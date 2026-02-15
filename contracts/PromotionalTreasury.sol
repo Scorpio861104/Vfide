@@ -4,7 +4,11 @@ pragma solidity 0.8.30;
 import "./VFIDEToken.sol";
 import "./SharedInterfaces.sol";
 
-// Note: AccessControl is now defined in SharedInterfaces.sol for zkSync compatibility
+// Note: VFIDEAccessControlLite is defined in SharedInterfaces.sol for zkSync compatibility
+
+interface IERC20Metadata {
+    function decimals() external view returns (uint8);
+}
 
 /**
  * @title PromotionalTreasury
@@ -16,21 +20,18 @@ import "./SharedInterfaces.sol";
  * - Once depleted, promotions permanently end
  * - No minting, no refills, just fair distribution
  */
-contract PromotionalTreasury is AccessControl, ReentrancyGuard {
+contract PromotionalTreasury is VFIDEAccessControlLite, ReentrancyGuard {
     using SafeERC20 for IERC20;
-
-    interface IERC20Metadata {
-        function decimals() external view returns (uint8);
-    }
     
     bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
+    bytes32 public constant OPERATOR_ROLE = keccak256("OPERATOR_ROLE");
     
     VFIDEToken public immutable vfideToken;
     IERC20 public rewardToken;
     uint8 public rewardTokenDecimals = 18;
 
-    // Howey-safe mode disables promotional token distributions
-    bool public howeySafeMode = true;
+    // Compliance mode disables promotional token distributions
+    bool public complianceMode = true;
     
     // Fixed allocation: 2,000,000 VFIDE for ALL promotions
     uint256 public constant TOTAL_PROMOTIONAL_ALLOCATION = 2_000_000 * 10**18;
@@ -116,10 +117,10 @@ contract PromotionalTreasury is AccessControl, ReentrancyGuard {
     event PioneerBadgeAwarded(address indexed user, uint256 pioneerNumber, uint256 bonus);
     event PromotionalBudgetDepleted(string category);
     event BudgetReplenished(string category, uint256 amount);
-    event HoweySafeModeUpdated(bool enabled);
+    event ComplianceModeUpdated(bool enabled);
     event RewardTokenUpdated(address indexed oldToken, address indexed newToken);
 
-    error PT_HoweySafeMode();
+    error PT_ComplianceMode();
     
     constructor(address _vfideToken, address _admin) {
         require(_vfideToken != address(0), "Invalid token address");
@@ -148,14 +149,14 @@ contract PromotionalTreasury is AccessControl, ReentrancyGuard {
         emit RewardTokenUpdated(oldToken, token);
     }
 
-    function setHoweySafeMode(bool enabled) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        require(enabled, "PT: howey safe only");
-        howeySafeMode = true;
-        emit HoweySafeModeUpdated(true);
+    function setComplianceMode(bool enabled) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        require(enabled, "PT: compliance mode only");
+        complianceMode = true;
+        emit ComplianceModeUpdated(true);
     }
 
-    function _requireHoweyDisabled() internal view {
-        if (howeySafeMode) revert PT_HoweySafeMode();
+    function _requireComplianceDisabled() internal view {
+        if (complianceMode) revert PT_ComplianceMode();
     }
     
     /**
@@ -366,17 +367,20 @@ contract PromotionalTreasury is AccessControl, ReentrancyGuard {
     }
     
     /**
-     * @notice Claim merchant volume milestone rewards
+     * @notice Claim merchant volume milestone rewards (operator-only, volume verified off-chain)
+     * @param merchant The merchant address to claim for
+     * @param volumeProcessed The verified volume processed by the merchant
      */
-    function claimMerchantMilestone(uint256 volumeProcessed) external nonReentrant {
-        require(merchantRewardsClaimed[msg.sender] < MAX_MERCHANT_REWARDS, "Merchant cap reached");
-        require(!merchantMilestoneClaimed[msg.sender], "Milestone already claimed");
-        
-        merchantVolumeProcessed[msg.sender] = volumeProcessed;
-        merchantMilestoneClaimed[msg.sender] = true;
-        
+    function claimMerchantMilestone(address merchant, uint256 volumeProcessed) external nonReentrant onlyRole(OPERATOR_ROLE) {
+        require(merchant != address(0), "Invalid merchant");
+        require(merchantRewardsClaimed[merchant] < MAX_MERCHANT_REWARDS, "Merchant cap reached");
+        require(!merchantMilestoneClaimed[merchant], "Milestone already claimed");
+
+        merchantVolumeProcessed[merchant] = volumeProcessed;
+        merchantMilestoneClaimed[merchant] = true;
+
         uint256 rewardAmount = 0;
-        
+
         if (volumeProcessed >= 10_000 * 10**18) {
             rewardAmount = MERCHANT_10K_VOLUME;
         } else if (volumeProcessed >= 5_000 * 10**18) {
@@ -386,15 +390,15 @@ contract PromotionalTreasury is AccessControl, ReentrancyGuard {
         } else {
             revert("Insufficient volume");
         }
-        
+
         require(merchantBudgetRemaining >= rewardAmount, "Merchant budget depleted");
-        
-        merchantRewardsClaimed[msg.sender] += rewardAmount;
-        _distributeReward(msg.sender, rewardAmount, "merchant");
+
+        merchantRewardsClaimed[merchant] += rewardAmount;
+        _distributeReward(merchant, rewardAmount, "merchant");
         merchantBudgetRemaining -= rewardAmount;
-        
-        emit MerchantMilestoneRewardClaimed(msg.sender, volumeProcessed, rewardAmount);
-        
+
+        emit MerchantMilestoneRewardClaimed(merchant, volumeProcessed, rewardAmount);
+
         if (merchantBudgetRemaining == 0) {
             emit PromotionalBudgetDepleted("merchant");
         }
@@ -404,7 +408,7 @@ contract PromotionalTreasury is AccessControl, ReentrancyGuard {
      * @notice Internal reward distribution
      */
     function _distributeReward(address user, uint256 amount, string memory /*category*/) internal {
-        _requireHoweyDisabled();
+        _requireComplianceDisabled();
         require(amount > 0, "Invalid amount");
         require(totalDistributed + amount <= TOTAL_PROMOTIONAL_ALLOCATION, "Total budget exceeded");
         
@@ -431,26 +435,11 @@ contract PromotionalTreasury is AccessControl, ReentrancyGuard {
     }
     
     /**
-     * @notice Emergency: Replenish specific category (only if DAO approves)
+     * @notice Budget replenishment disabled to enforce fixed allocation promise
+     * @dev Function signature preserved for ABI compatibility, always reverts
      */
-    function replenishBudget(string memory category, uint256 amount) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        require(amount > 0, "Invalid amount");
-        
-        if (keccak256(bytes(category)) == keccak256(bytes("education"))) {
-            educationBudgetRemaining += amount;
-        } else if (keccak256(bytes(category)) == keccak256(bytes("referral"))) {
-            referralBudgetRemaining += amount;
-        } else if (keccak256(bytes(category)) == keccak256(bytes("user_milestone"))) {
-            userMilestoneBudgetRemaining += amount;
-        } else if (keccak256(bytes(category)) == keccak256(bytes("merchant"))) {
-            merchantBudgetRemaining += amount;
-        } else if (keccak256(bytes(category)) == keccak256(bytes("pioneer"))) {
-            pioneerBudgetRemaining += amount;
-        } else {
-            revert("Invalid category");
-        }
-        
-        emit BudgetReplenished(category, amount);
+    function replenishBudget(string memory, uint256) external view onlyRole(DEFAULT_ADMIN_ROLE) {
+        revert("PT: budget replenishment disabled");
     }
     
     /**

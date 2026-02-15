@@ -4,14 +4,14 @@ import { AlertCircle } from "lucide-react";
 import { useAccount } from "wagmi";
 
 /**
- * Demo Mode Banner Component
+ * Connection Banner Component
  * 
  * Displays a banner when wallet is not connected to encourage connection.
- * Works identically on all networks - no testnet-specific behavior.
+ * Works identically on all networks.
  * 
  * @returns Banner component or null if wallet is connected
  */
-export function DemoModeBanner() {
+export function ConnectionBanner() {
   const { address } = useAccount();
   
   // Only show if wallet not connected
@@ -26,3 +26,5 @@ export function DemoModeBanner() {
     </div>
   );
 }
+
+export const DemoModeBanner = ConnectionBanner;

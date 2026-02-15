@@ -5,27 +5,30 @@ import { VFIDEPresaleABI, ERC20ABI } from "@/lib/abis";
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { useAccount, useWriteContract, useWaitForTransactionReceipt, useReadContract, useGasPrice } from "wagmi";
-import { parseUnits, isAddress, formatEther } from "viem";
+import { parseUnits, isAddress, formatEther, zeroAddress } from "viem";
 import { Loader2, CheckCircle, Wallet, Fuel, Sparkles } from "lucide-react";
 import { useToast } from "@/components/ui/toast";
+import { useVfidePrice } from "@/hooks/usePriceHooks";
 import { safeParseFloat } from "@/lib/validation";
 
-// Contract addresses from environment - Base Sepolia deployment
-const PRESALE_ADDRESS = (process.env.NEXT_PUBLIC_VFIDE_PRESALE_ADDRESS || '0x89aefb047B6CB2bB302FE2734DDa452985eF1658') as `0x${string}`;
-// Note: USDC/USDT are not available on Base Sepolia testnet
-// Users must use ETH for testnet purchases
-const STABLECOINS_AVAILABLE = false; // Set to true when stablecoins are deployed
+// Contract addresses from environment
+const PRESALE_ADDRESS = process.env.NEXT_PUBLIC_VFIDE_PRESALE_ADDRESS as `0x${string}` | undefined;
+const USDC_ADDRESS = (process.env.NEXT_PUBLIC_USDC_ADDRESS || '') as `0x${string}`;
+const USDT_ADDRESS = (process.env.NEXT_PUBLIC_USDT_ADDRESS || '') as `0x${string}`;
+// Stablecoins are available only when addresses are configured
+const STABLECOINS_AVAILABLE = Boolean(USDC_ADDRESS || USDT_ADDRESS);
 
 // Tier mapping: 0 = Founding, 1 = Oath, 2 = Public
 const TIER_MAP = { founding: 0, oath: 1, public: 2 } as const;
-const LOCK_PERIODS = { founding: 180 * 24 * 3600, oath: 90 * 24 * 3600, public: 0 } as const;
+const LOCK_PERIODS = { founding: 0, oath: 0, public: 0 } as const;
 
 export default function TokenLaunchPage() {
   const { address, isConnected } = useAccount();
   const { showToast } = useToast();
+  const { ethPriceUsd } = useVfidePrice();
+  const presaleConfigured = Boolean(PRESALE_ADDRESS && isAddress(PRESALE_ADDRESS) && PRESALE_ADDRESS !== zeroAddress);
   const [selectedTier, setSelectedTier] = useState<"founding" | "oath" | "public" | null>(null);
   const [amount, setAmount] = useState("");
-  const [referralCode, setReferralCode] = useState("");
   const [paymentMethod, setPaymentMethod] = useState<'usdc' | 'usdt' | 'eth'>('eth');
   
   // Contract write hooks
@@ -38,60 +41,77 @@ export default function TokenLaunchPage() {
 
   // Gas price for fee estimate
   const { data: gasPrice } = useGasPrice();
-  const estimatedGas = BigInt(150000); // Typical presale tx gas
+  const estimatedGas = BigInt(150000); // Typical launch tx gas
   const gasCostWei = gasPrice ? estimatedGas * gasPrice : BigInt(0);
   const gasCostEth = safeParseFloat(formatEther(gasCostWei), 0);
-  const gasCostUsd = gasCostEth * 2500; // Rough ETH price
+  const gasCostUsd = gasCostEth * (ethPriceUsd || 2500);
 
   // Read tier availability
   const { data: _foundingRemaining } = useReadContract({
-    address: PRESALE_ADDRESS,
+    address: (PRESALE_ADDRESS ?? zeroAddress) as `0x${string}`,
     abi: VFIDEPresaleABI,
     functionName: 'getTierRemaining',
     args: [0],
+    query: { enabled: presaleConfigured },
   });
 
   const { data: _oathRemaining } = useReadContract({
-    address: PRESALE_ADDRESS,
+    address: (PRESALE_ADDRESS ?? zeroAddress) as `0x${string}`,
     abi: VFIDEPresaleABI,
     functionName: 'getTierRemaining',
     args: [1],
+    query: { enabled: presaleConfigured },
   });
 
   const { data: _publicRemaining } = useReadContract({
-    address: PRESALE_ADDRESS,
+    address: (PRESALE_ADDRESS ?? zeroAddress) as `0x${string}`,
     abi: VFIDEPresaleABI,
     functionName: 'getTierRemaining',
     args: [2],
+    query: { enabled: presaleConfigured },
   });
 
   // Read user info
   const { data: _userInfo } = useReadContract({
-    address: PRESALE_ADDRESS,
+    address: (PRESALE_ADDRESS ?? zeroAddress) as `0x${string}`,
     abi: VFIDEPresaleABI,
     functionName: 'getUserInfo',
     args: address ? [address] : undefined,
+    query: { enabled: presaleConfigured && Boolean(address) },
   });
 
-  // Stablecoin allowance - disabled on testnet since no stablecoins available
-  // This will be enabled when USDC/USDT are deployed on mainnet
+  // Stablecoin allowance (enabled when stablecoin addresses are configured)
   const { data: allowance } = useReadContract({
-    address: PRESALE_ADDRESS, // Placeholder - won't be used since stablecoins disabled
+    address: (PRESALE_ADDRESS ?? zeroAddress) as `0x${string}`,
     abi: ERC20ABI,
     functionName: 'allowance',
     args: address ? [address, PRESALE_ADDRESS] : undefined,
     query: {
-      enabled: STABLECOINS_AVAILABLE && paymentMethod !== 'eth',
+      enabled: presaleConfigured && STABLECOINS_AVAILABLE && paymentMethod !== 'eth',
     }
   });
 
-  // Handle approve - only for stablecoins (disabled on testnet)
+    // Handle approve - only for stablecoins
   const handleApprove = () => {
+    if (!presaleConfigured || !PRESALE_ADDRESS) {
+      showToast('Launch contract not configured', 'error');
+      return;
+    }
+    const numAmount = safeParseFloat(amount, 0);
+    if (numAmount <= 0 || numAmount > 500000) {
+      showToast('Enter an amount between 1 and 500,000', 'error');
+      return;
+    }
     if (!STABLECOINS_AVAILABLE) return;
+    const stablecoinAddress = paymentMethod === 'usdc' ? USDC_ADDRESS : USDT_ADDRESS;
+    if (!stablecoinAddress) {
+      showToast('Stablecoin address not configured', 'error');
+      return;
+    }
     const usdAmount = calculateTotal();
     const amountWithBuffer = parseUnits((usdAmount * 1.01).toFixed(6), 6); // 1% buffer for rounding
     writeApprove({
-      address: PRESALE_ADDRESS, // Will be replaced with actual stablecoin address
+      address: stablecoinAddress,
       abi: ERC20ABI,
       functionName: 'approve',
       args: [PRESALE_ADDRESS, amountWithBuffer],
@@ -100,61 +120,52 @@ export default function TokenLaunchPage() {
 
   // Handle purchase
   const handlePurchase = () => {
+    if (!presaleConfigured || !PRESALE_ADDRESS) {
+      showToast('Launch contract not configured', 'error');
+      return;
+    }
     if (!selectedTier || !amount) return;
+    const numAmount = safeParseFloat(amount, 0);
+    if (numAmount <= 0 || numAmount > 500000) {
+      showToast('Enter an amount between 1 and 500,000', 'error');
+      return;
+    }
     
     const tier = TIER_MAP[selectedTier];
     const lockPeriod = BigInt(LOCK_PERIODS[selectedTier]);
     const usdAmount = calculateTotal();
     const stableAmount = parseUnits(usdAmount.toFixed(6), 6);
-    const hasReferrer = referralCode && isAddress(referralCode);
     
-    // M-3 Fix: Block self-referral
-    if (hasReferrer && referralCode.toLowerCase() === address?.toLowerCase()) {
-      showToast("Cannot use your own address as referrer", "error");
-      return;
-    }
-    
-    // Only ETH payments are available on testnet
-    // Stablecoin payments will be enabled on mainnet
-    if (paymentMethod === 'eth' || !STABLECOINS_AVAILABLE) {
-      // ETH payments require oracle price feed integration
-      // Currently using placeholder value - production will use Chainlink price feeds
-      if (hasReferrer) {
-        writeContract({
-          address: PRESALE_ADDRESS,
-          abi: VFIDEPresaleABI,
-          functionName: 'buyTokensWithReferral',
-          args: [lockPeriod, referralCode as `0x${string}`],
-          value: parseUnits('0.01', 18), // Placeholder - needs oracle
-        });
-      } else {
+    // ETH payment path
+      if (paymentMethod === 'eth' || !STABLECOINS_AVAILABLE) {
+      if (!ethPriceUsd || ethPriceUsd <= 0) {
+        showToast('Price feed unavailable. Please try again later.', 'error');
+        return;
+      }
+      const ethAmount = usdAmount / ethPriceUsd;
+      if (ethAmount <= 0) {
+        showToast('Invalid purchase amount', 'error');
+        return;
+      }
         writeContract({
           address: PRESALE_ADDRESS,
           abi: VFIDEPresaleABI,
           functionName: 'buyTokens',
           args: [lockPeriod],
-          value: parseUnits('0.01', 18), // Placeholder - needs oracle
+          value: parseUnits(ethAmount.toFixed(6), 18),
         });
-      }
     } else {
-      // Stablecoin payments - disabled on testnet
-      // This code path is kept for mainnet deployment
-      const stablecoinPlaceholder = PRESALE_ADDRESS; // Will be replaced with actual USDC/USDT address
-      if (hasReferrer) {
-        writeContract({
-          address: PRESALE_ADDRESS,
-          abi: VFIDEPresaleABI,
-          functionName: 'buyWithStableReferral',
-          args: [stablecoinPlaceholder, stableAmount, tier, lockPeriod, referralCode as `0x${string}`],
-        });
-      } else {
+      const stablecoinAddress = paymentMethod === 'usdc' ? USDC_ADDRESS : USDT_ADDRESS;
+      if (!stablecoinAddress) {
+        showToast('Stablecoin address not configured', 'error');
+        return;
+      }
         writeContract({
           address: PRESALE_ADDRESS,
           abi: VFIDEPresaleABI,
           functionName: 'buyWithStable',
-          args: [stablecoinPlaceholder, stableAmount, tier, lockPeriod],
+          args: [stablecoinAddress, stableAmount, tier, lockPeriod],
         });
-      }
     }
   };
   
@@ -179,54 +190,47 @@ export default function TokenLaunchPage() {
       name: "Founding",
       price: 0.03,
       priceDisplay: "$0.03",
-      commitment: "180 days (mandatory)",
-      immediateUnlock: "10%",
-      supply: "10,000,000 VFIDE",
+      commitment: "No lock",
+      immediateUnlock: "100%",
+      supply: "Part of 50,000,000 VFIDE launch allocation",
       maxPurchase: "500,000 VFIDE",
       color: "#FFD700",
       features: [
-        "180-day lock required (10% immediate, 90% locked)",
-        "Best price: 2.33x value vs Public tier",
+        "Governance voting rights",
         "Early supporter recognition",
         "No processor fees (burn + gas apply)",
-        "ProofScore reputation building",
-        "+2% buyer referral bonus + 3% referrer bonus"
+        "ProofScore reputation building"
       ]
     },
     oath: {
       name: "Oath",
       price: 0.05,
       priceDisplay: "$0.05",
-      commitment: "90 days (mandatory)",
-      immediateUnlock: "20%",
-      supply: "10,000,000 VFIDE",
+      commitment: "No lock",
+      immediateUnlock: "100%",
+      supply: "Part of 50,000,000 VFIDE launch allocation",
       maxPurchase: "500,000 VFIDE",
       color: "#00F0FF",
       features: [
-        "90-day lock required (20% immediate, 80% locked)",
-        "1.4x value vs Public tier",
+        "Governance voting rights",
         "Priority governance access",
         "No processor fees (burn + gas apply)",
-        "ProofScore reputation building",
-        "+2% buyer referral bonus + 3% referrer bonus"
+        "ProofScore reputation building"
       ]
     },
     public: {
       name: "Public",
       price: 0.07,
       priceDisplay: "$0.07",
-      commitment: "Optional",
-      immediateUnlock: "Varies",
-      supply: "15,000,000 VFIDE",
+      commitment: "No lock",
+      immediateUnlock: "100%",
+      supply: "Part of 50,000,000 VFIDE launch allocation",
       maxPurchase: "500,000 VFIDE",
       color: "#0080FF",
       features: [
-        "No lock required (or optional lock for bonus)",
-        "180-day lock: +30% bonus (10% immediate)",
-        "90-day lock: +15% bonus (20% immediate)",
-        "No lock: 100% immediate, 0% bonus",
+        "Governance voting rights",
         "No processor fees (burn + gas apply)",
-        "+2% buyer referral bonus + 3% referrer bonus"
+        "ProofScore reputation building"
       ]
     }
   };
@@ -252,9 +256,9 @@ export default function TokenLaunchPage() {
       <main className="min-h-screen bg-zinc-950 pt-20 relative overflow-hidden">
         {/* Premium Background Effects */}
         <div className="fixed inset-0 pointer-events-none">
-          <div className="absolute top-1/4 -left-32 w-125 h-125 bg-cyan-500/10 rounded-full blur-[120px] animate-pulse" />
-          <div className="absolute bottom-1/4 -right-32 w-100 h-100 bg-blue-500/10 rounded-full blur-[100px] animate-pulse" style={{ animationDelay: '1s' }} />
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-150 h-150 bg-purple-500/5 rounded-full blur-[150px]" />
+          <div className="absolute top-1/4 -left-32 w-[31.25rem] h-[31.25rem] bg-cyan-500/10 rounded-full blur-[120px] animate-pulse" />
+          <div className="absolute bottom-1/4 -right-32 w-[25rem] h-[25rem] bg-blue-500/10 rounded-full blur-[100px] animate-pulse" style={{ animationDelay: '1s' }} />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[37.5rem] h-[37.5rem] bg-purple-500/5 rounded-full blur-[150px]" />
         </div>
 
         {/* Hero Header */}
@@ -271,7 +275,7 @@ export default function TokenLaunchPage() {
                 className="inline-flex items-center gap-2 px-4 py-2 bg-linear-to-r from-cyan-500/20 to-blue-500/20 border border-cyan-500/30 rounded-full mb-4"
               >
                 <Sparkles className="w-4 h-4 text-cyan-400" />
-                <span className="text-cyan-400 text-sm font-medium">Token Presale Live</span>
+                <span className="text-cyan-400 text-sm font-medium">Token Launch Live</span>
               </motion.div>
               <h1 className="text-5xl md:text-6xl font-bold text-white mb-4 tracking-tight">
                 Join VFIDE <span className="text-transparent bg-clip-text bg-linear-to-r from-cyan-400 to-blue-400">Governance</span>
@@ -281,42 +285,18 @@ export default function TokenLaunchPage() {
               </p>
               <p className="text-lg text-gray-400 max-w-2xl mx-auto mb-8">
                 VFIDE tokens grant voting rights, payment network access, and protocol participation.
-                Three tiers available based on your commitment level and desired governance influence.
+                Three tiers available based on launch allocation and desired governance influence.
               </p>
 
-              {/* Referral Program Highlight */}
-              <motion.div 
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2 }}
-                className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-cyan-500/20 to-blue-500/10 backdrop-blur-xl border-2 border-cyan-500/50 p-6"
-              >
-                <div className="flex items-center justify-center gap-3 mb-3">
-                  <div className="text-3xl">🎁</div>
-                  <h3 className="text-2xl font-bold text-transparent bg-clip-text bg-linear-to-r from-cyan-400 to-blue-400">Referral Rewards Active</h3>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-center">
-                  <div className="bg-white/5 backdrop-blur-sm rounded-xl p-4 border border-white/10">
-                    <div className="text-3xl font-bold text-cyan-400 mb-1">+2%</div>
-                    <div className="text-white font-bold mb-1">Buyer Bonus</div>
-                    <div className="text-sm text-gray-400">Use a referral code when purchasing</div>
-                  </div>
-                  <div className="bg-white/5 backdrop-blur-sm rounded-xl p-4 border border-white/10">
-                    <div className="text-3xl font-bold text-cyan-400 mb-1">+3%</div>
-                    <div className="text-white font-bold mb-1">Referrer Reward</div>
-                    <div className="text-sm text-gray-400">Share your address to earn</div>
-                  </div>
-                </div>
-                <p className="text-sm text-gray-400 mt-4">
-                  Bonuses paid instantly in VFIDE tokens • No limit on referrals • Multi-level structure
-                </p>
-              </motion.div>
-
-              {/* Clean Legal Notice */}
+              {/* Legal Notice */}
               <div className="mt-6 bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-4">
                 <p className="text-sm text-gray-400 leading-relaxed">
-                  <strong className="text-white">Utility Token Notice:</strong> VFIDE tokens provide governance and payment utility. 
-                  Not an investment contract. Token value may fluctuate. Purchase only if you plan to participate in governance or payments. 
+                  <strong className="text-white">Utility Token Notice:</strong> VFIDE tokens are functional utility tokens
+                  that provide governance voting rights and payment capabilities within the VFIDE ecosystem. Tokens are not intended
+                  as an investment, do not represent equity or ownership, and do not entitle holders to profits, dividends, or revenue
+                  sharing of any kind. Token value may go to zero. Price differences between tiers reflect launch phasing, not
+                  expected appreciation. Purchase only if you intend to actively use governance or payment features.
+                  This is not an offer of securities. Consult a qualified attorney for legal advice.
                   See <a href="/legal" className="text-cyan-400 hover:underline">full terms</a>.
                 </p>
               </div>
@@ -336,8 +316,7 @@ export default function TokenLaunchPage() {
                 Step 1: Select Your Commitment Tier
               </h2>
               <p className="text-center text-gray-400 mb-12 max-w-3xl mx-auto">
-                Different tiers offer different utility characteristics. Longer commitment = lower price + higher voting power.
-                All tiers provide immediate governance and payment access.
+                Different tiers offer different utility characteristics. All tiers provide immediate governance and payment access.
               </p>
             </motion.div>
             
@@ -357,10 +336,10 @@ export default function TokenLaunchPage() {
                   }`}
                   style={selectedTier === key ? { borderColor: tier.color, boxShadow: `0 0 30px ${tier.color}40` } : undefined}
                 >
-                  {/* Most Popular badge shown on oath tier */}
+                  {/* Recommended tier badge shown on oath tier */}
                   {key === 'oath' && (
                     <div className="absolute top-0 left-1/2 -translate-x-1/2 px-4 py-1 bg-linear-to-r from-cyan-500 to-blue-500 text-white rounded-b-xl text-sm font-bold shadow-lg shadow-cyan-500/25">
-                      MOST POPULAR
+                      RECOMMENDED FOR GOVERNANCE
                     </div>
                   )}
                   
@@ -425,7 +404,7 @@ export default function TokenLaunchPage() {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {[
                   { icon: '🗳️', title: 'Governance Rights', desc: 'Vote on proposals, elect council members, influence treasury allocation' },
-                  { icon: '💳', title: 'Payment Access', desc: 'Accept/make payments with no processor fees* (live in Phase 2)' },
+                  { icon: '💳', title: 'Payment Access', desc: 'Accept/make payments with no processor fees* (burn fees + gas apply)' },
                   { icon: '⭐', title: 'ProofScore Building', desc: 'Build reputation for fee discounts and enhanced privileges' }
                 ].map((benefit, idx) => (
                   <motion.div 
@@ -505,36 +484,8 @@ export default function TokenLaunchPage() {
                       ))}
                     </div>
                     <p id="amount-hint" className="text-xs text-gray-400 mt-2">
-                      Maximum 500,000 VFIDE per address (including referral bonuses)
+                      Maximum 500,000 VFIDE per address
                     </p>
-                  </div>
-
-                  {/* Referral Code - Prominent */}
-                  <div className="bg-gradient-to-br from-cyan-500/10 to-blue-500/10 border-2 border-cyan-500/30 rounded-xl p-6">
-                    <div className="flex items-center gap-2 mb-3">
-                      <span className="text-2xl">🎁</span>
-                      <label className="text-white font-bold text-lg">
-                        Referral Code - Get +2% Bonus VFIDE
-                      </label>
-                    </div>
-                    <input
-                      type="text"
-                      value={referralCode}
-                      onChange={(e) => setReferralCode(e.target.value)}
-                      placeholder="Enter referrer address (0x...)"
-                      pattern="^0x[a-fA-F0-9]{40}$"
-                      aria-label="Referral code address"
-                      aria-describedby="referral-hint"
-                      className="w-full px-4 py-3 bg-white/5 border border-cyan-500/20 rounded-xl text-white placeholder-gray-500 focus:border-cyan-500/50 focus:outline-none transition-colors"
-                    />
-                    <div className="mt-3 bg-white/5 rounded-xl p-3 border border-white/10">
-                      <div className="text-sm text-white font-bold mb-1">Referral Rewards:</div>
-                      <div className="text-sm text-gray-400 space-y-1">
-                        <div>• <span className="text-cyan-400">You get:</span> +2% bonus VFIDE instantly</div>
-                        <div>• <span className="text-cyan-400">Referrer gets:</span> +3% VFIDE when you purchase</div>
-                        <div>• <span className="text-cyan-400">No limit:</span> Refer unlimited people, stack rewards</div>
-                      </div>
-                    </div>
                   </div>
 
                   {amount && parseFloat(amount) > 0 && (
@@ -557,12 +508,6 @@ export default function TokenLaunchPage() {
                           <span className="text-gray-400">Price per VFIDE:</span>
                           <span className="text-white font-bold">{tiers[selectedTier].priceDisplay}</span>
                         </div>
-                        {referralCode && (
-                          <div className="flex justify-between p-2 bg-cyan-500/10 rounded-lg text-cyan-400">
-                            <span>Referral Bonus (+2%):</span>
-                            <span className="font-bold">+{(parseFloat(amount) * 0.02).toLocaleString()} VFIDE</span>
-                          </div>
-                        )}
                         <div className="border-t border-white/10 pt-4 mt-4">
                           <div className="flex justify-between text-lg">
                             <span className="text-white font-bold">Total Cost:</span>
@@ -571,10 +516,7 @@ export default function TokenLaunchPage() {
                           <div className="flex justify-between mt-2">
                             <span className="text-white font-bold">Total VFIDE:</span>
                             <span className="text-transparent bg-clip-text bg-linear-to-r from-cyan-400 to-blue-400 font-bold">
-                              {referralCode 
-                                ? (parseFloat(amount) * 1.02).toLocaleString()
-                                : parseFloat(amount).toLocaleString()
-                              }
+                              {parseFloat(amount).toLocaleString()}
                             </span>
                           </div>
                         </div>
@@ -664,14 +606,6 @@ export default function TokenLaunchPage() {
                 >
                   <h3 className="text-lg font-bold text-white mb-4">Payment Method</h3>
                   
-                  {/* Testnet Notice */}
-                  <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-3 mb-4">
-                    <p className="text-amber-400 text-sm text-center">
-                      🧪 <strong>Testnet:</strong> Only ETH payments available. Get free test ETH from{' '}
-                      <a href="https://www.alchemy.com/faucets/base-sepolia" target="_blank" rel="noopener noreferrer" className="underline">Alchemy Faucet</a>
-                    </p>
-                  </div>
-                  
                   <div className="grid grid-cols-3 gap-3">
                     {[
                       { id: 'usdc' as const, label: 'USDC', color: '#2775CA', disabled: !STABLECOINS_AVAILABLE },
@@ -693,7 +627,7 @@ export default function TokenLaunchPage() {
                         }`}
                       >
                         <div className="text-lg font-bold text-white">{method.label}</div>
-                        {method.disabled && <div className="text-xs text-gray-500">Coming Soon</div>}
+                        {method.disabled && <div className="text-xs text-gray-500">Unavailable</div>}
                       </motion.button>
                     ))}
                   </div>
@@ -849,17 +783,13 @@ export default function TokenLaunchPage() {
                   q: "Why purchase VFIDE tokens?",
                   a: "Purchase if you want to: Vote on protocol governance, accept/make payments without processor fees (burn + gas apply), build ProofScore reputation, participate in treasury decisions, or qualify for council elections. Tokens provide utility value through active participation."
                 },
-                {
+                {        
                   q: "What are the different tiers?",
-                  a: "Three tiers based on commitment and price: Founding ($0.03, 180-day mandatory lock, 10% immediate), Oath ($0.05, 90-day mandatory lock, 20% immediate), Public ($0.07, optional lock with bonuses). Better price = longer commitment. All tiers grant immediate governance access."
+                  a: "Three launch tiers based on price and allocation: Founding ($0.03), Oath ($0.05), Public ($0.07). The price steps up as each tier allocation sells out. All tiers grant immediate governance access."
                 },
-                {
-                  q: "What's the commitment period?",
-                  a: "A time period where tokens are locked for external transfers but fully functional for governance and payments. During commitment you CAN: vote on proposals, use for payments (Phase 2), transfer between your own vaults. You CANNOT: transfer to other users or sell. Designed to align holder interests with protocol development."
-                },
-                {
-                  q: "How do referral bonuses work?",
-                  a: "Simple structure: When someone uses your address as referral code, you (referrer) get +3% VFIDE and they (buyer) get +2% VFIDE. Bonuses come from the bonus pool and are credited instantly. No limit on total referrals - stack rewards indefinitely."
+                {        
+                  q: "Are tokens locked?",
+                  a: "No. There are no lockups or bonuses. Tokens are delivered immediately to your vault upon purchase."
                 },
                 {
                   q: "Can I get a refund?",
@@ -871,7 +801,7 @@ export default function TokenLaunchPage() {
                 },
                 {
                   q: "When can I use tokens for payments?",
-                  a: "Governance voting is available immediately upon purchase. Merchant payment network (no processor fees, burn + gas apply) launches in Phase 2 (estimated Q1 2026). You can use tokens for governance participation and ProofScore building right away."
+                  a: "Governance voting is available immediately upon purchase. The merchant payment network is available with burn fees + gas. You can use tokens for governance participation and ProofScore building right away."
                 },
               ].map((faq, i) => (
                 <motion.div 
@@ -903,7 +833,7 @@ export default function TokenLaunchPage() {
                   <ul className="space-y-2 text-sm text-gray-400">
                     <li className="flex items-center gap-2"><span className="text-cyan-400">•</span> Total Supply: 200,000,000 VFIDE (fixed)</li>
                     <li className="flex items-center gap-2"><span className="text-cyan-400">•</span> Dev Reserve: 50,000,000 (25%, 36-month vesting)</li>
-                    <li className="flex items-center gap-2"><span className="text-cyan-400">•</span> Presale: 50,000,000 (25%)</li>
+                    <li className="flex items-center gap-2"><span className="text-cyan-400">•</span> Launch Allocation: 50,000,000 (25%)</li>
                     <li className="flex items-center gap-2"><span className="text-cyan-400">•</span> Treasury/Operations: 100,000,000 (50%)</li>
                     <li className="flex items-center gap-2"><span className="text-cyan-400">•</span> Deflationary burn mechanism (0.25-5%)</li>
                     <li className="flex items-center gap-2"><span className="text-cyan-400">•</span> ProofScore-based fee discounts</li>
@@ -916,9 +846,9 @@ export default function TokenLaunchPage() {
                 >
                   <h3 className="text-xl font-bold text-cyan-400 mb-3">Smart Contract</h3>
                   <ul className="space-y-2 text-sm text-gray-400">
-                    <li className="flex items-center gap-2"><span className="text-cyan-400">•</span> Third-party audit planned pre-mainnet</li>
+                    <li className="flex items-center gap-2"><span className="text-cyan-400">•</span> Audit pending pre-launch</li>
                     <li className="flex items-center gap-2"><span className="text-cyan-400">•</span> Open source and verifiable</li>
-                    <li className="flex items-center gap-2"><span className="text-cyan-400">•</span> Non-upgradeable core logic</li>
+                    <li className="flex items-center gap-2"><span className="text-cyan-400">•</span> Timelocked admin functions (2-day delay)</li>
                     <li className="flex items-center gap-2"><span className="text-cyan-400">•</span> Community governance controls</li>
                   </ul>
                 </motion.div>

@@ -6,10 +6,9 @@
 
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Wallet, TrendingUp, History, Award } from 'lucide-react';
-import { WalletButton as _WalletButton } from '@/components/crypto/WalletButton';
 import { TransactionHistory } from '@/components/crypto/TransactionHistory';
 import { RewardsDisplay } from '@/components/crypto/RewardsDisplay';
 import { useAccount, useBalance } from 'wagmi';
@@ -19,10 +18,41 @@ export default function CryptoDashboard() {
   const { address, isConnected } = useAccount();
   const { data: ethBalance } = useBalance({ address });
   const [activeTab, setActiveTab] = useState<'transactions' | 'rewards'>('transactions');
+  const [ethPriceUsd, setEthPriceUsd] = useState<number | null>(null);
+  const [priceError, setPriceError] = useState<string | null>(null);
+
+  // Load ETH price for USD conversion
+  useEffect(() => {
+    let isMounted = true;
+
+    const fetchPrice = async () => {
+      try {
+        const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd');
+        if (!response.ok) throw new Error('Price unavailable');
+        const data = await response.json();
+        const price = Number(data?.ethereum?.usd);
+        if (Number.isFinite(price) && isMounted) {
+          setEthPriceUsd(price);
+        }
+      } catch {
+        if (isMounted) {
+          setEthPriceUsd(null);
+          setPriceError('USD rate unavailable');
+        }
+      }
+    };
+
+    fetchPrice();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   // Format balance display
   const formattedBalance = ethBalance ? parseFloat(ethBalance.formatted).toFixed(4) : '0.0000';
-  const usdValue = ethBalance ? (parseFloat(ethBalance.formatted) * 2500).toFixed(2) : '0.00'; // Mock USD rate
+  const usdValue = ethBalance && ethPriceUsd
+    ? (parseFloat(ethBalance.formatted) * ethPriceUsd).toFixed(2)
+    : null;
 
   if (!isConnected || !address) {
     return (
@@ -65,7 +95,9 @@ export default function CryptoDashboard() {
               <Wallet className="w-5 h-5 text-blue-400" />
             </div>
             <div className="text-white text-3xl font-bold mb-1">{formattedBalance}</div>
-            <div className="text-gray-400 text-sm">≈ ${usdValue} USD</div>
+            <div className="text-gray-400 text-sm">
+              {usdValue ? `≈ $${usdValue} USD` : priceError ?? 'USD value unavailable'}
+            </div>
           </motion.div>
 
           <motion.div

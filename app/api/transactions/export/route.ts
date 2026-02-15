@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { PDFDocument, StandardFonts, rgb } from 'pdf-lib';
 import { query } from '@/lib/db';
 import { requireAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
@@ -233,68 +234,88 @@ async function formatAsPDF(
   transactions: Transaction[],
   options: ExportOptions,
   address: string
-): Promise<string> {
-  // For PDF, we generate an HTML string that will be rendered as PDF
-  // In production, use a library like puppeteer or jspdf
-  const rows = transactions
-    .slice(0, 1000) // Limit for PDF
-    .map(
-      (tx) => `
-    <tr>
-      <td>${new Date(tx.timestamp).toLocaleDateString()}</td>
-      <td>${tx.type}</td>
-      <td>${tx.token_symbol || 'ETH'}</td>
-      <td>${tx.amount}</td>
-      ${options.includeUsdValue ? `<td>$${tx.usd_value || '0'}</td>` : ''}
-      <td>${tx.status}</td>
-    </tr>
-  `
-    )
-    .join('');
+): Promise<Uint8Array> {
+  const pdfDoc = await PDFDocument.create();
+  const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+  const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
 
-  return `
-<!DOCTYPE html>
-<html>
-<head>
-  <title>Transaction History Export</title>
-  <style>
-    body { font-family: Arial, sans-serif; margin: 40px; }
-    h1 { color: #333; }
-    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-    th { background-color: #f4f4f4; }
-    .header { margin-bottom: 20px; }
-    .meta { color: #666; font-size: 12px; }
-  </style>
-</head>
-<body>
-  <div class="header">
-    <h1>Transaction History</h1>
-    <p class="meta">
-      Address: ${address}<br>
-      Date Range: ${options.dateRange.start} to ${options.dateRange.end}<br>
-      Exported: ${new Date().toISOString()}<br>
-      Total Transactions: ${transactions.length}
-    </p>
-  </div>
-  <table>
-    <thead>
-      <tr>
-        <th>Date</th>
-        <th>Type</th>
-        <th>Token</th>
-        <th>Amount</th>
-        ${options.includeUsdValue ? '<th>USD Value</th>' : ''}
-        <th>Status</th>
-      </tr>
-    </thead>
-    <tbody>
-      ${rows}
-    </tbody>
-  </table>
-</body>
-</html>
-  `;
+  const pageSize: [number, number] = [612, 792]; // Letter
+  const margin = 40;
+  const fontSize = 10;
+  const lineHeight = fontSize + 4;
+
+  let page = pdfDoc.addPage(pageSize);
+  let y = page.getHeight() - margin;
+
+  const drawText = (text: string, x: number, yPos: number, size = fontSize, bold = false) => {
+    page.drawText(text, {
+      x,
+      y: yPos,
+      size,
+      font: bold ? boldFont : font,
+      color: rgb(0.1, 0.1, 0.1),
+    });
+  };
+
+  const addPageIfNeeded = () => {
+    if (y <= margin + lineHeight) {
+      page = pdfDoc.addPage(pageSize);
+      y = page.getHeight() - margin;
+    }
+  };
+
+  drawText('Transaction History Export', margin, y, 16, true);
+  y -= lineHeight * 2;
+  drawText(`Address: ${address}`, margin, y);
+  y -= lineHeight;
+  drawText(`Date Range: ${options.dateRange.start} to ${options.dateRange.end}`, margin, y);
+  y -= lineHeight;
+  drawText(`Exported: ${new Date().toISOString()}`, margin, y);
+  y -= lineHeight;
+  drawText(`Total Transactions: ${transactions.length}`, margin, y);
+  y -= lineHeight * 2;
+
+  const columns = [
+    { label: 'Date', width: 90 },
+    { label: 'Type', width: 70 },
+    { label: 'Token', width: 60 },
+    { label: 'Amount', width: 90 },
+    ...(options.includeUsdValue ? [{ label: 'USD Value', width: 80 }] : []),
+    { label: 'Status', width: 80 },
+  ];
+
+  const drawRow = (values: string[], isHeader = false) => {
+    let x = margin;
+    values.forEach((value, index) => {
+      drawText(value, x, y, fontSize, isHeader);
+      x += columns[index]?.width ?? 0;
+    });
+    y -= lineHeight;
+    addPageIfNeeded();
+  };
+
+  drawRow(columns.map((col) => col.label), true);
+  y -= 2;
+
+  const rows = transactions.slice(0, 1000).map((tx) => {
+    const row = [
+      new Date(tx.timestamp).toLocaleDateString(),
+      tx.type,
+      tx.token_symbol || 'ETH',
+      tx.amount,
+    ];
+    if (options.includeUsdValue) {
+      row.push(tx.usd_value ? `$${tx.usd_value}` : '');
+    }
+    row.push(tx.status);
+    return row;
+  });
+
+  rows.forEach((row) => {
+    drawRow(row);
+  });
+
+  return pdfDoc.save();
 }
 
 function getContentType(format: string): string {
@@ -304,7 +325,7 @@ function getContentType(format: string): string {
     case 'json':
       return 'application/json';
     case 'pdf':
-      return 'text/html'; // Would be application/pdf with proper PDF generation
+      return 'application/pdf';
     default:
       return 'application/octet-stream';
   }
@@ -397,7 +418,7 @@ export async function POST(request: NextRequest) {
     const transactions = result.rows as Transaction[];
 
     // Format based on export type
-    let formattedData: string;
+    let formattedData: string | Uint8Array;
     switch (options.format) {
       case 'csv':
         formattedData = formatAsCSV(transactions, options);
@@ -417,7 +438,12 @@ export async function POST(request: NextRequest) {
 
     const filename = `transactions-${new Date().toISOString().split('T')[0]}.${options.format}`;
 
-    return new Response(formattedData, {
+    const responseBody =
+      options.format === 'pdf'
+        ? Buffer.from(formattedData as Uint8Array)
+        : (formattedData as string);
+
+    return new Response(responseBody, {
       headers: {
         'Content-Type': getContentType(options.format),
         'Content-Disposition': `attachment; filename="${filename}"`,
@@ -426,8 +452,6 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error('[Export API] Error:', error);
-    const errorMessage =
-      error instanceof Error ? error.message : 'Failed to export transactions';
-    return NextResponse.json({ error: errorMessage }, { status: 500 });
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

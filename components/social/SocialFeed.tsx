@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useCallback, useRef, useEffect } from 'react';
+import React, { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Heart,
@@ -13,8 +13,11 @@ import {
   Filter,
   Zap,
   MoreHorizontal,
+  AlertCircle,
 } from 'lucide-react';
 import { SocialTipButton } from './SocialTipButton';
+import { useAccount } from 'wagmi';
+import { getAuthHeaders } from '@/lib/auth/client';
 
 // ==================== TYPES ====================
 
@@ -22,6 +25,7 @@ interface FeedPost {
   id: string;
   author: {
     id: string;
+    address: string;
     avatar: string;
     name: string;
     username: string;
@@ -63,134 +67,62 @@ interface Comment {
   liked: boolean;
 }
 
-// ==================== MOCK DATA ====================
+// ==================== DATA HELPERS ====================
 
-const generateMockPosts = (): FeedPost[] => [
-  {
-    id: 'p1',
-    author: {
-      id: 'u1',
-      avatar: '👨‍💼',
-      name: 'Alex Rivera',
-      username: 'alex_finance',
-      isVerified: true,
-      proofScore: 9200,
-    },
-    content: 'Just completed my 100th transaction on VFIDE! 🚀 The platform is incredibly smooth. DeFi is the future!',
-    type: 'activity',
-    timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000),
-    likes: 342,
-    comments: 48,
-    shares: 23,
-    liked: false,
-    saved: false,
-    metrics: { engagement: 94, reach: 2341, impressions: 12500 },
-    tags: ['DeFi', 'Milestone'],
-  },
-  {
-    id: 'p2',
-    author: {
-      id: 'u2',
-      avatar: '👩‍🎤',
-      name: 'Sara Chen',
-      username: 'sara_merchant',
-      isVerified: true,
-      proofScore: 7800,
-    },
-    content: 'Unlocked: Merchant Master Badge 🎖️ First 1,000 payments processed through my store. This platform is a game-changer for small businesses!',
-    type: 'achievement',
-    timestamp: new Date(Date.now() - 5 * 60 * 60 * 1000),
-    likes: 856,
-    comments: 142,
-    shares: 67,
-    liked: true,
-    saved: true,
-    metrics: { engagement: 156, reach: 4892, impressions: 28340 },
-    tags: ['Achievement', 'Commerce'],
-  },
-  {
-    id: 'p3',
-    author: {
-      id: 'u3',
-      avatar: '👨‍💻',
-      name: 'John Park',
-      username: 'dev_john',
-      isVerified: true,
-      proofScore: 8600,
-    },
-    content: 'Just deployed a new smart contract optimization that reduces gas costs by 35%. The technical community here is amazing! 💡',
-    type: 'status',
-    timestamp: new Date(Date.now() - 8 * 60 * 60 * 1000),
-    likes: 523,
-    comments: 89,
-    shares: 45,
-    liked: false,
-    saved: false,
-    metrics: { engagement: 127, reach: 3456, impressions: 19876 },
-    tags: ['Development', 'Tech'],
-  },
-  {
-    id: 'p4',
-    author: {
-      id: 'u4',
-      avatar: '🌙',
-      name: 'Luna Tech',
-      username: 'luna_dev',
-      isVerified: true,
-      proofScore: 8950,
-    },
-    content: 'Governance Proposal #142 passed with 78% approval! 🗳️ The community decided to increase staking rewards. Democracy in action!',
-    type: 'proposal',
-    timestamp: new Date(Date.now() - 12 * 60 * 60 * 1000),
-    likes: 1204,
-    comments: 203,
-    shares: 134,
-    liked: false,
-    saved: false,
-    metrics: { engagement: 234, reach: 6234, impressions: 41203 },
-    tags: ['Governance', 'Voting'],
-  },
-  {
-    id: 'p5',
-    author: {
-      id: 'u5',
-      avatar: '🦊',
-      name: 'Felix Dev',
-      username: 'felix_codes',
-      isVerified: false,
-      proofScore: 6200,
-    },
-    content: 'Started my journey on VFIDE today! Excited to be part of this community. Any tips for beginners? 🚀',
-    type: 'status',
-    timestamp: new Date(Date.now() - 15 * 60 * 60 * 1000),
-    likes: 178,
-    comments: 32,
-    shares: 8,
-    liked: false,
-    saved: false,
-    metrics: { engagement: 42, reach: 1234, impressions: 5678 },
-    tags: ['Introduction', 'Newbie'],
-  },
-];
+const PAGE_SIZE = 12;
 
-const mockComments: Comment[] = [
-  {
-    id: 'c1',
-    author: { avatar: '👩‍🔬', name: 'Emma Wilson', username: 'emma_community' },
-    content: 'Congrats! This is amazing progress. 🎉',
-    timestamp: new Date(Date.now() - 1 * 60 * 60 * 1000),
-    likes: 45,
-    liked: false,
-  },
-  {
-    id: 'c2',
-    author: { avatar: '🧑‍💼', name: 'Mark Johnson', username: 'mark_vault' },
-    content: 'Welcome to the community! You\'re going to love it here.',
-    timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000),
-    likes: 32,
-    liked: true,
-  },
-];
+const inferPostType = (tags?: string[]): FeedPost['type'] => {
+  if (!tags || tags.length === 0) return 'status';
+  const normalized = tags.map((tag) => tag.toLowerCase());
+  if (normalized.some((tag) => tag.includes('governance') || tag.includes('proposal'))) return 'proposal';
+  if (normalized.some((tag) => tag.includes('achievement') || tag.includes('badge'))) return 'achievement';
+  if (normalized.some((tag) => tag.includes('activity') || tag.includes('milestone'))) return 'activity';
+  return 'status';
+};
+
+const mapCommunityPost = (post: Record<string, unknown>): FeedPost => {
+  const likes = Number(post?.likes ?? 0);
+  const comments = Number(post?.comments ?? 0);
+  const shares = Number(post?.shares ?? 0);
+  const views = Number(post?.views ?? 0);
+  const tags = Array.isArray(post?.tags) ? post.tags : undefined;
+  const address = typeof post?.author?.address === 'string' ? post.author.address : '';
+  const name = String(post?.author?.name ?? address ?? 'Member');
+  const username = name
+    .toLowerCase()
+    .replace(/[^a-z0-9_]+/g, '_')
+    .replace(/^_+|_+$/g, '')
+    .slice(0, 20) || (address ? `${address.slice(0, 6)}${address.slice(-4)}`.toLowerCase() : 'member');
+
+  return {
+    id: String(post?.id ?? ''),
+    author: {
+      id: address || String(post?.author?.name ?? 'user'),
+      address,
+      avatar: String(post?.author?.avatar ?? '👤'),
+      name,
+      username,
+      isVerified: Boolean(post?.author?.verified ?? false),
+      proofScore: Number(post?.author?.proofScore ?? 0),
+    },
+    content: String(post?.content ?? ''),
+    type: inferPostType(tags),
+    timestamp: new Date(Number(post?.timestamp ?? Date.now())),
+    likes,
+    comments,
+    shares,
+    liked: Boolean(post?.liked ?? false),
+    saved: Boolean(post?.bookmarked ?? false),
+    metrics: {
+      engagement: likes + comments + shares,
+      reach: views,
+      impressions: views,
+    },
+    tags,
+  };
+};
+
+const emptyComments: Comment[] = [];
 
 // ==================== COMPONENTS ====================
 
@@ -199,7 +131,8 @@ interface SocialFeedProps {
 }
 
 export function SocialFeed({ onPostCreated }: SocialFeedProps) {
-  const [posts, setPosts] = useState<FeedPost[]>(generateMockPosts());
+  const { address } = useAccount();
+  const [posts, setPosts] = useState<FeedPost[]>([]);
   const [newPostContent, setNewPostContent] = useState('');
   const [filter, setFilter] = useState<FeedFilter>({ type: 'all', sortBy: 'latest' });
   const [showFilters, setShowFilters] = useState(false);
@@ -208,18 +141,48 @@ export function SocialFeed({ onPostCreated }: SocialFeedProps) {
   const [savedPosts, setSavedPosts] = useState<Set<string>>(new Set());
   const [searchQuery, setSearchQuery] = useState('');
   const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [offset, setOffset] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
   const observerTarget = useRef<HTMLDivElement>(null);
 
-  // Simulate infinite scroll
+  const fetchPosts = useCallback(async (nextOffset: number, append = false) => {
+    try {
+      if (!append) {
+        setIsLoading(true);
+      }
+      setError(null);
+      const response = await fetch(`/api/community/posts?limit=${PAGE_SIZE}&offset=${nextOffset}`);
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data.error || 'Failed to load posts');
+      }
+      const data = await response.json();
+      const incoming = Array.isArray(data?.posts) ? data.posts.map(mapCommunityPost) : [];
+      setPosts((prev) => (append ? [...prev, ...incoming] : incoming));
+      setHasMore(incoming.length === PAGE_SIZE);
+      setOffset(nextOffset + incoming.length);
+    } catch (err) {
+      console.error('Failed to load community posts:', err);
+      setError('Unable to load community feed');
+    } finally {
+      setIsLoading(false);
+      setIsLoadingMore(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchPosts(0, false);
+  }, [fetchPosts]);
+
+  // Infinite scroll
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
-        if (entries[0]?.isIntersecting && !isLoadingMore) {
+        if (entries[0]?.isIntersecting && !isLoadingMore && hasMore) {
           setIsLoadingMore(true);
-          setTimeout(() => {
-            setPosts((prev) => [...prev, ...generateMockPosts()]);
-            setIsLoadingMore(false);
-          }, 500);
+          fetchPosts(offset, true);
         }
       },
       { threshold: 0.5 },
@@ -230,9 +193,9 @@ export function SocialFeed({ onPostCreated }: SocialFeedProps) {
     }
 
     return () => observer.disconnect();
-  }, [isLoadingMore]);
+  }, [fetchPosts, hasMore, isLoadingMore, offset]);
 
-  const filteredPosts = posts.filter((post) => {
+  const filteredPosts = useMemo(() => posts.filter((post) => {
     if (filter.type && filter.type !== 'all' && post.type !== filter.type) {
       return false;
     }
@@ -247,7 +210,7 @@ export function SocialFeed({ onPostCreated }: SocialFeedProps) {
     }
 
     return true;
-  });
+  }), [filter.type, posts, searchQuery]);
 
   const sortedPosts = [...filteredPosts].sort((a, b) => {
     switch (filter.sortBy) {
@@ -293,14 +256,21 @@ export function SocialFeed({ onPostCreated }: SocialFeedProps) {
 
   const handlePostCreate = () => {
     if (!newPostContent.trim()) return;
+    if (!address) {
+      setError('Connect your wallet to post');
+      return;
+    }
+
+    setError(null);
 
     const newPost: FeedPost = {
       id: `p_${Date.now()}`,
       author: {
-        id: 'current_user',
+        id: address,
+        address,
         avatar: '👤',
         name: 'You',
-        username: 'your_username',
+        username: address.slice(0, 6),
         isVerified: false,
         proofScore: 5000,
       },
@@ -317,6 +287,28 @@ export function SocialFeed({ onPostCreated }: SocialFeedProps) {
     setPosts((prev) => [newPost, ...prev]);
     setNewPostContent('');
     onPostCreated?.(newPostContent);
+
+    fetch('/api/community/posts', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+      body: JSON.stringify({ content: newPost.content, author: address }),
+    })
+      .then(async (res) => {
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          throw new Error(data.error || 'Failed to publish');
+        }
+        return res.json();
+      })
+      .then((data) => {
+        if (data?.post) {
+          setPosts((prev) => [mapCommunityPost(data.post), ...prev.filter((post) => post.id !== newPost.id)]);
+        }
+      })
+      .catch((err) => {
+        console.error('Failed to create post:', err);
+        setError('Unable to publish post');
+      });
   };
 
   const getPostIcon = (type: FeedPost['type']) => {
@@ -466,7 +458,27 @@ export function SocialFeed({ onPostCreated }: SocialFeedProps) {
         {/* Posts List */}
         <div className="space-y-6">
           <AnimatePresence mode="wait">
-            {sortedPosts.length === 0 ? (
+            {isLoading ? (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="text-center py-12"
+              >
+                <div className="text-zinc-400">Loading community posts...</div>
+              </motion.div>
+            ) : error ? (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="text-center py-12"
+              >
+                <AlertCircle className="w-12 h-12 text-red-400 mx-auto mb-4" />
+                <h3 className="text-xl font-semibold text-zinc-100 mb-2">Unable to load feed</h3>
+                <p className="text-zinc-400">{error}</p>
+              </motion.div>
+            ) : sortedPosts.length === 0 ? (
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -541,8 +553,8 @@ export function SocialFeed({ onPostCreated }: SocialFeedProps) {
                         <div className="text-zinc-500">Reach</div>
                       </div>
                       <div>
-                        <div className="text-violet-400 font-bold">{post.metrics.engagement}%</div>
-                        <div className="text-zinc-500">Engagement</div>
+                        <div className="text-violet-400 font-bold">{post.metrics.engagement}</div>
+                        <div className="text-zinc-500">Engagements</div>
                       </div>
                       <div>
                         <div className="text-emerald-500 font-bold">{post.metrics.impressions}</div>
@@ -616,26 +628,30 @@ export function SocialFeed({ onPostCreated }: SocialFeedProps) {
                         className="mt-6 pt-6 border-t border-zinc-700"
                       >
                         <div className="space-y-4 mb-4">
-                          {mockComments.map((comment) => (
-                            <div key={comment.id} className="flex gap-3">
-                              <div className="w-8 h-8 rounded-full bg-zinc-800 flex items-center justify-center text-sm shrink-0">
-                                {comment.author.avatar}
-                              </div>
-                              <div className="flex-1 bg-zinc-950 rounded-lg p-3">
-                                <div className="flex items-center gap-2 mb-1">
-                                  <h4 className="font-semibold text-zinc-100 text-sm">{comment.author.name}</h4>
-                                  <span className="text-xs text-zinc-500">@{comment.author.username}</span>
+                          {emptyComments.length === 0 ? (
+                            <div className="text-sm text-zinc-500">No comments yet.</div>
+                          ) : (
+                            emptyComments.map((comment) => (
+                              <div key={comment.id} className="flex gap-3">
+                                <div className="w-8 h-8 rounded-full bg-zinc-800 flex items-center justify-center text-sm shrink-0">
+                                  {comment.author.avatar}
                                 </div>
-                                <p className="text-sm text-zinc-300 mb-2">{comment.content}</p>
-                                <div className="flex items-center gap-3 text-xs text-zinc-500">
-                                  <button className="hover:text-pink-400 transition-colors">
-                                    {comment.liked ? '❤️' : '🤍'} {comment.likes}
-                                  </button>
-                                  <span>Reply</span>
+                                <div className="flex-1 bg-zinc-950 rounded-lg p-3">
+                                  <div className="flex items-center gap-2 mb-1">
+                                    <h4 className="font-semibold text-zinc-100 text-sm">{comment.author.name}</h4>
+                                    <span className="text-xs text-zinc-500">@{comment.author.username}</span>
+                                  </div>
+                                  <p className="text-sm text-zinc-300 mb-2">{comment.content}</p>
+                                  <div className="flex items-center gap-3 text-xs text-zinc-500">
+                                    <button className="hover:text-pink-400 transition-colors">
+                                      {comment.liked ? '❤️' : '🤍'} {comment.likes}
+                                    </button>
+                                    <span>Reply</span>
+                                  </div>
                                 </div>
                               </div>
-                            </div>
-                          ))}
+                            ))
+                          )}
                         </div>
 
                         {/* Reply Input */}

@@ -116,9 +116,9 @@ export default function SetupPage() {
       </div>
 
       <div className="max-w-3xl mx-auto px-4 py-8">
-        <h1 className="text-3xl font-bold mb-2">Testnet Setup Guide</h1>
+        <h1 className="text-3xl font-bold mb-2">Network Setup Guide</h1>
         <p className="text-zinc-400 mb-8">
-          Complete these 3 steps to start using VFIDE on Base Sepolia testnet
+          Complete these 3 steps to start using VFIDE on Base Sepolia (same features as mainnet).
         </p>
 
         {/* Overall Status */}
@@ -127,6 +127,7 @@ export default function SetupPage() {
             <CheckCircle size={48} className="text-green-400 mx-auto mb-3" />
             <h2 className="text-xl font-bold text-green-400 mb-2">You&apos;re All Set! 🎉</h2>
             <p className="text-zinc-300 mb-4">Connected to Base Sepolia with {ethBalance.toFixed(4)} ETH</p>
+            <p className="text-sm text-zinc-400">Testnet mirrors mainnet behavior, just using test ETH.</p>
             <Link 
               href="/token-launch"
               className="inline-flex items-center gap-2 px-6 py-3 bg-linear-to-r from-cyan-500 to-blue-600 text-white font-bold rounded-lg"

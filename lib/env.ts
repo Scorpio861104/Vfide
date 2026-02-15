@@ -26,7 +26,8 @@ const envSchema = z.object({
   NEXT_PUBLIC_API_BASE_URL: z.string().url().optional(),
   NEXT_PUBLIC_APP_URL: z.string().url().optional(),
   NEXT_PUBLIC_DOCS_URL: z.string().url().optional(),
-  NEXT_PUBLIC_BLOCK_EXPLORER_URL: z.string().url().default('https://sepolia.basescan.org'),
+  NEXT_PUBLIC_EXPLORER_URL: z.string().url().default('https://sepolia.basescan.org'),
+  NEXT_PUBLIC_BLOCK_EXPLORER_URL: z.string().url().optional(),
 
   // WebSocket
   NEXT_PUBLIC_WS_URL: z.string().optional(),
@@ -132,6 +133,7 @@ function parseEnv(): Environment {
     NEXT_PUBLIC_API_BASE_URL: process.env.NEXT_PUBLIC_API_BASE_URL,
     NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
     NEXT_PUBLIC_DOCS_URL: process.env.NEXT_PUBLIC_DOCS_URL,
+    NEXT_PUBLIC_EXPLORER_URL: process.env.NEXT_PUBLIC_EXPLORER_URL || process.env.NEXT_PUBLIC_BLOCK_EXPLORER_URL,
     NEXT_PUBLIC_BLOCK_EXPLORER_URL: process.env.NEXT_PUBLIC_BLOCK_EXPLORER_URL,
     NEXT_PUBLIC_WS_URL: process.env.NEXT_PUBLIC_WS_URL,
     

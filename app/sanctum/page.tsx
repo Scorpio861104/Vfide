@@ -2,15 +2,14 @@
 
 import { Footer } from "@/components/layout/Footer";
 import { SanctumVaultABI } from "@/lib/abis";
-import { useState } from "react";
-import { useAccount, useWriteContract, useWaitForTransactionReceipt, useReadContract } from "wagmi";
-import { parseUnits } from "viem";
+import { useMemo, useState } from "react";
+import { useAccount, useWriteContract, useWaitForTransactionReceipt, useReadContract, useReadContracts } from "wagmi";
+import { formatUnits, parseUnits } from "viem";
 import { motion, AnimatePresence } from "framer-motion";
 import { Heart, Shield, DollarSign, Users, CheckCircle, Clock, AlertTriangle, ExternalLink, Sparkles } from "lucide-react";
 import { safeParseFloat } from "@/lib/validation";
 
-// SanctumVault not deployed on Base Sepolia testnet yet
-// Contract addresses will be populated after mainnet deployment
+// SanctumVault address
 const SANCTUM_VAULT_ADDRESS = (process.env.NEXT_PUBLIC_SANCTUM_VAULT_ADDRESS || '0x0000000000000000000000000000000000000000') as `0x${string}`;
 const VFIDE_TOKEN_ADDRESS = (process.env.NEXT_PUBLIC_VFIDE_TOKEN_ADDRESS || '0xf57992ab9F8887650C2a220A34fe86ebD00c02f5') as `0x${string}`;
 
@@ -46,13 +45,104 @@ export default function SanctumPage() {
     query: { enabled: IS_SANCTUM_DEPLOYED },
   });
 
-  // Read next proposal ID (to know how many exist)
-  const { data: _nextProposalId } = useReadContract({
+  const { data: _disbursementCount } = useReadContract({
     address: SANCTUM_VAULT_ADDRESS,
     abi: SanctumVaultABI,
-    functionName: '_nextProposalId',
+    functionName: 'disbursementCount',
     query: { enabled: IS_SANCTUM_DEPLOYED },
   });
+
+  const charityCount = typeof _charityCount === 'bigint' ? Number(_charityCount) : 0;
+
+  const charityIndices = useMemo(() => {
+    return Array.from({ length: charityCount }, (_, index) => BigInt(index));
+  }, [charityCount]);
+
+  const { data: charityAddressReads } = useReadContracts({
+    contracts: charityIndices.map((index) => ({
+      address: SANCTUM_VAULT_ADDRESS,
+      abi: SanctumVaultABI,
+      functionName: 'charityList',
+      args: [index],
+    })),
+    query: { enabled: IS_SANCTUM_DEPLOYED && charityIndices.length > 0 },
+  });
+
+  const charityAddresses = (charityAddressReads ?? [])
+    .map((read) => (read && read.status === 'success' ? read.result : null))
+    .filter((addr): addr is `0x${string}` => typeof addr === 'string');
+
+  const { data: charityInfoReads } = useReadContracts({
+    contracts: charityAddresses.map((addr) => ({
+      address: SANCTUM_VAULT_ADDRESS,
+      abi: SanctumVaultABI,
+      functionName: 'charities',
+      args: [addr],
+    })),
+    query: { enabled: IS_SANCTUM_DEPLOYED && charityAddresses.length > 0 },
+  });
+
+  const charities = charityAddresses.map((addr, idx) => {
+    const read = charityInfoReads?.[idx];
+    const info = read && read.status === 'success' ? read.result as {
+      approved: boolean;
+      name: string;
+      category: string;
+      approvedAt: bigint;
+    } : null;
+
+    return {
+      address: addr,
+      name: info?.name || addr,
+      category: info?.category || 'unknown',
+      verified: info?.approved ?? false,
+    };
+  });
+
+  const disbursementTotal = typeof _disbursementCount === 'bigint' ? Number(_disbursementCount) : 0;
+  const disbursementIds = useMemo(() => {
+    return Array.from({ length: disbursementTotal }, (_, idx) => BigInt(idx + 1));
+  }, [disbursementTotal]);
+
+  const { data: disbursementReads } = useReadContracts({
+    contracts: disbursementIds.map((id) => ({
+      address: SANCTUM_VAULT_ADDRESS,
+      abi: SanctumVaultABI,
+      functionName: 'getDisbursement',
+      args: [id],
+    })),
+    query: { enabled: IS_SANCTUM_DEPLOYED && disbursementIds.length > 0 },
+  });
+
+  const disbursements = disbursementIds.map((id, idx) => {
+    const read = disbursementReads?.[idx];
+    const data = read && read.status === 'success' ? read.result as [
+      `0x${string}`,
+      `0x${string}`,
+      bigint,
+      string,
+      string,
+      bigint,
+      bigint,
+      boolean,
+      boolean,
+      number
+    ] : null;
+
+    return data ? {
+      id: Number(id),
+      charity: data[0],
+      token: data[1],
+      amount: data[2],
+      campaign: data[3],
+      documentation: data[4],
+      proposedAt: Number(data[5]),
+      executedAt: Number(data[6]),
+      executed: data[7],
+      rejected: data[8],
+      approvals: data[9],
+    } : null;
+  }).filter((item): item is NonNullable<typeof item> => item !== null);
 
   // Handlers
   const _handleDonate = () => {
@@ -195,11 +285,28 @@ export default function SanctumPage() {
               exit={{ opacity: 0, y: -20 }}
               transition={{ duration: 0.2 }}
             >
-              {activeTab === 'overview' && <OverviewTab />}
-              {activeTab === 'charities' && <CharitiesTab />}
-              {activeTab === 'disbursements' && <DisbursementsTab isConnected={isConnected} />}
+              {activeTab === 'overview' && (
+                <OverviewTab
+                  vaultBalance={typeof _vaultBalance === 'bigint' ? _vaultBalance : undefined}
+                />
+              )}
+              {activeTab === 'charities' && <CharitiesTab charities={charities} />}
+              {activeTab === 'disbursements' && (
+                <DisbursementsTab
+                  isConnected={isConnected}
+                  isDeployed={IS_SANCTUM_DEPLOYED}
+                  disbursements={disbursements}
+                  onApprove={_handleApproveDisbursement}
+                  onExecute={_handleExecuteDisbursement}
+                />
+              )}
               {activeTab === 'donate' && <DonateTab isConnected={isConnected} />}
-              {activeTab === 'history' && <HistoryTab />}
+              {activeTab === 'history' && (
+                <HistoryTab
+                  isDeployed={IS_SANCTUM_DEPLOYED}
+                  disbursements={disbursements}
+                />
+              )}
             </motion.div>
           </AnimatePresence>
         </div>
@@ -222,7 +329,7 @@ function GlassCard({ children, className = "" }: { children: React.ReactNode; cl
   );
 }
 
-function OverviewTab() {
+function OverviewTab({ vaultBalance }: { vaultBalance: bigint | undefined }) {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 lg:gap-8">
       {/* How It Works */}
@@ -292,7 +399,11 @@ function OverviewTab() {
       <div className="lg:col-span-2 bg-linear-to-r from-pink-900/20 to-purple-900/20 border border-pink-500/30 rounded-2xl p-8">
         <div className="text-center">
           <div className="text-gray-400 mb-2">Current Sanctum Balance</div>
-          <div className="text-5xl font-bold text-pink-400 mb-4">45,230 VFIDE</div>
+          <div className="text-5xl font-bold text-pink-400 mb-4">
+            {typeof vaultBalance === 'bigint'
+              ? `${safeParseFloat(formatUnits(vaultBalance, 18), 0).toLocaleString()} VFIDE`
+              : '—'}
+          </div>
           <div className="text-sm text-gray-400">Ready for disbursement to approved charities</div>
         </div>
       </div>
@@ -300,17 +411,7 @@ function OverviewTab() {
   );
 }
 
-function CharitiesTab() {
-  const charities = [
-    { name: 'Save the Children', category: 'Children', verified: true, totalReceived: 25000, status: 'active' },
-    { name: 'Doctors Without Borders', category: 'Healthcare', verified: true, totalReceived: 18000, status: 'active' },
-    { name: 'Ocean Cleanup', category: 'Environment', verified: true, totalReceived: 15000, status: 'active' },
-    { name: 'Code.org', category: 'Education', verified: true, totalReceived: 12000, status: 'active' },
-    { name: 'World Wildlife Fund', category: 'Wildlife', verified: true, totalReceived: 10000, status: 'active' },
-    { name: 'Habitat for Humanity', category: 'Housing', verified: true, totalReceived: 8000, status: 'active' },
-    { name: 'Water.org', category: 'Water Access', verified: true, totalReceived: 7000, status: 'active' },
-    { name: 'Khan Academy', category: 'Education', verified: true, totalReceived: 5000, status: 'active' },
-  ];
+function CharitiesTab({ charities }: { charities: Array<{ address: string; name: string; category: string; verified: boolean }> }) {
 
   return (
     <div className="space-y-6">
@@ -320,33 +421,37 @@ function CharitiesTab() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {charities.map((charity, idx) => (
-          <div key={idx} className="bg-zinc-800 border border-zinc-700 rounded-xl p-6 hover:border-pink-500/50 transition-colors">
-            <div className="flex justify-between items-start mb-4">
-              <div>
-                <div className="flex items-center gap-2">
-                  <h3 className="text-lg font-bold text-zinc-100">{charity.name}</h3>
-                  {charity.verified && (
-                    <CheckCircle className="w-4 h-4 text-green-400" />
-                  )}
+        {charities.length === 0 ? (
+          <div className="text-center text-zinc-400 py-10">No approved charities on-chain.</div>
+        ) : (
+          charities.map((charity) => (
+            <div key={charity.address} className="bg-zinc-800 border border-zinc-700 rounded-xl p-6 hover:border-pink-500/50 transition-colors">
+              <div className="flex justify-between items-start mb-4">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-lg font-bold text-zinc-100">{charity.name}</h3>
+                    {charity.verified && (
+                      <CheckCircle className="w-4 h-4 text-green-400" />
+                    )}
+                  </div>
+                  <div className="text-sm text-zinc-400">{charity.category}</div>
+                  <div className="text-xs text-zinc-500 font-mono mt-1">{charity.address}</div>
                 </div>
-                <div className="text-sm text-zinc-400">{charity.category}</div>
+                <span className="px-2 py-1 bg-green-500/20 text-green-400 text-xs rounded-full">
+                  {charity.verified ? 'active' : 'inactive'}
+                </span>
               </div>
-              <span className="px-2 py-1 bg-green-500/20 text-green-400 text-xs rounded-full">
-                {charity.status}
-              </span>
-            </div>
-            <div className="flex justify-between items-center">
-              <div>
-                <div className="text-2xl font-bold text-pink-400">{charity.totalReceived.toLocaleString()}</div>
-                <div className="text-xs text-zinc-400">VFIDE received</div>
+              <div className="flex justify-between items-center">
+                <div>
+                  <div className="text-sm text-zinc-400">On-chain registry</div>
+                </div>
+                <button className="text-cyan-400 text-sm hover:underline flex items-center gap-1">
+                  View Details <ExternalLink size={12} />
+                </button>
               </div>
-              <button className="text-cyan-400 text-sm hover:underline flex items-center gap-1">
-                View Details <ExternalLink size={12} />
-              </button>
             </div>
-          </div>
-        ))}
+          ))
+        )}
       </div>
 
       <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4 text-center">
@@ -358,13 +463,31 @@ function CharitiesTab() {
   );
 }
 
-function DisbursementsTab({ isConnected }: { isConnected: boolean }) {
-  const disbursements = [
-    { id: 1, charity: 'Save the Children', amount: 5000, status: 'executed', approvals: '3/3', date: '2025-12-15' },
-    { id: 2, charity: 'Doctors Without Borders', amount: 3000, status: 'pending', approvals: '2/3', date: '2025-12-18' },
-    { id: 3, charity: 'Ocean Cleanup', amount: 4000, status: 'executed', approvals: '3/3', date: '2025-12-10' },
-    { id: 4, charity: 'Code.org', amount: 2500, status: 'executed', approvals: '3/3', date: '2025-12-05' },
-  ];
+function DisbursementsTab({
+  isConnected,
+  isDeployed,
+  disbursements,
+  onApprove,
+  onExecute,
+}: {
+  isConnected: boolean;
+  isDeployed: boolean;
+  disbursements: Array<{
+    id: number;
+    charity: string;
+    token: string;
+    amount: bigint;
+    campaign: string;
+    documentation: string;
+    proposedAt: number;
+    executedAt: number;
+    executed: boolean;
+    rejected: boolean;
+    approvals: number;
+  }>;
+  onApprove: (proposalId: number) => void;
+  onExecute: (proposalId: number) => void;
+}) {
 
   return (
     <div className="space-y-6">
@@ -377,42 +500,55 @@ function DisbursementsTab({ isConnected }: { isConnected: boolean }) {
         )}
       </div>
 
-      <div className="space-y-4">
-        {disbursements.map((d) => (
-          <div key={d.id} className="bg-zinc-800 border border-zinc-700 rounded-xl p-6">
-            <div className="flex flex-wrap justify-between items-center gap-4">
-              <div>
-                <div className="text-zinc-100 font-bold text-lg">{d.charity}</div>
-                <div className="text-sm text-zinc-400">Proposal #{d.id} · {d.date}</div>
-              </div>
-              <div className="text-2xl font-bold text-pink-400">{d.amount.toLocaleString()} VFIDE</div>
-              <div className="flex items-center gap-4">
-                <div className="text-center">
-                  <div className="text-zinc-100 font-bold">{d.approvals}</div>
-                  <div className="text-xs text-zinc-400">Approvals</div>
+      {disbursements.length === 0 ? (
+        <div className="text-center text-zinc-400 py-10">
+          {isDeployed ? 'No disbursement proposals available on-chain.' : 'SanctumVault not deployed on this network.'}
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {disbursements.map((d) => (
+            <div key={d.id} className="bg-zinc-800 border border-zinc-700 rounded-xl p-6">
+              <div className="flex flex-wrap justify-between items-center gap-4">
+                <div>
+                  <div className="text-zinc-100 font-bold text-lg">{d.campaign || 'Disbursement'}</div>
+                  <div className="text-sm text-zinc-400">Proposal #{d.id} · {d.proposedAt ? new Date(d.proposedAt * 1000).toLocaleDateString() : '—'}</div>
+                  <div className="text-xs text-zinc-500 font-mono mt-1">Charity: {d.charity}</div>
                 </div>
-                <span className={`px-3 py-1 rounded-full text-sm font-bold ${
-                  d.status === 'executed' ? 'bg-green-500/20 text-green-400' :
-                  d.status === 'pending' ? 'bg-yellow-500/20 text-yellow-400' :
-                  'bg-red-500/20 text-red-400'
-                }`}>
-                  {d.status.toUpperCase()}
-                </span>
+                <div className="text-2xl font-bold text-pink-400">{safeParseFloat(formatUnits(d.amount, 18), 0).toLocaleString()} VFIDE</div>
+                <div className="flex items-center gap-4">
+                  <div className="text-center">
+                    <div className="text-zinc-100 font-bold">{d.approvals}</div>
+                    <div className="text-xs text-zinc-400">Approvals</div>
+                  </div>
+                  <span className={`px-3 py-1 rounded-full text-sm font-bold ${
+                    d.executed ? 'bg-green-500/20 text-green-400' :
+                    d.rejected ? 'bg-red-500/20 text-red-400' :
+                    'bg-yellow-500/20 text-yellow-400'
+                  }`}>
+                    {d.executed ? 'EXECUTED' : d.rejected ? 'REJECTED' : 'PENDING'}
+                  </span>
+                </div>
               </div>
+              {!d.executed && !d.rejected && isConnected && (
+                <div className="mt-4 pt-4 border-t border-zinc-700 flex gap-3">
+                  <button
+                    onClick={() => onApprove(d.id)}
+                    className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-bold"
+                  >
+                    Approve
+                  </button>
+                  <button
+                    onClick={() => onExecute(d.id)}
+                    className="px-4 py-2 bg-zinc-700 hover:bg-zinc-700 text-zinc-100 rounded-lg text-sm font-bold"
+                  >
+                    Execute
+                  </button>
+                </div>
+              )}
             </div>
-            {d.status === 'pending' && isConnected && (
-              <div className="mt-4 pt-4 border-t border-zinc-700 flex gap-3">
-                <button className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-bold">
-                  Approve
-                </button>
-                <button className="px-4 py-2 bg-zinc-700 hover:bg-zinc-700 text-zinc-100 rounded-lg text-sm font-bold">
-                  View Details
-                </button>
-              </div>
-            )}
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -504,70 +640,72 @@ function DonateTab({ isConnected }: { isConnected: boolean }) {
   );
 }
 
-function HistoryTab() {
-  const history = [
-    { type: 'disbursement', charity: 'Save the Children', amount: 5000, date: '2025-12-15', txHash: '0x1234...5678' },
-    { type: 'donation', donor: '0xABC...123', amount: 1000, date: '2025-12-14', txHash: '0x2345...6789' },
-    { type: 'fee_deposit', source: 'Transaction Fees', amount: 2500, date: '2025-12-13', txHash: '0x3456...7890' },
-    { type: 'disbursement', charity: 'Ocean Cleanup', amount: 4000, date: '2025-12-10', txHash: '0x4567...8901' },
-    { type: 'donation', donor: '0xDEF...456', amount: 500, date: '2025-12-08', txHash: '0x5678...9012' },
-  ];
+function HistoryTab({
+  isDeployed,
+  disbursements,
+}: {
+  isDeployed: boolean;
+  disbursements: Array<{
+    id: number;
+    charity: string;
+    amount: bigint;
+    proposedAt: number;
+    executedAt: number;
+    executed: boolean;
+    rejected: boolean;
+  }>;
+}) {
 
   return (
     <div className="space-y-6">
       <h2 className="text-2xl font-bold text-zinc-100">Transaction History</h2>
 
-      <div className="bg-zinc-800 border border-zinc-700 rounded-xl overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="bg-zinc-900">
-                <th className="text-left text-zinc-400 text-sm font-medium px-6 py-4">Type</th>
-                <th className="text-left text-zinc-400 text-sm font-medium px-6 py-4">Details</th>
-                <th className="text-right text-zinc-400 text-sm font-medium px-6 py-4">Amount</th>
-                <th className="text-left text-zinc-400 text-sm font-medium px-6 py-4">Date</th>
-                <th className="text-left text-zinc-400 text-sm font-medium px-6 py-4">Tx</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-[#3A3A3F]">
-              {history.map((tx, idx) => (
-                <tr key={idx} className="hover:bg-zinc-900/50">
-                  <td className="px-6 py-4">
-                    <span className={`px-2 py-1 rounded text-xs font-bold ${
-                      tx.type === 'disbursement' ? 'bg-green-500/20 text-green-400' :
-                      tx.type === 'donation' ? 'bg-pink-500/20 text-pink-400' :
-                      'bg-blue-500/20 text-blue-400'
-                    }`}>
-                      {tx.type.replace('_', ' ').toUpperCase()}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 text-zinc-100">
-                    {tx.type === 'disbursement' ? `To: ${tx.charity}` :
-                     tx.type === 'donation' ? `From: ${tx.donor}` :
-                     tx.source}
-                  </td>
-                  <td className="px-6 py-4 text-right">
-                    <span className={tx.type === 'disbursement' ? 'text-red-400' : 'text-green-400'}>
-                      {tx.type === 'disbursement' ? '-' : '+'}{tx.amount.toLocaleString()} VFIDE
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 text-zinc-400">{tx.date}</td>
-                  <td className="px-6 py-4">
-                    <a 
-                      href={`https://basescan.org/tx/${tx.txHash}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-cyan-400 hover:underline text-sm"
-                    >
-                      {tx.txHash}
-                    </a>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+      {disbursements.length === 0 ? (
+        <div className="bg-zinc-800 border border-zinc-700 rounded-xl p-10 text-center text-zinc-400">
+          {isDeployed ? 'No on-chain history available yet.' : 'SanctumVault not deployed on this network.'}
         </div>
-      </div>
+      ) : (
+        <div className="bg-zinc-800 border border-zinc-700 rounded-xl overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="bg-zinc-900">
+                  <th className="text-left text-zinc-400 text-sm font-medium px-6 py-4">Type</th>
+                  <th className="text-left text-zinc-400 text-sm font-medium px-6 py-4">Details</th>
+                  <th className="text-right text-zinc-400 text-sm font-medium px-6 py-4">Amount</th>
+                  <th className="text-left text-zinc-400 text-sm font-medium px-6 py-4">Date</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[#3A3A3F]">
+                {disbursements.map((tx) => (
+                  <tr key={tx.id} className="hover:bg-zinc-900/50">
+                    <td className="px-6 py-4">
+                      <span className={`px-2 py-1 rounded text-xs font-bold ${
+                        tx.executed ? 'bg-green-500/20 text-green-400' :
+                        tx.rejected ? 'bg-red-500/20 text-red-400' :
+                        'bg-yellow-500/20 text-yellow-400'
+                      }`}>
+                        {tx.executed ? 'EXECUTED' : tx.rejected ? 'REJECTED' : 'PENDING'}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 text-zinc-100">
+                      To: {tx.charity}
+                    </td>
+                    <td className="px-6 py-4 text-right">
+                      <span className={tx.executed ? 'text-red-400' : 'text-amber-400'}>
+                        {safeParseFloat(formatUnits(tx.amount, 18), 0).toLocaleString()} VFIDE
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 text-zinc-400">
+                      {tx.executedAt ? new Date(tx.executedAt * 1000).toLocaleDateString() : tx.proposedAt ? new Date(tx.proposedAt * 1000).toLocaleDateString() : '—'}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

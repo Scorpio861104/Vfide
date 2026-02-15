@@ -110,7 +110,7 @@ export function useOptimistic<T, R = T>(options: UseOptimisticOptions<T, R>) {
 
       return id;
     },
-    [onOptimisticUpdate, rollbackTimeout, maxPending, cleanupTimeout]
+    [onOptimisticUpdate, rollbackTimeout, maxPending, cleanupTimeout, rollback]
   );
 
   /**

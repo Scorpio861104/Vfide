@@ -26,8 +26,7 @@ describe('/api/crypto/payment-requests', () => {
     it('should return payment requests', async () => {
       withRateLimit.mockResolvedValue(null);
       requireAuth.mockReturnValue({ user: { address: '0x1111111111111111111111111111111111111123' } });
-      
-      query.mockResolvedValueOnce({ rows: [{ id: 1 }] });
+
       query.mockResolvedValueOnce({
         rows: [
           {
@@ -40,7 +39,7 @@ describe('/api/crypto/payment-requests', () => {
         ],
       });
 
-      const request = new NextRequest('http://localhost:3000/api/crypto/payment-requests?userId=1');
+      const request = new NextRequest('http://localhost:3000/api/crypto/payment-requests?userAddress=0x1111111111111111111111111111111111111123');
       const response = await GET(request);
       const data = await response.json();
 
@@ -54,16 +53,17 @@ describe('/api/crypto/payment-requests', () => {
       withRateLimit.mockResolvedValue(null);
       requireAuth.mockReturnValue({ user: { address: '0x1111111111111111111111111111111111111123' } });
 
-      query.mockResolvedValueOnce({ rows: [{ id: 1 }] });
-      query.mockResolvedValueOnce({
-        rows: [{ id: 1, from_address: '0x1111111111111111111111111111111111111123', to_address: '0x2222222222222222222222222222222222222456' }],
-      });
+      query
+        .mockResolvedValueOnce({ rows: [{ id: 1 }] })
+        .mockResolvedValueOnce({ rows: [{ id: 2 }] })
+        .mockResolvedValueOnce({
+          rows: [{ id: 1, from_address: '0x1111111111111111111111111111111111111123', to_address: '0x2222222222222222222222222222222222222456' }],
+        });
 
       const request = new NextRequest('http://localhost:3000/api/crypto/payment-requests', {
         method: 'POST',
         body: JSON.stringify({
-          fromUserId: 1,
-          toUserId: 2,
+          toAddress: '0x2222222222222222222222222222222222222456',
           amount: '1.5',
         }),
       });

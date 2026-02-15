@@ -7,6 +7,7 @@
  */
 
 import { useState, useCallback } from 'react';
+import { buildCsrfHeaders } from '@/lib/security/csrfClient';
 
 // ============================================================================
 // Types & Interfaces
@@ -180,20 +181,16 @@ export async function uploadFile(
     throw new Error(validation.error);
   }
 
-  const fileId = `file_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  const fileId = `file_${Date.now()}_${Array.from(crypto.getRandomValues(new Uint8Array(7)), b => b.toString(16).padStart(2, '0')).join('').slice(0, 9)}`;
 
-  // Create form data
-  const formData = new FormData();
-  formData.append('file', file);
-  formData.append('messageId', messageId);
-  formData.append('userId', userId);
+  const dataUrl = await new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
 
-  return new Promise((resolve, reject) => {
-    const xhr = new XMLHttpRequest();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = () => reject(new Error('Failed to read file'));
 
-    // Track upload progress
-    xhr.upload.addEventListener('progress', (e) => {
-      if (e.lengthComputable && onProgress) {
+    reader.onprogress = (e) => {
+      if (onProgress && e.lengthComputable) {
         onProgress({
           fileId,
           fileName: file.name,
@@ -203,60 +200,67 @@ export async function uploadFile(
           status: 'uploading',
         });
       }
-    });
+    };
 
-    // Handle completion
-    xhr.addEventListener('load', () => {
-      if (xhr.status === 200) {
-        try {
-          const response = JSON.parse(xhr.responseText);
-          if (response.success) {
-            if (onProgress) {
-              onProgress({
-                fileId,
-                fileName: file.name,
-                loaded: file.size,
-                total: file.size,
-                percentage: 100,
-                status: 'complete',
-              });
-            }
-            resolve(response.attachment);
-          } else {
-            reject(new Error(response.error || 'Upload failed'));
-          }
-        } catch (_error) {
-          reject(new Error('Failed to parse response'));
-        }
-      } else {
-        reject(new Error(`Upload failed: ${xhr.status}`));
-      }
-    });
-
-    // Handle errors
-    xhr.addEventListener('error', () => {
-      if (onProgress) {
-        onProgress({
-          fileId,
-          fileName: file.name,
-          loaded: 0,
-          total: file.size,
-          percentage: 0,
-          status: 'error',
-          error: 'Upload failed',
-        });
-      }
-      reject(new Error('Upload failed'));
-    });
-
-    xhr.addEventListener('abort', () => {
-      reject(new Error('Upload cancelled'));
-    });
-
-    // Send request
-    xhr.open('POST', '/api/attachments/upload');
-    xhr.send(formData);
+    reader.readAsDataURL(file);
   });
+
+  const headers = await buildCsrfHeaders({ 'Content-Type': 'application/json' }, 'POST');
+  const response = await fetch('/api/attachments/upload', {
+    method: 'POST',
+    headers,
+    credentials: 'include',
+    body: JSON.stringify({
+      userId,
+      messageId,
+      filename: file.name,
+      fileType: file.type,
+      fileSize: file.size,
+      url: dataUrl,
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Upload failed: ${response.status}`);
+  }
+
+  const payload = await response.json();
+  if (!payload.success || !payload.attachment) {
+    throw new Error(payload.error || 'Upload failed');
+  }
+
+  if (onProgress) {
+    onProgress({
+      fileId,
+      fileName: file.name,
+      loaded: file.size,
+      total: file.size,
+      percentage: 100,
+      status: 'complete',
+    });
+  }
+
+  const attachment = payload.attachment as {
+    id: number | string;
+    filename: string;
+    file_type?: string;
+    file_size?: number;
+    url: string;
+    uploaded_by?: number;
+    created_at?: string;
+  };
+
+  return {
+    id: String(attachment.id),
+    messageId,
+    type: getAttachmentType(attachment.file_type || file.type),
+    name: attachment.filename,
+    size: attachment.file_size ?? file.size,
+    mimeType: attachment.file_type || file.type,
+    url: attachment.url,
+    uploadedAt: attachment.created_at ? new Date(attachment.created_at).getTime() : Date.now(),
+    uploadedBy: String(attachment.uploaded_by ?? userId),
+  };
 }
 
 /**

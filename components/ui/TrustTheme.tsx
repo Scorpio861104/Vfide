@@ -129,7 +129,7 @@ export function TrustThemeProvider({
   };
 
   // Apply CSS custom properties based on trust level
-  const applyTheme = () => {
+  const applyTheme = useCallback(() => {
     const root = document.documentElement;
     
     root.style.setProperty("--trust-primary", theme.colors.primary);
@@ -137,11 +137,11 @@ export function TrustThemeProvider({
     root.style.setProperty("--trust-glow", theme.colors.glow);
     root.style.setProperty("--trust-gradient", theme.colors.gradient);
     root.style.setProperty("--trust-background", theme.colors.background);
-  };
+  }, [theme]);
 
   useEffect(() => {
     applyTheme();
-  }, [theme]);
+  }, [applyTheme]);
 
   return (
     <TrustThemeContext.Provider value={{ theme, setScore, applyTheme }}>

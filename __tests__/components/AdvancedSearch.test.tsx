@@ -8,6 +8,142 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import AdvancedSearch from '@/components/search/AdvancedSearch';
 
+const mockSearchResults = [
+  {
+    id: 'result-1',
+    type: 'proposal',
+    title: 'Governance Proposal Result',
+    description: 'Result for governance proposal',
+    author: {
+      id: 'user-1',
+      username: 'alice',
+      displayName: 'Alice',
+      avatar: '',
+    },
+    createdAt: new Date().toISOString(),
+    score: 88,
+    category: 'Governance',
+    status: 'active',
+    highlights: ['governance'],
+    tags: ['proposal'],
+    attachments: 0,
+  },
+  {
+    id: 'result-2',
+    type: 'transaction',
+    title: 'Transaction Result',
+    description: 'Result for transaction search',
+    author: {
+      id: 'user-2',
+      username: 'bob',
+      displayName: 'Bob',
+      avatar: '',
+    },
+    createdAt: new Date().toISOString(),
+    score: 42,
+    category: 'Payments',
+    status: 'completed',
+    highlights: ['transaction'],
+    tags: ['payment'],
+    attachments: 1,
+  },
+];
+
+const seedSearchStorage = () => {
+  const history = [
+    {
+      id: 'history-1',
+      query: 'governance proposal',
+      filters: {
+        contentType: ['proposal'],
+        dateRange: 'week',
+        category: [],
+        users: [],
+        status: ['active'],
+      },
+      timestamp: new Date().toISOString(),
+      resultsCount: 15,
+    },
+    {
+      id: 'history-2',
+      query: 'governance rewards',
+      filters: {
+        contentType: ['transaction'],
+        dateRange: 'month',
+        category: [],
+        users: [],
+        status: ['completed'],
+      },
+      timestamp: new Date().toISOString(),
+      resultsCount: 42,
+    },
+  ];
+
+  const saved = [
+    {
+      id: 'saved-1',
+      name: 'Active Proposals',
+      query: 'proposal',
+      filters: {
+        contentType: ['proposal'],
+        dateRange: 'all',
+        category: [],
+        users: [],
+        status: ['active'],
+      },
+      createdAt: new Date().toISOString(),
+      lastUsed: new Date().toISOString(),
+      useCount: 12,
+    },
+    {
+      id: 'saved-2',
+      name: 'My Transactions',
+      query: 'transaction',
+      filters: {
+        contentType: ['transaction'],
+        dateRange: 'month',
+        category: [],
+        users: [],
+        status: ['completed'],
+      },
+      createdAt: new Date().toISOString(),
+      lastUsed: new Date().toISOString(),
+      useCount: 34,
+    },
+    {
+      id: 'saved-3',
+      name: 'High Score Posts',
+      query: 'score',
+      filters: {
+        contentType: ['post'],
+        dateRange: 'year',
+        category: [],
+        users: [],
+        status: ['all'],
+      },
+      createdAt: new Date().toISOString(),
+      lastUsed: new Date().toISOString(),
+      useCount: 7,
+    },
+  ];
+
+  localStorage.setItem('vfide-search-history', JSON.stringify(history));
+  localStorage.setItem('vfide-saved-searches', JSON.stringify(saved));
+};
+
+beforeEach(() => {
+  seedSearchStorage();
+  global.fetch = jest.fn().mockResolvedValue({
+    ok: true,
+    json: async () => ({ results: mockSearchResults }),
+  }) as unknown as typeof fetch;
+});
+
+afterEach(() => {
+  jest.resetAllMocks();
+  localStorage.clear();
+});
+
 // ============================================================================
 // Search Input & Basic Functionality Tests
 // ============================================================================
@@ -182,7 +318,7 @@ describe('AdvancedSearch - Search History', () => {
     fireEvent.click(screen.getByRole('button', { name: /🕐 history \(\d+\)/i }));
 
     expect(screen.getByText(/"governance proposal"/i)).toBeInTheDocument();
-    expect(screen.getByText(/"staking rewards"/i)).toBeInTheDocument();
+    expect(screen.getByText(/"governance rewards"/i)).toBeInTheDocument();
   });
 
   test('history items show result counts', () => {

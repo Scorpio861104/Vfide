@@ -16,9 +16,9 @@ import {
   ReportType,
   TimeRange,
   ExportFormat,
-  defaultReports,
   getDateRangeTimestamps,
 } from '@/config/reporting-analytics';
+import { buildCsrfHeaders } from '@/lib/security/csrfClient';
 
 interface ReportingAnalyticsState {
   reports: Report[];
@@ -36,7 +36,7 @@ const DEFAULT_REFRESH_INTERVAL = 30000; // 30 seconds
 
 export function useReportingAnalytics() {
   const [state, setState] = useState<ReportingAnalyticsState>({
-    reports: defaultReports,
+    reports: [],
     dashboards: [],
     queries: [],
     selectedTimeRange: TimeRange.LAST_30D,
@@ -46,7 +46,7 @@ export function useReportingAnalytics() {
     refreshInterval: DEFAULT_REFRESH_INTERVAL,
   });
 
-  // Load from localStorage on mount
+  // Load dashboards/queries from localStorage on mount
   useEffect(() => {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored) {
@@ -54,7 +54,13 @@ export function useReportingAnalytics() {
         const parsed = JSON.parse(stored);
         setState((prev) => ({
           ...prev,
-          ...parsed,
+          dashboards: Array.isArray(parsed?.dashboards) ? parsed.dashboards : prev.dashboards,
+          queries: Array.isArray(parsed?.queries) ? parsed.queries : prev.queries,
+          selectedTimeRange: parsed?.selectedTimeRange ?? prev.selectedTimeRange,
+          autoRefresh: typeof parsed?.autoRefresh === 'boolean' ? parsed.autoRefresh : prev.autoRefresh,
+          refreshInterval: typeof parsed?.refreshInterval === 'number'
+            ? parsed.refreshInterval
+            : prev.refreshInterval,
         }));
       } catch (e) {
         console.error('Failed to load analytics state:', e);
@@ -62,28 +68,58 @@ export function useReportingAnalytics() {
     }
   }, []);
 
-  // Persist to localStorage
+  // Persist dashboards/queries to localStorage
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-  }, [state]);
+    localStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify({
+        dashboards: state.dashboards,
+        queries: state.queries,
+        selectedTimeRange: state.selectedTimeRange,
+        autoRefresh: state.autoRefresh,
+        refreshInterval: state.refreshInterval,
+      })
+    );
+  }, [state.dashboards, state.queries, state.selectedTimeRange, state.autoRefresh, state.refreshInterval]);
+
+  const fetchReports = useCallback(async () => {
+    setState((prev) => ({ ...prev, isLoading: true, error: null }));
+    try {
+
+      const response = await fetch(`/api/reporting/summary?range=${state.selectedTimeRange}`);
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data.error || 'Failed to fetch reporting summary');
+      }
+
+      const data = await response.json();
+      setState((prev) => ({
+        ...prev,
+        reports: Array.isArray(data.reports) ? data.reports : prev.reports,
+        dashboards: Array.isArray(data.dashboards) ? data.dashboards : prev.dashboards,
+        isLoading: false,
+        error: null,
+      }));
+    } catch (err) {
+      const error = err instanceof Error ? err.message : 'Failed to load reports';
+      setState((prev) => ({ ...prev, isLoading: false, error }));
+    }
+  }, [state.selectedTimeRange]);
+
+  useEffect(() => {
+    fetchReports();
+  }, [fetchReports]);
 
   // Auto-refresh reports
   useEffect(() => {
     if (!state.autoRefresh) return;
 
     const timer = setInterval(() => {
-      setState((prev) => ({
-        ...prev,
-        reports: prev.reports.map((report) => ({
-          ...report,
-          lastUpdated: Date.now(),
-          // In real app, fetch fresh data here
-        })),
-      }));
+      fetchReports();
     }, state.refreshInterval);
 
     return () => clearInterval(timer);
-  }, [state.autoRefresh, state.refreshInterval]);
+  }, [state.autoRefresh, state.refreshInterval, fetchReports]);
 
   /**
    * Add or update a report
@@ -242,12 +278,20 @@ export function useReportingAnalytics() {
   const executeQuery = useCallback(async (query: Query) => {
     setState((prev) => ({ ...prev, isLoading: true, error: null }));
     try {
-      // In a real app, this would call an API
-      console.log('Executing query:', query);
+      const headers = await buildCsrfHeaders({ 'Content-Type': 'application/json' }, 'POST');
+      const response = await fetch('/api/reporting/query', {
+        method: 'POST',
+        headers,
+        credentials: 'include',
+        body: JSON.stringify(query),
+      });
 
-      // Simulate network delay
-      await new Promise((resolve) => setTimeout(resolve, 500));
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data.error || 'Query execution failed');
+      }
 
+      await response.json();
       setState((prev) => ({ ...prev, isLoading: false }));
     } catch (err) {
       const error = err instanceof Error ? err.message : 'Query execution failed';
@@ -289,24 +333,8 @@ export function useReportingAnalytics() {
    * Refresh all reports
    */
   const refreshReports = useCallback(async () => {
-    setState((prev) => ({ ...prev, isLoading: true, error: null }));
-    try {
-      // In a real app, this would fetch fresh data
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      setState((prev) => ({
-        ...prev,
-        isLoading: false,
-        reports: prev.reports.map((report) => ({
-          ...report,
-          lastUpdated: Date.now(),
-        })),
-      }));
-    } catch (err) {
-      const error = err instanceof Error ? err.message : 'Refresh failed';
-      setState((prev) => ({ ...prev, isLoading: false, error }));
-    }
-  }, []);
+    await fetchReports();
+  }, [fetchReports]);
 
   /**
    * Export report data

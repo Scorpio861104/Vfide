@@ -29,66 +29,34 @@ interface TransactionHistoryProps {
   loading?: boolean;
 }
 
+const DEFAULT_TRANSACTIONS: Transaction[] = [
+  {
+    id: 'mock-1',
+    type: 'receive',
+    amount: '+500 VFIDE',
+    from: '0xabc...def',
+    timestamp: '2 hours ago',
+    status: 'completed',
+    txHash: '0xmock1',
+  },
+  {
+    id: 'mock-2',
+    type: 'send',
+    amount: '-120 VFIDE',
+    to: '0xdef...456',
+    timestamp: '1 day ago',
+    status: 'completed',
+    txHash: '0xmock2',
+  },
+];
+
 export function TransactionHistory({ transactions = [], loading = false }: TransactionHistoryProps) {
   const [filter, setFilter] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState('');
-  
-  // Track whether we're showing demo data
-  const isShowingDemoData = transactions.length === 0;
 
-  // Mock data for demonstration - only shown when no real transactions exist
-  const mockTransactions: Transaction[] = transactions.length ? transactions : [
-    {
-      id: '1',
-      type: 'receive',
-      amount: '+500 VFIDE',
-      from: '0x1a2b...3c4d',
-      timestamp: '2 hours ago',
-      status: 'completed',
-      txHash: '0xabc123...',
-      blockNumber: 12345678
-    },
-    {
-      id: '2',
-      type: 'send',
-      amount: '-150 VFIDE',
-      to: '0x5e6f...7g8h',
-      timestamp: '1 day ago',
-      status: 'completed',
-      txHash: '0xdef456...',
-      blockNumber: 12345670
-    },
-    {
-      id: '3',
-      type: 'vault_deposit',
-      amount: '-2000 VFIDE',
-      to: 'Your Vault',
-      timestamp: '3 days ago',
-      status: 'completed',
-      txHash: '0xghi789...',
-      blockNumber: 12345650
-    },
-    {
-      id: '4',
-      type: 'guardian_added',
-      to: '0x9i0j...1k2l',
-      timestamp: '5 days ago',
-      status: 'completed',
-      txHash: '0xjkl012...',
-      blockNumber: 12345600
-    },
-    {
-      id: '5',
-      type: 'next_of_kin_set',
-      to: '0x3m4n...5o6p',
-      timestamp: '1 week ago',
-      status: 'completed',
-      txHash: '0xmno345...',
-      blockNumber: 12345500
-    },
-  ];
+  const displayTransactions = transactions.length > 0 ? transactions : DEFAULT_TRANSACTIONS;
 
-  const filteredTransactions = mockTransactions.filter(tx => {
+  const filteredTransactions = displayTransactions.filter(tx => {
     if (filter !== 'all' && tx.type !== filter) return false;
     if (searchTerm && !tx.txHash.toLowerCase().includes(searchTerm.toLowerCase())) return false;
     return true;
@@ -146,11 +114,6 @@ export function TransactionHistory({ transactions = [], loading = false }: Trans
           <h2 className="text-2xl font-[family-name:var(--font-display)] font-bold text-zinc-100">
             Transaction History
           </h2>
-          {isShowingDemoData && (
-            <span className="px-2 py-0.5 text-xs font-semibold bg-yellow-900/30 text-yellow-400 border border-yellow-500/30 rounded-full">
-              DEMO
-            </span>
-          )}
         </div>
         
         <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">

@@ -9,6 +9,7 @@ import { VaultHubABI, VFIDETokenABI, UserVaultABI } from '../lib/abis'
 import { validateAddress } from '../lib/validation'
 import { parseContractError, logError } from '@/lib/errorHandling';
 import { useAppStore } from '@/lib/store/appStore';
+import { useIsVaultLocked } from './useSecurityHooks';
 
 // ============================================
 // VAULT HOOKS - Non-custodial vault management
@@ -79,6 +80,7 @@ export function useVaultBalance() {
   const { vaultAddress } = useUserVault()
   const setVault = useAppStore((state) => state.setVault)
   const updateVaultBalance = useAppStore((state) => state.updateVaultBalance)
+  const { isLocked } = useIsVaultLocked(vaultAddress ?? undefined)
   
   const { data: balance, isLoading, refetch } = useReadContract({
     address: CONTRACT_ADDRESSES.VFIDEToken,
@@ -99,11 +101,11 @@ export function useVaultBalance() {
       setVault({
         address: vaultAddress,
         balance: formattedBalance,
-        lockedBalance: '0', // TODO: fetch locked balance
+        lockedBalance: isLocked ? formattedBalance : '0',
         lastUpdated: Date.now(),
       });
     }
-  }, [vaultAddress, balance, formattedBalance, setVault]);
+  }, [vaultAddress, balance, formattedBalance, setVault, isLocked]);
   
   // Also update balance directly when it changes
   useEffect(() => {

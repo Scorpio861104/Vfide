@@ -341,11 +341,15 @@ export function useDebounce<T>(value: T, delay: number): T {
 
 export function useThrottle<T>(value: T, interval: number): T {
   const [throttledValue, setThrottledValue] = useState(value);
-  const lastUpdateRef = useRef(Date.now());
+  const lastUpdateRef = useRef(0);
 
   useEffect(() => {
     const now = Date.now();
+    if (lastUpdateRef.current === 0) {
+      lastUpdateRef.current = now;
+    }
     if (now - lastUpdateRef.current >= interval) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setThrottledValue(value);
       lastUpdateRef.current = now;
     }

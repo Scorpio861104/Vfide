@@ -8,6 +8,8 @@
  * Server-side utilities are in security-server.ts
  */
 
+import { buildCsrfHeaders } from '@/lib/security/csrfClient';
+
 /**
  * Generate a nonce for CSP inline scripts/styles
  * Client-side only - gets nonce from meta tag
@@ -35,8 +37,10 @@ export function isAllowedURL(url: string): boolean {
       return false;
     }
     
-    // Allow HTTPS and HTTP
-    return ['https:', 'http:'].includes(parsed.protocol);
+    // Allow HTTPS always; allow HTTP only in development
+    if (parsed.protocol === 'https:') return true;
+    if (parsed.protocol === 'http:' && process.env.NODE_ENV !== 'production') return true;
+    return false;
   } catch {
     // Invalid URL
     return false;
@@ -192,27 +196,28 @@ export const XSSProtection = {
    * Encode HTML entities
    */
   encodeHTML(str: string): string {
+    if (typeof document === 'undefined') return str;
     const div = document.createElement('div');
     div.textContent = str;
     return div.innerHTML;
   },
   
   /**
-   * Decode HTML entities
+   * Decode HTML entities safely using DOMParser (no script execution)
    */
   decodeHTML(str: string): string {
-    const div = document.createElement('div');
-    div.innerHTML = str;
-    return div.textContent || '';
+    if (typeof DOMParser === 'undefined') return str;
+    const doc = new DOMParser().parseFromString(str, 'text/html');
+    return doc.body.textContent || '';
   },
-  
+
   /**
-   * Remove all HTML tags
+   * Remove all HTML tags safely using DOMParser (no script execution)
    */
   stripHTML(str: string): string {
-    const div = document.createElement('div');
-    div.innerHTML = str;
-    return div.textContent || '';
+    if (typeof DOMParser === 'undefined') return str;
+    const doc = new DOMParser().parseFromString(str, 'text/html');
+    return doc.body.textContent || '';
   },
   
   /**
@@ -246,10 +251,18 @@ export const CSRFProtection = {
   },
   
   /**
-   * Verify CSRF token
+   * Verify CSRF token (timing-safe comparison)
    */
   verifyToken(token: string, sessionToken: string): boolean {
-    return token === sessionToken && token.length > 0;
+    if (!token || !sessionToken || token.length !== sessionToken.length) return false;
+    const encoder = new TextEncoder();
+    const a = encoder.encode(token);
+    const b = encoder.encode(sessionToken);
+    let mismatch = 0;
+    for (let i = 0; i < a.length; i++) {
+      mismatch |= (a[i] as number) ^ (b[i] as number);
+    }
+    return mismatch === 0;
   },
   
   /**
@@ -310,9 +323,11 @@ export class SecurityMonitor {
   
   private static async reportToBackend(violation: SecurityViolation) {
     try {
+      const headers = await buildCsrfHeaders({ 'Content-Type': 'application/json' }, 'POST');
       await fetch('/api/security/violations', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
+        credentials: 'include',
         body: JSON.stringify(violation),
       });
     } catch (err) {

@@ -1,8 +1,8 @@
 'use client';
 
 import Link from "next/link";
-import { motion, useScroll, useTransform, LazyMotion, domAnimation, m } from "framer-motion";
-import { useRef, useEffect, useState, lazy, Suspense } from "react";
+import { motion, useScroll, useTransform, LazyMotion, domAnimation } from "framer-motion";
+import { useRef, lazy, Suspense } from "react";
 import { 
   Shield, Zap, Users, TrendingDown, Lock, Sparkles,
   ArrowRight, ChevronRight, Play, CheckCircle2, Star
@@ -11,35 +11,13 @@ import {
 // Lazy load Footer for better initial load performance
 const Footer = lazy(() => import("@/components/layout/Footer").then(mod => ({ default: mod.Footer })));
 
-// Animated counter hook
-function useAnimatedCounter(end: number, duration: number = 2000, start: number = 0) {
-  const [count, setCount] = useState(start);
-  const [isVisible, setIsVisible] = useState(false);
-  
-  useEffect(() => {
-    if (!isVisible) return;
-    
-    let startTime: number;
-    const animate = (timestamp: number) => {
-      if (!startTime) startTime = timestamp;
-      const progress = Math.min((timestamp - startTime) / duration, 1);
-      const eased = 1 - Math.pow(1 - progress, 3); // ease-out cubic
-      setCount(Math.floor(start + (end - start) * eased));
-      if (progress < 1) requestAnimationFrame(animate);
-    };
-    requestAnimationFrame(animate);
-  }, [isVisible, end, duration, start]);
-  
-  return { count, setIsVisible };
-}
-
 // Floating orbs background component
 function FloatingOrbs() {
   return (
     <div className="absolute inset-0 overflow-hidden pointer-events-none">
       <div className="absolute top-1/4 -left-32 w-96 h-96 bg-cyan-400/10 rounded-full blur-[120px] animate-pulse" />
       <div className="absolute bottom-1/4 -right-32 w-96 h-96 bg-blue-500/10 rounded-full blur-[120px] animate-pulse" style={{ animationDelay: '1s' }} />
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-150 h-150 bg-violet-400/5 rounded-full blur-[150px]" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[37.5rem] h-[37.5rem] bg-violet-400/5 rounded-full blur-[150px]" />
     </div>
   );
 }
@@ -47,14 +25,14 @@ function FloatingOrbs() {
 // Hero 3D shield visualization
 function HeroVisualization() {
   return (
-    <div className="relative w-full h-75 sm:h-100 md:h-125 flex items-center justify-center">
+    <div className="relative w-full h-[18.75rem] sm:h-[25rem] md:h-[31.25rem] flex items-center justify-center">
       <div className="absolute inset-0 flex items-center justify-center">
         {/* Outer glow ring */}
         <motion.div
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 1, delay: 0.5 }}
-          className="absolute w-60 h-60 sm:w-80 sm:h-80 md:w-100 md:h-100"
+          className="absolute w-60 h-60 sm:w-80 sm:h-80 md:w-[25rem] md:h-[25rem]"
         >
           <div className="absolute inset-0 rounded-full border border-cyan-400/20 animate-pulse" />
           <div className="absolute inset-4 rounded-full border border-cyan-400/15" />
@@ -72,7 +50,7 @@ function HeroVisualization() {
           <svg 
             width="140" 
             height="170"
-            className="sm:w-45 sm:h-55"
+            className="sm:w-[11.25rem] sm:h-[13.75rem]"
             viewBox="0 0 100 120" 
             style={{ width: '140px', height: '170px' }}
             preserveAspectRatio="xMidYMid meet"
@@ -183,37 +161,6 @@ function FeatureCard({ icon, title, description, color, delay = 0 }: FeatureCard
   );
 }
 
-// Live stat component
-interface StatItemProps {
-  value: number;
-  label: string;
-  prefix?: string;
-  suffix?: string;
-  color: string;
-}
-
-function StatItem({ value, label, prefix = "", suffix = "", color }: StatItemProps) {
-  const { count, setIsVisible } = useAnimatedCounter(value, 2000);
-  
-  return (
-    <motion.div
-      initial={{ opacity: 0, scale: 0.9 }}
-      whileInView={{ opacity: 1, scale: 1 }}
-      viewport={{ once: true }}
-      onViewportEnter={() => setIsVisible(true)}
-      className="text-center relative"
-    >
-      <div 
-        className="text-3xl sm:text-4xl md:text-5xl font-bold mb-2 counter"
-        style={{ color }}
-      >
-        {prefix}{count.toLocaleString()}{suffix}
-      </div>
-      <div className="text-sm text-zinc-500 uppercase tracking-wider">{label}</div>
-    </motion.div>
-  );
-}
-
 // How it works step
 interface StepProps {
   number: string;
@@ -307,7 +254,7 @@ export default function Home() {
                 className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-cyan-400/10 border border-cyan-400/20 text-cyan-400 text-sm font-medium mb-8"
               >
                 <Sparkles className="w-4 h-4" />
-                Now Live on Base
+                Testnet on Base Sepolia
               </motion.div>
               
               <motion.h1
@@ -344,12 +291,12 @@ export default function Home() {
                   Get Started
                   <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                 </Link>
-                <Link 
-                  href="/live-demo"
+                <Link
+                  href="/crypto-social"
                   className="group inline-flex items-center justify-center gap-2 btn-secondary text-lg"
                 >
                   <Play className="w-5 h-5" />
-                  Watch Demo
+                  Explore Social
                 </Link>
               </motion.div>
               
@@ -361,12 +308,12 @@ export default function Home() {
                 className="flex flex-wrap gap-3 justify-center lg:justify-start"
               >
                 <TrustBadge>
-                  <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
-                  14 Contracts Deployed
+                  <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                  Open Source
                 </TrustBadge>
                 <TrustBadge>
-                  <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                  Audited &amp; Open Source
+                  <div className="w-2 h-2 bg-amber-500 rounded-full" />
+                  Testnet (Base Sepolia)
                 </TrustBadge>
               </motion.div>
             </div>
@@ -398,41 +345,6 @@ export default function Home() {
             <div className="w-1 h-2 bg-cyan-400 rounded-full" />
           </motion.div>
         </motion.div>
-      </section>
-
-      {/* Live Stats Section */}
-      <section className="relative py-20 bg-zinc-950 overflow-hidden">
-        <div className="absolute inset-0 aurora-bg" />
-        
-        <div className="relative z-10 container mx-auto px-3 sm:px-4 max-w-6xl">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-center mb-12"
-          >
-            <span className="text-sm text-zinc-500 uppercase tracking-widest">Live Network</span>
-          </motion.div>
-          
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 md:gap-12">
-            <StatItem value={2847} label="Vaults Created" color="#00F0FF" />
-            <StatItem value={12} prefix="$" suffix="M" label="Total Volume" color="#22C55E" />
-            <StatItem value={12459} label="Transactions" color="#FFD700" />
-            <StatItem value={847} suffix="K" label="VFIDE Burned" color="#EF4444" />
-          </div>
-          
-          <motion.p
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            viewport={{ once: true }}
-            className="text-center text-sm text-zinc-600 mt-12"
-          >
-            <span className="inline-flex items-center gap-2">
-              <span className="w-2 h-2 bg-cyan-400 rounded-full animate-pulse" />
-              Live data • Updates in real-time
-            </span>
-          </motion.p>
-        </div>
       </section>
 
       {/* Why VFIDE Section */}
@@ -486,7 +398,7 @@ export default function Home() {
             <FeatureCard
               icon={<Users className="w-7 h-7" />}
               title="Community Governed"
-              description="Vote on protocol changes using your tokens and ProofScore. True decentralized governance."
+              description="Vote on protocol changes using your tokens and ProofScore. Community-driven governance."
               color="#00F0FF"
               delay={0.4}
             />
@@ -622,7 +534,7 @@ export default function Home() {
             transition={{ delay: 0.1 }}
             className="text-xl text-zinc-400 mb-10"
           >
-            Join thousands of merchants and users building trust on VFIDE.
+            Join the merchants and users building trust on VFIDE.
           </motion.p>
           
           <motion.div

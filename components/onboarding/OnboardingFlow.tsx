@@ -96,15 +96,10 @@ interface OnboardingProviderProps {
 export function OnboardingProvider({ children, customSteps }: OnboardingProviderProps) {
   const { address: _address, isConnected } = useAccount();
   const _router = useRouter();
-  const [completedSteps, setCompletedSteps] = useState<Record<string, boolean>>({});
+  const [completedSteps, setCompletedSteps] = useState<Record<string, boolean>>(() => loadProgress());
   const [showChecklist, setShowChecklist] = useState(false);
   const [rewardToShow, setRewardToShow] = useState<OnboardingStep['reward'] | null>(null);
   const [showConfetti, setShowConfetti] = useState(false);
-
-  // Load progress on mount
-  useEffect(() => {
-    setCompletedSteps(loadProgress());
-  }, []);
 
   // Default steps
   const defaultSteps: Omit<OnboardingStep, 'isComplete'>[] = [
@@ -160,13 +155,6 @@ export function OnboardingProvider({ children, customSteps }: OnboardingProvider
     }));
   }, [allSteps, completedSteps]);
 
-  // Auto-complete wallet connection step
-  useEffect(() => {
-    if (isConnected && !completedSteps['connect-wallet']) {
-      markComplete('connect-wallet');
-    }
-  }, [isConnected, completedSteps]);
-
   // Calculate progress
   const progress = useMemo(() => {
     const completed = steps.filter((s) => s.isComplete).length;
@@ -202,6 +190,16 @@ export function OnboardingProvider({ children, customSteps }: OnboardingProvider
       setTimeout(() => setShowConfetti(false), 5000);
     }
   }, [steps, completedSteps]);
+
+  // Auto-complete wallet connection step
+  useEffect(() => {
+    if (isConnected && !completedSteps['connect-wallet']) {
+      const timeout = window.setTimeout(() => {
+        markComplete('connect-wallet');
+      }, 0);
+      return () => window.clearTimeout(timeout);
+    }
+  }, [isConnected, completedSteps, markComplete]);
 
   const skipOnboarding = useCallback(() => {
     const allCompleted = steps.reduce((acc, step) => {

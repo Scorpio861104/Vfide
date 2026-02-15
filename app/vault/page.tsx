@@ -6,7 +6,7 @@ import { useVaultHub } from "@/hooks/useVaultHub";
 import { TransactionHistory } from "@/components/vault/TransactionHistory";
 import { useToast } from "@/components/ui/toast";
 import { Skeleton } from "@/components/ui/Skeleton";
-import { useAccount, useWriteContract, useReadContract } from "wagmi";
+import { useAccount, useWriteContract, useReadContract, usePublicClient } from "wagmi";
 import { useState, useEffect } from "react";
 import { isAddress, parseUnits, formatUnits } from "viem";
 import { devLog } from "@/lib/utils";
@@ -18,7 +18,7 @@ import {
   Zap, DollarSign, TrendingUp, X, Loader2
 } from "lucide-react";
 import { safeParseFloat } from "@/lib/validation";
-import { CONTRACT_ADDRESSES, VFIDETokenABI, VaultHubLiteABI, UserVaultABI } from "@/lib/contracts";
+import { CONTRACT_ADDRESSES, VFIDETokenABI, VaultHubABI, UserVaultABI } from "@/lib/contracts";
 
 // Animation variants
 const containerVariants = {
@@ -211,8 +211,8 @@ function VaultContent() {
   
   const { vaultAddress, hasVault, isLoadingVault, createVault, isCreatingVault } = useVaultHub();
   const { balance: vaultBalance, isLoading: isLoadingBalance } = useVaultBalance();
-  const PRESALE_REFERENCE_PRICE = 0.07;
-  const usdValue = (safeParseFloat(vaultBalance, 0) * PRESALE_REFERENCE_PRICE).toFixed(2);
+  const REFERENCE_PRICE = 0.07;
+  const usdValue = (safeParseFloat(vaultBalance, 0) * REFERENCE_PRICE).toFixed(2);
   
   const {
     vaultOwner,
@@ -240,6 +240,7 @@ function VaultContent() {
   
   // Contract hooks
   const { writeContractAsync } = useWriteContract();
+  const publicClient = usePublicClient();
   
   // Read wallet token balance for deposit
   const { data: walletBalance } = useReadContract({
@@ -259,11 +260,17 @@ function VaultContent() {
   
   const walletBalanceFormatted = walletBalance ? formatUnits(walletBalance as bigint, 18) : '0';
   
-  const handleDeposit = async () => {
-    if (!depositAmount || parseFloat(depositAmount) <= 0) {
+    const handleDeposit = async () => {
+      if (!depositAmount || parseFloat(depositAmount) <= 0) {
       showToast("Enter a valid amount", "error");
       return;
     }
+
+      const walletBalanceNum = safeParseFloat(walletBalanceFormatted, 0);
+      if (parseFloat(depositAmount) > walletBalanceNum) {
+        showToast("Insufficient wallet balance", "error");
+        return;
+      }
     
     const amountWei = parseUnits(depositAmount, 18);
     const currentAllowance = allowance as bigint || 0n;
@@ -271,15 +278,18 @@ function VaultContent() {
     setIsDepositing(true);
     try {
       // Step 1: Approve if needed
-      if (currentAllowance < amountWei) {
+        if (currentAllowance < amountWei) {
         setDepositStep('approve');
         showToast("Approving VFIDE tokens...", "info");
-        await writeContractAsync({
+          const approveHash = await writeContractAsync({
           address: CONTRACT_ADDRESSES.VFIDEToken,
           abi: VFIDETokenABI,
           functionName: 'approve',
           args: [CONTRACT_ADDRESSES.VaultHub, amountWei],
         });
+          if (publicClient && approveHash) {
+            await publicClient.waitForTransactionReceipt({ hash: approveHash });
+          }
         await refetchAllowance();
       }
       
@@ -288,7 +298,7 @@ function VaultContent() {
       showToast("Depositing to vault...", "info");
       await writeContractAsync({
         address: CONTRACT_ADDRESSES.VaultHub,
-        abi: VaultHubLiteABI,
+        abi: VaultHubABI,
         functionName: 'deposit',
         args: [amountWei],
       });
@@ -309,11 +319,15 @@ function VaultContent() {
     }
   };
   
-  const handleWithdraw = async () => {
-    if (!withdrawAmount || parseFloat(withdrawAmount) <= 0) {
+    const handleWithdraw = async () => {
+      if (!withdrawAmount || parseFloat(withdrawAmount) <= 0) {
       showToast("Enter a valid amount", "error");
       return;
     }
+      if (parseFloat(withdrawAmount) > safeParseFloat(vaultBalance, 0)) {
+        showToast("Insufficient vault balance", "error");
+        return;
+      }
     if (!withdrawRecipient || !isAddress(withdrawRecipient)) {
       showToast("Enter a valid recipient address", "error");
       return;
@@ -391,8 +405,8 @@ function VaultContent() {
       <main className="min-h-screen bg-zinc-950 pt-20 relative">
         {/* Ambient Background */}
         <div className="fixed inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute top-0 right-1/4 w-150 h-150 bg-emerald-500/5 rounded-full blur-[120px]" />
-          <div className="absolute bottom-1/4 left-0 w-125 h-125 bg-cyan-500/5 rounded-full blur-[100px]" />
+          <div className="absolute top-0 right-1/4 w-[37.5rem] h-[37.5rem] bg-emerald-500/5 rounded-full blur-[120px]" />
+          <div className="absolute bottom-1/4 left-0 w-[31.25rem] h-[31.25rem] bg-cyan-500/5 rounded-full blur-[100px]" />
           <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-[0.02]" />
         </div>
 

@@ -2,12 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 import { requireAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
-import { isAddress } from 'viem';
 
 interface MessageDeleteRequest {
   messageId: string;
-  conversationId: string;
-  userAddress: string;
   hardDelete?: boolean;
 }
 
@@ -24,27 +21,17 @@ export async function DELETE(request: NextRequest) {
 
   try {
     const body: MessageDeleteRequest = await request.json();
-    const { messageId, conversationId, userAddress, hardDelete = false } = body;
+    const { messageId, hardDelete = false } = body;
 
-    if (!messageId || !conversationId || !userAddress) {
+    if (!messageId) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
-    }
-
-    // Validate address format
-    if (!isAddress(userAddress)) {
-      return NextResponse.json({ error: 'Invalid Ethereum address format' }, { status: 400 });
-    }
-
-    // Verify authenticated user matches userAddress
-    if (authResult.user.address.toLowerCase() !== userAddress.toLowerCase()) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
     }
 
     const messageResult = await query(
       `SELECT m.*, u.wallet_address as sender
        FROM messages m JOIN users u ON m.sender_id = u.id
-       WHERE m.id = $1 AND m.conversation_id = $2`,
-      [messageId, conversationId]
+       WHERE m.id = $1`,
+      [messageId]
     );
 
     if (messageResult.rows.length === 0) {
@@ -56,7 +43,7 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'Message not found' }, { status: 404 });
     }
 
-    if (message.sender.toLowerCase() !== userAddress.toLowerCase()) {
+    if (message.sender.toLowerCase() !== authResult.user.address.toLowerCase()) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
     }
 

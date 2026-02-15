@@ -61,92 +61,17 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: 'https',
-        hostname: '*.amazonaws.com',
+        hostname: '*.s3.amazonaws.com',
+      },
+      {
+        protocol: 'https',
+        hostname: '*.s3.*.amazonaws.com',
       },
       // Add more trusted domains as needed
     ],
   },
 
-  // Security headers including Content Security Policy
-  async headers() {
-    return [
-      {
-        source: '/:path*',
-        headers: [
-          // Content Security Policy
-          {
-            key: 'Content-Security-Policy',
-            value: [
-              // Default: only same origin
-              "default-src 'self'",
-              // Scripts: self, trusted domains, and unsafe-inline for Next.js hydration
-              // In production, consider migrating to nonce-based CSP
-              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://vercel.live https://*.walletconnect.com https://*.walletconnect.org",
-              // Styles: self and unsafe-inline for Tailwind/Radix UI
-              "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-              // Images: self, data URIs, HTTPS, and blob for avatars/NFTs
-              "img-src 'self' data: https: blob:",
-              // Fonts: self, data URIs, and Google Fonts
-              "font-src 'self' data: https://fonts.gstatic.com",
-              // Connect: self, WebSocket, and blockchain RPC endpoints
-              "connect-src 'self' wss: ws: https: https://*.walletconnect.com https://*.walletconnect.org https://*.base.org https://*.polygon.technology https://*.zksync.io",
-              // Frame: self and wallet connect
-              "frame-src 'self' https://*.walletconnect.com",
-              // Media: self and blob (for potential voice/video features)
-              "media-src 'self' blob:",
-              // Object: none (block plugins)
-              "object-src 'none'",
-              // Base URI: self
-              "base-uri 'self'",
-              // Form actions: self
-              "form-action 'self'",
-              // Frame ancestors: none (prevent clickjacking)
-              "frame-ancestors 'none'",
-              // Upgrade insecure requests in production
-              process.env.NODE_ENV === 'production' ? "upgrade-insecure-requests" : "",
-            ].filter(Boolean).join('; '),
-          },
-          // X-Frame-Options: prevent clickjacking
-          {
-            key: 'X-Frame-Options',
-            value: 'DENY',
-          },
-          // X-Content-Type-Options: prevent MIME sniffing
-          {
-            key: 'X-Content-Type-Options',
-            value: 'nosniff',
-          },
-          // Referrer-Policy: limit referrer information
-          {
-            key: 'Referrer-Policy',
-            value: 'strict-origin-when-cross-origin',
-          },
-          // Permissions-Policy: restrict browser features
-          {
-            key: 'Permissions-Policy',
-            value: [
-              'camera=()',
-              'microphone=()',
-              'geolocation=()',
-              'payment=()',
-              'usb=()',
-              'interest-cohort=()',
-            ].join(', '),
-          },
-          // X-XSS-Protection: legacy XSS protection
-          {
-            key: 'X-XSS-Protection',
-            value: '1; mode=block',
-          },
-          // Strict-Transport-Security: enforce HTTPS (production only)
-          ...(process.env.NODE_ENV === 'production' ? [{
-            key: 'Strict-Transport-Security',
-            value: 'max-age=63072000; includeSubDomains; preload',
-          }] : []),
-        ],
-      },
-    ];
-  },
+  // Security headers are set dynamically in middleware.ts to support CSP nonces.
 };
 
 // Sentry configuration options

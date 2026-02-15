@@ -26,8 +26,15 @@ export function PresenceManager() {
   useEffect(() => {
     return () => {
       if (address) {
-        // In production, send offline status to backend
-        console.log('[Presence] Disconnecting:', address);
+        void fetch('/api/presence', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            address,
+            status: 'offline',
+            lastActivity: Date.now(),
+          }),
+        });
       }
     };
   }, [address]);

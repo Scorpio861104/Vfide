@@ -47,6 +47,13 @@ export interface SponsorshipRequest {
   callData: Hex;
   value?: bigint;
   chainId: number;
+  gasLimits?: {
+    callGasLimit?: string;
+    verificationGasLimit?: string;
+    preVerificationGas?: string;
+    maxFeePerGas?: string;
+    maxPriorityFeePerGas?: string;
+  };
 }
 
 export interface SponsorshipResult {
@@ -113,16 +120,24 @@ export class PaymasterService {
    * Get user's sponsorship statistics
    */
   async getUserStats(_userAddress: Address, _chainId: number): Promise<UserSponsorshipStats> {
-    // In production, this would query the paymaster API
-    // For now, return default stats
-    const dailyLimit = BigInt(0.1 * 1e18); // 0.1 ETH daily limit
-    
+    if (!this.config.apiKey) {
+      // No API key configured — return zeroed stats to indicate unconfigured state
+      return {
+        totalSponsored: BigInt(0),
+        transactionsSponsored: 0,
+        dailyUsedWei: BigInt(0),
+        dailyLimitWei: BigInt(0),
+        remainingToday: BigInt(0),
+      };
+    }
+
+    // TODO: Query paymaster provider API for actual user stats
     return {
       totalSponsored: BigInt(0),
       transactionsSponsored: 0,
       dailyUsedWei: BigInt(0),
-      dailyLimitWei: dailyLimit,
-      remainingToday: dailyLimit,
+      dailyLimitWei: BigInt(0),
+      remainingToday: BigInt(0),
     };
   }
 
@@ -165,16 +180,20 @@ export class PaymasterService {
             {
               sender: request.userAddress,
               callData: request.callData,
-              callGasLimit: '0x100000',
-              verificationGasLimit: '0x100000',
-              preVerificationGas: '0x100000',
-              maxFeePerGas: '0x3B9ACA00',
-              maxPriorityFeePerGas: '0x3B9ACA00',
+              callGasLimit: request.gasLimits?.callGasLimit ?? '0x100000',
+              verificationGasLimit: request.gasLimits?.verificationGasLimit ?? '0x100000',
+              preVerificationGas: request.gasLimits?.preVerificationGas ?? '0x100000',
+              maxFeePerGas: request.gasLimits?.maxFeePerGas ?? '0x3B9ACA00',
+              maxPriorityFeePerGas: request.gasLimits?.maxPriorityFeePerGas ?? '0x3B9ACA00',
             },
             this.config.sponsorshipPolicyId || 'default',
           ],
         }),
       });
+
+      if (!response.ok) {
+        return { sponsored: false, reason: `Pimlico returned ${response.status}` };
+      }
 
       const data = await response.json();
       
@@ -188,13 +207,12 @@ export class PaymasterService {
 
       return { sponsored: false, reason: data.error?.message || 'Sponsorship denied' };
     } catch {
-      // Fallback to simulated response for demo
-      return this.getSimulatedSponsorship(request);
+      return { sponsored: false, reason: 'Pimlico sponsorship unavailable' };
     }
   }
 
   private async checkAlchemySponsorship(
-    request: SponsorshipRequest
+    _request: SponsorshipRequest
   ): Promise<SponsorshipResult> {
     if (!this.config.apiKey) {
       return { sponsored: false, reason: 'Alchemy API key not configured' };
@@ -202,11 +220,11 @@ export class PaymasterService {
 
     // Alchemy Gas Manager check
     // In production, this would call the Alchemy API
-    return this.getSimulatedSponsorship(request);
+    return { sponsored: false, reason: 'Alchemy sponsorship unavailable' };
   }
 
   private async checkCoinbaseSponsorship(
-    request: SponsorshipRequest
+    _request: SponsorshipRequest
   ): Promise<SponsorshipResult> {
     // Coinbase Smart Wallet has built-in sponsorship for certain transactions
     // Reserved for future contract whitelist
@@ -214,16 +232,8 @@ export class PaymasterService {
       // Add known Coinbase-sponsored contract addresses
     ];
 
-    // For Coinbase Smart Wallet, certain Base transactions are automatically sponsored
-    if (request.chainId === 8453) { // Base mainnet
-      return {
-        sponsored: true,
-        estimatedGas: BigInt(100000),
-        estimatedSavingsWei: BigInt(0.0001 * 1e18),
-      };
-    }
-
-    return this.getSimulatedSponsorship(request);
+    // For Coinbase Smart Wallet, sponsorship is provider-managed
+    return { sponsored: false, reason: 'Coinbase sponsorship requires provider integration' };
   }
 
   private async checkZkSyncSponsorship(
@@ -234,26 +244,8 @@ export class PaymasterService {
       return { sponsored: false, reason: 'Not a zkSync chain' };
     }
 
-    // zkSync has native paymaster support
-    // In production, encode the paymaster params
-    return {
-      sponsored: true,
-      estimatedGas: BigInt(100000),
-      paymasterAndData: '0x' as Hex, // Would contain actual paymaster address and params
-    };
-  }
-
-  private getSimulatedSponsorship(
-    _request: SponsorshipRequest
-  ): SponsorshipResult {
-    // Simulated sponsorship for demo/testing
-    // In production, this would be removed
-    return {
-      sponsored: true,
-      estimatedGas: BigInt(100000),
-      estimatedSavingsWei: BigInt(0.0001 * 1e18),
-      paymasterAndData: '0x' as Hex,
-    };
+    // zkSync has native paymaster support, but requires configured params
+    return { sponsored: false, reason: 'zkSync paymaster not configured' };
   }
 }
 
@@ -268,9 +260,11 @@ export function getPaymasterService(config?: PaymasterConfig): PaymasterService 
   
   if (!paymasterInstance) {
     // Default configuration
+    // NOTE: PIMLICO_API_KEY is server-side only. If paymaster sponsorship checks
+    // are needed from the client, route them through an API endpoint instead.
     paymasterInstance = new PaymasterService({
       provider: 'pimlico',
-      apiKey: process.env.NEXT_PUBLIC_PIMLICO_API_KEY,
+      apiKey: process.env.PIMLICO_API_KEY,
     });
   }
   

@@ -120,7 +120,7 @@ export function ToastProvider({
   }, []);
 
   const addToast = useCallback((type: ToastType, options: ToastOptions) => {
-    const id = `toast-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    const id = `toast-${Date.now()}-${Array.from(crypto.getRandomValues(new Uint8Array(5)), b => b.toString(16).padStart(2, '0')).join('')}`;
     const duration = options.duration ?? (type === 'loading' ? Infinity : 5000);
     const dismissible = options.dismissible ?? true;
 
@@ -249,8 +249,9 @@ export function ToastProvider({
 
   // Cleanup on unmount
   useEffect(() => {
+    const timeouts = timeoutsRef.current;
     return () => {
-      timeoutsRef.current.forEach((timeout) => clearTimeout(timeout));
+      timeouts.forEach((timeout) => clearTimeout(timeout));
     };
   }, []);
 
@@ -285,7 +286,7 @@ export function ToastProvider({
       <div
         role="region"
         aria-label="Notifications"
-        className={`fixed z-100 flex flex-col gap-2 pointer-events-none ${positionClasses[position]}`}
+        className={`fixed z-[100] flex flex-col gap-2 pointer-events-none ${positionClasses[position]}`}
         style={{ maxHeight: 'calc(100vh - 2rem)' }}
       >
         <AnimatePresence mode="popLayout">

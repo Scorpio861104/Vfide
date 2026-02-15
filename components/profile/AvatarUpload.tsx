@@ -11,7 +11,9 @@ import React, { useState, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Upload, Camera, X, Check, AlertCircle, Loader2, Image as ImageIcon } from 'lucide-react';
 import { useAccount } from 'wagmi';
+import { getCsrfToken } from '@/lib/security/csrfClient';
 import { apiClient } from '@/lib/api-client';
+import Image from 'next/image';
 
 interface AvatarUploadProps {
   currentAvatar?: string;
@@ -136,15 +138,42 @@ export function AvatarUpload({
     setUploadProgress(0);
 
     try {
-      // Simulate progress (in production, use XMLHttpRequest for real progress)
-      const progressInterval = setInterval(() => {
-        setUploadProgress((prev) => Math.min(prev + 10, 90));
-      }, 200);
+      const csrfToken = await getCsrfToken();
+      const response = await new Promise<{ success: boolean; avatarUrl: string }>((resolve, reject) => {
+        const formData = new FormData();
+        formData.append('avatar', file);
 
-      // Upload via API
-      const response = await apiClient.uploadAvatar(address, file);
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', `/api/users/${address}/avatar`, true);
+        xhr.withCredentials = true;
 
-      clearInterval(progressInterval);
+        if (csrfToken) {
+          xhr.setRequestHeader('x-csrf-token', csrfToken);
+        }
+
+        xhr.upload.onprogress = (event) => {
+          if (event.lengthComputable) {
+            const percent = Math.round((event.loaded / event.total) * 100);
+            setUploadProgress(percent);
+          }
+        };
+
+        xhr.onload = () => {
+          try {
+            const data = JSON.parse(xhr.responseText || '{}');
+            if (xhr.status >= 200 && xhr.status < 300) {
+              resolve(data as { success: boolean; avatarUrl: string });
+            } else {
+              reject(new Error(data.error || 'Upload failed'));
+            }
+          } catch (parseError) {
+            reject(parseError instanceof Error ? parseError : new Error('Upload failed'));
+          }
+        };
+
+        xhr.onerror = () => reject(new Error('Upload failed'));
+        xhr.send(formData);
+      });
       setUploadProgress(100);
 
       // Call success callback
@@ -186,10 +215,13 @@ export function AvatarUpload({
         <div className={`${sizeClasses[size]} relative`}>
           {preview || currentAvatar ? (
             <div className="relative w-full h-full rounded-full overflow-hidden border-4 border-cyan-400/20">
-              <img
+              <Image
                 src={preview || currentAvatar}
                 alt="Avatar preview"
+                width={120}
+                height={120}
                 className="w-full h-full object-cover"
+                unoptimized
               />
               {preview && !isUploading && (
                 <motion.button
@@ -384,7 +416,7 @@ export function AvatarUploadCompact({
 
       <div className="relative w-20 h-20 rounded-full overflow-hidden cursor-pointer">
         {currentAvatar ? (
-          <img src={currentAvatar} alt="Avatar" className="w-full h-full object-cover" />
+          <Image src={currentAvatar} alt="Avatar" width={80} height={80} className="w-full h-full object-cover" unoptimized />
         ) : (
           <div className="w-full h-full bg-linear-to-br from-cyan-400 to-violet-400 flex items-center justify-center">
             <ImageIcon className="w-8 h-8 text-white/50" />

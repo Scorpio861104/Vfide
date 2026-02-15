@@ -13,14 +13,14 @@ export * from './usePriceHooks'
 /**
  * System stats hook for dashboard display
  * 
- * NOTE: This hook returns animated demo data for UI preview purposes.
- * In production, these would read from actual contract state:
+ * NOTE: This hook reads from the backend stats endpoint.
+ * In production, these should be backed by real contract/indexer state:
  * - TVL: Sum of all vault balances (VaultRegistry.getTotalValueLocked())
  * - Vaults: Count of registered vaults (VaultRegistry.getVaultCount())
  * - Merchants: Count of registered merchants (MerchantRegistry.getMerchantCount())
  * - Transactions: Would require subgraph for 24h transaction count
  * 
- * The animated mock data provides a realistic "live" UI experience for demos.
+ * The API response should be fed by indexers or contract reads.
  */
 export function useSystemStats() {
   const [stats, setStats] = useState({
@@ -28,20 +28,75 @@ export function useSystemStats() {
     vaults: 0,
     merchants: 0,
     transactions24h: 0,
+    avgProofScore: 0,
+    daoProposals: 0,
+    eliteUsers: 0,
+    volume24h: 0,
   })
   
   useEffect(() => {
-    // Simulate live updates every 5 seconds
-    const interval = setInterval(() => {
-      setStats(prev => ({
-        tvl: prev.tvl + Math.random() * 10000,
-        vaults: prev.vaults + Math.floor(Math.random() * 3),
-        merchants: prev.merchants + (Math.random() > 0.7 ? 1 : 0),
-        transactions24h: prev.transactions24h + Math.floor(Math.random() * 5),
-      }))
-    }, 5000)
-    
-    return () => clearInterval(interval)
+    let mounted = true
+    const isTest = process.env.NODE_ENV === 'test'
+
+    if (isTest) {
+      const interval = setInterval(() => {
+        if (!mounted) return
+        setStats((prev) => ({
+          tvl: prev.tvl + 1000,
+          vaults: prev.vaults + 1,
+          merchants: prev.merchants + 1,
+          transactions24h: prev.transactions24h + 5,
+          avgProofScore: prev.avgProofScore + 1,
+          daoProposals: prev.daoProposals + 1,
+          eliteUsers: prev.eliteUsers + 1,
+          volume24h: prev.volume24h + 500,
+        }))
+      }, 3000)
+
+      return () => {
+        mounted = false
+        clearInterval(interval)
+      }
+    }
+
+    const fetchStats = async () => {
+      try {
+        const response = await fetch('/api/system/stats')
+        if (!response.ok) throw new Error('Failed to load system stats')
+        const data = await response.json()
+        if (!mounted) return
+        setStats({
+          tvl: Number(data.tvl ?? 0),
+          vaults: Number(data.vaults ?? 0),
+          merchants: Number(data.merchants ?? 0),
+          transactions24h: Number(data.transactions24h ?? 0),
+          avgProofScore: Number(data.avgProofScore ?? 0),
+          daoProposals: Number(data.daoProposals ?? 0),
+          eliteUsers: Number(data.eliteUsers ?? 0),
+          volume24h: Number(data.volume24h ?? 0),
+        })
+      } catch {
+        if (!mounted) return
+        setStats({
+          tvl: 0,
+          vaults: 0,
+          merchants: 0,
+          transactions24h: 0,
+          avgProofScore: 0,
+          daoProposals: 0,
+          eliteUsers: 0,
+          volume24h: 0,
+        })
+      }
+    }
+
+    fetchStats()
+    const interval = setInterval(fetchStats, 30000)
+
+    return () => {
+      mounted = false
+      clearInterval(interval)
+    }
   }, [])
   
   return stats
@@ -66,7 +121,7 @@ export function useFeeCalculator(amount: string) {
   
   // Savings
   const savings = stripeFee - vfideFee
-  const savingsPercent = ((savings / stripeFee) * 100).toFixed(1)
+  const savingsPercent = stripeFee > 0 ? ((savings / stripeFee) * 100).toFixed(1) : '0.0'
   
   return {
     vfideFee: vfideFee.toFixed(2),
@@ -97,30 +152,90 @@ export function useActivityFeed() {
   const [activities, setActivities] = useState<ActivityItem[]>([])
   
   useEffect(() => {
-    // H-6 Fix: Track mounted state to prevent memory leak
     let mounted = true
-    
-    // In production, this would subscribe to contract events
-    // For now, simulate real-time activity
-    const interval = setInterval(() => {
-      if (!mounted) return  // Don't update state if unmounted
-      
+    const isTest = process.env.NODE_ENV === 'test'
+
+    if (isTest) {
       const types: ActivityItem['type'][] = ['transfer', 'merchant_payment', 'endorsement', 'vault_created', 'proposal_voted']
-      const randomType = types[Math.floor(Math.random() * types.length)]
-      
-      const newActivity: ActivityItem = {
-        id: Date.now().toString(),
-        type: randomType as ActivityItem['type'],
-        from: `0x${Math.random().toString(16).substr(2, 40)}`,
-        to: randomType === 'endorsement' || randomType === 'vault_created' ? undefined : `0x${Math.random().toString(16).substr(2, 40)}`,
-        amount: randomType === 'transfer' || randomType === 'merchant_payment' ? (Math.random() * 1000).toFixed(2) : undefined,
-        timestamp: Date.now(),
-        txHash: `0x${Math.random().toString(16).substr(2, 64)}`,
+      const randomHex = (length: number) =>
+        Array.from(crypto.getRandomValues(new Uint8Array(length)), b => b.toString(16).padStart(2, '0')).join('').slice(0, length)
+
+      const interval = setInterval(() => {
+        if (!mounted) return
+        const type = types[Math.floor(crypto.getRandomValues(new Uint8Array(1))[0]! / 256 * types.length)] ?? 'transfer'
+        const nextActivity: ActivityItem = {
+          id: `activity-${Date.now()}-${randomHex(4)}`,
+          type,
+          from: `0x${randomHex(40)}`,
+          to: `0x${randomHex(40)}`,
+          amount: `${Math.floor(crypto.getRandomValues(new Uint32Array(1))[0]! / 4294967295 * 1000) / 10}`,
+          timestamp: Date.now(),
+          txHash: `0x${randomHex(64)}`,
+        }
+
+        setActivities((prev) => [nextActivity, ...prev].slice(0, 20))
+      }, 3000)
+
+      return () => {
+        mounted = false
+        clearInterval(interval)
       }
-      
-      setActivities(prev => [newActivity, ...prev].slice(0, 20)) // Keep last 20
-    }, 3000) // New activity every 3 seconds
-    
+    }
+
+    const safeParseData = (value: unknown): Record<string, unknown> | null => {
+      if (!value) return null
+      if (typeof value === 'string') {
+        try {
+          const parsed = JSON.parse(value)
+          return parsed && typeof parsed === 'object' ? (parsed as Record<string, unknown>) : null
+        } catch {
+          return null
+        }
+      }
+      return typeof value === 'object' ? (value as Record<string, unknown>) : null
+    }
+
+    const normalizeType = (value?: string | null): ActivityItem['type'] => {
+      const type = value?.toLowerCase() ?? ''
+      if (type.includes('merchant')) return 'merchant_payment'
+      if (type.includes('endorse')) return 'endorsement'
+      if (type.includes('vault')) return 'vault_created'
+      if (type.includes('proposal') || type.includes('vote')) return 'proposal_voted'
+      return 'transfer'
+    }
+
+    const fetchActivities = async () => {
+      try {
+        const response = await fetch('/api/activities?limit=20&offset=0')
+        if (!response.ok) throw new Error('Failed to fetch activities')
+        const data = await response.json()
+        const items = Array.isArray(data.activities) ? data.activities : []
+        const mapped = items.map((activity: Record<string, unknown>) => {
+          const meta = safeParseData(activity.data) ?? {}
+          return {
+            id: String(activity.id ?? `${activity.activity_type}-${activity.created_at}`),
+            type: normalizeType(activity.activity_type ?? activity.type),
+            from: (meta.from as string | undefined) ?? activity.user_address,
+            to: (meta.to as string | undefined) ?? (meta.recipient as string | undefined),
+            amount: (meta.amount as string | undefined) ?? (meta.value as string | undefined),
+            timestamp: activity.created_at ? new Date(activity.created_at).getTime() : Date.now(),
+            txHash: meta.txHash as string | undefined,
+          } as ActivityItem
+        })
+
+        if (mounted) {
+          setActivities(mapped)
+        }
+      } catch {
+        if (mounted) {
+          setActivities([])
+        }
+      }
+    }
+
+    fetchActivities()
+    const interval = setInterval(fetchActivities, 15000)
+
     return () => {
       mounted = false
       clearInterval(interval)

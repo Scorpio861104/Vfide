@@ -23,25 +23,177 @@ import {
     TrendingUp,
     Users,
 } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+
+type SocialPaymentEvent = {
+  event_data?: unknown;
+  eventData?: unknown;
+  timestamp?: string;
+};
+
+type TopTipper = {
+  name: string;
+  amount: number;
+  avatar?: string;
+};
+
+type TipActivity = {
+  from: string;
+  amount: number;
+  time: string;
+};
+
+type ContentSale = {
+  item: string;
+  buyer: string;
+  amount: number;
+  time: string;
+};
+
+const parseEventData = (data: unknown) => {
+  if (!data) return {} as Record<string, unknown>;
+  if (typeof data === 'string') {
+    try {
+      return JSON.parse(data) as Record<string, unknown>;
+    } catch {
+      return {} as Record<string, unknown>;
+    }
+  }
+  return typeof data === 'object' ? (data as Record<string, unknown>) : {};
+};
+
+const parseAmount = (value: unknown) => {
+  if (typeof value === 'number') return value;
+  if (typeof value === 'string') {
+    const numeric = Number.parseFloat(value.replace(/[^0-9.]/g, ''));
+    return Number.isFinite(numeric) ? numeric : 0;
+  }
+  return 0;
+};
+
+const formatAmount = (value: number) => `${value.toFixed(2)} VFIDE`;
+
+const formatRelativeTime = (timestamp?: string) => {
+  if (!timestamp) return 'recently';
+  const time = new Date(timestamp).getTime();
+  if (Number.isNaN(time)) return 'recently';
+  const seconds = Math.floor((Date.now() - time) / 1000);
+  if (seconds < 60) return 'just now';
+  if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
+  if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;
+  return `${Math.floor(seconds / 86400)}d ago`;
+};
 
 export default function SocialPaymentsDashboard() {
   const { address: _address, isConnected: _isConnected } = useAccount();
   const [activeTab, setActiveTab] = useState<'feed' | 'activity' | 'earnings'>('feed');
+  const [events, setEvents] = useState<SocialPaymentEvent[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
-  // Mock stats for demo
-  const mockStats = {
-    totalTipsReceived: '124.5 VFIDE',
-    totalTipsSent: '89.2 VFIDE',
-    contentSales: 12,
-    totalContentRevenue: '340 VFIDE',
-    endorsementRewards: 8,
-    topTippers: [
-      { name: 'Alex Rivera', amount: '25 VFIDE', avatar: '👨‍💼' },
-      { name: 'Sara Chen', amount: '18 VFIDE', avatar: '👩‍🎤' },
-      { name: 'John Park', amount: '15 VFIDE', avatar: '👨‍💻' },
-    ],
-  };
+  useEffect(() => {
+    let isMounted = true;
+
+    const fetchEvents = async () => {
+      setIsLoading(true);
+      setLoadError(null);
+      try {
+        const response = await fetch('/api/analytics?eventType=social_interaction&limit=200');
+        if (!response.ok) throw new Error('Failed to load social activity');
+        const data = await response.json();
+        if (isMounted) {
+          setEvents(Array.isArray(data.events) ? data.events : []);
+        }
+      } catch {
+        if (isMounted) {
+          setEvents([]);
+          setLoadError('Unable to load social payment analytics.');
+        }
+      } finally {
+        if (isMounted) setIsLoading(false);
+      }
+    };
+
+    fetchEvents();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const { stats, topTippers, tipHistory, contentSales } = useMemo(() => {
+    let tipsReceived = 0;
+    let tipsSent = 0;
+    let contentSalesCount = 0;
+    let contentRevenue = 0;
+    let endorsementRewards = 0;
+
+    const tippers: Record<string, TopTipper> = {};
+    const tipItems: TipActivity[] = [];
+    const saleItems: ContentSale[] = [];
+
+    events.forEach((event) => {
+      const data = parseEventData(event.event_data ?? event.eventData);
+      const actionRaw = data.action ?? data.type ?? data.event ?? '';
+      const action = typeof actionRaw === 'string' ? actionRaw.toLowerCase() : '';
+      const amount = parseAmount(data.amount ?? data.value ?? data.tipAmount ?? 0);
+      const timestamp = typeof event.timestamp === 'string' ? event.timestamp : undefined;
+
+      if (action.includes('tip')) {
+        const from = (data.from ?? data.sender ?? data.user ?? 'Supporter') as string;
+        const direction = action.includes('sent') ? 'sent' : action.includes('receive') || action.includes('received') ? 'received' : 'received';
+        if (direction === 'received') tipsReceived += amount;
+        if (direction === 'sent') tipsSent += amount;
+
+        if (direction === 'received') {
+          tipItems.push({
+            from,
+            amount,
+            time: formatRelativeTime(timestamp),
+          });
+
+          const key = from || 'Supporter';
+          if (!tippers[key]) {
+            tippers[key] = { name: key, amount: 0, avatar: data.avatar as string | undefined };
+          }
+          tippers[key].amount += amount;
+        }
+      }
+
+      if (action.includes('content') || action.includes('sale') || action.includes('purchase')) {
+        const item = (data.item ?? data.content ?? 'Content') as string;
+        const buyer = (data.buyer ?? data.to ?? data.user ?? 'Buyer') as string;
+        contentSalesCount += 1;
+        contentRevenue += amount;
+        saleItems.push({
+          item,
+          buyer,
+          amount,
+          time: formatRelativeTime(timestamp),
+        });
+      }
+
+      if (action.includes('endorsement')) {
+        endorsementRewards += 1;
+      }
+    });
+
+    const topTipperList = Object.values(tippers)
+      .sort((a, b) => b.amount - a.amount)
+      .slice(0, 3);
+
+    return {
+      stats: {
+        totalTipsReceived: tipsReceived,
+        totalTipsSent: tipsSent,
+        contentSales: contentSalesCount,
+        totalContentRevenue: contentRevenue,
+        endorsementRewards,
+      },
+      topTippers: topTipperList,
+      tipHistory: tipItems.slice(0, 3),
+      contentSales: saleItems.slice(0, 3),
+    };
+  }, [events]);
 
   return (
     <div className="min-h-screen bg-zinc-950">
@@ -77,7 +229,7 @@ export default function SocialPaymentsDashboard() {
               <TrendingUp className="w-5 h-5 text-green-400" />
             </div>
             <div className="text-2xl font-bold text-zinc-100 mb-1">
-              {mockStats.totalTipsReceived}
+              {formatAmount(stats.totalTipsReceived)}
             </div>
             <div className="text-sm text-green-400">Tips Received</div>
           </motion.div>
@@ -93,7 +245,7 @@ export default function SocialPaymentsDashboard() {
               <Heart className="w-5 h-5 text-purple-400" />
             </div>
             <div className="text-2xl font-bold text-zinc-100 mb-1">
-              {mockStats.totalTipsSent}
+              {formatAmount(stats.totalTipsSent)}
             </div>
             <div className="text-sm text-purple-400">Tips Sent</div>
           </motion.div>
@@ -109,11 +261,11 @@ export default function SocialPaymentsDashboard() {
               <DollarSign className="w-5 h-5 text-blue-400" />
             </div>
             <div className="text-2xl font-bold text-zinc-100 mb-1">
-              {mockStats.contentSales}
+              {stats.contentSales}
             </div>
             <div className="text-sm text-blue-400">Content Sales</div>
             <div className="text-xs text-zinc-500 mt-1">
-              {mockStats.totalContentRevenue} earned
+              {formatAmount(stats.totalContentRevenue)} earned
             </div>
           </motion.div>
 
@@ -128,7 +280,7 @@ export default function SocialPaymentsDashboard() {
               <Users className="w-5 h-5 text-yellow-400" />
             </div>
             <div className="text-2xl font-bold text-zinc-100 mb-1">
-              {mockStats.endorsementRewards}
+              {stats.endorsementRewards}
             </div>
             <div className="text-sm text-yellow-400">Endorsement Rewards</div>
           </motion.div>
@@ -146,23 +298,31 @@ export default function SocialPaymentsDashboard() {
             Top Supporters
           </h3>
           <div className="space-y-3">
-            {mockStats.topTippers.map((tipper, idx) => (
-              <div
-                key={idx}
-                className="flex items-center justify-between p-3 bg-zinc-950 rounded-lg hover:bg-zinc-800 transition-colors"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-zinc-800 flex items-center justify-center text-lg">
-                    {tipper.avatar}
+            {isLoading ? (
+              <div className="text-sm text-zinc-400">Loading supporters...</div>
+            ) : loadError ? (
+              <div className="text-sm text-red-400">{loadError}</div>
+            ) : topTippers.length === 0 ? (
+              <div className="text-sm text-zinc-400">No supporters yet.</div>
+            ) : (
+              topTippers.map((tipper) => (
+                <div
+                  key={tipper.name}
+                  className="flex items-center justify-between p-3 bg-zinc-950 rounded-lg hover:bg-zinc-800 transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-zinc-800 flex items-center justify-center text-lg">
+                      {tipper.avatar || '👤'}
+                    </div>
+                    <span className="font-medium text-zinc-100">{tipper.name}</span>
                   </div>
-                  <span className="font-medium text-zinc-100">{tipper.name}</span>
+                  <div className="flex items-center gap-2">
+                    <DollarSign className="w-4 h-4 text-purple-400" />
+                    <span className="font-bold text-purple-400">{formatAmount(tipper.amount)}</span>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <DollarSign className="w-4 h-4 text-purple-400" />
-                  <span className="font-bold text-purple-400">{tipper.amount}</span>
-                </div>
-              </div>
-            ))}
+              ))
+            )}
           </div>
         </motion.div>
 
@@ -214,22 +374,26 @@ export default function SocialPaymentsDashboard() {
                   Recent Tips Received
                 </h3>
                 <div className="space-y-3">
-                  {[
-                    { from: 'Alex Rivera', amount: '5 VFIDE', time: '2h ago' },
-                    { from: 'Sara Chen', amount: '3 VFIDE', time: '5h ago' },
-                    { from: 'John Park', amount: '2.5 VFIDE', time: '8h ago' },
-                  ].map((tip, idx) => (
-                    <div
-                      key={idx}
-                      className="p-3 bg-zinc-950 rounded-lg flex items-center justify-between"
-                    >
-                      <div>
-                        <div className="font-medium text-zinc-100">{tip.from}</div>
-                        <div className="text-xs text-zinc-500">{tip.time}</div>
+                  {isLoading ? (
+                    <div className="text-sm text-zinc-400">Loading tips...</div>
+                  ) : loadError ? (
+                    <div className="text-sm text-red-400">{loadError}</div>
+                  ) : tipHistory.length === 0 ? (
+                    <div className="text-sm text-zinc-400">No tips received yet.</div>
+                  ) : (
+                    tipHistory.map((tip, idx) => (
+                      <div
+                        key={`${tip.from}-${idx}`}
+                        className="p-3 bg-zinc-950 rounded-lg flex items-center justify-between"
+                      >
+                        <div>
+                          <div className="font-medium text-zinc-100">{tip.from}</div>
+                          <div className="text-xs text-zinc-500">{tip.time}</div>
+                        </div>
+                        <div className="font-bold text-green-400">+{formatAmount(tip.amount)}</div>
                       </div>
-                      <div className="font-bold text-green-400">+{tip.amount}</div>
-                    </div>
-                  ))}
+                    ))
+                  )}
                 </div>
               </div>
 
@@ -240,24 +404,28 @@ export default function SocialPaymentsDashboard() {
                   Content Sales
                 </h3>
                 <div className="space-y-3">
-                  {[
-                    { item: 'Premium Article', buyer: 'Sara Chen', amount: '10 VFIDE', time: '1d ago' },
-                    { item: 'Group Access', buyer: 'John Park', amount: '15 VFIDE', time: '2d ago' },
-                    { item: 'Premium Post', buyer: 'Emma Wilson', amount: '5 VFIDE', time: '3d ago' },
-                  ].map((sale, idx) => (
-                    <div
-                      key={idx}
-                      className="p-3 bg-zinc-950 rounded-lg"
-                    >
-                      <div className="flex items-center justify-between mb-1">
-                        <div className="font-medium text-zinc-100">{sale.item}</div>
-                        <div className="font-bold text-blue-400">+{sale.amount}</div>
+                  {isLoading ? (
+                    <div className="text-sm text-zinc-400">Loading sales...</div>
+                  ) : loadError ? (
+                    <div className="text-sm text-red-400">{loadError}</div>
+                  ) : contentSales.length === 0 ? (
+                    <div className="text-sm text-zinc-400">No content sales yet.</div>
+                  ) : (
+                    contentSales.map((sale, idx) => (
+                      <div
+                        key={`${sale.item}-${idx}`}
+                        className="p-3 bg-zinc-950 rounded-lg"
+                      >
+                        <div className="flex items-center justify-between mb-1">
+                          <div className="font-medium text-zinc-100">{sale.item}</div>
+                          <div className="font-bold text-blue-400">+{formatAmount(sale.amount)}</div>
+                        </div>
+                        <div className="text-xs text-zinc-500">
+                          to {sale.buyer} • {sale.time}
+                        </div>
                       </div>
-                      <div className="text-xs text-zinc-500">
-                        to {sale.buyer} • {sale.time}
-                      </div>
-                    </div>
-                  ))}
+                    ))
+                  )}
                 </div>
               </div>
             </div>

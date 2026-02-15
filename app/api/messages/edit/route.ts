@@ -2,13 +2,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getClient } from '@/lib/db';
 import { requireAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
-import { isAddress } from 'viem';
 
 interface MessageEditRequest {
   messageId: string;
-  conversationId: string;
-  newContent: string;
-  userAddress: string;
+  newContent?: string;
+  encryptedContent?: string;
 }
 
 export async function PATCH(request: NextRequest) {
@@ -26,28 +24,19 @@ export async function PATCH(request: NextRequest) {
   
   try {
     const body: MessageEditRequest = await request.json();
-    const { messageId, conversationId, newContent, userAddress } = body;
+    const { messageId, newContent, encryptedContent } = body;
+    const updatedContent = encryptedContent ?? newContent;
 
-    if (!messageId || !conversationId || !newContent || !userAddress) {
+    if (!messageId || !updatedContent) {
       return NextResponse.json(
         { error: 'Missing required fields' },
         { status: 400 }
       );
     }
 
-    // Validate address format
-    if (!isAddress(userAddress)) {
-      return NextResponse.json({ error: 'Invalid Ethereum address format' }, { status: 400 });
-    }
-
-    // Verify authenticated user matches userAddress
-    if (authResult.user.address.toLowerCase() !== userAddress.toLowerCase()) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
-    }
-
     // Validate content length and sanitization happens in validation schema
-    if (newContent.length < 1 || newContent.length > 5000) {
-      return NextResponse.json({ error: 'Content must be between 1 and 5000 characters' }, { status: 400 });
+    if (updatedContent.length < 1 || updatedContent.length > 20000) {
+      return NextResponse.json({ error: 'Content must be between 1 and 20000 characters' }, { status: 400 });
     }
 
     await client.query('BEGIN');
@@ -56,8 +45,8 @@ export async function PATCH(request: NextRequest) {
       `SELECT m.*, u.wallet_address as sender
        FROM messages m
        JOIN users u ON m.sender_id = u.id
-       WHERE m.id = $1 AND m.conversation_id = $2`,
-      [messageId, conversationId]
+       WHERE m.id = $1`,
+      [messageId]
     );
 
     if (messageResult.rows.length === 0) {
@@ -67,7 +56,7 @@ export async function PATCH(request: NextRequest) {
 
     const message = messageResult.rows[0];
 
-    if (message.sender.toLowerCase() !== userAddress.toLowerCase()) {
+    if (message.sender.toLowerCase() !== authResult.user.address.toLowerCase()) {
       await client.query('ROLLBACK');
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
     }
@@ -77,7 +66,7 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: 'Cannot edit deleted message' }, { status: 400 });
     }
 
-    const messageAge = Date.now() - new Date(message.timestamp).getTime();
+    const messageAge = Date.now() - new Date(message.created_at).getTime();
     if (messageAge > 15 * 60 * 1000) {
       await client.query('ROLLBACK');
       return NextResponse.json({ error: 'Edit time limit exceeded' }, { status: 400 });
@@ -91,7 +80,7 @@ export async function PATCH(request: NextRequest) {
 
     const updateResult = await client.query(
       `UPDATE messages SET content = $1, edited_at = NOW() WHERE id = $2 RETURNING *`,
-      [newContent, messageId]
+      [updatedContent, messageId]
     );
 
     await client.query('COMMIT');

@@ -645,10 +645,8 @@ export function AddressInput({
 }: AddressInputProps) {
   const id = useId();
   const { copy, copied } = useCopyToClipboard();
-  const [isResolving, setIsResolving] = useState(false);
 
   const isValidAddress = /^0x[a-fA-F0-9]{40}$/.test(value);
-  const isENS = value.endsWith('.eth') || value.includes('.');
 
   const handleCopy = () => {
     if (isValidAddress) {
@@ -656,26 +654,6 @@ export function AddressInput({
       triggerHaptic('light');
     }
   };
-
-  // Mock ENS resolution
-  const handleResolve = async () => {
-    if (!isENS) return;
-    setIsResolving(true);
-    
-    // Simulate ENS resolution
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    
-    // Mock resolved address
-    const mockAddress = `0x${'1234'.repeat(10)}`;
-    onResolve?.(mockAddress);
-    setIsResolving(false);
-  };
-
-  React.useEffect(() => {
-    if (isENS) {
-      handleResolve();
-    }
-  }, [isENS]);
 
   return (
     <div className={`space-y-1.5 ${className}`}>
@@ -702,14 +680,6 @@ export function AddressInput({
         />
 
         <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
-          {isResolving && (
-            <motion.div
-              animate={{ rotate: 360 }}
-              transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-              className="w-4 h-4 border-2 border-cyan-500 border-t-transparent rounded-full"
-            />
-          )}
-
           {isValidAddress && (
             <>
               <button

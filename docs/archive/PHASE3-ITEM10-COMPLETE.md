@@ -582,7 +582,7 @@ TOTAL:         3,100+ lines ✨
 ✅ Celebrate 50% milestone! 🎉
 ⬜ Start planning Item #11
 ⬜ Set up notification infrastructure
-⬜ Design notification UI mockups
+⬜ Design notification UI drafts
 ```
 
 ---
@@ -622,8 +622,8 @@ TOTAL:         3,100+ lines ✨
 - Performance optimized with React best practices
 - Security considerations documented and implemented
 
-### Known Limitations (Mock Data)
-- Currently uses mock data for wallets and balances
+### Known Limitations (Sample Data)
+- Currently uses sample data for wallets and balances
 - Real Wagmi integration documented in guide
 - Production deployment requires RPC provider setup
 - Price feed integration needed for accurate USD values

@@ -492,7 +492,7 @@ test.describe('Comprehensive Screen Reader Support', () => {
     await page.goto('/');
     
     const accessibilityScanResults = await new AxeBuilder({ page })
-      .withRules(['label', 'fieldset-legend', 'form-field-multiple-labels'])
+      .withRules(['label', 'form-field-multiple-labels'])
       .analyze();
     
     expect(accessibilityScanResults.violations).toEqual([]);

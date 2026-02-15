@@ -98,11 +98,6 @@ export function ReactionPicker({ onSelect, onClose, customImages = [] }: Reactio
     emojiButtonRefs.current[newIndex]?.focus();
   }, [activeTab, focusedIndex, customImages, onSelect, onClose]);
 
-  // Reset focus when tab changes
-  useEffect(() => {
-    setFocusedIndex(0);
-  }, [activeTab]);
-
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.9, y: 10 }}
@@ -116,7 +111,10 @@ export function ReactionPicker({ onSelect, onClose, customImages = [] }: Reactio
       <div className="flex items-center justify-between p-3 border-b border-white/10">
         <div className="flex gap-1">
           <button
-            onClick={() => setActiveTab('emoji')}
+            onClick={() => {
+              setActiveTab('emoji');
+              setFocusedIndex(0);
+            }}
             className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
               activeTab === 'emoji'
                 ? 'bg-cyan-500/20 text-cyan-400'
@@ -127,7 +125,10 @@ export function ReactionPicker({ onSelect, onClose, customImages = [] }: Reactio
             Emojis
           </button>
           <button
-            onClick={() => setActiveTab('custom')}
+            onClick={() => {
+              setActiveTab('custom');
+              setFocusedIndex(0);
+            }}
             className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
               activeTab === 'custom'
                 ? 'bg-purple-500/20 text-purple-400'

@@ -2,16 +2,18 @@
 
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  WifiOff, 
-  Wifi, 
-  RefreshCw, 
-  CloudOff, 
+import {
+  WifiOff,
+  Wifi,
+  RefreshCw,
+  CloudOff,
   Check,
   Clock,
   AlertTriangle,
   Upload
 } from 'lucide-react';
+import { buildCsrfHeaders } from '@/lib/security/csrfClient';
+import { secureId } from '@/lib/secureRandom';
 
 // ==================== TYPES ====================
 
@@ -39,69 +41,23 @@ interface _OfflineContextValue {
 // ==================== HOOK ====================
 
 export function useOfflineSupport() {
-  const [isOnline, setIsOnline] = useState(true);
+  const [isOnline, setIsOnline] = useState(() => {
+    if (typeof window === 'undefined') return true;
+    return navigator.onLine;
+  });
   const [isReconnecting, setIsReconnecting] = useState(false);
-  const [queuedActions, setQueuedActions] = useState<QueuedAction[]>([]);
-  const processingRef = useRef(false);
-
-  // Check initial online status
-  useEffect(() => {
-    setIsOnline(navigator.onLine);
-
-    const handleOnline = () => {
-      setIsOnline(true);
-      setIsReconnecting(true);
-      // Process queue after reconnection
-      setTimeout(() => {
-        setIsReconnecting(false);
-        processQueue();
-      }, 1000);
-    };
-
-    const handleOffline = () => {
-      setIsOnline(false);
-    };
-
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
-
-    return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
-    };
-  }, []);
-
-  // Load queue from localStorage
-  useEffect(() => {
+  const [queuedActions, setQueuedActions] = useState<QueuedAction[]>(() => {
+    if (typeof window === 'undefined') return [];
     const saved = localStorage.getItem('vfide_offline_queue');
-    if (saved) {
-      try {
-        setQueuedActions(JSON.parse(saved));
-      } catch {
-        // Ignore parse errors
-      }
+    if (!saved) return [];
+    try {
+      return JSON.parse(saved);
+    } catch {
+      return [];
     }
-  }, []);
-
-  // Save queue to localStorage
-  useEffect(() => {
-    localStorage.setItem('vfide_offline_queue', JSON.stringify(queuedActions));
-  }, [queuedActions]);
-
-  const addToQueue = useCallback((type: string, payload: unknown): string => {
-    const id = `action-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-    const action: QueuedAction = {
-      id,
-      type,
-      payload,
-      timestamp: Date.now(),
-      retries: 0,
-      maxRetries: 3,
-      status: 'pending',
-    };
-    setQueuedActions((prev) => [...prev, action]);
-    return id;
-  }, []);
+  });
+  const processingRef = useRef(false);
+  const reconnectTimeoutRef = useRef<number | null>(null);
 
   const removeFromQueue = useCallback((id: string) => {
     setQueuedActions((prev) => prev.filter((a) => a.id !== id));
@@ -123,8 +79,6 @@ export function useOfflineSupport() {
       updateAction(action.id, { status: 'processing' });
 
       try {
-        // Process based on action type
-        // This should be customized based on your app's needs
         await processAction(action);
         removeFromQueue(action.id);
       } catch (_error) {
@@ -141,6 +95,57 @@ export function useOfflineSupport() {
 
     processingRef.current = false;
   }, [queuedActions, removeFromQueue, updateAction]);
+
+  // Check initial online status
+  useEffect(() => {
+    const handleOnline = () => {
+      setIsOnline(true);
+      setIsReconnecting(true);
+      // Process queue after reconnection
+      if (reconnectTimeoutRef.current) {
+        window.clearTimeout(reconnectTimeoutRef.current);
+      }
+      reconnectTimeoutRef.current = window.setTimeout(() => {
+        setIsReconnecting(false);
+        processQueue();
+      }, 1000);
+    };
+
+    const handleOffline = () => {
+      setIsOnline(false);
+    };
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+      if (reconnectTimeoutRef.current) {
+        window.clearTimeout(reconnectTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  // Save queue to localStorage
+  useEffect(() => {
+    localStorage.setItem('vfide_offline_queue', JSON.stringify(queuedActions));
+  }, [queuedActions]);
+
+  const addToQueue = useCallback((type: string, payload: unknown): string => {
+    const id = secureId('action');
+    const action: QueuedAction = {
+      id,
+      type,
+      payload,
+      timestamp: Date.now(),
+      retries: 0,
+      maxRetries: 3,
+      status: 'pending',
+    };
+    setQueuedActions((prev) => [...prev, action]);
+    return id;
+  }, []);
 
   const retryAction = useCallback(async (id: string) => {
     const action = queuedActions.find((a) => a.id === id);
@@ -170,7 +175,10 @@ export function useOfflineSupport() {
   // Process queue when coming online
   useEffect(() => {
     if (isOnline && queuedActions.some((a) => a.status === 'pending')) {
-      processQueue();
+      const timeout = window.setTimeout(() => {
+        processQueue();
+      }, 0);
+      return () => window.clearTimeout(timeout);
     }
   }, [isOnline, queuedActions, processQueue]);
 
@@ -192,25 +200,37 @@ async function processAction(action: QueuedAction): Promise<void> {
   // Example action processing - customize for your app
   switch (action.type) {
     case 'send_message':
+      {
+        const headers = await buildCsrfHeaders({ 'Content-Type': 'application/json' }, 'POST');
       await fetch('/api/messages', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
+        credentials: 'include',
         body: JSON.stringify(action.payload),
       });
+      }
       break;
     case 'update_profile':
-      await fetch('/api/profile', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+      {
+        const headers = await buildCsrfHeaders({ 'Content-Type': 'application/json' }, 'POST');
+      await fetch('/api/users', {
+        method: 'POST',
+        headers,
+        credentials: 'include',
         body: JSON.stringify(action.payload),
       });
+      }
       break;
     case 'send_reaction':
-      await fetch('/api/reactions', {
+      {
+        const headers = await buildCsrfHeaders({ 'Content-Type': 'application/json' }, 'POST');
+      await fetch('/api/messages/reaction', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
+        credentials: 'include',
         body: JSON.stringify(action.payload),
       });
+      }
       break;
     default:
       console.warn('Unknown action type:', action.type);
@@ -231,7 +251,10 @@ export function OfflineBanner({ isOnline, isReconnecting, queuedCount, onRetryAl
 
   // Reset dismissed state when going offline
   useEffect(() => {
-    if (!isOnline) setDismissed(false);
+    if (!isOnline) {
+      const frame = window.requestAnimationFrame(() => setDismissed(false));
+      return () => window.cancelAnimationFrame(frame);
+    }
   }, [isOnline]);
 
   if (dismissed || (isOnline && !isReconnecting && queuedCount === 0)) {

@@ -39,7 +39,10 @@ export function useA11y() {
 
 export function A11yProvider({ children }: { children: React.ReactNode }) {
   const [announcements, setAnnouncements] = useState<string[]>([]);
-  const [highContrast, setHighContrast] = useState(false);
+  const [highContrast, setHighContrast] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return localStorage.getItem('vfide-high-contrast') === 'true';
+  });
   const [focusVisible, setFocusVisible] = useState(false);
   const reducedMotion = usePrefersReducedMotion();
 
@@ -64,14 +67,15 @@ export function A11yProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
-  // Load high contrast preference
+  // Apply high contrast preference
   useEffect(() => {
-    const saved = localStorage.getItem('vfide-high-contrast');
-    if (saved === 'true') {
-      setHighContrast(true);
+    if (highContrast) {
       document.documentElement.classList.add('high-contrast');
+      return;
     }
-  }, []);
+
+    document.documentElement.classList.remove('high-contrast');
+  }, [highContrast]);
 
   const announce = useCallback((message: string, _priority: 'polite' | 'assertive' = 'polite') => {
     setAnnouncements((prev) => [...prev, message]);
@@ -143,7 +147,7 @@ export function SkipLink({
       href={href}
       className="
         sr-only focus:not-sr-only
-        fixed top-4 left-4 z-9999
+        fixed top-4 left-4 z-[9999]
         px-4 py-2 bg-cyan-500 text-white font-medium rounded-lg
         focus:outline-none focus:ring-2 focus:ring-white
         transition-transform duration-200

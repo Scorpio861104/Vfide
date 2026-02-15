@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   MessageCircle,
@@ -9,6 +9,8 @@ import {
   CheckCircle2,
   Award,
 } from 'lucide-react';
+import { useAccount } from 'wagmi';
+import { getAuthHeaders } from '@/lib/auth/client';
 
 // ==================== TYPES ====================
 
@@ -65,172 +67,36 @@ interface ActivityStreak {
   activities: string[];
 }
 
-// ==================== MOCK DATA ====================
+// ==================== HELPERS ====================
 
-const mockFriendRequests: FriendRequest[] = [
-  {
-    id: 'fr1',
-    from: {
-      id: 'u20',
-      avatar: '👩‍⚕️',
-      name: 'Lisa Martinez',
-      username: 'lisa_med',
-      proofScore: 6800,
+const buildLeaderboardEntries = (rows: Record<string, unknown>[]): LeaderboardEntry[] =>
+  rows.map((row, index) => ({
+    rank: index + 1,
+    user: {
+      id: String(row?.userId ?? row?.walletAddress ?? index + 1),
+      avatar: '👤',
+      name: String(row?.username ?? row?.walletAddress ?? 'Member'),
+      username: String(row?.username ?? row?.walletAddress ?? 'member'),
+      isVerified: Boolean(row?.tier),
     },
-    mutualFriends: 3,
-    mutualInterests: ['DeFi', 'Governance'],
-    timestamp: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
-  },
-  {
-    id: 'fr2',
-    from: {
-      id: 'u21',
-      avatar: '🎨',
-      name: 'Carlos Designer',
-      username: 'carlos_art',
-      proofScore: 5200,
-    },
-    mutualFriends: 1,
-    mutualInterests: ['Community'],
-    timestamp: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
-  },
-];
+    score: Number(row?.activityScore ?? 0),
+    change: 0,
+    badges: Number(row?.stats?.questsCompleted ?? 0),
+    streak: Number(row?.stats?.currentStreak ?? 0),
+    icon: index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `${index + 1}`,
+  }));
 
-const mockMessages: Message[] = [
-  {
-    id: 'm1',
-    from: {
-      id: 'u1',
-      avatar: '👨‍💼',
-      name: 'Alex Rivera',
-      username: 'alex_finance',
-    },
-    content: 'Hey! Great contribution to the governance forum. Want to collaborate?',
-    timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000),
-    read: false,
-  },
-  {
-    id: 'm2',
-    from: {
-      id: 'u2',
-      avatar: '👩‍🎤',
-      name: 'Sara Chen',
-      username: 'sara_merchant',
-    },
-    content: 'Thanks for the referral! 🎉 Your friend just set up their first merchant account.',
-    timestamp: new Date(Date.now() - 5 * 60 * 60 * 1000),
-    read: true,
-  },
-];
-
-const mockLeaderboards = {
-  proofScore: [
-    {
-      rank: 1,
-      user: { id: 'u1', avatar: '👑', name: 'King Crypto', username: 'king_crypto', isVerified: true },
-      score: 12500,
-      change: 2,
-      badges: 28,
-      streak: 145,
-      icon: '🥇',
-    },
-    {
-      rank: 2,
-      user: { id: 'u2', avatar: '💎', name: 'Diamond Hands', username: 'diamond_hands', isVerified: true },
-      score: 11800,
-      change: -1,
-      badges: 26,
-      streak: 98,
-      icon: '🥈',
-    },
-    {
-      rank: 3,
-      user: { id: 'u3', avatar: '⚡', name: 'Lightning Fast', username: 'lightning_fast', isVerified: true },
-      score: 10200,
-      change: 3,
-      badges: 22,
-      streak: 67,
-      icon: '🥉',
-    },
-    {
-      rank: 4,
-      user: { id: 'u4', avatar: '🔥', name: 'Hot Stuff', username: 'hot_stuff', isVerified: false },
-      score: 9100,
-      change: 5,
-      badges: 19,
-      streak: 45,
-      icon: '4️⃣',
-    },
-    {
-      rank: 5,
-      user: { id: 'u5', avatar: '🚀', name: 'Rocket Man', username: 'rocket_man', isVerified: true },
-      score: 8700,
-      change: -2,
-      badges: 18,
-      streak: 34,
-      icon: '5️⃣',
-    },
-  ] as LeaderboardEntry[],
-  badges: [
-    {
-      rank: 1,
-      user: { id: 'u6', avatar: '🏆', name: 'Badge Collector', username: 'badge_collector', isVerified: true },
-      score: 42,
-      change: 1,
-      badges: 42,
-      streak: 120,
-      icon: '🥇',
-    },
-    {
-      rank: 2,
-      user: { id: 'u7', avatar: '🎖️', name: 'Honored One', username: 'honored_one', isVerified: true },
-      score: 38,
-      change: 0,
-      badges: 38,
-      streak: 95,
-      icon: '🥈',
-    },
-    {
-      rank: 3,
-      user: { id: 'u8', avatar: '⭐', name: 'Star Player', username: 'star_player', isVerified: false },
-      score: 35,
-      change: 2,
-      badges: 35,
-      streak: 78,
-      icon: '🥉',
-    },
-  ] as LeaderboardEntry[],
+const formatRelativeTime = (date: Date) => {
+  const ts = date?.getTime?.() ?? NaN;
+  if (Number.isNaN(ts)) return 'Recently active';
+  const diffMs = Date.now() - ts;
+  const diffMinutes = Math.max(1, Math.round(diffMs / 60000));
+  if (diffMinutes < 60) return `${diffMinutes} min ago`;
+  const diffHours = Math.round(diffMinutes / 60);
+  if (diffHours < 24) return `${diffHours} hr ago`;
+  const diffDays = Math.round(diffHours / 24);
+  return `${diffDays} day${diffDays === 1 ? '' : 's'} ago`;
 };
-
-const mockStreaks: ActivityStreak[] = [
-  {
-    userId: 'u1',
-    username: 'alex_finance',
-    avatar: '👨‍💼',
-    currentStreak: 145,
-    longestStreak: 156,
-    lastActivity: new Date(Date.now() - 2 * 60 * 60 * 1000),
-    activities: ['transaction', 'vote', 'engagement'],
-  },
-  {
-    userId: 'u2',
-    username: 'luna_dev',
-    avatar: '🌙',
-    currentStreak: 98,
-    longestStreak: 178,
-    lastActivity: new Date(Date.now() - 1 * 60 * 60 * 1000),
-    activities: ['achievement', 'governance'],
-  },
-  {
-    userId: 'u3',
-    username: 'emma_community',
-    avatar: '👩‍🔬',
-    currentStreak: 67,
-    longestStreak: 89,
-    lastActivity: new Date(Date.now() - 3 * 60 * 60 * 1000),
-    activities: ['social', 'referral'],
-  },
-];
 
 // ==================== COMPONENTS ====================
 
@@ -239,22 +105,190 @@ interface SocialInteractionsProps {
 }
 
 export function SocialInteractions({ currentUserId: _currentUserId = 'current_user' }: SocialInteractionsProps) {
+  const { address } = useAccount();
   const [activeTab, setActiveTab] = useState<'requests' | 'messages' | 'leaderboards' | 'streaks'>('requests');
   const [leaderboardType, setLeaderboardType] = useState<'proofScore' | 'badges'>('proofScore');
   const [_expandedRequestId, _setExpandedRequestId] = useState<string | null>(null);
   const [acceptedRequests, setAcceptedRequests] = useState<Set<string>>(new Set());
   const [readMessages, setReadMessages] = useState<Set<string>>(new Set());
+  const [processingRequestId, setProcessingRequestId] = useState<string | null>(null);
+  const [friendRequests, setFriendRequests] = useState<FriendRequest[]>([]);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [leaderboards, setLeaderboards] = useState<{ proofScore: LeaderboardEntry[]; badges: LeaderboardEntry[] }>({
+    proofScore: [],
+    badges: [],
+  });
+  const [streaks, setStreaks] = useState<ActivityStreak[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const isWalletConnected = Boolean(address);
 
   const unreadCount = useMemo(() => {
-    return mockMessages.filter((m) => !m.read && !readMessages.has(m.id)).length;
-  }, [readMessages]);
+    return messages.filter((m) => !m.read && !readMessages.has(m.id)).length;
+  }, [messages, readMessages]);
 
-  const handleAcceptRequest = (requestId: string) => {
-    setAcceptedRequests((prev) => {
-      const newSet = new Set(prev);
-      newSet.add(requestId);
-      return newSet;
-    });
+  useEffect(() => {
+    if (!address) {
+      setFriendRequests([]);
+      setMessages([]);
+      setLeaderboards({ proofScore: [], badges: [] });
+      setStreaks([]);
+      setError(null);
+      setIsLoading(false);
+      return;
+    }
+
+    const fetchData = async () => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const headers = getAuthHeaders();
+        const [requestsRes, messagesRes, leaderboardRes] = await Promise.all([
+          fetch(`/api/friends?address=${address}&status=pending`, { headers }).catch(() => null),
+          fetch(`/api/messages?userAddress=${address}&limit=20&offset=0`, { headers }).catch(() => null),
+          fetch('/api/leaderboard/monthly?limit=10').catch(() => null),
+        ]);
+
+        if (requestsRes?.ok) {
+          const data = await requestsRes.json();
+          const rows = Array.isArray(data?.friends) ? data.friends : [];
+          const mapped = rows.map((row: Record<string, unknown>) => {
+            const userAddress = String(row?.user_address ?? '').toLowerCase();
+            const friendAddress = String(row?.friend_address ?? '').toLowerCase();
+            const isRequester = userAddress !== address.toLowerCase();
+            const other = isRequester
+              ? {
+                  id: row?.user_address,
+                  avatar: row?.user_avatar ?? '👤',
+                  name: row?.user_username ?? row?.user_address ?? 'Member',
+                  username: row?.user_username ?? row?.user_address ?? 'member',
+                }
+              : {
+                  id: row?.friend_address,
+                  avatar: row?.friend_avatar ?? '👤',
+                  name: row?.friend_username ?? row?.friend_address ?? 'Member',
+                  username: row?.friend_username ?? row?.friend_address ?? 'member',
+                };
+
+            return {
+              id: String(row?.id ?? `${userAddress}-${friendAddress}`),
+              from: {
+                ...other,
+                proofScore: 0,
+              },
+              mutualFriends: 0,
+              mutualInterests: [],
+              timestamp: new Date(row?.created_at ?? Date.now()),
+            } as FriendRequest;
+          });
+          setFriendRequests(mapped);
+        }
+
+        if (messagesRes?.ok) {
+          const data = await messagesRes.json();
+          const rows = Array.isArray(data?.messages) ? data.messages : [];
+          const mapped = rows.map((row: Record<string, unknown>) => ({
+            id: String(row?.id ?? ''),
+            from: {
+              id: row?.sender_address ?? row?.sender_username ?? 'user',
+              avatar: row?.sender_avatar ?? '👤',
+              name: row?.sender_username ?? row?.sender_address ?? 'Member',
+              username: row?.sender_username ?? row?.sender_address ?? 'member',
+            },
+            content: String(row?.content ?? ''),
+            timestamp: new Date(row?.created_at ?? Date.now()),
+            read: Boolean(row?.is_read ?? false),
+          })) as Message[];
+          setMessages(mapped);
+        }
+
+        if (leaderboardRes?.ok) {
+          const data = await leaderboardRes.json();
+          const rows = Array.isArray(data?.leaderboard) ? data.leaderboard : [];
+          const entries = buildLeaderboardEntries(rows);
+          setLeaderboards({ proofScore: entries, badges: entries });
+          setStreaks(
+            rows.map((row: Record<string, unknown>) => {
+              const stats = row?.stats as Record<string, unknown> | undefined;
+              return {
+              userId: String(row?.userId ?? row?.walletAddress ?? ''),
+              username: String(row?.username ?? row?.walletAddress ?? 'member'),
+              avatar: '👤',
+              currentStreak: Number(stats?.currentStreak ?? 0),
+              longestStreak: Number(stats?.currentStreak ?? 0),
+              lastActivity: new Date(),
+              activities: [],
+            };
+            })
+          );
+        }
+      } catch (err) {
+        console.error('Failed to load social interactions:', err);
+        setError('Unable to load social interactions');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [address]);
+
+  const handleAcceptRequest = async (requestId: string) => {
+    if (!address) return;
+    try {
+      setProcessingRequestId(requestId);
+      const response = await fetch('/api/friends', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeaders(),
+        },
+        body: JSON.stringify({ friendshipId: requestId, status: 'accepted', userAddress: address }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data?.error || 'Failed to accept request');
+      }
+
+      setAcceptedRequests((prev) => {
+        const newSet = new Set(prev);
+        newSet.add(requestId);
+        return newSet;
+      });
+    } catch (err) {
+      console.error('Failed to accept request', err);
+      setError('Unable to accept friend request');
+    } finally {
+      setProcessingRequestId(null);
+    }
+  };
+
+  const handleDeclineRequest = async (requestId: string) => {
+    if (!address) return;
+    try {
+      setProcessingRequestId(requestId);
+      const response = await fetch('/api/friends', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeaders(),
+        },
+        body: JSON.stringify({ friendshipId: requestId, status: 'rejected', userAddress: address }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data?.error || 'Failed to decline request');
+      }
+
+      setFriendRequests((prev) => prev.filter((request) => request.id !== requestId));
+    } catch (err) {
+      console.error('Failed to decline request', err);
+      setError('Unable to decline friend request');
+    } finally {
+      setProcessingRequestId(null);
+    }
   };
 
   const handleMarkAsRead = (messageId: string) => {
@@ -266,7 +300,7 @@ export function SocialInteractions({ currentUserId: _currentUserId = 'current_us
   };
 
   const tabs = [
-    { key: 'requests', label: 'Friend Requests', icon: '👥', count: mockFriendRequests.length - acceptedRequests.size },
+    { key: 'requests', label: 'Friend Requests', icon: '👥', count: Math.max(0, friendRequests.length - acceptedRequests.size) },
     { key: 'messages', label: 'Messages', icon: '💬', count: unreadCount },
     { key: 'leaderboards', label: 'Leaderboards', icon: '🏆', count: undefined },
     { key: 'streaks', label: 'Activity Streaks', icon: '🔥', count: undefined },
@@ -319,81 +353,107 @@ export function SocialInteractions({ currentUserId: _currentUserId = 'current_us
               exit={{ opacity: 0, y: -20 }}
               className="space-y-4"
             >
-              {mockFriendRequests.map((request, idx) => (
-                <motion.div
-                  key={request.id}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: idx * 0.05 }}
-                  className={`bg-zinc-900 border transition-all rounded-lg p-6 ${
-                    acceptedRequests.has(request.id)
-                      ? 'border-emerald-500/50 bg-emerald-500/5'
-                      : 'border-zinc-700 hover:border-cyan-400'
-                  }`}
-                >
-                  <div className="flex items-start gap-4 mb-4">
-                    <div className="w-16 h-16 rounded-full bg-zinc-800 flex items-center justify-center text-3xl shrink-0">
-                      {request.from.avatar}
-                    </div>
-
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <h3 className="text-lg font-bold text-zinc-100">{request.from.name}</h3>
-                        <span className="text-zinc-400">@{request.from.username}</span>
+              {error && (
+                <div className="rounded-lg border border-pink-400/40 bg-pink-500/10 px-4 py-3 text-sm text-pink-200">
+                  {error}
+                </div>
+              )}
+              {!isWalletConnected ? (
+                <div className="text-center py-12">
+                  <Users className="w-16 h-16 text-zinc-700 mx-auto mb-4" />
+                  <h3 className="text-xl font-semibold text-zinc-100 mb-2">Connect your wallet</h3>
+                  <p className="text-zinc-400">Sign in to view friend requests.</p>
+                </div>
+              ) : isLoading ? (
+                <div className="text-center py-12 text-zinc-400">Loading friend requests...</div>
+              ) : friendRequests.length === 0 ? (
+                <div className="text-center py-12">
+                  <Users className="w-16 h-16 text-zinc-700 mx-auto mb-4" />
+                  <h3 className="text-xl font-semibold text-zinc-100 mb-2">No pending requests</h3>
+                  <p className="text-zinc-400">New friend requests will appear here.</p>
+                </div>
+              ) : (
+                friendRequests.map((request, idx) => (
+                  <motion.div
+                    key={request.id}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: idx * 0.05 }}
+                    className={`bg-zinc-900 border transition-all rounded-lg p-6 ${
+                      acceptedRequests.has(request.id)
+                        ? 'border-emerald-500/50 bg-emerald-500/5'
+                        : 'border-zinc-700 hover:border-cyan-400'
+                    }`}
+                  >
+                    <div className="flex items-start gap-4 mb-4">
+                      <div className="w-16 h-16 rounded-full bg-zinc-800 flex items-center justify-center text-3xl shrink-0">
+                        {request.from.avatar}
                       </div>
 
-                      <div className="text-sm text-cyan-400 font-semibold mb-2">
-                        {request.from.proofScore} Proof Score
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <h3 className="text-lg font-bold text-zinc-100">{request.from.name}</h3>
+                          <span className="text-zinc-400">@{request.from.username}</span>
+                        </div>
+
+                        <div className="text-sm text-cyan-400 font-semibold mb-2">
+                          {request.from.proofScore} Proof Score
+                        </div>
+
+                        {request.mutualFriends > 0 && (
+                          <div className="text-sm text-zinc-400 mb-2">
+                            <Users className="w-4 h-4 inline mr-1" />
+                            {request.mutualFriends} mutual friends
+                          </div>
+                        )}
+
+                        {request.mutualInterests.length > 0 && (
+                          <div className="flex flex-wrap gap-2 mb-3">
+                            {request.mutualInterests.map((interest) => (
+                              <span key={interest} className="text-xs px-2 py-1 rounded-full bg-zinc-800 text-violet-400">
+                                {interest}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+
+                        <p className="text-xs text-zinc-500">
+                          Requested {new Date(request.timestamp).toLocaleDateString()}
+                        </p>
                       </div>
-
-                      {request.mutualFriends > 0 && (
-                        <div className="text-sm text-zinc-400 mb-2">
-                          <Users className="w-4 h-4 inline mr-1" />
-                          {request.mutualFriends} mutual friends
-                        </div>
-                      )}
-
-                      {request.mutualInterests.length > 0 && (
-                        <div className="flex flex-wrap gap-2 mb-3">
-                          {request.mutualInterests.map((interest) => (
-                            <span key={interest} className="text-xs px-2 py-1 rounded-full bg-zinc-800 text-violet-400">
-                              {interest}
-                            </span>
-                          ))}
-                        </div>
-                      )}
-
-                      <p className="text-xs text-zinc-500">
-                        Requested {new Date(request.timestamp).toLocaleDateString()}
-                      </p>
                     </div>
-                  </div>
 
-                  {acceptedRequests.has(request.id) ? (
-                    <motion.button
-                      initial={{ scale: 0.9 }}
-                      animate={{ scale: 1 }}
-                      disabled
-                      className="w-full px-4 py-3 bg-emerald-500/20 border border-emerald-500 text-emerald-500 rounded-lg font-semibold flex items-center justify-center gap-2"
-                    >
-                      <CheckCircle2 className="w-5 h-5" />
-                      Friends
-                    </motion.button>
-                  ) : (
-                    <div className="flex gap-3">
-                      <button
-                        onClick={() => handleAcceptRequest(request.id)}
-                        className="flex-1 px-4 py-3 bg-cyan-400 text-zinc-950 rounded-lg hover:bg-cyan-400 transition-all font-semibold"
+                    {acceptedRequests.has(request.id) ? (
+                      <motion.button
+                        initial={{ scale: 0.9 }}
+                        animate={{ scale: 1 }}
+                        disabled
+                        className="w-full px-4 py-3 bg-emerald-500/20 border border-emerald-500 text-emerald-500 rounded-lg font-semibold flex items-center justify-center gap-2"
                       >
-                        Accept
-                      </button>
-                      <button className="flex-1 px-4 py-3 bg-zinc-800 border border-zinc-700 text-zinc-400 rounded-lg hover:border-pink-400 transition-colors font-semibold">
-                        Decline
-                      </button>
-                    </div>
-                  )}
-                </motion.div>
-              ))}
+                        <CheckCircle2 className="w-5 h-5" />
+                        Friends
+                      </motion.button>
+                    ) : (
+                      <div className="flex gap-3">
+                        <button
+                          onClick={() => handleAcceptRequest(request.id)}
+                          disabled={processingRequestId === request.id}
+                          className="flex-1 px-4 py-3 bg-cyan-400 text-zinc-950 rounded-lg hover:bg-cyan-400 transition-all font-semibold disabled:opacity-60 disabled:cursor-not-allowed"
+                        >
+                          {processingRequestId === request.id ? 'Working...' : 'Accept'}
+                        </button>
+                        <button
+                          onClick={() => handleDeclineRequest(request.id)}
+                          disabled={processingRequestId === request.id}
+                          className="flex-1 px-4 py-3 bg-zinc-800 border border-zinc-700 text-zinc-400 rounded-lg hover:border-pink-400 transition-colors font-semibold disabled:opacity-60 disabled:cursor-not-allowed"
+                        >
+                          Decline
+                        </button>
+                      </div>
+                    )}
+                  </motion.div>
+                ))
+              )}
             </motion.div>
           )}
 
@@ -406,14 +466,27 @@ export function SocialInteractions({ currentUserId: _currentUserId = 'current_us
               exit={{ opacity: 0, y: -20 }}
               className="space-y-4"
             >
-              {mockMessages.length === 0 ? (
+              {error && (
+                <div className="rounded-lg border border-pink-400/40 bg-pink-500/10 px-4 py-3 text-sm text-pink-200">
+                  {error}
+                </div>
+              )}
+              {!isWalletConnected ? (
+                <div className="text-center py-12">
+                  <MessageCircle className="w-16 h-16 text-zinc-700 mx-auto mb-4" />
+                  <h3 className="text-xl font-semibold text-zinc-100 mb-2">Connect your wallet</h3>
+                  <p className="text-zinc-400">Sign in to view your messages.</p>
+                </div>
+              ) : isLoading ? (
+                <div className="text-center py-12 text-zinc-400">Loading messages...</div>
+              ) : messages.length === 0 ? (
                 <div className="text-center py-12">
                   <MessageCircle className="w-16 h-16 text-zinc-700 mx-auto mb-4" />
                   <h3 className="text-xl font-semibold text-zinc-100 mb-2">No messages</h3>
                   <p className="text-zinc-400">Start a conversation with your friends</p>
                 </div>
               ) : (
-                mockMessages.map((message, idx) => (
+                messages.map((message, idx) => (
                   <motion.div
                     key={message.id}
                     initial={{ opacity: 0, x: -20 }}
@@ -483,57 +556,72 @@ export function SocialInteractions({ currentUserId: _currentUserId = 'current_us
               </div>
 
               <div className="space-y-3">
-                {mockLeaderboards[leaderboardType].map((entry, idx) => (
-                  <motion.div
-                    key={entry.user.id}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: idx * 0.05 }}
-                    className={`bg-zinc-900 border rounded-lg p-4 transition-all hover:border-amber-400/50 group`}
-                  >
-                    <div className="flex items-center gap-4">
-                      <div className="text-3xl font-bold text-amber-400 w-16 text-center">{entry.icon}</div>
-
-                      <div className="flex items-center gap-3 flex-1 min-w-0">
-                        <div className="w-12 h-12 rounded-full bg-zinc-800 flex items-center justify-center text-xl shrink-0">
-                          {entry.user.avatar}
-                        </div>
-
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2">
-                            <h4 className="font-bold text-zinc-100">{entry.user.name}</h4>
-                            {entry.user.isVerified && <CheckCircle2 className="w-4 h-4 text-cyan-400" />}
-                          </div>
-                          <p className="text-xs text-zinc-400">@{entry.user.username}</p>
-                        </div>
-                      </div>
-
-                      <div className="text-right shrink-0">
-                        <div className="text-2xl font-bold text-amber-400">{entry.score}</div>
-                        <div className={`text-xs font-semibold ${entry.change > 0 ? 'text-emerald-500' : entry.change < 0 ? 'text-pink-400' : 'text-zinc-500'}`}>
-                          {entry.change > 0 ? '↑' : entry.change < 0 ? '↓' : '='} {Math.abs(entry.change)}
-                        </div>
-                      </div>
-                    </div>
-
+                {error && (
+                  <div className="rounded-lg border border-pink-400/40 bg-pink-500/10 px-4 py-3 text-sm text-pink-200">
+                    {error}
+                  </div>
+                )}
+                {isLoading ? (
+                  <div className="text-center py-12 text-zinc-400">Loading leaderboards...</div>
+                ) : leaderboards[leaderboardType].length === 0 ? (
+                  <div className="text-center py-12">
+                    <Award className="w-16 h-16 text-zinc-700 mx-auto mb-4" />
+                    <h3 className="text-xl font-semibold text-zinc-100 mb-2">No leaderboard data yet</h3>
+                    <p className="text-zinc-400">Check back once activity picks up.</p>
+                  </div>
+                ) : (
+                  leaderboards[leaderboardType].map((entry, idx) => (
                     <motion.div
-                      initial={{ opacity: 0, height: 0 }}
-                      whileHover={{ opacity: 1, height: 'auto' }}
-                      className="mt-3 pt-3 border-t border-zinc-700 text-xs text-zinc-400"
+                      key={entry.user.id}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: idx * 0.05 }}
+                      className={`bg-zinc-900 border rounded-lg p-4 transition-all hover:border-amber-400/50 group`}
                     >
-                      <div className="flex gap-4">
-                        <div className="flex items-center gap-1">
-                          <Award className="w-3 h-3" />
-                          {entry.badges} badges
+                      <div className="flex items-center gap-4">
+                        <div className="text-3xl font-bold text-amber-400 w-16 text-center">{entry.icon}</div>
+
+                        <div className="flex items-center gap-3 flex-1 min-w-0">
+                          <div className="w-12 h-12 rounded-full bg-zinc-800 flex items-center justify-center text-xl shrink-0">
+                            {entry.user.avatar}
+                          </div>
+
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2">
+                              <h4 className="font-bold text-zinc-100">{entry.user.name}</h4>
+                              {entry.user.isVerified && <CheckCircle2 className="w-4 h-4 text-cyan-400" />}
+                            </div>
+                            <p className="text-xs text-zinc-400">@{entry.user.username}</p>
+                          </div>
                         </div>
-                        <div className="flex items-center gap-1">
-                          <Flame className="w-3 h-3" />
-                          {entry.streak} day streak
+
+                        <div className="text-right shrink-0">
+                          <div className="text-2xl font-bold text-amber-400">{entry.score}</div>
+                          <div className={`text-xs font-semibold ${entry.change > 0 ? 'text-emerald-500' : entry.change < 0 ? 'text-pink-400' : 'text-zinc-500'}`}>
+                            {entry.change > 0 ? '↑' : entry.change < 0 ? '↓' : '='} {Math.abs(entry.change)}
+                          </div>
                         </div>
                       </div>
+
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        whileHover={{ opacity: 1, height: 'auto' }}
+                        className="mt-3 pt-3 border-t border-zinc-700 text-xs text-zinc-400"
+                      >
+                        <div className="flex gap-4">
+                          <div className="flex items-center gap-1">
+                            <Award className="w-3 h-3" />
+                            {entry.badges} badges
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <Flame className="w-3 h-3" />
+                            {entry.streak} day streak
+                          </div>
+                        </div>
+                      </motion.div>
                     </motion.div>
-                  </motion.div>
-                ))}
+                  ))
+                )}
               </div>
             </motion.div>
           )}
@@ -547,75 +635,96 @@ export function SocialInteractions({ currentUserId: _currentUserId = 'current_us
               exit={{ opacity: 0, y: -20 }}
               className="space-y-4"
             >
-              {mockStreaks.map((streak, idx) => (
-                <motion.div
-                  key={streak.userId}
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: idx * 0.05 }}
-                  className="bg-linear-to-r from-zinc-900 to-zinc-800 border border-zinc-700 rounded-lg p-6 hover:border-pink-400/50 transition-colors"
-                >
-                  <div className="flex items-center gap-4 mb-4">
-                    <div className="w-16 h-16 rounded-full bg-zinc-800 flex items-center justify-center text-3xl shrink-0">
-                      {streak.avatar}
-                    </div>
+              {error && (
+                <div className="rounded-lg border border-pink-400/40 bg-pink-500/10 px-4 py-3 text-sm text-pink-200">
+                  {error}
+                </div>
+              )}
+              {isLoading ? (
+                <div className="text-center py-12 text-zinc-400">Loading activity streaks...</div>
+              ) : streaks.length === 0 ? (
+                <div className="text-center py-12">
+                  <Flame className="w-16 h-16 text-zinc-700 mx-auto mb-4" />
+                  <h3 className="text-xl font-semibold text-zinc-100 mb-2">No streaks yet</h3>
+                  <p className="text-zinc-400">Activity streaks will appear as users stay active.</p>
+                </div>
+              ) : (
+                streaks.map((streak, idx) => (
+                  <motion.div
+                    key={streak.userId}
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: idx * 0.05 }}
+                    className="bg-linear-to-r from-zinc-900 to-zinc-800 border border-zinc-700 rounded-lg p-6 hover:border-pink-400/50 transition-colors"
+                  >
+                    <div className="flex items-center gap-4 mb-4">
+                      <div className="w-16 h-16 rounded-full bg-zinc-800 flex items-center justify-center text-3xl shrink-0">
+                        {streak.avatar}
+                      </div>
 
-                    <div className="flex-1 min-w-0">
-                      <h3 className="text-xl font-bold text-zinc-100">{streak.username}</h3>
-                      <div className="flex items-center gap-2 text-pink-400 font-bold text-lg mt-1">
-                        <Flame className="w-5 h-5" />
-                        {streak.currentStreak} day streak
+                      <div className="flex-1 min-w-0">
+                        <h3 className="text-xl font-bold text-zinc-100">{streak.username}</h3>
+                        <div className="flex items-center gap-2 text-pink-400 font-bold text-lg mt-1">
+                          <Flame className="w-5 h-5" />
+                          {streak.currentStreak} day streak
+                        </div>
+                      </div>
+
+                      <div className="text-right shrink-0">
+                        <div className="text-sm text-zinc-400 mb-1">Personal best</div>
+                        <div className="text-2xl font-bold text-amber-400">{streak.longestStreak}</div>
                       </div>
                     </div>
 
-                    <div className="text-right shrink-0">
-                      <div className="text-sm text-zinc-400 mb-1">Personal best</div>
-                      <div className="text-2xl font-bold text-amber-400">{streak.longestStreak}</div>
+                    <div className="grid grid-cols-3 gap-4 mb-4 pb-4 border-b border-zinc-700">
+                      <div>
+                        <div className="text-cyan-400 font-bold">{formatRelativeTime(streak.lastActivity)}</div>
+                        <div className="text-xs text-zinc-500">Last activity</div>
+                      </div>
+                      <div className="text-center">
+                        <div className="inline-block px-3 py-2 bg-pink-400/20 text-pink-400 rounded-lg text-sm font-semibold">
+                          On Fire! 🔥
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-emerald-500 font-bold">{streak.activities.length}</div>
+                        <div className="text-xs text-zinc-500">Activity types</div>
+                      </div>
                     </div>
-                  </div>
 
-                  <div className="grid grid-cols-3 gap-4 mb-4 pb-4 border-b border-zinc-700">
                     <div>
-                      <div className="text-cyan-400 font-bold">1 day ago</div>
-                      <div className="text-xs text-zinc-500">Last activity</div>
-                    </div>
-                    <div className="text-center">
-                      <div className="inline-block px-3 py-2 bg-pink-400/20 text-pink-400 rounded-lg text-sm font-semibold">
-                        On Fire! 🔥
+                      <h4 className="text-xs text-zinc-400 font-semibold mb-2">Recent Activities</h4>
+                      <div className="flex flex-wrap gap-2">
+                        {streak.activities.length === 0 ? (
+                          <span className="px-3 py-1 rounded-full bg-zinc-800 border border-zinc-700 text-sm text-zinc-400">
+                            Activity types pending
+                          </span>
+                        ) : (
+                          streak.activities.map((activity) => {
+                            const activityEmojis: Record<string, string> = {
+                              transaction: '💳',
+                              vote: '🗳️',
+                              engagement: '💬',
+                              achievement: '🏆',
+                              governance: '⚙️',
+                              social: '👥',
+                              referral: '🤝',
+                            };
+                            return (
+                              <span
+                                key={activity}
+                                className="px-3 py-1 rounded-full bg-zinc-800 border border-zinc-700 text-sm"
+                              >
+                                {activityEmojis[activity] || '•'} {activity}
+                              </span>
+                            );
+                          })
+                        )}
                       </div>
                     </div>
-                    <div className="text-right">
-                      <div className="text-emerald-500 font-bold">{streak.activities.length}</div>
-                      <div className="text-xs text-zinc-500">Activity types</div>
-                    </div>
-                  </div>
-
-                  <div>
-                    <h4 className="text-xs text-zinc-400 font-semibold mb-2">Recent Activities</h4>
-                    <div className="flex flex-wrap gap-2">
-                      {streak.activities.map((activity) => {
-                        const activityEmojis: Record<string, string> = {
-                          transaction: '💳',
-                          vote: '🗳️',
-                          engagement: '💬',
-                          achievement: '🏆',
-                          governance: '⚙️',
-                          social: '👥',
-                          referral: '🤝',
-                        };
-                        return (
-                          <span
-                            key={activity}
-                            className="px-3 py-1 rounded-full bg-zinc-800 border border-zinc-700 text-sm"
-                          >
-                            {activityEmojis[activity] || '•'} {activity}
-                          </span>
-                        );
-                      })}
-                    </div>
-                  </div>
-                </motion.div>
-              ))}
+                  </motion.div>
+                ))
+              )}
             </motion.div>
           )}
         </AnimatePresence>

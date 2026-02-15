@@ -361,9 +361,9 @@ npm test -- MerchantPortal.test.tsx --watch
 
 ---
 
-## Mock Data
+## Sample Data
 
-The component includes realistic mock data for testing:
+The component includes realistic sample data for testing:
 
 **Payment Requests:**
 - 3 sample requests with various statuses
@@ -512,7 +512,7 @@ The Merchant Portal provides enterprise-grade payment management with:
 - WCAG 2.1 AA compliance
 - 800+ lines of production code
 - Complete API integration points
-- Realistic mock data for testing
+- Realistic sample data for testing
 
 **Status:** ✅ Production Ready  
 **Test Coverage:** 95%+  

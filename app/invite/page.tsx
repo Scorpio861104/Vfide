@@ -37,21 +37,21 @@ export default function InviteFriendsPage() {
     const body = encodeURIComponent(
       `I'm using VFIDE for trust-based payments. Join me using my invite link: ${referralLink}`
     )
-    window.open(`mailto:?subject=${subject}&body=${body}`, '_blank')
+    window.open(`mailto:?subject=${subject}&body=${body}`, '_blank', 'noopener,noreferrer')
   }
 
   const shareViaTwitter = () => {
     const text = encodeURIComponent(
       `Join me on VFIDE - the future of trust-based payments! ${referralLink}`
     )
-    window.open(`https://twitter.com/intent/tweet?text=${text}`, '_blank')
+    window.open(`https://twitter.com/intent/tweet?text=${text}`, '_blank', 'noopener,noreferrer')
   }
 
   const shareViaWhatsApp = () => {
     const text = encodeURIComponent(
       `Join me on VFIDE - the future of trust-based payments! ${referralLink}`
     )
-    window.open(`https://wa.me/?text=${text}`, '_blank')
+    window.open(`https://wa.me/?text=${text}`, '_blank', 'noopener,noreferrer')
   }
 
   const rewards = [

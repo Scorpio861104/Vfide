@@ -4,6 +4,7 @@ import React, { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { X, Camera, Type, Image as ImageIcon } from 'lucide-react';
 import { createTextStory, createMediaStory, STORY_BACKGROUNDS, Story } from '@/lib/storiesSystem';
+import Image from 'next/image';
 
 interface StoryCreatorProps {
   onClose: () => void;
@@ -203,7 +204,7 @@ export function StoryCreator({
                   {mediaFile?.type.startsWith('video/') ? (
                     <video src={mediaPreview} className="w-full h-full object-cover" controls />
                   ) : (
-                    <img src={mediaPreview} alt="Preview" className="w-full h-full object-cover" />
+                    <Image src={mediaPreview} alt="Preview" width={360} height={640} className="w-full h-full object-cover" unoptimized />
                   )}
                   <button
                     onClick={() => {

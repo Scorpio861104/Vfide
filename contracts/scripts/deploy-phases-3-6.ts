@@ -1,12 +1,18 @@
 import hre from "hardhat";
 import { Contract } from "ethers";
 
-const ethers = (hre as any).ethers;
+const ethers = (hre as unknown as { ethers: typeof import('ethers') }).ethers;
 
 /**
  * Deployment script for Phases 3-6 smart contracts
- * 
- * Usage:
+ *
+ * WARNING: This is a deployment template/roadmap. The contracts referenced here
+ * (BridgeSecurityModule, VFIDEBridge, LiquidityIncentivesV2, VFIDEPriceOracle,
+ * StakingRewards, GovernancePower, VFIDEStaking, LPTokenTracker, CollateralManager,
+ * VFIDELending, VFIDEFlashLoan) have NOT been implemented yet.
+ * Do NOT run this script until those contracts exist in the contracts/ directory.
+ *
+ * Usage (when ready):
  * npx hardhat run contracts/scripts/deploy-phases-3-6.ts --network <network>
  */
 
@@ -43,6 +49,24 @@ interface DeployedContracts {
 }
 
 async function main() {
+  // Guard: These contracts are not yet implemented
+  const requiredContracts = [
+    "BridgeSecurityModule", "VFIDEBridge", "VFIDEPriceOracle",
+    "StakingRewards", "GovernancePower", "VFIDEStaking",
+    "LiquidityIncentivesV2", "LPTokenTracker",
+    "CollateralManager", "VFIDELending", "VFIDEFlashLoan",
+  ];
+  for (const name of requiredContracts) {
+    try {
+      await ethers.getContractFactory(name);
+    } catch {
+      throw new Error(
+        `Contract "${name}" not found. This deploy script is a roadmap template — ` +
+        `implement all Phase 3-6 contracts before running.`
+      );
+    }
+  }
+
   const [deployer] = await ethers.getSigners();
   if (!deployer) {
     throw new Error('No deployer signer available');

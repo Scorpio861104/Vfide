@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getClient } from '@/lib/db';
 import { withRateLimit } from '@/lib/auth/rateLimit';
+import { requireAuth } from '@/lib/auth/middleware';
 
 /**
  * GET /api/leaderboard/monthly
@@ -10,6 +11,10 @@ export async function GET(request: NextRequest) {
   // Rate limiting for read operations
   const rateLimitResponse = await withRateLimit(request, 'read');
   if (rateLimitResponse) return rateLimitResponse;
+
+  // API-01 Fix: Require authentication to prevent public user enumeration
+  const authResult = await requireAuth(request);
+  if (authResult instanceof NextResponse) return authResult;
 
   try {
     const searchParams = request.nextUrl.searchParams;
@@ -191,19 +196,18 @@ export async function POST(request: NextRequest) {
   const rateLimitResponse = await withRateLimit(request, 'write');
   if (rateLimitResponse) return rateLimitResponse;
 
+  const authResult = await requireAuth(request);
+  if (authResult instanceof NextResponse) return authResult;
+
   try {
-    const {
-      userAddress,
-      questsCompleted,
-      challengesCompleted,
-      currentStreak,
-      transactionsCount,
-      socialInteractions,
-      governanceVotes,
-    } = await request.json();
+    const { userAddress } = await request.json();
 
     if (!userAddress) {
       return NextResponse.json({ error: 'User address required' }, { status: 400 });
+    }
+
+    if (authResult.user.address.toLowerCase() !== String(userAddress).toLowerCase()) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
     }
 
     const monthYear = new Date().toISOString().slice(0, 7);
@@ -225,35 +229,61 @@ export async function POST(request: NextRequest) {
 
       const userId = userResult.rows[0].id;
 
-      // Get user's total XP for the month
-      const xpResult = await client.query(
-        'SELECT COALESCE(SUM(xp_earned), 0) as total_xp FROM daily_rewards WHERE user_id = $1 AND reward_date >= DATE_TRUNC(\'month\', CURRENT_DATE)',
-        [userId]
-      );
+      // API-10 Fix: Compute ALL stats server-side from authoritative database records
+      const [xpResult, questsResult, streakResult, txResult, socialResult, govResult] = await Promise.all([
+        client.query(
+          'SELECT COALESCE(SUM(xp_earned), 0) as total_xp FROM daily_rewards WHERE user_id = $1 AND reward_date >= DATE_TRUNC(\'month\', CURRENT_DATE)',
+          [userId]
+        ),
+        client.query(
+          'SELECT COUNT(*) as quests_done FROM quest_completions WHERE user_id = $1 AND completed_at >= DATE_TRUNC(\'month\', CURRENT_DATE)',
+          [userId]
+        ),
+        client.query(
+          'SELECT COALESCE(current_streak, 0) as streak FROM user_streaks WHERE user_id = $1',
+          [userId]
+        ),
+        client.query(
+          'SELECT COUNT(*) as tx_count FROM activities WHERE user_id = $1 AND activity_type = \'transaction\' AND created_at >= DATE_TRUNC(\'month\', CURRENT_DATE)',
+          [userId]
+        ),
+        client.query(
+          'SELECT COUNT(*) as social_count FROM activities WHERE user_id = $1 AND activity_type IN (\'endorsement\', \'message\', \'friend_request\') AND created_at >= DATE_TRUNC(\'month\', CURRENT_DATE)',
+          [userId]
+        ),
+        client.query(
+          'SELECT COUNT(*) as vote_count FROM activities WHERE user_id = $1 AND activity_type = \'vote\' AND created_at >= DATE_TRUNC(\'month\', CURRENT_DATE)',
+          [userId]
+        ),
+      ]);
+
       const totalXp = xpResult.rows[0].total_xp;
+      const questsCompleted = parseInt(questsResult.rows[0].quests_done, 10) || 0;
+      const currentStreak = parseInt(streakResult.rows[0]?.streak ?? '0', 10) || 0;
+      const transactionsCount = parseInt(txResult.rows[0].tx_count, 10) || 0;
+      const socialInteractions = parseInt(socialResult.rows[0].social_count, 10) || 0;
+      const governanceVotes = parseInt(govResult.rows[0].vote_count, 10) || 0;
 
       // Upsert leaderboard entry
       await client.query(`
-        INSERT INTO monthly_leaderboard 
-        (user_id, month_year, total_xp_earned, quests_completed, challenges_completed, 
+        INSERT INTO monthly_leaderboard
+        (user_id, month_year, total_xp_earned, quests_completed, challenges_completed,
          current_streak, transactions_count, social_interactions, governance_votes, updated_at)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW())
-        ON CONFLICT (user_id, month_year) 
-        DO UPDATE SET 
+        VALUES ($1, $2, $3, $4, 0, $5, $6, $7, $8, NOW())
+        ON CONFLICT (user_id, month_year)
+        DO UPDATE SET
           total_xp_earned = COALESCE($3, monthly_leaderboard.total_xp_earned),
           quests_completed = COALESCE($4, monthly_leaderboard.quests_completed),
-          challenges_completed = COALESCE($5, monthly_leaderboard.challenges_completed),
-          current_streak = COALESCE($6, monthly_leaderboard.current_streak),
-          transactions_count = COALESCE($7, monthly_leaderboard.transactions_count),
-          social_interactions = COALESCE($8, monthly_leaderboard.social_interactions),
-          governance_votes = COALESCE($9, monthly_leaderboard.governance_votes),
+          current_streak = COALESCE($5, monthly_leaderboard.current_streak),
+          transactions_count = COALESCE($6, monthly_leaderboard.transactions_count),
+          social_interactions = COALESCE($7, monthly_leaderboard.social_interactions),
+          governance_votes = COALESCE($8, monthly_leaderboard.governance_votes),
           updated_at = NOW()
       `, [
         userId,
         monthYear,
         totalXp,
         questsCompleted,
-        challengesCompleted,
         currentStreak,
         transactionsCount,
         socialInteractions,

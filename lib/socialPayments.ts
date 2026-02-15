@@ -8,6 +8,8 @@
 import { useCallback, useEffect, useState } from 'react';
 import { sendPayment } from './crypto';
 import { validateAmount, validateEthereumAddress } from './cryptoValidation';
+import { buildCsrfHeaders } from '@/lib/security/csrfClient';
+import { secureId } from '@/lib/secureRandom';
 
 // ============================================================================
 // Types
@@ -89,7 +91,7 @@ export async function tipPost(
     });
 
     const tip: SocialTip = {
-      id: `tip_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      id: secureId('tip'),
       postId,
       recipientAddress,
       amount,
@@ -101,9 +103,11 @@ export async function tipPost(
     };
 
     // Save tip to database
+    const tipHeaders = await buildCsrfHeaders({ 'Content-Type': 'application/json' }, 'POST');
     await fetch('/api/social/tips', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: tipHeaders,
+      credentials: 'include',
       body: JSON.stringify(tip),
     });
 
@@ -136,7 +140,7 @@ export async function tipComment(
     });
 
     const tip: SocialTip = {
-      id: `tip_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      id: secureId('tip'),
       commentId,
       recipientAddress,
       amount,
@@ -147,9 +151,11 @@ export async function tipComment(
       status: transaction.status === 'confirmed' ? 'confirmed' : 'pending',
     };
 
+    const tipHeaders = await buildCsrfHeaders({ 'Content-Type': 'application/json' }, 'POST');
     await fetch('/api/social/tips', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: tipHeaders,
+      credentials: 'include',
       body: JSON.stringify(tip),
     });
 
@@ -186,7 +192,7 @@ export async function purchaseContent(
     });
 
     const payment: ContentPayment = {
-      id: `content_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      id: secureId('content'),
       contentId,
       contentType,
       price,
@@ -199,9 +205,11 @@ export async function purchaseContent(
     };
 
     // Save payment and grant access
+    const purchaseHeaders = await buildCsrfHeaders({ 'Content-Type': 'application/json' }, 'POST');
     const response = await fetch('/api/social/content-purchases', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: purchaseHeaders,
+      credentials: 'include',
       body: JSON.stringify(payment),
     });
 
@@ -254,7 +262,7 @@ export async function rewardEndorsement(
     });
 
     const reward: EndorsementReward = {
-      id: `reward_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      id: secureId('reward'),
       endorsementId,
       senderAddress: transaction.from,
       recipientAddress,
@@ -265,9 +273,11 @@ export async function rewardEndorsement(
       txHash: transaction.txHash,
     };
 
+    const rewardHeaders = await buildCsrfHeaders({ 'Content-Type': 'application/json' }, 'POST');
     await fetch('/api/social/endorsement-rewards', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: rewardHeaders,
+      credentials: 'include',
       body: JSON.stringify(reward),
     });
 
@@ -332,9 +342,11 @@ export async function getPostTipTotal(postId: string): Promise<{ eth: string; vf
 // ============================================================================
 
 async function notifyTipReceived(tip: SocialTip): Promise<void> {
+  const headers = await buildCsrfHeaders({ 'Content-Type': 'application/json' }, 'POST');
   await fetch('/api/notifications', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers,
+    credentials: 'include',
     body: JSON.stringify({
       type: 'tip_received',
       userId: tip.recipientAddress,
@@ -344,9 +356,11 @@ async function notifyTipReceived(tip: SocialTip): Promise<void> {
 }
 
 async function notifyContentPurchase(payment: ContentPayment): Promise<void> {
+  const headers = await buildCsrfHeaders({ 'Content-Type': 'application/json' }, 'POST');
   await fetch('/api/notifications', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers,
+    credentials: 'include',
     body: JSON.stringify({
       type: 'content_purchased',
       userId: payment.sellerAddress,
@@ -356,9 +370,11 @@ async function notifyContentPurchase(payment: ContentPayment): Promise<void> {
 }
 
 async function notifyEndorsementReward(reward: EndorsementReward): Promise<void> {
+  const headers = await buildCsrfHeaders({ 'Content-Type': 'application/json' }, 'POST');
   await fetch('/api/notifications', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers,
+    credentials: 'include',
     body: JSON.stringify({
       type: 'endorsement_reward',
       userId: reward.recipientAddress,

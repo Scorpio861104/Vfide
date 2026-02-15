@@ -138,7 +138,7 @@ export function ContentLoader({
   className = '',
 }: ContentLoaderProps) {
   const [showContent, setShowContent] = useState(!isLoading);
-  const [loadStartTime] = useState(Date.now());
+  const [loadStartTime] = useState(() => Date.now());
 
   useEffect(() => {
     if (!isLoading) {
@@ -151,8 +151,11 @@ export function ContentLoader({
 
       return () => clearTimeout(timeout);
     } else {
-      setShowContent(false);
-      return undefined;
+      const timeout = setTimeout(() => {
+        setShowContent(false);
+      }, 0);
+
+      return () => clearTimeout(timeout);
     }
   }, [isLoading, loadStartTime, minLoadTime]);
 

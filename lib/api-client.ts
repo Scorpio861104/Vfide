@@ -18,11 +18,21 @@ interface Message {
 }
 
 interface User {
-  address: string;
+  address?: string;
+  wallet_address?: string;
   username?: string;
+  display_name?: string;
   avatar?: string;
+  avatar_url?: string;
   bio?: string;
-  createdAt: number;
+  email?: string;
+  location?: string;
+  website?: string;
+  twitter?: string;
+  github?: string;
+  proof_score?: number;
+  created_at?: number | string;
+  updated_at?: number | string;
 }
 
 interface GamificationProgress {
@@ -47,6 +57,7 @@ export class APIError extends Error {
 export class APIClient {
   private baseURL: string;
   private token: string | null = null;
+  private csrfToken: string | null = null;
 
   constructor(baseURL: string = '') {
     this.baseURL = baseURL || (typeof window !== 'undefined' ? window.location.origin : '');
@@ -57,19 +68,12 @@ export class APIClient {
    */
   setToken(token: string) {
     this.token = token;
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('vfide_api_token', token);
-    }
   }
 
   /**
    * Get authentication token
    */
   getToken(): string | null {
-    if (this.token) return this.token;
-    if (typeof window !== 'undefined') {
-      this.token = localStorage.getItem('vfide_api_token');
-    }
     return this.token;
   }
 
@@ -78,8 +82,23 @@ export class APIClient {
    */
   clearToken() {
     this.token = null;
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem('vfide_api_token');
+  }
+
+  private async ensureCsrfToken(): Promise<void> {
+    if (this.csrfToken) return;
+
+    const response = await fetch(`${this.baseURL}/api/csrf`, {
+      method: 'GET',
+      credentials: 'include',
+    });
+
+    if (!response.ok) {
+      throw new APIError('Failed to fetch CSRF token', response.status);
+    }
+
+    const data = await response.json();
+    if (data?.token) {
+      this.csrfToken = data.token as string;
     }
   }
 
@@ -93,6 +112,11 @@ export class APIClient {
     const url = `${this.baseURL}/api${endpoint}`;
     const token = this.getToken();
 
+    const method = (options.method || 'GET').toUpperCase();
+    if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(method)) {
+      await this.ensureCsrfToken();
+    }
+
     const headers: HeadersInit = {
       'Content-Type': 'application/json',
       ...options.headers,
@@ -102,10 +126,15 @@ export class APIClient {
       (headers as Record<string, string>)['Authorization'] = `Bearer ${token}`;
     }
 
+    if (this.csrfToken && ['POST', 'PUT', 'PATCH', 'DELETE'].includes(method)) {
+      (headers as Record<string, string>)['x-csrf-token'] = this.csrfToken;
+    }
+
     try {
       const response = await fetch(url, {
         ...options,
         headers,
+        credentials: 'include',
       });
 
       const data = await response.json();
@@ -147,7 +176,7 @@ export class APIClient {
   }
 
   async verifyToken() {
-    return this.request<{ valid: boolean; address: string }>('/auth/verify');
+    return this.request<{ valid: boolean; address: string }>('/auth');
   }
 
   // ============ Messages ============
@@ -174,24 +203,24 @@ export class APIClient {
     });
   }
 
-  async markMessageRead(messageId: string, conversationId: string) {
+  async markMessageRead(messageIds: string[]) {
     return this.request<{ success: boolean; message: Message }>('/messages', {
       method: 'PATCH',
-      body: JSON.stringify({ messageId, conversationId, read: true }),
+      body: JSON.stringify({ messageIds }),
     });
   }
 
-  async editMessage(messageId: string, conversationId: string, newEncryptedContent: string) {
+  async editMessage(messageId: string, newEncryptedContent: string) {
     return this.request<{ success: boolean; message: Message }>('/messages/edit', {
       method: 'PATCH',
-      body: JSON.stringify({ messageId, conversationId, encryptedContent: newEncryptedContent }),
+      body: JSON.stringify({ messageId, encryptedContent: newEncryptedContent }),
     });
   }
 
-  async deleteMessage(messageId: string, conversationId: string) {
+  async deleteMessage(messageId: string) {
     return this.request<{ success: boolean; message: Message }>('/messages/delete', {
       method: 'DELETE',
-      body: JSON.stringify({ messageId, conversationId }),
+      body: JSON.stringify({ messageId }),
     });
   }
 

@@ -1,8 +1,12 @@
 
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import UserProfile from '@/components/profile/UserProfile';
+
+jest.mock('wagmi', () => ({
+  useAccount: () => ({ address: undefined, isConnected: false }),
+}));
 
 // Mock framer-motion
 jest.mock('framer-motion', () => ({
@@ -46,12 +50,12 @@ jest.mock('lucide-react', () => ({
   MessageSquare: () => <span />,
 }));
 
-test('debug: check for duplicate johndoe', () => {
+test('debug: check for duplicate johndoe', async () => {
   const { container } = render(<UserProfile />);
   
   // Click edit mode
-  const editBtn = screen.getByRole('button', { name: /Edit Profile/i });
-  require('@testing-library/react').fireEvent.click(editBtn);
+  const editBtn = await screen.findByRole('button', { name: /Edit Profile/i });
+  fireEvent.click(editBtn);
   
   // Find all inputs with johndoe
   const allInputs = container.querySelectorAll('input');

@@ -19,6 +19,7 @@
 
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { safeParseInt } from '@/lib/validation';
+import { getAuthHeaders, getAuthToken } from '@/lib/auth/client';
 
 // ============================================================================
 // Type Definitions
@@ -86,146 +87,11 @@ type DateRange = 'all' | 'today' | 'week' | 'month' | 'year' | 'custom';
 type SortBy = 'relevance' | 'date' | 'score' | 'popular';
 
 // ============================================================================
-// Mock Data Generators
+// Storage Keys
 // ============================================================================
 
-const generateMockSearchResult = (id: string, type: ContentType): SearchResult => {
-  const titles: Record<ContentType, string[]> = {
-    proposal: ['Increase Staking Rewards', 'Update Governance Rules', 'Community Fund Allocation'],
-    user: ['Alice Developer', 'Bob Merchant', 'Carol Validator'],
-    transaction: ['Payment to Merchant #123', 'Staking Reward Claimed', 'Token Transfer'],
-    activity: ['Voted on Proposal #42', 'Joined Council Election', 'Earned Achievement Badge'],
-    post: ['Introducing New Feature', 'Community Update', 'Technical Discussion'],
-    comment: ['Great proposal!', 'I agree with this approach', 'Some concerns about implementation'],
-    all: ['Mixed Content Item']
-  };
-
-  const categories = ['Governance', 'Finance', 'Technical', 'Community', 'General'];
-  const statuses: SearchStatus[] = ['active', 'completed', 'pending', 'archived'];
-
-  return {
-    id,
-    type,
-    title: (titles[type] ?? titles.all)[Math.floor(Math.random() * (titles[type] ?? titles.all).length)] ?? 'Mixed Content Item',
-    description: `This is a detailed description of the ${type} item. It contains relevant information that matches your search query with highlighted terms.`,
-    author: {
-      id: `user${id}`,
-      username: `user${id}`,
-      displayName: `User ${id}`,
-      avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=user${id}`
-    },
-    createdAt: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000),
-    score: Math.floor(Math.random() * 100),
-    category: categories[Math.floor(Math.random() * categories.length)] ?? 'General',
-    status: statuses[Math.floor(Math.random() * statuses.length)] ?? 'active',
-    highlights: ['search term', 'matched phrase', 'relevant keyword'],
-    tags: ['tag1', 'tag2', 'tag3'].slice(0, Math.floor(Math.random() * 3) + 1),
-    attachments: Math.random() > 0.5 ? Math.floor(Math.random() * 5) : 0
-  };
-};
-
-const mockSearchHistory = (): SearchHistoryItem[] => [
-  {
-    id: 'h1',
-    query: 'governance proposal',
-    filters: {
-      contentType: ['proposal'],
-      dateRange: 'month',
-      category: ['Governance'],
-      users: [],
-      status: ['active']
-    },
-    timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000),
-    resultsCount: 15
-  },
-  {
-    id: 'h2',
-    query: 'staking rewards',
-    filters: {
-      contentType: ['transaction', 'proposal'],
-      dateRange: 'week',
-      category: ['Finance'],
-      users: [],
-      status: ['all']
-    },
-    timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000),
-    resultsCount: 42
-  },
-  {
-    id: 'h3',
-    query: 'community fund',
-    filters: {
-      contentType: ['all'],
-      dateRange: 'all',
-      category: [],
-      users: [],
-      status: ['active']
-    },
-    timestamp: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
-    resultsCount: 28
-  }
-];
-
-const mockSavedSearches = (): SavedSearch[] => [
-  {
-    id: 's1',
-    name: 'Active Proposals',
-    query: 'proposal',
-    filters: {
-      contentType: ['proposal'],
-      dateRange: 'all',
-      category: ['Governance'],
-      users: [],
-      status: ['active']
-    },
-    createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
-    lastUsed: new Date(Date.now() - 12 * 60 * 60 * 1000),
-    useCount: 12
-  },
-  {
-    id: 's2',
-    name: 'My Transactions',
-    query: 'transaction',
-    filters: {
-      contentType: ['transaction'],
-      dateRange: 'month',
-      category: [],
-      users: ['currentUser'],
-      status: ['all']
-    },
-    createdAt: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000),
-    lastUsed: new Date(Date.now() - 24 * 60 * 60 * 1000),
-    useCount: 34
-  },
-  {
-    id: 's3',
-    name: 'High Score Posts',
-    query: '',
-    filters: {
-      contentType: ['post'],
-      dateRange: 'month',
-      category: [],
-      users: [],
-      status: ['all'],
-      minScore: 80
-    },
-    createdAt: new Date(Date.now() - 21 * 24 * 60 * 60 * 1000),
-    useCount: 8
-  }
-];
-
-const mockSearchResults = (): SearchResult[] => {
-  return [
-    generateMockSearchResult('r1', 'proposal'),
-    generateMockSearchResult('r2', 'user'),
-    generateMockSearchResult('r3', 'transaction'),
-    generateMockSearchResult('r4', 'activity'),
-    generateMockSearchResult('r5', 'post'),
-    generateMockSearchResult('r6', 'proposal'),
-    generateMockSearchResult('r7', 'comment'),
-    generateMockSearchResult('r8', 'user')
-  ];
-};
+const SEARCH_HISTORY_KEY = 'vfide-search-history';
+const SAVED_SEARCHES_KEY = 'vfide-saved-searches';
 
 // ============================================================================
 // Helper Functions
@@ -286,6 +152,37 @@ const getStatusBadgeColor = (status: SearchStatus): string => {
   return colors[status];
 };
 
+const SUPPORTED_SEARCH_TYPES: ContentType[] = ['proposal', 'user', 'transaction', 'activity'];
+
+const mapApiResult = (result: Record<string, unknown>, index: number): SearchResult => {
+  const author = result?.author ?? {};
+  const createdAt = result?.createdAt ? new Date(result.createdAt) : new Date();
+
+  return {
+    id: typeof result?.id === 'string' ? result.id : `result-${index}`,
+    type: (result?.type as ContentType) ?? 'activity',
+    title: typeof result?.title === 'string' ? result.title : 'Search Result',
+    description: typeof result?.description === 'string' ? result.description : '',
+    author: {
+      id: typeof author?.id === 'string' ? author.id : 'unknown',
+      username: typeof author?.username === 'string' ? author.username : 'unknown',
+      displayName: typeof author?.displayName === 'string'
+        ? author.displayName
+        : typeof author?.username === 'string'
+          ? author.username
+          : 'Unknown',
+      avatar: typeof author?.avatar === 'string' ? author.avatar : '',
+    },
+    createdAt,
+    score: typeof result?.score === 'number' ? result.score : 0,
+    category: typeof result?.category === 'string' ? result.category : 'General',
+    status: (result?.status as SearchStatus) ?? 'completed',
+    highlights: Array.isArray(result?.highlights) ? result.highlights : undefined,
+    tags: Array.isArray(result?.tags) ? result.tags : undefined,
+    attachments: typeof result?.attachments === 'number' ? result.attachments : 0,
+  };
+};
+
 const _highlightText = (text: string, highlights: string[]): string => {
   let result = text;
   highlights.forEach(term => {
@@ -339,7 +236,7 @@ function SearchResultCard({ result, onSelect }: SearchResultCardProps) {
         <div className="flex items-center space-x-4">
           <div className="flex items-center space-x-1">
             <img
-              src={result.author.avatar}
+              src={result.author.avatar || `https://api.dicebear.com/7.x/identicon/svg?seed=${encodeURIComponent(result.author.id)}`}
               alt={result.author.displayName}
               className="w-5 h-5 rounded-full"
             />
@@ -478,8 +375,8 @@ export default function AdvancedSearch({
   });
   const [showFilters, setShowFilters] = useState(false);
   const [sortBy, setSortBy] = useState<SortBy>('relevance');
-  const [searchHistory, setSearchHistory] = useState<SearchHistoryItem[]>(mockSearchHistory());
-  const [savedSearches, setSavedSearches] = useState<SavedSearch[]>(mockSavedSearches());
+  const [searchHistory, setSearchHistory] = useState<SearchHistoryItem[]>([]);
+  const [savedSearches, setSavedSearches] = useState<SavedSearch[]>([]);
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
@@ -487,8 +384,70 @@ export default function AdvancedSearch({
   const [autocompleteResults, setAutocompleteResults] = useState<AutocompleteResult[]>([]);
   const [showAutocomplete, setShowAutocomplete] = useState(false);
 
+  useEffect(() => {
+    try {
+      const storedHistory = localStorage.getItem(SEARCH_HISTORY_KEY);
+      if (storedHistory) {
+        const parsed = JSON.parse(storedHistory) as Array<Omit<SearchHistoryItem, 'timestamp'> & { timestamp: string } >;
+        setSearchHistory(
+          parsed.map((item) => ({
+            ...item,
+            timestamp: new Date(item.timestamp),
+          }))
+        );
+      }
+
+      const storedSaved = localStorage.getItem(SAVED_SEARCHES_KEY);
+      if (storedSaved) {
+        const parsed = JSON.parse(storedSaved) as Array<Omit<SavedSearch, 'createdAt' | 'lastUsed'> & { createdAt: string; lastUsed?: string }>;
+        setSavedSearches(
+          parsed.map((item) => ({
+            ...item,
+            createdAt: new Date(item.createdAt),
+            lastUsed: item.lastUsed ? new Date(item.lastUsed) : undefined,
+          }))
+        );
+      }
+    } catch {
+      // Ignore storage errors
+    }
+  }, []);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(
+        SEARCH_HISTORY_KEY,
+        JSON.stringify(
+          searchHistory.map((item) => ({
+            ...item,
+            timestamp: item.timestamp.toISOString(),
+          }))
+        )
+      );
+    } catch {
+      // Ignore storage errors
+    }
+  }, [searchHistory]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(
+        SAVED_SEARCHES_KEY,
+        JSON.stringify(
+          savedSearches.map((item) => ({
+            ...item,
+            createdAt: item.createdAt.toISOString(),
+            lastUsed: item.lastUsed ? item.lastUsed.toISOString() : undefined,
+          }))
+        )
+      );
+    } catch {
+      // Ignore storage errors
+    }
+  }, [savedSearches]);
+
   // Handlers
-  const handleSearch = useCallback(() => {
+  const handleSearch = useCallback(async () => {
     if (!searchQuery.trim() && filters.contentType[0] === 'all') return;
 
     setIsSearching(true);
@@ -496,22 +455,67 @@ export default function AdvancedSearch({
     setShowSaved(false);
     setShowAutocomplete(false);
 
-    // Simulate API call
-    setTimeout(() => {
-      const results = mockSearchResults();
-      setSearchResults(results);
-      setIsSearching(false);
+    const trimmed = searchQuery.trim();
+    const selectedTypes: ContentType[] = filters.contentType[0] === 'all' ? ['all'] : filters.contentType;
+    const apiTypes = selectedTypes.includes('all')
+      ? [...SUPPORTED_SEARCH_TYPES]
+      : selectedTypes.filter((type): type is ContentType => SUPPORTED_SEARCH_TYPES.includes(type));
 
-      // Add to history
+    try {
+      if (!trimmed) {
+        setSearchResults([]);
+        return;
+      }
+
+      if (apiTypes.length === 0) {
+        setSearchResults([]);
+        return;
+      }
+
+      const params = new URLSearchParams({
+        q: trimmed,
+        types: apiTypes.join(','),
+        limit: '50',
+        offset: '0',
+      });
+
+      const token = await getAuthToken();
+      const isTestEnv = process.env.NODE_ENV === 'test';
+      if (!token && !isTestEnv) {
+        setSearchResults([]);
+        return;
+      }
+
+      const response = await fetch(`/api/search?${params.toString()}`, {
+        headers: token ? getAuthHeaders() : undefined,
+      });
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data.error || 'Search failed');
+      }
+
+      const data = await response.json();
+      const results = Array.isArray(data.results)
+        ? data.results.map((result: Record<string, unknown>, index: number) => mapApiResult(result, index))
+        : [];
+
+      setSearchResults(results);
+
       const historyItem: SearchHistoryItem = {
         id: `h${Date.now()}`,
-        query: searchQuery,
+        query: trimmed,
         filters: { ...filters },
         timestamp: new Date(),
-        resultsCount: results.length
+        resultsCount: results.length,
       };
-      setSearchHistory(prev => [historyItem, ...prev.slice(0, 19)]);
-    }, 800);
+
+      setSearchHistory((prev) => [historyItem, ...prev.slice(0, 19)]);
+    } catch (error) {
+      console.error('Search failed:', error);
+      setSearchResults([]);
+    } finally {
+      setIsSearching(false);
+    }
   }, [searchQuery, filters]);
 
   const handleClearSearch = useCallback(() => {

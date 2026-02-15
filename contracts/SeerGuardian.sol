@@ -421,7 +421,7 @@ contract SeerGuardian {
      * @param proposalId The proposal ID
      * @param proposer The proposer address
      */
-    function autoCheckProposer(uint256 proposalId, address proposer) external {
+    function autoCheckProposer(uint256 proposalId, address proposer) external onlyAuthorized {
         uint16 score = seer.getScore(proposer);
         
         // Flag proposals from low-trust users

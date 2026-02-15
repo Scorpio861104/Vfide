@@ -231,6 +231,17 @@ export function GasPriceOptimizer({
   const [isExpanded, setIsExpanded] = useState(!compact);
   const [lastRefresh, setLastRefresh] = useState(Date.now());
 
+  // Trigger alert notification
+  const triggerAlert = useCallback((gwei: number) => {
+    if ('Notification' in window && Notification.permission === 'granted') {
+      new Notification('⛽ Low Gas Alert!', {
+        body: `Gas is now ${gwei.toFixed(1)} gwei - good time to transact!`,
+        icon: '/icons/gas-icon.png',
+        tag: 'gas-alert',
+      });
+    }
+  }, []);
+
   // Fetch gas prices
   const fetchData = useCallback(async () => {
     try {
@@ -259,7 +270,7 @@ export function GasPriceOptimizer({
     } finally {
       setIsLoading(false);
     }
-  }, [chainId, alertSettings.enabled, alertSettings.threshold]);
+  }, [chainId, alertSettings.enabled, alertSettings.threshold, triggerAlert]);
 
   // Initial fetch and polling
   useEffect(() => {
@@ -267,17 +278,6 @@ export function GasPriceOptimizer({
     const interval = setInterval(fetchData, 15000); // Update every 15 seconds
     return () => clearInterval(interval);
   }, [fetchData]);
-
-  // Trigger alert notification
-  const triggerAlert = useCallback((gwei: number) => {
-    if ('Notification' in window && Notification.permission === 'granted') {
-      new Notification('⛽ Low Gas Alert!', {
-        body: `Gas is now ${gwei.toFixed(1)} gwei - good time to transact!`,
-        icon: '/icons/gas-icon.png',
-        tag: 'gas-alert',
-      });
-    }
-  }, []);
 
   // Toggle alert
   const toggleAlert = useCallback(() => {

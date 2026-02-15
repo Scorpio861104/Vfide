@@ -11,6 +11,14 @@
 
 import type { Metadata } from 'next';
 
+const serializeJsonLd = (value: unknown) => JSON.stringify(value).replace(/</g, '\\u003c');
+const escapeXml = (value: string) => value
+  .replace(/&/g, '&amp;')
+  .replace(/</g, '&lt;')
+  .replace(/>/g, '&gt;')
+  .replace(/"/g, '&quot;')
+  .replace(/'/g, '&apos;');
+
 export interface SEOConfig {
   title: string;
   description: string;
@@ -112,7 +120,7 @@ export function generateStructuredData(type: 'organization' | 'website' | 'bread
       '@type': 'WebSite',
       name: 'VFIDE',
       url: baseUrl,
-      description: 'Decentralized Payment Protocol',
+      description: 'Crypto Payment Protocol',
       potentialAction: {
         '@type': 'SearchAction',
         target: `${baseUrl}/search?q={search_term_string}`,
@@ -150,6 +158,10 @@ export function generateStructuredData(type: 'organization' | 'website' | 'bread
   return schemas[type];
 }
 
+export function serializeStructuredData(data: unknown) {
+  return serializeJsonLd(data);
+}
+
 /**
  * Generate breadcrumb JSON-LD
  * Improves navigation in search results
@@ -180,15 +192,15 @@ export interface SitemapEntry {
 
 export function generateSitemapEntry(entry: SitemapEntry): string {
   const baseUrl = 'https://vfide.io';
-  const url = `${baseUrl}${entry.url}`;
+  const url = escapeXml(`${baseUrl}${entry.url}`);
   const lastmod = entry.lastModified ? entry.lastModified.toISOString().split('T')[0] : '';
   
   return `
   <url>
     <loc>${url}</loc>
-    ${lastmod ? `<lastmod>${lastmod}</lastmod>` : ''}
-    ${entry.changeFrequency ? `<changefreq>${entry.changeFrequency}</changefreq>` : ''}
-    ${entry.priority !== undefined ? `<priority>${entry.priority}</priority>` : ''}
+    ${lastmod ? `<lastmod>${escapeXml(lastmod)}</lastmod>` : ''}
+    ${entry.changeFrequency ? `<changefreq>${escapeXml(entry.changeFrequency)}</changefreq>` : ''}
+    ${entry.priority !== undefined ? `<priority>${escapeXml(String(entry.priority))}</priority>` : ''}
   </url>`;
 }
 

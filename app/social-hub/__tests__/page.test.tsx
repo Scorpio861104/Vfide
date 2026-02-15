@@ -266,7 +266,9 @@ describe('SocialHubPage', () => {
         btn.querySelector('svg.lucide-heart') || btn.textContent?.includes('234')
       );
       expect(likeButtons.length).toBeGreaterThan(0);
-      fireEvent.click(likeButtons[0]);
+      const [firstLikeButton] = likeButtons;
+      expect(firstLikeButton).toBeDefined();
+      fireEvent.click(firstLikeButton!);
     });
   });
 

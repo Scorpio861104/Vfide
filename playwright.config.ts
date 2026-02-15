@@ -42,7 +42,7 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: 'node playwright/test-server.js',
+    command: 'node playwright/test-server.cjs',
     url: 'http://127.0.0.1:3000/e2e',
     reuseExistingServer: !process.env.CI,
     timeout: 120 * 1000,

@@ -81,7 +81,7 @@ export default function AboutPage() {
                 <h3 className="text-xl font-bold text-zinc-100 mb-2">Community Governed</h3>
                 <p className="text-zinc-400">
                   Every protocol decision is made by the community through DAO governance.
-                  No central authority, no hidden agendas.
+                  Progressive decentralization via DAO governance.
                 </p>
               </motion.div>
 
@@ -113,7 +113,7 @@ export default function AboutPage() {
                 </div>
                 <h3 className="text-xl font-bold text-zinc-100 mb-2">For Everyone</h3>
                 <p className="text-zinc-400">
-                  No KYC, no geo-restrictions, no minimums. If you have a wallet, you&apos;re in.
+                  Streamlined verification process, no minimums. If you have a wallet, you&apos;re in.
                   Financial inclusion for all.
                 </p>
               </motion.div>
@@ -141,8 +141,8 @@ export default function AboutPage() {
           <div className="container mx-auto px-4 max-w-4xl text-center">
             <h2 className="text-3xl font-bold text-zinc-100 mb-4">Open Source & Transparent</h2>
             <p className="text-zinc-400 mb-8">
-              All VFIDE smart contracts are open source, professionally audited, and deployed on public blockchains.
-              Verify everything yourself.
+              All VFIDE smart contracts are open source and deployed on public blockchains.
+              Security-focused development practices — verify everything yourself.
             </p>
             <a
               href="https://github.com/Scorpio861104/Vfide"

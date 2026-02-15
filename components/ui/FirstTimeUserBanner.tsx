@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Sparkles, X } from 'lucide-react';
 
@@ -21,24 +21,16 @@ export function FirstTimeUserBanner({
   actionText = "Learn More",
   onAction,
 }: FirstTimeUserBannerProps) {
-  const [isDismissed, setIsDismissed] = useState(true);
-  const [isClient, setIsClient] = useState(false);
-
-  useEffect(() => {
-    setIsClient(true);
-    // Check if user has dismissed before
+  const [isDismissed, setIsDismissed] = useState(() => {
+    if (typeof window === 'undefined') return true;
     const dismissed = localStorage.getItem(storageKey);
-    if (!dismissed) {
-      setIsDismissed(false);
-    }
-  }, [storageKey]);
+    return Boolean(dismissed);
+  });
 
   const handleDismiss = () => {
     setIsDismissed(true);
     localStorage.setItem(storageKey, 'true');
   };
-
-  if (!isClient) return null;
 
   return (
     <AnimatePresence>

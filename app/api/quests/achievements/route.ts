@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getClient } from '@/lib/db';
-import { requireAuth } from '@/lib/auth/middleware';
+import { requireAuth, checkOwnership } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 
 /**
@@ -12,12 +12,19 @@ export async function GET(request: NextRequest) {
   const rateLimit = await withRateLimit(request, 'api');
   if (rateLimit) return rateLimit;
 
+  const authResult = await requireAuth(request);
+  if (authResult instanceof NextResponse) return authResult;
+
   try {
     const searchParams = request.nextUrl.searchParams;
     const userAddress = searchParams.get('userAddress');
 
     if (!userAddress) {
       return NextResponse.json({ error: 'User address required' }, { status: 400 });
+    }
+
+    if (!checkOwnership(authResult.user, userAddress)) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
     }
 
     const client = await getClient();
@@ -119,6 +126,10 @@ export async function POST(request: NextRequest) {
         { error: 'Milestone key, user address, and progress required' },
         { status: 400 }
       );
+    }
+
+    if (!checkOwnership(authResult.user, userAddress)) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
     }
 
     const client = await getClient();

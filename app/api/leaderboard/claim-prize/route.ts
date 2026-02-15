@@ -29,6 +29,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    if (authResult.user.address.toLowerCase() !== String(userAddress).toLowerCase()) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+    }
+
     const client = await getClient();
 
     try {
@@ -37,7 +41,7 @@ export async function POST(request: NextRequest) {
       // Get user ID
       const userResult = await client.query(
         'SELECT id FROM users WHERE wallet_address = $1',
-        [userAddress]
+        [String(userAddress).toLowerCase()]
       );
 
       if (userResult.rows.length === 0) {
@@ -47,16 +51,17 @@ export async function POST(request: NextRequest) {
 
       const userId = userResult.rows[0].id;
 
-      // Check if user has unclaimed prize
+      // Check if user has unclaimed prize — FOR UPDATE locks the row atomically
       const leaderboardResult = await client.query(`
         SELECT ml.*, pt.tier_name
         FROM monthly_leaderboard ml
         LEFT JOIN prize_tiers pt ON ml.final_rank >= pt.rank_start AND ml.final_rank <= pt.rank_end
-        WHERE ml.user_id = $1 
+        WHERE ml.user_id = $1
           AND ml.month_year = $2
           AND ml.prize_claimed = false
           AND ml.prize_amount > 0
           AND ml.final_rank IS NOT NULL
+        FOR UPDATE OF ml
       `, [userId, monthYear]);
 
       if (leaderboardResult.rows.length === 0) {

@@ -19,7 +19,7 @@ import {
   Wallet
 } from 'lucide-react';
 import { formatEther, formatUnits, type Address, type Hex } from 'viem';
-import { useAccount, useBalance, useFeeData } from 'wagmi';
+import { useAccount, useBalance, useFeeData, usePublicClient } from 'wagmi';
 import { useChainId } from 'wagmi';
 
 // ==================== TYPES ====================
@@ -112,6 +112,8 @@ const getRiskLevelBg = (level: RiskWarning['level']): string => {
 // ==================== HOOKS ====================
 
 function useTransactionSimulation(tx: TransactionDetails) {
+  const publicClient = usePublicClient();
+  const { address } = useAccount();
   const [simulation, setSimulation] = useState<SimulationResult | null>(null);
   const [isSimulating, setIsSimulating] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -122,13 +124,32 @@ function useTransactionSimulation(tx: TransactionDetails) {
       setError(null);
 
       try {
-        // In production, this would call a simulation API like Tenderly
-        // For now, we'll use basic validation
-        await new Promise((resolve) => setTimeout(resolve, 500));
-        
+        if (!publicClient) {
+          throw new Error('Simulation client unavailable');
+        }
+
+        const account = (tx.from ?? address) as Address | undefined;
+        const client = publicClient as unknown as { estimateGas: (args: Record<string, unknown>) => Promise<bigint>; call: (args: Record<string, unknown>) => Promise<{ data?: string }> };
+        const gasUsed = await client.estimateGas({
+          account,
+          to: tx.to,
+          value: tx.value,
+          data: tx.data,
+        });
+
+        const callResult = tx.data
+            ? await client.call({
+                account,
+                to: tx.to,
+                value: tx.value,
+                data: tx.data,
+              })
+          : null;
+
         setSimulation({
           success: true,
-          gasUsed: tx.gasLimit || BigInt(21000),
+          gasUsed,
+          returnData: callResult?.data as Hex | undefined,
         });
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Simulation failed');
@@ -143,7 +164,7 @@ function useTransactionSimulation(tx: TransactionDetails) {
     };
 
     simulate();
-  }, [tx]);
+  }, [tx, publicClient, address]);
 
   return { simulation, isSimulating, error };
 }
@@ -151,13 +172,36 @@ function useTransactionSimulation(tx: TransactionDetails) {
 function useRiskAnalysis(tx: TransactionDetails): RiskWarning[] {
   const { address } = useAccount();
   const { data: balance } = useBalance({ address });
+  const publicClient = usePublicClient();
+  const [hasHistory, setHasHistory] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    const checkHistory = async () => {
+      if (!publicClient || !tx.to) return;
+      try {
+        const count = await publicClient.getTransactionCount({ address: tx.to });
+        if (isMounted) {
+          setHasHistory(count > 0);
+        }
+      } catch {
+        if (isMounted) {
+          setHasHistory(null);
+        }
+      }
+    };
+
+    checkHistory();
+    return () => {
+      isMounted = false;
+    };
+  }, [publicClient, tx.to]);
 
   return useMemo(() => {
     const warnings: RiskWarning[] = [];
 
     // Check if sending to new address
-    if (tx.to) {
-      // In production, check address history
+    if (tx.to && hasHistory === false) {
       warnings.push({
         level: 'low',
         title: 'First interaction',
@@ -212,7 +256,7 @@ function useRiskAnalysis(tx: TransactionDetails): RiskWarning[] {
     }
 
     return warnings;
-  }, [tx, balance]);
+  }, [tx, balance, hasHistory]);
 }
 
 // ==================== COMPONENTS ====================

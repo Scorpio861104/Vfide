@@ -25,11 +25,28 @@ interface Endorsement {
  * Get endorsements
  */
 export async function GET(request: NextRequest) {
+  const authResult = await requireAuth(request);
+  if (authResult instanceof NextResponse) {
+    return authResult;
+  }
+
   try {
     const searchParams = request.nextUrl.searchParams;
     const endorsedAddress = searchParams.get('endorsedAddress');
     const endorserAddress = searchParams.get('endorserAddress');
     const proposalId = searchParams.get('proposalId');
+        if (!endorsedAddress && !endorserAddress) {
+          return NextResponse.json({ error: 'endorsedAddress or endorserAddress required' }, { status: 400 });
+        }
+
+        const authAddress = authResult.user.address.toLowerCase();
+        const ownsEndorsed = endorsedAddress && endorsedAddress.toLowerCase() === authAddress;
+        const ownsEndorser = endorserAddress && endorserAddress.toLowerCase() === authAddress;
+
+        if (!ownsEndorsed && !ownsEndorser) {
+          return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+        }
+
     const limit = parseInt(searchParams.get('limit') || '50', 10);
     const offset = parseInt(searchParams.get('offset') || '0', 10);
 
@@ -204,7 +221,7 @@ export async function POST(request: NextRequest) {
 
     // Check if endorsement already exists
     const existingResult = await client.query(
-      `SELECT * FROM endorsements 
+      `SELECT id FROM endorsements
        WHERE endorser_id = $1 AND endorsed_id = $2 AND ($3::integer IS NULL OR proposal_id = $3)`,
       [endorserId, endorsedId, proposalId || null]
     );
@@ -221,7 +238,7 @@ export async function POST(request: NextRequest) {
     const endorsementResult = await client.query(
       `INSERT INTO endorsements (endorser_id, endorsed_id, proposal_id, message)
        VALUES ($1, $2, $3, $4)
-       RETURNING *`,
+       RETURNING id, endorser_id, endorsed_id, proposal_id, message, created_at`,
       [endorserId, endorsedId, proposalId || null, message || '']
     );
 

@@ -1,11 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 import { withRateLimit } from '@/lib/auth/rateLimit';
+import { requireAdmin } from '@/lib/auth/middleware';
+import { isAddress } from 'viem';
 
 export async function GET(request: NextRequest) {
   // Rate limiting
   const rateLimit = await withRateLimit(request, 'api');
   if (rateLimit) return rateLimit;
+
+  const authResult = await requireAdmin(request);
+  if (authResult instanceof NextResponse) return authResult;
 
   try {
     const { searchParams } = new URL(request.url);
@@ -36,15 +41,53 @@ export async function POST(request: NextRequest) {
   const rateLimit = await withRateLimit(request, 'api');
   if (rateLimit) return rateLimit;
 
+  const authResult = await requireAdmin(request);
+  if (authResult instanceof NextResponse) return authResult;
+
   try {
     const body = await request.json();
-    const { userId, violationType, severity, description, ipAddress } = body;
+    const { userAddress, violationType, severity, description, details } = body as {
+      userAddress?: string;
+      violationType?: string;
+      severity?: string;
+      description?: string;
+      details?: Record<string, unknown>;
+    };
+
+    if (!userAddress || !isAddress(userAddress)) {
+      return NextResponse.json({ error: 'Valid user address required' }, { status: 400 });
+    }
+
+    if (!violationType) {
+      return NextResponse.json({ error: 'violationType required' }, { status: 400 });
+    }
+    const normalizedSeverity = severity || 'medium';
+    const allowedSeverities = new Set(['low', 'medium', 'high', 'critical']);
+    if (!allowedSeverities.has(normalizedSeverity)) {
+      return NextResponse.json({ error: 'Invalid severity' }, { status: 400 });
+    }
+
+    const detailsPayload = details ? JSON.stringify(details) : null;
+    if (detailsPayload && detailsPayload.length > 5000) {
+      return NextResponse.json({ error: 'Details payload too large' }, { status: 400 });
+    }
+
+    const forwardedFor = request.headers.get('x-forwarded-for');
+    const ipAddress = forwardedFor ? forwardedFor.split(',')[0]?.trim() : null;
+    let userId: number | null = null;
+    if (userAddress && isAddress(userAddress)) {
+      const userResult = await query<{ id: number }>(
+        'SELECT id FROM users WHERE wallet_address = $1',
+        [userAddress.toLowerCase()]
+      );
+      userId = userResult.rows[0]?.id ?? null;
+    }
 
     const result = await query(
-      `INSERT INTO security_violations (user_id, violation_type, severity, description, ip_address, detected_at)
-       VALUES ($1, $2, $3, $4, $5, NOW())
+      `INSERT INTO security_violations (user_id, violation_type, severity, description, ip_address, details, detected_at)
+       VALUES ($1, $2, $3, $4, $5, $6, NOW())
        RETURNING *`,
-      [userId, violationType, severity, description, ipAddress]
+      [userId, violationType, normalizedSeverity, description, ipAddress ?? null, detailsPayload]
     );
 
     return NextResponse.json({ success: true, violation: result.rows[0] });

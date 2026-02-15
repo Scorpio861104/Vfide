@@ -7,6 +7,14 @@ import {
 } from '@/config/security-advanced';
 import { safeLocalStorage } from '@/lib/utils';
 
+/**
+ * SECURITY WARNING: WebAuthn verification in this module is CLIENT-SIDE ONLY.
+ * Challenges are generated locally and assertions are not verified on a server.
+ * The credential public key is stored in localStorage, not on a backend.
+ * For production security, challenges must come from the server and assertions
+ * must be verified server-side against server-stored public keys.
+ */
+
 // Wallet linking storage key
 const LINKED_WALLET_KEY = 'vfide-biometric-wallet';
 

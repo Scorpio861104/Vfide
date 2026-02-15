@@ -1,4 +1,8 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
+import { authenticator } from 'otplib';
+import QRCode from 'qrcode';
+import { buildCsrfHeaders } from '@/lib/security/csrfClient';
+import { getEncryptedItem, removeEncryptedItem, setEncryptedItem } from '@/lib/storage/encryptedStorage';
 import {
   TwoFactorConfig,
   TwoFactorMethod,
@@ -8,6 +12,15 @@ import {
   validateBackupCode,
   generateBackupCodes
 } from '@/config/security-advanced';
+
+/**
+ * SECURITY WARNING: TOTP 2FA in this module is CLIENT-SIDE ONLY.
+ * The TOTP secret is generated and stored in the browser (localStorage/encryptedStorage).
+ * Verification happens entirely in JavaScript without server validation.
+ * This does NOT provide real 2FA security - it can be bypassed by clearing localStorage.
+ * For production security, TOTP secrets must be generated and verified server-side.
+ * SMS and Email 2FA methods do use server-side verification via /api/security/2fa/*.
+ */
 
 export interface UseTwoFactorAuthResult {
   config: TwoFactorConfig;
@@ -33,29 +46,19 @@ export interface UseTwoFactorAuthResult {
   testVerification: (code: string) => boolean;
 }
 
-// Mock TOTP secret generation (in production, use a library like otplib)
 const generateTOTPSecret = (): string => {
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
-  let secret = '';
-  for (let i = 0; i < 32; i++) {
-    secret += chars[Math.floor(Math.random() * chars.length)];
-  }
-  return secret;
+  return authenticator.generateSecret();
 };
 
-// Mock TOTP QR code generation
-const generateTOTPQR = (secret: string, email: string): string => {
+const generateTOTPQR = async (secret: string, email: string): Promise<string> => {
   const issuer = 'VFIDE';
-  const otpauth = `otpauth://totp/${issuer}:${email}?secret=${secret}&issuer=${issuer}`;
-  // In production, use a QR code library like qrcode or similar
-  return `data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200"><text x="10" y="100" font-size="12">${otpauth}</text></svg>`;
+  const otpauth = authenticator.keyuri(email, issuer, secret);
+  return QRCode.toDataURL(otpauth);
 };
 
-// Mock TOTP verification (in production, use otplib or speakeasy)
 const verifyTOTPInternal = (secret: string, code: string): boolean => {
-  // Simple mock: accept code if it's 6 digits and matches pattern
-  // In production, verify against time-based algorithm
-  return validateTOTPCode(code);
+  if (!validateTOTPCode(code)) return false;
+  return authenticator.check(code, secret);
 };
 
 const loadConfig = (): TwoFactorConfig => {
@@ -103,11 +106,6 @@ export const useTwoFactorAuth = (userEmail?: string): UseTwoFactorAuthResult => 
   const [totpSecret, setTotpSecret] = useState<string | null>(null);
   const [backupCodes, setBackupCodes] = useState<string[]>([]);
 
-  useEffect(() => {
-    const loaded = loadConfig();
-    setConfig(loaded);
-  }, []);
-
   const updateConfig = useCallback((updates: Partial<TwoFactorConfig>) => {
     setConfig((prev) => {
       const next = { ...prev, ...updates };
@@ -118,7 +116,7 @@ export const useTwoFactorAuth = (userEmail?: string): UseTwoFactorAuthResult => 
 
   const initiateTOTP = useCallback(async (): Promise<TOTPSetup> => {
     const secret = generateTOTPSecret();
-    const qrCode = generateTOTPQR(secret, userEmail || 'user@vfide.com');
+    const qrCode = await generateTOTPQR(secret, userEmail || 'user@vfide.com');
     const codes = generateBackupCodes();
 
     setTotpSecret(secret);
@@ -137,8 +135,8 @@ export const useTwoFactorAuth = (userEmail?: string): UseTwoFactorAuthResult => 
 
     // Store secret securely (in production, encrypt or use secure storage)
     if (typeof window !== 'undefined') {
-      localStorage.setItem(SECURITY_STORAGE_KEYS.twoFactorSecret, totpSecret);
-      localStorage.setItem(SECURITY_STORAGE_KEYS.twoFactorBackupCodes, JSON.stringify(backupCodes));
+      await setEncryptedItem(SECURITY_STORAGE_KEYS.twoFactorSecret, totpSecret);
+      await setEncryptedItem(SECURITY_STORAGE_KEYS.twoFactorBackupCodes, JSON.stringify(backupCodes));
     }
 
     updateConfig({
@@ -152,14 +150,24 @@ export const useTwoFactorAuth = (userEmail?: string): UseTwoFactorAuthResult => 
   }, [totpSecret, backupCodes, updateConfig]);
 
   const enableSMS = useCallback(async (phoneNumber: string): Promise<boolean> => {
-    // In production: Send SMS verification code via Twilio/SNS
-    // For now, mock implementation
+    const headers = await buildCsrfHeaders({ 'Content-Type': 'application/json' }, 'POST');
+    const response = await fetch('/api/security/2fa/initiate', {
+      method: 'POST',
+      headers,
+      credentials: 'include',
+      body: JSON.stringify({ method: 'sms', destination: phoneNumber }),
+    });
+
+    if (!response.ok) {
+      return false;
+    }
+
     const codes = generateBackupCodes();
     setBackupCodes(codes);
 
     if (typeof window !== 'undefined') {
-      localStorage.setItem(SECURITY_STORAGE_KEYS.twoFactorPhone, phoneNumber);
-      localStorage.setItem(SECURITY_STORAGE_KEYS.twoFactorBackupCodes, JSON.stringify(codes));
+      await setEncryptedItem(SECURITY_STORAGE_KEYS.twoFactorPhone, phoneNumber);
+      await setEncryptedItem(SECURITY_STORAGE_KEYS.twoFactorBackupCodes, JSON.stringify(codes));
     }
 
     updateConfig({
@@ -173,13 +181,24 @@ export const useTwoFactorAuth = (userEmail?: string): UseTwoFactorAuthResult => 
   }, [updateConfig]);
 
   const enableEmail = useCallback(async (email: string): Promise<boolean> => {
-    // In production: Send email verification code via SendGrid/SES
+    const headers = await buildCsrfHeaders({ 'Content-Type': 'application/json' }, 'POST');
+    const response = await fetch('/api/security/2fa/initiate', {
+      method: 'POST',
+      headers,
+      credentials: 'include',
+      body: JSON.stringify({ method: 'email', destination: email }),
+    });
+
+    if (!response.ok) {
+      return false;
+    }
+
     const codes = generateBackupCodes();
     setBackupCodes(codes);
 
     if (typeof window !== 'undefined') {
-      localStorage.setItem(SECURITY_STORAGE_KEYS.twoFactorEmail, email);
-      localStorage.setItem(SECURITY_STORAGE_KEYS.twoFactorBackupCodes, JSON.stringify(codes));
+      await setEncryptedItem(SECURITY_STORAGE_KEYS.twoFactorEmail, email);
+      await setEncryptedItem(SECURITY_STORAGE_KEYS.twoFactorBackupCodes, JSON.stringify(codes));
     }
 
     updateConfig({
@@ -194,7 +213,7 @@ export const useTwoFactorAuth = (userEmail?: string): UseTwoFactorAuthResult => 
 
   const verifyTOTP = useCallback(async (code: string): Promise<boolean> => {
     if (typeof window === 'undefined') return false;
-    const secret = localStorage.getItem(SECURITY_STORAGE_KEYS.twoFactorSecret);
+    const secret = await getEncryptedItem(SECURITY_STORAGE_KEYS.twoFactorSecret);
     if (!secret) return false;
 
     const valid = verifyTOTPInternal(secret, code);
@@ -205,28 +224,38 @@ export const useTwoFactorAuth = (userEmail?: string): UseTwoFactorAuthResult => 
   }, [updateConfig]);
 
   const verifySMS = useCallback(async (code: string): Promise<boolean> => {
-    // In production: Verify via backend API
-    const valid = validateTOTPCode(code);
-    if (valid) {
-      updateConfig({ lastVerified: new Date() });
-    }
-    return valid;
+    const headers = await buildCsrfHeaders({ 'Content-Type': 'application/json' }, 'POST');
+    const response = await fetch('/api/security/2fa/verify', {
+      method: 'POST',
+      headers,
+      credentials: 'include',
+      body: JSON.stringify({ method: 'sms', code }),
+    });
+
+    if (!response.ok) return false;
+    updateConfig({ lastVerified: new Date() });
+    return true;
   }, [updateConfig]);
 
   const verifyEmail = useCallback(async (code: string): Promise<boolean> => {
-    // In production: Verify via backend API
-    const valid = validateTOTPCode(code);
-    if (valid) {
-      updateConfig({ lastVerified: new Date() });
-    }
-    return valid;
+    const headers = await buildCsrfHeaders({ 'Content-Type': 'application/json' }, 'POST');
+    const response = await fetch('/api/security/2fa/verify', {
+      method: 'POST',
+      headers,
+      credentials: 'include',
+      body: JSON.stringify({ method: 'email', code }),
+    });
+
+    if (!response.ok) return false;
+    updateConfig({ lastVerified: new Date() });
+    return true;
   }, [updateConfig]);
 
   const verifyBackupCode = useCallback(async (code: string): Promise<boolean> => {
     if (typeof window === 'undefined') return false;
     if (!validateBackupCode(code)) return false;
 
-    const stored = localStorage.getItem(SECURITY_STORAGE_KEYS.twoFactorBackupCodes);
+    const stored = await getEncryptedItem(SECURITY_STORAGE_KEYS.twoFactorBackupCodes);
     if (!stored) return false;
 
     try {
@@ -236,7 +265,7 @@ export const useTwoFactorAuth = (userEmail?: string): UseTwoFactorAuthResult => 
 
       // Remove used code
       codes.splice(index, 1);
-      localStorage.setItem(SECURITY_STORAGE_KEYS.twoFactorBackupCodes, JSON.stringify(codes));
+      await setEncryptedItem(SECURITY_STORAGE_KEYS.twoFactorBackupCodes, JSON.stringify(codes));
 
       updateConfig({
         backupCodesRemaining: codes.length,
@@ -251,10 +280,10 @@ export const useTwoFactorAuth = (userEmail?: string): UseTwoFactorAuthResult => 
 
   const disable = useCallback(async (): Promise<void> => {
     if (typeof window !== 'undefined') {
-      localStorage.removeItem(SECURITY_STORAGE_KEYS.twoFactorSecret);
-      localStorage.removeItem(SECURITY_STORAGE_KEYS.twoFactorPhone);
-      localStorage.removeItem(SECURITY_STORAGE_KEYS.twoFactorEmail);
-      localStorage.removeItem(SECURITY_STORAGE_KEYS.twoFactorBackupCodes);
+      removeEncryptedItem(SECURITY_STORAGE_KEYS.twoFactorSecret);
+      removeEncryptedItem(SECURITY_STORAGE_KEYS.twoFactorPhone);
+      removeEncryptedItem(SECURITY_STORAGE_KEYS.twoFactorEmail);
+      removeEncryptedItem(SECURITY_STORAGE_KEYS.twoFactorBackupCodes);
     }
 
     updateConfig({
@@ -270,7 +299,7 @@ export const useTwoFactorAuth = (userEmail?: string): UseTwoFactorAuthResult => 
     setBackupCodes(codes);
 
     if (typeof window !== 'undefined') {
-      localStorage.setItem(SECURITY_STORAGE_KEYS.twoFactorBackupCodes, JSON.stringify(codes));
+      await setEncryptedItem(SECURITY_STORAGE_KEYS.twoFactorBackupCodes, JSON.stringify(codes));
     }
 
     updateConfig({ backupCodesRemaining: codes.length });

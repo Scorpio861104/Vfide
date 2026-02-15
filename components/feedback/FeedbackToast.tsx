@@ -65,7 +65,7 @@ export function useAdvancedToast() {
 
 // ==================== UTILITIES ====================
 
-const generateId = () => `toast-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+const generateId = () => `toast-${Date.now()}-${Array.from(crypto.getRandomValues(new Uint8Array(5)), b => b.toString(16).padStart(2, '0')).join('')}`;
 
 const getToastIcon = (type: ToastType, icon?: React.ReactNode) => {
   if (icon) return icon;
@@ -166,7 +166,7 @@ function ToastItem({ toast, onRemove }: ToastItemProps) {
       className={`
         relative overflow-hidden rounded-xl
         ${getToastStyles(toast.type)}
-        w-90 max-w-[calc(100vw-32px)]
+        w-[22.5rem] max-w-[calc(100vw-32px)]
       `}
       role="alert"
       aria-live="polite"
@@ -188,7 +188,7 @@ function ToastItem({ toast, onRemove }: ToastItemProps) {
             {/* Transaction Hash */}
             {toast.txHash && (
               <div className="mt-2 flex items-center gap-2">
-                <code className="text-xs text-cyan-400 font-mono truncate max-w-45">
+                <code className="text-xs text-cyan-400 font-mono truncate max-w-[11.25rem]">
                   {toast.txHash}
                 </code>
                 <button

@@ -1,5 +1,6 @@
 import { query } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
+import { isAddress } from 'viem';
 import { requireAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 
@@ -28,6 +29,8 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       );
     }
 
+    const isAddressParam = isAddress(userIdParam);
+
     // Verify authenticated user matches requested userId
     const userResult = await query(
       'SELECT id FROM users WHERE wallet_address = $1',
@@ -35,7 +38,21 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     );
 
     const userId = userResult.rows[0]?.id;
-    if (userResult.rows.length === 0 || !userId || userId.toString() !== userIdParam) {
+    if (userResult.rows.length === 0 || !userId) {
+      return NextResponse.json(
+        { error: 'You can only view your own transactions' },
+        { status: 403 }
+      );
+    }
+
+    if (isAddressParam) {
+      if (authResult.user.address.toLowerCase() !== userIdParam.toLowerCase()) {
+        return NextResponse.json(
+          { error: 'You can only view your own transactions' },
+          { status: 403 }
+        );
+      }
+    } else if (userId.toString() !== userIdParam) {
       return NextResponse.json(
         { error: 'You can only view your own transactions' },
         { status: 403 }
@@ -68,9 +85,8 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     return NextResponse.json({ transactions: result.rows, total: result.rows.length });
   } catch (error) {
     console.error('[Transactions API] Error:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Failed to fetch transactions';
     return NextResponse.json(
-      { error: errorMessage },
+      { error: 'Internal server error' },
       { status: 500 }
     );
   }

@@ -334,7 +334,7 @@ export function useWebSocket(config: WSConfig, userAddress?: string) {
       wsRef.current?.disconnect();
       wsRef.current = null;
     };
-  }, [config.url, userAddress]);
+  }, [config, userAddress]);
 
   const send = useCallback((message: Omit<WSMessage, 'timestamp'>) => {
     return wsRef.current?.send(message) || false;

@@ -3,7 +3,7 @@
 import { Footer } from '@/components/layout/Footer'
 import { VFIDEBadgeNFTABI, SeerABI } from '@/lib/abis'
 import { motion, AnimatePresence } from 'framer-motion'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useAccount, useWriteContract, useWaitForTransactionReceipt, useReadContract } from 'wagmi'
 import { keccak256, toBytes } from 'viem'
 import { 
@@ -89,8 +89,6 @@ export default function BadgesPage() {
   const { writeContract, data: hash, isPending } = useWriteContract();
   const { isLoading: _isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash });
 
-  // Get current time once on component mount
-  const [currentTime] = useState(() => Date.now())
   const allBadges = getAllBadges()
   const categories = getBadgeCategories()
 
@@ -122,21 +120,70 @@ export default function BadgesPage() {
       setMintingBadge(null);
     }
   };
+  const [userBadges, setUserBadges] = useState<Record<string, { earned: boolean; minted: boolean; tokenId?: number }>>({});
+  const [_isBadgesLoading, setIsBadgesLoading] = useState(false);
+  const [_badgesError, setBadgesError] = useState<string | null>(null);
 
-  // Mock user badges - using currentTime to avoid render-time Date.now() calls
-  const mockUserBadges: Record<string, { earned: boolean; expiry?: number; minted: boolean; tokenId?: number }> = {
-    PIONEER: { earned: true, minted: true, tokenId: 2847 },
-    GENESIS_PRESALE: { earned: true, minted: false },
-    ACTIVE_TRADER: { earned: true, expiry: currentTime + 60 * 24 * 60 * 60 * 1000, minted: false },
-    GOVERNANCE_VOTER: { earned: false, minted: false },
-    POWER_USER: { earned: false, minted: false },
-    TRUSTED_ENDORSER: { earned: false, minted: false },
-    VERIFIED_MERCHANT: { earned: false, minted: false },
-    FOUNDING_MEMBER: { earned: false, minted: false },
-  };
+  useEffect(() => {
+    if (!address) {
+      setUserBadges({});
+      return;
+    }
+
+    let isMounted = true;
+
+    const fetchUserBadges = async () => {
+      setIsBadgesLoading(true);
+      setBadgesError(null);
+      try {
+        const response = await fetch(`/api/badges?userAddress=${address}`);
+        if (!response.ok) throw new Error('Failed to load badges');
+        const data = await response.json();
+        const badgeMap: Record<string, { earned: boolean; minted: boolean; tokenId?: number }> = {};
+
+        if (Array.isArray(data.badges)) {
+          data.badges.forEach((badge: { badge_name?: string; name?: string }) => {
+            const badgeName = badge.badge_name ?? badge.name;
+            if (!badgeName) return;
+            badgeMap[badgeName] = { earned: true, minted: false };
+          });
+        }
+
+        if (isMounted) {
+          setUserBadges(badgeMap);
+        }
+      } catch {
+        if (isMounted) {
+          setUserBadges({});
+          setBadgesError('Unable to load earned badges.');
+        }
+      } finally {
+        if (isMounted) setIsBadgesLoading(false);
+      }
+    };
+
+    fetchUserBadges();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [address]);
+
+  useEffect(() => {
+    if (!isSuccess || !mintingBadge) return;
+    setUserBadges((prev) => ({
+      ...prev,
+      [mintingBadge]: {
+        ...prev[mintingBadge],
+        earned: true,
+        minted: true,
+      },
+    }));
+    setMintingBadge(null);
+  }, [isSuccess, mintingBadge]);
 
   const filteredBadges = allBadges.filter(badge => {
-    const userBadge = mockUserBadges[badge.name]
+    const userBadge = userBadges[badge.name]
     
     if (searchQuery && !badge.name.toLowerCase().includes(searchQuery.toLowerCase()) && 
         !badge.description.toLowerCase().includes(searchQuery.toLowerCase())) {
@@ -153,9 +200,9 @@ export default function BadgesPage() {
     }
   })
 
-  const earnedCount = allBadges.filter(b => mockUserBadges[b.name]?.earned).length
-  const mintedCount = safeParseInt(nftBalance?.toString(), 0) || allBadges.filter(b => mockUserBadges[b.name]?.minted).length
-  const totalPoints = allBadges.filter(b => mockUserBadges[b.name]?.earned).reduce((sum, b) => sum + b.points, 0)
+  const earnedCount = allBadges.filter(b => userBadges[b.name]?.earned).length
+  const mintedCount = safeParseInt(nftBalance?.toString(), 0)
+  const totalPoints = allBadges.filter(b => userBadges[b.name]?.earned).reduce((sum, b) => sum + b.points, 0)
 
   const tabs: { id: TabId; label: string; count: number }[] = [
     { id: 'all', label: 'All Badges', count: allBadges.length },
@@ -170,8 +217,8 @@ export default function BadgesPage() {
       <main className="min-h-screen bg-zinc-950 pt-20 relative">
         {/* Ambient Background */}
         <div className="fixed inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute top-0 left-1/3 w-150 h-150 bg-amber-500/5 rounded-full blur-[120px]" />
-          <div className="absolute bottom-1/4 right-1/4 w-125 h-125 bg-purple-500/5 rounded-full blur-[100px]" />
+          <div className="absolute top-0 left-1/3 w-[37.5rem] h-[37.5rem] bg-amber-500/5 rounded-full blur-[120px]" />
+          <div className="absolute bottom-1/4 right-1/4 w-[31.25rem] h-[31.25rem] bg-purple-500/5 rounded-full blur-[100px]" />
           <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-[0.02]" />
         </div>
 
@@ -304,7 +351,7 @@ export default function BadgesPage() {
             >
               <AnimatePresence mode="popLayout">
                 {filteredBadges.map((badge) => {
-                  const userBadge = mockUserBadges[badge.name]
+                  const userBadge = userBadges[badge.name]
                   const defaultRarity = { bg: 'bg-gray-500/20', border: 'border-gray-500/30', text: 'text-gray-400', glow: '' }
                   const rarity = rarityColors[badge.rarity] ?? rarityColors.Common ?? defaultRarity
                   const isEarned = userBadge?.earned

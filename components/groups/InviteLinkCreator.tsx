@@ -7,6 +7,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useAccount } from 'wagmi';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Link as LinkIcon,
@@ -48,18 +49,23 @@ export function InviteLinkCreator({
   const [maxUses, setMaxUses] = useState(0); // Unlimited
   const [description, setDescription] = useState('');
   const [requireApproval, setRequireApproval] = useState(false);
+  const { address } = useAccount();
   const { announce } = useAnnounce();
 
   const handleCreate = async () => {
     setIsCreating(true);
 
     try {
+      if (!address) {
+        announce('Connect your wallet to create an invite', 'assertive');
+        return;
+      }
       const response = await fetch('/api/groups/invites', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           groupId,
-          createdBy: '0x...', // In production: get from auth
+          createdBy: address,
           expiresIn: expiresIn || undefined,
           maxUses: maxUses || undefined,
           description,
@@ -328,7 +334,7 @@ export function InviteLinkCard({ link, onRevoke, onDelete }: InviteLinkCardProps
       {!isValid && (
         <div className="mt-3 text-xs text-red-400">
           {!link.isActive && '🔴 Revoked'}
-          {link.expiresAt && Date.now() > link.expiresAt && '⏰ Expired'}
+          {link.expiresAt && link.isActive && (!link.maxUses || link.currentUses < link.maxUses) && '⏰ Expired'}
           {link.maxUses && link.currentUses >= link.maxUses && '👥 Max uses reached'}
         </div>
       )}

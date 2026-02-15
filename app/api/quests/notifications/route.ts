@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getClient } from '@/lib/db';
-import { requireAuth } from '@/lib/auth/middleware';
+import { requireAuth, checkOwnership } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 
 /**
@@ -22,6 +22,10 @@ export async function GET(request: NextRequest) {
 
     if (!userAddress) {
       return NextResponse.json({ error: 'User address required' }, { status: 400 });
+    }
+
+    if (!checkOwnership(authResult.user, userAddress)) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
     }
 
     const client = await getClient();
@@ -101,6 +105,10 @@ export async function PATCH(request: NextRequest) {
         { error: 'Notification IDs array and user address required' },
         { status: 400 }
       );
+    }
+
+    if (!checkOwnership(authResult.user, userAddress)) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
     }
 
     const client = await getClient();

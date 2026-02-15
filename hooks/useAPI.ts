@@ -9,11 +9,15 @@ import { apiClient, APIError } from '@/lib/api-client';
  */
 export interface UserProfile {
   address: string;
+  username?: string;
+  displayName?: string;
   alias?: string;
   bio?: string;
   email?: string;
   location?: string;
   website?: string;
+  twitter?: string;
+  github?: string;
   avatar?: string;
   proofScore?: number;
   createdAt?: string;
@@ -21,16 +25,24 @@ export interface UserProfile {
 }
 
 type ApiUser = {
-  address: string;
+  address?: string;
+  wallet_address?: string;
   username?: string;
+  display_name?: string;
   avatar?: string;
+  avatar_url?: string;
   bio?: string;
   email?: string;
   location?: string;
   website?: string;
+  twitter?: string;
+  github?: string;
   proofScore?: number;
+  proof_score?: number;
   createdAt?: number | string;
+  created_at?: number | string;
   updatedAt?: number | string;
+  updated_at?: number | string;
 };
 
 const normalizeUserProfile = (user: ApiUser): UserProfile => {
@@ -38,16 +50,20 @@ const normalizeUserProfile = (user: ApiUser): UserProfile => {
     typeof value === 'number' ? new Date(value).toISOString() : value;
 
   return {
-    address: user.address,
-    alias: user.username,
+    address: user.address ?? user.wallet_address ?? '',
+    username: user.username,
+    displayName: user.display_name ?? user.username,
+    alias: user.display_name ?? user.username,
     bio: user.bio,
     email: user.email,
     location: user.location,
     website: user.website,
-    avatar: user.avatar,
-    proofScore: user.proofScore,
-    createdAt: toIso(user.createdAt),
-    updatedAt: toIso(user.updatedAt),
+    twitter: user.twitter,
+    github: user.github,
+    avatar: user.avatar ?? user.avatar_url,
+    proofScore: user.proofScore ?? user.proof_score,
+    createdAt: toIso(user.createdAt ?? user.created_at),
+    updatedAt: toIso(user.updatedAt ?? user.updated_at),
   };
 };
 
@@ -118,7 +134,7 @@ export function useAuth() {
  * Hook for fetching messages
  */
 export function useMessages(conversationId: string, enabled = true) {
-  const [messages, setMessages] = useState<any[]>([]);
+  const [messages, setMessages] = useState<unknown[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -176,7 +192,7 @@ export function useMessages(conversationId: string, enabled = true) {
  */
 export function useUserProfile(address?: string) {
   const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(Boolean(address));
   const [error, setError] = useState<string | null>(null);
 
   const fetchProfile = useCallback(async () => {
@@ -207,11 +223,35 @@ export function useUserProfile(address?: string) {
     fetchProfile();
   }, [fetchProfile]);
 
-  const updateProfile = useCallback(async (data: { username?: string; displayName?: string; bio?: string; avatarUrl?: string }) => {
+  const updateProfile = useCallback(async (data: {
+    username?: string;
+    displayName?: string;
+    alias?: string;
+    bio?: string;
+    email?: string;
+    location?: string;
+    website?: string;
+    twitter?: string;
+    github?: string;
+    avatarUrl?: string;
+  }) => {
     if (!address) return;
 
+    const username = data.username ?? data.alias ?? data.displayName;
+    const displayName = data.displayName ?? data.alias;
+
     try {
-      const response = await apiClient.updateUser(address, data);
+      const response = await apiClient.updateUser(address, {
+        username,
+        display_name: displayName,
+        bio: data.bio,
+        email: data.email,
+        location: data.location,
+        website: data.website,
+        twitter: data.twitter,
+        github: data.github,
+        avatar_url: data.avatarUrl,
+      } as Record<string, unknown>);
       setProfile(normalizeUserProfile(response.user));
       return response.user;
     } catch (err) {
@@ -313,7 +353,7 @@ export function useFriends(address?: string) {
  * Hook for gamification data
  */
 export function useGamification(address?: string) {
-  const [progress, setProgress] = useState<any>(null);
+  const [progress, setProgress] = useState<unknown>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -367,7 +407,7 @@ export function useGamification(address?: string) {
  * Hook for leaderboard
  */
 export function useLeaderboard(category: 'xp' | 'level' | 'achievements' = 'xp', limit = 50) {
-  const [leaderboard, setLeaderboard] = useState<any[]>([]);
+  const [leaderboard, setLeaderboard] = useState<unknown[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [cached, setCached] = useState(false);

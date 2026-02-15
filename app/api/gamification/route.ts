@@ -61,41 +61,6 @@ export async function GET(request: NextRequest) {
       userData = result.rows[0];
     }
 
-    // Jest-only safeguard: if a default stub row is returned, re-query once
-    // to allow tests that chain mockResolvedValueOnce to provide the intended row.
-    if (
-      isTestEnv &&
-      userData &&
-      userData.xp === 0 &&
-      userData.level === 1 &&
-      userData.streak === 0
-    ) {
-      const retry = await query(
-        `SELECT g.*, 
-                COALESCE(
-                  json_agg(
-                    json_build_object(
-                      'id', a.id,
-                      'name', a.name,
-                      'description', a.description,
-                      'icon', a.icon,
-                      'earnedAt', ua.earned_at
-                    ) ORDER BY ua.earned_at DESC
-                  ) FILTER (WHERE a.id IS NOT NULL), '[]'
-                ) as achievements
-         FROM user_gamification g
-         JOIN users u ON g.user_id = u.id
-         LEFT JOIN user_achievements ua ON g.user_id = ua.user_id
-         LEFT JOIN achievements a ON ua.achievement_id = a.id
-         WHERE u.wallet_address = $1
-         GROUP BY g.user_id, g.xp, g.level, g.streak, g.last_active`,
-        [userAddress.toLowerCase()]
-      );
-      if (retry.rows.length > 0) {
-        userData = retry.rows[0];
-      }
-    }
-
     if (!userData) {
       return NextResponse.json(
         { error: 'User data not found' },

@@ -102,7 +102,7 @@ export function usePagePerformance(): UsePagePerformanceResult {
         avgLargestContentfulPaint: lcp,
         totalErrors: todayErrors.length,
         errorRate: (todayErrors.length / Math.max(1, apiMetrics.length)) * 100,
-        averageSessionDuration: Math.random() * 300000, // 0-5 min in ms
+        averageSessionDuration: performance.now(),
       };
 
       setPageMetrics(metrics);

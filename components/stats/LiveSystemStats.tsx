@@ -7,7 +7,7 @@
 
 import { useSystemStats } from '@/lib/vfide-hooks'
 import { motion } from 'framer-motion'
-import { useState, ReactNode } from 'react'
+import { useEffect, useRef, useState, ReactNode } from 'react'
 import { Lock, Building2, Store, Zap } from 'lucide-react'
 
 interface StatCardProps {
@@ -97,15 +97,64 @@ function StatCard({ label, value, subValue, icon, color, trend, trendPercent }: 
 }
 
 export function LiveSystemStats() {
-  const { vaults: totalVaults, merchants: totalMerchants, transactions24h: totalTransactions, tvl: totalValueLocked } = useSystemStats()
-  
-  // Calculate mock trends (in production, compare with previous values)
-  const [trends] = useState({
-    vaults: { direction: 'up' as const, percent: 12.3 },
-    merchants: { direction: 'up' as const, percent: 8.7 },
-    transactions: { direction: 'up' as const, percent: 23.5 },
-    tvl: { direction: 'up' as const, percent: 15.2 },
+  const {
+    vaults: totalVaults,
+    merchants: totalMerchants,
+    transactions24h: totalTransactions,
+    tvl: totalValueLocked,
+    avgProofScore,
+    daoProposals,
+    eliteUsers,
+    volume24h,
+  } = useSystemStats()
+  const previousStats = useRef({
+    vaults: totalVaults,
+    merchants: totalMerchants,
+    transactions: totalTransactions,
+    tvl: totalValueLocked,
   })
+  type TrendDirection = 'up' | 'down' | 'neutral'
+  type TrendData = { direction: TrendDirection; percent: number }
+
+  const [trends, setTrends] = useState<{
+    vaults: TrendData;
+    merchants: TrendData;
+    transactions: TrendData;
+    tvl: TrendData;
+  }>({
+    vaults: { direction: 'neutral' as const, percent: 0 },
+    merchants: { direction: 'neutral' as const, percent: 0 },
+    transactions: { direction: 'neutral' as const, percent: 0 },
+    tvl: { direction: 'neutral' as const, percent: 0 },
+  })
+
+  useEffect(() => {
+    const calcTrend = (current: number, previous: number): TrendData => {
+      if (previous === 0) {
+        return { direction: 'neutral' as const, percent: 0 }
+      }
+      const diff = current - previous
+      const percent = (diff / previous) * 100
+      return {
+        direction: diff > 0 ? 'up' : diff < 0 ? 'down' : 'neutral',
+        percent: Math.abs(percent),
+      }
+    }
+
+    setTrends({
+      vaults: calcTrend(totalVaults, previousStats.current.vaults),
+      merchants: calcTrend(totalMerchants, previousStats.current.merchants),
+      transactions: calcTrend(totalTransactions, previousStats.current.transactions),
+      tvl: calcTrend(totalValueLocked, previousStats.current.tvl),
+    })
+
+    previousStats.current = {
+      vaults: totalVaults,
+      merchants: totalMerchants,
+      transactions: totalTransactions,
+      tvl: totalValueLocked,
+    }
+  }, [totalVaults, totalMerchants, totalTransactions, totalValueLocked])
   
   return (
     <div className="space-y-3 sm:space-y-4 md:space-y-6">
@@ -179,19 +228,19 @@ export function LiveSystemStats() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3 md:gap-4 text-center">
           <div>
             <p className="text-[10px] sm:text-xs text-zinc-100/50">Avg ProofScore</p>
-            <p className="text-base sm:text-lg md:text-xl font-bold text-cyan-400">685</p>
+            <p className="text-base sm:text-lg md:text-xl font-bold text-cyan-400">{Math.round(avgProofScore)}</p>
           </div>
           <div>
             <p className="text-[10px] sm:text-xs text-zinc-100/50">DAO Proposals</p>
-            <p className="text-base sm:text-lg md:text-xl font-bold text-violet-400">12</p>
+            <p className="text-base sm:text-lg md:text-xl font-bold text-violet-400">{daoProposals}</p>
           </div>
           <div>
             <p className="text-[10px] sm:text-xs text-zinc-100/50">Elite Users</p>
-            <p className="text-base sm:text-lg md:text-xl font-bold text-emerald-400">847</p>
+            <p className="text-base sm:text-lg md:text-xl font-bold text-emerald-400">{eliteUsers}</p>
           </div>
           <div>
             <p className="text-[10px] sm:text-xs text-zinc-100/50">24h Volume</p>
-            <p className="text-base sm:text-lg md:text-xl font-bold text-amber-400">$2.1M</p>
+            <p className="text-base sm:text-lg md:text-xl font-bold text-amber-400">${(volume24h / 1000000).toFixed(2)}M</p>
           </div>
         </div>
       </motion.div>

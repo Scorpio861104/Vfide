@@ -15,9 +15,11 @@
 
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { MobileButton } from '@/components/mobile/MobileForm';
 import { responsiveGrids, ResponsiveContainer } from '@/lib/mobile';
+import { useAccount } from 'wagmi';
+import { getAuthHeaders } from '@/lib/auth/client';
 
 // ==================== TYPES ====================
 
@@ -53,9 +55,9 @@ interface Achievement {
   id: string;
   title: string;
   description: string;
-  progress: number;
-  target: number;
-  reward: string;
+  progress?: number;
+  target?: number;
+  reward?: string;
   icon: string;
   completed: boolean;
 }
@@ -68,15 +70,9 @@ interface ScoreBreakdown {
   trend: 'up' | 'down' | 'stable';
 }
 
-// ==================== MOCK DATA ====================
+// ==================== TIER HELPERS ====================
 
-function getCurrentScore(): number {
-  return 7850;
-}
-
-function getCurrentTier(): ScoreTier {
-  const score = getCurrentScore();
-  const tiers: ScoreTier[] = [
+const TIERS: ScoreTier[] = [
     {
       name: 'Newcomer',
       minScore: 0,
@@ -134,187 +130,28 @@ function getCurrentTier(): ScoreTier {
     },
   ];
 
-  return tiers.find((t) => score >= t.minScore && score <= t.maxScore) ?? tiers[0]!;
-}
+const getTierForScore = (score: number): ScoreTier =>
+  TIERS.find((tier) => score >= tier.minScore && score <= tier.maxScore) ?? TIERS[0]!;
 
-function generateScoreHistory(): ScoreRecord[] {
-  const now = Date.now();
-  const records: ScoreRecord[] = [];
-  let currentScore = 7850;
-
-  for (let i = 29; i >= 0; i--) {
-    const date = new Date(now - i * 24 * 60 * 60 * 1000);
-    const change = Math.floor(Math.random() * 100) - 30;
-    currentScore = Math.max(0, currentScore + change);
-
-    records.push({
-      date: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-      score: currentScore,
-      change,
-      activities: [
-        'Verified transaction',
-        'Dispute resolution',
-        'Community participation',
-      ].filter(() => Math.random() > 0.5),
-    });
-  }
-
-  return records;
-}
-
-function generateBadges(): Badge[] {
-  return [
-    {
-      id: 'first-transaction',
-      name: 'First Step',
-      description: 'Completed your first transaction',
-      icon: '🚀',
-      earnedAt: Date.now() - 60 * 24 * 60 * 60 * 1000,
-      rarity: 'common',
-      requirements: 'Complete 1 transaction',
-    },
-    {
-      id: 'verified-account',
-      name: 'Verified Badge',
-      description: 'Account fully verified',
-      icon: '✅',
-      earnedAt: Date.now() - 45 * 24 * 60 * 60 * 1000,
-      rarity: 'common',
-      requirements: 'Verify account',
-    },
-    {
-      id: 'trader',
-      name: 'Active Trader',
-      description: 'Completed 10 transactions',
-      icon: '📈',
-      earnedAt: Date.now() - 30 * 24 * 60 * 60 * 1000,
-      rarity: 'uncommon',
-      requirements: 'Complete 10 transactions',
-    },
-    {
-      id: 'power-user',
-      name: 'Power User',
-      description: 'Score over 5000',
-      icon: '⚡',
-      earnedAt: Date.now() - 14 * 24 * 60 * 60 * 1000,
-      rarity: 'rare',
-      requirements: 'Achieve 5000+ score',
-    },
-    {
-      id: 'community-helper',
-      name: 'Community Helper',
-      description: 'Helped 5 community members',
-      icon: '🤝',
-      earnedAt: Date.now() - 7 * 24 * 60 * 60 * 1000,
-      rarity: 'rare',
-      requirements: 'Help 5 members',
-    },
-    {
-      id: 'legend',
-      name: 'Legend Status',
-      description: 'Reached highest tier',
-      icon: '🏆',
-      earnedAt: Date.now() - 2 * 24 * 60 * 60 * 1000,
-      rarity: 'legendary',
-      requirements: 'Reach Legend tier',
-    },
+const buildBreakdown = (stats: { badge_count: number; friend_count: number; proposal_count: number; endorsement_count: number }): ScoreBreakdown[] => {
+  const entries = [
+    { category: 'Badges Earned', activities: stats.badge_count, trend: 'stable' as const },
+    { category: 'Connections', activities: stats.friend_count, trend: 'stable' as const },
+    { category: 'Proposals Created', activities: stats.proposal_count, trend: 'stable' as const },
+    { category: 'Endorsements Received', activities: stats.endorsement_count, trend: 'stable' as const },
   ];
-}
 
-function generateAchievements(): Achievement[] {
-  return [
-    {
-      id: 'achieve-1',
-      title: 'Transaction Master',
-      description: 'Complete 50 transactions',
-      progress: 38,
-      target: 50,
-      reward: '+500 ProofScore',
-      icon: '💰',
-      completed: false,
-    },
-    {
-      id: 'achieve-2',
-      title: 'Social Butterfly',
-      description: 'Add 10 trusted contacts',
-      progress: 7,
-      target: 10,
-      reward: '+300 ProofScore',
-      icon: '🦋',
-      completed: false,
-    },
-    {
-      id: 'achieve-3',
-      title: 'Dispute Resolver',
-      description: 'Resolve disputes successfully',
-      progress: 5,
-      target: 5,
-      reward: '+1000 ProofScore',
-      icon: '⚖️',
-      completed: true,
-    },
-    {
-      id: 'achieve-4',
-      title: 'Consistency Champion',
-      description: 'Active for 30 consecutive days',
-      progress: 28,
-      target: 30,
-      reward: '+750 ProofScore',
-      icon: '🔥',
-      completed: false,
-    },
-    {
-      id: 'achieve-5',
-      title: 'Governance Guardian',
-      description: 'Participate in 5 governance votes',
-      progress: 3,
-      target: 5,
-      reward: '+400 ProofScore',
-      icon: '🗳️',
-      completed: false,
-    },
-  ];
-}
+  const totalActivities = entries.reduce((sum, entry) => sum + entry.activities, 0);
+  if (totalActivities === 0) return [];
 
-function generateScoreBreakdown(): ScoreBreakdown[] {
-  return [
-    {
-      category: 'Transaction History',
-      score: 2500,
-      percentage: 32,
-      activities: 45,
-      trend: 'up',
-    },
-    {
-      category: 'Account Verification',
-      score: 1800,
-      percentage: 23,
-      activities: 8,
-      trend: 'stable',
-    },
-    {
-      category: 'Community Engagement',
-      score: 1600,
-      percentage: 20,
-      activities: 12,
-      trend: 'up',
-    },
-    {
-      category: 'Security & Safety',
-      score: 1200,
-      percentage: 15,
-      activities: 15,
-      trend: 'stable',
-    },
-    {
-      category: 'Governance Participation',
-      score: 750,
-      percentage: 10,
-      activities: 5,
-      trend: 'down',
-    },
-  ];
-}
+  return entries.map((entry) => ({
+    category: entry.category,
+    score: entry.activities,
+    percentage: Math.round((entry.activities / totalActivities) * 100),
+    activities: entry.activities,
+    trend: entry.trend,
+  }));
+};
 
 // ==================== COMPONENTS ====================
 
@@ -435,7 +272,8 @@ interface AchievementItemProps {
 }
 
 function AchievementItem({ achievement }: AchievementItemProps) {
-  const progress = (achievement.progress / achievement.target) * 100;
+  const hasProgress = typeof achievement.progress === 'number' && typeof achievement.target === 'number' && achievement.target > 0;
+  const progress = hasProgress ? (achievement.progress! / achievement.target!) * 100 : 0;
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg p-4 md:p-5 border border-gray-200 dark:border-gray-700">
@@ -456,11 +294,11 @@ function AchievementItem({ achievement }: AchievementItemProps) {
         )}
       </div>
 
-      {!achievement.completed && (
+      {!achievement.completed && hasProgress && (
         <div className="mb-3">
           <div className="flex justify-between items-center mb-1">
             <span className="text-xs text-gray-600 dark:text-gray-400">
-              {achievement.progress} / {achievement.target}
+              {hasProgress ? `${achievement.progress} / ${achievement.target}` : 'N/A'}
             </span>
             <span className="text-xs font-bold text-gray-700 dark:text-gray-300">
               {Math.round(progress)}%
@@ -475,9 +313,11 @@ function AchievementItem({ achievement }: AchievementItemProps) {
         </div>
       )}
 
-      <p className="text-xs md:text-sm font-medium text-green-600 dark:text-green-400">
-        Reward: {achievement.reward}
-      </p>
+      {achievement.reward && (
+        <p className="text-xs md:text-sm font-medium text-green-600 dark:text-green-400">
+          Reward: {achievement.reward}
+        </p>
+      )}
     </div>
   );
 }
@@ -485,17 +325,96 @@ function AchievementItem({ achievement }: AchievementItemProps) {
 // ==================== MAIN COMPONENT ====================
 
 export default function ProofScoreDashboard() {
+  const { address, isConnected } = useAccount();
   const [activeTab, setActiveTab] = useState<'overview' | 'timeline' | 'badges' | 'achievements'>(
     'overview'
   );
   const [showCelebration, setShowCelebration] = useState(false);
-  
-  const currentScore = getCurrentScore();
-  const currentTier = getCurrentTier();
-  const scoreHistory = generateScoreHistory();
-  const badges = generateBadges();
-  const achievements = generateAchievements();
-  const breakdown = generateScoreBreakdown();
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [currentScore, setCurrentScore] = useState(0);
+  const [userStats, setUserStats] = useState({ badge_count: 0, friend_count: 0, proposal_count: 0, endorsement_count: 0 });
+  const [streak, setStreak] = useState(0);
+  const [badges, setBadges] = useState<Badge[]>([]);
+  const [achievements, setAchievements] = useState<Achievement[]>([]);
+  const [scoreHistory, setScoreHistory] = useState<ScoreRecord[]>([]);
+
+  useEffect(() => {
+    if (!address || !isConnected) {
+      setCurrentScore(0);
+      setUserStats({ badge_count: 0, friend_count: 0, proposal_count: 0, endorsement_count: 0 });
+      setBadges([]);
+      setAchievements([]);
+      setScoreHistory([]);
+      return;
+    }
+
+    const fetchData = async () => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const [userRes, badgesRes, gamificationRes] = await Promise.all([
+          fetch(`/api/users/${address}`, { headers: getAuthHeaders() }).catch(() => null),
+          fetch(`/api/badges?userAddress=${address}`, { headers: getAuthHeaders() }).catch(() => null),
+          fetch(`/api/gamification?userAddress=${address}`, { headers: getAuthHeaders() }).catch(() => null),
+        ]);
+
+        if (userRes?.ok) {
+          const data = await userRes.json();
+          const user = data?.user;
+          setCurrentScore(Number(user?.proof_score ?? 0));
+          setUserStats({
+            badge_count: Number(user?.stats?.badge_count ?? 0),
+            friend_count: Number(user?.stats?.friend_count ?? 0),
+            proposal_count: Number(user?.stats?.proposal_count ?? 0),
+            endorsement_count: Number(user?.stats?.endorsement_count ?? 0),
+          });
+        }
+
+        if (badgesRes?.ok) {
+          const data = await badgesRes.json();
+          const mapped = Array.isArray(data?.badges)
+            ? data.badges.map((badge: Record<string, unknown>) => ({
+                id: String(badge?.badge_id ?? badge?.id ?? ''),
+                name: badge?.badge_name ?? badge?.name ?? 'Badge',
+                description: badge?.badge_description ?? badge?.description ?? '',
+                icon: badge?.badge_icon ?? '🏅',
+                earnedAt: badge?.earned_at ? new Date(badge.earned_at).getTime() : Date.now(),
+                rarity: (badge?.badge_rarity ?? badge?.rarity ?? 'common') as Badge['rarity'],
+                requirements: badge?.requirements ?? 'Earned through participation',
+              }))
+            : [];
+          setBadges(mapped);
+        }
+
+        if (gamificationRes?.ok) {
+          const data = await gamificationRes.json();
+          setStreak(Number(data?.streak ?? 0));
+          const mapped = Array.isArray(data?.achievements)
+            ? data.achievements.map((achievement: Record<string, unknown>) => ({
+                id: String(achievement?.id ?? ''),
+                title: achievement?.name ?? 'Achievement',
+                description: achievement?.description ?? '',
+                icon: achievement?.icon ?? '🏆',
+                completed: true,
+                reward: undefined,
+              }))
+            : [];
+          setAchievements(mapped);
+        }
+      } catch (err) {
+        console.error('Failed to load ProofScore data:', err);
+        setError('Unable to load ProofScore data');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [address, isConnected]);
+
+  const currentTier = useMemo(() => getTierForScore(currentScore), [currentScore]);
+  const breakdown = useMemo(() => buildBreakdown(userStats), [userStats]);
 
   // ==================== TAB CONTENT ====================
 
@@ -522,20 +441,20 @@ export default function ProofScoreDashboard() {
             color="from-blue-500 to-blue-700"
           />
           <StatBox
-            label="This Month"
-            value="+185"
-            icon="📈"
+            label="Badges"
+            value={badges.length}
+            icon="🏅"
             color="from-green-500 to-green-700"
           />
           <StatBox
-            label="Rank"
-            value="#2,847"
-            icon="🏅"
+            label="Achievements"
+            value={achievements.length}
+            icon="🏆"
             color="from-purple-500 to-purple-700"
           />
           <StatBox
             label="Streak"
-            value="28 days"
+            value={`${streak} days`}
             icon="🔥"
             color="from-orange-500 to-orange-700"
           />
@@ -545,42 +464,48 @@ export default function ProofScoreDashboard() {
       {/* Score Breakdown */}
       <div>
         <h2 className="text-lg md:text-xl font-bold text-gray-900 dark:text-white mb-4">
-          Score Breakdown
+          Activity Breakdown
         </h2>
-        <div className="space-y-3">
-          {breakdown.map((item, idx) => (
-            <div key={idx} className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-              <div className="flex justify-between items-start mb-2">
-                <div>
-                  <h4 className="font-semibold text-gray-900 dark:text-white text-sm md:text-base">
-                    {item.category}
-                  </h4>
-                  <p className="text-xs text-gray-600 dark:text-gray-400">
-                    {item.activities} activities
-                  </p>
+        {breakdown.length === 0 ? (
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 border border-gray-200 dark:border-gray-700 text-sm text-gray-600 dark:text-gray-300">
+            Activity breakdown will appear after you start earning badges, endorsements, and proposals.
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {breakdown.map((item, idx) => (
+              <div key={idx} className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+                <div className="flex justify-between items-start mb-2">
+                  <div>
+                    <h4 className="font-semibold text-gray-900 dark:text-white text-sm md:text-base">
+                      {item.category}
+                    </h4>
+                    <p className="text-xs text-gray-600 dark:text-gray-400">
+                      {item.activities} activities
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-bold text-gray-900 dark:text-white text-sm md:text-base">
+                      {item.score.toLocaleString()}
+                    </p>
+                    <p className="text-xs text-gray-600 dark:text-gray-400">{item.percentage}%</p>
+                  </div>
                 </div>
-                <div className="text-right">
-                  <p className="font-bold text-gray-900 dark:text-white text-sm md:text-base">
-                    {item.score.toLocaleString()}
-                  </p>
-                  <p className="text-xs text-gray-600 dark:text-gray-400">{item.percentage}%</p>
+                <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                  <div
+                    className={`h-2 rounded-full transition-all ${
+                      item.trend === 'up'
+                        ? 'bg-green-500'
+                        : item.trend === 'down'
+                          ? 'bg-red-500'
+                          : 'bg-gray-500'
+                    }`}
+                    style={{ width: `${item.percentage}%` }}
+                  />
                 </div>
               </div>
-              <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                <div
-                  className={`h-2 rounded-full transition-all ${
-                    item.trend === 'up'
-                      ? 'bg-green-500'
-                      : item.trend === 'down'
-                        ? 'bg-red-500'
-                        : 'bg-gray-500'
-                  }`}
-                  style={{ width: `${item.percentage}%` }}
-                />
-              </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
@@ -591,53 +516,59 @@ export default function ProofScoreDashboard() {
         30-Day Score History
       </h2>
 
-      <div className="space-y-4">
-        {scoreHistory.map((record, idx) => (
-          <div
-            key={idx}
-            className="bg-white dark:bg-gray-800 rounded-lg p-4 md:p-5 border border-gray-200 dark:border-gray-700"
-          >
-            <div className="flex items-start justify-between mb-2">
-              <div>
-                <p className="font-semibold text-gray-900 dark:text-white text-sm md:text-base">
-                  {record.date}
-                </p>
-                <p className="text-xs text-gray-600 dark:text-gray-400">
-                  {record.activities.join(' • ')}
-                </p>
+      {scoreHistory.length === 0 ? (
+        <div className="bg-white dark:bg-gray-800 rounded-lg p-6 border border-gray-200 dark:border-gray-700 text-sm text-gray-600 dark:text-gray-300">
+          Score history will appear once daily snapshots are available.
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {scoreHistory.map((record, idx) => (
+            <div
+              key={idx}
+              className="bg-white dark:bg-gray-800 rounded-lg p-4 md:p-5 border border-gray-200 dark:border-gray-700"
+            >
+              <div className="flex items-start justify-between mb-2">
+                <div>
+                  <p className="font-semibold text-gray-900 dark:text-white text-sm md:text-base">
+                    {record.date}
+                  </p>
+                  <p className="text-xs text-gray-600 dark:text-gray-400">
+                    {record.activities.join(' • ')}
+                  </p>
+                </div>
+                <div className="text-right">
+                  <p className="font-bold text-gray-900 dark:text-white text-base md:text-lg">
+                    {record.score}
+                  </p>
+                  <p
+                    className={`text-xs font-semibold ${
+                      record.change > 0
+                        ? 'text-green-600 dark:text-green-400'
+                        : record.change < 0
+                          ? 'text-red-600 dark:text-red-400'
+                          : 'text-gray-600 dark:text-gray-400'
+                    }`}
+                  >
+                    {record.change > 0 ? '+' : ''}{record.change}
+                  </p>
+                </div>
               </div>
-              <div className="text-right">
-                <p className="font-bold text-gray-900 dark:text-white text-base md:text-lg">
-                  {record.score}
-                </p>
-                <p
-                  className={`text-xs font-semibold ${
+              <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1.5">
+                <div
+                  className={`h-1.5 rounded-full transition-all ${
                     record.change > 0
-                      ? 'text-green-600 dark:text-green-400'
+                      ? 'bg-green-500'
                       : record.change < 0
-                        ? 'text-red-600 dark:text-red-400'
-                        : 'text-gray-600 dark:text-gray-400'
+                        ? 'bg-red-500'
+                        : 'bg-gray-500'
                   }`}
-                >
-                  {record.change > 0 ? '+' : ''}{record.change}
-                </p>
+                  style={{ width: `${Math.min((record.score / 10000) * 100, 100)}%` }}
+                />
               </div>
             </div>
-            <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1.5">
-              <div
-                className={`h-1.5 rounded-full transition-all ${
-                  record.change > 0
-                    ? 'bg-green-500'
-                    : record.change < 0
-                      ? 'bg-red-500'
-                      : 'bg-gray-500'
-                }`}
-                style={{ width: `${Math.min((record.score / 10000) * 100, 100)}%` }}
-              />
-            </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 
@@ -647,11 +578,17 @@ export default function ProofScoreDashboard() {
         Your Badges ({badges.length})
       </h2>
 
-      <div className={`grid ${responsiveGrids.balanced} gap-4`}>
-        {badges.map((badge) => (
-          <BadgeCard key={badge.id} badge={badge} />
-        ))}
-      </div>
+      {badges.length === 0 ? (
+        <div className="bg-white dark:bg-gray-800 rounded-lg p-6 border border-gray-200 dark:border-gray-700 text-sm text-gray-600 dark:text-gray-300">
+          Earn badges by completing verified actions across the platform.
+        </div>
+      ) : (
+        <div className={`grid ${responsiveGrids.balanced} gap-4`}>
+          {badges.map((badge) => (
+            <BadgeCard key={badge.id} badge={badge} />
+          ))}
+        </div>
+      )}
     </div>
   );
 
@@ -661,11 +598,17 @@ export default function ProofScoreDashboard() {
         Achievements ({achievements.filter((a) => a.completed).length} / {achievements.length})
       </h2>
 
-      <div className="space-y-4">
-        {achievements.map((achievement) => (
-          <AchievementItem key={achievement.id} achievement={achievement} />
-        ))}
-      </div>
+      {achievements.length === 0 ? (
+        <div className="bg-white dark:bg-gray-800 rounded-lg p-6 border border-gray-200 dark:border-gray-700 text-sm text-gray-600 dark:text-gray-300">
+          Achievements will appear after you complete milestones.
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {achievements.map((achievement) => (
+            <AchievementItem key={achievement.id} achievement={achievement} />
+          ))}
+        </div>
+      )}
     </div>
   );
 
@@ -685,6 +628,21 @@ export default function ProofScoreDashboard() {
               </p>
             </div>
           </div>
+          {!isConnected && (
+            <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
+              Connect your wallet to load your ProofScore details.
+            </div>
+          )}
+          {isConnected && isLoading && (
+            <div className="mt-4 rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-700">
+              Loading your ProofScore data...
+            </div>
+          )}
+          {error && (
+            <div className="mt-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+              {error}
+            </div>
+          )}
         </div>
 
         {/* Main Score Display */}
@@ -701,12 +659,12 @@ export default function ProofScoreDashboard() {
                   <p className="font-bold">{currentTier.name}</p>
                 </div>
                 <div>
-                  <p className="text-xs opacity-75">This Month</p>
-                  <p className="font-bold">+185</p>
+                  <p className="text-xs opacity-75">Streak</p>
+                  <p className="font-bold">{streak} days</p>
                 </div>
                 <div>
-                  <p className="text-xs opacity-75">Percentile</p>
-                  <p className="font-bold">Top 0.3%</p>
+                  <p className="text-xs opacity-75">Badges</p>
+                  <p className="font-bold">{badges.length}</p>
                 </div>
               </div>
             </div>

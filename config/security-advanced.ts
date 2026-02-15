@@ -70,7 +70,7 @@ export interface SecurityLogEntry {
   type: SecurityEventType;
   severity: 'info' | 'warning' | 'critical';
   message: string;
-  details: Record<string, any>;
+  details: Record<string, unknown>;
   userAgent?: string;
   ipAddress?: string;
   location?: string;
@@ -90,7 +90,7 @@ export interface ThreatAlert {
   severity: ThreatLevel;
   detected: Date;
   message: string;
-  details: Record<string, any>;
+  details: Record<string, unknown>;
   resolved: boolean;
 }
 
@@ -174,18 +174,24 @@ export const validateBackupCode = (code: string): boolean => {
 export const generateBackupCodes = (count: number = 10): string[] => {
   const codes: string[] = [];
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-  
+  const charsLen = chars.length; // 36
+  const limit = 256 - (256 % charsLen); // 252 -- rejection sampling threshold
+
   for (let i = 0; i < count; i++) {
-    let code = '';
-    for (let j = 0; j < 3; j++) {
-      for (let k = 0; k < 4; k++) {
-        code += chars[Math.floor(Math.random() * chars.length)];
+    const codeChars: string[] = [];
+    while (codeChars.length < 12) {
+      const randomBytes = crypto.getRandomValues(new Uint8Array(16));
+      for (const b of randomBytes) {
+        if (codeChars.length >= 12) break;
+        if (b < limit) {
+          codeChars.push(chars[b % charsLen]!);
+        }
       }
-      if (j < 2) code += '-';
     }
+    const code = `${codeChars.slice(0, 4).join('')}-${codeChars.slice(4, 8).join('')}-${codeChars.slice(8, 12).join('')}`;
     codes.push(code);
   }
-  
+
   return codes;
 };
 

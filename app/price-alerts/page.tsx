@@ -1,9 +1,10 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Footer } from '@/components/layout/Footer';
 import { useAccount } from 'wagmi';
+import { secureId } from '@/lib/secureRandom';
 import { 
   Bell, 
   BellRing,
@@ -25,6 +26,7 @@ import {
   ArrowDown,
   RefreshCw
 } from 'lucide-react';
+import { safeJSONParseArray } from '@/lib/safeParse';
 
 // Types
 type AlertType = 'price_above' | 'price_below' | 'percent_change' | 'volume_spike';
@@ -53,17 +55,6 @@ interface TokenInfo {
   icon: string;
 }
 
-// Sample token data
-const TOKENS: TokenInfo[] = [
-  { symbol: 'VFIDE', name: 'VFIDE Token', price: 0.0847, change24h: 5.23, icon: '🔷' },
-  { symbol: 'ETH', name: 'Ethereum', price: 3847.52, change24h: -1.24, icon: '⟠' },
-  { symbol: 'BTC', name: 'Bitcoin', price: 67234.18, change24h: 2.15, icon: '₿' },
-  { symbol: 'USDC', name: 'USD Coin', price: 1.00, change24h: 0.01, icon: '💵' },
-  { symbol: 'ARB', name: 'Arbitrum', price: 1.23, change24h: -3.45, icon: '🔵' },
-  { symbol: 'OP', name: 'Optimism', price: 2.87, change24h: 4.12, icon: '🔴' },
-  { symbol: 'MATIC', name: 'Polygon', price: 0.89, change24h: -0.87, icon: '💜' },
-];
-
 const ALERT_TYPES: Record<AlertType, { label: string; icon: React.ComponentType<{ size?: number; className?: string }> }> = {
   'price_above': { label: 'Price Above', icon: TrendingUp },
   'price_below': { label: 'Price Below', icon: TrendingDown },
@@ -73,10 +64,14 @@ const ALERT_TYPES: Record<AlertType, { label: string; icon: React.ComponentType<
 
 export default function PriceAlertsPage() {
   const { address } = useAccount();
-  const [alerts, setAlerts] = useState<PriceAlert[]>([]);
+  const [alertsByAddress, setAlertsByAddress] = useState<Record<string, PriceAlert[]>>({});
   const [isCreating, setIsCreating] = useState(false);
   const [_editingId, _setEditingId] = useState<string | null>(null);
   const [filter, setFilter] = useState<'all' | 'active' | 'triggered'>('all');
+  const [tokens, setTokens] = useState<TokenInfo[]>([
+    { symbol: 'VFIDE', name: 'VFIDE Token', price: 0, change24h: 0, icon: '🔷' },
+    { symbol: 'ETH', name: 'Ethereum', price: 0, change24h: 0, icon: '⟠' },
+  ]);
   
   // New alert form state
   const [newToken, setNewToken] = useState('VFIDE');
@@ -89,27 +84,60 @@ export default function PriceAlertsPage() {
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [_browserNotifications, setBrowserNotifications] = useState(false);
 
-  // Load alerts from localStorage
+  // Load token prices
   useEffect(() => {
-    if (address) {
-      const stored = localStorage.getItem(`price_alerts_${address}`);
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        setAlerts(parsed.map((a: PriceAlert) => ({
-          ...a,
-          createdAt: new Date(a.createdAt),
-          triggeredAt: a.triggeredAt ? new Date(a.triggeredAt) : undefined
-        })));
+    let isMounted = true;
+    const loadPrices = async () => {
+      try {
+        const res = await fetch('/api/crypto/price');
+        if (!res.ok) return;
+        const data = await res.json();
+        const vfideUsd = data?.prices?.vfide?.usd ?? 0;
+        const ethUsd = data?.prices?.eth?.usd ?? 0;
+        if (!isMounted) return;
+        setTokens([
+          { symbol: 'VFIDE', name: 'VFIDE Token', price: vfideUsd, change24h: 0, icon: '🔷' },
+          { symbol: 'ETH', name: 'Ethereum', price: ethUsd, change24h: 0, icon: '⟠' },
+        ]);
+      } catch {
+        // ignore
       }
-    }
-  }, [address]);
+    };
+
+    loadPrices();
+    const interval = setInterval(loadPrices, 60_000);
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
+  }, []);
+
+  const alerts = useMemo<PriceAlert[]>(() => {
+    if (!address) return [];
+
+    const inMemory = alertsByAddress[address];
+    if (inMemory) return inMemory;
+
+    const stored = localStorage.getItem(`price_alerts_${address}`);
+    const parsed = safeJSONParseArray<PriceAlert>(stored, []);
+    if (!parsed.length) return [];
+
+    return parsed.map((a) => ({
+      ...a,
+      createdAt: new Date(a.createdAt),
+      triggeredAt: a.triggeredAt ? new Date(a.triggeredAt) : undefined
+    }));
+  }, [address, alertsByAddress]);
 
   // Save alerts
   const saveAlerts = useCallback((newAlerts: PriceAlert[]) => {
     if (address) {
       localStorage.setItem(`price_alerts_${address}`, JSON.stringify(newAlerts));
+      setAlertsByAddress((prev) => ({
+        ...prev,
+        [address]: newAlerts,
+      }));
     }
-    setAlerts(newAlerts);
   }, [address]);
 
   // Request browser notification permission
@@ -122,11 +150,11 @@ export default function PriceAlertsPage() {
 
   // Create alert
   const handleCreateAlert = () => {
-    const token = TOKENS.find(t => t.symbol === newToken);
+    const token = tokens.find(t => t.symbol === newToken);
     if (!token || !newValue) return;
 
     const alert: PriceAlert = {
-      id: Date.now().toString(36),
+      id: secureId('alert'),
       token: token.name,
       tokenSymbol: token.symbol,
       type: newType,
@@ -183,7 +211,7 @@ export default function PriceAlertsPage() {
     triggered: alerts.filter(a => a.status === 'triggered').length
   };
 
-  const getSelectedToken = () => TOKENS.find(t => t.symbol === newToken);
+  const getSelectedToken = () => tokens.find(t => t.symbol === newToken);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-zinc-950 via-zinc-900 to-zinc-950">
@@ -191,7 +219,7 @@ export default function PriceAlertsPage() {
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
           <div>
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-jade-500/10 rounded-full text-jade-400 text-sm font-medium mb-4">
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-500/10 rounded-full text-emerald-400 text-sm font-medium mb-4">
               <BellRing size={16} />
               Price Monitoring
             </div>
@@ -201,7 +229,7 @@ export default function PriceAlertsPage() {
           
           <button
             onClick={() => setIsCreating(true)}
-            className="px-6 py-3 bg-gradient-to-r from-jade-500 to-teal-500 text-black font-semibold rounded-lg flex items-center gap-2"
+            className="px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-black font-semibold rounded-lg flex items-center gap-2"
           >
             <Plus size={18} />
             Create Alert
@@ -224,11 +252,11 @@ export default function PriceAlertsPage() {
           
           <div className="p-4 bg-zinc-900/50 border border-zinc-700 rounded-xl">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-jade-500/10 rounded-lg">
-                <Activity className="text-jade-400" size={20} />
+              <div className="p-2 bg-emerald-500/10 rounded-lg">
+                <Activity className="text-emerald-400" size={20} />
               </div>
               <div>
-                <p className="text-2xl font-bold text-jade-400">{stats.active}</p>
+                <p className="text-2xl font-bold text-emerald-400">{stats.active}</p>
                 <p className="text-sm text-zinc-400">Active</p>
               </div>
             </div>
@@ -264,7 +292,7 @@ export default function PriceAlertsPage() {
               <button
                 onClick={() => setSoundEnabled(!soundEnabled)}
                 className={`w-12 h-6 rounded-full transition-colors ${
-                  soundEnabled ? 'bg-jade-500' : 'bg-zinc-700'
+                  soundEnabled ? 'bg-emerald-500' : 'bg-zinc-700'
                 }`}
               >
                 <div className={`w-5 h-5 bg-white rounded-full transition-transform ${
@@ -279,7 +307,7 @@ export default function PriceAlertsPage() {
         <div className="mb-8">
           <h2 className="text-lg font-semibold text-white mb-4">Market Overview</h2>
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
-            {TOKENS.map(token => (
+            {tokens.map(token => (
               <div key={token.symbol} className="p-3 bg-zinc-900/50 border border-zinc-700 rounded-xl">
                 <div className="flex items-center gap-2 mb-2">
                   <span className="text-lg">{token.icon}</span>
@@ -289,7 +317,7 @@ export default function PriceAlertsPage() {
                   ${token.price < 1 ? token.price.toFixed(4) : token.price.toLocaleString()}
                 </p>
                 <p className={`text-sm flex items-center gap-1 ${
-                  token.change24h >= 0 ? 'text-jade-400' : 'text-red-400'
+                  token.change24h >= 0 ? 'text-emerald-400' : 'text-red-400'
                 }`}>
                   {token.change24h >= 0 ? <ArrowUp size={12} /> : <ArrowDown size={12} />}
                   {Math.abs(token.change24h).toFixed(2)}%
@@ -333,9 +361,9 @@ export default function PriceAlertsPage() {
                     <select
                       value={newToken}
                       onChange={(e) => setNewToken(e.target.value)}
-                      className="w-full px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-lg text-white focus:outline-none focus:border-jade-500"
+                      className="w-full px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-lg text-white focus:outline-none focus:border-emerald-500"
                     >
-                      {TOKENS.map(token => (
+                      {tokens.map(token => (
                         <option key={token.symbol} value={token.symbol}>
                           {token.icon} {token.symbol} - ${token.price < 1 ? token.price.toFixed(4) : token.price.toLocaleString()}
                         </option>
@@ -355,7 +383,7 @@ export default function PriceAlertsPage() {
                             onClick={() => setNewType(type)}
                             className={`p-3 rounded-lg border flex items-center gap-2 ${
                               newType === type
-                                ? 'border-jade-400 bg-jade-500/10 text-jade-400'
+                                ? 'border-emerald-400 bg-emerald-500/10 text-emerald-400'
                                 : 'border-zinc-700 bg-zinc-800 text-zinc-400 hover:border-zinc-600'
                             }`}
                           >
@@ -385,7 +413,7 @@ export default function PriceAlertsPage() {
                         placeholder={newType === 'percent_change' ? '10' : 
                                    newType === 'volume_spike' ? '2' : 
                                    getSelectedToken()?.price.toString() || '0'}
-                        className="w-full pl-10 pr-4 py-3 bg-zinc-800 border border-zinc-700 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:border-jade-500"
+                        className="w-full pl-10 pr-4 py-3 bg-zinc-800 border border-zinc-700 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:border-emerald-500"
                       />
                     </div>
                     {getSelectedToken() && newType !== 'percent_change' && newType !== 'volume_spike' && (
@@ -403,7 +431,7 @@ export default function PriceAlertsPage() {
                       value={newNote}
                       onChange={(e) => setNewNote(e.target.value)}
                       placeholder="e.g., Buy more if price drops"
-                      className="w-full px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:border-jade-500"
+                      className="w-full px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:border-emerald-500"
                     />
                   </div>
 
@@ -430,7 +458,7 @@ export default function PriceAlertsPage() {
                           }}
                           className={`flex-1 p-3 rounded-lg border flex items-center justify-center gap-2 ${
                             newChannels.includes(channel.id)
-                              ? 'border-jade-400 bg-jade-500/10 text-jade-400'
+                              ? 'border-emerald-400 bg-emerald-500/10 text-emerald-400'
                               : 'border-zinc-700 bg-zinc-800 text-zinc-400'
                           }`}
                         >
@@ -452,7 +480,7 @@ export default function PriceAlertsPage() {
                   <button
                     onClick={handleCreateAlert}
                     disabled={!newValue}
-                    className="flex-1 py-3 bg-gradient-to-r from-jade-500 to-teal-500 text-black font-semibold rounded-lg disabled:opacity-50"
+                    className="flex-1 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-black font-semibold rounded-lg disabled:opacity-50"
                   >
                     Create Alert
                   </button>
@@ -470,7 +498,7 @@ export default function PriceAlertsPage() {
               onClick={() => setFilter(f)}
               className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                 filter === f
-                  ? 'bg-jade-500/20 text-jade-400'
+                  ? 'bg-emerald-500/20 text-emerald-400'
                   : 'bg-zinc-800 text-zinc-400 hover:text-white'
               }`}
             >
@@ -487,7 +515,7 @@ export default function PriceAlertsPage() {
             <p className="text-zinc-400 mb-6">Create your first price alert to get notified when tokens hit your targets</p>
             <button
               onClick={() => setIsCreating(true)}
-              className="px-6 py-3 bg-jade-500/10 text-jade-400 rounded-lg"
+              className="px-6 py-3 bg-emerald-500/10 text-emerald-400 rounded-lg"
             >
               Create Alert
             </button>
@@ -495,7 +523,7 @@ export default function PriceAlertsPage() {
         ) : (
           <div className="space-y-3">
             {filteredAlerts.map(alert => {
-              const token = TOKENS.find(t => t.symbol === alert.tokenSymbol);
+              const token = tokens.find(t => t.symbol === alert.tokenSymbol);
               const AlertIcon = ALERT_TYPES[alert.type].icon;
               const progress = alert.type === 'price_above' 
                 ? Math.min((alert.currentPrice / alert.targetValue) * 100, 100)
@@ -524,7 +552,7 @@ export default function PriceAlertsPage() {
                         <div className="flex items-center gap-2">
                           <span className="font-semibold text-white">{alert.tokenSymbol}</span>
                           <span className={`px-2 py-0.5 rounded text-xs ${
-                            alert.status === 'active' ? 'bg-jade-500/20 text-jade-400' :
+                            alert.status === 'active' ? 'bg-emerald-500/20 text-emerald-400' :
                             alert.status === 'triggered' ? 'bg-amber-500/20 text-amber-400' :
                             'bg-zinc-700 text-zinc-400'
                           }`}>
@@ -556,7 +584,7 @@ export default function PriceAlertsPage() {
                           </div>
                           <div className="h-2 bg-zinc-800 rounded-full overflow-hidden">
                             <div 
-                              className="h-full bg-gradient-to-r from-jade-500 to-teal-500 rounded-full"
+                              className="h-full bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full"
                               style={{ width: `${progress}%` }}
                             />
                           </div>
@@ -572,7 +600,7 @@ export default function PriceAlertsPage() {
                           onClick={() => handleToggleAlert(alert.id)}
                           className={`p-2 rounded-lg ${
                             alert.status === 'active' 
-                              ? 'bg-jade-500/10 text-jade-400' 
+                              ? 'bg-emerald-500/10 text-emerald-400' 
                               : 'bg-zinc-800 text-zinc-400'
                           }`}
                           title={alert.status === 'active' ? 'Pause alert' : 'Resume alert'}
@@ -603,7 +631,7 @@ export default function PriceAlertsPage() {
               onClick={() => {
                 setNewToken('VFIDE');
                 setNewType('price_above');
-                const vfide = TOKENS.find(t => t.symbol === 'VFIDE');
+                const vfide = tokens.find(t => t.symbol === 'VFIDE');
                 setNewValue(vfide ? (vfide.price * 1.1).toFixed(4) : '0.10');
                 setNewNote('10% price increase');
                 setIsCreating(true);
@@ -611,8 +639,8 @@ export default function PriceAlertsPage() {
               className="p-4 bg-zinc-900/50 border border-zinc-700 rounded-xl hover:border-zinc-500 transition-colors text-left"
             >
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-jade-500/10 rounded-lg">
-                  <TrendingUp className="text-jade-400" size={20} />
+                <div className="p-2 bg-emerald-500/10 rounded-lg">
+                  <TrendingUp className="text-emerald-400" size={20} />
                 </div>
                 <div>
                   <p className="font-medium text-white">VFIDE +10%</p>

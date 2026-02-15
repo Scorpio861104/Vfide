@@ -1,6 +1,8 @@
+"use client";
+
 // Helper component to display user with username support
 
-import React, { useEffect, useState } from 'react';
+import React, { useMemo } from 'react';
 import { UserProfileService } from '@/lib/userProfileService';
 import { UserProfile } from '@/types/userProfile';
 
@@ -12,12 +14,10 @@ interface UserDisplayProps {
 }
 
 export function UserDisplay({ address, fallbackAlias, showAddress = false, className = '' }: UserDisplayProps) {
-  const [profile, setProfile] = useState<UserProfile | null>(null);
-
-  useEffect(() => {
-    const cached = UserProfileService.getProfile(address);
-    setProfile(cached);
-  }, [address]);
+  const profile: UserProfile | null = useMemo(
+    () => UserProfileService.getProfile(address),
+    [address]
+  );
 
   const displayName = profile?.username 
     ? `@${profile.username}` 
@@ -48,12 +48,10 @@ interface UserAvatarProps {
 }
 
 export function UserAvatar({ address, username, alias, size = 'md', className = '' }: UserAvatarProps) {
-  const [profile, setProfile] = useState<UserProfile | null>(null);
-
-  useEffect(() => {
-    const cached = UserProfileService.getProfile(address);
-    setProfile(cached);
-  }, [address]);
+  const profile: UserProfile | null = useMemo(
+    () => UserProfileService.getProfile(address),
+    [address]
+  );
 
   const sizeClasses = {
     sm: 'w-8 h-8 text-xs',

@@ -25,6 +25,8 @@ contract DAO is ReentrancyGuard {
     event ModulesSet(address timelock, address seer, address hub, address hooks, address council);
     event AdminSet(address admin);
     event ParamsSet(uint64 votingPeriod, uint256 minVotesRequired);
+    event ParamsProposed(uint64 votingPeriod, uint256 minVotesRequired, uint256 effectiveTime);
+    event MinParticipationSet(uint256 minParticipation);
     event ProposalCreated(uint256 id, address proposer, ProposalType ptype, address target, uint256 value, bytes data, string description);
     event Voted(uint256 id, address voter, bool support);
     event Finalized(uint256 id, bool passed);
@@ -47,6 +49,12 @@ contract DAO is ReentrancyGuard {
     uint64 public votingDelay = 1 days; // Flash loan protection: vote cannot start immediately
     uint256 public minVotesRequired = 5000; // Absolute number of vote-points (Score) required to pass
     uint256 public minParticipation = 2; // FLOW-2 FIX: Minimum unique voters required
+
+    // Two-step timelock for governance parameter changes (defense-in-depth)
+    uint256 public constant PARAM_CHANGE_DELAY = 2 days;
+    uint64  public pendingVotingPeriod;
+    uint256 public pendingMinVotes;
+    uint256 public paramChangeProposalTime;
 
     struct Proposal {
         address proposer;
@@ -83,6 +91,12 @@ contract DAO is ReentrancyGuard {
     uint256 public constant FATIGUE_RECOVERY_RATE = 1 days; // Recover 5% per day
     uint256 public constant FATIGUE_PER_VOTE = 5; // 5% fatigue per vote
 
+    // Delegation tracking
+    mapping(address => address) public delegateOf;
+    mapping(address => address[]) public delegatorsOf;
+    mapping(address => mapping(address => bool)) private isDelegatorOf;
+    uint256 public constant MAX_DELEGATORS = 100; // Cap to prevent gas DoS
+
     modifier onlyAdmin() {
         _checkAdmin();
         _;
@@ -110,14 +124,27 @@ contract DAO is ReentrancyGuard {
     }
 
     function setAdmin(address _admin) external onlyAdmin { require(_admin!=address(0),"zero"); admin=_admin; emit AdminSet(_admin); }
-    function setParams(uint64 _period, uint256 _minVotes) external onlyAdmin {
-        // M-21 Fix: Validate parameters before setting
-        if(_period<1 hours)_period=1 hours;
-        require(_period <= 30 days, "DAO: voting period too long");
-        require(_minVotes <= 1000000, "DAO: minVotes too high");
-        votingPeriod=_period;
-        minVotesRequired=_minVotes;
-        emit ParamsSet(_period,_minVotes);
+
+    /// @notice Propose new governance parameters (2-day delay before taking effect)
+    function proposeParams(uint64 _period, uint256 _minVotes) external onlyAdmin {
+        require(_period >= 1 days, "DAO: voting period too short (min 1 day)");
+        require(_period <= 30 days, "DAO: voting period too long (max 30 days)");
+        require(_minVotes >= 1, "DAO: minVotes too low (min 1)");
+        require(_minVotes <= 1000000, "DAO: minVotes too high (max 1000000)");
+        pendingVotingPeriod = _period;
+        pendingMinVotes = _minVotes;
+        paramChangeProposalTime = block.timestamp;
+        emit ParamsProposed(_period, _minVotes, block.timestamp + PARAM_CHANGE_DELAY);
+    }
+
+    /// @notice Confirm pending governance parameter change after delay
+    function confirmParams() external onlyAdmin {
+        require(paramChangeProposalTime > 0, "DAO: no pending params");
+        require(block.timestamp >= paramChangeProposalTime + PARAM_CHANGE_DELAY, "DAO: delay not met");
+        votingPeriod = pendingVotingPeriod;
+        minVotesRequired = pendingMinVotes;
+        paramChangeProposalTime = 0;
+        emit ParamsSet(votingPeriod, minVotesRequired);
     }
     
     /// @notice Set minimum participation requirement (FLOW-2 FIX)
@@ -125,6 +152,7 @@ contract DAO is ReentrancyGuard {
     function setMinParticipation(uint256 _minParticipation) external onlyAdmin {
         require(_minParticipation >= 1 && _minParticipation <= 100, "DAO: invalid participation");
         minParticipation = _minParticipation;
+        emit MinParticipationSet(_minParticipation);
     }
 
     function _eligible(address a) internal view returns (bool) {
@@ -161,7 +189,45 @@ contract DAO is ReentrancyGuard {
         }
     }
 
-    // function delegateVote(address delegate) external { ... } // Removed
+    /// @notice Delegate your voting power to another address (set to zero to revoke)
+    function delegate(address delegatee) external {
+        require(delegatee != msg.sender, "DAO: self-delegate");
+
+        address current = delegateOf[msg.sender];
+        if (current != address(0)) {
+            _removeDelegator(current, msg.sender);
+        }
+
+        if (delegatee == address(0)) {
+            delegateOf[msg.sender] = address(0);
+            emit VoteDelegated(msg.sender, address(0));
+            return;
+        }
+
+        delegateOf[msg.sender] = delegatee;
+        if (!isDelegatorOf[delegatee][msg.sender]) {
+            require(delegatorsOf[delegatee].length < MAX_DELEGATORS, "DAO: delegatee at max capacity");
+            delegatorsOf[delegatee].push(msg.sender);
+            isDelegatorOf[delegatee][msg.sender] = true;
+        }
+
+        emit VoteDelegated(msg.sender, delegatee);
+    }
+
+    function _removeDelegator(address delegatee, address delegator) internal {
+        if (!isDelegatorOf[delegatee][delegator]) return;
+        isDelegatorOf[delegatee][delegator] = false;
+
+        address[] storage list = delegatorsOf[delegatee];
+        uint256 len = list.length;
+        for (uint256 i = 0; i < len; i++) {
+            if (list[i] == delegator) {
+                list[i] = list[len - 1];
+                list.pop();
+                break;
+            }
+        }
+    }
 
     function vote(uint256 id, bool support) external nonReentrant {
         address voter = msg.sender;
@@ -171,6 +237,7 @@ contract DAO is ReentrancyGuard {
         if (block.timestamp < p.start) revert DAO_VoteNotStarted(); // Flash loan protection
         if (block.timestamp >= p.end) revert DAO_VoteEnded();
         if (!_eligible(voter)) revert DAO_NotEligible();
+        require(delegateOf[voter] == address(0), "DAO: delegated");
         if (p.hasVoted[voter]) revert DAO_AlreadyVoted();
         
         // M-8 Fix: Validate proposal hasn't been executed or queued
@@ -193,33 +260,34 @@ contract DAO is ReentrancyGuard {
         }
 
         // Governance Fatigue: Reduce weight if voting too frequently
-        VoterInfo storage info = voterInfo[voter];
-        
-        // Recover fatigue based on time passed
-        if (info.lastVoteTime > 0) {
-            uint256 elapsed = block.timestamp - info.lastVoteTime;
-            // forge-lint: disable-next-line(divide-before-multiply)
-            uint256 recovery = (elapsed / FATIGUE_RECOVERY_RATE) * 5; // 5% per day, division first is intentional for step recovery
-            // H-4 Fix: Cap recovery to fatigue to prevent underflow
-            if (recovery >= info.fatigue) {
-                info.fatigue = 0;
-            } else {
-                info.fatigue -= recovery;
-            }
-        }
-        
-        // Apply fatigue penalty
-        if (info.fatigue > 0) {
-            // Cap fatigue at 90%
-            uint256 penaltyPercent = info.fatigue > 90 ? 90 : info.fatigue;
-            weight = weight * (100 - penaltyPercent) / 100;
-        }
-        
-        // Add new fatigue
-        info.fatigue += FATIGUE_PER_VOTE;
-        info.lastVoteTime = block.timestamp;
+        weight = _applyFatigue(voter, weight);
         
         if (support) p.forVotes += weight; else p.againstVotes += weight;
+
+        // Apply delegated votes from delegators to this voter
+        address[] storage delegators = delegatorsOf[voter];
+        uint256 dlen = delegators.length;
+        for (uint256 i = 0; i < dlen; i++) {
+            address delegator = delegators[i];
+            if (p.hasVoted[delegator]) continue;
+            if (!_eligible(delegator)) continue;
+
+            p.hasVoted[delegator] = true;
+            p.voterCount++;
+            voterProposals[delegator].push(id);
+
+            uint256 dWeight;
+            if (p.scoreSnapshot[delegator] == 0) {
+                dWeight = uint256(seer.getScore(delegator));
+                p.scoreSnapshot[delegator] = dWeight;
+            } else {
+                dWeight = p.scoreSnapshot[delegator];
+            }
+
+            dWeight = _applyFatigue(delegator, dWeight);
+
+            if (support) p.forVotes += dWeight; else p.againstVotes += dWeight;
+        }
         
         emit Voted(id, voter, support);
         
@@ -230,6 +298,32 @@ contract DAO is ReentrancyGuard {
         if (address(hooks) != address(0)) {
             try hooks.onVoteCast(id, voter, support) {} catch {}
         }
+    }
+
+    function _applyFatigue(address voter, uint256 weight) internal returns (uint256) {
+        VoterInfo storage info = voterInfo[voter];
+
+        // Recover fatigue based on time passed
+        if (info.lastVoteTime > 0) {
+            uint256 elapsed = block.timestamp - info.lastVoteTime;
+            // forge-lint: disable-next-line(divide-before-multiply)
+            uint256 recovery = (elapsed / FATIGUE_RECOVERY_RATE) * 5; // 5% per day
+            if (recovery >= info.fatigue) {
+                info.fatigue = 0;
+            } else {
+                info.fatigue -= recovery;
+            }
+        }
+
+        if (info.fatigue > 0) {
+            uint256 penaltyPercent = info.fatigue > 90 ? 90 : info.fatigue;
+            weight = weight * (100 - penaltyPercent) / 100;
+        }
+
+        info.fatigue += FATIGUE_PER_VOTE;
+        info.lastVoteTime = block.timestamp;
+
+        return weight;
     }
 
     // H-5 Fix: Add nonReentrant to prevent reentrancy via malicious hooks
@@ -401,12 +495,28 @@ contract DAO is ReentrancyGuard {
         uint256 fatiguePercent,
         uint256 effectivePower
     ) {
+        (rawScore, fatiguePercent, effectivePower) = _effectivePowerView(voter);
+
+        address[] storage delegators = delegatorsOf[voter];
+        uint256 dlen = delegators.length;
+        for (uint256 i = 0; i < dlen; i++) {
+            address delegator = delegators[i];
+            if (delegateOf[delegator] != voter) continue;
+            (, , uint256 delegatedPower) = _effectivePowerView(delegator);
+            effectivePower += delegatedPower;
+        }
+    }
+
+    function _effectivePowerView(address voter) internal view returns (
+        uint256 rawScore,
+        uint256 fatiguePercent,
+        uint256 effectivePower
+    ) {
         rawScore = uint256(seer.getScore(voter));
-        
+
         VoterInfo storage info = voterInfo[voter];
         uint256 fatigue = info.fatigue;
-        
-        // Calculate recovered fatigue
+
         if (info.lastVoteTime > 0) {
             uint256 elapsed = block.timestamp - info.lastVoteTime;
             uint256 recovery = (elapsed / FATIGUE_RECOVERY_RATE) * 5;
@@ -416,7 +526,7 @@ contract DAO is ReentrancyGuard {
                 fatigue -= recovery;
             }
         }
-        
+
         fatiguePercent = fatigue > 90 ? 90 : fatigue;
         effectivePower = rawScore * (100 - fatiguePercent) / 100;
     }

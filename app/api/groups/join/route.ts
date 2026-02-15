@@ -30,13 +30,23 @@ export async function POST(request: NextRequest) {
   try {
     client = await getClient();
     const body = await request.json();
-    const { code, userId } = body;
+    const { code } = body;
 
-    if (!code || !userId) {
+    if (!code) {
       return NextResponse.json(
         { error: 'Missing required fields' },
         { status: 400 }
       );
+    }
+
+    const userResult = await client.query(
+      'SELECT id FROM users WHERE wallet_address = $1',
+      [authResult.user.address.toLowerCase()]
+    );
+
+    const userId = userResult.rows[0]?.id;
+    if (!userId) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
     await client.query('BEGIN');

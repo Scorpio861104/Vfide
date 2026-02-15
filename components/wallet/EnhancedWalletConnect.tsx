@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAccount, useConnect, useChainId, useSwitchChain } from 'wagmi';
 import {
@@ -57,32 +57,18 @@ export function EnhancedWalletConnect({ onSuccess, showOnboarding = true }: Enha
   const { switchChain } = useSwitchChain();
   const switchChainFn = switchChain as ((params: { chainId: number }) => Promise<void>) | undefined;
 
-  const [isMobile, setIsMobile] = useState(false);
+  const [isMobile] = useState(() => isMobileDevice());
   const [showAllWallets, setShowAllWallets] = useState(false);
-  const [showGuide, setShowGuide] = useState(false);
+  const [isGuideOpen, setIsGuideOpen] = useState(false);
+  const [guideDismissed, setGuideDismissed] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
-  const [userError, setUserError] = useState<ReturnType<typeof getUserFriendlyError> | null>(null);
+  const [manualError, setManualError] = useState<ReturnType<typeof getUserFriendlyError> | null>(null);
   const [prefs, setPrefs] = useState(getWalletPreferences());
-
-  // Detect mobile on mount
-  useEffect(() => {
-    setIsMobile(isMobileDevice());
-  }, []);
-
-  // Show guide for first-time users
-  useEffect(() => {
-    if (showOnboarding && !prefs.hasSeenWalletGuide && !isConnected) {
-      setShowGuide(true);
-    }
-  }, [showOnboarding, prefs.hasSeenWalletGuide, isConnected]);
-
-  // Handle connection errors
-  useEffect(() => {
-    if (connectError) {
-      const friendlyError = getUserFriendlyError(connectError);
-      setUserError(friendlyError);
-    }
-  }, [connectError]);
+  const userError = useMemo(
+    () => manualError ?? (connectError ? getUserFriendlyError(connectError) : null),
+    [manualError, connectError]
+  );
+  const showGuide = isGuideOpen || (showOnboarding && !guideDismissed && !prefs.hasSeenWalletGuide && !isConnected);
 
   // Auto-switch to Base after connection
   useEffect(() => {
@@ -90,7 +76,7 @@ export function EnhancedWalletConnect({ onSuccess, showOnboarding = true }: Enha
       autoSwitchToBaseIfNeeded(isConnected, chainId, switchChainFn, (error) => {
         // Show error toast if auto-switch fails
         const friendlyError = getUserFriendlyError(error);
-        setUserError(friendlyError);
+        setManualError(friendlyError);
       });
     }
   }, [isConnected, chainId, prefs.autoSwitchToBase, switchChainFn]);
@@ -110,7 +96,7 @@ export function EnhancedWalletConnect({ onSuccess, showOnboarding = true }: Enha
   const handleConnect = useCallback((connectorId: string) => {
     const connector = connectors.find(c => c.id === connectorId);
     if (connector) {
-      setUserError(null);
+      setManualError(null);
       connect({ connector });
       
       // Mark guide as seen
@@ -131,7 +117,8 @@ export function EnhancedWalletConnect({ onSuccess, showOnboarding = true }: Enha
 
   // Close guide
   const handleCloseGuide = () => {
-    setShowGuide(false);
+    setIsGuideOpen(false);
+    setGuideDismissed(true);
     const updated = { ...prefs, hasSeenWalletGuide: true };
     setPrefs(updated);
     saveWalletPreferences(updated);
@@ -232,7 +219,7 @@ export function EnhancedWalletConnect({ onSuccess, showOnboarding = true }: Enha
                 )}
               </div>
               <button
-                onClick={() => setUserError(null)}
+                onClick={() => setManualError(null)}
                 className="text-zinc-500 hover:text-zinc-300"
               >
                 <X size={16} />
@@ -382,7 +369,7 @@ export function EnhancedWalletConnect({ onSuccess, showOnboarding = true }: Enha
 
         {/* Help link */}
         <button
-          onClick={() => setShowGuide(true)}
+          onClick={() => setIsGuideOpen(true)}
           className="mt-4 w-full text-xs text-zinc-500 hover:text-zinc-400 flex items-center justify-center gap-1"
         >
           <HelpCircle size={14} />

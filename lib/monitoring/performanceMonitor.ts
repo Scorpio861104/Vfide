@@ -87,7 +87,7 @@ class PerformanceMonitor {
   private isInitialized = false;
 
   private constructor() {
-    this.sessionId = `session-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    this.sessionId = `session-${Date.now()}-${Array.from(crypto.getRandomValues(new Uint8Array(5)), b => b.toString(16).padStart(2, '0')).join('')}`;
   }
 
   static getInstance(): PerformanceMonitor {
@@ -454,12 +454,12 @@ import { useState, useEffect, useRef } from 'react';
  * Hook to track component render performance
  */
 export function useRenderTracking(componentName: string): void {
-  const renderStart = useRef(performance.now());
+  const renderStart = useRef(0);
   
   useEffect(() => {
+    renderStart.current = performance.now();
     const renderTime = performance.now() - renderStart.current;
     trackComponentRender(componentName, renderTime);
-    renderStart.current = performance.now();
   });
 }
 
@@ -513,14 +513,11 @@ export function usePerformanceScore(): number {
  * Hook to get full performance report
  */
 export function usePerformanceReport(): PerformanceReport | null {
-  const [report, setReport] = useState<PerformanceReport | null>(null);
+  const [report, setReport] = useState<PerformanceReport | null>(() => performanceMonitor.generateReport());
 
   useEffect(() => {
     const unsubscribe = performanceMonitor.onReport(setReport);
-    
-    // Generate initial report
-    setReport(performanceMonitor.generateReport());
-    
+
     return unsubscribe;
   }, []);
 

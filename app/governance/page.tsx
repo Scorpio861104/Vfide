@@ -1,17 +1,24 @@
 'use client';
 
 import { Footer } from "@/components/layout/Footer";
-import { DAOABI } from "@/lib/abis";
+import { DAOABI, CouncilElectionABI, SeerABI } from "@/lib/abis";
 import { useState, useEffect, useMemo } from "react";
 import { useProofScore, useDAOProposals } from "@/lib/vfide-hooks";
-import { useAccount, useWriteContract, useWaitForTransactionReceipt, useReadContract } from "wagmi";
+import { useAccount, useWriteContract, useWaitForTransactionReceipt, useReadContract, useReadContracts } from "wagmi";
+import type { Abi } from "viem";
+import { isAddress } from "viem";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Bell, Search, Vote, Users, Clock, ChevronRight, Sparkles, Crown, Lightbulb, MessageSquare, History, BarChart3, FileText, Plus } from "lucide-react";
+import { X, Bell, Search, Vote, Users, Clock, Sparkles, Crown, Lightbulb, MessageSquare, History, BarChart3, FileText, Plus } from "lucide-react";
 import { sanitizeString } from "@/lib/validation";
 import { useCopyWithId } from "@/lib/hooks/useCopyToClipboard";
+import { formatAddress } from "@/lib/utils";
 
 // Contract address from environment
 const DAO_ADDRESS = (process.env.NEXT_PUBLIC_DAO_ADDRESS || '0xB75b08C5e42da4242e218C25B6A6B05d7BeF0728') as `0x${string}`;
+const COUNCIL_ELECTION_ADDRESS = (process.env.NEXT_PUBLIC_COUNCIL_ELECTION_ADDRESS || '0x0000000000000000000000000000000000000000') as `0x${string}`;
+const SEER_ADDRESS = (process.env.NEXT_PUBLIC_SEER_ADDRESS || '0x0000000000000000000000000000000000000000') as `0x${string}`;
+const IS_COUNCIL_ELECTION_DEPLOYED = COUNCIL_ELECTION_ADDRESS !== '0x0000000000000000000000000000000000000000';
+const IS_SEER_DEPLOYED = SEER_ADDRESS !== '0x0000000000000000000000000000000000000000';
 
 type TabType = 'overview' | 'proposals' | 'create' | 'council' | 'suggestions' | 'discussions' | 'members' | 'history' | 'stats';
 
@@ -20,12 +27,24 @@ interface Proposal {
   type: string;
   title: string;
   author: string;
-  timeLeft: string;
   endTime: number;
   forVotes: number;
   againstVotes: number;
   voted: boolean;
   description?: string;
+}
+
+function formatTimeLeft(endTimeMs: number) {
+  const now = Date.now();
+  const diff = endTimeMs - now;
+  if (diff <= 0) return 'Ended';
+  const hours = Math.floor(diff / (1000 * 60 * 60));
+  const days = Math.floor(hours / 24);
+  const remainingHours = hours % 24;
+  if (days > 0) return `${days}d ${remainingHours}h`;
+  if (hours > 0) return `${hours}h`;
+  const minutes = Math.floor(diff / (1000 * 60));
+  return `${minutes}m`;
 }
 
 function useCountdown(endTime: number) {
@@ -215,9 +234,6 @@ export default function GovernancePage() {
                   aria-label="Notifications"
                 >
                   <Bell className="w-5 h-5 text-gray-400" />
-                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-linear-to-r from-red-500 to-pink-500 rounded-full text-xs text-white flex items-center justify-center font-bold animate-pulse">
-                    3
-                  </span>
                 </motion.button>
               </div>
             </div>
@@ -233,25 +249,14 @@ export default function GovernancePage() {
                   <h3 className="font-bold text-white mb-3 flex items-center justify-between">
                     <span className="flex items-center gap-2">
                       <Bell className="w-4 h-4 text-cyan-400" />
-                      Urgent Notifications
+                      Notifications
                     </span>
                     <button onClick={() => setShowNotifications(false)} className="text-gray-500 hover:text-white transition-colors">
                       <X className="w-4 h-4" />
                     </button>
                   </h3>
-                  <div className="space-y-2 text-sm">
-                    <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-xl">
-                      <div className="text-red-400 font-bold flex items-center gap-1"><Clock className="w-3 h-3" /> 5 hours left</div>
-                      <div className="text-gray-300">Security Audit proposal needs your vote</div>
-                    </div>
-                    <div className="p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl">
-                      <div className="text-amber-400 font-bold flex items-center gap-1"><Sparkles className="w-3 h-3" /> Quorum alert</div>
-                      <div className="text-gray-300">Multi-Chain proposal at 85% quorum</div>
-                    </div>
-                    <div className="p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-xl">
-                      <div className="text-emerald-400 font-bold flex items-center gap-1"><Vote className="w-3 h-3" /> Vote confirmed</div>
-                      <div className="text-gray-300">Your vote on Proposal #140 recorded</div>
-                    </div>
+                  <div className="text-sm text-center py-4 text-gray-500">
+                    No active notifications
                   </div>
                 </motion.div>
               )}
@@ -373,7 +378,7 @@ function OverviewTab({ score, proposalCount }: { score?: number; proposalCount?:
               </div>
             </motion.div>
             
-            <motion.div 
+            <motion.div
               whileHover={{ scale: 1.02, y: -2 }}
               className="bg-linear-to-br from-emerald-500/10 to-green-500/5 backdrop-blur-xl border border-emerald-500/20 rounded-2xl p-6"
             >
@@ -383,14 +388,17 @@ function OverviewTab({ score, proposalCount }: { score?: number; proposalCount?:
                   <Users className="w-4 h-4 text-emerald-400" />
                 </div>
               </div>
-              <div className="text-3xl font-bold text-white">87%</div>
-              <div className="text-gray-500 text-sm mt-1">12 of 14 votes</div>
-              <div className="mt-3 text-xs text-emerald-400 flex items-center gap-1">
-                <ChevronRight className="w-3 h-3" /> Above average
-              </div>
+              {address ? (
+                <>
+                  <div className="text-3xl font-bold text-white">&mdash;</div>
+                  <div className="text-gray-500 text-sm mt-1">Connect to view</div>
+                </>
+              ) : (
+                <div className="text-lg text-gray-500">Connect wallet</div>
+              )}
             </motion.div>
-            
-            <motion.div 
+
+            <motion.div
               whileHover={{ scale: 1.02, y: -2 }}
               className="bg-linear-to-br from-amber-500/10 to-orange-500/5 backdrop-blur-xl border border-amber-500/20 rounded-2xl p-6"
             >
@@ -400,11 +408,14 @@ function OverviewTab({ score, proposalCount }: { score?: number; proposalCount?:
                   <BarChart3 className="w-4 h-4 text-amber-400" />
                 </div>
               </div>
-              <div className="text-3xl font-bold text-amber-400">40%</div>
-              <div className="text-gray-500 text-sm mt-1">Current: 506/845</div>
-              <div className="mt-3 text-xs text-gray-500 flex items-center gap-1">
-                <Clock className="w-3 h-3" /> +42/day recovery
-              </div>
+              {address ? (
+                <>
+                  <div className="text-3xl font-bold text-amber-400">&mdash;</div>
+                  <div className="text-gray-500 text-sm mt-1">Connect to view</div>
+                </>
+              ) : (
+                <div className="text-lg text-gray-500">Connect wallet</div>
+              )}
             </motion.div>
           </motion.div>
         </div>
@@ -424,26 +435,9 @@ function OverviewTab({ score, proposalCount }: { score?: number; proposalCount?:
               </div>
               Upcoming Voting Deadlines
             </h2>
-            
-            <div className="space-y-3">
-              <DeadlineCard
-                id={142}
-                title="Treasury: Security Audit"
-                hoursRemaining={5}
-                voted={false}
-              />
-              <DeadlineCard
-                id={141}
-                title="Protocol: Multi-Chain"
-                hoursRemaining={24}
-                voted={false}
-              />
-              <DeadlineCard
-                id={140}
-                title="Fee Reduction to 0.20%"
-                hoursRemaining={48}
-                voted={true}
-              />
+
+            <div className="text-center py-8 text-gray-500">
+              No active proposals with upcoming deadlines
             </div>
           </motion.div>
         </div>
@@ -492,18 +486,82 @@ function DeadlineCard({ id, title, hoursRemaining, voted }: { id: number; title:
 }
 
 function ProposalsTab({ searchQuery, onVote }: { searchQuery: string; onVote: (proposalId: number, support: boolean) => void }) {
+  const { address } = useAccount();
   const [selectedProposal, setSelectedProposal] = useState<Proposal | null>(null);
   const [filterType, setFilterType] = useState<string>('all');
-  const [baseTime] = useState(() => Date.now());
+
+  const { data: activeProposalIds } = useReadContract({
+    address: DAO_ADDRESS,
+    abi: DAOABI,
+    functionName: 'getActiveProposals',
+  });
+
+  const proposalIds = useMemo(
+    () => (Array.isArray(activeProposalIds) ? activeProposalIds : []),
+    [activeProposalIds]
+  );
+
+  const { data: proposalDetails } = useReadContracts({
+    contracts: proposalIds.map((id) => ({
+      address: DAO_ADDRESS,
+      abi: DAOABI,
+      functionName: 'getProposalDetails',
+      args: [id],
+    })),
+    query: { enabled: proposalIds.length > 0 },
+  });
+
+  const { data: votedResults } = useReadContracts({
+    contracts: address
+      ? proposalIds.map((id) => ({
+          address: DAO_ADDRESS,
+          abi: DAOABI,
+          functionName: 'hasVoted',
+          args: [id, address],
+        }))
+      : [],
+    query: { enabled: proposalIds.length > 0 && !!address },
+  });
+
+  const proposals = useMemo(() => {
+    if (!proposalDetails || proposalIds.length === 0) return [];
+
+    return proposalIds
+      .map((id, idx) => {
+        const details = proposalDetails[idx]?.result as
+          | [string, bigint, string, bigint, string, bigint, bigint, bigint, bigint, boolean, boolean]
+          | undefined;
+
+        if (!details) return null;
+
+        const [proposer, ptype, , , description, , endTime, forVotes, againstVotes] = details;
+
+        const title = description?.split('\n')[0]?.slice(0, 120) || `Proposal #${id.toString()}`;
+        const type =
+          Number(ptype) === 1
+            ? 'TREASURY'
+            : Number(ptype) === 2
+              ? 'UPGRADE'
+              : Number(ptype) === 3
+                ? 'SECURITY'
+                : 'GENERIC';
+
+        return {
+          id: Number(id),
+          type,
+          title,
+          author: proposer,
+          endTime: Number(endTime) * 1000,
+          forVotes: Number(forVotes),
+          againstVotes: Number(againstVotes),
+          voted: Boolean(votedResults?.[idx]?.result),
+          description,
+        } as Proposal;
+      })
+      .filter(Boolean) as Proposal[];
+  }, [proposalDetails, proposalIds, votedResults]);
   
   const filteredProposals = useMemo(() => {
-    const now = baseTime;
-    const proposals: Proposal[] = [
-      { id: 140, type: 'PARAMETER', title: 'Reduce Merchant Fee to 0.20%', author: '0x742d...bEb', timeLeft: '2 days', endTime: now + 48 * 60 * 60 * 1000, forVotes: 12450, againstVotes: 5820, voted: false, description: 'This proposal aims to reduce the merchant transaction fee from 0.25% to 0.20% to increase competitiveness and merchant adoption.' },
-      { id: 142, type: 'TREASURY', title: 'Allocate $50k for Security Audit', author: 'Council', timeLeft: '5 hours', endTime: now + 5 * 60 * 60 * 1000, forVotes: 18900, againstVotes: 1640, voted: false, description: 'Request treasury allocation of $50,000 to conduct comprehensive security audit by leading firm.' },
-      { id: 141, type: 'UPGRADE', title: 'Enable Multi-Chain Support (Arbitrum)', author: '0x1a2b...3c4d', timeLeft: '1 day', endTime: now + 24 * 60 * 60 * 1000, forVotes: 9240, againstVotes: 7860, voted: false, description: 'Deploy VFIDE protocol on Arbitrum to expand ecosystem reach and reduce transaction costs.' }
-    ];
-    
     return proposals.filter(p => {
       const matchesSearch = searchQuery === '' || 
         p.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -511,7 +569,7 @@ function ProposalsTab({ searchQuery, onVote }: { searchQuery: string; onVote: (p
       const matchesType = filterType === 'all' || p.type === filterType;
       return matchesSearch && matchesType;
     });
-  }, [searchQuery, filterType, baseTime]);
+  }, [searchQuery, filterType, proposals]);
 
   return (
     <section className="py-8">
@@ -533,6 +591,7 @@ function ProposalsTab({ searchQuery, onVote }: { searchQuery: string; onVote: (p
                     a.href = url;
                     a.download = 'proposals.csv';
                     a.click();
+                    URL.revokeObjectURL(url);
                   }}
                   className="px-4 py-2 bg-zinc-900 border border-zinc-700 text-cyan-400 rounded-lg font-bold hover:border-cyan-400 transition-colors"
                 >
@@ -545,7 +604,7 @@ function ProposalsTab({ searchQuery, onVote }: { searchQuery: string; onVote: (p
             </div>
             
             <div className="flex gap-2 overflow-x-auto pb-2">
-              {['all', 'PARAMETER', 'TREASURY', 'UPGRADE'].map(type => (
+              {['all', 'GENERIC', 'TREASURY', 'UPGRADE', 'SECURITY'].map(type => (
                 <button
                   key={type}
                   onClick={() => setFilterType(type)}
@@ -579,7 +638,7 @@ function ProposalsTab({ searchQuery, onVote }: { searchQuery: string; onVote: (p
                         {prop.type}
                       </div>
                       <h3 className="text-xl font-bold text-zinc-100 mb-2">{prop.title}</h3>
-                      <p className="text-zinc-400 text-sm">Proposed by {prop.author} • Ends in {prop.timeLeft}</p>
+                      <p className="text-zinc-400 text-sm">Proposed by {prop.author} • Ends in {formatTimeLeft(prop.endTime)}</p>
                     </div>
                     <div className="text-right">
                       <div className="text-2xl font-bold text-zinc-100">#{prop.id}</div>
@@ -700,19 +759,10 @@ function ProposalCountdown({ endTime }: { endTime: number }) {
 }
 
 function MembersTab({ searchQuery }: { searchQuery: string }) {
-  const [sortBy, setSortBy] = useState<'score' | 'votes' | 'participation'>('score');
+  const [sortBy] = useState<'score' | 'votes' | 'participation'>('score');
   
   const filteredMembers = useMemo(() => {
-    const members = [
-      { address: '0x742d...bEb', score: 945, votes: 28, participation: 98, fatigue: 15, lastVote: '2 hours ago' },
-      { address: '0x1a2b...3c4d', score: 892, votes: 26, participation: 91, fatigue: 25, lastVote: '5 hours ago' },
-      { address: '0x5e6f...7g8h', score: 845, votes: 24, participation: 87, fatigue: 40, lastVote: '1 day ago' },
-      { address: '0x9i0j...1k2l', score: 823, votes: 22, participation: 82, fatigue: 10, lastVote: '12 hours ago' },
-      { address: '0x3m4n...5o6p', score: 801, votes: 21, participation: 78, fatigue: 50, lastVote: '3 days ago' },
-      { address: '0x7q8r...9s0t', score: 789, votes: 19, participation: 75, fatigue: 30, lastVote: '18 hours ago' },
-      { address: '0x1u2v...3w4x', score: 756, votes: 18, participation: 71, fatigue: 20, lastVote: '6 hours ago' },
-      { address: '0x5y6z...7a8b', score: 734, votes: 16, participation: 68, fatigue: 35, lastVote: '2 days ago' }
-    ];
+    const members: Array<{ address: string; score: number; votes: number; participation: number; fatigue: number; lastVote: string }> = [];
     
     const filtered = members.filter(m => 
       searchQuery === '' || m.address.toLowerCase().includes(searchQuery.toLowerCase())
@@ -743,76 +793,61 @@ function MembersTab({ searchQuery }: { searchQuery: string }) {
                   a.href = url;
                   a.download = 'members.csv';
                   a.click();
+                  URL.revokeObjectURL(url);
                 }}
                 className="px-4 py-2 bg-zinc-900 border border-zinc-700 text-cyan-400 rounded-lg font-bold hover:border-cyan-400"
+                disabled={filteredMembers.length === 0}
               >
                 📊 Export CSV
               </button>
             </div>
             
-            <div className="flex items-center justify-between">
-              <div className="flex gap-2">
-                {[{ key: 'score', label: 'By Score' }, { key: 'votes', label: 'By Votes' }, { key: 'participation', label: 'By Participation' }].map(({ key, label }) => (
-                  <button
-                    key={key}
-                    onClick={() => setSortBy(key as typeof sortBy)}
-                    className={`px-4 py-2 rounded-lg font-bold transition-all ${
-                      sortBy === key
-                        ? 'bg-cyan-400 text-zinc-900'
-                        : 'bg-zinc-900 text-zinc-400 hover:text-cyan-400'
-                    }`}
-                  >
-                    {label}
-                  </button>
-                ))}
+            {filteredMembers.length === 0 ? (
+              <div className="mt-6">
+                <div className="text-center text-zinc-400 py-10">
+                  Member analytics require an indexer. No on-chain member roster is available yet.
+                </div>
               </div>
-              <div className="text-zinc-400 text-sm">Total: {filteredMembers.length} members</div>
-            </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-sm">
+                  <thead className="text-zinc-400 border-b border-zinc-700">
+                    <tr>
+                      <th className="py-3 px-4">Member</th>
+                      <th className="py-3 px-4 text-right">Score</th>
+                      <th className="py-3 px-4 text-right">Votes</th>
+                      <th className="py-3 px-4 text-right">Participation</th>
+                      <th className="py-3 px-4 text-right">Fatigue</th>
+                      <th className="py-3 px-4 text-right">Last Vote</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredMembers.map((member) => (
+                      <tr key={member.address} className="border-b border-zinc-800">
+                        <td className="py-4 px-4 text-zinc-100 font-mono text-xs sm:text-sm">
+                          {member.address}
+                        </td>
+                        <td className="py-4 px-4 text-right text-zinc-300">{member.score}</td>
+                        <td className="py-4 px-4 text-right text-zinc-300">{member.votes}</td>
+                        <td className="py-4 px-4 text-right">
+                          <span className={member.participation > 70 ? 'text-emerald-400' : 'text-zinc-400'}>
+                            {member.participation}%
+                          </span>
+                        </td>
+                        <td className="py-4 px-4 text-right">
+                          <span className={member.fatigue > 40 ? 'text-orange-500' : 'text-zinc-400'}>
+                            {member.fatigue}%
+                          </span>
+                        </td>
+                        <td className="py-4 px-4 text-right text-zinc-400 text-sm">{member.lastVote}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
-          
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-zinc-700">
-                  <th className="text-left py-3 px-4 text-zinc-400 text-sm">Member</th>
-                  <th className="text-right py-3 px-4 text-zinc-400 text-sm">ProofScore</th>
-                  <th className="text-right py-3 px-4 text-zinc-400 text-sm">Total Votes</th>
-                  <th className="text-right py-3 px-4 text-zinc-400 text-sm">Participation</th>
-                  <th className="text-right py-3 px-4 text-zinc-400 text-sm">Fatigue</th>
-                  <th className="text-right py-3 px-4 text-zinc-400 text-sm">Last Vote</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredMembers.map((member, idx) => (
-                  <tr key={member.address} className="border-b border-zinc-700 hover:bg-zinc-900 transition-colors">
-                    <td className="py-4 px-4">
-                      <div className="flex items-center gap-2">
-                        {idx === 2 && <span className="text-cyan-400">👤</span>}
-                        <span className="text-zinc-100 font-mono text-sm">{member.address}</span>
-                        {idx === 2 && <span className="text-cyan-400 text-xs">(You)</span>}
-                      </div>
-                    </td>
-                    <td className="py-4 px-4 text-right">
-                      <span className="text-cyan-400 font-bold">{member.score}</span>
-                    </td>
-                    <td className="py-4 px-4 text-right text-zinc-100">{member.votes}</td>
-                    <td className="py-4 px-4 text-right">
-                      <span className={member.participation >= 85 ? 'text-emerald-500' : 'text-zinc-400'}>
-                        {member.participation}%
-                      </span>
-                    </td>
-                    <td className="py-4 px-4 text-right">
-                      <span className={member.fatigue > 40 ? 'text-orange-500' : 'text-zinc-400'}>
-                        {member.fatigue}%
-                      </span>
-                    </td>
-                    <td className="py-4 px-4 text-right text-zinc-400 text-sm">{member.lastVote}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          
+
           <div className="mt-6 p-4 bg-zinc-900 rounded-lg">
             <h3 className="text-lg font-bold text-zinc-100 mb-3">Governance Fatigue Explanation</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-zinc-400">
@@ -843,24 +878,65 @@ function MembersTab({ searchQuery }: { searchQuery: string }) {
 }
 
 function HistoryTab({ searchQuery }: { searchQuery: string }) {
+  const { address } = useAccount();
+  const { data: voterHistory } = useReadContract({
+    address: DAO_ADDRESS,
+    abi: DAOABI,
+    functionName: 'getVoterHistory',
+    args: address ? [address] : undefined,
+  });
+
+  const historyIds = useMemo(() => (Array.isArray(voterHistory) ? voterHistory : []), [voterHistory]);
+
+  const { data: historyDetails } = useReadContracts({
+    contracts: historyIds.map((id) => ({
+      address: DAO_ADDRESS,
+      abi: DAOABI,
+      functionName: 'getProposalDetails',
+      args: [id],
+    })),
+    query: { enabled: historyIds.length > 0 },
+  });
+
+  const { data: historyStatuses } = useReadContracts({
+    contracts: historyIds.map((id) => ({
+      address: DAO_ADDRESS,
+      abi: DAOABI,
+      functionName: 'getProposalStatus',
+      args: [id],
+    })),
+    query: { enabled: historyIds.length > 0 },
+  });
+
   const filteredHistory = useMemo(() => {
-    const history = [
-      { id: 140, title: 'Fee Reduction', vote: 'FOR', date: '2 hours ago', result: 'Pending', power: 845 },
-      { id: 139, title: 'Council Election Q4', vote: 'FOR', date: '1 day ago', result: 'Passed ✓', power: 845 },
-      { id: 138, title: 'Token Burn Proposal', vote: 'AGAINST', date: '3 days ago', result: 'Rejected ✗', power: 845 },
-      { id: 137, title: 'Audit Budget Increase', vote: 'FOR', date: '5 days ago', result: 'Passed ✓', power: 823 },
-      { id: 136, title: 'Guardian Node Changes', vote: 'FOR', date: '7 days ago', result: 'Passed ✓', power: 823 },
-      { id: 135, title: 'Treasury Allocation', vote: 'FOR', date: '10 days ago', result: 'Passed ✓', power: 801 },
-      { id: 134, title: 'Protocol Upgrade v2.1', vote: 'FOR', date: '12 days ago', result: 'Passed ✓', power: 801 },
-      { id: 133, title: 'Fee Structure Change', vote: 'AGAINST', date: '15 days ago', result: 'Rejected ✗', power: 789 }
-    ];
-    
-    return history.filter(h => 
-      searchQuery === '' || 
+    const history = historyIds
+      .map((id, idx) => {
+        const details = historyDetails?.[idx]?.result as
+          | [string, bigint, string, bigint, string, bigint, bigint, bigint, bigint, boolean, boolean]
+          | undefined;
+        const status = historyStatuses?.[idx]?.result as [string, boolean, boolean, bigint] | undefined;
+        if (!details) return null;
+
+        const [, , , , description, , endTime] = details;
+        const title = description?.split('\n')[0]?.slice(0, 120) || `Proposal #${id.toString()}`;
+        const date = endTime ? new Date(Number(endTime) * 1000).toLocaleDateString() : 'Unknown';
+        const result = status?.[0] ?? 'Unknown';
+
+        return {
+          id: Number(id),
+          title,
+          date,
+          result,
+        };
+      })
+      .filter(Boolean) as { id: number; title: string; date: string; result: string }[];
+
+    return history.filter((h) =>
+      searchQuery === '' ||
       h.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       h.id.toString().includes(searchQuery)
     );
-  }, [searchQuery]);
+  }, [historyIds, historyDetails, historyStatuses, searchQuery]);
 
   return (
     <section className="py-8">
@@ -872,14 +948,15 @@ function HistoryTab({ searchQuery }: { searchQuery: string }) {
             </h2>
             <button
               onClick={() => {
-                const csv = 'ID,Title,Vote,Date,Result,Power\n' + 
-                  filteredHistory.map(h => `${h.id},"${h.title}",${h.vote},"${h.date}","${h.result}",${h.power}`).join('\n');
+                const csv = 'ID,Title,Date,Result\n' + 
+                  filteredHistory.map(h => `${h.id},"${h.title}","${h.date}","${h.result}"`).join('\n');
                 const blob = new Blob([csv], { type: 'text/csv' });
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
                 a.download = 'voting-history.csv';
                 a.click();
+                URL.revokeObjectURL(url);
               }}
               className="px-4 py-2 bg-zinc-900 border border-zinc-700 text-cyan-400 rounded-lg font-bold hover:border-cyan-400"
             >
@@ -901,15 +978,12 @@ function HistoryTab({ searchQuery }: { searchQuery: string }) {
                     <span className="text-zinc-100 font-bold">{item.title}</span>
                   </div>
                   <div className="flex items-center gap-4 text-sm">
-                    <span className={item.vote === 'FOR' ? 'text-emerald-500' : 'text-red-600'}>
-                      Voted {item.vote}
-                    </span>
+                    <span className="text-emerald-500">Vote recorded</span>
                     <span className="text-zinc-400">{item.date}</span>
-                    <span className="text-zinc-400">Power used: {item.power}</span>
                   </div>
                 </div>
                 <div className="text-right">
-                  <div className={`font-bold ${item.result.includes('Passed') ? 'text-emerald-500' : item.result.includes('Rejected') ? 'text-red-600' : 'text-orange-500'}`}>
+                  <div className={`font-bold ${item.result.includes('Executed') || item.result.includes('Queued') || item.result.includes('Ended') ? 'text-emerald-500' : item.result.includes('Failed') || item.result.includes('Rejected') ? 'text-red-600' : 'text-orange-500'}`}>
                     {item.result}
                   </div>
                 </div>
@@ -1109,76 +1183,49 @@ function SuggestionsTab() {
     description: '',
     category: 'feature'
   });
-  const [suggestions, setSuggestions] = useState<Suggestion[]>([
-    {
-      id: 1,
-      title: "Add multi-chain support for Arbitrum",
-      description: "Expand VFIDE to Arbitrum for lower gas fees and faster transactions. This would make the platform more accessible to users who prefer L2 solutions.",
-      category: "feature",
-      author: "0x742d...bEb",
-      authorScore: 847,
-      timestamp: "2 hours ago",
-      upvotes: 45,
-      downvotes: 3,
-      comments: [
-        { id: 1, author: "0x1a2b...3c4d", authorScore: 723, content: "This would be amazing for reducing gas costs!", timestamp: "1 hour ago", likes: 5 },
-        { id: 2, author: "0x5e6f...7g8h", authorScore: 912, content: "Have we considered Optimism as well?", timestamp: "45 min ago", likes: 3 }
-      ],
-      status: "reviewing",
-      votedBy: []
-    },
-    {
-      id: 2,
-      title: "Implement recurring payment subscriptions",
-      description: "Allow merchants to set up recurring payments for subscription-based services. Users could authorize monthly charges with customizable limits.",
-      category: "feature",
-      author: "0x1a2b...3c4d",
-      authorScore: 723,
-      timestamp: "5 hours ago",
-      upvotes: 38,
-      downvotes: 5,
-      comments: [
-        { id: 1, author: "0x9i0j...1k2l", authorScore: 654, content: "Essential for SaaS integrations!", timestamp: "3 hours ago", likes: 8 }
-      ],
-      status: "new",
-      votedBy: []
-    },
-    {
-      id: 3,
-      title: "Create a merchant referral program",
-      description: "Incentivize merchants to bring other merchants to the platform with a referral bonus system. Could be 0.1% of referred merchant's volume for first 6 months.",
-      category: "economics",
-      author: "0x5e6f...7g8h",
-      authorScore: 912,
-      timestamp: "1 day ago",
-      upvotes: 67,
-      downvotes: 8,
-      comments: [
-        { id: 1, author: "0x742d...bEb", authorScore: 847, content: "Great for viral growth! Maybe cap it at 1 year?", timestamp: "20 hours ago", likes: 12 },
-        { id: 2, author: "0x1a2b...3c4d", authorScore: 723, content: "Should we require KYC for referrers?", timestamp: "18 hours ago", likes: 4 }
-      ],
-      status: "approved",
-      votedBy: []
-    },
-    {
-      id: 4,
-      title: "Mobile app for vault management",
-      description: "Build a dedicated mobile app for managing vaults, viewing ProofScore, and quick payments. PWA would be acceptable as first version.",
-      category: "feature",
-      author: "0x9i0j...1k2l",
-      authorScore: 654,
-      timestamp: "2 days ago",
-      upvotes: 89,
-      downvotes: 2,
-      comments: [
-        { id: 1, author: "0x5e6f...7g8h", authorScore: 912, content: "PWA first makes sense. React Native later?", timestamp: "1 day ago", likes: 15 }
-      ],
-      status: "implemented",
-      votedBy: []
-    }
-  ]);
+  const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [filter, setFilter] = useState<'all' | 'new' | 'reviewing' | 'approved'>('all');
   const [sortBy, setSortBy] = useState<'recent' | 'popular'>('popular');
+
+  const storageKey = `vfide_governance_suggestions_${address ?? 'public'}`;
+
+  useEffect(() => {
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    try {
+      const stored = localStorage.getItem(storageKey);
+      const nextSuggestions = !stored
+        ? []
+        : (() => {
+            const parsed = JSON.parse(stored);
+            return Array.isArray(parsed) ? parsed : [];
+          })();
+      timer = setTimeout(() => {
+        setSuggestions(nextSuggestions);
+      }, 0);
+      if (!stored) {
+        return;
+      }
+    } catch {
+      timer = setTimeout(() => {
+        setSuggestions([]);
+      }, 0);
+    }
+
+    return () => {
+      if (timer) {
+        clearTimeout(timer);
+      }
+    };
+  }, [storageKey]);
+
+  const persistSuggestions = (updated: Suggestion[]) => {
+    setSuggestions(updated);
+    try {
+      localStorage.setItem(storageKey, JSON.stringify(updated));
+    } catch {
+      // ignore storage errors
+    }
+  };
 
   const handleSubmit = () => {
     if (!newSuggestion.title.trim() || !newSuggestion.description.trim()) return;
@@ -1202,14 +1249,14 @@ function SuggestionsTab() {
       votedBy: []
     };
     
-    setSuggestions([suggestion, ...suggestions]);
+    persistSuggestions([suggestion, ...suggestions]);
     setNewSuggestion({ title: '', description: '', category: 'feature' });
     setShowSubmitForm(false);
   };
 
   const handleVote = (id: number, isUpvote: boolean) => {
     const voterKey = address || 'anonymous';
-    setSuggestions(suggestions.map(s => {
+    persistSuggestions(suggestions.map(s => {
       if (s.id !== id) return s;
       // Prevent double voting (in production, this would be on-chain)
       if (s.votedBy.includes(voterKey)) {
@@ -1234,7 +1281,7 @@ function SuggestionsTab() {
     // Sanitize comment input to prevent XSS
     const sanitizedComment = sanitizeString(newComment, 500);
     
-    setSuggestions(suggestions.map(s => {
+    persistSuggestions(suggestions.map(s => {
       if (s.id !== suggestionId) return s;
       const comment: SuggestionComment = {
         id: s.comments.length + 1,
@@ -1424,7 +1471,7 @@ function SuggestionsTab() {
               <div key={suggestion.id} className="bg-zinc-800 border border-zinc-700 rounded-xl p-6 hover:border-emerald-500/50 transition-all">
                 <div className="flex gap-4">
                   {/* Vote Column */}
-                  <div className="flex flex-col items-center gap-1 min-w-15">
+                  <div className="flex flex-col items-center gap-1 min-w-[3.75rem]">
                     <button
                       onClick={() => handleVote(suggestion.id, true)}
                       disabled={hasVoted}
@@ -1600,79 +1647,58 @@ function DiscussionsTab({ searchQuery }: { searchQuery: string }) {
   const [newReply, setNewReply] = useState('');
   const [category, setCategory] = useState<'all' | Discussion['category']>('all');
   
-  const [discussions, setDiscussions] = useState<Discussion[]>([
-    {
-      id: 1,
-      title: "📢 VFIDE v2.0 Launch Discussion",
-      author: "VFIDE Team",
-      authorScore: 1000,
-      timestamp: "2 hours ago",
-      replies: 47,
-      views: 1250,
-      lastReply: "10 min ago",
-      isPinned: true,
-      category: "announcements",
-      preview: "We're excited to announce the upcoming v2.0 release! This thread is for community discussion about the new features..."
-    },
-    {
-      id: 2,
-      title: "Best practices for merchant onboarding",
-      author: "0x742d...bEb",
-      authorScore: 847,
-      timestamp: "5 hours ago",
-      replies: 23,
-      views: 456,
-      lastReply: "1 hour ago",
-      isPinned: false,
-      category: "general",
-      preview: "I've been helping onboard local merchants in my area. Here are some tips that have worked well for me..."
-    },
-    {
-      id: 3,
-      title: "Proposal #142 Discussion: Multi-Chain Expansion",
-      author: "0x1a2b...3c4d",
-      authorScore: 723,
-      timestamp: "1 day ago",
-      replies: 89,
-      views: 2340,
-      lastReply: "30 min ago",
-      isPinned: true,
-      category: "proposals",
-      preview: "Let's discuss the pros and cons of expanding to Arbitrum and Optimism as outlined in Proposal #142..."
-    },
-    {
-      id: 4,
-      title: "Help: Vault recovery process",
-      author: "0x5e6f...7g8h",
-      authorScore: 312,
-      timestamp: "3 days ago",
-      replies: 12,
-      views: 234,
-      lastReply: "6 hours ago",
-      isPinned: false,
-      category: "support",
-      preview: "I need help understanding the vault recovery process. My guardian says they can't see the approval button..."
-    },
-    {
-      id: 5,
-      title: "Idea: Gamification of ProofScore building",
-      author: "0x9i0j...1k2l",
-      authorScore: 654,
-      timestamp: "1 week ago",
-      replies: 34,
-      views: 567,
-      lastReply: "2 days ago",
-      isPinned: false,
-      category: "ideas",
-      preview: "What if we added achievements and milestones to make building ProofScore more engaging? Here's my proposal..."
-    }
-  ]);
+  const [discussions, setDiscussions] = useState<Discussion[]>([]);
 
-  const [replies, setReplies] = useState<Reply[]>([
-    { id: 1, author: "0x742d...bEb", authorScore: 847, content: "Great idea! I especially like the multi-chain support concept. This would really help with gas fees.", timestamp: "1 hour ago", likes: 12 },
-    { id: 2, author: "0x1a2b...3c4d", authorScore: 723, content: "I agree, but we need to consider the security implications carefully. Let's not rush this.", timestamp: "45 min ago", likes: 8 },
-    { id: 3, author: "0x5e6f...7g8h", authorScore: 912, content: "Has anyone done a cost analysis? What would the deployment costs look like on Arbitrum?", timestamp: "30 min ago", likes: 5 },
-  ]);
+  const [replies, setReplies] = useState<Reply[]>([]);
+
+  const discussionsKey = `vfide_governance_discussions_${address ?? 'public'}`;
+  const repliesKey = `vfide_governance_discussion_replies_${address ?? 'public'}`;
+
+  useEffect(() => {
+    const timers: ReturnType<typeof setTimeout>[] = [];
+    const defer = (callback: () => void) => {
+      const timer = setTimeout(callback, 0);
+      timers.push(timer);
+    };
+
+    try {
+      const stored = localStorage.getItem(discussionsKey);
+      const parsedDiscussions = stored ? (JSON.parse(stored) as Discussion[]) : [];
+      defer(() => setDiscussions(parsedDiscussions));
+    } catch {
+      defer(() => setDiscussions([]));
+    }
+
+    try {
+      const storedReplies = localStorage.getItem(repliesKey);
+      const parsedReplies = storedReplies ? (JSON.parse(storedReplies) as Reply[]) : [];
+      defer(() => setReplies(parsedReplies));
+    } catch {
+      defer(() => setReplies([]));
+    }
+
+    return () => {
+      timers.forEach((timer) => clearTimeout(timer));
+    };
+  }, [discussionsKey, repliesKey]);
+
+  const persistDiscussions = (updated: Discussion[]) => {
+    setDiscussions(updated);
+    try {
+      localStorage.setItem(discussionsKey, JSON.stringify(updated));
+    } catch {
+      // ignore storage errors
+    }
+  };
+
+  const persistReplies = (updated: Reply[]) => {
+    setReplies(updated);
+    try {
+      localStorage.setItem(repliesKey, JSON.stringify(updated));
+    } catch {
+      // ignore storage errors
+    }
+  };
 
   const handleNewThread = () => {
     if (!newThread.title.trim() || !newThread.content.trim()) return;
@@ -1695,7 +1721,7 @@ function DiscussionsTab({ searchQuery }: { searchQuery: string }) {
       preview: sanitizedContent.slice(0, 150) + '...'
     };
     
-    setDiscussions([thread, ...discussions]);
+    persistDiscussions([thread, ...discussions]);
     setNewThread({ title: '', content: '', category: 'general' });
     setShowNewThread(false);
   };
@@ -1715,12 +1741,12 @@ function DiscussionsTab({ searchQuery }: { searchQuery: string }) {
       likes: 0
     };
     
-    setReplies([...replies, reply]);
+    persistReplies([...replies, reply]);
     setNewReply('');
     
     // Update discussion reply count
     if (selectedDiscussion) {
-      setDiscussions(discussions.map(d => 
+      persistDiscussions(discussions.map(d => 
         d.id === selectedDiscussion.id 
           ? { ...d, replies: d.replies + 1, lastReply: 'Just now' }
           : d
@@ -1960,8 +1986,8 @@ function DiscussionsTab({ searchQuery }: { searchQuery: string }) {
 }
 
 // ========== CREATE PROPOSAL TAB ==========
-function CreateProposalTab() {
-  const { address, isConnected } = useAccount();
+  function CreateProposalTab() {
+    const { isConnected } = useAccount();
   const { score } = useProofScore();
   const [proposalType, setProposalType] = useState<'parameter' | 'treasury' | 'upgrade' | 'other'>('parameter');
   const [formData, setFormData] = useState({
@@ -1998,12 +2024,37 @@ function CreateProposalTab() {
     const ptype = ptypeMap[proposalType] ?? 3;
     
     // Set target and value based on proposal type
-    const target = proposalType === 'treasury' && formData.treasuryRecipient
-      ? formData.treasuryRecipient as `0x${string}`
-      : '0x0000000000000000000000000000000000000000' as `0x${string}`;
-    const value = proposalType === 'treasury' && formData.treasuryAmount
-      ? BigInt(Math.floor(parseFloat(formData.treasuryAmount) * 1e18))
-      : 0n;
+    let target: `0x${string}` = '0x0000000000000000000000000000000000000000';
+    let value = 0n;
+    let calldata: `0x${string}` = '0x';
+
+    if (proposalType === 'treasury') {
+      if (!formData.treasuryRecipient) {
+        alert('Treasury recipient is required.');
+        return;
+      }
+      target = formData.treasuryRecipient as `0x${string}`;
+      value = formData.treasuryAmount
+        ? BigInt(Math.floor(parseFloat(formData.treasuryAmount) * 1e18))
+        : 0n;
+    }
+
+    if (proposalType === 'parameter' || proposalType === 'upgrade') {
+      if (formData.targetContract) {
+        if (!isAddress(formData.targetContract)) {
+          alert('Target contract address is invalid.');
+          return;
+        }
+        target = formData.targetContract as `0x${string}`;
+      }
+      if (formData.calldata) {
+        if (!formData.calldata.startsWith('0x')) {
+          alert('Calldata must be hex prefixed with 0x.');
+          return;
+        }
+        calldata = formData.calldata as `0x${string}`;
+      }
+    }
     
     setIsSubmitting(true);
     try {
@@ -2011,7 +2062,7 @@ function CreateProposalTab() {
         address: DAO_ADDRESS,
         abi: DAOABI,
         functionName: 'propose',
-        args: [ptype, target, value, '0x' as `0x${string}`, `${sanitizedTitle}\n\n${sanitizedDescription}`],
+        args: [ptype, target, value, calldata, `${sanitizedTitle}\n\n${sanitizedDescription}`],
       });
       alert('Proposal submitted! It will appear in Active Proposals after confirmation.');
       // Reset form
@@ -2214,43 +2265,129 @@ function CreateProposalTab() {
 function CouncilTab() {
   const { isConnected, address } = useAccount();
   const { score } = useProofScore();
+  const { writeContractAsync } = useWriteContract();
   const [activeSection, setActiveSection] = useState<'members' | 'candidates' | 'register'>('members');
   const [isRegistering, setIsRegistering] = useState(false);
   const [candidateStatement, setCandidateStatement] = useState('');
 
-  const requiredScoreToRun = 7000; // Minimum ProofScore to run for council (70% on 0-10000 scale)
-  const canRun = (score || 0) >= requiredScoreToRun;
+  const { data: councilMembersData } = useReadContract({
+    address: COUNCIL_ELECTION_ADDRESS,
+    abi: CouncilElectionABI,
+    functionName: 'getCouncilMembers',
+    query: { enabled: IS_COUNCIL_ELECTION_DEPLOYED },
+  });
 
-  // Mock council data - in production, read from CouncilElection contract
-  // Council has 12 seats, 365-day terms, 7000 min ProofScore to run
-  const councilMembers = [
-    { address: '0x1a2b...3c4d', name: 'CryptoSage', score: 8500, term: 'Term 1', votes: 45200, status: 'active' },
-    { address: '0x5e6f...7g8h', name: 'VaultMaster', score: 8200, term: 'Term 1', votes: 38500, status: 'active' },
-    { address: '0x9i0j...1k2l', name: 'DeFiWhale', score: 8100, term: 'Term 1', votes: 32100, status: 'active' },
-    { address: '0xmnop...qrst', name: 'TokenNinja', score: 7950, term: 'Term 1', votes: 28900, status: 'active' },
-    { address: '0xuvwx...yz12', name: 'ChainGuard', score: 7800, term: 'Term 1', votes: 25400, status: 'active' },
-    { address: '0x3456...7890', name: 'TrustBuilder', score: 7750, term: 'Term 1', votes: 23100, status: 'active' },
-    { address: '0xabcd...ef01', name: 'ProofKeeper', score: 7680, term: 'Term 1', votes: 21800, status: 'active' },
-    { address: '0x2345...6789', name: 'ScoreMaxer', score: 7550, term: 'Term 1', votes: 19500, status: 'active' },
-    { address: '0xbcde...f012', name: 'VaultSentry', score: 7420, term: 'Term 1', votes: 18200, status: 'active' },
-    { address: '0xcdef...0123', name: 'TrustWarden', score: 7350, term: 'Term 1', votes: 17100, status: 'active' },
-    { address: '0xdef0...1234', name: 'ChainSage', score: 7280, term: 'Term 1', votes: 15800, status: 'active' },
-    { address: '0xef01...2345', name: 'ProofMaster', score: 7150, term: 'Term 1', votes: 14500, status: 'active' },
-  ];
+  const { data: candidatesData } = useReadContract({
+    address: COUNCIL_ELECTION_ADDRESS,
+    abi: CouncilElectionABI,
+    functionName: 'getCandidates',
+    query: { enabled: IS_COUNCIL_ELECTION_DEPLOYED },
+  });
 
-  const candidates = [
-    { address: '0xabc1...def2', name: 'RisingStar', score: 520, statement: 'I will focus on merchant adoption and reducing fees.', votes: 12500 },
-    { address: '0xghi3...jkl4', name: 'NewVoice', score: 480, statement: 'Community first! More transparency in treasury.', votes: 8200 },
-    { address: '0xmno5...pqr6', name: 'TechBuilder', score: 445, statement: 'Improve smart contract security and auditing.', votes: 5800 },
-  ];
+  const { data: electionStatusData } = useReadContract({
+    address: COUNCIL_ELECTION_ADDRESS,
+    abi: CouncilElectionABI,
+    functionName: 'getElectionStatus',
+    query: { enabled: IS_COUNCIL_ELECTION_DEPLOYED },
+  });
 
-  const electionStatus = {
-    phase: 'Voting', // 'Registration' | 'Voting' | 'Cooldown'
-    daysLeft: 12,
-    nextElection: 'Jan 15, 2026',
-    totalCandidates: candidates.length,
-    currentTerm: 1,
-  };
+  const { data: registrationData } = useReadContract({
+    address: COUNCIL_ELECTION_ADDRESS,
+    abi: CouncilElectionABI,
+    functionName: 'canRegister',
+    args: address ? [address] : undefined,
+    query: { enabled: IS_COUNCIL_ELECTION_DEPLOYED && !!address },
+  });
+
+  const registrationInfo = Array.isArray(registrationData)
+    ? registrationData
+    : undefined;
+  const requiredScoreToRun = registrationInfo ? Number(registrationInfo[3]) : 7000;
+  const canRun = registrationInfo ? Boolean(registrationInfo[0]) : (score || 0) >= requiredScoreToRun;
+
+  const councilMemberAddresses = Array.isArray(councilMembersData)
+    ? (councilMembersData as `0x${string}`[])
+    : [];
+  const candidateAddresses = Array.isArray(candidatesData)
+    ? (candidatesData as `0x${string}`[])
+    : [];
+
+  const { data: councilScoreData } = useReadContracts({
+    contracts: councilMemberAddresses.map((member) => ({
+      address: SEER_ADDRESS,
+      abi: SeerABI as Abi,
+      functionName: 'getScore',
+      args: [member],
+    })),
+    query: { enabled: IS_SEER_DEPLOYED && councilMemberAddresses.length > 0 },
+  });
+
+  const { data: candidateScoreData } = useReadContracts({
+    contracts: candidateAddresses.map((candidate) => ({
+      address: SEER_ADDRESS,
+      abi: SeerABI as Abi,
+      functionName: 'getScore',
+      args: [candidate],
+    })),
+    query: { enabled: IS_SEER_DEPLOYED && candidateAddresses.length > 0 },
+  });
+
+  const councilMembers = useMemo(
+    () =>
+      councilMemberAddresses.map((member, index) => {
+        const scoreValue = councilScoreData?.[index]?.result;
+        const parsedScore = typeof scoreValue === 'bigint' ? Number(scoreValue) : Number(scoreValue ?? 0);
+        return {
+          address: member,
+          name: formatAddress(member),
+          score: parsedScore,
+          term: 'Current Term',
+          votes: 0,
+          status: 'Active',
+        };
+      }),
+    [councilMemberAddresses, councilScoreData]
+  );
+
+  const candidates = useMemo(
+    () =>
+      candidateAddresses.map((candidate, index) => {
+        const scoreValue = candidateScoreData?.[index]?.result;
+        const parsedScore = typeof scoreValue === 'bigint' ? Number(scoreValue) : Number(scoreValue ?? 0);
+        return {
+          address: candidate,
+          name: formatAddress(candidate),
+          score: parsedScore,
+          statement: 'Registered on-chain candidate',
+          votes: 0,
+        };
+      }),
+    [candidateAddresses, candidateScoreData]
+  );
+
+  const [statusTimestamp, setStatusTimestamp] = useState(() => Date.now());
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setStatusTimestamp(Date.now());
+    }, 60_000);
+
+    return () => clearInterval(timer);
+  }, []);
+
+  const electionStatus = useMemo(() => {
+    const tuple = Array.isArray(electionStatusData) ? electionStatusData : undefined;
+    const termEnd = tuple ? Number(tuple[2]) * 1000 : 0;
+    const daysLeft = tuple ? Number(tuple[3]) : 0;
+    const phase = termEnd > statusTimestamp ? 'Active' : 'Ended';
+    return {
+      phase,
+      daysLeft,
+      nextElection: termEnd ? new Date(termEnd).toLocaleDateString() : 'TBD',
+      totalCandidates: tuple ? Number(tuple[4]) : candidates.length,
+      currentTerm: 0,
+    };
+  }, [electionStatusData, candidates.length, statusTimestamp]);
 
   const handleRegister = async () => {
     if (!canRun || !candidateStatement) return;
@@ -2260,22 +2397,20 @@ function CouncilTab() {
     
     setIsRegistering(true);
     
-    // TODO: Wire to CouncilElection.register() contract call
-    // The CouncilElection contract's register() function takes no arguments -
-    // it checks eligibility based on ProofScore from Seer contract.
-    // The candidate statement is currently stored off-chain only.
-    // Future: Add candidateStatements mapping to CouncilElection.sol
-    // For now, statement is stored locally only
     try {
-      // Future implementation:
-      // await writeContractAsync({
-      //   address: CONTRACT_ADDRESSES.CouncilElection,
-      //   abi: CouncilElectionABI,
-      //   functionName: 'register',
-      // });
-      await new Promise(r => setTimeout(r, 1500)); // Placeholder for contract call
-      alert('Registration submitted! You are now a council candidate.');
-    } catch (err) {
+      if (!IS_COUNCIL_ELECTION_DEPLOYED) {
+        alert('CouncilElection contract not deployed. Please try again later.');
+        setIsRegistering(false);
+        return;
+      }
+
+      await writeContractAsync({
+        address: COUNCIL_ELECTION_ADDRESS,
+        abi: CouncilElectionABI,
+        functionName: 'register',
+      });
+      alert(`Registration submitted! Statement: ${sanitizedStatement}`);
+      } catch (_err) {
       alert('Registration failed. Please try again.');
     }
     setIsRegistering(false);
@@ -2330,38 +2465,44 @@ function CouncilTab() {
           <div className="space-y-4">
             <h3 className="text-xl font-bold text-zinc-100 mb-4">Current Council (Term {electionStatus.currentTerm})</h3>
             <div className="grid gap-4">
-              {councilMembers.map((member, idx) => (
-                <div key={idx} className="bg-zinc-800 border border-zinc-700 rounded-xl p-6">
-                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                    <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 bg-amber-400/20 rounded-full flex items-center justify-center text-2xl">
-                        {idx === 0 ? '👑' : '⭐'}
-                      </div>
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-zinc-100 font-bold text-lg">{member.name}</span>
-                          {idx === 0 && <span className="px-2 py-0.5 bg-amber-400 text-zinc-900 rounded text-xs font-bold">LEAD</span>}
+              {councilMembers.length === 0 ? (
+                <div className="bg-zinc-800 border border-zinc-700 rounded-xl p-6 text-center text-zinc-400">
+                  No council members available.
+                </div>
+              ) : (
+                councilMembers.map((member, idx) => (
+                  <div key={idx} className="bg-zinc-800 border border-zinc-700 rounded-xl p-6">
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                      <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 bg-amber-400/20 rounded-full flex items-center justify-center text-2xl">
+                          {idx === 0 ? '👑' : '⭐'}
                         </div>
-                        <div className="text-zinc-400 text-sm font-mono">{member.address}</div>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-zinc-100 font-bold text-lg">{member.name}</span>
+                            {idx === 0 && <span className="px-2 py-0.5 bg-amber-400 text-zinc-900 rounded text-xs font-bold">LEAD</span>}
+                          </div>
+                          <div className="text-zinc-400 text-sm font-mono">{member.address}</div>
+                        </div>
                       </div>
-                    </div>
-                    <div className="flex items-center gap-6 text-sm">
-                      <div>
-                        <div className="text-zinc-400">ProofScore</div>
-                        <div className="text-cyan-400 font-bold">{member.score}</div>
-                      </div>
-                      <div>
-                        <div className="text-zinc-400">Votes Received</div>
-                        <div className="text-emerald-500 font-bold">{member.votes.toLocaleString()}</div>
-                      </div>
-                      <div>
-                        <div className="text-zinc-400">Status</div>
-                        <div className="text-emerald-500 font-bold capitalize">{member.status}</div>
+                      <div className="flex items-center gap-6 text-sm">
+                        <div>
+                          <div className="text-zinc-400">ProofScore</div>
+                          <div className="text-cyan-400 font-bold">{member.score}</div>
+                        </div>
+                        <div>
+                          <div className="text-zinc-400">Votes Received</div>
+                          <div className="text-emerald-500 font-bold">{member.votes.toLocaleString()}</div>
+                        </div>
+                        <div>
+                          <div className="text-zinc-400">Status</div>
+                          <div className="text-emerald-500 font-bold capitalize">{member.status}</div>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                ))
+              )}
             </div>
           </div>
         )}
@@ -2376,31 +2517,37 @@ function CouncilTab() {
               </div>
             )}
             <div className="grid gap-4">
-              {candidates.map((candidate, idx) => (
-                <div key={idx} className="bg-zinc-800 border border-zinc-700 rounded-xl p-6">
-                  <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-2">
-                        <span className="text-zinc-100 font-bold text-lg">{candidate.name}</span>
-                        <span className="text-cyan-400 text-sm">Score: {candidate.score}</span>
+              {candidates.length === 0 ? (
+                <div className="bg-zinc-800 border border-zinc-700 rounded-xl p-6 text-center text-zinc-400">
+                  No candidates available.
+                </div>
+              ) : (
+                candidates.map((candidate, idx) => (
+                  <div key={idx} className="bg-zinc-800 border border-zinc-700 rounded-xl p-6">
+                    <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-2">
+                          <span className="text-zinc-100 font-bold text-lg">{candidate.name}</span>
+                          <span className="text-cyan-400 text-sm">Score: {candidate.score}</span>
+                        </div>
+                        <p className="text-zinc-400 text-sm mb-2">&quot;{candidate.statement}&quot;</p>
+                        <div className="text-zinc-400 text-xs font-mono">{candidate.address}</div>
                       </div>
-                      <p className="text-zinc-400 text-sm mb-2">&quot;{candidate.statement}&quot;</p>
-                      <div className="text-zinc-400 text-xs font-mono">{candidate.address}</div>
-                    </div>
-                    <div className="flex items-center gap-4">
-                      <div className="text-right">
-                        <div className="text-zinc-400 text-sm">Current Votes</div>
-                        <div className="text-emerald-500 font-bold text-xl">{candidate.votes.toLocaleString()}</div>
+                      <div className="flex items-center gap-4">
+                        <div className="text-right">
+                          <div className="text-zinc-400 text-sm">Current Votes</div>
+                          <div className="text-emerald-500 font-bold text-xl">{candidate.votes.toLocaleString()}</div>
+                        </div>
+                        {electionStatus.phase === 'Voting' && isConnected && (
+                          <button className="px-6 py-3 bg-emerald-500 text-zinc-900 rounded-lg font-bold hover:bg-green-500 transition-colors">
+                            Vote
+                          </button>
+                        )}
                       </div>
-                      {electionStatus.phase === 'Voting' && isConnected && (
-                        <button className="px-6 py-3 bg-emerald-500 text-zinc-900 rounded-lg font-bold hover:bg-green-500 transition-colors">
-                          Vote
-                        </button>
-                      )}
                     </div>
                   </div>
-                </div>
-              ))}
+                ))
+              )}
             </div>
           </div>
         )}

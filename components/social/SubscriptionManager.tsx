@@ -1,8 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { useAccount, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
-import { parseEther } from 'viem';
+import { useAccount } from 'wagmi';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTransactionSounds } from '@/hooks/useTransactionSounds';
 import { Check, Sparkles, Crown, Zap, Star } from 'lucide-react';
@@ -14,13 +13,14 @@ import { Check, Sparkles, Crown, Zap, Star } from 'lucide-react';
 
 // Confetti particles for success
 function SuccessConfetti() {
+  const colors = ['#9333EA', '#3B82F6', '#10B981', '#F59E0B'];
   const particles = Array.from({ length: 30 }, (_, i) => ({
     id: i,
-    x: 50 + (Math.random() - 0.5) * 60,
-    delay: Math.random() * 0.3,
-    color: ['#9333EA', '#3B82F6', '#10B981', '#F59E0B'][Math.floor(Math.random() * 4)]
+    x: 50 + ((i * 17 + 7) % 60 - 30),
+    delay: (i % 10) * 0.03,
+    color: colors[i % 4],
   }));
-  
+
   return (
     <div className="absolute inset-0 overflow-hidden pointer-events-none">
       {particles.map((p) => (
@@ -29,7 +29,7 @@ function SuccessConfetti() {
           className="absolute w-2 h-2 rounded-full"
           style={{ left: `${p.x}%`, top: '50%', backgroundColor: p.color }}
           initial={{ y: 0, opacity: 1, scale: 1 }}
-          animate={{ y: -200, opacity: 0, scale: 0, x: (Math.random() - 0.5) * 100 }}
+          animate={{ y: -200, opacity: 0, scale: 0, x: ((p.id * 23 + 11) % 100 - 50) }}
           transition={{ duration: 1.5, delay: p.delay, ease: 'easeOut' }}
         />
       ))}
@@ -61,15 +61,34 @@ const SUBSCRIPTION_TIERS: SubscriptionTier[] = [
     duration: 90,
     price: '0.12',
     label: 'Quarterly',
-    features: ['All premium content', 'Exclusive Discord access', 'Monthly Q&A sessions', 'Early content access', '20% savings'],
+    features: [
+      'All premium content',
+      'Exclusive Discord access',
+      'Monthly Q&A sessions',
+      'Early content access',
+      '20% savings',
+    ],
   },
   {
     duration: 365,
     price: '0.40',
     label: 'Annual',
-    features: ['All premium content', 'Exclusive Discord access', 'Monthly Q&A sessions', 'Early content access', '1-on-1 consultation', '33% savings'],
+    features: [
+      'All premium content',
+      'Exclusive Discord access',
+      'Monthly Q&A sessions',
+      'Early content access',
+      '1-on-1 consultation',
+      '33% savings',
+    ],
   },
 ];
+
+const getFrequencyFromDuration = (durationDays: number) => {
+  if (durationDays >= 365) return 'yearly';
+  if (durationDays >= 90) return 'quarterly';
+  return 'monthly';
+};
 
 export function SubscriptionManager({
   creatorAddress,
@@ -77,15 +96,11 @@ export function SubscriptionManager({
   className = '',
 }: SubscriptionManagerProps) {
   const { address: userAddress } = useAccount();
+  const { playSuccess, playError, playNotification } = useTransactionSounds();
+
   const [selectedTier, setSelectedTier] = useState<SubscriptionTier | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
-  const { playSuccess, playNotification, playError } = useTransactionSounds();
-
-  const { writeContract, data: hash, error } = useWriteContract();
-  const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({
-    hash,
-  });
 
   const handleSubscribe = async (tier: SubscriptionTier) => {
     if (!userAddress) {
@@ -97,46 +112,40 @@ export function SubscriptionManager({
     setIsProcessing(true);
 
     try {
-      // In production, this would call the SubscriptionManager contract
-      // For now, we'll simulate with a direct transfer
-      await writeContract({
-        address: creatorAddress as `0x${string}`,
-        abi: [
-          {
-            name: 'subscribe',
-            type: 'function',
-            stateMutability: 'payable',
-            inputs: [{ name: 'duration', type: 'uint256' }],
-            outputs: [],
-          },
-        ],
-        functionName: 'subscribe',
-        args: [BigInt(tier.duration)],
-        value: parseEther(tier.price),
+      const response = await fetch('/api/subscriptions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userAddress,
+          merchantAddress: creatorAddress,
+          merchantName: creatorName,
+          amount: tier.price,
+          frequency: getFrequencyFromDuration(tier.duration),
+        }),
       });
-    } catch (err) {
-      console.error('Subscription failed:', err);
-      setIsProcessing(false);
-    }
-  };
 
-  React.useEffect(() => {
-    if (isSuccess) {
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data.error || 'Subscription failed');
+      }
+
       setIsProcessing(false);
       setSelectedTier(null);
       setShowSuccess(true);
       playSuccess();
-      setTimeout(() => setShowSuccess(false), 3000);
-    }
-  }, [isSuccess, creatorName, playSuccess]);
-
-  React.useEffect(() => {
-    if (error) {
+    } catch (err) {
+      console.error('Subscription failed:', err);
       setIsProcessing(false);
       playError();
-      alert(`Subscription failed: ${error.message}`);
+      alert(`Subscription failed: ${err instanceof Error ? err.message : 'Unknown error'}`);
     }
-  }, [error, playError]);
+  };
+
+  React.useEffect(() => {
+    if (!showSuccess) return;
+    const timer = window.setTimeout(() => setShowSuccess(false), 3000);
+    return () => window.clearTimeout(timer);
+  }, [showSuccess]);
 
   return (
     <div className={`space-y-6 ${className} relative`}>
@@ -149,11 +158,7 @@ export function SubscriptionManager({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
           >
-            <motion.div
-              className="text-center relative"
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-            >
+            <motion.div className="text-center relative" initial={{ scale: 0 }} animate={{ scale: 1 }}>
               <SuccessConfetti />
               <motion.div
                 className="text-8xl mb-4"
@@ -169,12 +174,12 @@ export function SubscriptionManager({
         )}
       </AnimatePresence>
 
-      <motion.div 
+      <motion.div
         className="text-center mb-8"
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
       >
-        <motion.h2 
+        <motion.h2
           className="text-2xl font-bold mb-2 flex items-center justify-center gap-2"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -183,9 +188,7 @@ export function SubscriptionManager({
           <Crown className="w-6 h-6 text-purple-500" />
           Subscribe to {creatorName}
         </motion.h2>
-        <p className="text-gray-600 dark:text-gray-400">
-          Get exclusive access to premium content and perks
-        </p>
+        <p className="text-gray-600 dark:text-gray-400">Get exclusive access to premium content and perks</p>
       </motion.div>
 
       <div className="grid md:grid-cols-3 gap-6">
@@ -200,11 +203,11 @@ export function SubscriptionManager({
             initial={{ opacity: 0, y: 30, rotateX: -10 }}
             animate={{ opacity: 1, y: 0, rotateX: 0 }}
             transition={{ delay: tierIndex * 0.15, type: 'spring', stiffness: 200 }}
-            whileHover={{ 
-              scale: 1.03, 
+            whileHover={{
+              scale: 1.03,
               borderColor: 'rgb(147, 51, 234)',
               rotateY: selectedTier?.duration === tier.duration ? 0 : 3,
-              transition: { duration: 0.2 }
+              transition: { duration: 0.2 },
             }}
             style={{ transformStyle: 'preserve-3d', perspective: 1000 }}
           >
@@ -219,7 +222,7 @@ export function SubscriptionManager({
                 BEST VALUE
               </motion.div>
             )}
-            
+
             {/* Shimmer effect on selected */}
             {selectedTier?.duration === tier.duration && (
               <motion.div
@@ -240,7 +243,7 @@ export function SubscriptionManager({
                 {tier.duration === 365 && <Crown className="w-8 h-8 text-yellow-500 mx-auto" />}
               </motion.div>
               <h3 className="text-xl font-bold mb-2">{tier.label}</h3>
-              <motion.div 
+              <motion.div
                 className="flex items-baseline justify-center gap-1"
                 initial={{ scale: 0.8 }}
                 animate={{ scale: 1 }}
@@ -254,14 +257,14 @@ export function SubscriptionManager({
 
             <ul className="space-y-2 mb-6 relative z-10">
               {tier.features.map((feature, featureIndex) => (
-                <motion.li 
-                  key={featureIndex} 
+                <motion.li
+                  key={featureIndex}
                   className="flex items-start gap-2 text-sm"
                   initial={{ opacity: 0, x: -10 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.3 + tierIndex * 0.1 + featureIndex * 0.05 }}
                 >
-                  <motion.span 
+                  <motion.span
                     className="text-green-500 mt-0.5"
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
@@ -279,7 +282,7 @@ export function SubscriptionManager({
                 handleSubscribe(tier);
                 playNotification();
               }}
-              disabled={isProcessing || isConfirming}
+              disabled={isProcessing}
               className="w-full py-3 bg-linear-to-r from-purple-500 to-blue-500 disabled:from-gray-600 disabled:to-gray-700 disabled:cursor-not-allowed rounded-lg text-white font-medium relative z-10"
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
@@ -291,7 +294,7 @@ export function SubscriptionManager({
                     animate={{ rotate: 360 }}
                     transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
                   />
-                  {isConfirming ? 'Confirming...' : 'Processing...'}
+                  Processing...
                 </span>
               ) : (
                 <span className="flex items-center justify-center gap-2">
@@ -306,15 +309,13 @@ export function SubscriptionManager({
 
       <AnimatePresence>
         {!userAddress && (
-          <motion.div 
+          <motion.div
             className="text-center p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg"
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
           >
-            <p className="text-yellow-800 dark:text-yellow-200">
-              Connect your wallet to subscribe
-            </p>
+            <p className="text-yellow-800 dark:text-yellow-200">Connect your wallet to subscribe</p>
           </motion.div>
         )}
       </AnimatePresence>

@@ -445,6 +445,7 @@ export function MobileNumberInput({
     if (typeof value === 'number') {
       setCurrent(clamp(value));
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [value, min, max]);
 
   React.useEffect(() => {

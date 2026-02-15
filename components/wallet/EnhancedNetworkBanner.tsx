@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAccount, useChainId, useSwitchChain } from 'wagmi';
 import { AlertCircle, X, Zap, Check } from 'lucide-react';
@@ -27,28 +27,13 @@ export function EnhancedNetworkBanner() {
   const chainId = useChainId();
   const { switchChain, isPending, isSuccess, error } = useSwitchChain();
 
-  const [showBanner, setShowBanner] = useState(false);
   const [showSteps, setShowSteps] = useState(false);
   const [prefs, setPrefs] = useState(getWalletPreferences());
 
   const isWrongNetwork = isConnected && chainId !== PREFERRED_CHAIN.id;
   const guide = getNetworkSwitchGuide(chainId);
 
-  // Show banner when on wrong network
-  useEffect(() => {
-    if (isWrongNetwork && !prefs.dismissedWrongNetworkWarning) {
-      setShowBanner(true);
-    } else {
-      setShowBanner(false);
-    }
-  }, [isWrongNetwork, prefs.dismissedWrongNetworkWarning]);
-
-  // Hide banner after successful switch
-  useEffect(() => {
-    if (isSuccess) {
-      setShowBanner(false);
-    }
-  }, [isSuccess]);
+  const showBanner = isWrongNetwork && !prefs.dismissedWrongNetworkWarning && !isSuccess;
 
   // Handle switch
   const handleSwitch = () => {
@@ -60,7 +45,6 @@ export function EnhancedNetworkBanner() {
     const updated = { ...prefs, dismissedWrongNetworkWarning: true };
     setPrefs(updated);
     saveWalletPreferences(updated);
-    setShowBanner(false);
   };
 
   if (!showBanner || !isWrongNetwork) {

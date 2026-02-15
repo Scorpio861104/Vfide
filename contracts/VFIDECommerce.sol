@@ -156,7 +156,7 @@ contract MerchantRegistry {
 contract CommerceEscrow {
     using SafeERC20_COM for IERC20_COM;
     
-    enum State { NONE, OPEN, FUNDED, RELEASED, REFUNDED, DISPUTED, RESOLVED }
+    enum State { NONE, OPEN, FUNDED, RELEASED, REFUNDED, DISPUTED, RESOLVED, CANCELLED }
 
     address public dao;
     IERC20_COM     public token;
@@ -176,6 +176,16 @@ contract CommerceEscrow {
 
     uint256 public escrowCount;
     mapping(uint256 => Escrow) public escrows;
+    mapping(uint256 => bool) public buyerReleaseApproved;
+    mapping(uint256 => bool) public merchantReleaseApproved;
+    mapping(uint256 => bool) public buyerRefundApproved;
+    mapping(uint256 => bool) public merchantRefundApproved;
+    mapping(uint256 => uint256) public escrowDeposits;
+
+    event ReleaseApproved(uint256 indexed escrowId, address indexed by);
+    event RefundApproved(uint256 indexed escrowId, address indexed by);
+    event EscrowFunded(uint256 indexed escrowId, address indexed buyer, uint256 amount);
+    event EscrowCancelled(uint256 indexed escrowId, address indexed buyer, uint256 refundedAmount);
 
     modifier onlyDAO() { if (msg.sender != dao) revert COM_NotDAO(); _; }
 
@@ -206,30 +216,103 @@ contract CommerceEscrow {
         });
     }
 
+    function fundEscrow(uint256 id) external {
+        Escrow storage e = escrows[id];
+        if (msg.sender != e.buyerOwner) revert COM_NotBuyer();
+        if (e.state != State.OPEN) revert COM_BadState();
+        token.safeTransferFrom(e.buyerVault, address(this), e.amount);
+        escrowDeposits[id] += e.amount;
+        emit EscrowFunded(id, msg.sender, e.amount);
+    }
+
+    /// @notice Cancel an OPEN escrow and refund any deposited funds to the buyer
+    /// @dev Only the buyer can cancel, and only while the escrow is still in OPEN state
+    /// @param id The escrow ID to cancel
+    function cancelPurchase(uint256 id) external {
+        Escrow storage e = escrows[id];
+        if (msg.sender != e.buyerOwner) revert COM_NotBuyer();
+        if (e.state != State.OPEN) revert COM_BadState();
+
+        e.state = State.CANCELLED;
+
+        // Refund any tokens already deposited via fundEscrow
+        uint256 deposited = escrowDeposits[id];
+        if (deposited > 0) {
+            escrowDeposits[id] = 0;
+            token.safeTransfer(e.buyerVault, deposited);
+        }
+
+        emit EscrowCancelled(id, msg.sender, deposited);
+    }
+
     function markFunded(uint256 id) external {
         Escrow storage e = escrows[id];
+        if (msg.sender != e.buyerOwner) revert COM_NotBuyer();
         if (e.state != State.OPEN) revert COM_BadState();
-        uint256 bal = token.balanceOf(address(this));
-        if (bal < e.amount) revert COM_NotFunded();
+        if (escrowDeposits[id] < e.amount) revert COM_NotFunded();
         e.state = State.FUNDED;
     }
 
-    function release(uint256 id) external {
-        Escrow storage e = escrows[id];
-        if (e.state != State.FUNDED) revert COM_BadState();
-        if (msg.sender != e.buyerOwner && msg.sender != dao) revert COM_NotAllowed();
+    function _finalizeRelease(uint256 id, Escrow storage e) internal {
         e.state = State.RELEASED;
+        buyerReleaseApproved[id] = false;
+        merchantReleaseApproved[id] = false;
+        escrowDeposits[id] -= e.amount;
         token.safeTransfer(e.sellerVault, e.amount);
     }
 
-    function refund(uint256 id) external {
-        Escrow storage e = escrows[id];
-        if (e.state != State.FUNDED && e.state != State.DISPUTED) revert COM_BadState();
-        if (msg.sender != e.merchantOwner && msg.sender != dao) revert COM_NotAllowed();
+    function _finalizeRefund(uint256 id, Escrow storage e) internal {
         e.state = State.REFUNDED;
+        buyerRefundApproved[id] = false;
+        merchantRefundApproved[id] = false;
+        escrowDeposits[id] -= e.amount;
         // C-7 Fix: Update merchant state BEFORE external token transfer (CEI pattern)
         merchants._noteRefund(e.merchantOwner);
         token.safeTransfer(e.buyerVault, e.amount);
+    }
+
+    function approveRelease(uint256 id) public {
+        Escrow storage e = escrows[id];
+        if (e.state != State.FUNDED) revert COM_BadState();
+        if (msg.sender == e.buyerOwner) {
+            buyerReleaseApproved[id] = true;
+        } else if (msg.sender == e.merchantOwner) {
+            merchantReleaseApproved[id] = true;
+        } else {
+            revert COM_NotAllowed();
+        }
+
+        emit ReleaseApproved(id, msg.sender);
+
+        if (buyerReleaseApproved[id] && merchantReleaseApproved[id]) {
+            _finalizeRelease(id, e);
+        }
+    }
+
+    function release(uint256 id) external {
+        approveRelease(id);
+    }
+
+    function approveRefund(uint256 id) public {
+        Escrow storage e = escrows[id];
+        if (e.state != State.FUNDED && e.state != State.DISPUTED) revert COM_BadState();
+        if (msg.sender == e.buyerOwner) {
+            buyerRefundApproved[id] = true;
+        } else if (msg.sender == e.merchantOwner) {
+            merchantRefundApproved[id] = true;
+        } else {
+            revert COM_NotAllowed();
+        }
+
+        emit RefundApproved(id, msg.sender);
+
+        if (buyerRefundApproved[id] && merchantRefundApproved[id]) {
+            _finalizeRefund(id, e);
+        }
+    }
+
+    function refund(uint256 id) external {
+        approveRefund(id);
     }
 
     function dispute(uint256 id, string calldata /*reason*/) external {
@@ -237,6 +320,10 @@ contract CommerceEscrow {
         if (e.state != State.FUNDED) revert COM_BadState();
         if (msg.sender != e.buyerOwner && msg.sender != e.merchantOwner) revert COM_NotAllowed();
         e.state = State.DISPUTED;
+        buyerReleaseApproved[id] = false;
+        merchantReleaseApproved[id] = false;
+        buyerRefundApproved[id] = false;
+        merchantRefundApproved[id] = false;
         merchants._noteDispute(e.merchantOwner);
     }
 
@@ -244,6 +331,7 @@ contract CommerceEscrow {
         Escrow storage e = escrows[id];
         if (e.state != State.DISPUTED) revert COM_BadState();
         e.state = State.RESOLVED;
+        escrowDeposits[id] -= e.amount;
         if (buyerWins) {
             token.safeTransfer(e.buyerVault, e.amount);
         } else {

@@ -19,7 +19,7 @@ import React, { Suspense } from 'react';
  * // Preload on hover
  * <button onMouseEnter={() => Chart.preload()}>View Chart</button>
  */
-export function lazyWithPreload<T extends React.ComponentType<any>>(
+export function lazyWithPreload<T extends React.ComponentType<Record<string, unknown>>>(
   importFunc: () => Promise<{ default: T }>
 ) {
   const LazyComponent = React.lazy(importFunc);
@@ -38,7 +38,7 @@ export function lazyWithPreload<T extends React.ComponentType<any>>(
  * <Link href="/dashboard" onMouseEnter={() => preloadComponent('/dashboard')}>
  */
 export function preloadComponent(route: string) {
-  const routeMap: Record<string, () => Promise<any>> = {
+  const routeMap: Record<string, () => Promise<unknown>> = {
     '/dashboard': () => import('@/app/dashboard/page'),
     '/vault': () => import('@/app/vault/page'),
     '/rewards': () => import('@/app/rewards/page'),
@@ -60,7 +60,7 @@ export function preloadComponent(route: string) {
  * Dynamic import with error boundary and loading state
  * Provides better UX for code-split components
  */
-export function withDynamicImport<T extends Record<string, any>>(
+export function withDynamicImport<T extends Record<string, unknown>>(
   importFunc: () => Promise<{ default: React.ComponentType<T> }>,
   fallback?: React.ReactNode
 ) {
@@ -84,7 +84,7 @@ export function withDynamicImport<T extends Record<string, any>>(
  * const code = await qrCode.toDataURL('https://vfide.io');
  */
 export async function importHeavyLibrary(library: string) {
-  const libraryMap: Record<string, () => Promise<any>> = {
+  const libraryMap: Record<string, () => Promise<unknown>> = {
     'qrcode': () => import('qrcode'),
     'recharts': () => import('recharts'),
     'framer-motion': () => import('framer-motion'),

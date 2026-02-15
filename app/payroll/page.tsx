@@ -43,8 +43,7 @@ const _PAYROLL_MANAGER_ABI = [
   { name: 'estimateEndTime', type: 'function', stateMutability: 'view', inputs: [{ name: 'streamId', type: 'uint256' }], outputs: [{ type: 'uint256' }] },
 ] as const;
 
-// PayrollManager not deployed on Base Sepolia testnet yet
-// Contract addresses will be populated after mainnet deployment
+// PayrollManager address
 const PAYROLL_MANAGER_ADDRESS = (process.env.NEXT_PUBLIC_PAYROLL_MANAGER_ADDRESS || '0x0000000000000000000000000000000000000000') as `0x${string}`;
 const _VFIDE_TOKEN_ADDRESS = (process.env.NEXT_PUBLIC_VFIDE_TOKEN_ADDRESS || '0xf57992ab9F8887650C2a220A34fe86ebD00c02f5') as `0x${string}`;
 

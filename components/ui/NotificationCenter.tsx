@@ -28,6 +28,8 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { useTransactionSounds } from '@/hooks/useTransactionSounds';
+import { useAccount } from 'wagmi';
+import { getAuthHeaders } from '@/lib/auth/client';
 
 // ==================== TYPES ====================
 
@@ -88,65 +90,39 @@ const priorityColors: Record<NotificationPriority, string> = {
 
 const STORAGE_KEY = 'vfide-notif-prefs';
 
-// Mock notifications with enhanced data
-const mockNotifications: Notification[] = [
-  {
-    id: '1',
-    type: 'vote',
-    title: 'Active Proposal',
-    message: 'Proposal #142: Treasury allocation ends in 5 hours',
-    time: '5h',
-    timestamp: Date.now() - 5 * 60 * 60 * 1000,
-    href: '/governance',
-    read: false,
-    priority: 'high',
-    groupKey: 'governance',
-  },
-  {
-    id: '2',
-    type: 'reward',
-    title: 'Claimable Rewards',
-    message: '467.50 VFIDE from payroll streams',
-    time: '1d',
-    timestamp: Date.now() - 24 * 60 * 60 * 1000,
-    href: '/payroll',
-    read: false,
-    priority: 'medium',
-  },
-  {
-    id: '3',
-    type: 'security',
-    title: 'Guardian Request',
-    message: '0x1a2b...3c4d wants you as guardian',
-    time: '2d',
-    timestamp: Date.now() - 48 * 60 * 60 * 1000,
-    href: '/vault',
-    read: false,
-    priority: 'critical',
-  },
-  {
-    id: '4',
-    type: 'success',
-    title: 'Badge Unlocked',
-    message: 'You earned the "Early Adopter" badge!',
-    time: '3d',
-    timestamp: Date.now() - 72 * 60 * 60 * 1000,
-    href: '/badges',
-    read: true,
-    priority: 'low',
-  },
-  {
-    id: '5',
-    type: 'transaction',
-    title: 'Transaction Confirmed',
-    message: 'Sent 0.5 ETH to alice.eth',
-    time: '10m',
-    timestamp: Date.now() - 10 * 60 * 1000,
-    href: '/crypto',
-    read: false,
-    priority: 'medium',
-  },
-];
+interface ApiNotificationRow {
+  id: number;
+  type: string;
+  title: string;
+  message: string;
+  data: Record<string, unknown> | null;
+  is_read: boolean;
+  archived: boolean;
+  created_at: string;
+}
+
+const toNotification = (row: ApiNotificationRow): Notification => {
+  const data = row.data && typeof row.data === 'object' ? row.data : {};
+  const type = (row.type as NotificationType) || 'alert';
+  // Validate href protocol to prevent javascript: XSS from API data
+  const rawHref = typeof data?.href === 'string' ? data.href : undefined;
+  const href = rawHref && /^(https?:\/\/|\/(?!\/))/i.test(rawHref) ? rawHref : undefined;
+  const priority = (data?.priority as NotificationPriority) || 'medium';
+  return {
+    id: String(row.id),
+    type,
+    title: row.title,
+    message: row.message,
+    time: formatTimeAgo(new Date(row.created_at).getTime()),
+    timestamp: new Date(row.created_at).getTime(),
+    href,
+    read: Boolean(row.is_read),
+    archived: Boolean(row.archived),
+    snoozedUntil: typeof data?.snoozedUntil === 'number' ? data.snoozedUntil : undefined,
+    priority,
+    groupKey: typeof data?.groupKey === 'string' ? data.groupKey : undefined,
+  };
+};
 
 // ==================== HELPERS ====================
 
@@ -408,10 +384,13 @@ function SettingsPanel({ prefs, onUpdate }: SettingsPanelProps) {
 // ==================== MAIN COMPONENT ====================
 
 export function NotificationCenter() {
+  const { address } = useAccount();
   const [isOpen, setIsOpen] = useState(false);
-  const [notifications, setNotifications] = useState(mockNotifications);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
   const [activeTab, setActiveTab] = useState<'all' | 'unread' | 'settings'>('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [prefs, setPrefs] = useState<NotificationPreferences>({
     sound: true,
     desktop: true,
@@ -421,6 +400,47 @@ export function NotificationCenter() {
   });
 
   const { play: playSound } = useTransactionSounds();
+  useEffect(() => {
+    let isMounted = true;
+    if (!isOpen) return;
+    if (!address) {
+      setNotifications([]);
+      setLoadError(null);
+      return;
+    }
+
+    const loadNotifications = async () => {
+      setIsLoading(true);
+      setLoadError(null);
+      try {
+        const response = await fetch(`/api/notifications?userAddress=${address}&limit=50&offset=0`, {
+          headers: getAuthHeaders(),
+        });
+        if (!response.ok) {
+          const data = await response.json().catch(() => ({}));
+          throw new Error(data.error || 'Failed to load notifications');
+        }
+        const data = await response.json();
+        const rows = Array.isArray(data?.notifications) ? data.notifications : [];
+        if (isMounted) {
+          setNotifications(rows.map((row: ApiNotificationRow) => toNotification(row)));
+        }
+      } catch {
+        if (isMounted) {
+          setNotifications([]);
+          setLoadError('Unable to load notifications.');
+        }
+      } finally {
+        if (isMounted) setIsLoading(false);
+      }
+    };
+
+    loadNotifications();
+    return () => {
+      isMounted = false;
+    };
+  }, [address, isOpen]);
+
 
   // Load preferences
   useEffect(() => {
@@ -436,6 +456,58 @@ export function NotificationCenter() {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(prefs));
     } catch { /* ignore */ }
   }, [prefs]);
+
+  const unreadCount = notifications.filter(n => !n.read && !n.archived).length;
+  const activeNotifications = notifications.filter(n => !n.archived);
+
+  const filteredNotifications = activeNotifications.filter(n => {
+    if (activeTab === 'unread' && n.read) return false;
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase();
+      return n.title.toLowerCase().includes(q) || n.message.toLowerCase().includes(q);
+    }
+    return true;
+  }).filter(n => !n.snoozedUntil || n.snoozedUntil <= Date.now());
+
+  const markAsRead = (id: string) => {
+    setNotifications(prev => 
+      prev.map(n => n.id === id ? { ...n, read: true } : n)
+    );
+    if (address) {
+      const numericId = Number(id);
+      const notificationIds = Number.isNaN(numericId) ? [] : [numericId];
+      if (notificationIds.length > 0) {
+        fetch('/api/notifications', {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            ...getAuthHeaders(),
+          },
+          body: JSON.stringify({ notificationIds }),
+        }).catch(() => undefined);
+      }
+    }
+    if (prefs.sound && !isInQuietHours(prefs)) {
+      playSound('click');
+    }
+  };
+
+  const markAllRead = useCallback(() => {
+    setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+    if (address) {
+      fetch('/api/notifications', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeaders(),
+        },
+        body: JSON.stringify({ markAllRead: true, userAddress: address }),
+      }).catch(() => undefined);
+    }
+    if (prefs.sound && !isInQuietHours(prefs)) {
+      playSound('success');
+    }
+  }, [address, playSound, prefs]);
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -458,40 +530,26 @@ export function NotificationCenter() {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen]);
-
-  const unreadCount = notifications.filter(n => !n.read && !n.archived).length;
-  const activeNotifications = notifications.filter(n => !n.archived);
-
-  const filteredNotifications = activeNotifications.filter(n => {
-    if (activeTab === 'unread' && n.read) return false;
-    if (searchQuery) {
-      const q = searchQuery.toLowerCase();
-      return n.title.toLowerCase().includes(q) || n.message.toLowerCase().includes(q);
-    }
-    return true;
-  }).filter(n => !n.snoozedUntil || n.snoozedUntil <= Date.now());
-
-  const markAsRead = (id: string) => {
-    setNotifications(prev => 
-      prev.map(n => n.id === id ? { ...n, read: true } : n)
-    );
-    if (prefs.sound && !isInQuietHours(prefs)) {
-      playSound('click');
-    }
-  };
-
-  const markAllRead = () => {
-    setNotifications(prev => prev.map(n => ({ ...n, read: true })));
-    if (prefs.sound && !isInQuietHours(prefs)) {
-      playSound('success');
-    }
-  };
+  }, [isOpen, markAllRead]);
 
   const archive = (id: string) => {
     setNotifications(prev => 
       prev.map(n => n.id === id ? { ...n, archived: true, read: true } : n)
     );
+    if (address) {
+      const numericId = Number(id);
+      const archiveIds = Number.isNaN(numericId) ? [] : [numericId];
+      if (archiveIds.length > 0) {
+        fetch('/api/notifications', {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            ...getAuthHeaders(),
+          },
+          body: JSON.stringify({ archiveIds }),
+        }).catch(() => undefined);
+      }
+    }
   };
 
   const snooze = (id: string) => {
@@ -503,6 +561,16 @@ export function NotificationCenter() {
 
   const clearArchived = () => {
     setNotifications(prev => prev.filter(n => !n.archived));
+    if (address) {
+      fetch('/api/notifications', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeaders(),
+        },
+        body: JSON.stringify({ deleteArchived: true, userAddress: address }),
+      }).catch(() => undefined);
+    }
   };
 
   return (
@@ -647,6 +715,10 @@ export function NotificationCenter() {
               <div className="max-h-80 overflow-y-auto">
                 {activeTab === 'settings' ? (
                   <SettingsPanel prefs={prefs} onUpdate={setPrefs} />
+                ) : isLoading ? (
+                  <div className="p-6 text-center text-zinc-400 text-sm">Loading notifications...</div>
+                ) : loadError ? (
+                  <div className="p-6 text-center text-pink-300 text-sm">{loadError}</div>
                 ) : filteredNotifications.length === 0 ? (
                   <div className="p-8 text-center">
                     <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-white/5 flex items-center justify-center">

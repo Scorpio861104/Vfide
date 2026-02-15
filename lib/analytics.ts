@@ -7,6 +7,7 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
+import { buildCsrfHeaders } from '@/lib/security/csrfClient';
 
 // ============================================================================
 // Types & Interfaces
@@ -53,7 +54,7 @@ export interface AnalyticsEvent {
   type: MetricType;
   userId?: string;
   timestamp: number;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export interface TimeSeriesData {
@@ -109,7 +110,7 @@ export enum TimeRange {
 }
 
 // ============================================================================
-// Mock Storage (Replace with database in production)
+// Local cache for client-side analytics
 // ============================================================================
 
 const analyticsStore = new Map<string, AnalyticsEvent>();
@@ -125,7 +126,7 @@ let eventIdCounter = 0;
 export function trackEvent(
   type: MetricType,
   userId?: string,
-  metadata?: Record<string, any>
+  metadata?: Record<string, unknown>
 ): AnalyticsEvent {
   const event: AnalyticsEvent = {
     id: `evt_${++eventIdCounter}`,
@@ -136,9 +137,28 @@ export function trackEvent(
   };
 
   analyticsStore.set(event.id, event);
-  
-  // In production, send to analytics backend
-  // sendToAnalyticsBackend(event);
+
+  // Send to analytics backend for persistence
+  void buildCsrfHeaders({ 'Content-Type': 'application/json' }, 'POST')
+    .then((headers) =>
+      fetch('/api/analytics', {
+        method: 'POST',
+        headers,
+        credentials: 'include',
+        body: JSON.stringify({
+          userId,
+          eventType: type,
+          eventData: {
+            ...metadata,
+            eventType: type,
+            userId,
+          },
+        }),
+      })
+    )
+    .catch((error) => {
+      console.error('Failed to store analytics event:', error);
+    });
   
   return event;
 }
@@ -163,7 +183,7 @@ export function trackSearch(query: string, results: number, userId?: string) {
 export function trackPerformance(
   metric: 'page_load' | 'api_response',
   duration: number,
-  metadata?: Record<string, any>
+  metadata?: Record<string, unknown>
 ) {
   const type = metric === 'page_load' 
     ? MetricType.PAGE_LOAD_TIME 
@@ -500,9 +520,7 @@ export function useMetricSummary(
   
   const loadSummary = useCallback(async () => {
     try {
-      const response = await fetch(
-        `/api/analytics/metrics?type=${type}&range=${range}`
-      );
+      const response = await fetch(`/api/analytics/metrics?type=${type}&range=${range}`);
       const data = await response.json();
       
       if (data.success) {
@@ -538,9 +556,7 @@ export function useTimeSeriesData(
   
   const loadData = useCallback(async () => {
     try {
-      const response = await fetch(
-        `/api/analytics/timeseries?type=${type}&range=${range}`
-      );
+      const response = await fetch(`/api/analytics/timeseries?type=${type}&range=${range}`);
       const result = await response.json();
       
       if (result.success) {

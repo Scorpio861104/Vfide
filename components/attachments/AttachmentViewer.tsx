@@ -24,6 +24,10 @@ import {
     X,
 } from 'lucide-react';
 import React, { useState } from 'react';
+import Image from 'next/image';
+
+/** Only allow http(s) URLs to prevent javascript: XSS via user-controlled attachment URLs */
+const isSafeUrl = (url: string) => /^https?:\/\//i.test(url);
 
 interface AttachmentViewerProps {
   attachments: Attachment[];
@@ -109,11 +113,14 @@ function ImageAttachment({ attachment, compact, onClick }: ImageAttachmentProps)
       className="relative group cursor-pointer rounded-lg overflow-hidden border border-zinc-800 hover:border-blue-500 transition-colors"
       style={{ maxWidth: compact ? '200px' : '400px' }}
     >
-      <img
-        src={attachment.url}
+      <Image
+        src={isSafeUrl(attachment.url) ? attachment.url : ''}
         alt={attachment.name}
+        width={400}
+        height={300}
         className="w-full h-auto"
         loading="lazy"
+        unoptimized
       />
       
       {/* Overlay on hover */}
@@ -121,7 +128,7 @@ function ImageAttachment({ attachment, compact, onClick }: ImageAttachmentProps)
         <button
           onClick={(e) => {
             e.stopPropagation();
-            window.open(attachment.url, '_blank');
+            if (isSafeUrl(attachment.url)) window.open(attachment.url, '_blank', 'noopener,noreferrer');
           }}
           className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-lg flex items-center justify-center hover:bg-white/30 transition-colors"
         >
@@ -163,7 +170,7 @@ function VideoAttachment({ attachment, compact }: VideoAttachmentProps) {
         className="w-full h-auto bg-black"
         preload="metadata"
       >
-        <source src={attachment.url} type={attachment.mimeType} />
+        <source src={isSafeUrl(attachment.url) ? attachment.url : ''} type={attachment.mimeType} />
         Your browser doesn&apos;t support video playback.
       </video>
       
@@ -173,7 +180,7 @@ function VideoAttachment({ attachment, compact }: VideoAttachmentProps) {
           <div className="text-gray-400 text-xs">{formatFileSize(attachment.size)}</div>
         </div>
         <a
-          href={attachment.url}
+          href={isSafeUrl(attachment.url) ? attachment.url : '#'}
           download={attachment.name}
           className="ml-2 w-8 h-8 flex items-center justify-center text-gray-400 hover:text-blue-400 hover:bg-blue-900/20 rounded-lg transition-colors"
         >
@@ -211,7 +218,7 @@ function FileAttachment({ attachment, compact: _compact }: FileAttachmentProps) 
 
       <div className="flex items-center gap-1">
         <a
-          href={attachment.url}
+          href={isSafeUrl(attachment.url) ? attachment.url : '#'}
           download={attachment.name}
           className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-blue-400 hover:bg-blue-900/20 rounded-lg transition-colors"
           title="Download"
@@ -219,7 +226,7 @@ function FileAttachment({ attachment, compact: _compact }: FileAttachmentProps) 
           <Download className="w-4 h-4" />
         </a>
         <a
-          href={attachment.url}
+          href={isSafeUrl(attachment.url) ? attachment.url : '#'}
           target="_blank"
           rel="noopener noreferrer"
           className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-blue-400 hover:bg-blue-900/20 rounded-lg transition-colors"
@@ -312,10 +319,13 @@ function ImageLightbox({ images, initialIndex, onClose }: ImageLightboxProps) {
         className="max-w-[90vw] max-h-[90vh]"
         onClick={(e) => e.stopPropagation()}
       >
-        <img
-          src={currentImage.url}
+        <Image
+          src={isSafeUrl(currentImage.url) ? currentImage.url : ''}
           alt={currentImage.name}
+          width={800}
+          height={600}
           className="max-w-full max-h-[90vh] object-contain"
+          unoptimized
         />
 
         {/* Image Info */}
@@ -334,7 +344,7 @@ function ImageLightbox({ images, initialIndex, onClose }: ImageLightboxProps) {
 
       {/* Download Button */}
       <a
-        href={currentImage.url}
+        href={isSafeUrl(currentImage.url) ? currentImage.url : '#'}
         download={currentImage.name}
         onClick={(e) => e.stopPropagation()}
         className="absolute bottom-4 right-4 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg flex items-center gap-2 transition-colors"

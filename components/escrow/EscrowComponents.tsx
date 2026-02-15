@@ -32,7 +32,7 @@ export function EscrowCard({
   amount,
   token,
   createdAt,
-  releaseTime,
+  releaseTime: _releaseTime,
   state,
   timeRemaining,
   onRelease,
@@ -40,6 +40,8 @@ export function EscrowCard({
   onRefund: _onRefund,
   loading
 }: EscrowCardProps) {
+  const isNearRelease = /\b([0-9]|1[0-9]|2[0-4])h\b/i.test(timeRemaining);
+
   const stateConfig = {
     CREATED: {
       label: 'Active',
@@ -113,7 +115,7 @@ export function EscrowCard({
                   <Timer className="w-3 h-3 shrink-0" /> Release
                 </p>
                 <p className={`font-medium text-xs sm:text-sm ${
-                  releaseTime <= new Date(Date.now() + 24 * 60 * 60 * 1000) 
+                  isNearRelease
                     ? 'text-amber-400' 
                     : 'text-white'
                 }`}>

@@ -1,14 +1,35 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
-import { getAvatarUrl } from '@/lib/constants';
 import { withRateLimit } from '@/lib/auth/rateLimit';
+import { requireAuth, checkOwnership } from '@/lib/auth/middleware';
+import { processAvatarUpload } from '@/lib/storage/avatarStorage';
+import { username as usernameValidator, safeTextMax, urlString, shortText } from '@/lib/auth/validation';
+import { z } from 'zod';
+
+// Extended update schema that includes all profile fields
+const profileUpdateSchema = z.object({
+  username: usernameValidator.optional(),
+  display_name: shortText.optional(),
+  email: z.string().email('Invalid email').max(254).optional().nullable(),
+  bio: safeTextMax(500).optional(),
+  avatar_url: urlString.optional(),
+  location: shortText.optional(),
+  website: urlString.optional(),
+  twitter: z.string().max(50).regex(/^[a-zA-Z0-9_]*$/, 'Invalid Twitter handle').optional(),
+  github: z.string().max(50).regex(/^[a-zA-Z0-9_-]*$/, 'Invalid GitHub username').optional(),
+});
 
 interface User {
   wallet_address: string;
   username: string;
-  email: string;
+  display_name: string | null;
+  email: string | null;
   bio: string;
-  avatar_url: string;
+  avatar_url: string | null;
+  location: string | null;
+  website: string | null;
+  twitter: string | null;
+  github: string | null;
   proof_score: number;
   is_council_member: boolean;
   is_verified: boolean;
@@ -35,6 +56,11 @@ export async function GET(
   const rateLimitResponse = await withRateLimit(request, 'read');
   if (rateLimitResponse) return rateLimitResponse;
 
+  const authResult = await requireAuth(request);
+  if (authResult instanceof NextResponse) {
+    return authResult;
+  }
+
   try {
     const resolvedParams = await params;
     const address = resolvedParams?.address;
@@ -46,9 +72,12 @@ export async function GET(
       );
     }
 
-    // Get user by wallet_address or username
+    // Get user by wallet_address or username — select explicit columns
     const userResult = await query<User>(
-      `SELECT * FROM users 
+      `SELECT wallet_address, username, display_name, email, bio, avatar_url,
+              location, website, twitter, github, proof_score, is_council_member,
+              is_verified, created_at, updated_at
+       FROM users
        WHERE wallet_address = $1 OR username = $1`,
       [address.toLowerCase()]
     );
@@ -61,14 +90,18 @@ export async function GET(
     }
 
     const user = userResult.rows[0];
+    const isOwner = checkOwnership(authResult.user, user.wallet_address);
 
     // Get user stats
     const statsResult = await query<UserStats>(
       `SELECT 
         (SELECT COUNT(*) FROM user_badges WHERE user_id = u.id) as badge_count,
-        (SELECT COUNT(*) FROM friendships WHERE (user_id = u.id OR friend_id = u.id) AND status = 'accepted') as friend_count,
-        (SELECT COUNT(*) FROM proposals WHERE proposer_id = u.id) as proposal_count,
-        (SELECT COUNT(*) FROM endorsements WHERE endorser_id = u.id) as endorsement_count
+        (SELECT COUNT(*)
+         FROM friendships f
+         WHERE (f.user_id = u.id OR f.friend_id = u.id)
+           AND f.status = 'accepted') as friend_count,
+        (SELECT COUNT(*) FROM proposals WHERE proposer_address = u.wallet_address) as proposal_count,
+        (SELECT COUNT(*) FROM endorsements WHERE to_user_id = u.id) as endorsement_count
        FROM users u
        WHERE u.wallet_address = $1`,
       [user.wallet_address]
@@ -81,17 +114,17 @@ export async function GET(
       endorsement_count: 0
     };
 
-    return NextResponse.json({ 
-      user: {
-        ...user,
-        stats
-      }
-    });
+    const responseUser = {
+      ...user,
+      email: isOwner ? user.email : null,
+      stats,
+    };
+
+    return NextResponse.json({ user: responseUser });
   } catch (error) {
     console.error('[User GET API] Error:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Failed to fetch user';
     return NextResponse.json(
-      { error: errorMessage },
+      { error: 'Internal server error' },
       { status: 500 }
     );
   }
@@ -109,6 +142,11 @@ export async function PUT(
   const rateLimitResponse = await withRateLimit(request, 'write');
   if (rateLimitResponse) return rateLimitResponse;
 
+  const authResult = await requireAuth(request);
+  if (authResult instanceof NextResponse) {
+    return authResult;
+  }
+
   try {
     const resolvedParams = await params;
     const address = resolvedParams?.address;
@@ -121,19 +159,60 @@ export async function PUT(
     }
 
     const body = await request.json();
-    const { username, email, bio, avatar_url } = body;
+    const parsed = profileUpdateSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Validation failed', details: parsed.error.issues },
+        { status: 400 }
+      );
+    }
 
-    // Update user in database
+    const {
+      username,
+      display_name,
+      email,
+      bio,
+      avatar_url,
+      location,
+      website,
+      twitter,
+      github,
+    } = parsed.data;
+
+    if (!checkOwnership(authResult.user, address)) {
+      return NextResponse.json(
+        { error: 'You can only update your own profile' },
+        { status: 403 }
+      );
+    }
+
+    // Update user in database — only return safe columns, not email
     const result = await query<User>(
-      `UPDATE users 
+      `UPDATE users
        SET username = COALESCE($2, username),
-           email = COALESCE($3, email),
-           bio = COALESCE($4, bio),
-           avatar_url = COALESCE($5, avatar_url),
+           display_name = COALESCE($3, display_name),
+           email = COALESCE($4, email),
+           bio = COALESCE($5, bio),
+           avatar_url = COALESCE($6, avatar_url),
+           location = COALESCE($7, location),
+           website = COALESCE($8, website),
+           twitter = COALESCE($9, twitter),
+           github = COALESCE($10, github),
            updated_at = NOW()
        WHERE wallet_address = $1
-       RETURNING *`,
-      [address.toLowerCase(), username, email, bio, avatar_url]
+       RETURNING wallet_address, username, display_name, bio, avatar_url, location, website, twitter, github, proof_score, is_council_member, is_verified, created_at, updated_at`,
+      [
+        address.toLowerCase(),
+        username,
+        display_name,
+        email,
+        bio,
+        avatar_url,
+        location,
+        website,
+        twitter,
+        github,
+      ]
     );
 
     if (result.rows.length === 0) {
@@ -149,9 +228,8 @@ export async function PUT(
     });
   } catch (error) {
     console.error('[User PUT API] Error:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Failed to update user';
     return NextResponse.json(
-      { error: errorMessage },
+      { error: 'Internal server error' },
       { status: 500 }
     );
   }
@@ -169,6 +247,11 @@ export async function POST(
   const rateLimitResponse = await withRateLimit(request, 'upload');
   if (rateLimitResponse) return rateLimitResponse;
 
+  const authResult = await requireAuth(request);
+  if (authResult instanceof NextResponse) {
+    return authResult;
+  }
+
   try {
     const resolvedParams = await params;
     const address = resolvedParams?.address;
@@ -177,6 +260,13 @@ export async function POST(
       return NextResponse.json(
         { error: 'Invalid address parameter' },
         { status: 400 }
+      );
+    }
+
+    if (!checkOwnership(authResult.user, address)) {
+      return NextResponse.json(
+        { error: 'You can only update your own avatar' },
+        { status: 403 }
       );
     }
     
@@ -191,29 +281,14 @@ export async function POST(
       );
     }
 
-    // Validate file type
-    if (!file.type.startsWith('image/')) {
-      return NextResponse.json(
-        { error: 'File must be an image' },
-        { status: 400 }
-      );
+    let avatarResult;
+    try {
+      avatarResult = await processAvatarUpload({ file, address });
+    } catch (uploadError) {
+      const message = uploadError instanceof Error ? uploadError.message : 'Failed to process avatar';
+      const status = message.startsWith('Missing required environment variable') ? 500 : 400;
+      return NextResponse.json({ error: message }, { status });
     }
-
-    // Validate file size (max 5MB)
-    if (file.size > 5 * 1024 * 1024) {
-      return NextResponse.json(
-        { error: 'File size must be less than 5MB' },
-        { status: 400 }
-      );
-    }
-
-    // In production:
-    // 1. Upload to S3/Cloudinary/IPFS
-    // 2. Process image (resize, optimize)
-    // 3. Update user profile with image URL
-
-    // For now, generate a placeholder URL using DiceBear
-    const avatarUrl = getAvatarUrl(address);
     
     // Update user avatar in database
     const result = await query<User>(
@@ -221,7 +296,7 @@ export async function POST(
        SET avatar_url = $2, updated_at = NOW()
        WHERE wallet_address = $1
        RETURNING avatar_url`,
-      [address.toLowerCase(), avatarUrl]
+      [address.toLowerCase(), avatarResult.avatarUrl]
     );
 
     if (result.rows.length === 0 || !result.rows[0]) {
@@ -234,12 +309,12 @@ export async function POST(
     return NextResponse.json({
       success: true,
       avatarUrl: result.rows[0].avatar_url,
+      variants: avatarResult.variants,
     });
   } catch (error) {
     console.error('[Avatar Upload API] Error:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Failed to upload avatar';
     return NextResponse.json(
-      { error: errorMessage },
+      { error: 'Internal server error' },
       { status: 500 }
     );
   }

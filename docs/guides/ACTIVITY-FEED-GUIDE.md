@@ -198,7 +198,7 @@ Response: CSV or JSON file download
 
 ### Frontend Integration
 
-Replace mock data with real API calls:
+Replace placeholder data with real API calls:
 
 ```typescript
 import { useState, useEffect } from 'react';
@@ -547,12 +547,12 @@ The test suite includes 58 comprehensive tests covering:
 - **Data Validation** (5 tests): Missing data, timestamps, colors
 - **Integration** (4 tests): Full workflows, filter+pagination+export
 
-### Mock Data
+### Sample Data
 
-The component includes realistic mock data:
+The component includes realistic sample data:
 
 ```typescript
-const mockActivities = [
+const sampleActivities = [
   {
     id: '1',
     type: 'transaction',

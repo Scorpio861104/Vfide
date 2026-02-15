@@ -362,32 +362,44 @@ contract VaultRecoveryClaim is Ownable, ReentrancyGuard {
     /**
      * @notice Trusted verifier votes on a recovery claim
      * @dev Used when vault has no personal guardians, or as additional verification
+     *      12i Fix: For vaults WITH guardians, verifiers can only vote after GUARDIAN_VOTE_WINDOW
+     *      to ensure guardians get priority as the primary recovery mechanism
      * @param claimId The claim ID
      * @param approve True to approve claim
      */
     function verifierVote(uint256 claimId, bool approve) external nonReentrant {
         RecoveryClaim storage claim = claims[claimId];
-        
+
         if (claim.status != ClaimStatus.Pending && claim.status != ClaimStatus.GuardianApproved) {
             revert ClaimNotPending();
         }
         if (block.timestamp > claim.expiresAt) revert ClaimHasExpired();
         if (verifierVoted[claimId][msg.sender]) revert AlreadyVoted();
-        
+
         // Only trusted verifiers can vote
         if (!trustedVerifier[msg.sender]) revert NotTrustedVerifier();
-        
+
+        // 12i Fix: If vault has guardians, require guardian vote window to elapse first
+        // This gives guardians priority as the primary recovery mechanism
+        IUserVault userVault = IUserVault(claim.vault);
+        uint8 guardians = userVault.guardianCount();
+        if (guardians > 0 && claim.status == ClaimStatus.Pending) {
+            require(
+                block.timestamp >= claim.initiatedAt + GUARDIAN_VOTE_WINDOW,
+                "VRC: guardian vote window still active"
+            );
+        }
+
         verifierVoted[claimId][msg.sender] = true;
-        
+
         if (approve) {
             claim.verifierVotes++;
         }
-        
+
         emit VerifierVoteCast(claimId, msg.sender, approve, claim.verifierVotes);
-        
+
         // If vault has no guardians, verifier votes can approve directly
-        IUserVault userVault = IUserVault(claim.vault);
-        if (userVault.guardianCount() == 0 && claim.verifierVotes >= MIN_VERIFIER_VOTES) {
+        if (guardians == 0 && claim.verifierVotes >= MIN_VERIFIER_VOTES) {
             claim.status = ClaimStatus.GuardianApproved;
             claim.challengeEndsAt = uint64(block.timestamp + CHALLENGE_PERIOD);
         }

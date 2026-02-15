@@ -65,40 +65,41 @@ interface UseThemeManagerReturn {
 }
 
 export function useThemeManager(): UseThemeManagerReturn {
-  const [settings, setSettings] = useState<ThemeSettings>(DEFAULT_THEME_SETTINGS);
-  const [savedThemes, setSavedThemes] = useState<SavedTheme[]>([]);
-  const [isDirty, setIsDirty] = useState(false);
-  const [isSaved, setIsSaved] = useState(true);
-
-  // Load settings from storage
-  useEffect(() => {
+  const [settings, setSettings] = useState<ThemeSettings>(() => {
+    if (typeof window === 'undefined') return DEFAULT_THEME_SETTINGS;
     const storedSettings = localStorage.getItem(STORAGE_KEY);
+    if (!storedSettings) return DEFAULT_THEME_SETTINGS;
+    try {
+      const parsed = JSON.parse(storedSettings);
+      return validateThemeSettings(parsed) ? parsed : DEFAULT_THEME_SETTINGS;
+    } catch {
+      return DEFAULT_THEME_SETTINGS;
+    }
+  });
+  const [savedThemes, setSavedThemes] = useState<SavedTheme[]>(() => {
+    if (typeof window === 'undefined') return [];
     const storedThemes = localStorage.getItem(SAVED_THEMES_KEY);
-
-    if (storedSettings) {
-      try {
-        const parsed = JSON.parse(storedSettings);
-        if (validateThemeSettings(parsed)) {
-          setSettings(parsed);
-        }
-      } catch {
-        // Use defaults
-      }
+    if (!storedThemes) return [];
+    try {
+      return JSON.parse(storedThemes);
+    } catch {
+      return [];
     }
+  });
+  const [isDirty, setIsDirty] = useState(false);
+  const isSaved = !isDirty;
 
-    if (storedThemes) {
-      try {
-        setSavedThemes(JSON.parse(storedThemes));
-      } catch {
-        // Use empty array
-      }
-    }
-  }, []);
+  const currentPalette = useMemo(() => {
+    const preset = PRESETS[settings.theme];
+    const basePalette = preset.palette;
+    return settings.customPalette
+      ? mergeThemePalettes(basePalette, settings.customPalette)
+      : basePalette;
+  }, [settings.theme, settings.customPalette]);
 
   // Save settings to storage
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
-    setIsSaved(true);
   }, [settings]);
 
   // Apply theme to document
@@ -127,7 +128,7 @@ export function useThemeManager(): UseThemeManagerReturn {
 
     // Apply CSS variables
     const cssVars = generateCSSVariables(
-      config.palette,
+      currentPalette,
       settings.colorDensity
     );
 
@@ -148,20 +149,14 @@ export function useThemeManager(): UseThemeManagerReturn {
       return () => mediaQuery.removeEventListener('change', handleChange);
     }
     return undefined;
-  }, [settings]);
+  }, [settings, currentPalette]);
 
   // Build current theme config
   const config = useMemo<ThemeConfig>(() => {
-    const preset = PRESETS[settings.theme];
-    const basePalette = preset.palette;
-    const mergedPalette = settings.customPalette
-      ? mergeThemePalettes(basePalette, settings.customPalette)
-      : basePalette;
-
     return {
       mode: settings.mode,
       theme: settings.theme,
-      palette: mergedPalette,
+      palette: currentPalette,
       fonts: {
         sans: 'system-ui, -apple-system, sans-serif',
         serif: 'Georgia, serif',
@@ -202,9 +197,9 @@ export function useThemeManager(): UseThemeManagerReturn {
       borderRadius: settings.borderRadius,
       disableAnimations: settings.disableAnimations,
       highContrast: settings.highContrast,
-      cssVariables: generateCSSVariables(mergedPalette, settings.colorDensity),
+      cssVariables: generateCSSVariables(currentPalette, settings.colorDensity),
     };
-  }, [settings]);
+  }, [settings, currentPalette]);
 
   // Update handlers
   const setMode = useCallback((mode: ThemeMode) => {

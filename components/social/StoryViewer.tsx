@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Story, isStoryExpired as _isStoryExpired, getStoryTimeRemaining } from '@/lib/storiesSystem';
 import { motion, AnimatePresence } from 'framer-motion';
+import Image from 'next/image';
 
 interface StoryViewerProps {
   stories: Story[];
@@ -29,6 +30,22 @@ export function StoryViewer({
   const currentStory = stories[currentIndex];
   const STORY_DURATION = 5000; // 5 seconds per story
 
+  const goToNext = useCallback(() => {
+    if (currentIndex < stories.length - 1) {
+      setCurrentIndex((prev) => prev + 1);
+      setProgress(0);
+    } else {
+      onClose();
+    }
+  }, [currentIndex, stories.length, onClose]);
+
+  const goToPrevious = useCallback(() => {
+    if (currentIndex > 0) {
+      setCurrentIndex((prev) => prev - 1);
+      setProgress(0);
+    }
+  }, [currentIndex]);
+
   // Auto-progress story
   useEffect(() => {
     if (isPaused || !currentStory) return;
@@ -46,7 +63,7 @@ export function StoryViewer({
     }, 50);
 
     return () => clearInterval(interval);
-  }, [currentIndex, isPaused, currentStory]);
+  }, [isPaused, currentStory, goToNext]);
 
   // Mark story as viewed
   useEffect(() => {
@@ -54,22 +71,6 @@ export function StoryViewer({
       onView(currentStory.id);
     }
   }, [currentStory, userAddress, onView]);
-
-  const goToNext = () => {
-    if (currentIndex < stories.length - 1) {
-      setCurrentIndex((prev) => prev + 1);
-      setProgress(0);
-    } else {
-      onClose();
-    }
-  };
-
-  const goToPrevious = () => {
-    if (currentIndex > 0) {
-      setCurrentIndex((prev) => prev - 1);
-      setProgress(0);
-    }
-  };
 
   const handleReaction = (emoji: string) => {
     if (currentStory) {
@@ -167,10 +168,13 @@ export function StoryViewer({
             animate={{ scale: 1, opacity: 1 }}
             className="w-full h-full relative"
           >
-            <img
+            <Image
               src={currentStory.content}
               alt="Story"
+              width={400}
+              height={700}
               className="w-full h-full object-contain"
+              unoptimized
             />
             {currentStory.caption && (
               <div className="absolute bottom-20 left-0 right-0 p-6 bg-linear-to-t from-black/70 to-transparent">

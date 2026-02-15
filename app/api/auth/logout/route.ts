@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { clearAuthCookies } from '@/lib/auth/cookieAuth';
+import { clearAuthCookies, getAuthCookie } from '@/lib/auth/cookieAuth';
 import { revokeToken, hashToken } from '@/lib/auth/tokenRevocation';
 import { extractToken } from '@/lib/auth/jwt';
 import { withRateLimit } from '@/lib/auth/rateLimit';
@@ -21,7 +21,11 @@ export async function POST(request: NextRequest) {
   try {
     // Get token from header or cookie
     const authHeader = request.headers.get('authorization');
-    const token = extractToken(authHeader);
+    let token = extractToken(authHeader);
+
+    if (!token) {
+      token = await getAuthCookie(request);
+    }
 
     // Revoke the token if present
     if (token) {

@@ -4,12 +4,15 @@ import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { useNaturalLanguage } from '@/lib/naturalLanguage';
 import { useVoiceCommands, speak } from '@/lib/voiceCommands';
 import { toast } from '@/lib/toast';
+import { useAccount, usePublicClient } from 'wagmi';
 
 // ============================================================================
 // Command Bar Component - Natural Language + Voice
 // ============================================================================
 
 export default function CommandBar() {
+  const { address } = useAccount();
+  const publicClient = usePublicClient();
   const [isOpen, setIsOpen] = useState(false);
   const [input, setInput] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
@@ -89,28 +92,81 @@ export default function CommandBar() {
     }
   }, [isListening, startListening, stopListening]);
 
+  const resolveRecipient = useCallback(async (identifier: string) => {
+    if (identifier.startsWith('0x') && identifier.length === 42) {
+      return identifier;
+    }
+
+    if (identifier.endsWith('.eth') && publicClient) {
+      const resolved = await publicClient.getEnsAddress({ name: identifier });
+      if (!resolved) {
+        throw new Error(`Unable to resolve ENS ${identifier}`);
+      }
+      return resolved;
+    }
+
+    const response = await fetch(`/api/users?search=${encodeURIComponent(identifier)}&limit=1`);
+    if (response.ok) {
+      const data = await response.json();
+      const user = Array.isArray(data?.data) ? data.data[0] : data?.items?.[0];
+      const address = user?.wallet_address || user?.address;
+      if (address) {
+        return address as string;
+      }
+    }
+
+    throw new Error(`Unsupported recipient: ${identifier}`);
+  }, [publicClient]);
+
   const handleExecute = useCallback(async () => {
     if (!executionPlan || executionPlan.steps.length === 0) {
       toast.error('No valid actions to execute');
       return;
     }
 
+    if (!address) {
+      toast.error('Please connect your wallet');
+      return;
+    }
+
     // Confirm with voice
     speak('Executing your request');
 
-    // In production, this would actually execute the transactions
-    for (const step of executionPlan.steps) {
-      toast.info(`Executing: ${step.description}`);
-      // Simulate delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-    }
+    try {
+      for (const step of executionPlan.steps) {
+        toast.info(`Executing: ${step.description}`);
 
-    toast.success('All actions completed');
-    speak('All done');
-    setIsOpen(false);
-    setInput('');
-    clearIntent();
-  }, [executionPlan, clearIntent]);
+        if (step.type === 'send') {
+          const recipient = await resolveRecipient(String(step.params.to));
+          const response = await fetch('/api/crypto/payment-requests', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              toAddress: recipient,
+              amount: String(step.params.amount ?? 0),
+              token: String(step.params.token ?? 'ETH'),
+              memo: `Command: ${step.description}`,
+            }),
+          });
+
+          if (!response.ok) {
+            const data = await response.json().catch(() => ({}));
+            throw new Error(data.error || 'Failed to create payment request');
+          }
+        } else {
+          toast.info(`Step type ${step.type} requires manual execution`);
+        }
+      }
+
+      toast.success('All actions completed');
+      speak('All done');
+      setIsOpen(false);
+      setInput('');
+      clearIntent();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Execution failed');
+    }
+  }, [executionPlan, clearIntent, address, resolveRecipient]);
 
   const handleExampleClick = useCallback((example: string) => {
     setInput(example);

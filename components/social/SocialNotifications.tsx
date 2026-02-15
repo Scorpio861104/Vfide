@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Bell,
@@ -13,54 +13,58 @@ import {
 import { useAccount } from 'wagmi';
 import { Notification } from '@/types/socialIntegration';
 import { formatAddress as _formatAddress } from '@/lib/messageEncryption';
+import { secureId } from '@/lib/secureRandom';
 
 export function SocialNotifications() {
   const { address } = useAccount();
-  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [notificationsByAddress, setNotificationsByAddress] = useState<Record<string, Notification[]>>({});
   const [showNotifications, setShowNotifications] = useState(false);
-  const [unreadCount, setUnreadCount] = useState(0);
-  const [isClient, setIsClient] = useState(false);
 
-  // Handle SSR
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
+  const notifications = useMemo(() => {
+    if (!address) return [];
+    const inMemory = notificationsByAddress[address];
+    if (inMemory) return inMemory;
+    if (typeof window === 'undefined') return [];
 
-  // Load notifications
-  useEffect(() => {
-    if (!address || !isClient || typeof window === 'undefined') return;
-    
     try {
       const stored = localStorage.getItem(`vfide_notifications_${address}`);
-      if (stored) {
-        const notifs: Notification[] = JSON.parse(stored);
-        setNotifications(notifs);
-        setUnreadCount(notifs.filter(n => !n.read).length);
-      }
+      return stored ? (JSON.parse(stored) as Notification[]) : [];
     } catch (e) {
       console.error('Failed to load notifications:', e);
-      setNotifications([]);
+      return [];
     }
-  }, [address, isClient]);
+  }, [address, notificationsByAddress]);
 
-  // Save notifications
-  useEffect(() => {
-    if (!address || notifications.length === 0 || !isClient || typeof window === 'undefined') return;
-    try {
-      localStorage.setItem(`vfide_notifications_${address}`, JSON.stringify(notifications));
-      setUnreadCount(notifications.filter(n => !n.read).length);
-    } catch (e) {
-      console.error('Failed to save notifications:', e);
-    }
-  }, [address, notifications, isClient]);
+  const unreadCount = useMemo(
+    () => notifications.filter(n => !n.read).length,
+    [notifications]
+  );
+
+  const updateNotifications = useCallback((updater: (current: Notification[]) => Notification[]) => {
+    if (!address) return;
+    setNotificationsByAddress((prev) => {
+      const current = prev[address] ?? notifications;
+      const next = updater(current);
+
+      if (typeof window !== 'undefined') {
+        try {
+          localStorage.setItem(`vfide_notifications_${address}`, JSON.stringify(next));
+        } catch (e) {
+          console.error('Failed to save notifications:', e);
+        }
+      }
+
+      return { ...prev, [address]: next };
+    });
+  }, [address, notifications]);
 
   // Add event listener cleanup for custom events
   useEffect(() => {
-    if (!isClient || typeof window === 'undefined') return;
+    if (!address || typeof window === 'undefined') return;
 
     const handleCustomNotification = (event: CustomEvent) => {
       const notification = event.detail as Notification;
-      setNotifications(prev => [notification, ...prev]);
+      updateNotifications((prev) => [notification, ...prev]);
     };
 
     window.addEventListener('vfide-notification', handleCustomNotification as EventListener);
@@ -68,25 +72,25 @@ export function SocialNotifications() {
     return () => {
       window.removeEventListener('vfide-notification', handleCustomNotification as EventListener);
     };
-  }, [isClient]);
+  }, [address, updateNotifications]);
 
   const markAsRead = useCallback((id: string) => {
-    setNotifications(prev => prev.map(n => 
+    updateNotifications((prev) => prev.map(n => 
       n.id === id ? { ...n, read: true } : n
     ));
-  }, []);
+  }, [updateNotifications]);
 
   const markAllAsRead = useCallback(() => {
-    setNotifications(prev => prev.map(n => ({ ...n, read: true })));
-  }, []);
+    updateNotifications((prev) => prev.map(n => ({ ...n, read: true })));
+  }, [updateNotifications]);
 
   const deleteNotification = useCallback((id: string) => {
-    setNotifications(prev => prev.filter(n => n.id !== id));
-  }, []);
+    updateNotifications((prev) => prev.filter(n => n.id !== id));
+  }, [updateNotifications]);
 
   const clearAll = useCallback(() => {
-    setNotifications([]);
-  }, []);
+    updateNotifications(() => []);
+  }, [updateNotifications]);
 
   // Keyboard navigation
   useEffect(() => {
@@ -210,7 +214,7 @@ export function SocialNotifications() {
                   </div>
                 ) : (
                   <div className="divide-y divide-[#2A2A2F]">
-                    {notifications
+                    {[...notifications]
                       .sort((a, b) => b.timestamp - a.timestamp)
                       .map((notif) => {
                         const color = getColor(notif.type);
@@ -290,7 +294,7 @@ export function addNotification(address: string, notification: Omit<Notification
     
     const newNotif: Notification = {
       ...notification,
-      id: `notif_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      id: secureId('notif'),
       timestamp: Date.now(),
       read: false,
     };

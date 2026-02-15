@@ -8,6 +8,9 @@ export async function GET(request: NextRequest) {
   const rateLimit = await withRateLimit(request, 'api');
   if (rateLimit) return rateLimit;
 
+  const authResult = await requireAuth(request);
+  if (authResult instanceof NextResponse) return authResult;
+
   try {
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId');
@@ -16,9 +19,23 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'userId required' }, { status: 400 });
     }
 
+    const userResult = await query<{ id: number }>(
+      'SELECT id FROM users WHERE wallet_address = $1',
+      [authResult.user.address.toLowerCase()]
+    );
+
+    const resolvedUserId = userResult.rows[0]?.id;
+    if (!resolvedUserId) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    }
+
+    if (String(resolvedUserId) !== String(userId)) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+    }
+
     const result = await query(
       `SELECT * FROM sync_state WHERE user_id = $1`,
-      [userId]
+      [resolvedUserId]
     );
 
     return NextResponse.json({ syncState: result.rows[0] || null });
@@ -42,10 +59,20 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { userId, entity, lastSyncTimestamp } = body;
+    const { entity, lastSyncTimestamp } = body;
 
-    if (!userId || !entity) {
-      return NextResponse.json({ error: 'userId and entity required' }, { status: 400 });
+    if (!entity) {
+      return NextResponse.json({ error: 'entity required' }, { status: 400 });
+    }
+
+    const userResult = await query<{ id: number }>(
+      'SELECT id FROM users WHERE wallet_address = $1',
+      [authResult.user.address.toLowerCase()]
+    );
+
+    const resolvedUserId = userResult.rows[0]?.id;
+    if (!resolvedUserId) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
     const result = await query(
@@ -54,7 +81,7 @@ export async function POST(request: NextRequest) {
        ON CONFLICT (user_id, entity) DO UPDATE
        SET last_sync_timestamp = $3
        RETURNING *`,
-      [userId, entity, lastSyncTimestamp || new Date()]
+      [resolvedUserId, entity, lastSyncTimestamp || new Date()]
     );
 
     return NextResponse.json({ success: true, syncState: result.rows[0] });

@@ -65,9 +65,9 @@ describe('Payment Requests Section', () => {
   it('displays existing payment requests', () => {
     render(<MerchantPortal />);
 
-    expect(screen.getByText(/Web Development/i)).toBeInTheDocument();
-    expect(screen.getByText(/Consulting Services/i)).toBeInTheDocument();
-    expect(screen.getByText(/Product License/i)).toBeInTheDocument();
+    expect(screen.getByText(/Monthly retainer/i)).toBeInTheDocument();
+    expect(screen.getByText(/Consulting hours/i)).toBeInTheDocument();
+    expect(screen.getByText(/Vendor invoice/i)).toBeInTheDocument();
   });
 
   it('shows request status badges', () => {
@@ -93,16 +93,16 @@ describe('Payment Requests Section', () => {
     await user.click(createButton);
 
     await waitFor(() => {
-      expect(screen.getByText(/New service payment/i)).toBeInTheDocument();
+      expect(screen.getByText(/Enter a valid recipient address/i)).toBeInTheDocument();
     });
   });
 
   it('displays recipient email for each request', () => {
     render(<MerchantPortal />);
 
-    expect(screen.getByText('dev@example.com')).toBeInTheDocument();
-    expect(screen.getByText('consultant@example.com')).toBeInTheDocument();
-    expect(screen.getByText('vendor@example.com')).toBeInTheDocument();
+    expect(screen.getByText(/dev@example.com/i)).toBeInTheDocument();
+    expect(screen.getByText(/consultant@example.com/i)).toBeInTheDocument();
+    expect(screen.getByText(/vendor@example.com/i)).toBeInTheDocument();
   });
 
   it('shows payment request amounts and currencies', () => {
@@ -119,9 +119,7 @@ describe('Payment Requests Section', () => {
 
     const copyButtons = screen.getAllByText(/Copy Link/i);
     expect(copyButtons.length).toBeGreaterThan(0);
-
     await user.click(copyButtons[0]);
-    // Button click should work
     expect(copyButtons[0]).toBeInTheDocument();
   });
 });

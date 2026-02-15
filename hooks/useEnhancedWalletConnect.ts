@@ -146,7 +146,7 @@ export function useEnhancedWalletConnect() {
       }
     }
     return undefined;
-  }, [isConnecting, isPending, showToast, disconnect]);
+  }, [isConnecting, isPending, showToast, disconnect, connectionTimeout]);
 
   // Show toast notifications for connection events
   useEffect(() => {

@@ -23,7 +23,6 @@ export default function NotificationHubPage() {
   const {
     notifications,
     stats,
-    isLoading: _isLoading,
     filterNotifications,
     markAsRead,
     markAllAsRead,

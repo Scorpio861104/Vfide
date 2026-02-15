@@ -240,10 +240,10 @@ export default function LeaderboardPage() {
               <div className="w-16 h-16 bg-linear-to-br from-amber-400 to-orange-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
                 <Trophy className="w-8 h-8 text-white" />
               </div>
-              <h1 className="text-3xl sm:text-4xl md:text-5xl font-(family-name:--font-display) font-bold text-zinc-100 mb-2">
+              <h1 className="text-3xl sm:text-4xl md:text-5xl font-[family-name:var(--font-display)] font-bold text-zinc-100 mb-2">
                 ProofScore Leaderboard
               </h1>
-              <p className="text-lg sm:text-xl text-zinc-400 font-(family-name:--font-body)">
+              <p className="text-lg sm:text-xl text-zinc-400 font-[family-name:var(--font-body)]">
                 Top contributors in the VFIDE ecosystem
               </p>
               {userRank && (

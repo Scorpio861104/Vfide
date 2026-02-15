@@ -1,17 +1,9 @@
 'use client';
 
 import { Footer } from "@/components/layout/Footer";
-import { SubscriptionManagerABI } from "@/lib/abis";
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useToast } from "@/components/ui/toast";
-import { useAccount, useWriteContract, useWaitForTransactionReceipt, useReadContract } from "wagmi";
-
-// Contract addresses (SubscriptionManager not deployed yet)
-const SUBSCRIPTION_MANAGER_ADDRESS = (process.env.NEXT_PUBLIC_SUBSCRIPTION_MANAGER_ADDRESS || '0x0000000000000000000000000000000000000000') as `0x${string}`;
-const _VFIDE_TOKEN_ADDRESS = (process.env.NEXT_PUBLIC_VFIDE_TOKEN_ADDRESS || '0x3249215721a21BC9635C01Ea05AdE032dd90961f') as `0x${string}`;
-
-// Check if contract is deployed (not zero address)
-const IS_SUBSCRIPTION_DEPLOYED = SUBSCRIPTION_MANAGER_ADDRESS !== '0x0000000000000000000000000000000000000000';
+import { useAccount } from "wagmi";
 
 interface Subscription {
   id: number;
@@ -23,65 +15,80 @@ interface Subscription {
   status: "Active" | "Paused";
 }
 
+interface SubscriptionApiRow {
+  id: number | string;
+  merchant_name?: string;
+  merchant_address: string;
+  amount: string;
+  frequency: string;
+  next_payment: string;
+  status: string;
+}
+
 export default function SubscriptionsPage() {
   const { address, isConnected } = useAccount();
   const { showToast } = useToast();
   
-  // Contract write hooks
-  const { writeContract, data: hash, isPending: _isPending } = useWriteContract();
-  const { isLoading: _isConfirming, isSuccess: _isSuccess } = useWaitForTransactionReceipt({ hash });
+  const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
 
-  // Read user subscriptions
-  const { data: _userSubIds } = useReadContract({
-    address: SUBSCRIPTION_MANAGER_ADDRESS,
-    abi: SubscriptionManagerABI,
-    functionName: 'getUserSubscriptions',
-    args: address ? [address] : undefined,
-    query: { enabled: IS_SUBSCRIPTION_DEPLOYED && !!address },
-  });
+  const refreshSubscriptions = useCallback(async () => {
+    if (!address) return;
+    try {
+      const response = await fetch(`/api/subscriptions?userAddress=${address}`);
+      const data = await response.json();
+      if (response.ok && Array.isArray(data.subscriptions)) {
+        const mapped = data.subscriptions.map((sub: SubscriptionApiRow) => ({
+          id: Number(sub.id),
+          name: sub.merchant_name || 'Subscription',
+          merchant: sub.merchant_address,
+          amount: sub.amount,
+          frequency: sub.frequency,
+          nextPayment: sub.next_payment,
+          status: sub.status === 'paused' ? 'Paused' : 'Active',
+        })) as Subscription[];
+        setSubscriptions(mapped);
+      }
+    } catch (error) {
+      console.error('Failed to load subscriptions:', error);
+    }
+  }, [address]);
 
-  // Contract action handlers
-  const handlePause = (id: number) => {
-    if (!isConnected) {
+  const updateSubscriptionStatus = async (id: number, status: 'active' | 'paused' | 'cancelled') => {
+    if (!isConnected || !address) {
       showToast("Please connect your wallet", "error");
       return;
     }
-    writeContract({
-      address: SUBSCRIPTION_MANAGER_ADDRESS,
-      abi: SubscriptionManagerABI,
-      functionName: 'pauseSubscription',
-      args: [BigInt(id)],
-    });
-  };
 
-  const handleResume = (id: number) => {
-    if (!isConnected) {
-      showToast("Please connect your wallet", "error");
-      return;
+    try {
+      const response = await fetch('/api/subscriptions', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userAddress: address,
+          subscriptionId: id,
+          status,
+        }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data.error || 'Failed to update subscription');
+      }
+
+      await refreshSubscriptions();
+    } catch (error) {
+      console.error('Subscription update failed:', error);
+      showToast("Failed to update subscription", "error");
     }
-    writeContract({
-      address: SUBSCRIPTION_MANAGER_ADDRESS,
-      abi: SubscriptionManagerABI,
-      functionName: 'resumeSubscription',
-      args: [BigInt(id)],
-    });
   };
 
-  const handleCancel = (id: number) => {
-    if (!isConnected) {
-      showToast("Please connect your wallet", "error");
-      return;
-    }
-    writeContract({
-      address: SUBSCRIPTION_MANAGER_ADDRESS,
-      abi: SubscriptionManagerABI,
-      functionName: 'cancelSubscription',
-      args: [BigInt(id)],
-    });
-  };
+  const handlePause = (id: number) => updateSubscriptionStatus(id, 'paused');
+  const handleResume = (id: number) => updateSubscriptionStatus(id, 'active');
+  const handleCancel = (id: number) => updateSubscriptionStatus(id, 'cancelled');
 
-  // Display mock or empty subscriptions for now
-  const [subscriptions, _setSubscriptions] = useState<Subscription[]>([]);
+  useEffect(() => {
+    void refreshSubscriptions();
+  }, [refreshSubscriptions]);
 
   return (
     <>
@@ -122,9 +129,9 @@ export default function SubscriptionsPage() {
                     </div>
                     <h3 className="text-xl font-bold text-zinc-100 mb-2">No Active Subscriptions</h3>
                     <p className="text-zinc-400 mb-4">
-                      {isConnected 
-                        ? "Subscribe to a merchant service to see your recurring payments here."
-                        : "Connect your wallet to view and manage your subscriptions."}
+                      {!isConnected
+                        ? "Connect your wallet to view and manage your subscriptions."
+                        : "Subscribe to a merchant service to see your recurring payments here."}
                     </p>
                   </div>
                 ) : subscriptions.map((sub) => (

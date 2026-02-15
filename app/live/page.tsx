@@ -1,0 +1,174 @@
+/**
+ * VFIDE Live Page
+ * Shows real-time features in one showcase
+ */
+
+'use client'
+
+import { Footer } from '@/components/layout/Footer'
+import { ProofScoreVisualizer } from '@/components/trust/ProofScoreVisualizer'
+import { LiveActivityFeed } from '@/components/trust/LiveActivityFeed'
+import { FeeSavingsCalculator } from '@/components/commerce/FeeSavingsCalculator'
+import { LiveSystemStats } from '@/components/stats/LiveSystemStats'
+import Link from 'next/link'
+import { motion } from 'framer-motion'
+import { useAccount } from 'wagmi'
+
+export default function LivePage() {
+  const { address, isConnected } = useAccount()
+  
+  return (
+    <>
+      <div className="min-h-screen bg-linear-to-b from-[#0A0A0A] to-zinc-900 py-16 sm:py-20 px-3 sm:px-4 pt-20 sm:pt-24 overflow-x-hidden">
+      
+      <div className="max-w-7xl mx-auto space-y-6 sm:space-y-8 md:space-y-12">
+        {/* Hero */}
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-center space-y-2 sm:space-y-4"
+        >
+          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-zinc-100">
+            Experience{' '}
+            <span className="text-transparent bg-clip-text bg-linear-to-r from-cyan-400 to-blue-500">
+              VFIDE Live
+            </span>
+          </h1>
+          <p className="text-base sm:text-lg md:text-xl text-zinc-100/60 max-w-2xl mx-auto px-2">
+            Real-time blockchain data that makes people{' '}
+            <span className="text-emerald-400 font-bold">excited</span> and want to be{' '}
+            <span className="text-amber-400 font-bold">all in</span> on VFIDE
+          </p>
+        </motion.div>
+        
+        {/* Network Stats - Full Width */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.2 }}
+        >
+          <LiveSystemStats />
+        </motion.div>
+        
+        {/* Two Column Layout */}
+        <div className="grid lg:grid-cols-2 gap-4 sm:gap-6 md:gap-8">
+          {/* Left Column */}
+          <div className="space-y-4 sm:space-y-6 md:space-y-8">
+            {/* ProofScore Visualizer */}
+            <motion.div
+              initial={{ opacity: 0, x: -50 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.3 }}
+              className="rounded-2xl p-4 sm:p-6 md:p-8"
+            >
+              <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-zinc-100 mb-3 sm:mb-4 md:mb-6 text-center">
+                Your ProofScore Reputation
+              </h2>
+              <div className="flex justify-center">
+                <div className="hidden sm:block">
+                  <ProofScoreVisualizer address={address} size="large" showDetails />
+                </div>
+                <div className="sm:hidden">
+                  <ProofScoreVisualizer address={address} size="medium" showDetails />
+                </div>
+              </div>
+              
+              {isConnected && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.5 }}
+                  className="mt-4 sm:mt-6 md:mt-8 space-y-2 sm:space-y-3"
+                >
+                  <Link
+                    href="/endorsements"
+                    className="w-full bg-linear-to-r from-amber-400 to-orange-500 text-zinc-950 font-bold py-2 sm:py-3 px-4 sm:px-6 rounded-lg hover:scale-105 transition-transform text-sm sm:text-base text-center"
+                  >
+                    Endorse Another User
+                  </Link>
+                  <Link
+                    href="/governance"
+                    className="w-full bg-linear-to-r from-violet-400 to-violet-600 text-white font-bold py-2 sm:py-3 px-4 sm:px-6 rounded-lg hover:scale-105 transition-transform text-sm sm:text-base text-center"
+                  >
+                    Vote on DAO Proposal
+                  </Link>
+                </motion.div>
+              )}
+            </motion.div>
+            
+            {/* Fee Calculator */}
+            <motion.div
+              initial={{ opacity: 0, x: -50 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.4 }}
+              className="bg-zinc-950/50 backdrop-blur-xl rounded-2xl p-4 sm:p-6 md:p-8 border border-cyan-400/20"
+            >
+              <FeeSavingsCalculator />
+            </motion.div>
+          </div>
+          
+          {/* Right Column - Activity Feed */}
+          <motion.div
+            initial={{ opacity: 0, x: 50 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.5 }}
+            className="bg-zinc-950/50 backdrop-blur-xl rounded-2xl p-4 sm:p-6 md:p-8 border border-cyan-400/20"
+          >
+            <LiveActivityFeed />
+            
+            {/* Quick Actions */}
+            {isConnected && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.7 }}
+                className="mt-4 sm:mt-6 md:mt-8 grid grid-cols-2 gap-2 sm:gap-3"
+              >
+                <Link
+                  href="/pay"
+                  className="bg-linear-to-r from-cyan-400 to-blue-500 text-white font-bold py-2 sm:py-3 px-2 sm:px-4 rounded-lg hover:scale-105 transition-transform text-xs sm:text-sm text-center"
+                >
+                  Send VFIDE
+                </Link>
+                <Link
+                  href="/merchant"
+                  className="bg-linear-to-r from-emerald-400 to-[#00CC6A] text-zinc-950 font-bold py-2 sm:py-3 px-2 sm:px-4 rounded-lg hover:scale-105 transition-transform text-xs sm:text-sm text-center"
+                >
+                  Pay Merchant
+                </Link>
+              </motion.div>
+            )}
+          </motion.div>
+        </div>
+        
+        {/* Bottom CTA */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.8 }}
+          className="relative"
+        >
+          <div className="absolute inset-0 bg-linear-to-r from-cyan-400 via-[#00FF88] to-amber-400 rounded-2xl blur-2xl opacity-20" />
+          <div className="relative bg-zinc-950/80 backdrop-blur-xl rounded-2xl p-4 sm:p-6 md:p-8 lg:p-12 border-2 border-cyan-400/30 text-center space-y-3 sm:space-y-4 md:space-y-6">
+            <h2 className="text-lg sm:text-xl md:text-2xl lg:text-3xl xl:text-4xl font-bold text-zinc-100">
+              Ready for No Processor Fees?
+            </h2>
+            <p className="text-xs sm:text-sm md:text-base lg:text-lg xl:text-xl text-zinc-100/70 max-w-2xl mx-auto">
+              Join thousands building trust-based commerce with non-custodial vaults and DAO governance.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 md:gap-4 justify-center items-center">
+              <button className="w-full sm:w-auto bg-linear-to-r from-emerald-400 to-cyan-400 text-zinc-950 font-bold py-2 sm:py-3 md:py-4 px-4 sm:px-6 md:px-8 rounded-xl hover:scale-105 transition-transform text-sm sm:text-base md:text-lg">
+                Create Your Vault
+              </button>
+              <button className="w-full sm:w-auto bg-zinc-950 border-2 border-cyan-400 text-cyan-400 font-bold py-2 sm:py-3 md:py-4 px-4 sm:px-6 md:px-8 rounded-xl hover:scale-105 transition-transform text-sm sm:text-base md:text-lg">
+                Read Docs
+              </button>
+            </div>
+          </div>
+        </motion.div>
+      </div>
+    </div>
+    <Footer />
+  </>
+  )
+}

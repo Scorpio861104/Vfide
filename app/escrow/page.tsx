@@ -30,14 +30,14 @@ import { Loader2 } from 'lucide-react'
 
 // EscrowManager ABI
 const _ESCROW_MANAGER_ABI = [
-  { name: 'createEscrow', type: 'function', stateMutability: 'nonpayable', inputs: [{ name: 'seller', type: 'address' }, { name: 'token', type: 'address' }, { name: 'amount', type: 'uint256' }, { name: 'timeout', type: 'uint256' }], outputs: [{ type: 'uint256' }] },
-  { name: 'release', type: 'function', stateMutability: 'nonpayable', inputs: [{ name: 'id', type: 'uint256' }], outputs: [] },
-  { name: 'refund', type: 'function', stateMutability: 'nonpayable', inputs: [{ name: 'id', type: 'uint256' }], outputs: [] },
+  { name: 'createEscrow', type: 'function', stateMutability: 'nonpayable', inputs: [{ name: 'merchant', type: 'address' }, { name: 'token', type: 'address' }, { name: 'amount', type: 'uint256' }, { name: 'orderId', type: 'string' }], outputs: [{ type: 'uint256' }] },
+  { name: 'approveRelease', type: 'function', stateMutability: 'nonpayable', inputs: [{ name: 'id', type: 'uint256' }], outputs: [] },
+  { name: 'approveRefund', type: 'function', stateMutability: 'nonpayable', inputs: [{ name: 'id', type: 'uint256' }], outputs: [] },
   { name: 'claimTimeout', type: 'function', stateMutability: 'nonpayable', inputs: [{ name: 'id', type: 'uint256' }], outputs: [] },
   { name: 'raiseDispute', type: 'function', stateMutability: 'nonpayable', inputs: [{ name: 'id', type: 'uint256' }], outputs: [] },
   { name: 'checkTimeout', type: 'function', stateMutability: 'view', inputs: [{ name: 'id', type: 'uint256' }], outputs: [{ name: 'isNearTimeout', type: 'bool' }, { name: 'timeRemaining', type: 'uint256' }] },
-  { name: 'escrows', type: 'function', stateMutability: 'view', inputs: [{ name: 'id', type: 'uint256' }], outputs: [{ name: 'buyer', type: 'address' }, { name: 'seller', type: 'address' }, { name: 'token', type: 'address' }, { name: 'amount', type: 'uint256' }, { name: 'deadline', type: 'uint256' }, { name: 'state', type: 'uint8' }] },
-  { name: 'nextId', type: 'function', stateMutability: 'view', inputs: [], outputs: [{ type: 'uint256' }] },
+  { name: 'escrows', type: 'function', stateMutability: 'view', inputs: [{ name: 'id', type: 'uint256' }], outputs: [{ name: 'buyer', type: 'address' }, { name: 'merchant', type: 'address' }, { name: 'token', type: 'address' }, { name: 'amount', type: 'uint256' }, { name: 'createdAt', type: 'uint256' }, { name: 'releaseTime', type: 'uint256' }, { name: 'state', type: 'uint8' }, { name: 'orderId', type: 'string' }] },
+  { name: 'escrowCount', type: 'function', stateMutability: 'view', inputs: [], outputs: [{ type: 'uint256' }] },
 ] as const;
 
 // Contract addresses from environment
@@ -126,10 +126,10 @@ export default function EscrowPage() {
   const handleRelease = async (id: number) => {
     try {
       await releaseEscrow(BigInt(id));
-      toast.success('Escrow released successfully');
+      toast.success('Release approval submitted. Awaiting counterparty.');
     } catch (err) {
       console.error('Failed to release escrow:', err);
-      toast.error('Failed to release escrow. Please try again.');
+      toast.error('Failed to approve release. Please try again.');
     }
   };
 
@@ -216,7 +216,7 @@ export default function EscrowPage() {
               
               <p className="text-lg text-gray-400 max-w-2xl mx-auto">
                 Secure your transactions with smart contract escrow. Funds are held safely 
-                until delivery is confirmed, with dispute resolution backed by the DAO.
+                until both buyer and merchant approve release, with dispute resolution backed by the DAO.
               </p>
             </motion.div>
           
@@ -408,6 +408,11 @@ export default function EscrowPage() {
                                 }`}>
                                   {formatTimeRemaining(escrow.releaseTime)}
                                 </p>
+                                {escrow.state === 0 && (
+                                  <p className="mt-2 text-xs text-gray-400">
+                                    Buyer approval: {escrow.buyerReleaseApproved ? '✅' : '⏳'} · Merchant approval: {escrow.merchantReleaseApproved ? '✅' : '⏳'}
+                                  </p>
+                                )}
                               </div>
                             </div>
                           </div>
@@ -427,7 +432,7 @@ export default function EscrowPage() {
                                 ) : (
                                   <CheckCircle2 className="w-4 h-4" />
                                 )}
-                                Release Funds
+                                Approve Release
                               </motion.button>
                               <motion.button
                                 whileHover={{ scale: 1.02 }}
@@ -498,8 +503,8 @@ export default function EscrowPage() {
               },
               {
                 step: '3',
-                title: 'Buyer Confirms',
-                description: 'Buyer confirms receipt and releases funds to merchant',
+                title: 'Both Approve',
+                description: 'Buyer and merchant both approve release of funds',
                 icon: <CheckCircle2 className="w-6 h-6" />,
                 gradient: 'from-emerald-500/20 to-green-500/10',
                 border: 'border-emerald-500/20',

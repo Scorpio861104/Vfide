@@ -114,7 +114,7 @@ function ShareMenu({ notification, onClose: _onClose }: { notification: Achievem
 
   const shareToTwitter = () => {
     const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`;
-    window.open(url, '_blank', 'width=550,height=420');
+    window.open(url, '_blank', 'width=550,height=420,noopener,noreferrer');
   };
 
   const nativeShare = async () => {
@@ -222,25 +222,25 @@ function AchievementToast({ notification, onDismiss, position }: ToastProps) {
             {[...Array(isLegendary ? 40 : 25)].map((_, i) => (
               <motion.div
                 key={i}
-                initial={{ 
-                  y: 0, 
-                  x: Math.random() * 350 - 25, 
-                  opacity: 1, 
+                initial={{
+                  y: 0,
+                  x: (i * 37 + 13) % 350 - 25,
+                  opacity: 1,
                   rotate: 0,
                   scale: 1
                 }}
-                animate={{ 
-                  y: 300 + Math.random() * 100, 
-                  x: Math.random() * 350 - 25, 
-                  opacity: 0, 
-                  rotate: Math.random() * 720 - 360,
+                animate={{
+                  y: 300 + (i * 23) % 100,
+                  x: ((i + 7) * 41) % 350 - 25,
+                  opacity: 0,
+                  rotate: (i * 97) % 720 - 360,
                   scale: 0.5
                 }}
                 exit={{ opacity: 0 }}
-                transition={{ duration: 2 + Math.random(), delay: Math.random() * 0.3, ease: 'easeOut' }}
+                transition={{ duration: 2 + (i % 3) * 0.5, delay: (i % 10) * 0.03, ease: 'easeOut' }}
                 className={`absolute ${i % 2 === 0 ? 'w-2 h-2 rounded-full' : 'w-3 h-1 rounded-sm'}`}
                 style={{
-                  backgroundColor: CONFETTI_COLORS[Math.floor(Math.random() * CONFETTI_COLORS.length)],
+                  backgroundColor: CONFETTI_COLORS[i % CONFETTI_COLORS.length],
                   top: -10,
                 }}
               />
@@ -251,7 +251,7 @@ function AchievementToast({ notification, onDismiss, position }: ToastProps) {
 
       {/* Toast Content */}
       <div className={`relative bg-linear-to-r ${colorMap[notification.type]} p-0.5 rounded-2xl shadow-2xl ${rarityGlow[rarity]}`}>
-        <div className={`bg-zinc-900 rounded-2xl p-4 min-w-95 border-2 ${rarityColors[rarity]} border-opacity-50`}>
+        <div className={`bg-zinc-900 rounded-2xl p-4 min-w-[23.75rem] border-2 ${rarityColors[rarity]} border-opacity-50`}>
           {/* Combo Multiplier Badge */}
           {notification.comboMultiplier && notification.comboMultiplier > 1 && (
             <motion.div
@@ -407,7 +407,7 @@ export function AchievementToastContainer() {
 
     const newNotification: AchievementNotification = {
       ...notification,
-      id: `${Date.now()}-${Math.random()}`,
+      id: `${Date.now()}-${Array.from(crypto.getRandomValues(new Uint8Array(4)), b => b.toString(16).padStart(2, '0')).join('')}`,
       timestamp: Date.now(),
       comboMultiplier: multiplier,
     };
@@ -426,7 +426,7 @@ export function AchievementToastContainer() {
   }, [addNotification]);
 
   return (
-    <div className="fixed top-4 right-4 z-100 flex flex-col gap-3 pointer-events-none max-w-md">
+    <div className="fixed top-4 right-4 z-[100] flex flex-col gap-3 pointer-events-none max-w-md">
       {/* Combo Counter */}
       <AnimatePresence>
         {comboCount >= 2 && (
@@ -464,7 +464,9 @@ function playAchievementSound(type: AchievementNotification['type'], rarity: 'co
   if (typeof window === 'undefined') return;
   
   try {
-    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    const AudioContextClass = window.AudioContext || (window as typeof window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+    if (!AudioContextClass) return;
+    const audioContext = new AudioContextClass();
     
     const frequencies: Record<string, number[]> = {
       badge: [523.25, 659.25, 783.99],

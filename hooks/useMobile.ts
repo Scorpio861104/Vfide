@@ -224,15 +224,15 @@ export const useViewport = () => {
 // ============================================================================
 
 export const useSafeArea = () => {
-  const [safeArea, setSafeArea] = useState({
-    top: 0,
-    right: 0,
-    bottom: 0,
-    left: 0
-  });
-
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
+  const [safeArea] = useState(() => {
+    if (typeof window === 'undefined') {
+      return {
+        top: 0,
+        right: 0,
+        bottom: 0,
+        left: 0,
+      };
+    }
 
     const computedStyle = getComputedStyle(document.documentElement);
     const getSafeAreaValue = (side: string) => {
@@ -240,13 +240,13 @@ export const useSafeArea = () => {
       return value ? parseInt(value) : 0;
     };
 
-    setSafeArea({
+    return {
       top: getSafeAreaValue('top'),
       right: getSafeAreaValue('right'),
       bottom: getSafeAreaValue('bottom'),
-      left: getSafeAreaValue('left')
-    });
-  }, []);
+      left: getSafeAreaValue('left'),
+    };
+  });
 
   return safeArea;
 };

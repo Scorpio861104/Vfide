@@ -470,37 +470,38 @@ contract ProofScoreBurnRouter is Ownable {
     }
     
     /**
+     * 12j Fix: Shared day-reset helper to eliminate duplicated logic
+     */
+    function _resetDayIfNeeded() internal {
+        if (block.timestamp >= currentDayStart + 1 days) {
+            currentDayStart = block.timestamp - (block.timestamp % 1 days);
+            dailyBurnedAmount = 0;
+            dailyVolumeTracked = 0;
+        }
+    }
+
+    /**
      * @notice Update daily burn tracking (called by token after transfer)
      * @dev This allows accurate daily cap enforcement
      */
     function recordBurn(uint256 burnAmount) external {
         require(msg.sender == token, "only token");
-        
-        // Check if new day - reset counter
-        if (block.timestamp >= currentDayStart + 1 days) {
-            currentDayStart = block.timestamp - (block.timestamp % 1 days);
-            dailyBurnedAmount = burnAmount;
-            dailyVolumeTracked = 0; // Reset volume on new day
-        } else {
-            dailyBurnedAmount += burnAmount;
-        }
+
+        // 12j Fix: Use shared day-reset helper
+        _resetDayIfNeeded();
+        dailyBurnedAmount += burnAmount;
     }
-    
+
     /**
      * @notice Record transfer volume (called by token after transfer)
      * @dev Used for adaptive fee calculations
      */
     function recordVolume(uint256 amount) external {
         require(msg.sender == token, "only token");
-        
-        // Check if new day - reset counter
-        if (block.timestamp >= currentDayStart + 1 days) {
-            currentDayStart = block.timestamp - (block.timestamp % 1 days);
-            dailyVolumeTracked = amount;
-            dailyBurnedAmount = 0; // Reset burns on new day
-        } else {
-            dailyVolumeTracked += amount;
-        }
+
+        // 12j Fix: Use shared day-reset helper
+        _resetDayIfNeeded();
+        dailyVolumeTracked += amount;
     }
     
     /**

@@ -78,7 +78,12 @@ export function SimpleWalletConnect() {
       324: 'https://mainnet.era.zksync.io',
       300: 'https://sepolia.era.zksync.dev',
     };
-    return rpcUrls[id] || `https://rpc.chain${id}.example.com`;
+    const url = rpcUrls[id];
+    if (!url) {
+      console.error(`[VFIDE] No RPC URL configured for chain ${id}`);
+      return '';
+    }
+    return url;
   }, []);
 
   // Track latency when connected
@@ -152,7 +157,7 @@ export function SimpleWalletConnect() {
       setCopied(true);
       showToast('Address copied to clipboard', 'success', 2000);
       setTimeout(() => setCopied(false), 2000);
-    } catch (err) {
+    } catch (_err) {
       // Fallback for non-HTTPS contexts or if clipboard API fails
       try {
         const textArea = document.createElement('textarea');

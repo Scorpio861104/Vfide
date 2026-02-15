@@ -105,10 +105,10 @@ export function GuardianWizard({ onClose }: { onClose: () => void }) {
               <div className="w-16 h-16 mx-auto mb-4 flex items-center justify-center bg-emerald-500/10 rounded-full border border-emerald-500/30">
                 {steps[step]?.icon}
               </div>
-              <h2 className="text-3xl font-bold text-zinc-100 mb-3 font-(family-name:--font-display)">
+              <h2 className="text-3xl font-bold text-zinc-100 mb-3 font-[family-name:var(--font-display)]">
                 {steps[step]?.title}
               </h2>
-              <p className="text-lg text-zinc-400 leading-relaxed font-(family-name:--font-body)">
+              <p className="text-lg text-zinc-400 leading-relaxed font-[family-name:var(--font-body)]">
                 {steps[step]?.description}
               </p>
             </div>
@@ -117,7 +117,7 @@ export function GuardianWizard({ onClose }: { onClose: () => void }) {
               <div className="space-y-4 my-6">
                 {[0, 1, 2, 3, 4].map((index) => (
                   <div key={index}>
-                    <label className="block text-zinc-400 text-sm mb-2 font-(family-name:--font-body)">
+                    <label className="block text-zinc-400 text-sm mb-2 font-[family-name:var(--font-body)]">
                       Guardian #{index + 1} {index < 3 && <span className="text-red-500">*</span>}
                     </label>
                     <input

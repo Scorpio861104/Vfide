@@ -31,22 +31,22 @@ import { GlobalUserSearch } from '@/components/social/GlobalUserSearch';
 import { ActivityFeed } from '@/components/social/ActivityFeed';
 import { EndorsementsBadges } from '@/components/social/EndorsementsBadges';
 import { FirstTimeUserBanner } from '@/components/ui/FirstTimeUserBanner';
-import { Friend, Group } from '@/types/messaging';
+import { Friend } from '@/types/messaging';
 import { FriendRequest } from '@/types/friendRequests';
 import { STORAGE_KEYS } from '@/lib/messageEncryption';
 import { analytics } from '@/lib/socialAnalytics';
 import { gamification, useGamification } from '@/lib/gamification';
 import { UserStatsWidget } from '@/components/gamification/GamificationWidgets';
+import { safeJSONParseArray } from '@/lib/safeParse';
 
 type TabType = 'messages' | 'requests' | 'circles' | 'groups' | 'account' | 'privacy' | 'discover' | 'activity';
 
 export default function SocialPage() {
   const { address, isConnected } = useAccount();
-  const { hasVault, vaultAddress: _vaultAddress, isLoading: isLoadingVault } = useHasVault();
+  const { hasVault, isLoading: isLoadingVault } = useHasVault();
   const { recordActivity, unlockAchievement } = useGamification(address);
   const [activeTab, setActiveTab] = useState<TabType>('messages');
   const [selectedFriend, setSelectedFriend] = useState<Friend | undefined>();
-  const [_selectedGroup, setSelectedGroup] = useState<Group | undefined>();
   const [friends, setFriends] = useState<Friend[]>([]);
 
   // Load friends from localStorage
@@ -55,11 +55,8 @@ export default function SocialPage() {
     
     const stored = localStorage.getItem(`${STORAGE_KEYS.FRIENDS}_${address}`);
     if (stored) {
-      try {
-        setFriends(JSON.parse(stored));
-      } catch (e) {
-        console.error('Failed to load friends:', e);
-      }
+      const parsed = safeJSONParseArray<Friend>(stored, []);
+      setFriends(parsed);
     }
   }, [address]);
 
@@ -93,7 +90,7 @@ export default function SocialPage() {
     };
 
     const stored = localStorage.getItem(`${STORAGE_KEYS.FRIENDS}_${address}`);
-    const existingFriends: Friend[] = stored ? JSON.parse(stored) : [];
+    const existingFriends = safeJSONParseArray<Friend>(stored, []);
     const updated = [...existingFriends, newFriend];
     setFriends(updated);
     localStorage.setItem(`${STORAGE_KEYS.FRIENDS}_${address}`, JSON.stringify(updated));
@@ -314,18 +311,10 @@ export default function SocialPage() {
                   <FriendsList
                     onSelectFriend={(friend) => {
                       setSelectedFriend(friend);
-                      setSelectedGroup(undefined);
                       // Store friends for group creation
-                      const stored = localStorage.getItem(`vfide_friends_${address}`);
+                      const stored = localStorage.getItem(`${STORAGE_KEYS.FRIENDS}_${address}`);
                       if (stored) {
-                        try {
-                          setFriends(JSON.parse(stored));
-                        } catch (e) {
-                          // Invalid JSON in localStorage, ignore and use default empty array
-                          if (process.env.NODE_ENV === 'development') {
-                            console.warn('Failed to parse friends from localStorage:', e);
-                          }
-                        }
+                        setFriends(safeJSONParseArray<Friend>(stored, []));
                       }
                     }}
                     selectedFriend={selectedFriend}
@@ -491,7 +480,7 @@ export default function SocialPage() {
                   </div>
                   <div className="flex items-center gap-1">
                     <Users className="w-3 h-3 text-emerald-500" />
-                    <span>Decentralized storage (coming soon)</span>
+                    <span>Decentralized storage</span>
                   </div>
                 </div>
               </div>

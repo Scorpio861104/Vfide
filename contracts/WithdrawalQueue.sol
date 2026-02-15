@@ -334,7 +334,7 @@ abstract contract WithdrawalQueue is VFIDEAccessControl, VFIDEReentrancyGuard {
  * @notice Minimal concrete implementation for deployment/testing
  * @dev Replace with a vault-integrated implementation in production
  */
-contract WithdrawalQueueStub is WithdrawalQueue {
+abstract contract WithdrawalQueueStub is WithdrawalQueue {
     mapping(address => uint256) private balances;
 
     constructor(address _admin, uint256 _minimumDelayAmount)

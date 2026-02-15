@@ -47,9 +47,8 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     return NextResponse.json({ balances: result.rows });
   } catch (error) {
     console.error('[Balance API] Error:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Failed to fetch balances';
     return NextResponse.json(
-      { error: errorMessage },
+      { error: 'Internal server error' },
       { status: 500 }
     );
   }

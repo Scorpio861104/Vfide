@@ -81,7 +81,10 @@ interface VoiceSpeechRecognition extends EventTarget {
 function getSpeechRecognition(): VoiceSpeechRecognition | null {
   if (typeof window === 'undefined') return null;
   
-  const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
+  type SpeechRecognitionConstructor = new () => VoiceSpeechRecognition;
+  const SpeechRecognitionAPI =
+    (window as Window & { SpeechRecognition?: SpeechRecognitionConstructor; webkitSpeechRecognition?: SpeechRecognitionConstructor }).SpeechRecognition ||
+    (window as Window & { SpeechRecognition?: SpeechRecognitionConstructor; webkitSpeechRecognition?: SpeechRecognitionConstructor }).webkitSpeechRecognition;
   if (!SpeechRecognitionAPI) return null;
   
   return new SpeechRecognitionAPI() as VoiceSpeechRecognition;
@@ -136,7 +139,7 @@ export function useVoiceCommands(options?: {
 }) {
   const [state, setState] = useState<VoiceState>({
     isListening: false,
-    isSupported: false,
+    isSupported: !!getSpeechRecognition(),
     transcript: '',
     interimTranscript: '',
     error: null,
@@ -144,21 +147,22 @@ export function useVoiceCommands(options?: {
   });
 
   const recognitionRef = useRef<VoiceSpeechRecognition | null>(null);
+  const transcriptRef = useRef(state.transcript);
   const onResultRef = useRef(options?.onResult);
   const onShortcutRef = useRef(options?.onShortcut);
 
   // Update refs when callbacks change
   useEffect(() => {
+    transcriptRef.current = state.transcript;
     onResultRef.current = options?.onResult;
     onShortcutRef.current = options?.onShortcut;
-  }, [options?.onResult, options?.onShortcut]);
+  }, [state.transcript, options?.onResult, options?.onShortcut]);
 
   // Initialize speech recognition
   useEffect(() => {
     const recognition = getSpeechRecognition();
     
     if (!recognition) {
-      setState(s => ({ ...s, isSupported: false }));
       return;
     }
 
@@ -205,7 +209,7 @@ export function useVoiceCommands(options?: {
 
       // Process final results
       if (final) {
-        const fullTranscript = state.transcript + final;
+        const fullTranscript = transcriptRef.current + final;
         
         // Check for shortcuts first
         const shortcut = checkForShortcut(fullTranscript);
@@ -263,7 +267,6 @@ export function useVoiceCommands(options?: {
     };
 
     recognitionRef.current = recognition;
-    setState(s => ({ ...s, isSupported: true }));
 
     return () => {
       recognition.abort();

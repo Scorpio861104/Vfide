@@ -106,7 +106,9 @@ class VFIDESDK {
   init(config: VFIDEConfig): void {
     this.config = { ...this.config, ...config };
     this.isInitialized = true;
-    this.emit('widget:loaded', { config: this.config });
+    // Emit a sanitized config (strip apiKey to prevent leakage to event listeners)
+    const { apiKey: _apiKey, ...safeConfig } = this.config;
+    this.emit('widget:loaded', { config: safeConfig });
   }
 
   /**
@@ -131,6 +133,27 @@ class VFIDESDK {
     this.listeners.get(type)?.forEach((callback) => callback(payload));
   }
 
+  private createPaymentIcon(): SVGSVGElement {
+    const ns = 'http://www.w3.org/2000/svg';
+    const svg = document.createElementNS(ns, 'svg');
+    svg.setAttribute('width', '20');
+    svg.setAttribute('height', '20');
+    svg.setAttribute('viewBox', '0 0 24 24');
+    svg.setAttribute('fill', 'none');
+    svg.setAttribute('stroke', 'currentColor');
+    svg.setAttribute('stroke-width', '2');
+
+    const path1 = document.createElementNS(ns, 'path');
+    path1.setAttribute('d', 'M12 2L2 7l10 5 10-5-10-5z');
+    const path2 = document.createElementNS(ns, 'path');
+    path2.setAttribute('d', 'M2 17l10 5 10-5');
+    const path3 = document.createElementNS(ns, 'path');
+    path3.setAttribute('d', 'M2 12l10 5 10-5');
+
+    svg.append(path1, path2, path3);
+    return svg;
+  }
+
   /**
    * Create a payment button
    */
@@ -146,14 +169,11 @@ class VFIDESDK {
     // Create button element
     const button = document.createElement('button');
     button.className = 'vfide-payment-button';
-    button.innerHTML = `
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="M12 2L2 7l10 5 10-5-10-5z"/>
-        <path d="M2 17l10 5 10-5"/>
-        <path d="M2 12l10 5 10-5"/>
-      </svg>
-      <span>Pay ${request.amount} ${request.token || 'ETH'}</span>
-    `;
+
+    const icon = this.createPaymentIcon();
+    const label = document.createElement('span');
+    label.textContent = `Pay ${request.amount} ${request.token || 'ETH'}`;
+    button.append(icon, label);
 
     this.applyStyles(button, {
       display: 'inline-flex',
@@ -209,28 +229,45 @@ class VFIDESDK {
     widget.className = 'vfide-donation-widget';
     
     const amounts = donation.suggestedAmounts || ['1', '5', '10', '25'];
-    
-    widget.innerHTML = `
-      <div class="vfide-donation-header">
-        <h3>${donation.message || 'Support us'}</h3>
-      </div>
-      <div class="vfide-donation-amounts">
-        ${amounts.map((amt) => `
-          <button class="vfide-amount-btn" data-amount="${amt}">
-            ${amt} ${donation.token || 'ETH'}
-          </button>
-        `).join('')}
-        ${donation.allowCustom !== false ? `
-          <input type="number" class="vfide-custom-amount" placeholder="Custom" min="0" step="0.01" />
-        ` : ''}
-      </div>
-      <button class="vfide-donate-btn">Donate</button>
-      ${options.showBranding !== false ? `
-        <div class="vfide-branding">
-          Powered by VFIDE
-        </div>
-      ` : ''}
-    `;
+
+    const header = document.createElement('div');
+    header.className = 'vfide-donation-header';
+    const title = document.createElement('h3');
+    title.textContent = donation.message || 'Support us';
+    header.appendChild(title);
+
+    const amountList = document.createElement('div');
+    amountList.className = 'vfide-donation-amounts';
+    amounts.forEach((amt) => {
+      const amountButton = document.createElement('button');
+      amountButton.className = 'vfide-amount-btn';
+      amountButton.dataset.amount = amt;
+      amountButton.textContent = `${amt} ${donation.token || 'ETH'}`;
+      amountList.appendChild(amountButton);
+    });
+
+    if (donation.allowCustom !== false) {
+      const customInput = document.createElement('input');
+      customInput.type = 'number';
+      customInput.className = 'vfide-custom-amount';
+      customInput.placeholder = 'Custom';
+      customInput.min = '0';
+      customInput.step = '0.01';
+      amountList.appendChild(customInput);
+    }
+
+    const donateButton = document.createElement('button');
+    donateButton.className = 'vfide-donate-btn';
+    donateButton.textContent = 'Donate';
+
+    widget.append(header, amountList, donateButton);
+
+    if (options.showBranding !== false) {
+      const branding = document.createElement('div');
+      branding.className = 'vfide-branding';
+      branding.textContent = 'Powered by VFIDE';
+      widget.appendChild(branding);
+    }
 
     this.applyStyles(widget, {
       display: 'flex',
@@ -246,9 +283,9 @@ class VFIDESDK {
     });
 
     // Style child elements
-    const header = widget.querySelector('.vfide-donation-header h3') as HTMLElement;
-    if (header) {
-      this.applyStyles(header, {
+    const headerTitle = widget.querySelector('.vfide-donation-header h3') as HTMLElement;
+    if (headerTitle) {
+      this.applyStyles(headerTitle, {
         margin: '0',
         fontSize: '18px',
         fontWeight: '600',
@@ -384,27 +421,45 @@ class VFIDESDK {
       monthly: 'per month',
     }[subscription.interval];
 
-    widget.innerHTML = `
-      <div class="vfide-sub-header">
-        <h3>${subscription.description || 'Subscribe'}</h3>
-        <div class="vfide-sub-price">
-          <span class="vfide-amount">${subscription.amount}</span>
-          <span class="vfide-token">${subscription.token || 'ETH'}</span>
-          <span class="vfide-interval">${intervalText}</span>
-        </div>
-      </div>
-      ${subscription.trialDays ? `
-        <div class="vfide-trial">
-          ${subscription.trialDays}-day free trial
-        </div>
-      ` : ''}
-      <button class="vfide-subscribe-btn">
-        Subscribe with VFIDE
-      </button>
-      <p class="vfide-sub-terms">
-        Payments stream continuously. Cancel anytime.
-      </p>
-    `;
+    const subHeader = document.createElement('div');
+    subHeader.className = 'vfide-sub-header';
+
+    const title = document.createElement('h3');
+    title.textContent = subscription.description || 'Subscribe';
+
+    const price = document.createElement('div');
+    price.className = 'vfide-sub-price';
+    const amount = document.createElement('span');
+    amount.className = 'vfide-amount';
+    amount.textContent = subscription.amount;
+    const token = document.createElement('span');
+    token.className = 'vfide-token';
+    token.textContent = subscription.token || 'ETH';
+    const interval = document.createElement('span');
+    interval.className = 'vfide-interval';
+    interval.textContent = intervalText;
+
+    price.append(amount, token, interval);
+    subHeader.append(title, price);
+
+    widget.appendChild(subHeader);
+
+    if (subscription.trialDays) {
+      const trial = document.createElement('div');
+      trial.className = 'vfide-trial';
+      trial.textContent = `${subscription.trialDays}-day free trial`;
+      widget.appendChild(trial);
+    }
+
+    const subscribe = document.createElement('button');
+    subscribe.className = 'vfide-subscribe-btn';
+    subscribe.textContent = 'Subscribe with VFIDE';
+    widget.appendChild(subscribe);
+
+    const terms = document.createElement('p');
+    terms.className = 'vfide-sub-terms';
+    terms.textContent = 'Payments stream continuously. Cancel anytime.';
+    widget.appendChild(terms);
 
     this.applyStyles(widget, {
       display: 'flex',
@@ -447,9 +502,9 @@ class VFIDESDK {
       });
     }
 
-    const terms = widget.querySelector('.vfide-sub-terms') as HTMLElement;
-    if (terms) {
-      this.applyStyles(terms, {
+    const termsText = widget.querySelector('.vfide-sub-terms') as HTMLElement;
+    if (termsText) {
+      this.applyStyles(termsText, {
         margin: '0',
         fontSize: '12px',
         color: this.config.theme === 'dark' ? '#666' : '#9ca3af',
@@ -493,23 +548,28 @@ class VFIDESDK {
   /**
    * Create a subscription
    */
-  async createSubscription(config: SubscriptionConfig): Promise<SubscriptionResult> {
-    this.emit('subscription:created', config);
+  async createSubscription(_config: SubscriptionConfig): Promise<SubscriptionResult> {
+    throw new Error('Subscriptions are not yet implemented. This feature is under development.');
+  }
 
-    // In production, this would create a streaming payment
-    return {
-      subscriptionId: `sub_${Date.now()}`,
-      status: 'active',
-      nextPaymentDate: Date.now() + this.getIntervalMs(config.interval),
-    };
+  /**
+   * Validate that a URL is safe (HTTPS only, no javascript: or data: schemes)
+   */
+  private isSafeUrl(url: string): boolean {
+    try {
+      const parsed = new URL(url);
+      return parsed.protocol === 'https:';
+    } catch {
+      return false;
+    }
   }
 
   /**
    * Build payment URL
    */
   private buildPaymentUrl(request: PaymentRequest): string {
-    const base = this.config.environment === 'mainnet' 
-      ? 'https://pay.vfide.io' 
+    const base = this.config.environment === 'mainnet'
+      ? 'https://pay.vfide.io'
       : 'https://testnet.pay.vfide.io';
 
     const params = new URLSearchParams({
@@ -518,9 +578,9 @@ class VFIDESDK {
       token: request.token || 'ETH',
       ...(request.chainId && { chain: request.chainId.toString() }),
       ...(request.description && { desc: request.description }),
-      ...(request.callbackUrl && { callback: request.callbackUrl }),
-      ...(request.successUrl && { success: request.successUrl }),
-      ...(request.cancelUrl && { cancel: request.cancelUrl }),
+      ...(request.callbackUrl && this.isSafeUrl(request.callbackUrl) && { callback: request.callbackUrl }),
+      ...(request.successUrl && this.isSafeUrl(request.successUrl) && { success: request.successUrl }),
+      ...(request.cancelUrl && this.isSafeUrl(request.cancelUrl) && { cancel: request.cancelUrl }),
     });
 
     return `${base}?${params.toString()}`;

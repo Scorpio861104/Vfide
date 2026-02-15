@@ -18,7 +18,6 @@ import { useAccount } from 'wagmi';
 import {
   X,
   Wallet,
-  Mail,
   ArrowLeft,
   Sparkles,
   Key,
@@ -29,21 +28,17 @@ import {
   ChevronRight,
 } from 'lucide-react';
 import { WalletCapabilities } from './WalletCapabilities';
-import { EmbeddedLogin } from './EmbeddedLogin';
 import { GaslessStatus } from './GaslessTransaction';
 import { SessionKeyManager } from './SessionKeyManager';
 import { useSmartWallet } from '@/hooks/useSmartWallet';
-import { useEmbeddedWallet } from '@/lib/embeddedWallet/embeddedWalletService';
 
 // ==================== TYPES ====================
 
-type WalletView = 'main' | 'embedded' | 'capabilities' | 'gasless' | 'sessions' | 'settings';
+type WalletView = 'main' | 'capabilities' | 'gasless' | 'sessions' | 'settings';
 
 export interface UnifiedWalletModalProps {
   isOpen: boolean;
   onClose: () => void;
-  /** Default to embedded wallet for new users */
-  defaultToEmbedded?: boolean;
 }
 
 // ==================== TAB NAVIGATION ====================
@@ -81,38 +76,18 @@ function TabButton({ icon, label, active, onClick, badge }: TabButtonProps) {
 export function UnifiedWalletModal({
   isOpen,
   onClose,
-  defaultToEmbedded = false,
 }: UnifiedWalletModalProps) {
   const { isConnected, address } = useAccount();
   const { capabilities } = useSmartWallet();
-  const { state: embeddedState } = useEmbeddedWallet();
-  const [view, setView] = useState<WalletView>(defaultToEmbedded ? 'embedded' : 'main');
+  const [view, setView] = useState<WalletView>('main');
 
-  const isAuthenticated = isConnected || embeddedState.isAuthenticated;
-  const walletAddress = address || embeddedState.walletAddress;
+  const isAuthenticated = isConnected;
+  const walletAddress = address;
 
   if (!isOpen) return null;
 
   const renderContent = () => {
     switch (view) {
-      case 'embedded':
-        return (
-          <div className="p-6">
-            <button
-              onClick={() => setView('main')}
-              className="flex items-center gap-2 text-gray-500 hover:text-gray-700 mb-4"
-            >
-              <ArrowLeft className="w-4 h-4" />
-              Back
-            </button>
-            <EmbeddedLogin
-              onSuccess={() => setView('main')}
-              showSocial
-              showEmail
-            />
-          </div>
-        );
-
       case 'capabilities':
         return (
           <div className="p-6">
@@ -279,32 +254,6 @@ export function UnifiedWalletModal({
                       )}
                     </ConnectButton.Custom>
                   </div>
-
-                  <div className="relative">
-                    <div className="absolute inset-0 flex items-center">
-                      <div className="w-full border-t border-gray-300 dark:border-gray-600" />
-                    </div>
-                    <div className="relative flex justify-center text-sm">
-                      <span className="px-4 bg-white dark:bg-gray-900 text-gray-500">
-                        or
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Embedded Wallet */}
-                  <button
-                    onClick={() => setView('embedded')}
-                    className="w-full p-4 bg-gray-50 dark:bg-gray-800 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-left"
-                  >
-                    <div className="flex items-center gap-3">
-                      <Mail className="w-6 h-6 text-purple-500" />
-                      <div className="flex-1">
-                        <p className="font-semibold">Sign in with Email</p>
-                        <p className="text-xs text-gray-500">No wallet needed - we create one for you</p>
-                      </div>
-                      <ChevronRight className="w-5 h-5 text-gray-400" />
-                    </div>
-                  </button>
                 </div>
               </>
             )}

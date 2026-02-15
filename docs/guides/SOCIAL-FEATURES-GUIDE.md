@@ -508,10 +508,10 @@ const calculateSuggestionScore = (user: User): number => {
   
   // Community engagement (15 points)
   if (user.followers > 100) score += 15;
-  
-  // Randomness (10 points)
-  score += Math.random() * 10;
-  
+
+  // Activity bonus (up to 10 points)
+  score += Math.min(user.recentActions, 10);
+
   return Math.min(score, 100);
 };
 ```

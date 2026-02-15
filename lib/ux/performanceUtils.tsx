@@ -6,6 +6,8 @@
  * Tools for optimizing React component rendering and app performance.
  */
 
+/* eslint-disable react-hooks/refs */
+
 import React, { 
   useState, 
   useEffect, 
@@ -179,21 +181,21 @@ export function useDeepCallback<T extends (...args: unknown[]) => unknown>(
   callback: T,
   deps: unknown[]
 ): T {
-  const [currentCallback, setCurrentCallback] = useState<T>(() => callback);
-  const [currentDeps, setCurrentDeps] = useState(deps);
+  const callbackRef = useRef<T>(callback);
+  const depsRef = useRef(deps);
 
   useEffect(() => {
     const hasChanged = !deps.every((dep, i) => 
-      JSON.stringify(dep) === JSON.stringify(currentDeps[i])
+      JSON.stringify(dep) === JSON.stringify(depsRef.current[i])
     );
 
     if (hasChanged) {
-      setCurrentCallback(() => callback);
-      setCurrentDeps(deps);
+      callbackRef.current = callback;
+      depsRef.current = deps;
     }
-  }, [callback, deps, currentDeps]);
+  }, [callback, deps]);
 
-  return useCallback((...args: Parameters<T>) => currentCallback(...args), [currentCallback]) as T;
+  return useCallback((...args: Parameters<T>) => callbackRef.current(...args), []) as T;
 }
 
 // ==================== RAF THROTTLE ====================
@@ -205,20 +207,20 @@ export function useRafThrottle<T extends (...args: unknown[]) => void>(
   callback: T
 ): T {
   const rafRef = useRef<number | null>(null);
-  const [currentCallback, setCurrentCallback] = useState<T>(() => callback);
+  const callbackRef = useRef<T>(callback);
 
   useEffect(() => {
-    setCurrentCallback(() => callback);
+    callbackRef.current = callback;
   }, [callback]);
 
   const throttledFn = useCallback((...args: Parameters<T>) => {
     if (rafRef.current !== null) return;
 
     rafRef.current = requestAnimationFrame(() => {
-      currentCallback(...args);
+      callbackRef.current(...args);
       rafRef.current = null;
     });
-  }, [currentCallback]);
+  }, []);
 
   useEffect(() => {
     return () => {
@@ -336,15 +338,13 @@ export function useBatchedUpdates<T extends Record<string, unknown>>(
  * Returns a stable reference that only changes when value deeply changes
  */
 export function useStableValue<T>(value: T): T {
-  const [stableValue, setStableValue] = useState<T>(value);
+  const stableValueRef = useRef<T>(value);
 
-  useEffect(() => {
-    if (JSON.stringify(stableValue) !== JSON.stringify(value)) {
-      setStableValue(value);
-    }
-  }, [value, stableValue]);
+  if (JSON.stringify(stableValueRef.current) !== JSON.stringify(value)) {
+    stableValueRef.current = value;
+  }
 
-  return stableValue;
+  return stableValueRef.current;
 }
 
 // ==================== COMPONENT PERFORMANCE ====================
@@ -358,20 +358,23 @@ export interface PerformanceMetrics {
 export function usePerformanceMetrics(): PerformanceMetrics {
   const renderCount = useRef(0);
   const renderTimes = useRef<number[]>([]);
-  const lastRenderStart = useRef(performance.now());
+  const lastRenderStart = useRef(0);
 
   useEffect(() => {
-    const renderTime = performance.now() - lastRenderStart.current;
-    renderTimes.current.push(renderTime);
+    const now = performance.now();
+    if (lastRenderStart.current !== 0) {
+      const renderTime = now - lastRenderStart.current;
+      renderTimes.current.push(renderTime);
+    }
     renderCount.current++;
     
     // Keep only last 10 renders
     if (renderTimes.current.length > 10) {
       renderTimes.current.shift();
     }
-  });
 
-  lastRenderStart.current = performance.now();
+    lastRenderStart.current = now;
+  });
 
   const averageRenderTime = renderTimes.current.length > 0
     ? renderTimes.current.reduce((a, b) => a + b, 0) / renderTimes.current.length
@@ -390,15 +393,15 @@ export function usePerformanceMetrics(): PerformanceMetrics {
  * Automatically cleans up heavy resources when component unmounts
  */
 export function useCleanup(cleanupFn: () => void, deps: unknown[] = []) {
-  const [currentCleanup, setCurrentCleanup] = useState(() => cleanupFn);
+  const cleanupRef = useRef(cleanupFn);
 
   useEffect(() => {
-    setCurrentCleanup(() => cleanupFn);
+    cleanupRef.current = cleanupFn;
   }, [cleanupFn]);
 
-   
   useEffect(() => {
-    return () => currentCleanup();
+    return () => cleanupRef.current();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, deps);
 }
 

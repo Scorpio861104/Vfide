@@ -147,6 +147,11 @@ export function MerchantPOS() {
     },
     enabled: showQRPayment && !!address,
   })
+
+  // Clear cart
+  const clearCart = useCallback(() => {
+    setCart([])
+  }, [])
   
   // Handle confirmed payment from blockchain event
   const handlePaymentConfirmed = useCallback((customerAddress: `0x${string}` | string, amount: string) => {
@@ -171,7 +176,7 @@ export function MerchantPOS() {
     setShowEmailPrompt(true) // Ask for email after payment confirmed
     clearCart()
     pendingPaymentRef.current = null
-  }, [subtotal, processorFees.vfide])
+  }, [subtotal, processorFees.vfide, clearCart])
 
   // Add product to catalog
   const handleAddProduct = () => {
@@ -215,17 +220,14 @@ export function MerchantPOS() {
     }).filter(item => item.quantity > 0))
   }
   
-  // Clear cart
-  const clearCart = () => setCart([])
-  
   // Complete sale - now just adds email to the current sale (payment already confirmed via event)
-  const completeSale = (email?: string) => {
+  const completeSale = async (email?: string) => {
     if (currentSale) {
       // Update the current sale with email info
       const updatedSale: Sale = {
         ...currentSale,
         customerEmail: email,
-        emailSent: !!email,
+        emailSent: false,
       }
       
       // Update in sales history
@@ -236,7 +238,13 @@ export function MerchantPOS() {
       
       // Send email if provided
       if (email) {
-        sendDigitalReceipt(updatedSale, email)
+        const sent = await sendDigitalReceipt(updatedSale, email)
+        setSalesHistory((prev) => prev.map((sale) =>
+          sale.id === updatedSale.id ? { ...sale, emailSent: sent } : sale
+        ))
+        setCurrentSale((prev) =>
+          prev && prev.id === updatedSale.id ? { ...prev, emailSent: sent } : prev
+        )
       }
     }
     
@@ -247,8 +255,28 @@ export function MerchantPOS() {
   
   // Send digital receipt
   const sendDigitalReceipt = async (sale: Sale, email: string) => {
-    // In production: await fetch('/api/send-receipt', { method: 'POST', body: JSON.stringify({ sale, email }) })
-    void sale; void email; // Placeholder until API integration
+    if (!address) return false
+
+    try {
+      const response = await fetch('/api/send-receipt', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sale,
+          email,
+          merchantAddress: address,
+        }),
+      })
+
+      if (!response.ok) {
+        return false
+      }
+
+      return true
+    } catch (error) {
+      console.error('Failed to send receipt:', error)
+      return false
+    }
   }
   
   // Sales analytics - Single-pass aggregation instead of multiple reduces (O(n) instead of O(n×3))

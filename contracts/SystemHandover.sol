@@ -4,7 +4,7 @@ pragma solidity 0.8.30;
 interface ISeer_SH { function minForGovernance() external view returns (uint16); }
 interface IVFIDEPresaleLike_SH { function presaleStartTime() external view returns (uint256); }
 interface IDAO_SH { function setAdmin(address _admin) external; }
-interface IDAOTimelock_SH { function setAdmin(address _admin) external; }
+interface IDAOTimelock_SH { function proposeAdmin(address _admin) external; function confirmAdmin() external; function adminChangeTime() external view returns (uint64); }
 interface IProofLedger_SH { function logSystemEvent(address who, string calldata action, address by) external; }
 
 error SH_NotDev();
@@ -61,8 +61,12 @@ contract SystemHandover {
 
     function setParams(uint64 _monthsDelay, uint16 _minAvg, uint8 _maxExt, uint64 _extSpan) external onlyDev {
         if (_monthsDelay<90 days) _monthsDelay=90 days;
+        // Cap extensions to prevent indefinite handover delay
+        require(_maxExt <= 3, "SH: maxExtensions capped at 3");
+        require(_extSpan <= 90 days, "SH: extensionSpan capped at 90 days");
+        // Prevent changing params after handover is armed (locked-in timeline)
+        require(start == 0, "SH: cannot change params after armed");
         monthsDelay=_monthsDelay; minAvgCouncilScore=_minAvg; maxExtensions=_maxExt; extensionSpan=_extSpan;
-        if (start!=0) handoverAt = start + monthsDelay;
         emit ParamsSet(monthsDelay,minAvgCouncilScore,maxExtensions,extensionSpan);
         _log("handover_params");
     }
@@ -78,13 +82,23 @@ contract SystemHandover {
     }
 
     /// Transfer control to DAO (DAO becomes its own admin; timelock admin = DAO).
+    /// 12d Fix: Uses proposeAdmin for timelock (two-step pattern).
+    /// A second call to finalizeTimelockHandover() is needed after the delay.
     function executeHandover(address newAdmin) external onlyDev {
         if (block.timestamp < handoverAt) revert SH_TooEarly();
         if (newAdmin == address(0)) newAdmin = address(dao);
         dao.setAdmin(newAdmin);
-        timelock.setAdmin(address(dao));
+        timelock.proposeAdmin(address(dao));
         emit Executed(address(dao), address(timelock), newAdmin, extensionsUsed);
         _log("handover_executed");
+    }
+
+    /// Finalize the two-step timelock admin change after the delay has passed.
+    function finalizeTimelockHandover() external onlyDev {
+        require(timelock.adminChangeTime() > 0, "SH: no pending admin change");
+        require(block.timestamp >= timelock.adminChangeTime(), "SH: too early");
+        timelock.confirmAdmin();
+        _log("handover_timelock_finalized");
     }
 
     function setLedger(address _ledger) external onlyDev { ledger=IProofLedger_SH(_ledger); emit LedgerSet(_ledger); }

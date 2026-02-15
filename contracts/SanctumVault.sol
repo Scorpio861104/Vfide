@@ -415,9 +415,14 @@ contract SanctumVault is Ownable, ReentrancyGuard {
     mapping(uint256 => EmergencyRecoveryRequest) public emergencyRecoveries;
     uint256 public constant EMERGENCY_TIMELOCK = 2 days;
 
+    // 12f Fix: Multi-approval for emergency recovery
+    mapping(uint256 => mapping(address => bool)) public emergencyApprovals;
+    mapping(uint256 => uint8) public emergencyApprovalCount;
+
     event EmergencyRecoveryRequested(uint256 indexed id, address token, address to, uint256 amount, string reason);
     event EmergencyRecoveryCancelled(uint256 indexed id, string reason);
     event EmergencyRecoveryExecuted(uint256 indexed id, address token, address to, uint256 amount);
+    event EmergencyRecoveryApproved(uint256 indexed id, address indexed approver, uint8 totalApprovals);
 
     /**
      * Request emergency token recovery (only if funds are stuck)
@@ -459,18 +464,37 @@ contract SanctumVault is Ownable, ReentrancyGuard {
     }
 
     /**
-     * Execute emergency recovery after timelock
+     * 12f Fix: Approve emergency recovery (approvers must also approve before execution)
+     */
+    function approveEmergencyRecovery(uint256 id) external onlyApprover {
+        EmergencyRecoveryRequest storage req = emergencyRecoveries[id];
+        require(req.requestedAt > 0, "not found");
+        require(!req.executed, "already executed");
+        require(!req.cancelled, "cancelled");
+        require(!emergencyApprovals[id][msg.sender], "already approved");
+
+        emergencyApprovals[id][msg.sender] = true;
+        emergencyApprovalCount[id]++;
+
+        emit EmergencyRecoveryApproved(id, msg.sender, emergencyApprovalCount[id]);
+    }
+
+    /**
+     * Execute emergency recovery after timelock AND sufficient approvals
+     * 12f Fix: Requires approvalsRequired approvals in addition to DAO + timelock
      */
     function executeEmergencyRecovery(uint256 id) external onlyDAO nonReentrant {
         EmergencyRecoveryRequest storage req = emergencyRecoveries[id];
         require(!req.executed, "already executed");
         require(!req.cancelled, "cancelled");
         require(block.timestamp >= req.requestedAt + EMERGENCY_TIMELOCK, "timelock not passed");
-        
+        // 12f Fix: Require multi-approval before execution
+        require(emergencyApprovalCount[id] >= approvalsRequired, "insufficient emergency approvals");
+
         req.executed = true;
-        
+
         IERC20(req.token).safeTransfer(req.to, req.amount);
-        
+
         _logEv(req.to, "emergency_recovery", req.amount, req.reason);
         emit EmergencyRecoveryExecuted(id, req.token, req.to, req.amount);
     }

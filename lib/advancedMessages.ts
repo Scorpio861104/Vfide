@@ -3,6 +3,8 @@
  * Threads, reactions, editing, pinned messages, and more
  */
 
+import { secureId } from '@/lib/secureRandom';
+
 export interface MessageThread {
   parentMessageId: string;
   replies: ThreadReply[];
@@ -74,7 +76,7 @@ export function createThreadReply(
   content: string
 ): ThreadReply {
   return {
-    id: `reply_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+    id: secureId('reply'),
     from,
     content,
     timestamp: Date.now(),
@@ -134,7 +136,7 @@ export function createPoll(
   anonymous: boolean = false
 ): Poll {
   return {
-    id: `poll_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+    id: secureId('poll'),
     question,
     options: options.map((text, index) => ({
       id: `option_${index}`,
@@ -225,7 +227,7 @@ export function createScheduledMessage(
   scheduledFor: number
 ): ScheduledMessage {
   return {
-    id: `scheduled_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+    id: secureId('scheduled'),
     to,
     content,
     scheduledFor,
@@ -365,7 +367,7 @@ export function createAutoReply(
   }
 ): AutoReply {
   return {
-    id: `autoreply_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+    id: secureId('autoreply'),
     enabled: true,
     trigger,
     message,

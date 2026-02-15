@@ -6,7 +6,7 @@
  */
 
 import { useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
-import { keccak256, toBytes, Address } from 'viem';
+import { keccak256, toBytes, Address, isAddress } from 'viem';
 import { useState, useCallback } from 'react';
 
 // Contract addresses (will be updated after deployment)
@@ -503,11 +503,20 @@ export function useVaultInfo(vaultAddress: Address | undefined) {
  * Combined vault search hook with multiple methods
  */
 export function useVaultSearch() {
+  const registryAvailable = VAULT_REGISTRY_ADDRESS !== '0x0000000000000000000000000000000000000000';
   const [searchType, setSearchType] = useState<'recoveryId' | 'email' | 'username' | 'guardian'>('recoveryId');
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResult, setSearchResult] = useState<Address | null>(null);
   const [isSearching, setIsSearching] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const recovery = useSearchByRecoveryId(searchType === 'recoveryId' ? searchQuery : '');
+  const email = useSearchByEmail(searchType === 'email' ? searchQuery : '');
+  const username = useSearchByUsername(searchType === 'username' ? searchQuery : '');
+  const guardianAddress = searchType === 'guardian' && isAddress(searchQuery)
+    ? (searchQuery as Address)
+    : undefined;
+  const guardian = useSearchByGuardian(guardianAddress);
 
   const search = useCallback(async (type: typeof searchType, query: string) => {
     setIsSearching(true);
@@ -515,22 +524,67 @@ export function useVaultSearch() {
     setSearchResult(null);
 
     try {
-      // In production, this would call the appropriate contract read
-      // For now, simulate the search
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Mock: return null for not found, or mock address for demo
-      if (query.toLowerCase() === 'demo' || query.length > 5) {
-        setSearchResult('0x1234567890abcdef1234567890abcdef12345678' as Address);
-      } else {
-        setError('No vault found with that identifier');
+      if (!registryAvailable) {
+        setError('Vault registry not configured');
+        return;
+      }
+
+      if (!query.trim()) {
+        setError('Please enter a search value');
+        return;
+      }
+
+      if (type === 'recoveryId') {
+        const result = await recovery.refetch();
+        const vault = result.data as Address | undefined;
+        if (vault && vault !== '0x0000000000000000000000000000000000000000') {
+          setSearchResult(vault);
+        } else {
+          setError('No vault found with that recovery ID');
+        }
+      }
+
+      if (type === 'email') {
+        const result = await email.refetch();
+        const vault = result.data as Address | undefined;
+        if (vault && vault !== '0x0000000000000000000000000000000000000000') {
+          setSearchResult(vault);
+        } else {
+          setError('No vault found with that email');
+        }
+      }
+
+      if (type === 'username') {
+        const result = await username.refetch();
+        const vault = result.data as Address | undefined;
+        if (vault && vault !== '0x0000000000000000000000000000000000000000') {
+          setSearchResult(vault);
+        } else {
+          setError('No vault found with that username');
+        }
+      }
+
+      if (type === 'guardian') {
+        if (!guardianAddress) {
+          setError('Guardian address is invalid');
+          return;
+        }
+
+        const result = await guardian.refetch();
+        const vaults = result.data as Address[] | undefined;
+        const vault = vaults && vaults.length > 0 ? vaults[0] : undefined;
+        if (vault && vault !== '0x0000000000000000000000000000000000000000') {
+          setSearchResult(vault);
+        } else {
+          setError('No vaults found for this guardian');
+        }
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Search failed');
     } finally {
       setIsSearching(false);
     }
-  }, []);
+  }, [email, guardian, guardianAddress, recovery, registryAvailable, username]);
 
   return {
     searchType,

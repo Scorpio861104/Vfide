@@ -3,6 +3,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Story, isStoryExpired } from '@/lib/storiesSystem';
+import Image from 'next/image';
 
 interface StoryRingProps {
   userId: string;
@@ -58,7 +59,7 @@ export function StoryRing({
           className={`w-full h-full rounded-full overflow-hidden ${ringClasses} transition-all`}
         >
           {thumbnail ? (
-            <img src={thumbnail} alt={userName} className="w-full h-full object-cover" />
+            <Image src={thumbnail} alt={userName} width={56} height={56} className="w-full h-full object-cover" unoptimized />
           ) : latestStory?.type === 'text' ? (
             <div
               className="w-full h-full flex items-center justify-center text-xs font-bold text-white p-2 text-center"

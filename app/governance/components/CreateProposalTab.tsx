@@ -5,7 +5,6 @@ import { useAccount } from "wagmi"
 import { sanitizeString } from "@/lib/validation"
 
 interface CreateProposalTabProps {
-  DAO_DEPLOYED: boolean
   canPropose: boolean
   isCreating: boolean
   votingDelay?: bigint
@@ -16,7 +15,6 @@ interface CreateProposalTabProps {
 }
 
 export function CreateProposalTab({
-  DAO_DEPLOYED,
   canPropose,
   isCreating,
   votingDelay,
@@ -102,11 +100,6 @@ export function CreateProposalTab({
                   <h2 className="text-2xl font-bold text-zinc-100">✍️ Create New Proposal</h2>
                   <p className="text-zinc-400">Share your idea with the community.</p>
                 </div>
-                {!DAO_DEPLOYED && (
-                  <span className="px-3 py-1 text-xs rounded bg-amber-400/20 text-amber-400 border border-amber-400">
-                    Testnet Only
-                  </span>
-                )}
               </div>
 
               {!isConnected && (
@@ -115,11 +108,6 @@ export function CreateProposalTab({
                 </div>
               )}
 
-              {!DAO_DEPLOYED && (
-                <div className="bg-cyan-400/10 border border-cyan-400/50 rounded-lg p-3 mb-4 text-sm text-cyan-400">
-                  This is a test environment. Proposals here are for demonstration purposes.
-                </div>
-              )}
 
               {!canPropose && (
                 <div className="bg-zinc-900 border border-red-900 rounded-lg p-3 mb-4 text-sm text-amber-400">

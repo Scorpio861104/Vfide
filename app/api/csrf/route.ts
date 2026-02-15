@@ -16,14 +16,14 @@ export async function GET(request: NextRequest) {
     // Generate a new CSRF token
     const token = generateCSRFToken();
 
-    // Create response with token
+    // VULN-01 Fix: Don't leak token in JSON body — return via response header only
     const response = NextResponse.json(
-      {
-        token,
-        message: 'CSRF token generated successfully',
-      },
+      { success: true },
       { status: 200 }
     );
+
+    // Set token in response header for client to read
+    response.headers.set('X-CSRF-Token', token);
 
     // Set token in secure cookie
     response.cookies.set('csrf_token', token, {

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Footer } from '@/components/layout/Footer';
 import { useAccount, useConnect, useDisconnect } from 'wagmi';
@@ -95,27 +95,21 @@ export default function HardwareWalletPage() {
   const [connectionType, setConnectionType] = useState<'usb' | 'bluetooth'>('usb');
   const [firmwareVerified, setFirmwareVerified] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
-  const [_deviceConnected, setDeviceConnected] = useState(false);
-  const [_setupComplete, setSetupComplete] = useState(false);
+  const detectedWallet: WalletBrand | null = isConnected && connector
+    ? (() => {
+        const connectorName = (connector.name || '').toLowerCase();
+        if (connectorName.includes('ledger')) return 'ledger';
+        if (connectorName.includes('trezor')) return 'trezor';
+        return null;
+      })()
+    : null;
+  const activeWallet = selectedWallet ?? detectedWallet;
+  const _deviceConnected = isConnected && Boolean(activeWallet);
   
   // Preferences
   const [autoLock, setAutoLock] = useState(true);
   const [confirmOnDevice, setConfirmOnDevice] = useState(true);
   const [blindSigningDisabled, setBlindSigningDisabled] = useState(true);
-
-  // Check if hardware wallet is already connected
-  useEffect(() => {
-    if (isConnected && connector) {
-      const connectorName = (connector.name || '').toLowerCase();
-      if (connectorName.includes('ledger')) {
-        setSelectedWallet('ledger');
-        setDeviceConnected(true);
-      } else if (connectorName.includes('trezor')) {
-        setSelectedWallet('trezor');
-        setDeviceConnected(true);
-      }
-    }
-  }, [isConnected, connector]);
 
   const handleSelectWallet = (wallet: WalletBrand) => {
     setSelectedWallet(wallet);
@@ -125,7 +119,6 @@ export default function HardwareWalletPage() {
 
   const handleVerifyFirmware = async () => {
     setIsVerifying(true);
-    // Simulate firmware verification
     await new Promise(resolve => setTimeout(resolve, 2000));
     setFirmwareVerified(true);
     setIsVerifying(false);
@@ -133,11 +126,14 @@ export default function HardwareWalletPage() {
   };
 
   const handleConnect = async () => {
+    const walletForConnect = activeWallet;
+    if (!walletForConnect) return;
+
     // Find appropriate connector
     const hwConnectors = connectors.filter(c => {
       const name = c.name.toLowerCase();
-      if (selectedWallet === 'ledger') return name.includes('ledger');
-      if (selectedWallet === 'trezor') return name.includes('trezor');
+      if (walletForConnect === 'ledger') return name.includes('ledger');
+      if (walletForConnect === 'trezor') return name.includes('trezor');
       return name.includes('walletconnect'); // Fallback for others
     });
     
@@ -147,16 +143,10 @@ export default function HardwareWalletPage() {
         if (connector) {
           await connect({ connector });
         }
-        setDeviceConnected(true);
         setCurrentStep(3);
       } catch (error) {
         console.error('Connection failed:', error);
       }
-    } else {
-      // Simulate connection for demo
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      setDeviceConnected(true);
-      setCurrentStep(3);
     }
   };
 
@@ -169,7 +159,6 @@ export default function HardwareWalletPage() {
       blindSigningDisabled,
       setupDate: new Date().toISOString()
     }));
-    setSetupComplete(true);
     setCurrentStep(4);
   };
 
@@ -186,7 +175,7 @@ export default function HardwareWalletPage() {
                   onClick={() => handleSelectWallet(key)}
                   className={`p-6 rounded-xl border text-left transition-all ${
                     selectedWallet === key 
-                      ? 'border-jade-400 bg-jade-500/10' 
+                      ? 'border-emerald-400 bg-emerald-500/10' 
                       : 'border-zinc-700 bg-zinc-900/50 hover:border-zinc-500'
                   }`}
                   whileHover={{ scale: 1.02 }}
@@ -242,8 +231,8 @@ export default function HardwareWalletPage() {
 
             <div className="bg-zinc-900/50 border border-zinc-700 rounded-xl p-6 space-y-6">
               <div className="flex items-center gap-4">
-                <div className="p-4 bg-jade-500/10 rounded-full">
-                  <FileCheck className="text-jade-400" size={32} />
+                <div className="p-4 bg-emerald-500/10 rounded-full">
+                  <FileCheck className="text-emerald-400" size={32} />
                 </div>
                 <div>
                   <h3 className="text-lg font-semibold text-white">Firmware Verification</h3>
@@ -256,19 +245,19 @@ export default function HardwareWalletPage() {
                   <h4 className="font-medium text-white mb-2">Before connecting:</h4>
                   <ul className="space-y-2 text-sm text-zinc-300">
                     <li className="flex items-center gap-2">
-                      <CheckCircle2 size={16} className="text-jade-400" />
+                      <CheckCircle2 size={16} className="text-emerald-400" />
                       Download the official {WALLET_INFO[selectedWallet].name} app
                     </li>
                     <li className="flex items-center gap-2">
-                      <CheckCircle2 size={16} className="text-jade-400" />
+                      <CheckCircle2 size={16} className="text-emerald-400" />
                       Update firmware to the latest version
                     </li>
                     <li className="flex items-center gap-2">
-                      <CheckCircle2 size={16} className="text-jade-400" />
+                      <CheckCircle2 size={16} className="text-emerald-400" />
                       Verify device authenticity through official check
                     </li>
                     <li className="flex items-center gap-2">
-                      <CheckCircle2 size={16} className="text-jade-400" />
+                      <CheckCircle2 size={16} className="text-emerald-400" />
                       Install Ethereum app on your device
                     </li>
                   </ul>
@@ -281,7 +270,7 @@ export default function HardwareWalletPage() {
                   className="flex items-center justify-between p-4 bg-zinc-800/50 rounded-lg hover:bg-zinc-700/50 transition-colors"
                 >
                   <div className="flex items-center gap-3">
-                    <Download className="text-jade-400" size={20} />
+                    <Download className="text-emerald-400" size={20} />
                     <span className="text-white">Download {WALLET_INFO[selectedWallet].name} App</span>
                   </div>
                   <ExternalLink size={16} className="text-zinc-400" />
@@ -294,7 +283,7 @@ export default function HardwareWalletPage() {
                     type="checkbox" 
                     checked={firmwareVerified}
                     onChange={(e) => setFirmwareVerified(e.target.checked)}
-                    className="mt-1 w-5 h-5 rounded border-zinc-600 bg-zinc-800 text-jade-500 focus:ring-jade-500"
+                    className="mt-1 w-5 h-5 rounded border-zinc-600 bg-zinc-800 text-emerald-500 focus:ring-emerald-500"
                   />
                   <span className="text-sm text-zinc-300">
                     I confirm my device is genuine, has the latest firmware, and the Ethereum app is installed
@@ -305,7 +294,7 @@ export default function HardwareWalletPage() {
               <motion.button
                 onClick={handleVerifyFirmware}
                 disabled={!firmwareVerified || isVerifying}
-                className="w-full py-3 bg-gradient-to-r from-jade-500 to-teal-500 text-black font-semibold rounded-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                className="w-full py-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-black font-semibold rounded-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 whileHover={{ scale: firmwareVerified ? 1.02 : 1 }}
                 whileTap={{ scale: firmwareVerified ? 0.98 : 1 }}
               >
@@ -341,22 +330,22 @@ export default function HardwareWalletPage() {
                   onClick={() => setConnectionType('usb')}
                   className={`flex-1 p-4 rounded-xl border flex items-center justify-center gap-3 ${
                     connectionType === 'usb' 
-                      ? 'border-jade-400 bg-jade-500/10' 
+                      ? 'border-emerald-400 bg-emerald-500/10' 
                       : 'border-zinc-700 bg-zinc-900/50'
                   }`}
                 >
-                  <Usb size={24} className={connectionType === 'usb' ? 'text-jade-400' : 'text-zinc-400'} />
+                  <Usb size={24} className={connectionType === 'usb' ? 'text-emerald-400' : 'text-zinc-400'} />
                   <span className={connectionType === 'usb' ? 'text-white' : 'text-zinc-400'}>USB Connection</span>
                 </button>
                 <button
                   onClick={() => setConnectionType('bluetooth')}
                   className={`flex-1 p-4 rounded-xl border flex items-center justify-center gap-3 ${
                     connectionType === 'bluetooth' 
-                      ? 'border-jade-400 bg-jade-500/10' 
+                      ? 'border-emerald-400 bg-emerald-500/10' 
                       : 'border-zinc-700 bg-zinc-900/50'
                   }`}
                 >
-                  <Bluetooth size={24} className={connectionType === 'bluetooth' ? 'text-jade-400' : 'text-zinc-400'} />
+                  <Bluetooth size={24} className={connectionType === 'bluetooth' ? 'text-emerald-400' : 'text-zinc-400'} />
                   <span className={connectionType === 'bluetooth' ? 'text-white' : 'text-zinc-400'}>Bluetooth</span>
                 </button>
               </div>
@@ -366,15 +355,15 @@ export default function HardwareWalletPage() {
               <div className="text-center space-y-6">
                 <div className="relative mx-auto w-32 h-32">
                   <motion.div
-                    className="absolute inset-0 bg-jade-500/20 rounded-full"
+                    className="absolute inset-0 bg-emerald-500/20 rounded-full"
                     animate={{ scale: [1, 1.2, 1], opacity: [0.5, 0.2, 0.5] }}
                     transition={{ duration: 2, repeat: Infinity }}
                   />
                   <div className="absolute inset-0 flex items-center justify-center">
                     {connectionType === 'usb' ? (
-                      <Usb size={48} className="text-jade-400" />
+                      <Usb size={48} className="text-emerald-400" />
                     ) : (
-                      <Bluetooth size={48} className="text-jade-400" />
+                      <Bluetooth size={48} className="text-emerald-400" />
                     )}
                   </div>
                 </div>
@@ -403,7 +392,7 @@ export default function HardwareWalletPage() {
 
                 <motion.button
                   onClick={handleConnect}
-                  className="w-full py-4 bg-gradient-to-r from-jade-500 to-teal-500 text-black font-semibold rounded-lg flex items-center justify-center gap-2"
+                  className="w-full py-4 bg-gradient-to-r from-emerald-500 to-teal-500 text-black font-semibold rounded-lg flex items-center justify-center gap-2"
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                 >
@@ -427,8 +416,8 @@ export default function HardwareWalletPage() {
 
             <div className="bg-zinc-900/50 border border-zinc-700 rounded-xl p-6 space-y-6">
               <div className="flex items-center gap-4 pb-4 border-b border-zinc-700">
-                <div className="p-3 bg-jade-500/10 rounded-full">
-                  <CheckCircle2 className="text-jade-400" size={24} />
+                <div className="p-3 bg-emerald-500/10 rounded-full">
+                  <CheckCircle2 className="text-emerald-400" size={24} />
                 </div>
                 <div>
                   <h3 className="text-lg font-semibold text-white">Device Connected</h3>
@@ -440,7 +429,7 @@ export default function HardwareWalletPage() {
 
               <div className="space-y-4">
                 <h4 className="font-medium text-white flex items-center gap-2">
-                  <Settings size={18} className="text-jade-400" />
+                  <Settings size={18} className="text-emerald-400" />
                   Security Preferences
                 </h4>
 
@@ -456,7 +445,7 @@ export default function HardwareWalletPage() {
                     type="checkbox" 
                     checked={autoLock}
                     onChange={(e) => setAutoLock(e.target.checked)}
-                    className="w-5 h-5 rounded border-zinc-600 bg-zinc-800 text-jade-500 focus:ring-jade-500"
+                    className="w-5 h-5 rounded border-zinc-600 bg-zinc-800 text-emerald-500 focus:ring-emerald-500"
                   />
                 </label>
 
@@ -472,7 +461,7 @@ export default function HardwareWalletPage() {
                     type="checkbox" 
                     checked={confirmOnDevice}
                     onChange={(e) => setConfirmOnDevice(e.target.checked)}
-                    className="w-5 h-5 rounded border-zinc-600 bg-zinc-800 text-jade-500 focus:ring-jade-500"
+                    className="w-5 h-5 rounded border-zinc-600 bg-zinc-800 text-emerald-500 focus:ring-emerald-500"
                   />
                 </label>
 
@@ -488,16 +477,16 @@ export default function HardwareWalletPage() {
                     type="checkbox" 
                     checked={blindSigningDisabled}
                     onChange={(e) => setBlindSigningDisabled(e.target.checked)}
-                    className="w-5 h-5 rounded border-zinc-600 bg-zinc-800 text-jade-500 focus:ring-jade-500"
+                    className="w-5 h-5 rounded border-zinc-600 bg-zinc-800 text-emerald-500 focus:ring-emerald-500"
                   />
                 </label>
               </div>
 
               {blindSigningDisabled && (
-                <div className="p-4 bg-jade-500/10 border border-jade-500/30 rounded-lg">
+                <div className="p-4 bg-emerald-500/10 border border-emerald-500/30 rounded-lg">
                   <div className="flex items-start gap-3">
-                    <Info className="text-jade-400 flex-shrink-0 mt-0.5" size={18} />
-                    <p className="text-sm text-jade-200">
+                    <Info className="text-emerald-400 flex-shrink-0 mt-0.5" size={18} />
+                    <p className="text-sm text-emerald-200">
                       Blind signing disabled is the most secure option. You&apos;ll always see exactly what you&apos;re signing on your device screen.
                     </p>
                   </div>
@@ -506,7 +495,7 @@ export default function HardwareWalletPage() {
 
               <motion.button
                 onClick={handleSavePreferences}
-                className="w-full py-3 bg-gradient-to-r from-jade-500 to-teal-500 text-black font-semibold rounded-lg flex items-center justify-center gap-2"
+                className="w-full py-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-black font-semibold rounded-lg flex items-center justify-center gap-2"
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
               >
@@ -520,13 +509,13 @@ export default function HardwareWalletPage() {
       case 4:
         return (
           <div className="space-y-6">
-            <div className="bg-gradient-to-br from-jade-500/20 to-teal-500/20 border border-jade-500/30 rounded-xl p-8 text-center">
+            <div className="bg-gradient-to-br from-emerald-500/20 to-teal-500/20 border border-emerald-500/30 rounded-xl p-8 text-center">
               <motion.div
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
-                className="mx-auto w-20 h-20 bg-jade-500/20 rounded-full flex items-center justify-center mb-6"
+                className="mx-auto w-20 h-20 bg-emerald-500/20 rounded-full flex items-center justify-center mb-6"
               >
-                <CheckCircle2 className="text-jade-400" size={48} />
+                <CheckCircle2 className="text-emerald-400" size={48} />
               </motion.div>
               
               <h2 className="text-2xl font-bold text-white mb-2">Setup Complete!</h2>
@@ -536,15 +525,15 @@ export default function HardwareWalletPage() {
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
                 <div className="p-4 bg-zinc-900/50 rounded-lg">
-                  <Lock className="text-jade-400 mx-auto mb-2" size={24} />
+                  <Lock className="text-emerald-400 mx-auto mb-2" size={24} />
                   <p className="text-sm text-zinc-300">Auto-lock: {autoLock ? 'Enabled' : 'Disabled'}</p>
                 </div>
                 <div className="p-4 bg-zinc-900/50 rounded-lg">
-                  <Fingerprint className="text-jade-400 mx-auto mb-2" size={24} />
+                  <Fingerprint className="text-emerald-400 mx-auto mb-2" size={24} />
                   <p className="text-sm text-zinc-300">Device Confirm: {confirmOnDevice ? 'Required' : 'Optional'}</p>
                 </div>
                 <div className="p-4 bg-zinc-900/50 rounded-lg">
-                  <Shield className="text-jade-400 mx-auto mb-2" size={24} />
+                  <Shield className="text-emerald-400 mx-auto mb-2" size={24} />
                   <p className="text-sm text-zinc-300">Blind Sign: {blindSigningDisabled ? 'Disabled' : 'Enabled'}</p>
                 </div>
               </div>
@@ -552,7 +541,7 @@ export default function HardwareWalletPage() {
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <a 
                   href="/dashboard"
-                  className="px-6 py-3 bg-gradient-to-r from-jade-500 to-teal-500 text-black font-semibold rounded-lg flex items-center justify-center gap-2"
+                  className="px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-black font-semibold rounded-lg flex items-center justify-center gap-2"
                 >
                   Go to Dashboard
                   <ArrowRight size={18} />
@@ -569,24 +558,24 @@ export default function HardwareWalletPage() {
 
             <div className="bg-zinc-900/50 border border-zinc-700 rounded-xl p-6">
               <h3 className="font-semibold text-white mb-4 flex items-center gap-2">
-                <HelpCircle size={18} className="text-jade-400" />
+                <HelpCircle size={18} className="text-emerald-400" />
                 Best Practices
               </h3>
               <ul className="space-y-3 text-sm text-zinc-300">
                 <li className="flex items-start gap-2">
-                  <CheckCircle2 size={16} className="text-jade-400 mt-0.5 flex-shrink-0" />
+                  <CheckCircle2 size={16} className="text-emerald-400 mt-0.5 flex-shrink-0" />
                   Always verify transaction details on your device screen before signing
                 </li>
                 <li className="flex items-start gap-2">
-                  <CheckCircle2 size={16} className="text-jade-400 mt-0.5 flex-shrink-0" />
+                  <CheckCircle2 size={16} className="text-emerald-400 mt-0.5 flex-shrink-0" />
                   Keep your recovery phrase stored securely offline, never digitally
                 </li>
                 <li className="flex items-start gap-2">
-                  <CheckCircle2 size={16} className="text-jade-400 mt-0.5 flex-shrink-0" />
+                  <CheckCircle2 size={16} className="text-emerald-400 mt-0.5 flex-shrink-0" />
                   Regularly update your device firmware through official channels
                 </li>
                 <li className="flex items-start gap-2">
-                  <CheckCircle2 size={16} className="text-jade-400 mt-0.5 flex-shrink-0" />
+                  <CheckCircle2 size={16} className="text-emerald-400 mt-0.5 flex-shrink-0" />
                   Be cautious of phishing attempts asking you to enter your seed phrase
                 </li>
               </ul>
@@ -604,7 +593,7 @@ export default function HardwareWalletPage() {
       <div className="max-w-4xl mx-auto px-4 py-12">
         {/* Header */}
         <div className="text-center mb-12">
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-jade-500/10 rounded-full text-jade-400 text-sm font-medium mb-4">
+          <div className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-500/10 rounded-full text-emerald-400 text-sm font-medium mb-4">
             <Shield size={16} />
             Maximum Security Setup
           </div>
@@ -619,12 +608,12 @@ export default function HardwareWalletPage() {
         <div className="flex items-center justify-center mb-12">
           {SETUP_STEPS.map((step, index) => (
             <div key={step.id} className="flex items-center">
-              <div className={`flex flex-col items-center ${index <= currentStep ? 'text-jade-400' : 'text-zinc-600'}`}>
+              <div className={`flex flex-col items-center ${index <= currentStep ? 'text-emerald-400' : 'text-zinc-600'}`}>
                 <div className={`w-10 h-10 rounded-full flex items-center justify-center border-2 ${
                   index < currentStep 
-                    ? 'bg-jade-500 border-jade-500 text-black' 
+                    ? 'bg-emerald-500 border-emerald-500 text-black' 
                     : index === currentStep 
-                      ? 'border-jade-500 text-jade-400' 
+                      ? 'border-emerald-500 text-emerald-400' 
                       : 'border-zinc-700 text-zinc-600'
                 }`}>
                   {index < currentStep ? <CheckCircle2 size={20} /> : index + 1}
@@ -633,7 +622,7 @@ export default function HardwareWalletPage() {
               </div>
               {index < SETUP_STEPS.length - 1 && (
                 <div className={`w-12 sm:w-24 h-0.5 mx-2 ${
-                  index < currentStep ? 'bg-jade-500' : 'bg-zinc-700'
+                  index < currentStep ? 'bg-emerald-500' : 'bg-zinc-700'
                 }`} />
               )}
             </div>

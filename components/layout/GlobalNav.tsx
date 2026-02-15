@@ -86,14 +86,11 @@ const moreLinks = [
       { href: "/escrow", label: "Escrow" },
       { href: "/treasury", label: "Treasury" },
       { href: "/token-launch", label: "Token Launch", accent: true },
-      { href: "/streaming", label: "Streaming", accent: true },
-      { href: "/cross-chain", label: "Cross-Chain", accent: true },
     ]
   },
   {
     category: "Privacy & Security",
     items: [
-      { href: "/stealth", label: "Private Pay", accent: true },
       { href: "/guardians", label: "Guardians" },
       { href: "/multisig", label: "Multi-Sig" },
       { href: "/time-locks", label: "Time Locks" },
@@ -127,7 +124,8 @@ export function GlobalNav() {
       <div className="container mx-auto px-3 sm:px-4 py-3">
         <div className="flex items-center justify-between gap-2">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2 sm:gap-3 group shrink-0">\n            <motion.svg 
+          <Link href="/" className="flex items-center gap-2 sm:gap-3 group shrink-0">
+            <motion.svg 
               width="40" 
               height="40" 
               viewBox="0 0 40 40" 
@@ -168,7 +166,7 @@ export function GlobalNav() {
                 </linearGradient>
               </defs>
             </motion.svg>
-            <span className="text-2xl font-(family-name:--font-display) font-bold text-zinc-50 group-hover:text-cyan-400 transition-colors">
+            <span className="text-2xl font-[family-name:var(--font-display)] font-bold text-zinc-50 group-hover:text-cyan-400 transition-colors">
               VFIDE
             </span>
           </Link>

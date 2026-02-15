@@ -10,6 +10,8 @@ error TL_TooEarly();
 
 contract DAOTimelock {
     event AdminSet(address admin);
+    event AdminChangeProposed(address indexed currentAdmin, address indexed pendingAdmin, uint64 confirmableAt);
+    event AdminChangeCancelled(address indexed pendingAdmin);
     event DelaySet(uint64 delay);
     event LedgerSet(address ledger);
     event PanicGuardSet(address panicGuard);
@@ -23,6 +25,11 @@ contract DAOTimelock {
     uint64  public constant EXPIRY_WINDOW = 7 days; // H-15: Transactions expire 7 days after ETA
     IProofLedger public ledger;      // optional
     IPanicGuard  public panicGuard;  // optional
+
+    // 12d Fix: Two-step admin change with delay
+    address public pendingAdmin;
+    uint64 public adminChangeTime;
+    uint64 public constant ADMIN_CHANGE_DELAY = 48 hours;
 
     struct Op { address target; uint256 value; bytes data; uint64 eta; bool done; }
     mapping(bytes32 => Op) public queue;
@@ -43,7 +50,34 @@ contract DAOTimelock {
     uint64 public constant MIN_DELAY = 12 hours;
     uint64 public constant MAX_DELAY = 30 days;
     
-    function setAdmin(address _admin) external onlyAdmin { require(_admin!=address(0),"admin=0"); admin=_admin; emit AdminSet(_admin); _log("tl_admin_set"); }
+    // 12d Fix: Two-step admin change with timelock delay
+    function proposeAdmin(address _admin) external onlyAdmin {
+        require(_admin != address(0), "admin=0");
+        require(_admin != admin, "TL: already admin");
+        pendingAdmin = _admin;
+        adminChangeTime = uint64(block.timestamp) + ADMIN_CHANGE_DELAY;
+        emit AdminChangeProposed(admin, _admin, adminChangeTime);
+        _log("tl_admin_proposed");
+    }
+
+    function confirmAdmin() external onlyAdmin {
+        require(pendingAdmin != address(0), "TL: no pending admin");
+        require(block.timestamp >= adminChangeTime, "TL: admin change too early");
+        address newAdmin = pendingAdmin;
+        pendingAdmin = address(0);
+        adminChangeTime = 0;
+        admin = newAdmin;
+        emit AdminSet(newAdmin);
+        _log("tl_admin_set");
+    }
+
+    function cancelAdminChange() external onlyAdmin {
+        require(pendingAdmin != address(0), "TL: no pending admin");
+        emit AdminChangeCancelled(pendingAdmin);
+        pendingAdmin = address(0);
+        adminChangeTime = 0;
+        _log("tl_admin_change_cancelled");
+    }
     function setDelay(uint64 _delay) external onlyAdmin { 
         // C-1 FIX: Enforce minimum and maximum delay to prevent timelock bypass
         require(_delay >= MIN_DELAY, "TL: delay below minimum");
@@ -138,7 +172,47 @@ contract DAOTimelock {
     }
     
     /**
-     * @notice Get all queued transactions
+     * @notice Get queued transactions with pagination to prevent gas limit issues
+     * @param offset Start index
+     * @param limit Maximum entries to return (0 = all, capped at 200)
+     */
+    function getQueuedTransactions(uint256 offset, uint256 limit) external view returns (
+        bytes32[] memory ids,
+        address[] memory targets,
+        uint256[] memory values,
+        uint64[] memory etas,
+        bool[] memory done,
+        bool[] memory expired
+    ) {
+        uint256 total = queuedIds.length;
+        if (offset >= total) {
+            return (ids, targets, values, etas, done, expired);
+        }
+        uint256 remaining = total - offset;
+        uint256 count = limit == 0 ? remaining : (limit > remaining ? remaining : limit);
+        if (count > 200) count = 200; // hard cap per call
+
+        ids = new bytes32[](count);
+        targets = new address[](count);
+        values = new uint256[](count);
+        etas = new uint64[](count);
+        done = new bool[](count);
+        expired = new bool[](count);
+
+        for (uint256 i = 0; i < count; i++) {
+            bytes32 id = queuedIds[offset + i];
+            Op storage op = queue[id];
+            ids[i] = id;
+            targets[i] = op.target;
+            values[i] = op.value;
+            etas[i] = op.eta;
+            done[i] = op.done;
+            expired[i] = op.eta > 0 && block.timestamp > op.eta + EXPIRY_WINDOW;
+        }
+    }
+
+    /**
+     * @notice Get queued transactions (legacy: returns all — use paginated version for large queues)
      */
     function getQueuedTransactions() external view returns (
         bytes32[] memory ids,
@@ -149,13 +223,14 @@ contract DAOTimelock {
         bool[] memory expired
     ) {
         uint256 len = queuedIds.length;
+        require(len <= 500, "TL: queue too large, use paginated version");
         ids = new bytes32[](len);
         targets = new address[](len);
         values = new uint256[](len);
         etas = new uint64[](len);
         done = new bool[](len);
         expired = new bool[](len);
-        
+
         for (uint256 i = 0; i < len; i++) {
             bytes32 id = queuedIds[i];
             Op storage op = queue[id];
@@ -165,6 +240,43 @@ contract DAOTimelock {
             etas[i] = op.eta;
             done[i] = op.done;
             expired[i] = op.eta > 0 && block.timestamp > op.eta + EXPIRY_WINDOW;
+        }
+    }
+
+    /**
+     * @notice Remove completed/expired entries from queuedIds to reclaim storage
+     * @dev Anyone can call this — it only removes entries that are done or expired
+     */
+    function cleanupQueue(uint256 maxIterations) external {
+        uint256 len = queuedIds.length;
+        uint256 iterations = maxIterations == 0 ? len : (maxIterations > len ? len : maxIterations);
+        uint256 writeIdx = 0;
+
+        for (uint256 readIdx = 0; readIdx < len && readIdx < iterations; readIdx++) {
+            bytes32 id = queuedIds[readIdx];
+            Op storage op = queue[id];
+            bool isExpired = op.eta > 0 && block.timestamp > op.eta + EXPIRY_WINDOW;
+
+            if (!op.done && !isExpired) {
+                if (writeIdx != readIdx) {
+                    queuedIds[writeIdx] = queuedIds[readIdx];
+                }
+                writeIdx++;
+            }
+        }
+
+        // Copy remaining unprocessed entries
+        for (uint256 i = iterations; i < len; i++) {
+            if (writeIdx != i) {
+                queuedIds[writeIdx] = queuedIds[i];
+            }
+            writeIdx++;
+        }
+
+        // Trim the array
+        uint256 toRemove = len - writeIdx;
+        for (uint256 i = 0; i < toRemove; i++) {
+            queuedIds.pop();
         }
     }
     

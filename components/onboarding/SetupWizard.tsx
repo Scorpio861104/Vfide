@@ -265,7 +265,7 @@ export function SetupWizard({ onComplete }: SetupWizardProps) {
                       </div>
                       <h3 className="text-2xl font-bold text-white mb-2">Connect to Supported Network</h3>
                       <p className="text-zinc-400">
-                        Switch to a supported VFIDE network (Base or Base Sepolia)
+                        Switch to Base Sepolia for the full VFIDE experience. It mirrors mainnet behavior with test ETH.
                       </p>
                     </div>
 

@@ -11,10 +11,12 @@ import {
   KeyRound, UserCheck, Zap
 } from "lucide-react";
 import Link from "next/link";
-import { useAccount, useReadContract } from "wagmi";
-import { isAddress } from "viem";
+import { useAccount, useReadContract, useWaitForTransactionReceipt, useWriteContract } from "wagmi";
+import { isAddress, keccak256, toBytes } from "viem";
+import { safeBigIntToNumber } from "@/lib/validation";
 import { CONTRACT_ADDRESSES } from "@/lib/contracts";
 import { VaultHubABI, SeerABI, VFIDEBadgeNFTABI } from "@/lib/abis";
+import { useSearchByEmail, useSearchByGuardian, useSearchByRecoveryId, useSearchByUsername, useVaultInfo } from "@/hooks/useVaultRegistry";
 
 // Animation variants
 const containerVariants = {
@@ -26,6 +28,24 @@ const itemVariants = {
   hidden: { opacity: 0, y: 30 },
   show: { opacity: 1, y: 0, transition: { type: "spring" as const, stiffness: 100, damping: 15 } }
 };
+
+const VAULT_RECOVERY_CLAIM_ADDRESS = (process.env.NEXT_PUBLIC_VAULT_RECOVERY_CLAIM_ADDRESS || '0x0000000000000000000000000000000000000000') as `0x${string}`;
+const IS_RECOVERY_CLAIM_DEPLOYED = VAULT_RECOVERY_CLAIM_ADDRESS !== '0x0000000000000000000000000000000000000000';
+
+const VAULT_RECOVERY_CLAIM_ABI = [
+  {
+    name: 'initiateClaim',
+    type: 'function',
+    stateMutability: 'nonpayable',
+    inputs: [
+      { name: 'vault', type: 'address' },
+      { name: 'recoveryId', type: 'string' },
+      { name: 'evidenceHash', type: 'bytes32' },
+      { name: 'reason', type: 'string' },
+    ],
+    outputs: [{ name: 'claimId', type: 'uint256' }],
+  },
+] as const;
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // AURORA BACKGROUND WITH PARTICLES
@@ -53,7 +73,7 @@ function AuroraBackground() {
           scale: [1, 0.8, 1.1, 1]
         }}
         transition={{ duration: 25, repeat: Infinity, ease: "easeInOut", delay: 2 }}
-        className="absolute bottom-0 right-1/4 w-175 h-175 bg-gradient-to-br from-purple-500/15 via-pink-500/10 to-transparent rounded-full blur-[130px]"
+        className="absolute bottom-0 right-1/4 w-[43.75rem] h-[43.75rem] bg-gradient-to-br from-purple-500/15 via-pink-500/10 to-transparent rounded-full blur-[130px]"
       />
       
       {/* Accent glow */}
@@ -63,7 +83,7 @@ function AuroraBackground() {
           scale: [1, 1.3, 1]
         }}
         transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-150 h-150 bg-gradient-to-br from-emerald-500/10 to-transparent rounded-full blur-[100px]"
+        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[37.5rem] h-[37.5rem] bg-gradient-to-br from-emerald-500/10 to-transparent rounded-full blur-[100px]"
       />
       
       {/* Grid overlay */}
@@ -90,9 +110,9 @@ function FloatingParticles() {
     const timer = setTimeout(() => {
       setParticles([...Array(15)].map((_, i) => ({
         id: i,
-        x: Math.random() * 100,
-        duration: Math.random() * 15 + 15,
-        delay: Math.random() * 10
+        x: ((i * 37 + 13) % 100),
+        duration: 15 + (i % 5) * 3,
+        delay: (i % 10)
       })));
     }, 0);
     return () => clearTimeout(timer);
@@ -530,8 +550,62 @@ function ClaimFlowModal({
   const [step, setStep] = useState(1);
   const [recoveryId, setRecoveryId] = useState("");
   const [reason, setReason] = useState("");
+  const [claimError, setClaimError] = useState("");
   const { address: newWalletAddress } = useAccount();
+  const { writeContract, data: claimHash, isPending: isClaimPending } = useWriteContract();
+  const { isSuccess: isClaimSuccess } = useWaitForTransactionReceipt({ hash: claimHash });
   
+  const handleClaim = () => {
+    if (!IS_RECOVERY_CLAIM_DEPLOYED) {
+      setClaimError('Recovery contract not deployed. Please try again later.');
+      return;
+    }
+    if (!vault) {
+      setClaimError('No vault selected for recovery.');
+      return;
+    }
+    if (!newWalletAddress) {
+      setClaimError('Connect your new wallet to continue.');
+      return;
+    }
+
+    setClaimError('');
+    const evidenceHash = keccak256(toBytes(`${vault.address}:${recoveryId}:${reason}`));
+
+    writeContract({
+      address: VAULT_RECOVERY_CLAIM_ADDRESS,
+      abi: VAULT_RECOVERY_CLAIM_ABI,
+      functionName: 'initiateClaim',
+      args: [vault.address as `0x${string}`, recoveryId, evidenceHash, reason || 'Recovery request'],
+    });
+  };
+
+  const handleNext = () => {
+    if (step === 1) {
+      setStep(2);
+      return;
+    }
+    if (step === 2) {
+      if (!recoveryId) {
+        setClaimError('Recovery ID is required.');
+        return;
+      }
+      handleClaim();
+    }
+  };
+
+  useEffect(() => {
+    if (isClaimSuccess && step === 2) {
+      const timer = setTimeout(() => {
+        setStep(3);
+      }, 0);
+
+      return () => clearTimeout(timer);
+    }
+
+    return undefined;
+  }, [isClaimSuccess, step]);
+
   if (!vault) return null;
   
   return (
@@ -688,6 +762,12 @@ function ClaimFlowModal({
                     className="w-full px-5 py-4 rounded-xl bg-white/5 border-2 border-white/10 text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500/50 transition-colors resize-none"
                   />
                 </div>
+
+                {claimError && (
+                  <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-sm">
+                    {claimError}
+                  </div>
+                )}
               </motion.div>
             )}
             
@@ -784,12 +864,12 @@ function ClaimFlowModal({
             <motion.button
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
-              onClick={() => setStep(step + 1)}
-              disabled={step === 2 && !recoveryId}
+              onClick={handleNext}
+              disabled={(step === 2 && (!recoveryId || isClaimPending))}
               className="px-8 py-3 bg-linear-to-r from-cyan-500 to-blue-500 rounded-xl font-bold text-white flex items-center gap-2 disabled:opacity-50 shadow-lg shadow-cyan-500/30 relative overflow-hidden group"
             >
               <span className="relative z-10 flex items-center gap-2">
-                Continue
+                {step === 2 && isClaimPending ? 'Submitting...' : 'Continue'}
                 <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
               </span>
               <motion.div
@@ -815,6 +895,7 @@ function ClaimFlowModal({
 
 export default function VaultRecoveryPage() {
   const { address } = useAccount();
+  const registryEnabled = (process.env.NEXT_PUBLIC_VAULT_REGISTRY_ADDRESS || '0x0000000000000000000000000000000000000000') !== '0x0000000000000000000000000000000000000000';
   const [searchMethod, setSearchMethod] = useState<"recoveryId" | "email" | "username" | "guardian">("recoveryId");
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearching, setIsSearching] = useState(false);
@@ -830,9 +911,25 @@ export default function VaultRecoveryPage() {
   } | null>(null);
   const [showClaimModal, setShowClaimModal] = useState(false);
   const [error, setError] = useState("");
+
+  const { refetch: refetchRecoveryId } = useSearchByRecoveryId(searchQuery);
+  const { refetch: refetchEmail } = useSearchByEmail(searchQuery);
+  const { refetch: refetchUsername } = useSearchByUsername(searchQuery);
+  const { refetch: refetchGuardian } = useSearchByGuardian(isAddress(searchQuery) ? (searchQuery as `0x${string}`) : undefined);
+  const { vaultInfo: registryVaultInfo } = useVaultInfo(registryEnabled ? vaultToLookup : undefined);
+
+  const fetchOffchainVault = async (method: 'recoveryId' | 'email' | 'username', value: string) => {
+    const params = new URLSearchParams({ method, value });
+    const response = await fetch(`/api/vault/recovery-lookup?${params.toString()}`);
+    const data = await response.json();
+    if (response.ok && data?.success && data?.vault) {
+      return data.vault as `0x${string}`;
+    }
+    return undefined;
+  };
   
   // Contract reads for vault lookup
-  const { data: _vaultInfo, refetch: refetchVaultInfo } = useReadContract({
+  const { data: _vaultInfo } = useReadContract({
     address: CONTRACT_ADDRESSES.VaultHub,
     abi: VaultHubABI,
     functionName: 'getVaultInfo',
@@ -840,7 +937,7 @@ export default function VaultRecoveryPage() {
     query: { enabled: !!vaultToLookup }
   });
   
-  const { data: _proofScore, refetch: refetchProofScore } = useReadContract({
+  const { data: _proofScore } = useReadContract({
     address: CONTRACT_ADDRESSES.Seer,
     abi: SeerABI,
     functionName: 'proofScore',
@@ -848,13 +945,73 @@ export default function VaultRecoveryPage() {
     query: { enabled: !!vaultToLookup }
   });
   
-  const { data: _badgeBalance, refetch: refetchBadges } = useReadContract({
+  const { data: _badgeBalance } = useReadContract({
     address: CONTRACT_ADDRESSES.BadgeNFT,
     abi: VFIDEBadgeNFTABI,
     functionName: 'balanceOf',
     args: vaultToLookup ? [vaultToLookup] : undefined,
     query: { enabled: !!vaultToLookup }
   });
+
+  useEffect(() => {
+    if (!vaultToLookup) return;
+
+    const timers: ReturnType<typeof setTimeout>[] = [];
+    const defer = (callback: () => void) => {
+      const timer = setTimeout(callback, 0);
+      timers.push(timer);
+    };
+
+    if (registryEnabled && registryVaultInfo) {
+      const createdDate = new Date(safeBigIntToNumber(registryVaultInfo.createdAt, 0) * 1000);
+      const daysSince = Math.floor((Date.now() - createdDate.getTime()) / (1000 * 60 * 60 * 24));
+      const lastActive = daysSince === 0 ? "Today" : daysSince === 1 ? "Yesterday" : `${daysSince} days ago`;
+
+      const nextSearchResult = {
+        address: registryVaultInfo.vault,
+        originalOwner: registryVaultInfo.originalOwner,
+        proofScore: safeBigIntToNumber(registryVaultInfo.proofScore, 0),
+        badgeCount: safeBigIntToNumber(registryVaultInfo.badgeCount, 0),
+        hasGuardians: registryVaultInfo.hasGuardians,
+        lastActive,
+        isRecoverable: registryVaultInfo.isRecoverable,
+      };
+
+      defer(() => setSearchResult(nextSearchResult));
+      defer(() => setIsSearching(false));
+    } else if (_vaultInfo) {
+      const info = _vaultInfo as [string, bigint, boolean, boolean] | undefined;
+      if (!info || !info[3]) {
+        defer(() => setError("No vault found at this address. Please check and try again."));
+        defer(() => setIsSearching(false));
+      } else {
+        const [owner, createdAt, isLocked] = info;
+        const score = _proofScore as bigint | undefined;
+        const badges = _badgeBalance as bigint | undefined;
+
+        const createdDate = new Date(safeBigIntToNumber(createdAt, 0) * 1000);
+        const daysSince = Math.floor((Date.now() - createdDate.getTime()) / (1000 * 60 * 60 * 24));
+        const lastActive = daysSince === 0 ? "Today" : daysSince === 1 ? "Yesterday" : `${daysSince} days ago`;
+
+        const nextSearchResult = {
+          address: vaultToLookup,
+          originalOwner: owner,
+          proofScore: score ? safeBigIntToNumber(score, 0) / 100 : 0,
+          badgeCount: badges ? safeBigIntToNumber(badges, 0) : 0,
+          hasGuardians: isLocked,
+          lastActive,
+          isRecoverable: !isLocked && owner !== address
+        };
+
+        defer(() => setSearchResult(nextSearchResult));
+        defer(() => setIsSearching(false));
+      }
+    }
+
+    return () => {
+      timers.forEach((timer) => clearTimeout(timer));
+    };
+  }, [vaultToLookup, registryEnabled, registryVaultInfo, _vaultInfo, _proofScore, _badgeBalance, address]);
 
   const handleSearch = async () => {
     if (!searchQuery.trim()) {
@@ -867,56 +1024,78 @@ export default function VaultRecoveryPage() {
     setSearchResult(null);
     
     try {
-      // For recoveryId method, the query should be a vault address
       if (searchMethod === "recoveryId") {
-        // Check if it's a valid address format
-        if (!isAddress(searchQuery)) {
-          setError("Please enter a valid vault address (0x...)");
-          setIsSearching(false);
-          return;
+        if (registryEnabled) {
+          const result = await refetchRecoveryId();
+          const vault = result.data as `0x${string}` | undefined;
+          if (!vault || vault === '0x0000000000000000000000000000000000000000') {
+            setError('No vault found for this recovery ID.');
+            setIsSearching(false);
+            return;
+          }
+          setVaultToLookup(vault);
+        } else {
+          const vault = await fetchOffchainVault('recoveryId', searchQuery);
+          if (vault) {
+            setVaultToLookup(vault);
+            return;
+          }
+
+          if (!isAddress(searchQuery)) {
+            setError("Please enter a valid vault address (0x...) or configure recovery lookup.");
+            setIsSearching(false);
+            return;
+          }
+          setVaultToLookup(searchQuery as `0x${string}`);
         }
-        
-        // Set the vault to lookup and trigger contract reads
-        setVaultToLookup(searchQuery as `0x${string}`);
-        
-        // Wait for refetch to complete
-        const [vaultResult, scoreResult, badgeResult] = await Promise.all([
-          refetchVaultInfo(),
-          refetchProofScore(),
-          refetchBadges()
-        ]);
-        
-        const info = vaultResult.data as [string, bigint, boolean, boolean] | undefined;
-        
-        if (!info || !info[3]) { // info[3] is 'exists' boolean
-          setError("No vault found at this address. Please check and try again.");
-          setIsSearching(false);
-          return;
-        }
-        
-        const [owner, createdAt, isLocked] = info;
-        const score = scoreResult.data as bigint | undefined;
-        const badges = badgeResult.data as bigint | undefined;
-        
-        // Calculate last active (using createdAt for now, could add activity tracking later)
-        const createdDate = new Date(Number(createdAt) * 1000);
-        const daysSince = Math.floor((Date.now() - createdDate.getTime()) / (1000 * 60 * 60 * 24));
-        const lastActive = daysSince === 0 ? "Today" : daysSince === 1 ? "Yesterday" : `${daysSince} days ago`;
-        
-        setSearchResult({
-          address: searchQuery,
-          originalOwner: owner,
-          proofScore: score ? Number(score) / 100 : 0, // Convert from basis points
-          badgeCount: badges ? Number(badges) : 0,
-          hasGuardians: isLocked, // If locked, likely has guardians
-          lastActive,
-          isRecoverable: !isLocked && owner !== address // Can recover if not locked and not current user
-        });
       } else {
-        // For email/username/guardian searches, would need an off-chain indexer
-        // These are stored in a backend database, not on-chain
-        // TODO: Implement backend API for off-chain identity lookup
-        setError(`${searchMethod} search requires backend integration. Currently only vault address (recoveryId) search is supported on-chain.`);
+        if (!registryEnabled) {
+          if (searchMethod === 'guardian') {
+            setError('Guardian lookup requires the on-chain registry.');
+            setIsSearching(false);
+            return;
+          }
+
+          const vault = await fetchOffchainVault(searchMethod, searchQuery);
+          if (!vault) {
+            setError('No vault found for this identifier.');
+            setIsSearching(false);
+            return;
+          }
+          setVaultToLookup(vault);
+          return;
+        }
+
+        if (searchMethod === 'email') {
+          const result = await refetchEmail();
+          const vault = result.data as `0x${string}` | undefined;
+          if (!vault || vault === '0x0000000000000000000000000000000000000000') {
+            setError('No vault found for this email.');
+            setIsSearching(false);
+            return;
+          }
+          setVaultToLookup(vault);
+        } else if (searchMethod === 'username') {
+          const result = await refetchUsername();
+          const vault = result.data as `0x${string}` | undefined;
+          if (!vault || vault === '0x0000000000000000000000000000000000000000') {
+            setError('No vault found for this username.');
+            setIsSearching(false);
+            return;
+          }
+          setVaultToLookup(vault);
+        } else if (searchMethod === 'guardian') {
+          const result = await refetchGuardian();
+          const vaults = result.data as `0x${string}`[] | undefined;
+          const vault = vaults && vaults.length > 0 ? vaults[0] : undefined;
+          if (!vault || vault === '0x0000000000000000000000000000000000000000') {
+            setError('No vaults found for this guardian.');
+            setIsSearching(false);
+            return;
+          }
+          setVaultToLookup(vault);
+        }
+
       }
     } catch (_err) {
       setError("Failed to fetch vault information. Please try again.");
@@ -1019,30 +1198,34 @@ export default function VaultRecoveryPage() {
                   gradient="cyan"
                   badge="Best"
                 />
-                <SearchMethodButton
-                  icon={Mail}
-                  title="Email"
-                  description="Linked email address"
-                  active={searchMethod === "email"}
-                  onClick={() => setSearchMethod("email")}
-                  gradient="purple"
-                />
-                <SearchMethodButton
-                  icon={User}
-                  title="Username"
-                  description="Your VFide username"
-                  active={searchMethod === "username"}
-                  onClick={() => setSearchMethod("username")}
-                  gradient="gold"
-                />
-                <SearchMethodButton
-                  icon={Users}
-                  title="Guardian"
-                  description="Through your guardian"
-                  active={searchMethod === "guardian"}
-                  onClick={() => setSearchMethod("guardian")}
-                  gradient="green"
-                />
+                {registryEnabled && (
+                  <>
+                    <SearchMethodButton
+                      icon={Mail}
+                      title="Email"
+                      description="Linked email address"
+                      active={searchMethod === "email"}
+                      onClick={() => setSearchMethod("email")}
+                      gradient="purple"
+                    />
+                    <SearchMethodButton
+                      icon={User}
+                      title="Username"
+                      description="Your VFide username"
+                      active={searchMethod === "username"}
+                      onClick={() => setSearchMethod("username")}
+                      gradient="gold"
+                    />
+                    <SearchMethodButton
+                      icon={Users}
+                      title="Guardian"
+                      description="Through your guardian"
+                      active={searchMethod === "guardian"}
+                      onClick={() => setSearchMethod("guardian")}
+                      gradient="green"
+                    />
+                  </>
+                )}
               </div>
             </motion.div>
             
@@ -1074,7 +1257,7 @@ export default function VaultRecoveryPage() {
                     disabled={isSearching}
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
-                    className="w-full sm:w-auto px-6 sm:px-10 py-4 sm:py-5 bg-linear-to-r from-cyan-500 via-blue-500 to-purple-500 rounded-2xl font-bold text-white flex items-center justify-center gap-3 disabled:opacity-50 sm:min-w-50 shadow-lg shadow-cyan-500/30 relative overflow-hidden group"
+                    className="w-full sm:w-auto px-6 sm:px-10 py-4 sm:py-5 bg-linear-to-r from-cyan-500 via-blue-500 to-purple-500 rounded-2xl font-bold text-white flex items-center justify-center gap-3 disabled:opacity-50 sm:min-w-[12.5rem] shadow-lg shadow-cyan-500/30 relative overflow-hidden group"
                   >
                     {isSearching ? (
                       <>

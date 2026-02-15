@@ -25,6 +25,7 @@ describe('/api/crypto/payment-requests/[id]', () => {
   describe('GET', () => {
     it('should return payment request by id', async () => {
       withRateLimit.mockResolvedValue(null);
+      requireAuth.mockReturnValue({ user: { address: '0x1111111111111111111111111111111111111123' } });
 
       query.mockResolvedValue({
         rows: [{
@@ -46,6 +47,7 @@ describe('/api/crypto/payment-requests/[id]', () => {
 
     it('should return 404 when payment request not found', async () => {
       withRateLimit.mockResolvedValue(null);
+      requireAuth.mockReturnValue({ user: { address: '0x1111111111111111111111111111111111111123' } });
       query.mockResolvedValue({ rows: [] });
 
       const request = new NextRequest('http://localhost:3000/api/crypto/payment-requests/999');
@@ -60,14 +62,23 @@ describe('/api/crypto/payment-requests/[id]', () => {
   describe('PUT', () => {
     it('should update payment request status', async () => {
       withRateLimit.mockResolvedValue(null);
-      requireAuth.mockReturnValue(true);
+      requireAuth.mockReturnValue({ user: { address: '0x1111111111111111111111111111111111111123' } });
 
-      query.mockResolvedValue({
-        rows: [{
-          id: 1,
-          status: 'accepted',
-        }],
-      });
+      query
+        .mockResolvedValueOnce({
+          rows: [{
+            id: 1,
+            from_address: '0x1111111111111111111111111111111111111123',
+            to_address: '0x2222222222222222222222222222222222222456',
+            status: 'pending',
+          }],
+        })
+        .mockResolvedValueOnce({
+          rows: [{
+            id: 1,
+            status: 'accepted',
+          }],
+        });
 
       const request = new NextRequest('http://localhost:3000/api/crypto/payment-requests/1', {
         method: 'PUT',

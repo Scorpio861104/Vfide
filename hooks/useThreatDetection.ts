@@ -1,16 +1,14 @@
 import { useCallback, useEffect, useState } from 'react';
+import { useAccount } from 'wagmi';
+import { buildCsrfHeaders } from '@/lib/security/csrfClient';
 import {
   ThreatDetectionResult,
   ThreatAlert,
   ThreatLevel,
   ThreatType,
-  DeviceFingerprint,
-  SessionActivity as _SessionActivity,
   SecurityMetrics,
-  SECURITY_STORAGE_KEYS,
   getThreatLevel,
   calculateRiskScore,
-  generateDeviceFingerprint,
   DEFAULT_RATE_LIMITS
 } from '@/config/security-advanced';
 
@@ -24,7 +22,7 @@ export interface UseThreatDetectionResult {
   // Detection methods
   detectAnomalies: () => Promise<ThreatDetectionResult>;
   checkRateLimit: (action: string) => boolean;
-  reportSuspiciousActivity: (type: ThreatType, details: Record<string, any>) => void;
+  reportSuspiciousActivity: (type: ThreatType, details: Record<string, unknown>) => void;
   
   // Management
   resolveThread: (threatId: string) => void;
@@ -39,71 +37,103 @@ interface RateLimitEntry {
   blockUntil?: number;
 }
 
-const loadThreats = (): ThreatAlert[] => {
-  if (typeof window === 'undefined') return [];
-
-  try {
-    const stored = localStorage.getItem(SECURITY_STORAGE_KEYS.threats);
-    if (!stored) return [];
-
-    const parsed = JSON.parse(stored);
-    return parsed.map((threat: { id: string; level: string; type: string; detected: string; details: Record<string, unknown>; resolved: boolean }) => ({
-      ...threat,
-      detected: new Date(threat.detected)
-    }));
-  } catch (error) {
-    console.error('Failed to load threats', error);
-    return [];
-  }
-};
-
-const saveThreats = (threats: ThreatAlert[]): void => {
-  if (typeof window === 'undefined') return;
-  localStorage.setItem(SECURITY_STORAGE_KEYS.threats, JSON.stringify(threats));
-};
-
 const generateThreatId = (): string => {
-  return `threat_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  const bytes = new Uint8Array(6);
+  crypto.getRandomValues(bytes);
+  return `threat_${Date.now()}_${Array.from(bytes, b => b.toString(16).padStart(2, '0')).join('')}`;
 };
 
-const checkUnusualLocation = (): boolean => {
-  // In production: Compare with known locations from backend
-  // For now, randomly simulate (mock)
-  return false;
+const apiRateLimit = DEFAULT_RATE_LIMITS.api ?? { maxAttempts: 100, windowMs: 60 * 1000, blockDurationMs: 5 * 60 * 1000 };
+
+type AnomalyStats = {
+  totalActivities: number;
+  uniqueIPs: number;
+  uniqueDevices: number;
+  requestsLastHour: number;
+  lastActivity: { timestamp: number; ipAddress: string; userAgent: string } | null;
 };
 
-const checkUnusualDevice = (currentDevice: DeviceFingerprint): boolean => {
-  if (typeof window === 'undefined') return false;
+const buildThreatsFromStats = (stats: AnomalyStats | null): ThreatAlert[] => {
+  if (!stats) return [];
+  const threats: ThreatAlert[] = [];
 
-  try {
-    const stored = localStorage.getItem(SECURITY_STORAGE_KEYS.deviceFingerprint);
-    if (!stored) {
-      // First time device, save it
-      localStorage.setItem(SECURITY_STORAGE_KEYS.deviceFingerprint, JSON.stringify(currentDevice));
-      return false;
-    }
-
-    const knownDevice: DeviceFingerprint = JSON.parse(stored);
-    return knownDevice.hash !== currentDevice.hash;
-  } catch (_error) {
-    return false;
+  if (stats.uniqueIPs > 1) {
+    threats.push({
+      id: generateThreatId(),
+      type: 'unusual_location',
+      severity: 'medium',
+      detected: new Date(),
+      message: 'Multiple access locations detected',
+      details: { uniqueIPs: stats.uniqueIPs },
+      resolved: false,
+    });
   }
-};
 
-const checkSuspiciousIp = (): boolean => {
-  // In production: Check against threat intelligence databases
-  return false;
+  if (stats.uniqueDevices > 1) {
+    threats.push({
+      id: generateThreatId(),
+      type: 'unusual_device',
+      severity: 'medium',
+      detected: new Date(),
+      message: 'Multiple devices detected',
+      details: { uniqueDevices: stats.uniqueDevices },
+      resolved: false,
+    });
+  }
+
+  if (stats.requestsLastHour >= apiRateLimit.maxAttempts) {
+    threats.push({
+      id: generateThreatId(),
+      type: 'rapid_requests',
+      severity: 'high',
+      detected: new Date(),
+      message: 'High request volume detected',
+      details: { requestsLastHour: stats.requestsLastHour },
+      resolved: false,
+    });
+  }
+
+  return threats;
 };
 
 export const useThreatDetection = (): UseThreatDetectionResult => {
-  const [threats, setThreats] = useState<ThreatAlert[]>(loadThreats());
+  const { address } = useAccount();
+  const [threats, setThreats] = useState<ThreatAlert[]>([]);
   const [riskScore, setRiskScore] = useState<number>(0);
   const [rateLimits, setRateLimits] = useState<Map<string, RateLimitEntry>>(new Map());
+  const [anomalyStats, setAnomalyStats] = useState<AnomalyStats | null>(null);
+
+  const fetchAnomalyStats = useCallback(async (): Promise<AnomalyStats | null> => {
+    try {
+      const response = await fetch('/api/security/anomaly');
+      if (!response.ok) throw new Error('Failed to fetch anomaly stats');
+      const data = await response.json();
+      const stats = data.stats as AnomalyStats | undefined;
+      if (!stats) return null;
+
+      setAnomalyStats(stats);
+      const nextThreats = buildThreatsFromStats(stats);
+      setThreats(nextThreats);
+
+      const score = calculateRiskScore({
+        failedAttempts: nextThreats.filter(t => t.type === 'brute_force').length,
+        unusualLocation: stats.uniqueIPs > 1,
+        unusualDevice: stats.uniqueDevices > 1,
+        rapidRequests: stats.requestsLastHour >= apiRateLimit.maxAttempts,
+        suspiciousIp: false,
+        noTwoFactor: false
+      });
+      setRiskScore(score);
+      return stats;
+    } catch (error) {
+      console.error('Failed to fetch anomaly stats', error);
+      return null;
+    }
+  }, []);
 
   useEffect(() => {
-    const loaded = loadThreats();
-    setThreats(loaded);
-  }, []);
+    fetchAnomalyStats();
+  }, [fetchAnomalyStats]);
 
   useEffect(() => {
     // Calculate risk score based on active threats
@@ -123,7 +153,7 @@ export const useThreatDetection = (): UseThreatDetectionResult => {
     type: ThreatType,
     severity: ThreatLevel,
     message: string,
-    details: Record<string, any> = {}
+    details: Record<string, unknown> = {}
   ) => {
     const newThreat: ThreatAlert = {
       id: generateThreatId(),
@@ -137,97 +167,38 @@ export const useThreatDetection = (): UseThreatDetectionResult => {
 
     setThreats(prev => {
       const updated = [...prev, newThreat];
-      saveThreats(updated);
       return updated;
     });
   }, []);
 
   const detectAnomalies = useCallback(async (): Promise<ThreatDetectionResult> => {
-    const deviceFingerprint = generateDeviceFingerprint();
-    const unusualLocation = checkUnusualLocation();
-    const unusualDevice = checkUnusualDevice(deviceFingerprint);
-    const suspiciousIp = checkSuspiciousIp();
-
-    const detectedThreats: ThreatAlert[] = [];
-
-    if (unusualLocation) {
-      const threat: ThreatAlert = {
-        id: generateThreatId(),
-        type: 'unusual_location',
-        severity: 'medium',
-        detected: new Date(),
-        message: 'Login from unusual location detected',
-        details: { location: deviceFingerprint.timezone },
-        resolved: false
-      };
-      detectedThreats.push(threat);
-    }
-
-    if (unusualDevice) {
-      const threat: ThreatAlert = {
-        id: generateThreatId(),
-        type: 'unusual_device',
-        severity: 'medium',
-        detected: new Date(),
-        message: 'New device detected',
-        details: { device: deviceFingerprint.userAgent },
-        resolved: false
-      };
-      detectedThreats.push(threat);
-    }
-
-    if (suspiciousIp) {
-      const threat: ThreatAlert = {
-        id: generateThreatId(),
-        type: 'suspicious_ip',
-        severity: 'high',
-        detected: new Date(),
-        message: 'Suspicious IP address detected',
-        details: {},
-        resolved: false
-      };
-      detectedThreats.push(threat);
-    }
-
-    if (detectedThreats.length > 0) {
-      setThreats(prev => {
-        const updated = [...prev, ...detectedThreats];
-        saveThreats(updated);
-        return updated;
-      });
-    }
+    const stats = await fetchAnomalyStats();
+    const detectedThreats = buildThreatsFromStats(stats);
 
     const score = calculateRiskScore({
-      failedAttempts: 0,
-      unusualLocation,
-      unusualDevice,
-      rapidRequests: false,
-      suspiciousIp,
+      failedAttempts: detectedThreats.filter(t => t.type === 'brute_force').length,
+      unusualLocation: detectedThreats.some(t => t.type === 'unusual_location'),
+      unusualDevice: detectedThreats.some(t => t.type === 'unusual_device'),
+      rapidRequests: detectedThreats.some(t => t.type === 'rapid_requests'),
+      suspiciousIp: detectedThreats.some(t => t.type === 'suspicious_ip'),
       noTwoFactor: false
     });
 
     const recommendations: string[] = [];
-    if (unusualLocation || unusualDevice) {
+    if (detectedThreats.some(t => t.type === 'unusual_location' || t.type === 'unusual_device')) {
       recommendations.push('Enable two-factor authentication for additional security');
-    }
-    if (suspiciousIp) {
-      recommendations.push('Change your password immediately');
-      recommendations.push('Review recent security logs');
-    }
-    if (detectedThreats.length === 0) {
-      recommendations.push('Your account security looks good');
     }
 
     return {
       threatLevel: getThreatLevel(score),
       riskScore: score,
       threats: detectedThreats,
-      recommendations
+      recommendations,
     };
-  }, []);
+  }, [fetchAnomalyStats]);
 
   const checkRateLimit = useCallback((action: string): boolean => {
-    const config = DEFAULT_RATE_LIMITS[action] || DEFAULT_RATE_LIMITS.api;
+    const config = DEFAULT_RATE_LIMITS[action] ?? apiRateLimit;
     const now = Date.now();
     const key = action;
     
@@ -289,7 +260,7 @@ export const useThreatDetection = (): UseThreatDetectionResult => {
 
   const reportSuspiciousActivity = useCallback((
     type: ThreatType,
-    details: Record<string, any>
+    details: Record<string, unknown>
   ) => {
     const severityMap: Record<ThreatType, ThreatLevel> = {
       brute_force: 'high',
@@ -308,14 +279,37 @@ export const useThreatDetection = (): UseThreatDetectionResult => {
       `Suspicious activity detected: ${type}`,
       details
     );
-  }, [addThreat]);
+    if (!address) return;
+
+    const reporter = typeof globalThis.fetch === 'function' ? globalThis.fetch : null;
+    if (!reporter) return;
+
+    void buildCsrfHeaders({ 'Content-Type': 'application/json' }, 'POST')
+      .then((headers) =>
+        reporter('/api/security/violations', {
+          method: 'POST',
+          headers,
+          credentials: 'include',
+          body: JSON.stringify({
+            userAddress: address,
+            violationType: type,
+            severity: severityMap[type],
+            description: details?.message ?? `Suspicious activity detected: ${type}`,
+            ipAddress: details?.ipAddress,
+            details,
+          }),
+        })
+      )
+      .catch((error) => {
+        console.error('Failed to report suspicious activity', error);
+      });
+  }, [addThreat, address]);
 
   const resolveThread = useCallback((threatId: string) => {
     setThreats(prev => {
       const updated = prev.map(t =>
         t.id === threatId ? { ...t, resolved: true } : t
       );
-      saveThreats(updated);
       return updated;
     });
   }, []);
@@ -323,7 +317,6 @@ export const useThreatDetection = (): UseThreatDetectionResult => {
   const dismissThreat = useCallback((threatId: string) => {
     setThreats(prev => {
       const updated = prev.filter(t => t.id !== threatId);
-      saveThreats(updated);
       return updated;
     });
   }, []);
@@ -363,9 +356,9 @@ export const useThreatDetection = (): UseThreatDetectionResult => {
   const activeThreats = threats.filter(t => !t.resolved);
 
   const metrics: SecurityMetrics = {
-    totalSessions: 1, // Mock value
+    totalSessions: anomalyStats?.totalActivities ?? 1,
     failedLoginAttempts: activeThreats.filter(t => t.type === 'brute_force').length,
-    activeSessions: 1, // Mock value
+    activeSessions: anomalyStats?.uniqueDevices ?? 1,
     threatsDetected: threats.length,
     lastThreatDetected: threats.length > 0 ? threats[threats.length - 1]?.detected ?? null : null,
     averageRiskScore: riskScore

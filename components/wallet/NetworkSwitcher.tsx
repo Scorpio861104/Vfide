@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAccount, useChainId, useSwitchChain } from 'wagmi';
 import { Check, ChevronDown, AlertTriangle, Zap } from 'lucide-react';
-import { base, baseSepolia, polygon, polygonAmoy } from 'wagmi/chains';
+import { base, baseSepolia, polygon, polygonAmoy, zkSync, zkSyncSepoliaTestnet } from 'wagmi/chains';
 import { IS_TESTNET } from '@/lib/chains';
 
 interface NetworkInfo {
@@ -20,10 +20,12 @@ const NETWORKS: NetworkInfo[] = IS_TESTNET
   ? [
       { id: baseSepolia.id, name: 'Base Sepolia', symbol: 'ETH', color: '#0052FF', testnet: true },
       { id: polygonAmoy.id, name: 'Polygon Amoy', symbol: 'MATIC', color: '#8247E5', testnet: true },
+      { id: zkSyncSepoliaTestnet.id, name: 'zkSync Sepolia', symbol: 'ETH', color: '#8C8DFC', testnet: true },
     ]
   : [
       { id: base.id, name: 'Base', symbol: 'ETH', color: '#0052FF' },
       { id: polygon.id, name: 'Polygon', symbol: 'MATIC', color: '#8247E5' },
+      { id: zkSync.id, name: 'zkSync', symbol: 'ETH', color: '#8C8DFC' },
     ];
 
 /**
@@ -52,7 +54,7 @@ export function NetworkSwitcher() {
       setIsOpen(false);
       return;
     }
-    switchChain({ chainId: networkId as 84532 | 80002 | 8453 | 137 | 324 | 300 });
+    switchChain({ chainId: networkId as 84532 | 80002 | 300 | 8453 | 137 | 324 });
     setIsOpen(false);
   };
 

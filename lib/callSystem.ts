@@ -239,7 +239,7 @@ export class CallManager {
     // In production, send via WebSocket to signaling server
     console.log('Send signal:', type, data);
     
-    // For demo, store in localStorage for same-device testing
+    // Fallback: store in localStorage for same-device testing
     const signals = JSON.parse(localStorage.getItem('vfide_call_signals') || '[]');
     signals.push({ type, data, timestamp: Date.now() });
     localStorage.setItem('vfide_call_signals', JSON.stringify(signals));
@@ -292,7 +292,7 @@ export function useCall() {
 
       // Create call object
       const call: Call = {
-        id: `call_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        id: `call_${Date.now()}_${Array.from(crypto.getRandomValues(new Uint8Array(7)), b => b.toString(16).padStart(2, '0')).join('').slice(0, 9)}`,
         type,
         initiator,
         recipient,
@@ -425,7 +425,7 @@ function sendCallSignal(recipient: string, type: string, data: Record<string, un
   // In production, send via WebSocket/signaling server
   console.log('Send call signal to', recipient, ':', type, data);
   
-  // For demo, use localStorage
+  // Fallback: use localStorage
   const key = `vfide_call_signal_${recipient}`;
   const signals = JSON.parse(localStorage.getItem(key) || '[]');
   signals.push({ type, data, timestamp: Date.now() });

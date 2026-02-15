@@ -45,7 +45,7 @@ function FireParticle({ delay }: { delay: number }) {
       initial={{ y: 0, x: 0, opacity: 0.8, scale: 1 }}
       animate={{
         y: [-5, -25],
-        x: [0, (Math.random() - 0.5) * 20],
+        x: [0, (delay * 37 % 20) - 10],
         opacity: [0.8, 0],
         scale: [1, 0.3],
       }}
@@ -101,6 +101,7 @@ export default function StreakTracker() {
     if (streak.currentStreak >= 7) {
       playNotification();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (

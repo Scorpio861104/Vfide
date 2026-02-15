@@ -5,6 +5,8 @@
  * Helps understand feature adoption and user flows
  */
 
+import { buildCsrfHeaders } from '@/lib/security/csrfClient';
+
 type EventType = 
   | 'wallet_connected'
   | 'vault_created'
@@ -53,11 +55,10 @@ class SocialAnalytics {
       this.events.shift();
     }
 
-    // In production, you would send this to your analytics service
-    // e.g., Mixpanel, Amplitude, PostHog, etc.
-    // this.sendToAnalytics(eventRecord);
+    // Send to backend analytics endpoint
+    this.sendToAnalytics(eventRecord);
 
-    // For now, store in localStorage for debugging
+    // Store locally for recent debugging context
     this.storeLocally(eventRecord);
   }
 
@@ -76,6 +77,27 @@ class SocialAnalytics {
       }
 
       localStorage.setItem('vfide_analytics_events', JSON.stringify(events));
+    } catch (error) {
+      console.error('Failed to store analytics event:', error);
+    }
+  }
+
+  private async sendToAnalytics(event: typeof this.events[0]) {
+    try {
+      const headers = await buildCsrfHeaders({ 'Content-Type': 'application/json' }, 'POST');
+      await fetch('/api/analytics', {
+        method: 'POST',
+        headers,
+        credentials: 'include',
+        body: JSON.stringify({
+          userId: event.data.userAddress,
+          eventType: event.type,
+          eventData: {
+            ...event.data,
+            timestamp: event.timestamp,
+          },
+        }),
+      });
     } catch (error) {
       console.error('Failed to store analytics event:', error);
     }

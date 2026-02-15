@@ -1,0 +1,17 @@
+{
+  "extends": "./tsconfig.json",
+  "include": ["components/**/*", "types/**/*.d.ts"],
+  "exclude": [
+    "node_modules",
+    ".next",
+    "dist",
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "**/*.spec.ts",
+    "**/*.spec.tsx",
+    "**/*.stories.ts",
+    "**/*.stories.tsx",
+    "**/*.stories.mdx",
+    "__tests__/**"
+  ]
+}

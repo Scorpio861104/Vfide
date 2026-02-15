@@ -8,6 +8,7 @@
  */
 
 import { encodeFunctionData, type Address, type Hex } from 'viem';
+import { secureId } from '@/lib/secureRandom';
 
 // ==================== TYPES ====================
 
@@ -100,7 +101,7 @@ export class TransactionBatcher {
    * Add a transaction to the pending batch
    */
   add(tx: BatchableTransaction): string {
-    const id = tx.id || `tx-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    const id = tx.id || secureId('tx');
     const transaction = { ...tx, id };
     
     this.pendingTransactions.set(id, transaction);
@@ -233,7 +234,7 @@ export class TransactionBatcher {
     const savings = sequentialGas - batchedGas;
 
     return {
-      id: `batch-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+      id: secureId('batch'),
       transactions,
       estimatedGas: batchedGas,
       estimatedSavings: savings > BigInt(0) ? savings : BigInt(0),
@@ -336,7 +337,7 @@ export function useTransactionBatcher(options?: BatcherOptions) {
   const [pending, setPending] = useState<BatchableTransaction[]>([]);
   const [savings, setSavings] = useState({ totalGas: BigInt(0), batchedGas: BigInt(0), savings: BigInt(0), savingsPercent: 0 });
   
-  const batcher = useMemo(() => new TransactionBatcher(options), []);
+  const batcher = useMemo(() => new TransactionBatcher(options), [options]);
 
   const updateState = useCallback(() => {
     setPending(batcher.getPending());

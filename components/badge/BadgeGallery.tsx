@@ -4,7 +4,7 @@ import { useBadgeNFTs } from '@/lib/vfide-hooks'
 import { getBadgeById, getAllBadges, getBadgesByCategory, getBadgeCategories } from '@/lib/badge-registry'
 import { BadgeDisplay } from './BadgeDisplay'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { useState, useMemo } from 'react'
+import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useTransactionSounds } from '@/hooks/useTransactionSounds'
 import { Trophy, Lock, Sparkles, Star, Zap } from 'lucide-react'
@@ -43,10 +43,7 @@ export function BadgeGallery({ address, showAll = false, compact = false }: Badg
   const earnedSet = new Set(tokenIds.map(id => `0x${BigInt(id).toString(16)}`))
   
   // Total points with animation
-  const totalPoints = useMemo(() => 
-    earnedBadges.filter(b => b).reduce((sum, badge) => sum + (badge?.points || 0), 0),
-    [earnedBadges]
-  )
+  const totalPoints = earnedBadges.filter(b => b).reduce((sum, badge) => sum + (badge?.points || 0), 0)
 
   // Rarity colors
   const getRarityGlow = (points: number) => {

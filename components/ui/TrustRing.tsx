@@ -87,8 +87,10 @@ export function TrustRing({
   // Animated score counter
   useEffect(() => {
     if (!animated) {
-      setDisplayScore(score);
-      return;
+      const timer = setTimeout(() => {
+        setDisplayScore(score);
+      }, 0);
+      return () => clearTimeout(timer);
     }
     
     const duration = 1500;

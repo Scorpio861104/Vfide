@@ -1,17 +1,18 @@
 import type { Metadata, Viewport } from "next";
+import { headers } from "next/headers";
+import { Inter, Space_Grotesk } from "next/font/google";
 import "./globals.css";
 import { Web3Provider } from "@/components/wallet/Web3Provider";
 import { OnboardingManager } from "@/components/onboarding/OnboardingManager";
 import { HelpCenter } from "@/components/onboarding/HelpCenter";
 import { ToastProvider } from "@/components/ui/toast";
-// Network-agnostic: Works on testnet and mainnet identically
 import { NetworkSwitchOverlay } from "@/components/wallet/NetworkSwitchOverlay";
 import { EnhancedNetworkBanner } from "@/components/wallet/EnhancedNetworkBanner";
-import { DemoModeBanner } from "@/components/layout/DemoModeBanner";
 import { TestnetNotification } from "@/components/ui/TestnetNotification";
 import { ErrorBoundary } from "@/components/error/ErrorBoundary";
 import { PresenceManager } from "@/components/social/PresenceManager";
 import { SecurityProvider } from "@/components/security/SecurityProvider";
+import { CsrfFetchProvider } from "@/components/security/CsrfFetchProvider";
 import { PerformanceProvider } from "@/components/performance/PerformanceProvider";
 import { ErrorMonitoringProvider, DevErrorConsole } from "@/components/monitoring/ErrorMonitoringProvider";
 import { AccessibilityProvider } from "@/components/accessibility/AccessibilityProvider";
@@ -21,16 +22,14 @@ import { PieMenu } from "@/components/navigation/PieMenu";
 import { ServiceWorkerRegistration } from "@/components/core/ServiceWorkerRegistration";
 import { ZustandHydration } from "@/components/core/ZustandHydration";
 import { WebVitalsTracker } from "@/components/core/WebVitalsTracker";
-import { MockServiceWorker } from "@/components/dev/MockServiceWorker";
 
-// Use CSS variables for fonts - will load from Google Fonts via CSS
-// This avoids build-time network requests while still using Google Fonts in production
-const _fontVariables = "--font-body --font-display";
+const inter = Inter({ subsets: ["latin"], variable: "--font-inter", display: "swap" });
+const spaceGrotesk = Space_Grotesk({ subsets: ["latin"], variable: "--font-space-grotesk", display: "swap" });
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://vfide.io"),
-  title: "VFIDE - Decentralized Payment Protocol",
-  description: "Accept crypto payments. Build trust. No merchant processor fees. Network burn fees + gas apply.",
+  title: "VFIDE - Crypto Payment Protocol",
+  description: "Accept crypto payments. Build trust. No merchant processor fees. Network burn fees + gas apply. Currently on Base Sepolia testnet.",
   keywords: "crypto payments, VFIDE, trust scoring, ProofScore, Web3 commerce, DeFi, stablecoin payments",
   authors: [{ name: "VFIDE Protocol" }],
   creator: "VFIDE",
@@ -49,7 +48,7 @@ export const metadata: Metadata = {
     locale: "en_US",
     url: "https://vfide.io",
     siteName: "VFIDE",
-    title: "VFIDE - Decentralized Payment Protocol",
+    title: "VFIDE - Crypto Payment Protocol",
     description: "Accept crypto payments. Build trust. No processor fees*.",
     images: [
       {
@@ -62,7 +61,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "VFIDE - Decentralized Payment Protocol",
+    title: "VFIDE - Crypto Payment Protocol",
     description: "Accept crypto payments. Build trust. No processor fees*.",
     images: ["/og-image.png"],
   },
@@ -74,24 +73,21 @@ export const viewport: Viewport = {
   themeColor: "#0F0F12",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   const isE2E = process.env.E2E === '1'
+  const headerList = await headers();
+  const nonce = headerList.get('x-nonce') || '';
 
   return (
     <html lang="en">
       <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap"
-          rel="stylesheet"
-        />
+        <meta property="csp-nonce" content={nonce} />
       </head>
-      <body className="font-sans antialiased bg-zinc-900" style={{ fontFamily: 'Inter, system-ui, sans-serif' }}>
+      <body className={`${inter.variable} ${spaceGrotesk.variable} font-sans antialiased bg-zinc-900`}>
         {isE2E ? (
           children
         ) : (
@@ -99,27 +95,25 @@ export default function RootLayout({
             <AccessibilityProvider>
               <Web3Provider>
                 <ToastProvider>
+                  <CsrfFetchProvider />
                   <SecurityProvider />
                   <PerformanceProvider />
                   <ErrorMonitoringProvider />
                   <PresenceManager />
                   <DevErrorConsole />
-                  <DemoModeBanner />
                   <ServiceWorkerRegistration />
-                  <MockServiceWorker />
                   <ZustandHydration />
                   <WebVitalsTracker />
                   <EnhancedNetworkBanner />
-                <NetworkSwitchOverlay />
-                <TestnetNotification />
-                {/* Network detection handled by wallet connection */}
-                <AchievementToastContainer />
-                {children}
-                <PieMenu />
-                <OnboardingManager />
-                <HelpCenter />
-              </ToastProvider>
-            </Web3Provider>
+                  <NetworkSwitchOverlay />
+                  <TestnetNotification />
+                  <AchievementToastContainer />
+                  {children}
+                  <PieMenu />
+                  <OnboardingManager />
+                  <HelpCenter />
+                </ToastProvider>
+              </Web3Provider>
           </AccessibilityProvider>
           </ErrorBoundary>
         )}

@@ -3,6 +3,8 @@ import { query } from '@/lib/db';
 import { requireAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 
+const MAX_BATCH_IDS = 200;
+
 interface Notification {
   id: number;
   user_id: number;
@@ -11,6 +13,7 @@ interface Notification {
   message: string;
   data: Record<string, unknown>;
   is_read: boolean;
+  archived: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -108,9 +111,8 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     console.error('[Notifications GET API] Error:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Failed to fetch notifications';
     return NextResponse.json(
-      { error: errorMessage },
+      { error: 'Internal server error' },
       { status: 500 }
     );
   }
@@ -142,6 +144,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    if (authResult.user.address.toLowerCase() !== userAddress.toLowerCase()) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+    }
+
     // Get user ID
     const userResult = await query(
       'SELECT id FROM users WHERE wallet_address = $1',
@@ -165,9 +171,9 @@ export async function POST(request: NextRequest) {
 
     // Insert notification
     const result = await query<Notification>(
-      `INSERT INTO notifications (user_id, type, title, message, data, is_read)
-       VALUES ($1, $2, $3, $4, $5, false)
-       RETURNING *`,
+      `INSERT INTO notifications (user_id, type, title, message, data, is_read, archived, updated_at)
+       VALUES ($1, $2, $3, $4, $5, false, false, NOW())
+       RETURNING id, user_id, type, title, message, data, is_read, archived, created_at, updated_at`,
       [userId, type, title, message, data ? JSON.stringify(data) : null]
     );
 
@@ -177,9 +183,8 @@ export async function POST(request: NextRequest) {
     }, { status: 201 });
   } catch (error) {
     console.error('[Notifications POST API] Error:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Failed to create notification';
     return NextResponse.json(
-      { error: errorMessage },
+      { error: 'Internal server error' },
       { status: 500 }
     );
   }
@@ -202,7 +207,7 @@ export async function PATCH(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { notificationIds, userAddress, markAllRead } = body;
+    const { notificationIds, userAddress, markAllRead, archiveAll, archiveIds } = body;
 
     if (markAllRead && userAddress) {
       // Verify ownership - user can only modify their own notifications
@@ -245,7 +250,92 @@ export async function PATCH(request: NextRequest) {
         success: true,
         updated: result.rowCount || 0,
       });
+    } else if (archiveAll && userAddress) {
+      if (authResult.user.address.toLowerCase() !== userAddress.toLowerCase()) {
+        return NextResponse.json(
+          { error: 'You can only modify your own notifications' },
+          { status: 403 }
+        );
+      }
+
+      const userResult = await query(
+        'SELECT id FROM users WHERE wallet_address = $1',
+        [userAddress.toLowerCase()]
+      );
+
+      if (userResult.rows.length === 0) {
+        return NextResponse.json(
+          { error: 'User not found' },
+          { status: 404 }
+        );
+      }
+
+      const userId = userResult.rows[0]?.id;
+      if (!userId) {
+        return NextResponse.json(
+          { error: 'User not found' },
+          { status: 404 }
+        );
+      }
+
+      const result = await query(
+        `UPDATE notifications
+         SET archived = true, updated_at = NOW()
+         WHERE user_id = $1 AND archived = false`,
+        [userId]
+      );
+
+      return NextResponse.json({
+        success: true,
+        updated: result.rowCount || 0,
+      });
+    } else if (archiveIds && Array.isArray(archiveIds)) {
+      if (archiveIds.length > MAX_BATCH_IDS) {
+        return NextResponse.json(
+          { error: `Cannot archive more than ${MAX_BATCH_IDS} notifications at once` },
+          { status: 400 }
+        );
+      }
+
+      const userResult = await query(
+        'SELECT id FROM users WHERE wallet_address = $1',
+        [authResult.user.address.toLowerCase()]
+      );
+
+      if (userResult.rows.length === 0) {
+        return NextResponse.json(
+          { error: 'User not found' },
+          { status: 404 }
+        );
+      }
+
+      const userId = userResult.rows[0]?.id;
+      if (!userId) {
+        return NextResponse.json(
+          { error: 'User not found' },
+          { status: 404 }
+        );
+      }
+
+      const result = await query(
+        `UPDATE notifications
+         SET archived = true, updated_at = NOW()
+         WHERE id = ANY($1) AND user_id = $2`,
+        [archiveIds, userId]
+      );
+
+      return NextResponse.json({
+        success: true,
+        updated: result.rowCount || 0,
+      });
     } else if (notificationIds && Array.isArray(notificationIds)) {
+      if (notificationIds.length > MAX_BATCH_IDS) {
+        return NextResponse.json(
+          { error: `Cannot update more than ${MAX_BATCH_IDS} notifications at once` },
+          { status: 400 }
+        );
+      }
+
       // Verify ownership - notifications must belong to authenticated user
       const userResult = await query(
         'SELECT id FROM users WHERE wallet_address = $1',
@@ -281,15 +371,14 @@ export async function PATCH(request: NextRequest) {
       });
     } else {
       return NextResponse.json(
-        { error: 'Either notificationIds or (markAllRead + userAddress) required' },
+        { error: 'Either notificationIds, archiveIds, or (markAllRead/archiveAll + userAddress) required' },
         { status: 400 }
       );
     }
   } catch (error) {
     console.error('[Notifications PATCH API] Error:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Failed to update notifications';
     return NextResponse.json(
-      { error: errorMessage },
+      { error: 'Internal server error' },
       { status: 500 }
     );
   }
@@ -312,7 +401,7 @@ export async function DELETE(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { notificationIds, userAddress, deleteAll } = body;
+    const { notificationIds, userAddress, deleteAll, deleteArchived } = body;
 
     if (deleteAll && userAddress) {
       // Verify ownership - user can only delete their own notifications
@@ -346,6 +435,43 @@ export async function DELETE(request: NextRequest) {
 
       const result = await query(
         'DELETE FROM notifications WHERE user_id = $1',
+        [userId]
+      );
+
+      return NextResponse.json({
+        success: true,
+        deleted: result.rowCount || 0,
+      });
+    } else if (deleteArchived && userAddress) {
+      if (authResult.user.address.toLowerCase() !== userAddress.toLowerCase()) {
+        return NextResponse.json(
+          { error: 'You can only delete your own notifications' },
+          { status: 403 }
+        );
+      }
+
+      const userResult = await query(
+        'SELECT id FROM users WHERE wallet_address = $1',
+        [userAddress.toLowerCase()]
+      );
+
+      if (userResult.rows.length === 0) {
+        return NextResponse.json(
+          { error: 'User not found' },
+          { status: 404 }
+        );
+      }
+
+      const userId = userResult.rows[0]?.id;
+      if (!userId) {
+        return NextResponse.json(
+          { error: 'User not found' },
+          { status: 404 }
+        );
+      }
+
+      const result = await query(
+        'DELETE FROM notifications WHERE user_id = $1 AND archived = true',
         [userId]
       );
 
@@ -393,9 +519,8 @@ export async function DELETE(request: NextRequest) {
     }
   } catch (error) {
     console.error('[Notifications DELETE API] Error:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Failed to delete notifications';
     return NextResponse.json(
-      { error: errorMessage },
+      { error: 'Internal server error' },
       { status: 500 }
     );
   }

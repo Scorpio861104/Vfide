@@ -5,6 +5,8 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
+import { buildCsrfHeaders } from '@/lib/security/csrfClient';
+import { secureId } from '@/lib/secureRandom';
 
 // ============================================================================
 // Types & Interfaces
@@ -138,7 +140,7 @@ export async function queueAction(
   data: Record<string, unknown>
 ): Promise<QueuedAction> {
   const queuedAction: QueuedAction = {
-    id: `queue_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+    id: secureId('queue'),
     type,
     action,
     data,
@@ -429,9 +431,11 @@ export async function syncPendingActions(): Promise<{
       await updateQueuedAction(action.id, { status: SyncStatus.SYNCING });
 
       // Attempt to sync
+      const headers = await buildCsrfHeaders({ 'Content-Type': 'application/json' }, 'POST');
       const response = await fetch('/api/sync', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
+        credentials: 'include',
         body: JSON.stringify(action),
       });
 

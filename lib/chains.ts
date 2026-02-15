@@ -13,9 +13,9 @@ import {
   base, 
   baseSepolia, 
   polygon, 
-  polygonAmoy,
   zkSync,
-  zkSyncSepoliaTestnet 
+  polygonAmoy,
+  zkSyncSepoliaTestnet
 } from 'wagmi/chains'
 
 import type { Chain } from 'viem'
@@ -143,7 +143,7 @@ export const CHAINS: Record<SupportedChain, ChainConfig> = {
 // ENVIRONMENT CONFIGURATION
 // ========================================
 
-export const IS_TESTNET = process.env.NEXT_PUBLIC_IS_TESTNET !== 'false'
+export const IS_TESTNET = process.env.NEXT_PUBLIC_IS_TESTNET === 'true' || process.env.NODE_ENV === 'development'
 
 // Default chain - can be overridden by user preference
 export const DEFAULT_CHAIN: SupportedChain = 
@@ -187,8 +187,12 @@ export function getChainId(chain: SupportedChain): number {
 /**
  * Get all supported chain IDs for current network mode
  */
+function getActiveChains(): SupportedChain[] {
+  return Object.keys(CHAINS) as SupportedChain[]
+}
+
 export function getAllChainIds(): number[] {
-  return Object.keys(CHAINS).map(key => getChainId(key as SupportedChain))
+  return getActiveChains().map(chain => getChainId(chain))
 }
 
 /**

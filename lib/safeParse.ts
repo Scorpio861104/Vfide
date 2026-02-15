@@ -109,7 +109,7 @@ export function safeJSONParseArray<T>(
  * @param fallback Fallback object (default: empty object)
  * @returns Parsed object or fallback
  */
-export function safeJSONParseObject<T extends Record<string, any>>(
+export function safeJSONParseObject<T extends Record<string, unknown>>(
   jsonString: string | null | undefined,
   fallback: T = {} as T
 ): T {

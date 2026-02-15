@@ -17,24 +17,15 @@ export async function GET(request: NextRequest) {
   const rateLimit = await withRateLimit(request, 'api');
   if (rateLimit) return rateLimit;
 
+  const envOk = checkEnvironmentVariables();
+
   const healthData = {
-    status: 'ok',
+    status: envOk ? 'ok' : 'degraded',
     timestamp: new Date().toISOString(),
     version: process.env.npm_package_version || '1.2.0',
-    environment: process.env.NODE_ENV || 'development',
-    uptime: process.uptime(),
-    memory: {
-      used: Math.round(process.memoryUsage().heapUsed / 1024 / 1024),
-      total: Math.round(process.memoryUsage().heapTotal / 1024 / 1024),
-      external: Math.round(process.memoryUsage().external / 1024 / 1024),
-    },
-    checks: {
-      env: checkEnvironmentVariables(),
-      nextjs: true, // If this runs, Next.js is working
-    }
   };
 
-  const statusCode = healthData.checks.env ? 200 : 503;
+  const statusCode = envOk ? 200 : 503;
 
   return NextResponse.json(healthData, { status: statusCode });
 }
@@ -45,19 +36,30 @@ export async function GET(request: NextRequest) {
 function checkEnvironmentVariables(): boolean {
   const required = [
     'NEXT_PUBLIC_CHAIN_ID',
-    'NEXT_PUBLIC_CONTRACT_ADDRESS', // Added to .env.local.example - use 0x0 for dev
+    'NEXT_PUBLIC_CONTRACT_ADDRESS',
     'NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID'
   ];
 
-  const missing = required.filter(key => {
+  // Server-only vars (not exposed to client, only checked existence)
+  const requiredServer = [
+    'JWT_SECRET',
+  ];
+
+  const missingPublic = required.filter(key => {
     const value = process.env[key];
     return value === undefined || value === '';
   });
 
-  if (missing.length > 0) {
-    console.warn('⚠️ Missing environment variables:', missing);
-    console.warn('💡 For local dev, see REALITY_CHECK.md or copy .env.local.example');
+  const missingServer = requiredServer.filter(key => {
+    const value = process.env[key];
+    return value === undefined || value === '';
+  });
+
+  const allMissing = [...missingPublic, ...missingServer];
+
+  if (allMissing.length > 0 && process.env.NODE_ENV !== 'production') {
+    console.warn('Missing environment variables:', allMissing);
   }
 
-  return missing.length === 0;
+  return allMissing.length === 0;
 }

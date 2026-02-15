@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 
 /**
  * Transaction Sound Effects Hook
@@ -55,24 +55,25 @@ const TONE_DURATIONS: Record<SoundType, number> = {
 };
 
 export function useTransactionSounds() {
-  const [settings, setSettings] = useState<SoundSettings>({
-    enabled: true,
-    volume: 0.5,
-  });
-  
-  const audioContextRef = useRef<AudioContext | null>(null);
-
-  // Load settings from storage
-  useEffect(() => {
+  const [settings, setSettings] = useState<SoundSettings>(() => {
     try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        setSettings(JSON.parse(stored));
+      if (typeof window !== 'undefined') {
+        const stored = localStorage.getItem(STORAGE_KEY);
+        if (stored) {
+          return JSON.parse(stored) as SoundSettings;
+        }
       }
     } catch {
       // Ignore storage errors
     }
-  }, []);
+
+    return {
+      enabled: true,
+      volume: 0.5,
+    };
+  });
+  
+  const audioContextRef = useRef<AudioContext | null>(null);
 
   // Initialize audio context on first user interaction
   const initAudioContext = useCallback(() => {

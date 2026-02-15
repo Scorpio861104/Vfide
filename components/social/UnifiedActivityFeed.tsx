@@ -72,142 +72,144 @@ interface UnifiedActivityFeedProps {
   className?: string;
 }
 
-// ==================== MOCK DATA ====================
+type ActivityApiItem = {
+  id?: number | string;
+  activity_type?: string | null;
+  title?: string | null;
+  description?: string | null;
+  created_at?: string | null;
+  user_address?: string | null;
+  user_username?: string | null;
+  user_avatar?: string | null;
+  data?: unknown;
+};
 
-const generateMockActivities = (): UnifiedActivity[] => [
-  {
-    id: 'a1',
-    type: 'tip_received',
-    timestamp: new Date(Date.now() - 30 * 60 * 1000),
-    actor: {
-      address: '0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb',
-      name: 'Alex Rivera',
-      avatar: '👨‍💼',
-    },
-    amount: '5',
-    currency: 'VFIDE',
-    content: 'Great post! Really insightful.',
-    metadata: {
-      postId: 'post_123',
-      txHash: '0xabc...def',
-    },
-  },
-  {
-    id: 'a2',
-    type: 'post',
-    timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000),
-    actor: {
-      address: '0x123...456',
-      name: 'You',
-      avatar: '👤',
-    },
-    content: 'Just completed my 100th transaction on VFIDE! The platform is incredibly smooth.',
-  },
-  {
-    id: 'a3',
-    type: 'content_sold',
-    timestamp: new Date(Date.now() - 3 * 60 * 60 * 1000),
-    actor: {
-      address: '0x123...456',
-      name: 'You',
-      avatar: '👤',
-    },
-    recipient: {
-      address: '0x789...abc',
-      name: 'Sara Chen',
-      avatar: '👩‍🎤',
-    },
-    amount: '10',
-    currency: 'VFIDE',
-    metadata: {
-      contentType: 'Premium Article',
-    },
-  },
-  {
-    id: 'a4',
-    type: 'endorsement_reward',
-    timestamp: new Date(Date.now() - 5 * 60 * 60 * 1000),
-    actor: {
-      address: '0xdef...789',
-      name: 'John Park',
-      avatar: '👨‍💻',
-    },
-    amount: '2.5',
-    currency: 'VFIDE',
-    content: 'Thanks for the helpful endorsement!',
-  },
-  {
-    id: 'a5',
-    type: 'achievement',
-    timestamp: new Date(Date.now() - 6 * 60 * 60 * 1000),
-    actor: {
-      address: '0x123...456',
-      name: 'You',
-      avatar: '👤',
-    },
-    metadata: {
-      achievementName: 'Social Butterfly',
-    },
-  },
-  {
-    id: 'a6',
-    type: 'tip_sent',
-    timestamp: new Date(Date.now() - 8 * 60 * 60 * 1000),
-    actor: {
-      address: '0x123...456',
-      name: 'You',
-      avatar: '👤',
-    },
-    recipient: {
-      address: '0xabc...def',
-      name: 'Emma Wilson',
-      avatar: '👩‍🔬',
-    },
-    amount: '3',
-    currency: 'VFIDE',
-    content: 'Amazing content!',
-    metadata: {
-      postId: 'post_456',
-      txHash: '0x123...abc',
-    },
-  },
-];
+const safeParseData = (value: unknown): Record<string, unknown> | null => {
+  if (!value) return null;
+  if (typeof value === 'string') {
+    try {
+      const parsed = JSON.parse(value);
+      return parsed && typeof parsed === 'object' ? (parsed as Record<string, unknown>) : null;
+    } catch {
+      return null;
+    }
+  }
+  return typeof value === 'object' ? (value as Record<string, unknown>) : null;
+};
+
+const normalizeActivityType = (value?: string | null, data?: Record<string, unknown> | null): ActivityType => {
+  const type = value?.toLowerCase() ?? '';
+  if (type.includes('post')) return 'post';
+  if (type.includes('comment')) return 'comment';
+  if (type.includes('like')) return 'like';
+  if (type.includes('tip')) {
+    const direction = String(data?.direction ?? data?.flow ?? '').toLowerCase();
+    if (type.includes('sent') || direction === 'sent') return 'tip_sent';
+    if (type.includes('received') || direction === 'received') return 'tip_received';
+    return 'tip_received';
+  }
+  if (type.includes('content')) {
+    const direction = String(data?.direction ?? '').toLowerCase();
+    if (type.includes('sold') || direction === 'sold') return 'content_sold';
+    return 'content_purchased';
+  }
+  if (type.includes('endorse')) return 'endorsement_reward';
+  if (type.includes('reward')) return 'token_reward';
+  if (type.includes('payment') || type.includes('transfer') || type.includes('transaction')) {
+    if (type.includes('sent')) return 'payment_sent';
+    if (type.includes('received')) return 'payment_received';
+    return 'payment_received';
+  }
+  if (type.includes('achievement')) return 'achievement';
+  return 'achievement';
+};
 
 // ==================== COMPONENT ====================
 
 export function UnifiedActivityFeed({
+  userAddress,
   filter = 'all',
   limit = 20,
   className = '',
-}: Omit<UnifiedActivityFeedProps, 'userAddress'>) {
+}: UnifiedActivityFeedProps) {
   const [activities, setActivities] = useState<UnifiedActivity[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const loadActivities = useCallback(async () => {
     setIsLoading(true);
+    setError(null);
     try {
-      // In production, fetch from API
-      // const response = await fetch(`/api/activity?user=${userAddress}&filter=${filter}&limit=${limit}`);
-      // const data = await response.json();
-      
-      // Mock data for now
-      await new Promise((resolve) => setTimeout(resolve, 500));
-      let mockData = generateMockActivities();
-      
-      // Filter if needed
-      if (filter === 'social') {
-        mockData = mockData.filter(a => ['post', 'comment', 'like', 'achievement'].includes(a.type));
-      } else if (filter === 'financial') {
-        mockData = mockData.filter(a => !['post', 'comment', 'like', 'achievement'].includes(a.type));
+      const params = new URLSearchParams({
+        limit: String(limit),
+        offset: '0',
+      });
+
+      if (userAddress) {
+        params.set('userAddress', userAddress);
       }
-      
-      setActivities(mockData.slice(0, limit));
+
+      const response = await fetch(`/api/activities?${params.toString()}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch activities');
+      }
+
+      const data = await response.json();
+      const items: ActivityApiItem[] = Array.isArray(data.activities) ? data.activities : [];
+      const mapped: UnifiedActivity[] = items.map((activity) => {
+        const meta = safeParseData(activity.data);
+        const type = normalizeActivityType(activity.activity_type, meta);
+        const actorName = activity.user_username ?? activity.user_address ?? 'Unknown';
+        const recipient = (meta?.to as string | undefined) ?? (meta?.recipient as string | undefined);
+        const recipientName = (meta?.recipientName as string | undefined) ?? recipient ?? 'Recipient';
+
+        const unified: UnifiedActivity = {
+          id: String(activity.id ?? `${activity.activity_type}-${activity.created_at}`),
+          type,
+          timestamp: activity.created_at ? new Date(activity.created_at) : new Date(),
+          actor: {
+            address: activity.user_address ?? '0x0',
+            name: actorName,
+            avatar: activity.user_avatar ?? '👤',
+          },
+          recipient: recipient
+            ? {
+                address: recipient,
+                name: recipientName,
+                avatar: (meta?.recipientAvatar as string | undefined) ?? '👤',
+              }
+            : undefined,
+          amount: (meta?.amount as string | undefined) ?? (meta?.value as string | undefined),
+          currency: (meta?.currency as UnifiedActivity['currency']) ?? (meta?.token as UnifiedActivity['currency']),
+          content: (meta?.content as string | undefined) ?? activity.description ?? undefined,
+          metadata: {
+            postId: meta?.postId as string | undefined,
+            commentId: meta?.commentId as string | undefined,
+            txHash: meta?.txHash as string | undefined,
+            contentType: meta?.contentType as string | undefined,
+            achievementName: meta?.achievementName as string | undefined,
+          },
+        };
+
+        return unified;
+      });
+
+      let filtered = mapped;
+      if (filter === 'social') {
+        filtered = mapped.filter((activity) => ['post', 'comment', 'like', 'achievement'].includes(activity.type));
+      } else if (filter === 'financial') {
+        filtered = mapped.filter((activity) => !['post', 'comment', 'like', 'achievement'].includes(activity.type));
+      }
+
+      setActivities(filtered.slice(0, limit));
     } catch (error) {
       console.error('Failed to load activities:', error);
+      setError('Unable to load activity feed.');
+      setActivities([]);
     } finally {
       setIsLoading(false);
     }
-  }, [filter, limit]);
+  }, [filter, limit, userAddress]);
 
   useEffect(() => {
     loadActivities();
@@ -327,6 +329,9 @@ export function UnifiedActivityFeed({
 
   return (
     <div className={`space-y-3 ${className}`}>
+      {error && (
+        <div className="text-sm text-red-400">{error}</div>
+      )}
       {activities.map((activity, idx) => (
         <motion.div
           key={activity.id}

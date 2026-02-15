@@ -5,7 +5,7 @@
  * Integrates with WebSocket for real-time presence updates.
  */
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useWebSocket, WSMessage } from './websocket';
 
 export type PresenceStatus = 'online' | 'offline' | 'away' | 'busy';
@@ -120,8 +120,25 @@ export function usePresence(userAddress?: string) {
     heartbeatInterval: 30000,
   };
   const { isConnected, send, subscribe } = useWebSocket(config, userAddress);
-  const [lastActivity, setLastActivity] = useState(Date.now());
+  const [lastActivity, setLastActivity] = useState(() => Date.now());
   const [status, setStatus] = useState<PresenceStatus>('online');
+
+  const postPresence = useCallback(async (nextStatus: PresenceStatus, activityTime?: number) => {
+    if (!userAddress) return;
+    try {
+      await fetch('/api/presence', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          address: userAddress,
+          status: nextStatus,
+          lastActivity: activityTime ?? Date.now(),
+        }),
+      });
+    } catch {
+      // Ignore presence update errors
+    }
+  }, [userAddress]);
 
   // Track user activity
   useEffect(() => {
@@ -137,6 +154,10 @@ export function usePresence(userAddress?: string) {
         lastActivity: Date.now(),
         lastSeen: Date.now(),
       });
+
+      if (!isConnected) {
+        void postPresence('online', Date.now());
+      }
     };
 
     // Listen to activity events
@@ -149,7 +170,7 @@ export function usePresence(userAddress?: string) {
         window.removeEventListener(event, handleActivity);
       });
     };
-  }, [userAddress]);
+  }, [userAddress, isConnected, postPresence]);
 
   // Auto-update status based on inactivity
   useEffect(() => {
@@ -160,15 +181,23 @@ export function usePresence(userAddress?: string) {
       if (newStatus !== status) {
         setStatus(newStatus);
         updatePresence(userAddress, { status: newStatus });
+        if (!isConnected) {
+          void postPresence(newStatus, Date.now());
+        }
       }
     }, 10000); // Check every 10 seconds
 
     return () => clearInterval(interval);
-  }, [userAddress, lastActivity, status]);
+  }, [userAddress, lastActivity, status, isConnected, postPresence]);
 
   // Broadcast presence via WebSocket
   useEffect(() => {
-    if (!userAddress || !isConnected) return;
+    if (!userAddress) return;
+
+    if (!isConnected) {
+      void postPresence(status, Date.now());
+      return;
+    }
 
     // Send initial presence
     send({
@@ -195,7 +224,7 @@ export function usePresence(userAddress?: string) {
     }, PRESENCE_BROADCAST_INTERVAL);
 
     return () => clearInterval(interval);
-  }, [userAddress, isConnected, status, send]);
+  }, [userAddress, isConnected, status, send, postPresence]);
 
   // Listen for presence updates from other users
   useEffect(() => {
@@ -222,15 +251,19 @@ export function usePresence(userAddress?: string) {
       if (document.hidden) {
         setStatus('away');
         updatePresence(userAddress, { status: 'away' });
-        send({
-          type: 'presence',
-          from: userAddress,
-          data: {
-            address: userAddress,
-            status: 'away',
-            timestamp: Date.now(),
-          },
-        });
+        if (isConnected) {
+          send({
+            type: 'presence',
+            from: userAddress,
+            data: {
+              address: userAddress,
+              status: 'away',
+              timestamp: Date.now(),
+            },
+          });
+        } else {
+          void postPresence('away', Date.now());
+        }
       } else {
         setStatus('online');
         setLastActivity(Date.now());
@@ -238,21 +271,25 @@ export function usePresence(userAddress?: string) {
           status: 'online',
           lastActivity: Date.now(),
         });
-        send({
-          type: 'presence',
-          from: userAddress,
-          data: {
-            address: userAddress,
-            status: 'online',
-            timestamp: Date.now(),
-          },
-        });
+        if (isConnected) {
+          send({
+            type: 'presence',
+            from: userAddress,
+            data: {
+              address: userAddress,
+              status: 'online',
+              timestamp: Date.now(),
+            },
+          });
+        } else {
+          void postPresence('online', Date.now());
+        }
       }
     };
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
     return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
-  }, [userAddress, send]);
+  }, [userAddress, send, isConnected, postPresence]);
 
   return {
     status,
@@ -277,13 +314,34 @@ export function useUserPresence(address: string) {
   const [presence, setPresence] = useState<UserPresence | null>(() => getPresence(address));
 
   useEffect(() => {
-    // Get initial presence
-    const initial = getPresence(address);
-    if (initial) {
-      setPresence(initial);
-    }
+    if (!isConnected) {
+      let active = true;
+      const fetchPresence = async () => {
+        try {
+          const response = await fetch(`/api/presence?addresses=${address}`);
+          if (!response.ok) return;
+          const data = await response.json();
+          const row = Array.isArray(data.presence) ? data.presence[0] : undefined;
+          if (row && active) {
+            updatePresence(row.wallet_address, {
+              status: row.status,
+              lastSeen: new Date(row.last_seen_at).getTime(),
+              lastActivity: new Date(row.last_activity_at).getTime(),
+            });
+            setPresence(getPresence(address));
+          }
+        } catch {
+          // ignore
+        }
+      };
 
-    if (!isConnected) return;
+      fetchPresence();
+      const interval = setInterval(fetchPresence, 30000);
+      return () => {
+        active = false;
+        clearInterval(interval);
+      };
+    }
 
     // Subscribe to updates for this user
     const unsubscribe = subscribe('presence', (message: WSMessage) => {
@@ -317,10 +375,37 @@ export function useBulkPresence(addresses: string[]) {
   );
 
   useEffect(() => {
-    // Get initial presence
-    setPresenceMap(getBulkPresence(addresses));
+    if (!isConnected) {
+      let active = true;
+      const fetchPresence = async () => {
+        try {
+          if (addresses.length === 0) return;
+          const response = await fetch(`/api/presence?addresses=${addresses.join(',')}`);
+          if (!response.ok) return;
+          const data = await response.json();
+          const rows = Array.isArray(data.presence) ? data.presence : [];
+          rows.forEach((row: Record<string, unknown>) => {
+            updatePresence(row.wallet_address, {
+              status: row.status,
+              lastSeen: new Date(row.last_seen_at).getTime(),
+              lastActivity: new Date(row.last_activity_at).getTime(),
+            });
+          });
+          if (active) {
+            setPresenceMap(getBulkPresence(addresses));
+          }
+        } catch {
+          // ignore
+        }
+      };
 
-    if (!isConnected) return;
+      fetchPresence();
+      const interval = setInterval(fetchPresence, 30000);
+      return () => {
+        active = false;
+        clearInterval(interval);
+      };
+    }
 
     // Subscribe to updates
     const unsubscribe = subscribe('presence', (message: WSMessage) => {
@@ -332,7 +417,7 @@ export function useBulkPresence(addresses: string[]) {
     });
 
     return unsubscribe;
-  }, [addresses.join(','), isConnected, subscribe]);
+  }, [addresses, isConnected, subscribe]);
 
   return presenceMap;
 }

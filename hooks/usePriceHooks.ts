@@ -87,7 +87,7 @@ export function useVfidePrice() {
     circulatingSupply: data?.market?.circulatingSupply ?? 50000000,
     totalSupply: data?.market?.totalSupply ?? 200000000,
     source: data?.source ?? 'fallback',
-    timestamp: data?.timestamp ?? Date.now(),
+    timestamp: data?.timestamp ?? 0,
     isLoading,
     isStale, // New: indicates if showing stale data while revalidating
     error: error instanceof Error ? error.message : null,

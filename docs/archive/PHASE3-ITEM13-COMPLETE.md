@@ -104,7 +104,7 @@ Item #13 (User Profiles) has been successfully implemented with a comprehensive 
 ### ✅ Badges Tab
 - **Badge Showcase**
   - Grid layout (1/2/3 columns responsive)
-  - 6 mock badges with varied rarities
+  - 6 sample badges with varied rarities
   - Badge cards with:
     * Icon (emoji)
     * Name
@@ -190,13 +190,13 @@ UserProfile.tsx (850 lines)
 │   ├── PrivacySettings
 │   └── SocialConnections
 │
-├── Mock Data Generators (150 lines)
-│   ├── mockUserProfile
-│   ├── mockUserStats
-│   ├── mockBadges
-│   ├── mockRecentActivity
-│   ├── mockPrivacySettings
-│   └── mockSocialConnections
+├── Sample Data Generators (150 lines)
+│   ├── sampleUserProfile
+│   ├── sampleUserStats
+│   ├── sampleBadges
+│   ├── sampleRecentActivity
+│   ├── samplePrivacySettings
+│   └── sampleSocialConnections
 │
 ├── Helper Functions (180 lines)
 │   ├── getRarityColor()
@@ -225,7 +225,7 @@ UserProfile.tsx (850 lines)
 
 ```typescript
 // Profile State
-const [profile, setProfile] = useState<UserProfile>(mockUserProfile());
+const [profile, setProfile] = useState<UserProfile>(sampleUserProfile());
 const [editedProfile, setEditedProfile] = useState<UserProfile>(profile);
 const [isEditing, setIsEditing] = useState(false);
 
@@ -234,11 +234,11 @@ const [activeTab, setActiveTab] = useState<'overview' | 'badges' | 'activity' | 
 const [errors, setErrors] = useState<Record<string, string>>({});
 
 // Data State
-const [stats] = useState<UserStats>(mockUserStats());
-const [badges] = useState<Badge[]>(mockBadges());
-const [recentActivity] = useState<RecentActivity[]>(mockRecentActivity());
-const [privacySettings, setPrivacySettings] = useState<PrivacySettings>(mockPrivacySettings());
-const [socialConnections] = useState<SocialConnections>(mockSocialConnections());
+const [stats] = useState<UserStats>(sampleUserStats());
+const [badges] = useState<Badge[]>(sampleBadges());
+const [recentActivity] = useState<RecentActivity[]>(sampleRecentActivity());
+const [privacySettings, setPrivacySettings] = useState<PrivacySettings>(samplePrivacySettings());
+const [socialConnections] = useState<SocialConnections>(sampleSocialConnections());
 ```
 
 ### Validation Functions

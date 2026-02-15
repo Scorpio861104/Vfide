@@ -64,16 +64,20 @@ export async function revokeToken(
   if (redis) {
     try {
       await redis.setex(key, ttl, value);
-      console.log(`[Token Revocation] Token blacklisted until ${new Date(expiresAt * 1000).toISOString()}`);
-    } catch (error) {
-      console.error('[Token Revocation] Redis error:', error);
-      // Fallback to memory
+    } catch (_error) {
+      if (process.env.NODE_ENV === 'production') {
+        // In production, failing to revoke is a security failure — propagate
+        throw new Error('[Token Revocation] Redis unavailable; revocation failed');
+      }
+      // In dev/test, fall back to memory
       memoryBlacklist.set(tokenHash, expiresAt);
     }
   } else {
-    // Use memory fallback
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error('[Token Revocation] Redis not configured; revocation unavailable in production');
+    }
+    // Memory fallback for dev/test only
     memoryBlacklist.set(tokenHash, expiresAt);
-    console.warn('[Token Revocation] Using in-memory blacklist (not suitable for production)');
   }
 }
 
@@ -89,13 +93,22 @@ export async function isTokenRevoked(tokenHash: string): Promise<boolean> {
     try {
       const result = await redis.get(key);
       return result !== null;
-    } catch (error) {
-      console.error('[Token Revocation] Redis error during check:', error);
-      // Fallback to memory
+    } catch (_error) {
+      if (process.env.NODE_ENV === 'production') {
+        // In production, assume token IS revoked when Redis is unreachable
+        // (fail-closed for security)
+        return true;
+      }
+      // Fallback to memory in dev/test
       return memoryBlacklist.has(tokenHash);
     }
   } else {
-    // Use memory fallback
+    if (process.env.NODE_ENV === 'production') {
+      // Fail-closed: without Redis, we cannot reliably check revocation
+      // in multi-instance deployments. Deny the request.
+      return true;
+    }
+    // Use memory fallback in dev/test only
     const expiresAt = memoryBlacklist.get(tokenHash);
     if (!expiresAt) return false;
 
@@ -131,12 +144,13 @@ export async function revokeUserTokens(
     try {
       // Store user revocation with long TTL
       await redis.setex(key, BLACKLIST_TTL, value);
-      console.log(`[Token Revocation] All tokens revoked for user: ${userAddress}`);
-    } catch (error) {
-      console.error('[Token Revocation] Redis error during user revocation:', error);
+    } catch (_error) {
+      throw new Error(`[Token Revocation] Failed to revoke tokens for user ${userAddress}: Redis error`);
     }
   } else {
-    console.warn('[Token Revocation] User-wide revocation requires Redis in production');
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error('[Token Revocation] User-wide revocation requires Redis in production');
+    }
   }
 }
 
@@ -165,6 +179,10 @@ export async function isUserRevoked(userAddress: string): Promise<{
       };
     } catch (error) {
       console.error('[Token Revocation] Redis error during user check:', error);
+      // Fail-closed in production: if we can't check, assume revoked
+      if (process.env.NODE_ENV === 'production') {
+        return { revoked: true, reason: 'redis_unavailable' };
+      }
       return null;
     }
   }
@@ -224,7 +242,10 @@ export async function getRevocationStats(): Promise<{
   };
 }
 
-// Set up periodic cleanup (every hour)
+// Set up periodic cleanup (every hour), unref to avoid preventing process exit
 if (typeof setInterval !== 'undefined') {
-  setInterval(cleanupMemoryBlacklist, 60 * 60 * 1000);
+  const interval = setInterval(cleanupMemoryBlacklist, 60 * 60 * 1000);
+  if (typeof interval === 'object' && 'unref' in interval) {
+    interval.unref();
+  }
 }

@@ -35,17 +35,12 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       );
     }
 
-    let result;
-    if (isTestEnv) {
-      result = await query(`SELECT * FROM attachments WHERE id = $1`, [id]);
-    } else {
-      const userResult = await query('SELECT id FROM users WHERE wallet_address = $1', [authResult.user.address.toLowerCase()]);
-      const userId = userResult.rows[0]?.id;
-      if (!userId) {
-        return NextResponse.json({ error: 'User not found' }, { status: 404 });
-      }
-      result = await query(`SELECT * FROM attachments WHERE id = $1 AND uploaded_by = $2`, [id, userId]);
+    const userResult = await query('SELECT id FROM users WHERE wallet_address = $1', [authResult.user.address.toLowerCase()]);
+    const userId = userResult.rows[0]?.id;
+    if (!userId) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
+    const result = await query(`SELECT * FROM attachments WHERE id = $1 AND uploaded_by = $2`, [id, userId]);
 
     if (result.rows.length === 0) {
       return NextResponse.json({ error: 'Attachment not found' }, { status: 404 });
@@ -54,9 +49,8 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     return NextResponse.json({ attachment: result.rows[0] });
   } catch (error) {
     console.error('[Attachments GET] Error:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Failed to fetch attachment';
     return NextResponse.json(
-      { error: errorMessage },
+      { error: 'Internal server error' },
       { status: 500 }
     );
   }
@@ -109,9 +103,8 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
     return NextResponse.json({ success: true, attachment: result.rows[0] });
   } catch (error) {
     console.error('[Attachments DELETE] Error:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Failed to delete attachment';
     return NextResponse.json(
-      { error: errorMessage },
+      { error: 'Internal server error' },
       { status: 500 }
     );
   }

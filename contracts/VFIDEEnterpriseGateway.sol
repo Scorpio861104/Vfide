@@ -108,7 +108,7 @@ contract VFIDEEnterpriseGateway {
         // Pull funds
         // FIX: Measure actual received amount to support Fee-on-Transfer tokens
         uint256 balanceBefore = token.balanceOf(address(this));
-        if (!token.transferFrom(payer, address(this), amount)) revert ENT_TransferFailed();
+        token.safeTransferFrom(payer, address(this), amount);
         uint256 received = token.balanceOf(address(this)) - balanceBefore;
 
         orders[orderId] = Order({

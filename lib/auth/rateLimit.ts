@@ -89,63 +89,80 @@ class InMemoryRateLimiter {
   }
 }
 
-// Create rate limiter instance
-let rateLimiter: Ratelimit | InMemoryRateLimiter;
+let upstashRedis: Redis | null = null;
+const upstashLimiters = new Map<RateLimitType, Ratelimit>();
 let inMemoryLimiter: InMemoryRateLimiter | null = null;
 
-function getRateLimiter(): Ratelimit | InMemoryRateLimiter {
-  if (rateLimiter) return rateLimiter;
-  
-  // Try to use Upstash Redis if configured
-  if (process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN) {
+function getUpstashLimiter(type: RateLimitType): Ratelimit | null {
+  if (!process.env.UPSTASH_REDIS_REST_URL || !process.env.UPSTASH_REDIS_REST_TOKEN) {
+    return null;
+  }
+
+  if (!upstashRedis) {
     try {
-      const redis = new Redis({
+      upstashRedis = new Redis({
         url: process.env.UPSTASH_REDIS_REST_URL,
         token: process.env.UPSTASH_REDIS_REST_TOKEN,
       });
-      
-      rateLimiter = new Ratelimit({
-        redis,
-        limiter: Ratelimit.slidingWindow(100, '1m'),
-        analytics: true,
-        prefix: 'vfide:ratelimit',
-      });
-      
       console.log('[RateLimit] Using Upstash Redis');
-      return rateLimiter;
     } catch (_error) {
       console.warn('[RateLimit] Failed to initialize Upstash Redis, using in-memory fallback');
+      upstashRedis = null;
+      return null;
     }
   }
-  
-  // Fall back to in-memory rate limiting
+
+  const existing = upstashLimiters.get(type);
+  if (existing) return existing;
+
+  const config = RATE_LIMITS[type];
+  const limiter = new Ratelimit({
+    redis: upstashRedis,
+    limiter: Ratelimit.slidingWindow(config.requests, config.window),
+    analytics: true,
+    prefix: 'vfide:ratelimit',
+  });
+
+  upstashLimiters.set(type, limiter);
+  return limiter;
+}
+
+function getInMemoryLimiter(): InMemoryRateLimiter {
+  if (inMemoryLimiter) return inMemoryLimiter;
+
   inMemoryLimiter = new InMemoryRateLimiter();
-  rateLimiter = inMemoryLimiter;
-  
-  // Cleanup old entries every 5 minutes
+
+  // Cleanup old entries every 5 minutes (store ref to prevent module-reload leaks)
   if (typeof setInterval !== 'undefined') {
-    setInterval(() => inMemoryLimiter?.cleanup(), 300000);
+    const cleanupInterval = setInterval(() => inMemoryLimiter?.cleanup(), 300000);
+    // Unref the timer so it doesn't prevent Node.js process exit
+    if (typeof cleanupInterval === 'object' && 'unref' in cleanupInterval) {
+      cleanupInterval.unref();
+    }
   }
-  
+
   console.log('[RateLimit] Using in-memory rate limiting');
-  return rateLimiter;
+  return inMemoryLimiter;
 }
 
 /**
  * Get client identifier for rate limiting
+ * Only trust headers set by infrastructure (Cloudflare edge, Vercel platform).
+ * x-forwarded-for / x-real-ip are trivially spoofable and excluded.
  */
 export function getClientIdentifier(request: NextRequest): string {
-  // Try to get real IP from various headers
-  const forwarded = request.headers.get('x-forwarded-for');
-  const realIp = request.headers.get('x-real-ip');
+  // Cloudflare's header is set at the edge and cannot be spoofed by the client
   const cfConnectingIp = request.headers.get('cf-connecting-ip');
-  
-  const ip = cfConnectingIp || realIp || forwarded?.split(',')[0]?.trim() || 'unknown';
-  
+
+  // Next.js/Vercel platform IP via header (request.ip removed in Next.js 16)
+  const platformIp = request.headers.get('x-vercel-forwarded-for');
+
+  const ip = cfConnectingIp || platformIp || 'unknown';
+
   // Include user agent for additional uniqueness
   const userAgent = request.headers.get('user-agent') || 'unknown';
   const hash = simpleHash(userAgent);
-  
+
   return `${ip}:${hash}`;
 }
 
@@ -166,18 +183,18 @@ export async function rateLimit(
   request: NextRequest,
   type: RateLimitType = 'api'
 ): Promise<{ success: boolean; response?: NextResponse }> {
-  const limiter = getRateLimiter();
+  const limiter = getUpstashLimiter(type);
   const identifier = getClientIdentifier(request);
   const config = RATE_LIMITS[type];
   
   try {
     let result;
     
-    if (limiter instanceof InMemoryRateLimiter) {
-      result = await limiter.limit(`${identifier}:${type}`, config);
-    } else {
-      // Upstash Ratelimit
+    if (limiter) {
+      // Upstash Ratelimit (per-type limiter)
       result = await limiter.limit(`${identifier}:${type}`);
+    } else {
+      result = await getInMemoryLimiter().limit(`${identifier}:${type}`, config);
     }
     
     if (!result.success) {
@@ -206,8 +223,8 @@ export async function rateLimit(
     return { success: true };
   } catch (error) {
     console.error('[RateLimit] Error:', error);
-    // On error, allow the request to proceed
-    return { success: true };
+    // On error, fail closed - deny the request
+    return { success: false };
   }
 }
 
@@ -219,5 +236,13 @@ export async function withRateLimit(
   type: RateLimitType = 'api'
 ): Promise<NextResponse | null> {
   const result = await rateLimit(request, type);
-  return result.success ? null : result.response || null;
+  if (result.success) return null;
+
+  // Fail-closed: if `rateLimit` returned { success: false } without a
+  // response (e.g. internal error), return 503 instead of null (which
+  // would let the request through).
+  return result.response || NextResponse.json(
+    { error: 'Service temporarily unavailable' },
+    { status: 503 }
+  );
 }

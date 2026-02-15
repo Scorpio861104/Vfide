@@ -36,9 +36,15 @@ export interface InviteLinkOptions {
  */
 export function generateInviteCode(): string {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  const length = 12;
   let code = '';
-  for (let i = 0; i < 12; i++) {
-    code += chars.charAt(Math.floor(Math.random() * chars.length));
+
+  // Always use crypto API — available in all modern browsers and Node 15+
+  const bytes = new Uint32Array(length);
+  crypto.getRandomValues(bytes);
+  for (let i = 0; i < length; i += 1) {
+    const byte = bytes[i] ?? 0;
+    code += chars.charAt(byte % chars.length);
   }
   return code;
 }
@@ -162,7 +168,7 @@ export async function createInviteLink(
 ): Promise<InviteLink> {
   const code = generateInviteCode();
   const link: InviteLink = {
-    id: `invite_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+    id: `invite_${Date.now()}_${Array.from(crypto.getRandomValues(new Uint8Array(7)), b => b.toString(16).padStart(2, '0')).join('').slice(0, 9)}`,
     groupId,
     code,
     createdBy,
@@ -239,12 +245,12 @@ export function useInviteLinks(groupId: string) {
   const [links, setLinks] = React.useState<InviteLink[]>([]);
   const [loading, setLoading] = React.useState(true);
 
-  const loadLinks = async () => {
+  const loadLinks = React.useCallback(async () => {
     setLoading(true);
     const groupLinks = await getGroupInviteLinks(groupId);
     setLinks(groupLinks);
     setLoading(false);
-  };
+  }, [groupId]);
 
   const create = async (options: InviteLinkOptions) => {
     // In production: get user address from auth
@@ -266,7 +272,7 @@ export function useInviteLinks(groupId: string) {
 
   React.useEffect(() => {
     loadLinks();
-  }, [groupId]);
+  }, [loadLinks]);
 
   return {
     links,

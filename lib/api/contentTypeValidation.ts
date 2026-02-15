@@ -22,6 +22,7 @@ export const CONTENT_TYPES = {
   FORM_URLENCODED: 'application/x-www-form-urlencoded',
   TEXT: 'text/plain',
   OCTET_STREAM: 'application/octet-stream',
+  CSP_REPORT: 'application/csp-report',
 } as const;
 
 export type ContentType = typeof CONTENT_TYPES[keyof typeof CONTENT_TYPES];
@@ -31,7 +32,8 @@ export type ContentType = typeof CONTENT_TYPES[keyof typeof CONTENT_TYPES];
  */
 export const ENDPOINT_CONTENT_TYPE_REQUIREMENTS: Record<string, ContentType[]> = {
   // File upload endpoints - allow multipart/form-data
-  '/api/attachments/upload': [CONTENT_TYPES.FORM_DATA],
+  '/api/attachments/upload': [CONTENT_TYPES.JSON],
+  '/api/security/csp-report': [CONTENT_TYPES.JSON, CONTENT_TYPES.TEXT, CONTENT_TYPES.CSP_REPORT],
   
   // All other write endpoints default to JSON only
   default: [CONTENT_TYPES.JSON],
@@ -91,8 +93,11 @@ export function validateContentType(request: NextRequest): NextResponse | null {
     return null;
   }
   
-  // Get allowed content types for this endpoint
-  const allowedTypes = getAllowedContentTypes(pathname);
+  // Special-case avatar uploads to allow multipart form data
+  const isAvatarUpload = request.method === 'POST' && /^\/api\/users\/[^/]+$/.test(pathname);
+  const allowedTypes = isAvatarUpload
+    ? [CONTENT_TYPES.FORM_DATA]
+    : getAllowedContentTypes(pathname);
   
   // If no restrictions, allow anything
   if (allowedTypes.length === 0) {

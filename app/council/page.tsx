@@ -1,14 +1,13 @@
 'use client';
 
 import { Footer } from "@/components/layout/Footer";
-import { CouncilElectionABI, CouncilSalaryABI } from "@/lib/abis";
+import { CouncilElectionABI, CouncilSalaryABI, SeerABI } from "@/lib/abis";
 import { useState } from "react";
-import { useAccount, useWriteContract, useWaitForTransactionReceipt, useReadContract } from "wagmi";
+import { useAccount, useWriteContract, useWaitForTransactionReceipt, useReadContract, useReadContracts } from "wagmi";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   Users, 
   DollarSign, 
-  Clock, 
   Shield, 
   Vote,
   AlertTriangle,
@@ -19,13 +18,15 @@ import {
   Sparkles
 } from "lucide-react";
 
-// Contract addresses from environment (CouncilElection and CouncilSalary not deployed to testnet yet)
+// Contract addresses from environment
 const COUNCIL_ELECTION_ADDRESS = (process.env.NEXT_PUBLIC_COUNCIL_ELECTION_ADDRESS || '0x0000000000000000000000000000000000000000') as `0x${string}`;
 const COUNCIL_SALARY_ADDRESS = (process.env.NEXT_PUBLIC_COUNCIL_SALARY_ADDRESS || '0x0000000000000000000000000000000000000000') as `0x${string}`;
+const SEER_ADDRESS = (process.env.NEXT_PUBLIC_SEER_ADDRESS || '0x0000000000000000000000000000000000000000') as `0x${string}`;
 
 // Check if contracts are deployed (not zero address)
 const IS_COUNCIL_ELECTION_DEPLOYED = COUNCIL_ELECTION_ADDRESS !== '0x0000000000000000000000000000000000000000';
 const IS_COUNCIL_SALARY_DEPLOYED = COUNCIL_SALARY_ADDRESS !== '0x0000000000000000000000000000000000000000';
+const IS_SEER_DEPLOYED = SEER_ADDRESS !== '0x0000000000000000000000000000000000000000';
 
 type TabType = 'overview' | 'members' | 'salary' | 'voting';
 
@@ -42,6 +43,34 @@ export default function CouncilPage() {
     address: COUNCIL_ELECTION_ADDRESS,
     abi: CouncilElectionABI,
     functionName: 'getCouncilMembers',
+    query: { enabled: IS_COUNCIL_ELECTION_DEPLOYED },
+  });
+
+  const { data: _councilSize } = useReadContract({
+    address: COUNCIL_ELECTION_ADDRESS,
+    abi: CouncilElectionABI,
+    functionName: 'councilSize',
+    query: { enabled: IS_COUNCIL_ELECTION_DEPLOYED },
+  });
+
+  const { data: _minCouncilScore } = useReadContract({
+    address: COUNCIL_ELECTION_ADDRESS,
+    abi: CouncilElectionABI,
+    functionName: 'minCouncilScore',
+    query: { enabled: IS_COUNCIL_ELECTION_DEPLOYED },
+  });
+
+  const { data: _termEnd } = useReadContract({
+    address: COUNCIL_ELECTION_ADDRESS,
+    abi: CouncilElectionABI,
+    functionName: 'termEnd',
+    query: { enabled: IS_COUNCIL_ELECTION_DEPLOYED },
+  });
+
+  const { data: _termSeconds } = useReadContract({
+    address: COUNCIL_ELECTION_ADDRESS,
+    abi: CouncilElectionABI,
+    functionName: 'termSeconds',
     query: { enabled: IS_COUNCIL_ELECTION_DEPLOYED },
   });
 
@@ -86,6 +115,41 @@ export default function CouncilPage() {
     functionName: 'getClaimable',
     args: address ? [address] : undefined,
     query: { enabled: IS_COUNCIL_SALARY_DEPLOYED && !!address },
+  });
+
+  const { data: _lastPayTime } = useReadContract({
+    address: COUNCIL_SALARY_ADDRESS,
+    abi: CouncilSalaryABI,
+    functionName: 'lastPayTime',
+    query: { enabled: IS_COUNCIL_SALARY_DEPLOYED },
+  });
+
+  const { data: _payInterval } = useReadContract({
+    address: COUNCIL_SALARY_ADDRESS,
+    abi: CouncilSalaryABI,
+    functionName: 'payInterval',
+    query: { enabled: IS_COUNCIL_SALARY_DEPLOYED },
+  });
+
+  const { data: _minScoreToPay } = useReadContract({
+    address: COUNCIL_SALARY_ADDRESS,
+    abi: CouncilSalaryABI,
+    functionName: 'minScoreToPay',
+    query: { enabled: IS_COUNCIL_SALARY_DEPLOYED },
+  });
+
+  const { data: _complianceMode } = useReadContract({
+    address: COUNCIL_SALARY_ADDRESS,
+    abi: CouncilSalaryABI,
+    functionName: 'complianceMode',
+    query: { enabled: IS_COUNCIL_SALARY_DEPLOYED },
+  });
+
+  const { data: _currentTerm } = useReadContract({
+    address: COUNCIL_SALARY_ADDRESS,
+    abi: CouncilSalaryABI,
+    functionName: 'currentTerm',
+    query: { enabled: IS_COUNCIL_SALARY_DEPLOYED },
   });
 
   // Read can register
@@ -207,10 +271,39 @@ export default function CouncilPage() {
               exit={{ opacity: 0, y: -20 }}
               transition={{ duration: 0.2 }}
             >
-              {activeTab === 'overview' && <OverviewTab />}
-              {activeTab === 'members' && <MembersTab />}
-              {activeTab === 'salary' && <SalaryTab isConnected={isConnected} />}
-              {activeTab === 'voting' && <VotingTab isConnected={isConnected} />}
+              {activeTab === 'overview' && (
+                <OverviewTab
+                  councilSize={typeof _councilSize === 'bigint' ? Number(_councilSize) : undefined}
+                  councilMembers={Array.isArray(_councilMembers) ? _councilMembers.length : undefined}
+                  termSeconds={typeof _termSeconds === 'bigint' ? Number(_termSeconds) : undefined}
+                  payInterval={typeof _payInterval === 'bigint' ? Number(_payInterval) : undefined}
+                />
+              )}
+              {activeTab === 'members' && (
+                <MembersTab
+                  councilMembers={_councilMembers as `0x${string}`[] | undefined}
+                  councilSize={typeof _councilSize === 'bigint' ? Number(_councilSize) : undefined}
+                  minCouncilScore={typeof _minCouncilScore === 'bigint' ? Number(_minCouncilScore) : undefined}
+                  termEnd={typeof _termEnd === 'bigint' ? Number(_termEnd) : undefined}
+                />
+              )}
+              {activeTab === 'salary' && (
+                <SalaryTab
+                  isConnected={isConnected}
+                  claimable={typeof _claimableSalary === 'bigint' ? _claimableSalary : undefined}
+                  lastPayTime={typeof _lastPayTime === 'bigint' ? Number(_lastPayTime) : undefined}
+                  payInterval={typeof _payInterval === 'bigint' ? Number(_payInterval) : undefined}
+                  minScoreToPay={typeof _minScoreToPay === 'bigint' ? Number(_minScoreToPay) : undefined}
+                  complianceMode={typeof _complianceMode === 'boolean' ? _complianceMode : undefined}
+                />
+              )}
+              {activeTab === 'voting' && (
+                <VotingTab
+                  isConnected={isConnected}
+                  currentTerm={typeof _currentTerm === 'bigint' ? Number(_currentTerm) : undefined}
+                  councilSize={typeof _councilSize === 'bigint' ? Number(_councilSize) : undefined}
+                />
+              )}
             </motion.div>
           </AnimatePresence>
         </div>
@@ -233,7 +326,17 @@ function GlassCard({ children, className = "" }: { children: React.ReactNode; cl
   );
 }
 
-function OverviewTab() {
+function OverviewTab({
+  councilSize,
+  councilMembers,
+  termSeconds,
+  payInterval,
+}: {
+  councilSize?: number;
+  councilMembers?: number;
+  termSeconds?: number;
+  payInterval?: number;
+}) {
   return (
     <div className="space-y-8">
       {/* Hero Section */}
@@ -256,10 +359,34 @@ function OverviewTab() {
         className="grid grid-cols-1 md:grid-cols-4 gap-4"
       >
         {[
-          { value: '12', label: 'Council Seats', gradient: 'from-cyan-500/20 to-blue-500/10', border: 'border-cyan-500/20', text: 'text-cyan-400' },
-          { value: '--', label: 'Active Members', gradient: 'from-emerald-500/20 to-green-500/10', border: 'border-emerald-500/20', text: 'text-emerald-400' },
-          { value: '365', label: 'Days Term Length', gradient: 'from-amber-500/20 to-orange-500/10', border: 'border-amber-500/20', text: 'text-amber-400' },
-          { value: '120d', label: 'Pay Interval', gradient: 'from-purple-500/20 to-pink-500/10', border: 'border-purple-500/20', text: 'text-purple-400' },
+          {
+            value: typeof councilSize === 'number' ? councilSize.toString() : '—',
+            label: 'Council Seats',
+            gradient: 'from-cyan-500/20 to-blue-500/10',
+            border: 'border-cyan-500/20',
+            text: 'text-cyan-400',
+          },
+          {
+            value: typeof councilMembers === 'number' ? councilMembers.toString() : '—',
+            label: 'Active Members',
+            gradient: 'from-emerald-500/20 to-green-500/10',
+            border: 'border-emerald-500/20',
+            text: 'text-emerald-400',
+          },
+          {
+            value: typeof termSeconds === 'number' ? Math.round(termSeconds / 86400).toString() : '—',
+            label: 'Days Term Length',
+            gradient: 'from-amber-500/20 to-orange-500/10',
+            border: 'border-amber-500/20',
+            text: 'text-amber-400',
+          },
+          {
+            value: typeof payInterval === 'number' ? `${Math.round(payInterval / 86400)}d` : '—',
+            label: 'Pay Interval',
+            gradient: 'from-purple-500/20 to-pink-500/10',
+            border: 'border-purple-500/20',
+            text: 'text-purple-400',
+          },
         ].map((stat, _idx) => (
           <motion.div
             key={stat.label}
@@ -333,66 +460,48 @@ function OverviewTab() {
   );
 }
 
-function MembersTab() {
-  const members = [
-    { 
-      address: '0x1234...5678', 
-      name: 'Council Member 1',
-      role: 'Chair',
-      proofScore: 95,
-      joinedDays: 180,
-      status: 'active'
-    },
-    { 
-      address: '0x2345...6789', 
-      name: 'Council Member 2',
-      role: 'Secretary',
-      proofScore: 88,
-      joinedDays: 120,
-      status: 'active'
-    },
-    { 
-      address: '0x3456...7890', 
-      name: 'Council Member 3',
-      role: 'Treasury Lead',
-      proofScore: 92,
-      joinedDays: 90,
-      status: 'active'
-    },
-    { 
-      address: '0x4567...8901', 
-      name: 'Council Member 4',
-      role: 'Tech Lead',
-      proofScore: 85,
-      joinedDays: 60,
-      status: 'active'
-    },
-    { 
-      address: '0x5678...9012', 
-      name: 'Council Member 5',
-      role: 'Community Lead',
-      proofScore: 78,
-      joinedDays: 45,
-      status: 'active'
-    },
-    { 
-      address: '0x6789...0123', 
-      name: 'Council Member 6',
-      role: 'Member',
-      proofScore: 72,
-      joinedDays: 30,
-      status: 'active'
-    },
-    { 
-      address: '—', 
-      name: 'Vacant Seat',
-      role: 'Open',
-      proofScore: 0,
-      joinedDays: 0,
-      status: 'vacant'
-    },
-  ];
+function MembersTab({
+  councilMembers,
+  councilSize,
+  minCouncilScore,
+  termEnd,
+}: {
+  councilMembers?: `0x${string}`[];
+  councilSize?: number;
+  minCouncilScore?: number;
+  termEnd?: number;
+}) {
+  const membersList = councilMembers ?? [];
+  const { data: scoreReads } = useReadContracts({
+    contracts: membersList.map((member) => ({
+      address: SEER_ADDRESS,
+      abi: SeerABI,
+      functionName: 'getScore',
+      args: [member],
+    })),
+    query: { enabled: IS_SEER_DEPLOYED && membersList.length > 0 },
+  });
 
+  const scores = (scoreReads ?? []).map((read) => (read && read.status === 'success' ? Number(read.result as bigint) : null));
+
+  const members = (councilMembers ?? []).map((address, idx) => ({
+    address,
+    name: `Council Member ${idx + 1}`,
+    role: idx === 0 ? 'Chair' : 'Member',
+    status: 'active' as const,
+    score: scores[idx] ?? null,
+  }));
+
+  const vacantCount = Math.max((councilSize ?? 0) - members.length, 0);
+  const vacants = Array.from({ length: vacantCount }).map((_, idx) => ({
+    address: '—',
+    name: `Vacant Seat ${idx + 1}`,
+    role: 'Open',
+    status: 'vacant' as const,
+  }));
+
+  const displayMembers = [...members, ...vacants];
+  const termEndsLabel = termEnd ? new Date(termEnd * 1000).toLocaleDateString() : '—';
   return (
     <div className="space-y-8">
       {/* Members List */}
@@ -408,7 +517,10 @@ function MembersTab() {
           Current Council Members
         </h3>
         <div className="space-y-4">
-          {members.map((member, idx) => (
+          {displayMembers.length === 0 ? (
+            <div className="text-center text-gray-400 py-10">No council members found.</div>
+          ) : (
+            displayMembers.map((member, idx) => (
             <motion.div 
               key={idx}
               whileHover={{ scale: 1.005, x: 4 }}
@@ -444,17 +556,18 @@ function MembersTab() {
                 {member.status !== 'vacant' && (
                   <>
                     <span className="px-3 py-1 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-full text-xs font-bold">
-                      Score: {member.proofScore}
+                      Score: {member.score ?? '—'}
                     </span>
                     <span className="text-xs text-gray-400">
                       <Calendar size={12} className="inline mr-1" />
-                      {member.joinedDays} days
+                      Term ends: {termEndsLabel}
                     </span>
                   </>
                 )}
               </div>
             </motion.div>
-          ))}
+          )))
+          }
         </div>
       </motion.div>
 
@@ -476,16 +589,12 @@ function MembersTab() {
         </div>
         <div className="bg-white/5 border border-white/10 rounded-xl p-4 space-y-3">
           <div className="flex items-center justify-between">
-            <span className="text-gray-400">Last Check</span>
-            <span className="text-white">Today, 00:00 UTC</span>
-          </div>
-          <div className="flex items-center justify-between">
-            <span className="text-gray-400">Members Passing</span>
-            <span className="text-emerald-400 font-semibold">12 / 12</span>
+            <span className="text-gray-400">Council Seats</span>
+            <span className="text-white">{members.length} / {councilSize ?? '—'}</span>
           </div>
           <div className="flex items-center justify-between">
             <span className="text-gray-400">Minimum Required Score</span>
-            <span className="text-cyan-400 font-semibold">7000 (70%)</span>
+            <span className="text-cyan-400 font-semibold">{minCouncilScore ?? '—'} (0-10000 scale)</span>
           </div>
         </div>
       </motion.div>
@@ -493,11 +602,26 @@ function MembersTab() {
   );
 }
 
-function SalaryTab({ isConnected: _isConnected }: { isConnected: boolean }) {
-  // Salary is NOT fixed - funded by ecosystem fees, distributed every 120 days
-  const salaryHistory = [
-    { period: 'Period 1 (Days 1-120)', amount: 'Variable (fees collected)', recipients: 12, status: 'pending' },
-  ];
+function SalaryTab({
+  isConnected: _isConnected,
+  claimable,
+  lastPayTime,
+  payInterval,
+  minScoreToPay,
+  complianceMode,
+}: {
+  isConnected: boolean;
+  claimable?: bigint;
+  lastPayTime?: number;
+  payInterval?: number;
+  minScoreToPay?: number;
+  complianceMode?: boolean;
+}) {
+  const lastPayLabel = lastPayTime ? new Date(lastPayTime * 1000).toLocaleDateString() : '—';
+  const nextPayLabel = lastPayTime && payInterval
+    ? new Date((lastPayTime + payInterval) * 1000).toLocaleDateString()
+    : '—';
+  const claimableLabel = typeof claimable === 'bigint' ? `${Number(claimable) / 1e18}` : '—';
 
   return (
     <div className="space-y-8">
@@ -539,26 +663,24 @@ function SalaryTab({ isConnected: _isConnected }: { isConnected: boolean }) {
       >
         <h3 className="text-xl font-bold text-white mb-6">Distribution History</h3>
         <div className="space-y-3">
-          {salaryHistory.map((entry) => (
-            <div key={entry.period} className="flex items-center justify-between p-4 bg-white/5 border border-white/10 rounded-xl">
-              <div className="flex items-center gap-4">
-                <div className="p-2 rounded-lg bg-white/5 border border-white/10">
-                  <Calendar className="text-gray-400" size={20} />
-                </div>
-                <div>
-                  <div className="text-white font-bold">{entry.period}</div>
-                  <div className="text-xs text-gray-400">{entry.recipients} recipients</div>
-                </div>
+          <div className="flex items-center justify-between p-4 bg-white/5 border border-white/10 rounded-xl">
+            <div className="flex items-center gap-4">
+              <div className="p-2 rounded-lg bg-white/5 border border-white/10">
+                <Calendar className="text-gray-400" size={20} />
               </div>
-              <div className="text-right">
-                <div className="text-emerald-400 font-bold">{entry.amount}</div>
-                <div className="text-xs text-emerald-400">
-                  <CheckCircle size={12} className="inline mr-1" />
-                  Distributed
-                </div>
+              <div>
+                <div className="text-white font-bold">Last Distribution</div>
+                <div className="text-xs text-gray-400">{lastPayLabel}</div>
               </div>
             </div>
-          ))}
+            <div className="text-right">
+              <div className="text-emerald-400 font-bold">Variable (fees collected)</div>
+              <div className="text-xs text-emerald-400">
+                <CheckCircle size={12} className="inline mr-1" />
+                {complianceMode ? 'Paused (Compliance Mode)' : 'Recorded'}
+              </div>
+            </div>
+          </div>
         </div>
       </motion.div>
 
@@ -573,35 +695,32 @@ function SalaryTab({ isConnected: _isConnected }: { isConnected: boolean }) {
         <p className="text-gray-400 text-sm mb-4">
           Keeper can trigger monthly salary distribution on or after the 1st of each month.
         </p>
-        <div className="bg-white/5 border border-white/10 rounded-xl p-4 mb-4">
+        <div className="bg-white/5 border border-white/10 rounded-xl p-4 mb-4 space-y-2">
           <div className="flex items-center justify-between">
             <span className="text-gray-400">Next Distribution Available</span>
-            <span className="text-cyan-400 font-bold">January 1, 2026</span>
+            <span className="text-cyan-400 font-bold">{nextPayLabel}</span>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-gray-400">Minimum Score to Pay</span>
+            <span className="text-white">{minScoreToPay ?? '—'}</span>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-gray-400">Your Claimable</span>
+            <span className="text-emerald-400 font-bold">{claimableLabel} VFIDE</span>
           </div>
         </div>
         <button 
           className="w-full bg-white/5 text-gray-500 font-bold py-3 rounded-xl border border-white/10 cursor-not-allowed"
           disabled
         >
-          Distribution Not Available Yet
+          {complianceMode ? 'Distribution Disabled (Compliance Mode)' : 'Distribution Not Available Yet'}
         </button>
       </motion.div>
     </div>
   );
 }
 
-function VotingTab({ isConnected }: { isConnected: boolean }) {
-  const removalVotes = [
-    {
-      target: '0x9876...5432',
-      targetName: 'Council Member X',
-      reason: 'ProofScore dropped below threshold for 30 days',
-      votesFor: 4,
-      votesNeeded: 5,
-      deadline: '2 days',
-      status: 'active'
-    }
-  ];
+function VotingTab({ isConnected, currentTerm, councilSize }: { isConnected: boolean; currentTerm?: number; councilSize?: number }) {
 
   return (
     <div className="space-y-8">
@@ -621,8 +740,8 @@ function VotingTab({ isConnected }: { isConnected: boolean }) {
           </div>
         </div>
         <div className="bg-amber-500/20 border border-amber-500/30 rounded-xl p-4">
-          <p className="text-amber-400 text-sm font-bold">Vote Threshold: &gt;50% (7/12)</p>
-          <p className="text-gray-400 text-sm">At least 7 council members must vote for removal</p>
+          <p className="text-amber-400 text-sm font-bold">Vote Threshold: &gt;50% ({councilSize ? `${Math.floor(councilSize / 2) + 1}/${councilSize}` : '—'})</p>
+          <p className="text-gray-400 text-sm">Term #{currentTerm ?? '—'} · Council removal votes are term-scoped</p>
         </div>
       </motion.div>
 
@@ -634,71 +753,12 @@ function VotingTab({ isConnected }: { isConnected: boolean }) {
         className="relative overflow-hidden rounded-2xl bg-linear-to-br from-white/8 to-white/2 backdrop-blur-xl border border-white/10 p-6"
       >
         <h3 className="text-xl font-bold text-white mb-6">Active Removal Votes</h3>
-        {removalVotes.length > 0 ? (
-          <div className="space-y-4">
-            {removalVotes.map((vote, idx) => (
-              <div key={idx} className="p-4 bg-red-500/10 rounded-xl border border-red-500/30">
-                <div className="flex items-start justify-between mb-4">
-                  <div>
-                    <div className="text-white font-bold">{vote.targetName}</div>
-                    <div className="text-xs text-gray-400 font-mono">{vote.target}</div>
-                  </div>
-                  <span className="px-3 py-1 bg-red-500/20 text-red-400 border border-red-500/30 rounded-full text-xs font-bold">
-                    Removal Vote
-                  </span>
-                </div>
-                <div className="mb-4">
-                  <div className="text-sm text-gray-400 mb-2">Reason:</div>
-                  <p className="text-white text-sm bg-white/5 border border-white/10 p-3 rounded-xl">{vote.reason}</p>
-                </div>
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-2">
-                    <span className="text-gray-400">Votes:</span>
-                    <span className="text-cyan-400 font-bold">{vote.votesFor}/{vote.votesNeeded}</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm text-gray-400">
-                    <Clock size={14} />
-                    {vote.deadline} remaining
-                  </div>
-                </div>
-                <div className="h-2 bg-white/5 rounded-full overflow-hidden mb-4">
-                  <motion.div 
-                    initial={{ width: 0 }}
-                    animate={{ width: `${(vote.votesFor / vote.votesNeeded) * 100}%` }}
-                    className="h-full bg-linear-to-r from-red-500 to-orange-500 rounded-full"
-                  />
-                </div>
-                {isConnected ? (
-                  <div className="flex gap-3">
-                    <motion.button 
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      className="flex-1 bg-linear-to-r from-red-500 to-red-600 text-white font-bold py-2 rounded-xl shadow-lg shadow-red-500/25 hover:shadow-red-500/40 transition-all"
-                    >
-                      Vote For Removal
-                    </motion.button>
-                    <motion.button 
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      className="flex-1 bg-white/5 border border-white/10 text-white font-bold py-2 rounded-xl hover:bg-white/10 transition-colors"
-                    >
-                      Abstain
-                    </motion.button>
-                  </div>
-                ) : (
-                  <p className="text-center text-gray-400 text-sm">Connect wallet to vote</p>
-                )}
-              </div>
-            ))}
+        <div className="text-center py-8">
+          <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 inline-block mb-3">
+            <CheckCircle className="w-8 h-8 text-emerald-400" />
           </div>
-        ) : (
-          <div className="text-center py-8">
-            <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 inline-block mb-3">
-              <CheckCircle className="w-8 h-8 text-emerald-400" />
-            </div>
-            <p className="text-gray-400">No active removal votes</p>
-          </div>
-        )}
+          <p className="text-gray-400">No active removal votes available on-chain.</p>
+        </div>
       </motion.div>
 
       {/* Initiate Removal (Council Only) */}
@@ -713,12 +773,16 @@ function VotingTab({ isConnected }: { isConnected: boolean }) {
           <p className="text-gray-400 text-sm mb-4">
             Council members can propose removal of another member who fails to meet requirements.
           </p>
+          <div className="bg-amber-500/10 border border-amber-500/30 text-amber-400 text-sm rounded-lg p-3 mb-4">
+            Removal initiation is not exposed on-chain. Use a DAO proposal for governance actions.
+          </div>
           <div className="space-y-4 mb-4">
             <div>
               <label className="text-sm text-gray-400 mb-2 block">Target Member Address</label>
               <input
                 type="text"
                 placeholder="0x..."
+                disabled
                 className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:border-red-500/50 focus:outline-none transition-colors"
               />
             </div>
@@ -728,6 +792,7 @@ function VotingTab({ isConnected }: { isConnected: boolean }) {
                 placeholder="Describe why this member should be removed..."
                 rows={3}
                 maxLength={500}
+                disabled
                 className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:border-red-500/50 focus:outline-none resize-none transition-colors"
               />
             </div>
@@ -735,10 +800,11 @@ function VotingTab({ isConnected }: { isConnected: boolean }) {
           <motion.button 
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
-            className="w-full bg-linear-to-r from-red-500 to-red-600 text-white font-bold py-3 rounded-xl shadow-lg shadow-red-500/25 hover:shadow-red-500/40 transition-all flex items-center justify-center gap-2"
+            disabled
+            className="w-full bg-white/5 text-gray-500 font-bold py-3 rounded-xl border border-white/10 cursor-not-allowed flex items-center justify-center gap-2"
           >
             <AlertTriangle size={18} />
-            Propose Removal
+            Propose Removal (Unavailable)
           </motion.button>
         </motion.div>
       )}

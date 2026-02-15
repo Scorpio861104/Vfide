@@ -192,16 +192,6 @@ export const LISTING_PRICE = {
 export const PRESALE_REFERENCE_PRICE = PRESALE_PRICES.OATH;
 
 // ========================================
-// FEATURE FLAGS
-// ========================================
-
-/**
- * Whether the app is in demo mode
- * When true, shows demo labels on mock data
- */
-export const IS_DEMO_MODE = process.env.NEXT_PUBLIC_DEMO_MODE === 'true';
-
-// ========================================
 // TIME CONSTANTS
 // ========================================
 

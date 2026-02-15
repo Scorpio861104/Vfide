@@ -2,6 +2,9 @@
  * Validation utilities for crypto operations
  */
 
+import { getAuthHeaders } from '@/lib/auth/client';
+import { formatUnits, isAddress, parseUnits } from 'viem';
+
 export class ValidationError extends Error {
   constructor(message: string) {
     super(message);
@@ -10,11 +13,11 @@ export class ValidationError extends Error {
 }
 
 /**
- * Validate Ethereum address format
+ * Validate Ethereum address format (with EIP-55 checksum)
  */
 export function validateEthereumAddress(address: string): boolean {
   if (!address || typeof address !== 'string') return false;
-  return /^0x[a-fA-F0-9]{40}$/.test(address);
+  return isAddress(address);
 }
 
 /**
@@ -154,8 +157,8 @@ export async function checkSufficientBalance(
         method: 'eth_getBalance',
         params: [address, 'latest'],
       });
-      balance = (parseInt(balanceWei, 16) / 1e18).toString();
-      
+      balance = formatUnits(BigInt(balanceWei), 18);
+
       // Validate parsed balance
       const balanceNum = parseFloat(balance);
       if (isNaN(balanceNum) || !isFinite(balanceNum)) {
@@ -163,9 +166,34 @@ export async function checkSufficientBalance(
       }
     } else {
       // VFIDE token balance from API
-      const response = await fetch(`/api/crypto/balance/${address}`);
+      const response = await fetch(`/api/crypto/balance/${address}`, {
+        headers: { ...getAuthHeaders() },
+      });
+      if (!response.ok) {
+        return {
+          sufficient: false,
+          balance: '0',
+          required: amount,
+          error: 'Unauthorized balance lookup',
+        };
+      }
+
       const data = await response.json();
-      balance = data.tokenBalance || '0';
+      const balances = Array.isArray(data.balances) ? data.balances : [];
+      const tokenAddress = process.env.NEXT_PUBLIC_VFIDE_TOKEN_ADDRESS?.toLowerCase();
+
+      if (!tokenAddress) {
+        const total = balances.reduce((sum: number, row: { balance?: string }) => {
+          const value = parseFloat(row.balance || '0');
+          return sum + (isNaN(value) ? 0 : value);
+        }, 0);
+        balance = total.toString();
+      } else {
+        const match = balances.find((row: { token_address?: string }) =>
+          row.token_address?.toLowerCase() === tokenAddress
+        );
+        balance = match?.balance ? String(match.balance) : '0';
+      }
     }
 
     // Estimate gas if needed
@@ -226,7 +254,7 @@ export async function estimateGas(
   value: string
 ): Promise<number> {
   try {
-    const valueWei = '0x' + (parseFloat(value) * 1e18).toString(16);
+    const valueWei = '0x' + parseUnits(value, 18).toString(16);
 
     // Estimate gas limit
     const gasLimit = await window.ethereum.request({
@@ -244,15 +272,13 @@ export async function estimateGas(
       params: [],
     });
 
-    // Calculate total gas cost in ETH
-    const gasLimitNum = parseInt(gasLimit, 16);
-    const gasPriceNum = parseInt(gasPrice, 16);
-    
-    if (isNaN(gasLimitNum) || isNaN(gasPriceNum) || !isFinite(gasLimitNum) || !isFinite(gasPriceNum)) {
-      throw new Error('Invalid gas limit or price from provider');
-    }
-    
-    const gasCost = (gasLimitNum * gasPriceNum) / 1e18;
+    // Calculate total gas cost in ETH using BigInt to avoid precision loss on hex values
+    const gasLimitBig = BigInt(gasLimit);
+    const gasPriceBig = BigInt(gasPrice);
+    const gasCostWei = gasLimitBig * gasPriceBig;
+    // VULN-13 Fix: Use BigInt division to avoid Number() precision loss on large values
+    const gasCostGwei = gasCostWei / BigInt(1e9);
+    const gasCost = Number(gasCostGwei) / 1e9; // Safe: gwei fits in Number
 
     return gasCost;
   } catch (error) {

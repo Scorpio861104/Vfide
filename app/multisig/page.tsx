@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useAccount } from 'wagmi';
 
 interface Signer {
@@ -21,21 +21,23 @@ interface Transaction {
   status: 'pending' | 'executed' | 'cancelled';
 }
 
+const SAMPLE_TX_CREATED_AT = {
+  recent: Date.parse('2024-03-01T10:00:00Z'),
+  earlier: Date.parse('2024-02-29T12:00:00Z'),
+};
+
 export default function MultisigPage() {
   const { address, isConnected } = useAccount();
-  const [signers, setSigners] = useState<Signer[]>([]);
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [required, _setRequired] = useState(2);
-  const [_showCreateModal, setShowCreateModal] = useState(false);
-
-  useEffect(() => {
-    if (address) {
-      setSigners([
-        { address: address, name: 'You', isActive: true },
+  const signers: Signer[] = address
+    ? [
+        { address, name: 'You', isActive: true },
         { address: '0x1234...5678', name: 'Alice', isActive: true },
         { address: '0xabcd...efgh', name: 'Bob', isActive: true },
-      ]);
-      setTransactions([
+      ]
+    : [];
+
+  const transactions: Transaction[] = address
+    ? [
         {
           id: '1',
           to: '0x9999...0000',
@@ -44,7 +46,7 @@ export default function MultisigPage() {
           description: 'Team expenses Q1',
           confirmations: 1,
           required: 2,
-          createdAt: Date.now() - 2 * 60 * 60 * 1000,
+          createdAt: SAMPLE_TX_CREATED_AT.recent,
           status: 'pending',
         },
         {
@@ -55,12 +57,13 @@ export default function MultisigPage() {
           description: 'Contractor payment',
           confirmations: 2,
           required: 2,
-          createdAt: Date.now() - 24 * 60 * 60 * 1000,
+          createdAt: SAMPLE_TX_CREATED_AT.earlier,
           status: 'executed',
         },
-      ]);
-    }
-  }, [address]);
+      ]
+    : [];
+  const [required, _setRequired] = useState(2);
+  const [_showCreateModal, setShowCreateModal] = useState(false);
 
   if (!isConnected) {
     return (
@@ -124,7 +127,7 @@ export default function MultisigPage() {
                 </div>
                 <div>
                   <div className="font-medium">{signer.name}</div>
-                  <div className="text-xs text-muted-foreground font-mono truncate max-w-30 sm:max-w-50">{signer.address}</div>
+                  <div className="text-xs text-muted-foreground font-mono truncate max-w-[7.5rem] sm:max-w-[12.5rem]">{signer.address}</div>
                 </div>
               </div>
               <span className="text-xs px-2 py-1 rounded-full bg-green-500/20 text-green-500">

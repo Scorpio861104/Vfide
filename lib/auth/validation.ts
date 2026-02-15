@@ -25,8 +25,16 @@ export const username = z
   .max(30, 'Username must be at most 30 characters')
   .regex(/^[a-zA-Z0-9_-]+$/, 'Username can only contain letters, numbers, underscores, and hyphens');
 
-// Safe text (prevents XSS) - base validator without max
-const sanitizeText = (val: string) => val.replace(/<script[^>]*>.*?<\/script>/gi, '').trim();
+// Safe text (prevents XSS) - strips all HTML tags and dangerous patterns
+const sanitizeText = (val: string) => {
+  // Strip ALL HTML tags (not just <script>)
+  let sanitized = val.replace(/<[^>]*>/g, '');
+  // Strip javascript: and other dangerous URI schemes
+  sanitized = sanitized.replace(/(?:javascript|vbscript|data)\s*:/gi, '');
+  // Strip event handler attributes (in case of partial HTML)
+  sanitized = sanitized.replace(/on\w+\s*=\s*["'][^"']*["']/gi, '');
+  return sanitized.trim();
+};
 
 export const safeText = z
   .string()
@@ -89,8 +97,12 @@ export const updateUserSchema = z.object({
 export const sendMessageSchema = z.object({
   from: ethereumAddress,
   to: ethereumAddress,
-  content: z.string().min(1, 'Message cannot be empty').max(5000, 'Message is too long').transform(sanitizeText),
+  content: z.string().min(1, 'Message cannot be empty').max(5000, 'Message is too long').transform(sanitizeText).optional(),
+  encryptedContent: z.string().min(1, 'Encrypted message cannot be empty').max(20000, 'Encrypted message is too long').optional(),
   conversationId: z.string().optional(),
+}).refine((data) => Boolean(data.content || data.encryptedContent), {
+  message: 'Message content is required',
+  path: ['content'],
 });
 
 export const editMessageSchema = z.object({

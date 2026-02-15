@@ -80,144 +80,6 @@ interface SocialStats {
   suggestions: number;
 }
 
-// ==================== MOCK DATA GENERATORS ====================
-
-const generateMockUser = (id: string, index: number): User => ({
-  id,
-  username: `user_${index}`,
-  displayName: `User ${index}`,
-  avatar: '👤',
-  bio: `Blockchain enthusiast and DeFi explorer #${index}`,
-  proofScore: Math.floor(Math.random() * 2000) + 500,
-  followers: Math.floor(Math.random() * 500) + 20,
-  following: Math.floor(Math.random() * 300) + 10,
-  badges: Math.floor(Math.random() * 15),
-  isVerified: Math.random() > 0.7,
-  joinedAt: new Date(2024, Math.floor(Math.random() * 12), Math.floor(Math.random() * 28) + 1),
-});
-
-const mockFollowingUsers = (): User[] => [
-  generateMockUser('u1', 1),
-  generateMockUser('u2', 2),
-  generateMockUser('u3', 3),
-  generateMockUser('u4', 4),
-  generateMockUser('u5', 5),
-];
-
-const mockFollowers = (): User[] => [
-  generateMockUser('u6', 6),
-  generateMockUser('u7', 7),
-  generateMockUser('u8', 8),
-  generateMockUser('u9', 9),
-];
-
-const mockFriends = (): User[] => [
-  generateMockUser('u10', 10),
-  generateMockUser('u11', 11),
-  generateMockUser('u12', 12),
-];
-
-const mockFriendRequests = (): FriendRequest[] => [
-  {
-    id: 'fr1',
-    fromUserId: 'u20',
-    fromUser: generateMockUser('u20', 20),
-    toUserId: 'current',
-    createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
-    status: 'pending',
-  },
-  {
-    id: 'fr2',
-    fromUserId: 'u21',
-    fromUser: generateMockUser('u21', 21),
-    toUserId: 'current',
-    createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
-    status: 'pending',
-  },
-];
-
-const mockSuggestions = (): SocialSuggestion[] => [
-  {
-    userId: 'u30',
-    user: generateMockUser('u30', 30),
-    reason: 'mutual_follow',
-    score: 95,
-  },
-  {
-    userId: 'u31',
-    user: generateMockUser('u31', 31),
-    reason: 'active_user',
-    score: 88,
-  },
-  {
-    userId: 'u32',
-    user: generateMockUser('u32', 32),
-    reason: 'shared_interests',
-    score: 82,
-  },
-  {
-    userId: 'u33',
-    user: generateMockUser('u33', 33),
-    reason: 'frequent_interactor',
-    score: 75,
-  },
-  {
-    userId: 'u34',
-    user: generateMockUser('u34', 34),
-    reason: 'mutual_follow',
-    score: 72,
-  },
-];
-
-const mockFeedPosts = (): FeedPost[] => [
-  {
-    id: 'p1',
-    userId: 'u1',
-    user: generateMockUser('u1', 1),
-    content: 'Just participated in the latest governance proposal! 🗳️',
-    type: 'activity',
-    timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000),
-    likes: 42,
-    liked: false,
-    comments: 8,
-    shares: 3,
-  },
-  {
-    id: 'p2',
-    userId: 'u2',
-    user: generateMockUser('u2', 2),
-    content: 'Earned the "Governance Pro" badge! 🏆',
-    type: 'achievement',
-    timestamp: new Date(Date.now() - 5 * 60 * 60 * 1000),
-    likes: 156,
-    liked: true,
-    comments: 24,
-    shares: 12,
-  },
-  {
-    id: 'p3',
-    userId: 'u3',
-    user: generateMockUser('u3', 3),
-    content: 'Exploring new DeFi opportunities with strategic staking. 💰',
-    type: 'status',
-    timestamp: new Date(Date.now() - 8 * 60 * 60 * 1000),
-    likes: 89,
-    liked: false,
-    comments: 15,
-    shares: 7,
-  },
-];
-
-const mockBlockedUsers = (): BlockedUser[] => [
-  {
-    id: 'b1',
-    userId: 'u50',
-    user: generateMockUser('u50', 50),
-    blockedAt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
-    reason: 'Spam behavior',
-  },
-];
-
 // ==================== HELPER FUNCTIONS ====================
 
 const _formatJoinDate = (date: Date): string => {
@@ -575,9 +437,25 @@ function FeedPostCard({ post, onLike, onComment, onShare }: FeedPostCardProps) {
 
 interface SocialFeaturesProps {
   className?: string;
+  followingUsers?: User[];
+  followers?: User[];
+  friends?: User[];
+  friendRequests?: FriendRequest[];
+  suggestions?: SocialSuggestion[];
+  feedPosts?: FeedPost[];
+  blockedUsers?: BlockedUser[];
 }
 
-function SocialFeatures({ className = '' }: SocialFeaturesProps) {
+function SocialFeatures({
+  className = '',
+  followingUsers = [],
+  followers = [],
+  friends = [],
+  friendRequests: initialFriendRequests = [],
+  suggestions: initialSuggestions = [],
+  feedPosts = [],
+  blockedUsers: initialBlockedUsers = [],
+}: SocialFeaturesProps) {
   // State Management
   const [activeTab, setActiveTab] = useState<
     'feed' | 'following' | 'followers' | 'friends' | 'suggestions' | 'requests' | 'blocked'
@@ -586,14 +464,21 @@ function SocialFeatures({ className = '' }: SocialFeaturesProps) {
   const [relationships, setRelationships] = useState<Record<string, UserRelationship>>({});
   const [likedPosts, setLikedPosts] = useState<Set<string>>(new Set());
 
-  // Mock Data
-  const [followingUsers] = useState(mockFollowingUsers());
-  const [followers] = useState(mockFollowers());
-  const [friends] = useState(mockFriends());
-  const [friendRequests, setFriendRequests] = useState(mockFriendRequests());
-  const [suggestions, setSuggestions] = useState(mockSuggestions());
-  const [feedPosts, _setFeedPosts] = useState(mockFeedPosts());
-  const [blockedUsers, setBlockedUsers] = useState(mockBlockedUsers());
+  const [friendRequests, setFriendRequests] = useState(initialFriendRequests);
+  const [suggestions, setSuggestions] = useState(initialSuggestions);
+  const [blockedUsers, setBlockedUsers] = useState(initialBlockedUsers);
+
+  React.useEffect(() => {
+    setFriendRequests(initialFriendRequests);
+  }, [initialFriendRequests]);
+
+  React.useEffect(() => {
+    setSuggestions(initialSuggestions);
+  }, [initialSuggestions]);
+
+  React.useEffect(() => {
+    setBlockedUsers(initialBlockedUsers);
+  }, [initialBlockedUsers]);
 
   // Initialize relationships
   React.useEffect(() => {
@@ -608,7 +493,7 @@ function SocialFeatures({ className = '' }: SocialFeaturesProps) {
       initialRelationships[user.id] = { userId: user.id, status: 'friend' };
     });
     setRelationships(initialRelationships);
-  }, []);
+  }, [followingUsers, followers, friends]);
 
   // Event Handlers
   const handleFollow = useCallback((userId: string) => {
@@ -652,7 +537,7 @@ function SocialFeatures({ className = '' }: SocialFeaturesProps) {
       setFriendRequests((prev) => prev.filter((r) => r.id !== requestId));
       handleAddFriend(request.fromUserId);
     }
-  }, [friendRequests]);
+  }, [friendRequests, handleAddFriend]);
 
   const handleRejectRequest = useCallback((requestId: string) => {
     setFriendRequests((prev) => prev.filter((r) => r.id !== requestId));

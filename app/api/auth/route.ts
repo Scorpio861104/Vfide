@@ -3,7 +3,7 @@ import { verifyMessage } from 'viem';
 import { generateToken, verifyToken, extractToken } from '@/lib/auth/jwt';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { validateBody, authSchema } from '@/lib/auth/validation';
-import { setAuthCookie, getAuthCookie } from '@/lib/auth/cookieAuth';
+import { setAuthCookie, setRefreshCookie, getAuthCookie } from '@/lib/auth/cookieAuth';
 
 /**
  * POST /api/auth
@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
     const { address, message, signature } = validation.data;
 
     // Verify the message contains expected content (prevent replay attacks)
-    const expectedPrefix = 'Sign in to VFIDE';
+    const expectedPrefix = 'Sign this message to authenticate with VFIDE';
     if (!message.includes(expectedPrefix)) {
       return NextResponse.json(
         { error: 'Invalid message format' },
@@ -40,28 +40,33 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check message timestamp to prevent replay attacks (within 5 minutes)
+    // VULN-03 Fix: Timestamp is mandatory -- reject messages without timestamps
     const timestampMatch = message.match(/Timestamp: (\d+)/);
-    if (timestampMatch && timestampMatch[1]) {
-      const messageTimestamp = parseInt(timestampMatch[1], 10);
-      
-      // Validate parsed timestamp
-      if (isNaN(messageTimestamp) || !isFinite(messageTimestamp)) {
-        return NextResponse.json(
-          { error: 'Invalid timestamp in message' },
-          { status: 400 }
-        );
-      }
-      
-      const now = Date.now();
-      const fiveMinutes = 5 * 60 * 1000;
-      
-      if (Math.abs(now - messageTimestamp) > fiveMinutes) {
-        return NextResponse.json(
-          { error: 'Message expired. Please sign a new message.' },
-          { status: 400 }
-        );
-      }
+    if (!timestampMatch || !timestampMatch[1]) {
+      return NextResponse.json(
+        { error: 'Message must include a timestamp' },
+        { status: 400 }
+      );
+    }
+
+    const messageTimestamp = parseInt(timestampMatch[1], 10);
+
+    // Validate parsed timestamp
+    if (isNaN(messageTimestamp) || !isFinite(messageTimestamp)) {
+      return NextResponse.json(
+        { error: 'Invalid timestamp in message' },
+        { status: 400 }
+      );
+    }
+
+    const now = Date.now();
+    const fiveMinutes = 5 * 60 * 1000;
+
+    if (Math.abs(now - messageTimestamp) > fiveMinutes) {
+      return NextResponse.json(
+        { error: 'Message expired. Please sign a new message.' },
+        { status: 400 }
+      );
     }
 
     // Verify the cryptographic signature
@@ -78,19 +83,19 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Generate secure JWT token
+    // Generate secure JWT access + refresh tokens
     const tokenResponse = generateToken(address);
 
-    // Create response with HTTPOnly cookie for enhanced security
+    // Create response — tokens are ONLY set in HTTPOnly cookies, never in body
     const response = NextResponse.json({
       success: true,
-      token: tokenResponse.token,
       address: tokenResponse.address,
       expiresIn: tokenResponse.expiresIn,
     });
 
-    // Set HTTPOnly cookie (XSS protection)
+    // Set HTTPOnly cookies (XSS protection)
     await setAuthCookie(tokenResponse.token, response);
+    await setRefreshCookie(tokenResponse.refreshToken, response);
 
     return response;
   } catch (error) {

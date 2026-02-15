@@ -598,7 +598,7 @@ handleDismissSuggestion(userId: string): void
 
 ### What Worked Well
 1. **Type-first development** - Interfaces defined first
-2. **Mock data approach** - Easy testing without backend
+2. **Sample data approach** - Easy testing without backend
 3. **Component modularity** - Sub-components well organized
 4. **Comprehensive testing** - High confidence
 5. **Clear documentation** - Easy onboarding
@@ -615,7 +615,7 @@ handleDismissSuggestion(userId: string): void
 
 ### Best Practices Established
 1. Define all types upfront
-2. Create mock data generators
+2. Create sample data generators
 3. Build sub-components early
 4. Test as you develop
 5. Document while building

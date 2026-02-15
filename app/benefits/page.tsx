@@ -330,7 +330,6 @@ function TiersTab() {
 
 function RewardsTab({ isConnected }: { isConnected: boolean }) {
   const availableRewards = [
-    { name: 'Daily Hold Bonus', amount: '50 VFIDE', claimable: true, cooldown: null },
     { name: 'Weekly Referral Bonus', amount: '250 VFIDE', claimable: true, cooldown: null },
     { name: 'ProofScore Multiplier', amount: '2.5x', claimable: false, cooldown: '3 days' },
     { name: 'Transaction Cashback', amount: '125 VFIDE', claimable: true, cooldown: null },
@@ -341,23 +340,6 @@ function RewardsTab({ isConnected }: { isConnected: boolean }) {
     <div className="space-y-8">
       {isConnected ? (
         <>
-          {/* Claimable Rewards */}
-          <div className="bg-linear-to-br from-green-900/20 to-teal-900/20 border border-green-500/30 rounded-xl p-8">
-            <div className="flex items-center gap-4 mb-6">
-              <Award className="w-12 h-12 text-green-400" />
-              <div>
-                <h2 className="text-2xl font-bold text-zinc-100">Claimable Rewards</h2>
-                <p className="text-zinc-400">Rewards ready to claim based on your activity</p>
-              </div>
-            </div>
-            <div className="text-4xl font-bold text-green-400 text-center py-4">
-              425 VFIDE Available
-            </div>
-            <button className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-lg transition-colors mt-4">
-              Claim All Rewards
-            </button>
-          </div>
-
           {/* Rewards List */}
           <div className="bg-zinc-800 border border-zinc-700 rounded-xl p-6">
             <h3 className="text-xl font-bold text-zinc-100 mb-6">Reward Breakdown</h3>
@@ -393,27 +375,6 @@ function RewardsTab({ isConnected }: { isConnected: boolean }) {
             </div>
           </div>
 
-          {/* Preview Rewards */}
-          <div className="bg-zinc-800 border border-zinc-700 rounded-xl p-6">
-            <h3 className="text-xl font-bold text-zinc-100 mb-4">Preview Upcoming Rewards</h3>
-            <p className="text-zinc-400 text-sm mb-4">
-              Based on your current activity and holdings, here&apos;s what you can expect:
-            </p>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="p-4 bg-zinc-900 rounded-lg text-center">
-                <div className="text-2xl font-bold text-yellow-400">150</div>
-                <div className="text-xs text-zinc-400">VFIDE next week</div>
-              </div>
-              <div className="p-4 bg-zinc-900 rounded-lg text-center">
-                <div className="text-2xl font-bold text-cyan-400">650</div>
-                <div className="text-xs text-zinc-400">VFIDE next month</div>
-              </div>
-              <div className="p-4 bg-zinc-900 rounded-lg text-center">
-                <div className="text-2xl font-bold text-purple-400">2,400</div>
-                <div className="text-xs text-zinc-400">VFIDE this quarter</div>
-              </div>
-            </div>
-          </div>
         </>
       ) : (
         <div className="bg-zinc-800 border border-zinc-700 rounded-xl p-12 text-center">
@@ -491,7 +452,7 @@ function StatsTab({ isConnected, address }: { isConnected: boolean; address?: st
         <h3 className="text-xl font-bold text-zinc-100 mb-6">Recent Activity</h3>
         <div className="space-y-3">
           {[
-            { action: 'Claimed daily reward', amount: '+50 VFIDE', time: '2 hours ago' },
+            { action: 'Governance vote reward', amount: '+50 VFIDE', time: '2 hours ago' },
             { action: 'Referral bonus received', amount: '+250 VFIDE', time: '1 day ago' },
             { action: 'ProofScore increased', amount: '+5 points', time: '3 days ago' },
             { action: 'Transaction cashback', amount: '+75 VFIDE', time: '5 days ago' },
@@ -520,7 +481,7 @@ function StatsTab({ isConnected, address }: { isConnected: boolean; address?: st
           </div>
         </div>
         <p className="text-zinc-400 text-sm">
-          You need 197,550 more VFIDE to reach Platinum tier. Keep holding and earning!
+          You need 197,550 more VFIDE to reach Platinum tier. Keep participating and earning!
         </p>
       </div>
     </div>

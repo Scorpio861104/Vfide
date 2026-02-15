@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/auth/middleware';
 import { revokeToken, revokeUserTokens, hashToken } from '@/lib/auth/tokenRevocation';
 import { extractToken } from '@/lib/auth/jwt';
+import { getAuthCookie } from '@/lib/auth/cookieAuth';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 
 /**
@@ -25,7 +26,11 @@ export async function POST(request: NextRequest) {
 
     // Get the current token from the request
     const authHeader = request.headers.get('authorization');
-    const token = extractToken(authHeader);
+    let token = extractToken(authHeader);
+
+    if (!token) {
+      token = await getAuthCookie(request);
+    }
 
     if (!token) {
       return NextResponse.json(

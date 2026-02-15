@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import {
   defaultSettings,
   safeParseSettings,
@@ -54,18 +54,10 @@ const loadFromStorage = (): SettingsState => {
 };
 
 export const useSettings = (): UseSettingsResult => {
-  const [settings, setSettings] = useState<SettingsState>(defaultSettings);
+  const [settings, setSettings] = useState<SettingsState>(() => loadFromStorage());
   const [isDirty, setIsDirty] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [error, setError] = useState<string | null>(null);
-
-  // initial load
-  useEffect(() => {
-    const loaded = loadFromStorage();
-    setSettings(loaded);
-    setIsDirty(false);
-    setError(null);
-  }, []);
 
   const persist = useCallback(
     (next: SettingsState) => {

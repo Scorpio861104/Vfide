@@ -185,12 +185,14 @@ function ParticleStream() {
   const [particles, setParticles] = useState<Array<{ id: number; left: number }>>([])
   
   useEffect(() => {
+    let counter = 0
     const interval = setInterval(() => {
+      counter++
       setParticles((prev) => [
         ...prev.slice(-20), // Keep last 20
         {
           id: Date.now(),
-          left: Math.random() * 100,
+          left: (counter * 37 + 13) % 100,
         },
       ])
     }, 500)

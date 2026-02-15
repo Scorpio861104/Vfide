@@ -11,7 +11,6 @@ interface TypingIndicatorProps {
 }
 
 export function TypingIndicator({ conversationId, currentUserAddress, otherUserName }: TypingIndicatorProps) {
-  const [isTyping, setIsTyping] = useState(false);
   const [typingUsers, setTypingUsers] = useState<string[]>([]);
   const { subscribe, isConnected } = useWebSocket(
     { url: getWebSocketURL() },
@@ -29,7 +28,6 @@ export function TypingIndicator({ conversationId, currentUserAddress, otherUserN
         if (data && typeof data === 'object' && 'typing' in data) {
           if (data.typing) {
             setTypingUsers(prev => [...new Set([...prev, message.from])]);
-            setIsTyping(true);
           } else {
             setTypingUsers(prev => prev.filter(u => u !== message.from));
           }
@@ -43,13 +41,11 @@ export function TypingIndicator({ conversationId, currentUserAddress, otherUserN
   // Auto-hide typing indicator after 5 seconds
   useEffect(() => {
     if (typingUsers.length === 0) {
-      setIsTyping(false);
       return;
     }
 
     const timer = setTimeout(() => {
       setTypingUsers([]);
-      setIsTyping(false);
     }, 5000);
 
     return () => clearTimeout(timer);
@@ -57,7 +53,7 @@ export function TypingIndicator({ conversationId, currentUserAddress, otherUserN
 
   return (
     <AnimatePresence>
-      {isTyping && (
+      {typingUsers.length > 0 && (
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}

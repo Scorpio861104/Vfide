@@ -12,23 +12,12 @@ import {
   base, 
   baseSepolia, 
   polygon, 
-  polygonAmoy,
   zkSync,
+  polygonAmoy,
   zkSyncSepoliaTestnet,
 } from 'wagmi/chains'
 import { IS_TESTNET } from './chains'
 import { isMobileDevice } from './mobileDetection'
-
-// Create noopStorage for SSR to avoid hydration mismatches
-// SSR-safe storage implementation - parameters required by Storage interface
-const noopStorage = {
-   
-  getItem: (_key: string) => null,
-   
-  setItem: (_key: string, _value: string) => {},
-   
-  removeItem: (_key: string) => {},
-}
 
 // Enhanced storage with error handling for wallet persistence
 const safeStorage = {
@@ -69,37 +58,12 @@ const hasWalletConnect = typeof projectId === 'string' && projectId.length > 0
 // App metadata for wallet connections
 const appName = 'VFIDE'
 
-// Custom zkSync Sepolia with explicit RPC
-const zkSyncSepoliaWithMetadata = {
-  ...zkSyncSepoliaTestnet,
-  rpcUrls: {
-    default: {
-      http: ['https://sepolia.era.zksync.dev'],
-      webSocket: ['wss://sepolia.era.zksync.dev/ws'],
-    },
-    public: {
-      http: ['https://sepolia.era.zksync.dev'],
-      webSocket: ['wss://sepolia.era.zksync.dev/ws'],
-    },
-  },
-  blockExplorers: {
-    default: {
-      name: 'zkSync Sepolia Explorer',
-      url: 'https://sepolia.explorer.zksync.io',
-    },
-  },
-} as const
-
 // ========================================
 // CHAIN CONFIGURATION
 // ========================================
 
 // Testnet chains
-const testnetChains = [
-  baseSepolia,
-  polygonAmoy,
-  zkSyncSepoliaWithMetadata,
-] as const
+const testnetChains = [baseSepolia, polygonAmoy, zkSyncSepoliaTestnet] as const
 
 // Mainnet chains
 const mainnetChains = [
@@ -179,9 +143,13 @@ const connectors = connectorsForWallets(
   walletGroups,
   {
     appName,
-    // RainbowKit expects a string here; it is only used when the WalletConnect
-    // wallet is present.
-    projectId: projectId || '00000000000000000000000000000000',
+    // projectId is required for WalletConnect; must be configured via environment
+    projectId: projectId || (() => {
+      if (process.env.NODE_ENV === 'production') {
+        console.error('[VFIDE] NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID is not set. WalletConnect will not work.');
+      }
+      return '';
+    })(),
   }
 )
 
@@ -200,16 +168,13 @@ const testnetConfig = createConfig({
       http('https://base-sepolia.blockpi.network/v1/rpc/public'),
       http(),
     ]),
-    // Polygon Amoy with fallback RPCs
     [polygonAmoy.id]: fallback([
       http('https://rpc-amoy.polygon.technology'),
-      http('https://polygon-amoy.blockpi.network/v1/rpc/public'),
       http(),
     ]),
-    // zkSync Sepolia with fallback RPCs
     [zkSyncSepoliaTestnet.id]: fallback([
       http('https://sepolia.era.zksync.dev'),
-      http('https://zksync-sepolia.blockpi.network/v1/rpc/public'),
+      http(),
     ]),
   },
   ssr: true,

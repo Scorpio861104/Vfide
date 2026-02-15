@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { motion } from 'framer-motion';
 import { Trophy, Zap, Award } from 'lucide-react';
 import { useGamification, ACHIEVEMENTS, type AchievementId } from '@/lib/gamification';
@@ -15,13 +15,7 @@ interface UserStatsWidgetProps {
  */
 export function UserStatsWidget({ userAddress, compact = false }: UserStatsWidgetProps) {
   const { progress } = useGamification(userAddress);
-  const [isClient, setIsClient] = useState(false);
-
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
-
-  if (!isClient || !progress) {
+  if (!progress) {
     return null;
   }
 
@@ -112,13 +106,7 @@ export function UserStatsWidget({ userAddress, compact = false }: UserStatsWidge
  */
 export function AchievementsList({ userAddress }: { userAddress: string }) {
   const { progress } = useGamification(userAddress);
-  const [isClient, setIsClient] = useState(false);
-
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
-
-  if (!isClient || !progress) {
+  if (!progress) {
     return null;
   }
 

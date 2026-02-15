@@ -572,10 +572,10 @@ export function ContextMenu({ trigger, items, onOpenChange }: ContextMenuProps) 
     onOpenChange?.(true);
   };
 
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
     setIsOpen(false);
     onOpenChange?.(false);
-  };
+  }, [onOpenChange]);
 
   // Close on click outside
   useEffect(() => {
@@ -589,7 +589,7 @@ export function ContextMenu({ trigger, items, onOpenChange }: ContextMenuProps) 
 
     document.addEventListener('click', handleClick);
     return () => document.removeEventListener('click', handleClick);
-  }, [isOpen]);
+  }, [isOpen, handleClose]);
 
   // Close on escape
   useEffect(() => {
@@ -603,7 +603,7 @@ export function ContextMenu({ trigger, items, onOpenChange }: ContextMenuProps) 
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen]);
+  }, [isOpen, handleClose]);
 
   return (
     <>
@@ -617,7 +617,7 @@ export function ContextMenu({ trigger, items, onOpenChange }: ContextMenuProps) 
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.9 }}
             style={{ left: position.x, top: position.y }}
-            className="fixed z-50 min-w-45 bg-zinc-900 border border-zinc-800 rounded-xl shadow-2xl overflow-hidden py-1"
+            className="fixed z-50 min-w-[11.25rem] bg-zinc-900 border border-zinc-800 rounded-xl shadow-2xl overflow-hidden py-1"
           >
             {items.map((item) => (
               <button

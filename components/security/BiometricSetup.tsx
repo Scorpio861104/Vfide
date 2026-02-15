@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState } from 'react';
 import { useBiometricAuth } from '@/hooks/useBiometricAuth';
 import { BiometricType } from '@/config/security-advanced';

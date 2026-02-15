@@ -225,73 +225,148 @@ export async function decryptMessage(
 }
 
 /**
- * Legacy encryption for group messages
- * In production, each user would have their own encrypted copy
- * This is a simplified version for backward compatibility
+ * Encrypt group messages using a shared AES-GCM key derived from the groupId
+ * and a server-provisioned group secret.
+ * The groupSecret MUST be fetched from the server (not derived from groupId alone)
+ * to prevent anyone who knows the groupId from decrypting messages.
  */
 export async function encryptGroupMessage(
   message: string,
   groupId: string,
   members: string[],
-  senderSign: (message: string) => Promise<string>
+  senderSign: (message: string) => Promise<string>,
+  groupSecret?: string
 ): Promise<string> {
   const timestamp = Date.now();
   const nonce = crypto.getRandomValues(new Uint8Array(16));
   const nonceHex = Buffer.from(nonce).toString('hex');
-  
+
   const messageToSign = `VFIDE_GROUP_ENCRYPT:${groupId}:${message}:${timestamp}:${nonceHex}`;
   const signature = await senderSign(messageToSign);
-  
-  // For group messages, we use a simpler approach
-  // In production, you would encrypt separately for each member
+
+  // Key material: combine groupId with server-provisioned secret.
+  // groupSecret is REQUIRED — deriving from public groupId alone provides no security.
+  if (!groupSecret) {
+    throw new Error('[GroupEncrypt] groupSecret is required. Cannot encrypt with public groupId alone.');
+  }
+  const keyInput = `${groupId}:${groupSecret}`;
+
+  // Derive a symmetric AES-GCM key using HKDF
+  const groupKeyMaterial = await crypto.subtle.importKey(
+    'raw',
+    new TextEncoder().encode(keyInput),
+    'HKDF',
+    false,
+    ['deriveKey']
+  );
+
+  const groupAesKey = await crypto.subtle.deriveKey(
+    {
+      name: 'HKDF',
+      hash: 'SHA-256',
+      salt: new TextEncoder().encode('vfide-group-v2'),
+      info: new TextEncoder().encode(`group:${groupId}`),
+    },
+    groupKeyMaterial,
+    { name: 'AES-GCM', length: 256 },
+    false,
+    ['encrypt', 'decrypt']
+  );
+
+  // Encrypt the message with AES-GCM
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const ciphertext = await crypto.subtle.encrypt(
+    { name: 'AES-GCM', iv },
+    groupAesKey,
+    new TextEncoder().encode(message)
+  );
+
   const payload = {
-    v: 1,
-    msg: Buffer.from(message).toString('base64'),
+    v: 2,
+    ct: Buffer.from(ciphertext).toString('base64'),
+    iv: Buffer.from(iv).toString('base64'),
     sig: signature,
     ts: timestamp,
     nonce: nonceHex,
     groupId,
     members,
   };
-  
+
   return JSON.stringify(payload);
 }
 
 /**
- * Decrypt group message
+ * Decrypt group message.
+ * Supports v2 (AES-GCM encrypted) and v1 (legacy base64 — signature-only integrity).
  */
 export async function decryptGroupMessage(
   encryptedMessage: string,
   senderAddress: string,
   receiverAddress: string,
-  verify: (message: string, signature: string) => Promise<boolean>
+  verify: (message: string, signature: string) => Promise<boolean>,
+  groupSecret?: string
 ): Promise<{ message: string; timestamp: number; verified: boolean; groupId: string }> {
   try {
     const payload = JSON.parse(encryptedMessage);
-    const { msg, sig, ts, nonce, groupId, members, v } = payload;
-    
-    // Check version
-    if (v !== 1) {
-      throw new Error('Unsupported encryption version');
-    }
-    
+    const { sig, ts, nonce, groupId, members, v } = payload;
+
     // Check if receiver is a member
     if (!members.includes(receiverAddress)) {
       throw new Error('Not a group member');
     }
-    
-    const message = Buffer.from(msg, 'base64').toString('utf-8');
+
+    let message: string;
+
+    if (v === 2) {
+      // v2: Real AES-GCM encryption
+      const { ct, iv } = payload;
+
+      // groupSecret is REQUIRED for v2 messages — matches encrypt side
+      if (!groupSecret) {
+        throw new Error('[GroupDecrypt] groupSecret is required for v2 messages.');
+      }
+      const keyInput = `${groupId}:${groupSecret}`;
+
+      const groupKeyMaterial = await crypto.subtle.importKey(
+        'raw',
+        new TextEncoder().encode(keyInput),
+        'HKDF',
+        false,
+        ['deriveKey']
+      );
+
+      const groupAesKey = await crypto.subtle.deriveKey(
+        {
+          name: 'HKDF',
+          hash: 'SHA-256',
+          salt: new TextEncoder().encode('vfide-group-v2'),
+          info: new TextEncoder().encode(`group:${groupId}`),
+        },
+        groupKeyMaterial,
+        { name: 'AES-GCM', length: 256 },
+        false,
+        ['encrypt', 'decrypt']
+      );
+
+      const decrypted = await crypto.subtle.decrypt(
+        { name: 'AES-GCM', iv: Buffer.from(iv, 'base64') },
+        groupAesKey,
+        Buffer.from(ct, 'base64')
+      );
+
+      message = new TextDecoder().decode(decrypted);
+    } else if (v === 1) {
+      // v1 legacy: base64-encoded plaintext (backward compat only)
+      message = Buffer.from(payload.msg, 'base64').toString('utf-8');
+    } else {
+      throw new Error('Unsupported group encryption version');
+    }
+
     const messageToVerify = `VFIDE_GROUP_ENCRYPT:${groupId}:${message}:${ts}:${nonce}`;
     const verified = await verify(messageToVerify, sig);
-    
-    return {
-      message,
-      timestamp: ts,
-      verified,
-      groupId,
-    };
-  } catch (error) {
-    console.error('Group decryption failed:', error);
+
+    return { message, timestamp: ts, verified, groupId };
+  } catch (_error) {
     throw new Error('Failed to decrypt group message');
   }
 }

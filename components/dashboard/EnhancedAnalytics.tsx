@@ -126,7 +126,7 @@ async function fetchTransactions(address?: string): Promise<Transaction[]> {
 async function fetchAlerts(address?: string): Promise<Alert[]> {
   if (!address) return [];
   try {
-    const res = await fetch(`/api/notifications?userId=${address}`);
+    const res = await fetch(`/api/notifications?userAddress=${address}`);
     if (res.ok) {
       const data = await res.json();
       return (data.notifications || []).slice(0, 5).map((n: {
@@ -267,7 +267,7 @@ export default function EnhancedDashboardAnalytics() {
   const [portfolioData, setPortfolioData] = useState<PortfolioDataPoint[]>([]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [alerts, setAlerts] = useState<Alert[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
 
   // Filters
   const [transactionFilter, setTransactionFilter] = useState('all');
@@ -275,6 +275,8 @@ export default function EnhancedDashboardAnalytics() {
   const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
+    if (!address) return;
+
     // Fetch real data from APIs
     const loadData = async () => {
       setIsLoading(true);
@@ -288,12 +290,8 @@ export default function EnhancedDashboardAnalytics() {
       setAlerts(notifs);
       setIsLoading(false);
     };
-    
-    if (address) {
-      loadData();
-    } else {
-      setIsLoading(false);
-    }
+
+    loadData();
   }, [address]);
 
   // Calculate asset allocation

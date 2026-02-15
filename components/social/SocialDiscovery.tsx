@@ -1,8 +1,10 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { safeParseInt } from '@/lib/validation';
+import { useAccount } from 'wagmi';
+import { getAuthHeaders } from '@/lib/auth/client';
 import {
   Search,
   Filter,
@@ -56,159 +58,6 @@ interface CommunityHighlight {
   icon: string;
 }
 
-// ==================== MOCK DATA ====================
-
-const mockUserCards: UserCard[] = [
-  {
-    id: 'u1',
-    username: 'alex_finance',
-    displayName: 'Alex Rivera',
-    avatar: '👨‍💼',
-    bio: 'DeFi strategist and governance participant',
-    proofScore: 9200,
-    followers: 542,
-    badges: 12,
-    isVerified: true,
-    matchScore: 94,
-    reason: 'Shared interests',
-    tags: ['DeFi', 'Governance', 'Trading'],
-  },
-  {
-    id: 'u2',
-    username: 'sara_merchant',
-    displayName: 'Sara Chen',
-    avatar: '👩‍🎤',
-    bio: 'Payment processor and merchant portal expert',
-    proofScore: 7800,
-    followers: 423,
-    badges: 9,
-    isVerified: true,
-    matchScore: 88,
-    reason: 'Mutual followers',
-    tags: ['Payments', 'Merchant', 'Finance'],
-  },
-  {
-    id: 'u3',
-    username: 'dev_john',
-    displayName: 'John Park',
-    avatar: '👨‍💻',
-    bio: 'Smart contract developer building on VFIDE',
-    proofScore: 8600,
-    followers: 367,
-    badges: 15,
-    isVerified: true,
-    matchScore: 82,
-    reason: 'Active contributor',
-    tags: ['Development', 'Smart Contracts', 'Tech'],
-  },
-  {
-    id: 'u4',
-    username: 'emma_community',
-    displayName: 'Emma Wilson',
-    avatar: '👩‍🔬',
-    bio: 'Community organizer and trust builder',
-    proofScore: 6900,
-    followers: 612,
-    badges: 8,
-    isVerified: false,
-    matchScore: 76,
-    reason: 'Similar activity',
-    tags: ['Community', 'Trust', 'Social'],
-  },
-  {
-    id: 'u5',
-    username: 'mark_vault',
-    displayName: 'Mark Johnson',
-    avatar: '🧑‍💼',
-    bio: 'Vault master with 500k+ locked',
-    proofScore: 7500,
-    followers: 289,
-    badges: 11,
-    isVerified: true,
-    matchScore: 79,
-    reason: 'Similar interests',
-    tags: ['Vault', 'Security', 'Finance'],
-  },
-];
-
-const mockTrendingUsers: TrendingUser[] = [
-  {
-    id: 't1',
-    displayName: 'Luna Tech',
-    avatar: '🌙',
-    trendingScore: 98,
-    trendingReason: 'Viral governance proposal',
-    newFollowers: 245,
-  },
-  {
-    id: 't2',
-    displayName: 'Crypto Kate',
-    avatar: '👑',
-    trendingScore: 94,
-    trendingReason: 'Record transaction volume',
-    newFollowers: 189,
-  },
-  {
-    id: 't3',
-    displayName: 'Felix Dev',
-    avatar: '🦊',
-    trendingScore: 89,
-    trendingReason: 'Major contract deployment',
-    newFollowers: 156,
-  },
-];
-
-const mockHighlights: CommunityHighlight[] = [
-  {
-    id: 'h1',
-    title: 'Governance Enthusiasts',
-    description: 'Active participants in DAO proposals and voting',
-    participantCount: 2341,
-    activity: 'High',
-    icon: '🗳️',
-  },
-  {
-    id: 'h2',
-    title: 'DeFi Traders',
-    description: 'Strategic traders and yield farmers',
-    participantCount: 1892,
-    activity: 'Very High',
-    icon: '📊',
-  },
-  {
-    id: 'h3',
-    title: 'Payment Merchants',
-    description: 'Accepting payments and building commerce',
-    participantCount: 1456,
-    activity: 'High',
-    icon: '💳',
-  },
-  {
-    id: 'h4',
-    title: 'Security & Vault Masters',
-    description: 'Protecting assets and managing vaults',
-    participantCount: 987,
-    activity: 'Medium',
-    icon: '🔒',
-  },
-  {
-    id: 'h5',
-    title: 'Community Builders',
-    description: 'Growing networks and mentoring users',
-    participantCount: 1234,
-    activity: 'High',
-    icon: '🤝',
-  },
-  {
-    id: 'h6',
-    title: 'Development Contributors',
-    description: 'Building and improving the protocol',
-    participantCount: 567,
-    activity: 'Medium',
-    icon: '⚙️',
-  },
-];
-
 // ==================== COMPONENTS ====================
 
 interface SocialDiscoveryProps {
@@ -216,14 +65,107 @@ interface SocialDiscoveryProps {
 }
 
 export function SocialDiscovery({ onSelectUser }: SocialDiscoveryProps) {
+  const { address } = useAccount();
   const [searchQuery, setSearchQuery] = useState('');
   const [filter, setFilter] = useState<DiscoverFilter>({ sortBy: 'trending' });
   const [showFilters, setShowFilters] = useState(false);
   const [followedUsers, setFollowedUsers] = useState<Set<string>>(new Set());
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
+  const [users, setUsers] = useState<UserCard[]>([]);
+  const [trendingUsers, setTrendingUsers] = useState<TrendingUser[]>([]);
+  const [highlights, setHighlights] = useState<CommunityHighlight[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    const loadDiscovery = async () => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const headers = getAuthHeaders();
+        const [trendingRes, suggestedRes] = await Promise.all([
+          fetch('/api/community/trending').catch(() => null),
+          address ? fetch(`/api/friends/suggested?userAddress=${address}&limit=12`, { headers }).catch(() => null) : null,
+        ]);
+
+        if (trendingRes?.ok) {
+          const data = await trendingRes.json();
+          const topics = Array.isArray(data?.topics) ? data.topics : [];
+          const mappedTrending = topics.map((topic: Record<string, unknown>, idx: number) => ({
+            id: String(topic?.id ?? `trend-${idx}`),
+            displayName: String(topic?.tag ?? 'Topic'),
+            avatar: '🏷️',
+            trendingScore: Number(topic?.posts ?? 0),
+            trendingReason: `${Number(topic?.posts ?? 0)} posts`,
+            newFollowers: 0,
+          })) as TrendingUser[];
+          const mappedHighlights = topics.map((topic: Record<string, unknown>, idx: number) => ({
+            id: String(topic?.id ?? `highlight-${idx}`),
+            title: String(topic?.tag ?? 'Community Topic'),
+            description: 'Trending community discussion',
+            participantCount: Number(topic?.posts ?? 0),
+            activity: Number(topic?.posts ?? 0) > 20 ? 'Very High' : Number(topic?.posts ?? 0) > 10 ? 'High' : 'Medium',
+            icon: '✨',
+          })) as CommunityHighlight[];
+          if (isMounted) {
+            setTrendingUsers(mappedTrending);
+            setHighlights(mappedHighlights);
+          }
+        } else if (isMounted) {
+          setTrendingUsers([]);
+          setHighlights([]);
+        }
+
+        if (suggestedRes?.ok) {
+          const data = await suggestedRes.json();
+          const rows = Array.isArray(data?.users) ? data.users : [];
+          const mappedUsers = rows.map((row: Record<string, unknown>, idx: number) => ({
+            id: String(row?.address ?? `user-${idx}`),
+            username: String(row?.name ?? row?.address ?? 'member')
+              .toLowerCase()
+              .replace(/[^a-z0-9_]+/g, '_')
+              .replace(/^_+|_+$/g, '')
+              .slice(0, 20) || 'member',
+            displayName: String(row?.name ?? row?.address ?? 'Member'),
+            avatar: String(row?.avatar ?? '👤'),
+            bio: String(row?.bio ?? 'VFIDE community member'),
+            proofScore: Number(row?.proofScore ?? 0),
+            followers: Number(row?.followers ?? 0),
+            badges: Number(row?.badges ?? 0),
+            isVerified: Boolean(row?.verified ?? false),
+            matchScore: Number(row?.mutualFriends ?? 0),
+            reason: row?.mutualFriends ? `${row.mutualFriends} mutual connections` : 'Suggested',
+            tags: Array.isArray(row?.tags) ? row.tags : [],
+          })) as UserCard[];
+          if (isMounted) {
+            setUsers(mappedUsers);
+          }
+        } else if (isMounted) {
+          setUsers([]);
+        }
+      } catch {
+        if (isMounted) {
+          setError('Unable to load discovery data.');
+          setUsers([]);
+          setTrendingUsers([]);
+          setHighlights([]);
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    loadDiscovery();
+    return () => {
+      isMounted = false;
+    };
+  }, [address]);
 
   const filteredUsers = useMemo(() => {
-    let results = mockUserCards;
+    let results = users;
 
     // Search filter
     if (searchQuery) {
@@ -267,9 +209,9 @@ export function SocialDiscovery({ onSelectUser }: SocialDiscoveryProps) {
     }
 
     return sorted;
-  }, [searchQuery, filter, selectedTag]);
+  }, [users, searchQuery, filter, selectedTag]);
 
-  const allTags = Array.from(new Set(mockUserCards.flatMap((u) => u.tags)));
+  const allTags = Array.from(new Set(users.flatMap((u) => u.tags))).filter(Boolean);
 
   const handleFollow = (userId: string) => {
     setFollowedUsers((prev) => {
@@ -293,6 +235,11 @@ export function SocialDiscovery({ onSelectUser }: SocialDiscoveryProps) {
       >
         <div className="max-w-6xl mx-auto">
           <h1 className="text-3xl md:text-4xl font-bold text-zinc-100 mb-4">Discover Community</h1>
+          {error && (
+            <div className="mb-4 rounded-lg border border-pink-400/40 bg-pink-500/10 px-4 py-2 text-sm text-pink-200">
+              {error}
+            </div>
+          )}
 
           {/* Search Bar */}
           <div className="flex gap-3 mb-4">
@@ -390,7 +337,7 @@ export function SocialDiscovery({ onSelectUser }: SocialDiscoveryProps) {
           </AnimatePresence>
 
           {/* Quick Tags */}
-          {!selectedTag && (
+          {!selectedTag && allTags.length > 0 && (
             <div className="flex flex-wrap gap-2">
               {allTags.slice(0, 5).map((tag) => (
                 <motion.button
@@ -421,43 +368,45 @@ export function SocialDiscovery({ onSelectUser }: SocialDiscoveryProps) {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {mockTrendingUsers.map((user, idx) => (
-              <motion.div
-                key={user.id}
-                initial={{ opacity: 0, scale: 0.9 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                viewport={{ once: true }}
-                transition={{ delay: idx * 0.1 }}
-                className="bg-linear-to-br from-zinc-900 via-[#2A2A3E] to-zinc-900 border border-pink-400/30 rounded-lg p-6 hover:border-pink-400 transition-colors group cursor-pointer"
-              >
-                <div className="flex items-center justify-between mb-4">
-                  <div className="text-5xl">{user.avatar}</div>
-                  <motion.div
-                    animate={{ scale: [1, 1.2, 1] }}
-                    transition={{ duration: 2, repeat: Infinity }}
-                    className="text-pink-400"
-                  >
-                    <Flame className="w-5 h-5" />
-                  </motion.div>
-                </div>
+            {isLoading ? (
+              <div className="col-span-full text-center py-8 text-zinc-500">Loading trending topics...</div>
+            ) : trendingUsers.length === 0 ? (
+              <div className="col-span-full text-center py-8 text-zinc-500">No trending topics yet.</div>
+            ) : (
+              trendingUsers.map((user, idx) => (
+                <motion.div
+                  key={user.id}
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  whileInView={{ opacity: 1, scale: 1 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: idx * 0.1 }}
+                  className="bg-linear-to-br from-zinc-900 via-[#2A2A3E] to-zinc-900 border border-pink-400/30 rounded-lg p-6 hover:border-pink-400 transition-colors group cursor-pointer"
+                >
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="text-5xl">{user.avatar}</div>
+                    <motion.div
+                      animate={{ scale: [1, 1.2, 1] }}
+                      transition={{ duration: 2, repeat: Infinity }}
+                      className="text-pink-400"
+                    >
+                      <Flame className="w-5 h-5" />
+                    </motion.div>
+                  </div>
 
-                <h3 className="text-lg font-bold text-zinc-100 mb-1">{user.displayName}</h3>
-                <p className="text-sm text-zinc-400 mb-3">{user.trendingReason}</p>
+                  <h3 className="text-lg font-bold text-zinc-100 mb-1">{user.displayName}</h3>
+                  <p className="text-sm text-zinc-400 mb-3">{user.trendingReason}</p>
 
-                <div className="bg-zinc-950 rounded p-3 mb-4">
-                  <div className="text-pink-400 text-2xl font-bold">{user.trendingScore}</div>
-                  <div className="text-xs text-zinc-500">Trending Score</div>
-                </div>
+                  <div className="bg-zinc-950 rounded p-3 mb-4">
+                    <div className="text-pink-400 text-2xl font-bold">{user.trendingScore}</div>
+                    <div className="text-xs text-zinc-500">Recent posts</div>
+                  </div>
 
-                <div className="text-sm text-zinc-400 mb-4">
-                  <span className="text-cyan-400 font-semibold">+{user.newFollowers}</span> new followers
-                </div>
-
-                <button className="w-full px-4 py-2 bg-pink-400 text-white rounded-lg hover:bg-pink-500 transition-colors font-semibold text-sm group-hover:shadow-lg group-hover:shadow-pink-400/50">
-                  Follow
-                </button>
-              </motion.div>
-            ))}
+                  <button className="w-full px-4 py-2 bg-pink-400 text-white rounded-lg hover:bg-pink-500 transition-colors font-semibold text-sm group-hover:shadow-lg group-hover:shadow-pink-400/50">
+                    Explore
+                  </button>
+                </motion.div>
+              ))
+            )}
           </div>
         </motion.section>
 
@@ -474,40 +423,46 @@ export function SocialDiscovery({ onSelectUser }: SocialDiscoveryProps) {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {mockHighlights.map((highlight, idx) => (
-              <motion.div
-                key={highlight.id}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: idx * 0.05 }}
-                className="bg-zinc-900 border border-zinc-700 rounded-lg p-6 hover:border-violet-400 transition-colors cursor-pointer group"
-              >
-                <div className="flex items-start justify-between mb-4">
-                  <div className="text-4xl">{highlight.icon}</div>
-                  <div className="text-right">
-                    <div className="text-cyan-400 text-sm font-bold">{highlight.participantCount}</div>
-                    <div className="text-zinc-500 text-xs">members</div>
+            {isLoading ? (
+              <div className="col-span-full text-center py-8 text-zinc-500">Loading highlights...</div>
+            ) : highlights.length === 0 ? (
+              <div className="col-span-full text-center py-8 text-zinc-500">No community highlights yet.</div>
+            ) : (
+              highlights.map((highlight, idx) => (
+                <motion.div
+                  key={highlight.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: idx * 0.05 }}
+                  className="bg-zinc-900 border border-zinc-700 rounded-lg p-6 hover:border-violet-400 transition-colors cursor-pointer group"
+                >
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="text-4xl">{highlight.icon}</div>
+                    <div className="text-right">
+                      <div className="text-cyan-400 text-sm font-bold">{highlight.participantCount}</div>
+                      <div className="text-zinc-500 text-xs">members</div>
+                    </div>
                   </div>
-                </div>
 
-                <h3 className="text-lg font-bold text-zinc-100 mb-2">{highlight.title}</h3>
-                <p className="text-zinc-400 text-sm mb-4">{highlight.description}</p>
+                  <h3 className="text-lg font-bold text-zinc-100 mb-2">{highlight.title}</h3>
+                  <p className="text-zinc-400 text-sm mb-4">{highlight.description}</p>
 
-                <div className="flex items-center justify-between">
-                  <span className={`text-xs font-semibold px-2 py-1 rounded ${
-                    highlight.activity === 'Very High'
-                      ? 'bg-cyan-400/20 text-cyan-400'
-                      : highlight.activity === 'High'
-                        ? 'bg-emerald-500/20 text-emerald-500'
-                        : 'bg-amber-400/20 text-amber-400'
-                  }`}>
-                    {highlight.activity} Activity
-                  </span>
-                  <ChevronRight className="w-4 h-4 text-zinc-400 group-hover:text-violet-400 transition-colors" />
-                </div>
-              </motion.div>
-            ))}
+                  <div className="flex items-center justify-between">
+                    <span className={`text-xs font-semibold px-2 py-1 rounded ${
+                      highlight.activity === 'Very High'
+                        ? 'bg-cyan-400/20 text-cyan-400'
+                        : highlight.activity === 'High'
+                          ? 'bg-emerald-500/20 text-emerald-500'
+                          : 'bg-amber-400/20 text-amber-400'
+                    }`}>
+                      {highlight.activity} Activity
+                    </span>
+                    <ChevronRight className="w-4 h-4 text-zinc-400 group-hover:text-violet-400 transition-colors" />
+                  </div>
+                </motion.div>
+              ))
+            )}
           </div>
         </motion.section>
 
@@ -526,7 +481,15 @@ export function SocialDiscovery({ onSelectUser }: SocialDiscoveryProps) {
             </div>
           </div>
 
-          {filteredUsers.length === 0 ? (
+          {isLoading && users.length === 0 ? (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="text-center py-12 text-zinc-500"
+            >
+              Loading member suggestions...
+            </motion.div>
+          ) : filteredUsers.length === 0 ? (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}

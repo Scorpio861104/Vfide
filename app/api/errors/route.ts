@@ -29,6 +29,11 @@ export async function GET(request: NextRequest) {
     const params: (string | number)[] = [];
 
     if (severity) {
+      // API-11 Fix: Validate severity in GET as well
+      const VALID_GET_SEVERITIES = ['info', 'warning', 'error', 'critical'];
+      if (!VALID_GET_SEVERITIES.includes(severity)) {
+        return NextResponse.json({ error: 'Invalid severity parameter' }, { status: 400 });
+      }
       params.push(severity);
       sql += ` WHERE severity = $1`;
     }
@@ -62,6 +67,18 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'message required' }, { status: 400 });
     }
 
+    // API-11 Fix: Validate severity against whitelist
+    const VALID_SEVERITIES = ['info', 'warning', 'error', 'critical'];
+    const normalizedSeverity = VALID_SEVERITIES.includes(severity) ? severity : 'error';
+
+    // API-11 Fix: Enforce length limits on user-controlled strings
+    const sanitizedMessage = typeof message === 'string' ? message.slice(0, 2000) : String(message).slice(0, 2000);
+    const sanitizedStack = typeof stack === 'string' ? stack.slice(0, 5000) : undefined;
+    const metadataStr = JSON.stringify(metadata || {});
+    if (metadataStr.length > 5000) {
+      return NextResponse.json({ error: 'Metadata too large' }, { status: 400 });
+    }
+
     const userResult = await query(
       'SELECT id FROM users WHERE wallet_address = $1',
       [authResult.user.address.toLowerCase()]
@@ -73,7 +90,7 @@ export async function POST(request: NextRequest) {
       `INSERT INTO error_logs (user_id, severity, message, stack, metadata, timestamp)
        VALUES ($1, $2, $3, $4, $5, NOW())
        RETURNING *`,
-      [userId, severity || 'error', message, stack, JSON.stringify(metadata || {})]
+      [userId, normalizedSeverity, sanitizedMessage, sanitizedStack, metadataStr]
     );
 
     return NextResponse.json({ success: true, error: result.rows[0] });

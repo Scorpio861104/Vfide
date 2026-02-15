@@ -11,7 +11,7 @@ import { cookies } from 'next/headers';
 // Cookie configuration
 const AUTH_COOKIE_NAME = 'vfide_auth_token';
 const REFRESH_COOKIE_NAME = 'vfide_refresh_token';
-const COOKIE_MAX_AGE = 60 * 60 * 24; // 24 hours
+const COOKIE_MAX_AGE = 60 * 60; // 1 hour (matches access token expiry)
 const REFRESH_MAX_AGE = 60 * 60 * 24 * 7; // 7 days
 
 interface CookieOptions {

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getClient } from '@/lib/db';
-import { requireAuth } from '@/lib/auth/middleware';
+import { requireAuth, checkOwnership } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 
 /**
@@ -22,6 +22,10 @@ export async function GET(request: NextRequest) {
 
     if (!userAddress) {
       return NextResponse.json({ error: 'User address required' }, { status: 400 });
+    }
+
+    if (!checkOwnership(authResult.user, userAddress)) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
     }
 
     const client = await getClient();
@@ -105,9 +109,14 @@ export async function GET(request: NextRequest) {
 
 /**
  * POST /api/quests/streak
- * Manually update streak (for testing or specific events)
+ * Manually update streak (for testing only - blocked in production)
  */
 export async function POST(request: NextRequest) {
+  // Block this testing endpoint in production
+  if (process.env.NODE_ENV === 'production') {
+    return NextResponse.json({ error: 'Not available in production' }, { status: 403 });
+  }
+
   // Rate limiting
   const rateLimit = await withRateLimit(request, 'write');
   if (rateLimit) return rateLimit;
@@ -122,6 +131,10 @@ export async function POST(request: NextRequest) {
 
     if (!userAddress) {
       return NextResponse.json({ error: 'User address required' }, { status: 400 });
+    }
+
+    if (!checkOwnership(authResult.user, userAddress)) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
     }
 
     const client = await getClient();

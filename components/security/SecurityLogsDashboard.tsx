@@ -1,3 +1,5 @@
+'use client';
+
 import { formatSecurityEventType } from '@/config/security-advanced';
 import { useSecurityLogs } from '@/hooks/useSecurityLogs';
 import { useState } from 'react';
@@ -139,7 +141,7 @@ export function SecurityLogsDashboard({ className = '' }: SecurityLogsDashboardP
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
       >
-        <div className="max-h-150 overflow-y-auto">
+        <div className="max-h-[37.5rem] overflow-y-auto">
           {logs.filteredLogs.length === 0 ? (
             <motion.div 
               className="p-12 text-center text-gray-500 dark:text-gray-400"

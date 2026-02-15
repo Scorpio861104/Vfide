@@ -5,17 +5,17 @@ pragma solidity 0.8.30;
 
 interface IVaultHub {
     function vaultOf(address owner) external view returns (address);
-    function isVault(address a) external view returns (bool);
+    function ownerOfVault(address vault) external view returns (address);
     function ensureVault(address owner_) external returns (address vault);
-    function setVFIDEToken(address token) external;
-    function setSecurityHub(address security) external;
-    function setProofLedger(address ledger) external;
-    function setDAORecoveryMultisig(address multisig) external;
-    function setRecoveryTimelock(uint256 timelock) external;
-    function requestDAORecovery(address vault, address newOwner) external;
-    function finalizeDAORecovery(address vault) external;
-    function cancelDAORecovery(address vault) external;
-    function totalVaultsCreated() external view returns (uint256);
+    function isVault(address a) external view returns (bool);
+    function predictVault(address owner_) external view returns (address predicted);
+    function getVaultInfo(address vault) external view returns (address owner_, uint256 createdAt, bool isLocked, bool exists);
+    function checkVaultStatus(address addr) external view returns (bool hasVault, address vaultAddress, bool isVaultContract);
+    function totalVaults() external view returns (uint256);
+    function setModules(address _vfideToken, address _securityHub, address _ledger, address _dao) external;
+    function setVFIDE(address _vfide) external;
+    function proposeDAO(address _dao) external;
+    function confirmDAO() external;
 }
 
 interface ISecurityHub {
@@ -100,11 +100,14 @@ interface IVFIDEToken is IERC20 {
     function setSecurityHub(address hub) external;
     function setVaultHub(address hub) external;
     function setLedger(address ledger) external;
-    function setBurnRouter(address router) external;
+    function proposeBurnRouter(address router) external;
+    function confirmBurnRouter() external;
     function setTreasurySink(address treasury) external;
     function setSanctumSink(address sanctum) external;
-    function setSystemExempt(address who, bool isExempt) external;
-    function setWhitelist(address addr, bool status) external;
+    function proposeSystemExempt(address who, bool isExempt) external;
+    function confirmSystemExempt(address who) external;
+    function proposeWhitelist(address addr, bool status) external;
+    function confirmWhitelist(address addr) external;
     function setVaultOnly(bool enabled) external;
     function setCircuitBreaker(bool active, uint256 duration) external;
     function setBlacklist(address user, bool status) external;
@@ -124,6 +127,14 @@ interface IVFIDEToken is IERC20 {
     function whaleLimitExempt(address) external view returns (bool);
     function remainingDailyLimit(address account) external view returns (uint256);
     function cooldownRemaining(address account) external view returns (uint256);
+    // Governance delegation & checkpoints
+    function delegate(address delegatee) external;
+    function delegates(address account) external view returns (address);
+    function getCurrentVotes(address account) external view returns (uint256);
+    function getPriorVotes(address account, uint256 blockNumber) external view returns (uint224);
+    // Batch ops
+    function batchTransfer(address[] calldata recipients, uint256[] calldata amounts) external returns (bool);
+    function batchApprove(address[] calldata spenders, uint256[] calldata amounts) external returns (bool);
 }
 
 interface ISeer {
@@ -253,8 +264,8 @@ abstract contract ReentrancyGuard {
     }
 }
 
-/// @notice AccessControl for role-based permissions (OpenZeppelin-compatible pattern)
-abstract contract AccessControl {
+/// @notice Lightweight AccessControl for zkSync compatibility
+abstract contract VFIDEAccessControlLite {
     struct RoleData {
         mapping(address => bool) members;
         bytes32 adminRole;

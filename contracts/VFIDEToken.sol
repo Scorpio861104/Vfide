@@ -30,6 +30,11 @@ import "./SharedInterfaces.sol";
 
 /// ─────────────────────────── ERC20 (no OZ deps; 0.8.x checked math)
 contract VFIDEToken is Ownable, ReentrancyGuard {
+    struct Checkpoint {
+        uint32 fromBlock;
+        uint224 votes;
+    }
+
     /// Constants
     string public constant name = "VFIDE Token";  // WHITEPAPER: "VFIDE Token"
     string public constant symbol = "VFIDE";
@@ -45,7 +50,8 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
     uint256 public maxWalletBalance = 4_000_000e18;      // 4M VFIDE max per wallet (2% of supply)
     uint256 public dailyTransferLimit = 5_000_000e18;    // 5M VFIDE max per 24h (2.5% of supply)
     uint256 public transferCooldown = 0;                  // Seconds between transfers (0 = disabled)
-    
+    uint256 public constant MAX_COOLDOWN = 1 hours;       // Upper bound for transfer cooldown
+
     // Tracking for daily limits and cooldowns
     mapping(address => uint256) public dailyTransferred;
     mapping(address => uint256) public dailyResetTime;
@@ -63,11 +69,28 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
     mapping(address => uint256) private _balances;
     mapping(address => mapping(address => uint256)) private _allowances;
 
+    // Governance delegation & checkpoints
+    mapping(address => address) public delegates;
+    mapping(address => Checkpoint[]) public checkpoints;
+    mapping(address => uint32) public numCheckpoints;
+
     /// Modules & config
     IVaultHub public vaultHub;                    // vault registry (required)
     ISecurityHub public securityHub;              // lock checks (optional)
     IProofLedger public ledger;                   // event logging (optional)
     IProofScoreBurnRouterToken public burnRouter; // fee calculator (optional)
+    address public pendingBurnRouter;                     // two-step: proposed router
+    uint256 public burnRouterProposalTime;                // two-step: proposal timestamp
+    uint256 public constant BURN_ROUTER_DELAY = 2 days;  // two-step: mandatory delay
+
+    // Two-step timelock for module changes (VaultHub, SecurityHub, Ledger)
+    uint256 public constant MODULE_CHANGE_DELAY = 2 days;
+    address public pendingVaultHub;
+    uint256 public vaultHubProposalTime;
+    address public pendingSecurityHub;
+    uint256 public securityHubProposalTime;
+    address public pendingLedger;
+    uint256 public ledgerProposalTime;
 
     /// Policy settings
     bool public vaultOnly = true;                 // VAULT-ONLY ON BY DEFAULT (user security)
@@ -80,12 +103,28 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
     mapping(address => bool) public systemExempt; // bypass all checks (presale, sinks, etc)
     mapping(address => bool) public whitelisted;  // bypass vault-only (exchanges)
 
+    // Two-step timelock for exemption changes (prevent instant rug)
+    uint256 public constant EXEMPT_CHANGE_DELAY = 1 days;
+    struct PendingExemption {
+        bool isExempt;
+        uint256 proposalTime;
+    }
+    mapping(address => PendingExemption) public pendingExemptions;
+    mapping(address => PendingExemption) public pendingWhitelist;
+
     // Presale control (set at genesis, receives 50M tokens)
     address public presaleContract;
 
     // Sinks (fallbacks if router is unset or returns zero sinks)
     address public treasurySink;  // sanctuary/treasury receiver for charity share
     address public sanctumSink; // Optional: Burn to Sanctum instead of 0x0
+
+    // Two-step timelock for sink changes (prevent instant fee redirection)
+    uint256 public constant SINK_CHANGE_DELAY = 2 days;
+    address public pendingTreasurySink;
+    uint256 public treasurySinkProposalTime;
+    address public pendingSanctumSink;
+    uint256 public sanctumSinkProposalTime;
     
     // Sanctions / Compliance
     mapping(address => bool) public isBlacklisted;
@@ -106,13 +145,22 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
 
     /// Events
     event VaultHubSet(address indexed hub);
+    event VaultHubProposed(address indexed hub, uint256 effectiveTime);
     event SecurityHubSet(address indexed hub);
+    event SecurityHubProposed(address indexed hub, uint256 effectiveTime);
     event LedgerSet(address indexed ledger);
+    event LedgerProposed(address indexed ledger, uint256 effectiveTime);
     event BurnRouterSet(address indexed router);
+    event BurnRouterProposed(address indexed router, uint256 effectiveTime);
+    event BurnRouterConfirmed(address indexed router);
     event TreasurySinkSet(address indexed sink);
+    event TreasurySinkProposed(address indexed sink, uint256 effectiveTime);
     event SanctumSinkSet(address indexed sink);
+    event SanctumSinkProposed(address indexed sink, uint256 effectiveTime);
     event SystemExemptSet(address indexed who, bool isExempt);
+    event SystemExemptProposed(address indexed who, bool isExempt, uint256 effectiveTime);
     event Whitelisted(address indexed addr, bool status);
+    event WhitelistProposed(address indexed addr, bool status, uint256 effectiveTime);
     event VaultOnlySet(bool enabled);
     event ExemptSet(address indexed target, bool exempt);
     event PolicyLocked();
@@ -121,6 +169,8 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
     event FeeApplied(address indexed from, address indexed to, uint256 burnAmount, uint256 sanctumAmount, uint256 ecosystemAmount, address indexed sanctumSink, address ecosystemSink);
     event Transfer(address indexed from, address indexed to, uint256 value);
     event Approval(address indexed owner, address indexed spender, uint256 value);
+    event DelegateChanged(address indexed delegator, address indexed fromDelegate, address indexed toDelegate);
+    event DelegateVotesChanged(address indexed delegate, uint256 previousBalance, uint256 newBalance);
 
     /// Errors
     error VF_ZERO();
@@ -260,63 +310,242 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
         return true;
     }
 
+    /// @notice Batch transfer to multiple recipients
+    function batchTransfer(address[] calldata recipients, uint256[] calldata amounts) external nonReentrant returns (bool) {
+        require(recipients.length == amounts.length, "length mismatch");
+        require(recipients.length <= 100, "too many recipients");
+
+        for (uint256 i = 0; i < recipients.length; i++) {
+            _transfer(msg.sender, recipients[i], amounts[i]);
+        }
+
+        return true;
+    }
+
+    /// @notice Batch approve multiple spenders
+    function batchApprove(address[] calldata spenders, uint256[] calldata amounts) external returns (bool) {
+        require(spenders.length == amounts.length, "length mismatch");
+        require(spenders.length <= 100, "too many spenders");
+
+        for (uint256 i = 0; i < spenders.length; i++) {
+            _approve(msg.sender, spenders[i], amounts[i]);
+        }
+
+        return true;
+    }
+
+    /// @notice Delegate voting power to another address
+    function delegate(address delegatee) external {
+        _delegate(msg.sender, delegatee);
+    }
+
+    /// @notice Get current votes for an account
+    function getCurrentVotes(address account) external view returns (uint256) {
+        uint32 nCheckpoints = numCheckpoints[account];
+        return nCheckpoints > 0 ? checkpoints[account][nCheckpoints - 1].votes : 0;
+    }
+
+    /// @notice Get votes for an account at a prior block
+    function getPriorVotes(address account, uint256 blockNumber) external view returns (uint224) {
+        require(blockNumber < block.number, "VFIDE: not yet determined");
+
+        uint32 nCheckpoints = numCheckpoints[account];
+        if (nCheckpoints == 0) {
+            return 0;
+        }
+
+        if (checkpoints[account][nCheckpoints - 1].fromBlock <= blockNumber) {
+            return checkpoints[account][nCheckpoints - 1].votes;
+        }
+
+        if (checkpoints[account][0].fromBlock > blockNumber) {
+            return 0;
+        }
+
+        uint32 lower = 0;
+        uint32 upper = nCheckpoints - 1;
+        while (upper > lower) {
+            uint32 center = upper - (upper - lower) / 2;
+            Checkpoint memory cp = checkpoints[account][center];
+
+            if (cp.fromBlock == blockNumber) {
+                return cp.votes;
+            } else if (cp.fromBlock < blockNumber) {
+                lower = center;
+            } else {
+                upper = center - 1;
+            }
+        }
+
+        return checkpoints[account][lower].votes;
+    }
+
     // ─────────────────────────── Admin / Modules
 
-    function setVaultHub(address hub) external onlyOwner {
+    /// @notice Propose a new VaultHub (two-step with MODULE_CHANGE_DELAY)
+    function proposeVaultHub(address hub) external onlyOwner {
         require(hub != address(0), "VF: zero address");
+        pendingVaultHub = hub;
+        vaultHubProposalTime = block.timestamp;
+        emit VaultHubProposed(hub, block.timestamp + MODULE_CHANGE_DELAY);
+        _log("vault_hub_proposed");
+    }
+
+    /// @notice Confirm the pending VaultHub after delay
+    function confirmVaultHub() external onlyOwner {
+        require(vaultHubProposalTime > 0, "VF: no proposal");
+        require(block.timestamp >= vaultHubProposalTime + MODULE_CHANGE_DELAY, "VF: delay not met");
+        address hub = pendingVaultHub;
         vaultHub = IVaultHub(hub);
         emit VaultHubSet(hub);
-        _log("vault_hub_set");
+        pendingVaultHub = address(0);
+        vaultHubProposalTime = 0;
+        _log("vault_hub_confirmed");
     }
 
-    function setSecurityHub(address hub) external onlyOwner {
+    /// @notice Propose a new SecurityHub (two-step with MODULE_CHANGE_DELAY)
+    function proposeSecurityHub(address hub) external onlyOwner {
+        pendingSecurityHub = hub;
+        securityHubProposalTime = block.timestamp;
+        emit SecurityHubProposed(hub, block.timestamp + MODULE_CHANGE_DELAY);
+        _log("security_hub_proposed");
+    }
+
+    /// @notice Confirm the pending SecurityHub after delay
+    function confirmSecurityHub() external onlyOwner {
+        require(securityHubProposalTime > 0, "VF: no proposal");
+        require(block.timestamp >= securityHubProposalTime + MODULE_CHANGE_DELAY, "VF: delay not met");
+        address hub = pendingSecurityHub;
         securityHub = ISecurityHub(hub);
         emit SecurityHubSet(hub);
-        _log("security_hub_set");
+        pendingSecurityHub = address(0);
+        securityHubProposalTime = 0;
+        _log("security_hub_confirmed");
     }
 
-    function setLedger(address _ledger) external onlyOwner {
+    /// @notice Propose a new Ledger (two-step with MODULE_CHANGE_DELAY)
+    function proposeLedger(address _ledger) external onlyOwner {
+        pendingLedger = _ledger;
+        ledgerProposalTime = block.timestamp;
+        emit LedgerProposed(_ledger, block.timestamp + MODULE_CHANGE_DELAY);
+        _log("ledger_proposed");
+    }
+
+    /// @notice Confirm the pending Ledger after delay
+    function confirmLedger() external onlyOwner {
+        require(ledgerProposalTime > 0, "VF: no proposal");
+        require(block.timestamp >= ledgerProposalTime + MODULE_CHANGE_DELAY, "VF: delay not met");
+        address _ledger = pendingLedger;
         ledger = IProofLedger(_ledger);
         emit LedgerSet(_ledger);
-        _log("ledger_set");
+        pendingLedger = address(0);
+        ledgerProposalTime = 0;
+        _log("ledger_confirmed");
     }
 
-    function setBurnRouter(address router) external onlyOwner {
+    /// @notice Propose a new burn router (two-step: propose then confirm after delay)
+    /// @param router Address of the proposed burn router
+    function proposeBurnRouter(address router) external onlyOwner {
         if (policyLocked && router == address(0)) revert VF_POLICY_LOCKED();
+        pendingBurnRouter = router;
+        burnRouterProposalTime = block.timestamp;
+        emit BurnRouterProposed(router, block.timestamp + BURN_ROUTER_DELAY);
+        _log("burn_router_proposed");
+    }
+
+    /// @notice Confirm the pending burn router after BURN_ROUTER_DELAY has elapsed
+    function confirmBurnRouter() external onlyOwner {
+        require(burnRouterProposalTime > 0, "VF: no proposal");
+        require(block.timestamp >= burnRouterProposalTime + BURN_ROUTER_DELAY, "VF: delay not met");
+        address router = pendingBurnRouter;
         burnRouter = IProofScoreBurnRouterToken(router);
         emit BurnRouterSet(router);
-        _log("burn_router_set");
+        emit BurnRouterConfirmed(router);
+        pendingBurnRouter = address(0);
+        burnRouterProposalTime = 0;
+        _log("burn_router_confirmed");
     }
 
-    function setTreasurySink(address sink) external onlyOwner {
+    /// @notice Propose a new treasury sink (2-day delay to prevent instant fee redirection)
+    function proposeTreasurySink(address sink) external onlyOwner {
         if (policyLocked && sink == address(0)) revert VF_POLICY_LOCKED();
+        pendingTreasurySink = sink;
+        treasurySinkProposalTime = block.timestamp;
+        emit TreasurySinkProposed(sink, block.timestamp + SINK_CHANGE_DELAY);
+        _log("treasury_sink_proposed");
+    }
+
+    /// @notice Confirm the pending treasury sink after SINK_CHANGE_DELAY has elapsed
+    function confirmTreasurySink() external onlyOwner {
+        require(treasurySinkProposalTime > 0, "VF: no proposal");
+        require(block.timestamp >= treasurySinkProposalTime + SINK_CHANGE_DELAY, "VF: delay not met");
+        address sink = pendingTreasurySink;
         treasurySink = sink;
+        pendingTreasurySink = address(0);
+        treasurySinkProposalTime = 0;
         emit TreasurySinkSet(sink);
         _log("treasury_sink_set");
     }
 
-    function setSanctumSink(address _sanctum) external onlyOwner {
+    /// @notice Propose a new sanctum sink (2-day delay to prevent instant fee redirection)
+    function proposeSanctumSink(address _sanctum) external onlyOwner {
         if (policyLocked) require(_sanctum != address(0), "VF: cannot set zero when locked");
         require(_sanctum != address(0), "VF: zero address");
-        sanctumSink = _sanctum;
-        emit SanctumSinkSet(_sanctum);
+        pendingSanctumSink = _sanctum;
+        sanctumSinkProposalTime = block.timestamp;
+        emit SanctumSinkProposed(_sanctum, block.timestamp + SINK_CHANGE_DELAY);
+        _log("sanctum_sink_proposed");
+    }
+
+    /// @notice Confirm the pending sanctum sink after SINK_CHANGE_DELAY has elapsed
+    function confirmSanctumSink() external onlyOwner {
+        require(sanctumSinkProposalTime > 0, "VF: no proposal");
+        require(block.timestamp >= sanctumSinkProposalTime + SINK_CHANGE_DELAY, "VF: delay not met");
+        address sink = pendingSanctumSink;
+        require(sink != address(0), "VF: zero address");
+        sanctumSink = sink;
+        pendingSanctumSink = address(0);
+        sanctumSinkProposalTime = 0;
+        emit SanctumSinkSet(sink);
         _log("sanctum_sink_set");
     }
 
-    /// @notice Exempt address from all checks (fees + vault-only) - use for system contracts
-    function setSystemExempt(address who, bool isExempt) external onlyOwner {
+    /// @notice Propose exemption change (1-day delay to prevent instant rug)
+    function proposeSystemExempt(address who, bool isExempt) external onlyOwner {
         require(who != address(0), "VF: zero address");
-        systemExempt[who] = isExempt;
-        emit SystemExemptSet(who, isExempt);
-        _logEv(who, isExempt ? "exempt_on" : "exempt_off", 0, "");
+        pendingExemptions[who] = PendingExemption(isExempt, block.timestamp);
+        emit SystemExemptProposed(who, isExempt, block.timestamp + EXEMPT_CHANGE_DELAY);
+        _logEv(who, isExempt ? "exempt_proposed_on" : "exempt_proposed_off", 0, "");
     }
-    
-    /// @notice Whitelist address to bypass vault-only rule - use for exchanges/DEXs
-    function setWhitelist(address addr, bool status) external onlyOwner {
+
+    /// @notice Confirm pending exemption change after delay
+    function confirmSystemExempt(address who) external onlyOwner {
+        PendingExemption memory p = pendingExemptions[who];
+        require(p.proposalTime > 0, "VF: no proposal");
+        require(block.timestamp >= p.proposalTime + EXEMPT_CHANGE_DELAY, "VF: delay not met");
+        systemExempt[who] = p.isExempt;
+        delete pendingExemptions[who];
+        emit SystemExemptSet(who, p.isExempt);
+        _logEv(who, p.isExempt ? "exempt_on" : "exempt_off", 0, "");
+    }
+
+    /// @notice Propose whitelist change (1-day delay)
+    function proposeWhitelist(address addr, bool status) external onlyOwner {
         require(addr != address(0), "VF: zero address");
-        whitelisted[addr] = status;
-        emit Whitelisted(addr, status);
-        _logEv(addr, status ? "whitelist_add" : "whitelist_remove", 0, "");
+        pendingWhitelist[addr] = PendingExemption(status, block.timestamp);
+        emit WhitelistProposed(addr, status, block.timestamp + EXEMPT_CHANGE_DELAY);
+        _logEv(addr, status ? "whitelist_proposed_add" : "whitelist_proposed_remove", 0, "");
+    }
+
+    /// @notice Confirm pending whitelist change after delay
+    function confirmWhitelist(address addr) external onlyOwner {
+        PendingExemption memory p = pendingWhitelist[addr];
+        require(p.proposalTime > 0, "VF: no proposal");
+        require(block.timestamp >= p.proposalTime + EXEMPT_CHANGE_DELAY, "VF: delay not met");
+        whitelisted[addr] = p.isExempt;
+        delete pendingWhitelist[addr];
+        emit Whitelisted(addr, p.isExempt);
+        _logEv(addr, p.isExempt ? "whitelist_add" : "whitelist_remove", 0, "");
     }
 
     function setVaultOnly(bool enabled) external onlyOwner {
@@ -416,27 +645,45 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
         uint256 _dailyLimit,
         uint256 _cooldown
     ) external onlyOwner {
-        // Sanity checks: limits should be reasonable if enabled
-        if (_maxTransfer > 0) require(_maxTransfer >= 100_000e18, "min 100k");
+        // Unconditional floors: prevent honeypotting by removing limits entirely
+        require(_maxTransfer >= 100e18, "min 100 VFIDE");
+        require(_dailyLimit >= 1000e18, "min 1000 VFIDE");
+        // Conditional: wallet limit can be disabled (0) but has a floor if enabled
         if (_maxWallet > 0) require(_maxWallet >= 200_000e18, "min 200k");
-        if (_dailyLimit > 0) require(_dailyLimit >= 500_000e18, "min 500k");
-        if (_cooldown > 0) require(_cooldown <= 1 hours, "max 1 hour cooldown");
-        
+        require(_cooldown <= MAX_COOLDOWN, "exceeds MAX_COOLDOWN");
+
         maxTransferAmount = _maxTransfer;
         maxWalletBalance = _maxWallet;
         dailyTransferLimit = _dailyLimit;
         transferCooldown = _cooldown;
-        
+
         emit AntiWhaleSet(_maxTransfer, _maxWallet, _dailyLimit, _cooldown);
         _log("anti_whale_updated");
     }
     
     /**
      * @notice Exempt address from whale limits (for exchanges, liquidity pools, etc.)
+     * @dev Only contracts may be granted exemption (guard against self-destructed addresses)
      */
     function setWhaleLimitExempt(address addr, bool exempt) external onlyOwner {
+        if (exempt) {
+            uint256 size;
+            assembly { size := extcodesize(addr) }
+            require(size > 0, "VF: must be contract");
+        }
         whaleLimitExempt[addr] = exempt;
         emit WhaleLimitExemptSet(addr, exempt);
+    }
+
+    /**
+     * @notice Set transfer cooldown independently
+     * @param _cooldown Seconds between transfers (0 = disabled, max MAX_COOLDOWN)
+     */
+    function setTransferCooldown(uint256 _cooldown) external onlyOwner {
+        require(_cooldown <= MAX_COOLDOWN, "exceeds MAX_COOLDOWN");
+        transferCooldown = _cooldown;
+        emit AntiWhaleSet(maxTransferAmount, maxWalletBalance, dailyTransferLimit, _cooldown);
+        _log("transfer_cooldown_updated");
     }
 
     // ─────────────────────────── Internal core
@@ -526,6 +773,7 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
                 require(sink2 != address(0), "sanctum sink=0");
                 _balances[sink2] += _sanctumAmt;
                 emit Transfer(from, sink2, _sanctumAmt);
+                _moveDelegates(delegates[from], delegates[sink2], _sanctumAmt);
                 remaining -= _sanctumAmt;
             }
             if (_ecoAmt > 0) {
@@ -533,6 +781,7 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
                 require(sink3 != address(0), "eco sink=0");
                 _balances[sink3] += _ecoAmt;
                 emit Transfer(from, sink3, _ecoAmt);
+                _moveDelegates(delegates[from], delegates[sink3], _ecoAmt);
                 remaining -= _ecoAmt;
             }
 
@@ -552,6 +801,7 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
         // Deliver net to receiver
         _balances[to] += remaining;
         emit Transfer(from, to, remaining);
+        _moveDelegates(delegates[from], delegates[to], remaining);
 
         _logEv(from, "transfer", amount, "");
     }
@@ -561,10 +811,12 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
             // Hard burn
             totalSupply -= burnAmt;
             emit Transfer(from, address(0), burnAmt);
+            _moveDelegates(delegates[from], address(0), burnAmt);
         } else {
             // Soft burn sink (e.g., dead vault, dedicated burner)
             _balances[sink] += burnAmt;
             emit Transfer(from, sink, burnAmt);
+            _moveDelegates(delegates[from], delegates[sink], burnAmt);
         }
     }
 
@@ -574,12 +826,69 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
         totalSupply += amount;
         _balances[to] += amount;
         emit Transfer(address(0), to, amount);
+        _moveDelegates(address(0), delegates[to], amount);
     }
 
     function _approve(address owner_, address spender, uint256 amount) internal {
         require(owner_ != address(0) && spender != address(0), "approve 0");
         _allowances[owner_][spender] = amount;
         emit Approval(owner_, spender, amount);
+    }
+
+    function _delegate(address delegator, address delegatee) internal {
+        address currentDelegate = delegates[delegator];
+        uint256 delegatorBalance = _balances[delegator];
+        delegates[delegator] = delegatee;
+
+        emit DelegateChanged(delegator, currentDelegate, delegatee);
+
+        _moveDelegates(currentDelegate, delegatee, delegatorBalance);
+    }
+
+    function _moveDelegates(address srcRep, address dstRep, uint256 amount) internal {
+        if (srcRep != dstRep && amount > 0) {
+            if (srcRep != address(0)) {
+                uint32 srcRepNum = numCheckpoints[srcRep];
+                uint256 srcRepOld = srcRepNum > 0 ? checkpoints[srcRep][srcRepNum - 1].votes : 0;
+                uint256 srcRepNew = srcRepOld - amount;
+                _writeCheckpoint(srcRep, srcRepNum, srcRepOld, srcRepNew);
+            }
+
+            if (dstRep != address(0)) {
+                uint32 dstRepNum = numCheckpoints[dstRep];
+                uint256 dstRepOld = dstRepNum > 0 ? checkpoints[dstRep][dstRepNum - 1].votes : 0;
+                uint256 dstRepNew = dstRepOld + amount;
+                _writeCheckpoint(dstRep, dstRepNum, dstRepOld, dstRepNew);
+            }
+        }
+    }
+
+    function _writeCheckpoint(
+        address delegatee,
+        uint32 nCheckpoints,
+        uint256 oldVotes,
+        uint256 newVotes
+    ) internal {
+        uint32 blockNumber = safe32(block.number, "VFIDE: block number exceeds 32 bits");
+
+        if (nCheckpoints > 0 && checkpoints[delegatee][nCheckpoints - 1].fromBlock == blockNumber) {
+            checkpoints[delegatee][nCheckpoints - 1].votes = safe224(newVotes, "VFIDE: votes exceed 224 bits");
+        } else {
+            checkpoints[delegatee][nCheckpoints] = Checkpoint(blockNumber, safe224(newVotes, "VFIDE: votes exceed 224 bits"));
+            numCheckpoints[delegatee] = nCheckpoints + 1;
+        }
+
+        emit DelegateVotesChanged(delegatee, oldVotes, newVotes);
+    }
+
+    function safe32(uint n, string memory errorMessage) internal pure returns (uint32) {
+        require(n < (1 << 32), errorMessage);
+        return uint32(n);
+    }
+
+    function safe224(uint n, string memory errorMessage) internal pure returns (uint224) {
+        require(n < (1 << 224), errorMessage);
+        return uint224(n);
     }
 
     // ─────────────────────────── Helpers

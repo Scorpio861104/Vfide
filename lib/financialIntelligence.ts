@@ -497,7 +497,7 @@ export function summarizeTaxYear(
     (e) => e.type === 'capital-loss' || (e.type === 'capital-gain' && (e.gain || 0) < 0)
   );
 
-  // Simplified - assumes all short-term for demo
+  // Simplified - assumes all short-term for now
   const shortTermGains = gains.reduce((sum, e) => sum + (e.gain || 0), 0);
   const longTermGains = 0;
   const totalLosses = Math.abs(losses.reduce((sum, e) => sum + (e.gain || 0), 0));

@@ -27,15 +27,6 @@ export type { WalletCapabilitiesProps } from './WalletCapabilities';
 export { EnhancedConnectButton } from './EnhancedConnectButton';
 export type { EnhancedConnectButtonProps } from './EnhancedConnectButton';
 
-export { EmbeddedLogin } from './EmbeddedLogin';
-export type { EmbeddedLoginProps } from './EmbeddedLogin';
-
-export { GaslessBanner, GaslessStatus, GaslessToggle } from './GaslessTransaction';
-export type { GaslessBannerProps, GaslessStatusProps, GaslessToggleProps } from './GaslessTransaction';
-
-export { SessionKeyManager } from './SessionKeyManager';
-export type { SessionKeyManagerProps } from './SessionKeyManager';
-
 export { UnifiedWalletModal } from './UnifiedWalletModal';
 export type { UnifiedWalletModalProps } from './UnifiedWalletModal';
 
@@ -65,12 +56,3 @@ export {
   type SessionKey,
   type SessionKeyPermission,
 } from '@/lib/sessionKeys/sessionKeyService';
-
-export {
-  EmbeddedWalletProvider,
-  useEmbeddedWallet,
-  useEmailLogin,
-  useSocialLogin,
-  type EmbeddedUser,
-  type AuthMethod,
-} from '@/lib/embeddedWallet/embeddedWalletService';

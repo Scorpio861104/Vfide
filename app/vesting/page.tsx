@@ -80,9 +80,9 @@ export default function VestingPage() {
       >
         {/* Premium Background Effects */}
         <div className="fixed inset-0 pointer-events-none">
-          <div className="absolute top-1/4 -left-32 w-125 h-125 bg-purple-500/10 rounded-full blur-[120px] animate-pulse" />
-          <div className="absolute bottom-1/4 -right-32 w-100 h-100 bg-violet-500/10 rounded-full blur-[100px] animate-pulse" style={{ animationDelay: '1s' }} />
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-150 h-150 bg-cyan-500/5 rounded-full blur-[150px]" />
+          <div className="absolute top-1/4 -left-32 w-[31.25rem] h-[31.25rem] bg-purple-500/10 rounded-full blur-[120px] animate-pulse" />
+          <div className="absolute bottom-1/4 -right-32 w-[25rem] h-[25rem] bg-violet-500/10 rounded-full blur-[100px] animate-pulse" style={{ animationDelay: '1s' }} />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[37.5rem] h-[37.5rem] bg-cyan-500/5 rounded-full blur-[150px]" />
         </div>
 
         <div className="container mx-auto px-4 relative z-10">
@@ -259,7 +259,7 @@ function OverviewTab({ vestingStatus }: { vestingStatus?: readonly [bigint, bigi
             { title: 'Linear Vesting', desc: 'Tokens unlock bi-monthly over 36 months', bgColor: 'bg-cyan-500/20', iconColor: 'text-cyan-400' },
             { title: 'Claim Anytime', desc: 'Claim vested tokens whenever convenient', bgColor: 'bg-emerald-500/20', iconColor: 'text-emerald-400' },
             { title: 'Beneficiary Only', desc: 'Only designated beneficiary can claim', bgColor: 'bg-amber-500/20', iconColor: 'text-amber-400' },
-            { title: 'Presale Sync', desc: 'Vesting starts from presale launch', bgColor: 'bg-violet-500/20', iconColor: 'text-violet-400' },
+            { title: 'Launch Sync', desc: 'Vesting starts from launch time', bgColor: 'bg-violet-500/20', iconColor: 'text-violet-400' },
             { title: 'Pause Protection', desc: 'Claims can be paused for emergencies', bgColor: 'bg-rose-500/20', iconColor: 'text-rose-400' },
           ].map((item, idx) => (
             <motion.div 
@@ -359,7 +359,7 @@ function ScheduleTab({ schedule }: { schedule?: readonly Milestone[] }) {
           </div>
           <div className="text-sm text-gray-400">
             <strong className="text-white">Dev Reserve Schedule:</strong> 25% of total supply allocated 
-            to developer reserve. Tokens vest linearly over 36 months starting from presale launch, 
+            to developer reserve. Tokens vest linearly over 36 months starting from launch time, 
             with a 60-day cliff period. Unlocks occur bi-monthly (every 60 days).
           </div>
         </div>

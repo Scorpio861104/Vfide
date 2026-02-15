@@ -25,6 +25,8 @@ import {
   Calendar, TrendingUp, Award, Zap, Users, MessageSquare
 } from 'lucide-react';
 import { useTransactionSounds } from '@/hooks/useTransactionSounds';
+import { useAccount } from 'wagmi';
+import { useUserProfile } from '@/hooks/useAPI';
 
 // ==================== TYPES ====================
 
@@ -87,130 +89,15 @@ interface SocialConnections {
   friends: number;
 }
 
-// ==================== MOCK DATA ====================
+// ==================== DEFAULT STATE ====================
 
-const generateMockProfile = (): UserProfile => ({
-  id: 'user-1',
-  username: 'johndoe',
-  displayName: 'John Doe',
-  email: 'john.doe@example.com',
-  bio: 'Blockchain enthusiast and early adopter of Vfide. Passionate about decentralized governance and community-driven projects.',
-  avatar: '👤',
-  joinedDate: new Date('2024-01-15'),
-  location: 'San Francisco, CA',
-  website: 'https://johndoe.com',
-  twitter: '@johndoe',
-  github: 'johndoe',
-});
-
-const generateMockStats = (): UserStats => ({
-  totalActivities: 247,
-  badgesEarned: 12,
-  votescast: 45,
-  transactionsCount: 89,
-  governanceScore: 850,
-  proofScore: 1250,
-});
-
-const generateMockBadges = (): Badge[] => [
-  {
-    id: 'badge-1',
-    name: 'Early Adopter',
-    description: 'Joined in the first month',
-    icon: '🚀',
-    earnedDate: new Date('2024-01-20'),
-    rarity: 'legendary',
-  },
-  {
-    id: 'badge-2',
-    name: 'Active Voter',
-    description: 'Participated in 25+ votes',
-    icon: '🗳️',
-    earnedDate: new Date('2024-03-15'),
-    rarity: 'epic',
-  },
-  {
-    id: 'badge-3',
-    name: 'Transaction Master',
-    description: 'Completed 50+ transactions',
-    icon: '💰',
-    earnedDate: new Date('2024-05-10'),
-    rarity: 'rare',
-  },
-  {
-    id: 'badge-4',
-    name: 'Community Builder',
-    description: 'Referred 10+ users',
-    icon: '🤝',
-    earnedDate: new Date('2024-07-01'),
-    rarity: 'rare',
-  },
-  {
-    id: 'badge-5',
-    name: 'Governance Pro',
-    description: 'Created 5+ proposals',
-    icon: '📜',
-    earnedDate: new Date('2024-08-20'),
-    rarity: 'epic',
-  },
-  {
-    id: 'badge-6',
-    name: 'Streak Champion',
-    description: '30 day activity streak',
-    icon: '🔥',
-    earnedDate: new Date('2024-09-15'),
-    rarity: 'common',
-  },
-];
-
-const generateMockRecentActivities = (): RecentActivity[] => [
-  {
-    id: 'act-1',
-    type: 'vote',
-    title: 'Voted on Treasury Proposal #42',
-    timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000),
-  },
-  {
-    id: 'act-2',
-    type: 'transaction',
-    title: 'Received 500 USDC',
-    timestamp: new Date(Date.now() - 5 * 60 * 60 * 1000),
-  },
-  {
-    id: 'act-3',
-    type: 'badge',
-    title: 'Earned "Streak Champion" badge',
-    timestamp: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
-  },
-];
-
-const generateMockPrivacySettings = (): PrivacySettings => ({
+const DEFAULT_PRIVACY_SETTINGS: PrivacySettings = {
   profileVisibility: 'public',
   showEmail: true,
   showActivities: true,
   showBadges: true,
   showStats: true,
   allowMessages: true,
-});
-
-const generateMockSocialConnections = (): SocialConnections => ({
-  followers: 156,
-  following: 89,
-  friends: 42,
-});
-
-const generateActivityHeatmap = (): ActivityHeatmapDay[] => {
-  const days: ActivityHeatmapDay[] = [];
-  const today = new Date();
-  for (let i = 0; i < 365; i++) {
-    const date = new Date(today);
-    date.setDate(date.getDate() - i);
-    days.push({
-      date,
-      count: Math.random() > 0.3 ? Math.floor(Math.random() * 12) : 0
-    });
-  }
-  return days.reverse();
 };
 
 // ==================== HELPER FUNCTIONS ====================
@@ -264,6 +151,28 @@ const validateUrl = (url: string): boolean => {
   } catch {
     return false;
   }
+};
+
+const buildActivityHeatmap = (activities: RecentActivity[]): ActivityHeatmapDay[] => {
+  const days: ActivityHeatmapDay[] = [];
+  const today = new Date();
+  const counts = activities.reduce<Record<string, number>>((acc, activity) => {
+    const dayKey = new Date(activity.timestamp).toDateString();
+    acc[dayKey] = (acc[dayKey] || 0) + 1;
+    return acc;
+  }, {});
+
+  for (let i = 0; i < 365; i++) {
+    const date = new Date(today);
+    date.setDate(date.getDate() - i);
+    const dayKey = date.toDateString();
+    days.push({
+      date,
+      count: counts[dayKey] || 0,
+    });
+  }
+
+  return days.reverse();
 };
 
 const formatRarityLabel = (rarity: Badge['rarity']): string => {
@@ -458,7 +367,11 @@ function ShareProfileModal({ profile, onClose }: { profile: UserProfile; onClose
 
   const shareToTwitter = () => {
     const text = `Check out ${profile.displayName}'s profile on VFIDE!`;
-    window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(profileUrl)}`, '_blank');
+    window.open(
+      `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(profileUrl)}`,
+      '_blank',
+      'noopener,noreferrer'
+    );
   };
 
   return (
@@ -687,13 +600,33 @@ function ActivityItem({ activity, index = 0 }: ActivityItemProps) {
 
 export default function UserProfile() {
   // State
-  const [profile, setProfile] = useState<UserProfile>(generateMockProfile());
-  const [stats] = useState<UserStats>(generateMockStats());
-  const [badges] = useState<Badge[]>(generateMockBadges());
-  const [recentActivities] = useState<RecentActivity[]>(generateMockRecentActivities());
-  const [privacySettings, setPrivacySettings] = useState<PrivacySettings>(generateMockPrivacySettings());
-  const [socialConnections] = useState<SocialConnections>(generateMockSocialConnections());
-  const [activityHeatmap] = useState<ActivityHeatmapDay[]>(generateActivityHeatmap());
+  const { address, isConnected } = useAccount();
+  const activeAddress = isConnected ? address : undefined;
+  const {
+    profile: apiProfile,
+    updateProfile,
+    uploadAvatar: _uploadAvatar,
+    isLoading: isProfileLoading,
+    error: profileError,
+  } = useUserProfile(activeAddress);
+
+  const [profile, setProfile] = useState<UserProfile>({
+    id: activeAddress ?? '',
+    username: '',
+    displayName: '',
+    email: '',
+    bio: '',
+    avatar: undefined,
+    joinedDate: new Date(),
+    location: undefined,
+    website: undefined,
+    twitter: undefined,
+    github: undefined,
+  });
+  const [badges, setBadges] = useState<Badge[]>([]);
+  const [recentActivities, setRecentActivities] = useState<RecentActivity[]>([]);
+  const [privacySettings, setPrivacySettings] = useState<PrivacySettings>(DEFAULT_PRIVACY_SETTINGS);
+  const [_isPrivacyLoading, setIsPrivacyLoading] = useState(false);
   
   const [isEditing, setIsEditing] = useState(false);
   const [editedProfile, setEditedProfile] = useState<UserProfile>(profile);
@@ -704,6 +637,115 @@ export default function UserProfile() {
   
   const [errors, setErrors] = useState<Record<string, string>>({});
   const { play: playSound } = useTransactionSounds();
+
+  useEffect(() => {
+    if (!apiProfile) return;
+
+    const joinedDate = apiProfile.createdAt ? new Date(apiProfile.createdAt) : new Date();
+    const nextProfile: UserProfile = {
+      id: apiProfile.address ?? activeAddress ?? '',
+      username: apiProfile.username ?? apiProfile.alias ?? '',
+      displayName: apiProfile.displayName ?? apiProfile.alias ?? apiProfile.username ?? '',
+      email: apiProfile.email ?? '',
+      bio: apiProfile.bio ?? '',
+      avatar: apiProfile.avatar,
+      joinedDate,
+      location: apiProfile.location ?? undefined,
+      website: apiProfile.website ?? undefined,
+      twitter: apiProfile.twitter ?? undefined,
+      github: apiProfile.github ?? undefined,
+    };
+
+    setProfile(nextProfile);
+    setEditedProfile(nextProfile);
+  }, [apiProfile, activeAddress]);
+
+  useEffect(() => {
+    if (!activeAddress) return;
+
+    const fetchBadges = async () => {
+      try {
+        const response = await fetch(`/api/badges?userAddress=${activeAddress}`);
+        if (!response.ok) return;
+        const data = await response.json();
+
+        const mapped: Badge[] = Array.isArray(data.badges)
+          ? data.badges.map((badge: Record<string, unknown>) => ({
+              id: String(badge.badge_id ?? badge.id ?? ''),
+              name: badge.badge_name ?? badge.name ?? 'Badge',
+              description: badge.badge_description ?? badge.description ?? '',
+              icon: badge.badge_icon ?? badge.icon ?? '🏅',
+              earnedDate: badge.earned_at ? new Date(badge.earned_at) : new Date(),
+              rarity: badge.badge_rarity ?? badge.rarity ?? 'common',
+            }))
+          : [];
+
+        setBadges(mapped);
+      } catch {
+        setBadges([]);
+      }
+    };
+
+    const fetchActivities = async () => {
+      try {
+        const response = await fetch(`/api/activities?userAddress=${activeAddress}&limit=50&offset=0`);
+        if (!response.ok) return;
+        const data = await response.json();
+
+        const mapped: RecentActivity[] = Array.isArray(data.activities)
+          ? data.activities.map((activity: Record<string, unknown>) => ({
+              id: String(activity.id),
+              type: activity.activity_type ?? activity.type ?? 'activity',
+              title: activity.title ?? activity.description ?? 'Activity',
+              timestamp: activity.created_at ? new Date(activity.created_at) : new Date(),
+            }))
+          : [];
+
+        setRecentActivities(mapped);
+      } catch {
+        setRecentActivities([]);
+      }
+    };
+
+    fetchBadges();
+    fetchActivities();
+  }, [activeAddress]);
+
+  useEffect(() => {
+    if (!activeAddress) return;
+
+    const fetchPrivacySettings = async () => {
+      setIsPrivacyLoading(true);
+      try {
+        const response = await fetch(`/api/users/privacy?userAddress=${activeAddress}`);
+        if (!response.ok) return;
+        const data = await response.json();
+        if (data?.settings) {
+          setPrivacySettings(data.settings as PrivacySettings);
+        }
+      } catch {
+        // Ignore privacy fetch errors
+      } finally {
+        setIsPrivacyLoading(false);
+      }
+    };
+
+    fetchPrivacySettings();
+  }, [activeAddress]);
+
+  const savePrivacySettings = useCallback(async (nextSettings: PrivacySettings) => {
+    if (!activeAddress) return;
+
+    try {
+      await fetch('/api/users/privacy', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userAddress: activeAddress, settings: nextSettings }),
+      });
+    } catch {
+      // Ignore privacy save errors
+    }
+  }, [activeAddress]);
 
   // Validation
   const validateProfile = useCallback((): boolean => {
@@ -719,9 +761,7 @@ export default function UserProfile() {
       newErrors.displayName = 'Display name is required';
     }
 
-    if (!editedProfile.email.trim()) {
-      newErrors.email = 'Email is required';
-    } else if (!validateEmail(editedProfile.email)) {
+    if (editedProfile.email && !validateEmail(editedProfile.email)) {
       newErrors.email = 'Please enter a valid email address';
     }
 
@@ -746,21 +786,42 @@ export default function UserProfile() {
     setErrors({});
   }, [profile]);
 
-  const handleSaveProfile = useCallback(() => {
-    if (validateProfile()) {
+  const handleSaveProfile = useCallback(async () => {
+    if (!validateProfile()) return;
+
+    try {
+      await updateProfile({
+        username: editedProfile.username,
+        displayName: editedProfile.displayName,
+        bio: editedProfile.bio,
+        email: editedProfile.email,
+        location: editedProfile.location,
+        website: editedProfile.website,
+        twitter: editedProfile.twitter,
+        github: editedProfile.github,
+      });
+
       setProfile(editedProfile);
       setIsEditing(false);
       setErrors({});
       playSound('success');
-      // In real app: API call to save profile
+    } catch (error) {
+      console.error('Failed to save profile:', error);
+      setErrors((prev) => ({ ...prev, form: 'Failed to save profile' }));
     }
-  }, [editedProfile, validateProfile, playSound]);
+  }, [editedProfile, validateProfile, playSound, updateProfile]);
 
-  const handleSaveBio = useCallback((newBio: string) => {
-    setProfile(prev => ({ ...prev, bio: newBio }));
-    setEditingBio(false);
-    playSound('success');
-  }, [playSound]);
+  const handleSaveBio = useCallback(async (newBio: string) => {
+    try {
+      await updateProfile({ bio: newBio });
+      setProfile((prev) => ({ ...prev, bio: newBio }));
+      setEditingBio(false);
+      playSound('success');
+    } catch (error) {
+      console.error('Failed to save bio:', error);
+      setErrors((prev) => ({ ...prev, bio: 'Failed to save bio' }));
+    }
+  }, [playSound, updateProfile]);
 
   const handleProfileChange = useCallback((field: keyof UserProfile, value: string) => {
     setEditedProfile((prev) => ({ ...prev, [field]: value }));
@@ -775,8 +836,12 @@ export default function UserProfile() {
   }, [errors]);
 
   const handlePrivacyChange = useCallback((field: keyof PrivacySettings, value: boolean | string) => {
-    setPrivacySettings((prev) => ({ ...prev, [field]: value }));
-  }, []);
+    setPrivacySettings((prev) => {
+      const next = { ...prev, [field]: value } as PrivacySettings;
+      void savePrivacySettings(next);
+      return next;
+    });
+  }, [savePrivacySettings]);
 
   const handleAvatarUpload = useCallback((avatarUrl: string) => {
     // Update profile with new avatar
@@ -785,6 +850,35 @@ export default function UserProfile() {
   }, []);
 
   // Computed values
+  const stats = useMemo<UserStats>(() => {
+    const totalActivities = recentActivities.length;
+    const votescast = recentActivities.filter((activity) => activity.type === 'vote').length;
+    const transactionsCount = recentActivities.filter((activity) => activity.type === 'transaction').length;
+
+    return {
+      totalActivities,
+      badgesEarned: badges.length,
+      votescast,
+      transactionsCount,
+      governanceScore: 0,
+      proofScore: apiProfile?.proofScore ?? 0,
+    };
+  }, [recentActivities, badges, apiProfile?.proofScore]);
+
+  const socialConnections = useMemo<SocialConnections>(
+    () => ({
+      followers: 0,
+      following: 0,
+      friends: 0,
+    }),
+    []
+  );
+
+  const activityHeatmap = useMemo(
+    () => buildActivityHeatmap(recentActivities),
+    [recentActivities]
+  );
+
   const sortedBadges = useMemo(() => {
     const rarityOrder: Record<Badge['rarity'], number> = {
       legendary: 0,
@@ -794,6 +888,28 @@ export default function UserProfile() {
     };
     return [...badges].sort((a, b) => rarityOrder[a.rarity] - rarityOrder[b.rarity]);
   }, [badges]);
+
+  if (isProfileLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-cyan-400 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-zinc-400">Loading profile...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (profileError) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="text-center">
+          <p className="text-red-400">{profileError}</p>
+          <p className="text-zinc-500 text-sm mt-2">Please try again later.</p>
+        </div>
+      </div>
+    );
+  }
 
   // Render functions
   const renderOverviewTab = () => (
@@ -1054,7 +1170,7 @@ export default function UserProfile() {
         >
           <h2 className="text-xl font-semibold text-white mb-4">Links</h2>
           <div className="flex flex-wrap gap-3">
-            {profile.website && (
+            {profile.website && /^https?:\/\//i.test(profile.website) && (
               <motion.a
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}

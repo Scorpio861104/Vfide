@@ -59,14 +59,22 @@ export function getCSRFTokenFromRequest(request: NextRequest): {
  */
 export function verifyCSRFToken(request: NextRequest): boolean {
   const { cookieToken, headerToken } = getCSRFTokenFromRequest(request);
-  
+
   // Both tokens must be present
   if (!cookieToken || !headerToken) {
     return false;
   }
-  
-  // Tokens must match
-  return cookieToken === headerToken;
+
+  // Timing-safe comparison to prevent timing attacks
+  if (cookieToken.length !== headerToken.length) return false;
+  const encoder = new TextEncoder();
+  const a = encoder.encode(cookieToken);
+  const b = encoder.encode(headerToken);
+  let mismatch = 0;
+  for (let i = 0; i < a.length; i++) {
+    mismatch |= (a[i] as number) ^ (b[i] as number);
+  }
+  return mismatch === 0;
 }
 
 /**
@@ -93,11 +101,12 @@ export function validateCSRF(request: NextRequest): NextResponse | null {
   if (!stateChangingMethods.includes(request.method)) {
     return null; // Not a state-changing request, no validation needed
   }
-  
-  // Skip CSRF check for authentication endpoints (use other security measures)
+
+  // Skip CSRF check only for initial wallet auth (wallet signature is the auth factor)
+  // and infrastructure endpoints — narrow match, not prefix
   const pathname = new URL(request.url).pathname;
-  const skipPaths = ['/api/auth/', '/api/health'];
-  if (skipPaths.some(path => pathname.startsWith(path))) {
+  const skipPaths = ['/api/auth', '/api/health', '/api/security/csp-report'];
+  if (skipPaths.some(path => pathname === path)) {
     return null;
   }
   

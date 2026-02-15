@@ -117,7 +117,7 @@ export default function App() {
 
 ### Connecting Wagmi Hooks
 
-Replace mock data with real Wagmi hooks:
+Replace placeholder data with real Wagmi hooks:
 
 ```tsx
 import { useAccount, useConnect, useDisconnect, useNetwork, useSwitchNetwork, useBalance } from 'wagmi';
@@ -143,7 +143,7 @@ export default function WalletManager() {
     address: address,
   });
   
-  // Replace mock wallet data with real data
+  // Replace placeholder wallet data with real data
   const wallets = connectors.map(connector => ({
     id: connector.id,
     address: address || '',

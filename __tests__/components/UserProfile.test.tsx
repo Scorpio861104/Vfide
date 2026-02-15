@@ -4,9 +4,126 @@
  */
 
 import React from 'react';
-import { render, screen, fireEvent, within } from '@testing-library/react';
+import { render, screen, fireEvent, within, cleanup } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import UserProfile from '@/components/profile/UserProfile';
+
+jest.mock('framer-motion', () => ({
+  motion: {
+    div: ({ children, className, style, onClick, ...props }: any) => (
+      <div className={className} style={style} onClick={onClick} {...props}>{children}</div>
+    ),
+    button: ({ children, className, style, onClick, disabled, ...props }: any) => (
+      <button className={className} style={style} onClick={onClick} disabled={disabled} {...props}>{children}</button>
+    ),
+    span: ({ children, className, style, ...props }: any) => (
+      <span className={className} style={style} {...props}>{children}</span>
+    ),
+    p: ({ children, className, style, ...props }: any) => (
+      <p className={className} style={style} {...props}>{children}</p>
+    ),
+    img: ({ src, alt, className, ...props }: any) => (
+      <img src={src} alt={alt} className={className} {...props} />
+    ),
+    a: ({ children, className, style, href, target, rel, ...props }: any) => (
+      <a className={className} style={style} href={href} target={target} rel={rel} {...props}>{children}</a>
+    ),
+  },
+  AnimatePresence: ({ children }: any) => <>{children}</>,
+  useMotionValue: () => ({ get: () => 0, set: jest.fn(), on: () => () => {} }),
+  useTransform: () => ({ get: () => 0, on: () => () => {} }),
+  animate: jest.fn(() => ({ stop: jest.fn() })),
+}));
+
+jest.mock('@/hooks/useTransactionSounds', () => ({
+  useTransactionSounds: () => ({ playSuccess: jest.fn(), playNotification: jest.fn(), play: jest.fn() }),
+}));
+
+jest.mock('wagmi', () => ({
+  useAccount: () => ({
+    address: '0x1234567890123456789012345678901234567890',
+    isConnected: true,
+  }),
+}));
+
+jest.mock('@/hooks/useAPI', () => ({
+  useUserProfile: () => ({
+    profile: {
+      address: '0x1234567890123456789012345678901234567890',
+      username: 'johndoe',
+      displayName: 'John Doe',
+      email: 'john@example.com',
+      bio: 'Blockchain enthusiast',
+      avatar: '👤',
+      createdAt: new Date().toISOString(),
+      location: 'San Francisco, CA',
+      website: 'https://example.com',
+      twitter: 'johndoe',
+      github: 'johndoe',
+    },
+    updateProfile: jest.fn(),
+    uploadAvatar: jest.fn(),
+    isLoading: false,
+    error: null,
+  }),
+}));
+
+beforeEach(() => {
+  global.fetch = jest.fn().mockImplementation((input: RequestInfo | URL) => {
+    const url = typeof input === 'string' ? input : input.toString();
+
+    if (url.includes('/api/badges')) {
+      return Promise.resolve({
+        ok: true,
+        json: async () => ({
+          badges: [
+            {
+              badge_id: 1,
+              badge_name: 'PIONEER',
+              badge_description: 'First supporters',
+              badge_icon: '🏁',
+              badge_rarity: 'legendary',
+              earned_at: new Date().toISOString(),
+            },
+          ],
+        }),
+      } as Response);
+    }
+
+    if (url.includes('/api/activities')) {
+      return Promise.resolve({
+        ok: true,
+        json: async () => ({
+          activities: [
+            {
+              id: 1,
+              activity_type: 'transaction',
+              title: 'Sent payment',
+              created_at: new Date(Date.now() - 60 * 60 * 1000).toISOString(),
+            },
+          ],
+        }),
+      } as Response);
+    }
+
+    if (url.includes('/api/users/privacy')) {
+      return Promise.resolve({
+        ok: true,
+        json: async () => ({ settings: {} }),
+      } as Response);
+    }
+
+    return Promise.resolve({
+      ok: true,
+      json: async () => ({}),
+    } as Response);
+  }) as unknown as typeof fetch;
+});
+
+afterEach(() => {
+  cleanup();
+  jest.resetAllMocks();
+});
 
 // ==================== COMPONENT RENDERING TESTS ====================
 

@@ -113,7 +113,7 @@ export function useEndorse(targetAddress?: `0x${string}`) {
 export function useScoreBreakdown(userAddress?: `0x${string}`) {
   const { address: connectedAddress } = useAccount()
   const targetAddress = userAddress || connectedAddress
-  
+
   const { data, isLoading, refetch } = useReadContract({
     address: CONTRACT_ADDRESSES.Seer,
     abi: SeerABI,
@@ -123,25 +123,28 @@ export function useScoreBreakdown(userAddress?: `0x${string}`) {
       enabled: !!targetAddress,
     }
   })
-  
-  const totalScore = data ? Number(data) : 5000
 
-  // Simulated breakdown based on total score
-  // In production, fetch individual components from ProofLedger
+  const totalScore = data ? Number(data) : 5000
+  const isConnected = !!targetAddress
+
+  // Returns default zero values - connect to Seer contract for live data
+  // Component-level breakdown not available - requires ProofLedger contract integration
   return {
     breakdown: {
       totalScore,
-      baseScore: Math.floor(totalScore * 0.4),
-      activityBonus: Math.floor(totalScore * 0.3),
-      ageBonus: Math.floor(totalScore * 0.1),
-      activityPoints: Math.floor(totalScore * 0.15),
-      endorsementPoints: Math.floor(totalScore * 0.1),
+      baseScore: 0,
+      activityBonus: 0,
+      ageBonus: 0,
+      activityPoints: 0,
+      endorsementPoints: 0,
       vaultBonus: 0,
       badgePoints: 0,
       reputationDelta: 0,
       hasDiversityBonus: totalScore >= 7000,
     },
     isLoading,
+    isConnected,
+    hasBreakdownData: false, // No granular breakdown available until ProofLedger is integrated
     refetch,
   }
 }

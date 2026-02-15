@@ -1,6 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
+// 12e Fix: Minimal IERC20 interface for token balance check
+interface IERC20Minimal {
+    function balanceOf(address account) external view returns (uint256);
+}
+
 /**
  * @title AdminMultiSig
  * @notice Multi-signature requirement for critical operations with timelock delays and community veto
@@ -51,8 +56,15 @@ contract AdminMultiSig {
     uint256 public proposalCount;
     mapping(uint256 => Proposal) public proposals;
     
-    uint256 public vetoThreshold = 100; // 100 veto votes needed
+    uint256 public vetoThreshold = 100; // 100 community veto votes needed
     mapping(uint256 => mapping(address => bool)) public communityVetos;
+
+    // Council veto requires 2/5 members to prevent single-member governance blockade
+    uint256 public constant COUNCIL_VETO_THRESHOLD = 2;
+
+    // 12e Fix: Token-weighted community veto to prevent Sybil attacks
+    IERC20Minimal public vfideToken;
+    uint256 public constant MIN_VETO_BALANCE = 100e18; // Must hold at least 100 VFIDE to veto
 
     event ProposalCreated(
         uint256 indexed proposalId,
@@ -65,6 +77,7 @@ contract AdminMultiSig {
     event ProposalApproved(uint256 indexed proposalId, address indexed approver, uint256 approvalCount);
     event ProposalExecuted(uint256 indexed proposalId, address indexed executor);
     event ProposalVetoed(uint256 indexed proposalId, address indexed vetoer);
+    event CouncilVetoCast(uint256 indexed proposalId, address indexed vetoer, uint256 councilVetoCount);
     event CommunityVeto(uint256 indexed proposalId, address indexed voter, uint256 vetoCount);
     event CouncilMemberUpdated(address indexed oldMember, address indexed newMember);
 
@@ -81,15 +94,19 @@ contract AdminMultiSig {
     /**
      * @notice Initialize council with 5 members
      * @param _council Array of 5 council member addresses
+     * @param _vfideToken VFIDE token address for Sybil-resistant community veto
      */
-    constructor(address[COUNCIL_SIZE] memory _council) {
+    constructor(address[COUNCIL_SIZE] memory _council, address _vfideToken) {
         for (uint256 i = 0; i < COUNCIL_SIZE; i++) {
             require(_council[i] != address(0), "AdminMultiSig: zero address in council");
             require(!isCouncilMember[_council[i]], "AdminMultiSig: duplicate council member");
-            
+
             council[i] = _council[i];
             isCouncilMember[_council[i]] = true;
         }
+        // 12e Fix: Set token for Sybil-resistant veto
+        require(_vfideToken != address(0), "AdminMultiSig: zero token");
+        vfideToken = IERC20Minimal(_vfideToken);
     }
 
     /**
@@ -195,16 +212,16 @@ contract AdminMultiSig {
     }
 
     /**
-     * @notice Council member veto a proposal
+     * @notice Council member votes to veto a proposal (requires 2/5 council members)
      * @param _proposalId ID of the proposal to veto
      */
-    function vetoProposal(uint256 _proposalId) 
-        external 
-        onlyCouncil 
-        proposalExists(_proposalId) 
+    function vetoProposal(uint256 _proposalId)
+        external
+        onlyCouncil
+        proposalExists(_proposalId)
     {
         Proposal storage proposal = proposals[_proposalId];
-        
+
         require(
             proposal.status == ProposalStatus.Pending || proposal.status == ProposalStatus.Approved,
             "AdminMultiSig: invalid status"
@@ -212,23 +229,41 @@ contract AdminMultiSig {
         require(!proposal.hasVetoed[msg.sender], "AdminMultiSig: already vetoed");
 
         proposal.hasVetoed[msg.sender] = true;
-        proposal.status = ProposalStatus.Vetoed;
 
-        emit ProposalVetoed(_proposalId, msg.sender);
+        // Count council vetoes
+        uint256 councilVetoCount = 0;
+        for (uint256 i = 0; i < COUNCIL_SIZE; i++) {
+            if (proposal.hasVetoed[council[i]]) {
+                councilVetoCount++;
+            }
+        }
+
+        emit CouncilVetoCast(_proposalId, msg.sender, councilVetoCount);
+
+        if (councilVetoCount >= COUNCIL_VETO_THRESHOLD) {
+            proposal.status = ProposalStatus.Vetoed;
+            emit ProposalVetoed(_proposalId, msg.sender);
+        }
     }
 
     /**
      * @notice Community member votes to veto a proposal
      * @param _proposalId ID of the proposal to veto
+     * @dev 12e Fix: Requires minimum VFIDE token balance to prevent Sybil attacks
      */
     function communityVeto(uint256 _proposalId) external proposalExists(_proposalId) {
         Proposal storage proposal = proposals[_proposalId];
-        
+
         require(proposal.status == ProposalStatus.Approved, "AdminMultiSig: not approved");
         require(!communityVetos[_proposalId][msg.sender], "AdminMultiSig: already voted");
         require(
             block.timestamp <= proposal.executionTime + VETO_WINDOW,
             "AdminMultiSig: veto window closed"
+        );
+        // 12e Fix: Require minimum token balance to prevent Sybil attacks
+        require(
+            vfideToken.balanceOf(msg.sender) >= MIN_VETO_BALANCE,
+            "AdminMultiSig: insufficient VFIDE balance for veto"
         );
 
         communityVetos[_proposalId][msg.sender] = true;

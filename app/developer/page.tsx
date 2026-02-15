@@ -2,36 +2,36 @@
 
 import React, { useState } from 'react';
 
-const SDK_CODE_SNIPPET = `// Install: npm install @vfide/sdk
+const SDK_CODE_SNIPPET = `// VFIDE SDK (coming soon - not yet published)
+// For now, interact directly with VFIDE smart contracts using viem/wagmi
 
-import { VFIDEWidget } from '@vfide/sdk';
+import { useWriteContract, useReadContract } from 'wagmi';
+import { vfideTokenAbi } from '@/lib/abis';
 
-// 1. Embed a payment button
-<VFIDEWidget.PaymentButton
-  to="0x1234..."
-  amount="0.01"
-  token="ETH"
-  onSuccess={(tx) => console.log('Paid!', tx)}
-/>
-
-// 2. Request payment via API
-const payment = await VFIDE.requestPayment({
-  to: merchantAddress,
-  amount: '10.00',
-  token: 'USDC',
-  metadata: { orderId: '12345' }
+// 1. Read ProofScore
+const { data: score } = useReadContract({
+  address: PROOF_SCORE_ADDRESS,
+  abi: proofScoreAbi,
+  functionName: 'getScore',
+  args: [userAddress],
 });
 
-// 3. Create streaming payment
-const stream = await VFIDE.createStream({
-  to: recipientAddress,
-  amount: '100',
-  token: 'USDC',
-  duration: 30 * 24 * 60 * 60 // 30 days
+// 2. Send payment via contract
+const { writeContract } = useWriteContract();
+await writeContract({
+  address: VFIDE_TOKEN_ADDRESS,
+  abi: vfideTokenAbi,
+  functionName: 'transfer',
+  args: [recipientAddress, amount],
 });
 
-// 4. Verify payment
-const verified = await VFIDE.verifyPayment(txHash);`;
+// 3. Create escrow
+await writeContract({
+  address: ESCROW_MANAGER_ADDRESS,
+  abi: escrowManagerAbi,
+  functionName: 'createEscrow',
+  args: [recipientAddress, amount, deadline],
+});`;
 
 const WEBHOOK_CODE = `// Webhook endpoint example (Node.js)
 app.post('/webhooks/vfide', (req, res) => {
@@ -62,7 +62,7 @@ app.post('/webhooks/vfide', (req, res) => {
 
 export default function DeveloperPage() {
   const [activeTab, setActiveTab] = useState<'sdk' | 'webhooks' | 'api'>('sdk');
-  const [apiKey, _setApiKey] = useState('vfide_pk_test_xxxxxxxxxxxx');
+  const [apiKey, _setApiKey] = useState('');
   const [showKey, setShowKey] = useState(false);
 
   return (
@@ -80,7 +80,7 @@ export default function DeveloperPage() {
           <div className="flex-1 relative">
             <input
               type={showKey ? 'text' : 'password'}
-              value={apiKey}
+              value={apiKey || 'Generate an API key in your dashboard'}
               readOnly
               className="w-full p-3 bg-muted border border-border rounded-lg font-mono text-sm"
             />
@@ -149,7 +149,7 @@ export default function DeveloperPage() {
               <div className="text-2xl mb-2">🔐</div>
               <h4 className="font-medium">Escrow</h4>
               <p className="text-sm text-muted-foreground mt-1">
-                Conditional payments with programmable release
+                Conditional payments with dual-approval release
               </p>
             </div>
           </div>
@@ -186,8 +186,8 @@ export default function DeveloperPage() {
                 { event: 'payment.failed', desc: 'A payment transaction failed' },
                 { event: 'stream.started', desc: 'A new streaming payment began' },
                 { event: 'stream.depleted', desc: 'A stream ran out of funds' },
-                { event: 'escrow.released', desc: 'Escrow funds were released' },
-                { event: 'escrow.refunded', desc: 'Escrow was refunded to sender' },
+                { event: 'escrow.released', desc: 'Escrow funds released after both parties approve' },
+                { event: 'escrow.refunded', desc: 'Escrow refunded after both parties approve' },
               ].map((item) => (
                 <div key={item.event} className="flex justify-between p-2 bg-muted rounded-lg">
                   <code className="text-sm font-mono text-primary">{item.event}</code>
@@ -212,7 +212,7 @@ export default function DeveloperPage() {
                 { method: 'GET', path: '/v1/streams/:id', desc: 'Get stream details' },
                 { method: 'DELETE', path: '/v1/streams/:id', desc: 'Cancel a stream' },
                 { method: 'POST', path: '/v1/escrow', desc: 'Create conditional escrow' },
-                { method: 'POST', path: '/v1/escrow/:id/release', desc: 'Release escrow funds' },
+                { method: 'POST', path: '/v1/escrow/:id/release', desc: 'Submit release approval (requires both parties)' },
               ].map((endpoint) => (
                 <div key={endpoint.path} className="flex items-center gap-3 p-2 bg-muted rounded-lg">
                   <span className={`px-2 py-0.5 rounded text-xs font-mono ${
@@ -257,7 +257,7 @@ export default function DeveloperPage() {
         <a href="https://github.com/Scorpio861104/Vfide" target="_blank" rel="noopener noreferrer" className="bg-card rounded-xl p-4 border hover:border-primary transition-colors">
           <div className="text-2xl mb-2">💻</div>
           <h4 className="font-medium">GitHub</h4>
-          <p className="text-sm text-muted-foreground">Open source SDK</p>
+          <p className="text-sm text-muted-foreground">Source code</p>
         </a>
         <a href="https://discord.gg/vfide" target="_blank" rel="noopener noreferrer" className="bg-card rounded-xl p-4 border hover:border-primary transition-colors">
           <div className="text-2xl mb-2">💬</div>

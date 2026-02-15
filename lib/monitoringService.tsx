@@ -286,14 +286,14 @@ export function withPerformanceTracking<P extends object>(
 ) {
   const WrappedComponent = React.memo((props: P) => {
     const name = componentName || Component.displayName || Component.name || 'Unknown';
-    const startTime = performance.now();
 
     React.useEffect(() => {
+      const startTime = performance.now();
       return () => {
         const renderTime = performance.now() - startTime;
         monitoring.trackPerformance(name, renderTime, props as Record<string, unknown>);
 };
-    }, [props]);
+    }, [name, props]);
 
     return <Component {...props} />;
   });

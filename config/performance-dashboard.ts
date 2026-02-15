@@ -98,7 +98,7 @@ export interface AnalyticsEvent {
   sessionId: string;
   timestamp: number;
   duration?: number;
-  metadata: Record<string, any>;
+  metadata: Record<string, unknown>;
   page: string;
 }
 
@@ -302,9 +302,11 @@ export const DEFAULT_PERFORMANCE_THRESHOLDS = {
   [MetricType.CPU]: { warning: 70, critical: 90 },
   [MetricType.MEMORY]: { warning: 75, critical: 90 },
   [MetricType.DISK]: { warning: 80, critical: 95 },
+  [MetricType.NETWORK]: { warning: 100, critical: 200 },
   [MetricType.API_RESPONSE_TIME]: { warning: 1000, critical: 5000 },
   [MetricType.PAGE_LOAD_TIME]: { warning: 3000, critical: 10000 },
   [MetricType.ERROR_RATE]: { warning: 1, critical: 5 },
   [MetricType.DATABASE_QUERY]: { warning: 500, critical: 2000 },
+  [MetricType.BUNDLE_SIZE]: { warning: 500, critical: 1000 },
   [MetricType.LIGHTHOUSE_SCORE]: { warning: 60, critical: 40 },
 };

@@ -7,6 +7,11 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
+import { buildCsrfHeaders } from '@/lib/security/csrfClient';
+
+async function buildGroupWriteHeaders(method: string): Promise<HeadersInit> {
+  return buildCsrfHeaders({ 'Content-Type': 'application/json' }, method);
+}
 
 // ============================================================================
 // Types & Interfaces
@@ -23,7 +28,6 @@ export enum Permission {
   // Group Management
   MANAGE_GROUP = 'manage_group',           // Edit group details
   DELETE_GROUP = 'delete_group',           // Delete group
-  
   // Member Management
   INVITE_MEMBERS = 'invite_members',       // Create invite links
   REMOVE_MEMBERS = 'remove_members',       // Kick members
@@ -54,7 +58,6 @@ export interface GroupMember {
 
 export interface PermissionCheck {
   userId: string;
-  groupId: string;
   permission: Permission;
   hasPermission: boolean;
   reason?: string;
@@ -297,91 +300,176 @@ export function getPermissionsByCategory(): Record<string, Permission[]> {
 }
 
 // ============================================================================
-// Mock Storage (Replace with database in production)
+// API-backed Storage
 // ============================================================================
 
-const groupMembersStore = new Map<string, GroupMember>();
+function normalizeRole(role?: string): GroupRole {
+  switch (role) {
+    case GroupRole.OWNER:
+    case GroupRole.ADMIN:
+    case GroupRole.MODERATOR:
+    case GroupRole.MEMBER:
+      return role;
+    default:
+      return GroupRole.MEMBER;
+  }
+}
+
+function toGroupMember(member: {
+  user_address?: string;
+  user_id?: number | string;
+  group_id?: number | string;
+  role?: string;
+  joined_at?: string;
+  custom_permissions?: Permission[];
+  banned_permissions?: Permission[];
+}): GroupMember {
+  const joinedAt = member.joined_at ? new Date(member.joined_at).getTime() : Date.now();
+  const userId = member.user_address || String(member.user_id || '');
+  const groupId = member.group_id ? String(member.group_id) : '';
+
+  return {
+    userId,
+    groupId,
+    role: normalizeRole(member.role),
+    joinedAt,
+    customPermissions: member.custom_permissions || undefined,
+    bannedPermissions: member.banned_permissions || undefined,
+  };
+}
 
 /**
  * Get member by user ID and group ID
  */
-export function getMember(userId: string, groupId: string): GroupMember | null {
-  const key = `${groupId}:${userId}`;
-  return groupMembersStore.get(key) || null;
+export async function getMember(userId: string, groupId: string): Promise<GroupMember | null> {
+  try {
+    const response = await fetch(
+      `/api/groups/members?groupId=${groupId}&userAddress=${userId}`,
+      { cache: 'no-store' }
+    );
+
+    if (!response.ok) return null;
+    const data = await response.json();
+    if (!data?.success || !data?.member) return null;
+
+    return toGroupMember(data.member);
+  } catch (error) {
+    console.error('Failed to fetch group member:', error);
+    return null;
+  }
 }
 
 /**
  * Get all members of a group
  */
-export function getGroupMembers(groupId: string): GroupMember[] {
-  const members: GroupMember[] = [];
-  groupMembersStore.forEach((member, key) => {
-    if (key.startsWith(`${groupId}:`)) {
-      members.push(member);
-    }
-  });
-  return members;
+export async function getGroupMembers(groupId: string): Promise<GroupMember[]> {
+  try {
+    const response = await fetch(`/api/groups/members?groupId=${groupId}`, { cache: 'no-store' });
+    if (!response.ok) return [];
+    const data = await response.json();
+    if (!data?.success || !Array.isArray(data.members)) return [];
+    return data.members.map(toGroupMember);
+  } catch (error) {
+    console.error('Failed to fetch group members:', error);
+    return [];
+  }
 }
 
 /**
  * Update member role
  */
-export function updateMemberRole(
+export async function updateMemberRole(
   userId: string,
   groupId: string,
   role: GroupRole
-): GroupMember | null {
-  const key = `${groupId}:${userId}`;
-  const member = groupMembersStore.get(key);
-  
-  if (!member) return null;
+): Promise<GroupMember | null> {
+  try {
+    const headers = await buildGroupWriteHeaders('PATCH');
+    const response = await fetch('/api/groups/members', {
+      method: 'PATCH',
+      headers,
+      credentials: 'include',
+      body: JSON.stringify({
+        groupId,
+        userAddress: userId,
+        action: 'update_role',
+        role,
+      }),
+    });
 
-  const updated = { ...member, role };
-  groupMembersStore.set(key, updated);
-  return updated;
+    if (!response.ok) return null;
+    const data = await response.json();
+    if (!data?.success || !data?.member) return null;
+    return toGroupMember(data.member);
+  } catch (error) {
+    console.error('Failed to update member role:', error);
+    return null;
+  }
 }
 
 /**
  * Update member custom permissions
  */
-export function updateMemberPermissions(
+export async function updateMemberPermissions(
   userId: string,
   groupId: string,
   customPermissions?: Permission[],
   bannedPermissions?: Permission[]
-): GroupMember | null {
-  const key = `${groupId}:${userId}`;
-  const member = groupMembersStore.get(key);
-  
-  if (!member) return null;
+): Promise<GroupMember | null> {
+  try {
+    const headers = await buildGroupWriteHeaders('PATCH');
+    const response = await fetch('/api/groups/members', {
+      method: 'PATCH',
+      headers,
+      credentials: 'include',
+      body: JSON.stringify({
+        groupId,
+        userAddress: userId,
+        action: 'update_permissions',
+        customPermissions,
+        bannedPermissions,
+      }),
+    });
 
-  const updated = {
-    ...member,
-    customPermissions: customPermissions !== undefined ? customPermissions : member.customPermissions,
-    bannedPermissions: bannedPermissions !== undefined ? bannedPermissions : member.bannedPermissions,
-  };
-  
-  groupMembersStore.set(key, updated);
-  return updated;
+    if (!response.ok) return null;
+    const data = await response.json();
+    if (!data?.success || !data?.member) return null;
+    return toGroupMember(data.member);
+  } catch (error) {
+    console.error('Failed to update member permissions:', error);
+    return null;
+  }
 }
 
 /**
  * Create a new member
  */
-export function createMember(
+export async function createMember(
   userId: string,
   groupId: string,
   role: GroupRole = GroupRole.MEMBER
-): GroupMember {
-  const key = `${groupId}:${userId}`;
-  const member: GroupMember = {
-    userId,
-    groupId,
-    role,
-    joinedAt: Date.now(),
-  };
-  groupMembersStore.set(key, member);
-  return member;
+): Promise<GroupMember | null> {
+  try {
+    const headers = await buildGroupWriteHeaders('POST');
+    const response = await fetch('/api/groups/members', {
+      method: 'POST',
+      headers,
+      credentials: 'include',
+      body: JSON.stringify({
+        groupId,
+        userAddress: userId,
+        role,
+      }),
+    });
+
+    if (!response.ok) return null;
+    const data = await response.json();
+    if (!data?.success || !data?.member) return null;
+    return toGroupMember(data.member);
+  } catch (error) {
+    console.error('Failed to create group member:', error);
+    return null;
+  }
 }
 
 // ============================================================================
@@ -404,12 +492,13 @@ export function useMemberPermissions(userId?: string, groupId?: string) {
 
     const loadMember = async () => {
       try {
-        const response = await fetch(`/api/groups/members?userId=${userId}&groupId=${groupId}`);
+        const response = await fetch(`/api/groups/members?userAddress=${userId}&groupId=${groupId}`);
         const data = await response.json();
 
         if (data.success && data.member) {
-          setMember(data.member);
-          setPermissions(getMemberPermissions(data.member));
+          const normalized = toGroupMember(data.member);
+          setMember(normalized);
+          setPermissions(getMemberPermissions(normalized));
         }
       } catch (err) {
         console.error('Failed to load member permissions:', err);
@@ -468,7 +557,8 @@ export function useGroupMembers(groupId?: string) {
       const data = await response.json();
 
       if (data.success) {
-        setMembers(data.members || []);
+        const normalized = Array.isArray(data.members) ? data.members.map(toGroupMember) : [];
+        setMembers(normalized);
       }
     } catch (err) {
       console.error('Failed to load members:', err);
@@ -483,12 +573,14 @@ export function useGroupMembers(groupId?: string) {
 
   const updateRole = async (userId: string, role: GroupRole) => {
     try {
+      const headers = await buildGroupWriteHeaders('PATCH');
       const response = await fetch('/api/groups/members', {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
+        credentials: 'include',
         body: JSON.stringify({
           groupId,
-          userId,
+          userAddress: userId,
           action: 'update_role',
           role,
         }),
@@ -512,12 +604,14 @@ export function useGroupMembers(groupId?: string) {
     bannedPermissions?: Permission[]
   ) => {
     try {
+      const headers = await buildGroupWriteHeaders('PATCH');
       const response = await fetch('/api/groups/members', {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
+        credentials: 'include',
         body: JSON.stringify({
           groupId,
-          userId,
+          userAddress: userId,
           action: 'update_permissions',
           customPermissions,
           bannedPermissions,
@@ -538,9 +632,10 @@ export function useGroupMembers(groupId?: string) {
 
   const removeMember = async (userId: string) => {
     try {
+      const headers = await buildCsrfHeaders({}, 'DELETE');
       const response = await fetch(
-        `/api/groups/members?groupId=${groupId}&userId=${userId}`,
-        { method: 'DELETE' }
+        `/api/groups/members?groupId=${groupId}&userAddress=${userId}`,
+        { method: 'DELETE', headers, credentials: 'include' }
       );
 
       const data = await response.json();

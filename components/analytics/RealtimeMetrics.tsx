@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { Play, Pause, Activity, AlertTriangle, AlertCircle } from 'lucide-react';
@@ -81,7 +83,7 @@ export function RealtimeMetrics({
         clearInterval(intervalRef.current);
       }
     };
-  }, [isPaused, onUpdate, updateInterval, maxHistoryLength]);
+  }, [isPaused, onUpdate, updateInterval, maxHistoryLength, metrics]);
 
   const getStatus = (metric: RealtimeMetric): 'normal' | 'warning' | 'critical' => {
     if (!metric.threshold) return 'normal';

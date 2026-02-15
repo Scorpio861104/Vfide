@@ -62,7 +62,7 @@ export function CreatorDashboard() {
     recentTransactions: [],
   });
   const [isLoading, setIsLoading] = useState(true);
-  const [ethPrice] = useState(2500); // Mock ETH price in USD
+  const [ethPrice, setEthPrice] = useState(2500);
   const [showClaimCelebration, setShowClaimCelebration] = useState(false);
   const { playSuccess, playNotification: _playNotification } = useTransactionSounds();
 
@@ -72,41 +72,35 @@ export function CreatorDashboard() {
 
       setIsLoading(true);
       try {
-        // Mock data - in production, fetch from API
-        setStats({
-          totalEarnings: '2.45',
-          totalTips: 127,
-          totalUnlocks: 18,
-          totalSubscribers: 42,
-          topSupporters: [
-            { address: '0x742d...bEb', displayName: 'CryptoWhale', amount: '0.85' },
-            { address: '0x1234...567', displayName: 'NFTCollector', amount: '0.52' },
-            { address: '0x9876...321', displayName: 'DeFiFan', amount: '0.38' },
-          ],
-          recentTransactions: [
-            {
-              id: '1',
-              type: 'tip',
-              amount: '0.05',
-              from: '0x742d...bEb',
-              timestamp: new Date(Date.now() - 1000 * 60 * 15),
-            },
-            {
-              id: '2',
-              type: 'subscription',
-              amount: '0.12',
-              from: '0x1234...567',
-              timestamp: new Date(Date.now() - 1000 * 60 * 60),
-            },
-            {
-              id: '3',
-              type: 'unlock',
-              amount: '0.10',
-              from: '0x9876...321',
-              timestamp: new Date(Date.now() - 1000 * 60 * 120),
-            },
-          ],
-        });
+        const [statsResponse, priceResponse] = await Promise.all([
+          fetch(`/api/creators/stats?creatorAddress=${address}`),
+          fetch('/api/crypto/price'),
+        ]);
+
+        if (statsResponse.ok) {
+          const data = await statsResponse.json();
+          setStats({
+            totalEarnings: data.totalEarnings ?? '0',
+            totalTips: Number(data.totalTips ?? 0),
+            totalUnlocks: Number(data.totalUnlocks ?? 0),
+            totalSubscribers: Number(data.totalSubscribers ?? 0),
+            topSupporters: Array.isArray(data.topSupporters) ? data.topSupporters : [],
+            recentTransactions: Array.isArray(data.recentTransactions)
+              ? data.recentTransactions.map((tx: Record<string, unknown>) => ({
+                  ...tx,
+                  timestamp: tx.timestamp ? new Date(tx.timestamp) : new Date(),
+                }))
+              : [],
+          });
+        }
+
+        if (priceResponse.ok) {
+          const priceData = await priceResponse.json();
+          const ethUsd = priceData?.prices?.eth?.usd;
+          if (typeof ethUsd === 'number') {
+            setEthPrice(ethUsd);
+          }
+        }
       } catch (error) {
         console.error('Failed to load creator stats:', error);
       } finally {

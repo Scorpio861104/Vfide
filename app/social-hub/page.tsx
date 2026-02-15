@@ -1,12 +1,14 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Footer } from '@/components/layout/Footer';
 import { PageWrapper } from '@/components/ui/PageLayout';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAccount } from 'wagmi';
+import { getAuthHeaders } from '@/lib/auth/client';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import Link from 'next/link';
+import Image from 'next/image';
 import {
   Rss,
   Camera,
@@ -93,121 +95,6 @@ interface SuggestedUser {
 }
 
 // ============================================================================
-// MOCK DATA
-// ============================================================================
-
-const mockStories: Story[] = [
-  { id: '1', author: { address: '0x1234', name: 'You', avatar: '✨' }, preview: '', viewed: false, isLive: false },
-  { id: '2', author: { address: '0x2345', name: 'CryptoKing', avatar: '👑' }, preview: 'https://picsum.photos/100/180?1', viewed: false, isLive: true },
-  { id: '3', author: { address: '0x3456', name: 'DeFiQueen', avatar: '💎' }, preview: 'https://picsum.photos/100/180?2', viewed: false, isLive: false },
-  { id: '4', author: { address: '0x4567', name: 'NFTArtist', avatar: '🎨' }, preview: 'https://picsum.photos/100/180?3', viewed: true, isLive: false },
-  { id: '5', author: { address: '0x5678', name: 'DAOBuilder', avatar: '🏗️' }, preview: 'https://picsum.photos/100/180?4', viewed: true, isLive: false },
-  { id: '6', author: { address: '0x6789', name: 'TokenTrader', avatar: '📊' }, preview: 'https://picsum.photos/100/180?5', viewed: false, isLive: false },
-];
-
-const _mockPosts: Post[] = [
-  {
-    id: '1',
-    author: {
-      address: '0xCrypto...King',
-      name: 'CryptoKing',
-      avatar: '👑',
-      verified: true,
-      proofScore: 95,
-    },
-    content: 'Just hit 1000 successful transactions on VFIDE! The trust protocol is working exactly as designed. Loving the seamless P2P experience 🚀\n\n#VFIDE #DeFi #TrustProtocol',
-    media: [{ type: 'image', url: 'https://picsum.photos/600/400?1' }],
-    timestamp: Date.now() - 1000 * 60 * 30,
-    likes: 234,
-    comments: 45,
-    shares: 12,
-    views: 1420,
-    liked: false,
-    bookmarked: false,
-    isFollowing: true,
-    tags: ['VFIDE', 'DeFi', 'TrustProtocol'],
-  },
-  {
-    id: '2',
-    author: {
-      address: '0xDeFi...Queen',
-      name: 'DeFiQueen',
-      avatar: '💎',
-      verified: true,
-      proofScore: 88,
-    },
-    content: 'PSA: Always check ProofScore before transacting with new addresses. Just avoided a potential scam thanks to the reputation system! 🛡️\n\nStay safe out there, friends.',
-    timestamp: Date.now() - 1000 * 60 * 120,
-    likes: 567,
-    comments: 89,
-    shares: 156,
-    views: 3240,
-    liked: true,
-    bookmarked: true,
-    isFollowing: false,
-    tags: ['Security', 'ProofScore'],
-  },
-  {
-    id: '3',
-    author: {
-      address: '0xNFT...Artist',
-      name: 'NFTArtist',
-      avatar: '🎨',
-      verified: false,
-      proofScore: 72,
-    },
-    content: 'New collection dropping next week! All payments will be through VFIDE for that sweet escrow protection. Preview coming soon 👀',
-    media: [
-      { type: 'image', url: 'https://picsum.photos/600/400?2' },
-      { type: 'image', url: 'https://picsum.photos/600/400?3' },
-    ],
-    timestamp: Date.now() - 1000 * 60 * 240,
-    likes: 892,
-    comments: 156,
-    shares: 78,
-    views: 5670,
-    liked: false,
-    bookmarked: false,
-    isFollowing: true,
-    tags: ['NFT', 'Art', 'ComingSoon'],
-  },
-  {
-    id: '4',
-    author: {
-      address: '0xDAO...Builder',
-      name: 'DAOBuilder',
-      avatar: '🏗️',
-      verified: true,
-      proofScore: 91,
-    },
-    content: 'Proposal #42 passed! Our community decided to allocate 10% of treasury to developer grants. This is what decentralized governance looks like! 🗳️\n\nThank you to everyone who participated in the vote.',
-    timestamp: Date.now() - 1000 * 60 * 360,
-    likes: 1203,
-    comments: 234,
-    shares: 189,
-    views: 8900,
-    liked: true,
-    bookmarked: false,
-    isFollowing: true,
-    tags: ['DAO', 'Governance', 'Community'],
-  },
-];
-
-const mockTrending: TrendingTopic[] = [
-  { id: '1', tag: '#VFIDE', posts: 12450, trending: 'up' },
-  { id: '2', tag: '#DeFi', posts: 8920, trending: 'up' },
-  { id: '3', tag: '#ProofScore', posts: 5670, trending: 'stable' },
-  { id: '4', tag: '#Web3', posts: 4230, trending: 'up' },
-  { id: '5', tag: '#NFT', posts: 3890, trending: 'down' },
-];
-
-const mockSuggested: SuggestedUser[] = [
-  { address: '0x7890', name: 'WhaleWatcher', avatar: '🐋', bio: 'Tracking big moves', followers: 45000, mutualFriends: 12, verified: true },
-  { address: '0x8901', name: 'YieldFarmer', avatar: '🌾', bio: 'Max APY seeker', followers: 23000, mutualFriends: 8, verified: true },
-  { address: '0x9012', name: 'GasOptimizer', avatar: '⛽', bio: 'Saving you fees', followers: 18000, mutualFriends: 5, verified: false },
-];
-
-// ============================================================================
 // HELPER FUNCTIONS
 // ============================================================================
 
@@ -225,6 +112,41 @@ function formatNumber(num: number): string {
   return num.toString();
 }
 
+const FALLBACK_TRENDING_TOPICS: TrendingTopic[] = [
+  { id: 'fallback-1', tag: '#VFIDE', posts: 12400, trending: 'up' },
+  { id: 'fallback-2', tag: '#DeFi', posts: 9800, trending: 'up' },
+  { id: 'fallback-3', tag: '#ProofScore', posts: 5400, trending: 'stable' },
+];
+
+const FALLBACK_SUGGESTED_USERS: SuggestedUser[] = [
+  {
+    address: '0xwhale...watcher',
+    name: 'WhaleWatcher',
+    avatar: '🐋',
+    bio: 'Tracking liquidity moves',
+    followers: 18200,
+    mutualFriends: 12,
+    verified: true,
+  },
+  {
+    address: '0xyield...farmer',
+    name: 'YieldFarmer',
+    avatar: '🌾',
+    bio: 'Hunting sustainable yields',
+    followers: 8400,
+    mutualFriends: 8,
+    verified: false,
+  },
+];
+
+const FALLBACK_STORY: Story = {
+  id: 'story-you',
+  author: { address: '', name: 'You', avatar: '✨' },
+  preview: '',
+  viewed: false,
+  isLive: false,
+};
+
 // ============================================================================
 // COMPONENTS
 // ============================================================================
@@ -237,7 +159,7 @@ function StoryRing({ story, onClick }: { story: Story; onClick: () => void }) {
       whileHover={{ scale: 1.05 }}
       whileTap={{ scale: 0.95 }}
       onClick={onClick}
-      className="flex flex-col items-center gap-1 min-w-18"
+      className="flex flex-col items-center gap-1 min-w-[4.5rem]"
     >
       <div className={`
         relative p-0.5 rounded-full
@@ -246,7 +168,7 @@ function StoryRing({ story, onClick }: { story: Story; onClick: () => void }) {
       `}>
         <div className="w-14 h-14 rounded-full bg-zinc-900 flex items-center justify-center text-2xl overflow-hidden">
           {story.preview ? (
-            <img src={story.preview} alt="" className="w-full h-full object-cover" />
+            <Image src={story.preview} alt="" width={56} height={56} className="w-full h-full object-cover" unoptimized />
           ) : isYou ? (
             <Plus className="w-6 h-6 text-cyan-400" />
           ) : (
@@ -259,7 +181,7 @@ function StoryRing({ story, onClick }: { story: Story; onClick: () => void }) {
           </span>
         )}
       </div>
-      <span className="text-xs text-zinc-400 truncate max-w-15">
+      <span className="text-xs text-zinc-400 truncate max-w-[3.75rem]">
         {story.author.name}
       </span>
     </motion.button>
@@ -293,7 +215,7 @@ function CreatePostCard({ onPost }: { onPost: (content: string) => void }) {
             onChange={(e) => setContent(e.target.value)}
             onFocus={() => setIsFocused(true)}
             placeholder="What's happening in Web3?"
-            className="w-full bg-transparent text-zinc-50 placeholder-[#6A6A6F] resize-none outline-none min-h-15"
+            className="w-full bg-transparent text-zinc-50 placeholder-[#6A6A6F] resize-none outline-none min-h-[3.75rem]"
             rows={isFocused ? 3 : 1}
           />
           
@@ -381,7 +303,7 @@ function PostCard({ post, onLike, onBookmark }: { post: Post; onLike: () => void
             <MoreHorizontal className="w-5 h-5" />
           </button>
           {showMenu && (
-            <div className="absolute right-0 top-full mt-1 bg-zinc-900 border border-zinc-700 rounded-lg py-1 min-w-37.5 z-10">
+            <div className="absolute right-0 top-full mt-1 bg-zinc-900 border border-zinc-700 rounded-lg py-1 min-w-[9.375rem] z-10">
               <button className="w-full px-4 py-2 text-left text-sm text-zinc-400 hover:bg-zinc-700 flex items-center gap-2">
                 <Flag className="w-4 h-4" /> Report
               </button>
@@ -411,11 +333,14 @@ function PostCard({ post, onLike, onBookmark }: { post: Post; onLike: () => void
       {post.media && post.media.length > 0 && (
         <div className={`grid ${post.media.length === 1 ? 'grid-cols-1' : 'grid-cols-2'} gap-0.5`}>
           {post.media.map((m, index) => (
-            <img
+            <Image
               key={m.url}
               src={m.url}
               alt={`Post image ${index + 1}`}
+              width={600}
+              height={256}
               className="w-full h-64 object-cover"
+              unoptimized
             />
           ))}
         </div>
@@ -465,7 +390,15 @@ function PostCard({ post, onLike, onBookmark }: { post: Post; onLike: () => void
   );
 }
 
-function TrendingSidebar() {
+function TrendingSidebar({
+  trendingTopics,
+  suggestedUsers,
+  userStats,
+}: {
+  trendingTopics: TrendingTopic[];
+  suggestedUsers: SuggestedUser[];
+  userStats: { followers: number; following: number; likes: number; proofScore: number };
+}) {
   return (
     <div className="space-y-6">
       {/* Quick Links */}
@@ -500,21 +433,25 @@ function TrendingSidebar() {
           <TrendingUp className="w-5 h-5 text-pink-400" />
           Trending
         </h3>
-        <div className="space-y-3">
-          {mockTrending.map((topic, index) => (
-            <div key={topic.id} className="flex items-center justify-between group cursor-pointer">
-              <div>
-                <div className="flex items-center gap-2">
-                  <span className="text-sm text-zinc-500">{index + 1}</span>
-                  <span className="text-cyan-400 font-medium group-hover:underline">{topic.tag}</span>
+        {trendingTopics.length === 0 ? (
+          <div className="text-sm text-zinc-500">No trending topics yet.</div>
+        ) : (
+          <div className="space-y-3">
+            {trendingTopics.map((topic, index) => (
+              <div key={topic.id} className="flex items-center justify-between group cursor-pointer">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-zinc-500">{index + 1}</span>
+                    <span className="text-cyan-400 font-medium group-hover:underline">{topic.tag}</span>
+                  </div>
+                  <span className="text-xs text-zinc-500">{formatNumber(topic.posts)} posts</span>
                 </div>
-                <span className="text-xs text-zinc-500">{formatNumber(topic.posts)} posts</span>
+                {topic.trending === 'up' && <TrendingUp className="w-4 h-4 text-green-400" />}
+                {topic.trending === 'down' && <TrendingUp className="w-4 h-4 text-red-400 rotate-180" />}
               </div>
-              {topic.trending === 'up' && <TrendingUp className="w-4 h-4 text-green-400" />}
-              {topic.trending === 'down' && <TrendingUp className="w-4 h-4 text-red-400 rotate-180" />}
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Who to Follow */}
@@ -523,25 +460,29 @@ function TrendingSidebar() {
           <Users className="w-5 h-5 text-violet-400" />
           Who to Follow
         </h3>
-        <div className="space-y-4">
-          {mockSuggested.map((user) => (
-            <div key={user.address} className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-linear-to-br from-cyan-400 to-violet-400 flex items-center justify-center text-lg">
-                {user.avatar}
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-1">
-                  <span className="font-medium text-zinc-50 truncate">{user.name}</span>
-                  {user.verified && <Shield className="w-3 h-3 text-cyan-400" />}
+        {suggestedUsers.length === 0 ? (
+          <div className="text-sm text-zinc-500">No suggestions yet.</div>
+        ) : (
+          <div className="space-y-4">
+            {suggestedUsers.map((user) => (
+              <div key={user.address} className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-linear-to-br from-cyan-400 to-violet-400 flex items-center justify-center text-lg">
+                  {user.avatar}
                 </div>
-                <span className="text-xs text-zinc-500">{user.mutualFriends} mutual</span>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-1">
+                    <span className="font-medium text-zinc-50 truncate">{user.name}</span>
+                    {user.verified && <Shield className="w-3 h-3 text-cyan-400" />}
+                  </div>
+                  <span className="text-xs text-zinc-500">{user.mutualFriends} mutual</span>
+                </div>
+                <button className="px-3 py-1 bg-cyan-400 text-zinc-950 text-sm font-semibold rounded-full hover:bg-cyan-400 transition-colors">
+                  Follow
+                </button>
               </div>
-              <button className="px-3 py-1 bg-cyan-400 text-zinc-950 text-sm font-semibold rounded-full hover:bg-cyan-400 transition-colors">
-                Follow
-              </button>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
         <button className="w-full mt-4 text-cyan-400 text-sm hover:underline">
           Show more
         </button>
@@ -555,19 +496,19 @@ function TrendingSidebar() {
         </h3>
         <div className="grid grid-cols-2 gap-4">
           <div className="text-center">
-            <div className="text-2xl font-bold text-cyan-400">1.2K</div>
+            <div className="text-2xl font-bold text-cyan-400">{formatNumber(userStats.followers)}</div>
             <div className="text-xs text-zinc-500">Followers</div>
           </div>
           <div className="text-center">
-            <div className="text-2xl font-bold text-violet-400">847</div>
+            <div className="text-2xl font-bold text-violet-400">{formatNumber(userStats.following)}</div>
             <div className="text-xs text-zinc-500">Following</div>
           </div>
           <div className="text-center">
-            <div className="text-2xl font-bold text-pink-400">15.2K</div>
+            <div className="text-2xl font-bold text-pink-400">{formatNumber(userStats.likes)}</div>
             <div className="text-xs text-zinc-500">Total Likes</div>
           </div>
           <div className="text-center">
-            <div className="text-2xl font-bold text-emerald-500">89</div>
+            <div className="text-2xl font-bold text-emerald-500">{userStats.proofScore}</div>
             <div className="text-xs text-zinc-500">ProofScore</div>
           </div>
         </div>
@@ -583,23 +524,27 @@ function TrendingSidebar() {
 export default function SocialHubPage() {
   const { address, isConnected } = useAccount();
   const [posts, setPosts] = useState<Post[]>([]);
-  const [_stories, setStories] = useState<Story[]>([]);
-  const [_trending, setTrending] = useState<TrendingTopic[]>([]);
-  const [_suggested, setSuggested] = useState<SuggestedUser[]>([]);
+  const [stories, setStories] = useState<Story[]>([FALLBACK_STORY]);
+  const [trendingTopics, setTrendingTopics] = useState<TrendingTopic[]>(FALLBACK_TRENDING_TOPICS);
+  const [suggestedUsers, setSuggestedUsers] = useState<SuggestedUser[]>(FALLBACK_SUGGESTED_USERS);
+  const [profileStats, setProfileStats] = useState({ followers: 0, following: 0, proofScore: 0 });
   const [feedFilter, setFeedFilter] = useState<'all' | 'following' | 'trending'>('all');
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [_isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   // Fetch social data on mount
   useEffect(() => {
     const fetchSocialData = async () => {
       setIsLoading(true);
+      setError(null);
       try {
+        const authHeaders = getAuthHeaders();
         const [postsRes, storiesRes, trendingRes, suggestedRes] = await Promise.all([
           fetch('/api/community/posts').catch(() => null),
           fetch('/api/community/stories').catch(() => null),
           fetch('/api/community/trending').catch(() => null),
-          fetch('/api/friends/suggested').catch(() => null),
+          fetch('/api/friends/suggested', { headers: authHeaders }).catch(() => null),
         ]);
         
         if (postsRes?.ok) {
@@ -608,24 +553,64 @@ export default function SocialHubPage() {
         }
         if (storiesRes?.ok) {
           const data = await storiesRes.json();
-          setStories(data.stories || []);
+          const apiStories = Array.isArray(data.stories) ? data.stories : [];
+          const mergedStories = [
+            FALLBACK_STORY,
+            ...apiStories.filter((story: Story) => story?.author?.name !== 'You'),
+          ];
+          setStories(mergedStories);
         }
         if (trendingRes?.ok) {
           const data = await trendingRes.json();
-          setTrending(data.topics || []);
+          const topics = Array.isArray(data.topics) ? data.topics : [];
+          setTrendingTopics(topics.length > 0 ? topics : FALLBACK_TRENDING_TOPICS);
         }
         if (suggestedRes?.ok) {
           const data = await suggestedRes.json();
-          setSuggested(data.users || []);
+          const users = Array.isArray(data.users) ? data.users : [];
+          setSuggestedUsers(users.length > 0 ? users : FALLBACK_SUGGESTED_USERS);
         }
       } catch {
-        // APIs not available yet - use empty state
+        setError('Failed to load social data');
       } finally {
         setIsLoading(false);
       }
     };
     fetchSocialData();
   }, []);
+
+  useEffect(() => {
+    if (!address) {
+      setProfileStats({ followers: 0, following: 0, proofScore: 0 });
+      return;
+    }
+
+    const loadProfile = async () => {
+      try {
+        const res = await fetch(`/api/users/${address}`, { headers: getAuthHeaders() });
+        if (!res.ok) return;
+        const data = await res.json();
+        const stats = data?.user?.stats;
+        setProfileStats({
+          followers: Number(stats?.friend_count ?? 0),
+          following: Number(stats?.friend_count ?? 0),
+          proofScore: Number(data?.user?.proof_score ?? 0),
+        });
+      } catch {
+        // Ignore profile failures
+      }
+    };
+
+    loadProfile();
+  }, [address]);
+
+  const userStats = useMemo(
+    () => ({
+      ...profileStats,
+      likes: posts.reduce((sum, post) => sum + post.likes, 0),
+    }),
+    [posts, profileStats]
+  );
 
   const handlePost = async (content: string) => {
     const newPost: Post = {
@@ -740,13 +725,17 @@ export default function SocialHubPage() {
                     className="bg-zinc-900/80 backdrop-blur-xl border border-zinc-700 rounded-2xl p-4"
                   >
                     <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide">
-                      {mockStories.map((story) => (
-                        <StoryRing
-                          key={story.id}
-                          story={story}
-                          onClick={() => {}}
-                        />
-                      ))}
+                      {stories.length === 0 ? (
+                        <div className="text-zinc-500 text-sm py-4">No stories yet.</div>
+                      ) : (
+                        stories.map((story) => (
+                          <StoryRing
+                            key={story.id}
+                            story={story}
+                            onClick={() => {}}
+                          />
+                        ))
+                      )}
                     </div>
                   </motion.div>
 
@@ -791,22 +780,32 @@ export default function SocialHubPage() {
                   </motion.div>
 
                   {/* Posts */}
-                  <div className="space-y-6">
-                    {posts.map((post, index) => (
-                      <motion.div
-                        key={post.id}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.3 + index * 0.1 }}
-                      >
-                        <PostCard
-                          post={post}
-                          onLike={() => handleLike(post.id)}
-                          onBookmark={() => handleBookmark(post.id)}
-                        />
-                      </motion.div>
-                    ))}
-                  </div>
+                  {error && (
+                    <div className="text-sm text-pink-400">{error}</div>
+                  )}
+
+                  {isLoading ? (
+                    <div className="text-zinc-500 text-sm">Loading feed…</div>
+                  ) : posts.length === 0 ? (
+                    <div className="text-zinc-500 text-sm">No posts yet.</div>
+                  ) : (
+                    <div className="space-y-6">
+                      {posts.map((post, index) => (
+                        <motion.div
+                          key={post.id}
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: 0.3 + index * 0.1 }}
+                        >
+                          <PostCard
+                            post={post}
+                            onLike={() => handleLike(post.id)}
+                            onBookmark={() => handleBookmark(post.id)}
+                          />
+                        </motion.div>
+                      ))}
+                    </div>
+                  )}
 
                   {/* Load More */}
                   <button className="w-full py-4 bg-zinc-900 border border-zinc-700 rounded-xl text-cyan-400 hover:bg-zinc-700 transition-colors">
@@ -817,7 +816,11 @@ export default function SocialHubPage() {
                 {/* Sidebar */}
                 <div className="hidden lg:block">
                   <div className="sticky top-24">
-                    <TrendingSidebar />
+                    <TrendingSidebar
+                      trendingTopics={trendingTopics}
+                      suggestedUsers={suggestedUsers}
+                      userStats={userStats}
+                    />
                   </div>
                 </div>
               </div>

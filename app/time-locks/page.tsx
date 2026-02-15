@@ -1,7 +1,9 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { isAddress } from 'viem';
 import { useAccount } from 'wagmi';
+import { getAuthHeaders } from '@/lib/auth/client';
 
 interface TimeLock {
   id: string;
@@ -16,38 +18,81 @@ interface TimeLock {
 export default function TimeLocksPage() {
   const { address, isConnected } = useAccount();
   const [timeLocks, setTimeLocks] = useState<TimeLock[]>([]);
-  const [_settings, _setSettings] = useState({
-    tier1: { threshold: 0.1, delay: 0 },
-    tier2: { threshold: 1, delay: 3600 },
-    tier3: { threshold: 10, delay: 21600 },
-    tier4: { threshold: 100, delay: 86400 },
-  });
+  const [isLoading, setIsLoading] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [whitelist, setWhitelist] = useState<string[]>([]);
 
   useEffect(() => {
-    if (address) {
-      // Mock data
-      setTimeLocks([
-        {
-          id: '1',
-          token: 'ETH',
-          to: '0x1234...5678',
-          amount: '5.0',
-          createdAt: Date.now() - 2 * 60 * 60 * 1000,
-          unlockAt: Date.now() + 4 * 60 * 60 * 1000,
-          status: 'pending',
-        },
-        {
-          id: '2',
-          token: 'USDC',
-          to: '0xabcd...efgh',
-          amount: '500',
-          createdAt: Date.now() - 24 * 60 * 60 * 1000,
-          unlockAt: Date.now() - 1 * 60 * 60 * 1000,
-          status: 'ready',
-        },
-      ]);
+    if (!address) {
+      setTimeLocks([]);
+      return;
     }
+
+    let isMounted = true;
+
+    const fetchTimeLocks = async () => {
+      setIsLoading(true);
+      setLoadError(null);
+      try {
+        const response = await fetch(`/api/time-locks?userAddress=${address}`, {
+          headers: getAuthHeaders(),
+        });
+        if (!response.ok) throw new Error('Failed to load time locks');
+        const data = await response.json();
+        const locks = Array.isArray(data.timeLocks || data.locks) ? (data.timeLocks || data.locks) : [];
+        const mapped = locks.map((lock: Record<string, unknown>) => {
+          const createdAt = lock.createdAt ? new Date(lock.createdAt).getTime() : Date.now();
+          const unlockAt = lock.unlockAt ? new Date(lock.unlockAt).getTime() : Date.now();
+          const status: TimeLock['status'] = lock.status || (unlockAt <= Date.now() ? 'ready' : 'pending');
+
+          return {
+            id: String(lock.id ?? `${lock.token ?? 'token'}-${createdAt}`),
+            token: lock.token ?? 'VFIDE',
+            to: lock.to ?? lock.recipient ?? 'Unknown',
+            amount: String(lock.amount ?? '0'),
+            createdAt,
+            unlockAt,
+            status,
+          } as TimeLock;
+        });
+
+        if (isMounted) {
+          setTimeLocks(mapped);
+        }
+      } catch {
+        if (isMounted) {
+          setTimeLocks([]);
+          setLoadError('Unable to load time-locked transfers.');
+        }
+      } finally {
+        if (isMounted) setIsLoading(false);
+      }
+    };
+
+    fetchTimeLocks();
+
+    return () => {
+      isMounted = false;
+    };
   }, [address]);
+
+  useEffect(() => {
+    const stored = localStorage.getItem('vfide_time_lock_whitelist');
+    if (stored) {
+      try {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed)) {
+          setWhitelist(parsed);
+        }
+      } catch {
+        // ignore
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem('vfide_time_lock_whitelist', JSON.stringify(whitelist));
+  }, [whitelist]);
 
   const formatTime = (ms: number) => {
     const seconds = Math.floor(ms / 1000);
@@ -61,6 +106,29 @@ export default function TimeLocksPage() {
     const remaining = lock.unlockAt - Date.now();
     if (remaining <= 0) return 'Ready';
     return formatTime(remaining);
+  };
+
+  const handleExecute = (id: string) => {
+    setTimeLocks((prev) => prev.map((lock) => (lock.id === id ? { ...lock, status: 'executed' } : lock)));
+  };
+
+  const handleCancel = (id: string) => {
+    setTimeLocks((prev) => prev.map((lock) => (lock.id === id ? { ...lock, status: 'cancelled' } : lock)));
+  };
+
+  const handleAccelerate = (id: string) => {
+    setTimeLocks((prev) => prev.map((lock) => (lock.id === id ? { ...lock, unlockAt: Date.now(), status: 'ready' } : lock)));
+  };
+
+  const handleAddWhitelist = () => {
+    const input = prompt('Enter address to whitelist (0x...)');
+    if (!input) return;
+    if (!isAddress(input)) return;
+    setWhitelist((prev) => (prev.includes(input) ? prev : [...prev, input]));
+  };
+
+  const handleRemoveWhitelist = (addressToRemove: string) => {
+    setWhitelist((prev) => prev.filter((addr) => addr !== addressToRemove));
   };
 
   if (!isConnected) {
@@ -109,7 +177,15 @@ export default function TimeLocksPage() {
       <div>
         <h3 className="font-medium mb-3">Pending Transfers</h3>
         <div className="space-y-3">
-          {timeLocks.filter(l => l.status === 'pending' || l.status === 'ready').length === 0 ? (
+          {isLoading ? (
+            <div className="text-center py-8 text-muted-foreground bg-card rounded-xl border">
+              Loading time-locked transfers...
+            </div>
+          ) : loadError ? (
+            <div className="text-center py-8 text-red-500/80 bg-card rounded-xl border">
+              {loadError}
+            </div>
+          ) : timeLocks.filter(l => l.status === 'pending' || l.status === 'ready').length === 0 ? (
             <div className="text-center py-8 text-muted-foreground bg-card rounded-xl border">
               No pending time-locked transfers
             </div>
@@ -138,7 +214,7 @@ export default function TimeLocksPage() {
                       <div
                         className="h-full bg-primary rounded-full"
                         style={{
-                          width: `${Math.max(0, 100 - ((lock.unlockAt - Date.now()) / (lock.unlockAt - lock.createdAt)) * 100)}%`,
+                          width: `${Math.min(100, Math.max(0, ((Date.now() - lock.createdAt) / Math.max(1, lock.unlockAt - lock.createdAt)) * 100))}%`,
                         }}
                       />
                     </div>
@@ -146,15 +222,24 @@ export default function TimeLocksPage() {
 
                   <div className="flex gap-2 mt-3">
                     {lock.status === 'ready' ? (
-                      <button className="flex-1 px-3 py-2 bg-green-500 text-white rounded-lg text-sm">
+                      <button
+                        className="flex-1 px-3 py-2 bg-green-500 text-white rounded-lg text-sm"
+                        onClick={() => handleExecute(lock.id)}
+                      >
                         Execute Transfer
                       </button>
                     ) : (
-                      <button className="flex-1 px-3 py-2 bg-primary text-primary-foreground rounded-lg text-sm">
+                      <button
+                        className="flex-1 px-3 py-2 bg-primary text-primary-foreground rounded-lg text-sm"
+                        onClick={() => handleAccelerate(lock.id)}
+                      >
                         Accelerate with 2FA
                       </button>
                     )}
-                    <button className="px-3 py-2 bg-red-500/10 text-red-500 rounded-lg text-sm">
+                    <button
+                      className="px-3 py-2 bg-red-500/10 text-red-500 rounded-lg text-sm"
+                      onClick={() => handleCancel(lock.id)}
+                    >
                       Cancel
                     </button>
                   </div>
@@ -168,14 +253,27 @@ export default function TimeLocksPage() {
       <div className="bg-card rounded-xl p-4 border">
         <div className="flex items-center justify-between mb-3">
           <h3 className="font-medium">Whitelisted Addresses</h3>
-          <button className="text-sm text-primary">+ Add Address</button>
+          <button className="text-sm text-primary" onClick={handleAddWhitelist}>+ Add Address</button>
         </div>
         <p className="text-sm text-muted-foreground mb-3">
           Transfers to whitelisted addresses are instant (after 24h cooldown)
         </p>
-        <div className="text-center py-4 text-muted-foreground text-sm">
-          No addresses whitelisted yet
-        </div>
+        {whitelist.length === 0 ? (
+          <div className="text-center py-4 text-muted-foreground text-sm">
+            No addresses whitelisted yet
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {whitelist.map((addr) => (
+              <div key={addr} className="flex items-center justify-between rounded-lg border border-white/10 bg-muted/40 px-3 py-2 text-sm">
+                <span className="font-mono text-muted-foreground">{addr}</span>
+                <button className="text-xs text-red-500" onClick={() => handleRemoveWhitelist(addr)}>
+                  Remove
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

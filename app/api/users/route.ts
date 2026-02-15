@@ -114,7 +114,7 @@ export async function GET(request: NextRequest) {
     trackApiCallSimple('/api/users', 'GET', 500, Date.now() - startTime);
     console.error('Error fetching users:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch users', details: error instanceof Error ? error.message : 'Unknown error' },
+      { error: 'Internal server error' },
       { status: 500 }
     );
   }
@@ -162,7 +162,7 @@ export async function POST(request: NextRequest) {
 
     // Check if user exists
     const existingUser = await query<User>(
-      'SELECT * FROM users WHERE wallet_address = $1',
+      'SELECT id FROM users WHERE wallet_address = $1',
       [wallet_address.toLowerCase()]
     );
 
@@ -184,7 +184,9 @@ export async function POST(request: NextRequest) {
              last_seen_at = NOW(),
              updated_at = NOW()
          WHERE wallet_address = $1
-         RETURNING *`,
+         RETURNING id, wallet_address, username, display_name, bio, avatar_url,
+                   proof_score, reputation_score, is_council_member, is_verified,
+                   created_at, last_seen_at`,
         [
           wallet_address.toLowerCase(),
           username,
@@ -204,7 +206,9 @@ export async function POST(request: NextRequest) {
       const insertResult = await query<User>(
         `INSERT INTO users (wallet_address, username, display_name, bio, avatar_url, email, location, website, twitter, github)
          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-         RETURNING *`,
+         RETURNING id, wallet_address, username, display_name, bio, avatar_url,
+                   proof_score, reputation_score, is_council_member, is_verified,
+                   created_at, last_seen_at`,
         [
           wallet_address.toLowerCase(),
           username,
@@ -225,7 +229,7 @@ export async function POST(request: NextRequest) {
   } catch (error: unknown) {
     console.error('Error creating/updating user:', error);
     return NextResponse.json(
-      { error: 'Failed to create/update user', details: error instanceof Error ? error.message : 'Unknown error' },
+      { error: 'Internal server error' },
       { status: 500 }
     );
   }

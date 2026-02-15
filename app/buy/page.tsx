@@ -57,8 +57,10 @@ const FIAT_PROVIDERS: FiatProvider[] = [
     status: 'active',
     getUrl: (address: string, amount?: number) => {
       const baseUrl = 'https://buy.moonpay.com';
+      const apiKey = process.env.NEXT_PUBLIC_MOONPAY_API_KEY;
+      if (!apiKey) return '';
       const params = new URLSearchParams({
-        apiKey: process.env.NEXT_PUBLIC_MOONPAY_API_KEY || 'pk_test_key',
+        apiKey,
         currencyCode: 'eth',
         walletAddress: address,
         colorCode: '#00FFB2', // Digital Jade
@@ -82,8 +84,10 @@ const FIAT_PROVIDERS: FiatProvider[] = [
     status: 'active',
     getUrl: (address: string, amount?: number) => {
       const baseUrl = 'https://global.transak.com';
+      const apiKey = process.env.NEXT_PUBLIC_TRANSAK_API_KEY;
+      if (!apiKey) return '';
       const params = new URLSearchParams({
-        apiKey: process.env.NEXT_PUBLIC_TRANSAK_API_KEY || 'test_api_key',
+        apiKey,
         cryptoCurrencyCode: 'ETH',
         network: 'base',
         walletAddress: address,
@@ -108,8 +112,10 @@ const FIAT_PROVIDERS: FiatProvider[] = [
     status: 'active',
     getUrl: (address: string, amount?: number) => {
       const baseUrl = 'https://app.ramp.network';
+      const hostApiKey = process.env.NEXT_PUBLIC_RAMP_API_KEY;
+      if (!hostApiKey) return '';
       const params = new URLSearchParams({
-        hostApiKey: process.env.NEXT_PUBLIC_RAMP_API_KEY || 'test_key',
+        hostApiKey,
         swapAsset: 'BASE_ETH',
         userAddress: address,
         ...(amount ? { fiatValue: amount.toString() } : {})
@@ -117,8 +123,8 @@ const FIAT_PROVIDERS: FiatProvider[] = [
       return `${baseUrl}?${params.toString()}`;
     }
   },
-  {
-    id: 'coinbase',
+    {
+      id: 'coinbase',
     name: 'Coinbase Onramp',
     logo: '🔵',
     description: 'Trusted by millions, seamless Coinbase integration',
@@ -129,7 +135,7 @@ const FIAT_PROVIDERS: FiatProvider[] = [
     countries: 100,
     kycLevel: 'standard',
     supportedTokens: ['ETH', 'USDC', 'USDT'],
-    status: 'coming_soon',
+      status: 'active',
     getUrl: (address: string) => {
       return `https://pay.coinbase.com/buy?addresses={"${address}":["base"]}`;
     }
@@ -148,12 +154,18 @@ export default function BuyPage() {
   const [selectedProvider, setSelectedProvider] = useState<string | null>(null);
   const [amount, setAmount] = useState<string>('100');
   const [copied, setCopied] = useState(false);
+  const [buyError, setBuyError] = useState<string | null>(null);
 
   // Handle provider selection
   const handleBuy = useCallback((provider: FiatProvider) => {
     if (!address) return;
     
     const url = provider.getUrl(address, parseFloat(amount) || undefined);
+    if (!url) {
+      setBuyError(`${provider.name} is not configured yet. Please check back soon or choose another provider.`);
+      return;
+    }
+    setBuyError(null);
     window.open(url, '_blank', 'noopener,noreferrer');
   }, [address, amount]);
 
@@ -167,14 +179,13 @@ export default function BuyPage() {
   }, [address]);
 
   const activeProviders = FIAT_PROVIDERS.filter(p => p.status === 'active');
-  const comingSoonProviders = FIAT_PROVIDERS.filter(p => p.status === 'coming_soon');
 
   return (
     <div className="min-h-screen bg-linear-to-b from-zinc-950 via-zinc-900 to-zinc-950">
       <div className="max-w-4xl mx-auto px-4 py-12">
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-jade-500/10 rounded-full text-jade-400 text-sm font-medium mb-4">
+          <div className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-500/10 rounded-full text-emerald-400 text-sm font-medium mb-4">
             <CreditCard size={16} />
             Fiat On-Ramp
           </div>
@@ -183,12 +194,12 @@ export default function BuyPage() {
         </div>
 
         {/* Important Notice */}
-        <div className="mb-8 p-4 bg-jade-500/10 border border-jade-500/30 rounded-xl">
+        <div className="mb-8 p-4 bg-emerald-500/10 border border-emerald-500/30 rounded-xl">
           <div className="flex items-start gap-3">
-            <Shield className="text-jade-400 shrink-0 mt-1" size={20} />
+            <Shield className="text-emerald-400 shrink-0 mt-1" size={20} />
             <div>
-              <p className="font-semibold text-jade-300">How It Works</p>
-              <p className="text-jade-200/80 text-sm mt-1">
+              <p className="font-semibold text-emerald-300">How It Works</p>
+              <p className="text-emerald-200/80 text-sm mt-1">
                 VFIDE partners with licensed payment providers. You complete purchase with them,
                 and crypto is sent directly to your wallet. VFIDE never handles fiat or your payment info.
               </p>
@@ -218,7 +229,7 @@ export default function BuyPage() {
                   onClick={handleCopyAddress}
                   className="p-2 bg-zinc-800 rounded-lg hover:bg-zinc-700"
                 >
-                  {copied ? <Check className="text-jade-400" size={18} /> : <Copy className="text-zinc-400" size={18} />}
+                  {copied ? <Check className="text-emerald-400" size={18} /> : <Copy className="text-zinc-400" size={18} />}
                 </button>
               </div>
             </div>
@@ -236,7 +247,7 @@ export default function BuyPage() {
                     value={amount}
                     onChange={(e) => setAmount(e.target.value)}
                     placeholder="100"
-                    className="w-full pl-8 pr-4 py-3 bg-zinc-800 border border-zinc-700 rounded-lg text-white text-xl font-semibold focus:outline-none focus:border-jade-500"
+                    className="w-full pl-8 pr-4 py-3 bg-zinc-800 border border-zinc-700 rounded-lg text-white text-xl font-semibold focus:outline-none focus:border-emerald-500"
                   />
                 </div>
                 <div className="flex gap-2">
@@ -246,7 +257,7 @@ export default function BuyPage() {
                       onClick={() => setAmount(val.toString())}
                       className={`px-4 py-2 rounded-lg font-medium ${
                         amount === val.toString()
-                          ? 'bg-jade-500/20 text-jade-400 border border-jade-500/30'
+                          ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
                           : 'bg-zinc-800 text-zinc-400 border border-zinc-700'
                       }`}
                     >
@@ -257,10 +268,16 @@ export default function BuyPage() {
               </div>
             </div>
 
+            {buyError && (
+              <div className="mb-6 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
+                {buyError}
+              </div>
+            )}
+
             {/* Provider Selection */}
             <div className="mb-8">
               <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                <Globe className="text-jade-400" size={20} />
+                <Globe className="text-emerald-400" size={20} />
                 Choose a Provider
               </h2>
               <div className="space-y-4">
@@ -270,7 +287,7 @@ export default function BuyPage() {
                     whileHover={{ scale: 1.01 }}
                     className={`p-5 bg-zinc-900/50 border rounded-xl cursor-pointer transition-all ${
                       selectedProvider === provider.id
-                        ? 'border-jade-400 bg-jade-500/5'
+                        ? 'border-emerald-400 bg-emerald-500/5'
                         : 'border-zinc-700 hover:border-zinc-600'
                     }`}
                     onClick={() => setSelectedProvider(provider.id)}
@@ -299,7 +316,7 @@ export default function BuyPage() {
                       </div>
                       
                       <div className="text-right">
-                        <div className="text-jade-400 font-bold">{provider.fees}</div>
+                        <div className="text-emerald-400 font-bold">{provider.fees}</div>
                         <div className="text-xs text-zinc-400 mt-1">{provider.processingTime}</div>
                       </div>
                     </div>
@@ -335,7 +352,7 @@ export default function BuyPage() {
                             
                             <button
                               onClick={() => handleBuy(provider)}
-                              className="w-full py-3 bg-linear-to-r from-jade-500 to-teal-500 text-black font-semibold rounded-lg flex items-center justify-center gap-2"
+                              className="w-full py-3 bg-linear-to-r from-emerald-500 to-teal-500 text-black font-semibold rounded-lg flex items-center justify-center gap-2"
                             >
                               Buy with {provider.name}
                               <ExternalLink size={16} />
@@ -349,59 +366,40 @@ export default function BuyPage() {
               </div>
             </div>
 
-            {/* Coming Soon Providers */}
-            {comingSoonProviders.length > 0 && (
-              <div className="mb-8">
-                <h3 className="text-sm font-medium text-zinc-500 mb-3">Coming Soon</h3>
-                <div className="grid grid-cols-2 gap-3">
-                  {comingSoonProviders.map(provider => (
-                    <div key={provider.id} className="p-4 bg-zinc-900/30 border border-zinc-800 rounded-xl opacity-60">
-                      <div className="flex items-center gap-3">
-                        <span className="text-2xl">{provider.logo}</span>
-                        <div>
-                          <p className="font-medium text-white">{provider.name}</p>
-                          <p className="text-xs text-zinc-500">{provider.fees}</p>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
           </>
         )}
 
         {/* How It Works */}
         <div className="mt-12 p-6 bg-zinc-900/50 border border-zinc-700 rounded-xl">
           <h3 className="text-lg font-semibold text-white mb-6 flex items-center gap-2">
-            <Info className="text-jade-400" size={20} />
+            <Info className="text-emerald-400" size={20} />
             How Fiat On-Ramp Works
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             <div className="text-center">
-              <div className="w-12 h-12 bg-jade-500/20 rounded-full flex items-center justify-center mx-auto mb-3">
-                <span className="text-jade-400 font-bold">1</span>
+              <div className="w-12 h-12 bg-emerald-500/20 rounded-full flex items-center justify-center mx-auto mb-3">
+                <span className="text-emerald-400 font-bold">1</span>
               </div>
               <p className="font-medium text-white text-sm">Choose Provider</p>
               <p className="text-xs text-zinc-500 mt-1">Select based on fees & methods</p>
             </div>
             <div className="text-center">
-              <div className="w-12 h-12 bg-jade-500/20 rounded-full flex items-center justify-center mx-auto mb-3">
-                <span className="text-jade-400 font-bold">2</span>
+              <div className="w-12 h-12 bg-emerald-500/20 rounded-full flex items-center justify-center mx-auto mb-3">
+                <span className="text-emerald-400 font-bold">2</span>
               </div>
               <p className="font-medium text-white text-sm">Complete KYC</p>
               <p className="text-xs text-zinc-500 mt-1">Verify identity with provider</p>
             </div>
             <div className="text-center">
-              <div className="w-12 h-12 bg-jade-500/20 rounded-full flex items-center justify-center mx-auto mb-3">
-                <span className="text-jade-400 font-bold">3</span>
+              <div className="w-12 h-12 bg-emerald-500/20 rounded-full flex items-center justify-center mx-auto mb-3">
+                <span className="text-emerald-400 font-bold">3</span>
               </div>
               <p className="font-medium text-white text-sm">Pay with Card/Bank</p>
               <p className="text-xs text-zinc-500 mt-1">Secure payment processing</p>
             </div>
             <div className="text-center">
-              <div className="w-12 h-12 bg-jade-500/20 rounded-full flex items-center justify-center mx-auto mb-3">
-                <span className="text-jade-400 font-bold">4</span>
+              <div className="w-12 h-12 bg-emerald-500/20 rounded-full flex items-center justify-center mx-auto mb-3">
+                <span className="text-emerald-400 font-bold">4</span>
               </div>
               <p className="font-medium text-white text-sm">Receive Crypto</p>
               <p className="text-xs text-zinc-500 mt-1">Sent directly to your wallet</p>

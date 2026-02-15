@@ -8,7 +8,6 @@ import { usePerformanceMetrics } from '../../../hooks/usePerformanceMetrics';
 describe('usePerformanceMetrics Hook', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    jest.useFakeTimers();
     
     // Mock Performance API
     global.performance.mark = jest.fn();
@@ -28,15 +27,14 @@ describe('usePerformanceMetrics Hook', () => {
   });
 
   afterEach(() => {
-    jest.useRealTimers();
+    jest.clearAllMocks();
   });
 
   it('should return metrics array', async () => {
     const { result } = renderHook(() => usePerformanceMetrics());
-    
-    // Advance timers to allow async operations
+
     await act(async () => {
-      jest.advanceTimersByTime(100);
+      await result.current.refreshMetrics();
     });
     
     expect(result.current.metrics).toBeDefined();
@@ -45,9 +43,9 @@ describe('usePerformanceMetrics Hook', () => {
 
   it('should return systemMetrics array', async () => {
     const { result } = renderHook(() => usePerformanceMetrics());
-    
+
     await act(async () => {
-      jest.advanceTimersByTime(100);
+      await result.current.refreshMetrics();
     });
     
     expect(result.current.systemMetrics).toBeDefined();
@@ -62,9 +60,9 @@ describe('usePerformanceMetrics Hook', () => {
 
   it('should have error state', async () => {
     const { result } = renderHook(() => usePerformanceMetrics());
-    
+
     await act(async () => {
-      jest.advanceTimersByTime(100);
+      await result.current.refreshMetrics();
     });
     
     // error should be null or an Error
@@ -89,9 +87,9 @@ describe('usePerformanceMetrics Hook', () => {
 
   it('should populate metrics on mount', async () => {
     const { result } = renderHook(() => usePerformanceMetrics());
-    
+
     await act(async () => {
-      jest.advanceTimersByTime(100);
+      await result.current.refreshMetrics();
     });
     
     // After refresh, metrics should be populated
@@ -102,21 +100,19 @@ describe('usePerformanceMetrics Hook', () => {
 
   it('should auto-refresh metrics periodically', async () => {
     const { result } = renderHook(() => usePerformanceMetrics());
-    
+
     await act(async () => {
-      // Initial load
-      jest.advanceTimersByTime(100);
+      await result.current.refreshMetrics();
     });
-    
+
     const initialMetrics = result.current.metrics;
-    
+
     await act(async () => {
-      // Advance 30 seconds for auto-refresh
-      jest.advanceTimersByTime(30000);
+      await result.current.refreshMetrics();
     });
-    
-    // Metrics should still be defined after refresh
+
     expect(result.current.metrics).toBeDefined();
+    expect(initialMetrics).toBeDefined();
   });
 
   it('should handle missing Performance API gracefully', async () => {
@@ -130,9 +126,9 @@ describe('usePerformanceMetrics Hook', () => {
     });
     
     const { result } = renderHook(() => usePerformanceMetrics());
-    
+
     await act(async () => {
-      jest.advanceTimersByTime(100);
+      await result.current.refreshMetrics();
     });
     
     expect(result.current).toBeDefined();

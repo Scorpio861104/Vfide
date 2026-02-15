@@ -4,8 +4,10 @@ import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAccount, useChainId } from 'wagmi';
 import { QrCode, Copy, Check, Download, Share2, X } from 'lucide-react';
+import QRCode from 'qrcode';
 import { IS_TESTNET } from '@/lib/chains';
 import { logger } from '@/lib/logger';
+import Image from 'next/image';
 
 /**
  * Wallet QR Code Component
@@ -178,10 +180,13 @@ export function WalletQRCode({ isOpen, onClose }: WalletQRCodeProps) {
             {/* QR Code */}
             <div className="bg-white p-4 rounded-xl mb-4">
               {qrDataUrl ? (
-                <img 
+                <Image 
                   src={qrDataUrl} 
                   alt="Wallet QR Code" 
+                  width={256}
+                  height={256}
                   className="w-full aspect-square"
+                  unoptimized
                 />
               ) : (
                 <div className="w-full aspect-square flex items-center justify-center">
@@ -245,85 +250,15 @@ export function WalletQRCode({ isOpen, onClose }: WalletQRCodeProps) {
  * Uses a simple canvas-based QR generation
  */
 async function generateQRCode(data: string): Promise<string> {
-  // Create a simple QR-like pattern (for demo - in production use qrcode library)
-  const size = 256;
-  const canvas = document.createElement('canvas');
-  canvas.width = size;
-  canvas.height = size;
-  const ctx = canvas.getContext('2d')!;
-
-  // White background
-  ctx.fillStyle = '#ffffff';
-  ctx.fillRect(0, 0, size, size);
-
-  // Generate a deterministic pattern from the address
-  const moduleSize = 8;
-  const modules = Math.floor(size / moduleSize);
-  const quietZone = 4;
-  
-  ctx.fillStyle = '#000000';
-  
-  // Position patterns (corners)
-  drawPositionPattern(ctx, quietZone * moduleSize, quietZone * moduleSize, moduleSize);
-  drawPositionPattern(ctx, (modules - quietZone - 7) * moduleSize, quietZone * moduleSize, moduleSize);
-  drawPositionPattern(ctx, quietZone * moduleSize, (modules - quietZone - 7) * moduleSize, moduleSize);
-
-  // Data modules (simplified - create pattern from address hash)
-  const hash = simpleHash(data);
-  for (let i = 0; i < 200; i++) {
-    const x = ((hash * (i + 1)) % (modules - 16)) + 8;
-    const y = ((hash * (i + 7)) % (modules - 16)) + 8;
-    
-    // Avoid position patterns
-    if (isInPositionPattern(x, y, modules, quietZone)) continue;
-    
-    if ((hash * (i + 3)) % 2 === 0) {
-      ctx.fillRect(x * moduleSize, y * moduleSize, moduleSize, moduleSize);
-    }
-  }
-
-  // Add address text at bottom
-  ctx.fillStyle = '#000000';
-  ctx.font = '10px monospace';
-  ctx.textAlign = 'center';
-  ctx.fillText(data.slice(0, 21), size / 2, size - 20);
-  ctx.fillText(data.slice(21), size / 2, size - 8);
-
-  return canvas.toDataURL('image/png');
-}
-
-function drawPositionPattern(ctx: CanvasRenderingContext2D, x: number, y: number, moduleSize: number) {
-  // Outer black
-  ctx.fillStyle = '#000000';
-  ctx.fillRect(x, y, 7 * moduleSize, 7 * moduleSize);
-  
-  // Inner white
-  ctx.fillStyle = '#ffffff';
-  ctx.fillRect(x + moduleSize, y + moduleSize, 5 * moduleSize, 5 * moduleSize);
-  
-  // Center black
-  ctx.fillStyle = '#000000';
-  ctx.fillRect(x + 2 * moduleSize, y + 2 * moduleSize, 3 * moduleSize, 3 * moduleSize);
-}
-
-function isInPositionPattern(x: number, y: number, modules: number, quietZone: number): boolean {
-  // Top-left
-  if (x < quietZone + 8 && y < quietZone + 8) return true;
-  // Top-right
-  if (x >= modules - quietZone - 8 && y < quietZone + 8) return true;
-  // Bottom-left
-  if (x < quietZone + 8 && y >= modules - quietZone - 8) return true;
-  return false;
-}
-
-function simpleHash(str: string): number {
-  let hash = 0;
-  for (let i = 0; i < str.length; i++) {
-    const char = str.charCodeAt(i);
-    hash = ((hash << 5) - hash) + char;
-    hash = hash & hash;
-  }
-  return Math.abs(hash);
+  return QRCode.toDataURL(data, {
+    errorCorrectionLevel: 'M',
+    margin: 2,
+    width: 256,
+    color: {
+      dark: '#000000',
+      light: '#ffffff',
+    },
+  });
 }
 
 /**

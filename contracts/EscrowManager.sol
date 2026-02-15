@@ -27,6 +27,8 @@ contract EscrowManager is ReentrancyGuard {
     event EscrowCreated(uint256 indexed escrowId, address indexed buyer, address indexed merchant, uint256 amount, uint256 releaseTime, uint256 lockPeriod, uint256 timestamp);
     event EscrowReleased(uint256 indexed escrowId, address indexed to);
     event EscrowRefunded(uint256 indexed escrowId);
+    event ReleaseApproved(uint256 indexed escrowId, address indexed by);
+    event RefundApproved(uint256 indexed escrowId, address indexed by);
     event DisputeRaised(uint256 indexed escrowId, address indexed by);
     event DisputeResolved(uint256 indexed escrowId, address indexed winner);
     event EscrowNearTimeout(uint256 indexed escrowId, uint256 timeRemaining); // H-8 Fix
@@ -46,6 +48,10 @@ contract EscrowManager is ReentrancyGuard {
 
     uint256 public escrowCount;
     mapping(uint256 => Escrow) public escrows;
+    mapping(uint256 => bool) public buyerReleaseApproved;
+    mapping(uint256 => bool) public merchantReleaseApproved;
+    mapping(uint256 => bool) public buyerRefundApproved;
+    mapping(uint256 => bool) public merchantRefundApproved;
     
     address public arbiter; // DAO or specialized court
     ISeer public seer;
@@ -104,16 +110,12 @@ contract EscrowManager is ReentrancyGuard {
         return id;
     }
 
-    // 2. Release Funds (Buyer confirms receipt)
-    // C-4 Fix: Add nonReentrant modifier
-    function release(uint256 id) external nonReentrant {
-        Escrow storage e = escrows[id];
-        require(msg.sender == e.buyer, "not buyer");
-        require(e.state == State.CREATED, "bad state");
-
+    function _finalizeRelease(uint256 id, Escrow storage e) internal {
         e.state = State.RELEASED;
+        buyerReleaseApproved[id] = false;
+        merchantReleaseApproved[id] = false;
         IERC20(e.token).safeTransfer(e.merchant, e.amount);
-        
+
         // WHITEPAPER: Commerce Incentives (FREE) - Buyer +2, Merchant +5 ProofScore points
         if (address(seer) != address(0)) {
             try seer.reward(e.buyer, 2, "commerce_buyer") {} catch {}
@@ -123,20 +125,65 @@ contract EscrowManager is ReentrancyGuard {
         emit EscrowReleased(id, e.merchant);
     }
 
-    // 3. Refund (Merchant cancels/refunds)
-    // C-4 Fix: Add nonReentrant modifier
-    function refund(uint256 id) external nonReentrant {
-        Escrow storage e = escrows[id];
-        require(msg.sender == e.merchant, "not merchant");
-        require(e.state == State.CREATED, "bad state"); // H-19: Cannot refund during dispute
-
+    function _finalizeRefund(uint256 id, Escrow storage e) internal {
         e.state = State.REFUNDED;
+        buyerRefundApproved[id] = false;
+        merchantRefundApproved[id] = false;
         IERC20(e.token).safeTransfer(e.buyer, e.amount);
-        
         emit EscrowRefunded(id);
     }
 
-    // 4. Claim Timeout (Merchant claims after wait period)
+    // 2. Release Funds (requires buyer + merchant approval)
+    // C-4 Fix: Add nonReentrant modifier
+    function approveRelease(uint256 id) public nonReentrant {
+        Escrow storage e = escrows[id];
+        require(e.state == State.CREATED, "bad state");
+        if (msg.sender == e.buyer) {
+            buyerReleaseApproved[id] = true;
+        } else if (msg.sender == e.merchant) {
+            merchantReleaseApproved[id] = true;
+        } else {
+            revert("not party");
+        }
+
+        emit ReleaseApproved(id, msg.sender);
+
+        if (buyerReleaseApproved[id] && merchantReleaseApproved[id]) {
+            _finalizeRelease(id, e);
+        }
+    }
+
+    // Backwards-compatible wrapper
+    function release(uint256 id) external {
+        approveRelease(id);
+    }
+
+    // 3. Refund (requires buyer + merchant approval)
+    // C-4 Fix: Add nonReentrant modifier
+    function approveRefund(uint256 id) public nonReentrant {
+        Escrow storage e = escrows[id];
+        require(e.state == State.CREATED, "bad state"); // H-19: Cannot refund during dispute
+        if (msg.sender == e.buyer) {
+            buyerRefundApproved[id] = true;
+        } else if (msg.sender == e.merchant) {
+            merchantRefundApproved[id] = true;
+        } else {
+            revert("not party");
+        }
+
+        emit RefundApproved(id, msg.sender);
+
+        if (buyerRefundApproved[id] && merchantRefundApproved[id]) {
+            _finalizeRefund(id, e);
+        }
+    }
+
+    // Backwards-compatible wrapper
+    function refund(uint256 id) external {
+        approveRefund(id);
+    }
+
+    // 4. Claim Timeout (Merchant can approve release after wait period)
     // C-4 Fix: Add nonReentrant modifier
     function claimTimeout(uint256 id) external nonReentrant {
         Escrow storage e = escrows[id];
@@ -144,10 +191,12 @@ contract EscrowManager is ReentrancyGuard {
         require(e.state == State.CREATED, "bad state");
         require(block.timestamp >= e.releaseTime, "too early");
 
-        e.state = State.RELEASED;
-        IERC20(e.token).safeTransfer(e.merchant, e.amount);
-        
-        emit EscrowReleased(id, e.merchant);
+        merchantReleaseApproved[id] = true;
+        emit ReleaseApproved(id, msg.sender);
+
+        if (buyerReleaseApproved[id]) {
+            _finalizeRelease(id, e);
+        }
     }
 
     // 5. Raise Dispute (Either party can dispute per WHITEPAPER)
@@ -158,6 +207,10 @@ contract EscrowManager is ReentrancyGuard {
         require(e.state == State.CREATED, "bad state");
 
         e.state = State.DISPUTED;
+        buyerReleaseApproved[id] = false;
+        merchantReleaseApproved[id] = false;
+        buyerRefundApproved[id] = false;
+        merchantRefundApproved[id] = false;
         emit DisputeRaised(id, msg.sender);
     }
 

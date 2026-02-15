@@ -143,7 +143,7 @@ export class SessionKeyService {
     
     // Generate session ID
     const sessionId = keccak256(
-      toBytes(`${owner}-${chainId}-${now}-${Math.random()}`)
+      toBytes(`${owner}-${chainId}-${now}-${Array.from(crypto.getRandomValues(new Uint8Array(16)), b => b.toString(16).padStart(2, '0')).join('')}`)
     ).slice(0, 18); // Short ID
 
     // Generate a session key address (in production, use proper key derivation)
@@ -229,7 +229,7 @@ export class SessionKeyService {
     // Find matching permission
     const permission = session.permissions.find(p =>
       p.target.toLowerCase() === target.toLowerCase() &&
-      (p.selector === '0x' || selector.startsWith(p.selector))
+      selector.startsWith(p.selector)
     );
 
     if (!permission) {
@@ -364,11 +364,13 @@ export function useSessionKeys(): UseSessionKeysResult {
   const sessions = useMemo(() => {
     if (!address) return [];
     return service.getSessions(address, chainId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [address, chainId, service, updateTrigger]);
 
   const activeSessions = useMemo(() => {
     if (!address) return [];
     return service.getActiveSessions(address, chainId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [address, chainId, service, updateTrigger]);
 
   const createSession = useCallback(
@@ -459,17 +461,18 @@ export function createTransferPermission(
 }
 
 /**
- * Create permission for any call to a contract
+ * Create permission for a specific function on a contract
  */
 export function createContractPermission(
   contractAddress: Address,
+  selector: Hex,
   maxValuePerCall: bigint = BigInt(0.1 * 1e18),
   maxTotalValue: bigint = BigInt(1 * 1e18),
   maxCalls: number = 50
 ): SessionKeyPermission {
   return {
     target: contractAddress,
-    selector: '0x' as Hex, // Any function
+    selector,
     maxValuePerCall,
     maxTotalValue,
     maxCalls,

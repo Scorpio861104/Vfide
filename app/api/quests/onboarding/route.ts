@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getClient } from '@/lib/db';
-import { requireAuth } from '@/lib/auth/middleware';
+import { requireAuth, checkOwnership } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 
 /**
@@ -12,12 +12,19 @@ export async function GET(request: NextRequest) {
   const rateLimit = await withRateLimit(request, 'api');
   if (rateLimit) return rateLimit;
 
+  const authResult = await requireAuth(request);
+  if (authResult instanceof NextResponse) return authResult;
+
   try {
     const searchParams = request.nextUrl.searchParams;
     const userAddress = searchParams.get('userAddress');
 
     if (!userAddress) {
       return NextResponse.json({ error: 'User address required' }, { status: 400 });
+    }
+
+    if (!checkOwnership(authResult.user, userAddress)) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
     }
 
     const client = await getClient();
@@ -90,24 +97,30 @@ export async function PATCH(request: NextRequest) {
   try {
     const { step, userAddress } = await request.json();
 
-    const validSteps = [
-      'connectWallet',
-      'completeProfile',
-      'firstTransaction',
-      'addFriend',
-      'joinGroup',
-      'voteProposal',
-      'earnBadge',
-      'depositVault',
-      'giveEndorsement',
-      'completeQuest',
-    ];
+    const validSteps: Record<string, string> = {
+      connectWallet: 'step_connect_wallet',
+      completeProfile: 'step_complete_profile',
+      firstTransaction: 'step_first_transaction',
+      addFriend: 'step_add_friend',
+      joinGroup: 'step_join_group',
+      voteProposal: 'step_vote_proposal',
+      earnBadge: 'step_earn_badge',
+      depositVault: 'step_deposit_vault',
+      giveEndorsement: 'step_give_endorsement',
+      completeQuest: 'step_complete_quest',
+    };
 
-    if (!step || !validSteps.includes(step) || !userAddress) {
+    const columnName = validSteps[step];
+
+    if (!step || !columnName || !userAddress) {
       return NextResponse.json(
         { error: 'Valid step name and user address required' },
         { status: 400 }
       );
+    }
+
+    if (!checkOwnership(authResult.user, userAddress)) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
     }
 
     const client = await getClient();
@@ -128,9 +141,7 @@ export async function PATCH(request: NextRequest) {
 
       const userId = userResult.rows[0].id;
 
-      // Convert camelCase to snake_case for database column
-      const columnName = `step_${step.replace(/([A-Z])/g, '_$1').toLowerCase()}`;
-
+      // columnName is already resolved from the strict whitelist above
       // Update the specific step
       await client.query(`
         INSERT INTO user_onboarding (user_id, ${columnName})
@@ -216,6 +227,10 @@ export async function POST(request: NextRequest) {
 
     if (!userAddress) {
       return NextResponse.json({ error: 'User address required' }, { status: 400 });
+    }
+
+    if (!checkOwnership(authResultPost.user, userAddress)) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
     }
 
     const client = await getClient();

@@ -5,8 +5,19 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
+import { encodeFunctionData, formatUnits, isAddress, parseUnits } from 'viem';
+import { buildCsrfHeaders } from '@/lib/security/csrfClient';
+import { isSupportedChainId } from '@/lib/chains';
+import { ZERO_ADDRESS } from './constants';
 // Crypto validation types - ValidationError used in type definitions
 import type { ValidationError as _ValidationError } from './cryptoValidation';
+
+/** Generate a crypto-safe hex ID */
+function secureId(): string {
+  const bytes = new Uint8Array(8);
+  crypto.getRandomValues(bytes);
+  return Array.from(bytes, b => b.toString(16).padStart(2, '0')).join('');
+}
 
 // ============================================================================
 // Types & Interfaces
@@ -43,13 +54,13 @@ export interface PaymentRequest {
   from: string; // Requester
   to: string; // Payer
   amount: string;
-  currency: 'ETH' | 'VFIDE';
+  currency: 'ETH' | 'VFIDE' | 'USDC' | 'USDT' | 'DAI';
   reason: string;
-  status: 'pending' | 'paid' | 'declined' | 'expired';
-  messageId: string;
-  conversationId: string;
-  createdAt: number;
-  expiresAt: number;
+  status: 'pending' | 'paid' | 'declined' | 'expired' | 'cancelled';
+  messageId?: string;
+  conversationId?: string;
+  createdAt?: number;
+  expiresAt?: number;
 }
 
 export interface TokenReward {
@@ -100,26 +111,21 @@ export async function connectWallet(): Promise<Wallet> {
       params: [address, 'latest'],
     });
 
-    // Convert wei to ETH
-    const balanceWei = parseInt(balance, 16);
-    if (isNaN(balanceWei) || !isFinite(balanceWei)) {
-      throw new Error('Invalid balance format from provider');
-    }
-    
-    const ethBalance = balanceWei / 1e18;
+    // Convert wei to ETH using formatUnits to avoid BigInt-to-Number precision loss
+    const ethBalance = formatUnits(BigInt(balance), 18);
 
-    // Get VFIDE token balance (mock for now)
+    // Get VFIDE token balance
     const tokenBalance = await getTokenBalance(address);
 
-    // Get USD value
-    const usdValue = await getUsdValue(ethBalance);
+    // Get USD value (parseFloat on formatted string is safe — value is human-readable, not raw wei)
+    const usdValue = await getUsdValue(parseFloat(ethBalance));
 
     // Try to get ENS name
     const ensName = await resolveEns(address);
 
     return {
       address,
-      balance: ethBalance.toFixed(4),
+      balance: parseFloat(ethBalance).toFixed(4),
       tokenBalance,
       usdValue,
       ensName,
@@ -134,16 +140,37 @@ export async function connectWallet(): Promise<Wallet> {
  * Get VFIDE token balance
  */
 async function getTokenBalance(address: string): Promise<string> {
-  // In production, call token contract
-  // For now, return mock data from API
+  // Fetch token balances from the crypto balance API
   try {
     const response = await fetch(`/api/crypto/balance/${address}`);
+    if (!response.ok) {
+      return '0';
+    }
     const data = await response.json();
-    return data.tokenBalance || '0';
+    const balances = Array.isArray(data.balances) ? data.balances : [];
+    const tokenAddress = process.env.NEXT_PUBLIC_VFIDE_TOKEN_ADDRESS?.toLowerCase();
+
+    if (!tokenAddress) {
+      const total = balances.reduce((sum: number, row: { balance?: string }) => {
+        const value = parseFloat(row.balance || '0');
+        return sum + (isNaN(value) ? 0 : value);
+      }, 0);
+      return total.toString();
+    }
+
+    const match = balances.find((row: { token_address?: string }) =>
+      row.token_address?.toLowerCase() === tokenAddress
+    );
+
+    return match?.balance ? String(match.balance) : '0';
   } catch {
     return '0';
   }
 }
+
+  async function buildWriteHeaders(method: string): Promise<HeadersInit> {
+    return buildCsrfHeaders({ 'Content-Type': 'application/json' }, method);
+  }
 
 /**
  * Get current USD value
@@ -199,12 +226,40 @@ export async function sendPayment(
     memo?: string;
   }
 ): Promise<Transaction> {
+  // Validate recipient address
+  if (!to || !isAddress(to)) {
+    throw new Error('Invalid recipient address');
+  }
+
+  // Validate amount is a positive finite number
+  const parsedAmount = parseFloat(amount);
+  if (!amount || isNaN(parsedAmount) || !isFinite(parsedAmount) || parsedAmount <= 0) {
+    throw new Error('Invalid payment amount: must be a positive number');
+  }
+
   try {
     const from = await getCurrentWalletAddress();
 
+    // Balance check before sending
+    if (currency === 'ETH') {
+      const balanceHex = await window.ethereum.request({
+        method: 'eth_getBalance',
+        params: [from, 'latest'],
+      });
+      const balanceEth = parseFloat(formatUnits(BigInt(balanceHex), 18));
+      if (balanceEth < parsedAmount) {
+        throw new Error('Insufficient ETH balance');
+      }
+    } else {
+      const tokenBal = await getTokenBalance(from);
+      if (parseFloat(tokenBal) < parsedAmount) {
+        throw new Error('Insufficient VFIDE token balance');
+      }
+    }
+
     // Create transaction
     const transaction: Transaction = {
-      id: `tx_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      id: `tx_${Date.now()}_${secureId()}`,
       type: 'send',
       from,
       to,
@@ -215,16 +270,28 @@ export async function sendPayment(
       ...options,
     };
 
+    // Get current chain ID for transaction
+    const chainIdHex = await window.ethereum.request({ method: 'eth_chainId' });
+    const currentChainId = parseInt(chainIdHex, 16);
+
+    // Validate chain ID against supported chains
+    if (!isSupportedChainId(currentChainId)) {
+      throw new Error(`Unsupported chain (ID: ${currentChainId}). Please switch to a supported network.`);
+    }
+
     // Send transaction
     if (currency === 'ETH') {
-      const txHash = await sendEthTransaction(to, amount);
+      const txHash = await sendEthTransaction(to, amount, from, currentChainId);
       transaction.txHash = txHash;
+      transaction.status = 'pending'; // Tx submitted but not yet confirmed
     } else {
       const txHash = await sendTokenTransaction(to, amount);
       transaction.txHash = txHash;
+      transaction.status = 'pending'; // Tx submitted but not yet confirmed
     }
 
-    // Save to database
+    // Save to database with pending status — confirmation should be
+    // tracked by a separate indexer/listener polling for tx receipts.
     await saveTransaction(transaction);
 
     // Send notification
@@ -240,7 +307,7 @@ export async function sendPayment(
 /**
  * Send ETH transaction
  */
-async function sendEthTransaction(to: string, amount: string): Promise<string> {
+async function sendEthTransaction(to: string, amount: string, fromAddress: string, chainId?: number): Promise<string> {
   if (typeof window.ethereum === 'undefined') {
     throw new Error('MetaMask not installed');
   }
@@ -250,14 +317,17 @@ async function sendEthTransaction(to: string, amount: string): Promise<string> {
     throw new Error('Invalid transaction amount');
   }
 
-  const amountWei = '0x' + (amountFloat * 1e18).toString(16);
+  // Use parseUnits for precise wei conversion (no floating point loss)
+  const amountWei = '0x' + parseUnits(amount, 18).toString(16);
 
   const txHash = await window.ethereum.request({
     method: 'eth_sendTransaction',
     params: [
       {
+        from: fromAddress,
         to,
         value: amountWei,
+        chainId: chainId ? `0x${chainId.toString(16)}` : undefined,
       },
     ],
   });
@@ -269,20 +339,56 @@ async function sendEthTransaction(to: string, amount: string): Promise<string> {
  * Send VFIDE token transaction
  */
 async function sendTokenTransaction(to: string, amount: string): Promise<string> {
-  // In production, call token contract
-  // For now, use API
-  const response = await fetch('/api/crypto/transfer', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ to, amount, currency: 'VFIDE' }),
-  });
-
-  const data = await response.json();
-  if (!data.success) {
-    throw new Error(data.error || 'Transaction failed');
+  if (typeof window.ethereum === 'undefined') {
+    throw new Error('MetaMask not installed');
   }
 
-  return data.txHash;
+  const tokenAddress = process.env.NEXT_PUBLIC_VFIDE_TOKEN_ADDRESS;
+  if (!tokenAddress || tokenAddress === ZERO_ADDRESS) {
+    throw new Error('VFIDE token address not configured');
+  }
+
+  const amountFloat = parseFloat(amount);
+  if (isNaN(amountFloat) || !isFinite(amountFloat) || amountFloat <= 0) {
+    throw new Error('Invalid transaction amount');
+  }
+
+  const amountWei = parseUnits(amount, 18);
+  const data = encodeFunctionData({
+    abi: [
+      {
+        type: 'function',
+        name: 'transfer',
+        stateMutability: 'nonpayable',
+        inputs: [
+          { name: 'to', type: 'address' },
+          { name: 'amount', type: 'uint256' },
+        ],
+        outputs: [{ type: 'bool' }],
+      },
+    ] as const,
+    functionName: 'transfer',
+    args: [to as `0x${string}`, amountWei],
+  });
+
+  const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+  const from = accounts[0];
+  if (!from) {
+    throw new Error('No wallet address found');
+  }
+
+  const txHash = await window.ethereum.request({
+    method: 'eth_sendTransaction',
+    params: [
+      {
+        from,
+        to: tokenAddress,
+        data,
+      },
+    ],
+  });
+
+  return txHash;
 }
 
 /**
@@ -302,9 +408,11 @@ export async function tipMessage(
   transaction.type = 'tip';
 
   // Update message with tip
+  const tipHeaders = await buildWriteHeaders('POST');
   await fetch('/api/messages/tip', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: tipHeaders,
+    credentials: 'include',
     body: JSON.stringify({ messageId, transaction }),
   });
 
@@ -321,31 +429,31 @@ export async function createPaymentRequest(
   reason: string,
   conversationId: string
 ): Promise<PaymentRequest> {
-  const from = await getCurrentWalletAddress();
-
-  const request: PaymentRequest = {
-    id: `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-    from,
-    to,
-    amount,
-    currency,
-    reason,
-    status: 'pending',
-    messageId: '', // Will be set when message is created
-    conversationId,
-    createdAt: Date.now(),
-    expiresAt: Date.now() + 7 * 24 * 60 * 60 * 1000, // 7 days
-  };
-
-  // Save to database
+  const createHeaders = await buildWriteHeaders('POST');
   const response = await fetch('/api/crypto/payment-requests', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(request),
+    headers: createHeaders,
+    credentials: 'include',
+    body: JSON.stringify({
+      toAddress: to,
+      amount,
+      token: currency,
+      memo: reason,
+    }),
   });
 
   const data = await response.json();
-  return data.request;
+  const row = data.request || {};
+  return {
+    id: String(row.id ?? ''),
+    from: row.from_address ?? row.from ?? '',
+    to: row.to_address ?? row.to ?? '',
+    amount: String(row.amount ?? amount),
+    currency: (row.token ?? currency) as PaymentRequest['currency'],
+    reason: row.memo ?? reason,
+    status: row.status ?? 'pending',
+    conversationId,
+  };
 }
 
 /**
@@ -355,22 +463,34 @@ export async function payPaymentRequest(requestId: string): Promise<Transaction>
   // Get request details
   const response = await fetch(`/api/crypto/payment-requests/${requestId}`);
   const data = await response.json();
-  const request: PaymentRequest = data.request;
+  const request: PaymentRequest = {
+    id: String(data.request?.id ?? requestId),
+    from: data.request?.from_address ?? data.request?.from ?? '',
+    to: data.request?.to_address ?? data.request?.to ?? '',
+    amount: String(data.request?.amount ?? '0'),
+    currency: (data.request?.token ?? data.request?.currency ?? 'ETH') as PaymentRequest['currency'],
+    reason: data.request?.memo ?? data.request?.reason ?? '',
+    status: data.request?.status ?? 'pending',
+    messageId: data.request?.message_id,
+    conversationId: data.request?.conversation_id,
+  };
 
   // Send payment
-  const transaction = await sendPayment(request.from, request.amount, request.currency, {
+  const transaction = await sendPayment(request.from, request.amount, request.currency as 'ETH' | 'VFIDE', {
     messageId: request.messageId,
     conversationId: request.conversationId,
-    memo: `Payment for: ${request.reason}`,
+    memo: request.reason ? `Payment for: ${request.reason}` : 'Payment request',
   });
 
   transaction.type = 'payment_request';
 
   // Update request status
+  const patchHeaders = await buildWriteHeaders('PATCH');
   await fetch(`/api/crypto/payment-requests/${requestId}`, {
     method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ status: 'paid', transactionId: transaction.id }),
+    headers: patchHeaders,
+    credentials: 'include',
+    body: JSON.stringify({ status: 'paid', txHash: transaction.txHash ?? transaction.id }),
   });
 
   return transaction;
@@ -389,7 +509,7 @@ export async function rewardTokens(
   amount: string = '10'
 ): Promise<TokenReward> {
   const reward: TokenReward = {
-    id: `reward_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+    id: `reward_${Date.now()}_${secureId()}`,
     userId,
     action,
     amount,
@@ -398,9 +518,11 @@ export async function rewardTokens(
   };
 
   // Save to database
+  const rewardHeaders = await buildWriteHeaders('POST');
   await fetch('/api/crypto/rewards', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: rewardHeaders,
+    credentials: 'include',
     body: JSON.stringify(reward),
   });
 
@@ -410,9 +532,30 @@ export async function rewardTokens(
 /**
  * Claim rewards
  */
-export async function claimRewards(userId: string): Promise<TokenReward[]> {
+export async function claimRewards(userId: string, rewardIds?: string[]): Promise<TokenReward[]> {
+  let ids = rewardIds;
+
+  if (!ids || ids.length === 0) {
+    const rewardsResponse = await fetch(`/api/crypto/rewards/${userId}`);
+    const rewardsData = await rewardsResponse.json();
+    ids = (rewardsData.rewards || [])
+      .filter((r: TokenReward) => {
+        const status = (r as { status?: string }).status;
+        return status === 'pending' || !r.claimed;
+      })
+      .map((r: TokenReward) => r.id);
+  }
+
+  if (!ids || ids.length === 0) {
+    return [];
+  }
+
+  const claimHeaders = await buildWriteHeaders('POST');
   const response = await fetch(`/api/crypto/rewards/${userId}/claim`, {
     method: 'POST',
+    headers: claimHeaders,
+    credentials: 'include',
+    body: JSON.stringify({ rewardIds: ids }),
   });
 
   const data = await response.json();
@@ -449,20 +592,24 @@ async function getCurrentWalletAddress(): Promise<string> {
 }
 
 async function saveTransaction(transaction: Transaction): Promise<void> {
+  const txHeaders = await buildWriteHeaders('POST');
   await fetch('/api/crypto/transactions', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: txHeaders,
+    credentials: 'include',
     body: JSON.stringify(transaction),
   });
 }
 
 async function notifyPayment(transaction: Transaction): Promise<void> {
+  const notificationHeaders = await buildWriteHeaders('POST');
   await fetch('/api/notifications', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: notificationHeaders,
+    credentials: 'include',
     body: JSON.stringify({
       type: 'payment',
-      userId: transaction.to,
+      userAddress: transaction.to,
       data: transaction,
     }),
   });
@@ -574,16 +721,27 @@ export function useTransactions(userId: string) {
 /**
  * Hook for payment requests
  */
-export function usePaymentRequests(userId: string) {
+export function usePaymentRequests(userAddress: string) {
   const [requests, setRequests] = useState<PaymentRequest[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function fetchRequests() {
       try {
-        const response = await fetch(`/api/crypto/payment-requests?userId=${userId}`);
+        const response = await fetch(`/api/crypto/payment-requests?userAddress=${userAddress}`);
         const data = await response.json();
-        setRequests(data.requests || []);
+        const mapped = Array.isArray(data.requests)
+          ? data.requests.map((row: Record<string, unknown>) => ({
+              id: String(row.id ?? ''),
+              from: row.from_address ?? row.from ?? '',
+              to: row.to_address ?? row.to ?? '',
+              amount: String(row.amount ?? '0'),
+              currency: (row.token ?? 'ETH') as PaymentRequest['currency'],
+              reason: row.memo ?? '',
+              status: row.status ?? 'pending',
+            }))
+          : [];
+        setRequests(mapped);
       } catch (error) {
         console.error('Failed to fetch payment requests:', error);
       } finally {
@@ -596,7 +754,7 @@ export function usePaymentRequests(userId: string) {
     const interval = setInterval(fetchRequests, 30000);
 
     return () => clearInterval(interval);
-  }, [userId]);
+  }, [userAddress]);
 
   return { requests, loading };
 }
@@ -617,7 +775,7 @@ export function useRewards(userId: string) {
       
       // Calculate total unclaimed
       const unclaimed = data.rewards
-        .filter((r: TokenReward) => !r.claimed)
+        .filter((r: TokenReward) => (r as { status?: string }).status === 'pending' || !r.claimed)
         .reduce((sum: number, r: TokenReward) => sum + parseFloat(r.amount), 0);
       setTotalUnclaimed(unclaimed.toFixed(2));
     } catch (error) {

@@ -22,6 +22,7 @@ const eslintConfig = defineConfig([
     "storybook-static/**",
     "playwright-report/**",
     "test-results/**",
+    "typechain-types/**",
 
     // Tests/dev-only files shouldn't block production lint:
     "__tests__/**",
@@ -32,31 +33,29 @@ const eslintConfig = defineConfig([
     "e2e/**",
     "playwright/**",
     
-    // Temporarily exclude extremely large files that cause ESLint to hang
-    // TODO: Refactor these files into smaller components
-    "app/governance/page.tsx",
-    "app/admin/page.tsx",
   ]),
 
   // Make lint actionable for this repo: avoid failing on widespread, intentional patterns.
   {
     rules: {
-      "@typescript-eslint/no-explicit-any": "off",
+      "@typescript-eslint/no-explicit-any": "warn",
       "@typescript-eslint/no-unused-vars": ["warn", {
         "argsIgnorePattern": "^_",
         "varsIgnorePattern": "^_",
         "caughtErrorsIgnorePattern": "^_",
         "ignoreRestSiblings": true,
       }],
-      "react-hooks/set-state-in-effect": "off",
-      "react-hooks/purity": "off",
-      "react-hooks/immutability": "off",
-      // These are intentional patterns - adding deps would cause infinite loops
-      "react-hooks/exhaustive-deps": "off",
       // Allow <img> for dynamic/external images where Next.js Image optimization isn't suitable
-      "@next/next/no-img-element": "off",
+      "@next/next/no-img-element": "warn",
       // Allow anonymous default exports for config files
       "import/no-anonymous-default-export": "off",
+    },
+  },
+
+  {
+    files: ["**/*.cjs"],
+    rules: {
+      "@typescript-eslint/no-require-imports": "off",
     },
   },
 ]);

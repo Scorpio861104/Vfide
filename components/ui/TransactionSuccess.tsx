@@ -5,7 +5,7 @@
 
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { CheckCircle2, Share2, X, Trophy, Sparkles } from 'lucide-react'
 
@@ -33,22 +33,18 @@ interface ConfettiParticle {
 
 // Confetti particle component
 function Confetti() {
-  const [particles, setParticles] = useState<ConfettiParticle[]>([])
-
-  useEffect(() => {
+  const particles = useMemo<ConfettiParticle[]>(() => {
     const colors = ['#00F0FF', '#FFD700', '#50C878', '#FF6B6B', '#A78BFA', '#0080FF']
-    const newParticles = Array.from({ length: 50 }, (_, i) => ({
+    return Array.from({ length: 50 }, (_, i) => ({
       id: i,
-      color: colors[Math.floor(Math.random() * colors.length)] || '#00F0FF',
-      x: Math.random() * 100,
-      delay: Math.random() * 0.5,
-      duration: 2 + Math.random() * 2,
-      size: 6 + Math.random() * 8,
-      rotateDir: Math.random() > 0.5 ? 1 : -1,
-      borderRadius: Math.random() > 0.5 ? '50%' : '2px',
+      color: colors[i % colors.length] || '#00F0FF',
+      x: (i * 37 + 13) % 100,
+      delay: (i % 10) * 0.05,
+      duration: 2 + (i % 4) * 0.5,
+      size: 6 + (i % 4) * 2,
+      rotateDir: i % 2 === 0 ? 1 : -1,
+      borderRadius: i % 2 === 0 ? '50%' : '2px',
     }))
-     
-    setParticles(newParticles)
   }, [])
 
   if (particles.length === 0) return null
@@ -122,7 +118,8 @@ export function TransactionSuccess({
     
     window.open(
       `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent('https://vfide.app')}`,
-      '_blank'
+      '_blank',
+      'noopener,noreferrer'
     )
   }
 

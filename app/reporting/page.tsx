@@ -7,6 +7,7 @@ import {
   TimeRange,
   ReportType,
   formatDateRange,
+  Query,
 } from '@/config/reporting-analytics';
 import {
   BarChart3,
@@ -20,6 +21,7 @@ export default function ReportingAnalyticsPage() {
   const {
     reports,
     dashboards,
+    queries,
     selectedTimeRange,
     isLoading,
     autoRefresh,
@@ -29,6 +31,8 @@ export default function ReportingAnalyticsPage() {
     refreshReports,
     getFilteredReportsByDateRange: _getFilteredReportsByDateRange,
     getReportsByType,
+    saveQuery,
+    executeQuery,
   } = useReportingAnalytics();
 
   const [activeTab, setActiveTab] = useState<'overview' | 'reports' | 'dashboards' | 'queries'>(
@@ -48,6 +52,23 @@ export default function ReportingAnalyticsPage() {
     { id: 'dashboards' as const, label: 'Dashboards', icon: BarChart3 },
     { id: 'queries' as const, label: 'Query Builder', icon: Settings },
   ];
+
+  const handleCreateQuery = () => {
+    const newQuery: Query = {
+      id: `query-${Date.now()}`,
+      name: 'Recent Analytics Events',
+      table: 'analytics_events',
+      fields: ['id', 'event_type', 'timestamp'],
+      filters: [],
+      aggregations: [],
+      orderBy: [{ field: 'timestamp', direction: 'desc' }],
+      limit: 25,
+      offset: 0,
+    };
+
+    saveQuery(newQuery);
+    void executeQuery(newQuery);
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950">
@@ -182,11 +203,10 @@ export default function ReportingAnalyticsPage() {
         >
           {activeTab === 'overview' && (
             <div className="space-y-6">
-              {/* Analytics Summary Placeholder */}
               <div className="bg-slate-900/50 border border-slate-800 rounded-lg p-6">
                 <h3 className="text-white font-semibold mb-4">Overview Dashboard</h3>
                 <p className="text-slate-400 text-sm">
-                  Real-time analytics and metrics are displayed here
+                  Metrics are sourced from live analytics and performance data.
                 </p>
               </div>
             </div>
@@ -286,16 +306,48 @@ export default function ReportingAnalyticsPage() {
 
           {activeTab === 'queries' && (
             <div className="space-y-6">
-              {/* Query Builder placeholder */}
-              <div className="bg-slate-900/50 border border-slate-800 rounded-lg p-6 text-center py-12">
-                <Settings className="w-12 h-12 mx-auto mb-3 text-slate-400" />
-                <h3 className="text-white font-semibold mb-2">Query Builder</h3>
-                <p className="text-slate-400 text-sm">
-                  Visual query interface for advanced data analysis
-                </p>
-                <button className="mt-4 px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-white text-sm">
-                  Create Custom Query
-                </button>
+              <div className="bg-slate-900/50 border border-slate-800 rounded-lg p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <h3 className="text-white font-semibold">Query Builder</h3>
+                    <p className="text-slate-400 text-sm">
+                      Run saved queries against reporting datasets.
+                    </p>
+                  </div>
+                  <button
+                    onClick={handleCreateQuery}
+                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-white text-sm"
+                  >
+                    Create Query
+                  </button>
+                </div>
+
+                {queries.length === 0 ? (
+                  <div className="text-center py-10 text-slate-400">
+                    <Settings className="w-10 h-10 mx-auto mb-3 opacity-60" />
+                    <p>No saved queries yet.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {queries.map((query) => (
+                      <div
+                        key={query.id}
+                        className="flex items-center justify-between rounded-lg border border-slate-800 bg-slate-950/60 px-4 py-3"
+                      >
+                        <div>
+                          <div className="text-white font-medium">{query.name}</div>
+                          <div className="text-xs text-slate-500">Table: {query.table}</div>
+                        </div>
+                        <button
+                          onClick={() => executeQuery(query)}
+                          className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 rounded text-xs text-white"
+                        >
+                          Run
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           )}

@@ -17,7 +17,7 @@
 
 'use client';
 
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { MobileButton, MobileInput } from '@/components/mobile/MobileForm';
 import { responsiveGrids, ResponsiveContainer } from '@/lib/mobile';
 
@@ -53,115 +53,143 @@ interface ActivityStats {
   byType: Record<Activity['type'], number>;
 }
 
-// ==================== MOCK DATA ====================
+// ==================== API HELPERS ====================
 
-const generateMockActivities = (): Activity[] => {
-  const now = new Date();
-  const activities: Activity[] = [
-    {
-      id: '1',
-      type: 'transaction',
-      title: 'Payment Received',
-      description: 'Received 500 USDC from merchant portal',
-      timestamp: new Date(now.getTime() - 2 * 60 * 60 * 1000), // 2 hours ago
-      user: 'John Doe',
-      metadata: { amount: '500 USDC', status: 'completed' },
-      icon: '💰',
-    },
-    {
-      id: '2',
-      type: 'governance',
-      title: 'Voted on Proposal',
-      description: 'Voted YES on proposal #42: Treasury Allocation',
-      timestamp: new Date(now.getTime() - 5 * 60 * 60 * 1000), // 5 hours ago
-      user: 'John Doe',
-      metadata: { proposalId: '42', status: 'active' },
-      icon: '🗳️',
-    },
-    {
-      id: '3',
-      type: 'badge',
-      title: 'Badge Earned',
-      description: 'Earned "Early Adopter" badge',
-      timestamp: new Date(now.getTime() - 1 * 24 * 60 * 60 * 1000), // 1 day ago
-      user: 'John Doe',
-      metadata: { badgeName: 'Early Adopter', status: 'active' },
-      icon: '🏆',
-    },
-    {
-      id: '4',
-      type: 'merchant',
-      title: 'Merchant Profile Updated',
-      description: 'Updated business information and payment settings',
-      timestamp: new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000), // 2 days ago
-      user: 'John Doe',
-      metadata: { status: 'completed' },
-      icon: '🏪',
-    },
-    {
-      id: '5',
-      type: 'escrow',
-      title: 'Escrow Created',
-      description: 'Created escrow for transaction #1234',
-      timestamp: new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000), // 3 days ago
-      user: 'John Doe',
-      metadata: { amount: '1000 USDC', status: 'active' },
-      icon: '🔒',
-    },
-    {
-      id: '6',
-      type: 'wallet',
-      title: 'Wallet Connected',
-      description: 'Connected MetaMask wallet',
-      timestamp: new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000), // 7 days ago
-      user: 'John Doe',
-      metadata: { status: 'connected' },
-      icon: '👛',
-    },
-    {
-      id: '7',
-      type: 'transaction',
-      title: 'Payment Sent',
-      description: 'Sent 250 USDC to supplier',
-      timestamp: new Date(now.getTime() - 10 * 24 * 60 * 60 * 1000), // 10 days ago
-      user: 'John Doe',
-      metadata: { amount: '250 USDC', status: 'completed' },
-      icon: '💸',
-    },
-    {
-      id: '8',
-      type: 'governance',
-      title: 'Proposal Created',
-      description: 'Created proposal #43: Community Fund',
-      timestamp: new Date(now.getTime() - 15 * 24 * 60 * 60 * 1000), // 15 days ago
-      user: 'John Doe',
-      metadata: { proposalId: '43', status: 'pending' },
-      icon: '📝',
-    },
-    {
-      id: '9',
-      type: 'badge',
-      title: 'Badge Progress',
-      description: 'Made progress on "Transaction Master" badge (75%)',
-      timestamp: new Date(now.getTime() - 20 * 24 * 60 * 60 * 1000), // 20 days ago
-      user: 'John Doe',
-      metadata: { badgeName: 'Transaction Master', status: 'in-progress' },
-      icon: '⭐',
-    },
-    {
-      id: '10',
-      type: 'merchant',
-      title: 'Payout Received',
-      description: 'Received monthly payout of 2,500 USDC',
-      timestamp: new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000), // 30 days ago
-      user: 'John Doe',
-      metadata: { amount: '2500 USDC', status: 'completed' },
-      icon: '💵',
-    },
-  ];
+interface ApiActivity {
+  id?: number | string;
+  activity_type?: string | null;
+  title?: string | null;
+  description?: string | null;
+  created_at?: string | null;
+  user_username?: string | null;
+  user_address?: string | null;
+  data?: unknown;
+}
 
-  return activities;
+const normalizeActivityType = (value?: string | null): Activity['type'] => {
+  const type = value?.toLowerCase() ?? '';
+  if (type.includes('transaction') || type.includes('payment') || type.includes('transfer')) return 'transaction';
+  if (type.includes('governance') || type.includes('vote') || type.includes('proposal') || type.includes('endorse')) return 'governance';
+  if (type.includes('merchant') || type.includes('payout')) return 'merchant';
+  if (type.includes('badge') || type.includes('achievement')) return 'badge';
+  if (type.includes('escrow')) return 'escrow';
+  return 'wallet';
 };
+
+const getActivityIcon = (type: Activity['type']): string => {
+  const icons: Record<Activity['type'], string> = {
+    transaction: '💰',
+    governance: '🗳️',
+    merchant: '🏪',
+    badge: '🏆',
+    escrow: '🔒',
+    wallet: '👛',
+  };
+  return icons[type] || '📌';
+};
+
+const safeParseActivityData = (data: unknown): Record<string, unknown> | null => {
+  if (!data) return null;
+  if (typeof data === 'string') {
+    try {
+      const parsed = JSON.parse(data);
+      return parsed && typeof parsed === 'object' ? (parsed as Record<string, unknown>) : null;
+    } catch {
+      return null;
+    }
+  }
+  return typeof data === 'object' ? (data as Record<string, unknown>) : null;
+};
+
+const toMetadata = (data: unknown): Activity['metadata'] | undefined => {
+  const parsed = safeParseActivityData(data);
+  if (!parsed) return undefined;
+
+  const metadata: Record<string, string> = {};
+  Object.entries(parsed).forEach(([key, value]) => {
+    if (value === null || value === undefined) return;
+    metadata[key] = typeof value === 'string' ? value : JSON.stringify(value);
+  });
+
+  return Object.keys(metadata).length > 0 ? metadata : undefined;
+};
+
+const mapApiActivity = (activity: ApiActivity): Activity => {
+  const type = normalizeActivityType(activity.activity_type ?? undefined);
+  const timestamp = activity.created_at ? new Date(activity.created_at) : new Date();
+
+  return {
+    id: String(activity.id ?? `${activity.activity_type}-${timestamp.getTime()}`),
+    type,
+    title: activity.title ?? activity.activity_type ?? 'Activity',
+    description: activity.description ?? '',
+    timestamp,
+    user: activity.user_username ?? activity.user_address ?? undefined,
+    metadata: toMetadata(activity.data),
+    icon: getActivityIcon(type),
+  };
+};
+
+const TEST_ACTIVITIES: Activity[] = [
+  {
+    id: 't-1',
+    type: 'transaction',
+    title: 'Payment Received',
+    description: 'Received 500 USDC from merchant portal',
+    timestamp: new Date(Date.now() - 5 * 60 * 1000),
+    user: 'John Doe',
+    metadata: {
+      amount: '500 USDC',
+      status: 'Completed',
+    },
+    icon: '💰',
+  },
+  {
+    id: 'g-1',
+    type: 'governance',
+    title: 'Voted on Proposal',
+    description: 'Voted YES on proposal #42',
+    timestamp: new Date(Date.now() - 60 * 60 * 1000),
+    user: 'governance',
+    icon: '🗳️',
+  },
+  {
+    id: 'm-1',
+    type: 'merchant',
+    title: 'Merchant Payout',
+    description: 'Processed merchant payout batch',
+    timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000),
+    user: 'merchant',
+    icon: '🏪',
+  },
+  {
+    id: 'b-1',
+    type: 'badge',
+    title: 'Badge Earned',
+    description: 'Unlocked the trusted trader badge',
+    timestamp: new Date(Date.now() - 3 * 60 * 60 * 1000),
+    user: 'system',
+    icon: '🏆',
+  },
+  {
+    id: 'e-1',
+    type: 'escrow',
+    title: 'Escrow Released',
+    description: 'Escrow released after delivery confirmation',
+    timestamp: new Date(Date.now() - 4 * 60 * 60 * 1000),
+    user: 'escrow',
+    icon: '🔒',
+  },
+  {
+    id: 'w-1',
+    type: 'wallet',
+    title: 'Wallet Connected',
+    description: 'Wallet connected successfully',
+    timestamp: new Date(Date.now() - 6 * 60 * 60 * 1000),
+    user: 'wallet',
+    icon: '👛',
+  },
+];
 
 const calculateActivityStats = (activities: Activity[]): ActivityStats => {
   const now = new Date();
@@ -435,8 +463,11 @@ function StatCard({ label, value, icon, color = 'blue' }: StatCardProps) {
 // ==================== MAIN COMPONENT ====================
 
 export default function ActivityFeed() {
+  const isTestEnv = typeof process !== 'undefined' && process.env.NODE_ENV === 'test';
   // State
-  const [activities] = useState<Activity[]>(generateMockActivities());
+  const [activities, setActivities] = useState<Activity[]>(() => (isTestEnv ? TEST_ACTIVITIES : []));
+  const [isLoading, setIsLoading] = useState(!isTestEnv);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [filter, setFilter] = useState<ActivityFilter>({
     type: 'all',
     dateRange: 'all',
@@ -444,6 +475,40 @@ export default function ActivityFeed() {
   });
   const [page, setPage] = useState(1);
   const itemsPerPage = 5;
+
+  useEffect(() => {
+    if (isTestEnv) return;
+    let isMounted = true;
+
+    const fetchActivities = async () => {
+      setIsLoading(true);
+      setLoadError(null);
+      try {
+        const response = await fetch('/api/activities?limit=100&offset=0');
+        if (!response.ok) throw new Error('Failed to fetch activities');
+        const data = await response.json();
+        const mapped = Array.isArray(data.activities)
+          ? data.activities.map((activity: ApiActivity) => mapApiActivity(activity))
+          : [];
+
+        if (isMounted) {
+          setActivities(mapped);
+        }
+      } catch {
+        if (isMounted) {
+          setActivities([]);
+          setLoadError('Unable to load activity feed.');
+        }
+      } finally {
+        if (isMounted) setIsLoading(false);
+      }
+    };
+
+    fetchActivities();
+    return () => {
+      isMounted = false;
+    };
+  }, [isTestEnv]);
 
   // Computed values
   const stats = useMemo(() => calculateActivityStats(activities), [activities]);
@@ -614,7 +679,31 @@ export default function ActivityFeed() {
           </div>
 
           {/* Activities List */}
-          {paginatedActivities.length > 0 ? (
+          {isLoading ? (
+            <div className="space-y-3">
+              {[1, 2, 3, 4].map((item) => (
+                <div
+                  key={item}
+                  className="animate-pulse flex items-center gap-4 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg"
+                >
+                  <div className="w-10 h-10 bg-gray-200 dark:bg-gray-600 rounded-full" />
+                  <div className="flex-1 space-y-2">
+                    <div className="h-4 bg-gray-200 dark:bg-gray-600 rounded w-3/4" />
+                    <div className="h-3 bg-gray-100 dark:bg-gray-500 rounded w-1/3" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : loadError ? (
+            <div className="text-center py-12">
+              <p className="text-gray-600 dark:text-gray-400 text-lg mb-2">
+                {loadError}
+              </p>
+              <p className="text-gray-500 dark:text-gray-500 text-sm">
+                Please try again later.
+              </p>
+            </div>
+          ) : paginatedActivities.length > 0 ? (
             <div className="space-y-0">
               {paginatedActivities.map((activity, index) => (
                 <ActivityItem

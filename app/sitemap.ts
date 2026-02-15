@@ -16,9 +16,9 @@ export default function sitemap(): MetadataRoute.Sitemap {
     '/legal',             // Legal/Terms
     '/token-launch',      // Token launch info
     '/merchant',          // Merchant portal
-    '/live-demo',         // Live demo
     '/governance',        // Governance overview
     '/guardians',         // Guardians info
+    '/crypto-social' // Crypto-social
   ]
 
   return routes.map((route) => ({

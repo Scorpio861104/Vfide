@@ -5,7 +5,9 @@
 
 'use client';
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import { useAccount } from 'wagmi';
+import { buildCsrfHeaders } from '@/lib/security/csrfClient';
 import type {
   Notification,
   NotificationPreference,
@@ -19,6 +21,8 @@ import {
   DeliveryChannel,
   DEFAULT_NOTIFICATION_PREFERENCES,
   calculateNotificationStats,
+  getNotificationColor,
+  getNotificationIcon,
   groupNotificationsByType as _groupNotificationsByType,
 } from '@/config/notification-hub';
 
@@ -29,11 +33,11 @@ interface UseNotificationHubResult {
   error: Error | null;
   
   // Core operations
-  addNotification: (notification: Omit<Notification, 'id' | 'timestamp' | 'status'>) => void;
-  markAsRead: (notificationId: string) => void;
-  markAllAsRead: () => void;
-  dismissNotification: (notificationId: string) => void;
-  clearNotifications: () => void;
+  addNotification: (notification: Omit<Notification, 'id' | 'timestamp' | 'status'>) => Promise<void>;
+  markAsRead: (notificationId: string) => Promise<void>;
+  markAllAsRead: () => Promise<void>;
+  dismissNotification: (notificationId: string) => Promise<void>;
+  clearNotifications: () => Promise<void>;
   
   // Filtering and search
   filterNotifications: (filter: NotificationFilter) => Notification[];
@@ -54,45 +58,152 @@ interface UseNotificationHubResult {
   archiveOldNotifications: (daysOld: number) => number;
 }
 
-const STORAGE_KEY = 'notifications_v1';
 const PREFS_STORAGE_KEY = 'notification_preferences_v1';
 const MAX_NOTIFICATIONS = 1000;
 
+interface ApiNotification {
+  id: number;
+  type: string;
+  title: string;
+  message: string;
+  data?: Record<string, unknown> | null;
+  is_read: boolean;
+  created_at: string;
+}
+
+function mapApiNotification(
+  apiNotification: ApiNotification,
+  userAddress: string
+): Notification {
+  const type = Object.values(NotificationType).includes(apiNotification.type as NotificationType)
+    ? (apiNotification.type as NotificationType)
+    : NotificationType.SYSTEM;
+  const severity = (apiNotification.data?.severity as Notification['severity']) ?? _NotificationSeverity.MEDIUM;
+  const priority = (apiNotification.data?.priority as Notification['priority']) ?? 1;
+
+  return {
+    id: apiNotification.id.toString(),
+    type,
+    severity,
+    title: apiNotification.title,
+    message: apiNotification.message,
+    description: typeof apiNotification.data?.description === 'string' ? apiNotification.data.description : undefined,
+    icon: getNotificationIcon(type),
+    color: getNotificationColor(type),
+    timestamp: new Date(apiNotification.created_at).getTime(),
+    userId: userAddress,
+    status: apiNotification.is_read ? NotificationStatus.READ : NotificationStatus.DELIVERED,
+    priority,
+    metadata: apiNotification.data ?? {},
+    actionUrl: typeof apiNotification.data?.actionUrl === 'string' ? apiNotification.data.actionUrl : undefined,
+    actionLabel: typeof apiNotification.data?.actionLabel === 'string' ? apiNotification.data.actionLabel : undefined,
+    relatedId: typeof apiNotification.data?.relatedId === 'string' ? apiNotification.data.relatedId : undefined,
+    channels: [DeliveryChannel.IN_APP],
+    deliveryStatus: {
+      [DeliveryChannel.IN_APP]: NotificationStatus.DELIVERED,
+      [DeliveryChannel.EMAIL]: NotificationStatus.PENDING,
+      [DeliveryChannel.SMS]: NotificationStatus.PENDING,
+      [DeliveryChannel.PUSH]: NotificationStatus.PENDING,
+      [DeliveryChannel.WEBHOOK]: NotificationStatus.PENDING,
+    },
+    readAt: apiNotification.is_read ? new Date(apiNotification.created_at).getTime() : undefined,
+  };
+}
+
 export function useNotificationHub(): UseNotificationHubResult {
+  const { address } = useAccount();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [preferences, setPreferences] = useState<Record<NotificationType, NotificationPreference>>(
     DEFAULT_NOTIFICATION_PREFERENCES
   );
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
-  // Load notifications from localStorage on mount
-  useEffect(() => {
+  const fetchPreferences = useCallback(async () => {
+    if (!address) {
+      return;
+    }
+
     try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        setNotifications(Array.isArray(parsed) ? parsed : []);
+      const response = await fetch(`/api/notifications/hub-preferences?userAddress=${address}`);
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data.error || 'Failed to fetch notification preferences');
       }
 
-      const storedPrefs = localStorage.getItem(PREFS_STORAGE_KEY);
-      if (storedPrefs) {
-        const parsed = JSON.parse(storedPrefs);
-        setPreferences(parsed);
+      const data = await response.json();
+      if (data.preferences) {
+        setPreferences(data.preferences as Record<NotificationType, NotificationPreference>);
       }
-    } catch (e) {
-      console.error('Failed to load notifications:', e);
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error('Failed to fetch notification preferences'));
     }
-  }, []);
+  }, [address]);
 
-  // Save notifications to localStorage
-  useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(notifications));
-    } catch (e) {
-      console.error('Failed to save notifications:', e);
+  const savePreferences = useCallback(
+    async (nextPreferences: Record<NotificationType, NotificationPreference>) => {
+      if (!address) return;
+
+      try {
+        const headers = await buildCsrfHeaders({ 'Content-Type': 'application/json' }, 'PUT');
+        const response = await fetch('/api/notifications/hub-preferences', {
+          method: 'PUT',
+          headers,
+          credentials: 'include',
+          body: JSON.stringify({
+            userAddress: address,
+            preferences: nextPreferences,
+          }),
+        });
+
+        if (!response.ok) {
+          const data = await response.json().catch(() => ({}));
+          throw new Error(data.error || 'Failed to update notification preferences');
+        }
+      } catch (err) {
+        setError(err instanceof Error ? err : new Error('Failed to update notification preferences'));
+      }
+    },
+    [address]
+  );
+
+  const fetchNotifications = useCallback(async () => {
+    if (!address) {
+      setNotifications([]);
+      setIsLoading(false);
+      return;
     }
-  }, [notifications]);
+
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const response = await fetch(`/api/notifications?userAddress=${address}&limit=100&offset=0`);
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data.error || 'Failed to fetch notifications');
+      }
+
+      const data = await response.json();
+      const items: ApiNotification[] = Array.isArray(data.notifications) ? data.notifications : [];
+      const mapped = items.map((item) => mapApiNotification(item, address));
+      setNotifications(mapped.slice(0, MAX_NOTIFICATIONS));
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error('Failed to fetch notifications'));
+    } finally {
+      setIsLoading(false);
+    }
+  }, [address]);
+
+  // Load notifications from API
+  useEffect(() => {
+    fetchNotifications();
+  }, [fetchNotifications]);
+
+  // Load preferences from API
+  useEffect(() => {
+    fetchPreferences();
+  }, [fetchPreferences]);
 
   // Save preferences to localStorage
   useEffect(() => {
@@ -103,115 +214,177 @@ export function useNotificationHub(): UseNotificationHubResult {
     }
   }, [preferences]);
 
-  // Track active timeouts for cleanup
-  const activeTimeouts = useRef<Set<NodeJS.Timeout>>(new Set());
-
-  // Cleanup all timeouts on unmount
-  useEffect(() => {
-    return () => {
-      activeTimeouts.current.forEach(clearTimeout);
-      activeTimeouts.current.clear();
-    };
-  }, []);
-
   // Add notification
   const addNotification = useCallback(
-    (notificationData: Omit<Notification, 'id' | 'timestamp' | 'status'>) => {
-      try {
-        const newNotification: Notification = {
-          ...notificationData,
-          id: `notif-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-          timestamp: Date.now(),
-          status: NotificationStatus.DELIVERED,
-          deliveryStatus: Object.values(DeliveryChannel).reduce(
-            (acc, channel) => ({
-              ...acc,
-              [channel]: NotificationStatus.PENDING,
-            }),
-            {} as Record<DeliveryChannel, NotificationStatus>
-          ),
-        };
+    async (notificationData: Omit<Notification, 'id' | 'timestamp' | 'status'>) => {
+      if (!address) {
+        setError(new Error('Wallet address required to add notification'));
+        return;
+      }
 
-        setNotifications((prev) => {
-          const updated = [newNotification, ...prev];
-          return updated.slice(0, MAX_NOTIFICATIONS);
+      try {
+        const headers = await buildCsrfHeaders({ 'Content-Type': 'application/json' }, 'POST');
+        const response = await fetch('/api/notifications', {
+          method: 'POST',
+          headers,
+          credentials: 'include',
+          body: JSON.stringify({
+            userAddress: address,
+            type: notificationData.type,
+            title: notificationData.title,
+            message: notificationData.message,
+            data: {
+              ...notificationData.metadata,
+              severity: notificationData.severity,
+              priority: notificationData.priority,
+              actionUrl: notificationData.actionUrl,
+              actionLabel: notificationData.actionLabel,
+              relatedId: notificationData.relatedId,
+            },
+          }),
         });
 
-        // Simulate delivery
-        const deliveryTimeoutId = setTimeout(() => {
-          setNotifications((prev) =>
-            prev.map((n) =>
-              n.id === newNotification.id
-                ? {
-                    ...n,
-                    deliveryStatus: Object.entries(n.deliveryStatus).reduce(
-                      (acc, [channel, _]) => ({
-                        ...acc,
-                        [channel]: NotificationStatus.DELIVERED,
-                      }),
-                      {} as Record<DeliveryChannel, NotificationStatus>
-                    ),
-                  }
-                : n
-            )
-          );
-          
-          // Remove from active timeouts after completion
-          activeTimeouts.current.delete(deliveryTimeoutId);
-        }, 1000);
-        
-        // Track timeout for cleanup
-        activeTimeouts.current.add(deliveryTimeoutId);
+        if (!response.ok) {
+          const data = await response.json().catch(() => ({}));
+          throw new Error(data.error || 'Failed to create notification');
+        }
 
-        // Fire browser notification if supported
-        if (typeof window !== 'undefined' && 'Notification' in window) {
-          if (Notification.permission === 'granted') {
-            new Notification(notificationData.title, {
-              body: notificationData.message,
-              icon: notificationData.icon,
-              tag: newNotification.id,
-            });
-          }
+        const result = await response.json();
+        const created = result.notification as ApiNotification | undefined;
+        if (created) {
+          const mapped = mapApiNotification(created, address);
+          setNotifications((prev) => [mapped, ...prev].slice(0, MAX_NOTIFICATIONS));
         }
       } catch (err) {
         setError(err instanceof Error ? err : new Error('Failed to add notification'));
       }
     },
-    []
+    [address]
   );
 
   // Mark as read
-  const markAsRead = useCallback((notificationId: string) => {
-    setNotifications((prev) =>
-      prev.map((n) =>
-        n.id === notificationId
-          ? { ...n, status: NotificationStatus.READ, readAt: Date.now() }
-          : n
-      )
-    );
-  }, []);
+  const markAsRead = useCallback(async (notificationId: string) => {
+    if (!address) return;
+
+    const numericId = Number(notificationId);
+    if (Number.isNaN(numericId)) return;
+
+    try {
+      const headers = await buildCsrfHeaders({ 'Content-Type': 'application/json' }, 'PATCH');
+      const response = await fetch('/api/notifications', {
+        method: 'PATCH',
+        headers,
+        credentials: 'include',
+        body: JSON.stringify({
+          notificationIds: [numericId],
+        }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data.error || 'Failed to mark notification as read');
+      }
+
+      setNotifications((prev) =>
+        prev.map((n) =>
+          n.id === notificationId
+            ? { ...n, status: NotificationStatus.READ, readAt: Date.now() }
+            : n
+        )
+      );
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error('Failed to mark notification as read'));
+    }
+  }, [address]);
 
   // Mark all as read
-  const markAllAsRead = useCallback(() => {
-    setNotifications((prev) =>
-      prev.map((n) =>
-        n.status !== NotificationStatus.READ
-          ? { ...n, status: NotificationStatus.READ, readAt: Date.now() }
-          : n
-      )
-    );
-  }, []);
+  const markAllAsRead = useCallback(async () => {
+    if (!address) return;
+
+    try {
+      const headers = await buildCsrfHeaders({ 'Content-Type': 'application/json' }, 'PATCH');
+      const response = await fetch('/api/notifications', {
+        method: 'PATCH',
+        headers,
+        credentials: 'include',
+        body: JSON.stringify({
+          markAllRead: true,
+          userAddress: address,
+        }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data.error || 'Failed to mark notifications as read');
+      }
+
+      setNotifications((prev) =>
+        prev.map((n) =>
+          n.status !== NotificationStatus.READ
+            ? { ...n, status: NotificationStatus.READ, readAt: Date.now() }
+            : n
+        )
+      );
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error('Failed to mark notifications as read'));
+    }
+  }, [address]);
 
   // Dismiss notification
-  const dismissNotification = useCallback((notificationId: string) => {
-    setNotifications((prev) => prev.filter((n) => n.id !== notificationId));
-  }, []);
+  const dismissNotification = useCallback(async (notificationId: string) => {
+    if (!address) return;
+
+    const numericId = Number(notificationId);
+    if (Number.isNaN(numericId)) return;
+
+    try {
+      const headers = await buildCsrfHeaders({ 'Content-Type': 'application/json' }, 'DELETE');
+      const response = await fetch('/api/notifications', {
+        method: 'DELETE',
+        headers,
+        credentials: 'include',
+        body: JSON.stringify({
+          notificationIds: [numericId],
+        }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data.error || 'Failed to delete notification');
+      }
+
+      setNotifications((prev) => prev.filter((n) => n.id !== notificationId));
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error('Failed to delete notification'));
+    }
+  }, [address]);
 
   // Clear all notifications
-  const clearNotifications = useCallback(() => {
-    setNotifications([]);
-    localStorage.removeItem(STORAGE_KEY);
-  }, []);
+  const clearNotifications = useCallback(async () => {
+    if (!address) return;
+
+    try {
+      const headers = await buildCsrfHeaders({ 'Content-Type': 'application/json' }, 'DELETE');
+      const response = await fetch('/api/notifications', {
+        method: 'DELETE',
+        headers,
+        credentials: 'include',
+        body: JSON.stringify({
+          deleteAll: true,
+          userAddress: address,
+        }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data.error || 'Failed to clear notifications');
+      }
+
+      setNotifications([]);
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error('Failed to clear notifications'));
+    }
+  }, [address]);
 
   // Filter notifications
   const filterNotifications = useCallback(
@@ -266,22 +439,28 @@ export function useNotificationHub(): UseNotificationHubResult {
   // Update preference
   const updatePreference = useCallback(
     (type: NotificationType, preference: Partial<NotificationPreference>) => {
-      setPreferences((prev) => ({
-        ...prev,
-        [type]: {
-          ...prev[type],
-          ...preference,
-          type,
-        },
-      }));
+      setPreferences((prev) => {
+        const next = {
+          ...prev,
+          [type]: {
+            ...prev[type],
+            ...preference,
+            type,
+          },
+        };
+
+        void savePreferences(next);
+        return next;
+      });
     },
-    []
+    [savePreferences]
   );
 
   // Reset preferences
   const resetPreferences = useCallback(() => {
     setPreferences(DEFAULT_NOTIFICATION_PREFERENCES);
-  }, []);
+    void savePreferences(DEFAULT_NOTIFICATION_PREFERENCES);
+  }, [savePreferences]);
 
   // Add delivery channel
   const addDeliveryChannel = useCallback(
@@ -300,8 +479,8 @@ export function useNotificationHub(): UseNotificationHubResult {
 
   // Remove delivery channel
   const removeDeliveryChannel = useCallback((channel: DeliveryChannel) => {
-    setPreferences((prev) =>
-      Object.entries(prev).reduce(
+    setPreferences((prev) => {
+      const next = Object.entries(prev).reduce(
         (acc, [type, pref]) => ({
           ...acc,
           [type]: {
@@ -310,9 +489,12 @@ export function useNotificationHub(): UseNotificationHubResult {
           },
         }),
         {} as Record<NotificationType, NotificationPreference>
-      )
-    );
-  }, []);
+      );
+
+      void savePreferences(next);
+      return next;
+    });
+  }, [savePreferences]);
 
   // Export notifications
   const exportNotifications = useCallback(

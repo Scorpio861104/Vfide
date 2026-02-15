@@ -24,6 +24,7 @@ import { responsiveGrids, ResponsiveContainer } from '@/lib/mobile';
 import { safeParseFloat } from '@/lib/validation';
 import { useTransactionSounds } from '@/hooks/useTransactionSounds';
 import { Wallet, Link2, Coins, Settings, CheckCircle2, X, Edit3, Power } from 'lucide-react';
+import { useAccount, useBalance, useChainId, useDisconnect, useSwitchChain } from 'wagmi';
 
 // Animated counter for balances
 function AnimatedBalance({ value, prefix = '', suffix = '' }: { value: number; prefix?: string; suffix?: string }) {
@@ -83,17 +84,6 @@ interface TokenBalance {
   logo: string;
 }
 
-interface Transaction {
-  hash: string;
-  from: string;
-  to: string;
-  value: string;
-  timestamp: number;
-  status: 'pending' | 'confirmed' | 'failed';
-  chainId: number;
-  type: 'send' | 'receive' | 'contract';
-}
-
 interface WalletStats {
   totalWallets: number;
   connectedWallets: number;
@@ -101,7 +91,7 @@ interface WalletStats {
   totalTransactions: number;
 }
 
-// ==================== MOCK DATA ====================
+// ==================== SUPPORTED CHAINS ====================
 
 const supportedChains: Chain[] = [
   {
@@ -151,127 +141,13 @@ const supportedChains: Chain[] = [
   },
 ];
 
-function generateMockWallets(): Wallet[] {
-  return [
-    {
-      id: 'wallet-1',
-      address: '0x1234...5678',
-      type: 'metamask',
-      nickname: 'Main Wallet',
-      balance: '2.5',
-      balanceUSD: 8750,
-      chainId: 1,
-      chainName: 'Ethereum',
-      connected: true,
-      isActive: true,
-      connectedAt: Date.now() - 7 * 24 * 60 * 60 * 1000,
-      lastUsed: Date.now() - 30 * 60 * 1000,
-      icon: '🦊',
-    },
-    {
-      id: 'wallet-2',
-      address: '0xabcd...ef01',
-      type: 'ledger',
-      nickname: 'Hardware Wallet',
-      balance: '15.8',
-      balanceUSD: 55300,
-      chainId: 1,
-      chainName: 'Ethereum',
-      connected: true,
-      isActive: false,
-      connectedAt: Date.now() - 14 * 24 * 60 * 60 * 1000,
-      lastUsed: Date.now() - 2 * 60 * 60 * 1000,
-      icon: '🔐',
-    },
-    {
-      id: 'wallet-3',
-      address: '0x9876...5432',
-      type: 'walletconnect',
-      nickname: 'Mobile Wallet',
-      balance: '0.85',
-      balanceUSD: 2975,
-      chainId: 8453,
-      chainName: 'Base',
-      connected: true,
-      isActive: false,
-      connectedAt: Date.now() - 3 * 24 * 60 * 60 * 1000,
-      lastUsed: Date.now() - 5 * 60 * 60 * 1000,
-      icon: '📱',
-    },
-  ];
-}
-
-function generateTokenBalances(_address: string): TokenBalance[] {
-  return [
-    {
-      address: '0x0000000000000000000000000000000000000000',
-      symbol: 'ETH',
-      name: 'Ethereum',
-      balance: '2500000000000000000',
-      balanceFormatted: '2.5',
-      valueUSD: 8750,
-      decimals: 18,
-      logo: '⟠',
-    },
-    {
-      address: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',
-      symbol: 'USDC',
-      name: 'USD Coin',
-      balance: '5000000000',
-      balanceFormatted: '5000',
-      valueUSD: 5000,
-      decimals: 6,
-      logo: '💵',
-    },
-    {
-      address: '0xdAC17F958D2ee523a2206206994597C13D831ec7',
-      symbol: 'USDT',
-      name: 'Tether USD',
-      balance: '3500000000',
-      balanceFormatted: '3500',
-      valueUSD: 3500,
-      decimals: 6,
-      logo: '💲',
-    },
-    {
-      address: '0x6B175474E89094C44Da98b954EedeAC495271d0F',
-      symbol: 'DAI',
-      name: 'Dai Stablecoin',
-      balance: '2000000000000000000000',
-      balanceFormatted: '2000',
-      valueUSD: 2000,
-      decimals: 18,
-      logo: '◈',
-    },
-  ];
-}
-
-function _generateTransactions(walletAddress: string): Transaction[] {
-  const transactions: Transaction[] = [];
-  const now = Date.now();
-
-  for (let i = 0; i < 10; i++) {
-    transactions.push({
-      hash: `0x${Math.random().toString(16).substr(2, 64)}`,
-      from: i % 2 === 0 ? walletAddress : '0xother...addr',
-      to: i % 2 === 0 ? '0xother...addr' : walletAddress,
-      value: (Math.random() * 2).toFixed(4),
-      timestamp: now - i * 24 * 60 * 60 * 1000,
-      status: i === 0 ? 'pending' : 'confirmed',
-      chainId: 1,
-      type: i % 2 === 0 ? 'send' : 'receive',
-    });
-  }
-
-  return transactions;
-}
 
 function calculateWalletStats(wallets: Wallet[]): WalletStats {
   return {
     totalWallets: wallets.length,
     connectedWallets: wallets.filter((w) => w.connected).length,
     totalBalanceUSD: wallets.reduce((sum, w) => sum + w.balanceUSD, 0),
-    totalTransactions: 156,
+    totalTransactions: 0,
   };
 }
 
@@ -327,6 +203,14 @@ interface WalletCardProps {
 function WalletCard({ wallet, onActivate, onDisconnect, onEdit }: WalletCardProps) {
   const statusColor = getStatusColor(wallet.connected, wallet.isActive);
   const chain = getChainById(wallet.chainId);
+  const [nowMs, setNowMs] = useState(() => Date.now());
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setNowMs(Date.now());
+    }, 60000);
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <motion.div
@@ -430,7 +314,7 @@ function WalletCard({ wallet, onActivate, onDisconnect, onEdit }: WalletCardProp
 
       {/* Last Used */}
       <p className="text-xs text-gray-500 dark:text-gray-400 mt-3 text-center">
-        Last used {(() => Math.floor((Date.now() - wallet.lastUsed) / (60 * 1000)))()} minutes ago
+        Last used {Math.max(0, Math.floor((nowMs - wallet.lastUsed) / (60 * 1000)))} minutes ago
       </p>
     </motion.div>
   );
@@ -574,22 +458,114 @@ function StatCard({ label, value, icon, color }: StatCardProps) {
 // ==================== MAIN COMPONENT ====================
 
 export default function WalletManager() {
+  const { address, isConnected } = useAccount();
+  const chainId = useChainId();
+  const { disconnect } = useDisconnect();
+  const { switchChainAsync } = useSwitchChain();
+  const { data: nativeBalance } = useBalance({
+    address,
+    chainId,
+    query: { enabled: !!address },
+  });
   const [activeTab, setActiveTab] = useState<'wallets' | 'chains' | 'tokens' | 'settings'>(
     'wallets'
   );
-  const [wallets, setWallets] = useState<Wallet[]>(generateMockWallets());
-  const [selectedChain, setSelectedChain] = useState<number>(1);
-  const [tokens, _setTokens] = useState<TokenBalance[]>(
-    generateTokenBalances(wallets[0]?.address ?? '')
-  );
+  const [wallets, setWallets] = useState<Wallet[]>([]);
+  const [selectedChain, setSelectedChain] = useState<number>(chainId ?? 1);
+  const [tokens, setTokens] = useState<TokenBalance[]>([]);
+  const [ethPrice, setEthPrice] = useState<number | null>(null);
   const [showConnectModal, setShowConnectModal] = useState(false);
   const [editingWallet, setEditingWallet] = useState<string | null>(null);
   const [walletNickname, setWalletNickname] = useState('');
-  const [showConnectionSuccess, setShowConnectionSuccess] = useState(false);
   const { playSuccess, playNotification, playError } = useTransactionSounds();
 
   const stats = calculateWalletStats(wallets);
   const activeWallet = wallets.find((w) => w.isActive);
+
+  useEffect(() => {
+    if (chainId) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setSelectedChain(chainId);
+    }
+  }, [chainId]);
+
+  useEffect(() => {
+    const fetchEthPrice = async () => {
+      try {
+        const response = await fetch('/api/crypto/price');
+        if (!response.ok) return;
+        const data = await response.json();
+        const price = data?.prices?.eth?.usd;
+        if (typeof price === 'number') {
+          setEthPrice(price);
+        }
+      } catch {
+        // Ignore price errors
+      }
+    };
+
+    fetchEthPrice();
+  }, []);
+
+  useEffect(() => {
+    const timers: ReturnType<typeof setTimeout>[] = [];
+    const defer = (callback: () => void) => {
+      const timer = setTimeout(callback, 0);
+      timers.push(timer);
+    };
+
+    if (!isConnected || !address) {
+      defer(() => setWallets([]));
+      defer(() => setTokens([]));
+      return () => {
+        timers.forEach((timer) => clearTimeout(timer));
+      };
+    }
+
+    const formatted = nativeBalance?.formatted ?? '0';
+    const balanceValue = safeParseFloat(formatted, 0);
+    const usdValue = ethPrice ? balanceValue * ethPrice : 0;
+    const chainName = getChainById(chainId ?? 1)?.name ?? `Chain ${chainId ?? 1}`;
+
+    const nextWallet: Wallet = {
+      id: `wallet-${address}`,
+      address,
+      type: 'injected',
+      nickname: 'Connected Wallet',
+      balance: formatted,
+      balanceUSD: usdValue,
+      chainId: chainId ?? 1,
+      chainName,
+      connected: true,
+      isActive: true,
+      connectedAt: Date.now(),
+      lastUsed: Date.now(),
+      icon: getWalletTypeIcon('injected'),
+    };
+
+    defer(() => setWallets([nextWallet]));
+
+    if (nativeBalance) {
+      defer(() =>
+        setTokens([
+          {
+            address: 'native',
+            symbol: nativeBalance.symbol ?? 'ETH',
+            name: chainName,
+            balance: nativeBalance.value?.toString() ?? '0',
+            balanceFormatted: formatted,
+            valueUSD: usdValue,
+            decimals: nativeBalance.decimals ?? 18,
+            logo: nativeBalance.symbol === 'ETH' ? '⟠' : '💠',
+          },
+        ])
+      );
+    }
+
+    return () => {
+      timers.forEach((timer) => clearTimeout(timer));
+    };
+  }, [address, chainId, ethPrice, isConnected, nativeBalance]);
 
   const handleActivateWallet = (id: string) => {
     setWallets(
@@ -603,8 +579,10 @@ export default function WalletManager() {
   };
 
   const handleDisconnectWallet = (id: string) => {
-    setWallets(wallets.filter((w) => w.id !== id));
-    playError();
+    if (activeWallet?.id === id) {
+      disconnect();
+      playError();
+    }
   };
 
   const handleEditWallet = (id: string) => {
@@ -628,45 +606,14 @@ export default function WalletManager() {
   };
 
   const handleSwitchChain = (chainId: number) => {
-    setSelectedChain(chainId);
-    playNotification();
-    // Update active wallet's chain
-    if (activeWallet) {
-      setWallets(
-        wallets.map((w) =>
-          w.isActive
-            ? {
-                ...w,
-                chainId,
-                chainName: getChainById(chainId)?.name || 'Unknown',
-              }
-            : w
-        )
-      );
-    }
-  };
-
-  const handleConnectWallet = (type: string) => {
-    const newWallet: Wallet = {
-      id: `wallet-${Date.now()}`,
-      address: `0x${Math.random().toString(16).substr(2, 40)}`,
-      type: type as Wallet['type'],
-      nickname: `${type} Wallet`,
-      balance: '0',
-      balanceUSD: 0,
-      chainId: selectedChain,
-      chainName: getChainById(selectedChain)?.name || 'Unknown',
-      connected: true,
-      isActive: false,
-      connectedAt: Date.now(),
-      lastUsed: Date.now(),
-      icon: getWalletTypeIcon(type),
-    };
-    setWallets([...wallets, newWallet]);
-    setShowConnectModal(false);
-    setShowConnectionSuccess(true);
-    playSuccess();
-    setTimeout(() => setShowConnectionSuccess(false), 2000);
+    switchChainAsync({ chainId: chainId as 84532 | 80002 | 300 | 8453 | 137 | 324 })
+      .then(() => {
+        setSelectedChain(chainId);
+        playNotification();
+      })
+      .catch(() => {
+        playError();
+      });
   };
 
   // ==================== TAB CONTENT ====================
@@ -711,15 +658,21 @@ export default function WalletManager() {
 
       {/* Wallets Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
-        {wallets.map((wallet) => (
-          <WalletCard
-            key={wallet.id}
-            wallet={wallet}
-            onActivate={handleActivateWallet}
-            onDisconnect={handleDisconnectWallet}
-            onEdit={handleEditWallet}
-          />
-        ))}
+        {wallets.length === 0 ? (
+          <div className="col-span-full rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-6 text-sm text-gray-600 dark:text-gray-300">
+            Connect your wallet using the main connect button to manage it here.
+          </div>
+        ) : (
+          wallets.map((wallet) => (
+            <WalletCard
+              key={wallet.id}
+              wallet={wallet}
+              onActivate={handleActivateWallet}
+              onDisconnect={handleDisconnectWallet}
+              onEdit={handleEditWallet}
+            />
+          ))
+        )}
       </div>
     </div>
   );
@@ -758,7 +711,13 @@ export default function WalletManager() {
               {activeWallet.nickname} • {getChainById(activeWallet.chainId)?.name}
             </p>
           </div>
-          <TokenList tokens={tokens} />
+          {tokens.length === 0 ? (
+            <div className="bg-white dark:bg-gray-800 rounded-lg p-4 md:p-6 border border-gray-200 dark:border-gray-700 text-sm text-gray-600 dark:text-gray-400">
+              Token balances will appear once your wallet balance is available.
+            </div>
+          ) : (
+            <TokenList tokens={tokens} />
+          )}
         </>
       ) : (
         <div className="bg-yellow-50 dark:bg-yellow-900 border border-yellow-200 dark:border-yellow-700 rounded-lg p-6 text-center">
@@ -822,6 +781,7 @@ export default function WalletManager() {
         <MobileButton
           onClick={() => {
             if (confirm('Are you sure you want to disconnect all wallets?')) {
+              disconnect();
               setWallets([]);
             }
           }}
@@ -919,41 +879,16 @@ export default function WalletManager() {
                     <X className="w-6 h-6" />
                   </motion.button>
                 </div>
-                <div className="space-y-3">
-                  {['metamask', 'walletconnect', 'ledger', 'coinbase'].map((type, index) => (
-                    <motion.button
-                      key={type}
-                      onClick={() => handleConnectWallet(type)}
-                      className="w-full flex items-center gap-4 p-4 border-2 border-gray-200 dark:border-gray-700 rounded-lg"
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: index * 0.1 }}
-                      whileHover={{ scale: 1.02, borderColor: 'rgb(59, 130, 246)' }}
-                      whileTap={{ scale: 0.98 }}
-                    >
-                      <span className="text-3xl">{getWalletTypeIcon(type)}</span>
-                      <span className="text-lg font-semibold text-gray-900 dark:text-white capitalize">
-                        {type}
-                      </span>
-                    </motion.button>
-                  ))}
+                <div className="space-y-3 text-sm text-gray-600 dark:text-gray-300">
+                  <p>
+                    Use the main wallet connect button in the header to connect your wallet. Once connected,
+                    it will appear in this manager automatically.
+                  </p>
+                  <MobileButton onClick={() => setShowConnectModal(false)}>
+                    Close
+                  </MobileButton>
                 </div>
               </motion.div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* Connection Success Toast */}
-        <AnimatePresence>
-          {showConnectionSuccess && (
-            <motion.div
-              className="fixed bottom-8 right-8 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg flex items-center gap-2"
-              initial={{ opacity: 0, y: 50, scale: 0.9 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 50, scale: 0.9 }}
-            >
-              <CheckCircle2 className="w-5 h-5" />
-              Wallet Connected!
             </motion.div>
           )}
         </AnimatePresence>

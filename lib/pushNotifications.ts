@@ -5,6 +5,7 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
+import { buildCsrfHeaders } from '@/lib/security/csrfClient';
 
 // ============================================================================
 // Types & Interfaces
@@ -54,7 +55,7 @@ export interface PushNotificationPayload {
   icon?: string;
   badge?: string;
   image?: string;
-  data?: Record<string, any>;
+  data?: Record<string, unknown>;
   tag?: string;
   requireInteraction?: boolean;
 }
@@ -341,7 +342,7 @@ export function isInQuietHours(preferences: NotificationPreferences): boolean {
 /**
  * Hook to manage push notification subscription
  */
-export function usePushNotifications(userId?: string) {
+export function usePushNotifications(userAddress?: string) {
   const [isSupported, setIsSupported] = useState(false);
   const [permission, setPermission] = useState<NotificationPermission>('default');
   const [isSubscribed, setIsSubscribed] = useState(false);
@@ -375,14 +376,15 @@ export function usePushNotifications(userId?: string) {
   }, [isSupported]);
 
   const subscribe = useCallback(async () => {
-    if (!userId) {
-      throw new Error('User ID required');
+    if (!userAddress) {
+      throw new Error('User address required');
     }
 
     setLoading(true);
     try {
       // Get VAPID key from server
       const response = await fetch('/api/notifications/vapid');
+      if (!response.ok) throw new Error('Failed to fetch VAPID key');
       const { publicKey } = await response.json();
 
       // Subscribe to push
@@ -392,15 +394,18 @@ export function usePushNotifications(userId?: string) {
       }
 
       // Save subscription to server
+      const saveHeaders = await buildCsrfHeaders({ 'Content-Type': 'application/json' }, 'POST');
       const saveResponse = await fetch('/api/notifications/push', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: saveHeaders,
+        credentials: 'include',
         body: JSON.stringify({
-          userId,
+          userAddress,
           subscription: sub,
         }),
       });
 
+      if (!saveResponse.ok) throw new Error('Failed to save subscription');
       const data = await saveResponse.json();
       if (!data.success) {
         throw new Error(data.error || 'Failed to save subscription');
@@ -417,11 +422,11 @@ export function usePushNotifications(userId?: string) {
     } finally {
       setLoading(false);
     }
-  }, [userId]);
+  }, [userAddress]);
 
   const unsubscribe = useCallback(async () => {
-    if (!userId) {
-      throw new Error('User ID required');
+    if (!userAddress) {
+      throw new Error('User address required');
     }
 
     setLoading(true);
@@ -430,11 +435,18 @@ export function usePushNotifications(userId?: string) {
       await unsubscribeFromPush();
 
       // Remove subscription from server
-      await fetch('/api/notifications/push', {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId }),
-      });
+      if (subscription?.endpoint) {
+        const deleteHeaders = await buildCsrfHeaders({ 'Content-Type': 'application/json' }, 'DELETE');
+        const deleteResponse = await fetch('/api/notifications/push', {
+          method: 'DELETE',
+          headers: deleteHeaders,
+          credentials: 'include',
+          body: JSON.stringify({ userAddress, endpoint: subscription.endpoint }),
+        });
+        if (!deleteResponse.ok) {
+          console.warn('Failed to remove server subscription:', deleteResponse.status);
+        }
+      }
 
       setSubscription(null);
       setIsSubscribed(false);
@@ -444,7 +456,7 @@ export function usePushNotifications(userId?: string) {
     } finally {
       setLoading(false);
     }
-  }, [userId]);
+  }, [userAddress, subscription?.endpoint]);
 
   const requestPermission = useCallback(async () => {
     try {
@@ -472,41 +484,42 @@ export function usePushNotifications(userId?: string) {
 /**
  * Hook to manage notification preferences
  */
-export function useNotificationPreferences(userId?: string) {
+export function useNotificationPreferences(userAddress?: string) {
   const [preferences, setPreferences] = useState<NotificationPreferences | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const loadPreferences = async () => {
-      if (!userId) {
+      if (!userAddress) {
         setLoading(false);
         return;
       }
 
       try {
-        const response = await fetch(`/api/notifications/preferences?userId=${userId}`);
+        const response = await fetch(`/api/notifications/preferences?userAddress=${userAddress}`);
+        if (!response.ok) throw new Error('Failed to load preferences');
         const data = await response.json();
 
         if (data.success) {
           setPreferences(data.preferences);
         } else {
           // Use defaults if none exist
-          setPreferences(getDefaultPreferences(userId));
+          setPreferences(getDefaultPreferences(userAddress));
         }
       } catch (error) {
         console.error('Failed to load preferences:', error);
-        setPreferences(getDefaultPreferences(userId));
+        setPreferences(getDefaultPreferences(userAddress));
       } finally {
         setLoading(false);
       }
     };
 
     loadPreferences();
-  }, [userId]);
+  }, [userAddress]);
 
   const updatePreferences = useCallback(
     async (updates: Partial<NotificationPreferences>) => {
-      if (!userId || !preferences) {
+      if (!userAddress || !preferences) {
         throw new Error('Cannot update preferences');
       }
 
@@ -514,12 +527,18 @@ export function useNotificationPreferences(userId?: string) {
       setPreferences(updated);
 
       try {
+        const headers = await buildCsrfHeaders({ 'Content-Type': 'application/json' }, 'PUT');
         const response = await fetch('/api/notifications/preferences', {
           method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(updated),
+          headers,
+          credentials: 'include',
+          body: JSON.stringify({ userAddress, ...updated }),
         });
 
+        if (!response.ok) {
+          setPreferences(preferences);
+          throw new Error('Failed to update preferences');
+        }
         const data = await response.json();
         if (!data.success) {
           // Revert on error
@@ -531,7 +550,7 @@ export function useNotificationPreferences(userId?: string) {
         throw error;
       }
     },
-    [userId, preferences]
+    [userAddress, preferences]
   );
 
   return {

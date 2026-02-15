@@ -1,7 +1,7 @@
 'use client';
 
 import { motion, AnimatePresence } from "framer-motion";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 // Page transition wrapper
 interface PageTransitionProps {
@@ -183,33 +183,25 @@ interface ConfettiProps {
 }
 
 export function Confetti({ trigger, colors = ["#00F0FF", "#00FF88", "#FFD700", "#A78BFA"] }: ConfettiProps) {
-  const [particles, setParticles] = useState<Array<{
+  const particles = useMemo<Array<{
     id: number;
     x: number;
     y: number;
     color: string;
     rotation: number;
     scale: number;
-  }>>([]);
-  
-  useEffect(() => {
-    if (trigger) {
-      const newParticles = Array.from({ length: 50 }, (_, i) => ({
+  }>>(() =>
+    Array.from({ length: 50 }, (_, i) => ({
         id: i,
-        x: Math.random() * 100 - 50,
-        y: Math.random() * -100 - 50,
-        color: colors[Math.floor(Math.random() * colors.length)] || '#00F0FF',
-        rotation: Math.random() * 360,
-        scale: Math.random() * 0.5 + 0.5
-      }));
-       
-      setParticles(newParticles);
-      
-      const timeout = setTimeout(() => setParticles([]), 2000);
-      return () => clearTimeout(timeout);
-    }
-    return undefined;
-  }, [trigger, colors]);
+        x: (i * 37 + 13) % 100 - 50,
+        y: -((i * 53 + 7) % 100) - 50,
+        color: colors[i % colors.length] || '#00F0FF',
+        rotation: (i * 97) % 360,
+        scale: (i % 5) * 0.1 + 0.5
+      })),
+  [colors]);
+
+  if (!trigger) return null;
   
   return (
     <div className="fixed inset-0 pointer-events-none z-50 overflow-hidden">
@@ -268,7 +260,7 @@ export function Counter({ value, duration = 1500, prefix = "", suffix = "", clas
     };
     
     requestAnimationFrame(animate);
-     
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [value, duration]);
   
   return (

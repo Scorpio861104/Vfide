@@ -109,9 +109,17 @@ export function PageTransitionProvider({
   const [isTransitioning, setIsTransitioning] = useState(false);
 
   useEffect(() => {
-    setIsTransitioning(true);
-    const timer = setTimeout(() => setIsTransitioning(false), 300);
-    return () => clearTimeout(timer);
+    const startTimer = setTimeout(() => {
+      setIsTransitioning(true);
+    }, 0);
+    const endTimer = setTimeout(() => {
+      setIsTransitioning(false);
+    }, 300);
+
+    return () => {
+      clearTimeout(startTimer);
+      clearTimeout(endTimer);
+    };
   }, [pathname]);
 
   return (

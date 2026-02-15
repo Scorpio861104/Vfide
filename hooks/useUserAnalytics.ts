@@ -6,7 +6,9 @@
 'use client';
 
 import { useState, useCallback, useEffect } from 'react';
+import { useAccount } from 'wagmi';
 import { AnalyticsEvent, UserAnalytics } from '@/config/performance-dashboard';
+import { buildCsrfHeaders } from '@/lib/security/csrfClient';
 
 interface UseUserAnalyticsResult {
   events: AnalyticsEvent[];
@@ -18,7 +20,6 @@ interface UseUserAnalyticsResult {
   exportAnalytics: (format: 'json' | 'csv') => string;
 }
 
-const STORAGE_KEY = 'analytics_events_v1';
 const SESSION_KEY = 'session_id_v1';
 const MAX_EVENTS = 1000;
 
@@ -27,13 +28,14 @@ function getOrCreateSessionId(): string {
 
   let sessionId = sessionStorage.getItem(SESSION_KEY);
   if (!sessionId) {
-    sessionId = `session-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    sessionId = `session-${Date.now()}-${Array.from(crypto.getRandomValues(new Uint8Array(7)), b => b.toString(16).padStart(2, '0')).join('').slice(0, 9)}`;
     sessionStorage.setItem(SESSION_KEY, sessionId);
   }
   return sessionId;
 }
 
 export function useUserAnalytics(): UseUserAnalyticsResult {
+  const { address } = useAccount();
   const [events, setEvents] = useState<AnalyticsEvent[]>([]);
   const [analytics, setAnalytics] = useState<UserAnalytics>({
     totalUsers: 0,
@@ -48,34 +50,64 @@ export function useUserAnalytics(): UseUserAnalyticsResult {
 
   const sessionId = getOrCreateSessionId();
 
-  // Load events from localStorage on mount
-  useEffect(() => {
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        setEvents(Array.isArray(parsed) ? parsed : []);
-      }
-    } catch (e) {
-      console.error('Failed to load analytics events:', e);
-    }
-  }, []);
+  const mapApiEvent = useCallback((event: Record<string, unknown>): AnalyticsEvent => {
+    const data = typeof event?.event_data === 'string'
+      ? (() => {
+          try {
+            return JSON.parse(event.event_data);
+          } catch {
+            return {} as Record<string, unknown>;
+          }
+        })()
+      : (event?.event_data ?? {});
 
-  // Save events to localStorage whenever they change
+    return {
+      id: String(event.id ?? `event-${Date.now()}`),
+      eventName: data.eventName ?? event.event_type ?? 'event',
+      category: data.category ?? 'general',
+      userId: data.userId ?? event.user_id ?? '',
+      sessionId: data.sessionId ?? sessionId,
+      timestamp: event.timestamp ? new Date(event.timestamp).getTime() : Date.now(),
+      duration: data.duration,
+      metadata: data.metadata ?? {},
+      page: data.page ?? 'unknown',
+    };
+  }, [sessionId]);
+
+  // Load events from API on mount
   useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(events));
-    } catch (e) {
-      console.error('Failed to save analytics events:', e);
-    }
-  }, [events]);
+    if (!address) return;
+
+    let isMounted = true;
+
+    const loadEvents = async () => {
+      try {
+        const response = await fetch(`/api/analytics?userId=${address}&limit=1000`);
+        if (!response.ok) throw new Error('Failed to fetch analytics');
+        const data = await response.json();
+        const items = Array.isArray(data.events) ? data.events : [];
+        if (isMounted) {
+          setEvents(items.map(mapApiEvent).slice(0, MAX_EVENTS));
+        }
+      } catch (e) {
+        console.error('Failed to load analytics events:', e);
+        if (isMounted) setEvents([]);
+      }
+    };
+
+    loadEvents();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [address, mapApiEvent]);
 
   // Track a user event
   const trackEvent = useCallback(
     (eventData: Omit<AnalyticsEvent, 'id' | 'timestamp'>) => {
       const newEvent: AnalyticsEvent = {
         ...eventData,
-        id: `event-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        id: `event-${Date.now()}-${Array.from(crypto.getRandomValues(new Uint8Array(7)), b => b.toString(16).padStart(2, '0')).join('').slice(0, 9)}`,
         timestamp: Date.now(),
         sessionId,
       };
@@ -84,8 +116,28 @@ export function useUserAnalytics(): UseUserAnalyticsResult {
         const updated = [newEvent, ...prev];
         return updated.slice(0, MAX_EVENTS);
       });
+
+      void buildCsrfHeaders({ 'Content-Type': 'application/json' }, 'POST')
+        .then((headers) =>
+          fetch('/api/analytics', {
+            method: 'POST',
+            headers,
+            credentials: 'include',
+            body: JSON.stringify({
+              userId: eventData.userId || address || '',
+              eventType: eventData.eventName,
+              eventData: {
+                ...eventData,
+                sessionId,
+              },
+            }),
+          })
+        )
+        .catch((error) => {
+          console.error('Failed to track analytics event:', error);
+        });
     },
-    [sessionId]
+    [sessionId, address]
   );
 
   // Get session metrics
@@ -183,7 +235,7 @@ export function useUserAnalytics(): UseUserAnalyticsResult {
         ? (singlePageSessions / Object.values(sessionDurations).length) * 100
         : 0;
 
-    // Calculate conversion rate (mock - based on conversion events)
+    // Calculate conversion rate (based on conversion events)
     const conversionEvents = events.filter(
       (e) => e.eventName.includes('conversion') || e.eventName.includes('purchase')
     ).length;
@@ -201,6 +253,10 @@ export function useUserAnalytics(): UseUserAnalyticsResult {
       topEvents,
     };
   }, [events]);
+
+  useEffect(() => {
+    setAnalytics(getSessionMetrics());
+  }, [events, getSessionMetrics]);
 
   // Get events by page
   const getEventsByPage = useCallback(

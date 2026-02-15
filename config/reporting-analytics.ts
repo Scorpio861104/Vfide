@@ -458,5 +458,10 @@ export const sampleRevenueQuery: Query = {
  * Sample Metric Sparkline Data
  */
 export function generateSparklineData(days: number = 7): number[] {
-  return Array.from({ length: days }, () => Math.random() * 100);
+  return Array.from({ length: days }, (_, index) => {
+    const base = 50;
+    const amplitude = 20;
+    const phase = (index / Math.max(days, 1)) * Math.PI * 2;
+    return Math.round(base + Math.sin(phase) * amplitude + index * 1.5);
+  });
 }

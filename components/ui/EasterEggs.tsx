@@ -9,26 +9,27 @@ import { useEffect, useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import confetti from "canvas-confetti";
 
+const KONAMI_CODE = [
+  "ArrowUp", "ArrowUp",
+  "ArrowDown", "ArrowDown",
+  "ArrowLeft", "ArrowRight",
+  "ArrowLeft", "ArrowRight",
+  "KeyB", "KeyA"
+];
+
 /**
  * Konami Code Hook
  * Detects the famous ↑↑↓↓←→←→BA sequence
  */
 export function useKonamiCode(callback: () => void) {
   const [input, setInput] = useState<string[]>([]);
-  const konamiCode = [
-    "ArrowUp", "ArrowUp",
-    "ArrowDown", "ArrowDown",
-    "ArrowLeft", "ArrowRight",
-    "ArrowLeft", "ArrowRight",
-    "KeyB", "KeyA"
-  ];
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       const newInput = [...input, e.code].slice(-10);
       setInput(newInput);
 
-      if (newInput.join(",") === konamiCode.join(",")) {
+      if (newInput.join(",") === KONAMI_CODE.join(",")) {
         callback();
         setInput([]);
       }
@@ -98,8 +99,8 @@ export function fireStarShower() {
   const animationEnd = Date.now() + duration;
   const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 9999 };
 
-  const randomInRange = (min: number, max: number) => 
-    Math.random() * (max - min) + min;
+  const randomInRange = (min: number, max: number) =>
+    min + ((Date.now() % 1000) / 1000) * (max - min);
 
   const interval = setInterval(() => {
     const timeLeft = animationEnd - Date.now();
@@ -113,14 +114,14 @@ export function fireStarShower() {
     confetti({
       ...defaults,
       particleCount,
-      origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 },
+      origin: { x: randomInRange(0.1, 0.3), y: 0.3 },
       colors: ["#00FFB2", "#7B61FF"],
       shapes: ["star"],
     });
     confetti({
       ...defaults,
       particleCount,
-      origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 },
+      origin: { x: randomInRange(0.7, 0.9), y: 0.3 },
       colors: ["#00D4FF", "#FFD700"],
       shapes: ["star"],
     });
@@ -243,14 +244,10 @@ export function EasterEggsProvider({ children }: { children: React.ReactNode }) 
  * Shows special animation on first successful transaction
  */
 export function useFirstTransactionCelebration() {
-  const [hasCelebrated, setHasCelebrated] = useState(false);
-
-  useEffect(() => {
-    const celebrated = localStorage.getItem("vfide_first_tx_celebrated");
-    if (celebrated) {
-      setHasCelebrated(true);
-    }
-  }, []);
+  const [hasCelebrated, setHasCelebrated] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return Boolean(localStorage.getItem("vfide_first_tx_celebrated"));
+  });
 
   const celebrate = useCallback(() => {
     if (hasCelebrated) return;
@@ -310,7 +307,7 @@ export function SparkleOnHover({
   const [sparkles, setSparkles] = useState<{ id: number; x: number; y: number }[]>([]);
 
   const handleMouseMove = (e: React.MouseEvent) => {
-    if (Math.random() > 0.7) { // Only 30% chance per move
+    if (Date.now() % 10 > 7) { // Roughly 30% chance per move
       const rect = e.currentTarget.getBoundingClientRect();
       const x = e.clientX - rect.left;
       const y = e.clientY - rect.top;

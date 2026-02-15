@@ -43,6 +43,7 @@ export function MembersTab({ searchQuery }: { searchQuery: string }) {
                   a.href = url
                   a.download = "members.csv"
                   a.click()
+                  URL.revokeObjectURL(url)
                 }}
                 className="px-4 py-2 bg-zinc-900 border border-zinc-700 text-cyan-400 rounded-lg font-bold hover:border-cyan-400"
               >

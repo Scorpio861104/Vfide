@@ -5,6 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyToken, extractToken, JWTPayload } from './jwt';
+import { getAuthCookie } from './cookieAuth';
 
 export interface AuthenticatedRequest extends NextRequest {
   user?: JWTPayload;
@@ -21,7 +22,11 @@ export interface AuthResult {
  */
 export async function verifyAuth(request: NextRequest): Promise<AuthResult> {
   const authHeader = request.headers.get('authorization');
-  const token = extractToken(authHeader);
+  let token = extractToken(authHeader);
+
+  if (!token) {
+    token = await getAuthCookie(request);
+  }
 
   if (!token) {
     return {
@@ -99,10 +104,14 @@ export async function requireOwnership(
 /**
  * Admin addresses - in production, store in database
  */
-const ADMIN_ADDRESSES = new Set([
-  '0x1234567890abcdef1234567890abcdef12345678', // Example admin
-  process.env.ADMIN_ADDRESS?.toLowerCase(),
-].filter(Boolean));
+const ADMIN_ADDRESSES = new Set(
+  [
+    process.env.ADMIN_ADDRESS,
+    ...(process.env.ADMIN_ADDRESSES?.split(',') || []),
+  ]
+    .map((value) => value?.trim().toLowerCase())
+    .filter(Boolean)
+);
 
 /**
  * Check if user is an admin

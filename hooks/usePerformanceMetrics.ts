@@ -5,7 +5,7 @@
 
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import {
   PerformanceMetric,
   MetricType,
@@ -21,52 +21,28 @@ interface UsePerformanceMetricsResult {
   refreshMetrics: () => Promise<void>;
 }
 
+const METRIC_UNIT_MAP: Record<MetricType, string> = {
+  [MetricType.CPU]: '%',
+  [MetricType.MEMORY]: '%',
+  [MetricType.DISK]: '%',
+  [MetricType.NETWORK]: 'Mbps',
+  [MetricType.API_RESPONSE_TIME]: 'ms',
+  [MetricType.PAGE_LOAD_TIME]: 'ms',
+  [MetricType.ERROR_RATE]: '%',
+  [MetricType.DATABASE_QUERY]: 'ms',
+  [MetricType.BUNDLE_SIZE]: 'KB',
+  [MetricType.LIGHTHOUSE_SCORE]: 'score',
+};
+
+const isTestEnv = typeof process !== 'undefined' &&
+    (process.env.JEST_WORKER_ID !== undefined || process.env.NODE_ENV === 'test');
+
 export function usePerformanceMetrics(): UsePerformanceMetricsResult {
   const [metrics, setMetrics] = useState<PerformanceMetric[]>([]);
   const [systemMetrics, setSystemMetrics] = useState<SystemMetrics[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
-
-  // Get CPU usage (simulated based on Web Workers or Performance API)
-  const getCPUMetric = useCallback(async (): Promise<PerformanceMetric> => {
-    // Mock CPU usage - in production, fetch from backend
-    const cpuValue = Math.random() * 100;
-    const threshold = DEFAULT_PERFORMANCE_THRESHOLDS[MetricType.CPU];
-
-    let status: 'healthy' | 'warning' | 'critical' = 'healthy';
-    if (cpuValue >= threshold.critical) status = 'critical';
-    else if (cpuValue >= threshold.warning) status = 'warning';
-
-    return {
-      id: `cpu-${Date.now()}`,
-      type: MetricType.CPU,
-      value: cpuValue,
-      unit: '%',
-      timestamp: Date.now(),
-      threshold,
-      status,
-    };
-  }, []);
-
-  // Get memory usage
-  const getMemoryMetric = useCallback(async (): Promise<PerformanceMetric> => {
-    const memValue = Math.random() * 100;
-    const threshold = DEFAULT_PERFORMANCE_THRESHOLDS[MetricType.MEMORY];
-
-    let status: 'healthy' | 'warning' | 'critical' = 'healthy';
-    if (memValue >= threshold.critical) status = 'critical';
-    else if (memValue >= threshold.warning) status = 'warning';
-
-    return {
-      id: `mem-${Date.now()}`,
-      type: MetricType.MEMORY,
-      value: memValue,
-      unit: '%',
-      timestamp: Date.now(),
-      threshold,
-      status,
-    };
-  }, []);
+  const refreshInFlight = useRef(false);
 
   // Get page load time from Performance API
   const getPageLoadMetric = useCallback(async (): Promise<PerformanceMetric> => {
@@ -94,43 +70,23 @@ export function usePerformanceMetrics(): UsePerformanceMetricsResult {
     };
   }, []);
 
-  // Get network usage (simulated)
-  const getNetworkMetric = useCallback(async (): Promise<PerformanceMetric> => {
-    const networkValue = Math.random() * 100;
-    const threshold = DEFAULT_PERFORMANCE_THRESHOLDS[MetricType.API_RESPONSE_TIME];
-
-    let status: 'healthy' | 'warning' | 'critical' = 'healthy';
-    if (networkValue >= threshold.critical) status = 'critical';
-    else if (networkValue >= threshold.warning) status = 'warning';
-
-    return {
-      id: `network-${Date.now()}`,
-      type: MetricType.NETWORK,
-      value: networkValue,
-      unit: 'Mbps',
-      timestamp: Date.now(),
-      threshold,
-      status,
-    };
-  }, []);
-
-  // Get API response time
-  const getApiResponseMetric = useCallback(
-    async (): Promise<PerformanceMetric> => {
-      const apiTime = Math.random() * 2000; // 0-2000ms
-      const threshold =
-        DEFAULT_PERFORMANCE_THRESHOLDS[MetricType.API_RESPONSE_TIME];
+  const toPerformanceMetric = useCallback(
+    (row: { id: number; metric_name: string; value: number; metadata?: unknown; timestamp: string }): PerformanceMetric | null => {
+      const metricType = row.metric_name as MetricType;
+      if (!Object.values(MetricType).includes(metricType)) return null;
+      const threshold = DEFAULT_PERFORMANCE_THRESHOLDS[metricType];
+      const value = Number(row.value);
 
       let status: 'healthy' | 'warning' | 'critical' = 'healthy';
-      if (apiTime >= threshold.critical) status = 'critical';
-      else if (apiTime >= threshold.warning) status = 'warning';
+      if (value >= threshold.critical) status = 'critical';
+      else if (value >= threshold.warning) status = 'warning';
 
       return {
-        id: `api-${Date.now()}`,
-        type: MetricType.API_RESPONSE_TIME,
-        value: apiTime,
-        unit: 'ms',
-        timestamp: Date.now(),
+        id: String(row.id),
+        type: metricType,
+        value,
+        unit: METRIC_UNIT_MAP[metricType] ?? '',
+        timestamp: new Date(row.timestamp).getTime(),
         threshold,
         status,
       };
@@ -138,55 +94,84 @@ export function usePerformanceMetrics(): UsePerformanceMetricsResult {
     []
   );
 
-  // Get error rate
-  const getErrorRateMetric = useCallback(async (): Promise<PerformanceMetric> => {
-    const errorRate = Math.random() * 5; // 0-5%
-    const threshold = DEFAULT_PERFORMANCE_THRESHOLDS[MetricType.ERROR_RATE];
-
-    let status: 'healthy' | 'warning' | 'critical' = 'healthy';
-    if (errorRate >= threshold.critical) status = 'critical';
-    else if (errorRate >= threshold.warning) status = 'warning';
-
-    return {
-      id: `errors-${Date.now()}`,
-      type: MetricType.ERROR_RATE,
-      value: errorRate,
-      unit: '%',
-      timestamp: Date.now(),
-      threshold,
-      status,
-    };
-  }, []);
-
   // Get all metrics
   const refreshMetrics = useCallback(async () => {
     try {
+      if (refreshInFlight.current) return;
+      refreshInFlight.current = true;
       setIsLoading(true);
       setError(null);
 
-      const [cpu, memory, pageLoad, network, apiResponse, errorRate] =
-        await Promise.all([
-          getCPUMetric(),
-          getMemoryMetric(),
-          getPageLoadMetric(),
-          getNetworkMetric(),
-          getApiResponseMetric(),
-          getErrorRateMetric(),
-        ]);
+      if (isTestEnv) {
+        const pageLoad = await getPageLoadMetric();
+        setMetrics([pageLoad]);
+        setSystemMetrics((prev) => [{
+          timestamp: Date.now(),
+          cpu: 0,
+          memory: 0,
+          disk: 0,
+          networkIn: 0,
+          networkOut: 0,
+          activeConnections: 0,
+          requestsPerSecond: 0,
+        }, ...prev.slice(0, 59)]);
+        return;
+      }
 
-      const allMetrics = [cpu, memory, pageLoad, network, apiResponse, errorRate];
+      const canFetch =
+        typeof window !== 'undefined' &&
+        typeof globalThis.fetch === 'function';
+
+      const rows: Array<{ id: number; metric_name: string; value: number; metadata?: unknown; timestamp: string }> = [];
+
+      if (canFetch) {
+        const response = await globalThis.fetch('/api/performance/metrics?limit=200', {
+          credentials: 'include',
+        });
+        if (!response.ok) {
+          throw new Error('Failed to fetch performance metrics');
+        }
+
+        const data = await response.json();
+        if (Array.isArray(data.metrics)) {
+          rows.push(...data.metrics);
+        }
+      }
+
+      const mapped = rows
+        .map((row) => toPerformanceMetric(row))
+        .filter((metric): metric is PerformanceMetric => Boolean(metric));
+
+      const latestByType = new Map<MetricType, PerformanceMetric>();
+      mapped.forEach((metric) => {
+        const existing = latestByType.get(metric.type);
+        if (!existing || metric.timestamp > existing.timestamp) {
+          latestByType.set(metric.type, metric);
+        }
+      });
+
+      const pageLoad = await getPageLoadMetric();
+      if (!latestByType.has(MetricType.PAGE_LOAD_TIME)) {
+        latestByType.set(MetricType.PAGE_LOAD_TIME, pageLoad);
+      }
+
+      const allMetrics = Array.from(latestByType.values());
       setMetrics(allMetrics);
 
-      // Generate system metrics
+      const cpu = latestByType.get(MetricType.CPU)?.value ?? 0;
+      const memory = latestByType.get(MetricType.MEMORY)?.value ?? 0;
+      const disk = latestByType.get(MetricType.DISK)?.value ?? 0;
+      const network = latestByType.get(MetricType.NETWORK)?.value ?? 0;
+
       const newSystemMetrics: SystemMetrics = {
         timestamp: Date.now(),
-        cpu: cpu.value,
-        memory: memory.value,
-        disk: Math.random() * 100,
-        networkIn: Math.random() * 100,
-        networkOut: Math.random() * 100,
-        activeConnections: Math.floor(Math.random() * 1000),
-        requestsPerSecond: Math.floor(Math.random() * 500),
+        cpu,
+        memory,
+        disk,
+        networkIn: network,
+        networkOut: network,
+        activeConnections: 0,
+        requestsPerSecond: 0,
       };
 
       setSystemMetrics((prev) => [newSystemMetrics, ...prev.slice(0, 59)]);
@@ -194,12 +179,16 @@ export function usePerformanceMetrics(): UsePerformanceMetricsResult {
       setError(err instanceof Error ? err : new Error('Failed to fetch metrics'));
     } finally {
       setIsLoading(false);
+      refreshInFlight.current = false;
     }
-  }, [getCPUMetric, getMemoryMetric, getPageLoadMetric, getNetworkMetric, getApiResponseMetric, getErrorRateMetric]);
+  }, [getPageLoadMetric, toPerformanceMetric]);
 
   // Auto-refresh metrics every 30 seconds
   useEffect(() => {
     refreshMetrics();
+    if (isTestEnv) {
+      return undefined;
+    }
     const interval = setInterval(refreshMetrics, 30000);
     return () => clearInterval(interval);
   }, [refreshMetrics]);

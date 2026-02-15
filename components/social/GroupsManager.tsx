@@ -13,6 +13,7 @@ import {
   Settings,
   LogOut,
 } from 'lucide-react';
+import { secureId } from '@/lib/secureRandom';
 import { useAccount } from 'wagmi';
 import { Group, Friend } from '@/types/messaging';
 import { formatAddress, STORAGE_KEYS } from '@/lib/messageEncryption';
@@ -35,15 +36,25 @@ export function GroupsManager({ friends, onSelectGroup, selectedGroup }: GroupsM
   // Load groups from localStorage
   useEffect(() => {
     if (!address) return;
+    let timer: ReturnType<typeof setTimeout> | undefined;
     
     const stored = localStorage.getItem(`${STORAGE_KEYS.GROUPS}_${address}`);
     if (stored) {
       try {
-        setGroups(JSON.parse(stored));
+        const parsedGroups = JSON.parse(stored);
+        timer = setTimeout(() => {
+          setGroups(parsedGroups);
+        }, 0);
       } catch (e) {
         console.error('Failed to load groups:', e);
       }
     }
+
+    return () => {
+      if (timer) {
+        clearTimeout(timer);
+      }
+    };
   }, [address]);
 
   // Save groups to localStorage
@@ -62,7 +73,7 @@ export function GroupsManager({ friends, onSelectGroup, selectedGroup }: GroupsM
     }
     
     const newGroup: Group = {
-      id: `group_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      id: secureId('group'),
       name: newGroupName,
       description: newGroupDescription || undefined,
       members: [address, ...selectedMembers],

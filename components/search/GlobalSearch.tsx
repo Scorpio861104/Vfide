@@ -138,22 +138,23 @@ export function GlobalSearch() {
   const [results, setResults] = useState<SearchResult[]>([]);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [activeCategory, setActiveCategory] = useState<SearchCategory>('all');
-  const [recentSearches, setRecentSearches] = useState<RecentSearch[]>([]);
+  const [recentSearches, setRecentSearches] = useState<RecentSearch[]>(() => {
+    if (typeof window === 'undefined') return [];
+
+    try {
+      const stored = localStorage.getItem(RECENT_SEARCHES_KEY);
+      if (!stored) return [];
+      const parsed = JSON.parse(stored);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  });
   const [isListening, setIsListening] = useState(false);
   const [showTips, setShowTips] = useState(false);
   
   const inputRef = useRef<HTMLInputElement>(null);
   const recognitionRef = useRef<SpeechRecognitionInterface | null>(null);
-
-  // Load recent searches
-  useEffect(() => {
-    try {
-      const stored = localStorage.getItem(RECENT_SEARCHES_KEY);
-      if (stored) {
-        setRecentSearches(JSON.parse(stored));
-      }
-    } catch { /* ignore */ }
-  }, []);
 
   // Save recent search
   const saveRecentSearch = useCallback((searchQuery: string, resultCount: number) => {
@@ -195,7 +196,10 @@ export function GlobalSearch() {
       return;
     }
 
-    const SpeechRecognitionAPI = window.webkitSpeechRecognition || window.SpeechRecognition;
+    type SpeechRecognitionConstructor = new () => SpeechRecognitionInterface;
+    const SpeechRecognitionAPI =
+      (window as Window & { webkitSpeechRecognition?: SpeechRecognitionConstructor; SpeechRecognition?: SpeechRecognitionConstructor }).webkitSpeechRecognition ||
+      (window as Window & { webkitSpeechRecognition?: SpeechRecognitionConstructor; SpeechRecognition?: SpeechRecognitionConstructor }).SpeechRecognition;
     if (!SpeechRecognitionAPI) {
       setIsListening(false);
       return;
@@ -311,7 +315,7 @@ export function GlobalSearch() {
         title: shortenAddress(searchQuery),
         subtitle: 'View address on explorer',
         icon: <Wallet className="w-5 h-5" />,
-        action: () => window.open(`https://basescan.org/address/${searchQuery}`, '_blank'),
+        action: () => window.open(`https://basescan.org/address/${searchQuery}`, '_blank', 'noopener,noreferrer'),
         category: 'transactions',
       });
       searchResults.push({
@@ -333,7 +337,7 @@ export function GlobalSearch() {
         title: `Transaction ${shortenAddress(searchQuery)}`,
         subtitle: 'View on block explorer',
         icon: <Hash className="w-5 h-5" />,
-        action: () => window.open(`https://basescan.org/tx/${searchQuery}`, '_blank'),
+        action: () => window.open(`https://basescan.org/tx/${searchQuery}`, '_blank', 'noopener,noreferrer'),
         category: 'transactions',
       });
     }

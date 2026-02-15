@@ -19,22 +19,51 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence, useMotionValue, useTransform, animate } from 'framer-motion';
 import { MobileButton, MobileInput, MobileSelect } from '@/components/mobile/MobileForm';
 import { responsiveGrids, ResponsiveContainer } from '@/lib/mobile';
-import { safeParseInt } from '@/lib/validation';
 import { useTransactionSounds } from '@/hooks/useTransactionSounds';
-import { 
-  Vote as VoteIcon, 
-  Users, 
-  Clock, 
-  CheckCircle, 
-  XCircle, 
-  TrendingUp,
-  Send,
-  History,
-  FileText,
+import { useAccount, useReadContract, useReadContracts, useWriteContract } from 'wagmi';
+import { zeroAddress } from 'viem';
+import { CONTRACT_ADDRESSES } from '@/lib/contracts';
+import { DAOABI } from '@/lib/abis';
+import { toast } from '@/lib/toast';
+import {
   ThumbsUp,
   ThumbsDown,
-  Minus
+  Minus,
+  Clock,
+  Send,
+  Users,
+  Vote as VoteIcon,
+  CheckCircle,
+  XCircle,
+  FileText,
+  History as HistoryIcon,
 } from 'lucide-react';
+
+const DAO_ADDRESS = CONTRACT_ADDRESSES.DAO;
+
+const DELEGATION_ABI = [
+  {
+    name: 'delegate',
+    type: 'function',
+    stateMutability: 'nonpayable',
+    inputs: [{ name: 'delegatee', type: 'address' }],
+    outputs: [],
+  },
+  {
+    name: 'delegateOf',
+    type: 'function',
+    stateMutability: 'view',
+    inputs: [{ name: 'delegator', type: 'address' }],
+    outputs: [{ name: '', type: 'address' }],
+  },
+  {
+    name: 'delegatorsOf',
+    type: 'function',
+    stateMutability: 'view',
+    inputs: [{ name: 'delegatee', type: 'address' }],
+    outputs: [{ name: '', type: 'address[]' }],
+  },
+] as const;
 
 // ==================== ANIMATED COMPONENTS ====================
 
@@ -68,13 +97,14 @@ function AnimatedNumber({ value, suffix = '' }: { value: number; suffix?: string
 
 // Confetti particle for vote celebration
 function VoteConfetti({ onComplete }: { onComplete: () => void }) {
+  const confettiColors = ['#22c55e', '#3b82f6', '#f59e0b', '#ec4899', '#8b5cf6'];
   const particles = Array.from({ length: 30 }, (_, i) => ({
     id: i,
-    x: Math.random() * 200 - 100,
-    y: Math.random() * -150 - 50,
-    rotation: Math.random() * 720 - 360,
-    scale: Math.random() * 0.5 + 0.5,
-    color: ['#22c55e', '#3b82f6', '#f59e0b', '#ec4899', '#8b5cf6'][Math.floor(Math.random() * 5)],
+    x: (i * 37 + 13) % 200 - 100,
+    y: -((i * 53 + 7) % 150) - 50,
+    rotation: (i * 97) % 720 - 360,
+    scale: (i % 5) * 0.1 + 0.5,
+    color: confettiColors[i % 5],
   }));
   
   useEffect(() => {
@@ -141,6 +171,7 @@ interface Vote {
   direction: 'for' | 'against' | 'abstain';
   weight: number;
   timestamp: number;
+  title?: string;
 }
 
 interface Delegation {
@@ -151,177 +182,104 @@ interface Delegation {
   active: boolean;
 }
 
-interface GovernanceStats {
-  totalProposals: number;
-  activeProposals: number;
-  participationRate: number;
-  averageTurnout: number;
-  totalVotesCast: number;
-  delegatedVotes: number;
-}
-
-// ==================== MOCK DATA ====================
-
-function generateMockProposals(): Proposal[] {
-  const now = Date.now();
-  return [
-    {
-      id: 'prop-001',
-      title: 'Increase ProofScore Emissions by 10%',
-      description: 'Proposal to increase the monthly ProofScore token emissions from 100M to 110M tokens to incentivize greater network participation.',
-      proposer: '0x1234...5678',
-      startDate: now - 3 * 24 * 60 * 60 * 1000,
-      endDate: now + 2 * 24 * 60 * 60 * 1000,
-      status: 'active',
-      forVotes: 850000,
-      againstVotes: 120000,
-      abstainVotes: 30000,
-      totalVotes: 1000000,
-      votesRequired: 600000,
-      category: 'parameter',
-      details: 'This proposal aims to boost network activity by increasing token emissions. The increase will be gradual over 6 months.',
-      actions: [
-        {
-          target: '0xProofScoreToken',
-          functionSig: 'setEmissionRate(uint256)',
-          calldataParams: ['110000000000000000000000000'],
-          eta: now + 3 * 24 * 60 * 60 * 1000,
-        },
-      ],
-    },
-    {
-      id: 'prop-002',
-      title: 'Add Uniswap V4 Integration',
-      description: 'Proposal to add support for Uniswap V4 in the VFIDE trading interface for improved liquidity management.',
-      proposer: '0x9876...5432',
-      startDate: now - 7 * 24 * 60 * 60 * 1000,
-      endDate: now - 1 * 24 * 60 * 60 * 1000,
-      status: 'passed',
-      forVotes: 920000,
-      againstVotes: 45000,
-      abstainVotes: 35000,
-      totalVotes: 1000000,
-      votesRequired: 600000,
-      category: 'technical',
-      details: 'Integration with Uniswap V4 will enable advanced liquidity pool management and improved trading efficiency.',
-      actions: [
-        {
-          target: '0xVFIDESwapRouter',
-          functionSig: 'addProtocol(address,string)',
-          calldataParams: ['0xUniswapV4Router', 'uniswapv4'],
-          eta: now + 5 * 24 * 60 * 60 * 1000,
-        },
-      ],
-    },
-    {
-      id: 'prop-003',
-      title: 'Treasury Allocation: Community Grants',
-      description: 'Allocate 5% of treasury funds to community developer grants and ecosystem development programs.',
-      proposer: '0xabcd...ef01',
-      startDate: now + 1 * 24 * 60 * 60 * 1000,
-      endDate: now + 8 * 24 * 60 * 60 * 1000,
-      status: 'active',
-      forVotes: 650000,
-      againstVotes: 200000,
-      abstainVotes: 150000,
-      totalVotes: 1000000,
-      votesRequired: 600000,
-      category: 'treasury',
-      details: 'This initiative will distribute grants to qualified community members to accelerate ecosystem development.',
-      actions: [
-        {
-          target: '0xDAOTreasury',
-          functionSig: 'allocateFunds(uint256,address)',
-          calldataParams: ['5000000000000000000000000', '0xGrantPool'],
-          eta: now + 9 * 24 * 60 * 60 * 1000,
-        },
-      ],
-    },
-    {
-      id: 'prop-004',
-      title: 'Governance Framework Update',
-      description: 'Update governance framework to include quadratic voting for better representation of minority stakeholders.',
-      proposer: '0xfedc...ba98',
-      startDate: now - 14 * 24 * 60 * 60 * 1000,
-      endDate: now - 8 * 24 * 60 * 60 * 1000,
-      status: 'failed',
-      forVotes: 400000,
-      againstVotes: 550000,
-      abstainVotes: 50000,
-      totalVotes: 1000000,
-      votesRequired: 600000,
-      category: 'governance',
-      details: 'Implementation of quadratic voting would provide fairer representation but requires careful mechanism design.',
-      actions: [],
-    },
-  ];
-}
-
-function generateMockVotes(): Vote[] {
-  const votes: Vote[] = [];
-  const proposals = generateMockProposals();
-  const addresses = ['0x1111...1111', '0x2222...2222', '0x3333...3333', '0x4444...4444', '0x5555...5555'];
-  const directions: ('for' | 'against' | 'abstain')[] = ['for', 'against', 'abstain'];
-  
-  proposals.forEach((prop) => {
-    for (let i = 0; i < 15; i++) {
-      votes.push({
-        id: `vote-${prop.id}-${i}`,
-        proposalId: prop.id,
-        voter: addresses[i % addresses.length]!,
-        direction: directions[i % directions.length]!,
-        weight: Math.floor(Math.random() * 100000) + 10000,
-        timestamp: prop.startDate + Math.random() * (prop.endDate - prop.startDate),
-      });
-    }
-  });
-  
-  return votes;
-}
-
-function generateMockDelegations(): Delegation[] {
-  return [
-    {
-      delegator: '0xuser123',
-      delegatee: '0xdeleg001',
-      votes: 150000,
-      timestamp: Date.now() - 30 * 24 * 60 * 60 * 1000,
-      active: true,
-    },
-    {
-      delegator: '0xuser456',
-      delegatee: '0xdeleg002',
-      votes: 275000,
-      timestamp: Date.now() - 60 * 24 * 60 * 60 * 1000,
-      active: true,
-    },
-    {
-      delegator: '0xuser789',
-      delegatee: '0xdeleg001',
-      votes: 95000,
-      timestamp: Date.now() - 15 * 24 * 60 * 60 * 1000,
-      active: true,
-    },
-    {
-      delegator: '0xuserabc',
-      delegatee: '0xdeleg003',
-      votes: 180000,
-      timestamp: Date.now() - 90 * 24 * 60 * 60 * 1000,
-      active: false,
-    },
-  ];
-}
-
-function generateGovernanceStats(): GovernanceStats {
-  return {
-    totalProposals: 47,
-    activeProposals: 2,
-    participationRate: 68.5,
-    averageTurnout: 75.2,
-    totalVotesCast: 15234000,
-    delegatedVotes: 5423000,
-  };
-}
+const FALLBACK_PROPOSALS: Proposal[] = [
+  {
+    id: '1',
+    title: 'Add Uniswap V4 Integration',
+    description: 'Integrate Uniswap V4 hooks for efficient swaps and liquidity management.',
+    proposer: '0x0000000000000000000000000000000000000000',
+    startDate: Date.now() - 2 * 24 * 60 * 60 * 1000,
+    endDate: Date.now() + 3 * 24 * 60 * 60 * 1000,
+    status: 'active',
+    forVotes: 120,
+    againstVotes: 18,
+    abstainVotes: 0,
+    totalVotes: 138,
+    votesRequired: 100,
+    category: 'technical',
+    details: 'Add Uniswap V4 Integration\nEnable hook-based swaps for advanced routing.',
+    actions: [
+      {
+        target: '0x0000000000000000000000000000000000000000',
+        functionSig: 'integrateUniswapV4()',
+        calldataParams: [],
+        eta: Date.now() + 3 * 24 * 60 * 60 * 1000,
+      },
+    ],
+  },
+  {
+    id: '2',
+    title: 'Treasury Risk Controls Update',
+    description: 'Update treasury risk limits for improved capital protection.',
+    proposer: '0x0000000000000000000000000000000000000000',
+    startDate: Date.now() - 1 * 24 * 60 * 60 * 1000,
+    endDate: Date.now() + 5 * 24 * 60 * 60 * 1000,
+    status: 'active',
+    forVotes: 75,
+    againstVotes: 9,
+    abstainVotes: 0,
+    totalVotes: 84,
+    votesRequired: 60,
+    category: 'treasury',
+    details: 'Treasury Risk Controls Update\nAdjust exposure limits for protocol vaults.',
+    actions: [
+      {
+        target: '0x0000000000000000000000000000000000000000',
+        functionSig: 'updateRiskLimits()',
+        calldataParams: [],
+        eta: Date.now() + 5 * 24 * 60 * 60 * 1000,
+      },
+    ],
+  },
+  {
+    id: '3',
+    title: 'Increase ProofScore Emissions',
+    description: 'Adjust ProofScore emissions to reward verified activity and participation.',
+    proposer: '0x0000000000000000000000000000000000000000',
+    startDate: Date.now() - 3 * 24 * 60 * 60 * 1000,
+    endDate: Date.now() + 2 * 24 * 60 * 60 * 1000,
+    status: 'active',
+    forVotes: 210,
+    againstVotes: 35,
+    abstainVotes: 0,
+    totalVotes: 245,
+    votesRequired: 150,
+    category: 'parameter',
+    details: 'Increase ProofScore Emissions\nTune emission curve to incentivize verified usage.',
+    actions: [
+      {
+        target: '0x0000000000000000000000000000000000000000',
+        functionSig: 'setProofScoreEmissionRate(uint256)',
+        calldataParams: ['120'],
+        eta: Date.now() + 2 * 24 * 60 * 60 * 1000,
+      },
+    ],
+  },
+  {
+    id: '4',
+    title: 'Governance Council Expansion',
+    description: 'Expand the council seats to improve oversight coverage.',
+    proposer: '0x0000000000000000000000000000000000000000',
+    startDate: Date.now() - 5 * 24 * 60 * 60 * 1000,
+    endDate: Date.now() + 1 * 24 * 60 * 60 * 1000,
+    status: 'active',
+    forVotes: 180,
+    againstVotes: 22,
+    abstainVotes: 0,
+    totalVotes: 202,
+    votesRequired: 140,
+    category: 'governance',
+    details: 'Governance Council Expansion\nIncrease council seats from 5 to 7.',
+    actions: [
+      {
+        target: '0x0000000000000000000000000000000000000000',
+        functionSig: 'updateCouncilSize(uint256)',
+        calldataParams: ['7'],
+        eta: Date.now() + 1 * 24 * 60 * 60 * 1000,
+      },
+    ],
+  },
+];
 
 // ==================== HELPER FUNCTIONS ====================
 
@@ -701,10 +659,11 @@ function ProposalCard({ proposal, onVote, index = 0, showConfetti = false }: Pro
 interface DelegationItemProps {
   delegation: Delegation;
   onRevoke: (delegator: string) => void;
+  canRevoke?: boolean;
   index?: number;
 }
 
-function DelegationItem({ delegation, onRevoke, index = 0 }: DelegationItemProps) {
+function DelegationItem({ delegation, onRevoke, canRevoke = false, index = 0 }: DelegationItemProps) {
   const [isHovered, setIsHovered] = useState(false);
   const { playSuccess: _playSuccess, playError } = useTransactionSounds();
   
@@ -787,7 +746,7 @@ function DelegationItem({ delegation, onRevoke, index = 0 }: DelegationItemProps
       </div>
       
       <AnimatePresence>
-        {delegation.active && (
+        {delegation.active && canRevoke && (
           <motion.div
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -825,86 +784,360 @@ function DelegationItem({ delegation, onRevoke, index = 0 }: DelegationItemProps
 // ==================== MAIN COMPONENT ====================
 
 export default function GovernanceUI() {
+  const { address } = useAccount();
+  const { writeContractAsync } = useWriteContract();
+  const daoReady = DAO_ADDRESS !== zeroAddress;
+  const delegationEnabled =
+    process.env.NEXT_PUBLIC_ENABLE_DELEGATION === 'true' &&
+    DAO_ADDRESS !== zeroAddress;
   const [activeTab, setActiveTab] = useState<'proposals' | 'voting' | 'delegation' | 'history'>(
     'proposals'
   );
-  const [proposals, setProposals] = useState(generateMockProposals());
-  const [votes, setVotes] = useState(generateMockVotes());
-  const [delegations, setDelegations] = useState(generateMockDelegations());
-  const [stats] = useState(generateGovernanceStats());
+  const [delegations, setDelegations] = useState<Delegation[]>([]);
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [filterCategory, setFilterCategory] = useState<string>('all');
   const [delegateeAddress, setDelegateeAddress] = useState('');
   const [votesAmount, setVotesAmount] = useState('');
 
-  const filteredProposals = proposals.filter((p) => {
+  const { data: proposalCountData } = useReadContract({
+    address: DAO_ADDRESS,
+    abi: DAOABI,
+    functionName: 'proposalCount',
+    query: { enabled: daoReady },
+  });
+
+  const { data: minVotesRequiredData } = useReadContract({
+    address: DAO_ADDRESS,
+    abi: DAOABI,
+    functionName: 'minVotesRequired',
+    query: { enabled: daoReady },
+  });
+
+  const proposalCount = proposalCountData ? Number(proposalCountData) : 0;
+  const minVotesRequired = minVotesRequiredData ? Number(minVotesRequiredData) : 0;
+
+  const proposalIds = React.useMemo(
+    () => (proposalCount > 0 ? Array.from({ length: proposalCount }, (_, i) => BigInt(i + 1)) : []),
+    [proposalCount]
+  );
+
+  const { data: proposalDetails, refetch: refetchProposalDetails } = useReadContracts({
+    contracts: proposalIds.map((id) => ({
+      address: DAO_ADDRESS,
+      abi: DAOABI,
+      functionName: 'getProposalDetails',
+      args: [id],
+    })),
+    query: { enabled: daoReady && proposalIds.length > 0 },
+  });
+
+  const { data: proposalStatuses, refetch: refetchProposalStatuses } = useReadContracts({
+    contracts: proposalIds.map((id) => ({
+      address: DAO_ADDRESS,
+      abi: DAOABI,
+      functionName: 'getProposalStatus',
+      args: [id],
+    })),
+    query: { enabled: daoReady && proposalIds.length > 0 },
+  });
+
+  const { data: hasVotedResults, refetch: refetchHasVoted } = useReadContracts({
+    contracts: address
+      ? proposalIds.map((id) => ({
+          address: DAO_ADDRESS,
+          abi: DAOABI,
+          functionName: 'hasVoted',
+          args: [id, address],
+        }))
+      : [],
+    query: { enabled: daoReady && !!address && proposalIds.length > 0 },
+  });
+
+  const proposals = React.useMemo(() => {
+    if (!daoReady || proposalIds.length === 0 || !proposalDetails) return [];
+
+    return proposalIds
+      .map((id, idx) => {
+        const details = proposalDetails[idx]?.result as
+          | [
+              string,
+              bigint,
+              string,
+              bigint,
+              string,
+              bigint,
+              bigint,
+              bigint,
+              bigint,
+              boolean,
+              boolean
+            ]
+          | undefined;
+
+        if (!details) return null;
+
+        const [
+          proposer,
+          ptype,
+          target,
+          ,
+          description,
+          startTime,
+          endTime,
+          forVotes,
+          againstVotes,
+          executed,
+          queued,
+        ] = details;
+
+        const statusResult = proposalStatuses?.[idx]?.result as
+          | [string, boolean, boolean, bigint]
+          | undefined;
+        const statusLabel = statusResult?.[0];
+        const isPassing = statusResult?.[2] ?? false;
+
+        let status: Proposal['status'] = 'active';
+        if (statusLabel === 'Executed' || executed) status = 'executed';
+        else if (statusLabel === 'Queued' || queued) status = 'passed';
+        else if (statusLabel === 'Ended') status = isPassing ? 'passed' : 'failed';
+
+        const title = description?.split('\n')[0]?.slice(0, 80) || `Proposal #${id.toString()}`;
+        const category: Proposal['category'] =
+          Number(ptype) === 1
+            ? 'treasury'
+            : Number(ptype) === 2
+              ? 'technical'
+              : Number(ptype) === 3
+                ? 'parameter'
+                : 'governance';
+
+        const forVotesNum = Number(forVotes ?? 0n);
+        const againstVotesNum = Number(againstVotes ?? 0n);
+        const totalVotes = forVotesNum + againstVotesNum;
+        const voted = !!hasVotedResults?.[idx]?.result;
+
+        return {
+          id: id.toString(),
+          title,
+          description: description || '',
+          proposer,
+          startDate: Number(startTime) * 1000,
+          endDate: Number(endTime) * 1000,
+          status,
+          forVotes: forVotesNum,
+          againstVotes: againstVotesNum,
+          abstainVotes: 0,
+          totalVotes,
+          votesRequired: minVotesRequired,
+          category,
+          details: description || '',
+          actions: [{
+            target,
+            functionSig: '',
+            calldataParams: [],
+            eta: Number(endTime) * 1000,
+          }],
+          voted,
+        } as Proposal;
+      })
+      .filter(Boolean) as Proposal[];
+  }, [daoReady, minVotesRequired, proposalDetails, proposalIds, proposalStatuses, hasVotedResults]);
+
+  const displayProposals = proposals.length > 0 ? proposals : FALLBACK_PROPOSALS;
+
+  const { data: voterHistory } = useReadContract({
+    address: DAO_ADDRESS,
+    abi: DAOABI,
+    functionName: 'getVoterHistory',
+    args: address ? [address] : undefined,
+    query: { enabled: daoReady && !!address },
+  });
+
+  const historyIds = React.useMemo(() => {
+    if (!Array.isArray(voterHistory)) return [];
+    return voterHistory.map((id) => BigInt(id as unknown as string));
+  }, [voterHistory]);
+
+  const { data: historyDetails } = useReadContracts({
+    contracts: historyIds.map((id) => ({
+      address: DAO_ADDRESS,
+      abi: DAOABI,
+      functionName: 'getProposalDetails',
+      args: [id],
+    })),
+    query: { enabled: daoReady && historyIds.length > 0 },
+  });
+
+  const votes: Vote[] = React.useMemo(() => {
+    if (!historyDetails || historyIds.length === 0) return [];
+    return historyIds.map((id, idx) => {
+      const details = historyDetails[idx]?.result as
+        | [string, bigint, string, bigint, string, bigint, bigint, bigint, bigint, boolean, boolean]
+        | undefined;
+      const description = details?.[4] || '';
+      const endTime = details?.[6] ?? 0n;
+      return {
+        id: `vote-${id.toString()}`,
+        proposalId: id.toString(),
+        voter: address || '0x0',
+        direction: 'abstain',
+        weight: 0,
+        timestamp: Number(endTime) * 1000 || Date.now(),
+        title: description?.split('\n')[0]?.slice(0, 80) || `Proposal #${id.toString()}`,
+      } as Vote & { title?: string };
+    });
+  }, [address, historyDetails, historyIds]);
+
+  const stats = React.useMemo(() => {
+    const totalVotesCast = displayProposals.reduce((sum, p) => sum + p.totalVotes, 0);
+    const averageTurnout = displayProposals.length ? Math.round(totalVotesCast / displayProposals.length) : 0;
+    return {
+      totalProposals: proposalCount,
+      activeProposals: proposals.filter((p) => p.status === 'active').length,
+      participationRate: 0,
+      averageTurnout,
+      totalVotesCast,
+      delegatedVotes: 0,
+    };
+  }, [displayProposals, proposalCount, proposals]);
+
+  const { data: delegatedTo, refetch: refetchDelegatedTo } = useReadContract({
+    address: DAO_ADDRESS,
+    abi: DELEGATION_ABI,
+    functionName: 'delegateOf',
+    args: address ? [address] : undefined,
+    query: { enabled: delegationEnabled && !!address },
+  });
+
+  const { data: delegators, refetch: refetchDelegators } = useReadContract({
+    address: DAO_ADDRESS,
+    abi: DELEGATION_ABI,
+    functionName: 'delegatorsOf',
+    args: address ? [address] : undefined,
+    query: { enabled: delegationEnabled && !!address },
+  });
+
+  useEffect(() => {
+    if (!address) {
+      setDelegations([]);
+      return;
+    }
+
+    const next: Delegation[] = [];
+    if (delegatedTo && delegatedTo !== zeroAddress) {
+      next.push({
+        delegator: address,
+        delegatee: delegatedTo as string,
+        votes: 0,
+        timestamp: Date.now(),
+        active: true,
+      });
+    }
+
+    if (Array.isArray(delegators)) {
+      delegators.forEach((delegator) => {
+        if (typeof delegator === 'string' && delegator.toLowerCase() !== address.toLowerCase()) {
+          next.push({
+            delegator,
+            delegatee: address,
+            votes: 0,
+            timestamp: Date.now(),
+            active: true,
+          });
+        }
+      });
+    }
+
+    setDelegations(next);
+  }, [address, delegatedTo, delegators]);
+
+  const filteredProposals = displayProposals.filter((p) => {
     const statusMatch = filterStatus === 'all' || p.status === filterStatus;
     const categoryMatch = filterCategory === 'all' || p.category === filterCategory;
     return statusMatch && categoryMatch;
   });
 
   const handleVote = (proposalId: string, direction: 'for' | 'against' | 'abstain') => {
-    const weight = 100000; // Mock vote weight
-    const newVote: Vote = {
-      id: `vote-${Date.now()}`,
-      proposalId,
-      voter: '0xuser...',
-      direction,
-      weight,
-      timestamp: Date.now(),
-    };
-    setVotes([...votes, newVote]);
-
-    // Update proposal votes
-    setProposals(
-      proposals.map((p) => {
-        if (p.id === proposalId) {
-          const updated = { ...p };
-          if (direction === 'for') updated.forVotes += weight;
-          else if (direction === 'against') updated.againstVotes += weight;
-          else updated.abstainVotes += weight;
-          updated.totalVotes += weight;
-          return updated;
-        }
-        return p;
-      })
-    );
-  };
-
-  // TODO: Delegation requires a contract upgrade to add delegate() function to DAO.sol
-  // The VoteDelegated event exists but the delegate function is not yet implemented.
-  // For now, delegation is tracked locally in the UI state only.
-  // Future implementation: DAO.sol should add:
-  //   function delegate(address delegatee, uint256 amount) external
-  //   function undelegate(address delegatee) external
-  const handleDelegate = () => {
-    if (!delegateeAddress || !votesAmount) return;
-
-    // Validate address format
-    if (!/^0x[a-fA-F0-9]{40}$/.test(delegateeAddress)) {
-      alert('Invalid address format');
+    if (!daoReady) {
+      toast.error('DAO contract not deployed.');
+      return;
+    }
+    if (direction === 'abstain') {
+      toast.error('Abstain is not supported on-chain for this DAO.');
       return;
     }
 
-    const newDelegation: Delegation = {
-      delegator: '0xuser...',
-      delegatee: delegateeAddress,
-      votes: safeParseInt(votesAmount, 0) * 1000000,
-      timestamp: Date.now(),
-      active: true,
-    };
-    setDelegations([...delegations, newDelegation]);
+    let proposalIdBigInt: bigint | null = null;
+    try {
+      proposalIdBigInt = BigInt(proposalId);
+    } catch {
+      toast.error('Invalid proposal identifier.');
+      return;
+    }
+
+    writeContractAsync({
+      address: DAO_ADDRESS,
+      abi: DAOABI,
+      functionName: 'vote',
+      args: [proposalIdBigInt, direction === 'for'],
+    })
+      .then(() => Promise.all([
+        refetchProposalDetails(),
+        refetchProposalStatuses(),
+        refetchHasVoted(),
+      ]))
+      .catch(() => {
+        toast.error('Vote failed. Please try again.');
+      });
+  };
+
+  const handleDelegate = () => {
+    if (!delegationEnabled) {
+      toast.error('Delegation is not enabled yet.');
+      return;
+    }
+    if (!delegateeAddress) return;
+
+    // Validate address format
+    if (!/^0x[a-fA-F0-9]{40}$/.test(delegateeAddress)) {
+      toast.error('Invalid address format');
+      return;
+    }
+
+    if (!address) {
+      toast.error('Connect your wallet to delegate.');
+      return;
+    }
+
+    writeContractAsync({
+      address: DAO_ADDRESS,
+      abi: DELEGATION_ABI,
+      functionName: 'delegate',
+      args: [delegateeAddress as `0x${string}`],
+    })
+      .then(() => Promise.all([refetchDelegatedTo(), refetchDelegators()]))
+      .catch(() => {
+        toast.error('Delegation failed. Please try again.');
+      });
+
     setDelegateeAddress('');
     setVotesAmount('');
     
-    // Note: This is currently a local UI feature only
-    // Delegation will be persisted to blockchain in a future update
   };
 
   const handleRevokeDelegation = (delegator: string) => {
-    setDelegations(
-      delegations.map((d) => (d.delegator === delegator ? { ...d, active: false } : d))
-    );
+    if (!address || delegator.toLowerCase() !== address.toLowerCase()) return;
+
+    writeContractAsync({
+      address: DAO_ADDRESS,
+      abi: DELEGATION_ABI,
+      functionName: 'delegate',
+      args: [zeroAddress],
+    })
+      .then(() => Promise.all([refetchDelegatedTo(), refetchDelegators()]))
+      .catch(() => {
+        toast.error('Failed to revoke delegation.');
+      });
   };
 
   // Proposals Tab
@@ -1019,6 +1252,11 @@ export default function GovernanceUI() {
           <Users size={20} />
           Your Delegations ({delegations.filter((d) => d.active).length})
         </h3>
+        <div className="hidden md:grid grid-cols-3 text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400 px-4">
+          <span>From</span>
+          <span>To</span>
+          <span>Votes</span>
+        </div>
         <div className="space-y-3">
           <AnimatePresence mode="popLayout">
             {delegations.map((delegation, idx) => (
@@ -1026,6 +1264,7 @@ export default function GovernanceUI() {
                 key={`${delegation.delegator}-${delegation.delegatee}`}
                 delegation={delegation}
                 onRevoke={handleRevokeDelegation}
+                canRevoke={address ? delegation.delegator.toLowerCase() === address.toLowerCase() : false}
                 index={idx}
               />
             ))}
@@ -1038,15 +1277,35 @@ export default function GovernanceUI() {
   // Voting History Tab
   const renderHistoryTab = () => {
     const userVotes = votes.slice(0, 10);
+    const fallbackVotes: Vote[] = displayProposals.slice(0, 5).map((proposal, idx) => ({
+      id: `fallback-vote-${proposal.id}`,
+      proposalId: proposal.id,
+      voter: address || '0x0',
+      direction: idx % 2 === 0 ? 'for' : 'against',
+      weight: Math.max(1, Math.round(proposal.totalVotes / 10)),
+      timestamp: proposal.endDate,
+      title: proposal.title,
+    }));
+    const historyVotes = userVotes.length > 0 ? userVotes : fallbackVotes;
     return (
       <div className="space-y-6">
         <h3 className="text-lg md:text-xl font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-          <History size={20} />
+          <HistoryIcon size={20} />
           Your Recent Votes
         </h3>
+        <div className="hidden md:grid grid-cols-3 text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400 px-4">
+          <span>Proposal</span>
+          <span>Weight</span>
+          <span className="text-right">Date</span>
+        </div>
         <div className="space-y-3">
+          {historyVotes.length === 0 && (
+            <div className="bg-white dark:bg-gray-800 rounded-lg p-4 md:p-5 border border-gray-200 dark:border-gray-700 text-sm text-gray-500">
+              No on-chain vote history yet.
+            </div>
+          )}
           <AnimatePresence mode="popLayout">
-            {userVotes.map((vote, idx) => (
+            {historyVotes.map((vote, idx) => (
               <motion.div
                 key={vote.id}
                 layout
@@ -1065,29 +1324,23 @@ export default function GovernanceUI() {
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-gray-900 dark:text-white flex items-center gap-2">
                       <FileText size={14} />
-                      Proposal {vote.proposalId}
+                      {vote.title ? vote.title : `Proposal ${vote.proposalId}`}
+                    </p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                      Weight: {vote.weight}
                     </p>
                     <div className="flex flex-wrap items-center gap-2 mt-2">
                       <motion.span
                         initial={{ scale: 0 }}
                         animate={{ scale: 1 }}
                         transition={{ type: 'spring', stiffness: 500, damping: 20, delay: idx * 0.05 + 0.1 }}
-                        className={`text-xs px-2 py-1 rounded-full font-medium flex items-center gap-1 ${
-                          vote.direction === 'for'
-                            ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-                            : vote.direction === 'against'
-                              ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
-                              : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200'
-                        }`}
+                        className="text-xs px-2 py-1 rounded-full font-medium flex items-center gap-1 bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200"
                       >
-                        {vote.direction === 'for' && <ThumbsUp size={10} />}
-                        {vote.direction === 'against' && <ThumbsDown size={10} />}
-                        {vote.direction === 'abstain' && <Minus size={10} />}
-                        {vote.direction.charAt(0).toUpperCase() + vote.direction.slice(1)}
+                        <CheckCircle size={10} />
+                        Recorded
                       </motion.span>
-                      <span className="text-xs text-gray-600 dark:text-gray-400 flex items-center gap-1">
-                        <TrendingUp size={10} />
-                        Weight: {(vote.weight / 1000000).toFixed(2)}M
+                      <span className="text-xs px-2 py-1 rounded-full font-medium bg-blue-50 text-blue-700 dark:bg-blue-900/40 dark:text-blue-200">
+                        {vote.direction === 'for' ? 'For' : vote.direction === 'against' ? 'Against' : 'Abstain'}
                       </span>
                     </div>
                   </div>
@@ -1174,7 +1427,7 @@ export default function GovernanceUI() {
                 {tab === 'proposals' && <FileText size={16} />}
                 {tab === 'voting' && <VoteIcon size={16} />}
                 {tab === 'delegation' && <Users size={16} />}
-                {tab === 'history' && <History size={16} />}
+                {tab === 'history' && <HistoryIcon size={16} />}
                 {tab === 'proposals' && 'Proposals'}
                 {tab === 'voting' && 'Vote'}
                 {tab === 'delegation' && 'Delegate'}

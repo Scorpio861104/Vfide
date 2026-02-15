@@ -12,11 +12,13 @@ import { useEffect, useRef } from 'react';
  */
 export function useRenderCount(componentName: string, logThreshold: number = 5) {
   const renderCount = useRef(0);
-  const startTime = useRef(Date.now());
+  const startTime = useRef<number | null>(null);
 
   useEffect(() => {
+    const now = Date.now();
+    const start = startTime.current ?? now;
     renderCount.current += 1;
-    const renderTime = Date.now() - startTime.current;
+    const renderTime = now - start;
 
     if (renderCount.current >= logThreshold) {
       console.log(
@@ -25,9 +27,10 @@ export function useRenderCount(componentName: string, logThreshold: number = 5) 
       );
     }
 
-    startTime.current = Date.now();
+    startTime.current = now;
   });
 
+  // eslint-disable-next-line react-hooks/refs
   return renderCount.current;
 }
 

@@ -3,6 +3,8 @@
  * Larger-scale groups with topics, channels, roles, and moderation
  */
 
+import { secureId, secureInviteCode } from '@/lib/secureRandom';
+
 export interface Community {
   id: string;
   name: string;
@@ -169,7 +171,7 @@ export function createCommunity(
   icon: string = '🏛️',
   visibility: Community['visibility'] = 'public'
 ): Community {
-  const communityId = `community_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  const communityId = secureId('community');
 
   // Create default roles
   const roles: CommunityRole[] = DEFAULT_ROLES.map((role, index) => ({
@@ -244,12 +246,7 @@ export function createInvite(
  * Generate random invite code
  */
 function generateInviteCode(): string {
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-  let code = '';
-  for (let i = 0; i < 8; i++) {
-    code += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-  return code;
+  return secureInviteCode(8);
 }
 
 /**

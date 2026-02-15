@@ -15,8 +15,13 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version-file: '.nvmrc'
           cache: 'npm'
+
+      - name: Verify runtime constraints
+        run: |
+          node -e "const [major]=process.versions.node.split('.').map(Number); if(major!==22){console.error('Expected Node 22.x, got '+process.versions.node); process.exit(1);}"
+          node -e "const {execSync}=require('node:child_process'); const v=execSync('npm -v').toString().trim(); const [major]=v.split('.').map(Number); if(major<10){console.error('Expected npm >=10, got '+v); process.exit(1);}"
       
       - name: Install dependencies
         run: npm ci

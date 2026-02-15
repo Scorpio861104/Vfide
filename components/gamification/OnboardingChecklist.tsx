@@ -16,14 +16,16 @@ import {
   Vote, Trophy, Zap, Star, X, Sparkles
 } from 'lucide-react';
 import { useTransactionSounds } from '@/hooks/useTransactionSounds';
+import { getAuthHeaders, getAuthToken } from '@/lib/auth/client';
 
 // Confetti particle component
 function Confetti({ count = 50 }: { count?: number }) {
+  const confettiColors = ['#FFD700', '#FFA500', '#FF6B6B', '#4ECDC4', '#9333EA'];
   const particles = Array.from({ length: count }, (_, i) => ({
     id: i,
-    x: Math.random() * 100,
-    delay: Math.random() * 0.5,
-    color: ['#FFD700', '#FFA500', '#FF6B6B', '#4ECDC4', '#9333EA'][Math.floor(Math.random() * 5)]
+    x: (i * 37 + 13) % 100,
+    delay: (i % 10) * 0.05,
+    color: confettiColors[i % 5]
   }));
   
   return (
@@ -83,96 +85,69 @@ export default function OnboardingChecklist() {
 
   useEffect(() => {
     if (isConnected) {
-      loadProgress();
+      void loadProgress();
     }
   }, [isConnected]);
 
   const loadProgress = async () => {
-    // In production: Fetch from API
-    const mockItems: ChecklistItem[] = [
-      {
-        id: '1',
-        title: 'Connect Your Wallet',
-        description: 'Link your wallet to get started',
-        icon: <Wallet className="w-5 h-5" />,
-        completed: true,
-        reward: { xp: 50, vfide: 10 },
-        action: { label: 'Connected', link: '#' },
-        order: 1
-      },
-      {
-        id: '2',
-        title: 'Set Up Guardians',
-        description: 'Add 3 trusted guardians for account recovery',
-        icon: <Shield className="w-5 h-5" />,
-        completed: false,
-        reward: { xp: 100, vfide: 25, badge: 'Guardian Angel' },
-        action: { label: 'Add Guardians', link: '/vault' },
-        order: 2
-      },
-      {
-        id: '3',
-        title: 'Make First Transaction',
-        description: 'Send or receive your first payment',
-        icon: <Zap className="w-5 h-5" />,
-        completed: false,
-        reward: { xp: 150, vfide: 50 },
-        action: { label: 'Send Payment', link: '/crypto' },
-        order: 3
-      },
-      {
-        id: '4',
-        title: 'Add 3 Friends',
-        description: 'Build your network',
-        icon: <Users className="w-5 h-5" />,
-        completed: false,
-        reward: { xp: 100, vfide: 30 },
-        action: { label: 'Find Friends', link: '/social' },
-        order: 4
-      },
-      {
-        id: '5',
-        title: 'Send First Message',
-        description: 'Start a conversation',
-        icon: <MessageSquare className="w-5 h-5" />,
-        completed: false,
-        reward: { xp: 75 },
-        action: { label: 'Open Chat', link: '/social-messaging' },
-        order: 5
-      },
-      {
-        id: '6',
-        title: 'Cast Your First Vote',
-        description: 'Participate in governance',
-        icon: <Vote className="w-5 h-5" />,
-        completed: false,
-        reward: { xp: 200, vfide: 75, badge: 'Active Voter' },
-        action: { label: 'View Proposals', link: '/governance' },
-        order: 6
-      },
-      {
-        id: '7',
-        title: 'Reach 600 ProofScore',
-        description: 'Build your reputation',
-        icon: <Star className="w-5 h-5" />,
-        completed: false,
-        reward: { xp: 300, vfide: 100, badge: 'Trusted Member' },
-        action: { label: 'View Score', link: '/dashboard' },
-        order: 7
-      },
-      {
-        id: '8',
-        title: 'Earn Your First Badge',
-        description: 'Unlock an achievement',
-        icon: <Trophy className="w-5 h-5" />,
-        completed: false,
-        reward: { xp: 250, vfide: 150 },
-        action: { label: 'View Badges', link: '/achievements' },
-        order: 8
-      }
-    ];
+    try {
+      const token = getAuthToken();
+      if (!token) return;
 
-    setItems(mockItems);
+      const response = await fetch('/api/gamification/onboarding', {
+        headers: getAuthHeaders(),
+      });
+      if (!response.ok) {
+        return;
+      }
+
+      const data = await response.json();
+      const iconMap: Record<string, React.ReactNode> = {
+        'connect-wallet': <Wallet className="w-5 h-5" />,
+        'setup-guardians': <Shield className="w-5 h-5" />,
+        'first-transaction': <Zap className="w-5 h-5" />,
+        'add-friends': <Users className="w-5 h-5" />,
+        'send-message': <MessageSquare className="w-5 h-5" />,
+        'cast-vote': <Vote className="w-5 h-5" />,
+        'proofscore-600': <Star className="w-5 h-5" />,
+        'first-badge': <Trophy className="w-5 h-5" />,
+      };
+
+      if (Array.isArray(data?.items)) {
+        setItems(
+          data.items.map((item: ChecklistItem) => ({
+            ...item,
+            icon: iconMap[item.id] ?? <Sparkles className="w-5 h-5" />,
+          }))
+        );
+      }
+    } catch (error) {
+      console.error('Failed to load onboarding checklist:', error);
+    }
+  };
+
+  const handleCompleteItem = async (itemId: string) => {
+    try {
+      const response = await fetch('/api/gamification/onboarding', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+        body: JSON.stringify({ itemId, completed: true }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data.error || 'Failed to update checklist');
+      }
+
+      setItems((prev) =>
+        prev.map((item) =>
+          item.id === itemId ? { ...item, completed: true } : item
+        )
+      );
+      playSuccess();
+    } catch (error) {
+      console.error('Failed to update onboarding checklist:', error);
+    }
   };
 
   const completedCount = items.filter(item => item.completed).length;
@@ -302,7 +277,7 @@ export default function OnboardingChecklist() {
               exit={{ opacity: 0, x: 20 }}
               transition={{ delay: index * 0.05, type: 'spring', stiffness: 300 }}
             >
-              <ChecklistItemCard item={item} onComplete={() => playSuccess()} />
+              <ChecklistItemCard item={item} onComplete={handleCompleteItem} />
             </motion.div>
           ))}
         </AnimatePresence>
@@ -343,7 +318,7 @@ export default function OnboardingChecklist() {
   );
 }
 
-function ChecklistItemCard({ item, onComplete: _onComplete }: { item: ChecklistItem; onComplete?: () => void }) {
+function ChecklistItemCard({ item, onComplete }: { item: ChecklistItem; onComplete?: (itemId: string) => void }) {
   return (
     <motion.div 
       className={`rounded-lg p-3 ${
@@ -418,6 +393,18 @@ function ChecklistItemCard({ item, onComplete: _onComplete }: { item: ChecklistI
                 <ArrowRight className="w-4 h-4" />
               </motion.div>
             </motion.a>
+          )}
+
+          {!item.completed && onComplete && (
+            <motion.button
+              type="button"
+              onClick={() => onComplete(item.id)}
+              className="mt-2 inline-flex items-center gap-2 text-xs font-semibold text-emerald-400"
+              whileHover={{ scale: 1.03 }}
+            >
+              <CheckCircle2 className="w-4 h-4" />
+              Mark complete
+            </motion.button>
           )}
         </div>
       </div>

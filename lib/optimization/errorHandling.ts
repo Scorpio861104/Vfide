@@ -44,7 +44,7 @@ export enum ErrorType {
 export interface ApiError {
   type: ErrorType;
   message: string;
-  details?: Record<string, any>;
+  details?: Record<string, unknown>;
   code?: string;
   statusCode: number;
   timestamp: string;
@@ -90,7 +90,7 @@ const RETRYABLE_ERRORS = new Set([
 export function createApiError(
   type: ErrorType,
   message: string,
-  details?: Record<string, any>,
+  details?: Record<string, unknown>,
   requestId?: string
 ): ApiError {
   return {
@@ -140,7 +140,7 @@ export class AppError extends Error {
   constructor(
     public type: ErrorType,
     message: string,
-    public details?: Record<string, any>,
+    public details?: Record<string, unknown>,
     public statusCode?: number
   ) {
     super(message);

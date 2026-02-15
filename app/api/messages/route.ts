@@ -160,9 +160,8 @@ export async function GET(request: NextRequest) {
     }
   } catch (error) {
     console.error('[Messages GET API] Error:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Failed to fetch messages';
     return NextResponse.json(
-      { error: errorMessage },
+      { error: 'Internal server error' },
       { status: 500 }
     );
   }
@@ -195,8 +194,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { from, to, content } = validation.data;
-    const isEncrypted = false; // Default to unencrypted
+    const { from, to, content, encryptedContent } = validation.data;
+    const messageContent = encryptedContent ?? content ?? '';
+    const isEncrypted = Boolean(encryptedContent);
     
     // Content is already sanitized by sendMessageSchema via validateBody
 
@@ -244,8 +244,8 @@ export async function POST(request: NextRequest) {
     const messageResult = await client.query(
       `INSERT INTO messages (sender_id, recipient_id, content, is_encrypted, is_read)
        VALUES ($1, $2, $3, $4, false)
-       RETURNING *`,
-      [senderId, recipientId, content, isEncrypted || false]
+       RETURNING id, sender_id, recipient_id, content, is_encrypted, is_read, created_at, updated_at`,
+      [senderId, recipientId, messageContent, isEncrypted]
     );
 
     const message = messageResult.rows[0];
@@ -270,9 +270,8 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     await client.query('ROLLBACK');
     console.error('[Messages POST API] Error:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Failed to send message';
     return NextResponse.json(
-      { error: errorMessage },
+      { error: 'Internal server error' },
       { status: 500 }
     );
   } finally {

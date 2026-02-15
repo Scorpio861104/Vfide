@@ -1,4 +1,4 @@
-// VFIDE Testnet - Interactive Onboarding System
+// VFIDE - Interactive Onboarding System
 // Welcome new users and guide them through the platform
 
 import { create } from 'zustand';
@@ -41,7 +41,7 @@ const ONBOARDING_STEPS: Record<string, OnboardingStep> = {
   'connect-wallet': {
     id: 'connect-wallet',
     title: '🔗 Connect Your Wallet',
-    description: 'First, connect your wallet to get started. We support MetaMask, Coinbase Wallet, and WalletConnect. Don\'t worry, this is a testnet—completely safe!',
+    description: 'First, connect your wallet to get started. We support MetaMask, Coinbase Wallet, and WalletConnect. Base Sepolia mirrors mainnet behavior, and all transactions use test ETH.',
     targetElement: '[data-onboarding="wallet-button"]',
     position: 'bottom',
     action: 'connect-wallet',
@@ -52,7 +52,7 @@ const ONBOARDING_STEPS: Record<string, OnboardingStep> = {
   'get-testnet-eth': {
     id: 'get-testnet-eth',
     title: '💧 Get Free Testnet ETH',
-    description: 'You\'ll need some testnet ETH to interact with the platform. Click the faucet button to get free testnet ETH. It takes about 30 seconds.',
+    description: 'You\'ll need Base Sepolia ETH to interact with the platform. Click the faucet button to get free test ETH. It takes about 30 seconds.',
     targetElement: '[data-onboarding="faucet-button"]',
     position: 'bottom',
     action: 'use-faucet',
@@ -106,7 +106,7 @@ const ONBOARDING_STEPS: Record<string, OnboardingStep> = {
   'send-message': {
     id: 'send-message',
     title: '✉️ Send Your First Message',
-    description: 'Real-time messaging powered by WebSocket. Try sending a message to the VFIDE Founder or another community member!',
+    description: 'Secure messaging built into VFIDE. Try sending a message to the VFIDE Founder or another community member!',
     targetElement: '[data-onboarding="message-button"]',
     position: 'right',
     action: 'send-message',

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
 import {
   Award,
@@ -38,41 +38,27 @@ interface EndorsementsBadgesProps {
 }
 
 export function EndorsementsBadges({ userAddress, showGiveEndorsement, onGiveEndorsement }: EndorsementsBadgesProps) {
-  const [endorsements, setEndorsements] = useState<Endorsement[]>([]);
-  const [badges, setBadges] = useState<Badge[]>([]);
-  const [isClient, setIsClient] = useState(false);
-
-  // Handle SSR
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
-
-  useEffect(() => {
-    if (!userAddress || !isClient || typeof window === 'undefined') return;
-    
-    // Load endorsements from localStorage
+  const endorsements = useMemo<Endorsement[]>(() => {
+    if (!userAddress || typeof window === 'undefined') return [];
     try {
       const storedEndorsements = localStorage.getItem(`vfide_endorsements_${userAddress}`);
-      if (storedEndorsements) {
-        const endorsementsData: Endorsement[] = JSON.parse(storedEndorsements);
-        setEndorsements(endorsementsData);
-      }
+      return storedEndorsements ? (JSON.parse(storedEndorsements) as Endorsement[]) : [];
     } catch (e) {
       console.error('Failed to load endorsements:', e);
-      setEndorsements([]);
+      return [];
     }
+  }, [userAddress]);
 
-    // Load badges
+  const badges = useMemo<Badge[]>(() => {
+    if (!userAddress || typeof window === 'undefined') return [];
     try {
       const storedBadges = localStorage.getItem(`vfide_badges_${userAddress}`);
-      if (storedBadges) {
-        setBadges(JSON.parse(storedBadges));
-      }
+      return storedBadges ? (JSON.parse(storedBadges) as Badge[]) : [];
     } catch (e) {
       console.error('Failed to load badges:', e);
-      setBadges([]);
+      return [];
     }
-  }, [userAddress, isClient]);
+  }, [userAddress]);
 
   // Memoize stats calculation for performance
   const endorsementStats = useMemo(() => {

@@ -7,7 +7,8 @@
 
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { buildCsrfHeaders } from '@/lib/security/csrfClient';
 
 // ============================================================================
 // Types
@@ -123,36 +124,44 @@ type OperationProcessor = (operation: QueuedOperation) => Promise<void>;
 
 const processors: Record<string, OperationProcessor> = {
   transfer: async (op) => {
+    const headers = await buildCsrfHeaders({ 'Content-Type': 'application/json' }, 'POST');
     const response = await fetch('/api/vault/transfer', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers,
+      credentials: 'include',
       body: JSON.stringify(op.data),
     });
     if (!response.ok) throw new Error('Transfer failed');
   },
 
   message: async (op) => {
+    const headers = await buildCsrfHeaders({ 'Content-Type': 'application/json' }, 'POST');
     const response = await fetch('/api/messages', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers,
+      credentials: 'include',
       body: JSON.stringify(op.data),
     });
     if (!response.ok) throw new Error('Message failed');
   },
 
   vote: async (op) => {
+    const headers = await buildCsrfHeaders({ 'Content-Type': 'application/json' }, 'POST');
     const response = await fetch('/api/governance/vote', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers,
+      credentials: 'include',
       body: JSON.stringify(op.data),
     });
     if (!response.ok) throw new Error('Vote failed');
   },
 
   stake: async (op) => {
+    const headers = await buildCsrfHeaders({ 'Content-Type': 'application/json' }, 'POST');
     const response = await fetch('/api/staking/stake', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers,
+      credentials: 'include',
       body: JSON.stringify(op.data),
     });
     if (!response.ok) throw new Error('Stake failed');
@@ -160,9 +169,11 @@ const processors: Record<string, OperationProcessor> = {
 
   custom: async (op) => {
     const { url, method = 'POST', body } = op.data as { url: string; method?: string; body?: unknown };
+    const headers = await buildCsrfHeaders({ 'Content-Type': 'application/json' }, method);
     const response = await fetch(url, {
       method,
-      headers: { 'Content-Type': 'application/json' },
+      headers,
+      credentials: 'include',
       body: body ? JSON.stringify(body) : undefined,
     });
     if (!response.ok) throw new Error('Request failed');
@@ -215,6 +226,9 @@ export function useOfflineQueue() {
     lastSyncTime: null,
   });
 
+  // Ref to hold the latest syncQueue — avoids TDZ while keeping the closure fresh
+  const syncQueueRef = useRef<(() => Promise<void>) | null>(null);
+
   // Load queue on mount
   useEffect(() => {
     getAllFromStore()
@@ -226,7 +240,7 @@ export function useOfflineQueue() {
   useEffect(() => {
     const handleOnline = () => {
       setState((s) => ({ ...s, isOnline: true }));
-      syncQueue();
+      syncQueueRef.current?.();
     };
 
     const handleOffline = () => {
@@ -242,28 +256,47 @@ export function useOfflineQueue() {
     };
   }, []);
 
-  // Listen for service worker messages
-  useEffect(() => {
-    const handleMessage = (event: MessageEvent) => {
-      if (event.data.type === 'QUEUE_REQUEST') {
-        const { request } = event.data;
-        addOperation({
-          type: 'custom',
-          data: {
-            url: request.url,
-            method: request.method,
-            body: request.body,
-          },
-        });
-      } else if (event.data.type === 'PROCESS_QUEUE') {
-        syncQueue();
-      }
-    };
+  const processOperation = useCallback(async (operation: QueuedOperation): Promise<boolean> => {
+    const processor = processors[operation.type];
+    if (!processor) {
+      console.error(`No processor for operation type: ${operation.type}`);
+      return false;
+    }
 
-    navigator.serviceWorker?.addEventListener('message', handleMessage);
-    return () => {
-      navigator.serviceWorker?.removeEventListener('message', handleMessage);
-    };
+    try {
+      const processingOp = { ...operation, status: 'processing' as const };
+      await updateInStore(processingOp);
+      setState((s) => ({
+        ...s,
+        queue: s.queue.map((op) => (op.id === operation.id ? processingOp : op)),
+      }));
+
+      await processor(operation);
+
+      await removeFromStore(operation.id);
+      setState((s) => ({
+        ...s,
+        queue: s.queue.filter((op) => op.id !== operation.id),
+      }));
+
+      return true;
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      const failedOp: QueuedOperation = {
+        ...operation,
+        retries: operation.retries + 1,
+        status: operation.retries + 1 >= operation.maxRetries ? 'failed' : 'pending',
+        error: errorMessage,
+      };
+
+      await updateInStore(failedOp);
+      setState((s) => ({
+        ...s,
+        queue: s.queue.map((op) => (op.id === operation.id ? failedOp : op)),
+      }));
+
+      return false;
+    }
   }, []);
 
   const addOperation = useCallback(async (
@@ -287,58 +320,36 @@ export function useOfflineQueue() {
     }
 
     return newOp.id;
-  }, []);
+  }, [processOperation]);
 
   const removeOperation = useCallback(async (id: string): Promise<void> => {
     await removeFromStore(id);
     setState((s) => ({ ...s, queue: s.queue.filter((op) => op.id !== id) }));
   }, []);
 
-  const processOperation = async (operation: QueuedOperation): Promise<boolean> => {
-    const processor = processors[operation.type];
-    if (!processor) {
-      console.error(`No processor for operation type: ${operation.type}`);
-      return false;
-    }
+  // Listen for service worker messages
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      if (event.data.type === 'QUEUE_REQUEST') {
+        const { request } = event.data;
+        void addOperation({
+          type: 'custom',
+          data: {
+            url: request.url,
+            method: request.method,
+            body: request.body,
+          },
+        });
+      } else if (event.data.type === 'PROCESS_QUEUE') {
+        syncQueueRef.current?.();
+      }
+    };
 
-    try {
-      // Update status to processing
-      const processingOp = { ...operation, status: 'processing' as const };
-      await updateInStore(processingOp);
-      setState((s) => ({
-        ...s,
-        queue: s.queue.map((op) => (op.id === operation.id ? processingOp : op)),
-      }));
-
-      await processor(operation);
-
-      // Success - remove from queue
-      await removeFromStore(operation.id);
-      setState((s) => ({
-        ...s,
-        queue: s.queue.filter((op) => op.id !== operation.id),
-      }));
-
-      return true;
-    } catch (error) {
-      // Failed - update retry count
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      const failedOp: QueuedOperation = {
-        ...operation,
-        retries: operation.retries + 1,
-        status: operation.retries + 1 >= operation.maxRetries ? 'failed' : 'pending',
-        error: errorMessage,
-      };
-
-      await updateInStore(failedOp);
-      setState((s) => ({
-        ...s,
-        queue: s.queue.map((op) => (op.id === operation.id ? failedOp : op)),
-      }));
-
-      return false;
-    }
-  };
+    navigator.serviceWorker?.addEventListener('message', handleMessage);
+    return () => {
+      navigator.serviceWorker?.removeEventListener('message', handleMessage);
+    };
+  }, [addOperation]);
 
   const syncQueue = useCallback(async (): Promise<void> => {
     if (!navigator.onLine || state.isSyncing) return;
@@ -358,7 +369,12 @@ export function useOfflineQueue() {
       isSyncing: false,
       lastSyncTime: Date.now(),
     }));
-  }, [state.queue, state.isSyncing]);
+  }, [state.queue, state.isSyncing, processOperation]);
+
+  // Keep the ref in sync so effects always call the latest version
+  useEffect(() => {
+    syncQueueRef.current = syncQueue;
+  }, [syncQueue]);
 
   const retryFailed = useCallback(async (): Promise<void> => {
     const failedOps = state.queue.filter((op) => op.status === 'failed');

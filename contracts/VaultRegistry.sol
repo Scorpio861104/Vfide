@@ -70,6 +70,7 @@ contract VaultRegistry is Ownable, ReentrancyGuard {
     // Guardian address => list of vaults they guard
     mapping(address => address[]) public vaultsGuardedBy;
     mapping(address => mapping(address => bool)) private _isGuardianOf;
+    mapping(address => uint256) public guardianCount;
     
     // Vault metadata for search results
     struct VaultInfo {
@@ -267,6 +268,7 @@ contract VaultRegistry is Ownable, ReentrancyGuard {
         if (!_isGuardianOf[guardian][vault]) {
             _isGuardianOf[guardian][vault] = true;
             vaultsGuardedBy[guardian].push(vault);
+            guardianCount[vault] += 1;
             emit GuardianRegistered(vault, guardian);
         }
     }
@@ -280,6 +282,9 @@ contract VaultRegistry is Ownable, ReentrancyGuard {
     ) external onlyVaultOwner(vault) validVault(vault) {
         if (_isGuardianOf[guardian][vault]) {
             _isGuardianOf[guardian][vault] = false;
+            if (guardianCount[vault] > 0) {
+                guardianCount[vault] -= 1;
+            }
             
             // Remove from array (swap and pop)
             address[] storage guardedVaults = vaultsGuardedBy[guardian];
@@ -318,7 +323,7 @@ contract VaultRegistry is Ownable, ReentrancyGuard {
      * @notice Update vault activity timestamp
      * @dev Called on significant vault actions to track activity
      */
-    function updateActivity(address vault) external {
+    function updateActivity(address vault) external onlyVaultOwner(vault) {
         if (vaultHub.isVault(vault)) {
             vaultLastActiveAt[vault] = block.timestamp;
             emit VaultActivityUpdated(vault, block.timestamp);
@@ -605,10 +610,8 @@ contract VaultRegistry is Ownable, ReentrancyGuard {
     // INTERNAL HELPERS
     // ═══════════════════════════════════════════════════════════════════════════════
     
-    function _hasGuardians(address /*vault*/) internal pure returns (bool) {
-        // Check if any guardian is registered for this vault
-        // This is a simplified check - in production, query UserVault directly
-        return true; // Placeholder - implement based on UserVault interface
+    function _hasGuardians(address vault) internal view returns (bool) {
+        return guardianCount[vault] > 0;
     }
     
     function _toLower(string memory str) internal pure returns (string memory) {

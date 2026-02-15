@@ -10,13 +10,14 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useAccount } from 'wagmi';
 import { 
-  Target, Flame, Gift, CheckCircle2, Lock, 
+  Flame, Gift, CheckCircle2, Lock, 
   Clock, TrendingUp, Star, Award, Calendar,
   ChevronLeft, ChevronRight, Zap
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTransactionSounds } from '@/hooks/useTransactionSounds';
 import { triggerAchievement } from './AchievementToast';
+import { getAuthHeaders } from '@/lib/auth/client';
 
 interface Quest {
   id: string;
@@ -156,41 +157,160 @@ function StreakCalendar({ history, onMonthChange }: { history: boolean[]; onMont
 // ==================== MAIN COMPONENT ====================
 
 export default function DailyQuestsPanel() {
-  const { address: _address, isConnected } = useAccount();
+  const { address, isConnected } = useAccount();
   const [activeTab, setActiveTab] = useState<'daily' | 'weekly' | 'monthly'>('daily');
   const [quests, setQuests] = useState<Quest[]>([]);
   const [showCalendar, setShowCalendar] = useState(false);
-  const [streak] = useState<StreakData>({
-    current: 7,
-    longest: 12,
+  const [streak, setStreak] = useState<StreakData>({
+    current: 0,
+    longest: 0,
     lastActive: Date.now(),
-    nextMilestone: 30,
-    multiplier: 1.15,
-    history: Array(30).fill(false).map((_, i) => i < 7 || Math.random() > 0.4)
+    nextMilestone: 7,
+    multiplier: 1,
+    history: Array(30).fill(false),
   });
   const [showClaimModal, setShowClaimModal] = useState(false);
   const [claimedReward, setClaimedReward] = useState<Quest | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const { play: playSound } = useTransactionSounds();
 
   useEffect(() => {
-    if (isConnected) {
-      loadQuests();
+    if (isConnected && address) {
+      void loadQuests();
+      void loadStreak();
+    } else {
+      setQuests([]);
     }
-  }, [isConnected, activeTab]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isConnected, activeTab, address]);
 
   const loadQuests = async () => {
-    const mockQuests: Quest[] = generateMockQuests(activeTab);
-    setQuests(mockQuests);
+    if (!address) return;
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      if (activeTab === 'monthly') {
+        setQuests([]);
+        return;
+      }
+
+      const endpoint = activeTab === 'weekly' ? '/api/quests/weekly' : '/api/quests/daily';
+      const response = await fetch(`${endpoint}?userAddress=${address}`, {
+        headers: getAuthHeaders(),
+      });
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data.error || 'Failed to load quests');
+      }
+
+      const data = await response.json();
+      const rows = activeTab === 'weekly' ? data?.challenges : data?.quests;
+      const mapped: Quest[] = Array.isArray(rows)
+        ? rows.map((row: Record<string, unknown>) => {
+            const rewardVfide = row.rewardVfide ?? row.reward_vfide;
+            const rewardXp = row.rewardXp ?? row.reward_xp;
+            const expiresAt = activeTab === 'weekly'
+              ? new Date(row.weekEnd ?? row.week_end ?? Date.now()).getTime()
+              : new Date().setHours(23, 59, 59, 999);
+
+            return {
+              id: String(row.id),
+              type: activeTab,
+              title: row.title ?? 'Quest',
+              description: row.description ?? '',
+              progress: Number(row.progress ?? 0),
+              target: Number(row.target ?? 0),
+              reward: {
+                vfide: rewardVfide ? Number(rewardVfide) : undefined,
+                xp: rewardXp ? Number(rewardXp) : undefined,
+              },
+              completed: Boolean(row.completed),
+              claimed: Boolean(row.claimed),
+              expiresAt,
+              difficulty: (row.difficulty ?? 'easy') as Quest['difficulty'],
+              icon: row.icon ?? '🎯',
+            };
+          })
+        : [];
+
+      setQuests(mapped);
+    } catch (err) {
+      console.error('Failed to load quests:', err);
+      setError('Unable to load quests');
+      setQuests([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const loadStreak = async () => {
+    if (!address) return;
+    try {
+      const response = await fetch(`/api/quests/streak?userAddress=${address}`, {
+        headers: getAuthHeaders(),
+      });
+      if (!response.ok) return;
+      const data = await response.json();
+      const streakData = data?.streak;
+      if (!streakData) return;
+
+      const current = Number(streakData.currentStreak ?? 0);
+      const longest = Number(streakData.longestStreak ?? 0);
+      const lastActiveDate = streakData.lastActivityDate
+        ? new Date(streakData.lastActivityDate)
+        : new Date();
+
+      const today = new Date();
+      const diffDays = Math.floor((today.getTime() - lastActiveDate.getTime()) / (24 * 60 * 60 * 1000));
+      const history = Array(30).fill(false);
+      if (diffDays >= 0 && diffDays < history.length) {
+        history[history.length - 1 - diffDays] = true;
+      }
+
+      const milestones = [7, 14, 30, 60, 90, 120];
+      const nextMilestone = milestones.find((m) => m > current) ?? current;
+
+      setStreak({
+        current,
+        longest,
+        lastActive: lastActiveDate.getTime(),
+        nextMilestone,
+        multiplier: current > 0 ? 1 + Math.min(current / 100, 0.5) : 1,
+        history,
+      });
+    } catch (err) {
+      console.error('Failed to load streak:', err);
+    }
   };
 
   const claimReward = async (quest: Quest) => {
+    if (!address) return;
     playSound('notification');
     setClaimedReward(quest);
     setShowClaimModal(true);
     
-    setQuests(prev => prev.map(q => 
-      q.id === quest.id ? { ...q, claimed: true } : q
-    ));
+    try {
+      const response = await fetch('/api/quests/claim', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+        body: JSON.stringify({ questId: quest.id, userAddress: address }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data.error || 'Failed to claim reward');
+      }
+
+      setQuests(prev => prev.map(q => 
+        q.id === quest.id ? { ...q, claimed: true } : q
+      ));
+    } catch (err) {
+      console.error('Failed to claim reward:', err);
+      setError('Unable to claim reward');
+    }
 
     // Trigger achievement toast
     triggerAchievement(
@@ -205,233 +325,172 @@ export default function DailyQuestsPanel() {
     setTimeout(() => setShowClaimModal(false), 3500);
   };
 
-  const getDifficultyColor = (difficulty: string) => {
+  const getDifficultyColor = (difficulty: Quest['difficulty']) => {
     switch (difficulty) {
-      case 'easy': return 'text-green-400 bg-green-400/10';
-      case 'medium': return 'text-blue-400 bg-blue-400/10';
-      case 'hard': return 'text-purple-400 bg-purple-400/10';
-      case 'legendary': return 'text-yellow-400 bg-yellow-400/10 animate-pulse';
-      default: return 'text-gray-400 bg-gray-400/10';
+      case 'easy':
+        return 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30';
+      case 'medium':
+        return 'bg-blue-500/10 text-blue-400 border border-blue-500/30';
+      case 'hard':
+        return 'bg-purple-500/10 text-purple-400 border border-purple-500/30';
+      case 'legendary':
+        return 'bg-amber-500/10 text-amber-400 border border-amber-500/30';
+      default:
+        return 'bg-zinc-500/10 text-zinc-300 border border-zinc-500/30';
     }
   };
 
-  const getTypeColor = (type: string) => {
+  const getTypeColor = (type: Quest['type']) => {
     switch (type) {
-      case 'daily': return 'from-blue-500 to-cyan-500';
-      case 'weekly': return 'from-purple-500 to-pink-500';
-      case 'monthly': return 'from-yellow-500 to-orange-500';
-      default: return 'from-gray-500 to-gray-600';
+      case 'daily':
+        return 'from-cyan-400 to-blue-500';
+      case 'weekly':
+        return 'from-purple-500 to-pink-500';
+      case 'monthly':
+        return 'from-amber-400 to-orange-500';
+      default:
+        return 'from-zinc-600 to-zinc-800';
     }
   };
 
   const getTimeRemaining = (expiresAt: number) => {
-    const now = Date.now();
-    const diff = expiresAt - now;
-    const hours = Math.floor(diff / (1000 * 60 * 60));
-    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-    
-    if (hours > 24) {
-      const days = Math.floor(hours / 24);
-      return `${days}d remaining`;
-    }
-    return `${hours}h ${minutes}m`;
+    const diff = expiresAt - Date.now();
+    if (diff <= 0) return 'Expired';
+    const minutes = Math.floor(diff / 60000);
+    const hours = Math.floor(minutes / 60);
+    const days = Math.floor(hours / 24);
+    if (days > 0) return `${days}d ${hours % 24}h`;
+    if (hours > 0) return `${hours}h ${minutes % 60}m`;
+    return `${minutes}m`;
   };
 
-  const completedCount = quests.filter(q => q.completed).length;
-  const totalXP = quests.filter(q => q.completed).reduce((sum, q) => sum + (q.reward.xp || 0), 0);
-  const readyToClaim = quests.filter(q => q.completed && !q.claimed).length;
-
-  if (!isConnected) {
-    return (
-      <motion.div 
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="bg-zinc-900 border border-zinc-800 rounded-xl p-8 text-center"
-      >
-        <Target className="w-16 h-16 text-amber-400 mx-auto mb-4 opacity-50" />
-        <h3 className="text-xl font-bold text-white mb-2">Connect Wallet</h3>
-        <p className="text-zinc-400">Connect your wallet to see daily quests</p>
-      </motion.div>
-    );
-  }
+  const completedCount = quests.filter((q) => q.completed).length;
+  const readyToClaim = quests.filter((q) => q.completed && !q.claimed).length;
+  const totalXP = quests.reduce((sum, q) => sum + (q.reward.xp ?? 0), 0);
 
   return (
     <div className="space-y-6">
-      {/* Streak Counter - Enhanced */}
-      <motion.div 
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="bg-linear-to-r from-orange-500/20 to-red-500/20 border border-orange-500/30 rounded-xl p-6 relative overflow-hidden"
-      >
-        {/* Animated Fire Particles */}
-        <div className="absolute inset-0 pointer-events-none overflow-hidden">
-          {[...Array(8)].map((_, i) => (
-            <motion.div
-              key={i}
-              className="absolute w-2 h-2 rounded-full bg-orange-500/40"
-              initial={{ y: '100%', x: Math.random() * 100 + '%', opacity: 0 }}
-              animate={{ 
-                y: [100, -20],
-                opacity: [0, 0.8, 0],
-                scale: [0.5, 1, 0.3]
-              }}
-              transition={{ 
-                duration: 2 + Math.random() * 2,
-                repeat: Infinity,
-                delay: Math.random() * 2,
-                ease: 'easeOut'
-              }}
-            />
-          ))}
-        </div>
-
-        <div className="flex items-center justify-between mb-4 relative z-10">
-          <div className="flex items-center gap-4">
-            <motion.div 
-              className="relative"
-              animate={{ scale: [1, 1.1, 1] }}
-              transition={{ duration: 1.5, repeat: Infinity }}
-            >
-              <Flame className="w-14 h-14 text-orange-500" />
-              <motion.div 
-                className="absolute -top-2 -right-2 w-7 h-7 bg-linear-to-br from-orange-500 to-red-500 rounded-full flex items-center justify-center text-xs font-bold text-white shadow-lg"
-                animate={{ scale: [1, 1.15, 1] }}
-                transition={{ duration: 0.5, repeat: Infinity }}
-              >
-                {streak.current}
-              </motion.div>
-            </motion.div>
-            <div>
-              <h3 className="text-2xl font-bold text-white">{streak.current} Day Streak! 🔥</h3>
-              <p className="text-zinc-400 text-sm flex items-center gap-2">
-                <Zap className="w-4 h-4 text-yellow-400" />
-                {streak.multiplier}x XP multiplier active
-              </p>
-            </div>
+      <div className="bg-zinc-800 border border-zinc-700 rounded-xl p-6">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div>
+            <h2 className="text-2xl font-bold text-white">Quests</h2>
+            <p className="text-sm text-zinc-400">Complete quests to earn VFIDE, XP, and badges.</p>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 text-sm text-zinc-300">
+              <Flame className="w-4 h-4 text-orange-500" />
+              {streak.current} day streak
+            </div>
             <button
-              onClick={() => setShowCalendar(!showCalendar)}
-              className={`p-2 rounded-lg transition-colors ${showCalendar ? 'bg-orange-500/30 text-orange-400' : 'hover:bg-zinc-800 text-zinc-400'}`}
-              title="View streak calendar"
+              onClick={() => setShowCalendar((prev) => !prev)}
+              className="px-3 py-2 text-xs font-semibold rounded-lg border border-zinc-700 text-zinc-300 hover:border-amber-400 hover:text-amber-300"
             >
-              <Calendar className="w-5 h-5" />
+              {showCalendar ? 'Hide Streak' : 'View Streak'}
             </button>
-            <div className="text-right">
-              <div className="text-sm text-zinc-400 mb-1">Best Streak</div>
-              <div className="text-2xl font-bold text-amber-400 flex items-center gap-1">
-                <Trophy className="w-5 h-5" />
-                {streak.longest} days
-              </div>
-            </div>
           </div>
         </div>
+        <div className="mt-4 flex flex-wrap items-center gap-4 text-sm text-zinc-400">
+          <div className="flex items-center gap-2">
+            <Zap className="w-4 h-4 text-amber-400" />
+            Bonus: {((streak.multiplier - 1) * 100).toFixed(0)}%
+          </div>
+          <div className="flex items-center gap-2">
+            <Calendar className="w-4 h-4 text-cyan-400" />
+            Next milestone: {streak.nextMilestone} days
+          </div>
+        </div>
+        {showCalendar && (
+          <div className="mt-4">
+            <StreakCalendar history={streak.history} />
+          </div>
+        )}
+      </div>
 
-        {/* Streak Calendar */}
-        <AnimatePresence>
-          {showCalendar && (
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: 'auto', opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              className="overflow-hidden"
-            >
-              <StreakCalendar history={streak.history} />
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* Streak Progress */}
-        <div className="space-y-2 mt-4 relative z-10">
-          <div className="flex justify-between items-center text-sm">
-            <span className="text-zinc-400">Next Milestone: {streak.nextMilestone} days</span>
-            <span className="text-white font-bold">{streak.current}/{streak.nextMilestone}</span>
-          </div>
-          <div className="w-full bg-zinc-800 rounded-full h-3 overflow-hidden">
-            <motion.div 
-              className="bg-linear-to-r from-orange-500 to-red-500 h-3 rounded-full"
-              initial={{ width: 0 }}
-              animate={{ width: `${(streak.current / streak.nextMilestone) * 100}%` }}
-              transition={{ duration: 1, ease: 'easeOut' }}
-            />
-          </div>
-          <div className="flex justify-between text-xs text-zinc-400">
-            <span className="text-green-400">✓ 7 days: 1.15x</span>
-            <span>⏳ 30 days: 1.5x</span>
-            <span className="text-zinc-500">🔒 90 days: 2x</span>
-          </div>
+      <motion.div className="bg-zinc-900 border border-zinc-800 rounded-xl p-2">
+        <div className="flex items-center gap-2 overflow-x-auto">
+          {(['daily', 'weekly', 'monthly'] as const).map((tab) => {
+            const count = quests.filter((q) => q.type === tab && q.completed && !q.claimed).length;
+            return (
+              <motion.button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                whileHover={{ y: -2 }}
+                whileTap={{ scale: 0.98 }}
+                className={`relative px-6 py-3 font-semibold capitalize transition-all ${
+                  activeTab === tab
+                    ? 'text-amber-400'
+                    : 'text-zinc-400 hover:text-white'
+                }`}
+              >
+                {tab}
+                {count > 0 && (
+                  <motion.span
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    className="absolute -top-1 -right-1 w-5 h-5 bg-linear-to-r from-amber-400 to-orange-500 rounded-full text-[10px] font-bold text-black flex items-center justify-center"
+                  >
+                    {count}
+                  </motion.span>
+                )}
+                {activeTab === tab && (
+                  <motion.div
+                    layoutId="questTabIndicator"
+                    className="absolute bottom-0 left-0 right-0 h-0.5 bg-linear-to-r from-amber-400 to-orange-500"
+                  />
+                )}
+              </motion.button>
+            );
+          })}
         </div>
       </motion.div>
 
-      {/* Quest Tabs - Enhanced */}
-      <div className="flex gap-2 border-b border-zinc-800">
-        {(['daily', 'weekly', 'monthly'] as const).map((tab) => {
-          const count = quests.filter(q => q.type === tab && q.completed && !q.claimed).length;
-          return (
-            <motion.button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              whileHover={{ y: -2 }}
-              whileTap={{ scale: 0.98 }}
-              className={`relative px-6 py-3 font-semibold capitalize transition-all ${
-                activeTab === tab
-                  ? 'text-amber-400'
-                  : 'text-zinc-400 hover:text-white'
-              }`}
-            >
-              {tab}
-              {count > 0 && (
-                <motion.span 
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  className="absolute -top-1 -right-1 w-5 h-5 bg-linear-to-r from-amber-400 to-orange-500 rounded-full text-[10px] font-bold text-black flex items-center justify-center"
-                >
-                  {count}
-                </motion.span>
-              )}
-              {activeTab === tab && (
-                <motion.div
-                  layoutId="questTabIndicator"
-                  className="absolute bottom-0 left-0 right-0 h-0.5 bg-linear-to-r from-amber-400 to-orange-500"
-                />
-              )}
-            </motion.button>
-          );
-        })}
-      </div>
-
-      {/* Quests Grid - Enhanced */}
-      <motion.div 
+      <motion.div
         className="grid grid-cols-1 md:grid-cols-2 gap-4"
         initial="hidden"
         animate="visible"
         variants={{
-          visible: { transition: { staggerChildren: 0.1 } }
+          visible: { transition: { staggerChildren: 0.1 } },
         }}
       >
-        <AnimatePresence mode="popLayout">
-          {quests.filter(q => q.type === activeTab).map((quest, index) => (
-            <motion.div
-              key={quest.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.9 }}
-              transition={{ delay: index * 0.05 }}
-            >
-              <QuestCard 
-                quest={quest}
-                onClaim={claimReward}
-                getDifficultyColor={getDifficultyColor}
-                getTypeColor={getTypeColor}
-                getTimeRemaining={getTimeRemaining}
-              />
-            </motion.div>
-          ))}
-        </AnimatePresence>
+        {isLoading && (
+          <div className="col-span-full rounded-xl border border-zinc-800 bg-zinc-900 p-6 text-sm text-zinc-400">
+            Loading quests...
+          </div>
+        )}
+        {error && !isLoading && (
+          <div className="col-span-full rounded-xl border border-red-500/30 bg-red-500/10 p-6 text-sm text-red-200">
+            {error}
+          </div>
+        )}
+        {!isLoading && !error && quests.length === 0 && (
+          <div className="col-span-full rounded-xl border border-zinc-800 bg-zinc-900 p-6 text-sm text-zinc-400">
+            No {activeTab} quests available right now.
+          </div>
+        )}
+        {!isLoading && !error && quests.length > 0 && (
+          <AnimatePresence mode="popLayout">
+            {quests.filter((q) => q.type === activeTab).map((quest, index) => (
+              <motion.div
+                key={quest.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.9 }}
+                transition={{ delay: index * 0.05 }}
+              >
+                <QuestCard
+                  quest={quest}
+                  onClaim={claimReward}
+                  getDifficultyColor={getDifficultyColor}
+                  getTypeColor={getTypeColor}
+                  getTimeRemaining={getTimeRemaining}
+                />
+              </motion.div>
+            ))}
+          </AnimatePresence>
+        )}
       </motion.div>
 
-      {/* Daily Summary - Enhanced with Progress Rings */}
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.3 }}
@@ -442,36 +501,35 @@ export default function DailyQuestsPanel() {
           Today&apos;s Progress
         </h3>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <StatCard 
-            icon={<ProgressRing progress={(completedCount / Math.max(quests.length, 1)) * 100} color="#50C878" />} 
-            label="Completed" 
-            value={`${completedCount}/${quests.length}`} 
+          <StatCard
+            icon={<ProgressRing progress={(completedCount / Math.max(quests.length, 1)) * 100} color="#50C878" />}
+            label="Completed"
+            value={`${completedCount}/${quests.length}`}
             color="text-emerald-500"
-            isRing 
+            isRing
           />
-          <StatCard 
-            icon={<Gift className="w-8 h-8" />} 
-            label="Rewards Ready" 
+          <StatCard
+            icon={<Gift className="w-8 h-8" />}
+            label="Rewards Ready"
             value={readyToClaim}
             color="text-amber-400"
             pulse={readyToClaim > 0}
           />
-          <StatCard 
-            icon={<Star className="w-8 h-8" />} 
-            label="Total XP" 
-            value={`+${totalXP}`} 
-            color="text-purple-600" 
+          <StatCard
+            icon={<Star className="w-8 h-8" />}
+            label="Total XP"
+            value={`+${totalXP}`}
+            color="text-purple-600"
           />
-          <StatCard 
-            icon={<Flame className="w-8 h-8" />} 
-            label="Streak Bonus" 
-            value={`${((streak.multiplier - 1) * 100).toFixed(0)}%`} 
-            color="text-orange-500" 
+          <StatCard
+            icon={<Flame className="w-8 h-8" />}
+            label="Streak Bonus"
+            value={`${((streak.multiplier - 1) * 100).toFixed(0)}%`}
+            color="text-orange-500"
           />
         </div>
       </motion.div>
 
-      {/* Claim Modal */}
       <AnimatePresence>
         {showClaimModal && claimedReward && (
           <ClaimRewardModal reward={claimedReward} onClose={() => setShowClaimModal(false)} />
@@ -479,11 +537,6 @@ export default function DailyQuestsPanel() {
       </AnimatePresence>
     </div>
   );
-}
-
-// Trophy icon for streak display
-function Trophy({ className }: { className?: string }) {
-  return <Award className={className} />;
 }
 
 // Quest Card Component
@@ -496,8 +549,8 @@ function QuestCard({
 }: { 
   quest: Quest;
   onClaim: (quest: Quest) => void;
-  getDifficultyColor: (difficulty: string) => string;
-  getTypeColor: (type: string) => string;
+  getDifficultyColor: (difficulty: Quest['difficulty']) => string;
+  getTypeColor: (type: Quest['type']) => string;
   getTimeRemaining: (expiresAt: number) => string;
 }) {
   const progress = Math.min((quest.progress / quest.target) * 100, 100);
@@ -604,194 +657,41 @@ function StatCard({ icon, label, value, color, isRing: _isRing, pulse }: { icon:
 // Claim Reward Modal
 function ClaimRewardModal({ reward, onClose }: { reward: Quest; onClose: () => void }) {
   return (
-    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-zinc-900 border-2 border-amber-400 rounded-xl p-8 text-center max-w-md animate-in zoom-in-95">
+    <div
+      className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+      onClick={onClose}
+    >
+      <div
+        className="bg-zinc-900 border-2 border-amber-400 rounded-xl p-8 text-center max-w-md animate-in zoom-in-95"
+        onClick={(event) => event.stopPropagation()}
+      >
         <div className="text-6xl mb-4 animate-bounce">🎉</div>
         <h2 className="text-3xl font-bold text-white mb-2">Quest Complete!</h2>
-        <p className="text-zinc-400 mb-6">{reward.title}</p>
-        
-        <div className="space-y-3 mb-6">
+        <p className="text-sm text-zinc-400 mb-6">You&apos;ve earned new rewards.</p>
+        <div className="space-y-2 mb-6">
           {reward.reward.vfide && (
-            <div className="bg-amber-400/10 border border-amber-400 rounded-lg p-4">
-              <div className="text-4xl font-bold text-amber-400 mb-1">+{reward.reward.vfide} VFIDE</div>
-              <div className="text-sm text-zinc-400">Added to your balance</div>
+            <div className="flex items-center justify-center gap-2 text-amber-400 font-semibold">
+              <Gift className="w-4 h-4" /> {reward.reward.vfide} VFIDE
             </div>
           )}
           {reward.reward.xp && (
-            <div className="bg-purple-600/10 border border-purple-600 rounded-lg p-4">
-              <div className="text-4xl font-bold text-purple-600 mb-1">+{reward.reward.xp} XP</div>
-              <div className="text-sm text-zinc-400">Experience gained</div>
+            <div className="flex items-center justify-center gap-2 text-purple-400 font-semibold">
+              <Star className="w-4 h-4" /> {reward.reward.xp} XP
+            </div>
+          )}
+          {reward.reward.badge && (
+            <div className="flex items-center justify-center gap-2 text-cyan-400 font-semibold">
+              <Award className="w-4 h-4" /> {reward.reward.badge}
             </div>
           )}
         </div>
-
-        <button 
+        <button
           onClick={onClose}
-          className="w-full px-6 py-3 bg-linear-to-r from-amber-400 to-orange-500 text-zinc-950 rounded-lg font-bold hover:opacity-90 transition-opacity"
+          className="w-full px-4 py-2 rounded-lg bg-amber-400 text-zinc-950 font-semibold hover:bg-amber-300"
         >
-          Awesome!
+          Close
         </button>
       </div>
     </div>
   );
-}
-
-// Generate Mock Quests
-function generateMockQuests(type: 'daily' | 'weekly' | 'monthly'): Quest[] {
-  const now = Date.now();
-  const day = 24 * 60 * 60 * 1000;
-  
-  if (type === 'daily') {
-    return [
-      {
-        id: 'd1',
-        type: 'daily',
-        title: 'Daily Login',
-        description: 'Log in to VFIDE today',
-        progress: 1,
-        target: 1,
-        reward: { vfide: 15, xp: 50 },
-        completed: true,
-        claimed: false,
-        expiresAt: now + day,
-        difficulty: 'easy',
-        icon: '🌅'
-      },
-      {
-        id: 'd2',
-        type: 'daily',
-        title: 'First Transaction',
-        description: 'Make at least 1 transaction',
-        progress: 0,
-        target: 1,
-        reward: { vfide: 25, xp: 100 },
-        completed: false,
-        claimed: false,
-        expiresAt: now + day,
-        difficulty: 'easy',
-        icon: '💸'
-      },
-      {
-        id: 'd3',
-        type: 'daily',
-        title: 'Social Butterfly',
-        description: 'Send 3 messages',
-        progress: 2,
-        target: 3,
-        reward: { xp: 75 },
-        completed: false,
-        claimed: false,
-        expiresAt: now + day,
-        difficulty: 'easy',
-        icon: '💬'
-      },
-      {
-        id: 'd4',
-        type: 'daily',
-        title: 'Vote on Proposal',
-        description: 'Cast 1 governance vote',
-        progress: 0,
-        target: 1,
-        reward: { vfide: 30, xp: 150 },
-        completed: false,
-        claimed: false,
-        expiresAt: now + day,
-        difficulty: 'medium',
-        icon: '🗳️'
-      }
-    ];
-  }
-  
-  if (type === 'weekly') {
-    return [
-      {
-        id: 'w1',
-        type: 'weekly',
-        title: 'Transaction Master',
-        description: 'Complete 20 transactions',
-        progress: 12,
-        target: 20,
-        reward: { vfide: 200, xp: 500 },
-        completed: false,
-        claimed: false,
-        expiresAt: now + 5 * day,
-        difficulty: 'medium',
-        icon: '💰'
-      },
-      {
-        id: 'w2',
-        type: 'weekly',
-        title: 'Friend Collector',
-        description: 'Add 5 new friends',
-        progress: 3,
-        target: 5,
-        reward: { vfide: 150, xp: 400 },
-        completed: false,
-        claimed: false,
-        expiresAt: now + 5 * day,
-        difficulty: 'medium',
-        icon: '👥'
-      },
-      {
-        id: 'w3',
-        type: 'weekly',
-        title: 'Governance Participant',
-        description: 'Vote on 5 proposals',
-        progress: 5,
-        target: 5,
-        reward: { vfide: 250, xp: 600, badge: 'Active Voter' },
-        completed: true,
-        claimed: false,
-        expiresAt: now + 5 * day,
-        difficulty: 'hard',
-        icon: '⚖️'
-      }
-    ];
-  }
-  
-  // Monthly quests
-  return [
-    {
-      id: 'm1',
-      type: 'monthly',
-      title: 'Power User',
-      description: 'Complete 100 transactions',
-      progress: 67,
-      target: 100,
-      reward: { vfide: 1000, xp: 2500, badge: 'Power User' },
-      completed: false,
-      claimed: false,
-      expiresAt: now + 20 * day,
-      difficulty: 'hard',
-      icon: '⚡'
-    },
-    {
-      id: 'm2',
-      type: 'monthly',
-      title: 'ProofScore Elite',
-      description: 'Reach 8000 ProofScore',
-      progress: 7850,
-      target: 8000,
-      reward: { vfide: 1500, xp: 3000, badge: 'Elite Member' },
-      completed: false,
-      claimed: false,
-      expiresAt: now + 20 * day,
-      difficulty: 'legendary',
-      icon: '👑'
-    },
-    {
-      id: 'm3',
-      type: 'monthly',
-      title: 'Community Leader',
-      description: 'Help 10 users resolve issues',
-      progress: 4,
-      target: 10,
-      reward: { vfide: 2000, xp: 5000, badge: 'Community Helper' },
-      completed: false,
-      claimed: false,
-      expiresAt: now + 20 * day,
-      difficulty: 'legendary',
-      icon: '🤝'
-    }
-  ];
 }

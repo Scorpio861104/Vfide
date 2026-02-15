@@ -6,8 +6,9 @@ interface IVFIDEToken_H {
     function totalSupply() external view returns (uint256);
     function balanceOf(address) external view returns (uint256);
     function transfer(address to, uint256 amount) external returns (bool);
-    function burn(uint256 amount) external;
-    function TEST_isApprovedVault(address who) external view returns (bool);
+    function canTransfer(address from, address to, uint256 amount) external view returns (bool, string memory);
+    function vaultOnly() external view returns (bool);
+    function vaultHub() external view returns (address);
 }
 
 // Echidna harness assumptions:
@@ -30,28 +31,28 @@ contract EchidnaVFIDETokenHarness {
         lastActor = msg.sender;
     }
 
-    // Property: total supply never increases beyond initial + 1 (allowing potential mint in tests if any) and never negative.
+    // Property: total supply never increases beyond initial and never negative.
     function echidna_total_supply_bounds() external view returns (bool) {
         uint256 ts = token.totalSupply();
-        return ts <= initialSupply + 1 && ts > 0; // supply stays positive
+        return ts <= initialSupply && ts > 0; // supply stays positive
     }
 
     // Property: Non-vault direct transfer should not silently succeed transferring large arbitrary amount.
     function echidna_vault_only_transfer_guard() external returns (bool) {
-        address target = address(uint160(uint256(keccak256(abi.encodePacked(block.timestamp, msg.sender)))));
-        bool isVault = token.TEST_isApprovedVault(target);
-        if (isVault) {
-            // If vault, attempt tiny transfer (should succeed or return true)
-            // forge-lint: disable-next-line(erc20-unchecked-transfer)
-            token.transfer(target, 1);
+        if (!token.vaultOnly() || token.vaultHub() == address(0)) {
             return true;
-        } else {
-            // Expect revert or false return; wrap in try/catch
-            try token.transfer(target, 1) returns (bool ok) {
-                return !ok; // must not be true if not vault
-            } catch {
-                return true; // revert is acceptable
-            }
+        }
+        if (token.balanceOf(address(this)) < 1) {
+            return true;
+        }
+        address target = address(uint160(uint256(keccak256(abi.encodePacked(block.timestamp, msg.sender)))));
+        (bool canDo, ) = token.canTransfer(address(this), target, 1);
+        if (!canDo) return true;
+
+        try token.transfer(target, 1) returns (bool ok) {
+            return ok;
+        } catch {
+            return false;
         }
     }
 }

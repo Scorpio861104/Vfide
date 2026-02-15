@@ -214,12 +214,21 @@ contract SubscriptionManager is ReentrancyGuard {
         emit EmergencyCancelled(subId, msg.sender);
     }
 
-    // 3. Merchant (or anyone) processes the payment
+    // 3. Merchant, subscriber, DAO, or self (for batch) processes the payment
     // H-16 Fix: Add nonReentrant to prevent reentrancy via malicious tokens
+    // 12h Fix: Restrict caller to merchant, subscriber, DAO, or contract itself (batch)
     function processPayment(uint256 subId) external nonReentrant {
         Subscription storage sub = subscriptions[subId];
         if (!sub.active) revert SM_InactiveSubscription();
         if (sub.paused) revert SM_SubscriptionPaused(); // Cannot process while paused
+        // 12h Fix: Only merchant, subscriber, DAO, or self (for batchProcessPayments) can call
+        require(
+            msg.sender == sub.merchant ||
+            msg.sender == sub.subscriber ||
+            msg.sender == dao ||
+            msg.sender == address(this),
+            "SM: not authorized to process"
+        );
         if (block.timestamp < sub.nextPayment) revert SM_PaymentTooEarly();
         
         // Check grace period

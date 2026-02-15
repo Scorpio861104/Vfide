@@ -23,12 +23,21 @@ export function ChainSelector({ onChainSelect, showOnlyReady = false, compact = 
 
   // Find current chain from chainId
   useEffect(() => {
+    let timer: ReturnType<typeof setTimeout> | undefined
     const chains = getChainList()
     for (const chain of chains) {
       // Check both mainnet and testnet for this chain
       if (chain.mainnet.id === chainId || chain.testnet.id === chainId) {
-        setSelectedChain(prev => prev !== chain.id ? chain.id : prev)
+        timer = setTimeout(() => {
+          setSelectedChain(prev => prev !== chain.id ? chain.id : prev)
+        }, 0)
         break
+      }
+    }
+
+    return () => {
+      if (timer) {
+        clearTimeout(timer)
       }
     }
   }, [chainId])
@@ -237,7 +246,7 @@ export function ChainSelector({ onChainSelect, showOnlyReady = false, compact = 
 
                 {!ready && (
                   <span className="text-xs text-gray-500 bg-gray-800 px-2 py-1 rounded">
-                    Coming Soon
+                    Unavailable
                   </span>
                 )}
               </div>

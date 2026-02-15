@@ -32,6 +32,8 @@ export async function fetchGasPrice(rpcUrl: string, chainId: number): Promise<Ga
       }),
     });
 
+    if (!response.ok) return null;
+
     const data = await response.json();
     
     if (data.result) {

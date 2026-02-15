@@ -17,12 +17,15 @@
 
 'use client';
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MobileButton, MobileInput } from '@/components/mobile/MobileForm';
 import { responsiveGrids, ResponsiveContainer } from '@/lib/mobile';
 import { useTransactionSounds } from '@/hooks/useTransactionSounds';
 import { Bell, Check, Archive, ChevronRight, Clock, AlertTriangle, CheckCircle, XCircle, Info, Wallet } from 'lucide-react';
+import { useAccount } from 'wagmi';
+import { useRouter } from 'next/navigation';
+import { getAuthHeaders } from '@/lib/auth/client';
 
 // ==================== TYPES ====================
 
@@ -73,117 +76,6 @@ interface NotificationFilter {
   priority: 'all' | Notification['priority'];
   read: 'all' | 'read' | 'unread';
   dateRange: 'all' | 'today' | 'week' | 'month';
-}
-
-// ==================== MOCK DATA ====================
-
-function generateMockNotifications(): Notification[] {
-  const now = Date.now();
-  return [
-    {
-      id: 'notif-1',
-      title: 'Transaction Confirmed',
-      message: 'Your payment of $500 to John Doe has been confirmed',
-      type: 'success',
-      icon: '✅',
-      timestamp: now - 2 * 60 * 1000,
-      read: false,
-      archived: false,
-      actionUrl: '/transactions/tx-123',
-      actionLabel: 'View Details',
-      priority: 'high',
-      category: 'transaction',
-      source: 'Blockchain',
-    },
-    {
-      id: 'notif-2',
-      title: 'Governance Vote Available',
-      message: 'New proposal "Increase Treasury" is open for voting. Cast your vote now!',
-      type: 'info',
-      icon: '🗳️',
-      timestamp: now - 30 * 60 * 1000,
-      read: false,
-      archived: false,
-      actionUrl: '/governance/proposals/456',
-      actionLabel: 'Vote Now',
-      priority: 'medium',
-      category: 'governance',
-      source: 'DAO',
-    },
-    {
-      id: 'notif-3',
-      title: 'Security Alert',
-      message: 'New login from Chrome on Windows detected',
-      type: 'warning',
-      icon: '⚠️',
-      timestamp: now - 1 * 60 * 60 * 1000,
-      read: true,
-      archived: false,
-      actionUrl: '/settings/security',
-      actionLabel: 'Review Activity',
-      priority: 'critical',
-      category: 'security',
-      source: 'Security System',
-    },
-    {
-      id: 'notif-4',
-      title: 'Payment Request Received',
-      message: 'Alice Smith requested $250 for project services',
-      type: 'transaction',
-      icon: '💰',
-      timestamp: now - 2 * 60 * 60 * 1000,
-      read: true,
-      archived: false,
-      actionUrl: '/payments/requests/789',
-      actionLabel: 'Review Request',
-      priority: 'medium',
-      category: 'merchant',
-      source: 'Merchant Portal',
-    },
-    {
-      id: 'notif-5',
-      title: 'System Maintenance',
-      message: 'Scheduled maintenance on January 5 from 2-4 AM UTC',
-      type: 'info',
-      icon: '🔧',
-      timestamp: now - 6 * 60 * 60 * 1000,
-      read: true,
-      archived: false,
-      priority: 'low',
-      category: 'system',
-      source: 'System',
-    },
-    {
-      id: 'notif-6',
-      title: 'ProofScore Increased',
-      message: 'Your ProofScore increased by 45 points. You are now a Rising Star!',
-      type: 'success',
-      icon: '⭐',
-      timestamp: now - 12 * 60 * 60 * 1000,
-      read: true,
-      archived: false,
-      actionUrl: '/proofscore',
-      actionLabel: 'View Profile',
-      priority: 'low',
-      category: 'system',
-      source: 'ProofScore',
-    },
-    {
-      id: 'notif-7',
-      title: 'Transaction Failed',
-      message: 'Transaction to 0x1234...5678 failed due to insufficient gas',
-      type: 'error',
-      icon: '❌',
-      timestamp: now - 24 * 60 * 60 * 1000,
-      read: true,
-      archived: true,
-      actionUrl: '/transactions/failed/abc',
-      actionLabel: 'Retry',
-      priority: 'high',
-      category: 'transaction',
-      source: 'Blockchain',
-    },
-  ];
 }
 
 function calculateNotificationStats(notifications: Notification[]): NotificationStats {
@@ -548,10 +440,12 @@ function StatCard({ label, value, icon, color }: StatCardProps) {
 // ==================== MAIN COMPONENT ====================
 
 export default function NotificationCenter() {
+  const { address: userAddress } = useAccount();
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState<'notifications' | 'history' | 'preferences'>(
     'notifications'
   );
-  const [notifications, setNotifications] = useState<Notification[]>(generateMockNotifications());
+  const [notifications, setNotifications] = useState<Notification[]>([]);
   const [filter, setFilter] = useState<NotificationFilter>({
     search: '',
     type: 'all',
@@ -576,43 +470,215 @@ export default function NotificationCenter() {
   });
   const [_showDetailView, _setShowDetailView] = useState(false);
   const [_selectedNotification, _setSelectedNotification] = useState<Notification | null>(null);
+  const [isSavingPreferences, setIsSavingPreferences] = useState(false);
+  const [isLoadingPreferences, setIsLoadingPreferences] = useState(true);
+  const [isLoadingNotifications, setIsLoadingNotifications] = useState(true);
 
   const stats = calculateNotificationStats(notifications);
   const filteredNotifications = filterNotifications(notifications, filter);
 
-  const handleMarkAsRead = useCallback((id: string) => {
+  const mapNotificationRow = useCallback((row: Record<string, unknown>): Notification => {
+    const data = (row.data ?? {}) as Record<string, unknown>;
+    const type = (row.type ?? 'info') as Notification['type'];
+    const iconByType: Record<string, string> = {
+      success: '✅',
+      error: '❌',
+      warning: '⚠️',
+      info: 'ℹ️',
+      transaction: '💰',
+    };
+
+    return {
+      id: String(row.id),
+      title: row.title ?? 'Notification',
+      message: row.message ?? '',
+      type,
+      icon: data.icon ?? iconByType[type] ?? '🔔',
+      timestamp: row.created_at ? new Date(row.created_at).getTime() : Date.now(),
+      read: Boolean(row.is_read),
+      archived: Boolean(row.archived),
+      actionUrl: data.actionUrl,
+      actionLabel: data.actionLabel,
+      priority: (data.priority as Notification['priority']) ?? 'medium',
+      category: (data.category as Notification['category']) ?? 'system',
+      source: data.source ?? 'System',
+    };
+  }, []);
+
+  const loadNotifications = useCallback(async () => {
+    if (!userAddress) {
+      setNotifications([]);
+      setIsLoadingNotifications(false);
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/notifications?userAddress=${userAddress}&limit=100&offset=0`, {
+        headers: getAuthHeaders(),
+      });
+      if (!response.ok) {
+        return;
+      }
+
+      const data = await response.json();
+      if (Array.isArray(data?.notifications)) {
+        setNotifications(data.notifications.map(mapNotificationRow));
+      }
+    } catch (error) {
+      console.error('Failed to load notifications:', error);
+    } finally {
+      setIsLoadingNotifications(false);
+    }
+  }, [mapNotificationRow, userAddress]);
+
+  const handleMarkAsRead = useCallback(async (id: string) => {
+    try {
+      await fetch('/api/notifications', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+        body: JSON.stringify({ notificationIds: [Number(id)] }),
+      });
+    } catch (error) {
+      console.error('Failed to mark notification as read:', error);
+    }
+
     setNotifications((prev) =>
       prev.map((n) => (n.id === id ? { ...n, read: true } : n))
     );
   }, []);
 
-  const handleMarkAllAsRead = useCallback(() => {
-    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
-  }, []);
+  const handleMarkAllAsRead = useCallback(async () => {
+    if (!userAddress) return;
+    try {
+      await fetch('/api/notifications', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+        body: JSON.stringify({ markAllRead: true, userAddress }),
+      });
+    } catch (error) {
+      console.error('Failed to mark all notifications as read:', error);
+    }
 
-  const handleArchive = useCallback((id: string) => {
+    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+  }, [userAddress]);
+
+  const handleArchive = useCallback(async (id: string) => {
+    try {
+      await fetch('/api/notifications', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+        body: JSON.stringify({ archiveIds: [Number(id)] }),
+      });
+    } catch (error) {
+      console.error('Failed to archive notification:', error);
+    }
+
     setNotifications((prev) =>
       prev.map((n) => (n.id === id ? { ...n, archived: true } : n))
     );
   }, []);
 
-  const handleArchiveAll = useCallback(() => {
+  const handleArchiveAll = useCallback(async () => {
+    if (!userAddress) return;
+    try {
+      await fetch('/api/notifications', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+        body: JSON.stringify({ archiveAll: true, userAddress }),
+      });
+    } catch (error) {
+      console.error('Failed to archive notifications:', error);
+    }
+
     setNotifications((prev) => prev.map((n) => ({ ...n, archived: true })));
-  }, []);
+  }, [userAddress]);
 
-  const handleClearArchive = useCallback(() => {
+  const handleClearArchive = useCallback(async () => {
+    if (!userAddress) return;
+    try {
+      await fetch('/api/notifications', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+        body: JSON.stringify({ deleteArchived: true, userAddress }),
+      });
+    } catch (error) {
+      console.error('Failed to clear archived notifications:', error);
+    }
+
     setNotifications((prev) => prev.filter((n) => !n.archived));
+  }, [userAddress]);
+
+  const handleNotificationAction = useCallback(
+    (url: string) => {
+      if (!url) return;
+      router.push(url);
+    },
+    [router]
+  );
+
+  const loadPreferences = useCallback(async () => {
+    try {
+      const response = await fetch('/api/preferences/notifications', {
+        headers: getAuthHeaders(),
+      });
+      if (!response.ok) {
+        return;
+      }
+
+      const data = await response.json();
+      if (data?.preferences) {
+        setPreferences(data.preferences as NotificationPreferences);
+      }
+    } catch (error) {
+      console.error('Failed to load notification preferences:', error);
+    } finally {
+      setIsLoadingPreferences(false);
+    }
   }, []);
 
-  const handleNotificationAction = useCallback((_url: string) => {
-    // In production, this would navigate to the URL
-    // Navigation handled by router
-  }, []);
+  const handleSavePreferences = useCallback(async () => {
+    setIsSavingPreferences(true);
+    try {
+      const response = await fetch('/api/preferences/notifications', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+        body: JSON.stringify({ preferences }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data.error || 'Failed to save preferences');
+      }
+
+      const data = await response.json().catch(() => ({}));
+      if (data?.preferences) {
+        setPreferences(data.preferences as NotificationPreferences);
+      }
+    } catch (error) {
+      console.error('Failed to save notification preferences:', error);
+      alert(error instanceof Error ? error.message : 'Failed to save preferences');
+    } finally {
+      setIsSavingPreferences(false);
+    }
+  }, [preferences]);
+
+  useEffect(() => {
+    void loadPreferences();
+  }, [loadPreferences]);
+
+  useEffect(() => {
+    void loadNotifications();
+  }, [loadNotifications]);
 
   // ==================== TAB CONTENT ====================
 
   const renderNotificationsTab = () => (
     <div className="space-y-6">
+      {isLoadingNotifications && (
+        <div className="flex items-center justify-center py-8 text-gray-500">
+          <span className="animate-pulse">Loading notifications...</span>
+        </div>
+      )}
       {/* Stats */}
       <div className={`grid ${responsiveGrids.auto} gap-4`}>
         <StatCard
@@ -1025,13 +1091,11 @@ export default function NotificationCenter() {
 
         {/* Save Button */}
         <MobileButton
-          onClick={() => {
-            // In production, this would save preferences to backend
-            // Preferences saved successfully
-          }}
-          className="w-full mt-6 bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-6 rounded-lg transition-colors"
+          onClick={handleSavePreferences}
+          disabled={isSavingPreferences || isLoadingPreferences}
+          className="w-full mt-6 bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-6 rounded-lg transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
         >
-          Save Preferences
+          {isSavingPreferences ? 'Saving...' : 'Save Preferences'}
         </MobileButton>
       </div>
     </div>

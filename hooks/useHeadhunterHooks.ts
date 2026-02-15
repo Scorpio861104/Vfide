@@ -216,11 +216,10 @@ export function useClaimHeadhunterReward() {
 
 /**
  * Helper function to calculate rank based on points
- * (This would need to be replaced with actual on-chain data)
+ * (Fallback when leaderboard API data is unavailable)
  */
 function calculateRank(points: number): number {
-  // Mock implementation - replace with actual leaderboard data
-  // In reality, you'd fetch all referrers and sort by points
+  // Fallback heuristic only. Prefer API leaderboard data when available.
   if (points >= 45) return 1;
   if (points >= 38) return 2;
   if (points >= 32) return 3;
@@ -242,7 +241,7 @@ export function useReferralLink() {
   
   return {
     referralLink: address ? `${baseUrl}/signup?ref=${address}` : '',
-    qrCodeUrl: address ? `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(`${baseUrl}/signup?ref=${address}`)}` : '',
+    qrCodeUrl: '', // QR code should be generated locally using qrcode.react, not via third-party API
   };
 }
 
@@ -253,10 +252,31 @@ export function useQuarterlyPoolEstimate() {
   const [poolEstimate, setPoolEstimate] = useState<bigint>(0n);
   
   useEffect(() => {
-    // In production, this would come from contract
-    // Estimated 25% of ecosystem fees allocated to headhunters
-    // Assuming $50k monthly volume = $12.5k quarterly
-    setPoolEstimate(parseEther('12500')); // 12,500 VFIDE
+    let isMounted = true;
+
+    const fetchPool = async () => {
+      const now = new Date();
+      const year = now.getUTCFullYear();
+      const quarter = Math.floor(now.getUTCMonth() / 3) + 1;
+
+      try {
+        const response = await fetch(`/api/leaderboard/headhunter?year=${year}&quarter=${quarter}`);
+        if (!response.ok) throw new Error('Failed to fetch pool estimate');
+        const data = await response.json();
+        const rewardPool = data?.meta?.rewardPool ?? 0;
+        const estimate = parseEther(String(rewardPool || 0));
+        if (isMounted) setPoolEstimate(estimate);
+      } catch {
+        if (isMounted) {
+          setPoolEstimate(parseEther('0'));
+        }
+      }
+    };
+
+    fetchPool();
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   return {
@@ -268,13 +288,12 @@ export function useQuarterlyPoolEstimate() {
 /**
  * Get referral activity history
  * 
- * NOTE: This hook returns demo data for UI preview purposes.
- * In production with a deployed subgraph, this would fetch real
- * on-chain referral events. The subgraph would index:
+ * NOTE: This hook reads referral activity from the API.
+ * In production, back this with a subgraph indexing:
  * - UserReferred events from EcosystemVault
  * - MerchantReferred events from EcosystemVault
  * 
- * For now, mock data provides a realistic UI experience for testing.
+ * Update the API to pull from indexed chain events.
  */
 export interface ReferralActivity {
   id: string;
@@ -298,29 +317,59 @@ export function useReferralActivity() {
       return;
     }
 
-    // In production, fetch from subgraph or event logs
-    // For now, return mock data
-    setActivity([
-      {
-        id: '1',
-        type: 'merchant',
-        address: '0xABCDEF1234567890ABCDEF1234567890ABCDEF12' as `0x${string}`,
-        status: 'credited',
-        timestamp: Date.now() - 2 * 24 * 60 * 60 * 1000,
-        points: 3,
-        txHash: '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef' as `0x${string}`,
-      },
-      {
-        id: '2',
-        type: 'user',
-        address: '0x1234567890ABCDEF1234567890ABCDEF12345678' as `0x${string}`,
-        status: 'pending',
-        timestamp: Date.now() - 5 * 24 * 60 * 60 * 1000,
-        points: 1,
-        txHash: '0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890' as `0x${string}`,
-      },
-    ]);
-    setIsLoading(false);
+    let isMounted = true;
+
+    const fetchActivity = async () => {
+      setIsLoading(true);
+      try {
+        const response = await fetch(`/api/activities?userAddress=${address}&limit=50&offset=0`);
+        if (!response.ok) throw new Error('Failed to fetch referral activity');
+        const data = await response.json();
+        const items = Array.isArray(data.activities) ? data.activities : [];
+
+        const mapped = items
+          .filter((item: Record<string, unknown>) => {
+            const type = String(item.activity_type ?? item.type ?? '').toLowerCase();
+            return type.includes('referral');
+          })
+          .map((item: Record<string, unknown>): ReferralActivity => {
+            const meta = typeof item.data === 'string'
+              ? (() => {
+                  try {
+                    return JSON.parse(item.data);
+                  } catch {
+                    return {};
+                  }
+                })()
+              : (item.data ?? {});
+            const typeRaw = String(meta.type ?? item.activity_type ?? '').toLowerCase();
+            return {
+              id: String(item.id ?? `${item.activity_type}-${item.created_at}`),
+              type: typeRaw.includes('merchant') ? 'merchant' : 'user',
+              address: (meta.referrer ?? meta.address ?? item.user_address ?? '0x0000000000000000000000000000000000000000') as `0x${string}`,
+              status: (meta.status === 'credited' ? 'credited' : 'pending') as ReferralActivity['status'],
+              timestamp: item.created_at ? new Date(item.created_at).getTime() : Date.now(),
+              points: Number(meta.points ?? 0),
+              txHash: (meta.txHash ?? meta.transactionHash ?? '0x0000000000000000000000000000000000000000000000000000000000000000') as `0x${string}`,
+            };
+          });
+
+        if (isMounted) {
+          setActivity(mapped);
+        }
+      } catch {
+        if (isMounted) {
+          setActivity([]);
+        }
+      } finally {
+        if (isMounted) setIsLoading(false);
+      }
+    };
+
+    fetchActivity();
+    return () => {
+      isMounted = false;
+    };
   }, [address]);
 
   return {
@@ -332,12 +381,8 @@ export function useReferralActivity() {
 /**
  * Get top 20 leaderboard
  * 
- * NOTE: This hook returns demo data for UI preview purposes.
- * In production with a deployed subgraph, this would query aggregated
- * referral points per address, sorted by total points descending.
- * The subgraph would maintain running totals per year/quarter.
- * 
- * For now, mock data provides a realistic UI experience for testing.
+ * NOTE: This hook reads leaderboard data from the API.
+ * In production, back this with a subgraph or contract reads.
  */
 export interface LeaderboardEntry {
   rank: number;
@@ -361,17 +406,44 @@ export function useLeaderboard(year: bigint, quarter: bigint) {
       return;
     }
 
-    // In production, fetch from subgraph or contract
-    // For now, return mock data
-    const mockData: LeaderboardEntry[] = [
-      { rank: 1, address: '0x1234567890ABCDEF1234567890ABCDEF12345678' as `0x${string}`, points: 45, userReferrals: 30, merchantReferrals: 5, estimatedReward: '$3,750', isCurrentUser: false },
-      { rank: 2, address: '0x2345678901BCDEF23456789012CDEF3456789012' as `0x${string}`, points: 38, userReferrals: 26, merchantReferrals: 4, estimatedReward: '$3,000', isCurrentUser: false },
-      { rank: 3, address: '0x3456789012CDEF34567890123DEF45678901234' as `0x${string}`, points: 32, userReferrals: 23, merchantReferrals: 3, estimatedReward: '$2,500', isCurrentUser: false },
-      { rank: 7, address: address || ('0x0000000000000000000000000000000000000000' as `0x${string}`), points: 18, userReferrals: 4, merchantReferrals: 2, estimatedReward: '$1,250', isCurrentUser: true },
-    ];
+    let isMounted = true;
 
-    setLeaderboard(mockData);
-    setIsLoading(false);
+    const fetchLeaderboard = async () => {
+      setIsLoading(true);
+      try {
+        const response = await fetch(
+          `/api/leaderboard/headhunter?year=${Number(year)}&quarter=${Number(quarter)}&userAddress=${address ?? ''}`
+        );
+        if (!response.ok) throw new Error('Failed to fetch leaderboard');
+        const data = await response.json();
+        const rows = Array.isArray(data.data) ? data.data : [];
+
+        if (isMounted) {
+          setLeaderboard(
+            rows.map((entry: Record<string, unknown>) => ({
+              rank: Number(entry.rank ?? 0),
+              address: entry.address as `0x${string}`,
+              points: Number(entry.points ?? 0),
+              userReferrals: Number(entry.userReferrals ?? 0),
+              merchantReferrals: Number(entry.merchantReferrals ?? 0),
+              estimatedReward: String(entry.estimatedReward ?? '$0'),
+              isCurrentUser: Boolean(entry.isCurrentUser),
+            }))
+          );
+        }
+      } catch {
+        if (isMounted) {
+          setLeaderboard([]);
+        }
+      } finally {
+        if (isMounted) setIsLoading(false);
+      }
+    };
+
+    fetchLeaderboard();
+    return () => {
+      isMounted = false;
+    };
   }, [year, quarter, address]);
 
   return {

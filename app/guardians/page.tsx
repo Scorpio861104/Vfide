@@ -2,10 +2,14 @@
 
 import { Footer } from "@/components/layout/Footer";
 import { useState, useMemo } from "react";
-import { useAccount } from "wagmi";
+import { useAccount, useReadContract, useWriteContract } from "wagmi";
 import { isAddress } from "viem";
 import { motion, AnimatePresence } from "framer-motion";
 import { Shield, Users, Clock, CheckCircle2, AlertCircle, Key, Heart, UserPlus, UserMinus, RefreshCw, ArrowRightCircle, Timer, Lock, FileText } from "lucide-react";
+import { UserVaultABI } from "@/lib/abis";
+import { useUserVault } from "@/hooks/useVaultHooks";
+import { ZERO_ADDRESS } from "@/lib/constants";
+import { formatAddress } from "@/lib/utils";
 
 type TabType = 'overview' | 'my-guardians' | 'next-of-kin' | 'recovery' | 'responsibilities' | 'pending';
 
@@ -32,9 +36,9 @@ export default function GuardiansPage() {
       >
         {/* Premium Background Effects */}
         <div className="fixed inset-0 pointer-events-none">
-          <div className="absolute top-1/4 -left-32 w-125 h-125 bg-cyan-500/10 rounded-full blur-[120px] animate-pulse" />
-          <div className="absolute bottom-1/4 -right-32 w-100 h-100 bg-purple-500/10 rounded-full blur-[100px] animate-pulse" style={{ animationDelay: '1s' }} />
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-150 h-150 bg-blue-500/5 rounded-full blur-[150px]" />
+          <div className="absolute top-1/4 -left-32 w-[31.25rem] h-[31.25rem] bg-cyan-500/10 rounded-full blur-[120px] animate-pulse" />
+          <div className="absolute bottom-1/4 -right-32 w-[25rem] h-[25rem] bg-purple-500/10 rounded-full blur-[100px] animate-pulse" style={{ animationDelay: '1s' }} />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[37.5rem] h-[37.5rem] bg-blue-500/5 rounded-full blur-[150px]" />
         </div>
 
         {/* Header */}
@@ -227,10 +231,53 @@ function OverviewTab() {
 }
 
 function ResponsibilitiesTab({ isConnected }: { isConnected: boolean }) {
-  // Note: Full guardian tracking requires an indexer to scan GuardianSet events
-  // For now, users should track their guardianship responsibilities manually
-  // A future enhancement would add The Graph subgraph for this data
-  const vaultsGuarding: Array<{ owner: string; alias: string; status: string; addedDate: string }> = [];
+  const { address } = useAccount();
+  const [lookupVault, setLookupVault] = useState('');
+  const isValidVault = useMemo(() => {
+    if (!lookupVault) return null;
+    return isAddress(lookupVault);
+  }, [lookupVault]);
+
+  const { data: isGuardianData } = useReadContract({
+    address: isValidVault ? (lookupVault as `0x${string}`) : ZERO_ADDRESS,
+    abi: UserVaultABI,
+    functionName: 'isGuardian',
+    args: address ? [address] : undefined,
+    query: { enabled: Boolean(address) && isValidVault === true },
+  });
+
+  const { data: recoveryStatusData } = useReadContract({
+    address: isValidVault ? (lookupVault as `0x${string}`) : ZERO_ADDRESS,
+    abi: UserVaultABI,
+    functionName: 'getRecoveryStatus',
+    query: { enabled: isValidVault === true },
+  });
+
+  const { data: inheritanceStatusData } = useReadContract({
+    address: isValidVault ? (lookupVault as `0x${string}`) : ZERO_ADDRESS,
+    abi: UserVaultABI,
+    functionName: 'getInheritanceStatus',
+    query: { enabled: isValidVault === true },
+  });
+
+  const recoveryStatus = Array.isArray(recoveryStatusData)
+    ? {
+        approvals: Number(recoveryStatusData[1] ?? 0),
+        threshold: Number(recoveryStatusData[2] ?? 0),
+        expiryTime: Number(recoveryStatusData[3] ?? 0),
+        active: Boolean(recoveryStatusData[4]),
+      }
+    : null;
+
+  const inheritanceStatus = Array.isArray(inheritanceStatusData)
+    ? {
+        active: Boolean(inheritanceStatusData[0]),
+        approvals: Number(inheritanceStatusData[1] ?? 0),
+        threshold: Number(inheritanceStatusData[2] ?? 0),
+        expiryTime: Number(inheritanceStatusData[3] ?? 0),
+        denied: Boolean(inheritanceStatusData[4]),
+      }
+    : null;
 
   if (!isConnected) {
     return (
@@ -251,33 +298,6 @@ function ResponsibilitiesTab({ isConnected }: { isConnected: boolean }) {
     );
   }
 
-  if (vaultsGuarding.length === 0) {
-    return (
-      <motion.div 
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="space-y-6 max-w-4xl mx-auto"
-      >
-        <div className="bg-gradient-to-br from-white/8 to-white/2 backdrop-blur-xl border border-white/10 rounded-2xl p-8 text-center">
-          <motion.div
-            animate={{ scale: [1, 1.1, 1] }}
-            transition={{ duration: 2, repeat: Infinity }}
-          >
-            <Shield className="w-16 h-16 mx-auto mb-4 text-gray-400" />
-          </motion.div>
-          <h2 className="text-2xl font-bold text-white mb-4">No Vaults Found</h2>
-          <p className="text-gray-400 mb-4">
-            You are not currently guarding any vaults, or we haven&apos;t indexed them yet.
-          </p>
-          <p className="text-sm text-gray-500">
-            If you know you are a guardian for a vault, enter the vault address below to check:
-          </p>
-          {/* Future: Add vault address input to verify guardianship */}
-        </div>
-      </motion.div>
-    );
-  }
-
   return (
     <motion.div 
       initial={{ opacity: 0, y: 20 }}
@@ -287,40 +307,65 @@ function ResponsibilitiesTab({ isConnected }: { isConnected: boolean }) {
       <div className="bg-gradient-to-br from-white/8 to-white/2 backdrop-blur-xl border border-white/10 rounded-2xl p-6">
         <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
           <Users className="w-5 h-5 text-cyan-400" />
-          Vaults You&apos;re Guarding ({vaultsGuarding.length})
+          Guardian Responsibilities Lookup
         </h2>
 
-        <div className="space-y-3">
-          {vaultsGuarding.map((vault, idx) => (
-            <motion.div 
-              key={idx} 
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: idx * 0.1 }}
-              whileHover={{ scale: 1.01 }}
-              className="flex items-center justify-between p-4 bg-black/20 border border-white/10 rounded-xl"
-            >
-              <div className="flex items-center gap-4">
-                <div className={`p-2 rounded-full ${vault.status === 'healthy' ? 'bg-green-500/20' : 'bg-yellow-500/20'}`}>
-                  {vault.status === 'healthy' ? (
-                    <CheckCircle2 className="w-5 h-5 text-green-400" />
-                  ) : (
-                    <AlertCircle className="w-5 h-5 text-yellow-400" />
-                  )}
-                </div>
-                <div>
-                  <div className="text-white font-bold">{vault.alias}</div>
-                  <div className="text-gray-400 text-sm font-mono">{vault.owner}</div>
+        <div className="space-y-4">
+          <div>
+            <label className="block text-gray-400 text-sm mb-2">Vault Address</label>
+            <input
+              type="text"
+              placeholder="0x..."
+              value={lookupVault}
+              onChange={(e) => setLookupVault(e.target.value)}
+              className={`w-full px-4 py-3 bg-black/30 border rounded-xl text-white focus:outline-none focus:ring-2 font-mono transition-all ${
+                isValidVault === false
+                  ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20'
+                  : isValidVault === true
+                    ? 'border-green-500 focus:border-green-500 focus:ring-green-500/20'
+                    : 'border-white/10 focus:border-cyan-500 focus:ring-cyan-500/20'
+              }`}
+            />
+            {isValidVault === false && (
+              <p className="mt-1 text-sm text-red-400 flex items-center gap-1">
+                <AlertCircle className="w-4 h-4" />
+                Enter a valid vault address
+              </p>
+            )}
+          </div>
+
+          {isValidVault && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="p-4 bg-black/30 border border-white/10 rounded-xl">
+                <div className="text-gray-400 text-xs mb-1">Guardian Status</div>
+                <div className="text-white font-bold">
+                  {isGuardianData ? 'You are a guardian' : 'Not a guardian'}
                 </div>
               </div>
-              <div className="text-right">
-                <div className={`text-sm font-bold ${vault.status === 'healthy' ? 'text-green-400' : 'text-yellow-400'}`}>
-                  {vault.status === 'healthy' ? 'Healthy' : '⚠️ Action Required'}
+              <div className="p-4 bg-black/30 border border-white/10 rounded-xl">
+                <div className="text-gray-400 text-xs mb-1">Active Recovery</div>
+                <div className="text-white font-bold">
+                  {recoveryStatus?.active ? 'Yes' : 'No'}
                 </div>
-                <div className="text-gray-500 text-xs">Since {vault.addedDate}</div>
               </div>
-            </motion.div>
-          ))}
+              <div className="p-4 bg-black/30 border border-white/10 rounded-xl">
+                <div className="text-gray-400 text-xs mb-1">Active Inheritance</div>
+                <div className="text-white font-bold">
+                  {inheritanceStatus?.active && !inheritanceStatus.denied ? 'Yes' : 'No'}
+                </div>
+              </div>
+              <div className="p-4 bg-black/30 border border-white/10 rounded-xl">
+                <div className="text-gray-400 text-xs mb-1">Approvals Needed</div>
+                <div className="text-white font-bold">
+                  {recoveryStatus?.active
+                    ? `${recoveryStatus.approvals}/${recoveryStatus.threshold}`
+                    : inheritanceStatus?.active
+                      ? `${inheritanceStatus.approvals}/${inheritanceStatus.threshold}`
+                      : '0/0'}
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
@@ -343,18 +388,97 @@ function ResponsibilitiesTab({ isConnected }: { isConnected: boolean }) {
 }
 
 function PendingActionsTab({ isConnected }: { isConnected: boolean }) {
-  // Note: Pending recovery data requires an indexer to scan RecoveryRequested events
-  // and cross-reference with user's guardian status
-  const pendingRecoveries: Array<{
-    vaultOwner: string;
-    alias: string;
-    requestedBy: string;
-    type: string;
-    requestTime: string;
-    expiresIn: string;
-    approvalsNeeded: number;
-    approvalsGiven: number;
-  }> = [];
+  const { address } = useAccount();
+  const { writeContractAsync } = useWriteContract();
+  const [lookupVault, setLookupVault] = useState('');
+  const [actionError, setActionError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const isValidVault = useMemo(() => {
+    if (!lookupVault) return null;
+    return isAddress(lookupVault);
+  }, [lookupVault]);
+
+  const { data: isGuardianData } = useReadContract({
+    address: isValidVault ? (lookupVault as `0x${string}`) : ZERO_ADDRESS,
+    abi: UserVaultABI,
+    functionName: 'isGuardian',
+    args: address ? [address] : undefined,
+    query: { enabled: Boolean(address) && isValidVault === true },
+  });
+
+  const { data: recoveryStatusData, refetch: refetchRecoveryStatus } = useReadContract({
+    address: isValidVault ? (lookupVault as `0x${string}`) : ZERO_ADDRESS,
+    abi: UserVaultABI,
+    functionName: 'getRecoveryStatus',
+    query: { enabled: isValidVault === true },
+  });
+
+  const { data: inheritanceStatusData, refetch: refetchInheritanceStatus } = useReadContract({
+    address: isValidVault ? (lookupVault as `0x${string}`) : ZERO_ADDRESS,
+    abi: UserVaultABI,
+    functionName: 'getInheritanceStatus',
+    query: { enabled: isValidVault === true },
+  });
+
+  const recoveryStatus = Array.isArray(recoveryStatusData)
+    ? {
+        proposedOwner: recoveryStatusData[0] as string,
+        approvals: Number(recoveryStatusData[1] ?? 0),
+        threshold: Number(recoveryStatusData[2] ?? 0),
+        expiryTime: Number(recoveryStatusData[3] ?? 0),
+        active: Boolean(recoveryStatusData[4]),
+      }
+    : null;
+
+  const inheritanceStatus = Array.isArray(inheritanceStatusData)
+    ? {
+        active: Boolean(inheritanceStatusData[0]),
+        approvals: Number(inheritanceStatusData[1] ?? 0),
+        threshold: Number(inheritanceStatusData[2] ?? 0),
+        expiryTime: Number(inheritanceStatusData[3] ?? 0),
+        denied: Boolean(inheritanceStatusData[4]),
+      }
+    : null;
+
+  const isGuardian = Boolean(isGuardianData);
+
+  const handleApproveRecovery = async () => {
+    if (!isValidVault || !isGuardian) return;
+    setIsSubmitting(true);
+    setActionError(null);
+    try {
+      await writeContractAsync({
+        address: lookupVault as `0x${string}`,
+        abi: UserVaultABI,
+        functionName: 'approveRecovery',
+        args: [],
+      });
+      await refetchRecoveryStatus();
+    } catch {
+      setActionError('Failed to approve recovery.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleApproveInheritance = async () => {
+    if (!isValidVault || !isGuardian) return;
+    setIsSubmitting(true);
+    setActionError(null);
+    try {
+      await writeContractAsync({
+        address: lookupVault as `0x${string}`,
+        abi: UserVaultABI,
+        functionName: 'approveInheritance',
+        args: [],
+      });
+      await refetchInheritanceStatus();
+    } catch {
+      setActionError('Failed to approve inheritance.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   if (!isConnected) {
     return (
@@ -375,106 +499,168 @@ function PendingActionsTab({ isConnected }: { isConnected: boolean }) {
     );
   }
 
-  if (pendingRecoveries.length === 0) {
-    return (
-      <motion.div 
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="text-center py-16"
-      >
-        <motion.div
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          transition={{ type: "spring" as const, stiffness: 200 }}
-        >
-          <div className="relative inline-block">
-            <CheckCircle2 className="w-16 h-16 text-green-400" />
-            <motion.div 
-              className="absolute inset-0 rounded-full bg-green-500/20"
-              animate={{ scale: [1, 1.5, 1], opacity: [0.5, 0, 0.5] }}
-              transition={{ duration: 2, repeat: Infinity }}
-            />
-          </div>
-        </motion.div>
-        <h2 className="text-2xl font-bold text-white mb-4 mt-4">All Clear!</h2>
-        <p className="text-gray-400">No pending recovery requests require your attention</p>
-        <p className="text-sm text-gray-500 mt-2">
-          If you expect to see a recovery request, ensure you are a guardian for the vault.
-        </p>
-      </motion.div>
-    );
-  }
-
   return (
     <motion.div 
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       className="space-y-6 max-w-4xl mx-auto"
     >
-      <motion.div 
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className="bg-linear-to-r from-red-500/10 to-red-500/5 border border-red-500/30 rounded-2xl p-4"
-      >
-        <p className="text-red-400 font-bold text-center">
-          ⚠️ {pendingRecoveries.length} recovery request(s) need your attention
-        </p>
-      </motion.div>
+      <div className="bg-gradient-to-br from-white/8 to-white/2 backdrop-blur-xl border border-white/10 rounded-2xl p-6">
+        <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+          <Clock className="w-5 h-5 text-red-400" />
+          Pending Actions Lookup
+        </h2>
 
-      {pendingRecoveries.map((recovery, idx) => (
-        <motion.div 
-          key={idx} 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: idx * 0.1 }}
-          className="bg-gradient-to-br from-white/8 to-white/2 backdrop-blur-xl border border-yellow-500/50 rounded-2xl p-6"
-        >
-          <div className="flex items-start justify-between mb-6">
-            <div>
-              <h3 className="text-xl font-bold text-white mb-1">{recovery.alias}</h3>
-              <p className="text-gray-400 text-sm font-mono">{recovery.vaultOwner}</p>
+        <div className="space-y-4">
+          <div>
+            <label className="block text-gray-400 text-sm mb-2">Vault Address</label>
+            <input
+              type="text"
+              placeholder="0x..."
+              value={lookupVault}
+              onChange={(e) => setLookupVault(e.target.value)}
+              className={`w-full px-4 py-3 bg-black/30 border rounded-xl text-white focus:outline-none focus:ring-2 font-mono transition-all ${
+                isValidVault === false
+                  ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20'
+                  : isValidVault === true
+                    ? 'border-green-500 focus:border-green-500 focus:ring-green-500/20'
+                    : 'border-white/10 focus:border-cyan-500 focus:ring-cyan-500/20'
+              }`}
+            />
+            {isValidVault === false && (
+              <p className="mt-1 text-sm text-red-400 flex items-center gap-1">
+                <AlertCircle className="w-4 h-4" />
+                Enter a valid vault address
+              </p>
+            )}
+          </div>
+
+          {isValidVault && (
+            <div className="space-y-4">
+              {!isGuardian && (
+                <div className="p-4 bg-black/30 border border-white/10 rounded-xl text-sm text-gray-400">
+                  You are not registered as a guardian for this vault.
+                </div>
+              )}
+
+              {isGuardian && recoveryStatus?.active && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="bg-gradient-to-br from-white/8 to-white/2 backdrop-blur-xl border border-yellow-500/50 rounded-2xl p-6"
+                >
+                  <div className="flex items-start justify-between mb-6">
+                    <div>
+                      <h3 className="text-xl font-bold text-white mb-1">Recovery Approval Needed</h3>
+                      <p className="text-gray-400 text-sm font-mono">{lookupVault}</p>
+                    </div>
+                    <div className="px-3 py-1 bg-yellow-500/20 border border-yellow-500/50 rounded-full">
+                      <span className="text-yellow-400 text-sm font-bold">Recovery</span>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                    {[
+                      { label: 'New Address', value: formatAddress(recoveryStatus.proposedOwner), mono: true },
+                      { label: 'Approvals', value: `${recoveryStatus.approvals}/${recoveryStatus.threshold}`, mono: false },
+                      { label: 'Expiry', value: recoveryStatus.expiryTime ? new Date(recoveryStatus.expiryTime * 1000).toLocaleDateString() : 'N/A', mono: false },
+                      { label: 'Status', value: 'Active', color: 'text-yellow-400', mono: false },
+                    ].map((item, i) => (
+                      <div key={i} className="bg-black/30 rounded-xl p-3 border border-white/10">
+                        <div className="text-gray-500 text-xs mb-1">{item.label}</div>
+                        <div className={`text-sm ${item.color || 'text-white'} ${item.mono ? 'font-mono' : 'font-bold'}`}>{item.value}</div>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="flex gap-4">
+                    <motion.button 
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      disabled={isSubmitting}
+                      onClick={handleApproveRecovery}
+                      className="flex-1 px-6 py-3 bg-linear-to-r from-green-500 to-emerald-500 text-white rounded-xl font-bold shadow-lg shadow-green-500/25 disabled:opacity-50"
+                    >
+                      ✓ Approve Recovery
+                    </motion.button>
+                  </div>
+                </motion.div>
+              )}
+
+              {isGuardian && inheritanceStatus?.active && !inheritanceStatus.denied && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="bg-gradient-to-br from-white/8 to-white/2 backdrop-blur-xl border border-pink-500/50 rounded-2xl p-6"
+                >
+                  <div className="flex items-start justify-between mb-6">
+                    <div>
+                      <h3 className="text-xl font-bold text-white mb-1">Inheritance Approval Needed</h3>
+                      <p className="text-gray-400 text-sm font-mono">{lookupVault}</p>
+                    </div>
+                    <div className="px-3 py-1 bg-pink-500/20 border border-pink-500/50 rounded-full">
+                      <span className="text-pink-400 text-sm font-bold">Inheritance</span>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                    {[
+                      { label: 'Approvals', value: `${inheritanceStatus.approvals}/${inheritanceStatus.threshold}`, mono: false },
+                      { label: 'Expiry', value: inheritanceStatus.expiryTime ? new Date(inheritanceStatus.expiryTime * 1000).toLocaleDateString() : 'N/A', mono: false },
+                      { label: 'Status', value: 'Active', color: 'text-pink-400', mono: false },
+                    ].map((item, i) => (
+                      <div key={i} className="bg-black/30 rounded-xl p-3 border border-white/10">
+                        <div className="text-gray-500 text-xs mb-1">{item.label}</div>
+                        <div className={`text-sm ${item.color || 'text-white'} ${item.mono ? 'font-mono' : 'font-bold'}`}>{item.value}</div>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="flex gap-4">
+                    <motion.button 
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      disabled={isSubmitting}
+                      onClick={handleApproveInheritance}
+                      className="flex-1 px-6 py-3 bg-linear-to-r from-green-500 to-emerald-500 text-white rounded-xl font-bold shadow-lg shadow-green-500/25 disabled:opacity-50"
+                    >
+                      ✓ Approve Inheritance
+                    </motion.button>
+                  </div>
+                </motion.div>
+              )}
+
+              {isGuardian && !recoveryStatus?.active && !inheritanceStatus?.active && (
+                <div className="text-center py-8">
+                  <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ type: "spring" as const, stiffness: 200 }}
+                  >
+                    <div className="relative inline-block">
+                      <CheckCircle2 className="w-16 h-16 text-green-400" />
+                      <motion.div 
+                        className="absolute inset-0 rounded-full bg-green-500/20"
+                        animate={{ scale: [1, 1.5, 1], opacity: [0.5, 0, 0.5] }}
+                        transition={{ duration: 2, repeat: Infinity }}
+                      />
+                    </div>
+                  </motion.div>
+                  <h2 className="text-2xl font-bold text-white mb-4 mt-4">All Clear!</h2>
+                  <p className="text-gray-400">No pending guardian actions for this vault</p>
+                </div>
+              )}
             </div>
-            <div className="px-3 py-1 bg-yellow-500/20 border border-yellow-500/50 rounded-full">
-              <span className="text-yellow-400 text-sm font-bold">{recovery.type}</span>
+          )}
+
+          {actionError && (
+            <div className="flex items-center gap-2 text-red-400 text-sm">
+              <AlertCircle className="w-4 h-4" />
+              {actionError}
             </div>
-          </div>
-
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-            {[
-              { label: 'New Address', value: recovery.requestedBy, mono: true },
-              { label: 'Requested', value: recovery.requestTime },
-              { label: 'Time Left', value: recovery.expiresIn, color: 'text-yellow-400' },
-              { label: 'Approvals', value: `${recovery.approvalsGiven}/${recovery.approvalsNeeded}` },
-            ].map((item, i) => (
-              <div key={i} className="bg-black/30 rounded-xl p-3 border border-white/10">
-                <div className="text-gray-500 text-xs mb-1">{item.label}</div>
-                <div className={`text-sm ${item.color || 'text-white'} ${item.mono ? 'font-mono' : 'font-bold'}`}>{item.value}</div>
-              </div>
-            ))}
-          </div>
-
-          <div className="flex gap-4">
-            <motion.button 
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              className="flex-1 px-6 py-3 bg-linear-to-r from-green-500 to-emerald-500 text-white rounded-xl font-bold shadow-lg shadow-green-500/25"
-            >
-              ✓ Approve Recovery
-            </motion.button>
-            <motion.button 
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              className="px-6 py-3 border-2 border-gray-500/50 text-gray-400 rounded-xl font-bold hover:border-red-500/50 hover:text-red-400 transition-colors"
-            >
-              Report Fraud
-            </motion.button>
-          </div>
-
-          <p className="text-center text-gray-500 text-xs mt-4">
-            Only approve if you have verified the vault owner&apos;s identity through trusted means
-          </p>
-        </motion.div>
-      ))}
+          )}
+        </div>
+      </div>
     </motion.div>
   );
 }
@@ -483,6 +669,17 @@ function PendingActionsTab({ isConnected }: { isConnected: boolean }) {
 function MyGuardiansTab({ isConnected }: { isConnected: boolean }) {
   const [showAddForm, setShowAddForm] = useState(false);
   const [newGuardianAddress, setNewGuardianAddress] = useState('');
+  const [actionError, setActionError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { vaultAddress, hasVault } = useUserVault();
+  const { writeContractAsync } = useWriteContract();
+
+  const { data: guardiansData, refetch: refetchGuardians, isLoading: isGuardiansLoading } = useReadContract({
+    address: vaultAddress ?? ZERO_ADDRESS,
+    abi: UserVaultABI,
+    functionName: 'getGuardians',
+    query: { enabled: !!vaultAddress },
+  });
   
   // Validate guardian address
   const isValidAddress = useMemo(() => {
@@ -490,12 +687,70 @@ function MyGuardiansTab({ isConnected }: { isConnected: boolean }) {
     return isAddress(newGuardianAddress);
   }, [newGuardianAddress]);
   
-  // Mock data - in production, fetch from contract
-  const myGuardians = [
-    { address: "0x1a2b...3c4d", alias: "Mom", addedDate: "Dec 1, 2025", mature: true },
-    { address: "0x5e6f...7g8h", alias: "Brother", addedDate: "Dec 10, 2025", mature: true },
-    { address: "0x9i0j...1k2l", alias: "Best Friend", addedDate: "Dec 15, 2025", mature: false },
-  ];
+  const myGuardians: Array<{ address: string; alias: string; addedDate: string; mature: boolean }> = useMemo(() => {
+    const guardiansTuple = guardiansData as
+      | readonly [readonly `0x${string}`[], readonly boolean[]]
+      | undefined;
+    const guardians = Array.isArray(guardiansTuple?.[0]) ? (guardiansTuple?.[0] as `0x${string}`[]) : [];
+    const mature = Array.isArray(guardiansTuple?.[1]) ? (guardiansTuple?.[1] as boolean[]) : [];
+
+    return guardians.map((guardian, index) => ({
+      address: guardian,
+      alias: formatAddress(guardian),
+      addedDate: 'On-chain',
+      mature: Boolean(mature[index]),
+    }));
+  }, [guardiansData]);
+
+  const handleAddGuardian = async () => {
+    if (!vaultAddress) {
+      setActionError('Create a vault before adding guardians.');
+      return;
+    }
+
+    if (!isAddress(newGuardianAddress)) {
+      setActionError('Enter a valid guardian address.');
+      return;
+    }
+
+    setIsSubmitting(true);
+    setActionError(null);
+    try {
+      await writeContractAsync({
+        address: vaultAddress,
+        abi: UserVaultABI,
+        functionName: 'setGuardian',
+        args: [newGuardianAddress as `0x${string}`, true],
+      });
+      await refetchGuardians();
+      setNewGuardianAddress('');
+      setShowAddForm(false);
+    } catch {
+      setActionError('Failed to add guardian. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleRemoveGuardian = async (guardian: string) => {
+    if (!vaultAddress) return;
+
+    setIsSubmitting(true);
+    setActionError(null);
+    try {
+      await writeContractAsync({
+        address: vaultAddress,
+        abi: UserVaultABI,
+        functionName: 'setGuardian',
+        args: [guardian as `0x${string}`, false],
+      });
+      await refetchGuardians();
+    } catch {
+      setActionError('Failed to remove guardian.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   if (!isConnected) {
     return (
@@ -512,6 +767,25 @@ function MyGuardiansTab({ isConnected }: { isConnected: boolean }) {
         </motion.div>
         <h2 className="text-2xl font-bold text-white mb-4">Connect Wallet</h2>
         <p className="text-gray-400">Connect your wallet to manage your guardians</p>
+      </motion.div>
+    );
+  }
+
+  if (!hasVault) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="text-center py-16"
+      >
+        <motion.div
+          animate={{ scale: [1, 1.1, 1] }}
+          transition={{ duration: 2, repeat: Infinity }}
+        >
+          <Shield className="w-16 h-16 mx-auto mb-4 text-gray-400" />
+        </motion.div>
+        <h2 className="text-2xl font-bold text-white mb-4">Create a Vault</h2>
+        <p className="text-gray-400">You need a vault before adding guardians.</p>
       </motion.div>
     );
   }
@@ -611,14 +885,21 @@ function MyGuardiansTab({ isConnected }: { isConnected: boolean }) {
                     Valid address
                   </p>
                 )}
+                {actionError && (
+                  <p className="mt-2 text-sm text-red-400 flex items-center gap-1">
+                    <AlertCircle className="w-4 h-4" />
+                    {actionError}
+                  </p>
+                )}
               </div>
               <motion.button 
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
-                disabled={!isValidAddress}
+                disabled={!isValidAddress || isSubmitting}
+                onClick={handleAddGuardian}
                 className="w-full py-3 bg-linear-to-r from-cyan-500 to-blue-500 text-white rounded-xl font-bold shadow-lg shadow-cyan-500/25 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Add Guardian
+                {isSubmitting ? 'Adding...' : 'Add Guardian'}
               </motion.button>
             </motion.div>
           )}
@@ -634,46 +915,60 @@ function MyGuardiansTab({ isConnected }: { isConnected: boolean }) {
       >
         <h3 className="text-xl font-bold text-white mb-4">Your Guardians</h3>
         <div className="space-y-3">
-          {myGuardians.map((guardian) => (
-            <motion.div 
-              key={guardian.address} 
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              whileHover={{ scale: 1.01 }}
-              className="p-4 bg-black/20 border border-white/10 rounded-xl"
-            >
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div className="flex items-center gap-4">
-                  <div className={`p-2 rounded-full ${guardian.mature ? 'bg-green-500/20' : 'bg-yellow-500/20'}`}>
-                    {guardian.mature ? (
-                      <CheckCircle2 className="text-green-400" size={20} />
-                    ) : (
-                      <Timer className="text-yellow-400" size={20} />
+          {isGuardiansLoading ? (
+            <div className="p-6 bg-black/30 border border-white/10 rounded-xl text-center text-gray-400">
+              Loading guardians...
+            </div>
+          ) : myGuardians.length === 0 ? (
+            <div className="p-6 bg-black/30 border border-white/10 rounded-xl text-center">
+              <Users className="w-12 h-12 mx-auto mb-3 text-gray-400" />
+              <p className="text-gray-400">No guardians added yet</p>
+              <p className="text-gray-500 text-sm mt-1">Add trusted contacts to secure your vault</p>
+            </div>
+          ) : (
+            myGuardians.map((guardian) => (
+              <motion.div 
+                key={guardian.address} 
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                whileHover={{ scale: 1.01 }}
+                className="p-4 bg-black/20 border border-white/10 rounded-xl"
+              >
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div className="flex items-center gap-4">
+                    <div className={`p-2 rounded-full ${guardian.mature ? 'bg-green-500/20' : 'bg-yellow-500/20'}`}>
+                      {guardian.mature ? (
+                        <CheckCircle2 className="text-green-400" size={20} />
+                      ) : (
+                        <Timer className="text-yellow-400" size={20} />
+                      )}
+                    </div>
+                    <div>
+                      <div className="text-white font-bold">{guardian.alias}</div>
+                      <div className="text-gray-400 text-sm font-mono">{guardian.address}</div>
+                      <div className="text-gray-500 text-xs">Added: {guardian.addedDate}</div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    {!guardian.mature && (
+                      <span className="px-3 py-1 bg-yellow-500/20 text-yellow-400 rounded-full text-xs font-bold">
+                        Maturing...
+                      </span>
                     )}
-                  </div>
-                  <div>
-                    <div className="text-white font-bold">{guardian.alias}</div>
-                    <div className="text-gray-400 text-sm font-mono">{guardian.address}</div>
-                    <div className="text-gray-500 text-xs">Added: {guardian.addedDate}</div>
+                    <motion.button 
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}
+                      onClick={() => handleRemoveGuardian(guardian.address)}
+                      disabled={isSubmitting}
+                      className="p-2 border border-red-500/50 text-red-400 rounded-lg hover:bg-red-500/10 transition-colors"
+                    >
+                      <UserMinus size={18} />
+                    </motion.button>
                   </div>
                 </div>
-                <div className="flex items-center gap-3">
-                  {!guardian.mature && (
-                    <span className="px-3 py-1 bg-yellow-500/20 text-yellow-400 rounded-full text-xs font-bold">
-                      Maturing...
-                    </span>
-                  )}
-                  <motion.button 
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.9 }}
-                    className="p-2 border border-red-500/50 text-red-400 rounded-lg hover:bg-red-500/10 transition-colors"
-                  >
-                    <UserMinus size={18} />
-                  </motion.button>
-                </div>
-              </div>
-            </motion.div>
-          ))}
+              </motion.div>
+            ))
+          )}
         </div>
       </motion.div>
     </motion.div>
@@ -684,16 +979,97 @@ function MyGuardiansTab({ isConnected }: { isConnected: boolean }) {
 function NextOfKinTab({ isConnected }: { isConnected: boolean }) {
   const [showSetForm, setShowSetForm] = useState(false);
   const [newKinAddress, setNewKinAddress] = useState('');
-  
-  // Mock data - in production, fetch from contract
-  const currentNextOfKin = {
-    address: "0xabcd...efgh",
-    alias: "Spouse",
-    setDate: "Nov 15, 2025"
+  const [actionError, setActionError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { vaultAddress, hasVault } = useUserVault();
+  const { writeContractAsync } = useWriteContract();
+
+  const { data: nextOfKinData, refetch: refetchNextOfKin } = useReadContract({
+    address: vaultAddress ?? ZERO_ADDRESS,
+    abi: UserVaultABI,
+    functionName: 'nextOfKin',
+    query: { enabled: !!vaultAddress },
+  });
+
+  const { data: inheritanceStatusData, refetch: refetchInheritanceStatus } = useReadContract({
+    address: vaultAddress ?? ZERO_ADDRESS,
+    abi: UserVaultABI,
+    functionName: 'getInheritanceStatus',
+    query: { enabled: !!vaultAddress },
+  });
+
+  const currentNextOfKin =
+    typeof nextOfKinData === 'string' && nextOfKinData !== ZERO_ADDRESS
+      ? { address: nextOfKinData, alias: formatAddress(nextOfKinData), setDate: 'On-chain' }
+      : null;
+
+  const inheritanceStatus = Array.isArray(inheritanceStatusData)
+    ? {
+        active: Boolean(inheritanceStatusData[0]),
+        approvals: Number(inheritanceStatusData[1] ?? 0),
+        threshold: Number(inheritanceStatusData[2] ?? 0),
+        expiryTime: Number(inheritanceStatusData[3] ?? 0),
+        denied: Boolean(inheritanceStatusData[4]),
+      }
+    : null;
+
+  const inheritanceRequest = inheritanceStatus?.active && !inheritanceStatus.denied
+    ? {
+        approvals: inheritanceStatus.approvals,
+        threshold: inheritanceStatus.threshold,
+        expiryTime: inheritanceStatus.expiryTime,
+      }
+    : null;
+
+  const handleSetNextOfKin = async () => {
+    if (!vaultAddress) {
+      setActionError('Create a vault before setting a Next of Kin.');
+      return;
+    }
+
+    if (!isAddress(newKinAddress)) {
+      setActionError('Enter a valid address for Next of Kin.');
+      return;
+    }
+
+    setIsSubmitting(true);
+    setActionError(null);
+    try {
+      await writeContractAsync({
+        address: vaultAddress,
+        abi: UserVaultABI,
+        functionName: 'setNextOfKin',
+        args: [newKinAddress as `0x${string}`],
+      });
+      await refetchNextOfKin();
+      setNewKinAddress('');
+      setShowSetForm(false);
+    } catch {
+      setActionError('Failed to set Next of Kin.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleDenyInheritance = async () => {
+    if (!vaultAddress) return;
+    setIsSubmitting(true);
+    setActionError(null);
+    try {
+      await writeContractAsync({
+        address: vaultAddress,
+        abi: UserVaultABI,
+        functionName: 'denyInheritance',
+        args: [],
+      });
+      await refetchInheritanceStatus();
+    } catch {
+      setActionError('Failed to deny inheritance request.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
   
-  const inheritanceRequest = null; // No active request
-
   if (!isConnected) {
     return (
       <motion.div 
@@ -709,6 +1085,25 @@ function NextOfKinTab({ isConnected }: { isConnected: boolean }) {
         </motion.div>
         <h2 className="text-2xl font-bold text-white mb-4">Connect Wallet</h2>
         <p className="text-gray-400">Connect your wallet to manage your Next of Kin</p>
+      </motion.div>
+    );
+  }
+
+  if (!hasVault) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="text-center py-16"
+      >
+        <motion.div
+          animate={{ scale: [1, 1.1, 1] }}
+          transition={{ duration: 2, repeat: Infinity }}
+        >
+          <Heart className="w-16 h-16 mx-auto mb-4 text-gray-400" />
+        </motion.div>
+        <h2 className="text-2xl font-bold text-white mb-4">Create a Vault</h2>
+        <p className="text-gray-400">You need a vault before setting a Next of Kin.</p>
       </motion.div>
     );
   }
@@ -802,6 +1197,12 @@ function NextOfKinTab({ isConnected }: { isConnected: boolean }) {
                   onChange={(e) => setNewKinAddress(e.target.value)}
                   className="w-full px-4 py-3 bg-black/30 border border-white/10 rounded-xl text-white focus:border-yellow-500 focus:outline-none focus:ring-2 focus:ring-yellow-500/20 font-mono transition-all"
                 />
+                  {actionError && (
+                    <p className="mt-2 text-sm text-red-400 flex items-center gap-1">
+                      <AlertCircle className="w-4 h-4" />
+                      {actionError}
+                    </p>
+                  )}
               </div>
               <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4">
                 <p className="text-red-400 text-sm">
@@ -812,9 +1213,11 @@ function NextOfKinTab({ isConnected }: { isConnected: boolean }) {
               <motion.button 
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
-                className="w-full py-3 bg-linear-to-r from-yellow-500 to-amber-500 text-black rounded-xl font-bold shadow-lg shadow-yellow-500/25"
+                disabled={isSubmitting}
+                onClick={handleSetNextOfKin}
+                className="w-full py-3 bg-linear-to-r from-yellow-500 to-amber-500 text-black rounded-xl font-bold shadow-lg shadow-yellow-500/25 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Set Next of Kin
+                {isSubmitting ? 'Saving...' : 'Set Next of Kin'}
               </motion.button>
             </motion.div>
           )}
@@ -839,7 +1242,9 @@ function NextOfKinTab({ isConnected }: { isConnected: boolean }) {
           <motion.button 
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
-            className="w-full py-3 bg-linear-to-r from-red-500 to-red-600 text-white rounded-xl font-bold shadow-lg shadow-red-500/25"
+            onClick={handleDenyInheritance}
+            disabled={isSubmitting}
+            className="w-full py-3 bg-linear-to-r from-red-500 to-red-600 text-white rounded-xl font-bold shadow-lg shadow-red-500/25 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Deny Inheritance Request (I&apos;m Alive!)
           </motion.button>
@@ -887,18 +1292,104 @@ function NextOfKinTab({ isConnected }: { isConnected: boolean }) {
 function RecoveryTab({ isConnected }: { isConnected: boolean }) {
   const [showRequestForm, setShowRequestForm] = useState(false);
   const [newAddress, setNewAddress] = useState('');
-  
-  // Mock data - in production, fetch from contract
-  const activeRecovery = null; // No active recovery
-  /*
-  const activeRecovery = {
-    proposedOwner: "0xnew1...2345",
-    approvals: 1,
-    needed: 2,
-    expiresIn: "25 days",
-    startedBy: "Guardian: Mom"
+  const [actionError, setActionError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { vaultAddress, hasVault } = useUserVault();
+  const { writeContractAsync } = useWriteContract();
+
+  const { data: recoveryStatusData, refetch: refetchRecoveryStatus } = useReadContract({
+    address: vaultAddress ?? ZERO_ADDRESS,
+    abi: UserVaultABI,
+    functionName: 'getRecoveryStatus',
+    query: { enabled: !!vaultAddress },
+  });
+
+  const recoveryStatus = Array.isArray(recoveryStatusData)
+    ? {
+        proposedOwner: recoveryStatusData[0] as string,
+        approvals: Number(recoveryStatusData[1] ?? 0),
+        threshold: Number(recoveryStatusData[2] ?? 0),
+        expiryTime: Number(recoveryStatusData[3] ?? 0),
+        active: Boolean(recoveryStatusData[4]),
+      }
+    : null;
+
+  const activeRecovery = recoveryStatus?.active
+    ? {
+        proposedOwner: recoveryStatus.proposedOwner,
+        approvals: recoveryStatus.approvals,
+        threshold: recoveryStatus.threshold,
+        expiryTime: recoveryStatus.expiryTime,
+      }
+    : null;
+
+  const handleRequestRecovery = async () => {
+    if (!vaultAddress) {
+      setActionError('Create a vault before requesting recovery.');
+      return;
+    }
+
+    if (!isAddress(newAddress)) {
+      setActionError('Enter a valid new owner address.');
+      return;
+    }
+
+    setIsSubmitting(true);
+    setActionError(null);
+    try {
+      await writeContractAsync({
+        address: vaultAddress,
+        abi: UserVaultABI,
+        functionName: 'requestRecovery',
+        args: [newAddress as `0x${string}`],
+      });
+      await refetchRecoveryStatus();
+      setShowRequestForm(false);
+      setNewAddress('');
+    } catch {
+      setActionError('Failed to request recovery.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
-  */
+
+  const handleFinalizeRecovery = async () => {
+    if (!vaultAddress) return;
+    setIsSubmitting(true);
+    setActionError(null);
+    try {
+      await writeContractAsync({
+        address: vaultAddress,
+        abi: UserVaultABI,
+        functionName: 'finalizeRecovery',
+        args: [],
+      });
+      await refetchRecoveryStatus();
+    } catch {
+      setActionError('Failed to finalize recovery.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleCancelRecovery = async () => {
+    if (!vaultAddress) return;
+    setIsSubmitting(true);
+    setActionError(null);
+    try {
+      await writeContractAsync({
+        address: vaultAddress,
+        abi: UserVaultABI,
+        functionName: 'cancelRecovery',
+        args: [],
+      });
+      await refetchRecoveryStatus();
+    } catch {
+      setActionError('Failed to cancel recovery.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   if (!isConnected) {
     return (
@@ -915,6 +1406,25 @@ function RecoveryTab({ isConnected }: { isConnected: boolean }) {
         </motion.div>
         <h2 className="text-2xl font-bold text-white mb-4">Connect Wallet</h2>
         <p className="text-gray-400">Connect your wallet to manage recovery</p>
+      </motion.div>
+    );
+  }
+
+  if (!hasVault) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="text-center py-16"
+      >
+        <motion.div
+          animate={{ scale: [1, 1.1, 1] }}
+          transition={{ duration: 2, repeat: Infinity }}
+        >
+          <Key className="w-16 h-16 mx-auto mb-4 text-gray-400" />
+        </motion.div>
+        <h2 className="text-2xl font-bold text-white mb-4">Create a Vault</h2>
+        <p className="text-gray-400">You need a vault before starting recovery.</p>
       </motion.div>
     );
   }
@@ -960,10 +1470,10 @@ function RecoveryTab({ isConnected }: { isConnected: boolean }) {
           </h3>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
             {[
-              { label: 'New Address', value: '0xnew1...2345', mono: true },
-              { label: 'Approvals', value: '1/2', color: 'text-green-400' },
-              { label: 'Expires In', value: '25 days', color: 'text-yellow-400' },
-              { label: 'Started By', value: 'Guardian: Mom' },
+              { label: 'New Address', value: formatAddress(activeRecovery.proposedOwner), mono: true },
+              { label: 'Approvals', value: `${activeRecovery.approvals}/${activeRecovery.threshold}`, color: 'text-green-400', mono: false },
+              { label: 'Expires In', value: activeRecovery.expiryTime ? `${Math.max(0, Math.ceil((activeRecovery.expiryTime * 1000 - Date.now()) / (1000 * 60 * 60 * 24)))} days` : 'Unknown', color: 'text-yellow-400', mono: false },
+              { label: 'Started By', value: 'On-chain request', mono: false },
             ].map((item, i) => (
               <div key={i} className="bg-black/30 rounded-xl p-4 border border-white/10">
                 <div className="text-gray-400 text-xs mb-1">{item.label}</div>
@@ -975,18 +1485,28 @@ function RecoveryTab({ isConnected }: { isConnected: boolean }) {
             <motion.button 
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
-              className="flex-1 py-3 bg-linear-to-r from-green-500 to-emerald-500 text-white rounded-xl font-bold shadow-lg shadow-green-500/25"
+              onClick={handleFinalizeRecovery}
+              disabled={isSubmitting}
+              className="flex-1 py-3 bg-linear-to-r from-green-500 to-emerald-500 text-white rounded-xl font-bold shadow-lg shadow-green-500/25 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Finalize Recovery
             </motion.button>
             <motion.button 
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
-              className="px-6 py-3 border border-red-500/50 text-red-400 rounded-xl font-bold hover:bg-red-500/10 transition-colors"
+              onClick={handleCancelRecovery}
+              disabled={isSubmitting}
+              className="px-6 py-3 border border-red-500/50 text-red-400 rounded-xl font-bold hover:bg-red-500/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Cancel Recovery
             </motion.button>
           </div>
+          {actionError && (
+            <p className="mt-4 text-sm text-red-400 flex items-center gap-1">
+              <AlertCircle className="w-4 h-4" />
+              {actionError}
+            </p>
+          )}
         </motion.div>
       ) : (
         <motion.div 
@@ -1035,12 +1555,20 @@ function RecoveryTab({ isConnected }: { isConnected: boolean }) {
                     className="w-full px-4 py-3 bg-black/30 border border-white/10 rounded-xl text-white focus:border-cyan-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/20 font-mono transition-all"
                   />
                 </div>
+                {actionError && (
+                  <p className="text-sm text-red-400 flex items-center gap-1">
+                    <AlertCircle className="w-4 h-4" />
+                    {actionError}
+                  </p>
+                )}
                 <motion.button 
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
-                  className="w-full py-3 bg-linear-to-r from-cyan-500 to-blue-500 text-white rounded-xl font-bold shadow-lg shadow-cyan-500/25"
+                  onClick={handleRequestRecovery}
+                  disabled={isSubmitting}
+                  className="w-full py-3 bg-linear-to-r from-cyan-500 to-blue-500 text-white rounded-xl font-bold shadow-lg shadow-cyan-500/25 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Request Recovery
+                  {isSubmitting ? 'Requesting...' : 'Request Recovery'}
                 </motion.button>
                 <p className="text-gray-500 text-xs text-center">
                   Recovery expires after 30 days. Contact your guardians to approve.

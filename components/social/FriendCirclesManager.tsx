@@ -46,30 +46,51 @@ export function FriendCirclesManager({ friends }: FriendCirclesManagerProps) {
   const [selectedFriends, setSelectedFriends] = useState<string[]>([]);
   const [memberNicknames, setMemberNicknames] = useState<Record<string, string>>({});
 
+  const initializeDefaultCircles = () => {
+    const newCircles = DEFAULT_CIRCLES.map((template, idx) => ({
+      ...template,
+      id: `circle_${Date.now()}_${idx}`,
+      members: [],
+      createdAt: Date.now(),
+    }));
+    setCircles(newCircles);
+  };
+
   // Load circles and members
   useEffect(() => {
     if (!address) return;
+    const timers: ReturnType<typeof setTimeout>[] = [];
+    const defer = (callback: () => void) => {
+      const timer = setTimeout(callback, 0);
+      timers.push(timer);
+    };
     
     const storedCircles = localStorage.getItem(`${STORAGE_KEYS.FRIENDS}_circles_${address}`);
     if (storedCircles) {
       try {
-        setCircles(JSON.parse(storedCircles));
+        const parsedCircles = JSON.parse(storedCircles);
+        defer(() => setCircles(parsedCircles));
       } catch (e) {
         console.error('Failed to load circles:', e);
-        initializeDefaultCircles();
+        defer(() => initializeDefaultCircles());
       }
     } else {
-      initializeDefaultCircles();
+      defer(() => initializeDefaultCircles());
     }
 
     const storedMembers = localStorage.getItem(`${STORAGE_KEYS.FRIENDS}_circle_members_${address}`);
     if (storedMembers) {
       try {
-        setCircleMembers(JSON.parse(storedMembers));
+        const parsedMembers = JSON.parse(storedMembers);
+        defer(() => setCircleMembers(parsedMembers));
       } catch (e) {
         console.error('Failed to load circle members:', e);
       }
     }
+
+    return () => {
+      timers.forEach((timer) => clearTimeout(timer));
+    };
   }, [address]);
 
   // Save circles
@@ -83,16 +104,6 @@ export function FriendCirclesManager({ friends }: FriendCirclesManagerProps) {
     if (!address || circleMembers.length === 0) return;
     localStorage.setItem(`${STORAGE_KEYS.FRIENDS}_circle_members_${address}`, JSON.stringify(circleMembers));
   }, [address, circleMembers]);
-
-  const initializeDefaultCircles = () => {
-    const newCircles = DEFAULT_CIRCLES.map((template, idx) => ({
-      ...template,
-      id: `circle_${Date.now()}_${idx}`,
-      members: [],
-      createdAt: Date.now(),
-    }));
-    setCircles(newCircles);
-  };
 
   const handleCreateCircle = () => {
     if (!circleName || !address) return;

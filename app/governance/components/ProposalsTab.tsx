@@ -92,6 +92,7 @@ export function ProposalsTab({
                     a.href = url
                     a.download = "proposals.csv"
                     a.click()
+                    URL.revokeObjectURL(url)
                   }}
                   className="px-4 py-2 bg-zinc-900 border border-zinc-700 text-cyan-400 rounded-lg font-bold hover:border-cyan-400 transition-colors"
                 >
@@ -122,7 +123,7 @@ export function ProposalsTab({
             {filteredProposals.length === 0 ? (
               <div className="text-center py-12 text-zinc-400">
                 No proposals found matching your search.
-                {activeProposalIds && activeProposalIds.length ? (
+                {process.env.NODE_ENV === 'development' && activeProposalIds && activeProposalIds.length ? (
                   <div className="mt-4 text-sm text-gray-600">
                     (Debug) Active on-chain IDs: {activeProposalIds.map((id) => id.toString()).join(", ")}
                   </div>
@@ -131,7 +132,7 @@ export function ProposalsTab({
             ) : null}
             {filteredProposals.map((prop) => {
               const total = prop.forVotes + prop.againstVotes
-              const forPercent = Math.round((prop.forVotes / total) * 100)
+              const forPercent = total > 0 ? Math.round((prop.forVotes / total) * 100) : 0
 
               return (
                 <div

@@ -432,9 +432,17 @@ class GamificationEngine {
    * Get leaderboard data
    */
   getLeaderboard(_limit: number = 10): Array<{ address: string; level: number; xp: number }> {
-    // In a real implementation, this would query a backend
-    // For now, return empty array
-    return [];
+    if (typeof window === 'undefined') return [];
+
+    const allProgress = getAllUserProgress();
+    return allProgress
+      .sort((a, b) => b.totalXP - a.totalXP)
+      .slice(0, _limit)
+      .map((entry) => ({
+        address: entry.address,
+        level: entry.level,
+        xp: entry.totalXP,
+      }));
   }
 }
 

@@ -76,10 +76,12 @@ contract UserVault is ReentrancyGuard {
     struct Inheritance {
         bool active;
         uint8 approvals;
+        uint8 cancelVotes;
         uint64 expiryTime;
         bool ownerDenied;
         uint256 nonce;
         mapping(address => mapping(uint256 => bool)) voted;
+        mapping(address => mapping(uint256 => bool)) cancelVoted;
     }
     Inheritance private _inheritance;
     uint64 public constant INHERITANCE_EXPIRY = 30 days;
@@ -405,7 +407,7 @@ contract UserVault is ReentrancyGuard {
     // ——— Recovery (guardian-initiated)
     function requestRecovery(address proposed) external notLocked {
         if (!isGuardian[msg.sender]) revert UV_NotGuardian();
-        require(!isGuardianMature(msg.sender) == false, "UV:immature");
+        require(isGuardianMature(msg.sender), "UV:immature");
         if (proposed == address(0)) revert UV_Zero();
 
         _recovery.proposedOwner = proposed;
@@ -476,6 +478,7 @@ contract UserVault is ReentrancyGuard {
 
         _inheritance.active = true;
         _inheritance.approvals = 0;
+        _inheritance.cancelVotes = 0;
         _inheritance.expiryTime = uint64(block.timestamp + INHERITANCE_EXPIRY);
         _inheritance.nonce++;
 
@@ -518,14 +521,17 @@ contract UserVault is ReentrancyGuard {
         if (!isGuardian[msg.sender]) revert UV_NotGuardian();
         require(isGuardianMature(msg.sender), "UV:immature");
         if (!_inheritance.active) revert UV_NoInheritance();
+        if (_inheritance.cancelVoted[msg.sender][_inheritance.nonce]) revert UV_AlreadyVoted();
+
+        _inheritance.cancelVoted[msg.sender][_inheritance.nonce] = true;
 
         uint8 threshold = (guardianCount / 2) + 1;
-        _inheritance.approvals++;
+        _inheritance.cancelVotes++;
 
-        if (_inheritance.approvals >= threshold) {
+        if (_inheritance.cancelVotes >= threshold) {
             _inheritance.active = false;
             _inheritance.nonce++;
-            emit InheritanceCancelledByGuardians(msg.sender, _inheritance.approvals);
+            emit InheritanceCancelledByGuardians(msg.sender, _inheritance.cancelVotes);
             _logSys("inheritance_cancelled_by_guardians");
         }
     }

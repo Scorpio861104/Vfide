@@ -24,12 +24,12 @@ const footerLinks: {
     { href: "/governance", label: "Governance" },
     { href: "/token-launch", label: "Token Launch" },
     { href: "https://github.com/Scorpio861104/Vfide", label: "GitHub", external: true },
-    { href: "https://discord.gg/vfide", label: "Discord", external: true },
+    { href: "https://discord.gg/vfide", label: "Discord", external: true, soon: true },
   ],
   resources: [
     { href: "/docs", label: "Documentation" },
     { href: "/about", label: "About" },
-    { href: "/live-demo", label: "Live Demo" },
+    { href: "/live", label: "Live Demo" },
   ],
   legal: [
     { href: "/legal", label: "Legal & Terms" },
@@ -189,7 +189,7 @@ export function Footer() {
             <p>© 2025 VFIDE Protocol. All rights reserved.</p>
             <div className="flex items-center gap-2">
               <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
-              <span>Base Sepolia Testnet</span>
+              <span>Base Sepolia Network</span>
             </div>
           </div>
         </div>

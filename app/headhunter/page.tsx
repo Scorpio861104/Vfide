@@ -439,7 +439,7 @@ export default function HeadhunterPage() {
                         {/* Info */}
                         <div>
                           <div className="flex flex-wrap items-center gap-2 mb-1">
-                            <span className="font-mono text-white text-xs sm:text-sm truncate max-w-25 sm:max-w-45">{activity.address}</span>
+                            <span className="font-mono text-white text-xs sm:text-sm truncate max-w-[6.25rem] sm:max-w-[11.25rem]">{activity.address}</span>
                             <span className={`px-2 py-0.5 text-xs font-semibold rounded ${
                               activity.status === 'credited'
                                 ? 'bg-emerald-500/20 text-emerald-500'

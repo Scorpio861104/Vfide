@@ -28,7 +28,10 @@ describe('/api/crypto/rewards/[userId]/claim', () => {
       requireOwnership.mockReturnValue({ user: { address: '0x1111111111111111111111111111111111111123', id: '1' } });
 
       query.mockResolvedValueOnce({
-        rows: [{ id: 1, amount: '100', reward_type: 'quest', source_contract: '0xabcabcabcabcabcabcabcabcabcabcabcabcabca' }],
+        rows: [{ id: 1 }],
+      });
+      query.mockResolvedValueOnce({
+        rows: [{ id: 1, amount: '100', status: 'pending', source_contract: null, onchain_reward_id: null }],
       });
       query.mockResolvedValueOnce({
         rows: [{ id: 1 }],
@@ -37,7 +40,7 @@ describe('/api/crypto/rewards/[userId]/claim', () => {
       const request = new NextRequest('http://localhost:3000/api/crypto/rewards/1/claim', {
         method: 'POST',
         body: JSON.stringify({
-          rewardIds: ['1', '2'],
+          rewardIds: [1, 2],
         }),
       });
 

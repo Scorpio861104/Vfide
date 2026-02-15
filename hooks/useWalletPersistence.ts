@@ -53,7 +53,7 @@ export function useWalletPersistence() {
   const hasAttemptedReconnect = useRef(false);
   const heartbeatInterval = useRef<NodeJS.Timeout | null>(null);
   const inactivityTimer = useRef<NodeJS.Timeout | null>(null);
-  const lastActivityTime = useRef<number>(Date.now());
+  const lastActivityTime = useRef<number>(0);
   
   // State for reconnection feedback
   const [isReconnecting, setIsReconnecting] = useState(false);
@@ -99,6 +99,10 @@ export function useWalletPersistence() {
       // Invalid session, clear it
       safeLocalStorage.removeItem(SESSION_KEY);
     }
+  }, []);
+
+  useEffect(() => {
+    lastActivityTime.current = Date.now();
   }, []);
 
   // Clear session on disconnect
@@ -158,7 +162,7 @@ export function useWalletPersistence() {
       session.permanent = enabled;
       safeLocalStorage.setItem(SESSION_KEY, JSON.stringify(session));
     }
-  }, []);
+  }, [getSession]);
 
   // Check if Stay Connected is enabled
   const isStayConnectedEnabled = useCallback((): boolean => {
@@ -207,8 +211,8 @@ export function useWalletPersistence() {
     
     if (lastConnector) {
       hasAttemptedReconnect.current = true;
-      setIsReconnecting(true);
-      setReconnectError(null);
+      setTimeout(() => { setIsReconnecting(true); }, 0);
+      setTimeout(() => { setReconnectError(null); }, 0);
       
       // Use AbortController to cancel reconnect on timeout
       const abortController = new AbortController();
@@ -337,13 +341,13 @@ export function useWalletPersistence() {
         clearInterval(inactivityTimer.current);
         inactivityTimer.current = null;
       }
-      setMinutesUntilDisconnect(null);
+      setTimeout(() => { setMinutesUntilDisconnect(null); }, 0);
       return;
     }
 
     // Check if auto-disconnect is enabled
     if (!isAutoDisconnectEnabled()) {
-      setMinutesUntilDisconnect(null);
+      setTimeout(() => { setMinutesUntilDisconnect(null); }, 0);
       return;
     }
 

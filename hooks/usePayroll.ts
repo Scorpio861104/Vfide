@@ -7,7 +7,7 @@
  * - Type-safe contract interactions
  */
 
-import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
+import { useAccount, useReadContract, useReadContracts, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { parseUnits, formatUnits, isAddress } from 'viem';
 import { PayrollManagerABI } from '@/lib/abis';
@@ -100,72 +100,94 @@ export function usePayroll() {
     return streamed > stream.depositBalance ? stream.depositBalance : streamed;
   }, [currentTime]);
 
-  // Load streams when IDs are available
+  const streamIds = useMemo(() => {
+    const allIds = new Set<bigint>();
+    const payerIds = payerStreamIds as readonly bigint[] | undefined;
+    const payeeIds = payeeStreamIds as readonly bigint[] | undefined;
+
+    if (payerIds) payerIds.forEach((id) => allIds.add(id));
+    if (payeeIds) payeeIds.forEach((id) => allIds.add(id));
+
+    return Array.from(allIds);
+  }, [payerStreamIds, payeeStreamIds]);
+
+  const { data: streamReads, isLoading: streamsLoading, error: streamsError } = useReadContracts({
+    contracts: streamIds.map((id) => ({
+      address: PAYROLL_MANAGER_ADDRESS,
+      abi: PayrollManagerABI,
+      functionName: 'getStream',
+      args: [id],
+    })),
+    query: { enabled: IS_DEPLOYED && !!address && streamIds.length > 0 },
+  });
+
   useEffect(() => {
-    const loadStreams = async () => {
-      if (!IS_DEPLOYED || !address) {
-        setStreams([]);
-        return;
-      }
-
-      const allIds = new Set<bigint>();
-      
-      // Type assertions for JSON ABI return values
-      const payerIds = payerStreamIds as readonly bigint[] | undefined;
-      const payeeIds = payeeStreamIds as readonly bigint[] | undefined;
-      
-      if (payerIds) {
-        payerIds.forEach((id: bigint) => allIds.add(id));
-      }
-      if (payeeIds) {
-        payeeIds.forEach((id: bigint) => allIds.add(id));
-      }
-
-      if (allIds.size === 0) {
-        setStreams([]);
-        return;
-      }
-
-      setLoading(true);
+    if (!IS_DEPLOYED || !address) {
+      setStreams([]);
+      setLoading(false);
       setError(null);
+      return;
+    }
 
-      try {
-        // For now, we'd need to make individual calls to getStream for each ID
-        // In production, this would use a multicall or subgraph
-        const loadedStreams: PayrollStream[] = [];
-        
-        // Since we can't make dynamic contract calls in this context,
-        // we'll set up the structure for when streams are available
-        for (const id of allIds) {
-          // Placeholder - in production each stream would be fetched
-          loadedStreams.push({
-            id,
-            payer: '0x0000000000000000000000000000000000000000' as `0x${string}`,
-            payee: '0x0000000000000000000000000000000000000000' as `0x${string}`,
-            token: VFIDE_TOKEN_ADDRESS,
-            ratePerSecond: BigInt(0),
-            startTime: BigInt(Math.floor(Date.now() / 1000)),
-            lastWithdrawTime: BigInt(Math.floor(Date.now() / 1000)),
-            depositBalance: BigInt(0),
-            active: false,
-            paused: false,
-            pausedAt: BigInt(0),
-            pausedAccrued: BigInt(0),
-            claimable: BigInt(0),
-            monthlyRate: BigInt(0),
-          });
-        }
+    if (streamsError) {
+      setStreams([]);
+      setLoading(false);
+      setError(streamsError instanceof Error ? streamsError.message : 'Failed to load streams');
+      return;
+    }
 
-        setStreams(loadedStreams);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to load streams');
-      } finally {
-        setLoading(false);
-      }
-    };
+    if (streamsLoading) {
+      setLoading(true);
+      return;
+    }
 
-    loadStreams();
-  }, [address, payerStreamIds, payeeStreamIds]);
+    if (!streamReads || streamIds.length === 0) {
+      setStreams([]);
+      setLoading(false);
+      setError(null);
+      return;
+    }
+
+    setLoading(false);
+    setError(null);
+
+    const loadedStreams: PayrollStream[] = streamReads
+      .map((read, index) => {
+        if (!read || read.status === 'failure' || !read.result) return null;
+        const stream = read.result as {
+          payer: `0x${string}`;
+          payee: `0x${string}`;
+          token: `0x${string}`;
+          ratePerSecond: bigint;
+          startTime: bigint;
+          lastWithdrawTime: bigint;
+          depositBalance: bigint;
+          active: boolean;
+          paused: boolean;
+          pausedAt: bigint;
+          pausedAccrued: bigint;
+        };
+
+        const claimable = calculateClaimable({
+          id: streamIds[index],
+          ...stream,
+          claimable: BigInt(0),
+          monthlyRate: BigInt(0),
+        } as PayrollStream);
+
+        const monthlyRate = stream.ratePerSecond * BigInt(30 * 24 * 60 * 60);
+
+        return {
+          id: streamIds[index],
+          ...stream,
+          claimable,
+          monthlyRate,
+        } as PayrollStream;
+      })
+      .filter((stream): stream is PayrollStream => stream !== null);
+
+    setStreams(loadedStreams);
+  }, [address, streamIds, streamReads, streamsLoading, streamsError, calculateClaimable]);
 
   // Create a new stream
   const createStream = useCallback(async (

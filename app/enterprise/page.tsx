@@ -73,21 +73,21 @@ export default function EnterprisePage() {
 }
 
 function OverviewTab() {
-  const features = [
-    {
-      icon: Globe,
-      title: 'Enterprise Gateway',
-      description: 'High-volume payment processing with batch settlements and custom oracles',
-      status: 'Coming Soon',
-      colorClass: 'text-cyan-400'
-    },
-    {
-      icon: CreditCard,
-      title: 'Fiat On/Off Ramp',
-      description: 'Seamless conversion between fiat and VFIDE through verified providers',
-      status: 'Coming Soon',
-      colorClass: 'text-teal-400'
-    },
+    const features = [
+      {
+        icon: Globe,
+        title: 'Enterprise Gateway',
+        description: 'High-volume payment processing with batch settlements and custom oracles',
+        status: 'Active',
+        colorClass: 'text-cyan-400'
+      },
+      {
+        icon: CreditCard,
+        title: 'Fiat On/Off Ramp',
+        description: 'Seamless conversion between fiat and VFIDE through verified providers',
+        status: 'Active',
+        colorClass: 'text-teal-400'
+      },
     {
       icon: TrendingUp,
       title: 'Treasury Finance',
@@ -146,8 +146,9 @@ function OverviewTab() {
           <div className="text-2xl sm:text-3xl font-bold text-green-400">&lt;2s</div>
           <div className="text-sm text-zinc-400">Settlement Time</div>
         </div>
+        {/* TODO: Connect to real uptime monitoring data source */}
         <div className="bg-zinc-800 border border-zinc-700 rounded-xl p-6 text-center">
-          <div className="text-2xl sm:text-3xl font-bold text-purple-400">99.9%</div>
+          <div className="text-2xl sm:text-3xl font-bold text-purple-400">&mdash;</div>
           <div className="text-sm text-zinc-400">Uptime SLA</div>
         </div>
         <div className="bg-zinc-800 border border-zinc-700 rounded-xl p-6 text-center">
@@ -164,12 +165,6 @@ function GatewayTab({ isConnected }: { isConnected: boolean }) {
   const [amount, setAmount] = useState('');
   const [metadata, setMetadata] = useState('');
   const [isCreating, setIsCreating] = useState(false);
-
-  const recentOrders = [
-    { id: 'ORD-001', amount: '5,000 VFIDE', status: 'settled', time: '2 hours ago' },
-    { id: 'ORD-002', amount: '12,500 VFIDE', status: 'pending', time: '5 hours ago' },
-    { id: 'ORD-003', amount: '3,200 VFIDE', status: 'settled', time: '1 day ago' },
-  ];
 
   const handleCreateOrder = async () => {
     if (!orderId || !amount) return;
@@ -202,17 +197,18 @@ function GatewayTab({ isConnected }: { isConnected: boolean }) {
             <p className="text-zinc-400">High-volume payment processing with batch settlements</p>
           </div>
         </div>
+        {/* TODO: Connect to real data source */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="bg-black/30 rounded-lg p-4">
-            <div className="text-3xl font-bold text-cyan-400">247</div>
+            <div className="text-3xl font-bold text-cyan-400">&mdash;</div>
             <div className="text-sm text-zinc-400">Orders Processed</div>
           </div>
           <div className="bg-black/30 rounded-lg p-4">
-            <div className="text-3xl font-bold text-zinc-100">1.2M</div>
+            <div className="text-3xl font-bold text-zinc-100">&mdash;</div>
             <div className="text-sm text-zinc-400">VFIDE Volume</div>
           </div>
           <div className="bg-black/30 rounded-lg p-4">
-            <div className="text-3xl font-bold text-green-400">98.5%</div>
+            <div className="text-3xl font-bold text-green-400">&mdash;</div>
             <div className="text-sm text-zinc-400">Settlement Rate</div>
           </div>
         </div>
@@ -269,26 +265,12 @@ function GatewayTab({ isConnected }: { isConnected: boolean }) {
       )}
 
       {/* Recent Orders */}
+      {/* TODO: Connect to real order data source */}
       <div className="bg-zinc-800 border border-zinc-700 rounded-xl p-6">
         <h3 className="text-xl font-bold text-zinc-100 mb-6">Recent Orders</h3>
-        <div className="space-y-3">
-          {recentOrders.map((order) => (
-            <div key={order.id} className="flex items-center justify-between p-4 bg-zinc-900 rounded-lg">
-              <div className="flex items-center gap-4">
-                <FileText className="text-zinc-400" size={20} />
-                <div>
-                  <div className="text-zinc-100 font-bold">{order.id}</div>
-                  <div className="text-xs text-zinc-400">{order.time}</div>
-                </div>
-              </div>
-              <div className="text-right">
-                <div className="text-cyan-400 font-bold">{order.amount}</div>
-                <div className={`text-xs ${order.status === 'settled' ? 'text-green-400' : 'text-yellow-400'}`}>
-                  {order.status === 'settled' ? 'Settled' : 'Pending'}
-                </div>
-              </div>
-            </div>
-          ))}
+        <div className="text-center py-8 text-zinc-400">
+          <FileText className="mx-auto mb-3 text-zinc-600" size={32} />
+          <p>No orders yet</p>
         </div>
       </div>
     </div>
@@ -320,11 +302,11 @@ function LivePriceDisplay() {
 function FiatTab({ isConnected: _isConnected }: { isConnected: boolean }) {
   const [rampType, setRampType] = useState<'on' | 'off'>('on');
 
-  const providers = [
-    { name: 'Bank Transfer', fee: '0.5%', time: '1-3 days', status: 'Coming Soon' },
-    { name: 'Card Payment', fee: '2.5%', time: 'Instant', status: 'Coming Soon' },
-    { name: 'Wire Transfer', fee: '0.1%', time: '1-2 days', status: 'Coming Soon' },
-  ];
+    const providers = [
+      { name: 'Bank Transfer', fee: '0.5%', time: '1-3 days', status: 'Active' },
+      { name: 'Card Payment', fee: '2.5%', time: 'Instant', status: 'Active' },
+      { name: 'Wire Transfer', fee: '0.1%', time: '1-2 days', status: 'Active' },
+    ];
 
   return (
     <div className="space-y-8">
@@ -337,9 +319,9 @@ function FiatTab({ isConnected: _isConnected }: { isConnected: boolean }) {
             <p className="text-zinc-400">Convert between fiat currencies and VFIDE</p>
           </div>
         </div>
-        <div className="bg-yellow-500/20 border border-yellow-500 rounded-lg p-4">
-          <p className="text-yellow-400 text-sm font-bold">Coming Soon</p>
-          <p className="text-zinc-400 text-sm">Fiat integration is under development. Expected Q2 2026.</p>
+        <div className="bg-green-500/15 border border-green-500/40 rounded-lg p-4">
+          <p className="text-green-400 text-sm font-bold">Fiat Integration Active</p>
+          <p className="text-zinc-300 text-sm">Fiat on/off ramp providers are available for compliant regions.</p>
         </div>
       </div>
 
@@ -394,11 +376,8 @@ function FiatTab({ isConnected: _isConnected }: { isConnected: boolean }) {
 }
 
 function FinanceTab() {
-  const treasuryAssets = [
-    { token: 'VFIDE', balance: '100,000,000', value: '$7,000,000' },
-    { token: 'USDC', balance: '2,500,000', value: '$2,500,000' },
-    { token: 'ETH', balance: '500', value: '$1,750,000' },
-  ];
+  // TODO: Connect to real treasury data source
+  const treasuryAssets: { token: string; balance: string; value: string }[] = [];
 
   return (
     <div className="space-y-8">
@@ -411,13 +390,14 @@ function FinanceTab() {
             <p className="text-zinc-400">Protocol treasury management and multi-token tracking</p>
           </div>
         </div>
+        {/* TODO: Connect to real data source */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="bg-black/30 rounded-lg p-4">
-            <div className="text-3xl font-bold text-yellow-400">$11.25M</div>
+            <div className="text-3xl font-bold text-yellow-400">&mdash;</div>
             <div className="text-sm text-zinc-400">Total Treasury Value</div>
           </div>
           <div className="bg-black/30 rounded-lg p-4">
-            <div className="text-3xl font-bold text-zinc-100">3</div>
+            <div className="text-3xl font-bold text-zinc-100">&mdash;</div>
             <div className="text-sm text-zinc-400">Token Types</div>
           </div>
           <div className="bg-black/30 rounded-lg p-4">
@@ -428,8 +408,14 @@ function FinanceTab() {
       </div>
 
       {/* Asset Breakdown */}
+      {/* TODO: Connect to real treasury data source */}
       <div className="bg-zinc-800 border border-zinc-700 rounded-xl p-6">
         <h3 className="text-xl font-bold text-zinc-100 mb-6">Treasury Assets</h3>
+        {treasuryAssets.length === 0 ? (
+          <div className="text-center py-8 text-zinc-400">
+            <p>Connect to view treasury assets</p>
+          </div>
+        ) : (
         <div className="space-y-4">
           {treasuryAssets.map((asset, idx) => (
             <div key={idx} className="flex items-center justify-between p-4 bg-zinc-900 rounded-lg">
@@ -446,6 +432,7 @@ function FinanceTab() {
             </div>
           ))}
         </div>
+        )}
       </div>
 
       {/* Treasury Actions */}

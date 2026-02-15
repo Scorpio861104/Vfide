@@ -11,8 +11,8 @@ import { useState, useEffect } from 'react';
 import { useAccount } from 'wagmi';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Gift, Flame, Calendar, CheckCircle2, Sparkles, Star, Zap, Clock } from 'lucide-react';
-import { safeParseInt } from '@/lib/validation';
 import { useTransactionSounds } from '@/hooks/useTransactionSounds';
+import { getAuthHeaders, getAuthToken } from '@/lib/auth/client';
 
 interface DailyReward {
   day: number;
@@ -27,7 +27,7 @@ export default function DailyRewardsWidget() {
   const [canClaim, setCanClaim] = useState(true);
   const [claiming, setClaiming] = useState(false);
   const [claimed, setClaimed] = useState(false);
-  const [streak] = useState(7);
+  const [streak, setStreak] = useState(0);
   const [nextRewardTime, setNextRewardTime] = useState<number | null>(null);
   const [weekRewards, setWeekRewards] = useState<DailyReward[]>([]);
   const [showConfetti, setShowConfetti] = useState(false);
@@ -35,64 +35,64 @@ export default function DailyRewardsWidget() {
 
   useEffect(() => {
     if (isConnected) {
-      checkClaimStatus();
-      loadWeekRewards();
+      void checkClaimStatus();
     }
   }, [isConnected]);
 
   const checkClaimStatus = async () => {
-    // In production: Check API for last claim time
-    const lastClaim = localStorage.getItem('lastDailyClaim');
-    if (lastClaim) {
-      const lastClaimTime = safeParseInt(lastClaim, 0);
-      const now = Date.now();
-      const hoursUntilNext = 24 - ((now - lastClaimTime) / (1000 * 60 * 60));
-      
-      if (hoursUntilNext > 0) {
-        setCanClaim(false);
-        setNextRewardTime(now + (hoursUntilNext * 60 * 60 * 1000));
-      }
-    }
-  };
+    try {
+      const token = getAuthToken();
+      if (!token) return;
 
-  const loadWeekRewards = () => {
-    const rewards: DailyReward[] = [
-      { day: 1, vfide: 15, xp: 50, claimed: true },
-      { day: 2, vfide: 15, xp: 50, claimed: true },
-      { day: 3, vfide: 20, xp: 75, claimed: true, bonus: true },
-      { day: 4, vfide: 15, xp: 50, claimed: true },
-      { day: 5, vfide: 15, xp: 50, claimed: true },
-      { day: 6, vfide: 15, xp: 50, claimed: true },
-      { day: 7, vfide: 50, xp: 200, claimed: false, bonus: true }
-    ];
-    setWeekRewards(rewards);
+      const response = await fetch('/api/gamification/daily-rewards', {
+        headers: getAuthHeaders(),
+      });
+      if (!response.ok) return;
+      const data = await response.json();
+
+      setCanClaim(Boolean(data.canClaim));
+      setStreak(Number(data.streak || 0));
+      setClaimed(!data.canClaim);
+      setWeekRewards(Array.isArray(data.rewards) ? data.rewards : []);
+      setNextRewardTime(data.nextClaimAt ? Number(data.nextClaimAt) : null);
+    } catch (error) {
+      console.error('Failed to load daily reward status:', error);
+    }
   };
 
   const claimDailyReward = async () => {
     setClaiming(true);
     
     try {
-      // In production: Call API to claim reward
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      localStorage.setItem('lastDailyClaim', Date.now().toString());
+      const response = await fetch('/api/gamification/daily-rewards', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+      });
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data.error || 'Failed to claim reward');
+      }
+
+      const data = await response.json();
       setCanClaim(false);
       setClaimed(true);
       setShowConfetti(true);
       playSuccess();
-      setNextRewardTime(Date.now() + (24 * 60 * 60 * 1000));
-      
+      setNextRewardTime(data.nextClaimAt ? Number(data.nextClaimAt) : null);
+      setStreak(Number(data.streak || 0));
+      setWeekRewards(Array.isArray(data.rewards) ? data.rewards : []);
+
       // Hide confetti after animation
       setTimeout(() => setShowConfetti(false), 3000);
-      
-      // Trigger achievement notification
+
       if (window.showAchievement) {
         window.showAchievement({
           type: 'reward',
           title: 'Daily Reward Claimed!',
-          description: `Day ${streak} streak bonus applied`,
+          description: `Day ${data.streak ?? streak} streak bonus applied`,
           icon: '🎁',
-          reward: { vfide: 15, xp: 50 }
+          reward: data.reward || { vfide: 15, xp: 50 },
         });
       }
     } catch (error) {
@@ -125,29 +125,29 @@ export default function DailyRewardsWidget() {
             {[...Array(20)].map((_, i) => (
               <motion.div
                 key={i}
-                initial={{ 
-                  y: -20, 
-                  x: Math.random() * 300 - 150,
+                initial={{
+                  y: -20,
+                  x: (i * 37 + 13) % 300 - 150,
                   opacity: 1,
                   rotate: 0,
                   scale: 1
                 }}
-                animate={{ 
-                  y: 400, 
-                  x: Math.random() * 300 - 150,
+                animate={{
+                  y: 400,
+                  x: ((i + 5) * 41) % 300 - 150,
                   opacity: 0,
-                  rotate: 360 * (Math.random() > 0.5 ? 1 : -1),
+                  rotate: 360 * (i % 2 === 0 ? 1 : -1),
                   scale: 0.5
                 }}
                 exit={{ opacity: 0 }}
-                transition={{ duration: 2 + Math.random(), delay: Math.random() * 0.5 }}
+                transition={{ duration: 2 + (i % 3) * 0.5, delay: (i % 10) * 0.05 }}
                 className="absolute pointer-events-none"
                 style={{
                   left: '50%',
-                  width: 8 + Math.random() * 8,
-                  height: 8 + Math.random() * 8,
-                  backgroundColor: confettiColors[Math.floor(Math.random() * confettiColors.length)],
-                  borderRadius: Math.random() > 0.5 ? '50%' : '2px',
+                  width: 8 + (i % 3) * 4,
+                  height: 8 + (i % 3) * 4,
+                  backgroundColor: confettiColors[i % confettiColors.length],
+                  borderRadius: i % 2 === 0 ? '50%' : '2px',
                 }}
               />
             ))}

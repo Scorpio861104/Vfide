@@ -13,6 +13,7 @@ import {
   LogOut,
   CheckCheck,
 } from 'lucide-react';
+import { secureId } from '@/lib/secureRandom';
 import { useAccount } from 'wagmi';
 import { Group, GroupMessage } from '@/types/groups';
 import { Friend } from '@/types/messaging';
@@ -28,45 +29,65 @@ export function GroupMessaging() {
   const [newMessage, setNewMessage] = useState('');
   const [showCreateGroup, setShowCreateGroup] = useState(false);
   const [showGroupMenu, setShowGroupMenu] = useState(false);
-  const [isClient, setIsClient] = useState(false);
+  const isClient = typeof window !== 'undefined';
   const messagesEndRef = useRef<HTMLDivElement>(null);
-
-  // Handle SSR
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
 
   // Load groups
   useEffect(() => {
     if (!address || !isClient || typeof window === 'undefined') return;
+    let timer: ReturnType<typeof setTimeout> | undefined;
     
     try {
       const stored = localStorage.getItem(`vfide_groups_${address}`);
       if (stored) {
         const groupsData: Group[] = JSON.parse(stored);
-        setGroups(groupsData.sort((a, b) => b.lastActivity - a.lastActivity));
+        timer = setTimeout(() => {
+          setGroups(groupsData.sort((a, b) => b.lastActivity - a.lastActivity));
+        }, 0);
       }
     } catch (e) {
       console.error('Failed to load groups:', e);
-      setGroups([]);
+      timer = setTimeout(() => {
+        setGroups([]);
+      }, 0);
     }
+
+    return () => {
+      if (timer) {
+        clearTimeout(timer);
+      }
+    };
   }, [address, isClient]);
 
   // Load messages for selected group
   useEffect(() => {
     if (!selectedGroup || !isClient || typeof window === 'undefined') return;
+    let timer: ReturnType<typeof setTimeout> | undefined;
     
     try {
       const stored = localStorage.getItem(`vfide_group_messages_${selectedGroup.id}`);
       if (stored) {
-        setMessages(JSON.parse(stored));
+        const parsedMessages = JSON.parse(stored);
+        timer = setTimeout(() => {
+          setMessages(parsedMessages);
+        }, 0);
       } else {
-        setMessages([]);
+        timer = setTimeout(() => {
+          setMessages([]);
+        }, 0);
       }
     } catch (e) {
       console.error('Failed to load group messages:', e);
-      setMessages([]);
+      timer = setTimeout(() => {
+        setMessages([]);
+      }, 0);
     }
+
+    return () => {
+      if (timer) {
+        clearTimeout(timer);
+      }
+    };
   }, [selectedGroup, isClient]);
 
   // Auto-scroll to bottom
@@ -78,7 +99,7 @@ export function GroupMessaging() {
     if (!newMessage.trim() || !selectedGroup || !address) return;
 
     const message: GroupMessage = {
-      id: `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      id: secureId('msg'),
       groupId: selectedGroup.id,
       from: address,
       content: newMessage,
@@ -351,8 +372,15 @@ function CreateGroupModal({ onClose, onCreate, userAddress }: CreateGroupModalPr
     // Load friends
     const stored = localStorage.getItem(`vfide_friends_${userAddress}`);
     if (stored) {
-      setFriends(JSON.parse(stored));
+      const parsedFriends = JSON.parse(stored);
+      const timer = setTimeout(() => {
+        setFriends(parsedFriends);
+      }, 0);
+
+      return () => clearTimeout(timer);
     }
+
+    return undefined;
   }, [userAddress]);
 
   const handleCreate = () => {
@@ -362,7 +390,7 @@ function CreateGroupModal({ onClose, onCreate, userAddress }: CreateGroupModalPr
     }
 
     const group: Group = {
-      id: `group_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      id: secureId('group'),
       name,
       description,
       icon,

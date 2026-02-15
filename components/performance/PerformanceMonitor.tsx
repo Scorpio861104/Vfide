@@ -61,11 +61,13 @@ export function usePerformanceMetrics(sampleInterval = 1000) {
   });
 
   const frameCountRef = useRef(0);
-  const lastTimeRef = useRef(performance.now());
+  const lastTimeRef = useRef(0);
   const rafRef = useRef<number | undefined>(undefined);
 
   // FPS calculation
   useEffect(() => {
+    lastTimeRef.current = performance.now();
+
     const measureFPS = () => {
       frameCountRef.current++;
       const currentTime = performance.now();
@@ -152,14 +154,18 @@ export function usePerformanceMetrics(sampleInterval = 1000) {
 
   // Web Vitals
   useEffect(() => {
+    let navTimer: ReturnType<typeof setTimeout> | undefined;
+
     // Get navigation timing
     const navTiming = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming;
     if (navTiming) {
-      setMetrics((prev) => ({
-        ...prev,
-        pageLoadTime: Math.round(navTiming.loadEventEnd - navTiming.startTime),
-        ttfb: Math.round(navTiming.responseStart - navTiming.requestStart),
-      }));
+      navTimer = setTimeout(() => {
+        setMetrics((prev) => ({
+          ...prev,
+          pageLoadTime: Math.round(navTiming.loadEventEnd - navTiming.startTime),
+          ttfb: Math.round(navTiming.responseStart - navTiming.requestStart),
+        }));
+      }, 0);
     }
 
     // Observe paint entries
@@ -226,6 +232,9 @@ export function usePerformanceMetrics(sampleInterval = 1000) {
     }
 
     return () => {
+      if (navTimer) {
+        clearTimeout(navTimer);
+      }
       paintObserver.disconnect();
       lcpObserver.disconnect();
       clsObserver.disconnect();

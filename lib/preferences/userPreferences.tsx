@@ -182,19 +182,15 @@ function migratePreferences(old: Partial<UserPreferences>, fromVersion: number):
 const PreferencesContext = createContext<PreferencesContextValue | null>(null);
 
 export function PreferencesProvider({ children }: { children: ReactNode }) {
-  const [preferences, setPreferencesState] = useState<UserPreferences>(DEFAULT_PREFERENCES);
-  const [isLoaded, setIsLoaded] = useState(false);
-
-  // Load preferences on mount
-  useEffect(() => {
+  const [preferences, setPreferencesState] = useState<UserPreferences>(() => {
     const loaded = loadFromStorage();
-    setPreferencesState(loaded);
-    setIsLoaded(true);
-    
-    // Apply system preferences
     applySystemPreferences(loaded);
-    
-    // Listen for storage changes from other tabs
+    return loaded;
+  });
+  const [isLoaded] = useState(true);
+
+  // Listen for storage changes from other tabs
+  useEffect(() => {
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === STORAGE_KEY && e.newValue) {
         try {

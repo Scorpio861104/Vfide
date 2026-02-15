@@ -6,9 +6,9 @@
  * Manage pre-approved transaction sessions for seamless UX.
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { type Address } from 'viem';
+import { type Address, type Hex } from 'viem';
 import {
   Key,
   Plus,
@@ -69,7 +69,15 @@ function formatAddress(address: Address): string {
 
 function SessionKeyCard({ session, onRevoke }: SessionKeyCardProps) {
   const [expanded, setExpanded] = useState(false);
-  const now = Math.floor(Date.now() / 1000);
+  const [now, setNow] = useState(() => Math.floor(Date.now() / 1000));
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setNow(Math.floor(Date.now() / 1000));
+    }, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
   const isExpired = session.validUntil < now;
   const isActive = session.isActive && !isExpired;
 
@@ -197,18 +205,20 @@ function CreateSessionDialog({
 }: CreateSessionDialogProps) {
   const [duration, setDuration] = useState(3600); // 1 hour
   const [selectedContract, setSelectedContract] = useState<Address | ''>('');
+  const [selectedSelector, setSelectedSelector] = useState<string>('');
   const [maxCalls, setMaxCalls] = useState(50);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedContract) return;
+    if (!selectedSelector || !/^0x[a-fA-F0-9]{8}$/.test(selectedSelector)) return;
 
     setIsSubmitting(true);
     try {
       await onSubmit({
         permissions: [
-          createContractPermission(selectedContract, BigInt(0.1 * 1e18), BigInt(1 * 1e18), maxCalls),
+          createContractPermission(selectedContract, selectedSelector as Hex, BigInt(0.1 * 1e18), BigInt(1 * 1e18), maxCalls),
         ],
         duration,
       });
@@ -268,6 +278,23 @@ function CreateSessionDialog({
                 required
               />
             )}
+          </div>
+
+          {/* Function Selector */}
+          <div>
+            <label className="block text-sm font-medium mb-1">Function Selector (4-byte hex)</label>
+            <input
+              type="text"
+              value={selectedSelector}
+              onChange={(e) => setSelectedSelector(e.target.value)}
+              placeholder="0x095ea7b3"
+              pattern="^0x[a-fA-F0-9]{8}$"
+              className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 font-mono"
+              required
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              The 4-byte function selector to allow (e.g. 0xa9059cbb for transfer)
+            </p>
           </div>
 
           {/* Duration */}

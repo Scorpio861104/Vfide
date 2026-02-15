@@ -110,36 +110,40 @@ function calculateBadgeProgress(
     }
   }
   
-  // Activity-based badges (would need actual data)
+  // Activity-based badges - should be connected to real on-chain data
   if (badge.name === 'ACTIVE_PARTICIPANT') {
+    // TODO: Connect to real activity tracking contract
     return {
-      progress: 25,
-      progressText: '25 / 100 activities this month',
+      progress: 0,
+      progressText: '0 / 100 activities this month',
     }
   }
-  
+
   if (badge.name === 'COMMUNITY_PILLAR') {
+    // TODO: Connect to real activity tracking contract
     return {
-      progress: 15,
-      progressText: '15 / 100 monthly activities for 3 months',
+      progress: 0,
+      progressText: '0 / 100 monthly activities for 3 months',
     }
   }
-  
+
   // Trust-based badges
   if (badge.name === 'TRUST_BUILDER') {
+    // TODO: Connect to real endorsement data from Seer contract
     return {
-      progress: 3,
-      progressText: '3 / 10 positive endorsements received',
+      progress: 0,
+      progressText: '0 / 10 positive endorsements received',
     }
   }
-  
+
   if (badge.name === 'TRUSTED_ENDORSER') {
+    // TODO: Connect to real endorsement data from Seer contract
     return {
-      progress: 40,
-      progressText: '4 / 10 endorsements given',
+      progress: 0,
+      progressText: '0 / 10 endorsements given',
     }
   }
-  
+
   // Commerce badges
   if (badge.name === 'MERCHANT_VERIFIED') {
     return {
@@ -147,17 +151,19 @@ function calculateBadgeProgress(
       progressText: 'Register as a merchant to start',
     }
   }
-  
+
   if (badge.name === 'TRUSTED_MERCHANT') {
+    // TODO: Connect to real commerce data from EscrowManager contract
     return {
-      progress: 20,
-      progressText: '2 / 10 successful sales',
+      progress: 0,
+      progressText: '0 / 10 successful sales',
     }
   }
-  
+
   // Default for other badges
+  // TODO: Connect to real on-chain data for badge progress
   return {
-    progress: Math.random() * 30, // Placeholder
+    progress: 0,
     progressText: 'Keep participating to earn this badge',
   }
 }

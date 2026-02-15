@@ -117,23 +117,20 @@ export function CommandPalette({ customCommands = [], onSearch }: CommandPalette
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [isSearching, setIsSearching] = useState(false);
   const [searchResults, setSearchResults] = useState<CommandItem[]>([]);
-  const [recentCommands, setRecentCommands] = useState<string[]>([]);
+  const [recentCommands, setRecentCommands] = useState<string[]>(() => {
+    if (typeof window === 'undefined') return [];
+    const saved = localStorage.getItem('vfide_recent_commands');
+    if (!saved) return [];
+    try {
+      return JSON.parse(saved);
+    } catch {
+      return [];
+    }
+  });
   
   const { address } = useAccount();
   const { playClick } = useTransactionSounds();
   const commands = useCommands(address);
-
-  // Load recent commands from localStorage
-  useEffect(() => {
-    const saved = localStorage.getItem('vfide_recent_commands');
-    if (saved) {
-      try {
-        setRecentCommands(JSON.parse(saved));
-      } catch {
-        // Ignore parse errors
-      }
-    }
-  }, []);
 
   // Save recent command
   const saveRecentCommand = useCallback((commandId: string) => {
@@ -183,7 +180,6 @@ export function CommandPalette({ customCommands = [], onSearch }: CommandPalette
   // Handle search
   useEffect(() => {
     if (!onSearch || !query.trim()) {
-      setSearchResults([]);
       return;
     }
 
@@ -204,11 +200,31 @@ export function CommandPalette({ customCommands = [], onSearch }: CommandPalette
   // Reset when opened/closed
   useEffect(() => {
     if (isOpen) {
-      setQuery('');
-      setSelectedIndex(0);
-      setSearchResults([]);
+      const frame = window.requestAnimationFrame(() => {
+        setQuery('');
+        setSelectedIndex(0);
+        setSearchResults([]);
+      });
+      return () => window.cancelAnimationFrame(frame);
     }
   }, [isOpen]);
+
+  const handleQueryChange = useCallback((value: string) => {
+    setQuery(value);
+    setSelectedIndex(0);
+    if (!value.trim()) {
+      setSearchResults([]);
+    }
+  }, []);
+
+  const executeCommand = useCallback((cmd: CommandItem) => {
+    if (cmd.disabled) return;
+    
+    playClick();
+    saveRecentCommand(cmd.id);
+    cmd.action();
+    close();
+  }, [close, playClick, saveRecentCommand]);
 
   // Keyboard navigation
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
@@ -232,16 +248,7 @@ export function CommandPalette({ customCommands = [], onSearch }: CommandPalette
         }
         break;
     }
-  }, [displayedCommands, selectedIndex]);
-
-  const executeCommand = useCallback((cmd: CommandItem) => {
-    if (cmd.disabled) return;
-    
-    playClick();
-    saveRecentCommand(cmd.id);
-    cmd.action();
-    close();
-  }, [close, playClick, saveRecentCommand]);
+  }, [displayedCommands, selectedIndex, executeCommand]);
 
   // Group commands by category
   const groupedCommands = useMemo(() => {
@@ -302,10 +309,7 @@ export function CommandPalette({ customCommands = [], onSearch }: CommandPalette
                 <input
                   type="text"
                   value={query}
-                  onChange={(e) => {
-                    setQuery(e.target.value);
-                    setSelectedIndex(0);
-                  }}
+                  onChange={(e) => handleQueryChange(e.target.value)}
                   onKeyDown={handleKeyDown}
                   placeholder="Type a command or search..."
                   className="flex-1 bg-transparent text-zinc-100 placeholder-zinc-500 outline-none text-base"
@@ -320,7 +324,7 @@ export function CommandPalette({ customCommands = [], onSearch }: CommandPalette
               </div>
 
               {/* Command List */}
-              <div className="max-h-100 overflow-y-auto p-2">
+              <div className="max-h-[25rem] overflow-y-auto p-2">
                 {displayedCommands.length === 0 ? (
                   <div className="py-8 text-center text-zinc-500">
                     No commands found for &ldquo;{query}&rdquo;

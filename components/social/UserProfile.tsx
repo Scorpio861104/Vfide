@@ -12,6 +12,7 @@ import {
   Copy,
   CheckCircle2,
 } from 'lucide-react';
+import Image from 'next/image';
 
 // ==================== TYPES ====================
 
@@ -76,174 +77,39 @@ interface FriendInfo {
   isMutual: boolean;
 }
 
-// ==================== MOCK DATA ====================
-
-const mockUserProfile: UserProfile = {
-  id: 'user_123',
-  username: 'alice_blockchain',
-  displayName: 'Alice Chen',
-  avatar: '👩‍💼',
-  coverImage: 'url_to_cover',
-  bio: 'DeFi enthusiast | Governance advocate | Building trust on VFIDE 🚀',
-  location: 'San Francisco, CA',
-  joinedAt: new Date('2023-06-15'),
-  proofScore: 8450,
-  followers: 342,
-  following: 187,
-  friends: 54,
-  badges: [
-    {
-      id: 'b1',
-      name: 'Governance Pro',
-      description: 'Participated in 50+ proposals',
-      icon: '🗳️',
-      rarity: 'rare',
-      unlockedAt: new Date('2024-01-20'),
-    },
-    {
-      id: 'b2',
-      name: 'Payment Pioneer',
-      description: 'Completed 100 transactions',
-      icon: '💳',
-      rarity: 'uncommon',
-      unlockedAt: new Date('2023-12-10'),
-    },
-    {
-      id: 'b3',
-      name: 'Community Builder',
-      description: 'Referred 10+ successful users',
-      icon: '🤝',
-      rarity: 'rare',
-      unlockedAt: new Date('2024-02-05'),
-    },
-    {
-      id: 'b4',
-      name: 'Vault Master',
-      description: 'Maintained 500k+ vault balance for 30 days',
-      icon: '🔒',
-      rarity: 'epic',
-      unlockedAt: new Date('2024-01-15'),
-    },
-  ],
-  isVerified: true,
-  isFollowing: false,
-  isFriend: false,
-  activityStreak: 28,
-  totalPoints: 15430,
-  level: 12,
-  lastActive: new Date(Date.now() - 2 * 60 * 60 * 1000),
-};
-
-const mockAchievements: Achievement[] = [
-  {
-    id: 'a1',
-    title: 'Power User',
-    description: 'Reach ProofScore of 10,000',
-    progress: 8450,
-    maxProgress: 10000,
-    icon: '⚡',
-    isUnlocked: false,
-  },
-  {
-    id: 'a2',
-    title: 'Social Butterfly',
-    description: 'Get 100 followers',
-    progress: 342,
-    maxProgress: 100,
-    icon: '🦋',
-    isUnlocked: true,
-    unlockedAt: new Date('2024-01-10'),
-  },
-  {
-    id: 'a3',
-    title: 'Finance Master',
-    description: 'Complete 500 transactions',
-    progress: 287,
-    maxProgress: 500,
-    icon: '💰',
-    isUnlocked: false,
-  },
-  {
-    id: 'a4',
-    title: 'Governance Legend',
-    description: 'Vote on 100 proposals',
-    progress: 87,
-    maxProgress: 100,
-    icon: '🏛️',
-    isUnlocked: false,
-  },
-];
-
-const mockActivityItems: ActivityItem[] = [
-  {
-    id: 'act1',
-    type: 'badge',
-    title: 'Unlocked: Community Builder',
-    description: 'Successfully referred 10 users',
-    timestamp: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
-    icon: '🤝',
-  },
-  {
-    id: 'act2',
-    type: 'governance',
-    title: 'Voted on Proposal #142',
-    description: 'Proposal: Increase staking rewards - Voted YES',
-    timestamp: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000),
-    icon: '🗳️',
-  },
-  {
-    id: 'act3',
-    type: 'transaction',
-    title: 'Payment Completed',
-    description: 'Received 2.5 ETH payment',
-    timestamp: new Date(Date.now() - 12 * 24 * 60 * 60 * 1000),
-    icon: '💸',
-  },
-  {
-    id: 'act4',
-    type: 'achievement',
-    title: 'Unlocked: Social Butterfly',
-    description: 'Reached 100 followers milestone',
-    timestamp: new Date(Date.now() - 25 * 24 * 60 * 60 * 1000),
-    icon: '🦋',
-  },
-];
-
-const mockFriends: FriendInfo[] = [
-  {
-    id: 'f1',
-    displayName: 'Bob Smith',
-    avatar: '👨‍💻',
-    proofScore: 7200,
-    isMutual: true,
-  },
-  {
-    id: 'f2',
-    displayName: 'Carol Johnson',
-    avatar: '👩‍🎤',
-    proofScore: 6800,
-    isMutual: true,
-  },
-  {
-    id: 'f3',
-    displayName: 'David Lee',
-    avatar: '👨‍🔬',
-    proofScore: 5400,
-    isMutual: false,
-  },
-];
-
 // ==================== COMPONENTS ====================
 
 interface UserProfileProps {
   user?: UserProfile;
+  achievements?: Achievement[];
+  activityItems?: ActivityItem[];
+  friends?: FriendInfo[];
   isOwnProfile?: boolean;
 }
 
-export function UserProfileComponent({ user = mockUserProfile, isOwnProfile = false }: UserProfileProps) {
+export function UserProfileComponent({
+  user,
+  achievements = [],
+  activityItems = [],
+  friends = [],
+  isOwnProfile = false,
+}: UserProfileProps) {
   const [activeTab, setActiveTab] = useState<'activity' | 'friends' | 'achievements' | 'badges'>('activity');
   const [copied, setCopied] = useState(false);
   const [showShareMenu, setShowShareMenu] = useState(false);
+
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-linear-to-b from-zinc-950 via-[#1A1A2E] to-zinc-950">
+        <div className="flex items-center justify-center min-h-[60vh] text-center">
+          <div>
+            <h2 className="text-xl font-semibold text-zinc-200">Profile unavailable</h2>
+            <p className="text-zinc-500 text-sm mt-2">Check back later.</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const handleCopyProfile = () => {
     navigator.clipboard.writeText(`https://vfide.app/profile/${user.username}`);
@@ -252,9 +118,9 @@ export function UserProfileComponent({ user = mockUserProfile, isOwnProfile = fa
   };
 
   const tabs = [
-    { key: 'activity', label: 'Activity', icon: '📊', count: mockActivityItems.length },
-    { key: 'friends', label: 'Friends', icon: '👥', count: user.friends },
-    { key: 'achievements', label: 'Achievements', icon: '🎯', count: mockAchievements.filter(a => a.isUnlocked).length },
+    { key: 'activity', label: 'Activity', icon: '📊', count: activityItems.length },
+    { key: 'friends', label: 'Friends', icon: '👥', count: friends.length || user.friends },
+    { key: 'achievements', label: 'Achievements', icon: '🎯', count: achievements.filter(a => a.isUnlocked).length },
     { key: 'badges', label: 'Badges', icon: '🏆', count: user.badges.length },
   ];
 
@@ -267,7 +133,7 @@ export function UserProfileComponent({ user = mockUserProfile, isOwnProfile = fa
         className="relative h-48 md:h-64 bg-linear-to-r from-cyan-400/20 via-violet-400/20 to-rose-500/20"
       >
         {user.coverImage && (
-          <img src={user.coverImage} alt="cover" className="w-full h-full object-cover" />
+          <Image src={user.coverImage} alt="cover" width={1200} height={256} className="w-full h-full object-cover" unoptimized />
         )}
         <div className="absolute inset-0 bg-linear-to-t from-zinc-950 to-transparent" />
       </motion.div>
@@ -500,27 +366,31 @@ export function UserProfileComponent({ user = mockUserProfile, isOwnProfile = fa
               exit={{ opacity: 0, y: -20 }}
               className="space-y-4"
             >
-              {mockActivityItems.map((item, idx) => (
-                <motion.div
-                  key={item.id}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: idx * 0.05 }}
-                  className="bg-zinc-900 border border-zinc-700 rounded-lg p-4 hover:border-cyan-400/50 transition-colors"
-                >
-                  <div className="flex items-start gap-4">
-                    <div className="text-2xl shrink-0">{item.icon}</div>
-                    <div className="flex-1 min-w-0">
-                      <h4 className="text-zinc-100 font-semibold">{item.title}</h4>
-                      <p className="text-zinc-400 text-sm">{item.description}</p>
-                      <p className="text-zinc-500 text-xs mt-1">
-                        {new Date(item.timestamp).toLocaleDateString()} at{' '}
-                        {new Date(item.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                      </p>
+              {activityItems.length === 0 ? (
+                <div className="text-center text-zinc-500 py-12">No activity yet.</div>
+              ) : (
+                activityItems.map((item, idx) => (
+                  <motion.div
+                    key={item.id}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: idx * 0.05 }}
+                    className="bg-zinc-900 border border-zinc-700 rounded-lg p-4 hover:border-cyan-400/50 transition-colors"
+                  >
+                    <div className="flex items-start gap-4">
+                      <div className="text-2xl shrink-0">{item.icon}</div>
+                      <div className="flex-1 min-w-0">
+                        <h4 className="text-zinc-100 font-semibold">{item.title}</h4>
+                        <p className="text-zinc-400 text-sm">{item.description}</p>
+                        <p className="text-zinc-500 text-xs mt-1">
+                          {new Date(item.timestamp).toLocaleDateString()} at{' '}
+                          {new Date(item.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                </motion.div>
-              ))}
+                  </motion.div>
+                ))
+              )}
             </motion.div>
           )}
 
@@ -533,39 +403,43 @@ export function UserProfileComponent({ user = mockUserProfile, isOwnProfile = fa
               exit={{ opacity: 0, y: -20 }}
               className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
             >
-              {mockFriends.map((friend, idx) => (
-                <motion.div
-                  key={friend.id}
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: idx * 0.05 }}
-                  className="bg-zinc-900 border border-zinc-700 rounded-lg p-4 hover:border-violet-400 transition-colors"
-                >
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="w-12 h-12 rounded-full bg-zinc-800 flex items-center justify-center text-2xl">
-                      {friend.avatar}
+              {friends.length === 0 ? (
+                <div className="col-span-full text-center text-zinc-500 py-12">No friends to show.</div>
+              ) : (
+                friends.map((friend, idx) => (
+                  <motion.div
+                    key={friend.id}
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: idx * 0.05 }}
+                    className="bg-zinc-900 border border-zinc-700 rounded-lg p-4 hover:border-violet-400 transition-colors"
+                  >
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="w-12 h-12 rounded-full bg-zinc-800 flex items-center justify-center text-2xl">
+                        {friend.avatar}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-semibold text-zinc-100 truncate">{friend.displayName}</h4>
+                        {friend.isMutual && (
+                          <div className="text-xs text-cyan-400 flex items-center gap-1">
+                            <Users className="w-3 h-3" />
+                            Mutual friends
+                          </div>
+                        )}
+                      </div>
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <h4 className="font-semibold text-zinc-100 truncate">{friend.displayName}</h4>
-                      {friend.isMutual && (
-                        <div className="text-xs text-cyan-400 flex items-center gap-1">
-                          <Users className="w-3 h-3" />
-                          Mutual friends
-                        </div>
-                      )}
+                    <div className="flex items-center justify-between text-sm mb-3">
+                      <div>
+                        <div className="text-cyan-400 font-semibold">{friend.proofScore}</div>
+                        <div className="text-zinc-400 text-xs">Proof Score</div>
+                      </div>
                     </div>
-                  </div>
-                  <div className="flex items-center justify-between text-sm mb-3">
-                    <div>
-                      <div className="text-cyan-400 font-semibold">{friend.proofScore}</div>
-                      <div className="text-zinc-400 text-xs">Proof Score</div>
-                    </div>
-                  </div>
-                  <button className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 text-zinc-100 rounded hover:border-violet-400 transition-colors text-sm font-semibold">
-                    View Profile
-                  </button>
-                </motion.div>
-              ))}
+                    <button className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 text-zinc-100 rounded hover:border-violet-400 transition-colors text-sm font-semibold">
+                      View Profile
+                    </button>
+                  </motion.div>
+                ))
+              )}
             </motion.div>
           )}
 
@@ -578,43 +452,47 @@ export function UserProfileComponent({ user = mockUserProfile, isOwnProfile = fa
               exit={{ opacity: 0, y: -20 }}
               className="grid grid-cols-1 md:grid-cols-2 gap-4"
             >
-              {mockAchievements.map((achievement, idx) => (
-                <motion.div
-                  key={achievement.id}
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: idx * 0.05 }}
-                  className={`bg-zinc-900 border rounded-lg p-4 transition-colors ${
-                    achievement.isUnlocked ? 'border-cyan-400' : 'border-zinc-700'
-                  }`}
-                >
-                  <div className="flex items-start gap-4">
-                    <div className={`text-4xl shrink-0 ${achievement.isUnlocked ? 'opacity-100' : 'opacity-50'}`}>
-                      {achievement.icon}
-                    </div>
-                    <div className="flex-1">
-                      <h4 className="font-semibold text-zinc-100 mb-1">{achievement.title}</h4>
-                      <p className="text-zinc-400 text-sm mb-3">{achievement.description}</p>
-                      <div className="w-full bg-zinc-950 rounded-full h-2 overflow-hidden">
-                        <motion.div
-                          initial={{ width: 0 }}
-                          animate={{ width: `${(achievement.progress / achievement.maxProgress) * 100}%` }}
-                          transition={{ duration: 1, delay: 0.2 }}
-                          className={`h-full ${achievement.isUnlocked ? 'bg-linear-to-r from-cyan-400 to-violet-400' : 'bg-zinc-700'}`}
-                        />
+              {achievements.length === 0 ? (
+                <div className="col-span-full text-center text-zinc-500 py-12">No achievements yet.</div>
+              ) : (
+                achievements.map((achievement, idx) => (
+                  <motion.div
+                    key={achievement.id}
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: idx * 0.05 }}
+                    className={`bg-zinc-900 border rounded-lg p-4 transition-colors ${
+                      achievement.isUnlocked ? 'border-cyan-400' : 'border-zinc-700'
+                    }`}
+                  >
+                    <div className="flex items-start gap-4">
+                      <div className={`text-4xl shrink-0 ${achievement.isUnlocked ? 'opacity-100' : 'opacity-50'}`}>
+                        {achievement.icon}
                       </div>
-                      <div className="flex justify-between items-center mt-2">
-                        <span className="text-xs text-zinc-400">
-                          {achievement.progress} / {achievement.maxProgress}
-                        </span>
-                        {achievement.isUnlocked && (
-                          <span className="text-[10px] text-cyan-400 font-semibold">UNLOCKED</span>
-                        )}
+                      <div className="flex-1">
+                        <h4 className="font-semibold text-zinc-100 mb-1">{achievement.title}</h4>
+                        <p className="text-zinc-400 text-sm mb-3">{achievement.description}</p>
+                        <div className="w-full bg-zinc-950 rounded-full h-2 overflow-hidden">
+                          <motion.div
+                            initial={{ width: 0 }}
+                            animate={{ width: `${(achievement.progress / achievement.maxProgress) * 100}%` }}
+                            transition={{ duration: 1, delay: 0.2 }}
+                            className={`h-full ${achievement.isUnlocked ? 'bg-linear-to-r from-cyan-400 to-violet-400' : 'bg-zinc-700'}`}
+                          />
+                        </div>
+                        <div className="flex justify-between items-center mt-2">
+                          <span className="text-xs text-zinc-400">
+                            {achievement.progress} / {achievement.maxProgress}
+                          </span>
+                          {achievement.isUnlocked && (
+                            <span className="text-[10px] text-cyan-400 font-semibold">UNLOCKED</span>
+                          )}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </motion.div>
-              ))}
+                  </motion.div>
+                ))
+              )}
             </motion.div>
           )}
 

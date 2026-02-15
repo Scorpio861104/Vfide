@@ -29,6 +29,11 @@ export async function GET(request: NextRequest) {
   const rateLimit = await withRateLimit(request, 'api');
   if (rateLimit) return rateLimit;
 
+  // Authentication - required to prevent unauthenticated access to user activity data
+  // which includes wallet addresses, usernames, and activity metadata
+  const authResult = await requireAuth(request);
+  if (authResult instanceof NextResponse) return authResult;
+
   try {
     const searchParams = request.nextUrl.searchParams;
     const userAddress = searchParams.get('userAddress');
@@ -58,6 +63,13 @@ export async function GET(request: NextRequest) {
     let paramCount = 1;
 
     if (userAddress) {
+      // API-08 Fix: Only allow querying own activities (IDOR prevention)
+      if (authResult.user.address.toLowerCase() !== userAddress.toLowerCase()) {
+        return NextResponse.json(
+          { error: 'Cannot view other users\' activities' },
+          { status: 403 }
+        );
+      }
       queryText += ` AND u.wallet_address = $${paramCount}`;
       params.push(userAddress.toLowerCase());
       paramCount++;
@@ -137,6 +149,10 @@ export async function POST(request: NextRequest) {
         { error: 'Missing required fields: userAddress, activityType, title' },
         { status: 400 }
       );
+    }
+
+    if (authResult.user.address.toLowerCase() !== userAddress.toLowerCase()) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
     }
 
     // Get user ID

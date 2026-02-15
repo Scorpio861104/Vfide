@@ -64,7 +64,8 @@ class GasPriceService {
   private minFetchInterval = 10000; // 10 seconds between fetches
 
   constructor() {
-    this.etherscanApiKey = process.env.NEXT_PUBLIC_ETHERSCAN_API_KEY;
+    // Server-side only — no NEXT_PUBLIC_ prefix so key stays out of client bundle
+    this.etherscanApiKey = process.env.ETHERSCAN_API_KEY;
   }
 
   /**
@@ -128,9 +129,10 @@ class GasPriceService {
       throw new Error('Etherscan only supports mainnet');
     }
 
-    const apiKey = this.etherscanApiKey || 'YourApiKeyToken';
+    const apiKey = this.etherscanApiKey;
+    const url = `https://api.etherscan.io/api?module=gastracker&action=gasoracle${apiKey ? `&apikey=${apiKey}` : ''}`;
     const response = await fetch(
-      `https://api.etherscan.io/api?module=gastracker&action=gasoracle&apikey=${apiKey}`,
+      url,
       { next: { revalidate: 12 } }
     );
 
@@ -313,43 +315,82 @@ class GasPriceService {
       return cached.data;
     }
 
-    // In production, this would fetch from a database or external API
-    // For now, generate mock historical data
-    const history = this.generateMockHistory(hours);
-    historyCache.set(cacheKey, { data: history, timestamp: Date.now() });
-    return history;
+    try {
+      const history = await this.fetchHistoryFromProvider(chainId, hours);
+      historyCache.set(cacheKey, { data: history, timestamp: Date.now() });
+      return history;
+    } catch (error) {
+      console.warn('Failed to fetch fee history, falling back to current prices:', error);
+      const current = await this.getCurrentPrices(chainId);
+      const fallback: GasPriceHistory[] = [
+        {
+          timestamp: Date.now(),
+          baseFee: Number(current.baseFee) / 1e9,
+          normal: Number(current.normal.maxFeePerGas) / 1e9,
+        },
+      ];
+      historyCache.set(cacheKey, { data: fallback, timestamp: Date.now() });
+      return fallback;
+    }
   }
 
   /**
-   * Generate mock historical data for development
+   * Fetch historical gas prices from provider fee history
    */
-  private generateMockHistory(hours: number): GasPriceHistory[] {
+  private async fetchHistoryFromProvider(chainId: number, hours: number): Promise<GasPriceHistory[]> {
+    if (typeof window === 'undefined' || !window.ethereum) {
+      throw new Error('No provider available');
+    }
+
+    const blockTime = this.getEstimatedBlockTime(chainId);
+    const targetBlocks = Math.max(1, Math.floor((hours * 60 * 60) / blockTime));
+    const blockCount = Math.min(1024, targetBlocks);
+
+    const feeHistory = await window.ethereum.request({
+      method: 'eth_feeHistory',
+      params: [`0x${blockCount.toString(16)}`, 'latest', [10, 50, 90]],
+    });
+
+    if (!feeHistory?.baseFeePerGas || !Array.isArray(feeHistory.baseFeePerGas)) {
+      throw new Error('Fee history unavailable');
+    }
+
+    const baseFees: string[] = feeHistory.baseFeePerGas;
+    const rewards: string[][] | undefined = feeHistory.reward;
     const history: GasPriceHistory[] = [];
     const now = Date.now();
-    const interval = 5 * 60 * 1000; // 5 minute intervals
-    const points = Math.floor((hours * 60 * 60 * 1000) / interval);
 
-    let baseFee = 25 + Math.random() * 20; // Start with random base fee
-
-    for (let i = points; i >= 0; i--) {
-      // Simulate realistic gas price fluctuations
-      const hourOfDay = new Date(now - i * interval).getUTCHours();
-      
-      // Higher during business hours
-      const businessHourMultiplier = hourOfDay >= 13 && hourOfDay <= 21 ? 1.3 : 1;
-      
-      // Random walk
-      baseFee += (Math.random() - 0.5) * 5;
-      baseFee = Math.max(10, Math.min(150, baseFee)); // Clamp between 10-150 gwei
+    for (let i = 0; i < blockCount; i++) {
+      const fallbackBaseFee = baseFees[baseFees.length - 1] ?? '0x0';
+      const baseFeeWei = BigInt(baseFees[i] ?? fallbackBaseFee);
+      const reward = rewards?.[i]?.[1];
+      const priorityFeeWei = reward ? BigInt(reward) : 0n;
+      const normalWei = baseFeeWei + priorityFeeWei;
+      const timestamp = now - (blockCount - 1 - i) * blockTime * 1000;
 
       history.push({
-        timestamp: now - i * interval,
-        baseFee: baseFee * businessHourMultiplier,
-        normal: baseFee * businessHourMultiplier * 1.1,
+        timestamp,
+        baseFee: Number(baseFeeWei) / 1e9,
+        normal: Number(normalWei) / 1e9,
       });
     }
 
     return history;
+  }
+
+  private getEstimatedBlockTime(chainId: number): number {
+    switch (chainId) {
+      case 1: // Ethereum mainnet
+      case 11155111: // Sepolia
+        return 12;
+      case 137: // Polygon
+      case 10: // Optimism
+      case 42161: // Arbitrum
+      case 8453: // Base
+        return 2;
+      default:
+        return 12;
+    }
   }
 
   /**

@@ -12,135 +12,16 @@ import { useState, useEffect } from 'react';
 import { Plus, Camera } from 'lucide-react';
 import { Story, isStoryExpired } from '@/lib/storiesSystem';
 
-// Mock users with stories
-const _mockUserStories: { userId: string; userName: string; userAvatar: string; stories: Story[] }[] = [
-  {
-    userId: '0x1234...5678',
-    userName: 'alex_finance',
-    userAvatar: '👨‍💼',
-    stories: [
-      {
-        id: 's1',
-        userId: '0x1234...5678',
-        userName: 'alex_finance',
-        userAvatar: '👨‍💼',
-        type: 'text',
-        content: 'Just hit 10,000 ProofScore! 🚀 The grind pays off!',
-        backgroundColor: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-        textColor: '#FFFFFF',
-        createdAt: Date.now() - 2 * 60 * 60 * 1000,
-        expiresAt: Date.now() + 22 * 60 * 60 * 1000,
-        viewedBy: [],
-        reactions: [{ userId: '0x2', emoji: '🔥', timestamp: Date.now() }],
-      },
-      {
-        id: 's2',
-        userId: '0x1234...5678',
-        userName: 'alex_finance',
-        userAvatar: '👨‍💼',
-        type: 'text',
-        content: 'Building the future of DeFi one transaction at a time 💪',
-        backgroundColor: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
-        textColor: '#FFFFFF',
-        createdAt: Date.now() - 1 * 60 * 60 * 1000,
-        expiresAt: Date.now() + 23 * 60 * 60 * 1000,
-        viewedBy: [],
-        reactions: [],
-      },
-    ],
-  },
-  {
-    userId: '0x2345...6789',
-    userName: 'sara_merchant',
-    userAvatar: '👩‍🎤',
-    stories: [
-      {
-        id: 's3',
-        userId: '0x2345...6789',
-        userName: 'sara_merchant',
-        userAvatar: '👩‍🎤',
-        type: 'text',
-        content: 'New milestone: 500 payments processed! 🎉 Zero fees means happy customers!',
-        backgroundColor: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
-        textColor: '#FFFFFF',
-        createdAt: Date.now() - 4 * 60 * 60 * 1000,
-        expiresAt: Date.now() + 20 * 60 * 60 * 1000,
-        viewedBy: [],
-        reactions: [
-          { userId: '0x1', emoji: '👏', timestamp: Date.now() },
-          { userId: '0x3', emoji: '❤️', timestamp: Date.now() },
-        ],
-      },
-    ],
-  },
-  {
-    userId: '0x3456...7890',
-    userName: 'dev_john',
-    userAvatar: '👨‍💻',
-    stories: [
-      {
-        id: 's4',
-        userId: '0x3456...7890',
-        userName: 'dev_john',
-        userAvatar: '👨‍💻',
-        type: 'text',
-        content: 'Pro tip: Always check your vault before big transfers! 🔐',
-        backgroundColor: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
-        textColor: '#FFFFFF',
-        createdAt: Date.now() - 6 * 60 * 60 * 1000,
-        expiresAt: Date.now() + 18 * 60 * 60 * 1000,
-        viewedBy: [],
-        reactions: [],
-      },
-    ],
-  },
-  {
-    userId: '0x4567...8901',
-    userName: 'luna_dev',
-    userAvatar: '🌙',
-    stories: [
-      {
-        id: 's5',
-        userId: '0x4567...8901',
-        userName: 'luna_dev',
-        userAvatar: '🌙',
-        type: 'text',
-        content: 'Governance proposal passed! The community has spoken 🗳️',
-        backgroundColor: 'linear-gradient(135deg, #30cfd0 0%, #330867 100%)',
-        textColor: '#FFFFFF',
-        createdAt: Date.now() - 8 * 60 * 60 * 1000,
-        expiresAt: Date.now() + 16 * 60 * 60 * 1000,
-        viewedBy: [],
-        reactions: [{ userId: '0x1', emoji: '🔥', timestamp: Date.now() }],
-      },
-    ],
-  },
-  {
-    userId: '0x5678...9012',
-    userName: 'crypto_whale',
-    userAvatar: '🐋',
-    stories: [
-      {
-        id: 's6',
-        userId: '0x5678...9012',
-        userName: 'crypto_whale',
-        userAvatar: '🐋',
-        type: 'text',
-        content: 'Market update: Stay calm and HODL 📈',
-        backgroundColor: 'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)',
-        textColor: '#333333',
-        createdAt: Date.now() - 3 * 60 * 60 * 1000,
-        expiresAt: Date.now() + 21 * 60 * 60 * 1000,
-        viewedBy: [],
-        reactions: [],
-      },
-    ],
-  },
-];
+type UserStoryGroup = {
+  userId: string;
+  userName: string;
+  userAvatar: string;
+  stories: Story[];
+};
 
 export default function StoriesPage() {
   const { address, isConnected } = useAccount();
-  const [userStories, setUserStories] = useState<typeof _mockUserStories>([]);
+  const [userStories, setUserStories] = useState<UserStoryGroup[]>([]);
   const [myStories, setMyStories] = useState<Story[]>([]);
   const [showCreator, setShowCreator] = useState(false);
   const [viewingStories, setViewingStories] = useState<{ stories: Story[]; index: number } | null>(null);

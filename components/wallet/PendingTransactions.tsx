@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAccount, useChainId } from 'wagmi';
 import { 
@@ -86,14 +86,14 @@ export function usePendingTransactions() {
   };
 
   // Update transaction status
-  const updateTransaction = (hash: string, updates: Partial<Transaction>) => {
+  const updateTransaction = useCallback((hash: string, updates: Partial<Transaction>) => {
     setTransactions(prev => 
       prev.map(tx => tx.hash === hash ? { ...tx, ...updates } : tx)
     );
-  };
+  }, []);
 
   // Poll for pending transaction status
-  const pollTransaction = async (hash: string, txHash: string, txChainId: number) => {
+  const pollTransaction = useCallback(async (hash: string, txHash: string, txChainId: number) => {
     if (!window.ethereum) return;
     
     setIsPolling(true);
@@ -116,7 +116,7 @@ export function usePendingTransactions() {
     } finally {
       setIsPolling(false);
     }
-  };
+  }, [updateTransaction]);
 
   // Poll all pending transactions
   useEffect(() => {
@@ -128,7 +128,7 @@ export function usePendingTransactions() {
     }, 5000); // Poll every 5 seconds
 
     return () => clearInterval(interval);
-  }, [transactions]);
+  }, [transactions, pollTransaction]);
 
   // Get pending count
   const pendingCount = transactions.filter(tx => tx.status === 'pending').length;

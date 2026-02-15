@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
+import React, { createContext, useContext, useEffect, useState, useCallback, useRef, useMemo } from 'react';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { Eye, Sun, Type, Zap, Volume2 } from 'lucide-react';
 
@@ -70,28 +70,22 @@ interface AccessibilityProviderProps {
 
 export function AccessibilityProvider({ children }: AccessibilityProviderProps) {
   const systemReducedMotion = useReducedMotion();
-  const [settings, setSettings] = useState<AccessibilitySettings>(defaultSettings);
-  const announceRef = useRef<HTMLDivElement>(null);
-
-  // Load settings from localStorage
-  useEffect(() => {
+  const [settings, setSettings] = useState<AccessibilitySettings>(() => {
+    if (typeof window === 'undefined') return defaultSettings;
     const saved = localStorage.getItem('vfide_accessibility');
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        setSettings((prev) => ({ ...prev, ...parsed }));
-      } catch {
-        // Ignore parse errors
-      }
+    if (!saved) return defaultSettings;
+    try {
+      const parsed = JSON.parse(saved) as Partial<AccessibilitySettings>;
+      return { ...defaultSettings, ...parsed };
+    } catch {
+      return defaultSettings;
     }
-  }, []);
-
-  // Sync with system preference for reduced motion
-  useEffect(() => {
-    if (systemReducedMotion) {
-      setSettings((prev) => ({ ...prev, reduceMotion: true }));
-    }
-  }, [systemReducedMotion]);
+  });
+  const announceRef = useRef<HTMLDivElement>(null);
+  const resolvedSettings = useMemo(
+    () => (systemReducedMotion ? { ...settings, reduceMotion: true } : settings),
+    [settings, systemReducedMotion]
+  );
 
   // Apply settings to document
   useEffect(() => {
@@ -103,21 +97,21 @@ export function AccessibilityProvider({ children }: AccessibilityProviderProps) 
       large: '18px',
       'extra-large': '20px',
     };
-    root.style.setProperty('--base-font-size', fontSizeMap[settings.fontSize]);
-    root.classList.toggle('text-lg', settings.fontSize === 'large');
-    root.classList.toggle('text-xl', settings.fontSize === 'extra-large');
+    root.style.setProperty('--base-font-size', fontSizeMap[resolvedSettings.fontSize]);
+    root.classList.toggle('text-lg', resolvedSettings.fontSize === 'large');
+    root.classList.toggle('text-xl', resolvedSettings.fontSize === 'extra-large');
 
     // High contrast
-    root.classList.toggle('high-contrast', settings.highContrast);
+    root.classList.toggle('high-contrast', resolvedSettings.highContrast);
 
     // Color blind mode
-    root.setAttribute('data-color-blind-mode', settings.colorBlindMode);
+    root.setAttribute('data-color-blind-mode', resolvedSettings.colorBlindMode);
 
     // Focus indicator
-    root.classList.toggle('high-visibility-focus', settings.focusIndicator === 'high-visibility');
+    root.classList.toggle('high-visibility-focus', resolvedSettings.focusIndicator === 'high-visibility');
 
     // Dyslexic font
-    root.classList.toggle('dyslexic-font', settings.dyslexicFont);
+    root.classList.toggle('dyslexic-font', resolvedSettings.dyslexicFont);
 
     // Line spacing
     const lineSpacingMap = {
@@ -125,17 +119,17 @@ export function AccessibilityProvider({ children }: AccessibilityProviderProps) 
       relaxed: '1.75',
       loose: '2',
     };
-    root.style.setProperty('--line-spacing', lineSpacingMap[settings.lineSpacing]);
+    root.style.setProperty('--line-spacing', lineSpacingMap[resolvedSettings.lineSpacing]);
 
     // Large click targets
-    root.classList.toggle('large-targets', settings.largeClickTargets);
+    root.classList.toggle('large-targets', resolvedSettings.largeClickTargets);
 
     // Reduce motion
-    root.classList.toggle('reduce-motion', settings.reduceMotion);
+    root.classList.toggle('reduce-motion', resolvedSettings.reduceMotion);
 
     // Save to localStorage
-    localStorage.setItem('vfide_accessibility', JSON.stringify(settings));
-  }, [settings]);
+    localStorage.setItem('vfide_accessibility', JSON.stringify(resolvedSettings));
+  }, [resolvedSettings]);
 
   const updateSettings = useCallback((updates: Partial<AccessibilitySettings>) => {
     setSettings((prev) => ({ ...prev, ...updates }));
@@ -161,7 +155,7 @@ export function AccessibilityProvider({ children }: AccessibilityProviderProps) 
 
   return (
     <AccessibilityContext.Provider
-      value={{ settings, updateSettings, resetSettings, announceMessage }}
+      value={{ settings: resolvedSettings, updateSettings, resetSettings, announceMessage }}
     >
       {children}
       {/* Screen reader announcer */}
@@ -525,13 +519,13 @@ export function SkipLinks() {
     <div className="sr-only focus-within:not-sr-only">
       <a
         href="#main-content"
-        className="fixed top-4 left-4 z-100 bg-cyan-500 text-black px-4 py-2 rounded-lg font-semibold focus:outline-none focus:ring-4 focus:ring-cyan-500/50"
+        className="fixed top-4 left-4 z-[100] bg-cyan-500 text-black px-4 py-2 rounded-lg font-semibold focus:outline-none focus:ring-4 focus:ring-cyan-500/50"
       >
         Skip to main content
       </a>
       <a
         href="#main-navigation"
-        className="fixed top-4 left-48 z-100 bg-cyan-500 text-black px-4 py-2 rounded-lg font-semibold focus:outline-none focus:ring-4 focus:ring-cyan-500/50"
+        className="fixed top-4 left-48 z-[100] bg-cyan-500 text-black px-4 py-2 rounded-lg font-semibold focus:outline-none focus:ring-4 focus:ring-cyan-500/50"
       >
         Skip to navigation
       </a>

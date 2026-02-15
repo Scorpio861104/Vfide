@@ -39,25 +39,47 @@ export function ConnectionProgress({
 
   // Track connection state changes
   useEffect(() => {
+    const timers: ReturnType<typeof setTimeout>[] = [];
+    const defer = (callback: () => void, delay = 0) => {
+      const timer = setTimeout(callback, delay);
+      timers.push(timer);
+    };
+
     if (isConnecting || isReconnecting) {
-      setStep('approving');
+      defer(() => setStep('approving'));
     } else if (isConnected && step !== 'idle') {
-      setStep('connected');
-      setShowSuccess(true);
-      setTimeout(() => {
+      defer(() => setStep('connected'));
+      defer(() => setShowSuccess(true));
+      defer(() => {
         setShowSuccess(false);
         onClose?.();
       }, 1500);
     }
+
+    return () => {
+      timers.forEach((timer) => clearTimeout(timer));
+    };
   }, [isConnecting, isReconnecting, isConnected, step, onClose]);
 
   // Reset on hide
   useEffect(() => {
+    let timer: ReturnType<typeof setTimeout> | undefined;
+
     if (!isVisible) {
-      setStep('idle');
+      timer = setTimeout(() => {
+        setStep('idle');
+      }, 0);
     } else if (isVisible && step === 'idle') {
-      setStep('opening');
+      timer = setTimeout(() => {
+        setStep('opening');
+      }, 0);
     }
+
+    return () => {
+      if (timer) {
+        clearTimeout(timer);
+      }
+    };
   }, [isVisible, step]);
 
   const stepInfo = STEP_INFO[step];

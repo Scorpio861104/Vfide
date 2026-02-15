@@ -75,8 +75,8 @@ function PayContent() {
     >
       {/* Premium Background Effects */}
       <div className="fixed inset-0 pointer-events-none">
-        <div className="absolute top-1/4 -left-32 w-125 h-125 bg-cyan-500/10 rounded-full blur-[120px] animate-pulse" />
-        <div className="absolute bottom-1/4 -right-32 w-100 h-100 bg-blue-500/10 rounded-full blur-[100px] animate-pulse" style={{ animationDelay: '1s' }} />
+        <div className="absolute top-1/4 -left-32 w-[31.25rem] h-[31.25rem] bg-cyan-500/10 rounded-full blur-[120px] animate-pulse" />
+        <div className="absolute bottom-1/4 -right-32 w-[25rem] h-[25rem] bg-blue-500/10 rounded-full blur-[100px] animate-pulse" style={{ animationDelay: '1s' }} />
       </div>
 
       {/* Header */}
@@ -233,7 +233,7 @@ export default function PayPage() {
       <Suspense fallback={
         <div className="min-h-screen bg-zinc-950 pt-20 flex items-center justify-center relative overflow-hidden">
           <div className="fixed inset-0 pointer-events-none">
-            <div className="absolute top-1/4 -left-32 w-125 h-125 bg-cyan-500/10 rounded-full blur-[120px]" />
+            <div className="absolute top-1/4 -left-32 w-[31.25rem] h-[31.25rem] bg-cyan-500/10 rounded-full blur-[120px]" />
           </div>
           <div className="flex items-center gap-3 text-cyan-400 text-2xl">
             <Sparkles className="w-6 h-6 animate-pulse" />

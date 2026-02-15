@@ -49,30 +49,24 @@ export function VaultActionsModal({ isOpen, onClose, actionType, vaultAddress }:
 
   // Reset state when modal opens
   useEffect(() => {
-    if (isOpen) {
-      setAmount('');
-      setRecipientAddress('');
-      setStep('input');
-      setErrorMessage('');
-      reset();
-    }
-  }, [isOpen, reset]);
+    const timers: ReturnType<typeof setTimeout>[] = [];
+    const defer = (callback: () => void) => {
+      const timer = setTimeout(callback, 0);
+      timers.push(timer);
+    };
 
-  // Handle transaction status changes
-  useEffect(() => {
-    if (isPending || isConfirming) {
-      setStep('pending');
+    if (isOpen) {
+      defer(() => setAmount(''));
+      defer(() => setRecipientAddress(''));
+      defer(() => setStep('input'));
+      defer(() => setErrorMessage(''));
+      defer(() => reset());
     }
-    if (txSuccess) {
-      setStep('success');
-      showToast(`${getActionTitle()} successful!`, 'success');
-    }
-    if (txError || writeError) {
-      setStep('error');
-      setErrorMessage(writeError?.message || 'Transaction failed');
-    }
-   
-  }, [isPending, isConfirming, txSuccess, txError, writeError, showToast, actionType]);
+
+    return () => {
+      timers.forEach((timer) => clearTimeout(timer));
+    };
+  }, [isOpen, reset]);
 
   const getActionTitle = () => {
     switch (actionType) {
@@ -81,6 +75,31 @@ export function VaultActionsModal({ isOpen, onClose, actionType, vaultAddress }:
       case 'transfer': return 'Transfer to Another Vault';
     }
   };
+
+  // Handle transaction status changes
+  useEffect(() => {
+    const timers: ReturnType<typeof setTimeout>[] = [];
+    const defer = (callback: () => void) => {
+      const timer = setTimeout(callback, 0);
+      timers.push(timer);
+    };
+
+    if (isPending || isConfirming) {
+      defer(() => setStep('pending'));
+    }
+    if (txSuccess) {
+      defer(() => setStep('success'));
+      defer(() => showToast(`${getActionTitle()} successful!`, 'success'));
+    }
+    if (txError || writeError) {
+      defer(() => setStep('error'));
+      defer(() => setErrorMessage(writeError?.message || 'Transaction failed'));
+    }
+
+    return () => {
+      timers.forEach((timer) => clearTimeout(timer));
+    };
+  }, [isPending, isConfirming, txSuccess, txError, writeError, showToast, actionType]);
 
   const getActionIcon = () => {
     switch (actionType) {

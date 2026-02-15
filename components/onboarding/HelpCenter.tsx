@@ -46,7 +46,7 @@ const helpTopics: HelpTopic[] = [
       "• Chain ID: 84532",
       "• Explorer: https://sepolia.basescan.org",
       "━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
-      "The app works identically on both networks.",
+      "Base Sepolia mirrors mainnet behavior; only the ETH is test ETH.",
       "Tip: Click 'Switch Network' in the app and your wallet should auto-add it!"
     ]
   },
@@ -209,7 +209,7 @@ export function HelpCenter() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/50 backdrop-blur-sm z-90"
+                className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[90]"
               onClick={() => {
                 setIsOpen(false);
                 setSelectedTopic(null);
@@ -222,7 +222,7 @@ export function HelpCenter() {
               animate={{ x: 0 }}
               exit={{ x: "100%" }}
               transition={{ type: "spring", damping: 25 }}
-              className="fixed right-0 top-0 bottom-0 w-full sm:w-[90vw] md:w-125 bg-linear-to-br from-zinc-800 to-zinc-900 border-l-2 border-cyan-400 shadow-2xl z-91 overflow-y-auto"
+                className="fixed right-0 top-0 bottom-0 w-full sm:w-[90vw] md:w-[31.25rem] bg-linear-to-br from-zinc-800 to-zinc-900 border-l-2 border-cyan-400 shadow-2xl z-[91] overflow-y-auto"
             >
               {/* Header */}
               <div className="sticky top-0 bg-zinc-900 border-b border-zinc-700 p-6 flex items-center justify-between">

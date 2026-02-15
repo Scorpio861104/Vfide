@@ -49,9 +49,15 @@ const POOL_ABI = [
  * Calculate price from Uniswap V3 sqrtPriceX96
  */
 function calculatePrice(sqrtPriceX96: bigint, token0: string, decimals0: number, decimals1: number): number {
-  const sqrtPrice = Number(sqrtPriceX96) / (2 ** 96);
-  const price = sqrtPrice ** 2;
-  
+  // Use BigInt arithmetic to avoid precision loss on uint160 values (up to 2^160)
+  // Number can only represent integers up to 2^53 safely
+  const sqrtPriceBig = BigInt(sqrtPriceX96);
+  const Q96 = BigInt(2) ** BigInt(96);
+  // price = (sqrtPrice / 2^96)^2 = sqrtPrice^2 / 2^192
+  // Scale by 1e18 for precision
+  const priceScaled = (sqrtPriceBig * sqrtPriceBig * BigInt(1e18)) / (Q96 * Q96);
+  const price = Number(priceScaled) / 1e18;
+
   // Adjust for decimals
   const decimalAdjustment = 10 ** (decimals1 - decimals0);
   let adjustedPrice = price * decimalAdjustment;
@@ -89,18 +95,12 @@ export async function GET(request: NextRequest) {
     
     // Check if fetch was successful
     if (!ethPriceResponse.ok) {
-      console.error('Failed to fetch ETH price:', ethPriceResponse.status);
-      // Use fallback price if fetch fails
-      const ethPrice = 2000; // Fallback price
-      const vfidePrice = 0.10;
-      const vfidePriceInEth = vfidePrice / ethPrice;
-      
-      return NextResponse.json({ 
-        price: vfidePriceInEth, 
-        priceUsd: vfidePrice, 
-        ethPrice,
-        source: 'fallback'
-      });
+      return NextResponse.json({
+        success: false,
+        error: 'ETH price feed unavailable',
+        source: 'unavailable',
+        timestamp: Date.now(),
+      }, { status: 503 });
     }
     
     const ethPriceData = await ethPriceResponse.json();
@@ -146,7 +146,7 @@ export async function GET(request: NextRequest) {
 
     // Market data
     const marketCap = 200_000_000 * vfidePrice; // Total supply * price
-    const circulatingSupply = 50_000_000; // Presale allocation initially circulating
+    const circulatingSupply = 50_000_000; // Launch allocation initially circulating
     const circulatingMarketCap = circulatingSupply * vfidePrice;
 
     return NextResponse.json({
@@ -169,29 +169,11 @@ export async function GET(request: NextRequest) {
       timestamp: Date.now(),
       source: priceSource,
     });
-  } catch (error) {
-    console.error('[Price API] Error:', error);
-    
-    // Fallback to base prices
+  } catch (_error) {
     return NextResponse.json({
-      success: true,
-      prices: {
-        vfide: {
-          usd: 0.10,
-          eth: 0.00005,
-        },
-        eth: {
-          usd: 2000,
-        },
-      },
-      market: {
-        marketCap: 20_000_000,
-        circulatingMarketCap: 5_000_000,
-        totalSupply: 200_000_000,
-        circulatingSupply: 50_000_000,
-      },
+      success: false,
+      error: 'Price service temporarily unavailable',
       timestamp: Date.now(),
-      source: 'fallback',
-    });
+    }, { status: 503 });
   }
 }

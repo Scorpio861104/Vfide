@@ -3,6 +3,8 @@
  * Snapchat/Instagram-style ephemeral content sharing
  */
 
+import { secureId } from '@/lib/secureRandom';
+
 export interface Story {
   id: string;
   userId: string;
@@ -64,7 +66,7 @@ export function createTextStory(
   textColor?: string
 ): Story {
   return {
-    id: `story_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+    id: secureId('story'),
     userId,
     userName,
     type: 'text',
@@ -90,7 +92,7 @@ export function createMediaStory(
   userAvatar?: string
 ): Story {
   return {
-    id: `story_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+    id: secureId('story'),
     userId,
     userName,
     userAvatar,

@@ -9,6 +9,89 @@ import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
 import ProofScoreDashboard from '../../components/gamification/ProofScoreDashboard';
 
+jest.mock('wagmi', () => ({
+  useAccount: () => ({
+    address: '0x1111111111111111111111111111111111111111',
+    isConnected: true,
+  }),
+}));
+
+const mockFetch = jest.fn(async (input: RequestInfo | URL) => {
+  const url = String(input);
+  if (url.includes('/api/users/')) {
+    return {
+      ok: true,
+      json: async () => ({
+        user: {
+          proof_score: 7850,
+          stats: {
+            badge_count: 12,
+            friend_count: 18,
+            proposal_count: 5,
+            endorsement_count: 22,
+          },
+        },
+      }),
+    } as Response;
+  }
+
+  if (url.includes('/api/badges')) {
+    return {
+      ok: true,
+      json: async () => ({
+        badges: [
+          {
+            badge_id: 'legend-1',
+            badge_name: 'Legendary Member',
+            badge_description: 'Reached the Legend tier',
+            badge_icon: '🏆',
+            badge_rarity: 'legendary',
+            earned_at: new Date('2025-01-01').toISOString(),
+          },
+        ],
+      }),
+    } as Response;
+  }
+
+  if (url.includes('/api/gamification')) {
+    return {
+      ok: true,
+      json: async () => ({
+        streak: 42,
+        achievements: [
+          {
+            id: 'achv-1',
+            name: 'ProofScore Pioneer',
+            description: 'Reached 5000+ ProofScore',
+            icon: '🏅',
+          },
+        ],
+      }),
+    } as Response;
+  }
+
+  return {
+    ok: false,
+    json: async () => ({}),
+  } as Response;
+});
+
+beforeAll(() => {
+  global.fetch = mockFetch as typeof fetch;
+});
+
+afterEach(() => {
+  mockFetch.mockClear();
+});
+
+const renderWithData = async () => {
+  render(<ProofScoreDashboard />);
+  await waitFor(() =>
+    expect(screen.queryByText(/Loading your ProofScore data/i)).not.toBeInTheDocument()
+  );
+  await waitFor(() => expect(screen.getAllByText('7850').length).toBeGreaterThan(0));
+};
+
 describe('ProofScoreDashboard Component', () => {
   it('renders without crashing', () => {
     render(<ProofScoreDashboard />);
@@ -16,15 +99,15 @@ describe('ProofScoreDashboard Component', () => {
     expect(header).toBeInTheDocument();
   });
 
-  it('displays current ProofScore prominently', () => {
-    render(<ProofScoreDashboard />);
+  it('displays current ProofScore prominently', async () => {
+    await renderWithData();
 
     expect(screen.getByText('Your Current ProofScore')).toBeInTheDocument();
     expect(screen.getAllByText('7850')[0]).toBeInTheDocument();
   });
 
-  it('displays current tier information', () => {
-    render(<ProofScoreDashboard />);
+  it('displays current tier information', async () => {
+    await renderWithData();
 
     expect(screen.getAllByText('Legend')[0]).toBeInTheDocument();
     expect(screen.getByText(/The most trusted and active member/i)).toBeInTheDocument();
@@ -44,7 +127,7 @@ describe('ProofScoreDashboard Component', () => {
     render(<ProofScoreDashboard />);
 
     // Should start on Overview tab
-    expect(screen.getByText(/Score Breakdown/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/Activity Breakdown/i)[0]).toBeInTheDocument();
 
     // Click Timeline tab
     const timelineTab = screen.getByRole('button', { name: /Timeline/i });
@@ -64,21 +147,21 @@ describe('ProofScoreDashboard Component', () => {
 });
 
 describe('Tier Display', () => {
-  it('shows tier name and description', () => {
-    render(<ProofScoreDashboard />);
+  it('shows tier name and description', async () => {
+    await renderWithData();
 
     expect(screen.getAllByText('Legend')[0]).toBeInTheDocument();
     expect(screen.getByText(/The most trusted and active member/i)).toBeInTheDocument();
   });
 
-  it('displays tier badge', () => {
-    render(<ProofScoreDashboard />);
+  it('displays tier badge', async () => {
+    await renderWithData();
 
     expect(screen.getAllByText('🏆')[0]).toBeInTheDocument();
   });
 
-  it('shows tier benefits', () => {
-    render(<ProofScoreDashboard />);
+  it('shows tier benefits', async () => {
+    await renderWithData();
 
     expect(screen.getByText(/All features unlocked/i)).toBeInTheDocument();
     expect(screen.getByText(/Custom support/i)).toBeInTheDocument();
@@ -104,26 +187,25 @@ describe('Quick Stats Section', () => {
     render(<ProofScoreDashboard />);
 
     expect(screen.getByText('Current Score')).toBeInTheDocument();
-    expect(screen.getAllByText('This Month')[0]).toBeInTheDocument();
-    expect(screen.getByText('Rank')).toBeInTheDocument();
-    expect(screen.getByText('Streak')).toBeInTheDocument();
+    expect(screen.getAllByText('Badges')[0]).toBeInTheDocument();
+    expect(screen.getAllByText('Achievements')[0]).toBeInTheDocument();
+    expect(screen.getAllByText('Streak')[0]).toBeInTheDocument();
   });
 
-  it('shows stat values', () => {
-    render(<ProofScoreDashboard />);
+  it('shows stat values', async () => {
+    await renderWithData();
 
     expect(screen.getAllByText('7850')[0]).toBeInTheDocument();
-    expect(screen.getAllByText('+185')[0]).toBeInTheDocument();
-    expect(screen.getByText('#2,847')).toBeInTheDocument();
-    expect(screen.getByText('28 days')).toBeInTheDocument();
+    expect(screen.getAllByText('1').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('42 days')[0]).toBeInTheDocument();
   });
 
   it('displays stat icons', () => {
     render(<ProofScoreDashboard />);
 
     expect(screen.getByText('📊')).toBeInTheDocument();
-    expect(screen.getByText('📈')).toBeInTheDocument();
     expect(screen.getByText('🏅')).toBeInTheDocument();
+    expect(screen.getByText('🏆')).toBeInTheDocument();
     expect(screen.getByText('🔥')).toBeInTheDocument();
   });
 });
@@ -132,37 +214,34 @@ describe('Score Breakdown Section', () => {
   it('displays score breakdown categories', () => {
     render(<ProofScoreDashboard />);
 
-    expect(screen.getByText('Transaction History')).toBeInTheDocument();
-    expect(screen.getByText('Account Verification')).toBeInTheDocument();
-    expect(screen.getByText('Community Engagement')).toBeInTheDocument();
+    expect(screen.getByText('Activity Breakdown')).toBeInTheDocument();
   });
 
-  it('shows score amounts', () => {
-    render(<ProofScoreDashboard />);
+  it('shows score amounts', async () => {
+    await renderWithData();
 
-    expect(screen.getAllByText('2,500')[0]).toBeInTheDocument();
-    expect(screen.getAllByText('1,800')[0]).toBeInTheDocument();
+    expect(screen.getAllByText('12')[0]).toBeInTheDocument();
+    expect(screen.getAllByText('18')[0]).toBeInTheDocument();
   });
 
-  it('displays percentage breakdowns', () => {
-    render(<ProofScoreDashboard />);
+  it('displays percentage breakdowns', async () => {
+    await renderWithData();
 
-    expect(screen.getAllByText('32%')[0]).toBeInTheDocument();
-    expect(screen.getAllByText('23%')[0]).toBeInTheDocument();
+    expect(screen.getByText('21%')).toBeInTheDocument();
+    expect(screen.getByText('32%')).toBeInTheDocument();
   });
 
-  it('shows activity counts', () => {
-    render(<ProofScoreDashboard />);
+  it('shows activity counts', async () => {
+    await renderWithData();
 
     // Activity count displays
     const activityTexts = screen.getAllByText(/activities/i);
     expect(activityTexts.length).toBeGreaterThan(0);
   });
 
-  it('displays trend indicators', () => {
-    render(<ProofScoreDashboard />);
+  it('displays trend indicators', async () => {
+    await renderWithData();
 
-    // Should have "up" and "down" trends displayed
     const statusElements = screen.getAllByText(/\d+ activities/);
     expect(statusElements.length).toBeGreaterThan(0);
   });
@@ -202,8 +281,9 @@ describe('Timeline Tab', () => {
     await user.click(timelineTab);
 
     await waitFor(() => {
-      const changeElements = screen.getAllByText(/\+|\-/);
-      expect(changeElements.length).toBeGreaterThan(0);
+      expect(
+        screen.getByText(/Score history will appear once daily snapshots are available/i)
+      ).toBeInTheDocument();
     });
   });
 
@@ -215,8 +295,9 @@ describe('Timeline Tab', () => {
     await user.click(timelineTab);
 
     await waitFor(() => {
-      const activities = screen.queryAllByText(/transaction|verification|participation/i);
-      expect(activities.length).toBeGreaterThan(0);
+      expect(
+        screen.getByText(/Score history will appear once daily snapshots are available/i)
+      ).toBeInTheDocument();
     });
   });
 });
@@ -224,7 +305,7 @@ describe('Timeline Tab', () => {
 describe('Badges Tab', () => {
   it('displays badges when tab is clicked', async () => {
     const user = userEvent.setup();
-    render(<ProofScoreDashboard />);
+    await renderWithData();
 
     const badgesTab = screen.getByRole('button', { name: /Badges/i });
     await user.click(badgesTab);
@@ -236,45 +317,43 @@ describe('Badges Tab', () => {
 
   it('shows badge icons', async () => {
     const user = userEvent.setup();
-    render(<ProofScoreDashboard />);
+    await renderWithData();
 
     const badgesTab = screen.getByRole('button', { name: /Badges/i });
     await user.click(badgesTab);
 
     await waitFor(() => {
-      expect(screen.getByText('🚀')).toBeInTheDocument();
-      expect(screen.getByText('✅')).toBeInTheDocument();
+      expect(screen.getAllByText('🏆').length).toBeGreaterThan(0);
     });
   });
 
   it('displays badge names', async () => {
     const user = userEvent.setup();
-    render(<ProofScoreDashboard />);
+    await renderWithData();
 
     const badgesTab = screen.getByRole('button', { name: /Badges/i });
     await user.click(badgesTab);
 
     await waitFor(() => {
-      expect(screen.getByText('First Step')).toBeInTheDocument();
-      expect(screen.getByText('Verified Badge')).toBeInTheDocument();
+      expect(screen.getByText('Legendary Member')).toBeInTheDocument();
     });
   });
 
   it('shows badge descriptions', async () => {
     const user = userEvent.setup();
-    render(<ProofScoreDashboard />);
+    await renderWithData();
 
     const badgesTab = screen.getByRole('button', { name: /Badges/i });
     await user.click(badgesTab);
 
     await waitFor(() => {
-      expect(screen.getByText(/Completed your first transaction/i)).toBeInTheDocument();
+      expect(screen.getByText(/Reached the Legend tier/i)).toBeInTheDocument();
     });
   });
 
   it('displays badge rarity levels', async () => {
     const user = userEvent.setup();
-    render(<ProofScoreDashboard />);
+    await renderWithData();
 
     const badgesTab = screen.getByRole('button', { name: /Badges/i });
     await user.click(badgesTab);
@@ -287,7 +366,7 @@ describe('Badges Tab', () => {
 
   it('counts total badges', async () => {
     const user = userEvent.setup();
-    render(<ProofScoreDashboard />);
+    await renderWithData();
 
     const badgesTab = screen.getByRole('button', { name: /Badges/i });
     await user.click(badgesTab);
@@ -301,7 +380,7 @@ describe('Badges Tab', () => {
 describe('Achievements Tab', () => {
   it('displays achievements when tab is clicked', async () => {
     const user = userEvent.setup();
-    render(<ProofScoreDashboard />);
+    await renderWithData();
 
     const achievementsTab = screen.getByRole('button', { name: /Achievements/i });
     await user.click(achievementsTab);
@@ -313,57 +392,31 @@ describe('Achievements Tab', () => {
 
   it('shows achievement titles', async () => {
     const user = userEvent.setup();
-    render(<ProofScoreDashboard />);
+    await renderWithData();
 
     const achievementsTab = screen.getByRole('button', { name: /Achievements/i });
     await user.click(achievementsTab);
 
     await waitFor(() => {
-      expect(screen.getByText('Transaction Master')).toBeInTheDocument();
-      expect(screen.getByText('Social Butterfly')).toBeInTheDocument();
-    });
-  });
-
-  it('displays achievement progress bars', async () => {
-    const user = userEvent.setup();
-    const { container } = render(<ProofScoreDashboard />);
-
-    const achievementsTab = screen.getByRole('button', { name: /Achievements/i });
-    await user.click(achievementsTab);
-
-    await waitFor(() => {
-      const progressBars = container.querySelectorAll('[style*="width"]');
-      expect(progressBars.length).toBeGreaterThan(0);
-    });
-  });
-
-  it('shows achievement rewards', async () => {
-    const user = userEvent.setup();
-    render(<ProofScoreDashboard />);
-
-    const achievementsTab = screen.getByRole('button', { name: /Achievements/i });
-    await user.click(achievementsTab);
-
-    await waitFor(() => {
-      expect(screen.getAllByText(/\+\d+ ProofScore/)[0]).toBeInTheDocument();
+      expect(screen.getByText('ProofScore Pioneer')).toBeInTheDocument();
     });
   });
 
   it('indicates completed achievements', async () => {
     const user = userEvent.setup();
-    render(<ProofScoreDashboard />);
+    await renderWithData();
 
     const achievementsTab = screen.getByRole('button', { name: /Achievements/i });
     await user.click(achievementsTab);
 
     await waitFor(() => {
-      expect(screen.getByText('Dispute Resolver')).toBeInTheDocument();
+      expect(screen.getByText('ProofScore Pioneer')).toBeInTheDocument();
     });
   });
 
   it('counts completed vs total achievements', async () => {
     const user = userEvent.setup();
-    render(<ProofScoreDashboard />);
+    await renderWithData();
 
     const achievementsTab = screen.getByRole('button', { name: /Achievements/i });
     await user.click(achievementsTab);
@@ -407,14 +460,13 @@ describe('Accessibility', () => {
 
     expect(screen.getByText('Your ProofScore Status')).toBeInTheDocument();
     expect(screen.getByText('Quick Stats')).toBeInTheDocument();
-    expect(screen.getByText('Score Breakdown')).toBeInTheDocument();
+    expect(screen.getByText('Activity Breakdown')).toBeInTheDocument();
   });
 
   it('color is not only indicator of status', () => {
     render(<ProofScoreDashboard />);
 
     // Check for text labels alongside colors
-    expect(screen.getAllByText(/This Month/i)[0]).toBeInTheDocument();
     expect(screen.getAllByText(/Tier/i)[0]).toBeInTheDocument();
   });
 });
@@ -433,8 +485,8 @@ describe('Mobile Responsiveness', () => {
     expect(screen.getByText('ProofScore Dashboard')).toBeInTheDocument();
   });
 
-  it('main score is readable on mobile', () => {
-    render(<ProofScoreDashboard />);
+  it('main score is readable on mobile', async () => {
+    await renderWithData();
 
     expect(screen.getAllByText('7850')[0]).toBeInTheDocument();
   });
@@ -456,33 +508,31 @@ describe('Mobile Responsiveness', () => {
   it('score breakdown cards are mobile-friendly', () => {
     render(<ProofScoreDashboard />);
 
-    expect(screen.getByText('Score Breakdown')).toBeInTheDocument();
-    expect(screen.getByText('Transaction History')).toBeInTheDocument();
+    expect(screen.getByText('Activity Breakdown')).toBeInTheDocument();
   });
 
   it('badge cards are responsive', async () => {
     const user = userEvent.setup();
-    render(<ProofScoreDashboard />);
+    await renderWithData();
 
     const badgesTab = screen.getByRole('button', { name: /Badges/i });
     await user.click(badgesTab);
 
     await waitFor(() => {
-      expect(screen.getByText('First Step')).toBeInTheDocument();
+      expect(screen.getByText('Legendary Member')).toBeInTheDocument();
     });
   });
 });
 
 describe('Data Display', () => {
-  it('displays all score breakdown categories', () => {
-    render(<ProofScoreDashboard />);
+  it('displays all score breakdown categories', async () => {
+    await renderWithData();
 
     const categories = [
-      'Transaction History',
-      'Account Verification',
-      'Community Engagement',
-      'Security & Safety',
-      'Governance Participation',
+      'Badges Earned',
+      'Connections',
+      'Proposals Created',
+      'Endorsements Received',
     ];
 
     categories.forEach((category) => {
@@ -490,21 +540,14 @@ describe('Data Display', () => {
     });
   });
 
-  it('calculates and displays percentages correctly', () => {
-    render(<ProofScoreDashboard />);
+  it('calculates and displays percentages correctly', async () => {
+    await renderWithData();
 
-    const percentages = screen.getAllByText(/%/);
-    expect(percentages.length).toBeGreaterThan(0);
+    expect(screen.getByText('21%')).toBeInTheDocument();
   });
 
-  it('formats large numbers with commas', () => {
-    render(<ProofScoreDashboard />);
-
-    expect(screen.getAllByText('2,500')[0]).toBeInTheDocument();
-  });
-
-  it('displays tier badge correctly', () => {
-    render(<ProofScoreDashboard />);
+  it('displays tier badge correctly', async () => {
+    await renderWithData();
 
     // Legend tier should show trophy emoji
     expect(screen.getAllByText('🏆')[0]).toBeInTheDocument();
@@ -540,7 +583,7 @@ describe('Tab State Management', () => {
     render(<ProofScoreDashboard />);
 
     // Overview tab
-    expect(screen.getByText('Score Breakdown')).toBeInTheDocument();
+    expect(screen.getByText('Activity Breakdown')).toBeInTheDocument();
 
     // Timeline tab
     const timelineTab = screen.getByRole('button', { name: /Timeline/i });
@@ -562,14 +605,14 @@ describe('Visual Indicators', () => {
 
   it('colors indicate achievement status', async () => {
     const user = userEvent.setup();
-    render(<ProofScoreDashboard />);
+    await renderWithData();
 
     const achievementsTab = screen.getByRole('button', { name: /Achievements/i });
     await user.click(achievementsTab);
 
     await waitFor(() => {
       // Check for checkmark indicating completed
-      expect(screen.getByText('Dispute Resolver')).toBeInTheDocument();
+      expect(screen.getByText('ProofScore Pioneer')).toBeInTheDocument();
     });
   });
 
@@ -577,7 +620,8 @@ describe('Visual Indicators', () => {
     render(<ProofScoreDashboard />);
 
     expect(screen.getByText('📊')).toBeInTheDocument();
-    expect(screen.getByText('📈')).toBeInTheDocument();
+    expect(screen.getByText('🏅')).toBeInTheDocument();
+    expect(screen.getByText('🔥')).toBeInTheDocument();
     expect(screen.getByText('⭐')).toBeInTheDocument();
   });
 });
@@ -587,7 +631,7 @@ describe('Integration Tests', () => {
     render(<ProofScoreDashboard />);
 
     expect(screen.getByText('ProofScore Dashboard')).toBeInTheDocument();
-    expect(screen.getByText('Score Breakdown')).toBeInTheDocument();
+    expect(screen.getByText('Activity Breakdown')).toBeInTheDocument();
     expect(screen.getByText('Quick Stats')).toBeInTheDocument();
   });
 
@@ -613,11 +657,11 @@ describe('Integration Tests', () => {
     // Back to Overview
     tab = screen.getByRole('button', { name: /Overview/i });
     await user.click(tab);
-    await waitFor(() => expect(screen.getByText('Score Breakdown')).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText('Activity Breakdown')).toBeInTheDocument());
   });
 
-  it('all data displays correctly together', () => {
-    render(<ProofScoreDashboard />);
+  it('all data displays correctly together', async () => {
+    await renderWithData();
 
     // Score
     expect(screen.getAllByText('7850')[0]).toBeInTheDocument();
@@ -627,11 +671,11 @@ describe('Integration Tests', () => {
 
     // Stats
     expect(screen.getByText('Current Score')).toBeInTheDocument();
-    expect(screen.getAllByText('This Month')[0]).toBeInTheDocument();
+    expect(screen.getAllByText('Badges')[0]).toBeInTheDocument();
 
     // Breakdown
-    expect(screen.getByText('Score Breakdown')).toBeInTheDocument();
-    expect(screen.getByText('Transaction History')).toBeInTheDocument();
+    expect(screen.getByText('Activity Breakdown')).toBeInTheDocument();
+    expect(screen.getByText('Badges Earned')).toBeInTheDocument();
   });
 
   it('dark mode is supported throughout', () => {

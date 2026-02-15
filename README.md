@@ -8,9 +8,32 @@ Next.js 16 frontend for the VFIDE trust-based payment protocol.
 - **React**: 19
 - **Styling**: Tailwind CSS 4
 - **Web3**: wagmi v2, RainbowKit
-- **Chain**: Base Sepolia (testnet), Base/Polygon/zkSync (mainnet)
+- **Chain**: Base Mainnet and Base Sepolia
 
 ## Getting Started
+
+### Required Runtime
+
+This repository requires a Hardhat-compatible Node runtime.
+
+- Node: 22 (pinned in `.nvmrc` and `.node-version`)
+- npm: 10+
+
+Recommended setup before installing dependencies:
+
+```bash
+# Use pinned Node version
+nvm use
+
+# Verify runtime
+node -v
+npm -v
+
+# Install dependencies (engine checks are enforced)
+npm install
+```
+
+If your shell does not use nvm, install and activate Node 22 manually before running project scripts.
 
 ### Development
 

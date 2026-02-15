@@ -75,33 +75,33 @@ const DEFAULT_PREFS: NotificationPreferences = {
 // ==================== HOOK ====================
 
 export function useNotifications() {
-  const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [preferences, setPreferences] = useState<NotificationPreferences>(DEFAULT_PREFS);
+  const [notifications, setNotifications] = useState<Notification[]>(() => {
+    if (typeof window === 'undefined') return [];
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (!stored) return [];
+      const parsed = JSON.parse(stored) as Notification[];
+      const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+      return parsed.filter((n) => !n.archived || n.timestamp > weekAgo);
+    } catch {
+      return [];
+    }
+  });
+  const [preferences, setPreferences] = useState<NotificationPreferences>(() => {
+    if (typeof window === 'undefined') return DEFAULT_PREFS;
+    try {
+      const prefs = localStorage.getItem(PREFS_KEY);
+      if (!prefs) return DEFAULT_PREFS;
+      return { ...DEFAULT_PREFS, ...JSON.parse(prefs) };
+    } catch {
+      return DEFAULT_PREFS;
+    }
+  });
   const { play: playSound } = useTransactionSounds();
   const desktopPermission = useRef<NotificationPermission>('default');
 
-  // Load from storage
+  // Check desktop notification permission
   useEffect(() => {
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        // Filter out old archived notifications (older than 7 days)
-        const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
-        setNotifications(parsed.filter((n: Notification) => 
-          !n.archived || n.timestamp > weekAgo
-        ));
-      }
-
-      const prefs = localStorage.getItem(PREFS_KEY);
-      if (prefs) {
-        setPreferences({ ...DEFAULT_PREFS, ...JSON.parse(prefs) });
-      }
-    } catch {
-      // Ignore storage errors
-    }
-
-    // Check desktop notification permission
     if (typeof window !== 'undefined' && 'Notification' in window) {
       desktopPermission.current = Notification.permission;
     }
@@ -193,7 +193,7 @@ export function useNotifications() {
 
     const newNotification: Notification = {
       ...notification,
-      id: `notif-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+      id: `notif-${Date.now()}-${Array.from(crypto.getRandomValues(new Uint8Array(5)), b => b.toString(16).padStart(2, '0')).join('')}`,
       timestamp: Date.now(),
       read: false,
       archived: false,

@@ -3,18 +3,15 @@ pragma solidity 0.8.30;
 
 import "./SharedInterfaces.sol";
 
-/**
- * OwnerControlPanel - Centralized Admin Interface
- * ----------------------------------------------------------
- * Single control panel for managing all VFIDE protocol contracts
- * Aggregates owner/admin functions for easy management and monitoring
- * 
- * SECURITY:
- * - All functions restricted to owner (multisig recommended)
- * - Read-only views for monitoring system state
- * - Emergency controls centralized
- * - No fund custody (just passes through calls)
- */
+/// @title OwnerControlPanel - Centralized Admin Interface
+/// @author VFIDE Protocol Team
+/// @notice Single control panel for managing all VFIDE protocol contracts.
+///         Aggregates owner/admin functions for easy management and monitoring.
+/// @dev SECURITY NOTES:
+///      - All state-changing functions restricted to owner (multisig recommended).
+///      - Read-only views for monitoring system state.
+///      - Emergency controls centralized for rapid incident response.
+///      - No fund custody: this contract never holds tokens, it only passes through calls.
 
 interface IVFIDEPresale {
     function setPaused(bool _paused) external;
@@ -47,9 +44,17 @@ interface IUserVault {
 
 contract OwnerControlPanel {
     using SafeERC20 for IERC20;
-    
+
     address public immutable owner;
-    
+
+    // Timelock for sensitive operations
+    uint256 public constant TIMELOCK_DELAY = 2 days;
+    mapping(bytes32 => uint256) public timelockRequests;
+
+    event TimelockRequested(bytes32 indexed operationHash, uint256 executeAfter);
+    event TimelockExecuted(bytes32 indexed operationHash);
+    event TimelockCancelled(bytes32 indexed operationHash);
+
     IVFIDEToken public vfideToken;
     IVFIDEPresale public presale;
     IVaultHub public vaultHub;
@@ -63,10 +68,33 @@ contract OwnerControlPanel {
     
     error OCP_NotOwner();
     error OCP_Zero();
-    
+    error OCP_TimelockNotReady();
+    error OCP_TimelockNotQueued();
+
     modifier onlyOwner() {
         if (msg.sender != owner) revert OCP_NotOwner();
         _;
+    }
+
+    /// @notice Request a timelocked operation
+    function _requestTimelock(bytes32 opHash) internal {
+        timelockRequests[opHash] = block.timestamp + TIMELOCK_DELAY;
+        emit TimelockRequested(opHash, block.timestamp + TIMELOCK_DELAY);
+    }
+
+    /// @notice Execute a timelocked operation (reverts if not ready)
+    function _executeTimelock(bytes32 opHash) internal {
+        uint256 executeAfter = timelockRequests[opHash];
+        if (executeAfter == 0) revert OCP_TimelockNotQueued();
+        if (block.timestamp < executeAfter) revert OCP_TimelockNotReady();
+        delete timelockRequests[opHash];
+        emit TimelockExecuted(opHash);
+    }
+
+    /// @notice Cancel a pending timelock
+    function cancelTimelock(bytes32 opHash) external onlyOwner {
+        delete timelockRequests[opHash];
+        emit TimelockCancelled(opHash);
     }
     
     constructor(
@@ -88,7 +116,21 @@ contract OwnerControlPanel {
     }
     
     /**
-     * @notice Update contract references (if contracts are redeployed)
+     * @notice Request contract reference update (timelocked)
+     */
+    function requestSetContracts(
+        address _token,
+        address _presale,
+        address _vaultHub,
+        address _burnRouter,
+        address _seer
+    ) external onlyOwner {
+        bytes32 opHash = keccak256(abi.encodePacked("setContracts", _token, _presale, _vaultHub, _burnRouter, _seer));
+        _requestTimelock(opHash);
+    }
+
+    /**
+     * @notice Execute contract reference update (after timelock delay)
      */
     function setContracts(
         address _token,
@@ -97,6 +139,8 @@ contract OwnerControlPanel {
         address _burnRouter,
         address _seer
     ) external onlyOwner {
+        bytes32 opHash = keccak256(abi.encodePacked("setContracts", _token, _presale, _vaultHub, _burnRouter, _seer));
+        _executeTimelock(opHash);
         if (_token != address(0)) vfideToken = IVFIDEToken(_token);
         if (_presale != address(0)) presale = IVFIDEPresale(_presale);
         if (_vaultHub != address(0)) vaultHub = IVaultHub(_vaultHub);
@@ -121,7 +165,14 @@ contract OwnerControlPanel {
         if (hub != address(0)) vfideToken.setVaultHub(hub);
         if (security != address(0)) vfideToken.setSecurityHub(security);
         if (ledger != address(0)) vfideToken.setLedger(ledger);
-        if (router != address(0)) vfideToken.setBurnRouter(router);
+        if (router != address(0)) vfideToken.proposeBurnRouter(router);
+    }
+
+    /**
+     * @notice Confirm pending burn router change (after BURN_ROUTER_DELAY has elapsed)
+     */
+    function token_confirmBurnRouter() external onlyOwner {
+        vfideToken.confirmBurnRouter();
     }
     
     /**
@@ -136,25 +187,39 @@ contract OwnerControlPanel {
     }
     
     /**
-     * @notice Exempt address from vault-only and fees (for system contracts)
+     * @notice Propose exemption change (timelocked - 1 day delay)
      */
-    function token_setSystemExempt(address who, bool isExempt) external onlyOwner {
-        vfideToken.setSystemExempt(who, isExempt);
+    function token_proposeSystemExempt(address who, bool isExempt) external onlyOwner {
+        vfideToken.proposeSystemExempt(who, isExempt);
     }
-    
+
     /**
-     * @notice Whitelist address to bypass vault-only (for exchanges/DEXs)
+     * @notice Confirm pending exemption change after delay
      */
-    function token_setWhitelist(address addr, bool status) external onlyOwner {
-        vfideToken.setWhitelist(addr, status);
+    function token_confirmSystemExempt(address who) external onlyOwner {
+        vfideToken.confirmSystemExempt(who);
     }
-    
+
     /**
-     * @notice Batch whitelist multiple addresses (gas efficient)
+     * @notice Propose whitelist change (timelocked - 1 day delay)
      */
-    function token_batchWhitelist(address[] calldata addrs, bool status) external onlyOwner {
+    function token_proposeWhitelist(address addr, bool status) external onlyOwner {
+        vfideToken.proposeWhitelist(addr, status);
+    }
+
+    /**
+     * @notice Confirm pending whitelist change after delay
+     */
+    function token_confirmWhitelist(address addr) external onlyOwner {
+        vfideToken.confirmWhitelist(addr);
+    }
+
+    /**
+     * @notice Batch propose whitelist (gas efficient)
+     */
+    function token_batchProposeWhitelist(address[] calldata addrs, bool status) external onlyOwner {
         for (uint256 i = 0; i < addrs.length; i++) {
-            vfideToken.setWhitelist(addrs[i], status);
+            vfideToken.proposeWhitelist(addrs[i], status);
         }
     }
     
@@ -510,9 +575,19 @@ contract OwnerControlPanel {
     }
     
     /**
-     * @notice Emergency withdraw (only before sale or after finalization)
+     * @notice Request emergency withdraw (timelocked — 2 day delay)
+     */
+    function presale_requestEmergencyWithdraw() external onlyOwner {
+        bytes32 opHash = keccak256(abi.encodePacked("presale_emergencyWithdraw"));
+        _requestTimelock(opHash);
+    }
+
+    /**
+     * @notice Execute emergency withdraw (after timelock delay)
      */
     function presale_emergencyWithdraw() external onlyOwner {
+        bytes32 opHash = keccak256(abi.encodePacked("presale_emergencyWithdraw"));
+        _executeTimelock(opHash);
         presale.emergencyWithdraw();
         emit EmergencyAction("emergency_withdraw", address(presale));
     }

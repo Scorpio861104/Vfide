@@ -13,6 +13,7 @@ import {
   Clock,
 } from 'lucide-react';
 import { formatAddress as _formatAddress } from '@/lib/messageEncryption';
+import { secureId } from '@/lib/secureRandom';
 import { UserDisplay } from '@/components/common/UserDisplay';
 
 interface ActivityItem {
@@ -31,26 +32,66 @@ interface ActivityFeedProps {
 export function ActivityFeed({ userAddress }: ActivityFeedProps) {
   const [activities, setActivities] = useState<ActivityItem[]>([]);
   const [filter, setFilter] = useState<'all' | ActivityItem['type']>('all');
-  const [isClient, setIsClient] = useState(false);
-
-  // Handle SSR
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!userAddress || !isClient || typeof window === 'undefined') return;
-    
-    try {
-      const stored = localStorage.getItem(`vfide_activity_feed_${userAddress}`);
-      if (stored) {
-        setActivities(JSON.parse(stored));
-      }
-    } catch (e) {
-      console.error('Failed to load activity feed:', e);
+    if (!userAddress) {
       setActivities([]);
+      setIsLoading(false);
+      return;
     }
-  }, [userAddress, isClient]);
+
+    let isMounted = true;
+
+    const normalizeType = (value?: string | null): ActivityItem['type'] => {
+      const type = value?.toLowerCase() ?? '';
+      if (type.includes('message')) return 'message';
+      if (type.includes('payment') || type.includes('transfer') || type.includes('transaction')) return 'payment';
+      if (type.includes('endorse')) return 'endorsement';
+      if (type.includes('friend')) return 'friend_added';
+      if (type.includes('badge')) return 'badge_earned';
+      if (type.includes('group')) return 'group_joined';
+      return 'message';
+    };
+
+    const loadActivities = async () => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const response = await fetch(`/api/activities?userAddress=${userAddress}&limit=50&offset=0`);
+        if (!response.ok) throw new Error('Failed to fetch activities');
+        const data = await response.json();
+        const items = Array.isArray(data.activities) ? data.activities : [];
+        const mapped = items.map((activity: Record<string, unknown>) => ({
+          id: String(activity.id ?? `${activity.activity_type}-${activity.created_at}`),
+          type: normalizeType(activity.activity_type ?? activity.type),
+          user: activity.user_address ?? activity.user_username ?? 'Unknown',
+          content: activity.description ?? activity.title ?? 'Activity',
+          timestamp: activity.created_at ? new Date(activity.created_at).getTime() : Date.now(),
+          metadata: activity.data ?? activity.metadata ?? undefined,
+        })) as ActivityItem[];
+
+        if (isMounted) {
+          setActivities(mapped);
+        }
+      } catch (e) {
+        console.error('Failed to load activity feed:', e);
+        if (isMounted) {
+          setActivities([]);
+          setError('Unable to load activity feed.');
+        }
+      } finally {
+        if (isMounted) setIsLoading(false);
+      }
+    };
+
+    loadActivities();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [userAddress]);
 
   const getIcon = (type: ActivityItem['type']) => {
     const iconMap = {
@@ -128,7 +169,17 @@ export function ActivityFeed({ userAddress }: ActivityFeedProps) {
       </div>
 
       {/* Activity List */}
-      {filteredActivities.length === 0 ? (
+      {isLoading ? (
+        <div className="p-8 bg-zinc-950 border border-zinc-800 rounded-xl text-center">
+          <Activity className="w-12 h-12 text-zinc-500 mx-auto mb-3 opacity-50" />
+          <p className="text-zinc-500">Loading activity…</p>
+        </div>
+      ) : error ? (
+        <div className="p-8 bg-zinc-950 border border-zinc-800 rounded-xl text-center">
+          <Activity className="w-12 h-12 text-zinc-500 mx-auto mb-3 opacity-50" />
+          <p className="text-red-400">{error}</p>
+        </div>
+      ) : filteredActivities.length === 0 ? (
         <div className="p-8 bg-zinc-950 border border-zinc-800 rounded-xl text-center">
           <Activity className="w-12 h-12 text-zinc-500 mx-auto mb-3 opacity-50" />
           <p className="text-zinc-500">No activity yet</p>
@@ -195,27 +246,51 @@ export function addActivity(
   userAddress: string,
   activity: Omit<ActivityItem, 'id' | 'timestamp'>
 ) {
-  if (typeof window === 'undefined') return;
-  
-  try {
-    const stored = localStorage.getItem(`vfide_activity_feed_${userAddress}`);
-    const activities: ActivityItem[] = stored ? JSON.parse(stored) : [];
-    
-    const newActivity: ActivityItem = {
-      ...activity,
-      id: `activity_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      timestamp: Date.now(),
-    };
-    
-    activities.unshift(newActivity);
-    
-    // Keep only last 100 activities
-    if (activities.length > 100) {
-      activities.splice(100);
+  if (!userAddress) return;
+
+  const newActivity: ActivityItem = {
+    id: secureId('activity'),
+    timestamp: Date.now(),
+    ...activity,
+  };
+
+  if (typeof window !== 'undefined') {
+    try {
+      const key = `vfide_activity_feed_${userAddress}`;
+      const existing = localStorage.getItem(key);
+      const items = existing ? (JSON.parse(existing) as ActivityItem[]) : [];
+      const nextItems = [newActivity, ...items].slice(0, 100);
+      localStorage.setItem(key, JSON.stringify(nextItems));
+    } catch (error) {
+      console.error('Failed to store activity locally:', error);
     }
-    
-    localStorage.setItem(`vfide_activity_feed_${userAddress}`, JSON.stringify(activities));
-  } catch (error) {
-    console.error('Failed to add activity:', error);
   }
+
+  const titleMap: Record<ActivityItem['type'], string> = {
+    message: 'Message',
+    payment: 'Payment',
+    endorsement: 'Endorsement',
+    friend_added: 'Friend Added',
+    badge_earned: 'Badge Earned',
+    group_joined: 'Group Joined',
+  };
+
+  const reporter = typeof window !== 'undefined' && typeof window.fetch === 'function'
+    ? window.fetch.bind(window)
+    : null;
+  if (!reporter) return;
+
+  void reporter('/api/activities', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      userAddress,
+      activityType: activity.type,
+      title: titleMap[activity.type] ?? 'Activity',
+      description: activity.content,
+      data: activity.metadata ?? {},
+    }),
+  }).catch((error) => {
+    console.error('Failed to add activity:', error);
+  });
 }

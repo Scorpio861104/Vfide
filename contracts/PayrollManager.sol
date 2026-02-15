@@ -84,6 +84,7 @@ contract PayrollManager is ReentrancyGuard {
     }
     
     constructor(address _dao, address _seer) {
+        require(_dao != address(0), "PM: zero DAO");
         dao = _dao;
         if (_seer != address(0)) seer = ISeer_PM(_seer);
     }
@@ -108,6 +109,17 @@ contract PayrollManager is ReentrancyGuard {
     }
 
     /**
+     * @dev Safe transferFrom helper for non-standard ERC20 tokens (e.g. USDT)
+     * SC-18 Fix: Use low-level call to handle tokens that don't return bool
+     */
+    function _safeTransferFromPay(address token, address from, address to, uint256 amount) internal {
+        (bool success, bytes memory data) = token.call(
+            abi.encodeWithSelector(IERC20_Pay.transferFrom.selector, from, to, amount)
+        );
+        require(success && (data.length == 0 || abi.decode(data, (bool))), "PM: transferFrom failed");
+    }
+
+    /**
      * Create a new salary stream.
      * @param payee Employee address
      * @param token Payment token (e.g. USDC, VFIDE)
@@ -119,8 +131,8 @@ contract PayrollManager is ReentrancyGuard {
         if (rate == 0) revert PM_InvalidRate();
         if (initialDeposit == 0) revert PM_InvalidDeposit();
         
-        // Transfer tokens in
-        require(IERC20_Pay(token).transferFrom(msg.sender, address(this), initialDeposit), "transfer failed");
+        // SC-18 Fix: Use safe transferFrom for non-standard ERC20 compatibility
+        _safeTransferFromPay(token, msg.sender, address(this), initialDeposit);
 
         uint256 id = nextStreamId++;
         streams[id] = Stream({
@@ -158,7 +170,8 @@ contract PayrollManager is ReentrancyGuard {
         if (!s.active) revert PM_StreamInactive();
         if (msg.sender != s.payer) revert PM_NotPayer();
         
-        require(IERC20_Pay(s.token).transferFrom(msg.sender, address(this), amount), "transfer failed");
+        // SC-18 Fix: Use safe transferFrom for non-standard ERC20 compatibility
+        _safeTransferFromPay(s.token, msg.sender, address(this), amount);
         s.depositBalance += amount;
         
         emit TopUp(streamId, amount);
@@ -250,19 +263,39 @@ contract PayrollManager is ReentrancyGuard {
     
     /**
      * @notice Emergency withdraw by DAO (for contract migration or disputes)
+     * 12g Fix: Calculates and transfers accrued wages to payee first, then remainder to DAO
      */
-    function emergencyWithdraw(uint256 streamId, address to) external onlyDAO {
+    function emergencyWithdraw(uint256 streamId, address to) external onlyDAO nonReentrant {
         Stream storage s = streams[streamId];
         require(s.active, "PM: stream inactive");
         require(to != address(0), "PM: zero address");
-        
+
+        // 12g Fix: Pay accrued wages to the employee first
+        uint256 due = claimable(streamId);
         uint256 balance = s.depositBalance;
+
+        if (due > balance) {
+            due = balance;
+        }
+
+        // Transfer accrued wages to payee
+        if (due > 0) {
+            s.depositBalance -= due;
+            _safeTransferPay(s.token, s.payee, due);
+            emit Withdraw(streamId, s.payee, due);
+        }
+
+        // Transfer remainder to DAO-controlled address
+        uint256 remainder = s.depositBalance;
         s.depositBalance = 0;
         s.active = false;
-        
-        _safeTransferPay(s.token, to, balance);
-        
-        emit EmergencyWithdraw(streamId, to, balance);
+        s.pausedAccrued = 0;
+
+        if (remainder > 0) {
+            _safeTransferPay(s.token, to, remainder);
+        }
+
+        emit EmergencyWithdraw(streamId, to, remainder);
     }
 
     /**

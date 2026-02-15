@@ -78,6 +78,23 @@ export function useGasPrice() {
     }));
   }, [chainId]);
 
+  // Trigger alert notification
+  const triggerAlert = useCallback((price: GasPrice) => {
+    // Check for notification permission
+    if ('Notification' in window && Notification.permission === 'granted') {
+      new Notification('⛽ Low Gas Alert!', {
+        body: `Gas price is now ${price.standard.toFixed(2)} Gwei - good time to transact!`,
+        icon: '/icons/gas-icon.png',
+        tag: 'gas-alert',
+      });
+    }
+
+    // Dispatch custom event for in-app notification
+    window.dispatchEvent(new CustomEvent('gas-alert', { detail: price }));
+    
+    setAlert(prev => ({ ...prev, notified: true }));
+  }, []);
+
   // Fetch gas price from RPC
   const fetchGasPrice = useCallback(async () => {
     try {
@@ -129,24 +146,7 @@ export function useGasPrice() {
     } finally {
       setIsLoading(false);
     }
-  }, [alert.enabled, alert.threshold]);
-
-  // Trigger alert notification
-  const triggerAlert = useCallback((price: GasPrice) => {
-    // Check for notification permission
-    if ('Notification' in window && Notification.permission === 'granted') {
-      new Notification('⛽ Low Gas Alert!', {
-        body: `Gas price is now ${price.standard.toFixed(2)} Gwei - good time to transact!`,
-        icon: '/icons/gas-icon.png',
-        tag: 'gas-alert',
-      });
-    }
-
-    // Dispatch custom event for in-app notification
-    window.dispatchEvent(new CustomEvent('gas-alert', { detail: price }));
-    
-    setAlert(prev => ({ ...prev, notified: true }));
-  }, []);
+  }, [alert.enabled, alert.threshold, triggerAlert]);
 
   // Enable/disable alerts
   const setAlertEnabled = useCallback((enabled: boolean) => {

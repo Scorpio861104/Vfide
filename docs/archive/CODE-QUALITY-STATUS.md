@@ -169,7 +169,7 @@
 
 ### TypeScript `any` Usage
 ✅ **Status:** Clean  
-- Only found in test files (mocks)
+- Only found in test files (test doubles)
 - All new code fully typed
 - No implicit `any` types
 

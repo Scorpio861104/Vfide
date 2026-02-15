@@ -104,7 +104,7 @@ export interface Notification {
   priority: NotificationPriority;
   
   // Metadata
-  metadata: Record<string, any>;
+  metadata: Record<string, unknown>;
   actionUrl?: string;
   actionLabel?: string;
   relatedId?: string; // Transaction hash, proposal ID, etc.
@@ -150,7 +150,7 @@ export interface NotificationFilter {
 export interface NotificationSchedule {
   id: string;
   eventType: string; // 'proposal_voting', 'payment_due', etc.
-  triggerCondition: Record<string, any>;
+  triggerCondition: Record<string, unknown>;
   notificationType: NotificationType;
   title: string;
   message: string;

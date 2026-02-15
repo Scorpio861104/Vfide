@@ -13,15 +13,17 @@ import {
   CheckCheck,
   Check,
 } from 'lucide-react';
+import { secureId } from '@/lib/secureRandom';
 import { useAccount, useSignMessage } from 'wagmi';
 import { Friend, Message } from '@/types/messaging';
-import { 
-  encryptMessage, 
-  decryptMessage, 
-  formatAddress, 
+import {
+  encryptMessage,
+  decryptMessage,
+  formatAddress,
   getConversationId,
-  STORAGE_KEYS 
+  STORAGE_KEYS,
 } from '@/lib/messageEncryption';
+import { verifyMessage } from 'viem';
 import { TransactionButtons } from './TransactionButtons';
 import { EndorsementsBadges as _EndorsementsBadges } from './EndorsementsBadges';
 import { MutualFriends } from './MutualFriends';
@@ -80,8 +82,12 @@ export function MessagingCenter({ friend, hasVault = false }: MessagingCenterPro
                 throw new Error('Operation aborted');
               }
               
-              // Simple verification function (in production, use proper signature verification)
-              const verify = async (_message: string, _signature: string) => true;
+              const verify = async (message: string, signature: string) =>
+                verifyMessage({
+                  message,
+                  signature: signature as `0x${string}`,
+                  address: msg.from as `0x${string}`,
+                });
               
               const { message: decrypted, verified } = await decryptMessage(
                 msg.encryptedContent,
@@ -146,7 +152,7 @@ export function MessagingCenter({ friend, hasVault = false }: MessagingCenterPro
     if (!inputMessage.trim() || !address || !signMessageAsync) return;
     
     const messageContent = inputMessage;
-    const tempId = `msg_${Date.now()}_${Math.random().toString(36)}`;
+    const tempId = secureId('msg');
     
     // Optimistic update: Add message immediately with pending state
     const optimisticMessage: Message = {
@@ -193,8 +199,25 @@ export function MessagingCenter({ friend, hasVault = false }: MessagingCenterPro
       // Announce message sent
       announce('Message sent', 'polite');
       
-      // In production, send to backend/IPFS/blockchain here
-      // await sendToBackend(newMessage);
+      // Persist to backend
+      const response = await apiClient.sendMessage({
+        conversationId,
+        from: address,
+        to: friend.address,
+        encryptedContent,
+      });
+
+      if (response?.message?.id) {
+        setMessages((prev) => prev.map((msg) =>
+          msg.id === tempId
+            ? {
+                ...msg,
+                id: response.message.id,
+                timestamp: response.message.timestamp,
+              }
+            : msg
+        ));
+      }
       
     } catch (_error) {
       // Rollback optimistic update on error
@@ -246,8 +269,7 @@ export function MessagingCenter({ friend, hasVault = false }: MessagingCenterPro
       // Announce edit
       announce('Message edited', 'polite');
 
-      // Update backend (in production)
-      await apiClient.editMessage(messageId, conversationId, encryptedContent);
+      await apiClient.editMessage(messageId, encryptedContent);
 
       // Update localStorage
       const updatedMessages = messages.map(msg => 
@@ -275,8 +297,7 @@ export function MessagingCenter({ friend, hasVault = false }: MessagingCenterPro
       // Announce deletion
       announce('Message deleted', 'polite');
 
-      // Update backend (in production)
-      await apiClient.deleteMessage(messageId, conversationId);
+      await apiClient.deleteMessage(messageId);
 
       // Update localStorage
       const updatedMessages = messages.map(msg => 
@@ -302,9 +323,20 @@ export function MessagingCenter({ friend, hasVault = false }: MessagingCenterPro
   };
 
   // Handle report message
-  const handleReportMessage = (_messageId: string) => {
-    // In production: send report to backend
-    // Message report submitted
+  const handleReportMessage = async (messageId: string) => {
+    try {
+      await fetch('/api/messages/report', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          messageId,
+          reason: 'user_report',
+        }),
+      });
+    } catch (error) {
+      console.error('Failed to report message:', error);
+    }
+
     alert('Message reported. Thank you for helping keep the community safe.');
   };
 

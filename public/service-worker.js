@@ -9,6 +9,74 @@
 
 const CACHE_NAME = 'vfide-v1';
 const RUNTIME_CACHE = 'vfide-runtime';
+const CSRF_HEADER_NAME = 'x-csrf-token';
+
+let cachedCsrfToken = null;
+let csrfTokenPromise = null;
+
+const isWriteMethod = (method) => {
+  return method !== 'GET' && method !== 'HEAD' && method !== 'OPTIONS';
+};
+
+const isSameOrigin = (url) => {
+  if (url.startsWith('/')) return true;
+  try {
+    const parsed = new URL(url, self.location.origin);
+    return parsed.origin === self.location.origin;
+  } catch {
+    return false;
+  }
+};
+
+const getCsrfToken = async () => {
+  if (cachedCsrfToken) return cachedCsrfToken;
+  if (!csrfTokenPromise) {
+    csrfTokenPromise = fetch('/api/csrf', { credentials: 'include' })
+      .then(async (response) => {
+        if (!response.ok) return '';
+        const data = await response.json();
+        return typeof data?.token === 'string' ? data.token : '';
+      })
+      .then((token) => {
+        cachedCsrfToken = token || null;
+        csrfTokenPromise = null;
+        return token;
+      })
+      .catch(() => {
+        csrfTokenPromise = null;
+        return '';
+      });
+  }
+  return csrfTokenPromise;
+};
+
+const fetchWithCsrf = async (input, init) => {
+  const method = init?.method || (input instanceof Request ? input.method : 'GET');
+  const url = typeof input === 'string' ? input : input.url;
+
+  if (isWriteMethod(method) && isSameOrigin(url)) {
+    const token = await getCsrfToken();
+    const headers = new Headers(init?.headers || (input instanceof Request ? input.headers : undefined));
+
+    if (token && !headers.has(CSRF_HEADER_NAME)) {
+      headers.set(CSRF_HEADER_NAME, token);
+    }
+
+    const nextInit = {
+      ...init,
+      headers,
+      credentials: init?.credentials || 'include',
+    };
+
+    if (input instanceof Request) {
+      return fetch(new Request(input, nextInit));
+    }
+
+    return fetch(input, nextInit);
+  }
+
+  return fetch(input, init);
+};
 
 // Files to cache on install
 const STATIC_ASSETS = [
@@ -66,6 +134,11 @@ self.addEventListener('fetch', (event) => {
 
   // Skip chrome-extension requests
   if (event.request.url.startsWith('chrome-extension')) {
+    return;
+  }
+
+  // Never cache API responses — they contain dynamic/authenticated data
+  if (new URL(event.request.url).pathname.startsWith('/api/')) {
     return;
   }
 
@@ -186,7 +259,7 @@ self.addEventListener('notificationclose', (event) => {
   const notificationData = event.notification.data;
   if (notificationData?.trackDismissal) {
     // Send analytics event
-    fetch('/api/analytics/track', {
+    fetchWithCsrf('/api/analytics/track', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -219,7 +292,7 @@ async function syncMessages() {
 
     for (const request of requests) {
       try {
-        await fetch(request);
+        await fetchWithCsrf(request);
         await cache.delete(request);
       } catch (error) {
         console.error('Failed to sync message:', error);

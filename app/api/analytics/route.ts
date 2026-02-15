@@ -122,6 +122,14 @@ export async function POST(request: NextRequest) {
     const metrics = Array.isArray(body.metrics) ? body.metrics : null;
 
     if (metrics && metrics.length > 0) {
+      // API-24 Fix: Limit batch size to prevent abuse
+      if (metrics.length > 50) {
+        return NextResponse.json(
+          { error: 'Batch size cannot exceed 50 events' },
+          { status: 400 }
+        );
+      }
+
       const values: Array<string | number | boolean | Date | null | undefined | unknown[]> = [];
       const placeholders = (metrics as Array<{
         event?: string;
@@ -130,15 +138,27 @@ export async function POST(request: NextRequest) {
         sessionId?: string;
         timestamp?: number;
       }>).map((metric, index) => {
+        // API-23 Fix: Validate event type in batch path
+        const eventType = String(metric.event || 'performance');
+        if (!VALID_EVENT_TYPES.includes(eventType)) {
+          throw new Error(`Invalid event type: ${eventType}`);
+        }
+
+        // API-24 Fix: Limit event_data size
+        const eventData = JSON.stringify({
+          ...(metric.properties || {}),
+          value: metric.value,
+          sessionId: metric.sessionId,
+        });
+        if (eventData.length > 5000) {
+          throw new Error('Event data too large');
+        }
+
         const baseIndex = index * 4;
         values.push(
           authResult.user.address,
-          String(metric.event || 'performance'),
-          JSON.stringify({
-            ...(metric.properties || {}),
-            value: metric.value,
-            sessionId: metric.sessionId,
-          }),
+          eventType,
+          eventData,
           new Date(metric.timestamp || Date.now()).toISOString()
         );
         return `($${baseIndex + 1}, $${baseIndex + 2}, $${baseIndex + 3}, $${baseIndex + 4})`;

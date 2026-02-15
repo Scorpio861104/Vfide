@@ -148,7 +148,7 @@ export function MessageListSkeleton({ count = 5 }: { count?: number }) {
             <div className="max-w-[70%] space-y-2">
               <Skeleton 
                 height={60} 
-                width={Math.random() * 150 + 150}
+                width={150 + (i * 37) % 150}
                 rounded="lg"
               />
               <Skeleton height={12} width={100} />

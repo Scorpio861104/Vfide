@@ -6,7 +6,7 @@
 import hre from 'hardhat';
 import { Contract } from 'ethers';
 
-const ethers = (hre as any).ethers;
+const ethers = (hre as unknown as { ethers: typeof import('ethers') }).ethers;
 
 interface DeploymentConfig {
   network: string;
@@ -312,18 +312,18 @@ async function printDeploymentSummary(contracts: DeployedContracts): Promise<voi
 async function verifyContracts(contracts: DeployedContracts, config: DeploymentConfig): Promise<void> {
   console.log('\n🔍 Verifying contracts on Etherscan...\n');
 
-  const verifyContract = async (address: string, constructorArguments: any[]) => {
+  const verifyContract = async (address: string, constructorArguments: unknown[]) => {
     try {
-      await (hre as any).run('verify:verify', {
+      await (hre as unknown as { run: (task: string, args: Record<string, unknown>) => Promise<void> }).run('verify:verify', {
         address,
         constructorArguments,
       });
       console.log(`   ✓ Verified: ${address}`);
-    } catch (error: any) {
-      if (error.message.includes('already verified')) {
+    } catch (error: unknown) {
+      if (error instanceof Error && error.message.includes('already verified')) {
         console.log(`   ℹ Already verified: ${address}`);
       } else {
-        console.error(`   ✗ Failed to verify ${address}:`, error.message);
+        console.error(`   ✗ Failed to verify ${address}:`, error instanceof Error ? error.message : String(error));
       }
     }
   };

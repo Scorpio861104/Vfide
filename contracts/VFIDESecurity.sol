@@ -492,6 +492,7 @@ contract SecurityHub {
     }
 
     function setModules(address _guardianLock, address _panicGuard, address _breaker, address _ledger) external onlyDAO {
+        require(_guardianLock != address(0) && _panicGuard != address(0) && _breaker != address(0), "SEC: zero module");
         guardianLock = GuardianLock(_guardianLock);
         panicGuard   = PanicGuard(_panicGuard);
         breaker      = EmergencyBreaker(_breaker);

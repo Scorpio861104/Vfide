@@ -129,7 +129,7 @@ contract CircuitBreaker is VFIDEAccessControl {
      * @notice Record transaction volume and check threshold
      * @param _volume Transaction volume to record
      */
-    function recordVolume(uint256 _volume) external notTriggered {
+    function recordVolume(uint256 _volume) external onlyRole(CONFIG_MANAGER_ROLE) notTriggered {
         if (!config.enabled) return;
 
         // Reset daily volume after 24h

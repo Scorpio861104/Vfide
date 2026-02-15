@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   UserPlus,
@@ -28,7 +28,7 @@ interface FriendsListProps {
 
 export function FriendsList({ onSelectFriend, selectedFriend }: FriendsListProps) {
   const { address } = useAccount();
-  const [friends, setFriends] = useState<Friend[]>([]);
+  const [friendsByAddress, setFriendsByAddress] = useState<Record<string, Friend[]>>({});
   const [searchQuery, setSearchQuery] = useState('');
   const [showAddFriend, setShowAddFriend] = useState(false);
   const [newFriendAddress, setNewFriendAddress] = useState('');
@@ -37,33 +37,37 @@ export function FriendsList({ onSelectFriend, selectedFriend }: FriendsListProps
   const [justAdded, setJustAdded] = useState<string | null>(null);
   const { playSuccess, playNotification, playError } = useTransactionSounds();
   
+  const friends = useMemo(() => {
+    if (!address) return [];
+    const inMemory = friendsByAddress[address];
+    if (inMemory) return inMemory;
+    if (typeof window === 'undefined') return [];
+
+    const stored = localStorage.getItem(`${STORAGE_KEYS.FRIENDS}_${address}`);
+    if (!stored) return [];
+
+    try {
+      return JSON.parse(stored) as Friend[];
+    } catch (e) {
+      console.error('Failed to load friends:', e);
+      return [];
+    }
+  }, [address, friendsByAddress]);
+
+  const setFriends = (nextFriends: Friend[]) => {
+    if (!address) return;
+    setFriendsByAddress((prev) => ({ ...prev, [address]: nextFriends }));
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(`${STORAGE_KEYS.FRIENDS}_${address}`, JSON.stringify(nextFriends));
+    }
+  };
+
   // Get presence for all friends
   const friendAddresses = friends.map(f => f.address);
   const presenceMap = useBulkPresence(friendAddresses);
   
   // Count online friends
   const onlineCount = friends.filter(f => presenceMap.get(f.address)?.status === 'online').length;
-
-  // Load friends from localStorage
-  useEffect(() => {
-    if (!address) return;
-    
-    const stored = localStorage.getItem(`${STORAGE_KEYS.FRIENDS}_${address}`);
-    if (stored) {
-      try {
-        setFriends(JSON.parse(stored));
-      } catch (e) {
-        console.error('Failed to load friends:', e);
-      }
-    }
-  }, [address]);
-
-  // Save friends to localStorage
-  useEffect(() => {
-    if (!address || friends.length === 0) return;
-    
-    localStorage.setItem(`${STORAGE_KEYS.FRIENDS}_${address}`, JSON.stringify(friends));
-  }, [address, friends]);
 
   const handleAddFriend = () => {
     if (!newFriendAddress || !address) return;

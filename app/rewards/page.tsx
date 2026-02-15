@@ -1,6 +1,6 @@
 'use client'
 
-// Rewards Management System (Howey-compliant - no staking)
+// Rewards Management System (no staking)
 import { Footer } from '@/components/layout/Footer'
 import { safeParseFloat } from '@/lib/validation'
 import { DutyDistributorABI, PromotionalTreasuryABI } from '@/lib/abis'
@@ -20,12 +20,12 @@ import {
     Vote,
     Zap
 } from 'lucide-react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { formatUnits } from 'viem'
 import { useAccount, useReadContract, useWaitForTransactionReceipt, useWriteContract } from 'wagmi'
 
-// Contract addresses from environment (these contracts not deployed to testnet yet)
-// LIQUIDITY_INCENTIVES_ADDRESS removed for Howey compliance
+// Contract addresses from environment
+// LIQUIDITY_INCENTIVES_ADDRESS removed for compliance
 const DUTY_DISTRIBUTOR_ADDRESS = (process.env.NEXT_PUBLIC_DUTY_DISTRIBUTOR_ADDRESS || '0x0000000000000000000000000000000000000000') as `0x${string}`;
 const PROMOTIONAL_TREASURY_ADDRESS = (process.env.NEXT_PUBLIC_PROMOTIONAL_TREASURY_ADDRESS || '0x0000000000000000000000000000000000000000') as `0x${string}`;
 
@@ -39,6 +39,20 @@ export default function RewardsPage() {
   const { address, isConnected } = useAccount()
   const [activeTab, setActiveTab] = useState<TabId>('overview')
   const [claimingId, _setClaimingId] = useState<string | null>(null)
+
+  const tabs = [
+    { id: 'overview' as const, label: 'Overview', color: 'amber', icon: Sparkles },
+    { id: 'duty' as const, label: 'Duty Rewards', color: 'cyan', icon: Coins },
+    { id: 'promotional' as const, label: 'Promotional', color: 'emerald', icon: Trophy },
+    { id: 'referral' as const, label: 'Referral', color: 'purple', icon: Users },
+  ]
+
+  const colorMap: Record<string, string> = {
+    amber: 'border-amber-400/40 text-amber-300',
+    cyan: 'border-cyan-400/40 text-cyan-300',
+    emerald: 'border-emerald-400/40 text-emerald-300',
+    purple: 'border-purple-400/40 text-purple-300',
+  }
 
   // Contract write hooks
   const { writeContract, data: hash, isPending: _isPending } = useWriteContract();
@@ -91,7 +105,110 @@ export default function RewardsPage() {
     query: { enabled: IS_PROMO_DEPLOYED },
   });
 
-  // LP pools read removed for Howey compliance
+  const { data: _promoComplianceMode } = useReadContract({
+    address: PROMOTIONAL_TREASURY_ADDRESS,
+    abi: PromotionalTreasuryABI,
+    functionName: 'complianceMode',
+    query: { enabled: IS_PROMO_DEPLOYED },
+  });
+
+  const { data: _completedProfile } = useReadContract({
+    address: PROMOTIONAL_TREASURY_ADDRESS,
+    abi: PromotionalTreasuryABI,
+    functionName: 'completedProfile',
+    args: address ? [address] : undefined,
+    query: { enabled: IS_PROMO_DEPLOYED && !!address },
+  });
+
+  const { data: _completedProofScoreTutorial } = useReadContract({
+    address: PROMOTIONAL_TREASURY_ADDRESS,
+    abi: PromotionalTreasuryABI,
+    functionName: 'completedProofScoreTutorial',
+    args: address ? [address] : undefined,
+    query: { enabled: IS_PROMO_DEPLOYED && !!address },
+  });
+
+  const { data: _completedPaymentTutorial } = useReadContract({
+    address: PROMOTIONAL_TREASURY_ADDRESS,
+    abi: PromotionalTreasuryABI,
+    functionName: 'completedPaymentTutorial',
+    args: address ? [address] : undefined,
+    query: { enabled: IS_PROMO_DEPLOYED && !!address },
+  });
+
+  const { data: _createdVault } = useReadContract({
+    address: PROMOTIONAL_TREASURY_ADDRESS,
+    abi: PromotionalTreasuryABI,
+    functionName: 'createdVault',
+    args: address ? [address] : undefined,
+    query: { enabled: IS_PROMO_DEPLOYED && !!address },
+  });
+
+  const { data: _madeFirstTransaction } = useReadContract({
+    address: PROMOTIONAL_TREASURY_ADDRESS,
+    abi: PromotionalTreasuryABI,
+    functionName: 'madeFirstTransaction',
+    args: address ? [address] : undefined,
+    query: { enabled: IS_PROMO_DEPLOYED && !!address },
+  });
+
+  const { data: _madeFirstMerchantPayment } = useReadContract({
+    address: PROMOTIONAL_TREASURY_ADDRESS,
+    abi: PromotionalTreasuryABI,
+    functionName: 'madeFirstMerchantPayment',
+    args: address ? [address] : undefined,
+    query: { enabled: IS_PROMO_DEPLOYED && !!address },
+  });
+
+  const { data: _gaveFirstEndorsement } = useReadContract({
+    address: PROMOTIONAL_TREASURY_ADDRESS,
+    abi: PromotionalTreasuryABI,
+    functionName: 'gaveFirstEndorsement',
+    args: address ? [address] : undefined,
+    query: { enabled: IS_PROMO_DEPLOYED && !!address },
+  });
+
+  const { data: _receivedFirstEndorsement } = useReadContract({
+    address: PROMOTIONAL_TREASURY_ADDRESS,
+    abi: PromotionalTreasuryABI,
+    functionName: 'receivedFirstEndorsement',
+    args: address ? [address] : undefined,
+    query: { enabled: IS_PROMO_DEPLOYED && !!address },
+  });
+
+  const { data: _claimedThreeMerchants } = useReadContract({
+    address: PROMOTIONAL_TREASURY_ADDRESS,
+    abi: PromotionalTreasuryABI,
+    functionName: 'claimedThreeMerchants',
+    args: address ? [address] : undefined,
+    query: { enabled: IS_PROMO_DEPLOYED && !!address },
+  });
+
+  const { data: _claimedTenMerchants } = useReadContract({
+    address: PROMOTIONAL_TREASURY_ADDRESS,
+    abi: PromotionalTreasuryABI,
+    functionName: 'claimedTenMerchants',
+    args: address ? [address] : undefined,
+    query: { enabled: IS_PROMO_DEPLOYED && !!address },
+  });
+
+  const { data: _isPioneer } = useReadContract({
+    address: PROMOTIONAL_TREASURY_ADDRESS,
+    abi: PromotionalTreasuryABI,
+    functionName: 'isPioneer',
+    args: address ? [address] : undefined,
+    query: { enabled: IS_PROMO_DEPLOYED && !!address },
+  });
+
+  const { data: _referralCount } = useReadContract({
+    address: PROMOTIONAL_TREASURY_ADDRESS,
+    abi: PromotionalTreasuryABI,
+    functionName: 'referralCount',
+    args: address ? [address] : undefined,
+    query: { enabled: IS_PROMO_DEPLOYED && !!address },
+  });
+
+  // LP pools read removed for compliance
 
   // Calculate totals from contract data with safe conversions
   // Type assertions needed because JSON ABIs don't provide strict return types
@@ -105,10 +222,46 @@ export default function RewardsPage() {
 
   // userPromoStats returns a tuple: [educationClaimed, referralClaimed, milestoneClaimed, merchantClaimed, totalClaimed]
   const userPromoStatsTuple = userPromoStats as readonly [bigint, bigint, bigint, bigint, bigint] | undefined;
-  const promoTotalClaimed = userPromoStatsTuple ? safeParseFloat(formatUnits(userPromoStatsTuple[4], 18), 0) : 0;
+  const referralClaimed = userPromoStatsTuple ? safeParseFloat(formatUnits(userPromoStatsTuple[1], 18), 0) : 0;
 
-  const totalClaimable = dutyClaimable; // Add other claimable amounts
-  const totalEarned = promoTotalClaimed + (dutyClaimedBigInt ? safeParseFloat(formatUnits(dutyClaimedBigInt, 18), 0) : 0);
+  const remainingBudgets = _remainingBudgets as readonly [bigint, bigint, bigint, bigint, bigint, bigint] | undefined;
+  const promoRemainingTotal = remainingBudgets ? safeParseFloat(formatUnits(remainingBudgets[5], 18), 0) : 0;
+  const promoActive = typeof _isPromoActive === 'boolean' ? _isPromoActive : false;
+  const promoComplianceMode = typeof _promoComplianceMode === 'boolean' ? _promoComplianceMode : true;
+
+  const promoFlags = {
+    completedProfile: _completedProfile === true,
+    completedProofScoreTutorial: _completedProofScoreTutorial === true,
+    completedPaymentTutorial: _completedPaymentTutorial === true,
+    createdVault: _createdVault === true,
+    madeFirstTransaction: _madeFirstTransaction === true,
+    madeFirstMerchantPayment: _madeFirstMerchantPayment === true,
+    gaveFirstEndorsement: _gaveFirstEndorsement === true,
+    receivedFirstEndorsement: _receivedFirstEndorsement === true,
+    claimedThreeMerchants: _claimedThreeMerchants === true,
+    claimedTenMerchants: _claimedTenMerchants === true,
+    isPioneer: _isPioneer === true,
+  };
+
+  const referralCount = typeof _referralCount === 'bigint' ? Number(_referralCount) : 0;
+  const referralCode = address ? `VFIDE-${address.slice(2, 6).toUpperCase()}${address.slice(-4).toUpperCase()}` : 'VFIDE-REF';
+
+  const promoClaimable = promoActive && !promoComplianceMode
+    ? [
+        !promoFlags.completedProfile ? 10 : 0,
+        !promoFlags.completedProofScoreTutorial ? 10 : 0,
+        !promoFlags.completedPaymentTutorial ? 10 : 0,
+        !promoFlags.createdVault ? 50 : 0,
+        !promoFlags.madeFirstTransaction ? 25 : 0,
+        !promoFlags.madeFirstMerchantPayment ? 25 : 0,
+        !promoFlags.gaveFirstEndorsement ? 15 : 0,
+        !promoFlags.receivedFirstEndorsement ? 15 : 0,
+        !promoFlags.claimedThreeMerchants ? 50 : 0,
+        !promoFlags.claimedTenMerchants ? 100 : 0,
+      ].reduce((sum, val) => sum + val, 0)
+    : 0;
+
+  const totalClaimable = dutyClaimable + promoClaimable;
 
   // Claim handlers
   const handleClaimDuty = () => {
@@ -137,7 +290,7 @@ export default function RewardsPage() {
     });
   };
 
-  // Liquidity staking handlers removed for Howey compliance
+  // Liquidity staking handlers removed for compliance
 
   // Generic claim handler for different reward types
   const handleClaim = (id: string) => {
@@ -145,6 +298,36 @@ export default function RewardsPage() {
       case 'duty':
       case 'all':
         handleClaimDuty();
+        break;
+      case 'education:complete_profile':
+        _handleClaimEducation('complete_profile');
+        break;
+      case 'education:proof_score_tutorial':
+        _handleClaimEducation('proof_score_tutorial');
+        break;
+      case 'education:payment_tutorial':
+        _handleClaimEducation('payment_tutorial');
+        break;
+      case 'milestone:first_transaction':
+        _handleClaimMilestone('first_transaction');
+        break;
+      case 'milestone:first_merchant_payment':
+        _handleClaimMilestone('first_merchant_payment');
+        break;
+      case 'milestone:first_endorsement_given':
+        _handleClaimMilestone('first_endorsement_given');
+        break;
+      case 'milestone:first_endorsement_received':
+        _handleClaimMilestone('first_endorsement_received');
+        break;
+      case 'milestone:vault_created':
+        _handleClaimMilestone('vault_created');
+        break;
+      case 'milestone:three_merchants':
+        _handleClaimMilestone('three_merchants');
+        break;
+      case 'milestone:ten_merchants':
+        _handleClaimMilestone('ten_merchants');
         break;
       // Add other reward types as needed
     }
@@ -186,84 +369,68 @@ export default function RewardsPage() {
                         Rewards Center
                       </span>
                     </h1>
-                    <p className="text-xl text-gray-400">
-                      Earn rewards for active participation in the VFIDE ecosystem
-                    </p>
+                    <p className="text-zinc-400 mt-2">Claim duty, promotional, and referral rewards with full on-chain verification.</p>
                   </div>
                 </div>
-              </div>
-              
-              {isConnected && (
-                <div className="flex gap-4">
-                  <motion.div 
-                    whileHover={{ scale: 1.02 }}
-                    className="bg-linear-to-br from-emerald-500/10 to-green-500/5 backdrop-blur-xl border border-emerald-500/20 rounded-2xl p-4 flex-1 min-w-0"
-                  >
-                    <div className="text-gray-400 text-sm mb-1 flex items-center gap-1">
-                      <Sparkles className="w-3 h-3 text-emerald-400" />
-                      Total Claimable
-                    </div>
-                    <div className="text-2xl font-bold text-emerald-400">{totalClaimable.toLocaleString()} VFIDE</div>
-                  </motion.div>
-                  <motion.div 
-                    whileHover={{ scale: 1.02 }}
-                    className="bg-linear-to-br from-amber-500/10 to-orange-500/5 backdrop-blur-xl border border-amber-500/20 rounded-2xl p-4 flex-1 min-w-0"
-                  >
-                    <div className="text-gray-400 text-sm mb-1 flex items-center gap-1">
-                      <Trophy className="w-3 h-3 text-amber-400" />
-                      Total Earned
-                    </div>
-                    <div className="text-2xl font-bold text-amber-400">{totalEarned.toLocaleString()} VFIDE</div>
-                  </motion.div>
+                <div className="flex flex-wrap gap-2 mt-6">
+                  {tabs.map((tab) => {
+                    const isActive = activeTab === tab.id
+                    return (
+                      <motion.button
+                        key={tab.id}
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={() => setActiveTab(tab.id)}
+                        className={`flex items-center gap-2 px-4 py-3 rounded-xl font-semibold transition-all whitespace-nowrap border ${
+                          isActive ? colorMap[tab.color] : `bg-white/5 text-gray-400 ${colorMap[tab.color]}`
+                        }`}
+                      >
+                        <tab.icon className="w-4 h-4" />
+                        <span className="hidden sm:inline">{tab.label}</span>
+                      </motion.button>
+                    )
+                  })}
                 </div>
-              )}
+              </div>
             </div>
           </div>
         </motion.section>
 
-        {/* Tab Navigation */}
-        <section className="border-b border-white/5 backdrop-blur-sm bg-black/20 sticky top-16 z-40">
-          <div className="container mx-auto px-3 sm:px-4">
-            <div className="flex gap-1 overflow-x-auto py-2 scrollbar-hide">
-              {[
-                { id: 'overview' as const, label: 'Overview', icon: Gift, color: 'amber' },
-                { id: 'duty' as const, label: 'Duty Rewards', icon: Vote, color: 'purple' },
-                { id: 'promotional' as const, label: 'Promotional', icon: Trophy, color: 'emerald' },
-                { id: 'referral' as const, label: 'Referrals', icon: Users, color: 'pink' },
-              ].map(tab => {
-                const isActive = activeTab === tab.id;
-                const colorMap: Record<string, string> = {
-                  amber: isActive ? 'bg-linear-to-r from-amber-500 to-orange-500 text-white shadow-lg shadow-amber-500/25' : 'hover:bg-amber-500/10 hover:text-amber-400',
-                  purple: isActive ? 'bg-linear-to-r from-purple-500 to-violet-500 text-white shadow-lg shadow-purple-500/25' : 'hover:bg-purple-500/10 hover:text-purple-400',
-                  emerald: isActive ? 'bg-linear-to-r from-emerald-500 to-green-500 text-white shadow-lg shadow-emerald-500/25' : 'hover:bg-emerald-500/10 hover:text-emerald-400',
-                  cyan: isActive ? 'bg-linear-to-r from-cyan-500 to-blue-500 text-white shadow-lg shadow-cyan-500/25' : 'hover:bg-cyan-500/10 hover:text-cyan-400',
-                  pink: isActive ? 'bg-linear-to-r from-pink-500 to-rose-500 text-white shadow-lg shadow-pink-500/25' : 'hover:bg-pink-500/10 hover:text-pink-400',
-                };
-                return (
-                  <motion.button
-                    key={tab.id}
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={() => setActiveTab(tab.id)}
-                    className={`flex items-center gap-2 px-4 py-3 rounded-xl font-semibold transition-all whitespace-nowrap ${
-                      isActive ? colorMap[tab.color] : `bg-white/5 text-gray-400 ${colorMap[tab.color]}`
-                    }`}
-                  >
-                    <tab.icon className="w-4 h-4" />
-                    <span className="hidden sm:inline">{tab.label}</span>
-                  </motion.button>
-                );
-              })}
-            </div>
-          </div>
-        </section>
-
         {/* Content */}
         <div className="container mx-auto px-4 py-8">
-          {activeTab === 'overview' && <OverviewTab isConnected={isConnected} totalClaimable={totalClaimable} dutyClaimable={dutyClaimable} onClaim={handleClaim} claimingId={claimingId} />}
+          {activeTab === 'overview' && (
+            <OverviewTab
+              isConnected={isConnected}
+              totalClaimable={totalClaimable}
+              dutyClaimable={dutyClaimable}
+              promoClaimable={promoClaimable}
+              onClaim={handleClaim}
+              claimingId={claimingId}
+            />
+          )}
           {activeTab === 'duty' && <DutyRewardsTab isConnected={isConnected} dutyClaimable={dutyClaimable} onClaim={handleClaim} claimingId={claimingId} />}
-          {activeTab === 'promotional' && <PromotionalTab isConnected={isConnected} onClaim={handleClaim} claimingId={claimingId} />}
-          {activeTab === 'referral' && <ReferralTab isConnected={isConnected} onClaim={handleClaim} claimingId={claimingId} />}
+          {activeTab === 'promotional' && (
+            <PromotionalTab
+              isConnected={isConnected}
+              onClaim={handleClaim}
+              claimingId={claimingId}
+              promoRemainingTotal={promoRemainingTotal}
+              promoActive={promoActive}
+              promoComplianceMode={promoComplianceMode}
+              promoFlags={promoFlags}
+            />
+          )}
+          {activeTab === 'referral' && (
+            <ReferralTab
+              isConnected={isConnected}
+              onClaim={handleClaim}
+              claimingId={claimingId}
+              referralCount={referralCount}
+              promoComplianceMode={promoComplianceMode}
+              referralCode={referralCode}
+              referralClaimed={referralClaimed}
+            />
+          )}
         </div>
       </main>
 
@@ -272,17 +439,18 @@ export default function RewardsPage() {
   )
 }
 
-function OverviewTab({ isConnected, totalClaimable, dutyClaimable, onClaim, claimingId }: { 
+function OverviewTab({ isConnected, totalClaimable, dutyClaimable, promoClaimable, onClaim, claimingId }: { 
   isConnected: boolean; 
   totalClaimable: number;
   dutyClaimable: number;
+  promoClaimable: number;
   onClaim: (id: string) => void;
   claimingId: string | null;
 }) {
   // Dynamic reward sources - values come from contract reads in parent
   const rewardSources = [
     { id: 'duty', name: 'Governance Voting', amount: dutyClaimable, icon: Vote, color: '#00F0FF', description: 'Rewards for participating in DAO votes' },
-    { id: 'promo', name: 'Promotional Rewards', amount: 0, icon: Trophy, color: '#FFD700', description: 'Education, milestones, and pioneer badges' },
+    { id: 'promo', name: 'Promotional Rewards', amount: promoClaimable, icon: Trophy, color: '#FFD700', description: 'Education and milestone rewards' },
     { id: 'referral', name: 'Referral Bonus', amount: 0, icon: Users, color: '#A78BFA', description: 'Rewards for inviting new users' },
   ]
 
@@ -406,14 +574,13 @@ function DutyRewardsTab({ isConnected, dutyClaimable, onClaim, claimingId }: {
   const [votingHistory, setVotingHistory] = useState<Array<{id: number; proposal: string; date: string; points: number; claimed: boolean}>>([]);
   
   // Fetch on mount
-  useState(() => {
-    if (address) {
-      fetch(`/api/governance/votes/${address}`)
-        .then(res => res.ok ? res.json() : { votes: [] })
-        .then(data => setVotingHistory(data.votes || []))
-        .catch(() => setVotingHistory([]));
-    }
-  });
+  useEffect(() => {
+    if (!address) return;
+    fetch(`/api/governance/votes/${address}`)
+      .then(res => res.ok ? res.json() : { votes: [] })
+      .then(data => setVotingHistory(data.votes || []))
+      .catch(() => setVotingHistory([]));
+  }, [address]);
 
   if (!isConnected) {
     return (
@@ -497,18 +664,121 @@ function DutyRewardsTab({ isConnected, dutyClaimable, onClaim, claimingId }: {
   )
 }
 
-function PromotionalTab({ isConnected, onClaim, claimingId }: {
+function PromotionalTab({
+  isConnected,
+  onClaim,
+  claimingId,
+  promoRemainingTotal,
+  promoActive,
+  promoComplianceMode,
+  promoFlags,
+}: {
   isConnected: boolean;
   onClaim: (id: string) => void;
   claimingId: string | null;
+  promoRemainingTotal: number;
+  promoActive: boolean;
+  promoComplianceMode: boolean;
+  promoFlags: {
+    completedProfile: boolean;
+    completedProofScoreTutorial: boolean;
+    completedPaymentTutorial: boolean;
+    createdVault: boolean;
+    madeFirstTransaction: boolean;
+    madeFirstMerchantPayment: boolean;
+    gaveFirstEndorsement: boolean;
+    receivedFirstEndorsement: boolean;
+    claimedThreeMerchants: boolean;
+    claimedTenMerchants: boolean;
+    isPioneer: boolean;
+  };
 }) {
+  const totalAllocation = 2_000_000;
+  const distributed = Math.max(0, totalAllocation - promoRemainingTotal);
+  const progress = totalAllocation > 0 ? Math.min((distributed / totalAllocation) * 100, 100) : 0;
+
   const promotionalRewards = [
-    { id: 'pioneer', name: 'Pioneer Badge', amount: 500, icon: Star, status: 'claimable', desc: 'Early adopter reward for joining before mainnet' },
-    { id: 'education1', name: 'Complete Profile', amount: 100, icon: GraduationCap, status: 'claimable', desc: 'Set up your vault and profile' },
-    { id: 'education2', name: 'First Vote', amount: 100, icon: Vote, status: 'claimable', desc: 'Participate in your first governance vote' },
-    { id: 'education3', name: 'Guardian Setup', amount: 200, icon: Lock, status: 'locked', desc: 'Add at least 2 guardians to your vault', progress: 50 },
-    { id: 'milestone1', name: '1,000 VFIDE Held', amount: 300, icon: Coins, status: 'claimed', desc: 'Hold 1,000+ VFIDE for 30 days' },
-  ]
+    {
+      id: 'education:complete_profile',
+      name: 'Complete Profile',
+      amount: 10,
+      icon: GraduationCap,
+      desc: 'Set up your vault and profile',
+      claimed: promoFlags.completedProfile,
+    },
+    {
+      id: 'education:proof_score_tutorial',
+      name: 'ProofScore Tutorial',
+      amount: 10,
+      icon: GraduationCap,
+      desc: 'Complete ProofScore tutorial',
+      claimed: promoFlags.completedProofScoreTutorial,
+    },
+    {
+      id: 'education:payment_tutorial',
+      name: 'Payment Tutorial',
+      amount: 10,
+      icon: GraduationCap,
+      desc: 'Complete payment tutorial',
+      claimed: promoFlags.completedPaymentTutorial,
+    },
+    {
+      id: 'milestone:vault_created',
+      name: 'Vault Created',
+      amount: 50,
+      icon: Lock,
+      desc: 'Create your first vault',
+      claimed: promoFlags.createdVault,
+    },
+    {
+      id: 'milestone:first_transaction',
+      name: 'First Transaction',
+      amount: 25,
+      icon: Coins,
+      desc: 'Make your first transaction',
+      claimed: promoFlags.madeFirstTransaction,
+    },
+    {
+      id: 'milestone:first_merchant_payment',
+      name: 'First Merchant Payment',
+      amount: 25,
+      icon: Coins,
+      desc: 'Pay a merchant for the first time',
+      claimed: promoFlags.madeFirstMerchantPayment,
+    },
+    {
+      id: 'milestone:first_endorsement_given',
+      name: 'First Endorsement Given',
+      amount: 15,
+      icon: Star,
+      desc: 'Give your first endorsement',
+      claimed: promoFlags.gaveFirstEndorsement,
+    },
+    {
+      id: 'milestone:first_endorsement_received',
+      name: 'First Endorsement Received',
+      amount: 15,
+      icon: Star,
+      desc: 'Receive your first endorsement',
+      claimed: promoFlags.receivedFirstEndorsement,
+    },
+    {
+      id: 'milestone:three_merchants',
+      name: '3 Merchants Visited',
+      amount: 50,
+      icon: Users,
+      desc: 'Visit three unique merchants',
+      claimed: promoFlags.claimedThreeMerchants,
+    },
+    {
+      id: 'milestone:ten_merchants',
+      name: '10 Merchants Visited',
+      amount: 100,
+      icon: Users,
+      desc: 'Visit ten unique merchants',
+      claimed: promoFlags.claimedTenMerchants,
+    },
+  ];
 
   if (!isConnected) {
     return (
@@ -528,94 +798,110 @@ function PromotionalTab({ isConnected, onClaim, claimingId }: {
         <div className="flex items-center gap-4">
           <div className="flex-1">
             <div className="h-3 bg-zinc-700 rounded-full overflow-hidden">
-              <div className="h-full bg-linear-to-r from-amber-400 to-orange-500" style={{ width: '35%' }} />
+              <div className="h-full bg-linear-to-r from-amber-400 to-orange-500" style={{ width: `${progress}%` }} />
             </div>
           </div>
-          <div className="text-zinc-100 font-bold">700K / 2M VFIDE distributed</div>
+          <div className="text-zinc-100 font-bold">{distributed.toLocaleString()} / {totalAllocation.toLocaleString()} VFIDE distributed</div>
+        </div>
+        <div className="text-xs text-zinc-400 mt-2">
+          {promoActive ? 'Promotions active' : 'Promotions inactive'} · {promoComplianceMode ? 'Compliance mode enabled' : 'Distributions active'}
         </div>
       </div>
 
       {/* Rewards List */}
       <div className="space-y-4">
-        {promotionalRewards.map((reward) => (
-          <div 
-            key={reward.id} 
-            className={`bg-zinc-800 border rounded-xl p-6 ${
-              reward.status === 'claimable' ? 'border-emerald-500' : 
-              reward.status === 'claimed' ? 'border-zinc-700 opacity-60' : 'border-zinc-700'
-            }`}
-          >
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-              <div className="flex items-center gap-4">
-                <div className={`w-14 h-14 rounded-xl flex items-center justify-center ${
-                  reward.status === 'claimable' ? 'bg-emerald-500/20' :
-                  reward.status === 'claimed' ? 'bg-zinc-700' : 'bg-amber-400/20'
-                }`}>
-                  <reward.icon size={28} className={
-                    reward.status === 'claimable' ? 'text-emerald-500' :
-                    reward.status === 'claimed' ? 'text-zinc-400' : 'text-amber-400'
-                  } />
-                </div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <h4 className="text-lg font-bold text-zinc-100">{reward.name}</h4>
-                    {reward.status === 'claimed' && (
-                      <span className="px-2 py-0.5 bg-emerald-500/20 text-emerald-500 text-xs rounded-full">Claimed</span>
-                    )}
+        {promotionalRewards.map((reward) => {
+          const status = reward.claimed ? 'claimed' : promoActive && !promoComplianceMode ? 'claimable' : 'locked';
+          return (
+            <div 
+              key={reward.id} 
+              className={`bg-zinc-800 border rounded-xl p-6 ${
+                status === 'claimable' ? 'border-emerald-500' : 
+                status === 'claimed' ? 'border-zinc-700 opacity-60' : 'border-zinc-700'
+              }`}
+            >
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div className="flex items-center gap-4">
+                  <div className={`w-14 h-14 rounded-xl flex items-center justify-center ${
+                    status === 'claimable' ? 'bg-emerald-500/20' :
+                    status === 'claimed' ? 'bg-zinc-700' : 'bg-amber-400/20'
+                  }`}>
+                    <reward.icon size={28} className={
+                      status === 'claimable' ? 'text-emerald-500' :
+                      status === 'claimed' ? 'text-zinc-400' : 'text-amber-400'
+                    } />
                   </div>
-                  <p className="text-zinc-400 text-sm">{reward.desc}</p>
-                  {reward.status === 'locked' && reward.progress !== undefined && (
-                    <div className="mt-2">
-                      <div className="h-2 bg-zinc-700 rounded-full w-48 overflow-hidden">
-                        <div className="h-full bg-amber-400" style={{ width: `${reward.progress}%` }} />
-                      </div>
-                      <div className="text-xs text-zinc-400 mt-1">{reward.progress}% complete</div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h4 className="text-lg font-bold text-zinc-100">{reward.name}</h4>
+                      {status === 'claimable' && (
+                        <span className="px-2 py-0.5 bg-emerald-500/20 text-emerald-500 text-xs rounded-full">Claimable</span>
+                      )}
+                      {status === 'claimed' && (
+                        <span className="px-2 py-0.5 bg-emerald-500/20 text-emerald-500 text-xs rounded-full">Claimed</span>
+                      )}
+                      {status === 'locked' && (
+                        <span className="px-2 py-0.5 bg-amber-500/20 text-amber-400 text-xs rounded-full">Locked</span>
+                      )}
+                    </div>
+                    <p className="text-zinc-400 text-sm">{reward.desc}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-4">
+                  <div className="text-right">
+                    <div className="text-2xl font-bold text-amber-400">{reward.amount} VFIDE</div>
+                  </div>
+                  {status === 'claimable' && (
+                    <button
+                      onClick={() => onClaim(reward.id)}
+                      disabled={claimingId === reward.id}
+                      className="px-6 py-3 bg-emerald-500 text-zinc-900 rounded-lg font-bold hover:bg-green-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {claimingId === reward.id ? 'Claiming...' : 'Claim'}
+                    </button>
+                  )}
+                  {status === 'locked' && (
+                    <div className="px-6 py-3 bg-zinc-700 text-zinc-400 rounded-lg font-bold">
+                      <Lock size={16} className="inline mr-1" /> Locked
                     </div>
                   )}
                 </div>
               </div>
-              <div className="flex items-center gap-4">
-                <div className="text-right">
-                  <div className="text-2xl font-bold text-amber-400">{reward.amount} VFIDE</div>
-                </div>
-                {reward.status === 'claimable' && (
-                  <button
-                    onClick={() => onClaim(reward.id)}
-                    disabled={claimingId === reward.id}
-                    className="px-6 py-3 bg-emerald-500 text-zinc-900 rounded-lg font-bold hover:bg-green-500 transition-colors"
-                  >
-                    {claimingId === reward.id ? 'Claiming...' : 'Claim'}
-                  </button>
-                )}
-                {reward.status === 'locked' && (
-                  <div className="px-6 py-3 bg-zinc-700 text-zinc-400 rounded-lg font-bold">
-                    <Lock size={16} className="inline mr-1" /> Locked
-                  </div>
-                )}
-              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   )
 }
 
-// LiquidityTab removed for Howey compliance - no staking/reward expectations
+// LiquidityTab removed for compliance - no staking/reward expectations
 
-function ReferralTab({ isConnected, onClaim, claimingId }: {
+function ReferralTab({
+  isConnected,
+  onClaim,
+  claimingId,
+  referralCount,
+  promoComplianceMode,
+  referralCode,
+  referralClaimed,
+}: {
   isConnected: boolean;
   onClaim: (id: string) => void;
   claimingId: string | null;
+  referralCount: number;
+  promoComplianceMode: boolean;
+  referralCode: string;
+  referralClaimed: number;
 }) {
   const [copied, setCopied] = useState(false)
 
   const referralStats = {
-    code: 'VFIDE-X7K9M2',
-    totalReferrals: 12,
-    activeReferrals: 8,
-    earned: 1450.00,
-    claimable: 350.00,
+    code: referralCode,
+    totalReferrals: referralCount,
+    activeReferrals: referralCount,
+    earned: referralClaimed,
+    claimable: 0,
   }
 
   const copyToClipboard = async (text: string) => {
@@ -664,6 +950,11 @@ function ReferralTab({ isConnected, onClaim, claimingId }: {
       {/* Referral Link Generator */}
       <div className="bg-linear-to-r from-violet-400/20 to-violet-500/20 border border-violet-400 rounded-xl p-6">
         <h3 className="text-lg font-bold text-violet-400 mb-4 text-center">Your Referral Link</h3>
+        {promoComplianceMode && (
+          <div className="mb-4 text-xs text-amber-400 text-center">
+            Referral rewards are disabled while compliance mode is enabled.
+          </div>
+        )}
         
         {/* Full Referral URL */}
         <div className="bg-zinc-900 rounded-lg p-4 mb-4">
@@ -688,31 +979,43 @@ function ReferralTab({ isConnected, onClaim, claimingId }: {
         {/* Share Buttons */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
           <button 
-            onClick={() => window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent('Join me on VFIDE - the future of trust-based payments! 0% processing fees, earn reputation, lower transfer fees. Use my referral link:')}&url=${encodeURIComponent(`https://vfide.app/join?ref=${referralStats.code}`)}`, '_blank')}
+            onClick={() => window.open(
+              `https://twitter.com/intent/tweet?text=${encodeURIComponent('Join me on VFIDE - the future of trust-based payments! 0% processing fees, earn reputation, lower transfer fees. Use my referral link:')}&url=${encodeURIComponent(`https://vfide.app/join?ref=${referralStats.code}`)}`,
+              '_blank',
+              'noopener,noreferrer'
+            )}
             className="flex items-center justify-center gap-2 px-4 py-3 bg-black border border-zinc-700 rounded-lg text-white hover:bg-zinc-900 transition-colors"
           >
             <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
             <span className="text-sm font-bold">Share on X</span>
           </button>
           <button 
-            onClick={() => window.open(`https://t.me/share/url?url=${encodeURIComponent(`https://vfide.app/join?ref=${referralStats.code}`)}&text=${encodeURIComponent('Join VFIDE - 0% payment processing fees!')}`, '_blank')}
+            onClick={() => window.open(
+              `https://t.me/share/url?url=${encodeURIComponent(`https://vfide.app/join?ref=${referralStats.code}`)}&text=${encodeURIComponent('Join VFIDE - 0% payment processing fees!')}`,
+              '_blank',
+              'noopener,noreferrer'
+            )}
             className="flex items-center justify-center gap-2 px-4 py-3 bg-sky-600 rounded-lg text-white hover:bg-blue-600 transition-colors"
           >
             <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/></svg>
             <span className="text-sm font-bold">Telegram</span>
           </button>
           <button 
-            onClick={() => window.open(`https://wa.me/?text=${encodeURIComponent(`Join me on VFIDE! 0% payment fees, earn reputation. https://vfide.app/join?ref=${referralStats.code}`)}`, '_blank')}
+            onClick={() => window.open(
+              `https://wa.me/?text=${encodeURIComponent(`Join me on VFIDE! 0% payment fees, earn reputation. https://vfide.app/join?ref=${referralStats.code}`)}`,
+              '_blank',
+              'noopener,noreferrer'
+            )}
             className="flex items-center justify-center gap-2 px-4 py-3 bg-green-500 rounded-lg text-white hover:bg-green-500 transition-colors"
           >
             <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
             <span className="text-sm font-bold">WhatsApp</span>
           </button>
-          <button 
+          <button
             onClick={() => {
-              const _qrData = `https://vfide.app/join?ref=${referralStats.code}`;
-              // Open QR code modal or generate inline
-              alert('QR Code feature coming soon!');
+              const qrData = `https://vfide.app/join?ref=${referralStats.code}`;
+              const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(qrData)}`;
+              window.open(qrUrl, '_blank', 'noopener,noreferrer');
             }}
             className="flex items-center justify-center gap-2 px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-lg text-zinc-100 hover:border-violet-400 transition-colors"
           >

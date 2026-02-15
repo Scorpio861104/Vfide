@@ -469,16 +469,17 @@ export function NumberTicker({
 
 // ==================== CONFETTI BURST ====================
 
+const CONFETTI_COLORS = ['#00FFB2', '#22C55E', '#F59E0B', '#EF4444', '#8B5CF6'];
+
 export function ConfettiBurst({ trigger }: { trigger: boolean }) {
-  const colors = ['#00FFB2', '#22C55E', '#F59E0B', '#EF4444', '#8B5CF6'];
   const [particles, setParticles] = useState<Array<{ id: number; x: number; color: string }>>([]);
 
   React.useEffect(() => {
     if (trigger) {
       const newParticles = Array.from({ length: 30 }).map((_, i) => ({
         id: Date.now() + i,
-        x: Math.random() * 100 - 50,
-        color: colors[Math.floor(Math.random() * colors.length)] || colors[0] || '#8B5CF6',
+        x: (i * 37 + 13) % 100 - 50,
+        color: CONFETTI_COLORS[i % CONFETTI_COLORS.length] || CONFETTI_COLORS[0] || '#8B5CF6',
       }));
       setParticles(newParticles);
       triggerHaptic('success');
@@ -500,10 +501,10 @@ export function ConfettiBurst({ trigger }: { trigger: boolean }) {
           }}
           animate={{ 
             x: `calc(50% + ${particle.x}vw)`,
-            y: `${Math.random() * 100}%`,
+            y: `${(particle.id * 37 + 13) % 100}%`,
             scale: 0,
             opacity: 0,
-            rotate: Math.random() * 720,
+            rotate: (particle.id * 97) % 720,
           }}
           transition={{ duration: 1.5, ease: 'easeOut' }}
           className="absolute w-3 h-3 rounded-sm"

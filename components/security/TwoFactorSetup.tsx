@@ -1,6 +1,9 @@
+'use client';
+
 import React, { useState } from 'react';
 import { useTwoFactorAuth } from '@/hooks/useTwoFactorAuth';
 import { TOTPSetup, TwoFactorMethod } from '@/config/security-advanced';
+import Image from 'next/image';
 
 interface TwoFactorSetupProps {
   userEmail?: string;
@@ -21,6 +24,10 @@ export function TwoFactorSetup({
   const [verificationCode, setVerificationCode] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [email, setEmail] = useState(userEmail || '');
+  const [smsCode, setSmsCode] = useState('');
+  const [emailCode, setEmailCode] = useState('');
+  const [smsPending, setSmsPending] = useState(false);
+  const [emailPending, setEmailPending] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -67,8 +74,7 @@ export function TwoFactorSetup({
     try {
       const result = await twoFactor.enableSMS(phoneNumber);
       if (result) {
-        setSuccess(true);
-        setTimeout(() => onComplete?.(), 1500);
+        setSmsPending(true);
       } else {
         setError('Failed to enable SMS authentication');
       }
@@ -87,13 +93,52 @@ export function TwoFactorSetup({
     try {
       const result = await twoFactor.enableEmail(email);
       if (result) {
-        setSuccess(true);
-        setTimeout(() => onComplete?.(), 1500);
+        setEmailPending(true);
       } else {
         setError('Failed to enable email authentication');
       }
     } catch {
       setError('Failed to enable email authentication');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleVerifySMS = async () => {
+    if (!smsCode) return;
+
+    setLoading(true);
+    setError('');
+    try {
+      const result = await twoFactor.verifySMS(smsCode);
+      if (result) {
+        setSuccess(true);
+        setTimeout(() => onComplete?.(), 1500);
+      } else {
+        setError('Invalid verification code. Please try again.');
+      }
+    } catch {
+      setError('Failed to verify SMS code');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleVerifyEmail = async () => {
+    if (!emailCode) return;
+
+    setLoading(true);
+    setError('');
+    try {
+      const result = await twoFactor.verifyEmail(emailCode);
+      if (result) {
+        setSuccess(true);
+        setTimeout(() => onComplete?.(), 1500);
+      } else {
+        setError('Invalid verification code. Please try again.');
+      }
+    } catch {
+      setError('Failed to verify email code');
     } finally {
       setLoading(false);
     }
@@ -167,7 +212,13 @@ export function TwoFactorSetup({
             </button>
 
             <button
-              onClick={() => setSelectedMethod('sms')}
+              onClick={() => {
+                setSelectedMethod('sms');
+                setSmsPending(false);
+                setSmsCode('');
+                setError('');
+                setSuccess(false);
+              }}
               disabled={loading}
               className="p-6 border-2 border-gray-300 dark:border-gray-600 rounded-xl hover:border-blue-500 dark:hover:border-blue-500 transition-colors text-center group"
             >
@@ -179,7 +230,13 @@ export function TwoFactorSetup({
             </button>
 
             <button
-              onClick={() => setSelectedMethod('email')}
+              onClick={() => {
+                setSelectedMethod('email');
+                setEmailPending(false);
+                setEmailCode('');
+                setError('');
+                setSuccess(false);
+              }}
               disabled={loading}
               className="p-6 border-2 border-gray-300 dark:border-gray-600 rounded-xl hover:border-blue-500 dark:hover:border-blue-500 transition-colors text-center group"
             >
@@ -200,7 +257,7 @@ export function TwoFactorSetup({
                 Scan this QR code with your authenticator app:
               </p>
               <div className="bg-white p-4 rounded-lg inline-block">
-                <img src={totpSetup.qrCode} alt="QR Code" className="w-48 h-48" />
+                <Image src={totpSetup.qrCode} alt="QR Code" width={192} height={192} className="w-48 h-48" unoptimized />
               </div>
               <p className="text-xs text-gray-500 mt-2">
                 Or enter this key manually: <code className="bg-gray-200 dark:bg-gray-700 px-2 py-1 rounded">{totpSetup.secret}</code>
@@ -269,18 +326,34 @@ export function TwoFactorSetup({
 
         {selectedMethod === 'sms' && (
           <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Phone Number
-              </label>
-              <input
-                type="tel"
-                value={phoneNumber}
-                onChange={(e) => setPhoneNumber(e.target.value)}
-                placeholder="+1 (555) 123-4567"
-                className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
-              />
-            </div>
+            {!smsPending ? (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Phone Number
+                </label>
+                <input
+                  type="tel"
+                  value={phoneNumber}
+                  onChange={(e) => setPhoneNumber(e.target.value)}
+                  placeholder="+1 (555) 123-4567"
+                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
+                />
+              </div>
+            ) : (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Verification Code
+                </label>
+                <input
+                  type="text"
+                  value={smsCode}
+                  onChange={(e) => setSmsCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                  placeholder="Enter 6-digit code"
+                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
+                  maxLength={6}
+                />
+              </div>
+            )}
 
             {error && (
               <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 text-red-700 dark:text-red-300">
@@ -290,14 +363,18 @@ export function TwoFactorSetup({
 
             <div className="flex gap-3">
               <button
-                onClick={handleEnableSMS}
-                disabled={!phoneNumber || loading}
+                onClick={smsPending ? handleVerifySMS : handleEnableSMS}
+                disabled={(smsPending ? smsCode.length !== 6 : !phoneNumber) || loading}
                 className="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
               >
-                {loading ? 'Enabling...' : 'Enable SMS 2FA'}
+                {loading ? 'Verifying...' : smsPending ? 'Verify Code' : 'Send SMS Code'}
               </button>
               <button
-                onClick={() => setSelectedMethod(null)}
+                onClick={() => {
+                  setSelectedMethod(null);
+                  setSmsPending(false);
+                  setSmsCode('');
+                }}
                 className="px-6 py-3 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 font-medium"
               >
                 Back
@@ -308,18 +385,34 @@ export function TwoFactorSetup({
 
         {selectedMethod === 'email' && (
           <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Email Address
-              </label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="you@example.com"
-                className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
-              />
-            </div>
+            {!emailPending ? (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Email Address
+                </label>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="you@example.com"
+                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
+                />
+              </div>
+            ) : (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Verification Code
+                </label>
+                <input
+                  type="text"
+                  value={emailCode}
+                  onChange={(e) => setEmailCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                  placeholder="Enter 6-digit code"
+                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
+                  maxLength={6}
+                />
+              </div>
+            )}
 
             {error && (
               <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 text-red-700 dark:text-red-300">
@@ -329,14 +422,18 @@ export function TwoFactorSetup({
 
             <div className="flex gap-3">
               <button
-                onClick={handleEnableEmail}
-                disabled={!email || loading}
+                onClick={emailPending ? handleVerifyEmail : handleEnableEmail}
+                disabled={(emailPending ? emailCode.length !== 6 : !email) || loading}
                 className="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
               >
-                {loading ? 'Enabling...' : 'Enable Email 2FA'}
+                {loading ? 'Verifying...' : emailPending ? 'Verify Code' : 'Send Email Code'}
               </button>
               <button
-                onClick={() => setSelectedMethod(null)}
+                onClick={() => {
+                  setSelectedMethod(null);
+                  setEmailPending(false);
+                  setEmailCode('');
+                }}
                 className="px-6 py-3 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 font-medium"
               >
                 Back

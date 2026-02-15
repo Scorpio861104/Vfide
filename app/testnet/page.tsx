@@ -1,25 +1,13 @@
 'use client'
 
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
-import { useEffect } from 'react'
-import { useAccount, useChainId } from 'wagmi'
+import { useAccount } from 'wagmi'
 import { FAUCET_URLS } from '@/lib/testnet'
-import { isTestnetChainId } from '@/lib/chains'
 import { useCopyToClipboard } from '@/lib/hooks/useCopyToClipboard'
 
 export default function TestnetPage() {
-  const router = useRouter()
   const { copied, copy } = useCopyToClipboard()
   const { address } = useAccount()
-  const chainId = useChainId()
-
-  // Redirect to home if not on testnet
-  useEffect(() => {
-    if (chainId && !isTestnetChainId(chainId)) {
-      router.push('/')
-    }
-  }, [router, chainId])
 
   const copyAddress = () => {
     if (address) {
@@ -31,9 +19,9 @@ export default function TestnetPage() {
     <>
       <div className="min-h-screen bg-zinc-900 text-white pt-20">
         <div className="max-w-2xl mx-auto px-4 py-12">
-          <h1 className="text-3xl font-bold mb-2">Get Test ETH</h1>
+          <h1 className="text-3xl font-bold mb-2">Get ETH</h1>
           <p className="text-zinc-400 mb-8">
-            You need test ETH to pay for transactions on Base Sepolia. It&apos;s free.
+            Base Sepolia mirrors mainnet behavior. You just need test ETH to pay for transactions.
           </p>
 
           {/* Address section */}

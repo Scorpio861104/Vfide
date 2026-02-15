@@ -71,20 +71,13 @@ export const EnhancedInput = forwardRef<HTMLInputElement, FormFieldProps>(functi
   const id = useId();
   const [isFocused, setIsFocused] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [charCount, setCharCount] = useState(0);
+  const charCount = typeof value === 'string' ? value.length : 0;
   const isPassword = type === 'password';
   const hasError = !!error;
   const errorMessage = typeof error === 'string' ? error : error?.message;
   const isSuccess = !hasError && charCount > 0 && !isValidating;
 
-  useEffect(() => {
-    if (typeof value === 'string') {
-      setCharCount(value.length);
-    }
-  }, [value]);
-
   const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setCharCount(e.target.value.length);
     onChange?.(e);
   }, [onChange]);
 
@@ -277,16 +270,10 @@ export const EnhancedTextarea = forwardRef<HTMLTextAreaElement, EnhancedTextarea
 ) {
   const id = useId();
   const [isFocused, setIsFocused] = useState(false);
-  const [charCount, setCharCount] = useState(0);
+  const charCount = typeof value === 'string' ? value.length : 0;
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const hasError = !!error;
   const errorMessage = typeof error === 'string' ? error : error?.message;
-
-  useEffect(() => {
-    if (typeof value === 'string') {
-      setCharCount(value.length);
-    }
-  }, [value]);
 
   useEffect(() => {
     if (autoResize && textareaRef.current) {
@@ -296,7 +283,6 @@ export const EnhancedTextarea = forwardRef<HTMLTextAreaElement, EnhancedTextarea
   }, [value, autoResize]);
 
   const handleChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setCharCount(e.target.value.length);
     onChange?.(e as unknown as React.ChangeEvent<HTMLInputElement>);
   }, [onChange]);
 

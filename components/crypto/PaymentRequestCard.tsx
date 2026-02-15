@@ -181,7 +181,7 @@ export function PaymentRequestCard({ request, isRecipient }: PaymentRequestCardP
     }
   };
 
-  const isExpired = Date.now() > request.expiresAt;
+  const isExpired = typeof request.expiresAt === 'number' ? Date.now() > request.expiresAt : false;
   const canPay = isRecipient && request.status === 'pending' && !isExpired;
 
   return (

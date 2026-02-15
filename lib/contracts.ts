@@ -25,27 +25,24 @@ import {
   MerchantPortalABI,
   ProofScoreBurnRouterABI,
   ProofLedgerABI,
-  CommerceEscrowABI,
-  VaultHubLiteABI,
-  UserVaultLiteABI
+  CommerceEscrowABI
 } from './abis'
 
 // Zero address placeholder for missing contracts
 const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000' as const
 
 /**
- * H-5 Fix: Validate contract address at runtime
- * Returns properly typed address, or zero address if invalid/missing
- * Runtime validation logs warnings for debugging
+ * Validate contract address at runtime.
+ * In production: throws if address is missing (prevents silent zero-address burns).
+ * In dev/test: logs warning and returns zero address for convenience.
  */
 function validateContractAddress(address: string | undefined, name: string): `0x${string}` {
   if (!address) {
-    if (process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test') {
-      // Convert camelCase name to SCREAMING_SNAKE_CASE for env var name
-      // Examples: vfideToken -> VFIDE_TOKEN, StablecoinRegistry -> STABLECOIN_REGISTRY
-      const envVarName = `NEXT_PUBLIC_${name.replace(/([a-z0-9])([A-Z])/g, '$1_$2').toUpperCase()}_ADDRESS`;
-      console.warn(`[VFIDE] Missing contract address: ${name}. Using ZERO_ADDRESS. Set ${envVarName} in environment.`)
+    const envVarName = `NEXT_PUBLIC_${name.replace(/([a-z0-9])([A-Z])/g, '$1_$2').toUpperCase()}_ADDRESS`;
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error(`[VFIDE] CRITICAL: Missing contract address for ${name}. Set ${envVarName}.`);
     }
+    console.warn(`[VFIDE] Missing contract address: ${name}. Using ZERO_ADDRESS. Set ${envVarName} in environment.`)
     return ZERO_ADDRESS
   }
   if (!isAddress(address)) {
@@ -53,6 +50,17 @@ function validateContractAddress(address: string | undefined, name: string): `0x
     return ZERO_ADDRESS
   }
   return address as `0x${string}`
+}
+
+/**
+ * Guard: throws if a contract address is zero, preventing silent fund burns.
+ * Call this before any write transaction targeting a contract.
+ */
+export function requireContractAddress(address: `0x${string}`, name: string): `0x${string}` {
+  if (address === ZERO_ADDRESS) {
+    throw new Error(`[VFIDE] Contract address for ${name} is not configured. Transaction blocked to prevent fund loss.`)
+  }
+  return address
 }
 
 export const CONTRACT_ADDRESSES = {
@@ -74,7 +82,6 @@ export const CONTRACT_ADDRESSES = {
   EmergencyBreaker: validateContractAddress(process.env.NEXT_PUBLIC_EMERGENCY_BREAKER_ADDRESS, 'EmergencyBreaker'),
   // Additional contracts
   BurnRouter: validateContractAddress(process.env.NEXT_PUBLIC_BURN_ROUTER_ADDRESS, 'BurnRouter'),
-  LiquidityIncentives: validateContractAddress(process.env.NEXT_PUBLIC_LIQUIDITY_INCENTIVES_ADDRESS, 'LiquidityIncentives'),
   DutyDistributor: validateContractAddress(process.env.NEXT_PUBLIC_DUTY_DISTRIBUTOR_ADDRESS, 'DutyDistributor'),
   PromotionalTreasury: validateContractAddress(process.env.NEXT_PUBLIC_PROMOTIONAL_TREASURY_ADDRESS, 'PromotionalTreasury'),
   PayrollManager: validateContractAddress(process.env.NEXT_PUBLIC_PAYROLL_MANAGER_ADDRESS, 'PayrollManager'),
@@ -89,7 +96,6 @@ export const CONTRACT_ADDRESSES = {
 export const MERCHANT_PORTAL_ABI = MerchantPortalABI;
 export const SEER_ABI = SeerABI;
 export const VFIDE_TOKEN_ABI = VFIDETokenABI;
-// Use full VaultHub (VaultInfrastructure) instead of VaultHubLite for all features
 export const VAULT_HUB_ABI = VaultHubABI;
 // UserVault ABI for individual vault operations (Next of Kin, guardians, inheritance)
 export const USER_VAULT_ABI = UserVaultABI;
@@ -114,7 +120,5 @@ export {
   MerchantPortalABI,
   ProofScoreBurnRouterABI,
   ProofLedgerABI,
-  CommerceEscrowABI,
-  VaultHubLiteABI,
-  UserVaultLiteABI
+  CommerceEscrowABI
 }

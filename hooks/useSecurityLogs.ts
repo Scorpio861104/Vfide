@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import {
   SecurityLogEntry,
   SecurityEventType,
@@ -12,10 +12,10 @@ export interface UseSecurityLogsResult {
   filteredLogs: SecurityLogEntry[];
   
   // Logging
-  log: (type: SecurityEventType, message: string, details?: Record<string, any>) => void;
-  logSuccess: (type: SecurityEventType, message: string, details?: Record<string, any>) => void;
-  logWarning: (type: SecurityEventType, message: string, details?: Record<string, any>) => void;
-  logCritical: (type: SecurityEventType, message: string, details?: Record<string, any>) => void;
+  log: (type: SecurityEventType, message: string, details?: Record<string, unknown>) => void;
+  logSuccess: (type: SecurityEventType, message: string, details?: Record<string, unknown>) => void;
+  logWarning: (type: SecurityEventType, message: string, details?: Record<string, unknown>) => void;
+  logCritical: (type: SecurityEventType, message: string, details?: Record<string, unknown>) => void;
   
   // Filtering
   filterByType: (type: SecurityEventType | null) => void;
@@ -58,7 +58,8 @@ const saveLogs = (logs: SecurityLogEntry[]): void => {
 };
 
 const generateLogId = (): string => {
-  return `log_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  const bytes = crypto.getRandomValues(new Uint8Array(7));
+  return `log_${Date.now()}_${Array.from(bytes, b => b.toString(16).padStart(2, '0')).join('').slice(0, 9)}`;
 };
 
 const getClientInfo = () => {
@@ -83,7 +84,6 @@ const getClientInfo = () => {
 
 export const useSecurityLogs = (): UseSecurityLogsResult => {
   const [logs, setLogs] = useState<SecurityLogEntry[]>(loadLogs());
-  const [filteredLogs, setFilteredLogs] = useState<SecurityLogEntry[]>([]);
   const [filters, setFilters] = useState<{
     type: SecurityEventType | null;
     severity: 'info' | 'warning' | 'critical' | null;
@@ -96,14 +96,7 @@ export const useSecurityLogs = (): UseSecurityLogsResult => {
     searchQuery: ''
   });
 
-  useEffect(() => {
-    const loaded = loadLogs();
-    setLogs(loaded);
-    setFilteredLogs(loaded);
-  }, []);
-
-  // Apply filters whenever logs or filters change
-  useEffect(() => {
+  const filteredLogs = useMemo(() => {
     let filtered = [...logs];
 
     if (filters.type) {
@@ -130,14 +123,14 @@ export const useSecurityLogs = (): UseSecurityLogsResult => {
       );
     }
 
-    setFilteredLogs(filtered.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime()));
+    return filtered.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
   }, [logs, filters]);
 
   const addLog = useCallback((
     type: SecurityEventType,
     message: string,
     severity: 'info' | 'warning' | 'critical',
-    details: Record<string, any> = {}
+    details: Record<string, unknown> = {}
   ) => {
     const clientInfo = getClientInfo();
     
@@ -158,19 +151,19 @@ export const useSecurityLogs = (): UseSecurityLogsResult => {
     });
   }, []);
 
-  const log = useCallback((type: SecurityEventType, message: string, details?: Record<string, any>) => {
+  const log = useCallback((type: SecurityEventType, message: string, details?: Record<string, unknown>) => {
     addLog(type, message, 'info', details);
   }, [addLog]);
 
-  const logSuccess = useCallback((type: SecurityEventType, message: string, details?: Record<string, any>) => {
+  const logSuccess = useCallback((type: SecurityEventType, message: string, details?: Record<string, unknown>) => {
     addLog(type, message, 'info', details);
   }, [addLog]);
 
-  const logWarning = useCallback((type: SecurityEventType, message: string, details?: Record<string, any>) => {
+  const logWarning = useCallback((type: SecurityEventType, message: string, details?: Record<string, unknown>) => {
     addLog(type, message, 'warning', details);
   }, [addLog]);
 
-  const logCritical = useCallback((type: SecurityEventType, message: string, details?: Record<string, any>) => {
+  const logCritical = useCallback((type: SecurityEventType, message: string, details?: Record<string, unknown>) => {
     addLog(type, message, 'critical', details);
   }, [addLog]);
 
@@ -224,7 +217,6 @@ export const useSecurityLogs = (): UseSecurityLogsResult => {
 
   const clearLogs = useCallback(() => {
     setLogs([]);
-    setFilteredLogs([]);
     if (typeof window !== 'undefined') {
       localStorage.removeItem(SECURITY_STORAGE_KEYS.logs);
     }

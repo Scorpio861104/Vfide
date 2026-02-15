@@ -17,13 +17,13 @@ contract DutyDistributor is Ownable, IGovernanceHooks {
     event DutyPointsEarned(address indexed user, uint256 points, string reason);
     event RewardsClaimed(address indexed user, uint256 amount);
     event EpochClosed(uint256 epochId, uint256 totalPoints);
-    event HoweySafeModeUpdated(bool enabled);
+    event ComplianceModeUpdated(bool enabled);
 
     IEcosystemVault public ecosystemVault;
     address public dao;
 
-    // Howey-safe mode disables reward accrual and payout
-    bool public howeySafeMode = true;
+    // Compliance mode disables reward accrual and payout
+    bool public complianceMode = true;
 
     // Duty Points Tracking
     mapping(address => uint256) public userPoints;
@@ -53,15 +53,15 @@ contract DutyDistributor is Ownable, IGovernanceHooks {
         require(msg.sender == dao, "not dao");
     }
 
-    function setParams(uint256 _pointsPerVote, uint256 _rewardPerPoint) external onlyOwner {
-        if (howeySafeMode) revert("DD: howey safe");
-        pointsPerVote = _pointsPerVote;
-        rewardPerPoint = _rewardPerPoint;
+    /// @notice Permanently disabled — compliance mode is irrevocable
+    function setParams(uint256, uint256) external view onlyOwner {
+        revert("DD: permanently disabled");
     }
 
-    function setHoweySafeMode(bool enabled) external onlyOwner {
-        howeySafeMode = enabled;
-        emit HoweySafeModeUpdated(enabled);
+    function setComplianceMode(bool enabled) external onlyOwner {
+        require(enabled, "DD: compliance mode only");
+        complianceMode = true;
+        emit ComplianceModeUpdated(true);
     }
 
     // -------------------------------------------------------
@@ -69,7 +69,7 @@ contract DutyDistributor is Ownable, IGovernanceHooks {
     // -------------------------------------------------------
 
     function onVoteCast(uint256 /*id*/, address voter, bool /*support*/) external override onlyDAO {
-        if (howeySafeMode) return;
+        if (complianceMode) return;
         // L-3 FIX: Check points cap before adding
         if (userPoints[voter] + pointsPerVote <= maxPointsPerUser) {
             userPoints[voter] += pointsPerVote;
@@ -91,55 +91,13 @@ contract DutyDistributor is Ownable, IGovernanceHooks {
     // Claim Rewards
     // -------------------------------------------------------
 
-    function claimRewards() external {
-        require(!howeySafeMode, "DD: howey safe");
-        uint256 points = userPoints[msg.sender];
-        require(points > 0, "no points");
-
-        uint256 reward = points * rewardPerPoint;
-        uint256 pointsToConsume = points; // FLOW-7 FIX: Track how many points to burn
-        
-        // H-3 FIX: Apply maximum reward cap
-        if (reward > maxRewardPerClaim) {
-            reward = maxRewardPerClaim;
-            // FLOW-7 FIX: Only consume points equivalent to the capped reward
-            // This prevents losing points when reward is capped
-            pointsToConsume = maxRewardPerClaim / rewardPerPoint;
-            if (pointsToConsume == 0) pointsToConsume = 1; // Consume at least 1 point
-        }
-        
-        // H-3 FIX: Check and reset daily cap
-        uint256 currentDay = block.timestamp / 1 days;
-        if (currentDay > lastRewardResetDay) {
-            dailyRewardsPaid = 0;
-            lastRewardResetDay = currentDay;
-        }
-        
-        // H-3 FIX: Enforce daily cap
-        // FLOW-7 FIX: If daily cap limits reward, also limit points consumed
-        if (dailyRewardsPaid + reward > dailyRewardCap) {
-            uint256 availableReward = dailyRewardCap - dailyRewardsPaid;
-            require(availableReward > 0, "DD: daily cap exceeded");
-            reward = availableReward;
-            pointsToConsume = availableReward / rewardPerPoint;
-            if (pointsToConsume == 0) pointsToConsume = 1;
-        }
-        dailyRewardsPaid += reward;
-        
-        // Consume only the points that correspond to claimed reward
-        userPoints[msg.sender] -= pointsToConsume;
-        totalPoints -= pointsToConsume;
-
-        // Request payment from Vault
-        ecosystemVault.payExpense(msg.sender, reward, "duty_reward");
-        
-        emit RewardsClaimed(msg.sender, reward);
+    /// @notice Permanently disabled — compliance mode is irrevocable
+    function claimRewards() external pure {
+        revert("DD: permanently disabled");
     }
     
-    /// @notice DAO can set reward caps (H-3 fix)
-    function setRewardCaps(uint256 _maxPerClaim, uint256 _maxPointsPerUser, uint256 _dailyCap) external onlyOwner {
-        maxRewardPerClaim = _maxPerClaim;
-        maxPointsPerUser = _maxPointsPerUser;
-        dailyRewardCap = _dailyCap;
+    /// @notice Permanently disabled — compliance mode is irrevocable
+    function setRewardCaps(uint256, uint256, uint256) external view onlyOwner {
+        revert("DD: permanently disabled");
     }
 }

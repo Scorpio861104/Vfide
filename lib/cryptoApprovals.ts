@@ -4,6 +4,8 @@
  */
 
 import { validateEthereumAddress, ValidationError } from './cryptoValidation';
+import { ZERO_ADDRESS } from './constants';
+import { parseUnits, formatUnits } from 'viem';
 
 // Type guards for error handling
 const isErrorWithMessage = (err: unknown): err is { message: string } => {
@@ -14,7 +16,7 @@ const isErrorWithMessage = (err: unknown): err is { message: string } => {
  * VFIDE Token Contract Address
  * Read from environment variable or fallback to placeholder
  */
-export const VFIDE_TOKEN_ADDRESS = process.env.NEXT_PUBLIC_VFIDE_TOKEN_ADDRESS || '0x...';
+export const VFIDE_TOKEN_ADDRESS = process.env.NEXT_PUBLIC_VFIDE_TOKEN_ADDRESS || ZERO_ADDRESS;
 
 /**
  * Maximum uint256 value for unlimited token approval
@@ -60,6 +62,13 @@ export interface ApprovalStatus {
   needsApproval: boolean;
 }
 
+function getTokenAddress(): string {
+  if (!validateEthereumAddress(VFIDE_TOKEN_ADDRESS) || VFIDE_TOKEN_ADDRESS === ZERO_ADDRESS) {
+    throw new ValidationError('VFIDE token address is not configured');
+  }
+  return VFIDE_TOKEN_ADDRESS;
+}
+
 /**
  * Check if user has sufficient allowance for token transfer
  */
@@ -77,18 +86,19 @@ export async function checkTokenAllowance(
       throw new ValidationError('Invalid spender address');
     }
 
-    // Convert amount to Wei (18 decimals)
-    const requiredAmountWei = BigInt(Math.floor(parseFloat(requiredAmount) * 1e18));
+    // Convert amount to Wei using parseUnits for precision-safe conversion
+    const requiredAmountWei = parseUnits(requiredAmount, 18);
 
     // Encode allowance function call
     const data = encodeAllowanceCall(ownerAddress, spenderAddress);
+    const tokenAddress = getTokenAddress();
 
     // Call contract
     const result = await window.ethereum.request({
       method: 'eth_call',
       params: [
         {
-          to: VFIDE_TOKEN_ADDRESS,
+          to: tokenAddress,
           data,
         },
         'latest',
@@ -102,7 +112,7 @@ export async function checkTokenAllowance(
 
     return {
       hasApproval: !needsApproval,
-      currentAllowance: (Number(currentAllowance) / 1e18).toString(),
+      currentAllowance: formatUnits(currentAllowance, 18),
       requiredAmount,
       needsApproval,
     };
@@ -147,23 +157,23 @@ export async function requestTokenApproval(
     if (unlimited) {
       approvalAmount = MAX_UINT256;
     } else if (amount) {
-      // Convert to Wei
-      approvalAmount = '0x' + BigInt(Math.floor(parseFloat(amount) * 1e18)).toString(16);
+      // Convert to Wei using parseUnits for precision
+      approvalAmount = '0x' + parseUnits(amount, 18).toString(16);
     } else {
-      // Default to unlimited
-      approvalAmount = MAX_UINT256;
+      throw new Error('Token approval requires either an explicit amount or unlimited=true');
     }
 
     // Encode approve function call
     const data = encodeApproveCall(spenderAddress, approvalAmount);
 
     // Send approval transaction
+    const tokenAddress = getTokenAddress();
     const txHash = await window.ethereum.request({
       method: 'eth_sendTransaction',
       params: [
         {
           from: userAddress,
-          to: VFIDE_TOKEN_ADDRESS,
+          to: tokenAddress,
           data,
         },
       ],
@@ -271,12 +281,13 @@ export async function getTokenBalance(address: string): Promise<string> {
     }
 
     const data = encodeBalanceOfCall(address);
+    const tokenAddress = getTokenAddress();
 
     const result = await window.ethereum.request({
       method: 'eth_call',
       params: [
         {
-          to: VFIDE_TOKEN_ADDRESS,
+          to: tokenAddress,
           data,
         },
         'latest',
@@ -284,7 +295,7 @@ export async function getTokenBalance(address: string): Promise<string> {
     });
 
     const balance = BigInt(result);
-    return (Number(balance) / 1e18).toString();
+    return formatUnits(balance, 18);
   } catch (error) {
     console.error('Failed to get token balance:', error);
     return '0';
@@ -317,13 +328,14 @@ export async function revokeTokenApproval(
 
     // Encode approve(spender, 0)
     const data = encodeApproveCall(spenderAddress, '0x0');
+    const tokenAddress = getTokenAddress();
 
     const txHash = await window.ethereum.request({
       method: 'eth_sendTransaction',
       params: [
         {
           from: userAddress,
-          to: VFIDE_TOKEN_ADDRESS,
+          to: tokenAddress,
           data,
         },
       ],

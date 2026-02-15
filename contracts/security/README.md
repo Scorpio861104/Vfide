@@ -100,24 +100,23 @@ Auto-pause system based on monitoring key ecosystem metrics.
 - Price drop: 20% in 1 hour
 - Blacklist count: 10 in 24 hours
 
-### 7. VFIDETokenV2.sol
-Enhanced VFIDE token with security features and optimizations.
+### 7. VFIDEToken.sol (Unified)
+Unified VFIDE token with security, vault-only flow, and governance checkpoints.
 
 **Features:**
-- ✅ Multi-sig requirement for blacklist/freeze
+- ✅ Vault-only transfers with auto-vault provisioning
 - ✅ Checkpoint-based voting power (flash loan protection)
 - ✅ Vote delegation
-- ✅ Batch transfer and approve
-- ✅ Storage slot packing optimization
-- ✅ Anti-whale protection
-- ✅ Reentrancy protection
+- ✅ Batch operations (batchTransfer, batchApprove)
+- ✅ Anti-whale protection + cooldown + daily limits
+- ✅ Blacklist with freeze delay
+- ✅ ProofScore-aware burn/treasury routing
+- ✅ SecurityHub lock checks + circuit breaker
 
-**Enhancements over V1:**
-- Checkpoint-based voting prevents flash loan attacks
-- Vote delegation without token transfer
-- Batch operations (up to 200 recipients/spenders)
-- Optimized storage layout
-- Enhanced security modifiers
+**Enhancements over prior split designs:**
+- Governance checkpoints + delegation in the same token used by vault-only flows
+- Unified policy controls (vault-only, blacklist, circuit breaker)
+- Fee routing and security hooks baked in
 
 ## 📦 Installation & Deployment
 
@@ -219,7 +218,7 @@ npm test -- __tests__/contracts/security/emergency-control
 # Circuit breaker tests
 npm test -- __tests__/contracts/security/circuit-breaker
 
-# Token V2 tests
+# Token tests
 npm test -- __tests__/contracts/security/token-v2
 ```
 
@@ -318,7 +317,7 @@ AdminMultiSig:        0x...
 EmergencyControlV2:   0x...
 CircuitBreaker:       0x...
 WithdrawalQueue:      0x...
-VFIDETokenV2:         0x...
+VFIDEToken:           0x...
 ```
 
 ### Mainnet
@@ -329,7 +328,7 @@ AdminMultiSig:        [To be deployed]
 EmergencyControlV2:   [To be deployed]
 CircuitBreaker:       [To be deployed]
 WithdrawalQueue:      [To be deployed]
-VFIDETokenV2:         [To be deployed]
+VFIDEToken:           [To be deployed]
 ```
 
 ## 📚 Documentation

@@ -160,7 +160,16 @@ const TOKEN_ABI = [
       { name: 'who', type: 'address' },
       { name: 'isExempt', type: 'bool' },
     ],
-    name: 'setSystemExempt',
+    name: 'proposeSystemExempt',
+    outputs: [],
+    stateMutability: 'nonpayable',
+    type: 'function',
+  },
+  {
+    inputs: [
+      { name: 'who', type: 'address' },
+    ],
+    name: 'confirmSystemExempt',
     outputs: [],
     stateMutability: 'nonpayable',
     type: 'function',
@@ -180,7 +189,16 @@ const TOKEN_ABI = [
       { name: 'addr', type: 'address' },
       { name: 'status', type: 'bool' },
     ],
-    name: 'setWhitelist',
+    name: 'proposeWhitelist',
+    outputs: [],
+    stateMutability: 'nonpayable',
+    type: 'function',
+  },
+  {
+    inputs: [
+      { name: 'addr', type: 'address' },
+    ],
+    name: 'confirmWhitelist',
     outputs: [],
     stateMutability: 'nonpayable',
     type: 'function',
@@ -378,8 +396,6 @@ export default function AdminPanel() {
   });
   const [txHistory, setTxHistory] = useState<AdminTransaction[]>([]);
   const [batchActions, setBatchActions] = useState<BatchAction[]>([]);
-  const [showSimulation, setShowSimulation] = useState(false);
-  const [simulationData, setSimulationData] = useState<{ action: string; changes: Array<{ field: string; before: string; after: string }>; impact: string } | null>(null);
   const [showBatchMode, setShowBatchMode] = useState(false);
   const [showTxHistory, setShowTxHistory] = useState(false);
   const [showHealthDashboard, setShowHealthDashboard] = useState(true);
@@ -427,6 +443,8 @@ export default function AdminPanel() {
     functionName: 'presaleMinted',
     query: { enabled: IS_TOKEN_DEPLOYED },
   });
+
+  const presaleMintedAmount = presaleMinted ? safeBigIntToNumber(presaleMinted as bigint, 18) : 0;
 
   const { data: isWhitelisted } = useReadContract({
     address: TOKEN_ADDRESS,
@@ -653,7 +671,7 @@ export default function AdminPanel() {
     writeContract({
       address: TOKEN_ADDRESS,
       abi: TOKEN_ABI,
-      functionName: 'setSystemExempt',
+      functionName: 'proposeSystemExempt',
       args: [exemptAddress as `0x${string}`, true],
     });
   };
@@ -663,8 +681,18 @@ export default function AdminPanel() {
     writeContract({
       address: TOKEN_ADDRESS,
       abi: TOKEN_ABI,
-      functionName: 'setSystemExempt',
+      functionName: 'proposeSystemExempt',
       args: [exemptAddress as `0x${string}`, false],
+    });
+  };
+
+  const handleExemptConfirm = () => {
+    if (!exemptAddress) return;
+    writeContract({
+      address: TOKEN_ADDRESS,
+      abi: TOKEN_ABI,
+      functionName: 'confirmSystemExempt',
+      args: [exemptAddress as `0x${string}`],
     });
   };
 
@@ -688,13 +716,13 @@ export default function AdminPanel() {
     });
   };
 
-  // Vault-only bypass whitelist (for exchanges)
+  // Vault-only bypass whitelist (for exchanges) - timelocked
   const handleVaultBypassAdd = () => {
     if (!vaultBypassAddress) return;
     writeContract({
       address: TOKEN_ADDRESS,
       abi: TOKEN_ABI,
-      functionName: 'setWhitelist',
+      functionName: 'proposeWhitelist',
       args: [vaultBypassAddress as `0x${string}`, true],
     });
   };
@@ -704,8 +732,18 @@ export default function AdminPanel() {
     writeContract({
       address: TOKEN_ADDRESS,
       abi: TOKEN_ABI,
-      functionName: 'setWhitelist',
+      functionName: 'proposeWhitelist',
       args: [vaultBypassAddress as `0x${string}`, false],
+    });
+  };
+
+  const handleVaultBypassConfirm = () => {
+    if (!vaultBypassAddress) return;
+    writeContract({
+      address: TOKEN_ADDRESS,
+      abi: TOKEN_ABI,
+      functionName: 'confirmWhitelist',
+      args: [vaultBypassAddress as `0x${string}`],
     });
   };
 
@@ -798,6 +836,7 @@ export default function AdminPanel() {
     a.href = url;
     a.download = `vfide-admin-config-${Date.now()}.json`;
     a.click();
+    URL.revokeObjectURL(url);
   };
 
   const handleUpdateBurnPolicy = () => {
@@ -908,81 +947,6 @@ export default function AdminPanel() {
           />
         </div>
 
-        {/* Simulation Mode Banner */}
-        {showSimulation && (
-          <div className="bg-yellow-500/20 border border-yellow-500 rounded-lg p-4 mb-8">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <span className="text-2xl">🔍</span>
-                <div>
-                  <p className="text-yellow-400 font-bold">Simulation Mode Active</p>
-                  <p className="text-gray-300 text-sm">Actions will show preview without executing</p>
-                </div>
-              </div>
-              <button
-                onClick={() => {
-                  setShowSimulation(false);
-                  setSimulationData(null);
-                }}
-                className="bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded-lg transition-colors"
-              >
-                Exit Simulation
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* Simulation Preview */}
-        {simulationData && (
-          <div className="bg-blue-500/20 border border-blue-500 rounded-lg p-6 mb-8">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-blue-400 font-bold text-xl">📊 Action Preview</h3>
-              <button
-                onClick={() => setSimulationData(null)}
-                className="text-gray-400 hover:text-gray-300"
-              >
-                ✕
-              </button>
-            </div>
-            
-            <div className="mb-4">
-              <p className="text-white font-bold text-lg mb-2">{simulationData.action}</p>
-              <p className="text-gray-300 text-sm mb-4">{simulationData.impact}</p>
-            </div>
-
-            <div className="space-y-2 mb-4">
-              {simulationData.changes.map((change: { field: string, before: string, after: string }, idx: number) => (
-                <div key={idx} className="bg-black/30 rounded-lg p-3">
-                  <p className="text-gray-400 text-sm mb-1">{change.field}</p>
-                  <div className="flex items-center gap-2 text-sm">
-                    <span className="text-red-400">{change.before}</span>
-                    <span className="text-gray-500">→</span>
-                    <span className="text-green-400">{change.after}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            <div className="flex gap-2">
-              <button
-                onClick={() => {
-                  setShowSimulation(false);
-                  setSimulationData(null);
-                  // Would execute the real action here
-                }}
-                className="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg transition-colors"
-              >
-                ✅ Execute Action
-              </button>
-              <button
-                onClick={() => setSimulationData(null)}
-                className="flex-1 bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg transition-colors"
-              >
-                ❌ Cancel
-              </button>
-            </div>
-          </div>
-        )}
 
         {/* Supply Stats */}
         <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 mb-8">
@@ -995,15 +959,15 @@ export default function AdminPanel() {
               </p>
             </div>
             <div className="bg-black/30 rounded-lg p-4">
-              <p className="text-gray-400 text-sm">Presale Minted</p>
+                  <p className="text-gray-400 text-sm">Launch Minted</p>
               <p className="text-white text-2xl font-bold">
-                {presaleMinted ? formatEther(presaleMinted).slice(0, -18) : '0'} VFIDE
+                {presaleMintedAmount.toLocaleString()} VFIDE
               </p>
             </div>
             <div className="bg-black/30 rounded-lg p-4">
-              <p className="text-gray-400 text-sm">Presale Remaining</p>
+                  <p className="text-gray-400 text-sm">Launch Remaining</p>
               <p className="text-white text-2xl font-bold">
-                {presaleMinted ? (50_000_000 - Number(formatEther(presaleMinted))).toLocaleString() : '50,000,000'} VFIDE
+                {(50_000_000 - presaleMintedAmount).toLocaleString()} VFIDE
               </p>
             </div>
           </div>
@@ -1178,7 +1142,7 @@ export default function AdminPanel() {
                 <option value="burnRouter">Burn Router</option>
                 <option value="treasurySink">Treasury Sink</option>
                 <option value="sanctumSink">Sanctum Sink</option>
-                <option value="presale">Presale Contract</option>
+                    <option value="presale">Launch Contract</option>
               </select>
             </div>
 
@@ -1230,7 +1194,7 @@ export default function AdminPanel() {
                   <p className="text-white font-mono break-all">{sanctumSinkAddress as string || 'Not set'}</p>
                 </div>
                 <div className="bg-black/30 rounded p-2">
-                  <span className="text-gray-400">Presale:</span>
+                  <span className="text-gray-400">Launch:</span>
                   <p className="text-white font-mono break-all">{presaleContractAddress as string || 'Not set'}</p>
                 </div>
               </div>
@@ -1261,14 +1225,21 @@ export default function AdminPanel() {
                 disabled={!exemptAddress || isPending || isConfirming}
                 className="flex-1 bg-green-600 hover:bg-green-700 disabled:bg-gray-600 text-white font-bold py-3 px-6 rounded-lg transition-colors"
               >
-                ✅ Add Exemption
+                Propose Add
               </button>
               <button
                 onClick={handleExemptRemove}
                 disabled={!exemptAddress || isPending || isConfirming}
                 className="flex-1 bg-red-600 hover:bg-red-700 disabled:bg-gray-600 text-white font-bold py-3 px-6 rounded-lg transition-colors"
               >
-                ❌ Remove
+                Propose Remove
+              </button>
+              <button
+                onClick={handleExemptConfirm}
+                disabled={!exemptAddress || isPending || isConfirming}
+                className="flex-1 bg-amber-600 hover:bg-amber-700 disabled:bg-gray-600 text-white font-bold py-3 px-6 rounded-lg transition-colors"
+              >
+                Confirm (after 1d)
               </button>
             </div>
 
@@ -1360,14 +1331,21 @@ export default function AdminPanel() {
                 disabled={!vaultBypassAddress || isPending || isConfirming}
                 className="flex-1 bg-green-600 hover:bg-green-700 disabled:bg-gray-600 text-white font-bold py-3 px-6 rounded-lg transition-colors"
               >
-                ✅ Whitelist
+                Propose Whitelist
               </button>
               <button
                 onClick={handleVaultBypassRemove}
                 disabled={!vaultBypassAddress || isPending || isConfirming}
                 className="flex-1 bg-red-600 hover:bg-red-700 disabled:bg-gray-600 text-white font-bold py-3 px-6 rounded-lg transition-colors"
               >
-                ❌ Remove
+                Propose Remove
+              </button>
+              <button
+                onClick={handleVaultBypassConfirm}
+                disabled={!vaultBypassAddress || isPending || isConfirming}
+                className="flex-1 bg-amber-600 hover:bg-amber-700 disabled:bg-gray-600 text-white font-bold py-3 px-6 rounded-lg transition-colors"
+              >
+                Confirm (after 1d)
               </button>
             </div>
 
@@ -1730,7 +1708,7 @@ export default function AdminPanel() {
               {batchActions.length === 0 ? (
                 <div className="text-center text-gray-400 py-8">
                   <p>No actions queued</p>
-                  <p className="text-sm mt-2">Actions can be queued for batch execution (feature coming soon)</p>
+                  <p className="text-sm mt-2">Actions can be queued for batch execution.</p>
                 </div>
               ) : (
                 <>
@@ -1981,21 +1959,6 @@ export default function AdminPanel() {
                 🏥 {showHealthDashboard ? 'Hide' : 'Show'} Health Dashboard
               </button>
 
-              {/* Toggle Simulation Mode */}
-              <button
-                onClick={() => {
-                  setShowSimulation(!showSimulation);
-                  if (showSimulation) setSimulationData(null);
-                }}
-                className={`block w-full ${
-                  showSimulation
-                    ? 'bg-yellow-600 hover:bg-yellow-700'
-                    : 'bg-gray-600 hover:bg-gray-700'
-                } text-white font-bold py-3 px-6 rounded-lg transition-colors text-center`}
-              >
-                🔍 {showSimulation ? 'Disable' : 'Enable'} Simulation Mode
-              </button>
-
               {/* Toggle Batch Mode */}
               <button
                 onClick={() => setShowBatchMode(!showBatchMode)}
@@ -2053,13 +2016,13 @@ export default function AdminPanel() {
                   <p className="text-gray-400 mb-2">Connect notification services:</p>
                   <div className="space-y-1">
                     <button className="text-gray-500 text-xs hover:text-blue-400 transition-colors">
-                      → Email Alerts (Coming Soon)
+                      → Email Alerts
                     </button>
                     <button className="text-gray-500 text-xs hover:text-blue-400 transition-colors block">
-                      → Discord Webhook (Coming Soon)
+                      → Discord Webhook
                     </button>
                     <button className="text-gray-500 text-xs hover:text-blue-400 transition-colors block">
-                      → Telegram Bot (Coming Soon)
+                      → Telegram Bot
                     </button>
                   </div>
                 </div>

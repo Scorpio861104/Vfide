@@ -1,6 +1,6 @@
-'use client';
-
 import Script from 'next/script';
+import { headers } from 'next/headers';
+import { serializeStructuredData } from '@/lib/optimization/seoOptimization';
 
 // Organization structured data
 const organizationSchema = {
@@ -9,7 +9,7 @@ const organizationSchema = {
   name: 'VFIDE',
   url: 'https://vfide.io',
   logo: 'https://vfide.io/logo.png',
-  description: 'Decentralized payment protocol with trust scoring and ProofScore verification.',
+  description: 'Crypto payment protocol with trust scoring and ProofScore verification on Base Sepolia testnet.',
   sameAs: [
     'https://twitter.com/vfide',
     'https://github.com/vfide',
@@ -37,49 +37,32 @@ const webApplicationSchema = {
   featureList: [
     'Crypto payments acceptance',
     'Trust scoring with ProofScore',
-    'Decentralized vault storage',
+    'Non-custodial vault storage',
     'Merchant POS system',
     'Governance participation',
     'Community endorsements',
   ],
 };
 
-// SoftwareApplication for app stores
-const softwareApplicationSchema = {
-  '@context': 'https://schema.org',
-  '@type': 'SoftwareApplication',
-  name: 'VFIDE',
-  applicationCategory: 'Finance',
-  operatingSystem: 'iOS, Android, Web',
-  offers: {
-    '@type': 'Offer',
-    price: '0',
-    priceCurrency: 'USD',
-  },
-};
-
-export function StructuredData() {
+export async function StructuredData() {
+  const headerList = await headers();
+  const nonce = headerList.get('x-nonce') || undefined;
   return (
     <>
       <Script
         id="organization-schema"
         type="application/ld+json"
+        nonce={nonce}
         dangerouslySetInnerHTML={{
-          __html: JSON.stringify(organizationSchema),
+          __html: serializeStructuredData(organizationSchema),
         }}
       />
       <Script
         id="web-application-schema"
         type="application/ld+json"
+        nonce={nonce}
         dangerouslySetInnerHTML={{
-          __html: JSON.stringify(webApplicationSchema),
-        }}
-      />
-      <Script
-        id="software-application-schema"
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify(softwareApplicationSchema),
+          __html: serializeStructuredData(webApplicationSchema),
         }}
       />
     </>
@@ -92,7 +75,9 @@ interface BreadcrumbItem {
   url: string;
 }
 
-export function PageBreadcrumbSchema({ items }: { items: BreadcrumbItem[] }) {
+export async function PageBreadcrumbSchema({ items }: { items: BreadcrumbItem[] }) {
+  const headerList = await headers();
+  const nonce = headerList.get('x-nonce') || undefined;
   const breadcrumbSchema = {
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
@@ -108,8 +93,9 @@ export function PageBreadcrumbSchema({ items }: { items: BreadcrumbItem[] }) {
     <Script
       id="breadcrumb-schema"
       type="application/ld+json"
+      nonce={nonce}
       dangerouslySetInnerHTML={{
-        __html: JSON.stringify(breadcrumbSchema),
+        __html: serializeStructuredData(breadcrumbSchema),
       }}
     />
   );
@@ -121,7 +107,9 @@ interface FAQItem {
   answer: string;
 }
 
-export function FAQSchema({ faqs }: { faqs: FAQItem[] }) {
+export async function FAQSchema({ faqs }: { faqs: FAQItem[] }) {
+  const headerList = await headers();
+  const nonce = headerList.get('x-nonce') || undefined;
   const faqSchema = {
     '@context': 'https://schema.org',
     '@type': 'FAQPage',
@@ -139,8 +127,9 @@ export function FAQSchema({ faqs }: { faqs: FAQItem[] }) {
     <Script
       id="faq-schema"
       type="application/ld+json"
+      nonce={nonce}
       dangerouslySetInnerHTML={{
-        __html: JSON.stringify(faqSchema),
+        __html: serializeStructuredData(faqSchema),
       }}
     />
   );

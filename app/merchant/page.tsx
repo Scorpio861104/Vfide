@@ -264,7 +264,7 @@ export default function MerchantPage() {
               <FeatureCard
                 icon={Zap}
                 title="Flexible Settlement"
-                description="Direct payments settle instantly. Escrow mode holds funds until release."
+                description="Direct payments settle instantly. Escrow mode holds funds until both parties approve release."
                 color="blue"
               />
               <FeatureCard
@@ -297,7 +297,7 @@ export default function MerchantPage() {
             </motion.div>
 
             <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
-              <table className="w-full min-w-150">
+              <table className="w-full min-w-[37.5rem]">
                 <thead>
                   <tr className="border-b border-white/10">
                     <th className="text-left py-4 px-2 sm:px-4 text-gray-400 font-medium text-sm">Feature</th>

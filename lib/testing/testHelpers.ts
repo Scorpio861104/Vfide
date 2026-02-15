@@ -162,7 +162,7 @@ export function setupTestEnvironment() {
   });
 
   // Mock IntersectionObserver
-  (global as any).IntersectionObserver = createMockIntersectionObserver();
+  (global as unknown as Record<string, unknown>).IntersectionObserver = createMockIntersectionObserver();
 }
 
 /**

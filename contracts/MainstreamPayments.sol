@@ -422,12 +422,15 @@ contract VFIDEPriceOracle {
         uint256 usdDisplay,
         uint256 vfideFormatted
     ) {
+        require(vfidePerUsd > 0, "PO: price not set");
+        require(block.timestamp <= lastUpdateTime + stalenessThreshold, "PO: stale price");
+
         // usdPrice is in cents, convert to 6 decimals
         usdDisplay = usdPrice * 1e4; // cents to 6 decimals
-        
+
         // Calculate VFIDE amount
         vfidePrice = (usdDisplay * vfidePerUsd) / 1e6;
-        
+
         // Format for display (2 decimal places = divide by 1e16)
         vfideFormatted = vfidePrice / 1e16;
     }
@@ -1050,12 +1053,30 @@ contract MultiCurrencyRouter {
             // No swap needed (already VFIDE)
             estimatedVfide = amountIn;
         } else {
-            // Would call DEX for real quote
-            // For now, placeholder - frontend should query DEX directly
-            estimatedVfide = amountIn;  
+            estimatedVfide = _quoteAmounts(path, amountIn);
         }
         
         usdValue = priceOracle.vfideToUsd(estimatedVfide);
+    }
+
+    function _quoteAmounts(address[] memory path, uint256 amountIn) internal view returns (uint256) {
+        if (recommendedRouter == address(0)) return amountIn;
+
+        (bool ok, bytes memory data) = recommendedRouter.staticcall(
+            abi.encodeWithSignature(
+                "getAmountsOut(uint256,address[])",
+                amountIn,
+                path
+            )
+        );
+
+        if (!ok || data.length == 0) {
+            return amountIn;
+        }
+
+        uint256[] memory amounts = abi.decode(data, (uint256[]));
+        if (amounts.length == 0) return amountIn;
+        return amounts[amounts.length - 1];
     }
     
     /**

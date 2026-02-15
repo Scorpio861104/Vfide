@@ -16,8 +16,8 @@ export function OnboardingTooltip() {
   
   useEffect(() => {
     if (!isActive || !step || !step.targetElement) {
-      setPosition(null);
-      return;
+      const frame = window.requestAnimationFrame(() => setPosition(null));
+      return () => window.cancelAnimationFrame(frame);
     }
     
     const updatePosition = () => {
@@ -63,13 +63,14 @@ export function OnboardingTooltip() {
     };
     
     // Initial position
-    setTimeout(updatePosition, 100);
+    const timeoutId = window.setTimeout(updatePosition, 100);
     
     // Update on scroll/resize
     window.addEventListener('scroll', updatePosition);
     window.addEventListener('resize', updatePosition);
     
     return () => {
+      window.clearTimeout(timeoutId);
       window.removeEventListener('scroll', updatePosition);
       window.removeEventListener('resize', updatePosition);
     };

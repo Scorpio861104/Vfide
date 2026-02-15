@@ -25,6 +25,8 @@ import { useAccount } from 'wagmi';
 import { getAuthHeaders } from '@/lib/auth/client';
 import { isAddress } from 'viem';
 
+const SAMPLE_TIME_BASE = Date.parse('2024-03-01T00:00:00Z');
+
 // Animated counter
 function AnimatedCounter({ value, prefix = '', suffix = '' }: { value: number; prefix?: string; suffix?: string }) {
   const count = useMotionValue(0);
@@ -165,7 +167,7 @@ const generateApiKeyValue = () => {
     window.crypto.getRandomValues(bytes);
     return `sk_live_${Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('')}`;
   }
-  return `sk_live_${Math.random().toString(36).slice(2)}${Math.random().toString(36).slice(2)}`;
+  return `sk_live_placeholder_configure_server_side`;
 };
 
 // ==================== MAIN COMPONENT ====================
@@ -624,8 +626,8 @@ function PaymentRequestsSection({
       currency: 'USDC',
       memo: 'Monthly retainer',
       status: 'pending' as const,
-      createdAt: Date.now() - 2 * 24 * 60 * 60 * 1000,
-      updatedAt: Date.now() - 24 * 60 * 60 * 1000,
+      createdAt: SAMPLE_TIME_BASE - 2 * 24 * 60 * 60 * 1000,
+      updatedAt: SAMPLE_TIME_BASE - 24 * 60 * 60 * 1000,
       txHash: null,
     },
     {
@@ -636,8 +638,8 @@ function PaymentRequestsSection({
       currency: 'ETH',
       memo: 'Consulting hours',
       status: 'sent' as const,
-      createdAt: Date.now() - 5 * 24 * 60 * 60 * 1000,
-      updatedAt: Date.now() - 4 * 24 * 60 * 60 * 1000,
+      createdAt: SAMPLE_TIME_BASE - 5 * 24 * 60 * 60 * 1000,
+      updatedAt: SAMPLE_TIME_BASE - 4 * 24 * 60 * 60 * 1000,
       txHash: null,
     },
     {
@@ -648,8 +650,8 @@ function PaymentRequestsSection({
       currency: 'USDC',
       memo: 'Vendor invoice',
       status: 'completed' as const,
-      createdAt: Date.now() - 10 * 24 * 60 * 60 * 1000,
-      updatedAt: Date.now() - 9 * 24 * 60 * 60 * 1000,
+      createdAt: SAMPLE_TIME_BASE - 10 * 24 * 60 * 60 * 1000,
+      updatedAt: SAMPLE_TIME_BASE - 9 * 24 * 60 * 60 * 1000,
       txHash: null,
     },
   ];
@@ -862,7 +864,7 @@ function BulkPaymentsSection({
         {
           id: 'sample-job-1',
           filename: 'payroll_january_2024.csv',
-          uploadedAt: Date.now() - 2 * 60 * 60 * 1000,
+          uploadedAt: SAMPLE_TIME_BASE - 2 * 60 * 60 * 1000,
           status: 'processing' as const,
           totalRows: 120,
           successCount: 84,
@@ -872,7 +874,7 @@ function BulkPaymentsSection({
         {
           id: 'sample-job-2',
           filename: 'payouts_february_2024.csv',
-          uploadedAt: Date.now() - 24 * 60 * 60 * 1000,
+          uploadedAt: SAMPLE_TIME_BASE - 24 * 60 * 60 * 1000,
           status: 'completed' as const,
           totalRows: 200,
           successCount: 200,
@@ -949,8 +951,8 @@ function ApiKeysSection({
       key: 'vfide_live_prod_1234567890',
       maskedKey: 'vfide_live_****************',
       status: 'active' as const,
-      createdAt: Date.now() - 7 * 24 * 60 * 60 * 1000,
-      lastUsed: Date.now() - 2 * 60 * 60 * 1000,
+      createdAt: SAMPLE_TIME_BASE - 7 * 24 * 60 * 60 * 1000,
+      lastUsed: SAMPLE_TIME_BASE - 2 * 60 * 60 * 1000,
       permissions: ['read:payments', 'write:payments'],
     },
     {
@@ -959,8 +961,8 @@ function ApiKeysSection({
       key: 'vfide_live_dev_0987654321',
       maskedKey: 'vfide_live_****************',
       status: 'active' as const,
-      createdAt: Date.now() - 30 * 24 * 60 * 60 * 1000,
-      lastUsed: Date.now() - 24 * 60 * 60 * 1000,
+      createdAt: SAMPLE_TIME_BASE - 30 * 24 * 60 * 60 * 1000,
+      lastUsed: SAMPLE_TIME_BASE - 24 * 60 * 60 * 1000,
       permissions: ['read:payments'],
     },
     {
@@ -969,7 +971,7 @@ function ApiKeysSection({
       key: 'vfide_live_test_1122334455',
       maskedKey: 'vfide_live_****************',
       status: 'revoked' as const,
-      createdAt: Date.now() - 90 * 24 * 60 * 60 * 1000,
+      createdAt: SAMPLE_TIME_BASE - 90 * 24 * 60 * 60 * 1000,
       lastUsed: null,
       permissions: ['read:payments'],
     },

@@ -119,7 +119,7 @@ All pages follow consistent patterns:
 ### wagmi Configuration
 
 The app uses wagmi v3 for blockchain interactions:
-- **Chains**: Ethereum, Polygon, Arbitrum, Sepolia (testnet)
+- **Chains**: Base Mainnet and Base Sepolia
 - **Connectors**: MetaMask (injected), WalletConnect, Coinbase Wallet
 
 ### Contract Interactions

@@ -151,7 +151,7 @@ export function checkETag(request: NextRequest, etag: string): boolean {
  * // Request: /api/users?fields=id,username,avatar
  * const filtered = filterFields(user, ['id', 'username', 'avatar']);
  */
-export function filterFields<T extends Record<string, any>>(
+export function filterFields<T extends Record<string, unknown>>(
   data: T,
   fields?: string[]
 ): Partial<T> {

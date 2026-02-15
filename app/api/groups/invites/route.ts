@@ -1,4 +1,5 @@
 import { query } from '@/lib/db';
+import crypto from 'crypto';
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
@@ -19,15 +20,21 @@ interface GroupInvite {
 
 async function generateInviteCode(): Promise<string> {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-  let code = '';
-  for (let i = 0; i < 12; i++) {
-    code += chars.charAt(Math.floor(Math.random() * chars.length));
+  const length = 12;
+
+  for (let attempt = 0; attempt < 5; attempt += 1) {
+    let code = '';
+    for (let i = 0; i < length; i += 1) {
+      code += chars.charAt(crypto.randomInt(chars.length));
+    }
+
+    const existing = await query('SELECT id FROM group_invites WHERE code = $1', [code]);
+    if (existing.rows.length === 0) {
+      return code;
+    }
   }
-  const existing = await query('SELECT id FROM group_invites WHERE code = $1', [code]);
-  if (existing.rows.length > 0) {
-    return generateInviteCode();
-  }
-  return code;
+
+  throw new Error('Failed to generate invite code');
 }
 
 export async function POST(request: NextRequest) {
@@ -96,6 +103,9 @@ export async function GET(request: NextRequest) {
   const rateLimit = await withRateLimit(request, 'api');
   if (rateLimit) return rateLimit;
 
+  const authResult = await requireAuth(request);
+  if (authResult instanceof NextResponse) return authResult;
+
   try {
     const { searchParams } = new URL(request.url);
     const groupId = searchParams.get('groupId');
@@ -117,6 +127,18 @@ export async function GET(request: NextRequest) {
     }
 
     if (groupId) {
+      const memberResult = await query(
+        `SELECT gm.role FROM group_members gm
+         JOIN users u ON gm.user_id = u.id
+         WHERE gm.group_id = $1 AND u.wallet_address = $2`,
+        [groupId, authResult.user.address.toLowerCase()]
+      );
+
+      const role = memberResult.rows[0]?.role;
+      if (!role || !['owner', 'admin', 'moderator'].includes(role)) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+      }
+
       const result = await query<GroupInvite>(
         `SELECT gi.*, u.username as creator_username
          FROM group_invites gi

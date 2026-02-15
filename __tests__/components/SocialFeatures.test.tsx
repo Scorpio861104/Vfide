@@ -8,6 +8,20 @@ import { render, screen, fireEvent, within } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import SocialFeatures from '@/components/social/SocialFeatures';
 
+jest.mock('framer-motion', () => {
+  const React = require('react');
+  const handler = {
+    get: (_target: unknown, prop: string) => {
+      return ({ children, ...rest }: { children?: React.ReactNode }) =>
+        React.createElement(prop, rest, children);
+    },
+  };
+
+  return {
+    motion: new Proxy({}, handler),
+  };
+});
+
 // ==================== TAB NAVIGATION TESTS ====================
 
 describe('SocialFeatures - Tab Navigation', () => {

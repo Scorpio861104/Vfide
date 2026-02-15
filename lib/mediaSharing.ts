@@ -3,6 +3,9 @@
  * Handle file uploads, image sharing, and media attachments in messages
  */
 
+import { buildCsrfHeaders } from '@/lib/security/csrfClient';
+import { secureId } from '@/lib/secureRandom';
+
 export interface MediaAttachment {
   id: string;
   type: 'image' | 'video' | 'audio' | 'file';
@@ -168,53 +171,73 @@ export async function uploadFile(
     throw new Error(validation.error);
   }
 
-  // In production, this would upload to IPFS or cloud storage
-  // For now, use data URLs for demo
-  return new Promise((resolve, reject) => {
+  const dataUrl = await new Promise<string>((resolve, reject) => {
     const reader = new FileReader();
 
-    reader.onload = async (e) => {
-      try {
-        const url = e.target?.result as string;
-        
-        // Generate thumbnail for images
-        let thumbnailUrl: string | undefined;
-        if (file.type.startsWith('image/')) {
-          thumbnailUrl = await generateThumbnail(file);
-        }
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = () => reject(new Error('Failed to read file'));
 
-        const attachment: MediaAttachment = {
-          id: `media_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-          type: getFileCategory(file.type) || 'file',
-          name: file.name,
-          size: file.size,
-          url,
-          thumbnailUrl,
-          mimeType: file.type,
-          uploadedAt: Date.now(),
-          uploadedBy: '', // Will be set by caller
-        };
-
-        resolve(attachment);
-      } catch (error) {
-        reject(error);
+    reader.onprogress = (e) => {
+      if (onProgress && e.lengthComputable) {
+        onProgress(Math.round((e.loaded / e.total) * 100));
       }
     };
 
-    reader.onerror = () => reject(new Error('Failed to read file'));
-
-    // Simulate progress
-    if (onProgress) {
-      let progress = 0;
-      const interval = setInterval(() => {
-        progress += 10;
-        onProgress(progress);
-        if (progress >= 90) clearInterval(interval);
-      }, 100);
-    }
-
     reader.readAsDataURL(file);
   });
+
+  const headers = await buildCsrfHeaders({ 'Content-Type': 'application/json' }, 'POST');
+  const response = await fetch('/api/attachments/upload', {
+    method: 'POST',
+    headers,
+    credentials: 'include',
+    body: JSON.stringify({
+      filename: file.name,
+      fileType: file.type,
+      fileSize: file.size,
+      url: dataUrl,
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Upload failed: ${response.status}`);
+  }
+
+  const payload = await response.json();
+  if (!payload.success || !payload.attachment) {
+    throw new Error(payload.error || 'Upload failed');
+  }
+
+  const attachment = payload.attachment as {
+    id: number | string;
+    filename: string;
+    file_type?: string;
+    file_size?: number;
+    url: string;
+    uploaded_by?: number;
+    created_at?: string;
+  };
+
+  let thumbnailUrl: string | undefined;
+  if (file.type.startsWith('image/')) {
+    thumbnailUrl = await generateThumbnail(file);
+  }
+
+  if (onProgress) {
+    onProgress(100);
+  }
+
+  return {
+    id: String(attachment.id),
+    type: getFileCategory(attachment.file_type || file.type) || 'file',
+    name: attachment.filename,
+    size: attachment.file_size ?? file.size,
+    url: attachment.url,
+    thumbnailUrl,
+    mimeType: attachment.file_type || file.type,
+    uploadedAt: attachment.created_at ? new Date(attachment.created_at).getTime() : Date.now(),
+    uploadedBy: attachment.uploaded_by ? String(attachment.uploaded_by) : '',
+  };
 }
 
 /**
@@ -273,7 +296,7 @@ export function useMediaUpload() {
   const [isUploading, setIsUploading] = React.useState(false);
 
   const handleUploadFile = React.useCallback(async (file: File, userAddress: string): Promise<MediaAttachment> => {
-    const uploadId = `upload_${Date.now()}_${Math.random()}`;
+    const uploadId = secureId('upload');
     
     // Add to uploads map
     setUploads((prev) => {

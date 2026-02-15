@@ -215,9 +215,9 @@ Route (app)                              Size     First Load JS
 - Production RPC endpoints
 
 **Preview (Staging):**
-- Use testnet configuration
+- Use Base Sepolia configuration
 - Test contract addresses
-- Testnet RPC endpoints
+- Base Sepolia RPC endpoints
 
 **Development:**
 - Same as Preview

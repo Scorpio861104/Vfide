@@ -59,7 +59,7 @@ Before deploying contracts:
 slither . --print human-summary > docs/security/slither-report-$(date +%Y%m%d).md
 
 # Generate Mythril report
-myth analyze contracts/VFIDETokenV2.sol > docs/security/mythril-report-$(date +%Y%m%d).txt
+myth analyze contracts/VFIDEToken.sol > docs/security/mythril-report-$(date +%Y%m%d).txt
 ```
 
 ## Continuous Security

@@ -548,15 +548,11 @@ export function BackgroundVideo({
   overlay?: boolean;
 }) {
   const reducedMotion = usePrefersReducedMotion();
-  const [canPlayVideo, setCanPlayVideo] = useState(!reducedMotion);
-
-  useEffect(() => {
-    // Check if user prefers reduced data
+  const [canPlayVideo] = useState(() => {
+    if (reducedMotion || typeof navigator === 'undefined') return false;
     const connection = (navigator as Navigator & { connection?: { saveData?: boolean } }).connection;
-    if (connection?.saveData) {
-      setCanPlayVideo(false);
-    }
-  }, []);
+    return !connection?.saveData;
+  });
 
   if (!canPlayVideo && fallbackImage) {
     return (

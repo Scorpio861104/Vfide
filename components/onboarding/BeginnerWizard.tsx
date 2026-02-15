@@ -145,10 +145,10 @@ export function BeginnerWizard({ onComplete }: { onComplete?: () => void }) {
               <div className="w-16 h-16 mx-auto mb-4 flex items-center justify-center bg-cyan-400/10 rounded-full border border-cyan-400/30">
                 {currentStepData?.icon}
               </div>
-              <h2 className="text-3xl font-bold text-zinc-100 mb-3 font-(family-name:--font-display)">
+              <h2 className="text-3xl font-bold text-zinc-100 mb-3 font-[family-name:var(--font-display)]">
                 {currentStepData?.title}
               </h2>
-              <p className="text-lg text-zinc-400 leading-relaxed font-(family-name:--font-body) max-w-xl mx-auto">
+              <p className="text-lg text-zinc-400 leading-relaxed font-[family-name:var(--font-body)] max-w-xl mx-auto">
                 {currentStepData?.description}
               </p>
             </div>
@@ -187,7 +187,7 @@ export function BeginnerWizard({ onComplete }: { onComplete?: () => void }) {
             ← Back
           </button>
 
-          <div className="text-zinc-400 text-sm font-(family-name:--font-body)">
+          <div className="text-zinc-400 text-sm font-[family-name:var(--font-body)]">
             Step {currentStep + 1} of {steps.length}
           </div>
 

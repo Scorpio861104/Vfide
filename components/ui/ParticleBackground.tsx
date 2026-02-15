@@ -34,13 +34,20 @@ export function ParticleBackground() {
       particles = [];
 
       for (let i = 0; i < particleCount; i++) {
+        // Use deterministic spread based on index and canvas size
+        const fx = ((i * 2654435761) >>> 0) / 4294967296; // Knuth multiplicative hash for x
+        const fy = (((i + 1) * 2654435761) >>> 0) / 4294967296; // offset for y
+        const fvx = (((i + 2) * 2654435761) >>> 0) / 4294967296;
+        const fvy = (((i + 3) * 2654435761) >>> 0) / 4294967296;
+        const fs = (((i + 4) * 2654435761) >>> 0) / 4294967296;
+        const fo = (((i + 5) * 2654435761) >>> 0) / 4294967296;
         particles.push({
-          x: Math.random() * canvas.width,
-          y: Math.random() * canvas.height,
-          vx: (Math.random() - 0.5) * 0.5,
-          vy: (Math.random() - 0.5) * 0.5,
-          size: Math.random() * 2 + 1,
-          opacity: Math.random() * 0.5 + 0.2
+          x: fx * canvas.width,
+          y: fy * canvas.height,
+          vx: (fvx - 0.5) * 0.5,
+          vy: (fvy - 0.5) * 0.5,
+          size: fs * 2 + 1,
+          opacity: fo * 0.5 + 0.2
         });
       }
     };

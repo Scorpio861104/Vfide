@@ -4,7 +4,7 @@
  */
 
 import jwt from 'jsonwebtoken';
-import { isTokenRevoked, hashToken } from './tokenRevocation';
+import { isTokenRevoked, hashToken, isUserRevoked, revokeToken } from './tokenRevocation';
 
 // JWT Configuration
 // No fallback secret - fail fast if not set
@@ -16,6 +16,22 @@ function getJWTSecret(): string {
       'Please add it to your .env.local file for development or configure it in your deployment environment for production.'
     );
   }
+
+  // Enforce minimum secret strength
+  if (secret.length < 32) {
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error(
+        'JWT_SECRET must be at least 32 characters long for adequate security. ' +
+        'Current length: ' + secret.length
+      );
+    } else {
+      console.warn(
+        '[JWT] WARNING: JWT_SECRET is shorter than 32 characters (' + secret.length + ' chars). ' +
+        'This is insecure and will be rejected in production.'
+      );
+    }
+  }
+
   return secret;
 }
 
@@ -28,13 +44,15 @@ function getSecret(): string {
   return _jwtSecret;
 }
 
-const JWT_EXPIRES_IN = '24h';
+const JWT_ACCESS_EXPIRES_IN = '1h';
+const JWT_REFRESH_EXPIRES_IN = '7d';
 const JWT_ISSUER = 'vfide';
 const JWT_AUDIENCE = 'vfide-app';
 
 export interface JWTPayload {
   address: string;
   chainId?: number;
+  type?: 'access' | 'refresh';
   iat?: number;
   exp?: number;
   iss?: string;
@@ -43,30 +61,75 @@ export interface JWTPayload {
 
 export interface TokenResponse {
   token: string;
+  refreshToken: string;
   expiresIn: number;
   address: string;
 }
 
 /**
- * Generate a secure JWT token for authenticated users
+ * Generate access + refresh token pair for authenticated users
  */
 export function generateToken(address: string, chainId?: number): TokenResponse {
-  const payload: JWTPayload = {
+  const basePayload = {
     address: address.toLowerCase(),
-    chainId: chainId || 8453, // Default to Base
+    chainId: chainId || 8453,
   };
 
-  const token = jwt.sign(payload, getSecret(), {
-    expiresIn: JWT_EXPIRES_IN,
+  const token = jwt.sign({ ...basePayload, type: 'access' }, getSecret(), {
+    expiresIn: JWT_ACCESS_EXPIRES_IN,
+    issuer: JWT_ISSUER,
+    audience: JWT_AUDIENCE,
+  });
+
+  const refreshToken = jwt.sign({ ...basePayload, type: 'refresh' }, getSecret(), {
+    expiresIn: JWT_REFRESH_EXPIRES_IN,
     issuer: JWT_ISSUER,
     audience: JWT_AUDIENCE,
   });
 
   return {
     token,
-    expiresIn: 86400, // 24 hours in seconds
+    refreshToken,
+    expiresIn: 3600, // 1 hour in seconds
     address: address.toLowerCase(),
   };
+}
+
+/**
+ * Refresh an access token using a valid refresh token
+ */
+export async function refreshAccessToken(refreshTokenStr: string): Promise<TokenResponse | null> {
+  try {
+    const decoded = jwt.verify(refreshTokenStr, getSecret(), {
+      algorithms: ['HS256'],
+      issuer: JWT_ISSUER,
+      audience: JWT_AUDIENCE,
+    }) as JWTPayload;
+
+    if (decoded.type !== 'refresh') {
+      return null;
+    }
+
+    // Check revocation
+    const tokenHash = await hashToken(refreshTokenStr);
+    if (await isTokenRevoked(tokenHash)) {
+      return null;
+    }
+    const userRevocation = await isUserRevoked(decoded.address);
+    if (userRevocation?.revoked) {
+      return null;
+    }
+
+    // Issue new token pair
+    const newTokens = generateToken(decoded.address, decoded.chainId);
+
+    // Revoke the old refresh token to prevent reuse (token rotation)
+    await revokeToken(tokenHash, decoded.exp || 0, 'token_rotation');
+
+    return newTokens;
+  } catch {
+    return null;
+  }
 }
 
 /**
@@ -76,6 +139,7 @@ export function generateToken(address: string, chainId?: number): TokenResponse 
 export async function verifyToken(token: string): Promise<JWTPayload | null> {
   try {
     const decoded = jwt.verify(token, getSecret(), {
+      algorithms: ['HS256'],
       issuer: JWT_ISSUER,
       audience: JWT_AUDIENCE,
     }) as JWTPayload;
@@ -86,6 +150,12 @@ export async function verifyToken(token: string): Promise<JWTPayload | null> {
     
     if (revoked) {
       console.warn('[JWT] Token has been revoked');
+      return null;
+    }
+
+    const userRevocation = await isUserRevoked(decoded.address);
+    if (userRevocation?.revoked) {
+      console.warn('[JWT] User tokens have been revoked');
       return null;
     }
 
@@ -119,10 +189,10 @@ export function isTokenExpired(payload: JWTPayload): boolean {
 }
 
 /**
- * Refresh token if it's close to expiring (within 1 hour)
+ * Refresh token if it's close to expiring (within 10 minutes of 1h access token)
  */
 export function shouldRefreshToken(payload: JWTPayload): boolean {
   if (!payload.exp) return true;
-  const oneHourFromNow = Date.now() + 3600000;
-  return payload.exp * 1000 < oneHourFromNow;
+  const tenMinutesFromNow = Date.now() + 600000;
+  return payload.exp * 1000 < tenMinutesFromNow;
 }

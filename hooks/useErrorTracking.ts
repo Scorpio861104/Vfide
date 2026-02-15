@@ -30,15 +30,11 @@ const STORAGE_KEY = 'error_logs_v1';
 const MAX_ERRORS = 500;
 
 export function useErrorTracking(): UseErrorTrackingResult {
-  const [errors, setErrors] = useState<ErrorLog[]>([]);
-
-  // Load errors from localStorage on mount with SSR safety
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    
+  const [errors, setErrors] = useState<ErrorLog[]>(() => {
+    if (typeof window === 'undefined') return [];
     const parsed = safeGetJSON<ErrorLog[]>(STORAGE_KEY, []);
-    setErrors(Array.isArray(parsed) ? parsed : []);
-  }, []);
+    return Array.isArray(parsed) ? parsed : [];
+  });
 
   // Save errors to localStorage whenever they change with SSR safety
   useEffect(() => {
@@ -52,7 +48,7 @@ export function useErrorTracking(): UseErrorTrackingResult {
     (errorData: Omit<ErrorLog, 'id' | 'timestamp'>) => {
       const newError: ErrorLog = {
         ...errorData,
-        id: `error-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        id: `error-${Date.now()}-${Array.from(crypto.getRandomValues(new Uint8Array(7)), b => b.toString(16).padStart(2, '0')).join('').slice(0, 9)}`,
         timestamp: Date.now(),
       };
 

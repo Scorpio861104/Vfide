@@ -43,15 +43,19 @@ const QRCodeDisplay = ({ data, size = 200, label }: { data: string; size?: numbe
 
   useEffect(() => {
     let mounted = true;
-    setHasError(false);
-    setDataUrl(null);
 
     QRCode.toDataURL(data, { width: size, margin: 1 })
       .then((url) => {
-        if (mounted) setDataUrl(url);
+        if (mounted) {
+          setDataUrl(url);
+          setHasError(false);
+        }
       })
       .catch(() => {
-        if (mounted) setHasError(true);
+        if (mounted) {
+          setHasError(true);
+          setDataUrl(null);
+        }
       });
 
     return () => {
@@ -482,16 +486,20 @@ export default function PaperWalletPage() {
                         </h3>
                         <p className="text-xs text-red-600">NEVER SHARE - Full control of funds</p>
                       </div>
-                      <div className={showPrivateKey ? '' : 'no-print blur-lg'}>
-                        <QRCodeDisplay data={wallet.privateKey} size={120} />
+                      <div className={showPrivateKey ? '' : 'no-print'}>
+                        {showPrivateKey ? (
+                          <QRCodeDisplay data={wallet.privateKey} size={120} />
+                        ) : (
+                          <div className="w-[120px] h-[120px] bg-gray-200 rounded flex items-center justify-center text-gray-400 text-xs">Hidden</div>
+                        )}
                       </div>
                     </div>
-                    <div className={`p-3 bg-white rounded font-mono text-sm break-all border border-red-300 ${showPrivateKey ? '' : 'no-print blur-lg select-none'}`}>
-                      {wallet.privateKey}
+                    <div className={`p-3 bg-white rounded font-mono text-sm break-all border border-red-300`}>
+                      {showPrivateKey ? wallet.privateKey : '●'.repeat(64)}
                     </div>
                     {!showPrivateKey && (
                       <div className="no-print mt-2 p-2 bg-yellow-100 border border-yellow-300 rounded text-xs text-yellow-800">
-                        🔒 Private key hidden for security. Click "Show Private Key" below to reveal.
+                        🔒 Private key hidden for security. Click &quot;Show Private Key&quot; below to reveal.
                       </div>
                     )}
                   </div>
@@ -505,17 +513,22 @@ export default function PaperWalletPage() {
                     <p className="text-xs text-amber-600 mb-4">
                       Write these words in order. This recovers your wallet.
                     </p>
-                    <div className={`grid grid-cols-4 gap-2 ${showMnemonic ? '' : 'no-print blur-lg select-none'}`}>
-                      {wallet.mnemonic.split(' ').map((word, idx) => (
+                    <div className={`grid grid-cols-4 gap-2 ${showMnemonic ? '' : 'no-print'}`}>
+                      {showMnemonic ? wallet.mnemonic.split(' ').map((word, idx) => (
                         <div key={idx} className="p-2 bg-white rounded border border-amber-300 text-center">
                           <span className="text-xs text-amber-600">{idx + 1}.</span>{' '}
                           <span className="font-mono font-medium">{word}</span>
+                        </div>
+                      )) : Array.from({ length: 24 }, (_, idx) => (
+                        <div key={idx} className="p-2 bg-white rounded border border-amber-300 text-center">
+                          <span className="text-xs text-amber-600">{idx + 1}.</span>{' '}
+                          <span className="font-mono font-medium">●●●●●</span>
                         </div>
                       ))}
                     </div>
                     {!showMnemonic && (
                       <div className="no-print mt-2 p-2 bg-yellow-100 border border-yellow-300 rounded text-xs text-yellow-800">
-                        🔒 Recovery phrase hidden for security. Click "Show Seed Phrase" below to reveal.
+                        🔒 Recovery phrase hidden for security. Click &quot;Show Seed Phrase&quot; below to reveal.
                       </div>
                     )}
                   </div>

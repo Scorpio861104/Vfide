@@ -44,9 +44,9 @@ export function ErrorMonitoringProvider() {
  * Shows errors in development mode
  */
 export function DevErrorConsole() {
-  const [errors, setErrors] = React.useState<any[]>([]);
+  const [errors, setErrors] = React.useState<unknown[]>([]);
   const [isOpen, setIsOpen] = React.useState(false);
-  const [stats, setStats] = React.useState<any>(null);
+  const [stats, setStats] = React.useState<unknown>(null);
 
   useEffect(() => {
     if (process.env.NODE_ENV !== 'development') return;
@@ -74,7 +74,7 @@ export function DevErrorConsole() {
   }
 
   return (
-    <div className="fixed bottom-4 right-4 z-9999">
+    <div className="fixed bottom-4 right-4 z-[9999]">
       {/* Toggle Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
@@ -86,7 +86,7 @@ export function DevErrorConsole() {
 
       {/* Error Console */}
       {isOpen && (
-        <div className="absolute bottom-14 right-0 w-full sm:w-150 max-w-[calc(100vw-1rem)] max-h-125 bg-gray-900 border border-gray-700 rounded-lg shadow-2xl overflow-hidden">
+        <div className="absolute bottom-14 right-0 w-full sm:w-[37.5rem] max-w-[calc(100vw-1rem)] max-h-[31.25rem] bg-gray-900 border border-gray-700 rounded-lg shadow-2xl overflow-hidden">
           {/* Header */}
           <div className="bg-gray-800 px-4 py-3 border-b border-gray-700 flex items-center justify-between">
             <div>
@@ -104,7 +104,7 @@ export function DevErrorConsole() {
           </div>
 
           {/* Errors List */}
-          <div className="overflow-y-auto max-h-100">
+          <div className="overflow-y-auto max-h-[25rem]">
             {errors.map((error) => (
               <div
                 key={error.id}

@@ -36,6 +36,7 @@ error ECO_AlreadyClaimed();
 error ECO_TooEarly();
 error ECO_InvalidRank();
 error ECO_ArrayCapReached();
+error EV_ComplianceOnly();
 
 contract EcosystemVault is Ownable, ReentrancyGuard {
     using SafeERC20 for IERC20;
@@ -57,6 +58,7 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
     event SeerUpdated(address indexed oldSeer, address indexed newSeer);
     event PendingReferralRegistered(address indexed referred, address indexed referrer, bool isMerchant);
     event RewardTokenUpdated(address indexed oldToken, address indexed newToken);
+    event ComplianceModeSet(bool enabled);
 
     // ═══════════════════════════════════════════════════════════════════════
     //                              CONSTANTS
@@ -120,6 +122,9 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
     IERC20 public rewardToken;
     ISeer public seer;
     ICouncilManager public councilManager;
+
+    // Compliance mode disables user-facing reward claims
+    bool public complianceMode = true;
     
     mapping(address => bool) public isManager;
 
@@ -224,7 +229,12 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
     }
 
     function setAllocations(uint16 _councilBps, uint16 _merchantBps, uint16 _headhunterBps) external onlyOwner {
-        require(_councilBps + _merchantBps + _headhunterBps == MAX_BPS, "must total 100%");
+        // 12a Fix: Include operationsBps in the total check to prevent overflow
+        // All four buckets (council + merchant + headhunter + operations) must total MAX_BPS
+        require(
+            _councilBps + _merchantBps + _headhunterBps + operationsBps == MAX_BPS,
+            "ECO: must total 100% with operations"
+        );
         // M-5 Fix: Enforce minimum allocation thresholds
         require(_councilBps >= MIN_ALLOCATION_BPS, "ECO: council below minimum");
         require(_merchantBps >= MIN_ALLOCATION_BPS, "ECO: merchant below minimum");
@@ -234,7 +244,17 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
         headhunterBps = _headhunterBps;
         emit AllocationUpdated(_councilBps, _merchantBps, _headhunterBps);
     }
-    
+
+    function setComplianceMode(bool enabled) external onlyOwner {
+        require(enabled, "EV: compliance mode only");
+        complianceMode = true;
+        emit ComplianceModeSet(true);
+    }
+
+    function _requireComplianceDisabled() internal view {
+        if (complianceMode) revert EV_ComplianceOnly();
+    }
+
     /**
      * @notice Set operations wallet for team sustainability
      */
@@ -426,6 +446,7 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
      * @param period The period number to claim from
      */
     function claimMerchantReward(uint256 period) external nonReentrant {
+        _requireComplianceDisabled();
         if (!merchantPeriodEnded[period]) revert ECO_NotEligible();
         if (merchantPeriodClaimed[period][msg.sender]) revert ECO_AlreadyClaimed();
         if (periodMerchantTxCount[period][msg.sender] == 0) revert ECO_NotEligible();
@@ -631,6 +652,7 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
      * @param quarter The quarter to claim from (1-4)
      */
     function claimHeadhunterReward(uint256 year, uint256 quarter) external nonReentrant {
+        _requireComplianceDisabled();
         if (quarter == 0 || quarter > 4) revert ECO_InvalidRank();
         if (!quarterEnded[year][quarter]) revert ECO_NotEligible();
         if (quarterClaimed[year][quarter][msg.sender]) revert ECO_AlreadyClaimed();

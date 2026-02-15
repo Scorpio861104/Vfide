@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { motion as _motion } from 'framer-motion';
 import {
   Shield,
@@ -18,35 +18,54 @@ import { PrivacySettings as PrivacySettingsType, DEFAULT_PRIVACY_SETTINGS, Block
 import { STORAGE_KEYS, formatAddress } from '@/lib/messageEncryption';
 import { safeParseInt } from '@/lib/validation';
 
+function loadPrivacySettings(address: string): PrivacySettingsType {
+  if (typeof window === 'undefined') return DEFAULT_PRIVACY_SETTINGS;
+  const storedSettings = localStorage.getItem(`${STORAGE_KEYS.FRIENDS}_privacy_${address}`);
+  if (!storedSettings) return DEFAULT_PRIVACY_SETTINGS;
+  try {
+    return JSON.parse(storedSettings);
+  } catch (e) {
+    console.error('Failed to load privacy settings:', e);
+    return DEFAULT_PRIVACY_SETTINGS;
+  }
+}
+
+function loadBlockedUsers(address: string): BlockedUser[] {
+  if (typeof window === 'undefined') return [];
+  const storedBlocked = localStorage.getItem(`${STORAGE_KEYS.FRIENDS}_blocked_${address}`);
+  if (!storedBlocked) return [];
+  try {
+    return JSON.parse(storedBlocked);
+  } catch (e) {
+    console.error('Failed to load blocked users:', e);
+    return [];
+  }
+}
+
 export function PrivacySettings() {
   const { address } = useAccount();
-  const [settings, setSettings] = useState<PrivacySettingsType>(DEFAULT_PRIVACY_SETTINGS);
-  const [blockedUsers, setBlockedUsers] = useState<BlockedUser[]>([]);
+  const [settingsByAddress, setSettingsByAddress] = useState<Record<string, PrivacySettingsType>>({});
+  const [blockedUsersByAddress, setBlockedUsersByAddress] = useState<Record<string, BlockedUser[]>>({});
   const [blockAddress, setBlockAddress] = useState('');
   const [saved, setSaved] = useState(false);
 
-  // Load settings from localStorage
-  useEffect(() => {
-    if (!address) return;
-    
-    const storedSettings = localStorage.getItem(`${STORAGE_KEYS.FRIENDS}_privacy_${address}`);
-    if (storedSettings) {
-      try {
-        setSettings(JSON.parse(storedSettings));
-      } catch (e) {
-        console.error('Failed to load privacy settings:', e);
-      }
-    }
+  const settings = address
+    ? settingsByAddress[address] ?? loadPrivacySettings(address)
+    : DEFAULT_PRIVACY_SETTINGS;
 
-    const storedBlocked = localStorage.getItem(`${STORAGE_KEYS.FRIENDS}_blocked_${address}`);
-    if (storedBlocked) {
-      try {
-        setBlockedUsers(JSON.parse(storedBlocked));
-      } catch (e) {
-        console.error('Failed to load blocked users:', e);
-      }
-    }
-  }, [address]);
+  const blockedUsers = address
+    ? blockedUsersByAddress[address] ?? loadBlockedUsers(address)
+    : [];
+
+  const updateSettings = (nextSettings: PrivacySettingsType) => {
+    if (!address) return;
+    setSettingsByAddress((prev) => ({ ...prev, [address]: nextSettings }));
+  };
+
+  const updateBlockedUsers = (nextBlockedUsers: BlockedUser[]) => {
+    if (!address) return;
+    setBlockedUsersByAddress((prev) => ({ ...prev, [address]: nextBlockedUsers }));
+  };
 
   // Save settings
   const saveSettings = () => {
@@ -80,7 +99,7 @@ export function PrivacySettings() {
     };
 
     const updated = [...blockedUsers, newBlocked];
-    setBlockedUsers(updated);
+    updateBlockedUsers(updated);
     localStorage.setItem(`${STORAGE_KEYS.FRIENDS}_blocked_${address}`, JSON.stringify(updated));
     setBlockAddress('');
   };
@@ -90,7 +109,7 @@ export function PrivacySettings() {
     if (!address) return;
     
     const updated = blockedUsers.filter(u => u.address !== userAddress);
-    setBlockedUsers(updated);
+    updateBlockedUsers(updated);
     localStorage.setItem(`${STORAGE_KEYS.FRIENDS}_blocked_${address}`, JSON.stringify(updated));
   };
 
@@ -154,7 +173,7 @@ export function PrivacySettings() {
                   name="allowMessagesFrom"
                   value={option.value}
                   checked={settings.allowMessagesFrom === option.value}
-                  onChange={(e) => setSettings({ ...settings, allowMessagesFrom: e.target.value as PrivacySettingsType['allowMessagesFrom'] })}
+                  onChange={(e) => updateSettings({ ...settings, allowMessagesFrom: e.target.value as PrivacySettingsType['allowMessagesFrom'] })}
                   className="sr-only"
                 />
                 <div className="flex items-start gap-3">
@@ -197,7 +216,7 @@ export function PrivacySettings() {
                   name="allowFriendRequestsFrom"
                   value={option.value}
                   checked={settings.allowFriendRequestsFrom === option.value}
-                  onChange={(e) => setSettings({ ...settings, allowFriendRequestsFrom: e.target.value as PrivacySettingsType['allowFriendRequestsFrom'] })}
+                  onChange={(e) => updateSettings({ ...settings, allowFriendRequestsFrom: e.target.value as PrivacySettingsType['allowFriendRequestsFrom'] })}
                   className="sr-only"
                 />
                 <div className="flex items-start gap-3">
@@ -240,7 +259,7 @@ export function PrivacySettings() {
                   name="showOnlineStatus"
                   value={option.value}
                   checked={settings.showOnlineStatus === option.value}
-                  onChange={(e) => setSettings({ ...settings, showOnlineStatus: e.target.value as PrivacySettingsType['showOnlineStatus'] })}
+                  onChange={(e) => updateSettings({ ...settings, showOnlineStatus: e.target.value as PrivacySettingsType['showOnlineStatus'] })}
                   className="sr-only"
                 />
                 <div className="flex items-center gap-3">
@@ -266,7 +285,7 @@ export function PrivacySettings() {
               <input
                 type="checkbox"
                 checked={settings.requireProofScoreForRequests}
-                onChange={(e) => setSettings({ ...settings, requireProofScoreForRequests: e.target.checked })}
+                onChange={(e) => updateSettings({ ...settings, requireProofScoreForRequests: e.target.checked })}
                 className="mt-1 w-4 h-4 rounded border-zinc-700 bg-zinc-950 text-cyan-400 focus:ring-cyan-400 focus:ring-offset-0"
               />
               <div>
@@ -289,7 +308,7 @@ export function PrivacySettings() {
                 max="10000"
                 step="100"
                 value={settings.minimumProofScoreForRequests}
-                onChange={(e) => setSettings({ ...settings, minimumProofScoreForRequests: safeParseInt(e.target.value, 0, { min: 0, max: 10000 }) })}
+                onChange={(e) => updateSettings({ ...settings, minimumProofScoreForRequests: safeParseInt(e.target.value, 0, { min: 0, max: 10000 }) })}
                 disabled={!settings.requireProofScoreForRequests}
                 className="w-full"
               />
@@ -299,7 +318,7 @@ export function PrivacySettings() {
               <input
                 type="checkbox"
                 checked={settings.autoRejectLowTrust}
-                onChange={(e) => setSettings({ ...settings, autoRejectLowTrust: e.target.checked })}
+                onChange={(e) => updateSettings({ ...settings, autoRejectLowTrust: e.target.checked })}
                 className="mt-1 w-4 h-4 rounded border-zinc-700 bg-zinc-950 text-cyan-400 focus:ring-cyan-400 focus:ring-offset-0"
               />
               <div>

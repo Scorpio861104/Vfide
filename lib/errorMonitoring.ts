@@ -7,6 +7,8 @@
 
 'use client';
 
+import { buildCsrfHeaders } from '@/lib/security/csrfClient';
+
 export interface ErrorReport {
   id: string;
   timestamp: number;
@@ -18,7 +20,7 @@ export interface ErrorReport {
   url: string;
   userAgent: string;
   userId?: string;
-  context?: Record<string, any>;
+  context?: Record<string, unknown>;
   tags?: string[];
   fingerprint?: string;
 }
@@ -26,9 +28,16 @@ export interface ErrorReport {
 export interface ErrorContext {
   componentName?: string;
   actionName?: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
   userId?: string;
   sessionId?: string;
+}
+
+/** Generate a hex ID using crypto-safe randomness */
+function cryptoId(): string {
+  const bytes = new Uint8Array(8);
+  crypto.getRandomValues(bytes);
+  return Array.from(bytes, b => b.toString(16).padStart(2, '0')).join('');
 }
 
 class ErrorMonitor {
@@ -38,6 +47,9 @@ class ErrorMonitor {
   private userId?: string;
   private isProduction: boolean;
   private errorListeners: Array<(error: ErrorReport) => void> = [];
+  private boundErrorHandler?: (event: ErrorEvent) => void;
+  private boundRejectionHandler?: (event: PromiseRejectionEvent) => void;
+  private originalConsoleError?: typeof console.error;
 
   constructor() {
     this.sessionId = this.generateSessionId();
@@ -46,10 +58,13 @@ class ErrorMonitor {
   }
 
   /**
-   * Generate unique session ID
+   * Generate unique session ID using crypto-safe randomness
    */
   private generateSessionId(): string {
-    return `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const bytes = new Uint8Array(12);
+    crypto.getRandomValues(bytes);
+    const hex = Array.from(bytes, b => b.toString(16).padStart(2, '0')).join('');
+    return `session_${Date.now()}_${hex}`;
   }
 
   /**
@@ -58,8 +73,8 @@ class ErrorMonitor {
   private initializeGlobalHandlers() {
     if (typeof window === 'undefined') return;
 
-    // Handle uncaught errors
-    window.addEventListener('error', (event) => {
+    // Handle uncaught errors — store reference for cleanup
+    this.boundErrorHandler = (event: ErrorEvent) => {
       this.captureError(event.error || new Error(event.message), {
         componentName: 'window',
         actionName: 'uncaught-error',
@@ -69,10 +84,11 @@ class ErrorMonitor {
           colno: event.colno,
         },
       });
-    });
+    };
+    window.addEventListener('error', this.boundErrorHandler);
 
-    // Handle unhandled promise rejections
-    window.addEventListener('unhandledrejection', (event) => {
+    // Handle unhandled promise rejections — store reference for cleanup
+    this.boundRejectionHandler = (event: PromiseRejectionEvent) => {
       this.captureError(
         new Error(`Unhandled Promise Rejection: ${event.reason}`),
         {
@@ -83,18 +99,37 @@ class ErrorMonitor {
           },
         }
       );
-    });
+    };
+    window.addEventListener('unhandledrejection', this.boundRejectionHandler);
 
-    // Handle console errors in development
+    // Handle console errors in development — store original for restoration
     if (!this.isProduction) {
-      const originalError = console.error;
+      this.originalConsoleError = console.error;
+      const captureError = this.captureError.bind(this);
+      const originalConsoleError = this.originalConsoleError;
       console.error = (...args: unknown[]) => {
-        this.captureError(new Error(args.join(' ')), {
+        captureError(new Error(args.join(' ')), {
           componentName: 'console',
           actionName: 'console-error',
         });
-        originalError.apply(console, args);
+        originalConsoleError.apply(console, args);
       };
+    }
+  }
+
+  /**
+   * Remove global event listeners (call on cleanup/unmount)
+   */
+  destroy() {
+    if (typeof window === 'undefined') return;
+    if (this.boundErrorHandler) {
+      window.removeEventListener('error', this.boundErrorHandler);
+    }
+    if (this.boundRejectionHandler) {
+      window.removeEventListener('unhandledrejection', this.boundRejectionHandler);
+    }
+    if (this.originalConsoleError) {
+      console.error = this.originalConsoleError;
     }
   }
 
@@ -116,7 +151,7 @@ class ErrorMonitor {
     const errorObj = typeof error === 'string' ? new Error(error) : error;
 
     const report: ErrorReport = {
-      id: `error_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      id: `error_${Date.now()}_${cryptoId()}`,
       timestamp: Date.now(),
       type: 'error',
       severity,
@@ -151,7 +186,7 @@ class ErrorMonitor {
    */
   captureWarning(message: string, context?: ErrorContext) {
     const report: ErrorReport = {
-      id: `warning_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      id: `warning_${Date.now()}_${cryptoId()}`,
       timestamp: Date.now(),
       type: 'warning',
       severity: 'low',
@@ -178,7 +213,7 @@ class ErrorMonitor {
    */
   captureInfo(message: string, context?: ErrorContext) {
     const report: ErrorReport = {
-      id: `info_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      id: `info_${Date.now()}_${cryptoId()}`,
       timestamp: Date.now(),
       type: 'info',
       severity: 'low',
@@ -231,9 +266,11 @@ class ErrorMonitor {
     if (!this.isProduction) return;
 
     try {
+      const headers = await buildCsrfHeaders({ 'Content-Type': 'application/json' }, 'POST');
       await fetch('/api/errors', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
+        credentials: 'include',
         body: JSON.stringify(report),
         keepalive: true,
       });

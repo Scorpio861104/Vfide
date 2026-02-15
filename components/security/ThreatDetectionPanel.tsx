@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence, useMotionValue, useTransform, animate } from 'framer-motion';
 import { Shield, Search, CheckCircle2, X, AlertTriangle } from 'lucide-react';
@@ -45,7 +47,7 @@ export function ThreatDetectionPanel({ className = '' }: ThreatDetectionPanelPro
     useEffect(() => {
       const controls = animate(motionValue, score, { duration: 1.5 });
       return controls.stop;
-    }, [score]);
+    }, [score, motionValue]);
     
     return <motion.span>{rounded}</motion.span>;
   };
@@ -53,7 +55,7 @@ export function ThreatDetectionPanel({ className = '' }: ThreatDetectionPanelPro
   useEffect(() => {
     // Run anomaly detection on mount
     threat.detectAnomalies();
-  }, []);
+  }, [threat]);
 
   const handleScan = async () => {
     setIsScanning(true);

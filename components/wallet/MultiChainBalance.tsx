@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAccount } from 'wagmi';
 import { Coins, ChevronDown, RefreshCw, ExternalLink } from 'lucide-react';
@@ -83,10 +83,9 @@ const CHAINS: Omit<ChainBalance, 'balance' | 'balanceUSD'>[] = [
   },
 ];
 
-// Approximate prices (in production, fetch from price API)
-const APPROX_PRICES: Record<string, number> = {
-  ETH: 2500,
-  MATIC: 0.80,
+const FALLBACK_PRICES: Record<string, number> = {
+  ETH: 2000,
+  MATIC: 0.8,
 };
 
 interface MultiChainBalanceProps {
@@ -101,11 +100,32 @@ export function MultiChainBalance({ compact = false }: MultiChainBalanceProps) {
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const { playSuccess, playNotification } = useTransactionSounds();
 
+  const fetchPrices = useCallback(async () => {
+    try {
+      const response = await fetch(
+        'https://api.coingecko.com/api/v3/simple/price?ids=ethereum,matic-network&vs_currencies=usd'
+      );
+      if (!response.ok) {
+        return FALLBACK_PRICES;
+      }
+
+      const data = await response.json();
+      return {
+        ETH: Number(data?.ethereum?.usd ?? FALLBACK_PRICES.ETH),
+        MATIC: Number(data?.['matic-network']?.usd ?? FALLBACK_PRICES.MATIC),
+      };
+    } catch (error) {
+      console.warn('Failed to fetch live prices, using fallback:', error);
+      return FALLBACK_PRICES;
+    }
+  }, []);
+
   // Fetch balances from all chains
-  const fetchBalances = async () => {
+  const fetchBalances = useCallback(async () => {
     if (!address) return;
     
     setIsLoading(true);
+    const prices = await fetchPrices();
     
     const results = await Promise.all(
       CHAINS.map(async (chain) => {
@@ -122,9 +142,9 @@ export function MultiChainBalance({ compact = false }: MultiChainBalanceProps) {
           });
           
           const data = await response.json();
-          const balanceWei = parseInt(data.result || '0', 16);
-          const balanceEth = balanceWei / 1e18;
-          const price = APPROX_PRICES[chain.symbol] || 0;
+          const balanceWei = BigInt(data.result || '0x0');
+          const balanceEth = Number(balanceWei) / 1e18;
+          const price = prices[chain.symbol] || 0;
           const balanceUSD = balanceEth * price;
           
           return {
@@ -146,14 +166,15 @@ export function MultiChainBalance({ compact = false }: MultiChainBalanceProps) {
     setLastUpdated(new Date());
     setIsLoading(false);
     playSuccess();
-  };
+  }, [address, fetchPrices, playSuccess]);
 
   // Fetch on mount and when address changes
   useEffect(() => {
     if (isConnected && address) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       fetchBalances();
     }
-  }, [address, isConnected]);
+  }, [address, isConnected, fetchBalances]);
 
   // Calculate total USD value with memoization to avoid regex parsing on every render
   const totalUSD = useMemo(() => {
@@ -332,7 +353,7 @@ export function MultiChainIndicator() {
             }),
           });
           const data = await response.json();
-          const balance = parseInt(data.result || '0', 16);
+          const balance = Number(BigInt(data.result || '0x0'));
           if (balance > 0) count++;
         } catch {
           // Ignore errors

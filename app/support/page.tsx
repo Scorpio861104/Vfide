@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Footer } from '@/components/layout/Footer';
 import { useAccount } from 'wagmi';
@@ -26,6 +26,7 @@ import {
   LifeBuoy,
   Headphones
 } from 'lucide-react';
+import { safeJSONParseArray } from '@/lib/safeParse';
 
 // Ticket types and categories
 type TicketStatus = 'open' | 'in-progress' | 'waiting' | 'resolved' | 'closed';
@@ -67,7 +68,7 @@ const FAQ_ITEMS = [
     category: 'Security',
     icon: Shield,
     questions: [
-      { q: 'Is VFIDE secure?', a: 'Yes! VFIDE uses post-quantum encryption (ML-KEM-1024 + Dilithium-5), never stores private keys, and all transactions require your explicit approval.' },
+      { q: 'Is VFIDE secure?', a: 'Yes! VFIDE uses P-256 ECDH key exchange with AES-256-GCM encryption for messaging, never stores private keys, and all transactions require your explicit approval.' },
       { q: 'What if I lose my wallet?', a: 'Use the Guardian recovery system. Your designated guardians can help you connect a new wallet to your existing vault without accessing your funds.' },
       { q: 'How does ProofScore work?', a: 'ProofScore measures your on-chain reputation (0-100%). Higher scores unlock lower fees and more features. Earn points by using VFIDE, voting, and securing your account.' },
       { q: 'Is VFIDE an exchange or wallet?', a: 'No. VFIDE is a protocol interface, not an exchange or custodial wallet. We don\'t match trades, hold funds, or control private keys. You interact directly with your own smart contract vault. Swaps route to external DEXs like Uniswap.' },
@@ -79,7 +80,7 @@ const FAQ_ITEMS = [
     questions: [
       { q: 'Why is my transaction pending?', a: 'Transactions require blockchain confirmation. This usually takes 1-5 minutes depending on network congestion. Check the transaction status on the explorer.' },
       { q: 'What are the fees?', a: 'VFIDE charges burn fees (0.25-5% depending on your ProofScore) plus Base network gas fees (usually $0.01-$0.10).' },
-      { q: 'Can I cancel a transaction?', a: 'Once submitted to the blockchain, transactions cannot be cancelled. However, escrow and streaming payments can be refunded before completion.' },
+      { q: 'Can I cancel a transaction?', a: 'Once submitted to the blockchain, transactions cannot be cancelled. Escrow refunds require approval from both buyer and merchant before completion.' },
     ]
   }
 ];
@@ -88,7 +89,7 @@ const STATUS_CONFIG: Record<TicketStatus, { label: string; color: string; icon: 
   'open': { label: 'Open', color: 'text-blue-400 bg-blue-500/20', icon: MessageCircle },
   'in-progress': { label: 'In Progress', color: 'text-amber-400 bg-amber-500/20', icon: RefreshCw },
   'waiting': { label: 'Waiting on You', color: 'text-purple-400 bg-purple-500/20', icon: Clock },
-  'resolved': { label: 'Resolved', color: 'text-jade-400 bg-jade-500/20', icon: CheckCircle2 },
+  'resolved': { label: 'Resolved', color: 'text-emerald-400 bg-emerald-500/20', icon: CheckCircle2 },
   'closed': { label: 'Closed', color: 'text-zinc-400 bg-zinc-500/20', icon: XCircle }
 };
 
@@ -111,7 +112,7 @@ const CATEGORY_CONFIG: Record<TicketCategory, { label: string; icon: React.Compo
 export default function SupportPage() {
   const { address, isConnected } = useAccount();
   const [activeTab, setActiveTab] = useState<'faq' | 'tickets' | 'new'>('faq');
-  const [tickets, setTickets] = useState<Ticket[]>([]);
+  const [ticketsByAddress, setTicketsByAddress] = useState<Record<string, Ticket[]>>({});
   const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
   const [expandedFaq, setExpandedFaq] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -123,31 +124,36 @@ export default function SupportPage() {
   const [newMessage, setNewMessage] = useState('');
   const [replyMessage, setReplyMessage] = useState('');
 
-  // Load tickets from localStorage
-  useEffect(() => {
-    if (address) {
-      const stored = localStorage.getItem(`support_tickets_${address}`);
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        setTickets(parsed.map((t: Ticket) => ({
-          ...t,
-          createdAt: new Date(t.createdAt),
-          updatedAt: new Date(t.updatedAt),
-          messages: t.messages.map(m => ({
-            ...m,
-            timestamp: new Date(m.timestamp)
-          }))
-        })));
-      }
-    }
-  }, [address]);
+  const tickets = useMemo<Ticket[]>(() => {
+    if (!address) return [];
+
+    const inMemory = ticketsByAddress[address];
+    if (inMemory) return inMemory;
+
+    const stored = localStorage.getItem(`support_tickets_${address}`);
+    const parsed = safeJSONParseArray<Ticket>(stored, []);
+    if (!parsed.length) return [];
+
+    return parsed.map((t) => ({
+      ...t,
+      createdAt: new Date(t.createdAt),
+      updatedAt: new Date(t.updatedAt),
+      messages: t.messages.map((m) => ({
+        ...m,
+        timestamp: new Date(m.timestamp)
+      }))
+    }));
+  }, [address, ticketsByAddress]);
 
   // Save tickets to localStorage
   const saveTickets = useCallback((newTickets: Ticket[]) => {
     if (address) {
       localStorage.setItem(`support_tickets_${address}`, JSON.stringify(newTickets));
+      setTicketsByAddress((prev) => ({
+        ...prev,
+        [address]: newTickets,
+      }));
     }
-    setTickets(newTickets);
   }, [address]);
 
   const handleCreateTicket = () => {
@@ -239,7 +245,7 @@ export default function SupportPage() {
       <div className="max-w-6xl mx-auto px-4 py-12">
         {/* Header */}
         <div className="text-center mb-12">
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-jade-500/10 rounded-full text-jade-400 text-sm font-medium mb-4">
+          <div className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-500/10 rounded-full text-emerald-400 text-sm font-medium mb-4">
             <Headphones size={16} />
             24/7 Support
           </div>
@@ -256,12 +262,12 @@ export default function SupportPage() {
             onClick={() => setActiveTab('faq')}
             className={`p-6 rounded-xl border text-left transition-all ${
               activeTab === 'faq' 
-                ? 'border-jade-400 bg-jade-500/10' 
+                ? 'border-emerald-400 bg-emerald-500/10' 
                 : 'border-zinc-700 bg-zinc-900/50 hover:border-zinc-500'
             }`}
             whileHover={{ scale: 1.02 }}
           >
-            <Book className={activeTab === 'faq' ? 'text-jade-400' : 'text-zinc-400'} size={28} />
+            <Book className={activeTab === 'faq' ? 'text-emerald-400' : 'text-zinc-400'} size={28} />
             <h3 className="text-lg font-semibold text-white mt-3">FAQ & Guides</h3>
             <p className="text-sm text-zinc-400 mt-1">Browse common questions and tutorials</p>
           </motion.button>
@@ -270,17 +276,17 @@ export default function SupportPage() {
             onClick={() => setActiveTab('tickets')}
             className={`p-6 rounded-xl border text-left transition-all ${
               activeTab === 'tickets' 
-                ? 'border-jade-400 bg-jade-500/10' 
+                ? 'border-emerald-400 bg-emerald-500/10' 
                 : 'border-zinc-700 bg-zinc-900/50 hover:border-zinc-500'
             }`}
             whileHover={{ scale: 1.02 }}
           >
-            <MessageSquare className={activeTab === 'tickets' ? 'text-jade-400' : 'text-zinc-400'} size={28} />
+            <MessageSquare className={activeTab === 'tickets' ? 'text-emerald-400' : 'text-zinc-400'} size={28} />
             <h3 className="text-lg font-semibold text-white mt-3">My Tickets</h3>
             <p className="text-sm text-zinc-400 mt-1">
               View and manage your support requests
               {tickets.filter(t => t.status !== 'closed').length > 0 && (
-                <span className="ml-2 px-2 py-0.5 bg-jade-500/20 text-jade-400 rounded-full text-xs">
+                <span className="ml-2 px-2 py-0.5 bg-emerald-500/20 text-emerald-400 rounded-full text-xs">
                   {tickets.filter(t => t.status !== 'closed').length} active
                 </span>
               )}
@@ -291,12 +297,12 @@ export default function SupportPage() {
             onClick={() => setActiveTab('new')}
             className={`p-6 rounded-xl border text-left transition-all ${
               activeTab === 'new' 
-                ? 'border-jade-400 bg-jade-500/10' 
+                ? 'border-emerald-400 bg-emerald-500/10' 
                 : 'border-zinc-700 bg-zinc-900/50 hover:border-zinc-500'
             }`}
             whileHover={{ scale: 1.02 }}
           >
-            <Plus className={activeTab === 'new' ? 'text-jade-400' : 'text-zinc-400'} size={28} />
+            <Plus className={activeTab === 'new' ? 'text-emerald-400' : 'text-zinc-400'} size={28} />
             <h3 className="text-lg font-semibold text-white mt-3">New Ticket</h3>
             <p className="text-sm text-zinc-400 mt-1">Create a new support request</p>
           </motion.button>
@@ -320,7 +326,7 @@ export default function SupportPage() {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Search for answers..."
-                  className="w-full pl-12 pr-4 py-4 bg-zinc-900/50 border border-zinc-700 rounded-xl text-white placeholder-zinc-500 focus:outline-none focus:border-jade-500"
+                  className="w-full pl-12 pr-4 py-4 bg-zinc-900/50 border border-zinc-700 rounded-xl text-white placeholder-zinc-500 focus:outline-none focus:border-emerald-500"
                 />
               </div>
 
@@ -328,7 +334,7 @@ export default function SupportPage() {
               {filteredFaq.map((category) => (
                 <div key={category.category} className="bg-zinc-900/50 border border-zinc-700 rounded-xl overflow-hidden">
                   <div className="p-4 border-b border-zinc-700 flex items-center gap-3">
-                    <category.icon className="text-jade-400" size={20} />
+                    <category.icon className="text-emerald-400" size={20} />
                     <h3 className="font-semibold text-white">{category.category}</h3>
                   </div>
                   <div className="divide-y divide-zinc-800">
@@ -370,13 +376,13 @@ export default function SupportPage() {
               ))}
 
               {/* Still need help? */}
-              <div className="p-6 bg-linear-to-r from-jade-500/10 to-teal-500/10 border border-jade-500/30 rounded-xl text-center">
-                <LifeBuoy className="text-jade-400 mx-auto mb-4" size={32} />
+              <div className="p-6 bg-linear-to-r from-emerald-500/10 to-teal-500/10 border border-emerald-500/30 rounded-xl text-center">
+                <LifeBuoy className="text-emerald-400 mx-auto mb-4" size={32} />
                 <h3 className="text-lg font-semibold text-white mb-2">Still need help?</h3>
                 <p className="text-zinc-400 mb-4">Can&apos;t find what you&apos;re looking for? Our support team is ready to assist.</p>
                 <button
                   onClick={() => setActiveTab('new')}
-                  className="px-6 py-3 bg-linear-to-r from-jade-500 to-teal-500 text-black font-semibold rounded-lg"
+                  className="px-6 py-3 bg-linear-to-r from-emerald-500 to-teal-500 text-black font-semibold rounded-lg"
                 >
                   Create Support Ticket
                 </button>
@@ -398,7 +404,7 @@ export default function SupportPage() {
                   <h3 className="font-semibold text-white">Your Tickets</h3>
                   <button
                     onClick={() => setActiveTab('new')}
-                    className="p-2 bg-jade-500/10 rounded-lg text-jade-400 hover:bg-jade-500/20"
+                    className="p-2 bg-emerald-500/10 rounded-lg text-emerald-400 hover:bg-emerald-500/20"
                   >
                     <Plus size={18} />
                   </button>
@@ -410,7 +416,7 @@ export default function SupportPage() {
                     <p className="text-zinc-400">No tickets yet</p>
                     <button
                       onClick={() => setActiveTab('new')}
-                      className="mt-4 px-4 py-2 bg-jade-500/10 text-jade-400 rounded-lg text-sm"
+                      className="mt-4 px-4 py-2 bg-emerald-500/10 text-emerald-400 rounded-lg text-sm"
                     >
                       Create your first ticket
                     </button>
@@ -425,7 +431,7 @@ export default function SupportPage() {
                           onClick={() => setSelectedTicket(ticket)}
                           className={`w-full p-4 rounded-xl border text-left transition-all ${
                             selectedTicket?.id === ticket.id
-                              ? 'border-jade-400 bg-jade-500/10'
+                              ? 'border-emerald-400 bg-emerald-500/10'
                               : 'border-zinc-700 bg-zinc-900/50 hover:border-zinc-500'
                           }`}
                         >
@@ -493,12 +499,12 @@ export default function SupportPage() {
                         >
                           <div className={`max-w-[80%] p-4 rounded-xl ${
                             msg.sender === 'user'
-                              ? 'bg-jade-500/20 text-jade-100'
+                              ? 'bg-emerald-500/20 text-emerald-100'
                               : 'bg-zinc-800 text-zinc-100'
                           }`}>
                             <div className="flex items-center gap-2 mb-2">
                               {msg.sender === 'support' && (
-                                <span className="px-2 py-0.5 bg-jade-500/20 text-jade-400 rounded text-xs">
+                                <span className="px-2 py-0.5 bg-emerald-500/20 text-emerald-400 rounded text-xs">
                                   VFIDE Support
                                 </span>
                               )}
@@ -521,13 +527,13 @@ export default function SupportPage() {
                             value={replyMessage}
                             onChange={(e) => setReplyMessage(e.target.value)}
                             placeholder="Type your reply..."
-                            className="flex-1 px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:border-jade-500"
+                            className="flex-1 px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:border-emerald-500"
                             onKeyPress={(e) => e.key === 'Enter' && handleSendReply()}
                           />
                           <button
                             onClick={handleSendReply}
                             disabled={!replyMessage.trim()}
-                            className="px-4 py-3 bg-jade-500 text-black rounded-lg disabled:opacity-50"
+                            className="px-4 py-3 bg-emerald-500 text-black rounded-lg disabled:opacity-50"
                           >
                             <Send size={18} />
                           </button>
@@ -557,7 +563,7 @@ export default function SupportPage() {
             >
               <div className="bg-zinc-900/50 border border-zinc-700 rounded-xl p-6 space-y-6">
                 <div className="flex items-center gap-3">
-                  <Plus className="text-jade-400" size={24} />
+                  <Plus className="text-emerald-400" size={24} />
                   <h3 className="text-xl font-semibold text-white">Create Support Ticket</h3>
                 </div>
 
@@ -580,7 +586,7 @@ export default function SupportPage() {
                       value={newSubject}
                       onChange={(e) => setNewSubject(e.target.value)}
                       placeholder="Brief description of your issue"
-                      className="w-full px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:border-jade-500"
+                      className="w-full px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:border-emerald-500"
                     />
                   </div>
 
@@ -590,7 +596,7 @@ export default function SupportPage() {
                       <select
                         value={newCategory}
                         onChange={(e) => setNewCategory(e.target.value as TicketCategory)}
-                        className="w-full px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-lg text-white focus:outline-none focus:border-jade-500"
+                        className="w-full px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-lg text-white focus:outline-none focus:border-emerald-500"
                       >
                         {(Object.entries(CATEGORY_CONFIG) as [TicketCategory, typeof CATEGORY_CONFIG[TicketCategory]][]).map(([key, config]) => (
                           <option key={key} value={key}>{config.label}</option>
@@ -603,7 +609,7 @@ export default function SupportPage() {
                       <select
                         value={newPriority}
                         onChange={(e) => setNewPriority(e.target.value as TicketPriority)}
-                        className="w-full px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-lg text-white focus:outline-none focus:border-jade-500"
+                        className="w-full px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-lg text-white focus:outline-none focus:border-emerald-500"
                       >
                         {(Object.entries(PRIORITY_CONFIG) as [TicketPriority, typeof PRIORITY_CONFIG[TicketPriority]][]).map(([key, config]) => (
                           <option key={key} value={key}>{config.label}</option>
@@ -619,7 +625,7 @@ export default function SupportPage() {
                       onChange={(e) => setNewMessage(e.target.value)}
                       placeholder="Describe your issue in detail. Include any relevant transaction IDs, error messages, or steps to reproduce the problem."
                       rows={6}
-                      className="w-full px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:border-jade-500 resize-none"
+                      className="w-full px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:border-emerald-500 resize-none"
                     />
                   </div>
 
@@ -634,7 +640,7 @@ export default function SupportPage() {
                 <button
                   onClick={handleCreateTicket}
                   disabled={!newSubject.trim() || !newMessage.trim()}
-                  className="w-full py-4 bg-linear-to-r from-jade-500 to-teal-500 text-black font-semibold rounded-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  className="w-full py-4 bg-linear-to-r from-emerald-500 to-teal-500 text-black font-semibold rounded-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
                   <Send size={18} />
                   Submit Ticket
@@ -650,8 +656,8 @@ export default function SupportPage() {
             href="mailto:support@vfide.io"
             className="p-4 bg-zinc-900/50 border border-zinc-700 rounded-xl flex items-center gap-4 hover:border-zinc-500 transition-colors"
           >
-            <div className="p-3 bg-jade-500/10 rounded-lg">
-              <Mail className="text-jade-400" size={20} />
+            <div className="p-3 bg-emerald-500/10 rounded-lg">
+              <Mail className="text-emerald-400" size={20} />
             </div>
             <div>
               <p className="font-medium text-white">Email Support</p>

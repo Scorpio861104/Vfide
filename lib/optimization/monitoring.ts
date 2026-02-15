@@ -9,6 +9,8 @@
  * - Custom alerts
  */
 
+import { buildCsrfHeaders, getCsrfToken } from '@/lib/security/csrfClient';
+
 /**
  * Performance metrics types
  */
@@ -32,7 +34,7 @@ export interface PerformanceMetrics {
 export interface BusinessMetrics {
   event: string;
   value?: number;
-  properties?: Record<string, any>;
+  properties?: Record<string, unknown>;
   timestamp: number;
   userId?: string;
   sessionId?: string;
@@ -76,7 +78,7 @@ export function trackWebVitals() {
  * Track custom business events
  * Monitors user actions and conversions
  */
-export function trackEvent(event: string, properties?: Record<string, any>) {
+export function trackEvent(event: string, properties?: Record<string, unknown>) {
   const metric: BusinessMetrics = {
     event,
     properties,
@@ -220,7 +222,7 @@ export function trackRetention() {
  * Track conversion funnel
  * Monitors user progress through key flows
  */
-export function trackFunnelStep(funnel: string, step: string, properties?: Record<string, any>) {
+export function trackFunnelStep(funnel: string, step: string, properties?: Record<string, unknown>) {
   sendMetric({
     event: 'funnel_step',
     properties: {
@@ -251,7 +253,7 @@ export function trackFeatureUsage(feature: string, action: string) {
  * Monitor error rates
  * Tracks application stability
  */
-export function trackErrorRate(error: Error, context?: Record<string, any>) {
+export function trackErrorRate(error: Error, context?: Record<string, unknown>) {
   sendMetric({
     event: 'error',
     properties: {
@@ -298,9 +300,11 @@ async function flushMetrics() {
 
   try {
     // Send to analytics endpoint
-    await fetch('/api/analytics/metrics', {
+    const headers = await buildCsrfHeaders({ 'Content-Type': 'application/json' }, 'POST');
+    await fetch('/api/analytics', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers,
+      credentials: 'include',
       body: JSON.stringify({ metrics: batch }),
       keepalive: true, // Ensure metrics sent even on page unload
     });
@@ -316,7 +320,16 @@ if (typeof window !== 'undefined') {
     if (metricsQueue.length > 0) {
       // Use sendBeacon for reliable delivery on page unload
       const data = JSON.stringify({ metrics: metricsQueue });
-      navigator.sendBeacon('/api/analytics/metrics', data);
+      void getCsrfToken().then((token) => {
+        if (!token) return;
+        fetch('/api/analytics', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'x-csrf-token': token },
+          credentials: 'include',
+          body: data,
+          keepalive: true,
+        });
+      });
     }
   });
 }
@@ -334,7 +347,7 @@ function getSessionId(): string | undefined {
   
   let sessionId = sessionStorage.getItem('session_id');
   if (!sessionId) {
-    sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    sessionId = `session_${Date.now()}_${Array.from(crypto.getRandomValues(new Uint8Array(5)), b => b.toString(16).padStart(2, '0')).join('')}`;
     sessionStorage.setItem('session_id', sessionId);
   }
   

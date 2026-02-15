@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   UserPlus,
@@ -20,49 +20,49 @@ interface FriendRequestsPanelProps {
 
 export function FriendRequestsPanel({ onAccept, onReject }: FriendRequestsPanelProps) {
   const { address } = useAccount();
-  const [requests, setRequests] = useState<FriendRequest[]>([]);
+  const [requestsByAddress, setRequestsByAddress] = useState<Record<string, FriendRequest[]>>({});
   const [filter, setFilter] = useState<'all' | 'pending' | 'history'>('pending');
+  const [requestFilterTime] = useState(() => Date.now());
 
-  // Load requests from localStorage
-  useEffect(() => {
-    if (!address) return;
-    
+  const requests = useMemo(() => {
+    if (!address) return [];
+    const inMemory = requestsByAddress[address];
+    if (inMemory) return inMemory;
+    if (typeof window === 'undefined') return [];
+
     const stored = localStorage.getItem(`${STORAGE_KEYS.FRIENDS}_requests_${address}`);
-    if (stored) {
-      try {
-        const allRequests: FriendRequest[] = JSON.parse(stored);
-        // Remove expired requests
-        const now = Date.now();
-        const validRequests = allRequests.filter(r => 
-          !r.expiresAt || r.expiresAt > now
-        );
-        setRequests(validRequests);
-      } catch (e) {
-        console.error('Failed to load friend requests:', e);
-      }
-    }
-  }, [address]);
+    if (!stored) return [];
 
-  // Save requests to localStorage
-  useEffect(() => {
-    if (!address || requests.length === 0) return;
-    
-    localStorage.setItem(
-      `${STORAGE_KEYS.FRIENDS}_requests_${address}`,
-      JSON.stringify(requests)
-    );
-  }, [address, requests]);
+    try {
+      const allRequests: FriendRequest[] = JSON.parse(stored);
+      return allRequests.filter(r => !r.expiresAt || r.expiresAt > requestFilterTime);
+    } catch (e) {
+      console.error('Failed to load friend requests:', e);
+      return [];
+    }
+  }, [address, requestsByAddress, requestFilterTime]);
+
+  const updateRequests = (nextRequests: FriendRequest[]) => {
+    if (!address) return;
+    setRequestsByAddress((prev) => ({ ...prev, [address]: nextRequests }));
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(
+        `${STORAGE_KEYS.FRIENDS}_requests_${address}`,
+        JSON.stringify(nextRequests)
+      );
+    }
+  };
 
   const handleAccept = (request: FriendRequest) => {
     // Update request status
-    setRequests(requests.map(r => 
+    updateRequests(requests.map(r => 
       r.id === request.id ? { ...r, status: 'accepted' } : r
     ));
     onAccept(request);
   };
 
   const handleReject = (request: FriendRequest) => {
-    setRequests(requests.map(r => 
+    updateRequests(requests.map(r => 
       r.id === request.id ? { ...r, status: 'rejected' } : r
     ));
     onReject(request);

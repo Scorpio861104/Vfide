@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import {
   User,
@@ -20,57 +20,69 @@ import { UserProfileService } from '@/lib/userProfileService';
 
 export function AccountSettings() {
   const { address } = useAccount();
-  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [profileByAddress, setProfileByAddress] = useState<Record<string, UserProfile>>({});
+  const [draftByAddress, setDraftByAddress] = useState<Record<string, { username: string; displayName: string; bio: string }>>({});
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
-  
-  // Form states
-  const [username, setUsername] = useState('');
-  const [displayName, setDisplayName] = useState('');
-  const [bio, setBio] = useState('');
-  const [usernameError, setUsernameError] = useState('');
-  const [usernameAvailable, setUsernameAvailable] = useState<boolean | null>(null);
+  const [createdTimestamp] = useState(() => Date.now());
 
-  // Load profile
-  useEffect(() => {
-    if (!address) return;
-    
+  const profile = useMemo(() => {
+    if (!address) return null;
+
+    const inMemory = profileByAddress[address];
+    if (inMemory) return inMemory;
+
     let existing = UserProfileService.getMyProfile(address);
     if (!existing) {
-      // Create default profile
       existing = {
         address,
-        joinedDate: Date.now(),
-        lastUpdated: Date.now(),
+        joinedDate: createdTimestamp,
+        lastUpdated: createdTimestamp,
       };
       UserProfileService.saveMyProfile(existing);
     }
-    setProfile(existing);
-    setUsername(existing.username || '');
-    setDisplayName(existing.displayName || '');
-    setBio(existing.bio || '');
-  }, [address]);
 
-  // Check username availability
-  useEffect(() => {
+    return existing;
+  }, [address, profileByAddress, createdTimestamp]);
+
+  const draft = useMemo(() => {
+    if (!address) return { username: '', displayName: '', bio: '' };
+    return draftByAddress[address] ?? {
+      username: profile?.username || '',
+      displayName: profile?.displayName || '',
+      bio: profile?.bio || '',
+    };
+  }, [address, draftByAddress, profile?.username, profile?.displayName, profile?.bio]);
+
+  const username = draft.username;
+  const displayName = draft.displayName;
+  const bio = draft.bio;
+
+  const { usernameError, usernameAvailable } = useMemo(() => {
     if (!username || !address || username === profile?.username) {
-      setUsernameAvailable(null);
-      setUsernameError('');
-      return;
+      return { usernameError: '', usernameAvailable: null as boolean | null };
     }
 
     const validation = validateUsername(username);
     if (!validation.valid) {
-      setUsernameError(validation.error || '');
-      setUsernameAvailable(false);
-      return;
+      return {
+        usernameError: validation.error || '',
+        usernameAvailable: false as boolean | null,
+      };
     }
 
     const available = UserProfileService.isUsernameAvailable(username, address);
-    setUsernameAvailable(available);
-    setUsernameError(available ? '' : 'Username already taken');
+    return {
+      usernameError: available ? '' : 'Username already taken',
+      usernameAvailable: available,
+    };
   }, [username, address, profile?.username]);
+
+  const updateDraft = (nextDraft: { username: string; displayName: string; bio: string }) => {
+    if (!address) return;
+    setDraftByAddress((prev) => ({ ...prev, [address]: nextDraft }));
+  };
 
   const handleSave = () => {
     if (!address || !profile) return;
@@ -88,7 +100,7 @@ export function AccountSettings() {
     const success = UserProfileService.saveMyProfile(updatedProfile);
     
     if (success) {
-      setProfile(updatedProfile);
+      setProfileByAddress((prev) => ({ ...prev, [address]: updatedProfile }));
       setEditing(false);
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);
@@ -98,11 +110,13 @@ export function AccountSettings() {
   };
 
   const handleCancel = () => {
-    setUsername(profile?.username || '');
-    setDisplayName(profile?.displayName || '');
-    setBio(profile?.bio || '');
-    setUsernameError('');
-    setUsernameAvailable(null);
+    if (address) {
+      setDraftByAddress((prev) => {
+        const next = { ...prev };
+        delete next[address];
+        return next;
+      });
+    }
     setEditing(false);
   };
 
@@ -195,7 +209,7 @@ export function AccountSettings() {
               type="text"
               placeholder="your_username"
               value={username}
-              onChange={(e) => setUsername(e.target.value.toLowerCase())}
+              onChange={(e) => updateDraft({ ...draft, username: e.target.value.toLowerCase() })}
               disabled={!editing}
               className={`w-full px-4 py-3 bg-zinc-950 border rounded-lg text-zinc-100 focus:outline-none transition-colors ${
                 editing
@@ -248,7 +262,7 @@ export function AccountSettings() {
             type="text"
             placeholder="Your Display Name"
             value={displayName}
-            onChange={(e) => setDisplayName(e.target.value)}
+            onChange={(e) => updateDraft({ ...draft, displayName: e.target.value })}
             disabled={!editing}
             maxLength={50}
             className={`w-full px-4 py-3 bg-zinc-950 border rounded-lg text-zinc-100 focus:outline-none ${
@@ -271,7 +285,7 @@ export function AccountSettings() {
           <textarea
             placeholder="Tell us about yourself..."
             value={bio}
-            onChange={(e) => setBio(e.target.value)}
+            onChange={(e) => updateDraft({ ...draft, bio: e.target.value })}
             disabled={!editing}
             rows={3}
             maxLength={200}

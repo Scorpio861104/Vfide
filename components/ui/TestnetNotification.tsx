@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, FlaskConical } from 'lucide-react';
 
 /**
- * Small notification that appears once to inform user they're on testnet
+ * Small notification that appears once to inform user they're on Base Sepolia
  * Non-intrusive, auto-dismisses after 8 seconds or can be manually dismissed
  */
 export function TestnetNotification() {
@@ -16,7 +16,7 @@ export function TestnetNotification() {
   const isTestnet = chainId ? isTestnetChainId(chainId) : false;
 
   useEffect(() => {
-    // Only show on testnet
+    // Only show on Base Sepolia
     if (!isTestnet) return;
 
     // Check if user has seen this notification in this session
@@ -54,10 +54,10 @@ export function TestnetNotification() {
               
               <div className="flex-1 min-w-0">
                 <h3 className="text-sm font-semibold text-amber-300 mb-1">
-                  Testnet Mode
+                  Base Sepolia
                 </h3>
                 <p className="text-xs text-amber-200/80">
-                  You&apos;re on Base Sepolia testnet. All transactions use test ETH (free).
+                  Base Sepolia mirrors mainnet behavior. All transactions use test ETH.
                 </p>
               </div>
 

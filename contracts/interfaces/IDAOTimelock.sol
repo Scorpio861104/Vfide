@@ -4,7 +4,10 @@ pragma solidity 0.8.30;
 interface IDAOTimelock {
     function admin() external view returns (address);
     function delay() external view returns (uint64);
-    function setAdmin(address _admin) external;
+    // 12d Fix: Two-step admin change
+    function proposeAdmin(address _admin) external;
+    function confirmAdmin() external;
+    function cancelAdminChange() external;
     function setDelay(uint64 _delay) external;
     function setLedger(address _ledger) external;
     function setPanicGuard(address _pg) external;

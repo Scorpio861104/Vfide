@@ -9,6 +9,10 @@ import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
 import GovernanceUI from '../../components/governance/GovernanceUI';
 
+beforeAll(() => {
+  process.env.NEXT_PUBLIC_ENABLE_DELEGATION = 'true';
+});
+
 describe('GovernanceUI Component', () => {
   it('renders without crashing', () => {
     render(<GovernanceUI />);

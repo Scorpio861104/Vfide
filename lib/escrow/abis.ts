@@ -79,7 +79,21 @@ export const ESCROW_ABI = [
   },
   {
     type: 'function',
+    name: 'approveRelease',
+    stateMutability: 'nonpayable',
+    inputs: [{ name: 'id', type: 'uint256' }],
+    outputs: []
+  },
+  {
+    type: 'function',
     name: 'refund',
+    stateMutability: 'nonpayable',
+    inputs: [{ name: 'id', type: 'uint256' }],
+    outputs: []
+  },
+  {
+    type: 'function',
+    name: 'approveRefund',
     stateMutability: 'nonpayable',
     inputs: [{ name: 'id', type: 'uint256' }],
     outputs: []
@@ -149,6 +163,34 @@ export const ESCROW_ABI = [
       { name: 'state', type: 'uint8' },
       { name: 'orderId', type: 'string' }
     ]
+  },
+  {
+    type: 'function',
+    name: 'buyerReleaseApproved',
+    stateMutability: 'view',
+    inputs: [{ name: 'id', type: 'uint256' }],
+    outputs: [{ type: 'bool' }]
+  },
+  {
+    type: 'function',
+    name: 'merchantReleaseApproved',
+    stateMutability: 'view',
+    inputs: [{ name: 'id', type: 'uint256' }],
+    outputs: [{ type: 'bool' }]
+  },
+  {
+    type: 'function',
+    name: 'buyerRefundApproved',
+    stateMutability: 'view',
+    inputs: [{ name: 'id', type: 'uint256' }],
+    outputs: [{ type: 'bool' }]
+  },
+  {
+    type: 'function',
+    name: 'merchantRefundApproved',
+    stateMutability: 'view',
+    inputs: [{ name: 'id', type: 'uint256' }],
+    outputs: [{ type: 'bool' }]
   },
   {
     type: 'function',

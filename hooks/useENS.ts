@@ -1,6 +1,4 @@
 'use client';
-
-import { useState, useEffect } from 'react';
 import { useEnsName, useEnsAvatar } from 'wagmi';
 import { normalize } from 'viem/ens';
 import { mainnet } from 'wagmi/chains';
@@ -11,14 +9,11 @@ import { mainnet } from 'wagmi/chains';
  * Phase 3: Resolve ENS names for addresses
  */
 export function useENS(address: string | undefined) {
-  const [ensName, setEnsName] = useState<string | null>(null);
-  const [ensAvatar, setEnsAvatar] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-
   // Use wagmi's ENS hooks
   const { data: resolvedName, isLoading: nameLoading } = useEnsName({
     address: address as `0x${string}` | undefined,
-    chainId: mainnet.id as number as 8453, // Cast for wagmi type compatibility
+    // @ts-expect-error ENS requires mainnet (chain 1) which is not in wagmi config
+    chainId: mainnet.id,
     query: {
       enabled: !!address,
       staleTime: 1000 * 60 * 60, // 1 hour cache
@@ -27,24 +22,17 @@ export function useENS(address: string | undefined) {
 
   const { data: resolvedAvatar, isLoading: avatarLoading } = useEnsAvatar({
     name: resolvedName ? normalize(resolvedName) : undefined,
-    chainId: mainnet.id as number as 8453, // Cast for wagmi type compatibility
+    // @ts-expect-error ENS requires mainnet (chain 1) which is not in wagmi config
+    chainId: mainnet.id,
     query: {
       enabled: !!resolvedName,
       staleTime: 1000 * 60 * 60, // 1 hour cache
     },
   });
 
-  useEffect(() => {
-    setIsLoading(nameLoading || avatarLoading);
-  }, [nameLoading, avatarLoading]);
-
-  useEffect(() => {
-    setEnsName(resolvedName || null);
-  }, [resolvedName]);
-
-  useEffect(() => {
-    setEnsAvatar(resolvedAvatar || null);
-  }, [resolvedAvatar]);
+  const isLoading = nameLoading || avatarLoading;
+  const ensName = resolvedName || null;
+  const ensAvatar = resolvedAvatar || null;
 
   return {
     ensName,

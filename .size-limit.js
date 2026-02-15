@@ -14,7 +14,7 @@ const config = [
   },
   {
     name: 'Crypto-social integration',
-    path: '.next/static/chunks/pages/demo/crypto-social*.js',
+    path: '.next/static/chunks/pages/crypto-social*.js',
     limit: '100 KB',
     gzip: true,
   },

@@ -7,6 +7,7 @@
 
 import * as React from 'react';
 import { onCLS, onINP, onFCP, onLCP, onTTFB, onFID, Metric } from 'web-vitals';
+import { buildCsrfHeaders } from '@/lib/security/csrfClient';
 
 export interface WebVitalsMetrics {
   CLS: number; // Cumulative Layout Shift
@@ -66,9 +67,11 @@ async function sendMetric(metric: PerformanceMetric) {
 
   if (process.env.NODE_ENV === 'production') {
     try {
+      const headers = await buildCsrfHeaders({ 'Content-Type': 'application/json' }, 'POST');
       await fetch('/api/performance/metrics', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
+        credentials: 'include',
         body: JSON.stringify({
           metric,
           timestamp: Date.now(),
@@ -179,7 +182,7 @@ export function getNavigationMetrics() {
 export function getMemoryUsage() {
   if (typeof window === 'undefined') return null;
   
-  const memory = performance.memory;
+  const memory = (performance as Performance & { memory?: { usedJSHeapSize: number; totalJSHeapSize: number; jsHeapSizeLimit: number } }).memory;
   if (!memory) return null;
 
   return {
@@ -272,10 +275,17 @@ export function useWebVitals() {
  * Performance optimization utilities
  */
 export function useOptimizeRendering(callback: () => void, deps: React.DependencyList = []) {
+  const callbackRef = React.useRef(callback);
+  React.useEffect(() => {
+    callbackRef.current = callback;
+  }, [callback]);
+
+   
   React.useEffect(() => {
     // Use requestAnimationFrame for smoother rendering
-    const rafId = requestAnimationFrame(callback)
+    const rafId = requestAnimationFrame(() => callbackRef.current())
     return () => cancelAnimationFrame(rafId)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, deps)
 }
 

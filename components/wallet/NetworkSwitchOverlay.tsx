@@ -35,37 +35,6 @@ export function NetworkSwitchOverlay() {
   // Check if user prefers auto-switch
   const AUTO_SWITCH_KEY = 'vfide-auto-switch-network'
 
-  useEffect(() => {
-    const autoSwitch = safeLocalStorage.getItem(AUTO_SWITCH_KEY) === 'true'
-    if (autoSwitch && isWrongNetwork && !isPending && !dismissed) {
-      handleSwitch(true)
-    }
-     
-  }, [isWrongNetwork])
-
-  // Show success animation briefly
-  useEffect(() => {
-    if (isSuccess) {
-      setShowSuccess(true)
-      setTimeout(() => {
-        setShowSuccess(false)
-        setDismissed(true)
-      }, 1500)
-    }
-  }, [isSuccess])
-
-  // Reset dismissed state when address changes (new wallet)
-  useEffect(() => {
-    setDismissed(false)
-  }, [address])
-
-  // Reset when user manually switches to correct network
-  useEffect(() => {
-    if (!isWrongNetwork) {
-      setDismissed(false)
-    }
-  }, [isWrongNetwork])
-
   const handleSwitch = useCallback(async (remember: boolean = false) => {
     if (remember) {
       safeLocalStorage.setItem(AUTO_SWITCH_KEY, 'true')
@@ -80,6 +49,40 @@ export function NetworkSwitchOverlay() {
       })
     }
   }, [switchChain, expectedChainId, chainId])
+
+  useEffect(() => {
+    const autoSwitch = safeLocalStorage.getItem(AUTO_SWITCH_KEY) === 'true'
+    if (autoSwitch && isWrongNetwork && !isPending && !dismissed) {
+      handleSwitch(true)
+    }
+     
+  }, [dismissed, handleSwitch, isPending, isWrongNetwork])
+
+  // Show success animation briefly
+  useEffect(() => {
+    if (isSuccess) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setShowSuccess(true)
+      setTimeout(() => {
+        setShowSuccess(false)
+        setDismissed(true)
+      }, 1500)
+    }
+  }, [isSuccess])
+
+  // Reset dismissed state when address changes (new wallet)
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setDismissed(false)
+  }, [address])
+
+  // Reset when user manually switches to correct network
+  useEffect(() => {
+    if (!isWrongNetwork) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setDismissed(false)
+    }
+  }, [isWrongNetwork])
 
   const handleDismiss = () => {
     setDismissed(true)

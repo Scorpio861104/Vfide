@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence, useMotionValue, useTransform, animate } from 'framer-motion';
 import { TrendingUp, TrendingDown, Minus, BarChart3, LineChart as LineChartIcon, RefreshCw, Download } from 'lucide-react';
@@ -327,7 +329,7 @@ export function ReportingDashboard({
     [reports, selectedReportId]
   );
 
-  const handleRefresh = async () => {
+  const handleRefresh = React.useCallback(async () => {
     if (!onRefresh) return;
     
     setIsRefreshing(true);
@@ -337,7 +339,7 @@ export function ReportingDashboard({
     } finally {
       setIsRefreshing(false);
     }
-  };
+  }, [onRefresh, playSuccess]);
 
   const handleExport = (format: 'csv' | 'pdf' | 'json') => {
     if (onExport && selectedReportId) {
@@ -353,7 +355,7 @@ export function ReportingDashboard({
     }, selectedReport.updateInterval);
 
     return () => clearInterval(interval);
-  }, [autoRefresh, selectedReport]);
+  }, [autoRefresh, selectedReport, handleRefresh]);
 
   if (!selectedReport) {
     return (

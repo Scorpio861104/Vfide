@@ -115,9 +115,6 @@ const navigationItems: NavItem[] = [
       { id: 'pos', label: 'POS Terminal', href: '/pos', icon: CreditCard, color: '#10B981' },
       { id: 'escrow', label: 'Escrow', href: '/escrow', icon: Lock, color: '#10B981' },
       { id: 'payroll', label: 'Payroll', href: '/payroll', icon: Banknote, color: '#10B981' },
-      { id: 'streaming', label: 'Streaming', href: '/streaming', icon: Zap, color: '#10B981', badge: 'NEW' },
-      { id: 'cross-chain', label: 'Cross-Chain', href: '/cross-chain', icon: ArrowLeftRight, color: '#10B981' },
-      { id: 'stealth', label: 'Private Pay', href: '/stealth', icon: Eye, color: '#10B981' },
       { id: 'pay', label: 'Quick Pay', href: '/pay', icon: Send, color: '#10B981' },
       { id: 'subscriptions', label: 'Subscriptions', href: '/subscriptions', icon: Repeat, color: '#10B981' },
     ],
@@ -182,7 +179,7 @@ const navigationItems: NavItem[] = [
     color: '#64748B',
     children: [
       { id: 'developer-main', label: 'Dev Hub', href: '/developer', icon: Code, color: '#64748B' },
-      { id: 'testnet', label: 'Testnet', href: '/testnet', icon: TestTube, color: '#64748B' },
+      { id: 'testnet', label: 'Get ETH', href: '/testnet', icon: TestTube, color: '#64748B' },
       { id: 'explorer', label: 'Explorer', href: '/explorer', icon: Compass, color: '#64748B' },
       { id: 'token-launch', label: 'Token Launch', href: '/token-launch', icon: Rocket, color: '#64748B' },
     ],
@@ -527,8 +524,11 @@ export function PieMenu() {
   
   // Close on route change
   useEffect(() => {
-    setIsOpen(false);
-    setActiveCategory(null);
+    const frame = window.requestAnimationFrame(() => {
+      setIsOpen(false);
+      setActiveCategory(null);
+    });
+    return () => window.cancelAnimationFrame(frame);
   }, [pathname]);
   
   // Handle keyboard navigation
@@ -581,7 +581,7 @@ export function PieMenu() {
   return (
     <nav 
       ref={menuRef}
-      className="fixed bottom-4 right-4 z-100 sm:bottom-6 sm:right-6"
+      className="fixed bottom-4 right-4 z-[100] sm:bottom-6 sm:right-6"
       aria-label="Main navigation"
     >
       {/* Backdrop */}

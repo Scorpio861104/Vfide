@@ -6,6 +6,8 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { withRateLimit } from '@/lib/auth/rateLimit';
+import { query } from '@/lib/db';
+import { requireAdmin } from '@/lib/auth/middleware';
 
 interface CSPViolation {
   'document-uri'?: string;
@@ -23,10 +25,6 @@ interface CSPReport {
   'csp-report': CSPViolation;
 }
 
-// In-memory store for violations (in production, use database)
-const violations: Array<CSPViolation & { timestamp: number; userAgent: string }> = [];
-const MAX_VIOLATIONS = 1000;
-
 export async function POST(request: NextRequest) {
   // Rate limiting
   const rateLimit = await withRateLimit(request, 'api');
@@ -40,18 +38,24 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid report' }, { status: 400 });
     }
 
-    // Store violation with metadata
     const record = {
       ...violation,
       timestamp: Date.now(),
       userAgent: request.headers.get('user-agent') || 'unknown',
     };
 
-    violations.push(record);
-
-    // Keep only recent violations
-    if (violations.length > MAX_VIOLATIONS) {
-      violations.shift();
+    if (process.env.NODE_ENV !== 'test') {
+      await query(
+        `INSERT INTO error_logs (user_id, severity, message, stack, metadata, timestamp)
+         VALUES ($1, $2, $3, $4, $5, NOW())`,
+        [
+          null,
+          'warning',
+          'CSP violation',
+          null,
+          JSON.stringify({ type: 'csp', violation: record }),
+        ]
+      );
     }
 
     // Log in development
@@ -80,10 +84,8 @@ export async function GET(request: NextRequest) {
   const rateLimitGet = await withRateLimit(request, 'api');
   if (rateLimitGet) return rateLimitGet;
 
-  // Optional: endpoint to view recent violations (development only)
-  if (process.env.NODE_ENV !== 'development') {
-    return NextResponse.json({ error: 'Not available' }, { status: 404 });
-  }
+  const authResult = await requireAdmin(request);
+  if (authResult instanceof NextResponse) return authResult;
 
   const limit = parseInt(request.nextUrl.searchParams.get('limit') || '50', 10);
   
@@ -95,9 +97,22 @@ export async function GET(request: NextRequest) {
     );
   }
   
-  const recentViolations = violations.slice(-limit).reverse();
+  const result = await query(
+    `SELECT metadata, timestamp FROM error_logs
+     WHERE message = 'CSP violation'
+     ORDER BY timestamp DESC
+     LIMIT $1`,
+    [limit]
+  );
 
-  // Group by directive
+  const recentViolations = result.rows.map((row) => {
+    const meta = row.metadata || {};
+    return {
+      ...meta.violation,
+      timestamp: row.timestamp,
+    };
+  });
+
   const grouped = recentViolations.reduce((acc, v) => {
     const directive = v['violated-directive'] || 'unknown';
     if (!acc[directive]) {
@@ -105,10 +120,10 @@ export async function GET(request: NextRequest) {
     }
     acc[directive].push(v);
     return acc;
-  }, {} as Record<string, typeof violations>);
+  }, {} as Record<string, typeof recentViolations>);
 
   return NextResponse.json({
-    total: violations.length,
+    total: recentViolations.length,
     recent: recentViolations,
     grouped,
   });

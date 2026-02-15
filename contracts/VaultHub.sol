@@ -30,10 +30,16 @@ contract VaultHub is Ownable {
     uint64 public constant RECOVERY_DELAY = 7 days; // H-5: Increased from 3 to 7 days
     uint8 public constant RECOVERY_APPROVALS_REQUIRED = 3; // H-5: Multi-sig requirement
     mapping(address => bool) public isRecoveryApprover;
+    mapping(address => address) public recoveryProposedTarget;
 
     // Track total vaults created
     uint256 public totalVaults;
     mapping(address => uint256) public vaultCreatedAt;
+
+    // DAO change timelock
+    address public proposedDAO;
+    uint64 public daoProposalTime;
+    uint64 public constant DAO_CHANGE_DELAY = 2 days;
 
     /// Events
     event ModulesSet(address vfide, address securityHub, address ledger, address dao);
@@ -42,6 +48,7 @@ contract VaultHub is Ownable {
     event ForcedRecovery(address indexed vault, address indexed newOwner);
     event VFIDESet(address vfide);
     event DAOSet(address dao);
+    event DAOProposed(address indexed proposedDAO, uint64 proposalTime);
 
     /// Errors
     error VH_Zero();
@@ -71,10 +78,22 @@ contract VaultHub is Ownable {
         _log("hub_vfide_set");
     }
 
-    function setDAO(address _dao) external onlyOwner {
-        dao = _dao;
-        emit DAOSet(_dao);
-        _log("hub_dao_set");
+    function proposeDAO(address _dao) external onlyOwner {
+        require(_dao != address(0), "VH:zero-dao");
+        proposedDAO = _dao;
+        daoProposalTime = uint64(block.timestamp);
+        emit DAOProposed(_dao, uint64(block.timestamp));
+        _log("hub_dao_proposed");
+    }
+
+    function confirmDAO() external onlyOwner {
+        require(proposedDAO != address(0), "VH:no-proposal");
+        require(block.timestamp >= uint256(daoProposalTime) + uint256(DAO_CHANGE_DELAY), "VH:timelock");
+        dao = proposedDAO;
+        emit DAOSet(proposedDAO);
+        proposedDAO = address(0);
+        daoProposalTime = 0;
+        _log("hub_dao_confirmed");
     }
     
     // H-5 Fix: Multi-sig approver management
@@ -151,17 +170,27 @@ contract VaultHub is Ownable {
         address current = ownerOfVault[vault];
         require(current != address(0), "unknown vault");
         require(vaultOf[newOwner] == address(0), "target has vault");
-        
-        // C-2 Fix: Use nonce to prevent stale approval reuse
+
         uint256 nonce = recoveryNonce[vault];
-        
+
+        // If a different newOwner is proposed, reset the approval round
+        if (recoveryProposedTarget[vault] != address(0) && recoveryProposedTarget[vault] != newOwner) {
+            recoveryNonce[vault]++;
+            nonce = recoveryNonce[vault];
+            recoveryApprovalCount[vault] = 0;
+            _log("recovery_round_reset");
+        }
+
+        // Store the proposed target for this round
+        recoveryProposedTarget[vault] = newOwner;
+
         // Record approval for current nonce
         if (!recoveryApprovals[vault][msg.sender][nonce]) {
             recoveryApprovals[vault][msg.sender][nonce] = true;
             recoveryApprovalCount[vault]++;
             _log("recovery_approval_cast");
         }
-        
+
         // If threshold reached, initiate timelock
         if (recoveryApprovalCount[vault] >= RECOVERY_APPROVALS_REQUIRED) {
             recoveryProposedOwner[vault] = newOwner;
@@ -193,30 +222,31 @@ contract VaultHub is Ownable {
         if (msg.sender != dao) revert VH_NotDAO();
         require(recoveryUnlockTime[vault] != 0, "VH:no-req");
         require(block.timestamp >= recoveryUnlockTime[vault], "VH:timelock");
-        
+
         address newOwner = recoveryProposedOwner[vault];
         require(newOwner != address(0), "VH:zero");
-        
+
         // Re-check target has no vault (in case they made one during wait)
         require(vaultOf[newOwner] == address(0), "target has vault");
 
         address current = ownerOfVault[vault];
-        
-        // update registry and tell vault
+
+        // EFFECTS: Clear ALL recovery state BEFORE external call (checks-effects-interactions)
+        delete recoveryProposedOwner[vault];
+        delete recoveryUnlockTime[vault];
+        delete recoveryApprovalCount[vault];
+        delete recoveryProposedTarget[vault];
+        recoveryNonce[vault]++;
+
+        // Update registry
         if (current != address(0)) {
             vaultOf[current] = address(0);
         }
         ownerOfVault[vault] = newOwner;
         vaultOf[newOwner] = vault;
 
+        // INTERACTION: External call after all state changes
         UserVault(payable(vault)).__forceSetOwner(newOwner);
-        
-        // H-5 Fix: Clear multi-sig approval state
-        delete recoveryProposedOwner[vault];
-        delete recoveryUnlockTime[vault];
-        delete recoveryApprovalCount[vault];
-        // C-2 Fix: Clear all approvals for this vault to prevent stale votes
-        recoveryNonce[vault]++;
 
         emit ForcedRecovery(vault, newOwner);
         _logEv(vault, "force_recover_final", 0, "");

@@ -12,5 +12,6 @@ export type ImageProps = React.ImgHTMLAttributes<HTMLImageElement> & {
 
 export default function Image({ src, alt, ...rest }: ImageProps) {
   // Storybook-only lightweight replacement for next/image.
+  // eslint-disable-next-line @next/next/no-img-element
   return <img src={src} alt={alt} {...rest} />;
 }

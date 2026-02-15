@@ -224,7 +224,7 @@ export function ToastContainer({
   const visibleNotifications = notifications.slice(0, maxVisible);
 
   return (
-    <div className="fixed top-4 right-4 z-200 flex flex-col gap-3 pointer-events-none">
+    <div className="fixed top-4 right-4 z-[200] flex flex-col gap-3 pointer-events-none">
       <AnimatePresence mode="popLayout">
         {visibleNotifications.map((notification) => (
           <div key={notification.id} className="pointer-events-auto">
@@ -625,7 +625,7 @@ export function NotificationDropdown({ isOpen, onClose }: NotificationDropdownPr
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-99 bg-black/50 backdrop-blur-sm"
+            className="fixed inset-0 z-[99] bg-black/50 backdrop-blur-sm"
             onClick={onClose}
           />
 
@@ -635,7 +635,7 @@ export function NotificationDropdown({ isOpen, onClose }: NotificationDropdownPr
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -10, scale: 0.95 }}
             transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-            className="fixed top-16 right-4 z-100 w-96 max-h-[80vh] overflow-hidden rounded-2xl bg-zinc-950/95 backdrop-blur-xl border border-white/10 shadow-2xl"
+            className="fixed top-16 right-4 z-[100] w-96 max-h-[80vh] overflow-hidden rounded-2xl bg-zinc-950/95 backdrop-blur-xl border border-white/10 shadow-2xl"
           >
             {/* Header */}
             <div className="p-4 border-b border-white/10">
@@ -772,7 +772,15 @@ export function NotificationDropdown({ isOpen, onClose }: NotificationDropdownPr
                         onSnooze={() => snooze(notification.id)}
                         onAction={() => {
                           if (notification.actionUrl) {
-                            window.location.href = notification.actionUrl;
+                            // Validate URL to prevent open redirect / javascript: injection
+                            try {
+                              const url = new URL(notification.actionUrl, window.location.origin);
+                              if (url.origin === window.location.origin) {
+                                window.location.href = url.href;
+                              }
+                            } catch {
+                              // Invalid URL, ignore
+                            }
                           }
                         }}
                         compact
