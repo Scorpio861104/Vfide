@@ -214,7 +214,7 @@ export function useActivityFeed() {
           const meta = safeParseData(activity.data) ?? {}
           return {
             id: String(activity.id ?? `${activity.activity_type}-${activity.created_at}`),
-            type: normalizeType(activity.activity_type ?? activity.type),
+            type: normalizeType(activity.activity_type ?? activity.type) as string,
             from: (meta.from as string | undefined) ?? activity.user_address,
             to: (meta.to as string | undefined) ?? (meta.recipient as string | undefined),
             amount: (meta.amount as string | undefined) ?? (meta.value as string | undefined),

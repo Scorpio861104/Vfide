@@ -385,8 +385,8 @@ export function useBulkPresence(addresses: string[]) {
           const data = await response.json();
           const rows = Array.isArray(data.presence) ? data.presence : [];
           rows.forEach((row: Record<string, unknown>) => {
-            updatePresence(row.wallet_address, {
-              status: row.status,
+            updatePresence(String(row.wallet_address), {
+              status: row.status as any,
               lastSeen: new Date(row.last_seen_at as string | number | Date).getTime(),
               lastActivity: new Date(row.last_activity_at as string | number | Date).getTime(),
             });

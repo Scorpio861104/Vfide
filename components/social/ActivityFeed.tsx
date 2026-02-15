@@ -65,7 +65,7 @@ export function ActivityFeed({ userAddress }: ActivityFeedProps) {
         const items = Array.isArray(data.activities) ? data.activities : [];
         const mapped = items.map((activity: Record<string, unknown>) => ({
           id: String(activity.id ?? `${activity.activity_type}-${activity.created_at}`),
-          type: normalizeType(activity.activity_type ?? activity.type),
+          type: normalizeType(activity.activity_type ?? activity.type) as string,
           user: activity.user_address ?? activity.user_username ?? 'Unknown',
           content: activity.description ?? activity.title ?? 'Activity',
           timestamp: activity.created_at ? new Date(activity.created_at as string | number | Date).getTime() : Date.now(),
