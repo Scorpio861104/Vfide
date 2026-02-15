@@ -8,7 +8,7 @@ Next.js 16 frontend for the VFIDE trust-based payment protocol.
 - **React**: 19
 - **Styling**: Tailwind CSS 4
 - **Web3**: wagmi v2, RainbowKit
-- **Chain**: Base Mainnet and Base Sepolia
+- **Chain**: Base, Polygon, and zkSync (Mainnet and Testnets)
 
 ## Getting Started
 

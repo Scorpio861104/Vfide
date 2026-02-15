@@ -188,11 +188,21 @@ Multiple files have TODO/FIXME comments indicating incomplete work:
 
 **Action Required:** Complete or document incomplete features
 
+### 13. Documentation Inconsistency (Chain Support)
+**Status:** ✅ RESOLVED  
+**Severity:** LOW  
+**Impact:** Misleading information
+
+README stated only "Base Mainnet and Base Sepolia" but the codebase (lib/chains.ts) clearly supports Base, Polygon, and zkSync on both mainnet and testnet.
+
+**Action Taken:** Updated README to accurately reflect multi-chain support
+
 ---
 
 ## Resolved Issues ✅
 
-None yet. This is the initial audit.
+### 1. Documentation Inconsistency (Chain Support) - RESOLVED ✅
+Updated README.md to accurately state multi-chain support (Base, Polygon, zkSync)
 
 ---
 
@@ -215,8 +225,8 @@ None yet. This is the initial audit.
 | 🔴 Critical | 5 | Open |
 | 🟠 High | 5 | Open |
 | 🟡 Medium | 2 | Open |
-| ✅ Resolved | 0 | - |
-| **Total** | **12** | **All Open** |
+| ✅ Resolved | 1 | Fixed |
+| **Total** | **13** | **12 Open, 1 Resolved** |
 
 ---
 
