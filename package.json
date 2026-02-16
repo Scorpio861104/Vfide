@@ -75,7 +75,7 @@
     "test:vitest:watch": "vitest --watch"
   },
   "dependencies": {
-    "@datadog/browser-rum": "^6.25.4",
+    "@datadog/browser-rum": "^6.27.1",
     "@datadog/browser-rum-react": "^6.25.4",
     "@fontsource/inter": "^5.2.8",
     "@fontsource/space-grotesk": "^5.2.10",
