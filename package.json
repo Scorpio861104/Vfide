@@ -116,7 +116,7 @@
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.11.0",
-    "@axe-core/react": "^4.11.0",
+    "@axe-core/react": "^4.11.1",
     "@chainlink/contracts": "^1.5.0",
     "@changesets/cli": "^2.29.8",
     "@commitlint/cli": "^20.3.1",
