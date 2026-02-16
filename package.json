@@ -164,7 +164,7 @@
     "@uniswap/v3-core": "^1.0.1",
     "@uniswap/v3-periphery": "^1.4.4",
     "@vitest/ui": "^2.1.9",
-    "ajv": "^8.17.1",
+    "ajv": "^8.18.0",
     "axe-core": "^4.11.1",
     "chromatic": "^13.3.5",
     "dotenv": "^16.6.1",
