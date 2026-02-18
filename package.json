@@ -143,7 +143,7 @@
     "@storybook/addon-links": "^8.6.15",
     "@storybook/addon-onboarding": "^10.2.3",
     "@storybook/addon-viewport": "^8.6.15",
-    "@storybook/react-vite": "^10.2.4",
+    "@storybook/react-vite": "^10.2.8",
     "@tailwindcss/postcss": "^4",
     "@testing-library/dom": "^10.4.1",
     "@testing-library/jest-dom": "^6.9.1",
