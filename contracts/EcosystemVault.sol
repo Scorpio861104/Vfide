@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
-import { IERC20, ISeer, ICouncilManager, ISwapRouter, SafeERC20 } from "./SharedInterfaces.sol";
+import { IERC20, ISeer, ICouncilManager, ISwapRouter, SafeERC20, Ownable, ReentrancyGuard } from "./SharedInterfaces.sol";
 
 /**
  * EcosystemVault — Growth Incentive Treasury (Percentage-Based)

@@ -51,7 +51,7 @@ interface IHoweySafeContract {
     function howeySafeMode() external view returns (bool);
 }
 
-interface IEcosystemVault {
+interface IEcosystemVaultAdmin {
     function configureAutoSwap(address _router, address _stablecoin, bool _enabled, uint16 _maxSlippageBps) external;
     function setManager(address manager, bool active) external;
     function setAllocations(uint16 _councilBps, uint16 _merchantBps, uint16 _headhunterBps) external;
@@ -73,7 +73,7 @@ contract OwnerControlPanel {
     ISeer public seer;
     
     // New contract references for enhanced configuration
-    IEcosystemVault public ecosystemVault;
+    IEcosystemVaultAdmin public ecosystemVault;
     IHoweySafeContract public dutyDistributor;
     IHoweySafeContract public councilSalary;
     IHoweySafeContract public councilManager;
@@ -144,7 +144,7 @@ contract OwnerControlPanel {
         address _promotionalTreasury,
         address _liquidityIncentives
     ) external onlyOwner {
-        if (_ecosystemVault != address(0)) ecosystemVault = IEcosystemVault(_ecosystemVault);
+        if (_ecosystemVault != address(0)) ecosystemVault = IEcosystemVaultAdmin(_ecosystemVault);
         if (_dutyDistributor != address(0)) dutyDistributor = IHoweySafeContract(_dutyDistributor);
         if (_councilSalary != address(0)) councilSalary = IHoweySafeContract(_councilSalary);
         if (_councilManager != address(0)) councilManager = IHoweySafeContract(_councilManager);
@@ -826,7 +826,11 @@ contract OwnerControlPanel {
     
     /**
      * @notice Get Howey-safe mode status for all contracts
-     * @return Status of each contract (true = safe mode enabled)
+     * @return dutyDistributorSafe True if DutyDistributor safe mode enabled
+     * @return councilSalarySafe True if CouncilSalary safe mode enabled
+     * @return councilManagerSafe True if CouncilManager safe mode enabled
+     * @return promotionalTreasurySafe True if PromotionalTreasury safe mode enabled
+     * @return liquidityIncentivesSafe True if LiquidityIncentives safe mode enabled
      */
     function howey_getStatus() external view returns (
         bool dutyDistributorSafe,
@@ -998,7 +1002,12 @@ contract OwnerControlPanel {
     
     /**
      * @notice Get comprehensive system status
-     * @return Detailed status of all major configuration settings
+     * @return allHoweySafe True if all contracts have Howey-safe mode enabled
+     * @return autoSwapEnabled True if auto-swap is enabled in EcosystemVault
+     * @return tokenCircuitBreaker True if circuit breaker is active
+     * @return tokenVaultOnly True if vault-only mode is enabled
+     * @return tokenPolicyLocked True if token policy is locked
+     * @return healthStatus Overall health status string
      */
     function system_getStatus() external view returns (
         bool allHoweySafe,
