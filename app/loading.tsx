@@ -1,21 +1,24 @@
-'use client';
-
 export default function Loading() {
   return (
-    <div className="min-h-screen bg-zinc-900 flex items-center justify-center">
-      <div className="relative flex flex-col items-center gap-6">
-        <div className="relative flex items-center justify-center">
-          <div className="absolute inset-0 rounded-full border border-cyan-400/20 animate-spin" />
-          <div className="absolute inset-2 rounded-full bg-cyan-400/10 animate-pulse" />
-          <div className="relative w-16 h-16 rounded-full border-2 border-cyan-400/40 flex items-center justify-center bg-zinc-950">
-            <span className="text-2xl font-bold text-cyan-300">V</span>
+    <div className="min-h-screen flex items-center justify-center bg-zinc-900" role="status" aria-live="polite" aria-label="Loading page content">
+      <div className="text-center">
+        <div className="relative inline-block">
+          <div className="animate-spin w-16 h-16 border-2 border-cyan-400/20 border-t-cyan-400 rounded-full" />
+          <div className="animate-pulse absolute inset-0 flex items-center justify-center">
+            <span className="text-2xl font-bold text-white">V</span>
           </div>
         </div>
-        <div className="text-zinc-200 text-lg font-medium">Loading</div>
-        <div className="flex items-center gap-2">
-          <span className="w-2 h-2 rounded-full bg-cyan-400 animate-bounce" />
-          <span className="w-2 h-2 rounded-full bg-cyan-400 animate-bounce [animation-delay:150ms]" />
-          <span className="w-2 h-2 rounded-full bg-cyan-400 animate-bounce [animation-delay:300ms]" />
+        <p className="text-zinc-400 mt-6 text-sm font-medium tracking-wide">Loading</p>
+        <div className="flex gap-1.5 justify-center mt-3">
+          <span className="animate-bounce w-2 h-2 bg-cyan-400 rounded-full" />
+          <span
+            className="animate-bounce w-2 h-2 bg-cyan-400 rounded-full"
+            style={{ animationDelay: '0.15s' }}
+          />
+          <span
+            className="animate-bounce w-2 h-2 bg-cyan-400 rounded-full"
+            style={{ animationDelay: '0.3s' }}
+          />
         </div>
       </div>
     </div>

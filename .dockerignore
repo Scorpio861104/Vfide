@@ -1,0 +1,56 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Build outputs
+.next/
+out/
+dist/
+build/
+coverage/
+
+# Environment & secrets
+.env
+.env.*
+!.env.example
+
+# Version control
+.git/
+.gitignore
+
+# IDE & editors
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Test & development
+__tests__/
+*.test.ts
+*.test.tsx
+*.spec.ts
+*.spec.tsx
+jest.config.*
+jest.setup.*
+playwright.config.*
+cypress/
+
+# Documentation (not needed in container)
+*.md
+!README.md
+docs/
+
+# Hardhat artifacts (not needed in Next.js container)
+artifacts/
+cache/
+typechain-types/
+
+# Docker files
+docker-compose.yml
+Dockerfile
+.dockerignore
