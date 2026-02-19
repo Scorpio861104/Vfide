@@ -258,9 +258,10 @@ describe('Footer', () => {
     expect(externalLink).toBeDefined();
   });
 
-  it('should show Soon badge for Discord', () => {
+  it('should show Discord link in community section', () => {
     render(<Footer />);
     
-    expect(screen.getByText('Soon')).toBeInTheDocument();
+    const discordLinks = screen.getAllByText('Discord');
+    expect(discordLinks.length).toBeGreaterThan(0);
   });
 });

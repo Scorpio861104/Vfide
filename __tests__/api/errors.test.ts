@@ -9,9 +9,15 @@ jest.mock('@/lib/auth/rateLimit', () => ({
   withRateLimit: jest.fn(),
 }));
 
+jest.mock('@/lib/auth/middleware', () => ({
+  requireAuth: jest.fn(),
+  requireAdmin: jest.fn(),
+}));
+
 describe('/api/errors', () => {
   const { query } = require('@/lib/db');
   const { withRateLimit } = require('@/lib/auth/rateLimit');
+  const { requireAuth, requireAdmin } = require('@/lib/auth/middleware');
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -20,6 +26,7 @@ describe('/api/errors', () => {
   describe('POST', () => {
     it('should log error successfully', async () => {
       withRateLimit.mockResolvedValue(null);
+      requireAuth.mockResolvedValue({ user: { address: '0x1234567890123456789012345678901234567890' } });
       query.mockResolvedValue({ rows: [{ id: 1, message: 'Test error' }] });
 
       const request = new NextRequest('http://localhost:3000/api/errors', {
@@ -56,6 +63,7 @@ describe('/api/errors', () => {
 
     it('should handle missing error data', async () => {
       withRateLimit.mockResolvedValue(null);
+      requireAuth.mockResolvedValue({ user: { address: '0x1234567890123456789012345678901234567890' } });
       query.mockResolvedValue({ rows: [{ id: 1, message: 'Unknown error' }] });
 
       const request = new NextRequest('http://localhost:3000/api/errors', {

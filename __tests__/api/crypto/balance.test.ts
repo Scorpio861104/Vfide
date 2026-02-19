@@ -15,10 +15,15 @@ jest.mock('@/lib/db', () => ({
   query: jest.fn(),
 }));
 
+jest.mock('@/lib/auth/middleware', () => ({
+  requireAuth: jest.fn(),
+}));
+
 describe('/api/crypto/balance/[address]', () => {
   const { isAddress } = require('viem');
   const { withRateLimit } = require('@/lib/auth/rateLimit');
   const { query } = require('@/lib/db');
+  const { requireAuth } = require('@/lib/auth/middleware');
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -27,6 +32,7 @@ describe('/api/crypto/balance/[address]', () => {
   describe('GET', () => {
     it('should return balance for valid address', async () => {
       withRateLimit.mockResolvedValue(null);
+      requireAuth.mockResolvedValue({ user: { address: '0x1111111111111111111111111111111111111123' } });
       isAddress.mockReturnValue(true);
       query.mockResolvedValue({ rows: [{ token: 'VFIDE', balance: '1000' }] });
 
@@ -40,6 +46,7 @@ describe('/api/crypto/balance/[address]', () => {
 
     it('should return 400 for invalid address', async () => {
       withRateLimit.mockResolvedValue(null);
+      requireAuth.mockResolvedValue({ user: { address: '0x1111111111111111111111111111111111111123' } });
       isAddress.mockReturnValue(false);
 
       const request = new NextRequest('http://localhost:3000/api/crypto/balance/invalid');

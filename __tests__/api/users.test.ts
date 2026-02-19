@@ -9,6 +9,10 @@ jest.mock('@/lib/auth/rateLimit', () => ({
   withRateLimit: jest.fn(),
 }));
 
+jest.mock('@/lib/auth/middleware', () => ({
+  requireAuth: jest.fn(),
+}));
+
 jest.mock('@/lib/optimization/apiOptimization', () => ({
   parsePaginationParams: jest.fn(),
   createPaginatedResponse: jest.fn(),
@@ -24,7 +28,9 @@ jest.mock('@/lib/optimization/monitoring', () => ({
 describe('/api/users', () => {
   const { query } = require('@/lib/db');
   const { withRateLimit } = require('@/lib/auth/rateLimit');
+  const { requireAuth } = require('@/lib/auth/middleware');
   const { parsePaginationParams, createPaginatedResponse, parseFieldsParam } = require('@/lib/optimization/apiOptimization');
+  const mockAddress = '0x1234567890123456789012345678901234567890';
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -33,6 +39,7 @@ describe('/api/users', () => {
   describe('GET', () => {
     it('should return paginated users list', async () => {
       withRateLimit.mockResolvedValue(null);
+      requireAuth.mockResolvedValue({ user: { address: mockAddress } });
       parsePaginationParams.mockReturnValue({ page: 1, limit: 10 });
       parseFieldsParam.mockReturnValue(null);
 
@@ -69,6 +76,7 @@ describe('/api/users', () => {
 
     it('should support search parameter', async () => {
       withRateLimit.mockResolvedValue(null);
+      requireAuth.mockResolvedValue({ user: { address: mockAddress } });
       parsePaginationParams.mockReturnValue({ page: 1, limit: 10 });
       parseFieldsParam.mockReturnValue(null);
 
@@ -105,6 +113,7 @@ describe('/api/users', () => {
 
     it('should return 500 for database errors', async () => {
       withRateLimit.mockResolvedValue(null);
+      requireAuth.mockResolvedValue({ user: { address: mockAddress } });
       parsePaginationParams.mockReturnValue({ page: 1, limit: 10 });
       query.mockRejectedValue(new Error('Database error'));
 
@@ -118,6 +127,7 @@ describe('/api/users', () => {
 
     it('should order users by proof_score descending', async () => {
       withRateLimit.mockResolvedValue(null);
+      requireAuth.mockResolvedValue({ user: { address: mockAddress } });
       parsePaginationParams.mockReturnValue({ page: 1, limit: 10 });
       parseFieldsParam.mockReturnValue(null);
 
@@ -141,6 +151,7 @@ describe('/api/users', () => {
 
     it('should support field filtering', async () => {
       withRateLimit.mockResolvedValue(null);
+      requireAuth.mockResolvedValue({ user: { address: mockAddress } });
       parsePaginationParams.mockReturnValue({ page: 1, limit: 10 });
       parseFieldsParam.mockReturnValue(['wallet_address', 'username']);
 
@@ -166,6 +177,7 @@ describe('/api/users', () => {
 
     it('should create new user', async () => {
       withRateLimit.mockResolvedValue(null);
+      requireAuth.mockResolvedValue({ user: { address: mockAddress } });
 
       const newUser = {
         id: '1',
@@ -201,6 +213,7 @@ describe('/api/users', () => {
 
     it('should update existing user', async () => {
       withRateLimit.mockResolvedValue(null);
+      requireAuth.mockResolvedValue({ user: { address: mockAddress } });
 
       const existingUser = {
         id: '1',
@@ -234,6 +247,8 @@ describe('/api/users', () => {
 
     it('should return 400 when wallet_address is missing', async () => {
       withRateLimit.mockResolvedValue(null);
+      // Auth returns empty address which is now rejected at auth level with 401
+      requireAuth.mockResolvedValue({ user: { address: '' } });
 
       const request = new NextRequest('http://localhost:3000/api/users', {
         method: 'POST',
@@ -243,8 +258,8 @@ describe('/api/users', () => {
       const response = await POST(request);
       const data = await response.json();
 
-      expect(response.status).toBe(400);
-      expect(data.error).toBe('Wallet address is required');
+      expect(response.status).toBe(401);
+      expect(data.error).toBe('Unauthorized');
     });
 
     it('should return 429 for rate limit exceeded', async () => {
@@ -265,6 +280,7 @@ describe('/api/users', () => {
 
     it('should lowercase wallet address', async () => {
       withRateLimit.mockResolvedValue(null);
+      requireAuth.mockResolvedValue({ user: { address: mockAddress } });
 
       query
         .mockResolvedValueOnce({ rows: [] })
@@ -287,6 +303,7 @@ describe('/api/users', () => {
 
     it('should return 500 for database errors', async () => {
       withRateLimit.mockResolvedValue(null);
+      requireAuth.mockResolvedValue({ user: { address: mockAddress } });
       query.mockRejectedValue(new Error('Database error'));
 
       const request = new NextRequest('http://localhost:3000/api/users', {
@@ -303,6 +320,7 @@ describe('/api/users', () => {
 
     it('should handle partial updates', async () => {
       withRateLimit.mockResolvedValue(null);
+      requireAuth.mockResolvedValue({ user: { address: mockAddress } });
 
       const existingUser = {
         id: '1',

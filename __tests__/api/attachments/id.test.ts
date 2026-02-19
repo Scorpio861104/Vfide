@@ -25,6 +25,7 @@ describe('/api/attachments/[id]', () => {
   describe('GET', () => {
     it('should return attachment by id', async () => {
       withRateLimit.mockResolvedValue(null);
+      requireAuth.mockResolvedValue({ user: { address: '0x1234567890123456789012345678901234567890' } });
 
       query.mockResolvedValue({
         rows: [{
@@ -45,6 +46,7 @@ describe('/api/attachments/[id]', () => {
 
     it('should return 404 when attachment not found', async () => {
       withRateLimit.mockResolvedValue(null);
+      requireAuth.mockResolvedValue({ user: { address: '0x1234567890123456789012345678901234567890' } });
       query.mockResolvedValue({ rows: [] });
 
       const request = new NextRequest('http://localhost:3000/api/attachments/999');
@@ -59,7 +61,7 @@ describe('/api/attachments/[id]', () => {
   describe('DELETE', () => {
     it('should delete attachment successfully', async () => {
       withRateLimit.mockResolvedValue(null);
-      requireAuth.mockReturnValue(true);
+      requireAuth.mockResolvedValue({ user: { address: '0x1234567890123456789012345678901234567890' } });
 
       query.mockResolvedValue({ rows: [{ id: 1 }] });
 

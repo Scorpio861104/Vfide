@@ -82,7 +82,7 @@ describe('/api/proposals', () => {
         },
       });
 
-      query.mockResolvedValueOnce({ rows: [{ id: 1, is_council_member: false }] });
+      query.mockResolvedValueOnce({ rows: [{ id: 1, is_council_member: false, proof_score: 100 }] });
       query.mockResolvedValueOnce({
         rows: [{
           id: 1,

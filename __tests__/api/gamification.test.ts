@@ -10,6 +10,7 @@ jest.mock('@/lib/auth/rateLimit', () => ({
 }));
 
 jest.mock('@/lib/auth/middleware', () => ({
+  requireAuth: jest.fn(),
   requireAdmin: jest.fn(),
 }));
 
@@ -21,7 +22,7 @@ jest.mock('@/lib/auth/validation', () => ({
 describe('/api/gamification', () => {
   const { query } = require('@/lib/db');
   const { withRateLimit } = require('@/lib/auth/rateLimit');
-  const { requireAdmin } = require('@/lib/auth/middleware');
+  const { requireAuth, requireAdmin } = require('@/lib/auth/middleware');
   const { validateBody } = require('@/lib/auth/validation');
 
   beforeEach(() => {
@@ -32,6 +33,7 @@ describe('/api/gamification', () => {
     const mockUserAddress = '0x1234567890123456789012345678901234567890';
 
     it('should return user gamification data', async () => {
+      requireAuth.mockResolvedValue({ user: { address: mockUserAddress } });
       query.mockResolvedValue({
         rows: [{
           user_id: 1,
@@ -58,6 +60,7 @@ describe('/api/gamification', () => {
     });
 
     it('should return 400 when userAddress is missing', async () => {
+      requireAuth.mockResolvedValue({ user: { address: mockUserAddress } });
       const request = new NextRequest('http://localhost:3000/api/gamification');
       const response = await GET(request);
       const data = await response.json();
@@ -67,6 +70,7 @@ describe('/api/gamification', () => {
     });
 
     it('should create default entry for new user', async () => {
+      requireAuth.mockResolvedValue({ user: { address: mockUserAddress } });
       query
         .mockResolvedValueOnce({ rows: [] }) // No existing data
         .mockResolvedValueOnce({
@@ -90,6 +94,7 @@ describe('/api/gamification', () => {
     });
 
     it('should calculate XP progress correctly', async () => {
+      requireAuth.mockResolvedValue({ user: { address: mockUserAddress } });
       query.mockResolvedValue({
         rows: [{
           user_id: 1,
@@ -113,6 +118,7 @@ describe('/api/gamification', () => {
     });
 
     it('should return 500 for database errors', async () => {
+      requireAuth.mockResolvedValue({ user: { address: mockUserAddress } });
       query.mockRejectedValue(new Error('Database error'));
 
       const request = new NextRequest(`http://localhost:3000/api/gamification?userAddress=${mockUserAddress}`);

@@ -9,9 +9,15 @@ jest.mock('@/lib/auth/rateLimit', () => ({
   withRateLimit: jest.fn(),
 }));
 
+jest.mock('@/lib/auth/middleware', () => ({
+  requireAuth: jest.fn(),
+  requireAdmin: jest.fn(),
+}));
+
 describe('/api/analytics', () => {
   const { query } = require('@/lib/db');
   const { withRateLimit } = require('@/lib/auth/rateLimit');
+  const { requireAuth, requireAdmin } = require('@/lib/auth/middleware');
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -20,6 +26,7 @@ describe('/api/analytics', () => {
   describe('POST', () => {
     it('should track analytics event successfully', async () => {
       withRateLimit.mockResolvedValue(null);
+      requireAuth.mockResolvedValue({ user: { address: '0x1234567890123456789012345678901234567890' } });
       query.mockResolvedValue({ rows: [{ id: 1, event_type: 'page_view' }] });
 
       const request = new NextRequest('http://localhost:3000/api/analytics', {
@@ -55,6 +62,7 @@ describe('/api/analytics', () => {
 
     it('should return 400 for invalid request body', async () => {
       withRateLimit.mockResolvedValue(null);
+      requireAuth.mockResolvedValue({ user: { address: '0x1234567890123456789012345678901234567890' } });
 
       const request = new NextRequest('http://localhost:3000/api/analytics', {
         method: 'POST',

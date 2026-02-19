@@ -9,9 +9,14 @@ jest.mock('@/lib/auth/rateLimit', () => ({
   withRateLimit: jest.fn(),
 }));
 
+jest.mock('@/lib/auth/middleware', () => ({
+  requireAdmin: jest.fn(),
+}));
+
 describe('/api/performance/metrics', () => {
   const { query } = require('@/lib/db');
   const { withRateLimit } = require('@/lib/auth/rateLimit');
+  const { requireAdmin } = require('@/lib/auth/middleware');
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -20,6 +25,7 @@ describe('/api/performance/metrics', () => {
   describe('POST', () => {
     it('should accept performance metrics', async () => {
       withRateLimit.mockResolvedValue(null);
+      requireAdmin.mockResolvedValue({ user: { address: '0x1234567890123456789012345678901234567890' } });
       query.mockResolvedValue({ rows: [{ id: 1, metric_name: 'lcp', value: 2500 }] });
 
       const request = new NextRequest('http://localhost:3000/api/performance/metrics', {

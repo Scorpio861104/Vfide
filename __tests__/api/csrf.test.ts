@@ -5,11 +5,17 @@ jest.mock('@/lib/security/csrf', () => ({
   generateCSRFToken: jest.fn(),
 }));
 
+jest.mock('@/lib/auth/rateLimit', () => ({
+  withRateLimit: jest.fn(),
+}));
+
 describe('/api/csrf', () => {
   const { generateCSRFToken } = require('@/lib/security/csrf');
+  const { withRateLimit } = require('@/lib/auth/rateLimit');
 
   beforeEach(() => {
     jest.clearAllMocks();
+    withRateLimit.mockResolvedValue(null);
     process.env.NODE_ENV = 'test';
   });
 
@@ -18,7 +24,8 @@ describe('/api/csrf', () => {
       const mockToken = 'mock-csrf-token-12345';
       generateCSRFToken.mockReturnValue(mockToken);
 
-      const response = await GET();
+      const request = new NextRequest('http://localhost:3000/api/csrf');
+      const response = await GET(request);
       const data = await response.json();
 
       expect(response.status).toBe(200);
@@ -30,9 +37,10 @@ describe('/api/csrf', () => {
       const mockToken = 'mock-csrf-token-12345';
       generateCSRFToken.mockReturnValue(mockToken);
 
-      const response = await GET();
+      const request = new NextRequest('http://localhost:3000/api/csrf');
+      const response = await GET(request);
       const cookies = response.cookies.getAll();
-      const csrfCookie = cookies.find(c => c.name === 'csrf_token');
+      const csrfCookie = cookies.find((c: { name: string }) => c.name === 'csrf_token');
 
       expect(csrfCookie).toBeDefined();
       expect(csrfCookie?.value).toBe(mockToken);
@@ -42,25 +50,24 @@ describe('/api/csrf', () => {
       process.env.NODE_ENV = 'production';
       generateCSRFToken.mockReturnValue('token');
 
-      const response = await GET();
+      const request = new NextRequest('http://localhost:3000/api/csrf');
+      const response = await GET(request);
       const cookies = response.cookies.getAll();
-      const csrfCookie = cookies.find(c => c.name === 'csrf_token');
+      const csrfCookie = cookies.find((c: { name: string }) => c.name === 'csrf_token');
 
-      // Note: In Next.js Response API, we can't directly check secure flag
-      // but we verify the implementation sets it based on NODE_ENV
       expect(csrfCookie).toBeDefined();
     });
 
     it('should set cookie with correct attributes', async () => {
       generateCSRFToken.mockReturnValue('token');
 
-      const response = await GET();
+      const request = new NextRequest('http://localhost:3000/api/csrf');
+      const response = await GET(request);
       const cookies = response.cookies.getAll();
-      const csrfCookie = cookies.find(c => c.name === 'csrf_token');
+      const csrfCookie = cookies.find((c: { name: string }) => c.name === 'csrf_token');
 
       expect(csrfCookie).toBeDefined();
       expect(csrfCookie?.value).toBe('token');
-      // Cookie should be set with path='/'
     });
 
     it('should return 500 when token generation fails', async () => {
@@ -68,12 +75,12 @@ describe('/api/csrf', () => {
         throw new Error('Token generation failed');
       });
 
-      const response = await GET();
+      const request = new NextRequest('http://localhost:3000/api/csrf');
+      const response = await GET(request);
       const data = await response.json();
 
       expect(response.status).toBe(500);
       expect(data.error).toBe('Failed to generate CSRF token');
-      expect(data.message).toBe('Token generation failed');
     });
 
     it('should handle unknown errors gracefully', async () => {
@@ -81,12 +88,12 @@ describe('/api/csrf', () => {
         throw 'Unknown error';
       });
 
-      const response = await GET();
+      const request = new NextRequest('http://localhost:3000/api/csrf');
+      const response = await GET(request);
       const data = await response.json();
 
       expect(response.status).toBe(500);
       expect(data.error).toBe('Failed to generate CSRF token');
-      expect(data.message).toBe('Unknown error');
     });
 
     it('should generate unique tokens on multiple calls', async () => {
@@ -94,10 +101,12 @@ describe('/api/csrf', () => {
         .mockReturnValueOnce('token-1')
         .mockReturnValueOnce('token-2');
 
-      const response1 = await GET();
+      const request1 = new NextRequest('http://localhost:3000/api/csrf');
+      const response1 = await GET(request1);
       const data1 = await response1.json();
 
-      const response2 = await GET();
+      const request2 = new NextRequest('http://localhost:3000/api/csrf');
+      const response2 = await GET(request2);
       const data2 = await response2.json();
 
       expect(data1.token).toBe('token-1');

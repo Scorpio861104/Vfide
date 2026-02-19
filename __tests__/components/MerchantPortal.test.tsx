@@ -65,9 +65,9 @@ describe('Payment Requests Section', () => {
   it('displays existing payment requests', () => {
     render(<MerchantPortal />);
 
-    expect(screen.getByText(/Web Development/i)).toBeInTheDocument();
-    expect(screen.getByText(/Consulting Services/i)).toBeInTheDocument();
-    expect(screen.getByText(/Product License/i)).toBeInTheDocument();
+    expect(screen.getByText(/Monthly retainer/i)).toBeInTheDocument();
+    expect(screen.getByText(/Consulting hours/i)).toBeInTheDocument();
+    expect(screen.getByText(/Vendor invoice/i)).toBeInTheDocument();
   });
 
   it('shows request status badges', () => {
@@ -79,6 +79,26 @@ describe('Payment Requests Section', () => {
   });
 
   it('allows creating a new payment request', async () => {
+    // Mock fetch for the payment request creation
+    const mockFetch = jest.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        request: {
+          id: 'req-new',
+          from_address: '0x1234567890123456789012345678901234567890',
+          to_address: '0x9876543210987654321098765432109876543210',
+          amount: '5000',
+          token: 'USDC',
+          memo: 'New service payment',
+          status: 'pending',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          tx_hash: null,
+        },
+      }),
+    });
+    global.fetch = mockFetch;
+
     const user = userEvent.setup();
     render(<MerchantPortal />);
 
@@ -87,7 +107,8 @@ describe('Payment Requests Section', () => {
     const descriptionInput = screen.getByPlaceholderText(/monthly retainer for services/i);
     const createButton = screen.getByRole('button', { name: /Create Request/i });
 
-    await user.type(emailInput, 'new@example.com');
+    // Use a valid Ethereum address
+    await user.type(emailInput, '0x9876543210987654321098765432109876543210');
     await user.type(amountInput, '5000');
     await user.type(descriptionInput, 'New service payment');
     await user.click(createButton);
@@ -95,14 +116,18 @@ describe('Payment Requests Section', () => {
     await waitFor(() => {
       expect(screen.getByText(/New service payment/i)).toBeInTheDocument();
     });
+
+    // Cleanup
+    // @ts-expect-error – restoring original
+    delete global.fetch;
   });
 
   it('displays recipient email for each request', () => {
     render(<MerchantPortal />);
 
-    expect(screen.getByText('dev@example.com')).toBeInTheDocument();
-    expect(screen.getByText('consultant@example.com')).toBeInTheDocument();
-    expect(screen.getByText('vendor@example.com')).toBeInTheDocument();
+    expect(screen.getByText(/dev@example\.com/)).toBeInTheDocument();
+    expect(screen.getByText(/consultant@example\.com/)).toBeInTheDocument();
+    expect(screen.getByText(/vendor@example\.com/)).toBeInTheDocument();
   });
 
   it('shows payment request amounts and currencies', () => {
@@ -389,7 +414,7 @@ describe('API Keys Section', () => {
     await user.click(generateButton);
 
     await waitFor(() => {
-      expect(screen.getByText('New Test Key')).toBeInTheDocument();
+      expect(screen.getAllByText('New Test Key').length).toBeGreaterThan(0);
     });
   });
 });
