@@ -3,7 +3,7 @@ pragma solidity 0.8.30;
 
 import "@chainlink/contracts/src/v0.8/shared/interfaces/AggregatorV3Interface.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/security/Pausable.sol";
+import "@openzeppelin/contracts/utils/Pausable.sol";
 
 /**
  * @title VFIDEPriceOracle
@@ -109,7 +109,7 @@ contract VFIDEPriceOracle is Ownable, Pausable {
         address _chainlinkFeed,
         address _uniswapPool,
         address _owner
-    ) {
+    ) Ownable(_owner) {
         require(_vfideToken != address(0), "Invalid VFIDE token");
         require(_quoteToken != address(0), "Invalid quote token");
         
@@ -123,8 +123,6 @@ contract VFIDEPriceOracle is Ownable, Pausable {
         if (_uniswapPool != address(0)) {
             uniswapPool = _uniswapPool;
         }
-        
-        _transferOwnership(_owner);
     }
 
     /**

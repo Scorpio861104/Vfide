@@ -89,7 +89,7 @@ contract VFIDEBadgeNFT is ERC721, ERC721URIStorage, ERC721Enumerable, Ownable {
     constructor(
         address _seer,
         string memory _baseURI
-    ) ERC721("VFIDE Badge", "VBADGE") Ownable() {
+    ) ERC721("VFIDE Badge", "VBADGE") Ownable(msg.sender) {
         seer = Seer(_seer);
         _baseTokenURI = _baseURI;
         _nextTokenId = 1; // Start at 1 (0 = unminted)
@@ -184,19 +184,26 @@ contract VFIDEBadgeNFT is ERC721, ERC721URIStorage, ERC721Enumerable, Ownable {
     }
     
     /**
-     * @notice Override transfer to prevent it (soulbound)
+     * @notice Override _update to prevent transfers (soulbound) and support ERC721Enumerable
      */
-    function _beforeTokenTransfer(
-        address from,
+    function _update(
         address to,
-        uint256 firstTokenId,
-        uint256 batchSize
-    ) internal override(ERC721, ERC721Enumerable) {
+        uint256 tokenId,
+        address auth
+    ) internal override(ERC721, ERC721Enumerable) returns (address) {
+        address from = _ownerOf(tokenId);
         if (from != address(0) && to != address(0)) {
             revert TokenIsSoulbound();
         }
 
-        super._beforeTokenTransfer(from, to, firstTokenId, batchSize);
+        return super._update(to, tokenId, auth);
+    }
+
+    /**
+     * @notice Override _increaseBalance for ERC721Enumerable
+     */
+    function _increaseBalance(address account, uint128 value) internal override(ERC721, ERC721Enumerable) {
+        super._increaseBalance(account, value);
     }
     
     // ============ METADATA ============
@@ -212,7 +219,7 @@ contract VFIDEBadgeNFT is ERC721, ERC721URIStorage, ERC721Enumerable, Ownable {
         override(ERC721, ERC721URIStorage)
         returns (string memory)
     {
-        _requireMinted(tokenId);
+        _requireOwned(tokenId);
         
         bytes32 badge = tokenBadge[tokenId];
         
@@ -265,7 +272,7 @@ contract VFIDEBadgeNFT is ERC721, ERC721URIStorage, ERC721Enumerable, Ownable {
         uint256 mintTime,
         uint256 number
     ) {
-        _requireMinted(tokenId);
+        _requireOwned(tokenId);
         
         badge = tokenBadge[tokenId];
         name = BadgeRegistry.getName(badge);
@@ -384,10 +391,6 @@ contract VFIDEBadgeNFT is ERC721, ERC721URIStorage, ERC721Enumerable, Ownable {
     }
     
     // ============ OVERRIDES ============
-    
-    function _burn(uint256 tokenId) internal override(ERC721, ERC721URIStorage) {
-        super._burn(tokenId);
-    }
     
     function supportsInterface(bytes4 interfaceId)
         public

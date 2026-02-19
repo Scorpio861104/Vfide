@@ -6,6 +6,10 @@ import "./SharedInterfaces.sol";
 
 // Note: AccessControl is now defined in SharedInterfaces.sol for zkSync compatibility
 
+interface IERC20Metadata {
+    function decimals() external view returns (uint8);
+}
+
 /**
  * @title PromotionalTreasury
  * @notice Fixed allocation promotional rewards system with automatic depletion
@@ -18,10 +22,6 @@ import "./SharedInterfaces.sol";
  */
 contract PromotionalTreasury is AccessControl, ReentrancyGuard {
     using SafeERC20 for IERC20;
-
-    interface IERC20Metadata {
-        function decimals() external view returns (uint8);
-    }
     
     bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
     

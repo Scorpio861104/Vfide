@@ -352,11 +352,11 @@ contract VFIDETokenV2 is ERC20, VFIDEAccessControl, VFIDEReentrancyGuard {
     }
 
     /**
-     * @notice Internal transfer override to update checkpoints
+     * @notice Internal update override to update checkpoints
      */
-    function _transfer(address from, address to, uint256 amount) internal override {
-        super._transfer(from, to, amount);
-        _moveDelegates(delegates[from], delegates[to], amount);
+    function _update(address from, address to, uint256 value) internal override {
+        super._update(from, to, value);
+        _moveDelegates(delegates[from], delegates[to], value);
     }
 
     /**

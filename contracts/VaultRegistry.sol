@@ -2,7 +2,7 @@
 pragma solidity 0.8.30;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
 /**
  * @title VaultRegistry
@@ -119,7 +119,7 @@ contract VaultRegistry is Ownable, ReentrancyGuard {
     // CONSTRUCTOR
     // ═══════════════════════════════════════════════════════════════════════════════
     
-    constructor(address _vaultHub, address _badgeManager, address _proofScoreManager) Ownable() {
+    constructor(address _vaultHub, address _badgeManager, address _proofScoreManager) Ownable(msg.sender) {
         if (_vaultHub == address(0)) revert ZeroAddress();
         vaultHub = IVaultInfrastructure(_vaultHub);
         badgeManager = IBadgeManager(_badgeManager);

@@ -2,7 +2,7 @@
 pragma solidity 0.8.30;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 
 /**
@@ -201,7 +201,7 @@ contract VaultRecoveryClaim is Ownable, ReentrancyGuard {
     constructor(
         address _vaultHub,
         address _vaultRegistry
-    ) Ownable() {
+    ) Ownable(msg.sender) {
         if (_vaultHub == address(0)) revert ZeroAddress();
         vaultHub = IVaultInfrastructure(_vaultHub);
         vaultRegistry = IVaultRegistry(_vaultRegistry);

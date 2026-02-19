@@ -2,7 +2,7 @@
 pragma solidity 0.8.30;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/security/Pausable.sol";
+import "@openzeppelin/contracts/utils/Pausable.sol";
 
 /**
  * @title BridgeSecurityModule
@@ -94,8 +94,7 @@ contract BridgeSecurityModule is Ownable, Pausable {
         _;
     }
 
-    constructor(address _owner, address _bridge) {
-        _transferOwnership(_owner);
+    constructor(address _owner, address _bridge) Ownable(_owner) {
         bridge = _bridge;
     }
 
