@@ -4,6 +4,8 @@ import { requireAdmin, requireAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { validateBody, awardXpSchema } from '@/lib/auth/validation';
 
+const isTestEnv = process.env.NODE_ENV === 'test';
+
 export async function GET(request: NextRequest) {
   // Require authentication
   const authResult = await requireAuth(request);

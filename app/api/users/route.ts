@@ -160,9 +160,9 @@ export async function POST(request: NextRequest) {
     }
     const wallet_address = requestWallet;
 
-    // Check if user exists
-    const existingUser = await query<User>(
-      'SELECT * FROM users WHERE wallet_address = $1',
+    // Check if user exists — select only id (existence check)
+    const existingUser = await query<{ id: string }>(
+      'SELECT id FROM users WHERE wallet_address = $1',
       [wallet_address.toLowerCase()]
     );
 

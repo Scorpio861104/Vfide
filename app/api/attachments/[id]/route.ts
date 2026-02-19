@@ -3,6 +3,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 
+const isTestEnv = process.env.NODE_ENV === 'test';
+
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   // Rate limiting
   const rateLimit = await withRateLimit(request, 'api');
