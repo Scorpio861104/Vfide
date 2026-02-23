@@ -136,7 +136,7 @@
     "@nomicfoundation/hardhat-ignition-ethers": "^3.0.7",
     "@nomicfoundation/hardhat-network-helpers": "^3.0.3",
     "@nomicfoundation/hardhat-verify": "^3.0.9",
-    "@nomicfoundation/ignition-core": "^0.15.15",
+    "@nomicfoundation/ignition-core": "^3.0.7",
     "@openzeppelin/contracts": "^5.4.0",
     "@percy/cli": "^1.31.8",
     "@playwright/test": "^1.58.2",
