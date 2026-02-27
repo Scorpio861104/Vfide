@@ -270,7 +270,7 @@ describe('timeUntil', () => {
   })
 
   it('returns singular day', () => {
-    const futureDate = new Date(Date.now() + 1 * 24 * 60 * 60 * 1000)
+    const futureDate = new Date(Date.now() + 1 * 24 * 60 * 60 * 1000 + 5000)
     expect(timeUntil(futureDate)).toBe('1 day')
   })
 
@@ -337,6 +337,24 @@ describe('devLog', () => {
     devLog.error('test error', new Error('test'))
     expect(errorSpy).toHaveBeenCalled()
   })
+
+  it('does not log in production environment', () => {
+    const logSpy = jest.spyOn(console, 'log').mockImplementation()
+    const warnSpy = jest.spyOn(console, 'warn').mockImplementation()
+    const errorSpy = jest.spyOn(console, 'error').mockImplementation()
+    const original = process.env.NODE_ENV
+    Object.defineProperty(process.env, 'NODE_ENV', { value: 'production', configurable: true })
+    logSpy.mockClear()
+    warnSpy.mockClear()
+    errorSpy.mockClear()
+    devLog.log('test')
+    devLog.warn('test')
+    devLog.error('test')
+    expect(logSpy).not.toHaveBeenCalled()
+    expect(warnSpy).not.toHaveBeenCalled()
+    expect(errorSpy).not.toHaveBeenCalled()
+    Object.defineProperty(process.env, 'NODE_ENV', { value: original, configurable: true })
+  })
 })
 
 describe('buttonVariant', () => {
@@ -400,5 +418,11 @@ describe('safeBigInt', () => {
     const hugeNumber = Number.MAX_SAFE_INTEGER * 2
     const result = safeBigInt(hugeNumber, 99n)
     expect(result).toBeDefined()
+  })
+
+  it('handles NaN input by returning fallback value', () => {
+    // BigInt(Math.floor(NaN)) throws TypeError, triggering the catch block
+    const result = safeBigInt(NaN, 42n)
+    expect(result).toBe(42n)
   })
 })
