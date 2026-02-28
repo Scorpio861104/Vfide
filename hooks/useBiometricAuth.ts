@@ -118,7 +118,11 @@ const loadConfig = (): BiometricConfig => {
 
 const saveConfig = (config: BiometricConfig): void => {
   if (typeof window === 'undefined') return;
-  localStorage.setItem(SECURITY_STORAGE_KEYS.biometric, JSON.stringify(config));
+  try {
+    localStorage.setItem(SECURITY_STORAGE_KEYS.biometric, JSON.stringify(config));
+  } catch (e) {
+    console.error('Failed to save biometric config', e);
+  }
 };
 
 // Generate random challenge for WebAuthn

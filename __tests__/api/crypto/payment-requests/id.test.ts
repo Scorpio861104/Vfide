@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { GET, PUT } from '@/app/api/crypto/payment-requests/[id]/route';
+import { GET, PUT, PATCH } from '@/app/api/crypto/payment-requests/[id]/route';
 
 jest.mock('@/lib/db', () => ({
   query: jest.fn(),
@@ -18,23 +18,28 @@ describe('/api/crypto/payment-requests/[id]', () => {
   const { withRateLimit } = require('@/lib/auth/rateLimit');
   const { requireAuth } = require('@/lib/auth/middleware');
 
+  const mockUser = { address: '0x1111111111111111111111111111111111111123' };
+  const mockPaymentRequest = {
+    id: 1,
+    from_user_id: 42,
+    to_user_id: 99,
+    amount: '1.5',
+    status: 'pending',
+  };
+  const unauthorizedResponse = NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
   describe('GET', () => {
-    it('should return payment request by id', async () => {
+    it('should return payment request by id when user is a party', async () => {
       withRateLimit.mockResolvedValue(null);
-
-      query.mockResolvedValue({
-        rows: [{
-          id: 1,
-          from_address: '0x1111111111111111111111111111111111111123',
-          to_address: '0x2222222222222222222222222222222222222456',
-          amount: '1.5',
-          status: 'pending',
-        }],
-      });
+      requireAuth.mockResolvedValue({ user: mockUser });
+      // First query: fetch the payment request
+      query.mockResolvedValueOnce({ rows: [mockPaymentRequest] });
+      // Second query: user lookup to verify ownership (user is from_user_id=42)
+      query.mockResolvedValueOnce({ rows: [{ id: 42 }] });
 
       const request = new NextRequest('http://localhost:3000/api/crypto/payment-requests/1');
       const response = await GET(request, { params: Promise.resolve({ id: '1' }) });
@@ -44,9 +49,33 @@ describe('/api/crypto/payment-requests/[id]', () => {
       expect(data.request).toBeDefined();
     });
 
+    it('should return 401 when unauthenticated', async () => {
+      withRateLimit.mockResolvedValue(null);
+      requireAuth.mockResolvedValue(unauthorizedResponse);
+
+      const request = new NextRequest('http://localhost:3000/api/crypto/payment-requests/1');
+      const response = await GET(request, { params: Promise.resolve({ id: '1' }) });
+
+      expect(response.status).toBe(401);
+    });
+
+    it('should return 403 when user is not a party to the request', async () => {
+      withRateLimit.mockResolvedValue(null);
+      requireAuth.mockResolvedValue({ user: mockUser });
+      query.mockResolvedValueOnce({ rows: [mockPaymentRequest] });
+      // User is neither from_user_id (42) nor to_user_id (99)
+      query.mockResolvedValueOnce({ rows: [{ id: 999 }] });
+
+      const request = new NextRequest('http://localhost:3000/api/crypto/payment-requests/1');
+      const response = await GET(request, { params: Promise.resolve({ id: '1' }) });
+
+      expect(response.status).toBe(403);
+    });
+
     it('should return 404 when payment request not found', async () => {
       withRateLimit.mockResolvedValue(null);
-      query.mockResolvedValue({ rows: [] });
+      requireAuth.mockResolvedValue({ user: mockUser });
+      query.mockResolvedValueOnce({ rows: [] });
 
       const request = new NextRequest('http://localhost:3000/api/crypto/payment-requests/999');
       const response = await GET(request, { params: Promise.resolve({ id: '999' }) });
@@ -58,22 +87,19 @@ describe('/api/crypto/payment-requests/[id]', () => {
   });
 
   describe('PUT', () => {
-    it('should update payment request status', async () => {
+    it('should update payment request status when user is a party', async () => {
       withRateLimit.mockResolvedValue(null);
-      requireAuth.mockReturnValue(true);
-
-      query.mockResolvedValue({
-        rows: [{
-          id: 1,
-          status: 'accepted',
-        }],
-      });
+      requireAuth.mockResolvedValue({ user: mockUser });
+      // First query: fetch existing payment request
+      query.mockResolvedValueOnce({ rows: [mockPaymentRequest] });
+      // Second query: user lookup (user is from_user_id=42)
+      query.mockResolvedValueOnce({ rows: [{ id: 42 }] });
+      // Third query: update
+      query.mockResolvedValueOnce({ rows: [{ ...mockPaymentRequest, status: 'accepted' }] });
 
       const request = new NextRequest('http://localhost:3000/api/crypto/payment-requests/1', {
         method: 'PUT',
-        body: JSON.stringify({
-          status: 'accepted',
-        }),
+        body: JSON.stringify({ status: 'accepted' }),
       });
 
       const response = await PUT(request, { params: Promise.resolve({ id: '1' }) });
@@ -83,10 +109,27 @@ describe('/api/crypto/payment-requests/[id]', () => {
       expect(data.request).toBeDefined();
     });
 
+    it('should return 400 for invalid status value', async () => {
+      withRateLimit.mockResolvedValue(null);
+      requireAuth.mockResolvedValue({ user: mockUser });
+      query.mockResolvedValueOnce({ rows: [mockPaymentRequest] });
+      query.mockResolvedValueOnce({ rows: [{ id: 42 }] });
+
+      const request = new NextRequest('http://localhost:3000/api/crypto/payment-requests/1', {
+        method: 'PUT',
+        body: JSON.stringify({ status: 'invalid_status' }),
+      });
+
+      const response = await PUT(request, { params: Promise.resolve({ id: '1' }) });
+      const data = await response.json();
+
+      expect(response.status).toBe(400);
+      expect(data.error).toContain('Invalid status');
+    });
+
     it('should return 401 for unauthorized users', async () => {
       withRateLimit.mockResolvedValue(null);
-      const unauthorizedResponse = NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-      requireAuth.mockReturnValue(unauthorizedResponse);
+      requireAuth.mockResolvedValue(unauthorizedResponse);
 
       const request = new NextRequest('http://localhost:3000/api/crypto/payment-requests/1', {
         method: 'PUT',
@@ -95,6 +138,61 @@ describe('/api/crypto/payment-requests/[id]', () => {
 
       const response = await PUT(request, { params: Promise.resolve({ id: '1' }) });
       expect(response.status).toBe(401);
+    });
+  });
+
+  describe('PATCH', () => {
+    it('should update status and txHash when user is a party', async () => {
+      withRateLimit.mockResolvedValue(null);
+      requireAuth.mockResolvedValue({ user: mockUser });
+      // First query: fetch existing payment request
+      query.mockResolvedValueOnce({ rows: [mockPaymentRequest] });
+      // Second query: user lookup (user is to_user_id=99)
+      query.mockResolvedValueOnce({ rows: [{ id: 99 }] });
+      // Third query: update
+      query.mockResolvedValueOnce({ rows: [{ ...mockPaymentRequest, status: 'completed', tx_hash: '0xabc' }] });
+
+      const request = new NextRequest('http://localhost:3000/api/crypto/payment-requests/1', {
+        method: 'PATCH',
+        body: JSON.stringify({ status: 'completed', txHash: '0xabc' }),
+      });
+
+      const response = await PATCH(request, { params: Promise.resolve({ id: '1' }) });
+      const data = await response.json();
+
+      expect(response.status).toBe(200);
+      expect(data.success).toBe(true);
+    });
+
+    it('should return 401 for unauthenticated PATCH', async () => {
+      withRateLimit.mockResolvedValue(null);
+      requireAuth.mockResolvedValue(unauthorizedResponse);
+
+      const request = new NextRequest('http://localhost:3000/api/crypto/payment-requests/1', {
+        method: 'PATCH',
+        body: JSON.stringify({ status: 'completed' }),
+      });
+
+      const response = await PATCH(request, { params: Promise.resolve({ id: '1' }) });
+      expect(response.status).toBe(401);
+    });
+
+    it('should return 400 for invalid status in PATCH', async () => {
+      withRateLimit.mockResolvedValue(null);
+      requireAuth.mockResolvedValue({ user: mockUser });
+      query.mockResolvedValueOnce({ rows: [mockPaymentRequest] });
+      query.mockResolvedValueOnce({ rows: [{ id: 42 }] });
+
+      const request = new NextRequest('http://localhost:3000/api/crypto/payment-requests/1', {
+        method: 'PATCH',
+        body: JSON.stringify({ status: 'bad_status' }),
+      });
+
+      const response = await PATCH(request, { params: Promise.resolve({ id: '1' }) });
+      const data = await response.json();
+
+      expect(response.status).toBe(400);
+      expect(data.error).toContain('Invalid status');
     });
   });
 });
