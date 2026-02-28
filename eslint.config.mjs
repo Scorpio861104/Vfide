@@ -59,6 +59,10 @@ const eslintConfig = defineConfig([
       "@next/next/no-img-element": "off",
       // Allow anonymous default exports for config files
       "import/no-anonymous-default-export": "off",
+      // Warn on dangerouslySetInnerHTML to ensure all uses are reviewed.
+      // Safe uses (hardcoded JSON-LD schemas in StructuredData.tsx) are the only
+      // intentional exceptions — do not suppress this warning without a code review.
+      "react/no-danger": "warn",
     },
   },
 ]);

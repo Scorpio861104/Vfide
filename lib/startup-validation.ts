@@ -75,6 +75,22 @@ export function validateEnvironment(): void {
   } else {
     console.log('✅ Environment validation passed');
   }
+
+  // Warn when Redis is absent in production — rate limiting and token revocation
+  // fall back to in-memory stores, which are NOT shared across multiple instances.
+  if (process.env.NODE_ENV === 'production' && !process.env.NEXT_PHASE) {
+    const redisUrl = process.env.UPSTASH_REDIS_REST_URL;
+    const redisToken = process.env.UPSTASH_REDIS_REST_TOKEN;
+    if (!redisUrl || !redisToken) {
+      console.warn(
+        '⚠️  UPSTASH_REDIS_REST_URL / UPSTASH_REDIS_REST_TOKEN are not set. ' +
+        'Rate limiting and JWT token revocation are using in-memory stores. ' +
+        'This is unsafe in multi-instance (horizontally-scaled) deployments because ' +
+        'each instance maintains its own independent state. ' +
+        'Set both variables to use the shared Redis backend.'
+      );
+    }
+  }
 }
 
 /**

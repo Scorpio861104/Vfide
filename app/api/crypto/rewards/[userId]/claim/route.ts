@@ -2,14 +2,56 @@ import { query } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
 import { requireOwnership } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
-import { createPublicClient, http } from 'viem';
+import { createPublicClient, http, isAddress } from 'viem';
 import { baseSepolia } from 'viem/chains';
+import rewardABI from '@/lib/abis/UserRewards.json';
 
 // Initialize viem client for on-chain verification
-const _client = createPublicClient({
+const client = createPublicClient({
   chain: baseSepolia,
   transport: http(process.env.NEXT_PUBLIC_BASE_SEPOLIA_RPC || 'https://sepolia.base.org'),
 });
+
+/**
+ * Convert an arbitrary string ID (e.g. a UUID) to a bytes32 hex string
+ * by computing its SHA-256 hash. Used to map database reward IDs to the
+ * on-chain bytes32 parameter expected by the reward contract.
+ */
+async function idToBytes32(id: string): Promise<`0x${string}`> {
+  const encoded = new TextEncoder().encode(id);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', encoded);
+  return ('0x' + Array.from(new Uint8Array(hashBuffer))
+    .map(b => b.toString(16).padStart(2, '0'))
+    .join('')) as `0x${string}`;
+}
+
+/**
+ * Verify on-chain that a reward is claimable for a given user.
+ * Returns true when the contract confirms eligibility.
+ * Returns false when the contract says it is NOT claimable.
+ * Throws when the contract call itself fails (network error, revert, etc.) —
+ * callers should BLOCK the claim in that case (fail-safe).
+ */
+async function verifyRewardOnChain(
+  contractAddress: string,
+  userAddress: string,
+  rewardId: string
+): Promise<boolean> {
+  if (!isAddress(contractAddress) || !isAddress(userAddress)) {
+    throw new Error('Invalid address for on-chain verification');
+  }
+
+  const rewardIdBytes32 = await idToBytes32(rewardId);
+
+  const eligible = await client.readContract({
+    address: contractAddress as `0x${string}`,
+    abi: rewardABI,
+    functionName: 'isRewardClaimable',
+    args: [userAddress as `0x${string}`, rewardIdBytes32],
+  });
+
+  return Boolean(eligible);
+}
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ userId: string }> }) {
   // Rate limiting - strict for claims
@@ -60,33 +102,29 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       return NextResponse.json({ error: 'No claimable rewards found' }, { status: 404 });
     }
 
-    // Verify rewards on-chain if they have a source contract
-    // This prevents users from claiming rewards they didn't earn
+    // Verify rewards on-chain if they have a source contract.
+    // Fail-safe: block the claim if on-chain verification returns false OR throws.
     for (const reward of rewardsCheck.rows) {
       if (reward.source_contract) {
         try {
-          // TODO: Implement actual on-chain verification when reward contracts are deployed
-          // For now, we log the verification attempt for audit purposes
-          console.log(`[Reward Claim] Would verify reward ${reward.id} from contract ${reward.source_contract}`);
-          
-          // Example verification (would call actual contract):
-          // const isEligible = await client.readContract({
-          //   address: reward.source_contract as `0x${string}`,
-          //   abi: rewardABI,
-          //   functionName: 'isRewardClaimable',
-          //   args: [authResult.user.address, reward.id],
-          // });
-          //
-          // if (!isEligible) {
-          //   return NextResponse.json(
-          //     { error: `Reward ${reward.id} is not claimable on-chain` },
-          //     { status: 403 }
-          //   );
-          // }
+          const eligible = await verifyRewardOnChain(
+            reward.source_contract,
+            authResult.user.address,
+            reward.id
+          );
+          if (!eligible) {
+            return NextResponse.json(
+              { error: `Reward ${reward.id} is not claimable on-chain` },
+              { status: 403 }
+            );
+          }
         } catch (error) {
           console.error(`[Reward Claim] On-chain verification failed for reward ${reward.id}:`, error);
-          // In production, you might want to fail the entire claim if verification fails
-          // For now, we continue but log the error
+          // Fail-safe: block claim when on-chain check throws to prevent unauthorised claims
+          return NextResponse.json(
+            { error: 'On-chain verification failed. Please try again later.' },
+            { status: 503 }
+          );
         }
       }
     }

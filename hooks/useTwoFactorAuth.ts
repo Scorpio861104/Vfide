@@ -33,12 +33,28 @@ export interface UseTwoFactorAuthResult {
   testVerification: (code: string) => boolean;
 }
 
-// Mock TOTP secret generation (in production, use a library like otplib)
+// Cryptographically secure TOTP secret generation using Web Crypto API.
+// Produces a 20-byte (160-bit) secret encoded as Base32, compatible with
+// RFC 6238 TOTP and authenticator apps (Google Authenticator, Authy, etc.).
+const BASE32_CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+
 const generateTOTPSecret = (): string => {
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+  const bytes = new Uint8Array(20);
+  crypto.getRandomValues(bytes);
   let secret = '';
-  for (let i = 0; i < 32; i++) {
-    secret += chars[Math.floor(Math.random() * chars.length)];
+  // Base32 encodes 5 bits per character.
+  // We accumulate bits from each byte (8 bits) into a running buffer,
+  // then emit one Base32 character (5 bits) whenever we have ≥5 bits available.
+  let buffer = 0;   // running bit buffer
+  let bitsLeft = 0; // how many valid bits are currently in `buffer`
+  for (const byte of bytes) {
+    buffer = (buffer << 8) | byte; // push the next 8 bits into the buffer
+    bitsLeft += 8;
+    while (bitsLeft >= 5) {
+      bitsLeft -= 5;
+      // Extract the top 5 bits and map to a Base32 character
+      secret += BASE32_CHARS[(buffer >> bitsLeft) & 0x1f];
+    }
   }
   return secret;
 };

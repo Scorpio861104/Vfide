@@ -1,0 +1,22 @@
+[
+  {
+    "inputs": [
+      { "internalType": "address", "name": "user", "type": "address" },
+      { "internalType": "bytes32", "name": "rewardId", "type": "bytes32" }
+    ],
+    "name": "isRewardClaimable",
+    "outputs": [{ "internalType": "bool", "name": "", "type": "bool" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      { "internalType": "address", "name": "user", "type": "address" },
+      { "internalType": "bytes32[]", "name": "rewardIds", "type": "bytes32[]" }
+    ],
+    "name": "claimableRewards",
+    "outputs": [{ "internalType": "bool[]", "name": "", "type": "bool[]" }],
+    "stateMutability": "view",
+    "type": "function"
+  }
+]

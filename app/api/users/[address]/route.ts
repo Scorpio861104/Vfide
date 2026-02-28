@@ -6,14 +6,15 @@ import { withRateLimit } from '@/lib/auth/rateLimit';
 interface User {
   wallet_address: string;
   username: string;
-  email: string;
+  display_name: string | null;
   bio: string;
   avatar_url: string;
   proof_score: number;
+  reputation_score: number;
   is_council_member: boolean;
   is_verified: boolean;
   created_at: string;
-  updated_at: string;
+  last_seen_at: string | null;
 }
 
 interface UserStats {
@@ -46,9 +47,21 @@ export async function GET(
       );
     }
 
-    // Get user by wallet_address or username
+    // Get user by wallet_address or username — select only public fields to prevent PII leakage
     const userResult = await query<User>(
-      `SELECT * FROM users 
+      `SELECT
+         wallet_address,
+         username,
+         display_name,
+         bio,
+         avatar_url,
+         proof_score,
+         reputation_score,
+         is_council_member,
+         is_verified,
+         created_at,
+         last_seen_at
+       FROM users
        WHERE wallet_address = $1 OR username = $1`,
       [address.toLowerCase()]
     );

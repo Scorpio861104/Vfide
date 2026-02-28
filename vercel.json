@@ -13,12 +13,16 @@
         { "key": "X-Content-Type-Options", "value": "nosniff" },
         { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
         { "key": "X-XSS-Protection", "value": "1; mode=block" },
-        { "key": "Permissions-Policy", "value": "camera=(), microphone=(), geolocation=()" },
-        { "key": "Strict-Transport-Security", "value": "max-age=31536000; includeSubDomains; preload" },
-        { "key": "Content-Security-Policy", "value": "default-src 'self'; script-src 'self' https://vercel.live; style-src 'self'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' wss: ws: https:; frame-src 'self'; media-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'" },
+        { "key": "Permissions-Policy", "value": "camera=(), microphone=(), geolocation=(), payment=(), usb=(), interest-cohort=()" },
+        { "key": "Strict-Transport-Security", "value": "max-age=63072000; includeSubDomains; preload" },
+        {
+          "key": "Content-Security-Policy",
+          "value": "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://vercel.live https://*.walletconnect.com https://*.walletconnect.org; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: https: blob:; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' wss: ws: https: https://*.walletconnect.com https://*.walletconnect.org https://*.base.org https://*.polygon.technology https://*.zksync.io; frame-src 'self' https://*.walletconnect.com; media-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests"
+        },
         { "key": "Cross-Origin-Opener-Policy", "value": "same-origin" },
         { "key": "Cross-Origin-Embedder-Policy", "value": "credentialless" }
       ]
     }
-  ]
+  ],
+  "_comment_csp": "NOTE: 'unsafe-inline' and 'unsafe-eval' in script-src are required because Next.js injects inline hydration scripts and WalletConnect/RainbowKit use eval-based bundle loading. Migrating to nonce-based CSP requires Next.js experimental nonce support and is tracked as a future hardening task. The canonical header definition lives in next.config.js; this file mirrors it for the Vercel edge network."
 }
