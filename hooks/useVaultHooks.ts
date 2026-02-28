@@ -78,7 +78,6 @@ export function useCreateVault() {
 export function useVaultBalance() {
   const { vaultAddress } = useUserVault()
   const setVault = useAppStore((state) => state.setVault)
-  const updateVaultBalance = useAppStore((state) => state.updateVaultBalance)
   
   const { data: balance, isLoading, refetch } = useReadContract({
     address: CONTRACT_ADDRESSES.VFIDEToken,
@@ -152,13 +151,6 @@ export function useVaultBalance() {
       });
     }
   }, [vaultAddress, balance, formattedBalance, formattedLockedBalance, setVault]);
-  
-  // Also update balance directly when it changes
-  useEffect(() => {
-    if (formattedBalance && formattedBalance !== '0') {
-      updateVaultBalance(formattedBalance);
-    }
-  }, [formattedBalance, updateVaultBalance]);
   
   return {
     balance: formattedBalance,

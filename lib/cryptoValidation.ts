@@ -2,6 +2,8 @@
  * Validation utilities for crypto operations
  */
 
+import { parseEther } from 'viem';
+
 export class ValidationError extends Error {
   constructor(message: string) {
     super(message);
@@ -226,7 +228,8 @@ export async function estimateGas(
   value: string
 ): Promise<number> {
   try {
-    const valueWei = '0x' + (parseFloat(value) * 1e18).toString(16);
+    // Use BigInt conversion to avoid IEEE-754 floating-point precision loss
+    const valueWei = `0x${parseEther(value).toString(16)}`;
 
     // Estimate gas limit
     const gasLimit = await window.ethereum.request({

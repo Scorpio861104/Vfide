@@ -10,13 +10,13 @@ jest.mock('@/lib/auth/rateLimit', () => ({
 }));
 
 jest.mock('@/lib/auth/middleware', () => ({
-  requireAuth: jest.fn(),
+  requireOwnership: jest.fn(),
 }));
 
 describe('/api/notifications/preferences', () => {
   const { query } = require('@/lib/db');
   const { withRateLimit } = require('@/lib/auth/rateLimit');
-  const { requireAuth } = require('@/lib/auth/middleware');
+  const { requireOwnership } = require('@/lib/auth/middleware');
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -25,7 +25,7 @@ describe('/api/notifications/preferences', () => {
   describe('GET', () => {
     it('should return notification preferences', async () => {
       withRateLimit.mockResolvedValue(null);
-      requireAuth.mockReturnValue(true);
+      requireOwnership.mockResolvedValue({ user: { address: '0x123' } });
 
       query.mockResolvedValue({
         rows: [{
@@ -42,13 +42,14 @@ describe('/api/notifications/preferences', () => {
 
       expect(response.status).toBe(200);
       expect(data.preferences).toBeDefined();
+      expect(requireOwnership).toHaveBeenCalledWith(request, '0x123');
     });
   });
 
   describe('PUT', () => {
     it('should update notification preferences', async () => {
       withRateLimit.mockResolvedValue(null);
-      requireAuth.mockReturnValue(true);
+      requireOwnership.mockResolvedValue({ user: { address: '0x1111111111111111111111111111111111111123' } });
 
       query.mockResolvedValue({
         rows: [{
@@ -70,6 +71,7 @@ describe('/api/notifications/preferences', () => {
 
       expect(response.status).toBe(200);
       expect(data.preferences).toBeDefined();
+      expect(requireOwnership).toHaveBeenCalledWith(request, '0x1111111111111111111111111111111111111123');
     });
   });
 });

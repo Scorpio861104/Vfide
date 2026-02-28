@@ -26,7 +26,9 @@ export function useProofScore(userAddress?: `0x${string}`) {
     }
   })
   
-  const scoreNum = typeof score === 'bigint' ? safeBigIntToNumber(score, 0) : 5000 // Default neutral score (10x scale)
+  const scoreNum = score !== undefined && score !== null
+    ? (typeof score === 'bigint' ? safeBigIntToNumber(score, 0) : Number(score))
+    : 5000 // Default neutral score (10x scale) when contract hasn't responded yet
   
   // Calculate tier and benefits (updated for 10x scale: 0-10000)
   const tier = 

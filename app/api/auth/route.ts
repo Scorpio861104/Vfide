@@ -41,27 +41,33 @@ export async function POST(request: NextRequest) {
     }
 
     // Check message timestamp to prevent replay attacks (within 5 minutes)
+    // Reject messages that don't include a timestamp — they are not replayable otherwise
     const timestampMatch = message.match(/Timestamp: (\d+)/);
-    if (timestampMatch && timestampMatch[1]) {
-      const messageTimestamp = parseInt(timestampMatch[1], 10);
-      
-      // Validate parsed timestamp
-      if (isNaN(messageTimestamp) || !isFinite(messageTimestamp)) {
-        return NextResponse.json(
-          { error: 'Invalid timestamp in message' },
-          { status: 400 }
-        );
-      }
-      
-      const now = Date.now();
-      const fiveMinutes = 5 * 60 * 1000;
-      
-      if (Math.abs(now - messageTimestamp) > fiveMinutes) {
-        return NextResponse.json(
-          { error: 'Message expired. Please sign a new message.' },
-          { status: 400 }
-        );
-      }
+    if (!timestampMatch || !timestampMatch[1]) {
+      return NextResponse.json(
+        { error: 'Message must contain a timestamp' },
+        { status: 400 }
+      );
+    }
+
+    const messageTimestamp = parseInt(timestampMatch[1], 10);
+
+    // Validate parsed timestamp
+    if (isNaN(messageTimestamp) || !isFinite(messageTimestamp)) {
+      return NextResponse.json(
+        { error: 'Invalid timestamp in message' },
+        { status: 400 }
+      );
+    }
+
+    const now = Date.now();
+    const fiveMinutes = 5 * 60 * 1000;
+
+    if (Math.abs(now - messageTimestamp) > fiveMinutes) {
+      return NextResponse.json(
+        { error: 'Message expired. Please sign a new message.' },
+        { status: 400 }
+      );
     }
 
     // Verify the cryptographic signature

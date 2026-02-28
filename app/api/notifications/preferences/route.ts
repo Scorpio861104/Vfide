@@ -1,7 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
+import { requireOwnership } from '@/lib/auth/middleware';
+import { withRateLimit } from '@/lib/auth/rateLimit';
 
 export async function GET(request: NextRequest) {
+  const rateLimitResponse = await withRateLimit(request, 'read');
+  if (rateLimitResponse) return rateLimitResponse;
+
   try {
     const { searchParams } = new URL(request.url);
     const userAddress = searchParams.get('userAddress');
@@ -9,6 +14,10 @@ export async function GET(request: NextRequest) {
     if (!userAddress) {
       return NextResponse.json({ error: 'User address required' }, { status: 400 });
     }
+
+    // Require the caller to be the owner of these preferences
+    const authResult = await requireOwnership(request, userAddress);
+    if (authResult instanceof NextResponse) return authResult;
 
     const result = await query(
       `SELECT np.* FROM notification_preferences np
@@ -34,6 +43,9 @@ export async function GET(request: NextRequest) {
 }
 
 export async function PUT(request: NextRequest) {
+  const rateLimitResponse = await withRateLimit(request, 'write');
+  if (rateLimitResponse) return rateLimitResponse;
+
   try {
     const body = await request.json();
     const { userAddress, ...preferences } = body;
@@ -41,6 +53,10 @@ export async function PUT(request: NextRequest) {
     if (!userAddress) {
       return NextResponse.json({ error: 'User address required' }, { status: 400 });
     }
+
+    // Require the caller to be the owner of these preferences
+    const authResult = await requireOwnership(request, userAddress);
+    if (authResult instanceof NextResponse) return authResult;
 
     const result = await query(
       `UPDATE notification_preferences np
