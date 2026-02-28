@@ -26,6 +26,7 @@ import {
   NotificationCategory,
   useNotifications 
 } from '@/hooks/useNotifications';
+import { isAllowedURL } from '@/lib/security';
 
 // ==================== CONSTANTS ====================
 
@@ -771,7 +772,7 @@ export function NotificationDropdown({ isOpen, onClose }: NotificationDropdownPr
                         onArchive={() => archive(notification.id)}
                         onSnooze={() => snooze(notification.id)}
                         onAction={() => {
-                          if (notification.actionUrl) {
+                          if (notification.actionUrl && isAllowedURL(notification.actionUrl)) {
                             window.location.href = notification.actionUrl;
                           }
                         }}
