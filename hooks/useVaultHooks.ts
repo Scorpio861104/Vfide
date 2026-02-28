@@ -1,7 +1,7 @@
 'use client'
 
-import { useReadContract, useWriteContract, useAccount, useWaitForTransactionReceipt } from 'wagmi'
-import { parseEther, formatEther } from 'viem'
+import { useReadContract, useWriteContract, useAccount, useWaitForTransactionReceipt, useReadContracts } from 'wagmi'
+import { parseEther, formatEther, type Abi } from 'viem'
 import { useState, useEffect } from 'react'
 import { CONTRACT_ADDRESSES } from '../lib/contracts'
 import { ZERO_ADDRESS } from '../lib/constants'
@@ -90,8 +90,56 @@ export function useVaultBalance() {
       refetchInterval: 2000, // Refresh every 2 seconds
     }
   })
-  
+
+  // Fetch pending transaction count to compute locked balance
+  const { data: pendingTxCount } = useReadContract({
+    address: vaultAddress ?? undefined,
+    abi: VAULT_ABI,
+    functionName: 'pendingTxCount',
+    query: {
+      enabled: !!vaultAddress,
+      refetchInterval: 5000,
+    }
+  })
+
+  // Cap at MAX_PENDING_TX_READ to avoid creating an excessively large batch of
+  // contract reads. UserVault enforces a practical limit of ~10 pending
+  // transactions, but we guard against unexpectedly large values from the mock
+  // or misconfigured contracts.
+  const MAX_PENDING_TX_READ = 50
+  const pendingCount = Math.min(Number((pendingTxCount as bigint) || 0n), MAX_PENDING_TX_READ)
+
+  // Batch-read all pending transactions to sum their locked amounts
+  const pendingContracts = Array.from({ length: pendingCount }, (_, i) => ({
+    address: vaultAddress as `0x${string}`,
+    abi: VAULT_ABI as Abi,
+    functionName: 'pendingTransactions' as const,
+    args: [BigInt(i)] as const,
+  }))
+
+  const { data: pendingTxData } = useReadContracts({
+    contracts: pendingContracts,
+    query: {
+      enabled: !!vaultAddress && pendingCount > 0,
+    }
+  })
+
+  // PendingTransaction tuple: [toVault, amount, requestTime, approved, executed]
+  type PendingTxTuple = [string, bigint, bigint, boolean, boolean]
+
+  // Sum amounts of pending transactions that are not yet executed
+  const lockedBalanceRaw = (pendingTxData ?? []).reduce((sum, result) => {
+    if (result.status !== 'success' || !result.result) return sum
+    const tx = result.result as PendingTxTuple
+    const executed = tx[4]
+    if (!executed) {
+      return sum + tx[1]
+    }
+    return sum
+  }, 0n)
+
   const formattedBalance = balance ? formatEther(balance as bigint) : '0';
+  const formattedLockedBalance = formatEther(lockedBalanceRaw);
   
   // Sync with Zustand store for global state access
   useEffect(() => {
@@ -99,11 +147,11 @@ export function useVaultBalance() {
       setVault({
         address: vaultAddress,
         balance: formattedBalance,
-        lockedBalance: '0', // TODO: fetch locked balance
+        lockedBalance: formattedLockedBalance,
         lastUpdated: Date.now(),
       });
     }
-  }, [vaultAddress, balance, formattedBalance, setVault]);
+  }, [vaultAddress, balance, formattedBalance, formattedLockedBalance, setVault]);
   
   // Also update balance directly when it changes
   useEffect(() => {
@@ -115,6 +163,8 @@ export function useVaultBalance() {
   return {
     balance: formattedBalance,
     balanceRaw: (balance as bigint) || 0n,
+    lockedBalance: formattedLockedBalance,
+    lockedBalanceRaw,
     isLoading,
     refetch,
   }

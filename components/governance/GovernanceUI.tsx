@@ -836,6 +836,7 @@ export default function GovernanceUI() {
   const [filterCategory, setFilterCategory] = useState<string>('all');
   const [delegateeAddress, setDelegateeAddress] = useState('');
   const [votesAmount, setVotesAmount] = useState('');
+  const [delegateError, setDelegateError] = useState('');
 
   const filteredProposals = proposals.filter((p) => {
     const statusMatch = filterStatus === 'all' || p.status === filterStatus;
@@ -882,9 +883,10 @@ export default function GovernanceUI() {
 
     // Validate address format
     if (!/^0x[a-fA-F0-9]{40}$/.test(delegateeAddress)) {
-      alert('Invalid address format');
+      setDelegateError('Invalid address format');
       return;
     }
+    setDelegateError('');
 
     const newDelegation: Delegation = {
       delegator: '0xuser...',
@@ -990,8 +992,11 @@ export default function GovernanceUI() {
               type="text"
               placeholder="0x1234...5678"
               value={delegateeAddress}
-              onChange={(e) => setDelegateeAddress(e.target.value)}
+              onChange={(e) => { setDelegateeAddress(e.target.value); setDelegateError(''); }}
             />
+            {delegateError && (
+              <p className="mt-1 text-sm text-red-500">{delegateError}</p>
+            )}
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">

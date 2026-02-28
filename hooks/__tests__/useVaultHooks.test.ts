@@ -221,6 +221,7 @@ describe('useVaultBalance', () => {
     ;(wagmi.useAccount as jest.Mock).mockReturnValue({
       address: mockAddress,
     })
+    ;(wagmi.useReadContracts as jest.Mock).mockReturnValue({ data: [] })
   })
 
   it('returns formatted balance', () => {
