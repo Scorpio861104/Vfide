@@ -127,7 +127,7 @@ export function OnboardingProvider({ children, customSteps }: OnboardingProvider
     {
       id: 'first-transaction',
       title: 'Make First Transaction',
-      description: 'Send your first payment to earn rewards',
+      description: 'Send your first payment to complete your first milestone',
       action: { label: 'Send Payment', href: '/pay' },
       icon: <ArrowRight className="w-5 h-5" />,
       reward: { type: 'badge', value: 'First Payment', description: 'Earned your first badge!' },

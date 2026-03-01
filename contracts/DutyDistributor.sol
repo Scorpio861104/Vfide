@@ -65,6 +65,16 @@ contract DutyDistributor is Ownable, IGovernanceHooks {
         maxPointsPerUser = _maxPoints;
     }
 
+    /**
+     * @notice Satisfy IHoweySafeContract interface (no-op: DutyDistributor has
+     *         no reward mechanism to disable; compliance is structural).
+     * @dev One-way: only `enabled = true` is accepted.
+     */
+    function setHoweySafeMode(bool enabled) external onlyOwner {
+        require(enabled, "DD: howey safe only");
+        // No state change needed — this contract never distributes rewards.
+    }
+
     // -------------------------------------------------------
     // Governance Hooks (Called by DAO)
     // -------------------------------------------------------

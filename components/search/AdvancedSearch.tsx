@@ -140,7 +140,7 @@ const mockSearchHistory = (): SearchHistoryItem[] => [
   },
   {
     id: 'h2',
-    query: 'staking rewards',
+    query: 'governance vote',
     filters: {
       contentType: ['transaction', 'proposal'],
       dateRange: 'week',

@@ -82,6 +82,18 @@ contract CouncilSalary {
     }
 
     /**
+     * @notice Satisfy IHoweySafeContract interface (no-op: CouncilSalary pays
+     *         employment compensation in stablecoins, not investment returns).
+     * @dev One-way: only `enabled = true` is accepted.
+     */
+    function setHoweySafeMode(bool enabled) external {
+        require(msg.sender == dao, "not dao");
+        require(enabled, "CS: howey safe only");
+        // No state change needed — council salaries are employment compensation,
+        // not profit distribution.  Compliance is structural.
+    }
+
+    /**
      * Distribute salary to eligible council members.
      * C-1 FIX: Now requires DAO or authorized keeper to call
      * This prevents MEV manipulation and timing attacks

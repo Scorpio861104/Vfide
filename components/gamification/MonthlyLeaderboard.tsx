@@ -414,7 +414,7 @@ export default function MonthlyLeaderboard() {
           </table>
         </div>
         <div className="px-4 py-3 bg-white/5 border-t border-white/10 text-center text-sm text-gray-400">
-          Showing top 200 players • <span className="text-yellow-500 font-semibold">Top 1,000</span> earn rewards monthly
+          Showing top 200 players • <span className="text-yellow-500 font-semibold">Top 1,000</span> earn protocol recognition monthly
         </div>
       </motion.div>
 

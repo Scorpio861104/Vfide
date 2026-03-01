@@ -40,7 +40,7 @@ export function HoweySafeModePanel() {
     }
   };
 
-  const handleIndividualToggle = async (contractName: string, enabled: boolean) => {
+  const handleIndividualEnable = async (contractName: string) => {
     setLoading(true);
     try {
       const functionName = `howey_set${contractName}`;
@@ -48,9 +48,9 @@ export function HoweySafeModePanel() {
         address: OWNER_CONTROL_PANEL_ADDRESS,
         abi: OWNER_CONTROL_PANEL_ABI,
         functionName: functionName as any,
-        args: [enabled],
+        args: [true],
       });
-      alert(`Successfully ${enabled ? 'enabled' : 'disabled'} Howey-safe mode for ${contractName}!`);
+      alert(`Successfully enabled Howey-safe mode for ${contractName}!`);
     } catch (error) {
       console.error(error);
       alert('Transaction failed. See console for details.');
@@ -64,10 +64,11 @@ export function HoweySafeModePanel() {
   return (
     <div className="space-y-6">
       <div className="bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-white/10">
-        <h2 className="text-2xl font-bold text-white mb-4">Howey-Safe Mode Management</h2>
+        <h2 className="text-2xl font-bold text-white mb-4">Howey-Safe Mode Enforcement</h2>
         <p className="text-slate-400 mb-6">
-          Control profit-distribution features across all ecosystem contracts.
-          Safe mode must be enabled to pass the Howey Test and avoid securities classification.
+          Howey-safe mode is permanently enforced across all ecosystem contracts.
+          Once enabled, it cannot be disabled — this ensures VFIDE tokens are not
+          classified as securities under the Howey Test.
         </p>
 
         <div className="flex gap-4 mb-8">
@@ -77,13 +78,6 @@ export function HoweySafeModePanel() {
             className="flex-1 px-6 py-3 bg-green-600 hover:bg-green-700 disabled:bg-gray-600 text-white rounded-lg font-medium transition-colors"
           >
             🛡️ Enable All (Recommended)
-          </button>
-          <button
-            onClick={() => handleBatchToggle(false)}
-            disabled={loading}
-            className="flex-1 px-6 py-3 bg-red-600 hover:bg-red-700 disabled:bg-gray-600 text-white rounded-lg font-medium transition-colors"
-          >
-            ⚠️ Disable All (Legal Risk!)
           </button>
         </div>
 
@@ -129,17 +123,15 @@ export function HoweySafeModePanel() {
                     <span className={`text-sm font-medium ${isEnabled ? 'text-green-400' : 'text-red-400'}`}>
                       {isEnabled ? 'SAFE ✓' : 'UNSAFE ✗'}
                     </span>
-                    <button
-                      onClick={() => handleIndividualToggle(contract.name, !isEnabled)}
-                      disabled={loading}
-                      className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                        isEnabled
-                          ? 'bg-red-600 hover:bg-red-700 text-white'
-                          : 'bg-green-600 hover:bg-green-700 text-white'
-                      } disabled:bg-gray-600`}
-                    >
-                      {isEnabled ? 'Disable' : 'Enable'}
-                    </button>
+                    {!isEnabled && (
+                      <button
+                        onClick={() => handleIndividualEnable(contract.name)}
+                        disabled={loading}
+                        className="px-4 py-2 rounded-lg font-medium transition-colors bg-green-600 hover:bg-green-700 text-white disabled:bg-gray-600"
+                      >
+                        Enable
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>
@@ -151,14 +143,17 @@ export function HoweySafeModePanel() {
       <div className="bg-blue-500/20 border border-blue-500/50 rounded-xl p-6">
         <h3 className="text-white font-bold mb-2">ℹ️ What is Howey-Safe Mode?</h3>
         <p className="text-slate-300 text-sm mb-4">
-          Howey-safe mode disables all automatic profit distribution mechanisms in the protocol.
-          This ensures VFIDE tokens are not classified as securities under the Howey Test.
+          Howey-safe mode permanently disables all automatic profit-distribution
+          mechanisms in the protocol. Once enabled on a contract, it cannot be
+          reversed — this is enforced at the contract level via an immutable
+          one-way guard. This ensures VFIDE tokens are not classified as
+          securities under the Howey Test.
         </p>
         <ul className="text-slate-300 text-sm space-y-2">
-          <li>✓ Governance rewards: Disabled (no profit from voting)</li>
-          <li>✓ Council payments: Converted to stablecoin (employment, not profit)</li>
-          <li>✓ LP staking rewards: Disabled (no profit from providing liquidity)</li>
-          <li>✓ Promotional rewards: Disabled (no profit expectation)</li>
+          <li>✓ Governance participation points: Non-transferable badges (no profit from voting)</li>
+          <li>✓ Council payments: Employment compensation in stablecoins (not investment returns)</li>
+          <li>✓ LP tracking: Participation metrics only (no yield or profit from providing liquidity)</li>
+          <li>✓ Promotional allocations: One-time milestone completions, capped and non-recurring</li>
         </ul>
       </div>
     </div>

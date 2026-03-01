@@ -132,6 +132,17 @@ contract CouncilManager is ReentrancyGuard {
         paymentInterval = _interval;
     }
 
+    /**
+     * @notice Satisfy IHoweySafeContract interface (no-op: CouncilManager
+     *         distributes employment compensation, not investment returns).
+     * @dev One-way: only `enabled = true` is accepted.
+     */
+    function setHoweySafeMode(bool enabled) external onlyDAO {
+        require(enabled, "CM: howey safe only");
+        // No state change needed — council management fees are operational
+        // costs, not profit-sharing.  Compliance is structural.
+    }
+
     // ────────────────────────── Daily Score Checks ──────────────────────────
 
     /**

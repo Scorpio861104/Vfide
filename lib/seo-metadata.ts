@@ -119,14 +119,14 @@ export const pageMetadata = {
   }),
   
   rewards: generatePageMetadata({
-    title: 'Rewards',
-    description: 'Earn rewards for contributing to the VFIDE ecosystem.',
-    keywords: ['rewards', 'earn', 'incentives', 'staking'],
+    title: 'Milestones',
+    description: 'Complete milestones to build your ProofScore and unlock protocol features.',
+    keywords: ['milestones', 'achievements', 'protocol', 'ProofScore'],
   }),
   
   quests: generatePageMetadata({
     title: 'Quests',
-    description: 'Complete quests to earn rewards and build your ProofScore.',
+    description: 'Complete quests and build your ProofScore.',
     keywords: ['quests', 'challenges', 'missions', 'gamification'],
   }),
   

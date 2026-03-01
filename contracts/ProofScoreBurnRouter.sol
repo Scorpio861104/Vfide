@@ -410,7 +410,7 @@ contract ProofScoreBurnRouter is Ownable {
         uint256 totalBps = _calculateLinearFee(scoreFrom);
         
         // Split total fee: 40% burn, 10% sanctum, 50% ecosystem
-        // Sustainable split to fund: council salaries, staking, headhunter, competitions, merchant rebates
+        // Sustainable split to fund: council salaries, headhunter, competitions, merchant rebates
         uint256 burnBps = (totalBps * 40) / 100;       // 40% of total (deflationary)
         uint256 sanctumBps = (totalBps * 10) / 100;    // 10% of total (charity)
         uint256 ecosystemBps = totalBps - burnBps - sanctumBps; // 50% remainder (operations)

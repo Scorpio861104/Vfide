@@ -768,60 +768,70 @@ contract OwnerControlPanel {
     // ═══════════════════════════════════════════════════════════════════════
     
     /**
-     * @notice Enable/disable Howey-safe mode on all ecosystem contracts
-     * @dev One-click toggle for all contracts with howeySafeMode
-     * @param enabled True to enable (default safe state), false to disable
+     * @notice Enable Howey-safe mode on all ecosystem contracts.
+     * @dev One-way: Howey-safe mode can only be ENABLED (never disabled) from
+     *      this control panel.  The underlying contracts enforce the same
+     *      invariant via `require(enabled, ...)`.  Passing `false` is rejected
+     *      both here and in every target contract, preventing any accidental or
+     *      intentional disabling of compliance controls.
      */
     function howey_setAllSafeMode(bool enabled) external onlyOwner {
+        require(enabled, "OCP: howey safe only");
         if (address(dutyDistributor) != address(0)) {
-            dutyDistributor.setHoweySafeMode(enabled);
-            emit HoweySafeModeUpdated("DutyDistributor", enabled);
+            dutyDistributor.setHoweySafeMode(true);
+            emit HoweySafeModeUpdated("DutyDistributor", true);
         }
         if (address(councilSalary) != address(0)) {
-            councilSalary.setHoweySafeMode(enabled);
-            emit HoweySafeModeUpdated("CouncilSalary", enabled);
+            councilSalary.setHoweySafeMode(true);
+            emit HoweySafeModeUpdated("CouncilSalary", true);
         }
         if (address(councilManager) != address(0)) {
-            councilManager.setHoweySafeMode(enabled);
-            emit HoweySafeModeUpdated("CouncilManager", enabled);
+            councilManager.setHoweySafeMode(true);
+            emit HoweySafeModeUpdated("CouncilManager", true);
         }
         if (address(promotionalTreasury) != address(0)) {
-            promotionalTreasury.setHoweySafeMode(enabled);
-            emit HoweySafeModeUpdated("PromotionalTreasury", enabled);
+            promotionalTreasury.setHoweySafeMode(true);
+            emit HoweySafeModeUpdated("PromotionalTreasury", true);
         }
         if (address(liquidityIncentives) != address(0)) {
-            liquidityIncentives.setHoweySafeMode(enabled);
-            emit HoweySafeModeUpdated("LiquidityIncentives", enabled);
+            liquidityIncentives.setHoweySafeMode(true);
+            emit HoweySafeModeUpdated("LiquidityIncentives", true);
         }
         // Note: VFIDEPresale is not included as it has different semantics
     }
     
     /**
-     * @notice Set Howey-safe mode on individual contracts
+     * @notice Enable Howey-safe mode on individual contracts.
+     * @dev One-way: can only be set to true.
      */
     function howey_setDutyDistributor(bool enabled) external onlyOwner {
-        dutyDistributor.setHoweySafeMode(enabled);
-        emit HoweySafeModeUpdated("DutyDistributor", enabled);
+        require(enabled, "OCP: howey safe only");
+        dutyDistributor.setHoweySafeMode(true);
+        emit HoweySafeModeUpdated("DutyDistributor", true);
     }
     
     function howey_setCouncilSalary(bool enabled) external onlyOwner {
-        councilSalary.setHoweySafeMode(enabled);
-        emit HoweySafeModeUpdated("CouncilSalary", enabled);
+        require(enabled, "OCP: howey safe only");
+        councilSalary.setHoweySafeMode(true);
+        emit HoweySafeModeUpdated("CouncilSalary", true);
     }
     
     function howey_setCouncilManager(bool enabled) external onlyOwner {
-        councilManager.setHoweySafeMode(enabled);
-        emit HoweySafeModeUpdated("CouncilManager", enabled);
+        require(enabled, "OCP: howey safe only");
+        councilManager.setHoweySafeMode(true);
+        emit HoweySafeModeUpdated("CouncilManager", true);
     }
     
     function howey_setPromotionalTreasury(bool enabled) external onlyOwner {
-        promotionalTreasury.setHoweySafeMode(enabled);
-        emit HoweySafeModeUpdated("PromotionalTreasury", enabled);
+        require(enabled, "OCP: howey safe only");
+        promotionalTreasury.setHoweySafeMode(true);
+        emit HoweySafeModeUpdated("PromotionalTreasury", true);
     }
     
     function howey_setLiquidityIncentives(bool enabled) external onlyOwner {
-        liquidityIncentives.setHoweySafeMode(enabled);
-        emit HoweySafeModeUpdated("LiquidityIncentives", enabled);
+        require(enabled, "OCP: howey safe only");
+        liquidityIncentives.setHoweySafeMode(true);
+        emit HoweySafeModeUpdated("LiquidityIncentives", true);
     }
     
     /**

@@ -170,7 +170,7 @@ const mockHighlights: CommunityHighlight[] = [
   {
     id: 'h2',
     title: 'DeFi Traders',
-    description: 'Strategic traders and yield farmers',
+    description: 'Strategic traders and governance participants',
     participantCount: 1892,
     activity: 'Very High',
     icon: '📊',

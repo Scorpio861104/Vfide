@@ -187,7 +187,7 @@ const mockActivityItems: ActivityItem[] = [
     id: 'act2',
     type: 'governance',
     title: 'Voted on Proposal #142',
-    description: 'Proposal: Increase staking rewards - Voted YES',
+    description: 'Proposal: Adjust governance parameters - Voted YES',
     timestamp: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000),
     icon: '🗳️',
   },
