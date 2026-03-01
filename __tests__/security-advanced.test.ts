@@ -3,6 +3,7 @@
  * Tests for CSRF protection, JWT authentication, and rate limiting
  */
 
+import jwt from 'jsonwebtoken';
 import { NextRequest, NextResponse } from 'next/server';
 import { 
   generateCSRFToken, 
@@ -203,6 +204,101 @@ describe('JWT Authentication', () => {
       const invalidToken = 'not.a.valid.jwt.token';
       const decoded = await verifyToken(invalidToken);
       
+      expect(decoded).toBeNull();
+    });
+  });
+
+  describe('JWT secret rotation (PREV_JWT_SECRET)', () => {
+    const rotationAddress = '0xdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef';
+    const JWT_ISSUER = 'vfide';
+    const JWT_AUDIENCE = 'vfide-app';
+    // The module caches _jwtSecret lazily from the first call in beforeAll
+    const cachedCurrentSecret = 'test-secret-for-testing-only-min-32-chars';
+    const prevSecret = 'prev-secret-before-rotation-minimum-32chars';
+
+    afterEach(() => {
+      delete process.env.PREV_JWT_SECRET;
+    });
+
+    /** Sign a token directly with a given secret (bypasses module cache) */
+    function signWith(secret: string): string {
+      return jwt.sign(
+        { address: rotationAddress.toLowerCase(), chainId: 8453 },
+        secret,
+        { expiresIn: '24h', issuer: JWT_ISSUER, audience: JWT_AUDIENCE }
+      );
+    }
+
+    it('accepts token signed with PREV_JWT_SECRET during rotation window', async () => {
+      // Token was signed before rotation with the old (previous) secret
+      const oldToken = signWith(prevSecret);
+
+      // Rotation window: PREV_JWT_SECRET = old secret; JWT_SECRET = current (cached)
+      process.env.PREV_JWT_SECRET = prevSecret;
+
+      const decoded = await verifyToken(oldToken);
+      expect(decoded).not.toBeNull();
+      expect(decoded?.address).toBe(rotationAddress.toLowerCase());
+    });
+
+    it('accepts token signed with the current JWT_SECRET during rotation window', async () => {
+      // Token was signed after rotation with the current (cached) secret
+      const { token: currentToken } = generateToken(rotationAddress);
+
+      // Rotation window is active but should not break verification of new tokens
+      process.env.PREV_JWT_SECRET = prevSecret;
+
+      const decoded = await verifyToken(currentToken);
+      expect(decoded).not.toBeNull();
+      expect(decoded?.address).toBe(rotationAddress.toLowerCase());
+    });
+
+    it('rejects token invalid against both current and previous secrets', async () => {
+      const thirdSecret = 'unrelated-third-secret-nobody-configured-x32';
+      // Signed with a completely different secret — neither current nor previous
+      const alienToken = signWith(thirdSecret);
+
+      // Rotation window is active with a known prev secret (but not thirdSecret)
+      process.env.PREV_JWT_SECRET = prevSecret;
+
+      const decoded = await verifyToken(alienToken);
+      expect(decoded).toBeNull();
+    });
+
+    it('rejects tampered token even when PREV_JWT_SECRET is set', async () => {
+      const oldToken = signWith(prevSecret);
+      const tamperedToken = oldToken + 'x';
+
+      process.env.PREV_JWT_SECRET = prevSecret;
+
+      const decoded = await verifyToken(tamperedToken);
+      expect(decoded).toBeNull();
+    });
+
+    it('rejects expired token even when PREV_JWT_SECRET matches', async () => {
+      // Set exp to 1 hour in the past to create an already-expired token
+      const expiredToken = jwt.sign(
+        {
+          address: rotationAddress.toLowerCase(),
+          chainId: 8453,
+          exp: Math.floor(Date.now() / 1000) - 3600,
+        },
+        prevSecret,
+        { issuer: JWT_ISSUER, audience: JWT_AUDIENCE }
+      );
+
+      process.env.PREV_JWT_SECRET = prevSecret;
+
+      const decoded = await verifyToken(expiredToken);
+      expect(decoded).toBeNull();
+    });
+
+    it('rejects token when PREV_JWT_SECRET is not set and token used wrong secret', async () => {
+      // No rotation window active
+      delete process.env.PREV_JWT_SECRET;
+      const wrongToken = signWith(prevSecret); // signed with non-current secret
+
+      const decoded = await verifyToken(wrongToken);
       expect(decoded).toBeNull();
     });
   });

@@ -97,12 +97,16 @@ export async function requireOwnership(
 }
 
 /**
- * Admin addresses - in production, store in database
+ * Admin addresses — populated exclusively from environment variables.
+ * Set ADMIN_ADDRESS (single) or ADMIN_ADDRESSES (comma-separated) in your environment.
+ * Never hard-code addresses here; doing so grants permanent admin access to that wallet.
  */
-const ADMIN_ADDRESSES = new Set([
-  '0x1234567890abcdef1234567890abcdef12345678', // Example admin
-  process.env.ADMIN_ADDRESS?.toLowerCase(),
-].filter(Boolean));
+const ADMIN_ADDRESSES = new Set(
+  [
+    process.env.ADMIN_ADDRESS?.toLowerCase(),
+    ...(process.env.ADMIN_ADDRESSES?.split(',').map(a => a.trim().toLowerCase()) ?? []),
+  ].filter(Boolean) as string[]
+);
 
 /**
  * Check if user is an admin
