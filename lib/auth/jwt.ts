@@ -1,6 +1,15 @@
 /**
  * JWT Authentication Module
  * Secure token generation and verification using HMAC-SHA256
+ *
+ * Zero-downtime secret rotation:
+ *   1. Generate a new secret: openssl rand -base64 32
+ *   2. Set PREV_JWT_SECRET=<old value of JWT_SECRET> in your environment
+ *   3. Set JWT_SECRET=<new secret>
+ *   4. Deploy — new tokens use the new secret; existing tokens are still accepted
+ *      via PREV_JWT_SECRET during the transition window (max 24 h until all
+ *      old tokens expire naturally).
+ *   5. After 24 h, remove PREV_JWT_SECRET from the environment.
  */
 
 import jwt from 'jsonwebtoken';
@@ -17,6 +26,14 @@ function getJWTSecret(): string {
     );
   }
   return secret;
+}
+
+/**
+ * Return the previous (rotated-out) secret, if configured.
+ * Only present during a rolling rotation window.
+ */
+function getPrevSecret(): string | null {
+  return process.env.PREV_JWT_SECRET || null;
 }
 
 // Lazy-load JWT secret to avoid build-time errors
@@ -48,7 +65,8 @@ export interface TokenResponse {
 }
 
 /**
- * Generate a secure JWT token for authenticated users
+ * Generate a secure JWT token for authenticated users.
+ * Always signs with the current JWT_SECRET.
  */
 export function generateToken(address: string, chainId?: number): TokenResponse {
   const payload: JWTPayload = {
@@ -70,30 +88,50 @@ export function generateToken(address: string, chainId?: number): TokenResponse 
 }
 
 /**
- * Verify and decode a JWT token
- * Also checks if token has been revoked
+ * Verify and decode a JWT token.
+ * Tries the current secret first; falls back to PREV_JWT_SECRET during a
+ * rotation window so that existing sessions are not invalidated immediately.
+ * Also checks if the token has been explicitly revoked.
  */
 export async function verifyToken(token: string): Promise<JWTPayload | null> {
+  const verifyOptions = { issuer: JWT_ISSUER, audience: JWT_AUDIENCE };
+
+  // Try the current secret first
+  let decoded: JWTPayload | null = null;
   try {
-    const decoded = jwt.verify(token, getSecret(), {
-      issuer: JWT_ISSUER,
-      audience: JWT_AUDIENCE,
-    }) as JWTPayload;
-
-    // Check if token has been revoked
-    const tokenHash = await hashToken(token);
-    const revoked = await isTokenRevoked(tokenHash);
-    
-    if (revoked) {
-      console.warn('[JWT] Token has been revoked');
-      return null;
+    decoded = jwt.verify(token, getSecret(), verifyOptions) as JWTPayload;
+  } catch (currentErr) {
+    // If verification fails with the current secret, try the previous one
+    // (present only during a rotation window)
+    const prevSecret = getPrevSecret();
+    if (prevSecret) {
+      try {
+        decoded = jwt.verify(token, prevSecret, verifyOptions) as JWTPayload;
+      } catch (prevErr) {
+        // Token is invalid against both secrets
+        console.error('[JWT] Token verification failed against both current and previous secrets:',
+          prevErr instanceof Error ? prevErr.message : 'Unknown error');
+      }
+    } else {
+      console.error('[JWT] Token verification failed:',
+        currentErr instanceof Error ? currentErr.message : 'Unknown error');
     }
+  }
 
-    return decoded;
-  } catch (error) {
-    console.error('[JWT] Token verification failed:', error instanceof Error ? error.message : 'Unknown error');
+  if (!decoded) {
     return null;
   }
+
+  // Check if token has been revoked
+  const tokenHash = await hashToken(token);
+  const revoked = await isTokenRevoked(tokenHash);
+  
+  if (revoked) {
+    console.warn('[JWT] Token has been revoked');
+    return null;
+  }
+
+  return decoded;
 }
 
 /**

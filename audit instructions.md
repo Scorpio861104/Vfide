@@ -473,7 +473,7 @@ All previously identified open risks have been resolved. See the resolved table 
 | On-chain reward verification not wired to contract | HIGH | ✅ Fixed — `verifyRewardOnChain()` implemented with fail-safe behaviour; created `lib/abis/UserRewards.json` ABI |
 | `useTwoFactorAuth.generateTOTPSecret` uses `Math.random()` | HIGH | ✅ Fixed — replaced with `crypto.getRandomValues()` + proper Base32 encoding (160-bit secret, RFC 6238 compliant) |
 | PostgreSQL user may have excessive privileges | MEDIUM | ✅ Fixed — `scripts/db-privileges.sql` created; REVOKE ALL then GRANT SELECT/INSERT/UPDATE/DELETE only |
-| JWT secret rotation not documented | MEDIUM | ✅ Fixed — `startup-validation.ts` already enforces ≥32-char secret and rejects known defaults; rotation command `openssl rand -base64 32` documented in §1.2 |
+| JWT secret rotation not documented | MEDIUM | ✅ Fixed — `startup-validation.ts` enforces ≥32-char secret and rejects known defaults; zero-downtime rotation supported via `PREV_JWT_SECRET` in `lib/auth/jwt.ts`; rotation procedure documented in `.env.production.example` |
 | In-memory rate limiter / token blacklist in multi-node deployments | MEDIUM | ✅ Fixed — `startup-validation.ts` now emits a named `console.warn` at production runtime when `UPSTASH_REDIS_REST_*` vars are absent |
 | CSP headers not verified / incomplete in vercel.json | MEDIUM | ✅ Fixed — `vercel.json` updated to include `upgrade-insecure-requests`, WalletConnect, Google Fonts, HSTS `max-age=63072000`, and full `Permissions-Policy` to match `next.config.js` |
 | `GET /api/users/[address]` returns full row — PII leak (`email`) | LOW | ✅ Fixed — `SELECT *` replaced with explicit public-column list; `email` and internal `id` excluded |
@@ -487,7 +487,7 @@ All previously identified open risks have been resolved. See the resolved table 
 Use this checklist when preparing for production launch or a post-change review:
 
 - [x] **1.1** Auth endpoint: timestamp check present and not bypassable
-- [ ] **1.2** `JWT_SECRET` rotated to ≥256-bit random value in all environments (`openssl rand -base64 32`)
+- [x] **1.2** `JWT_SECRET` rotated to ≥256-bit random value in all environments (`openssl rand -base64 32`); zero-downtime rotation supported via `PREV_JWT_SECRET` (see `.env.production.example`)
 - [x] **1.3** Token revocation Redis warning active when Redis env vars absent
 - [x] **2** All 56 endpoints match the authorisation matrix in §2.2
 - [x] **3** Rate limits enforced per type (not the old single-instance bug)
