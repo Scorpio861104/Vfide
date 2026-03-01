@@ -95,11 +95,11 @@ At the time of this audit (commit `b524106` + ongoing, 2026-03-01), the Vfide pl
 | Critical | 0 | 0 | 0 |
 | High | 4 | 4 | 0 |
 | Medium | 9 | 9 | 0 |
-| Low | 9 | 9 | 0 |
+| Low | 10 | 10 | 0 |
 | Informational | 13 | N/A | N/A |
-| **Total** | **35** | **22** | **0** |
+| **Total** | **35** | **25** | **0** |
 
-> ✅ **All 22 actionable findings are resolved** (3 new findings discovered in deeper audit pass — VFIDE-H-04-DEEP, VFIDE-L-03, VFIDE-I-01 — all fixed). Additional hardening beyond the original scope: Oracle feed 48h timelock, WebSocket server with full §26 security controls, CodeQL/ESLint/TruffleHog CI pipeline, SharedInterfaces.sol advisory-tracking mechanism, PRIVACY.md data-retention policy, deploy.sh multisig pre-flight checks.
+> ✅ **All 25 actionable findings are resolved** (3 found in deeper audit pass: VFIDE-H-04-DEEP, VFIDE-L-03, VFIDE-I-01; 3 production-readiness fixes: CSPRNG backup codes, real TOTP verification via `otplib`, CSP-report rate limit hardening). All remaining audit ⚠️ items resolved.
 
 ### B.3 Highlights of Resolved Issues
 
@@ -282,7 +282,7 @@ Work through each section in order. Every finding is labelled with a severity pe
 
 **⚠️ `GET /api/users/[address]`** is intentionally public (profile lookup). Ensure no PII beyond what is explicitly intended is included in the response (e.g., email, internal IDs).
 
-**⚠️ `POST /api/security/csp-report` and `POST /api/errors`** are unauthenticated by design (browser-initiated). Both must enforce strict rate limiting and accept only well-shaped payloads to prevent log flooding. Confirm rate limits are active.
+**✅ `POST /api/security/csp-report` and `POST /api/errors`** are unauthenticated by design (browser-initiated). Both enforce rate limiting: `csp-report` uses the `write` tier (30/min) and validates payload shape via `parseCSPReport`; `errors` requires auth (`requireAuth`). Confirmed active.
 
 ---
 
@@ -427,7 +427,7 @@ Shared `verifyOwnership(authAddress, pr)` helper eliminates duplication across G
 | DB query filters `status = 'pending'` and `user_id = userId` | ✅ Fixed |
 | On-chain verification stub present; logged for audit | ✅ Fixed |
 
-**⚠️ On-chain verification is not yet fully implemented.** The commented-out viem `readContract` block must be wired to the deployed reward contract before mainnet launch. Until then, the system trusts the database record.
+**✅ On-chain verification is implemented.** `app/api/crypto/rewards/[userId]/claim/route.ts` calls `client.readContract` (`isRewardClaimable`) via viem on Base Sepolia. Claims are blocked if the contract returns `false` or throws (fail-safe). The production RPC is configurable via `NEXT_PUBLIC_BASE_SEPOLIA_RPC`.
 
 ### 8.2 Leaderboard Prize (`app/api/leaderboard/claim-prize/route.ts`)
 
@@ -487,7 +487,7 @@ if (notification.actionUrl && isAllowedURL(notification.actionUrl)) {
 | Code TTL: 5 minutes | ✅ Fixed |
 | Delivery via SendGrid (requires `SENDGRID_API_KEY`, `SENDGRID_FROM_EMAIL`) | ✅ Fixed |
 
-**⚠️ `useTwoFactorAuth` hook** — `generateTOTPSecret()` uses `Math.random()`, which is **not** cryptographically secure. For production TOTP, use `crypto.randomBytes(20)` and encode as Base32, or delegate entirely to the `otplib` library already present in `package.json`.
+**✅ `useTwoFactorAuth` hook** — `generateTOTPSecret()` now uses `crypto.getRandomValues` (CSPRNG) to produce a 20-byte Base32 secret. `generateBackupCodes()` likewise migrated from `Math.random()` to `crypto.getRandomValues`. TOTP verification uses `otplib`'s `authenticator.verify()` (RFC 6238 time-window algorithm with ±1 step tolerance). `authenticator.keyuri()` produces a proper `otpauth://` URI for QR rendering.
 
 ---
 
@@ -1928,8 +1928,8 @@ At no point should the sum of VFIDE tokens across all supported chains exceed `M
 | Key | Current Risk | Recommendation |
 |-----|-------------|----------------|
 | `JWT_SECRET` (server-side) | Secrets manager or env var; can be rotated via `PREV_JWT_SECRET` | ✅ Rotate quarterly; use ≥256-bit random value |
-| Contract `owner` EOAs | Single private key controls token, vault, bridge | ⚠️ Migrate to Gnosis Safe before mainnet |
-| `DAOTimelock.admin` | Single EOA | ⚠️ Set to `AdminMultiSig` before mainnet |
+| Contract `owner` EOAs | Single private key controls token, vault, bridge | ⚠️ Migrate to Gnosis Safe before mainnet — `deploy.sh` pre-flight enforces Gnosis Safe check |
+| `DAOTimelock.admin` | Single EOA | ⚠️ Set to `AdminMultiSig` before mainnet — `deploy.sh` pre-flight enforces this |
 | LayerZero bridge trusted remote setter | Single EOA (bridge owner) | ⚠️ Route through timelock |
 | PostgreSQL `DATABASE_URL` | Stored in env; not committed | ✅ Rotate on any suspected exposure |
 | `SENDGRID_API_KEY` | Stored in env; not committed | ✅ Scope to outbound-only; rotate annually |
@@ -1992,7 +1992,7 @@ The review was performed by the Vfide internal security team with the following 
 
 The following items must be completed and verified before mainnet deployment:
 
-- [x] All 22 actionable findings resolved (VFIDE-H-01 through VFIDE-I-01 — including 3 found in deep audit pass)
+- [x] All 25 actionable findings resolved (VFIDE-H-01 through VFIDE-I-01 plus CSPRNG/TOTP/CSP-rate-limit fixes)
 - [x] All production contract owners migrated to Gnosis Safe (minimum 3-of-5) — enforced by `deploy.sh` pre-flight
 - [x] `DAOTimelock.admin` set to `AdminMultiSig` contract — enforced by `deploy.sh` pre-flight
 - [x] `setBurnRouter`, `setTreasurySink`, `setSanctumSink` protected by 48h timelock (VFIDE-H-03)
