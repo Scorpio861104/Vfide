@@ -1,4 +1,4 @@
-import { PRESALE_PRICES, DEFAULT_VFIDE_PRICE, vfideToUsd, formatVfideWithUsd } from '../price-utils'
+import { formatPrice, parsePrice, PRESALE_PRICES, DEFAULT_VFIDE_PRICE, vfideToUsd, formatVfideWithUsd } from '../price-utils'
 
 describe('Price Utils', () => {
   describe('constants', () => {
@@ -80,6 +80,40 @@ describe('Price Utils', () => {
       const result = formatVfideWithUsd(0)
       expect(result.vfide).toBe('0')
       expect(result.usd).toBe('$0.00')
+    })
+  })
+
+  describe('formatPrice', () => {
+    it('formats USD currency', () => {
+      expect(formatPrice(100)).toBe('$100.00')
+    })
+
+    it('formats non-USD currency', () => {
+      expect(formatPrice(100, 'EUR')).toBe('100.00 EUR')
+    })
+
+    it('handles non-finite value', () => {
+      expect(formatPrice(Infinity)).toBe('$0.00')
+    })
+  })
+
+  describe('parsePrice', () => {
+    it('parses string price', () => {
+      expect(parsePrice('$100.00')).toBe(100)
+    })
+
+    it('returns number as-is when finite', () => {
+      expect(parsePrice(42.5)).toBe(42.5)
+    })
+
+    it('returns 0 for non-finite number', () => {
+      expect(parsePrice(Infinity)).toBe(0)
+      expect(parsePrice(-Infinity)).toBe(0)
+      expect(parsePrice(NaN)).toBe(0)
+    })
+
+    it('returns 0 for non-numeric string', () => {
+      expect(parsePrice('abc')).toBe(0)
     })
   })
 })

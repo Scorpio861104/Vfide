@@ -54,6 +54,26 @@ export function validateEnvironment(): void {
         'WARNING: JWT_SECRET should be at least 32 characters long for security'
       );
     }
+
+    // Validate PREV_JWT_SECRET during rotation window — must not equal JWT_SECRET
+    const prevSecret = process.env.PREV_JWT_SECRET;
+    if (prevSecret) {
+      if (prevSecret === jwtSecret) {
+        errors.push(
+          'CRITICAL: PREV_JWT_SECRET must not equal JWT_SECRET. ' +
+          'Set PREV_JWT_SECRET to the OLD secret value and JWT_SECRET to the NEW secret.'
+        );
+      } else if (prevSecret.length < 32) {
+        errors.push('WARNING: PREV_JWT_SECRET should be at least 32 characters long for security');
+      } else {
+        // Rotation window is active — warn so ops team remembers to remove it after 24 h
+        console.warn(
+          '⚠️  PREV_JWT_SECRET is set: JWT rotation window is active. ' +
+          'Old tokens will be accepted until they expire (max 24 h). ' +
+          'Remove PREV_JWT_SECRET after 24 h to complete the rotation.'
+        );
+      }
+    }
   }
 
   // If there are errors, fail fast
@@ -74,6 +94,22 @@ export function validateEnvironment(): void {
     }
   } else {
     console.log('✅ Environment validation passed');
+  }
+
+  // Warn when Redis is absent in production — rate limiting and token revocation
+  // fall back to in-memory stores, which are NOT shared across multiple instances.
+  if (process.env.NODE_ENV === 'production' && !process.env.NEXT_PHASE) {
+    const redisUrl = process.env.UPSTASH_REDIS_REST_URL;
+    const redisToken = process.env.UPSTASH_REDIS_REST_TOKEN;
+    if (!redisUrl || !redisToken) {
+      console.warn(
+        '⚠️  UPSTASH_REDIS_REST_URL / UPSTASH_REDIS_REST_TOKEN are not set. ' +
+        'Rate limiting and JWT token revocation are using in-memory stores. ' +
+        'This is unsafe in multi-instance (horizontally-scaled) deployments because ' +
+        'each instance maintains its own independent state. ' +
+        'Set both variables to use the shared Redis backend.'
+      );
+    }
   }
 }
 

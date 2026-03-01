@@ -9,6 +9,9 @@ import { motion, AnimatePresence } from "framer-motion";
 import { X, Bell, Search, Vote, Users, Clock, ChevronRight, Sparkles, Crown, Lightbulb, MessageSquare, History, BarChart3, FileText, Plus } from "lucide-react";
 import { sanitizeString } from "@/lib/validation";
 import { useCopyWithId } from "@/lib/hooks/useCopyToClipboard";
+import { toast } from "@/lib/toast";
+import { CouncilElectionABI } from "@/lib/abis";
+import { CONTRACT_ADDRESSES } from "@/lib/contracts";
 
 // Contract address from environment
 const DAO_ADDRESS = (process.env.NEXT_PUBLIC_DAO_ADDRESS || '0xB75b08C5e42da4242e218C25B6A6B05d7BeF0728') as `0x${string}`;
@@ -2025,13 +2028,13 @@ function CreateProposalTab() {
         functionName: 'propose',
         args: [ptype, target, value, '0x' as `0x${string}`, `${sanitizedTitle}\n\n${sanitizedDescription}`],
       });
-      alert('Proposal submitted! It will appear in Active Proposals after confirmation.');
+      toast.success('Proposal submitted! It will appear in Active Proposals after confirmation.');
       // Reset form
       setFormData({ title: '', description: '', targetContract: '', calldata: '', treasuryAmount: '', treasuryRecipient: '' });
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unknown error';
       if (!message.includes('rejected') && !message.includes('denied')) {
-        alert('Failed to submit proposal: ' + message.slice(0, 100));
+        toast.error('Failed to submit proposal: ' + message.slice(0, 100)); // truncate long contract errors
       }
     } finally {
       setIsSubmitting(false);
@@ -2229,6 +2232,7 @@ function CouncilTab() {
   const [activeSection, setActiveSection] = useState<'members' | 'candidates' | 'register'>('members');
   const [isRegistering, setIsRegistering] = useState(false);
   const [candidateStatement, setCandidateStatement] = useState('');
+  const { writeContractAsync: councilWriteContractAsync } = useWriteContract();
 
   const requiredScoreToRun = 7000; // Minimum ProofScore to run for council (70% on 0-10000 scale)
   const canRun = (score || 0) >= requiredScoreToRun;
@@ -2272,23 +2276,18 @@ function CouncilTab() {
     
     setIsRegistering(true);
     
-    // TODO: Wire to CouncilElection.register() contract call
-    // The CouncilElection contract's register() function takes no arguments -
-    // it checks eligibility based on ProofScore from Seer contract.
-    // The candidate statement is currently stored off-chain only.
-    // Future: Add candidateStatements mapping to CouncilElection.sol
-    // For now, statement is stored locally only
     try {
-      // Future implementation:
-      // await writeContractAsync({
-      //   address: CONTRACT_ADDRESSES.CouncilElection,
-      //   abi: CouncilElectionABI,
-      //   functionName: 'register',
-      // });
-      await new Promise(r => setTimeout(r, 1500)); // Placeholder for contract call
-      alert('Registration submitted! You are now a council candidate.');
+      await councilWriteContractAsync({
+        address: CONTRACT_ADDRESSES.CouncilElection,
+        abi: CouncilElectionABI,
+        functionName: 'register',
+      });
+      toast.success('Registration submitted! You are now a council candidate.');
     } catch (err) {
-      alert('Registration failed. Please try again.');
+      const message = err instanceof Error ? err.message : 'Registration failed';
+      if (!message.includes('rejected') && !message.includes('denied')) {
+        toast.error('Registration failed. Please try again.');
+      }
     }
     setIsRegistering(false);
   };

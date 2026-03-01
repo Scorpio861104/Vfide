@@ -491,7 +491,7 @@ export default function PaperWalletPage() {
                     </div>
                     {!showPrivateKey && (
                       <div className="no-print mt-2 p-2 bg-yellow-100 border border-yellow-300 rounded text-xs text-yellow-800">
-                        🔒 Private key hidden for security. Click "Show Private Key" below to reveal.
+                        🔒 Private key hidden for security. Click &quot;Show Private Key&quot; below to reveal.
                       </div>
                     )}
                   </div>
@@ -515,7 +515,7 @@ export default function PaperWalletPage() {
                     </div>
                     {!showMnemonic && (
                       <div className="no-print mt-2 p-2 bg-yellow-100 border border-yellow-300 rounded text-xs text-yellow-800">
-                        🔒 Recovery phrase hidden for security. Click "Show Seed Phrase" below to reveal.
+                        🔒 Recovery phrase hidden for security. Click &quot;Show Seed Phrase&quot; below to reveal.
                       </div>
                     )}
                   </div>

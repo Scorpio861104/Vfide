@@ -9,12 +9,14 @@ import { renderHook } from '@testing-library/react'
 // Mock wagmi
 const mockUseAccount = jest.fn()
 const mockUseReadContract = jest.fn()
+const mockUseReadContracts = jest.fn().mockReturnValue({ data: [] })
 const mockUseWriteContract = jest.fn()
 const mockUseWaitForTransactionReceipt = jest.fn()
 
 jest.mock('wagmi', () => ({
   useAccount: () => mockUseAccount(),
   useReadContract: (args: unknown) => mockUseReadContract(args),
+  useReadContracts: (args: unknown) => mockUseReadContracts(args),
   useWriteContract: () => mockUseWriteContract(),
   useWaitForTransactionReceipt: () => mockUseWaitForTransactionReceipt(),
 }))

@@ -89,46 +89,58 @@ class InMemoryRateLimiter {
   }
 }
 
-// Create rate limiter instance
-let rateLimiter: Ratelimit | InMemoryRateLimiter;
+// Create rate limiter instances (one per type when using Upstash, shared in-memory otherwise)
+let upstashLimiters: Map<RateLimitType, Ratelimit> | null = null;
 let inMemoryLimiter: InMemoryRateLimiter | null = null;
 
-function getRateLimiter(): Ratelimit | InMemoryRateLimiter {
-  if (rateLimiter) return rateLimiter;
-  
-  // Try to use Upstash Redis if configured
+function getUpstashLimiters(): Map<RateLimitType, Ratelimit> | null {
+  if (upstashLimiters !== null) return upstashLimiters;
+
   if (process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN) {
     try {
       const redis = new Redis({
         url: process.env.UPSTASH_REDIS_REST_URL,
         token: process.env.UPSTASH_REDIS_REST_TOKEN,
       });
-      
-      rateLimiter = new Ratelimit({
-        redis,
-        limiter: Ratelimit.slidingWindow(100, '1m'),
-        analytics: true,
-        prefix: 'vfide:ratelimit',
-      });
-      
+
+      // Create a separate Ratelimit instance per type so per-endpoint limits are enforced
+      upstashLimiters = new Map(
+        (Object.keys(RATE_LIMITS) as RateLimitType[]).map((type) => {
+          const cfg = RATE_LIMITS[type];
+          return [
+            type,
+            new Ratelimit({
+              redis,
+              limiter: Ratelimit.slidingWindow(cfg.requests, cfg.window),
+              analytics: true,
+              prefix: `vfide:ratelimit:${type}`,
+            }),
+          ];
+        })
+      );
+
       console.log('[RateLimit] Using Upstash Redis');
-      return rateLimiter;
+      return upstashLimiters;
     } catch (_error) {
       console.warn('[RateLimit] Failed to initialize Upstash Redis, using in-memory fallback');
     }
   }
-  
-  // Fall back to in-memory rate limiting
-  inMemoryLimiter = new InMemoryRateLimiter();
-  rateLimiter = inMemoryLimiter;
-  
-  // Cleanup old entries every 5 minutes
-  if (typeof setInterval !== 'undefined') {
-    setInterval(() => inMemoryLimiter?.cleanup(), 300000);
+
+  return null;
+}
+
+function getInMemoryLimiter(): InMemoryRateLimiter {
+  if (!inMemoryLimiter) {
+    inMemoryLimiter = new InMemoryRateLimiter();
+
+    // Cleanup old entries every 5 minutes
+    if (typeof setInterval !== 'undefined') {
+      setInterval(() => inMemoryLimiter?.cleanup(), 300000);
+    }
+
+    console.log('[RateLimit] Using in-memory rate limiting');
   }
-  
-  console.log('[RateLimit] Using in-memory rate limiting');
-  return rateLimiter;
+  return inMemoryLimiter;
 }
 
 /**
@@ -166,18 +178,18 @@ export async function rateLimit(
   request: NextRequest,
   type: RateLimitType = 'api'
 ): Promise<{ success: boolean; response?: NextResponse }> {
-  const limiter = getRateLimiter();
   const identifier = getClientIdentifier(request);
   const config = RATE_LIMITS[type];
-  
+
   try {
     let result;
-    
-    if (limiter instanceof InMemoryRateLimiter) {
-      result = await limiter.limit(`${identifier}:${type}`, config);
+
+    const upstash = getUpstashLimiters();
+    if (upstash) {
+      // Use the per-type Upstash limiter so endpoint-specific limits are enforced
+      result = await upstash.get(type)!.limit(`${identifier}:${type}`);
     } else {
-      // Upstash Ratelimit
-      result = await limiter.limit(`${identifier}:${type}`);
+      result = await getInMemoryLimiter().limit(`${identifier}:${type}`, config);
     }
     
     if (!result.success) {

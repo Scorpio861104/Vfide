@@ -158,7 +158,36 @@ describe('/api/auth', () => {
       expect(data.error).toBe('Message expired. Please sign a new message.');
     });
 
-    it('should handle NaN timestamp in message gracefully', async () => {
+    it('should return 400 for message missing timestamp', async () => {
+      const noTimestampMessage = 'Sign in to VFIDE\n\nAddress: 0x1234';
+
+      withRateLimit.mockResolvedValue(null);
+      validateBody.mockResolvedValue({
+        success: true,
+        data: {
+          address: mockAddress,
+          message: noTimestampMessage,
+          signature: mockSignature,
+        },
+      });
+
+      const request = new NextRequest('http://localhost:3000/api/auth', {
+        method: 'POST',
+        body: JSON.stringify({
+          address: mockAddress,
+          message: noTimestampMessage,
+          signature: mockSignature,
+        }),
+      });
+
+      const response = await POST(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(400);
+      expect(data.error).toBe('Message must contain a timestamp');
+    });
+
+    it('should return 400 for non-numeric timestamp in message', async () => {
       const invalidMessage = 'Sign in to VFIDE\n\nTimestamp: NaN';
 
       withRateLimit.mockResolvedValue(null);
@@ -170,8 +199,6 @@ describe('/api/auth', () => {
           signature: mockSignature,
         },
       });
-      // The API may accept NaN as a valid timestamp string in some implementations
-      // Just verify the response is defined
       const request = new NextRequest('http://localhost:3000/api/auth', {
         method: 'POST',
         body: JSON.stringify({
@@ -182,8 +209,8 @@ describe('/api/auth', () => {
       });
 
       const response = await POST(request);
-      // Response could be 200 or 400 depending on implementation
-      expect([200, 400]).toContain(response.status);
+      // 'Timestamp: NaN' does not match /Timestamp: (\d+)/ so fails timestamp presence check
+      expect(response.status).toBe(400);
     });
 
     it('should return 401 for invalid signature', async () => {

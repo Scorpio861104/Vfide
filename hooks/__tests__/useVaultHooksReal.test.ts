@@ -6,6 +6,7 @@ import { renderHook, act, waitFor } from '@testing-library/react'
 jest.mock('wagmi', () => ({
   useAccount: jest.fn(),
   useReadContract: jest.fn(),
+  useReadContracts: jest.fn().mockReturnValue({ data: [] }),
   useWriteContract: jest.fn(),
   useWaitForTransactionReceipt: jest.fn(),
   useChainId: jest.fn(),

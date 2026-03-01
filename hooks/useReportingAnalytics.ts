@@ -48,23 +48,27 @@ export function useReportingAnalytics() {
 
   // Load from localStorage on mount
   useEffect(() => {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) {
-      try {
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (stored) {
         const parsed = JSON.parse(stored);
         setState((prev) => ({
           ...prev,
           ...parsed,
         }));
-      } catch (e) {
-        console.error('Failed to load analytics state:', e);
       }
+    } catch (e) {
+      console.error('Failed to load analytics state:', e);
     }
   }, []);
 
   // Persist to localStorage
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    } catch (e) {
+      console.error('Failed to persist analytics state:', e);
+    }
   }, [state]);
 
   // Auto-refresh reports
