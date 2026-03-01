@@ -39,29 +39,16 @@ export interface ContentPayment {
   accessGranted: boolean;
 }
 
-export interface EndorsementReward {
-  id: string;
-  endorsementId: string;
-  senderAddress: string;
-  recipientAddress: string;
-  amount: string;
-  currency: 'VFIDE';
-  category: 'technical' | 'trustworthy' | 'helpful' | 'innovative' | 'collaborative';
-  timestamp: number;
-  txHash?: string;
-}
-
 export interface SocialPaymentStats {
   totalTipsReceived: string;
   totalTipsSent: string;
   contentSales: number;
-  endorsementRewards: number;
   topTippers: Array<{
     address: string;
     username: string;
     amount: string;
   }>;
-  recentActivity: Array<SocialTip | ContentPayment | EndorsementReward>;
+  recentActivity: Array<SocialTip | ContentPayment>;
 }
 
 // ============================================================================
@@ -233,54 +220,6 @@ export async function hasContentAccess(
 }
 
 // ============================================================================
-// Endorsement Rewards
-// ============================================================================
-
-/**
- * Send VFIDE tokens as endorsement reward
- */
-export async function rewardEndorsement(
-  endorsementId: string,
-  recipientAddress: string,
-  amount: string,
-  category: EndorsementReward['category']
-): Promise<EndorsementReward> {
-  validateAmount(amount);
-  validateEthereumAddress(recipientAddress);
-
-  try {
-    const transaction = await sendPayment(recipientAddress, amount, 'VFIDE', {
-      memo: `Endorsement reward: ${category}`,
-    });
-
-    const reward: EndorsementReward = {
-      id: `reward_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      endorsementId,
-      senderAddress: transaction.from,
-      recipientAddress,
-      amount,
-      currency: 'VFIDE',
-      category,
-      timestamp: Date.now(),
-      txHash: transaction.txHash,
-    };
-
-    await fetch('/api/social/endorsement-rewards', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(reward),
-    });
-
-    await notifyEndorsementReward(reward);
-
-    return reward;
-  } catch (error) {
-    console.error('Endorsement reward error:', error);
-    throw new Error('Failed to send endorsement reward');
-  }
-}
-
-// ============================================================================
 // Statistics & Analytics
 // ============================================================================
 
@@ -351,18 +290,6 @@ async function notifyContentPurchase(payment: ContentPayment): Promise<void> {
       type: 'content_purchased',
       userId: payment.sellerAddress,
       data: payment,
-    }),
-  });
-}
-
-async function notifyEndorsementReward(reward: EndorsementReward): Promise<void> {
-  await fetch('/api/notifications', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      type: 'endorsement_reward',
-      userId: reward.recipientAddress,
-      data: reward,
     }),
   });
 }

@@ -52,15 +52,6 @@ export interface PaymentRequest {
   expiresAt: number;
 }
 
-export interface TokenReward {
-  id: string;
-  userId: string;
-  action: 'message_sent' | 'reaction_given' | 'group_created' | 'member_invited' | 'content_shared' | 'daily_login';
-  amount: string;
-  timestamp: number;
-  claimed: boolean;
-}
-
 export interface CryptoBadge {
   id: string;
   tokenId: string;
@@ -377,58 +368,6 @@ export async function payPaymentRequest(requestId: string): Promise<Transaction>
 }
 
 // ============================================================================
-// Token Rewards System
-// ============================================================================
-
-/**
- * Reward tokens for engagement
- */
-export async function rewardTokens(
-  userId: string,
-  action: TokenReward['action'],
-  amount: string = '10'
-): Promise<TokenReward> {
-  const reward: TokenReward = {
-    id: `reward_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-    userId,
-    action,
-    amount,
-    timestamp: Date.now(),
-    claimed: false,
-  };
-
-  // Save to database
-  await fetch('/api/crypto/rewards', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(reward),
-  });
-
-  return reward;
-}
-
-/**
- * Claim rewards
- */
-export async function claimRewards(userId: string): Promise<TokenReward[]> {
-  const response = await fetch(`/api/crypto/rewards/${userId}/claim`, {
-    method: 'POST',
-  });
-
-  const data = await response.json();
-  return data.rewards;
-}
-
-/**
- * Get pending rewards
- */
-export async function getPendingRewards(userId: string): Promise<TokenReward[]> {
-  const response = await fetch(`/api/crypto/rewards/${userId}?status=pending`);
-  const data = await response.json();
-  return data.rewards;
-}
-
-// ============================================================================
 // Helper Functions
 // ============================================================================
 
@@ -599,47 +538,4 @@ export function usePaymentRequests(userId: string) {
   }, [userId]);
 
   return { requests, loading };
-}
-
-/**
- * Hook for token rewards
- */
-export function useRewards(userId: string) {
-  const [rewards, setRewards] = useState<TokenReward[]>([]);
-  const [totalUnclaimed, setTotalUnclaimed] = useState('0');
-  const [loading, setLoading] = useState(true);
-
-  const refresh = useCallback(async () => {
-    try {
-      const response = await fetch(`/api/crypto/rewards/${userId}`);
-      const data = await response.json();
-      setRewards(data.rewards || []);
-      
-      // Calculate total unclaimed
-      const unclaimed = data.rewards
-        .filter((r: TokenReward) => !r.claimed)
-        .reduce((sum: number, r: TokenReward) => sum + parseFloat(r.amount), 0);
-      setTotalUnclaimed(unclaimed.toFixed(2));
-    } catch (error) {
-      console.error('Failed to fetch rewards:', error);
-    } finally {
-      setLoading(false);
-    }
-  }, [userId]);
-
-  useEffect(() => {
-    refresh();
-  }, [refresh]);
-
-  const claim = useCallback(async () => {
-    try {
-      await claimRewards(userId);
-      await refresh();
-    } catch (error) {
-      console.error('Failed to claim rewards:', error);
-      throw error;
-    }
-  }, [userId, refresh]);
-
-  return { rewards, totalUnclaimed, loading, refresh, claim };
 }

@@ -10,7 +10,6 @@ import "./SharedInterfaces.sol";
  * Philosophy:
  * - Free incentives only - no circular cashback funded by fees
  * - ProofScore is free reputation that costs nothing to award
- * - High-trust merchants get reward token bonus (from ecosystem pool, not buyers)
  * - Merchants get 100% of payments (0% platform fee)
  * 
  * Commerce flow:
@@ -18,9 +17,7 @@ import "./SharedInterfaces.sol";
  * 2. Buyer funds escrow
  * 3. Merchant delivers goods/services
  * 4. Buyer releases funds → Merchant gets 100%
- * 5. VFIDEBenefits awards:
- *    - FREE ProofScore to both parties
- *    - 1 VFIDE bonus to high-trust merchants (from ecosystem pool)
+ * 5. VFIDEBenefits awards FREE ProofScore to both parties
  */
 contract VFIDEBenefits {
     // ═══════════════════════════════════════════════════════════════════════
@@ -170,8 +167,7 @@ contract VFIDEBenefits {
             } catch {}
         }
         
-        // Trigger EcosystemVault merchant bonus (1 VFIDE for high-trust merchants)
-        // Also checks headhunter rewards for referrers
+        // Trigger EcosystemVault activity tracking (merchant ranking rewards are permanently disabled)
         if (address(ecosystemVault) != address(0)) {
             try ecosystemVault.recordMerchantTransaction(merchant) {} catch {}
             try ecosystemVault.checkHeadhunterReward(merchant) {} catch {}

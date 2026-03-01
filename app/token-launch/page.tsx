@@ -254,34 +254,6 @@ export default function TokenLaunchPage() {
                 Three tiers available based on your commitment level and desired governance influence.
               </p>
 
-              {/* Referral Program Highlight */}
-              <motion.div 
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2 }}
-                className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-cyan-500/20 to-blue-500/10 backdrop-blur-xl border-2 border-cyan-500/50 p-6"
-              >
-                <div className="flex items-center justify-center gap-3 mb-3">
-                  <div className="text-3xl">🎁</div>
-                  <h3 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-400">Referral Rewards Active</h3>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-center">
-                  <div className="bg-white/5 backdrop-blur-sm rounded-xl p-4 border border-white/10">
-                    <div className="text-3xl font-bold text-cyan-400 mb-1">+2%</div>
-                    <div className="text-white font-bold mb-1">Buyer Bonus</div>
-                    <div className="text-sm text-gray-400">Use a referral code when purchasing</div>
-                  </div>
-                  <div className="bg-white/5 backdrop-blur-sm rounded-xl p-4 border border-white/10">
-                    <div className="text-3xl font-bold text-cyan-400 mb-1">+3%</div>
-                    <div className="text-white font-bold mb-1">Referrer Reward</div>
-                    <div className="text-sm text-gray-400">Share your address to earn</div>
-                  </div>
-                </div>
-                <p className="text-sm text-gray-400 mt-4">
-                  Bonuses paid instantly in VFIDE tokens • No limit on referrals • Multi-level structure
-                </p>
-              </motion.div>
-
               {/* Clean Legal Notice */}
               <div className="mt-6 bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-4">
                 <p className="text-sm text-gray-400 leading-relaxed">
@@ -475,7 +447,7 @@ export default function TokenLaunchPage() {
                       ))}
                     </div>
                     <p id="amount-hint" className="text-xs text-gray-400 mt-2">
-                      Maximum 500,000 VFIDE per address (including referral bonuses)
+                      Maximum 500,000 VFIDE per address
                     </p>
                   </div>
 
@@ -791,8 +763,8 @@ export default function TokenLaunchPage() {
                   a: "A time period where tokens are locked for external transfers but fully functional for governance and payments. During commitment you CAN: vote on proposals, use for payments (Phase 2), transfer between your own vaults. You CANNOT: transfer to other users or sell. Designed to align holder interests with protocol development."
                 },
                 {
-                  q: "How do referral bonuses work?",
-                  a: "Simple structure: When someone uses your address as referral code, you (referrer) get +3% VFIDE and they (buyer) get +2% VFIDE. Bonuses come from the bonus pool and are credited instantly. No limit on total referrals - stack rewards indefinitely."
+                  q: "Are there referral bonuses?",
+                  a: "No. VFIDE does not offer referral bonuses or any token rewards for bringing in other buyers. Doing so would create an expectation of profits from others' efforts, conflicting with Howey Test compliance. You purchase VFIDE at the tier price — that is the full transaction."
                 },
                 {
                   q: "Can I get a refund?",

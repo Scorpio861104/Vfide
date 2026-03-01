@@ -26,16 +26,6 @@ interface ShareableAchievement {
   qrCode?: string;
 }
 
-interface ReferralCard {
-  code: string;
-  link: string;
-  expiresAt?: Date;
-  uses: number;
-  maxUses?: number;
-  reward: number;
-  tier: 'bronze' | 'silver' | 'gold' | 'platinum';
-}
-
 interface _AchievementCertificate {
   id: string;
   holderName: string;
@@ -88,26 +78,6 @@ const mockAchievements: ShareableAchievement[] = [
   },
 ];
 
-const mockReferralCards: ReferralCard[] = [
-  {
-    code: 'ALICE2024',
-    link: 'vfide.app/join?ref=ALICE2024',
-    expiresAt: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000),
-    uses: 12,
-    maxUses: 50,
-    reward: 2500,
-    tier: 'silver',
-  },
-  {
-    code: 'ALEX_PRO',
-    link: 'vfide.app/join?ref=ALEX_PRO',
-    uses: 45,
-    maxUses: 100,
-    reward: 8500,
-    tier: 'gold',
-  },
-];
-
 const mockShareMetrics: ShareMetrics[] = [
   { platform: 'twitter', shares: 342, clicks: 1203, conversions: 28 },
   { platform: 'linkedin', shares: 156, clicks: 567, conversions: 34 },
@@ -123,9 +93,8 @@ interface ShareSystemProps {
 }
 
 export function ShareSystem({ userId: _userId = 'current_user', onShare }: ShareSystemProps) {
-  const [activeTab, setActiveTab] = useState<'achievements' | 'referrals' | 'certificates' | 'metrics'>('achievements');
+  const [activeTab, setActiveTab] = useState<'achievements' | 'certificates' | 'metrics'>('achievements');
   const [selectedAchievement, setSelectedAchievement] = useState<ShareableAchievement | null>(null);
-  const [_selectedReferral, _setSelectedReferral] = useState<ReferralCard | null>(null);
   const [copiedText, setCopiedText] = useState<string | null>(null);
   const [_showShareMenu, _setShowShareMenu] = useState<string | null>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -202,7 +171,6 @@ export function ShareSystem({ userId: _userId = 'current_user', onShare }: Share
 
   const tabs = [
     { key: 'achievements', label: 'Achievements', icon: '🏆', count: mockAchievements.length },
-    { key: 'referrals', label: 'Referrals', icon: '🤝', count: mockReferralCards.length },
     { key: 'certificates', label: 'Certificates', icon: '📜', count: mockAchievements.length },
     { key: 'metrics', label: 'Share Metrics', icon: '📊', count: undefined },
   ];
@@ -368,130 +336,6 @@ export function ShareSystem({ userId: _userId = 'current_user', onShare }: Share
                   </motion.div>
                 ))}
               </div>
-            </motion.div>
-          )}
-
-          {/* Referrals Tab */}
-          {activeTab === 'referrals' && (
-            <motion.div
-              key="referrals"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              className="space-y-6"
-            >
-              {mockReferralCards.map((referral, idx) => {
-                const tierColors: Record<string, string> = {
-                  bronze: 'from-amber-700 to-amber-900 border-amber-600',
-                  silver: 'from-slate-400 to-slate-600 border-slate-500',
-                  gold: 'from-yellow-400 to-yellow-600 border-yellow-500',
-                  platinum: 'from-blue-300 to-blue-500 border-blue-400',
-                };
-
-                return (
-                  <motion.div
-                    key={referral.code}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: idx * 0.1 }}
-                    className={`bg-gradient-to-r ${tierColors[referral.tier]} border-2 rounded-lg p-8 text-white`}
-                  >
-                    <div className="grid md:grid-cols-2 gap-8">
-                      {/* Left: Referral Info */}
-                      <div>
-                        <div className="text-sm font-semibold opacity-80 mb-2">REFERRAL CODE</div>
-                        <h3 className="text-3xl font-bold mb-4 font-mono">{referral.code}</h3>
-
-                        <div className="space-y-3 mb-6">
-                          <div>
-                            <div className="text-xs opacity-75">Full Referral Link</div>
-                            <code className="text-sm font-mono break-all">{referral.link}</code>
-                          </div>
-
-                          <div className="grid grid-cols-2 gap-4">
-                            <div>
-                              <div className="text-xs opacity-75">Uses</div>
-                              <div className="text-2xl font-bold">
-                                {referral.uses}
-                                {referral.maxUses && <span className="text-sm">/{referral.maxUses}</span>}
-                              </div>
-                            </div>
-
-                            <div>
-                              <div className="text-xs opacity-75">Reward</div>
-                              <div className="text-2xl font-bold">${referral.reward}</div>
-                            </div>
-                          </div>
-
-                          {referral.expiresAt && (
-                            <div>
-                              <div className="text-xs opacity-75">Expires</div>
-                              <div className="text-sm">{referral.expiresAt.toLocaleDateString()}</div>
-                            </div>
-                          )}
-                        </div>
-
-                        <div className="w-full bg-white/10 rounded h-2 mb-2">
-                          <div
-                            className="bg-white/30 rounded h-full"
-                            style={{ width: `${(referral.uses / (referral.maxUses || 100)) * 100}%` }}
-                          />
-                        </div>
-                        <div className="text-xs opacity-75">
-                          {referral.maxUses ? Math.max(0, referral.maxUses - referral.uses) : '∞'} uses remaining
-                        </div>
-                      </div>
-
-                      {/* Right: Share Buttons */}
-                      <div className="flex flex-col justify-between">
-                        <div>
-                          <div className="text-sm font-semibold opacity-80 mb-4">SHARE YOUR CODE</div>
-
-                          <div className="space-y-2">
-                            {[
-                              { platform: 'twitter', label: 'Twitter', icon: Twitter },
-                              { platform: 'linkedin', label: 'LinkedIn', icon: Linkedin },
-                              { platform: 'email', label: 'Email', icon: Mail },
-                              { platform: 'whatsapp', label: 'WhatsApp', icon: MessageCircle },
-                            ].map(({ platform, label, icon: Icon }) => (
-                              <button
-                                key={platform}
-                                onClick={() =>
-                                  handleShareToSocial(
-                                    platform as ShareMetrics['platform'],
-                                    `Join me on VFIDE! Use code ${referral.code} to get started: ${referral.link}`,
-                                  )
-                                }
-                                className="w-full px-4 py-2 bg-white/20 hover:bg-white/30 rounded transition-colors flex items-center gap-2 font-semibold text-sm"
-                              >
-                                <Icon className="w-4 h-4" />
-                                Share on {label}
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-
-                        <button
-                          onClick={() => handleCopyLink(referral.link, `referral_${referral.code}`)}
-                          className="w-full px-4 py-3 bg-white/30 hover:bg-white/40 rounded font-bold flex items-center justify-center gap-2 transition-colors"
-                        >
-                          {copiedText === `referral_${referral.code}` ? (
-                            <>
-                              <CheckCircle2 className="w-5 h-5" />
-                              Copied!
-                            </>
-                          ) : (
-                            <>
-                              <Copy className="w-5 h-5" />
-                              Copy Link
-                            </>
-                          )}
-                        </button>
-                      </div>
-                    </div>
-                  </motion.div>
-                );
-              })}
             </motion.div>
           )}
 

@@ -1,24 +1,22 @@
 /**
  * Crypto Dashboard Page
  * 
- * Central hub for wallet, payments, rewards, and transactions.
+ * Central hub for wallet, payments, and transactions.
  */
 
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import { motion } from 'framer-motion';
-import { Wallet, TrendingUp, History, Award } from 'lucide-react';
+import { Wallet, TrendingUp, History } from 'lucide-react';
 import { WalletButton as _WalletButton } from '@/components/crypto/WalletButton';
 import { TransactionHistory } from '@/components/crypto/TransactionHistory';
-import { RewardsDisplay } from '@/components/crypto/RewardsDisplay';
 import { useAccount, useBalance } from 'wagmi';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 
 export default function CryptoDashboard() {
   const { address, isConnected } = useAccount();
   const { data: ethBalance } = useBalance({ address });
-  const [activeTab, setActiveTab] = useState<'transactions' | 'rewards'>('transactions');
 
   // Format balance display
   const formattedBalance = ethBalance ? parseFloat(ethBalance.formatted).toFixed(4) : '0.0000';
@@ -33,7 +31,7 @@ export default function CryptoDashboard() {
           </div>
           <h2 className="text-2xl font-bold text-white mb-2">Connect Your Wallet</h2>
           <p className="text-gray-400 mb-6">
-            Connect your wallet to access payments, rewards, and transaction history.
+            Connect your wallet to access payments and transaction history.
           </p>
           <ConnectButton />
         </div>
@@ -48,7 +46,7 @@ export default function CryptoDashboard() {
         <div className="mb-8 flex items-center justify-between">
           <div>
             <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">Crypto Dashboard</h1>
-            <p className="text-gray-400">Manage your wallet, payments, and rewards</p>
+            <p className="text-gray-400">Manage your wallet and payments</p>
           </div>
           <ConnectButton />
         </div>
@@ -76,10 +74,10 @@ export default function CryptoDashboard() {
           >
             <div className="flex items-center justify-between mb-4">
               <span className="text-gray-400 text-sm">VFIDE Tokens</span>
-              <Award className="w-5 h-5 text-purple-400" />
+              <Wallet className="w-5 h-5 text-purple-400" />
             </div>
             <div className="text-white text-3xl font-bold mb-1">0</div>
-            <div className="text-gray-400 text-sm">Community Points</div>
+            <div className="text-gray-400 text-sm">Governance utility</div>
           </motion.div>
 
           <motion.div
@@ -93,40 +91,21 @@ export default function CryptoDashboard() {
               <TrendingUp className="w-5 h-5 text-green-400" />
             </div>
             <div className="text-white text-3xl font-bold mb-1">Active</div>
-            <div className="text-gray-400 text-sm">Earning rewards daily</div>
+            <div className="text-gray-400 text-sm">Governance participant</div>
           </motion.div>
         </div>
 
-        {/* Tabs */}
+        {/* Transactions */}
         <div className="flex items-center gap-2 mb-6 border-b border-zinc-800">
-          <button
-            onClick={() => setActiveTab('transactions')}
-            className={`flex items-center gap-2 px-4 py-3 border-b-2 transition-colors ${
-              activeTab === 'transactions'
-                ? 'border-blue-500 text-white'
-                : 'border-transparent text-gray-400 hover:text-white'
-            }`}
-          >
+          <div className="flex items-center gap-2 px-4 py-3 border-b-2 border-blue-500 text-white">
             <History className="w-4 h-4" />
             <span>Transactions</span>
-          </button>
-          <button
-            onClick={() => setActiveTab('rewards')}
-            className={`flex items-center gap-2 px-4 py-3 border-b-2 transition-colors ${
-              activeTab === 'rewards'
-                ? 'border-purple-500 text-white'
-                : 'border-transparent text-gray-400 hover:text-white'
-            }`}
-          >
-            <Award className="w-4 h-4" />
-            <span>Rewards</span>
-          </button>
+          </div>
         </div>
 
         {/* Content */}
         <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6">
-          {activeTab === 'transactions' && <TransactionHistory userId={address} />}
-          {activeTab === 'rewards' && <RewardsDisplay userId={address} />}
+          <TransactionHistory userId={address} />
         </div>
       </div>
     </div>

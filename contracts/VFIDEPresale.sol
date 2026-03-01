@@ -14,18 +14,17 @@ using SafeERC20 for IERC20;
  * - Optional lock periods for release scheduling
  * 
  * SUPPLY BREAKDOWN:
- * - VFIDEToken allocates: 50M VFIDE to presale contract at genesis
- * - Base Supply: 35M VFIDE (sold at $0.07 each)
- * - Bonus Pool: 15M VFIDE (lock bonuses + referral bonuses)
- * - Total Presale Distribution: 50M VFIDE (25% of 200M supply)
+ * - VFIDEToken allocates: 35M VFIDE to presale contract at genesis
+ * - Base Supply: 35M VFIDE — no bonus pool (rewards are not available)
+ * - Total Presale Distribution: 35M VFIDE
  * - LP tokens come from Treasury allocation (not presale)
  * - Max Raise: $2.45M (35M × $0.07 if 100% sells)
  * 
  * DYNAMIC LISTING PRICE:
  * - Listing price scales with presale results
  * 
- * HOWEY SAFE MODE:
- * - When enabled, lock bonuses and referral bonuses are disabled
+ * HOWEY COMPLIANCE:
+ * - Lock bonuses and referral bonuses are permanently disabled
  */
 
 // IStablecoinRegistry already defined in SharedInterfaces.sol
@@ -383,8 +382,7 @@ contract VFIDEPresale is ReentrancyGuard {
     
     /**
      * @notice Verify VFIDE tokens are available in presale contract
-     * @dev VFIDEToken pre-mints 50M to this contract at genesis.
-     *      35M for base sale + 15M for bonus pool.
+     * @dev VFIDEToken pre-mints 35M to this contract at genesis.
      *      This function verifies the pre-mint and marks deposit complete.
      */
     function depositTokens() external onlyDAO {

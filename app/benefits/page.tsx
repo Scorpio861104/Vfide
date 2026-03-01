@@ -83,7 +83,7 @@ export default function BenefitsPage() {
               </span>
             </h1>
             <p className="text-gray-400 text-lg max-w-2xl mx-auto">
-              Exclusive perks and rewards for VFIDE token holders and active participants
+              Exclusive perks for VFIDE token holders and active governance participants
             </p>
           </motion.div>
 
@@ -183,7 +183,7 @@ function OverviewTab() {
     {
       icon: Heart,
       title: 'Promotional Campaigns',
-      description: 'Periodic promotional rewards for completing educational milestones and achievements',
+      description: 'Recognition badges for completing educational milestones and achievements',
       color: '#F472B6'
     },
   ];
@@ -195,7 +195,7 @@ function OverviewTab() {
         <Gift className="w-16 h-16 text-purple-400 mx-auto mb-4" />
         <h2 className="text-3xl font-bold text-zinc-100 mb-4">Active Participation Benefits</h2>
         <p className="text-zinc-400 max-w-2xl mx-auto">
-          VFIDE rewards active participation through governance voting, merchant transactions,
+          VFIDE recognises active participation through governance voting, merchant transactions,
           and community engagement. Build your ProofScore through positive actions to unlock fee discounts.
         </p>
       </div>
@@ -328,100 +328,22 @@ function TiersTab() {
   );
 }
 
-function RewardsTab({ isConnected }: { isConnected: boolean }) {
-  const availableRewards = [
-    { name: 'Daily Hold Bonus', amount: '50 VFIDE', claimable: true, cooldown: null },
-    { name: 'Weekly Referral Bonus', amount: '250 VFIDE', claimable: true, cooldown: null },
-    { name: 'ProofScore Multiplier', amount: '2.5x', claimable: false, cooldown: '3 days' },
-    { name: 'Transaction Cashback', amount: '125 VFIDE', claimable: true, cooldown: null },
-    { name: 'Pioneer Recognition', amount: '1,000 VFIDE', claimable: false, cooldown: '14 days' },
-  ];
-
+function RewardsTab({ isConnected: _isConnected }: { isConnected: boolean }) {
   return (
     <div className="space-y-8">
-      {isConnected ? (
-        <>
-          {/* Claimable Rewards */}
-          <div className="bg-gradient-to-br from-green-900/20 to-teal-900/20 border border-green-500/30 rounded-xl p-8">
-            <div className="flex items-center gap-4 mb-6">
-              <Award className="w-12 h-12 text-green-400" />
-              <div>
-                <h2 className="text-2xl font-bold text-zinc-100">Claimable Rewards</h2>
-                <p className="text-zinc-400">Rewards ready to claim based on your activity</p>
-              </div>
-            </div>
-            <div className="text-4xl font-bold text-green-400 text-center py-4">
-              425 VFIDE Available
-            </div>
-            <button className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-lg transition-colors mt-4">
-              Claim All Rewards
-            </button>
-          </div>
-
-          {/* Rewards List */}
-          <div className="bg-zinc-800 border border-zinc-700 rounded-xl p-6">
-            <h3 className="text-xl font-bold text-zinc-100 mb-6">Reward Breakdown</h3>
-            <div className="space-y-3">
-              {availableRewards.map((reward, idx) => (
-                <div key={idx} className="flex items-center justify-between p-4 bg-zinc-900 rounded-lg">
-                  <div className="flex items-center gap-4">
-                    <Gift className={reward.claimable ? 'text-green-400' : 'text-zinc-500'} size={20} />
-                    <div>
-                      <div className="text-zinc-100 font-bold">{reward.name}</div>
-                      {reward.cooldown && (
-                        <div className="flex items-center gap-1 text-xs text-zinc-400">
-                          <Clock size={12} />
-                          {reward.cooldown} remaining
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <span className="text-cyan-400 font-bold">{reward.amount}</span>
-                    {reward.claimable ? (
-                      <button className="px-4 py-1 bg-green-600 hover:bg-green-700 text-white text-sm font-bold rounded-lg transition-colors">
-                        Claim
-                      </button>
-                    ) : (
-                      <button className="px-4 py-1 bg-zinc-700 text-zinc-500 text-sm font-bold rounded-lg cursor-not-allowed">
-                        Locked
-                      </button>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Preview Rewards */}
-          <div className="bg-zinc-800 border border-zinc-700 rounded-xl p-6">
-            <h3 className="text-xl font-bold text-zinc-100 mb-4">Preview Upcoming Rewards</h3>
-            <p className="text-zinc-400 text-sm mb-4">
-              Based on your current activity and holdings, here&apos;s what you can expect:
-            </p>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="p-4 bg-zinc-900 rounded-lg text-center">
-                <div className="text-2xl font-bold text-yellow-400">150</div>
-                <div className="text-xs text-zinc-400">VFIDE next week</div>
-              </div>
-              <div className="p-4 bg-zinc-900 rounded-lg text-center">
-                <div className="text-2xl font-bold text-cyan-400">650</div>
-                <div className="text-xs text-zinc-400">VFIDE next month</div>
-              </div>
-              <div className="p-4 bg-zinc-900 rounded-lg text-center">
-                <div className="text-2xl font-bold text-purple-400">2,400</div>
-                <div className="text-xs text-zinc-400">VFIDE this quarter</div>
-              </div>
-            </div>
-          </div>
-        </>
-      ) : (
-        <div className="bg-zinc-800 border border-zinc-700 rounded-xl p-12 text-center">
-          <Gift className="w-16 h-16 text-zinc-500 mx-auto mb-4" />
-          <h3 className="text-xl font-bold text-zinc-100 mb-2">Connect Wallet to View Rewards</h3>
-          <p className="text-zinc-400">Connect your wallet to see your available rewards and claim bonuses</p>
-        </div>
-      )}
+      <div className="bg-zinc-800 border border-zinc-700 rounded-xl p-12 text-center">
+        <Award className="w-16 h-16 text-zinc-500 mx-auto mb-4" />
+        <h3 className="text-xl font-bold text-zinc-100 mb-2">No Token Rewards</h3>
+        <p className="text-zinc-400 max-w-lg mx-auto">
+          VFIDE is a governance utility token. Token distributions for holding,
+          referrals, or activity are not offered — doing so would create an
+          expectation of profits and conflict with Howey Test compliance.
+        </p>
+        <p className="text-zinc-500 text-sm mt-4">
+          Participation XP and governance badges are available through the{' '}
+          <a href="/quests" className="text-cyan-400 hover:underline">Quests</a> page.
+        </p>
+      </div>
     </div>
   );
 }
@@ -491,17 +413,16 @@ function StatsTab({ isConnected, address }: { isConnected: boolean; address?: st
         <h3 className="text-xl font-bold text-zinc-100 mb-6">Recent Activity</h3>
         <div className="space-y-3">
           {[
-            { action: 'Claimed daily reward', amount: '+50 VFIDE', time: '2 hours ago' },
-            { action: 'Referral bonus received', amount: '+250 VFIDE', time: '1 day ago' },
+            { action: 'Governance vote cast', amount: '+10 XP', time: '2 hours ago' },
             { action: 'ProofScore increased', amount: '+5 points', time: '3 days ago' },
-            { action: 'Transaction cashback', amount: '+75 VFIDE', time: '5 days ago' },
+            { action: 'Daily check-in', amount: '+50 XP', time: '5 days ago' },
           ].map((activity, idx) => (
             <div key={idx} className="flex items-center justify-between p-3 bg-zinc-900 rounded-lg">
               <div>
                 <div className="text-zinc-100 text-sm">{activity.action}</div>
                 <div className="text-xs text-zinc-400">{activity.time}</div>
               </div>
-              <span className="text-green-400 font-bold">{activity.amount}</span>
+              <span className="text-purple-400 font-bold">{activity.amount}</span>
             </div>
           ))}
         </div>
@@ -520,7 +441,7 @@ function StatsTab({ isConnected, address }: { isConnected: boolean; address?: st
           </div>
         </div>
         <p className="text-zinc-400 text-sm">
-          You need 197,550 more VFIDE to reach Platinum tier. Keep holding and earning!
+          You need 197,550 more VFIDE to reach Platinum tier.
         </p>
       </div>
     </div>

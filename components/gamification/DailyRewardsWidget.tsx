@@ -1,8 +1,8 @@
 /**
- * DAILY REWARDS WIDGET
- * 
- * Simple daily login reward system
- * One-click claim for daily VFIDE + XP
+ * DAILY CHECK-IN WIDGET
+ *
+ * Tracks governance participation streak and XP.
+ * No token rewards — VFIDE is a utility token, not an investment.
  */
 
 'use client';
@@ -10,16 +10,14 @@
 import { useState, useEffect } from 'react';
 import { useAccount } from 'wagmi';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Gift, Flame, Calendar, CheckCircle2, Sparkles, Star, Zap, Clock } from 'lucide-react';
+import { Flame, CheckCircle2, Sparkles, Zap, Clock } from 'lucide-react';
 import { safeParseInt } from '@/lib/validation';
 import { useTransactionSounds } from '@/hooks/useTransactionSounds';
 
-interface DailyReward {
+interface DailyCheckIn {
   day: number;
-  vfide: number;
   xp: number;
   claimed: boolean;
-  bonus?: boolean;
 }
 
 export default function DailyRewardsWidget() {
@@ -29,74 +27,53 @@ export default function DailyRewardsWidget() {
   const [claimed, setClaimed] = useState(false);
   const [streak] = useState(7);
   const [nextRewardTime, setNextRewardTime] = useState<number | null>(null);
-  const [weekRewards, setWeekRewards] = useState<DailyReward[]>([]);
-  const [showConfetti, setShowConfetti] = useState(false);
-  const { playSuccess, playNotification: _playNotification } = useTransactionSounds();
+  const [weekCheckIns, setWeekCheckIns] = useState<DailyCheckIn[]>([]);
+  const { playSuccess } = useTransactionSounds();
 
   useEffect(() => {
     if (isConnected) {
       checkClaimStatus();
-      loadWeekRewards();
+      loadWeekCheckIns();
     }
   }, [isConnected]);
 
   const checkClaimStatus = async () => {
-    // In production: Check API for last claim time
     const lastClaim = localStorage.getItem('lastDailyClaim');
     if (lastClaim) {
       const lastClaimTime = safeParseInt(lastClaim, 0);
       const now = Date.now();
-      const hoursUntilNext = 24 - ((now - lastClaimTime) / (1000 * 60 * 60));
-      
+      const hoursUntilNext = 24 - (now - lastClaimTime) / (1000 * 60 * 60);
       if (hoursUntilNext > 0) {
         setCanClaim(false);
-        setNextRewardTime(now + (hoursUntilNext * 60 * 60 * 1000));
+        setNextRewardTime(now + hoursUntilNext * 60 * 60 * 1000);
       }
     }
   };
 
-  const loadWeekRewards = () => {
-    const rewards: DailyReward[] = [
-      { day: 1, vfide: 15, xp: 50, claimed: true },
-      { day: 2, vfide: 15, xp: 50, claimed: true },
-      { day: 3, vfide: 20, xp: 75, claimed: true, bonus: true },
-      { day: 4, vfide: 15, xp: 50, claimed: true },
-      { day: 5, vfide: 15, xp: 50, claimed: true },
-      { day: 6, vfide: 15, xp: 50, claimed: true },
-      { day: 7, vfide: 50, xp: 200, claimed: false, bonus: true }
+  const loadWeekCheckIns = () => {
+    const checkIns: DailyCheckIn[] = [
+      { day: 1, xp: 50, claimed: true },
+      { day: 2, xp: 50, claimed: true },
+      { day: 3, xp: 75, claimed: true },
+      { day: 4, xp: 50, claimed: true },
+      { day: 5, xp: 50, claimed: true },
+      { day: 6, xp: 50, claimed: true },
+      { day: 7, xp: 200, claimed: false },
     ];
-    setWeekRewards(rewards);
+    setWeekCheckIns(checkIns);
   };
 
-  const claimDailyReward = async () => {
+  const claimDailyCheckIn = async () => {
     setClaiming(true);
-    
     try {
-      // In production: Call API to claim reward
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
+      await new Promise((resolve) => setTimeout(resolve, 800));
       localStorage.setItem('lastDailyClaim', Date.now().toString());
       setCanClaim(false);
       setClaimed(true);
-      setShowConfetti(true);
       playSuccess();
-      setNextRewardTime(Date.now() + (24 * 60 * 60 * 1000));
-      
-      // Hide confetti after animation
-      setTimeout(() => setShowConfetti(false), 3000);
-      
-      // Trigger achievement notification
-      if (window.showAchievement) {
-        window.showAchievement({
-          type: 'reward',
-          title: 'Daily Reward Claimed!',
-          description: `Day ${streak} streak bonus applied`,
-          icon: '🎁',
-          reward: { vfide: 15, xp: 50 }
-        });
-      }
+      setNextRewardTime(Date.now() + 24 * 60 * 60 * 1000);
     } catch (error) {
-      console.error('Failed to claim reward:', error);
+      console.error('Failed to claim daily check-in:', error);
     } finally {
       setClaiming(false);
     }
@@ -104,81 +81,30 @@ export default function DailyRewardsWidget() {
 
   if (!isConnected) return null;
 
-  const todayReward = weekRewards[streak - 1] ?? weekRewards[0] ?? { day: 1, vfide: 15, xp: 50, claimed: false };
+  const todayCheckIn = weekCheckIns[streak - 1] ?? { day: streak, xp: 50, claimed: false };
   const timeUntilNext = nextRewardTime ? nextRewardTime - Date.now() : 0;
   const hoursLeft = Math.floor(timeUntilNext / (1000 * 60 * 60));
   const minutesLeft = Math.floor((timeUntilNext % (1000 * 60 * 60)) / (1000 * 60));
 
-  // Confetti particles
-  const confettiColors = ['#FFD700', '#FFA500', '#50C878', '#9333EA', '#FF6B6B'];
-
   return (
-    <motion.div 
+    <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="relative bg-gradient-to-br from-amber-400/10 to-orange-500/10 border-2 border-amber-400/30 rounded-2xl p-6 overflow-hidden"
+      className="relative bg-gradient-to-br from-purple-500/10 to-blue-500/10 border-2 border-purple-500/30 rounded-2xl p-6 overflow-hidden"
     >
-      {/* Confetti animation */}
-      <AnimatePresence>
-        {showConfetti && (
-          <>
-            {[...Array(20)].map((_, i) => (
-              <motion.div
-                key={i}
-                initial={{ 
-                  y: -20, 
-                  x: Math.random() * 300 - 150,
-                  opacity: 1,
-                  rotate: 0,
-                  scale: 1
-                }}
-                animate={{ 
-                  y: 400, 
-                  x: Math.random() * 300 - 150,
-                  opacity: 0,
-                  rotate: 360 * (Math.random() > 0.5 ? 1 : -1),
-                  scale: 0.5
-                }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 2 + Math.random(), delay: Math.random() * 0.5 }}
-                className="absolute pointer-events-none"
-                style={{
-                  left: '50%',
-                  width: 8 + Math.random() * 8,
-                  height: 8 + Math.random() * 8,
-                  backgroundColor: confettiColors[Math.floor(Math.random() * confettiColors.length)],
-                  borderRadius: Math.random() > 0.5 ? '50%' : '2px',
-                }}
-              />
-            ))}
-          </>
-        )}
-      </AnimatePresence>
-
-      {/* Background glow */}
-      <motion.div
-        animate={{ opacity: [0.3, 0.5, 0.3], scale: [1, 1.05, 1] }}
-        transition={{ duration: 3, repeat: Infinity }}
-        className="absolute -top-10 -right-10 w-32 h-32 bg-gradient-to-br from-yellow-500/30 to-orange-500/20 rounded-full blur-3xl pointer-events-none"
-      />
-
       {/* Header */}
       <div className="relative flex items-center justify-between mb-5">
         <div className="flex items-center gap-3">
-          <motion.div 
-            animate={canClaim ? { scale: [1, 1.1, 1], rotate: [0, 5, -5, 0] } : {}}
-            transition={{ duration: 1.5, repeat: canClaim ? Infinity : 0 }}
-            className="bg-gradient-to-br from-amber-400 to-orange-500 rounded-xl p-3 shadow-lg shadow-yellow-500/30"
-          >
-            <Gift className="w-6 h-6 text-black" />
-          </motion.div>
+          <div className="bg-gradient-to-br from-purple-500 to-blue-600 rounded-xl p-3 shadow-lg shadow-purple-500/30">
+            <Zap className="w-6 h-6 text-white" />
+          </div>
           <div>
-            <h3 className="text-xl font-bold text-white">Daily Reward</h3>
+            <h3 className="text-xl font-bold text-white">Daily Check-In</h3>
             <p className="text-sm text-zinc-400 flex items-center gap-1">
               {canClaim ? (
                 <>
-                  <Sparkles className="w-3 h-3 text-yellow-500" />
-                  Ready to claim!
+                  <Sparkles className="w-3 h-3 text-purple-400" />
+                  Ready to check in!
                 </>
               ) : (
                 <>
@@ -189,199 +115,97 @@ export default function DailyRewardsWidget() {
             </p>
           </div>
         </div>
-        <motion.div 
-          className="text-right"
-          animate={canClaim ? { y: [0, -3, 0] } : {}}
-          transition={{ duration: 1, repeat: canClaim ? Infinity : 0 }}
-        >
+        <div className="text-right">
           <div className="flex items-center gap-2 text-orange-500 mb-1">
-            <motion.div
-              animate={{ scale: [1, 1.2, 1] }}
-              transition={{ duration: 0.5, repeat: Infinity }}
-            >
-              <Flame className="w-5 h-5" />
-            </motion.div>
+            <Flame className="w-5 h-5" />
             <span className="text-2xl font-bold">{streak}</span>
           </div>
           <div className="text-xs text-zinc-400">Day Streak</div>
-        </motion.div>
+        </div>
       </div>
 
       {/* Week Calendar */}
       <div className="grid grid-cols-7 gap-2 mb-5">
-        {weekRewards.map((reward, index) => {
-          const isToday = reward.day === streak;
-          const isClaimed = reward.claimed || (isToday && claimed);
-          
+        {weekCheckIns.map((checkIn, index) => {
+          const isToday = checkIn.day === streak;
+          const isClaimed = checkIn.claimed || (isToday && claimed);
           return (
-            <motion.div
-              key={reward.day}
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: index * 0.05 }}
-              whileHover={{ scale: 1.05, y: -2 }}
+            <div
+              key={checkIn.day}
               className={`relative aspect-square rounded-xl p-2 text-center transition-all ${
                 isClaimed
                   ? 'bg-emerald-500/20 border border-emerald-500/50'
                   : isToday
-                  ? 'bg-gradient-to-br from-amber-400/30 to-orange-500/20 border-2 border-amber-400'
+                  ? 'bg-gradient-to-br from-purple-400/30 to-blue-500/20 border-2 border-purple-400'
                   : 'bg-zinc-800 border border-zinc-700'
               }`}
             >
-              {/* Pulsing effect for today */}
-              {isToday && !isClaimed && (
-                <motion.div
-                  animate={{ opacity: [0.5, 1, 0.5], scale: [1, 1.05, 1] }}
-                  transition={{ duration: 1.5, repeat: Infinity }}
-                  className="absolute inset-0 rounded-xl bg-gradient-to-br from-amber-400/20 to-transparent pointer-events-none"
-                />
+              <div className="text-xs text-zinc-400 mb-1">Day {checkIn.day}</div>
+              {isClaimed ? (
+                <CheckCircle2 className="w-5 h-5 text-emerald-500 mx-auto" />
+              ) : (
+                <div className="text-sm font-bold text-purple-400">+{checkIn.xp}</div>
               )}
-              
-              <div className="relative">
-                <div className="text-xs text-zinc-400 mb-1">Day {reward.day}</div>
-                {isClaimed ? (
-                  <motion.div
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    transition={{ type: "spring", stiffness: 500 }}
-                  >
-                    <CheckCircle2 className="w-5 h-5 text-emerald-500 mx-auto" />
-                  </motion.div>
-                ) : (
-                  <div>
-                    <div className="text-sm font-bold text-amber-400">{reward.vfide}</div>
-                    {reward.bonus && (
-                      <motion.div
-                        animate={{ rotate: [0, 10, -10, 0] }}
-                        transition={{ duration: 1, repeat: Infinity }}
-                      >
-                        <Star className="w-3 h-3 text-orange-500 mx-auto" />
-                      </motion.div>
-                    )}
-                  </div>
-                )}
-              </div>
-            </motion.div>
+            </div>
           );
         })}
       </div>
 
-      {/* Today's Reward */}
-      <motion.div 
-        whileHover={{ scale: 1.01 }}
-        className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 mb-4"
-      >
+      {/* Today's XP */}
+      <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 mb-4">
         <div className="text-center mb-4">
-          <div className="text-sm text-zinc-400 mb-2">Today&apos;s Reward</div>
-          <div className="flex items-center justify-center gap-6">
-            <motion.div 
-              whileHover={{ scale: 1.1 }}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-yellow-500/10 border border-yellow-500/30"
-            >
-              <Gift className="w-5 h-5 text-amber-400" />
-              <span className="text-2xl font-bold text-amber-400">{todayReward.vfide}</span>
-              <span className="text-sm text-zinc-400">VFIDE</span>
-            </motion.div>
-            <motion.div 
-              whileHover={{ scale: 1.1 }}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-purple-500/10 border border-purple-500/30"
-            >
-              <Zap className="w-5 h-5 text-purple-600" />
-              <span className="text-2xl font-bold text-purple-600">{todayReward.xp}</span>
-              <span className="text-sm text-zinc-400">XP</span>
-            </motion.div>
+          <div className="text-sm text-zinc-400 mb-2">Today&apos;s Check-In Reward</div>
+          <div className="flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-purple-500/10 border border-purple-500/30 w-fit mx-auto">
+            <Zap className="w-5 h-5 text-purple-400" />
+            <span className="text-2xl font-bold text-purple-400">+{todayCheckIn.xp}</span>
+            <span className="text-sm text-zinc-400">Governance XP</span>
           </div>
-          {todayReward.bonus && (
-            <motion.div
-              animate={{ y: [0, -2, 0] }}
-              transition={{ duration: 1, repeat: Infinity }}
-              className="inline-flex items-center gap-1 mt-3 px-3 py-1 rounded-full bg-orange-500/20 text-orange-400 text-xs"
-            >
-              <Star className="w-3 h-3" />
-              Bonus Day!
-            </motion.div>
-          )}
+          <p className="text-xs text-zinc-500 mt-2">
+            XP reflects participation — not a monetary return
+          </p>
         </div>
 
-        {/* Claim Button */}
-        <motion.button
-          onClick={claimDailyReward}
+        <button
+          onClick={claimDailyCheckIn}
           disabled={!canClaim || claiming}
-          whileHover={canClaim ? { scale: 1.02 } : {}}
-          whileTap={canClaim ? { scale: 0.98 } : {}}
-          className={`w-full py-3.5 rounded-xl font-bold transition-all flex items-center justify-center gap-2 ${
+          className={`w-full py-3 rounded-xl font-bold text-white transition-all ${
             canClaim && !claiming
-              ? 'bg-gradient-to-r from-amber-400 to-orange-500 text-black shadow-lg shadow-yellow-500/30 hover:shadow-yellow-500/50'
-              : 'bg-zinc-800 text-zinc-500 cursor-not-allowed'
+              ? 'bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 shadow-lg shadow-purple-500/30'
+              : 'bg-zinc-700 cursor-not-allowed opacity-60'
           }`}
         >
           {claiming ? (
-            <>
-              <motion.div
-                animate={{ rotate: 360 }}
-                transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                className="w-5 h-5 border-2 border-black border-t-transparent rounded-full"
-              />
-              Claiming...
-            </>
+            <span className="flex items-center justify-center gap-2">
+              <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              Checking in...
+            </span>
           ) : canClaim ? (
-            <>
+            <span className="flex items-center justify-center gap-2">
               <Sparkles className="w-5 h-5" />
-              Claim Reward
-            </>
+              Check In Now
+            </span>
           ) : (
-            <>
-              <Clock className="w-4 h-4" />
-              Next Reward: {hoursLeft}h {minutesLeft}m
-            </>
+            <span className="flex items-center justify-center gap-2">
+              <CheckCircle2 className="w-5 h-5" />
+              Checked In Today
+            </span>
           )}
-        </motion.button>
-      </motion.div>
+        </button>
+      </div>
 
-      {/* Streak Milestones */}
-      <motion.div 
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.3 }}
-        className="bg-zinc-950 rounded-xl p-4"
-      >
-        <div className="text-xs text-zinc-400 mb-3 flex items-center gap-2">
-          <Calendar className="w-4 h-4" />
-          Streak Milestones
-        </div>
-        <div className="grid grid-cols-4 gap-2">
-          {[
-            { days: 7, multiplier: '1.15x', unlocked: streak >= 7 },
-            { days: 30, multiplier: '1.5x', unlocked: streak >= 30 },
-            { days: 90, multiplier: '2x', unlocked: streak >= 90 },
-            { days: 365, multiplier: '3x', unlocked: streak >= 365 },
-          ].map((milestone) => (
-            <motion.div 
-              key={milestone.days}
-              whileHover={{ scale: 1.05 }}
-              className={`text-center p-2 rounded-lg transition-all ${
-                milestone.unlocked 
-                  ? 'bg-emerald-500/10 border border-emerald-500/30' 
-                  : 'bg-zinc-900 border border-zinc-800'
-              }`}
-            >
-              <div className={`text-xs mb-1 ${milestone.unlocked ? 'text-emerald-500' : 'text-zinc-500'}`}>
-                {milestone.unlocked ? (
-                  <CheckCircle2 className="w-4 h-4 mx-auto" />
-                ) : (
-                  `🔒`
-                )}
-              </div>
-              <div className={`text-sm font-medium ${milestone.unlocked ? 'text-white' : 'text-gray-500'}`}>
-                {milestone.days}d
-              </div>
-              <div className={`text-xs ${milestone.unlocked ? 'text-emerald-500' : 'text-zinc-400'}`}>
-                {milestone.multiplier} XP
-              </div>
-            </motion.div>
-          ))}
-        </div>
-      </motion.div>
+      {/* Streak info */}
+      <AnimatePresence>
+        {claimed && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0 }}
+            className="text-center text-sm text-emerald-400 font-semibold"
+          >
+            ✓ Streak maintained — {streak} day{streak !== 1 ? 's' : ''} strong!
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 }

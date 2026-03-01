@@ -11,9 +11,7 @@ import { motion } from 'framer-motion';
 import {
     ArrowDownLeft,
     ArrowUpRight,
-    Award,
     DollarSign,
-    Gift,
     Heart,
     Lock,
     MessageCircle,
@@ -33,8 +31,6 @@ type ActivityType =
   | 'tip_received'
   | 'content_purchased'
   | 'content_sold'
-  | 'endorsement_reward'
-  | 'token_reward'
   | 'payment_sent'
   | 'payment_received'
   | 'achievement';
@@ -122,19 +118,6 @@ const generateMockActivities = (): UnifiedActivity[] => [
     metadata: {
       contentType: 'Premium Article',
     },
-  },
-  {
-    id: 'a4',
-    type: 'endorsement_reward',
-    timestamp: new Date(Date.now() - 5 * 60 * 60 * 1000),
-    actor: {
-      address: '0xdef...789',
-      name: 'John Park',
-      avatar: '👨‍💻',
-    },
-    amount: '2.5',
-    currency: 'VFIDE',
-    content: 'Thanks for the helpful endorsement!',
   },
   {
     id: 'a5',
@@ -229,10 +212,6 @@ export function UnifiedActivityFeed({
         return <Unlock className="w-4 h-4" />;
       case 'content_sold':
         return <Lock className="w-4 h-4" />;
-      case 'endorsement_reward':
-        return <Award className="w-4 h-4" />;
-      case 'token_reward':
-        return <Gift className="w-4 h-4" />;
       case 'payment_sent':
         return <ArrowUpRight className="w-4 h-4" />;
       case 'payment_received':
@@ -254,8 +233,6 @@ export function UnifiedActivityFeed({
       case 'tip_received':
       case 'payment_received':
       case 'content_sold':
-      case 'endorsement_reward':
-      case 'token_reward':
         return 'from-green-500 to-emerald-500';
       case 'tip_sent':
       case 'payment_sent':
@@ -284,10 +261,6 @@ export function UnifiedActivityFeed({
         return `purchased ${activity.metadata?.contentType}`;
       case 'content_sold':
         return `sold ${activity.metadata?.contentType} to ${activity.recipient?.name}`;
-      case 'endorsement_reward':
-        return `sent ${activity.amount} ${activity.currency} endorsement reward`;
-      case 'token_reward':
-        return `earned ${activity.amount} ${activity.currency} tokens`;
       case 'payment_sent':
         return `sent ${activity.amount} ${activity.currency}`;
       case 'payment_received':

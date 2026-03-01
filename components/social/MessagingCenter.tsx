@@ -34,7 +34,6 @@ import { MessageActions, EditedIndicator } from './MessageActions';
 import { apiClient } from '@/lib/api-client';
 import { PaymentButton } from '../crypto/PaymentButton';
 import { useAnnounce } from '@/lib/accessibility';
-import { rewardTokens } from '@/lib/crypto';
 interface MessagingCenterProps {
   friend: Friend;
   hasVault?: boolean;
@@ -184,11 +183,6 @@ export function MessagingCenter({ friend, hasVault = false }: MessagingCenterPro
       ));
       
       setEncryptionStatus('idle');
-      
-      // Reward tokens for sending message
-      if (address) {
-        await rewardTokens(address, 'message_sent', '10');
-      }
       
       // Announce message sent
       announce('Message sent', 'polite');

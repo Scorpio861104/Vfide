@@ -63,7 +63,6 @@ interface ChecklistItem {
   completed: boolean;
   reward: {
     xp: number;
-    vfide?: number;
     badge?: string;
   };
   action: {
@@ -96,7 +95,7 @@ export default function OnboardingChecklist() {
         description: 'Link your wallet to get started',
         icon: <Wallet className="w-5 h-5" />,
         completed: true,
-        reward: { xp: 50, vfide: 10 },
+        reward: { xp: 50 },
         action: { label: 'Connected', link: '#' },
         order: 1
       },
@@ -106,7 +105,7 @@ export default function OnboardingChecklist() {
         description: 'Add 3 trusted guardians for account recovery',
         icon: <Shield className="w-5 h-5" />,
         completed: false,
-        reward: { xp: 100, vfide: 25, badge: 'Guardian Angel' },
+        reward: { xp: 100, badge: 'Guardian Angel' },
         action: { label: 'Add Guardians', link: '/vault' },
         order: 2
       },
@@ -116,7 +115,7 @@ export default function OnboardingChecklist() {
         description: 'Send or receive your first payment',
         icon: <Zap className="w-5 h-5" />,
         completed: false,
-        reward: { xp: 150, vfide: 50 },
+        reward: { xp: 150 },
         action: { label: 'Send Payment', link: '/crypto' },
         order: 3
       },
@@ -126,7 +125,7 @@ export default function OnboardingChecklist() {
         description: 'Build your network',
         icon: <Users className="w-5 h-5" />,
         completed: false,
-        reward: { xp: 100, vfide: 30 },
+        reward: { xp: 100 },
         action: { label: 'Find Friends', link: '/social' },
         order: 4
       },
@@ -146,7 +145,7 @@ export default function OnboardingChecklist() {
         description: 'Participate in governance',
         icon: <Vote className="w-5 h-5" />,
         completed: false,
-        reward: { xp: 200, vfide: 75, badge: 'Active Voter' },
+        reward: { xp: 200, badge: 'Active Voter' },
         action: { label: 'View Proposals', link: '/governance' },
         order: 6
       },
@@ -156,7 +155,7 @@ export default function OnboardingChecklist() {
         description: 'Build your reputation',
         icon: <Star className="w-5 h-5" />,
         completed: false,
-        reward: { xp: 300, vfide: 100, badge: 'Trusted Member' },
+        reward: { xp: 300, badge: 'Trusted Member' },
         action: { label: 'View Score', link: '/dashboard' },
         order: 7
       },
@@ -166,7 +165,7 @@ export default function OnboardingChecklist() {
         description: 'Unlock an achievement',
         icon: <Trophy className="w-5 h-5" />,
         completed: false,
-        reward: { xp: 250, vfide: 150 },
+        reward: { xp: 250 },
         action: { label: 'View Badges', link: '/achievements' },
         order: 8
       }
@@ -178,9 +177,6 @@ export default function OnboardingChecklist() {
   const completedCount = items.filter(item => item.completed).length;
   const totalCount = items.length;
   const progress = (completedCount / totalCount) * 100;
-  const totalRewards = items
-    .filter(item => item.completed)
-    .reduce((sum, item) => sum + (item.reward.vfide || 0), 0);
 
   // Play sound when all tasks complete
   const handleAllComplete = useCallback(() => {
@@ -282,12 +278,6 @@ export default function OnboardingChecklist() {
               />
             </motion.div>
           </div>
-          {totalRewards > 0 && (
-            <div className="text-center text-sm">
-              <span className="text-zinc-400">Earned: </span>
-              <span className="text-amber-400 font-bold">{totalRewards} VFIDE</span>
-            </div>
-          )}
         </div>
       </div>
 
@@ -381,14 +371,6 @@ function ChecklistItemCard({ item, onComplete: _onComplete }: { item: ChecklistI
                 whileHover={{ scale: 1.1, y: -2 }}
               >
                 +{item.reward.xp} XP
-              </motion.span>
-            )}
-            {item.reward.vfide && (
-              <motion.span 
-                className="text-xs bg-amber-400/20 text-amber-400 px-2 py-1 rounded"
-                whileHover={{ scale: 1.1, y: -2 }}
-              >
-                +{item.reward.vfide} VFIDE
               </motion.span>
             )}
             {item.reward.badge && (
