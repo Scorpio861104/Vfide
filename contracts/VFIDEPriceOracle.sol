@@ -58,6 +58,17 @@ contract VFIDEPriceOracle is Ownable, Pausable {
     /// @notice Circuit breaker activated time
     uint256 public circuitBreakerTime;
 
+    /// @notice Timelock delay for oracle feed configuration changes (48 hours)
+    uint64 public constant ORACLE_CONFIG_DELAY = 48 hours;
+
+    /// @notice Pending Chainlink feed change
+    address public pendingChainlinkFeed;
+    uint64  public pendingChainlinkFeedAt;
+
+    /// @notice Pending Uniswap pool change
+    address public pendingUniswapPool;
+    uint64  public pendingUniswapPoolAt;
+
     /// @notice Historical prices
     mapping(uint256 => PricePoint) public historicalPrices;
     uint256 public pricePointCount;
@@ -87,7 +98,9 @@ contract VFIDEPriceOracle is Ownable, Pausable {
     );
     event CircuitBreakerReset();
     event ChainlinkFeedUpdated(address indexed oldFeed, address indexed newFeed);
+    event ChainlinkFeedScheduled(address indexed pendingFeed, uint64 effectiveAt);
     event UniswapPoolUpdated(address indexed oldPool, address indexed newPool);
+    event UniswapPoolScheduled(address indexed pendingPool, uint64 effectiveAt);
 
     error PriceStale();
     error InvalidPrice();
@@ -278,23 +291,51 @@ contract VFIDEPriceOracle is Ownable, Pausable {
     }
 
     /**
-     * @notice Set Chainlink feed
+     * @notice Schedule a Chainlink feed update (takes effect after 48h timelock)
      * @param _chainlinkFeed New Chainlink feed address
      */
     function setChainlinkFeed(address _chainlinkFeed) external onlyOwner {
-        address oldFeed = address(chainlinkFeed);
-        chainlinkFeed = AggregatorV3Interface(_chainlinkFeed);
-        emit ChainlinkFeedUpdated(oldFeed, _chainlinkFeed);
+        uint64 effectiveAt = uint64(block.timestamp) + ORACLE_CONFIG_DELAY;
+        pendingChainlinkFeed = _chainlinkFeed;
+        pendingChainlinkFeedAt = effectiveAt;
+        emit ChainlinkFeedScheduled(_chainlinkFeed, effectiveAt);
     }
 
     /**
-     * @notice Set Uniswap pool
+     * @notice Apply a scheduled Chainlink feed update after the timelock has elapsed
+     */
+    function applyChainlinkFeed() external onlyOwner {
+        require(pendingChainlinkFeedAt != 0, "VFIDEPriceOracle: no pending update");
+        require(block.timestamp >= pendingChainlinkFeedAt, "VFIDEPriceOracle: timelock not elapsed");
+        address oldFeed = address(chainlinkFeed);
+        chainlinkFeed = AggregatorV3Interface(pendingChainlinkFeed);
+        emit ChainlinkFeedUpdated(oldFeed, pendingChainlinkFeed);
+        delete pendingChainlinkFeed;
+        delete pendingChainlinkFeedAt;
+    }
+
+    /**
+     * @notice Schedule a Uniswap pool update (takes effect after 48h timelock)
      * @param _uniswapPool New Uniswap pool address
      */
     function setUniswapPool(address _uniswapPool) external onlyOwner {
+        uint64 effectiveAt = uint64(block.timestamp) + ORACLE_CONFIG_DELAY;
+        pendingUniswapPool = _uniswapPool;
+        pendingUniswapPoolAt = effectiveAt;
+        emit UniswapPoolScheduled(_uniswapPool, effectiveAt);
+    }
+
+    /**
+     * @notice Apply a scheduled Uniswap pool update after the timelock has elapsed
+     */
+    function applyUniswapPool() external onlyOwner {
+        require(pendingUniswapPoolAt != 0, "VFIDEPriceOracle: no pending update");
+        require(block.timestamp >= pendingUniswapPoolAt, "VFIDEPriceOracle: timelock not elapsed");
         address oldPool = uniswapPool;
-        uniswapPool = _uniswapPool;
-        emit UniswapPoolUpdated(oldPool, _uniswapPool);
+        uniswapPool = pendingUniswapPool;
+        emit UniswapPoolUpdated(oldPool, pendingUniswapPool);
+        delete pendingUniswapPool;
+        delete pendingUniswapPoolAt;
     }
 
     /**

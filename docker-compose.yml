@@ -24,7 +24,9 @@ services:
       retries: 5
 
   # WebSocket server (optional - commented out by default)
-  # Uncomment and create a Dockerfile in websocket-server/ to use this service
+  # The Dockerfile now exists at websocket-server/Dockerfile.
+  # Before enabling, complete all items in §26 of the audit doc and set the required env vars.
+  # See websocket-server/README.md for full configuration instructions.
   # websocket:
   #   build:
   #     context: ./websocket-server
@@ -36,6 +38,8 @@ services:
   #   depends_on:
   #     - postgres
   #   environment:
+  #     JWT_SECRET: ${JWT_SECRET:?JWT_SECRET must be set}
+  #     ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost:3000}
   #     DATABASE_URL: postgresql://vfide_user:${POSTGRES_PASSWORD}@postgres:5432/vfide_db
 
 volumes:

@@ -3,6 +3,7 @@
 # Dependencies
 /node_modules
 /contracts/node_modules
+/websocket-server/node_modules
 /.pnp
 .pnp.*
 .yarn/*
