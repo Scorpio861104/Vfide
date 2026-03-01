@@ -9,8 +9,8 @@ import "./SharedInterfaces.sol";
  * SUPPLY (ALL MINTED AT GENESIS):
  * - Total supply: 200,000,000 VFIDE (18 decimals)
  * - Dev reserve: 50,000,000 → DevReserveVestingVault (locked)
- * - Presale allocation: 50,000,000 → PresaleContract (35M base + 15M bonus)
- * - Treasury/Operations: 100,000,000 → Treasury (liquidity, CEX, operations)
+ * - Presale allocation: 35,000,000 → PresaleContract (no bonus pool)
+ * - Treasury/Operations: 115,000,000 → Treasury (liquidity, CEX, operations)
  * 
  * VAULT-ONLY (ON BY DEFAULT):
  * - Users MUST use vaults for transfers (enables recovery/ProofScore)
@@ -37,7 +37,7 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
 
     uint256 public constant MAX_SUPPLY = 200_000_000e18;
     uint256 public constant DEV_RESERVE_SUPPLY = 50_000_000e18;
-    uint256 public constant PRESALE_CAP = 50_000_000e18;
+    uint256 public constant PRESALE_CAP = 35_000_000e18;
 
     // ─────────────────────────── Anti-Whale Protection
     // All limits configurable by owner, can be disabled by setting to 0
@@ -212,16 +212,16 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
         emit Transfer(address(0), devReserveVestingVault, DEV_RESERVE_SUPPLY);
         _logEv(devReserveVestingVault, "premint_dev_reserve", DEV_RESERVE_SUPPLY, "50M locked");
         
-        // 50M to Presale Contract (35M base + 15M bonus)
+        // 35M to Presale Contract (no bonus pool — rewards are not available)
         _balances[_presaleContract] = PRESALE_CAP;
         emit Transfer(address(0), _presaleContract, PRESALE_CAP);
-        _logEv(_presaleContract, "premint_presale", PRESALE_CAP, "50M for presale");
+        _logEv(_presaleContract, "premint_presale", PRESALE_CAP, "35M for presale");
         
-        // 100M to Treasury (operations, liquidity, CEX, trading)
+        // 115M to Treasury (operations, liquidity, CEX, trading: 200M - 50M dev - 35M presale)
         uint256 treasuryAmount = MAX_SUPPLY - DEV_RESERVE_SUPPLY - PRESALE_CAP;
         _balances[treasury] = treasuryAmount;
         emit Transfer(address(0), treasury, treasuryAmount);
-        _logEv(treasury, "premint_treasury", treasuryAmount, "100M for operations");
+        _logEv(treasury, "premint_treasury", treasuryAmount, "115M for operations");
     }
 
     // ─────────────────────────── ERC20 standard

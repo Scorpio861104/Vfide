@@ -163,12 +163,6 @@ function OverviewTab() {
       color: '#00F0FF'
     },
     {
-      icon: Users,
-      title: 'Referral Bonuses',
-      description: 'Receive a one-time bonus when users you refer complete their first purchase',
-      color: '#4ECDC4'
-    },
-    {
       icon: Shield,
       title: 'Guardian Privileges',
       description: 'Special access and voting power for trusted community members',
@@ -247,7 +241,7 @@ function TiersTab() {
       name: 'Silver',
       color: '#C0C0C0',
       requirement: '10,000+ VFIDE',
-      benefits: ['5% fee discount', 'Priority support', 'Early access', 'Referral bonuses'],
+      benefits: ['5% fee discount', 'Priority support', 'Early access'],
       proofScore: '25+'
     },
     {

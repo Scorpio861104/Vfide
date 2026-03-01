@@ -756,7 +756,7 @@ export default function TokenLaunchPage() {
                 },
                 {
                   q: "What are the different tiers?",
-                  a: "Three tiers based on commitment and price: Founding ($0.03, 180-day mandatory lock, 10% immediate), Oath ($0.05, 90-day mandatory lock, 20% immediate), Public ($0.07, optional lock with bonuses). Better price = longer commitment. All tiers grant immediate governance access."
+                  a: "Three tiers based on commitment and price: Founding ($0.03, 180-day mandatory lock, 10% immediate), Oath ($0.05, 90-day mandatory lock, 20% immediate), Public ($0.07, optional lock period). Better price = longer commitment. All tiers grant immediate governance access."
                 },
                 {
                   q: "What's the commitment period?",

@@ -171,9 +171,9 @@ export async function PATCH(request: NextRequest) {
         await client.query(`
           INSERT INTO achievement_notifications 
           (user_id, notification_type, title, message, icon, reward_xp, reward_vfide)
-          VALUES ($1, 'onboarding_complete', 'Onboarding Complete!', 'You've completed all onboarding steps! Claim your bonus reward.', '🎉', 500, $2)
+          VALUES ($1, 'onboarding_complete', 'Onboarding Complete!', 'You''ve completed all onboarding steps!', '🎉', 500, $2)
           ON CONFLICT DO NOTHING
-        `, [userId, BigInt(100) * BigInt(10 ** 18)]);
+        `, [userId, BigInt(0)]);
       }
 
       await client.query('COMMIT');
@@ -253,7 +253,7 @@ export async function POST(request: NextRequest) {
       }
 
       const rewardXp = 500;
-      const rewardVfide = BigInt(100) * BigInt(10 ** 18);
+      const rewardVfide = BigInt(0);
 
       // Mark reward as claimed
       await client.query(`
@@ -276,7 +276,7 @@ export async function POST(request: NextRequest) {
       await client.query(`
         INSERT INTO daily_rewards 
         (user_id, reward_date, reward_type, xp_earned, vfide_earned, description, claimed, claimed_at)
-        VALUES ($1, CURRENT_DATE, 'onboarding_bonus', $2, $3, 'Onboarding completion bonus', true, NOW())
+        VALUES ($1, CURRENT_DATE, 'onboarding_complete', $2, $3, 'Onboarding completion XP', true, NOW())
       `, [userId, rewardXp, rewardVfide.toString()]);
 
       await client.query('COMMIT');
@@ -285,7 +285,6 @@ export async function POST(request: NextRequest) {
         success: true,
         reward: {
           xp: rewardXp,
-          vfide: rewardVfide.toString(),
         },
       });
     } catch (error) {

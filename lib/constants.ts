@@ -152,13 +152,16 @@ export const PRESALE_SUPPLY = {
 } as const;
 
 /**
- * Lock period unlock percentages (no bonus tokens)
+ * Lock period unlock schedules (no bonus tokens — locking reflects commitment only)
  */
-export const LOCK_BONUSES = {
-  LOCK_180_DAYS: { bonus: 0, immediate: 0.10, days: 180 },  // 10% immediate, 90% locked
-  LOCK_90_DAYS: { bonus: 0, immediate: 0.20, days: 90 },    // 20% immediate, 80% locked
-  NO_LOCK: { bonus: 0, immediate: 1.0, days: 0 },           // 100% immediate
+export const LOCK_SCHEDULES = {
+  LOCK_180_DAYS: { immediate: 0.10, days: 180 },  // 10% immediate, 90% locked
+  LOCK_90_DAYS:  { immediate: 0.20, days: 90  },  // 20% immediate, 80% locked
+  NO_LOCK:       { immediate: 1.0,  days: 0   },  // 100% immediate
 } as const;
+
+/** @deprecated Use LOCK_SCHEDULES — bonus field was always 0 */
+export const LOCK_BONUSES = LOCK_SCHEDULES;
 
 /**
  * Dynamic listing price range based on presale completion
