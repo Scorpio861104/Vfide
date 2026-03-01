@@ -127,6 +127,83 @@ run_pre_deployment_checks() {
         log_error "Production build failed"
         exit 1
     fi
+
+    # ── Security: production contract-ownership pre-flight (VFIDE-M-05 / VFIDE-L-01) ──
+    if [ "$ENVIRONMENT" = "production" ]; then
+        check_contract_ownership_prereqs
+    fi
+}
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Contract-ownership pre-flight checks
+#
+# Addresses audit findings:
+#   VFIDE-M-05: All contract owners must be a Gnosis Safe (min 3-of-5), not a
+#               bare EOA.  A single private-key compromise would give an attacker
+#               simultaneous control over token, vault factory, bridge, fee
+#               router, and treasury.
+#   VFIDE-L-01: DAOTimelock.admin must be the AdminMultiSig contract, not an EOA.
+#   §20.14:     VFIDEBridge on the destination chain must have minting rights for
+#               VFIDEToken; this must be manually verified before going live.
+#
+# These checks are advisory (warn + prompt) for now.  Uncomment the `exit 1`
+# lines once MULTISIG_ADDRESS is configured to enforce hard-blocks.
+# ─────────────────────────────────────────────────────────────────────────────
+check_contract_ownership_prereqs() {
+    echo ""
+    echo "================================================"
+    echo "  🔐 Contract Ownership Pre-Flight Checklist"
+    echo "  (VFIDE-M-05 / VFIDE-L-01 / §20.14)"
+    echo "================================================"
+    echo ""
+
+    local all_ok=true
+
+    # ── 1. Multisig address must be set ────────────────────────────────────
+    if [ -z "${GNOSIS_SAFE_ADDRESS:-}" ]; then
+        log_error "GNOSIS_SAFE_ADDRESS is not set."
+        echo "         All production contracts must be owned by a Gnosis Safe"
+        echo "         (minimum 3-of-5 signers) — not a bare EOA (VFIDE-M-05)."
+        echo "         Set: export GNOSIS_SAFE_ADDRESS=0x<your-safe-address>"
+        all_ok=false
+    else
+        log_success "GNOSIS_SAFE_ADDRESS = $GNOSIS_SAFE_ADDRESS"
+    fi
+
+    # ── 2. DAO timelock admin ──────────────────────────────────────────────
+    if [ -z "${DAO_TIMELOCK_ADMIN_ADDRESS:-}" ]; then
+        log_error "DAO_TIMELOCK_ADMIN_ADDRESS is not set."
+        echo "         DAOTimelock.admin must be the AdminMultiSig contract"
+        echo "         (3-of-5 council), not a single EOA (VFIDE-L-01)."
+        echo "         Set: export DAO_TIMELOCK_ADMIN_ADDRESS=0x<AdminMultiSig>"
+        all_ok=false
+    else
+        log_success "DAO_TIMELOCK_ADMIN_ADDRESS = $DAO_TIMELOCK_ADMIN_ADDRESS"
+    fi
+
+    # ── 3. Bridge mint permission reminder ────────────────────────────────
+    echo ""
+    log_warning "MANUAL CHECK REQUIRED (§20.14):"
+    echo "         Verify that the VFIDEBridge contract on EACH destination chain"
+    echo "         has been granted minting rights on VFIDEToken before going live."
+    echo "         Steps:"
+    echo "           a. Call VFIDEToken.setMinter(<bridgeAddress>, true) on destination"
+    echo "           b. Confirm VFIDEToken.isMinter(<bridgeAddress>) returns true"
+    echo "           c. Test a small cross-chain transfer on the destination chain"
+    echo ""
+
+    if [ "$all_ok" = false ]; then
+        echo "─────────────────────────────────────────────────────────────"
+        log_error "Production deployment aborted — contract-ownership checks failed."
+        echo "         Missing GNOSIS_SAFE_ADDRESS or DAO_TIMELOCK_ADMIN_ADDRESS."
+        echo "         A single-EOA deployment would expose the protocol to a"
+        echo "         private-key compromise that gives full protocol control."
+        echo "         Set the required environment variables and re-run."
+        exit 1
+    fi
+
+    log_success "All contract-ownership pre-flight checks passed."
+    echo ""
 }
 
 deploy_to_vercel() {

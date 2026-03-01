@@ -28,6 +28,102 @@ jobs:
       - name: Run npm audit (fail on high/critical)
         run: npm audit --audit-level=high
 
+  # ── CodeQL SAST (JavaScript / TypeScript) ──────────────────────────────
+  codeql:
+    name: CodeQL SAST
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+      actions: read
+    strategy:
+      fail-fast: false
+      matrix:
+        language: ['javascript-typescript']
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: ${{ matrix.language }}
+          # Use the security-extended query suite for broader coverage
+          queries: security-extended
+
+      - name: Auto-build
+        uses: github/codeql-action/autobuild@v3
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: '/language:${{ matrix.language }}'
+
+  # ── ESLint security rules ───────────────────────────────────────────────
+  eslint-security:
+    name: ESLint security rules
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci --prefer-offline
+
+      - name: Install eslint-plugin-security
+        run: npm install --no-save eslint-plugin-security@^3.0.0 @microsoft/eslint-formatter-sarif@^3.0.0
+
+      - name: Run ESLint with security rules (SARIF output)
+        run: |
+          npx eslint \
+            --plugin security \
+            --rule 'security/detect-object-injection: warn' \
+            --rule 'security/detect-non-literal-regexp: warn' \
+            --rule 'security/detect-non-literal-fs-filename: warn' \
+            --rule 'security/detect-eval-with-expression: error' \
+            --rule 'security/detect-new-buffer: error' \
+            --rule 'security/detect-no-csrf-before-method-override: warn' \
+            --rule 'security/detect-possible-timing-attacks: warn' \
+            --format @microsoft/eslint-formatter-sarif \
+            --output-file eslint-security.sarif \
+            'app/**/*.{ts,tsx}' 'lib/**/*.{ts,tsx}' 'pages/**/*.{ts,tsx}' \
+          || true
+
+      - name: Upload ESLint SARIF results
+        if: always()
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: eslint-security.sarif
+          category: eslint-security
+
+  # ── Secrets scanning (TruffleHog) ─────────────────────────────────────
+  secrets-scan:
+    name: TruffleHog secrets scan
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Fetch full history so TruffleHog can scan all commits in the PR
+          fetch-depth: 0
+
+      - name: TruffleHog OSS
+        uses: trufflesecurity/trufflehog@v3
+        with:
+          # Scan only the commits introduced by this push / PR.
+          # Use origin/<default_branch> so TruffleHog receives a valid ref.
+          base: origin/${{ github.event.repository.default_branch }}
+          head: HEAD
+          extra_args: --only-verified
+
   # ── Slither smart contract static analysis ──────────────────────────────
   slither:
     name: Slither

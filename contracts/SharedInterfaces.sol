@@ -1,7 +1,34 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
-/// ─────────────────────────── Shared Interfaces
+/**
+ * @notice SECURITY — Local security-primitive maintenance policy
+ *
+ * All security-critical primitives (`ReentrancyGuard`, `SafeERC20`, `Ownable`,
+ * `Pausable`) are implemented locally in this file rather than imported from
+ * OpenZeppelin.  This eliminates npm supply-chain risk but means OZ upstream
+ * fixes do NOT flow in automatically.
+ *
+ * MANDATORY ACTION on any new OpenZeppelin security advisory that affects these
+ * primitives:
+ *   1. Review the advisory at https://github.com/OpenZeppelin/openzeppelin-contracts/security/advisories
+ *   2. Compare the patched OZ source with the corresponding section below.
+ *   3. Apply the equivalent fix here and update `SHARED_INTERFACES_VERSION`.
+ *   4. Add the advisory ID to the `PATCHED_ADVISORIES` constant below.
+ *
+ * @custom:oz-version-baseline 5.1.0  — primitives last validated against this release
+ */
+
+/// @notice Monotonic version bump on every security-patch update to this file.
+/// @dev    File-level constants in Solidity 0.8 are implicitly internal.
+///         Increment on every security-motivated change; use in NatDoc review trail.
+uint256 constant SHARED_INTERFACES_VERSION = 1;
+
+/// @notice Comma-separated list of OZ advisory IDs whose mitigations have been
+///         manually assessed and confirmed as not applicable or applied here.
+/// @dev    Example: "GHSA-xxxx-yyyy-zzzz,GHSA-aaaa-bbbb-cccc"
+string constant PATCHED_ADVISORIES = "";
+
 
 interface IVaultHub {
     function vaultOf(address owner) external view returns (address);
