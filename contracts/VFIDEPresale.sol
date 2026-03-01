@@ -79,15 +79,15 @@ contract VFIDEPresale is ReentrancyGuard {
     event TierEnabled(uint8 tier, bool enabled);
     event PurchaseCancelled(address indexed buyer, uint256 indexed index, uint256 tokensReturned);
     event SubscriptionCancelled(uint256 indexed index); // Kept for backwards compatibility
-    event HoweySafeModeUpdated(bool enabled);
 
     // Immutable config
     address public immutable DAO;
     address public immutable TREASURY;
     IERC20 public immutable vfideToken;
 
-    // Howey-safe mode disables bonus and referral incentives
-    bool public howeySafeMode = true;
+    // Howey-safe mode is permanently hardcoded — bonus and referral incentives
+    // are disabled to ensure VFIDE is not classified as a security.
+    bool public constant howeySafeMode = true;
     
     // Supply constants
     uint256 public constant BASE_SUPPLY = 35_000_000 * 1e18;    // 35M base tokens
@@ -254,12 +254,6 @@ contract VFIDEPresale is ReentrancyGuard {
         saleEndTime = _startTime + SALE_DURATION;
     }
 
-    function setHoweySafeMode(bool enabled) external onlyDAO {
-        require(enabled, "PS: howey safe only");
-        howeySafeMode = true;
-        emit HoweySafeModeUpdated(true);
-    }
-    
     // ══════════════════════════════════════════════════════════════════════════
     //                              ADMIN FUNCTIONS
     // ══════════════════════════════════════════════════════════════════════════

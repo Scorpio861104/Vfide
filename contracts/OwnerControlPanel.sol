@@ -46,10 +46,8 @@ interface IUserVault {
 }
 
 // Interfaces for contracts with Howey-safe mode
-interface IHoweySafeContract {
-    function setHoweySafeMode(bool enabled) external;
-    function howeySafeMode() external view returns (bool);
-}
+// NOTE: The Howey-safe mode interface was removed — compliance is now hardcoded as a
+// constant in every ecosystem contract.  There is no runtime setter.
 
 interface IEcosystemVaultAdmin {
     function configureAutoSwap(address _router, address _stablecoin, bool _enabled, uint16 _maxSlippageBps) external;
@@ -74,18 +72,12 @@ contract OwnerControlPanel {
     
     // New contract references for enhanced configuration
     IEcosystemVaultAdmin public ecosystemVault;
-    IHoweySafeContract public dutyDistributor;
-    IHoweySafeContract public councilSalary;
-    IHoweySafeContract public councilManager;
-    IHoweySafeContract public promotionalTreasury;
-    IHoweySafeContract public liquidityIncentives;
     
     event ContractsUpdated(address token, address presale, address vaultHub, address burnRouter, address seer);
-    event EcosystemContractsUpdated(address ecosystemVault, address dutyDistributor, address councilSalary, address councilManager, address promotionalTreasury, address liquidityIncentives);
+    event EcosystemContractsUpdated(address ecosystemVault);
     event EmergencyAction(string action, address target);
     event FeePolicyUpdated(uint16 minBps, uint16 maxBps);
     event AntiWhaleUpdated(uint256 maxTransfer, uint256 maxWallet, uint256 dailyLimit, uint256 cooldown);
-    event HoweySafeModeUpdated(string contract_name, bool enabled);
     event AutoSwapConfigured(address router, address stablecoin, bool enabled, uint16 maxSlippageBps);
     
     error OCP_NotOwner();
@@ -137,20 +129,10 @@ contract OwnerControlPanel {
      * @dev Call this after deploying ecosystem contracts
      */
     function setEcosystemContracts(
-        address _ecosystemVault,
-        address _dutyDistributor,
-        address _councilSalary,
-        address _councilManager,
-        address _promotionalTreasury,
-        address _liquidityIncentives
+        address _ecosystemVault
     ) external onlyOwner {
         if (_ecosystemVault != address(0)) ecosystemVault = IEcosystemVaultAdmin(_ecosystemVault);
-        if (_dutyDistributor != address(0)) dutyDistributor = IHoweySafeContract(_dutyDistributor);
-        if (_councilSalary != address(0)) councilSalary = IHoweySafeContract(_councilSalary);
-        if (_councilManager != address(0)) councilManager = IHoweySafeContract(_councilManager);
-        if (_promotionalTreasury != address(0)) promotionalTreasury = IHoweySafeContract(_promotionalTreasury);
-        if (_liquidityIncentives != address(0)) liquidityIncentives = IHoweySafeContract(_liquidityIncentives);
-        emit EcosystemContractsUpdated(_ecosystemVault, _dutyDistributor, _councilSalary, _councilManager, _promotionalTreasury, _liquidityIncentives);
+        emit EcosystemContractsUpdated(_ecosystemVault);
     }
     
     // ═══════════════════════════════════════════════════════════════════════
@@ -764,109 +746,32 @@ contract OwnerControlPanel {
     }
     
     // ═══════════════════════════════════════════════════════════════════════
-    //                          HOWEY-SAFE MODE MANAGEMENT
+    //                     HOWEY COMPLIANCE STATUS (READ-ONLY)
     // ═══════════════════════════════════════════════════════════════════════
+    //
+    // Howey-safe mode is HARDCODED as a constant in every ecosystem contract.
+    // There are no runtime setters — compliance cannot be toggled at all.
+    // These view functions exist purely for dashboard status display.
     
     /**
-     * @notice Enable Howey-safe mode on all ecosystem contracts.
-     * @dev One-way: Howey-safe mode can only be ENABLED (never disabled) from
-     *      this control panel.  The underlying contracts enforce the same
-     *      invariant via `require(enabled, ...)`.  Passing `false` is rejected
-     *      both here and in every target contract, preventing any accidental or
-     *      intentional disabling of compliance controls.
+     * @notice Returns the Howey-safe status for each ecosystem contract.
+     * @dev Always (true, true, true, true, true) — hardcoded in each contract.
      */
-    function howey_setAllSafeMode(bool enabled) external onlyOwner {
-        require(enabled, "OCP: howey safe only");
-        if (address(dutyDistributor) != address(0)) {
-            dutyDistributor.setHoweySafeMode(true);
-            emit HoweySafeModeUpdated("DutyDistributor", true);
-        }
-        if (address(councilSalary) != address(0)) {
-            councilSalary.setHoweySafeMode(true);
-            emit HoweySafeModeUpdated("CouncilSalary", true);
-        }
-        if (address(councilManager) != address(0)) {
-            councilManager.setHoweySafeMode(true);
-            emit HoweySafeModeUpdated("CouncilManager", true);
-        }
-        if (address(promotionalTreasury) != address(0)) {
-            promotionalTreasury.setHoweySafeMode(true);
-            emit HoweySafeModeUpdated("PromotionalTreasury", true);
-        }
-        if (address(liquidityIncentives) != address(0)) {
-            liquidityIncentives.setHoweySafeMode(true);
-            emit HoweySafeModeUpdated("LiquidityIncentives", true);
-        }
-        // Note: VFIDEPresale is not included as it has different semantics
-    }
-    
-    /**
-     * @notice Enable Howey-safe mode on individual contracts.
-     * @dev One-way: can only be set to true.
-     */
-    function howey_setDutyDistributor(bool enabled) external onlyOwner {
-        require(enabled, "OCP: howey safe only");
-        dutyDistributor.setHoweySafeMode(true);
-        emit HoweySafeModeUpdated("DutyDistributor", true);
-    }
-    
-    function howey_setCouncilSalary(bool enabled) external onlyOwner {
-        require(enabled, "OCP: howey safe only");
-        councilSalary.setHoweySafeMode(true);
-        emit HoweySafeModeUpdated("CouncilSalary", true);
-    }
-    
-    function howey_setCouncilManager(bool enabled) external onlyOwner {
-        require(enabled, "OCP: howey safe only");
-        councilManager.setHoweySafeMode(true);
-        emit HoweySafeModeUpdated("CouncilManager", true);
-    }
-    
-    function howey_setPromotionalTreasury(bool enabled) external onlyOwner {
-        require(enabled, "OCP: howey safe only");
-        promotionalTreasury.setHoweySafeMode(true);
-        emit HoweySafeModeUpdated("PromotionalTreasury", true);
-    }
-    
-    function howey_setLiquidityIncentives(bool enabled) external onlyOwner {
-        require(enabled, "OCP: howey safe only");
-        liquidityIncentives.setHoweySafeMode(true);
-        emit HoweySafeModeUpdated("LiquidityIncentives", true);
-    }
-    
-    /**
-     * @notice Get Howey-safe mode status for all contracts
-     * @return dutyDistributorSafe True if DutyDistributor safe mode enabled
-     * @return councilSalarySafe True if CouncilSalary safe mode enabled
-     * @return councilManagerSafe True if CouncilManager safe mode enabled
-     * @return promotionalTreasurySafe True if PromotionalTreasury safe mode enabled
-     * @return liquidityIncentivesSafe True if LiquidityIncentives safe mode enabled
-     */
-    function howey_getStatus() external view returns (
+    function howey_getStatus() external pure returns (
         bool dutyDistributorSafe,
         bool councilSalarySafe,
         bool councilManagerSafe,
         bool promotionalTreasurySafe,
         bool liquidityIncentivesSafe
     ) {
-        dutyDistributorSafe = address(dutyDistributor) != address(0) ? dutyDistributor.howeySafeMode() : false;
-        councilSalarySafe = address(councilSalary) != address(0) ? councilSalary.howeySafeMode() : false;
-        councilManagerSafe = address(councilManager) != address(0) ? councilManager.howeySafeMode() : false;
-        promotionalTreasurySafe = address(promotionalTreasury) != address(0) ? promotionalTreasury.howeySafeMode() : false;
-        liquidityIncentivesSafe = address(liquidityIncentives) != address(0) ? liquidityIncentives.howeySafeMode() : false;
+        return (true, true, true, true, true);
     }
     
     /**
-     * @notice Check if all contracts are in safe mode (recommended for production)
-     * @return allSafe True if all contracts have howeySafeMode enabled
+     * @notice Returns true — Howey-safe mode is permanently hardcoded.
      */
-    function howey_areAllSafe() external view returns (bool allSafe) {
-        allSafe = true;
-        if (address(dutyDistributor) != address(0) && !dutyDistributor.howeySafeMode()) allSafe = false;
-        if (address(councilSalary) != address(0) && !councilSalary.howeySafeMode()) allSafe = false;
-        if (address(councilManager) != address(0) && !councilManager.howeySafeMode()) allSafe = false;
-        if (address(promotionalTreasury) != address(0) && !promotionalTreasury.howeySafeMode()) allSafe = false;
-        if (address(liquidityIncentives) != address(0) && !liquidityIncentives.howeySafeMode()) allSafe = false;
+    function howey_areAllSafe() external pure returns (bool allSafe) {
+        return true;
     }
     
     // ═══════════════════════════════════════════════════════════════════════
@@ -967,16 +872,10 @@ contract OwnerControlPanel {
     
     /**
      * @notice Production setup with recommended safe defaults
-     * @dev Enables all Howey-safe modes and disables auto-swap (safest configuration)
+     * @dev Disables auto-swap (safest starting configuration).
+     *      Howey-safe mode is hardcoded — no calls needed.
      */
     function production_setupSafeDefaults() external onlyOwner {
-        // Enable Howey-safe mode on all contracts
-        if (address(dutyDistributor) != address(0)) dutyDistributor.setHoweySafeMode(true);
-        if (address(councilSalary) != address(0)) councilSalary.setHoweySafeMode(true);
-        if (address(councilManager) != address(0)) councilManager.setHoweySafeMode(true);
-        if (address(promotionalTreasury) != address(0)) promotionalTreasury.setHoweySafeMode(true);
-        if (address(liquidityIncentives) != address(0)) liquidityIncentives.setHoweySafeMode(true);
-        
         // Disable auto-swap (start conservatively)
         if (address(ecosystemVault) != address(0)) {
             address router = ecosystemVault.swapRouter();
@@ -990,18 +889,12 @@ contract OwnerControlPanel {
     
     /**
      * @notice Production setup with auto-swap enabled
-     * @dev Sets Howey-safe mode + enables auto-swap for stablecoin payments
+     * @dev Enables auto-swap for stablecoin payments.
+     *      Howey-safe mode is hardcoded — no calls needed.
      * @param dexRouter DEX router address for swaps
      * @param usdc USDC token address (or other preferred stablecoin)
      */
     function production_setupWithAutoSwap(address dexRouter, address usdc) external onlyOwner {
-        // Enable Howey-safe mode on all contracts
-        if (address(dutyDistributor) != address(0)) dutyDistributor.setHoweySafeMode(true);
-        if (address(councilSalary) != address(0)) councilSalary.setHoweySafeMode(true);
-        if (address(councilManager) != address(0)) councilManager.setHoweySafeMode(true);
-        if (address(promotionalTreasury) != address(0)) promotionalTreasury.setHoweySafeMode(true);
-        if (address(liquidityIncentives) != address(0)) liquidityIncentives.setHoweySafeMode(true);
-        
         // Enable auto-swap with conservative 1% slippage
         if (address(ecosystemVault) != address(0)) {
             ecosystemVault.configureAutoSwap(dexRouter, usdc, true, 100);
@@ -1012,7 +905,7 @@ contract OwnerControlPanel {
     
     /**
      * @notice Get comprehensive system status
-     * @return allHoweySafe True if all contracts have Howey-safe mode enabled
+     * @return allHoweySafe Always true — Howey-safe mode is hardcoded
      * @return autoSwapEnabled True if auto-swap is enabled in EcosystemVault
      * @return tokenCircuitBreaker True if circuit breaker is active
      * @return tokenVaultOnly True if vault-only mode is enabled
@@ -1027,13 +920,8 @@ contract OwnerControlPanel {
         bool tokenPolicyLocked,
         string memory healthStatus
     ) {
-        // Check Howey-safe mode status
+        // Howey-safe mode is hardcoded as a constant in every ecosystem contract.
         allHoweySafe = true;
-        if (address(dutyDistributor) != address(0) && !dutyDistributor.howeySafeMode()) allHoweySafe = false;
-        if (address(councilSalary) != address(0) && !councilSalary.howeySafeMode()) allHoweySafe = false;
-        if (address(councilManager) != address(0) && !councilManager.howeySafeMode()) allHoweySafe = false;
-        if (address(promotionalTreasury) != address(0) && !promotionalTreasury.howeySafeMode()) allHoweySafe = false;
-        if (address(liquidityIncentives) != address(0) && !liquidityIncentives.howeySafeMode()) allHoweySafe = false;
         
         // Check auto-swap status
         autoSwapEnabled = address(ecosystemVault) != address(0) ? ecosystemVault.autoSwapEnabled() : false;
@@ -1044,10 +932,8 @@ contract OwnerControlPanel {
         tokenPolicyLocked = vfideToken.policyLocked();
         
         // Determine health status
-        if (allHoweySafe && !tokenCircuitBreaker) {
+        if (!tokenCircuitBreaker) {
             healthStatus = "Production Ready - All Systems Safe";
-        } else if (!allHoweySafe) {
-            healthStatus = "Warning - Howey-safe mode disabled";
         } else {
             healthStatus = "Circuit Breaker Active";
         }

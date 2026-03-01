@@ -29,8 +29,10 @@ contract PromotionalTreasury is AccessControl, ReentrancyGuard {
     IERC20 public rewardToken;
     uint8 public rewardTokenDecimals = 18;
 
-    // Howey-safe mode disables promotional token distributions
-    bool public howeySafeMode = true;
+    // Howey-safe mode is permanently hardcoded — no runtime toggle exists.
+    // Promotional token distributions are disabled to ensure VFIDE is not
+    // classified as a security under the Howey Test.
+    bool public constant howeySafeMode = true;
     
     // Fixed allocation: 2,000,000 VFIDE for ALL promotions
     uint256 public constant TOTAL_PROMOTIONAL_ALLOCATION = 2_000_000 * 10**18;
@@ -116,7 +118,6 @@ contract PromotionalTreasury is AccessControl, ReentrancyGuard {
     event PioneerBadgeAwarded(address indexed user, uint256 pioneerNumber, uint256 bonus);
     event PromotionalBudgetDepleted(string category);
     event BudgetReplenished(string category, uint256 amount);
-    event HoweySafeModeUpdated(bool enabled);
     event RewardTokenUpdated(address indexed oldToken, address indexed newToken);
 
     error PT_HoweySafeMode();
@@ -148,14 +149,8 @@ contract PromotionalTreasury is AccessControl, ReentrancyGuard {
         emit RewardTokenUpdated(oldToken, token);
     }
 
-    function setHoweySafeMode(bool enabled) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        require(enabled, "PT: howey safe only");
-        howeySafeMode = true;
-        emit HoweySafeModeUpdated(true);
-    }
-
-    function _requireHoweyDisabled() internal view {
-        if (howeySafeMode) revert PT_HoweySafeMode();
+    function _requireHoweyDisabled() internal pure {
+        revert PT_HoweySafeMode();
     }
     
     /**

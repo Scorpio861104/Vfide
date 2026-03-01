@@ -25,11 +25,11 @@ export const OWNER_CONTROL_PANEL_ABI = [
       { name: 'healthStatus', type: 'string' },
     ],
   },
-  // Howey-Safe Mode
+  // Howey Compliance — view-only (hardcoded in contracts, no setters)
   {
     name: 'howey_getStatus',
     type: 'function',
-    stateMutability: 'view',
+    stateMutability: 'pure',
     inputs: [],
     outputs: [
       { name: 'dutyDistributorSafe', type: 'bool' },
@@ -42,51 +42,9 @@ export const OWNER_CONTROL_PANEL_ABI = [
   {
     name: 'howey_areAllSafe',
     type: 'function',
-    stateMutability: 'view',
+    stateMutability: 'pure',
     inputs: [],
     outputs: [{ name: 'allSafe', type: 'bool' }],
-  },
-  {
-    name: 'howey_setAllSafeMode',
-    type: 'function',
-    stateMutability: 'nonpayable',
-    inputs: [{ name: 'enabled', type: 'bool' }],
-    outputs: [],
-  },
-  {
-    name: 'howey_setDutyDistributor',
-    type: 'function',
-    stateMutability: 'nonpayable',
-    inputs: [{ name: 'enabled', type: 'bool' }],
-    outputs: [],
-  },
-  {
-    name: 'howey_setCouncilSalary',
-    type: 'function',
-    stateMutability: 'nonpayable',
-    inputs: [{ name: 'enabled', type: 'bool' }],
-    outputs: [],
-  },
-  {
-    name: 'howey_setCouncilManager',
-    type: 'function',
-    stateMutability: 'nonpayable',
-    inputs: [{ name: 'enabled', type: 'bool' }],
-    outputs: [],
-  },
-  {
-    name: 'howey_setPromotionalTreasury',
-    type: 'function',
-    stateMutability: 'nonpayable',
-    inputs: [{ name: 'enabled', type: 'bool' }],
-    outputs: [],
-  },
-  {
-    name: 'howey_setLiquidityIncentives',
-    type: 'function',
-    stateMutability: 'nonpayable',
-    inputs: [{ name: 'enabled', type: 'bool' }],
-    outputs: [],
   },
   // Auto-Swap
   {
