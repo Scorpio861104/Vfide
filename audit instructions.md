@@ -84,7 +84,7 @@ At the time of this audit (commit `b524106` + ongoing, 2026-03-01), the Vfide pl
 | Layer | Overall Rating | Notes |
 |-------|---------------|-------|
 | Web Application | **Low Risk** | All findings resolved including nonce-based CSP, CSP violation reporting, and rate limiting. |
-| Smart Contracts | **Low Risk** | All findings resolved; 48h timelocks on fee-sink, bridge trusted-remote, and oracle feed changes. |
+| Smart Contracts | **Low Risk** | All findings resolved; 48h timelocks on fee-sink, bridge trusted-remote, oracle feed; recovery-owner anchoring; DAOTimelock array cleanup; DOMAIN_SEPARATOR immutable. |
 | Infrastructure | **Low Risk** | Docker credentials secured; full CI pipeline: npm audit, CodeQL, ESLint security, TruffleHog, Slither, Trivy. WebSocket server with all §26 controls. |
 | Compliance | **Low Risk** | Howey compliance documented; PRIVACY.md data-retention and GDPR right-to-erasure process defined. |
 
@@ -93,13 +93,13 @@ At the time of this audit (commit `b524106` + ongoing, 2026-03-01), the Vfide pl
 | Severity | Total | Fixed | Open |
 |----------|-------|-------|------|
 | Critical | 0 | 0 | 0 |
-| High | 3 | 3 | 0 |
+| High | 4 | 4 | 0 |
 | Medium | 9 | 9 | 0 |
-| Low | 8 | 8 | 0 |
-| Informational | 12 | N/A | N/A |
-| **Total** | **32** | **20** | **0** |
+| Low | 9 | 9 | 0 |
+| Informational | 13 | N/A | N/A |
+| **Total** | **35** | **22** | **0** |
 
-> ✅ **All 20 actionable findings are resolved.** Additional hardening beyond the original scope has also been applied: Oracle feed 48h timelock, WebSocket server with full §26 security controls, CodeQL/ESLint/TruffleHog CI pipeline, SharedInterfaces.sol advisory-tracking mechanism, PRIVACY.md data-retention policy, and deploy.sh multisig pre-flight checks.
+> ✅ **All 22 actionable findings are resolved** (3 new findings discovered in deeper audit pass — VFIDE-H-04-DEEP, VFIDE-L-03, VFIDE-I-01 — all fixed). Additional hardening beyond the original scope: Oracle feed 48h timelock, WebSocket server with full §26 security controls, CodeQL/ESLint/TruffleHog CI pipeline, SharedInterfaces.sol advisory-tracking mechanism, PRIVACY.md data-retention policy, deploy.sh multisig pre-flight checks.
 
 ### B.3 Highlights of Resolved Issues
 
@@ -1769,6 +1769,68 @@ Each finding is assigned:
 
 ---
 
+### VFIDE-H-04-DEEP — Recovery Recipient Overridable Post-Threshold (Deep Audit)
+
+| Field | Value |
+|-------|-------|
+| **ID** | VFIDE-H-04-DEEP |
+| **Severity** | High |
+| **CVSS v3.1** | 7.5 (AV:N/AC:H/PR:H/UI:N/S:U/C:H/I:H/A:N) |
+| **Status** | ✅ Fixed — `contracts/VaultInfrastructureLite.sol` |
+| **File** | `contracts/VaultInfrastructureLite.sol` |
+
+**Description:** `approveForceRecovery(vault, newOwner)` allowed each of the three required approvers to vote for a **different** `newOwner`. The "winning" owner was whoever cast the threshold-triggering vote. Additionally, after the threshold was reached, any unused approver could call the function again with a different `newOwner`, causing `recoveryProposedOwner[vault]` to be silently overwritten — redirecting the recovery to an attacker-controlled address after legitimate approvers had already voted.
+
+Attack scenario:
+1. Approver A votes for owner1 (count = 1)
+2. Approver B votes for owner2 (count = 2)
+3. Approver C votes for owner3 → threshold hit → `recoveryProposedOwner = owner3`, timelock starts (7 days)
+4. Attacker (approver D) votes for attacker-address (count = 4) → threshold re-check → `recoveryProposedOwner = attacker-address`
+5. After 7 days, DAO finalizes → vault transferred to attacker
+
+**Remediation (applied):**
+- First vote anchors `recoveryProposedOwner[vault]` to the proposed owner; all subsequent votes must match it (revert `VI_OwnerMismatch` otherwise).
+- `recoveryUnlockTime` is only set once — the first time `recoveryApprovalCount` reaches the threshold. Subsequent votes cannot restart the clock or change the target.
+- New `cancelForceRecovery(vault)` function (DAO-only) allows cancellation before finalization; increments the nonce to invalidate all outstanding approvals.
+
+---
+
+### VFIDE-L-03 — DAOTimelock `queuedIds` Unbounded Growth / Stale Entries (Deep Audit)
+
+| Field | Value |
+|-------|-------|
+| **ID** | VFIDE-L-03 |
+| **Severity** | Low |
+| **CVSS v3.1** | 3.7 (AV:N/AC:H/PR:H/UI:N/S:U/C:N/I:N/A:L) |
+| **Status** | ✅ Fixed — `contracts/DAOTimelock.sol` |
+| **File** | `contracts/DAOTimelock.sol` |
+
+**Description:** `cancel()`, `cleanupExpired()`, and `requeueExpired()` all deleted entries from the `queue` mapping but never removed them from the `queuedIds` tracking array. Over time the array would grow without bound, making `getQueuedTransactions()` O(N) on a monotonically increasing N, and returning zero-struct values for all cancelled/expired transactions (misleading for callers). `requeueExpired()` also failed to add the new ID to `queuedIds`, so re-queued transactions became invisible to `getQueuedTransactions()`.
+
+**Remediation (applied):**
+- Added internal `_removeFromQueuedIds(bytes32 id)` using swap-and-pop (O(N) search, O(1) deletion).
+- `cancel()` now calls `_removeFromQueuedIds(id)`.
+- `cleanupExpired()` now calls `_removeFromQueuedIds(id)`.
+- `requeueExpired()` now calls `_removeFromQueuedIds(oldId)` and pushes `newId` to `queuedIds`.
+
+---
+
+### VFIDE-I-01 — VFIDEToken `DOMAIN_SEPARATOR` Mutable State Variable (Deep Audit)
+
+| Field | Value |
+|-------|-------|
+| **ID** | VFIDE-I-01 |
+| **Severity** | Informational |
+| **CVSS v3.1** | 1.9 (AV:L/AC:H/PR:H/UI:N/S:U/C:L/I:N/A:N) |
+| **Status** | ✅ Fixed — `contracts/VFIDEToken.sol` |
+| **File** | `contracts/VFIDEToken.sol` |
+
+**Description:** `DOMAIN_SEPARATOR` was declared as `bytes32 public` (a regular storage slot). Although no setter exists, a mutable state variable could theoretically be overwritten in a compromised proxy upgrade scenario. Additionally, reading a storage slot on every `permit()` call costs an extra `SLOAD` that `immutable` eliminates.
+
+**Remediation (applied):** Changed declaration to `bytes32 public immutable DOMAIN_SEPARATOR`. The value is still computed and set once in the constructor; `immutable` encodes it directly in contract bytecode, making it permanently read-only and cheaper to access.
+
+---
+
 ### Previously Resolved Findings (For Reference)
 
 | ID | Title | Severity | Fixed |
@@ -1930,7 +1992,7 @@ The review was performed by the Vfide internal security team with the following 
 
 The following items must be completed and verified before mainnet deployment:
 
-- [x] All 20 actionable findings resolved (VFIDE-H-01 through VFIDE-L-02)
+- [x] All 22 actionable findings resolved (VFIDE-H-01 through VFIDE-I-01 — including 3 found in deep audit pass)
 - [x] All production contract owners migrated to Gnosis Safe (minimum 3-of-5) — enforced by `deploy.sh` pre-flight
 - [x] `DAOTimelock.admin` set to `AdminMultiSig` contract — enforced by `deploy.sh` pre-flight
 - [x] `setBurnRouter`, `setTreasurySink`, `setSanctumSink` protected by 48h timelock (VFIDE-H-03)
