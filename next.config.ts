@@ -74,14 +74,20 @@ const nextConfig: NextConfig = {
         source: '/:path*',
         headers: [
           // Content Security Policy
+          // NOTE: 'unsafe-inline' has been removed from script-src.
+          // Per-request nonce injection is handled by middleware.ts, which sets
+          // the 'Content-Security-Policy' header with 'nonce-{nonce}' for every
+          // HTML response.  This static header definition in next.config.ts is kept
+          // only as a fallback for routes not matched by the middleware matcher
+          // (static files, etc.) and deliberately omits 'unsafe-inline'.
+          // 'unsafe-eval' is still required for WalletConnect/RainbowKit.
           {
             key: 'Content-Security-Policy',
             value: [
               // Default: only same origin
               "default-src 'self'",
-              // Scripts: self, trusted domains, and unsafe-inline for Next.js hydration
-              // In production, consider migrating to nonce-based CSP
-              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://vercel.live https://*.walletconnect.com https://*.walletconnect.org",
+              // Scripts: nonce injected by middleware; 'unsafe-eval' for WalletConnect/RainbowKit
+              "script-src 'self' 'unsafe-eval' https://vercel.live https://*.walletconnect.com https://*.walletconnect.org",
               // Styles: self and unsafe-inline for Tailwind/Radix UI
               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
               // Images: self, data URIs, HTTPS, and blob for avatars/NFTs

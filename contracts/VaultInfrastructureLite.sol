@@ -29,8 +29,9 @@ contract VaultInfrastructureLite is Ownable {
     // Recovery Timelock with Multi-Sig (H-5 Fix)
     mapping(address => uint64) public recoveryUnlockTime;
     mapping(address => address) public recoveryProposedOwner;
-    mapping(address => mapping(address => bool)) public recoveryApprovals;
+    mapping(address => mapping(address => mapping(uint256 => bool))) public recoveryApprovals; // C-2 Fix: nonce-based
     mapping(address => uint8) public recoveryApprovalCount;
+    mapping(address => uint256) public recoveryNonce; // C-2 Fix: nonce to invalidate old approvals
     uint64 public constant RECOVERY_DELAY = 7 days;
     uint8 public constant RECOVERY_APPROVALS_REQUIRED = 3;
     mapping(address => bool) public isRecoveryApprover;
@@ -159,8 +160,8 @@ contract VaultInfrastructureLite is Ownable {
         require(current != address(0), "unknown vault");
         require(vaultOf[newOwner] == address(0), "target has vault");
 
-        if (!recoveryApprovals[vault][msg.sender]) {
-            recoveryApprovals[vault][msg.sender] = true;
+        if (!recoveryApprovals[vault][msg.sender][recoveryNonce[vault]]) {
+            recoveryApprovals[vault][msg.sender][recoveryNonce[vault]] = true;
             recoveryApprovalCount[vault]++;
             _log("recovery_approval_cast");
         }
@@ -210,6 +211,7 @@ contract VaultInfrastructureLite is Ownable {
         delete recoveryProposedOwner[vault];
         delete recoveryUnlockTime[vault];
         delete recoveryApprovalCount[vault];
+        recoveryNonce[vault]++; // C-2 Fix: invalidate any outstanding approvals
 
         emit ForcedRecovery(vault, newOwner);
         _logEv(vault, "force_recover_final", 0, "");

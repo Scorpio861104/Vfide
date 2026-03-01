@@ -17,12 +17,12 @@
         { "key": "Strict-Transport-Security", "value": "max-age=63072000; includeSubDomains; preload" },
         {
           "key": "Content-Security-Policy",
-          "value": "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://vercel.live https://*.walletconnect.com https://*.walletconnect.org; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: https: blob:; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' wss: ws: https: https://*.walletconnect.com https://*.walletconnect.org https://*.base.org https://*.polygon.technology https://*.zksync.io; frame-src 'self' https://*.walletconnect.com; media-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests"
+          "value": "default-src 'self'; script-src 'self' 'unsafe-eval' https://vercel.live https://*.walletconnect.com https://*.walletconnect.org; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: https: blob:; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' wss: ws: https: https://*.walletconnect.com https://*.walletconnect.org https://*.base.org https://*.polygon.technology https://*.zksync.io; frame-src 'self' https://*.walletconnect.com; media-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests"
         },
         { "key": "Cross-Origin-Opener-Policy", "value": "same-origin" },
         { "key": "Cross-Origin-Embedder-Policy", "value": "credentialless" }
       ]
     }
   ],
-  "_comment_csp": "NOTE: 'unsafe-inline' and 'unsafe-eval' in script-src are required because Next.js injects inline hydration scripts and WalletConnect/RainbowKit use eval-based bundle loading. Migrating to nonce-based CSP requires Next.js experimental nonce support and is tracked as a future hardening task. The canonical header definition lives in next.config.js; this file mirrors it for the Vercel edge network."
+  "_comment_csp": "NOTE: 'unsafe-inline' has been removed from script-src. Per-request nonce injection is handled by middleware.ts (x-nonce header). 'unsafe-eval' is still required for WalletConnect/RainbowKit bundle loading and will be replaced with a hash-based approach when those dependencies support it. The canonical header definition lives in next.config.ts; this file mirrors it for the Vercel edge network (the nonce varies per-request so cannot be statically set here)."
 }

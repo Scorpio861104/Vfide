@@ -86,6 +86,15 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
     // Sinks (fallbacks if router is unset or returns zero sinks)
     address public treasurySink;  // sanctuary/treasury receiver for charity share
     address public sanctumSink; // Optional: Burn to Sanctum instead of 0x0
+
+    // VFIDE-H-03 Fix: 48-hour timelock for fee-sink and burn-router changes
+    uint64 public constant SINK_CHANGE_DELAY = 48 hours;
+    address public pendingBurnRouter;
+    uint64  public pendingBurnRouterAt;
+    address public pendingTreasurySink;
+    uint64  public pendingTreasurySinkAt;
+    address public pendingSanctumSink;
+    uint64  public pendingSanctumSinkAt;
     
     // Sanctions / Compliance
     mapping(address => bool) public isBlacklisted;
@@ -109,8 +118,11 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
     event SecurityHubSet(address indexed hub);
     event LedgerSet(address indexed ledger);
     event BurnRouterSet(address indexed router);
+    event BurnRouterScheduled(address indexed router, uint64 effectiveAt);
     event TreasurySinkSet(address indexed sink);
+    event TreasurySinkScheduled(address indexed sink, uint64 effectiveAt);
     event SanctumSinkSet(address indexed sink);
+    event SanctumSinkScheduled(address indexed sink, uint64 effectiveAt);
     event SystemExemptSet(address indexed who, bool isExempt);
     event Whitelisted(address indexed addr, bool status);
     event VaultOnlySet(bool enabled);
@@ -283,24 +295,60 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
 
     function setBurnRouter(address router) external onlyOwner {
         if (policyLocked && router == address(0)) revert VF_POLICY_LOCKED();
-        burnRouter = IProofScoreBurnRouterToken(router);
-        emit BurnRouterSet(router);
+        uint64 effectiveAt = uint64(block.timestamp) + SINK_CHANGE_DELAY;
+        pendingBurnRouter = router;
+        pendingBurnRouterAt = effectiveAt;
+        emit BurnRouterScheduled(router, effectiveAt);
+        _log("burn_router_scheduled");
+    }
+
+    function applyBurnRouter() external onlyOwner {
+        require(pendingBurnRouterAt != 0, "VF: no pending");
+        require(block.timestamp >= pendingBurnRouterAt, "VF: timelock");
+        burnRouter = IProofScoreBurnRouterToken(pendingBurnRouter);
+        emit BurnRouterSet(pendingBurnRouter);
         _log("burn_router_set");
+        delete pendingBurnRouter;
+        delete pendingBurnRouterAt;
     }
 
     function setTreasurySink(address sink) external onlyOwner {
         if (policyLocked && sink == address(0)) revert VF_POLICY_LOCKED();
-        treasurySink = sink;
-        emit TreasurySinkSet(sink);
+        uint64 effectiveAt = uint64(block.timestamp) + SINK_CHANGE_DELAY;
+        pendingTreasurySink = sink;
+        pendingTreasurySinkAt = effectiveAt;
+        emit TreasurySinkScheduled(sink, effectiveAt);
+        _log("treasury_sink_scheduled");
+    }
+
+    function applyTreasurySink() external onlyOwner {
+        require(pendingTreasurySinkAt != 0, "VF: no pending");
+        require(block.timestamp >= pendingTreasurySinkAt, "VF: timelock");
+        treasurySink = pendingTreasurySink;
+        emit TreasurySinkSet(pendingTreasurySink);
         _log("treasury_sink_set");
+        delete pendingTreasurySink;
+        delete pendingTreasurySinkAt;
     }
 
     function setSanctumSink(address _sanctum) external onlyOwner {
         if (policyLocked) require(_sanctum != address(0), "VF: cannot set zero when locked");
         require(_sanctum != address(0), "VF: zero address");
-        sanctumSink = _sanctum;
-        emit SanctumSinkSet(_sanctum);
+        uint64 effectiveAt = uint64(block.timestamp) + SINK_CHANGE_DELAY;
+        pendingSanctumSink = _sanctum;
+        pendingSanctumSinkAt = effectiveAt;
+        emit SanctumSinkScheduled(_sanctum, effectiveAt);
+        _log("sanctum_sink_scheduled");
+    }
+
+    function applySanctumSink() external onlyOwner {
+        require(pendingSanctumSinkAt != 0, "VF: no pending");
+        require(block.timestamp >= pendingSanctumSinkAt, "VF: timelock");
+        sanctumSink = pendingSanctumSink;
+        emit SanctumSinkSet(pendingSanctumSink);
         _log("sanctum_sink_set");
+        delete pendingSanctumSink;
+        delete pendingSanctumSinkAt;
     }
 
     /// @notice Exempt address from all checks (fees + vault-only) - use for system contracts

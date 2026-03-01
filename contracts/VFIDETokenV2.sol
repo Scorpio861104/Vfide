@@ -1,5 +1,9 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.19;
+pragma solidity 0.8.30;
+
+// STATUS: Draft / Archived — VFIDEToken.sol (contracts/VFIDEToken.sol) is the production token.
+// VFIDETokenV2 is an alternative design kept for reference only.
+// DO NOT deploy this contract as the primary VFIDE token.
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "./VFIDEAccessControl.sol";

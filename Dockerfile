@@ -1,4 +1,10 @@
 # Production Dockerfile for Next.js Frontend
+# SECURITY NOTE (§21.1): Pin this image to a specific digest before production deployment
+# to prevent supply-chain substitution via mutable image tags.
+# Steps to pin:
+#   docker pull node:25-alpine
+#   docker inspect node:25-alpine --format='{{index .RepoDigests 0}}'
+# Then replace `node:25-alpine` with `node:25-alpine@sha256:<digest>` on the FROM line below.
 FROM node:25-alpine AS base
 
 # Install dependencies only when needed

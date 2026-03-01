@@ -80,6 +80,20 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
     /// @notice Bridge transaction history
     mapping(bytes32 => BridgeTransaction) public bridgeTransactions;
 
+    /// @notice Timelock delay for sensitive configuration changes (48 hours)
+    uint64 public constant CONFIG_TIMELOCK_DELAY = 48 hours;
+
+    /// @notice Pending trusted remote changes (chainId => remote + effectiveAt)
+    struct PendingRemote {
+        bytes32 remote;
+        uint64 effectiveAt;
+    }
+    mapping(uint32 => PendingRemote) public pendingTrustedRemotes;
+
+    /// @notice Pending security module change
+    address public pendingSecurityModule;
+    uint64 public pendingSecurityModuleAt;
+
     // Events
     event BridgeSent(
         address indexed sender,
@@ -98,7 +112,9 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
     );
 
     event TrustedRemoteSet(uint32 indexed chainId, bytes32 remote);
+    event TrustedRemoteScheduled(uint32 indexed chainId, bytes32 remote, uint64 effectiveAt);
     event SecurityModuleUpdated(address indexed oldModule, address indexed newModule);
+    event SecurityModuleScheduled(address indexed pendingModule, uint64 effectiveAt);
     event MaxBridgeAmountUpdated(uint256 oldAmount, uint256 newAmount);
     event BridgeFeeUpdated(uint256 oldFee, uint256 newFee);
     event FeeCollectorUpdated(address indexed oldCollector, address indexed newCollector);
@@ -259,23 +275,51 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
     }
 
     /**
-     * @notice Set trusted remote for a chain
+     * @notice Schedule a trusted remote update (takes effect after 48h timelock)
      * @param _chainId Chain ID
      * @param _remote Remote bridge address
      */
     function setTrustedRemote(uint32 _chainId, bytes32 _remote) external onlyOwner {
-        trustedRemotes[_chainId] = _remote;
-        emit TrustedRemoteSet(_chainId, _remote);
+        uint64 effectiveAt = uint64(block.timestamp) + CONFIG_TIMELOCK_DELAY;
+        pendingTrustedRemotes[_chainId] = PendingRemote({remote: _remote, effectiveAt: effectiveAt});
+        emit TrustedRemoteScheduled(_chainId, _remote, effectiveAt);
     }
 
     /**
-     * @notice Set security module
-     * @param _securityModule Security module address
+     * @notice Apply a scheduled trusted remote update after the timelock has elapsed
+     * @param _chainId Chain ID to apply the pending update for
+     */
+    function applyTrustedRemote(uint32 _chainId) external onlyOwner {
+        PendingRemote memory pending = pendingTrustedRemotes[_chainId];
+        require(pending.effectiveAt != 0, "VFIDEBridge: no pending update");
+        require(block.timestamp >= pending.effectiveAt, "VFIDEBridge: timelock not elapsed");
+        trustedRemotes[_chainId] = pending.remote;
+        delete pendingTrustedRemotes[_chainId];
+        emit TrustedRemoteSet(_chainId, pending.remote);
+    }
+
+    /**
+     * @notice Schedule a security module update (takes effect after 48h timelock)
+     * @param _securityModule New security module address
      */
     function setSecurityModule(address _securityModule) external onlyOwner {
+        uint64 effectiveAt = uint64(block.timestamp) + CONFIG_TIMELOCK_DELAY;
+        pendingSecurityModule = _securityModule;
+        pendingSecurityModuleAt = effectiveAt;
+        emit SecurityModuleScheduled(_securityModule, effectiveAt);
+    }
+
+    /**
+     * @notice Apply a scheduled security module update after the timelock has elapsed
+     */
+    function applySecurityModule() external onlyOwner {
+        require(pendingSecurityModuleAt != 0, "VFIDEBridge: no pending update");
+        require(block.timestamp >= pendingSecurityModuleAt, "VFIDEBridge: timelock not elapsed");
         address oldModule = securityModule;
-        securityModule = _securityModule;
-        emit SecurityModuleUpdated(oldModule, _securityModule);
+        securityModule = pendingSecurityModule;
+        delete pendingSecurityModule;
+        delete pendingSecurityModuleAt;
+        emit SecurityModuleUpdated(oldModule, securityModule);
     }
 
     /**
