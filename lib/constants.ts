@@ -120,19 +120,15 @@ export const DEFAULT_PAYROLL_TOPUP = '5000';
  * Presale tier prices in USD (from VFIDEPresale.sol)
  * 
  * Supply breakdown:
- * - Tier 0 (Founding): $0.03 per VFIDE, 10M cap
- * - Tier 1 (Oath): $0.05 per VFIDE, 10M cap
- * - Tier 2 (Public): $0.07 per VFIDE, 15M cap
- * - Total: 35M base tokens, 15M bonus pool = 50M presale allocation
+ * - Tier 0 (Founding): $0.03 per VFIDE, 10M cap — 180-day lock required
+ * - Tier 1 (Oath): $0.05 per VFIDE, 10M cap — 90-day lock required
+ * - Tier 2 (Public): $0.07 per VFIDE, 15M cap — optional lock
+ * - Total: 35M base tokens
  * 
- * Lock bonuses:
- * - 180-day lock: +30% bonus (10% immediate)
- * - 90-day lock: +15% bonus (20% immediate)
- * - No lock: 0% bonus (100% immediate)
- * 
- * Referral bonuses:
- * - Referrer: +3% of base tokens
- * - Referee: +2% of base tokens
+ * Lock periods (no bonus tokens — locking reflects commitment, not investment return):
+ * - 180-day lock: 10% immediate, 90% locked
+ * - 90-day lock: 20% immediate, 80% locked
+ * - No lock: 100% immediate
  */
 export const PRESALE_PRICES = {
   FOUNDING: 0.03,  // Tier 0: $0.03 per VFIDE
@@ -147,30 +143,21 @@ export const PRESALE_CAPS = {
 } as const;
 
 /**
- * Total presale supply breakdown
- * 35M base allocation + 15M bonus pool = 50M total (25% of max supply)
+ * Total presale supply: 35M base allocation
+ * No bonus pool — rewards are not offered
  */
 export const PRESALE_SUPPLY = {
   BASE: 35_000_000,
-  BONUS_POOL: 15_000_000,
-  TOTAL: 50_000_000,
+  TOTAL: 35_000_000,
 } as const;
 
 /**
- * Lock period bonuses (from 15M bonus pool)
+ * Lock period unlock percentages (no bonus tokens)
  */
 export const LOCK_BONUSES = {
-  LOCK_180_DAYS: { bonus: 0.30, immediate: 0.10, days: 180 },  // +30% bonus, 10% immediate
-  LOCK_90_DAYS: { bonus: 0.15, immediate: 0.20, days: 90 },    // +15% bonus, 20% immediate
-  NO_LOCK: { bonus: 0, immediate: 1.0, days: 0 },              // 100% immediate
-} as const;
-
-/**
- * Referral bonuses (from bonus pool)
- */
-export const REFERRAL_BONUSES = {
-  REFERRER: 0.03,  // 3% of base tokens
-  REFEREE: 0.02,   // 2% of base tokens
+  LOCK_180_DAYS: { bonus: 0, immediate: 0.10, days: 180 },  // 10% immediate, 90% locked
+  LOCK_90_DAYS: { bonus: 0, immediate: 0.20, days: 90 },    // 20% immediate, 80% locked
+  NO_LOCK: { bonus: 0, immediate: 1.0, days: 0 },           // 100% immediate
 } as const;
 
 /**

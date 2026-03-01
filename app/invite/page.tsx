@@ -11,7 +11,6 @@ import {
   Twitter,
   Share2,
   Users,
-  Gift,
   Trophy,
   Zap,
   QrCode,
@@ -56,15 +55,15 @@ export default function InviteFriendsPage() {
 
   const rewards = [
     {
-      icon: Gift,
-      title: 'Earn Rewards',
-      description: 'Get 100 VFIDE tokens for each friend who joins',
+      icon: Users,
+      title: 'Grow the Network',
+      description: 'Invite friends to join the VFIDE governance community',
       color: 'text-emerald-400',
     },
     {
       icon: Trophy,
-      title: 'Unlock Badges',
-      description: 'Earn exclusive badges as you invite more friends',
+      title: 'Earn Governance Badges',
+      description: 'Build your ProofScore reputation through community participation',
       color: 'text-amber-400',
     },
     {
@@ -115,7 +114,7 @@ export default function InviteFriendsPage() {
             Invite Friends
           </h1>
           <p className="text-gray-400 text-lg">
-            Share VFIDE with friends and earn rewards together
+            Share VFIDE with your network and grow the governance community
           </p>
         </motion.div>
 

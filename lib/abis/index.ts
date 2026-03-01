@@ -25,7 +25,6 @@ import CommerceEscrowABI from './CommerceEscrow.json'
 // New consolidated ABIs
 import BurnRouterABI from './BurnRouter.json'
 import DutyDistributorABI from './DutyDistributor.json'
-import PromotionalTreasuryABI from './PromotionalTreasury.json'
 import CouncilElectionABI from './CouncilElection.json'
 import CouncilSalaryABI from './CouncilSalary.json'
 import SubscriptionManagerABI from './SubscriptionManager.json'
@@ -72,7 +71,6 @@ validateABI(CommerceEscrowABI, 'CommerceEscrow');
 // Validate new ABIs
 validateABI(BurnRouterABI, 'BurnRouter');
 validateABI(DutyDistributorABI, 'DutyDistributor');
-validateABI(PromotionalTreasuryABI, 'PromotionalTreasury');
 validateABI(CouncilElectionABI, 'CouncilElection');
 validateABI(CouncilSalaryABI, 'CouncilSalary');
 validateABI(SubscriptionManagerABI, 'SubscriptionManager');
@@ -112,7 +110,6 @@ export {
   // New consolidated exports
   BurnRouterABI,
   DutyDistributorABI,
-  PromotionalTreasuryABI,
   CouncilElectionABI,
   CouncilSalaryABI,
   SubscriptionManagerABI,

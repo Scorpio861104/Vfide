@@ -27,7 +27,6 @@ interface IVFIDEPresale {
     function fundRefunds() external payable;
     function verifyTokenBalance() external view returns (bool sufficient, uint256 balance);
     function totalBaseSold() external view returns (uint256);
-    function totalBonusGiven() external view returns (uint256);
     function totalSold() external view returns (uint256);
     function paused() external view returns (bool);
     function finalized() external view returns (bool);
@@ -651,7 +650,6 @@ contract OwnerControlPanel {
      */
     function getPresaleStatus() external view returns (
         uint256 totalBaseSold,
-        uint256 totalBonusGiven,
         uint256 totalSold,
         uint256 tokenBalance,
         bool hasSufficientTokens,
@@ -662,7 +660,6 @@ contract OwnerControlPanel {
         uint256 timeRemaining
     ) {
         totalBaseSold = presale.totalBaseSold();
-        totalBonusGiven = presale.totalBonusGiven();
         totalSold = presale.totalSold();
         paused = presale.paused();
         finalized = presale.finalized();
@@ -761,7 +758,7 @@ contract OwnerControlPanel {
         bool dutyDistributorSafe,
         bool councilSalarySafe,
         bool councilManagerSafe,
-        bool promotionalTreasurySafe,
+        bool presaleSafe,
         bool liquidityIncentivesSafe
     ) {
         return (true, true, true, true, true);

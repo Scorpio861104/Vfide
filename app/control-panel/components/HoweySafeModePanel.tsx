@@ -5,9 +5,8 @@ export function HoweySafeModePanel() {
     { name: 'DutyDistributor', icon: '⚖️', description: 'Governance participation tracking — no rewards, no profit distribution' },
     { name: 'CouncilSalary', icon: '👥', description: 'Council employment compensation in stablecoins — not investment returns' },
     { name: 'CouncilManager', icon: '🏛️', description: 'Council oversight — operational costs only, not profit-sharing' },
-    { name: 'PromotionalTreasury', icon: '🎁', description: 'One-time capped milestone allocations — permanently disabled via constant' },
     { name: 'LiquidityIncentives', icon: '💧', description: 'LP participation tracking only — no yield, no profit from providing liquidity' },
-    { name: 'VFIDEPresale', icon: '🚀', description: 'Bonus and referral incentives permanently disabled via constant' },
+    { name: 'VFIDEPresale', icon: '🚀', description: 'Lock bonuses and referral incentives permanently removed' },
   ];
 
   return (

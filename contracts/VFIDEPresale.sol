@@ -58,14 +58,12 @@ error PS_InvalidTier();
 error PS_TierDisabled();
 error PS_TierSoldOut();
 error PS_TierLockRequired();
-error PS_HoweySafeMode();
 
 contract VFIDEPresale is ReentrancyGuard {
     // Events
     event Purchase(address indexed buyer, uint256 indexed lockPeriod, uint256 ethSpent, uint256 baseTokens, uint256 bonusTokens, uint256 purchaseIndex);
     event StablePurchase(address indexed buyer, address indexed stablecoin, uint256 indexed lockPeriod, uint256 stableAmount, uint256 baseTokens, uint256 bonusTokens, uint256 purchaseIndex);
     event TieredPurchase(address indexed buyer, uint8 tier, uint256 baseTokens, uint256 usdPaid);
-    event ReferralPurchase(address indexed buyer, address indexed referrer, uint256 referrerBonus, uint256 refereeBonus);
     event ClaimImmediate(address indexed user, uint256 amount);
     event ClaimLocked(address indexed user, uint256 amount);
     event PresaleFinalized(uint256 ethRaised, uint256 lpVfide, uint256 listingPrice);
@@ -85,14 +83,9 @@ contract VFIDEPresale is ReentrancyGuard {
     address public immutable TREASURY;
     IERC20 public immutable vfideToken;
 
-    // Howey-safe mode is permanently hardcoded — bonus and referral incentives
-    // are disabled to ensure VFIDE is not classified as a security.
-    bool public constant howeySafeMode = true;
-    
     // Supply constants
     uint256 public constant BASE_SUPPLY = 35_000_000 * 1e18;    // 35M base tokens
-    uint256 public constant BONUS_POOL = 15_000_000 * 1e18;     // 15M bonus tokens
-    uint256 public constant TOTAL_SUPPLY = 50_000_000 * 1e18;   // 50M total
+    uint256 public constant TOTAL_SUPPLY = 35_000_000 * 1e18;   // 35M total (no bonus pool — rewards are not available)
     uint256 public constant MAX_PER_WALLET = 500_000 * 1e18;    // 500K per wallet
     uint256 public constant MIN_PURCHASE_USD = 10 * 1e6;         // Min $10 (6 decimals for USDC/USDT)
     uint256 public constant MIN_PURCHASE_ETH = 0.01 ether;       // Min 0.01 ETH (if ETH accepted)
@@ -126,18 +119,9 @@ contract VFIDEPresale is ReentrancyGuard {
     // Stablecoin registry
     IStablecoinRegistry public stablecoinRegistry;
     
-    // Lock bonus percentages
-    uint256 public constant BONUS_180_DAYS = 30;                 // +30% bonus
-    uint256 public constant BONUS_90_DAYS = 15;                  // +15% bonus
-    uint256 public constant BONUS_NO_LOCK = 0;                   // 0% bonus
-    
-    // Referral bonus percentages (from bonus pool)
-    uint256 public constant REFERRER_BONUS = 3;                  // 3% bonus to referrer
-    uint256 public constant REFEREE_BONUS = 2;                   // 2% bonus to referee (buyer)
-    
-    // Immediate unlock percentages
-    uint256 public constant IMMEDIATE_180_DAYS = 10;             // 10% immediate
-    uint256 public constant IMMEDIATE_90_DAYS = 20;              // 20% immediate
+    // Immediate unlock percentages (lock bonuses are not offered — VFIDE is a utility token, not investment)
+    uint256 public constant IMMEDIATE_180_DAYS = 10;             // 10% immediate (tier 0 & 1 mandatory lock)
+    uint256 public constant IMMEDIATE_90_DAYS = 20;              // 20% immediate (tier 1 mandatory lock)
     uint256 public constant IMMEDIATE_NO_LOCK = 100;             // 100% immediate
     
     // Lock periods
@@ -152,7 +136,6 @@ contract VFIDEPresale is ReentrancyGuard {
     
     // State variables
     uint256 public totalBaseSold;
-    uint256 public totalBonusGiven;
     uint256 public totalSold;
     uint256 public totalClaimed;     // Track total tokens claimed for accurate _pendingClaims
     bool public paused;
@@ -195,18 +178,6 @@ contract VFIDEPresale is ReentrancyGuard {
     mapping(address => uint256) public totalAllocated;
     mapping(address => uint256) public lastPurchaseTime;
     
-    // Referral tracking
-    mapping(address => uint256) public referralBonusEarned;     // Total referral bonus earned
-    mapping(address => uint256) public referralBonusClaimed;    // Amount claimed
-    mapping(address => uint256) public referralCount;           // Number of referrals made
-    uint256 public totalReferralBonusGiven;                     // Total referral bonuses from pool (referrer + referee)
-    // C-10 Fix: Track referrer bonuses separately for accurate pool accounting
-    uint256 public totalReferrerBonusOnly;                      // Only referrer bonuses (3% to referrers)
-    
-    // M-2 Fix: Referral chain tracking to prevent circular/self-referral chains
-    mapping(address => address) public referrerOf;              // Who referred this address
-    uint8 public constant MAX_REFERRAL_CHAIN_DEPTH = 5;         // Max depth to check for cycles
-    
     modifier onlyDAO() {
         _checkDAO();
         _;
@@ -218,11 +189,6 @@ contract VFIDEPresale is ReentrancyGuard {
     
     modifier whenNotPaused() {
         _checkNotPaused();
-        _;
-    }
-
-    modifier whenHoweySafeDisabled() {
-        if (howeySafeMode) revert PS_HoweySafeMode();
         _;
     }
 
@@ -497,75 +463,6 @@ contract VFIDEPresale is ReentrancyGuard {
     }
     
     /**
-     * @notice Purchase VFIDE tokens with stablecoin + referral
-     * @param stablecoin Address of the stablecoin to use
-     * @param amount Amount of stablecoin to spend
-     * @param tier Price tier: 0=Founding ($0.03), 1=Oath ($0.05), 2=Public ($0.07)
-     * @param lockPeriod Lock duration: 0, 90 days, or 180 days
-     * @param referrer Address of the referrer
-     */
-    function buyWithStableReferral(address stablecoin, uint256 amount, uint8 tier, uint256 lockPeriod, address referrer) external nonReentrant whenNotPaused whenHoweySafeDisabled {
-        require(tokensDeposited, "PS: tokens not yet deposited");
-        require(address(stablecoinRegistry) != address(0), "PS: no registry");
-        if (!stablecoinRegistry.isWhitelisted(stablecoin)) revert PS_InvalidStablecoin();
-        if (!isTierAvailable(tier)) revert PS_TierDisabled();
-        
-        // Validate referrer
-        require(referrer != address(0) && referrer != msg.sender, "PS: invalid referrer");
-        require(purchases[referrer].length > 0, "PS: referrer not a buyer");
-        _checkNoCircularReferral(referrer);
-        
-        uint8 decimals = stablecoinRegistry.tokenDecimals(stablecoin);
-        
-        // Normalize to 6 decimals
-        uint256 usdAmount;
-        if (decimals == 6) {
-            usdAmount = amount;
-        } else if (decimals == 18) {
-            usdAmount = amount / 1e12;
-        } else {
-            usdAmount = (amount * 1e6) / (10 ** decimals);
-        }
-        
-        require(usdAmount >= MIN_PURCHASE_USD, "Below minimum ($10)");
-        
-        // Transfer stablecoin (SafeERC20 for non-standard tokens)
-        IERC20(stablecoin).safeTransferFrom(msg.sender, TREASURY, amount);
-        
-        // Track contributions
-        stableContributed[msg.sender][stablecoin] += amount;
-        usdContributed[msg.sender] += usdAmount;
-        totalUsdRaised += usdAmount;
-        
-        // Calculate base and referral bonuses using tier pricing
-        uint256 baseTokens = calculateTokensFromUsdTier(usdAmount, tier);
-        
-        // Check tier capacity
-        _checkAndUpdateTierSold(tier, baseTokens);
-        
-        uint256 referrerBonus = (baseTokens * REFERRER_BONUS) / 100;
-        uint256 refereeBonus = (baseTokens * REFEREE_BONUS) / 100;
-        
-        // Track referrer bonus
-        referralBonusEarned[referrer] += referrerBonus;
-        referralCount[referrer] += 1;
-        totalReferralBonusGiven += referrerBonus + refereeBonus;
-        // C-10 Fix: Track referrer-only bonuses for accurate pool accounting
-        totalReferrerBonusOnly += referrerBonus;
-        
-        if (referrerOf[msg.sender] == address(0)) {
-            referrerOf[msg.sender] = referrer;
-        }
-        
-        // Process purchase with referee bonus
-        _processPurchase(msg.sender, baseTokens, tier, lockPeriod, refereeBonus, usdAmount);
-        
-        emit StablePurchase(msg.sender, stablecoin, lockPeriod, amount, baseTokens, refereeBonus, purchases[msg.sender].length - 1);
-        emit TieredPurchase(msg.sender, tier, baseTokens, usdAmount);
-        emit ReferralPurchase(msg.sender, referrer, referrerBonus, refereeBonus);
-    }
-
-    /**
      * @notice Purchase VFIDE tokens with ETH (legacy support, uses tier 2 public price)
      * @param lockPeriod Lock duration: 0 (no lock), 90 days, or 180 days
      * @dev Stablecoins preferred for exact USD pricing
@@ -626,14 +523,13 @@ contract VFIDEPresale is ReentrancyGuard {
      * @param baseTokens Base tokens purchased
      * @param tier Price tier (0=Founding, 1=Oath, 2=Public)
      * @param lockPeriod Lock period chosen
-     * @param extraBonus Extra bonus tokens (e.g., referee bonus)
      */
     function _processPurchase(
         address buyer, 
         uint256 baseTokens, 
         uint8 tier,
         uint256 lockPeriod,
-        uint256 extraBonus,
+        uint256,
         uint256 /*usdAmount*/
     ) internal {
         require(tokensDeposited, "Tokens not deposited");
@@ -645,46 +541,30 @@ contract VFIDEPresale is ReentrancyGuard {
         // Validate tier lock requirements
         _validateTierLock(tier, lockPeriod);
         
-        // Determine bonus and immediate unlock percentages based on tier
-        uint256 bonusPercentage;
+        // Determine immediate unlock percentage (no bonuses — VFIDE is a utility token)
         uint256 immediatePercentage;
         
-        if (tier == 0 || tier == 1) {
-            // Tiers 0-1: NO bonus (price discount IS the reward)
-            // Lock is mandatory, use fixed unlock percentages
-            bonusPercentage = 0;
-            if (tier == 0) {
-                // Founding: 180-day lock required, 10% immediate
-                immediatePercentage = IMMEDIATE_180_DAYS;
-            } else {
-                // Oath: 90-day lock required, 20% immediate
-                immediatePercentage = IMMEDIATE_90_DAYS;
-            }
+        if (tier == 0) {
+            // Founding: 180-day lock required, 10% immediate
+            immediatePercentage = IMMEDIATE_180_DAYS;
+        } else if (tier == 1) {
+            // Oath: 90-day lock required, 20% immediate
+            immediatePercentage = IMMEDIATE_90_DAYS;
         } else {
-            // Tier 2 (Public): Optional lock with bonuses as reward
+            // Tier 2 (Public): optional lock, immediate percentage by lock period
             if (lockPeriod == LOCK_180_DAYS) {
-                bonusPercentage = BONUS_180_DAYS;
                 immediatePercentage = IMMEDIATE_180_DAYS;
             } else if (lockPeriod == LOCK_90_DAYS) {
-                bonusPercentage = BONUS_90_DAYS;
                 immediatePercentage = IMMEDIATE_90_DAYS;
             } else if (lockPeriod == LOCK_NONE) {
-                bonusPercentage = BONUS_NO_LOCK;
                 immediatePercentage = IMMEDIATE_NO_LOCK;
             } else {
                 revert PS_InvalidLockPeriod();
             }
         }
 
-        if (howeySafeMode) {
-            bonusPercentage = 0;
-            extraBonus = 0;
-        }
-        
-        // Calculate bonus tokens
-        uint256 lockBonus = (baseTokens * bonusPercentage) / 100;
-        uint256 totalBonus = lockBonus + extraBonus;
-        uint256 totalTokens = baseTokens + totalBonus;
+        // No bonus tokens — rewards are not offered
+        uint256 totalTokens = baseTokens;
         
         // Per-transaction limit
         require(totalTokens <= 50_000 * 1e18, "Exceeds per-tx limit");
@@ -696,15 +576,9 @@ contract VFIDEPresale is ReentrancyGuard {
         // Check limits
         require(totalAllocated[buyer] + totalTokens <= MAX_PER_WALLET, "Exceeds wallet cap");
         require(totalBaseSold + baseTokens <= BASE_SUPPLY, "Base supply exceeded");
-        // C-10 Fix: Include referrer bonuses in pool limit check
-        // totalBonusGiven = lock bonuses + referee bonuses (already allocated to buyers)
-        // totalReferrerBonusOnly = referrer bonuses that will be claimed later
-        // Total pool usage = totalBonusGiven + totalReferrerBonusOnly (no double-counting)
-        require(totalBonusGiven + totalBonus + totalReferrerBonusOnly <= BONUS_POOL, "Bonus pool exceeded");
         
         // Update state
         totalBaseSold += baseTokens;
-        totalBonusGiven += totalBonus;
         totalSold += totalTokens;
         totalAllocated[buyer] += totalTokens;
         lastPurchaseTime[buyer] = block.timestamp;
@@ -717,7 +591,7 @@ contract VFIDEPresale is ReentrancyGuard {
         // Record purchase with tier for cancelPurchase tracking
         purchases[buyer].push(PurchaseRecord({
             baseAmount: baseTokens,
-            bonusAmount: totalBonus,
+            bonusAmount: 0,
             immediateAmount: immediateAmount,
             lockedAmount: lockedAmount,
             lockPeriod: lockPeriod,
@@ -727,85 +601,6 @@ contract VFIDEPresale is ReentrancyGuard {
             lockedClaimed: false
         }));
     }
-
-    /**
-     * @notice Buy tokens with ETH + referral (legacy support, uses tier 2 public price)
-     * @param lockPeriod Lock period (0, 90 days, or 180 days)
-     * @param referrer Address of the referrer (must have already purchased)
-     * @dev Stablecoins preferred - use buyWithStableReferral instead
-     */
-    function buyTokensWithReferral(uint256 lockPeriod, address referrer) external payable nonReentrant whenNotPaused whenHoweySafeDisabled {
-        if (!ethAccepted) revert PS_ETHNotAccepted();
-        if (!isTierAvailable(2)) revert PS_TierDisabled(); // ETH uses tier 2 (public)
-        require(msg.value >= MIN_PURCHASE_ETH, "Below minimum");
-        require(!isEthPriceStale(), "PS: ETH price stale - use stablecoin or wait for DAO update");
-        
-        // Validate referrer
-        require(referrer != address(0) && referrer != msg.sender, "PS: invalid referrer");
-        require(purchases[referrer].length > 0, "PS: referrer not a buyer");
-        _checkNoCircularReferral(referrer);
-        
-        // Circuit breakers
-        if (tx.gasprice > maxGasPrice) revert PS_GasPriceTooHigh();
-        
-        // Calculate USD equivalent
-        uint256 usdAmount = (msg.value * ethPriceUsd) / 1e12;
-        totalEthRaised += msg.value;
-        totalUsdRaised += usdAmount;
-        usdContributed[msg.sender] += usdAmount;
-        ethContributed[msg.sender] += msg.value;  // Track for refunds
-        
-        // Forward ETH to treasury
-        (bool success, ) = TREASURY.call{value: msg.value}("");
-        require(success, "ETH transfer failed");
-        
-        // Calculate base using tier 2 (public) and referral bonuses
-        uint256 baseTokens = calculateTokensFromEthTier(msg.value, 2);
-        
-        // Check and update tier 2 sold
-        _checkAndUpdateTierSold(2, baseTokens);
-        
-        uint256 referrerBonus = (baseTokens * REFERRER_BONUS) / 100;
-        uint256 refereeBonus = (baseTokens * REFEREE_BONUS) / 100;
-        
-        // Track referrer bonus
-        referralBonusEarned[referrer] += referrerBonus;
-        referralCount[referrer] += 1;
-        totalReferralBonusGiven += referrerBonus + refereeBonus;
-        // C-10 Fix: Track referrer-only bonuses for accurate pool accounting
-        totalReferrerBonusOnly += referrerBonus;
-        
-        if (referrerOf[msg.sender] == address(0)) {
-            referrerOf[msg.sender] = referrer;
-        }
-        
-        // Process purchase with referee bonus
-        _processPurchase(msg.sender, baseTokens, 2, lockPeriod, refereeBonus, usdAmount);
-        
-        emit Purchase(msg.sender, lockPeriod, msg.value, baseTokens, refereeBonus, purchases[msg.sender].length - 1);
-        emit TieredPurchase(msg.sender, 2, baseTokens, usdAmount);
-        emit ReferralPurchase(msg.sender, referrer, referrerBonus, refereeBonus);
-    }
-
-    /**
-     * @notice Claim referral bonuses (available after presale is finalized)
-     * @dev Referrers can claim their 3% bonus on all referred purchases
-     */
-    function claimReferralBonus() external nonReentrant {
-        if (howeySafeMode) revert PS_HoweySafeMode();
-        require(finalized, "Presale not finalized");
-        
-        uint256 claimable = referralBonusEarned[msg.sender] - referralBonusClaimed[msg.sender];
-        require(claimable > 0, "No referral bonus to claim");
-        
-        referralBonusClaimed[msg.sender] += claimable;
-        totalClaimed += claimable;
-        
-        vfideToken.safeTransfer(msg.sender, claimable);
-        
-        emit ClaimImmediate(msg.sender, claimable);
-    }
-
     // ──────────────────────────── Claim Functions ────────────────────────────
 
     /**
@@ -926,12 +721,11 @@ contract VFIDEPresale is ReentrancyGuard {
         require(!p.immediateClaimed && !p.lockedClaimed, "Already claimed");
         require(p.baseAmount > 0, "Already cancelled");
         
-        // Return tokens to pool
-        uint256 totalTokens = p.baseAmount + p.bonusAmount;
+        // Return tokens to pool (bonusAmount is always 0)
+        uint256 totalTokens = p.baseAmount;
         
         // Update state
         totalBaseSold -= p.baseAmount;
-        totalBonusGiven -= p.bonusAmount;
         totalSold -= totalTokens;
         totalAllocated[msg.sender] -= totalTokens;
         
@@ -1049,20 +843,12 @@ contract VFIDEPresale is ReentrancyGuard {
         uint256 purchaseCount,
         uint256 totalAllocatedTokens,
         uint256 ethContributedAmt,
-        uint256 usdContributedAmt,
-        uint256 referralBonusEarnedAmt,
-        uint256 referralBonusClaimedAmt,
-        uint256 referralCountNum,
-        address referredBy
+        uint256 usdContributedAmt
     ) {
         purchaseCount = purchases[user].length;
         totalAllocatedTokens = totalAllocated[user];
         ethContributedAmt = ethContributed[user];
         usdContributedAmt = usdContributed[user];
-        referralBonusEarnedAmt = referralBonusEarned[user];
-        referralBonusClaimedAmt = referralBonusClaimed[user];
-        referralCountNum = referralCount[user];
-        referredBy = referrerOf[user];
     }
 
     /**
@@ -1077,17 +863,10 @@ contract VFIDEPresale is ReentrancyGuard {
     ) {
         uint256 baseTokens = calculateTokensFromUsdTier(usdAmount, tier);
         
-        base180 = baseTokens;
-        bonus180 = (baseTokens * BONUS_180_DAYS) / 100;
-        total180 = base180 + bonus180;
-        
-        base90 = baseTokens;
-        bonus90 = (baseTokens * BONUS_90_DAYS) / 100;
-        total90 = base90 + bonus90;
-        
-        baseNoLock = baseTokens;
-        bonusNoLock = 0;
-        totalNoLock = baseTokens;
+        // No bonuses — rewards are not offered
+        base180 = baseTokens; bonus180 = 0; total180 = baseTokens;
+        base90 = baseTokens; bonus90 = 0; total90 = baseTokens;
+        baseNoLock = baseTokens; bonusNoLock = 0; totalNoLock = baseTokens;
     }
 
     /**
@@ -1107,17 +886,10 @@ contract VFIDEPresale is ReentrancyGuard {
     ) {
         uint256 baseTokens = calculateTokensFromEth(ethAmount);
         
-        base180 = baseTokens;
-        bonus180 = (baseTokens * BONUS_180_DAYS) / 100;
-        total180 = base180 + bonus180;
-        
-        base90 = baseTokens;
-        bonus90 = (baseTokens * BONUS_90_DAYS) / 100;
-        total90 = base90 + bonus90;
-        
-        baseNoLock = baseTokens;
-        bonusNoLock = 0;
-        totalNoLock = baseTokens;
+        // No bonuses — rewards are not offered
+        base180 = baseTokens; bonus180 = 0; total180 = baseTokens;
+        base90 = baseTokens; bonus90 = 0; total90 = baseTokens;
+        baseNoLock = baseTokens; bonusNoLock = 0; totalNoLock = baseTokens;
     }
 
     function getPresaleStats() external view returns (
@@ -1209,17 +981,6 @@ contract VFIDEPresale is ReentrancyGuard {
     function _pendingClaims() internal view returns (uint256 pending) {
         // Accurate pending = totalSold - totalClaimed (fixed from approximation)
         pending = totalSold > totalClaimed ? totalSold - totalClaimed : 0;
-    }
-    
-    /// @notice M-2 Fix: Check that referrer doesn't create a circular chain back to msg.sender
-    /// @dev Walks up the referral chain up to MAX_REFERRAL_CHAIN_DEPTH levels
-    function _checkNoCircularReferral(address referrer) internal view {
-        address current = referrer;
-        for (uint8 i = 0; i < MAX_REFERRAL_CHAIN_DEPTH; i++) {
-            current = referrerOf[current];
-            if (current == address(0)) break;
-            require(current != msg.sender, "PS: circular referral chain");
-        }
     }
     
     function getFinalizationDetails() external view returns (
