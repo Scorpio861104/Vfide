@@ -193,6 +193,143 @@ const LEVEL_THRESHOLDS = [
   16300,  // Level 15
 ];
 
+/**
+ * Platform perks unlocked at each level.
+ * These are utility benefits for your own activity — not investment profit —
+ * so they are fully Howey Test compliant.
+ */
+export interface LevelPerk {
+  level: number;
+  title: string;
+  description: string;
+  icon: string;
+  category: 'fee' | 'governance' | 'feature' | 'status';
+}
+
+export const LEVEL_PERKS: LevelPerk[] = [
+  {
+    level: 2,
+    title: '1% Fee Discount',
+    description: 'Your transaction fees are reduced by 1% across the platform.',
+    icon: '💸',
+    category: 'fee',
+  },
+  {
+    level: 3,
+    title: 'Verified Participant Badge',
+    description: 'Display a verified participant badge on your public profile.',
+    icon: '✅',
+    category: 'status',
+  },
+  {
+    level: 5,
+    title: '3% Fee Discount',
+    description: 'Your transaction fees are reduced by 3% across the platform.',
+    icon: '💸',
+    category: 'fee',
+  },
+  {
+    level: 5,
+    title: 'Governance Voting Unlocked',
+    description: 'Eligible to participate in DAO governance proposals.',
+    icon: '🗳️',
+    category: 'governance',
+  },
+  {
+    level: 7,
+    title: 'Priority Support',
+    description: 'Your support requests are escalated to a dedicated queue.',
+    icon: '⚡',
+    category: 'feature',
+  },
+  {
+    level: 8,
+    title: '5% Fee Discount',
+    description: 'Your transaction fees are reduced by 5% across the platform.',
+    icon: '💸',
+    category: 'fee',
+  },
+  {
+    level: 10,
+    title: '1.25× Governance Voting Weight',
+    description: 'Your governance votes carry 25% more weight than base votes.',
+    icon: '🗳️',
+    category: 'governance',
+  },
+  {
+    level: 10,
+    title: 'Early Feature Access',
+    description: 'Opt in to beta features before public release.',
+    icon: '🔬',
+    category: 'feature',
+  },
+  {
+    level: 12,
+    title: '8% Fee Discount',
+    description: 'Your transaction fees are reduced by 8% across the platform.',
+    icon: '💸',
+    category: 'fee',
+  },
+  {
+    level: 12,
+    title: 'Direct DAO Proposal Rights',
+    description: 'Submit governance proposals directly without a delegate.',
+    icon: '📋',
+    category: 'governance',
+  },
+  {
+    level: 15,
+    title: '12% Fee Discount',
+    description: 'Maximum 12% transaction fee reduction for top-level members.',
+    icon: '💸',
+    category: 'fee',
+  },
+  {
+    level: 15,
+    title: '1.5× Governance Voting Weight',
+    description: 'Your governance votes carry 50% more weight than base votes.',
+    icon: '🗳️',
+    category: 'governance',
+  },
+  {
+    level: 15,
+    title: 'Council Eligibility',
+    description: 'Eligible to be elected to the VFIDE Community Council.',
+    icon: '👑',
+    category: 'status',
+  },
+];
+
+/**
+ * Additional governance perks granted by the Headhunter competition badge.
+ * The badge is earned by finishing in the top 20 of a quarterly headhunter
+ * competition. It stacks additively with level-based voting perks above.
+ *
+ * Badge perks: +25% voting weight bonus (stacks on top of level multiplier),
+ * direct DAO proposal rights (if not already unlocked at Level 12),
+ * and Community Council eligibility (if not already unlocked at Level 15).
+ */
+export const HEADHUNTER_BADGE_PERKS: Pick<LevelPerk, 'title' | 'description' | 'icon' | 'category'>[] = [
+  {
+    title: '+25% Voting Weight Bonus',
+    description: 'Stacks additively on top of your level-based voting multiplier.',
+    icon: '🗳️',
+    category: 'governance',
+  },
+  {
+    title: 'Direct DAO Proposal Rights',
+    description: 'Submit governance proposals directly, regardless of XP level.',
+    icon: '📋',
+    category: 'governance',
+  },
+  {
+    title: 'Council Eligibility',
+    description: 'Eligible to be elected to the Community Council for the quarter.',
+    icon: '👑',
+    category: 'status',
+  },
+];
+
 class GamificationEngine {
   private storageKey = 'vfide_gamification';
 

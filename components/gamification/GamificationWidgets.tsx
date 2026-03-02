@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Trophy, Zap, Award } from 'lucide-react';
-import { useGamification, ACHIEVEMENTS, type AchievementId } from '@/lib/gamification';
+import { useGamification, ACHIEVEMENTS, LEVEL_PERKS, type AchievementId } from '@/lib/gamification';
 
 interface UserStatsWidgetProps {
   userAddress: string;
@@ -103,6 +103,29 @@ export function UserStatsWidget({ userAddress, compact = false }: UserStatsWidge
           <div className="text-lg font-bold text-violet-400">{progress.stats.friendsAdded}</div>
         </div>
       </div>
+
+      {/* Next Level Perk */}
+      {(() => {
+        const nextPerk = LEVEL_PERKS.find(p => p.level > progress.level);
+        if (!nextPerk) return null;
+        return (
+          <motion.div
+            initial={{ opacity: 0, y: 4 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="mt-3 bg-gradient-to-r from-cyan-500/10 to-violet-500/10 border border-cyan-500/20 rounded-lg p-3"
+          >
+            <div className="text-xs text-zinc-400 mb-1 uppercase tracking-wider">Unlock at Level {nextPerk.level}</div>
+            <div className="flex items-center gap-2">
+              <span className="text-lg">{nextPerk.icon}</span>
+              <div>
+                <div className="text-sm font-bold text-cyan-400">{nextPerk.title}</div>
+                <div className="text-xs text-zinc-400">{nextPerk.description}</div>
+              </div>
+            </div>
+          </motion.div>
+        );
+      })()}
     </motion.div>
   );
 }

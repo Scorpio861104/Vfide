@@ -249,8 +249,27 @@ export default function HeadhunterPage() {
                   </div>
                 </div>
 
-                <div className="text-xs text-zinc-400 text-center">
+                <div className="text-xs text-zinc-400 text-center mb-3">
                   Top 20 recruiters each quarter earn the exclusive Headhunter governance badge
+                </div>
+
+                {/* What the badge does */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div className="bg-zinc-900 border border-violet-500/30 rounded-lg p-3 text-center">
+                    <div className="text-xl mb-1">🗳️</div>
+                    <div className="text-xs font-bold text-violet-400">+25% Voting Weight</div>
+                    <div className="text-xs text-zinc-500 mt-0.5">Governance votes count more</div>
+                  </div>
+                  <div className="bg-zinc-900 border border-cyan-500/30 rounded-lg p-3 text-center">
+                    <div className="text-xl mb-1">📋</div>
+                    <div className="text-xs font-bold text-cyan-400">Proposal Rights</div>
+                    <div className="text-xs text-zinc-500 mt-0.5">Submit DAO proposals directly</div>
+                  </div>
+                  <div className="bg-zinc-900 border border-amber-400/30 rounded-lg p-3 text-center">
+                    <div className="text-xl mb-1">👑</div>
+                    <div className="text-xs font-bold text-amber-400">Council Eligibility</div>
+                    <div className="text-xs text-zinc-500 mt-0.5">Can be elected to Community Council</div>
+                  </div>
                 </div>
               </div>
             </div>
