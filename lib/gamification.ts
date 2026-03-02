@@ -216,6 +216,32 @@ const LEVEL_THRESHOLDS = [
 export const MAX_XP_PER_DAY = 500;
 
 /**
+ * ProofScore bonus granted per gamification level.
+ *
+ * Each level of in-app activity awards this many ProofScore points on top of
+ * the base score that comes from on-chain actions (transactions, governance,
+ * verification, etc.).  At Level 15 (the max) a user gains up to
+ * MAX_LEVELS × XP_PROOF_SCORE_BONUS_PER_LEVEL = 15 × 100 = 1,500 ProofScore
+ * points — a meaningful but non-dominant contribution (15 % of MAX_PROOF_SCORE).
+ *
+ * Formula: bonusPoints = (effectiveLevel - 1) * XP_PROOF_SCORE_BONUS_PER_LEVEL
+ * The -1 means Level 1 (the starting level) contributes 0, so new users begin
+ * with the same base ProofScore regardless of any XP they haven't earned yet.
+ */
+export const XP_PROOF_SCORE_BONUS_PER_LEVEL = 100;
+
+/**
+ * Convert an XP effective level to the equivalent ProofScore bonus.
+ *
+ * @param effectiveLevel - The player's effective level (1–15, after penalties).
+ * @returns Additional ProofScore points from gamification (0 at Level 1, up to 1,400 at Level 15).
+ */
+export function xpLevelToProofScoreBonus(effectiveLevel: number): number {
+  const clamped = Math.max(1, Math.min(15, Math.round(effectiveLevel)));
+  return (clamped - 1) * XP_PROOF_SCORE_BONUS_PER_LEVEL;
+}
+
+/**
  * Platform perks unlocked at each level.
  * These are utility benefits for your own activity — not investment profit —
  * so they are fully Howey Test compliant.

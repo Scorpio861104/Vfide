@@ -292,3 +292,40 @@ describe('GamificationEngine — anti-abuse fairness', () => {
     expect(progress.dailyXPEarned).toBe(0);
   });
 });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// xpLevelToProofScoreBonus helper tests
+// ─────────────────────────────────────────────────────────────────────────────
+
+import { xpLevelToProofScoreBonus, XP_PROOF_SCORE_BONUS_PER_LEVEL } from '@/lib/gamification';
+
+describe('xpLevelToProofScoreBonus', () => {
+  it('Level 1 contributes 0 ProofScore bonus (fair start — no advantage at base level)', () => {
+    expect(xpLevelToProofScoreBonus(1)).toBe(0);
+  });
+
+  it('Level 15 (max) contributes 14 × XP_PROOF_SCORE_BONUS_PER_LEVEL', () => {
+    expect(xpLevelToProofScoreBonus(15)).toBe(14 * XP_PROOF_SCORE_BONUS_PER_LEVEL);
+  });
+
+  it('returns correct bonus at each integer level', () => {
+    for (let level = 1; level <= 15; level++) {
+      expect(xpLevelToProofScoreBonus(level)).toBe((level - 1) * XP_PROOF_SCORE_BONUS_PER_LEVEL);
+    }
+  });
+
+  it('clamps levels below 1 to the Level 1 bonus (0)', () => {
+    expect(xpLevelToProofScoreBonus(0)).toBe(0);
+    expect(xpLevelToProofScoreBonus(-5)).toBe(0);
+  });
+
+  it('clamps levels above 15 to the Level 15 bonus (1400)', () => {
+    expect(xpLevelToProofScoreBonus(16)).toBe(14 * XP_PROOF_SCORE_BONUS_PER_LEVEL);
+    expect(xpLevelToProofScoreBonus(100)).toBe(14 * XP_PROOF_SCORE_BONUS_PER_LEVEL);
+  });
+
+  it('XP_PROOF_SCORE_BONUS_PER_LEVEL is 100 so max bonus is 1400 (14% of 10,000)', () => {
+    expect(XP_PROOF_SCORE_BONUS_PER_LEVEL).toBe(100);
+    expect(xpLevelToProofScoreBonus(15)).toBe(1400);
+  });
+});

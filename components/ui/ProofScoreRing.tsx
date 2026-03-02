@@ -2,6 +2,7 @@
 
 import { motion, useSpring, useTransform } from "framer-motion";
 import { useEffect, useState } from "react";
+import { xpLevelToProofScoreBonus } from "@/lib/gamification";
 
 interface ProofScoreRingProps {
   score: number;
@@ -131,11 +132,14 @@ export function ProofScoreRing({ score, size = "md", showLabel = true, className
 interface ProofScoreCardProps {
   score: number;
   feeRate: number;
+  /** The user's current effective XP level (1–15). When provided the XP contribution row is shown. */
+  xpLevel?: number;
   className?: string;
 }
 
-export function ProofScoreCard({ score, feeRate, className = "" }: ProofScoreCardProps) {
+export function ProofScoreCard({ score, feeRate, xpLevel, className = "" }: ProofScoreCardProps) {
   const tierInfo = getTierInfo(score);
+  const xpBonus = xpLevel != null ? xpLevelToProofScoreBonus(xpLevel) : 0;
   
   const breakdown = [
     { label: 'Base Score', value: 5000, icon: '📊' },
@@ -143,6 +147,9 @@ export function ProofScoreCard({ score, feeRate, className = "" }: ProofScoreCar
     { label: 'Transactions', value: Math.min(Math.max(0, (score - 5500) * 0.4), 1500), icon: '💳' },
     { label: 'Governance', value: Math.min(250, Math.max(0, (score - 6000) * 0.2)), icon: '🗳️' },
     { label: 'Badges', value: Math.min(500, Math.max(0, (score - 6500) * 0.3)), icon: '🏆' },
+    ...(xpLevel != null
+      ? [{ label: `XP Level ${xpLevel} Bonus`, value: xpBonus, icon: '⚡' }]
+      : []),
   ];
   
   return (
@@ -204,8 +211,27 @@ export function ProofScoreCard({ score, feeRate, className = "" }: ProofScoreCar
           />
         </div>
         <p className="text-xs text-zinc-500 mt-3 text-center">
-          💡 Increase your score through governance, badges, and transactions
+          💡 Increase your score through governance, badges, transactions, and levelling up your XP
         </p>
+      </div>
+
+      {/* XP → ProofScore explainer */}
+      <div className="mt-4 rounded-xl bg-violet-900/20 border border-violet-500/20 p-4">
+        <p className="text-xs font-semibold text-violet-300 uppercase tracking-wider mb-2">
+          ⚡ How XP boosts your ProofScore
+        </p>
+        <p className="text-xs text-zinc-400 leading-relaxed">
+          Every XP level you earn in the app adds <span className="text-violet-300 font-semibold">+100 ProofScore</span> (up to +1,400 at Level 15).
+          Your <span className="text-violet-300 font-semibold">effective level</span> is used — penalties from policy violations reduce it permanently.
+        </p>
+        <div className="mt-3 grid grid-cols-5 gap-1 text-center">
+          {[1, 3, 5, 10, 15].map((lvl) => (
+            <div key={lvl} className="rounded-lg bg-zinc-900/60 py-1.5 px-1">
+              <div className="text-xs font-bold text-violet-300">Lv {lvl}</div>
+              <div className="text-[10px] text-zinc-400">+{(lvl - 1) * 100}</div>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
