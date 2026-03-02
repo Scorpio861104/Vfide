@@ -13,6 +13,19 @@ jest.mock('@/lib/auth/middleware', () => ({
   requireOwnership: jest.fn(),
 }));
 
+// Prevent the route from making real RPC calls to the blockchain during tests
+jest.mock('viem', () => ({
+  createPublicClient: jest.fn(() => ({
+    readContract: jest.fn().mockResolvedValue(true),
+  })),
+  http: jest.fn(),
+  isAddress: jest.fn().mockReturnValue(true),
+}));
+
+jest.mock('viem/chains', () => ({
+  baseSepolia: {},
+}));
+
 describe('/api/crypto/rewards/[userId]/claim', () => {
   const { query } = require('@/lib/db');
   const { withRateLimit } = require('@/lib/auth/rateLimit');
@@ -28,7 +41,8 @@ describe('/api/crypto/rewards/[userId]/claim', () => {
       requireOwnership.mockReturnValue({ user: { address: '0x1111111111111111111111111111111111111123', id: '1' } });
 
       query.mockResolvedValueOnce({
-        rows: [{ id: 1, amount: '100', reward_type: 'quest', source_contract: '0xabcabcabcabcabcabcabcabcabcabcabcabcabca' }],
+        // No source_contract → on-chain verification is skipped for this test
+        rows: [{ id: 1, amount: '100', reward_type: 'quest', source_contract: null }],
       });
       query.mockResolvedValueOnce({
         rows: [{ id: 1 }],

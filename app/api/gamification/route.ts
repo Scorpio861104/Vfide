@@ -174,6 +174,9 @@ export async function POST(request: NextRequest) {
     }
 
     const row = capCheck.rows[0];
+    if (!row) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    }
     const earnedToday = row.daily_xp_date === today ? (Number(row.daily_xp_earned) || 0) : 0;
     const remaining = Math.max(0, SERVER_MAX_XP_PER_DAY - earnedToday);
     const awarded = Math.min(xpAmount, remaining);
