@@ -334,8 +334,7 @@ function RewardsTab({ isConnected: _isConnected }: { isConnected: boolean }) {
           expectation of profits and conflict with Howey Test compliance.
         </p>
         <p className="text-zinc-500 text-sm mt-4">
-          Participation XP and governance badges are available through the{' '}
-          <a href="/quests" className="text-cyan-400 hover:underline">Quests</a> page.
+          Governance participation is tracked on-chain through ProofScore.
         </p>
       </div>
     </div>

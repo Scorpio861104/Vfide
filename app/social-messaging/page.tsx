@@ -35,15 +35,12 @@ import { Friend, Group } from '@/types/messaging';
 import { FriendRequest } from '@/types/friendRequests';
 import { STORAGE_KEYS } from '@/lib/messageEncryption';
 import { analytics } from '@/lib/socialAnalytics';
-import { gamification, useGamification } from '@/lib/gamification';
-import { UserStatsWidget } from '@/components/gamification/GamificationWidgets';
 
 type TabType = 'messages' | 'requests' | 'circles' | 'groups' | 'account' | 'privacy' | 'discover' | 'activity';
 
 export default function SocialPage() {
   const { address, isConnected } = useAccount();
   const { hasVault, vaultAddress: _vaultAddress, isLoading: isLoadingVault } = useHasVault();
-  const { recordActivity, unlockAchievement } = useGamification(address);
   const [activeTab, setActiveTab] = useState<TabType>('messages');
   const [selectedFriend, setSelectedFriend] = useState<Friend | undefined>();
   const [_selectedGroup, setSelectedGroup] = useState<Group | undefined>();
@@ -63,22 +60,19 @@ export default function SocialPage() {
     }
   }, [address]);
 
-  // Track wallet connection and unlock achievement
+  // Track wallet connection
   React.useEffect(() => {
     if (isConnected && address) {
       analytics.track('wallet_connected', { userAddress: address });
-      unlockAchievement('first_connection');
-      recordActivity();
     }
-  }, [isConnected, address, unlockAchievement, recordActivity]);
+  }, [isConnected, address]);
 
-  // Track vault status and unlock achievement
+  // Track vault status
   React.useEffect(() => {
     if (hasVault && address) {
       analytics.track('vault_created', { userAddress: address, hasVault: true });
-      unlockAchievement('vault_creator');
     }
-  }, [hasVault, address, unlockAchievement]);
+  }, [hasVault, address]);
 
   // Accept friend request handler
   const handleAcceptRequest = (request: FriendRequest) => {
@@ -97,10 +91,6 @@ export default function SocialPage() {
     const updated = [...existingFriends, newFriend];
     setFriends(updated);
     localStorage.setItem(`${STORAGE_KEYS.FRIENDS}_${address}`, JSON.stringify(updated));
-
-    // Award XP and update gamification stats
-    gamification.incrementStat(address, 'friendsAdded');
-    gamification.awardXP(address, 25, 'Added a friend');
   };
 
   const handleRejectRequest = (_request: FriendRequest) => {
@@ -196,10 +186,9 @@ export default function SocialPage() {
                 </div>
               </div>
 
-              {/* Connection Status, Gamification & Notifications */}
+              {/* Connection Status & Notifications */}
               {address && (
                 <div className="flex items-center gap-2 md:gap-3">
-                  <UserStatsWidget userAddress={address} compact />
                   <div className="flex flex-col md:flex-row items-start md:items-center gap-2 md:gap-3 bg-zinc-900 border border-zinc-700 rounded-lg px-3 md:px-4 py-2 md:py-3">
                     <div className="flex items-center gap-2">
                       <div className="w-2 h-2 md:w-3 md:h-3 bg-emerald-500 rounded-full animate-pulse" />

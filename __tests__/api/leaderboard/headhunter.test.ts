@@ -1,47 +1,21 @@
 import { NextRequest } from 'next/server';
-import { GET } from '@/app/api/leaderboard/headhunter/route';
-
-jest.mock('@/lib/db', () => ({
-  query: jest.fn(),
-}));
-
-jest.mock('@/lib/auth/rateLimit', () => ({
-  withRateLimit: jest.fn(),
-}));
+import { GET, POST } from '@/app/api/leaderboard/headhunter/route';
 
 describe('/api/leaderboard/headhunter', () => {
-  const { withRateLimit } = require('@/lib/auth/rateLimit');
-
-  beforeEach(() => {
-    jest.clearAllMocks();
+  it('GET returns 410 — feature disabled', async () => {
+    const request = new NextRequest('http://localhost:3000/test', { method: 'GET' });
+    const response = await GET(request);
+    expect(response.status).toBe(410);
+    const data = await response.json();
+    expect(data.error).toBeTruthy();
   });
 
-  describe('GET', () => {
-    it('should return headhunter leaderboard', async () => {
-      withRateLimit.mockResolvedValue(null);
-
-      // Note: The API requires year and quarter params, and returns data (not leaderboard)
-      // Without a subgraph URL, it returns an empty data array with a message
-      const request = new NextRequest('http://localhost:3000/api/leaderboard/headhunter?year=2025&quarter=1');
-      const response = await GET(request);
-      const data = await response.json();
-
-      expect(response.status).toBe(200);
-      expect(data.success).toBe(true);
-      expect(data.data).toEqual([]);
-      expect(data.meta.year).toBe(2025);
-      expect(data.meta.quarter).toBe(1);
+  it('POST returns 410 — feature disabled', async () => {
+    const request = new NextRequest('http://localhost:3000/test', {
+      method: 'POST',
+      body: JSON.stringify({}),
     });
-
-    it('should return 400 when year and quarter are missing', async () => {
-      withRateLimit.mockResolvedValue(null);
-
-      const request = new NextRequest('http://localhost:3000/api/leaderboard/headhunter');
-      const response = await GET(request);
-      const data = await response.json();
-
-      expect(response.status).toBe(400);
-      expect(data.error).toBe('Year and quarter are required');
-    });
+    const response = await POST(request);
+    expect(response.status).toBe(410);
   });
 });

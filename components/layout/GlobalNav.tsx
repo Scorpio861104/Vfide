@@ -67,19 +67,8 @@ const moreLinks = [
     ]
   },
   {
-    category: "Gamification",
-    items: [
-      { href: "/quests", label: "Quests", accent: true },
-      { href: "/achievements", label: "Achievements", accent: true },
-      { href: "/badges", label: "Badges", accent: true },
-      { href: "/rewards", label: "Rewards", accent: true },
-      { href: "/leaderboard", label: "Leaderboard" },
-    ]
-  },
-  {
     category: "Community",
     items: [
-      { href: "/headhunter", label: "Headhunter", accent: true },
       { href: "/endorsements", label: "Endorsements" },
       { href: "/appeals", label: "Appeals" },
       { href: "/council", label: "Council" },
