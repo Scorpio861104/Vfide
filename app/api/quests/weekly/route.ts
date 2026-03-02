@@ -70,7 +70,6 @@ export async function GET(request: NextRequest) {
         target: row.target,
         progress: row.progress,
         rewardXp: row.reward_xp,
-        rewardVfide: (BigInt(row.reward_vfide || '0') / BigInt(10 ** 18)).toString(),
         icon: row.icon,
         weekStart: row.week_start,
         weekEnd: row.week_end,

@@ -108,15 +108,14 @@ export async function POST(request: NextRequest) {
         `, [userId, achievement.reward_badge]);
       }
 
-      // Create reward record
+      // Create reward record (vfide_earned is 0 — XP-only rewards; token distributions are not offered)
       await client.query(`
         INSERT INTO daily_rewards 
         (user_id, reward_date, reward_type, xp_earned, vfide_earned, description, claimed, claimed_at)
-        VALUES ($1, CURRENT_DATE, 'achievement_milestone', $2, $3, $4, true, NOW())
+        VALUES ($1, CURRENT_DATE, 'achievement_milestone', $2, 0, $3, true, NOW())
       `, [
         userId,
         achievement.reward_xp,
-        achievement.reward_vfide,
         `Unlocked achievement: ${achievement.title}`,
       ]);
 
@@ -126,7 +125,6 @@ export async function POST(request: NextRequest) {
         success: true,
         reward: {
           xp: achievement.reward_xp,
-          vfide: achievement.reward_vfide,
           badge: achievement.reward_badge,
         },
       });

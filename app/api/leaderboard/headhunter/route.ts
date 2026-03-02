@@ -21,22 +21,7 @@ interface LeaderboardEntry {
   points: number;
   userReferrals: number;
   merchantReferrals: number;
-  estimatedReward: string;
   isCurrentUser: boolean;
-}
-
-// Reward pool per quarter (from tokenomics: 15M tokens over 5 years = 750K/quarter)
-const QUARTERLY_REWARD_POOL = 750_000;
-
-// Calculate estimated reward based on rank
-function calculateReward(rank: number, points: number, totalPoints: number): string {
-  if (totalPoints === 0) return '$0';
-  
-  // Top 20 split the pool proportionally
-  const share = points / totalPoints;
-  const reward = QUARTERLY_REWARD_POOL * share * 0.10; // Assuming $0.10 per token
-  
-  return `$${reward.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
 }
 
 export async function GET(request: NextRequest) {
@@ -98,7 +83,6 @@ export async function GET(request: NextRequest) {
           year: yearNum,
           quarter: quarterNum,
           totalParticipants: 0,
-          rewardPool: QUARTERLY_REWARD_POOL,
         }
       });
     }
@@ -182,7 +166,6 @@ export async function GET(request: NextRequest) {
       points: stat.points,
       userReferrals: stat.userReferrals,
       merchantReferrals: stat.merchantReferrals,
-      estimatedReward: calculateReward(index + 1, stat.points, totalPoints),
       isCurrentUser: stat.referrer.toLowerCase() === userAddress,
     }));
 
@@ -194,7 +177,6 @@ export async function GET(request: NextRequest) {
         quarter: quarterNum,
         totalParticipants: stats.length,
         totalPoints,
-        rewardPool: QUARTERLY_REWARD_POOL,
       }
     });
 

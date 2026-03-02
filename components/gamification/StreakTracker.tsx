@@ -87,11 +87,11 @@ export default function StreakTracker() {
   const isStreakAtRisk = new Date(streak.lastActivityDate).toDateString() !== new Date().toDateString();
 
   const milestoneRewards = {
-    7: { xp: 70, vfide: '35' },
-    14: { xp: 140, vfide: '70' },
-    30: { xp: 300, vfide: '150' },
-    60: { xp: 600, vfide: '300' },
-    90: { xp: 900, vfide: '450' },
+    7: { xp: 70 },
+    14: { xp: 140 },
+    30: { xp: 300 },
+    60: { xp: 600 },
+    90: { xp: 900 },
   };
 
   const upcomingReward = milestoneRewards[nextMilestone as keyof typeof milestoneRewards];
@@ -259,13 +259,6 @@ export default function StreakTracker() {
             >
               <Zap className="w-4 h-4 text-emerald-500" />
               <span className="text-emerald-500 font-semibold">+{upcomingReward.xp} XP</span>
-            </motion.div>
-            <motion.div 
-              whileHover={{ scale: 1.1 }}
-              className="flex items-center gap-2 px-3 py-2 rounded-lg bg-amber-400/10 border border-amber-400/30"
-            >
-              <Target className="w-4 h-4 text-amber-400" />
-              <span className="text-amber-400 font-semibold">+{upcomingReward.vfide} VFIDE</span>
             </motion.div>
           </div>
         </motion.div>
