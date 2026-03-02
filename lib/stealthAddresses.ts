@@ -374,6 +374,118 @@ export function calculatePrivacyScore(
 }
 
 // ============================================================================
+// Encrypted Storage for Stealth Keys
+// ============================================================================
+
+const STEALTH_SALT_KEY = 'vfide-stealth-salt';
+const PBKDF2_ITERATIONS = 100000;
+
+interface StoredStealthKeys {
+  metaAddress: StealthMetaAddress;
+  spendingPrivKey: string;
+  viewingPrivKey: string;
+}
+
+interface EncryptedStealthStorage {
+  encrypted: true;
+  iv: string;
+  ciphertext: string;
+}
+
+/**
+ * Derive an AES-256-GCM key from the user's wallet address using PBKDF2.
+ * A device-specific random salt is persisted in localStorage so that a
+ * raw localStorage dump from another device cannot be trivially decrypted.
+ */
+export async function deriveStorageKey(userAddress: string): Promise<CryptoKey> {
+  let saltHex = localStorage.getItem(STEALTH_SALT_KEY);
+  if (!saltHex) {
+    const salt = randomBytes(16);
+    saltHex = bytesToHex(salt);
+    localStorage.setItem(STEALTH_SALT_KEY, saltHex);
+  }
+  const saltBytes = hexToBytes(saltHex);
+
+  const encoder = new TextEncoder();
+  const keyMaterial = await crypto.subtle.importKey(
+    'raw',
+    encoder.encode(userAddress.toLowerCase()),
+    'PBKDF2',
+    false,
+    ['deriveKey']
+  );
+
+  return crypto.subtle.deriveKey(
+    {
+      name: 'PBKDF2',
+      salt: new Uint8Array(saltBytes).buffer as ArrayBuffer,
+      iterations: PBKDF2_ITERATIONS,
+      hash: 'SHA-256',
+    },
+    keyMaterial,
+    { name: 'AES-GCM', length: 256 },
+    false,
+    ['encrypt', 'decrypt']
+  );
+}
+
+/**
+ * Encrypt stealth private keys with AES-256-GCM before writing to localStorage.
+ */
+export async function encryptStealthKeys(
+  keys: StoredStealthKeys,
+  userAddress: string
+): Promise<string> {
+  const cryptoKey = await deriveStorageKey(userAddress);
+  const iv = randomBytes(12);
+  const encoder = new TextEncoder();
+  const plaintext = encoder.encode(JSON.stringify(keys));
+
+  const ciphertextBuffer = await crypto.subtle.encrypt(
+    { name: 'AES-GCM', iv: new Uint8Array(iv).buffer as ArrayBuffer },
+    cryptoKey,
+    plaintext
+  );
+
+  const payload: EncryptedStealthStorage = {
+    encrypted: true,
+    iv: bytesToHex(iv),
+    ciphertext: bytesToHex(new Uint8Array(ciphertextBuffer)),
+  };
+  return JSON.stringify(payload);
+}
+
+/**
+ * Decrypt stealth private keys from localStorage.
+ * Also handles migration from the legacy plain-text format.
+ */
+export async function decryptStealthKeys(
+  stored: string,
+  userAddress: string
+): Promise<StoredStealthKeys> {
+  const parsed: EncryptedStealthStorage | StoredStealthKeys = JSON.parse(stored);
+
+  // Migrate legacy plain-text storage
+  if (!('encrypted' in parsed)) {
+    return parsed as StoredStealthKeys;
+  }
+
+  const { iv, ciphertext } = parsed as EncryptedStealthStorage;
+  const cryptoKey = await deriveStorageKey(userAddress);
+  const ivBytes = hexToBytes(iv);
+  const ciphertextBytes = hexToBytes(ciphertext);
+
+  const plaintextBuffer = await crypto.subtle.decrypt(
+    { name: 'AES-GCM', iv: new Uint8Array(ivBytes).buffer as ArrayBuffer },
+    cryptoKey,
+    new Uint8Array(ciphertextBytes).buffer as ArrayBuffer
+  );
+
+  const decoder = new TextDecoder();
+  return JSON.parse(decoder.decode(plaintextBuffer)) as StoredStealthKeys;
+}
+
+// ============================================================================
 // React Hook
 // ============================================================================
 
@@ -392,11 +504,12 @@ export function useStealth(userAddress: string | undefined) {
     setError(null);
 
     try {
-      // Check for existing keys in secure storage
+      // Check for existing keys in encrypted storage
       const storedKeys = localStorage.getItem(`vfide-stealth-${userAddress}`);
 
       if (storedKeys) {
-        const { metaAddress, spendingPrivKey: spk, viewingPrivKey: vpk } = JSON.parse(storedKeys);
+        const { metaAddress, spendingPrivKey: spk, viewingPrivKey: vpk } =
+          await decryptStealthKeys(storedKeys, userAddress);
         setProfile({
           metaAddress,
           receivedPayments: [],
@@ -406,7 +519,7 @@ export function useStealth(userAddress: string | undefined) {
         setViewingPrivKey(vpk);
       } else {
         // Generate new stealth identity
-        const { metaAddress, spendingPrivKey: spk, viewingPrivKey: vpk } = 
+        const { metaAddress, spendingPrivKey: spk, viewingPrivKey: vpk } =
           await generateStealthMetaAddress();
 
         setProfile({
@@ -417,11 +530,12 @@ export function useStealth(userAddress: string | undefined) {
         setSpendingPrivKey(spk);
         setViewingPrivKey(vpk);
 
-        // Store securely (in production, use encrypted storage)
-        localStorage.setItem(
-          `vfide-stealth-${userAddress}`,
-          JSON.stringify({ metaAddress, spendingPrivKey: spk, viewingPrivKey: vpk })
+        // Persist keys using AES-GCM encrypted storage
+        const encrypted = await encryptStealthKeys(
+          { metaAddress, spendingPrivKey: spk, viewingPrivKey: vpk },
+          userAddress
         );
+        localStorage.setItem(`vfide-stealth-${userAddress}`, encrypted);
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to initialize stealth');

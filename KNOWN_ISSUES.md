@@ -15,18 +15,13 @@ This document tracks known enhancement opportunities that do not block productio
 
 ### 1. localStorage Encryption Enhancement
 **Priority:** Medium (Enhancement)  
-**Status:** Future improvement  
-**Timeline:** Post-launch (Month 1)
+**Status:** ✅ Implemented  
+**Timeline:** Completed
 
-**What:** Add encryption for stealth address keys in localStorage
+**What:** Stealth address keys are now encrypted with AES-256-GCM (PBKDF2-derived key, 100K iterations) before being written to localStorage. A device-specific random salt is generated on first use and stored separately.
 
-**Why Not Blocking:**
-- Client-side data only
-- User-controlled
-- XSS protection already in place
-- No server exposure risk
-
-**Tracking:** Will implement as security enhancement post-launch
+**Implementation:** `lib/stealthAddresses.ts` — `encryptStealthKeys` / `decryptStealthKeys` / `deriveStorageKey`.  
+**Migration:** Legacy plain-text entries are transparently read and re-persisted in the new encrypted format on next initialization.
 
 ---
 

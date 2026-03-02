@@ -7,7 +7,23 @@ import {
   StealthAddress,
   StealthPayment,
   PrivacyProfile,
+  encryptStealthKeys,
+  decryptStealthKeys,
 } from '../stealthAddresses';
+
+// Polyfill Web Crypto API for jsdom test environment
+beforeAll(() => {
+  if (typeof globalThis.crypto === 'undefined' || !globalThis.crypto.subtle) {
+    // Node.js 18+ exposes webcrypto via require('crypto')
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { webcrypto } = require('crypto');
+    Object.defineProperty(globalThis, 'crypto', {
+      value: webcrypto,
+      configurable: true,
+      writable: true,
+    });
+  }
+});
 
 describe('StealthMetaAddress interface', () => {
   it('defines meta address structure', () => {
@@ -123,5 +139,64 @@ describe('PrivacyProfile interface', () => {
     };
     expect(profile.receivedPayments.length).toBe(1);
     expect(profile.sentPayments.length).toBe(1);
+  });
+});
+
+describe('encryptStealthKeys / decryptStealthKeys', () => {
+  const testAddress = '0xAbCd1234567890AbCd1234567890AbCd12345678';
+  const testKeys = {
+    metaAddress: {
+      spendingPubKey: 'aabbcc' + '00'.repeat(30),
+      viewingPubKey: 'ddeeff' + '11'.repeat(30),
+      prefix: 'st:eth:0x',
+    } as StealthMetaAddress,
+    spendingPrivKey: '01'.repeat(32),
+    viewingPrivKey: '02'.repeat(32),
+  };
+
+  beforeEach(() => {
+    // Provide a minimal localStorage stub
+    const store: Record<string, string> = {};
+    jest.spyOn(Storage.prototype, 'getItem').mockImplementation((k) => store[k] ?? null);
+    jest.spyOn(Storage.prototype, 'setItem').mockImplementation((k, v) => { store[k] = v; });
+    jest.spyOn(Storage.prototype, 'removeItem').mockImplementation((k) => { delete store[k]; });
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
+  it('encrypts keys into an opaque ciphertext (not plain JSON)', async () => {
+    const stored = await encryptStealthKeys(testKeys, testAddress);
+    const parsed = JSON.parse(stored);
+    expect(parsed.encrypted).toBe(true);
+    expect(parsed.iv).toBeDefined();
+    expect(parsed.ciphertext).toBeDefined();
+    // The stored blob must not contain the raw private key hex
+    expect(stored).not.toContain(testKeys.spendingPrivKey);
+    expect(stored).not.toContain(testKeys.viewingPrivKey);
+  });
+
+  it('round-trips: decrypt(encrypt(keys)) === keys', async () => {
+    const stored = await encryptStealthKeys(testKeys, testAddress);
+    const recovered = await decryptStealthKeys(stored, testAddress);
+    expect(recovered.spendingPrivKey).toBe(testKeys.spendingPrivKey);
+    expect(recovered.viewingPrivKey).toBe(testKeys.viewingPrivKey);
+    expect(recovered.metaAddress.spendingPubKey).toBe(testKeys.metaAddress.spendingPubKey);
+    expect(recovered.metaAddress.viewingPubKey).toBe(testKeys.metaAddress.viewingPubKey);
+  });
+
+  it('migrates legacy plain-text storage transparently', async () => {
+    // Simulate the old plain-text format
+    const legacy = JSON.stringify(testKeys);
+    const recovered = await decryptStealthKeys(legacy, testAddress);
+    expect(recovered.spendingPrivKey).toBe(testKeys.spendingPrivKey);
+    expect(recovered.viewingPrivKey).toBe(testKeys.viewingPrivKey);
+  });
+
+  it('fails to decrypt with a different address (wrong derived key)', async () => {
+    const stored = await encryptStealthKeys(testKeys, testAddress);
+    await expect(decryptStealthKeys(stored, '0x0000000000000000000000000000000000000000'))
+      .rejects.toThrow();
   });
 });
