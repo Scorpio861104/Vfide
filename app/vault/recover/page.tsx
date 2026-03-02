@@ -843,7 +843,7 @@ export default function VaultRecoveryPage() {
   const { data: _proofScore, refetch: refetchProofScore } = useReadContract({
     address: CONTRACT_ADDRESSES.Seer,
     abi: SeerABI,
-    functionName: 'proofScore',
+    functionName: 'getScore',
     args: vaultToLookup ? [vaultToLookup] : undefined,
     query: { enabled: !!vaultToLookup }
   });

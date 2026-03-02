@@ -104,7 +104,7 @@ export default function BadgesPage() {
   const { data: _proofScore } = useReadContract({
     address: SEER_ADDRESS,
     abi: SeerABI,
-    functionName: 'score',
+    functionName: 'getScore',
     args: address ? [address] : undefined,
   });
 

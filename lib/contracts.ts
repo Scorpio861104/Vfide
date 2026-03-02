@@ -27,7 +27,21 @@ import {
   ProofLedgerABI,
   CommerceEscrowABI,
   VaultHubLiteABI,
-  UserVaultLiteABI
+  UserVaultLiteABI,
+  BurnRouterABI,
+  DutyDistributorABI,
+  CouncilElectionABI,
+  CouncilSalaryABI,
+  SubscriptionManagerABI,
+  SanctumVaultABI,
+  DevReserveVestingABI,
+  PayrollManagerABI,
+  EcosystemVaultABI,
+  VaultRegistryABI,
+  ERC20ABI,
+  SeerSocialABI,
+  UserRewardsABI,
+  PromotionalTreasuryABI,
 } from './abis'
 
 // Zero address placeholder for missing contracts
@@ -82,6 +96,8 @@ export const CONTRACT_ADDRESSES = {
   SubscriptionManager: validateContractAddress(process.env.NEXT_PUBLIC_SUBSCRIPTION_MANAGER_ADDRESS, 'SubscriptionManager'),
   SanctumVault: validateContractAddress(process.env.NEXT_PUBLIC_SANCTUM_VAULT_ADDRESS, 'SanctumVault'),
   DevReserveVesting: validateContractAddress(process.env.NEXT_PUBLIC_DEV_VAULT_ADDRESS, 'DevReserveVesting'),
+  SeerSocial: validateContractAddress(process.env.NEXT_PUBLIC_SEER_SOCIAL_ADDRESS, 'SeerSocial'),
+  EcosystemVault: validateContractAddress(process.env.NEXT_PUBLIC_ECOSYSTEM_VAULT_ADDRESS, 'EcosystemVault'),
 }
 
 // Legacy ABI alias names for compatibility with existing hooks
@@ -115,5 +131,19 @@ export {
   ProofLedgerABI,
   CommerceEscrowABI,
   VaultHubLiteABI,
-  UserVaultLiteABI
+  UserVaultLiteABI,
+  BurnRouterABI,
+  DutyDistributorABI,
+  CouncilElectionABI,
+  CouncilSalaryABI,
+  SubscriptionManagerABI,
+  SanctumVaultABI,
+  DevReserveVestingABI,
+  PayrollManagerABI,
+  EcosystemVaultABI,
+  VaultRegistryABI,
+  ERC20ABI,
+  SeerSocialABI,
+  UserRewardsABI,
+  PromotionalTreasuryABI,
 }

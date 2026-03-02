@@ -56,14 +56,14 @@ export function useCreateVault() {
     hash: data,
   })
   
-  // VaultHub createVault() with no args
+  // VaultHub ensureVault() creates if doesn't exist, returns existing vault if it does
   const createVault = () => {
     if (!address) return
     writeContract({
       address: CONTRACT_ADDRESSES.VaultHub,
       abi: HUB_ABI,
-      functionName: 'createVault',
-      args: [],
+      functionName: 'ensureVault',
+      args: [address],
     })
   }
   
@@ -313,7 +313,7 @@ export function useAbnormalTransactionThreshold(vaultAddress?: `0x${string}`) {
   const { data: threshold } = useReadContract({
     address: vaultAddress,
     abi: VAULT_ABI,
-    functionName: 'getAbnormalTransactionThreshold',
+    functionName: 'abnormalTransactionThreshold',
     query: {
       enabled: !!vaultAddress,
     }

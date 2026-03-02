@@ -6,7 +6,7 @@ import { X, ArrowDownToLine, ArrowUpFromLine, RefreshCw, AlertCircle, CheckCircl
 import { useAccount, useWriteContract, useWaitForTransactionReceipt, useReadContract } from 'wagmi';
 import { parseEther, formatEther, isAddress } from 'viem';
 import { CONTRACT_ADDRESSES } from '@/lib/contracts';
-import { VFIDETokenABI, VaultInfrastructureABI } from '@/lib/abis';
+import { VFIDETokenABI, VaultInfrastructureABI, UserVaultABI } from '@/lib/abis';
 import { useVaultBalance } from '@/hooks/useVaultHooks';
 import { useToast } from '@/components/ui/toast';
 
@@ -154,7 +154,7 @@ export function VaultActionsModal({ isOpen, onClose, actionType, vaultAddress }:
         // Transfer VFIDE from vault back to wallet using vault's transferVFIDE
         writeContract({
           address: vaultAddress,
-          abi: VaultInfrastructureABI,
+          abi: UserVaultABI,
           functionName: 'transferVFIDE',
           args: [address as `0x${string}`, amountBigInt],
         });
@@ -162,7 +162,7 @@ export function VaultActionsModal({ isOpen, onClose, actionType, vaultAddress }:
         // Transfer to another vault using vault's transferVFIDE
         writeContract({
           address: vaultAddress,
-          abi: VaultInfrastructureABI,
+          abi: UserVaultABI,
           functionName: 'transferVFIDE',
           args: [recipientAddress as `0x${string}`, amountBigInt],
         });

@@ -34,6 +34,9 @@ import PayrollManagerABI from './PayrollManager.json'
 import EcosystemVaultABI from './EcosystemVault.json'
 import VaultRegistryABI from './VaultRegistry.json'
 import ERC20ABI from './ERC20.json'
+import SeerSocialABI from './SeerSocial.json'
+import UserRewardsABI from './UserRewards.json'
+import PromotionalTreasuryABI from './PromotionalTreasury.json'
 
 // Runtime validation: Ensure ABIs are valid arrays
 function validateABI(abi: unknown, name: string): unknown[] {
@@ -80,6 +83,9 @@ validateABI(PayrollManagerABI, 'PayrollManager');
 validateABI(EcosystemVaultABI, 'EcosystemVault');
 validateABI(VaultRegistryABI, 'VaultRegistry');
 validateABI(ERC20ABI, 'ERC20');
+validateABI(SeerSocialABI, 'SeerSocial');
+validateABI(UserRewardsABI, 'UserRewards');
+validateABI(PromotionalTreasuryABI, 'PromotionalTreasury');
 
 // VaultHub ABI - use VaultInfrastructure for full features
 const VaultHubABI = VaultInfrastructureABI
@@ -119,4 +125,7 @@ export {
   EcosystemVaultABI,
   VaultRegistryABI,
   ERC20ABI,
+  SeerSocialABI,
+  UserRewardsABI,
+  PromotionalTreasuryABI,
 }

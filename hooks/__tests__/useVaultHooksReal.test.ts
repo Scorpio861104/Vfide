@@ -153,7 +153,7 @@ describe('useVaultHooks - Comprehensive Tests', () => {
 
       expect(mockWriteContract).toHaveBeenCalledWith(
         expect.objectContaining({
-          functionName: 'createVault',
+          functionName: 'ensureVault',
         })
       )
     })
