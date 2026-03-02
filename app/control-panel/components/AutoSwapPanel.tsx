@@ -101,8 +101,8 @@ export function AutoSwapPanel() {
       <div className="bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-white/10">
         <h2 className="text-2xl font-bold text-white mb-4">🔄 Auto-Swap Configuration</h2>
         <p className="text-slate-400 mb-6">
-          Configure automatic VFIDE to stablecoin conversion for reward payments.
-          When enabled, all ecosystem rewards are automatically converted to your preferred stablecoin.
+          Configure automatic VFIDE to stablecoin conversion for protocol fee distributions.
+          When enabled, fee receipts are automatically converted to your preferred stablecoin.
         </p>
 
         {/* Current Configuration Display */}

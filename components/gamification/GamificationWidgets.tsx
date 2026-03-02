@@ -2,8 +2,8 @@
 
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Trophy, Zap, Award } from 'lucide-react';
-import { useGamification, ACHIEVEMENTS, type AchievementId } from '@/lib/gamification';
+import { Trophy, Zap, Award, AlertTriangle } from 'lucide-react';
+import { useGamification, ACHIEVEMENTS, LEVEL_PERKS, XP_PROOF_SCORE_BONUS_PER_LEVEL, xpLevelToProofScoreBonus, type AchievementId } from '@/lib/gamification';
 
 interface UserStatsWidgetProps {
   userAddress: string;
@@ -60,8 +60,21 @@ export function UserStatsWidget({ userAddress, compact = false }: UserStatsWidge
             <Trophy className="w-6 h-6 text-zinc-950" />
           </div>
           <div>
-            <div className="text-2xl font-bold text-zinc-100">Level {progress.level}</div>
-            <div className="text-xs text-zinc-400">{progress.xp.toLocaleString()} XP</div>
+            {/* Show effective level when penalties exist */}
+            {(progress.penaltyXP ?? 0) > 0 ? (
+              <>
+                <div className="text-2xl font-bold text-zinc-100">
+                  Level {progress.effectiveLevel ?? progress.level}
+                  <span className="text-xs font-normal text-red-400 ml-2">(effective)</span>
+                </div>
+                <div className="text-xs text-zinc-400">{progress.xp.toLocaleString()} XP earned · <span className="text-red-400">−{progress.penaltyXP.toLocaleString()} penalty</span></div>
+              </>
+            ) : (
+              <>
+                <div className="text-2xl font-bold text-zinc-100">Level {progress.level}</div>
+                <div className="text-xs text-zinc-400">{progress.xp.toLocaleString()} XP</div>
+              </>
+            )}
           </div>
         </div>
 
@@ -72,6 +85,22 @@ export function UserStatsWidget({ userAddress, compact = false }: UserStatsWidge
           </div>
         </div>
       </div>
+
+      {/* Penalty Warning */}
+      {(progress.penaltyXP ?? 0) > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: -4 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex items-start gap-2 bg-red-950/40 border border-red-500/30 rounded-lg p-3 mb-3 text-xs"
+        >
+          <AlertTriangle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
+          <span className="text-red-300">
+            Your account has <strong>{progress.penaltyXP.toLocaleString()} penalty XP</strong> from policy violations.
+            Perks and governance rights use your <em>effective</em> level ({progress.effectiveLevel ?? progress.level}), 
+            which cannot be restored by earning more XP.
+          </span>
+        </motion.div>
+      )}
 
       {/* Progress Bar */}
       <div className="relative h-3 bg-zinc-950 rounded-full overflow-hidden mb-4">
@@ -103,6 +132,54 @@ export function UserStatsWidget({ userAddress, compact = false }: UserStatsWidge
           <div className="text-lg font-bold text-violet-400">{progress.stats.friendsAdded}</div>
         </div>
       </div>
+
+      {/* Next Level Perk */}
+      {(() => {
+        const effectiveLvl = progress.effectiveLevel ?? progress.level;
+        const nextPerk = LEVEL_PERKS.find(p => p.level > effectiveLvl);
+        if (!nextPerk) return null;
+        return (
+          <motion.div
+            initial={{ opacity: 0, y: 4 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="mt-3 bg-gradient-to-r from-cyan-500/10 to-violet-500/10 border border-cyan-500/20 rounded-lg p-3"
+          >
+            <div className="text-xs text-zinc-400 mb-1 uppercase tracking-wider">Unlock at Level {nextPerk.level}</div>
+            <div className="flex items-center gap-2">
+              <span className="text-lg">{nextPerk.icon}</span>
+              <div>
+                <div className="text-sm font-bold text-cyan-400">{nextPerk.title}</div>
+                <div className="text-xs text-zinc-400">{nextPerk.description}</div>
+              </div>
+            </div>
+          </motion.div>
+        );
+      })()}
+
+      {/* XP → ProofScore connection */}
+      <motion.div
+        initial={{ opacity: 0, y: 4 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.5 }}
+        className="mt-3 rounded-xl bg-violet-900/20 border border-violet-500/20 p-3"
+      >
+        <div className="flex items-center gap-2 mb-1">
+          <Zap className="w-3 h-3 text-violet-400" />
+          <span className="text-xs font-semibold text-violet-300 uppercase tracking-wider">
+            XP → ProofScore
+          </span>
+        </div>
+        <p className="text-xs text-zinc-400 leading-relaxed">
+          Each XP level adds{' '}
+          <span className="text-violet-300 font-semibold">+{XP_PROOF_SCORE_BONUS_PER_LEVEL} ProofScore</span>.{' '}
+          Your current effective level ({progress.effectiveLevel ?? progress.level}) contributes{' '}
+          <span className="text-violet-300 font-semibold">
+            +{xpLevelToProofScoreBonus(progress.effectiveLevel ?? progress.level).toLocaleString()}
+          </span>{' '}
+          of a possible +1,400.
+        </p>
+      </motion.div>
     </motion.div>
   );
 }

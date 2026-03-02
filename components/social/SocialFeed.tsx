@@ -139,7 +139,7 @@ const generateMockPosts = (): FeedPost[] => [
       isVerified: true,
       proofScore: 8950,
     },
-    content: 'Governance Proposal #142 passed with 78% approval! 🗳️ The community decided to increase staking rewards. Democracy in action!',
+    content: 'Governance Proposal #142 passed with 78% approval! 🗳️ The community decided to adjust governance parameters. Democracy in action!',
     type: 'proposal',
     timestamp: new Date(Date.now() - 12 * 60 * 60 * 1000),
     likes: 1204,

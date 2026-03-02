@@ -64,7 +64,7 @@ contract DAOTimelock {
         emit Queued(id,target,value,data,eta); _log("tl_queued");
     }
 
-    function cancel(bytes32 id) external onlyAdmin { if(queue[id].eta==0) revert TL_NotQueued(); delete queue[id]; emit Cancelled(id); _log("tl_cancelled"); }
+    function cancel(bytes32 id) external onlyAdmin { if(queue[id].eta==0) revert TL_NotQueued(); delete queue[id]; _removeFromQueuedIds(id); emit Cancelled(id); _log("tl_cancelled"); }
 
     function execute(bytes32 id) external payable returns(bytes memory res){
         // H-23: Only admin (DAO) can execute to prevent front-running
@@ -121,7 +121,13 @@ contract DAOTimelock {
      * @dev Returns all IDs that are queued but not yet executed or expired
      */
     bytes32[] private queuedIds;
-    
+
+    /**
+     * @notice 1-indexed position of each tracked ID in queuedIds (0 = not tracked).
+     * @dev    Used for O(1) swap-and-pop removal.
+     */
+    mapping(bytes32 => uint256) private queuedIdIndex;
+
     /**
      * @notice Queue transaction with tracking
      * FLOW-5 FIX: Use nonce for unique ID (consistent with queueTx)
@@ -133,6 +139,7 @@ contract DAOTimelock {
         if(queue[id].eta != 0) revert TL_AlreadyQueued();
         queue[id] = Op({target: target, value: value, data: data, eta: eta, done: false});
         queuedIds.push(id);
+        queuedIdIndex[id] = queuedIds.length; // 1-indexed
         emit Queued(id, target, value, data, eta);
         _log("tl_queued");
     }
@@ -215,6 +222,7 @@ contract DAOTimelock {
         require(block.timestamp > op.eta + EXPIRY_WINDOW, "TL: not expired");
         
         delete queue[id];
+        _removeFromQueuedIds(id);
         emit Cancelled(id);
         _log("tl_cleanup_expired");
     }
@@ -235,8 +243,9 @@ contract DAOTimelock {
         uint256 value = op.value;
         bytes memory data = op.data;
         
-        // Delete old
+        // Delete old and remove from tracking array
         delete queue[oldId];
+        _removeFromQueuedIds(oldId);
         
         // Create new with fresh ETA and unique nonce
         uint64 eta = uint64(block.timestamp) + delay;
@@ -245,9 +254,34 @@ contract DAOTimelock {
         require(queue[newId].eta == 0, "TL: already queued");
         
         queue[newId] = Op({target: target, value: value, data: data, eta: eta, done: false});
+        queuedIds.push(newId);
+        queuedIdIndex[newId] = queuedIds.length; // 1-indexed
         
         emit Cancelled(oldId);
         emit Queued(newId, target, value, data, eta);
         _log("tl_requeued");
+    }
+
+    /**
+     * @notice Remove an ID from the queuedIds tracking array in O(1) using swap-and-pop.
+     * @dev    Uses queuedIdIndex to locate the element directly.
+     *         Safe to call with IDs not in the array (no-op).
+     */
+    function _removeFromQueuedIds(bytes32 id) internal {
+        uint256 idx = queuedIdIndex[id];
+        if (idx == 0) return; // not tracked — safe no-op
+
+        uint256 arrayIdx = idx - 1;            // convert 1-indexed → 0-indexed
+        uint256 lastIdx  = queuedIds.length - 1;
+
+        if (arrayIdx != lastIdx) {
+            // Move the last element into the vacated slot and update its index
+            bytes32 lastId = queuedIds[lastIdx];
+            queuedIds[arrayIdx] = lastId;
+            queuedIdIndex[lastId] = idx;       // keep 1-indexed
+        }
+
+        queuedIds.pop();
+        delete queuedIdIndex[id];
     }
 }

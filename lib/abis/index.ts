@@ -25,7 +25,6 @@ import CommerceEscrowABI from './CommerceEscrow.json'
 // New consolidated ABIs
 import BurnRouterABI from './BurnRouter.json'
 import DutyDistributorABI from './DutyDistributor.json'
-import PromotionalTreasuryABI from './PromotionalTreasury.json'
 import CouncilElectionABI from './CouncilElection.json'
 import CouncilSalaryABI from './CouncilSalary.json'
 import SubscriptionManagerABI from './SubscriptionManager.json'
@@ -35,6 +34,9 @@ import PayrollManagerABI from './PayrollManager.json'
 import EcosystemVaultABI from './EcosystemVault.json'
 import VaultRegistryABI from './VaultRegistry.json'
 import ERC20ABI from './ERC20.json'
+import SeerSocialABI from './SeerSocial.json'
+import UserRewardsABI from './UserRewards.json'
+import PromotionalTreasuryABI from './PromotionalTreasury.json'
 
 // Runtime validation: Ensure ABIs are valid arrays
 function validateABI(abi: unknown, name: string): unknown[] {
@@ -72,7 +74,6 @@ validateABI(CommerceEscrowABI, 'CommerceEscrow');
 // Validate new ABIs
 validateABI(BurnRouterABI, 'BurnRouter');
 validateABI(DutyDistributorABI, 'DutyDistributor');
-validateABI(PromotionalTreasuryABI, 'PromotionalTreasury');
 validateABI(CouncilElectionABI, 'CouncilElection');
 validateABI(CouncilSalaryABI, 'CouncilSalary');
 validateABI(SubscriptionManagerABI, 'SubscriptionManager');
@@ -82,6 +83,9 @@ validateABI(PayrollManagerABI, 'PayrollManager');
 validateABI(EcosystemVaultABI, 'EcosystemVault');
 validateABI(VaultRegistryABI, 'VaultRegistry');
 validateABI(ERC20ABI, 'ERC20');
+validateABI(SeerSocialABI, 'SeerSocial');
+validateABI(UserRewardsABI, 'UserRewards');
+validateABI(PromotionalTreasuryABI, 'PromotionalTreasury');
 
 // VaultHub ABI - use VaultInfrastructure for full features
 const VaultHubABI = VaultInfrastructureABI
@@ -112,7 +116,6 @@ export {
   // New consolidated exports
   BurnRouterABI,
   DutyDistributorABI,
-  PromotionalTreasuryABI,
   CouncilElectionABI,
   CouncilSalaryABI,
   SubscriptionManagerABI,
@@ -122,4 +125,7 @@ export {
   EcosystemVaultABI,
   VaultRegistryABI,
   ERC20ABI,
+  SeerSocialABI,
+  UserRewardsABI,
+  PromotionalTreasuryABI,
 }

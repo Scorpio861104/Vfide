@@ -8,22 +8,19 @@ import { IERC20, ISeer, ICouncilManager, ISwapRouter, SafeERC20, Ownable, Reentr
  * ----------------------------------------------------------
  * Receives 50% of all transfer fees from ProofScoreBurnRouter.
  * 
- * Three equal buckets (33.3% each), distributed as PERCENTAGES not fixed amounts:
+ * Two active buckets:
  * 
- * 1. COUNCIL REWARDS (33.3%)
+ * 1. COUNCIL REWARDS (50%)
  *    - Split evenly between active council members (1-12)
  *    - Distributed every 120 days via CouncilSalary contract
  *    - Each member gets: councilPool / activeMembers
  * 
- * 2. MERCHANT BONUS (33.3%)
- *    - Tiered percentage based on ProofScore
- *    - Paid as % of merchantPool per transaction
- *    - Higher trust = higher bonus tier
+ * 2. OPERATIONS (50%)
+ *    - Reserved for protocol operations and upgrades
  * 
- * 3. HEADHUNTER FUND (33.3%)
- *    - 20 rank levels, distributed quarterly
- *    - Points: 1pt per user referral, 3pt per merchant referral
- *    - Pool split by rank position (top ranks get larger %)
+ * NOTE: Merchant bonus and headhunter (referral) reward pools are permanently
+ * disabled — distributing tokens based on ranking or referral activity would
+ * create an expectation of profit, conflicting with Howey Test compliance.
  *
  * Owner-controlled pre-mainnet, DAO-controlled post-mainnet.
  */
@@ -36,6 +33,8 @@ error ECO_AlreadyClaimed();
 error ECO_TooEarly();
 error ECO_InvalidRank();
 error ECO_ArrayCapReached();
+/// @notice Permanently reverts — token rewards for referrals or merchant ranking are not available (Howey compliance)
+error ECO_RewardsNotAvailable();
 
 contract EcosystemVault is Ownable, ReentrancyGuard {
     using SafeERC20 for IERC20;
@@ -459,25 +458,10 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
      * @notice Claim merchant reward for a completed period based on rank
      * @param period The period number to claim from
      */
-    function claimMerchantReward(uint256 period) external nonReentrant {
-        if (!merchantPeriodEnded[period]) revert ECO_NotEligible();
-        if (merchantPeriodClaimed[period][msg.sender]) revert ECO_AlreadyClaimed();
-        if (periodMerchantTxCount[period][msg.sender] == 0) revert ECO_NotEligible();
-        
-        // Calculate rank (1-based)
-        uint8 rank = _calculateMerchantRank(period, msg.sender);
-        if (rank == 0 || rank > MERCHANT_RANKS) revert ECO_InvalidRank();
-        
-        // Get share based on rank tier
-        uint16 shareBps = _getMerchantRankShare(rank);
-        uint256 pool = merchantPeriodPoolSnapshot[period];
-        uint256 reward = (pool * shareBps) / MAX_BPS;
-        
-        merchantPeriodClaimed[period][msg.sender] = true;
-        totalMerchantBonusesPaid[msg.sender] += reward;
-        rewardToken.safeTransfer(msg.sender, reward);
-        
-        emit MerchantBonusPaid(msg.sender, reward, periodMerchantTier[period][msg.sender]);
+    function claimMerchantReward(uint256) external pure {
+        // Permanently disabled: distributing tokens based on merchant ranking
+        // creates an expectation of profit, conflicting with Howey Test compliance.
+        revert ECO_RewardsNotAvailable();
     }
 
     function _calculateMerchantRank(uint256 period, address merchant) internal view returns (uint8) {
@@ -664,27 +648,10 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
      * @param year The year to claim from
      * @param quarter The quarter to claim from (1-4)
      */
-    function claimHeadhunterReward(uint256 year, uint256 quarter) external nonReentrant {
-        if (quarter == 0 || quarter > 4) revert ECO_InvalidRank();
-        if (!quarterEnded[year][quarter]) revert ECO_NotEligible();
-        if (quarterClaimed[year][quarter][msg.sender]) revert ECO_AlreadyClaimed();
-        if (yearPoints[year][msg.sender] == 0) revert ECO_NotEligible();
-        
-        // Must maintain minimum score to claim (prevents score tanking after referrals)
-        if (seer.getScore(msg.sender) < HEADHUNTER_MIN_SCORE) revert ECO_NotEligible();
-        
-        // Calculate rank based on year-accumulated points
-        uint8 rank = _calculateHeadhunterRank(year, msg.sender);
-        if (rank == 0 || rank > HEADHUNTER_RANKS) revert ECO_InvalidRank();
-        
-        // Calculate reward based on rank
-        uint256 pool = quarterPoolSnapshot[year][quarter];
-        uint256 reward = (pool * HEADHUNTER_RANK_SHARE_BPS[rank - 1]) / MAX_BPS;
-        
-        quarterClaimed[year][quarter][msg.sender] = true;
-        rewardToken.safeTransfer(msg.sender, reward);
-        
-        emit HeadhunterRewardClaimed(msg.sender, year, quarter, reward, rank);
+    function claimHeadhunterReward(uint256, uint256) external pure {
+        // Permanently disabled: distributing tokens based on referral ranking
+        // creates an expectation of profit, conflicting with Howey Test compliance.
+        revert ECO_RewardsNotAvailable();
     }
 
     function _calculateHeadhunterRank(uint256 year, address referrer) internal view returns (uint8) {

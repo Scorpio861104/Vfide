@@ -77,7 +77,6 @@ export async function GET(request: NextRequest) {
         target: row.target,
         progress: row.progress,
         rewardXp: row.reward_xp,
-        rewardVfide: (BigInt(row.reward_vfide || '0') / BigInt(10 ** 18)).toString(),
         rewardBadge: row.reward_badge,
         icon: row.icon,
         rarity: row.rarity,
@@ -171,13 +170,12 @@ export async function POST(request: NextRequest) {
         await client.query(`
           INSERT INTO achievement_notifications 
           (user_id, notification_type, title, message, icon, reward_xp, reward_vfide)
-          VALUES ($1, 'achievement_unlock', 'Achievement Unlocked!', $2, '🎖️', $3, $4)
+          VALUES ($1, 'achievement_unlock', 'Achievement Unlocked!', $2, '🎖️', $3, 0)
           ON CONFLICT DO NOTHING
         `, [
           userId,
           `You've unlocked ${milestone.title}`,
           milestone.reward_xp,
-          milestone.reward_vfide,
         ]);
       }
 

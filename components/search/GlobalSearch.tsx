@@ -94,9 +94,9 @@ const PAGES = [
 const COMMANDS = [
   { id: 'send', title: 'Send Payment', description: 'Send crypto to an address', keywords: ['send', 'pay', 'transfer'], icon: Send, action: '/pay' },
   { id: 'swap', title: 'Swap Tokens', description: 'Exchange one token for another', keywords: ['swap', 'exchange', 'trade'], icon: ArrowRightLeft, action: '/crypto?tab=swap' },
-  { id: 'stake', title: 'Stake VFIDE', description: 'Stake tokens for rewards', keywords: ['stake', 'staking', 'lock'], icon: PiggyBank, action: '/rewards?tab=stake' },
+  { id: 'stake', title: 'Lock VFIDE', description: 'Lock tokens for governance voting power', keywords: ['stake', 'staking', 'lock', 'governance'], icon: PiggyBank, action: '/rewards?tab=stake' },
   { id: 'vote', title: 'Vote on Proposal', description: 'Participate in governance', keywords: ['vote', 'governance', 'proposal'], icon: Vote, action: '/governance' },
-  { id: 'claim', title: 'Claim Rewards', description: 'Claim pending rewards', keywords: ['claim', 'rewards', 'earnings'], icon: Trophy, action: '/rewards?tab=claim' },
+  { id: 'claim', title: 'Claim Milestones', description: 'Claim completed milestone allocations', keywords: ['claim', 'rewards', 'milestones'], icon: Trophy, action: '/rewards?tab=claim' },
 ];
 
 // ==================== HELPERS ====================

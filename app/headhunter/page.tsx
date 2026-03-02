@@ -9,24 +9,22 @@ import {
 } from 'lucide-react';
 import { 
   useHeadhunterStats, 
-  useHeadhunterReward, 
-  useClaimHeadhunterReward,
   useReferralLink,
-  useQuarterlyPoolEstimate,
   useLeaderboard,
   useReferralActivity
 } from '@/hooks/useHeadhunterHooks';
-import { formatEther } from 'viem';
 
 /**
  * HEADHUNTER COMPETITION PAGE
  * 
  * Features:
- * - Referral dashboard (points, rank, earnings)
+ * - Referral dashboard (points, rank, community recognition)
  * - Top 20 leaderboard
  * - Referral link generator
- * - Quarterly claim interface
  * - Progress tracking
+ * 
+ * Note: Headhunter competition awards community recognition and governance
+ * badges — not VFIDE tokens. This keeps the program Howey Test compliant.
  */
 
 export default function HeadhunterPage() {
@@ -36,10 +34,7 @@ export default function HeadhunterPage() {
 
   // Real contract hooks
   const stats = useHeadhunterStats();
-  const { poolEstimate: _poolEstimate, formattedPool } = useQuarterlyPoolEstimate();
   const { referralLink, qrCodeUrl: _qrCodeUrl } = useReferralLink();
-  const reward = useHeadhunterReward(stats.currentYearNumber, stats.currentQuarterNumber);
-  const { claimReward, isPending: isClaimPending, isSuccess: isClaimSuccess } = useClaimHeadhunterReward();
   const { leaderboard, isLoading: _leaderboardLoading } = useLeaderboard(stats.currentYearNumber, stats.currentQuarterNumber);
   const { activity: recentActivity, isLoading: _activityLoading } = useReferralActivity();
 
@@ -58,16 +53,6 @@ export default function HeadhunterPage() {
     { name: 'Telegram', icon: MessageCircle, color: 'bg-sky-600', link: `https://t.me/share/url?url=${encodeURIComponent(referralLink)}&text=Join VFIDE!` },
     { name: 'Email', icon: Mail, color: 'bg-red-500', link: `mailto:?subject=Join VFIDE&body=Sign up with my link: ${encodeURIComponent(referralLink)}` },
   ];
-
-  const handleClaimReward = async () => {
-    if (!reward.quarterEnded || reward.claimed) return;
-    
-    try {
-      await claimReward(stats.currentYearNumber, stats.currentQuarterNumber);
-    } catch (error) {
-      console.error('Failed to claim reward:', error);
-    }
-  };
 
   if (!isConnected) {
     return (
@@ -98,7 +83,7 @@ export default function HeadhunterPage() {
                 </h1>
               </div>
               <p className="text-zinc-400 text-lg">
-                Recruit users and merchants to earn quarterly rewards
+                Recruit users and merchants to earn community recognition and governance badges
               </p>
             </div>
             <div className="text-right">
@@ -134,14 +119,14 @@ export default function HeadhunterPage() {
 
             <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4">
               <div className="flex items-center justify-between mb-2">
-                <Gift className="w-5 h-5 text-purple-600" />
-                <span className="text-xs text-zinc-400">Claimable</span>
+                <Award className="w-5 h-5 text-purple-600" />
+                <span className="text-xs text-zinc-400">Recognition</span>
               </div>
               <div className="text-2xl font-bold text-white">
-                ${reward.estimatedReward ? parseFloat(formatEther(reward.estimatedReward)).toFixed(2) : '0.00'}
+                {stats.estimatedRank > 0 && stats.estimatedRank <= 20 ? '🏆 Top 20' : '—'}
               </div>
               <div className="text-xs text-emerald-500 mt-1">
-                {reward.rewardShare} share
+                Community badge at quarter end
               </div>
             </div>
 
@@ -235,11 +220,11 @@ export default function HeadhunterPage() {
               </div>
             </div>
 
-            {/* Reward Calculator */}
+            {/* Community Recognition */}
             <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6">
               <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-                <Gift className="w-5 h-5 text-purple-600" />
-                Estimated Q{stats.currentQuarterNumber} Reward
+                <Award className="w-5 h-5 text-purple-600" />
+                Q{stats.currentQuarterNumber} Community Recognition
               </h2>
               
               <div className="bg-zinc-800 rounded-xl p-6 mb-4">
@@ -253,39 +238,40 @@ export default function HeadhunterPage() {
 
                 <div className="grid grid-cols-2 gap-4 mb-4">
                   <div className="bg-zinc-900 rounded-lg p-4 text-center">
-                    <div className="text-sm text-zinc-400 mb-1">Reward Share</div>
-                    <div className="text-2xl font-bold text-amber-400">{reward.rewardShare}</div>
+                    <div className="text-sm text-zinc-400 mb-1">Points This Year</div>
+                    <div className="text-2xl font-bold text-amber-400">{stats.currentYearPoints}</div>
                   </div>
                   <div className="bg-zinc-900 rounded-lg p-4 text-center">
-                    <div className="text-sm text-zinc-400 mb-1">Estimated Amount</div>
+                    <div className="text-sm text-zinc-400 mb-1">Quarterly Badge</div>
                     <div className="text-2xl font-bold text-emerald-500">
-                      ${reward.estimatedReward ? parseFloat(formatEther(reward.estimatedReward)).toFixed(2) : '0.00'}
+                      {stats.estimatedRank > 0 && stats.estimatedRank <= 20 ? '🏆 Earned' : '—'}
                     </div>
                   </div>
                 </div>
 
-                <div className="text-xs text-zinc-400 text-center">
-                  * Final amount depends on quarterly pool size ({formattedPool})
+                <div className="text-xs text-zinc-400 text-center mb-3">
+                  Top 20 recruiters each quarter earn the exclusive Headhunter governance badge
+                </div>
+
+                {/* What the badge does */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div className="bg-zinc-900 border border-violet-500/30 rounded-lg p-3 text-center">
+                    <div className="text-xl mb-1">🗳️</div>
+                    <div className="text-xs font-bold text-violet-400">+25% Voting Weight</div>
+                    <div className="text-xs text-zinc-500 mt-0.5">Governance votes count more</div>
+                  </div>
+                  <div className="bg-zinc-900 border border-cyan-500/30 rounded-lg p-3 text-center">
+                    <div className="text-xl mb-1">📋</div>
+                    <div className="text-xs font-bold text-cyan-400">Proposal Rights</div>
+                    <div className="text-xs text-zinc-500 mt-0.5">Submit DAO proposals directly</div>
+                  </div>
+                  <div className="bg-zinc-900 border border-amber-400/30 rounded-lg p-3 text-center">
+                    <div className="text-xl mb-1">👑</div>
+                    <div className="text-xs font-bold text-amber-400">Council Eligibility</div>
+                    <div className="text-xs text-zinc-500 mt-0.5">Can be elected to Community Council</div>
+                  </div>
                 </div>
               </div>
-
-              {/* Claim Button */}
-              {reward.quarterEnded && !reward.claimed && reward.estimatedReward > 0n && (
-                <button 
-                  onClick={handleClaimReward}
-                  disabled={isClaimPending}
-                  className="w-full px-6 py-4 bg-gradient-to-r from-amber-400 to-orange-500 text-zinc-950 rounded-lg font-bold text-lg hover:opacity-90 transition-opacity flex items-center justify-center gap-2 disabled:opacity-50"
-                >
-                  <Gift className="w-6 h-6" />
-                  {isClaimPending ? 'Claiming...' : `Claim ${formatEther(reward.estimatedReward)} VFIDE`}
-                </button>
-              )}
-              
-              {isClaimSuccess && (
-                <div className="mt-4 p-4 bg-emerald-500/10 border border-emerald-500 rounded-lg text-center text-emerald-500">
-                  ✓ Reward claimed successfully!
-                </div>
-              )}
             </div>
 
             {/* How It Works */}
@@ -316,8 +302,8 @@ export default function HeadhunterPage() {
                 <div className="flex gap-4">
                   <div className="shrink-0 w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold">4</div>
                   <div>
-                    <div className="font-semibold text-white mb-1">Claim Rewards</div>
-                    <div className="text-sm text-zinc-400">Top 20 share quarterly pool (15% for #1, 5% for #7, etc.)</div>
+                    <div className="font-semibold text-white mb-1">Earn Recognition</div>
+                    <div className="text-sm text-zinc-400">Top 20 earn the exclusive Headhunter governance badge and community recognition</div>
                   </div>
                 </div>
               </div>
@@ -326,7 +312,7 @@ export default function HeadhunterPage() {
                 <div className="flex items-start gap-3">
                   <Crown className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
                   <div className="text-sm text-zinc-400">
-                    <span className="text-amber-400 font-semibold">Pro Tip:</span> Maintain 60%+ ProofScore to participate. Score below 60% at claim time = forfeited rewards!
+                    <span className="text-amber-400 font-semibold">Pro Tip:</span> Maintain 60%+ ProofScore to participate. Dropping below 60% disqualifies you from the quarterly recognition!
                   </div>
                 </div>
               </div>
@@ -387,12 +373,12 @@ export default function HeadhunterPage() {
                         </div>
                       </div>
 
-                      {/* Reward */}
+                      {/* Recognition */}
                       <div className="text-right shrink-0">
                         <div className="text-lg sm:text-2xl font-bold text-emerald-500">
-                          {entry.estimatedReward}
+                          {entry.rank <= 20 ? '🏆' : '—'}
                         </div>
-                        <div className="text-xs text-zinc-400 whitespace-nowrap">Est. reward</div>
+                        <div className="text-xs text-zinc-400 whitespace-nowrap">Badge eligible</div>
                       </div>
                     </div>
                   </div>

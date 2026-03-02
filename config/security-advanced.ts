@@ -174,18 +174,28 @@ export const validateBackupCode = (code: string): boolean => {
 export const generateBackupCodes = (count: number = 10): string[] => {
   const codes: string[] = [];
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-  
+  // Reject-resample approach: discard any random byte that falls in the biased
+  // tail (>= floor(256/36)*36 == 252) and draw a new one.  This guarantees
+  // uniform distribution across all 36 characters with no modulo bias.
+  const uniformSample = (): number => {
+    const buf = new Uint8Array(1);
+    do {
+      crypto.getRandomValues(buf);
+    } while (buf[0]! >= 252); // 252 = floor(256/36)*36 — reject the biased tail
+    return buf[0]! % chars.length;
+  };
+
   for (let i = 0; i < count; i++) {
     let code = '';
     for (let j = 0; j < 3; j++) {
       for (let k = 0; k < 4; k++) {
-        code += chars[Math.floor(Math.random() * chars.length)];
+        code += chars[uniformSample()];
       }
       if (j < 2) code += '-';
     }
     codes.push(code);
   }
-  
+
   return codes;
 };
 

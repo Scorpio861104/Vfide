@@ -79,8 +79,9 @@ function parseCSPReport(body: unknown): CSPViolation | null {
 }
 
 export async function POST(request: NextRequest) {
-  // Rate limiting
-  const rateLimit = await withRateLimit(request, 'api');
+  // Rate limiting — unauthenticated endpoint; use write-tier (30/min) to
+  // prevent log-flood attacks while still accepting legitimate browser reports.
+  const rateLimit = await withRateLimit(request, 'write');
   if (rateLimit) return rateLimit;
 
   try {

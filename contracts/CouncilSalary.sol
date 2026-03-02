@@ -80,7 +80,6 @@ contract CouncilSalary {
         require(_dao != address(0), "zero address");
         dao = _dao;
     }
-
     /**
      * Distribute salary to eligible council members.
      * C-1 FIX: Now requires DAO or authorized keeper to call

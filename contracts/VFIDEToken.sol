@@ -9,8 +9,8 @@ import "./SharedInterfaces.sol";
  * SUPPLY (ALL MINTED AT GENESIS):
  * - Total supply: 200,000,000 VFIDE (18 decimals)
  * - Dev reserve: 50,000,000 → DevReserveVestingVault (locked)
- * - Presale allocation: 50,000,000 → PresaleContract (35M base + 15M bonus)
- * - Treasury/Operations: 100,000,000 → Treasury (liquidity, CEX, operations)
+ * - Presale allocation: 35,000,000 → PresaleContract (no bonus pool)
+ * - Treasury/Operations: 115,000,000 → Treasury (liquidity, CEX, operations)
  * 
  * VAULT-ONLY (ON BY DEFAULT):
  * - Users MUST use vaults for transfers (enables recovery/ProofScore)
@@ -37,7 +37,7 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
 
     uint256 public constant MAX_SUPPLY = 200_000_000e18;
     uint256 public constant DEV_RESERVE_SUPPLY = 50_000_000e18;
-    uint256 public constant PRESALE_CAP = 50_000_000e18;
+    uint256 public constant PRESALE_CAP = 35_000_000e18;
 
     // ─────────────────────────── Anti-Whale Protection
     // All limits configurable by owner, can be disabled by setting to 0
@@ -86,6 +86,15 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
     // Sinks (fallbacks if router is unset or returns zero sinks)
     address public treasurySink;  // sanctuary/treasury receiver for charity share
     address public sanctumSink; // Optional: Burn to Sanctum instead of 0x0
+
+    // VFIDE-H-03 Fix: 48-hour timelock for fee-sink and burn-router changes
+    uint64 public constant SINK_CHANGE_DELAY = 48 hours;
+    address public pendingBurnRouter;
+    uint64  public pendingBurnRouterAt;
+    address public pendingTreasurySink;
+    uint64  public pendingTreasurySinkAt;
+    address public pendingSanctumSink;
+    uint64  public pendingSanctumSinkAt;
     
     // Sanctions / Compliance
     mapping(address => bool) public isBlacklisted;
@@ -99,7 +108,7 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
     event FrozenSet(address indexed user, bool frozen, address indexed setBy);
 
     // EIP-2612 Permit
-    bytes32 public DOMAIN_SEPARATOR;
+    bytes32 public immutable DOMAIN_SEPARATOR;
     // keccak256("Permit(address owner,address spender,uint256 value,uint256 nonce,uint256 deadline)");
     bytes32 public constant PERMIT_TYPEHASH = 0x6e71edae12b1b97f4d1f60370fef10105fa2faae0126114a169c64845d6126c9;
     mapping(address => uint256) public nonces;
@@ -109,8 +118,11 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
     event SecurityHubSet(address indexed hub);
     event LedgerSet(address indexed ledger);
     event BurnRouterSet(address indexed router);
+    event BurnRouterScheduled(address indexed router, uint64 effectiveAt);
     event TreasurySinkSet(address indexed sink);
+    event TreasurySinkScheduled(address indexed sink, uint64 effectiveAt);
     event SanctumSinkSet(address indexed sink);
+    event SanctumSinkScheduled(address indexed sink, uint64 effectiveAt);
     event SystemExemptSet(address indexed who, bool isExempt);
     event Whitelisted(address indexed addr, bool status);
     event VaultOnlySet(bool enabled);
@@ -200,16 +212,16 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
         emit Transfer(address(0), devReserveVestingVault, DEV_RESERVE_SUPPLY);
         _logEv(devReserveVestingVault, "premint_dev_reserve", DEV_RESERVE_SUPPLY, "50M locked");
         
-        // 50M to Presale Contract (35M base + 15M bonus)
+        // 35M to Presale Contract (no bonus pool — rewards are not available)
         _balances[_presaleContract] = PRESALE_CAP;
         emit Transfer(address(0), _presaleContract, PRESALE_CAP);
-        _logEv(_presaleContract, "premint_presale", PRESALE_CAP, "50M for presale");
+        _logEv(_presaleContract, "premint_presale", PRESALE_CAP, "35M for presale");
         
-        // 100M to Treasury (operations, liquidity, CEX, trading)
+        // 115M to Treasury (operations, liquidity, CEX, trading: 200M - 50M dev - 35M presale)
         uint256 treasuryAmount = MAX_SUPPLY - DEV_RESERVE_SUPPLY - PRESALE_CAP;
         _balances[treasury] = treasuryAmount;
         emit Transfer(address(0), treasury, treasuryAmount);
-        _logEv(treasury, "premint_treasury", treasuryAmount, "100M for operations");
+        _logEv(treasury, "premint_treasury", treasuryAmount, "115M for operations");
     }
 
     // ─────────────────────────── ERC20 standard
@@ -283,24 +295,60 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
 
     function setBurnRouter(address router) external onlyOwner {
         if (policyLocked && router == address(0)) revert VF_POLICY_LOCKED();
-        burnRouter = IProofScoreBurnRouterToken(router);
-        emit BurnRouterSet(router);
+        uint64 effectiveAt = uint64(block.timestamp) + SINK_CHANGE_DELAY;
+        pendingBurnRouter = router;
+        pendingBurnRouterAt = effectiveAt;
+        emit BurnRouterScheduled(router, effectiveAt);
+        _log("burn_router_scheduled");
+    }
+
+    function applyBurnRouter() external onlyOwner {
+        require(pendingBurnRouterAt != 0, "VF: no pending");
+        require(block.timestamp >= pendingBurnRouterAt, "VF: timelock");
+        burnRouter = IProofScoreBurnRouterToken(pendingBurnRouter);
+        emit BurnRouterSet(pendingBurnRouter);
         _log("burn_router_set");
+        delete pendingBurnRouter;
+        delete pendingBurnRouterAt;
     }
 
     function setTreasurySink(address sink) external onlyOwner {
         if (policyLocked && sink == address(0)) revert VF_POLICY_LOCKED();
-        treasurySink = sink;
-        emit TreasurySinkSet(sink);
+        uint64 effectiveAt = uint64(block.timestamp) + SINK_CHANGE_DELAY;
+        pendingTreasurySink = sink;
+        pendingTreasurySinkAt = effectiveAt;
+        emit TreasurySinkScheduled(sink, effectiveAt);
+        _log("treasury_sink_scheduled");
+    }
+
+    function applyTreasurySink() external onlyOwner {
+        require(pendingTreasurySinkAt != 0, "VF: no pending");
+        require(block.timestamp >= pendingTreasurySinkAt, "VF: timelock");
+        treasurySink = pendingTreasurySink;
+        emit TreasurySinkSet(pendingTreasurySink);
         _log("treasury_sink_set");
+        delete pendingTreasurySink;
+        delete pendingTreasurySinkAt;
     }
 
     function setSanctumSink(address _sanctum) external onlyOwner {
         if (policyLocked) require(_sanctum != address(0), "VF: cannot set zero when locked");
         require(_sanctum != address(0), "VF: zero address");
-        sanctumSink = _sanctum;
-        emit SanctumSinkSet(_sanctum);
+        uint64 effectiveAt = uint64(block.timestamp) + SINK_CHANGE_DELAY;
+        pendingSanctumSink = _sanctum;
+        pendingSanctumSinkAt = effectiveAt;
+        emit SanctumSinkScheduled(_sanctum, effectiveAt);
+        _log("sanctum_sink_scheduled");
+    }
+
+    function applySanctumSink() external onlyOwner {
+        require(pendingSanctumSinkAt != 0, "VF: no pending");
+        require(block.timestamp >= pendingSanctumSinkAt, "VF: timelock");
+        sanctumSink = pendingSanctumSink;
+        emit SanctumSinkSet(pendingSanctumSink);
         _log("sanctum_sink_set");
+        delete pendingSanctumSink;
+        delete pendingSanctumSinkAt;
     }
 
     /// @notice Exempt address from all checks (fees + vault-only) - use for system contracts

@@ -38,6 +38,22 @@ export interface UserProgress {
   xp: number;
   xpToNextLevel: number;
   achievements: AchievementId[];
+  /**
+   * Accumulated XP penalty from violations.  The effective level (and all
+   * perk/governance calculations) is based on `xp - penaltyXP`, so grinding
+   * more XP can never fully erase the impact of misconduct.
+   */
+  penaltyXP: number;
+  /** Effective XP after subtracting penalties; never goes below 0. */
+  effectiveXP: number;
+  /** Effective level derived from effectiveXP — used for all perk gates. */
+  effectiveLevel: number;
+  /**
+   * Per-calendar-day XP already awarded.  Capped at MAX_XP_PER_DAY to
+   * prevent rapid farming.
+   */
+  dailyXPDate: string;
+  dailyXPEarned: number;
   stats: {
     messagesSent: number;
     friendsAdded: number;
@@ -193,6 +209,175 @@ const LEVEL_THRESHOLDS = [
   16300,  // Level 15
 ];
 
+/**
+ * Maximum XP that can be earned in a single calendar day.
+ * Prevents rapid farming and ensures the playing field stays level.
+ */
+export const MAX_XP_PER_DAY = 500;
+
+/**
+ * ProofScore bonus granted per gamification level.
+ *
+ * Each level of in-app activity awards this many ProofScore points on top of
+ * the base score that comes from on-chain actions (transactions, governance,
+ * verification, etc.).  At Level 15 (the max) a user gains up to
+ * MAX_LEVELS × XP_PROOF_SCORE_BONUS_PER_LEVEL = 15 × 100 = 1,500 ProofScore
+ * points — a meaningful but non-dominant contribution (15 % of MAX_PROOF_SCORE).
+ *
+ * Formula: bonusPoints = (effectiveLevel - 1) * XP_PROOF_SCORE_BONUS_PER_LEVEL
+ * The -1 means Level 1 (the starting level) contributes 0, so new users begin
+ * with the same base ProofScore regardless of any XP they haven't earned yet.
+ */
+export const XP_PROOF_SCORE_BONUS_PER_LEVEL = 100;
+
+/**
+ * Convert an XP effective level to the equivalent ProofScore bonus.
+ *
+ * @param effectiveLevel - The player's effective level (1–15, after penalties).
+ * @returns Additional ProofScore points from gamification (0 at Level 1, up to 1,400 at Level 15).
+ */
+export function xpLevelToProofScoreBonus(effectiveLevel: number): number {
+  const clamped = Math.max(1, Math.min(15, Math.round(effectiveLevel)));
+  return (clamped - 1) * XP_PROOF_SCORE_BONUS_PER_LEVEL;
+}
+
+/**
+ * Platform perks unlocked at each level.
+ * These are utility benefits for your own activity — not investment profit —
+ * so they are fully Howey Test compliant.
+ */
+export interface LevelPerk {
+  level: number;
+  title: string;
+  description: string;
+  icon: string;
+  category: 'fee' | 'governance' | 'feature' | 'status';
+}
+
+export const LEVEL_PERKS: LevelPerk[] = [
+  {
+    level: 2,
+    title: '1% Fee Discount',
+    description: 'Your transaction fees are reduced by 1% across the platform.',
+    icon: '💸',
+    category: 'fee',
+  },
+  {
+    level: 3,
+    title: 'Verified Participant Badge',
+    description: 'Display a verified participant badge on your public profile.',
+    icon: '✅',
+    category: 'status',
+  },
+  {
+    level: 5,
+    title: '3% Fee Discount',
+    description: 'Your transaction fees are reduced by 3% across the platform.',
+    icon: '💸',
+    category: 'fee',
+  },
+  {
+    level: 5,
+    title: 'Governance Voting Unlocked',
+    description: 'Eligible to participate in DAO governance proposals.',
+    icon: '🗳️',
+    category: 'governance',
+  },
+  {
+    level: 7,
+    title: 'Priority Support',
+    description: 'Your support requests are escalated to a dedicated queue.',
+    icon: '⚡',
+    category: 'feature',
+  },
+  {
+    level: 8,
+    title: '5% Fee Discount',
+    description: 'Your transaction fees are reduced by 5% across the platform.',
+    icon: '💸',
+    category: 'fee',
+  },
+  {
+    level: 10,
+    title: '1.25× Governance Voting Weight',
+    description: 'Your governance votes carry 25% more weight than base votes.',
+    icon: '🗳️',
+    category: 'governance',
+  },
+  {
+    level: 10,
+    title: 'Early Feature Access',
+    description: 'Opt in to beta features before public release.',
+    icon: '🔬',
+    category: 'feature',
+  },
+  {
+    level: 12,
+    title: '8% Fee Discount',
+    description: 'Your transaction fees are reduced by 8% across the platform.',
+    icon: '💸',
+    category: 'fee',
+  },
+  {
+    level: 12,
+    title: 'Direct DAO Proposal Rights',
+    description: 'Submit governance proposals directly without a delegate.',
+    icon: '📋',
+    category: 'governance',
+  },
+  {
+    level: 15,
+    title: '12% Fee Discount',
+    description: 'Maximum 12% transaction fee reduction for top-level members.',
+    icon: '💸',
+    category: 'fee',
+  },
+  {
+    level: 15,
+    title: '1.5× Governance Voting Weight',
+    description: 'Your governance votes carry 50% more weight than base votes.',
+    icon: '🗳️',
+    category: 'governance',
+  },
+  {
+    level: 15,
+    title: 'Council Eligibility',
+    description: 'Eligible to be elected to the VFIDE Community Council.',
+    icon: '👑',
+    category: 'status',
+  },
+];
+
+/**
+ * Additional governance perks granted by the Headhunter competition badge.
+ * The badge is earned by finishing in the top 20 of a quarterly headhunter
+ * competition. It stacks additively with level-based voting perks above.
+ *
+ * Badge perks: +25% voting weight bonus (stacks on top of level multiplier),
+ * direct DAO proposal rights (if not already unlocked at Level 12),
+ * and Community Council eligibility (if not already unlocked at Level 15).
+ */
+export const HEADHUNTER_BADGE_PERKS: Pick<LevelPerk, 'title' | 'description' | 'icon' | 'category'>[] = [
+  {
+    title: '+25% Voting Weight Bonus',
+    description: 'Stacks additively on top of your level-based voting multiplier.',
+    icon: '🗳️',
+    category: 'governance',
+  },
+  {
+    title: 'Direct DAO Proposal Rights',
+    description: 'Submit governance proposals directly, regardless of XP level.',
+    icon: '📋',
+    category: 'governance',
+  },
+  {
+    title: 'Council Eligibility',
+    description: 'Eligible to be elected to the Community Council for the quarter.',
+    icon: '👑',
+    category: 'status',
+  },
+];
+
 class GamificationEngine {
   private storageKey = 'vfide_gamification';
 
@@ -207,7 +392,15 @@ class GamificationEngine {
     try {
       const stored = localStorage.getItem(`${this.storageKey}_${userAddress}`);
       if (stored) {
-        return JSON.parse(stored);
+        const parsed: UserProgress = JSON.parse(stored);
+        // Backfill anti-abuse fields added after initial launch so existing
+        // stored objects are always fully shaped.
+        if (parsed.penaltyXP === undefined) parsed.penaltyXP = 0;
+        if (parsed.effectiveXP === undefined) parsed.effectiveXP = parsed.xp;
+        if (parsed.effectiveLevel === undefined) parsed.effectiveLevel = parsed.level;
+        if (parsed.dailyXPDate === undefined) parsed.dailyXPDate = '';
+        if (parsed.dailyXPEarned === undefined) parsed.dailyXPEarned = 0;
+        return parsed;
       }
     } catch (error) {
       console.error('Failed to load gamification progress:', error);
@@ -228,30 +421,78 @@ class GamificationEngine {
   }
 
   /**
-   * Award XP and check for level ups
+   * Award XP and check for level ups.
+   * Enforces the per-day cap (MAX_XP_PER_DAY) so rapid farming is not possible.
+   * Returns the actual XP awarded (may be less than requested if cap is hit).
    */
-  awardXP(userAddress: string, amount: number, _reason: string): { levelUp: boolean; newLevel?: number } {
+  awardXP(userAddress: string, amount: number, reason: string): { levelUp: boolean; newLevel?: number; awarded: number } {
     const progress = this.getProgress(userAddress);
-    const oldLevel = progress.level;
-    
-    progress.xp += amount;
-    
-    // Check for level up
+    const today = new Date().toDateString();
+
+    // Reset daily counter when the date changes
+    if (progress.dailyXPDate !== today) {
+      progress.dailyXPDate = today;
+      progress.dailyXPEarned = 0;
+    }
+
+    // Clamp to remaining daily allowance
+    const remaining = Math.max(0, MAX_XP_PER_DAY - progress.dailyXPEarned);
+    const awarded = Math.min(amount, remaining);
+
+    if (awarded <= 0) {
+      this.saveProgress(userAddress, progress);
+      return { levelUp: false, awarded: 0 };
+    }
+
+    progress.xp += awarded;
+    progress.dailyXPEarned += awarded;
+
+    // Recompute effective values (used for all perk/governance gates)
+    progress.effectiveXP = Math.max(0, progress.xp - progress.penaltyXP);
+    progress.effectiveLevel = this.calculateLevel(progress.effectiveXP);
+
+    // Earned level (ignores penalties — stored for record-keeping only)
     const newLevel = this.calculateLevel(progress.xp);
+    const oldLevel = progress.level;
     const levelUp = newLevel > oldLevel;
-    
+
     if (levelUp) {
       progress.level = newLevel;
-      analytics.track('payment_attempt_no_vault', { 
-        feature: 'level_up',
-        metadata: { level: newLevel, xp: progress.xp } 
+      analytics.track('payment_attempt_no_vault', {
+        feature: 'xp_level_up',
+        metadata: { level: newLevel, xp: progress.xp, reason },
       });
     }
 
-    progress.xpToNextLevel = this.getXPForNextLevel(progress.xp);
+    // xpToNextLevel is based on effective XP so it reflects the user's real progress
+    progress.xpToNextLevel = this.getXPForNextLevel(progress.effectiveXP);
     this.saveProgress(userAddress, progress);
 
-    return { levelUp, newLevel: levelUp ? newLevel : undefined };
+    return { levelUp, newLevel: levelUp ? newLevel : undefined, awarded };
+  }
+
+  /**
+   * Deduct XP as a penalty for misconduct.
+   * Penalty XP accumulates in `penaltyXP` and permanently reduces
+   * `effectiveLevel` — grinding more XP does NOT remove the penalty.
+   */
+  deductXP(userAddress: string, amount: number, reason: string): { newEffectiveLevel: number; penaltyXP: number } {
+    if (amount <= 0) throw new Error('Penalty amount must be positive');
+    const progress = this.getProgress(userAddress);
+
+    progress.penaltyXP += amount;
+    progress.effectiveXP = Math.max(0, progress.xp - progress.penaltyXP);
+    progress.effectiveLevel = this.calculateLevel(progress.effectiveXP);
+    // xpToNextLevel always reflects effective XP after penalties
+    progress.xpToNextLevel = this.getXPForNextLevel(progress.effectiveXP);
+
+    analytics.track('payment_attempt_no_vault', {
+      feature: 'gamification_xp_penalty',
+      metadata: { penaltyXP: amount, reason, effectiveLevel: progress.effectiveLevel },
+    });
+
+    this.saveProgress(userAddress, progress);
+    return { newEffectiveLevel: progress.effectiveLevel, penaltyXP: progress.penaltyXP };
   }
 
   /**
@@ -415,6 +656,11 @@ class GamificationEngine {
       xp: 0,
       xpToNextLevel: 100,
       achievements: [],
+      penaltyXP: 0,
+      effectiveXP: 0,
+      effectiveLevel: 1,
+      dailyXPDate: '',
+      dailyXPEarned: 0,
       stats: {
         messagesSent: 0,
         friendsAdded: 0,
@@ -511,5 +757,7 @@ export function useGamification(userAddress: string | undefined) {
       userAddress ? gamification.incrementStat(userAddress, stat, amount) : undefined,
     recordActivity: () => 
       userAddress ? gamification.recordActivity(userAddress) : undefined,
+    deductXP: (amount: number, reason: string) =>
+      userAddress ? gamification.deductXP(userAddress, amount, reason) : { newEffectiveLevel: 1, penaltyXP: 0 },
   };
 }

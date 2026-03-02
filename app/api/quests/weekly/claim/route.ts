@@ -97,15 +97,14 @@ export async function POST(request: NextRequest) {
         WHERE user_id = $2
       `, [challenge.reward_xp, userId]);
 
-      // Create reward record
+      // Create reward record (vfide_earned is 0 — XP-only rewards; token distributions are not offered)
       await client.query(`
         INSERT INTO daily_rewards 
         (user_id, reward_date, reward_type, xp_earned, vfide_earned, description, claimed, claimed_at)
-        VALUES ($1, CURRENT_DATE, 'weekly_challenge', $2, $3, $4, true, NOW())
+        VALUES ($1, CURRENT_DATE, 'weekly_challenge', $2, 0, $3, true, NOW())
       `, [
         userId,
         challenge.reward_xp,
-        challenge.reward_vfide,
         `Completed weekly challenge: ${challenge.title}`,
       ]);
 
@@ -113,12 +112,11 @@ export async function POST(request: NextRequest) {
       await client.query(`
         INSERT INTO achievement_notifications 
         (user_id, notification_type, title, message, icon, reward_xp, reward_vfide)
-        VALUES ($1, 'challenge_complete', 'Weekly Challenge Complete!', $2, '🏆', $3, $4)
+        VALUES ($1, 'challenge_complete', 'Weekly Challenge Complete!', $2, '🏆', $3, 0)
       `, [
         userId,
         `You've completed ${challenge.title}`,
         challenge.reward_xp,
-        challenge.reward_vfide,
       ]);
 
       await client.query('COMMIT');
@@ -127,7 +125,6 @@ export async function POST(request: NextRequest) {
         success: true,
         reward: {
           xp: challenge.reward_xp,
-          vfide: challenge.reward_vfide,
         },
       });
     } catch (error) {

@@ -269,7 +269,7 @@ export default function DashboardPage() {
                   </motion.span>
                 </h1>
                 <p className="text-white/60 max-w-2xl text-sm sm:text-base mb-4">
-                  Your VFIDE command center for vaults, ProofScore, and rewards—built to move at the speed of trust.
+                  Your VFIDE command center for vaults, ProofScore, and governance—built to move at the speed of trust.
                 </p>
                 <div className="flex items-center gap-3 flex-wrap">
                   <motion.div whileHover={{ scale: 1.02 }} className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-full px-3 sm:px-4 py-2 flex items-center gap-2 sm:gap-3 max-w-full">

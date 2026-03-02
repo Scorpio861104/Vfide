@@ -19,7 +19,7 @@ export function useHasVault() {
   const { data: vaultAddress, isLoading, isError, error } = useReadContract({
     address: VAULT_HUB_ADDRESS,
     abi: VaultHubABI,
-    functionName: 'userVaults',
+    functionName: 'vaultOf',
     args: address ? [address] : undefined,
     query: {
       enabled: !!address && isConnected,

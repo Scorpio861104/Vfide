@@ -26,7 +26,6 @@ interface Quest {
   progress: number;
   target: number;
   reward: {
-    vfide?: number;
     xp?: number;
     badge?: string;
   };
@@ -535,12 +534,6 @@ function QuestCard({
 
       {/* Rewards */}
       <div className="flex items-center gap-4 mb-4 flex-wrap">
-        {quest.reward.vfide && (
-          <div className="flex items-center gap-1.5 bg-amber-400/10 px-3 py-1.5 rounded-lg">
-            <Gift className="w-4 h-4 text-amber-400" />
-            <span className="text-sm font-bold text-amber-400">{quest.reward.vfide} VFIDE</span>
-          </div>
-        )}
         {quest.reward.xp && (
           <div className="flex items-center gap-1.5 bg-purple-600/10 px-3 py-1.5 rounded-lg">
             <Star className="w-4 h-4 text-purple-600" />
@@ -611,12 +604,6 @@ function ClaimRewardModal({ reward, onClose }: { reward: Quest; onClose: () => v
         <p className="text-zinc-400 mb-6">{reward.title}</p>
         
         <div className="space-y-3 mb-6">
-          {reward.reward.vfide && (
-            <div className="bg-amber-400/10 border border-amber-400 rounded-lg p-4">
-              <div className="text-4xl font-bold text-amber-400 mb-1">+{reward.reward.vfide} VFIDE</div>
-              <div className="text-sm text-zinc-400">Added to your balance</div>
-            </div>
-          )}
           {reward.reward.xp && (
             <div className="bg-purple-600/10 border border-purple-600 rounded-lg p-4">
               <div className="text-4xl font-bold text-purple-600 mb-1">+{reward.reward.xp} XP</div>
@@ -650,7 +637,7 @@ function generateMockQuests(type: 'daily' | 'weekly' | 'monthly'): Quest[] {
         description: 'Log in to VFIDE today',
         progress: 1,
         target: 1,
-        reward: { vfide: 15, xp: 50 },
+        reward: { xp: 50 },
         completed: true,
         claimed: false,
         expiresAt: now + day,
@@ -664,7 +651,7 @@ function generateMockQuests(type: 'daily' | 'weekly' | 'monthly'): Quest[] {
         description: 'Make at least 1 transaction',
         progress: 0,
         target: 1,
-        reward: { vfide: 25, xp: 100 },
+        reward: { xp: 100 },
         completed: false,
         claimed: false,
         expiresAt: now + day,
@@ -692,7 +679,7 @@ function generateMockQuests(type: 'daily' | 'weekly' | 'monthly'): Quest[] {
         description: 'Cast 1 governance vote',
         progress: 0,
         target: 1,
-        reward: { vfide: 30, xp: 150 },
+        reward: { xp: 150 },
         completed: false,
         claimed: false,
         expiresAt: now + day,
@@ -711,7 +698,7 @@ function generateMockQuests(type: 'daily' | 'weekly' | 'monthly'): Quest[] {
         description: 'Complete 20 transactions',
         progress: 12,
         target: 20,
-        reward: { vfide: 200, xp: 500 },
+        reward: { xp: 500 },
         completed: false,
         claimed: false,
         expiresAt: now + 5 * day,
@@ -725,7 +712,7 @@ function generateMockQuests(type: 'daily' | 'weekly' | 'monthly'): Quest[] {
         description: 'Add 5 new friends',
         progress: 3,
         target: 5,
-        reward: { vfide: 150, xp: 400 },
+        reward: { xp: 400 },
         completed: false,
         claimed: false,
         expiresAt: now + 5 * day,
@@ -739,7 +726,7 @@ function generateMockQuests(type: 'daily' | 'weekly' | 'monthly'): Quest[] {
         description: 'Vote on 5 proposals',
         progress: 5,
         target: 5,
-        reward: { vfide: 250, xp: 600, badge: 'Active Voter' },
+        reward: { xp: 600, badge: 'Active Voter' },
         completed: true,
         claimed: false,
         expiresAt: now + 5 * day,
@@ -758,7 +745,7 @@ function generateMockQuests(type: 'daily' | 'weekly' | 'monthly'): Quest[] {
       description: 'Complete 100 transactions',
       progress: 67,
       target: 100,
-      reward: { vfide: 1000, xp: 2500, badge: 'Power User' },
+      reward: { xp: 2500, badge: 'Power User' },
       completed: false,
       claimed: false,
       expiresAt: now + 20 * day,
@@ -772,7 +759,7 @@ function generateMockQuests(type: 'daily' | 'weekly' | 'monthly'): Quest[] {
       description: 'Reach 8000 ProofScore',
       progress: 7850,
       target: 8000,
-      reward: { vfide: 1500, xp: 3000, badge: 'Elite Member' },
+      reward: { xp: 3000, badge: 'Elite Member' },
       completed: false,
       claimed: false,
       expiresAt: now + 20 * day,
@@ -786,7 +773,7 @@ function generateMockQuests(type: 'daily' | 'weekly' | 'monthly'): Quest[] {
       description: 'Help 10 users resolve issues',
       progress: 4,
       target: 10,
-      reward: { vfide: 2000, xp: 5000, badge: 'Community Helper' },
+      reward: { xp: 5000, badge: 'Community Helper' },
       completed: false,
       claimed: false,
       expiresAt: now + 20 * day,

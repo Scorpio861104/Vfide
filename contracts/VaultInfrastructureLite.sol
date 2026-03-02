@@ -29,8 +29,9 @@ contract VaultInfrastructureLite is Ownable {
     // Recovery Timelock with Multi-Sig (H-5 Fix)
     mapping(address => uint64) public recoveryUnlockTime;
     mapping(address => address) public recoveryProposedOwner;
-    mapping(address => mapping(address => bool)) public recoveryApprovals;
+    mapping(address => mapping(address => mapping(uint256 => bool))) public recoveryApprovals; // C-2 Fix: nonce-based
     mapping(address => uint8) public recoveryApprovalCount;
+    mapping(address => uint256) public recoveryNonce; // C-2 Fix: nonce to invalidate old approvals
     uint64 public constant RECOVERY_DELAY = 7 days;
     uint8 public constant RECOVERY_APPROVALS_REQUIRED = 3;
     mapping(address => bool) public isRecoveryApprover;
@@ -40,6 +41,7 @@ contract VaultInfrastructureLite is Ownable {
     event VaultCreated(address indexed owner, address indexed vault);
     event ImplementationSet(address indexed implementation);
     event ForcedRecoveryInitiated(address indexed vault, address indexed newOwner, uint64 unlockTime);
+    event ForcedRecoveryCancelled(address indexed vault);
     event ForcedRecovery(address indexed vault, address indexed newOwner);
     event VFIDESet(address vfide);
     event DAOSet(address dao);
@@ -48,6 +50,8 @@ contract VaultInfrastructureLite is Ownable {
     error VI_Zero();
     error VI_NotDAO();
     error VI_NoImplementation();
+    error VI_OwnerMismatch();     // approver voted for different newOwner than the existing proposal
+    error VI_NoRecovery();        // no recovery in progress for this vault
 
     constructor(
         address _implementation,
@@ -159,18 +163,50 @@ contract VaultInfrastructureLite is Ownable {
         require(current != address(0), "unknown vault");
         require(vaultOf[newOwner] == address(0), "target has vault");
 
-        if (!recoveryApprovals[vault][msg.sender]) {
-            recoveryApprovals[vault][msg.sender] = true;
+        // SECURITY FIX (deep-audit): Anchor proposed owner to the FIRST vote so that
+        // subsequent approvers cannot redirect recovery to a different recipient, and a
+        // late-voting approver cannot override the target after the threshold is reached.
+        address existingProposal = recoveryProposedOwner[vault];
+        if (existingProposal == address(0)) {
+            // First vote establishes the candidate; locking it in for all future votes.
+            recoveryProposedOwner[vault] = newOwner;
+        } else {
+            // All subsequent votes must be for the same candidate.
+            if (newOwner != existingProposal) revert VI_OwnerMismatch();
+        }
+
+        if (!recoveryApprovals[vault][msg.sender][recoveryNonce[vault]]) {
+            recoveryApprovals[vault][msg.sender][recoveryNonce[vault]] = true;
             recoveryApprovalCount[vault]++;
             _log("recovery_approval_cast");
         }
 
-        if (recoveryApprovalCount[vault] >= RECOVERY_APPROVALS_REQUIRED) {
-            recoveryProposedOwner[vault] = newOwner;
+        // Only start the timelock once (when count first hits the threshold).
+        if (recoveryApprovalCount[vault] >= RECOVERY_APPROVALS_REQUIRED &&
+                recoveryUnlockTime[vault] == 0) {
             recoveryUnlockTime[vault] = uint64(block.timestamp + RECOVERY_DELAY);
-            emit ForcedRecoveryInitiated(vault, newOwner, recoveryUnlockTime[vault]);
+            emit ForcedRecoveryInitiated(vault, recoveryProposedOwner[vault], recoveryUnlockTime[vault]);
             _logEv(vault, "force_recover_init", 0, "");
         }
+    }
+
+    /**
+     * @notice Cancel a recovery-in-progress before it is finalized.
+     * @dev    Increments the nonce to invalidate all existing approvals.
+     *         Only callable by DAO — e.g., if the original owner recovers access.
+     */
+    function cancelForceRecovery(address vault) external {
+        if (msg.sender != dao) revert VI_NotDAO();
+        if (recoveryProposedOwner[vault] == address(0) &&
+                recoveryApprovalCount[vault] == 0) revert VI_NoRecovery();
+
+        delete recoveryProposedOwner[vault];
+        delete recoveryUnlockTime[vault];
+        delete recoveryApprovalCount[vault];
+        recoveryNonce[vault]++; // invalidate all outstanding approvals
+
+        emit ForcedRecoveryCancelled(vault);
+        _logEv(vault, "force_recover_cancelled", 0, "");
     }
 
     function initiateForceRecovery(address vault, address newOwner) external {
@@ -181,10 +217,17 @@ contract VaultInfrastructureLite is Ownable {
         require(vaultOf[newOwner] == address(0), "target has vault");
         require(recoveryApprovalCount[vault] >= RECOVERY_APPROVALS_REQUIRED, "VI:insufficient-approvals");
 
-        recoveryProposedOwner[vault] = newOwner;
+        // If approvers have already anchored a proposed owner, DAO must confirm the same one.
+        address existingProposal = recoveryProposedOwner[vault];
+        if (existingProposal != address(0)) {
+            if (newOwner != existingProposal) revert VI_OwnerMismatch();
+        } else {
+            recoveryProposedOwner[vault] = newOwner;
+        }
+
         recoveryUnlockTime[vault] = uint64(block.timestamp + RECOVERY_DELAY);
 
-        emit ForcedRecoveryInitiated(vault, newOwner, recoveryUnlockTime[vault]);
+        emit ForcedRecoveryInitiated(vault, recoveryProposedOwner[vault], recoveryUnlockTime[vault]);
         _logEv(vault, "force_recover_init", 0, "");
     }
 
@@ -210,6 +253,7 @@ contract VaultInfrastructureLite is Ownable {
         delete recoveryProposedOwner[vault];
         delete recoveryUnlockTime[vault];
         delete recoveryApprovalCount[vault];
+        recoveryNonce[vault]++; // C-2 Fix: invalidate any outstanding approvals
 
         emit ForcedRecovery(vault, newOwner);
         _logEv(vault, "force_recover_final", 0, "");

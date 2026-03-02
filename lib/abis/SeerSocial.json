@@ -1,0 +1,78 @@
+[
+  {
+    "type": "function",
+    "name": "becomeMentor",
+    "stateMutability": "nonpayable",
+    "inputs": [],
+    "outputs": []
+  },
+  {
+    "type": "function",
+    "name": "sponsorMentee",
+    "stateMutability": "nonpayable",
+    "inputs": [{ "name": "mentee", "type": "address" }],
+    "outputs": []
+  },
+  {
+    "type": "function",
+    "name": "getMentees",
+    "stateMutability": "view",
+    "inputs": [{ "name": "mentor", "type": "address" }],
+    "outputs": [{ "name": "", "type": "address[]" }]
+  },
+  {
+    "type": "function",
+    "name": "getMentorInfo",
+    "stateMutability": "view",
+    "inputs": [{ "name": "subject", "type": "address" }],
+    "outputs": [
+      { "name": "isMentorUser", "type": "bool" },
+      { "name": "mentor", "type": "address" },
+      { "name": "menteeCount", "type": "uint16" },
+      { "name": "hasMentor", "type": "bool" },
+      { "name": "canBecome", "type": "bool" },
+      { "name": "minScore", "type": "uint16" },
+      { "name": "currentScore", "type": "uint16" }
+    ]
+  },
+  {
+    "type": "function",
+    "name": "getActiveEndorsements",
+    "stateMutability": "view",
+    "inputs": [{ "name": "subject", "type": "address" }],
+    "outputs": [
+      { "name": "endorsers", "type": "address[]" },
+      { "name": "weights", "type": "uint16[]" },
+      { "name": "expiries", "type": "uint64[]" },
+      { "name": "timestamps", "type": "uint64[]" }
+    ]
+  },
+  {
+    "type": "function",
+    "name": "appeals",
+    "stateMutability": "view",
+    "inputs": [{ "name": "user", "type": "address" }],
+    "outputs": [
+      { "name": "requester", "type": "address" },
+      { "name": "reason", "type": "string" },
+      { "name": "timestamp", "type": "uint64" },
+      { "name": "resolved", "type": "bool" },
+      { "name": "approved", "type": "bool" },
+      { "name": "resolution", "type": "string" }
+    ]
+  },
+  {
+    "type": "function",
+    "name": "fileAppeal",
+    "stateMutability": "nonpayable",
+    "inputs": [{ "name": "reason", "type": "string" }],
+    "outputs": []
+  },
+  {
+    "type": "function",
+    "name": "pendingAppealCount",
+    "stateMutability": "view",
+    "inputs": [],
+    "outputs": [{ "name": "", "type": "uint256" }]
+  }
+]

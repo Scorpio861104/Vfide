@@ -107,7 +107,7 @@ export function ProductionSetupPanel() {
             <div className="space-y-2 text-sm mb-6">
               <div className="flex items-center gap-2 text-slate-300">
                 <span className="text-green-400">✓</span>
-                <span>Enable all Howey-safe modes</span>
+                <span>All compliance hardcoded in contracts</span>
               </div>
               <div className="flex items-center gap-2 text-slate-300">
                 <span className="text-green-400">✓</span>
@@ -137,13 +137,13 @@ export function ProductionSetupPanel() {
             <div className="text-4xl mb-4">🚀</div>
             <h3 className="text-xl font-bold text-white mb-3">With Auto-Swap</h3>
             <p className="text-slate-400 text-sm mb-4">
-              Full-featured setup with stablecoin reward payments.
+              Full-featured setup with auto-conversion to stablecoins for council payments.
             </p>
             
             <div className="space-y-2 text-sm mb-6">
               <div className="flex items-center gap-2 text-slate-300">
                 <span className="text-green-400">✓</span>
-                <span>Enable all Howey-safe modes</span>
+                <span>All compliance hardcoded in contracts</span>
               </div>
               <div className="flex items-center gap-2 text-slate-300">
                 <span className="text-green-400">✓</span>
@@ -151,7 +151,7 @@ export function ProductionSetupPanel() {
               </div>
               <div className="flex items-center gap-2 text-slate-300">
                 <span className="text-green-400">✓</span>
-                <span>Stablecoin reward payments</span>
+                <span>Council salaries paid in stablecoins</span>
               </div>
               <div className="flex items-center gap-2 text-slate-300">
                 <span className="text-blue-400">ℹ️</span>
@@ -204,11 +204,10 @@ export function ProductionSetupPanel() {
         <div className="bg-blue-500/20 border border-blue-500/50 rounded-xl p-6">
           <h3 className="text-white font-bold mb-3">📋 Safe Defaults Includes:</h3>
           <ul className="text-slate-300 text-sm space-y-2">
-            <li>• DutyDistributor: Safe mode ON</li>
-            <li>• CouncilSalary: Safe mode ON</li>
-            <li>• CouncilManager: Safe mode ON</li>
-            <li>• PromotionalTreasury: Safe mode ON</li>
-            <li>• LiquidityIncentives: Safe mode ON</li>
+            <li>• DutyDistributor: Hardcoded compliant</li>
+            <li>• CouncilSalary: Hardcoded compliant</li>
+            <li>• CouncilManager: Hardcoded compliant</li>
+            <li>• LiquidityIncentives: Hardcoded compliant</li>
             <li>• Auto-swap: Disabled</li>
           </ul>
         </div>
@@ -245,7 +244,7 @@ export function ProductionSetupPanel() {
         onClose={() => setShowSafeDefaultsConfirm(false)}
         onConfirm={handleSafeDefaults}
         title="Deploy Safe Defaults"
-        message="This will configure all ecosystem contracts with Howey-safe mode enabled and auto-swap disabled. This is the recommended configuration for initial production launch."
+        message="This will configure auto-swap (disabled) for a conservative production launch. Compliance is hardcoded in contracts."
         confirmText="Deploy Configuration"
         details={[
           { label: 'Howey-Safe Mode', value: 'All contracts ON' },
@@ -259,7 +258,7 @@ export function ProductionSetupPanel() {
         onClose={() => setShowAutoSwapConfirm(false)}
         onConfirm={handleAutoSwapSetup}
         title="Deploy with Auto-Swap"
-        message="This will configure all ecosystem contracts with Howey-safe mode enabled AND enable auto-swap for stablecoin reward payments. Ensure DEX has sufficient liquidity."
+        message="This will configure auto-swap for stablecoin council salary payments. Compliance is hardcoded in contracts. Ensure DEX has sufficient liquidity."
         confirmText="Deploy Configuration"
         details={[
           { label: 'Howey-Safe Mode', value: 'All contracts ON' },

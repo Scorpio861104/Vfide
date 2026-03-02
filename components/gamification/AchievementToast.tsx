@@ -22,7 +22,6 @@ export interface AchievementNotification {
   icon?: string;
   reward?: {
     xp?: number;
-    vfide?: number;
     badge?: string;
   };
   timestamp: number;
@@ -320,15 +319,6 @@ function AchievementToast({ notification, onDismiss, position }: ToastProps) {
                     >
                       <Star className="w-4 h-4" />
                       <AnimatedCounter value={notification.reward.xp} suffix=" XP" />
-                    </motion.span>
-                  )}
-                  {notification.reward.vfide && (
-                    <motion.span 
-                      className="text-sm bg-yellow-500/20 text-yellow-400 font-bold px-3 py-1.5 rounded-lg flex items-center gap-1"
-                      whileHover={{ scale: 1.05 }}
-                    >
-                      <Gift className="w-4 h-4" />
-                      <AnimatedCounter value={notification.reward.vfide} suffix=" VFIDE" />
                     </motion.span>
                   )}
                   {notification.reward.badge && (

@@ -146,23 +146,11 @@ describe('VFIDEPresale Contract', () => {
     });
   });
 
-  describe('Lock Period Bonuses', () => {
-    it('should return no lock bonus percentage', async () => {
-      mockContractRead.mockResolvedValueOnce(0);
-      const result = await mockContractRead({ functionName: 'BONUS_NO_LOCK' });
-      expect(result).toBe(0);
-    });
-
-    it('should return 90 days lock bonus percentage', async () => {
-      mockContractRead.mockResolvedValueOnce(2000); // 20%
-      const result = await mockContractRead({ functionName: 'BONUS_90_DAYS' });
-      expect(result).toBe(2000);
-    });
-
-    it('should return 180 days lock bonus percentage', async () => {
-      mockContractRead.mockResolvedValueOnce(5000); // 50%
-      const result = await mockContractRead({ functionName: 'BONUS_180_DAYS' });
-      expect(result).toBe(5000);
+  describe('Lock Period Bonuses — removed', () => {
+    it('confirms lock bonuses are not available', () => {
+      // BONUS_NO_LOCK, BONUS_90_DAYS, BONUS_180_DAYS have been removed from VFIDEPresale.
+      // Lock periods exist for commitment tracking, not to earn bonus tokens.
+      expect(true).toBe(true);
     });
 
     it('should return no lock immediate release percentage', async () => {
@@ -184,47 +172,11 @@ describe('VFIDEPresale Contract', () => {
     });
   });
 
-  describe('Referral System', () => {
-    it('should return referrer bonus percentage', async () => {
-      mockContractRead.mockResolvedValueOnce(500); // 5%
-      const result = await mockContractRead({ functionName: 'REFERRER_BONUS' });
-      expect(result).toBe(500);
-    });
-
-    it('should return referee bonus percentage', async () => {
-      mockContractRead.mockResolvedValueOnce(500); // 5%
-      const result = await mockContractRead({ functionName: 'REFEREE_BONUS' });
-      expect(result).toBe(500);
-    });
-
-    it('should return max referral chain depth', async () => {
-      mockContractRead.mockResolvedValueOnce(3);
-      const result = await mockContractRead({ functionName: 'MAX_REFERRAL_CHAIN_DEPTH' });
-      expect(result).toBe(3);
-    });
-
-    it('should get referrer of user', async () => {
-      mockContractRead.mockResolvedValueOnce(referrer);
-      const result = await mockContractRead({ functionName: 'referrerOf', args: [buyer1] });
-      expect(result).toBe(referrer);
-    });
-
-    it('should get referral count', async () => {
-      mockContractRead.mockResolvedValueOnce(5);
-      const result = await mockContractRead({ functionName: 'referralCount', args: [referrer] });
-      expect(result).toBe(5);
-    });
-
-    it('should get referral bonus earned', async () => {
-      mockContractRead.mockResolvedValueOnce(parseEther('1000'));
-      const result = await mockContractRead({ functionName: 'referralBonusEarned', args: [referrer] });
-      expect(result).toBe(parseEther('1000'));
-    });
-
-    it('should check if referral bonus claimed', async () => {
-      mockContractRead.mockResolvedValueOnce(false);
-      const result = await mockContractRead({ functionName: 'referralBonusClaimed', args: [referrer] });
-      expect(result).toBe(false);
+  describe('Referral System — removed', () => {
+    it('confirms referral bonuses are not available', () => {
+      // buyTokensWithReferral, buyWithStableReferral, and claimReferralBonus
+      // have been removed from VFIDEPresale. VFIDE has no referral or bonus system.
+      expect(true).toBe(true);
     });
   });
 
@@ -234,15 +186,6 @@ describe('VFIDEPresale Contract', () => {
       const result = await mockContractWrite({ 
         functionName: 'buyTokens',
         args: [0] // Tier 0, no lock
-      });
-      expect(result).toBe('0xhash');
-    });
-
-    it('should allow buying tokens with ETH and referral', async () => {
-      mockContractWrite.mockResolvedValueOnce('0xhash');
-      const result = await mockContractWrite({ 
-        functionName: 'buyTokensWithReferral',
-        args: [0, referrer]
       });
       expect(result).toBe('0xhash');
     });
@@ -304,14 +247,6 @@ describe('VFIDEPresale Contract', () => {
         args: [0]
       })).rejects.toThrow('GasPriceTooHigh');
     });
-
-    it('should reject self-referral', async () => {
-      mockContractWrite.mockRejectedValueOnce(new Error('CannotReferSelf'));
-      await expect(mockContractWrite({ 
-        functionName: 'buyTokensWithReferral',
-        args: [0, buyer1] // buyer1 referring themselves
-      })).rejects.toThrow('CannotReferSelf');
-    });
   });
 
   describe('Buy Tokens - Stablecoins', () => {
@@ -320,15 +255,6 @@ describe('VFIDEPresale Contract', () => {
       const result = await mockContractWrite({ 
         functionName: 'buyWithStable',
         args: [buyer1, parseEther('100'), 0]
-      });
-      expect(result).toBe('0xhash');
-    });
-
-    it('should allow buying with stablecoin and referral', async () => {
-      mockContractWrite.mockResolvedValueOnce('0xhash');
-      const result = await mockContractWrite({ 
-        functionName: 'buyWithStableReferral',
-        args: [buyer1, parseEther('100'), 0, referrer]
       });
       expect(result).toBe('0xhash');
     });
@@ -428,12 +354,6 @@ describe('VFIDEPresale Contract', () => {
     it('should allow claiming all tokens', async () => {
       mockContractWrite.mockResolvedValueOnce('0xhash');
       const result = await mockContractWrite({ functionName: 'claimAll' });
-      expect(result).toBe('0xhash');
-    });
-
-    it('should allow claiming referral bonus', async () => {
-      mockContractWrite.mockResolvedValueOnce('0xhash');
-      const result = await mockContractWrite({ functionName: 'claimReferralBonus' });
       expect(result).toBe('0xhash');
     });
 
@@ -685,11 +605,10 @@ describe('VFIDEPresale Contract', () => {
 
     it('should get user dashboard', async () => {
       const dashboard = {
+        purchaseCount: 2,
         totalAllocated: parseEther('5000'),
-        immediateClaimed: parseEther('500'),
-        lockedClaimed: parseEther('0'),
-        referralBonus: parseEther('250'),
-        referralCount: 2
+        ethContributed: parseEther('1'),
+        usdContributed: 3500_000000n // $3500 in 6 decimals
       };
       mockContractRead.mockResolvedValueOnce(dashboard);
       const result = await mockContractRead({ functionName: 'getUserDashboard', args: [buyer1] });
@@ -827,16 +746,10 @@ describe('VFIDEPresale Contract', () => {
       expect(result).toBe(parseEther('80000000'));
     });
 
-    it('should get total bonus given', async () => {
+    it('should get total sold', async () => {
       mockContractRead.mockResolvedValueOnce(parseEther('20000000'));
-      const result = await mockContractRead({ functionName: 'totalBonusGiven' });
+      const result = await mockContractRead({ functionName: 'totalSold' });
       expect(result).toBe(parseEther('20000000'));
-    });
-
-    it('should get total referral bonus given', async () => {
-      mockContractRead.mockResolvedValueOnce(parseEther('5000000'));
-      const result = await mockContractRead({ functionName: 'totalReferralBonusGiven' });
-      expect(result).toBe(parseEther('5000000'));
     });
 
     it('should get listing price', async () => {

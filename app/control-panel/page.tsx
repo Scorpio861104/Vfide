@@ -24,7 +24,7 @@ export default function ControlPanelPage() {
 
   const tabs = [
     { id: 'overview', label: 'System Overview', icon: '📊' },
-    { id: 'howey', label: 'Howey-Safe Mode', icon: '🛡️' },
+    { id: 'howey', label: 'Compliance', icon: '🛡️' },
     { id: 'autoswap', label: 'Auto-Swap', icon: '🔄' },
     { id: 'token', label: 'Token Management', icon: '🪙' },
     { id: 'fees', label: 'Fee Management', icon: '💰' },

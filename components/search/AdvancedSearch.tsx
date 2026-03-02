@@ -140,7 +140,7 @@ const mockSearchHistory = (): SearchHistoryItem[] => [
   },
   {
     id: 'h2',
-    query: 'staking rewards',
+    query: 'governance vote',
     filters: {
       contentType: ['transaction', 'proposal'],
       dateRange: 'week',
@@ -163,6 +163,19 @@ const mockSearchHistory = (): SearchHistoryItem[] => [
     },
     timestamp: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
     resultsCount: 28
+  },
+  {
+    id: 'h4',
+    query: 'staking rewards',
+    filters: {
+      contentType: ['transaction'],
+      dateRange: 'week',
+      category: ['Finance'],
+      users: [],
+      status: ['all']
+    },
+    timestamp: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
+    resultsCount: 9
   }
 ];
 

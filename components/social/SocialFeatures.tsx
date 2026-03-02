@@ -198,7 +198,7 @@ const mockFeedPosts = (): FeedPost[] => [
     id: 'p3',
     userId: 'u3',
     user: generateMockUser('u3', 3),
-    content: 'Exploring new DeFi opportunities with strategic staking. 💰',
+    content: 'Exploring new governance opportunities with active protocol participation. 🗳️',
     type: 'status',
     timestamp: new Date(Date.now() - 8 * 60 * 60 * 1000),
     likes: 89,

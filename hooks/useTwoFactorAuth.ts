@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { authenticator } from 'otplib';
 import {
   TwoFactorConfig,
   TwoFactorMethod,
@@ -59,19 +60,16 @@ const generateTOTPSecret = (): string => {
   return secret;
 };
 
-// Mock TOTP QR code generation
-const generateTOTPQR = (secret: string, email: string): string => {
-  const issuer = 'VFIDE';
-  const otpauth = `otpauth://totp/${issuer}:${email}?secret=${secret}&issuer=${issuer}`;
-  // In production, use a QR code library like qrcode or similar
-  return `data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200"><text x="10" y="100" font-size="12">${otpauth}</text></svg>`;
-};
-
-// Mock TOTP verification (in production, use otplib or speakeasy)
+// Verify a TOTP code against the given Base32 secret using RFC 6238.
+// Uses otplib's `authenticator` which implements the standard 30-second
+// window algorithm (±1 window tolerance for clock skew).
 const verifyTOTPInternal = (secret: string, code: string): boolean => {
-  // Simple mock: accept code if it's 6 digits and matches pattern
-  // In production, verify against time-based algorithm
-  return validateTOTPCode(code);
+  if (!validateTOTPCode(code)) return false;
+  try {
+    return authenticator.verify({ token: code, secret });
+  } catch {
+    return false;
+  }
 };
 
 const loadConfig = (): TwoFactorConfig => {
@@ -138,7 +136,13 @@ export const useTwoFactorAuth = (userEmail?: string): UseTwoFactorAuthResult => 
 
   const initiateTOTP = useCallback(async (): Promise<TOTPSetup> => {
     const secret = generateTOTPSecret();
-    const qrCode = generateTOTPQR(secret, userEmail || 'user@vfide.com');
+    // Build a valid otpauth:// URI that any authenticator app can scan as a QR code.
+    // A unique identifier (wallet address, email, or UUID) is required so that
+    // users who register multiple accounts can distinguish them in their app.
+    // Callers should always supply `userEmail`; if omitted we fall back to a
+    // generated placeholder that remains unique per session via the secret itself.
+    const account = encodeURIComponent(userEmail ?? `vfide-user-${secret.slice(0, 8)}`);
+    const qrCode = authenticator.keyuri(account, 'VFIDE', secret);
     const codes = generateBackupCodes();
 
     setTotpSecret(secret);

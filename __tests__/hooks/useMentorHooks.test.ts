@@ -17,12 +17,14 @@ jest.mock('wagmi', () => ({
 jest.mock('@/lib/contracts', () => ({
   CONTRACT_ADDRESSES: {
     Seer: '0x1234567890123456789012345678901234567890',
+    SeerSocial: '0x1234567890123456789012345678901234567890',
   },
 }))
 
 // Mock abis
 jest.mock('@/lib/abis', () => ({
   SeerABI: [],
+  SeerSocialABI: [],
 }))
 
 describe('useMentorHooks', () => {

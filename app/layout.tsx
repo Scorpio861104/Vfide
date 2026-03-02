@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { headers } from "next/headers";
 import "./globals.css";
 import { Web3Provider } from "@/components/wallet/Web3Provider";
 import { OnboardingManager } from "@/components/onboarding/OnboardingManager";
@@ -72,15 +73,21 @@ export const viewport: Viewport = {
   themeColor: "#0F0F12",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   const isE2E = process.env.E2E === '1'
+  const nonce = (await headers()).get('x-nonce') ?? ''
 
   return (
     <html lang="en">
+      <head>
+        {/* CSP nonce exposed for getClientNonce() in lib/security.ts. The matching
+            nonce is set in the Content-Security-Policy header by middleware.ts. */}
+        {nonce && <meta property="csp-nonce" content={nonce} />}
+      </head>
       <body className="font-sans antialiased bg-zinc-900">
         {isE2E ? (
           <main id="main-content" className="min-h-screen min-w-0 w-full" tabIndex={-1}>

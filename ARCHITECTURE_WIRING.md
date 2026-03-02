@@ -24,11 +24,11 @@ This document provides a comprehensive view of how all components in the Vfide a
 ┌─────────────────────────────────────────────────────────────────┐
 │                    FRONTEND LAYER (Next.js 16)                   │
 │  ┌────────────────────────────────────────────────────────────┐ │
-│  │  App Router (77 Pages)                                     │ │
+│  │  App Router (72 Pages)                                     │ │
 │  │  - Dashboard, Profile, Pay, Wallet, Messaging, etc.       │ │
 │  └────────────────────────────────────────────────────────────┘ │
 │  ┌────────────────────────────────────────────────────────────┐ │
-│  │  Components (246 Components)                               │ │
+│  │  Components (280 Components)                               │ │
 │  │  - UI, Forms, Modals, Charts, Navigation, etc.           │ │
 │  └────────────────────────────────────────────────────────────┘ │
 │  ┌────────────────────────────────────────────────────────────┐ │
@@ -40,7 +40,7 @@ This document provides a comprehensive view of how all components in the Vfide a
            ▼                    ▼                    ▼
 ┌───────────────────┐  ┌──────────────────┐  ┌──────────────────┐
 │   API Layer       │  │  WebSocket       │  │  Blockchain      │
-│  (49 Endpoints)   │  │  (Socket.IO)     │  │  (RPC Nodes)     │
+│  (55 Endpoints)   │  │  (Socket.IO)     │  │  (RPC Nodes)     │
 └───────────────────┘  └──────────────────┘  └──────────────────┘
            │                    │                    │
            ▼                    ▼                    │
@@ -60,7 +60,7 @@ This document provides a comprehensive view of how all components in the Vfide a
 │  │  Mainnet     │  │  PoS         │  │  Era         │         │
 │  └──────────────┘  └──────────────┘  └──────────────┘         │
 │                                                                  │
-│  Smart Contracts (21):                                          │
+│  Smart Contracts (27 wired):                                    │
 │  - VFIDEToken, VaultInfrastructure, DAO                        │
 │  - SecurityHub, GuardianRegistry, CommerceEscrow               │
 │  - MerchantPortal, ProofLedger, and more                       │

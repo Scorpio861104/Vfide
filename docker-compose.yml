@@ -9,7 +9,10 @@ services:
       - "5432:5432"
     environment:
       POSTGRES_USER: vfide_user
-      POSTGRES_PASSWORD: vfide_password
+      # SECURITY: Do NOT use this default password in any non-local environment.
+      # Set POSTGRES_PASSWORD via Docker secrets or a secrets manager (e.g. AWS Secrets Manager).
+      # Generate a strong password: openssl rand -base64 32
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set}
       POSTGRES_DB: vfide_db
     volumes:
       - postgres_data:/var/lib/postgresql/data
@@ -21,7 +24,9 @@ services:
       retries: 5
 
   # WebSocket server (optional - commented out by default)
-  # Uncomment and create a Dockerfile in websocket-server/ to use this service
+  # The Dockerfile now exists at websocket-server/Dockerfile.
+  # Before enabling, complete all items in §26 of the audit doc and set the required env vars.
+  # See websocket-server/README.md for full configuration instructions.
   # websocket:
   #   build:
   #     context: ./websocket-server
@@ -33,7 +38,9 @@ services:
   #   depends_on:
   #     - postgres
   #   environment:
-  #     DATABASE_URL: postgresql://vfide_user:vfide_password@postgres:5432/vfide_db
+  #     JWT_SECRET: ${JWT_SECRET:?JWT_SECRET must be set}
+  #     ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost:3000}
+  #     DATABASE_URL: postgresql://vfide_user:${POSTGRES_PASSWORD}@postgres:5432/vfide_db
 
 volumes:
   postgres_data:

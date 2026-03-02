@@ -100,22 +100,21 @@ export async function POST(request: NextRequest) {
         WHERE user_id = $2
       `, [quest.reward_xp, userId]);
 
-      // Create reward record
+      // Create reward record (vfide_earned is 0 — XP-only rewards; token distributions are not offered)
       await client.query(`
         INSERT INTO daily_rewards (user_id, reward_date, reward_type, xp_earned, vfide_earned, description, claimed, claimed_at)
-        VALUES ($1, CURRENT_DATE, 'quest_completion', $2, $3, $4, true, NOW())
-      `, [userId, quest.reward_xp, quest.reward_vfide, `Completed quest: ${quest.title}`]);
+        VALUES ($1, CURRENT_DATE, 'quest_completion', $2, 0, $3, true, NOW())
+      `, [userId, quest.reward_xp, `Completed quest: ${quest.title}`]);
 
       // Create achievement notification
       await client.query(`
         INSERT INTO achievement_notifications (user_id, notification_type, title, message, icon, reward_xp, reward_vfide)
-        VALUES ($1, 'quest_complete', $2, $3, '✅', $4, $5)
+        VALUES ($1, 'quest_complete', $2, $3, '✅', $4, 0)
       `, [
         userId,
         'Quest Complete!',
         `You've completed ${quest.title}`,
         quest.reward_xp,
-        quest.reward_vfide,
       ]);
 
       await client.query('COMMIT');
@@ -124,7 +123,6 @@ export async function POST(request: NextRequest) {
         success: true,
         reward: {
           xp: quest.reward_xp,
-          vfide: quest.reward_vfide,
         },
       });
     } catch (error) {

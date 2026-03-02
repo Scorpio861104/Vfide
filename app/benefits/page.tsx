@@ -83,7 +83,7 @@ export default function BenefitsPage() {
               </span>
             </h1>
             <p className="text-gray-400 text-lg max-w-2xl mx-auto">
-              Exclusive perks and rewards for VFIDE token holders and active participants
+              Exclusive perks for VFIDE token holders and active governance participants
             </p>
           </motion.div>
 
@@ -163,12 +163,6 @@ function OverviewTab() {
       color: '#00F0FF'
     },
     {
-      icon: Users,
-      title: 'Referral Bonuses',
-      description: 'Receive a one-time bonus when users you refer complete their first purchase',
-      color: '#4ECDC4'
-    },
-    {
       icon: Shield,
       title: 'Guardian Privileges',
       description: 'Special access and voting power for trusted community members',
@@ -183,7 +177,7 @@ function OverviewTab() {
     {
       icon: Heart,
       title: 'Promotional Campaigns',
-      description: 'Periodic promotional rewards for completing educational milestones and achievements',
+      description: 'Recognition badges for completing educational milestones and achievements',
       color: '#F472B6'
     },
   ];
@@ -195,7 +189,7 @@ function OverviewTab() {
         <Gift className="w-16 h-16 text-purple-400 mx-auto mb-4" />
         <h2 className="text-3xl font-bold text-zinc-100 mb-4">Active Participation Benefits</h2>
         <p className="text-zinc-400 max-w-2xl mx-auto">
-          VFIDE rewards active participation through governance voting, merchant transactions,
+          VFIDE recognises active participation through governance voting, merchant transactions,
           and community engagement. Build your ProofScore through positive actions to unlock fee discounts.
         </p>
       </div>
@@ -240,36 +234,41 @@ function TiersTab() {
       name: 'Bronze',
       color: '#CD7F32',
       requirement: '1,000+ VFIDE',
-      benefits: ['Basic fee discounts', 'Community access', 'Voting rights'],
-      proofScore: '10+'
+      benefits: ['1% fee discount', 'Community access', 'Voting rights'],
+      proofScore: '10+',
+      xpLevel: 2,
     },
     {
       name: 'Silver',
       color: '#C0C0C0',
       requirement: '10,000+ VFIDE',
-      benefits: ['5% fee discount', 'Priority support', 'Early access', 'Referral bonuses'],
-      proofScore: '25+'
+      benefits: ['3% fee discount', 'Priority support', 'Early feature access'],
+      proofScore: '25+',
+      xpLevel: 5,
     },
     {
       name: 'Gold',
       color: '#FFD700',
       requirement: '50,000+ VFIDE',
-      benefits: ['10% fee discount', 'Priority access', 'Beta features', 'Direct DAO proposals'],
-      proofScore: '50+'
+      benefits: ['5% fee discount', '1.25× voting weight', 'Beta features'],
+      proofScore: '50+',
+      xpLevel: 10,
     },
     {
       name: 'Platinum',
       color: '#E5E4E2',
       requirement: '250,000+ VFIDE',
-      benefits: ['25% fee discount', 'Council eligibility', 'Custom integrations', 'Premium support'],
-      proofScore: '75+'
+      benefits: ['8% fee discount', 'Direct DAO proposals', 'Custom integrations', 'Premium support'],
+      proofScore: '75+',
+      xpLevel: 12,
     },
     {
       name: 'Diamond',
       color: '#B9F2FF',
       requirement: '1,000,000+ VFIDE',
-      benefits: ['50% fee discount', 'Founding Member status', 'All benefits unlocked', 'Strategic advisor role'],
-      proofScore: '90+'
+      benefits: ['12% fee discount', '1.5× voting weight', 'Council eligibility', 'Founding Member status'],
+      proofScore: '90+',
+      xpLevel: 15,
     },
   ];
 
@@ -277,7 +276,7 @@ function TiersTab() {
     <div className="space-y-8">
       <div className="text-center mb-8">
         <h2 className="text-2xl font-bold text-zinc-100 mb-2">Membership Tiers</h2>
-        <p className="text-zinc-400">Hold VFIDE and maintain your ProofScore to unlock higher tiers</p>
+        <p className="text-zinc-400">Hold VFIDE, maintain your ProofScore, <span className="text-cyan-400">and reach the matching XP level</span> to unlock higher tiers</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
@@ -289,8 +288,9 @@ function TiersTab() {
           >
             <Crown size={40} style={{ color: tier.color }} className="mx-auto mb-4" />
             <h3 className="text-xl font-bold text-zinc-100 mb-2">{tier.name}</h3>
-            <div className="text-sm text-cyan-400 font-bold mb-2">{tier.requirement}</div>
-            <div className="text-xs text-zinc-400 mb-4">ProofScore: {tier.proofScore}</div>
+            <div className="text-sm text-cyan-400 font-bold mb-1">{tier.requirement}</div>
+            <div className="text-xs text-zinc-400 mb-1">ProofScore: {tier.proofScore}</div>
+            <div className="text-xs text-amber-400 font-semibold mb-4">XP Level {tier.xpLevel}+</div>
             <div className="border-t border-zinc-700 pt-4">
               <ul className="text-xs text-zinc-400 space-y-1">
                 {tier.benefits.map((benefit, bidx) => (
@@ -307,7 +307,7 @@ function TiersTab() {
 
       <div className="bg-zinc-800 border border-zinc-700 rounded-xl p-6">
         <h3 className="text-xl font-bold text-zinc-100 mb-4">How Tiers Work</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div>
             <h4 className="text-cyan-400 font-bold mb-2">Token Holdings</h4>
             <p className="text-zinc-400 text-sm">
@@ -322,106 +322,107 @@ function TiersTab() {
               tier benefits. This ensures only trusted members receive premium perks.
             </p>
           </div>
+          <div>
+            <h4 className="text-amber-400 font-bold mb-2">XP Level Requirement</h4>
+            <p className="text-zinc-400 text-sm">
+              Each tier also requires a matching XP level, earned through quests, streaks, 
+              and daily activity. Level up to unlock your tier&apos;s perks — regardless of token balance alone.
+            </p>
+          </div>
         </div>
       </div>
     </div>
   );
 }
 
-function RewardsTab({ isConnected }: { isConnected: boolean }) {
-  const availableRewards = [
-    { name: 'Daily Hold Bonus', amount: '50 VFIDE', claimable: true, cooldown: null },
-    { name: 'Weekly Referral Bonus', amount: '250 VFIDE', claimable: true, cooldown: null },
-    { name: 'ProofScore Multiplier', amount: '2.5x', claimable: false, cooldown: '3 days' },
-    { name: 'Transaction Cashback', amount: '125 VFIDE', claimable: true, cooldown: null },
-    { name: 'Pioneer Recognition', amount: '1,000 VFIDE', claimable: false, cooldown: '14 days' },
+function RewardsTab({ isConnected: _isConnected }: { isConnected: boolean }) {
+  const rewardCategories = [
+    {
+      icon: '💸',
+      color: 'border-emerald-500/40 bg-emerald-500/5',
+      labelColor: 'text-emerald-400',
+      title: 'Fee Discounts',
+      description: 'Earn up to 12% off transaction fees by leveling up through quests and daily activity.',
+      cta: { label: 'Start Quests', href: '/quests' },
+    },
+    {
+      icon: '🗳️',
+      color: 'border-violet-500/40 bg-violet-500/5',
+      labelColor: 'text-violet-400',
+      title: 'Governance Power',
+      description: 'Higher XP levels grant up to 1.5× voting weight and the right to submit DAO proposals directly.',
+      cta: { label: 'View Perks', href: '/achievements' },
+    },
+    {
+      icon: '🔬',
+      color: 'border-cyan-500/40 bg-cyan-500/5',
+      labelColor: 'text-cyan-400',
+      title: 'Early Feature Access',
+      description: 'Reach Level 10 to opt in to beta features and new platform capabilities before public release.',
+      cta: { label: 'View Perks', href: '/achievements' },
+    },
+    {
+      icon: '🏆',
+      color: 'border-amber-400/40 bg-amber-400/5',
+      labelColor: 'text-amber-400',
+      title: 'Headhunter Recognition',
+      description: 'Top 20 quarterly recruiters earn the Headhunter governance badge: +25% voting weight, proposal rights, and council eligibility.',
+      cta: { label: 'Headhunter Program', href: '/headhunter' },
+    },
+    {
+      icon: '🔥',
+      color: 'border-orange-500/40 bg-orange-500/5',
+      labelColor: 'text-orange-400',
+      title: 'Streak Milestones',
+      description: 'Maintain daily activity streaks for XP bonuses at 7, 14, 30, 60, and 90-day milestones.',
+      cta: { label: 'Start Quests', href: '/quests' },
+    },
+    {
+      icon: '✅',
+      color: 'border-zinc-500/40 bg-zinc-500/5',
+      labelColor: 'text-zinc-300',
+      title: 'Verified Profile Badge',
+      description: 'Reach Level 3 to display a Verified Participant badge on your public profile.',
+      cta: { label: 'View Achievements', href: '/achievements' },
+    },
   ];
 
   return (
-    <div className="space-y-8">
-      {isConnected ? (
-        <>
-          {/* Claimable Rewards */}
-          <div className="bg-gradient-to-br from-green-900/20 to-teal-900/20 border border-green-500/30 rounded-xl p-8">
-            <div className="flex items-center gap-4 mb-6">
-              <Award className="w-12 h-12 text-green-400" />
-              <div>
-                <h2 className="text-2xl font-bold text-zinc-100">Claimable Rewards</h2>
-                <p className="text-zinc-400">Rewards ready to claim based on your activity</p>
-              </div>
-            </div>
-            <div className="text-4xl font-bold text-green-400 text-center py-4">
-              425 VFIDE Available
-            </div>
-            <button className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-lg transition-colors mt-4">
-              Claim All Rewards
-            </button>
-          </div>
+    <div className="space-y-6">
+      <div className="text-center mb-6">
+        <h2 className="text-2xl font-bold text-zinc-100 mb-2">Available Rewards</h2>
+        <p className="text-zinc-400 max-w-2xl mx-auto">
+          All rewards are <span className="text-cyan-400 font-semibold">platform utility benefits</span> earned 
+          through your own activity — not investment returns. Level up, streak up, and compete to unlock them.
+        </p>
+      </div>
 
-          {/* Rewards List */}
-          <div className="bg-zinc-800 border border-zinc-700 rounded-xl p-6">
-            <h3 className="text-xl font-bold text-zinc-100 mb-6">Reward Breakdown</h3>
-            <div className="space-y-3">
-              {availableRewards.map((reward, idx) => (
-                <div key={idx} className="flex items-center justify-between p-4 bg-zinc-900 rounded-lg">
-                  <div className="flex items-center gap-4">
-                    <Gift className={reward.claimable ? 'text-green-400' : 'text-zinc-500'} size={20} />
-                    <div>
-                      <div className="text-zinc-100 font-bold">{reward.name}</div>
-                      {reward.cooldown && (
-                        <div className="flex items-center gap-1 text-xs text-zinc-400">
-                          <Clock size={12} />
-                          {reward.cooldown} remaining
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <span className="text-cyan-400 font-bold">{reward.amount}</span>
-                    {reward.claimable ? (
-                      <button className="px-4 py-1 bg-green-600 hover:bg-green-700 text-white text-sm font-bold rounded-lg transition-colors">
-                        Claim
-                      </button>
-                    ) : (
-                      <button className="px-4 py-1 bg-zinc-700 text-zinc-500 text-sm font-bold rounded-lg cursor-not-allowed">
-                        Locked
-                      </button>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {rewardCategories.map((cat, idx) => (
+          <div key={idx} className={`border rounded-xl p-5 ${cat.color}`}>
+            <div className="text-3xl mb-3">{cat.icon}</div>
+            <h3 className={`text-lg font-bold mb-2 ${cat.labelColor}`}>{cat.title}</h3>
+            <p className="text-zinc-400 text-sm mb-4">{cat.description}</p>
+            <a
+              href={cat.cta.href}
+              className="text-xs font-semibold text-cyan-400 hover:text-cyan-300 underline underline-offset-2 transition-colors"
+            >
+              {cat.cta.label} →
+            </a>
           </div>
+        ))}
+      </div>
 
-          {/* Preview Rewards */}
-          <div className="bg-zinc-800 border border-zinc-700 rounded-xl p-6">
-            <h3 className="text-xl font-bold text-zinc-100 mb-4">Preview Upcoming Rewards</h3>
-            <p className="text-zinc-400 text-sm mb-4">
-              Based on your current activity and holdings, here&apos;s what you can expect:
-            </p>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="p-4 bg-zinc-900 rounded-lg text-center">
-                <div className="text-2xl font-bold text-yellow-400">150</div>
-                <div className="text-xs text-zinc-400">VFIDE next week</div>
-              </div>
-              <div className="p-4 bg-zinc-900 rounded-lg text-center">
-                <div className="text-2xl font-bold text-cyan-400">650</div>
-                <div className="text-xs text-zinc-400">VFIDE next month</div>
-              </div>
-              <div className="p-4 bg-zinc-900 rounded-lg text-center">
-                <div className="text-2xl font-bold text-purple-400">2,400</div>
-                <div className="text-xs text-zinc-400">VFIDE this quarter</div>
-              </div>
-            </div>
-          </div>
-        </>
-      ) : (
-        <div className="bg-zinc-800 border border-zinc-700 rounded-xl p-12 text-center">
-          <Gift className="w-16 h-16 text-zinc-500 mx-auto mb-4" />
-          <h3 className="text-xl font-bold text-zinc-100 mb-2">Connect Wallet to View Rewards</h3>
-          <p className="text-zinc-400">Connect your wallet to see your available rewards and claim bonuses</p>
+      <div className="bg-zinc-800 border border-zinc-700 rounded-xl p-5 text-sm text-zinc-400">
+        <div className="flex items-start gap-2">
+          <span className="text-amber-400 shrink-0 mt-0.5">ℹ️</span>
+          <span>
+            VFIDE is a governance utility token. Rewards are platform perks tied to{' '}
+            <strong className="text-zinc-200">your own usage</strong> — fee discounts, voting weight, feature access, and community recognition. 
+            No token distributions are offered for holding, referrals, or activity.
+          </span>
         </div>
-      )}
+      </div>
     </div>
   );
 }
@@ -491,17 +492,16 @@ function StatsTab({ isConnected, address }: { isConnected: boolean; address?: st
         <h3 className="text-xl font-bold text-zinc-100 mb-6">Recent Activity</h3>
         <div className="space-y-3">
           {[
-            { action: 'Claimed daily reward', amount: '+50 VFIDE', time: '2 hours ago' },
-            { action: 'Referral bonus received', amount: '+250 VFIDE', time: '1 day ago' },
+            { action: 'Governance vote cast', amount: '+10 XP', time: '2 hours ago' },
             { action: 'ProofScore increased', amount: '+5 points', time: '3 days ago' },
-            { action: 'Transaction cashback', amount: '+75 VFIDE', time: '5 days ago' },
+            { action: 'Daily check-in', amount: '+50 XP', time: '5 days ago' },
           ].map((activity, idx) => (
             <div key={idx} className="flex items-center justify-between p-3 bg-zinc-900 rounded-lg">
               <div>
                 <div className="text-zinc-100 text-sm">{activity.action}</div>
                 <div className="text-xs text-zinc-400">{activity.time}</div>
               </div>
-              <span className="text-green-400 font-bold">{activity.amount}</span>
+              <span className="text-purple-400 font-bold">{activity.amount}</span>
             </div>
           ))}
         </div>
@@ -520,7 +520,7 @@ function StatsTab({ isConnected, address }: { isConnected: boolean; address?: st
           </div>
         </div>
         <p className="text-zinc-400 text-sm">
-          You need 197,550 more VFIDE to reach Platinum tier. Keep holding and earning!
+          You need 197,550 more VFIDE to reach Platinum tier.
         </p>
       </div>
     </div>
