@@ -1,7 +1,7 @@
 # Known Issues - Quick Reference
 
-**Last Updated:** January 28, 2026  
-**Status:** 0 blocking issues, 4 enhancement opportunities
+**Last Updated:** March 2, 2026  
+**Status:** 0 blocking issues, 3 open enhancement opportunities, 1 resolved
 
 ---
 
@@ -100,13 +100,13 @@ curl http://localhost:3000/api/health
 
 ## Issue Count
 
-| Severity | Blocking | Non-Blocking |
-|----------|----------|--------------|
-| Critical | 0 | 0 |
-| High | 0 | 0 |
-| Medium | 0 | 4 |
-| Low | 0 | 0 |
-| **Total** | **0** | **4** |
+| Severity | Blocking | Open | Resolved |
+|----------|----------|------|---------|
+| Critical | 0 | 0 | 0 |
+| High | 0 | 0 | 0 |
+| Medium | 0 | 3 | 1 |
+| Low | 0 | 0 | 0 |
+| **Total** | **0** | **3** | **1** |
 
 ---
 
