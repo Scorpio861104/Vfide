@@ -1,23 +1,38 @@
-import Link from 'next/link';
+'use client';
+
+import DailyQuestsPanel from '@/components/gamification/DailyQuestsPanel';
+import OnboardingChecklist from '@/components/gamification/OnboardingChecklist';
+import { Target } from 'lucide-react';
 
 export default function QuestsPage() {
   return (
-    <div className="min-h-screen bg-zinc-950 text-white flex items-center justify-center">
-      <div className="max-w-md mx-auto px-6 text-center">
-        <div className="text-5xl mb-6">📋</div>
-        <h1 className="text-2xl font-bold mb-3">Quests Not Available</h1>
-        <p className="text-zinc-400 mb-6">
-          Quests and daily challenges are not part of the VFIDE platform.
-          VFIDE is a governance utility token — participation is through governance
-          voting, ProofScore, and merchant activity.
-        </p>
-        <Link
-          href="/governance"
-          className="inline-flex items-center gap-2 px-5 py-2.5 bg-purple-600 hover:bg-purple-700 rounded-lg font-medium transition-colors"
-        >
-          Go to Governance
-        </Link>
+    <div className="min-h-screen bg-zinc-950 text-white">
+      {/* Header */}
+      <div className="bg-gradient-to-r from-purple-600/10 to-blue-500/10 border-b border-purple-600/20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="flex items-center gap-4 mb-4">
+            <div className="bg-gradient-to-br from-purple-600 to-blue-500 rounded-lg p-3">
+              <Target className="w-8 h-8 text-white" />
+            </div>
+            <div>
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-600 to-blue-500 bg-clip-text text-transparent">
+                Daily Quests
+              </h1>
+              <p className="text-zinc-400 text-lg">
+                Complete governance challenges and earn participation XP
+              </p>
+            </div>
+          </div>
+        </div>
       </div>
+
+      {/* Main Content */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <DailyQuestsPanel />
+      </div>
+
+      {/* Onboarding Checklist (floating) */}
+      <OnboardingChecklist />
     </div>
   );
 }

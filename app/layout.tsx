@@ -16,6 +16,7 @@ import { SecurityProvider } from "@/components/security/SecurityProvider";
 import { PerformanceProvider } from "@/components/performance/PerformanceProvider";
 import { ErrorMonitoringProvider, DevErrorConsole } from "@/components/monitoring/ErrorMonitoringProvider";
 import { AccessibilityProvider } from "@/components/accessibility/AccessibilityProvider";
+import { AchievementToastContainer } from "@/components/gamification/AchievementToast";
 import { PieMenu } from "@/components/navigation/PieMenu";
 // Core integrations from PR #56
 import { ServiceWorkerRegistration } from "@/components/core/ServiceWorkerRegistration";
@@ -111,6 +112,7 @@ export default async function RootLayout({
                   <NetworkSwitchOverlay />
                   <TestnetNotification />
                   {/* Network detection handled by wallet connection */}
+                  <AchievementToastContainer />
                   <main id="main-content" className="min-h-screen min-w-0 w-full" tabIndex={-1}>
                     {children}
                   </main>
