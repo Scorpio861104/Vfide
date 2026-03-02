@@ -4,6 +4,9 @@ import { requireAdmin, requireAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { validateBody, awardXpSchema } from '@/lib/auth/validation';
 
+/** Maximum XP awardable per wallet per calendar day (mirrors lib/gamification.ts). */
+const SERVER_MAX_XP_PER_DAY = 500;
+
 const isTestEnv = process.env.NODE_ENV === 'test';
 
 export async function GET(request: NextRequest) {
@@ -155,16 +158,49 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Update XP and calculate new level
+    // Enforce daily XP cap server-side.
+    // daily_xp_earned resets when daily_xp_date is not today's UTC date.
+    const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+
+    const capCheck = await query(
+      `SELECT daily_xp_earned, daily_xp_date FROM user_gamification g
+       JOIN users u ON g.user_id = u.id
+       WHERE u.wallet_address = $1`,
+      [userAddress.toLowerCase()]
+    );
+
+    if (capCheck.rows.length === 0) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    }
+
+    const row = capCheck.rows[0];
+    const earnedToday = row.daily_xp_date === today ? (Number(row.daily_xp_earned) || 0) : 0;
+    const remaining = Math.max(0, SERVER_MAX_XP_PER_DAY - earnedToday);
+    const awarded = Math.min(xpAmount, remaining);
+
+    if (awarded <= 0) {
+      return NextResponse.json(
+        { success: true, xpAwarded: 0, reason, dailyCapped: true, message: 'Daily XP cap reached' },
+        { status: 200 }
+      );
+    }
+
+    // Update XP and calculate new level, resetting daily counter if needed.
+    // penalty_xp is preserved; effective_xp = max(0, new_xp - penalty_xp).
     const result = await query(
       `UPDATE user_gamification g
        SET xp = xp + $2,
+           effective_xp = GREATEST(0, (xp + $2) - COALESCE(penalty_xp, 0)),
            level = FLOOR(SQRT((xp + $2) / 100.0)) + 1,
+           effective_level = FLOOR(SQRT(GREATEST(0, (xp + $2) - COALESCE(penalty_xp, 0)) / 100.0)) + 1,
+           daily_xp_date = $3,
+           daily_xp_earned = CASE WHEN daily_xp_date = $3 THEN daily_xp_earned + $2 ELSE $2 END,
            last_active = NOW()
        FROM users u
        WHERE g.user_id = u.id AND u.wallet_address = $1
-       RETURNING g.*, (FLOOR(SQRT((xp + $2) / 100.0)) + 1) > g.level as leveled_up`,
-      [userAddress.toLowerCase(), xpAmount]
+       RETURNING g.*,
+                 (FLOOR(SQRT((xp + $2) / 100.0)) + 1) > g.level as leveled_up`,
+      [userAddress.toLowerCase(), awarded, today]
     );
 
     if (result.rows.length === 0) {
@@ -185,7 +221,8 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      xpAwarded: xpAmount,
+      xpAwarded: awarded,
+      dailyCapped: false,
       reason,
       newXP: userData.xp,
       newLevel: userData.level,

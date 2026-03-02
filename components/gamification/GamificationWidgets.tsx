@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Trophy, Zap, Award } from 'lucide-react';
+import { Trophy, Zap, Award, AlertTriangle } from 'lucide-react';
 import { useGamification, ACHIEVEMENTS, LEVEL_PERKS, type AchievementId } from '@/lib/gamification';
 
 interface UserStatsWidgetProps {
@@ -60,8 +60,21 @@ export function UserStatsWidget({ userAddress, compact = false }: UserStatsWidge
             <Trophy className="w-6 h-6 text-zinc-950" />
           </div>
           <div>
-            <div className="text-2xl font-bold text-zinc-100">Level {progress.level}</div>
-            <div className="text-xs text-zinc-400">{progress.xp.toLocaleString()} XP</div>
+            {/* Show effective level when penalties exist */}
+            {(progress.penaltyXP ?? 0) > 0 ? (
+              <>
+                <div className="text-2xl font-bold text-zinc-100">
+                  Level {progress.effectiveLevel ?? progress.level}
+                  <span className="text-xs font-normal text-red-400 ml-2">(effective)</span>
+                </div>
+                <div className="text-xs text-zinc-400">{progress.xp.toLocaleString()} XP earned · <span className="text-red-400">−{progress.penaltyXP.toLocaleString()} penalty</span></div>
+              </>
+            ) : (
+              <>
+                <div className="text-2xl font-bold text-zinc-100">Level {progress.level}</div>
+                <div className="text-xs text-zinc-400">{progress.xp.toLocaleString()} XP</div>
+              </>
+            )}
           </div>
         </div>
 
@@ -72,6 +85,22 @@ export function UserStatsWidget({ userAddress, compact = false }: UserStatsWidge
           </div>
         </div>
       </div>
+
+      {/* Penalty Warning */}
+      {(progress.penaltyXP ?? 0) > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: -4 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex items-start gap-2 bg-red-950/40 border border-red-500/30 rounded-lg p-3 mb-3 text-xs"
+        >
+          <AlertTriangle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
+          <span className="text-red-300">
+            Your account has <strong>{progress.penaltyXP.toLocaleString()} penalty XP</strong> from policy violations.
+            Perks and governance rights use your <em>effective</em> level ({progress.effectiveLevel ?? progress.level}), 
+            which cannot be restored by earning more XP.
+          </span>
+        </motion.div>
+      )}
 
       {/* Progress Bar */}
       <div className="relative h-3 bg-zinc-950 rounded-full overflow-hidden mb-4">
@@ -106,7 +135,8 @@ export function UserStatsWidget({ userAddress, compact = false }: UserStatsWidge
 
       {/* Next Level Perk */}
       {(() => {
-        const nextPerk = LEVEL_PERKS.find(p => p.level > progress.level);
+        const effectiveLvl = progress.effectiveLevel ?? progress.level;
+        const nextPerk = LEVEL_PERKS.find(p => p.level > effectiveLvl);
         if (!nextPerk) return null;
         return (
           <motion.div
