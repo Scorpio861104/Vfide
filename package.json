@@ -145,7 +145,7 @@
     "@storybook/addon-essentials": "^8.6.15",
     "@storybook/addon-interactions": "^8.6.15",
     "@storybook/addon-links": "^10.2.10",
-    "@storybook/addon-onboarding": "^10.2.3",
+    "@storybook/addon-onboarding": "^10.2.13",
     "@storybook/addon-viewport": "^8.6.15",
     "@storybook/react-vite": "^10.2.8",
     "@tailwindcss/postcss": "^4",
