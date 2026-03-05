@@ -6,7 +6,6 @@ This is the recommended production set: core contracts + interfaces.
 
 - AdminMultiSig.sol
 - BadgeManager.sol
-- BadgeManagerLite.sol
 - BadgeRegistry.sol
 - BridgeSecurityModule.sol
 - CircuitBreaker.sol
@@ -15,14 +14,12 @@ This is the recommended production set: core contracts + interfaces.
 - CouncilSalary.sol
 - DAO.sol
 - DAOTimelock.sol
-- DAOTimelockV2.sol
 - DeployPhase1.sol
 - DeployPhases3to6.sol
 - DevReserveVestingVault.sol
 - DutyDistributor.sol
 - EcosystemVault.sol
 - EmergencyControl.sol
-- EmergencyControlV2.sol
 - EscrowManager.sol
 - GovernanceHooks.sol
 - LiquidityIncentives.sol
@@ -55,12 +52,9 @@ This is the recommended production set: core contracts + interfaces.
 - VFIDEReentrancyGuard.sol
 - VFIDESecurity.sol
 - VFIDEToken.sol
-- VFIDETokenV2.sol
 - VFIDETrust.sol
 - VaultHub.sol
-- VaultHubLite.sol
 - VaultInfrastructure.sol
-- VaultInfrastructureLite.sol
 - VaultRecoveryClaim.sol
 - VaultRegistry.sol
 - WithdrawalQueue.sol

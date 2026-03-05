@@ -39,7 +39,7 @@ Multi-signature requirement for critical operations with timelock delays.
 - `CRITICAL` - Critical operations (48h delay, 3/5 approval)
 - `EMERGENCY` - Emergency actions (no delay, 5/5 approval)
 
-### 3. EmergencyControlV2.sol
+### 3. EmergencyControl.sol
 Enhanced emergency control with granular pause capabilities.
 
 **Features:**
@@ -100,7 +100,7 @@ Auto-pause system based on monitoring key ecosystem metrics.
 - Price drop: 20% in 1 hour
 - Blacklist count: 10 in 24 hours
 
-### 7. VFIDETokenV2.sol
+### 7. VFIDEToken.sol
 Enhanced VFIDE token with security features and optimizations.
 
 **Features:**
@@ -315,10 +315,10 @@ struct TransferConfig {
 ```
 VFIDEAccessControl:   0x...
 AdminMultiSig:        0x...
-EmergencyControlV2:   0x...
+EmergencyControl:     0x...
 CircuitBreaker:       0x...
 WithdrawalQueue:      0x...
-VFIDETokenV2:         0x...
+VFIDEToken:           0x...
 ```
 
 ### Mainnet
@@ -326,10 +326,10 @@ VFIDETokenV2:         0x...
 ```
 VFIDEAccessControl:   [To be deployed]
 AdminMultiSig:        [To be deployed]
-EmergencyControlV2:   [To be deployed]
+EmergencyControl:     [To be deployed]
 CircuitBreaker:       [To be deployed]
 WithdrawalQueue:      [To be deployed]
-VFIDETokenV2:         [To be deployed]
+VFIDEToken:           [To be deployed]
 ```
 
 ## 📚 Documentation
