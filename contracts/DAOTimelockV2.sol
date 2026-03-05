@@ -22,6 +22,7 @@ error TIMELOCK_Expired();
 error TIMELOCK_AlreadyQueued();
 error TIMELOCK_NotQueued();
 error TIMELOCK_Zero();
+error TIMELOCK_OnlyTimelock();
 
 contract DAOTimelockV2 {
     event TransactionQueued(bytes32 indexed txId, address indexed target, uint256 value, bytes data, uint256 eta);
@@ -52,6 +53,11 @@ contract DAOTimelockV2 {
         _;
     }
 
+    modifier onlyTimelockSelf() {
+        if (msg.sender != address(this)) revert TIMELOCK_OnlyTimelock();
+        _;
+    }
+
     function _checkDAO() internal view {
         if (msg.sender != dao) revert TIMELOCK_NotDAO();
     }
@@ -62,21 +68,21 @@ contract DAOTimelockV2 {
         ledger = IProofLedger(_ledger);
     }
 
-    function setDAO(address _dao) external onlyDAO {
+    function setDAO(address _dao) external onlyTimelockSelf {
         if (_dao == address(0)) revert TIMELOCK_Zero();
         dao = _dao;
         emit DAOSet(_dao);
         _log("timelock_dao_set");
     }
 
-    function setDelay(uint256 _delay) external onlyDAO {
+    function setDelay(uint256 _delay) external onlyTimelockSelf {
         require(_delay >= 1 days && _delay <= 30 days, "delay out of bounds");
         delay = _delay;
         emit DelaySet(_delay);
         _log("timelock_delay_set");
     }
 
-    function setLedger(address _ledger) external onlyDAO {
+    function setLedger(address _ledger) external onlyTimelockSelf {
         ledger = IProofLedger(_ledger);
     }
 
@@ -95,6 +101,7 @@ contract DAOTimelockV2 {
         string memory signature,
         bytes memory data
     ) external onlyDAO returns (bytes32, uint256) {
+        if (target == address(0)) revert TIMELOCK_Zero();
         // C-2 Fix: Use nonce to prevent transaction ID collision
         uint256 currentNonce = nonce++;
         bytes32 txId = _getTxId(target, value, signature, data, currentNonce);
