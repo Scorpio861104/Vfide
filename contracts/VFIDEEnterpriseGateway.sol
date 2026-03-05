@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
-import { IERC20, ISeer, IVaultHub, SafeERC20 } from "./SharedInterfaces.sol";
+import { IERC20, ISeer, ISwapRouter, IVaultHub, SafeERC20 } from "./SharedInterfaces.sol";
 
 error ENT_NotOracle();
 error ENT_NotDAO();
@@ -78,11 +78,13 @@ contract VFIDEEnterpriseGateway {
     }
 
     function setOracle(address _oracle) external onlyDAO {
+        if (_oracle == address(0)) revert ENT_Zero();
         oracle = _oracle;
         emit OracleSet(_oracle);
     }
 
     function setMerchantWallet(address _wallet) external onlyDAO {
+        if (_wallet == address(0)) revert ENT_Zero();
         merchantWallet = _wallet;
         emit MerchantWalletSet(_wallet);
     }
@@ -148,6 +150,10 @@ contract VFIDEEnterpriseGateway {
         uint16 _maxSlippageBps
     ) external onlyDAO {
         require(_maxSlippageBps <= 500, "ENT: slippage too high"); // Max 5%
+        if (_enabled) {
+            if (_router == address(0) || _stablecoin == address(0)) revert ENT_Zero();
+            require(_stablecoin != address(token), "ENT: invalid stablecoin");
+        }
         swapRouter = _router;
         settlementStablecoin = _stablecoin;
         stableSettlementEnabled = _enabled;
@@ -274,16 +280,3 @@ contract VFIDEEnterpriseGateway {
     }
 }
 
-// Minimal swap router interface
-interface ISwapRouter {
-    function swapExactTokensForTokens(
-        uint256 amountIn,
-        uint256 amountOutMin,
-        address[] calldata path,
-        address to,
-        uint256 deadline
-    ) external returns (uint256[] memory amounts);
-    
-    // H-13 Fix: Add getAmountsOut for slippage calculation
-    function getAmountsOut(uint256 amountIn, address[] calldata path) external view returns (uint256[] memory amounts);
-}

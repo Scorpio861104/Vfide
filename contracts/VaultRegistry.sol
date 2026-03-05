@@ -3,6 +3,7 @@ pragma solidity 0.8.30;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+import "./interfaces/IVaultInfrastructure.sol";
 
 /**
  * @title VaultRegistry
@@ -20,12 +21,6 @@ import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
  * 
  * Privacy: All identifiers are stored as keccak256 hashes, never plaintext
  */
-
-interface IVaultInfrastructure {
-    function vaultOf(address owner) external view returns (address);
-    function ownerOfVault(address vault) external view returns (address);
-    function isVault(address a) external view returns (bool);
-}
 
 interface IBadgeManager {
     function getUserBadges(address user) external view returns (uint256[] memory);
@@ -89,6 +84,7 @@ contract VaultRegistry is Ownable, ReentrancyGuard {
     mapping(address => uint256) public vaultIndex;
     mapping(address => uint256) public vaultCreatedAt;
     mapping(address => uint256) public vaultLastActiveAt;
+    mapping(address => uint256) public guardianCountOfVault;
     
     // ═══════════════════════════════════════════════════════════════════════════════
     // EVENTS
@@ -112,6 +108,7 @@ contract VaultRegistry is Ownable, ReentrancyGuard {
     error InvalidVault();
     error RecoveryIdAlreadyTaken();
     error UsernameAlreadyTaken();
+    error PhoneAlreadyTaken();
     error VaultNotFound();
     error ZeroAddress();
     
@@ -227,7 +224,17 @@ contract VaultRegistry is Ownable, ReentrancyGuard {
         address vault,
         bytes32 phoneHash
     ) external onlyVaultOwner(vault) validVault(vault) {
+        if (vaultByPhoneHash[phoneHash] != address(0) && vaultByPhoneHash[phoneHash] != vault) {
+            revert PhoneAlreadyTaken();
+        }
+
+        bytes32 oldPhone = _phoneHashStorage[vault];
+        if (oldPhone != bytes32(0) && oldPhone != phoneHash) {
+            delete vaultByPhoneHash[oldPhone];
+        }
+
         vaultByPhoneHash[phoneHash] = vault;
+        _phoneHashStorage[vault] = phoneHash;
         emit PhoneRecoverySet(vault, phoneHash);
     }
     
@@ -267,6 +274,7 @@ contract VaultRegistry is Ownable, ReentrancyGuard {
         if (!_isGuardianOf[guardian][vault]) {
             _isGuardianOf[guardian][vault] = true;
             vaultsGuardedBy[guardian].push(vault);
+            guardianCountOfVault[vault]++;
             emit GuardianRegistered(vault, guardian);
         }
     }
@@ -280,6 +288,9 @@ contract VaultRegistry is Ownable, ReentrancyGuard {
     ) external onlyVaultOwner(vault) validVault(vault) {
         if (_isGuardianOf[guardian][vault]) {
             _isGuardianOf[guardian][vault] = false;
+            if (guardianCountOfVault[vault] > 0) {
+                guardianCountOfVault[vault]--;
+            }
             
             // Remove from array (swap and pop)
             address[] storage guardedVaults = vaultsGuardedBy[guardian];
@@ -605,10 +616,8 @@ contract VaultRegistry is Ownable, ReentrancyGuard {
     // INTERNAL HELPERS
     // ═══════════════════════════════════════════════════════════════════════════════
     
-    function _hasGuardians(address /*vault*/) internal pure returns (bool) {
-        // Check if any guardian is registered for this vault
-        // This is a simplified check - in production, query UserVault directly
-        return true; // Placeholder - implement based on UserVault interface
+    function _hasGuardians(address vault) internal view returns (bool) {
+        return guardianCountOfVault[vault] > 0;
     }
     
     function _toLower(string memory str) internal pure returns (string memory) {
@@ -628,6 +637,7 @@ contract VaultRegistry is Ownable, ReentrancyGuard {
     
     // Email hash storage (using a slot mapping pattern)
     mapping(address => bytes32) private _emailHashStorage;
+    mapping(address => bytes32) private _phoneHashStorage;
     
     function _getStoredEmailHash(address vault) internal view returns (bytes32) {
         return _emailHashStorage[vault];

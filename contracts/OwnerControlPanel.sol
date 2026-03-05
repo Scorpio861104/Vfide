@@ -16,7 +16,7 @@ import "./SharedInterfaces.sol";
  * - No fund custody (just passes through calls)
  */
 
-interface IVFIDEPresale {
+interface IVFIDEPresaleOCP {
     function setPaused(bool _paused) external;
     function extendSale(uint256 additionalDays) external;
     function setMaxGasPrice(uint256 newMaxGasPrice) external;
@@ -34,7 +34,7 @@ interface IVFIDEPresale {
     function saleEndTime() external view returns (uint256);
 }
 
-interface IUserVault {
+interface IUserVaultOCP {
     function setFrozen(bool _frozen) external;
     function setAbnormalTransactionThreshold(uint256 threshold) external;
     function setWithdrawalCooldown(uint64 cooldown) external;
@@ -50,12 +50,17 @@ interface IUserVault {
 
 interface IEcosystemVaultAdmin {
     function configureAutoSwap(address _router, address _stablecoin, bool _enabled, uint16 _maxSlippageBps) external;
+    function configureAutoWorkPayout(bool enabled, uint256 merchantTxReward, uint256 merchantReferralReward, uint256 userReferralReward) external;
     function setManager(address manager, bool active) external;
     function setAllocations(uint16 _councilBps, uint16 _merchantBps, uint16 _headhunterBps) external;
     function autoSwapEnabled() external view returns (bool);
     function swapRouter() external view returns (address);
     function preferredStablecoin() external view returns (address);
     function maxSlippageBps() external view returns (uint16);
+    function autoWorkPayoutEnabled() external view returns (bool);
+    function autoMerchantTxReward() external view returns (uint256);
+    function autoMerchantReferralReward() external view returns (uint256);
+    function autoUserReferralReward() external view returns (uint256);
 }
 
 contract OwnerControlPanel {
@@ -64,13 +69,26 @@ contract OwnerControlPanel {
     address public immutable owner;
     
     IVFIDEToken public vfideToken;
-    IVFIDEPresale public presale;
+    IVFIDEPresaleOCP public presale;
     IVaultHub public vaultHub;
     IProofScoreBurnRouter public burnRouter;
     ISeer public seer;
     
     // New contract references for enhanced configuration
     IEcosystemVaultAdmin public ecosystemVault;
+
+    uint256 public governanceDelay = 1 days;
+    uint256 public constant MIN_GOVERNANCE_DELAY = 1 hours;
+    uint256 public constant MAX_GOVERNANCE_DELAY = 7 days;
+
+    uint16 public maxAutoSwapSlippageBps = 500;
+    uint16 public constant MAX_ALLOWED_AUTOSWAP_SLIPPAGE_BPS = 2000;
+
+    uint256 public minAutoWorkPayoutWei;
+    uint256 public maxAutoWorkPayoutWei = 10_000 ether;
+    uint256 public constant MAX_ALLOWED_AUTO_WORK_PAYOUT_WEI = 1_000_000 ether;
+
+    mapping(bytes32 => uint256) public queuedActionEta;
     
     event ContractsUpdated(address token, address presale, address vaultHub, address burnRouter, address seer);
     event EcosystemContractsUpdated(address ecosystemVault);
@@ -78,13 +96,37 @@ contract OwnerControlPanel {
     event FeePolicyUpdated(uint16 minBps, uint16 maxBps);
     event AntiWhaleUpdated(uint256 maxTransfer, uint256 maxWallet, uint256 dailyLimit, uint256 cooldown);
     event AutoSwapConfigured(address router, address stablecoin, bool enabled, uint16 maxSlippageBps);
+    event GovernanceActionQueued(bytes32 indexed actionId, uint256 executeAfter);
+    event GovernanceActionCancelled(bytes32 indexed actionId);
+    event GovernanceActionExecuted(bytes32 indexed actionId);
+    event GovernanceDelayUpdated(uint256 oldDelay, uint256 newDelay);
+    event AutoSwapSlippageLimitUpdated(uint16 oldLimit, uint16 newLimit);
+    event AutoWorkPayoutBoundsUpdated(uint256 minReward, uint256 maxReward);
     
     error OCP_NotOwner();
     error OCP_Zero();
+    error OCP_InvalidRange();
+    error OCP_ActionNotQueued();
+    error OCP_ActionNotReady(uint256 executeAfter);
+    error OCP_SlippageTooHigh();
     
     modifier onlyOwner() {
         if (msg.sender != owner) revert OCP_NotOwner();
         _;
+    }
+
+    function _consumeQueuedAction(bytes32 actionId) internal {
+        uint256 eta = queuedActionEta[actionId];
+        if (eta == 0) revert OCP_ActionNotQueued();
+        if (block.timestamp < eta) revert OCP_ActionNotReady(eta);
+        delete queuedActionEta[actionId];
+        emit GovernanceActionExecuted(actionId);
+    }
+
+    function _queueAction(bytes32 actionId) internal returns (uint256 eta) {
+        eta = block.timestamp + governanceDelay;
+        queuedActionEta[actionId] = eta;
+        emit GovernanceActionQueued(actionId, eta);
     }
     
     constructor(
@@ -99,7 +141,7 @@ contract OwnerControlPanel {
         owner = _owner;
         
         if (_token != address(0)) vfideToken = IVFIDEToken(_token);
-        if (_presale != address(0)) presale = IVFIDEPresale(_presale);
+        if (_presale != address(0)) presale = IVFIDEPresaleOCP(_presale);
         if (_vaultHub != address(0)) vaultHub = IVaultHub(_vaultHub);
         if (_burnRouter != address(0)) burnRouter = IProofScoreBurnRouter(_burnRouter);
         if (_seer != address(0)) seer = ISeer(_seer);
@@ -116,7 +158,7 @@ contract OwnerControlPanel {
         address _seer
     ) external onlyOwner {
         if (_token != address(0)) vfideToken = IVFIDEToken(_token);
-        if (_presale != address(0)) presale = IVFIDEPresale(_presale);
+        if (_presale != address(0)) presale = IVFIDEPresaleOCP(_presale);
         if (_vaultHub != address(0)) vaultHub = IVaultHub(_vaultHub);
         if (_burnRouter != address(0)) burnRouter = IProofScoreBurnRouter(_burnRouter);
         if (_seer != address(0)) seer = ISeer(_seer);
@@ -132,6 +174,119 @@ contract OwnerControlPanel {
     ) external onlyOwner {
         if (_ecosystemVault != address(0)) ecosystemVault = IEcosystemVaultAdmin(_ecosystemVault);
         emit EcosystemContractsUpdated(_ecosystemVault);
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    //                          GOVERNANCE GUARDRAILS
+    // ═══════════════════════════════════════════════════════════════════════
+
+    function governance_setDelay(uint256 newDelay) external onlyOwner {
+        if (newDelay < MIN_GOVERNANCE_DELAY || newDelay > MAX_GOVERNANCE_DELAY) {
+            revert OCP_InvalidRange();
+        }
+        uint256 oldDelay = governanceDelay;
+        governanceDelay = newDelay;
+        emit GovernanceDelayUpdated(oldDelay, newDelay);
+    }
+
+    function governance_setMaxAutoSwapSlippageBps(uint16 newLimit) external onlyOwner {
+        if (newLimit > MAX_ALLOWED_AUTOSWAP_SLIPPAGE_BPS) revert OCP_InvalidRange();
+        uint16 oldLimit = maxAutoSwapSlippageBps;
+        maxAutoSwapSlippageBps = newLimit;
+        emit AutoSwapSlippageLimitUpdated(oldLimit, newLimit);
+    }
+
+    function governance_setAutoWorkPayoutBounds(uint256 minReward, uint256 maxReward) external onlyOwner {
+        if (minReward > maxReward || maxReward > MAX_ALLOWED_AUTO_WORK_PAYOUT_WEI) {
+            revert OCP_InvalidRange();
+        }
+        minAutoWorkPayoutWei = minReward;
+        maxAutoWorkPayoutWei = maxReward;
+        emit AutoWorkPayoutBoundsUpdated(minReward, maxReward);
+    }
+
+    function governance_queueAction(bytes32 actionId) external onlyOwner returns (uint256 executeAfter) {
+        return _queueAction(actionId);
+    }
+
+    function governance_cancelAction(bytes32 actionId) external onlyOwner {
+        if (queuedActionEta[actionId] == 0) revert OCP_ActionNotQueued();
+        delete queuedActionEta[actionId];
+        emit GovernanceActionCancelled(actionId);
+    }
+
+    function actionId_token_lockPolicy() public pure returns (bytes32) {
+        return keccak256(abi.encode("token_lockPolicy"));
+    }
+
+    function actionId_autoSwap_configure(
+        address router,
+        address stablecoin,
+        bool enabled,
+        uint16 maxSlippageBps
+    ) public pure returns (bytes32) {
+        return keccak256(abi.encode("autoSwap_configure", router, stablecoin, enabled, maxSlippageBps));
+    }
+
+    function actionId_autoSwap_quickSetupUSDC(address router, address usdc) public pure returns (bytes32) {
+        return keccak256(abi.encode("autoSwap_quickSetupUSDC", router, usdc));
+    }
+
+    function actionId_token_setVaultOnly(bool enabled) public pure returns (bytes32) {
+        return keccak256(abi.encode("token_setVaultOnly", enabled));
+    }
+
+    function actionId_token_setCircuitBreaker(bool active, uint256 duration) public pure returns (bytes32) {
+        return keccak256(abi.encode("token_setCircuitBreaker", active, duration));
+    }
+
+    function actionId_token_setBlacklist(address user, bool status) public pure returns (bytes32) {
+        return keccak256(abi.encode("token_setBlacklist", user, status));
+    }
+
+    function actionId_emergency_pauseAll() public pure returns (bytes32) {
+        return keccak256(abi.encode("emergency_pauseAll"));
+    }
+
+    function actionId_emergency_resumeAll() public pure returns (bytes32) {
+        return keccak256(abi.encode("emergency_resumeAll"));
+    }
+
+    function actionId_ecosystem_setAllocations(
+        uint16 councilBps,
+        uint16 merchantBps,
+        uint16 headhunterBps
+    ) public pure returns (bytes32) {
+        return keccak256(abi.encode("ecosystem_setAllocations", councilBps, merchantBps, headhunterBps));
+    }
+
+    function actionId_ecosystem_configureAutoWorkPayout(
+        bool enabled,
+        uint256 merchantTxReward,
+        uint256 merchantReferralReward,
+        uint256 userReferralReward
+    ) public pure returns (bytes32) {
+        return keccak256(
+            abi.encode(
+                "ecosystem_configureAutoWorkPayout",
+                enabled,
+                merchantTxReward,
+                merchantReferralReward,
+                userReferralReward
+            )
+        );
+    }
+
+    function actionId_emergency_recoverETH(address recipient) public pure returns (bytes32) {
+        return keccak256(abi.encode("emergency_recoverETH", recipient));
+    }
+
+    function actionId_emergency_recoverTokens(
+        address token,
+        address recipient,
+        uint256 amount
+    ) public pure returns (bytes32) {
+        return keccak256(abi.encode("emergency_recoverTokens", token, recipient, amount));
     }
     
     // ═══════════════════════════════════════════════════════════════════════
@@ -191,6 +346,7 @@ contract OwnerControlPanel {
      * @notice Enable/disable vault-only enforcement
      */
     function token_setVaultOnly(bool enabled) external onlyOwner {
+        _consumeQueuedAction(actionId_token_setVaultOnly(enabled));
         vfideToken.setVaultOnly(enabled);
     }
     
@@ -198,6 +354,7 @@ contract OwnerControlPanel {
      * @notice Lock policy permanently (ONE-WAY - cannot be undone!)
      */
     function token_lockPolicy() external onlyOwner {
+        _consumeQueuedAction(actionId_token_lockPolicy());
         vfideToken.lockPolicy();
     }
     
@@ -207,6 +364,7 @@ contract OwnerControlPanel {
      * @param duration Duration in seconds (max 7 days). Ignored when disabling.
      */
     function token_setCircuitBreaker(bool active, uint256 duration) external onlyOwner {
+        _consumeQueuedAction(actionId_token_setCircuitBreaker(active, duration));
         vfideToken.setCircuitBreaker(active, duration);
         emit EmergencyAction(active ? "circuit_breaker_on" : "circuit_breaker_off", address(vfideToken));
     }
@@ -222,6 +380,7 @@ contract OwnerControlPanel {
      * @notice Blacklist address for compliance (sanctions)
      */
     function token_setBlacklist(address user, bool status) external onlyOwner {
+        _consumeQueuedAction(actionId_token_setBlacklist(user, status));
         vfideToken.setBlacklist(user, status);
     }
     
@@ -612,7 +771,7 @@ contract OwnerControlPanel {
      * @dev Requires vault owner cooperation or DAO recovery process
      */
     function vault_freezeVault(address vault, bool frozen) external onlyOwner {
-        IUserVault(vault).setFrozen(frozen);
+        IUserVaultOCP(vault).setFrozen(frozen);
         emit EmergencyAction(frozen ? "vault_frozen" : "vault_unfrozen", vault);
     }
     
@@ -697,7 +856,7 @@ contract OwnerControlPanel {
     ) {
         isValid = vaultHub.isVault(vaultAddress);
         if (isValid) {
-            IUserVault vault = IUserVault(vaultAddress);
+            IUserVaultOCP vault = IUserVaultOCP(vaultAddress);
             vaultOwner = vault.owner();
             guardianCount = vault.guardianCount();
             frozen = vault.frozen();
@@ -789,6 +948,8 @@ contract OwnerControlPanel {
         bool enabled,
         uint16 maxSlippageBps
     ) external onlyOwner {
+        if (maxSlippageBps > maxAutoSwapSlippageBps) revert OCP_SlippageTooHigh();
+        _consumeQueuedAction(actionId_autoSwap_configure(router, stablecoin, enabled, maxSlippageBps));
         ecosystemVault.configureAutoSwap(router, stablecoin, enabled, maxSlippageBps);
         emit AutoSwapConfigured(router, stablecoin, enabled, maxSlippageBps);
     }
@@ -831,6 +992,8 @@ contract OwnerControlPanel {
      * @param usdc USDC token address
      */
     function autoSwap_quickSetupUSDC(address router, address usdc) external onlyOwner {
+        if (100 > maxAutoSwapSlippageBps) revert OCP_SlippageTooHigh();
+        _consumeQueuedAction(actionId_autoSwap_quickSetupUSDC(router, usdc));
         ecosystemVault.configureAutoSwap(router, usdc, true, 100); // 1% slippage
         emit AutoSwapConfigured(router, usdc, true, 100);
     }
@@ -860,7 +1023,64 @@ contract OwnerControlPanel {
         uint16 merchantBps,
         uint16 headhunterBps
     ) external onlyOwner {
+        _consumeQueuedAction(actionId_ecosystem_setAllocations(councilBps, merchantBps, headhunterBps));
         ecosystemVault.setAllocations(councilBps, merchantBps, headhunterBps);
+    }
+
+    /**
+     * @notice Configure automatic fixed work payouts for verified events
+     * @param enabled Toggle auto payout behavior
+     * @param merchantTxReward Fixed amount paid for qualified merchant transactions
+     * @param merchantReferralReward Fixed amount paid for verified merchant referrals
+     * @param userReferralReward Fixed amount paid for verified user referrals
+     */
+    function ecosystem_configureAutoWorkPayout(
+        bool enabled,
+        uint256 merchantTxReward,
+        uint256 merchantReferralReward,
+        uint256 userReferralReward
+    ) external onlyOwner {
+        if (
+            merchantTxReward < minAutoWorkPayoutWei ||
+            merchantTxReward > maxAutoWorkPayoutWei ||
+            merchantReferralReward < minAutoWorkPayoutWei ||
+            merchantReferralReward > maxAutoWorkPayoutWei ||
+            userReferralReward < minAutoWorkPayoutWei ||
+            userReferralReward > maxAutoWorkPayoutWei
+        ) {
+            revert OCP_InvalidRange();
+        }
+        _consumeQueuedAction(
+            actionId_ecosystem_configureAutoWorkPayout(
+                enabled,
+                merchantTxReward,
+                merchantReferralReward,
+                userReferralReward
+            )
+        );
+        ecosystemVault.configureAutoWorkPayout(
+            enabled,
+            merchantTxReward,
+            merchantReferralReward,
+            userReferralReward
+        );
+    }
+
+    /**
+     * @notice Get current automatic fixed work payout configuration
+     */
+    function ecosystem_getAutoWorkPayoutConfig() external view returns (
+        bool enabled,
+        uint256 merchantTxReward,
+        uint256 merchantReferralReward,
+        uint256 userReferralReward
+    ) {
+        return (
+            ecosystemVault.autoWorkPayoutEnabled(),
+            ecosystemVault.autoMerchantTxReward(),
+            ecosystemVault.autoMerchantReferralReward(),
+            ecosystemVault.autoUserReferralReward()
+        );
     }
     
     // ═══════════════════════════════════════════════════════════════════════
@@ -944,6 +1164,7 @@ contract OwnerControlPanel {
      * @notice Emergency pause all systems
      */
     function emergency_pauseAll() external onlyOwner {
+        _consumeQueuedAction(actionId_emergency_pauseAll());
         // Pause presale
         presale.setPaused(true);
         
@@ -957,6 +1178,7 @@ contract OwnerControlPanel {
      * @notice Resume all systems
      */
     function emergency_resumeAll() external onlyOwner {
+        _consumeQueuedAction(actionId_emergency_resumeAll());
         // Unpause presale
         presale.setPaused(false);
         
@@ -970,6 +1192,7 @@ contract OwnerControlPanel {
      * @notice Recover ETH sent to this contract
      */
     function emergency_recoverETH(address payable recipient) external onlyOwner {
+        _consumeQueuedAction(actionId_emergency_recoverETH(recipient));
         if (recipient == address(0)) revert OCP_Zero();
         uint256 balance = address(this).balance;
         if (balance > 0) {
@@ -983,6 +1206,7 @@ contract OwnerControlPanel {
      * @notice Recover ERC20 tokens sent to this contract
      */
     function emergency_recoverTokens(address token, address recipient, uint256 amount) external onlyOwner {
+        _consumeQueuedAction(actionId_emergency_recoverTokens(token, recipient, amount));
         if (token == address(0) || recipient == address(0)) revert OCP_Zero();
         IERC20(token).safeTransfer(recipient, amount);
         emit EmergencyAction("tokens_recovered", token);

@@ -4,6 +4,7 @@ pragma solidity 0.8.30;
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
+import "./interfaces/IVaultInfrastructure.sol";
 
 /**
  * @title VaultRecoveryClaim
@@ -27,19 +28,7 @@ import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
  * - Proof Score pattern matching (future: ML-based identity)
  */
 
-interface IVaultInfrastructure {
-    function vaultOf(address owner) external view returns (address);
-    function ownerOfVault(address vault) external view returns (address);
-    function isVault(address a) external view returns (bool);
-    // Recovery functions
-    function approveForceRecovery(address vault, address newOwner) external;
-    function recoveryApprovalCount(address vault) external view returns (uint8);
-    function recoveryProposedOwner(address vault) external view returns (address);
-    function recoveryUnlockTime(address vault) external view returns (uint64);
-    function finalizeForceRecovery(address vault) external;
-}
-
-interface IUserVault {
+interface IUserVaultRecovery {
     function owner() external view returns (address);
     function isGuardian(address) external view returns (bool);
     function guardianCount() external view returns (uint8);
@@ -333,7 +322,7 @@ contract VaultRecoveryClaim is Ownable, ReentrancyGuard {
         if (guardianVoted[claimId][msg.sender]) revert AlreadyVoted();
         
         // Verify caller is a mature guardian of the vault
-        IUserVault userVault = IUserVault(claim.vault);
+        IUserVaultRecovery userVault = IUserVaultRecovery(claim.vault);
         if (!userVault.isGuardian(msg.sender)) revert NotGuardian();
         if (!userVault.isGuardianMature(msg.sender)) revert NotGuardian(); // Must be mature
         
@@ -386,7 +375,7 @@ contract VaultRecoveryClaim is Ownable, ReentrancyGuard {
         emit VerifierVoteCast(claimId, msg.sender, approve, claim.verifierVotes);
         
         // If vault has no guardians, verifier votes can approve directly
-        IUserVault userVault = IUserVault(claim.vault);
+        IUserVaultRecovery userVault = IUserVaultRecovery(claim.vault);
         if (userVault.guardianCount() == 0 && claim.verifierVotes >= MIN_VERIFIER_VOTES) {
             claim.status = ClaimStatus.GuardianApproved;
             claim.challengeEndsAt = uint64(block.timestamp + CHALLENGE_PERIOD);
