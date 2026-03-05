@@ -17,7 +17,7 @@ import "./SharedInterfaces.sol";
  */
 
 /// ─────────────────────────── User Vault (embedded)
-contract UserVault is ReentrancyGuard {
+contract UserVaultLegacy is ReentrancyGuard {
     using SafeERC20 for IERC20;
     
     /// Immutable references
@@ -72,23 +72,28 @@ contract UserVault is ReentrancyGuard {
     struct Recovery {
         address proposedOwner;
         uint8 approvals;               // guardian approvals count
+        uint64 readyTime;              // Minimum time before finalization
         uint64 expiryTime;             // H-2 Fix: Recovery expires after 30 days
         uint8 guardianCountSnapshot;   // Lock guardian count at request time
         uint256 nonce;                 // H-2 Fix: Nonce to invalidate old votes
         mapping(address => mapping(uint256 => bool)) voted;  // H-2 Fix: nonce => voted
     }
     Recovery private _recovery;
+    uint64 public constant RECOVERY_MIN_DELAY = 7 days;
     uint64 public constant RECOVERY_EXPIRY = 30 days;
 
     struct Inheritance {
         bool active;                   // Inheritance request active
         uint8 approvals;               // guardian approvals count
+        uint64 readyTime;              // Minimum time before finalization
         uint64 expiryTime;             // Inheritance expires after 30 days
+        uint8 guardianCountSnapshot;   // Lock guardian count at request time
         bool ownerDenied;              // Owner explicitly denied (prevents gaming)
         uint256 nonce;                 // H-3 Fix: Nonce to invalidate old votes
         mapping(address => mapping(uint256 => bool)) voted;  // H-3 Fix: nonce => voted
     }
     Inheritance private _inheritance;
+    uint64 public constant INHERITANCE_MIN_DELAY = 7 days;
     uint64 public constant INHERITANCE_EXPIRY = 30 days;
 
     /// Events
@@ -128,6 +133,8 @@ contract UserVault is ReentrancyGuard {
     error UV_NoPendingTx();
     error UV_TxAlreadyProcessed();
     error UV_RecoveryActive();
+    error UV_InheritanceActive();
+    error UV_ClaimInProgress();
 
     modifier onlyOwner() {
         _checkOwner();
@@ -154,6 +161,15 @@ contract UserVault is ReentrancyGuard {
 
     function _checkNotFrozen() internal view {
         if (frozen) revert UV_Frozen();
+    }
+
+    modifier noActiveClaims() {
+        _checkNoActiveClaims();
+        _;
+    }
+
+    function _checkNoActiveClaims() internal view {
+        if (_recovery.proposedOwner != address(0) || _inheritance.active) revert UV_ClaimInProgress();
     }
 
     constructor(
@@ -193,6 +209,9 @@ contract UserVault is ReentrancyGuard {
         // This blocks both additions (vote dilution) and removals (vote manipulation)
         if (_recovery.proposedOwner != address(0)) {
             revert UV_RecoveryActive();
+        }
+        if (_inheritance.active) {
+            revert UV_InheritanceActive();
         }
         
         if (isGuardian[g] != active) {
@@ -420,11 +439,12 @@ contract UserVault is ReentrancyGuard {
         // H-2 FIX: Even nextOfKin with 0 guardians needs a timelock to prevent instant takeover
         // This gives the owner time to cancel if the vault isn't truly abandoned
         if (msg.sender == nextOfKin && guardianCount == 0) {
-            // Instead of instant recovery, require a 7-day waiting period
-            // Use the same recovery mechanism but with auto-approval
+            // Instead of instant recovery, require a 7-day waiting period.
+            // With zero guardians, mark one virtual approval so finalize can occur after timelock.
             _recovery.nonce++;
             _recovery.proposedOwner = proposedOwner;
-            _recovery.approvals = 0; // No guardians to approve
+            _recovery.approvals = 1;
+            _recovery.readyTime = uint64(block.timestamp + RECOVERY_MIN_DELAY);
             _recovery.expiryTime = uint64(block.timestamp + RECOVERY_EXPIRY);
             _recovery.guardianCountSnapshot = 0;
             
@@ -437,6 +457,7 @@ contract UserVault is ReentrancyGuard {
         _recovery.nonce++;  // H-2 Fix: Increment nonce to invalidate old votes
         _recovery.proposedOwner = proposedOwner;
         _recovery.approvals = 0;
+        _recovery.readyTime = uint64(block.timestamp + RECOVERY_MIN_DELAY);
         _recovery.expiryTime = uint64(block.timestamp + RECOVERY_EXPIRY);
         _recovery.guardianCountSnapshot = guardianCount; // Lock guardian count
         
@@ -466,6 +487,7 @@ contract UserVault is ReentrancyGuard {
 
     function finalizeRecovery() external notLocked {
         if (_recovery.proposedOwner == address(0)) revert UV_NoRecovery();
+        require(block.timestamp >= _recovery.readyTime, "UV: recovery timelock");
         // H-2 Fix: Check if recovery has expired
         require(block.timestamp <= _recovery.expiryTime, "UV: recovery expired");
         
@@ -479,6 +501,7 @@ contract UserVault is ReentrancyGuard {
         // clear request (H-2 Fix: also clear expiry) and vote state
         _recovery.proposedOwner = address(0);
         _recovery.approvals = 0;
+        _recovery.readyTime = 0;
         _recovery.expiryTime = 0;
         _recovery.guardianCountSnapshot = 0;
         // Note: Individual voted mappings cannot be cleared efficiently in a loop
@@ -495,6 +518,7 @@ contract UserVault is ReentrancyGuard {
         address cancelled = _recovery.proposedOwner;
         _recovery.proposedOwner = address(0);
         _recovery.approvals = 0;
+        _recovery.readyTime = 0;
         _recovery.expiryTime = 0;
         _recovery.guardianCountSnapshot = 0;
         
@@ -520,7 +544,9 @@ contract UserVault is ReentrancyGuard {
         _inheritance.nonce++;  // H-3 Fix: Increment nonce to invalidate old votes
         _inheritance.active = true;
         _inheritance.approvals = 0;
+        _inheritance.readyTime = uint64(block.timestamp + INHERITANCE_MIN_DELAY);
         _inheritance.expiryTime = uint64(block.timestamp + INHERITANCE_EXPIRY);
+        _inheritance.guardianCountSnapshot = guardianCount;
         _inheritance.ownerDenied = false;
         
         _logEv(msg.sender, "inheritance_requested", 0, "");
@@ -533,6 +559,7 @@ contract UserVault is ReentrancyGuard {
      */
     function approveInheritance() external notLocked {
         if (!isGuardian[msg.sender]) revert UV_NotGuardian();
+        require(isGuardianMature(msg.sender), "UV: guardian not mature");
         if (!_inheritance.active) revert UV_NoInheritance();
         if (_inheritance.ownerDenied) revert UV_InheritanceDenied();
         if (_inheritance.voted[msg.sender][_inheritance.nonce]) revert UV_AlreadyVoted();
@@ -557,7 +584,9 @@ contract UserVault is ReentrancyGuard {
         _inheritance.ownerDenied = true;
         _inheritance.active = false;
         _inheritance.approvals = 0;
+        _inheritance.readyTime = 0;
         _inheritance.expiryTime = 0;
+        _inheritance.guardianCountSnapshot = 0;
         
         _logEv(msg.sender, "inheritance_denied", 0, "");
         emit InheritanceDenied(msg.sender);
@@ -584,16 +613,17 @@ contract UserVault is ReentrancyGuard {
         _inheritanceCancellationVoted[msg.sender][_inheritanceCancellationNonce] = true;
         _inheritanceCancellationApprovals++;
         
-        // H-1 FIX: Use snapshot guardian count instead of current count
-        // This prevents threshold manipulation during voting
-        uint8 snapshotCount = _inheritance.approvals > 0 ? guardianCount : guardianCount; // Use current if first vote
+        // Use guardian snapshot from request time to prevent threshold manipulation
+        uint8 snapshotCount = _inheritance.guardianCountSnapshot;
         uint256 threshold = snapshotCount >= 2 ? 2 : 1;
         
         if (_inheritanceCancellationApprovals >= threshold) {
             // Cancel inheritance request
             _inheritance.active = false;
             _inheritance.approvals = 0;
+            _inheritance.readyTime = 0;
             _inheritance.expiryTime = 0;
+            _inheritance.guardianCountSnapshot = 0;
             _inheritance.ownerDenied = false;
             
             // C-1 FIX: Increment nonce to invalidate all previous votes
@@ -618,12 +648,13 @@ contract UserVault is ReentrancyGuard {
     function finalizeInheritance() external notLocked nonReentrant {
         if (!_inheritance.active) revert UV_NoInheritance();
         if (_inheritance.ownerDenied) revert UV_InheritanceDenied();
+        require(block.timestamp >= _inheritance.readyTime, "UV: inheritance timelock");
         
         // Check expiry
         require(block.timestamp <= _inheritance.expiryTime, "UV: inheritance expired");
         
         // Require 2/3 guardian threshold (same as recovery)
-        uint256 threshold = guardianCount >= 2 ? 2 : 1;
+        uint256 threshold = _inheritance.guardianCountSnapshot >= 2 ? 2 : 1;
         require(_inheritance.approvals >= threshold, "UV: insufficient approvals");
         
         address inheritor = nextOfKin;
@@ -644,7 +675,9 @@ contract UserVault is ReentrancyGuard {
         // Clear inheritance request
         _inheritance.active = false;
         _inheritance.approvals = 0;
+        _inheritance.readyTime = 0;
         _inheritance.expiryTime = 0;
+        _inheritance.guardianCountSnapshot = 0;
         _inheritance.ownerDenied = false;
         _inheritanceCancellationApprovals = 0; // Clear guardian cancellation votes
         
@@ -659,7 +692,7 @@ contract UserVault is ReentrancyGuard {
     // Return value for transfers that require approval
     event TransferPendingApproval(uint256 indexed txId, address indexed toVault, uint256 amount);
     
-    function transferVFIDE(address toVault, uint256 amount) external onlyOwner notLocked notFrozen nonReentrant returns (bool) {
+    function transferVFIDE(address toVault, uint256 amount) external onlyOwner notLocked notFrozen noActiveClaims nonReentrant returns (bool) {
         if (toVault == address(0)) revert UV_Zero();
         // M-18 Fix: Validate amount and balance
         require(amount > 0, "UV: zero amount");
@@ -712,7 +745,7 @@ contract UserVault is ReentrancyGuard {
         return true;
     }
 
-    function approveVFIDE(address spender, uint256 amount) external onlyOwner notLocked returns (bool) {
+    function approveVFIDE(address spender, uint256 amount) external onlyOwner notLocked noActiveClaims returns (bool) {
         if (spender == address(0)) revert UV_Zero();
         bool ok = IERC20(vfideToken).approve(spender, amount);
         require(ok, "UV:approve-failed");
@@ -722,7 +755,7 @@ contract UserVault is ReentrancyGuard {
     }
 
     // ——— Generic Execution (Smart Account)
-    function execute(address target, uint256 value, bytes calldata data) external onlyOwner notLocked nonReentrant returns (bytes memory result) {
+    function execute(address target, uint256 value, bytes calldata data) external onlyOwner notLocked noActiveClaims nonReentrant returns (bytes memory result) {
         if (target == address(0)) revert UV_Zero();
         
         // M-7 Fix: Enforce maximum value threshold for ETH transfers
@@ -891,15 +924,17 @@ contract UserVault is ReentrancyGuard {
     function getInheritanceStatus() external view returns (
         bool active,
         uint8 approvals,
+        uint64 readyTime,
         uint64 expiryTime,
         bool ownerDenied,
         uint8 guardianThreshold
     ) {
         active = _inheritance.active;
         approvals = _inheritance.approvals;
+        readyTime = _inheritance.readyTime;
         expiryTime = _inheritance.expiryTime;
         ownerDenied = _inheritance.ownerDenied;
-        guardianThreshold = guardianCount >= 2 ? 2 : 1;
+        guardianThreshold = _inheritance.guardianCountSnapshot >= 2 ? 2 : 1;
     }
     
     /**
@@ -1029,6 +1064,31 @@ contract UserVault is ReentrancyGuard {
     receive() external payable {}
 }
 
+interface IUserVaultBytecodeProvider {
+    function creationCode(
+        address hub,
+        address vfide,
+        address owner_,
+        address securityHub,
+        address ledger
+    ) external pure returns (bytes memory);
+}
+
+contract UserVaultBytecodeProvider is IUserVaultBytecodeProvider {
+    function creationCode(
+        address hub,
+        address vfide,
+        address owner_,
+        address securityHub,
+        address ledger
+    ) external pure returns (bytes memory) {
+        return abi.encodePacked(
+            type(UserVaultLegacy).creationCode,
+            abi.encode(hub, vfide, owner_, securityHub, ledger)
+        );
+    }
+}
+
 /// ─────────────────────────── Hub / Factory / Registry
 contract VaultInfrastructure is Ownable {
     /// Modules & config
@@ -1036,6 +1096,7 @@ contract VaultInfrastructure is Ownable {
     ISecurityHub public securityHub;  // shared lock view
     IProofLedger public ledger;       // optional ledger
     address public dao;                  // DAO can force recover
+    address public vaultBytecodeProvider;
 
     /// Registry
     mapping(address => address) public vaultOf;
@@ -1058,17 +1119,21 @@ contract VaultInfrastructure is Ownable {
     event ForcedRecovery(address indexed vault, address indexed newOwner);
     event VFIDESet(address vfide);
     event DAOSet(address dao);
+    event VaultBytecodeProviderSet(address provider);
 
     /// Errors
     error VI_Zero();
     error VI_NotDAO();
+    error VI_NotConfigured();
 
     constructor(address _vfideToken, address _securityHub, address _ledger, address _dao) {
         vfideToken = _vfideToken;
         securityHub = ISecurityHub(_securityHub);
         ledger = IProofLedger(_ledger);
         dao = _dao;
+        vaultBytecodeProvider = address(new UserVaultBytecodeProvider());
         emit ModulesSet(_vfideToken, _securityHub, _ledger, _dao);
+        emit VaultBytecodeProviderSet(vaultBytecodeProvider);
     }
 
     // ——— Module wiring
@@ -1092,6 +1157,13 @@ contract VaultInfrastructure is Ownable {
         emit DAOSet(_dao);
         _log("hub_dao_set");
     }
+
+    function setVaultBytecodeProvider(address provider) external onlyOwner {
+        if (provider == address(0)) revert VI_Zero();
+        vaultBytecodeProvider = provider;
+        emit VaultBytecodeProviderSet(provider);
+        _log("hub_bytecode_provider_set");
+    }
     
     // H-5 Fix: Multi-sig approver management
     function setRecoveryApprover(address approver, bool status) external onlyOwner {
@@ -1104,7 +1176,7 @@ contract VaultInfrastructure is Ownable {
     function predictVault(address owner_) public view returns (address predicted) {
         if (owner_ == address(0)) return address(0);
         bytes32 salt = _salt(owner_);
-        bytes memory bytecode = _creationCode(owner_);
+        bytes memory bytecode = _getCreationCode(owner_);
         bytes32 codeHash = keccak256(bytecode);
         predicted = address(uint160(uint256(keccak256(abi.encodePacked(
             bytes1(0xff),
@@ -1123,7 +1195,7 @@ contract VaultInfrastructure is Ownable {
 
         // Deploy via CREATE2 for deterministic address
         bytes32 salt = _salt(owner_);
-        bytes memory bytecode = _creationCode(owner_);
+        bytes memory bytecode = _getCreationCode(owner_);
         assembly { vault := create2(0, add(bytecode, 0x20), mload(bytecode), salt) }
         require(vault != address(0), "create2 failed");
 
@@ -1215,7 +1287,7 @@ contract VaultInfrastructure is Ownable {
         ownerOfVault[vault] = newOwner;
         vaultOf[newOwner] = vault;
 
-        UserVault(payable(vault)).__forceSetOwner(newOwner);
+        UserVaultLegacy(payable(vault)).__forceSetOwner(newOwner);
         
         // H-5 Fix: Clear multi-sig approval state
         delete recoveryProposedOwner[vault];
@@ -1234,10 +1306,15 @@ contract VaultInfrastructure is Ownable {
         return keccak256(abi.encodePacked(owner_));
     }
 
-    function _creationCode(address owner_) internal view returns (bytes memory) {
-        return abi.encodePacked(
-            type(UserVault).creationCode,
-            abi.encode(address(this), vfideToken, owner_, address(securityHub), address(ledger))
+    function _getCreationCode(address owner_) internal view returns (bytes memory) {
+        address provider = vaultBytecodeProvider;
+        if (provider == address(0)) revert VI_NotConfigured();
+        return IUserVaultBytecodeProvider(provider).creationCode(
+            address(this),
+            vfideToken,
+            owner_,
+            address(securityHub),
+            address(ledger)
         );
     }
 
@@ -1256,41 +1333,4 @@ contract VaultInfrastructure is Ownable {
     uint256 public totalVaults;
     mapping(address => uint256) public vaultCreatedAt;
     
-    /**
-     * @notice Get vault info
-     */
-    function getVaultInfo(address vault) external view returns (
-        address owner_,
-        uint256 createdAt,
-        bool isLocked,
-        bool exists
-    ) {
-        owner_ = ownerOfVault[vault];
-        exists = owner_ != address(0);
-        createdAt = vaultCreatedAt[vault];
-        isLocked = address(securityHub) != address(0) && securityHub.isLocked(vault);
-    }
-    
-    /**
-     * @notice Batch predict vault addresses
-     */
-    function predictVaultsBatch(address[] calldata owners) external view returns (address[] memory vaults) {
-        vaults = new address[](owners.length);
-        for (uint256 i = 0; i < owners.length; i++) {
-            vaults[i] = predictVault(owners[i]);
-        }
-    }
-    
-    /**
-     * @notice Check if address is a vault or has a vault
-     */
-    function checkVaultStatus(address addr) external view returns (
-        bool hasVault,
-        address vaultAddress,
-        bool isVaultContract
-    ) {
-        vaultAddress = vaultOf[addr];
-        hasVault = vaultAddress != address(0);
-        isVaultContract = ownerOfVault[addr] != address(0);
-    }
 }
