@@ -56,11 +56,11 @@ Notes:
 	- `setModules` now rejects zero-address updates for core dependencies (`vfideToken`, `securityHub`, `dao`).
 	- `setVFIDE` and `setDAO` now reject zero-address assignments.
 - Added regression checks in `__tests__/contracts/VaultHub.test.ts` for zero-address setter rejections.
-- Additional lightweight-vault hardening in `contracts/VaultHubLite.sol` / `UserVaultLite`:
+- Additional lightweight-vault hardening (historical, now retired) previously landed in `contracts/VaultHubLite.sol` / `UserVaultLite`:
 	- `UserVaultLite` constructor now rejects zero core addresses.
 	- `setGuardian` now prevents duplicate guardian addresses across slots (prevents approval-count inconsistencies).
 	- CREATE2 salt now uses stable user-only salt helper for deterministic prediction parity between deployment and `predictVaultAddress`.
-- Added regression checks in `__tests__/contracts/VaultHubLite.test.ts` for duplicate-guardian rejection and deterministic prediction behavior.
+- Added regression checks in legacy suite `__tests__/contracts/VaultHubLite.test.ts` for duplicate-guardian rejection and deterministic prediction behavior.
 - Vault-system correctness fixes applied:
 	- `contracts/UserVault.sol`: inheritance guardian-cancel voting now uses dedicated `cancelApprovals`/`cancelVoted` accounting (no overlap with inheritance-finalization approvals).
 	- `contracts/UserVault.sol`: simplified guardian maturity gate in recovery request path (`require(isGuardianMature(...))`) for clarity and auditability.
@@ -202,7 +202,7 @@ Notes:
 	- no active contract-size warning or declaration-shadow warning was reproducible,
 	- current optimization overrides in `hardhat.config.ts` remain sufficient for warning-free compile output.
 - Governance timelock guardrail follow-up (March 5, 2026):
-	- Patched `contracts/DAOTimelockV2.sol` to reject zero-address queue targets in `queueTransaction` (prevents malformed/no-op or burn-target queue entries).
+	- Patched `contracts/DAOTimelock.sol` to reject zero-address queue targets in queue paths (prevents malformed/no-op or burn-target queue entries).
 	- Added Feature 9 verifier: `scripts/verify-feature9-governance-timelock.ts` + local harness `scripts/verify-feature9-governance-local.sh`.
 	- Added npm scripts:
 		- `contract:verify:feature9:governance`
@@ -238,7 +238,7 @@ Notes:
 	- `setUserLimits` now rejects zero limits and enforces `hourly <= daily`.
 	- `setWhitelist` and `setBlacklist` now reject zero-address users.
 - Added new targeted test suite: `__tests__/contracts/BridgeSecurityModule.test.ts`.
-- Validation run: focused suites passed (`21/21`) for `__tests__/contracts/VaultHubLite.test.ts` and `__tests__/contracts/BridgeSecurityModule.test.ts`.
+- Validation run: focused suites passed (`21/21`) for legacy `__tests__/contracts/VaultHubLite.test.ts` and `__tests__/contracts/BridgeSecurityModule.test.ts`.
 
 (Features 8-16: Pending deep review)
 
