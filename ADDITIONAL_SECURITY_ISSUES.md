@@ -8,6 +8,29 @@
 
 After a more sincere and thorough line-by-line audit, I have identified **35+ additional security issues** that were missed in the initial review. These range from critical input validation gaps to missing authentication and improper error handling.
 
+### Dependency Vulnerability Update (March 5, 2026)
+
+Status: `npm audit` reduced from `25` to `0` findings after non-breaking remediation and dependency decoupling.
+
+Actions completed:
+- Upgraded direct dependency `dompurify` to `^3.3.2`.
+- Temporarily added Chainlink-scoped/alias npm overrides to force patched OpenZeppelin `4.9.6` during intermediate remediation.
+- Removed those temporary overrides after fully decoupling from `@chainlink/contracts`.
+- Replaced npm Chainlink interface import with a local `AggregatorV3Interface` (`contracts/interfaces/AggregatorV3Interface.sol`) and removed direct dependency `@chainlink/contracts`.
+- Removed unused vulnerable dev dependency `@uniswap/v3-periphery` (which pinned legacy OpenZeppelin `3.x`).
+- Re-ran verification gates after dependency updates:
+  - `npm run typecheck`
+  - `npm run lint`
+  - `npm test -- __tests__/api/auth/logout.test.ts __tests__/api/attachments/id.test.ts __tests__/api/attachments/upload.test.ts`
+  - `npm run -s contract:verify:governance-safety:local`
+
+Residual risk (transitive/upstream):
+- None in npm audit at this time (`0 vulnerabilities`).
+
+Operational decision:
+- Keep dependency minimization in place and prefer local interfaces for simple external-feed bindings.
+- Continue routine `npm audit` checks in CI and during release preparation.
+
 ---
 
 ## CRITICAL Issues (Newly Identified)
