@@ -233,11 +233,11 @@ contract FiatRampRegistry {
 // ═══════════════════════════════════════════════════════════════════════════
 
 /**
- * @title VFIDEPriceOracle
+ * @title MainstreamPriceOracle
  * @notice Provides VFIDE/USD pricing for fiat display at checkout
  * @dev Supports multiple price sources with fallback
  */
-contract VFIDEPriceOracle {
+contract MainstreamPriceOracle {
     event PriceUpdated(uint256 vfidePerUsd, uint256 timestamp, address indexed updater);
     event PriceSourceAdded(address indexed source, string name, uint8 priority);
     event PriceSourceRemoved(address indexed source);
@@ -876,7 +876,7 @@ contract MultiCurrencyRouter {
     
     address public dao;
     address public vfideToken;
-    VFIDEPriceOracle public priceOracle;
+    MainstreamPriceOracle public priceOracle;
     
     // Recommended DEX routers (user chooses which to use)
     address public recommendedRouter;  // e.g., Uniswap V3 Router
@@ -905,7 +905,7 @@ contract MultiCurrencyRouter {
         require(_dao != address(0) && _vfide != address(0), "MCR: zero");
         dao = _dao;
         vfideToken = _vfide;
-        priceOracle = VFIDEPriceOracle(_priceOracle);
+        priceOracle = MainstreamPriceOracle(_priceOracle);
         recommendedRouter = _recommendedRouter;
         
         // VFIDE doesn't need routing
