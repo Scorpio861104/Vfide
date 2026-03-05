@@ -1,8 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { requireAuth } from '@/lib/auth/middleware';
+import { getRequestAuthToken, requireAuth } from '@/lib/auth/middleware';
 import { revokeToken, revokeUserTokens, hashToken } from '@/lib/auth/tokenRevocation';
-import { extractToken } from '@/lib/auth/jwt';
 import { withRateLimit } from '@/lib/auth/rateLimit';
+
+const MAX_REVOKE_REASON_LENGTH = 200;
+
+function isObjectRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
 
 /**
  * POST /api/auth/revoke
@@ -20,12 +25,40 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const body = await request.json();
+    let body: unknown;
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json({ error: 'Invalid JSON payload' }, { status: 400 });
+    }
+
+    if (!isObjectRecord(body)) {
+      return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
+    }
+
     const { revokeAll, reason } = body;
 
+    if (revokeAll !== undefined && typeof revokeAll !== 'boolean') {
+      return NextResponse.json(
+        { error: 'Invalid revokeAll flag. Must be a boolean if provided.' },
+        { status: 400 }
+      );
+    }
+
+    if (
+      reason !== undefined &&
+      (typeof reason !== 'string' || reason.trim().length === 0 || reason.length > MAX_REVOKE_REASON_LENGTH)
+    ) {
+      return NextResponse.json(
+        { error: `Invalid reason. Must be a non-empty string up to ${MAX_REVOKE_REASON_LENGTH} characters.` },
+        { status: 400 }
+      );
+    }
+
+    const normalizedReason = typeof reason === 'string' ? reason.trim() : 'user_requested';
+
     // Get the current token from the request
-    const authHeader = request.headers.get('authorization');
-    const token = extractToken(authHeader);
+    const token = await getRequestAuthToken(request);
 
     if (!token) {
       return NextResponse.json(
@@ -34,11 +67,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (revokeAll) {
+    if (revokeAll === true) {
       // Revoke all tokens for this user
       await revokeUserTokens(
         authResult.user.address,
-        reason || 'user_requested'
+        normalizedReason
       );
 
       return NextResponse.json({
@@ -53,7 +86,7 @@ export async function POST(request: NextRequest) {
       await revokeToken(
         tokenHash,
         expiresAt,
-        reason || 'user_requested'
+        normalizedReason
       );
 
       return NextResponse.json({

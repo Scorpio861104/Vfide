@@ -5,6 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyToken, extractToken, JWTPayload } from './jwt';
+import { getAuthCookie } from './cookieAuth';
 
 export interface AuthenticatedRequest extends NextRequest {
   user?: JWTPayload;
@@ -17,11 +18,25 @@ export interface AuthResult {
 }
 
 /**
+ * Resolve auth token from request using a consistent precedence:
+ * Authorization header first, then HTTPOnly auth cookie.
+ */
+export async function getRequestAuthToken(request: NextRequest): Promise<string | null> {
+  const authHeader = request.headers.get('authorization');
+  const headerToken = extractToken(authHeader)?.trim() ?? '';
+  if (headerToken.length > 0) {
+    return headerToken;
+  }
+
+  const cookieToken = (await getAuthCookie(request))?.trim() ?? '';
+  return cookieToken.length > 0 ? cookieToken : null;
+}
+
+/**
  * Verify authentication from request headers
  */
 export async function verifyAuth(request: NextRequest): Promise<AuthResult> {
-  const authHeader = request.headers.get('authorization');
-  const token = extractToken(authHeader);
+  const token = await getRequestAuthToken(request);
 
   if (!token) {
     return {

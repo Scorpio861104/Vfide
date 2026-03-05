@@ -276,3 +276,13 @@ Notes:
 	- `__tests__/api/security/violations.test.ts` (non-positive limit rejection + max-limit capping).
 	- `__tests__/api/friends.test.ts` (invalid status rejection, invalid pagination rejection, and limit cap behavior).
 - Validation run: targeted API suites passed (`15/15`) for the two files above.
+- Auth/ownership alignment follow-up completed:
+	- `lib/auth/middleware.ts` now exports shared request token resolution (`Authorization` header first, then HTTPOnly cookie) via `getRequestAuthToken`, and `verifyAuth` now uses this centralized path.
+	- `app/api/auth/logout/route.ts` and `app/api/auth/revoke/route.ts` now use the shared resolver to keep header/cookie auth handling consistent.
+	- `app/api/attachments/upload/route.ts` and `app/api/attachments/[id]/route.ts` now resolve uploader ownership with case-insensitive wallet matching (`LOWER(wallet_address) = LOWER($1)`) to avoid checksum/case mismatch false negatives.
+	- Updated regression suite `__tests__/api/auth/revoke.test.ts` to cover the shared token resolver path.
+- Validation run: targeted auth + attachment suites passed (`19/19`) across:
+	- `__tests__/api/auth/logout.test.ts`
+	- `__tests__/api/auth/revoke.test.ts`
+	- `__tests__/api/attachments/upload.test.ts`
+	- `__tests__/api/attachments/id.test.ts`

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { clearAuthCookies } from '@/lib/auth/cookieAuth';
 import { revokeToken, hashToken } from '@/lib/auth/tokenRevocation';
-import { extractToken } from '@/lib/auth/jwt';
+import { getRequestAuthToken } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 
 /**
@@ -19,9 +19,7 @@ export async function POST(request: NextRequest) {
   if (rateLimitResponse) return rateLimitResponse;
 
   try {
-    // Get token from header or cookie
-    const authHeader = request.headers.get('authorization');
-    const token = extractToken(authHeader);
+    const token = await getRequestAuthToken(request);
 
     // Revoke the token if present
     if (token) {
