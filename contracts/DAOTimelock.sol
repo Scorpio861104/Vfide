@@ -7,6 +7,7 @@ error TL_NotAdmin();
 error TL_AlreadyQueued();
 error TL_NotQueued();
 error TL_TooEarly();
+error TL_OnlyTimelock();
 
 contract DAOTimelock {
     event AdminSet(address admin);
@@ -33,6 +34,11 @@ contract DAOTimelock {
         _;
     }
 
+    modifier onlyTimelockSelf() {
+        if (msg.sender != address(this)) revert TL_OnlyTimelock();
+        _;
+    }
+
     function _checkAdmin() internal view {
         if (msg.sender != admin) revert TL_NotAdmin();
     }
@@ -43,8 +49,8 @@ contract DAOTimelock {
     uint64 public constant MIN_DELAY = 12 hours;
     uint64 public constant MAX_DELAY = 30 days;
     
-    function setAdmin(address _admin) external onlyAdmin { require(_admin!=address(0),"admin=0"); admin=_admin; emit AdminSet(_admin); _log("tl_admin_set"); }
-    function setDelay(uint64 _delay) external onlyAdmin { 
+    function setAdmin(address _admin) external onlyTimelockSelf { require(_admin!=address(0),"admin=0"); admin=_admin; emit AdminSet(_admin); _log("tl_admin_set"); }
+    function setDelay(uint64 _delay) external onlyTimelockSelf { 
         // C-1 FIX: Enforce minimum and maximum delay to prevent timelock bypass
         require(_delay >= MIN_DELAY, "TL: delay below minimum");
         require(_delay <= MAX_DELAY, "TL: delay above maximum");
@@ -52,16 +58,11 @@ contract DAOTimelock {
         emit DelaySet(_delay); 
         _log("tl_delay_set"); 
     }
-    function setLedger(address _ledger) external onlyAdmin { ledger=IProofLedger(_ledger); emit LedgerSet(_ledger); _log("tl_ledger_set"); }
-    function setPanicGuard(address _pg) external onlyAdmin { panicGuard=IPanicGuard(_pg); emit PanicGuardSet(_pg); _log("tl_panicguard_set"); }
+    function setLedger(address _ledger) external onlyTimelockSelf { ledger=IProofLedger(_ledger); emit LedgerSet(_ledger); _log("tl_ledger_set"); }
+    function setPanicGuard(address _pg) external onlyTimelockSelf { panicGuard=IPanicGuard(_pg); emit PanicGuardSet(_pg); _log("tl_panicguard_set"); }
 
     function queueTx(address target,uint256 value,bytes calldata data) external onlyAdmin returns(bytes32 id){
-        uint64 eta=uint64(block.timestamp)+delay;
-        uint256 currentNonce = nonce++;
-        id=keccak256(abi.encode(target,value,data,eta,currentNonce));
-        if(queue[id].eta!=0) revert TL_AlreadyQueued();
-        queue[id]=Op({target: target, value: value, data: data, eta: eta, done: false});
-        emit Queued(id,target,value,data,eta); _log("tl_queued");
+        id = _queueTracked(target, value, data);
     }
 
     function cancel(bytes32 id) external onlyAdmin { if(queue[id].eta==0) revert TL_NotQueued(); delete queue[id]; _removeFromQueuedIds(id); emit Cancelled(id); _log("tl_cancelled"); }
@@ -133,6 +134,11 @@ contract DAOTimelock {
      * FLOW-5 FIX: Use nonce for unique ID (consistent with queueTx)
      */
     function queueTxWithTracking(address target, uint256 value, bytes calldata data) external onlyAdmin returns(bytes32 id) {
+        id = _queueTracked(target, value, data);
+    }
+
+    function _queueTracked(address target, uint256 value, bytes calldata data) internal returns (bytes32 id) {
+        require(target != address(0), "TL: target=0");
         uint64 eta = uint64(block.timestamp) + delay;
         uint256 currentNonce = nonce++; // FLOW-5 FIX: Use nonce for uniqueness
         id = keccak256(abi.encode(target, value, data, eta, currentNonce));

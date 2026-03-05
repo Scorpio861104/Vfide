@@ -210,6 +210,12 @@ Notes:
 	- Validation run passed:
 		- `npx hardhat compile`
 		- `npm run -s contract:verify:feature9:governance:local`
+	- Queue-path consistency hardening (March 5, 2026, follow-up):
+		- Unified `queueTx` and `queueTxWithTracking` to a single tracked internal path in `contracts/DAOTimelock.sol`.
+		- This ensures all queued operations appear in `getQueuedTransactions` and are eligible for consistent cleanup/requeue lifecycle handling.
+	- Follow-up validation run passed:
+		- `npm run -s contract:compile`
+		- `npm run -s contract:verify:feature9:governance:local`
 
 ### Feature 15: Privacy/stealth/time-lock/multisig specialty modules
 Status: Partially reviewed
