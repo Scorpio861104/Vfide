@@ -34,15 +34,50 @@ export interface PaginatedResponse<T> {
   };
 }
 
+const MAX_PAGINATION_PAGE = 1000;
+const DEFAULT_PAGINATION_PAGE = 1;
+const DEFAULT_PAGINATION_LIMIT = 20;
+const MAX_PAGINATION_LIMIT = 100;
+
+function parseBoundedPositiveInt(
+  rawValue: string | null,
+  fallback: number,
+  max: number
+): number {
+  if (rawValue === null) {
+    return fallback;
+  }
+
+  // Reject non-integer query fragments like "10abc" to avoid partial parsing.
+  if (!/^\d+$/.test(rawValue)) {
+    return fallback;
+  }
+
+  const parsed = Number.parseInt(rawValue, 10);
+  if (!Number.isFinite(parsed) || parsed < 1) {
+    return fallback;
+  }
+
+  return Math.min(parsed, max);
+}
+
 /**
  * Parse pagination parameters from request
  * Enforces reasonable limits to prevent abuse
  */
 export function parsePaginationParams(request: NextRequest): PaginationParams {
   const { searchParams } = new URL(request.url);
-  
-  const page = Math.max(1, parseInt(searchParams.get('page') || '1', 10));
-  const limit = Math.min(100, Math.max(1, parseInt(searchParams.get('limit') || '20', 10)));
+
+  const page = parseBoundedPositiveInt(
+    searchParams.get('page'),
+    DEFAULT_PAGINATION_PAGE,
+    MAX_PAGINATION_PAGE
+  );
+  const limit = parseBoundedPositiveInt(
+    searchParams.get('limit'),
+    DEFAULT_PAGINATION_LIMIT,
+    MAX_PAGINATION_LIMIT
+  );
   const cursor = searchParams.get('cursor') || undefined;
 
   return { page, limit, cursor };

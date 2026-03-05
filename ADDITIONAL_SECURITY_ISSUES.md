@@ -31,6 +31,30 @@ Operational decision:
 - Keep dependency minimization in place and prefer local interfaces for simple external-feed bindings.
 - Continue routine `npm audit` checks in CI and during release preparation.
 
+### Unbounded Pagination Follow-Up (March 5, 2026)
+
+Status: Shared pagination parsing hardened and regression-covered.
+
+Actions completed:
+- Hardened `parsePaginationParams` in `lib/optimization/apiOptimization.ts`:
+  - Added strict integer parsing (reject partial values like `10abc`).
+  - Added safe fallbacks for malformed/negative/zero pagination values.
+  - Kept upper bounds (`page <= 1000`, `limit <= 100`).
+- Added defensive pagination guard in `app/api/users/route.ts` to return `400` for invalid pagination state.
+- Added regression tests in `__tests__/lib/optimization/apiOptimization.test.ts` covering:
+  - Valid parsing.
+  - Max bound clamping.
+  - Malformed values fallback.
+  - Zero/negative values fallback.
+
+Validation:
+- `npm test -- __tests__/lib/optimization/apiOptimization.test.ts __tests__/api/users.test.ts`
+- `npm run typecheck`
+- `npm run lint`
+
+Operational decision:
+- Keep pagination parsing centralized in `parsePaginationParams` and apply endpoint-specific guards only where needed.
+
 ---
 
 ## CRITICAL Issues (Newly Identified)
