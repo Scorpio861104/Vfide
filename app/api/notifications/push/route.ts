@@ -4,6 +4,16 @@ import { validateBody, pushSubscriptionSchema, pushUnsubscribeSchema } from '@/l
 import { requireAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 
+const ADDRESS_PATTERN = /^0x[a-fA-F0-9]{3,64}$/;
+
+function normalizeAddress(value: string): string {
+  return value.trim().toLowerCase();
+}
+
+function isAddressLike(value: string): boolean {
+  return ADDRESS_PATTERN.test(value);
+}
+
 export async function POST(request: NextRequest) {
   const rateLimitResponse = await withRateLimit(request, 'write');
   if (rateLimitResponse) return rateLimitResponse;
@@ -11,6 +21,13 @@ export async function POST(request: NextRequest) {
   const authResult = await requireAuth(request);
   if (authResult instanceof NextResponse) {
     return authResult;
+  }
+
+  const authAddress = typeof authResult.user?.address === 'string'
+    ? normalizeAddress(authResult.user.address)
+    : '';
+  if (!authAddress || !isAddressLike(authAddress)) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
   try {
@@ -23,9 +40,14 @@ export async function POST(request: NextRequest) {
     }
 
     const { userAddress, subscription } = validation.data;
+    const normalizedUserAddress = normalizeAddress(userAddress);
+
+    if (!isAddressLike(normalizedUserAddress)) {
+      return NextResponse.json({ error: 'Invalid user address' }, { status: 400 });
+    }
 
     // Verify user is subscribing for themselves
-    if (authResult.user.address.toLowerCase() !== userAddress.toLowerCase()) {
+    if (authAddress !== normalizedUserAddress) {
       return NextResponse.json(
         { error: 'You can only subscribe for your own account' },
         { status: 403 }
@@ -40,7 +62,7 @@ export async function POST(request: NextRequest) {
        ON CONFLICT (user_id, endpoint) DO UPDATE
        SET keys = $3
        RETURNING *`,
-      [userAddress.toLowerCase(), subscription.endpoint, JSON.stringify(subscription.keys)]
+      [normalizedUserAddress, subscription.endpoint, JSON.stringify(subscription.keys)]
     );
 
     return NextResponse.json({ success: true, subscription: result.rows[0] });
@@ -59,6 +81,13 @@ export async function DELETE(request: NextRequest) {
     return authResult;
   }
 
+  const authAddress = typeof authResult.user?.address === 'string'
+    ? normalizeAddress(authResult.user.address)
+    : '';
+  if (!authAddress || !isAddressLike(authAddress)) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   try {
     const validation = await validateBody(request, pushUnsubscribeSchema);
     if (!validation.success) {
@@ -69,9 +98,14 @@ export async function DELETE(request: NextRequest) {
     }
 
     const { userAddress, endpoint } = validation.data;
+    const normalizedUserAddress = normalizeAddress(userAddress);
+
+    if (!isAddressLike(normalizedUserAddress)) {
+      return NextResponse.json({ error: 'Invalid user address' }, { status: 400 });
+    }
 
     // Verify user is unsubscribing for themselves
-    if (authResult.user.address.toLowerCase() !== userAddress.toLowerCase()) {
+    if (authAddress !== normalizedUserAddress) {
       return NextResponse.json(
         { error: 'You can only unsubscribe from your own account' },
         { status: 403 }
@@ -82,7 +116,7 @@ export async function DELETE(request: NextRequest) {
       `DELETE FROM push_subscriptions ps
        USING users u
        WHERE ps.user_id = u.id AND u.wallet_address = $1 AND ps.endpoint = $2`,
-      [userAddress.toLowerCase(), endpoint]
+      [normalizedUserAddress, endpoint]
     );
 
     return NextResponse.json({ success: true });
