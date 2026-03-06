@@ -110,6 +110,8 @@ Status legend:
   - `app/api/errors/route.ts` GET/POST handlers now normalize severity filters/values, enforce auth address presence, trim required messages, and enforce UTF-8 metadata byte-size limits
   - `app/api/analytics/route.ts` GET/POST handlers now normalize event/user identifiers, validate user-id address format, normalize batch event types, and enforce UTF-8 event-data byte-size limits
   - `app/api/attachments/upload/route.ts` POST handler now enforces strict object payloads, filename/path traversal guards, URL protocol validation, and normalized MIME/extension checks with bounded sizes
+  - `app/api/notifications/preferences/route.ts` GET/PUT handlers now enforce normalized address validation and safer strict JSON object parsing for updates
+  - `app/api/leaderboard/monthly/route.ts` GET/POST handlers now validate month/user-address format and enforce strict JSON/object + non-negative activity counter validation
   - Focused test confirmation: `npm test -- --runInBand __tests__/api/activities.test.ts __tests__/api/users.test.ts __tests__/api/crypto/rewards/claim.test.ts` ✅ (29 tests)
   - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/security/violations.test.ts` ✅ (6 tests)
   - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/messages/reaction.test.ts` ✅ (4 tests)
@@ -121,6 +123,7 @@ Status legend:
   - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/quests/onboarding.test.ts __tests__/api/quests/achievements.test.ts` ✅ (15 tests)
   - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/endorsements.test.ts __tests__/api/transactions/export.test.ts __tests__/api/performance/metrics.test.ts` ✅ (24 tests)
   - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/errors.test.ts __tests__/api/analytics.test.ts __tests__/api/attachments/upload.test.ts` ✅ (25 tests)
+  - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/notifications/preferences.test.ts __tests__/api/leaderboard/monthly.test.ts` ✅ (16 tests)
   - Additional typecheck confirmation: `npm run -s typecheck` ✅
 
 ### 7. Frontend page-by-page behavior and contract wiring checks

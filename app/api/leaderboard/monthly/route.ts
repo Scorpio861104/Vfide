@@ -3,6 +3,33 @@ import { getClient } from '@/lib/db';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { requireAuth } from '@/lib/auth/middleware';
 
+const ADDRESS_PATTERN = /^0x[a-fA-F0-9]{3,64}$/;
+const MONTH_PATTERN = /^\d{4}-(0[1-9]|1[0-2])$/;
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function normalizeAddress(value: string): string {
+  return value.trim().toLowerCase();
+}
+
+function isAddressLike(value: string): boolean {
+  return ADDRESS_PATTERN.test(value);
+}
+
+function toOptionalNonNegativeInteger(value: unknown): number | null | undefined {
+  if (value === undefined || value === null) {
+    return undefined;
+  }
+
+  if (!Number.isInteger(value) || Number(value) < 0) {
+    return null;
+  }
+
+  return Number(value);
+}
+
 /**
  * GET /api/leaderboard/monthly
  * Fetch monthly leaderboard with rankings and prize pool info
@@ -14,14 +41,32 @@ export async function GET(request: NextRequest) {
 
   try {
     const searchParams = request.nextUrl.searchParams;
-    const monthYear = searchParams.get('month') || new Date().toISOString().slice(0, 7); // Default to current month
-    const userAddress = searchParams.get('userAddress');
+    const rawMonthYear = searchParams.get('month');
+    const monthYear = rawMonthYear?.trim() || new Date().toISOString().slice(0, 7); // Default to current month
+    const rawUserAddress = searchParams.get('userAddress');
+    const userAddress = typeof rawUserAddress === 'string' && rawUserAddress.trim().length > 0
+      ? normalizeAddress(rawUserAddress)
+      : null;
     const limit = Math.min(parseInt(searchParams.get('limit') || '50', 10), 100); // Cap at 100, default to 50
 
     // Validate parsed number - require at least 1 for leaderboard (0 would be meaningless)
     if (isNaN(limit) || limit < 1) {
       return NextResponse.json(
         { error: 'Invalid limit parameter (must be >= 1)' },
+        { status: 400 }
+      );
+    }
+
+    if (!MONTH_PATTERN.test(monthYear)) {
+      return NextResponse.json(
+        { error: 'Invalid month parameter. Expected YYYY-MM.' },
+        { status: 400 }
+      );
+    }
+
+    if (userAddress && !isAddressLike(userAddress)) {
+      return NextResponse.json(
+        { error: 'Invalid userAddress format' },
         { status: 400 }
       );
     }
@@ -98,7 +143,7 @@ export async function GET(request: NextRequest) {
       if (userAddress) {
         // First check if user is in the top results we already fetched
         const userInLeaderboard = leaderboard.find(
-          entry => entry.walletAddress.toLowerCase() === userAddress.toLowerCase()
+            entry => entry.walletAddress.toLowerCase() === userAddress
         );
         
         if (userInLeaderboard) {
@@ -199,22 +244,63 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const {
-      userAddress,
-      questsCompleted,
-      challengesCompleted,
-      currentStreak,
-      transactionsCount,
-      socialInteractions,
-      governanceVotes,
-    } = await request.json();
+    let body: unknown;
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+    }
 
-    if (!userAddress) {
+    if (!isRecord(body)) {
+      return NextResponse.json({ error: 'Request body must be a JSON object' }, { status: 400 });
+    }
+
+    const {
+      userAddress: rawUserAddress,
+      questsCompleted: rawQuestsCompleted,
+      challengesCompleted: rawChallengesCompleted,
+      currentStreak: rawCurrentStreak,
+      transactionsCount: rawTransactionsCount,
+      socialInteractions: rawSocialInteractions,
+      governanceVotes: rawGovernanceVotes,
+    } = body;
+
+    if (typeof rawUserAddress !== 'string' || rawUserAddress.trim().length === 0) {
       return NextResponse.json({ error: 'User address required' }, { status: 400 });
     }
 
+    const userAddress = normalizeAddress(rawUserAddress);
+    if (!isAddressLike(userAddress)) {
+      return NextResponse.json({ error: 'Invalid user address format' }, { status: 400 });
+    }
+
+    const questsCompleted = toOptionalNonNegativeInteger(rawQuestsCompleted);
+    const challengesCompleted = toOptionalNonNegativeInteger(rawChallengesCompleted);
+    const currentStreak = toOptionalNonNegativeInteger(rawCurrentStreak);
+    const transactionsCount = toOptionalNonNegativeInteger(rawTransactionsCount);
+    const socialInteractions = toOptionalNonNegativeInteger(rawSocialInteractions);
+    const governanceVotes = toOptionalNonNegativeInteger(rawGovernanceVotes);
+
+    if (
+      questsCompleted === null ||
+      challengesCompleted === null ||
+      currentStreak === null ||
+      transactionsCount === null ||
+      socialInteractions === null ||
+      governanceVotes === null
+    ) {
+      return NextResponse.json(
+        { error: 'Activity counters must be non-negative integers when provided' },
+        { status: 400 }
+      );
+    }
+
+    if (!authResult.user?.address || !isAddressLike(authResult.user.address)) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     // Users may only update their own leaderboard stats
-    if (authResult.user.address.toLowerCase() !== userAddress.toLowerCase()) {
+    if (normalizeAddress(authResult.user.address) !== userAddress) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
