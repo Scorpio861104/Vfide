@@ -11,17 +11,19 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
   try {
     const resolvedParams = await params;
-    const address = resolvedParams?.address;
+    const addressParam = resolvedParams?.address;
 
-    if (!address || typeof address !== 'string') {
+    if (!addressParam || typeof addressParam !== 'string') {
       return NextResponse.json(
         { error: 'Invalid address parameter' },
         { status: 400 }
       );
     }
 
+    const normalizedAddress = addressParam.trim().toLowerCase();
+
     // Validate address format
-    if (!isAddress(address)) {
+    if (!isAddress(normalizedAddress)) {
       return NextResponse.json(
         { error: 'Invalid Ethereum address format' },
         { status: 400 }
@@ -32,8 +34,15 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     const authResult = await requireAuth(request);
     if (authResult instanceof NextResponse) return authResult;
 
+    const authAddress = typeof authResult.user?.address === 'string'
+      ? authResult.user.address.trim().toLowerCase()
+      : '';
+    if (!authAddress || !isAddress(authAddress)) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     // Verify user is requesting their own balance
-    if (authResult.user.address.toLowerCase() !== address.toLowerCase()) {
+    if (authAddress !== normalizedAddress) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
     }
 
@@ -41,7 +50,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       `SELECT tb.* FROM token_balances tb
        JOIN users u ON tb.user_id = u.id
        WHERE u.wallet_address = $1`,
-      [address.toLowerCase()]
+      [normalizedAddress]
     );
 
     return NextResponse.json({ balances: result.rows });

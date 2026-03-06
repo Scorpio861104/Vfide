@@ -66,5 +66,27 @@ describe('/api/crypto/balance/[address]', () => {
 
       expect(response.status).toBe(429);
     });
+
+    it('should return 401 when authenticated address is missing', async () => {
+      withRateLimit.mockResolvedValue(null);
+      requireAuth.mockResolvedValue({ user: {} });
+      isAddress.mockImplementation((value: string) => value === '0x1111111111111111111111111111111111111123');
+
+      const request = new NextRequest('http://localhost:3000/api/crypto/balance/0x1111111111111111111111111111111111111123');
+      const response = await GET(request, { params: Promise.resolve({ address: '0x1111111111111111111111111111111111111123' }) });
+
+      expect(response.status).toBe(401);
+    });
+
+    it('should return 403 for address ownership mismatch', async () => {
+      withRateLimit.mockResolvedValue(null);
+      requireAuth.mockResolvedValue({ user: { address: '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' } });
+      isAddress.mockReturnValue(true);
+
+      const request = new NextRequest('http://localhost:3000/api/crypto/balance/0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb');
+      const response = await GET(request, { params: Promise.resolve({ address: '0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb' }) });
+
+      expect(response.status).toBe(403);
+    });
   });
 });
