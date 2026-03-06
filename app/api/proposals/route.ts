@@ -5,6 +5,22 @@ import { withRateLimit } from '@/lib/auth/rateLimit';
 import { createProposalSchema } from '@/lib/auth/validation';
 import { isAddress } from 'viem';
 
+const MAX_PROPOSALS_LIMIT = 100;
+const MAX_PROPOSALS_OFFSET = 10000;
+
+function parseStrictIntegerParam(value: string | null): number | null {
+  if (value === null) return null;
+  const trimmed = value.trim();
+  if (!/^\d+$/.test(trimmed)) return null;
+  return Number.parseInt(trimmed, 10);
+}
+
+function parsePositiveInteger(value: string): number | null {
+  if (!/^\d+$/.test(value.trim())) return null;
+  const parsed = Number.parseInt(value, 10);
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
+}
+
 interface Proposal {
   id: number;
   proposer_id: number;
@@ -36,24 +52,23 @@ export async function GET(request: NextRequest) {
     const offsetParam = searchParams.get('offset');
     const proposerId = searchParams.get('proposerId');
 
-    // Parse and validate limit with upper bound
-    const MAX_PROPOSALS_LIMIT = 100;
-    const MAX_PROPOSALS_OFFSET = 10000;
-    const limit = limitParam 
-      ? Math.min(Math.max(1, parseInt(limitParam, 10)), MAX_PROPOSALS_LIMIT)
-      : 50;
-    
-    // Parse and validate offset
-    const rawOffset = offsetParam ? parseInt(offsetParam, 10) : 0;
-    const offset = Math.min(Math.max(0, rawOffset), MAX_PROPOSALS_OFFSET);
+    const parsedLimit = parseStrictIntegerParam(limitParam);
+    const parsedOffset = parseStrictIntegerParam(offsetParam);
 
-    // Validate parsed numbers
-    if (isNaN(limit) || isNaN(rawOffset)) {
+    if ((limitParam !== null && parsedLimit === null) || (offsetParam !== null && parsedOffset === null)) {
       return NextResponse.json(
         { error: 'Invalid limit or offset parameter' },
         { status: 400 }
       );
     }
+
+    // Parse and validate limit/offset with upper bounds
+    const limit = parsedLimit === null
+      ? 50
+      : Math.min(Math.max(1, parsedLimit), MAX_PROPOSALS_LIMIT);
+    const offset = parsedOffset === null
+      ? 0
+      : Math.min(Math.max(0, parsedOffset), MAX_PROPOSALS_OFFSET);
 
     // Validate status if provided
     const VALID_STATUSES = ['active', 'pending', 'passed', 'rejected', 'executed'];
@@ -64,7 +79,8 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    if (proposerId && !isAddress(proposerId)) {
+    const normalizedProposerId = proposerId?.trim().toLowerCase() ?? null;
+    if (normalizedProposerId && !isAddress(normalizedProposerId)) {
       return NextResponse.json(
         { error: 'Invalid proposerId address format' },
         { status: 400 }
@@ -90,9 +106,9 @@ export async function GET(request: NextRequest) {
       paramCount++;
     }
 
-    if (proposerId) {
+    if (normalizedProposerId) {
       queryText += ` AND u.wallet_address = $${paramCount}`;
-      params.push(proposerId.toLowerCase());
+      params.push(normalizedProposerId);
       paramCount++;
     }
 
@@ -112,9 +128,9 @@ export async function GET(request: NextRequest) {
       countParamCount++;
     }
 
-    if (proposerId) {
+    if (normalizedProposerId) {
       countQuery += ` AND u.wallet_address = $${countParamCount}`;
-      countParams.push(proposerId.toLowerCase());
+      countParams.push(normalizedProposerId);
     }
 
     const countResult = await query<{ count: string }>(countQuery, countParams);
@@ -261,11 +277,18 @@ export async function POST(request: NextRequest) {
  * Get a specific proposal
  */
 export async function GET_BY_ID(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { id } = await params;
+    const parsedId = parsePositiveInteger(id);
+    if (!parsedId) {
+      return NextResponse.json(
+        { error: 'Invalid proposal ID' },
+        { status: 400 }
+      );
+    }
 
     const result = await query<Proposal>(
       `SELECT 
@@ -277,7 +300,7 @@ export async function GET_BY_ID(
        FROM proposals p
        JOIN users u ON p.proposer_id = u.id
        WHERE p.id = $1`,
-      [id]
+      [parsedId]
     );
 
     if (result.rows.length === 0) {

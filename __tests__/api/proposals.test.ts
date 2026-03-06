@@ -84,6 +84,24 @@ describe('/api/proposals', () => {
         [50, 10000]
       );
     });
+
+    it('should return 400 for invalid limit parameter', async () => {
+      withRateLimit.mockResolvedValue(null);
+
+      const request = new NextRequest('http://localhost:3000/api/proposals?limit=10abc');
+      const response = await GET(request);
+
+      expect(response.status).toBe(400);
+    });
+
+    it('should return 400 for invalid proposerId format', async () => {
+      withRateLimit.mockResolvedValue(null);
+
+      const request = new NextRequest('http://localhost:3000/api/proposals?proposerId=not-an-address');
+      const response = await GET(request);
+
+      expect(response.status).toBe(400);
+    });
   });
 
   describe('POST', () => {
