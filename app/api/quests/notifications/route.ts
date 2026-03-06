@@ -4,7 +4,16 @@ import { isAdmin, requireAuth } from '@/lib/auth/middleware';
 
 const MAX_QUEST_NOTIFICATION_IDS = 500;
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const ADDRESS_PATTERN = /^0x[a-fA-F0-9]{3,64}$/;
 import { withRateLimit } from '@/lib/auth/rateLimit';
+
+function normalizeAddress(value: string): string {
+  return value.trim().toLowerCase();
+}
+
+function isAddressLike(value: string): boolean {
+  return ADDRESS_PATTERN.test(value);
+}
 
 /**
  * GET /api/quests/notifications
@@ -19,6 +28,13 @@ export async function GET(request: NextRequest) {
   const authResult = await requireAuth(request);
   if (authResult instanceof NextResponse) return authResult;
 
+  const requesterAddress = typeof authResult.user?.address === 'string'
+    ? normalizeAddress(authResult.user.address)
+    : '';
+  if (!requesterAddress || !isAddressLike(requesterAddress)) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   try {
     const searchParams = request.nextUrl.searchParams;
     const userAddress = searchParams.get('userAddress');
@@ -27,8 +43,11 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'User address required' }, { status: 400 });
     }
 
-    const requesterAddress = authResult.user.address.toLowerCase();
-    const targetAddress = userAddress.toLowerCase();
+    const targetAddress = normalizeAddress(userAddress);
+    if (!isAddressLike(targetAddress)) {
+      return NextResponse.json({ error: 'Invalid user address format' }, { status: 400 });
+    }
+
     const canAccess = requesterAddress === targetAddress || isAdmin(authResult.user);
     if (!canAccess) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
@@ -40,7 +59,7 @@ export async function GET(request: NextRequest) {
       // Get user ID
       const userResult = await client.query(
         'SELECT id FROM users WHERE wallet_address = $1',
-        [userAddress]
+        [targetAddress]
       );
 
       if (userResult.rows.length === 0) {
@@ -103,6 +122,13 @@ export async function PATCH(request: NextRequest) {
   const authResult = await requireAuth(request);
   if (authResult instanceof NextResponse) return authResult;
 
+  const requesterAddress = typeof authResult.user?.address === 'string'
+    ? normalizeAddress(authResult.user.address)
+    : '';
+  if (!requesterAddress || !isAddressLike(requesterAddress)) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   let body: Record<string, unknown>;
   try {
     body = await request.json();
@@ -149,8 +175,11 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
-    const requesterAddress = authResult.user.address.toLowerCase();
-    const targetAddress = userAddress.toLowerCase();
+    const targetAddress = normalizeAddress(userAddress);
+    if (!isAddressLike(targetAddress)) {
+      return NextResponse.json({ error: 'Invalid user address format' }, { status: 400 });
+    }
+
     const canUpdate = requesterAddress === targetAddress || isAdmin(authResult.user);
     if (!canUpdate) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });

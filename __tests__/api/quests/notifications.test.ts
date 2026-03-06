@@ -79,6 +79,32 @@ describe('/api/quests/notifications', () => {
 
       expect(response.status).toBe(403);
     });
+
+    it('should return 401 for malformed authenticated address', async () => {
+      withRateLimit.mockResolvedValue(null);
+      requireAuth.mockResolvedValue({ user: { address: 'bad-address', id: 1 } });
+
+      const request = new NextRequest('http://localhost:3000/api/quests/notifications?userAddress=0x123');
+      const response = await GET(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(401);
+      expect(data.error).toBe('Unauthorized');
+      expect(getClient).not.toHaveBeenCalled();
+    });
+
+    it('should return 400 for malformed userAddress query', async () => {
+      withRateLimit.mockResolvedValue(null);
+      requireAuth.mockResolvedValue({ user: { address: '0x123', id: 1 } });
+
+      const request = new NextRequest('http://localhost:3000/api/quests/notifications?userAddress=not-an-address');
+      const response = await GET(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(400);
+      expect(data.error).toBe('Invalid user address format');
+      expect(getClient).not.toHaveBeenCalled();
+    });
   });
 
   describe('PATCH', () => {
@@ -150,6 +176,46 @@ describe('/api/quests/notifications', () => {
 
       expect(response.status).toBe(400);
       expect(data.error).toContain('Too many notificationIds');
+    });
+
+    it('should return 401 for malformed authenticated address on PATCH', async () => {
+      withRateLimit.mockResolvedValue(null);
+      requireAuth.mockResolvedValue({ user: { address: 'bad-address', id: 1 } });
+
+      const request = new NextRequest('http://localhost:3000/api/quests/notifications', {
+        method: 'PATCH',
+        body: JSON.stringify({
+          notificationIds: ['11111111-1111-1111-1111-111111111111'],
+          userAddress: '0x123',
+        }),
+      });
+
+      const response = await PATCH(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(401);
+      expect(data.error).toBe('Unauthorized');
+      expect(getClient).not.toHaveBeenCalled();
+    });
+
+    it('should return 400 for malformed userAddress on PATCH', async () => {
+      withRateLimit.mockResolvedValue(null);
+      requireAuth.mockResolvedValue({ user: { address: '0x123', id: 1 } });
+
+      const request = new NextRequest('http://localhost:3000/api/quests/notifications', {
+        method: 'PATCH',
+        body: JSON.stringify({
+          notificationIds: ['11111111-1111-1111-1111-111111111111'],
+          userAddress: 'not-an-address',
+        }),
+      });
+
+      const response = await PATCH(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(400);
+      expect(data.error).toBe('Invalid user address format');
+      expect(getClient).not.toHaveBeenCalled();
     });
   });
 });
