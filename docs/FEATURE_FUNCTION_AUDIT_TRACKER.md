@@ -147,6 +147,7 @@ Status legend:
   - `app/api/quests/onboarding/route.ts` GET/PATCH/POST handlers now enforce authenticated-address shape checks, strict `userAddress` format validation, and normalized address comparison for access control before onboarding reads/updates/claims
   - `app/api/quests/achievements/route.ts` GET/POST handlers now enforce authenticated-address shape checks, strict `userAddress` format validation, and normalized address comparison for access control before achievement reads/updates
   - `app/api/quests/notifications/route.ts` GET/PATCH handlers now enforce authenticated-address shape checks, strict `userAddress` format validation, and normalized address comparison for access control before notification reads/updates
+  - `app/api/groups/members/route.ts` POST/PATCH/DELETE handlers now enforce authenticated-address presence/shape checks before actor validation and role-gated member mutations
   - Focused test confirmation: `npm test -- --runInBand __tests__/api/activities.test.ts __tests__/api/users.test.ts __tests__/api/crypto/rewards/claim.test.ts` ✅ (29 tests)
   - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/security/violations.test.ts` ✅ (6 tests)
   - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/messages/reaction.test.ts` ✅ (4 tests)
@@ -193,6 +194,7 @@ Status legend:
   - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/quests/onboarding.test.ts` ✅ (15 tests)
   - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/quests/achievements.test.ts` ✅ (10 tests)
   - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/quests/notifications.test.ts` ✅ (11 tests)
+  - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/groups/members.test.ts` ✅ (11 tests)
   - Additional typecheck confirmation: `npm run -s typecheck` ✅
 
 ### 7. Frontend page-by-page behavior and contract wiring checks

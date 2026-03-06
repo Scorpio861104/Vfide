@@ -102,7 +102,12 @@ export async function POST(request: NextRequest) {
     }
 
     const { groupId, userAddress, role = 'member', actorAddress } = body;
-    const authenticatedAddress = authResult.user.address.toLowerCase();
+    const authenticatedAddress = typeof authResult.user?.address === 'string'
+      ? authResult.user.address.trim().toLowerCase()
+      : '';
+    if (!authenticatedAddress || !isAddress(authenticatedAddress)) {
+      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+    }
 
     if (!groupId || !userAddress) {
       return NextResponse.json({ success: false, error: 'groupId and userAddress required' }, { status: 400 });
@@ -192,7 +197,12 @@ export async function PATCH(request: NextRequest) {
     }
 
     const { groupId, userAddress, role, actorAddress } = body;
-    const authenticatedAddress = authResult.user.address.toLowerCase();
+    const authenticatedAddress = typeof authResult.user?.address === 'string'
+      ? authResult.user.address.trim().toLowerCase()
+      : '';
+    if (!authenticatedAddress || !isAddress(authenticatedAddress)) {
+      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+    }
 
     if (!groupId || !userAddress || !role || !actorAddress) {
       return NextResponse.json({ success: false, error: 'Missing required fields' }, { status: 400 });
@@ -270,7 +280,12 @@ export async function DELETE(request: NextRequest) {
     const groupId = searchParams.get('groupId');
     const userAddress = searchParams.get('userAddress');
     const actorAddress = searchParams.get('actorAddress');
-    const authenticatedAddress = authResultDelete.user.address.toLowerCase();
+    const authenticatedAddress = typeof authResultDelete.user?.address === 'string'
+      ? authResultDelete.user.address.trim().toLowerCase()
+      : '';
+    if (!authenticatedAddress || !isAddress(authenticatedAddress)) {
+      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+    }
 
     if (!groupId || !userAddress) {
       return NextResponse.json({ success: false, error: 'Missing groupId or userAddress' }, { status: 400 });

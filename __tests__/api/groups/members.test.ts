@@ -58,6 +58,28 @@ describe('/api/groups/members', () => {
   });
 
   describe('POST', () => {
+    it('should return 401 for malformed authenticated address', async () => {
+      withRateLimit.mockResolvedValue(null);
+      requireAuth.mockResolvedValue({ user: { address: 'bad-address' } });
+
+      const request = new NextRequest('http://localhost:3000/api/groups/members', {
+        method: 'POST',
+        body: JSON.stringify({
+          groupId: 1,
+          userAddress: '0x2222222222222222222222222222222222222222',
+          actorAddress: '0x2222222222222222222222222222222222222222',
+          role: 'member',
+        }),
+      });
+
+      const response = await POST(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(401);
+      expect(data.error).toBe('Unauthorized');
+      expect(query).not.toHaveBeenCalled();
+    });
+
     it('should reject spoofed actorAddress that does not match authenticated user', async () => {
       withRateLimit.mockResolvedValue(null);
       requireAuth.mockResolvedValue({ user: { address: '0x1111111111111111111111111111111111111111' } });
@@ -121,6 +143,28 @@ describe('/api/groups/members', () => {
   });
 
   describe('PATCH', () => {
+    it('should return 401 for malformed authenticated address', async () => {
+      withRateLimit.mockResolvedValue(null);
+      requireAuth.mockResolvedValue({ user: { address: 'bad-address' } });
+
+      const request = new NextRequest('http://localhost:3000/api/groups/members', {
+        method: 'PATCH',
+        body: JSON.stringify({
+          groupId: 1,
+          userAddress: '0x2222222222222222222222222222222222222222',
+          actorAddress: '0x2222222222222222222222222222222222222222',
+          role: 'member',
+        }),
+      });
+
+      const response = await PATCH(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(401);
+      expect(data.error).toBe('Unauthorized');
+      expect(query).not.toHaveBeenCalled();
+    });
+
     it('should reject spoofed actorAddress in role updates', async () => {
       withRateLimit.mockResolvedValue(null);
       requireAuth.mockResolvedValue({ user: { address: '0x1111111111111111111111111111111111111111' } });
@@ -166,6 +210,22 @@ describe('/api/groups/members', () => {
   });
 
   describe('DELETE', () => {
+    it('should return 401 for malformed authenticated address', async () => {
+      withRateLimit.mockResolvedValue(null);
+      requireAuth.mockResolvedValue({ user: { address: 'bad-address' } });
+
+      const request = new NextRequest(
+        'http://localhost:3000/api/groups/members?groupId=1&userAddress=0x2222222222222222222222222222222222222222'
+      );
+
+      const response = await DELETE(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(401);
+      expect(data.error).toBe('Unauthorized');
+      expect(query).not.toHaveBeenCalled();
+    });
+
     it('should reject non-admin member removing another member', async () => {
       withRateLimit.mockResolvedValue(null);
       requireAuth.mockResolvedValue({ user: { address: '0x1111111111111111111111111111111111111111' } });
