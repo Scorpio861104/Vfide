@@ -95,6 +95,10 @@ Status legend:
   - `app/escrow/page.tsx` order-id input placeholder normalized to a concrete format example
   - `app/escrow/page.tsx` merchant-address validation now uses toast error feedback instead of blocking browser alert
   - `app/control-panel/components/AutoSwapPanel.tsx` quick-setup validation now uses inline form error state instead of browser alert
+  - `components/governance/TimelockQueue.tsx` cancel actions now use an in-app confirmation modal instead of browser `confirm(...)`
+  - `components/social/GroupsManager.tsx` browser `alert/confirm` flows replaced with toast notifications and an in-app leave-group confirmation modal
+  - `app/admin/page.tsx` high-risk actions (`lockPolicy`, `transferOwnership`, `batch execute`, `batch clear`, `emergency pause`) now use in-app confirmation modal instead of browser `confirm(...)`
+  - `app/admin/page.tsx` burn-policy validation now surfaces inline dismissible error banner instead of browser `alert(...)`
 
 ### 8. Deployment/runtime configuration and production readiness checks
 - Status: in-progress

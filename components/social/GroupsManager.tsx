@@ -16,6 +16,7 @@ import {
 import { useAccount } from 'wagmi';
 import { Group, Friend } from '@/types/messaging';
 import { formatAddress, STORAGE_KEYS } from '@/lib/messageEncryption';
+import { useToast } from '@/components/ui/toast';
 
 interface GroupsManagerProps {
   friends: Friend[];
@@ -25,7 +26,9 @@ interface GroupsManagerProps {
 
 export function GroupsManager({ friends, onSelectGroup, selectedGroup }: GroupsManagerProps) {
   const { address } = useAccount();
+  const { toast } = useToast();
   const [groups, setGroups] = useState<Group[]>([]);
+  const [pendingLeaveGroupId, setPendingLeaveGroupId] = useState<string | null>(null);
   const [showCreateGroup, setShowCreateGroup] = useState(false);
   const [newGroupName, setNewGroupName] = useState('');
   const [newGroupDescription, setNewGroupDescription] = useState('');
@@ -57,7 +60,10 @@ export function GroupsManager({ friends, onSelectGroup, selectedGroup }: GroupsM
     if (!newGroupName.trim() || !address) return;
     
     if (selectedMembers.length < 2) {
-      alert('Groups need at least 2 other members');
+      toast({
+        title: 'Need More Members',
+        description: 'Groups need at least 2 other members.',
+      });
       return;
     }
     
@@ -80,9 +86,13 @@ export function GroupsManager({ friends, onSelectGroup, selectedGroup }: GroupsM
   };
 
   const handleLeaveGroup = (groupId: string) => {
-    if (confirm('Leave this group? You will lose access to all messages.')) {
-      setGroups(groups.filter(g => g.id !== groupId));
-    }
+    setPendingLeaveGroupId(groupId);
+  };
+
+  const confirmLeaveGroup = () => {
+    if (!pendingLeaveGroupId) return;
+    setGroups(groups.filter((g) => g.id !== pendingLeaveGroupId));
+    setPendingLeaveGroupId(null);
   };
 
   const toggleMemberSelection = (memberAddress: string) => {
@@ -99,7 +109,7 @@ export function GroupsManager({ friends, onSelectGroup, selectedGroup }: GroupsM
   );
 
   return (
-    <div className="bg-zinc-900 rounded-xl border border-zinc-700 h-full flex flex-col">
+    <div className="bg-zinc-900 rounded-xl border border-zinc-700 h-full flex flex-col relative">
       {/* Header */}
       <div className="p-4 border-b border-zinc-700">
         <div className="flex items-center justify-between mb-4">
@@ -265,7 +275,10 @@ export function GroupsManager({ friends, onSelectGroup, selectedGroup }: GroupsM
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            alert('Group settings - Coming soon!');
+                            toast({
+                              title: 'Group Settings',
+                              description: 'Group settings are coming soon.',
+                            });
                           }}
                           className="p-1.5 rounded-lg hover:bg-zinc-700 text-zinc-400 hover:text-zinc-100 transition-colors"
                         >
@@ -289,6 +302,44 @@ export function GroupsManager({ friends, onSelectGroup, selectedGroup }: GroupsM
           </div>
         )}
       </div>
+
+      <AnimatePresence>
+        {pendingLeaveGroupId && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 z-20 flex items-center justify-center bg-black/70 p-4"
+            onClick={() => setPendingLeaveGroupId(null)}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              transition={{ duration: 0.15 }}
+              className="w-full max-w-sm rounded-xl border border-zinc-700 bg-zinc-900 p-4"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <h4 className="text-sm font-semibold text-zinc-100 mb-2">Leave Group</h4>
+              <p className="text-xs text-zinc-400 mb-4">You will lose access to all messages in this group.</p>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setPendingLeaveGroupId(null)}
+                  className="flex-1 rounded-lg border border-zinc-700 px-3 py-2 text-sm text-zinc-200 hover:bg-zinc-800 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={confirmLeaveGroup}
+                  className="flex-1 rounded-lg bg-pink-600 px-3 py-2 text-sm font-semibold text-white hover:bg-pink-700 transition-colors"
+                >
+                  Leave Group
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

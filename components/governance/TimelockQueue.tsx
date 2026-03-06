@@ -31,6 +31,7 @@ interface QueuedTransaction {
 export function TimelockQueue() {
   const { toast } = useToast();
   const [selectedTx, setSelectedTx] = useState<QueuedTransaction | null>(null);
+  const [cancelCandidateTxId, setCancelCandidateTxId] = useState<string | null>(null);
 
   // Read queued transactions
   const { data: queueData, refetch: refetchQueue } = useReadContract({
@@ -163,7 +164,7 @@ export function TimelockQueue() {
                 key={tx.id}
                 tx={tx}
                 onExecute={handleExecute}
-                onCancel={handleCancel}
+                onRequestCancel={setCancelCandidateTxId}
                 onSelect={setSelectedTx}
               />
             ))}
@@ -177,7 +178,21 @@ export function TimelockQueue() {
           tx={selectedTx}
           onClose={() => setSelectedTx(null)}
           onExecute={handleExecute}
-          onCancel={handleCancel}
+          onRequestCancel={(txId) => {
+            setCancelCandidateTxId(txId);
+            setSelectedTx(null);
+          }}
+        />
+      )}
+
+      {cancelCandidateTxId && (
+        <CancelConfirmModal
+          txId={cancelCandidateTxId}
+          onClose={() => setCancelCandidateTxId(null)}
+          onConfirm={() => {
+            handleCancel(cancelCandidateTxId);
+            setCancelCandidateTxId(null);
+          }}
         />
       )}
     </>
@@ -187,12 +202,12 @@ export function TimelockQueue() {
 function TransactionCard({
   tx,
   onExecute,
-  onCancel,
+  onRequestCancel,
   onSelect,
 }: {
   tx: QueuedTransaction;
   onExecute: (id: string) => void;
-  onCancel: (id: string) => void;
+  onRequestCancel: (id: string) => void;
   onSelect: (tx: QueuedTransaction) => void;
 }) {
   const now = useNowSeconds();
@@ -264,9 +279,7 @@ function TransactionCard({
           <button
             onClick={(e) => {
               e.stopPropagation();
-              if (confirm("Are you sure you want to cancel this transaction?")) {
-                onCancel(tx.id);
-              }
+              onRequestCancel(tx.id);
             }}
             className="px-4 py-2 bg-red-600 text-white rounded-lg font-bold hover:bg-red-700 transition-colors"
           >
@@ -282,12 +295,12 @@ function TransactionDetailModal({
   tx,
   onClose,
   onExecute,
-  onCancel,
+  onRequestCancel,
 }: {
   tx: QueuedTransaction;
   onClose: () => void;
   onExecute: (id: string) => void;
-  onCancel: (id: string) => void;
+  onRequestCancel: (id: string) => void;
 }) {
   const now = useNowSeconds();
   const eta = Number(tx.eta);
@@ -370,10 +383,7 @@ function TransactionDetailModal({
               </button>
               <button
                 onClick={() => {
-                  if (confirm("Are you sure you want to cancel this transaction?")) {
-                    onCancel(tx.id);
-                    onClose();
-                  }
+                  onRequestCancel(tx.id);
                 }}
                 className="px-6 py-3 bg-red-600 text-white rounded-lg font-bold hover:bg-red-700 transition-colors"
               >
@@ -381,6 +391,47 @@ function TransactionDetailModal({
               </button>
             </div>
           )}
+        </div>
+      </motion.div>
+    </div>
+  );
+}
+
+function CancelConfirmModal({
+  txId,
+  onClose,
+  onConfirm,
+}: {
+  txId: string;
+  onClose: () => void;
+  onConfirm: () => void;
+}) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4" onClick={onClose}>
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.95 }}
+        className="bg-zinc-800 border border-zinc-700 rounded-xl max-w-lg w-full p-6"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <h3 className="text-xl font-bold text-zinc-100 mb-3">Cancel Timelock Transaction</h3>
+        <p className="text-zinc-300 text-sm mb-2">You are about to cancel a queued governance transaction.</p>
+        <p className="text-zinc-400 text-xs break-all mb-6">Transaction: {txId}</p>
+
+        <div className="flex gap-3">
+          <button
+            onClick={onClose}
+            className="flex-1 px-4 py-2 rounded-lg border border-zinc-600 text-zinc-200 hover:bg-zinc-700 transition-colors"
+          >
+            Keep Queued
+          </button>
+          <button
+            onClick={onConfirm}
+            className="flex-1 px-4 py-2 rounded-lg bg-red-600 text-white font-bold hover:bg-red-700 transition-colors"
+          >
+            Confirm Cancel
+          </button>
         </div>
       </motion.div>
     </div>

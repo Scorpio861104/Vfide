@@ -24,6 +24,13 @@ type BatchAction = {
   description: string;
 };
 
+type PendingAdminAction =
+  | 'lockPolicy'
+  | 'transferOwnership'
+  | 'executeBatch'
+  | 'clearBatch'
+  | 'toggleCircuitBreaker';
+
 // ABI fragments for owner functions
 const TOKEN_ABI = [
   {
@@ -383,6 +390,8 @@ export default function AdminPanel() {
   const [showBatchMode, setShowBatchMode] = useState(false);
   const [showTxHistory, setShowTxHistory] = useState(false);
   const [showHealthDashboard, setShowHealthDashboard] = useState(true);
+  const [pendingAdminAction, setPendingAdminAction] = useState<PendingAdminAction | null>(null);
+  const [adminValidationError, setAdminValidationError] = useState<string | null>(null);
 
   // Read contract owner
   const { data: owner } = useReadContract({
@@ -610,14 +619,7 @@ export default function AdminPanel() {
   };
 
   const handleLockPolicy = () => {
-    if (!confirm('WARNING: This is IRREVERSIBLE! Vault-only mode will be permanently enabled. Continue?')) {
-      return;
-    }
-    writeContract({
-      address: TOKEN_ADDRESS,
-      abi: TOKEN_ABI,
-      functionName: 'lockPolicy',
-    });
+    setPendingAdminAction('lockPolicy');
   };
 
   const handleToggleCircuitBreaker = () => {
@@ -731,17 +733,145 @@ export default function AdminPanel() {
   };
 
   const handleTransferOwnership = () => {
-    if (!newOwner) return;
-    if (!confirm(`⚠️ CRITICAL: Transfer ownership to ${newOwner}?\n\nThis is IRREVERSIBLE! You will lose all admin access.\n\nRecommended: Transfer to DAO Timelock address for decentralized governance.`)) {
+    if (!newOwner) {
+      setAdminValidationError('New owner address is required before ownership transfer.');
       return;
     }
-    writeContract({
-      address: TOKEN_ADDRESS,
-      abi: TOKEN_ABI,
-      functionName: 'transferOwnership',
-      args: [newOwner as `0x${string}`],
-    });
+    setPendingAdminAction('transferOwnership');
   };
+
+  const confirmAdminAction = () => {
+    if (!pendingAdminAction) return;
+
+    if (pendingAdminAction === 'lockPolicy') {
+      writeContract({
+        address: TOKEN_ADDRESS,
+        abi: TOKEN_ABI,
+        functionName: 'lockPolicy',
+      });
+      setPendingAdminAction(null);
+      return;
+    }
+
+    if (pendingAdminAction === 'transferOwnership') {
+      if (!newOwner) {
+        setAdminValidationError('New owner address is missing.');
+        setPendingAdminAction(null);
+        return;
+      }
+      writeContract({
+        address: TOKEN_ADDRESS,
+        abi: TOKEN_ABI,
+        functionName: 'transferOwnership',
+        args: [newOwner as `0x${string}`],
+      });
+      setPendingAdminAction(null);
+      return;
+    }
+
+    if (pendingAdminAction === 'executeBatch') {
+      setBatchActions([]);
+      setPendingAdminAction(null);
+      return;
+    }
+
+    if (pendingAdminAction === 'clearBatch') {
+      setBatchActions([]);
+      setPendingAdminAction(null);
+      return;
+    }
+
+    if (pendingAdminAction === 'toggleCircuitBreaker') {
+      handleToggleCircuitBreaker();
+      setPendingAdminAction(null);
+    }
+  };
+
+  const getPendingActionDetails = () => {
+    if (!pendingAdminAction) return null;
+
+    if (pendingAdminAction === 'lockPolicy') {
+      return {
+        title: 'Lock Vault-Only Policy',
+        message: 'This action is irreversible. Vault-only mode will be permanently enforced.',
+        confirmLabel: 'Lock Permanently',
+      };
+    }
+
+    if (pendingAdminAction === 'transferOwnership') {
+      return {
+        title: 'Transfer Ownership',
+        message: `Transfer contract ownership to ${newOwner}. This is irreversible and removes your admin access.`,
+        confirmLabel: 'Transfer Ownership',
+      };
+    }
+
+    if (pendingAdminAction === 'executeBatch') {
+      return {
+        title: 'Execute Batch Actions',
+        message: `Execute ${batchActions.length} queued actions sequentially.`,
+        confirmLabel: 'Execute All',
+      };
+    }
+
+    if (pendingAdminAction === 'clearBatch') {
+      return {
+        title: 'Clear Batch Queue',
+        message: 'Remove all queued actions from this batch list.',
+        confirmLabel: 'Clear Queue',
+      };
+    }
+
+    return {
+      title: circuitBreaker ? 'Resume Operations' : 'Emergency Pause',
+      message: circuitBreaker
+        ? 'Deactivate the emergency circuit breaker and resume normal transfer rules.'
+        : 'Activate emergency pause to halt token transfers (except owner). Use only for urgent incidents.',
+      confirmLabel: circuitBreaker ? 'Resume' : 'Pause Now',
+    };
+  };
+
+  const pendingActionDetails = getPendingActionDetails();
+
+  const dismissAdminValidationError = () => {
+    setAdminValidationError(null);
+  };
+
+  const clearPendingAction = () => {
+    setPendingAdminAction(null);
+  };
+
+  const clearAdminNotices = () => {
+    dismissAdminValidationError();
+    clearPendingAction();
+  };
+
+  const queueBatchExecution = () => {
+    if (batchActions.length === 0) {
+      setAdminValidationError('No actions are queued to execute.');
+      return;
+    }
+    setPendingAdminAction('executeBatch');
+  };
+
+  const queueBatchClear = () => {
+    if (batchActions.length === 0) {
+      setAdminValidationError('Batch queue is already empty.');
+      return;
+    }
+    setPendingAdminAction('clearBatch');
+  };
+
+  const queueEmergencyToggle = () => {
+    setPendingAdminAction('toggleCircuitBreaker');
+  };
+
+  // Clear stale notices once a transaction succeeds
+  useEffect(() => {
+    if (isSuccess && (adminValidationError || pendingAdminAction)) {
+      clearAdminNotices();
+    }
+  }, [isSuccess, adminValidationError, pendingAdminAction]);
 
   // Track transaction for history - integrate with write functions
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -812,13 +942,15 @@ export default function AdminPanel() {
 
     // Validation
     if (params.maxTotalBps > 1000) {
-      alert('Max total BPS cannot exceed 1000 (10%)');
+      setAdminValidationError('Max total BPS cannot exceed 1000 (10%).');
       return;
     }
     if (params.baseBurnBps + params.baseSanctumBps + params.baseEcosystemBps > params.maxTotalBps) {
-      alert('Base fees exceed max total BPS');
+      setAdminValidationError('Base fees exceed max total BPS.');
       return;
     }
+
+    setAdminValidationError(null);
 
     writeContract({
       address: BURN_ROUTER_ADDRESS,
@@ -879,6 +1011,18 @@ export default function AdminPanel() {
             </div>
           </div>
         </div>
+
+        {adminValidationError && (
+          <div className="bg-red-500/20 border border-red-500 rounded-lg p-4 mb-8 flex items-start justify-between gap-4">
+            <p className="text-red-200 text-sm font-semibold">{adminValidationError}</p>
+            <button
+              onClick={dismissAdminValidationError}
+              className="text-red-100 hover:text-white text-sm font-bold"
+            >
+              Dismiss
+            </button>
+          </div>
+        )}
 
         {/* Status Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
@@ -1762,22 +1906,13 @@ export default function AdminPanel() {
 
                   <div className="flex gap-2">
                     <button
-                      onClick={() => {
-                        if (confirm(`Execute ${batchActions.length} actions?\n\nThis will execute all queued actions sequentially.`)) {
-                          // Execute batch actions sequentially
-                          setBatchActions([]);
-                        }
-                      }}
+                      onClick={queueBatchExecution}
                       className="flex-1 bg-orange-600 hover:bg-orange-700 text-white font-bold py-3 px-6 rounded-lg transition-colors"
                     >
                       ⚡ Execute All ({batchActions.length})
                     </button>
                     <button
-                      onClick={() => {
-                        if (confirm('Clear all queued actions?')) {
-                          setBatchActions([]);
-                        }
-                      }}
+                      onClick={queueBatchClear}
                       className="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-6 rounded-lg transition-colors"
                     >
                       🗑️ Clear Queue
@@ -1951,11 +2086,7 @@ export default function AdminPanel() {
             <div className="space-y-3">
               {/* Emergency Pause */}
               <button
-                onClick={() => {
-                  if (confirm('🚨 EMERGENCY PAUSE\n\nThis will immediately halt all token transfers (except owner).\n\nUse only in emergencies!\n\nContinue?')) {
-                    handleToggleCircuitBreaker();
-                  }
-                }}
+                onClick={queueEmergencyToggle}
                 className={`block w-full ${
                   circuitBreaker
                     ? 'bg-green-600 hover:bg-green-700'
@@ -2067,6 +2198,29 @@ export default function AdminPanel() {
             </div>
           </div>
         </div>
+
+        {pendingActionDetails && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+            <div className="w-full max-w-xl rounded-xl border border-red-500/50 bg-gray-900 p-6">
+              <h3 className="text-xl font-bold text-white mb-3">{pendingActionDetails.title}</h3>
+              <p className="text-gray-300 text-sm mb-6">{pendingActionDetails.message}</p>
+              <div className="flex gap-3">
+                <button
+                  onClick={clearPendingAction}
+                  className="flex-1 rounded-lg border border-gray-600 px-4 py-3 text-gray-200 hover:bg-gray-800 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={confirmAdminAction}
+                  className="flex-1 rounded-lg bg-red-600 px-4 py-3 text-white font-bold hover:bg-red-700 transition-colors"
+                >
+                  {pendingActionDetails.confirmLabel}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Transaction Status */}
         {(isPending || isConfirming || isSuccess) && (
