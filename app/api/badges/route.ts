@@ -4,6 +4,12 @@ import { isAdmin, requireAdmin, requireAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { validateBody, awardBadgeSchema } from '@/lib/auth/validation';
 
+const ADDRESS_LIKE_REGEX = /^0x[a-fA-F0-9]{3,40}$/;
+
+function isAddressLike(value: string): boolean {
+  return ADDRESS_LIKE_REGEX.test(value.trim());
+}
+
 interface Badge {
   id: number;
   name: string;
@@ -32,16 +38,32 @@ interface UserBadge {
 export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
-    const userAddress = searchParams.get('userAddress');
+    const userAddressParam = searchParams.get('userAddress');
 
-    if (userAddress) {
+    if (userAddressParam) {
+      const targetAddress = userAddressParam.trim().toLowerCase();
+      if (!isAddressLike(targetAddress)) {
+        return NextResponse.json(
+          { error: 'Invalid userAddress format' },
+          { status: 400 }
+        );
+      }
+
       const authResult = await requireAuth(request);
       if (authResult instanceof NextResponse) {
         return authResult;
       }
 
-      const requesterAddress = authResult.user.address.toLowerCase();
-      const targetAddress = userAddress.toLowerCase();
+      const requesterAddress = typeof authResult.user?.address === 'string'
+        ? authResult.user.address.trim().toLowerCase()
+        : '';
+      if (!requesterAddress || !isAddressLike(requesterAddress)) {
+        return NextResponse.json(
+          { error: 'Unauthorized' },
+          { status: 401 }
+        );
+      }
+
       const canRead = requesterAddress === targetAddress || isAdmin(authResult.user);
       if (!canRead) {
         return NextResponse.json(
@@ -227,10 +249,26 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
+    const normalizedUserAddress = userAddress.trim().toLowerCase();
+    if (!isAddressLike(normalizedUserAddress)) {
+      return NextResponse.json(
+        { error: 'Invalid userAddress format' },
+        { status: 400 }
+      );
+    }
+
+    const parsedBadgeId = Number.parseInt(badgeId, 10);
+    if (!Number.isInteger(parsedBadgeId) || parsedBadgeId <= 0) {
+      return NextResponse.json(
+        { error: 'Invalid badgeId format' },
+        { status: 400 }
+      );
+    }
+
     // Get user ID
     const userResult = await query(
       'SELECT id FROM users WHERE wallet_address = $1',
-      [userAddress.toLowerCase()]
+      [normalizedUserAddress]
     );
 
     if (userResult.rows.length === 0) {
@@ -251,7 +289,7 @@ export async function DELETE(request: NextRequest) {
     // Remove badge
     const result = await query(
       'DELETE FROM user_badges WHERE user_id = $1 AND badge_id = $2',
-      [userId, badgeId]
+      [userId, parsedBadgeId]
     );
 
     return NextResponse.json({

@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { GET } from '@/app/api/badges/route';
+import { DELETE, GET } from '@/app/api/badges/route';
 
 jest.mock('@/lib/db', () => ({
   query: jest.fn(),
@@ -18,7 +18,7 @@ jest.mock('@/lib/auth/middleware', () => ({
 describe('/api/badges', () => {
   const { query } = require('@/lib/db');
   const { withRateLimit } = require('@/lib/auth/rateLimit');
-  const { requireAuth, isAdmin } = require('@/lib/auth/middleware');
+  const { requireAuth, isAdmin, requireAdmin } = require('@/lib/auth/middleware');
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -96,6 +96,52 @@ describe('/api/badges', () => {
 
       expect(response.status).toBe(500);
       expect(data.error).toContain('Failed');
+    });
+
+    it('should return 400 for invalid userAddress format', async () => {
+      requireAuth.mockResolvedValue({ user: { address: '0x123' } });
+      isAdmin.mockReturnValue(false);
+
+      const request = new NextRequest('http://localhost:3000/api/badges?userAddress=not-an-address');
+      const response = await GET(request);
+
+      expect(response.status).toBe(400);
+    });
+
+    it('should return 401 when requester address is missing', async () => {
+      requireAuth.mockResolvedValue({ user: {} });
+      isAdmin.mockReturnValue(false);
+
+      const request = new NextRequest('http://localhost:3000/api/badges?userAddress=0x123');
+      const response = await GET(request);
+
+      expect(response.status).toBe(401);
+    });
+  });
+
+  describe('DELETE', () => {
+    it('should return 400 for invalid badgeId format', async () => {
+      withRateLimit.mockResolvedValue(null);
+      requireAdmin.mockResolvedValue({ user: { address: '0xabc' } });
+
+      const request = new NextRequest('http://localhost:3000/api/badges?userAddress=0x123&badgeId=abc', {
+        method: 'DELETE',
+      });
+
+      const response = await DELETE(request);
+      expect(response.status).toBe(400);
+    });
+
+    it('should return 400 for invalid userAddress format in delete', async () => {
+      withRateLimit.mockResolvedValue(null);
+      requireAdmin.mockResolvedValue({ user: { address: '0xabc' } });
+
+      const request = new NextRequest('http://localhost:3000/api/badges?userAddress=invalid&badgeId=1', {
+        method: 'DELETE',
+      });
+
+      const response = await DELETE(request);
+      expect(response.status).toBe(400);
     });
   });
 });

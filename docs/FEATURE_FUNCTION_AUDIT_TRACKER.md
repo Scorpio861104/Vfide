@@ -114,6 +114,7 @@ Status legend:
   - `app/api/notifications/preferences/route.ts` GET/PUT handlers now enforce normalized address validation and safer strict JSON object parsing for updates
   - `app/api/leaderboard/monthly/route.ts` GET/POST handlers now validate month/user-address format and enforce strict JSON/object + non-negative activity counter validation
   - `app/api/auth/revoke/route.ts` POST handler now enforces authenticated-address presence and rejects invalid token shapes before revocation writes
+  - `app/api/badges/route.ts` GET/DELETE handlers now validate address-like query inputs, enforce requester address presence on gated reads, and validate positive integer `badgeId` before delete writes
   - Focused test confirmation: `npm test -- --runInBand __tests__/api/activities.test.ts __tests__/api/users.test.ts __tests__/api/crypto/rewards/claim.test.ts` ✅ (29 tests)
   - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/security/violations.test.ts` ✅ (6 tests)
   - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/messages/reaction.test.ts` ✅ (4 tests)
@@ -129,6 +130,7 @@ Status legend:
   - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/crypto/payment-requests/id.test.ts __tests__/api/crypto/payment-requests.test.ts` ✅ (20 tests)
   - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/crypto/rewards/claim.test.ts` ✅ (6 tests)
   - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/auth/revoke.test.ts` ✅ (7 tests)
+  - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/badges.test.ts` ✅ (8 tests)
   - Additional typecheck confirmation: `npm run -s typecheck` ✅
 
 ### 7. Frontend page-by-page behavior and contract wiring checks
