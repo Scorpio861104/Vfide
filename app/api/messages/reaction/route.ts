@@ -68,6 +68,13 @@ export async function POST(request: NextRequest) {
     return authResult;
   }
 
+  const authenticatedAddress = typeof authResult.user?.address === 'string'
+    ? authResult.user.address.trim().toLowerCase()
+    : '';
+  if (!authenticatedAddress || !isAddress(authenticatedAddress)) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   let body: Record<string, unknown>;
   try {
     const parsed: unknown = await request.json();
@@ -108,17 +115,19 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const normalizedUserAddress = userAddress.toLowerCase();
+
     // Validate address format
-    if (!isAddress(userAddress)) {
+    if (!isAddress(normalizedUserAddress)) {
       return NextResponse.json({ error: 'Invalid Ethereum address format' }, { status: 400 });
     }
 
     // Verify authenticated user matches userAddress
-    if (authResult.user.address.toLowerCase() !== userAddress.toLowerCase()) {
+    if (authenticatedAddress !== normalizedUserAddress) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
     }
 
-    const isParticipant = await ensureConversationParticipant(messageId, conversationId, userAddress);
+    const isParticipant = await ensureConversationParticipant(messageId, conversationId, normalizedUserAddress);
     if (!isParticipant) {
       return NextResponse.json(
         { error: 'You can only react to messages in your own conversations' },
@@ -198,7 +207,7 @@ export async function POST(request: NextRequest) {
          AND ${identifierColumn} = $2 
          AND mr.reaction_type = $3
          AND u.wallet_address = $4`,
-      [messageId, reactionIdentifier, reactionType, userAddress.toLowerCase()]
+      [messageId, reactionIdentifier, reactionType, normalizedUserAddress]
     );
 
     if (existingResult.rows.length > 0) {
@@ -211,7 +220,7 @@ export async function POST(request: NextRequest) {
            AND ${identifierColumn} = $2
            AND mr.reaction_type = $3
            AND u.wallet_address = $4`,
-        [messageId, reactionIdentifier, reactionType, userAddress.toLowerCase()]
+        [messageId, reactionIdentifier, reactionType, normalizedUserAddress]
       );
     } else {
       // Add reaction
@@ -221,7 +230,7 @@ export async function POST(request: NextRequest) {
            SELECT $1, u.id, $2, $3, NOW()
            FROM users u
            WHERE u.wallet_address = $4`,
-          [messageId, reactionType, normalizedEmoji, userAddress.toLowerCase()]
+          [messageId, reactionType, normalizedEmoji, normalizedUserAddress]
         );
       } else {
         await query(
@@ -229,7 +238,7 @@ export async function POST(request: NextRequest) {
            SELECT $1, u.id, $2, $3, $4, NOW()
            FROM users u
            WHERE u.wallet_address = $5`,
-          [messageId, reactionType, normalizedImageUrl, normalizedImageName || 'custom', userAddress.toLowerCase()]
+          [messageId, reactionType, normalizedImageUrl, normalizedImageName || 'custom', normalizedUserAddress]
         );
       }
     }
@@ -301,6 +310,13 @@ export async function DELETE(request: NextRequest) {
     return authResult;
   }
 
+  const authenticatedAddress = typeof authResult.user?.address === 'string'
+    ? authResult.user.address.trim().toLowerCase()
+    : '';
+  if (!authenticatedAddress || !isAddress(authenticatedAddress)) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   let body: Record<string, unknown>;
   try {
     const parsed: unknown = await request.json();
@@ -345,17 +361,19 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
+    const normalizedUserAddress = userAddress.toLowerCase();
+
     // Validate address format
-    if (!isAddress(userAddress)) {
+    if (!isAddress(normalizedUserAddress)) {
       return NextResponse.json({ error: 'Invalid Ethereum address format' }, { status: 400 });
     }
 
     // Verify authenticated user matches userAddress
-    if (authResult.user.address.toLowerCase() !== userAddress.toLowerCase()) {
+    if (authenticatedAddress !== normalizedUserAddress) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
     }
 
-    const isParticipant = await ensureConversationParticipant(messageId, conversationId, userAddress);
+    const isParticipant = await ensureConversationParticipant(messageId, conversationId, normalizedUserAddress);
     if (!isParticipant) {
       return NextResponse.json(
         { error: 'You can only react to messages in your own conversations' },
@@ -371,7 +389,7 @@ export async function DELETE(request: NextRequest) {
          AND mr.message_id = $1
          AND mr.emoji = $2
          AND u.wallet_address = $3`,
-      [messageId, emoji, userAddress.toLowerCase()]
+      [messageId, emoji, normalizedUserAddress]
     );
 
     return NextResponse.json({

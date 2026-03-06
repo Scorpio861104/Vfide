@@ -154,6 +154,7 @@ Status legend:
   - `app/api/users/[address]/route.ts` PUT/POST handlers now enforce authenticated-address presence/shape checks before ownership checks and profile/avatar mutation writes
   - `app/api/messages/edit/route.ts` PATCH handler now enforces authenticated-address presence/shape checks and normalized address comparisons before message edit authorization
   - `app/api/messages/delete/route.ts` DELETE handler now enforces authenticated-address presence/shape checks and normalized address comparisons before message delete authorization
+  - `app/api/messages/reaction/route.ts` POST/DELETE handlers now enforce authenticated-address presence/shape checks and normalized address comparisons before reaction ownership/conversation authorization
   - Focused test confirmation: `npm test -- --runInBand __tests__/api/activities.test.ts __tests__/api/users.test.ts __tests__/api/crypto/rewards/claim.test.ts` ✅ (29 tests)
   - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/security/violations.test.ts` ✅ (6 tests)
   - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/messages/reaction.test.ts` ✅ (4 tests)
@@ -207,6 +208,7 @@ Status legend:
   - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/users/address.test.ts` ✅ (8 tests)
   - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/messages/edit.test.ts` ✅ (5 tests)
   - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/messages/delete.test.ts` ✅ (5 tests)
+  - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/messages/reaction.test.ts` ✅ (5 tests)
   - Additional typecheck confirmation: `npm run -s typecheck` ✅
 
 ### 7. Frontend page-by-page behavior and contract wiring checks

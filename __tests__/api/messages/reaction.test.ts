@@ -97,6 +97,27 @@ describe('/api/messages/reaction', () => {
       expect(response.status).toBe(401);
     });
 
+    it('should return 401 for malformed authenticated address', async () => {
+      withRateLimit.mockResolvedValue(null);
+      requireAuth.mockReturnValue({ user: { address: 'bad-address' } });
+
+      const request = new NextRequest('http://localhost:3000/api/messages/reaction', {
+        method: 'POST',
+        body: JSON.stringify({
+          messageId: '1',
+          conversationId: '1',
+          emoji: '👍',
+          userAddress: '0x1111111111111111111111111111111111111123',
+        }),
+      });
+
+      const response = await POST(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(401);
+      expect(data.error).toBe('Unauthorized');
+    });
+
     it('should return 403 when user is not part of the message conversation', async () => {
       withRateLimit.mockResolvedValue(null);
       requireAuth.mockReturnValue({ user: { address: '0x1111111111111111111111111111111111111123' } });
