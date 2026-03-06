@@ -111,5 +111,26 @@ describe('/api/crypto/transactions/[userId]', () => {
         [1, 50, 10000]
       );
     });
+
+    it('should return 400 for malformed limit parameter', async () => {
+      withRateLimit.mockResolvedValue(null);
+      requireAuth.mockReturnValue({ user: { address: '0x1111111111111111111111111111111111111123' } });
+      query.mockResolvedValueOnce({ rows: [{ id: 1 }] });
+
+      const request = new NextRequest('http://localhost:3000/api/crypto/transactions/1?limit=10abc&offset=0');
+      const response = await GET(request, { params: Promise.resolve({ userId: '1' }) });
+
+      expect(response.status).toBe(400);
+    });
+
+    it('should return 400 for non-numeric userId parameter', async () => {
+      withRateLimit.mockResolvedValue(null);
+      requireAuth.mockReturnValue({ user: { address: '0x1111111111111111111111111111111111111123' } });
+
+      const request = new NextRequest('http://localhost:3000/api/crypto/transactions/abc');
+      const response = await GET(request, { params: Promise.resolve({ userId: 'abc' }) });
+
+      expect(response.status).toBe(400);
+    });
   });
 });

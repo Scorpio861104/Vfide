@@ -5,6 +5,21 @@ import { withRateLimit } from '@/lib/auth/rateLimit';
 
 const MAX_TRANSACTIONS_LIMIT = 100;
 const MAX_TRANSACTIONS_OFFSET = 10000;
+const ADDRESS_LIKE_REGEX = /^0x[a-fA-F0-9]{3,40}$/;
+
+function parseStrictIntegerParam(value: string | null): number | null {
+  if (value === null) return null;
+  const trimmed = value.trim();
+  if (!/^\d+$/.test(trimmed)) return null;
+  return Number.parseInt(trimmed, 10);
+}
+
+function parsePositiveInteger(value: string): number | null {
+  const trimmed = value.trim();
+  if (!/^\d+$/.test(trimmed)) return null;
+  const parsed = Number.parseInt(trimmed, 10);
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
+}
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ userId: string }> }) {
   // Rate limiting: 100 requests per minute
@@ -16,7 +31,10 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   if (authResult instanceof NextResponse) {
     return authResult;
   }
-  if (!authResult.user?.address) {
+  const authAddress = typeof authResult.user?.address === 'string'
+    ? authResult.user.address.trim().toLowerCase()
+    : '';
+  if (!authAddress || !ADDRESS_LIKE_REGEX.test(authAddress)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
@@ -31,14 +49,22 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       );
     }
 
+    const requestedUserId = parsePositiveInteger(userIdParam);
+    if (!requestedUserId) {
+      return NextResponse.json(
+        { error: 'Invalid userId parameter' },
+        { status: 400 }
+      );
+    }
+
     // Verify authenticated user matches requested userId
     const userResult = await query(
       'SELECT id FROM users WHERE wallet_address = $1',
-      [authResult.user.address.toLowerCase()]
+      [authAddress]
     );
 
     const userId = userResult.rows[0]?.id;
-    if (userResult.rows.length === 0 || !userId || userId.toString() !== userIdParam) {
+    if (userResult.rows.length === 0 || !userId || userId.toString() !== requestedUserId.toString()) {
       return NextResponse.json(
         { error: 'You can only view your own transactions' },
         { status: 403 }
@@ -46,19 +72,21 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     }
 
     const { searchParams } = new URL(request.url);
-    const rawLimit = parseInt(searchParams.get('limit') || '50', 10);
-    const offsetParam = parseInt(searchParams.get('offset') || '0', 10);
+    const parsedLimit = parseStrictIntegerParam(searchParams.get('limit'));
+    const parsedOffset = parseStrictIntegerParam(searchParams.get('offset'));
 
-    // Validate parsed numbers
-    if (isNaN(rawLimit) || isNaN(offsetParam) || !isFinite(rawLimit) || !isFinite(offsetParam)) {
+    if (
+      (searchParams.get('limit') !== null && parsedLimit === null) ||
+      (searchParams.get('offset') !== null && parsedOffset === null)
+    ) {
       return NextResponse.json(
         { error: 'Invalid limit or offset parameter' },
         { status: 400 }
       );
     }
 
-    const limit = Math.min(Math.max(rawLimit, 0), MAX_TRANSACTIONS_LIMIT);
-    const offset = Math.min(Math.max(offsetParam, 0), MAX_TRANSACTIONS_OFFSET);
+    const limit = Math.min(Math.max(parsedLimit ?? 50, 0), MAX_TRANSACTIONS_LIMIT);
+    const offset = Math.min(Math.max(parsedOffset ?? 0, 0), MAX_TRANSACTIONS_OFFSET);
 
     const result = await query(
       `SELECT t.* FROM transactions t
