@@ -47,6 +47,26 @@ describe('/api/crypto/payment-requests', () => {
       expect(response.status).toBe(200);
       expect(data.requests).toHaveLength(1);
     });
+
+    it('should return 400 for malformed userId query', async () => {
+      withRateLimit.mockResolvedValue(null);
+      requireAuth.mockReturnValue({ user: { address: '0x1111111111111111111111111111111111111123' } });
+
+      const request = new NextRequest('http://localhost:3000/api/crypto/payment-requests?userId=1abc');
+      const response = await GET(request);
+
+      expect(response.status).toBe(400);
+    });
+
+    it('should return 401 when auth address is missing in GET', async () => {
+      withRateLimit.mockResolvedValue(null);
+      requireAuth.mockReturnValue({ user: {} });
+
+      const request = new NextRequest('http://localhost:3000/api/crypto/payment-requests?userId=1');
+      const response = await GET(request);
+
+      expect(response.status).toBe(401);
+    });
   });
 
   describe('POST', () => {
@@ -105,6 +125,23 @@ describe('/api/crypto/payment-requests', () => {
 
       expect(response.status).toBe(200);
       expect(data.success).toBe(true);
+    });
+
+    it('should return 401 when auth address is missing in POST', async () => {
+      withRateLimit.mockResolvedValue(null);
+      requireAuth.mockReturnValue({ user: {} });
+
+      const request = new NextRequest('http://localhost:3000/api/crypto/payment-requests', {
+        method: 'POST',
+        body: JSON.stringify({
+          fromUserId: 1,
+          toUserId: 2,
+          amount: '1.5',
+        }),
+      });
+
+      const response = await POST(request);
+      expect(response.status).toBe(401);
     });
   });
 });

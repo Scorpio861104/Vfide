@@ -122,6 +122,7 @@ Status legend:
   - `app/api/crypto/transactions/[userId]/route.ts` GET handler now enforces authenticated address shape checks, validates positive numeric `userId` params, and enforces strict numeric `limit`/`offset` parsing before pagination queries
   - `app/api/attachments/[id]/route.ts` GET/DELETE handlers now enforce authenticated address presence/shape checks and strict positive numeric `id` parsing (rejecting mixed-format IDs) before ownership queries
   - `app/api/auth/logout/route.ts` POST handler now trims and validates token shape before revocation hashing, gracefully ignoring malformed token payloads while still clearing auth cookies
+  - `app/api/crypto/payment-requests/route.ts` GET/POST handlers now enforce authenticated address presence/shape checks and strict positive numeric `userId` query parsing before ownership checks
   - Focused test confirmation: `npm test -- --runInBand __tests__/api/activities.test.ts __tests__/api/users.test.ts __tests__/api/crypto/rewards/claim.test.ts` ✅ (29 tests)
   - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/security/violations.test.ts` ✅ (6 tests)
   - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/messages/reaction.test.ts` ✅ (4 tests)
@@ -144,6 +145,7 @@ Status legend:
   - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/crypto/transactions.test.ts` ✅ (7 tests)
   - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/attachments/id.test.ts` ✅ (6 tests)
   - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/auth/logout.test.ts` ✅ (4 tests)
+  - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/crypto/payment-requests.test.ts` ✅ (7 tests)
   - Additional typecheck confirmation: `npm run -s typecheck` ✅
 
 ### 7. Frontend page-by-page behavior and contract wiring checks

@@ -5,6 +5,14 @@ import { withRateLimit } from '@/lib/auth/rateLimit';
 
 const USER_ID_REGEX = /^\d+$/;
 const DECIMAL_AMOUNT_REGEX = /^\d+(\.\d{1,18})?$/;
+const ADDRESS_LIKE_REGEX = /^0x[a-fA-F0-9]{3,40}$/;
+
+function parsePositiveInteger(value: string): number | null {
+  const trimmed = value.trim();
+  if (!/^\d+$/.test(trimmed)) return null;
+  const parsed = Number.parseInt(trimmed, 10);
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
+}
 
 export async function GET(request: NextRequest) {
   // Rate limiting: 100 requests per minute
@@ -16,7 +24,10 @@ export async function GET(request: NextRequest) {
   if (authResult instanceof NextResponse) {
     return authResult;
   }
-  if (!authResult.user?.address) {
+  const authAddress = typeof authResult.user?.address === 'string'
+    ? authResult.user.address.trim().toLowerCase()
+    : '';
+  if (!authAddress || !ADDRESS_LIKE_REGEX.test(authAddress)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
@@ -28,15 +39,20 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'userId required' }, { status: 400 });
     }
 
+    const requestedUserId = parsePositiveInteger(userIdParam);
+    if (!requestedUserId) {
+      return NextResponse.json({ error: 'Invalid userId parameter' }, { status: 400 });
+    }
+
     // Verify authenticated user matches requested userId
     // This prevents users from accessing other users' payment requests
     const userResult = await query(
       'SELECT id FROM users WHERE wallet_address = $1',
-      [authResult.user.address.toLowerCase()]
+      [authAddress]
     );
 
     const userId = userResult.rows[0]?.id;
-    if (userResult.rows.length === 0 || !userId || userId.toString() !== userIdParam) {
+    if (userResult.rows.length === 0 || !userId || userId.toString() !== requestedUserId.toString()) {
       return NextResponse.json(
         { error: 'You can only view your own payment requests' },
         { status: 403 }
@@ -67,7 +83,10 @@ export async function POST(request: NextRequest) {
   if (authResult instanceof NextResponse) {
     return authResult;
   }
-  if (!authResult.user?.address) {
+  const authAddress = typeof authResult.user?.address === 'string'
+    ? authResult.user.address.trim().toLowerCase()
+    : '';
+  if (!authAddress || !ADDRESS_LIKE_REGEX.test(authAddress)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
@@ -160,7 +179,7 @@ export async function POST(request: NextRequest) {
     // Verify authenticated user matches fromUserId
     const userResult = await query(
       'SELECT id FROM users WHERE wallet_address = $1',
-      [authResult.user.address.toLowerCase()]
+      [authAddress]
     );
 
     const userId = userResult.rows[0]?.id;
