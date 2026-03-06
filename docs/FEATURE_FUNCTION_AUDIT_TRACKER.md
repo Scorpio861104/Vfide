@@ -240,10 +240,15 @@ Status legend:
 - Status: in-progress
 - Verification evidence:
   - `npm run -s typecheck:contracts` ✅ after adding `tsconfig.contracts.json` scoped to Hardhat + contract script TypeScript surfaces
+  - `set -a && source ./.env.local && set +a && npm run -s validate:env` ✅ (passes locally with warnings-only)
+  - `set -a && source ./.env.local && set +a && npm run -s validate:production` ✅ (typecheck/contracts/lint/tests/env all pass with warnings-only)
   - `npm run -s test:ci` ✅ (376 suites, 8012 tests)
   - `npm test -- --runInBand` ✅ (377 suites, 8120 tests)
   - `npm run lint` ✅ (0 errors, 0 warnings)
   - `npm run typecheck` ✅
   - `npm run -s contract:test` ✅ (exit code 0)
+  - `set -a && source ./.env.local && set +a && npm run -s contract:verify:governance-safety:local` ✅
+  - `set -a && source ./.env.local && set +a && npm run -s contract:verify:merchant-payment-escrow:local` ✅
+  - `set -a && source ./.env.local && set +a && npm run -s contract:verify:ecosystem-work-rewards:local` ✅
   - `npm run -s build` ✅ with expected local-env warnings for missing deploy secrets (`DATABASE_URL`, `JWT_SECRET`)
-  - `npm run validate:production` now executes through typecheck/contracts/lint/tests and fails only at `validate:env` because required secrets are not present in this local container (`DATABASE_URL`, `JWT_SECRET`)
+  - Added local baseline template values for validation parity in `.env.local.example` (`NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID`, `NEXT_PUBLIC_EXPLORER_URL`, `NEXT_PUBLIC_APP_URL`, `DATABASE_URL`, `JWT_SECRET`)
