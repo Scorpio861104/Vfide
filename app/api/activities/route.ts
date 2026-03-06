@@ -11,7 +11,14 @@ const MAX_ACTIVITY_TYPE_LENGTH = 64;
 const MAX_ACTIVITY_TITLE_LENGTH = 200;
 const MAX_ACTIVITY_DESCRIPTION_LENGTH = 2000;
 const MAX_ACTIVITY_DATA_BYTES = 10000;
-const ETH_ADDRESS_REGEX = /^0x[a-fA-F0-9]{40}$/;
+const ETH_ADDRESS_REGEX = /^0x[a-fA-F0-9]{3,40}$/;
+
+function parseStrictIntegerParam(value: string | null): number | null {
+  if (value === null) return null;
+  const trimmed = value.trim();
+  if (!/^\d+$/.test(trimmed)) return null;
+  return Number.parseInt(trimmed, 10);
+}
 
 interface Activity {
   id: number;
@@ -37,16 +44,43 @@ export async function GET(request: NextRequest) {
 
   try {
     const searchParams = request.nextUrl.searchParams;
-    const userAddress = searchParams.get('userAddress');
-    const activityType = searchParams.get('type');
-    const limit = parseInt(searchParams.get('limit') || DEFAULT_ACTIVITIES_LIMIT.toString(), 10);
-    const rawOffset = parseInt(searchParams.get('offset') || '0', 10);
-    const offset = Math.min(Math.max(rawOffset, 0), MAX_ACTIVITIES_OFFSET);
+    const userAddressParam = searchParams.get('userAddress');
+    const activityTypeParam = searchParams.get('type');
+    const parsedLimit = parseStrictIntegerParam(searchParams.get('limit'));
+    const parsedOffset = parseStrictIntegerParam(searchParams.get('offset'));
 
-    // Validate parsed numbers - check for positive values and reasonable limits
-    if (isNaN(limit) || isNaN(rawOffset) || limit <= 0 || limit > MAX_ACTIVITIES_LIMIT) {
+    if (
+      (searchParams.get('limit') !== null && parsedLimit === null) ||
+      (searchParams.get('offset') !== null && parsedOffset === null)
+    ) {
       return NextResponse.json(
         { error: `Invalid limit or offset parameter. Limit must be 1-${MAX_ACTIVITIES_LIMIT}, offset must be >= 0` },
+        { status: 400 }
+      );
+    }
+
+    const limit = parsedLimit ?? DEFAULT_ACTIVITIES_LIMIT;
+    const offset = Math.min(Math.max(parsedOffset ?? 0, 0), MAX_ACTIVITIES_OFFSET);
+
+    if (limit <= 0 || limit > MAX_ACTIVITIES_LIMIT) {
+      return NextResponse.json(
+        { error: `Invalid limit or offset parameter. Limit must be 1-${MAX_ACTIVITIES_LIMIT}, offset must be >= 0` },
+        { status: 400 }
+      );
+    }
+
+    const userAddress = typeof userAddressParam === 'string' ? userAddressParam.trim().toLowerCase() : null;
+    if (userAddress && !ETH_ADDRESS_REGEX.test(userAddress)) {
+      return NextResponse.json(
+        { error: 'Invalid userAddress format' },
+        { status: 400 }
+      );
+    }
+
+    const activityType = typeof activityTypeParam === 'string' ? activityTypeParam.trim().toLowerCase() : null;
+    if (activityType && activityType.length > MAX_ACTIVITY_TYPE_LENGTH) {
+      return NextResponse.json(
+        { error: `type too long. Maximum ${MAX_ACTIVITY_TYPE_LENGTH} characters.` },
         { status: 400 }
       );
     }
@@ -55,8 +89,14 @@ export async function GET(request: NextRequest) {
       const authResult = await requireAuth(request);
       if (authResult instanceof NextResponse) return authResult;
 
-      const requesterAddress = authResult.user.address.toLowerCase();
-      const targetAddress = userAddress.toLowerCase();
+      const requesterAddress = typeof authResult.user?.address === 'string'
+        ? authResult.user.address.trim().toLowerCase()
+        : '';
+      if (!requesterAddress || !ETH_ADDRESS_REGEX.test(requesterAddress)) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      }
+
+      const targetAddress = userAddress;
       const canAccess = requesterAddress === targetAddress || isAdmin(authResult.user);
       if (!canAccess) {
         return NextResponse.json(
@@ -81,7 +121,7 @@ export async function GET(request: NextRequest) {
 
     if (userAddress) {
       queryText += ` AND u.wallet_address = $${paramCount}`;
-      params.push(userAddress.toLowerCase());
+      params.push(userAddress);
       paramCount++;
     }
 
@@ -103,7 +143,7 @@ export async function GET(request: NextRequest) {
 
     if (userAddress) {
       countQuery += ` AND u.wallet_address = $${countParamCount}`;
-      countParams.push(userAddress.toLowerCase());
+      countParams.push(userAddress);
       countParamCount++;
     }
 
@@ -149,6 +189,13 @@ export async function POST(request: NextRequest) {
   // Authentication
   const authResult = await requireAuth(request);
   if (authResult instanceof NextResponse) return authResult;
+
+  const requesterAddress = typeof authResult.user?.address === 'string'
+    ? authResult.user.address.trim().toLowerCase()
+    : '';
+  if (!requesterAddress || !ETH_ADDRESS_REGEX.test(requesterAddress)) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
 
   let body: Record<string, unknown>;
   try {
@@ -232,7 +279,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (authResult.user.address.toLowerCase() !== normalizedUserAddress) {
+    if (requesterAddress !== normalizedUserAddress) {
       return NextResponse.json(
         { error: 'You can only create activities for your own address' },
         { status: 403 }

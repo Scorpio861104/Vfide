@@ -29,6 +29,16 @@ interface User {
   last_seen_at: Date | null;
 }
 
+const ETH_ADDRESS_REGEX = /^0x[a-fA-F0-9]{40}$/;
+
+function normalizeAddress(value: string): string {
+  return value.trim().toLowerCase();
+}
+
+function isAddressLike(value: string): boolean {
+  return ETH_ADDRESS_REGEX.test(value.trim());
+}
+
 // GET /api/users - Get all users
 export async function GET(request: NextRequest) {
   const startTime = Date.now();
@@ -39,6 +49,9 @@ export async function GET(request: NextRequest) {
 
   const authResult = await requireAuth(request);
   if (authResult instanceof NextResponse) return authResult;
+  if (!authResult.user?.address || !isAddressLike(authResult.user.address)) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
 
   try {
     // Use standardized pagination parsing
@@ -129,7 +142,7 @@ export async function POST(request: NextRequest) {
   // Authentication (required - no test bypasses)
   const authResult = await requireAuth(request);
   if (authResult instanceof NextResponse) return authResult;
-  if (!authResult.user?.address) {
+  if (!authResult.user?.address || !isAddressLike(authResult.user.address)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
@@ -174,16 +187,21 @@ export async function POST(request: NextRequest) {
     if (!requestWallet) {
       return NextResponse.json({ error: 'Wallet address is required' }, { status: 400 });
     }
+
+    const wallet_address = normalizeAddress(requestWallet);
+    if (!isAddressLike(wallet_address)) {
+      return NextResponse.json({ error: 'Invalid wallet address format' }, { status: 400 });
+    }
+
     // Verify user is updating their own profile
-    if (requestWallet.toLowerCase() !== authResult.user.address.toLowerCase()) {
+    if (wallet_address !== normalizeAddress(authResult.user.address)) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
     }
-    const wallet_address = requestWallet;
 
     // Check if user exists — select only id (existence check)
     const existingUser = await query<{ id: string }>(
       'SELECT id FROM users WHERE wallet_address = $1',
-      [wallet_address.toLowerCase()]
+      [wallet_address]
     );
 
     let user: User;
@@ -206,7 +224,7 @@ export async function POST(request: NextRequest) {
          WHERE wallet_address = $1
          RETURNING *`,
         [
-          wallet_address.toLowerCase(),
+          wallet_address,
           usernameValue,
           displayNameValue,
           bioValue,
@@ -226,7 +244,7 @@ export async function POST(request: NextRequest) {
          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
          RETURNING *`,
         [
-          wallet_address.toLowerCase(),
+          wallet_address,
           usernameValue,
           displayNameValue,
           bioValue,

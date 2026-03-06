@@ -128,6 +128,8 @@ Status legend:
   - `app/api/crypto/fees/route.ts` GET handler now treats non-positive RPC gas-price responses as invalid and falls back to deterministic safe baseline fee values
   - `app/api/notifications/route.ts` GET/POST/PATCH/DELETE handlers now enforce authenticated address presence/shape checks, strict `limit`/`offset`/`unreadOnly` query parsing, normalized userAddress validation, boolean flag type checks, and positive-integer normalization for bulk `notificationIds`
   - `app/api/messages/route.ts` GET/POST/PATCH handlers now enforce authenticated address presence checks, strict `limit`/`offset` query parsing, normalized userAddress validation on reads, and stronger read-receipt address validation ordering before ownership checks
+  - `app/api/activities/route.ts` GET/POST handlers now enforce strict numeric query parsing for `limit`/`offset`, normalized `userAddress` validation for reads, and authenticated-address presence checks before ownership/creation paths
+  - `app/api/users/route.ts` GET/POST handlers now enforce authenticated address shape checks and normalized wallet-address validation before profile create/update writes
   - Focused test confirmation: `npm test -- --runInBand __tests__/api/activities.test.ts __tests__/api/users.test.ts __tests__/api/crypto/rewards/claim.test.ts` ✅ (29 tests)
   - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/security/violations.test.ts` ✅ (6 tests)
   - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/messages/reaction.test.ts` ✅ (4 tests)
@@ -156,6 +158,7 @@ Status legend:
   - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/crypto/fees.test.ts __tests__/api/crypto/price.test.ts` ✅ (17 tests)
   - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/notifications.test.ts` ✅ (23 tests)
   - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/messages.test.ts` ✅ (18 tests)
+  - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/activities.test.ts __tests__/api/users.test.ts` ✅ (26 tests)
   - Additional typecheck confirmation: `npm run -s typecheck` ✅
 
 ### 7. Frontend page-by-page behavior and contract wiring checks
