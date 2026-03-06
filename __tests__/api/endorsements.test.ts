@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { GET, POST } from '@/app/api/endorsements/route';
+import { DELETE, GET, POST } from '@/app/api/endorsements/route';
 
 jest.mock('@/lib/db', () => ({
   query: jest.fn(),
@@ -224,6 +224,24 @@ describe('/api/endorsements', () => {
       expect(data.error).toBe('Unauthorized');
       expect(endorsementSchema.safeParse).not.toHaveBeenCalled();
       expect(getClient).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('DELETE', () => {
+    it('should return 401 for malformed authenticated address', async () => {
+      withRateLimit.mockResolvedValue(null);
+      requireAuth.mockReturnValue({ user: { address: 'bad-address' } });
+
+      const request = new NextRequest('http://localhost:3000/api/endorsements?endorsementId=1', {
+        method: 'DELETE',
+      });
+
+      const response = await DELETE(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(401);
+      expect(data.error).toBe('Unauthorized');
+      expect(query).not.toHaveBeenCalled();
     });
   });
 });

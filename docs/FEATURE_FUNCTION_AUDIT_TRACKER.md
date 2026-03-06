@@ -157,6 +157,8 @@ Status legend:
   - `app/api/messages/reaction/route.ts` POST/DELETE handlers now enforce authenticated-address presence/shape checks and normalized address comparisons before reaction ownership/conversation authorization
   - `app/api/crypto/rewards/[userId]/route.ts` GET handler now enforces authenticated-address presence/shape checks before owner-address authorization checks on reward reads
   - `app/api/friends/route.ts` GET/POST/PATCH/DELETE handlers now enforce authenticated-address presence/shape checks, strict numeric `limit`/`offset` parsing, and normalized address comparisons for friendship authorization flows
+  - `app/api/proposals/route.ts` POST handler now enforces authenticated-address presence/shape checks before ownership validation and proposal creation flows
+  - `app/api/endorsements/route.ts` DELETE handler now enforces authenticated-address presence/shape checks before endorsement ownership verification
   - Focused test confirmation: `npm test -- --runInBand __tests__/api/activities.test.ts __tests__/api/users.test.ts __tests__/api/crypto/rewards/claim.test.ts` ✅ (29 tests)
   - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/security/violations.test.ts` ✅ (6 tests)
   - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/messages/reaction.test.ts` ✅ (4 tests)
@@ -212,6 +214,7 @@ Status legend:
   - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/messages/delete.test.ts` ✅ (5 tests)
   - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/messages/reaction.test.ts` ✅ (5 tests)
   - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/friends.test.ts __tests__/api/crypto/rewards.test.ts` ✅ (18 tests)
+  - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/friends.test.ts __tests__/api/crypto/rewards.test.ts __tests__/api/proposals.test.ts __tests__/api/endorsements.test.ts` ✅ (38 tests)
   - Additional typecheck confirmation: `npm run -s typecheck` ✅
 
 ### 7. Frontend page-by-page behavior and contract wiring checks

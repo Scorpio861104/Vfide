@@ -174,7 +174,11 @@ export async function POST(request: NextRequest) {
   if (authResult instanceof NextResponse) {
     return authResult;
   }
-  if (!authResult.user?.address) {
+
+  const authenticatedAddress = typeof authResult.user?.address === 'string'
+    ? authResult.user.address.trim().toLowerCase()
+    : '';
+  if (!authenticatedAddress || !isAddress(authenticatedAddress)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 

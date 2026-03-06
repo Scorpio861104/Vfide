@@ -396,7 +396,11 @@ export async function DELETE(request: NextRequest) {
   if (authResult instanceof NextResponse) {
     return authResult;
   }
-  if (!authResult.user?.address) {
+
+  const authAddress = typeof authResult.user?.address === 'string'
+    ? normalizeAddress(authResult.user.address)
+    : '';
+  if (!authAddress || !isAddressLike(authAddress)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
@@ -436,7 +440,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     const endorsement = endorsementCheck.rows[0];
-    if (!endorsement || normalizeAddress(endorsement.wallet_address) !== normalizeAddress(authResult.user.address)) {
+    if (!endorsement || normalizeAddress(endorsement.wallet_address) !== authAddress) {
       return NextResponse.json(
         { error: 'You can only delete your own endorsements' },
         { status: 403 }
