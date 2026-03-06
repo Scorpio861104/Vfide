@@ -81,5 +81,18 @@ describe('/api/crypto/rewards/[userId]', () => {
 
       expect(response.status).toBe(403);
     });
+
+    it('should return 401 for malformed authenticated address', async () => {
+      withRateLimit.mockResolvedValue(null);
+      requireAuth.mockReturnValue({ user: { address: 'bad-address' } });
+
+      const request = new NextRequest('http://localhost:3000/api/crypto/rewards/1');
+      const response = await GET(request, { params: Promise.resolve({ userId: '1' }) });
+      const data = await response.json();
+
+      expect(response.status).toBe(401);
+      expect(data.error).toBe('Unauthorized');
+      expect(query).not.toHaveBeenCalled();
+    });
   });
 });

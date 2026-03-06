@@ -3,6 +3,16 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 
+const ADDRESS_PATTERN = /^0x[a-fA-F0-9]{3,64}$/;
+
+function normalizeAddress(value: string): string {
+  return value.trim().toLowerCase();
+}
+
+function isAddressLike(value: string): boolean {
+  return ADDRESS_PATTERN.test(value);
+}
+
 export async function GET(request: NextRequest, { params }: { params: Promise<{ userId: string }> }) {
   // Rate limiting
   const rateLimitResponse = await withRateLimit(request, 'read');
@@ -13,7 +23,11 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   if (authResult instanceof NextResponse) {
     return authResult;
   }
-  if (!authResult.user?.address) {
+
+  const authenticatedAddress = typeof authResult.user?.address === 'string'
+    ? normalizeAddress(authResult.user.address)
+    : '';
+  if (!authenticatedAddress || !isAddressLike(authenticatedAddress)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
   try {
@@ -37,7 +51,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    if (authResult.user.address.toLowerCase() !== ownerAddress.toLowerCase()) {
+    if (authenticatedAddress !== ownerAddress.toLowerCase()) {
       return NextResponse.json(
         { error: 'You do not have permission to access this resource' },
         { status: 403 }

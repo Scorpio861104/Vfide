@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { GET, PATCH, POST } from '@/app/api/friends/route';
+import { DELETE, GET, PATCH, POST } from '@/app/api/friends/route';
 
 const mockQuery = jest.fn();
 const mockGetClient = jest.fn();
@@ -106,6 +106,36 @@ describe('/api/friends', () => {
       expect(data.error).toContain('Invalid limit or offset');
     });
 
+    it('should reject mixed-format limit values', async () => {
+      withRateLimit.mockResolvedValue(null);
+      requireAuth.mockReturnValue({
+        user: { address: '0x1111111111111111111111111111111111111123' }
+      });
+
+      const request = new NextRequest(
+        'http://localhost:3000/api/friends?address=0x1111111111111111111111111111111111111123&limit=10abc&offset=0'
+      );
+      const response = await GET(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(400);
+      expect(data.error).toContain('Invalid limit or offset');
+    });
+
+    it('should return 401 for malformed authenticated address', async () => {
+      withRateLimit.mockResolvedValue(null);
+      requireAuth.mockReturnValue({ user: { address: 'bad-address' } });
+
+      const request = new NextRequest(
+        'http://localhost:3000/api/friends?address=0x1111111111111111111111111111111111111123'
+      );
+      const response = await GET(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(401);
+      expect(data.error).toBe('Unauthorized');
+    });
+
     it('should cap limit to max bound', async () => {
       withRateLimit.mockResolvedValue(null);
       requireAuth.mockReturnValue({
@@ -187,6 +217,23 @@ describe('/api/friends', () => {
       const response = await POST(request);
       expect(response.status).toBe(401);
     });
+
+    it('should return 401 for malformed authenticated address', async () => {
+      withRateLimit.mockResolvedValue(null);
+      requireAuth.mockReturnValue({ user: { address: 'bad-address' } });
+
+      const request = new NextRequest('http://localhost:3000/api/friends', {
+        method: 'POST',
+        body: JSON.stringify({}),
+      });
+
+      const response = await POST(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(401);
+      expect(data.error).toBe('Unauthorized');
+      expect(mockGetClient).not.toHaveBeenCalled();
+    });
   });
 
   describe('PATCH', () => {
@@ -237,6 +284,42 @@ describe('/api/friends', () => {
 
       expect(response.status).toBe(400);
       expect(data.error).toContain('Invalid request body');
+    });
+
+    it('should return 401 for malformed authenticated address', async () => {
+      withRateLimit.mockResolvedValue(null);
+      requireAuth.mockReturnValue({ user: { address: 'bad-address' } });
+
+      const request = new NextRequest('http://localhost:3000/api/friends', {
+        method: 'PATCH',
+        body: JSON.stringify({ friendshipId: 1, status: 'accepted', userAddress: '0x1111111111111111111111111111111111111123' }),
+      });
+
+      const response = await PATCH(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(401);
+      expect(data.error).toBe('Unauthorized');
+      expect(mockGetClient).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('DELETE', () => {
+    it('should return 401 for malformed authenticated address', async () => {
+      withRateLimit.mockResolvedValue(null);
+      requireAuth.mockReturnValue({ user: { address: 'bad-address' } });
+
+      const request = new NextRequest(
+        'http://localhost:3000/api/friends?user1=0x1111111111111111111111111111111111111123&user2=0x2222222222222222222222222222222222222456',
+        { method: 'DELETE' }
+      );
+
+      const response = await DELETE(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(401);
+      expect(data.error).toBe('Unauthorized');
+      expect(mockQuery).not.toHaveBeenCalled();
     });
   });
 });

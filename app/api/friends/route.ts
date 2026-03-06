@@ -30,6 +30,38 @@ function isObjectRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
+function normalizeAddress(value: string): string {
+  return value.trim().toLowerCase();
+}
+
+function parsePositiveInteger(value: string): number | null {
+  const trimmed = value.trim();
+  if (!/^\d+$/.test(trimmed)) {
+    return null;
+  }
+
+  const parsed = Number.parseInt(trimmed, 10);
+  if (!Number.isSafeInteger(parsed) || parsed <= 0) {
+    return null;
+  }
+
+  return parsed;
+}
+
+function parseNonNegativeInteger(value: string): number | null {
+  const trimmed = value.trim();
+  if (!/^\d+$/.test(trimmed)) {
+    return null;
+  }
+
+  const parsed = Number.parseInt(trimmed, 10);
+  if (!Number.isSafeInteger(parsed) || parsed < 0) {
+    return null;
+  }
+
+  return parsed;
+}
+
 /**
  * GET /api/friends?address=xxx&status=accepted
  * Get user's friends list or friend requests
@@ -44,7 +76,11 @@ export async function GET(request: NextRequest) {
   if (authResult instanceof NextResponse) {
     return authResult;
   }
-  if (!authResult.user?.address) {
+
+  const authenticatedAddress = typeof authResult.user?.address === 'string'
+    ? normalizeAddress(authResult.user.address)
+    : '';
+  if (!authenticatedAddress || !isAddress(authenticatedAddress)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
@@ -52,18 +88,20 @@ export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams;
     const address = searchParams.get('address');
     const status = searchParams.get('status') || 'accepted';
-    const rawLimit = parseInt(searchParams.get('limit') || String(DEFAULT_FRIENDS_LIMIT), 10);
-    const rawOffset = parseInt(searchParams.get('offset') || '0', 10);
+    const rawLimit = searchParams.get('limit');
+    const rawOffset = searchParams.get('offset');
+    const parsedLimit = rawLimit === null ? DEFAULT_FRIENDS_LIMIT : parsePositiveInteger(rawLimit);
+    const parsedOffset = rawOffset === null ? 0 : parseNonNegativeInteger(rawOffset);
 
-    if (isNaN(rawLimit) || isNaN(rawOffset) || rawLimit <= 0 || rawOffset < 0) {
+    if (parsedLimit === null || parsedOffset === null) {
       return NextResponse.json(
         { error: 'Invalid limit or offset parameter' },
         { status: 400 }
       );
     }
 
-    const limit = Math.min(rawLimit, MAX_FRIENDS_LIMIT);
-    const offset = Math.min(rawOffset, MAX_FRIENDS_OFFSET);
+    const limit = Math.min(parsedLimit, MAX_FRIENDS_LIMIT);
+    const offset = Math.min(parsedOffset, MAX_FRIENDS_OFFSET);
 
     if (!address) {
       return NextResponse.json(
@@ -79,6 +117,8 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    const normalizedAddress = normalizeAddress(address);
+
     if (!ALLOWED_FRIENDSHIP_STATUS.has(status)) {
       return NextResponse.json(
         { error: 'Invalid status parameter' },
@@ -87,7 +127,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Verify the requesting user is accessing their own friends list
-    if (authResult.user.address.toLowerCase() !== address.toLowerCase()) {
+    if (authenticatedAddress !== normalizedAddress) {
       return NextResponse.json(
         { error: 'You can only view your own friends list' },
         { status: 403 }
@@ -111,7 +151,7 @@ export async function GET(request: NextRequest) {
          AND f.status = $2
        ORDER BY f.created_at DESC
        LIMIT $3 OFFSET $4`,
-      [address.toLowerCase(), status, limit, offset]
+      [normalizedAddress, status, limit, offset]
     );
 
     return NextResponse.json({
@@ -144,6 +184,13 @@ export async function POST(request: NextRequest) {
     return authResult;
   }
 
+  const authenticatedAddress = typeof authResult.user?.address === 'string'
+    ? normalizeAddress(authResult.user.address)
+    : '';
+  if (!authenticatedAddress || !isAddress(authenticatedAddress)) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   const client = await getClient();
   
   try {
@@ -157,9 +204,11 @@ export async function POST(request: NextRequest) {
     }
 
     const { from, to } = validation.data;
+    const fromAddress = normalizeAddress(from);
+    const toAddress = normalizeAddress(to);
 
     // Verify the request is from the authenticated user
-    if (authResult.user.address.toLowerCase() !== from.toLowerCase()) {
+    if (authenticatedAddress !== fromAddress) {
       return NextResponse.json(
         { error: 'You can only send friend requests from your own address' },
         { status: 403 }
@@ -171,12 +220,12 @@ export async function POST(request: NextRequest) {
     // Get user IDs
     const fromResult = await client.query(
       'SELECT id FROM users WHERE wallet_address = $1',
-      [from.toLowerCase()]
+      [fromAddress]
     );
 
     const toResult = await client.query(
       'SELECT id FROM users WHERE wallet_address = $1',
-      [to.toLowerCase()]
+      [toAddress]
     );
 
     if (fromResult.rows.length === 0 || toResult.rows.length === 0) {
@@ -258,6 +307,13 @@ export async function PATCH(request: NextRequest) {
     return authResult;
   }
 
+  const authenticatedAddress = typeof authResult.user?.address === 'string'
+    ? normalizeAddress(authResult.user.address)
+    : '';
+  if (!authenticatedAddress || !isAddress(authenticatedAddress)) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   const client = await getClient();
   
   try {
@@ -315,12 +371,14 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
+    const normalizedUserAddress = normalizeAddress(userAddressValue);
+
     await client.query('BEGIN');
 
     // Get user ID
     const userResult = await client.query(
       'SELECT id FROM users WHERE wallet_address = $1',
-      [userAddressValue.toLowerCase()]
+      [normalizedUserAddress]
     );
 
     if (userResult.rows.length === 0) {
@@ -334,7 +392,7 @@ export async function PATCH(request: NextRequest) {
     const userId = userResult.rows[0].id;
 
     // Verify the authenticated user is the one accepting/rejecting
-    if (authResult.user.address.toLowerCase() !== userAddressValue.toLowerCase()) {
+    if (authenticatedAddress !== normalizedUserAddress) {
       await client.query('ROLLBACK');
       return NextResponse.json(
         { error: 'You can only respond to your own friend requests' },
@@ -428,6 +486,13 @@ export async function DELETE(request: NextRequest) {
     return authResult;
   }
 
+  const authenticatedAddress = typeof authResult.user?.address === 'string'
+    ? normalizeAddress(authResult.user.address)
+    : '';
+  if (!authenticatedAddress || !isAddress(authenticatedAddress)) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   try {
     const searchParams = request.nextUrl.searchParams;
     const user1 = searchParams.get('user1');
@@ -448,8 +513,9 @@ export async function DELETE(request: NextRequest) {
     }
 
     // Verify the authenticated user is one of the users in the friendship
-    const authenticatedAddress = authResult.user.address.toLowerCase();
-    if (authenticatedAddress !== user1.toLowerCase() && authenticatedAddress !== user2.toLowerCase()) {
+    const user1Address = normalizeAddress(user1);
+    const user2Address = normalizeAddress(user2);
+    if (authenticatedAddress !== user1Address && authenticatedAddress !== user2Address) {
       return NextResponse.json(
         { error: 'You can only remove your own friendships' },
         { status: 403 }
@@ -459,12 +525,12 @@ export async function DELETE(request: NextRequest) {
     // Get user IDs
     const user1Result = await query(
       'SELECT id FROM users WHERE wallet_address = $1',
-      [user1.toLowerCase()]
+      [user1Address]
     );
 
     const user2Result = await query(
       'SELECT id FROM users WHERE wallet_address = $1',
-      [user2.toLowerCase()]
+      [user2Address]
     );
 
     if (user1Result.rows.length === 0 || user2Result.rows.length === 0) {
