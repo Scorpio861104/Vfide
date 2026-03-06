@@ -123,5 +123,26 @@ describe('/api/messages/edit', () => {
       const response = await PATCH(request);
       expect(response.status).toBe(401);
     });
+
+    it('should return 401 for malformed authenticated address', async () => {
+      withRateLimit.mockResolvedValue(null);
+      requireAuth.mockReturnValue({ user: { address: 'bad-address' } });
+
+      const request = new NextRequest('http://localhost:3000/api/messages/edit', {
+        method: 'PATCH',
+        body: JSON.stringify({
+          messageId: '1',
+          conversationId: '1',
+          newContent: 'Updated content',
+          userAddress: '0x1111111111111111111111111111111111111123',
+        }),
+      });
+
+      const response = await PATCH(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(401);
+      expect(data.error).toBe('Unauthorized');
+    });
   });
 });
