@@ -11,10 +11,10 @@ import {
   KeyRound, UserCheck, Zap
 } from "lucide-react";
 import Link from "next/link";
-import { useAccount, useReadContract } from "wagmi";
-import { isAddress } from "viem";
+import { useAccount, usePublicClient } from "wagmi";
+import { isAddress, keccak256, stringToHex, zeroAddress } from "viem";
 import { CONTRACT_ADDRESSES } from "@/lib/contracts";
-import { VaultHubABI, SeerABI, VFIDEBadgeNFTABI } from "@/lib/abis";
+import { VaultHubABI, SeerABI, VFIDEBadgeNFTABI, VaultRegistryABI } from "@/lib/abis";
 
 // Animation variants
 const containerVariants = {
@@ -815,6 +815,7 @@ function ClaimFlowModal({
 
 export default function VaultRecoveryPage() {
   const { address } = useAccount();
+  const publicClient = usePublicClient();
   const [searchMethod, setSearchMethod] = useState<"recoveryId" | "email" | "username" | "guardian">("recoveryId");
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearching, setIsSearching] = useState(false);
@@ -830,31 +831,6 @@ export default function VaultRecoveryPage() {
   } | null>(null);
   const [showClaimModal, setShowClaimModal] = useState(false);
   const [error, setError] = useState("");
-  
-  // Contract reads for vault lookup
-  const { data: _vaultInfo, refetch: refetchVaultInfo } = useReadContract({
-    address: CONTRACT_ADDRESSES.VaultHub,
-    abi: VaultHubABI,
-    functionName: 'getVaultInfo',
-    args: vaultToLookup ? [vaultToLookup] : undefined,
-    query: { enabled: !!vaultToLookup }
-  });
-  
-  const { data: _proofScore, refetch: refetchProofScore } = useReadContract({
-    address: CONTRACT_ADDRESSES.Seer,
-    abi: SeerABI,
-    functionName: 'getScore',
-    args: vaultToLookup ? [vaultToLookup] : undefined,
-    query: { enabled: !!vaultToLookup }
-  });
-  
-  const { data: _badgeBalance, refetch: refetchBadges } = useReadContract({
-    address: CONTRACT_ADDRESSES.BadgeNFT,
-    abi: VFIDEBadgeNFTABI,
-    functionName: 'balanceOf',
-    args: vaultToLookup ? [vaultToLookup] : undefined,
-    query: { enabled: !!vaultToLookup }
-  });
 
   const handleSearch = async () => {
     if (!searchQuery.trim()) {
@@ -867,62 +843,120 @@ export default function VaultRecoveryPage() {
     setSearchResult(null);
     
     try {
-      // For recoveryId method, the query should be a vault address
-      if (searchMethod === "recoveryId") {
-        // Check if it's a valid address format
-        if (!isAddress(searchQuery)) {
-          setError("Please enter a valid vault address (0x...)");
-          setIsSearching(false);
-          return;
-        }
-        
-        // Set the vault to lookup and trigger contract reads
-        setVaultToLookup(searchQuery as `0x${string}`);
-        
-        // Wait for refetch to complete
-        const [vaultResult, scoreResult, badgeResult] = await Promise.all([
-          refetchVaultInfo(),
-          refetchProofScore(),
-          refetchBadges()
-        ]);
-        
-        const info = vaultResult.data as [string, bigint, boolean, boolean] | undefined;
-        
-        if (!info || !info[3]) { // info[3] is 'exists' boolean
-          setError("No vault found at this address. Please check and try again.");
-          setIsSearching(false);
-          return;
-        }
-        
-        const [owner, createdAt, isLocked] = info;
-        const score = scoreResult.data as bigint | undefined;
-        const badges = badgeResult.data as bigint | undefined;
-        
-        // Calculate last active (using createdAt for now, could add activity tracking later)
-        const createdDate = new Date(Number(createdAt) * 1000);
-        const daysSince = Math.floor((Date.now() - createdDate.getTime()) / (1000 * 60 * 60 * 24));
-        const lastActive = daysSince === 0 ? "Today" : daysSince === 1 ? "Yesterday" : `${daysSince} days ago`;
-        
-        setSearchResult({
-          address: searchQuery,
-          originalOwner: owner,
-          proofScore: score ? Number(score) / 100 : 0, // Convert from basis points
-          badgeCount: badges ? Number(badges) : 0,
-          hasGuardians: isLocked, // If locked, likely has guardians
-          lastActive,
-          isRecoverable: !isLocked && owner !== address // Can recover if not locked and not current user
-        });
-      } else {
-        // For email/username/guardian searches, would need an off-chain indexer
-        // These are stored in a backend database, not on-chain
-        // TODO: Implement backend API for off-chain identity lookup
-        setError(`${searchMethod} search requires backend integration. Currently only vault address (recoveryId) search is supported on-chain.`);
+      if (!publicClient) {
+        setError("Wallet client not ready. Please connect and try again.");
+        return;
       }
+
+      if (CONTRACT_ADDRESSES.VaultRegistry === zeroAddress) {
+        setError("Vault registry contract is not configured in this environment.");
+        return;
+      }
+
+      const normalizedQuery = searchQuery.trim();
+      let resolvedVault: `0x${string}` | undefined;
+
+      if (searchMethod === "recoveryId") {
+        const vaultAddress = await publicClient.readContract({
+          address: CONTRACT_ADDRESSES.VaultRegistry,
+          abi: VaultRegistryABI,
+          functionName: "searchByRecoveryId",
+          args: [normalizedQuery]
+        });
+        if (vaultAddress && vaultAddress !== zeroAddress) {
+          resolvedVault = vaultAddress as `0x${string}`;
+        }
+      } else if (searchMethod === "email") {
+        const emailHash = keccak256(stringToHex(normalizedQuery.toLowerCase()));
+        const vaultAddress = await publicClient.readContract({
+          address: CONTRACT_ADDRESSES.VaultRegistry,
+          abi: VaultRegistryABI,
+          functionName: "searchByEmail",
+          args: [emailHash]
+        });
+        if (vaultAddress && vaultAddress !== zeroAddress) {
+          resolvedVault = vaultAddress as `0x${string}`;
+        }
+      } else if (searchMethod === "username") {
+        const vaultAddress = await publicClient.readContract({
+          address: CONTRACT_ADDRESSES.VaultRegistry,
+          abi: VaultRegistryABI,
+          functionName: "searchByUsername",
+          args: [normalizedQuery]
+        });
+        if (vaultAddress && vaultAddress !== zeroAddress) {
+          resolvedVault = vaultAddress as `0x${string}`;
+        }
+      } else {
+        if (!isAddress(normalizedQuery)) {
+          setError("Please enter a valid guardian wallet address (0x...)");
+          return;
+        }
+        const vaultAddresses = await publicClient.readContract({
+          address: CONTRACT_ADDRESSES.VaultRegistry,
+          abi: VaultRegistryABI,
+          functionName: "searchByGuardian",
+          args: [normalizedQuery as `0x${string}`]
+        });
+        const firstVault = (vaultAddresses as `0x${string}`[] | undefined)?.find((v) => v !== zeroAddress);
+        if (firstVault) {
+          resolvedVault = firstVault;
+        }
+      }
+
+      if (!resolvedVault) {
+        setError(`No vault found for the provided ${searchMethod}.`);
+        return;
+      }
+
+      setVaultToLookup(resolvedVault);
+
+      const [info, score, badges] = await Promise.all([
+        publicClient.readContract({
+          address: CONTRACT_ADDRESSES.VaultHub,
+          abi: VaultHubABI,
+          functionName: "getVaultInfo",
+          args: [resolvedVault]
+        }),
+        publicClient.readContract({
+          address: CONTRACT_ADDRESSES.Seer,
+          abi: SeerABI,
+          functionName: "getScore",
+          args: [resolvedVault]
+        }),
+        publicClient.readContract({
+          address: CONTRACT_ADDRESSES.BadgeNFT,
+          abi: VFIDEBadgeNFTABI,
+          functionName: "balanceOf",
+          args: [resolvedVault]
+        })
+      ]);
+
+      const vaultInfo = info as [string, bigint, boolean, boolean] | undefined;
+      if (!vaultInfo || !vaultInfo[3]) {
+        setError("Vault exists in registry but metadata lookup failed.");
+        return;
+      }
+
+      const [owner, createdAt, isLocked] = vaultInfo;
+      const createdDate = new Date(Number(createdAt) * 1000);
+      const daysSince = Math.floor((Date.now() - createdDate.getTime()) / (1000 * 60 * 60 * 24));
+      const lastActive = daysSince === 0 ? "Today" : daysSince === 1 ? "Yesterday" : `${daysSince} days ago`;
+
+      setSearchResult({
+        address: resolvedVault,
+        originalOwner: owner,
+        proofScore: score ? Number(score as bigint) / 100 : 0,
+        badgeCount: badges ? Number(badges as bigint) : 0,
+        hasGuardians: isLocked,
+        lastActive,
+        isRecoverable: !isLocked && owner !== address
+      });
     } catch (_err) {
       setError("Failed to fetch vault information. Please try again.");
+    } finally {
+      setIsSearching(false);
     }
-    
-    setIsSearching(false);
   };
   
   return (

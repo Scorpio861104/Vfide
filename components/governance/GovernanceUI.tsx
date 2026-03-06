@@ -872,12 +872,8 @@ export default function GovernanceUI() {
     );
   };
 
-  // TODO: Delegation requires a contract upgrade to add delegate() function to DAO.sol
-  // The VoteDelegated event exists but the delegate function is not yet implemented.
-  // For now, delegation is tracked locally in the UI state only.
-  // Future implementation: DAO.sol should add:
-  //   function delegate(address delegatee, uint256 amount) external
-  //   function undelegate(address delegatee) external
+  // DAO v1 intentionally does not expose on-chain delegation calls.
+  // Keep this tab as a read-only preview until a timelocked DAO upgrade adds delegate/undelegate functions.
   const handleDelegate = () => {
     if (!delegateeAddress || !votesAmount) return;
 
@@ -886,21 +882,14 @@ export default function GovernanceUI() {
       setDelegateError('Invalid address format');
       return;
     }
-    setDelegateError('');
 
-    const newDelegation: Delegation = {
-      delegator: '0xuser...',
-      delegatee: delegateeAddress,
-      votes: safeParseInt(votesAmount, 0) * 1000000,
-      timestamp: Date.now(),
-      active: true,
-    };
-    setDelegations([...delegations, newDelegation]);
-    setDelegateeAddress('');
-    setVotesAmount('');
-    
-    // Note: This is currently a local UI feature only
-    // Delegation will be persisted to blockchain in a future update
+    const parsedVotes = safeParseInt(votesAmount, 0);
+    if (parsedVotes <= 0) {
+      setDelegateError('Delegation is unavailable in DAO v1. Entered amount is ignored.');
+      return;
+    }
+
+    setDelegateError('Delegation actions are disabled until DAO delegation is activated on-chain.');
   };
 
   const handleRevokeDelegation = (delegator: string) => {
@@ -978,6 +967,10 @@ export default function GovernanceUI() {
   // Delegation Tab
   const renderDelegationTab = () => (
     <div className="space-y-6">
+      <div className="rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-700 dark:bg-amber-950/40 dark:text-amber-200">
+        Delegation is read-only in DAO v1. The contract emits delegation events but does not yet expose delegation transactions.
+      </div>
+
       {/* Delegate Form */}
       <div className="bg-white dark:bg-gray-800 rounded-lg p-4 md:p-6 border border-gray-200 dark:border-gray-700">
         <h3 className="text-base md:text-lg font-bold text-gray-900 dark:text-white mb-4">
@@ -1013,7 +1006,7 @@ export default function GovernanceUI() {
             onClick={handleDelegate}
             className="w-full bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-lg transition-colors"
           >
-            Delegate Votes
+            Delegation Unavailable
           </MobileButton>
         </div>
       </div>

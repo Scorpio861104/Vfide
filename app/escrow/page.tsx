@@ -104,7 +104,7 @@ export default function EscrowPage() {
     // Validate merchant address
     const validation = validateAddress(createForm.merchant);
     if (!validation.valid) {
-      alert(`Invalid merchant address: ${validation.error}`);
+      toast.error(`Invalid merchant address: ${validation.error}`);
       return;
     }
     
@@ -706,7 +706,7 @@ export default function EscrowPage() {
                     type="text"
                     value={createForm.orderId}
                     onChange={e => setCreateForm(f => ({ ...f, orderId: e.target.value }))}
-                    placeholder="ORD-2024-XXX"
+                    placeholder="ORD-2026-0001"
                     className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder:text-gray-500 focus:outline-none focus:border-cyan-500/50 transition-colors"
                   />
                 </div>

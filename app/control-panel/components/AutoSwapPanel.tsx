@@ -12,6 +12,7 @@ import {
 export function AutoSwapPanel() {
   const [router, setRouter] = useState('');
   const [stablecoin, setStablecoin] = useState('');
+  const [formError, setFormError] = useState<string | null>(null);
   const [enabled, setEnabled] = useState(false);
   const [slippageBps, setSlippageBps] = useState(100); // 1%
   const [showConfirmation, setShowConfirmation] = useState(false);
@@ -55,9 +56,11 @@ export function AutoSwapPanel() {
 
   const handleQuickSetupUSDC = async () => {
     if (!router || !stablecoin) {
-      alert('Please enter both router and USDC addresses');
+      setFormError('Please enter both router and USDC addresses.');
       return;
     }
+
+    setFormError(null);
 
     setLoading(true);
     try {
@@ -155,7 +158,10 @@ export function AutoSwapPanel() {
           <AddressInput
             label="DEX Router Address"
             value={router}
-            onChange={setRouter}
+            onChange={(value) => {
+              setRouter(value);
+              if (formError) setFormError(null);
+            }}
             placeholder="0x... (e.g., SyncSwap Router)"
             required
           />
@@ -163,10 +169,19 @@ export function AutoSwapPanel() {
           <AddressInput
             label="Stablecoin Address"
             value={stablecoin}
-            onChange={setStablecoin}
+            onChange={(value) => {
+              setStablecoin(value);
+              if (formError) setFormError(null);
+            }}
             placeholder="0x... (e.g., USDC)"
             required
           />
+
+          {formError && (
+            <div className="rounded-lg border border-red-500/40 bg-red-500/10 px-3 py-2 text-sm text-red-200">
+              {formError}
+            </div>
+          )}
 
           <div className="space-y-2">
             <label className="text-white font-medium">
