@@ -43,5 +43,23 @@ describe('/api/leaderboard/headhunter', () => {
       expect(response.status).toBe(400);
       expect(data.error).toBe('Year and quarter are required');
     });
+
+    it('should return 400 for malformed quarter parameter', async () => {
+      withRateLimit.mockResolvedValue(null);
+
+      const request = new NextRequest('http://localhost:3000/api/leaderboard/headhunter?year=2025&quarter=1abc');
+      const response = await GET(request);
+
+      expect(response.status).toBe(400);
+    });
+
+    it('should return 400 for out-of-range quarter parameter', async () => {
+      withRateLimit.mockResolvedValue(null);
+
+      const request = new NextRequest('http://localhost:3000/api/leaderboard/headhunter?year=2025&quarter=5');
+      const response = await GET(request);
+
+      expect(response.status).toBe(400);
+    });
   });
 });

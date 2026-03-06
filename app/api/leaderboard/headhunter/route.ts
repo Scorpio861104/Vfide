@@ -24,6 +24,30 @@ interface LeaderboardEntry {
   isCurrentUser: boolean;
 }
 
+function parseStrictIntegerParam(value: string): number | null {
+  const trimmed = value.trim();
+  if (!/^\d+$/.test(trimmed)) return null;
+  return Number.parseInt(trimmed, 10);
+}
+
+function parseLeaderboardPeriod(year: string, quarter: string): { year: number; quarter: number } | null {
+  const yearNum = parseStrictIntegerParam(year);
+  const quarterNum = parseStrictIntegerParam(quarter);
+  if (yearNum === null || quarterNum === null) {
+    return null;
+  }
+
+  if (yearNum < 2020 || yearNum > 2100) {
+    return null;
+  }
+
+  if (quarterNum < 1 || quarterNum > 4) {
+    return null;
+  }
+
+  return { year: yearNum, quarter: quarterNum };
+}
+
 export async function GET(request: NextRequest) {
   // Rate limiting for read operations
   const rateLimitResponse = await withRateLimit(request, 'read');
@@ -41,6 +65,16 @@ export async function GET(request: NextRequest) {
         { status: 400 }
       );
     }
+
+    const parsedPeriod = parseLeaderboardPeriod(year, quarter);
+    if (!parsedPeriod) {
+      return NextResponse.json(
+        { error: 'Invalid year or quarter parameter' },
+        { status: 400 }
+      );
+    }
+    const yearNum = parsedPeriod.year;
+    const quarterNum = parsedPeriod.quarter;
 
     // In production: Query subgraph or aggregate contract events
     // Example subgraph query would be:
@@ -63,17 +97,6 @@ export async function GET(request: NextRequest) {
     const subgraphUrl = process.env.NEXT_PUBLIC_SUBGRAPH_URL;
     
     if (!subgraphUrl) {
-      // Validate year and quarter
-      const yearNum = parseInt(year, 10);
-      const quarterNum = parseInt(quarter, 10);
-      
-      if (isNaN(yearNum) || isNaN(quarterNum) || !isFinite(yearNum) || !isFinite(quarterNum)) {
-        return NextResponse.json(
-          { error: 'Invalid year or quarter parameter' },
-          { status: 400 }
-        );
-      }
-      
       // Return empty leaderboard with a message
       return NextResponse.json({
         success: true,
@@ -85,17 +108,6 @@ export async function GET(request: NextRequest) {
           totalParticipants: 0,
         }
       });
-    }
-
-    // Validate year and quarter before using
-    const yearNum = parseInt(year, 10);
-    const quarterNum = parseInt(quarter, 10);
-    
-    if (isNaN(yearNum) || isNaN(quarterNum) || !isFinite(yearNum) || !isFinite(quarterNum)) {
-      return NextResponse.json(
-        { error: 'Invalid year or quarter parameter' },
-        { status: 400 }
-      );
     }
 
     // When subgraph is available, fetch real data
