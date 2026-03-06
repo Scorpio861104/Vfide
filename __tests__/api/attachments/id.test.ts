@@ -27,14 +27,16 @@ describe('/api/attachments/[id]', () => {
       withRateLimit.mockResolvedValue(null);
       requireAuth.mockResolvedValue({ user: { address: '0x1234567890123456789012345678901234567890' } });
 
-      query.mockResolvedValue({
-        rows: [{
-          id: 1,
-          filename: 'test.jpg',
-          url: 'https://example.com/test.jpg',
-          size: 1024,
-        }],
-      });
+      query
+        .mockResolvedValueOnce({ rows: [{ id: 1 }] })
+        .mockResolvedValueOnce({
+          rows: [{
+            id: 1,
+            filename: 'test.jpg',
+            url: 'https://example.com/test.jpg',
+            size: 1024,
+          }],
+        });
 
       const request = new NextRequest('http://localhost:3000/api/attachments/1');
       const response = await GET(request, { params: Promise.resolve({ id: '1' }) });
@@ -47,7 +49,9 @@ describe('/api/attachments/[id]', () => {
     it('should return 404 when attachment not found', async () => {
       withRateLimit.mockResolvedValue(null);
       requireAuth.mockResolvedValue({ user: { address: '0x1234567890123456789012345678901234567890' } });
-      query.mockResolvedValue({ rows: [] });
+      query
+        .mockResolvedValueOnce({ rows: [{ id: 1 }] })
+        .mockResolvedValueOnce({ rows: [] });
 
       const request = new NextRequest('http://localhost:3000/api/attachments/999');
       const response = await GET(request, { params: Promise.resolve({ id: '999' }) });
@@ -63,7 +67,9 @@ describe('/api/attachments/[id]', () => {
       withRateLimit.mockResolvedValue(null);
       requireAuth.mockResolvedValue({ user: { address: '0x1234567890123456789012345678901234567890' } });
 
-      query.mockResolvedValue({ rows: [{ id: 1 }] });
+      query
+        .mockResolvedValueOnce({ rows: [{ id: 1 }] })
+        .mockResolvedValueOnce({ rows: [{ id: 1 }] });
 
       const request = new NextRequest('http://localhost:3000/api/attachments/1', {
         method: 'DELETE',

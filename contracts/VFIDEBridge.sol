@@ -80,6 +80,9 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
     /// @notice Bridge transaction history
     mapping(bytes32 => BridgeTransaction) public bridgeTransactions;
 
+    /// @notice Processed inbound LayerZero message GUIDs (replay protection)
+    mapping(bytes32 => bool) public processedInboundGuids;
+
     /// @notice Timelock delay for sensitive configuration changes (48 hours)
     uint64 public constant CONFIG_TIMELOCK_DELAY = 48 hours;
 
@@ -93,6 +96,24 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
     /// @notice Pending security module change
     address public pendingSecurityModule;
     uint64 public pendingSecurityModuleAt;
+
+    /// @notice Pending bridge config changes
+    uint256 public pendingMaxBridgeAmount;
+    uint64 public pendingMaxBridgeAmountAt;
+
+    uint256 public pendingBridgeFee;
+    uint64 public pendingBridgeFeeAt;
+
+    address public pendingFeeCollector;
+    uint64 public pendingFeeCollectorAt;
+
+    /// @notice Pending emergency withdrawal request
+    struct PendingEmergencyWithdraw {
+        address token;
+        uint256 amount;
+        uint64 effectiveAt;
+    }
+    PendingEmergencyWithdraw public pendingEmergencyWithdraw;
 
     // Events
     event BridgeSent(
@@ -113,15 +134,27 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
 
     event TrustedRemoteSet(uint32 indexed chainId, bytes32 remote);
     event TrustedRemoteScheduled(uint32 indexed chainId, bytes32 remote, uint64 effectiveAt);
+    event TrustedRemoteCancelled(uint32 indexed chainId);
     event SecurityModuleUpdated(address indexed oldModule, address indexed newModule);
     event SecurityModuleScheduled(address indexed pendingModule, uint64 effectiveAt);
+    event SecurityModuleCancelled();
     event MaxBridgeAmountUpdated(uint256 oldAmount, uint256 newAmount);
+    event MaxBridgeAmountScheduled(uint256 pendingAmount, uint64 effectiveAt);
+    event MaxBridgeAmountCancelled();
     event BridgeFeeUpdated(uint256 oldFee, uint256 newFee);
+    event BridgeFeeScheduled(uint256 pendingFee, uint64 effectiveAt);
+    event BridgeFeeCancelled();
     event FeeCollectorUpdated(address indexed oldCollector, address indexed newCollector);
+    event FeeCollectorScheduled(address indexed pendingCollector, uint64 effectiveAt);
+    event FeeCollectorCancelled();
+    event EmergencyWithdrawScheduled(address indexed token, uint256 amount, uint64 effectiveAt);
+    event EmergencyWithdrawExecuted(address indexed token, uint256 amount);
+    event EmergencyWithdrawCancelled();
 
     error InvalidAmount();
     error InvalidDestination();
     error InvalidRemote();
+    error DuplicateMessage();
     error RateLimitExceeded();
     error InvalidFee();
     error TransferFailed();
@@ -234,13 +267,20 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
         bytes calldata payload,
         address /*_executor*/,
         bytes calldata /*_extraData*/
-    ) internal override {
+    ) internal override whenNotPaused {
         // Verify trusted remote
         bytes32 remote = trustedRemotes[_origin.srcEid];
         require(remote != bytes32(0) && remote == _origin.sender, "Invalid remote");
 
+        // Replay protection (defense in depth)
+        if (processedInboundGuids[_guid]) revert DuplicateMessage();
+        processedInboundGuids[_guid] = true;
+
         // Decode payload
         (address receiver, uint256 amount) = abi.decode(payload, (address, uint256));
+
+        if (receiver == address(0)) revert InvalidDestination();
+        if (amount == 0) revert InvalidAmount();
 
         // Generate transaction ID
         bytes32 txId = _guid;
@@ -286,6 +326,16 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
     }
 
     /**
+     * @notice Cancel a pending trusted remote update
+     * @param _chainId Chain ID to cancel the pending update for
+     */
+    function cancelTrustedRemote(uint32 _chainId) external onlyOwner {
+        require(pendingTrustedRemotes[_chainId].effectiveAt != 0, "VFIDEBridge: no pending update");
+        delete pendingTrustedRemotes[_chainId];
+        emit TrustedRemoteCancelled(_chainId);
+    }
+
+    /**
      * @notice Apply a scheduled trusted remote update after the timelock has elapsed
      * @param _chainId Chain ID to apply the pending update for
      */
@@ -310,6 +360,16 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
     }
 
     /**
+     * @notice Cancel a pending security module update
+     */
+    function cancelSecurityModule() external onlyOwner {
+        require(pendingSecurityModuleAt != 0, "VFIDEBridge: no pending update");
+        delete pendingSecurityModule;
+        delete pendingSecurityModuleAt;
+        emit SecurityModuleCancelled();
+    }
+
+    /**
      * @notice Apply a scheduled security module update after the timelock has elapsed
      */
     function applySecurityModule() external onlyOwner {
@@ -327,9 +387,35 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
      * @param _maxAmount New max amount
      */
     function setMaxBridgeAmount(uint256 _maxAmount) external onlyOwner {
+        if (_maxAmount < MIN_BRIDGE_AMOUNT) revert InvalidAmount();
+        uint64 effectiveAt = uint64(block.timestamp) + CONFIG_TIMELOCK_DELAY;
+        pendingMaxBridgeAmount = _maxAmount;
+        pendingMaxBridgeAmountAt = effectiveAt;
+        emit MaxBridgeAmountScheduled(_maxAmount, effectiveAt);
+    }
+
+    /**
+     * @notice Cancel a pending max bridge amount update
+     */
+    function cancelMaxBridgeAmount() external onlyOwner {
+        require(pendingMaxBridgeAmountAt != 0, "VFIDEBridge: no pending update");
+        delete pendingMaxBridgeAmount;
+        delete pendingMaxBridgeAmountAt;
+        emit MaxBridgeAmountCancelled();
+    }
+
+    /**
+     * @notice Apply a scheduled max bridge amount update after timelock
+     */
+    function applyMaxBridgeAmount() external onlyOwner {
+        require(pendingMaxBridgeAmountAt != 0, "VFIDEBridge: no pending update");
+        require(block.timestamp >= pendingMaxBridgeAmountAt, "VFIDEBridge: timelock not elapsed");
         uint256 oldAmount = maxBridgeAmount;
-        maxBridgeAmount = _maxAmount;
-        emit MaxBridgeAmountUpdated(oldAmount, _maxAmount);
+        uint256 newAmount = pendingMaxBridgeAmount;
+        maxBridgeAmount = newAmount;
+        delete pendingMaxBridgeAmount;
+        delete pendingMaxBridgeAmountAt;
+        emit MaxBridgeAmountUpdated(oldAmount, newAmount);
     }
 
     /**
@@ -338,9 +424,34 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
      */
     function setBridgeFee(uint256 _fee) external onlyOwner {
         if (_fee > 100) revert InvalidFee(); // Max 1%
+        uint64 effectiveAt = uint64(block.timestamp) + CONFIG_TIMELOCK_DELAY;
+        pendingBridgeFee = _fee;
+        pendingBridgeFeeAt = effectiveAt;
+        emit BridgeFeeScheduled(_fee, effectiveAt);
+    }
+
+    /**
+     * @notice Cancel a pending bridge fee update
+     */
+    function cancelBridgeFee() external onlyOwner {
+        require(pendingBridgeFeeAt != 0, "VFIDEBridge: no pending update");
+        delete pendingBridgeFee;
+        delete pendingBridgeFeeAt;
+        emit BridgeFeeCancelled();
+    }
+
+    /**
+     * @notice Apply a scheduled bridge fee update after timelock
+     */
+    function applyBridgeFee() external onlyOwner {
+        require(pendingBridgeFeeAt != 0, "VFIDEBridge: no pending update");
+        require(block.timestamp >= pendingBridgeFeeAt, "VFIDEBridge: timelock not elapsed");
         uint256 oldFee = bridgeFee;
-        bridgeFee = _fee;
-        emit BridgeFeeUpdated(oldFee, _fee);
+        uint256 newFee = pendingBridgeFee;
+        bridgeFee = newFee;
+        delete pendingBridgeFee;
+        delete pendingBridgeFeeAt;
+        emit BridgeFeeUpdated(oldFee, newFee);
     }
 
     /**
@@ -349,9 +460,34 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
      */
     function setFeeCollector(address _feeCollector) external onlyOwner {
         require(_feeCollector != address(0), "Invalid collector");
+        uint64 effectiveAt = uint64(block.timestamp) + CONFIG_TIMELOCK_DELAY;
+        pendingFeeCollector = _feeCollector;
+        pendingFeeCollectorAt = effectiveAt;
+        emit FeeCollectorScheduled(_feeCollector, effectiveAt);
+    }
+
+    /**
+     * @notice Cancel a pending fee collector update
+     */
+    function cancelFeeCollector() external onlyOwner {
+        require(pendingFeeCollectorAt != 0, "VFIDEBridge: no pending update");
+        delete pendingFeeCollector;
+        delete pendingFeeCollectorAt;
+        emit FeeCollectorCancelled();
+    }
+
+    /**
+     * @notice Apply a scheduled fee collector update after timelock
+     */
+    function applyFeeCollector() external onlyOwner {
+        require(pendingFeeCollectorAt != 0, "VFIDEBridge: no pending update");
+        require(block.timestamp >= pendingFeeCollectorAt, "VFIDEBridge: timelock not elapsed");
         address oldCollector = feeCollector;
-        feeCollector = _feeCollector;
-        emit FeeCollectorUpdated(oldCollector, _feeCollector);
+        address newCollector = pendingFeeCollector;
+        feeCollector = newCollector;
+        delete pendingFeeCollector;
+        delete pendingFeeCollectorAt;
+        emit FeeCollectorUpdated(oldCollector, newCollector);
     }
 
     /**
@@ -374,7 +510,37 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
      * @param _amount Amount to withdraw
      */
     function emergencyWithdraw(address _token, uint256 _amount) external onlyOwner {
-        IERC20(_token).safeTransfer(owner(), _amount);
+        require(_token != address(0), "Invalid token");
+        require(_token != address(vfideToken), "VFIDEBridge: cannot withdraw VFIDE");
+        require(_amount > 0, "Invalid amount");
+        uint64 effectiveAt = uint64(block.timestamp) + CONFIG_TIMELOCK_DELAY;
+        pendingEmergencyWithdraw = PendingEmergencyWithdraw({
+            token: _token,
+            amount: _amount,
+            effectiveAt: effectiveAt
+        });
+        emit EmergencyWithdrawScheduled(_token, _amount, effectiveAt);
+    }
+
+    /**
+     * @notice Execute the queued emergency withdrawal after timelock
+     */
+    function applyEmergencyWithdraw() external onlyOwner {
+        PendingEmergencyWithdraw memory pending = pendingEmergencyWithdraw;
+        require(pending.effectiveAt != 0, "VFIDEBridge: no pending withdraw");
+        require(block.timestamp >= pending.effectiveAt, "VFIDEBridge: timelock not elapsed");
+        delete pendingEmergencyWithdraw;
+        IERC20(pending.token).safeTransfer(owner(), pending.amount);
+        emit EmergencyWithdrawExecuted(pending.token, pending.amount);
+    }
+
+    /**
+     * @notice Cancel a pending emergency withdrawal
+     */
+    function cancelEmergencyWithdraw() external onlyOwner {
+        require(pendingEmergencyWithdraw.effectiveAt != 0, "VFIDEBridge: no pending withdraw");
+        delete pendingEmergencyWithdraw;
+        emit EmergencyWithdrawCancelled();
     }
 
     /**

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 import { requireAuth, checkOwnership } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
-import { validateBody, createProposalSchema } from '@/lib/auth/validation';
+import { createProposalSchema } from '@/lib/auth/validation';
 
 interface Proposal {
   id: number;
@@ -34,15 +34,17 @@ export async function GET(request: NextRequest) {
 
     // Parse and validate limit with upper bound
     const MAX_PROPOSALS_LIMIT = 100;
+    const MAX_PROPOSALS_OFFSET = 10000;
     const limit = limitParam 
       ? Math.min(Math.max(1, parseInt(limitParam, 10)), MAX_PROPOSALS_LIMIT)
       : 50;
     
     // Parse and validate offset
-    const offset = offsetParam ? Math.max(0, parseInt(offsetParam, 10)) : 0;
+    const rawOffset = offsetParam ? parseInt(offsetParam, 10) : 0;
+    const offset = Math.min(Math.max(0, rawOffset), MAX_PROPOSALS_OFFSET);
 
     // Validate parsed numbers
-    if (isNaN(limit) || isNaN(offset)) {
+    if (isNaN(limit) || isNaN(rawOffset)) {
       return NextResponse.json(
         { error: 'Invalid limit or offset parameter' },
         { status: 400 }
@@ -149,16 +151,33 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
+  let body: unknown;
   try {
-    const validation = await validateBody(request, createProposalSchema);
-    if (!validation.success) {
-      return NextResponse.json(
-        { error: validation.error, details: validation.details },
-        { status: 400 }
-      );
-    }
+    body = await request.json();
+  } catch {
+    return NextResponse.json(
+      { error: 'Invalid JSON body' },
+      { status: 400 }
+    );
+  }
 
-    const { proposerAddress, title, description, endsAt } = validation.data;
+  if (!body || typeof body !== 'object' || Array.isArray(body)) {
+    return NextResponse.json(
+      { error: 'Request body must be a JSON object' },
+      { status: 400 }
+    );
+  }
+
+  const parsed = createProposalSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: 'Validation failed', details: parsed.error.issues },
+      { status: 400 }
+    );
+  }
+
+  try {
+    const { proposerAddress, title, description, endsAt } = parsed.data;
 
     // Verify user is creating proposal for themselves
     if (!checkOwnership(authResult.user, proposerAddress)) {

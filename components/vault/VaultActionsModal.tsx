@@ -6,7 +6,7 @@ import { X, ArrowDownToLine, ArrowUpFromLine, RefreshCw, AlertCircle, CheckCircl
 import { useAccount, useWriteContract, useWaitForTransactionReceipt, useReadContract } from 'wagmi';
 import { parseEther, formatEther, isAddress } from 'viem';
 import { CONTRACT_ADDRESSES } from '@/lib/contracts';
-import { VFIDETokenABI, VaultInfrastructureABI, UserVaultABI } from '@/lib/abis';
+import { VFIDETokenABI, UserVaultABI } from '@/lib/abis';
 import { useVaultBalance } from '@/hooks/useVaultHooks';
 import { useToast } from '@/components/ui/toast';
 

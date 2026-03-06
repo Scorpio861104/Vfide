@@ -53,5 +53,20 @@ describe('/api/security/anomaly', () => {
       const response = await GET(request);
       expect(response.status).toBe(429);
     });
+
+    it('should still return stats when activity recording fails', async () => {
+      withRateLimit.mockResolvedValue(null);
+      requireAuth.mockResolvedValue({ user: { address: '0x1111111111111111111111111111111111111123' } });
+      getAnomalyStats.mockResolvedValue({ totalEvents: 10, anomalies: 1 });
+      recordActivity.mockRejectedValue(new Error('log sink down'));
+
+      const request = new NextRequest('http://localhost:3000/api/security/anomaly');
+      const response = await GET(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(200);
+      expect(data.success).toBe(true);
+      expect(data.stats).toEqual({ totalEvents: 10, anomalies: 1 });
+    });
   });
 });

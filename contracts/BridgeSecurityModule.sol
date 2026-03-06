@@ -200,8 +200,10 @@ contract BridgeSecurityModule is Ownable, Pausable {
      * @param _dailyLimit New daily limit
      */
     function setUserLimits(uint256 _hourlyLimit, uint256 _dailyLimit) external onlyOwner {
+        require(_hourlyLimit > 0 && _dailyLimit > 0, "Invalid limits");
         require(_hourlyLimit <= HOURLY_RATE_LIMIT, "Exceeds global hourly limit");
         require(_dailyLimit <= DAILY_CAP, "Exceeds global daily cap");
+        require(_hourlyLimit <= _dailyLimit, "Hourly exceeds daily");
         userHourlyLimit = _hourlyLimit;
         userDailyLimit = _dailyLimit;
         emit UserLimitUpdated(_hourlyLimit, _dailyLimit);
@@ -213,6 +215,7 @@ contract BridgeSecurityModule is Ownable, Pausable {
      * @param status Whitelist status
      */
     function setWhitelist(address user, bool status) external onlyOwner {
+        require(user != address(0), "Invalid user");
         whitelist[user] = status;
         emit UserWhitelisted(user, status);
     }
@@ -223,6 +226,7 @@ contract BridgeSecurityModule is Ownable, Pausable {
      * @param status Blacklist status
      */
     function setBlacklist(address user, bool status) external onlyOwner {
+        require(user != address(0), "Invalid user");
         blacklist[user] = status;
         emit UserBlacklisted(user, status);
     }
@@ -262,6 +266,7 @@ contract BridgeSecurityModule is Ownable, Pausable {
      * @param _required Required oracle count
      */
     function setRequiredOracles(uint256 _required) external onlyOwner {
+        require(_required > 0, "Invalid oracle threshold");
         require(_required <= oracleCount, "Exceeds oracle count");
         uint256 oldCount = requiredOracles;
         requiredOracles = _required;

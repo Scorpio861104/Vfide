@@ -112,13 +112,21 @@ contract CouncilManager is ReentrancyGuard {
         address _councilSalary,
         address _token
     ) external onlyDAO {
+        bool updated;
         if (_election != address(0)) election = ICouncilElection(_election);
+        if (_election != address(0)) updated = true;
         if (_seer != address(0)) seer = ISeer(_seer);
+        if (_seer != address(0)) updated = true;
         if (_ecosystemVault != address(0)) ecosystemVault = _ecosystemVault;
+        if (_ecosystemVault != address(0)) updated = true;
         if (_councilSalary != address(0)) councilSalary = _councilSalary;
+        if (_councilSalary != address(0)) updated = true;
         if (_token != address(0)) token = IERC20(_token);
+        if (_token != address(0)) updated = true;
+
+        require(updated, "CM: no updates");
         
-        emit ModulesSet(_election, _seer, _ecosystemVault, _councilSalary);
+        emit ModulesSet(address(election), address(seer), ecosystemVault, councilSalary);
     }
 
     function setKeeper(address keeper, bool authorized) external onlyDAO {

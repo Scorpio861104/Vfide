@@ -9,6 +9,12 @@ import { getClient } from '@/lib/db';
 import { requireAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 
+const MAX_INVITE_CODE_LENGTH = 64;
+
+function isObjectRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
 /**
  * POST /api/groups/join
  * Join a group using an invite code
@@ -29,13 +35,52 @@ export async function POST(request: NextRequest) {
 
   try {
     client = await getClient();
-    const body = await request.json();
-    const { code, userId } = body;
+    let body: unknown;
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json({ error: 'Invalid JSON payload' }, { status: 400 });
+    }
 
-    if (!code || !userId) {
+    if (!isObjectRecord(body)) {
+      return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
+    }
+
+    const { code, userId } = body;
+    const authenticatedAddress = authResult.user.address.toLowerCase();
+
+    if (typeof code !== 'string' || code.trim().length === 0 || code.length > MAX_INVITE_CODE_LENGTH) {
       return NextResponse.json(
-        { error: 'Missing required fields' },
+        { error: 'Invalid invite code' },
         { status: 400 }
+      );
+    }
+
+    if (userId !== undefined && (!Number.isInteger(userId) || Number(userId) <= 0)) {
+      return NextResponse.json(
+        { error: 'Invalid userId' },
+        { status: 400 }
+      );
+    }
+
+    const authUserResult = await client.query(
+      'SELECT id FROM users WHERE wallet_address = $1',
+      [authenticatedAddress]
+    );
+
+    if (authUserResult.rows.length === 0 || !authUserResult.rows[0]?.id) {
+      return NextResponse.json(
+        { error: 'Authenticated user not found' },
+        { status: 404 }
+      );
+    }
+
+    const authenticatedUserId = authUserResult.rows[0].id;
+
+    if (userId && Number(userId) !== Number(authenticatedUserId)) {
+      return NextResponse.json(
+        { error: 'Unauthorized userId' },
+        { status: 403 }
       );
     }
 
@@ -85,7 +130,7 @@ export async function POST(request: NextRequest) {
     // Check if user is already a member
     const memberCheckResult = await client.query(
       `SELECT id FROM group_members WHERE group_id = $1 AND user_id = $2`,
-      [link.group_id, userId]
+      [link.group_id, authenticatedUserId]
     );
     
     if (memberCheckResult.rows.length > 0) {
@@ -111,7 +156,7 @@ export async function POST(request: NextRequest) {
     await client.query(
       `INSERT INTO group_members (group_id, user_id, role, joined_at)
        VALUES ($1, $2, 'member', NOW())`,
-      [link.group_id, userId]
+      [link.group_id, authenticatedUserId]
     );
 
     // Update invite usage count

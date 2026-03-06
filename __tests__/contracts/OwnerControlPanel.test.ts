@@ -46,6 +46,171 @@ describe('OwnerControlPanel Contract', () => {
     });
   });
 
+  describe('Governance Guardrails', () => {
+    it('should set governance delay within allowed range', async () => {
+      mockContractWrite.mockResolvedValueOnce('0xhash');
+
+      const tx = await mockContractWrite({ functionName: 'governance_setDelay', args: [86400] });
+      expect(tx).toBe('0xhash');
+    });
+
+    it('should reject governance delay outside allowed range', async () => {
+      mockContractWrite.mockRejectedValueOnce(new Error('OCP_InvalidRange'));
+
+      await expect(
+        mockContractWrite({ functionName: 'governance_setDelay', args: [30] })
+      ).rejects.toThrow('OCP_InvalidRange');
+    });
+
+    it('should set autoswap slippage governance cap', async () => {
+      mockContractWrite.mockResolvedValueOnce('0xhash');
+
+      const tx = await mockContractWrite({ functionName: 'governance_setMaxAutoSwapSlippageBps', args: [300] });
+      expect(tx).toBe('0xhash');
+    });
+
+    it('should reject autoswap slippage governance cap above hard max', async () => {
+      mockContractWrite.mockRejectedValueOnce(new Error('OCP_InvalidRange'));
+
+      await expect(
+        mockContractWrite({ functionName: 'governance_setMaxAutoSwapSlippageBps', args: [9999] })
+      ).rejects.toThrow('OCP_InvalidRange');
+    });
+
+    it('should set auto work payout bounds', async () => {
+      mockContractWrite.mockResolvedValueOnce('0xhash');
+
+      const tx = await mockContractWrite({ functionName: 'governance_setAutoWorkPayoutBounds', args: [0, parseEther('100')] });
+      expect(tx).toBe('0xhash');
+    });
+
+    it('should reject auto work payout bounds when min > max', async () => {
+      mockContractWrite.mockRejectedValueOnce(new Error('OCP_InvalidRange'));
+
+      await expect(
+        mockContractWrite({ functionName: 'governance_setAutoWorkPayoutBounds', args: [parseEther('10'), parseEther('1')] })
+      ).rejects.toThrow('OCP_InvalidRange');
+    });
+
+    it('should queue a governance action', async () => {
+      const actionId = '0xactionid1234';
+      mockContractWrite.mockResolvedValueOnce('0xhash');
+
+      const tx = await mockContractWrite({ functionName: 'governance_queueAction', args: [actionId] });
+      expect(tx).toBe('0xhash');
+    });
+
+    it('should cancel a queued governance action', async () => {
+      const actionId = '0xactionid1234';
+      mockContractWrite.mockResolvedValueOnce('0xhash');
+
+      const tx = await mockContractWrite({ functionName: 'governance_cancelAction', args: [actionId] });
+      expect(tx).toBe('0xhash');
+    });
+
+    it('should reject token_lockPolicy when action is not queued', async () => {
+      mockContractWrite.mockRejectedValueOnce(new Error('OCP_ActionNotQueued'));
+
+      await expect(
+        mockContractWrite({ functionName: 'token_lockPolicy' })
+      ).rejects.toThrow('OCP_ActionNotQueued');
+    });
+
+    it('should reject queued action execution before timelock delay', async () => {
+      mockContractWrite.mockRejectedValueOnce(new Error('OCP_ActionNotReady'));
+
+      await expect(
+        mockContractWrite({ functionName: 'autoSwap_configure', args: [owner, user1, true, 100] })
+      ).rejects.toThrow('OCP_ActionNotReady');
+    });
+
+    it('should reject autoswap config when slippage exceeds governance cap', async () => {
+      mockContractWrite.mockRejectedValueOnce(new Error('OCP_SlippageTooHigh'));
+
+      await expect(
+        mockContractWrite({ functionName: 'autoSwap_configure', args: [owner, user1, true, 9999] })
+      ).rejects.toThrow('OCP_SlippageTooHigh');
+    });
+
+    it('should reject auto work payout config when outside bounds', async () => {
+      mockContractWrite.mockRejectedValueOnce(new Error('OCP_InvalidRange'));
+
+      await expect(
+        mockContractWrite({
+          functionName: 'ecosystem_configureAutoWorkPayout',
+          args: [true, parseEther('999999999'), parseEther('999999999'), parseEther('999999999')],
+        })
+      ).rejects.toThrow('OCP_InvalidRange');
+    });
+
+    it('should allow execution after queue + delay flow', async () => {
+      const actionId = '0xactionid1234';
+      mockContractRead.mockResolvedValueOnce(actionId);
+      mockContractWrite.mockResolvedValueOnce('0xqueuehash');
+      mockContractWrite.mockResolvedValueOnce('0xexecuthash');
+
+      const computedActionId = await mockContractRead({ functionName: 'actionId_token_lockPolicy' });
+      const queueTx = await mockContractWrite({ functionName: 'governance_queueAction', args: [computedActionId] });
+      const executeTx = await mockContractWrite({ functionName: 'token_lockPolicy' });
+
+      expect(computedActionId).toBe(actionId);
+      expect(queueTx).toBe('0xqueuehash');
+      expect(executeTx).toBe('0xexecuthash');
+    });
+
+    it('should compute and queue action id for autoSwap_configure then execute', async () => {
+      const actionId = '0xautoswapactionid1234';
+      mockContractRead.mockResolvedValueOnce(actionId);
+      mockContractWrite.mockResolvedValueOnce('0xqueuehash');
+      mockContractWrite.mockResolvedValueOnce('0xexecuthash');
+
+      const computedActionId = await mockContractRead({ functionName: 'actionId_autoSwap_configure', args: [owner, user1, true, 100] });
+      const queueTx = await mockContractWrite({ functionName: 'governance_queueAction', args: [computedActionId] });
+      const executeTx = await mockContractWrite({ functionName: 'autoSwap_configure', args: [owner, user1, true, 100] });
+
+      expect(computedActionId).toBe(actionId);
+      expect(queueTx).toBe('0xqueuehash');
+      expect(executeTx).toBe('0xexecuthash');
+    });
+
+    it('should compute and queue action id for ecosystem_configureAutoWorkPayout then execute', async () => {
+      const actionId = '0xautoworkactionid1234';
+      mockContractRead.mockResolvedValueOnce(actionId);
+      mockContractWrite.mockResolvedValueOnce('0xqueuehash');
+      mockContractWrite.mockResolvedValueOnce('0xexecuthash');
+
+      const computedActionId = await mockContractRead({
+        functionName: 'actionId_ecosystem_configureAutoWorkPayout',
+        args: [true, parseEther('1'), parseEther('0.5'), parseEther('0.25')],
+      });
+      const queueTx = await mockContractWrite({ functionName: 'governance_queueAction', args: [computedActionId] });
+      const executeTx = await mockContractWrite({
+        functionName: 'ecosystem_configureAutoWorkPayout',
+        args: [true, parseEther('1'), parseEther('0.5'), parseEther('0.25')],
+      });
+
+      expect(computedActionId).toBe(actionId);
+      expect(queueTx).toBe('0xqueuehash');
+      expect(executeTx).toBe('0xexecuthash');
+    });
+
+    it('should reject cancellation for non-queued action id', async () => {
+      mockContractWrite.mockRejectedValueOnce(new Error('OCP_ActionNotQueued'));
+
+      await expect(
+        mockContractWrite({ functionName: 'governance_cancelAction', args: ['0xnotqueued'] })
+      ).rejects.toThrow('OCP_ActionNotQueued');
+    });
+
+    it('should reject emergency recoverETH when action is not queued', async () => {
+      mockContractWrite.mockRejectedValueOnce(new Error('OCP_ActionNotQueued'));
+
+      await expect(
+        mockContractWrite({ functionName: 'emergency_recoverETH', args: [owner] })
+      ).rejects.toThrow('OCP_ActionNotQueued');
+    });
+  });
+
   describe('Fee Management', () => {
     it('should set fee policy', async () => {
       mockContractWrite.mockResolvedValueOnce('0xhash');

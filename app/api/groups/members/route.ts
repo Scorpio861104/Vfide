@@ -2,6 +2,7 @@ import { query } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
+import { isAddress } from 'viem';
 
 interface GroupMember {
   id: number;
@@ -12,6 +13,12 @@ interface GroupMember {
   user_address?: string;
   username?: string;
   avatar_url?: string;
+}
+
+const VALID_GROUP_MEMBER_ROLES = ['member', 'moderator', 'admin'] as const;
+
+function isObjectRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
 export async function GET(request: NextRequest) {
@@ -70,28 +77,59 @@ export async function POST(request: NextRequest) {
   if (authResult instanceof NextResponse) return authResult;
 
   try {
-    const body = await request.json();
+    let body: unknown;
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json({ success: false, error: 'Invalid JSON payload' }, { status: 400 });
+    }
+
+    if (!isObjectRecord(body)) {
+      return NextResponse.json({ success: false, error: 'Invalid request body' }, { status: 400 });
+    }
+
     const { groupId, userAddress, role = 'member', actorAddress } = body;
+    const authenticatedAddress = authResult.user.address.toLowerCase();
 
     if (!groupId || !userAddress) {
       return NextResponse.json({ success: false, error: 'groupId and userAddress required' }, { status: 400 });
     }
 
-    if (actorAddress) {
-      const actorResult = await query(
-        `SELECT gm.role FROM group_members gm
-         JOIN users u ON gm.user_id = u.id
-         WHERE gm.group_id = $1 AND u.wallet_address = $2`,
-        [groupId, actorAddress.toLowerCase()]
-      );
-      
-      const actor = actorResult.rows[0];
-      if (actorResult.rows.length === 0 || !actor || !['admin', 'moderator'].includes(actor.role)) {
-        return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 403 });
-      }
+    const groupIdValue =
+      typeof groupId === 'number' || typeof groupId === 'string' ? groupId.toString() : null;
+    const userAddressValue = typeof userAddress === 'string' ? userAddress : null;
+    const roleValue = typeof role === 'string' ? role : null;
+    const actorAddressValue = typeof actorAddress === 'string' ? actorAddress : null;
+
+    if (!groupIdValue || !userAddressValue || !roleValue) {
+      return NextResponse.json({ success: false, error: 'Invalid groupId, userAddress, or role type' }, { status: 400 });
     }
 
-    const userResult = await query('SELECT id FROM users WHERE wallet_address = $1', [userAddress.toLowerCase()]);
+    if (!isAddress(userAddressValue)) {
+      return NextResponse.json({ success: false, error: 'Invalid userAddress format' }, { status: 400 });
+    }
+
+    if (!VALID_GROUP_MEMBER_ROLES.includes(roleValue as (typeof VALID_GROUP_MEMBER_ROLES)[number])) {
+      return NextResponse.json({ success: false, error: 'Invalid role value' }, { status: 400 });
+    }
+
+    if (actorAddressValue && actorAddressValue.toLowerCase() !== authenticatedAddress) {
+      return NextResponse.json({ success: false, error: 'Unauthorized actor' }, { status: 403 });
+    }
+
+    const actorResult = await query(
+      `SELECT gm.role FROM group_members gm
+       JOIN users u ON gm.user_id = u.id
+       WHERE gm.group_id = $1 AND u.wallet_address = $2`,
+      [groupIdValue, authenticatedAddress]
+    );
+
+    const actor = actorResult.rows[0];
+    if (actorResult.rows.length === 0 || !actor || !['admin', 'moderator'].includes(actor.role)) {
+      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 403 });
+    }
+
+    const userResult = await query('SELECT id FROM users WHERE wallet_address = $1', [userAddressValue.toLowerCase()]);
     if (userResult.rows.length === 0) {
       return NextResponse.json({ success: false, error: 'User not found' }, { status: 404 });
     }
@@ -103,10 +141,10 @@ export async function POST(request: NextRequest) {
 
     const result = await query<GroupMember>(
       'INSERT INTO group_members (group_id, user_id, role) VALUES ($1, $2, $3) RETURNING *',
-      [groupId, userIdVal, role]
+      [groupIdValue, userIdVal, roleValue]
     );
     
-    await query('UPDATE groups SET member_count = member_count + 1 WHERE id = $1', [groupId]);
+    await query('UPDATE groups SET member_count = member_count + 1 WHERE id = $1', [groupIdValue]);
 
     return NextResponse.json({ success: true, member: result.rows[0] }, { status: 201 });
   } catch (error) {
@@ -125,18 +163,51 @@ export async function PATCH(request: NextRequest) {
   if (authResult instanceof NextResponse) return authResult;
 
   try {
-    const body = await request.json();
+    let body: unknown;
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json({ success: false, error: 'Invalid JSON payload' }, { status: 400 });
+    }
+
+    if (!isObjectRecord(body)) {
+      return NextResponse.json({ success: false, error: 'Invalid request body' }, { status: 400 });
+    }
+
     const { groupId, userAddress, role, actorAddress } = body;
+    const authenticatedAddress = authResult.user.address.toLowerCase();
 
     if (!groupId || !userAddress || !role || !actorAddress) {
       return NextResponse.json({ success: false, error: 'Missing required fields' }, { status: 400 });
+    }
+
+    const groupIdValue =
+      typeof groupId === 'number' || typeof groupId === 'string' ? groupId.toString() : null;
+    const userAddressValue = typeof userAddress === 'string' ? userAddress : null;
+    const roleValue = typeof role === 'string' ? role : null;
+    const actorAddressValue = typeof actorAddress === 'string' ? actorAddress : null;
+
+    if (!groupIdValue || !userAddressValue || !roleValue || !actorAddressValue) {
+      return NextResponse.json({ success: false, error: 'Invalid groupId, userAddress, role, or actorAddress type' }, { status: 400 });
+    }
+
+    if (!isAddress(userAddressValue) || !isAddress(actorAddressValue)) {
+      return NextResponse.json({ success: false, error: 'Invalid address format' }, { status: 400 });
+    }
+
+    if (!VALID_GROUP_MEMBER_ROLES.includes(roleValue as (typeof VALID_GROUP_MEMBER_ROLES)[number])) {
+      return NextResponse.json({ success: false, error: 'Invalid role value' }, { status: 400 });
+    }
+
+    if (actorAddressValue.toLowerCase() !== authenticatedAddress) {
+      return NextResponse.json({ success: false, error: 'Unauthorized actor' }, { status: 403 });
     }
 
     const actorResult = await query(
       `SELECT gm.role FROM group_members gm
        JOIN users u ON gm.user_id = u.id
        WHERE gm.group_id = $1 AND u.wallet_address = $2`,
-      [groupId, actorAddress.toLowerCase()]
+      [groupIdValue, authenticatedAddress]
     );
 
     const actor = actorResult.rows[0];
@@ -150,7 +221,7 @@ export async function PATCH(request: NextRequest) {
        FROM users u
        WHERE gm.user_id = u.id AND gm.group_id = $1 AND u.wallet_address = $2
        RETURNING gm.*`,
-      [groupId, userAddress.toLowerCase(), role]
+      [groupIdValue, userAddressValue.toLowerCase(), roleValue]
     );
 
     if (result.rows.length === 0) {
@@ -177,16 +248,48 @@ export async function DELETE(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const groupId = searchParams.get('groupId');
     const userAddress = searchParams.get('userAddress');
+    const actorAddress = searchParams.get('actorAddress');
+    const authenticatedAddress = authResultDelete.user.address.toLowerCase();
 
     if (!groupId || !userAddress) {
       return NextResponse.json({ success: false, error: 'Missing groupId or userAddress' }, { status: 400 });
+    }
+
+    if (!isAddress(userAddress)) {
+      return NextResponse.json({ success: false, error: 'Invalid userAddress format' }, { status: 400 });
+    }
+
+    if (actorAddress) {
+      if (!isAddress(actorAddress)) {
+        return NextResponse.json({ success: false, error: 'Invalid actorAddress format' }, { status: 400 });
+      }
+      if (actorAddress.toLowerCase() !== authenticatedAddress) {
+        return NextResponse.json({ success: false, error: 'Unauthorized actor' }, { status: 403 });
+      }
+    }
+
+    const targetAddress = userAddress.toLowerCase();
+    const isSelfRemoval = targetAddress === authenticatedAddress;
+
+    if (!isSelfRemoval) {
+      const actorResult = await query(
+        `SELECT gm.role FROM group_members gm
+         JOIN users u ON gm.user_id = u.id
+         WHERE gm.group_id = $1 AND u.wallet_address = $2`,
+        [groupId, authenticatedAddress]
+      );
+
+      const actor = actorResult.rows[0];
+      if (actorResult.rows.length === 0 || !actor || !['admin', 'moderator'].includes(actor.role)) {
+        return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 403 });
+      }
     }
 
     const result = await query(
       `DELETE FROM group_members gm
        USING users u
        WHERE gm.user_id = u.id AND gm.group_id = $1 AND u.wallet_address = $2`,
-      [groupId, userAddress.toLowerCase()]
+      [groupId, targetAddress]
     );
 
     if (result.rowCount === 0) {

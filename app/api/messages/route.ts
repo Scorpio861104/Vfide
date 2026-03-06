@@ -22,6 +22,10 @@ interface Message {
   recipient_avatar?: string;
 }
 
+const MAX_MESSAGES_LIMIT = 200;
+const MAX_MESSAGES_OFFSET = 10000;
+const MAX_BULK_MESSAGE_IDS = 500;
+
 /**
  * GET /api/messages?conversationWith=0x...&limit=50&offset=0
  * Get messages for a conversation between current user and another user
@@ -41,11 +45,14 @@ export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams;
     const userAddress = searchParams.get('userAddress'); // Current user
     const conversationWith = searchParams.get('conversationWith'); // Other user
-    const limit = parseInt(searchParams.get('limit') || '50', 10);
-    const offset = parseInt(searchParams.get('offset') || '0', 10);
+    const rawLimit = parseInt(searchParams.get('limit') || '50', 10);
+    const rawOffset = parseInt(searchParams.get('offset') || '0', 10);
+
+    const limit = Math.min(Math.max(rawLimit, 0), MAX_MESSAGES_LIMIT);
+    const offset = Math.min(Math.max(rawOffset, 0), MAX_MESSAGES_OFFSET);
 
     // Validate parsed numbers
-    if (isNaN(limit) || isNaN(offset) || limit < 0 || offset < 0) {
+    if (isNaN(rawLimit) || isNaN(rawOffset)) {
       return NextResponse.json(
         { error: 'Invalid limit or offset parameter' },
         { status: 400 }
@@ -295,12 +302,30 @@ export async function PATCH(request: NextRequest) {
     return authResult;
   }
 
+  let body: Record<string, unknown>;
   try {
-    const body = await request.json();
+    body = await request.json();
+  } catch {
+    return NextResponse.json(
+      { error: 'Invalid JSON body' },
+      { status: 400 }
+    );
+  }
+
+  if (!body || typeof body !== 'object' || Array.isArray(body)) {
+    return NextResponse.json(
+      { error: 'Request body must be a JSON object' },
+      { status: 400 }
+    );
+  }
+
+  try {
     const { messageIds, conversationWith, userAddress } = body;
+    const userAddressValue = typeof userAddress === 'string' ? userAddress : null;
+    const conversationWithValue = typeof conversationWith === 'string' ? conversationWith : null;
 
     // Verify ownership - user can only mark their own messages as read
-    if (userAddress && authResult.user.address.toLowerCase() !== userAddress.toLowerCase()) {
+    if (userAddressValue && authResult.user.address.toLowerCase() !== userAddressValue.toLowerCase()) {
       return NextResponse.json(
         { error: 'You can only mark your own messages as read' },
         { status: 403 }
@@ -308,6 +333,24 @@ export async function PATCH(request: NextRequest) {
     }
 
     if (messageIds && Array.isArray(messageIds)) {
+      if (messageIds.length > MAX_BULK_MESSAGE_IDS) {
+        return NextResponse.json(
+          { error: `Too many messageIds. Maximum ${MAX_BULK_MESSAGE_IDS} allowed.` },
+          { status: 400 }
+        );
+      }
+
+      const hasInvalidMessageIds = messageIds.some(
+        (id) => !Number.isInteger(id) || Number(id) <= 0
+      );
+
+      if (hasInvalidMessageIds) {
+        return NextResponse.json(
+          { error: 'Invalid messageIds. Must be an array of positive integers.' },
+          { status: 400 }
+        );
+      }
+
       // Verify the user is the recipient of these messages
       const messageCheck = await query(
         `SELECT m.id, recipient.wallet_address 
@@ -339,7 +382,7 @@ export async function PATCH(request: NextRequest) {
         success: true,
         updated: messageIds.length,
       });
-    } else if (conversationWith && userAddress) {
+    } else if (conversationWithValue && userAddressValue) {
       // Mark all messages in conversation as read
       const result = await query(
         `UPDATE messages m
@@ -350,7 +393,7 @@ export async function PATCH(request: NextRequest) {
            AND sender.wallet_address = $1
            AND recipient.wallet_address = $2
            AND m.is_read = false`,
-        [conversationWith.toLowerCase(), userAddress.toLowerCase()]
+          [conversationWithValue.toLowerCase(), userAddressValue.toLowerCase()]
       );
 
       return NextResponse.json({

@@ -30,6 +30,32 @@ async function expectRevert(action: () => Promise<unknown>) {
   }
 }
 
+async function queueAndGetId(
+  timelock: any,
+  target: string,
+  value: bigint,
+  data: string
+): Promise<string> {
+  const tx = await timelock.queueTx(target, value, data);
+  const receipt = await tx.wait();
+  if (!receipt || !Array.isArray(receipt.logs)) {
+    throw new Error("Missing transaction receipt logs");
+  }
+
+  for (const log of receipt.logs) {
+    try {
+      const parsed = timelock.interface.parseLog(log);
+      if (parsed && parsed.name === "Queued") {
+        return parsed.args.id as string;
+      }
+    } catch {
+      // Ignore logs emitted by other contracts.
+    }
+  }
+
+  throw new Error("Queued event not found");
+}
+
 async function main() {
   const rpcUrl = process.env.RPC_URL ?? "http://127.0.0.1:8545";
   const provider = new JsonRpcProvider(rpcUrl);
@@ -40,7 +66,7 @@ async function main() {
   const daoAddress = await daoSigner.getAddress();
   const nonDaoAddress = await nonDaoSigner.getAddress();
 
-  const timelockArtifact = loadArtifact("artifacts/contracts/DAOTimelockV2.sol/DAOTimelockV2.json");
+  const timelockArtifact = loadArtifact("artifacts/contracts/DAOTimelock.sol/DAOTimelock.json");
 
   const timelockFactory = new ContractFactory(
     timelockArtifact.abi as any,
@@ -48,83 +74,51 @@ async function main() {
     daoSigner
   );
 
-  const timelock = await timelockFactory.deploy(
-    daoAddress,
-    "0x0000000000000000000000000000000000000000"
-  ) as any;
+  const timelock = await timelockFactory.deploy(daoAddress) as any;
   await timelock.waitForDeployment();
 
   // Guardrail: only DAO can queue operations.
   await expectRevert(async () =>
-    timelock.connect(nonDaoSigner).queueTransaction(
+    timelock.connect(nonDaoSigner).queueTx(
       await timelock.getAddress(),
       0,
-      "setDelay(uint256)",
       "0x"
     )
   );
 
   // Guardrail: cannot queue a zero target operation.
   await expectRevert(() =>
-    timelock.queueTransaction(
+    timelock.queueTx(
       "0x0000000000000000000000000000000000000000",
       0,
-      "setDelay(uint256)",
       "0x"
     )
   );
 
   // Queue a valid self-governed delay update.
   const newDelay = 3n * 24n * 60n * 60n;
-  const encodedDelayArg = newDelay.toString(16).padStart(64, "0");
-  const delayData = `0x${encodedDelayArg}`;
-
-  const queueTx = await timelock.queueTransaction(
+  const delayData = timelock.interface.encodeFunctionData("setDelay", [newDelay]);
+  const firstId = await queueAndGetId(
+    timelock,
     await timelock.getAddress(),
-    0,
-    "setDelay(uint256)",
+    0n,
     delayData
   );
-  await queueTx.wait();
-
-  const nonceAfterFirstQueue = await timelock.nonce();
-  const firstNonce = nonceAfterFirstQueue - 1n;
 
   // Timelock must enforce the delay before execution.
   await expectRevert(async () =>
-    timelock.executeTransaction(
-      await timelock.getAddress(),
-      0,
-      "setDelay(uint256)",
-      delayData,
-      firstNonce,
-      { gasLimit: 5_000_000 }
-    )
+    timelock.execute(firstId, { gasLimit: 5_000_000 })
   );
 
-  const eta = await timelock.getEta(
-    await timelock.getAddress(),
-    0,
-    "setDelay(uint256)",
-    delayData,
-    firstNonce
-  );
-  if (eta === 0n) {
+  const queued = await timelock.queue(firstId);
+  if (!queued || queued.eta === 0n) {
     throw new Error("Expected queued transaction ETA to be set");
   }
 
-  await increaseTime(provider, 2 * 24 * 60 * 60 + 1);
+  const initialDelay = await timelock.delay();
+  await increaseTime(provider, Number(initialDelay) + 1);
 
-  await (
-    await timelock.executeTransaction(
-      await timelock.getAddress(),
-      0,
-      "setDelay(uint256)",
-      delayData,
-      firstNonce,
-      { gasLimit: 5_000_000 }
-    )
-  ).wait();
+  await (await timelock.execute(firstId, { gasLimit: 5_000_000 })).wait();
 
   const currentDelay = await timelock.delay();
   if (currentDelay !== newDelay) {
@@ -132,36 +126,18 @@ async function main() {
   }
 
   // Queue + cancel path should prevent execution.
-  const queueCancelTx = await timelock.queueTransaction(
+  const setAdminData = timelock.interface.encodeFunctionData("setAdmin", [nonDaoAddress]);
+  const secondId = await queueAndGetId(
+    timelock,
     await timelock.getAddress(),
-    0,
-    "setDAO(address)",
-    `0x${nonDaoAddress.slice(2).padStart(64, "0")}`
+    0n,
+    setAdminData
   );
-  await queueCancelTx.wait();
 
-  const nonceAfterSecondQueue = await timelock.nonce();
-  const secondNonce = nonceAfterSecondQueue - 1n;
-
-  await (
-    await timelock.cancelTransaction(
-      await timelock.getAddress(),
-      0,
-      "setDAO(address)",
-      `0x${nonDaoAddress.slice(2).padStart(64, "0")}`,
-      secondNonce
-    )
-  ).wait();
+  await (await timelock.cancel(secondId)).wait();
 
   await expectRevert(async () =>
-    timelock.executeTransaction(
-      await timelock.getAddress(),
-      0,
-      "setDAO(address)",
-      `0x${nonDaoAddress.slice(2).padStart(64, "0")}`,
-      secondNonce,
-      { gasLimit: 5_000_000 }
-    )
+    timelock.execute(secondId, { gasLimit: 5_000_000 })
   );
 
   console.log("Feature 9 governance/timelock checks passed");

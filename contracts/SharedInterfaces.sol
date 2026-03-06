@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
-/**
- * @notice SECURITY — Local security-primitive maintenance policy
+/*
+ * SECURITY — Local security-primitive maintenance policy
  *
  * All security-critical primitives (`ReentrancyGuard`, `SafeERC20`, `Ownable`,
  * `Pausable`) are implemented locally in this file rather than imported from
@@ -16,17 +16,17 @@ pragma solidity 0.8.30;
  *   3. Apply the equivalent fix here and update `SHARED_INTERFACES_VERSION`.
  *   4. Add the advisory ID to the `PATCHED_ADVISORIES` constant below.
  *
- * @custom:oz-version-baseline 5.1.0  — primitives last validated against this release
+ * OZ version baseline: 5.1.0 (primitives last validated against this release)
  */
 
-/// @notice Monotonic version bump on every security-patch update to this file.
-/// @dev    File-level constants in Solidity 0.8 are implicitly internal.
-///         Increment on every security-motivated change; use in NatDoc review trail.
+// Monotonic version bump on every security-patch update to this file.
+// File-level constants in Solidity 0.8 are implicitly internal.
+// Increment on every security-motivated change; use in review trail.
 uint256 constant SHARED_INTERFACES_VERSION = 1;
 
-/// @notice Comma-separated list of OZ advisory IDs whose mitigations have been
-///         manually assessed and confirmed as not applicable or applied here.
-/// @dev    Example: "GHSA-xxxx-yyyy-zzzz,GHSA-aaaa-bbbb-cccc"
+// Comma-separated list of OZ advisory IDs whose mitigations have been
+// manually assessed and confirmed as not applicable or applied here.
+// Example: "GHSA-xxxx-yyyy-zzzz,GHSA-aaaa-bbbb-cccc"
 string constant PATCHED_ADVISORIES = "";
 
 
@@ -169,6 +169,8 @@ interface ISeer {
 
 interface IEcosystemVault {
     function payExpense(address recipient, uint256 amount, string calldata reason) external;
+    function payMerchantWorkReward(address worker, uint256 amount, string calldata reason) external;
+    function payReferralWorkReward(address worker, uint256 amount, string calldata reason) external;
     function burnFunds(uint256 amount) external;
     function recordMerchantTransaction(address merchant) external;
     function checkHeadhunterReward(address merchant) external;
@@ -367,5 +369,3 @@ library SafeERC20 {
         require(success && (data.length == 0 || abi.decode(data, (bool))), "SafeERC20: approve failed");
     }
 }
-
-/// @notice 

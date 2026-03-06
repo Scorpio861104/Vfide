@@ -17,6 +17,14 @@ interface GroupInvite {
   created_at: string;
 }
 
+const MAX_INVITE_CODE_LENGTH = 64;
+const MAX_INVITE_DESCRIPTION_LENGTH = 500;
+const MAX_INVITE_EXPIRY_MS = 365 * 24 * 60 * 60 * 1000;
+
+function isObjectRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
 async function generateInviteCode(): Promise<string> {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
   let code = '';
@@ -43,12 +51,59 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const body = await request.json();
+    let body: unknown;
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json({ error: 'Invalid JSON payload' }, { status: 400 });
+    }
+
+    if (!isObjectRecord(body)) {
+      return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
+    }
+
     const { groupId, expiresIn, maxUses, description, requireApproval } = body;
 
-    if (!groupId) {
+    if (!Number.isInteger(groupId) || Number(groupId) <= 0) {
       return NextResponse.json(
-        { error: 'Missing required field: groupId' },
+        { error: 'Invalid groupId' },
+        { status: 400 }
+      );
+    }
+
+    if (
+      expiresIn !== undefined &&
+      (!Number.isFinite(expiresIn) || Number(expiresIn) <= 0 || Number(expiresIn) > MAX_INVITE_EXPIRY_MS)
+    ) {
+      return NextResponse.json(
+        { error: `Invalid expiresIn. Must be a positive number up to ${MAX_INVITE_EXPIRY_MS}.` },
+        { status: 400 }
+      );
+    }
+
+    if (
+      maxUses !== undefined &&
+      (!Number.isInteger(maxUses) || Number(maxUses) <= 0)
+    ) {
+      return NextResponse.json(
+        { error: 'Invalid maxUses. Must be a positive integer if provided.' },
+        { status: 400 }
+      );
+    }
+
+    if (
+      description !== undefined &&
+      (typeof description !== 'string' || description.length > MAX_INVITE_DESCRIPTION_LENGTH)
+    ) {
+      return NextResponse.json(
+        { error: `Invalid description. Must be a string up to ${MAX_INVITE_DESCRIPTION_LENGTH} characters.` },
+        { status: 400 }
+      );
+    }
+
+    if (requireApproval !== undefined && typeof requireApproval !== 'boolean') {
+      return NextResponse.json(
+        { error: 'Invalid requireApproval flag. Must be a boolean if provided.' },
         { status: 400 }
       );
     }
@@ -76,7 +131,7 @@ export async function POST(request: NextRequest) {
     }
 
     const code = await generateInviteCode();
-    const expiresAt = expiresIn ? new Date(Date.now() + expiresIn).toISOString() : null;
+    const expiresAt = expiresIn ? new Date(Date.now() + Number(expiresIn)).toISOString() : null;
 
     const result = await query<GroupInvite>(
       `INSERT INTO group_invites (group_id, code, created_by, expires_at, max_uses, description, require_approval)
@@ -117,6 +172,31 @@ export async function GET(request: NextRequest) {
     }
 
     if (groupId) {
+      const authResult = await requireAuth(request);
+      if (authResult instanceof NextResponse) return authResult;
+      if (!authResult.user?.address) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      }
+
+      const userResult = await query(
+        'SELECT id FROM users WHERE wallet_address = $1',
+        [authResult.user.address.toLowerCase()]
+      );
+
+      if (userResult.rows.length === 0 || !userResult.rows[0]?.id) {
+        return NextResponse.json({ error: 'User not found' }, { status: 404 });
+      }
+
+      const memberRoleResult = await query(
+        'SELECT role FROM group_members WHERE group_id = $1 AND user_id = $2',
+        [groupId, userResult.rows[0].id]
+      );
+
+      const memberRole = memberRoleResult.rows[0]?.role;
+      if (!memberRole || !['admin', 'moderator'].includes(memberRole)) {
+        return NextResponse.json({ error: 'Not authorized to view group invites' }, { status: 403 });
+      }
+
       const result = await query<GroupInvite>(
         `SELECT gi.*, u.username as creator_username
          FROM group_invites gi
@@ -152,12 +232,27 @@ export async function PATCH(request: NextRequest) {
   }
 
   try {
-    const body = await request.json();
+    let body: unknown;
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json({ error: 'Invalid JSON payload' }, { status: 400 });
+    }
+
+    if (!isObjectRecord(body)) {
+      return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
+    }
+
     const { code, action } = body;
 
-    if (!code || !action) {
+    if (
+      typeof code !== 'string' ||
+      code.trim().length === 0 ||
+      code.length > MAX_INVITE_CODE_LENGTH ||
+      (action !== 'revoke' && action !== 'activate')
+    ) {
       return NextResponse.json(
-        { error: 'Missing required fields' },
+        { error: 'Invalid code or action' },
         { status: 400 }
       );
     }

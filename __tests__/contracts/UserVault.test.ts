@@ -613,6 +613,22 @@ describe('UserVault Contract', () => {
   });
 
   describe('Edge Cases and Integration', () => {
+    it('should reject duplicate guardian inheritance-cancel vote', async () => {
+      mockContractWrite.mockRejectedValueOnce(new Error('UV_AlreadyVoted'));
+
+      await expect(
+        mockContractWrite({ functionName: 'guardianCancelInheritance', args: [] })
+      ).rejects.toThrow('UV_AlreadyVoted');
+    });
+
+    it('should reject recovery request from immature guardian', async () => {
+      mockContractWrite.mockRejectedValueOnce(new Error('UV:immature'));
+
+      await expect(
+        mockContractWrite({ functionName: 'requestRecovery', args: [user1] })
+      ).rejects.toThrow('UV:immature');
+    });
+
     it('should return vault owner', async () => {
       mockContractRead.mockResolvedValueOnce(owner);
 

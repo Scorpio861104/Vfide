@@ -1,5 +1,7 @@
 // OwnerControlPanel Contract Configuration
-export const OWNER_CONTROL_PANEL_ADDRESS = '0x0000000000000000000000000000000000000000' as `0x${string}`;
+const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000' as const;
+export const OWNER_CONTROL_PANEL_ADDRESS =
+  (process.env.NEXT_PUBLIC_OWNER_CONTROL_PANEL_ADDRESS || ZERO_ADDRESS) as `0x${string}`;
 
 export const OWNER_CONTROL_PANEL_ABI = [
   // Owner verification
@@ -9,6 +11,122 @@ export const OWNER_CONTROL_PANEL_ABI = [
     stateMutability: 'view',
     inputs: [],
     outputs: [{ name: '', type: 'address' }],
+  },
+  // Governance Guardrails
+  {
+    name: 'governanceDelay',
+    type: 'function',
+    stateMutability: 'view',
+    inputs: [],
+    outputs: [{ name: '', type: 'uint256' }],
+  },
+  {
+    name: 'maxAutoSwapSlippageBps',
+    type: 'function',
+    stateMutability: 'view',
+    inputs: [],
+    outputs: [{ name: '', type: 'uint16' }],
+  },
+  {
+    name: 'minAutoWorkPayoutWei',
+    type: 'function',
+    stateMutability: 'view',
+    inputs: [],
+    outputs: [{ name: '', type: 'uint256' }],
+  },
+  {
+    name: 'maxAutoWorkPayoutWei',
+    type: 'function',
+    stateMutability: 'view',
+    inputs: [],
+    outputs: [{ name: '', type: 'uint256' }],
+  },
+  {
+    name: 'queuedActionEta',
+    type: 'function',
+    stateMutability: 'view',
+    inputs: [{ name: '', type: 'bytes32' }],
+    outputs: [{ name: '', type: 'uint256' }],
+  },
+  {
+    name: 'governance_setDelay',
+    type: 'function',
+    stateMutability: 'nonpayable',
+    inputs: [{ name: 'newDelay', type: 'uint256' }],
+    outputs: [],
+  },
+  {
+    name: 'governance_setMaxAutoSwapSlippageBps',
+    type: 'function',
+    stateMutability: 'nonpayable',
+    inputs: [{ name: 'newLimit', type: 'uint16' }],
+    outputs: [],
+  },
+  {
+    name: 'governance_setAutoWorkPayoutBounds',
+    type: 'function',
+    stateMutability: 'nonpayable',
+    inputs: [
+      { name: 'minReward', type: 'uint256' },
+      { name: 'maxReward', type: 'uint256' },
+    ],
+    outputs: [],
+  },
+  {
+    name: 'governance_queueAction',
+    type: 'function',
+    stateMutability: 'nonpayable',
+    inputs: [{ name: 'actionId', type: 'bytes32' }],
+    outputs: [{ name: 'executeAfter', type: 'uint256' }],
+  },
+  {
+    name: 'governance_cancelAction',
+    type: 'function',
+    stateMutability: 'nonpayable',
+    inputs: [{ name: 'actionId', type: 'bytes32' }],
+    outputs: [],
+  },
+  {
+    name: 'actionId_token_lockPolicy',
+    type: 'function',
+    stateMutability: 'pure',
+    inputs: [],
+    outputs: [{ name: '', type: 'bytes32' }],
+  },
+  {
+    name: 'actionId_autoSwap_configure',
+    type: 'function',
+    stateMutability: 'pure',
+    inputs: [
+      { name: 'router', type: 'address' },
+      { name: 'stablecoin', type: 'address' },
+      { name: 'enabled', type: 'bool' },
+      { name: 'maxSlippageBps', type: 'uint16' },
+    ],
+    outputs: [{ name: '', type: 'bytes32' }],
+  },
+  {
+    name: 'actionId_ecosystem_setAllocations',
+    type: 'function',
+    stateMutability: 'pure',
+    inputs: [
+      { name: 'councilBps', type: 'uint16' },
+      { name: 'merchantBps', type: 'uint16' },
+      { name: 'headhunterBps', type: 'uint16' },
+    ],
+    outputs: [{ name: '', type: 'bytes32' }],
+  },
+  {
+    name: 'actionId_ecosystem_configureAutoWorkPayout',
+    type: 'function',
+    stateMutability: 'pure',
+    inputs: [
+      { name: 'enabled', type: 'bool' },
+      { name: 'merchantTxReward', type: 'uint256' },
+      { name: 'merchantReferralReward', type: 'uint256' },
+      { name: 'userReferralReward', type: 'uint256' },
+    ],
+    outputs: [{ name: '', type: 'bytes32' }],
   },
   // System Status
   {
@@ -216,6 +334,30 @@ export const OWNER_CONTROL_PANEL_ABI = [
       { name: 'headhunterBps', type: 'uint16' },
     ],
     outputs: [],
+  },
+  {
+    name: 'ecosystem_configureAutoWorkPayout',
+    type: 'function',
+    stateMutability: 'nonpayable',
+    inputs: [
+      { name: 'enabled', type: 'bool' },
+      { name: 'merchantTxReward', type: 'uint256' },
+      { name: 'merchantReferralReward', type: 'uint256' },
+      { name: 'userReferralReward', type: 'uint256' },
+    ],
+    outputs: [],
+  },
+  {
+    name: 'ecosystem_getAutoWorkPayoutConfig',
+    type: 'function',
+    stateMutability: 'view',
+    inputs: [],
+    outputs: [
+      { name: 'enabled', type: 'bool' },
+      { name: 'merchantTxReward', type: 'uint256' },
+      { name: 'merchantReferralReward', type: 'uint256' },
+      { name: 'userReferralReward', type: 'uint256' },
+    ],
   },
   // Production Setup
   {

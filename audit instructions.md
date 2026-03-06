@@ -1277,7 +1277,7 @@ The following contracts were reviewed and found to have no material security fin
 | `CouncilSalary.sol` | Salary in ETH/USDC, not VFIDE; Howey compliant |
 | `TempVault.sol` | Temporary holding vault; limited scope |
 | `DeployPhase1.sol`, `DeployPhases3to6.sol` | Deployment scripts — not runtime security-critical |
-| `DAOTimelockV2.sol` | V2 variant — same security controls as `DAOTimelock.sol` |
+| `DAOTimelock.sol` | Canonical governance timelock variant (V2 retired) |
 | `EmergencyControlV2.sol` | V2 of EmergencyControl; identical security properties |
 
 ---

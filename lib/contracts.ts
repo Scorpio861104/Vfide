@@ -40,6 +40,7 @@ import {
   VaultRegistryABI,
   ERC20ABI,
   SeerSocialABI,
+  SeerViewABI,
   UserRewardsABI,
   PromotionalTreasuryABI,
 } from './abis'
@@ -77,6 +78,7 @@ export const CONTRACT_ADDRESSES = {
   MerchantPortal: validateContractAddress(process.env.NEXT_PUBLIC_MERCHANT_PORTAL_ADDRESS, 'MerchantPortal'),
   VaultHub: validateContractAddress(process.env.NEXT_PUBLIC_VAULT_HUB_ADDRESS, 'VaultHub'),
   Seer: validateContractAddress(process.env.NEXT_PUBLIC_SEER_ADDRESS, 'Seer'),
+  SeerView: validateContractAddress(process.env.NEXT_PUBLIC_SEER_VIEW_ADDRESS, 'SeerView'),
   DAO: validateContractAddress(process.env.NEXT_PUBLIC_DAO_ADDRESS, 'DAO'),
   DAOTimelock: validateContractAddress(process.env.NEXT_PUBLIC_DAO_TIMELOCK_ADDRESS, 'DAOTimelock'),
   TrustGateway: validateContractAddress(process.env.NEXT_PUBLIC_TRUST_GATEWAY_ADDRESS, 'TrustGateway'),
@@ -144,6 +146,7 @@ export {
   VaultRegistryABI,
   ERC20ABI,
   SeerSocialABI,
+  SeerViewABI,
   UserRewardsABI,
   PromotionalTreasuryABI,
 }

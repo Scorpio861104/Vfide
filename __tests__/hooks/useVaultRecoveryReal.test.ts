@@ -141,6 +141,31 @@ describe('useVaultRecovery', () => {
     })
   })
 
+  it('decodes recovery and inheritance tuple order from UserVault ABI', () => {
+    const futureSec = BigInt(Math.floor(Date.now() / 1000) + 86400)
+
+    mockUseReadContract.mockImplementation(({ functionName }) => {
+      if (functionName === 'getRecoveryStatus') {
+        return { data: ['0xabc', 2n, 2n, futureSec, true] }
+      }
+      if (functionName === 'getInheritanceStatus') {
+        return { data: [true, 1n, 2n, futureSec, false] }
+      }
+      return { data: undefined }
+    })
+
+    const { result } = renderHook(() => useVaultRecovery(testVaultAddress))
+
+    expect(result.current.recoveryStatus.isActive).toBe(true)
+    expect(result.current.recoveryStatus.proposedOwner).toBe('0xabc')
+    expect(result.current.recoveryStatus.approvals).toBe(2)
+
+    expect(result.current.inheritanceStatus.isActive).toBe(true)
+    expect(result.current.inheritanceStatus.approvals).toBe(1)
+    expect(result.current.inheritanceStatus.threshold).toBe(2)
+    expect(result.current.inheritanceStatus.denied).toBe(false)
+  })
+
   describe('setNextOfKinAddress', () => {
     it('calls writeContractAsync with correct args', async () => {
       mockWriteContractAsync.mockResolvedValue('0xtx')

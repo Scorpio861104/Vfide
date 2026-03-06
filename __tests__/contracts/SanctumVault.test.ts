@@ -79,6 +79,11 @@ describe('SanctumVault Contract', () => {
       mockContractWrite.mockRejectedValueOnce(new Error('AlreadyApprover'));
       await expect(mockContractWrite({ functionName: 'addApprover', args: [approver1] })).rejects.toThrow('AlreadyApprover');
     });
+
+    it('should reject approver removal that violates threshold', async () => {
+      mockContractWrite.mockRejectedValueOnce(new Error('would violate threshold'));
+      await expect(mockContractWrite({ functionName: 'removeApprover', args: [approver1] })).rejects.toThrow('would violate threshold');
+    });
   });
 
   describe('Disbursement', () => {
@@ -124,6 +129,21 @@ describe('SanctumVault Contract', () => {
     it('should reject recovery before timelock', async () => {
       mockContractWrite.mockRejectedValueOnce(new Error('TimelockActive'));
       await expect(mockContractWrite({ functionName: 'emergencyRecover' })).rejects.toThrow('TimelockActive');
+    });
+
+    it('should reject emergency recovery request with zero token', async () => {
+      mockContractWrite.mockRejectedValueOnce(new Error('zero token'));
+      await expect(
+        mockContractWrite({
+          functionName: 'requestEmergencyRecovery',
+          args: ['0x0000000000000000000000000000000000000000' as Address, owner, 1, 'rescue'],
+        })
+      ).rejects.toThrow('zero token');
+    });
+
+    it('should reject cancel for missing emergency recovery request', async () => {
+      mockContractWrite.mockRejectedValueOnce(new Error('not found'));
+      await expect(mockContractWrite({ functionName: 'cancelEmergencyRecovery', args: [9999, 'missing'] })).rejects.toThrow('not found');
     });
   });
 

@@ -74,6 +74,17 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
   const authResult = await requireAuth(request);
   if (authResult instanceof NextResponse) return authResult;
 
+  let body: Record<string, unknown>;
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+  }
+
+  if (!body || typeof body !== 'object' || Array.isArray(body)) {
+    return NextResponse.json({ error: 'Request body must be a JSON object' }, { status: 400 });
+  }
+
   try {
     const resolvedParams = await params;
     const id = resolvedParams?.id;
@@ -85,15 +96,15 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       );
     }
 
-    const body = await request.json();
     const { status } = body;
+    const normalizedStatus = typeof status === 'string' ? status : null;
 
-    if (!status) {
+    if (!normalizedStatus) {
       return NextResponse.json({ error: 'Status required' }, { status: 400 });
     }
 
     // Validate status is an allowed value
-    if (!ALLOWED_STATUSES.includes(status)) {
+    if (!ALLOWED_STATUSES.includes(normalizedStatus as (typeof ALLOWED_STATUSES)[number])) {
       return NextResponse.json(
         { error: `Invalid status. Allowed values: ${ALLOWED_STATUSES.join(', ')}` },
         { status: 400 }
@@ -113,7 +124,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
        SET status = $2, updated_at = NOW()
        WHERE id = $1
        RETURNING *`,
-      [id, status]
+      [id, normalizedStatus]
     );
 
     return NextResponse.json({ request: result.rows[0] });
@@ -130,6 +141,17 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   const authResult = await requireAuth(request);
   if (authResult instanceof NextResponse) return authResult;
 
+  let body: Record<string, unknown>;
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+  }
+
+  if (!body || typeof body !== 'object' || Array.isArray(body)) {
+    return NextResponse.json({ error: 'Request body must be a JSON object' }, { status: 400 });
+  }
+
   try {
     const resolvedParams = await params;
     const id = resolvedParams?.id;
@@ -141,15 +163,16 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       );
     }
 
-    const body = await request.json();
     const { status, txHash } = body;
+    const normalizedStatus = typeof status === 'string' ? status : null;
+    const normalizedTxHash = typeof txHash === 'string' ? txHash : null;
 
-    if (!status) {
+    if (!normalizedStatus) {
       return NextResponse.json({ error: 'Status required' }, { status: 400 });
     }
 
     // Validate status is an allowed value
-    if (!ALLOWED_STATUSES.includes(status)) {
+    if (!ALLOWED_STATUSES.includes(normalizedStatus as (typeof ALLOWED_STATUSES)[number])) {
       return NextResponse.json(
         { error: `Invalid status. Allowed values: ${ALLOWED_STATUSES.join(', ')}` },
         { status: 400 }
@@ -169,7 +192,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
        SET status = $2, tx_hash = $3, updated_at = NOW()
        WHERE id = $1
        RETURNING *`,
-      [id, status, txHash]
+      [id, normalizedStatus, normalizedTxHash]
     );
 
     return NextResponse.json({ success: true, request: result.rows[0] });

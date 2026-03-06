@@ -15,15 +15,16 @@ jest.mock('@/lib/auth/middleware', () => ({
 }));
 
 jest.mock('@/lib/auth/validation', () => ({
-  validateBody: jest.fn(),
-  endorsementSchema: {},
+  endorsementSchema: {
+    safeParse: jest.fn(),
+  },
 }));
 
 describe('/api/endorsements', () => {
   const { query, getClient } = require('@/lib/db');
   const { withRateLimit } = require('@/lib/auth/rateLimit');
   const { requireAuth } = require('@/lib/auth/middleware');
-  const { validateBody } = require('@/lib/auth/validation');
+  const { endorsementSchema } = require('@/lib/auth/validation');
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -52,13 +53,79 @@ describe('/api/endorsements', () => {
       expect(response.status).toBe(200);
       expect(data.endorsements).toHaveLength(1);
     });
+
+    it('should clamp oversized limit values', async () => {
+      withRateLimit.mockResolvedValue(null);
+      query
+        .mockResolvedValueOnce({ rows: [] })
+        .mockResolvedValueOnce({ rows: [{ count: '0' }] });
+
+      const request = new NextRequest('http://localhost:3000/api/endorsements?endorsedAddress=0x456&limit=10000&offset=0');
+      const response = await GET(request);
+
+      expect(response.status).toBe(200);
+      expect(query).toHaveBeenNthCalledWith(
+        1,
+        expect.stringContaining('LIMIT $2 OFFSET $3'),
+        ['0x456', 200, 0]
+      );
+    });
+
+    it('should clamp oversized offset values', async () => {
+      withRateLimit.mockResolvedValue(null);
+      query
+        .mockResolvedValueOnce({ rows: [] })
+        .mockResolvedValueOnce({ rows: [{ count: '0' }] });
+
+      const request = new NextRequest('http://localhost:3000/api/endorsements?endorsedAddress=0x456&limit=50&offset=999999');
+      const response = await GET(request);
+
+      expect(response.status).toBe(200);
+      expect(query).toHaveBeenNthCalledWith(
+        1,
+        expect.stringContaining('LIMIT $2 OFFSET $3'),
+        ['0x456', 50, 10000]
+      );
+    });
   });
 
   describe('POST', () => {
+    it('should return 400 for malformed JSON', async () => {
+      withRateLimit.mockResolvedValue(null);
+      requireAuth.mockReturnValue({ user: { address: '0x1111111111111111111111111111111111111123' } });
+
+      const request = new NextRequest('http://localhost:3000/api/endorsements', {
+        method: 'POST',
+        body: '{"fromAddress":"0x1111111111111111111111111111111111111123"',
+      });
+
+      const response = await POST(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(400);
+      expect(data.error).toContain('Invalid JSON');
+    });
+
+    it('should return 400 for non-object body', async () => {
+      withRateLimit.mockResolvedValue(null);
+      requireAuth.mockReturnValue({ user: { address: '0x1111111111111111111111111111111111111123' } });
+
+      const request = new NextRequest('http://localhost:3000/api/endorsements', {
+        method: 'POST',
+        body: JSON.stringify(['invalid']),
+      });
+
+      const response = await POST(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(400);
+      expect(data.error).toContain('JSON object');
+    });
+
     it('should create endorsement successfully', async () => {
       withRateLimit.mockResolvedValue(null);
       requireAuth.mockReturnValue({ user: { address: '0x1111111111111111111111111111111111111123' } });
-      validateBody.mockResolvedValue({
+      endorsementSchema.safeParse.mockReturnValue({
         success: true,
         data: {
           fromAddress: '0x1111111111111111111111111111111111111123',

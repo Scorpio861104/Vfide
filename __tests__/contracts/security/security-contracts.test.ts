@@ -187,7 +187,7 @@ describe('VFIDE Security Contracts - Phase 1', () => {
     });
   });
 
-  describe('EmergencyControlV2', () => {
+  describe('EmergencyControl', () => {
     describe('Contract Pause', () => {
       it('should pause contract globally', () => {
         expect(true).toBe(true);
@@ -515,7 +515,7 @@ describe('VFIDE Security Contracts - Phase 1', () => {
     });
   });
 
-  describe('VFIDETokenV2', () => {
+  describe('VFIDEToken', () => {
     describe('Deployment', () => {
       it('should deploy with correct parameters', () => {
         expect(true).toBe(true);

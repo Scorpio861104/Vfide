@@ -8,7 +8,7 @@ import { Calendar } from 'lucide-react'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { CONTRACT_ADDRESSES } from '@/lib/contracts'
-import { SeerABI, SeerSocialABI } from '@/lib/abis'
+import { SeerABI, SeerViewABI } from '@/lib/abis'
 import { formatDistanceToNow } from 'date-fns'
 import { safeBigIntToNumber, ensureArray } from '@/lib/validation'
 
@@ -16,10 +16,10 @@ export default function EndorsementsPage() {
   const { address } = useAccount()
 
   const { data: endorsementData } = useReadContract({
-    address: CONTRACT_ADDRESSES.SeerSocial,
-    abi: SeerSocialABI,
+    address: CONTRACT_ADDRESSES.SeerView,
+    abi: SeerViewABI,
     functionName: 'getActiveEndorsements',
-    args: address ? [address] : undefined,
+    args: address ? [CONTRACT_ADDRESSES.Seer, address] : undefined,
     query: { enabled: !!address },
   })
 

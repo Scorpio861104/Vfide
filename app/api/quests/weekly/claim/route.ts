@@ -23,8 +23,25 @@ export async function POST(request: NextRequest) {
     return authResult;
   }
 
+  let body: Record<string, unknown>;
   try {
-    const { challengeId, userAddress } = await request.json();
+    body = await request.json();
+  } catch {
+    return NextResponse.json(
+      { error: 'Invalid JSON body' },
+      { status: 400 }
+    );
+  }
+
+  if (!body || typeof body !== 'object' || Array.isArray(body)) {
+    return NextResponse.json(
+      { error: 'Request body must be a JSON object' },
+      { status: 400 }
+    );
+  }
+
+  try {
+    const { challengeId, userAddress } = body;
 
     if (!challengeId || !userAddress) {
       return NextResponse.json(
@@ -33,8 +50,17 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    if (typeof userAddress !== 'string') {
+      return NextResponse.json(
+        { error: 'User address must be a string' },
+        { status: 400 }
+      );
+    }
+
+    const normalizedUserAddress = userAddress.toLowerCase();
+
     // Verify user is claiming their own rewards
-    if (!checkOwnership(authResult.user, userAddress)) {
+    if (!checkOwnership(authResult.user, normalizedUserAddress)) {
       return NextResponse.json(
         { error: 'You can only claim your own rewards' },
         { status: 403 }
@@ -49,7 +75,7 @@ export async function POST(request: NextRequest) {
       // Get user ID
       const userResult = await client.query(
         'SELECT id FROM users WHERE wallet_address = $1',
-        [userAddress]
+        [normalizedUserAddress]
       );
 
       if (userResult.rows.length === 0) {

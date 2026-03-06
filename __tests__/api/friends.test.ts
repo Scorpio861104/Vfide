@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { GET, POST } from '@/app/api/friends/route';
+import { GET, PATCH, POST } from '@/app/api/friends/route';
 
 const mockQuery = jest.fn();
 const mockGetClient = jest.fn();
@@ -73,6 +73,60 @@ describe('/api/friends', () => {
       expect(response.status).toBe(400);
       expect(data.error).toContain('required');
     });
+
+    it('should reject invalid status value', async () => {
+      withRateLimit.mockResolvedValue(null);
+      requireAuth.mockReturnValue({
+        user: { address: '0x1111111111111111111111111111111111111123' }
+      });
+
+      const request = new NextRequest(
+        'http://localhost:3000/api/friends?address=0x1111111111111111111111111111111111111123&status=hax'
+      );
+      const response = await GET(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(400);
+      expect(data.error).toContain('Invalid status');
+    });
+
+    it('should reject invalid limit/offset values', async () => {
+      withRateLimit.mockResolvedValue(null);
+      requireAuth.mockReturnValue({
+        user: { address: '0x1111111111111111111111111111111111111123' }
+      });
+
+      const request = new NextRequest(
+        'http://localhost:3000/api/friends?address=0x1111111111111111111111111111111111111123&limit=0&offset=-1'
+      );
+      const response = await GET(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(400);
+      expect(data.error).toContain('Invalid limit or offset');
+    });
+
+    it('should cap limit to max bound', async () => {
+      withRateLimit.mockResolvedValue(null);
+      requireAuth.mockReturnValue({
+        user: { address: '0x1111111111111111111111111111111111111123' }
+      });
+
+      mockQuery.mockResolvedValue({ rows: [] });
+
+      const request = new NextRequest(
+        'http://localhost:3000/api/friends?address=0x1111111111111111111111111111111111111123&limit=9999&offset=0'
+      );
+      const response = await GET(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(200);
+      expect(data.limit).toBe(200);
+      expect(mockQuery).toHaveBeenCalledWith(
+        expect.stringContaining('LIMIT $3 OFFSET $4'),
+        ['0x1111111111111111111111111111111111111123', 'accepted', 200, 0]
+      );
+    });
   });
 
   describe('POST', () => {
@@ -132,6 +186,57 @@ describe('/api/friends', () => {
 
       const response = await POST(request);
       expect(response.status).toBe(401);
+    });
+  });
+
+  describe('PATCH', () => {
+    it('should return 400 for malformed JSON payload', async () => {
+      withRateLimit.mockResolvedValue(null);
+      requireAuth.mockReturnValue({
+        user: { address: '0x1111111111111111111111111111111111111123' }
+      });
+
+      const mockClient = {
+        query: jest.fn().mockResolvedValue(undefined),
+        release: jest.fn(),
+      };
+      mockGetClient.mockResolvedValue(mockClient);
+
+      const request = new NextRequest('http://localhost:3000/api/friends', {
+        method: 'PATCH',
+        headers: { 'content-type': 'application/json' },
+        body: 'not-json',
+      });
+
+      const response = await PATCH(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(400);
+      expect(data.error).toContain('Invalid JSON payload');
+    });
+
+    it('should return 400 for invalid request body shape', async () => {
+      withRateLimit.mockResolvedValue(null);
+      requireAuth.mockReturnValue({
+        user: { address: '0x1111111111111111111111111111111111111123' }
+      });
+
+      const mockClient = {
+        query: jest.fn().mockResolvedValue(undefined),
+        release: jest.fn(),
+      };
+      mockGetClient.mockResolvedValue(mockClient);
+
+      const request = new NextRequest('http://localhost:3000/api/friends', {
+        method: 'PATCH',
+        body: JSON.stringify([]),
+      });
+
+      const response = await PATCH(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(400);
+      expect(data.error).toContain('Invalid request body');
     });
   });
 });

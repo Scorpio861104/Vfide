@@ -8,12 +8,32 @@ export async function GET(request: NextRequest) {
   const rateLimit = await withRateLimit(request, 'api');
   if (rateLimit) return rateLimit;
 
+  // Authentication
+  const authResult = await requireAuth(request);
+  if (authResult instanceof NextResponse) return authResult;
+  if (!authResult.user?.address) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   try {
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId');
 
     if (!userId) {
       return NextResponse.json({ error: 'userId required' }, { status: 400 });
+    }
+
+    const ownerResult = await query(
+      'SELECT id FROM users WHERE wallet_address = $1',
+      [authResult.user.address.toLowerCase()]
+    );
+
+    const authenticatedUserId = ownerResult.rows[0]?.id;
+    if (!authenticatedUserId || authenticatedUserId.toString() !== userId.toString()) {
+      return NextResponse.json(
+        { error: 'You can only access your own sync state' },
+        { status: 403 }
+      );
     }
 
     const result = await query(
@@ -40,12 +60,54 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
+  let body: Record<string, unknown>;
   try {
-    const body = await request.json();
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+  }
+
+  if (!body || typeof body !== 'object' || Array.isArray(body)) {
+    return NextResponse.json({ error: 'Request body must be a JSON object' }, { status: 400 });
+  }
+
+  try {
     const { userId, entity, lastSyncTimestamp } = body;
 
-    if (!userId || !entity) {
+    const normalizedUserId =
+      typeof userId === 'string' || typeof userId === 'number'
+        ? userId.toString()
+        : null;
+
+    if (!normalizedUserId || typeof entity !== 'string' || entity.trim().length === 0) {
       return NextResponse.json({ error: 'userId and entity required' }, { status: 400 });
+    }
+
+    let syncTimestamp: Date = new Date();
+    if (lastSyncTimestamp !== undefined) {
+      if (typeof lastSyncTimestamp !== 'string' && typeof lastSyncTimestamp !== 'number') {
+        return NextResponse.json({ error: 'Invalid lastSyncTimestamp' }, { status: 400 });
+      }
+
+      const parsedTimestamp = new Date(lastSyncTimestamp);
+      if (Number.isNaN(parsedTimestamp.getTime())) {
+        return NextResponse.json({ error: 'Invalid lastSyncTimestamp' }, { status: 400 });
+      }
+
+      syncTimestamp = parsedTimestamp;
+    }
+
+    const ownerResult = await query(
+      'SELECT id FROM users WHERE wallet_address = $1',
+      [authResult.user.address.toLowerCase()]
+    );
+
+    const authenticatedUserId = ownerResult.rows[0]?.id;
+    if (!authenticatedUserId || authenticatedUserId.toString() !== normalizedUserId) {
+      return NextResponse.json(
+        { error: 'You can only update your own sync state' },
+        { status: 403 }
+      );
     }
 
     const result = await query(
@@ -54,7 +116,7 @@ export async function POST(request: NextRequest) {
        ON CONFLICT (user_id, entity) DO UPDATE
        SET last_sync_timestamp = $3
        RETURNING *`,
-      [userId, entity, lastSyncTimestamp || new Date()]
+      [normalizedUserId, entity, syncTimestamp]
     );
 
     return NextResponse.json({ success: true, syncState: result.rows[0] });

@@ -15,9 +15,9 @@ interface RecoveryStatus {
 
 interface InheritanceStatus {
   isActive: boolean;
-  claimant: string | null;
-  guardianApprovals: number;
-  guardianDenials: number;
+  approvals: number;
+  threshold: number;
+  denied: boolean;
   expiryTime: number | null;
   daysRemaining: number | null;
 }
@@ -97,18 +97,18 @@ export function useVaultRecovery(vaultAddress?: `0x${string}`) {
 
   // Derive recovery status from contract data using useMemo (not useState + useEffect)
   const recoveryStatus: RecoveryStatus = useMemo(() => {
-    // recoveryData returns: [candidate, approvals, expiry, isActive]
-    const data = recoveryData as [string, number, bigint, boolean] | undefined;
+    // getRecoveryStatus returns: [proposedOwner, approvals, threshold, expiryTime, active]
+    const data = recoveryData as [string, bigint, bigint, bigint, boolean] | undefined;
     
     if (data) {
-      const [candidate, approvals, expiry, isActive] = data;
+      const [candidate, approvals, _threshold, expiry, isActive] = data;
       const expiryMs = Number(expiry) * 1000;
       const daysRemaining = Math.max(0, Math.ceil((expiryMs - now) / (24 * 60 * 60 * 1000)));
       
       return {
         isActive: isActive && candidate !== ZERO_ADDRESS,
         proposedOwner: candidate !== ZERO_ADDRESS ? candidate : null,
-        approvals: approvals || 0,
+        approvals: Number(approvals),
         expiryTime: expiryMs > 0 ? expiryMs : null,
         daysRemaining: expiryMs > 0 ? daysRemaining : null,
       };
@@ -124,28 +124,28 @@ export function useVaultRecovery(vaultAddress?: `0x${string}`) {
 
   // Derive inheritance status from contract data using useMemo
   const inheritanceStatus: InheritanceStatus = useMemo(() => {
-    // inheritanceData returns: [claimant, guardianApprovals, guardianDenials, expiry, isActive]
-    const data = inheritanceData as [string, number, number, bigint, boolean] | undefined;
+    // getInheritanceStatus returns: [active, approvals, threshold, expiryTime, denied]
+    const data = inheritanceData as [boolean, bigint, bigint, bigint, boolean] | undefined;
     
     if (data) {
-      const [claimant, guardianApprovals, guardianDenials, expiry, isActive] = data;
+      const [isActive, approvals, threshold, expiry, denied] = data;
       const expiryMs = Number(expiry) * 1000;
       const daysRemaining = Math.max(0, Math.ceil((expiryMs - now) / (24 * 60 * 60 * 1000)));
       
       return {
-        isActive: isActive && claimant !== ZERO_ADDRESS,
-        claimant: claimant !== ZERO_ADDRESS ? claimant : null,
-        guardianApprovals: guardianApprovals || 0,
-        guardianDenials: guardianDenials || 0,
+        isActive,
+        approvals: Number(approvals),
+        threshold: Number(threshold),
+        denied,
         expiryTime: expiryMs > 0 ? expiryMs : null,
         daysRemaining: expiryMs > 0 ? daysRemaining : null,
       };
     }
     return {
       isActive: false,
-      claimant: null,
-      guardianApprovals: 0,
-      guardianDenials: 0,
+      approvals: 0,
+      threshold: 0,
+      denied: false,
       expiryTime: null,
       daysRemaining: null,
     };

@@ -23,6 +23,38 @@ describe('/api/messages/delete', () => {
   });
 
   describe('DELETE', () => {
+    it('should return 400 for malformed JSON', async () => {
+      withRateLimit.mockResolvedValue(null);
+      requireAuth.mockReturnValue({ user: { address: '0x1111111111111111111111111111111111111123' } });
+
+      const request = new NextRequest('http://localhost:3000/api/messages/delete', {
+        method: 'DELETE',
+        body: '{"messageId": "1"',
+      });
+
+      const response = await DELETE(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(400);
+      expect(data.error).toContain('Invalid JSON');
+    });
+
+    it('should return 400 for non-object body', async () => {
+      withRateLimit.mockResolvedValue(null);
+      requireAuth.mockReturnValue({ user: { address: '0x1111111111111111111111111111111111111123' } });
+
+      const request = new NextRequest('http://localhost:3000/api/messages/delete', {
+        method: 'DELETE',
+        body: JSON.stringify(['invalid']),
+      });
+
+      const response = await DELETE(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(400);
+      expect(data.error).toContain('JSON object');
+    });
+
     it('should delete message successfully', async () => {
       withRateLimit.mockResolvedValue(null);
       requireAuth.mockReturnValue({ user: { address: '0x1111111111111111111111111111111111111123' } });

@@ -18,7 +18,7 @@ import {
   Zap, DollarSign, TrendingUp, X, Loader2
 } from "lucide-react";
 import { safeParseFloat } from "@/lib/validation";
-import { CONTRACT_ADDRESSES, VFIDETokenABI, VaultHubLiteABI, UserVaultABI } from "@/lib/contracts";
+import { CONTRACT_ADDRESSES, VFIDETokenABI, VaultHubABI, UserVaultABI } from "@/lib/contracts";
 
 // Animation variants
 const containerVariants = {
@@ -293,7 +293,7 @@ function VaultContent() {
       showToast("Depositing to vault...", "info");
       await writeContractAsync({
         address: CONTRACT_ADDRESSES.VaultHub,
-        abi: VaultHubLiteABI,
+        abi: VaultHubABI,
         functionName: 'deposit',
         args: [amountWei],
       });

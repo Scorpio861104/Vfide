@@ -3,6 +3,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 
+const MAX_TRANSACTIONS_LIMIT = 100;
+const MAX_TRANSACTIONS_OFFSET = 10000;
+
 export async function GET(request: NextRequest, { params }: { params: Promise<{ userId: string }> }) {
   // Rate limiting: 100 requests per minute
   const rateLimitResponse = await withRateLimit(request, 'read');
@@ -43,19 +46,19 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     }
 
     const { searchParams } = new URL(request.url);
-    const limitParam = parseInt(searchParams.get('limit') || '50', 10);
+    const rawLimit = parseInt(searchParams.get('limit') || '50', 10);
     const offsetParam = parseInt(searchParams.get('offset') || '0', 10);
 
     // Validate parsed numbers
-    if (isNaN(limitParam) || isNaN(offsetParam) || !isFinite(limitParam) || !isFinite(offsetParam)) {
+    if (isNaN(rawLimit) || isNaN(offsetParam) || !isFinite(rawLimit) || !isFinite(offsetParam)) {
       return NextResponse.json(
         { error: 'Invalid limit or offset parameter' },
         { status: 400 }
       );
     }
 
-    const limit = Math.min(limitParam, 100); // Max 100
-    const offset = Math.max(offsetParam, 0);
+    const limit = Math.min(Math.max(rawLimit, 0), MAX_TRANSACTIONS_LIMIT);
+    const offset = Math.min(Math.max(offsetParam, 0), MAX_TRANSACTIONS_OFFSET);
 
     const result = await query(
       `SELECT t.* FROM transactions t

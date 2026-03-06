@@ -68,16 +68,40 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
+  let body: Record<string, unknown>;
   try {
-    const body = await request.json();
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+  }
+
+  if (!body || typeof body !== 'object' || Array.isArray(body)) {
+    return NextResponse.json({ error: 'Request body must be a JSON object' }, { status: 400 });
+  }
+
+  try {
     const { fromUserId, toUserId, amount, token, memo } = body;
 
     if (!fromUserId || !toUserId || !amount) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
+    const fromUserIdValue =
+      typeof fromUserId === 'number' || typeof fromUserId === 'string' ? fromUserId.toString() : null;
+    const toUserIdValue =
+      typeof toUserId === 'number' || typeof toUserId === 'string' ? toUserId.toString() : null;
+    if (!fromUserIdValue || !toUserIdValue) {
+      return NextResponse.json({ error: 'fromUserId and toUserId must be strings or numbers' }, { status: 400 });
+    }
+
+    const amountValue =
+      typeof amount === 'number' ? amount.toString() : typeof amount === 'string' ? amount : null;
+    if (!amountValue) {
+      return NextResponse.json({ error: 'Amount must be a string or number' }, { status: 400 });
+    }
+
     // Validate amount is positive and within reasonable bounds
-    const numAmount = parseFloat(amount);
+    const numAmount = parseFloat(amountValue);
     const MAX_PAYMENT_AMOUNT = 1000000; // 1 million units max
     
     if (isNaN(numAmount) || numAmount <= 0) {
@@ -93,7 +117,7 @@ export async function POST(request: NextRequest) {
 
     // Validate token if provided
     const ALLOWED_TOKENS = ['ETH', 'USDC', 'USDT', 'DAI', 'WETH'];
-    const tokenValue = token || 'ETH';
+    const tokenValue = typeof token === 'string' && token.trim() ? token : 'ETH';
     
     if (!ALLOWED_TOKENS.includes(tokenValue.toUpperCase())) {
       return NextResponse.json(
@@ -117,18 +141,20 @@ export async function POST(request: NextRequest) {
     );
 
     const userId = userResult.rows[0]?.id;
-    if (userResult.rows.length === 0 || !userId || userId.toString() !== fromUserId.toString()) {
+    if (userResult.rows.length === 0 || !userId || userId.toString() !== fromUserIdValue) {
       return NextResponse.json(
         { error: 'You can only create payment requests from your own account' },
         { status: 403 }
       );
     }
 
+    const memoValue = typeof memo === 'string' ? memo : null;
+
     const result = await query(
       `INSERT INTO payment_requests (from_user_id, to_user_id, amount, token, memo, status, created_at)
        VALUES ($1, $2, $3, $4, $5, 'pending', NOW())
        RETURNING *`,
-      [fromUserId, toUserId, amount, token || 'ETH', memo]
+      [fromUserIdValue, toUserIdValue, amountValue, tokenValue, memoValue]
     );
 
     return NextResponse.json({ success: true, request: result.rows[0] });

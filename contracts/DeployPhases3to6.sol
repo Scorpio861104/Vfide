@@ -29,6 +29,8 @@ import "./VFIDEPriceOracle.sol";
  * @dev Phases 4-6 removed for Howey compliance
  */
 contract DeployPhase3 {
+    error DP3_Zero();
+
     struct DeploymentAddresses {
         // Phase 3: Bridge & Oracle (Howey-Safe)
         address vfideBridge;
@@ -64,8 +66,7 @@ contract DeployPhase3 {
         address quoteToken,
         address owner
     ) external returns (DeploymentAddresses memory) {
-        require(vfideToken != address(0), "Invalid VFIDE token");
-        require(owner != address(0), "Invalid owner");
+        if (vfideToken == address(0) || owner == address(0)) revert DP3_Zero();
 
         // Phase 3: Cross-Chain Integration & Oracle (Howey-Safe)
         _deployPhase3(
@@ -102,7 +103,7 @@ contract DeployPhase3 {
         // Deploy Bridge Security Module
         BridgeSecurityModule securityModule = new BridgeSecurityModule(owner, address(0));
         deployed.bridgeSecurityModule = address(securityModule);
-        emit ContractDeployed("BridgeSecurityModule", address(securityModule));
+        emit ContractDeployed("BSM", address(securityModule));
 
         // Deploy VFIDE Bridge
         VFIDEBridge bridge = new VFIDEBridge(
@@ -111,7 +112,7 @@ contract DeployPhase3 {
             owner
         );
         deployed.vfideBridge = address(bridge);
-        emit ContractDeployed("VFIDEBridge", address(bridge));
+        emit ContractDeployed("BRG", address(bridge));
 
         // Update bridge address in security module
         securityModule.setBridge(address(bridge));
@@ -125,9 +126,9 @@ contract DeployPhase3 {
             owner
         );
         deployed.priceOracle = address(priceOracle);
-        emit ContractDeployed("VFIDEPriceOracle", address(priceOracle));
+        emit ContractDeployed("ORC", address(priceOracle));
 
-        emit PhaseDeployed(3, "Cross-Chain Integration & Oracle");
+        emit PhaseDeployed(3, "P3");
     }
 
     // ============================================
@@ -156,14 +157,4 @@ contract DeployPhase3 {
         return deployed;
     }
 
-    /**
-     * @notice Verify deployment (Phase 3 only)
-     * @return valid Whether all Phase 3 contracts are deployed
-     */
-    function verifyDeployment() external view returns (bool valid) {
-        return deployed.vfideBridge != address(0) &&
-               deployed.bridgeSecurityModule != address(0) &&
-               deployed.priceOracle != address(0);
-        // Phases 4-6 verification removed for Howey compliance
-    }
 }

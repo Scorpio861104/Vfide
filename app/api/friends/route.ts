@@ -4,6 +4,11 @@ import { requireAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { validateBody, friendRequestSchema } from '@/lib/auth/validation';
 
+const DEFAULT_FRIENDS_LIMIT = 50;
+const MAX_FRIENDS_LIMIT = 200;
+const MAX_FRIENDS_OFFSET = 10000;
+const ALLOWED_FRIENDSHIP_STATUS = new Set(['pending', 'accepted', 'blocked', 'rejected']);
+
 interface Friendship {
   id: number;
   user_id: number;
@@ -17,6 +22,10 @@ interface Friendship {
   friend_address?: string;
   friend_username?: string;
   friend_avatar?: string;
+}
+
+function isObjectRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
 /**
@@ -41,10 +50,29 @@ export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams;
     const address = searchParams.get('address');
     const status = searchParams.get('status') || 'accepted';
+    const rawLimit = parseInt(searchParams.get('limit') || String(DEFAULT_FRIENDS_LIMIT), 10);
+    const rawOffset = parseInt(searchParams.get('offset') || '0', 10);
+
+    if (isNaN(rawLimit) || isNaN(rawOffset) || rawLimit <= 0 || rawOffset < 0) {
+      return NextResponse.json(
+        { error: 'Invalid limit or offset parameter' },
+        { status: 400 }
+      );
+    }
+
+    const limit = Math.min(rawLimit, MAX_FRIENDS_LIMIT);
+    const offset = Math.min(rawOffset, MAX_FRIENDS_OFFSET);
 
     if (!address) {
       return NextResponse.json(
         { error: 'address is required' },
+        { status: 400 }
+      );
+    }
+
+    if (!ALLOWED_FRIENDSHIP_STATUS.has(status)) {
+      return NextResponse.json(
+        { error: 'Invalid status parameter' },
         { status: 400 }
       );
     }
@@ -72,13 +100,16 @@ export async function GET(request: NextRequest) {
        JOIN users u2 ON f.friend_id = u2.id
        WHERE (u1.wallet_address = $1 OR u2.wallet_address = $1)
          AND f.status = $2
-       ORDER BY f.created_at DESC`,
-      [address.toLowerCase(), status]
+       ORDER BY f.created_at DESC
+       LIMIT $3 OFFSET $4`,
+      [address.toLowerCase(), status, limit, offset]
     );
 
     return NextResponse.json({
       friends: result.rows,
       count: result.rows.length,
+      limit,
+      offset,
     });
   } catch (error) {
     console.error('[Friends GET API] Error:', error);
@@ -221,7 +252,25 @@ export async function PATCH(request: NextRequest) {
   const client = await getClient();
   
   try {
-    const body = await request.json();
+    let body: unknown;
+    try {
+      body = await request.json();
+    } catch {
+      await client.query('ROLLBACK');
+      return NextResponse.json(
+        { error: 'Invalid JSON payload' },
+        { status: 400 }
+      );
+    }
+
+    if (!isObjectRecord(body)) {
+      await client.query('ROLLBACK');
+      return NextResponse.json(
+        { error: 'Invalid request body' },
+        { status: 400 }
+      );
+    }
+
     const { friendshipId, status, userAddress } = body;
 
     if (!friendshipId || !status || !userAddress) {
@@ -231,12 +280,26 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
+    const friendshipIdValue =
+      typeof friendshipId === 'number' || typeof friendshipId === 'string'
+        ? friendshipId.toString()
+        : null;
+    const statusValue = typeof status === 'string' ? status : null;
+    const userAddressValue = typeof userAddress === 'string' ? userAddress : null;
+
+    if (!friendshipIdValue || !statusValue || !userAddressValue) {
+      return NextResponse.json(
+        { error: 'friendshipId, status, and userAddress must be strings/numbers as expected' },
+        { status: 400 }
+      );
+    }
+
     await client.query('BEGIN');
 
     // Get user ID
     const userResult = await client.query(
       'SELECT id FROM users WHERE wallet_address = $1',
-      [userAddress.toLowerCase()]
+      [userAddressValue.toLowerCase()]
     );
 
     if (userResult.rows.length === 0) {
@@ -250,7 +313,7 @@ export async function PATCH(request: NextRequest) {
     const userId = userResult.rows[0].id;
 
     // Verify the authenticated user is the one accepting/rejecting
-    if (authResult.user.address.toLowerCase() !== userAddress.toLowerCase()) {
+    if (authResult.user.address.toLowerCase() !== userAddressValue.toLowerCase()) {
       await client.query('ROLLBACK');
       return NextResponse.json(
         { error: 'You can only respond to your own friend requests' },
@@ -261,7 +324,7 @@ export async function PATCH(request: NextRequest) {
     // Get friendship
     const friendshipResult = await client.query(
       'SELECT * FROM friendships WHERE id = $1 AND friend_id = $2 AND status = \'pending\'',
-      [friendshipId, userId]
+      [friendshipIdValue, userId]
     );
 
     if (friendshipResult.rows.length === 0) {
@@ -272,11 +335,11 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
-    if (status === 'accepted') {
+    if (statusValue === 'accepted') {
       // Update friendship status
       await client.query(
         'UPDATE friendships SET status = \'accepted\', updated_at = NOW() WHERE id = $1',
-        [friendshipId]
+        [friendshipIdValue]
       );
 
       // Create notification for requester
@@ -287,7 +350,7 @@ export async function PATCH(request: NextRequest) {
         [
           friendship.user_id,
           `Your friend request was accepted`,
-          JSON.stringify({ friendshipId, userId })
+          JSON.stringify({ friendshipId: friendshipIdValue, userId })
         ]
       );
 
@@ -297,11 +360,11 @@ export async function PATCH(request: NextRequest) {
         success: true,
         message: 'Friend request accepted',
       });
-    } else if (status === 'rejected') {
+    } else if (statusValue === 'rejected') {
       // Delete friendship
       await client.query(
         'DELETE FROM friendships WHERE id = $1',
-        [friendshipId]
+        [friendshipIdValue]
       );
 
       await client.query('COMMIT');

@@ -27,17 +27,19 @@ describe('/api/crypto/rewards/[userId]', () => {
       withRateLimit.mockResolvedValue(null);
       requireAuth.mockReturnValue({ user: { address: '0x1111111111111111111111111111111111111123' } });
 
-      query.mockResolvedValue({
-        rows: [
-          {
-            id: 1,
-            user_id: 1,
-            amount: '100',
-            type: 'quest',
-            claimed: false,
-          },
-        ],
-      });
+      query
+        .mockResolvedValueOnce({ rows: [{ wallet_address: '0x1111111111111111111111111111111111111123' }] })
+        .mockResolvedValueOnce({
+          rows: [
+            {
+              id: 1,
+              user_id: 1,
+              amount: '100',
+              type: 'quest',
+              claimed: false,
+            },
+          ],
+        });
 
       const request = new NextRequest('http://localhost:3000/api/crypto/rewards/1');
       const response = await GET(request, { params: Promise.resolve({ userId: '1' }) });
@@ -51,12 +53,14 @@ describe('/api/crypto/rewards/[userId]', () => {
       withRateLimit.mockResolvedValue(null);
       requireAuth.mockReturnValue({ user: { address: '0x1111111111111111111111111111111111111123' } });
 
-      query.mockResolvedValue({
-        rows: [
-          { id: 1, amount: '100', claimed: false, status: 'pending' },
-          { id: 2, amount: '50', claimed: false, status: 'pending' },
-        ],
-      });
+      query
+        .mockResolvedValueOnce({ rows: [{ wallet_address: '0x1111111111111111111111111111111111111123' }] })
+        .mockResolvedValueOnce({
+          rows: [
+            { id: 1, amount: '100', claimed: false, status: 'pending' },
+            { id: 2, amount: '50', claimed: false, status: 'pending' },
+          ],
+        });
 
       const request = new NextRequest('http://localhost:3000/api/crypto/rewards/1');
       const response = await GET(request, { params: Promise.resolve({ userId: '1' }) });
@@ -64,6 +68,18 @@ describe('/api/crypto/rewards/[userId]', () => {
 
       expect(response.status).toBe(200);
       expect(data.totalUnclaimed).toBe('150');
+    });
+
+    it('should return 403 when authenticated wallet does not own requested userId', async () => {
+      withRateLimit.mockResolvedValue(null);
+      requireAuth.mockReturnValue({ user: { address: '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' } });
+
+      query.mockResolvedValueOnce({ rows: [{ wallet_address: '0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb' }] });
+
+      const request = new NextRequest('http://localhost:3000/api/crypto/rewards/1');
+      const response = await GET(request, { params: Promise.resolve({ userId: '1' }) });
+
+      expect(response.status).toBe(403);
     });
   });
 });

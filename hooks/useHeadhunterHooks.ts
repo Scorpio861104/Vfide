@@ -1,7 +1,7 @@
 /**
  * HEADHUNTER COMPETITION HOOKS
  * 
- * React hooks for interacting with EcosystemVault headhunter functions
+ * React hooks for interacting with EcosystemVault referral/work-reward functions
  */
 
 import { useReadContract, useWriteContract, useAccount } from 'wagmi';
@@ -101,12 +101,6 @@ export function useHeadhunterReward(year: bigint, quarter: bigint): HeadhunterRe
     },
   });
 
-  // Rank reward percentages (BPS - basis points out of 10000)
-  const RANK_SHARES = [
-    1500, 1200, 1000, 800, 700, 600, 500, 450, 400, 350,
-    300, 280, 260, 240, 220, 200, 180, 160, 140, 120
-  ];
-
   if (!data || !address) {
     return {
       referrerPoints: 0,
@@ -123,25 +117,14 @@ export function useHeadhunterReward(year: bigint, quarter: bigint): HeadhunterRe
   // Type assertion for JSON ABI return value
   const rewardDataTuple = data as readonly [bigint, boolean, boolean, bigint];
   const [referrerPoints, claimed, quarterEndedFlag, poolSnapshot] = rewardDataTuple;
-  const rank = Number(referrerPoints) > 0 ? calculateRank(Number(referrerPoints)) : 0;
-  
-  // Calculate estimated reward
-  let estimatedReward = 0n;
-  let rewardShare = '0%';
-  
-  if (rank > 0 && rank <= 20 && quarterEndedFlag) {
-    const shareBPS = BigInt(RANK_SHARES[rank - 1] ?? 0);
-    estimatedReward = (poolSnapshot * shareBPS) / 10000n;
-    rewardShare = `${(Number(shareBPS) / 100).toFixed(1)}%`;
-  }
 
   return {
     referrerPoints: Number(referrerPoints),
     claimed,
     quarterEnded: quarterEndedFlag,
     poolSnapshot,
-    estimatedReward,
-    rewardShare,
+    estimatedReward: 0n,
+    rewardShare: 'Fixed work rewards only',
     isLoading,
     error: error as Error | null,
   };
@@ -188,21 +171,11 @@ export function usePendingReferral(referred: `0x${string}` | undefined): Pending
  * Claim headhunter reward for a completed quarter
  */
 export function useClaimHeadhunterReward() {
-  const { writeContract, isPending, isSuccess, error } = useWriteContract();
+  const { isPending, isSuccess, error } = useWriteContract();
   const [txHash] = useState<`0x${string}` | null>(null);
 
-  const claimReward = async (year: bigint, quarter: bigint) => {
-    try {
-      writeContract({
-        address: ECOSYSTEM_VAULT_ADDRESS,
-        abi: EcosystemVaultABI,
-        functionName: 'claimHeadhunterReward',
-        args: [year, quarter],
-      });
-    } catch (err) {
-      console.error('Claim failed:', err);
-      throw err;
-    }
+  const claimReward = async (_year: bigint, _quarter: bigint) => {
+    throw new Error('Rank/percentage headhunter claims are disabled. Use fixed work reward payouts via manager hooks.');
   };
 
   return {
@@ -215,22 +188,57 @@ export function useClaimHeadhunterReward() {
 }
 
 /**
- * Helper function to calculate rank based on points
- * (This would need to be replaced with actual on-chain data)
+ * Manager hook: pay fixed referral work reward from referral pool.
  */
-function calculateRank(points: number): number {
-  // Mock implementation - replace with actual leaderboard data
-  // In reality, you'd fetch all referrers and sort by points
-  if (points >= 45) return 1;
-  if (points >= 38) return 2;
-  if (points >= 32) return 3;
-  if (points >= 25) return 4;
-  if (points >= 20) return 5;
-  if (points >= 18) return 7;
-  if (points >= 15) return 10;
-  if (points >= 10) return 15;
-  if (points >= 5) return 20;
-  return 21; // Not in top 20
+export function usePayReferralWorkReward() {
+  const { writeContract, isPending, isSuccess, error } = useWriteContract();
+
+  const payReferralWorkReward = async (
+    worker: `0x${string}`,
+    amount: string,
+    reason: string
+  ) => {
+    writeContract({
+      address: ECOSYSTEM_VAULT_ADDRESS,
+      abi: EcosystemVaultABI,
+      functionName: 'payReferralWorkReward',
+      args: [worker, parseEther(amount), reason],
+    });
+  };
+
+  return {
+    payReferralWorkReward,
+    isPending,
+    isSuccess,
+    error: error as Error | null,
+  };
+}
+
+/**
+ * Manager hook: pay fixed merchant work reward from merchant pool.
+ */
+export function usePayMerchantWorkReward() {
+  const { writeContract, isPending, isSuccess, error } = useWriteContract();
+
+  const payMerchantWorkReward = async (
+    worker: `0x${string}`,
+    amount: string,
+    reason: string
+  ) => {
+    writeContract({
+      address: ECOSYSTEM_VAULT_ADDRESS,
+      abi: EcosystemVaultABI,
+      functionName: 'payMerchantWorkReward',
+      args: [worker, parseEther(amount), reason],
+    });
+  };
+
+  return {
+    payMerchantWorkReward,
+    isPending,
+    isSuccess,
+    error: error as Error | null,
+  };
 }
 
 /**
@@ -364,10 +372,10 @@ export function useLeaderboard(year: bigint, quarter: bigint) {
     // In production, fetch from subgraph or contract
     // For now, return mock data
     const mockData: LeaderboardEntry[] = [
-      { rank: 1, address: '0x1234567890ABCDEF1234567890ABCDEF12345678' as `0x${string}`, points: 45, userReferrals: 30, merchantReferrals: 5, estimatedReward: '$3,750', isCurrentUser: false },
-      { rank: 2, address: '0x2345678901BCDEF23456789012CDEF3456789012' as `0x${string}`, points: 38, userReferrals: 26, merchantReferrals: 4, estimatedReward: '$3,000', isCurrentUser: false },
-      { rank: 3, address: '0x3456789012CDEF34567890123DEF45678901234' as `0x${string}`, points: 32, userReferrals: 23, merchantReferrals: 3, estimatedReward: '$2,500', isCurrentUser: false },
-      { rank: 7, address: address || ('0x0000000000000000000000000000000000000000' as `0x${string}`), points: 18, userReferrals: 4, merchantReferrals: 2, estimatedReward: '$1,250', isCurrentUser: true },
+      { rank: 1, address: '0x1234567890ABCDEF1234567890ABCDEF12345678' as `0x${string}`, points: 45, userReferrals: 30, merchantReferrals: 5, estimatedReward: 'Manager-assigned fixed work payout', isCurrentUser: false },
+      { rank: 2, address: '0x2345678901BCDEF23456789012CDEF3456789012' as `0x${string}`, points: 38, userReferrals: 26, merchantReferrals: 4, estimatedReward: 'Manager-assigned fixed work payout', isCurrentUser: false },
+      { rank: 3, address: '0x3456789012CDEF34567890123DEF45678901234' as `0x${string}`, points: 32, userReferrals: 23, merchantReferrals: 3, estimatedReward: 'Manager-assigned fixed work payout', isCurrentUser: false },
+      { rank: 7, address: address || ('0x0000000000000000000000000000000000000000' as `0x${string}`), points: 18, userReferrals: 4, merchantReferrals: 2, estimatedReward: 'Manager-assigned fixed work payout', isCurrentUser: true },
     ];
 
     setLeaderboard(mockData);

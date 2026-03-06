@@ -27,6 +27,23 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       );
     }
 
+    const ownerResult = await query<{ wallet_address: string }>(
+      'SELECT wallet_address FROM users WHERE id = $1',
+      [userId]
+    );
+
+    const ownerAddress = ownerResult.rows[0]?.wallet_address;
+    if (!ownerAddress) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    }
+
+    if (authResult.user.address.toLowerCase() !== ownerAddress.toLowerCase()) {
+      return NextResponse.json(
+        { error: 'You do not have permission to access this resource' },
+        { status: 403 }
+      );
+    }
+
     const result = await query(
       `SELECT * FROM user_rewards
        WHERE user_id = $1

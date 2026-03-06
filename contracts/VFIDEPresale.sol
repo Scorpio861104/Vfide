@@ -370,17 +370,6 @@ contract VFIDEPresale is ReentrancyGuard {
     }
     
     /**
-     * @notice Validate that lock period meets tier requirements
-     * @param tier The purchase tier
-     * @param lockPeriod The requested lock period
-     * @dev Tier 0 requires 180 days, Tier 1 requires 90 days, Tier 2 is optional
-     */
-    function _validateTierLock(uint8 tier, uint256 lockPeriod) internal pure {
-        uint256 requiredLock = getTierRequiredLock(tier);
-        if (lockPeriod < requiredLock) revert PS_TierLockRequired();
-    }
-    
-    /**
      * @notice Verify VFIDE tokens are available in presale contract
      * @dev VFIDEToken pre-mints 35M to this contract at genesis.
      *      This function verifies the pre-mint and marks deposit complete.
@@ -423,6 +412,10 @@ contract VFIDEPresale is ReentrancyGuard {
      */
     function buyWithStable(address stablecoin, uint256 amount, uint8 tier, uint256 lockPeriod) external nonReentrant whenNotPaused {
         require(tokensDeposited, "PS: tokens not yet deposited");
+        require(block.timestamp >= saleStartTime, "Not started");
+        require(block.timestamp <= saleEndTime, "Ended");
+        require(totalBaseSold < BASE_SUPPLY, "Sold out");
+        if (purchases[msg.sender].length >= MAX_PURCHASES_PER_WALLET) revert PS_TooManyPurchases();
         require(address(stablecoinRegistry) != address(0), "PS: no registry");
         if (!stablecoinRegistry.isWhitelisted(stablecoin)) revert PS_InvalidStablecoin();
         if (!isTierAvailable(tier)) revert PS_TierDisabled();
@@ -451,105 +444,23 @@ contract VFIDEPresale is ReentrancyGuard {
         
         // Process purchase with tier pricing
         uint256 baseTokens = calculateTokensFromUsdTier(usdAmount, tier);
-        
-        // Check tier capacity
-        _checkAndUpdateTierSold(tier, baseTokens);
-        _processPurchase(msg.sender, baseTokens, tier, lockPeriod, 0, usdAmount);
-        
-        emit StablePurchase(msg.sender, stablecoin, lockPeriod, amount, baseTokens, 0, purchases[msg.sender].length - 1);
-        emit TieredPurchase(msg.sender, tier, baseTokens, usdAmount);
-    }
-    
-    /**
-     * @notice Purchase VFIDE tokens with ETH (legacy support, uses tier 2 public price)
-     * @param lockPeriod Lock duration: 0 (no lock), 90 days, or 180 days
-     * @dev Stablecoins preferred for exact USD pricing
-     *      ETH uses tier 2 (public) at $0.07 + configurable ethPriceUsd rate
-     */
-    function buyTokens(uint256 lockPeriod) external payable nonReentrant whenNotPaused {
-        if (!ethAccepted) revert PS_ETHNotAccepted();
-        if (!isTierAvailable(2)) revert PS_TierDisabled(); // ETH uses tier 2 (public)
-        require(msg.value >= MIN_PURCHASE_ETH, "Below minimum");
-        require(!isEthPriceStale(), "PS: ETH price stale - use stablecoin or wait for DAO update");
-        
-        // Circuit breakers
-        if (tx.gasprice > maxGasPrice) revert PS_GasPriceTooHigh();
-        
-        // Calculate USD equivalent (6 decimals)
-        uint256 usdAmount = (msg.value * ethPriceUsd) / 1e12;
-        totalEthRaised += msg.value;
-        totalUsdRaised += usdAmount;
-        usdContributed[msg.sender] += usdAmount;
-        ethContributed[msg.sender] += msg.value;  // Track for refunds
-        
-        // Forward ETH to treasury
-        (bool success, ) = TREASURY.call{value: msg.value}("");
-        require(success, "ETH transfer failed");
-        
-        // Calculate tokens using tier 2 (public) price and update tier
-        uint256 baseTokens = calculateTokensFromEthTier(msg.value, 2);
-        _checkAndUpdateTierSold(2, baseTokens);
-        _processPurchase(msg.sender, baseTokens, 2, lockPeriod, 0, usdAmount);
-        
-        emit Purchase(msg.sender, lockPeriod, msg.value, baseTokens, 0, purchases[msg.sender].length - 1);
-        emit TieredPurchase(msg.sender, 2, baseTokens, usdAmount);
-    }
-    
-    /**
-     * @notice Internal function to check tier capacity and update sold amount
-     * @param tier The tier being purchased (0, 1, or 2)
-     * @param baseTokens Amount of base tokens being purchased
-     */
-    function _checkAndUpdateTierSold(uint8 tier, uint256 baseTokens) internal {
+
+        // Validate lock-period rules per tier
         if (tier == 0) {
-            if (tier0Sold + baseTokens > TIER_0_CAP) revert PS_TierSoldOut();
-            tier0Sold += baseTokens;
+            if (lockPeriod < LOCK_180_DAYS) revert PS_TierLockRequired();
         } else if (tier == 1) {
-            if (tier1Sold + baseTokens > TIER_1_CAP) revert PS_TierSoldOut();
-            tier1Sold += baseTokens;
-        } else if (tier == 2) {
-            if (tier2Sold + baseTokens > TIER_2_CAP) revert PS_TierSoldOut();
-            tier2Sold += baseTokens;
-        } else {
+            if (lockPeriod < LOCK_90_DAYS) revert PS_TierLockRequired();
+        } else if (tier > 2) {
             revert PS_InvalidTier();
         }
-    }
-    
-    /**
-     * @notice Internal function to process a purchase
-     * @param buyer Address of the buyer
-     * @param baseTokens Base tokens purchased
-     * @param tier Price tier (0=Founding, 1=Oath, 2=Public)
-     * @param lockPeriod Lock period chosen
-     */
-    function _processPurchase(
-        address buyer, 
-        uint256 baseTokens, 
-        uint8 tier,
-        uint256 lockPeriod,
-        uint256,
-        uint256 /*usdAmount*/
-    ) internal {
-        require(tokensDeposited, "Tokens not deposited");
-        require(block.timestamp >= saleStartTime, "Not started");
-        require(block.timestamp <= saleEndTime, "Ended");
-        require(totalBaseSold < BASE_SUPPLY, "Sold out");
-        if (purchases[buyer].length >= MAX_PURCHASES_PER_WALLET) revert PS_TooManyPurchases();
-        
-        // Validate tier lock requirements
-        _validateTierLock(tier, lockPeriod);
-        
+
         // Determine immediate unlock percentage (no bonuses — VFIDE is a utility token)
         uint256 immediatePercentage;
-        
         if (tier == 0) {
-            // Founding: 180-day lock required, 10% immediate
             immediatePercentage = IMMEDIATE_180_DAYS;
         } else if (tier == 1) {
-            // Oath: 90-day lock required, 20% immediate
             immediatePercentage = IMMEDIATE_90_DAYS;
         } else {
-            // Tier 2 (Public): optional lock, immediate percentage by lock period
             if (lockPeriod == LOCK_180_DAYS) {
                 immediatePercentage = IMMEDIATE_180_DAYS;
             } else if (lockPeriod == LOCK_90_DAYS) {
@@ -563,31 +474,43 @@ contract VFIDEPresale is ReentrancyGuard {
 
         // No bonus tokens — rewards are not offered
         uint256 totalTokens = baseTokens;
-        
+
         // Per-transaction limit
         require(totalTokens <= 50_000 * 1e18, "Exceeds per-tx limit");
-        
+
+        // Check tier capacity
+        if (tier == 0) {
+            if (tier0Sold + baseTokens > TIER_0_CAP) revert PS_TierSoldOut();
+            tier0Sold += baseTokens;
+        } else if (tier == 1) {
+            if (tier1Sold + baseTokens > TIER_1_CAP) revert PS_TierSoldOut();
+            tier1Sold += baseTokens;
+        } else {
+            if (tier2Sold + baseTokens > TIER_2_CAP) revert PS_TierSoldOut();
+            tier2Sold += baseTokens;
+        }
+
+        // Check wallet/base supply limits
+        require(totalAllocated[msg.sender] + totalTokens <= MAX_PER_WALLET, "Exceeds wallet cap");
+        require(totalBaseSold + baseTokens <= BASE_SUPPLY, "Base supply exceeded");
+
         // Calculate immediate vs locked amounts
         uint256 immediateAmount = (totalTokens * immediatePercentage) / 100;
         uint256 lockedAmount = totalTokens - immediateAmount;
-        
-        // Check limits
-        require(totalAllocated[buyer] + totalTokens <= MAX_PER_WALLET, "Exceeds wallet cap");
-        require(totalBaseSold + baseTokens <= BASE_SUPPLY, "Base supply exceeded");
-        
-        // Update state
+
+        // Calculate unlock time
+        uint256 unlockTime = lockPeriod == LOCK_NONE
+            ? block.timestamp
+            : block.timestamp + lockPeriod;
+
+        // Update global/user accounting
         totalBaseSold += baseTokens;
         totalSold += totalTokens;
-        totalAllocated[buyer] += totalTokens;
-        lastPurchaseTime[buyer] = block.timestamp;
-        
-        // Calculate unlock time
-        uint256 unlockTime = lockPeriod == LOCK_NONE 
-            ? block.timestamp 
-            : block.timestamp + lockPeriod;
-        
-        // Record purchase with tier for cancelPurchase tracking
-        purchases[buyer].push(PurchaseRecord({
+        totalAllocated[msg.sender] += totalTokens;
+        lastPurchaseTime[msg.sender] = block.timestamp;
+
+        // Record purchase
+        purchases[msg.sender].push(PurchaseRecord({
             baseAmount: baseTokens,
             bonusAmount: 0,
             immediateAmount: immediateAmount,
@@ -598,7 +521,102 @@ contract VFIDEPresale is ReentrancyGuard {
             immediateClaimed: false,
             lockedClaimed: false
         }));
+        
+        emit StablePurchase(msg.sender, stablecoin, lockPeriod, amount, baseTokens, 0, purchases[msg.sender].length - 1);
+        emit TieredPurchase(msg.sender, tier, baseTokens, usdAmount);
     }
+    
+    /**
+     * @notice Purchase VFIDE tokens with ETH (legacy support, uses tier 2 public price)
+     * @param lockPeriod Lock duration: 0 (no lock), 90 days, or 180 days
+     * @dev Stablecoins preferred for exact USD pricing
+     *      ETH uses tier 2 (public) at $0.07 + configurable ethPriceUsd rate
+     */
+    function buyTokens(uint256 lockPeriod) external payable nonReentrant whenNotPaused {
+        require(tokensDeposited, "Tokens not deposited");
+        require(block.timestamp >= saleStartTime, "Not started");
+        require(block.timestamp <= saleEndTime, "Ended");
+        require(totalBaseSold < BASE_SUPPLY, "Sold out");
+        if (purchases[msg.sender].length >= MAX_PURCHASES_PER_WALLET) revert PS_TooManyPurchases();
+        if (!ethAccepted) revert PS_ETHNotAccepted();
+        if (!isTierAvailable(2)) revert PS_TierDisabled(); // ETH uses tier 2 (public)
+        require(msg.value >= MIN_PURCHASE_ETH, "Below minimum");
+        require(!isEthPriceStale(), "PS: ETH price stale - use stablecoin or wait for DAO update");
+        
+        // Circuit breakers
+        if (tx.gasprice > maxGasPrice) revert PS_GasPriceTooHigh();
+        
+        // Calculate USD equivalent (6 decimals)
+        uint256 usdAmount = (msg.value * ethPriceUsd) / 1e12;
+        
+        // Tier 2 lock periods: none, 90 days, or 180 days
+        uint256 immediatePercentage;
+        if (lockPeriod == LOCK_180_DAYS) {
+            immediatePercentage = IMMEDIATE_180_DAYS;
+        } else if (lockPeriod == LOCK_90_DAYS) {
+            immediatePercentage = IMMEDIATE_90_DAYS;
+        } else if (lockPeriod == LOCK_NONE) {
+            immediatePercentage = IMMEDIATE_NO_LOCK;
+        } else {
+            revert PS_InvalidLockPeriod();
+        }
+
+        totalEthRaised += msg.value;
+        totalUsdRaised += usdAmount;
+        usdContributed[msg.sender] += usdAmount;
+        ethContributed[msg.sender] += msg.value;  // Track for refunds
+        
+        // Forward ETH to treasury
+        (bool success, ) = TREASURY.call{value: msg.value}("");
+        require(success, "ETH transfer failed");
+        
+        // Calculate tokens using tier 2 (public) price
+        uint256 baseTokens = calculateTokensFromEthTier(msg.value, 2);
+
+        // No bonus tokens — rewards are not offered
+        uint256 totalTokens = baseTokens;
+
+        // Per-transaction limit
+        require(totalTokens <= 50_000 * 1e18, "Exceeds per-tx limit");
+
+        // Capacity and wallet checks
+        if (tier2Sold + baseTokens > TIER_2_CAP) revert PS_TierSoldOut();
+        require(totalAllocated[msg.sender] + totalTokens <= MAX_PER_WALLET, "Exceeds wallet cap");
+        require(totalBaseSold + baseTokens <= BASE_SUPPLY, "Base supply exceeded");
+
+        // Calculate immediate vs locked amounts
+        uint256 immediateAmount = (totalTokens * immediatePercentage) / 100;
+        uint256 lockedAmount = totalTokens - immediateAmount;
+
+        // Calculate unlock time
+        uint256 unlockTime = lockPeriod == LOCK_NONE
+            ? block.timestamp
+            : block.timestamp + lockPeriod;
+
+        // Update sold counters and user allocation
+        tier2Sold += baseTokens;
+        totalBaseSold += baseTokens;
+        totalSold += totalTokens;
+        totalAllocated[msg.sender] += totalTokens;
+        lastPurchaseTime[msg.sender] = block.timestamp;
+
+        // Record purchase
+        purchases[msg.sender].push(PurchaseRecord({
+            baseAmount: baseTokens,
+            bonusAmount: 0,
+            immediateAmount: immediateAmount,
+            lockedAmount: lockedAmount,
+            lockPeriod: lockPeriod,
+            unlockTime: unlockTime,
+            tier: 2,
+            immediateClaimed: false,
+            lockedClaimed: false
+        }));
+        
+        emit Purchase(msg.sender, lockPeriod, msg.value, baseTokens, 0, purchases[msg.sender].length - 1);
+        emit TieredPurchase(msg.sender, 2, baseTokens, usdAmount);
+    }
+    
     // ──────────────────────────── Claim Functions ────────────────────────────
 
     /**

@@ -9,9 +9,16 @@ jest.mock('@/lib/auth/rateLimit', () => ({
   withRateLimit: jest.fn(),
 }));
 
+jest.mock('@/lib/auth/middleware', () => ({
+  requireAuth: jest.fn(),
+  isAdmin: jest.fn(),
+  requireAdmin: jest.fn(),
+}));
+
 describe('/api/badges', () => {
   const { query } = require('@/lib/db');
   const { withRateLimit } = require('@/lib/auth/rateLimit');
+  const { requireAuth, isAdmin } = require('@/lib/auth/middleware');
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -20,6 +27,8 @@ describe('/api/badges', () => {
   describe('GET', () => {
     it('should return user badges', async () => {
       withRateLimit.mockResolvedValue(null);
+      requireAuth.mockResolvedValue({ user: { address: '0x123' } });
+      isAdmin.mockReturnValue(false);
 
       const mockBadges = [
         {
@@ -39,6 +48,17 @@ describe('/api/badges', () => {
 
       expect(response.status).toBe(200);
       expect(data.badges).toHaveLength(1);
+    });
+
+    it('should reject when requesting another user badges without admin', async () => {
+      withRateLimit.mockResolvedValue(null);
+      requireAuth.mockResolvedValue({ user: { address: '0xabc' } });
+      isAdmin.mockReturnValue(false);
+
+      const request = new NextRequest('http://localhost:3000/api/badges?userAddress=0x123');
+      const response = await GET(request);
+
+      expect(response.status).toBe(403);
     });
 
     it('should return all badges when userAddress is not provided', async () => {
@@ -66,6 +86,8 @@ describe('/api/badges', () => {
 
     it('should return 500 for database errors', async () => {
       withRateLimit.mockResolvedValue(null);
+      requireAuth.mockResolvedValue({ user: { address: '0x123' } });
+      isAdmin.mockReturnValue(false);
       query.mockRejectedValue(new Error('Database error'));
 
       const request = new NextRequest('http://localhost:3000/api/badges?userAddress=0x123');

@@ -54,6 +54,9 @@ contract AdminMultiSig {
     uint256 public vetoThreshold = 100; // 100 veto votes needed
     mapping(uint256 => mapping(address => bool)) public communityVetos;
 
+    uint256 private constant NO_ACTIVE_PROPOSAL = type(uint256).max;
+    uint256 private executingProposalId = NO_ACTIVE_PROPOSAL;
+
     event ProposalCreated(
         uint256 indexed proposalId,
         address indexed proposer,
@@ -75,6 +78,16 @@ contract AdminMultiSig {
 
     modifier proposalExists(uint256 _proposalId) {
         require(_proposalId < proposalCount, "AdminMultiSig: proposal does not exist");
+        _;
+    }
+
+    modifier onlyEmergencyProposalExecutionContext() {
+        require(msg.sender == address(this), "AdminMultiSig: only via proposal");
+        require(executingProposalId != NO_ACTIVE_PROPOSAL, "AdminMultiSig: no active execution");
+
+        Proposal storage proposal = proposals[executingProposalId];
+        require(proposal.proposalType == ProposalType.EMERGENCY, "AdminMultiSig: requires emergency proposal");
+        require(proposal.approvalCount >= EMERGENCY_APPROVALS, "AdminMultiSig: insufficient emergency approvals");
         _;
     }
 
@@ -185,11 +198,13 @@ contract AdminMultiSig {
         }
 
         proposal.status = ProposalStatus.Executed;
+        executingProposalId = _proposalId;
 
         // Use 500k gas limit for safety - prevents gas griefing
         // Can be increased via governance if needed for complex operations
         (bool success, ) = proposal.target.call{gas: 500000}(proposal.data);
         require(success, "AdminMultiSig: execution failed");
+        executingProposalId = NO_ACTIVE_PROPOSAL;
 
         emit ProposalExecuted(_proposalId, msg.sender);
     }
@@ -246,8 +261,7 @@ contract AdminMultiSig {
      * @param _index Index of council member to replace
      * @param _newMember New council member address
      */
-    function updateCouncilMember(uint256 _index, address _newMember) external {
-        require(msg.sender == address(this), "AdminMultiSig: only via proposal");
+    function updateCouncilMember(uint256 _index, address _newMember) external onlyEmergencyProposalExecutionContext {
         require(_index < COUNCIL_SIZE, "AdminMultiSig: invalid index");
         require(_newMember != address(0), "AdminMultiSig: zero address");
         require(!isCouncilMember[_newMember], "AdminMultiSig: already member");

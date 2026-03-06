@@ -1,8 +1,11 @@
-import { defineConfig, configVariable } from "hardhat/config";
-import "@nomicfoundation/hardhat-verify";
+import { defineConfig } from "hardhat/config";
+import "@nomicfoundation/hardhat-ethers";
 import * as dotenv from "dotenv";
 
 dotenv.config();
+
+const privateKey = process.env.PRIVATE_KEY;
+const accounts = privateKey ? [privateKey] : [];
 
 const config = defineConfig({
   solidity: {
@@ -18,36 +21,65 @@ const config = defineConfig({
           viaIR: true,
         },
       },
-      {
-        version: "0.8.20",
-        settings: {
-          optimizer: {
-            enabled: true,
-            runs: 200,
-          },
-          viaIR: process.env.NODE_ENV === "production",
-        },
-      },
-      {
-        version: "0.8.19",
-        settings: {
-          optimizer: {
-            enabled: true,
-            runs: 200,
-          },
-          viaIR: process.env.NODE_ENV === "production",
-        },
-      },
-      {
-        version: "0.7.6",
-        settings: {
-          optimizer: {
-            enabled: true,
-            runs: 200,
-          },
-        },
-      },
     ],
+    overrides: {
+      "contracts/VFIDETrust.sol": {
+        version: "0.8.30",
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 0,
+          },
+          metadata: {
+            bytecodeHash: "none",
+          },
+          viaIR: true,
+        },
+      },
+      "contracts/DeployPhases3to6.sol": {
+        version: "0.8.30",
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 1,
+          },
+          metadata: {
+            bytecodeHash: "none",
+          },
+          viaIR: true,
+        },
+      },
+      "contracts/BadgeManager.sol": {
+        version: "0.8.30",
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 1,
+          },
+          viaIR: true,
+        },
+      },
+      "contracts/VaultInfrastructure.sol": {
+        version: "0.8.30",
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 1,
+          },
+          viaIR: true,
+        },
+      },
+      "contracts/DeployPhase1.sol": {
+        version: "0.8.30",
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 1,
+          },
+          viaIR: true,
+        },
+      },
+    },
   },
   networks: {
     hardhat: {
@@ -55,44 +87,39 @@ const config = defineConfig({
       chainId: 31337,
       forking: process.env.FORK_MAINNET === "true"
         ? {
-            url: configVariable("MAINNET_RPC_URL"),
+            url: process.env.MAINNET_RPC_URL || "https://eth.llamarpc.com",
           }
         : undefined,
     },
     sepolia: {
       type: "http" as const,
-      url: configVariable("SEPOLIA_RPC_URL"),
-      accounts: [configVariable("PRIVATE_KEY")],
+      url: process.env.SEPOLIA_RPC_URL || "https://ethereum-sepolia-rpc.publicnode.com",
+      accounts,
       chainId: 11155111,
     },
     mainnet: {
       type: "http" as const,
-      url: configVariable("MAINNET_RPC_URL"),
-      accounts: [configVariable("PRIVATE_KEY")],
+      url: process.env.MAINNET_RPC_URL || "https://eth.llamarpc.com",
+      accounts,
       chainId: 1,
     },
     polygon: {
       type: "http" as const,
-      url: configVariable("POLYGON_RPC_URL"),
-      accounts: [configVariable("PRIVATE_KEY")],
+      url: process.env.POLYGON_RPC_URL || "https://polygon-rpc.com",
+      accounts,
       chainId: 137,
     },
     base: {
       type: "http" as const,
-      url: configVariable("BASE_RPC_URL"),
-      accounts: [configVariable("PRIVATE_KEY")],
+      url: process.env.BASE_RPC_URL || "https://mainnet.base.org",
+      accounts,
       chainId: 8453,
     },
     zkSync: {
       type: "http" as const,
-      url: configVariable("ZKSYNC_RPC_URL"),
-      accounts: [configVariable("PRIVATE_KEY")],
+      url: process.env.ZKSYNC_RPC_URL || "https://mainnet.era.zksync.io",
+      accounts,
       chainId: 324,
-    },
-  },
-  verify: {
-    etherscan: {
-      apiKey: configVariable("ETHERSCAN_API_KEY"),
     },
   },
   paths: {

@@ -105,6 +105,21 @@ describe('StablecoinRegistry Contract', () => {
   });
 
   describe('Edge Cases', () => {
+    it('should reject empty stablecoin symbol', async () => {
+      mockContractWrite.mockRejectedValueOnce(new Error('SR_Bounds'));
+      await expect(mockContractWrite({ functionName: 'addStablecoin', args: [usdc, 6, ''] })).rejects.toThrow('SR_Bounds');
+    });
+
+    it('should reject zero treasury address', async () => {
+      mockContractWrite.mockRejectedValueOnce(new Error('SR_Zero'));
+      await expect(
+        mockContractWrite({
+          functionName: 'setTreasury',
+          args: ['0x0000000000000000000000000000000000000000' as Address],
+        })
+      ).rejects.toThrow('SR_Zero');
+    });
+
     it('should handle zero address stablecoin', async () => {
       mockContractWrite.mockRejectedValueOnce(new Error('ZeroAddress'));
       await expect(mockContractWrite({ functionName: 'addStablecoin', args: ['0x0000000000000000000000000000000000000000' as Address, 6] })).rejects.toThrow('ZeroAddress');

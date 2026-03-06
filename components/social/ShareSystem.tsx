@@ -7,8 +7,6 @@ import {
   Copy,
   CheckCircle2,
   Download,
-  Mail,
-  MessageCircle,
   Twitter,
   Linkedin,
 } from 'lucide-react';

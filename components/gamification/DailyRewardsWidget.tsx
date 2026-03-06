@@ -126,7 +126,7 @@ export default function DailyRewardsWidget() {
 
       {/* Week Calendar */}
       <div className="grid grid-cols-7 gap-2 mb-5">
-        {weekCheckIns.map((checkIn, index) => {
+        {weekCheckIns.map((checkIn) => {
           const isToday = checkIn.day === streak;
           const isClaimed = checkIn.claimed || (isToday && claimed);
           return (

@@ -247,6 +247,17 @@ describe('VaultHub Contract', () => {
   });
 
   describe('Forced Recovery', () => {
+    it('should reject mismatched forced recovery candidate during approval flow', async () => {
+      mockContractWrite.mockRejectedValueOnce(new Error('VH:candidate-mismatch'));
+
+      await expect(
+        mockContractWrite({
+          functionName: 'approveForceRecovery',
+          args: [vault1, user2]
+        })
+      ).rejects.toThrow('VH:candidate-mismatch');
+    });
+
     it('should initiate recovery process', async () => {
       mockContractWrite.mockResolvedValueOnce('0xhash');
 
@@ -689,6 +700,31 @@ describe('VaultHub Contract', () => {
   });
 
   describe('Edge Cases and Integration', () => {
+    it('should reject setModules with zero core addresses', async () => {
+      mockContractWrite.mockRejectedValueOnce(new Error('VH_Zero'));
+      await expect(
+        mockContractWrite({
+          functionName: 'setModules',
+          args: [
+            '0x0000000000000000000000000000000000000000' as Address,
+            '0x0000000000000000000000000000000000000000' as Address,
+            user1,
+            '0x0000000000000000000000000000000000000000' as Address,
+          ],
+        })
+      ).rejects.toThrow('VH_Zero');
+    });
+
+    it('should reject setVFIDE with zero address', async () => {
+      mockContractWrite.mockRejectedValueOnce(new Error('VH_Zero'));
+      await expect(
+        mockContractWrite({
+          functionName: 'setVFIDE',
+          args: ['0x0000000000000000000000000000000000000000' as Address],
+        })
+      ).rejects.toThrow('VH_Zero');
+    });
+
     it('should handle zero balance vault', async () => {
       mockContractRead.mockResolvedValueOnce(0n);
 

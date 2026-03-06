@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query, getClient } from '@/lib/db';
 import { requireAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
-import { validateBody, endorsementSchema } from '@/lib/auth/validation';
+import { endorsementSchema } from '@/lib/auth/validation';
 
 interface Endorsement {
   id: number;
@@ -20,6 +20,9 @@ interface Endorsement {
   proposal_title?: string;
 }
 
+const MAX_ENDORSEMENTS_LIMIT = 200;
+const MAX_ENDORSEMENTS_OFFSET = 10000;
+
 /**
  * GET /api/endorsements?endorsedAddress=0x...&proposalId=123&limit=50&offset=0
  * Get endorsements
@@ -30,11 +33,14 @@ export async function GET(request: NextRequest) {
     const endorsedAddress = searchParams.get('endorsedAddress');
     const endorserAddress = searchParams.get('endorserAddress');
     const proposalId = searchParams.get('proposalId');
-    const limit = parseInt(searchParams.get('limit') || '50', 10);
-    const offset = parseInt(searchParams.get('offset') || '0', 10);
+    const rawLimit = parseInt(searchParams.get('limit') || '50', 10);
+    const rawOffset = parseInt(searchParams.get('offset') || '0', 10);
+
+    const limit = Math.min(Math.max(rawLimit, 0), MAX_ENDORSEMENTS_LIMIT);
+    const offset = Math.min(Math.max(rawOffset, 0), MAX_ENDORSEMENTS_OFFSET);
 
     // Validate parsed numbers
-    if (isNaN(limit) || isNaN(offset) || limit < 0 || offset < 0) {
+    if (isNaN(rawLimit) || isNaN(rawOffset)) {
       return NextResponse.json(
         { error: 'Invalid limit or offset parameter' },
         { status: 400 }
@@ -151,19 +157,35 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
+  let body: unknown;
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json(
+      { error: 'Invalid JSON body' },
+      { status: 400 }
+    );
+  }
+
+  if (!body || typeof body !== 'object' || Array.isArray(body)) {
+    return NextResponse.json(
+      { error: 'Request body must be a JSON object' },
+      { status: 400 }
+    );
+  }
+
+  const parsed = endorsementSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: 'Validation failed', details: parsed.error.issues },
+      { status: 400 }
+    );
+  }
+
   const client = await getClient();
   
   try {
-    // Validate request body
-    const validation = await validateBody(request, endorsementSchema);
-    if (!validation.success) {
-      return NextResponse.json(
-        { error: validation.error, details: validation.details },
-        { status: 400 }
-      );
-    }
-
-    const { fromAddress: endorserAddress, toAddress: endorsedAddress, message } = validation.data as {
+    const { fromAddress: endorserAddress, toAddress: endorsedAddress, message } = parsed.data as {
       fromAddress: string;
       toAddress: string;
       message: string;

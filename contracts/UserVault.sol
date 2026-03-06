@@ -65,23 +65,30 @@ contract UserVault is ReentrancyGuard {
     struct Recovery {
         address proposedOwner;
         uint8 approvals;
+        uint64 readyTime;
         uint64 expiryTime;
         uint8 guardianCountSnapshot;
         uint256 nonce;
         mapping(address => mapping(uint256 => bool)) voted;
     }
     Recovery private _recovery;
+    uint64 public constant RECOVERY_MIN_DELAY = 7 days;
     uint64 public constant RECOVERY_EXPIRY = 30 days;
 
     struct Inheritance {
         bool active;
         uint8 approvals;
+        uint8 cancelApprovals;
+        uint64 readyTime;
         uint64 expiryTime;
+        uint8 guardianCountSnapshot;
         bool ownerDenied;
         uint256 nonce;
         mapping(address => mapping(uint256 => bool)) voted;
+        mapping(address => mapping(uint256 => bool)) cancelVoted;
     }
     Inheritance private _inheritance;
+    uint64 public constant INHERITANCE_MIN_DELAY = 7 days;
     uint64 public constant INHERITANCE_EXPIRY = 30 days;
 
     // H-1 & H-17 Fix: Track guardian add time for flash endorsement protection
@@ -128,6 +135,8 @@ contract UserVault is ReentrancyGuard {
     error UV_NoPendingTx();
     error UV_TxAlreadyProcessed();
     error UV_RecoveryActive();
+    error UV_InheritanceActive();
+    error UV_ClaimInProgress();
     error UV_AlreadyInitialized();
 
     /**
@@ -191,6 +200,15 @@ contract UserVault is ReentrancyGuard {
         if (frozen) revert UV_Frozen();
     }
 
+    modifier noActiveClaims() {
+        _checkNoActiveClaims();
+        _;
+    }
+
+    function _checkNoActiveClaims() internal view {
+        if (_recovery.proposedOwner != address(0) || _inheritance.active) revert UV_ClaimInProgress();
+    }
+
     /**
      * @notice Initialize the vault (used instead of constructor for clone pattern)
      * @param _hub The VaultInfrastructure hub address
@@ -242,6 +260,9 @@ contract UserVault is ReentrancyGuard {
 
         if (_recovery.proposedOwner != address(0)) {
             revert UV_RecoveryActive();
+        }
+        if (_inheritance.active) {
+            revert UV_InheritanceActive();
         }
 
         if (isGuardian[g] != active) {
@@ -305,7 +326,7 @@ contract UserVault is ReentrancyGuard {
     }
 
     // ——— Transfers
-    function transferVFIDE(address toVault, uint256 amount) external onlyOwner notLocked notFrozen nonReentrant {
+    function transferVFIDE(address toVault, uint256 amount) external onlyOwner notLocked notFrozen noActiveClaims nonReentrant {
         if (toVault == address(0)) revert UV_Zero();
         require(block.timestamp >= lastWithdrawalTime + withdrawalCooldown, "UV:cooldown");
 
@@ -369,7 +390,7 @@ contract UserVault is ReentrancyGuard {
         emit TransactionApproved(txId, msg.sender);
     }
 
-    function executePendingTransaction(uint256 txId) external onlyOwner notLocked notFrozen nonReentrant {
+    function executePendingTransaction(uint256 txId) external onlyOwner notLocked notFrozen noActiveClaims nonReentrant {
         PendingTransaction storage ptx = pendingTransactions[txId];
         if (ptx.toVault == address(0)) revert UV_NoPendingTx();
         if (ptx.executed) revert UV_TxAlreadyProcessed();
@@ -405,11 +426,12 @@ contract UserVault is ReentrancyGuard {
     // ——— Recovery (guardian-initiated)
     function requestRecovery(address proposed) external notLocked {
         if (!isGuardian[msg.sender]) revert UV_NotGuardian();
-        require(!isGuardianMature(msg.sender) == false, "UV:immature");
+        require(isGuardianMature(msg.sender), "UV:immature");
         if (proposed == address(0)) revert UV_Zero();
 
         _recovery.proposedOwner = proposed;
         _recovery.approvals = 1;
+        _recovery.readyTime = uint64(block.timestamp + RECOVERY_MIN_DELAY);
         _recovery.expiryTime = uint64(block.timestamp + RECOVERY_EXPIRY);
         _recovery.guardianCountSnapshot = guardianCount;
         _recovery.nonce++;
@@ -439,6 +461,7 @@ contract UserVault is ReentrancyGuard {
 
         delete _recovery.proposedOwner;
         delete _recovery.approvals;
+        delete _recovery.readyTime;
         delete _recovery.expiryTime;
         _recovery.nonce++;
 
@@ -448,6 +471,7 @@ contract UserVault is ReentrancyGuard {
 
     function finalizeRecovery() external notLocked {
         if (_recovery.proposedOwner == address(0)) revert UV_NoRecovery();
+        require(block.timestamp >= _recovery.readyTime, "UV:timelock");
         if (block.timestamp > _recovery.expiryTime) revert UV_NoRecovery();
 
         // H-3 Fix: Require minimum 2 guardians for recovery to prevent single guardian takeover
@@ -460,6 +484,7 @@ contract UserVault is ReentrancyGuard {
 
         delete _recovery.proposedOwner;
         delete _recovery.approvals;
+        delete _recovery.readyTime;
         delete _recovery.expiryTime;
         _recovery.nonce++;
 
@@ -476,7 +501,10 @@ contract UserVault is ReentrancyGuard {
 
         _inheritance.active = true;
         _inheritance.approvals = 0;
+        _inheritance.cancelApprovals = 0;
+        _inheritance.readyTime = uint64(block.timestamp + INHERITANCE_MIN_DELAY);
         _inheritance.expiryTime = uint64(block.timestamp + INHERITANCE_EXPIRY);
+        _inheritance.guardianCountSnapshot = guardianCount;
         _inheritance.nonce++;
 
         emit InheritanceRequested(msg.sender);
@@ -500,6 +528,9 @@ contract UserVault is ReentrancyGuard {
     function denyInheritance() external onlyOwner {
         _inheritance.ownerDenied = true;
         _inheritance.active = false;
+        _inheritance.cancelApprovals = 0;
+        _inheritance.readyTime = 0;
+        _inheritance.guardianCountSnapshot = 0;
         emit InheritanceDenied(msg.sender);
         _logSys("inheritance_denied");
     }
@@ -508,6 +539,9 @@ contract UserVault is ReentrancyGuard {
         if (!_inheritance.active) revert UV_NoInheritance();
 
         _inheritance.active = false;
+        _inheritance.cancelApprovals = 0;
+        _inheritance.readyTime = 0;
+        _inheritance.guardianCountSnapshot = 0;
         _inheritance.nonce++;
 
         emit InheritanceCancelled(msg.sender);
@@ -518,14 +552,20 @@ contract UserVault is ReentrancyGuard {
         if (!isGuardian[msg.sender]) revert UV_NotGuardian();
         require(isGuardianMature(msg.sender), "UV:immature");
         if (!_inheritance.active) revert UV_NoInheritance();
+        if (_inheritance.cancelVoted[msg.sender][_inheritance.nonce]) revert UV_AlreadyVoted();
 
-        uint8 threshold = (guardianCount / 2) + 1;
-        _inheritance.approvals++;
+        uint8 threshold = (_inheritance.guardianCountSnapshot / 2) + 1;
+        _inheritance.cancelVoted[msg.sender][_inheritance.nonce] = true;
+        _inheritance.cancelApprovals++;
 
-        if (_inheritance.approvals >= threshold) {
+        if (_inheritance.cancelApprovals >= threshold) {
+            uint8 finalCancelApprovals = _inheritance.cancelApprovals;
             _inheritance.active = false;
+            _inheritance.cancelApprovals = 0;
+            _inheritance.readyTime = 0;
+            _inheritance.guardianCountSnapshot = 0;
             _inheritance.nonce++;
-            emit InheritanceCancelledByGuardians(msg.sender, _inheritance.approvals);
+            emit InheritanceCancelledByGuardians(msg.sender, finalCancelApprovals);
             _logSys("inheritance_cancelled_by_guardians");
         }
     }
@@ -533,13 +573,17 @@ contract UserVault is ReentrancyGuard {
     function finalizeInheritance() external notLocked nonReentrant {
         if (msg.sender != nextOfKin) revert UV_NotNextOfKin();
         if (!_inheritance.active) revert UV_NoInheritance();
+        require(block.timestamp >= _inheritance.readyTime, "UV:timelock");
         if (block.timestamp > _inheritance.expiryTime) revert UV_NoInheritance();
         if (_inheritance.ownerDenied) revert UV_InheritanceDenied();
 
-        uint8 threshold = (guardianCount / 2) + 1;
+        uint8 threshold = (_inheritance.guardianCountSnapshot / 2) + 1;
         require(_inheritance.approvals >= threshold, "UV:threshold");
 
         _inheritance.active = false;
+        _inheritance.cancelApprovals = 0;
+        _inheritance.readyTime = 0;
+        _inheritance.guardianCountSnapshot = 0;
         _inheritance.nonce++;
 
         uint256 balance = IERC20(vfideToken).balanceOf(address(this));
@@ -553,7 +597,7 @@ contract UserVault is ReentrancyGuard {
     }
 
     // ——— Execute arbitrary calls (limited)
-    function execute(address target, bytes calldata data) external payable onlyOwner notLocked notFrozen nonReentrant returns (bytes memory) {
+    function execute(address target, bytes calldata data) external payable onlyOwner notLocked notFrozen noActiveClaims nonReentrant returns (bytes memory) {
         require(target != vfideToken, "UV:no-token");
         require(target != hub, "UV:no-hub");
         require(msg.value <= maxExecuteValue, "UV:value");
@@ -603,7 +647,7 @@ contract UserVault is ReentrancyGuard {
     ) {
         active = _inheritance.active && block.timestamp <= _inheritance.expiryTime;
         approvals = _inheritance.approvals;
-        threshold = (guardianCount / 2) + 1;
+        threshold = (_inheritance.guardianCountSnapshot / 2) + 1;
         expiryTime = _inheritance.expiryTime;
         denied = _inheritance.ownerDenied;
     }

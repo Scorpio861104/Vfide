@@ -23,6 +23,38 @@ describe('/api/messages/edit', () => {
   });
 
   describe('PATCH', () => {
+    it('should return 400 for malformed JSON', async () => {
+      withRateLimit.mockResolvedValue(null);
+      requireAuth.mockReturnValue({ user: { address: '0x1111111111111111111111111111111111111123' } });
+
+      const request = new NextRequest('http://localhost:3000/api/messages/edit', {
+        method: 'PATCH',
+        body: '{"messageId": "1"',
+      });
+
+      const response = await PATCH(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(400);
+      expect(data.error).toContain('Invalid JSON');
+    });
+
+    it('should return 400 for non-object body', async () => {
+      withRateLimit.mockResolvedValue(null);
+      requireAuth.mockReturnValue({ user: { address: '0x1111111111111111111111111111111111111123' } });
+
+      const request = new NextRequest('http://localhost:3000/api/messages/edit', {
+        method: 'PATCH',
+        body: JSON.stringify(['invalid']),
+      });
+
+      const response = await PATCH(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(400);
+      expect(data.error).toContain('JSON object');
+    });
+
     it('should edit message successfully', async () => {
       withRateLimit.mockResolvedValue(null);
       requireAuth.mockReturnValue({ user: { address: '0x1111111111111111111111111111111111111123' } });

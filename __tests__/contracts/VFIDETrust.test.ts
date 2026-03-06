@@ -101,5 +101,25 @@ describe('VFIDETrust Contract', () => {
       mockContractWrite.mockRejectedValueOnce(new Error('TrustRevoked'));
       await expect(mockContractWrite({ functionName: 'fundTrust', args: [1, parseEther('100')] })).rejects.toThrow('TrustRevoked');
     });
+
+    it('should reject setBadge with zero subject', async () => {
+      mockContractWrite.mockRejectedValueOnce(new Error('TRUST_Zero'));
+      await expect(
+        mockContractWrite({
+          functionName: 'setBadge',
+          args: ['0x0000000000000000000000000000000000000000' as Address, '0x00', true, 0],
+        })
+      ).rejects.toThrow('TRUST_Zero');
+    });
+
+    it('should reject router policy that exceeds max total bps', async () => {
+      mockContractWrite.mockRejectedValueOnce(new Error('TRUST_Bounds'));
+      await expect(
+        mockContractWrite({
+          functionName: 'setPolicy',
+          args: [200, 50, 900, 150, 1000, beneficiary],
+        })
+      ).rejects.toThrow('TRUST_Bounds');
+    });
   });
 });

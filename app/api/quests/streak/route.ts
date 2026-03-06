@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getClient } from '@/lib/db';
-import { requireAuth } from '@/lib/auth/middleware';
+import { isAdmin, requireAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 
 /**
@@ -24,13 +24,24 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'User address required' }, { status: 400 });
     }
 
+    if (typeof userAddress !== 'string') {
+      return NextResponse.json({ error: 'User address must be a string' }, { status: 400 });
+    }
+
+    const requesterAddress = authResult.user.address.toLowerCase();
+    const targetAddress = userAddress.toLowerCase();
+    const canAccess = requesterAddress === targetAddress || isAdmin(authResult.user);
+    if (!canAccess) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
     const client = await getClient();
 
     try {
       // Get user ID
       const userResult = await client.query(
         'SELECT id FROM users WHERE wallet_address = $1',
-        [userAddress]
+        [targetAddress]
       );
 
       if (userResult.rows.length === 0) {
@@ -116,12 +127,35 @@ export async function POST(request: NextRequest) {
   const authResult = await requireAuth(request);
   if (authResult instanceof NextResponse) return authResult;
 
+  let body: Record<string, unknown>;
   try {
-    const body = await request.json();
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+  }
+
+  if (!body || typeof body !== 'object' || Array.isArray(body)) {
+    return NextResponse.json({ error: 'Request body must be a JSON object' }, { status: 400 });
+  }
+
+  try {
     const { userAddress, streakType = 'login' } = body;
 
     if (!userAddress) {
       return NextResponse.json({ error: 'User address required' }, { status: 400 });
+    }
+
+    if (typeof userAddress !== 'string') {
+      return NextResponse.json({ error: 'User address must be a string' }, { status: 400 });
+    }
+
+    const streakTypeValue = typeof streakType === 'string' ? streakType : 'login';
+
+    const requesterAddress = authResult.user.address.toLowerCase();
+    const targetAddress = userAddress.toLowerCase();
+    const canUpdate = requesterAddress === targetAddress || isAdmin(authResult.user);
+    if (!canUpdate) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
     const client = await getClient();
@@ -130,7 +164,7 @@ export async function POST(request: NextRequest) {
       // Get user ID
       const userResult = await client.query(
         'SELECT id FROM users WHERE wallet_address = $1',
-        [userAddress]
+        [targetAddress]
       );
 
       if (userResult.rows.length === 0) {
@@ -142,13 +176,13 @@ export async function POST(request: NextRequest) {
       // Update streak
       await client.query(
         'SELECT update_user_streak($1, $2)',
-        [userId, streakType]
+        [userId, streakTypeValue]
       );
 
       // Fetch updated streak
       const streakResult = await client.query(
         'SELECT * FROM user_streaks WHERE user_id = $1 AND streak_type = $2',
-        [userId, streakType]
+        [userId, streakTypeValue]
       );
 
       const streak = streakResult.rows[0];
@@ -156,7 +190,7 @@ export async function POST(request: NextRequest) {
       // Check for milestone rewards
       await client.query(
         'SELECT check_streak_milestones($1, $2, $3)',
-        [userId, streakType, streak.current_streak]
+        [userId, streakTypeValue, streak.current_streak]
       );
 
       return NextResponse.json({

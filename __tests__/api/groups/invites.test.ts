@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { GET, POST } from '@/app/api/groups/invites/route';
+import { GET, PATCH, POST } from '@/app/api/groups/invites/route';
 
 jest.mock('@/lib/db', () => ({
   query: jest.fn(),
@@ -25,8 +25,11 @@ describe('/api/groups/invites', () => {
   describe('GET', () => {
     it('should return group invites', async () => {
       withRateLimit.mockResolvedValue(null);
+      requireAuth.mockReturnValue({ user: { address: '0x1111111111111111111111111111111111111123' } });
 
-      query.mockResolvedValue({
+      query.mockResolvedValueOnce({ rows: [{ id: 1 }] });
+      query.mockResolvedValueOnce({ rows: [{ role: 'admin' }] });
+      query.mockResolvedValueOnce({
         rows: [
           {
             id: 1,
@@ -45,6 +48,21 @@ describe('/api/groups/invites', () => {
 
       expect(response.status).toBe(200);
       expect(data.invites).toHaveLength(1);
+    });
+
+    it('should return 403 when non-admin member requests group invites', async () => {
+      withRateLimit.mockResolvedValue(null);
+      requireAuth.mockReturnValue({ user: { address: '0x1111111111111111111111111111111111111123' } });
+
+      query.mockResolvedValueOnce({ rows: [{ id: 1 }] });
+      query.mockResolvedValueOnce({ rows: [{ role: 'member' }] });
+
+      const request = new NextRequest('http://localhost:3000/api/groups/invites?groupId=1');
+      const response = await GET(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(403);
+      expect(data.error).toContain('Not authorized');
     });
   });
 
@@ -95,6 +113,43 @@ describe('/api/groups/invites', () => {
 
       const response = await POST(request);
       expect(response.status).toBe(401);
+    });
+
+    it('should return 400 for malformed JSON payload', async () => {
+      withRateLimit.mockResolvedValue(null);
+      requireAuth.mockReturnValue({ user: { address: '0x1111111111111111111111111111111111111123' } });
+
+      const request = new NextRequest('http://localhost:3000/api/groups/invites', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: 'not-json',
+      });
+
+      const response = await POST(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(400);
+      expect(data.error).toContain('Invalid JSON payload');
+      expect(query).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('PATCH', () => {
+    it('should return 400 for invalid action', async () => {
+      withRateLimit.mockResolvedValue(null);
+      requireAuth.mockReturnValue({ user: { address: '0x1111111111111111111111111111111111111123' } });
+
+      const request = new NextRequest('http://localhost:3000/api/groups/invites', {
+        method: 'PATCH',
+        body: JSON.stringify({ code: 'ABC123', action: 'ban' }),
+      });
+
+      const response = await PATCH(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(400);
+      expect(data.error).toContain('Invalid code or action');
+      expect(query).not.toHaveBeenCalled();
     });
   });
 });

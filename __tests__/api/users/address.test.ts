@@ -1,5 +1,5 @@
-import { NextRequest } from 'next/server';
-import { GET } from '@/app/api/users/[address]/route';
+import { NextRequest, NextResponse } from 'next/server';
+import { GET, PUT, POST } from '@/app/api/users/[address]/route';
 
 jest.mock('@/lib/db', () => ({
   query: jest.fn(),
@@ -9,9 +9,14 @@ jest.mock('@/lib/auth/rateLimit', () => ({
   withRateLimit: jest.fn(),
 }));
 
+jest.mock('@/lib/auth/middleware', () => ({
+  requireAuth: jest.fn(),
+}));
+
 describe('/api/users/[address]', () => {
   const { query } = require('@/lib/db');
   const { withRateLimit } = require('@/lib/auth/rateLimit');
+  const { requireAuth } = require('@/lib/auth/middleware');
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -62,6 +67,61 @@ describe('/api/users/[address]', () => {
       const response = await GET(request, { params: Promise.resolve({ address: '0x1111111111111111111111111111111111111123' }) });
 
       expect(response.status).toBe(429);
+    });
+  });
+
+  describe('PUT', () => {
+    it('should reject when authenticated user does not own target address', async () => {
+      withRateLimit.mockResolvedValue(null);
+      requireAuth.mockResolvedValue({ user: { address: '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' } });
+
+      const request = new NextRequest('http://localhost:3000/api/users/0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb', {
+        method: 'PUT',
+        body: JSON.stringify({ bio: 'updated' }),
+      });
+
+      const response = await PUT(request, {
+        params: Promise.resolve({ address: '0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb' }),
+      });
+      const data = await response.json();
+
+      expect(response.status).toBe(403);
+      expect(data.error).toContain('only update your own profile');
+    });
+
+    it('should reject unauthenticated PUT', async () => {
+      withRateLimit.mockResolvedValue(null);
+      requireAuth.mockResolvedValue(NextResponse.json({ error: 'Unauthorized' }, { status: 401 }));
+
+      const request = new NextRequest('http://localhost:3000/api/users/0x1111111111111111111111111111111111111123', {
+        method: 'PUT',
+        body: JSON.stringify({ bio: 'updated' }),
+      });
+
+      const response = await PUT(request, {
+        params: Promise.resolve({ address: '0x1111111111111111111111111111111111111123' }),
+      });
+
+      expect(response.status).toBe(401);
+    });
+  });
+
+  describe('POST avatar', () => {
+    it('should reject when authenticated user does not own target address', async () => {
+      withRateLimit.mockResolvedValue(null);
+      requireAuth.mockResolvedValue({ user: { address: '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' } });
+
+      const request = new NextRequest('http://localhost:3000/api/users/0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb/avatar', {
+        method: 'POST',
+      });
+
+      const response = await POST(request, {
+        params: Promise.resolve({ address: '0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb' }),
+      });
+      const data = await response.json();
+
+      expect(response.status).toBe(403);
+      expect(data.error).toContain('only update your own avatar');
     });
   });
 });

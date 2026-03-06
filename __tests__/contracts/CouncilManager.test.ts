@@ -793,6 +793,23 @@ describe('CouncilManager Contract', () => {
   });
 
   describe('Edge Cases and Integration', () => {
+    it('should reject setModules with no updates', async () => {
+      mockContractWrite.mockRejectedValueOnce(new Error('CM: no updates'));
+
+      await expect(
+        mockContractWrite({
+          functionName: 'setModules',
+          args: [
+            '0x0000000000000000000000000000000000000000' as Address,
+            '0x0000000000000000000000000000000000000000' as Address,
+            '0x0000000000000000000000000000000000000000' as Address,
+            '0x0000000000000000000000000000000000000000' as Address,
+            '0x0000000000000000000000000000000000000000' as Address,
+          ]
+        })
+      ).rejects.toThrow('CM: no updates');
+    });
+
     it('should handle election with no candidates', async () => {
       mockContractRead.mockResolvedValueOnce([]);
 

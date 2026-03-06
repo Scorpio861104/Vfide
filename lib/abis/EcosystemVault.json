@@ -39,6 +39,40 @@
     "outputs": []
   },
   {
+    "name": "configureAutoWorkPayout",
+    "type": "function",
+    "stateMutability": "nonpayable",
+    "inputs": [
+      { "name": "enabled", "type": "bool" },
+      { "name": "merchantTxReward", "type": "uint256" },
+      { "name": "merchantReferralReward", "type": "uint256" },
+      { "name": "userReferralReward", "type": "uint256" }
+    ],
+    "outputs": []
+  },
+  {
+    "name": "payReferralWorkReward",
+    "type": "function",
+    "stateMutability": "nonpayable",
+    "inputs": [
+      { "name": "worker", "type": "address" },
+      { "name": "amount", "type": "uint256" },
+      { "name": "reason", "type": "string" }
+    ],
+    "outputs": []
+  },
+  {
+    "name": "payMerchantWorkReward",
+    "type": "function",
+    "stateMutability": "nonpayable",
+    "inputs": [
+      { "name": "worker", "type": "address" },
+      { "name": "amount", "type": "uint256" },
+      { "name": "reason", "type": "string" }
+    ],
+    "outputs": []
+  },
+  {
     "name": "getPendingReferral",
     "type": "function",
     "stateMutability": "view",

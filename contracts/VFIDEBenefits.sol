@@ -121,6 +121,7 @@ contract VFIDEBenefits {
      * @notice Set authorized caller (CommerceEscrow contract)
      */
     function setAuthorizedCaller(address caller, bool authorized) external onlyDAO {
+        if (caller == address(0)) revert BEN_Zero();
         authorizedCallers[caller] = authorized;
         emit AuthorizedCallerSet(caller, authorized);
     }
@@ -148,6 +149,7 @@ contract VFIDEBenefits {
         address merchant,
         uint256 amount
     ) external onlyAuthorized {
+        if (buyer == address(0) || merchant == address(0)) revert BEN_Zero();
         // Track stats
         totalTransactionsRewarded++;
         userTransactionCount[buyer]++;

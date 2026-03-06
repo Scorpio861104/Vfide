@@ -21,14 +21,18 @@ export async function GET(request: NextRequest) {
   try {
     const stats = await getAnomalyStats(authResult.user.address);
     
-    // Record this activity
-    await recordActivity(authResult.user.address, {
-      timestamp: Date.now(),
-      ipAddress: getClientIP(request),
-      userAgent: getUserAgent(request),
-      action: 'api_call',
-      endpoint: '/api/security/anomaly',
-    });
+    // Record this activity (best effort only)
+    try {
+      await recordActivity(authResult.user.address, {
+        timestamp: Date.now(),
+        ipAddress: getClientIP(request),
+        userAgent: getUserAgent(request),
+        action: 'api_call',
+        endpoint: '/api/security/anomaly',
+      });
+    } catch (recordingError) {
+      console.error('[Anomaly API] Failed to record activity:', recordingError);
+    }
 
     return NextResponse.json({
       success: true,

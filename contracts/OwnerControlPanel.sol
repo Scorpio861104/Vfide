@@ -1041,11 +1041,11 @@ contract OwnerControlPanel {
         uint256 userReferralReward
     ) external onlyOwner {
         if (
-            merchantTxReward < minAutoWorkPayoutWei ||
+            !_isAutoWorkRewardWithinBounds(merchantTxReward) ||
             merchantTxReward > maxAutoWorkPayoutWei ||
-            merchantReferralReward < minAutoWorkPayoutWei ||
+            !_isAutoWorkRewardWithinBounds(merchantReferralReward) ||
             merchantReferralReward > maxAutoWorkPayoutWei ||
-            userReferralReward < minAutoWorkPayoutWei ||
+            !_isAutoWorkRewardWithinBounds(userReferralReward) ||
             userReferralReward > maxAutoWorkPayoutWei
         ) {
             revert OCP_InvalidRange();
@@ -1064,6 +1064,12 @@ contract OwnerControlPanel {
             merchantReferralReward,
             userReferralReward
         );
+    }
+
+    function _isAutoWorkRewardWithinBounds(uint256 rewardWei) internal view returns (bool) {
+        // Zero explicitly disables that payout category.
+        if (rewardWei == 0) return true;
+        return rewardWei >= minAutoWorkPayoutWei;
     }
 
     /**

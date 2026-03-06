@@ -22,8 +22,18 @@ export async function DELETE(request: NextRequest) {
     return authResult;
   }
 
+  let body: MessageDeleteRequest;
   try {
-    const body: MessageDeleteRequest = await request.json();
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+  }
+
+  if (!body || typeof body !== 'object' || Array.isArray(body)) {
+    return NextResponse.json({ error: 'Request body must be a JSON object' }, { status: 400 });
+  }
+
+  try {
     const { messageId, conversationId, userAddress, hardDelete = false } = body;
 
     if (!messageId || !conversationId || !userAddress) {

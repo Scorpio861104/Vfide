@@ -11,7 +11,7 @@ error FI_AlreadyWhitelisted();
 error FI_BadSplit();
 error FI_Insufficient();
 
-contract StablecoinRegistryMock {
+contract FIStablecoinRegistryMock {
     mapping(address => bool) public allowed;
     mapping(address => uint8) public decimals;
     address public dao;

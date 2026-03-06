@@ -29,6 +29,42 @@ describe('/api/sync', () => {
   });
 
   describe('POST', () => {
+    it('should return 400 for malformed JSON', async () => {
+      withRateLimit.mockResolvedValue(null);
+      requireAuth.mockReturnValue({
+        user: { address: '0x1111111111111111111111111111111111111123' },
+      });
+
+      const request = new NextRequest('http://localhost:3000/api/sync', {
+        method: 'POST',
+        body: '{"userId":"1"',
+      });
+
+      const response = await POST(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(400);
+      expect(data.error).toContain('Invalid JSON');
+    });
+
+    it('should return 400 for non-object body', async () => {
+      withRateLimit.mockResolvedValue(null);
+      requireAuth.mockReturnValue({
+        user: { address: '0x1111111111111111111111111111111111111123' },
+      });
+
+      const request = new NextRequest('http://localhost:3000/api/sync', {
+        method: 'POST',
+        body: JSON.stringify(['invalid']),
+      });
+
+      const response = await POST(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(400);
+      expect(data.error).toContain('JSON object');
+    });
+
     it('should sync user data successfully', async () => {
       withRateLimit.mockResolvedValue(null);
       requireAuth.mockReturnValue({
@@ -43,7 +79,9 @@ describe('/api/sync', () => {
         },
       });
 
-      query.mockResolvedValue({ rows: [{ id: 1, synced_at: new Date() }] });
+      query
+        .mockResolvedValueOnce({ rows: [{ id: 1 }] })
+        .mockResolvedValueOnce({ rows: [{ id: 1, synced_at: new Date() }] });
 
       const request = new NextRequest('http://localhost:3000/api/sync', {
         method: 'POST',
@@ -89,9 +127,11 @@ describe('/api/sync', () => {
         },
       });
 
-      query.mockResolvedValue({
-        rows: [{ id: 1, synced_at: new Date(), conflict: true }],
-      });
+      query
+        .mockResolvedValueOnce({ rows: [{ id: 1 }] })
+        .mockResolvedValueOnce({
+          rows: [{ id: 1, synced_at: new Date(), conflict: true }],
+        });
 
       const request = new NextRequest('http://localhost:3000/api/sync', {
         method: 'POST',
@@ -107,6 +147,30 @@ describe('/api/sync', () => {
 
       expect(response.status).toBe(200);
       expect(data).toBeDefined();
+    });
+
+    it('should return 403 when userId does not belong to authenticated user', async () => {
+      withRateLimit.mockResolvedValue(null);
+      requireAuth.mockReturnValue({
+        user: { address: '0x1111111111111111111111111111111111111123' },
+      });
+
+      query.mockResolvedValueOnce({ rows: [{ id: 2 }] });
+
+      const request = new NextRequest('http://localhost:3000/api/sync', {
+        method: 'POST',
+        body: JSON.stringify({
+          userId: '1',
+          entity: 'quests',
+          lastSyncTimestamp: new Date().toISOString(),
+        }),
+      });
+
+      const response = await POST(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(403);
+      expect(data.error).toContain('own sync state');
     });
   });
 });

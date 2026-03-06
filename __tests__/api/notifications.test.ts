@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { GET, POST } from '@/app/api/notifications/route';
+import { DELETE, GET, PATCH, POST } from '@/app/api/notifications/route';
 
 jest.mock('@/lib/db', () => ({
   query: jest.fn(),
@@ -8,6 +8,7 @@ jest.mock('@/lib/db', () => ({
 
 jest.mock('@/lib/auth/middleware', () => ({
   requireAuth: jest.fn(),
+  isAdmin: jest.fn(),
 }));
 
 jest.mock('@/lib/auth/rateLimit', () => ({
@@ -22,6 +23,7 @@ jest.mock('@/lib/auth/validation', () => ({
 describe('/api/notifications', () => {
   const { query, getClient } = require('@/lib/db');
   const { requireAuth } = require('@/lib/auth/middleware');
+  const { isAdmin } = require('@/lib/auth/middleware');
   const { withRateLimit } = require('@/lib/auth/rateLimit');
   const { validateBody } = require('@/lib/auth/validation');
 
@@ -101,6 +103,46 @@ describe('/api/notifications', () => {
       );
     });
 
+    it('should clamp oversized limit values', async () => {
+      withRateLimit.mockResolvedValue(null);
+      requireAuth.mockReturnValue({ user: { address: mockUserAddress } });
+      query
+        .mockResolvedValueOnce({ rows: [] })
+        .mockResolvedValueOnce({ rows: [{ count: '0' }] });
+
+      const request = new NextRequest(
+        `http://localhost:3000/api/notifications?userAddress=${mockUserAddress}&limit=9999&offset=0`
+      );
+
+      const response = await GET(request);
+      expect(response.status).toBe(200);
+      expect(query).toHaveBeenNthCalledWith(
+        1,
+        expect.stringContaining('LIMIT $2 OFFSET $3'),
+        [mockUserAddress.toLowerCase(), 200, 0]
+      );
+    });
+
+    it('should clamp oversized offset values', async () => {
+      withRateLimit.mockResolvedValue(null);
+      requireAuth.mockReturnValue({ user: { address: mockUserAddress } });
+      query
+        .mockResolvedValueOnce({ rows: [] })
+        .mockResolvedValueOnce({ rows: [{ count: '0' }] });
+
+      const request = new NextRequest(
+        `http://localhost:3000/api/notifications?userAddress=${mockUserAddress}&limit=50&offset=999999`
+      );
+
+      const response = await GET(request);
+      expect(response.status).toBe(200);
+      expect(query).toHaveBeenNthCalledWith(
+        1,
+        expect.stringContaining('LIMIT $2 OFFSET $3'),
+        [mockUserAddress.toLowerCase(), 50, 10000]
+      );
+    });
+
     it('should return 500 for database errors', async () => {
       withRateLimit.mockResolvedValue(null);
       requireAuth.mockReturnValue({ user: { address: mockUserAddress } });
@@ -118,9 +160,26 @@ describe('/api/notifications', () => {
   describe('POST', () => {
     const mockUserAddress = '0x1234567890123456789012345678901234567890';
 
+    it('should return 400 for malformed JSON', async () => {
+      withRateLimit.mockResolvedValue(null);
+      requireAuth.mockReturnValue({ user: { address: mockUserAddress } });
+
+      const request = new NextRequest('http://localhost:3000/api/notifications', {
+        method: 'POST',
+        body: '{"userAddress":"0x123"',
+      });
+
+      const response = await POST(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(400);
+      expect(data.error).toContain('Invalid JSON');
+    });
+
     it('should create a notification', async () => {
       withRateLimit.mockResolvedValue(null);
       requireAuth.mockReturnValue({ user: { address: mockUserAddress } });
+      isAdmin.mockReturnValue(false);
 
       query
         .mockResolvedValueOnce({ rows: [{ id: 1 }] })  // user lookup
@@ -141,6 +200,25 @@ describe('/api/notifications', () => {
 
       expect(response.status).toBe(201);
       expect(data.notification).toBeDefined();
+    });
+
+    it('should reject creating notifications for another user', async () => {
+      withRateLimit.mockResolvedValue(null);
+      requireAuth.mockReturnValue({ user: { address: mockUserAddress } });
+      isAdmin.mockReturnValue(false);
+
+      const request = new NextRequest('http://localhost:3000/api/notifications', {
+        method: 'POST',
+        body: JSON.stringify({
+          userAddress: '0x0000000000000000000000000000000000000001',
+          type: 'system',
+          title: 'Injected',
+          message: 'Should not be allowed',
+        }),
+      });
+
+      const response = await POST(request);
+      expect(response.status).toBe(403);
     });
 
     it('should return 429 for rate limit exceeded', async () => {
@@ -192,6 +270,92 @@ describe('/api/notifications', () => {
 
       expect(response.status).toBe(400);
       expect(data.error).toContain('Missing required fields');
+    });
+  });
+
+  describe('PATCH/DELETE', () => {
+    const mockUserAddress = '0x1234567890123456789012345678901234567890';
+
+    it('should return 400 for malformed JSON on PATCH', async () => {
+      withRateLimit.mockResolvedValue(null);
+      requireAuth.mockReturnValue({ user: { address: mockUserAddress } });
+
+      const request = new NextRequest('http://localhost:3000/api/notifications', {
+        method: 'PATCH',
+        body: '{"notificationIds":[1,2]'
+      });
+
+      const response = await PATCH(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(400);
+      expect(data.error).toContain('Invalid JSON');
+    });
+
+    it('should return 400 for non-object body on PATCH', async () => {
+      withRateLimit.mockResolvedValue(null);
+      requireAuth.mockReturnValue({ user: { address: mockUserAddress } });
+
+      const request = new NextRequest('http://localhost:3000/api/notifications', {
+        method: 'PATCH',
+        body: JSON.stringify(['invalid']),
+      });
+
+      const response = await PATCH(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(400);
+      expect(data.error).toContain('JSON object');
+    });
+
+    it('should return 400 for malformed JSON on DELETE', async () => {
+      withRateLimit.mockResolvedValue(null);
+      requireAuth.mockReturnValue({ user: { address: mockUserAddress } });
+
+      const request = new NextRequest('http://localhost:3000/api/notifications', {
+        method: 'DELETE',
+        body: '{"notificationIds":[1,2]'
+      });
+
+      const response = await DELETE(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(400);
+      expect(data.error).toContain('Invalid JSON');
+    });
+
+    it('should reject oversized notificationIds on PATCH', async () => {
+      withRateLimit.mockResolvedValue(null);
+      requireAuth.mockReturnValue({ user: { address: mockUserAddress } });
+
+      const notificationIds = Array.from({ length: 501 }, (_, index) => index + 1);
+      const request = new NextRequest('http://localhost:3000/api/notifications', {
+        method: 'PATCH',
+        body: JSON.stringify({ notificationIds }),
+      });
+
+      const response = await PATCH(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(400);
+      expect(data.error).toContain('Too many notificationIds');
+    });
+
+    it('should reject oversized notificationIds on DELETE', async () => {
+      withRateLimit.mockResolvedValue(null);
+      requireAuth.mockReturnValue({ user: { address: mockUserAddress } });
+
+      const notificationIds = Array.from({ length: 501 }, (_, index) => index + 1);
+      const request = new NextRequest('http://localhost:3000/api/notifications', {
+        method: 'DELETE',
+        body: JSON.stringify({ notificationIds }),
+      });
+
+      const response = await DELETE(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(400);
+      expect(data.error).toContain('Too many notificationIds');
     });
   });
 });

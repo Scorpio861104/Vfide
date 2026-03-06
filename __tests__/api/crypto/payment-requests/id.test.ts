@@ -87,6 +87,38 @@ describe('/api/crypto/payment-requests/[id]', () => {
   });
 
   describe('PUT', () => {
+    it('should return 400 for malformed JSON in PUT', async () => {
+      withRateLimit.mockResolvedValue(null);
+      requireAuth.mockResolvedValue({ user: mockUser });
+
+      const request = new NextRequest('http://localhost:3000/api/crypto/payment-requests/1', {
+        method: 'PUT',
+        body: '{"status":"accepted"',
+      });
+
+      const response = await PUT(request, { params: Promise.resolve({ id: '1' }) });
+      const data = await response.json();
+
+      expect(response.status).toBe(400);
+      expect(data.error).toContain('Invalid JSON');
+    });
+
+    it('should return 400 for non-object body in PUT', async () => {
+      withRateLimit.mockResolvedValue(null);
+      requireAuth.mockResolvedValue({ user: mockUser });
+
+      const request = new NextRequest('http://localhost:3000/api/crypto/payment-requests/1', {
+        method: 'PUT',
+        body: JSON.stringify(['invalid']),
+      });
+
+      const response = await PUT(request, { params: Promise.resolve({ id: '1' }) });
+      const data = await response.json();
+
+      expect(response.status).toBe(400);
+      expect(data.error).toContain('JSON object');
+    });
+
     it('should update payment request status when user is a party', async () => {
       withRateLimit.mockResolvedValue(null);
       requireAuth.mockResolvedValue({ user: mockUser });
@@ -142,6 +174,38 @@ describe('/api/crypto/payment-requests/[id]', () => {
   });
 
   describe('PATCH', () => {
+    it('should return 400 for malformed JSON in PATCH', async () => {
+      withRateLimit.mockResolvedValue(null);
+      requireAuth.mockResolvedValue({ user: mockUser });
+
+      const request = new NextRequest('http://localhost:3000/api/crypto/payment-requests/1', {
+        method: 'PATCH',
+        body: '{"status":"completed"',
+      });
+
+      const response = await PATCH(request, { params: Promise.resolve({ id: '1' }) });
+      const data = await response.json();
+
+      expect(response.status).toBe(400);
+      expect(data.error).toContain('Invalid JSON');
+    });
+
+    it('should return 400 for non-object body in PATCH', async () => {
+      withRateLimit.mockResolvedValue(null);
+      requireAuth.mockResolvedValue({ user: mockUser });
+
+      const request = new NextRequest('http://localhost:3000/api/crypto/payment-requests/1', {
+        method: 'PATCH',
+        body: JSON.stringify(['invalid']),
+      });
+
+      const response = await PATCH(request, { params: Promise.resolve({ id: '1' }) });
+      const data = await response.json();
+
+      expect(response.status).toBe(400);
+      expect(data.error).toContain('JSON object');
+    });
+
     it('should update status and txHash when user is a party', async () => {
       withRateLimit.mockResolvedValue(null);
       requireAuth.mockResolvedValue({ user: mockUser });

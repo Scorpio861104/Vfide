@@ -126,6 +126,13 @@ describe('LiquidityIncentives Contract', () => {
   });
 
   describe('Edge Cases', () => {
+    it('should reject zero unstake cooldown', async () => {
+      mockContractWrite.mockRejectedValueOnce(new Error('LP: cooldown too short'));
+      await expect(
+        mockContractWrite({ functionName: 'setUnstakeCooldown', args: [0] })
+      ).rejects.toThrow('LP: cooldown too short');
+    });
+
     it('should handle zero stake', async () => {
       mockContractWrite.mockRejectedValueOnce(new Error('ZeroStake'));
       await expect(mockContractWrite({ functionName: 'claimRewards', args: [0] })).rejects.toThrow('ZeroStake');

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 import { getAvatarUrl } from '@/lib/constants';
 import { withRateLimit } from '@/lib/auth/rateLimit';
+import { requireAuth } from '@/lib/auth/middleware';
 
 interface User {
   wallet_address: string;
@@ -122,6 +123,12 @@ export async function PUT(
   const rateLimitResponse = await withRateLimit(request, 'write');
   if (rateLimitResponse) return rateLimitResponse;
 
+  // Require authentication
+  const authResult = await requireAuth(request);
+  if (authResult instanceof NextResponse) {
+    return authResult;
+  }
+
   try {
     const resolvedParams = await params;
     const address = resolvedParams?.address;
@@ -130,6 +137,14 @@ export async function PUT(
       return NextResponse.json(
         { error: 'Invalid address parameter' },
         { status: 400 }
+      );
+    }
+
+    // Only allow users to update their own profile
+    if (authResult.user.address.toLowerCase() !== address.toLowerCase()) {
+      return NextResponse.json(
+        { error: 'You can only update your own profile' },
+        { status: 403 }
       );
     }
 
@@ -182,6 +197,12 @@ export async function POST(
   const rateLimitResponse = await withRateLimit(request, 'upload');
   if (rateLimitResponse) return rateLimitResponse;
 
+  // Require authentication
+  const authResult = await requireAuth(request);
+  if (authResult instanceof NextResponse) {
+    return authResult;
+  }
+
   try {
     const resolvedParams = await params;
     const address = resolvedParams?.address;
@@ -190,6 +211,14 @@ export async function POST(
       return NextResponse.json(
         { error: 'Invalid address parameter' },
         { status: 400 }
+      );
+    }
+
+    // Only allow users to update their own avatar
+    if (authResult.user.address.toLowerCase() !== address.toLowerCase()) {
+      return NextResponse.json(
+        { error: 'You can only update your own avatar' },
+        { status: 403 }
       );
     }
     

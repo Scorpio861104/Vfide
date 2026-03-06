@@ -3,6 +3,7 @@ import { POST } from '@/app/api/auth/logout/route';
 
 jest.mock('@/lib/auth/cookieAuth', () => ({
   clearAuthCookies: jest.fn(),
+  getAuthCookie: jest.fn(async () => null),
 }));
 
 describe('/api/auth/logout', () => {

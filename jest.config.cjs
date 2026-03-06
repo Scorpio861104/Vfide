@@ -14,6 +14,7 @@ const customJestConfig = {
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/$1',
     '^uncrypto$': '<rootDir>/__mocks__/uncrypto.js',
+    '^minimatch$': '<rootDir>/__mocks__/minimatch-compat.cjs',
   },
   collectCoverageFrom: [
     'lib/utils.ts',

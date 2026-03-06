@@ -95,5 +95,15 @@ describe('VFIDEFinance Contract', () => {
       mockContractWrite.mockRejectedValueOnce(new Error('LoanDefaulted'));
       await expect(mockContractWrite({ functionName: 'repayLoan', args: [1, parseEther('100')] })).rejects.toThrow('LoanDefaulted');
     });
+
+    it('should reject rescue token with zero token address', async () => {
+      mockContractWrite.mockRejectedValueOnce(new Error('FI_Zero'));
+      await expect(
+        mockContractWrite({
+          functionName: 'rescueToken',
+          args: ['0x0000000000000000000000000000000000000000' as Address, user1, parseEther('1')],
+        })
+      ).rejects.toThrow('FI_Zero');
+    });
   });
 });

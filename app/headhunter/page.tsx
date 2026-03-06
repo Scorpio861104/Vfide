@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useAccount } from 'wagmi';
 import { 
-  Trophy, Users, TrendingUp, Gift, Copy, Check, 
+  Trophy, Users, TrendingUp, Copy, Check, 
   Award, Target, Crown,
   Share2, MessageCircle, Mail, Twitter
 } from 'lucide-react';

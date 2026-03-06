@@ -102,7 +102,7 @@ contract EcoTreasuryVault {
      * @dev Emergency function for recovering stuck tokens
      */
     function rescueToken(address token, address to, uint256 amount) external onlyDAO {
-        if (to == address(0) || amount == 0) revert FI_Zero();
+        if (token == address(0) || to == address(0) || amount == 0) revert FI_Zero();
         IERC20(token).safeTransfer(to, amount);
         emit Sent(token, to, amount, "rescue");
         _logEv(to, "treasury_rescue", amount, "");

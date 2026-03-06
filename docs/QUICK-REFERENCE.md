@@ -137,6 +137,160 @@ npm test -- --coverage
 npm test -- --watch
 ```
 
+### OwnerControlPanel Guardrail Verification (Local One-Command)
+
+```bash
+npm run contract:verify:ocp-guardrails:local
+```
+
+Expected success output:
+
+```text
+OwnerControlPanel guardrail integration checks passed
+```
+
+Notes:
+- This command auto-starts a temporary local Hardhat node on port `8546`.
+- It waits for RPC readiness, runs the verifier, and cleans up the node process on exit.
+- If needed, set a custom port: `PORT=8555 npm run contract:verify:ocp-guardrails:local`
+
+### Chain of Return Timelock Verification (Local One-Command)
+
+```bash
+npm run contract:verify:chain-of-return:local
+```
+
+Expected success output:
+
+```text
+Chain of Return timelock checks passed
+```
+
+Notes:
+- This verifies the recovery timelock for both 0-guardian Next-of-Kin and 1-guardian recovery flows.
+- It auto-starts a temporary local Hardhat node on port `8547`, waits for RPC, runs checks, and cleans up on exit.
+- Optional port override: `PORT=8558 npm run contract:verify:chain-of-return:local`
+
+### Combined Governance Safety Verification (Local)
+
+```bash
+npm run contract:verify:governance-safety:local
+```
+
+Expected success output includes:
+
+```text
+OwnerControlPanel guardrail integration checks passed
+Chain of Return timelock checks passed
+Next of Kin inheritance checks passed
+```
+
+Notes:
+- Runs both local verifiers in sequence as a single pre-release governance safety check.
+- Uses each verifier’s own temporary node lifecycle and cleanup behavior.
+
+### Next of Kin Inheritance Verification (Local)
+
+```bash
+npm run contract:verify:next-of-kin:local
+```
+
+Expected success output:
+
+```text
+Next of Kin inheritance checks passed
+```
+
+Notes:
+- Verifies inheritance timelock, guardian maturity, guardian snapshot threshold, and active-request guardian-change lock.
+- Auto-starts a temporary local Hardhat node on port `8548` and cleans up on exit.
+
+### ProofScore & Trust Social Consistency Verification (Local)
+
+```bash
+npm run contract:verify:proofscore-trust:local
+```
+
+Expected success output:
+
+```text
+ProofScore/Trust social consistency checks passed
+```
+
+Notes:
+- Verifies `SeerView` resolves endorsements and mentor state from `SeerSocial` when `Seer.seerSocial` is configured.
+- Confirms social writes are visible through existing `SeerView` methods used by frontend read paths.
+- Auto-starts a temporary local Hardhat node on port `8549` and cleans up on exit.
+
+### Fee/Burn Router Invariant Verification (Local)
+
+```bash
+npm run contract:verify:fee-burn-router:local
+```
+
+Expected success output:
+
+```text
+Fee/Burn Router invariant checks passed
+```
+
+Notes:
+- Verifies stale score snapshots cannot freeze fee scoring (fallback to current Seer score).
+- Verifies burn supply-floor redirection and fee-sum safety invariants.
+- Verifies split-ratio view matches runtime split (40/10/50).
+- Auto-starts a temporary local Hardhat node on port `8550` and cleans up on exit.
+
+### Ecosystem Work-Reward Invariant Verification (Local)
+
+```bash
+npm run contract:verify:ecosystem-work-rewards:local
+```
+
+Expected success output:
+
+```text
+Ecosystem work-reward invariant checks passed
+```
+
+Notes:
+- Verifies `payExpense` and `burnFunds` debit only `operationsPool` and cannot silently consume merchant/referral pools.
+- Verifies auto merchant/referral work payouts execute from their intended pools and update spending totals.
+- Auto-starts a temporary local Hardhat node on port `8551` and cleans up on exit.
+
+### Merchant Payment/Escrow Invariant Verification (Local)
+
+```bash
+npm run contract:verify:merchant-payment-escrow:local
+```
+
+Expected success output:
+
+```text
+Merchant payment/escrow invariant checks passed
+```
+
+Notes:
+- Verifies dispute-party conflict-of-interest guard on `resolveDisputePartial` (buyer/merchant cannot resolve own dispute).
+- Verifies authorized arbiter partial resolution and timeout claim flow remain functional.
+- Auto-starts a temporary local Hardhat node on port `8552` and cleans up on exit.
+
+### Bridge Governance Timelock Verification (Local)
+
+```bash
+npm run contract:verify:bridge-governance:local
+```
+
+Expected success output:
+
+```text
+Bridge governance timelock checks passed
+```
+
+Notes:
+- Verifies sensitive bridge owner operations are scheduled and cannot execute immediately.
+- Verifies cancel paths for pending bridge changes and VFIDE-liquidity withdraw protection.
+- Auto-starts a temporary local Hardhat node on port `8553` and cleans up on exit.
+
 ## 📚 Documentation Quick Links
 
 | Topic | File | Lines | Status |

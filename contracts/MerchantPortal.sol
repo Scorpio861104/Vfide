@@ -45,6 +45,10 @@ enum PaymentChannel {
 
 contract MerchantPortal is Ownable, ReentrancyGuard {
     using SafeERC20 for IERC20;
+
+    uint256 public constant MIN_SWAP_OUTPUT_BPS = 9000;
+    uint256 public constant MAX_SWAP_OUTPUT_BPS = 10000;
+    uint256 public constant MAX_SWAP_PATH_LENGTH = 5;
     
     /// Events
     event ModulesSet(address vaultHub, address seer, address securityHub, address ledger);
@@ -205,6 +209,7 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
         // M-10 Fix: Validate addresses if swap is enabled
         if (_router != address(0)) {
             require(_stable != address(0), "MP: stable required with router");
+            require(acceptedTokens[_stable] || _stable == stablecoin, "MP: stable not accepted");
         }
         swapRouter = ISwapRouter(_router);
         stablecoin = _stable;
@@ -212,16 +217,19 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
     }
     
     function setMinSwapOutput(uint256 _minBps) external onlyDAO {
-        require(_minBps >= 9000 && _minBps <= 10000, "invalid slippage"); // 0-10% slippage
+        require(_minBps >= MIN_SWAP_OUTPUT_BPS && _minBps <= MAX_SWAP_OUTPUT_BPS, "invalid slippage"); // 0-10% slippage
         minSwapOutputBps = _minBps;
         _log("min_swap_output_set");
     }
     
     function setSwapPath(address token, address[] calldata path) external onlyDAO {
         require(token != address(0), "zero token");
-        require(path.length >= 2, "path too short");
+        require(path.length >= 2 && path.length <= MAX_SWAP_PATH_LENGTH, "invalid path length");
         require(path[0] == token, "path start mismatch");
         require(path[path.length - 1] == stablecoin, "path end mismatch");
+        for (uint256 i = 0; i < path.length; i++) {
+            require(path[i] != address(0), "zero path node");
+        }
         tokenSwapPaths[token] = path;
         _log("swap_path_set");
     }

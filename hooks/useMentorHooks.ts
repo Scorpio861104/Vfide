@@ -3,7 +3,7 @@
 import { useMemo } from 'react'
 import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi'
 import { CONTRACT_ADDRESSES } from '@/lib/contracts'
-import { SeerSocialABI } from '@/lib/abis'
+import { SeerSocialABI, SeerViewABI } from '@/lib/abis'
 
 type MentorInfo = {
   isMentor: boolean
@@ -18,10 +18,10 @@ type MentorInfo = {
 
 export function useMentorInfo(address?: `0x${string}`) {
   const { data, isLoading, error, refetch } = useReadContract({
-    address: CONTRACT_ADDRESSES.SeerSocial,
-    abi: SeerSocialABI,
+    address: CONTRACT_ADDRESSES.SeerView,
+    abi: SeerViewABI,
     functionName: 'getMentorInfo',
-    args: address ? [address] : undefined,
+    args: address ? [CONTRACT_ADDRESSES.Seer, address] : undefined,
     query: { enabled: Boolean(address) },
   })
 

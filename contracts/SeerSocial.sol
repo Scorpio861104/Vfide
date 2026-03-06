@@ -307,6 +307,14 @@ contract SeerSocial {
         }
     }
 
+    function getEndorserCount(address subject) external view returns (uint256) {
+        return endorsersOf[subject].length;
+    }
+
+    function getEndorserAt(address subject, uint256 index) external view returns (address) {
+        return endorsersOf[subject][index];
+    }
+
     function _pruneExpiredEndorsements(address subject) internal {
         address[] storage endorsers = endorsersOf[subject];
         uint256 i = 0;

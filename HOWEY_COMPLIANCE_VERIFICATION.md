@@ -97,7 +97,7 @@ These contracts are inherently Howey-safe as they contain NO profit-distribution
 
 ### Governance Contracts (No Rewards)
 9. **DAO.sol** - Proposal and voting system, NO voting rewards
-10. **DAOTimelock.sol / DAOTimelockV2.sol** - Timelock for governance
+10. **DAOTimelock.sol** - Timelock for governance
 11. **CouncilElection.sol** - Election system, NO rewards
 
 ### Infrastructure Contracts

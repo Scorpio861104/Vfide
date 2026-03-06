@@ -11,6 +11,14 @@ error CE_BadSize();
 error CE_TermLimitReached();
 
 contract CouncilElection {
+    uint8 public constant MIN_COUNCIL_SIZE = 1;
+    uint8 public constant MAX_COUNCIL_SIZE = 25;
+    uint64 public constant MIN_TERM_SECONDS = 30 days;
+    uint64 public constant MAX_TERM_SECONDS = 1460 days;
+    uint64 public constant MIN_REFRESH_INTERVAL = 1 days;
+    uint64 public constant MAX_REFRESH_INTERVAL = 180 days;
+    uint64 public constant MAX_COOLDOWN_PERIOD = 3650 days;
+
     event ModulesSet(address dao, address seer, address hub, address ledger);
     event ParamsSet(uint8 councilSize, uint16 minScore, uint64 termSeconds, uint64 refreshInterval);
     event TermLimitsSet(uint8 maxConsecutiveTerms, uint64 cooldownPeriod);
@@ -62,17 +70,23 @@ contract CouncilElection {
     }
 
     function setParams(uint8 _size, uint16 _minScore, uint64 _term, uint64 _refresh) external onlyDAO {
-        if (_size == 0) revert CE_BadSize();
+        if (_size < MIN_COUNCIL_SIZE || _size > MAX_COUNCIL_SIZE) revert CE_BadSize();
         // M-11 Fix: Validate minimum score is reasonable (0-10000 scale for 10x precision)
         require(_minScore >= 5600 && _minScore <= 10000, "CE: invalid min score");
-        require(_term >= 30 days, "CE: term too short");
+        require(_term >= MIN_TERM_SECONDS && _term <= MAX_TERM_SECONDS, "CE: invalid term");
+        require(
+            _refresh >= MIN_REFRESH_INTERVAL &&
+            _refresh <= MAX_REFRESH_INTERVAL &&
+            _refresh <= _term,
+            "CE: invalid refresh"
+        );
         councilSize=_size; minCouncilScore=_minScore; termSeconds=_term; refreshInterval=_refresh;
         emit ParamsSet(_size,_minScore,_term,_refresh); _log("ce_params_set");
     }
 
     function setTermLimits(uint8 _maxConsecutive, uint64 _cooldown) external onlyDAO {
         require(_maxConsecutive > 0 && _maxConsecutive <= 10, "CE: invalid max terms");
-        require(_cooldown >= 90 days, "CE: cooldown too short");
+        require(_cooldown >= 90 days && _cooldown <= MAX_COOLDOWN_PERIOD, "CE: invalid cooldown");
         maxConsecutiveTerms = _maxConsecutive;
         cooldownPeriod = _cooldown;
         emit TermLimitsSet(_maxConsecutive, _cooldown);

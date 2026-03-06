@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getClient } from '@/lib/db';
-import { requireAuth } from '@/lib/auth/middleware';
+import { isAdmin, requireAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 
 /**
@@ -12,12 +12,23 @@ export async function GET(request: NextRequest) {
   const rateLimit = await withRateLimit(request, 'api');
   if (rateLimit) return rateLimit;
 
+  // Authentication
+  const authResult = await requireAuth(request);
+  if (authResult instanceof NextResponse) return authResult;
+
   try {
     const searchParams = request.nextUrl.searchParams;
     const userAddress = searchParams.get('userAddress');
 
     if (!userAddress) {
       return NextResponse.json({ error: 'User address required' }, { status: 400 });
+    }
+
+    const requesterAddress = authResult.user.address.toLowerCase();
+    const targetAddress = userAddress.toLowerCase();
+    const canAccess = requesterAddress === targetAddress || isAdmin(authResult.user);
+    if (!canAccess) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
     const client = await getClient();
@@ -87,8 +98,19 @@ export async function PATCH(request: NextRequest) {
   const authResult = await requireAuth(request);
   if (authResult instanceof NextResponse) return authResult;
 
+  let body: Record<string, unknown>;
   try {
-    const { step, userAddress } = await request.json();
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+  }
+
+  if (!body || typeof body !== 'object' || Array.isArray(body)) {
+    return NextResponse.json({ error: 'Request body must be a JSON object' }, { status: 400 });
+  }
+
+  try {
+    const { step, userAddress } = body;
 
     const validSteps = [
       'connectWallet',
@@ -103,11 +125,18 @@ export async function PATCH(request: NextRequest) {
       'completeQuest',
     ];
 
-    if (!step || !validSteps.includes(step) || !userAddress) {
+    if (!step || !userAddress || typeof step !== 'string' || typeof userAddress !== 'string' || !validSteps.includes(step)) {
       return NextResponse.json(
         { error: 'Valid step name and user address required' },
         { status: 400 }
       );
+    }
+
+    const requesterAddress = authResult.user.address.toLowerCase();
+    const targetAddress = userAddress.toLowerCase();
+    const canUpdate = requesterAddress === targetAddress || isAdmin(authResult.user);
+    if (!canUpdate) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
     const client = await getClient();
@@ -118,7 +147,7 @@ export async function PATCH(request: NextRequest) {
       // Get user ID
       const userResult = await client.query(
         'SELECT id FROM users WHERE wallet_address = $1',
-        [userAddress]
+        [targetAddress]
       );
 
       if (userResult.rows.length === 0) {
@@ -211,11 +240,33 @@ export async function POST(request: NextRequest) {
   const authResultPost = await requireAuth(request);
   if (authResultPost instanceof NextResponse) return authResultPost;
 
+  let body: Record<string, unknown>;
   try {
-    const { userAddress } = await request.json();
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+  }
+
+  if (!body || typeof body !== 'object' || Array.isArray(body)) {
+    return NextResponse.json({ error: 'Request body must be a JSON object' }, { status: 400 });
+  }
+
+  try {
+    const { userAddress } = body;
 
     if (!userAddress) {
       return NextResponse.json({ error: 'User address required' }, { status: 400 });
+    }
+
+    if (typeof userAddress !== 'string') {
+      return NextResponse.json({ error: 'User address must be a string' }, { status: 400 });
+    }
+
+    const requesterAddress = authResultPost.user.address.toLowerCase();
+    const targetAddress = userAddress.toLowerCase();
+    const canClaim = requesterAddress === targetAddress || isAdmin(authResultPost.user);
+    if (!canClaim) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
     const client = await getClient();
@@ -226,7 +277,7 @@ export async function POST(request: NextRequest) {
       // Get user ID
       const userResult = await client.query(
         'SELECT id FROM users WHERE wallet_address = $1',
-        [userAddress]
+        [targetAddress]
       );
 
       if (userResult.rows.length === 0) {

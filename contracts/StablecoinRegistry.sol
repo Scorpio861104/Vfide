@@ -25,6 +25,11 @@ contract StablecoinRegistry is Ownable {
     error SR_Zero();
     error SR_AlreadyAdded();
     error SR_NotFound();
+    error SR_Bounds();
+
+    uint8 public constant MIN_DECIMALS = 1;
+    uint8 public constant MAX_DECIMALS = 18;
+    uint8 public constant MAX_SYMBOL_LENGTH = 16;
     
     constructor() {}
     
@@ -37,6 +42,9 @@ contract StablecoinRegistry is Ownable {
     function addStablecoin(address token, uint8 decimals, string calldata symbol) external onlyOwner {
         if (token == address(0)) revert SR_Zero();
         if (stablecoins[token].allowed) revert SR_AlreadyAdded();
+        if (decimals < MIN_DECIMALS || decimals > MAX_DECIMALS) revert SR_Bounds();
+        uint256 symbolLength = bytes(symbol).length;
+        if (symbolLength == 0 || symbolLength > MAX_SYMBOL_LENGTH) revert SR_Bounds();
         
         stablecoins[token] = StablecoinInfo({
             allowed: true,
@@ -65,6 +73,7 @@ contract StablecoinRegistry is Ownable {
      * @param allowed Whether the stablecoin is allowed
      */
     function setAllowed(address token, bool allowed) external onlyOwner {
+        if (token == address(0)) revert SR_Zero();
         if (stablecoins[token].decimals == 0) revert SR_NotFound();
         stablecoins[token].allowed = allowed;
         emit StablecoinUpdated(token, allowed);
@@ -111,6 +120,7 @@ contract StablecoinRegistry is Ownable {
     
     /// @notice Set treasury address (for interface compatibility)
     function setTreasury(address _treasury) external onlyOwner {
+        if (_treasury == address(0)) revert SR_Zero();
         treasury = _treasury;
     }
     

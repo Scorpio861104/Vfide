@@ -1,6 +1,6 @@
 import { query } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
-import { requireOwnership } from '@/lib/auth/middleware';
+import { requireAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { createPublicClient, http, isAddress } from 'viem';
 import { baseSepolia } from 'viem/chains';
@@ -69,10 +69,27 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       );
     }
 
-    // Require ownership - only the user can claim their own rewards
-    const authResult = await requireOwnership(request, userId);
+    // Require authentication and verify ownership via database mapping
+    const authResult = await requireAuth(request);
     if (authResult instanceof NextResponse) {
       return authResult;
+    }
+
+    const ownerResult = await query<{ wallet_address: string }>(
+      'SELECT wallet_address FROM users WHERE id = $1',
+      [userId]
+    );
+
+    const ownerAddress = ownerResult.rows[0]?.wallet_address;
+    if (!ownerAddress) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    }
+
+    if (authResult.user.address.toLowerCase() !== ownerAddress.toLowerCase()) {
+      return NextResponse.json(
+        { error: 'You do not have permission to access this resource' },
+        { status: 403 }
+      );
     }
 
     const body = await request.json();

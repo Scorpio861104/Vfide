@@ -4,6 +4,7 @@ pragma solidity 0.8.30;
 import "./VFIDETrust.sol";
 import "./BadgeRegistry.sol";
 import "./SharedInterfaces.sol";
+import "./BadgeQualificationRules.sol";
 
 /**
  * @title BadgeManager
@@ -21,6 +22,7 @@ contract BadgeManager {
     
     address public dao;
     Seer public seer;
+    IBadgeQualificationRules public qualificationRules;
     
     /// @notice Track user statistics for badge qualification
     struct UserStats {
@@ -95,10 +97,11 @@ contract BadgeManager {
     //                          CONSTRUCTOR
     // ════════════════════════════════════════════════════════════════════════
     
-    constructor(address _dao, address _seer) {
-        if (_dao == address(0) || _seer == address(0)) revert BM_Zero();
+    constructor(address _dao, address _seer, address _qualificationRules) {
+        if (_dao == address(0) || _seer == address(0) || _qualificationRules == address(0)) revert BM_Zero();
         dao = _dao;
         seer = Seer(_seer);
+        qualificationRules = IBadgeQualificationRules(_qualificationRules);
     }
     
     // ════════════════════════════════════════════════════════════════════════
@@ -119,6 +122,11 @@ contract BadgeManager {
         if (operator == address(0)) revert BM_Zero();
         operators[operator] = authorized;
         emit OperatorSet(operator, authorized);
+    }
+
+    function setQualificationRules(address newRules) external onlyDAO {
+        if (newRules == address(0)) revert BM_Zero();
+        qualificationRules = IBadgeQualificationRules(newRules);
     }
     
     // ════════════════════════════════════════════════════════════════════════
@@ -237,70 +245,22 @@ contract BadgeManager {
     function _checkBadgeQualification(address user, bytes32 badge) internal view returns (bool qualified) {
         UserStats memory stats = userStats[user];
         uint16 score = seer.getScore(user);
-        
-        // ACTIVE_TRADER: 50+ commerce transactions in 90 days
-        if (badge == BadgeRegistry.ACTIVE_TRADER) {
-            return stats.commerceTxCount >= 50;
-        }
-        
-        // GOVERNANCE_VOTER: 10+ DAO proposals voted on
-        if (badge == BadgeRegistry.GOVERNANCE_VOTER) {
-            return stats.governanceVotes >= 10;
-        }
-        
-        // POWER_USER: Diversification bonus
-        if (badge == BadgeRegistry.POWER_USER) {
-            // Check if user has activity in 3+ areas
-            uint8 activityTypes = 0;
-            if (stats.commerceTxCount > 0) activityTypes++;
-            if (stats.governanceVotes > 0) activityTypes++;
-            if (stats.endorsementsReceived > 0) activityTypes++;
-            if (stats.referralsMade > 0) activityTypes++;
-            return activityTypes >= 3;
-        }
-        
-        // DAILY_CHAMPION: 30 consecutive days
-        if (badge == BadgeRegistry.DAILY_CHAMPION) {
-            return stats.consecutiveDays >= 30;
-        }
-        
-        // VERIFIED_MERCHANT: 100+ successful transactions, zero disputes
-        if (badge == BadgeRegistry.VERIFIED_MERCHANT) {
-            return stats.successfulTrades >= 100 && score >= 700;
-        }
-        
-        // CLEAN_RECORD: 1 year with no drops below 700
-        if (badge == BadgeRegistry.CLEAN_RECORD) {
-            if (stats.lastScoreDropBelow700 == 0) return false;
-            return block.timestamp >= stats.lastScoreDropBelow700 + 365 days;
-        }
-        
-        // ELITE_ACHIEVER: Score 900+
-        if (badge == BadgeRegistry.ELITE_ACHIEVER) {
-            return score >= 9000; // 900 on 0-10000 scale
-        }
-        
-        // COMMUNITY_BUILDER: 10 qualified referrals
-        if (badge == BadgeRegistry.COMMUNITY_BUILDER) {
-            return stats.referralsQualified >= 10;
-        }
-        
-        // FRAUD_HUNTER: 3+ confirmed reports
-        if (badge == BadgeRegistry.FRAUD_HUNTER) {
-            return stats.fraudReports >= 3;
-        }
-        
-        // EDUCATOR: 5+ educational pieces
-        if (badge == BadgeRegistry.EDUCATOR) {
-            return stats.educationalContent >= 5;
-        }
-        
-        // MENTOR: Helped 5+ users reach 540+
-        if (badge == BadgeRegistry.MENTOR) {
-            return stats.referralsQualified >= 5;
-        }
-        
-        return false;
+
+        return qualificationRules.checkQualification(
+            stats.commerceTxCount,
+            stats.consecutiveDays,
+            stats.governanceVotes,
+            stats.successfulTrades,
+            stats.endorsementsReceived,
+            stats.referralsMade,
+            stats.referralsQualified,
+            stats.fraudReports,
+            stats.educationalContent,
+            stats.lastScoreDropBelow700,
+            score,
+            badge,
+            block.timestamp
+        );
     }
     
     // ════════════════════════════════════════════════════════════════════════
@@ -503,45 +463,27 @@ contract BadgeManager {
      * @param user The user address
      */
     function _checkBadgeEligibility(address user) internal {
-        // Check common badges
-        if (_checkBadgeQualification(user, BadgeRegistry.ACTIVE_TRADER)) {
-            awardBadge(user, BadgeRegistry.ACTIVE_TRADER);
+        bytes32[10] memory badges = [
+            BadgeRegistry.ACTIVE_TRADER,
+            BadgeRegistry.GOVERNANCE_VOTER,
+            BadgeRegistry.POWER_USER,
+            BadgeRegistry.DAILY_CHAMPION,
+            BadgeRegistry.VERIFIED_MERCHANT,
+            BadgeRegistry.ELITE_ACHIEVER,
+            BadgeRegistry.COMMUNITY_BUILDER,
+            BadgeRegistry.FRAUD_HUNTER,
+            BadgeRegistry.EDUCATOR,
+            BadgeRegistry.MENTOR
+        ];
+
+        for (uint256 i = 0; i < badges.length; i++) {
+            _checkAndAwardBadge(user, badges[i]);
         }
-        
-        if (_checkBadgeQualification(user, BadgeRegistry.GOVERNANCE_VOTER)) {
-            awardBadge(user, BadgeRegistry.GOVERNANCE_VOTER);
-        }
-        
-        if (_checkBadgeQualification(user, BadgeRegistry.POWER_USER)) {
-            awardBadge(user, BadgeRegistry.POWER_USER);
-        }
-        
-        if (_checkBadgeQualification(user, BadgeRegistry.DAILY_CHAMPION)) {
-            awardBadge(user, BadgeRegistry.DAILY_CHAMPION);
-        }
-        
-        if (_checkBadgeQualification(user, BadgeRegistry.VERIFIED_MERCHANT)) {
-            awardBadge(user, BadgeRegistry.VERIFIED_MERCHANT);
-        }
-        
-        if (_checkBadgeQualification(user, BadgeRegistry.ELITE_ACHIEVER)) {
-            awardBadge(user, BadgeRegistry.ELITE_ACHIEVER);
-        }
-        
-        if (_checkBadgeQualification(user, BadgeRegistry.COMMUNITY_BUILDER)) {
-            awardBadge(user, BadgeRegistry.COMMUNITY_BUILDER);
-        }
-        
-        if (_checkBadgeQualification(user, BadgeRegistry.FRAUD_HUNTER)) {
-            awardBadge(user, BadgeRegistry.FRAUD_HUNTER);
-        }
-        
-        if (_checkBadgeQualification(user, BadgeRegistry.EDUCATOR)) {
-            awardBadge(user, BadgeRegistry.EDUCATOR);
-        }
-        
-        if (_checkBadgeQualification(user, BadgeRegistry.MENTOR)) {
-            awardBadge(user, BadgeRegistry.MENTOR);
+    }
+
+    function _checkAndAwardBadge(address user, bytes32 badge) internal {
+        if (_checkBadgeQualification(user, badge)) {
+            awardBadge(user, badge);
         }
     }
     
@@ -557,110 +499,15 @@ contract BadgeManager {
     function getUserStats(address user) external view returns (UserStats memory) {
         return userStats[user];
     }
-    
+
     /**
-     * @notice Check all badges user qualifies for but hasn't earned
-     * @param user The user address
-     * @return eligible Array of badge IDs user can earn
-     */
-    function getEligibleBadges(address user) external view returns (bytes32[] memory eligible) {
-        bytes32[] memory allBadges = new bytes32[](27); // Total badges defined
-        allBadges[0] = BadgeRegistry.PIONEER;
-        allBadges[1] = BadgeRegistry.GENESIS_PRESALE;
-        allBadges[2] = BadgeRegistry.FOUNDING_MEMBER;
-        allBadges[3] = BadgeRegistry.ACTIVE_TRADER;
-        allBadges[4] = BadgeRegistry.GOVERNANCE_VOTER;
-        allBadges[5] = BadgeRegistry.POWER_USER;
-        allBadges[6] = BadgeRegistry.DAILY_CHAMPION;
-        allBadges[7] = BadgeRegistry.TRUSTED_ENDORSER;
-        allBadges[8] = BadgeRegistry.COMMUNITY_BUILDER;
-        allBadges[9] = BadgeRegistry.PEACEMAKER;
-        allBadges[10] = BadgeRegistry.MENTOR;
-        allBadges[11] = BadgeRegistry.VERIFIED_MERCHANT;
-        allBadges[12] = BadgeRegistry.ELITE_MERCHANT;
-        allBadges[13] = BadgeRegistry.INSTANT_SETTLEMENT;
-        allBadges[14] = BadgeRegistry.ZERO_DISPUTE;
-        allBadges[15] = BadgeRegistry.FRAUD_HUNTER;
-        allBadges[16] = BadgeRegistry.CLEAN_RECORD;
-        allBadges[17] = BadgeRegistry.REDEMPTION;
-        allBadges[18] = BadgeRegistry.GUARDIAN;
-        allBadges[19] = BadgeRegistry.ELITE_ACHIEVER;
-        allBadges[20] = BadgeRegistry.CENTURY_ENDORSER;
-        allBadges[21] = BadgeRegistry.WHALE_SLAYER;
-        allBadges[22] = BadgeRegistry.DIVERSIFICATION_MASTER;
-        allBadges[23] = BadgeRegistry.EDUCATOR;
-        allBadges[24] = BadgeRegistry.CONTRIBUTOR;
-        allBadges[25] = BadgeRegistry.BUG_BOUNTY;
-        allBadges[26] = BadgeRegistry.TRANSLATOR;
-        
-        uint256 eligibleCount = 0;
-        for (uint256 i = 0; i < allBadges.length; i++) {
-            if (!seer.hasBadge(user, allBadges[i]) && _checkBadgeQualification(user, allBadges[i])) {
-                eligibleCount++;
-            }
-        }
-        
-        eligible = new bytes32[](eligibleCount);
-        uint256 index = 0;
-        for (uint256 i = 0; i < allBadges.length; i++) {
-            if (!seer.hasBadge(user, allBadges[i]) && _checkBadgeQualification(user, allBadges[i])) {
-                eligible[index] = allBadges[i];
-                index++;
-            }
-        }
-        
-        return eligible;
-    }
-    
-    /**
-     * @notice Get progress towards a specific badge
+     * @notice Public qualification check for external view helpers
      * @param user The user address
      * @param badge The badge ID
-     * @return current Current progress
-     * @return required Required progress
-     * @return percentage Completion percentage (0-100)
+     * @return qualified True if user meets requirements
      */
-    function getBadgeProgress(address user, bytes32 badge) external view returns (
-        uint32 current,
-        uint32 required,
-        uint8 percentage
-    ) {
-        UserStats memory stats = userStats[user];
-        
-        if (badge == BadgeRegistry.ACTIVE_TRADER) {
-            required = 50;
-            current = stats.commerceTxCount;
-        } else if (badge == BadgeRegistry.GOVERNANCE_VOTER) {
-            required = 10;
-            current = stats.governanceVotes;
-        } else if (badge == BadgeRegistry.DAILY_CHAMPION) {
-            required = 30;
-            current = stats.consecutiveDays;
-        } else if (badge == BadgeRegistry.VERIFIED_MERCHANT) {
-            required = 100;
-            current = stats.successfulTrades;
-        } else if (badge == BadgeRegistry.COMMUNITY_BUILDER) {
-            required = 10;
-            current = stats.referralsQualified;
-        } else if (badge == BadgeRegistry.FRAUD_HUNTER) {
-            required = 3;
-            current = stats.fraudReports;
-        } else if (badge == BadgeRegistry.EDUCATOR) {
-            required = 5;
-            current = stats.educationalContent;
-        } else if (badge == BadgeRegistry.MENTOR) {
-            required = 5;
-            current = stats.referralsQualified;
-        } else {
-            return (0, 0, 0);
-        }
-        
-        if (current >= required) {
-            percentage = 100;
-        } else {
-            percentage = uint8((uint256(current) * 100) / required);
-        }
-        
-        return (current, required, percentage);
+    function checkBadgeQualification(address user, bytes32 badge) external view returns (bool qualified) {
+        return _checkBadgeQualification(user, badge);
     }
+    
 }

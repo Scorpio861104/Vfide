@@ -293,6 +293,28 @@ describe('VFIDEBenefits Contract', () => {
   });
 
   describe('Edge Cases', () => {
+    it('should reject zero authorized caller address', async () => {
+      mockContractWrite.mockRejectedValueOnce(new Error('BEN_Zero'));
+
+      await expect(
+        mockContractWrite({
+          functionName: 'setAuthorizedCaller',
+          args: ['0x0000000000000000000000000000000000000000' as Address, true]
+        })
+      ).rejects.toThrow('BEN_Zero');
+    });
+
+    it('should reject rewardTransaction with zero buyer', async () => {
+      mockContractWrite.mockRejectedValueOnce(new Error('BEN_Zero'));
+
+      await expect(
+        mockContractWrite({
+          functionName: 'rewardTransaction',
+          args: ['0x0000000000000000000000000000000000000000' as Address, user2, parseEther('1')]
+        })
+      ).rejects.toThrow('BEN_Zero');
+    });
+
     it('should handle zero balance tier calculation', async () => {
       mockContractRead.mockResolvedValueOnce(0); // Bronze tier
 

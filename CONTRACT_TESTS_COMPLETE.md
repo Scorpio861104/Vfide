@@ -50,7 +50,7 @@ This document summarizes the completion of comprehensive test coverage for all s
 9. ✅ **BadgeManagerLite** (47 tests) - Lightweight badge management
 10. ✅ **CouncilElection** (24 tests) - Council member election system
 11. ✅ **CouncilSalary** (31 tests) - Salary distribution for council
-12. ✅ **DAOTimelockV2** (23 tests) - Timelock for DAO actions
+12. ✅ **DAOTimelock** (tests + Feature 9 verifier) - Timelock for DAO actions
 13. ✅ **DevReserveVestingVault** (18 tests) - Dev fund vesting
 14. ✅ **DutyDistributor** (27 tests) - Governance participation rewards
 15. ✅ **EcosystemVault** (15 tests) - Ecosystem fund management

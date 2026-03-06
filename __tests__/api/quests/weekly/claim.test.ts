@@ -24,6 +24,38 @@ describe('/api/quests/weekly/claim', () => {
   });
 
   describe('POST', () => {
+    it('should return 400 for malformed JSON', async () => {
+      withRateLimit.mockResolvedValue(null);
+      requireAuth.mockReturnValue({ user: { address: '0x1111111111111111111111111111111111111123', id: 1 } });
+
+      const request = new NextRequest('http://localhost:3000/api/quests/weekly/claim', {
+        method: 'POST',
+        body: '{"challengeId":1',
+      });
+
+      const response = await POST(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(400);
+      expect(data.error).toContain('Invalid JSON');
+    });
+
+    it('should return 400 for non-object body', async () => {
+      withRateLimit.mockResolvedValue(null);
+      requireAuth.mockReturnValue({ user: { address: '0x1111111111111111111111111111111111111123', id: 1 } });
+
+      const request = new NextRequest('http://localhost:3000/api/quests/weekly/claim', {
+        method: 'POST',
+        body: JSON.stringify(['invalid']),
+      });
+
+      const response = await POST(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(400);
+      expect(data.error).toContain('JSON object');
+    });
+
     it('should claim weekly quest successfully', async () => {
       withRateLimit.mockResolvedValue(null);
       // Route doesn't await requireAuth, so it uses sync return

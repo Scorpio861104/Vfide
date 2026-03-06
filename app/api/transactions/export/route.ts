@@ -3,6 +3,14 @@ import { query } from '@/lib/db';
 import { requireAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 
+const MAX_EXPORT_DATE_RANGE_DAYS = 366;
+const MAX_EXPORT_DATE_RANGE_MS = MAX_EXPORT_DATE_RANGE_DAYS * 24 * 60 * 60 * 1000;
+const MAX_EXPORT_FILTER_VALUES = 100;
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
+}
+
 // ==================== TYPES ====================
 
 interface ExportOptions {
@@ -323,9 +331,146 @@ export async function POST(request: NextRequest) {
     return authResult;
   }
 
+  let body: unknown;
   try {
-    const body = await request.json();
-    const { address, options } = body as { address: string; options: ExportOptions };
+    body = await request.json();
+  } catch {
+    return NextResponse.json(
+      { error: 'Invalid JSON body' },
+      { status: 400 }
+    );
+  }
+
+  try {
+    if (!isRecord(body)) {
+      return NextResponse.json(
+        { error: 'Invalid request body' },
+        { status: 400 }
+      );
+    }
+
+    const address = body.address;
+    const options = body.options;
+
+    if (typeof address !== 'string' || address.trim().length === 0) {
+      return NextResponse.json(
+        { error: 'Invalid address' },
+        { status: 400 }
+      );
+    }
+
+    if (!isRecord(options)) {
+      return NextResponse.json(
+        { error: 'Invalid export options' },
+        { status: 400 }
+      );
+    }
+
+    if (options.format !== 'csv' && options.format !== 'json' && options.format !== 'pdf') {
+      return NextResponse.json(
+        { error: 'Unsupported format' },
+        { status: 400 }
+      );
+    }
+
+    if (typeof options.includeMetadata !== 'boolean' || typeof options.includeFees !== 'boolean' || typeof options.includeUsdValue !== 'boolean') {
+      return NextResponse.json(
+        { error: 'Invalid export options' },
+        { status: 400 }
+      );
+    }
+
+    const dateRange = options.dateRange;
+    const filters = options.filters;
+
+    if (!isRecord(dateRange) || typeof dateRange.start !== 'string' || typeof dateRange.end !== 'string') {
+      return NextResponse.json(
+        { error: 'Invalid date range' },
+        { status: 400 }
+      );
+    }
+
+    if (!isRecord(filters) || !Array.isArray(filters.types) || !Array.isArray(filters.tokens)) {
+      return NextResponse.json(
+        { error: 'Invalid filters' },
+        { status: 400 }
+      );
+    }
+
+    if (
+      filters.types.length > MAX_EXPORT_FILTER_VALUES ||
+      filters.tokens.length > MAX_EXPORT_FILTER_VALUES
+    ) {
+      return NextResponse.json(
+        { error: `Too many filter values. Maximum ${MAX_EXPORT_FILTER_VALUES} per filter.` },
+        { status: 400 }
+      );
+    }
+
+    if (
+      !filters.types.every((value) => typeof value === 'string') ||
+      !filters.tokens.every((value) => typeof value === 'string')
+    ) {
+      return NextResponse.json(
+        { error: 'Invalid filters' },
+        { status: 400 }
+      );
+    }
+
+    if (
+      filters.minAmount !== undefined &&
+      (typeof filters.minAmount !== 'number' || !Number.isFinite(filters.minAmount))
+    ) {
+      return NextResponse.json(
+        { error: 'Invalid minimum amount filter' },
+        { status: 400 }
+      );
+    }
+
+    if (
+      filters.maxAmount !== undefined &&
+      (typeof filters.maxAmount !== 'number' || !Number.isFinite(filters.maxAmount))
+    ) {
+      return NextResponse.json(
+        { error: 'Invalid maximum amount filter' },
+        { status: 400 }
+      );
+    }
+
+    if (
+      typeof filters.minAmount === 'number' &&
+      typeof filters.maxAmount === 'number' &&
+      filters.minAmount > filters.maxAmount
+    ) {
+      return NextResponse.json(
+        { error: 'Invalid amount range: minAmount must be less than or equal to maxAmount' },
+        { status: 400 }
+      );
+    }
+
+    const validatedOptions: ExportOptions = {
+      format: options.format,
+      dateRange: {
+        start: dateRange.start,
+        end: dateRange.end,
+      },
+      filters: {
+        types: filters.types,
+        tokens: filters.tokens,
+        minAmount: filters.minAmount,
+        maxAmount: filters.maxAmount,
+      },
+      includeMetadata: options.includeMetadata,
+      includeFees: options.includeFees,
+      includeUsdValue: options.includeUsdValue,
+      taxFormat:
+        options.taxFormat === 'basic' ||
+        options.taxFormat === 'turbotax' ||
+        options.taxFormat === 'cointracker' ||
+        options.taxFormat === 'koinly'
+          ? options.taxFormat
+          : undefined,
+    };
 
     // Validate address matches authenticated user
     if (address.toLowerCase() !== authResult.user.address.toLowerCase()) {
@@ -336,12 +481,26 @@ export async function POST(request: NextRequest) {
     }
 
     // Parse and validate date range
-    const startDate = new Date(options.dateRange.start);
-    const endDate = new Date(options.dateRange.end);
+    const startDate = new Date(validatedOptions.dateRange.start);
+    const endDate = new Date(validatedOptions.dateRange.end);
 
     if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
       return NextResponse.json(
         { error: 'Invalid date range' },
+        { status: 400 }
+      );
+    }
+
+    if (endDate < startDate) {
+      return NextResponse.json(
+        { error: 'Invalid date range: end date must be on or after start date' },
+        { status: 400 }
+      );
+    }
+
+    if (endDate.getTime() - startDate.getTime() > MAX_EXPORT_DATE_RANGE_MS) {
+      return NextResponse.json(
+        { error: `Date range too large. Maximum ${MAX_EXPORT_DATE_RANGE_DAYS} days allowed.` },
         { status: 400 }
       );
     }
@@ -375,20 +534,26 @@ export async function POST(request: NextRequest) {
     ];
 
     // Add type filter if not 'all'
-    if (options.filters.types.length > 0 && !options.filters.types.includes('all')) {
+    if (validatedOptions.filters.types.length > 0 && !validatedOptions.filters.types.includes('all')) {
       queryText += ` AND t.type = ANY($${queryParams.length + 1})`;
-      queryParams.push(options.filters.types as unknown as string);
+      queryParams.push(validatedOptions.filters.types as unknown as string);
+    }
+
+    // Add token filter if not 'all'
+    if (validatedOptions.filters.tokens.length > 0 && !validatedOptions.filters.tokens.includes('all')) {
+      queryText += ` AND t.token_symbol = ANY($${queryParams.length + 1})`;
+      queryParams.push(validatedOptions.filters.tokens as unknown as string);
     }
 
     // Add amount filters
-    if (options.filters.minAmount !== undefined) {
+    if (validatedOptions.filters.minAmount !== undefined) {
       queryText += ` AND t.amount >= $${queryParams.length + 1}`;
-      queryParams.push(options.filters.minAmount);
+      queryParams.push(validatedOptions.filters.minAmount);
     }
 
-    if (options.filters.maxAmount !== undefined) {
+    if (validatedOptions.filters.maxAmount !== undefined) {
       queryText += ` AND t.amount <= $${queryParams.length + 1}`;
-      queryParams.push(options.filters.maxAmount);
+      queryParams.push(validatedOptions.filters.maxAmount);
     }
 
     queryText += ' ORDER BY t.timestamp DESC LIMIT 50000'; // Max 50k transactions
@@ -398,15 +563,15 @@ export async function POST(request: NextRequest) {
 
     // Format based on export type
     let formattedData: string;
-    switch (options.format) {
+    switch (validatedOptions.format) {
       case 'csv':
-        formattedData = formatAsCSV(transactions, options);
+        formattedData = formatAsCSV(transactions, validatedOptions);
         break;
       case 'json':
-        formattedData = formatAsJSON(transactions, options);
+        formattedData = formatAsJSON(transactions, validatedOptions);
         break;
       case 'pdf':
-        formattedData = await formatAsPDF(transactions, options, address);
+        formattedData = await formatAsPDF(transactions, validatedOptions, address);
         break;
       default:
         return NextResponse.json(
@@ -415,11 +580,11 @@ export async function POST(request: NextRequest) {
         );
     }
 
-    const filename = `transactions-${new Date().toISOString().split('T')[0]}.${options.format}`;
+    const filename = `transactions-${new Date().toISOString().split('T')[0]}.${validatedOptions.format}`;
 
     return new Response(formattedData, {
       headers: {
-        'Content-Type': getContentType(options.format),
+        'Content-Type': getContentType(validatedOptions.format),
         'Content-Disposition': `attachment; filename="${filename}"`,
         'Cache-Control': 'no-cache',
       },

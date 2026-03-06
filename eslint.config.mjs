@@ -1,6 +1,7 @@
 import { defineConfig, globalIgnores } from "eslint/config";
 import nextVitals from "eslint-config-next/core-web-vitals";
 import nextTs from "eslint-config-next/typescript";
+import reactPlugin from "eslint-plugin-react";
 
 const eslintConfig = defineConfig([
   ...nextVitals,
@@ -19,6 +20,7 @@ const eslintConfig = defineConfig([
     "docs/**",
     "docs-internal/**",
     "coverage/**",
+    "artifacts/**",
     "storybook-static/**",
     "playwright-report/**",
     "test-results/**",
@@ -41,6 +43,9 @@ const eslintConfig = defineConfig([
 
   // Make lint actionable for this repo: avoid failing on widespread, intentional patterns.
   {
+    plugins: {
+      react: reactPlugin,
+    },
     rules: {
       "@typescript-eslint/no-explicit-any": "off",
       "@typescript-eslint/no-unused-vars": ["warn", {

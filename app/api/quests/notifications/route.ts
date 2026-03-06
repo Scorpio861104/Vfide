@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getClient } from '@/lib/db';
-import { requireAuth } from '@/lib/auth/middleware';
+import { isAdmin, requireAuth } from '@/lib/auth/middleware';
+
+const MAX_QUEST_NOTIFICATION_IDS = 500;
 import { withRateLimit } from '@/lib/auth/rateLimit';
 
 /**
@@ -22,6 +24,13 @@ export async function GET(request: NextRequest) {
 
     if (!userAddress) {
       return NextResponse.json({ error: 'User address required' }, { status: 400 });
+    }
+
+    const requesterAddress = authResult.user.address.toLowerCase();
+    const targetAddress = userAddress.toLowerCase();
+    const canAccess = requesterAddress === targetAddress || isAdmin(authResult.user);
+    if (!canAccess) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
     const client = await getClient();
@@ -93,8 +102,19 @@ export async function PATCH(request: NextRequest) {
   const authResult = await requireAuth(request);
   if (authResult instanceof NextResponse) return authResult;
 
+  let body: Record<string, unknown>;
   try {
-    const { notificationIds, userAddress } = await request.json();
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+  }
+
+  if (!body || typeof body !== 'object' || Array.isArray(body)) {
+    return NextResponse.json({ error: 'Request body must be a JSON object' }, { status: 400 });
+  }
+
+  try {
+    const { notificationIds, userAddress } = body;
 
     if (!notificationIds || !Array.isArray(notificationIds) || !userAddress) {
       return NextResponse.json(
@@ -103,13 +123,34 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
+    if (typeof userAddress !== 'string') {
+      return NextResponse.json(
+        { error: 'User address must be a string' },
+        { status: 400 }
+      );
+    }
+
+    if (notificationIds.length > MAX_QUEST_NOTIFICATION_IDS) {
+      return NextResponse.json(
+        { error: `Too many notificationIds. Maximum ${MAX_QUEST_NOTIFICATION_IDS} allowed.` },
+        { status: 400 }
+      );
+    }
+
+    const requesterAddress = authResult.user.address.toLowerCase();
+    const targetAddress = userAddress.toLowerCase();
+    const canUpdate = requesterAddress === targetAddress || isAdmin(authResult.user);
+    if (!canUpdate) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
     const client = await getClient();
 
     try {
       // Get user ID
       const userResult = await client.query(
         'SELECT id FROM users WHERE wallet_address = $1',
-        [userAddress]
+        [targetAddress]
       );
 
       if (userResult.rows.length === 0) {

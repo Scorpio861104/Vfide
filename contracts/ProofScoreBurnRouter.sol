@@ -285,9 +285,10 @@ contract ProofScoreBurnRouter is Ownable {
         uint64 now_ = uint64(block.timestamp);
         uint64 windowStart = now_ > SCORE_WINDOW ? now_ - SCORE_WINDOW : 0;
         
-        // If latest snapshot is older than window, score hasn't changed recently
+        // If latest snapshot is older than window, do not trust stale snapshot history.
+        // Fall back to current Seer score so fee computation cannot be frozen.
         if (scoreHistory[user][len - 1].timestamp < windowStart) {
-            return scoreHistory[user][len - 1].score;
+            return seer.getScore(user);
         }
         
         // Calculate weighted average
@@ -381,7 +382,7 @@ contract ProofScoreBurnRouter is Ownable {
      * @param amount Transfer amount
      * @return burnAmount Amount to burn (Deflationary)
      * @return sanctumAmount Amount to Sanctum fund (Charity)
-     * @return ecosystemAmount Amount to Ecosystem fund (Merchant Reimbursement)
+     * @return ecosystemAmount Amount to Ecosystem fund (work compensation + operations)
      * @return sanctumSink_ Sanctum vault address
      * @return ecosystemSink_ Ecosystem vault address
      * @return burnSink_ Burn sink address (zero = hard burn)
@@ -410,7 +411,7 @@ contract ProofScoreBurnRouter is Ownable {
         uint256 totalBps = _calculateLinearFee(scoreFrom);
         
         // Split total fee: 40% burn, 10% sanctum, 50% ecosystem
-        // Sustainable split to fund: council salaries, headhunter, competitions, merchant rebates
+        // Sustainable split to fund: council, fixed work compensation, and operations
         uint256 burnBps = (totalBps * 40) / 100;       // 40% of total (deflationary)
         uint256 sanctumBps = (totalBps * 10) / 100;    // 10% of total (charity)
         uint256 ecosystemBps = totalBps - burnBps - sanctumBps; // 50% remainder (operations)
@@ -569,10 +570,7 @@ contract ProofScoreBurnRouter is Ownable {
     /**
      * Calculate split ratio (for transparency)
      */
-    function getSplitRatio() external view returns (uint256 burnPercent, uint256 sanctumPercent, uint256 ecosystemPercent) {
-        uint256 total = baseBurnBps + baseSanctumBps + baseEcosystemBps;
-        if (total == 0) return (0, 0, 0);
-        burnPercent = (uint256(baseBurnBps) * 100) / total;
-        sanctumPercent = (uint256(baseSanctumBps) * 100) / total;
-        ecosystemPercent = (uint256(baseEcosystemBps) * 100) / total;
+    function getSplitRatio() external pure returns (uint256 burnPercent, uint256 sanctumPercent, uint256 ecosystemPercent) {
+        // Mirrors computeFees split: 40% burn / 10% sanctum / 50% ecosystem.
+        return (40, 10, 50);
     }}

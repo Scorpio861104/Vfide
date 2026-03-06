@@ -25,6 +25,7 @@ contract VaultHub is Ownable {
     mapping(address => uint64) public recoveryUnlockTime;
     mapping(address => address) public recoveryProposedOwner;
     mapping(address => mapping(address => mapping(uint256 => bool))) public recoveryApprovals; // C-2 Fix: nonce-based
+    mapping(address => mapping(uint256 => address)) public recoveryCandidateForNonce;
     mapping(address => uint8) public recoveryApprovalCount;
     mapping(address => uint256) public recoveryNonce; // C-2 Fix: Nonce to invalidate old approvals
     uint64 public constant RECOVERY_DELAY = 7 days; // H-5: Increased from 3 to 7 days
@@ -57,6 +58,7 @@ contract VaultHub is Ownable {
 
     // ——— Module wiring
     function setModules(address _vfideToken, address _securityHub, address _ledger, address _dao) external onlyOwner {
+        if (_vfideToken == address(0) || _securityHub == address(0) || _dao == address(0)) revert VH_Zero();
         vfideToken = _vfideToken;
         securityHub = ISecurityHub(_securityHub);
         ledger = IProofLedger(_ledger);
@@ -66,12 +68,14 @@ contract VaultHub is Ownable {
     }
 
     function setVFIDE(address _vfide) external onlyOwner {
+        if (_vfide == address(0)) revert VH_Zero();
         vfideToken = _vfide;
         emit VFIDESet(_vfide);
         _log("hub_vfide_set");
     }
 
     function setDAO(address _dao) external onlyOwner {
+        if (_dao == address(0)) revert VH_Zero();
         dao = _dao;
         emit DAOSet(_dao);
         _log("hub_dao_set");
@@ -154,6 +158,13 @@ contract VaultHub is Ownable {
         
         // C-2 Fix: Use nonce to prevent stale approval reuse
         uint256 nonce = recoveryNonce[vault];
+
+        address candidate = recoveryCandidateForNonce[vault][nonce];
+        if (candidate == address(0)) {
+            recoveryCandidateForNonce[vault][nonce] = newOwner;
+        } else {
+            require(candidate == newOwner, "VH:candidate-mismatch");
+        }
         
         // Record approval for current nonce
         if (!recoveryApprovals[vault][msg.sender][nonce]) {
@@ -164,9 +175,9 @@ contract VaultHub is Ownable {
         
         // If threshold reached, initiate timelock
         if (recoveryApprovalCount[vault] >= RECOVERY_APPROVALS_REQUIRED) {
-            recoveryProposedOwner[vault] = newOwner;
+            recoveryProposedOwner[vault] = recoveryCandidateForNonce[vault][nonce];
             recoveryUnlockTime[vault] = uint64(block.timestamp + RECOVERY_DELAY);
-            emit ForcedRecoveryInitiated(vault, newOwner, recoveryUnlockTime[vault]);
+            emit ForcedRecoveryInitiated(vault, recoveryProposedOwner[vault], recoveryUnlockTime[vault]);
             _logEv(vault, "force_recover_init", 0, "");
         }
     }
@@ -182,10 +193,19 @@ contract VaultHub is Ownable {
         // H-5 Fix: Require multi-sig approvals first
         require(recoveryApprovalCount[vault] >= RECOVERY_APPROVALS_REQUIRED, "VH:insufficient-approvals");
 
-        recoveryProposedOwner[vault] = newOwner;
+        uint256 nonce = recoveryNonce[vault];
+        address candidate = recoveryCandidateForNonce[vault][nonce];
+        if (candidate != address(0) && candidate != newOwner) {
+            revert("VH:candidate-mismatch");
+        }
+        if (candidate == address(0)) {
+            recoveryCandidateForNonce[vault][nonce] = newOwner;
+        }
+
+        recoveryProposedOwner[vault] = recoveryCandidateForNonce[vault][nonce];
         recoveryUnlockTime[vault] = uint64(block.timestamp + RECOVERY_DELAY);
         
-        emit ForcedRecoveryInitiated(vault, newOwner, recoveryUnlockTime[vault]);
+        emit ForcedRecoveryInitiated(vault, recoveryProposedOwner[vault], recoveryUnlockTime[vault]);
         _logEv(vault, "force_recover_init", 0, "");
     }
 

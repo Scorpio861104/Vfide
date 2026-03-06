@@ -46,17 +46,33 @@ export async function PUT(request: NextRequest) {
   const rateLimitResponse = await withRateLimit(request, 'write');
   if (rateLimitResponse) return rateLimitResponse;
 
+  let body: Record<string, unknown>;
   try {
-    const body = await request.json();
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+  }
+
+  if (!body || typeof body !== 'object' || Array.isArray(body)) {
+    return NextResponse.json({ error: 'Request body must be a JSON object' }, { status: 400 });
+  }
+
+  try {
     const { userAddress, ...preferences } = body;
 
-    if (!userAddress) {
+    if (!userAddress || typeof userAddress !== 'string') {
       return NextResponse.json({ error: 'User address required' }, { status: 400 });
     }
 
     // Require the caller to be the owner of these preferences
     const authResult = await requireOwnership(request, userAddress);
     if (authResult instanceof NextResponse) return authResult;
+
+    const messagesPref = typeof preferences.messages === 'boolean' ? preferences.messages : null;
+    const proposalsPref = typeof preferences.proposals === 'boolean' ? preferences.proposals : null;
+    const endorsementsPref = typeof preferences.endorsements === 'boolean' ? preferences.endorsements : null;
+    const systemUpdatesPref =
+      typeof preferences.system_updates === 'boolean' ? preferences.system_updates : null;
 
     const result = await query(
       `UPDATE notification_preferences np
@@ -67,7 +83,13 @@ export async function PUT(request: NextRequest) {
        FROM users u
        WHERE np.user_id = u.id AND u.wallet_address = $1
        RETURNING np.*`,
-      [userAddress.toLowerCase(), preferences.messages, preferences.proposals, preferences.endorsements, preferences.system_updates]
+      [
+        userAddress.toLowerCase(),
+        messagesPref,
+        proposalsPref,
+        endorsementsPref,
+        systemUpdatesPref,
+      ]
     );
 
     return NextResponse.json({ success: true, preferences: result.rows[0] });

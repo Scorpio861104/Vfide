@@ -57,11 +57,13 @@ contract GovernanceHooks {
     }
 
     function setDAO(address _dao) external onlyOwner {
+        require(_dao != address(0), "zero dao");
         dao = _dao;
         emit DAOSet(_dao);
     }
 
     function setModules(address _ledger, address _seer, address _guardian) external onlyOwner { 
+        require(_seer != address(0), "zero seer");
         ledger=IProofLedger_GH(_ledger); 
         seer=ISeer_GH(_seer);
         guardian = ISeerGuardian_GH(_guardian);

@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { GET, POST } from '@/app/api/messages/route';
+import { GET, PATCH, POST } from '@/app/api/messages/route';
 
 jest.mock('@/lib/db', () => ({
   query: jest.fn(),
@@ -121,6 +121,53 @@ describe('/api/messages', () => {
 
       // Should use default limit of 50
       expect(query).toHaveBeenCalled();
+    });
+
+    it('should clamp oversized limit to 200', async () => {
+      withRateLimit.mockResolvedValue(null);
+      requireAuth.mockReturnValue({ user: { address: mockUserAddress } });
+      isAddress.mockReturnValue(true);
+
+      query
+        .mockResolvedValueOnce({ rows: [] })
+        .mockResolvedValueOnce({ rows: [{ count: '0' }] });
+
+      const request = new NextRequest(
+        `http://localhost:3000/api/messages?userAddress=${mockUserAddress}&conversationWith=${mockOtherAddress}&limit=9999`
+      );
+
+      const response = await GET(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(200);
+      expect(data.limit).toBe(200);
+      expect(query).toHaveBeenNthCalledWith(
+        1,
+        expect.stringContaining('LIMIT $3 OFFSET $4'),
+        [mockUserAddress.toLowerCase(), mockOtherAddress.toLowerCase(), 200, 0]
+      );
+    });
+
+    it('should clamp oversized offset to 10000', async () => {
+      withRateLimit.mockResolvedValue(null);
+      requireAuth.mockReturnValue({ user: { address: mockUserAddress } });
+      isAddress.mockReturnValue(true);
+
+      query
+        .mockResolvedValueOnce({ rows: [] })
+        .mockResolvedValueOnce({ rows: [{ count: '0' }] });
+
+      const request = new NextRequest(
+        `http://localhost:3000/api/messages?userAddress=${mockUserAddress}&conversationWith=${mockOtherAddress}&limit=50&offset=999999`
+      );
+
+      const response = await GET(request);
+      expect(response.status).toBe(200);
+      expect(query).toHaveBeenNthCalledWith(
+        1,
+        expect.stringContaining('LIMIT $3 OFFSET $4'),
+        [mockUserAddress.toLowerCase(), mockOtherAddress.toLowerCase(), 50, 10000]
+      );
     });
   });
 
@@ -259,6 +306,81 @@ describe('/api/messages', () => {
       expect(response.status).toBe(500);
       expect(data.error).toBe('Database error');
       expect(mockClient.release).toHaveBeenCalled();
+    });
+  });
+
+  describe('PATCH', () => {
+    it('should return 400 for malformed JSON', async () => {
+      withRateLimit.mockResolvedValue(null);
+      requireAuth.mockReturnValue({ user: { address: '0x1234567890123456789012345678901234567890' } });
+
+      const request = new NextRequest('http://localhost:3000/api/messages', {
+        method: 'PATCH',
+        body: '{"messageIds":[1,2]'
+      });
+
+      const response = await PATCH(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(400);
+      expect(data.error).toContain('Invalid JSON');
+    });
+
+    it('should return 400 for non-object body', async () => {
+      withRateLimit.mockResolvedValue(null);
+      requireAuth.mockReturnValue({ user: { address: '0x1234567890123456789012345678901234567890' } });
+
+      const request = new NextRequest('http://localhost:3000/api/messages', {
+        method: 'PATCH',
+        body: JSON.stringify(['invalid']),
+      });
+
+      const response = await PATCH(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(400);
+      expect(data.error).toContain('JSON object');
+    });
+
+    it('should reject oversized messageIds arrays', async () => {
+      withRateLimit.mockResolvedValue(null);
+      requireAuth.mockReturnValue({ user: { address: '0x1234567890123456789012345678901234567890' } });
+
+      const messageIds = Array.from({ length: 501 }, (_, index) => index + 1);
+
+      const request = new NextRequest('http://localhost:3000/api/messages', {
+        method: 'PATCH',
+        body: JSON.stringify({
+          messageIds,
+          userAddress: '0x1234567890123456789012345678901234567890',
+        }),
+      });
+
+      const response = await PATCH(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(400);
+      expect(data.error).toContain('Too many messageIds');
+    });
+
+    it('should reject invalid messageIds element types', async () => {
+      withRateLimit.mockResolvedValue(null);
+      requireAuth.mockReturnValue({ user: { address: '0x1234567890123456789012345678901234567890' } });
+
+      const request = new NextRequest('http://localhost:3000/api/messages', {
+        method: 'PATCH',
+        body: JSON.stringify({
+          messageIds: [1, '2', -3],
+          userAddress: '0x1234567890123456789012345678901234567890',
+        }),
+      });
+
+      const response = await PATCH(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(400);
+      expect(data.error).toContain('Invalid messageIds');
+      expect(query).not.toHaveBeenCalled();
     });
   });
 });

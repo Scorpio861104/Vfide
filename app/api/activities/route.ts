@@ -1,11 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
-import { requireAuth } from '@/lib/auth/middleware';
+import { isAdmin, requireAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 
 // Constants
 const MAX_ACTIVITIES_LIMIT = 100;
+const MAX_ACTIVITIES_OFFSET = 10000;
 const DEFAULT_ACTIVITIES_LIMIT = 50;
+const MAX_ACTIVITY_TYPE_LENGTH = 64;
+const MAX_ACTIVITY_TITLE_LENGTH = 200;
+const MAX_ACTIVITY_DESCRIPTION_LENGTH = 2000;
+const MAX_ACTIVITY_DATA_BYTES = 10000;
 
 interface Activity {
   id: number;
@@ -34,14 +39,30 @@ export async function GET(request: NextRequest) {
     const userAddress = searchParams.get('userAddress');
     const activityType = searchParams.get('type');
     const limit = parseInt(searchParams.get('limit') || DEFAULT_ACTIVITIES_LIMIT.toString(), 10);
-    const offset = parseInt(searchParams.get('offset') || '0', 10);
+    const rawOffset = parseInt(searchParams.get('offset') || '0', 10);
+    const offset = Math.min(Math.max(rawOffset, 0), MAX_ACTIVITIES_OFFSET);
 
     // Validate parsed numbers - check for positive values and reasonable limits
-    if (isNaN(limit) || isNaN(offset) || limit <= 0 || offset < 0 || limit > MAX_ACTIVITIES_LIMIT) {
+    if (isNaN(limit) || isNaN(rawOffset) || limit <= 0 || limit > MAX_ACTIVITIES_LIMIT) {
       return NextResponse.json(
         { error: `Invalid limit or offset parameter. Limit must be 1-${MAX_ACTIVITIES_LIMIT}, offset must be >= 0` },
         { status: 400 }
       );
+    }
+
+    if (userAddress) {
+      const authResult = await requireAuth(request);
+      if (authResult instanceof NextResponse) return authResult;
+
+      const requesterAddress = authResult.user.address.toLowerCase();
+      const targetAddress = userAddress.toLowerCase();
+      const canAccess = requesterAddress === targetAddress || isAdmin(authResult.user);
+      if (!canAccess) {
+        return NextResponse.json(
+          { error: 'You can only view your own activities' },
+          { status: 403 }
+        );
+      }
     }
 
     let queryText = `
@@ -128,21 +149,90 @@ export async function POST(request: NextRequest) {
   const authResult = await requireAuth(request);
   if (authResult instanceof NextResponse) return authResult;
 
+  let body: Record<string, unknown>;
   try {
-    const body = await request.json();
+    body = await request.json();
+  } catch {
+    return NextResponse.json(
+      { error: 'Invalid JSON body' },
+      { status: 400 }
+    );
+  }
+
+  if (!body || typeof body !== 'object' || Array.isArray(body)) {
+    return NextResponse.json(
+      { error: 'Request body must be a JSON object' },
+      { status: 400 }
+    );
+  }
+
+  try {
     const { userAddress, activityType, title, description, data } = body;
 
-    if (!userAddress || !activityType || !title) {
+    if (
+      typeof userAddress !== 'string' ||
+      typeof activityType !== 'string' ||
+      typeof title !== 'string' ||
+      userAddress.trim().length === 0 ||
+      activityType.trim().length === 0 ||
+      title.trim().length === 0
+    ) {
       return NextResponse.json(
         { error: 'Missing required fields: userAddress, activityType, title' },
         { status: 400 }
       );
     }
 
+    if (activityType.length > MAX_ACTIVITY_TYPE_LENGTH) {
+      return NextResponse.json(
+        { error: `activityType too long. Maximum ${MAX_ACTIVITY_TYPE_LENGTH} characters.` },
+        { status: 400 }
+      );
+    }
+
+    if (title.length > MAX_ACTIVITY_TITLE_LENGTH) {
+      return NextResponse.json(
+        { error: `title too long. Maximum ${MAX_ACTIVITY_TITLE_LENGTH} characters.` },
+        { status: 400 }
+      );
+    }
+
+    const normalizedDescription = typeof description === 'string' ? description : '';
+    if (normalizedDescription.length > MAX_ACTIVITY_DESCRIPTION_LENGTH) {
+      return NextResponse.json(
+        { error: `description too long. Maximum ${MAX_ACTIVITY_DESCRIPTION_LENGTH} characters.` },
+        { status: 400 }
+      );
+    }
+
+    if (data !== undefined && (typeof data !== 'object' || data === null || Array.isArray(data))) {
+      return NextResponse.json(
+        { error: 'data must be an object if provided' },
+        { status: 400 }
+      );
+    }
+
+    const serializedData = data ? JSON.stringify(data) : null;
+    if (serializedData && serializedData.length > MAX_ACTIVITY_DATA_BYTES) {
+      return NextResponse.json(
+        { error: `data too large. Maximum ${MAX_ACTIVITY_DATA_BYTES} bytes allowed.` },
+        { status: 400 }
+      );
+    }
+
+    const normalizedUserAddress = userAddress.toLowerCase();
+
+    if (authResult.user.address.toLowerCase() !== normalizedUserAddress) {
+      return NextResponse.json(
+        { error: 'You can only create activities for your own address' },
+        { status: 403 }
+      );
+    }
+
     // Get user ID
     const userResult = await query(
       'SELECT id FROM users WHERE wallet_address = $1',
-      [userAddress.toLowerCase()]
+      [normalizedUserAddress]
     );
 
     if (userResult.rows.length === 0) {
@@ -165,7 +255,7 @@ export async function POST(request: NextRequest) {
       `INSERT INTO activities (user_id, activity_type, title, description, data)
        VALUES ($1, $2, $3, $4, $5)
        RETURNING *`,
-      [userId, activityType, title, description || '', data ? JSON.stringify(data) : null]
+      [userId, activityType, title, normalizedDescription, serializedData]
     );
 
     return NextResponse.json({

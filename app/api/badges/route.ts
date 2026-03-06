@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
-import { requireAdmin } from '@/lib/auth/middleware';
+import { isAdmin, requireAdmin, requireAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { validateBody, awardBadgeSchema } from '@/lib/auth/validation';
 
@@ -35,6 +35,21 @@ export async function GET(request: NextRequest) {
     const userAddress = searchParams.get('userAddress');
 
     if (userAddress) {
+      const authResult = await requireAuth(request);
+      if (authResult instanceof NextResponse) {
+        return authResult;
+      }
+
+      const requesterAddress = authResult.user.address.toLowerCase();
+      const targetAddress = userAddress.toLowerCase();
+      const canRead = requesterAddress === targetAddress || isAdmin(authResult.user);
+      if (!canRead) {
+        return NextResponse.json(
+          { error: 'Unauthorized' },
+          { status: 403 }
+        );
+      }
+
       // Get user's earned badges
       const result = await query<UserBadge>(
         `SELECT 
@@ -48,7 +63,7 @@ export async function GET(request: NextRequest) {
          JOIN users u ON ub.user_id = u.id
          WHERE u.wallet_address = $1
          ORDER BY ub.earned_at DESC`,
-        [userAddress.toLowerCase()]
+        [targetAddress]
       );
 
       return NextResponse.json({

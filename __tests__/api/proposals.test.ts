@@ -15,15 +15,16 @@ jest.mock('@/lib/auth/middleware', () => ({
 }));
 
 jest.mock('@/lib/auth/validation', () => ({
-  validateBody: jest.fn(),
-  proposalSchema: {},
+  createProposalSchema: {
+    safeParse: jest.fn(),
+  },
 }));
 
 describe('/api/proposals', () => {
   const { query } = require('@/lib/db');
   const { withRateLimit } = require('@/lib/auth/rateLimit');
   const { requireAuth, checkOwnership } = require('@/lib/auth/middleware');
-  const { validateBody } = require('@/lib/auth/validation');
+  const { createProposalSchema } = require('@/lib/auth/validation');
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -66,14 +67,63 @@ describe('/api/proposals', () => {
         expect.any(Array)
       );
     });
+
+    it('should clamp oversized offset to 10000', async () => {
+      withRateLimit.mockResolvedValue(null);
+      query
+        .mockResolvedValueOnce({ rows: [] })
+        .mockResolvedValueOnce({ rows: [{ count: '0' }] });
+
+      const request = new NextRequest('http://localhost:3000/api/proposals?limit=50&offset=999999');
+      const response = await GET(request);
+
+      expect(response.status).toBe(200);
+      expect(query).toHaveBeenNthCalledWith(
+        1,
+        expect.stringContaining('LIMIT $1 OFFSET $2'),
+        [50, 10000]
+      );
+    });
   });
 
   describe('POST', () => {
+    it('should return 400 for malformed JSON', async () => {
+      withRateLimit.mockResolvedValue(null);
+      requireAuth.mockReturnValue({ user: { address: '0x1111111111111111111111111111111111111123' } });
+
+      const request = new NextRequest('http://localhost:3000/api/proposals', {
+        method: 'POST',
+        body: '{"proposerAddress":"0x1111111111111111111111111111111111111123"',
+      });
+
+      const response = await POST(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(400);
+      expect(data.error).toContain('Invalid JSON');
+    });
+
+    it('should return 400 for non-object body', async () => {
+      withRateLimit.mockResolvedValue(null);
+      requireAuth.mockReturnValue({ user: { address: '0x1111111111111111111111111111111111111123' } });
+
+      const request = new NextRequest('http://localhost:3000/api/proposals', {
+        method: 'POST',
+        body: JSON.stringify(['invalid']),
+      });
+
+      const response = await POST(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(400);
+      expect(data.error).toContain('JSON object');
+    });
+
     it('should create proposal successfully', async () => {
       withRateLimit.mockResolvedValue(null);
       requireAuth.mockReturnValue({ user: { address: '0x1111111111111111111111111111111111111123' } });
       checkOwnership.mockReturnValue(true);
-      validateBody.mockResolvedValue({
+      createProposalSchema.safeParse.mockReturnValue({
         success: true,
         data: {
           proposerAddress: '0x1111111111111111111111111111111111111123',

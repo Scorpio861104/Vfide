@@ -30,9 +30,7 @@ const MAX_BODY_SIZES = {
  * Generate a random nonce for CSP
  */
 function generateNonce(): string {
-  const buffer = new Uint8Array(16);
-  crypto.getRandomValues(buffer);
-  return Buffer.from(buffer).toString('base64');
+  return btoa(String.fromCharCode(...crypto.getRandomValues(new Uint8Array(16))));
 }
 
 /**
@@ -116,30 +114,34 @@ export function proxy(request: NextRequest) {
     }
   }
 
-  const response = NextResponse.next();
-
   // Generate nonce for this request
   const nonce = generateNonce();
 
-  // Store nonce in request for use in pages
+  const csp = [
+    "default-src 'self'",
+    `script-src 'self' 'nonce-${nonce}' 'unsafe-eval' https://vercel.live https://*.walletconnect.com https://*.walletconnect.org`,
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+    "img-src 'self' data: https: blob:",
+    "font-src 'self' data: https://fonts.gstatic.com",
+    "connect-src 'self' wss: ws: https: https://*.walletconnect.com https://*.walletconnect.org https://*.base.org https://*.polygon.technology https://*.zksync.io",
+    "frame-src 'self' https://*.walletconnect.com",
+    "media-src 'self' blob:",
+    "object-src 'none'",
+    "base-uri 'self'",
+    "form-action 'self'",
+    "frame-ancestors 'none'",
+    "upgrade-insecure-requests",
+  ].join('; ');
+
+  // Pass nonce into downstream request headers for app/layout.tsx
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set('x-nonce', nonce);
+
+  const response = NextResponse.next({
+    request: { headers: requestHeaders },
+  });
   response.headers.set('x-nonce', nonce);
-
-  // Only modify CSP if it exists and we need inline scripts
-  const csp = response.headers.get('Content-Security-Policy');
-  if (csp) {
-    // Add nonce to script-src if needed
-    const modifiedCSP = csp
-      .replace(
-        "script-src 'self'",
-        `script-src 'self' 'nonce-${nonce}'`
-      )
-      .replace(
-        "style-src 'self'",
-        `style-src 'self' 'nonce-${nonce}'`
-      );
-
-    response.headers.set('Content-Security-Policy', modifiedCSP);
-  }
+  response.headers.set('Content-Security-Policy', csp);
 
   return response;
 }

@@ -41,6 +41,9 @@ contract DutyDistributor is Ownable, IGovernanceHooks {
     
     // Points Config
     uint256 public pointsPerVote = 10;
+    uint256 public constant MAX_POINTS_PER_VOTE = 1000;
+    uint256 public constant MAX_POINTS_PER_USER_CAP = 1_000_000;
+    uint256 public constant MIN_POINTS_PER_USER_CAP = 1;
     
     // L-3 FIX: Max points per user to prevent gaming
     uint256 public maxPointsPerUser = 10_000;
@@ -58,10 +61,17 @@ contract DutyDistributor is Ownable, IGovernanceHooks {
     }
 
     function setPointsPerVote(uint256 _pointsPerVote) external onlyOwner {
+        require(_pointsPerVote > 0 && _pointsPerVote <= MAX_POINTS_PER_VOTE, "DD: invalid pointsPerVote");
+        require(_pointsPerVote <= maxPointsPerUser, "DD: pointsPerVote exceeds cap");
         pointsPerVote = _pointsPerVote;
     }
     
     function setMaxPointsPerUser(uint256 _maxPoints) external onlyOwner {
+        require(
+            _maxPoints >= MIN_POINTS_PER_USER_CAP && _maxPoints <= MAX_POINTS_PER_USER_CAP,
+            "DD: invalid max points"
+        );
+        require(_maxPoints >= pointsPerVote, "DD: max points below pointsPerVote");
         maxPointsPerUser = _maxPoints;
     }
 

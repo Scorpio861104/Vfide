@@ -186,7 +186,7 @@ export function PortfolioValueChart({ data }: { data: PortfolioDataPoint[] }) {
               padding: '12px',
             }}
             labelStyle={{ color: '#f3f4f6' }}
-            formatter={(value: number) => [`$${value.toLocaleString()}`, 'Value']}
+            formatter={(value: number | undefined) => [`$${(value ?? 0).toLocaleString()}`, 'Value']}
           />
           <Area
             type="monotone"
@@ -214,14 +214,14 @@ export function AssetAllocationChart({ allocations }: { allocations: AssetAlloca
             outerRadius={100}
             paddingAngle={2}
             dataKey="value"
-            label={({ name, percentage }) => `${name} ${percentage}%`}
+            label={({ name, percent }) => `${String(name ?? '')} ${Math.round((percent ?? 0) * 100)}%`}
           >
             {allocations.map((entry) => (
               <Cell key={`cell-${entry.name}`} fill={entry.color} />
             ))}
           </Pie>
           <Tooltip
-            formatter={(value: number) => `$${value.toLocaleString()}`}
+            formatter={(value: number | undefined) => `$${(value ?? 0).toLocaleString()}`}
             contentStyle={{
               backgroundColor: '#1f2937',
               border: '1px solid #374151',
@@ -248,7 +248,7 @@ export function TransactionVolumeChart({ data }: { data: PortfolioDataPoint[] })
               border: '1px solid #374151',
               borderRadius: '8px',
             }}
-            formatter={(value: number) => `$${value.toLocaleString()}`}
+            formatter={(value: number | undefined) => `$${(value ?? 0).toLocaleString()}`}
           />
           <Legend />
           <Bar dataKey="eth" stackId="a" fill="#627eea" name="ETH" />

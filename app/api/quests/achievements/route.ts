@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getClient } from '@/lib/db';
-import { requireAuth } from '@/lib/auth/middleware';
+import { isAdmin, requireAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 
 /**
@@ -12,12 +12,22 @@ export async function GET(request: NextRequest) {
   const rateLimit = await withRateLimit(request, 'api');
   if (rateLimit) return rateLimit;
 
+  const authResult = await requireAuth(request);
+  if (authResult instanceof NextResponse) return authResult;
+
   try {
     const searchParams = request.nextUrl.searchParams;
     const userAddress = searchParams.get('userAddress');
 
     if (!userAddress) {
       return NextResponse.json({ error: 'User address required' }, { status: 400 });
+    }
+
+    const requesterAddress = authResult.user.address.toLowerCase();
+    const targetAddress = userAddress.toLowerCase();
+    const canAccess = requesterAddress === targetAddress || isAdmin(authResult.user);
+    if (!canAccess) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
     const client = await getClient();
@@ -110,14 +120,53 @@ export async function POST(request: NextRequest) {
   const authResult = await requireAuth(request);
   if (authResult instanceof NextResponse) return authResult;
 
+  let body: Record<string, unknown>;
   try {
-    const { milestoneKey, userAddress, progress } = await request.json();
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+  }
+
+  if (!body || typeof body !== 'object' || Array.isArray(body)) {
+    return NextResponse.json({ error: 'Request body must be a JSON object' }, { status: 400 });
+  }
+
+  try {
+    const { milestoneKey, userAddress, progress } = body;
 
     if (!milestoneKey || !userAddress || progress === undefined) {
       return NextResponse.json(
         { error: 'Milestone key, user address, and progress required' },
         { status: 400 }
       );
+    }
+
+    if (typeof userAddress !== 'string' || typeof milestoneKey !== 'string') {
+      return NextResponse.json(
+        { error: 'Milestone key and user address must be strings' },
+        { status: 400 }
+      );
+    }
+
+    const progressValue =
+      typeof progress === 'number'
+        ? progress
+        : typeof progress === 'string'
+          ? Number(progress)
+          : NaN;
+    if (!Number.isFinite(progressValue)) {
+      return NextResponse.json(
+        { error: 'Progress must be a valid number' },
+        { status: 400 }
+      );
+    }
+
+    const targetAddress = userAddress.toLowerCase();
+
+    const requesterAddress = authResult.user.address.toLowerCase();
+    const canUpdate = requesterAddress === targetAddress || isAdmin(authResult.user);
+    if (!canUpdate) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
     const client = await getClient();
@@ -128,7 +177,7 @@ export async function POST(request: NextRequest) {
       // Get user ID
       const userResult = await client.query(
         'SELECT id FROM users WHERE wallet_address = $1',
-        [userAddress]
+        [targetAddress]
       );
 
       if (userResult.rows.length === 0) {
@@ -150,7 +199,7 @@ export async function POST(request: NextRequest) {
       }
 
       const milestone = milestoneResult.rows[0];
-      const unlocked = progress >= milestone.requirement_value;
+      const unlocked = progressValue >= milestone.requirement_value;
 
       // Update or insert progress
       await client.query(`
@@ -163,7 +212,7 @@ export async function POST(request: NextRequest) {
           unlocked = $5,
           unlocked_at = CASE WHEN $5 = true AND user_achievement_progress.unlocked = false THEN NOW() ELSE user_achievement_progress.unlocked_at END,
           updated_at = NOW()
-      `, [userId, milestone.id, progress, milestone.requirement_value, unlocked, unlocked ? new Date() : null]);
+      `, [userId, milestone.id, progressValue, milestone.requirement_value, unlocked, unlocked ? new Date() : null]);
 
       // If newly unlocked, create notification
       if (unlocked) {

@@ -22,10 +22,20 @@ export async function PATCH(request: NextRequest) {
     return authResult;
   }
 
+  let body: MessageEditRequest;
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+  }
+
+  if (!body || typeof body !== 'object' || Array.isArray(body)) {
+    return NextResponse.json({ error: 'Request body must be a JSON object' }, { status: 400 });
+  }
+
   const client = await getClient();
   
   try {
-    const body: MessageEditRequest = await request.json();
     const { messageId, conversationId, newContent, userAddress } = body;
 
     if (!messageId || !conversationId || !newContent || !userAddress) {

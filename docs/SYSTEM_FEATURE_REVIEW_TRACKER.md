@@ -131,6 +131,7 @@ Notes:
 - Added accounting consistency updates: `totalExpensesPaid` and `totalBurned` now increment at spend/burn time; council distributions now increment `totalCouncilPaid`.
 - Updated vault health aggregate to include `operationsPool` and tracked legacy outflows in `totalIn`, keeping health totals internally coherent.
 - Added and validated local invariant verifier: `npm run contract:verify:ecosystem-work-rewards:local`.
+- Guardrail alignment fix in `OwnerControlPanel`: `ecosystem_configureAutoWorkPayout` now allows `0` as an explicit disable value per category while still enforcing min/max bounds for non-zero rewards.
 - Remaining discussion: emergency owner timelock-withdraw policy boundaries relative to reserved pool guarantees.
 - Fourth-pass setter-bound hardening: `contracts/LiquidityIncentives.sol` now enforces non-zero unstake cooldown floor (`MIN_UNSTAKE_COOLDOWN`) alongside existing max cooldown bound, preventing accidental/no-cooldown anti-flash-loan bypass configuration.
 - Seventh-pass setter hardening in `contracts/VFIDEBenefits.sol`:

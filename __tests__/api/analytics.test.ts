@@ -75,5 +75,131 @@ describe('/api/analytics', () => {
       expect(response.status).toBe(400);
       expect(data.error).toContain('eventType');
     });
+
+    it('should reject oversized metrics batch', async () => {
+      withRateLimit.mockResolvedValue(null);
+      requireAuth.mockResolvedValue({ user: { address: '0x1234567890123456789012345678901234567890' } });
+
+      const metrics = Array.from({ length: 201 }, (_, i) => ({
+        event: 'performance',
+        value: i,
+        timestamp: Date.now(),
+      }));
+
+      const request = new NextRequest('http://localhost:3000/api/analytics', {
+        method: 'POST',
+        body: JSON.stringify({ metrics }),
+      });
+
+      const response = await POST(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(400);
+      expect(data.error).toContain('Too many metrics');
+    });
+
+    it('should reject batch with invalid event type', async () => {
+      withRateLimit.mockResolvedValue(null);
+      requireAuth.mockResolvedValue({ user: { address: '0x1234567890123456789012345678901234567890' } });
+
+      const request = new NextRequest('http://localhost:3000/api/analytics', {
+        method: 'POST',
+        body: JSON.stringify({
+          metrics: [
+            { event: 'performance', value: 100, timestamp: Date.now() },
+            { event: 'totally_invalid_event', value: 1, timestamp: Date.now() },
+          ],
+        }),
+      });
+
+      const response = await POST(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(400);
+      expect(data.error).toContain('Invalid event type in batch');
+    });
+
+    it('should reject malformed request body', async () => {
+      withRateLimit.mockResolvedValue(null);
+      requireAuth.mockResolvedValue({ user: { address: '0x1234567890123456789012345678901234567890' } });
+
+      const request = new NextRequest('http://localhost:3000/api/analytics', {
+        method: 'POST',
+        body: JSON.stringify(null),
+      });
+
+      const response = await POST(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(400);
+      expect(data.error).toContain('Invalid request body');
+      expect(query).not.toHaveBeenCalled();
+    });
+
+    it('should reject oversized single eventData payload', async () => {
+      withRateLimit.mockResolvedValue(null);
+      requireAuth.mockResolvedValue({ user: { address: '0x1234567890123456789012345678901234567890' } });
+
+      const request = new NextRequest('http://localhost:3000/api/analytics', {
+        method: 'POST',
+        body: JSON.stringify({
+          eventType: 'page_view',
+          eventData: {
+            payload: 'x'.repeat(11000),
+          },
+        }),
+      });
+
+      const response = await POST(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(400);
+      expect(data.error).toContain('Event data too large');
+      expect(query).not.toHaveBeenCalled();
+    });
+
+    it('should reject oversized batch eventData payload', async () => {
+      withRateLimit.mockResolvedValue(null);
+      requireAuth.mockResolvedValue({ user: { address: '0x1234567890123456789012345678901234567890' } });
+
+      const request = new NextRequest('http://localhost:3000/api/analytics', {
+        method: 'POST',
+        body: JSON.stringify({
+          metrics: [
+            {
+              event: 'performance',
+              value: 100,
+              properties: { payload: 'x'.repeat(11000) },
+              timestamp: Date.now(),
+            },
+          ],
+        }),
+      });
+
+      const response = await POST(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(400);
+      expect(data.error).toContain('Event data too large');
+      expect(query).not.toHaveBeenCalled();
+    });
+
+    it('should return 400 for malformed JSON payload', async () => {
+      withRateLimit.mockResolvedValue(null);
+      requireAuth.mockResolvedValue({ user: { address: '0x1234567890123456789012345678901234567890' } });
+
+      const request = new NextRequest('http://localhost:3000/api/analytics', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: 'not-json',
+      });
+
+      const response = await POST(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(400);
+      expect(data.error).toContain('Invalid JSON payload');
+      expect(query).not.toHaveBeenCalled();
+    });
   });
 });

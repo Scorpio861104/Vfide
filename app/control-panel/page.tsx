@@ -8,6 +8,7 @@ import { AutoSwapPanel } from './components/AutoSwapPanel';
 import { TokenManagementPanel } from './components/TokenManagementPanel';
 import { FeeManagementPanel } from './components/FeeManagementPanel';
 import { EcosystemPanel } from './components/EcosystemPanel';
+import { GovernancePanel } from './components/GovernancePanel';
 import { EmergencyPanel } from './components/EmergencyPanel';
 import { ProductionSetupPanel } from './components/ProductionSetupPanel';
 import { TransactionHistory } from './components/TransactionHistory';
@@ -29,6 +30,7 @@ export default function ControlPanelPage() {
     { id: 'token', label: 'Token Management', icon: '🪙' },
     { id: 'fees', label: 'Fee Management', icon: '💰' },
     { id: 'ecosystem', label: 'Ecosystem', icon: '🌿' },
+    { id: 'governance', label: 'Governance', icon: '⏱️' },
     { id: 'emergency', label: 'Emergency', icon: '🚨' },
     { id: 'setup', label: 'Quick Setup', icon: '⚡' },
     { id: 'history', label: 'History', icon: '📜' },
@@ -83,6 +85,7 @@ export default function ControlPanelPage() {
             {activeTab === 'token' && <TokenManagementPanel />}
             {activeTab === 'fees' && <FeeManagementPanel />}
             {activeTab === 'ecosystem' && <EcosystemPanel />}
+            {activeTab === 'governance' && <GovernancePanel />}
             {activeTab === 'emergency' && <EmergencyPanel />}
             {activeTab === 'setup' && <ProductionSetupPanel />}
             {activeTab === 'history' && <TransactionHistory />}

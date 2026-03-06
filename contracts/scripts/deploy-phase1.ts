@@ -146,10 +146,11 @@ async function deployContracts(config: DeploymentConfig): Promise<DeployedContra
   await multiSig.waitForDeployment();
   console.log(`   ✓ Deployed at: ${await multiSig.getAddress()}`);
 
-  // 3. Deploy EmergencyControlV2
-  console.log('3️⃣  Deploying EmergencyControlV2...');
-  const EmergencyControl = await ethers.getContractFactory('EmergencyControlV2');
-  const emergencyControl = await EmergencyControl.deploy(config.admin);
+  // 3. Deploy EmergencyControl
+  console.log('3️⃣  Deploying EmergencyControl...');
+  const EmergencyControl = await ethers.getContractFactory('EmergencyControl');
+  // Bootstrap with non-zero breaker placeholder; wire real breaker after deployment.
+  const emergencyControl = await EmergencyControl.deploy(config.admin, config.admin, config.ledger);
   await emergencyControl.waitForDeployment();
   console.log(`   ✓ Deployed at: ${await emergencyControl.getAddress()}`);
 
@@ -291,7 +292,7 @@ async function printDeploymentSummary(contracts: DeployedContracts): Promise<voi
   console.log('   ─────────────────────────────────────────────────────');
   console.log(`   VFIDEAccessControl:   ${await contracts.accessControl.getAddress()}`);
   console.log(`   AdminMultiSig:        ${await contracts.multiSig.getAddress()}`);
-  console.log(`   EmergencyControlV2:   ${await contracts.emergencyControl.getAddress()}`);
+  console.log(`   EmergencyControl:     ${await contracts.emergencyControl.getAddress()}`);
   console.log(`   CircuitBreaker:       ${await contracts.circuitBreaker.getAddress()}`);
   console.log(`   WithdrawalQueue:      ${await contracts.withdrawalQueue.getAddress()}`);
   console.log(`   VFIDEToken:           ${await contracts.token.getAddress()}`);
@@ -330,7 +331,11 @@ async function verifyContracts(contracts: DeployedContracts, config: DeploymentC
 
   await verifyContract(await contracts.accessControl.getAddress(), [config.admin]);
   await verifyContract(await contracts.multiSig.getAddress(), [config.council]);
-  await verifyContract(await contracts.emergencyControl.getAddress(), [config.admin]);
+  await verifyContract(await contracts.emergencyControl.getAddress(), [
+    config.admin,
+    config.admin,
+    config.ledger,
+  ]);
   await verifyContract(await contracts.circuitBreaker.getAddress(), [
     config.admin,
     config.priceOracle,

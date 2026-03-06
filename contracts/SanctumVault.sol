@@ -122,7 +122,33 @@ contract SanctumVault is Ownable, ReentrancyGuard {
 
     function setDAO(address _dao) external onlyDAO {
         if (_dao == address(0)) revert SANCT_Zero();
+        address oldDAO = dao;
         dao = _dao;
+
+        if (oldDAO != _dao) {
+            // Revoke stale approver privilege from prior DAO
+            if (isApprover[oldDAO]) {
+                isApprover[oldDAO] = false;
+
+                uint256 oldIdx = approverIndex[oldDAO];
+                uint256 lastIdx = approvers.length - 1;
+                if (oldIdx != lastIdx) {
+                    address lastApprover = approvers[lastIdx];
+                    approvers[oldIdx] = lastApprover;
+                    approverIndex[lastApprover] = oldIdx;
+                }
+                approvers.pop();
+                delete approverIndex[oldDAO];
+            }
+
+            // Ensure the new DAO has approver permissions
+            if (!isApprover[_dao]) {
+                isApprover[_dao] = true;
+                approverIndex[_dao] = approvers.length;
+                approvers.push(_dao);
+            }
+        }
+
         emit DAOSet(_dao);
         _log("sanctum_dao_set");
     }
@@ -155,6 +181,7 @@ contract SanctumVault is Ownable, ReentrancyGuard {
 
     function removeApprover(address _approver) external onlyDAO {
         require(isApprover[_approver], "not approver");
+        require(approvers.length > approvalsRequired, "would violate threshold");
         isApprover[_approver] = false;
         
         // M-4 Fix: O(1) swap-and-pop with index tracking
@@ -429,6 +456,7 @@ contract SanctumVault is Ownable, ReentrancyGuard {
         uint256 amount,
         string calldata reason
     ) external onlyDAO returns (uint256 id) {
+        require(token != address(0), "zero token");
         require(to != address(0), "zero to");
         require(amount > 0, "zero amount");
         
@@ -451,6 +479,7 @@ contract SanctumVault is Ownable, ReentrancyGuard {
      */
     function cancelEmergencyRecovery(uint256 id, string calldata reason) external onlyDAO {
         EmergencyRecoveryRequest storage req = emergencyRecoveries[id];
+        require(req.requestedAt != 0, "not found");
         require(!req.executed, "already executed");
         require(!req.cancelled, "already cancelled");
         
@@ -463,6 +492,7 @@ contract SanctumVault is Ownable, ReentrancyGuard {
      */
     function executeEmergencyRecovery(uint256 id) external onlyDAO nonReentrant {
         EmergencyRecoveryRequest storage req = emergencyRecoveries[id];
+        require(req.requestedAt != 0, "not found");
         require(!req.executed, "already executed");
         require(!req.cancelled, "cancelled");
         require(block.timestamp >= req.requestedAt + EMERGENCY_TIMELOCK, "timelock not passed");

@@ -4,10 +4,10 @@
  */
 
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
-import { Address, parseEther } from 'viem';
+import { Address } from 'viem';
 
-const mockContractRead = jest.fn();
-const mockContractWrite = jest.fn();
+const mockContractRead: any = jest.fn();
+const mockContractWrite: any = jest.fn();
 
 describe('VaultRegistry Contract', () => {
   let registryAddress: Address;
@@ -107,6 +107,18 @@ describe('VaultRegistry Contract', () => {
   });
 
   describe('Vault Metadata', () => {
+    it('should reject phone recovery hash collision across vaults', async () => {
+      const phoneHash = '0x1234000000000000000000000000000000000000000000000000000000000000';
+      mockContractWrite.mockRejectedValueOnce(new Error('PhoneAlreadyTaken'));
+
+      await expect(
+        mockContractWrite({
+          functionName: 'setPhoneRecovery',
+          args: [vaultAddress, phoneHash]
+        })
+      ).rejects.toThrow('PhoneAlreadyTaken');
+    });
+
     it('should set vault metadata', async () => {
       mockContractWrite.mockResolvedValueOnce('0xhash');
 
@@ -128,13 +140,24 @@ describe('VaultRegistry Contract', () => {
       const result = await mockContractRead({
         functionName: 'getVaultMetadata',
         args: [vaultAddress]
-      });
+      }) as { name: string; description: string; createdAt: bigint };
 
       expect(result.name).toBe('My Vault');
     });
   });
 
   describe('Vault Count and Queries', () => {
+    it('should expose guardian count per vault for recoverability checks', async () => {
+      mockContractRead.mockResolvedValueOnce(0n);
+
+      const result = await mockContractRead({
+        functionName: 'guardianCountOfVault',
+        args: [vaultAddress]
+      });
+
+      expect(result).toBe(0n);
+    });
+
     it('should return total vault count', async () => {
       mockContractRead.mockResolvedValueOnce(100n);
 

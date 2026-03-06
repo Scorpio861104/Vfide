@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
-import { requireAuth } from '@/lib/auth/middleware';
+import { isAdmin, requireAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 
 interface Notification {
@@ -14,6 +14,10 @@ interface Notification {
   created_at: string;
   updated_at: string;
 }
+
+const MAX_NOTIFICATIONS_LIMIT = 200;
+const MAX_NOTIFICATIONS_OFFSET = 10000;
+const MAX_BULK_NOTIFICATION_IDS = 500;
 
 /**
  * GET /api/notifications?userAddress=0x...&limit=50&offset=0&unreadOnly=false
@@ -33,12 +37,15 @@ export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
     const userAddress = searchParams.get('userAddress');
-    const limit = parseInt(searchParams.get('limit') || '50', 10);
-    const offset = parseInt(searchParams.get('offset') || '0', 10);
+    const rawLimit = parseInt(searchParams.get('limit') || '50', 10);
+    const rawOffset = parseInt(searchParams.get('offset') || '0', 10);
     const unreadOnly = searchParams.get('unreadOnly') === 'true';
 
+    const limit = Math.min(Math.max(rawLimit, 0), MAX_NOTIFICATIONS_LIMIT);
+    const offset = Math.min(Math.max(rawOffset, 0), MAX_NOTIFICATIONS_OFFSET);
+
     // Validate parsed numbers
-    if (isNaN(limit) || isNaN(offset) || limit < 0 || offset < 0) {
+    if (isNaN(rawLimit) || isNaN(rawOffset)) {
       return NextResponse.json(
         { error: 'Invalid limit or offset parameter' },
         { status: 400 }
@@ -131,8 +138,24 @@ export async function POST(request: NextRequest) {
     return authResult;
   }
 
+  let body: Record<string, unknown>;
   try {
-    const body = await request.json();
+    body = await request.json();
+  } catch {
+    return NextResponse.json(
+      { error: 'Invalid JSON body' },
+      { status: 400 }
+    );
+  }
+
+  if (!body || typeof body !== 'object' || Array.isArray(body)) {
+    return NextResponse.json(
+      { error: 'Request body must be a JSON object' },
+      { status: 400 }
+    );
+  }
+
+  try {
     const { userAddress, type, title, message, data } = body;
 
     if (!userAddress || !type || !title || !message) {
@@ -142,10 +165,32 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    if (
+      typeof userAddress !== 'string' ||
+      typeof type !== 'string' ||
+      typeof title !== 'string' ||
+      typeof message !== 'string'
+    ) {
+      return NextResponse.json(
+        { error: 'userAddress, type, title, and message must be strings' },
+        { status: 400 }
+      );
+    }
+
+    const requesterAddress = authResult.user.address.toLowerCase();
+    const targetAddress = userAddress.toLowerCase();
+    const canCreate = requesterAddress === targetAddress || isAdmin(authResult.user);
+    if (!canCreate) {
+      return NextResponse.json(
+        { error: 'You can only create notifications for your own account' },
+        { status: 403 }
+      );
+    }
+
     // Get user ID
     const userResult = await query(
       'SELECT id FROM users WHERE wallet_address = $1',
-      [userAddress.toLowerCase()]
+      [targetAddress]
     );
 
     if (userResult.rows.length === 0) {
@@ -200,13 +245,30 @@ export async function PATCH(request: NextRequest) {
     return authResult;
   }
 
+  let body: Record<string, unknown>;
   try {
-    const body = await request.json();
-    const { notificationIds, userAddress, markAllRead } = body;
+    body = await request.json();
+  } catch {
+    return NextResponse.json(
+      { error: 'Invalid JSON body' },
+      { status: 400 }
+    );
+  }
 
-    if (markAllRead && userAddress) {
+  if (!body || typeof body !== 'object' || Array.isArray(body)) {
+    return NextResponse.json(
+      { error: 'Request body must be a JSON object' },
+      { status: 400 }
+    );
+  }
+
+  try {
+    const { notificationIds, userAddress, markAllRead } = body;
+    const userAddressValue = typeof userAddress === 'string' ? userAddress : null;
+
+    if (markAllRead && userAddressValue) {
       // Verify ownership - user can only modify their own notifications
-      if (authResult.user.address.toLowerCase() !== userAddress.toLowerCase()) {
+      if (authResult.user.address.toLowerCase() !== userAddressValue.toLowerCase()) {
         return NextResponse.json(
           { error: 'You can only modify your own notifications' },
           { status: 403 }
@@ -216,7 +278,7 @@ export async function PATCH(request: NextRequest) {
       // Mark all notifications as read for user
       const userResult = await query(
         'SELECT id FROM users WHERE wallet_address = $1',
-        [userAddress.toLowerCase()]
+        [userAddressValue.toLowerCase()]
       );
 
       if (userResult.rows.length === 0) {
@@ -246,6 +308,13 @@ export async function PATCH(request: NextRequest) {
         updated: result.rowCount || 0,
       });
     } else if (notificationIds && Array.isArray(notificationIds)) {
+      if (notificationIds.length > MAX_BULK_NOTIFICATION_IDS) {
+        return NextResponse.json(
+          { error: `Too many notificationIds. Maximum ${MAX_BULK_NOTIFICATION_IDS} allowed.` },
+          { status: 400 }
+        );
+      }
+
       // Verify ownership - notifications must belong to authenticated user
       const userResult = await query(
         'SELECT id FROM users WHERE wallet_address = $1',
@@ -310,13 +379,30 @@ export async function DELETE(request: NextRequest) {
     return authResult;
   }
 
+  let body: Record<string, unknown>;
   try {
-    const body = await request.json();
-    const { notificationIds, userAddress, deleteAll } = body;
+    body = await request.json();
+  } catch {
+    return NextResponse.json(
+      { error: 'Invalid JSON body' },
+      { status: 400 }
+    );
+  }
 
-    if (deleteAll && userAddress) {
+  if (!body || typeof body !== 'object' || Array.isArray(body)) {
+    return NextResponse.json(
+      { error: 'Request body must be a JSON object' },
+      { status: 400 }
+    );
+  }
+
+  try {
+    const { notificationIds, userAddress, deleteAll } = body;
+    const userAddressValue = typeof userAddress === 'string' ? userAddress : null;
+
+    if (deleteAll && userAddressValue) {
       // Verify ownership - user can only delete their own notifications
-      if (authResult.user.address.toLowerCase() !== userAddress.toLowerCase()) {
+      if (authResult.user.address.toLowerCase() !== userAddressValue.toLowerCase()) {
         return NextResponse.json(
           { error: 'You can only delete your own notifications' },
           { status: 403 }
@@ -326,7 +412,7 @@ export async function DELETE(request: NextRequest) {
       // Delete all notifications for user
       const userResult = await query(
         'SELECT id FROM users WHERE wallet_address = $1',
-        [userAddress.toLowerCase()]
+        [userAddressValue.toLowerCase()]
       );
 
       if (userResult.rows.length === 0) {
@@ -354,6 +440,13 @@ export async function DELETE(request: NextRequest) {
         deleted: result.rowCount || 0,
       });
     } else if (notificationIds && Array.isArray(notificationIds)) {
+      if (notificationIds.length > MAX_BULK_NOTIFICATION_IDS) {
+        return NextResponse.json(
+          { error: `Too many notificationIds. Maximum ${MAX_BULK_NOTIFICATION_IDS} allowed.` },
+          { status: 400 }
+        );
+      }
+
       // Verify ownership - notifications must belong to authenticated user
       const userResult = await query(
         'SELECT id FROM users WHERE wallet_address = $1',

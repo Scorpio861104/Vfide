@@ -26,6 +26,7 @@ interface CSPReport {
 // In-memory store for violations (in production, use database)
 const violations: Array<CSPViolation & { timestamp: number; userAgent: string }> = [];
 const MAX_VIOLATIONS = 1000;
+const MAX_CSP_REPORTS_LIMIT = 200;
 
 // Maximum length for string fields to prevent log-flooding
 const MAX_FIELD_LENGTH = 2048;
@@ -91,7 +92,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unsupported content type' }, { status: 415 });
     }
 
-    const body: CSPReport = await request.json();
+    let body: CSPReport;
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json({ error: 'Invalid JSON payload' }, { status: 400 });
+    }
+
     const violation = parseCSPReport(body);
     
     if (!violation) {
@@ -143,10 +150,12 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Not available' }, { status: 404 });
   }
 
-  const limit = parseInt(request.nextUrl.searchParams.get('limit') || '50', 10);
+  const rawLimit = parseInt(request.nextUrl.searchParams.get('limit') || '50', 10);
+
+  const limit = Math.min(Math.max(rawLimit, 0), MAX_CSP_REPORTS_LIMIT);
   
   // Validate parsed number
-  if (isNaN(limit) || limit < 0) {
+  if (isNaN(rawLimit)) {
     return NextResponse.json(
       { error: 'Invalid limit parameter' },
       { status: 400 }

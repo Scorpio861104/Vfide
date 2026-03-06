@@ -17,6 +17,23 @@ export async function GET(request: NextRequest) {
   const rateLimit = await withRateLimit(request, 'api');
   if (rateLimit) return rateLimit;
 
+  const envHealthy = checkEnvironmentVariables();
+  const statusCode = envHealthy ? 200 : 503;
+
+  // Ops-safety hardening: avoid exposing process internals in production.
+  // Keep payload minimal for public liveness checks while preserving rich
+  // diagnostics in non-production environments.
+  if (process.env.NODE_ENV === 'production') {
+    return NextResponse.json(
+      {
+        status: 'ok',
+        timestamp: new Date().toISOString(),
+        version: process.env.npm_package_version || '1.2.0',
+      },
+      { status: statusCode }
+    );
+  }
+
   const healthData = {
     status: 'ok',
     timestamp: new Date().toISOString(),
@@ -29,12 +46,10 @@ export async function GET(request: NextRequest) {
       external: Math.round(process.memoryUsage().external / 1024 / 1024),
     },
     checks: {
-      env: checkEnvironmentVariables(),
+      env: envHealthy,
       nextjs: true, // If this runs, Next.js is working
     }
   };
-
-  const statusCode = healthData.checks.env ? 200 : 503;
 
   return NextResponse.json(healthData, { status: statusCode });
 }

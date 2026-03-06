@@ -43,6 +43,9 @@ interface ILPToken {
 // H-2 Fix: Add ReentrancyGuard for stake/unstake functions
 contract LiquidityIncentives is ReentrancyGuard {
     using SafeERC20 for IERC20;
+
+    uint256 public constant MIN_UNSTAKE_COOLDOWN = 1 minutes;
+    uint256 public constant MAX_UNSTAKE_COOLDOWN = 7 days;
     
     event PoolAdded(address indexed lpToken, string name);
     event PoolUpdated(address indexed lpToken, bool active);
@@ -127,7 +130,8 @@ contract LiquidityIncentives is ReentrancyGuard {
      * @notice Set unstake cooldown
      */
     function setUnstakeCooldown(uint256 cooldown) external onlyDAO {
-        require(cooldown <= 7 days, "LP: cooldown too long");
+        require(cooldown >= MIN_UNSTAKE_COOLDOWN, "LP: cooldown too short");
+        require(cooldown <= MAX_UNSTAKE_COOLDOWN, "LP: cooldown too long");
         unstakeCooldown = cooldown;
     }
     

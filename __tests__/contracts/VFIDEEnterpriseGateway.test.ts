@@ -76,6 +76,41 @@ describe('VFIDEEnterpriseGateway Contract', () => {
   });
 
   describe('Edge Cases', () => {
+    it('should reject zero oracle address', async () => {
+      mockContractWrite.mockRejectedValueOnce(new Error('ENT_Zero'));
+      await expect(
+        mockContractWrite({
+          functionName: 'setOracle',
+          args: ['0x0000000000000000000000000000000000000000' as Address],
+        })
+      ).rejects.toThrow('ENT_Zero');
+    });
+
+    it('should reject zero merchant wallet address', async () => {
+      mockContractWrite.mockRejectedValueOnce(new Error('ENT_Zero'));
+      await expect(
+        mockContractWrite({
+          functionName: 'setMerchantWallet',
+          args: ['0x0000000000000000000000000000000000000000' as Address],
+        })
+      ).rejects.toThrow('ENT_Zero');
+    });
+
+    it('should reject enabled stable settlement with zero router', async () => {
+      mockContractWrite.mockRejectedValueOnce(new Error('ENT_Zero'));
+      await expect(
+        mockContractWrite({
+          functionName: 'configureStableSettlement',
+          args: [
+            '0x0000000000000000000000000000000000000000' as Address,
+            enterprise,
+            true,
+            100,
+          ],
+        })
+      ).rejects.toThrow('ENT_Zero');
+    });
+
     it('should handle invalid email', async () => {
       mockContractWrite.mockRejectedValueOnce(new Error('InvalidEmail'));
       await expect(mockContractWrite({ functionName: 'registerEnterprise', args: ['Company', 'invalid'] })).rejects.toThrow('InvalidEmail');

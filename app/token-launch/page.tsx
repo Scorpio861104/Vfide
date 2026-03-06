@@ -22,7 +22,7 @@ const LOCK_PERIODS = { founding: 180 * 24 * 3600, oath: 90 * 24 * 3600, public: 
 
 export default function TokenLaunchPage() {
   const { address, isConnected } = useAccount();
-  const { showToast } = useToast();
+  const { showToast: _showToast } = useToast();
   const [selectedTier, setSelectedTier] = useState<"founding" | "oath" | "public" | null>(null);
   const [amount, setAmount] = useState("");
   const [paymentMethod, setPaymentMethod] = useState<'usdc' | 'usdt' | 'eth'>('eth');

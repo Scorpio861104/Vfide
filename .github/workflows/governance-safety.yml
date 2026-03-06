@@ -1,0 +1,37 @@
+name: Governance Safety
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'contracts/**'
+      - 'app/control-panel/**'
+      - 'scripts/verify-*.ts'
+      - 'scripts/verify-*.sh'
+      - 'package.json'
+      - 'package-lock.json'
+
+jobs:
+  governance-safety:
+    name: Governance safety verifiers
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci --prefer-offline
+
+      - name: Compile contracts
+        run: npm run -s contract:compile
+
+      - name: Run governance safety checks
+        run: npm run -s contract:verify:governance-safety:local

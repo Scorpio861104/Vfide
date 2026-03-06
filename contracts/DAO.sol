@@ -11,6 +11,7 @@ interface ISeerGuardian_DAO {
 }
 
 error DAO_NotAdmin();
+error DAO_NotTimelock();
 error DAO_Zero();
 error DAO_NotEligible();
 error DAO_UnknownProposal();
@@ -88,6 +89,11 @@ contract DAO is ReentrancyGuard {
         _;
     }
 
+    modifier onlyTimelock() {
+        if (msg.sender != address(timelock)) revert DAO_NotTimelock();
+        _;
+    }
+
     function _checkAdmin() internal view {
         if (msg.sender != admin) revert DAO_NotAdmin();
     }
@@ -98,19 +104,19 @@ contract DAO is ReentrancyGuard {
         emit ModulesSet(_timelock,_seer,_hub,_hooks,address(0)); emit AdminSet(_admin);
     }
 
-    function setModules(address _timelock, address _seer, address _hub, address _hooks) external onlyAdmin {
+    function setModules(address _timelock, address _seer, address _hub, address _hooks) external onlyTimelock {
         require(_timelock!=address(0)&&_seer!=address(0)&&_hub!=address(0),"zero");
         timelock=IDAOTimelock(_timelock); seer=ISeer(_seer); vaultHub=IVaultHub(_hub); hooks=IGovernanceHooks(_hooks);
         emit ModulesSet(_timelock,_seer,_hub,_hooks,address(0));
     }
     
     /// @notice Set the SeerGuardian for mutual DAO/Seer oversight
-    function setGuardian(address _guardian) external onlyAdmin {
+    function setGuardian(address _guardian) external onlyTimelock {
         guardian = ISeerGuardian_DAO(_guardian);
     }
 
-    function setAdmin(address _admin) external onlyAdmin { require(_admin!=address(0),"zero"); admin=_admin; emit AdminSet(_admin); }
-    function setParams(uint64 _period, uint256 _minVotes) external onlyAdmin {
+    function setAdmin(address _admin) external onlyTimelock { require(_admin!=address(0),"zero"); admin=_admin; emit AdminSet(_admin); }
+    function setParams(uint64 _period, uint256 _minVotes) external onlyTimelock {
         // M-21 Fix: Validate parameters before setting
         if(_period<1 hours)_period=1 hours;
         require(_period <= 30 days, "DAO: voting period too long");
@@ -122,7 +128,7 @@ contract DAO is ReentrancyGuard {
     
     /// @notice Set minimum participation requirement (FLOW-2 FIX)
     /// @param _minParticipation Minimum unique voters required for quorum
-    function setMinParticipation(uint256 _minParticipation) external onlyAdmin {
+    function setMinParticipation(uint256 _minParticipation) external onlyTimelock {
         require(_minParticipation >= 1 && _minParticipation <= 100, "DAO: invalid participation");
         minParticipation = _minParticipation;
     }

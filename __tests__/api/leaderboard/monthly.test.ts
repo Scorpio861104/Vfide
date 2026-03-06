@@ -1,5 +1,5 @@
-import { NextRequest } from 'next/server';
-import { GET } from '@/app/api/leaderboard/monthly/route';
+import { NextRequest, NextResponse } from 'next/server';
+import { GET, POST } from '@/app/api/leaderboard/monthly/route';
 
 // Mock the database client
 const mockQuery = jest.fn();
@@ -17,9 +17,14 @@ jest.mock('@/lib/auth/rateLimit', () => ({
   withRateLimit: jest.fn(),
 }));
 
+jest.mock('@/lib/auth/middleware', () => ({
+  requireAuth: jest.fn(),
+}));
+
 describe('/api/leaderboard/monthly', () => {
   const { getClient } = require('@/lib/db');
   const { withRateLimit } = require('@/lib/auth/rateLimit');
+  const { requireAuth } = require('@/lib/auth/middleware');
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -278,6 +283,65 @@ describe('/api/leaderboard/monthly', () => {
       expect(data.userPosition.rank).toBe(50);
       // Should have 3 queries (including user position query)
       expect(mockQuery).toHaveBeenCalledTimes(3);
+      expect(mockRelease).toHaveBeenCalled();
+    });
+  });
+
+  describe('POST', () => {
+    it('should reject unauthenticated requests', async () => {
+      withRateLimit.mockResolvedValue(null);
+      requireAuth.mockResolvedValue(NextResponse.json({ error: 'Unauthorized' }, { status: 401 }));
+
+      const request = new NextRequest('http://localhost:3000/api/leaderboard/monthly', {
+        method: 'POST',
+        body: JSON.stringify({ userAddress: '0x1111111111111111111111111111111111111123' }),
+      });
+
+      const response = await POST(request);
+      expect(response.status).toBe(401);
+    });
+
+    it('should reject when authenticated wallet differs from payload userAddress', async () => {
+      withRateLimit.mockResolvedValue(null);
+      requireAuth.mockResolvedValue({ user: { address: '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' } });
+
+      const request = new NextRequest('http://localhost:3000/api/leaderboard/monthly', {
+        method: 'POST',
+        body: JSON.stringify({ userAddress: '0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb' }),
+      });
+
+      const response = await POST(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(403);
+      expect(data.error).toBe('Forbidden');
+    });
+
+    it('should allow owner-aligned updates', async () => {
+      withRateLimit.mockResolvedValue(null);
+      requireAuth.mockResolvedValue({ user: { address: '0x1111111111111111111111111111111111111123' } });
+
+      mockQuery
+        .mockResolvedValueOnce(undefined)
+        .mockResolvedValueOnce({ rows: [{ id: 1 }] })
+        .mockResolvedValueOnce({ rows: [{ total_xp: '0' }] })
+        .mockResolvedValueOnce(undefined)
+        .mockResolvedValueOnce(undefined)
+        .mockResolvedValueOnce(undefined);
+
+      const request = new NextRequest('http://localhost:3000/api/leaderboard/monthly', {
+        method: 'POST',
+        body: JSON.stringify({
+          userAddress: '0x1111111111111111111111111111111111111123',
+          questsCompleted: 1,
+        }),
+      });
+
+      const response = await POST(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(200);
+      expect(data.success).toBe(true);
       expect(mockRelease).toHaveBeenCalled();
     });
   });

@@ -133,8 +133,18 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
+  let body: Record<string, unknown>;
   try {
-    const body = await request.json();
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+  }
+
+  if (!body || typeof body !== 'object' || Array.isArray(body)) {
+    return NextResponse.json({ error: 'Request body must be a JSON object' }, { status: 400 });
+  }
+
+  try {
     const {
       username,
       display_name,
@@ -146,6 +156,16 @@ export async function POST(request: NextRequest) {
       twitter,
       github,
     } = body;
+
+    const usernameValue = typeof username === 'string' ? username : null;
+    const displayNameValue = typeof display_name === 'string' ? display_name : null;
+    const bioValue = typeof bio === 'string' ? bio : null;
+    const avatarUrlValue = typeof avatar_url === 'string' ? avatar_url : null;
+    const emailValue = typeof email === 'string' ? email : null;
+    const locationValue = typeof location === 'string' ? location : null;
+    const websiteValue = typeof website === 'string' ? website : null;
+    const twitterValue = typeof twitter === 'string' ? twitter : null;
+    const githubValue = typeof github === 'string' ? github : null;
 
     // Use authenticated user's address (not from request body)
     const requestWallet = typeof body.wallet_address === 'string'
@@ -187,15 +207,15 @@ export async function POST(request: NextRequest) {
          RETURNING *`,
         [
           wallet_address.toLowerCase(),
-          username,
-          display_name,
-          bio,
-          avatar_url,
-          email,
-          location,
-          website,
-          twitter,
-          github,
+          usernameValue,
+          displayNameValue,
+          bioValue,
+          avatarUrlValue,
+          emailValue,
+          locationValue,
+          websiteValue,
+          twitterValue,
+          githubValue,
         ]
       );
       user = updateResult.rows[0]!;
@@ -207,15 +227,15 @@ export async function POST(request: NextRequest) {
          RETURNING *`,
         [
           wallet_address.toLowerCase(),
-          username,
-          display_name,
-          bio,
-          avatar_url,
-          email,
-          location,
-          website,
-          twitter,
-          github,
+          usernameValue,
+          displayNameValue,
+          bioValue,
+          avatarUrlValue,
+          emailValue,
+          locationValue,
+          websiteValue,
+          twitterValue,
+          githubValue,
         ]
       );
       user = insertResult.rows[0]!;

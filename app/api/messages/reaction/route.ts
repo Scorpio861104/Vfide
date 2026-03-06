@@ -20,6 +20,29 @@ interface ReactionRequest {
   userAddress: string;
 }
 
+async function ensureConversationParticipant(
+  messageId: string,
+  conversationId: string,
+  userAddress: string
+): Promise<boolean> {
+  const membershipResult = await query(
+    `SELECT m.id
+     FROM messages m
+     JOIN users sender ON m.sender_id = sender.id
+     JOIN users recipient ON m.recipient_id = recipient.id
+     WHERE m.id = $1
+       AND m.conversation_id = $2
+       AND (
+         sender.wallet_address = $3
+         OR recipient.wallet_address = $3
+       )
+     LIMIT 1`,
+    [messageId, conversationId, userAddress.toLowerCase()]
+  );
+
+  return membershipResult.rows.length > 0;
+}
+
 export async function POST(request: NextRequest) {
   // Rate limiting: 30 requests per minute for reactions
   const rateLimitResponse = await withRateLimit(request, 'write');
@@ -31,8 +54,24 @@ export async function POST(request: NextRequest) {
     return authResult;
   }
 
+  let body: ReactionRequest;
   try {
-    const body: ReactionRequest = await request.json();
+    body = await request.json();
+  } catch {
+    return NextResponse.json(
+      { error: 'Invalid JSON body' },
+      { status: 400 }
+    );
+  }
+
+  if (!body || typeof body !== 'object' || Array.isArray(body)) {
+    return NextResponse.json(
+      { error: 'Request body must be a JSON object' },
+      { status: 400 }
+    );
+  }
+
+  try {
     const { messageId, conversationId, reactionType = 'emoji', emoji, imageUrl, imageName, userAddress } = body;
 
     if (!messageId || !conversationId || !userAddress) {
@@ -50,6 +89,14 @@ export async function POST(request: NextRequest) {
     // Verify authenticated user matches userAddress
     if (authResult.user.address.toLowerCase() !== userAddress.toLowerCase()) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+    }
+
+    const isParticipant = await ensureConversationParticipant(messageId, conversationId, userAddress);
+    if (!isParticipant) {
+      return NextResponse.json(
+        { error: 'You can only react to messages in your own conversations' },
+        { status: 403 }
+      );
     }
 
     // Validate reaction based on type
@@ -204,8 +251,24 @@ export async function DELETE(request: NextRequest) {
     return authResult;
   }
 
+  let body: ReactionRequest;
   try {
-    const body: ReactionRequest = await request.json();
+    body = await request.json();
+  } catch {
+    return NextResponse.json(
+      { error: 'Invalid JSON body' },
+      { status: 400 }
+    );
+  }
+
+  if (!body || typeof body !== 'object' || Array.isArray(body)) {
+    return NextResponse.json(
+      { error: 'Request body must be a JSON object' },
+      { status: 400 }
+    );
+  }
+
+  try {
     const { messageId, conversationId, emoji, userAddress } = body;
 
     if (!messageId || !conversationId || !emoji || !userAddress) {
@@ -223,6 +286,14 @@ export async function DELETE(request: NextRequest) {
     // Verify authenticated user matches userAddress
     if (authResult.user.address.toLowerCase() !== userAddress.toLowerCase()) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+    }
+
+    const isParticipant = await ensureConversationParticipant(messageId, conversationId, userAddress);
+    if (!isParticipant) {
+      return NextResponse.json(
+        { error: 'You can only react to messages in your own conversations' },
+        { status: 403 }
+      );
     }
 
     // Remove reaction

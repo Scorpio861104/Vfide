@@ -281,6 +281,9 @@ contract EscrowManager is ReentrancyGuard {
         
         Escrow storage e = escrows[id];
         require(e.state == State.DISPUTED, "not disputed");
+
+        // Keep conflict-of-interest guard consistent with full dispute resolution.
+        require(msg.sender != e.buyer && msg.sender != e.merchant, "ES: conflict of interest");
         
         // C-5: High-value disputes require DAO, normal disputes require arbiter
         if (e.amount > HIGH_VALUE_THRESHOLD) {

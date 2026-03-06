@@ -30,6 +30,9 @@ error TRUST_Bounds();
 error TRUST_AlreadySet();
 error TRUST_NotSet();
 error TRUST_Paused();
+error TRUST_Disabled();
+error TRUST_Limit();
+error TRUST_InvalidState();
 error TRUST_InvalidEndorse();
 error TRUST_EndorseLimit();
 error TRUST_EndorseExists();
@@ -118,6 +121,24 @@ contract Seer {
     mapping(address => mapping(bytes32 => bool)) public hasBadge;
     mapping(address => mapping(bytes32 => uint256)) public badgeExpiry;
 
+    bytes32 private constant BADGE_PIONEER = keccak256("PIONEER");
+    bytes32 private constant BADGE_GENESIS_PRESALE = keccak256("GENESIS_PRESALE");
+    bytes32 private constant BADGE_FOUNDING_MEMBER = keccak256("FOUNDING_MEMBER");
+    bytes32 private constant BADGE_EARLY_TESTER = keccak256("EARLY_TESTER");
+    bytes32 private constant BADGE_ACTIVE_TRADER = keccak256("ACTIVE_TRADER");
+    bytes32 private constant BADGE_GOVERNANCE_VOTER = keccak256("GOVERNANCE_VOTER");
+    bytes32 private constant BADGE_POWER_USER = keccak256("POWER_USER");
+    bytes32 private constant BADGE_TRUSTED_ENDORSER = keccak256("TRUSTED_ENDORSER");
+    bytes32 private constant BADGE_COMMUNITY_BUILDER = keccak256("COMMUNITY_BUILDER");
+    bytes32 private constant BADGE_VERIFIED_MERCHANT = keccak256("VERIFIED_MERCHANT");
+    bytes32 private constant BADGE_ELITE_MERCHANT = keccak256("ELITE_MERCHANT");
+    bytes32 private constant BADGE_ELITE_ACHIEVER = keccak256("ELITE_ACHIEVER");
+    bytes32 private constant BADGE_FRAUD_HUNTER = keccak256("FRAUD_HUNTER");
+    bytes32 private constant BADGE_GUARDIAN = keccak256("GUARDIAN");
+    bytes32 private constant BADGE_CLEAN_RECORD = keccak256("CLEAN_RECORD");
+    bytes32 private constant BADGE_CONTRIBUTOR = keccak256("CONTRIBUTOR");
+    bytes32 private constant BADGE_EDUCATOR = keccak256("EDUCATOR");
+
     // ═══════════════════════════════════════════════════════════════════════
     // ENDORSEMENTS - Social proof with decay/limits
     // ═══════════════════════════════════════════════════════════════════════
@@ -163,7 +184,6 @@ contract Seer {
     // C-2 FIX: Rate limiting for operators to prevent score inflation attacks
     mapping(address => mapping(address => uint64)) public lastOperatorRewardTime;
     mapping(address => mapping(address => uint16)) public dailyOperatorRewardTotal;
-    mapping(address => uint64) public operatorRewardDayStart;
     uint16 public maxDailyOperatorReward = 200; // Max 2% score change per day per operator
     uint16 public maxSingleReward = 100; // Max 1% score change per call
     
@@ -282,7 +302,7 @@ contract Seer {
         address oldDAO = dao;
         dao = newDAO;
         emit DAOSet(oldDAO, newDAO);
-        _logSystem("dao_transferred");
+        _logSystem("dao_xfer");
     }
     
     /**
@@ -294,7 +314,7 @@ contract Seer {
         if (operator == address(0)) revert TRUST_Zero();
         operators[operator] = authorized;
         emit OperatorSet(operator, authorized);
-        _logSystem(authorized ? "operator_added" : "operator_removed");
+        _logSystem(authorized ? "op_add" : "op_rm");
     }
     
     /**
@@ -304,7 +324,7 @@ contract Seer {
     function setPaused(bool _paused) external onlyDAO {
         paused = _paused;
         emit Paused(_paused);
-        _logSystem(_paused ? "seer_paused" : "seer_unpaused");
+        _logSystem(_paused ? "pause_on" : "pause_off");
     }
     
     /**
@@ -314,28 +334,28 @@ contract Seer {
      * @param perMonth Score points lost per month toward neutral
      */
     function setDecayConfig(bool enabled, uint64 startDays, uint16 perMonth) external onlyDAO {
-        require(startDays >= 30, "SEER: decay start too short");
-        require(perMonth <= 500, "SEER: decay too aggressive");
+        if (startDays < 30) revert TRUST_Bounds();
+        if (perMonth > 500) revert TRUST_Bounds();
         decayEnabled = enabled;
         decayStartDays = startDays;
         decayPerMonth = perMonth;
-        _logSystem("decay_config_updated");
+        _logSystem("decay_cfg");
     }
 
     function setThresholds(uint16 low, uint16 high, uint16 minGov, uint16 minMerch) external onlyDAO {
         if (low > high) revert TRUST_Bounds();
         if (high > MAX_SCORE) revert TRUST_Bounds();
         // M-1 FIX: Add minimum value constraints to prevent threshold manipulation
-        require(low >= 1000, "SEER: low threshold too low"); // At least 10%
-        require(high <= 9500, "SEER: high threshold too high"); // At most 95%
-        require(minGov >= 3000, "SEER: governance threshold too low"); // At least 30%
-        require(minMerch >= 3000, "SEER: merchant threshold too low"); // At least 30%
+        if (low < 1000) revert TRUST_Bounds(); // At least 10%
+        if (high > 9500) revert TRUST_Bounds(); // At most 95%
+        if (minGov < 3000) revert TRUST_Bounds(); // At least 30%
+        if (minMerch < 3000) revert TRUST_Bounds(); // At least 30%
         lowTrustThreshold  = low;
         highTrustThreshold = high;
         minForGovernance   = minGov;
         minForMerchant     = minMerch;
         emit ThresholdsSet(low, high, minGov, minMerch);
-        _logSystem("seer_thresholds_set");
+        _logSystem("thr_set");
     }
     
     // ═══════════════════════════════════════════════════════════════════════
@@ -349,9 +369,9 @@ contract Seer {
      * @param weight Weight of this source (0-100)
      */
     function addScoreSource(address source, string calldata name, uint8 weight) external onlyDAO {
-        require(source != address(0), "SEER: zero source");
-        require(weight <= 100, "SEER: weight > 100");
-        require(scoreSourceIndex[source] == 0, "SEER: source exists");
+        if (source == address(0)) revert TRUST_Zero();
+        if (weight > 100) revert TRUST_Bounds();
+        if (scoreSourceIndex[source] != 0) revert TRUST_AlreadySet();
         
         scoreSources.push(ScoreSourceInfo({
             source: source,
@@ -362,7 +382,7 @@ contract Seer {
         scoreSourceIndex[source] = scoreSources.length; // 1-indexed
         
         emit ScoreSourceAdded(source, name, weight);
-        _logSystem("score_source_added");
+        _logSystem("src_add");
     }
     
     /**
@@ -370,13 +390,13 @@ contract Seer {
      */
     function removeScoreSource(address source) external onlyDAO {
         uint256 idx = scoreSourceIndex[source];
-        require(idx > 0, "SEER: source not found");
+        if (idx == 0) revert TRUST_NotSet();
         
         scoreSources[idx - 1].active = false;
         scoreSourceIndex[source] = 0;
         
         emit ScoreSourceRemoved(source);
-        _logSystem("score_source_removed");
+        _logSystem("src_rm");
     }
     
     /**
@@ -385,11 +405,11 @@ contract Seer {
      * @param onChainWeight Weight for on-chain sources (0-100)
      */
     function setDecentralizationWeights(uint8 daoWeight, uint8 onChainWeight) external onlyDAO {
-        require(daoWeight + onChainWeight == 100, "SEER: weights must sum to 100");
+        if (daoWeight + onChainWeight != 100) revert TRUST_Bounds();
         daoScoreWeight = daoWeight;
         onChainScoreWeight = onChainWeight;
         emit DecentralizationUpdated(daoWeight, onChainWeight);
-        _logSystem("decentralization_updated");
+        _logSystem("wgt_set");
     }
     
     /**
@@ -510,67 +530,67 @@ contract Seer {
         // For gas efficiency, we only check badges that contribute to score
         
         // Pioneer badges (permanent)
-        if (_checkActiveBadge(subject, keccak256("PIONEER"))) {
+        if (_checkActiveBadge(subject, BADGE_PIONEER)) {
             bonus += 30;
         }
-        if (_checkActiveBadge(subject, keccak256("GENESIS_PRESALE"))) {
+        if (_checkActiveBadge(subject, BADGE_GENESIS_PRESALE)) {
             bonus += 40;
         }
-        if (_checkActiveBadge(subject, keccak256("FOUNDING_MEMBER"))) {
+        if (_checkActiveBadge(subject, BADGE_FOUNDING_MEMBER)) {
             bonus += 50;
         }
-        if (_checkActiveBadge(subject, keccak256("EARLY_TESTER"))) {
+        if (_checkActiveBadge(subject, BADGE_EARLY_TESTER)) {
             bonus += 25;
         }
         
         // Activity badges (renewable)
-        if (_checkActiveBadge(subject, keccak256("ACTIVE_TRADER"))) {
+        if (_checkActiveBadge(subject, BADGE_ACTIVE_TRADER)) {
             bonus += 20;
         }
-        if (_checkActiveBadge(subject, keccak256("GOVERNANCE_VOTER"))) {
+        if (_checkActiveBadge(subject, BADGE_GOVERNANCE_VOTER)) {
             bonus += 25;
         }
-        if (_checkActiveBadge(subject, keccak256("POWER_USER"))) {
+        if (_checkActiveBadge(subject, BADGE_POWER_USER)) {
             bonus += 40;
         }
         
         // Trust badges (permanent/renewable)
-        if (_checkActiveBadge(subject, keccak256("TRUSTED_ENDORSER"))) {
+        if (_checkActiveBadge(subject, BADGE_TRUSTED_ENDORSER)) {
             bonus += 30;
         }
-        if (_checkActiveBadge(subject, keccak256("COMMUNITY_BUILDER"))) {
+        if (_checkActiveBadge(subject, BADGE_COMMUNITY_BUILDER)) {
             bonus += 35;
         }
         
         // Merchant badges (renewable)
-        if (_checkActiveBadge(subject, keccak256("VERIFIED_MERCHANT"))) {
+        if (_checkActiveBadge(subject, BADGE_VERIFIED_MERCHANT)) {
             bonus += 40;
         }
-        if (_checkActiveBadge(subject, keccak256("ELITE_MERCHANT"))) {
+        if (_checkActiveBadge(subject, BADGE_ELITE_MERCHANT)) {
             bonus += 60;
         }
         
         // Achievement badges (permanent)
-        if (_checkActiveBadge(subject, keccak256("ELITE_ACHIEVER"))) {
+        if (_checkActiveBadge(subject, BADGE_ELITE_ACHIEVER)) {
             bonus += 50;
         }
-        if (_checkActiveBadge(subject, keccak256("FRAUD_HUNTER"))) {
+        if (_checkActiveBadge(subject, BADGE_FRAUD_HUNTER)) {
             bonus += 50;
         }
         
         // Security badges
-        if (_checkActiveBadge(subject, keccak256("GUARDIAN"))) {
+        if (_checkActiveBadge(subject, BADGE_GUARDIAN)) {
             bonus += 40;
         }
-        if (_checkActiveBadge(subject, keccak256("CLEAN_RECORD"))) {
+        if (_checkActiveBadge(subject, BADGE_CLEAN_RECORD)) {
             bonus += 20;
         }
         
         // Contribution badges
-        if (_checkActiveBadge(subject, keccak256("CONTRIBUTOR"))) {
+        if (_checkActiveBadge(subject, BADGE_CONTRIBUTOR)) {
             bonus += 40;
         }
-        if (_checkActiveBadge(subject, keccak256("EDUCATOR"))) {
+        if (_checkActiveBadge(subject, BADGE_EDUCATOR)) {
             bonus += 30;
         }
         
@@ -663,25 +683,23 @@ contract Seer {
         uint16 old = getScore(subject);
         _score[subject] = newScore;
         emit ScoreSet(subject, old, newScore, reason);
-        _logEv(subject, "seer_score_set", newScore, reason);
+        _logEv(subject, "scr_set", newScore, reason);
     }
 
     /// Light-weight behavior hooks (can be called by authorized modules).
     function reward(address subject, uint16 delta, string calldata reason) external onlyOperator onlyNotPaused {
         // C-2 FIX: Rate limit operator rewards to prevent score inflation
-        require(delta <= maxSingleReward, "SEER: reward exceeds max single");
+        if (delta > maxSingleReward) revert TRUST_Bounds();
         
-        // Reset daily counter if new day
-        if (block.timestamp >= operatorRewardDayStart[msg.sender] + 1 days) {
-            operatorRewardDayStart[msg.sender] = uint64(block.timestamp);
+        // Reset subject-specific counters if entering a new 24h window
+        uint64 windowStart = lastOperatorRewardTime[msg.sender][subject];
+        if (windowStart == 0 || block.timestamp >= windowStart + 1 days) {
+            lastOperatorRewardTime[msg.sender][subject] = uint64(block.timestamp);
             dailyOperatorRewardTotal[msg.sender][subject] = 0;
         }
         
         // Check daily limit per subject
-        require(
-            dailyOperatorRewardTotal[msg.sender][subject] + delta <= maxDailyOperatorReward,
-            "SEER: daily reward limit exceeded"
-        );
+        if (dailyOperatorRewardTotal[msg.sender][subject] + delta > maxDailyOperatorReward) revert TRUST_Limit();
         
         dailyOperatorRewardTotal[msg.sender][subject] += delta;
         _delta(subject, int256(uint256(delta)), reason);
@@ -689,17 +707,17 @@ contract Seer {
 
     function punish(address subject, uint16 delta, string calldata reason) external onlyOperator onlyNotPaused {
         // C-2 FIX: Rate limit punishments too
-        require(delta <= maxSingleReward, "SEER: punish exceeds max single");
+        if (delta > maxSingleReward) revert TRUST_Bounds();
         _delta(subject, -int256(uint256(delta)), reason);
     }
     
     /// @notice DAO can set operator rate limits
     function setOperatorLimits(uint16 _maxSingle, uint16 _maxDaily) external onlyDAO {
-        require(_maxSingle <= 500, "SEER: max single too high"); // Max 5% per call
-        require(_maxDaily <= 1000, "SEER: max daily too high"); // Max 10% per day
+        if (_maxSingle > 500) revert TRUST_Bounds(); // Max 5% per call
+        if (_maxDaily > 1000) revert TRUST_Bounds(); // Max 10% per day
         maxSingleReward = _maxSingle;
         maxDailyOperatorReward = _maxDaily;
-        _logSystem("operator_limits_set");
+        _logSystem("op_lim");
     }
 
     function _delta(address subject, int256 d, string calldata reason) internal {
@@ -719,7 +737,7 @@ contract Seer {
         lastActivity[subject] = uint64(block.timestamp);
         
         emit ScoreSet(subject, cur, newScore, reason);
-        _logEv(subject, "seer_score_delta", uint256(int256(d < 0 ? -d : d)), reason);
+        _logEv(subject, "scr_dlt", uint256(int256(d < 0 ? -d : d)), reason);
         
         // CASCADE: Notify SeerAutonomous for automatic enforcement
         if (seerAutonomous != address(0)) {
@@ -763,13 +781,15 @@ contract Seer {
     /// @param active True to grant, false to revoke
     /// @param expiry Expiration timestamp (0 = permanent)
     function setBadge(address subject, bytes32 badge, bool active, uint256 expiry) external onlyDAO {
+        if (subject == address(0)) revert TRUST_Zero();
+        if (active && expiry > 0 && expiry <= block.timestamp) revert TRUST_Bounds();
         hasBadge[subject][badge] = active;
         if (active && expiry > 0) {
             badgeExpiry[subject][badge] = expiry;
         } else if (!active) {
             badgeExpiry[subject][badge] = 0;
         }
-        _logEv(subject, active ? "badge_granted" : "badge_revoked", uint256(badge), "");
+        _logEv(subject, active ? "bdg_on" : "bdg_off", uint256(badge), "");
     }
     
     /// @notice Check if a badge is valid (not expired)
@@ -786,10 +806,12 @@ contract Seer {
     /// @param expiry Expiration timestamp (0 = permanent)
     function setBadgeBatch(address[] calldata subjects, bytes32 badge, bool active, uint256 expiry) external onlyDAO {
         uint256 len = subjects.length;
-        require(len > 0 && len <= 100, "SEER: invalid batch size");
+        if (len == 0 || len > 100) revert TRUST_Bounds();
+        if (active && expiry > 0 && expiry <= block.timestamp) revert TRUST_Bounds();
         
         for (uint256 i = 0; i < len; i++) {
             address subject = subjects[i];
+            if (subject == address(0)) revert TRUST_Zero();
             hasBadge[subject][badge] = active;
             if (active && expiry > 0) {
                 badgeExpiry[subject][badge] = expiry;
@@ -797,7 +819,7 @@ contract Seer {
                 badgeExpiry[subject][badge] = 0;
             }
         }
-        _logEv(address(this), active ? "badge_batch_granted" : "badge_batch_revoked", len, "");
+        _logEv(address(this), active ? "bdg_b_on" : "bdg_b_off", len, "");
     }
 
     // ═══════════════════════════════════════════════════════════════════════
@@ -814,14 +836,14 @@ contract Seer {
         uint64 cooldown,
         uint16 minScore
     ) external onlyDAO {
-        require(baseValue > 0 && baseValue <= 200, "SEER: base out of range");
-        require(maxPerEndorser >= baseValue && maxPerEndorser <= 300, "SEER: max per endorser");
-        require(bonusCap >= baseValue, "SEER: bonus cap low");
-        require(maxPerSubject > 0 && maxPerSubject <= 50, "SEER: subject cap");
-        require(maxGiven > 0 && maxGiven <= 200, "SEER: given cap");
-        require(validity >= 7 days && validity <= 365 days, "SEER: validity range");
-        require(cooldown >= 10 minutes && cooldown <= 7 days, "SEER: cooldown range");
-        require(minScore >= MIN_SCORE && minScore <= MAX_SCORE, "SEER: min score range");
+        if (baseValue == 0 || baseValue > 200) revert TRUST_Bounds();
+        if (maxPerEndorser < baseValue || maxPerEndorser > 300) revert TRUST_Bounds();
+        if (bonusCap < baseValue) revert TRUST_Bounds();
+        if (maxPerSubject == 0 || maxPerSubject > 50) revert TRUST_Bounds();
+        if (maxGiven == 0 || maxGiven > 200) revert TRUST_Bounds();
+        if (validity < 7 days || validity > 365 days) revert TRUST_Bounds();
+        if (cooldown < 10 minutes || cooldown > 7 days) revert TRUST_Bounds();
+        if (minScore < MIN_SCORE || minScore > MAX_SCORE) revert TRUST_Bounds();
 
         endorsementBaseValue = baseValue;
         endorsementMaxPerEndorser = maxPerEndorser;
@@ -831,7 +853,7 @@ contract Seer {
         endorsementValidity = validity;
         endorsementCooldown = cooldown;
         minScoreToEndorse = minScore;
-        _logSystem("endorsement_policy_set");
+        _logSystem("end_pol");
     }
 
     function endorse(address subject, string calldata reason) external onlyNotPaused {
@@ -840,7 +862,7 @@ contract Seer {
 
         // Rate limit endorsers
         if (endorsementCooldown > 0) {
-            require(block.timestamp >= lastEndorseTime[msg.sender] + endorsementCooldown, "SEER: endorse cooldown");
+            if (block.timestamp < lastEndorseTime[msg.sender] + endorsementCooldown) revert TRUST_Limit();
         }
 
         uint16 endorserScore = getScore(msg.sender);
@@ -857,11 +879,11 @@ contract Seer {
 
         uint16 weight = endorsementBaseValue;
         if (endorserScore >= highTrustThreshold) weight += 10;
-        if (_checkActiveBadge(msg.sender, keccak256("TRUSTED_ENDORSER"))) weight += 10;
+        if (_checkActiveBadge(msg.sender, BADGE_TRUSTED_ENDORSER)) weight += 10;
         if (weight > endorsementMaxPerEndorser) weight = endorsementMaxPerEndorser;
 
         uint256 currentBonus = _calculateEndorsementBonus(subject);
-        require(currentBonus + weight <= endorsementBonusCap, "SEER: endorsement cap");
+        if (currentBonus + weight > endorsementBonusCap) revert TRUST_EndorseLimit();
 
         uint64 expiry = uint64(block.timestamp + endorsementValidity);
 
@@ -877,7 +899,7 @@ contract Seer {
         lastActivity[subject] = uint64(block.timestamp);
 
         emit UserEndorsed(msg.sender, subject, weight, expiry, reason);
-        _logEv(subject, "endorsement", weight, reason);
+        _logEv(subject, "end", weight, reason);
     }
 
     function pruneEndorsements(address subject) external onlyNotPaused {
@@ -906,45 +928,45 @@ contract Seer {
     // ═══════════════════════════════════════════════════════════════════════
 
     function setMentorConfig(uint16 minScore, uint16 maxMentees) external onlyDAO {
-        require(minScore >= 5000 && minScore <= MAX_SCORE, "SEER: mentor min out of range");
-        require(maxMentees >= 1 && maxMentees <= 200, "SEER: mentor max out of range");
+        if (minScore < 5000 || minScore > MAX_SCORE) revert TRUST_Bounds();
+        if (maxMentees < 1 || maxMentees > 200) revert TRUST_Bounds();
         minScoreToMentor = minScore;
         maxMenteesPerMentor = maxMentees;
         emit MentorConfigUpdated(minScore, maxMentees);
     }
 
     function becomeMentor() external onlyNotPaused {
-        require(!mentors[msg.sender], "SEER: already mentor");
-        require(getScore(msg.sender) >= minScoreToMentor, "SEER: score too low");
+        if (mentors[msg.sender]) revert TRUST_AlreadySet();
+        if (getScore(msg.sender) < minScoreToMentor) revert TRUST_Limit();
         mentors[msg.sender] = true;
         emit MentorRegistered(msg.sender);
-        _logSystem("mentor_registered");
+        _logSystem("mnt_add");
     }
 
     function revokeMentor(address mentor) external {
         if (msg.sender != mentor) _checkDAO();
         mentors[mentor] = false;
         emit MentorRevoked(mentor);
-        _logSystem("mentor_revoked");
+        _logSystem("mnt_rm");
     }
 
     function sponsorMentee(address mentee) external onlyNotPaused {
-        require(mentors[msg.sender], "SEER: not mentor");
-        require(mentee != address(0) && mentee != msg.sender, "SEER: invalid mentee");
-        require(mentorOf[mentee] == address(0), "SEER: mentee has mentor");
-        require(menteesOf[msg.sender].length < maxMenteesPerMentor, "SEER: max mentees");
-        require(getScore(msg.sender) >= minScoreToMentor, "SEER: mentor score too low");
+        if (!mentors[msg.sender]) revert TRUST_InvalidState();
+        if (mentee == address(0) || mentee == msg.sender) revert TRUST_InvalidEndorse();
+        if (mentorOf[mentee] != address(0)) revert TRUST_AlreadySet();
+        if (menteesOf[msg.sender].length >= maxMenteesPerMentor) revert TRUST_Limit();
+        if (getScore(msg.sender) < minScoreToMentor) revert TRUST_Limit();
 
         mentorOf[mentee] = msg.sender;
         menteesOf[msg.sender].push(mentee);
 
         emit MenteeSponsored(msg.sender, mentee);
-        _logEv(mentee, "mentee_sponsored", 0, "");
+        _logEv(mentee, "men_add", 0, "");
     }
 
     function removeMentee(address mentee) external {
         address mentor = mentorOf[mentee];
-        require(mentor != address(0), "SEER: no mentor");
+        if (mentor == address(0)) revert TRUST_NotSet();
         if (msg.sender != mentor) _checkDAO();
         _removeMentee(mentor, mentee);
     }
@@ -961,83 +983,25 @@ contract Seer {
         }
         mentorOf[mentee] = address(0);
         emit MenteeRemoved(mentor, mentee);
-        _logEv(mentee, "mentee_removed", 0, "");
+        _logEv(mentee, "men_rm", 0, "");
     }
 
     function getMentees(address mentor) external view returns (address[] memory) {
         return menteesOf[mentor];
     }
 
-    function getMentorInfo(address subject) external view returns (
-        bool isMentorUser,
-        address mentor,
-        uint16 menteeCount,
-        bool hasMentor,
-        bool canBecome,
-        uint16 minScore,
-        uint16 currentScore
-    ) {
-        currentScore = getScore(subject);
-        minScore = minScoreToMentor;
-        isMentorUser = mentors[subject];
-        mentor = mentorOf[subject];
-        hasMentor = mentor != address(0);
-        menteeCount = uint16(menteesOf[subject].length);
-        canBecome = !isMentorUser && currentScore >= minScoreToMentor;
+    function getStoredScore(address subject) external view returns (uint16) {
+        return _score[subject];
     }
 
-    /**
-     * @notice Return active endorsements for a subject
-     * @dev Filters out expired or zero-weight endorsements to keep UI simple
-     */
-    function getActiveEndorsements(address subject) external view returns (
-        address[] memory endorsers,
-        uint16[] memory weights,
-        uint64[] memory expiries,
-        uint64[] memory timestamps
-    ) {
-        address[] storage stored = endorsersOf[subject];
-        uint256 len = stored.length;
-        uint256 activeCount;
-
-        // First pass: count active endorsements
-        for (uint256 i = 0; i < len; i++) {
-            Endorsement storage e = endorsements[subject][stored[i]];
-            if (e.expiry > block.timestamp && e.weight > 0) {
-                activeCount++;
-            }
-        }
-
-        endorsers = new address[](activeCount);
-        weights = new uint16[](activeCount);
-        expiries = new uint64[](activeCount);
-        timestamps = new uint64[](activeCount);
-
-        uint256 idx;
-        for (uint256 i = 0; i < len; i++) {
-            Endorsement storage e = endorsements[subject][stored[i]];
-            if (e.expiry > block.timestamp && e.weight > 0) {
-                endorsers[idx] = stored[i];
-                weights[idx] = e.weight;
-                expiries[idx] = e.expiry;
-                timestamps[idx] = e.timestamp;
-                idx++;
-            }
-        }
+    function getEndorserCount(address subject) external view returns (uint256) {
+        return endorsersOf[subject].length;
     }
 
-    /**
-     * @notice Batch fetch scores for a list of addresses (returns NEUTRAL for unset)
-     */
-    function getScores(address[] calldata subjects) external view returns (uint16[] memory scores) {
-        uint256 len = subjects.length;
-        scores = new uint16[](len);
-        for (uint256 i = 0; i < len; i++) {
-            uint16 s = _score[subjects[i]];
-            scores[i] = s == 0 ? NEUTRAL : s;
-        }
+    function getEndorserAt(address subject, uint256 index) external view returns (address) {
+        return endorsersOf[subject][index];
     }
-    
+
     // ═══════════════════════════════════════════════════════════════════════
     //                         USABILITY IMPROVEMENTS
     // ═══════════════════════════════════════════════════════════════════════
@@ -1076,8 +1040,8 @@ contract Seer {
      * @dev DAO will review and can adjust score if warranted
      */
     function requestScoreReview(string calldata reason) external {
-        require(bytes(reason).length > 0 && bytes(reason).length <= 500, "SEER: invalid reason length");
-        require(scoreDisputes[msg.sender].timestamp == 0 || scoreDisputes[msg.sender].resolved, "SEER: dispute pending");
+        if (bytes(reason).length == 0 || bytes(reason).length > 500) revert TRUST_Bounds();
+        if (!(scoreDisputes[msg.sender].timestamp == 0 || scoreDisputes[msg.sender].resolved)) revert TRUST_AlreadySet();
         
         scoreDisputes[msg.sender] = ScoreDispute({
             requester: msg.sender,
@@ -1090,7 +1054,7 @@ contract Seer {
         pendingDisputeCount++;
         
         emit ScoreDisputeRequested(msg.sender, reason);
-        _logEv(msg.sender, "score_dispute_requested", 0, reason);
+        _logEv(msg.sender, "disp_req", 0, reason);
     }
     
     /**
@@ -1101,8 +1065,8 @@ contract Seer {
      */
     function resolveScoreDispute(address subject, bool approved, int16 adjustment) external onlyDAO {
         ScoreDispute storage dispute = scoreDisputes[subject];
-        require(dispute.timestamp > 0, "SEER: no dispute found");
-        require(!dispute.resolved, "SEER: already resolved");
+        if (dispute.timestamp == 0) revert TRUST_NotSet();
+        if (dispute.resolved) revert TRUST_AlreadySet();
         
         dispute.resolved = true;
         dispute.approved = approved;
@@ -1114,7 +1078,7 @@ contract Seer {
             if (next < int256(uint256(MIN_SCORE))) next = int256(uint256(MIN_SCORE));
             if (next > int256(uint256(MAX_SCORE))) next = int256(uint256(MAX_SCORE));
             _score[subject] = uint16(uint256(next));
-            emit ScoreSet(subject, cur, _score[subject], "dispute_resolved");
+            emit ScoreSet(subject, cur, _score[subject], "disp_ok");
         }
         
         if (pendingDisputeCount > 0) {
@@ -1122,14 +1086,14 @@ contract Seer {
         }
 
         emit ScoreDisputeResolved(subject, approved, adjustment);
-        _logEv(subject, "score_dispute_resolved", approved ? 1 : 0, "");
+        _logEv(subject, "disp_res", approved ? 1 : 0, "");
     }
 
     // ───────────────── Appeals (general-purpose)
     function fileAppeal(string calldata reason) external {
-        require(bytes(reason).length > 0 && bytes(reason).length <= 500, "SEER: invalid reason length");
+        if (bytes(reason).length == 0 || bytes(reason).length > 500) revert TRUST_Bounds();
         Appeal storage existing = appeals[msg.sender];
-        require(existing.timestamp == 0 || existing.resolved, "SEER: appeal pending");
+        if (!(existing.timestamp == 0 || existing.resolved)) revert TRUST_AlreadySet();
 
         appeals[msg.sender] = Appeal({
             requester: msg.sender,
@@ -1142,13 +1106,13 @@ contract Seer {
 
         pendingAppealCount++;
         emit AppealFiled(msg.sender, reason);
-        _logEv(msg.sender, "appeal_filed", 0, reason);
+        _logEv(msg.sender, "apl_req", 0, reason);
     }
 
     function resolveAppeal(address subject, bool approved, string calldata resolution) external onlyDAO {
         Appeal storage appeal = appeals[subject];
-        require(appeal.timestamp > 0, "SEER: no appeal");
-        require(!appeal.resolved, "SEER: appeal resolved");
+        if (appeal.timestamp == 0) revert TRUST_NotSet();
+        if (appeal.resolved) revert TRUST_AlreadySet();
 
         appeal.resolved = true;
         appeal.approved = approved;
@@ -1159,7 +1123,7 @@ contract Seer {
         }
 
         emit AppealResolved(subject, approved, resolution);
-        _logEv(subject, "appeal_resolved", 0, resolution);
+        _logEv(subject, "apl_res", 0, resolution);
     }
     
     /**
@@ -1189,52 +1153,6 @@ contract Seer {
         daoWeight = daoScoreWeight;
         onChainWeight = onChainScoreWeight;
         hasVault = address(vaultHub) != address(0) && vaultHub.vaultOf(subject) != address(0);
-    }
-    
-    /**
-     * @notice Batch query scores for multiple users (gas efficient for UIs)
-     * @param subjects Array of user addresses
-     * @return scores Array of corresponding scores
-     */
-    function getScoresBatch(address[] calldata subjects) external view returns (uint16[] memory scores) {
-        uint256 len = subjects.length;
-        require(len > 0 && len <= 100, "SEER: invalid batch size");
-        
-        scores = new uint16[](len);
-        for (uint256 i = 0; i < len; i++) {
-            scores[i] = getScore(subjects[i]);
-        }
-    }
-    
-    /**
-     * @notice Get trust level classification
-     * @param subject The user to check
-     * @return level Trust level: 0=Low, 1=Medium, 2=High
-     * @return levelName Human-readable level name
-     * @return canVote Whether user can participate in governance
-     * @return canBeMerchant Whether user can be a merchant
-     */
-    function getTrustLevel(address subject) external view returns (
-        uint8 level,
-        string memory levelName,
-        bool canVote,
-        bool canBeMerchant
-    ) {
-        uint16 score = getScore(subject);
-        
-        if (score <= lowTrustThreshold) {
-            level = 0;
-            levelName = "Low Trust";
-        } else if (score >= highTrustThreshold) {
-            level = 2;
-            levelName = "High Trust";
-        } else {
-            level = 1;
-            levelName = "Medium Trust";
-        }
-        
-        canVote = score >= minForGovernance;
-        canBeMerchant = score >= minForMerchant;
     }
     
     // ═══════════════════════════════════════════════════════════════════════
@@ -1299,14 +1217,14 @@ contract Seer {
      * @param subject The user to apply decay to
      */
     function applyDecay(address subject) external onlyNotPaused {
-        require(decayEnabled, "SEER: decay disabled");
+        if (!decayEnabled) revert TRUST_Disabled();
         
         uint64 lastAct = lastActivity[subject];
-        require(lastAct > 0, "SEER: no activity to decay");
+        if (lastAct == 0) revert TRUST_NotSet();
         
         uint64 elapsed = uint64(block.timestamp) - lastAct;
         uint64 daysInactive = elapsed / 1 days;
-        require(daysInactive >= decayStartDays, "SEER: not yet decayable");
+        if (daysInactive < decayStartDays) revert TRUST_InvalidState();
         
         (uint16 adjustedScore, , uint16 decayAmount) = getDecayAdjustedScore(subject);
         
@@ -1316,7 +1234,7 @@ contract Seer {
             lastActivity[subject] = uint64(block.timestamp);  // Reset decay timer
             
             emit DecayApplied(subject, oldScore, adjustedScore, daysInactive);
-            _logEv(subject, "score_decay_applied", decayAmount, "inactivity");
+            _logEv(subject, "decay", decayAmount, "ina");
         }
     }
     
@@ -1325,8 +1243,8 @@ contract Seer {
      * @param subjects Array of users to apply decay to
      */
     function applyDecayBatch(address[] calldata subjects) external onlyNotPaused {
-        require(decayEnabled, "SEER: decay disabled");
-        require(subjects.length > 0 && subjects.length <= 50, "SEER: invalid batch");
+        if (!decayEnabled) revert TRUST_Disabled();
+        if (subjects.length == 0 || subjects.length > 50) revert TRUST_Bounds();
         
         for (uint256 i = 0; i < subjects.length; i++) {
             address subject = subjects[i];
@@ -1452,7 +1370,7 @@ contract ProofScoreBurnRouterPlus {
     }
 
     function setModules(address _seer, address _treasury) external onlyDAO {
-        if (_seer == address(0)) revert TRUST_Zero();
+        if (_seer == address(0) || _treasury == address(0)) revert TRUST_Zero();
         seer = Seer(_seer);
         treasury = _treasury;
         emit SeerSet(_seer);
@@ -1466,7 +1384,12 @@ contract ProofScoreBurnRouterPlus {
         uint16 _maxTotalBps,
         address _treasury
     ) external onlyDAO {
-        if (_maxTotalBps > 4000) revert TRUST_Bounds(); // hard ceiling 40% for safety
+        if (_treasury == address(0)) revert TRUST_Zero();
+        if (_maxTotalBps == 0 || _maxTotalBps > 4000) revert TRUST_Bounds(); // hard ceiling 40% for safety
+        if (_baseBurnBps > _maxTotalBps || _baseRewardBps > _maxTotalBps) revert TRUST_Bounds();
+        if (uint256(_baseBurnBps) + _baseRewardBps > _maxTotalBps) revert TRUST_Bounds();
+        if (uint256(_baseBurnBps) + _baseRewardBps + _highBoostBps > _maxTotalBps) revert TRUST_Bounds();
+        if (uint256(_baseBurnBps) + _baseRewardBps + _lowPenaltyBps > _maxTotalBps) revert TRUST_Bounds();
         baseBurnBps   = _baseBurnBps;
         baseRewardBps = _baseRewardBps;
         highBoostBps  = _highBoostBps;
