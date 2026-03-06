@@ -34,6 +34,13 @@ export async function DELETE(request: NextRequest) {
     return authResult;
   }
 
+  const authenticatedAddress = typeof authResult.user?.address === 'string'
+    ? authResult.user.address.trim().toLowerCase()
+    : '';
+  if (!authenticatedAddress || !isAddress(authenticatedAddress)) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   let body: Record<string, unknown>;
   try {
     body = await request.json() as unknown as Record<string, unknown>;
@@ -59,13 +66,15 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'messageId or conversationId is too long' }, { status: 400 });
     }
 
+    const normalizedUserAddress = userAddress.toLowerCase();
+
     // Validate address format
-    if (!isAddress(userAddress)) {
+    if (!isAddress(normalizedUserAddress)) {
       return NextResponse.json({ error: 'Invalid Ethereum address format' }, { status: 400 });
     }
 
     // Verify authenticated user matches userAddress
-    if (authResult.user.address.toLowerCase() !== userAddress.toLowerCase()) {
+    if (authenticatedAddress !== normalizedUserAddress) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
     }
 
@@ -85,7 +94,7 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'Message not found' }, { status: 404 });
     }
 
-    if (message.sender.toLowerCase() !== userAddress.toLowerCase()) {
+    if (message.sender.toLowerCase() !== normalizedUserAddress) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
     }
 
