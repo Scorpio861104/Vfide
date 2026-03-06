@@ -3,6 +3,16 @@ import { getClient } from '@/lib/db';
 import { isAdmin, requireAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 
+const ADDRESS_PATTERN = /^0x[a-fA-F0-9]{3,64}$/;
+
+function normalizeAddress(value: string): string {
+  return value.trim().toLowerCase();
+}
+
+function isAddressLike(value: string): boolean {
+  return ADDRESS_PATTERN.test(value);
+}
+
 /**
  * GET /api/quests/daily
  * Fetch daily quests with user progress
@@ -15,16 +25,26 @@ export async function GET(request: NextRequest) {
   const authResult = await requireAuth(request);
   if (authResult instanceof NextResponse) return authResult;
 
+  const requesterAddress = typeof authResult.user?.address === 'string'
+    ? normalizeAddress(authResult.user.address)
+    : '';
+  if (!requesterAddress || !isAddressLike(requesterAddress)) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   try {
     const searchParams = request.nextUrl.searchParams;
-    const userAddress = searchParams.get('userAddress');
+    const userAddressParam = searchParams.get('userAddress');
 
-    if (!userAddress) {
+    if (!userAddressParam || userAddressParam.trim().length === 0) {
       return NextResponse.json({ error: 'User address required' }, { status: 400 });
     }
 
-    const requesterAddress = authResult.user.address.toLowerCase();
-    const targetAddress = userAddress.toLowerCase();
+    const targetAddress = normalizeAddress(userAddressParam);
+    if (!isAddressLike(targetAddress)) {
+      return NextResponse.json({ error: 'Invalid user address format' }, { status: 400 });
+    }
+
     const canAccess = requesterAddress === targetAddress || isAdmin(authResult.user);
     if (!canAccess) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
@@ -36,7 +56,7 @@ export async function GET(request: NextRequest) {
       // Get user ID from address
       const userResult = await client.query(
         'SELECT id FROM users WHERE wallet_address = $1',
-        [userAddress]
+        [targetAddress]
       );
 
       if (userResult.rows.length === 0) {
