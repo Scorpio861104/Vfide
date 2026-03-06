@@ -98,6 +98,8 @@ Status legend:
   - `app/api/friends/route.ts` GET/PATCH/DELETE handlers now enforce address validation, numeric `friendshipId` validation, and safer PATCH pre-transaction parsing (no rollback before begin)
   - `app/api/sync/route.ts` GET/POST handlers now enforce numeric `userId` format and bounded safe `entity` identifier format
   - `app/api/groups/members/route.ts` GET/POST/PATCH/DELETE handlers now enforce numeric `groupId` format and strict address validation on member lookups/mutations
+  - `app/api/groups/invites/route.ts` GET/POST/PATCH/DELETE handlers now enforce strict numeric `groupId` parsing, normalized invite code validation, and safer optional field normalization
+  - `app/api/groups/join/route.ts` POST handler now normalizes invite codes and correctly applies the persisted `require_approval` invite flag for pending join flows
   - `app/api/quests/streak/route.ts` GET/POST handlers now enforce normalized input handling and streak-type format validation
   - `app/api/quests/notifications/route.ts` PATCH handler now validates `notificationIds` array shape/content before UUID casts; GET uses safer VFIDE bigint divisor conversion
   - `app/api/quests/onboarding/route.ts` GET/PATCH/POST handlers now normalize required string inputs and use consistent normalized address lookups for user resolution
@@ -114,6 +116,7 @@ Status legend:
   - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/messages.test.ts __tests__/api/messages/edit.test.ts __tests__/api/messages/delete.test.ts __tests__/api/messages/reaction.test.ts` ✅ (28 tests)
   - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/proposals.test.ts __tests__/api/friends.test.ts` ✅ (16 tests)
   - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/sync.test.ts __tests__/api/groups/members.test.ts` ✅ (14 tests)
+  - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/groups/invites.test.ts __tests__/api/groups/join.test.ts __tests__/api/groups/members.test.ts` ✅ (22 tests)
   - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/quests/streak.test.ts __tests__/api/quests/notifications.test.ts` ✅ (13 tests)
   - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/quests/onboarding.test.ts __tests__/api/quests/achievements.test.ts` ✅ (15 tests)
   - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/endorsements.test.ts __tests__/api/transactions/export.test.ts __tests__/api/performance/metrics.test.ts` ✅ (24 tests)

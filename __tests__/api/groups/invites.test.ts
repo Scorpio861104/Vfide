@@ -64,6 +64,19 @@ describe('/api/groups/invites', () => {
       expect(response.status).toBe(403);
       expect(data.error).toContain('Not authorized');
     });
+
+    it('should return 400 for invalid groupId query parameter', async () => {
+      withRateLimit.mockResolvedValue(null);
+
+      const request = new NextRequest('http://localhost:3000/api/groups/invites?groupId=abc');
+      const response = await GET(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(400);
+      expect(data.error).toContain('Invalid groupId');
+      expect(requireAuth).not.toHaveBeenCalled();
+      expect(query).not.toHaveBeenCalled();
+    });
   });
 
   describe('POST', () => {

@@ -21,6 +21,19 @@ const MAX_INVITE_CODE_LENGTH = 64;
 const MAX_INVITE_DESCRIPTION_LENGTH = 500;
 const MAX_INVITE_EXPIRY_MS = 365 * 24 * 60 * 60 * 1000;
 
+function parsePositiveInteger(value: string): number | null {
+  if (!/^\d+$/.test(value)) {
+    return null;
+  }
+
+  const parsed = Number.parseInt(value, 10);
+  if (!Number.isSafeInteger(parsed) || parsed <= 0) {
+    return null;
+  }
+
+  return parsed;
+}
+
 function isObjectRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
@@ -36,6 +49,10 @@ async function generateInviteCode(): Promise<string> {
     return generateInviteCode();
   }
   return code;
+}
+
+function normalizeInviteCode(value: string): string {
+  return value.trim();
 }
 
 export async function POST(request: NextRequest) {
@@ -130,13 +147,18 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Not a group member' }, { status: 403 });
     }
 
+    const normalizedDescription =
+      typeof description === 'string' && description.trim().length > 0
+        ? description.trim()
+        : null;
+
     const code = await generateInviteCode();
     const expiresAt = expiresIn ? new Date(Date.now() + Number(expiresIn)).toISOString() : null;
 
     const result = await query<GroupInvite>(
       `INSERT INTO group_invites (group_id, code, created_by, expires_at, max_uses, description, require_approval)
        VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
-      [groupId, code, userId, expiresAt, maxUses || null, description || null, requireApproval || false]
+      [groupId, code, userId, expiresAt, maxUses || null, normalizedDescription, requireApproval || false]
     );
 
     return NextResponse.json({ success: true, invite: result.rows[0] }, { status: 201 });
@@ -153,10 +175,16 @@ export async function GET(request: NextRequest) {
 
   try {
     const { searchParams } = new URL(request.url);
-    const groupId = searchParams.get('groupId');
-    const code = searchParams.get('code');
+    const rawGroupId = searchParams.get('groupId');
+    const rawCode = searchParams.get('code');
+
+    const code = typeof rawCode === 'string' ? normalizeInviteCode(rawCode) : null;
 
     if (code) {
+      if (code.length === 0 || code.length > MAX_INVITE_CODE_LENGTH) {
+        return NextResponse.json({ error: 'Invalid invite code' }, { status: 400 });
+      }
+
       const result = await query<GroupInvite>(
         `SELECT gi.*, g.name as group_name, u.username as creator_username
          FROM group_invites gi
@@ -171,7 +199,12 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ invite: result.rows[0] });
     }
 
-    if (groupId) {
+    if (rawGroupId) {
+      const groupId = parsePositiveInteger(rawGroupId.trim());
+      if (groupId === null) {
+        return NextResponse.json({ error: 'Invalid groupId' }, { status: 400 });
+      }
+
       const authResult = await requireAuth(request);
       if (authResult instanceof NextResponse) return authResult;
       if (!authResult.user?.address) {
@@ -243,11 +276,13 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
     }
 
-    const { code, action } = body;
+    const rawCode = body.code;
+    const rawAction = body.action;
+    const code = typeof rawCode === 'string' ? normalizeInviteCode(rawCode) : '';
+    const action = typeof rawAction === 'string' ? rawAction.trim().toLowerCase() : '';
 
     if (
-      typeof code !== 'string' ||
-      code.trim().length === 0 ||
+      code.length === 0 ||
       code.length > MAX_INVITE_CODE_LENGTH ||
       (action !== 'revoke' && action !== 'activate')
     ) {
@@ -335,11 +370,19 @@ export async function DELETE(request: NextRequest) {
   }
 
   try {
-    const code = request.nextUrl.searchParams.get('code');
+    const rawCode = request.nextUrl.searchParams.get('code');
+    const code = typeof rawCode === 'string' ? normalizeInviteCode(rawCode) : '';
 
     if (!code) {
       return NextResponse.json(
         { error: 'Missing code parameter' },
+        { status: 400 }
+      );
+    }
+
+    if (code.length > MAX_INVITE_CODE_LENGTH) {
+      return NextResponse.json(
+        { error: 'Invalid code parameter' },
         { status: 400 }
       );
     }

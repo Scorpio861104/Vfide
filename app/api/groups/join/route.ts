@@ -15,6 +15,10 @@ function isObjectRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
+function normalizeInviteCode(value: string): string {
+  return value.trim();
+}
+
 /**
  * POST /api/groups/join
  * Join a group using an invite code
@@ -49,7 +53,9 @@ export async function POST(request: NextRequest) {
     const { code, userId } = body;
     const authenticatedAddress = authResult.user.address.toLowerCase();
 
-    if (typeof code !== 'string' || code.trim().length === 0 || code.length > MAX_INVITE_CODE_LENGTH) {
+    const inviteCode = typeof code === 'string' ? normalizeInviteCode(code) : '';
+
+    if (inviteCode.length === 0 || inviteCode.length > MAX_INVITE_CODE_LENGTH) {
       return NextResponse.json(
         { error: 'Invalid invite code' },
         { status: 400 }
@@ -89,7 +95,7 @@ export async function POST(request: NextRequest) {
     // Get invite link
     const linkResult = await client.query(
       `SELECT * FROM group_invites WHERE code = $1`,
-      [code]
+      [inviteCode]
     );
     
     if (linkResult.rows.length === 0) {
@@ -142,7 +148,7 @@ export async function POST(request: NextRequest) {
     }
 
     // If requires approval, create pending request (future feature)
-    if (link.metadata?.requireApproval) {
+    if (Boolean(link.require_approval)) {
       await client.query('ROLLBACK');
       return NextResponse.json({
         success: true,
