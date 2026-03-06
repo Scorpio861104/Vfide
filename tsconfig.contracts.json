@@ -1,0 +1,18 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "types": ["node", "jest"],
+    "tsBuildInfoFile": "./.tsbuildinfo.contracts"
+  },
+  "include": [
+    "hardhat.config.ts",
+    "scripts/**/*.ts",
+    "typechain-types/**/*.ts",
+    "jest.d.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    ".next",
+    "websocket-server/**"
+  ]
+}

@@ -239,10 +239,11 @@ Status legend:
 ### 8. Deployment/runtime configuration and production readiness checks
 - Status: in-progress
 - Verification evidence:
+  - `npm run -s typecheck:contracts` ✅ after adding `tsconfig.contracts.json` scoped to Hardhat + contract script TypeScript surfaces
   - `npm run -s test:ci` ✅ (376 suites, 8012 tests)
   - `npm test -- --runInBand` ✅ (377 suites, 8120 tests)
   - `npm run lint` ✅ (0 errors, 0 warnings)
   - `npm run typecheck` ✅
   - `npm run -s contract:test` ✅ (exit code 0)
   - `npm run -s build` ✅ with expected local-env warnings for missing deploy secrets (`DATABASE_URL`, `JWT_SECRET`)
-  - Remaining blocker for strict production validation: required secrets are not present in this local container (`DATABASE_URL`, `JWT_SECRET`)
+  - `npm run validate:production` now executes through typecheck/contracts/lint/tests and fails only at `validate:env` because required secrets are not present in this local container (`DATABASE_URL`, `JWT_SECRET`)
