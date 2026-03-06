@@ -45,11 +45,26 @@ const POOL_ABI = [
   },
 ] as const;
 
+const DEFAULT_ETH_PRICE_USD = 2000;
+
+function parseRefreshParam(refreshParam: string | null): boolean | null {
+  if (refreshParam === null) return false;
+  const normalized = refreshParam.trim().toLowerCase();
+  if (normalized === 'true') return true;
+  if (normalized === 'false') return false;
+  return null;
+}
+
 /**
  * Calculate price from Uniswap V3 sqrtPriceX96
  */
 function calculatePrice(sqrtPriceX96: bigint, token0: string, decimals0: number, decimals1: number): number {
-  const sqrtPrice = Number(sqrtPriceX96) / (2 ** 96);
+  const sqrtPriceX96Number = Number(sqrtPriceX96);
+  if (!Number.isFinite(sqrtPriceX96Number) || sqrtPriceX96Number <= 0) {
+    throw new Error('Invalid sqrtPriceX96 value');
+  }
+
+  const sqrtPrice = sqrtPriceX96Number / (2 ** 96);
   const price = sqrtPrice ** 2;
   
   // Adjust for decimals
@@ -59,6 +74,10 @@ function calculatePrice(sqrtPriceX96: bigint, token0: string, decimals0: number,
   // If VFIDE is token0, we get VFIDE per WETH, need to invert
   if (token0.toLowerCase() === VFIDE_TOKEN_ADDRESS.toLowerCase()) {
     adjustedPrice = 1 / adjustedPrice;
+  }
+
+  if (!Number.isFinite(adjustedPrice) || adjustedPrice <= 0) {
+    throw new Error('Calculated price is invalid');
   }
   
   return adjustedPrice;
@@ -78,7 +97,14 @@ export async function GET(request: NextRequest) {
   
   try {
     const { searchParams } = new URL(request.url);
-    const forceRefresh = searchParams.get('refresh') === 'true';
+    const parsedRefresh = parseRefreshParam(searchParams.get('refresh'));
+    if (parsedRefresh === null) {
+      return NextResponse.json(
+        { error: 'Invalid refresh parameter. Must be true or false.' },
+        { status: 400 }
+      );
+    }
+    const forceRefresh = parsedRefresh;
     
     // Fetch ETH price from CoinGecko
     const coingeckoUrl = process.env.NEXT_PUBLIC_COINGECKO_API_URL || 'https://api.coingecko.com/api/v3/simple/price';
@@ -91,7 +117,7 @@ export async function GET(request: NextRequest) {
     if (!ethPriceResponse.ok) {
       console.error('Failed to fetch ETH price:', ethPriceResponse.status);
       // Use fallback price if fetch fails
-      const ethPrice = 2000; // Fallback price
+      const ethPrice = DEFAULT_ETH_PRICE_USD;
       const vfidePrice = 0.10;
       const vfidePriceInEth = vfidePrice / ethPrice;
       
@@ -104,7 +130,11 @@ export async function GET(request: NextRequest) {
     }
     
     const ethPriceData = await ethPriceResponse.json();
-    const ethPrice = ethPriceData.ethereum?.usd || 2000;
+    const rawEthPrice = ethPriceData?.ethereum?.usd;
+    const parsedEthPrice = typeof rawEthPrice === 'number' ? rawEthPrice : Number(rawEthPrice);
+    const ethPrice = Number.isFinite(parsedEthPrice) && parsedEthPrice > 0
+      ? parsedEthPrice
+      : DEFAULT_ETH_PRICE_USD;
 
     // Default to tokenomics-based price
     let vfidePrice = 0.10; // Base price in USD

@@ -125,6 +125,17 @@ describe('/api/crypto/price', () => {
       expect(data.prices.eth.usd).toBe(2500);
     });
 
+    it('should return 400 for invalid refresh parameter', async () => {
+      withRateLimit.mockResolvedValue(null);
+
+      const request = new NextRequest('http://localhost:3000/api/crypto/price?refresh=1');
+      const response = await GET(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(400);
+      expect(data.error).toContain('Invalid refresh parameter');
+    });
+
     it('should calculate market cap correctly', async () => {
       withRateLimit.mockResolvedValue(null);
       (global.fetch as jest.Mock).mockResolvedValue({
@@ -194,6 +205,21 @@ describe('/api/crypto/price', () => {
 
       expect(response.status).toBe(200);
       expect(data.prices.eth.usd).toBe(2000); // Default value
+    });
+
+    it('should use default ETH price when CoinGecko returns non-numeric data', async () => {
+      withRateLimit.mockResolvedValue(null);
+      (global.fetch as jest.Mock).mockResolvedValue({
+        ok: true,
+        json: async () => ({ ethereum: { usd: 'not-a-number' } }),
+      });
+
+      const request = new NextRequest('http://localhost:3000/api/crypto/price');
+      const response = await GET(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(200);
+      expect(data.prices.eth.usd).toBe(2000);
     });
   });
 });
