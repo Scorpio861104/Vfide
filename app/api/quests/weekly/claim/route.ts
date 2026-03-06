@@ -3,6 +3,18 @@ import { getClient } from '@/lib/db';
 import { requireAuth, checkOwnership } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 
+const ADDRESS_LIKE_REGEX = /^0x[a-fA-F0-9]{3,40}$/;
+
+function parsePositiveInteger(value: unknown): number | null {
+  const parsed = typeof value === 'number'
+    ? value
+    : (typeof value === 'string' ? Number.parseInt(value, 10) : NaN);
+  if (!Number.isInteger(parsed) || parsed <= 0) {
+    return null;
+  }
+  return parsed;
+}
+
 /**
  * POST /api/quests/weekly/claim
  * Claim weekly challenge rewards
@@ -21,6 +33,13 @@ export async function POST(request: NextRequest) {
   const authResult = await requireAuth(request);
   if (authResult instanceof NextResponse) {
     return authResult;
+  }
+
+  const requesterAddress = typeof authResult.user?.address === 'string'
+    ? authResult.user.address.trim().toLowerCase()
+    : '';
+  if (!requesterAddress || !ADDRESS_LIKE_REGEX.test(requesterAddress)) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
   let body: Record<string, unknown>;
@@ -57,7 +76,21 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const normalizedUserAddress = userAddress.toLowerCase();
+    const normalizedUserAddress = userAddress.trim().toLowerCase();
+    if (!ADDRESS_LIKE_REGEX.test(normalizedUserAddress)) {
+      return NextResponse.json(
+        { error: 'Invalid user address format' },
+        { status: 400 }
+      );
+    }
+
+    const parsedChallengeId = parsePositiveInteger(challengeId);
+    if (!parsedChallengeId) {
+      return NextResponse.json(
+        { error: 'Challenge ID must be a positive integer' },
+        { status: 400 }
+      );
+    }
 
     // Verify user is claiming their own rewards
     if (!checkOwnership(authResult.user, normalizedUserAddress)) {
@@ -94,7 +127,7 @@ export async function POST(request: NextRequest) {
           AND uwp.challenge_id = $2
           AND uwp.completed = true 
           AND uwp.claimed = false
-      `, [userId, challengeId]);
+      `, [userId, parsedChallengeId]);
 
       if (progressResult.rows.length === 0) {
         await client.query('ROLLBACK');
@@ -111,7 +144,7 @@ export async function POST(request: NextRequest) {
         UPDATE user_weekly_progress
         SET claimed = true, claimed_at = NOW()
         WHERE user_id = $1 AND challenge_id = $2 AND week_start = $3
-      `, [userId, challengeId, challenge.week_start]);
+      `, [userId, parsedChallengeId, challenge.week_start]);
 
       // Add XP to user (also updates level)
       await client.query(`

@@ -11,15 +11,17 @@ jest.mock('@/lib/auth/rateLimit', () => ({
 
 jest.mock('@/lib/auth/middleware', () => ({
   requireAuth: jest.fn(),
+  checkOwnership: jest.fn(),
 }));
 
 describe('/api/quests/achievements/claim', () => {
   const { query } = require('@/lib/db');
   const { withRateLimit } = require('@/lib/auth/rateLimit');
-  const { requireAuth } = require('@/lib/auth/middleware');
+  const { requireAuth, checkOwnership } = require('@/lib/auth/middleware');
 
   beforeEach(() => {
     jest.clearAllMocks();
+    checkOwnership.mockReturnValue(true);
   });
 
   describe('POST', () => {
@@ -100,6 +102,35 @@ describe('/api/quests/achievements/claim', () => {
 
       const response = await POST(request);
       expect(response.status).toBe(401);
+    });
+
+    it('should return 401 when authenticated address is missing', async () => {
+      withRateLimit.mockResolvedValue(null);
+      requireAuth.mockReturnValue({ user: {} });
+
+      const request = new NextRequest('http://localhost:3000/api/quests/achievements/claim', {
+        method: 'POST',
+        body: JSON.stringify({ milestoneId: 1, userAddress: '0x1111111111111111111111111111111111111123' }),
+      });
+
+      const response = await POST(request);
+      expect(response.status).toBe(401);
+    });
+
+    it('should return 400 for invalid milestone id type', async () => {
+      withRateLimit.mockResolvedValue(null);
+      requireAuth.mockReturnValue({ user: { address: '0x1111111111111111111111111111111111111123', id: 1 } });
+
+      const request = new NextRequest('http://localhost:3000/api/quests/achievements/claim', {
+        method: 'POST',
+        body: JSON.stringify({
+          userAddress: '0x1111111111111111111111111111111111111123',
+          milestoneId: 'abc',
+        }),
+      });
+
+      const response = await POST(request);
+      expect(response.status).toBe(400);
     });
   });
 });

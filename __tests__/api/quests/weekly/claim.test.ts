@@ -116,5 +116,31 @@ describe('/api/quests/weekly/claim', () => {
       const response = await POST(request);
       expect(response.status).toBe(401);
     });
+
+    it('should return 401 when authenticated address is missing', async () => {
+      withRateLimit.mockResolvedValue(null);
+      requireAuth.mockResolvedValue({ user: {} });
+
+      const request = new NextRequest('http://localhost:3000/api/quests/weekly/claim', {
+        method: 'POST',
+        body: JSON.stringify({ challengeId: 1, userAddress: '0x1111111111111111111111111111111111111123' }),
+      });
+
+      const response = await POST(request);
+      expect(response.status).toBe(401);
+    });
+
+    it('should return 400 for invalid challenge id type', async () => {
+      withRateLimit.mockResolvedValue(null);
+      requireAuth.mockResolvedValue({ user: { address: '0x1111111111111111111111111111111111111123', id: 1 } });
+
+      const request = new NextRequest('http://localhost:3000/api/quests/weekly/claim', {
+        method: 'POST',
+        body: JSON.stringify({ challengeId: 'abc', userAddress: '0x1111111111111111111111111111111111111123' }),
+      });
+
+      const response = await POST(request);
+      expect(response.status).toBe(400);
+    });
   });
 });
