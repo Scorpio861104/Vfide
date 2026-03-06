@@ -5,6 +5,20 @@ import { withRateLimit } from '@/lib/auth/rateLimit';
 import { validateBody, authSchema } from '@/lib/auth/validation';
 import { setAuthCookie, getAuthCookie } from '@/lib/auth/cookieAuth';
 
+function parseMessageTimestamp(message: string): number | null {
+  const timestampMatch = message.match(/^Timestamp:\s*(\d+)\s*$/m);
+  if (!timestampMatch || !timestampMatch[1]) {
+    return null;
+  }
+
+  const parsed = Number.parseInt(timestampMatch[1], 10);
+  if (!Number.isSafeInteger(parsed) || parsed <= 0) {
+    return null;
+  }
+
+  return parsed;
+}
+
 /**
  * POST /api/auth
  * Authenticate user with wallet signature
@@ -42,20 +56,10 @@ export async function POST(request: NextRequest) {
 
     // Check message timestamp to prevent replay attacks (within 5 minutes)
     // Reject messages that don't include a timestamp — they are not replayable otherwise
-    const timestampMatch = message.match(/Timestamp: (\d+)/);
-    if (!timestampMatch || !timestampMatch[1]) {
+    const messageTimestamp = parseMessageTimestamp(message);
+    if (messageTimestamp === null) {
       return NextResponse.json(
         { error: 'Message must contain a timestamp' },
-        { status: 400 }
-      );
-    }
-
-    const messageTimestamp = parseInt(timestampMatch[1], 10);
-
-    // Validate parsed timestamp
-    if (isNaN(messageTimestamp) || !isFinite(messageTimestamp)) {
-      return NextResponse.json(
-        { error: 'Invalid timestamp in message' },
         { status: 400 }
       );
     }

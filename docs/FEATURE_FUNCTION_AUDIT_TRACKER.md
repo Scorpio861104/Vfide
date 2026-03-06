@@ -137,6 +137,7 @@ Status legend:
   - `app/api/security/2fa/initiate/route.ts` POST handler now enforces authenticated-address shape checks, bounded destination length validation, strict email destination format checks, and normalized destination persistence/delivery inputs
   - `app/api/endorsements/route.ts` GET/POST handlers now enforce strict non-negative numeric `limit`/`offset` query parsing (rejecting mixed-format values) and authenticated-address shape validation before endorsement writes
   - `app/api/security/violations/route.ts` GET/POST handlers now enforce strict positive numeric `limit` parsing (rejecting mixed-format values) and authenticated-address shape validation before violations reads/writes
+  - `app/api/auth/route.ts` POST handler now enforces strict full-line timestamp parsing (`Timestamp: <digits>`), rejects mixed-format timestamp values, and enforces safe-integer timestamp bounds before signature verification
   - Focused test confirmation: `npm test -- --runInBand __tests__/api/activities.test.ts __tests__/api/users.test.ts __tests__/api/crypto/rewards/claim.test.ts` ✅ (29 tests)
   - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/security/violations.test.ts` ✅ (6 tests)
   - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/messages/reaction.test.ts` ✅ (4 tests)
@@ -173,6 +174,7 @@ Status legend:
   - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/security/2fa-initiate.test.ts` ✅ (4 tests)
   - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/endorsements.test.ts` ✅ (9 tests)
   - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/security/violations.test.ts` ✅ (8 tests)
+  - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/auth.test.ts` ✅ (16 tests)
   - Additional typecheck confirmation: `npm run -s typecheck` ✅
 
 ### 7. Frontend page-by-page behavior and contract wiring checks

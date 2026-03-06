@@ -213,6 +213,64 @@ describe('/api/auth', () => {
       expect(response.status).toBe(400);
     });
 
+    it('should return 400 for mixed-format timestamp in message', async () => {
+      const invalidMessage = 'Sign in to VFIDE\n\nTimestamp: 123abc';
+
+      withRateLimit.mockResolvedValue(null);
+      validateBody.mockResolvedValue({
+        success: true,
+        data: {
+          address: mockAddress,
+          message: invalidMessage,
+          signature: mockSignature,
+        },
+      });
+
+      const request = new NextRequest('http://localhost:3000/api/auth', {
+        method: 'POST',
+        body: JSON.stringify({
+          address: mockAddress,
+          message: invalidMessage,
+          signature: mockSignature,
+        }),
+      });
+
+      const response = await POST(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(400);
+      expect(data.error).toBe('Message must contain a timestamp');
+    });
+
+    it('should return 400 for unsafe integer timestamp in message', async () => {
+      const unsafeTimestampMessage = 'Sign in to VFIDE\n\nTimestamp: 9007199254740993';
+
+      withRateLimit.mockResolvedValue(null);
+      validateBody.mockResolvedValue({
+        success: true,
+        data: {
+          address: mockAddress,
+          message: unsafeTimestampMessage,
+          signature: mockSignature,
+        },
+      });
+
+      const request = new NextRequest('http://localhost:3000/api/auth', {
+        method: 'POST',
+        body: JSON.stringify({
+          address: mockAddress,
+          message: unsafeTimestampMessage,
+          signature: mockSignature,
+        }),
+      });
+
+      const response = await POST(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(400);
+      expect(data.error).toBe('Message must contain a timestamp');
+    });
+
     it('should return 401 for invalid signature', async () => {
       withRateLimit.mockResolvedValue(null);
       validateBody.mockResolvedValue({
