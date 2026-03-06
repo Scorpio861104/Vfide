@@ -222,9 +222,12 @@ Status legend:
 - Verification evidence:
   - `npm run -s build` ✅ (all routes compiled and generated)
   - Full CI quality pass included frontend integration coverage (`npm run -s test:ci`) ✅
+  - Full local regression pass (`npm test -- --runInBand`) ✅ (377 suites, 8120 tests)
+  - Lint + type safety gates (`npm run lint` and `npm run typecheck`) ✅
 - Recent hardening completed:
   - `app/vault/recover/page.tsx` now uses on-chain `VaultRegistry` lookup for `recoveryId`, `email`, `username`, and `guardian`
   - `components/governance/GovernanceUI.tsx` delegation now explicitly marked read-only for DAO v1, with action path disabled
+  - `__tests__/components/GovernanceUI.test.tsx` delegation CTA assertions now match DAO v1 read-only UX (`Delegation Unavailable`) and full suite is green
   - `app/escrow/page.tsx` order-id input placeholder normalized to a concrete format example
   - `app/escrow/page.tsx` merchant-address validation now uses toast error feedback instead of blocking browser alert
   - `app/control-panel/components/AutoSwapPanel.tsx` quick-setup validation now uses inline form error state instead of browser alert
@@ -237,4 +240,9 @@ Status legend:
 - Status: in-progress
 - Verification evidence:
   - `npm run -s test:ci` ✅ (376 suites, 8012 tests)
+  - `npm test -- --runInBand` ✅ (377 suites, 8120 tests)
+  - `npm run lint` ✅ (0 errors, 0 warnings)
+  - `npm run typecheck` ✅
+  - `npm run -s contract:test` ✅ (exit code 0)
   - `npm run -s build` ✅ with expected local-env warnings for missing deploy secrets (`DATABASE_URL`, `JWT_SECRET`)
+  - Remaining blocker for strict production validation: required secrets are not present in this local container (`DATABASE_URL`, `JWT_SECRET`)

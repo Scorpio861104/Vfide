@@ -260,7 +260,7 @@ describe('Delegation Section', () => {
 
     const addressInput = screen.getByPlaceholderText('0x1234...5678');
     const amountInput = screen.getByPlaceholderText('e.g., 100');
-    const submitButton = screen.getByRole('button', { name: /Delegate Votes/i });
+    const submitButton = screen.getByRole('button', { name: /Delegation Unavailable/i });
 
     await user.type(addressInput, '0xabcd...ef01');
     await user.type(amountInput, '100');
@@ -494,7 +494,7 @@ describe('Data Validation', () => {
     const delegateTab = screen.getByRole('button', { name: /Delegate/i });
     await user.click(delegateTab);
 
-    const submitButton = screen.getByRole('button', { name: /Delegate Votes/i });
+    const submitButton = screen.getByRole('button', { name: /Delegation Unavailable/i });
     await user.click(submitButton);
 
     // Should not clear fields if validation fails
@@ -576,7 +576,7 @@ describe('Integration Tests', () => {
     // Fill form
     const addressInput = screen.getByPlaceholderText('0x1234...5678');
     const amountInput = screen.getByPlaceholderText('e.g., 100');
-    const submitButton = screen.getByRole('button', { name: /Delegate Votes/i });
+    const submitButton = screen.getByRole('button', { name: /Delegation Unavailable/i });
 
     await user.type(addressInput, '0xtest...1234');
     await user.type(amountInput, '50');

@@ -819,7 +819,6 @@ export default function VaultRecoveryPage() {
   const [searchMethod, setSearchMethod] = useState<"recoveryId" | "email" | "username" | "guardian">("recoveryId");
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearching, setIsSearching] = useState(false);
-  const [vaultToLookup, setVaultToLookup] = useState<`0x${string}` | undefined>(undefined);
   const [searchResult, setSearchResult] = useState<{
     address: string;
     originalOwner: string;
@@ -908,8 +907,6 @@ export default function VaultRecoveryPage() {
         setError(`No vault found for the provided ${searchMethod}.`);
         return;
       }
-
-      setVaultToLookup(resolvedVault);
 
       const [info, score, badges] = await Promise.all([
         publicClient.readContract({

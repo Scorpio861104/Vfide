@@ -4,13 +4,6 @@ import { requireAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { isAddress } from 'viem';
 
-interface MessageDeleteRequest {
-  messageId: string;
-  conversationId: string;
-  userAddress: string;
-  hardDelete?: boolean;
-}
-
 const MAX_ID_LENGTH = 128;
 
 function isRecord(value: unknown): value is Record<string, unknown> {

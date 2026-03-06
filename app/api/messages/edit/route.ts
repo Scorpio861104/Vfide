@@ -4,13 +4,6 @@ import { requireAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { isAddress } from 'viem';
 
-interface MessageEditRequest {
-  messageId: string;
-  conversationId: string;
-  newContent: string;
-  userAddress: string;
-}
-
 const MAX_ID_LENGTH = 128;
 const MAX_CONTENT_LENGTH = 5000;
 
