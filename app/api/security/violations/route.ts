@@ -9,9 +9,32 @@ const MAX_VIOLATION_TYPE_LENGTH = 64;
 const MAX_DESCRIPTION_LENGTH = 2000;
 const MAX_IP_LENGTH = 64;
 const VALID_SEVERITIES = ['low', 'medium', 'high', 'critical'] as const;
+const ADDRESS_PATTERN = /^0x[a-fA-F0-9]{3,64}$/;
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function normalizeAddress(value: string): string {
+  return value.trim().toLowerCase();
+}
+
+function isAddressLike(value: string): boolean {
+  return ADDRESS_PATTERN.test(value);
+}
+
+function parsePositiveInteger(value: string): number | null {
+  const trimmed = value.trim();
+  if (!/^\d+$/.test(trimmed)) {
+    return null;
+  }
+
+  const parsed = Number.parseInt(trimmed, 10);
+  if (!Number.isSafeInteger(parsed) || parsed <= 0) {
+    return null;
+  }
+
+  return parsed;
 }
 
 export async function GET(request: NextRequest) {
@@ -24,18 +47,28 @@ export async function GET(request: NextRequest) {
     return authResult;
   }
 
+  const authAddress = typeof authResult.user?.address === 'string'
+    ? normalizeAddress(authResult.user.address)
+    : '';
+  if (!authAddress || !isAddressLike(authAddress)) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   try {
     const { searchParams } = new URL(request.url);
-    const rawLimit = parseInt(searchParams.get('limit') || String(DEFAULT_VIOLATIONS_LIMIT), 10);
+    const rawLimit = searchParams.get('limit');
+    const parsedLimit = rawLimit === null
+      ? DEFAULT_VIOLATIONS_LIMIT
+      : parsePositiveInteger(rawLimit);
 
-    if (isNaN(rawLimit) || rawLimit <= 0) {
+    if (parsedLimit === null) {
       return NextResponse.json(
         { error: 'Invalid limit parameter' },
         { status: 400 }
       );
     }
 
-    const limit = Math.min(rawLimit, MAX_VIOLATIONS_LIMIT);
+    const limit = Math.min(parsedLimit, MAX_VIOLATIONS_LIMIT);
 
     const result = await query(
       `SELECT * FROM security_violations ORDER BY detected_at DESC LIMIT $1`,
@@ -57,6 +90,13 @@ export async function POST(request: NextRequest) {
   const authResult = await requireAuth(request);
   if (authResult instanceof NextResponse) {
     return authResult;
+  }
+
+  const authAddress = typeof authResult.user?.address === 'string'
+    ? normalizeAddress(authResult.user.address)
+    : '';
+  if (!authAddress || !isAddressLike(authAddress)) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
   try {
@@ -107,7 +147,7 @@ export async function POST(request: NextRequest) {
 
     const userResult = await query<{ id: number }>(
       'SELECT id FROM users WHERE wallet_address = $1',
-      [authResult.user.address.toLowerCase()]
+      [authAddress]
     );
 
     const userId = userResult.rows[0]?.id;

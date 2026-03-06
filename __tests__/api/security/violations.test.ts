@@ -83,6 +83,19 @@ describe('/api/security/violations', () => {
         [500]
       );
     });
+
+    it('should reject malformed mixed-format limit', async () => {
+      withRateLimit.mockResolvedValue(null);
+      requireAuth.mockResolvedValue({ user: { address: '0x1111111111111111111111111111111111111123' } });
+
+      const request = new NextRequest('http://localhost:3000/api/security/violations?limit=10abc');
+      const response = await GET(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(400);
+      expect(data.error).toContain('Invalid limit parameter');
+      expect(query).not.toHaveBeenCalled();
+    });
   });
 
   describe('POST', () => {
@@ -130,6 +143,27 @@ describe('/api/security/violations', () => {
 
       const response = await POST(request);
       expect(response.status).toBe(401);
+    });
+
+    it('should reject POST with malformed authenticated address', async () => {
+      withRateLimit.mockResolvedValue(null);
+      requireAuth.mockResolvedValue({ user: { address: 'bad-address' } });
+
+      const request = new NextRequest('http://localhost:3000/api/security/violations', {
+        method: 'POST',
+        body: JSON.stringify({
+          violationType: 'suspicious_activity',
+          description: 'x',
+          severity: 'low',
+        }),
+      });
+
+      const response = await POST(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(401);
+      expect(data.error).toBe('Unauthorized');
+      expect(query).not.toHaveBeenCalled();
     });
   });
 });
