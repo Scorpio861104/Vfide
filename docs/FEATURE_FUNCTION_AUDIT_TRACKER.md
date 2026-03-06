@@ -88,6 +88,7 @@ Status legend:
   - `app/api/users/[address]/route.ts` PUT handler now enforces strict JSON-object + field format/length validation (`username`, `email`, `bio`, `avatar_url`)
   - `app/api/activities/route.ts` POST handler now enforces address format and normalized `activityType`/`title` writes
   - `app/api/crypto/payment-requests/route.ts` POST handler now enforces numeric user IDs, no self-requesting, normalized token casing, strict decimal amount format, and memo type checks
+  - `app/api/crypto/payment-requests/[id]/route.ts` GET/PUT/PATCH handlers now enforce numeric request-id parsing, normalized status handling, stricter auth address checks, and tx-hash format validation
   - `app/api/crypto/rewards/[userId]/route.ts` GET handler now uses resilient amount parsing to prevent `NaN` propagation in totals
   - `app/api/security/violations/route.ts` POST handler now enforces strict object payload, required fields, severity whitelist, and bounded field lengths
   - `app/api/messages/reaction/route.ts` POST/DELETE handlers now enforce stricter typed normalization for IDs/emoji/image inputs, URL protocol checks, and bounded field lengths
@@ -124,6 +125,7 @@ Status legend:
   - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/endorsements.test.ts __tests__/api/transactions/export.test.ts __tests__/api/performance/metrics.test.ts` ✅ (24 tests)
   - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/errors.test.ts __tests__/api/analytics.test.ts __tests__/api/attachments/upload.test.ts` ✅ (25 tests)
   - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/notifications/preferences.test.ts __tests__/api/leaderboard/monthly.test.ts` ✅ (16 tests)
+  - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/crypto/payment-requests/id.test.ts __tests__/api/crypto/payment-requests.test.ts` ✅ (20 tests)
   - Additional typecheck confirmation: `npm run -s typecheck` ✅
 
 ### 7. Frontend page-by-page behavior and contract wiring checks

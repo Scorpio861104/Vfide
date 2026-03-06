@@ -5,6 +5,33 @@ import { withRateLimit } from '@/lib/auth/rateLimit';
 
 // Allowed status transitions for payment requests
 const ALLOWED_STATUSES = ['pending', 'accepted', 'rejected', 'completed', 'cancelled'] as const;
+const ADDRESS_PATTERN = /^0x[a-fA-F0-9]{3,64}$/;
+const TX_HASH_PATTERN = /^0x[a-fA-F0-9]{3,130}$/;
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function parsePositiveInteger(value: string): number | null {
+  if (!/^\d+$/.test(value)) {
+    return null;
+  }
+
+  const parsed = Number.parseInt(value, 10);
+  if (!Number.isSafeInteger(parsed) || parsed <= 0) {
+    return null;
+  }
+
+  return parsed;
+}
+
+function normalizeAddress(value: string): string {
+  return value.trim().toLowerCase();
+}
+
+function isAddressLike(value: string): boolean {
+  return ADDRESS_PATTERN.test(value);
+}
 
 /**
  * Look up the authenticated user's DB id and verify they are a party to the given payment request.
@@ -35,12 +62,18 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   // Require authentication — only parties involved should read a payment request
   const authResult = await requireAuth(request);
   if (authResult instanceof NextResponse) return authResult;
+  if (!authResult.user?.address || !isAddressLike(authResult.user.address)) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
 
   try {
     const resolvedParams = await params;
-    const id = resolvedParams?.id;
+    const id =
+      typeof resolvedParams?.id === 'string'
+        ? parsePositiveInteger(resolvedParams.id.trim())
+        : null;
 
-    if (!id || typeof id !== 'string') {
+    if (id === null) {
       return NextResponse.json(
         { error: 'Invalid id parameter' },
         { status: 400 }
@@ -57,7 +90,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     }
 
     const paymentRequest = result.rows[0]!;
-    const ownership = await verifyOwnership(authResult.user.address, paymentRequest);
+    const ownership = await verifyOwnership(normalizeAddress(authResult.user.address), paymentRequest);
     if (ownership instanceof NextResponse) return ownership;
 
     return NextResponse.json({ request: paymentRequest });
@@ -73,23 +106,29 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
 
   const authResult = await requireAuth(request);
   if (authResult instanceof NextResponse) return authResult;
+  if (!authResult.user?.address || !isAddressLike(authResult.user.address)) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
 
-  let body: Record<string, unknown>;
+  let body: unknown;
   try {
     body = await request.json();
   } catch {
     return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
   }
 
-  if (!body || typeof body !== 'object' || Array.isArray(body)) {
+  if (!isRecord(body)) {
     return NextResponse.json({ error: 'Request body must be a JSON object' }, { status: 400 });
   }
 
   try {
     const resolvedParams = await params;
-    const id = resolvedParams?.id;
+    const id =
+      typeof resolvedParams?.id === 'string'
+        ? parsePositiveInteger(resolvedParams.id.trim())
+        : null;
 
-    if (!id || typeof id !== 'string') {
+    if (id === null) {
       return NextResponse.json(
         { error: 'Invalid id parameter' },
         { status: 400 }
@@ -97,7 +136,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     }
 
     const { status } = body;
-    const normalizedStatus = typeof status === 'string' ? status : null;
+    const normalizedStatus = typeof status === 'string' ? status.trim().toLowerCase() : null;
 
     if (!normalizedStatus) {
       return NextResponse.json({ error: 'Status required' }, { status: 400 });
@@ -116,7 +155,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     if (existing.rows.length === 0) {
       return NextResponse.json({ error: 'Request not found' }, { status: 404 });
     }
-    const ownership = await verifyOwnership(authResult.user.address, existing.rows[0]!);
+    const ownership = await verifyOwnership(normalizeAddress(authResult.user.address), existing.rows[0]!);
     if (ownership instanceof NextResponse) return ownership;
 
     const result = await query(
@@ -140,23 +179,29 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
 
   const authResult = await requireAuth(request);
   if (authResult instanceof NextResponse) return authResult;
+  if (!authResult.user?.address || !isAddressLike(authResult.user.address)) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
 
-  let body: Record<string, unknown>;
+  let body: unknown;
   try {
     body = await request.json();
   } catch {
     return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
   }
 
-  if (!body || typeof body !== 'object' || Array.isArray(body)) {
+  if (!isRecord(body)) {
     return NextResponse.json({ error: 'Request body must be a JSON object' }, { status: 400 });
   }
 
   try {
     const resolvedParams = await params;
-    const id = resolvedParams?.id;
+    const id =
+      typeof resolvedParams?.id === 'string'
+        ? parsePositiveInteger(resolvedParams.id.trim())
+        : null;
 
-    if (!id || typeof id !== 'string') {
+    if (id === null) {
       return NextResponse.json(
         { error: 'Invalid id parameter' },
         { status: 400 }
@@ -164,8 +209,8 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     }
 
     const { status, txHash } = body;
-    const normalizedStatus = typeof status === 'string' ? status : null;
-    const normalizedTxHash = typeof txHash === 'string' ? txHash : null;
+    const normalizedStatus = typeof status === 'string' ? status.trim().toLowerCase() : null;
+    const normalizedTxHash = typeof txHash === 'string' ? txHash.trim() : null;
 
     if (!normalizedStatus) {
       return NextResponse.json({ error: 'Status required' }, { status: 400 });
@@ -179,12 +224,20 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       );
     }
 
+    if (txHash !== undefined && typeof txHash !== 'string') {
+      return NextResponse.json({ error: 'Invalid txHash format' }, { status: 400 });
+    }
+
+    if (normalizedTxHash && !TX_HASH_PATTERN.test(normalizedTxHash)) {
+      return NextResponse.json({ error: 'Invalid txHash format' }, { status: 400 });
+    }
+
     // Verify the authenticated user is a party to this payment request
     const existing = await query('SELECT * FROM payment_requests WHERE id = $1', [id]);
     if (existing.rows.length === 0) {
       return NextResponse.json({ error: 'Payment request not found' }, { status: 404 });
     }
-    const ownership = await verifyOwnership(authResult.user.address, existing.rows[0]!);
+    const ownership = await verifyOwnership(normalizeAddress(authResult.user.address), existing.rows[0]!);
     if (ownership instanceof NextResponse) return ownership;
 
     const result = await query(

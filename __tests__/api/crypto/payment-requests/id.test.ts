@@ -84,6 +84,19 @@ describe('/api/crypto/payment-requests/[id]', () => {
       expect(response.status).toBe(404);
       expect(data.error).toContain('not found');
     });
+
+    it('should return 400 for non-numeric id parameter', async () => {
+      withRateLimit.mockResolvedValue(null);
+      requireAuth.mockResolvedValue({ user: mockUser });
+
+      const request = new NextRequest('http://localhost:3000/api/crypto/payment-requests/bad-id');
+      const response = await GET(request, { params: Promise.resolve({ id: 'bad-id' }) });
+      const data = await response.json();
+
+      expect(response.status).toBe(400);
+      expect(data.error).toContain('Invalid id parameter');
+      expect(query).not.toHaveBeenCalled();
+    });
   });
 
   describe('PUT', () => {
@@ -257,6 +270,23 @@ describe('/api/crypto/payment-requests/[id]', () => {
 
       expect(response.status).toBe(400);
       expect(data.error).toContain('Invalid status');
+    });
+
+    it('should return 400 when txHash is not a string', async () => {
+      withRateLimit.mockResolvedValue(null);
+      requireAuth.mockResolvedValue({ user: mockUser });
+
+      const request = new NextRequest('http://localhost:3000/api/crypto/payment-requests/1', {
+        method: 'PATCH',
+        body: JSON.stringify({ status: 'completed', txHash: 123 }),
+      });
+
+      const response = await PATCH(request, { params: Promise.resolve({ id: '1' }) });
+      const data = await response.json();
+
+      expect(response.status).toBe(400);
+      expect(data.error).toContain('Invalid txHash');
+      expect(query).not.toHaveBeenCalled();
     });
   });
 });
