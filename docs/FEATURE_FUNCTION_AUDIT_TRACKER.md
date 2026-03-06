@@ -143,6 +143,7 @@ Status legend:
   - `app/api/gamification/route.ts` GET handler now enforces authenticated-address shape checks, strict `userAddress` query format validation, and normalized address comparison before profile reads
   - `app/api/quests/daily/route.ts` GET handler now enforces authenticated-address shape checks, strict `userAddress` query format validation, normalized address comparison for access control, and normalized address DB lookups
   - `app/api/quests/weekly/route.ts` GET handler now enforces authenticated-address shape checks, strict `userAddress` query format validation, normalized address comparison for access control, and normalized address DB lookups
+  - `app/api/quests/streak/route.ts` GET/POST handlers now enforce authenticated-address shape checks, strict `userAddress` format validation, and normalized address comparison for access control before streak reads/writes
   - Focused test confirmation: `npm test -- --runInBand __tests__/api/activities.test.ts __tests__/api/users.test.ts __tests__/api/crypto/rewards/claim.test.ts` ✅ (29 tests)
   - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/security/violations.test.ts` ✅ (6 tests)
   - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/messages/reaction.test.ts` ✅ (4 tests)
@@ -185,6 +186,7 @@ Status legend:
   - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/gamification.test.ts` ✅ (15 tests)
   - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/quests/daily.test.ts` ✅ (11 tests)
   - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/quests/weekly.test.ts` ✅ (5 tests)
+  - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/quests/streak.test.ts` ✅ (10 tests)
   - Additional typecheck confirmation: `npm run -s typecheck` ✅
 
 ### 7. Frontend page-by-page behavior and contract wiring checks

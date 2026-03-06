@@ -4,6 +4,15 @@ import { isAdmin, requireAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 
 const STREAK_TYPE_REGEX = /^[a-z_]{1,32}$/;
+const ADDRESS_PATTERN = /^0x[a-fA-F0-9]{3,64}$/;
+
+function normalizeAddress(value: string): string {
+  return value.trim().toLowerCase();
+}
+
+function isAddressLike(value: string): boolean {
+  return ADDRESS_PATTERN.test(value);
+}
 
 /**
  * GET /api/quests/streak
@@ -18,6 +27,13 @@ export async function GET(request: NextRequest) {
   const authResult = await requireAuth(request);
   if (authResult instanceof NextResponse) return authResult;
 
+  const requesterAddress = typeof authResult.user?.address === 'string'
+    ? normalizeAddress(authResult.user.address)
+    : '';
+  if (!requesterAddress || !isAddressLike(requesterAddress)) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   try {
     const searchParams = request.nextUrl.searchParams;
     const userAddress = searchParams.get('userAddress');
@@ -30,8 +46,11 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'User address must be a string' }, { status: 400 });
     }
 
-    const requesterAddress = authResult.user.address.toLowerCase();
-    const targetAddress = userAddress.toLowerCase();
+    const targetAddress = normalizeAddress(userAddress);
+    if (!isAddressLike(targetAddress)) {
+      return NextResponse.json({ error: 'Invalid user address format' }, { status: 400 });
+    }
+
     const canAccess = requesterAddress === targetAddress || isAdmin(authResult.user);
     if (!canAccess) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
@@ -129,6 +148,13 @@ export async function POST(request: NextRequest) {
   const authResult = await requireAuth(request);
   if (authResult instanceof NextResponse) return authResult;
 
+  const requesterAddress = typeof authResult.user?.address === 'string'
+    ? normalizeAddress(authResult.user.address)
+    : '';
+  if (!requesterAddress || !isAddressLike(requesterAddress)) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   let body: Record<string, unknown>;
   try {
     body = await request.json();
@@ -157,8 +183,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid streak type' }, { status: 400 });
     }
 
-    const requesterAddress = authResult.user.address.toLowerCase();
-    const targetAddress = userAddress.toLowerCase();
+    const targetAddress = normalizeAddress(userAddress);
+    if (!isAddressLike(targetAddress)) {
+      return NextResponse.json({ error: 'Invalid user address format' }, { status: 400 });
+    }
+
     const canUpdate = requesterAddress === targetAddress || isAdmin(authResult.user);
     if (!canUpdate) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });

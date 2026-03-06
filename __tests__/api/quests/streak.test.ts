@@ -77,6 +77,32 @@ describe('/api/quests/streak', () => {
 
       expect(response.status).toBe(403);
     });
+
+    it('should return 401 for malformed authenticated address', async () => {
+      withRateLimit.mockResolvedValue(null);
+      requireAuth.mockResolvedValue({ user: { address: 'bad-address', id: 1 } });
+
+      const request = new NextRequest('http://localhost:3000/api/quests/streak?userAddress=0x123');
+      const response = await GET(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(401);
+      expect(data.error).toBe('Unauthorized');
+      expect(getClient).not.toHaveBeenCalled();
+    });
+
+    it('should return 400 for malformed userAddress query', async () => {
+      withRateLimit.mockResolvedValue(null);
+      requireAuth.mockResolvedValue({ user: { address: '0x123', id: 1 } });
+
+      const request = new NextRequest('http://localhost:3000/api/quests/streak?userAddress=not-an-address');
+      const response = await GET(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(400);
+      expect(data.error).toBe('Invalid user address format');
+      expect(getClient).not.toHaveBeenCalled();
+    });
   });
 
   describe('POST', () => {
@@ -127,6 +153,40 @@ describe('/api/quests/streak', () => {
 
       const response = await POST(request);
       expect(response.status).toBe(403);
+    });
+
+    it('should return 401 for malformed authenticated address on POST', async () => {
+      withRateLimit.mockResolvedValue(null);
+      requireAuth.mockResolvedValue({ user: { address: 'bad-address', id: 1 } });
+
+      const request = new NextRequest('http://localhost:3000/api/quests/streak', {
+        method: 'POST',
+        body: JSON.stringify({ userAddress: '0x123', streakType: 'login' }),
+      });
+
+      const response = await POST(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(401);
+      expect(data.error).toBe('Unauthorized');
+      expect(getClient).not.toHaveBeenCalled();
+    });
+
+    it('should return 400 for malformed target userAddress on POST', async () => {
+      withRateLimit.mockResolvedValue(null);
+      requireAuth.mockResolvedValue({ user: { address: '0x123', id: 1 } });
+
+      const request = new NextRequest('http://localhost:3000/api/quests/streak', {
+        method: 'POST',
+        body: JSON.stringify({ userAddress: 'not-an-address', streakType: 'login' }),
+      });
+
+      const response = await POST(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(400);
+      expect(data.error).toBe('Invalid user address format');
+      expect(getClient).not.toHaveBeenCalled();
     });
   });
 });
