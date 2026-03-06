@@ -84,7 +84,7 @@ Status legend:
 - Verification evidence:
   - `npm test -- --runInBand __tests__/api` ✅ (58 suites, 475 tests)
 - Function hardening deltas:
-  - `app/api/crypto/rewards/[userId]/claim/route.ts` claim handler now validates and deduplicates reward IDs before DB casts/writes
+  - `app/api/crypto/rewards/[userId]/claim/route.ts` claim handler now enforces strict JSON-object parsing, authenticated address presence, and sanitized/deduplicated reward IDs before DB casts/writes
   - `app/api/users/[address]/route.ts` PUT handler now enforces strict JSON-object + field format/length validation (`username`, `email`, `bio`, `avatar_url`)
   - `app/api/activities/route.ts` POST handler now enforces address format and normalized `activityType`/`title` writes
   - `app/api/crypto/payment-requests/route.ts` POST handler now enforces numeric user IDs, no self-requesting, normalized token casing, strict decimal amount format, and memo type checks
@@ -126,6 +126,7 @@ Status legend:
   - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/errors.test.ts __tests__/api/analytics.test.ts __tests__/api/attachments/upload.test.ts` ✅ (25 tests)
   - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/notifications/preferences.test.ts __tests__/api/leaderboard/monthly.test.ts` ✅ (16 tests)
   - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/crypto/payment-requests/id.test.ts __tests__/api/crypto/payment-requests.test.ts` ✅ (20 tests)
+  - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/crypto/rewards/claim.test.ts` ✅ (6 tests)
   - Additional typecheck confirmation: `npm run -s typecheck` ✅
 
 ### 7. Frontend page-by-page behavior and contract wiring checks

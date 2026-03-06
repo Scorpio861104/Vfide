@@ -8,6 +8,10 @@ import rewardABI from '@/lib/abis/UserRewards.json';
 
 const REWARD_ID_REGEX = /^[a-zA-Z0-9:_-]{1,128}$/;
 
+function isObjectRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
 // Initialize viem client for on-chain verification
 const client = createPublicClient({
   chain: baseSepolia,
@@ -87,14 +91,31 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    if (authResult.user.address.toLowerCase() !== ownerAddress.toLowerCase()) {
+    const authAddress = typeof authResult.user?.address === 'string'
+      ? authResult.user.address.trim()
+      : '';
+    if (!authAddress) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    if (authAddress.toLowerCase() !== ownerAddress.toLowerCase()) {
       return NextResponse.json(
         { error: 'You do not have permission to access this resource' },
         { status: 403 }
       );
     }
 
-    const body = await request.json();
+    let body: unknown;
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+    }
+
+    if (!isObjectRecord(body)) {
+      return NextResponse.json({ error: 'Request body must be a JSON object' }, { status: 400 });
+    }
+
     const { rewardIds } = body;
 
     if (!rewardIds || !Array.isArray(rewardIds)) {
@@ -113,7 +134,8 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     // Validate reward IDs and deduplicate while preserving supported ID formats
     const normalizedRewardIds = [...new Set(rewardIds)]
       .filter((id): id is string => typeof id === 'string')
-      .map((id) => id.trim());
+      .map((id) => id.trim())
+      .filter((id) => id.length > 0);
 
     if (normalizedRewardIds.length === 0) {
       return NextResponse.json({ error: 'No valid reward IDs provided' }, { status: 400 });
@@ -141,7 +163,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
         try {
           const eligible = await verifyRewardOnChain(
             reward.source_contract,
-            authResult.user.address,
+            authAddress,
             reward.id
           );
           if (!eligible) {

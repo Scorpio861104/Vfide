@@ -88,5 +88,54 @@ describe('/api/crypto/rewards/[userId]/claim', () => {
       const response = await POST(request, { params: Promise.resolve({ userId: '1' }) });
       expect(response.status).toBe(403);
     });
+
+    it('should return 401 when authenticated address is missing', async () => {
+      withRateLimit.mockResolvedValue(null);
+      requireAuth.mockResolvedValue({ user: {} });
+      query.mockResolvedValueOnce({ rows: [{ wallet_address: '0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb' }] });
+
+      const request = new NextRequest('http://localhost:3000/api/crypto/rewards/1/claim', {
+        method: 'POST',
+        body: JSON.stringify({ rewardIds: ['1'] }),
+      });
+
+      const response = await POST(request, { params: Promise.resolve({ userId: '1' }) });
+      expect(response.status).toBe(401);
+    });
+
+    it('should return 400 for malformed JSON payload', async () => {
+      withRateLimit.mockResolvedValue(null);
+      requireAuth.mockResolvedValue({ user: { address: '0x1111111111111111111111111111111111111123' } });
+      query.mockResolvedValueOnce({ rows: [{ wallet_address: '0x1111111111111111111111111111111111111123' }] });
+
+      const request = new NextRequest('http://localhost:3000/api/crypto/rewards/1/claim', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: 'not-json',
+      });
+
+      const response = await POST(request, { params: Promise.resolve({ userId: '1' }) });
+      const data = await response.json();
+
+      expect(response.status).toBe(400);
+      expect(data.error).toContain('Invalid JSON body');
+    });
+
+    it('should return 400 when payload is not a JSON object', async () => {
+      withRateLimit.mockResolvedValue(null);
+      requireAuth.mockResolvedValue({ user: { address: '0x1111111111111111111111111111111111111123' } });
+      query.mockResolvedValueOnce({ rows: [{ wallet_address: '0x1111111111111111111111111111111111111123' }] });
+
+      const request = new NextRequest('http://localhost:3000/api/crypto/rewards/1/claim', {
+        method: 'POST',
+        body: JSON.stringify(['1', '2']),
+      });
+
+      const response = await POST(request, { params: Promise.resolve({ userId: '1' }) });
+      const data = await response.json();
+
+      expect(response.status).toBe(400);
+      expect(data.error).toContain('Request body must be a JSON object');
+    });
   });
 });
