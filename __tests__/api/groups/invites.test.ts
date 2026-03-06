@@ -77,6 +77,19 @@ describe('/api/groups/invites', () => {
       expect(requireAuth).not.toHaveBeenCalled();
       expect(query).not.toHaveBeenCalled();
     });
+
+    it('should return 401 for malformed authenticated address on groupId reads', async () => {
+      withRateLimit.mockResolvedValue(null);
+      requireAuth.mockReturnValue({ user: { address: 'bad-address' } });
+
+      const request = new NextRequest('http://localhost:3000/api/groups/invites?groupId=1');
+      const response = await GET(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(401);
+      expect(data.error).toBe('Unauthorized');
+      expect(query).not.toHaveBeenCalled();
+    });
   });
 
   describe('POST', () => {
@@ -143,6 +156,23 @@ describe('/api/groups/invites', () => {
 
       expect(response.status).toBe(400);
       expect(data.error).toContain('Invalid JSON payload');
+      expect(query).not.toHaveBeenCalled();
+    });
+
+    it('should return 401 for malformed authenticated address on POST', async () => {
+      withRateLimit.mockResolvedValue(null);
+      requireAuth.mockReturnValue({ user: { address: 'bad-address' } });
+
+      const request = new NextRequest('http://localhost:3000/api/groups/invites', {
+        method: 'POST',
+        body: JSON.stringify({ groupId: 1 }),
+      });
+
+      const response = await POST(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(401);
+      expect(data.error).toBe('Unauthorized');
       expect(query).not.toHaveBeenCalled();
     });
   });

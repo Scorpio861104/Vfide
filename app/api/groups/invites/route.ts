@@ -2,6 +2,7 @@ import { query } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
+import { isAddress } from 'viem';
 
 interface GroupInvite {
   id: number;
@@ -55,6 +56,10 @@ function normalizeInviteCode(value: string): string {
   return value.trim();
 }
 
+function normalizeAddress(value: string): string {
+  return value.trim().toLowerCase();
+}
+
 export async function POST(request: NextRequest) {
   // Rate limiting
   const rateLimit = await withRateLimit(request, 'write');
@@ -63,7 +68,11 @@ export async function POST(request: NextRequest) {
   // Authentication
   const authResult = await requireAuth(request);
   if (authResult instanceof NextResponse) return authResult;
-  if (!authResult.user?.address) {
+
+  const authenticatedAddress = typeof authResult.user?.address === 'string'
+    ? normalizeAddress(authResult.user.address)
+    : '';
+  if (!authenticatedAddress || !isAddress(authenticatedAddress)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
@@ -127,7 +136,7 @@ export async function POST(request: NextRequest) {
 
     const userResult = await query(
       'SELECT id FROM users WHERE wallet_address = $1',
-      [authResult.user.address.toLowerCase()]
+      [authenticatedAddress]
     );
 
     if (userResult.rows.length === 0) {
@@ -207,13 +216,17 @@ export async function GET(request: NextRequest) {
 
       const authResult = await requireAuth(request);
       if (authResult instanceof NextResponse) return authResult;
-      if (!authResult.user?.address) {
+
+      const authenticatedAddress = typeof authResult.user?.address === 'string'
+        ? normalizeAddress(authResult.user.address)
+        : '';
+      if (!authenticatedAddress || !isAddress(authenticatedAddress)) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
       }
 
       const userResult = await query(
         'SELECT id FROM users WHERE wallet_address = $1',
-        [authResult.user.address.toLowerCase()]
+        [authenticatedAddress]
       );
 
       if (userResult.rows.length === 0 || !userResult.rows[0]?.id) {
@@ -260,7 +273,11 @@ export async function PATCH(request: NextRequest) {
   // Authentication
   const authResult = await requireAuth(request);
   if (authResult instanceof NextResponse) return authResult;
-  if (!authResult.user?.address) {
+
+  const authenticatedAddress = typeof authResult.user?.address === 'string'
+    ? normalizeAddress(authResult.user.address)
+    : '';
+  if (!authenticatedAddress || !isAddress(authenticatedAddress)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
@@ -307,7 +324,7 @@ export async function PATCH(request: NextRequest) {
     // Verify ownership - only creator can modify
     const userResult = await query(
       'SELECT id FROM users WHERE wallet_address = $1',
-      [authResult.user.address.toLowerCase()]
+      [authenticatedAddress]
     );
     
     if (userResult.rows.length === 0 || userResult.rows[0]?.id !== result.rows[0]?.created_by) {
@@ -365,7 +382,11 @@ export async function DELETE(request: NextRequest) {
   // Authentication
   const authResult = await requireAuth(request);
   if (authResult instanceof NextResponse) return authResult;
-  if (!authResult.user?.address) {
+
+  const authenticatedAddress = typeof authResult.user?.address === 'string'
+    ? normalizeAddress(authResult.user.address)
+    : '';
+  if (!authenticatedAddress || !isAddress(authenticatedAddress)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
@@ -403,7 +424,7 @@ export async function DELETE(request: NextRequest) {
     // Verify ownership - only creator can delete
     const userResult = await query(
       'SELECT id FROM users WHERE wallet_address = $1',
-      [authResult.user.address.toLowerCase()]
+      [authenticatedAddress]
     );
     
     if (userResult.rows.length === 0 || userResult.rows[0]?.id !== inviteResult.rows[0]?.created_by) {
