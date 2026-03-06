@@ -5,6 +5,15 @@ import { withRateLimit } from '@/lib/auth/rateLimit';
 
 const USER_ID_REGEX = /^\d+$/;
 const ENTITY_REGEX = /^[a-zA-Z0-9:_-]{1,64}$/;
+const ADDRESS_PATTERN = /^0x[a-fA-F0-9]{3,64}$/;
+
+function normalizeAddress(value: string): string {
+  return value.trim().toLowerCase();
+}
+
+function isAddressLike(value: string): boolean {
+  return ADDRESS_PATTERN.test(value);
+}
 
 export async function GET(request: NextRequest) {
   // Rate limiting
@@ -14,7 +23,11 @@ export async function GET(request: NextRequest) {
   // Authentication
   const authResult = await requireAuth(request);
   if (authResult instanceof NextResponse) return authResult;
-  if (!authResult.user?.address) {
+
+  const authenticatedAddress = typeof authResult.user?.address === 'string'
+    ? normalizeAddress(authResult.user.address)
+    : '';
+  if (!authenticatedAddress || !isAddressLike(authenticatedAddress)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
@@ -32,7 +45,7 @@ export async function GET(request: NextRequest) {
 
     const ownerResult = await query(
       'SELECT id FROM users WHERE wallet_address = $1',
-      [authResult.user.address.toLowerCase()]
+      [authenticatedAddress]
     );
 
     const authenticatedUserId = ownerResult.rows[0]?.id;
@@ -63,7 +76,11 @@ export async function POST(request: NextRequest) {
   // Authentication
   const authResult = await requireAuth(request);
   if (authResult instanceof NextResponse) return authResult;
-  if (!authResult.user?.address) {
+
+  const authenticatedAddress = typeof authResult.user?.address === 'string'
+    ? normalizeAddress(authResult.user.address)
+    : '';
+  if (!authenticatedAddress || !isAddressLike(authenticatedAddress)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
@@ -116,7 +133,7 @@ export async function POST(request: NextRequest) {
 
     const ownerResult = await query(
       'SELECT id FROM users WHERE wallet_address = $1',
-      [authResult.user.address.toLowerCase()]
+      [authenticatedAddress]
     );
 
     const authenticatedUserId = ownerResult.rows[0]?.id;

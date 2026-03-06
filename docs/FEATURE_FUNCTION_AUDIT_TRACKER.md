@@ -150,6 +150,7 @@ Status legend:
   - `app/api/groups/members/route.ts` POST/PATCH/DELETE handlers now enforce authenticated-address presence/shape checks before actor validation and role-gated member mutations
   - `app/api/groups/join/route.ts` POST handler now enforces authenticated-address presence/shape checks before user resolution and invite join flow execution
   - `app/api/groups/invites/route.ts` GET(group-scoped)/POST/PATCH/DELETE handlers now enforce authenticated-address presence/shape checks before membership/ownership authorization queries
+  - `app/api/sync/route.ts` GET/POST handlers now enforce authenticated-address presence/shape checks before user ownership verification and sync state reads/writes
   - Focused test confirmation: `npm test -- --runInBand __tests__/api/activities.test.ts __tests__/api/users.test.ts __tests__/api/crypto/rewards/claim.test.ts` ✅ (29 tests)
   - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/security/violations.test.ts` ✅ (6 tests)
   - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/messages/reaction.test.ts` ✅ (4 tests)
@@ -199,6 +200,7 @@ Status legend:
   - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/groups/members.test.ts` ✅ (11 tests)
   - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/groups/join.test.ts` ✅ (8 tests)
   - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/groups/invites.test.ts` ✅ (9 tests)
+  - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/sync.test.ts` ✅ (8 tests)
   - Additional typecheck confirmation: `npm run -s typecheck` ✅
 
 ### 7. Frontend page-by-page behavior and contract wiring checks
