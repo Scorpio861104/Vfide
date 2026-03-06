@@ -5,6 +5,9 @@ import { requireAuth } from '@/lib/auth/middleware';
 import crypto from 'crypto';
 
 const CODE_TTL_MINUTES = 5;
+const ADDRESS_PATTERN = /^0x[a-fA-F0-9]{3,64}$/;
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const MAX_DESTINATION_LENGTH = 320;
 
 const generateCode = () => {
   return crypto.randomInt(100000, 1000000).toString();
@@ -13,6 +16,14 @@ const generateCode = () => {
 const hashCode = (code: string) => {
   return crypto.createHash('sha256').update(code).digest('hex');
 };
+
+function normalizeAddress(value: string): string {
+  return value.trim().toLowerCase();
+}
+
+function isAddressLike(value: string): boolean {
+  return ADDRESS_PATTERN.test(value);
+}
 
 const sendEmailCode = async (destination: string, code: string) => {
   const apiKey = process.env.SENDGRID_API_KEY;
@@ -95,6 +106,13 @@ export async function POST(request: NextRequest) {
     return authResult;
   }
 
+  const authAddress = typeof authResult.user?.address === 'string'
+    ? normalizeAddress(authResult.user.address)
+    : '';
+  if (!authAddress || !isAddressLike(authAddress)) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   let body: Record<string, unknown>;
   try {
     body = await request.json();
@@ -120,9 +138,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Destination required' }, { status: 400 });
     }
 
+    const normalizedDestination = destination.trim();
+    if (normalizedDestination.length === 0 || normalizedDestination.length > MAX_DESTINATION_LENGTH) {
+      return NextResponse.json({ error: 'Invalid destination' }, { status: 400 });
+    }
+
     const userResult = await query<{ id: number; email: string | null }>(
       'SELECT id, email FROM users WHERE wallet_address = $1',
-      [authResult.user.address.toLowerCase()]
+      [authAddress]
     );
 
     const userId = userResult.rows[0]?.id;
@@ -132,8 +155,12 @@ export async function POST(request: NextRequest) {
     }
 
     if (method === 'email') {
-      const normalizedDestination = destination.trim().toLowerCase();
-      if (!userEmail || userEmail.toLowerCase() !== normalizedDestination) {
+      const normalizedEmailDestination = normalizedDestination.toLowerCase();
+      if (!EMAIL_PATTERN.test(normalizedEmailDestination)) {
+        return NextResponse.json({ error: 'Invalid email destination format' }, { status: 400 });
+      }
+
+      if (!userEmail || userEmail.toLowerCase() !== normalizedEmailDestination) {
         return NextResponse.json({ error: 'Email address not verified' }, { status: 400 });
       }
     }
@@ -151,14 +178,14 @@ export async function POST(request: NextRequest) {
     await query(
       `INSERT INTO two_factor_codes (user_id, method, destination, code_hash, expires_at)
        VALUES ($1, $2, $3, $4, $5)`,
-      [userId, method, destination, codeHash, expiresAt.toISOString()]
+      [userId, method, method === 'email' ? normalizedDestination.toLowerCase() : normalizedDestination, codeHash, expiresAt.toISOString()]
     );
 
     try {
       if (method === 'email') {
-        await sendEmailCode(destination, code);
+        await sendEmailCode(normalizedDestination.toLowerCase(), code);
       } else {
-        await sendSmsCode(destination, code);
+        await sendSmsCode(normalizedDestination, code);
       }
     } catch (sendError) {
       await query('DELETE FROM two_factor_codes WHERE user_id = $1 AND method = $2', [userId, method]);

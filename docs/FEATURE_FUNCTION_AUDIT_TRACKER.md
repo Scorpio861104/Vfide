@@ -134,6 +134,7 @@ Status legend:
   - `app/api/analytics/route.ts` GET handler now enforces strict numeric `limit` query parsing and explicit authenticated-address validation for user-scoped analytics reads
   - `app/api/security/csp-report/route.ts` GET handler now enforces strict numeric `limit` query parsing in development-mode report inspection
   - `app/api/leaderboard/monthly/route.ts` GET handler now enforces strict numeric `limit` query parsing (rejecting mixed-format values) before cap/default behavior
+  - `app/api/security/2fa/initiate/route.ts` POST handler now enforces authenticated-address shape checks, bounded destination length validation, strict email destination format checks, and normalized destination persistence/delivery inputs
   - Focused test confirmation: `npm test -- --runInBand __tests__/api/activities.test.ts __tests__/api/users.test.ts __tests__/api/crypto/rewards/claim.test.ts` ✅ (29 tests)
   - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/security/violations.test.ts` ✅ (6 tests)
   - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/messages/reaction.test.ts` ✅ (4 tests)
@@ -167,6 +168,7 @@ Status legend:
   - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/analytics.test.ts __tests__/api/security/csp-report.test.ts` ✅ (16 tests)
   - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/leaderboard/monthly.test.ts __tests__/api/analytics.test.ts __tests__/api/security/csp-report.test.ts` ✅ (29 tests)
   - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/errors.test.ts __tests__/api/notifications/preferences.test.ts` ✅ (15 tests)
+  - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/security/2fa-initiate.test.ts` ✅ (4 tests)
   - Additional typecheck confirmation: `npm run -s typecheck` ✅
 
 ### 7. Frontend page-by-page behavior and contract wiring checks
