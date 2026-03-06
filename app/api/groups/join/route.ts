@@ -8,6 +8,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getClient } from '@/lib/db';
 import { requireAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
+import { isAddress } from 'viem';
 
 const MAX_INVITE_CODE_LENGTH = 64;
 
@@ -31,7 +32,11 @@ export async function POST(request: NextRequest) {
   // Authentication
   const authResult = await requireAuth(request);
   if (authResult instanceof NextResponse) return authResult;
-  if (!authResult.user?.address) {
+
+  const authenticatedAddress = typeof authResult.user?.address === 'string'
+    ? authResult.user.address.trim().toLowerCase()
+    : '';
+  if (!authenticatedAddress || !isAddress(authenticatedAddress)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
@@ -51,7 +56,6 @@ export async function POST(request: NextRequest) {
     }
 
     const { code, userId } = body;
-    const authenticatedAddress = authResult.user.address.toLowerCase();
 
     const inviteCode = typeof code === 'string' ? normalizeInviteCode(code) : '';
 

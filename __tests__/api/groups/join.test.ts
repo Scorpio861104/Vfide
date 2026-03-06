@@ -71,6 +71,26 @@ describe('/api/groups/join', () => {
       expect(response.status).toBe(401);
     });
 
+    it('should return 401 for malformed authenticated address', async () => {
+      withRateLimit.mockResolvedValue(null);
+      requireAuth.mockReturnValue({ user: { address: 'bad-address' } });
+
+      const request = new NextRequest('http://localhost:3000/api/groups/join', {
+        method: 'POST',
+        body: JSON.stringify({
+          code: 'ABC123',
+          userId: 1,
+        }),
+      });
+
+      const response = await POST(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(401);
+      expect(data.error).toBe('Unauthorized');
+      expect(getClient).not.toHaveBeenCalled();
+    });
+
     it('should return 400 when already a member', async () => {
       withRateLimit.mockResolvedValue(null);
       requireAuth.mockReturnValue({ user: { address: '0x1111111111111111111111111111111111111123' } });
