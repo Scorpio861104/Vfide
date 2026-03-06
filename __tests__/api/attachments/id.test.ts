@@ -60,6 +60,16 @@ describe('/api/attachments/[id]', () => {
       expect(response.status).toBe(404);
       expect(data.error).toContain('not found');
     });
+
+    it('should return 400 for malformed id parameter', async () => {
+      withRateLimit.mockResolvedValue(null);
+      requireAuth.mockResolvedValue({ user: { address: '0x1234567890123456789012345678901234567890' } });
+
+      const request = new NextRequest('http://localhost:3000/api/attachments/1abc');
+      const response = await GET(request, { params: Promise.resolve({ id: '1abc' }) });
+
+      expect(response.status).toBe(400);
+    });
   });
 
   describe('DELETE', () => {
@@ -89,6 +99,18 @@ describe('/api/attachments/[id]', () => {
         { status: 401 }
       );
       requireAuth.mockReturnValue(unauthorizedResponse);
+
+      const request = new NextRequest('http://localhost:3000/api/attachments/1', {
+        method: 'DELETE',
+      });
+
+      const response = await DELETE(request, { params: Promise.resolve({ id: '1' }) });
+      expect(response.status).toBe(401);
+    });
+
+    it('should return 401 when authenticated address is missing', async () => {
+      withRateLimit.mockResolvedValue(null);
+      requireAuth.mockResolvedValue({ user: {} });
 
       const request = new NextRequest('http://localhost:3000/api/attachments/1', {
         method: 'DELETE',

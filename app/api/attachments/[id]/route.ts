@@ -3,6 +3,15 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 
+const ADDRESS_LIKE_REGEX = /^0x[a-fA-F0-9]{3,40}$/;
+
+function parsePositiveInteger(value: string): number | null {
+  const trimmed = value.trim();
+  if (!/^\d+$/.test(trimmed)) return null;
+  const parsed = Number.parseInt(trimmed, 10);
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
+}
+
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   // Rate limiting
   const rateLimit = await withRateLimit(request, 'api');
@@ -10,6 +19,13 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
   const authResult = await requireAuth(request);
   if (authResult instanceof NextResponse) return authResult;
+
+  const authAddress = typeof authResult.user?.address === 'string'
+    ? authResult.user.address.trim().toLowerCase()
+    : '';
+  if (!authAddress || !ADDRESS_LIKE_REGEX.test(authAddress)) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
 
   try {
     const resolvedParams = await params;
@@ -22,12 +38,12 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       );
     }
 
-    const id = Number.parseInt(idParam, 10);
-    if (!Number.isInteger(id) || id <= 0) {
+    const id = parsePositiveInteger(idParam);
+    if (!id) {
       return NextResponse.json({ error: 'Invalid id parameter' }, { status: 400 });
     }
 
-    const userResult = await query('SELECT id FROM users WHERE LOWER(wallet_address) = LOWER($1)', [authResult.user.address]);
+    const userResult = await query('SELECT id FROM users WHERE LOWER(wallet_address) = LOWER($1)', [authAddress]);
     const userId = userResult.rows[0]?.id;
     if (!userId) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
@@ -58,6 +74,13 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
   const authResult = await requireAuth(request);
   if (authResult instanceof NextResponse) return authResult;
 
+  const authAddress = typeof authResult.user?.address === 'string'
+    ? authResult.user.address.trim().toLowerCase()
+    : '';
+  if (!authAddress || !ADDRESS_LIKE_REGEX.test(authAddress)) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   try {
     const resolvedParams = await params;
     const idParam = resolvedParams?.id;
@@ -69,13 +92,13 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
       );
     }
 
-    const id = Number.parseInt(idParam, 10);
-    if (!Number.isInteger(id) || id <= 0) {
+    const id = parsePositiveInteger(idParam);
+    if (!id) {
       return NextResponse.json({ error: 'Invalid id parameter' }, { status: 400 });
     }
 
     // Always verify ownership before deletion
-    const userResult = await query('SELECT id FROM users WHERE LOWER(wallet_address) = LOWER($1)', [authResult.user.address]);
+    const userResult = await query('SELECT id FROM users WHERE LOWER(wallet_address) = LOWER($1)', [authAddress]);
     const userId = userResult.rows[0]?.id;
     if (!userId) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
