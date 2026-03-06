@@ -87,6 +87,18 @@ describe('/api/endorsements', () => {
         ['0x456', 50, 10000]
       );
     });
+
+    it('should return 400 for malformed numeric pagination params', async () => {
+      withRateLimit.mockResolvedValue(null);
+
+      const request = new NextRequest('http://localhost:3000/api/endorsements?limit=10abc&offset=0');
+      const response = await GET(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(400);
+      expect(data.error).toContain('Invalid limit or offset parameter');
+      expect(query).not.toHaveBeenCalled();
+    });
   });
 
   describe('POST', () => {
@@ -189,6 +201,29 @@ describe('/api/endorsements', () => {
 
       const response = await POST(request);
       expect(response.status).toBe(401);
+    });
+
+    it('should return 401 for malformed authenticated address shape', async () => {
+      withRateLimit.mockResolvedValue(null);
+      requireAuth.mockReturnValue({ user: { address: 'bad-address' } });
+
+      const request = new NextRequest('http://localhost:3000/api/endorsements', {
+        method: 'POST',
+        body: JSON.stringify({
+          fromAddress: '0x1111111111111111111111111111111111111123',
+          toAddress: '0x2222222222222222222222222222222222222456',
+          skill: 'Trading',
+          message: 'Great trader!',
+        }),
+      });
+
+      const response = await POST(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(401);
+      expect(data.error).toBe('Unauthorized');
+      expect(endorsementSchema.safeParse).not.toHaveBeenCalled();
+      expect(getClient).not.toHaveBeenCalled();
     });
   });
 });

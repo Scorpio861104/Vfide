@@ -45,6 +45,19 @@ function parsePositiveInteger(value: string): number | null {
   return parsed;
 }
 
+function parseNonNegativeInteger(value: string): number | null {
+  if (!/^\d+$/.test(value)) {
+    return null;
+  }
+
+  const parsed = Number.parseInt(value, 10);
+  if (!Number.isSafeInteger(parsed) || parsed < 0) {
+    return null;
+  }
+
+  return parsed;
+}
+
 /**
  * GET /api/endorsements?endorsedAddress=0x...&proposalId=123&limit=50&offset=0
  * Get endorsements
@@ -58,19 +71,20 @@ export async function GET(request: NextRequest) {
     const rawEndorsedAddress = searchParams.get('endorsedAddress');
     const rawEndorserAddress = searchParams.get('endorserAddress');
     const rawProposalId = searchParams.get('proposalId');
-    const rawLimit = parseInt(searchParams.get('limit') || '50', 10);
-    const rawOffset = parseInt(searchParams.get('offset') || '0', 10);
+    const rawLimit = searchParams.get('limit');
+    const rawOffset = searchParams.get('offset');
+    const parsedLimit = rawLimit !== null ? parseNonNegativeInteger(rawLimit) : 50;
+    const parsedOffset = rawOffset !== null ? parseNonNegativeInteger(rawOffset) : 0;
 
-    const limit = Math.min(Math.max(rawLimit, 0), MAX_ENDORSEMENTS_LIMIT);
-    const offset = Math.min(Math.max(rawOffset, 0), MAX_ENDORSEMENTS_OFFSET);
-
-    // Validate parsed numbers
-    if (isNaN(rawLimit) || isNaN(rawOffset)) {
+    if (parsedLimit === null || parsedOffset === null) {
       return NextResponse.json(
         { error: 'Invalid limit or offset parameter' },
         { status: 400 }
       );
     }
+
+    const limit = Math.min(parsedLimit, MAX_ENDORSEMENTS_LIMIT);
+    const offset = Math.min(parsedOffset, MAX_ENDORSEMENTS_OFFSET);
 
     const endorsedAddress =
       typeof rawEndorsedAddress === 'string' && rawEndorsedAddress.trim().length > 0
@@ -206,7 +220,11 @@ export async function POST(request: NextRequest) {
   if (authResult instanceof NextResponse) {
     return authResult;
   }
-  if (!authResult.user?.address) {
+
+  const authAddress = typeof authResult.user?.address === 'string'
+    ? normalizeAddress(authResult.user.address)
+    : '';
+  if (!authAddress || !isAddressLike(authAddress)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
@@ -270,7 +288,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Verify the endorser is the authenticated user
-    if (normalizeAddress(authResult.user.address) !== endorserAddress) {
+    if (authAddress !== endorserAddress) {
       return NextResponse.json(
         { error: 'You can only create endorsements from your own address' },
         { status: 403 }
