@@ -171,6 +171,9 @@ interface IEcosystemVault {
     function payExpense(address recipient, uint256 amount, string calldata reason) external;
     function payMerchantWorkReward(address worker, uint256 amount, string calldata reason) external;
     function payReferralWorkReward(address worker, uint256 amount, string calldata reason) external;
+    function payReferralLevelReward(address worker, uint256 year, string calldata reason) external;
+    function claimReferralLevelRewards(uint256 year, string calldata reason) external returns (uint8 levelsPaid, uint256 totalAmount);
+    function processReferralLevelRewards(address worker, uint256 year, string calldata reason) external returns (uint8 levelsPaid, uint256 totalAmount);
     function burnFunds(uint256 amount) external;
     function recordMerchantTransaction(address merchant) external;
     function checkHeadhunterReward(address merchant) external;

@@ -41,6 +41,17 @@ export interface PendingReferral {
   error: Error | null;
 }
 
+export interface ReferralLevelStatus {
+  points: number;
+  unlockedLevel: number;
+  highestPaidLevel: number;
+  nextLevel: number;
+  nextLevelRequiredPoints: number;
+  nextLevelReward: bigint;
+  isLoading: boolean;
+  error: Error | null;
+}
+
 /**
  * Get headhunter stats for current user
  */
@@ -168,6 +179,52 @@ export function usePendingReferral(referred: `0x${string}` | undefined): Pending
 }
 
 /**
+ * Get referral level progress for a referrer and year.
+ */
+export function useReferralLevelStatus(year?: bigint): ReferralLevelStatus {
+  const { address } = useAccount();
+  const selectedYear = year ?? 1n;
+
+  const { data, isLoading, error } = useReadContract({
+    address: ECOSYSTEM_VAULT_ADDRESS,
+    abi: EcosystemVaultABI,
+    functionName: 'getReferralLevelStatus',
+    args: address ? [address, selectedYear] : undefined,
+    query: {
+      enabled: !!address,
+      refetchInterval: 30000,
+    },
+  });
+
+  if (!data || !address) {
+    return {
+      points: 0,
+      unlockedLevel: 0,
+      highestPaidLevel: 0,
+      nextLevel: 0,
+      nextLevelRequiredPoints: 0,
+      nextLevelReward: 0n,
+      isLoading,
+      error: error as Error | null,
+    };
+  }
+
+  const statusTuple = data as readonly [bigint, bigint, bigint, bigint, bigint, bigint];
+  const [points, unlockedLevel, highestPaidLevel, nextLevel, nextLevelRequiredPoints, nextLevelReward] = statusTuple;
+
+  return {
+    points: Number(points),
+    unlockedLevel: Number(unlockedLevel),
+    highestPaidLevel: Number(highestPaidLevel),
+    nextLevel: Number(nextLevel),
+    nextLevelRequiredPoints: Number(nextLevelRequiredPoints),
+    nextLevelReward,
+    isLoading,
+    error: error as Error | null,
+  };
+}
+
+/**
  * Claim headhunter reward for a completed quarter
  */
 export function useClaimHeadhunterReward() {
@@ -208,6 +265,56 @@ export function usePayReferralWorkReward() {
 
   return {
     payReferralWorkReward,
+    isPending,
+    isSuccess,
+    error: error as Error | null,
+  };
+}
+
+/**
+ * Manager hook: pay next unlocked referral level reward (milestone-based).
+ */
+export function usePayReferralLevelReward() {
+  const { writeContract, isPending, isSuccess, error } = useWriteContract();
+
+  const payReferralLevelReward = async (
+    worker: `0x${string}`,
+    year: bigint,
+    reason: string
+  ) => {
+    writeContract({
+      address: ECOSYSTEM_VAULT_ADDRESS,
+      abi: EcosystemVaultABI,
+      functionName: 'payReferralLevelReward',
+      args: [worker, year, reason],
+    });
+  };
+
+  return {
+    payReferralLevelReward,
+    isPending,
+    isSuccess,
+    error: error as Error | null,
+  };
+}
+
+/**
+ * Self-claim hook: claim all currently unlocked referral level rewards for the connected wallet.
+ */
+export function useClaimReferralLevelRewards() {
+  const { writeContract, isPending, isSuccess, error } = useWriteContract();
+
+  const claimReferralLevelRewards = async (year: bigint, reason: string) => {
+    writeContract({
+      address: ECOSYSTEM_VAULT_ADDRESS,
+      abi: EcosystemVaultABI,
+      functionName: 'claimReferralLevelRewards',
+      args: [year, reason],
+    });
+  };
+
+  return {
+    claimReferralLevelRewards,
     isPending,
     isSuccess,
     error: error as Error | null,

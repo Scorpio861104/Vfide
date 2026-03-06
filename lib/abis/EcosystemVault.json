@@ -51,6 +51,17 @@
     "outputs": []
   },
   {
+    "name": "configureAutoPayoutSustainability",
+    "type": "function",
+    "stateMutability": "nonpayable",
+    "inputs": [
+      { "name": "merchantReserve", "type": "uint16" },
+      { "name": "headhunterReserve", "type": "uint16" },
+      { "name": "maxAutoPayout", "type": "uint16" }
+    ],
+    "outputs": []
+  },
+  {
     "name": "payReferralWorkReward",
     "type": "function",
     "stateMutability": "nonpayable",
@@ -58,6 +69,77 @@
       { "name": "worker", "type": "address" },
       { "name": "amount", "type": "uint256" },
       { "name": "reason", "type": "string" }
+    ],
+    "outputs": []
+  },
+  {
+    "name": "payReferralLevelReward",
+    "type": "function",
+    "stateMutability": "nonpayable",
+    "inputs": [
+      { "name": "worker", "type": "address" },
+      { "name": "year", "type": "uint256" },
+      { "name": "reason", "type": "string" }
+    ],
+    "outputs": []
+  },
+  {
+    "name": "claimReferralLevelRewards",
+    "type": "function",
+    "stateMutability": "nonpayable",
+    "inputs": [
+      { "name": "year", "type": "uint256" },
+      { "name": "reason", "type": "string" }
+    ],
+    "outputs": [
+      { "name": "levelsPaid", "type": "uint8" },
+      { "name": "totalAmount", "type": "uint256" }
+    ]
+  },
+  {
+    "name": "processReferralLevelRewards",
+    "type": "function",
+    "stateMutability": "nonpayable",
+    "inputs": [
+      { "name": "worker", "type": "address" },
+      { "name": "year", "type": "uint256" },
+      { "name": "reason", "type": "string" }
+    ],
+    "outputs": [
+      { "name": "levelsPaid", "type": "uint8" },
+      { "name": "totalAmount", "type": "uint256" }
+    ]
+  },
+  {
+    "name": "getReferralLevelStatus",
+    "type": "function",
+    "stateMutability": "view",
+    "inputs": [
+      { "name": "referrer", "type": "address" },
+      { "name": "year", "type": "uint256" }
+    ],
+    "outputs": [
+      { "name": "points", "type": "uint16" },
+      { "name": "unlockedLevel", "type": "uint8" },
+      { "name": "highestPaidLevel", "type": "uint8" },
+      { "name": "nextLevel", "type": "uint8" },
+      { "name": "nextLevelRequiredPoints", "type": "uint16" },
+      { "name": "nextLevelReward", "type": "uint256" }
+    ]
+  },
+  {
+    "name": "configureReferralWorkLevels",
+    "type": "function",
+    "stateMutability": "nonpayable",
+    "inputs": [
+      { "name": "level1Points", "type": "uint16" },
+      { "name": "level2Points", "type": "uint16" },
+      { "name": "level3Points", "type": "uint16" },
+      { "name": "level4Points", "type": "uint16" },
+      { "name": "level1Reward", "type": "uint256" },
+      { "name": "level2Reward", "type": "uint256" },
+      { "name": "level3Reward", "type": "uint256" },
+      { "name": "level4Reward", "type": "uint256" }
     ],
     "outputs": []
   },

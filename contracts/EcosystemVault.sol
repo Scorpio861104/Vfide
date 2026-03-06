@@ -193,12 +193,50 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
         uint256 merchantReferralReward,
         uint256 userReferralReward
     );
+    event AutoPayoutSustainabilityConfigured(
+        uint16 merchantReserveBps,
+        uint16 headhunterReserveBps,
+        uint16 maxAutoPayoutBps
+    );
+    event ReferralWorkLevelsConfigured(
+        uint16 level1Points,
+        uint16 level2Points,
+        uint16 level3Points,
+        uint16 level4Points,
+        uint256 level1Reward,
+        uint256 level2Reward,
+        uint256 level3Reward,
+        uint256 level4Reward
+    );
+    event ReferralWorkLevelRewardPaid(address indexed worker, uint256 indexed year, uint8 level, uint256 amount, string reason);
 
     // Automatic fixed work-payout configuration
     bool public autoWorkPayoutEnabled;
     uint256 public autoMerchantTxReward;
     uint256 public autoMerchantReferralReward;
     uint256 public autoUserReferralReward;
+
+    // Sustainability guardrails for burn-fee funded reward pools.
+    // Reserve bps protect a minimum pool balance from reward payouts.
+    uint16 public merchantPoolReserveBps = 2000;   // Keep 20% reserve in merchant pool.
+    uint16 public headhunterPoolReserveBps = 2000; // Keep 20% reserve in headhunter pool.
+    // Auto payouts cannot exceed this fraction of current pool in a single execution.
+    uint16 public maxAutoPayoutBps = 1000;         // Max 10% per auto payout.
+
+    // Howey-safe referral work milestones (absolute thresholds, no ranking/profit share)
+    uint16 public referralLevel1Points = 10;
+    uint16 public referralLevel2Points = 25;
+    uint16 public referralLevel3Points = 50;
+    uint16 public referralLevel4Points = 100;
+
+    // Fixed payout per milestone level; zero means disabled until configured by owner.
+    uint256 public referralLevel1Reward;
+    uint256 public referralLevel2Reward;
+    uint256 public referralLevel3Reward;
+    uint256 public referralLevel4Reward;
+
+    // Highest referral-work level already paid for a referrer in a given year.
+    mapping(uint256 => mapping(address => uint8)) public referralLevelPaid;
 
     // ═══════════════════════════════════════════════════════════════════════
     //                              MODIFIERS
@@ -331,6 +369,67 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
         autoUserReferralReward = userReferralReward;
 
         emit AutoWorkPayoutConfigured(enabled, merchantTxReward, merchantReferralReward, userReferralReward);
+    }
+
+    /**
+     * @notice Configure sustainability guardrails for reward payouts.
+     * @dev Reserve bps prevent reward pools from draining to zero during burst activity.
+     */
+    function configureAutoPayoutSustainability(
+        uint16 merchantReserve,
+        uint16 headhunterReserve,
+        uint16 maxAutoPayout
+    ) external onlyOwner {
+        require(merchantReserve <= 9000, "ECO: merchant reserve too high");
+        require(headhunterReserve <= 9000, "ECO: headhunter reserve too high");
+        require(maxAutoPayout > 0 && maxAutoPayout <= 5000, "ECO: invalid auto payout bps");
+
+        merchantPoolReserveBps = merchantReserve;
+        headhunterPoolReserveBps = headhunterReserve;
+        maxAutoPayoutBps = maxAutoPayout;
+
+        emit AutoPayoutSustainabilityConfigured(merchantReserve, headhunterReserve, maxAutoPayout);
+    }
+
+    /**
+     * @notice Configure fixed referral-work levels and payouts.
+     * @dev Uses absolute point thresholds and fixed amounts; this avoids rank/profit distribution mechanics.
+     */
+    function configureReferralWorkLevels(
+        uint16 level1Points,
+        uint16 level2Points,
+        uint16 level3Points,
+        uint16 level4Points,
+        uint256 level1Reward,
+        uint256 level2Reward,
+        uint256 level3Reward,
+        uint256 level4Reward
+    ) external onlyOwner {
+        require(level1Points > 0, "ECO: invalid level1 points");
+        require(level1Points < level2Points, "ECO: levels not ascending");
+        require(level2Points < level3Points, "ECO: levels not ascending");
+        require(level3Points < level4Points, "ECO: levels not ascending");
+
+        referralLevel1Points = level1Points;
+        referralLevel2Points = level2Points;
+        referralLevel3Points = level3Points;
+        referralLevel4Points = level4Points;
+
+        referralLevel1Reward = level1Reward;
+        referralLevel2Reward = level2Reward;
+        referralLevel3Reward = level3Reward;
+        referralLevel4Reward = level4Reward;
+
+        emit ReferralWorkLevelsConfigured(
+            level1Points,
+            level2Points,
+            level3Points,
+            level4Points,
+            level1Reward,
+            level2Reward,
+            level3Reward,
+            level4Reward
+        );
     }
 
     // ═══════════════════════════════════════════════════════════════════════
@@ -510,7 +609,8 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
         if (worker == address(0) || amount == 0) revert ECO_Zero();
 
         allocateIncoming();
-        if (merchantPool < amount) revert ECO_InsufficientFunds();
+        uint256 spendable = _getSpendablePoolBalance(merchantPool, merchantPoolReserveBps);
+        if (amount > spendable) revert ECO_InsufficientFunds();
 
         merchantPool -= amount;
         totalMerchantBonusPaid += amount;
@@ -643,6 +743,9 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
         referralCredited[merchant] = true;
         _awardPoints(referrer, POINTS_MERCHANT_REFERRAL, merchant, true);
         _tryAutoWorkPayout(referrer, autoMerchantReferralReward, false, "verified_merchant_referral");
+        if (autoWorkPayoutEnabled) {
+            _processReferralLevelPayouts(referrer, currentYear, "auto_referral_level_progress", false);
+        }
     }
 
     /**
@@ -660,6 +763,9 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
         referralCredited[user] = true;
         _awardPoints(referrer, POINTS_USER_REFERRAL, user, false);
         _tryAutoWorkPayout(referrer, autoUserReferralReward, false, "verified_user_referral");
+        if (autoWorkPayoutEnabled) {
+            _processReferralLevelPayouts(referrer, currentYear, "auto_referral_level_progress", false);
+        }
     }
 
     function _awardPoints(address referrer, uint16 points, address referred, bool isMerchant) internal {
@@ -687,7 +793,9 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
         allocateIncoming();
 
         if (useMerchantPool) {
-            if (merchantPool < amount) return false;
+            uint256 merchantSpendable = _getSpendablePoolBalance(merchantPool, merchantPoolReserveBps);
+            uint256 merchantAutoCap = (merchantPool * maxAutoPayoutBps) / MAX_BPS;
+            if (amount > merchantSpendable || amount > merchantAutoCap) return false;
 
             merchantPool -= amount;
             totalMerchantBonusPaid += amount;
@@ -696,7 +804,9 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
             return true;
         }
 
-        if (headhunterPool < amount) return false;
+        uint256 headhunterSpendable = _getSpendablePoolBalance(headhunterPool, headhunterPoolReserveBps);
+        uint256 headhunterAutoCap = (headhunterPool * maxAutoPayoutBps) / MAX_BPS;
+        if (amount > headhunterSpendable || amount > headhunterAutoCap) return false;
 
         headhunterPool -= amount;
         totalHeadhunterPaid += amount;
@@ -748,13 +858,139 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
         if (worker == address(0) || amount == 0) revert ECO_Zero();
 
         allocateIncoming();
-        if (headhunterPool < amount) revert ECO_InsufficientFunds();
+        uint256 spendable = _getSpendablePoolBalance(headhunterPool, headhunterPoolReserveBps);
+        if (amount > spendable) revert ECO_InsufficientFunds();
 
         headhunterPool -= amount;
         totalHeadhunterPaid += amount;
         rewardToken.safeTransfer(worker, amount);
 
         emit WorkRewardPaid(worker, amount, "referral_work", reason);
+    }
+
+    /**
+     * @notice Pay the next unlocked referral-work level reward for a referrer in a year.
+     * @dev Only objective point milestones are used (no leaderboard rank, no percentage share).
+     */
+    function payReferralLevelReward(address worker, uint256 year, string calldata reason) external onlyManager nonReentrant {
+        _processReferralLevelPayouts(worker, year, reason, true);
+    }
+
+    /**
+     * @notice Self-claim unlocked referral work levels for the caller.
+     * @dev Enables autonomous user claims from objective milestones without manager intervention.
+     */
+    function claimReferralLevelRewards(uint256 year, string calldata reason) external nonReentrant returns (uint8 levelsPaid, uint256 totalAmount) {
+        (levelsPaid, totalAmount) = _processReferralLevelPayouts(msg.sender, year, reason, true);
+    }
+
+    /**
+     * @notice Permissionless processor for objective referral level payouts.
+     * @dev Anyone can trigger, but payout always goes to `worker`.
+     */
+    function processReferralLevelRewards(address worker, uint256 year, string calldata reason) external nonReentrant returns (uint8 levelsPaid, uint256 totalAmount) {
+        if (worker == address(0)) revert ECO_Zero();
+        (levelsPaid, totalAmount) = _processReferralLevelPayouts(worker, year, reason, false);
+    }
+
+    function _processReferralLevelPayouts(
+        address worker,
+        uint256 year,
+        string memory reason,
+        bool strict
+    ) internal returns (uint8 levelsPaid, uint256 totalAmount) {
+        if (worker == address(0)) {
+            if (strict) revert ECO_Zero();
+            return (0, 0);
+        }
+
+        // Keep eligibility tied to minimum trust threshold at payout time.
+        if (seer.getScore(worker) < HEADHUNTER_MIN_SCORE) {
+            if (strict) revert ECO_NotEligible();
+            return (0, 0);
+        }
+
+        uint16 points = yearPoints[year][worker];
+        uint8 unlockedLevel = _getReferralWorkLevel(points);
+        if (unlockedLevel == 0) {
+            if (strict) revert ECO_NotEligible();
+            return (0, 0);
+        }
+
+        uint8 alreadyPaidLevel = referralLevelPaid[year][worker];
+        if (alreadyPaidLevel >= unlockedLevel) {
+            if (strict) revert ECO_AlreadyClaimed();
+            return (0, 0);
+        }
+
+        allocateIncoming();
+
+        uint8 nextLevel = alreadyPaidLevel + 1;
+        uint8 finalPaidLevel = alreadyPaidLevel;
+
+        while (nextLevel <= unlockedLevel) {
+            uint256 levelReward = _getReferralLevelReward(nextLevel);
+            if (levelReward == 0) {
+                if (strict && levelsPaid == 0) revert ECO_NotEligible();
+                break;
+            }
+
+            uint256 spendable = _getSpendablePoolBalance(headhunterPool, headhunterPoolReserveBps);
+            if (levelReward > spendable) {
+                if (strict && levelsPaid == 0) revert ECO_InsufficientFunds();
+                break;
+            }
+
+            headhunterPool -= levelReward;
+            totalHeadhunterPaid += levelReward;
+            totalAmount += levelReward;
+            levelsPaid++;
+            finalPaidLevel = nextLevel;
+
+            emit ReferralWorkLevelRewardPaid(worker, year, nextLevel, levelReward, reason);
+
+            nextLevel++;
+        }
+
+        if (levelsPaid == 0) {
+            if (strict) revert ECO_AlreadyClaimed();
+            return (0, 0);
+        }
+
+        referralLevelPaid[year][worker] = finalPaidLevel;
+        rewardToken.safeTransfer(worker, totalAmount);
+        emit WorkRewardPaid(worker, totalAmount, "referral_work_level", reason);
+    }
+
+    function _getReferralWorkLevel(uint16 points) internal view returns (uint8) {
+        if (points >= referralLevel4Points) return 4;
+        if (points >= referralLevel3Points) return 3;
+        if (points >= referralLevel2Points) return 2;
+        if (points >= referralLevel1Points) return 1;
+        return 0;
+    }
+
+    function _getReferralLevelReward(uint8 level) internal view returns (uint256) {
+        if (level == 1) return referralLevel1Reward;
+        if (level == 2) return referralLevel2Reward;
+        if (level == 3) return referralLevel3Reward;
+        if (level == 4) return referralLevel4Reward;
+        return 0;
+    }
+
+    function _getSpendablePoolBalance(uint256 poolBalance, uint16 reserveBps) internal pure returns (uint256) {
+        if (poolBalance == 0) return 0;
+        if (reserveBps == 0) return poolBalance;
+        uint256 reserveAmount = (poolBalance * reserveBps) / MAX_BPS;
+        return poolBalance > reserveAmount ? poolBalance - reserveAmount : 0;
+    }
+
+    function _getReferralLevelRequiredPoints(uint8 level) internal view returns (uint16) {
+        if (level == 1) return referralLevel1Points;
+        if (level == 2) return referralLevel2Points;
+        if (level == 3) return referralLevel3Points;
+        if (level == 4) return referralLevel4Points;
+        return 0;
     }
 
     function _calculateHeadhunterRank(uint256 year, address referrer) internal view returns (uint8) {
@@ -971,6 +1207,28 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
         currentYearNumber = currentYear;
         currentQuarterNumber = currentQuarter;
         quarterEndsAt = yearStartTime + (QUARTER * currentQuarter);
+    }
+
+    /**
+     * @notice Returns current referral-work level progress for a referrer in a year.
+     */
+    function getReferralLevelStatus(address referrer, uint256 year) external view returns (
+        uint16 points,
+        uint8 unlockedLevel,
+        uint8 highestPaidLevel,
+        uint8 nextLevel,
+        uint16 nextLevelRequiredPoints,
+        uint256 nextLevelReward
+    ) {
+        points = yearPoints[year][referrer];
+        unlockedLevel = _getReferralWorkLevel(points);
+        highestPaidLevel = referralLevelPaid[year][referrer];
+
+        nextLevel = highestPaidLevel >= 4 ? 0 : highestPaidLevel + 1;
+
+        nextLevelRequiredPoints = _getReferralLevelRequiredPoints(nextLevel);
+
+        nextLevelReward = _getReferralLevelReward(nextLevel);
     }
 
     function getMerchantTierMultipliers() external pure returns (
