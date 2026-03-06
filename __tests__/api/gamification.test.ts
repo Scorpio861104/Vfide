@@ -128,6 +128,30 @@ describe('/api/gamification', () => {
       expect(response.status).toBe(500);
       expect(data.error).toBe('Failed to fetch gamification data');
     });
+
+    it('should return 401 for malformed authenticated address', async () => {
+      requireAuth.mockResolvedValue({ user: { address: 'bad-address' } });
+
+      const request = new NextRequest(`http://localhost:3000/api/gamification?userAddress=${mockUserAddress}`);
+      const response = await GET(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(401);
+      expect(data.error).toBe('Unauthorized');
+      expect(query).not.toHaveBeenCalled();
+    });
+
+    it('should return 400 for malformed userAddress query', async () => {
+      requireAuth.mockResolvedValue({ user: { address: mockUserAddress } });
+
+      const request = new NextRequest('http://localhost:3000/api/gamification?userAddress=not-an-address');
+      const response = await GET(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(400);
+      expect(data.error).toBe('Invalid user address format');
+      expect(query).not.toHaveBeenCalled();
+    });
   });
 
   describe('POST - Award XP', () => {

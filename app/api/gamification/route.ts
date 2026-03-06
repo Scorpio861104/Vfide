@@ -6,27 +6,51 @@ import { validateBody, awardXpSchema } from '@/lib/auth/validation';
 
 /** Maximum XP awardable per wallet per calendar day (mirrors lib/gamification.ts). */
 const SERVER_MAX_XP_PER_DAY = 500;
+const ADDRESS_PATTERN = /^0x[a-fA-F0-9]{3,64}$/;
 
 const isTestEnv = process.env.NODE_ENV === 'test';
+
+function normalizeAddress(value: string): string {
+  return value.trim().toLowerCase();
+}
+
+function isAddressLike(value: string): boolean {
+  return ADDRESS_PATTERN.test(value);
+}
 
 export async function GET(request: NextRequest) {
   // Require authentication
   const authResult = await requireAuth(request);
   if (authResult instanceof NextResponse) return authResult;
 
+  const authAddress = typeof authResult.user?.address === 'string'
+    ? normalizeAddress(authResult.user.address)
+    : '';
+  if (!authAddress || !isAddressLike(authAddress)) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   try {
     const { searchParams } = new URL(request.url);
-    const userAddress = searchParams.get('userAddress');
+    const userAddressParam = searchParams.get('userAddress');
 
-    if (!userAddress) {
+    if (!userAddressParam || userAddressParam.trim().length === 0) {
       return NextResponse.json(
         { error: 'User address is required' },
         { status: 400 }
       );
     }
 
+    const userAddress = normalizeAddress(userAddressParam);
+    if (!isAddressLike(userAddress)) {
+      return NextResponse.json(
+        { error: 'Invalid user address format' },
+        { status: 400 }
+      );
+    }
+
     // Verify user is requesting their own data
-    if (authResult.user.address.toLowerCase() !== userAddress.toLowerCase()) {
+    if (authAddress !== userAddress) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
     }
 
@@ -50,7 +74,7 @@ export async function GET(request: NextRequest) {
        LEFT JOIN achievements a ON ua.achievement_id = a.id
        WHERE u.wallet_address = $1
        GROUP BY g.user_id, g.xp, g.level, g.streak, g.last_active`,
-      [userAddress.toLowerCase()]
+      [userAddress]
     );
 
     let userData;
@@ -94,7 +118,7 @@ export async function GET(request: NextRequest) {
          LEFT JOIN achievements a ON ua.achievement_id = a.id
          WHERE u.wallet_address = $1
          GROUP BY g.user_id, g.xp, g.level, g.streak, g.last_active`,
-        [userAddress.toLowerCase()]
+        [userAddress]
       );
       if (retry.rows.length > 0) {
         userData = retry.rows[0];
