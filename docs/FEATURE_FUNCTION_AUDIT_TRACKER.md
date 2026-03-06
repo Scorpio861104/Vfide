@@ -108,7 +108,7 @@ Status legend:
   - `app/api/endorsements/route.ts` GET/POST/DELETE handlers now enforce read rate limiting, normalized address handling, numeric ID parsing, proposalId validation, and self-endorsement prevention
   - `app/api/transactions/export/route.ts` POST handler now normalizes/validates export addresses and filter values, validates auth address presence/format, and enforces safer normalized filter query inputs
   - `app/api/performance/metrics/route.ts` GET/POST handlers now trim metric names consistently and enforce UTF-8 metadata byte-size limits
-  - `app/api/errors/route.ts` GET/POST handlers now normalize severity filters/values, enforce auth address presence, trim required messages, and enforce UTF-8 metadata byte-size limits
+  - `app/api/errors/route.ts` GET/POST handlers now normalize severity filters/values, enforce strict numeric `limit` query parsing, enforce auth address presence/format, trim required messages, and enforce UTF-8 metadata byte-size limits
   - `app/api/analytics/route.ts` GET/POST handlers now normalize event/user identifiers, validate user-id address format, normalize batch event types, and enforce UTF-8 event-data byte-size limits
   - `app/api/attachments/upload/route.ts` POST handler now enforces strict object payloads, filename/path traversal guards, URL protocol validation, and normalized MIME/extension checks with bounded sizes
   - `app/api/notifications/preferences/route.ts` GET/PUT handlers now enforce normalized address validation and safer strict JSON object parsing for updates
@@ -166,6 +166,7 @@ Status legend:
   - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/leaderboard/headhunter.test.ts __tests__/api/activities.test.ts __tests__/api/users.test.ts` ✅ (30 tests)
   - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/analytics.test.ts __tests__/api/security/csp-report.test.ts` ✅ (16 tests)
   - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/leaderboard/monthly.test.ts __tests__/api/analytics.test.ts __tests__/api/security/csp-report.test.ts` ✅ (29 tests)
+  - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/errors.test.ts __tests__/api/notifications/preferences.test.ts` ✅ (15 tests)
   - Additional typecheck confirmation: `npm run -s typecheck` ✅
 
 ### 7. Frontend page-by-page behavior and contract wiring checks

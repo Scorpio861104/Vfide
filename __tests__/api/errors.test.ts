@@ -64,6 +64,17 @@ describe('/api/errors', () => {
       expect(data.error).toContain('Invalid severity');
       expect(query).not.toHaveBeenCalled();
     });
+
+    it('should reject malformed limit parameter', async () => {
+      withRateLimit.mockResolvedValue(null);
+      requireAdmin.mockResolvedValue({ user: { address: '0x1111111111111111111111111111111111111111' } });
+
+      const request = new NextRequest('http://localhost:3000/api/errors?limit=10abc');
+      const response = await GET(request);
+
+      expect(response.status).toBe(400);
+      expect(query).not.toHaveBeenCalled();
+    });
   });
 
   describe('POST', () => {
@@ -178,6 +189,21 @@ describe('/api/errors', () => {
 
       expect(response.status).toBe(400);
       expect(data.error).toContain('Invalid JSON payload');
+      expect(query).not.toHaveBeenCalled();
+    });
+
+    it('should return 401 when authenticated address is malformed', async () => {
+      withRateLimit.mockResolvedValue(null);
+      requireAuth.mockResolvedValue({ user: { address: 'invalid-address' } });
+
+      const request = new NextRequest('http://localhost:3000/api/errors', {
+        method: 'POST',
+        body: JSON.stringify({ message: 'Test error' }),
+      });
+
+      const response = await POST(request);
+
+      expect(response.status).toBe(401);
       expect(query).not.toHaveBeenCalled();
     });
   });

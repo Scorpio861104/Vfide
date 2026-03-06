@@ -9,6 +9,7 @@ const MAX_ERROR_MESSAGE_LENGTH = 2000;
 const MAX_ERROR_STACK_LENGTH = 20000;
 const MAX_ERROR_METADATA_BYTES = 10000;
 const VALID_SEVERITIES = ['error', 'warning', 'info', 'critical'] as const;
+const ADDRESS_PATTERN = /^0x[a-fA-F0-9]{3,64}$/;
 
 function isObjectRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -16,6 +17,21 @@ function isObjectRecord(value: unknown): value is Record<string, unknown> {
 
 function byteLength(value: string): number {
   return Buffer.byteLength(value, 'utf8');
+}
+
+function normalizeAddress(value: string): string {
+  return value.trim().toLowerCase();
+}
+
+function isAddressLike(value: string): boolean {
+  return ADDRESS_PATTERN.test(value);
+}
+
+function parseStrictIntegerParam(value: string | null): number | null {
+  if (value === null) return null;
+  const trimmed = value.trim();
+  if (!/^\d+$/.test(trimmed)) return null;
+  return Number.parseInt(trimmed, 10);
 }
 
 export async function GET(request: NextRequest) {
@@ -30,10 +46,19 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const severity = searchParams.get('severity')?.trim().toLowerCase() || null;
-    const limitParam = parseInt(searchParams.get('limit') || String(DEFAULT_ERROR_LOG_LIMIT), 10);
+    const parsedLimit = parseStrictIntegerParam(searchParams.get('limit'));
+
+    if (searchParams.get('limit') !== null && parsedLimit === null) {
+      return NextResponse.json(
+        { error: 'Invalid limit parameter' },
+        { status: 400 }
+      );
+    }
+
+    const limitParam = parsedLimit ?? DEFAULT_ERROR_LOG_LIMIT;
 
     // Validate parsed number
-    if (isNaN(limitParam) || limitParam < 0) {
+    if (limitParam < 0) {
       return NextResponse.json(
         { error: 'Invalid limit parameter' },
         { status: 400 }
@@ -96,6 +121,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    const authAddress = normalizeAddress(authResult.user.address);
+    if (!isAddressLike(authAddress)) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     if (typeof rawMessage !== 'string') {
       return NextResponse.json({ error: 'message required' }, { status: 400 });
     }
@@ -154,7 +184,7 @@ export async function POST(request: NextRequest) {
 
     const userResult = await query(
       'SELECT id FROM users WHERE wallet_address = $1',
-      [authResult.user.address.toLowerCase()]
+      [authAddress]
     );
 
     const userId = userResult.rows[0]?.id || null;
