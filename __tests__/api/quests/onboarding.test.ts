@@ -84,6 +84,31 @@ describe('/api/quests/onboarding', () => {
 
       expect(response.status).toBe(403);
     });
+
+    it('should return 401 for malformed authenticated address', async () => {
+      withRateLimit.mockResolvedValue(null);
+      requireAuth.mockResolvedValue({ user: { address: 'bad-address' } });
+
+      const request = new NextRequest('http://localhost:3000/api/quests/onboarding?userAddress=0x123');
+      const response = await GET(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(401);
+      expect(data.error).toBe('Unauthorized');
+      expect(getClient).not.toHaveBeenCalled();
+    });
+
+    it('should return 400 for malformed userAddress query', async () => {
+      withRateLimit.mockResolvedValue(null);
+
+      const request = new NextRequest('http://localhost:3000/api/quests/onboarding?userAddress=not-an-address');
+      const response = await GET(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(400);
+      expect(data.error).toBe('Invalid user address format');
+      expect(getClient).not.toHaveBeenCalled();
+    });
   });
 
   describe('PATCH', () => {
@@ -133,6 +158,39 @@ describe('/api/quests/onboarding', () => {
       const response = await PATCH(request);
       expect(response.status).toBe(403);
     });
+
+    it('should return 401 for malformed authenticated address on PATCH', async () => {
+      withRateLimit.mockResolvedValue(null);
+      requireAuth.mockResolvedValue({ user: { address: 'bad-address' } });
+
+      const request = new NextRequest('http://localhost:3000/api/quests/onboarding', {
+        method: 'PATCH',
+        body: JSON.stringify({ step: 'connectWallet', userAddress: '0x123' }),
+      });
+
+      const response = await PATCH(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(401);
+      expect(data.error).toBe('Unauthorized');
+      expect(getClient).not.toHaveBeenCalled();
+    });
+
+    it('should return 400 for malformed userAddress on PATCH', async () => {
+      withRateLimit.mockResolvedValue(null);
+
+      const request = new NextRequest('http://localhost:3000/api/quests/onboarding', {
+        method: 'PATCH',
+        body: JSON.stringify({ step: 'connectWallet', userAddress: 'not-an-address' }),
+      });
+
+      const response = await PATCH(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(400);
+      expect(data.error).toBe('Invalid user address format');
+      expect(getClient).not.toHaveBeenCalled();
+    });
   });
 
   describe('POST', () => {
@@ -178,6 +236,39 @@ describe('/api/quests/onboarding', () => {
 
       const response = await POST(request);
       expect(response.status).toBe(403);
+    });
+
+    it('should return 401 for malformed authenticated address on POST', async () => {
+      withRateLimit.mockResolvedValue(null);
+      requireAuth.mockResolvedValue({ user: { address: 'bad-address' } });
+
+      const request = new NextRequest('http://localhost:3000/api/quests/onboarding', {
+        method: 'POST',
+        body: JSON.stringify({ userAddress: '0x123' }),
+      });
+
+      const response = await POST(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(401);
+      expect(data.error).toBe('Unauthorized');
+      expect(getClient).not.toHaveBeenCalled();
+    });
+
+    it('should return 400 for malformed userAddress on POST', async () => {
+      withRateLimit.mockResolvedValue(null);
+
+      const request = new NextRequest('http://localhost:3000/api/quests/onboarding', {
+        method: 'POST',
+        body: JSON.stringify({ userAddress: 'not-an-address' }),
+      });
+
+      const response = await POST(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(400);
+      expect(data.error).toBe('Invalid user address format');
+      expect(getClient).not.toHaveBeenCalled();
     });
   });
 });

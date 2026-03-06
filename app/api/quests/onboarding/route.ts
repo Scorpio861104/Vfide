@@ -15,11 +15,20 @@ const VALID_ONBOARDING_STEPS = new Set([
   'giveEndorsement',
   'completeQuest',
 ]);
+const ADDRESS_PATTERN = /^0x[a-fA-F0-9]{3,64}$/;
 
 function toNonEmptyString(value: unknown): string | null {
   if (typeof value !== 'string') return null;
   const trimmed = value.trim();
   return trimmed.length > 0 ? trimmed : null;
+}
+
+function normalizeAddress(value: string): string {
+  return value.trim().toLowerCase();
+}
+
+function isAddressLike(value: string): boolean {
+  return ADDRESS_PATTERN.test(value);
 }
 
 /**
@@ -35,6 +44,13 @@ export async function GET(request: NextRequest) {
   const authResult = await requireAuth(request);
   if (authResult instanceof NextResponse) return authResult;
 
+  const requesterAddress = typeof authResult.user?.address === 'string'
+    ? normalizeAddress(authResult.user.address)
+    : '';
+  if (!requesterAddress || !isAddressLike(requesterAddress)) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   try {
     const searchParams = request.nextUrl.searchParams;
     const userAddress = toNonEmptyString(searchParams.get('userAddress'));
@@ -43,8 +59,11 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'User address required' }, { status: 400 });
     }
 
-    const requesterAddress = authResult.user.address.toLowerCase();
-    const targetAddress = userAddress.toLowerCase();
+    const targetAddress = normalizeAddress(userAddress);
+    if (!isAddressLike(targetAddress)) {
+      return NextResponse.json({ error: 'Invalid user address format' }, { status: 400 });
+    }
+
     const canAccess = requesterAddress === targetAddress || isAdmin(authResult.user);
     if (!canAccess) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
@@ -117,6 +136,13 @@ export async function PATCH(request: NextRequest) {
   const authResult = await requireAuth(request);
   if (authResult instanceof NextResponse) return authResult;
 
+  const requesterAddress = typeof authResult.user?.address === 'string'
+    ? normalizeAddress(authResult.user.address)
+    : '';
+  if (!requesterAddress || !isAddressLike(requesterAddress)) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   let body: Record<string, unknown>;
   try {
     body = await request.json();
@@ -139,8 +165,11 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
-    const requesterAddress = authResult.user.address.toLowerCase();
-    const targetAddress = userAddress.toLowerCase();
+    const targetAddress = normalizeAddress(userAddress);
+    if (!isAddressLike(targetAddress)) {
+      return NextResponse.json({ error: 'Invalid user address format' }, { status: 400 });
+    }
+
     const canUpdate = requesterAddress === targetAddress || isAdmin(authResult.user);
     if (!canUpdate) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
@@ -247,6 +276,13 @@ export async function POST(request: NextRequest) {
   const authResultPost = await requireAuth(request);
   if (authResultPost instanceof NextResponse) return authResultPost;
 
+  const requesterAddress = typeof authResultPost.user?.address === 'string'
+    ? normalizeAddress(authResultPost.user.address)
+    : '';
+  if (!requesterAddress || !isAddressLike(requesterAddress)) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   let body: Record<string, unknown>;
   try {
     body = await request.json();
@@ -265,8 +301,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'User address required' }, { status: 400 });
     }
 
-    const requesterAddress = authResultPost.user.address.toLowerCase();
-    const targetAddress = userAddress.toLowerCase();
+    const targetAddress = normalizeAddress(userAddress);
+    if (!isAddressLike(targetAddress)) {
+      return NextResponse.json({ error: 'Invalid user address format' }, { status: 400 });
+    }
+
     const canClaim = requesterAddress === targetAddress || isAdmin(authResultPost.user);
     if (!canClaim) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
