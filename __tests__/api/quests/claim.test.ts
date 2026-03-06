@@ -156,5 +156,38 @@ describe('/api/quests/claim', () => {
       expect(data.error).toContain('already claimed');
       expect(mockClient.release).toHaveBeenCalled();
     });
+
+    it('should return 401 when authenticated address is missing', async () => {
+      withRateLimit.mockResolvedValue(null);
+      requireAuth.mockReturnValue({ user: {} });
+
+      const request = new NextRequest('http://localhost:3000/api/quests/claim', {
+        method: 'POST',
+        body: JSON.stringify({ userAddress: '0x1111111111111111111111111111111111111123', questId: 1 }),
+      });
+
+      const response = await POST(request);
+      expect(response.status).toBe(401);
+    });
+
+    it('should return 400 for invalid quest id format', async () => {
+      withRateLimit.mockResolvedValue(null);
+      requireAuth.mockReturnValue({ user: { address: '0x1111111111111111111111111111111111111123', id: 1 } });
+      validateBody.mockResolvedValue({
+        success: true,
+        data: {
+          userAddress: '0x1111111111111111111111111111111111111123',
+          questId: 'abc',
+        },
+      });
+
+      const request = new NextRequest('http://localhost:3000/api/quests/claim', {
+        method: 'POST',
+        body: JSON.stringify({ userAddress: '0x1111111111111111111111111111111111111123', questId: 'abc' }),
+      });
+
+      const response = await POST(request);
+      expect(response.status).toBe(400);
+    });
   });
 });

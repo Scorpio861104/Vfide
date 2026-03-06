@@ -118,6 +118,7 @@ Status legend:
   - `app/api/quests/achievements/claim/route.ts` POST handler now enforces authenticated-address presence, validates address-like `userAddress`, and validates positive integer `milestoneId` before claim writes
   - `app/api/quests/weekly/claim/route.ts` POST handler now enforces authenticated-address presence, validates address-like `userAddress`, and validates positive integer `challengeId` before claim writes
   - `app/api/proposals/route.ts` GET handler now enforces strict numeric parsing for `limit`/`offset`, normalizes `proposerId` input before address validation, and `GET_BY_ID` now validates positive proposal IDs before DB reads
+  - `app/api/quests/claim/route.ts` POST handler now enforces authenticated-address presence, validates address-like `userAddress`, and validates positive integer `questId` before transactional claim writes
   - Focused test confirmation: `npm test -- --runInBand __tests__/api/activities.test.ts __tests__/api/users.test.ts __tests__/api/crypto/rewards/claim.test.ts` ✅ (29 tests)
   - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/security/violations.test.ts` ✅ (6 tests)
   - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/messages/reaction.test.ts` ✅ (4 tests)
@@ -136,6 +137,7 @@ Status legend:
   - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/badges.test.ts` ✅ (8 tests)
   - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/quests/achievements/claim.test.ts __tests__/api/quests/weekly/claim.test.ts` ✅ (12 tests)
   - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/proposals.test.ts` ✅ (9 tests)
+  - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/quests/claim.test.ts` ✅ (5 tests)
   - Additional typecheck confirmation: `npm run -s typecheck` ✅
 
 ### 7. Frontend page-by-page behavior and contract wiring checks

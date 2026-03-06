@@ -4,6 +4,18 @@ import { requireAuth, checkOwnership } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { validateBody, claimQuestSchema } from '@/lib/auth/validation';
 
+const ADDRESS_LIKE_REGEX = /^0x[a-fA-F0-9]{3,40}$/;
+
+function parsePositiveInteger(value: unknown): number | null {
+  const parsed = typeof value === 'number'
+    ? value
+    : (typeof value === 'string' ? Number.parseInt(value, 10) : NaN);
+  if (!Number.isInteger(parsed) || parsed <= 0) {
+    return null;
+  }
+  return parsed;
+}
+
 /**
  * POST /api/quests/claim
  * Claim a completed daily quest reward
@@ -24,6 +36,13 @@ export async function POST(request: NextRequest) {
     return authResult;
   }
 
+  const requesterAddress = typeof authResult.user?.address === 'string'
+    ? authResult.user.address.trim().toLowerCase()
+    : '';
+  if (!requesterAddress || !ADDRESS_LIKE_REGEX.test(requesterAddress)) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   try {
     const validation = await validateBody(request, claimQuestSchema);
     if (!validation.success) {
@@ -34,9 +53,26 @@ export async function POST(request: NextRequest) {
     }
 
     const { questId, userAddress } = validation.data;
+    const normalizedUserAddress = typeof userAddress === 'string'
+      ? userAddress.trim().toLowerCase()
+      : '';
+    if (!normalizedUserAddress || !ADDRESS_LIKE_REGEX.test(normalizedUserAddress)) {
+      return NextResponse.json(
+        { error: 'Invalid user address format' },
+        { status: 400 }
+      );
+    }
+
+    const parsedQuestId = parsePositiveInteger(questId);
+    if (!parsedQuestId) {
+      return NextResponse.json(
+        { error: 'Quest ID must be a positive integer' },
+        { status: 400 }
+      );
+    }
 
     // Verify user is claiming their own rewards
-    if (!checkOwnership(authResult.user, userAddress)) {
+    if (!checkOwnership(authResult.user, normalizedUserAddress)) {
       return NextResponse.json(
         { error: 'You can only claim your own rewards' },
         { status: 403 }
@@ -51,7 +87,7 @@ export async function POST(request: NextRequest) {
       // Get user ID
       const userResult = await client.query(
         'SELECT id FROM users WHERE wallet_address = $1',
-        [userAddress]
+        [normalizedUserAddress]
       );
 
       if (userResult.rows.length === 0) {
@@ -71,7 +107,7 @@ export async function POST(request: NextRequest) {
           AND uqp.quest_date = CURRENT_DATE
           AND uqp.completed = true
           AND uqp.claimed = false
-      `, [userId, questId]);
+      `, [userId, parsedQuestId]);
 
       if (progressResult.rows.length === 0) {
         await client.query('ROLLBACK');
@@ -88,7 +124,7 @@ export async function POST(request: NextRequest) {
         UPDATE user_quest_progress
         SET claimed = true, claimed_at = NOW()
         WHERE user_id = $1 AND quest_id = $2 AND quest_date = CURRENT_DATE
-      `, [userId, questId]);
+      `, [userId, parsedQuestId]);
 
       // Add XP to user
       await client.query(`
