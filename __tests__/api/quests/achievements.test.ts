@@ -85,6 +85,31 @@ describe('/api/quests/achievements', () => {
 
       expect(response.status).toBe(403);
     });
+
+    it('should return 401 for malformed authenticated address', async () => {
+      withRateLimit.mockResolvedValue(null);
+      requireAuth.mockResolvedValue({ user: { address: 'bad-address' } });
+
+      const request = new NextRequest('http://localhost:3000/api/quests/achievements?userAddress=0x123');
+      const response = await GET(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(401);
+      expect(data.error).toBe('Unauthorized');
+      expect(getClient).not.toHaveBeenCalled();
+    });
+
+    it('should return 400 for malformed userAddress query', async () => {
+      withRateLimit.mockResolvedValue(null);
+
+      const request = new NextRequest('http://localhost:3000/api/quests/achievements?userAddress=not-an-address');
+      const response = await GET(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(400);
+      expect(data.error).toBe('Invalid user address format');
+      expect(getClient).not.toHaveBeenCalled();
+    });
   });
 
   describe('POST', () => {
@@ -134,6 +159,39 @@ describe('/api/quests/achievements', () => {
 
       const response = await POST(request);
       expect(response.status).toBe(403);
+    });
+
+    it('should return 401 for malformed authenticated address on POST', async () => {
+      withRateLimit.mockResolvedValue(null);
+      requireAuth.mockResolvedValue({ user: { address: 'bad-address' } });
+
+      const request = new NextRequest('http://localhost:3000/api/quests/achievements', {
+        method: 'POST',
+        body: JSON.stringify({ milestoneKey: 'first_quest', userAddress: '0x123', progress: 1 }),
+      });
+
+      const response = await POST(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(401);
+      expect(data.error).toBe('Unauthorized');
+      expect(getClient).not.toHaveBeenCalled();
+    });
+
+    it('should return 400 for malformed userAddress on POST', async () => {
+      withRateLimit.mockResolvedValue(null);
+
+      const request = new NextRequest('http://localhost:3000/api/quests/achievements', {
+        method: 'POST',
+        body: JSON.stringify({ milestoneKey: 'first_quest', userAddress: 'not-an-address', progress: 1 }),
+      });
+
+      const response = await POST(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(400);
+      expect(data.error).toBe('Invalid user address format');
+      expect(getClient).not.toHaveBeenCalled();
     });
   });
 });
