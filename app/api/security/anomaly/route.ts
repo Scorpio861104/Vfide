@@ -3,6 +3,16 @@ import { requireAuth } from '@/lib/auth/middleware';
 import { getAnomalyStats, recordActivity, getClientIP, getUserAgent } from '@/lib/security/anomalyDetection';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 
+const ADDRESS_PATTERN = /^0x[a-fA-F0-9]{3,64}$/;
+
+function normalizeAddress(value: string): string {
+  return value.trim().toLowerCase();
+}
+
+function isAddressLike(value: string): boolean {
+  return ADDRESS_PATTERN.test(value);
+}
+
 /**
  * GET /api/security/anomaly
  * Get anomaly detection statistics for the authenticated user
@@ -18,12 +28,19 @@ export async function GET(request: NextRequest) {
     return authResult;
   }
 
+  const authAddress = typeof authResult.user?.address === 'string'
+    ? normalizeAddress(authResult.user.address)
+    : '';
+  if (!authAddress || !isAddressLike(authAddress)) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   try {
-    const stats = await getAnomalyStats(authResult.user.address);
+    const stats = await getAnomalyStats(authAddress);
     
     // Record this activity (best effort only)
     try {
-      await recordActivity(authResult.user.address, {
+      await recordActivity(authAddress, {
         timestamp: Date.now(),
         ipAddress: getClientIP(request),
         userAgent: getUserAgent(request),

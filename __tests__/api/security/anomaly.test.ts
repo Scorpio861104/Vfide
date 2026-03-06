@@ -68,5 +68,36 @@ describe('/api/security/anomaly', () => {
       expect(data.success).toBe(true);
       expect(data.stats).toEqual({ totalEvents: 10, anomalies: 1 });
     });
+
+    it('should return 401 for malformed authenticated address', async () => {
+      withRateLimit.mockResolvedValue(null);
+      requireAuth.mockResolvedValue({ user: { address: 'not-an-address' } });
+
+      const request = new NextRequest('http://localhost:3000/api/security/anomaly');
+      const response = await GET(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(401);
+      expect(data.error).toBe('Unauthorized');
+      expect(getAnomalyStats).not.toHaveBeenCalled();
+      expect(recordActivity).not.toHaveBeenCalled();
+    });
+
+    it('should normalize authenticated address before anomaly calls', async () => {
+      withRateLimit.mockResolvedValue(null);
+      requireAuth.mockResolvedValue({ user: { address: ' 0x1111111111111111111111111111111111111123 ' } });
+      getAnomalyStats.mockResolvedValue({ totalEvents: 2, anomalies: 0 });
+      recordActivity.mockResolvedValue(undefined);
+
+      const request = new NextRequest('http://localhost:3000/api/security/anomaly');
+      const response = await GET(request);
+
+      expect(response.status).toBe(200);
+      expect(getAnomalyStats).toHaveBeenCalledWith('0x1111111111111111111111111111111111111123');
+      expect(recordActivity).toHaveBeenCalledWith(
+        '0x1111111111111111111111111111111111111123',
+        expect.objectContaining({ endpoint: '/api/security/anomaly' })
+      );
+    });
   });
 });
