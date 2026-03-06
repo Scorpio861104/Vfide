@@ -16,6 +16,7 @@ interface GroupMember {
 }
 
 const VALID_GROUP_MEMBER_ROLES = ['member', 'moderator', 'admin'] as const;
+const GROUP_ID_REGEX = /^\d+$/;
 
 function isObjectRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -32,6 +33,14 @@ export async function GET(request: NextRequest) {
     const userAddress = searchParams.get('userAddress');
 
     if (groupId && userAddress) {
+      if (!GROUP_ID_REGEX.test(groupId)) {
+        return NextResponse.json({ success: false, error: 'Invalid groupId format' }, { status: 400 });
+      }
+
+      if (!isAddress(userAddress)) {
+        return NextResponse.json({ success: false, error: 'Invalid userAddress format' }, { status: 400 });
+      }
+
       const result = await query<GroupMember>(
         `SELECT gm.*, u.wallet_address as user_address, u.username, u.avatar_url
          FROM group_members gm
@@ -48,6 +57,10 @@ export async function GET(request: NextRequest) {
     }
 
     if (groupId) {
+      if (!GROUP_ID_REGEX.test(groupId)) {
+        return NextResponse.json({ success: false, error: 'Invalid groupId format' }, { status: 400 });
+      }
+
       const result = await query<GroupMember>(
         `SELECT gm.*, u.wallet_address as user_address, u.username, u.avatar_url, u.proof_score
          FROM group_members gm
@@ -103,6 +116,10 @@ export async function POST(request: NextRequest) {
 
     if (!groupIdValue || !userAddressValue || !roleValue) {
       return NextResponse.json({ success: false, error: 'Invalid groupId, userAddress, or role type' }, { status: 400 });
+    }
+
+    if (!GROUP_ID_REGEX.test(groupIdValue)) {
+      return NextResponse.json({ success: false, error: 'Invalid groupId format' }, { status: 400 });
     }
 
     if (!isAddress(userAddressValue)) {
@@ -191,6 +208,10 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'Invalid groupId, userAddress, role, or actorAddress type' }, { status: 400 });
     }
 
+    if (!GROUP_ID_REGEX.test(groupIdValue)) {
+      return NextResponse.json({ success: false, error: 'Invalid groupId format' }, { status: 400 });
+    }
+
     if (!isAddress(userAddressValue) || !isAddress(actorAddressValue)) {
       return NextResponse.json({ success: false, error: 'Invalid address format' }, { status: 400 });
     }
@@ -253,6 +274,10 @@ export async function DELETE(request: NextRequest) {
 
     if (!groupId || !userAddress) {
       return NextResponse.json({ success: false, error: 'Missing groupId or userAddress' }, { status: 400 });
+    }
+
+    if (!GROUP_ID_REGEX.test(groupId)) {
+      return NextResponse.json({ success: false, error: 'Invalid groupId format' }, { status: 400 });
     }
 
     if (!isAddress(userAddress)) {

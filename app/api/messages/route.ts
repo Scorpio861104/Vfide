@@ -25,6 +25,13 @@ interface Message {
 const MAX_MESSAGES_LIMIT = 200;
 const MAX_MESSAGES_OFFSET = 10000;
 const MAX_BULK_MESSAGE_IDS = 500;
+const MAX_CONVERSATION_ADDRESS_LENGTH = 64;
+
+function toNonEmptyString(value: unknown): string | null {
+  if (typeof value !== 'string') return null;
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : null;
+}
 
 /**
  * GET /api/messages?conversationWith=0x...&limit=50&offset=0
@@ -321,8 +328,8 @@ export async function PATCH(request: NextRequest) {
 
   try {
     const { messageIds, conversationWith, userAddress } = body;
-    const userAddressValue = typeof userAddress === 'string' ? userAddress : null;
-    const conversationWithValue = typeof conversationWith === 'string' ? conversationWith : null;
+    const userAddressValue = toNonEmptyString(userAddress);
+    const conversationWithValue = toNonEmptyString(conversationWith);
 
     // Verify ownership - user can only mark their own messages as read
     if (userAddressValue && authResult.user.address.toLowerCase() !== userAddressValue.toLowerCase()) {
@@ -383,6 +390,23 @@ export async function PATCH(request: NextRequest) {
         updated: messageIds.length,
       });
     } else if (conversationWithValue && userAddressValue) {
+      if (
+        userAddressValue.length > MAX_CONVERSATION_ADDRESS_LENGTH ||
+        conversationWithValue.length > MAX_CONVERSATION_ADDRESS_LENGTH
+      ) {
+        return NextResponse.json(
+          { error: 'Address value is too long' },
+          { status: 400 }
+        );
+      }
+
+      if (!isAddress(userAddressValue) || !isAddress(conversationWithValue)) {
+        return NextResponse.json(
+          { error: 'Invalid address format for conversation read-receipt update' },
+          { status: 400 }
+        );
+      }
+
       // Mark all messages in conversation as read
       const result = await query(
         `UPDATE messages m

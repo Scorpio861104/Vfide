@@ -83,6 +83,42 @@ Status legend:
 - Status: complete
 - Verification evidence:
   - `npm test -- --runInBand __tests__/api` ✅ (58 suites, 475 tests)
+- Function hardening deltas:
+  - `app/api/crypto/rewards/[userId]/claim/route.ts` claim handler now validates and deduplicates reward IDs before DB casts/writes
+  - `app/api/users/[address]/route.ts` PUT handler now enforces strict JSON-object + field format/length validation (`username`, `email`, `bio`, `avatar_url`)
+  - `app/api/activities/route.ts` POST handler now enforces address format and normalized `activityType`/`title` writes
+  - `app/api/crypto/payment-requests/route.ts` POST handler now enforces numeric user IDs, no self-requesting, normalized token casing, strict decimal amount format, and memo type checks
+  - `app/api/crypto/rewards/[userId]/route.ts` GET handler now uses resilient amount parsing to prevent `NaN` propagation in totals
+  - `app/api/security/violations/route.ts` POST handler now enforces strict object payload, required fields, severity whitelist, and bounded field lengths
+  - `app/api/messages/reaction/route.ts` POST/DELETE handlers now enforce stricter typed normalization for IDs/emoji/image inputs, URL protocol checks, and bounded field lengths
+  - `app/api/messages/edit/route.ts` PATCH handler now uses strict object parsing + normalized required strings with bounded IDs/content
+  - `app/api/messages/delete/route.ts` DELETE handler now enforces strict object parsing, normalized required strings, bounded IDs, and explicit boolean handling for `hardDelete`
+  - `app/api/messages/route.ts` PATCH handler now enforces normalized address strings and validates `conversationWith`/`userAddress` formats before conversation-level read updates
+  - `app/api/proposals/route.ts` GET handler now applies read rate limiting and validates `proposerId` address format
+  - `app/api/friends/route.ts` GET/PATCH/DELETE handlers now enforce address validation, numeric `friendshipId` validation, and safer PATCH pre-transaction parsing (no rollback before begin)
+  - `app/api/sync/route.ts` GET/POST handlers now enforce numeric `userId` format and bounded safe `entity` identifier format
+  - `app/api/groups/members/route.ts` GET/POST/PATCH/DELETE handlers now enforce numeric `groupId` format and strict address validation on member lookups/mutations
+  - `app/api/quests/streak/route.ts` GET/POST handlers now enforce normalized input handling and streak-type format validation
+  - `app/api/quests/notifications/route.ts` PATCH handler now validates `notificationIds` array shape/content before UUID casts; GET uses safer VFIDE bigint divisor conversion
+  - `app/api/quests/onboarding/route.ts` GET/PATCH/POST handlers now normalize required string inputs and use consistent normalized address lookups for user resolution
+  - `app/api/quests/achievements/route.ts` GET/POST handlers now normalize required strings, validate milestone key format, and enforce bounded numeric progress values
+  - `app/api/endorsements/route.ts` GET/POST/DELETE handlers now enforce read rate limiting, normalized address handling, numeric ID parsing, proposalId validation, and self-endorsement prevention
+  - `app/api/transactions/export/route.ts` POST handler now normalizes/validates export addresses and filter values, validates auth address presence/format, and enforces safer normalized filter query inputs
+  - `app/api/performance/metrics/route.ts` GET/POST handlers now trim metric names consistently and enforce UTF-8 metadata byte-size limits
+  - `app/api/errors/route.ts` GET/POST handlers now normalize severity filters/values, enforce auth address presence, trim required messages, and enforce UTF-8 metadata byte-size limits
+  - `app/api/analytics/route.ts` GET/POST handlers now normalize event/user identifiers, validate user-id address format, normalize batch event types, and enforce UTF-8 event-data byte-size limits
+  - `app/api/attachments/upload/route.ts` POST handler now enforces strict object payloads, filename/path traversal guards, URL protocol validation, and normalized MIME/extension checks with bounded sizes
+  - Focused test confirmation: `npm test -- --runInBand __tests__/api/activities.test.ts __tests__/api/users.test.ts __tests__/api/crypto/rewards/claim.test.ts` ✅ (29 tests)
+  - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/security/violations.test.ts` ✅ (6 tests)
+  - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/messages/reaction.test.ts` ✅ (4 tests)
+  - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/messages.test.ts __tests__/api/messages/edit.test.ts __tests__/api/messages/delete.test.ts __tests__/api/messages/reaction.test.ts` ✅ (28 tests)
+  - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/proposals.test.ts __tests__/api/friends.test.ts` ✅ (16 tests)
+  - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/sync.test.ts __tests__/api/groups/members.test.ts` ✅ (14 tests)
+  - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/quests/streak.test.ts __tests__/api/quests/notifications.test.ts` ✅ (13 tests)
+  - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/quests/onboarding.test.ts __tests__/api/quests/achievements.test.ts` ✅ (15 tests)
+  - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/endorsements.test.ts __tests__/api/transactions/export.test.ts __tests__/api/performance/metrics.test.ts` ✅ (24 tests)
+  - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/errors.test.ts __tests__/api/analytics.test.ts __tests__/api/attachments/upload.test.ts` ✅ (25 tests)
+  - Additional typecheck confirmation: `npm run -s typecheck` ✅
 
 ### 7. Frontend page-by-page behavior and contract wiring checks
 - Status: in-progress

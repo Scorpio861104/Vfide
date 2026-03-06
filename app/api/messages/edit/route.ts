@@ -11,6 +11,19 @@ interface MessageEditRequest {
   userAddress: string;
 }
 
+const MAX_ID_LENGTH = 128;
+const MAX_CONTENT_LENGTH = 5000;
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function toNonEmptyString(value: unknown): string | null {
+  if (typeof value !== 'string') return null;
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : null;
+}
+
 export async function PATCH(request: NextRequest) {
   // Rate limiting: 20 requests per minute for write operations
   const rateLimitResponse = await withRateLimit(request, 'write');
@@ -22,27 +35,34 @@ export async function PATCH(request: NextRequest) {
     return authResult;
   }
 
-  let body: MessageEditRequest;
+  let body: Record<string, unknown>;
   try {
-    body = await request.json();
+    body = await request.json() as unknown as Record<string, unknown>;
   } catch {
     return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
   }
 
-  if (!body || typeof body !== 'object' || Array.isArray(body)) {
+  if (!isRecord(body)) {
     return NextResponse.json({ error: 'Request body must be a JSON object' }, { status: 400 });
   }
 
   const client = await getClient();
   
   try {
-    const { messageId, conversationId, newContent, userAddress } = body;
+    const messageId = toNonEmptyString(body.messageId);
+    const conversationId = toNonEmptyString(body.conversationId);
+    const newContent = toNonEmptyString(body.newContent);
+    const userAddress = toNonEmptyString(body.userAddress);
 
     if (!messageId || !conversationId || !newContent || !userAddress) {
       return NextResponse.json(
         { error: 'Missing required fields' },
         { status: 400 }
       );
+    }
+
+    if (messageId.length > MAX_ID_LENGTH || conversationId.length > MAX_ID_LENGTH) {
+      return NextResponse.json({ error: 'messageId or conversationId is too long' }, { status: 400 });
     }
 
     // Validate address format
@@ -56,8 +76,8 @@ export async function PATCH(request: NextRequest) {
     }
 
     // Validate content length and sanitization happens in validation schema
-    if (newContent.length < 1 || newContent.length > 5000) {
-      return NextResponse.json({ error: 'Content must be between 1 and 5000 characters' }, { status: 400 });
+    if (newContent.length < 1 || newContent.length > MAX_CONTENT_LENGTH) {
+      return NextResponse.json({ error: `Content must be between 1 and ${MAX_CONTENT_LENGTH} characters` }, { status: 400 });
     }
 
     await client.query('BEGIN');

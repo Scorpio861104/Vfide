@@ -21,6 +21,10 @@ const ALLOWED_FILE_TYPES = [
 
 const ALLOWED_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.pdf', '.txt', '.doc', '.docx'];
 
+function isObjectRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
 export async function POST(request: NextRequest) {
   // Rate limiting
   const rateLimit = await withRateLimit(request, 'write');
@@ -38,13 +42,21 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
     }
 
-    if (!body || typeof body !== 'object' || Array.isArray(body)) {
+    if (!isObjectRecord(body)) {
       return NextResponse.json({ error: 'Request body must be a JSON object' }, { status: 400 });
     }
 
-    const { filename, fileType, fileSize, url } = body as Record<string, unknown>;
+    if (!authResult.user?.address || typeof authResult.user.address !== 'string') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
 
-    if (typeof filename !== 'string' || filename.trim().length === 0 || typeof url !== 'string' || url.trim().length === 0) {
+    const { filename: rawFilename, fileType: rawFileType, fileSize, url: rawUrl } = body;
+
+    const filename = typeof rawFilename === 'string' ? rawFilename.trim() : '';
+    const url = typeof rawUrl === 'string' ? rawUrl.trim() : '';
+    const fileType = typeof rawFileType === 'string' ? rawFileType.trim().toLowerCase() : '';
+
+    if (filename.length === 0 || url.length === 0) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
@@ -67,11 +79,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid URL protocol' }, { status: 400 });
     }
 
-    if (typeof fileType !== 'string' || fileType.trim().length === 0) {
+    if (fileType.length === 0) {
       return NextResponse.json({ error: 'Missing required field: fileType' }, { status: 400 });
     }
 
-    if (typeof fileSize !== 'number' || !Number.isFinite(fileSize)) {
+    if (typeof fileSize !== 'number' || !Number.isFinite(fileSize) || !Number.isInteger(fileSize)) {
       return NextResponse.json({ error: 'Missing required field: fileSize' }, { status: 400 });
     }
 

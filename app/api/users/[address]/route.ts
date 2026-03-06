@@ -25,6 +25,15 @@ interface UserStats {
   endorsement_count: number;
 }
 
+const USERNAME_REGEX = /^[a-zA-Z0-9_]{3,32}$/;
+const MAX_BIO_LENGTH = 500;
+const MAX_EMAIL_LENGTH = 254;
+const MAX_AVATAR_URL_LENGTH = 2048;
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
 /**
  * GET /api/users/:address
  * Get user profile with stats
@@ -148,8 +157,61 @@ export async function PUT(
       );
     }
 
-    const body = await request.json();
-    const { username, email, bio, avatar_url } = body;
+    const rawBody: unknown = await request.json();
+    if (!isRecord(rawBody)) {
+      return NextResponse.json(
+        { error: 'Request body must be a JSON object' },
+        { status: 400 }
+      );
+    }
+
+    const username = typeof rawBody.username === 'string' ? rawBody.username.trim() : undefined;
+    const email = typeof rawBody.email === 'string' ? rawBody.email.trim() : undefined;
+    const bio = typeof rawBody.bio === 'string' ? rawBody.bio.trim() : undefined;
+    const avatar_url = typeof rawBody.avatar_url === 'string' ? rawBody.avatar_url.trim() : undefined;
+
+    if (username !== undefined && !USERNAME_REGEX.test(username)) {
+      return NextResponse.json(
+        { error: 'Username must be 3-32 chars and contain only letters, numbers, or underscores' },
+        { status: 400 }
+      );
+    }
+
+    if (email !== undefined) {
+      if (email.length > MAX_EMAIL_LENGTH || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        return NextResponse.json(
+          { error: 'Invalid email format' },
+          { status: 400 }
+        );
+      }
+    }
+
+    if (bio !== undefined && bio.length > MAX_BIO_LENGTH) {
+      return NextResponse.json(
+        { error: `Bio must be <= ${MAX_BIO_LENGTH} characters` },
+        { status: 400 }
+      );
+    }
+
+    if (avatar_url !== undefined) {
+      if (avatar_url.length > MAX_AVATAR_URL_LENGTH) {
+        return NextResponse.json(
+          { error: 'Avatar URL is too long' },
+          { status: 400 }
+        );
+      }
+      try {
+        const parsed = new URL(avatar_url);
+        if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') {
+          throw new Error('invalid protocol');
+        }
+      } catch {
+        return NextResponse.json(
+          { error: 'Invalid avatar URL' },
+          { status: 400 }
+        );
+      }
+    }
 
     // Update user in database
     const result = await query<User>(

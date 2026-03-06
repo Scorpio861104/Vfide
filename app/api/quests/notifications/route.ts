@@ -3,6 +3,7 @@ import { getClient } from '@/lib/db';
 import { isAdmin, requireAuth } from '@/lib/auth/middleware';
 
 const MAX_QUEST_NOTIFICATION_IDS = 500;
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 import { withRateLimit } from '@/lib/auth/rateLimit';
 
 /**
@@ -72,7 +73,7 @@ export async function GET(request: NextRequest) {
         message: row.message,
         icon: row.icon,
         rewardXp: row.reward_xp,
-        rewardVfide: (BigInt(row.reward_vfide || '0') / BigInt(10 ** 18)).toString(),
+        rewardVfide: (BigInt(row.reward_vfide || '0') / BigInt('1000000000000000000')).toString(),
         createdAt: row.created_at,
       }));
 
@@ -137,6 +138,17 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
+    const normalizedNotificationIds = notificationIds
+      .filter((id): id is string => typeof id === 'string')
+      .map((id) => id.trim());
+
+    if (normalizedNotificationIds.length !== notificationIds.length || normalizedNotificationIds.some((id) => !UUID_REGEX.test(id))) {
+      return NextResponse.json(
+        { error: 'notificationIds must be an array of UUID strings' },
+        { status: 400 }
+      );
+    }
+
     const requesterAddress = authResult.user.address.toLowerCase();
     const targetAddress = userAddress.toLowerCase();
     const canUpdate = requesterAddress === targetAddress || isAdmin(authResult.user);
@@ -164,7 +176,7 @@ export async function PATCH(request: NextRequest) {
         UPDATE achievement_notifications
         SET shown = true, shown_at = NOW()
         WHERE user_id = $1 AND id = ANY($2::uuid[])
-      `, [userId, notificationIds]);
+      `, [userId, normalizedNotificationIds]);
 
       return NextResponse.json({ success: true });
     } finally {

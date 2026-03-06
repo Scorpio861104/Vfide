@@ -20,6 +20,20 @@ interface ReactionRequest {
   userAddress: string;
 }
 
+const MAX_ID_LENGTH = 128;
+const MAX_IMAGE_NAME_LENGTH = 120;
+const MAX_EMOJI_LENGTH = 16;
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function normalizeRequiredString(value: unknown): string | null {
+  if (typeof value !== 'string') return null;
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : null;
+}
+
 async function ensureConversationParticipant(
   messageId: string,
   conversationId: string,
@@ -54,9 +68,16 @@ export async function POST(request: NextRequest) {
     return authResult;
   }
 
-  let body: ReactionRequest;
+  let body: Record<string, unknown>;
   try {
-    body = await request.json();
+    const parsed: unknown = await request.json();
+    if (!isRecord(parsed)) {
+      return NextResponse.json(
+        { error: 'Request body must be a JSON object' },
+        { status: 400 }
+      );
+    }
+    body = parsed;
   } catch {
     return NextResponse.json(
       { error: 'Invalid JSON body' },
@@ -64,19 +85,25 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  if (!body || typeof body !== 'object' || Array.isArray(body)) {
-    return NextResponse.json(
-      { error: 'Request body must be a JSON object' },
-      { status: 400 }
-    );
-  }
-
   try {
-    const { messageId, conversationId, reactionType = 'emoji', emoji, imageUrl, imageName, userAddress } = body;
+    const reactionType = (body.reactionType as ReactionRequest['reactionType']) || 'emoji';
+    const normalizedEmoji = normalizeRequiredString(body.emoji);
+    const normalizedImageUrl = normalizeRequiredString(body.imageUrl);
+    const normalizedImageName = normalizeRequiredString(body.imageName);
+    const messageId = normalizeRequiredString(body.messageId);
+    const conversationId = normalizeRequiredString(body.conversationId);
+    const userAddress = normalizeRequiredString(body.userAddress);
 
     if (!messageId || !conversationId || !userAddress) {
       return NextResponse.json(
         { error: 'Missing required fields' },
+        { status: 400 }
+      );
+    }
+
+    if (messageId.length > MAX_ID_LENGTH || conversationId.length > MAX_ID_LENGTH) {
+      return NextResponse.json(
+        { error: 'messageId or conversationId too long' },
         { status: 400 }
       );
     }
@@ -101,21 +128,27 @@ export async function POST(request: NextRequest) {
 
     // Validate reaction based on type
     if (reactionType === 'emoji') {
-      if (!emoji) {
+      if (!normalizedEmoji) {
         return NextResponse.json(
           { error: 'Emoji is required for emoji reactions' },
           { status: 400 }
         );
       }
+      if (normalizedEmoji.length > MAX_EMOJI_LENGTH) {
+        return NextResponse.json(
+          { error: 'Emoji reaction is too long' },
+          { status: 400 }
+        );
+      }
       const emojiRegex = /^[\p{Emoji}]+$/u;
-      if (!emojiRegex.test(emoji)) {
+      if (!emojiRegex.test(normalizedEmoji)) {
         return NextResponse.json(
           { error: 'Invalid emoji' },
           { status: 400 }
         );
       }
     } else if (reactionType === 'custom_image') {
-      if (!imageUrl) {
+      if (!normalizedImageUrl) {
         return NextResponse.json(
           { error: 'Image URL is required for custom image reactions' },
           { status: 400 }
@@ -123,10 +156,20 @@ export async function POST(request: NextRequest) {
       }
       // Validate URL format
       try {
-        new URL(imageUrl);
+        const parsedUrl = new URL(normalizedImageUrl);
+        if (parsedUrl.protocol !== 'https:' && parsedUrl.protocol !== 'http:') {
+          throw new Error('Invalid protocol');
+        }
       } catch {
         return NextResponse.json(
           { error: 'Invalid image URL' },
+          { status: 400 }
+        );
+      }
+
+      if (normalizedImageName && normalizedImageName.length > MAX_IMAGE_NAME_LENGTH) {
+        return NextResponse.json(
+          { error: `imageName too long (max ${MAX_IMAGE_NAME_LENGTH})` },
           { status: 400 }
         );
       }
@@ -138,8 +181,15 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if reaction exists
-    const reactionIdentifier = reactionType === 'emoji' ? emoji : imageUrl;
+    const reactionIdentifier = reactionType === 'emoji' ? normalizedEmoji : normalizedImageUrl;
     const identifierColumn = reactionType === 'emoji' ? 'mr.emoji' : 'mr.image_url';
+
+    if (!reactionIdentifier) {
+      return NextResponse.json(
+        { error: 'Reaction identifier missing' },
+        { status: 400 }
+      );
+    }
     
     const existingResult = await query(
       `SELECT id FROM message_reactions mr
@@ -171,7 +221,7 @@ export async function POST(request: NextRequest) {
            SELECT $1, u.id, $2, $3, NOW()
            FROM users u
            WHERE u.wallet_address = $4`,
-          [messageId, reactionType, emoji, userAddress.toLowerCase()]
+          [messageId, reactionType, normalizedEmoji, userAddress.toLowerCase()]
         );
       } else {
         await query(
@@ -179,7 +229,7 @@ export async function POST(request: NextRequest) {
            SELECT $1, u.id, $2, $3, $4, NOW()
            FROM users u
            WHERE u.wallet_address = $5`,
-          [messageId, reactionType, imageUrl, imageName || 'custom', userAddress.toLowerCase()]
+          [messageId, reactionType, normalizedImageUrl, normalizedImageName || 'custom', userAddress.toLowerCase()]
         );
       }
     }
@@ -251,9 +301,16 @@ export async function DELETE(request: NextRequest) {
     return authResult;
   }
 
-  let body: ReactionRequest;
+  let body: Record<string, unknown>;
   try {
-    body = await request.json();
+    const parsed: unknown = await request.json();
+    if (!isRecord(parsed)) {
+      return NextResponse.json(
+        { error: 'Request body must be a JSON object' },
+        { status: 400 }
+      );
+    }
+    body = parsed;
   } catch {
     return NextResponse.json(
       { error: 'Invalid JSON body' },
@@ -261,19 +318,29 @@ export async function DELETE(request: NextRequest) {
     );
   }
 
-  if (!body || typeof body !== 'object' || Array.isArray(body)) {
-    return NextResponse.json(
-      { error: 'Request body must be a JSON object' },
-      { status: 400 }
-    );
-  }
-
   try {
-    const { messageId, conversationId, emoji, userAddress } = body;
+    const messageId = normalizeRequiredString(body.messageId);
+    const conversationId = normalizeRequiredString(body.conversationId);
+    const emoji = normalizeRequiredString(body.emoji);
+    const userAddress = normalizeRequiredString(body.userAddress);
 
     if (!messageId || !conversationId || !emoji || !userAddress) {
       return NextResponse.json(
         { error: 'Missing required fields' },
+        { status: 400 }
+      );
+    }
+
+    if (messageId.length > MAX_ID_LENGTH || conversationId.length > MAX_ID_LENGTH) {
+      return NextResponse.json(
+        { error: 'messageId or conversationId too long' },
+        { status: 400 }
+      );
+    }
+
+    if (emoji.length > MAX_EMOJI_LENGTH) {
+      return NextResponse.json(
+        { error: 'Emoji reaction is too long' },
         { status: 400 }
       );
     }

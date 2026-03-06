@@ -12,6 +12,10 @@ function isObjectRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
+function byteLength(value: string): number {
+  return Buffer.byteLength(value, 'utf8');
+}
+
 export async function GET(request: NextRequest) {
   // Rate limiting
   const rateLimit = await withRateLimit(request, 'api');
@@ -23,7 +27,7 @@ export async function GET(request: NextRequest) {
 
   try {
     const { searchParams } = new URL(request.url);
-    const metric = searchParams.get('metric');
+    const rawMetric = searchParams.get('metric');
     const rawLimit = parseInt(searchParams.get('limit') || String(DEFAULT_METRICS_GET_LIMIT), 10);
 
     // Validate and bound parsed limit
@@ -35,6 +39,8 @@ export async function GET(request: NextRequest) {
     }
 
     const limit = Math.min(rawLimit, MAX_METRICS_GET_LIMIT);
+
+    const metric = rawMetric?.trim() || null;
 
     if (metric && metric.length > MAX_METRIC_NAME_LENGTH) {
       return NextResponse.json(
@@ -84,9 +90,18 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
     }
 
-    const { metricName, value, metadata } = body;
+    const { metricName: rawMetricName, value, metadata } = body;
 
-    if (typeof metricName !== 'string' || metricName.trim().length === 0 || metricName.length > MAX_METRIC_NAME_LENGTH) {
+    if (typeof rawMetricName !== 'string') {
+      return NextResponse.json(
+        { error: `Invalid metricName. Must be a non-empty string up to ${MAX_METRIC_NAME_LENGTH} characters.` },
+        { status: 400 }
+      );
+    }
+
+    const metricName = rawMetricName.trim();
+
+    if (metricName.length === 0 || metricName.length > MAX_METRIC_NAME_LENGTH) {
       return NextResponse.json(
         { error: `Invalid metricName. Must be a non-empty string up to ${MAX_METRIC_NAME_LENGTH} characters.` },
         { status: 400 }
@@ -108,7 +123,7 @@ export async function POST(request: NextRequest) {
     }
 
     const serializedMetadata = JSON.stringify(metadata || {});
-    if (serializedMetadata.length > MAX_METADATA_BYTES) {
+    if (byteLength(serializedMetadata) > MAX_METADATA_BYTES) {
       return NextResponse.json(
         { error: `Metadata too large. Maximum ${MAX_METADATA_BYTES} bytes allowed.` },
         { status: 400 }

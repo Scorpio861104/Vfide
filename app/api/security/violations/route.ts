@@ -5,6 +5,14 @@ import { requireAuth } from '@/lib/auth/middleware';
 
 const DEFAULT_VIOLATIONS_LIMIT = 100;
 const MAX_VIOLATIONS_LIMIT = 500;
+const MAX_VIOLATION_TYPE_LENGTH = 64;
+const MAX_DESCRIPTION_LENGTH = 2000;
+const MAX_IP_LENGTH = 64;
+const VALID_SEVERITIES = ['low', 'medium', 'high', 'critical'] as const;
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
 
 export async function GET(request: NextRequest) {
   // Rate limiting
@@ -52,8 +60,50 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const body = await request.json();
-    const { violationType, severity, description, ipAddress } = body;
+    const body: unknown = await request.json();
+    if (!isRecord(body)) {
+      return NextResponse.json({ error: 'Request body must be a JSON object' }, { status: 400 });
+    }
+
+    const violationType = typeof body.violationType === 'string' ? body.violationType.trim() : null;
+    const description = typeof body.description === 'string' ? body.description.trim() : null;
+    const severity = typeof body.severity === 'string' ? body.severity.trim().toLowerCase() : null;
+    const ipAddress = typeof body.ipAddress === 'string' ? body.ipAddress.trim() : null;
+
+    if (!violationType || !description || !severity) {
+      return NextResponse.json(
+        { error: 'violationType, severity, and description are required' },
+        { status: 400 }
+      );
+    }
+
+    if (violationType.length > MAX_VIOLATION_TYPE_LENGTH) {
+      return NextResponse.json(
+        { error: `violationType too long (max ${MAX_VIOLATION_TYPE_LENGTH})` },
+        { status: 400 }
+      );
+    }
+
+    if (description.length > MAX_DESCRIPTION_LENGTH) {
+      return NextResponse.json(
+        { error: `description too long (max ${MAX_DESCRIPTION_LENGTH})` },
+        { status: 400 }
+      );
+    }
+
+    if (!VALID_SEVERITIES.includes(severity as (typeof VALID_SEVERITIES)[number])) {
+      return NextResponse.json(
+        { error: `Invalid severity. Allowed: ${VALID_SEVERITIES.join(', ')}` },
+        { status: 400 }
+      );
+    }
+
+    if (ipAddress && ipAddress.length > MAX_IP_LENGTH) {
+      return NextResponse.json(
+        { error: `ipAddress too long (max ${MAX_IP_LENGTH})` },
+        { status: 400 }
+      );
+    }
 
     const userResult = await query<{ id: number }>(
       'SELECT id FROM users WHERE wallet_address = $1',

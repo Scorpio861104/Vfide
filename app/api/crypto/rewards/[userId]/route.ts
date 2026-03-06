@@ -51,8 +51,15 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       [userId]
     );
 
-    const total = result.rows.reduce((sum, r) => sum + parseFloat(r.amount || 0), 0);
-    const totalUnclaimed = result.rows.filter(r => r.status === 'pending' || !r.claimed).reduce((sum, r) => sum + parseFloat(r.amount || 0), 0);
+    const parseAmount = (value: unknown): number => {
+      const amount = typeof value === 'number' ? value : parseFloat(String(value ?? '0'));
+      return Number.isFinite(amount) && amount > 0 ? amount : 0;
+    };
+
+    const total = result.rows.reduce((sum, r) => sum + parseAmount(r.amount), 0);
+    const totalUnclaimed = result.rows
+      .filter((r) => r.status === 'pending' || !r.claimed)
+      .reduce((sum, r) => sum + parseAmount(r.amount), 0);
 
     return NextResponse.json({
       rewards: result.rows,

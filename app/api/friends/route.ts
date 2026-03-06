@@ -3,11 +3,13 @@ import { query, getClient } from '@/lib/db';
 import { requireAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { validateBody, friendRequestSchema } from '@/lib/auth/validation';
+import { isAddress } from 'viem';
 
 const DEFAULT_FRIENDS_LIMIT = 50;
 const MAX_FRIENDS_LIMIT = 200;
 const MAX_FRIENDS_OFFSET = 10000;
 const ALLOWED_FRIENDSHIP_STATUS = new Set(['pending', 'accepted', 'blocked', 'rejected']);
+const FRIENDSHIP_ID_REGEX = /^\d+$/;
 
 interface Friendship {
   id: number;
@@ -66,6 +68,13 @@ export async function GET(request: NextRequest) {
     if (!address) {
       return NextResponse.json(
         { error: 'address is required' },
+        { status: 400 }
+      );
+    }
+
+    if (!isAddress(address)) {
+      return NextResponse.json(
+        { error: 'Invalid address format' },
         { status: 400 }
       );
     }
@@ -256,7 +265,6 @@ export async function PATCH(request: NextRequest) {
     try {
       body = await request.json();
     } catch {
-      await client.query('ROLLBACK');
       return NextResponse.json(
         { error: 'Invalid JSON payload' },
         { status: 400 }
@@ -264,7 +272,6 @@ export async function PATCH(request: NextRequest) {
     }
 
     if (!isObjectRecord(body)) {
-      await client.query('ROLLBACK');
       return NextResponse.json(
         { error: 'Invalid request body' },
         { status: 400 }
@@ -290,6 +297,20 @@ export async function PATCH(request: NextRequest) {
     if (!friendshipIdValue || !statusValue || !userAddressValue) {
       return NextResponse.json(
         { error: 'friendshipId, status, and userAddress must be strings/numbers as expected' },
+        { status: 400 }
+      );
+    }
+
+    if (!FRIENDSHIP_ID_REGEX.test(friendshipIdValue)) {
+      return NextResponse.json(
+        { error: 'friendshipId must be a positive integer' },
+        { status: 400 }
+      );
+    }
+
+    if (!isAddress(userAddressValue)) {
+      return NextResponse.json(
+        { error: 'Invalid userAddress format' },
         { status: 400 }
       );
     }
@@ -415,6 +436,13 @@ export async function DELETE(request: NextRequest) {
     if (!user1 || !user2) {
       return NextResponse.json(
         { error: 'Missing required fields: user1, user2' },
+        { status: 400 }
+      );
+    }
+
+    if (!isAddress(user1) || !isAddress(user2)) {
+      return NextResponse.json(
+        { error: 'Invalid user address format' },
         { status: 400 }
       );
     }

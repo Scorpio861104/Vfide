@@ -14,6 +14,10 @@ function isObjectRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
+function byteLength(value: string): number {
+  return Buffer.byteLength(value, 'utf8');
+}
+
 export async function GET(request: NextRequest) {
   // Rate limiting
   const rateLimit = await withRateLimit(request, 'api');
@@ -25,7 +29,7 @@ export async function GET(request: NextRequest) {
 
   try {
     const { searchParams } = new URL(request.url);
-    const severity = searchParams.get('severity');
+    const severity = searchParams.get('severity')?.trim().toLowerCase() || null;
     const limitParam = parseInt(searchParams.get('limit') || String(DEFAULT_ERROR_LOG_LIMIT), 10);
 
     // Validate parsed number
@@ -86,9 +90,20 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
     }
 
-    const { severity, message, stack, metadata } = body;
+    const { severity, message: rawMessage, stack: rawStack, metadata } = body;
 
-    if (typeof message !== 'string' || message.trim().length === 0) {
+    if (!authResult.user?.address || typeof authResult.user.address !== 'string') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    if (typeof rawMessage !== 'string') {
+      return NextResponse.json({ error: 'message required' }, { status: 400 });
+    }
+
+    const message = rawMessage.trim();
+    const stack = typeof rawStack === 'string' ? rawStack : rawStack;
+
+    if (message.length === 0) {
       return NextResponse.json({ error: 'message required' }, { status: 400 });
     }
 
@@ -99,7 +114,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (severity !== undefined && (typeof severity !== 'string' || !VALID_SEVERITIES.includes(severity as (typeof VALID_SEVERITIES)[number]))) {
+    const normalizedSeverity = typeof severity === 'string' ? severity.trim().toLowerCase() : severity;
+
+    if (normalizedSeverity !== undefined && (typeof normalizedSeverity !== 'string' || !VALID_SEVERITIES.includes(normalizedSeverity as (typeof VALID_SEVERITIES)[number]))) {
       return NextResponse.json(
         { error: `Invalid severity. Must be one of: ${VALID_SEVERITIES.join(', ')}` },
         { status: 400 }
@@ -128,7 +145,7 @@ export async function POST(request: NextRequest) {
     }
 
     const serializedMetadata = JSON.stringify(metadata || {});
-    if (serializedMetadata.length > MAX_ERROR_METADATA_BYTES) {
+    if (byteLength(serializedMetadata) > MAX_ERROR_METADATA_BYTES) {
       return NextResponse.json(
         { error: `metadata too large. Maximum ${MAX_ERROR_METADATA_BYTES} bytes allowed.` },
         { status: 400 }
@@ -146,7 +163,7 @@ export async function POST(request: NextRequest) {
       `INSERT INTO error_logs (user_id, severity, message, stack, metadata, timestamp)
        VALUES ($1, $2, $3, $4, $5, NOW())
        RETURNING *`,
-      [userId, severity || 'error', message, stack, serializedMetadata]
+      [userId, normalizedSeverity || 'error', message, stack, serializedMetadata]
     );
 
     return NextResponse.json({ success: true, error: result.rows[0] });

@@ -22,17 +22,42 @@ interface Endorsement {
 
 const MAX_ENDORSEMENTS_LIMIT = 200;
 const MAX_ENDORSEMENTS_OFFSET = 10000;
+const MAX_ENDORSEMENT_MESSAGE_LENGTH = 1000;
+
+function normalizeAddress(value: string): string {
+  return value.trim().toLowerCase();
+}
+
+function isAddressLike(value: string): boolean {
+  return /^0x[a-fA-F0-9]{3,64}$/.test(value);
+}
+
+function parsePositiveInteger(value: string): number | null {
+  if (!/^\d+$/.test(value)) {
+    return null;
+  }
+
+  const parsed = Number.parseInt(value, 10);
+  if (!Number.isSafeInteger(parsed) || parsed <= 0) {
+    return null;
+  }
+
+  return parsed;
+}
 
 /**
  * GET /api/endorsements?endorsedAddress=0x...&proposalId=123&limit=50&offset=0
  * Get endorsements
  */
 export async function GET(request: NextRequest) {
+  const rateLimitResponse = await withRateLimit(request, 'api');
+  if (rateLimitResponse) return rateLimitResponse;
+
   try {
     const searchParams = request.nextUrl.searchParams;
-    const endorsedAddress = searchParams.get('endorsedAddress');
-    const endorserAddress = searchParams.get('endorserAddress');
-    const proposalId = searchParams.get('proposalId');
+    const rawEndorsedAddress = searchParams.get('endorsedAddress');
+    const rawEndorserAddress = searchParams.get('endorserAddress');
+    const rawProposalId = searchParams.get('proposalId');
     const rawLimit = parseInt(searchParams.get('limit') || '50', 10);
     const rawOffset = parseInt(searchParams.get('offset') || '0', 10);
 
@@ -43,6 +68,34 @@ export async function GET(request: NextRequest) {
     if (isNaN(rawLimit) || isNaN(rawOffset)) {
       return NextResponse.json(
         { error: 'Invalid limit or offset parameter' },
+        { status: 400 }
+      );
+    }
+
+    const endorsedAddress =
+      typeof rawEndorsedAddress === 'string' && rawEndorsedAddress.trim().length > 0
+        ? normalizeAddress(rawEndorsedAddress)
+        : null;
+    const endorserAddress =
+      typeof rawEndorserAddress === 'string' && rawEndorserAddress.trim().length > 0
+        ? normalizeAddress(rawEndorserAddress)
+        : null;
+
+    if ((endorsedAddress && !isAddressLike(endorsedAddress)) || (endorserAddress && !isAddressLike(endorserAddress))) {
+      return NextResponse.json(
+        { error: 'Invalid address filter' },
+        { status: 400 }
+      );
+    }
+
+    const proposalId =
+      typeof rawProposalId === 'string' && rawProposalId.trim().length > 0
+        ? parsePositiveInteger(rawProposalId.trim())
+        : null;
+
+    if (rawProposalId && proposalId === null) {
+      return NextResponse.json(
+        { error: 'Invalid proposalId parameter' },
         { status: 400 }
       );
     }
@@ -68,13 +121,13 @@ export async function GET(request: NextRequest) {
 
     if (endorsedAddress) {
       queryText += ` AND endorsed.wallet_address = $${paramCount}`;
-      params.push(endorsedAddress.toLowerCase());
+      params.push(endorsedAddress);
       paramCount++;
     }
 
     if (endorserAddress) {
       queryText += ` AND endorser.wallet_address = $${paramCount}`;
-      params.push(endorserAddress.toLowerCase());
+      params.push(endorserAddress);
       paramCount++;
     }
 
@@ -102,13 +155,13 @@ export async function GET(request: NextRequest) {
 
     if (endorsedAddress) {
       countQuery += ` AND endorsed.wallet_address = $${countParamCount}`;
-      countParams.push(endorsedAddress.toLowerCase());
+      countParams.push(endorsedAddress);
       countParamCount++;
     }
 
     if (endorserAddress) {
       countQuery += ` AND endorser.wallet_address = $${countParamCount}`;
-      countParams.push(endorserAddress.toLowerCase());
+      countParams.push(endorserAddress);
       countParamCount++;
     }
 
@@ -185,15 +238,39 @@ export async function POST(request: NextRequest) {
   const client = await getClient();
   
   try {
-    const { fromAddress: endorserAddress, toAddress: endorsedAddress, message } = parsed.data as {
+    const { fromAddress: rawEndorserAddress, toAddress: rawEndorsedAddress, message } = parsed.data as {
       fromAddress: string;
       toAddress: string;
       message: string;
     };
+
+    const endorserAddress = normalizeAddress(rawEndorserAddress);
+    const endorsedAddress = normalizeAddress(rawEndorsedAddress);
     const proposalId = null; // Optional field
 
+    if (!isAddressLike(endorserAddress) || !isAddressLike(endorsedAddress)) {
+      return NextResponse.json(
+        { error: 'Invalid wallet address format' },
+        { status: 400 }
+      );
+    }
+
+    if (endorserAddress === endorsedAddress) {
+      return NextResponse.json(
+        { error: 'You cannot endorse yourself' },
+        { status: 400 }
+      );
+    }
+
+    if (typeof message === 'string' && message.length > MAX_ENDORSEMENT_MESSAGE_LENGTH) {
+      return NextResponse.json(
+        { error: `Endorsement message exceeds ${MAX_ENDORSEMENT_MESSAGE_LENGTH} characters` },
+        { status: 400 }
+      );
+    }
+
     // Verify the endorser is the authenticated user
-    if (authResult.user.address.toLowerCase() !== endorserAddress.toLowerCase()) {
+    if (normalizeAddress(authResult.user.address) !== endorserAddress) {
       return NextResponse.json(
         { error: 'You can only create endorsements from your own address' },
         { status: 403 }
@@ -205,12 +282,12 @@ export async function POST(request: NextRequest) {
     // Get user IDs
     const endorserResult = await client.query(
       'SELECT id FROM users WHERE wallet_address = $1',
-      [endorserAddress.toLowerCase()]
+      [endorserAddress]
     );
 
     const endorsedResult = await client.query(
       'SELECT id FROM users WHERE wallet_address = $1',
-      [endorsedAddress.toLowerCase()]
+      [endorsedAddress]
     );
 
     if (endorserResult.rows.length === 0 || endorsedResult.rows.length === 0) {
@@ -307,11 +384,19 @@ export async function DELETE(request: NextRequest) {
 
   try {
     const searchParams = request.nextUrl.searchParams;
-    const endorsementId = searchParams.get('endorsementId');
+    const rawEndorsementId = searchParams.get('endorsementId');
 
-    if (!endorsementId) {
+    if (!rawEndorsementId) {
       return NextResponse.json(
         { error: 'endorsementId is required' },
+        { status: 400 }
+      );
+    }
+
+    const endorsementId = parsePositiveInteger(rawEndorsementId);
+    if (endorsementId === null) {
+      return NextResponse.json(
+        { error: 'Invalid endorsementId' },
         { status: 400 }
       );
     }
@@ -333,7 +418,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     const endorsement = endorsementCheck.rows[0];
-    if (!endorsement || endorsement.wallet_address.toLowerCase() !== authResult.user.address.toLowerCase()) {
+    if (!endorsement || normalizeAddress(endorsement.wallet_address) !== normalizeAddress(authResult.user.address)) {
       return NextResponse.json(
         { error: 'You can only delete your own endorsements' },
         { status: 403 }

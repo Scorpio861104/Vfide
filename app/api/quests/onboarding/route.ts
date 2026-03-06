@@ -3,6 +3,25 @@ import { getClient } from '@/lib/db';
 import { isAdmin, requireAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 
+const VALID_ONBOARDING_STEPS = new Set([
+  'connectWallet',
+  'completeProfile',
+  'firstTransaction',
+  'addFriend',
+  'joinGroup',
+  'voteProposal',
+  'earnBadge',
+  'depositVault',
+  'giveEndorsement',
+  'completeQuest',
+]);
+
+function toNonEmptyString(value: unknown): string | null {
+  if (typeof value !== 'string') return null;
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : null;
+}
+
 /**
  * GET /api/quests/onboarding
  * Fetch user onboarding progress
@@ -18,7 +37,7 @@ export async function GET(request: NextRequest) {
 
   try {
     const searchParams = request.nextUrl.searchParams;
-    const userAddress = searchParams.get('userAddress');
+    const userAddress = toNonEmptyString(searchParams.get('userAddress'));
 
     if (!userAddress) {
       return NextResponse.json({ error: 'User address required' }, { status: 400 });
@@ -37,7 +56,7 @@ export async function GET(request: NextRequest) {
       // Get user ID
       const userResult = await client.query(
         'SELECT id FROM users WHERE wallet_address = $1',
-        [userAddress]
+        [targetAddress]
       );
 
       if (userResult.rows.length === 0) {
@@ -110,22 +129,10 @@ export async function PATCH(request: NextRequest) {
   }
 
   try {
-    const { step, userAddress } = body;
+    const step = toNonEmptyString(body.step);
+    const userAddress = toNonEmptyString(body.userAddress);
 
-    const validSteps = [
-      'connectWallet',
-      'completeProfile',
-      'firstTransaction',
-      'addFriend',
-      'joinGroup',
-      'voteProposal',
-      'earnBadge',
-      'depositVault',
-      'giveEndorsement',
-      'completeQuest',
-    ];
-
-    if (!step || !userAddress || typeof step !== 'string' || typeof userAddress !== 'string' || !validSteps.includes(step)) {
+    if (!step || !userAddress || !VALID_ONBOARDING_STEPS.has(step)) {
       return NextResponse.json(
         { error: 'Valid step name and user address required' },
         { status: 400 }
@@ -252,14 +259,10 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const { userAddress } = body;
+    const userAddress = toNonEmptyString(body.userAddress);
 
     if (!userAddress) {
       return NextResponse.json({ error: 'User address required' }, { status: 400 });
-    }
-
-    if (typeof userAddress !== 'string') {
-      return NextResponse.json({ error: 'User address must be a string' }, { status: 400 });
     }
 
     const requesterAddress = authResultPost.user.address.toLowerCase();

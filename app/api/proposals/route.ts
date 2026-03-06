@@ -3,6 +3,7 @@ import { query } from '@/lib/db';
 import { requireAuth, checkOwnership } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { createProposalSchema } from '@/lib/auth/validation';
+import { isAddress } from 'viem';
 
 interface Proposal {
   id: number;
@@ -25,6 +26,9 @@ interface Proposal {
  * Get governance proposals
  */
 export async function GET(request: NextRequest) {
+  const rateLimitResponse = await withRateLimit(request, 'read');
+  if (rateLimitResponse) return rateLimitResponse;
+
   try {
     const searchParams = request.nextUrl.searchParams;
     const status = searchParams.get('status');
@@ -56,6 +60,13 @@ export async function GET(request: NextRequest) {
     if (status && !VALID_STATUSES.includes(status)) {
       return NextResponse.json(
         { error: `Invalid status. Must be one of: ${VALID_STATUSES.join(', ')}` },
+        { status: 400 }
+      );
+    }
+
+    if (proposerId && !isAddress(proposerId)) {
+      return NextResponse.json(
+        { error: 'Invalid proposerId address format' },
         { status: 400 }
       );
     }

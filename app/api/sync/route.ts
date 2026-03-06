@@ -3,6 +3,9 @@ import { query } from '@/lib/db';
 import { requireAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 
+const USER_ID_REGEX = /^\d+$/;
+const ENTITY_REGEX = /^[a-zA-Z0-9:_-]{1,64}$/;
+
 export async function GET(request: NextRequest) {
   // Rate limiting
   const rateLimit = await withRateLimit(request, 'api');
@@ -21,6 +24,10 @@ export async function GET(request: NextRequest) {
 
     if (!userId) {
       return NextResponse.json({ error: 'userId required' }, { status: 400 });
+    }
+
+    if (!USER_ID_REGEX.test(userId)) {
+      return NextResponse.json({ error: 'Invalid userId format' }, { status: 400 });
     }
 
     const ownerResult = await query(
@@ -83,6 +90,16 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'userId and entity required' }, { status: 400 });
     }
 
+    const normalizedEntity = entity.trim();
+
+    if (!USER_ID_REGEX.test(normalizedUserId)) {
+      return NextResponse.json({ error: 'Invalid userId format' }, { status: 400 });
+    }
+
+    if (!ENTITY_REGEX.test(normalizedEntity)) {
+      return NextResponse.json({ error: 'Invalid entity format' }, { status: 400 });
+    }
+
     let syncTimestamp: Date = new Date();
     if (lastSyncTimestamp !== undefined) {
       if (typeof lastSyncTimestamp !== 'string' && typeof lastSyncTimestamp !== 'number') {
@@ -116,7 +133,7 @@ export async function POST(request: NextRequest) {
        ON CONFLICT (user_id, entity) DO UPDATE
        SET last_sync_timestamp = $3
        RETURNING *`,
-      [normalizedUserId, entity, syncTimestamp]
+      [normalizedUserId, normalizedEntity, syncTimestamp]
     );
 
     return NextResponse.json({ success: true, syncState: result.rows[0] });

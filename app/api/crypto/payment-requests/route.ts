@@ -3,6 +3,9 @@ import { query } from '@/lib/db';
 import { requireAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 
+const USER_ID_REGEX = /^\d+$/;
+const DECIMAL_AMOUNT_REGEX = /^\d+(\.\d{1,18})?$/;
+
 export async function GET(request: NextRequest) {
   // Rate limiting: 100 requests per minute
   const rateLimitResponse = await withRateLimit(request, 'read');
@@ -94,14 +97,27 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'fromUserId and toUserId must be strings or numbers' }, { status: 400 });
     }
 
+    if (!USER_ID_REGEX.test(fromUserIdValue) || !USER_ID_REGEX.test(toUserIdValue)) {
+      return NextResponse.json({ error: 'fromUserId and toUserId must be positive integers' }, { status: 400 });
+    }
+
+    if (fromUserIdValue === toUserIdValue) {
+      return NextResponse.json({ error: 'Cannot create a payment request to yourself' }, { status: 400 });
+    }
+
     const amountValue =
       typeof amount === 'number' ? amount.toString() : typeof amount === 'string' ? amount : null;
     if (!amountValue) {
       return NextResponse.json({ error: 'Amount must be a string or number' }, { status: 400 });
     }
 
+    const normalizedAmountValue = amountValue.trim();
+    if (!DECIMAL_AMOUNT_REGEX.test(normalizedAmountValue)) {
+      return NextResponse.json({ error: 'Amount must be a positive decimal with up to 18 decimals' }, { status: 400 });
+    }
+
     // Validate amount is positive and within reasonable bounds
-    const numAmount = parseFloat(amountValue);
+    const numAmount = parseFloat(normalizedAmountValue);
     const MAX_PAYMENT_AMOUNT = 1000000; // 1 million units max
     
     if (isNaN(numAmount) || numAmount <= 0) {
@@ -117,9 +133,9 @@ export async function POST(request: NextRequest) {
 
     // Validate token if provided
     const ALLOWED_TOKENS = ['ETH', 'USDC', 'USDT', 'DAI', 'WETH'];
-    const tokenValue = typeof token === 'string' && token.trim() ? token : 'ETH';
+    const tokenValue = typeof token === 'string' && token.trim() ? token.trim().toUpperCase() : 'ETH';
     
-    if (!ALLOWED_TOKENS.includes(tokenValue.toUpperCase())) {
+    if (!ALLOWED_TOKENS.includes(tokenValue)) {
       return NextResponse.json(
         { error: `Invalid token. Allowed tokens: ${ALLOWED_TOKENS.join(', ')}` },
         { status: 400 }
@@ -127,7 +143,14 @@ export async function POST(request: NextRequest) {
     }
 
     // Validate memo length if provided
-    if (memo && typeof memo === 'string' && memo.length > 500) {
+    if (memo !== undefined && memo !== null && typeof memo !== 'string') {
+      return NextResponse.json(
+        { error: 'Memo must be a string' },
+        { status: 400 }
+      );
+    }
+
+    if (typeof memo === 'string' && memo.length > 500) {
       return NextResponse.json(
         { error: 'Memo must be 500 characters or less' },
         { status: 400 }
@@ -154,7 +177,7 @@ export async function POST(request: NextRequest) {
       `INSERT INTO payment_requests (from_user_id, to_user_id, amount, token, memo, status, created_at)
        VALUES ($1, $2, $3, $4, $5, 'pending', NOW())
        RETURNING *`,
-      [fromUserIdValue, toUserIdValue, amountValue, tokenValue, memoValue]
+      [fromUserIdValue, toUserIdValue, normalizedAmountValue, tokenValue, memoValue]
     );
 
     return NextResponse.json({ success: true, request: result.rows[0] });

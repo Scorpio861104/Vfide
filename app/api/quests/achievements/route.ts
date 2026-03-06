@@ -3,6 +3,15 @@ import { getClient } from '@/lib/db';
 import { isAdmin, requireAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 
+const MILESTONE_KEY_REGEX = /^[a-z0-9_:-]{1,64}$/;
+const MAX_PROGRESS_VALUE = 1000000000;
+
+function toNonEmptyString(value: unknown): string | null {
+  if (typeof value !== 'string') return null;
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : null;
+}
+
 /**
  * GET /api/quests/achievements
  * Fetch achievement milestones with user progress
@@ -17,7 +26,7 @@ export async function GET(request: NextRequest) {
 
   try {
     const searchParams = request.nextUrl.searchParams;
-    const userAddress = searchParams.get('userAddress');
+    const userAddress = toNonEmptyString(searchParams.get('userAddress'));
 
     if (!userAddress) {
       return NextResponse.json({ error: 'User address required' }, { status: 400 });
@@ -36,7 +45,7 @@ export async function GET(request: NextRequest) {
       // Get user ID
       const userResult = await client.query(
         'SELECT id FROM users WHERE wallet_address = $1',
-        [userAddress]
+        [targetAddress]
       );
 
       if (userResult.rows.length === 0) {
@@ -132,7 +141,9 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const { milestoneKey, userAddress, progress } = body;
+    const milestoneKey = toNonEmptyString(body.milestoneKey);
+    const userAddress = toNonEmptyString(body.userAddress);
+    const { progress } = body;
 
     if (!milestoneKey || !userAddress || progress === undefined) {
       return NextResponse.json(
@@ -141,9 +152,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (typeof userAddress !== 'string' || typeof milestoneKey !== 'string') {
+    if (!MILESTONE_KEY_REGEX.test(milestoneKey)) {
       return NextResponse.json(
-        { error: 'Milestone key and user address must be strings' },
+        { error: 'Invalid milestone key format' },
         { status: 400 }
       );
     }
@@ -157,6 +168,13 @@ export async function POST(request: NextRequest) {
     if (!Number.isFinite(progressValue)) {
       return NextResponse.json(
         { error: 'Progress must be a valid number' },
+        { status: 400 }
+      );
+    }
+
+    if (progressValue < 0 || progressValue > MAX_PROGRESS_VALUE) {
+      return NextResponse.json(
+        { error: `Progress must be between 0 and ${MAX_PROGRESS_VALUE}` },
         { status: 400 }
       );
     }

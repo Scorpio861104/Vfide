@@ -44,6 +44,18 @@ function isObjectRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
+function byteLength(value: string): number {
+  return Buffer.byteLength(value, 'utf8');
+}
+
+function normalizeAddress(value: string): string {
+  return value.trim().toLowerCase();
+}
+
+function isAddressLike(value: string): boolean {
+  return /^0x[a-fA-F0-9]{3,64}$/.test(value);
+}
+
 export async function GET(request: NextRequest) {
   // Rate limiting
   const rateLimit = await withRateLimit(request, 'api');
@@ -51,9 +63,11 @@ export async function GET(request: NextRequest) {
 
   try {
     const { searchParams } = new URL(request.url);
-    const eventType = searchParams.get('eventType');
-    const userId = searchParams.get('userId');
+    const rawEventType = searchParams.get('eventType');
+    const rawUserId = searchParams.get('userId');
     const limitParam = searchParams.get('limit');
+    const eventType = rawEventType?.trim().toLowerCase() || null;
+    const userId = rawUserId ? normalizeAddress(rawUserId) : null;
     
     // Parse and validate limit with proper bounds
     const limit = limitParam 
@@ -76,6 +90,10 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    if (userId && !isAddressLike(userId)) {
+      return NextResponse.json({ error: 'Invalid userId format' }, { status: 400 });
+    }
+
     // Build query with proper parameterization
     const conditions: string[] = [];
     const params: (string | number)[] = [];
@@ -88,7 +106,7 @@ export async function GET(request: NextRequest) {
     if (userId) {
       const authResult = await requireAuth(request);
       if (authResult instanceof NextResponse) return authResult;
-      if (authResult.user.address.toLowerCase() !== userId.toLowerCase()) {
+      if (!authResult.user?.address || normalizeAddress(authResult.user.address) !== userId) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
       }
 
@@ -155,7 +173,7 @@ export async function POST(request: NextRequest) {
       }
 
       const invalidBatchEvent = (metrics as Array<{ event?: string }>).find(metric => {
-        const eventType = String(metric.event || 'performance');
+        const eventType = String(metric.event || 'performance').trim().toLowerCase();
         return !VALID_EVENT_TYPES.includes(eventType);
       });
 
@@ -168,6 +186,13 @@ export async function POST(request: NextRequest) {
 
       for (const metric of metrics as Array<{ timestamp?: number; properties?: Record<string, unknown>; value?: unknown; sessionId?: string }>) {
         if (metric.timestamp !== undefined && (typeof metric.timestamp !== 'number' || !Number.isFinite(metric.timestamp))) {
+          return NextResponse.json(
+            { error: 'Invalid metric timestamp in batch' },
+            { status: 400 }
+          );
+        }
+
+        if (typeof metric.timestamp === 'number' && Number.isNaN(new Date(metric.timestamp).getTime())) {
           return NextResponse.json(
             { error: 'Invalid metric timestamp in batch' },
             { status: 400 }
@@ -187,7 +212,7 @@ export async function POST(request: NextRequest) {
           sessionId: metric.sessionId,
         });
 
-        if (serializedEventData.length > MAX_EVENT_DATA_BYTES) {
+        if (byteLength(serializedEventData) > MAX_EVENT_DATA_BYTES) {
           return NextResponse.json(
             { error: `Event data too large. Maximum ${MAX_EVENT_DATA_BYTES} bytes allowed.` },
             { status: 400 }
@@ -211,8 +236,8 @@ export async function POST(request: NextRequest) {
 
         const baseIndex = index * 4;
         values.push(
-          authResult.user.address,
-          String(metric.event || 'performance'),
+          normalizeAddress(authResult.user.address),
+          String(metric.event || 'performance').trim().toLowerCase(),
           serializedEventData,
           new Date(metric.timestamp || Date.now()).toISOString()
         );
@@ -230,10 +255,10 @@ export async function POST(request: NextRequest) {
 
     const { userId, eventType, eventData } = body;
 
-    const normalizedEventType = typeof eventType === 'string' ? eventType : null;
+    const normalizedEventType = typeof eventType === 'string' ? eventType.trim().toLowerCase() : null;
     const normalizedUserId =
       typeof userId === 'string' || typeof userId === 'number'
-        ? String(userId)
+        ? String(userId).trim().toLowerCase()
         : null;
 
     if (!normalizedEventType) {
@@ -247,6 +272,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    if (normalizedUserId && !isAddressLike(normalizedUserId)) {
+      return NextResponse.json({ error: 'Invalid userId format' }, { status: 400 });
+    }
+
     if (eventData !== undefined && !isObjectRecord(eventData)) {
       return NextResponse.json(
         { error: 'Invalid eventData. Must be an object if provided.' },
@@ -255,18 +284,22 @@ export async function POST(request: NextRequest) {
     }
 
     const serializedEventData = JSON.stringify(eventData || {});
-    if (serializedEventData.length > MAX_EVENT_DATA_BYTES) {
+    if (byteLength(serializedEventData) > MAX_EVENT_DATA_BYTES) {
       return NextResponse.json(
         { error: `Event data too large. Maximum ${MAX_EVENT_DATA_BYTES} bytes allowed.` },
         { status: 400 }
       );
     }
 
-    if (normalizedUserId && authResult.user.address.toLowerCase() !== normalizedUserId.toLowerCase()) {
+    if (!authResult.user?.address || !isAddressLike(authResult.user.address)) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    if (normalizedUserId && normalizeAddress(authResult.user.address) !== normalizedUserId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
     }
 
-    const resolvedUserId = authResult.user.address || normalizedUserId || null;
+    const resolvedUserId = normalizeAddress(authResult.user.address) || normalizedUserId || null;
 
     const result = await query(
       `INSERT INTO analytics_events (user_id, event_type, event_data, timestamp)

@@ -3,6 +3,8 @@ import { getClient } from '@/lib/db';
 import { isAdmin, requireAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 
+const STREAK_TYPE_REGEX = /^[a-z_]{1,32}$/;
+
 /**
  * GET /api/quests/streak
  * Get user's login streak information
@@ -150,6 +152,10 @@ export async function POST(request: NextRequest) {
     }
 
     const streakTypeValue = typeof streakType === 'string' ? streakType : 'login';
+
+    if (!STREAK_TYPE_REGEX.test(streakTypeValue)) {
+      return NextResponse.json({ error: 'Invalid streak type' }, { status: 400 });
+    }
 
     const requesterAddress = authResult.user.address.toLowerCase();
     const targetAddress = userAddress.toLowerCase();

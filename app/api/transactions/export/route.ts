@@ -11,6 +11,19 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;
 }
 
+function normalizeAddress(value: string): string {
+  return value.trim().toLowerCase();
+}
+
+function isAddressLike(value: string): boolean {
+  return /^0x[a-fA-F0-9]{3,64}$/.test(value);
+}
+
+function isIsoDateString(value: string): boolean {
+  const parsed = new Date(value);
+  return !Number.isNaN(parsed.getTime());
+}
+
 // ==================== TYPES ====================
 
 interface ExportOptions {
@@ -349,13 +362,28 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const address = body.address;
+    const rawAddress = body.address;
     const options = body.options;
 
-    if (typeof address !== 'string' || address.trim().length === 0) {
+    if (typeof rawAddress !== 'string' || rawAddress.trim().length === 0) {
       return NextResponse.json(
         { error: 'Invalid address' },
         { status: 400 }
+      );
+    }
+
+    const address = normalizeAddress(rawAddress);
+    if (!isAddressLike(address)) {
+      return NextResponse.json(
+        { error: 'Invalid address' },
+        { status: 400 }
+      );
+    }
+
+    if (!authResult.user?.address || !isAddressLike(authResult.user.address)) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
       );
     }
 
@@ -390,6 +418,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    if (!isIsoDateString(dateRange.start) || !isIsoDateString(dateRange.end)) {
+      return NextResponse.json(
+        { error: 'Invalid date range' },
+        { status: 400 }
+      );
+    }
+
     if (!isRecord(filters) || !Array.isArray(filters.types) || !Array.isArray(filters.tokens)) {
       return NextResponse.json(
         { error: 'Invalid filters' },
@@ -410,6 +445,19 @@ export async function POST(request: NextRequest) {
     if (
       !filters.types.every((value) => typeof value === 'string') ||
       !filters.tokens.every((value) => typeof value === 'string')
+    ) {
+      return NextResponse.json(
+        { error: 'Invalid filters' },
+        { status: 400 }
+      );
+    }
+
+    const normalizedTypes = filters.types.map((value) => value.trim().toLowerCase());
+    const normalizedTokens = filters.tokens.map((value) => value.trim().toUpperCase());
+
+    if (
+      normalizedTypes.some((value) => value.length === 0 || value.length > 64) ||
+      normalizedTokens.some((value) => value.length === 0 || value.length > 32)
     ) {
       return NextResponse.json(
         { error: 'Invalid filters' },
@@ -455,8 +503,8 @@ export async function POST(request: NextRequest) {
         end: dateRange.end,
       },
       filters: {
-        types: filters.types,
-        tokens: filters.tokens,
+        types: normalizedTypes,
+        tokens: normalizedTokens,
         minAmount: filters.minAmount,
         maxAmount: filters.maxAmount,
       },
@@ -473,7 +521,7 @@ export async function POST(request: NextRequest) {
     };
 
     // Validate address matches authenticated user
-    if (address.toLowerCase() !== authResult.user.address.toLowerCase()) {
+    if (address !== normalizeAddress(authResult.user.address)) {
       return NextResponse.json(
         { error: 'You can only export your own transactions' },
         { status: 403 }

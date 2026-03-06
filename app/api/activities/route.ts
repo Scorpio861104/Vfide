@@ -11,6 +11,7 @@ const MAX_ACTIVITY_TYPE_LENGTH = 64;
 const MAX_ACTIVITY_TITLE_LENGTH = 200;
 const MAX_ACTIVITY_DESCRIPTION_LENGTH = 2000;
 const MAX_ACTIVITY_DATA_BYTES = 10000;
+const ETH_ADDRESS_REGEX = /^0x[a-fA-F0-9]{40}$/;
 
 interface Activity {
   id: number;
@@ -183,14 +184,25 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (activityType.length > MAX_ACTIVITY_TYPE_LENGTH) {
+    const normalizedUserAddress = userAddress.toLowerCase().trim();
+    if (!ETH_ADDRESS_REGEX.test(normalizedUserAddress)) {
+      return NextResponse.json(
+        { error: 'Invalid userAddress format' },
+        { status: 400 }
+      );
+    }
+
+    const normalizedActivityType = activityType.trim().toLowerCase();
+    const normalizedTitle = title.trim();
+
+    if (normalizedActivityType.length > MAX_ACTIVITY_TYPE_LENGTH) {
       return NextResponse.json(
         { error: `activityType too long. Maximum ${MAX_ACTIVITY_TYPE_LENGTH} characters.` },
         { status: 400 }
       );
     }
 
-    if (title.length > MAX_ACTIVITY_TITLE_LENGTH) {
+    if (normalizedTitle.length > MAX_ACTIVITY_TITLE_LENGTH) {
       return NextResponse.json(
         { error: `title too long. Maximum ${MAX_ACTIVITY_TITLE_LENGTH} characters.` },
         { status: 400 }
@@ -219,8 +231,6 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-
-    const normalizedUserAddress = userAddress.toLowerCase();
 
     if (authResult.user.address.toLowerCase() !== normalizedUserAddress) {
       return NextResponse.json(
@@ -255,7 +265,7 @@ export async function POST(request: NextRequest) {
       `INSERT INTO activities (user_id, activity_type, title, description, data)
        VALUES ($1, $2, $3, $4, $5)
        RETURNING *`,
-      [userId, activityType, title, normalizedDescription, serializedData]
+      [userId, normalizedActivityType, normalizedTitle, normalizedDescription, serializedData]
     );
 
     return NextResponse.json({

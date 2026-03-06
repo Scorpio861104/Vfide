@@ -6,6 +6,8 @@ import { createPublicClient, http, isAddress } from 'viem';
 import { baseSepolia } from 'viem/chains';
 import rewardABI from '@/lib/abis/UserRewards.json';
 
+const REWARD_ID_REGEX = /^[a-zA-Z0-9:_-]{1,128}$/;
+
 // Initialize viem client for on-chain verification
 const client = createPublicClient({
   chain: baseSepolia,
@@ -108,11 +110,24 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       return NextResponse.json({ error: 'Cannot claim more than 100 rewards at once' }, { status: 400 });
     }
 
+    // Validate reward IDs and deduplicate while preserving supported ID formats
+    const normalizedRewardIds = [...new Set(rewardIds)]
+      .filter((id): id is string => typeof id === 'string')
+      .map((id) => id.trim());
+
+    if (normalizedRewardIds.length === 0) {
+      return NextResponse.json({ error: 'No valid reward IDs provided' }, { status: 400 });
+    }
+
+    if (normalizedRewardIds.some((id) => !REWARD_ID_REGEX.test(id))) {
+      return NextResponse.json({ error: 'Invalid reward ID format' }, { status: 400 });
+    }
+
     // First, fetch the rewards to verify they exist and belong to the user
     const rewardsCheck = await query(
       `SELECT id, amount, reward_type, source_contract FROM user_rewards
        WHERE user_id = $1 AND id = ANY($2::uuid[]) AND status = 'pending'`,
-      [userId, rewardIds]
+      [userId, normalizedRewardIds]
     );
 
     if (rewardsCheck.rows.length === 0) {
@@ -152,7 +167,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
        SET status = 'claimed', claimed_at = NOW()
        WHERE user_id = $1 AND id = ANY($2::uuid[]) AND status = 'pending'
        RETURNING *`,
-      [userId, rewardIds]
+      [userId, normalizedRewardIds]
     );
 
     const totalClaimed = result.rows.reduce((sum, r) => {
