@@ -6,11 +6,17 @@ jest.mock('@/lib/auth/cookieAuth', () => ({
   getAuthCookie: jest.fn(async () => null),
 }));
 
+jest.mock('@/lib/auth/middleware', () => ({
+  getRequestAuthToken: jest.fn(),
+}));
+
 describe('/api/auth/logout', () => {
   const { clearAuthCookies } = require('@/lib/auth/cookieAuth');
+  const { getRequestAuthToken } = require('@/lib/auth/middleware');
 
   beforeEach(() => {
     jest.clearAllMocks();
+    getRequestAuthToken.mockResolvedValue(null);
   });
 
   describe('POST', () => {
@@ -56,6 +62,21 @@ describe('/api/auth/logout', () => {
 
       expect(response.status).toBe(500);
       expect(data.error).toBeDefined();
+    });
+
+    it('should ignore malformed token payload and still logout', async () => {
+      clearAuthCookies.mockImplementation((response) => response);
+      getRequestAuthToken.mockResolvedValue({ token: 'invalid-shape' });
+
+      const request = new NextRequest('http://localhost:3000/api/auth/logout', {
+        method: 'POST',
+      });
+
+      const response = await POST(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(200);
+      expect(data.success).toBe(true);
     });
   });
 });

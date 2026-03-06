@@ -20,10 +20,11 @@ export async function POST(request: NextRequest) {
 
   try {
     const token = await getRequestAuthToken(request);
+    const normalizedToken = typeof token === 'string' ? token.trim() : '';
 
     // Revoke the token if present
-    if (token) {
-      const tokenHash = await hashToken(token);
+    if (normalizedToken.length > 0) {
+      const tokenHash = await hashToken(normalizedToken);
       try {
         // expiresAt is Unix timestamp 24h from now, reason is 'logout'
         const expiresAt = Math.floor(Date.now() / 1000) + (60 * 60 * 24);
@@ -32,6 +33,9 @@ export async function POST(request: NextRequest) {
         // Log but don't fail - token might already be expired
         console.warn('[Logout] Token revocation warning:', error);
       }
+    } else if (token !== null && token !== undefined) {
+      // Do not fail logout for malformed token shapes from upstream extraction.
+      console.warn('[Logout] Ignoring malformed token payload');
     }
 
     // Clear cookies
