@@ -125,6 +125,7 @@ Status legend:
   - `app/api/crypto/payment-requests/route.ts` GET/POST handlers now enforce authenticated address presence/shape checks and strict positive numeric `userId` query parsing before ownership checks
   - `app/api/crypto/balance/[address]/route.ts` GET handler now normalizes route address input, enforces authenticated address presence/shape checks, and validates ownership against normalized addresses before balance reads
   - `app/api/crypto/price/route.ts` GET handler now enforces strict `refresh` query validation (`true|false`), validates external ETH price values as finite positive numbers, and rejects invalid computed Uniswap prices before fallback
+  - `app/api/crypto/fees/route.ts` GET handler now treats non-positive RPC gas-price responses as invalid and falls back to deterministic safe baseline fee values
   - Focused test confirmation: `npm test -- --runInBand __tests__/api/activities.test.ts __tests__/api/users.test.ts __tests__/api/crypto/rewards/claim.test.ts` ✅ (29 tests)
   - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/security/violations.test.ts` ✅ (6 tests)
   - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/messages/reaction.test.ts` ✅ (4 tests)
@@ -150,6 +151,7 @@ Status legend:
   - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/crypto/payment-requests.test.ts` ✅ (7 tests)
   - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/crypto/balance.test.ts` ✅ (5 tests)
   - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/crypto/price.test.ts` ✅ (11 tests)
+  - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/crypto/fees.test.ts __tests__/api/crypto/price.test.ts` ✅ (17 tests)
   - Additional typecheck confirmation: `npm run -s typecheck` ✅
 
 ### 7. Frontend page-by-page behavior and contract wiring checks

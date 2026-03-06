@@ -8,18 +8,30 @@ const client = createPublicClient({
   transport: http(process.env.NEXT_PUBLIC_BASE_SEPOLIA_RPC || 'https://sepolia.base.org'),
 });
 
+const FALLBACK_GAS_LIMIT = 200000n;
+const FALLBACK_GAS_PRICE = 1000000000n;
+const FALLBACK_TOTAL_FEE = FALLBACK_GAS_LIMIT * FALLBACK_GAS_PRICE;
+
 async function estimateNetworkFee(): Promise<{ gasLimit: bigint; gasPrice: bigint; totalFee: bigint }> {
   try {
     const gasPrice = await client.getGasPrice();
-    const estimatedGas = 200000n;
+    if (gasPrice <= 0n) {
+      return {
+        gasLimit: FALLBACK_GAS_LIMIT,
+        gasPrice: FALLBACK_GAS_PRICE,
+        totalFee: FALLBACK_TOTAL_FEE,
+      };
+    }
+
+    const estimatedGas = FALLBACK_GAS_LIMIT;
     const totalFee = gasPrice * estimatedGas;
     
     return { gasLimit: estimatedGas, gasPrice, totalFee };
   } catch (_error) {
     return {
-      gasLimit: 200000n,
-      gasPrice: 1000000000n,
-      totalFee: 200000000000000n,
+      gasLimit: FALLBACK_GAS_LIMIT,
+      gasPrice: FALLBACK_GAS_PRICE,
+      totalFee: FALLBACK_TOTAL_FEE,
     };
   }
 }

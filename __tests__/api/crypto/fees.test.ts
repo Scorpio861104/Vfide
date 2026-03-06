@@ -117,5 +117,25 @@ describe('/api/crypto/fees', () => {
       expect(data.timestamp).toBeGreaterThanOrEqual(beforeTimestamp);
       expect(data.timestamp).toBeLessThanOrEqual(afterTimestamp);
     });
+
+    it('should use fallback gas price when RPC returns non-positive gas price', async () => {
+      withRateLimit.mockResolvedValue(null);
+
+      const mockClient = {
+        estimateMaxPriorityFeePerGas: jest.fn().mockResolvedValue(BigInt(1000000000)),
+        getGasPrice: jest.fn().mockResolvedValue(BigInt(0)),
+      };
+      createPublicClient.mockReturnValue(mockClient);
+
+      const request = new NextRequest('http://localhost:3000/api/crypto/fees');
+      const response = await GET(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(200);
+      expect(data.success).toBe(true);
+      expect(Number(data.fees.slow.maxFeePerGas)).toBeGreaterThan(0);
+      expect(Number(data.fees.standard.maxFeePerGas)).toBeGreaterThan(0);
+      expect(Number(data.fees.fast.maxFeePerGas)).toBeGreaterThan(0);
+    });
   });
 });
