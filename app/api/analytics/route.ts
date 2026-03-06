@@ -56,6 +56,13 @@ function isAddressLike(value: string): boolean {
   return /^0x[a-fA-F0-9]{3,64}$/.test(value);
 }
 
+function parseStrictIntegerParam(value: string | null): number | null {
+  if (value === null) return null;
+  const trimmed = value.trim();
+  if (!/^\d+$/.test(trimmed)) return null;
+  return Number.parseInt(trimmed, 10);
+}
+
 export async function GET(request: NextRequest) {
   // Rate limiting
   const rateLimit = await withRateLimit(request, 'api');
@@ -68,19 +75,19 @@ export async function GET(request: NextRequest) {
     const limitParam = searchParams.get('limit');
     const eventType = rawEventType?.trim().toLowerCase() || null;
     const userId = rawUserId ? normalizeAddress(rawUserId) : null;
-    
-    // Parse and validate limit with proper bounds
-    const limit = limitParam 
-      ? Math.min(Math.max(1, parseInt(limitParam, 10)), MAX_ANALYTICS_LIMIT)
-      : DEFAULT_ANALYTICS_LIMIT;
 
-    // Validate parsed number
-    if (isNaN(limit)) {
+    const parsedLimit = parseStrictIntegerParam(limitParam);
+    if (limitParam !== null && parsedLimit === null) {
       return NextResponse.json(
         { error: 'Invalid limit parameter' },
         { status: 400 }
       );
     }
+
+    // Parse and validate limit with proper bounds
+    const limit = parsedLimit === null
+      ? DEFAULT_ANALYTICS_LIMIT
+      : Math.min(Math.max(1, parsedLimit), MAX_ANALYTICS_LIMIT);
 
     // Validate event type if provided
     if (eventType && !VALID_EVENT_TYPES.includes(eventType)) {
@@ -106,7 +113,10 @@ export async function GET(request: NextRequest) {
     if (userId) {
       const authResult = await requireAuth(request);
       if (authResult instanceof NextResponse) return authResult;
-      if (!authResult.user?.address || normalizeAddress(authResult.user.address) !== userId) {
+      if (!authResult.user?.address || !isAddressLike(authResult.user.address)) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      }
+      if (normalizeAddress(authResult.user.address) !== userId) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
       }
 

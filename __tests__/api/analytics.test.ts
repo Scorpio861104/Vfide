@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { POST } from '@/app/api/analytics/route';
+import { GET, POST } from '@/app/api/analytics/route';
 
 jest.mock('@/lib/db', () => ({
   query: jest.fn(),
@@ -21,6 +21,27 @@ describe('/api/analytics', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+  });
+
+  describe('GET', () => {
+    it('should return 400 for malformed limit parameter', async () => {
+      withRateLimit.mockResolvedValue(null);
+
+      const request = new NextRequest('http://localhost:3000/api/analytics?limit=10abc');
+      const response = await GET(request);
+
+      expect(response.status).toBe(400);
+    });
+
+    it('should return 403 when requesting another user analytics', async () => {
+      withRateLimit.mockResolvedValue(null);
+      requireAuth.mockResolvedValue({ user: { address: '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' } });
+
+      const request = new NextRequest('http://localhost:3000/api/analytics?userId=0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb');
+      const response = await GET(request);
+
+      expect(response.status).toBe(403);
+    });
   });
 
   describe('POST', () => {

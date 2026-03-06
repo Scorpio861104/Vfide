@@ -131,6 +131,8 @@ Status legend:
   - `app/api/activities/route.ts` GET/POST handlers now enforce strict numeric query parsing for `limit`/`offset`, normalized `userAddress` validation for reads, and authenticated-address presence checks before ownership/creation paths
   - `app/api/users/route.ts` GET/POST handlers now enforce authenticated address shape checks and normalized wallet-address validation before profile create/update writes
   - `app/api/leaderboard/headhunter/route.ts` GET handler now enforces strict integer parsing and bounded validation for `year`/`quarter` query params before subgraph/fallback flow
+  - `app/api/analytics/route.ts` GET handler now enforces strict numeric `limit` query parsing and explicit authenticated-address validation for user-scoped analytics reads
+  - `app/api/security/csp-report/route.ts` GET handler now enforces strict numeric `limit` query parsing in development-mode report inspection
   - Focused test confirmation: `npm test -- --runInBand __tests__/api/activities.test.ts __tests__/api/users.test.ts __tests__/api/crypto/rewards/claim.test.ts` ✅ (29 tests)
   - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/security/violations.test.ts` ✅ (6 tests)
   - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/messages/reaction.test.ts` ✅ (4 tests)
@@ -161,6 +163,7 @@ Status legend:
   - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/messages.test.ts` ✅ (18 tests)
   - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/activities.test.ts __tests__/api/users.test.ts` ✅ (26 tests)
   - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/leaderboard/headhunter.test.ts __tests__/api/activities.test.ts __tests__/api/users.test.ts` ✅ (30 tests)
+  - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/analytics.test.ts __tests__/api/security/csp-report.test.ts` ✅ (16 tests)
   - Additional typecheck confirmation: `npm run -s typecheck` ✅
 
 ### 7. Frontend page-by-page behavior and contract wiring checks

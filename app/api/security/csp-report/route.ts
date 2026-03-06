@@ -31,6 +31,13 @@ const MAX_CSP_REPORTS_LIMIT = 200;
 // Maximum length for string fields to prevent log-flooding
 const MAX_FIELD_LENGTH = 2048;
 
+function parseStrictIntegerParam(value: string | null): number | null {
+  if (value === null) return null;
+  const trimmed = value.trim();
+  if (!/^\d+$/.test(trimmed)) return null;
+  return Number.parseInt(trimmed, 10);
+}
+
 /**
  * Validate and sanitise a CSP report payload.
  * Returns the sanitised violation, or null when the payload is invalid.
@@ -150,17 +157,15 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Not available' }, { status: 404 });
   }
 
-  const rawLimit = parseInt(request.nextUrl.searchParams.get('limit') || '50', 10);
-
-  const limit = Math.min(Math.max(rawLimit, 0), MAX_CSP_REPORTS_LIMIT);
-  
-  // Validate parsed number
-  if (isNaN(rawLimit)) {
+  const parsedLimit = parseStrictIntegerParam(request.nextUrl.searchParams.get('limit'));
+  if (request.nextUrl.searchParams.get('limit') !== null && parsedLimit === null) {
     return NextResponse.json(
       { error: 'Invalid limit parameter' },
       { status: 400 }
     );
   }
+
+  const limit = Math.min(Math.max(parsedLimit ?? 50, 0), MAX_CSP_REPORTS_LIMIT);
   
   const recentViolations = violations.slice(-limit).reverse();
 

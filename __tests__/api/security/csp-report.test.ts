@@ -88,5 +88,19 @@ describe('/api/security/csp-report', () => {
         process.env.NODE_ENV = originalNodeEnv;
       }
     });
+
+    it('should return 400 for malformed limit in development mode', async () => {
+      const originalNodeEnv = process.env.NODE_ENV;
+      process.env.NODE_ENV = 'development';
+
+      try {
+        const getRequest = new NextRequest('http://localhost:3000/api/security/csp-report?limit=10abc');
+        const getResponse = await GET(getRequest);
+
+        expect(getResponse.status).toBe(400);
+      } finally {
+        process.env.NODE_ENV = originalNodeEnv;
+      }
+    });
   });
 });
