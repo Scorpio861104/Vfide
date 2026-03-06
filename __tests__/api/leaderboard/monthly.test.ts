@@ -172,6 +172,17 @@ describe('/api/leaderboard/monthly', () => {
       expect(mockRelease).toHaveBeenCalled();
     });
 
+    it('should return 400 for malformed limit parameter', async () => {
+      withRateLimit.mockResolvedValue(null);
+
+      const request = new NextRequest('http://localhost:3000/api/leaderboard/monthly?limit=10abc');
+      const response = await GET(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(400);
+      expect(data.error).toContain('Invalid limit parameter');
+    });
+
     it('should default to limit 50', async () => {
       withRateLimit.mockResolvedValue(null);
       mockQuery

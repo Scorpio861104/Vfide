@@ -18,6 +18,13 @@ function isAddressLike(value: string): boolean {
   return ADDRESS_PATTERN.test(value);
 }
 
+function parseStrictIntegerParam(value: string | null): number | null {
+  if (value === null) return null;
+  const trimmed = value.trim();
+  if (!/^\d+$/.test(trimmed)) return null;
+  return Number.parseInt(trimmed, 10);
+}
+
 function toOptionalNonNegativeInteger(value: unknown): number | null | undefined {
   if (value === undefined || value === null) {
     return undefined;
@@ -47,10 +54,18 @@ export async function GET(request: NextRequest) {
     const userAddress = typeof rawUserAddress === 'string' && rawUserAddress.trim().length > 0
       ? normalizeAddress(rawUserAddress)
       : null;
-    const limit = Math.min(parseInt(searchParams.get('limit') || '50', 10), 100); // Cap at 100, default to 50
+    const parsedLimit = parseStrictIntegerParam(searchParams.get('limit'));
+    if (searchParams.get('limit') !== null && parsedLimit === null) {
+      return NextResponse.json(
+        { error: 'Invalid limit parameter (must be >= 1)' },
+        { status: 400 }
+      );
+    }
+
+    const limit = Math.min(parsedLimit ?? 50, 100); // Cap at 100, default to 50
 
     // Validate parsed number - require at least 1 for leaderboard (0 would be meaningless)
-    if (isNaN(limit) || limit < 1) {
+    if (limit < 1) {
       return NextResponse.json(
         { error: 'Invalid limit parameter (must be >= 1)' },
         { status: 400 }
