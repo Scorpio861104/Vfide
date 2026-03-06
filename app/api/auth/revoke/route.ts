@@ -24,6 +24,13 @@ export async function POST(request: NextRequest) {
     return authResult;
   }
 
+  const authAddress = typeof authResult.user?.address === 'string'
+    ? authResult.user.address.trim()
+    : '';
+  if (!authAddress) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   try {
     let body: unknown;
     try {
@@ -60,7 +67,7 @@ export async function POST(request: NextRequest) {
     // Get the current token from the request
     const token = await getRequestAuthToken(request);
 
-    if (!token) {
+    if (!token || typeof token !== 'string') {
       return NextResponse.json(
         { error: 'No token provided' },
         { status: 400 }
@@ -70,7 +77,7 @@ export async function POST(request: NextRequest) {
     if (revokeAll === true) {
       // Revoke all tokens for this user
       await revokeUserTokens(
-        authResult.user.address,
+        authAddress,
         normalizedReason
       );
 

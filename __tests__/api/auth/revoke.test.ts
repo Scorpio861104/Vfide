@@ -111,5 +111,34 @@ describe('/api/auth/revoke', () => {
       expect(hashToken).toHaveBeenCalledWith('cookie-token');
       expect(revokeToken).toHaveBeenCalled();
     });
+
+    it('should return 401 when authenticated address is missing', async () => {
+      requireAuth.mockResolvedValue({ user: { exp: Math.floor(Date.now() / 1000) + 3600 } });
+
+      const request = new NextRequest('http://localhost:3000/api/auth/revoke', {
+        method: 'POST',
+        body: JSON.stringify({ reason: 'user_requested' }),
+      });
+
+      const response = await POST(request);
+
+      expect(response.status).toBe(401);
+      expect(revokeToken).not.toHaveBeenCalled();
+    });
+
+    it('should return 400 when token is not a string', async () => {
+      requireAuth.mockResolvedValue({ user: { address: '0x1111111111111111111111111111111111111123', exp: Math.floor(Date.now() / 1000) + 3600 } });
+      getRequestAuthToken.mockResolvedValueOnce({ token: 'invalid-shape' });
+
+      const request = new NextRequest('http://localhost:3000/api/auth/revoke', {
+        method: 'POST',
+        body: JSON.stringify({ reason: 'user_requested' }),
+      });
+
+      const response = await POST(request);
+
+      expect(response.status).toBe(400);
+      expect(revokeToken).not.toHaveBeenCalled();
+    });
   });
 });
