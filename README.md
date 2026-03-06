@@ -173,6 +173,7 @@ See contract configuration in `lib/contracts.ts` for contract addresses.
 - [Security Audit](./SECURITY_AUDIT.md) - Security review
 - [API Documentation](./openapi.yaml) - API specification
 - [Testing Guide](./TEST_EXECUTION_GUIDE.md) - Testing strategy
+- [Local Validation Runbook](./LOCAL_VALIDATION_RUNBOOK.md) - Reproducible local validation and runtime checks
 - [Deployment Checklist](./PRODUCTION_DEPLOYMENT_CHECKLIST.md) - Production deployment
 
 ## Learn More
