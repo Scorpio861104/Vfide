@@ -108,6 +108,19 @@ describe('/api/messages', () => {
       expect(data.error).toContain('Invalid');
     });
 
+    it('should return 400 for invalid userAddress format', async () => {
+      withRateLimit.mockResolvedValue(null);
+      requireAuth.mockReturnValue({ user: { address: mockUserAddress } });
+      isAddress.mockReturnValue(false);
+
+      const request = new NextRequest(
+        'http://localhost:3000/api/messages?userAddress=invalid&conversationWith=0xabcdefabcdefabcdefabcdefabcdefabcdefabcd'
+      );
+      const response = await GET(request);
+
+      expect(response.status).toBe(400);
+    });
+
     it('should default to limit 50 when not specified', async () => {
       withRateLimit.mockResolvedValue(null);
       requireAuth.mockReturnValue({ user: { address: mockUserAddress } });
@@ -381,6 +394,23 @@ describe('/api/messages', () => {
       expect(response.status).toBe(400);
       expect(data.error).toContain('Invalid messageIds');
       expect(query).not.toHaveBeenCalled();
+    });
+
+    it('should reject invalid userAddress format for conversation read update', async () => {
+      withRateLimit.mockResolvedValue(null);
+      requireAuth.mockReturnValue({ user: { address: '0x1234567890123456789012345678901234567890' } });
+      isAddress.mockImplementation((value: string) => value === '0xabcdefabcdefabcdefabcdefabcdefabcdefabcd');
+
+      const request = new NextRequest('http://localhost:3000/api/messages', {
+        method: 'PATCH',
+        body: JSON.stringify({
+          conversationWith: '0xabcdefabcdefabcdefabcdefabcdefabcdefabcd',
+          userAddress: 'invalid',
+        }),
+      });
+
+      const response = await PATCH(request);
+      expect(response.status).toBe(400);
     });
   });
 });

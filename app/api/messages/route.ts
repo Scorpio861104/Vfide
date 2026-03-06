@@ -26,6 +26,18 @@ const MAX_MESSAGES_LIMIT = 200;
 const MAX_MESSAGES_OFFSET = 10000;
 const MAX_BULK_MESSAGE_IDS = 500;
 const MAX_CONVERSATION_ADDRESS_LENGTH = 64;
+const ADDRESS_LIKE_REGEX = /^0x[a-fA-F0-9]{3,40}$/;
+
+function isAddressLike(value: string): boolean {
+  return ADDRESS_LIKE_REGEX.test(value.trim());
+}
+
+function parseStrictIntegerParam(value: string | null): number | null {
+  if (value === null) return null;
+  const trimmed = value.trim();
+  if (!/^\d+$/.test(trimmed)) return null;
+  return Number.parseInt(trimmed, 10);
+}
 
 function toNonEmptyString(value: unknown): string | null {
   if (typeof value !== 'string') return null;
@@ -48,33 +60,50 @@ export async function GET(request: NextRequest) {
     return authResult;
   }
 
+  const authAddress = typeof authResult.user?.address === 'string'
+    ? authResult.user.address.trim().toLowerCase()
+    : '';
+  if (!authAddress || !isAddressLike(authAddress)) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   try {
     const searchParams = request.nextUrl.searchParams;
-    const userAddress = searchParams.get('userAddress'); // Current user
-    const conversationWith = searchParams.get('conversationWith'); // Other user
-    const rawLimit = parseInt(searchParams.get('limit') || '50', 10);
-    const rawOffset = parseInt(searchParams.get('offset') || '0', 10);
+    const userAddressParam = searchParams.get('userAddress'); // Current user
+    const conversationWithParam = searchParams.get('conversationWith'); // Other user
+    const parsedLimit = parseStrictIntegerParam(searchParams.get('limit'));
+    const parsedOffset = parseStrictIntegerParam(searchParams.get('offset'));
 
-    const limit = Math.min(Math.max(rawLimit, 0), MAX_MESSAGES_LIMIT);
-    const offset = Math.min(Math.max(rawOffset, 0), MAX_MESSAGES_OFFSET);
-
-    // Validate parsed numbers
-    if (isNaN(rawLimit) || isNaN(rawOffset)) {
+    if (
+      (searchParams.get('limit') !== null && parsedLimit === null) ||
+      (searchParams.get('offset') !== null && parsedOffset === null)
+    ) {
       return NextResponse.json(
         { error: 'Invalid limit or offset parameter' },
         { status: 400 }
       );
     }
 
-    if (!userAddress) {
+    const limit = Math.min(Math.max(parsedLimit ?? 50, 0), MAX_MESSAGES_LIMIT);
+    const offset = Math.min(Math.max(parsedOffset ?? 0, 0), MAX_MESSAGES_OFFSET);
+
+    if (!userAddressParam) {
       return NextResponse.json(
         { error: 'userAddress is required' },
         { status: 400 }
       );
     }
 
+    const userAddress = userAddressParam.trim().toLowerCase();
+    if (!isAddress(userAddress)) {
+      return NextResponse.json(
+        { error: 'Invalid userAddress format' },
+        { status: 400 }
+      );
+    }
+
     // Verify ownership - user can only read their own messages
-    if (authResult.user.address.toLowerCase() !== userAddress.toLowerCase()) {
+    if (authAddress !== userAddress) {
       return NextResponse.json(
         { error: 'You can only view your own messages' },
         { status: 403 }
@@ -82,7 +111,8 @@ export async function GET(request: NextRequest) {
     }
 
     // If conversationWith is specified, get messages between two users
-    if (conversationWith) {
+    if (conversationWithParam) {
+      const conversationWith = conversationWithParam.trim().toLowerCase();
       // Validate conversationWith address
       if (!isAddress(conversationWith)) {
         return NextResponse.json(
@@ -197,6 +227,13 @@ export async function POST(request: NextRequest) {
     return authResult;
   }
 
+  const authAddress = typeof authResult.user?.address === 'string'
+    ? authResult.user.address.trim().toLowerCase()
+    : '';
+  if (!authAddress || !isAddressLike(authAddress)) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   const client = await getClient();
   
   try {
@@ -215,7 +252,7 @@ export async function POST(request: NextRequest) {
     // Content is already sanitized by sendMessageSchema via validateBody
 
     // Verify the sender is the authenticated user
-    if (authResult.user.address.toLowerCase() !== from.toLowerCase()) {
+    if (authAddress !== from.toLowerCase()) {
       return NextResponse.json(
         { error: 'You can only send messages from your own address' },
         { status: 403 }
@@ -309,6 +346,13 @@ export async function PATCH(request: NextRequest) {
     return authResult;
   }
 
+  const authAddress = typeof authResult.user?.address === 'string'
+    ? authResult.user.address.trim().toLowerCase()
+    : '';
+  if (!authAddress || !isAddressLike(authAddress)) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   let body: Record<string, unknown>;
   try {
     body = await request.json();
@@ -331,8 +375,15 @@ export async function PATCH(request: NextRequest) {
     const userAddressValue = toNonEmptyString(userAddress);
     const conversationWithValue = toNonEmptyString(conversationWith);
 
+    if (userAddressValue && !isAddress(userAddressValue)) {
+      return NextResponse.json(
+        { error: 'Invalid userAddress format for read-receipt update' },
+        { status: 400 }
+      );
+    }
+
     // Verify ownership - user can only mark their own messages as read
-    if (userAddressValue && authResult.user.address.toLowerCase() !== userAddressValue.toLowerCase()) {
+    if (userAddressValue && authAddress !== userAddressValue.toLowerCase()) {
       return NextResponse.json(
         { error: 'You can only mark your own messages as read' },
         { status: 403 }
@@ -368,7 +419,7 @@ export async function PATCH(request: NextRequest) {
       );
 
       const unauthorizedMessages = messageCheck.rows.filter(
-        m => m.wallet_address.toLowerCase() !== authResult.user.address.toLowerCase()
+        m => m.wallet_address.toLowerCase() !== authAddress
       );
 
       if (unauthorizedMessages.length > 0) {
