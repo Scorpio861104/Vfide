@@ -844,7 +844,7 @@ Contains ProofLedger (immutable event log), Seer (ProofScore engine), and ProofS
 | CONFIG delay: 24 hours; CRITICAL delay: 48 hours; VETO_WINDOW: 24 hours | ✅ Fixed |
 | Community veto window on all non-emergency proposals | ✅ Fixed |
 | Proposal expiry enforced | ✅ Fixed |
-| Uses `^0.8.19` instead of `0.8.30` (inconsistent with rest of codebase) | ✅ Fixed |
+| Used floating pragma instead of pinned `0.8.30` (inconsistent with rest of codebase) | ✅ Fixed |
 
 **✅ Compiler version pinned** to `pragma solidity 0.8.30` (VFIDE-M-01).
 
@@ -1007,7 +1007,7 @@ Hybrid oracle: Chainlink primary + Uniswap V3 TWAP fallback.
 | Daily withdrawal cap: 10% of vault balance | ✅ Fixed |
 | Governance override for emergency | ✅ Fixed |
 | Uses `VFIDEAccessControl` + `VFIDEReentrancyGuard` | ✅ Fixed |
-| Uses `pragma ^0.8.19` instead of `0.8.30` (inconsistent) | ✅ Fixed |
+| Used floating pragma instead of pinned `0.8.30` (inconsistent) | ✅ Fixed |
 
 ---
 
@@ -1019,7 +1019,7 @@ Hybrid oracle: Chainlink primary + Uniswap V3 TWAP fallback.
 | Anti-whale: `TransferConfig` with `maxTransfer`, `maxWallet`, cooldown | ✅ Fixed |
 | `VFIDEAccessControl` (role-based) instead of single `onlyOwner` | ✅ Fixed |
 | Separate `isFrozen` and `isBlacklisted` states | ✅ Fixed |
-| Uses `pragma ^0.8.19` instead of `0.8.30` | ✅ Fixed |
+| Used floating pragma instead of pinned `0.8.30` | ✅ Fixed |
 | Unclear relationship to `VFIDEToken.sol` — not clear which is production token | ✅ Fixed |
 
 **✅ Token status clarified (VFIDE-M-02):** `VFIDETokenV2.sol` now carries a top-of-file `STATUS: Draft / Archived` comment making it clear that `VFIDEToken.sol` is the production token and `VFIDETokenV2.sol` must not be deployed as the primary token. Pragma also pinned to `0.8.30` (VFIDE-M-01).
@@ -1262,7 +1262,7 @@ VFIDECommerce provides a trimmed integration layer above `EscrowManager`.
 | Monitoring window configurable | ✅ Fixed |
 | Price oracle integrated for manipulation detection | ✅ Fixed |
 | `VFIDEAccessControl` role-based gating | ✅ Fixed |
-| Uses `pragma ^0.8.19` — pin to `0.8.30` | ✅ Fixed |
+| Used floating pragma — pin to `0.8.30` | ✅ Fixed |
 
 ---
 
@@ -1655,7 +1655,7 @@ Each finding is assigned:
 
 ---
 
-### VFIDE-M-01 — Compiler Version Inconsistency (`^0.8.19` vs `0.8.30`)
+### VFIDE-M-01 — Compiler Version Inconsistency (floating pragma vs pinned `0.8.30`)
 
 | Field | Value |
 |-------|-------|
@@ -1665,9 +1665,9 @@ Each finding is assigned:
 | **Status** | ✅ Fixed — `pragma solidity 0.8.30` pinned in all four contracts |
 | **Files** | `AdminMultiSig.sol`, `WithdrawalQueue.sol`, `VFIDETokenV2.sol`, `CircuitBreaker.sol` |
 
-**Description:** Four contracts use `pragma solidity ^0.8.19` (floating) while the rest of the codebase pins to `0.8.30`. A floating pragma may compile with a different minor version depending on the local compiler, making builds non-reproducible and potentially exposing the contracts to compiler bugs fixed between 0.8.19 and 0.8.30.
+**Description:** Four contracts used a floating `pragma solidity` declaration while the rest of the codebase pins to `0.8.30`. A floating pragma may compile with a different minor version depending on the local compiler, making builds non-reproducible and potentially exposing the contracts to compiler bugs fixed in later compiler releases.
 
-**Remediation:** Change `pragma solidity ^0.8.19` to `pragma solidity 0.8.30` in all four files.
+**Remediation:** Change floating `pragma solidity` declarations to `pragma solidity 0.8.30` in all four files.
 
 ---
 
@@ -1681,7 +1681,7 @@ Each finding is assigned:
 | **Status** | ✅ Fixed — STATUS comment added to top of `VFIDETokenV2.sol` |
 | **Files** | `contracts/VFIDEToken.sol`, `contracts/VFIDETokenV2.sol` |
 
-**Description:** Two separate ERC-20 token implementations coexist. `VFIDEToken.sol` (0.8.30, custom primitives) appears to be the primary production token based on all integration points. `VFIDETokenV2.sol` (^0.8.19, OZ ERC20) appears to be an alternative design. Neither file nor the deployment scripts clearly document which is authoritative.
+**Description:** Two separate ERC-20 token implementations coexist. `VFIDEToken.sol` (0.8.30, custom primitives) appears to be the primary production token based on all integration points. `VFIDETokenV2.sol` (legacy alternative design) appears to be an alternative implementation. Neither file nor the deployment scripts clearly document which is authoritative.
 
 **Impact:** Deployment of the wrong contract is a Critical risk: all ecosystem contracts (VaultHub, Presale, BurnRouter, Bridge) would be wired to a dummy token, or both tokens could be deployed and confused by integrators.
 

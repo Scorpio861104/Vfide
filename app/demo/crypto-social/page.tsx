@@ -318,7 +318,7 @@ export default function CryptoSocialDemo() {
             <div>
               <h3 className="font-semibold mb-3 text-purple-600 dark:text-purple-400">Smart Contracts</h3>
               <ul className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
-                <li>• Solidity ^0.8.20</li>
+                <li>• Solidity 0.8.30</li>
                 <li>• TokenDistributor for payments</li>
                 <li>• VestingVault for subscriptions</li>
                 <li>• SocialGraph for relationships</li>

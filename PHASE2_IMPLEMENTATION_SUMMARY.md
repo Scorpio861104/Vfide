@@ -264,7 +264,7 @@ Integration Points:
 
 - [x] Flash loan attack prevention (checkpoint voting)
 - [x] Reentrancy protection (inherited from Phase 1)
-- [x] Integer overflow protection (Solidity 0.8.19)
+- [x] Integer overflow protection (Solidity 0.8.30)
 - [x] Access control (role-based, timelock)
 - [x] Proposal validation (length checks, empty checks)
 - [x] Quorum enforcement (33% minimum)

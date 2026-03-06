@@ -90,7 +90,7 @@ npm run format:check     # Check formatting
 - `@nomicfoundation/hardhat-toolbox@^5.0.0`
 - `@nomicfoundation/hardhat-verify@^2.0.12`
 - `hardhat-gas-reporter@^2.3.1`
-- `solidity-coverage@^0.8.19`
+- `solidity-coverage` (installed)
 
 **Commands Added:**
 ```bash

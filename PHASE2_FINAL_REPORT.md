@@ -211,7 +211,7 @@ Phase 2 of the VFIDE smart contract enhancements has been **successfully impleme
   - Propose: ~150,000 gas
 
 ### Solidity Best Practices
-- Solidity 0.8.19 (latest stable)
+- Solidity 0.8.30 (repo standard)
 - OpenZeppelin contracts (v5.0.1)
 - NatSpec documentation
 - Comprehensive events
