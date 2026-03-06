@@ -126,6 +126,7 @@ Status legend:
   - `app/api/crypto/balance/[address]/route.ts` GET handler now normalizes route address input, enforces authenticated address presence/shape checks, and validates ownership against normalized addresses before balance reads
   - `app/api/crypto/price/route.ts` GET handler now enforces strict `refresh` query validation (`true|false`), validates external ETH price values as finite positive numbers, and rejects invalid computed Uniswap prices before fallback
   - `app/api/crypto/fees/route.ts` GET handler now treats non-positive RPC gas-price responses as invalid and falls back to deterministic safe baseline fee values
+  - `app/api/notifications/route.ts` GET/POST/PATCH/DELETE handlers now enforce authenticated address presence/shape checks, strict `limit`/`offset`/`unreadOnly` query parsing, normalized userAddress validation, boolean flag type checks, and positive-integer normalization for bulk `notificationIds`
   - Focused test confirmation: `npm test -- --runInBand __tests__/api/activities.test.ts __tests__/api/users.test.ts __tests__/api/crypto/rewards/claim.test.ts` ✅ (29 tests)
   - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/security/violations.test.ts` ✅ (6 tests)
   - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/messages/reaction.test.ts` ✅ (4 tests)
@@ -152,6 +153,7 @@ Status legend:
   - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/crypto/balance.test.ts` ✅ (5 tests)
   - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/crypto/price.test.ts` ✅ (11 tests)
   - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/crypto/fees.test.ts __tests__/api/crypto/price.test.ts` ✅ (17 tests)
+  - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/notifications.test.ts` ✅ (23 tests)
   - Additional typecheck confirmation: `npm run -s typecheck` ✅
 
 ### 7. Frontend page-by-page behavior and contract wiring checks

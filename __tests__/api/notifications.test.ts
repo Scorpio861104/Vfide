@@ -77,7 +77,7 @@ describe('/api/notifications', () => {
 
     it('should return 400 when userAddress is missing', async () => {
       withRateLimit.mockResolvedValue(null);
-      requireAuth.mockReturnValue(true);
+      requireAuth.mockReturnValue({ user: { address: mockUserAddress } });
 
       const request = new NextRequest('http://localhost:3000/api/notifications');
       const response = await GET(request);
@@ -85,6 +85,30 @@ describe('/api/notifications', () => {
 
       expect(response.status).toBe(400);
       expect(data.error).toContain('required');
+    });
+
+    it('should return 400 for malformed limit parameter', async () => {
+      withRateLimit.mockResolvedValue(null);
+      requireAuth.mockReturnValue({ user: { address: mockUserAddress } });
+
+      const request = new NextRequest(
+        `http://localhost:3000/api/notifications?userAddress=${mockUserAddress}&limit=10abc&offset=0`
+      );
+      const response = await GET(request);
+
+      expect(response.status).toBe(400);
+    });
+
+    it('should return 400 for invalid unreadOnly parameter', async () => {
+      withRateLimit.mockResolvedValue(null);
+      requireAuth.mockReturnValue({ user: { address: mockUserAddress } });
+
+      const request = new NextRequest(
+        `http://localhost:3000/api/notifications?userAddress=${mockUserAddress}&unreadOnly=1`
+      );
+      const response = await GET(request);
+
+      expect(response.status).toBe(400);
     });
 
     it('should filter unread notifications', async () => {
@@ -271,6 +295,24 @@ describe('/api/notifications', () => {
       expect(response.status).toBe(400);
       expect(data.error).toContain('Missing required fields');
     });
+
+    it('should return 400 for invalid userAddress format in POST', async () => {
+      withRateLimit.mockResolvedValue(null);
+      requireAuth.mockReturnValue({ user: { address: mockUserAddress } });
+
+      const request = new NextRequest('http://localhost:3000/api/notifications', {
+        method: 'POST',
+        body: JSON.stringify({
+          userAddress: 'invalid-address',
+          type: 'system',
+          title: 'Test',
+          message: 'Test notification',
+        }),
+      });
+
+      const response = await POST(request);
+      expect(response.status).toBe(400);
+    });
   });
 
   describe('PATCH/DELETE', () => {
@@ -356,6 +398,32 @@ describe('/api/notifications', () => {
 
       expect(response.status).toBe(400);
       expect(data.error).toContain('Too many notificationIds');
+    });
+
+    it('should reject non-integer notificationIds on PATCH', async () => {
+      withRateLimit.mockResolvedValue(null);
+      requireAuth.mockReturnValue({ user: { address: mockUserAddress } });
+
+      const request = new NextRequest('http://localhost:3000/api/notifications', {
+        method: 'PATCH',
+        body: JSON.stringify({ notificationIds: ['abc'] }),
+      });
+
+      const response = await PATCH(request);
+      expect(response.status).toBe(400);
+    });
+
+    it('should reject non-boolean deleteAll on DELETE', async () => {
+      withRateLimit.mockResolvedValue(null);
+      requireAuth.mockReturnValue({ user: { address: mockUserAddress } });
+
+      const request = new NextRequest('http://localhost:3000/api/notifications', {
+        method: 'DELETE',
+        body: JSON.stringify({ deleteAll: 'yes', userAddress: mockUserAddress }),
+      });
+
+      const response = await DELETE(request);
+      expect(response.status).toBe(400);
     });
   });
 });

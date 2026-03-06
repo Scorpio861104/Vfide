@@ -18,6 +18,38 @@ interface Notification {
 const MAX_NOTIFICATIONS_LIMIT = 200;
 const MAX_NOTIFICATIONS_OFFSET = 10000;
 const MAX_BULK_NOTIFICATION_IDS = 500;
+const ADDRESS_LIKE_REGEX = /^0x[a-fA-F0-9]{3,40}$/;
+
+function isAddressLike(value: string): boolean {
+  return ADDRESS_LIKE_REGEX.test(value.trim());
+}
+
+function parseStrictIntegerParam(value: string | null): number | null {
+  if (value === null) return null;
+  const trimmed = value.trim();
+  if (!/^\d+$/.test(trimmed)) return null;
+  return Number.parseInt(trimmed, 10);
+}
+
+function parseBooleanParam(value: string | null): boolean | null {
+  if (value === null) return false;
+  const normalized = value.trim().toLowerCase();
+  if (normalized === 'true') return true;
+  if (normalized === 'false') return false;
+  return null;
+}
+
+function normalizeNotificationIds(value: unknown): number[] | null {
+  if (!Array.isArray(value)) return null;
+  const normalized = value
+    .map((id) => (typeof id === 'number' || typeof id === 'string' ? Number.parseInt(String(id), 10) : NaN));
+
+  if (normalized.some((id) => !Number.isInteger(id) || id <= 0)) {
+    return null;
+  }
+
+  return normalized;
+}
 
 /**
  * GET /api/notifications?userAddress=0x...&limit=50&offset=0&unreadOnly=false
@@ -34,33 +66,58 @@ export async function GET(request: NextRequest) {
     return authResult;
   }
 
+  const authAddress = typeof authResult.user?.address === 'string'
+    ? authResult.user.address.trim().toLowerCase()
+    : '';
+  if (!authAddress || !isAddressLike(authAddress)) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   try {
     const searchParams = request.nextUrl.searchParams;
-    const userAddress = searchParams.get('userAddress');
-    const rawLimit = parseInt(searchParams.get('limit') || '50', 10);
-    const rawOffset = parseInt(searchParams.get('offset') || '0', 10);
-    const unreadOnly = searchParams.get('unreadOnly') === 'true';
+    const userAddressParam = searchParams.get('userAddress');
+    const parsedLimit = parseStrictIntegerParam(searchParams.get('limit'));
+    const parsedOffset = parseStrictIntegerParam(searchParams.get('offset'));
+    const parsedUnreadOnly = parseBooleanParam(searchParams.get('unreadOnly'));
 
-    const limit = Math.min(Math.max(rawLimit, 0), MAX_NOTIFICATIONS_LIMIT);
-    const offset = Math.min(Math.max(rawOffset, 0), MAX_NOTIFICATIONS_OFFSET);
-
-    // Validate parsed numbers
-    if (isNaN(rawLimit) || isNaN(rawOffset)) {
+    if (
+      (searchParams.get('limit') !== null && parsedLimit === null) ||
+      (searchParams.get('offset') !== null && parsedOffset === null)
+    ) {
       return NextResponse.json(
         { error: 'Invalid limit or offset parameter' },
         { status: 400 }
       );
     }
 
-    if (!userAddress) {
+    if (parsedUnreadOnly === null) {
+      return NextResponse.json(
+        { error: 'Invalid unreadOnly parameter. Must be true or false.' },
+        { status: 400 }
+      );
+    }
+
+    const limit = Math.min(Math.max(parsedLimit ?? 50, 0), MAX_NOTIFICATIONS_LIMIT);
+    const offset = Math.min(Math.max(parsedOffset ?? 0, 0), MAX_NOTIFICATIONS_OFFSET);
+    const unreadOnly = parsedUnreadOnly;
+
+    if (!userAddressParam) {
       return NextResponse.json(
         { error: 'userAddress is required' },
         { status: 400 }
       );
     }
 
+    const userAddress = userAddressParam.trim().toLowerCase();
+    if (!isAddressLike(userAddress)) {
+      return NextResponse.json(
+        { error: 'Invalid userAddress format' },
+        { status: 400 }
+      );
+    }
+
     // Verify ownership - user can only view their own notifications
-    if (authResult.user.address.toLowerCase() !== userAddress.toLowerCase()) {
+    if (authAddress !== userAddress) {
       return NextResponse.json(
         { error: 'You can only view your own notifications' },
         { status: 403 }
@@ -82,7 +139,7 @@ export async function GET(request: NextRequest) {
 
     const result = await query<Notification>(
       queryText,
-      [userAddress.toLowerCase(), limit, offset]
+      [userAddress, limit, offset]
     );
 
     // Get total count
@@ -99,7 +156,7 @@ export async function GET(request: NextRequest) {
 
     const countResult = await query<{ count: string }>(
       countQuery,
-      [userAddress.toLowerCase()]
+      [userAddress]
     );
 
     const totalCount = parseInt(countResult.rows[0]?.count || '0', 10);
@@ -136,6 +193,13 @@ export async function POST(request: NextRequest) {
   const authResult = await requireAuth(request);
   if (authResult instanceof NextResponse) {
     return authResult;
+  }
+
+  const authAddress = typeof authResult.user?.address === 'string'
+    ? authResult.user.address.trim().toLowerCase()
+    : '';
+  if (!authAddress || !isAddressLike(authAddress)) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
   let body: Record<string, unknown>;
@@ -177,8 +241,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const requesterAddress = authResult.user.address.toLowerCase();
-    const targetAddress = userAddress.toLowerCase();
+    const targetAddress = userAddress.trim().toLowerCase();
+    if (!isAddressLike(targetAddress)) {
+      return NextResponse.json(
+        { error: 'Invalid userAddress format' },
+        { status: 400 }
+      );
+    }
+
+    const requesterAddress = authAddress;
     const canCreate = requesterAddress === targetAddress || isAdmin(authResult.user);
     if (!canCreate) {
       return NextResponse.json(
@@ -245,6 +316,13 @@ export async function PATCH(request: NextRequest) {
     return authResult;
   }
 
+  const authAddress = typeof authResult.user?.address === 'string'
+    ? authResult.user.address.trim().toLowerCase()
+    : '';
+  if (!authAddress || !isAddressLike(authAddress)) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   let body: Record<string, unknown>;
   try {
     body = await request.json();
@@ -266,9 +344,24 @@ export async function PATCH(request: NextRequest) {
     const { notificationIds, userAddress, markAllRead } = body;
     const userAddressValue = typeof userAddress === 'string' ? userAddress : null;
 
+    if (markAllRead !== undefined && typeof markAllRead !== 'boolean') {
+      return NextResponse.json(
+        { error: 'markAllRead must be a boolean when provided' },
+        { status: 400 }
+      );
+    }
+
     if (markAllRead && userAddressValue) {
+      const normalizedUserAddress = userAddressValue.trim().toLowerCase();
+      if (!isAddressLike(normalizedUserAddress)) {
+        return NextResponse.json(
+          { error: 'Invalid userAddress format' },
+          { status: 400 }
+        );
+      }
+
       // Verify ownership - user can only modify their own notifications
-      if (authResult.user.address.toLowerCase() !== userAddressValue.toLowerCase()) {
+      if (authAddress !== normalizedUserAddress) {
         return NextResponse.json(
           { error: 'You can only modify your own notifications' },
           { status: 403 }
@@ -278,7 +371,7 @@ export async function PATCH(request: NextRequest) {
       // Mark all notifications as read for user
       const userResult = await query(
         'SELECT id FROM users WHERE wallet_address = $1',
-        [userAddressValue.toLowerCase()]
+        [normalizedUserAddress]
       );
 
       if (userResult.rows.length === 0) {
@@ -315,10 +408,18 @@ export async function PATCH(request: NextRequest) {
         );
       }
 
+      const normalizedNotificationIds = normalizeNotificationIds(notificationIds);
+      if (!normalizedNotificationIds || normalizedNotificationIds.length === 0) {
+        return NextResponse.json(
+          { error: 'notificationIds must contain positive integer values' },
+          { status: 400 }
+        );
+      }
+
       // Verify ownership - notifications must belong to authenticated user
       const userResult = await query(
         'SELECT id FROM users WHERE wallet_address = $1',
-        [authResult.user.address.toLowerCase()]
+        [authAddress]
       );
 
       if (userResult.rows.length === 0) {
@@ -341,7 +442,7 @@ export async function PATCH(request: NextRequest) {
         `UPDATE notifications 
          SET is_read = true, updated_at = NOW()
          WHERE id = ANY($1) AND user_id = $2`,
-        [notificationIds, userId]
+        [normalizedNotificationIds, userId]
       );
 
       return NextResponse.json({
@@ -379,6 +480,13 @@ export async function DELETE(request: NextRequest) {
     return authResult;
   }
 
+  const authAddress = typeof authResult.user?.address === 'string'
+    ? authResult.user.address.trim().toLowerCase()
+    : '';
+  if (!authAddress || !isAddressLike(authAddress)) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   let body: Record<string, unknown>;
   try {
     body = await request.json();
@@ -400,9 +508,24 @@ export async function DELETE(request: NextRequest) {
     const { notificationIds, userAddress, deleteAll } = body;
     const userAddressValue = typeof userAddress === 'string' ? userAddress : null;
 
+    if (deleteAll !== undefined && typeof deleteAll !== 'boolean') {
+      return NextResponse.json(
+        { error: 'deleteAll must be a boolean when provided' },
+        { status: 400 }
+      );
+    }
+
     if (deleteAll && userAddressValue) {
+      const normalizedUserAddress = userAddressValue.trim().toLowerCase();
+      if (!isAddressLike(normalizedUserAddress)) {
+        return NextResponse.json(
+          { error: 'Invalid userAddress format' },
+          { status: 400 }
+        );
+      }
+
       // Verify ownership - user can only delete their own notifications
-      if (authResult.user.address.toLowerCase() !== userAddressValue.toLowerCase()) {
+      if (authAddress !== normalizedUserAddress) {
         return NextResponse.json(
           { error: 'You can only delete your own notifications' },
           { status: 403 }
@@ -412,7 +535,7 @@ export async function DELETE(request: NextRequest) {
       // Delete all notifications for user
       const userResult = await query(
         'SELECT id FROM users WHERE wallet_address = $1',
-        [userAddressValue.toLowerCase()]
+        [normalizedUserAddress]
       );
 
       if (userResult.rows.length === 0) {
@@ -447,10 +570,18 @@ export async function DELETE(request: NextRequest) {
         );
       }
 
+      const normalizedNotificationIds = normalizeNotificationIds(notificationIds);
+      if (!normalizedNotificationIds || normalizedNotificationIds.length === 0) {
+        return NextResponse.json(
+          { error: 'notificationIds must contain positive integer values' },
+          { status: 400 }
+        );
+      }
+
       // Verify ownership - notifications must belong to authenticated user
       const userResult = await query(
         'SELECT id FROM users WHERE wallet_address = $1',
-        [authResult.user.address.toLowerCase()]
+        [authAddress]
       );
 
       if (userResult.rows.length === 0) {
@@ -471,7 +602,7 @@ export async function DELETE(request: NextRequest) {
       // Delete specific notifications (only if they belong to the user)
       const result = await query(
         'DELETE FROM notifications WHERE id = ANY($1) AND user_id = $2',
-        [notificationIds, userId]
+        [normalizedNotificationIds, userId]
       );
 
       return NextResponse.json({
