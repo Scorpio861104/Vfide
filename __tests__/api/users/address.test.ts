@@ -71,6 +71,25 @@ describe('/api/users/[address]', () => {
   });
 
   describe('PUT', () => {
+    it('should reject malformed authenticated address', async () => {
+      withRateLimit.mockResolvedValue(null);
+      requireAuth.mockResolvedValue({ user: { address: 'bad-address' } });
+
+      const request = new NextRequest('http://localhost:3000/api/users/0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb', {
+        method: 'PUT',
+        body: JSON.stringify({ bio: 'updated' }),
+      });
+
+      const response = await PUT(request, {
+        params: Promise.resolve({ address: '0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb' }),
+      });
+      const data = await response.json();
+
+      expect(response.status).toBe(401);
+      expect(data.error).toBe('Unauthorized');
+      expect(query).not.toHaveBeenCalled();
+    });
+
     it('should reject when authenticated user does not own target address', async () => {
       withRateLimit.mockResolvedValue(null);
       requireAuth.mockResolvedValue({ user: { address: '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' } });
@@ -107,6 +126,24 @@ describe('/api/users/[address]', () => {
   });
 
   describe('POST avatar', () => {
+    it('should reject malformed authenticated address', async () => {
+      withRateLimit.mockResolvedValue(null);
+      requireAuth.mockResolvedValue({ user: { address: 'bad-address' } });
+
+      const request = new NextRequest('http://localhost:3000/api/users/0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb/avatar', {
+        method: 'POST',
+      });
+
+      const response = await POST(request, {
+        params: Promise.resolve({ address: '0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb' }),
+      });
+      const data = await response.json();
+
+      expect(response.status).toBe(401);
+      expect(data.error).toBe('Unauthorized');
+      expect(query).not.toHaveBeenCalled();
+    });
+
     it('should reject when authenticated user does not own target address', async () => {
       withRateLimit.mockResolvedValue(null);
       requireAuth.mockResolvedValue({ user: { address: '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' } });

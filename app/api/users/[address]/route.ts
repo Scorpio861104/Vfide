@@ -29,9 +29,18 @@ const USERNAME_REGEX = /^[a-zA-Z0-9_]{3,32}$/;
 const MAX_BIO_LENGTH = 500;
 const MAX_EMAIL_LENGTH = 254;
 const MAX_AVATAR_URL_LENGTH = 2048;
+const ADDRESS_PATTERN = /^0x[a-fA-F0-9]{3,64}$/;
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function normalizeAddress(value: string): string {
+  return value.trim().toLowerCase();
+}
+
+function isAddressLike(value: string): boolean {
+  return ADDRESS_PATTERN.test(value);
 }
 
 /**
@@ -141,6 +150,13 @@ export async function PUT(
   try {
     const resolvedParams = await params;
     const address = resolvedParams?.address;
+    const authenticatedAddress = typeof authResult.user?.address === 'string'
+      ? normalizeAddress(authResult.user.address)
+      : '';
+
+    if (!authenticatedAddress || !isAddressLike(authenticatedAddress)) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
 
     if (!address || typeof address !== 'string') {
       return NextResponse.json(
@@ -149,8 +165,10 @@ export async function PUT(
       );
     }
 
+    const normalizedAddress = normalizeAddress(address);
+
     // Only allow users to update their own profile
-    if (authResult.user.address.toLowerCase() !== address.toLowerCase()) {
+    if (authenticatedAddress !== normalizedAddress) {
       return NextResponse.json(
         { error: 'You can only update your own profile' },
         { status: 403 }
@@ -223,7 +241,7 @@ export async function PUT(
            updated_at = NOW()
        WHERE wallet_address = $1
        RETURNING *`,
-      [address.toLowerCase(), username, email, bio, avatar_url]
+      [normalizedAddress, username, email, bio, avatar_url]
     );
 
     if (result.rows.length === 0) {
@@ -268,6 +286,13 @@ export async function POST(
   try {
     const resolvedParams = await params;
     const address = resolvedParams?.address;
+    const authenticatedAddress = typeof authResult.user?.address === 'string'
+      ? normalizeAddress(authResult.user.address)
+      : '';
+
+    if (!authenticatedAddress || !isAddressLike(authenticatedAddress)) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
 
     if (!address || typeof address !== 'string') {
       return NextResponse.json(
@@ -276,8 +301,10 @@ export async function POST(
       );
     }
 
+    const normalizedAddress = normalizeAddress(address);
+
     // Only allow users to update their own avatar
-    if (authResult.user.address.toLowerCase() !== address.toLowerCase()) {
+    if (authenticatedAddress !== normalizedAddress) {
       return NextResponse.json(
         { error: 'You can only update your own avatar' },
         { status: 403 }
@@ -325,7 +352,7 @@ export async function POST(
        SET avatar_url = $2, updated_at = NOW()
        WHERE wallet_address = $1
        RETURNING avatar_url`,
-      [address.toLowerCase(), avatarUrl]
+      [normalizedAddress, avatarUrl]
     );
 
     if (result.rows.length === 0 || !result.rows[0]) {
