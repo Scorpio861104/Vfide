@@ -5,6 +5,9 @@ import { test, expect, devices } from '@playwright/test';
  * Tests mobile navigation, wallet connection, transactions, and touch gestures
  */
 
+// Ensure this suite runs with touch + mobile viewport when invoked under chromium.
+test.use({ ...devices['iPhone 12'] });
+
 // Mobile tests - use mobile-safari or mobile-chrome project from config
 test.describe('Mobile Responsive Tests', () => {
   test.skip(({ browserName }) => browserName !== 'chromium', 'Mobile tests run on mobile projects');

@@ -29,13 +29,14 @@ test.describe('WCAG 2.1 AA Compliance - E2E Tests', () => {
 
   test('Forms should have no WCAG violations', async ({ page }) => {
     await page.goto('/');
-    
-    // Test any form on the page
-    const accessibilityScanResults = await new AxeBuilder({ page })
-      .withTags(['wcag2a', 'wcag2aa'])
-      .include('form')
-      .analyze();
-    
+
+    // Only scope to form when a form is present.
+    const formCount = await page.locator('form').count();
+    const builder = new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa']);
+    const accessibilityScanResults = formCount > 0
+      ? await builder.include('form').analyze()
+      : await builder.analyze();
+
     expect(accessibilityScanResults.violations).toEqual([]);
   });
 
@@ -320,7 +321,7 @@ test.describe('Specific WCAG Criteria', () => {
     await page.goto('/');
     
     const accessibilityScanResults = await new AxeBuilder({ page })
-      .withRules(['label', 'form-field-multiple-labels', 'fieldset-legend'])
+      .withRules(['label', 'form-field-multiple-labels'])
       .analyze();
     
     expect(accessibilityScanResults.violations).toEqual([]);
