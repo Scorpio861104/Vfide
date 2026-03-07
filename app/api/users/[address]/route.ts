@@ -43,6 +43,43 @@ function isAddressLike(value: string): boolean {
   return ADDRESS_PATTERN.test(value);
 }
 
+function isDatabaseUnavailableError(error: unknown): boolean {
+  const stack: unknown[] = [error];
+
+  while (stack.length > 0) {
+    const current = stack.pop();
+    if (!current) continue;
+
+    const asRecord = typeof current === 'object' ? current as Record<string, unknown> : null;
+    const message = current instanceof Error
+      ? current.message.toLowerCase()
+      : String(current).toLowerCase();
+    const code = typeof asRecord?.code === 'string' ? asRecord.code.toLowerCase() : '';
+
+    if (
+      code === 'econnrefused' ||
+      code === '57p01' ||
+      message.includes('econnrefused') ||
+      message.includes('database query failed') ||
+      message.includes('connect') ||
+      message.includes('connection terminated') ||
+      message.includes('timeout expired')
+    ) {
+      return true;
+    }
+
+    const cause = asRecord?.cause;
+    if (cause) stack.push(cause);
+
+    const errors = asRecord?.errors;
+    if (Array.isArray(errors)) {
+      for (const nested of errors) stack.push(nested);
+    }
+  }
+
+  return false;
+}
+
 /**
  * GET /api/users/:address
  * Get user profile with stats
@@ -121,6 +158,14 @@ export async function GET(
     });
   } catch (error) {
     console.error('[User GET API] Error:', error);
+
+    if (isDatabaseUnavailableError(error)) {
+      return NextResponse.json({
+        user: null,
+        degraded: true,
+      });
+    }
+
     const errorMessage = error instanceof Error ? error.message : 'Failed to fetch user';
     return NextResponse.json(
       { error: errorMessage },
