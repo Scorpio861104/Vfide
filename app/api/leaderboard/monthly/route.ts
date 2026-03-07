@@ -25,6 +25,43 @@ function parseStrictIntegerParam(value: string | null): number | null {
   return Number.parseInt(trimmed, 10);
 }
 
+function isDatabaseUnavailableError(error: unknown): boolean {
+  const stack: unknown[] = [error];
+
+  while (stack.length > 0) {
+    const current = stack.pop();
+    if (!current) continue;
+
+    const asRecord = typeof current === 'object' ? current as Record<string, unknown> : null;
+    const message = current instanceof Error
+      ? current.message.toLowerCase()
+      : String(current).toLowerCase();
+    const code = typeof asRecord?.code === 'string' ? asRecord.code.toLowerCase() : '';
+
+    if (
+      code === 'econnrefused' ||
+      code === '57p01' ||
+      message.includes('econnrefused') ||
+      message.includes('database query failed') ||
+      message.includes('connect') ||
+      message.includes('connection terminated') ||
+      message.includes('timeout expired')
+    ) {
+      return true;
+    }
+
+    const cause = asRecord?.cause;
+    if (cause) stack.push(cause);
+
+    const errors = asRecord?.errors;
+    if (Array.isArray(errors)) {
+      for (const nested of errors) stack.push(nested);
+    }
+  }
+
+  return false;
+}
+
 function toOptionalNonNegativeInteger(value: unknown): number | null | undefined {
   if (value === undefined || value === null) {
     return undefined;
@@ -236,6 +273,23 @@ export async function GET(request: NextRequest) {
     }
   } catch (error) {
     console.error('Error fetching monthly leaderboard:', error);
+
+    // Graceful degradation for local/offline environments where DB is unavailable.
+    if (isDatabaseUnavailableError(error)) {
+      return NextResponse.json({
+        monthYear: new Date().toISOString().slice(0, 7),
+        prizePool: {
+          total: '0',
+          distributed: '0',
+          distributionComplete: false,
+          distributionDate: null,
+        },
+        leaderboard: [],
+        userPosition: null,
+        degraded: true,
+      });
+    }
+
     return NextResponse.json(
       { error: 'Failed to fetch monthly leaderboard' },
       { status: 500 }
