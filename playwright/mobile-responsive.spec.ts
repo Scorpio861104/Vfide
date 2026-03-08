@@ -10,7 +10,6 @@ test.use({ ...devices['iPhone 12'] });
 
 // Mobile tests - use mobile-safari or mobile-chrome project from config
 test.describe('Mobile Responsive Tests', () => {
-  test.skip(({ browserName }) => browserName !== 'chromium', 'Mobile tests run on mobile projects');
 
   test('should load homepage on mobile', async ({ page }) => {
     await page.goto('/');
@@ -124,7 +123,6 @@ test.describe('Mobile Responsive Tests', () => {
 });
 
 test.describe('Mobile Wallet Connection', () => {
-  test.skip(({ browserName }) => browserName !== 'chromium', 'Mobile tests run on mobile projects');
 
   test('should connect wallet on mobile', async ({ page }) => {
     await page.addInitScript(() => {
@@ -202,7 +200,6 @@ test.describe('Mobile Wallet Connection', () => {
 });
 
 test.describe('Mobile Transactions', () => {
-  test.skip(({ browserName }) => browserName !== 'chromium', 'Mobile tests run on mobile projects');
 
   test('should send transaction on mobile', async ({ page }) => {
     await page.addInitScript(() => {
@@ -271,7 +268,6 @@ test.describe('Mobile Transactions', () => {
 });
 
 test.describe('Mobile Touch Gestures', () => {
-  test.skip(({ browserName }) => browserName !== 'chromium', 'Mobile tests run on mobile projects');
 
   test('should support tap gestures', async ({ page }) => {
     await page.goto('/');
@@ -356,7 +352,6 @@ test.describe('Mobile Touch Gestures', () => {
 });
 
 test.describe('Mobile Layout Tests', () => {
-  test.skip(({ browserName }) => browserName !== 'chromium', 'Mobile tests run on mobile projects');
 
   test('should stack elements vertically on mobile', async ({ page }) => {
     await page.goto('/dashboard');
@@ -415,7 +410,6 @@ test.describe('Mobile Layout Tests', () => {
 });
 
 test.describe('Mobile Form Interactions', () => {
-  test.skip(({ browserName }) => browserName !== 'chromium', 'Mobile tests run on mobile projects');
 
   test('should show mobile keyboard for inputs', async ({ page }) => {
     await page.goto('/dashboard');
@@ -481,7 +475,6 @@ test.describe('Mobile Form Interactions', () => {
 });
 
 test.describe('Mobile Performance', () => {
-  test.skip(({ browserName }) => browserName !== 'chromium', 'Mobile tests run on mobile projects');
 
   test('should load quickly on mobile', async ({ page }) => {
     const startTime = Date.now();
@@ -510,7 +503,6 @@ test.describe('Mobile Performance', () => {
 });
 
 test.describe('Mobile Navigation', () => {
-  test.skip(({ browserName }) => browserName !== 'chromium', 'Mobile tests run on mobile projects');
 
   test('should have bottom navigation on mobile', async ({ page }) => {
     await page.goto('/dashboard');
@@ -558,7 +550,6 @@ test.describe('Mobile Navigation', () => {
 });
 
 test.describe('Mobile Accessibility', () => {
-  test.skip(({ browserName }) => browserName !== 'chromium', 'Mobile tests run on mobile projects');
 
   test('should have proper heading hierarchy', async ({ page }) => {
     await page.goto('/');
@@ -593,7 +584,6 @@ test.describe('Mobile Accessibility', () => {
 });
 
 test.describe('Android Mobile Tests', () => {
-  test.skip(({ browserName }) => browserName !== 'chromium', 'Android tests run on mobile-chrome project');
 
   test('should work on Android devices', async ({ page }) => {
     await page.goto('/');
@@ -617,7 +607,6 @@ test.describe('Android Mobile Tests', () => {
 });
 
 test.describe('Tablet Tests', () => {
-  test.skip(({ browserName }) => browserName !== 'chromium', 'Tablet tests run on tablet project');
 
   test('should work on tablet', async ({ page }) => {
     await page.goto('/');

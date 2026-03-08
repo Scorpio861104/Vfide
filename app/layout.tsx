@@ -90,7 +90,7 @@ export default async function RootLayout({
       </head>
       <body className="font-sans antialiased bg-zinc-900">
         <header role="banner" className="sr-only">
-          <a href="/">VFIDE</a>
+          <span>VFIDE</span>
         </header>
         <div id="global-live-region" className="sr-only" aria-live="polite" aria-atomic="true" />
         {isE2E ? (
