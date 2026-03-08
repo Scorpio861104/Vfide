@@ -26,6 +26,7 @@ export async function GET(request: NextRequest) {
   if (process.env.NODE_ENV === 'production') {
     return NextResponse.json(
       {
+        ok: true,
         status: 'ok',
         timestamp: new Date().toISOString(),
         version: process.env.npm_package_version || '1.2.0',
@@ -35,6 +36,7 @@ export async function GET(request: NextRequest) {
   }
 
   const healthData = {
+    ok: true,
     status: 'ok',
     timestamp: new Date().toISOString(),
     version: process.env.npm_package_version || '1.2.0',
