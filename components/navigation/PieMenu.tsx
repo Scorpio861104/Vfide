@@ -487,6 +487,7 @@ function TriggerButton({ isOpen, onClick, activeCategory }: TriggerButtonProps) 
       whileTap={{ scale: 0.95 }}
       aria-label={isOpen ? 'Close navigation menu' : 'Open navigation menu'}
       aria-expanded={isOpen}
+      aria-controls="pie-menu-panel"
       className="relative w-12 h-12 rounded-2xl flex items-center justify-center cursor-pointer overflow-hidden"
       style={{
         background: isOpen
@@ -806,6 +807,7 @@ export function PieMenu() {
         <AnimatePresence>
           {isOpen && (
             <motion.div
+                id="pie-menu-panel"
               initial={{ opacity: 0, x: 60, scale: 0.95 }}
               animate={{ opacity: 1, x: 0, scale: 1 }}
               exit={{ opacity: 0, x: 40, scale: 0.98 }}

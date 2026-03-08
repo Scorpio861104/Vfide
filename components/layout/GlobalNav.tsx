@@ -161,7 +161,8 @@ export function GlobalNav() {
   const [showMoreMenu, setShowMoreMenu] = useState(false);
   
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 glass border-b border-zinc-800">
+    <header role="banner" className="fixed top-0 left-0 right-0 z-50 glass border-b border-zinc-800">
+      <nav aria-label="Global navigation">
       <div className="container mx-auto px-3 sm:px-4 py-3">
         <div className="flex items-center justify-between gap-2">
           {/* Logo */}
@@ -335,6 +336,7 @@ export function GlobalNav() {
       
       {/* Vault Status Modal - shows when wallet connects */}
       <VaultStatusModal />
-    </nav>
+      </nav>
+    </header>
   );
 }

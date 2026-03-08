@@ -137,6 +137,7 @@ export function SocialNotifications() {
         className="relative p-2 hover:bg-zinc-800 rounded-lg transition-colors"
         aria-label={unreadCount > 0 ? `${unreadCount} unread notifications` : 'Notifications'}
         aria-expanded={showNotifications}
+        aria-controls="notifications-panel"
         aria-haspopup="dialog"
       >
         <Bell className="w-5 h-5 text-zinc-100" aria-hidden="true" />
@@ -165,6 +166,7 @@ export function SocialNotifications() {
 
             {/* Panel */}
             <motion.div
+              id="notifications-panel"
               initial={{ opacity: 0, y: -20, scale: 0.95 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -20, scale: 0.95 }}

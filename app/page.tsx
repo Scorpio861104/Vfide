@@ -174,9 +174,9 @@ function FeatureCard({ icon, title, description, color, delay = 0 }: FeatureCard
           <div style={{ color }}>{icon}</div>
         </div>
         
-        <h3 className="text-xl font-semibold text-zinc-50 mb-3 group-hover:text-white transition-colors">
+        <h2 className="text-xl font-semibold text-zinc-50 mb-3 group-hover:text-white transition-colors">
           {title}
-        </h3>
+        </h2>
         
         <p className="text-zinc-400 leading-relaxed group-hover:text-zinc-300 transition-colors">
           {description}
@@ -250,9 +250,9 @@ function Step({ number, title, description, time, index }: StepProps) {
       
       {/* Content */}
       <div className="flex-1 pb-8">
-        <h3 className="text-xl font-semibold text-zinc-50 mb-2 group-hover:text-cyan-400 transition-colors">
+        <h2 className="text-xl font-semibold text-zinc-50 mb-2 group-hover:text-cyan-400 transition-colors">
           {title}
-        </h3>
+        </h2>
         <p className="text-zinc-400 mb-3 leading-relaxed">
           {description}
         </p>

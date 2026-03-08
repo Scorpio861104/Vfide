@@ -107,6 +107,7 @@ export function MobileBottomNav() {
               className="fixed inset-0 bg-black/70 backdrop-blur-sm z-40 md:hidden"
             />
             <motion.div
+              id="mobile-more-menu"
               initial={{ y: '100%', opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: '100%', opacity: 0 }}
@@ -216,6 +217,7 @@ export function MobileBottomNav() {
             }`}
             aria-label={showMore ? 'Close more options' : 'Open more options'}
             aria-expanded={showMore}
+            aria-controls="mobile-more-menu"
           >
             <motion.div
               whileTap={{ scale: 0.9 }}

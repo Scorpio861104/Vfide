@@ -72,7 +72,7 @@ export function Footer() {
                 VFIDE
               </span>
             </Link>
-            <p className="text-zinc-500 text-sm leading-relaxed max-w-xs mb-6">
+            <p className="text-zinc-400 text-sm leading-relaxed max-w-xs mb-6">
               The decentralized payment protocol where trust is earned, not bought. Zero processing fees, instant settlement.
             </p>
             <div className="flex items-center gap-3">
@@ -82,7 +82,7 @@ export function Footer() {
                   href={social.href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-10 h-10 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-500 hover:text-cyan-400 hover:border-cyan-400/30 transition-all"
+                  className="w-10 h-10 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-400 hover:text-cyan-400 hover:border-cyan-400/30 transition-all"
                   aria-label={social.label}
                 >
                   <social.icon className="w-4 h-4" />
@@ -93,13 +93,13 @@ export function Footer() {
 
           {/* Product */}
           <div>
-            <h4 className="text-zinc-50 font-semibold mb-4 text-sm">Product</h4>
+            <h2 className="text-zinc-50 font-semibold mb-4 text-sm">Product</h2>
             <ul className="space-y-3">
               {footerLinks.product.map((link) => (
                 <li key={link.href}>
                   <Link 
                     href={link.href} 
-                    className="text-zinc-500 hover:text-cyan-400 text-sm transition-colors"
+                    className="text-zinc-400 hover:text-cyan-400 text-sm transition-colors"
                   >
                     {link.label}
                   </Link>
@@ -110,7 +110,7 @@ export function Footer() {
 
           {/* Community */}
           <div>
-            <h4 className="text-zinc-50 font-semibold mb-4 text-sm">Community</h4>
+            <h2 className="text-zinc-50 font-semibold mb-4 text-sm">Community</h2>
             <ul className="space-y-3">
               {footerLinks.community.map((link) => (
                 <li key={link.label}>
@@ -119,18 +119,18 @@ export function Footer() {
                       href={link.href}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-zinc-500 hover:text-cyan-400 text-sm transition-colors inline-flex items-center gap-1"
+                      className="text-zinc-400 hover:text-cyan-400 text-sm transition-colors inline-flex items-center gap-1"
                     >
                       {link.label}
                       <ExternalLink className="w-3 h-3" />
                       {link.soon && (
-                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-zinc-900 text-zinc-500">Soon</span>
+                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-zinc-900 text-zinc-400">Soon</span>
                       )}
                     </a>
                   ) : (
                     <Link 
                       href={link.href}
-                      className="text-zinc-500 hover:text-cyan-400 text-sm transition-colors"
+                      className="text-zinc-400 hover:text-cyan-400 text-sm transition-colors"
                     >
                       {link.label}
                     </Link>
@@ -142,13 +142,13 @@ export function Footer() {
 
           {/* Resources */}
           <div>
-            <h4 className="text-zinc-50 font-semibold mb-4 text-sm">Resources</h4>
+            <h2 className="text-zinc-50 font-semibold mb-4 text-sm">Resources</h2>
             <ul className="space-y-3">
               {footerLinks.resources.map((link) => (
                 <li key={link.href}>
                   <Link 
                     href={link.href}
-                    className="text-zinc-500 hover:text-cyan-400 text-sm transition-colors"
+                    className="text-zinc-400 hover:text-cyan-400 text-sm transition-colors"
                   >
                     {link.label}
                   </Link>
@@ -159,13 +159,13 @@ export function Footer() {
 
           {/* Legal */}
           <div>
-            <h4 className="text-zinc-50 font-semibold mb-4 text-sm">Legal</h4>
+            <h2 className="text-zinc-50 font-semibold mb-4 text-sm">Legal</h2>
             <ul className="space-y-3">
               {footerLinks.legal.map((link) => (
                 <li key={link.href}>
                   <Link 
                     href={link.href}
-                    className="text-zinc-500 hover:text-cyan-400 text-sm transition-colors"
+                    className="text-zinc-400 hover:text-cyan-400 text-sm transition-colors"
                   >
                     {link.label}
                   </Link>
@@ -178,14 +178,14 @@ export function Footer() {
         {/* Legal Disclaimer */}
         <div className="pt-8 border-t border-zinc-800">
           <div className="max-w-3xl mx-auto text-center mb-6">
-            <p className="text-zinc-600 text-xs leading-relaxed">
-              <strong className="text-zinc-500">DISCLAIMER:</strong> VFIDE tokens are utility tokens for governance and payments, 
+            <p className="text-zinc-400 text-xs leading-relaxed">
+              <strong className="text-zinc-400">DISCLAIMER:</strong> VFIDE tokens are utility tokens for governance and payments, 
               NOT investment securities. No guarantee of profits or returns. Cryptocurrency involves risk of total loss. 
               Not financial, legal, or tax advice. See{" "}
-              <Link href="/legal" className="text-cyan-400 hover:underline">Legal & Terms</Link> for full details.
+              <Link href="/legal" className="text-sky-200 underline underline-offset-2 hover:text-cyan-200">Legal & Terms</Link> for full details.
             </p>
           </div>
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-zinc-600">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-zinc-400">
             <p>© 2025 VFIDE Protocol. All rights reserved.</p>
             <div className="flex items-center gap-2">
               <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />

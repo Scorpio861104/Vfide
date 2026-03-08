@@ -179,14 +179,14 @@ export function QuickWalletConnect({ size = 'md' }: QuickWalletConnectProps) {
   // Loading state (includes both auto-reconnecting and manual reconnecting)
   if (isConnecting || isPending || isReconnecting || isAutoReconnecting) {
     return (
-      <div className="flex items-center gap-2 px-4 py-2.5 bg-zinc-800/80 rounded-xl border border-zinc-700">
+      <div className="flex items-center gap-2 px-4 py-2.5 bg-black rounded-xl border border-white/40">
         <motion.div
           animate={{ rotate: 360 }}
           transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
         >
           <RefreshCw size={18} className="text-cyan-400" />
         </motion.div>
-        <span className="text-sm text-zinc-300">
+        <span className="text-sm font-semibold text-white">
           {isAutoReconnecting ? 'Auto-reconnecting...' : 'Connecting...'}
         </span>
       </div>

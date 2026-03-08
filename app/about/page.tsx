@@ -13,7 +13,7 @@ export default function AboutPage() {
         <section className="py-20 bg-gradient-to-b from-zinc-800 to-zinc-900 border-b border-zinc-700">
           <div className="container mx-auto px-3 sm:px-4">
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 1, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               className="text-center max-w-4xl mx-auto"
             >
@@ -32,7 +32,7 @@ export default function AboutPage() {
         <section className="py-16">
           <div className="container mx-auto px-4 max-w-4xl">
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 1, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               className="bg-zinc-800 border border-zinc-700 rounded-xl p-8 mb-12"
@@ -54,7 +54,7 @@ export default function AboutPage() {
             {/* Core Values */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
               <motion.div
-                initial={{ opacity: 0, x: -20 }}
+                initial={{ opacity: 1, x: -20 }}
                 whileInView={{ opacity: 1, x: 0 }}
                 viewport={{ once: true }}
                 className="bg-zinc-800 border border-zinc-700 rounded-xl p-6"
@@ -70,7 +70,7 @@ export default function AboutPage() {
               </motion.div>
 
               <motion.div
-                initial={{ opacity: 0, x: 20 }}
+                initial={{ opacity: 1, x: 20 }}
                 whileInView={{ opacity: 1, x: 0 }}
                 viewport={{ once: true }}
                 className="bg-zinc-800 border border-zinc-700 rounded-xl p-6"
@@ -86,7 +86,7 @@ export default function AboutPage() {
               </motion.div>
 
               <motion.div
-                initial={{ opacity: 0, x: -20 }}
+                initial={{ opacity: 1, x: -20 }}
                 whileInView={{ opacity: 1, x: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: 0.1 }}
@@ -102,7 +102,7 @@ export default function AboutPage() {
               </motion.div>
 
               <motion.div
-                initial={{ opacity: 0, x: 20 }}
+                initial={{ opacity: 1, x: 20 }}
                 whileInView={{ opacity: 1, x: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: 0.1 }}
@@ -121,7 +121,7 @@ export default function AboutPage() {
 
             {/* Philosophy */}
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 1, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               className="bg-gradient-to-r from-cyan-400/10 to-blue-500/10 border-2 border-cyan-400/30 rounded-xl p-8 text-center"

@@ -89,6 +89,10 @@ export default async function RootLayout({
         {nonce && <meta property="csp-nonce" content={nonce} />}
       </head>
       <body className="font-sans antialiased bg-zinc-900">
+        <header role="banner" className="sr-only">
+          <a href="/">VFIDE</a>
+        </header>
+        <div id="global-live-region" className="sr-only" aria-live="polite" aria-atomic="true" />
         {isE2E ? (
           <main id="main-content" className="min-h-screen min-w-0 w-full" tabIndex={-1}>
             {children}

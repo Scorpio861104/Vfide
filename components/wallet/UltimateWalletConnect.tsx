@@ -704,6 +704,7 @@ function ConnectedWallet({
         transition={HAPTIC_SPRING}
         className="flex items-center gap-3 px-4 py-2.5 bg-gradient-to-r from-zinc-800/90 to-zinc-900/90 backdrop-blur-xl border border-white/10 rounded-2xl hover:border-cyan-500/40 transition-all group shadow-xl"
         aria-expanded={isDropdownOpen}
+        aria-controls="wallet-dropdown-menu"
         aria-haspopup="true"
       >
         {/* Activity indicator */}
@@ -764,6 +765,7 @@ function ConnectedWallet({
       <AnimatePresence>
         {isDropdownOpen && (
           <motion.div
+            id="wallet-dropdown-menu"
             initial={{ opacity: 0, y: -10, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -10, scale: 0.95 }}

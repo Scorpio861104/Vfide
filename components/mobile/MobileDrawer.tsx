@@ -102,6 +102,7 @@ export function MobileDrawer({ items = [], logo, onNavClick, children, className
         style={{ minWidth: 44, minHeight: 44, width: 44, height: 44 }}
         aria-label="Menu"
         aria-expanded={isOpen}
+        aria-controls="mobile-drawer-panel"
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.9 }}
       >
@@ -150,6 +151,7 @@ export function MobileDrawer({ items = [], logo, onNavClick, children, className
       <AnimatePresence>
         {isOpen && (
           <motion.aside
+            id="mobile-drawer-panel"
             className="fixed left-0 top-0 h-full w-70 bg-zinc-900 border-r border-zinc-700 md:hidden z-50"
             aria-hidden={false}
             initial={{ x: '-100%' }}

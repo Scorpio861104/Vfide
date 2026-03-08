@@ -115,10 +115,11 @@ test.describe('Screen Reader and ARIA - E2E Tests', () => {
       const ariaLabelledby = await button.getAttribute('aria-labelledby');
       
       // Button should have text or aria-label
-      const hasLabel = 
+      const hasLabel = Boolean(
         (text && text.trim().length > 0) || 
         ariaLabel || 
-        ariaLabelledby;
+        ariaLabelledby
+      );
       
       expect(hasLabel).toBe(true);
     }
