@@ -22,7 +22,7 @@ export default function FeedPage() {
   return (
     <>
       <PageWrapper variant="cosmic" showOrbs showGrid>
-        <main className="pt-20 pb-20">
+        <div className="pt-20 pb-20">
           {/* Header with link to Social Hub */}
           <motion.section
             initial={{ opacity: 0, y: -20 }}
@@ -75,7 +75,7 @@ export default function FeedPage() {
           ) : (
             <SocialFeed />
           )}
-        </main>
+        </div>
         <Footer />
       </PageWrapper>
     </>

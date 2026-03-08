@@ -99,7 +99,7 @@ function PayContent() {
   };
 
   return (
-    <motion.main 
+    <motion.div 
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       className="min-h-screen bg-zinc-950 pt-20 relative overflow-hidden"
@@ -296,7 +296,7 @@ function PayContent() {
           </motion.div>
         </div>
       </section>
-    </motion.main>
+    </motion.div>
   );
 }
 

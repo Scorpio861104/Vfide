@@ -213,7 +213,7 @@ export default function DashboardPage() {
           keywords="dashboard, vault, ProofScore, crypto wallet"
           canonicalUrl="https://vfide.io/dashboard"
         />
-        <main className="min-h-screen bg-zinc-950 pt-20 flex items-center justify-center relative overflow-hidden">
+        <div className="min-h-screen bg-zinc-950 pt-20 flex items-center justify-center relative overflow-hidden">
           <div className="absolute inset-0 overflow-hidden">
             <div className="absolute top-1/4 left-1/4 w-150 h-150 bg-cyan-500/10 rounded-full blur-[120px] animate-pulse" />
             <div className="absolute bottom-1/4 right-1/4 w-100 h-100 bg-purple-500/10 rounded-full blur-[100px] animate-pulse" style={{ animationDelay: '1s' }} />
@@ -238,7 +238,7 @@ export default function DashboardPage() {
             </p>
             <QuickWalletConnect size="lg" />
           </motion.div>
-        </main>
+        </div>
         <Footer />
       </>
     );
@@ -248,7 +248,7 @@ export default function DashboardPage() {
     <>
       
       <PageWrapper variant="cosmic" showOrbs showGrid>
-        <main className="pt-20 pb-20">
+        <div className="pt-20 pb-20">
           <div className="fixed inset-0 overflow-hidden pointer-events-none">
             <div className="absolute top-0 left-1/4 w-150 h-150 bg-cyan-400/5 rounded-full blur-[120px]" />
             <div className="absolute bottom-1/4 right-0 w-125 h-125 bg-purple-500/5 rounded-full blur-[100px]" />
@@ -379,7 +379,7 @@ export default function DashboardPage() {
             )}
           </AnimatePresence>
         </div>
-      </main>
+      </div>
       </PageWrapper>
 
       <Footer />

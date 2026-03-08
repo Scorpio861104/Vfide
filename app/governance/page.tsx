@@ -163,7 +163,7 @@ export default function GovernancePage() {
         <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.01)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.01)_1px,transparent_1px)] bg-size-[4rem_4rem]" />
       </div>
 
-      <main className="min-h-screen pt-20">
+      <div className="min-h-screen pt-20">
         {/* Hero Header */}
         <motion.section 
           initial={{ opacity: 0, y: -20 }}
@@ -321,7 +321,7 @@ export default function GovernancePage() {
         {activeTab === 'members' && <MembersTab searchQuery={searchQuery} />}
         {activeTab === 'history' && <HistoryTab searchQuery={searchQuery} />}
         {activeTab === 'stats' && <StatsTab />}
-      </main>
+      </div>
 
       <Footer />
     </>

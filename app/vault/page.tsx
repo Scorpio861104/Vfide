@@ -393,7 +393,7 @@ function VaultContent() {
   return (
     <>
       
-      <main className="min-h-screen bg-zinc-950 pt-20 relative">
+      <div className="min-h-screen bg-zinc-950 pt-20 relative">
         {/* Ambient Background */}
         <div className="fixed inset-0 overflow-hidden pointer-events-none">
           <div className="absolute top-0 right-1/4 w-150 h-150 bg-emerald-500/5 rounded-full blur-[120px]" />
@@ -978,7 +978,7 @@ function VaultContent() {
             </motion.div>
           )}
         </AnimatePresence>
-      </main>
+      </div>
 
       <Footer />
     </>
