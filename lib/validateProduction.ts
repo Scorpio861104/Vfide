@@ -99,7 +99,14 @@ export function validateProductionEnvironment(): ValidationResult {
   };
 
   const isProduction = process.env.NODE_ENV === 'production';
+  const isCI = process.env.CI === 'true' || process.env.VERCEL === '1';
+  const frontendOnly = process.env.FRONTEND_SELF_CONTAINED === 'true' || process.env.NEXT_PUBLIC_FRONTEND_ONLY === 'true';
+  const strictProduction = isProduction && isCI && !frontendOnly;
   const isTestnet = process.env.NEXT_PUBLIC_IS_TESTNET !== 'false';
+
+  if (frontendOnly) {
+    result.info.push('✅ FRONTEND_SELF_CONTAINED mode enabled (server-only requirements relaxed)');
+  }
 
   // Check each required environment variable
   for (const config of REQUIRED_ENV_VARS) {
@@ -112,14 +119,19 @@ export function validateProductionEnvironment(): ValidationResult {
     }
 
     // Check if required
-    if (config.required && isEmpty) {
+    const serverOnlyVar = config.name === 'DATABASE_URL' || config.name === 'JWT_SECRET';
+    const treatAsOptional = frontendOnly && serverOnlyVar;
+
+    if (config.required && isEmpty && !treatAsOptional) {
       result.errors.push(`❌ ${config.name} is required but not set`);
       result.missing.push(config.name);
       result.valid = false;
-    } else if (config.production && isProduction && isEmpty) {
+    } else if (config.production && strictProduction && isEmpty && !treatAsOptional) {
       result.errors.push(`❌ ${config.name} is required for production but not set`);
       result.missing.push(config.name);
       result.valid = false;
+    } else if (treatAsOptional && isEmpty) {
+      result.warnings.push(`⚠️  ${config.name} is not set (frontend-only mode)`);
     } else if (!config.required && isEmpty) {
       result.warnings.push(`⚠️  ${config.name} is not set (optional for ${config.category})`);
     } else if (value) {
@@ -132,7 +144,7 @@ export function validateProductionEnvironment(): ValidationResult {
   }
 
   // Additional validations
-  if (isProduction) {
+  if (strictProduction) {
     // Production-specific checks
     if (isTestnet) {
       result.warnings.push('⚠️  NEXT_PUBLIC_IS_TESTNET is true in production mode');
@@ -198,7 +210,12 @@ export function validateProductionEnvironment(): ValidationResult {
   if (redisConfigured.length > 0 && redisConfigured.length < redisVars.length) {
     result.errors.push(`❌ Partial Redis configuration. Required: ${redisVars.join(', ')}`);
     result.errors.push(`   Missing: ${redisVars.filter(v => !process.env[v]).join(', ')}`);
-    result.valid = false;
+    // In frontend-only mode, Redis is non-blocking.
+    if (frontendOnly) {
+      result.warnings.push('⚠️  Partial Redis configuration ignored in frontend-only mode');
+    } else {
+      result.valid = false;
+    }
   }
 
   return result;
@@ -244,8 +261,15 @@ if (isMainModule) {
 
   // In CI/Vercel environments, still fail if validation fails
   const isCI = process.env.CI === 'true' || process.env.VERCEL === '1';
+  const frontendOnly = process.env.FRONTEND_SELF_CONTAINED === 'true' || process.env.NEXT_PUBLIC_FRONTEND_ONLY === 'true';
 
   if (isCI && !result.valid) {
+    if (frontendOnly) {
+      console.log('⚠️  Running in CI/Deployment with frontend-only mode enabled');
+      console.log('⚠️  Backend-only integrations may be disabled by missing variables');
+      process.exit(0);
+    }
+
     console.log('❌ Running in CI/Deployment environment - validation errors must be fixed');
     console.log('❌ Configure all required environment variables in your deployment platform');
     process.exit(1); // Fail the build to prevent deployment with missing config
