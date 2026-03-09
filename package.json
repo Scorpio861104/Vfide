@@ -187,7 +187,7 @@
     "eslint-config-next": "^16.1.5",
     "eslint-plugin-react": "^7.37.5",
     "ethers": "^6.16.0",
-    "fast-check": "^4.5.3",
+    "fast-check": "^4.6.0",
     "hardhat": "3.1.7",
     "husky": "^9.1.7",
     "jest": "^30.2.0",
