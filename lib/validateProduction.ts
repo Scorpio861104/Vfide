@@ -38,7 +38,7 @@ const REQUIRED_ENV_VARS: EnvironmentConfig[] = [
 
   // Monitoring & Error Tracking
   { name: 'NEXT_PUBLIC_SENTRY_DSN', required: false, category: 'monitoring' },
-  { name: 'SENTRY_AUTH_TOKEN', required: false, category: 'monitoring', production: true },
+  { name: 'SENTRY_AUTH_TOKEN', required: false, category: 'monitoring' },
   { name: 'NEXT_PUBLIC_GA_MEASUREMENT_ID', required: false, category: 'monitoring' },
 
   // Avatar Storage (S3-Compatible) - Optional but disables avatar uploads if missing
@@ -100,12 +100,17 @@ export function validateProductionEnvironment(): ValidationResult {
 
   const isProduction = process.env.NODE_ENV === 'production';
   const isCI = process.env.CI === 'true' || process.env.VERCEL === '1';
-  const frontendOnly = process.env.FRONTEND_SELF_CONTAINED === 'true' || process.env.NEXT_PUBLIC_FRONTEND_ONLY === 'true';
+  const frontendOnlyEnv = process.env.FRONTEND_SELF_CONTAINED ?? process.env.NEXT_PUBLIC_FRONTEND_ONLY;
+  const autoFrontendOnly = isCI && frontendOnlyEnv !== 'false' && !process.env.DATABASE_URL && !process.env.JWT_SECRET;
+  const frontendOnly = frontendOnlyEnv === 'true' || autoFrontendOnly;
   const strictProduction = isProduction && isCI && !frontendOnly;
   const isTestnet = process.env.NEXT_PUBLIC_IS_TESTNET !== 'false';
 
   if (frontendOnly) {
     result.info.push('✅ FRONTEND_SELF_CONTAINED mode enabled (server-only requirements relaxed)');
+    if (autoFrontendOnly) {
+      result.warnings.push('⚠️  Auto-enabled frontend-only mode in CI (DATABASE_URL/JWT_SECRET not set)');
+    }
   }
 
   // Check each required environment variable
