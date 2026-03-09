@@ -17,7 +17,7 @@ import {
   Users,
   Wallet,
 } from 'lucide-react'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Footer } from '@/components/layout/Footer'
 
 type LoanStage =
@@ -30,6 +30,8 @@ type LoanStage =
   | 'disputed'
   | 'resolved-borrower'
   | 'resolved-lender'
+
+type ActorRole = 'simulator' | 'borrower' | 'lender' | 'arbiter'
 
 const stageOrder: LoanStage[] = [
   'draft',
@@ -111,25 +113,49 @@ export default function FlashlightPage() {
   const [durationDays, setDurationDays] = useState(14)
   const [interestBps, setInterestBps] = useState(600)
   const [collateralPct, setCollateralPct] = useState(125)
+  const [drawnAmount, setDrawnAmount] = useState(1500)
+  const [actorRole, setActorRole] = useState<ActorRole>('simulator')
+  const [simDay, setSimDay] = useState(0)
+  const [dueDay, setDueDay] = useState<number | null>(null)
   const [stage, setStage] = useState<LoanStage>('draft')
   const [evidenceNote, setEvidenceNote] = useState('')
 
   const totalDue = useMemo(() => {
-    const interest = (amount * interestBps) / 10000
-    return amount + interest
-  }, [amount, interestBps])
+    const settledPrincipal = Math.min(drawnAmount, amount)
+    const interest = (settledPrincipal * interestBps) / 10000
+    return settledPrincipal + interest
+  }, [amount, drawnAmount, interestBps])
 
   const borrowerProtected = collateralPct <= 200 && interestBps <= 1200
   const lenderProtected = collateralPct >= 110
 
-  const canRequest = stage === 'draft' && borrowerProtected && lenderProtected
-  const canApprove = stage === 'requested'
-  const canFundEscrow = stage === 'approved'
-  const canDraw = stage === 'escrow-funded'
-  const canRepay = stage === 'drawn'
-  const canDispute = stage === 'escrow-funded' || stage === 'drawn'
+  const isBorrower = actorRole === 'borrower' || actorRole === 'simulator'
+  const isLender = actorRole === 'lender' || actorRole === 'simulator'
+  const isArbiter = actorRole === 'arbiter' || actorRole === 'simulator'
+
+  const canRequest = stage === 'draft' && borrowerProtected && lenderProtected && isBorrower
+  const canApprove = stage === 'requested' && isLender
+  const canFundEscrow = stage === 'approved' && isLender
+  const canDraw = stage === 'escrow-funded' && isBorrower && drawnAmount > 0 && drawnAmount <= amount
+  const canRepay = stage === 'drawn' && isBorrower
+  const canDispute = (stage === 'escrow-funded' || stage === 'drawn') && isBorrower
 
   const currentStep = stageOrder.indexOf(stage)
+
+  useEffect(() => {
+    setDrawnAmount((prev) => Math.max(1, Math.min(amount, prev)))
+  }, [amount])
+
+  useEffect(() => {
+    if (stage === 'drawn' && dueDay !== null && simDay > dueDay) {
+      setStage('disputed')
+      setEvidenceNote((prev) =>
+        prev.trim()
+          ? prev
+          : `Auto-flagged: repayment window missed on day ${dueDay} (current day ${simDay}).`
+      )
+    }
+  }, [stage, dueDay, simDay])
 
   return (
     <>
@@ -284,6 +310,30 @@ export default function FlashlightPage() {
                     className="mt-1 w-full rounded-lg border border-white/10 bg-zinc-900/60 px-3 py-2 text-white"
                   />
                 </label>
+                <label className="text-sm text-zinc-300">
+                  Drawn Amount (USDC)
+                  <input
+                    type="number"
+                    min={1}
+                    max={amount}
+                    value={drawnAmount}
+                    onChange={(e) => setDrawnAmount(Math.max(1, Math.min(amount, Number(e.target.value) || 1)))}
+                    className="mt-1 w-full rounded-lg border border-white/10 bg-zinc-900/60 px-3 py-2 text-white"
+                  />
+                </label>
+                <label className="text-sm text-zinc-300">
+                  Active Role
+                  <select
+                    value={actorRole}
+                    onChange={(e) => setActorRole(e.target.value as ActorRole)}
+                    className="mt-1 w-full rounded-lg border border-white/10 bg-zinc-900/60 px-3 py-2 text-white"
+                  >
+                    <option value="simulator">Simulator (all actions)</option>
+                    <option value="borrower">Borrower</option>
+                    <option value="lender">Lender</option>
+                    <option value="arbiter">Arbiter</option>
+                  </select>
+                </label>
               </div>
 
               <div className="rounded-xl border border-white/10 bg-zinc-900/40 p-4 text-sm text-zinc-300">
@@ -299,10 +349,25 @@ export default function FlashlightPage() {
                 </div>
                 <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
                   <div>Principal: <span className="text-white">${amount}</span></div>
+                  <div>Drawn: <span className="text-white">${Math.min(drawnAmount, amount)}</span></div>
                   <div>Duration: <span className="text-white">{durationDays}d</span></div>
+                  <div>Sim Day: <span className="text-white">{simDay}</span></div>
                   <div>Interest: <span className="text-white">{(interestBps / 100).toFixed(2)}%</span></div>
                   <div>Total Due: <span className="text-white">${totalDue.toFixed(2)}</span></div>
+                  <div>
+                    Due Day:{' '}
+                    <span className="text-white">{dueDay === null ? 'Not set' : dueDay}</span>
+                  </div>
                 </div>
+              </div>
+
+              <div className="flex flex-wrap gap-2">
+                <button
+                  onClick={() => setSimDay((d) => d + 1)}
+                  className="rounded-full px-4 py-2 text-sm font-semibold border border-white/15 text-white"
+                >
+                  Advance Day
+                </button>
               </div>
 
               <div className="flex flex-wrap gap-2">
@@ -329,7 +394,10 @@ export default function FlashlightPage() {
                 </button>
                 <button
                   disabled={!canDraw}
-                  onClick={() => setStage('drawn')}
+                  onClick={() => {
+                    setStage('drawn')
+                    setDueDay(simDay + durationDays)
+                  }}
                   className="rounded-full px-4 py-2 text-sm font-semibold bg-indigo-400 text-zinc-900 disabled:opacity-40"
                 >
                   Borrower Draw
@@ -364,13 +432,15 @@ export default function FlashlightPage() {
                   />
                   <div className="flex flex-wrap gap-2">
                     <button
-                      onClick={() => setStage('resolved-borrower')}
+                      onClick={() => isArbiter && setStage('resolved-borrower')}
+                      disabled={!isArbiter}
                       className="rounded-full px-4 py-2 text-sm font-semibold bg-emerald-400 text-zinc-900"
                     >
                       Resolve to Borrower
                     </button>
                     <button
-                      onClick={() => setStage('resolved-lender')}
+                      onClick={() => isArbiter && setStage('resolved-lender')}
+                      disabled={!isArbiter}
                       className="rounded-full px-4 py-2 text-sm font-semibold bg-amber-300 text-zinc-900"
                     >
                       Resolve to Lender
@@ -383,6 +453,8 @@ export default function FlashlightPage() {
                 onClick={() => {
                   setStage('draft')
                   setEvidenceNote('')
+                  setDueDay(null)
+                  setSimDay(0)
                 }}
                 className="text-xs text-zinc-400 underline underline-offset-4"
               >

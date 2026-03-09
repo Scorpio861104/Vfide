@@ -29,7 +29,7 @@ test.describe('Mobile Responsive Tests', () => {
       await expect(menuBtn).toBeVisible();
     } else {
       // Navigation may always be visible on some layouts
-      const nav = page.locator('nav');
+      const nav = page.locator('nav').first();
       await expect(nav).toBeVisible();
     }
   });

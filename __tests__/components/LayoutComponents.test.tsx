@@ -219,7 +219,7 @@ describe('Footer', () => {
     
     expect(screen.getByText('Documentation')).toBeInTheDocument();
     expect(screen.getByText('About')).toBeInTheDocument();
-    expect(screen.getByText('Live Demo')).toBeInTheDocument();
+    expect(screen.getByText('Support')).toBeInTheDocument();
   });
 
   it('should render legal links', () => {

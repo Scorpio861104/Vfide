@@ -41,6 +41,9 @@ jobs:
       - name: Lint
         run: npm run -s lint
 
+      - name: Route alignment
+        run: npm run -s check:routes
+
       - name: Jest CI suite
         run: npm run -s test:ci
 

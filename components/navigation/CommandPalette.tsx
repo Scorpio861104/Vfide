@@ -45,7 +45,6 @@ import {
   Sparkles,
   Rocket,
   CheckCircle,
-  TestTube2,
   Crown,
   Flashlight,
 } from 'lucide-react';
@@ -86,7 +85,7 @@ function useCommands(address?: string) {
       { id: 'dashboard', title: 'Dashboard', description: 'View your dashboard', icon: <LayoutDashboard className="w-4 h-4" />, category: 'navigation', keywords: ['dashboard', 'overview', 'stats'], shortcut: 'G D', action: navigate('/dashboard') },
       { id: 'vault', title: 'Vault', description: 'Manage your vault', icon: <PiggyBank className="w-4 h-4" />, category: 'navigation', keywords: ['vault', 'savings', 'deposit', 'withdraw'], shortcut: 'G V', action: navigate('/vault') },
       { id: 'pay', title: 'Send Payment', description: 'Send tokens to someone', icon: <Send className="w-4 h-4" />, category: 'navigation', keywords: ['send', 'pay', 'transfer', 'payment'], shortcut: 'G P', action: navigate('/pay') },
-      { id: 'transactions', title: 'Transaction History', description: 'View all transactions', icon: <ArrowRightLeft className="w-4 h-4" />, category: 'navigation', keywords: ['transactions', 'history', 'activity'], shortcut: 'G T', action: navigate('/transactions') },
+      { id: 'transactions', title: 'Transaction History', description: 'View all transactions', icon: <ArrowRightLeft className="w-4 h-4" />, category: 'navigation', keywords: ['transactions', 'history', 'activity'], shortcut: 'G T', action: navigate('/reporting') },
       { id: 'flashlight', title: 'Flashloans P2P', description: 'P2P credit lanes and escrow', icon: <Flashlight className="w-4 h-4" />, category: 'navigation', keywords: ['flashlight', 'flashloans', 'p2p', 'credit', 'loan'], action: navigate('/flashlight') },
       { id: 'merchant', title: 'Merchant Portal', description: 'Manage your store', icon: <Store className="w-4 h-4" />, category: 'navigation', keywords: ['merchant', 'store', 'business', 'shop'], shortcut: 'G M', action: navigate('/merchant') },
       { id: 'dao-hub', title: 'DAO Hub', description: 'DAO-only disputes, proposals, and messaging', icon: <Crown className="w-4 h-4" />, category: 'navigation', keywords: ['dao', 'hub', 'governance', 'disputes'], shortcut: 'G H', action: navigate('/dao-hub') },
@@ -110,7 +109,6 @@ function useCommands(address?: string) {
       { id: 'performance', title: 'Performance', description: 'Performance dashboard', icon: <Activity className="w-4 h-4" />, category: 'navigation', keywords: ['performance', 'metrics'], action: navigate('/performance') },
       { id: 'benefits', title: 'Benefits', description: 'Program benefits', icon: <CheckCircle className="w-4 h-4" />, category: 'navigation', keywords: ['benefits', 'program'], action: navigate('/benefits') },
       { id: 'vesting', title: 'Vesting', description: 'Token vesting schedule', icon: <Hourglass className="w-4 h-4" />, category: 'navigation', keywords: ['vesting', 'schedule'], action: navigate('/vesting') },
-      { id: 'demo-social', title: 'Crypto Social Demo', description: 'Social demo experience', icon: <TestTube2 className="w-4 h-4" />, category: 'navigation', keywords: ['demo', 'social', 'crypto'], action: navigate('/demo/crypto-social') },
       { id: 'invite', title: 'Invite', description: 'Invite teammates', icon: <User className="w-4 h-4" />, category: 'navigation', keywords: ['invite', 'referral'], action: navigate('/invite') },
       { id: 'explorer', title: 'Explorer', description: 'Explore transactions', icon: <Search className="w-4 h-4" />, category: 'navigation', keywords: ['explorer', 'search'], action: navigate('/explorer') },
       { id: 'notifications', title: 'Notifications', description: 'System notifications', icon: <Bell className="w-4 h-4" />, category: 'navigation', keywords: ['notifications', 'alerts', 'updates'], action: navigate('/notifications') },
@@ -121,12 +119,12 @@ function useCommands(address?: string) {
       { id: 'cross-chain', title: 'Cross-Chain', description: 'Bridge assets', icon: <Link2 className="w-4 h-4" />, category: 'navigation', keywords: ['cross-chain', 'bridge'], action: navigate('/cross-chain') },
       { id: 'support', title: 'Support', description: 'Help center', icon: <LifeBuoy className="w-4 h-4" />, category: 'navigation', keywords: ['support', 'help'], action: navigate('/support') },
       { id: 'docs', title: 'Docs', description: 'Read documentation', icon: <FileText className="w-4 h-4" />, category: 'navigation', keywords: ['docs', 'documentation'], action: navigate('/docs') },
-      { id: 'settings', title: 'Settings', description: 'App settings', icon: <Settings className="w-4 h-4" />, category: 'navigation', keywords: ['settings', 'preferences', 'config'], shortcut: 'G S', action: navigate('/settings') },
+      { id: 'settings', title: 'Settings', description: 'App settings', icon: <Settings className="w-4 h-4" />, category: 'navigation', keywords: ['settings', 'preferences', 'config'], shortcut: 'G S', action: navigate('/vault/settings') },
       { id: 'profile', title: 'Profile', description: 'Your profile', icon: <User className="w-4 h-4" />, category: 'navigation', keywords: ['profile', 'account', 'me'], action: navigate('/profile') },
       // Actions
       { id: 'connect-wallet', title: 'Connect Wallet', description: 'Connect your wallet', icon: <Wallet className="w-4 h-4" />, category: 'action', keywords: ['connect', 'wallet', 'login'], action: () => document.querySelector<HTMLButtonElement>('[data-wallet-connect]')?.click(), disabled: !!address },
-      { id: 'new-payment', title: 'New Payment', description: 'Create a new payment', icon: <CreditCard className="w-4 h-4" />, category: 'action', keywords: ['new', 'payment', 'create'], action: navigate('/pay/new') },
-      { id: 'new-message', title: 'New Message', description: 'Start a conversation', icon: <MessageSquare className="w-4 h-4" />, category: 'action', keywords: ['new', 'message', 'chat', 'dm'], shortcut: '⌘ N', action: navigate('/social?compose=true') },
+      { id: 'new-payment', title: 'New Payment', description: 'Create a new payment', icon: <CreditCard className="w-4 h-4" />, category: 'action', keywords: ['new', 'payment', 'create'], action: navigate('/pay') },
+      { id: 'new-message', title: 'New Message', description: 'Start a conversation', icon: <MessageSquare className="w-4 h-4" />, category: 'action', keywords: ['new', 'message', 'chat', 'dm'], shortcut: '⌘ N', action: navigate('/social-messaging?compose=true') },
     ];
   }, [router, address]);
 }

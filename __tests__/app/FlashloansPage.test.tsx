@@ -1,5 +1,5 @@
 import { fireEvent, render, screen } from '@testing-library/react'
-import FlashlightPage from '@/app/flashlight/page'
+import FlashlightPage from '../../app/flashlight/page'
 import React from 'react'
 
 jest.mock('framer-motion', () => ({

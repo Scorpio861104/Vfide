@@ -31,7 +31,7 @@ const footerLinks: {
   resources: [
     { href: "/docs", label: "Documentation" },
     { href: "/about", label: "About" },
-    { href: "/live-demo", label: "Live Demo" },
+    { href: "/support", label: "Support" },
   ],
   legal: [
     { href: "/legal", label: "Legal & Terms" },

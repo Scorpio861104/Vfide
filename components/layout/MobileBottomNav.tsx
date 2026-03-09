@@ -63,17 +63,12 @@ const moreItems = [
   { href: '/price-alerts', label: 'Price Alerts', emoji: '📣', category: 'Intelligence' },
   { href: '/sanctum', label: 'Sanctum', emoji: '⚡', category: 'System' },
   { href: '/security-center', label: 'Security', emoji: '🔐', category: 'System' },
-  { href: '/developer', label: 'Developer', emoji: '👨‍💻', category: 'System' },
   { href: '/docs', label: 'Docs', emoji: '📚', category: 'System' },
   { href: '/control-panel', label: 'Control Panel', emoji: '🧰', category: 'System' },
   { href: '/setup', label: 'Setup', emoji: '🔧', category: 'System' },
-  { href: '/testnet', label: 'Testnet', emoji: '🧪', category: 'System' },
   { href: '/support', label: 'Support', emoji: '🆘', category: 'System' },
   { href: '/notifications', label: 'Notifications', emoji: '🔔', category: 'System' },
-  { href: '/live-demo', label: 'Live Demo', emoji: '🎬', category: 'System' },
-  { href: '/demo/crypto-social', label: 'Crypto Social Demo', emoji: '🎥', category: 'System' },
   { href: '/explorer', label: 'Explorer', emoji: '🧭', category: 'System' },
-  { href: '/explorer/[id]', label: 'Explorer Detail', emoji: '🗺️', category: 'System' },
   { href: '/theme', label: 'Theme', emoji: '🎨', category: 'System' },
   { href: '/theme-manager', label: 'Theme Manager', emoji: '🖼️', category: 'System' },
   { href: '/theme-showcase', label: 'Theme Showcase', emoji: '✨', category: 'System' },
@@ -86,7 +81,6 @@ const moreItems = [
   { href: '/paper-wallet', label: 'Paper Wallet', emoji: '📝', category: 'System' },
   { href: '/hardware-wallet', label: 'Hardware Wallet', emoji: '🔌', category: 'System' },
   { href: '/invite', label: 'Invite', emoji: '✉️', category: 'System' },
-  { href: '/invite/[code]', label: 'Invite Code', emoji: '🔑', category: 'System' },
 ]
 
 export function MobileBottomNav() {

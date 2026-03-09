@@ -16,6 +16,7 @@
     "prepare": "husky .husky",
     "size": "size-limit",
     "check-circular": "madge --circular --extensions ts,tsx ./",
+    "check:routes": "node scripts/check-route-alignment.mjs",
     "validate:env": "tsx lib/validateProduction.ts",
     "validate:production": "npm run typecheck && npm run typecheck:contracts && npm run lint && npm run test:ci && npm run validate:env",
     "prebuild": "npm run validate:env",

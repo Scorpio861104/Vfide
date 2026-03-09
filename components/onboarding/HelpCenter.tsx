@@ -278,11 +278,11 @@ export function HelpCenter() {
                       <div className="space-y-2">
                         {isTestnet && (
                           <a
-                            href="/testnet"
+                            href="/docs"
                             onClick={() => setIsOpen(false)}
                             className="block w-full px-4 py-2 bg-zinc-900 border border-zinc-700 hover:border-cyan-400 rounded-lg text-zinc-100 text-sm text-left transition-all"
                           >
-                            💧 Get Test ETH (Faucet Links)
+                            💧 Network Setup & Faucet Guide
                           </a>
                         )}
                         <button

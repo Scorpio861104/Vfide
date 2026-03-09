@@ -269,9 +269,9 @@ export function EmbeddedLogin({
 
       <p className="text-xs text-center text-gray-400 mt-6">
         By continuing, you agree to our{' '}
-        <a href="/terms" className="text-blue-600 hover:underline">Terms</a>
+        <a href="/legal" className="text-blue-600 hover:underline">Terms</a>
         {' '}and{' '}
-        <a href="/privacy" className="text-blue-600 hover:underline">Privacy Policy</a>
+        <a href="/legal" className="text-blue-600 hover:underline">Privacy Policy</a>
       </p>
     </div>
   );

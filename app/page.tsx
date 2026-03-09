@@ -376,11 +376,11 @@ export default function Home() {
                   </motion.div>
                   <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.98 }}>
                     <Link 
-                      href="/live-demo"
+                      href="/flashlight"
                       className="group inline-flex items-center justify-center gap-2 btn-secondary ring-effect text-lg"
                     >
                       <Play className="w-5 h-5" />
-                      Watch Demo
+                      Explore Flashloans P2P
                     </Link>
                   </motion.div>
                 </motion.div>
