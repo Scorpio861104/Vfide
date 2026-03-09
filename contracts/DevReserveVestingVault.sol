@@ -174,7 +174,8 @@ contract DevReserveVestingVault is ReentrancyGuard {
         // Safe: presale timestamp is a recent timestamp that fits in uint64
         startTimestamp = uint64(s);
         cliffTimestamp = startTimestamp + CLIFF;
-        endTimestamp = cliffTimestamp + VESTING;
+        // 36-month vesting horizon is measured from startTimestamp.
+        endTimestamp = startTimestamp + VESTING;
 
         _log("dev_vesting_synced");
         emit SyncedStart(startTimestamp, cliffTimestamp, endTimestamp);
@@ -188,7 +189,7 @@ contract DevReserveVestingVault is ReentrancyGuard {
         }
         if (s != 0) {
             c = s + CLIFF;
-            e = c + VESTING;
+            e = s + VESTING;
         }
     }
 
@@ -259,7 +260,8 @@ contract DevReserveVestingVault is ReentrancyGuard {
         uint256 cumulativeClaimed = 0;
         
         for (uint256 i = 0; i < TOTAL_UNLOCKS; i++) {
-            uint64 unlockTime = c + uint64((i + 1) * UNLOCK_INTERVAL);
+            // First unlock is available at cliff end; subsequent unlocks are every interval.
+            uint64 unlockTime = c + uint64(i * UNLOCK_INTERVAL);
             uint256 amount = UNLOCK_AMOUNT;
             
             // Last unlock may have rounding difference
@@ -307,17 +309,18 @@ contract DevReserveVestingVault is ReentrancyGuard {
         // Calculate unlocks completed
         if (s > 0 && block.timestamp >= c) {
             uint256 timeSinceCliff = block.timestamp - c;
-            unlocksCompleted = timeSinceCliff / UNLOCK_INTERVAL;
+            // At cliff, first unlock is already available.
+            unlocksCompleted = (timeSinceCliff / UNLOCK_INTERVAL) + 1;
             if (unlocksCompleted > TOTAL_UNLOCKS) unlocksCompleted = TOTAL_UNLOCKS;
             
             // Next unlock info
             if (unlocksCompleted < TOTAL_UNLOCKS) {
-                nextUnlockTime = c + (unlocksCompleted + 1) * UNLOCK_INTERVAL;
+                nextUnlockTime = c + unlocksCompleted * UNLOCK_INTERVAL;
                 nextUnlockAmount = UNLOCK_AMOUNT;
             }
         } else if (s > 0) {
             // Before cliff
-            nextUnlockTime = c + UNLOCK_INTERVAL;
+            nextUnlockTime = c;
             nextUnlockAmount = UNLOCK_AMOUNT;
         }
     }

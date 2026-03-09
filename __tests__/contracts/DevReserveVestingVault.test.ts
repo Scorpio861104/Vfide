@@ -21,33 +21,33 @@ describe('DevReserveVestingVault Contract', () => {
 
   describe('Constants', () => {
     it('should get allocation', async () => {
-      mockContractRead.mockResolvedValueOnce(parseEther('150000000'));
-      expect(await mockContractRead({ functionName: 'ALLOCATION' })).toBe(parseEther('150000000'));
+      mockContractRead.mockResolvedValueOnce(parseEther('50000000'));
+      expect(await mockContractRead({ functionName: 'ALLOCATION' })).toBe(parseEther('50000000'));
     });
 
     it('should get cliff period', async () => {
-      mockContractRead.mockResolvedValueOnce(365 * 86400);
-      expect(await mockContractRead({ functionName: 'CLIFF' })).toBe(365 * 86400);
+      mockContractRead.mockResolvedValueOnce(60 * 86400);
+      expect(await mockContractRead({ functionName: 'CLIFF' })).toBe(60 * 86400);
     });
 
     it('should get vesting period', async () => {
-      mockContractRead.mockResolvedValueOnce(3 * 365 * 86400);
-      expect(await mockContractRead({ functionName: 'VESTING' })).toBe(3 * 365 * 86400);
+      mockContractRead.mockResolvedValueOnce(36 * 30 * 86400);
+      expect(await mockContractRead({ functionName: 'VESTING' })).toBe(36 * 30 * 86400);
     });
 
     it('should get total unlocks', async () => {
-      mockContractRead.mockResolvedValueOnce(36);
-      expect(await mockContractRead({ functionName: 'TOTAL_UNLOCKS' })).toBe(36);
+      mockContractRead.mockResolvedValueOnce(18);
+      expect(await mockContractRead({ functionName: 'TOTAL_UNLOCKS' })).toBe(18);
     });
 
     it('should get unlock amount', async () => {
-      mockContractRead.mockResolvedValueOnce(parseEther('4166666'));
-      expect(await mockContractRead({ functionName: 'UNLOCK_AMOUNT' })).toBe(parseEther('4166666'));
+      mockContractRead.mockResolvedValueOnce(parseEther('2777777'));
+      expect(await mockContractRead({ functionName: 'UNLOCK_AMOUNT' })).toBe(parseEther('2777777'));
     });
 
     it('should get unlock interval', async () => {
-      mockContractRead.mockResolvedValueOnce(30 * 86400);
-      expect(await mockContractRead({ functionName: 'UNLOCK_INTERVAL' })).toBe(30 * 86400);
+      mockContractRead.mockResolvedValueOnce(60 * 86400);
+      expect(await mockContractRead({ functionName: 'UNLOCK_INTERVAL' })).toBe(60 * 86400);
     });
 
     it('should get beneficiary', async () => {
@@ -115,9 +115,9 @@ describe('DevReserveVestingVault Contract', () => {
 
   describe('Edge Cases', () => {
     it('should handle claimable after full vesting', async () => {
-      mockContractRead.mockResolvedValueOnce(parseEther('150000000'));
+      mockContractRead.mockResolvedValueOnce(parseEther('50000000'));
       const claimable = await mockContractRead({ functionName: 'claimable' });
-      expect(claimable).toBe(parseEther('150000000'));
+      expect(claimable).toBe(parseEther('50000000'));
     });
 
     it('should handle zero claimable', async () => {
@@ -127,9 +127,9 @@ describe('DevReserveVestingVault Contract', () => {
     });
 
     it('should handle partial vesting periods', async () => {
-      mockContractRead.mockResolvedValueOnce(parseEther('50000000'));
+      mockContractRead.mockResolvedValueOnce(parseEther('2777777'));
       const claimable = await mockContractRead({ functionName: 'claimable' });
-      expect(claimable).toBe(parseEther('50000000'));
+      expect(claimable).toBe(parseEther('2777777'));
     });
   });
 });

@@ -80,7 +80,7 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
     mapping(address => bool) public systemExempt; // bypass all checks (presale, sinks, etc)
     mapping(address => bool) public whitelisted;  // bypass vault-only (exchanges)
 
-    // Presale control (set at genesis, receives 50M tokens)
+    // Presale control (set at genesis, receives 35M tokens)
     address public presaleContract;
 
     // Sinks (fallbacks if router is unset or returns zero sinks)
@@ -148,8 +148,8 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
     /// Constructor: mint full supply and distribute at genesis
     constructor(
         address devReserveVestingVault, // MUST be deployed before token (receives 50M locked)
-        address _presaleContract,       // MUST be deployed before token (receives 50M for sale)
-        address treasury,               // Treasury/Owner address (receives 100M for operations/liquidity)
+        address _presaleContract,       // MUST be deployed before token (receives 35M for sale)
+        address treasury,               // Treasury/Owner address (receives 115M for operations/liquidity)
         address _vaultHub,              // MAY be zero at deploy; can be set later
         address _ledger,                // optional
         address _treasurySink           // recommended: EcoTreasuryVault
