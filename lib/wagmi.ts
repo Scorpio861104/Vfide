@@ -60,8 +60,15 @@ const safeStorage = {
 // When missing, we fully disable the WalletConnect connector to keep env-less
 // builds/tests deterministic and avoid remote registry/config fetches.
 // Support both naming conventions for backwards compatibility
-const projectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || process.env.NEXT_PUBLIC_WAGMI_PROJECT_ID
-const hasWalletConnect = typeof projectId === 'string' && projectId.length > 0
+const rawProjectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || process.env.NEXT_PUBLIC_WAGMI_PROJECT_ID
+const invalidProjectIds = new Set([
+  '',
+  'local_walletconnect_project_id',
+  'your_walletconnect_project_id_here',
+  'your_walletconnect_project_id',
+])
+const projectId = typeof rawProjectId === 'string' ? rawProjectId.trim() : ''
+const hasWalletConnect = projectId.length > 0 && !invalidProjectIds.has(projectId)
 
 // App metadata for wallet connections
 const appName = 'VFIDE'
@@ -137,10 +144,9 @@ const walletGroups = isMobile ? [
       coinbaseWallet,       // Cross-platform
     ],
   }] : [{
-    groupName: 'Mobile Wallets',
+    groupName: 'Browser Wallets',
     wallets: [
-      trustWallet,
-      rainbowWallet,
+      metaMaskWallet,
       coinbaseWallet,
     ],
   }]),
@@ -178,7 +184,7 @@ const connectors = connectorsForWallets(
     appName,
     // RainbowKit expects a string here; it is only used when the WalletConnect
     // wallet is present.
-    projectId: projectId || '00000000000000000000000000000000',
+    projectId: hasWalletConnect ? projectId : '00000000000000000000000000000000',
   }
 )
 

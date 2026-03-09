@@ -3,16 +3,57 @@
 import { motion } from 'framer-motion'
 import {
   ArrowRight,
+  Banknote,
   CheckCircle2,
   Clock,
+  FileCheck2,
   Flashlight,
   Gavel,
+  Handshake,
+  ShieldAlert,
   Scale,
   Shield,
+  TriangleAlert,
   Users,
   Wallet,
 } from 'lucide-react'
+import { useMemo, useState } from 'react'
 import { Footer } from '@/components/layout/Footer'
+
+type LoanStage =
+  | 'draft'
+  | 'requested'
+  | 'approved'
+  | 'escrow-funded'
+  | 'drawn'
+  | 'repaid'
+  | 'disputed'
+  | 'resolved-borrower'
+  | 'resolved-lender'
+
+const stageOrder: LoanStage[] = [
+  'draft',
+  'requested',
+  'approved',
+  'escrow-funded',
+  'drawn',
+  'repaid',
+]
+
+function stageLabel(stage: LoanStage): string {
+  const labels: Record<LoanStage, string> = {
+    draft: 'Draft',
+    requested: 'Requested',
+    approved: 'Approved',
+    'escrow-funded': 'Escrow Funded',
+    drawn: 'Borrower Drawn',
+    repaid: 'Repaid',
+    disputed: 'Disputed',
+    'resolved-borrower': 'Resolved: Borrower',
+    'resolved-lender': 'Resolved: Lender',
+  }
+  return labels[stage]
+}
 
 const highlights = [
   {
@@ -27,7 +68,7 @@ const highlights = [
   },
   {
     title: 'Interest only when used',
-    description: 'Flashlight interest accrues on drawn balance only, so unused credit stays free.',
+    description: 'Flashloans P2P interest accrues on drawn balance only, so unused credit stays free.',
     icon: <Flashlight className="w-4 h-4" />,
   },
 ]
@@ -52,7 +93,7 @@ const fairnessRules = [
 
 const steps = [
   {
-    title: 'Borrower requests a flashlight line',
+    title: 'Borrower requests a Flashloans P2P line',
     detail: 'Select amount, term, and a trusted lender. ProofScore helps price the lane.',
   },
   {
@@ -66,6 +107,30 @@ const steps = [
 ]
 
 export default function FlashlightPage() {
+  const [amount, setAmount] = useState(1500)
+  const [durationDays, setDurationDays] = useState(14)
+  const [interestBps, setInterestBps] = useState(600)
+  const [collateralPct, setCollateralPct] = useState(125)
+  const [stage, setStage] = useState<LoanStage>('draft')
+  const [evidenceNote, setEvidenceNote] = useState('')
+
+  const totalDue = useMemo(() => {
+    const interest = (amount * interestBps) / 10000
+    return amount + interest
+  }, [amount, interestBps])
+
+  const borrowerProtected = collateralPct <= 200 && interestBps <= 1200
+  const lenderProtected = collateralPct >= 110
+
+  const canRequest = stage === 'draft' && borrowerProtected && lenderProtected
+  const canApprove = stage === 'requested'
+  const canFundEscrow = stage === 'approved'
+  const canDraw = stage === 'escrow-funded'
+  const canRepay = stage === 'drawn'
+  const canDispute = stage === 'escrow-funded' || stage === 'drawn'
+
+  const currentStep = stageOrder.indexOf(stage)
+
   return (
     <>
       <div className="fixed inset-0 -z-10">
@@ -87,10 +152,10 @@ export default function FlashlightPage() {
           >
             <div className="inline-flex items-center gap-2 rounded-full border border-amber-400/30 bg-amber-400/10 px-4 py-2 text-xs font-semibold text-amber-200">
               <Flashlight className="w-4 h-4" />
-              Flashlight P2P Credit
+              Flashloans P2P Credit
             </div>
             <h1 className="mt-4 text-4xl md:text-5xl font-black text-white">
-              Flashlight Borrowing, Built on Trust
+              Flashloans P2P Borrowing, Built on Trust
             </h1>
             <p className="mt-3 text-lg text-zinc-400">
               A peer-to-peer credit lane where borrowers and lenders agree on terms, interest, and escrow protections.
@@ -98,7 +163,7 @@ export default function FlashlightPage() {
             </p>
             <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
               <button className="rounded-full bg-gradient-to-r from-cyan-400 to-amber-300 px-6 py-2 text-sm font-semibold text-zinc-900 shadow-lg shadow-cyan-500/20">
-                Request Flashlight Line
+                Request Flashloans P2P Line
               </button>
               <button className="rounded-full border border-white/10 bg-white/5 px-6 py-2 text-sm font-semibold text-white">
                 Offer Liquidity
@@ -122,7 +187,7 @@ export default function FlashlightPage() {
             <div className="rounded-2xl border border-cyan-500/20 bg-white/5 p-6">
               <div className="flex items-center gap-2 text-cyan-200 font-semibold">
                 <Wallet className="w-4 h-4" />
-                How Flashlight Works
+                How Flashloans P2P Works
               </div>
               <div className="mt-6 space-y-4">
                 {steps.map((step, index) => (
@@ -161,8 +226,221 @@ export default function FlashlightPage() {
                   Howey-safe positioning
                 </div>
                 <p className="mt-2 text-emerald-100/80">
-                  Flashlight is a peer-to-peer credit tool. VFIDE does not market profit expectations, pool user funds,
+                  Flashloans P2P is a peer-to-peer credit tool. VFIDE does not market profit expectations, pool user funds,
                   or promise returns. Participants set their own terms and remain responsible for local compliance.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-8 grid lg:grid-cols-[1.2fr_0.8fr] gap-6">
+            <div className="rounded-2xl border border-cyan-500/20 bg-white/5 p-6 space-y-5">
+              <div className="flex items-center gap-2 text-cyan-200 font-semibold">
+                <Handshake className="w-4 h-4" />
+                Live P2P Flow Simulator
+              </div>
+
+              <div className="grid sm:grid-cols-2 gap-4">
+                <label className="text-sm text-zinc-300">
+                  Principal (USDC)
+                  <input
+                    type="number"
+                    min={100}
+                    value={amount}
+                    onChange={(e) => setAmount(Math.max(100, Number(e.target.value) || 100))}
+                    className="mt-1 w-full rounded-lg border border-white/10 bg-zinc-900/60 px-3 py-2 text-white"
+                  />
+                </label>
+                <label className="text-sm text-zinc-300">
+                  Duration (days)
+                  <input
+                    type="number"
+                    min={1}
+                    max={30}
+                    value={durationDays}
+                    onChange={(e) => setDurationDays(Math.min(30, Math.max(1, Number(e.target.value) || 1)))}
+                    className="mt-1 w-full rounded-lg border border-white/10 bg-zinc-900/60 px-3 py-2 text-white"
+                  />
+                </label>
+                <label className="text-sm text-zinc-300">
+                  Interest (bps)
+                  <input
+                    type="number"
+                    min={100}
+                    max={1200}
+                    value={interestBps}
+                    onChange={(e) => setInterestBps(Math.min(1200, Math.max(100, Number(e.target.value) || 100)))}
+                    className="mt-1 w-full rounded-lg border border-white/10 bg-zinc-900/60 px-3 py-2 text-white"
+                  />
+                </label>
+                <label className="text-sm text-zinc-300">
+                  Collateral (%)
+                  <input
+                    type="number"
+                    min={110}
+                    max={200}
+                    value={collateralPct}
+                    onChange={(e) => setCollateralPct(Math.min(200, Math.max(110, Number(e.target.value) || 110)))}
+                    className="mt-1 w-full rounded-lg border border-white/10 bg-zinc-900/60 px-3 py-2 text-white"
+                  />
+                </label>
+              </div>
+
+              <div className="rounded-xl border border-white/10 bg-zinc-900/40 p-4 text-sm text-zinc-300">
+                <div className="flex items-center justify-between">
+                  <span>Current Stage</span>
+                  <span className="font-semibold text-white">{stageLabel(stage)}</span>
+                </div>
+                <div className="mt-3 h-2 rounded bg-zinc-800 overflow-hidden">
+                  <div
+                    className="h-2 bg-gradient-to-r from-cyan-400 to-emerald-400"
+                    style={{ width: `${((Math.max(currentStep, 0) + 1) / stageOrder.length) * 100}%` }}
+                  />
+                </div>
+                <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
+                  <div>Principal: <span className="text-white">${amount}</span></div>
+                  <div>Duration: <span className="text-white">{durationDays}d</span></div>
+                  <div>Interest: <span className="text-white">{(interestBps / 100).toFixed(2)}%</span></div>
+                  <div>Total Due: <span className="text-white">${totalDue.toFixed(2)}</span></div>
+                </div>
+              </div>
+
+              <div className="flex flex-wrap gap-2">
+                <button
+                  disabled={!canRequest}
+                  onClick={() => setStage('requested')}
+                  className="rounded-full px-4 py-2 text-sm font-semibold bg-cyan-500 text-zinc-900 disabled:opacity-40"
+                >
+                  Request Lane
+                </button>
+                <button
+                  disabled={!canApprove}
+                  onClick={() => setStage('approved')}
+                  className="rounded-full px-4 py-2 text-sm font-semibold bg-emerald-500 text-zinc-900 disabled:opacity-40"
+                >
+                  Lender Approve Terms
+                </button>
+                <button
+                  disabled={!canFundEscrow}
+                  onClick={() => setStage('escrow-funded')}
+                  className="rounded-full px-4 py-2 text-sm font-semibold bg-amber-400 text-zinc-900 disabled:opacity-40"
+                >
+                  Fund Escrow
+                </button>
+                <button
+                  disabled={!canDraw}
+                  onClick={() => setStage('drawn')}
+                  className="rounded-full px-4 py-2 text-sm font-semibold bg-indigo-400 text-zinc-900 disabled:opacity-40"
+                >
+                  Borrower Draw
+                </button>
+                <button
+                  disabled={!canRepay}
+                  onClick={() => setStage('repaid')}
+                  className="rounded-full px-4 py-2 text-sm font-semibold bg-green-400 text-zinc-900 disabled:opacity-40"
+                >
+                  Repay + Close
+                </button>
+                <button
+                  disabled={!canDispute}
+                  onClick={() => setStage('disputed')}
+                  className="rounded-full px-4 py-2 text-sm font-semibold bg-rose-400 text-zinc-900 disabled:opacity-40"
+                >
+                  Raise Dispute
+                </button>
+              </div>
+
+              {stage === 'disputed' && (
+                <div className="rounded-xl border border-rose-500/30 bg-rose-500/10 p-4 space-y-3">
+                  <div className="flex items-center gap-2 text-rose-100 font-semibold">
+                    <Gavel className="w-4 h-4" />
+                    DAO Arbitration Required
+                  </div>
+                  <textarea
+                    value={evidenceNote}
+                    onChange={(e) => setEvidenceNote(e.target.value)}
+                    placeholder="Attach borrower/lender evidence summary..."
+                    className="w-full min-h-24 rounded-lg border border-white/10 bg-zinc-900/50 px-3 py-2 text-sm text-white"
+                  />
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      onClick={() => setStage('resolved-borrower')}
+                      className="rounded-full px-4 py-2 text-sm font-semibold bg-emerald-400 text-zinc-900"
+                    >
+                      Resolve to Borrower
+                    </button>
+                    <button
+                      onClick={() => setStage('resolved-lender')}
+                      className="rounded-full px-4 py-2 text-sm font-semibold bg-amber-300 text-zinc-900"
+                    >
+                      Resolve to Lender
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              <button
+                onClick={() => {
+                  setStage('draft')
+                  setEvidenceNote('')
+                }}
+                className="text-xs text-zinc-400 underline underline-offset-4"
+              >
+                Reset simulation
+              </button>
+            </div>
+
+            <div className="rounded-2xl border border-white/10 bg-white/5 p-6 space-y-4">
+              <div className="flex items-center gap-2 text-white font-semibold">
+                <FileCheck2 className="w-4 h-4 text-cyan-300" />
+                Two-Party Protections
+              </div>
+
+              <div className="rounded-xl border border-cyan-500/20 bg-cyan-500/10 p-4">
+                <div className="flex items-center gap-2 text-cyan-100 font-semibold">
+                  <Shield className="w-4 h-4" /> Borrower Protections
+                </div>
+                <ul className="mt-2 text-xs text-zinc-300 space-y-1">
+                  <li>- Interest cap enforced at 12% max in this lane.</li>
+                  <li>- Funds remain escrowed until lender signs terms.</li>
+                  <li>- Dispute can freeze settlement before final release.</li>
+                </ul>
+              </div>
+
+              <div className="rounded-xl border border-amber-500/20 bg-amber-500/10 p-4">
+                <div className="flex items-center gap-2 text-amber-100 font-semibold">
+                  <Banknote className="w-4 h-4" /> Lender Protections
+                </div>
+                <ul className="mt-2 text-xs text-zinc-300 space-y-1">
+                  <li>- Minimum collateral ratio enforced at 110%.</li>
+                  <li>- Funds never leave escrow before approvals.</li>
+                  <li>- DAO arbitration supports evidence-based rulings.</li>
+                </ul>
+              </div>
+
+              <div className="rounded-xl border border-white/10 bg-zinc-900/40 p-4 text-xs text-zinc-300">
+                <div className="flex items-center gap-2 text-white font-semibold">
+                  {borrowerProtected && lenderProtected ? (
+                    <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                  ) : (
+                    <ShieldAlert className="w-4 h-4 text-rose-400" />
+                  )}
+                  Protection Status
+                </div>
+                <p className="mt-2">
+                  {borrowerProtected && lenderProtected
+                    ? 'Both parties are currently protected under configured terms.'
+                    : 'Adjust terms until both borrower and lender protections are satisfied.'}
+                </p>
+              </div>
+
+              <div className="rounded-xl border border-rose-500/20 bg-rose-500/10 p-4 text-xs text-rose-100">
+                <div className="flex items-center gap-2 font-semibold">
+                  <TriangleAlert className="w-4 h-4" />
+                  Default + Dispute Safety
+                </div>
+                <p className="mt-2 text-zinc-300">
+                  If repayment fails by term expiry, lane enters dispute/default review with escrow freeze and DAO resolution.
                 </p>
               </div>
             </div>
@@ -171,7 +449,7 @@ export default function FlashlightPage() {
           <div className="mt-12 rounded-2xl border border-white/10 bg-white/5 p-6">
             <div className="flex flex-wrap items-center justify-between gap-4">
               <div>
-                <div className="text-white font-semibold">Ready to deploy Flashlight lanes?</div>
+                <div className="text-white font-semibold">Ready to deploy Flashloans P2P lanes?</div>
                 <p className="text-sm text-zinc-400">
                   Use escrow defaults for new partners, and graduate to instant lanes for trusted repeat borrowers.
                 </p>

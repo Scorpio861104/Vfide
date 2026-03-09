@@ -62,8 +62,19 @@ app.post('/webhooks/vfide', (req, res) => {
 
 export default function DeveloperPage() {
   const [activeTab, setActiveTab] = useState<'sdk' | 'webhooks' | 'api'>('sdk');
-  const [apiKey, _setApiKey] = useState('vfide_pk_test_xxxxxxxxxxxx');
+  const [apiKey] = useState('vfide_pk_test_xxxxxxxxxxxx');
   const [showKey, setShowKey] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  const onCopyApiKey = async () => {
+    try {
+      await navigator.clipboard.writeText(apiKey);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch {
+      setCopied(false);
+    }
+  };
 
   return (
     <div className="container mx-auto px-4 py-8 pt-20 pb-24 md:pb-8 space-y-6">
@@ -76,12 +87,14 @@ export default function DeveloperPage() {
       {/* API Key */}
       <div className="bg-card rounded-xl p-4 border">
         <h3 className="font-medium mb-3">API Key</h3>
+        <p className="text-xs text-amber-500 mb-3">Demo key for local/testing UI only.</p>
         <div className="flex gap-2">
           <div className="flex-1 relative">
             <input
               type={showKey ? 'text' : 'password'}
               value={apiKey}
               readOnly
+              aria-label="Developer demo API key"
               className="w-full p-3 bg-muted border border-border rounded-lg font-mono text-sm"
             />
           </div>
@@ -91,12 +104,15 @@ export default function DeveloperPage() {
           >
             {showKey ? 'Hide' : 'Show'}
           </button>
-          <button className="px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm">
-            Copy
+          <button
+            onClick={onCopyApiKey}
+            className="px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm"
+          >
+            {copied ? 'Copied' : 'Copy'}
           </button>
         </div>
         <p className="text-xs text-muted-foreground mt-2">
-          Use this key to authenticate API requests. Keep it secret!
+          Use a real server-issued key in production.
         </p>
       </div>
 

@@ -87,7 +87,7 @@ const PAGES = [
   { title: 'Rewards', path: '/rewards', keywords: ['rewards', 'claim', 'earnings'], icon: Trophy },
   { title: 'Payroll', path: '/payroll', keywords: ['payroll', 'salary', 'payments', 'streaming'], icon: CreditCard },
   { title: 'Treasury', path: '/treasury', keywords: ['treasury', 'funds', 'reserve'], icon: PiggyBank },
-  { title: 'Flashlight', path: '/flashlight', keywords: ['flashlight', 'p2p', 'credit', 'loan'], icon: Flashlight },
+  { title: 'Flashloans P2P', path: '/flashlight', keywords: ['flashlight', 'flashloans', 'p2p', 'credit', 'loan'], icon: Flashlight },
   { title: 'Settings', path: '/settings', keywords: ['settings', 'preferences', 'config', 'options'], icon: Settings },
 ];
 

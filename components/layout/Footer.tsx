@@ -19,7 +19,7 @@ const footerLinks: {
     { href: "/merchant", label: "Merchant Portal" },
     { href: "/vault", label: "Vault Manager" },
     { href: "/pay", label: "Payments" },
-    { href: "/flashlight", label: "Flashlight" },
+    { href: "/flashlight", label: "Flashloans P2P" },
   ],
   community: [
     { href: "/governance", label: "Governance" },

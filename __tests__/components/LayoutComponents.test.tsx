@@ -111,7 +111,7 @@ describe('GlobalNav', () => {
     expect(screen.getByText('Merchant')).toBeInTheDocument();
     expect(screen.getByText('Governance')).toBeInTheDocument();
     expect(screen.getByText('DAO Hub')).toBeInTheDocument();
-    expect(screen.getByText('Flashlight')).toBeInTheDocument();
+    expect(screen.getByText('Flashloans P2P')).toBeInTheDocument();
   });
 
   it('should render wallet connect button', () => {
@@ -201,7 +201,7 @@ describe('Footer', () => {
     expect(screen.getByText('Merchant Portal')).toBeInTheDocument();
     expect(screen.getByText('Vault Manager')).toBeInTheDocument();
     expect(screen.getByText('Payments')).toBeInTheDocument();
-    expect(screen.getByText('Flashlight')).toBeInTheDocument();
+    expect(screen.getByText('Flashloans P2P')).toBeInTheDocument();
   });
 
   it('should render community links', () => {

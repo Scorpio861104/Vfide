@@ -56,7 +56,7 @@ const ecosystemLoadout = [
   },
   {
     icon: Sparkles,
-    label: "Flashlight P2P",
+    label: "Flashloans P2P",
     description: "Peer-powered credit pools",
     href: "/flashlight",
   },
