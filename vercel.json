@@ -23,6 +23,5 @@
         { "key": "Cross-Origin-Embedder-Policy", "value": "credentialless" }
       ]
     }
-  ],
-  "_comment_csp": "NOTE: 'unsafe-inline' has been removed from script-src. Per-request nonce injection is handled by middleware.ts (x-nonce header). 'unsafe-eval' is still required for WalletConnect/RainbowKit bundle loading and will be replaced with a hash-based approach when those dependencies support it. The canonical header definition lives in next.config.ts; this file mirrors it for the Vercel edge network (the nonce varies per-request so cannot be statically set here)."
+  ]
 }
