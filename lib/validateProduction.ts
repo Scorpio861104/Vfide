@@ -101,7 +101,10 @@ export function validateProductionEnvironment(): ValidationResult {
   const isProduction = process.env.NODE_ENV === 'production';
   const isCI = process.env.CI === 'true' || process.env.VERCEL === '1';
   const frontendOnlyEnv = process.env.FRONTEND_SELF_CONTAINED ?? process.env.NEXT_PUBLIC_FRONTEND_ONLY;
-  const autoFrontendOnly = isCI && frontendOnlyEnv !== 'false' && !process.env.DATABASE_URL && !process.env.JWT_SECRET;
+  const autoFrontendOnly =
+    isCI &&
+    frontendOnlyEnv !== 'false' &&
+    (!process.env.DATABASE_URL || !process.env.JWT_SECRET);
   const frontendOnly = frontendOnlyEnv === 'true' || autoFrontendOnly;
   const strictProduction = isProduction && isCI && !frontendOnly;
   const isTestnet = process.env.NEXT_PUBLIC_IS_TESTNET !== 'false';
