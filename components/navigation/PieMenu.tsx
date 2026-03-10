@@ -205,7 +205,7 @@ const navigationItems: NavItem[] = [
   },
   {
     id: 'developer',
-    label: 'Developer',
+    label: 'Tools',
     icon: Code,
     color: '#64748B',
     children: [

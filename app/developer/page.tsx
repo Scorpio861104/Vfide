@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 
-const SDK_CODE_SNIPPET = `// Install: npm install @vfide/sdk
+const SDK_CODE_SNIPPET = `// Example checkout widget
 
 import { VFIDEWidget } from '@vfide/sdk';
 
@@ -62,70 +62,46 @@ app.post('/webhooks/vfide', (req, res) => {
 
 export default function DeveloperPage() {
   const [activeTab, setActiveTab] = useState<'sdk' | 'webhooks' | 'api'>('sdk');
-  const [apiKey] = useState('vfide_pk_test_xxxxxxxxxxxx');
-  const [showKey, setShowKey] = useState(false);
-  const [copied, setCopied] = useState(false);
-
-  const onCopyApiKey = async () => {
-    try {
-      await navigator.clipboard.writeText(apiKey);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1500);
-    } catch {
-      setCopied(false);
-    }
-  };
 
   return (
-    <div className="container mx-auto px-4 py-8 pt-20 pb-24 md:pb-8 space-y-6">
+    <div className="container mx-auto max-w-6xl px-4 py-8 pt-20 pb-24 md:pb-10 space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-xl sm:text-2xl font-bold">Developer Tools</h1>
-        <p className="text-muted-foreground">Integrate VFIDE payments into your app</p>
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Integrations Center</h1>
+        <p className="text-sm sm:text-base text-muted-foreground mt-1">
+          Connect checkout, subscriptions, and payout flows with clear guides and safe defaults.
+        </p>
       </div>
 
-      {/* API Key */}
+      {/* Access */}
       <div className="bg-card rounded-xl p-4 border">
-        <h3 className="font-medium mb-3">API Key</h3>
-        <p className="text-xs text-amber-500 mb-3">Demo key for local/testing UI only.</p>
-        <div className="flex gap-2">
-          <div className="flex-1 relative">
-            <input
-              type={showKey ? 'text' : 'password'}
-              value={apiKey}
-              readOnly
-              aria-label="Developer demo API key"
-              className="w-full p-3 bg-muted border border-border rounded-lg font-mono text-sm"
-            />
-          </div>
-          <button
-            onClick={() => setShowKey(!showKey)}
-            className="px-4 py-2 bg-muted rounded-lg text-sm"
-          >
-            {showKey ? 'Hide' : 'Show'}
-          </button>
-          <button
-            onClick={onCopyApiKey}
-            className="px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm"
-          >
-            {copied ? 'Copied' : 'Copy'}
-          </button>
+        <h3 className="font-medium mb-2">Access & Safety</h3>
+        <p className="text-sm text-muted-foreground">
+          Keys and secrets are issued from secure merchant settings only. This page does not expose live credentials.
+        </p>
+        <div className="mt-3 grid gap-2 sm:grid-cols-2">
+          <a href="/merchant" className="inline-flex items-center justify-center rounded-lg bg-primary px-4 py-2 text-sm text-primary-foreground">
+            Open Merchant Portal
+          </a>
+          <a href="/security-center" className="inline-flex items-center justify-center rounded-lg bg-muted px-4 py-2 text-sm">
+            Review Security Center
+          </a>
         </div>
-        <p className="text-xs text-muted-foreground mt-2">
-          Use a real server-issued key in production.
+        <p className="text-xs text-muted-foreground mt-3">
+          Never share keys in chat, screenshots, client code, or browser storage.
         </p>
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-2 border-b border-border">
+      <div className="flex flex-wrap gap-2 border-b border-border pb-2">
         {(['sdk', 'webhooks', 'api'] as const).map((tab) => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
-            className={`px-4 py-2 text-sm capitalize ${
+            className={`rounded-lg px-4 py-2 text-sm capitalize ${
               activeTab === tab
-                ? 'border-b-2 border-primary text-primary'
-                : 'text-muted-foreground'
+                ? 'bg-primary/10 text-primary'
+                : 'bg-muted/50 text-muted-foreground'
             }`}
           >
             {tab === 'sdk' ? 'SDK' : tab}
@@ -137,16 +113,14 @@ export default function DeveloperPage() {
       {activeTab === 'sdk' && (
         <div className="space-y-4">
           <div className="bg-card rounded-xl p-4 border">
-            <h3 className="font-medium mb-2">Quick Start</h3>
-            <pre className="bg-muted p-4 rounded-lg overflow-x-auto text-sm font-mono">
+            <h3 className="font-medium mb-2">Checkout Quick Start</h3>
+            <pre className="bg-muted p-3 sm:p-4 rounded-lg overflow-x-auto text-xs sm:text-sm font-mono">
               <code>{SDK_CODE_SNIPPET}</code>
             </pre>
-            <button className="mt-3 px-4 py-2 bg-muted rounded-lg text-sm">
-              📋 Copy Code
-            </button>
+            <p className="mt-3 text-xs text-muted-foreground">If code looks crowded on mobile, swipe horizontally inside the snippet.</p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="bg-card rounded-xl p-4 border">
               <div className="text-2xl mb-2">🔘</div>
               <h4 className="font-medium">Payment Buttons</h4>
@@ -180,16 +154,16 @@ export default function DeveloperPage() {
             <input
               type="text"
               placeholder="https://yourapp.com/webhooks/vfide"
-              className="w-full p-3 bg-muted border border-border rounded-lg font-mono text-sm"
+              className="w-full p-3 bg-muted border border-border rounded-lg font-mono text-xs sm:text-sm"
             />
-            <button className="mt-3 px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm">
+            <button className="mt-3 w-full sm:w-auto px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm">
               Save Webhook
             </button>
           </div>
 
           <div className="bg-card rounded-xl p-4 border">
             <h3 className="font-medium mb-2">Example Handler</h3>
-            <pre className="bg-muted p-4 rounded-lg overflow-x-auto text-sm font-mono">
+            <pre className="bg-muted p-3 sm:p-4 rounded-lg overflow-x-auto text-xs sm:text-sm font-mono">
               <code>{WEBHOOK_CODE}</code>
             </pre>
           </div>
@@ -205,9 +179,9 @@ export default function DeveloperPage() {
                 { event: 'escrow.released', desc: 'Escrow funds were released' },
                 { event: 'escrow.refunded', desc: 'Escrow was refunded to sender' },
               ].map((item) => (
-                <div key={item.event} className="flex justify-between p-2 bg-muted rounded-lg">
-                  <code className="text-sm font-mono text-primary">{item.event}</code>
-                  <span className="text-sm text-muted-foreground">{item.desc}</span>
+                <div key={item.event} className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 p-2 bg-muted rounded-lg">
+                  <code className="text-xs sm:text-sm font-mono text-primary break-all">{item.event}</code>
+                  <span className="text-xs sm:text-sm text-muted-foreground">{item.desc}</span>
                 </div>
               ))}
             </div>
@@ -230,7 +204,7 @@ export default function DeveloperPage() {
                 { method: 'POST', path: '/v1/escrow', desc: 'Create conditional escrow' },
                 { method: 'POST', path: '/v1/escrow/:id/release', desc: 'Release escrow funds' },
               ].map((endpoint) => (
-                <div key={endpoint.path} className="flex items-center gap-3 p-2 bg-muted rounded-lg">
+                <div key={endpoint.path} className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 p-2 bg-muted rounded-lg min-w-0">
                   <span className={`px-2 py-0.5 rounded text-xs font-mono ${
                     endpoint.method === 'POST'
                       ? 'bg-green-500/20 text-green-500'
@@ -240,8 +214,8 @@ export default function DeveloperPage() {
                   }`}>
                     {endpoint.method}
                   </span>
-                  <code className="text-sm font-mono flex-1">{endpoint.path}</code>
-                  <span className="text-sm text-muted-foreground">{endpoint.desc}</span>
+                  <code className="text-xs sm:text-sm font-mono break-all sm:flex-1">{endpoint.path}</code>
+                  <span className="text-xs sm:text-sm text-muted-foreground">{endpoint.desc}</span>
                 </div>
               ))}
             </div>
@@ -264,7 +238,7 @@ export default function DeveloperPage() {
       )}
 
       {/* Resources */}
-      <div className="grid md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <a href="/docs" className="bg-card rounded-xl p-4 border hover:border-primary transition-colors">
           <div className="text-2xl mb-2">📚</div>
           <h4 className="font-medium">Documentation</h4>
@@ -278,7 +252,7 @@ export default function DeveloperPage() {
         <a href="https://discord.gg/vfide" target="_blank" rel="noopener noreferrer" className="bg-card rounded-xl p-4 border hover:border-primary transition-colors">
           <div className="text-2xl mb-2">💬</div>
           <h4 className="font-medium">Discord</h4>
-          <p className="text-sm text-muted-foreground">Developer community</p>
+          <p className="text-sm text-muted-foreground">Community support</p>
         </a>
       </div>
     </div>
