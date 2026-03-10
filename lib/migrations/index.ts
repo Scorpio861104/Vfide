@@ -37,6 +37,111 @@ export interface MigrationStatus {
   applied_at: Date | null;
 }
 
+function requiresNonTransactionalExecution(sql: string): boolean {
+  const pattern = /\bindex\s+concurrently\b|\breindex\b[\s\S]*\bconcurrently\b|\bvacuum\b|\bcluster\b/i;
+  return pattern.test(sql);
+}
+
+function splitSqlStatements(sql: string): string[] {
+  const statements: string[] = [];
+  let current = '';
+  let i = 0;
+  let inSingle = false;
+  let inDouble = false;
+  let inLineComment = false;
+  let inBlockComment = false;
+  let dollarTag: string | null = null;
+
+  while (i < sql.length) {
+    const char = sql[i];
+    const next = sql[i + 1];
+
+    if (inLineComment) {
+      current += char;
+      if (char === '\n') inLineComment = false;
+      i += 1;
+      continue;
+    }
+
+    if (inBlockComment) {
+      current += char;
+      if (char === '*' && next === '/') {
+        current += '/';
+        inBlockComment = false;
+        i += 2;
+        continue;
+      }
+      i += 1;
+      continue;
+    }
+
+    if (dollarTag) {
+      current += char;
+      if (sql.startsWith(dollarTag, i)) {
+        current += sql.slice(i + 1, i + dollarTag.length);
+        i += dollarTag.length;
+        dollarTag = null;
+      } else {
+        i += 1;
+      }
+      continue;
+    }
+
+    if (!inSingle && !inDouble && char === '-' && next === '-') {
+      current += '--';
+      inLineComment = true;
+      i += 2;
+      continue;
+    }
+
+    if (!inSingle && !inDouble && char === '/' && next === '*') {
+      current += '/*';
+      inBlockComment = true;
+      i += 2;
+      continue;
+    }
+
+    if (!inSingle && !inDouble && char === '$') {
+      const match = sql.slice(i).match(/^\$[A-Za-z_][A-Za-z0-9_]*\$|^\$\$/);
+      if (match) {
+        dollarTag = match[0];
+        current += dollarTag;
+        i += dollarTag.length;
+        continue;
+      }
+    }
+
+    if (!inDouble && char === '\'') {
+      inSingle = !inSingle;
+      current += char;
+      i += 1;
+      continue;
+    }
+
+    if (!inSingle && char === '"') {
+      inDouble = !inDouble;
+      current += char;
+      i += 1;
+      continue;
+    }
+
+    if (!inSingle && !inDouble && char === ';') {
+      const statement = current.trim();
+      if (statement) statements.push(statement);
+      current = '';
+      i += 1;
+      continue;
+    }
+
+    current += char;
+    i += 1;
+  }
+
+  const tail = current.trim();
+  if (tail) statements.push(tail);
+  return statements;
+}
+
 /**
  * Ensure migrations tracking table exists
  */
@@ -168,6 +273,25 @@ export async function applyMigration(
   name: string,
   sql: string
 ): Promise<void> {
+  if (requiresNonTransactionalExecution(sql)) {
+    try {
+      // Some PostgreSQL operations (for example CREATE INDEX CONCURRENTLY) are forbidden inside transactions.
+      const statements = splitSqlStatements(sql);
+      for (const statement of statements) {
+        await client.query(statement);
+      }
+      await client.query(
+        'INSERT INTO schema_migrations (name, applied_at) VALUES ($1, NOW())',
+        [name]
+      );
+      console.log(`✅ Applied migration: ${name} (non-transactional)`);
+      return;
+    } catch (error) {
+      console.error(`❌ Failed to apply migration ${name}:`, error);
+      throw error;
+    }
+  }
+
   try {
     await client.query('BEGIN');
 
@@ -199,6 +323,25 @@ export async function rollbackMigration(
 ): Promise<void> {
   if (!sql || sql.trim().length === 0) {
     throw new Error(`No rollback SQL provided for migration ${name}`);
+  }
+
+  if (requiresNonTransactionalExecution(sql)) {
+    try {
+      // Mirror apply behavior for rollback scripts that include non-transactional SQL.
+      const statements = splitSqlStatements(sql);
+      for (const statement of statements) {
+        await client.query(statement);
+      }
+      await client.query(
+        'DELETE FROM schema_migrations WHERE name = $1',
+        [name]
+      );
+      console.log(`✅ Rolled back migration: ${name} (non-transactional)`);
+      return;
+    } catch (error) {
+      console.error(`❌ Failed to rollback migration ${name}:`, error);
+      throw error;
+    }
   }
 
   try {

@@ -17,21 +17,35 @@ import {
   Users,
   Wallet,
 } from 'lucide-react'
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Footer } from '@/components/layout/Footer'
+import {
+  canPerformAction,
+  computeTotalDue,
+  getProtectionStatus,
+  performAction,
+  sanitizeTerms,
+  type ActorRole,
+  type LoanSimulationState,
+  type LoanStage,
+  type LoanTerms,
+} from '@/lib/flashloans/engine'
 
-type LoanStage =
-  | 'draft'
-  | 'requested'
-  | 'approved'
-  | 'escrow-funded'
-  | 'drawn'
-  | 'repaid'
-  | 'disputed'
-  | 'resolved-borrower'
-  | 'resolved-lender'
-
-type ActorRole = 'simulator' | 'borrower' | 'lender' | 'arbiter'
+interface FlashloanLaneApiRecord {
+  id: number
+  borrower_address: string
+  lender_address: string
+  arbiter_address: string | null
+  principal: string
+  duration_days: number
+  interest_bps: number
+  collateral_pct: number
+  drawn_amount: string
+  stage: LoanStage
+  sim_day: number
+  due_day: number | null
+  evidence_note: string
+}
 
 const stageOrder: LoanStage[] = [
   'draft',
@@ -114,48 +128,158 @@ export default function FlashlightPage() {
   const [interestBps, setInterestBps] = useState(600)
   const [collateralPct, setCollateralPct] = useState(125)
   const [drawnAmount, setDrawnAmount] = useState(1500)
+  const [lenderAddress, setLenderAddress] = useState('0x1111111111111111111111111111111111111111')
+  const [arbiterAddress, setArbiterAddress] = useState('0x2222222222222222222222222222222222222222')
   const [actorRole, setActorRole] = useState<ActorRole>('simulator')
-  const [simDay, setSimDay] = useState(0)
-  const [dueDay, setDueDay] = useState<number | null>(null)
-  const [stage, setStage] = useState<LoanStage>('draft')
-  const [evidenceNote, setEvidenceNote] = useState('')
+  const [laneId, setLaneId] = useState<number | null>(null)
+  const [serverMode, setServerMode] = useState(false)
+  const [isServerBusy, setIsServerBusy] = useState(false)
+  const [simulation, setSimulation] = useState<LoanSimulationState>({
+    stage: 'draft',
+    simDay: 0,
+    dueDay: null,
+    evidenceNote: '',
+  })
+  const [auditLog, setAuditLog] = useState<string[]>(['System: simulation initialized'])
+  const [actionError, setActionError] = useState<string>('')
 
-  const totalDue = useMemo(() => {
-    const settledPrincipal = Math.min(drawnAmount, amount)
-    const interest = (settledPrincipal * interestBps) / 10000
-    return settledPrincipal + interest
-  }, [amount, drawnAmount, interestBps])
+  const terms: LoanTerms = useMemo(
+    () =>
+      sanitizeTerms({
+        principal: amount,
+        durationDays,
+        interestBps,
+        collateralPct,
+        drawnAmount,
+      }),
+    [amount, durationDays, interestBps, collateralPct, drawnAmount]
+  )
 
-  const borrowerProtected = collateralPct <= 200 && interestBps <= 1200
-  const lenderProtected = collateralPct >= 110
+  const totalDue = useMemo(() => computeTotalDue(terms), [terms])
+  const { borrowerProtected, lenderProtected } = useMemo(() => getProtectionStatus(terms), [terms])
 
-  const isBorrower = actorRole === 'borrower' || actorRole === 'simulator'
-  const isLender = actorRole === 'lender' || actorRole === 'simulator'
-  const isArbiter = actorRole === 'arbiter' || actorRole === 'simulator'
+  const canRequest = canPerformAction('request', actorRole, simulation, terms)
+  const canApprove = canPerformAction('approve', actorRole, simulation, terms)
+  const canFundEscrow = canPerformAction('fund-escrow', actorRole, simulation, terms)
+  const canDraw = canPerformAction('draw', actorRole, simulation, terms)
+  const canRepay = canPerformAction('repay', actorRole, simulation, terms)
+  const canDispute = canPerformAction('raise-dispute', actorRole, simulation, terms)
+  const canResolve = canPerformAction('resolve-lender', actorRole, simulation, terms)
 
-  const canRequest = stage === 'draft' && borrowerProtected && lenderProtected && isBorrower
-  const canApprove = stage === 'requested' && isLender
-  const canFundEscrow = stage === 'approved' && isLender
-  const canDraw = stage === 'escrow-funded' && isBorrower && drawnAmount > 0 && drawnAmount <= amount
-  const canRepay = stage === 'drawn' && isBorrower
-  const canDispute = (stage === 'escrow-funded' || stage === 'drawn') && isBorrower
+  const stage = simulation.stage
+  const simDay = simulation.simDay
+  const dueDay = simulation.dueDay
+  const evidenceNote = simulation.evidenceNote
+  const currentStep = stageOrder.indexOf(simulation.stage)
 
-  const currentStep = stageOrder.indexOf(stage)
+  const setEvidenceNote = (note: string) => {
+    setSimulation((prev) => ({
+      ...prev,
+      evidenceNote: note,
+    }))
+  }
 
-  useEffect(() => {
-    setDrawnAmount((prev) => Math.max(1, Math.min(amount, prev)))
-  }, [amount])
-
-  useEffect(() => {
-    if (stage === 'drawn' && dueDay !== null && simDay > dueDay) {
-      setStage('disputed')
-      setEvidenceNote((prev) =>
-        prev.trim()
-          ? prev
-          : `Auto-flagged: repayment window missed on day ${dueDay} (current day ${simDay}).`
-      )
+  const runAction = (action: Parameters<typeof performAction>[0]) => {
+    if (serverMode && laneId) {
+      void runServerAction(action)
+      return
     }
-  }, [stage, dueDay, simDay])
+
+    try {
+      const result = performAction(action, actorRole, simulation, terms, {
+        evidenceNote: simulation.evidenceNote,
+      })
+      setSimulation(result.state)
+      setActionError('')
+      setAuditLog((prev) => [`Day ${result.state.simDay}: ${result.event}`, ...prev].slice(0, 12))
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Blocked action'
+      setActionError(message)
+      setAuditLog((prev) => [`Day ${simulation.simDay}: blocked action (${action})`, ...prev].slice(0, 12))
+    }
+  }
+
+  const hydrateFromLane = (lane: FlashloanLaneApiRecord) => {
+    setAmount(Number(lane.principal))
+    setDurationDays(lane.duration_days)
+    setInterestBps(lane.interest_bps)
+    setCollateralPct(lane.collateral_pct)
+    setDrawnAmount(Number(lane.drawn_amount))
+    setSimulation({
+      stage: lane.stage,
+      simDay: lane.sim_day,
+      dueDay: lane.due_day,
+      evidenceNote: lane.evidence_note,
+    })
+  }
+
+  const createServerLane = async () => {
+    setIsServerBusy(true)
+    setActionError('')
+    try {
+      const response = await fetch('/api/flashloans/lanes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          lenderAddress,
+          arbiterAddress,
+          principal: terms.principal,
+          durationDays: terms.durationDays,
+          interestBps: terms.interestBps,
+          collateralPct: terms.collateralPct,
+          drawnAmount: terms.drawnAmount,
+        }),
+      })
+
+      const payload = await response.json().catch(() => ({}))
+      if (!response.ok || !payload?.lane) {
+        throw new Error(payload?.error || 'Unable to create server lane')
+      }
+
+      setServerMode(true)
+      setLaneId(payload.lane.id)
+      hydrateFromLane(payload.lane as FlashloanLaneApiRecord)
+      setAuditLog((prev) => [`Day 0: server lane ${payload.lane.id} created`, ...prev].slice(0, 12))
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unable to create server lane'
+      setActionError(message)
+    } finally {
+      setIsServerBusy(false)
+    }
+  }
+
+  const runServerAction = async (action: Parameters<typeof performAction>[0]) => {
+    if (!laneId) return
+    setIsServerBusy(true)
+    setActionError('')
+    try {
+      const response = await fetch(`/api/flashloans/lanes/${laneId}/actions`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action,
+          drawnAmount: terms.drawnAmount,
+          evidenceNote: simulation.evidenceNote,
+        }),
+      })
+
+      const payload = await response.json().catch(() => ({}))
+      if (!response.ok || !payload?.lane) {
+        throw new Error(payload?.error || `Server action failed: ${action}`)
+      }
+
+      hydrateFromLane(payload.lane as FlashloanLaneApiRecord)
+      const eventText = typeof payload.event === 'string' ? payload.event : `server action ${action}`
+      const nextDay = (payload.lane as FlashloanLaneApiRecord).sim_day
+      setAuditLog((prev) => [`Day ${nextDay}: ${eventText}`, ...prev].slice(0, 12))
+    } catch (error) {
+      const message = error instanceof Error ? error.message : `Server action failed: ${action}`
+      setActionError(message)
+      setAuditLog((prev) => [`Day ${simulation.simDay}: blocked server action (${action})`, ...prev].slice(0, 12))
+    } finally {
+      setIsServerBusy(false)
+    }
+  }
 
   return (
     <>
@@ -334,6 +458,24 @@ export default function FlashlightPage() {
                     <option value="arbiter">Arbiter</option>
                   </select>
                 </label>
+                <label className="text-sm text-zinc-300">
+                  Lender Address
+                  <input
+                    type="text"
+                    value={lenderAddress}
+                    onChange={(e) => setLenderAddress(e.target.value)}
+                    className="mt-1 w-full rounded-lg border border-white/10 bg-zinc-900/60 px-3 py-2 text-white"
+                  />
+                </label>
+                <label className="text-sm text-zinc-300">
+                  Arbiter Address
+                  <input
+                    type="text"
+                    value={arbiterAddress}
+                    onChange={(e) => setArbiterAddress(e.target.value)}
+                    className="mt-1 w-full rounded-lg border border-white/10 bg-zinc-900/60 px-3 py-2 text-white"
+                  />
+                </label>
               </div>
 
               <div className="rounded-xl border border-white/10 bg-zinc-900/40 p-4 text-sm text-zinc-300">
@@ -363,60 +505,93 @@ export default function FlashlightPage() {
 
               <div className="flex flex-wrap gap-2">
                 <button
-                  onClick={() => setSimDay((d) => d + 1)}
-                  className="rounded-full px-4 py-2 text-sm font-semibold border border-white/15 text-white"
+                  onClick={() => void createServerLane()}
+                  disabled={isServerBusy || !!laneId}
+                  className="rounded-full px-4 py-2 text-sm font-semibold border border-cyan-400/30 text-cyan-200 disabled:opacity-40"
+                >
+                  {laneId ? `Server Lane #${laneId}` : 'Create Server Lane'}
+                </button>
+                <button
+                  onClick={() => {
+                    setServerMode((prev) => !prev)
+                    setActionError('')
+                  }}
+                  disabled={!laneId || isServerBusy}
+                  className="rounded-full px-4 py-2 text-sm font-semibold border border-white/15 text-white disabled:opacity-40"
+                >
+                  Mode: {serverMode ? 'Server' : 'Local'}
+                </button>
+                <button
+                  onClick={() => runAction('advance-day')}
+                  disabled={isServerBusy}
+                  className="rounded-full px-4 py-2 text-sm font-semibold border border-white/15 text-white disabled:opacity-40"
                 >
                   Advance Day
                 </button>
               </div>
 
+              {actionError && (
+                <div className="rounded-xl border border-rose-500/30 bg-rose-500/10 p-3 text-xs text-rose-100">
+                  {actionError}
+                </div>
+              )}
+
               <div className="flex flex-wrap gap-2">
                 <button
-                  disabled={!canRequest}
-                  onClick={() => setStage('requested')}
+                  disabled={!canRequest || isServerBusy}
+                  onClick={() => runAction('request')}
                   className="rounded-full px-4 py-2 text-sm font-semibold bg-cyan-500 text-zinc-900 disabled:opacity-40"
                 >
                   Request Lane
                 </button>
                 <button
-                  disabled={!canApprove}
-                  onClick={() => setStage('approved')}
+                  disabled={!canApprove || isServerBusy}
+                  onClick={() => runAction('approve')}
                   className="rounded-full px-4 py-2 text-sm font-semibold bg-emerald-500 text-zinc-900 disabled:opacity-40"
                 >
                   Lender Approve Terms
                 </button>
                 <button
-                  disabled={!canFundEscrow}
-                  onClick={() => setStage('escrow-funded')}
+                  disabled={!canFundEscrow || isServerBusy}
+                  onClick={() => runAction('fund-escrow')}
                   className="rounded-full px-4 py-2 text-sm font-semibold bg-amber-400 text-zinc-900 disabled:opacity-40"
                 >
                   Fund Escrow
                 </button>
                 <button
-                  disabled={!canDraw}
-                  onClick={() => {
-                    setStage('drawn')
-                    setDueDay(simDay + durationDays)
-                  }}
+                  disabled={!canDraw || isServerBusy}
+                  onClick={() => runAction('draw')}
                   className="rounded-full px-4 py-2 text-sm font-semibold bg-indigo-400 text-zinc-900 disabled:opacity-40"
                 >
                   Borrower Draw
                 </button>
                 <button
-                  disabled={!canRepay}
-                  onClick={() => setStage('repaid')}
+                  disabled={!canRepay || isServerBusy}
+                  onClick={() => runAction('repay')}
                   className="rounded-full px-4 py-2 text-sm font-semibold bg-green-400 text-zinc-900 disabled:opacity-40"
                 >
                   Repay + Close
                 </button>
                 <button
-                  disabled={!canDispute}
-                  onClick={() => setStage('disputed')}
+                  disabled={!canDispute || isServerBusy}
+                  onClick={() => runAction('raise-dispute')}
                   className="rounded-full px-4 py-2 text-sm font-semibold bg-rose-400 text-zinc-900 disabled:opacity-40"
                 >
                   Raise Dispute
                 </button>
               </div>
+
+              {(stage === 'escrow-funded' || stage === 'drawn' || stage === 'disputed') && (
+                <div className="rounded-xl border border-white/10 bg-zinc-900/40 p-4 space-y-2">
+                  <div className="text-xs font-semibold text-zinc-200">Evidence Notes</div>
+                  <textarea
+                    value={evidenceNote}
+                    onChange={(e) => setEvidenceNote(e.target.value)}
+                    placeholder="Attach borrower/lender evidence summary..."
+                    className="w-full min-h-24 rounded-lg border border-white/10 bg-zinc-900/50 px-3 py-2 text-sm text-white"
+                  />
+                </div>
+              )}
 
               {stage === 'disputed' && (
                 <div className="rounded-xl border border-rose-500/30 bg-rose-500/10 p-4 space-y-3">
@@ -424,23 +599,17 @@ export default function FlashlightPage() {
                     <Gavel className="w-4 h-4" />
                     DAO Arbitration Required
                   </div>
-                  <textarea
-                    value={evidenceNote}
-                    onChange={(e) => setEvidenceNote(e.target.value)}
-                    placeholder="Attach borrower/lender evidence summary..."
-                    className="w-full min-h-24 rounded-lg border border-white/10 bg-zinc-900/50 px-3 py-2 text-sm text-white"
-                  />
                   <div className="flex flex-wrap gap-2">
                     <button
-                      onClick={() => isArbiter && setStage('resolved-borrower')}
-                      disabled={!isArbiter}
+                      onClick={() => runAction('resolve-borrower')}
+                      disabled={!canResolve || isServerBusy}
                       className="rounded-full px-4 py-2 text-sm font-semibold bg-emerald-400 text-zinc-900"
                     >
                       Resolve to Borrower
                     </button>
                     <button
-                      onClick={() => isArbiter && setStage('resolved-lender')}
-                      disabled={!isArbiter}
+                      onClick={() => runAction('resolve-lender')}
+                      disabled={!canResolve || isServerBusy}
                       className="rounded-full px-4 py-2 text-sm font-semibold bg-amber-300 text-zinc-900"
                     >
                       Resolve to Lender
@@ -450,12 +619,8 @@ export default function FlashlightPage() {
               )}
 
               <button
-                onClick={() => {
-                  setStage('draft')
-                  setEvidenceNote('')
-                  setDueDay(null)
-                  setSimDay(0)
-                }}
+                onClick={() => runAction('reset')}
+                disabled={isServerBusy}
                 className="text-xs text-zinc-400 underline underline-offset-4"
               >
                 Reset simulation
@@ -514,6 +679,15 @@ export default function FlashlightPage() {
                 <p className="mt-2 text-zinc-300">
                   If repayment fails by term expiry, lane enters dispute/default review with escrow freeze and DAO resolution.
                 </p>
+              </div>
+
+              <div className="rounded-xl border border-white/10 bg-zinc-900/40 p-4">
+                <div className="text-white font-semibold text-xs uppercase tracking-wide">Audit Trail</div>
+                <ul className="mt-2 space-y-1 text-xs text-zinc-300">
+                  {auditLog.map((line) => (
+                    <li key={line}>- {line}</li>
+                  ))}
+                </ul>
               </div>
             </div>
           </div>
