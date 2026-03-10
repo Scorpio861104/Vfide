@@ -2,6 +2,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 import { requireAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
+import {
+  getAccountLock,
+  getStepUpAndCooldownPolicy,
+  recordSecurityEvent,
+} from '@/lib/security/accountProtection';
 
 const USER_ID_REGEX = /^\d+$/;
 const DECIMAL_AMOUNT_REGEX = /^\d+(\.\d{1,18})?$/;
@@ -90,6 +95,15 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
+  const requesterIp = (request.headers.get('x-forwarded-for') || '').split(',')[0]?.trim() || 'unknown';
+  const lock = getAccountLock(authAddress);
+  if (lock) {
+    return NextResponse.json(
+      { error: `Account temporarily locked due to security signals: ${lock.reason}` },
+      { status: 423 }
+    );
+  }
+
   let body: Record<string, unknown>;
   try {
     body = await request.json();
@@ -148,6 +162,54 @@ export async function POST(request: NextRequest) {
         { error: `Amount exceeds maximum limit of ${MAX_PAYMENT_AMOUNT}` },
         { status: 400 }
       );
+    }
+
+    const policy = getStepUpAndCooldownPolicy(numAmount);
+    if (policy.isHighRisk) {
+      const stepUpHeader = request.headers.get('x-vfide-step-up') || '';
+      const delayHeader = request.headers.get('x-vfide-delay-ack') || '';
+
+      if (policy.requiresStepUp && stepUpHeader.toLowerCase() !== 'verified') {
+        recordSecurityEvent(authAddress, {
+          ts: Date.now(),
+          ip: requesterIp,
+          type: 'payment_high_risk',
+          amount: numAmount,
+        });
+
+        return NextResponse.json(
+          {
+            error: 'Step-up authentication required for high-risk payment request',
+            requiresStepUp: true,
+            hardwareWalletRecommended: policy.hardwareWalletRecommended,
+          },
+          { status: 403 }
+        );
+      }
+
+      if (policy.requiresDelay && delayHeader.toLowerCase() !== 'acknowledged') {
+        return NextResponse.json(
+          {
+            error: 'High-risk payment request requires delay acknowledgement',
+            requiresDelay: true,
+            cooldownSeconds: policy.cooldownSeconds,
+          },
+          { status: 409 }
+        );
+      }
+
+      const lockResult = recordSecurityEvent(authAddress, {
+        ts: Date.now(),
+        ip: requesterIp,
+        type: 'payment_high_risk',
+        amount: numAmount,
+      });
+      if (lockResult.locked) {
+        return NextResponse.json(
+          { error: `Account locked after suspicious high-risk activity: ${lockResult.reason}` },
+          { status: 423 }
+        );
+      }
     }
 
     // Validate token if provided

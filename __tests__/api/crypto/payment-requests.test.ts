@@ -143,5 +143,42 @@ describe('/api/crypto/payment-requests', () => {
       const response = await POST(request);
       expect(response.status).toBe(401);
     });
+
+    it('requires step-up authentication for high-risk amounts', async () => {
+      withRateLimit.mockResolvedValue(null);
+      requireAuth.mockReturnValue({ user: { address: '0x1111111111111111111111111111111111111123' } });
+
+      const request = new NextRequest('http://localhost:3000/api/crypto/payment-requests', {
+        method: 'POST',
+        body: JSON.stringify({
+          fromUserId: 1,
+          toUserId: 2,
+          amount: '50000',
+        }),
+      });
+
+      const response = await POST(request);
+      expect(response.status).toBe(403);
+    });
+
+    it('requires delay acknowledgement for high-risk amounts even after step-up', async () => {
+      withRateLimit.mockResolvedValue(null);
+      requireAuth.mockReturnValue({ user: { address: '0x1111111111111111111111111111111111111123' } });
+
+      const request = new NextRequest('http://localhost:3000/api/crypto/payment-requests', {
+        method: 'POST',
+        headers: {
+          'x-vfide-step-up': 'verified',
+        },
+        body: JSON.stringify({
+          fromUserId: 1,
+          toUserId: 2,
+          amount: '50000',
+        }),
+      });
+
+      const response = await POST(request);
+      expect(response.status).toBe(409);
+    });
   });
 });

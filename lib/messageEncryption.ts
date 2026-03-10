@@ -23,6 +23,25 @@ async function deriveSharedSecret(
   );
 }
 
+function normalizeHex(input: string): string {
+  return input.startsWith('0x') ? input.slice(2) : input;
+}
+
+function assertValidHexKeyMaterial(hex: string, keyType: 'spki' | 'pkcs8'): string {
+  const normalized = normalizeHex(hex);
+
+  if (!/^[0-9a-f]+$/i.test(normalized) || normalized.length % 2 !== 0) {
+    throw new Error(`Invalid ${keyType} key format`);
+  }
+
+  // P-256 SPKI/PKCS8 DER payloads are significantly longer than wallet addresses.
+  if (normalized.length < 120) {
+    throw new Error(`Invalid ${keyType} key length`);
+  }
+
+  return normalized;
+}
+
 /**
  * Encrypt message using AES-GCM with a derived key
  */
@@ -106,10 +125,12 @@ export async function encryptMessage(
       ['deriveKey']
     );
 
+    const recipientSpkiHex = assertValidHexKeyMaterial(recipientPublicKeyHex, 'spki');
+
     // Import recipient's public key
     const recipientPublicKey = await crypto.subtle.importKey(
       'spki',
-      Buffer.from(recipientPublicKeyHex, 'hex'),
+      Buffer.from(recipientSpkiHex, 'hex'),
       {
         name: 'ECDH',
         namedCurve: 'P-256',
@@ -175,10 +196,12 @@ export async function decryptMessage(
       throw new Error('Unsupported encryption version');
     }
 
+    const recipientPkcs8Hex = assertValidHexKeyMaterial(recipientPrivateKeyHex, 'pkcs8');
+
     // Import recipient's private key
     const recipientPrivateKey = await crypto.subtle.importKey(
       'pkcs8',
-      Buffer.from(recipientPrivateKeyHex, 'hex'),
+      Buffer.from(recipientPkcs8Hex, 'hex'),
       {
         name: 'ECDH',
         namedCurve: 'P-256',
@@ -321,4 +344,10 @@ export const STORAGE_KEYS = {
   MESSAGES: 'vfide_messages',
   GROUPS: 'vfide_groups',
 } as const;
+
+export function stripDecryptedContentForStorage<T extends { decryptedContent?: string }>(
+  messages: T[],
+): Array<Omit<T, 'decryptedContent'>> {
+  return messages.map(({ decryptedContent: _decryptedContent, ...rest }) => rest);
+}
 

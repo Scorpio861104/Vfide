@@ -122,6 +122,21 @@ export class APIClient {
 
   // ============ Authentication ============
 
+  async getAuthChallenge(address: string, chainId: number) {
+    return this.request<{
+      address: string;
+      chainId: number;
+      domain: string;
+      message: string;
+      nonce: string;
+      issuedAt: number;
+      expiresAt: number;
+    }>('/auth/challenge', {
+      method: 'POST',
+      body: JSON.stringify({ address, chainId }),
+    });
+  }
+
   async authenticate(address: string, message: string, signature: string) {
     const response = await this.request<{
       success: boolean;

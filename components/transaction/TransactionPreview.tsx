@@ -68,6 +68,7 @@ export interface TransactionPreviewProps {
   recipientLabel?: string;
   actionLabel?: string;
   showAdvanced?: boolean;
+  allowlistedRecipients?: string[];
 }
 
 // ==================== UTILITIES ====================
@@ -87,6 +88,15 @@ const formatUSD = (eth: number, ethPrice: number): string => {
 
 const truncateAddress = (address: string): string => {
   return `${address.slice(0, 6)}...${address.slice(-4)}`;
+};
+
+const decodeTransactionIntent = (tx: TransactionDetails): string => {
+  if (!tx.data || tx.data === '0x') return 'Native asset transfer';
+  const selector = tx.data.slice(0, 10).toLowerCase();
+  if (selector === '0xa9059cbb') return 'ERC-20 transfer';
+  if (selector === '0x095ea7b3') return 'ERC-20 token approval';
+  if (selector === '0x23b872dd') return 'ERC-20 transferFrom';
+  return `Contract call (${selector})`;
 };
 
 const getRiskLevelColor = (level: RiskWarning['level']): string => {
@@ -148,7 +158,7 @@ function useTransactionSimulation(tx: TransactionDetails) {
   return { simulation, isSimulating, error };
 }
 
-function useRiskAnalysis(tx: TransactionDetails): RiskWarning[] {
+function useRiskAnalysis(tx: TransactionDetails, allowlistedRecipients: string[] = []): RiskWarning[] {
   const { address } = useAccount();
   const { data: balance } = useBalance({ address });
 
@@ -157,6 +167,16 @@ function useRiskAnalysis(tx: TransactionDetails): RiskWarning[] {
 
     // Check if sending to new address
     if (tx.to) {
+      const allowlisted = allowlistedRecipients.map((a) => a.toLowerCase()).includes(tx.to.toLowerCase());
+      if (!allowlisted) {
+        warnings.push({
+          level: 'high',
+          title: 'Recipient not in allowlist',
+          description: 'The recipient is not in your trusted allowlist.',
+          recommendation: 'Confirm destination address out-of-band before signing.',
+        });
+      }
+
       // In production, check address history
       warnings.push({
         level: 'low',
@@ -191,6 +211,16 @@ function useRiskAnalysis(tx: TransactionDetails): RiskWarning[] {
 
     // Check contract interaction
     if (tx.data && tx.data !== '0x') {
+      const selector = tx.data.slice(0, 10).toLowerCase();
+      if (selector === '0x095ea7b3') {
+        warnings.push({
+          level: 'critical',
+          title: 'Token approval detected',
+          description: 'This can grant spending permission to another contract.',
+          recommendation: 'Use limited allowance and verify spender contract.',
+        });
+      }
+
       warnings.push({
         level: 'low',
         title: 'Contract interaction',
@@ -212,7 +242,7 @@ function useRiskAnalysis(tx: TransactionDetails): RiskWarning[] {
     }
 
     return warnings;
-  }, [tx, balance]);
+  }, [tx, balance, allowlistedRecipients]);
 }
 
 // ==================== COMPONENTS ====================
@@ -344,15 +374,18 @@ export const TransactionPreview: React.FC<TransactionPreviewProps> = ({
   recipientLabel,
   actionLabel = 'Send Transaction',
   showAdvanced = false,
+  allowlistedRecipients = [],
 }) => {
   const [isAdvancedOpen, setIsAdvancedOpen] = useState(showAdvanced);
+  const [intentConfirmed, setIntentConfirmed] = useState(false);
   const { address } = useAccount();
   const chainId = useChainId();
   const { data: balance } = useBalance({ address });
   const { data: feeData } = useFeeData();
   
   const { simulation, isSimulating } = useTransactionSimulation(transaction);
-  const warnings = useRiskAnalysis(transaction);
+  const warnings = useRiskAnalysis(transaction, allowlistedRecipients);
+  const intentSummary = decodeTransactionIntent(transaction);
 
   const maxFeePerGas = transaction.maxFeePerGas || feeData?.maxFeePerGas || BigInt(0);
   const maxPriorityFeePerGas = transaction.maxPriorityFeePerGas || feeData?.maxPriorityFeePerGas || BigInt(0);
@@ -362,6 +395,7 @@ export const TransactionPreview: React.FC<TransactionPreviewProps> = ({
   const totalCostEth = parseFloat(formatEther(totalCost));
 
   const hasBlockingWarnings = warnings.some(w => w.level === 'critical');
+  const requiresManualIntentConfirmation = warnings.some((w) => w.level === 'high' || w.level === 'critical');
 
   const getExplorerUrl = (address: string) => {
     const explorers: Record<number, string> = {
@@ -455,6 +489,14 @@ export const TransactionPreview: React.FC<TransactionPreviewProps> = ({
             </p>
           </div>
         )}
+
+        <div className="p-3 bg-gray-800/60 rounded-lg border border-gray-700">
+          <p className="text-xs text-gray-500 mb-1">Intent</p>
+          <p className="text-sm text-gray-200 font-medium">{intentSummary}</p>
+          {warnings.some((w) => w.level === 'high' || w.level === 'critical') && (
+            <p className="text-xs text-amber-400 mt-1">High-risk transaction: hardware wallet and passkey re-auth are strongly recommended.</p>
+          )}
+        </div>
 
         {/* Simulation Status */}
         <div className="flex items-center gap-2 p-3 bg-gray-800/50 rounded-lg">
@@ -576,7 +618,7 @@ export const TransactionPreview: React.FC<TransactionPreviewProps> = ({
           </button>
           <button
             onClick={onConfirm}
-            disabled={isLoading || isSimulating || hasBlockingWarnings}
+            disabled={isLoading || isSimulating || hasBlockingWarnings || (requiresManualIntentConfirmation && !intentConfirmed)}
             className="flex-1 px-4 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
             {isLoading ? (
@@ -592,6 +634,18 @@ export const TransactionPreview: React.FC<TransactionPreviewProps> = ({
             )}
           </button>
         </div>
+
+        {requiresManualIntentConfirmation && (
+          <label className="flex items-start gap-2 text-xs text-gray-300 pt-1">
+            <input
+              type="checkbox"
+              className="mt-0.5"
+              checked={intentConfirmed}
+              onChange={(e) => setIntentConfirmed(e.target.checked)}
+            />
+            <span>I verified recipient, amount, and transaction intent. I understand this action may require cooldown and extra authentication.</span>
+          </label>
+        )}
       </div>
     </motion.div>
   );

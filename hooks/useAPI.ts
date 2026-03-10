@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useAccount, useSignMessage } from 'wagmi';
+import { useChainId } from 'wagmi';
 import { apiClient, APIError } from '@/lib/api-client';
 
 /**
@@ -57,6 +58,7 @@ const normalizeUserProfile = (user: ApiUser): UserProfile => {
 export function useAuth() {
   const { address } = useAccount();
   const { signMessageAsync } = useSignMessage();
+  const chainId = useChainId();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isAuthenticating, setIsAuthenticating] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -71,7 +73,8 @@ export function useAuth() {
     setError(null);
 
     try {
-      const message = `Sign this message to authenticate with VFIDE.\n\nAddress: ${address}\nTimestamp: ${Date.now()}`;
+      const challenge = await apiClient.getAuthChallenge(address, chainId || 8453);
+      const message = challenge.message;
       const signature = await signMessageAsync({ message });
 
       await apiClient.authenticate(address, message, signature);
@@ -85,7 +88,7 @@ export function useAuth() {
     } finally {
       setIsAuthenticating(false);
     }
-  }, [address, signMessageAsync]);
+  }, [address, signMessageAsync, chainId]);
 
   const logout = useCallback(() => {
     apiClient.clearToken();

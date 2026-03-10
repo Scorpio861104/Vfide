@@ -2,6 +2,7 @@
 
 export interface Friend {
   address: string;
+  encryptionPublicKey?: string;
   alias?: string;
   avatar?: string;
   proofScore?: number;

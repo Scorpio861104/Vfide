@@ -4,6 +4,15 @@ import { generateToken, verifyToken, extractToken } from '@/lib/auth/jwt';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { validateBody, authSchema } from '@/lib/auth/validation';
 import { setAuthCookie, getAuthCookie } from '@/lib/auth/cookieAuth';
+import {
+  consumeAndValidateSiweChallenge,
+  getRequestIp,
+} from '@/lib/security/siweChallenge';
+import {
+  clearAuthFailureSignals,
+  getAccountLock,
+  recordSecurityEvent,
+} from '@/lib/security/accountProtection';
 
 function parseMessageTimestamp(message: string): number | null {
   const timestampMatch = message.match(/^Timestamp:\s*(\d+)\s*$/m);
@@ -17,6 +26,13 @@ function parseMessageTimestamp(message: string): number | null {
   }
 
   return parsed;
+}
+
+function parseChainId(message: string): number | null {
+  const chainMatch = message.match(/^Chain ID:\s*(\d+)\s*$/m);
+  if (!chainMatch || !chainMatch[1]) return null;
+  const parsed = Number.parseInt(chainMatch[1], 10);
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
 }
 
 /**
@@ -44,14 +60,39 @@ export async function POST(request: NextRequest) {
     }
 
     const { address, message, signature } = validation.data;
+    const normalizedAddress = address.toLowerCase();
+    const ip = getRequestIp(request.headers);
+    const userAgent = request.headers.get('user-agent') || 'unknown';
+    const lock = getAccountLock(normalizedAddress);
 
-    // Verify the message contains expected content (prevent replay attacks)
-    const expectedPrefix = 'Sign in to VFIDE';
-    if (!message.includes(expectedPrefix)) {
+    if (lock) {
       return NextResponse.json(
-        { error: 'Invalid message format' },
+        { error: `Account temporarily locked due to security signals: ${lock.reason}` },
+        { status: 423 }
+      );
+    }
+
+    // Verify SIWE structure and challenge-binding (nonce/domain/chain/expiry).
+    const chainId = parseChainId(message);
+    if (!chainId) {
+      return NextResponse.json(
+        { error: 'SIWE message must include a valid Chain ID' },
         { status: 400 }
       );
+    }
+
+    const domain = (request.headers.get('host') || 'vfide.io').split(':')[0] || 'vfide.io';
+    const challengeValidation = consumeAndValidateSiweChallenge({
+      address: normalizedAddress,
+      message,
+      domain,
+      chainId,
+      ip,
+      userAgent,
+    });
+    if (!challengeValidation.ok) {
+      recordSecurityEvent(normalizedAddress, { ts: Date.now(), ip, type: 'auth_fail' });
+      return NextResponse.json({ error: challengeValidation.error }, { status: 400 });
     }
 
     // Check message timestamp to prevent replay attacks (within 5 minutes)
@@ -68,6 +109,7 @@ export async function POST(request: NextRequest) {
     const fiveMinutes = 5 * 60 * 1000;
 
     if (Math.abs(now - messageTimestamp) > fiveMinutes) {
+      recordSecurityEvent(normalizedAddress, { ts: Date.now(), ip, type: 'auth_fail' });
       return NextResponse.json(
         { error: 'Message expired. Please sign a new message.' },
         { status: 400 }
@@ -82,14 +124,18 @@ export async function POST(request: NextRequest) {
     });
 
     if (!isValid) {
+      recordSecurityEvent(normalizedAddress, { ts: Date.now(), ip, type: 'auth_fail' });
       return NextResponse.json(
         { error: 'Invalid signature' },
         { status: 401 }
       );
     }
 
+    recordSecurityEvent(normalizedAddress, { ts: Date.now(), ip, type: 'auth_success' });
+    clearAuthFailureSignals(normalizedAddress);
+
     // Generate secure JWT token
-    const tokenResponse = generateToken(address);
+    const tokenResponse = generateToken(normalizedAddress, chainId);
 
     // Create response with HTTPOnly cookie for enhanced security
     const response = NextResponse.json({

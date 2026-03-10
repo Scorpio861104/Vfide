@@ -2,7 +2,7 @@
  * VFIDE WebSocket Server
  *
  * Security controls implemented (§26 audit checklist):
- *  ✅ JWT verified on upgrade handshake (Authorization header or ?token query param)
+ *  ✅ JWT verified on upgrade handshake (Authorization header only)
  *  ✅ Per-IP rate limiting (connection + message)
  *  ✅ Message payload size limit (MAX_PAYLOAD_BYTES = 8 KiB)
  *  ✅ Zod schema validation on every inbound message
@@ -140,15 +140,11 @@ server.on('upgrade', (req: http.IncomingMessage, socket, head) => {
     return;
   }
 
-  // 3. Extract JWT from Authorization header or ?token= query param
+  // 3. Extract JWT from Authorization header only
   let token: string | undefined;
   const authHeader = req.headers['authorization'];
   if (typeof authHeader === 'string' && authHeader.startsWith('Bearer ')) {
     token = authHeader.slice(7);
-  } else {
-    // Fall back to query-string (?token=...) — acceptable for browser WS clients
-    const urlObj = new URL(req.url || '/', `http://localhost`);
-    token = urlObj.searchParams.get('token') || undefined;
   }
 
   if (!token) {

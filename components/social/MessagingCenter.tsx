@@ -17,10 +17,10 @@ import { useAccount, useSignMessage } from 'wagmi';
 import { Friend, Message } from '@/types/messaging';
 import { 
   encryptMessage, 
-  decryptMessage, 
   formatAddress, 
   getConversationId,
-  STORAGE_KEYS 
+  STORAGE_KEYS,
+  stripDecryptedContentForStorage,
 } from '@/lib/messageEncryption';
 import { TransactionButtons } from './TransactionButtons';
 import { EndorsementsBadges as _EndorsementsBadges } from './EndorsementsBadges';
@@ -47,8 +47,48 @@ export function MessagingCenter({ friend, hasVault = false }: MessagingCenterPro
   const [inputMessage, setInputMessage] = useState('');
   const [isSending, setIsSending] = useState(false);
   const [encryptionStatus, setEncryptionStatus] = useState<'idle' | 'encrypting' | 'decrypting' | 'error'>('idle');
+  const [directoryKey, setDirectoryKey] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const conversationId = address && friend ? getConversationId(address, friend.address) : '';
+  const recipientEncryptionKey = (friend.encryptionPublicKey?.trim() || directoryKey || '').trim();
+  const canEncryptForRecipient = Boolean(recipientEncryptionKey);
+
+  useEffect(() => {
+    let isActive = true;
+
+    const loadRecipientKey = async () => {
+      if (friend.encryptionPublicKey?.trim()) {
+        setDirectoryKey(null);
+        return;
+      }
+
+      try {
+        const response = await fetch(`/api/security/keys?address=${encodeURIComponent(friend.address)}`, {
+          method: 'GET',
+          credentials: 'include',
+        });
+
+        if (!isActive) return;
+        if (!response.ok) {
+          setDirectoryKey(null);
+          return;
+        }
+
+        const data = await response.json();
+        const key = typeof data.encryptionPublicKey === 'string' ? data.encryptionPublicKey.trim() : '';
+        setDirectoryKey(key || null);
+      } catch {
+        if (isActive) {
+          setDirectoryKey(null);
+        }
+      }
+    };
+
+    loadRecipientKey();
+    return () => {
+      isActive = false;
+    };
+  }, [friend.address, friend.encryptionPublicKey]);
 
   // Load conversation messages with AbortController for proper cleanup
   useEffect(() => {
@@ -67,45 +107,14 @@ export function MessagingCenter({ friend, hasVault = false }: MessagingCenterPro
         // Check if component is still mounted
         if (!isActive || abortController.signal.aborted) return;
         
-        // Decrypt messages for display
+        // Never persist or trust plaintext message content from browser storage.
+        // Without recipient-owned key exchange in this session, render encrypted placeholders only.
         setEncryptionStatus('decrypting');
-        const decryptedMsgs = await Promise.all(
-          msgs.map(async (msg) => {
-            try {
-              if (msg.decryptedContent) return msg;
-              
-              // Check abort signal during async operations
-              if (abortController.signal.aborted) {
-                throw new Error('Operation aborted');
-              }
-              
-              // Simple verification function (in production, use proper signature verification)
-              const verify = async (_message: string, _signature: string) => true;
-              
-              const { message: decrypted, verified } = await decryptMessage(
-                msg.encryptedContent,
-                msg.from,
-                verify
-              );
-              
-              return {
-                ...msg,
-                decryptedContent: decrypted,
-                verified,
-              };
-            } catch (e) {
-              // Don't log errors if aborted
-              if (!abortController.signal.aborted) {
-                console.error('Failed to decrypt message:', e);
-              }
-              return {
-                ...msg,
-                decryptedContent: '[Decryption failed]',
-                verified: false,
-              };
-            }
-          })
-        );
+        const decryptedMsgs = msgs.map((msg) => ({
+          ...msg,
+          decryptedContent: undefined,
+          verified: Boolean(msg.verified),
+        }));
         
         // Only update state if component is still mounted
         if (isActive && !abortController.signal.aborted) {
@@ -138,11 +147,18 @@ export function MessagingCenter({ friend, hasVault = false }: MessagingCenterPro
   useEffect(() => {
     if (!conversationId || messages.length === 0) return;
     
-    localStorage.setItem(`${STORAGE_KEYS.MESSAGES}_${conversationId}`, JSON.stringify(messages));
+    const encryptedOnlyMessages = stripDecryptedContentForStorage(messages);
+    localStorage.setItem(`${STORAGE_KEYS.MESSAGES}_${conversationId}`, JSON.stringify(encryptedOnlyMessages));
   }, [conversationId, messages]);
 
   const handleSendMessage = async () => {
     if (!inputMessage.trim() || !address || !signMessageAsync) return;
+
+    if (!canEncryptForRecipient || !recipientEncryptionKey) {
+      setEncryptionStatus('error');
+      alert('Secure messaging is not ready for this contact yet. Ask them to share an encryption key first.');
+      return;
+    }
     
     const messageContent = inputMessage;
     const tempId = `msg_${Date.now()}_${Math.random().toString(36)}`;
@@ -171,7 +187,7 @@ export function MessagingCenter({ friend, hasVault = false }: MessagingCenterPro
       // Encrypt the message
       const encryptedContent = await encryptMessage(
         messageContent,
-        friend.address,
+        recipientEncryptionKey,
         (msg) => signMessageAsync({ message: msg })
       );
       
@@ -222,11 +238,17 @@ export function MessagingCenter({ friend, hasVault = false }: MessagingCenterPro
   const handleEditMessage = async (messageId: string, newContent: string) => {
     if (!address) return;
 
+    if (!canEncryptForRecipient || !recipientEncryptionKey) {
+      setEncryptionStatus('error');
+      alert('Cannot securely edit message until recipient encryption key is available.');
+      return;
+    }
+
     try {
       // Encrypt new content
       const encryptedContent = await encryptMessage(
         newContent,
-        friend.address,
+        recipientEncryptionKey,
         (msg) => signMessageAsync({ message: msg })
       );
 
@@ -326,7 +348,7 @@ export function MessagingCenter({ friend, hasVault = false }: MessagingCenterPro
               <div className="flex items-center gap-2">
                 <p className="text-xs text-zinc-500 flex items-center gap-1">
                   <Lock className="w-3 h-3" />
-                  End-to-end encrypted
+                  Secure messaging
                 </p>
                 <LastSeenText address={friend.address} />
               </div>
@@ -536,6 +558,11 @@ export function MessagingCenter({ friend, hasVault = false }: MessagingCenterPro
 
       {/* Input */}
       <div className="p-4 border-t border-zinc-700">
+        {!canEncryptForRecipient && (
+          <div className="mb-3 rounded-lg border border-amber-600/40 bg-amber-950/30 p-3 text-xs text-amber-200">
+            This contact has not shared an encryption key yet. Message sending is disabled to prevent insecure delivery.
+          </div>
+        )}
         {/* Payment Button Above Input */}
         {address && (
           <div className="mb-3 flex items-center gap-2">
@@ -567,9 +594,10 @@ export function MessagingCenter({ friend, hasVault = false }: MessagingCenterPro
                   handleSendMessage();
                 }
               }}
-              placeholder="Type an encrypted message..."
+              placeholder={canEncryptForRecipient ? 'Type an encrypted message...' : 'Waiting for recipient encryption key...'}
               aria-label="Message input"
               rows={1}
+              disabled={!canEncryptForRecipient}
               className="w-full px-4 py-2 bg-zinc-950 border border-zinc-700 rounded-lg text-zinc-100 text-sm resize-none focus:border-cyan-400 focus:outline-none"
               style={{ minHeight: '40px', maxHeight: '120px' }}
             />
@@ -584,7 +612,7 @@ export function MessagingCenter({ friend, hasVault = false }: MessagingCenterPro
 
           <button
             onClick={handleSendMessage}
-            disabled={!inputMessage.trim() || isSending}
+            disabled={!inputMessage.trim() || isSending || !canEncryptForRecipient}
             aria-label={isSending ? 'Sending message' : 'Send message'}
             className="p-2 rounded-lg bg-cyan-400 text-zinc-950 hover:bg-cyan-400 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
@@ -595,7 +623,7 @@ export function MessagingCenter({ friend, hasVault = false }: MessagingCenterPro
         {/* Encryption notice */}
         <div className="flex items-center justify-center gap-1 mt-2 text-xs text-zinc-500">
           <Lock className="w-3 h-3" />
-          <span>Messages are encrypted using your wallet signature</span>
+          <span>Messages are sent only when a recipient encryption key is available</span>
         </div>
       </div>
     </div>

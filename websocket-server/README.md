@@ -6,7 +6,7 @@ Secure, authenticated WebSocket server for VFIDE real-time updates.
 
 | Control | Implementation |
 |---------|---------------|
-| JWT authentication | Bearer token in `Authorization` header or `?token=` query param; verified against `JWT_SECRET` with `PREV_JWT_SECRET` rotation support |
+| JWT authentication | Bearer token in `Authorization` header only; verified against `JWT_SECRET` with `PREV_JWT_SECRET` rotation support |
 | Per-IP rate limiting | 10 new connections / min; 60 messages / min per IP |
 | Payload size limit | `maxPayload: 8 KiB` enforced at server level + belt-and-suspenders check |
 | Schema validation | Zod `discriminatedUnion` validates every inbound message; unknown types rejected |
