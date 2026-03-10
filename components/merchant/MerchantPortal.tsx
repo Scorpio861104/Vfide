@@ -552,6 +552,9 @@ export default function MerchantPortal() {
                   {newlyGeneratedKey.requestId}
                 </code>
               </div>
+              <p className="mt-3 text-xs text-gray-600 dark:text-gray-400">
+                Use this request ID to track issuance with your backend admin flow. Your live secret is never shown in this browser.
+              </p>
             </div>
 
             <div className="bg-red-50 dark:bg-red-900/20 p-3 rounded-lg mb-4 border border-red-200 dark:border-red-800">
@@ -965,6 +968,9 @@ function ApiKeysSection({
         <h2 className="text-lg md:text-xl font-bold text-gray-900 dark:text-white mb-4">
           Generate New API Key
         </h2>
+        <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+          Submit a key request here, then retrieve the issued secret from your secure backend credential process.
+        </p>
         <div className="flex flex-col sm:flex-row gap-4">
           <MobileInput
             label="Key Name"

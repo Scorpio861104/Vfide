@@ -706,6 +706,49 @@ npm run storybook
 
 ---
 
+## First-Week Launch Monitoring Checklist
+
+Use this quick checklist after release so product, support, and engineering teams can triage issues quickly.
+
+### What to Watch Every Day
+
+- Authentication failures (login/logout/session expiry)
+- API key request completion rate
+- Payment request creation failures
+- Top client-side errors in browser logs
+- Top failing API endpoints by status code (4xx/5xx)
+- Mobile vs desktop error rate differences
+
+### Recommended Alert Thresholds
+
+- Auth failure rate > 3% for 15 minutes
+- API key request failure rate > 2% for 15 minutes
+- Any single endpoint 5xx rate > 1% for 10 minutes
+- Sudden drop in successful checkout/payment completion > 20%
+
+### Fast Incident Triage Flow
+
+1. Confirm if issue is browser-specific, mobile-specific, or global.
+2. Check latest deploy hash and rollback candidate.
+3. Compare server logs with client console errors.
+4. Share user-safe status update with support.
+5. Patch, verify with targeted tests, then redeploy.
+
+### Smoke Commands for Rapid Verification
+
+```bash
+# Static safety checks
+npm run lint && npm run typecheck
+
+# Critical merchant flow tests
+npx jest __tests__/components/MerchantPortal.test.tsx --runInBand
+
+# Cross-browser E2E sanity
+npm run test:e2e
+```
+
+---
+
 For complete setup instructions, examples, and best practices for the 4 new tools, see:
 
 📘 **[LIVE_TESTING_TOOLS_SETUP.md](./LIVE_TESTING_TOOLS_SETUP.md)**
