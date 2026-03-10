@@ -4,7 +4,7 @@
  */
 
 import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
 import MerchantPortal from '../../components/merchant/MerchantPortal';
@@ -330,8 +330,8 @@ describe('API Keys Section', () => {
     await user.click(apiTab);
 
     await waitFor(() => {
-      expect(screen.getByText('Production API Key')).toBeInTheDocument();
-      expect(screen.getByText('Development API Key')).toBeInTheDocument();
+      expect(screen.getByText('Production Key (Issued)')).toBeInTheDocument();
+      expect(screen.getByText('Staging Key (Issued)')).toBeInTheDocument();
       expect(screen.getByText('Old Test Key')).toBeInTheDocument();
     });
   });
@@ -351,7 +351,7 @@ describe('API Keys Section', () => {
     });
   });
 
-  it('allows showing and hiding API key values', async () => {
+  it('displays masked API key values and does not expose reveal controls', async () => {
     const user = userEvent.setup();
     render(<MerchantPortal />);
 
@@ -359,15 +359,9 @@ describe('API Keys Section', () => {
     await user.click(apiTab);
 
     await waitFor(() => {
-      const showButtons = screen.getAllByText('Show');
-      expect(showButtons.length).toBeGreaterThan(0);
-
-      // Click Show
-      fireEvent.click(showButtons[0]);
-
-      // Look for Hide button
-      const hideButtons = screen.queryAllByText('Hide');
-      expect(hideButtons.length).toBeGreaterThan(0);
+      expect(screen.getAllByText(/\*{4,}/).length).toBeGreaterThan(0);
+      expect(screen.queryByText('Show')).not.toBeInTheDocument();
+      expect(screen.queryByText('Hide')).not.toBeInTheDocument();
     });
   });
 
@@ -378,13 +372,9 @@ describe('API Keys Section', () => {
     const apiTab = screen.getByRole('button', { name: /API Keys/i });
     await user.click(apiTab);
 
-    await waitFor(() => {
-      const revokeButtons = screen.getAllByText('Revoke');
-      expect(revokeButtons.length).toBeGreaterThan(0);
-
-      // Click Revoke
-      fireEvent.click(revokeButtons[0]);
-    });
+    const revokeButtons = await screen.findAllByText('Revoke');
+    expect(revokeButtons.length).toBeGreaterThan(0);
+    await user.click(revokeButtons[0]);
   });
 
   it('displays API documentation link', async () => {
@@ -414,6 +404,8 @@ describe('API Keys Section', () => {
     await user.click(generateButton);
 
     await waitFor(() => {
+      expect(screen.getByText('API Key Request Submitted')).toBeInTheDocument();
+      expect(screen.getByText('Request ID:')).toBeInTheDocument();
       expect(screen.getAllByText('New Test Key').length).toBeGreaterThan(0);
     });
   });
@@ -543,13 +535,28 @@ describe('Merchant Portal Data Validation', () => {
 
   it('shows API key in masked format by default', async () => {
     const user = userEvent.setup();
+    localStorage.setItem('vfide-merchant-api-keys', JSON.stringify([
+      {
+        id: 'masked-key-1',
+        name: 'Security Test Key',
+        maskedKey: 'issued_live_************',
+        key: 'issued_live_super_secret_value',
+        status: 'active',
+        createdAt: Date.now(),
+        lastUsed: null,
+        permissions: ['read:payments'],
+      },
+    ]));
+
     render(<MerchantPortal />);
 
     const apiTab = screen.getByRole('button', { name: /API Keys/i });
     await user.click(apiTab);
 
     await waitFor(() => {
-      expect(screen.getAllByText(/sk_(test|live)_\.\.\./i).length).toBeGreaterThan(0);
+      expect(screen.getByText('Security Test Key')).toBeInTheDocument();
+      expect(screen.getByText('issued_live_************')).toBeInTheDocument();
+      expect(screen.queryByText('issued_live_super_secret_value')).not.toBeInTheDocument();
     });
   });
 

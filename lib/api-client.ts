@@ -57,9 +57,6 @@ export class APIClient {
    */
   setToken(token: string) {
     this.token = token;
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('vfide_api_token', token);
-    }
   }
 
   /**
@@ -67,9 +64,6 @@ export class APIClient {
    */
   getToken(): string | null {
     if (this.token) return this.token;
-    if (typeof window !== 'undefined') {
-      this.token = localStorage.getItem('vfide_api_token');
-    }
     return this.token;
   }
 
@@ -78,9 +72,6 @@ export class APIClient {
    */
   clearToken() {
     this.token = null;
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem('vfide_api_token');
-    }
   }
 
   /**

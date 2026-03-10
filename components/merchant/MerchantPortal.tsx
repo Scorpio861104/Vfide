@@ -19,7 +19,7 @@ import { MobileButton, MobileInput, MobileSelect } from '@/components/mobile/Mob
 import { responsiveGrids } from '@/lib/mobile';
 import { safeParseFloat } from '@/lib/validation';
 import { useTransactionSounds } from '@/hooks/useTransactionSounds';
-import { Key, Upload, CreditCard, BarChart3, Eye, EyeOff, Copy, CheckCircle2 } from 'lucide-react';
+import { Key, Upload, CreditCard, BarChart3 } from 'lucide-react';
 import { useEffect } from 'react';
 import { useAccount } from 'wagmi';
 import { getAuthHeaders } from '@/lib/auth/client';
@@ -159,13 +159,13 @@ const mapPaymentRequestRow = (row: any): PaymentRequest => {
   };
 };
 
-const generateApiKeyValue = () => {
+const generateApiKeyRequestId = () => {
   if (typeof window !== 'undefined' && window.crypto?.getRandomValues) {
-    const bytes = new Uint8Array(24);
+    const bytes = new Uint8Array(10);
     window.crypto.getRandomValues(bytes);
-    return `sk_live_${Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('')}`;
+    return `req_${Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('')}`;
   }
-  return `sk_live_${Math.random().toString(36).slice(2)}${Math.random().toString(36).slice(2)}`;
+  return `req_${Math.random().toString(36).slice(2)}${Math.random().toString(36).slice(2)}`;
 };
 
 // ==================== MAIN COMPONENT ====================
@@ -188,7 +188,7 @@ export default function MerchantPortal() {
     memo: '',
   });
   const [newApiKeyName, setNewApiKeyName] = useState('');
-  const [newlyGeneratedKey, setNewlyGeneratedKey] = useState<{ name: string; key: string } | null>(null);
+  const [newlyGeneratedKey, setNewlyGeneratedKey] = useState<{ name: string; requestId: string } | null>(null);
   const [uploadingFile, setUploadingFile] = useState(false);
   const { playSuccess, playNotification, playError } = useTransactionSounds();
 
@@ -315,31 +315,21 @@ export default function MerchantPortal() {
 
   const handleGenerateApiKey = () => {
     if (newApiKeyName) {
-      const keyValue = generateApiKeyValue();
+      const requestId = generateApiKeyRequestId();
       const newKey: ApiKey = {
         id: `key-${Date.now()}`,
-        key: keyValue, // Temporarily store for display in modal
-        maskedKey: `${keyValue.slice(0, 8)}...${keyValue.slice(-4)}`,
+        maskedKey: `pending_${requestId.slice(-8)}`,
         name: newApiKeyName,
         createdAt: Date.now(),
         lastUsed: null,
-        permissions: ['read:payments', 'write:payments', 'read:transactions'],
-        status: 'active',
+        permissions: ['read:payments', 'write:payments'],
+        status: 'inactive',
       };
 
-      // Show modal with full key
-      setNewlyGeneratedKey({ name: newApiKeyName, key: keyValue });
-
-      // Add to state WITHOUT the full key (will be stripped by localStorage effect)
+      // Display request receipt only; actual secrets must be generated server-side.
+      setNewlyGeneratedKey({ name: newApiKeyName, requestId });
       setApiKeys([newKey, ...apiKeys]);
       setNewApiKeyName('');
-
-      // Clear the full key from state after a short delay (allows modal to capture it)
-      setTimeout(() => {
-        setApiKeys(prev => prev.map(k =>
-          k.id === newKey.id ? { ...k, key: undefined } : k
-        ));
-      }, 100);
     }
   };
 
@@ -530,7 +520,7 @@ export default function MerchantPortal() {
         </motion.div>
       </AnimatePresence>
 
-      {/* API Key Generated Modal - Show full key once */}
+      {/* API Key Request Modal */}
       {newlyGeneratedKey && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
           <motion.div
@@ -544,10 +534,10 @@ export default function MerchantPortal() {
               </div>
               <div>
                 <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-1">
-                  API Key Generated!
+                  API Key Request Submitted
                 </h3>
                 <p className="text-sm text-yellow-600 dark:text-yellow-400 font-medium">
-                  ⚠️ Save this key immediately - it will not be shown again!
+                  🔒 Keys are issued by backend services and never generated in browser memory.
                 </p>
               </div>
             </div>
@@ -556,35 +546,25 @@ export default function MerchantPortal() {
               <p className="text-xs text-gray-600 dark:text-gray-400 mb-2 font-medium">Key Name:</p>
               <p className="text-sm font-bold text-gray-900 dark:text-white mb-3">{newlyGeneratedKey.name}</p>
 
-              <p className="text-xs text-gray-600 dark:text-gray-400 mb-2 font-medium">API Key:</p>
+              <p className="text-xs text-gray-600 dark:text-gray-400 mb-2 font-medium">Request ID:</p>
               <div className="bg-white dark:bg-gray-800 p-3 rounded border border-gray-300 dark:border-gray-600">
                 <code className="text-sm font-mono text-gray-900 dark:text-white break-all">
-                  {newlyGeneratedKey.key}
+                  {newlyGeneratedKey.requestId}
                 </code>
               </div>
             </div>
 
             <div className="bg-red-50 dark:bg-red-900/20 p-3 rounded-lg mb-4 border border-red-200 dark:border-red-800">
               <p className="text-xs text-red-800 dark:text-red-300">
-                <strong>Security Notice:</strong> This key grants access to your merchant account.
-                Store it securely (password manager, environment variables).
-                Never commit it to version control or share it publicly.
+                <strong>Security Notice:</strong> Retrieve the issued key only from a secure backend workflow.
+                Never generate, store, or export live API secrets from browser state.
               </p>
             </div>
 
             <div className="flex gap-3">
               <button
-                onClick={() => {
-                  navigator.clipboard.writeText(newlyGeneratedKey.key);
-                }}
-                className="flex-1 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
-              >
-                <Copy className="w-4 h-4" />
-                Copy Key
-              </button>
-              <button
                 onClick={() => setNewlyGeneratedKey(null)}
-                className="flex-1 px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg font-medium transition-colors"
+                className="w-full px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg font-medium transition-colors"
               >
                 Done
               </button>
@@ -950,9 +930,8 @@ function ApiKeysSection({
   const displayKeys = keys.length > 0 ? keys : [
     {
       id: 'sample-key-1',
-      name: 'Production API Key',
-      key: 'vfide_live_prod_1234567890',
-      maskedKey: 'vfide_live_****************',
+      name: 'Production Key (Issued)',
+      maskedKey: 'issued_live_************',
       status: 'active' as const,
       createdAt: Date.now() - 7 * 24 * 60 * 60 * 1000,
       lastUsed: Date.now() - 2 * 60 * 60 * 1000,
@@ -960,10 +939,9 @@ function ApiKeysSection({
     },
     {
       id: 'sample-key-2',
-      name: 'Development API Key',
-      key: 'vfide_live_dev_0987654321',
-      maskedKey: 'vfide_live_****************',
-      status: 'active' as const,
+      name: 'Staging Key (Issued)',
+      maskedKey: 'issued_stage_***********',
+      status: 'inactive' as const,
       createdAt: Date.now() - 30 * 24 * 60 * 60 * 1000,
       lastUsed: Date.now() - 24 * 60 * 60 * 1000,
       permissions: ['read:payments'],
@@ -1164,19 +1142,6 @@ function ApiKeyCard({
   apiKey: ApiKey;
   onRevoke: () => void;
 }) {
-  const [showKey, setShowKey] = React.useState(false);
-  const [copied, setCopied] = React.useState(false);
-
-  const handleCopy = () => {
-    if (apiKey.key) {
-      navigator.clipboard.writeText(apiKey.key);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    }
-  };
-
-  const keyIsAvailable = !!apiKey.key;
-
   return (
     <motion.div 
       className="rounded-lg p-4 bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600"
@@ -1204,23 +1169,9 @@ function ApiKeyCard({
           </div>
           <motion.p
             className="text-sm font-mono text-gray-600 dark:text-gray-400 break-all"
-            animate={{ opacity: showKey ? 1 : 0.7 }}
+            animate={{ opacity: 0.85 }}
           >
-            {showKey && keyIsAvailable ? (
-              <motion.span
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.3 }}
-              >
-                {apiKey.key}
-              </motion.span>
-            ) : !keyIsAvailable && showKey ? (
-              <span className="text-yellow-600 dark:text-yellow-400 text-xs">
-                🔒 Key hidden for security. Full key only shown once during generation.
-              </span>
-            ) : (
-              apiKey.maskedKey
-            )}
+            {apiKey.maskedKey}
           </motion.p>
           <p className="text-xs text-gray-500 dark:text-gray-500 mt-2">
             Created {new Date(apiKey.createdAt).toLocaleDateString()}
@@ -1230,34 +1181,6 @@ function ApiKeyCard({
         <div className="flex gap-2">
           {apiKey.status === 'active' && (
             <>
-              <motion.button
-                onClick={() => keyIsAvailable && setShowKey(!showKey)}
-                disabled={!keyIsAvailable}
-                className={`px-3 py-1 text-xs rounded flex items-center gap-1 ${
-                  keyIsAvailable
-                    ? 'text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20'
-                    : 'text-gray-400 dark:text-gray-600 cursor-not-allowed'
-                }`}
-                whileHover={keyIsAvailable ? { scale: 1.05 } : undefined}
-                whileTap={keyIsAvailable ? { scale: 0.95 } : undefined}
-              >
-                {showKey ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
-                {showKey ? 'Hide' : 'Show'}
-              </motion.button>
-              <motion.button
-                onClick={handleCopy}
-                disabled={!keyIsAvailable}
-                className={`px-3 py-1 text-xs rounded flex items-center gap-1 ${
-                  keyIsAvailable
-                    ? 'text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20'
-                    : 'text-gray-400 dark:text-gray-600 cursor-not-allowed'
-                }`}
-                whileHover={keyIsAvailable ? { scale: 1.05 } : undefined}
-                whileTap={keyIsAvailable ? { scale: 0.95 } : undefined}
-              >
-                {copied ? <CheckCircle2 className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
-                {copied ? 'Copied!' : 'Copy'}
-              </motion.button>
               <motion.button
                 onClick={onRevoke}
                 className="px-3 py-1 text-xs text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded"

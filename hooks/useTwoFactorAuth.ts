@@ -159,16 +159,6 @@ export const useTwoFactorAuth = (userEmail?: string): UseTwoFactorAuthResult => 
     if (!totpSecret) return false;
     if (!verifyTOTPInternal(totpSecret, code)) return false;
 
-    // Store secret securely (in production, encrypt or use secure storage)
-    if (typeof window !== 'undefined') {
-      try {
-        localStorage.setItem(SECURITY_STORAGE_KEYS.twoFactorSecret, totpSecret);
-        localStorage.setItem(SECURITY_STORAGE_KEYS.twoFactorBackupCodes, JSON.stringify(backupCodes));
-      } catch (e) {
-        console.error('Failed to save TOTP config', e);
-      }
-    }
-
     updateConfig({
       enabled: true,
       method: 'totp',
@@ -179,20 +169,11 @@ export const useTwoFactorAuth = (userEmail?: string): UseTwoFactorAuthResult => 
     return true;
   }, [totpSecret, backupCodes, updateConfig]);
 
-  const enableSMS = useCallback(async (phoneNumber: string): Promise<boolean> => {
+  const enableSMS = useCallback(async (_phoneNumber: string): Promise<boolean> => {
     // In production: Send SMS verification code via Twilio/SNS
     // For now, mock implementation
     const codes = generateBackupCodes();
     setBackupCodes(codes);
-
-    if (typeof window !== 'undefined') {
-      try {
-        localStorage.setItem(SECURITY_STORAGE_KEYS.twoFactorPhone, phoneNumber);
-        localStorage.setItem(SECURITY_STORAGE_KEYS.twoFactorBackupCodes, JSON.stringify(codes));
-      } catch (e) {
-        console.error('Failed to save SMS 2FA config', e);
-      }
-    }
 
     updateConfig({
       enabled: true,
@@ -204,19 +185,10 @@ export const useTwoFactorAuth = (userEmail?: string): UseTwoFactorAuthResult => 
     return true;
   }, [updateConfig]);
 
-  const enableEmail = useCallback(async (email: string): Promise<boolean> => {
+  const enableEmail = useCallback(async (_email: string): Promise<boolean> => {
     // In production: Send email verification code via SendGrid/SES
     const codes = generateBackupCodes();
     setBackupCodes(codes);
-
-    if (typeof window !== 'undefined') {
-      try {
-        localStorage.setItem(SECURITY_STORAGE_KEYS.twoFactorEmail, email);
-        localStorage.setItem(SECURITY_STORAGE_KEYS.twoFactorBackupCodes, JSON.stringify(codes));
-      } catch (e) {
-        console.error('Failed to save email 2FA config', e);
-      }
-    }
 
     updateConfig({
       enabled: true,
@@ -229,20 +201,13 @@ export const useTwoFactorAuth = (userEmail?: string): UseTwoFactorAuthResult => 
   }, [updateConfig]);
 
   const verifyTOTP = useCallback(async (code: string): Promise<boolean> => {
-    if (typeof window === 'undefined') return false;
-    try {
-      const secret = localStorage.getItem(SECURITY_STORAGE_KEYS.twoFactorSecret);
-      if (!secret) return false;
-
-      const valid = verifyTOTPInternal(secret, code);
-      if (valid) {
-        updateConfig({ lastVerified: new Date() });
-      }
-      return valid;
-    } catch (_e) {
-      return false;
+    if (!totpSecret) return false;
+    const valid = verifyTOTPInternal(totpSecret, code);
+    if (valid) {
+      updateConfig({ lastVerified: new Date() });
     }
-  }, [updateConfig]);
+    return valid;
+  }, [totpSecret, updateConfig]);
 
   const verifySMS = useCallback(async (code: string): Promise<boolean> => {
     // In production: Verify via backend API
@@ -263,43 +228,24 @@ export const useTwoFactorAuth = (userEmail?: string): UseTwoFactorAuthResult => 
   }, [updateConfig]);
 
   const verifyBackupCode = useCallback(async (code: string): Promise<boolean> => {
-    if (typeof window === 'undefined') return false;
     if (!validateBackupCode(code)) return false;
 
-    const stored = localStorage.getItem(SECURITY_STORAGE_KEYS.twoFactorBackupCodes);
-    if (!stored) return false;
+    const index = backupCodes.indexOf(code);
+    if (index === -1) return false;
 
-    try {
-      const codes: string[] = JSON.parse(stored);
-      const index = codes.indexOf(code);
-      if (index === -1) return false;
+    const nextCodes = backupCodes.filter((_, i) => i !== index);
+    setBackupCodes(nextCodes);
+    updateConfig({
+      backupCodesRemaining: nextCodes.length,
+      lastVerified: new Date()
+    });
 
-      // Remove used code
-      codes.splice(index, 1);
-      localStorage.setItem(SECURITY_STORAGE_KEYS.twoFactorBackupCodes, JSON.stringify(codes));
-
-      updateConfig({
-        backupCodesRemaining: codes.length,
-        lastVerified: new Date()
-      });
-
-      return true;
-    } catch (_error) {
-      return false;
-    }
-  }, [updateConfig]);
+    return true;
+  }, [backupCodes, updateConfig]);
 
   const disable = useCallback(async (): Promise<void> => {
-    if (typeof window !== 'undefined') {
-      try {
-        localStorage.removeItem(SECURITY_STORAGE_KEYS.twoFactorSecret);
-        localStorage.removeItem(SECURITY_STORAGE_KEYS.twoFactorPhone);
-        localStorage.removeItem(SECURITY_STORAGE_KEYS.twoFactorEmail);
-        localStorage.removeItem(SECURITY_STORAGE_KEYS.twoFactorBackupCodes);
-      } catch (e) {
-        console.error('Failed to clear 2FA config', e);
-      }
-    }
+    setTotpSecret(null);
+    setBackupCodes([]);
 
     updateConfig({
       enabled: false,
@@ -312,14 +258,6 @@ export const useTwoFactorAuth = (userEmail?: string): UseTwoFactorAuthResult => 
   const regenerateBackupCodes = useCallback(async (): Promise<string[]> => {
     const codes = generateBackupCodes();
     setBackupCodes(codes);
-
-    if (typeof window !== 'undefined') {
-      try {
-        localStorage.setItem(SECURITY_STORAGE_KEYS.twoFactorBackupCodes, JSON.stringify(codes));
-      } catch (e) {
-        console.error('Failed to save backup codes', e);
-      }
-    }
 
     updateConfig({ backupCodesRemaining: codes.length });
     return codes;
