@@ -29,6 +29,10 @@ export interface SessionKeyPermission {
   maxTotalValue: bigint;
   /** Max number of calls allowed */
   maxCalls: number;
+  /** Optional max token amount per call for ERC-20 amount-bearing selectors */
+  maxTokenAmountPerCall?: bigint;
+  /** Optional max cumulative token amount for ERC-20 amount-bearing selectors */
+  maxTokenAmountTotal?: bigint;
 }
 
 export interface SessionKey {
@@ -52,6 +56,8 @@ export interface SessionKey {
   callsUsed: number;
   /** Total value spent through this session */
   valueSpent: bigint;
+  /** Total token amount consumed by amount-bearing calldata (approve/transfer) */
+  tokenAmountSpent: bigint;
   /** Session creation timestamp */
   createdAt: number;
 }
@@ -80,20 +86,63 @@ export interface SessionCallResult {
 // ==================== SESSION KEY STORAGE ====================
 
 const SESSION_STORAGE_KEY = 'vfide_session_keys';
+const PERSISTENT_SESSION_KEYS_ENV = 'NEXT_PUBLIC_ENABLE_PERSISTENT_SESSION_KEYS';
+const SESSION_KEY_MAX_DURATION_ENV = 'NEXT_PUBLIC_SESSION_KEY_MAX_DURATION_SECONDS';
+const SESSION_KEY_MIN_DURATION_SECONDS = 60;
+const SESSION_KEY_DEFAULT_DURATION_SECONDS = 1800;
+const SESSION_KEY_MAX_DURATION_SECONDS = 4 * 60 * 60;
+
+function resolveMaxSessionDurationSeconds(): number {
+  const configured = process.env[SESSION_KEY_MAX_DURATION_ENV];
+  if (!configured) return SESSION_KEY_MAX_DURATION_SECONDS;
+
+  const parsed = Number.parseInt(configured, 10);
+  if (!Number.isInteger(parsed) || parsed < SESSION_KEY_MIN_DURATION_SECONDS) {
+    return SESSION_KEY_MAX_DURATION_SECONDS;
+  }
+
+  return parsed;
+}
+
+function getSessionStorageBackend(): Storage | null {
+  if (typeof window === 'undefined') return null;
+
+  if (process.env[PERSISTENT_SESSION_KEYS_ENV] === 'true') {
+    return window.localStorage;
+  }
+
+  return window.sessionStorage;
+}
 
 function getStoredSessions(): SessionKey[] {
-  if (typeof window === 'undefined') return [];
+  const storage = getSessionStorageBackend();
+  if (!storage) return [];
   
   try {
-    const stored = localStorage.getItem(SESSION_STORAGE_KEY);
+    // Default to session-scoped storage to reduce persistence after browser compromise.
+    if (typeof window !== 'undefined' && storage === window.sessionStorage) {
+      try {
+        window.localStorage.removeItem(SESSION_STORAGE_KEY);
+      } catch {
+        // Ignore storage cleanup errors.
+      }
+    }
+
+    const stored = storage.getItem(SESSION_STORAGE_KEY);
     if (!stored) return [];
     
     const parsed = JSON.parse(stored);
     return parsed.map((s: SessionKey) => ({
       ...s,
-      maxValuePerCall: BigInt(s.permissions[0]?.maxValuePerCall || 0),
-      maxTotalValue: BigInt(s.permissions[0]?.maxTotalValue || 0),
+      permissions: (s.permissions || []).map((p) => ({
+        ...p,
+        maxValuePerCall: BigInt(p.maxValuePerCall || 0),
+        maxTotalValue: BigInt(p.maxTotalValue || 0),
+        maxTokenAmountPerCall: p.maxTokenAmountPerCall !== undefined ? BigInt(p.maxTokenAmountPerCall) : undefined,
+        maxTokenAmountTotal: p.maxTokenAmountTotal !== undefined ? BigInt(p.maxTokenAmountTotal) : undefined,
+      })),
       valueSpent: BigInt(s.valueSpent || 0),
+      tokenAmountSpent: BigInt((s as SessionKey & { tokenAmountSpent?: string | number }).tokenAmountSpent || 0),
     }));
   } catch {
     return [];
@@ -101,7 +150,8 @@ function getStoredSessions(): SessionKey[] {
 }
 
 function storeSessions(sessions: SessionKey[]): void {
-  if (typeof window === 'undefined') return;
+  const storage = getSessionStorageBackend();
+  if (!storage) return;
   
   const serializable = sessions.map(s => ({
     ...s,
@@ -109,17 +159,43 @@ function storeSessions(sessions: SessionKey[]): void {
       ...p,
       maxValuePerCall: p.maxValuePerCall.toString(),
       maxTotalValue: p.maxTotalValue.toString(),
+      maxTokenAmountPerCall: p.maxTokenAmountPerCall !== undefined ? p.maxTokenAmountPerCall.toString() : undefined,
+      maxTokenAmountTotal: p.maxTokenAmountTotal !== undefined ? p.maxTokenAmountTotal.toString() : undefined,
     })),
     valueSpent: s.valueSpent.toString(),
+    tokenAmountSpent: s.tokenAmountSpent.toString(),
   }));
   
-  localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(serializable));
+  storage.setItem(SESSION_STORAGE_KEY, JSON.stringify(serializable));
 }
 
 // ==================== SESSION KEY SERVICE ====================
 
 export class SessionKeyService {
   private sessions: Map<string, SessionKey> = new Map();
+
+  private extractErc20AmountFromCallData(callData: Hex): bigint | null {
+    if (typeof callData !== 'string' || !callData.startsWith('0x') || callData.length < 10) {
+      return null;
+    }
+
+    const selector = callData.slice(0, 10).toLowerCase();
+    if (selector !== '0x095ea7b3' && selector !== '0xa9059cbb') {
+      return null;
+    }
+
+    // ABI encoding: 4-byte selector + 32-byte address + 32-byte amount
+    if (callData.length < 10 + (64 * 2)) {
+      return null;
+    }
+
+    const amountHex = callData.slice(10 + 64, 10 + 128);
+    if (!/^[0-9a-fA-F]{64}$/.test(amountHex)) {
+      return null;
+    }
+
+    return BigInt(`0x${amountHex}`);
+  }
 
   constructor() {
     // Load existing sessions from storage
@@ -139,7 +215,14 @@ export class SessionKeyService {
     params: CreateSessionParams
   ): Promise<SessionKey> {
     const now = Math.floor(Date.now() / 1000);
-    const duration = params.duration || 3600; // 1 hour default
+    const duration = params.duration ?? SESSION_KEY_DEFAULT_DURATION_SECONDS;
+    const maxAllowedDuration = resolveMaxSessionDurationSeconds();
+    if (duration < SESSION_KEY_MIN_DURATION_SECONDS) {
+      throw new Error(`Session duration must be at least ${SESSION_KEY_MIN_DURATION_SECONDS} seconds`);
+    }
+    if (duration > maxAllowedDuration) {
+      throw new Error(`Session duration exceeds maximum of ${maxAllowedDuration} seconds`);
+    }
     
     // Generate session ID
     const sessionId = keccak256(
@@ -160,6 +243,7 @@ export class SessionKeyService {
       isActive: true,
       callsUsed: 0,
       valueSpent: BigInt(0),
+      tokenAmountSpent: BigInt(0),
       createdAt: now,
     };
 
@@ -204,7 +288,8 @@ export class SessionKeyService {
     sessionId: string,
     target: Address,
     selector: Hex,
-    value: bigint = BigInt(0)
+    value: bigint = BigInt(0),
+    callData?: Hex
   ): { valid: boolean; reason?: string } {
     const session = this.sessions.get(sessionId);
     
@@ -248,18 +333,47 @@ export class SessionKeyService {
       return { valid: false, reason: 'Max calls reached' };
     }
 
+    if (permission.maxTokenAmountPerCall !== undefined || permission.maxTokenAmountTotal !== undefined) {
+      if (!callData) {
+        return { valid: false, reason: 'Missing calldata for token amount policy' };
+      }
+
+      const tokenAmount = this.extractErc20AmountFromCallData(callData);
+      if (tokenAmount === null) {
+        return { valid: false, reason: 'Unable to parse token amount from calldata' };
+      }
+
+      if (
+        permission.maxTokenAmountPerCall !== undefined &&
+        tokenAmount > permission.maxTokenAmountPerCall
+      ) {
+        return { valid: false, reason: 'Token amount exceeds per-call limit' };
+      }
+
+      if (
+        permission.maxTokenAmountTotal !== undefined &&
+        session.tokenAmountSpent + tokenAmount > permission.maxTokenAmountTotal
+      ) {
+        return { valid: false, reason: 'Would exceed token amount total limit' };
+      }
+    }
+
     return { valid: true };
   }
 
   /**
    * Record a successful call
    */
-  recordCall(sessionId: string, value: bigint = BigInt(0)): void {
+  recordCall(sessionId: string, value: bigint = BigInt(0), callData?: Hex): void {
     const session = this.sessions.get(sessionId);
     if (!session) return;
 
     session.callsUsed++;
     session.valueSpent += value;
+    const tokenAmount = callData ? this.extractErc20AmountFromCallData(callData) : null;
+    if (tokenAmount !== null) {
+      session.tokenAmountSpent += tokenAmount;
+    }
     this.sessions.set(sessionId, session);
     this.persist();
   }
@@ -347,7 +461,7 @@ export interface UseSessionKeysResult {
   /** Revoke all sessions */
   revokeAll: () => number;
   /** Validate a call against sessions */
-  validateCall: (sessionId: string, target: Address, selector: Hex, value?: bigint) => { valid: boolean; reason?: string };
+  validateCall: (sessionId: string, target: Address, selector: Hex, value?: bigint, callData?: Hex) => { valid: boolean; reason?: string };
   /** Check if user has any active sessions */
   hasActiveSessions: boolean;
   /** Refresh sessions */
@@ -400,8 +514,8 @@ export function useSessionKeys(): UseSessionKeysResult {
   }, [address, service]);
 
   const validateCall = useCallback(
-    (sessionId: string, target: Address, selector: Hex, value?: bigint) => {
-      return service.validateCall(sessionId, target, selector, value);
+    (sessionId: string, target: Address, selector: Hex, value?: bigint, callData?: Hex) => {
+      return service.validateCall(sessionId, target, selector, value, callData);
     },
     [service]
   );
@@ -429,14 +543,21 @@ export function useSessionKeys(): UseSessionKeysResult {
  */
 export function createApprovalPermission(
   tokenAddress: Address,
-  _maxApprovalValue: bigint = BigInt(2) ** BigInt(256) - BigInt(1)
+  maxApprovalValue: bigint,
+  maxCalls: number = 1
 ): SessionKeyPermission {
+  if (maxApprovalValue <= BigInt(0)) {
+    throw new Error('maxApprovalValue must be greater than zero');
+  }
+
   return {
     target: tokenAddress,
     selector: '0x095ea7b3' as Hex, // approve(address,uint256)
     maxValuePerCall: BigInt(0),
     maxTotalValue: BigInt(0),
-    maxCalls: 10,
+    maxCalls,
+    maxTokenAmountPerCall: maxApprovalValue,
+    maxTokenAmountTotal: maxApprovalValue,
   };
 }
 
@@ -449,12 +570,18 @@ export function createTransferPermission(
   maxTotal: bigint,
   maxCalls: number = 100
 ): SessionKeyPermission {
+  if (maxPerTransfer <= BigInt(0) || maxTotal <= BigInt(0)) {
+    throw new Error('Token transfer limits must be greater than zero');
+  }
+
   return {
     target: tokenAddress,
     selector: '0xa9059cbb' as Hex, // transfer(address,uint256)
-    maxValuePerCall: maxPerTransfer,
-    maxTotalValue: maxTotal,
+    maxValuePerCall: BigInt(0),
+    maxTotalValue: BigInt(0),
     maxCalls,
+    maxTokenAmountPerCall: maxPerTransfer,
+    maxTokenAmountTotal: maxTotal,
   };
 }
 

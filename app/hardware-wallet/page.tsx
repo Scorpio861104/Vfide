@@ -149,8 +149,7 @@ export default function HardwareWalletPage() {
         }
         setDeviceConnected(true);
         setCurrentStep(3);
-      } catch (error) {
-        console.error('Connection failed:', error);
+      } catch {
       }
     } else {
       // Simulate connection for demo

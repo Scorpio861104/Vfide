@@ -35,7 +35,7 @@ describe('PayrollManager Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'createPayroll',
-        args: ['Engineering Team', tokenAddress]
+        args: ['Engineering Team', tokenAddress],
       });
 
       expect(result).toBe('0xhash');
@@ -49,12 +49,12 @@ describe('PayrollManager Contract', () => {
         token: tokenAddress,
         totalEmployees: 5n,
         isActive: true,
-        createdAt: 1234567890n
+        createdAt: 1234567890n,
       });
 
       const details = await mockContractRead({
         functionName: 'getPayroll',
-        args: [1n]
+        args: [1n],
       });
 
       expect(details.name).toBe('Engineering Team');
@@ -65,7 +65,7 @@ describe('PayrollManager Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'createPayroll',
-        args: ['Sales Team', tokenAddress]
+        args: ['Sales Team', tokenAddress],
       });
 
       expect(result).toBe('0xhash');
@@ -77,7 +77,7 @@ describe('PayrollManager Contract', () => {
       await expect(async () => {
         await mockContractWrite({
           functionName: 'updatePayroll',
-          args: [1n, 'New Name']
+          args: [1n, 'New Name'],
         });
       }).rejects.toThrow('Not payroll owner');
     });
@@ -86,7 +86,7 @@ describe('PayrollManager Contract', () => {
       mockContractRead.mockResolvedValueOnce(25n);
 
       const total = await mockContractRead({
-        functionName: 'totalPayrolls'
+        functionName: 'totalPayrolls',
       });
 
       expect(total).toBe(25n);
@@ -97,7 +97,7 @@ describe('PayrollManager Contract', () => {
 
       const payrolls = await mockContractRead({
         functionName: 'getEmployerPayrolls',
-        args: [employer]
+        args: [employer],
       });
 
       expect(payrolls).toHaveLength(3);
@@ -108,7 +108,7 @@ describe('PayrollManager Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'deactivatePayroll',
-        args: [1n]
+        args: [1n],
       });
 
       expect(result).toBe('0xhash');
@@ -119,7 +119,7 @@ describe('PayrollManager Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'reactivatePayroll',
-        args: [1n]
+        args: [1n],
       });
 
       expect(result).toBe('0xhash');
@@ -130,7 +130,7 @@ describe('PayrollManager Contract', () => {
 
       const isActive = await mockContractRead({
         functionName: 'isPayrollActive',
-        args: [1n]
+        args: [1n],
       });
 
       expect(isActive).toBe(true);
@@ -143,7 +143,7 @@ describe('PayrollManager Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'addEmployee',
-        args: [1n, employee1, parseEther('5000'), 'Engineer']
+        args: [1n, employee1, parseEther('5000'), 'Engineer'],
       });
 
       expect(result).toBe('0xhash');
@@ -155,7 +155,7 @@ describe('PayrollManager Contract', () => {
       await expect(async () => {
         await mockContractWrite({
           functionName: 'addEmployee',
-          args: [1n, employee1, parseEther('5000'), 'Engineer']
+          args: [1n, employee1, parseEther('5000'), 'Engineer'],
         });
       }).rejects.toThrow('already exists');
     });
@@ -165,7 +165,7 @@ describe('PayrollManager Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'removeEmployee',
-        args: [1n, employee1]
+        args: [1n, employee1],
       });
 
       expect(result).toBe('0xhash');
@@ -178,12 +178,12 @@ describe('PayrollManager Contract', () => {
         position: 'Engineer',
         addedAt: 1234567890n,
         isActive: true,
-        totalPaid: parseEther('25000')
+        totalPaid: parseEther('25000'),
       });
 
       const details = await mockContractRead({
         functionName: 'getEmployee',
-        args: [1n, employee1]
+        args: [1n, employee1],
       });
 
       expect(details.salary).toBe(parseEther('5000'));
@@ -194,7 +194,7 @@ describe('PayrollManager Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'addEmployee',
-        args: [1n, employee2, parseEther('6000'), 'Manager']
+        args: [1n, employee2, parseEther('6000'), 'Manager'],
       });
 
       expect(result).toBe('0xhash');
@@ -205,7 +205,7 @@ describe('PayrollManager Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'updateSalary',
-        args: [1n, employee1, parseEther('5500')]
+        args: [1n, employee1, parseEther('5500')],
       });
 
       expect(result).toBe('0xhash');
@@ -216,7 +216,7 @@ describe('PayrollManager Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'updatePosition',
-        args: [1n, employee1, 'Senior Engineer']
+        args: [1n, employee1, 'Senior Engineer'],
       });
 
       expect(result).toBe('0xhash');
@@ -227,7 +227,7 @@ describe('PayrollManager Contract', () => {
 
       const employees = await mockContractRead({
         functionName: 'getPayrollEmployees',
-        args: [1n]
+        args: [1n],
       });
 
       expect(employees).toHaveLength(2);
@@ -238,7 +238,7 @@ describe('PayrollManager Contract', () => {
 
       const count = await mockContractRead({
         functionName: 'getActiveEmployeesCount',
-        args: [1n]
+        args: [1n],
       });
 
       expect(count).toBe(5n);
@@ -249,7 +249,7 @@ describe('PayrollManager Contract', () => {
 
       const isEmployee = await mockContractRead({
         functionName: 'isEmployee',
-        args: [1n, employee1]
+        args: [1n, employee1],
       });
 
       expect(isEmployee).toBe(true);
@@ -262,7 +262,7 @@ describe('PayrollManager Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'distributePayroll',
-        args: [1n]
+        args: [1n],
       });
 
       expect(result).toBe('0xhash');
@@ -274,7 +274,7 @@ describe('PayrollManager Contract', () => {
       await expect(async () => {
         await mockContractWrite({
           functionName: 'distributePayroll',
-          args: [1n]
+          args: [1n],
         });
       }).rejects.toThrow('Insufficient balance');
     });
@@ -284,7 +284,7 @@ describe('PayrollManager Contract', () => {
 
       const total = await mockContractRead({
         functionName: 'calculatePayrollAmount',
-        args: [1n]
+        args: [1n],
       });
 
       expect(total).toBe(parseEther('25000'));
@@ -295,7 +295,7 @@ describe('PayrollManager Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'distributePayroll',
-        args: [1n]
+        args: [1n],
       });
 
       expect(result).toBe('0xhash');
@@ -304,12 +304,12 @@ describe('PayrollManager Contract', () => {
     it('should get distribution history', async () => {
       mockContractRead.mockResolvedValueOnce([
         { id: 1n, amount: parseEther('25000'), timestamp: 1234567890n },
-        { id: 2n, amount: parseEther('25000'), timestamp: 1237159890n }
+        { id: 2n, amount: parseEther('25000'), timestamp: 1237159890n },
       ]);
 
       const history = await mockContractRead({
         functionName: 'getDistributionHistory',
-        args: [1n]
+        args: [1n],
       });
 
       expect(history).toHaveLength(2);
@@ -320,7 +320,7 @@ describe('PayrollManager Contract', () => {
 
       const timestamp = await mockContractRead({
         functionName: 'getLastDistribution',
-        args: [1n]
+        args: [1n],
       });
 
       expect(timestamp).toBe(1234567890n);
@@ -331,7 +331,7 @@ describe('PayrollManager Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'payEmployee',
-        args: [1n, employee1]
+        args: [1n, employee1],
       });
 
       expect(result).toBe('0xhash');
@@ -340,12 +340,12 @@ describe('PayrollManager Contract', () => {
     it('should get employee payment history', async () => {
       mockContractRead.mockResolvedValueOnce([
         { amount: parseEther('5000'), timestamp: 1234567890n },
-        { amount: parseEther('5000'), timestamp: 1237159890n }
+        { amount: parseEther('5000'), timestamp: 1237159890n },
       ]);
 
       const history = await mockContractRead({
         functionName: 'getEmployeePayments',
-        args: [1n, employee1]
+        args: [1n, employee1],
       });
 
       expect(history).toHaveLength(2);
@@ -356,7 +356,7 @@ describe('PayrollManager Contract', () => {
 
       const total = await mockContractRead({
         functionName: 'getTotalDistributed',
-        args: [1n]
+        args: [1n],
       });
 
       expect(total).toBe(parseEther('100000'));
@@ -367,7 +367,7 @@ describe('PayrollManager Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'payBonus',
-        args: [1n, employee1, parseEther('2000'), 'Performance bonus']
+        args: [1n, employee1, parseEther('2000'), 'Performance bonus'],
       });
 
       expect(result).toBe('0xhash');
@@ -380,7 +380,7 @@ describe('PayrollManager Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'setSchedule',
-        args: [1n, 2592000n] // Monthly (30 days)
+        args: [1n, 2592000n], // Monthly (30 days)
       });
 
       expect(result).toBe('0xhash');
@@ -390,12 +390,12 @@ describe('PayrollManager Contract', () => {
       mockContractRead.mockResolvedValueOnce({
         frequency: 2592000n, // Monthly
         nextPayment: 1234567890n,
-        autoDistribute: true
+        autoDistribute: true,
       });
 
       const schedule = await mockContractRead({
         functionName: 'getSchedule',
-        args: [1n]
+        args: [1n],
       });
 
       expect(schedule.frequency).toBe(2592000n);
@@ -406,7 +406,7 @@ describe('PayrollManager Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'enableAutoDistribute',
-        args: [1n]
+        args: [1n],
       });
 
       expect(result).toBe('0xhash');
@@ -417,7 +417,7 @@ describe('PayrollManager Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'disableAutoDistribute',
-        args: [1n]
+        args: [1n],
       });
 
       expect(result).toBe('0xhash');
@@ -428,7 +428,7 @@ describe('PayrollManager Contract', () => {
 
       const isDue = await mockContractRead({
         functionName: 'isDistributionDue',
-        args: [1n]
+        args: [1n],
       });
 
       expect(isDue).toBe(true);
@@ -439,7 +439,7 @@ describe('PayrollManager Contract', () => {
 
       const nextDate = await mockContractRead({
         functionName: 'getNextPaymentDate',
-        args: [1n]
+        args: [1n],
       });
 
       expect(nextDate).toBe(1234667890n);
@@ -450,7 +450,7 @@ describe('PayrollManager Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'setSchedule',
-        args: [1n, 2592000n]
+        args: [1n, 2592000n],
       });
 
       expect(result).toBe('0xhash');
@@ -462,7 +462,7 @@ describe('PayrollManager Contract', () => {
       await expect(async () => {
         await mockContractWrite({
           functionName: 'distributePayroll',
-          args: [1n]
+          args: [1n],
         });
       }).rejects.toThrow('not due');
     });
@@ -472,7 +472,7 @@ describe('PayrollManager Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'forceDistribute',
-        args: [1n]
+        args: [1n],
       });
 
       expect(result).toBe('0xhash');
@@ -482,7 +482,7 @@ describe('PayrollManager Contract', () => {
       mockContractRead.mockResolvedValueOnce([1n, 3n, 7n]);
 
       const due = await mockContractRead({
-        functionName: 'getPayrollsDue'
+        functionName: 'getPayrollsDue',
       });
 
       expect(due).toHaveLength(3);
@@ -495,7 +495,7 @@ describe('PayrollManager Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'fundPayroll',
-        args: [1n, parseEther('50000')]
+        args: [1n, parseEther('50000')],
       });
 
       expect(result).toBe('0xhash');
@@ -506,7 +506,7 @@ describe('PayrollManager Contract', () => {
 
       const balance = await mockContractRead({
         functionName: 'getPayrollBalance',
-        args: [1n]
+        args: [1n],
       });
 
       expect(balance).toBe(parseEther('25000'));
@@ -517,7 +517,7 @@ describe('PayrollManager Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'fundPayroll',
-        args: [1n, parseEther('30000')]
+        args: [1n, parseEther('30000')],
       });
 
       expect(result).toBe('0xhash');
@@ -528,7 +528,7 @@ describe('PayrollManager Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'withdrawFunds',
-        args: [1n, parseEther('5000')]
+        args: [1n, parseEther('5000')],
       });
 
       expect(result).toBe('0xhash');
@@ -540,7 +540,7 @@ describe('PayrollManager Contract', () => {
       await expect(async () => {
         await mockContractWrite({
           functionName: 'withdrawFunds',
-          args: [1n, parseEther('20000')]
+          args: [1n, parseEther('20000')],
         });
       }).rejects.toThrow('Insufficient buffer');
     });
@@ -550,7 +550,7 @@ describe('PayrollManager Contract', () => {
 
       const required = await mockContractRead({
         functionName: 'calculateRequiredBalance',
-        args: [1n, 2n] // periods
+        args: [1n, 2n], // periods
       });
 
       expect(required).toBe(parseEther('50000'));
@@ -561,7 +561,7 @@ describe('PayrollManager Contract', () => {
 
       const isFunded = await mockContractRead({
         functionName: 'isFullyFunded',
-        args: [1n]
+        args: [1n],
       });
 
       expect(isFunded).toBe(true);
@@ -570,12 +570,12 @@ describe('PayrollManager Contract', () => {
     it('should get funding history', async () => {
       mockContractRead.mockResolvedValueOnce([
         { amount: parseEther('50000'), timestamp: 1234567890n },
-        { amount: parseEther('25000'), timestamp: 1237159890n }
+        { amount: parseEther('25000'), timestamp: 1237159890n },
       ]);
 
       const history = await mockContractRead({
         functionName: 'getFundingHistory',
-        args: [1n]
+        args: [1n],
       });
 
       expect(history).toHaveLength(2);
@@ -589,12 +589,12 @@ describe('PayrollManager Contract', () => {
         activeEmployees: 5n,
         totalSalaries: parseEther('25000'),
         totalDistributed: parseEther('100000'),
-        distributionCount: 4n
+        distributionCount: 4n,
       });
 
       const stats = await mockContractRead({
         functionName: 'getPayrollStats',
-        args: [1n]
+        args: [1n],
       });
 
       expect(stats.totalEmployees).toBe(5n);
@@ -605,12 +605,12 @@ describe('PayrollManager Contract', () => {
         totalPayments: 12n,
         totalReceived: parseEther('60000'),
         averagePayment: parseEther('5000'),
-        lastPayment: 1234567890n
+        lastPayment: 1234567890n,
       });
 
       const stats = await mockContractRead({
         functionName: 'getEmployeeStats',
-        args: [1n, employee1]
+        args: [1n, employee1],
       });
 
       expect(stats.totalPayments).toBe(12n);
@@ -621,11 +621,11 @@ describe('PayrollManager Contract', () => {
         totalPayrolls: 50n,
         activePayrolls: 45n,
         totalEmployees: 250n,
-        totalDistributed: parseEther('5000000')
+        totalDistributed: parseEther('5000000'),
       });
 
       const stats = await mockContractRead({
-        functionName: 'getPlatformStats'
+        functionName: 'getPlatformStats',
       });
 
       expect(stats.totalPayrolls).toBe(50n);
@@ -638,12 +638,12 @@ describe('PayrollManager Contract', () => {
         employeesPaid: 5n,
         totalAmount: parseEther('25000'),
         successful: 5n,
-        failed: 0n
+        failed: 0n,
       });
 
       const report = await mockContractRead({
         functionName: 'generateReport',
-        args: [1n, 1234567890n, 1237159890n]
+        args: [1n, 1234567890n, 1237159890n],
       });
 
       expect(report.employeesPaid).toBe(5n);
@@ -655,7 +655,7 @@ describe('PayrollManager Contract', () => {
       mockContractRead.mockResolvedValueOnce(admin);
 
       const result = await mockContractRead({
-        functionName: 'admin'
+        functionName: 'admin',
       });
 
       expect(result).toBe(admin);
@@ -667,7 +667,7 @@ describe('PayrollManager Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'setAdmin',
-        args: [newAdmin]
+        args: [newAdmin],
       });
 
       expect(result).toBe('0xhash');
@@ -678,7 +678,7 @@ describe('PayrollManager Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'pause',
-        args: []
+        args: [],
       });
 
       expect(result).toBe('0xhash');
@@ -690,7 +690,7 @@ describe('PayrollManager Contract', () => {
       await expect(async () => {
         await mockContractWrite({
           functionName: 'distributePayroll',
-          args: [1n]
+          args: [1n],
         });
       }).rejects.toThrow('paused');
     });
@@ -700,7 +700,7 @@ describe('PayrollManager Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'setPlatformFee',
-        args: [100n] // 1%
+        args: [100n], // 1%
       });
 
       expect(result).toBe('0xhash');
@@ -711,7 +711,7 @@ describe('PayrollManager Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'emergencyPausePayroll',
-        args: [1n]
+        args: [1n],
       });
 
       expect(result).toBe('0xhash');
@@ -724,7 +724,7 @@ describe('PayrollManager Contract', () => {
 
       const count = await mockContractRead({
         functionName: 'getActiveEmployeesCount',
-        args: [1n]
+        args: [1n],
       });
 
       expect(count).toBe(0n);
@@ -736,7 +736,7 @@ describe('PayrollManager Contract', () => {
       await expect(async () => {
         await mockContractWrite({
           functionName: 'addEmployee',
-          args: [1n, employee1, 0n, 'Position']
+          args: [1n, employee1, 0n, 'Position'],
         });
       }).rejects.toThrow('greater than zero');
     });
@@ -746,7 +746,7 @@ describe('PayrollManager Contract', () => {
 
       const payrolls = await mockContractRead({
         functionName: 'getEmployeePayrolls',
-        args: [employee1]
+        args: [employee1],
       });
 
       expect(payrolls).toHaveLength(2);
@@ -757,7 +757,7 @@ describe('PayrollManager Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'removeEmployee',
-        args: [1n, employee1]
+        args: [1n, employee1],
       });
 
       expect(result).toBe('0xhash');

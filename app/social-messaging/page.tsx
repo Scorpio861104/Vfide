@@ -57,8 +57,7 @@ export default function SocialPage() {
     if (stored) {
       try {
         setFriends(JSON.parse(stored));
-      } catch (e) {
-        console.error('Failed to load friends:', e);
+      } catch {
       }
     }
   }, [address]);
@@ -327,11 +326,8 @@ export default function SocialPage() {
                       if (stored) {
                         try {
                           setFriends(JSON.parse(stored));
-                        } catch (e) {
+                        } catch {
                           // Invalid JSON in localStorage, ignore and use default empty array
-                          if (process.env.NODE_ENV === 'development') {
-                            console.warn('Failed to parse friends from localStorage:', e);
-                          }
                         }
                       }
                     }}

@@ -117,8 +117,7 @@ export default function EscrowPage() {
       setShowCreateModal(false);
       setCreateForm({ merchant: '', amount: '', orderId: '' });
       toast.success('Escrow created successfully');
-    } catch (err) {
-      console.error('Failed to create escrow:', err);
+    } catch {
       toast.error('Failed to create escrow. Please try again.');
     }
   };
@@ -127,8 +126,7 @@ export default function EscrowPage() {
     try {
       await releaseEscrow(BigInt(id));
       toast.success('Escrow released successfully');
-    } catch (err) {
-      console.error('Failed to release escrow:', err);
+    } catch {
       toast.error('Failed to release escrow. Please try again.');
     }
   };
@@ -138,8 +136,7 @@ export default function EscrowPage() {
       await raiseDispute(BigInt(id));
       toast.success('Dispute raised successfully');
       toast.info(`DAO hub notified for ESC-${id.toString()}. Arbitration queued.`);
-    } catch (err) {
-      console.error('Failed to raise dispute:', err);
+    } catch {
       toast.error('Failed to raise dispute. Please try again.');
     }
   };
@@ -148,8 +145,7 @@ export default function EscrowPage() {
     try {
       await refundEscrow(BigInt(id));
       toast.success('Refund issued successfully');
-    } catch (err) {
-      console.error('Failed to refund escrow:', err);
+    } catch {
       toast.error('Failed to refund escrow. Please try again.');
     }
   };
@@ -158,8 +154,7 @@ export default function EscrowPage() {
     try {
       await claimTimeout(BigInt(id));
       toast.success('Timeout claim submitted successfully');
-    } catch (err) {
-      console.error('Failed to claim timeout:', err);
+    } catch {
       toast.error('Failed to claim timeout. Please try again.');
     }
   };

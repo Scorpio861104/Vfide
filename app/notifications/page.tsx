@@ -122,6 +122,7 @@ export default function NotificationHubPage() {
           </span>
         </div>
       </PageHeader>
+      <h1 className="sr-only">Notification Command</h1>
 
       {/* Tab Navigation */}
       <div className="sticky top-20 z-40 bg-slate-900/80 backdrop-blur-xl border-b border-slate-800">

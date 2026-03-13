@@ -35,12 +35,7 @@ describe('DAO Governance Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'propose',
-        args: [
-          ['0xTarget1234567890123456789012345678901234'],
-          [0n],
-          ['0x1234'],
-          'Test Proposal'
-        ]
+        args: [['0xTarget1234567890123456789012345678901234'], [0n], ['0x1234'], 'Test Proposal'],
       });
 
       expect(result).toBe('0xhash');
@@ -52,7 +47,7 @@ describe('DAO Governance Contract', () => {
       await expect(async () => {
         await mockContractWrite({
           functionName: 'propose',
-          args: [['0xTarget'], [0n], ['0x1234'], 'Test']
+          args: [['0xTarget'], [0n], ['0x1234'], 'Test'],
         });
       }).rejects.toThrow('Not eligible');
     });
@@ -63,7 +58,7 @@ describe('DAO Governance Contract', () => {
       await expect(async () => {
         await mockContractWrite({
           functionName: 'propose',
-          args: [['0xTarget'], [0n], ['0x1234'], 'Test']
+          args: [['0xTarget'], [0n], ['0x1234'], 'Test'],
         });
       }).rejects.toThrow('Seer score too low');
     });
@@ -81,7 +76,7 @@ describe('DAO Governance Contract', () => {
       await expect(async () => {
         await mockContractWrite({
           functionName: 'propose',
-          args: [['0xTarget'], [0n], ['0x1234'], '']
+          args: [['0xTarget'], [0n], ['0x1234'], ''],
         });
       }).rejects.toThrow('Empty description');
     });
@@ -96,8 +91,8 @@ describe('DAO Governance Contract', () => {
             ['0xTarget1', '0xTarget2'],
             [0n], // Only 1 value
             ['0x1234', '0x5678'],
-            'Test'
-          ]
+            'Test',
+          ],
         });
       }).rejects.toThrow('Array length mismatch');
     });
@@ -107,7 +102,7 @@ describe('DAO Governance Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'propose',
-        args: [['0xTarget'], [0n], ['0x1234'], 'Test Proposal']
+        args: [['0xTarget'], [0n], ['0x1234'], 'Test Proposal'],
       });
 
       expect(result).toBe('0xhash');
@@ -123,7 +118,7 @@ describe('DAO Governance Contract', () => {
 
       const state = await mockContractRead({
         functionName: 'getProposalStatus',
-        args: [proposalId]
+        args: [proposalId],
       });
 
       expect(state).toBe(0);
@@ -134,7 +129,7 @@ describe('DAO Governance Contract', () => {
 
       const state = await mockContractRead({
         functionName: 'getProposalStatus',
-        args: [proposalId]
+        args: [proposalId],
       });
 
       expect(state).toBe(1);
@@ -145,7 +140,7 @@ describe('DAO Governance Contract', () => {
 
       const state = await mockContractRead({
         functionName: 'getProposalStatus',
-        args: [proposalId]
+        args: [proposalId],
       });
 
       expect(state).toBe(3);
@@ -156,7 +151,7 @@ describe('DAO Governance Contract', () => {
 
       const state = await mockContractRead({
         functionName: 'getProposalStatus',
-        args: [proposalId]
+        args: [proposalId],
       });
 
       expect(state).toBe(4);
@@ -167,7 +162,7 @@ describe('DAO Governance Contract', () => {
 
       const state = await mockContractRead({
         functionName: 'getProposalStatus',
-        args: [proposalId]
+        args: [proposalId],
       });
 
       expect(state).toBe(5);
@@ -178,7 +173,7 @@ describe('DAO Governance Contract', () => {
 
       const state = await mockContractRead({
         functionName: 'getProposalStatus',
-        args: [proposalId]
+        args: [proposalId],
       });
 
       expect(state).toBe(2);
@@ -195,12 +190,12 @@ describe('DAO Governance Contract', () => {
         startBlock: 1000n,
         endBlock: 2000n,
         executed: false,
-        cancelled: false
+        cancelled: false,
       });
 
       const details = await mockContractRead({
         functionName: 'getProposalDetails',
-        args: [proposalId]
+        args: [proposalId],
       });
 
       expect(details.id).toBe(proposalId);
@@ -216,7 +211,7 @@ describe('DAO Governance Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'vote',
-        args: [proposalId, 1] // 1 = For
+        args: [proposalId, 1], // 1 = For
       });
 
       expect(result).toBe('0xhash');
@@ -227,7 +222,7 @@ describe('DAO Governance Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'vote',
-        args: [proposalId, 0] // 0 = Against
+        args: [proposalId, 0], // 0 = Against
       });
 
       expect(result).toBe('0xhash');
@@ -238,7 +233,7 @@ describe('DAO Governance Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'vote',
-        args: [proposalId, 2] // 2 = Abstain
+        args: [proposalId, 2], // 2 = Abstain
       });
 
       expect(result).toBe('0xhash');
@@ -250,7 +245,7 @@ describe('DAO Governance Contract', () => {
       await expect(async () => {
         await mockContractWrite({
           functionName: 'vote',
-          args: [proposalId, 1]
+          args: [proposalId, 1],
         });
       }).rejects.toThrow('Not eligible to vote');
     });
@@ -261,7 +256,7 @@ describe('DAO Governance Contract', () => {
       await expect(async () => {
         await mockContractWrite({
           functionName: 'vote',
-          args: [proposalId, 1]
+          args: [proposalId, 1],
         });
       }).rejects.toThrow('Already voted');
     });
@@ -272,7 +267,7 @@ describe('DAO Governance Contract', () => {
       await expect(async () => {
         await mockContractWrite({
           functionName: 'vote',
-          args: [proposalId, 1]
+          args: [proposalId, 1],
         });
       }).rejects.toThrow('not active');
     });
@@ -283,7 +278,7 @@ describe('DAO Governance Contract', () => {
       await expect(async () => {
         await mockContractWrite({
           functionName: 'vote',
-          args: [proposalId, 1]
+          args: [proposalId, 1],
         });
       }).rejects.toThrow('Voting ended');
     });
@@ -293,7 +288,7 @@ describe('DAO Governance Contract', () => {
 
       const voted = await mockContractRead({
         functionName: 'hasVoted',
-        args: [proposalId, voter1]
+        args: [proposalId, voter1],
       });
 
       expect(voted).toBe(true);
@@ -304,7 +299,7 @@ describe('DAO Governance Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'vote',
-        args: [proposalId, 1]
+        args: [proposalId, 1],
       });
 
       expect(result).toBe('0xhash');
@@ -317,7 +312,7 @@ describe('DAO Governance Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'delegate',
-        args: [voter2]
+        args: [voter2],
       });
 
       expect(result).toBe('0xhash');
@@ -329,7 +324,7 @@ describe('DAO Governance Contract', () => {
       await expect(async () => {
         await mockContractWrite({
           functionName: 'delegate',
-          args: [voter1] // delegating to self
+          args: [voter1], // delegating to self
         });
       }).rejects.toThrow('self-delegate');
     });
@@ -339,7 +334,7 @@ describe('DAO Governance Contract', () => {
 
       const power = await mockContractRead({
         functionName: 'getVotingPower',
-        args: [voter2]
+        args: [voter2],
       });
 
       expect(power).toBe(parseEther('5000'));
@@ -351,7 +346,7 @@ describe('DAO Governance Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'delegate',
-        args: [zeroAddress]
+        args: [zeroAddress],
       });
 
       expect(result).toBe('0xhash');
@@ -365,7 +360,7 @@ describe('DAO Governance Contract', () => {
       mockContractRead.mockResolvedValueOnce(1000n); // 10% (basis points)
 
       const minParticipation = await mockContractRead({
-        functionName: 'minParticipation'
+        functionName: 'minParticipation',
       });
 
       expect(minParticipation).toBe(1000n);
@@ -375,7 +370,7 @@ describe('DAO Governance Contract', () => {
       mockContractRead.mockResolvedValueOnce(parseEther('10000')); // 10% quorum
 
       const minVotes = await mockContractRead({
-        functionName: 'minVotesRequired'
+        functionName: 'minVotesRequired',
       });
 
       expect(minVotes).toBe(parseEther('10000'));
@@ -386,7 +381,7 @@ describe('DAO Governance Contract', () => {
 
       const state = await mockContractRead({
         functionName: 'getProposalStatus',
-        args: [proposalId]
+        args: [proposalId],
       });
 
       expect(state).toBe(3); // Defeated
@@ -397,7 +392,7 @@ describe('DAO Governance Contract', () => {
 
       const state = await mockContractRead({
         functionName: 'getProposalStatus',
-        args: [proposalId]
+        args: [proposalId],
       });
 
       expect(state).toBe(4); // Queued
@@ -408,7 +403,7 @@ describe('DAO Governance Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'setMinParticipation',
-        args: [1500n] // 15%
+        args: [1500n], // 15%
       });
 
       expect(result).toBe('0xhash');
@@ -420,7 +415,7 @@ describe('DAO Governance Contract', () => {
       await expect(async () => {
         await mockContractWrite({
           functionName: 'setMinParticipation',
-          args: [1500n]
+          args: [1500n],
         });
       }).rejects.toThrow('Not admin');
     });
@@ -432,7 +427,7 @@ describe('DAO Governance Contract', () => {
 
       const eligible = await mockContractRead({
         functionName: 'isEligible',
-        args: [voter1]
+        args: [voter1],
       });
 
       expect(eligible).toBe(true);
@@ -444,7 +439,7 @@ describe('DAO Governance Contract', () => {
       await expect(async () => {
         await mockContractWrite({
           functionName: 'vote',
-          args: [1n, 1]
+          args: [1n, 1],
         });
       }).rejects.toThrow('Insufficient Seer score');
     });
@@ -454,7 +449,7 @@ describe('DAO Governance Contract', () => {
 
       const power = await mockContractRead({
         functionName: 'getVotingPower',
-        args: [voter1]
+        args: [voter1],
       });
 
       expect(power).toBe(parseEther('11000'));
@@ -465,12 +460,12 @@ describe('DAO Governance Contract', () => {
         proposalsVoted: 10n,
         votingPower: parseEther('5000'),
         seerScore: 800n,
-        fatigue: 50n
+        fatigue: 50n,
       });
 
       const stats = await mockContractRead({
         functionName: 'getVoterStats',
-        args: [voter1]
+        args: [voter1],
       });
 
       expect(stats.proposalsVoted).toBe(10n);
@@ -486,7 +481,7 @@ describe('DAO Governance Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'queue',
-        args: [proposalId]
+        args: [proposalId],
       });
 
       expect(result).toBe('0xhash');
@@ -498,7 +493,7 @@ describe('DAO Governance Contract', () => {
       await expect(async () => {
         await mockContractWrite({
           functionName: 'queue',
-          args: [proposalId]
+          args: [proposalId],
         });
       }).rejects.toThrow('did not pass');
     });
@@ -509,7 +504,7 @@ describe('DAO Governance Contract', () => {
       await expect(async () => {
         await mockContractWrite({
           functionName: 'execute',
-          args: [proposalId]
+          args: [proposalId],
         });
       }).rejects.toThrow('Timelock not expired');
     });
@@ -519,7 +514,7 @@ describe('DAO Governance Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'execute',
-        args: [proposalId]
+        args: [proposalId],
       });
 
       expect(result).toBe('0xhash');
@@ -530,13 +525,13 @@ describe('DAO Governance Contract', () => {
 
       await mockContractWrite({
         functionName: 'markExecuted',
-        args: [proposalId]
+        args: [proposalId],
       });
 
       mockContractRead.mockResolvedValueOnce(5); // Executed
       const state = await mockContractRead({
         functionName: 'getProposalStatus',
-        args: [proposalId]
+        args: [proposalId],
       });
 
       expect(state).toBe(5);
@@ -557,7 +552,7 @@ describe('DAO Governance Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'setAdmin',
-        args: [newAdmin]
+        args: [newAdmin],
       });
 
       expect(result).toBe('0xhash');
@@ -569,7 +564,7 @@ describe('DAO Governance Contract', () => {
       await expect(async () => {
         await mockContractWrite({
           functionName: 'setAdmin',
-          args: [voter1]
+          args: [voter1],
         });
       }).rejects.toThrow('Not admin');
     });
@@ -582,8 +577,8 @@ describe('DAO Governance Contract', () => {
         args: [
           86400n, // voting delay
           604800n, // voting period
-          1000n // quorum
-        ]
+          1000n, // quorum
+        ],
       });
 
       expect(result).toBe('0xhash');
@@ -595,7 +590,7 @@ describe('DAO Governance Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'setGuardian',
-        args: [guardian]
+        args: [guardian],
       });
 
       expect(result).toBe('0xhash');
@@ -617,8 +612,8 @@ describe('DAO Governance Contract', () => {
         args: [
           '0xSeer123456789012345678901234567890123',
           '0xLedger1234567890123456789012345678901',
-          '0xHooks12345678901234567890123456789012'
-        ]
+          '0xHooks12345678901234567890123456789012',
+        ],
       });
 
       expect(result).toBe('0xhash');
@@ -633,7 +628,7 @@ describe('DAO Governance Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'execute',
-        args: [proposalId]
+        args: [proposalId],
       });
 
       expect(result).toBe('0xhash');
@@ -644,7 +639,7 @@ describe('DAO Governance Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'execute',
-        args: [proposalId]
+        args: [proposalId],
       });
 
       expect(result).toBe('0xhash');
@@ -656,7 +651,7 @@ describe('DAO Governance Contract', () => {
       await expect(async () => {
         await mockContractWrite({
           functionName: 'execute',
-          args: [proposalId]
+          args: [proposalId],
         });
       }).rejects.toThrow('Already executed');
     });
@@ -667,7 +662,7 @@ describe('DAO Governance Contract', () => {
       await expect(async () => {
         await mockContractWrite({
           functionName: 'execute',
-          args: [proposalId]
+          args: [proposalId],
         });
       }).rejects.toThrow('cancelled');
     });
@@ -677,7 +672,7 @@ describe('DAO Governance Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'finalize',
-        args: [proposalId]
+        args: [proposalId],
       });
 
       expect(result).toBe('0xhash');
@@ -691,7 +686,7 @@ describe('DAO Governance Contract', () => {
       await expect(async () => {
         await mockContractWrite({
           functionName: 'vote',
-          args: [1n, 1]
+          args: [1n, 1],
         });
       }).rejects.toThrow('No voting power');
     });
@@ -703,7 +698,7 @@ describe('DAO Governance Contract', () => {
       await expect(async () => {
         await mockContractWrite({
           functionName: 'propose',
-          args: [['0xTarget'], [0n], ['0x1234'], 'Spam']
+          args: [['0xTarget'], [0n], ['0x1234'], 'Spam'],
         });
       }).rejects.toThrow('Rate limit');
     });
@@ -713,7 +708,7 @@ describe('DAO Governance Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'vote',
-        args: [1n, 0] // changing vote
+        args: [1n, 0], // changing vote
       });
 
       expect(result).toBe('0xhash');
@@ -723,7 +718,7 @@ describe('DAO Governance Contract', () => {
       mockContractRead.mockResolvedValueOnce([1n, 2n, 5n]); // active proposal IDs
 
       const active = await mockContractRead({
-        functionName: 'getActiveProposals'
+        functionName: 'getActiveProposals',
       });
 
       expect(active).toHaveLength(3);
@@ -733,12 +728,12 @@ describe('DAO Governance Contract', () => {
       mockContractRead.mockResolvedValueOnce([
         { id: 1n, description: 'Proposal 1' },
         { id: 2n, description: 'Proposal 2' },
-        { id: 3n, description: 'Proposal 3' }
+        { id: 3n, description: 'Proposal 3' },
       ]);
 
       const batch = await mockContractRead({
         functionName: 'getProposalsBatch',
-        args: [0n, 3n] // start, count
+        args: [0n, 3n], // start, count
       });
 
       expect(batch).toHaveLength(3);
@@ -749,7 +744,7 @@ describe('DAO Governance Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'disputeFlag',
-        args: [1n, 'Reason for dispute']
+        args: [1n, 'Reason for dispute'],
       });
 
       expect(result).toBe('0xhash');
@@ -761,12 +756,12 @@ describe('DAO Governance Contract', () => {
       mockContractRead.mockResolvedValueOnce([
         { proposalId: 1n, support: 1, timestamp: 1234567890n },
         { proposalId: 2n, support: 1, timestamp: 1234567900n },
-        { proposalId: 3n, support: 0, timestamp: 1234567910n }
+        { proposalId: 3n, support: 0, timestamp: 1234567910n },
       ]);
 
       const history = await mockContractRead({
         functionName: 'getVoterHistory',
-        args: [voter1]
+        args: [voter1],
       });
 
       expect(history).toHaveLength(3);
@@ -776,12 +771,12 @@ describe('DAO Governance Contract', () => {
       mockContractRead.mockResolvedValueOnce({
         proposalsVoted: 10n,
         totalProposals: 15n,
-        participationRate: 6666n // 66.66%
+        participationRate: 6666n, // 66.66%
       });
 
       const stats = await mockContractRead({
         functionName: 'getVoterStats',
-        args: [voter1]
+        args: [voter1],
       });
 
       expect(stats.proposalsVoted).toBe(10n);
@@ -793,12 +788,12 @@ describe('DAO Governance Contract', () => {
       mockContractRead.mockResolvedValueOnce({
         currentFatigue: 300n,
         fatiguePerVote: 100n,
-        recoveryRate: 10n
+        recoveryRate: 10n,
       });
 
       const info = await mockContractRead({
         functionName: 'getFatigueInfo',
-        args: [voter1]
+        args: [voter1],
       });
 
       expect(info.currentFatigue).toBe(300n);
@@ -809,7 +804,7 @@ describe('DAO Governance Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'vote',
-        args: [1n, 1]
+        args: [1n, 1],
       });
 
       expect(result).toBe('0xhash');
@@ -820,7 +815,7 @@ describe('DAO Governance Contract', () => {
       mockContractRead.mockResolvedValueOnce(rate);
 
       const recoveryRate = await mockContractRead({
-        functionName: 'FATIGUE_RECOVERY_RATE'
+        functionName: 'FATIGUE_RECOVERY_RATE',
       });
 
       expect(recoveryRate).toBe(rate);
@@ -831,7 +826,7 @@ describe('DAO Governance Contract', () => {
       mockContractRead.mockResolvedValueOnce(fatiguePerVote);
 
       const result = await mockContractRead({
-        functionName: 'FATIGUE_PER_VOTE'
+        functionName: 'FATIGUE_PER_VOTE',
       });
 
       expect(result).toBe(fatiguePerVote);
@@ -843,7 +838,7 @@ describe('DAO Governance Contract', () => {
       await expect(async () => {
         await mockContractWrite({
           functionName: 'vote',
-          args: [1n, 1]
+          args: [1n, 1],
         });
       }).rejects.toThrow('fatigue too high');
     });
@@ -855,7 +850,7 @@ describe('DAO Governance Contract', () => {
 
       const restricted = await mockContractRead({
         functionName: 'isRestricted',
-        args: [voter1]
+        args: [voter1],
       });
 
       expect(restricted).toBe(false);
@@ -867,7 +862,7 @@ describe('DAO Governance Contract', () => {
       await expect(async () => {
         await mockContractWrite({
           functionName: 'vote',
-          args: [1n, 1]
+          args: [1n, 1],
         });
       }).rejects.toThrow('restricted');
     });
@@ -877,7 +872,7 @@ describe('DAO Governance Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'guardianOverride',
-        args: [1n, true]
+        args: [1n, true],
       });
 
       expect(result).toBe('0xhash');
@@ -898,7 +893,7 @@ describe('DAO Governance Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'vote',
-        args: [1n, 1]
+        args: [1n, 1],
       });
 
       expect(result).toBe('0xhash');
@@ -920,7 +915,7 @@ describe('DAO Governance Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'vote',
-        args: [1n, 1]
+        args: [1n, 1],
       });
 
       expect(result).toBe('0xhash');
@@ -932,7 +927,7 @@ describe('DAO Governance Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'propose',
-        args: [['0xTarget'], [0n], ['0x1234'], 'Test']
+        args: [['0xTarget'], [0n], ['0x1234'], 'Test'],
       });
 
       expect(result).toBe('0xhash');
@@ -953,7 +948,7 @@ describe('DAO Governance Contract', () => {
 
       const score = await mockContractRead({
         functionName: 'getSeerScore',
-        args: [voter1]
+        args: [voter1],
       });
 
       expect(score).toBe(1000n);

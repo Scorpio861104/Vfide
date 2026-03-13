@@ -13,6 +13,7 @@ import {
   getAccountLock,
   recordSecurityEvent,
 } from '@/lib/security/accountProtection';
+import { getRequestIp } from '@/lib/security/requestContext';
 
 interface KeyDirectoryRow {
   address: string;
@@ -75,8 +76,8 @@ export async function PUT(request: NextRequest) {
   }
 
   const authenticatedAddress = authResult.user.address.toLowerCase();
-  const requesterIp = (request.headers.get('x-forwarded-for') || '').split(',')[0]?.trim() || 'unknown';
-  const lock = getAccountLock(authenticatedAddress);
+  const { ip: requesterIp } = getRequestIp(request.headers);
+  const lock = await getAccountLock(authenticatedAddress);
   if (lock) {
     return NextResponse.json(
       { error: `Account temporarily locked due to security signals: ${lock.reason}` },
@@ -118,7 +119,7 @@ export async function PUT(request: NextRequest) {
     return NextResponse.json({ error: 'Signature verification failed' }, { status: 401 });
   }
 
-  const lockResult = recordSecurityEvent(authenticatedAddress, {
+  const lockResult = await recordSecurityEvent(authenticatedAddress, {
     ts: Date.now(),
     ip: requesterIp,
     type: 'key_rotate',

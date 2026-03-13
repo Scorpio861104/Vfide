@@ -4,7 +4,14 @@
  */
 
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
-import { createPublicClient, createWalletClient, http, parseEther, formatEther, Address } from 'viem';
+import {
+  createPublicClient,
+  createWalletClient,
+  http,
+  parseEther,
+  formatEther,
+  Address,
+} from 'viem';
 import { sepolia } from 'viem/chains';
 
 const mockContractRead = jest.fn();
@@ -183,150 +190,168 @@ describe('VFIDEPresale Contract', () => {
   describe('Buy Tokens - ETH', () => {
     it('should allow buying tokens with ETH', async () => {
       mockContractWrite.mockResolvedValueOnce('0xhash');
-      const result = await mockContractWrite({ 
+      const result = await mockContractWrite({
         functionName: 'buyTokens',
-        args: [0] // Tier 0, no lock
+        args: [0], // Tier 0, no lock
       });
       expect(result).toBe('0xhash');
     });
 
     it('should reject purchase below minimum ETH', async () => {
       mockContractWrite.mockRejectedValueOnce(new Error('BelowMinimum'));
-      await expect(mockContractWrite({ 
-        functionName: 'buyTokens',
-        args: [0],
-        value: parseEther('0.005')
-      })).rejects.toThrow('BelowMinimum');
+      await expect(
+        mockContractWrite({
+          functionName: 'buyTokens',
+          args: [0],
+          value: parseEther('0.005'),
+        })
+      ).rejects.toThrow('BelowMinimum');
     });
 
     it('should reject purchase exceeding max per wallet', async () => {
       mockContractWrite.mockRejectedValueOnce(new Error('MaxPerWalletExceeded'));
-      await expect(mockContractWrite({ 
-        functionName: 'buyTokens',
-        args: [0],
-        value: parseEther('51')
-      })).rejects.toThrow('MaxPerWalletExceeded');
+      await expect(
+        mockContractWrite({
+          functionName: 'buyTokens',
+          args: [0],
+          value: parseEther('51'),
+        })
+      ).rejects.toThrow('MaxPerWalletExceeded');
     });
 
     it('should reject purchase when sale not active', async () => {
       mockContractWrite.mockRejectedValueOnce(new Error('SaleNotActive'));
-      await expect(mockContractWrite({ 
-        functionName: 'buyTokens',
-        args: [0]
-      })).rejects.toThrow('SaleNotActive');
+      await expect(
+        mockContractWrite({
+          functionName: 'buyTokens',
+          args: [0],
+        })
+      ).rejects.toThrow('SaleNotActive');
     });
 
     it('should reject purchase when paused', async () => {
       mockContractWrite.mockRejectedValueOnce(new Error('Pausable: paused'));
-      await expect(mockContractWrite({ 
-        functionName: 'buyTokens',
-        args: [0]
-      })).rejects.toThrow('Pausable: paused');
+      await expect(
+        mockContractWrite({
+          functionName: 'buyTokens',
+          args: [0],
+        })
+      ).rejects.toThrow('Pausable: paused');
     });
 
     it('should reject purchase when ETH not accepted', async () => {
       mockContractWrite.mockRejectedValueOnce(new Error('EthNotAccepted'));
-      await expect(mockContractWrite({ 
-        functionName: 'buyTokens',
-        args: [0]
-      })).rejects.toThrow('EthNotAccepted');
+      await expect(
+        mockContractWrite({
+          functionName: 'buyTokens',
+          args: [0],
+        })
+      ).rejects.toThrow('EthNotAccepted');
     });
 
     it('should reject purchase with stale ETH price', async () => {
       mockContractWrite.mockRejectedValueOnce(new Error('StalePrice'));
-      await expect(mockContractWrite({ 
-        functionName: 'buyTokens',
-        args: [0]
-      })).rejects.toThrow('StalePrice');
+      await expect(
+        mockContractWrite({
+          functionName: 'buyTokens',
+          args: [0],
+        })
+      ).rejects.toThrow('StalePrice');
     });
 
     it('should reject purchase exceeding max gas price', async () => {
       mockContractWrite.mockRejectedValueOnce(new Error('GasPriceTooHigh'));
-      await expect(mockContractWrite({ 
-        functionName: 'buyTokens',
-        args: [0]
-      })).rejects.toThrow('GasPriceTooHigh');
+      await expect(
+        mockContractWrite({
+          functionName: 'buyTokens',
+          args: [0],
+        })
+      ).rejects.toThrow('GasPriceTooHigh');
     });
   });
 
   describe('Buy Tokens - Stablecoins', () => {
     it('should allow buying with stablecoin', async () => {
       mockContractWrite.mockResolvedValueOnce('0xhash');
-      const result = await mockContractWrite({ 
+      const result = await mockContractWrite({
         functionName: 'buyWithStable',
-        args: [buyer1, parseEther('100'), 0]
+        args: [buyer1, parseEther('100'), 0],
       });
       expect(result).toBe('0xhash');
     });
 
     it('should reject invalid stablecoin', async () => {
       mockContractWrite.mockRejectedValueOnce(new Error('InvalidStablecoin'));
-      await expect(mockContractWrite({ 
-        functionName: 'buyWithStable',
-        args: [buyer1, parseEther('100'), 0]
-      })).rejects.toThrow('InvalidStablecoin');
+      await expect(
+        mockContractWrite({
+          functionName: 'buyWithStable',
+          args: [buyer1, parseEther('100'), 0],
+        })
+      ).rejects.toThrow('InvalidStablecoin');
     });
 
     it('should reject purchase below minimum USD', async () => {
       mockContractWrite.mockRejectedValueOnce(new Error('BelowMinimum'));
-      await expect(mockContractWrite({ 
-        functionName: 'buyWithStable',
-        args: [buyer1, parseEther('20'), 0]
-      })).rejects.toThrow('BelowMinimum');
+      await expect(
+        mockContractWrite({
+          functionName: 'buyWithStable',
+          args: [buyer1, parseEther('20'), 0],
+        })
+      ).rejects.toThrow('BelowMinimum');
     });
   });
 
   describe('Token Calculations', () => {
     it('should calculate tokens from ETH', async () => {
       mockContractRead.mockResolvedValueOnce(parseEther('50000'));
-      const result = await mockContractRead({ 
+      const result = await mockContractRead({
         functionName: 'calculateTokensFromEth',
-        args: [parseEther('1'), 0]
+        args: [parseEther('1'), 0],
       });
       expect(result).toBe(parseEther('50000'));
     });
 
     it('should calculate tokens from ETH for specific tier', async () => {
       mockContractRead.mockResolvedValueOnce(parseEther('40000'));
-      const result = await mockContractRead({ 
+      const result = await mockContractRead({
         functionName: 'calculateTokensFromEthTier',
-        args: [parseEther('1'), 1]
+        args: [parseEther('1'), 1],
       });
       expect(result).toBe(parseEther('40000'));
     });
 
     it('should calculate tokens from USD', async () => {
       mockContractRead.mockResolvedValueOnce(parseEther('50000'));
-      const result = await mockContractRead({ 
+      const result = await mockContractRead({
         functionName: 'calculateTokensFromUsd',
-        args: [parseEther('100'), 0]
+        args: [parseEther('100'), 0],
       });
       expect(result).toBe(parseEther('50000'));
     });
 
     it('should preview tokens from USD', async () => {
       mockContractRead.mockResolvedValueOnce(parseEther('50000'));
-      const result = await mockContractRead({ 
+      const result = await mockContractRead({
         functionName: 'calculateTokensFromUsdPreview',
-        args: [parseEther('100'), 0]
+        args: [parseEther('100'), 0],
       });
       expect(result).toBe(parseEther('50000'));
     });
 
     it('should calculate tokens from USD for specific tier', async () => {
       mockContractRead.mockResolvedValueOnce(parseEther('40000'));
-      const result = await mockContractRead({ 
+      const result = await mockContractRead({
         functionName: 'calculateTokensFromUsdTier',
-        args: [parseEther('100'), 1]
+        args: [parseEther('100'), 1],
       });
       expect(result).toBe(parseEther('40000'));
     });
 
     it('should calculate generic tokens', async () => {
       mockContractRead.mockResolvedValueOnce(parseEther('50000'));
-      const result = await mockContractRead({ 
+      const result = await mockContractRead({
         functionName: 'calculateTokens',
-        args: [parseEther('100'), 0]
+        args: [parseEther('100'), 0],
       });
       expect(result).toBe(parseEther('50000'));
     });
@@ -359,17 +384,23 @@ describe('VFIDEPresale Contract', () => {
 
     it('should reject claim when not finalized', async () => {
       mockContractWrite.mockRejectedValueOnce(new Error('NotFinalized'));
-      await expect(mockContractWrite({ functionName: 'claimImmediate' })).rejects.toThrow('NotFinalized');
+      await expect(mockContractWrite({ functionName: 'claimImmediate' })).rejects.toThrow(
+        'NotFinalized'
+      );
     });
 
     it('should reject claim with no tokens available', async () => {
       mockContractWrite.mockRejectedValueOnce(new Error('NothingToClaim'));
-      await expect(mockContractWrite({ functionName: 'claimImmediate' })).rejects.toThrow('NothingToClaim');
+      await expect(mockContractWrite({ functionName: 'claimImmediate' })).rejects.toThrow(
+        'NothingToClaim'
+      );
     });
 
     it('should reject locked token claim before unlock time', async () => {
       mockContractWrite.mockRejectedValueOnce(new Error('TokensStillLocked'));
-      await expect(mockContractWrite({ functionName: 'claimLocked' })).rejects.toThrow('TokensStillLocked');
+      await expect(mockContractWrite({ functionName: 'claimLocked' })).rejects.toThrow(
+        'TokensStillLocked'
+      );
     });
   });
 
@@ -382,7 +413,10 @@ describe('VFIDEPresale Contract', () => {
 
     it('should check if user can claim stable refund', async () => {
       mockContractRead.mockResolvedValueOnce(true);
-      const result = await mockContractRead({ functionName: 'canClaimStableRefund', args: [buyer1] });
+      const result = await mockContractRead({
+        functionName: 'canClaimStableRefund',
+        args: [buyer1],
+      });
       expect(result).toBe(true);
     });
 
@@ -431,12 +465,16 @@ describe('VFIDEPresale Contract', () => {
 
     it('should reject refund when not enabled', async () => {
       mockContractWrite.mockRejectedValueOnce(new Error('RefundsNotEnabled'));
-      await expect(mockContractWrite({ functionName: 'claimRefund' })).rejects.toThrow('RefundsNotEnabled');
+      await expect(mockContractWrite({ functionName: 'claimRefund' })).rejects.toThrow(
+        'RefundsNotEnabled'
+      );
     });
 
     it('should reject refund after deadline', async () => {
       mockContractWrite.mockRejectedValueOnce(new Error('RefundDeadlinePassed'));
-      await expect(mockContractWrite({ functionName: 'claimRefund' })).rejects.toThrow('RefundDeadlinePassed');
+      await expect(mockContractWrite({ functionName: 'claimRefund' })).rejects.toThrow(
+        'RefundDeadlinePassed'
+      );
     });
 
     it('should recover unclaimed refunds', async () => {
@@ -449,9 +487,9 @@ describe('VFIDEPresale Contract', () => {
   describe('Presale Management', () => {
     it('should allow depositing tokens', async () => {
       mockContractWrite.mockResolvedValueOnce('0xhash');
-      const result = await mockContractWrite({ 
+      const result = await mockContractWrite({
         functionName: 'depositTokens',
-        args: [parseEther('280000000')]
+        args: [parseEther('280000000')],
       });
       expect(result).toBe('0xhash');
     });
@@ -464,18 +502,18 @@ describe('VFIDEPresale Contract', () => {
 
     it('should allow extending sale', async () => {
       mockContractWrite.mockResolvedValueOnce('0xhash');
-      const result = await mockContractWrite({ 
+      const result = await mockContractWrite({
         functionName: 'extendSale',
-        args: [86400] // 1 day extension
+        args: [86400], // 1 day extension
       });
       expect(result).toBe('0xhash');
     });
 
     it('should allow canceling purchase', async () => {
       mockContractWrite.mockResolvedValueOnce('0xhash');
-      const result = await mockContractWrite({ 
+      const result = await mockContractWrite({
         functionName: 'cancelPurchase',
-        args: [buyer1, 0]
+        args: [buyer1, 0],
       });
       expect(result).toBe('0xhash');
     });
@@ -514,64 +552,66 @@ describe('VFIDEPresale Contract', () => {
   describe('Admin Controls', () => {
     it('should allow setting pause state', async () => {
       mockContractWrite.mockResolvedValueOnce('0xhash');
-      const result = await mockContractWrite({ 
+      const result = await mockContractWrite({
         functionName: 'setPaused',
-        args: [true]
+        args: [true],
       });
       expect(result).toBe('0xhash');
     });
 
     it('should allow setting ETH accepted', async () => {
       mockContractWrite.mockResolvedValueOnce('0xhash');
-      const result = await mockContractWrite({ 
+      const result = await mockContractWrite({
         functionName: 'setEthAccepted',
-        args: [true]
+        args: [true],
       });
       expect(result).toBe('0xhash');
     });
 
     it('should allow setting ETH price', async () => {
       mockContractWrite.mockResolvedValueOnce('0xhash');
-      const result = await mockContractWrite({ 
+      const result = await mockContractWrite({
         functionName: 'setEthPrice',
-        args: [parseEther('2500')]
+        args: [parseEther('2500')],
       });
       expect(result).toBe('0xhash');
     });
 
     it('should allow setting max gas price', async () => {
       mockContractWrite.mockResolvedValueOnce('0xhash');
-      const result = await mockContractWrite({ 
+      const result = await mockContractWrite({
         functionName: 'setMaxGasPrice',
-        args: [parseEther('0.0001')]
+        args: [parseEther('0.0001')],
       });
       expect(result).toBe('0xhash');
     });
 
     it('should allow setting stablecoin registry', async () => {
       mockContractWrite.mockResolvedValueOnce('0xhash');
-      const result = await mockContractWrite({ 
+      const result = await mockContractWrite({
         functionName: 'setStablecoinRegistry',
-        args: [buyer1]
+        args: [buyer1],
       });
       expect(result).toBe('0xhash');
     });
 
     it('should allow setting tier enabled', async () => {
       mockContractWrite.mockResolvedValueOnce('0xhash');
-      const result = await mockContractWrite({ 
+      const result = await mockContractWrite({
         functionName: 'setTierEnabled',
-        args: [0, true]
+        args: [0, true],
       });
       expect(result).toBe('0xhash');
     });
 
     it('should reject non-owner admin calls', async () => {
       mockContractWrite.mockRejectedValueOnce(new Error('Ownable: caller is not the owner'));
-      await expect(mockContractWrite({ 
-        functionName: 'setPaused',
-        args: [true]
-      })).rejects.toThrow('Ownable: caller is not the owner');
+      await expect(
+        mockContractWrite({
+          functionName: 'setPaused',
+          args: [true],
+        })
+      ).rejects.toThrow('Ownable: caller is not the owner');
     });
   });
 
@@ -583,7 +623,7 @@ describe('VFIDEPresale Contract', () => {
         totalUsdRaised: parseEther('1250000'),
         tier0Sold: parseEther('50000000'),
         tier1Sold: parseEther('50000000'),
-        tier2Sold: parseEther('0')
+        tier2Sold: parseEther('0'),
       };
       mockContractRead.mockResolvedValueOnce(stats);
       const result = await mockContractRead({ functionName: 'getPresaleStats' });
@@ -596,7 +636,7 @@ describe('VFIDEPresale Contract', () => {
         usdContributed: parseEther('2500'),
         tokensAllocated: parseEther('5000'),
         purchaseCount: 1,
-        lastPurchaseTime: Math.floor(Date.now() / 1000)
+        lastPurchaseTime: Math.floor(Date.now() / 1000),
       };
       mockContractRead.mockResolvedValueOnce(userInfo);
       const result = await mockContractRead({ functionName: 'getUserInfo', args: [buyer1] });
@@ -608,7 +648,7 @@ describe('VFIDEPresale Contract', () => {
         purchaseCount: 2,
         totalAllocated: parseEther('5000'),
         ethContributed: parseEther('1'),
-        usdContributed: 3500_000000n // $3500 in 6 decimals
+        usdContributed: 3500_000000n, // $3500 in 6 decimals
       };
       mockContractRead.mockResolvedValueOnce(dashboard);
       const result = await mockContractRead({ functionName: 'getUserDashboard', args: [buyer1] });
@@ -621,10 +661,13 @@ describe('VFIDEPresale Contract', () => {
         tokensBase: parseEther('2500'),
         tokensBonus: parseEther('500'),
         lockPeriod: 90,
-        purchaseTime: Math.floor(Date.now() / 1000)
+        purchaseTime: Math.floor(Date.now() / 1000),
       };
       mockContractRead.mockResolvedValueOnce(details);
-      const result = await mockContractRead({ functionName: 'getPurchaseDetails', args: [buyer1, 0] });
+      const result = await mockContractRead({
+        functionName: 'getPurchaseDetails',
+        args: [buyer1, 0],
+      });
       expect(result).toEqual(details);
     });
 
@@ -638,7 +681,7 @@ describe('VFIDEPresale Contract', () => {
       const details = {
         listingPrice: parseEther('0.001'),
         lpVfideAmount: parseEther('50000000'),
-        finalizedTime: Math.floor(Date.now() / 1000)
+        finalizedTime: Math.floor(Date.now() / 1000),
       };
       mockContractRead.mockResolvedValueOnce(details);
       const result = await mockContractRead({ functionName: 'getFinalizationDetails' });
@@ -650,7 +693,7 @@ describe('VFIDEPresale Contract', () => {
         totalEthRaised: parseEther('500'),
         totalUsdRaised: parseEther('1250000'),
         minimumGoal: parseEther('1200'),
-        goalReached: true
+        goalReached: true,
       };
       mockContractRead.mockResolvedValueOnce(stats);
       const result = await mockContractRead({ functionName: 'getRaiseStats' });
@@ -662,7 +705,7 @@ describe('VFIDEPresale Contract', () => {
         refundsEnabled: true,
         refundDeadline: Math.floor(Date.now() / 1000) + 86400,
         userCanClaim: true,
-        ethRefundAmount: parseEther('1')
+        ethRefundAmount: parseEther('1'),
       };
       mockContractRead.mockResolvedValueOnce(status);
       const result = await mockContractRead({ functionName: 'getRefundStatus', args: [buyer1] });
@@ -671,7 +714,10 @@ describe('VFIDEPresale Contract', () => {
 
     it('should get user stable contributions', async () => {
       mockContractRead.mockResolvedValueOnce(parseEther('1000'));
-      const result = await mockContractRead({ functionName: 'getUserStableContributions', args: [buyer1] });
+      const result = await mockContractRead({
+        functionName: 'getUserStableContributions',
+        args: [buyer1],
+      });
       expect(result).toBe(parseEther('1000'));
     });
   });
@@ -768,27 +814,33 @@ describe('VFIDEPresale Contract', () => {
   describe('Edge Cases', () => {
     it('should handle zero purchase amount', async () => {
       mockContractWrite.mockRejectedValueOnce(new Error('InvalidAmount'));
-      await expect(mockContractWrite({ 
-        functionName: 'buyTokens',
-        args: [0],
-        value: parseEther('0')
-      })).rejects.toThrow('InvalidAmount');
+      await expect(
+        mockContractWrite({
+          functionName: 'buyTokens',
+          args: [0],
+          value: parseEther('0'),
+        })
+      ).rejects.toThrow('InvalidAmount');
     });
 
     it('should handle tier sold out', async () => {
       mockContractWrite.mockRejectedValueOnce(new Error('TierSoldOut'));
-      await expect(mockContractWrite({ 
-        functionName: 'buyTokens',
-        args: [0]
-      })).rejects.toThrow('TierSoldOut');
+      await expect(
+        mockContractWrite({
+          functionName: 'buyTokens',
+          args: [0],
+        })
+      ).rejects.toThrow('TierSoldOut');
     });
 
     it('should handle max extension exceeded', async () => {
       mockContractWrite.mockRejectedValueOnce(new Error('MaxExtensionExceeded'));
-      await expect(mockContractWrite({ 
-        functionName: 'extendSale',
-        args: [100 * 86400] // 100 days
-      })).rejects.toThrow('MaxExtensionExceeded');
+      await expect(
+        mockContractWrite({
+          functionName: 'extendSale',
+          args: [100 * 86400], // 100 days
+        })
+      ).rejects.toThrow('MaxExtensionExceeded');
     });
 
     it('should check should enable refunds logic', async () => {
@@ -799,10 +851,12 @@ describe('VFIDEPresale Contract', () => {
 
     it('should handle purchase count limit', async () => {
       mockContractWrite.mockRejectedValueOnce(new Error('MaxPurchasesExceeded'));
-      await expect(mockContractWrite({ 
-        functionName: 'buyTokens',
-        args: [0]
-      })).rejects.toThrow('MaxPurchasesExceeded');
+      await expect(
+        mockContractWrite({
+          functionName: 'buyTokens',
+          args: [0],
+        })
+      ).rejects.toThrow('MaxPurchasesExceeded');
     });
 
     it('should get last purchase time', async () => {

@@ -35,7 +35,7 @@ describe('SeerGuardian Contract', () => {
 
       const restricted = await mockContractRead({
         functionName: 'isRestricted',
-        args: [user1]
+        args: [user1],
       });
 
       expect(restricted).toBe(false);
@@ -46,7 +46,7 @@ describe('SeerGuardian Contract', () => {
 
       const restricted = await mockContractRead({
         functionName: 'isRestricted',
-        args: [violator]
+        args: [violator],
       });
 
       expect(restricted).toBe(true);
@@ -57,7 +57,7 @@ describe('SeerGuardian Contract', () => {
 
       const level = await mockContractRead({
         functionName: 'getRestrictionLevel',
-        args: [violator]
+        args: [violator],
       });
 
       expect(level).toBe(3);
@@ -69,12 +69,12 @@ describe('SeerGuardian Contract', () => {
         level: 2,
         timestamp: 1234567890n,
         reason: 'Market manipulation',
-        canAppeal: true
+        canAppeal: true,
       });
 
       const details = await mockContractRead({
         functionName: 'getRestrictionDetails',
-        args: [violator]
+        args: [violator],
       });
 
       expect(details.isRestricted).toBe(true);
@@ -86,7 +86,7 @@ describe('SeerGuardian Contract', () => {
 
       const canVote = await mockContractRead({
         functionName: 'canPerformAction',
-        args: [user1, 'VOTE']
+        args: [user1, 'VOTE'],
       });
 
       expect(canVote).toBe(true);
@@ -97,7 +97,7 @@ describe('SeerGuardian Contract', () => {
 
       const canTransfer = await mockContractRead({
         functionName: 'canPerformAction',
-        args: [violator, 'TRANSFER']
+        args: [violator, 'TRANSFER'],
       });
 
       expect(canTransfer).toBe(false);
@@ -110,7 +110,7 @@ describe('SeerGuardian Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'recordViolation',
-        args: [violator, 0, 'Spam posting'] // 0 = SPAM
+        args: [violator, 0, 'Spam posting'], // 0 = SPAM
       });
 
       expect(result).toBe('0xhash');
@@ -121,7 +121,7 @@ describe('SeerGuardian Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'recordViolation',
-        args: [violator, 1, 'Price manipulation'] // 1 = MARKET_MANIPULATION
+        args: [violator, 1, 'Price manipulation'], // 1 = MARKET_MANIPULATION
       });
 
       expect(result).toBe('0xhash');
@@ -132,7 +132,7 @@ describe('SeerGuardian Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'recordViolation',
-        args: [violator, 2, 'Wash trading detected'] // 2 = WASH_TRADING
+        args: [violator, 2, 'Wash trading detected'], // 2 = WASH_TRADING
       });
 
       expect(result).toBe('0xhash');
@@ -143,7 +143,7 @@ describe('SeerGuardian Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'recordViolation',
-        args: [violator, 3, 'Fraudulent activity'] // 3 = FRAUD
+        args: [violator, 3, 'Fraudulent activity'], // 3 = FRAUD
       });
 
       expect(result).toBe('0xhash');
@@ -154,7 +154,7 @@ describe('SeerGuardian Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'recordViolation',
-        args: [violator, 4, 'Vote buying'] // 4 = GOVERNANCE_ABUSE
+        args: [violator, 4, 'Vote buying'], // 4 = GOVERNANCE_ABUSE
       });
 
       expect(result).toBe('0xhash');
@@ -165,7 +165,7 @@ describe('SeerGuardian Contract', () => {
 
       const count = await mockContractRead({
         functionName: 'getViolationCount',
-        args: [violator, 0] // SPAM type
+        args: [violator, 0], // SPAM type
       });
 
       expect(count).toBe(3n);
@@ -176,7 +176,7 @@ describe('SeerGuardian Contract', () => {
 
       const total = await mockContractRead({
         functionName: 'getTotalViolations',
-        args: [violator]
+        args: [violator],
       });
 
       expect(total).toBe(7n);
@@ -186,12 +186,12 @@ describe('SeerGuardian Contract', () => {
       mockContractRead.mockResolvedValueOnce([
         { type: 0, timestamp: 1234567890n, reason: 'Spam' },
         { type: 1, timestamp: 1234567900n, reason: 'Manipulation' },
-        { type: 3, timestamp: 1234567910n, reason: 'Fraud' }
+        { type: 3, timestamp: 1234567910n, reason: 'Fraud' },
       ]);
 
       const history = await mockContractRead({
         functionName: 'getViolationHistory',
-        args: [violator]
+        args: [violator],
       });
 
       expect(history).toHaveLength(3);
@@ -202,14 +202,14 @@ describe('SeerGuardian Contract', () => {
 
       await mockContractWrite({
         functionName: 'recordViolation',
-        args: [violator, 1, 'Another violation']
+        args: [violator, 1, 'Another violation'],
       });
 
       mockContractRead.mockResolvedValueOnce(3); // Escalated to Level 3
 
       const newLevel = await mockContractRead({
         functionName: 'getRestrictionLevel',
-        args: [violator]
+        args: [violator],
       });
 
       expect(newLevel).toBe(3);
@@ -222,7 +222,7 @@ describe('SeerGuardian Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'daoOverride',
-        args: [violator, false] // Remove restriction
+        args: [violator, false], // Remove restriction
       });
 
       expect(result).toBe('0xhash');
@@ -234,7 +234,7 @@ describe('SeerGuardian Contract', () => {
       await expect(async () => {
         await mockContractWrite({
           functionName: 'daoOverride',
-          args: [violator, false]
+          args: [violator, false],
         });
       }).rejects.toThrow('Not DAO');
     });
@@ -244,7 +244,7 @@ describe('SeerGuardian Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'daoSetRestrictionLevel',
-        args: [violator, 1] // Set to Level 1
+        args: [violator, 1], // Set to Level 1
       });
 
       expect(result).toBe('0xhash');
@@ -255,7 +255,7 @@ describe('SeerGuardian Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'daoOverride',
-        args: [violator, false]
+        args: [violator, false],
       });
 
       expect(result).toBe('0xhash');
@@ -266,7 +266,7 @@ describe('SeerGuardian Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'daoClearViolations',
-        args: [violator]
+        args: [violator],
       });
 
       expect(result).toBe('0xhash');
@@ -277,7 +277,7 @@ describe('SeerGuardian Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'daoPermanentBan',
-        args: [violator, 'Severe fraud']
+        args: [violator, 'Severe fraud'],
       });
 
       expect(result).toBe('0xhash');
@@ -287,7 +287,7 @@ describe('SeerGuardian Contract', () => {
       mockContractRead.mockResolvedValueOnce(daoAddress);
 
       const dao = await mockContractRead({
-        functionName: 'dao'
+        functionName: 'dao',
       });
 
       expect(dao).toBe(daoAddress);
@@ -300,7 +300,7 @@ describe('SeerGuardian Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'startRehabilitation',
-        args: []
+        args: [],
       });
 
       expect(result).toBe('0xhash');
@@ -311,7 +311,7 @@ describe('SeerGuardian Contract', () => {
 
       const eligible = await mockContractRead({
         functionName: 'isEligibleForRehabilitation',
-        args: [violator]
+        args: [violator],
       });
 
       expect(eligible).toBe(true);
@@ -322,7 +322,7 @@ describe('SeerGuardian Contract', () => {
 
       const eligible = await mockContractRead({
         functionName: 'isEligibleForRehabilitation',
-        args: [violator]
+        args: [violator],
       });
 
       expect(eligible).toBe(false);
@@ -333,12 +333,12 @@ describe('SeerGuardian Contract', () => {
         inRehabilitation: true,
         startTime: 1234567890n,
         duration: 2592000n, // 30 days
-        progress: 50n // 50%
+        progress: 50n, // 50%
       });
 
       const progress = await mockContractRead({
         functionName: 'getRehabilitationProgress',
-        args: [violator]
+        args: [violator],
       });
 
       expect(progress.progress).toBe(50n);
@@ -349,7 +349,7 @@ describe('SeerGuardian Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'completeRehabilitation',
-        args: [violator]
+        args: [violator],
       });
 
       expect(result).toBe('0xhash');
@@ -361,7 +361,7 @@ describe('SeerGuardian Contract', () => {
       await expect(async () => {
         await mockContractWrite({
           functionName: 'completeRehabilitation',
-          args: [violator]
+          args: [violator],
         });
       }).rejects.toThrow('not complete');
     });
@@ -371,14 +371,14 @@ describe('SeerGuardian Contract', () => {
 
       await mockContractWrite({
         functionName: 'completeRehabilitation',
-        args: [violator]
+        args: [violator],
       });
 
       mockContractRead.mockResolvedValueOnce(2); // Reduced level
 
       const newLevel = await mockContractRead({
         functionName: 'getRestrictionLevel',
-        args: [violator]
+        args: [violator],
       });
 
       expect(newLevel).toBe(2);
@@ -388,11 +388,11 @@ describe('SeerGuardian Contract', () => {
       mockContractRead.mockResolvedValueOnce({
         minDuration: 2592000n, // 30 days
         requiredScore: 500n,
-        noNewViolations: true
+        noNewViolations: true,
       });
 
       const requirements = await mockContractRead({
-        functionName: 'getRehabilitationRequirements'
+        functionName: 'getRehabilitationRequirements',
       });
 
       expect(requirements.minDuration).toBe(2592000n);
@@ -404,7 +404,7 @@ describe('SeerGuardian Contract', () => {
       mockContractRead.mockResolvedValueOnce(admin);
 
       const result = await mockContractRead({
-        functionName: 'admin'
+        functionName: 'admin',
       });
 
       expect(result).toBe(admin);
@@ -416,7 +416,7 @@ describe('SeerGuardian Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'setAdmin',
-        args: [newAdmin]
+        args: [newAdmin],
       });
 
       expect(result).toBe('0xhash');
@@ -428,7 +428,7 @@ describe('SeerGuardian Contract', () => {
       await expect(async () => {
         await mockContractWrite({
           functionName: 'setAdmin',
-          args: [user1]
+          args: [user1],
         });
       }).rejects.toThrow('Not admin');
     });
@@ -439,7 +439,7 @@ describe('SeerGuardian Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'addGuardian',
-        args: [newGuardian]
+        args: [newGuardian],
       });
 
       expect(result).toBe('0xhash');
@@ -450,7 +450,7 @@ describe('SeerGuardian Contract', () => {
 
       const isGuardian = await mockContractRead({
         functionName: 'isGuardian',
-        args: [admin]
+        args: [admin],
       });
 
       expect(isGuardian).toBe(true);
@@ -461,7 +461,7 @@ describe('SeerGuardian Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'removeGuardian',
-        args: [user1]
+        args: [user1],
       });
 
       expect(result).toBe('0xhash');
@@ -472,7 +472,7 @@ describe('SeerGuardian Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'recordViolation',
-        args: [violator, 0, 'Violation']
+        args: [violator, 0, 'Violation'],
       });
 
       expect(result).toBe('0xhash');
@@ -484,7 +484,7 @@ describe('SeerGuardian Contract', () => {
       await expect(async () => {
         await mockContractWrite({
           functionName: 'recordViolation',
-          args: [violator, 0, 'Violation']
+          args: [violator, 0, 'Violation'],
         });
       }).rejects.toThrow('Not guardian');
     });
@@ -495,7 +495,7 @@ describe('SeerGuardian Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'setDAO',
-        args: [newDao]
+        args: [newDao],
       });
 
       expect(result).toBe('0xhash');
@@ -506,7 +506,7 @@ describe('SeerGuardian Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'setAdmin',
-        args: [user1]
+        args: [user1],
       });
 
       expect(result).toBe('0xhash');
@@ -519,7 +519,7 @@ describe('SeerGuardian Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'submitAppeal',
-        args: ['I was wrongly accused']
+        args: ['I was wrongly accused'],
       });
 
       expect(result).toBe('0xhash');
@@ -530,7 +530,7 @@ describe('SeerGuardian Contract', () => {
 
       const canAppeal = await mockContractRead({
         functionName: 'canAppeal',
-        args: [violator]
+        args: [violator],
       });
 
       expect(canAppeal).toBe(true);
@@ -542,7 +542,7 @@ describe('SeerGuardian Contract', () => {
       await expect(async () => {
         await mockContractWrite({
           functionName: 'submitAppeal',
-          args: ['Second appeal']
+          args: ['Second appeal'],
         });
       }).rejects.toThrow('cooldown');
     });
@@ -552,12 +552,12 @@ describe('SeerGuardian Contract', () => {
         appellant: violator,
         reason: 'Wrongful restriction',
         timestamp: 1234567890n,
-        status: 0 // Pending
+        status: 0, // Pending
       });
 
       const details = await mockContractRead({
         functionName: 'getAppeal',
-        args: [1n]
+        args: [1n],
       });
 
       expect(details.appellant).toBe(violator);
@@ -568,7 +568,7 @@ describe('SeerGuardian Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'reviewAppeal',
-        args: [1n, true, 'Appeal granted']
+        args: [1n, true, 'Appeal granted'],
       });
 
       expect(result).toBe('0xhash');
@@ -580,7 +580,7 @@ describe('SeerGuardian Contract', () => {
       await expect(async () => {
         await mockContractWrite({
           functionName: 'reviewAppeal',
-          args: [1n, true, 'Review']
+          args: [1n, true, 'Review'],
         });
       }).rejects.toThrow('Not guardian');
     });
@@ -592,7 +592,7 @@ describe('SeerGuardian Contract', () => {
 
       const count = await mockContractRead({
         functionName: 'getTotalViolations',
-        args: [user1]
+        args: [user1],
       });
 
       expect(count).toBe(0n);
@@ -605,7 +605,7 @@ describe('SeerGuardian Contract', () => {
       await expect(async () => {
         await mockContractWrite({
           functionName: 'recordViolation',
-          args: [zeroAddress, 0, 'Test']
+          args: [zeroAddress, 0, 'Test'],
         });
       }).rejects.toThrow('Invalid address');
     });
@@ -615,11 +615,11 @@ describe('SeerGuardian Contract', () => {
         totalRestricted: 150n,
         totalViolations: 523n,
         activeAppeals: 12n,
-        inRehabilitation: 8n
+        inRehabilitation: 8n,
       });
 
       const stats = await mockContractRead({
-        functionName: 'getStatistics'
+        functionName: 'getStatistics',
       });
 
       expect(stats.totalRestricted).toBe(150n);
@@ -630,7 +630,7 @@ describe('SeerGuardian Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'recordViolation',
-        args: [violator, 1, 'Test violation']
+        args: [violator, 1, 'Test violation'],
       });
 
       expect(result).toBe('0xhash');
@@ -641,7 +641,7 @@ describe('SeerGuardian Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'daoSetRestrictionLevel',
-        args: [violator, 2]
+        args: [violator, 2],
       });
 
       expect(result).toBe('0xhash');
@@ -652,7 +652,7 @@ describe('SeerGuardian Contract', () => {
 
       const results = await mockContractRead({
         functionName: 'batchCheckRestrictions',
-        args: [[violator, user1, user2]]
+        args: [[violator, user1, user2]],
       });
 
       expect(results).toHaveLength(3);

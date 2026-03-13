@@ -176,10 +176,15 @@ contract VFIDEPriceOracle is Ownable, Pausable {
         try chainlinkFeed.latestRoundData() returns (
             uint80 roundId,
             int256 answer,
-            uint256,
+            uint256 startedAt,
             uint256 updatedAt,
             uint80 answeredInRound
         ) {
+            // Reject invalid rounds with missing timestamps
+            if (startedAt == 0 || updatedAt == 0) {
+                return (0, PriceSource.CHAINLINK);
+            }
+
             // Check if price is stale
             if (block.timestamp - updatedAt > MAX_PRICE_STALENESS) {
                 return (0, PriceSource.CHAINLINK);
@@ -198,12 +203,14 @@ contract VFIDEPriceOracle is Ownable, Pausable {
             // Convert to 18 decimals
             uint8 decimals = chainlinkFeed.decimals();
             uint256 chainlinkPrice = uint256(answer);
-            
+
+            // slither-disable-start divide-before-multiply
             if (decimals < 18) {
                 chainlinkPrice = chainlinkPrice * 10 ** (18 - decimals);
             } else if (decimals > 18) {
                 chainlinkPrice = chainlinkPrice / 10 ** (decimals - 18);
             }
+            // slither-disable-end divide-before-multiply
 
             return (chainlinkPrice, PriceSource.CHAINLINK);
         } catch {
@@ -244,7 +251,8 @@ contract VFIDEPriceOracle is Ownable, Pausable {
                 circuitBreakerActive = true;
                 circuitBreakerTime = block.timestamp;
                 emit CircuitBreakerTriggered(lastPrice, newPrice, deviation);
-                revert PriceManipulation();
+                // Fail-closed: keep circuit breaker state and skip price update.
+                return;
             }
         }
 
@@ -295,6 +303,7 @@ contract VFIDEPriceOracle is Ownable, Pausable {
      * @param _chainlinkFeed New Chainlink feed address
      */
     function setChainlinkFeed(address _chainlinkFeed) external onlyOwner {
+        require(_chainlinkFeed != address(0), "VFIDEPriceOracle: invalid feed");
         uint64 effectiveAt = uint64(block.timestamp) + ORACLE_CONFIG_DELAY;
         pendingChainlinkFeed = _chainlinkFeed;
         pendingChainlinkFeedAt = effectiveAt;
@@ -319,6 +328,7 @@ contract VFIDEPriceOracle is Ownable, Pausable {
      * @param _uniswapPool New Uniswap pool address
      */
     function setUniswapPool(address _uniswapPool) external onlyOwner {
+        require(_uniswapPool != address(0), "VFIDEPriceOracle: invalid pool");
         uint64 effectiveAt = uint64(block.timestamp) + ORACLE_CONFIG_DELAY;
         pendingUniswapPool = _uniswapPool;
         pendingUniswapPoolAt = effectiveAt;

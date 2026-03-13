@@ -115,6 +115,7 @@ contract MerchantRegistry {
         });
 
         ledger.logSystemEvent(msg.sender, "MerchantAdded", msg.sender);
+        // slither-disable-next-line reentrancy-events
         emit MerchantAdded(msg.sender, v, metaHash);
     }
 

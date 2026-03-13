@@ -67,8 +67,7 @@ export default function ThemeManagementPage() {
       try {
         const content = e.target?.result as string;
         importTheme(content);
-      } catch (error) {
-        console.error('Failed to import theme:', error);
+      } catch {
       }
     };
     reader.readAsText(file);

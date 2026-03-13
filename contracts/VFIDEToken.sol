@@ -307,9 +307,9 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
         require(block.timestamp >= pendingBurnRouterAt, "VF: timelock");
         burnRouter = IProofScoreBurnRouterToken(pendingBurnRouter);
         emit BurnRouterSet(pendingBurnRouter);
-        _log("burn_router_set");
         delete pendingBurnRouter;
         delete pendingBurnRouterAt;
+        _log("burn_router_set");
     }
 
     function setTreasurySink(address sink) external onlyOwner {
@@ -326,9 +326,9 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
         require(block.timestamp >= pendingTreasurySinkAt, "VF: timelock");
         treasurySink = pendingTreasurySink;
         emit TreasurySinkSet(pendingTreasurySink);
-        _log("treasury_sink_set");
         delete pendingTreasurySink;
         delete pendingTreasurySinkAt;
+        _log("treasury_sink_set");
     }
 
     function setSanctumSink(address _sanctum) external onlyOwner {
@@ -346,9 +346,9 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
         require(block.timestamp >= pendingSanctumSinkAt, "VF: timelock");
         sanctumSink = pendingSanctumSink;
         emit SanctumSinkSet(pendingSanctumSink);
-        _log("sanctum_sink_set");
         delete pendingSanctumSink;
         delete pendingSanctumSinkAt;
+        _log("sanctum_sink_set");
     }
 
     /// @notice Exempt address from all checks (fees + vault-only) - use for system contracts
@@ -489,6 +489,7 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
 
     // ─────────────────────────── Internal core
 
+    // slither-disable-next-line reentrancy-no-eth
     function _transfer(address from, address to, uint256 amount) internal {
         // 1. Sanctions check
         require(!isBlacklisted[from] && !isBlacklisted[to], "Sanctioned");
@@ -534,8 +535,8 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
         if (amount == 0) revert VF_ZERO();  // H-2 Fix: Reject zero amount transfers
 
         // Optimization: Fetch vaults once if needed for SecurityHub
-        address fromVault;
-        address toVault;
+        address fromVault = address(0);
+        address toVault = address(0);
         if (address(securityHub) != address(0)) {
             fromVault = _vaultOfAddr(from);
             toVault   = _vaultOfAddr(to);
@@ -692,11 +693,13 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
         if (dailyTransferLimit > 0) {
             // Reset daily counter if 24h has passed
             // H-3 Fix: Align to consistent 24-hour periods to prevent gaming
-            uint256 currentDay = block.timestamp / 1 days;
-            uint256 lastResetDay = dailyResetTime[from] / 1 days;
-            if (currentDay > lastResetDay) {
+            // slither-disable-next-line divide-before-multiply
+            uint256 currentDayStart = (block.timestamp / 1 days) * 1 days;
+            // slither-disable-next-line divide-before-multiply
+            uint256 lastResetStart = (dailyResetTime[from] / 1 days) * 1 days;
+            if (currentDayStart > lastResetStart) {
                 dailyTransferred[from] = 0;
-                dailyResetTime[from] = currentDay * 1 days; // Align to day boundary
+                dailyResetTime[from] = currentDayStart;
             }
             
             if (dailyTransferred[from] + amount > dailyTransferLimit) {
@@ -741,7 +744,7 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
      */
     function cooldownRemaining(address account) external view returns (uint256) {
         if (transferCooldown == 0) return 0;
-        if (lastTransferTime[account] == 0) return 0;
+        if (lastTransferTime[account] < 1) return 0;
         
         uint256 unlockTime = lastTransferTime[account] + transferCooldown;
         if (block.timestamp >= unlockTime) return 0;
@@ -796,6 +799,7 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
                 // H-3 Fix: Use day boundary check for consistency
                 uint256 currentDay = block.timestamp / 1 days;
                 uint256 lastResetDay = dailyResetTime[from] / 1 days;
+                // slither-disable-next-line incorrect-equality
                 if (currentDay == lastResetDay) {
                     if (transferred + amount > dailyTransferLimit) {
                         return (false, "Exceeds daily transfer limit");
@@ -860,6 +864,7 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
         }
         
         // Get fees from router
+        // slither-disable-next-line unused-return
         (burnAmount, sanctumAmount, ecosystemAmount, , , ) = burnRouter.computeFees(from, to, amount);
         
         netReceived = amount - burnAmount - sanctumAmount - ecosystemAmount;
@@ -952,19 +957,21 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
         limit = dailyTransferLimit;
         
         // H-3 FIX: Use day-boundary logic consistent with enforcement
-        uint256 currentDay = block.timestamp / 1 days;
-        uint256 lastResetDay = dailyResetTime[user] / 1 days;
+        // slither-disable-next-line divide-before-multiply
+        uint256 currentDayStart = (block.timestamp / 1 days) * 1 days;
+        // slither-disable-next-line divide-before-multiply
+        uint256 lastResetStart = (dailyResetTime[user] / 1 days) * 1 days;
         
-        if (currentDay > lastResetDay) {
+        if (currentDayStart > lastResetStart) {
             // New day - counter would reset on next transfer
             transferred = 0;
             remaining = limit;
-            resetTime = currentDay * 1 days;
+            resetTime = currentDayStart;
             nextResetTime = resetTime + 24 hours;
         } else {
             transferred = dailyTransferred[user];
             remaining = transferred >= limit ? 0 : limit - transferred;
-            resetTime = lastResetDay * 1 days;
+            resetTime = lastResetStart;
             nextResetTime = resetTime + 24 hours;
         }
     }

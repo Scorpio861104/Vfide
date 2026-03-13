@@ -8,7 +8,11 @@ import { Address, parseEther } from 'viem';
 const mockContractRead = jest.fn();
 const mockContractWrite = jest.fn();
 
-jest.mock('viem', () => ({ ...jest.requireActual('viem'), createPublicClient: jest.fn(), createWalletClient: jest.fn() }));
+jest.mock('viem', () => ({
+  ...jest.requireActual('viem'),
+  createPublicClient: jest.fn(),
+  createWalletClient: jest.fn(),
+}));
 
 describe('EcosystemVault Contract', () => {
   let owner: Address, user1: Address;
@@ -62,7 +66,9 @@ describe('EcosystemVault Contract', () => {
 
     it('should get min user vault USD', async () => {
       mockContractRead.mockResolvedValueOnce(parseEther('100'));
-      expect(await mockContractRead({ functionName: 'MIN_USER_VAULT_USD' })).toBe(parseEther('100'));
+      expect(await mockContractRead({ functionName: 'MIN_USER_VAULT_USD' })).toBe(
+        parseEther('100')
+      );
     });
 
     it('should get min allocation BPS', async () => {

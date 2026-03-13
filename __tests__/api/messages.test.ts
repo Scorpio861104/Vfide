@@ -187,8 +187,60 @@ describe('/api/messages', () => {
   describe('POST', () => {
     const mockUserAddress = '0x1234567890123456789012345678901234567890';
     const mockRecipientAddress = '0xabcdefabcdefabcdefabcdefabcdefabcdefabcd';
+    const encryptedPayload = JSON.stringify({
+      v: 1,
+      ephemeralPublicKey: 'a'.repeat(130),
+      ciphertext: 'dGVzdC1jaXBoZXJ0ZXh0',
+      iv: 'dGVzdC1pdg==',
+      sig: `0x${'d'.repeat(130)}`,
+      ts: Date.now(),
+      nonce: 'b'.repeat(32),
+    });
 
     it('should send a message successfully', async () => {
+      withRateLimit.mockResolvedValue(null);
+      requireAuth.mockReturnValue({ user: { address: mockUserAddress } });
+      validateBody.mockResolvedValue({
+        success: true,
+        data: {
+          from: mockUserAddress,
+          to: mockRecipientAddress,
+          content: encryptedPayload,
+        },
+      });
+
+      const mockClient = {
+        query: jest.fn()
+          .mockResolvedValueOnce({}) // BEGIN
+          .mockResolvedValueOnce({ rows: [{ id: 1 }] }) // sender
+          .mockResolvedValueOnce({ rows: [{ id: 2 }] }) // recipient
+          .mockResolvedValueOnce({ rows: [{ count: '0' }] }) // rate check
+          .mockResolvedValueOnce({ rows: [] }) // replay check
+          .mockResolvedValueOnce({ rows: [{ id: 1, content: encryptedPayload }] }) // insert message
+          .mockResolvedValueOnce({}) // insert notification
+          .mockResolvedValueOnce({}), // COMMIT
+        release: jest.fn(),
+      };
+      getClient.mockResolvedValue(mockClient);
+
+      const request = new NextRequest('http://localhost:3000/api/messages', {
+        method: 'POST',
+        body: JSON.stringify({
+          from: mockUserAddress,
+          to: mockRecipientAddress,
+          content: encryptedPayload,
+        }),
+      });
+
+      const response = await POST(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(201);
+      expect(data.message).toBeDefined();
+      expect(mockClient.release).toHaveBeenCalled();
+    });
+
+    it('should reject plaintext message content', async () => {
       withRateLimit.mockResolvedValue(null);
       requireAuth.mockReturnValue({ user: { address: mockUserAddress } });
       validateBody.mockResolvedValue({
@@ -201,13 +253,7 @@ describe('/api/messages', () => {
       });
 
       const mockClient = {
-        query: jest.fn()
-          .mockResolvedValueOnce({}) // BEGIN
-          .mockResolvedValueOnce({ rows: [{ id: 1 }] }) // sender
-          .mockResolvedValueOnce({ rows: [{ id: 2 }] }) // recipient
-          .mockResolvedValueOnce({ rows: [{ id: 1, content: 'Hello!' }] }) // insert message
-          .mockResolvedValueOnce({}) // insert notification
-          .mockResolvedValueOnce({}), // COMMIT
+        query: jest.fn(),
         release: jest.fn(),
       };
       getClient.mockResolvedValue(mockClient);
@@ -224,9 +270,9 @@ describe('/api/messages', () => {
       const response = await POST(request);
       const data = await response.json();
 
-      expect(response.status).toBe(201);
-      expect(data.message).toBeDefined();
-      expect(mockClient.release).toHaveBeenCalled();
+      expect(response.status).toBe(400);
+      expect(data.error).toContain('encrypted payload');
+      expect(mockClient.query).not.toHaveBeenCalledWith('BEGIN');
     });
 
     it('should return 429 for rate limit exceeded', async () => {
@@ -292,7 +338,7 @@ describe('/api/messages', () => {
         data: {
           from: mockUserAddress,
           to: mockRecipientAddress,
-          content: 'Hello!',
+          content: encryptedPayload,
         },
       });
 
@@ -309,7 +355,7 @@ describe('/api/messages', () => {
         body: JSON.stringify({
           from: mockUserAddress,
           to: mockRecipientAddress,
-          content: 'Hello!',
+          content: encryptedPayload,
         }),
       });
 
@@ -318,6 +364,87 @@ describe('/api/messages', () => {
 
       expect(response.status).toBe(500);
       expect(data.error).toBe('Database error');
+      expect(mockClient.release).toHaveBeenCalled();
+    });
+
+    it('should return 429 when sender exceeds per-conversation minute burst limit', async () => {
+      withRateLimit.mockResolvedValue(null);
+      requireAuth.mockReturnValue({ user: { address: mockUserAddress } });
+      validateBody.mockResolvedValue({
+        success: true,
+        data: {
+          from: mockUserAddress,
+          to: mockRecipientAddress,
+          content: encryptedPayload,
+        },
+      });
+
+      const mockClient = {
+        query: jest.fn()
+          .mockResolvedValueOnce({}) // BEGIN
+          .mockResolvedValueOnce({ rows: [{ id: 1 }] }) // sender
+          .mockResolvedValueOnce({ rows: [{ id: 2 }] }) // recipient
+          .mockResolvedValueOnce({ rows: [{ count: '30' }] }) // rate check limit reached
+          .mockResolvedValueOnce({}), // ROLLBACK
+        release: jest.fn(),
+      };
+      getClient.mockResolvedValue(mockClient);
+
+      const request = new NextRequest('http://localhost:3000/api/messages', {
+        method: 'POST',
+        body: JSON.stringify({
+          from: mockUserAddress,
+          to: mockRecipientAddress,
+          content: encryptedPayload,
+        }),
+      });
+
+      const response = await POST(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(429);
+      expect(data.error).toContain('rate limit exceeded');
+      expect(mockClient.release).toHaveBeenCalled();
+    });
+
+    it('should return 409 on duplicate encrypted payload replay', async () => {
+      withRateLimit.mockResolvedValue(null);
+      requireAuth.mockReturnValue({ user: { address: mockUserAddress } });
+      validateBody.mockResolvedValue({
+        success: true,
+        data: {
+          from: mockUserAddress,
+          to: mockRecipientAddress,
+          content: encryptedPayload,
+        },
+      });
+
+      const mockClient = {
+        query: jest.fn()
+          .mockResolvedValueOnce({}) // BEGIN
+          .mockResolvedValueOnce({ rows: [{ id: 1 }] }) // sender
+          .mockResolvedValueOnce({ rows: [{ id: 2 }] }) // recipient
+          .mockResolvedValueOnce({ rows: [{ count: '0' }] }) // rate check
+          .mockResolvedValueOnce({ rows: [{ id: 999 }] }) // replay hit
+          .mockResolvedValueOnce({}), // ROLLBACK
+        release: jest.fn(),
+      };
+      getClient.mockResolvedValue(mockClient);
+
+      const request = new NextRequest('http://localhost:3000/api/messages', {
+        method: 'POST',
+        body: JSON.stringify({
+          from: mockUserAddress,
+          to: mockRecipientAddress,
+          content: encryptedPayload,
+        }),
+      });
+
+      const response = await POST(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(409);
+      expect(data.error).toContain('replay');
       expect(mockClient.release).toHaveBeenCalled();
     });
   });

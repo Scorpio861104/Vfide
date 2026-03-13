@@ -97,6 +97,7 @@ export default function ReportingAnalyticsPage() {
           </button>
         </div>
       </PageHeader>
+      <h1 className="sr-only">Reporting Command</h1>
       <div className="container mx-auto px-4 pb-24 md:pb-8">
         <motion.div
           initial={{ opacity: 0, y: -20 }}

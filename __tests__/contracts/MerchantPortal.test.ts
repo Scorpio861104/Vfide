@@ -35,7 +35,7 @@ describe('MerchantPortal Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'registerMerchant',
-        args: ['Test Store', 'test@store.com', 'https://teststore.com']
+        args: ['Test Store', 'test@store.com', 'https://teststore.com'],
       });
 
       expect(result).toBe('0xhash');
@@ -47,7 +47,7 @@ describe('MerchantPortal Contract', () => {
       await expect(async () => {
         await mockContractWrite({
           functionName: 'registerMerchant',
-          args: ['Store', 'email@store.com', 'https://store.com']
+          args: ['Store', 'email@store.com', 'https://store.com'],
         });
       }).rejects.toThrow('Already registered');
     });
@@ -57,7 +57,7 @@ describe('MerchantPortal Contract', () => {
 
       const isRegistered = await mockContractRead({
         functionName: 'isMerchant',
-        args: [merchant1]
+        args: [merchant1],
       });
 
       expect(isRegistered).toBe(true);
@@ -70,12 +70,12 @@ describe('MerchantPortal Contract', () => {
         website: 'https://teststore.com',
         isActive: true,
         registeredAt: 1234567890n,
-        totalSales: parseEther('5000')
+        totalSales: parseEther('5000'),
       });
 
       const details = await mockContractRead({
         functionName: 'getMerchant',
-        args: [merchant1]
+        args: [merchant1],
       });
 
       expect(details.name).toBe('Test Store');
@@ -87,7 +87,7 @@ describe('MerchantPortal Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'registerMerchant',
-        args: ['Store', 'email@store.com', 'https://store.com']
+        args: ['Store', 'email@store.com', 'https://store.com'],
       });
 
       expect(result).toBe('0xhash');
@@ -98,7 +98,7 @@ describe('MerchantPortal Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'updateMerchantProfile',
-        args: ['New Name', 'new@email.com', 'https://newsite.com']
+        args: ['New Name', 'new@email.com', 'https://newsite.com'],
       });
 
       expect(result).toBe('0xhash');
@@ -110,7 +110,7 @@ describe('MerchantPortal Contract', () => {
       await expect(async () => {
         await mockContractWrite({
           functionName: 'updateMerchantProfile',
-          args: ['Name', 'email', 'url']
+          args: ['Name', 'email', 'url'],
         });
       }).rejects.toThrow('Not merchant owner');
     });
@@ -119,7 +119,7 @@ describe('MerchantPortal Contract', () => {
       mockContractRead.mockResolvedValueOnce(150n);
 
       const total = await mockContractRead({
-        functionName: 'totalMerchants'
+        functionName: 'totalMerchants',
       });
 
       expect(total).toBe(150n);
@@ -129,7 +129,7 @@ describe('MerchantPortal Contract', () => {
       mockContractRead.mockResolvedValueOnce(142n);
 
       const active = await mockContractRead({
-        functionName: 'activeMerchants'
+        functionName: 'activeMerchants',
       });
 
       expect(active).toBe(142n);
@@ -140,7 +140,7 @@ describe('MerchantPortal Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'verifyMerchant',
-        args: [merchant1]
+        args: [merchant1],
       });
 
       expect(result).toBe('0xhash');
@@ -153,7 +153,7 @@ describe('MerchantPortal Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'processPayment',
-        args: [merchant1, parseEther('100'), 'Order #12345']
+        args: [merchant1, parseEther('100'), 'Order #12345'],
       });
 
       expect(result).toBe('0xhash');
@@ -165,7 +165,7 @@ describe('MerchantPortal Contract', () => {
       await expect(async () => {
         await mockContractWrite({
           functionName: 'processPayment',
-          args: [merchant2, parseEther('100'), 'Order']
+          args: [merchant2, parseEther('100'), 'Order'],
         });
       }).rejects.toThrow('not registered');
     });
@@ -176,7 +176,7 @@ describe('MerchantPortal Contract', () => {
       await expect(async () => {
         await mockContractWrite({
           functionName: 'processPayment',
-          args: [merchant1, parseEther('100'), 'Order']
+          args: [merchant1, parseEther('100'), 'Order'],
         });
       }).rejects.toThrow('not active');
     });
@@ -187,7 +187,7 @@ describe('MerchantPortal Contract', () => {
       await expect(async () => {
         await mockContractWrite({
           functionName: 'processPayment',
-          args: [merchant1, 0n, 'Order']
+          args: [merchant1, 0n, 'Order'],
         });
       }).rejects.toThrow('greater than zero');
     });
@@ -198,7 +198,7 @@ describe('MerchantPortal Contract', () => {
       await expect(async () => {
         await mockContractWrite({
           functionName: 'processPayment',
-          args: [merchant1, parseEther('100'), 'Order']
+          args: [merchant1, parseEther('100'), 'Order'],
         });
       }).rejects.toThrow('Insufficient balance');
     });
@@ -208,7 +208,7 @@ describe('MerchantPortal Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'processPayment',
-        args: [merchant1, parseEther('100'), 'Order']
+        args: [merchant1, parseEther('100'), 'Order'],
       });
 
       expect(result).toBe('0xhash');
@@ -223,12 +223,12 @@ describe('MerchantPortal Contract', () => {
         fee: parseEther('3'),
         timestamp: 1234567890n,
         reference: 'Order #12345',
-        status: 1 // Completed
+        status: 1, // Completed
       });
 
       const details = await mockContractRead({
         functionName: 'getPayment',
-        args: [1n]
+        args: [1n],
       });
 
       expect(details.amount).toBe(parseEther('100'));
@@ -238,7 +238,7 @@ describe('MerchantPortal Contract', () => {
       mockContractRead.mockResolvedValueOnce(1523n);
 
       const count = await mockContractRead({
-        functionName: 'totalPayments'
+        functionName: 'totalPayments',
       });
 
       expect(count).toBe(1523n);
@@ -249,7 +249,7 @@ describe('MerchantPortal Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'refundPayment',
-        args: [1n, 'Customer request']
+        args: [1n, 'Customer request'],
       });
 
       expect(result).toBe('0xhash');
@@ -261,7 +261,7 @@ describe('MerchantPortal Contract', () => {
       await expect(async () => {
         await mockContractWrite({
           functionName: 'refundPayment',
-          args: [1n, 'Reason']
+          args: [1n, 'Reason'],
         });
       }).rejects.toThrow('Already refunded');
     });
@@ -273,7 +273,7 @@ describe('MerchantPortal Contract', () => {
 
       const pending = await mockContractRead({
         functionName: 'getPendingSettlement',
-        args: [merchant1]
+        args: [merchant1],
       });
 
       expect(pending).toBe(parseEther('5000'));
@@ -284,7 +284,7 @@ describe('MerchantPortal Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'settlePayments',
-        args: [merchant1]
+        args: [merchant1],
       });
 
       expect(result).toBe('0xhash');
@@ -296,7 +296,7 @@ describe('MerchantPortal Contract', () => {
       await expect(async () => {
         await mockContractWrite({
           functionName: 'settlePayments',
-          args: [merchant1]
+          args: [merchant1],
         });
       }).rejects.toThrow('No pending');
     });
@@ -306,7 +306,7 @@ describe('MerchantPortal Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'settlePayments',
-        args: [merchant1]
+        args: [merchant1],
       });
 
       expect(result).toBe('0xhash');
@@ -315,12 +315,12 @@ describe('MerchantPortal Contract', () => {
     it('should get settlement history', async () => {
       mockContractRead.mockResolvedValueOnce([
         { amount: parseEther('5000'), timestamp: 1234567890n, txHash: '0x123' },
-        { amount: parseEther('7500'), timestamp: 1234667890n, txHash: '0x456' }
+        { amount: parseEther('7500'), timestamp: 1234667890n, txHash: '0x456' },
       ]);
 
       const history = await mockContractRead({
         functionName: 'getSettlementHistory',
-        args: [merchant1]
+        args: [merchant1],
       });
 
       expect(history).toHaveLength(2);
@@ -331,7 +331,7 @@ describe('MerchantPortal Contract', () => {
 
       const total = await mockContractRead({
         functionName: 'getTotalSettled',
-        args: [merchant1]
+        args: [merchant1],
       });
 
       expect(total).toBe(parseEther('50000'));
@@ -343,7 +343,7 @@ describe('MerchantPortal Contract', () => {
       await expect(async () => {
         await mockContractWrite({
           functionName: 'settlePayments',
-          args: [merchant1]
+          args: [merchant1],
         });
       }).rejects.toThrow('Below minimum');
     });
@@ -354,7 +354,7 @@ describe('MerchantPortal Contract', () => {
       await expect(async () => {
         await mockContractWrite({
           functionName: 'settlePayments',
-          args: [merchant1]
+          args: [merchant1],
         });
       }).rejects.toThrow('not elapsed');
     });
@@ -364,7 +364,7 @@ describe('MerchantPortal Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'adminForceSettlement',
-        args: [merchant1]
+        args: [merchant1],
       });
 
       expect(result).toBe('0xhash');
@@ -375,7 +375,7 @@ describe('MerchantPortal Contract', () => {
 
       const nextDate = await mockContractRead({
         functionName: 'getNextSettlementDate',
-        args: [merchant1]
+        args: [merchant1],
       });
 
       expect(nextDate).toBe(1234667890n);
@@ -387,7 +387,7 @@ describe('MerchantPortal Contract', () => {
       mockContractRead.mockResolvedValueOnce(300n); // 3%
 
       const fee = await mockContractRead({
-        functionName: 'platformFee'
+        functionName: 'platformFee',
       });
 
       expect(fee).toBe(300n);
@@ -398,7 +398,7 @@ describe('MerchantPortal Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'setPlatformFee',
-        args: [250n] // 2.5%
+        args: [250n], // 2.5%
       });
 
       expect(result).toBe('0xhash');
@@ -410,7 +410,7 @@ describe('MerchantPortal Contract', () => {
       await expect(async () => {
         await mockContractWrite({
           functionName: 'setPlatformFee',
-          args: [250n]
+          args: [250n],
         });
       }).rejects.toThrow('Not admin');
     });
@@ -421,7 +421,7 @@ describe('MerchantPortal Contract', () => {
       await expect(async () => {
         await mockContractWrite({
           functionName: 'setPlatformFee',
-          args: [2000n] // 20% - too high
+          args: [2000n], // 20% - too high
         });
       }).rejects.toThrow('too high');
     });
@@ -431,7 +431,7 @@ describe('MerchantPortal Contract', () => {
 
       const fee = await mockContractRead({
         functionName: 'calculateFee',
-        args: [parseEther('100')]
+        args: [parseEther('100')],
       });
 
       expect(fee).toBe(parseEther('3'));
@@ -442,7 +442,7 @@ describe('MerchantPortal Contract', () => {
 
       const fee = await mockContractRead({
         functionName: 'getMerchantFee',
-        args: [merchant1]
+        args: [merchant1],
       });
 
       expect(fee).toBe(250n);
@@ -453,7 +453,7 @@ describe('MerchantPortal Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'setMerchantFee',
-        args: [merchant1, 200n] // 2%
+        args: [merchant1, 200n], // 2%
       });
 
       expect(result).toBe('0xhash');
@@ -463,7 +463,7 @@ describe('MerchantPortal Contract', () => {
       mockContractRead.mockResolvedValueOnce(parseEther('1500'));
 
       const collected = await mockContractRead({
-        functionName: 'totalFeesCollected'
+        functionName: 'totalFeesCollected',
       });
 
       expect(collected).toBe(parseEther('1500'));
@@ -474,7 +474,7 @@ describe('MerchantPortal Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'withdrawFees',
-        args: [parseEther('1000')]
+        args: [parseEther('1000')],
       });
 
       expect(result).toBe('0xhash');
@@ -485,7 +485,7 @@ describe('MerchantPortal Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'setPlatformFee',
-        args: [275n]
+        args: [275n],
       });
 
       expect(result).toBe('0xhash');
@@ -498,7 +498,7 @@ describe('MerchantPortal Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'deactivateMerchant',
-        args: []
+        args: [],
       });
 
       expect(result).toBe('0xhash');
@@ -509,7 +509,7 @@ describe('MerchantPortal Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'reactivateMerchant',
-        args: []
+        args: [],
       });
 
       expect(result).toBe('0xhash');
@@ -520,7 +520,7 @@ describe('MerchantPortal Contract', () => {
 
       const isActive = await mockContractRead({
         functionName: 'isMerchantActive',
-        args: [merchant1]
+        args: [merchant1],
       });
 
       expect(isActive).toBe(true);
@@ -531,7 +531,7 @@ describe('MerchantPortal Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'suspendMerchant',
-        args: [merchant1, 'Terms violation']
+        args: [merchant1, 'Terms violation'],
       });
 
       expect(result).toBe('0xhash');
@@ -542,7 +542,7 @@ describe('MerchantPortal Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'unsuspendMerchant',
-        args: [merchant1]
+        args: [merchant1],
       });
 
       expect(result).toBe('0xhash');
@@ -553,7 +553,7 @@ describe('MerchantPortal Contract', () => {
 
       const status = await mockContractRead({
         functionName: 'getMerchantStatus',
-        args: [merchant1]
+        args: [merchant1],
       });
 
       expect(status).toBe(1);
@@ -564,7 +564,7 @@ describe('MerchantPortal Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'suspendMerchant',
-        args: [merchant1, 'Reason']
+        args: [merchant1, 'Reason'],
       });
 
       expect(result).toBe('0xhash');
@@ -577,12 +577,12 @@ describe('MerchantPortal Contract', () => {
         totalSales: parseEther('50000'),
         totalTransactions: 523n,
         averageTransaction: parseEther('95.60'),
-        totalRefunds: parseEther('2000')
+        totalRefunds: parseEther('2000'),
       });
 
       const stats = await mockContractRead({
         functionName: 'getMerchantStats',
-        args: [merchant1]
+        args: [merchant1],
       });
 
       expect(stats.totalTransactions).toBe(523n);
@@ -593,11 +593,11 @@ describe('MerchantPortal Contract', () => {
         totalMerchants: 150n,
         activeMerchants: 142n,
         totalVolume: parseEther('1000000'),
-        totalFees: parseEther('30000')
+        totalFees: parseEther('30000'),
       });
 
       const stats = await mockContractRead({
-        functionName: 'getPlatformStats'
+        functionName: 'getPlatformStats',
       });
 
       expect(stats.totalMerchants).toBe(150n);
@@ -606,12 +606,12 @@ describe('MerchantPortal Contract', () => {
     it('should get top merchants by volume', async () => {
       mockContractRead.mockResolvedValueOnce([
         { merchant: merchant1, volume: parseEther('100000') },
-        { merchant: merchant2, volume: parseEther('85000') }
+        { merchant: merchant2, volume: parseEther('85000') },
       ]);
 
       const top = await mockContractRead({
         functionName: 'getTopMerchants',
-        args: [10n]
+        args: [10n],
       });
 
       expect(top).toHaveLength(2);
@@ -622,7 +622,7 @@ describe('MerchantPortal Contract', () => {
 
       const volume = await mockContractRead({
         functionName: 'getVolumeForPeriod',
-        args: [merchant1, 1234567890n, 1234667890n]
+        args: [merchant1, 1234567890n, 1234667890n],
       });
 
       expect(volume).toBe(parseEther('25000'));
@@ -631,12 +631,12 @@ describe('MerchantPortal Contract', () => {
     it('should get merchant payment history', async () => {
       mockContractRead.mockResolvedValueOnce([
         { id: 1n, amount: parseEther('100'), timestamp: 1234567890n },
-        { id: 2n, amount: parseEther('150'), timestamp: 1234567900n }
+        { id: 2n, amount: parseEther('150'), timestamp: 1234567900n },
       ]);
 
       const history = await mockContractRead({
         functionName: 'getMerchantPayments',
-        args: [merchant1, 0n, 10n] // offset, limit
+        args: [merchant1, 0n, 10n], // offset, limit
       });
 
       expect(history).toHaveLength(2);
@@ -648,7 +648,7 @@ describe('MerchantPortal Contract', () => {
       mockContractRead.mockResolvedValueOnce(admin);
 
       const result = await mockContractRead({
-        functionName: 'admin'
+        functionName: 'admin',
       });
 
       expect(result).toBe(admin);
@@ -660,7 +660,7 @@ describe('MerchantPortal Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'setAdmin',
-        args: [newAdmin]
+        args: [newAdmin],
       });
 
       expect(result).toBe('0xhash');
@@ -671,7 +671,7 @@ describe('MerchantPortal Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'pause',
-        args: []
+        args: [],
       });
 
       expect(result).toBe('0xhash');
@@ -683,7 +683,7 @@ describe('MerchantPortal Contract', () => {
       await expect(async () => {
         await mockContractWrite({
           functionName: 'processPayment',
-          args: [merchant1, parseEther('100'), 'Order']
+          args: [merchant1, parseEther('100'), 'Order'],
         });
       }).rejects.toThrow('paused');
     });
@@ -693,7 +693,7 @@ describe('MerchantPortal Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'setSettlementPeriod',
-        args: [604800n] // 7 days
+        args: [604800n], // 7 days
       });
 
       expect(result).toBe('0xhash');
@@ -706,7 +706,7 @@ describe('MerchantPortal Contract', () => {
 
       const sales = await mockContractRead({
         functionName: 'getTotalSales',
-        args: [merchant2]
+        args: [merchant2],
       });
 
       expect(sales).toBe(0n);
@@ -718,7 +718,7 @@ describe('MerchantPortal Contract', () => {
       await expect(async () => {
         await mockContractWrite({
           functionName: 'registerMerchant',
-          args: ['', 'email@test.com', 'https://test.com']
+          args: ['', 'email@test.com', 'https://test.com'],
         });
       }).rejects.toThrow('Name required');
     });
@@ -727,7 +727,7 @@ describe('MerchantPortal Contract', () => {
       mockContractRead.mockResolvedValueOnce([merchant1, merchant2]);
 
       const merchants = await mockContractRead({
-        functionName: 'getAllMerchants'
+        functionName: 'getAllMerchants',
       });
 
       expect(merchants).toHaveLength(2);
@@ -738,7 +738,7 @@ describe('MerchantPortal Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'verifyMerchant',
-        args: [merchant1]
+        args: [merchant1],
       });
 
       expect(result).toBe('0xhash');

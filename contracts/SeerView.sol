@@ -55,7 +55,7 @@ contract SeerView {
         ISeerViewTarget target = ISeerViewTarget(seer);
         currentScore = target.getScore(subject);
 
-        address social;
+        address social = address(0);
         try ISeerCoreSocialRef(seer).seerSocial() returns (address configuredSocial) {
             social = configuredSocial;
         } catch {}
@@ -86,7 +86,7 @@ contract SeerView {
         uint64[] memory timestamps
     ) {
         ISeerViewTarget target = ISeerViewTarget(seer);
-        address social;
+        address social = address(0);
         try ISeerCoreSocialRef(seer).seerSocial() returns (address configuredSocial) {
             social = configuredSocial;
         } catch {}
@@ -95,12 +95,13 @@ contract SeerView {
         uint256 total = useSocial
             ? ISeerSocialViewTarget(social).getEndorserCount(subject)
             : target.getEndorserCount(subject);
-        uint256 activeCount;
+        uint256 activeCount = 0;
 
         for (uint256 i = 0; i < total; i++) {
             address endorser = useSocial
                 ? ISeerSocialViewTarget(social).getEndorserAt(subject, i)
                 : target.getEndorserAt(subject, i);
+            // slither-disable-next-line unused-return
             (uint64 expiry, uint16 weight, ) = useSocial
                 ? ISeerSocialViewTarget(social).endorsements(subject, endorser)
                 : target.endorsements(subject, endorser);
@@ -114,7 +115,7 @@ contract SeerView {
         expiries = new uint64[](activeCount);
         timestamps = new uint64[](activeCount);
 
-        uint256 idx;
+        uint256 idx = 0;
         for (uint256 i = 0; i < total; i++) {
             address endorser = useSocial
                 ? ISeerSocialViewTarget(social).getEndorserAt(subject, i)

@@ -248,9 +248,9 @@ export async function decryptMessage(
 }
 
 /**
- * Legacy encryption for group messages
- * In production, each user would have their own encrypted copy
- * This is a simplified version for backward compatibility
+ * Encrypt a group message by creating one encrypted bundle per member public key.
+ *
+ * `members` must contain recipient encryption public keys (SPKI hex).
  */
 export async function encryptGroupMessage(
   message: string,
@@ -258,26 +258,61 @@ export async function encryptGroupMessage(
   members: string[],
   senderSign: (message: string) => Promise<string>
 ): Promise<string> {
+  const normalizedGroupId = groupId.trim();
+  if (!normalizedGroupId) {
+    throw new Error('Group encryption requires a non-empty group ID');
+  }
+
+  const uniqueMembers = Array.from(
+    new Set(
+      members
+        .map((m) => m.trim())
+        .filter(Boolean)
+        .map((memberPublicKey) => assertValidHexKeyMaterial(memberPublicKey, 'spki'))
+    )
+  );
+  if (uniqueMembers.length === 0) {
+    throw new Error('Group encryption requires at least one recipient public key');
+  }
+
+  const encryptedForMembers: Record<string, string> = {};
+  for (const memberPublicKey of uniqueMembers) {
+    encryptedForMembers[memberPublicKey] = await encryptMessage(
+      message,
+      memberPublicKey,
+      senderSign,
+    );
+  }
+
   const timestamp = Date.now();
-  const nonce = crypto.getRandomValues(new Uint8Array(16));
-  const nonceHex = Buffer.from(nonce).toString('hex');
-  
-  const messageToSign = `VFIDE_GROUP_ENCRYPT:${groupId}:${message}:${timestamp}:${nonceHex}`;
-  const signature = await senderSign(messageToSign);
-  
-  // For group messages, we use a simpler approach
-  // In production, you would encrypt separately for each member
-  const payload = {
-    v: 1,
-    msg: Buffer.from(message).toString('base64'),
-    sig: signature,
+  const groupPayloadMessageToSign = buildGroupPayloadSignatureMessage({
+    groupId: normalizedGroupId,
     ts: timestamp,
-    nonce: nonceHex,
-    groupId,
-    members,
-  };
-  
-  return JSON.stringify(payload);
+    members: uniqueMembers,
+    encryptedForMembers,
+  });
+  const groupSig = await senderSign(groupPayloadMessageToSign);
+
+  return JSON.stringify({
+    v: 2,
+    groupId: normalizedGroupId,
+    ts: timestamp,
+    members: uniqueMembers,
+    encryptedForMembers,
+    groupSig,
+  });
+}
+
+export function buildGroupPayloadSignatureMessage(payload: {
+  groupId: string;
+  ts: number;
+  members: string[];
+  encryptedForMembers: Record<string, string>;
+}): string {
+  const stableMemberBundles = payload.members
+    .map((member) => `${member}:${payload.encryptedForMembers[member]}`)
+    .join('|');
+  return `VFIDE_GROUP_PAYLOAD:${payload.groupId}:${payload.ts}:${stableMemberBundles}`;
 }
 
 /**
@@ -285,32 +320,78 @@ export async function encryptGroupMessage(
  */
 export async function decryptGroupMessage(
   encryptedMessage: string,
-  senderAddress: string,
-  receiverAddress: string,
+  recipientPrivateKeyHex: string,
+  recipientPublicKeyHex: string,
   verify: (message: string, signature: string) => Promise<boolean>
 ): Promise<{ message: string; timestamp: number; verified: boolean; groupId: string }> {
   try {
-    const payload = JSON.parse(encryptedMessage);
-    const { msg, sig, ts, nonce, groupId, members, v } = payload;
-    
-    // Check version
-    if (v !== 1) {
-      throw new Error('Unsupported encryption version');
+    const payload = JSON.parse(encryptedMessage) as Record<string, unknown>;
+    const { v } = payload;
+
+    if (v === 1) {
+      const groupId = payload.groupId;
+      const messageBase64 = payload.msg;
+      const signature = payload.sig;
+      const timestamp = payload.ts;
+      const nonce = payload.nonce;
+
+      if (typeof groupId !== 'string') {
+        throw new Error('Invalid group payload: missing groupId');
+      }
+      if (typeof messageBase64 !== 'string' || messageBase64.length === 0) {
+        throw new Error('Invalid group payload: missing message');
+      }
+      if (typeof signature !== 'string' || signature.length === 0) {
+        throw new Error('Invalid group payload: missing signature');
+      }
+      if (typeof timestamp !== 'number' || !Number.isFinite(timestamp)) {
+        throw new Error('Invalid group payload: missing timestamp');
+      }
+      if (typeof nonce !== 'string' || nonce.length === 0) {
+        throw new Error('Invalid group payload: missing nonce');
+      }
+
+      const message = Buffer.from(messageBase64, 'base64').toString('utf8');
+      const messageToVerify = `VFIDE_GROUP_ENCRYPT:${groupId}:${message}:${timestamp}:${nonce}`;
+      const verified = await verify(messageToVerify, signature);
+
+      return {
+        message,
+        timestamp,
+        verified,
+        groupId,
+      };
     }
-    
-    // Check if receiver is a member
-    if (!members.includes(receiverAddress)) {
-      throw new Error('Not a group member');
+
+    if (v !== 2) {
+      throw new Error('Unsupported group encryption version');
     }
-    
-    const message = Buffer.from(msg, 'base64').toString('utf-8');
-    const messageToVerify = `VFIDE_GROUP_ENCRYPT:${groupId}:${message}:${ts}:${nonce}`;
-    const verified = await verify(messageToVerify, sig);
-    
+
+    const groupId = payload.groupId;
+    const timestamp = payload.ts;
+    const encryptedForMembers = payload.encryptedForMembers as Record<string, string> | undefined;
+    if (typeof groupId !== 'string') {
+      throw new Error('Invalid group payload: missing groupId');
+    }
+    if (typeof timestamp !== 'number' || !Number.isFinite(timestamp)) {
+      throw new Error('Invalid group payload: missing timestamp');
+    }
+    if (!encryptedForMembers || typeof encryptedForMembers !== 'object') {
+      throw new Error('Invalid group payload: missing encrypted member map');
+    }
+
+    const recipientSpkiHex = assertValidHexKeyMaterial(recipientPublicKeyHex, 'spki');
+    const memberBundle = encryptedForMembers[recipientSpkiHex];
+    if (typeof memberBundle !== 'string') {
+      throw new Error('No encrypted payload available for this member key');
+    }
+
+    const decrypted = await decryptMessage(memberBundle, recipientPrivateKeyHex, verify);
+
     return {
-      message,
-      timestamp: ts,
-      verified,
+      message: decrypted.message,
+      timestamp,
+      verified: decrypted.verified,
       groupId,
     };
   } catch (error) {

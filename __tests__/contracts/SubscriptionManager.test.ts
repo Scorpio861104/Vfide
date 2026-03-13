@@ -30,7 +30,7 @@ describe('SubscriptionManager Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'subscribe',
-        args: [merchant, parseEther('10'), 2592000n] // 30 days
+        args: [merchant, parseEther('10'), 2592000n], // 30 days
       });
 
       expect(result).toBe('0xhash');
@@ -42,7 +42,7 @@ describe('SubscriptionManager Contract', () => {
       await expect(async () => {
         await mockContractWrite({
           functionName: 'subscribe',
-          args: [merchant, 0n, 2592000n]
+          args: [merchant, 0n, 2592000n],
         });
       }).rejects.toThrow('Invalid amount');
     });
@@ -52,7 +52,7 @@ describe('SubscriptionManager Contract', () => {
 
       const result = await mockContractRead({
         functionName: 'isActive',
-        args: [subscriber, merchant]
+        args: [subscriber, merchant],
       });
 
       expect(result).toBe(true);
@@ -65,12 +65,12 @@ describe('SubscriptionManager Contract', () => {
         amount: parseEther('10'),
         interval: 2592000n,
         lastPayment: 1234567890n,
-        active: true
+        active: true,
       });
 
       const result = await mockContractRead({
         functionName: 'getSubscription',
-        args: [subscriber, merchant]
+        args: [subscriber, merchant],
       });
 
       expect(result.amount).toBe(parseEther('10'));
@@ -83,7 +83,7 @@ describe('SubscriptionManager Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'cancel',
-        args: [merchant]
+        args: [merchant],
       });
 
       expect(result).toBe('0xhash');
@@ -96,7 +96,7 @@ describe('SubscriptionManager Contract', () => {
       await mockContractWrite({ functionName: 'cancel', args: [merchant] });
       const active = await mockContractRead({
         functionName: 'isActive',
-        args: [subscriber, merchant]
+        args: [subscriber, merchant],
       });
 
       expect(active).toBe(false);
@@ -109,7 +109,7 @@ describe('SubscriptionManager Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'processPayment',
-        args: [subscriber, merchant]
+        args: [subscriber, merchant],
       });
 
       expect(result).toBe('0xhash');
@@ -122,12 +122,12 @@ describe('SubscriptionManager Contract', () => {
 
       await mockContractWrite({
         functionName: 'processPayment',
-        args: [subscriber, merchant]
+        args: [subscriber, merchant],
       });
 
       const lastPayment = await mockContractRead({
         functionName: 'getLastPayment',
-        args: [subscriber, merchant]
+        args: [subscriber, merchant],
       });
 
       expect(lastPayment).toBe(timestamp);
@@ -139,7 +139,7 @@ describe('SubscriptionManager Contract', () => {
       await expect(async () => {
         await mockContractWrite({
           functionName: 'processPayment',
-          args: [subscriber, merchant]
+          args: [subscriber, merchant],
         });
       }).rejects.toThrow('not due');
     });
@@ -147,13 +147,11 @@ describe('SubscriptionManager Contract', () => {
 
   describe('Subscription Management', () => {
     it('should get all subscriptions for user', async () => {
-      mockContractRead.mockResolvedValueOnce([
-        { merchant: merchant, amount: parseEther('10') }
-      ]);
+      mockContractRead.mockResolvedValueOnce([{ merchant: merchant, amount: parseEther('10') }]);
 
       const result = await mockContractRead({
         functionName: 'getSubscriptions',
-        args: [subscriber]
+        args: [subscriber],
       });
 
       expect(result).toHaveLength(1);
@@ -164,7 +162,7 @@ describe('SubscriptionManager Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'updateAmount',
-        args: [merchant, parseEther('20')]
+        args: [merchant, parseEther('20')],
       });
 
       expect(result).toBe('0xhash');
@@ -175,7 +173,7 @@ describe('SubscriptionManager Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'updateInterval',
-        args: [merchant, 5184000n] // 60 days
+        args: [merchant, 5184000n], // 60 days
       });
 
       expect(result).toBe('0xhash');
@@ -188,7 +186,7 @@ describe('SubscriptionManager Contract', () => {
 
       const result = await mockContractRead({
         functionName: 'getSubscribers',
-        args: [merchant]
+        args: [merchant],
       });
 
       expect(result).toHaveLength(1);
@@ -199,7 +197,7 @@ describe('SubscriptionManager Contract', () => {
 
       const result = await mockContractRead({
         functionName: 'getMonthlyRevenue',
-        args: [merchant]
+        args: [merchant],
       });
 
       expect(result).toBe(parseEther('1000'));
@@ -212,7 +210,7 @@ describe('SubscriptionManager Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'setPlatformFee',
-        args: [250n] // 2.5%
+        args: [250n], // 2.5%
       });
 
       expect(result).toBe('0xhash');
@@ -223,7 +221,7 @@ describe('SubscriptionManager Contract', () => {
 
       const result = await mockContractRead({
         functionName: 'calculateFee',
-        args: [parseEther('10')]
+        args: [parseEther('10')],
       });
 
       expect(result).toBe(parseEther('0.25'));
@@ -237,7 +235,7 @@ describe('SubscriptionManager Contract', () => {
       await expect(async () => {
         await mockContractWrite({
           functionName: 'setPlatformFee',
-          args: [250n]
+          args: [250n],
         });
       }).rejects.toThrow('Not owner');
     });
@@ -249,7 +247,7 @@ describe('SubscriptionManager Contract', () => {
 
       const result = await mockContractRead({
         functionName: 'isExpired',
-        args: [subscriber, merchant]
+        args: [subscriber, merchant],
       });
 
       expect(result).toBe(true);
@@ -261,7 +259,7 @@ describe('SubscriptionManager Contract', () => {
       await expect(async () => {
         await mockContractWrite({
           functionName: 'processPayment',
-          args: [subscriber, merchant]
+          args: [subscriber, merchant],
         });
       }).rejects.toThrow('Insufficient balance');
     });

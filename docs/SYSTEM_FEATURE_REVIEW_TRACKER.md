@@ -47,7 +47,7 @@ Each feature section is reviewed for:
 ## Session-by-Session Review Log
 
 ### Feature 1: Vault System
-Status: Pending
+Status: In Progress
 Notes:
 - Start with UserVault transfer model, pending tx approvals, cooldowns, abnormal thresholds, and execute restrictions.
 - Then assess Hub/Registry forced recovery logic and ownership transitions.
@@ -71,6 +71,92 @@ Notes:
 	- `__tests__/contracts/VaultHub.test.ts`
 	- `__tests__/contracts/VaultRegistry.test.ts`
 - Validation run: compile + focused suites passed (`136/136`) across the three vault feature test files above.
+- Latest baseline validation run (2026-03-12): focused vault suites passed (`145/145`) across:
+	- `__tests__/contracts/UserVault.test.ts`
+	- `__tests__/contracts/VaultHub.test.ts`
+	- `__tests__/contracts/VaultRegistry.test.ts`
+	- `__tests__/contracts/VaultInfrastructure.test.ts`
+- Critical re-initialization takeover hardening applied in `contracts/UserVault.sol`:
+	- constructor now sets `initialized = true`, preventing post-deploy takeover via `initialize(...)` on constructor-deployed vaults.
+	- `initialize(...)` now requires `msg.sender == _hub`, constraining clone initialization authority to the hub path.
+- Added regression check in `__tests__/contracts/UserVault.test.ts` for initialize takeover attempts.
+- Validation rerun (2026-03-12): focused vault suites passed (`146/146`) across:
+	- `__tests__/contracts/UserVault.test.ts`
+	- `__tests__/contracts/VaultHub.test.ts`
+	- `__tests__/contracts/VaultRegistry.test.ts`
+	- `__tests__/contracts/VaultInfrastructure.test.ts`
+- Claim-flow race hardening applied in `contracts/UserVault.sol`:
+	- `requestRecovery(...)` now rejects while inheritance is active and rejects creating overlapping active recovery requests.
+	- `requestInheritance()` now rejects while recovery is active and rejects overlapping active inheritance requests.
+	- This enforces single-claim flow semantics and removes recovery/inheritance overlap race surface.
+- Added regression checks in `__tests__/contracts/UserVault.test.ts` for cross-claim request blocking.
+- Validation rerun (2026-03-12): focused vault suites passed (`148/148`) across:
+	- `__tests__/contracts/UserVault.test.ts`
+	- `__tests__/contracts/VaultHub.test.ts`
+	- `__tests__/contracts/VaultRegistry.test.ts`
+	- `__tests__/contracts/VaultInfrastructure.test.ts`
+- Vault identity-recovery hardening applied in `contracts/VaultRegistry.sol`:
+	- `setEmailRecovery(...)` now enforces collision safety across vaults (`EmailAlreadyTaken`) and avoids stale-map churn on idempotent updates.
+	- Username reassignment now clears prior username mappings via tracked per-vault username hash storage, preventing stale lookup aliases and permanent old-name reservation.
+- Added regression checks in `__tests__/contracts/VaultRegistry.test.ts` for email collision rejection and username replacement flow.
+- Validation rerun (2026-03-12): focused vault suites passed (`150/150`) across:
+	- `__tests__/contracts/UserVault.test.ts`
+	- `__tests__/contracts/VaultHub.test.ts`
+	- `__tests__/contracts/VaultRegistry.test.ts`
+	- `__tests__/contracts/VaultInfrastructure.test.ts`
+- Additional Vault hardening pass (2026-03-12):
+	- `contracts/VaultHub.sol` constructor now rejects zero `vfideToken` and zero `dao` addresses, preventing deployment-time bricking of core vault/DAO recovery wiring.
+	- `contracts/VaultHub.sol` `approveForceRecovery(...)` now defers ledger logging until after approval/timelock state writes (CEI ordering), reducing callback surface during approval updates.
+	- `contracts/UserVault.sol` `__forceSetOwner(...)` now rejects zero owner assignments, adding defense-in-depth on hub-forced ownership transitions.
+	- `contracts/UserVault.sol` `setNextOfKin(address(0))` behavior is explicitly documented as intentional clear/unset semantics.
+- Focused validation rerun (2026-03-12): vault suites passed (`150/150`) across:
+	- `__tests__/contracts/UserVault.test.ts`
+	- `__tests__/contracts/VaultHub.test.ts`
+	- `__tests__/contracts/VaultRegistry.test.ts`
+	- `__tests__/contracts/VaultInfrastructure.test.ts`
+- Legacy vault-path parity hardening (2026-03-12):
+	- `contracts/VaultInfrastructure.sol` constructor now rejects zero `vfideToken` and zero `dao` addresses.
+	- `contracts/VaultInfrastructure.sol` `setModules(...)` now rejects zero core addresses (`vfideToken`, `securityHub`, `dao`) to prevent no-op/invalid rewires.
+	- `contracts/VaultInfrastructure.sol` `setVFIDE(...)` and `setDAO(...)` now reject zero-address assignments.
+	- `contracts/VaultInfrastructure.sol` (`UserVaultLegacy`) `__forceSetOwner(...)` now rejects zero owner assignments.
+- Focused vault validation rerun (2026-03-12): suites passed (`134/134`) across:
+	- `__tests__/contracts/VaultInfrastructure.test.ts`
+	- `__tests__/contracts/VaultHub.test.ts`
+	- `__tests__/contracts/UserVault.test.ts`
+
+### Cross-feature conflict review notes (2026-03-12)
+- Unintended issue fixed in `contracts/PayrollManager.sol`:
+	- `topUp(...)` now uses `nonReentrant` and transfers tokens before state mutation/event emission (CEI), removing balance-inflation/reentry risk from hostile tokens.
+	- constructor now rejects zero `dao` address (`PM: zero DAO`), preventing invalid governance wiring at deployment time.
+	- validation run (2026-03-12): `npm run -s contract:compile` and `npx jest --runInBand __tests__/contracts/PayrollManager.test.ts` passed (`61/61`).
+- Unintended issue fixed in `contracts/CouncilManager.sol`:
+	- `distributePayments()` no longer consumes `lastPaymentTime` when council transfer fails; retry remains possible within the same interval.
+- Unintended issue fixed in `contracts/LiquidityIncentives.sol`:
+	- `stake(...)` now pulls LP tokens before stake accounting updates, preventing pre-credit state changes before external token transfer completion.
+- Unintended issue fixed in `contracts/VFIDEEnterpriseGateway.sol`:
+	- `createOrder(...)` now correctly uses caller vault as payer when available (fallback EOA otherwise), aligning implementation with documented vault-custody payment model.
+- Unintended issue fixed in `contracts/MerchantPortal.sol`:
+	- stable-conversion slippage floor now derives `minOut` from DEX quote output (`getAmountsOut`) instead of input token amount; adds direct-settlement fallback if quote is unavailable.
+- Critical unintended issue fixed in `contracts/VFIDEPriceOracle.sol`:
+	- manipulation detection path now preserves circuit-breaker activation state (removed post-activation revert that rolled back breaker state), ensuring fail-closed behavior under extreme price deviation.
+- Additional oracle hardening (2026-03-12):
+	- `contracts/VFIDEPriceOracle.sol` now rejects zero-address scheduling in `setChainlinkFeed(...)` and `setUniswapPool(...)`, preventing accidental timelocked deconfiguration of core oracle sources.
+- Unintended issue fixed in `contracts/VFIDEBridge.sol`:
+	- outgoing bridge `txId` derivation now includes a monotonic nonce (`bridgeTxNonce`), preventing same-second hash collisions for repeated identical bridge params.
+- Additional bridge hardening (2026-03-12):
+	- `contracts/VFIDEBridge.sol` constructor now rejects zero `endpoint` and zero `owner` addresses in addition to existing token guard, preventing invalid deployment wiring for omnichain messaging/ownership.
+	- intentional behavior documented: `setSecurityModule(address(0))` remains allowed by design to disable external module checks through the existing 48h timelock path.
+	- validation run: `npm run -s contract:verify:bridge-governance:local` passed after patch.
+- Unintended issue fixed in `contracts/VFIDEEnterpriseGateway.sol`:
+	- `_swapToStable(...)` now handles quote (`getAmountsOut`) failures gracefully by revoking approval and returning `0`, preserving intended fallback-to-VFIDE settlement instead of reverting order settlement.
+- Intentional behavior explicitly documented in `contracts/DAO.sol`:
+	- proportional time-based governance fatigue recovery is by design (boundary-gaming resistance) and now inline-commented in both execution and preview paths.
+- Unintended issue fixed in `contracts/AdminMultiSig.sol`:
+	- `executeProposal(...)` now uses `nonReentrant` (shared `ReentrancyGuard`), preventing nested proposal execution paths during external target call execution.
+	- intentional emergency self-call execution context is now inline-documented at the target call site to distinguish expected behavior from non-intentional reentrancy risk.
+- Unintended issue fixed in `contracts/SeerAutonomous.sol`:
+	- added shared `ReentrancyGuard` inheritance and `nonReentrant` on external mutation entrypoints (`beforeAction`, `onScoreChange`) to block callback-driven nested enforcement execution.
+	- intentional post-signal/accounting writes under guarded flow are now explicitly annotated as benign reentrancy patterns for audit clarity.
 
 ### Feature 2: Chain of Return
 Status: Reviewed + aligned
@@ -185,6 +271,25 @@ Notes:
 - Combined seventh-pass validation run passed (`159/159`) across:
 	- `__tests__/contracts/VFIDEBenefits.test.ts`
 	- `__tests__/contracts/CouncilManager.test.ts`
+- Eighth-pass finance/governance guard hardening in `contracts/VFIDEFinance.sol` (`StablecoinRegistryLegacy`):
+	- `setDAO` now rejects zero-address assignments.
+	- `setTreasury` now rejects zero-address assignments.
+- Added focused regression checks in `__tests__/contracts/VFIDEFinance.test.ts` for both zero-address setter rejections.
+- Validation run: compile + focused finance suite passed (`17/17`) for `__tests__/contracts/VFIDEFinance.test.ts`.
+- Ninth-pass router configuration hardening in `contracts/MainstreamPayments.sol` (`MultiCurrencyRouter`):
+	- Constructor now rejects zero `dao`, `vfide`, `priceOracle`, or `recommendedRouter` addresses.
+	- `setRecommendedRouter` now rejects the zero address (`MCR: zero router`).
+- Added focused regression check in `__tests__/contracts/MainstreamPayments.test.ts` for zero-address `setRecommendedRouter` rejection.
+- Validation run: compile + focused mainstream payments suite passed (`12/12`) for `__tests__/contracts/MainstreamPayments.test.ts`; follow-up Slither run with system `solc` showed no remaining `missing-zero-check` findings for `MultiCurrencyRouter`.
+- Tenth-pass bridge-module constructor hardening in `contracts/BridgeSecurityModule.sol`:
+	- Constructor now rejects zero bridge address (`Invalid bridge`) to align deployment-time invariants with runtime `onlyBridge` checks.
+- Added focused regression check in `__tests__/contracts/BridgeSecurityModule.test.ts` for zero-address `setBridge` rejection.
+- Validation run: compile + focused bridge security suite passed (`9/9`) for `__tests__/contracts/BridgeSecurityModule.test.ts`; follow-up Slither run with system `solc` returned no remaining targeted `missing-zero-check` hit for constructor `_bridge`.
+- Eleventh-pass auditability hardening in `contracts/MainstreamPayments.sol` (`TerminalRegistry`):
+	- Added `TapLimitUpdated(uint256 oldLimit, uint256 newLimit)` event.
+	- `setTapLimit` now emits `TapLimitUpdated` whenever DAO changes the tap limit.
+- Added focused regression check in `__tests__/contracts/MainstreamPayments.test.ts` for successful `setTapLimit` update call path.
+- Validation run: compile + focused mainstream payments suite passed (`13/13`) for `__tests__/contracts/MainstreamPayments.test.ts`; follow-up Slither run no longer reports the prior `events-maths` warning for `setTapLimit`.
 	- `__tests__/contracts/VFIDETrust.test.ts`
 	- `__tests__/contracts/BadgeManager.test.ts`
 - Full clean compile sweep (`hardhat clean` + compile) still reports deploy-size warnings on:

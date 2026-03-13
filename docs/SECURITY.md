@@ -348,6 +348,41 @@ The application validates environment variables on startup:
    - Update dependencies promptly
    - Review code for new vulnerabilities
 
+### Replay Monitor (When Ready)
+
+Use these settings when enabling scheduled webhook replay monitoring.
+
+Application/server environment variables:
+
+```bash
+# Shared machine token used by replay monitor API (server-side only)
+SECURITY_MONITOR_API_TOKEN=<long-random-token>
+
+# Optional controls for replay metrics endpoint behavior
+SECURITY_MONITOR_REQUIRE_ALLOWLIST=true
+SECURITY_MONITOR_ALLOWLIST=0xYourSecurityOpsWallet1,0xYourSecurityOpsWallet2
+SECURITY_WEBHOOK_REPLAY_REJECT_THRESHOLD_1H=25
+SECURITY_MONITOR_FAIL_ON_THRESHOLD=false
+```
+
+GitHub repository secrets:
+
+```text
+SECURITY_MONITOR_BASE_URL=https://your-production-domain
+SECURITY_MONITOR_API_TOKEN=<same value as app SECURITY_MONITOR_API_TOKEN>
+```
+
+GitHub repository variable (optional):
+
+```text
+SECURITY_MONITOR_FAIL_ON_THRESHOLD=false
+```
+
+Operational notes:
+- Workflow: `.github/workflows/security-replay-monitor.yml`
+- Reporter command: `npm run -s security:report:replay -- security-replay-metrics-report.md`
+- Keep monitor tokens out of `NEXT_PUBLIC_*` and rotate periodically.
+
 ---
 
 ## Testing

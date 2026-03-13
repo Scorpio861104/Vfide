@@ -216,6 +216,7 @@ contract SubscriptionManager is ReentrancyGuard {
 
     // 3. Merchant (or anyone) processes the payment
     // H-16 Fix: Add nonReentrant to prevent reentrancy via malicious tokens
+    // slither-disable-next-line arbitrary-send-erc20
     function processPayment(uint256 subId) external nonReentrant {
         Subscription storage sub = subscriptions[subId];
         if (!sub.active) revert SM_InactiveSubscription();
@@ -269,6 +270,8 @@ contract SubscriptionManager is ReentrancyGuard {
         // Update next payment time FIRST (reentrancy protection pattern)
         sub.nextPayment += sub.interval;
 
+        // This pull uses user vault custody by design (not arbitrary user-provided from-address).
+        // slither-disable-next-line arbitrary-send-erc20
         // Execute Transfer (using SafeERC20 for non-standard tokens)
         IERC20(sub.token).safeTransferFrom(userVault, merchantVault, sub.amount);
         

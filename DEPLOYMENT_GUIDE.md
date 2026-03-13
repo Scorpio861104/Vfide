@@ -208,7 +208,39 @@ SESSION_MAX_AGE=86400
 
 # CORS
 ALLOWED_ORIGINS=https://vfide.io,https://www.vfide.io
+
+# Webhook Replay Monitoring (recommended before enabling scheduled monitor)
+# Shared bearer token used by /api/security/webhook-replay-metrics machine access
+SECURITY_MONITOR_API_TOKEN=generate-a-long-random-token
+
+# Optional replay-monitor controls
+SECURITY_MONITOR_REQUIRE_ALLOWLIST=true
+SECURITY_MONITOR_ALLOWLIST=0xYourSecurityOpsWallet1,0xYourSecurityOpsWallet2
+SECURITY_WEBHOOK_REPLAY_REJECT_THRESHOLD_1H=25
+SECURITY_MONITOR_FAIL_ON_THRESHOLD=false
 ```
+
+### Step 3.1: Configure GitHub Replay Monitor (When Ready)
+
+The scheduled workflow `.github/workflows/security-replay-monitor.yml` can generate hourly replay-metrics reports and upload artifacts.
+
+Set these **GitHub repository secrets**:
+
+```text
+SECURITY_MONITOR_BASE_URL=https://your-production-domain
+SECURITY_MONITOR_API_TOKEN=<same value as app SECURITY_MONITOR_API_TOKEN>
+```
+
+Set this **GitHub repository variable** (optional):
+
+```text
+SECURITY_MONITOR_FAIL_ON_THRESHOLD=false
+```
+
+Notes:
+- Keep `SECURITY_MONITOR_API_TOKEN` server-side only. Do not use `NEXT_PUBLIC_*`.
+- If `SECURITY_MONITOR_FAIL_ON_THRESHOLD=true`, scheduled runs fail when replay rejection spikes exceed threshold.
+- Reporter script: `npm run -s security:report:replay -- security-replay-metrics-report.md`
 
 ### Step 4: Generate Security Secrets
 

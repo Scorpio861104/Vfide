@@ -30,7 +30,7 @@ describe('VFIDEBenefits Contract', () => {
 
       const result = await mockContractRead({
         functionName: 'getUserTier',
-        args: [user1]
+        args: [user1],
       });
 
       expect(result).toBe(2);
@@ -41,7 +41,7 @@ describe('VFIDEBenefits Contract', () => {
 
       const result = await mockContractRead({
         functionName: 'calculateTier',
-        args: [user1]
+        args: [user1],
       });
 
       expect(result).toBe(1);
@@ -51,12 +51,12 @@ describe('VFIDEBenefits Contract', () => {
       mockContractRead.mockResolvedValueOnce({
         minBalance: parseEther('5000'),
         name: 'Silver',
-        discountBps: 100n // 1%
+        discountBps: 100n, // 1%
       });
 
       const result = await mockContractRead({
         functionName: 'getTierInfo',
-        args: [1]
+        args: [1],
       });
 
       expect(result.name).toBe('Silver');
@@ -69,7 +69,7 @@ describe('VFIDEBenefits Contract', () => {
 
       const result = await mockContractRead({
         functionName: 'applyDiscount',
-        args: [user1, parseEther('10')]
+        args: [user1, parseEther('10')],
       });
 
       expect(result).toBe(parseEther('9.9'));
@@ -80,7 +80,7 @@ describe('VFIDEBenefits Contract', () => {
 
       const result = await mockContractRead({
         functionName: 'getDiscountBps',
-        args: [user1]
+        args: [user1],
       });
 
       expect(result).toBe(200n);
@@ -91,7 +91,7 @@ describe('VFIDEBenefits Contract', () => {
 
       const result = await mockContractRead({
         functionName: 'isEligibleFor',
-        args: [user1, 'premium_features']
+        args: [user1, 'premium_features'],
       });
 
       expect(result).toBe(true);
@@ -104,7 +104,7 @@ describe('VFIDEBenefits Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'claimRewards',
-        args: []
+        args: [],
       });
 
       expect(result).toBe('0xhash');
@@ -115,7 +115,7 @@ describe('VFIDEBenefits Contract', () => {
 
       const result = await mockContractRead({
         functionName: 'getPendingRewards',
-        args: [user1]
+        args: [user1],
       });
 
       expect(result).toBe(parseEther('100'));
@@ -126,7 +126,7 @@ describe('VFIDEBenefits Contract', () => {
 
       const result = await mockContractRead({
         functionName: 'getTotalClaimed',
-        args: [user1]
+        args: [user1],
       });
 
       expect(result).toBe(parseEther('500'));
@@ -139,7 +139,7 @@ describe('VFIDEBenefits Contract', () => {
 
       const result = await mockContractRead({
         functionName: 'getStakingMultiplier',
-        args: [user1]
+        args: [user1],
       });
 
       expect(result).toBe(150n);
@@ -150,7 +150,7 @@ describe('VFIDEBenefits Contract', () => {
 
       const result = await mockContractRead({
         functionName: 'calculateBoostedRewards',
-        args: [user1, parseEther('100')]
+        args: [user1, parseEther('100')],
       });
 
       expect(result).toBe(parseEther('150'));
@@ -163,7 +163,7 @@ describe('VFIDEBenefits Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'earnPoints',
-        args: [user1, 100n]
+        args: [user1, 100n],
       });
 
       expect(result).toBe('0xhash');
@@ -174,7 +174,7 @@ describe('VFIDEBenefits Contract', () => {
 
       const result = await mockContractRead({
         functionName: 'getLoyaltyPoints',
-        args: [user1]
+        args: [user1],
       });
 
       expect(result).toBe(5000n);
@@ -185,7 +185,7 @@ describe('VFIDEBenefits Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'redeemPoints',
-        args: [1000n]
+        args: [1000n],
       });
 
       expect(result).toBe('0xhash');
@@ -198,7 +198,7 @@ describe('VFIDEBenefits Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'registerReferral',
-        args: [user2] // user2 referred by caller
+        args: [user2], // user2 referred by caller
       });
 
       expect(result).toBe('0xhash');
@@ -209,7 +209,7 @@ describe('VFIDEBenefits Contract', () => {
 
       const result = await mockContractRead({
         functionName: 'getReferralCount',
-        args: [user1]
+        args: [user1],
       });
 
       expect(result).toBe(10n);
@@ -233,7 +233,7 @@ describe('VFIDEBenefits Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'setTierRequirements',
-        args: [1, parseEther('5000'), 100n]
+        args: [1, parseEther('5000'), 100n],
       });
 
       expect(result).toBe('0xhash');
@@ -244,7 +244,7 @@ describe('VFIDEBenefits Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'addBenefit',
-        args: ['premium_support', 2] // Gold tier and above
+        args: ['premium_support', 2], // Gold tier and above
       });
 
       expect(result).toBe('0xhash');
@@ -256,7 +256,7 @@ describe('VFIDEBenefits Contract', () => {
       await expect(async () => {
         await mockContractWrite({
           functionName: 'setTierRequirements',
-          args: [1, parseEther('5000'), 100n]
+          args: [1, parseEther('5000'), 100n],
         });
       }).rejects.toThrow('Not owner');
     });
@@ -269,12 +269,12 @@ describe('VFIDEBenefits Contract', () => {
         discount: 200n,
         rewards: parseEther('100'),
         points: 5000n,
-        referrals: 10n
+        referrals: 10n,
       });
 
       const result = await mockContractRead({
         functionName: 'getUserSummary',
-        args: [user1]
+        args: [user1],
       });
 
       expect(result.tier).toBe(2);
@@ -285,7 +285,7 @@ describe('VFIDEBenefits Contract', () => {
       mockContractRead.mockResolvedValueOnce(parseEther('10000'));
 
       const result = await mockContractRead({
-        functionName: 'getTotalDistributed'
+        functionName: 'getTotalDistributed',
       });
 
       expect(result).toBe(parseEther('10000'));
@@ -299,7 +299,7 @@ describe('VFIDEBenefits Contract', () => {
       await expect(
         mockContractWrite({
           functionName: 'setAuthorizedCaller',
-          args: ['0x0000000000000000000000000000000000000000' as Address, true]
+          args: ['0x0000000000000000000000000000000000000000' as Address, true],
         })
       ).rejects.toThrow('BEN_Zero');
     });
@@ -310,7 +310,7 @@ describe('VFIDEBenefits Contract', () => {
       await expect(
         mockContractWrite({
           functionName: 'rewardTransaction',
-          args: ['0x0000000000000000000000000000000000000000' as Address, user2, parseEther('1')]
+          args: ['0x0000000000000000000000000000000000000000' as Address, user2, parseEther('1')],
         })
       ).rejects.toThrow('BEN_Zero');
     });
@@ -320,7 +320,7 @@ describe('VFIDEBenefits Contract', () => {
 
       const result = await mockContractRead({
         functionName: 'calculateTier',
-        args: [user1]
+        args: [user1],
       });
 
       expect(result).toBe(0);
@@ -332,7 +332,7 @@ describe('VFIDEBenefits Contract', () => {
       await expect(async () => {
         await mockContractWrite({
           functionName: 'claimRewards',
-          args: []
+          args: [],
         });
       }).rejects.toThrow('No rewards');
     });
@@ -343,7 +343,7 @@ describe('VFIDEBenefits Contract', () => {
       await expect(async () => {
         await mockContractWrite({
           functionName: 'registerReferral',
-          args: [user1] // trying to refer self
+          args: [user1], // trying to refer self
         });
       }).rejects.toThrow('Cannot refer self');
     });

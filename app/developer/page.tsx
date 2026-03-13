@@ -11,7 +11,7 @@ import { VFIDEWidget } from '@vfide/sdk';
   to="0x1234..."
   amount="0.01"
   token="ETH"
-  onSuccess={(tx) => console.log('Paid!', tx)}
+  onSuccess={(tx) => handlePaymentSuccess(tx)}
 />
 
 // 2. Request payment via API

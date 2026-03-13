@@ -33,11 +33,7 @@ describe('BadgeRegistry Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'createBadgeType',
-        args: [
-          'Pioneer',
-          'Early adopter badge',
-          'https://badges.vfide.io/pioneer.json'
-        ]
+        args: ['Pioneer', 'Early adopter badge', 'https://badges.vfide.io/pioneer.json'],
       });
 
       expect(result).toBe('0xhash');
@@ -48,7 +44,7 @@ describe('BadgeRegistry Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'createBadgeType',
-        args: ['Contributor', 'Active contributor', 'https://uri.com']
+        args: ['Contributor', 'Active contributor', 'https://uri.com'],
       });
 
       expect(result).toBe('0xhash');
@@ -60,7 +56,7 @@ describe('BadgeRegistry Contract', () => {
       await expect(async () => {
         await mockContractWrite({
           functionName: 'createBadgeType',
-          args: ['Badge', 'Description', 'https://uri.com']
+          args: ['Badge', 'Description', 'https://uri.com'],
         });
       }).rejects.toThrow('Not admin');
     });
@@ -74,12 +70,12 @@ describe('BadgeRegistry Contract', () => {
         issuer: issuer,
         totalIssued: 100n,
         isActive: true,
-        createdAt: 1234567890n
+        createdAt: 1234567890n,
       });
 
       const details = await mockContractRead({
         functionName: 'getBadgeType',
-        args: [1n]
+        args: [1n],
       });
 
       expect(details.name).toBe('Pioneer');
@@ -89,7 +85,7 @@ describe('BadgeRegistry Contract', () => {
       mockContractRead.mockResolvedValueOnce(15n);
 
       const total = await mockContractRead({
-        functionName: 'totalBadgeTypes'
+        functionName: 'totalBadgeTypes',
       });
 
       expect(total).toBe(15n);
@@ -100,7 +96,7 @@ describe('BadgeRegistry Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'deactivateBadgeType',
-        args: [1n]
+        args: [1n],
       });
 
       expect(result).toBe('0xhash');
@@ -111,7 +107,7 @@ describe('BadgeRegistry Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'reactivateBadgeType',
-        args: [1n]
+        args: [1n],
       });
 
       expect(result).toBe('0xhash');
@@ -122,7 +118,7 @@ describe('BadgeRegistry Contract', () => {
 
       const isActive = await mockContractRead({
         functionName: 'isBadgeTypeActive',
-        args: [1n]
+        args: [1n],
       });
 
       expect(isActive).toBe(true);
@@ -134,7 +130,7 @@ describe('BadgeRegistry Contract', () => {
       await expect(async () => {
         await mockContractWrite({
           functionName: 'createBadgeType',
-          args: ['', 'Description', 'https://uri.com']
+          args: ['', 'Description', 'https://uri.com'],
         });
       }).rejects.toThrow('Name required');
     });
@@ -143,11 +139,11 @@ describe('BadgeRegistry Contract', () => {
       mockContractRead.mockResolvedValueOnce([
         { id: 1n, name: 'Pioneer' },
         { id: 2n, name: 'Contributor' },
-        { id: 3n, name: 'Validator' }
+        { id: 3n, name: 'Validator' },
       ]);
 
       const types = await mockContractRead({
-        functionName: 'getAllBadgeTypes'
+        functionName: 'getAllBadgeTypes',
       });
 
       expect(types).toHaveLength(3);
@@ -160,7 +156,7 @@ describe('BadgeRegistry Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'assignBadge',
-        args: [user1, 1n, 'Early supporter']
+        args: [user1, 1n, 'Early supporter'],
       });
 
       expect(result).toBe('0xhash');
@@ -172,7 +168,7 @@ describe('BadgeRegistry Contract', () => {
       await expect(async () => {
         await mockContractWrite({
           functionName: 'assignBadge',
-          args: [user1, 1n, 'Reason']
+          args: [user1, 1n, 'Reason'],
         });
       }).rejects.toThrow('Not authorized issuer');
     });
@@ -183,7 +179,7 @@ describe('BadgeRegistry Contract', () => {
       await expect(async () => {
         await mockContractWrite({
           functionName: 'assignBadge',
-          args: [user1, 1n, 'Reason']
+          args: [user1, 1n, 'Reason'],
         });
       }).rejects.toThrow('already assigned');
     });
@@ -193,7 +189,7 @@ describe('BadgeRegistry Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'assignBadge',
-        args: [user2, 2n, 'Active participation']
+        args: [user2, 2n, 'Active participation'],
       });
 
       expect(result).toBe('0xhash');
@@ -204,14 +200,14 @@ describe('BadgeRegistry Contract', () => {
 
       await mockContractWrite({
         functionName: 'assignBadge',
-        args: [user1, 1n, 'Reason']
+        args: [user1, 1n, 'Reason'],
       });
 
       mockContractRead.mockResolvedValueOnce(6n); // incremented
 
       const count = await mockContractRead({
         functionName: 'getUserBadgeCount',
-        args: [user1]
+        args: [user1],
       });
 
       expect(count).toBe(6n);
@@ -222,7 +218,7 @@ describe('BadgeRegistry Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'batchAssignBadge',
-        args: [[user1, user2], 1n, 'Mass distribution']
+        args: [[user1, user2], 1n, 'Mass distribution'],
       });
 
       expect(result).toBe('0xhash');
@@ -233,7 +229,7 @@ describe('BadgeRegistry Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'revokeBadge',
-        args: [user1, 1n, 'Terms violation']
+        args: [user1, 1n, 'Terms violation'],
       });
 
       expect(result).toBe('0xhash');
@@ -244,7 +240,7 @@ describe('BadgeRegistry Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'revokeBadge',
-        args: [user1, 1n, 'Reason']
+        args: [user1, 1n, 'Reason'],
       });
 
       expect(result).toBe('0xhash');
@@ -256,7 +252,7 @@ describe('BadgeRegistry Contract', () => {
       await expect(async () => {
         await mockContractWrite({
           functionName: 'assignBadge',
-          args: [user1, 1n, 'Reason']
+          args: [user1, 1n, 'Reason'],
         });
       }).rejects.toThrow('not active');
     });
@@ -268,12 +264,12 @@ describe('BadgeRegistry Contract', () => {
         issuer: issuer,
         reason: 'Early supporter',
         timestamp: 1234567890n,
-        isActive: true
+        isActive: true,
       });
 
       const details = await mockContractRead({
         functionName: 'getBadgeAssignment',
-        args: [user1, 1n]
+        args: [user1, 1n],
       });
 
       expect(details.recipient).toBe(user1);
@@ -286,7 +282,7 @@ describe('BadgeRegistry Contract', () => {
 
       const hasBadge = await mockContractRead({
         functionName: 'hasBadge',
-        args: [user1, 1n]
+        args: [user1, 1n],
       });
 
       expect(hasBadge).toBe(true);
@@ -297,7 +293,7 @@ describe('BadgeRegistry Contract', () => {
 
       const hasBadge = await mockContractRead({
         functionName: 'hasBadge',
-        args: [user2, 1n]
+        args: [user2, 1n],
       });
 
       expect(hasBadge).toBe(false);
@@ -308,12 +304,12 @@ describe('BadgeRegistry Contract', () => {
         isValid: true,
         badgeId: 1n,
         assignedAt: 1234567890n,
-        issuer: issuer
+        issuer: issuer,
       });
 
       const verification = await mockContractRead({
         functionName: 'verifyBadge',
-        args: [user1, 1n]
+        args: [user1, 1n],
       });
 
       expect(verification.isValid).toBe(true);
@@ -324,7 +320,7 @@ describe('BadgeRegistry Contract', () => {
 
       const isRevoked = await mockContractRead({
         functionName: 'isBadgeRevoked',
-        args: [user1, 1n]
+        args: [user1, 1n],
       });
 
       expect(isRevoked).toBe(true);
@@ -335,12 +331,12 @@ describe('BadgeRegistry Contract', () => {
         isValid: true,
         isRevoked: false,
         isExpired: false,
-        expiryDate: 0n
+        expiryDate: 0n,
       });
 
       const status = await mockContractRead({
         functionName: 'getBadgeStatus',
-        args: [user1, 1n]
+        args: [user1, 1n],
       });
 
       expect(status.isValid).toBe(true);
@@ -351,7 +347,7 @@ describe('BadgeRegistry Contract', () => {
 
       const results = await mockContractRead({
         functionName: 'verifyMultipleBadges',
-        args: [user1, [1n, 2n, 3n]]
+        args: [user1, [1n, 2n, 3n]],
       });
 
       expect(results).toHaveLength(3);
@@ -363,12 +359,12 @@ describe('BadgeRegistry Contract', () => {
         badgeId: 1n,
         issuer: issuer,
         timestamp: 1234567890n,
-        signature: '0xabc123'
+        signature: '0xabc123',
       });
 
       const proof = await mockContractRead({
         functionName: 'getVerificationProof',
-        args: [user1, 1n]
+        args: [user1, 1n],
       });
 
       expect(proof.recipient).toBe(user1);
@@ -379,7 +375,7 @@ describe('BadgeRegistry Contract', () => {
 
       const isAuthorized = await mockContractRead({
         functionName: 'isAuthorizedIssuer',
-        args: [issuer]
+        args: [issuer],
       });
 
       expect(isAuthorized).toBe(true);
@@ -392,7 +388,7 @@ describe('BadgeRegistry Contract', () => {
 
       const uri = await mockContractRead({
         functionName: 'getBadgeURI',
-        args: [1n]
+        args: [1n],
       });
 
       expect(uri).toBe('https://badges.vfide.io/pioneer.json');
@@ -403,7 +399,7 @@ describe('BadgeRegistry Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'updateBadgeURI',
-        args: [1n, 'https://badges.vfide.io/pioneer-v2.json']
+        args: [1n, 'https://badges.vfide.io/pioneer-v2.json'],
       });
 
       expect(result).toBe('0xhash');
@@ -416,13 +412,13 @@ describe('BadgeRegistry Contract', () => {
         image: 'https://badges.vfide.io/images/pioneer.png',
         attributes: [
           { trait_type: 'Rarity', value: 'Legendary' },
-          { trait_type: 'Level', value: '1' }
-        ]
+          { trait_type: 'Level', value: '1' },
+        ],
       });
 
       const metadata = await mockContractRead({
         functionName: 'getBadgeMetadata',
-        args: [1n]
+        args: [1n],
       });
 
       expect(metadata.name).toBe('Pioneer');
@@ -433,7 +429,7 @@ describe('BadgeRegistry Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'updateBadgeURI',
-        args: [1n, 'https://new-uri.com']
+        args: [1n, 'https://new-uri.com'],
       });
 
       expect(result).toBe('0xhash');
@@ -444,7 +440,7 @@ describe('BadgeRegistry Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'setBaseURI',
-        args: ['https://badges.vfide.io/']
+        args: ['https://badges.vfide.io/'],
       });
 
       expect(result).toBe('0xhash');
@@ -455,7 +451,7 @@ describe('BadgeRegistry Contract', () => {
 
       const uri = await mockContractRead({
         functionName: 'tokenURI',
-        args: [1n]
+        args: [1n],
       });
 
       expect(uri).toBe('https://badges.vfide.io/1.json');
@@ -466,7 +462,7 @@ describe('BadgeRegistry Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'updateBadgeDescription',
-        args: [1n, 'Updated description']
+        args: [1n, 'Updated description'],
       });
 
       expect(result).toBe('0xhash');
@@ -475,12 +471,12 @@ describe('BadgeRegistry Contract', () => {
     it('should get badge attributes', async () => {
       mockContractRead.mockResolvedValueOnce([
         { key: 'Rarity', value: 'Legendary' },
-        { key: 'Level', value: '1' }
+        { key: 'Level', value: '1' },
       ]);
 
       const attributes = await mockContractRead({
         functionName: 'getBadgeAttributes',
-        args: [1n]
+        args: [1n],
       });
 
       expect(attributes).toHaveLength(2);
@@ -493,7 +489,7 @@ describe('BadgeRegistry Contract', () => {
 
       const badges = await mockContractRead({
         functionName: 'getUserBadges',
-        args: [user1]
+        args: [user1],
       });
 
       expect(badges).toHaveLength(3);
@@ -504,7 +500,7 @@ describe('BadgeRegistry Contract', () => {
 
       const count = await mockContractRead({
         functionName: 'getUserBadgeCount',
-        args: [user1]
+        args: [user1],
       });
 
       expect(count).toBe(5n);
@@ -513,12 +509,12 @@ describe('BadgeRegistry Contract', () => {
     it('should get user badge details', async () => {
       mockContractRead.mockResolvedValueOnce([
         { badgeId: 1n, name: 'Pioneer', assignedAt: 1234567890n },
-        { badgeId: 2n, name: 'Contributor', assignedAt: 1234667890n }
+        { badgeId: 2n, name: 'Contributor', assignedAt: 1234667890n },
       ]);
 
       const details = await mockContractRead({
         functionName: 'getUserBadgeDetails',
-        args: [user1]
+        args: [user1],
       });
 
       expect(details).toHaveLength(2);
@@ -529,7 +525,7 @@ describe('BadgeRegistry Contract', () => {
 
       const hasAny = await mockContractRead({
         functionName: 'hasAnyBadge',
-        args: [user1]
+        args: [user1],
       });
 
       expect(hasAny).toBe(true);
@@ -538,12 +534,12 @@ describe('BadgeRegistry Contract', () => {
     it('should get badge assignment history', async () => {
       mockContractRead.mockResolvedValueOnce([
         { badgeId: 1n, timestamp: 1234567890n, action: 'assigned' },
-        { badgeId: 1n, timestamp: 1237159890n, action: 'revoked' }
+        { badgeId: 1n, timestamp: 1237159890n, action: 'revoked' },
       ]);
 
       const history = await mockContractRead({
         functionName: 'getBadgeHistory',
-        args: [user1, 1n]
+        args: [user1, 1n],
       });
 
       expect(history).toHaveLength(2);
@@ -553,12 +549,12 @@ describe('BadgeRegistry Contract', () => {
       mockContractRead.mockResolvedValueOnce({
         badgeId: 5n,
         name: 'Latest Badge',
-        assignedAt: 1234667890n
+        assignedAt: 1234667890n,
       });
 
       const recent = await mockContractRead({
         functionName: 'getMostRecentBadge',
-        args: [user1]
+        args: [user1],
       });
 
       expect(recent.badgeId).toBe(5n);
@@ -569,7 +565,7 @@ describe('BadgeRegistry Contract', () => {
 
       const filtered = await mockContractRead({
         functionName: 'filterUserBadgesByType',
-        args: [user1, 'Achievement']
+        args: [user1, 'Achievement'],
       });
 
       expect(filtered).toHaveLength(2);
@@ -581,7 +577,7 @@ describe('BadgeRegistry Contract', () => {
       mockContractRead.mockResolvedValueOnce(5000n);
 
       const total = await mockContractRead({
-        functionName: 'totalBadgesIssued'
+        functionName: 'totalBadgesIssued',
       });
 
       expect(total).toBe(5000n);
@@ -592,7 +588,7 @@ describe('BadgeRegistry Contract', () => {
 
       const count = await mockContractRead({
         functionName: 'getBadgeTypeIssuedCount',
-        args: [1n]
+        args: [1n],
       });
 
       expect(count).toBe(150n);
@@ -603,7 +599,7 @@ describe('BadgeRegistry Contract', () => {
 
       const holders = await mockContractRead({
         functionName: 'getBadgeHoldersCount',
-        args: [1n]
+        args: [1n],
       });
 
       expect(holders).toBe(120n);
@@ -614,7 +610,7 @@ describe('BadgeRegistry Contract', () => {
 
       const holders = await mockContractRead({
         functionName: 'getBadgeHolders',
-        args: [1n]
+        args: [1n],
       });
 
       expect(holders).toHaveLength(2);
@@ -625,7 +621,7 @@ describe('BadgeRegistry Contract', () => {
 
       const rarity = await mockContractRead({
         functionName: 'getBadgeRarity',
-        args: [1n]
+        args: [1n],
       });
 
       expect(rarity).toBe(95n);
@@ -636,11 +632,11 @@ describe('BadgeRegistry Contract', () => {
         totalBadgeTypes: 20n,
         totalBadgesIssued: 5000n,
         totalHolders: 1500n,
-        totalRevoked: 50n
+        totalRevoked: 50n,
       });
 
       const stats = await mockContractRead({
-        functionName: 'getPlatformStats'
+        functionName: 'getPlatformStats',
       });
 
       expect(stats.totalBadgeTypes).toBe(20n);
@@ -650,12 +646,12 @@ describe('BadgeRegistry Contract', () => {
       mockContractRead.mockResolvedValueOnce({
         totalIssued: 250n,
         badgeTypes: 5n,
-        activeRecipients: 200n
+        activeRecipients: 200n,
       });
 
       const stats = await mockContractRead({
         functionName: 'getIssuerStats',
-        args: [issuer]
+        args: [issuer],
       });
 
       expect(stats.totalIssued).toBe(250n);
@@ -668,7 +664,7 @@ describe('BadgeRegistry Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'addIssuer',
-        args: [issuer]
+        args: [issuer],
       });
 
       expect(result).toBe('0xhash');
@@ -679,7 +675,7 @@ describe('BadgeRegistry Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'removeIssuer',
-        args: [issuer]
+        args: [issuer],
       });
 
       expect(result).toBe('0xhash');
@@ -690,7 +686,7 @@ describe('BadgeRegistry Contract', () => {
 
       const isIssuer = await mockContractRead({
         functionName: 'isIssuer',
-        args: [issuer]
+        args: [issuer],
       });
 
       expect(isIssuer).toBe(true);
@@ -701,7 +697,7 @@ describe('BadgeRegistry Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'addIssuer',
-        args: [issuer]
+        args: [issuer],
       });
 
       expect(result).toBe('0xhash');
@@ -712,7 +708,7 @@ describe('BadgeRegistry Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'removeIssuer',
-        args: [issuer]
+        args: [issuer],
       });
 
       expect(result).toBe('0xhash');
@@ -722,7 +718,7 @@ describe('BadgeRegistry Contract', () => {
       mockContractRead.mockResolvedValueOnce([issuer, admin]);
 
       const issuers = await mockContractRead({
-        functionName: 'getAllIssuers'
+        functionName: 'getAllIssuers',
       });
 
       expect(issuers).toHaveLength(2);
@@ -734,7 +730,7 @@ describe('BadgeRegistry Contract', () => {
       await expect(async () => {
         await mockContractWrite({
           functionName: 'addIssuer',
-          args: [issuer]
+          args: [issuer],
         });
       }).rejects.toThrow('Not admin');
     });
@@ -745,7 +741,7 @@ describe('BadgeRegistry Contract', () => {
       mockContractRead.mockResolvedValueOnce(admin);
 
       const result = await mockContractRead({
-        functionName: 'admin'
+        functionName: 'admin',
       });
 
       expect(result).toBe(admin);
@@ -757,7 +753,7 @@ describe('BadgeRegistry Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'setAdmin',
-        args: [newAdmin]
+        args: [newAdmin],
       });
 
       expect(result).toBe('0xhash');
@@ -768,7 +764,7 @@ describe('BadgeRegistry Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'pause',
-        args: []
+        args: [],
       });
 
       expect(result).toBe('0xhash');
@@ -780,7 +776,7 @@ describe('BadgeRegistry Contract', () => {
       await expect(async () => {
         await mockContractWrite({
           functionName: 'assignBadge',
-          args: [user1, 1n, 'Reason']
+          args: [user1, 1n, 'Reason'],
         });
       }).rejects.toThrow('paused');
     });
@@ -792,7 +788,7 @@ describe('BadgeRegistry Contract', () => {
 
       const badges = await mockContractRead({
         functionName: 'getUserBadges',
-        args: [user2]
+        args: [user2],
       });
 
       expect(badges).toHaveLength(0);
@@ -804,7 +800,7 @@ describe('BadgeRegistry Contract', () => {
       await expect(async () => {
         await mockContractRead({
           functionName: 'getBadgeType',
-          args: [0n]
+          args: [0n],
         });
       }).rejects.toThrow('Invalid badge ID');
     });
@@ -814,7 +810,7 @@ describe('BadgeRegistry Contract', () => {
 
       const timestamp = await mockContractRead({
         functionName: 'getBadgeCreationTime',
-        args: [1n]
+        args: [1n],
       });
 
       expect(timestamp).toBe(1234567890n);

@@ -1,4 +1,5 @@
 import { isAddress } from 'viem';
+import { getRequestIp as getRequestIpContext } from '@/lib/security/requestContext';
 
 interface ChallengeRecord {
   nonce: string;
@@ -24,9 +25,7 @@ function challengeKey(address: string): string {
 }
 
 export function getRequestIp(headers: Headers): string {
-  const forwarded = headers.get('x-forwarded-for') || '';
-  const first = forwarded.split(',')[0]?.trim();
-  return first || 'unknown';
+  return getRequestIpContext(headers).ip;
 }
 
 export function buildSiweMessage(params: {

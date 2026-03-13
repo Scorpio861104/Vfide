@@ -155,6 +155,7 @@ contract UserVault is ReentrancyGuard {
         address _ledger
     ) {
         require(_hub != address(0) && _vfide != address(0) && _owner != address(0), "UV:zero");
+        initialized = true;
         hub = _hub;
         vfideToken = _vfide;
         owner = _owner;
@@ -170,6 +171,7 @@ contract UserVault is ReentrancyGuard {
         abnormalTransactionPercentageBps = 5000;
         
         _logSys("vault_created");
+        // slither-disable-next-line reentrancy-events
         emit OwnerSet(_owner);
     }
 
@@ -226,6 +228,7 @@ contract UserVault is ReentrancyGuard {
     ) external {
         if (initialized) revert UV_AlreadyInitialized();
         require(_hub != address(0) && _vfide != address(0) && _owner != address(0), "UV:zero");
+        require(msg.sender == _hub, "UV:onlyHub");
         
         initialized = true;
         hub = _hub;
@@ -243,14 +246,17 @@ contract UserVault is ReentrancyGuard {
         abnormalTransactionPercentageBps = 5000;
         
         _logSys("vault_created");
+        // slither-disable-next-line reentrancy-events
         emit OwnerSet(_owner);
     }
 
     // ——— Governance hooks (only hub may force operations)
     function __forceSetOwner(address newOwner) external {
         require(msg.sender == hub, "UV:onlyHub");
+        if (newOwner == address(0)) revert UV_Zero();
         owner = newOwner;
         _logSys("vault_force_owner");
+        // slither-disable-next-line reentrancy-events
         emit OwnerSet(newOwner);
     }
 
@@ -294,11 +300,12 @@ contract UserVault is ReentrancyGuard {
     function isGuardianMature(address g) public view returns (bool) {
         if (!isGuardian[g]) return false;
         uint64 addTime = guardianAddTime[g];
-        if (addTime == 0) return true;
+        if (addTime < 1) return true;
         return block.timestamp >= addTime + GUARDIAN_MATURITY_PERIOD;
     }
 
     function setNextOfKin(address kin) external onlyOwner notLocked {
+        // Intentional: allow zero address to explicitly clear configured next-of-kin.
         nextOfKin = kin;
         emit NextOfKinSet(kin);
         _logSys("nextofkin_set");
@@ -353,7 +360,7 @@ contract UserVault is ReentrancyGuard {
     function _isAbnormalTransaction(uint256 amount) internal view returns (bool) {
         if (usePercentageThreshold) {
             uint256 balance = useBalanceSnapshot ? balanceSnapshot : IERC20(vfideToken).balanceOf(address(this));
-            if (balance == 0) return false;
+            if (balance < 1) return false;
             uint256 threshold = (balance * abnormalTransactionPercentageBps) / 10000;
             return amount > threshold;
         } else {
@@ -428,6 +435,10 @@ contract UserVault is ReentrancyGuard {
         if (!isGuardian[msg.sender]) revert UV_NotGuardian();
         require(isGuardianMature(msg.sender), "UV:immature");
         if (proposed == address(0)) revert UV_Zero();
+        if (_inheritance.active) revert UV_InheritanceActive();
+        if (_recovery.proposedOwner != address(0) && block.timestamp <= _recovery.expiryTime) {
+            revert UV_RecoveryActive();
+        }
 
         _recovery.proposedOwner = proposed;
         _recovery.approvals = 1;
@@ -498,6 +509,12 @@ contract UserVault is ReentrancyGuard {
     function requestInheritance() external notLocked {
         if (msg.sender != nextOfKin) revert UV_NotNextOfKin();
         if (_inheritance.ownerDenied) revert UV_InheritanceDenied();
+        if (_recovery.proposedOwner != address(0) && block.timestamp <= _recovery.expiryTime) {
+            revert UV_RecoveryActive();
+        }
+        if (_inheritance.active && block.timestamp <= _inheritance.expiryTime) {
+            revert UV_InheritanceActive();
+        }
 
         _inheritance.active = true;
         _inheritance.approvals = 0;

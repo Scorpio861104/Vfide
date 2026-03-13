@@ -51,6 +51,7 @@ export default function EnterprisePage() {
           </div>
         </PageHeader>
         <main className="container mx-auto px-3 sm:px-4 pb-24 md:pb-16">
+          <h1 className="sr-only">Enterprise Command</h1>
 
           {/* Tab Navigation */}
           <div className="flex flex-wrap justify-center gap-2 mb-8">

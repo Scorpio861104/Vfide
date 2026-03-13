@@ -18,6 +18,7 @@ contract TempVault is ReentrancyGuard {
     address public pendingOwner;
     
     event Withdrawal(address indexed token, address indexed to, uint256 amount, address indexed by);
+    event NativeWithdrawal(address indexed to, uint256 amount, address indexed by);
     event OwnershipTransferStarted(address indexed previousOwner, address indexed newOwner);
     event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
     event EmergencyWithdrawal(address indexed token, uint256 amount);
@@ -51,6 +52,21 @@ contract TempVault is ReentrancyGuard {
         IERC20(token).safeTransfer(to, amount);
         
         emit Withdrawal(token, to, amount, msg.sender);
+    }
+
+    /**
+     * @notice Withdraw native ETH held by this contract
+     * @dev Handles forced ETH sends (e.g., selfdestruct) even though receive() reverts
+     */
+    function withdrawNative(address payable to, uint256 amount) external onlyOwner nonReentrant {
+        if (to == address(0)) revert TV_ZeroAddress();
+        if (amount < 1) revert TV_ZeroAmount();
+        require(amount <= address(this).balance, "TempVault: insufficient ETH");
+
+        (bool success, ) = to.call{value: amount}("");
+        if (!success) revert TV_TransferFailed();
+
+        emit NativeWithdrawal(to, amount, msg.sender);
     }
     
     /**

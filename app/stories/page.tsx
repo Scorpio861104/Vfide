@@ -176,8 +176,7 @@ export default function StoriesPage() {
         // Filter out expired stories
         const active = parsed.filter((s: Story) => !isStoryExpired(s));
         setMyStories(active);
-      } catch (e) {
-        console.error('Failed to load stories:', e);
+      } catch {
       }
     }
   }, [address]);

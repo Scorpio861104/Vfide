@@ -116,6 +116,7 @@ contract Phase1Deployer {
             addresses.multiSig
         );
 
+        // slither-disable-next-line reentrancy-events
         emit Phase1Deployed(msg.sender, addresses, block.timestamp);
 
         return addresses;

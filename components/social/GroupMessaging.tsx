@@ -13,18 +13,103 @@ import {
   LogOut,
   CheckCheck,
 } from 'lucide-react';
-import { useAccount } from 'wagmi';
+import { useAccount, useSignMessage } from 'wagmi';
 import { Group, GroupMessage } from '@/types/groups';
 import { Friend } from '@/types/messaging';
-import { formatAddress } from '@/lib/messageEncryption';
+import { encryptGroupMessage, formatAddress } from '@/lib/messageEncryption';
 import { UserDisplay } from '@/components/common/UserDisplay';
 import { addNotification } from './SocialNotifications';
 
+const KEY_DIR_ROUTE = '/api/security/keys';
+const GROUPS_ROUTE = '/api/groups';
+const GROUP_MESSAGES_ROUTE = '/api/groups/messages';
+const ETH_SIGNATURE_REGEX = /^0x[0-9a-fA-F]{130}$/;
+
+type GroupCreateInput = {
+  name: string;
+  description?: string;
+  icon?: string;
+  color?: string;
+  memberAddresses: string[];
+};
+
+type GroupMessageApiRow = {
+  id: number;
+  group_id: number;
+  sender_address?: string;
+  content: string;
+  is_encrypted: boolean;
+  created_at: string;
+};
+
+function normalizeGroupId(groupId: Group['id']): string {
+  return String(groupId);
+}
+
+function getNumericGroupId(groupId: Group['id']): number | null {
+  if (typeof groupId === 'number' && Number.isInteger(groupId) && groupId > 0) {
+    return groupId;
+  }
+
+  if (typeof groupId === 'string' && /^\d+$/.test(groupId.trim())) {
+    const parsed = Number.parseInt(groupId.trim(), 10);
+    return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
+  }
+
+  return null;
+}
+
+function mergeGroups(localGroups: Group[], remoteGroups: Group[]): Group[] {
+  const merged = new Map<string, Group>();
+
+  for (const group of localGroups) {
+    merged.set(normalizeGroupId(group.id), group);
+  }
+
+  for (const group of remoteGroups) {
+    merged.set(normalizeGroupId(group.id), group);
+  }
+
+  return Array.from(merged.values()).sort((a, b) => b.lastActivity - a.lastActivity);
+}
+
+function isStructurallyValidGroupPayloadForGroup(content: string, groupId: number): boolean {
+  try {
+    const payload = JSON.parse(content) as Record<string, unknown>;
+    if (!payload || typeof payload !== 'object') return false;
+
+    if (payload.v !== 2) return false;
+    if (typeof payload.groupId !== 'string' || payload.groupId.trim() !== String(groupId)) return false;
+    if (typeof payload.ts !== 'number' || !Number.isSafeInteger(payload.ts) || payload.ts <= 0) return false;
+    if (typeof payload.groupSig !== 'string' || !ETH_SIGNATURE_REGEX.test(payload.groupSig)) return false;
+
+    const members = payload.members;
+    const encryptedForMembers = payload.encryptedForMembers;
+    if (!Array.isArray(members) || members.length === 0) return false;
+    if (!encryptedForMembers || typeof encryptedForMembers !== 'object' || Array.isArray(encryptedForMembers)) {
+      return false;
+    }
+
+    const encryptedMap = encryptedForMembers as Record<string, unknown>;
+    for (const member of members) {
+      if (typeof member !== 'string' || member.length === 0) return false;
+      if (typeof encryptedMap[member] !== 'string') return false;
+    }
+
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export function GroupMessaging() {
   const { address } = useAccount();
+  const { signMessageAsync } = useSignMessage();
   const [groups, setGroups] = useState<Group[]>([]);
   const [selectedGroup, setSelectedGroup] = useState<Group | null>(null);
   const [messages, setMessages] = useState<GroupMessage[]>([]);
+  const [memberPublicKeys, setMemberPublicKeys] = useState<Record<string, string>>({});
+  const [encryptionStatus, setEncryptionStatus] = useState<'idle' | 'encrypting' | 'error'>('idle');
   const [newMessage, setNewMessage] = useState('');
   const [showCreateGroup, setShowCreateGroup] = useState(false);
   const [showGroupMenu, setShowGroupMenu] = useState(false);
@@ -39,34 +124,184 @@ export function GroupMessaging() {
   // Load groups
   useEffect(() => {
     if (!address || !isClient || typeof window === 'undefined') return;
-    
-    try {
-      const stored = localStorage.getItem(`vfide_groups_${address}`);
-      if (stored) {
-        const groupsData: Group[] = JSON.parse(stored);
-        setGroups(groupsData.sort((a, b) => b.lastActivity - a.lastActivity));
+
+    let isActive = true;
+
+    const loadGroups = async () => {
+      let localGroups: Group[] = [];
+      try {
+        const stored = localStorage.getItem(`vfide_groups_${address}`);
+        if (stored) {
+          localGroups = JSON.parse(stored) as Group[];
+        }
+      } catch (e) {
+        console.error('Failed to load local groups:', e);
       }
-    } catch (e) {
-      console.error('Failed to load groups:', e);
-      setGroups([]);
-    }
+
+      try {
+        const response = await fetch(`${GROUPS_ROUTE}?limit=200&offset=0`, {
+          method: 'GET',
+          credentials: 'include',
+        });
+
+        if (!response.ok) {
+          if (isActive) {
+            setGroups(localGroups.sort((a, b) => b.lastActivity - a.lastActivity));
+          }
+          return;
+        }
+
+        const data = await response.json();
+        const remoteGroups = Array.isArray(data.groups) ? data.groups as Group[] : [];
+        const mergedGroups = mergeGroups(localGroups, remoteGroups);
+
+        if (isActive) {
+          setGroups(mergedGroups);
+          localStorage.setItem(`vfide_groups_${address}`, JSON.stringify(mergedGroups));
+        }
+      } catch (error) {
+        console.error('Failed to load remote groups:', error);
+        if (isActive) {
+          setGroups(localGroups.sort((a, b) => b.lastActivity - a.lastActivity));
+        }
+      }
+    };
+
+    loadGroups();
+
+    return () => {
+      isActive = false;
+    };
   }, [address, isClient]);
 
   // Load messages for selected group
   useEffect(() => {
     if (!selectedGroup || !isClient || typeof window === 'undefined') return;
-    
-    try {
-      const stored = localStorage.getItem(`vfide_group_messages_${selectedGroup.id}`);
-      if (stored) {
-        setMessages(JSON.parse(stored));
-      } else {
-        setMessages([]);
+
+    let isActive = true;
+
+    const loadMessages = async () => {
+      const groupStorageKey = normalizeGroupId(selectedGroup.id);
+      const dbGroupId = getNumericGroupId(selectedGroup.id);
+
+      if (dbGroupId !== null) {
+        try {
+          const response = await fetch(`${GROUP_MESSAGES_ROUTE}?groupId=${dbGroupId}&limit=200&offset=0`, {
+            method: 'GET',
+            credentials: 'include',
+          });
+
+          if (response.ok) {
+            const data = await response.json();
+            const apiMessages = Array.isArray(data.messages) ? data.messages as GroupMessageApiRow[] : [];
+
+            const validMessages = apiMessages.filter((msg) =>
+              isStructurallyValidGroupPayloadForGroup(msg.content, dbGroupId)
+            );
+            if (validMessages.length !== apiMessages.length) {
+              setEncryptionStatus('error');
+            }
+
+            const normalized = validMessages.map((msg) => ({
+              id: String(msg.id),
+              groupId: String(msg.group_id),
+              from: typeof msg.sender_address === 'string' ? msg.sender_address : '',
+              encryptedContent: msg.content,
+              decryptedContent: undefined,
+              timestamp: new Date(msg.created_at).getTime(),
+              encrypted: Boolean(msg.is_encrypted),
+              readBy: [],
+            }));
+
+            if (isActive) {
+              setMessages(normalized);
+              localStorage.setItem(`vfide_group_messages_${groupStorageKey}`, JSON.stringify(normalized));
+            }
+            return;
+          }
+        } catch (error) {
+          console.error('Failed to load remote group messages:', error);
+        }
       }
-    } catch (e) {
-      console.error('Failed to load group messages:', e);
-      setMessages([]);
+
+      try {
+        const stored = localStorage.getItem(`vfide_group_messages_${groupStorageKey}`);
+        if (stored) {
+          const parsed = JSON.parse(stored) as GroupMessage[];
+          const sanitized = parsed.map((msg) => {
+            const encryptedContent = typeof msg.encryptedContent === 'string' ? msg.encryptedContent : '';
+            return {
+              ...msg,
+              encryptedContent,
+              groupId: String(msg.groupId),
+              // Never trust or persist plaintext content from storage.
+              decryptedContent: undefined,
+              content: undefined,
+              encrypted: encryptedContent.length > 0,
+            };
+          });
+          if (isActive) {
+            setMessages(sanitized);
+          }
+        } else if (isActive) {
+          setMessages([]);
+        }
+      } catch (e) {
+        console.error('Failed to load group messages:', e);
+        if (isActive) {
+          setMessages([]);
+        }
+      }
+    };
+
+    loadMessages();
+
+    return () => {
+      isActive = false;
+    };
+  }, [selectedGroup, isClient]);
+
+  // Resolve group member encryption public keys from key directory
+  useEffect(() => {
+    if (!selectedGroup || !isClient || typeof window === 'undefined') {
+      setMemberPublicKeys({});
+      return;
     }
+
+    let isActive = true;
+
+    const resolveKeys = async () => {
+      const keyMap: Record<string, string> = {};
+
+      await Promise.all(
+        selectedGroup.members.map(async (member) => {
+          try {
+            const response = await fetch(`${KEY_DIR_ROUTE}?address=${encodeURIComponent(member.address)}`, {
+              method: 'GET',
+              credentials: 'include',
+            });
+            if (!response.ok) return;
+            const data = await response.json();
+            const key = typeof data.encryptionPublicKey === 'string' ? data.encryptionPublicKey.trim() : '';
+            if (key) {
+              keyMap[member.address.toLowerCase()] = key;
+            }
+          } catch {
+            // Ignore per-member key fetch errors and keep map partial.
+          }
+        })
+      );
+
+      if (isActive) {
+        setMemberPublicKeys(keyMap);
+      }
+    };
+
+    resolveKeys();
+
+    return () => {
+      isActive = false;
+    };
   }, [selectedGroup, isClient]);
 
   // Auto-scroll to bottom
@@ -74,53 +309,172 @@ export function GroupMessaging() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  const sendMessage = () => {
+  useEffect(() => {
+    if (!selectedGroup || !address || messages.length === 0 || typeof window === 'undefined') return;
+
+    const groupStorageKey = normalizeGroupId(selectedGroup.id);
+
+    const encryptedOnly = messages.map((msg) => ({
+      ...msg,
+      decryptedContent: undefined,
+      content: undefined,
+    }));
+
+    localStorage.setItem(`vfide_group_messages_${groupStorageKey}`, JSON.stringify(encryptedOnly));
+  }, [messages, selectedGroup, address]);
+
+  const sendMessage = async () => {
     if (!newMessage.trim() || !selectedGroup || !address) return;
+    const numericGroupId = getNumericGroupId(selectedGroup.id);
 
-    const message: GroupMessage = {
-      id: `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      groupId: selectedGroup.id,
-      from: address,
-      content: newMessage,
-      timestamp: Date.now(),
-      encrypted: false,
-      readBy: [address],
-    };
+    if (numericGroupId === null && process.env.NODE_ENV === 'production') {
+      setEncryptionStatus('error');
+      alert('This group is not backend-verified. Please recreate the group to continue with secure messaging.');
+      return;
+    }
 
-    const updatedMessages = [...messages, message];
-    setMessages(updatedMessages);
-    localStorage.setItem(`vfide_group_messages_${selectedGroup.id}`, JSON.stringify(updatedMessages));
+    if (!signMessageAsync) {
+      setEncryptionStatus('error');
+      alert('Wallet signing is required for authenticated encrypted messages.');
+      return;
+    }
+
+    const normalizedMembers = selectedGroup.members.map((member) => member.address.toLowerCase());
+    const missingKeyMembers = normalizedMembers.filter((memberAddress) => !memberPublicKeys[memberAddress]);
+
+    if (missingKeyMembers.length > 0) {
+      setEncryptionStatus('error');
+      alert('Cannot send encrypted group message until all group members publish encryption keys.');
+      return;
+    }
+
+    setEncryptionStatus('encrypting');
+
+    const publicKeys = normalizedMembers
+      .map((memberAddress) => memberPublicKeys[memberAddress])
+      .filter((key): key is string => Boolean(key));
+
+    if (publicKeys.length === 0) {
+      setEncryptionStatus('error');
+      alert('Group encryption keys are unavailable. Please try again.');
+      return;
+    }
+
+    try {
+      const encryptedContent = await encryptGroupMessage(
+        newMessage,
+        String(selectedGroup.id),
+        publicKeys,
+        (messageToSign) => signMessageAsync({ message: messageToSign })
+      );
+
+      let message: GroupMessage;
+      if (numericGroupId !== null) {
+        const response = await fetch(GROUP_MESSAGES_ROUTE, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include',
+          body: JSON.stringify({
+            groupId: numericGroupId,
+            content: encryptedContent,
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to persist encrypted group message');
+        }
+
+        const data = await response.json();
+        const persisted = data.message as GroupMessageApiRow;
+
+        message = {
+          id: String(persisted.id),
+          groupId: String(persisted.group_id),
+          from: typeof persisted.sender_address === 'string' ? persisted.sender_address : address,
+          encryptedContent,
+          decryptedContent: newMessage,
+          timestamp: new Date(persisted.created_at).getTime(),
+          encrypted: true,
+          readBy: [address],
+        };
+      } else {
+        message = {
+          id: `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+          groupId: String(selectedGroup.id),
+          from: address,
+          encryptedContent,
+          decryptedContent: newMessage,
+          timestamp: Date.now(),
+          encrypted: true,
+          readBy: [address],
+        };
+      }
+
+      const updatedMessages = [...messages, message];
+      setMessages(updatedMessages);
 
     // Update group last activity
     const updatedGroups = groups.map(g =>
-      g.id === selectedGroup.id ? { ...g, lastActivity: Date.now() } : g
+      normalizeGroupId(g.id) === normalizeGroupId(selectedGroup.id) ? { ...g, lastActivity: Date.now() } : g
     );
     setGroups(updatedGroups.sort((a, b) => b.lastActivity - a.lastActivity));
     localStorage.setItem(`vfide_groups_${address}`, JSON.stringify(updatedGroups));
 
-    // Notify group members
-    selectedGroup.members.forEach(member => {
-      if (member.address !== address) {
-        addNotification(member.address, {
-          type: 'message',
-          from: address,
-          title: `New message in ${selectedGroup.name}`,
-          message: newMessage.slice(0, 100),
-        });
-      }
-    });
+      // Notify group members without leaking plaintext preview
+      selectedGroup.members.forEach(member => {
+        if (member.address !== address) {
+          addNotification(member.address, {
+            type: 'message',
+            from: address,
+            title: `New message in ${selectedGroup.name}`,
+            message: 'Encrypted message',
+          });
+        }
+      });
 
-    setNewMessage('');
+      setEncryptionStatus('idle');
+      setNewMessage('');
+    } catch {
+      setEncryptionStatus('error');
+      alert('Failed to encrypt group message. Please try again.');
+    }
   };
 
   const leaveGroup = () => {
     if (!selectedGroup || !address) return;
 
-    const updatedGroups = groups.filter(g => g.id !== selectedGroup.id);
-    setGroups(updatedGroups);
-    localStorage.setItem(`vfide_groups_${address}`, JSON.stringify(updatedGroups));
-    setSelectedGroup(null);
-    setShowGroupMenu(false);
+    const performLeave = async () => {
+      const numericGroupId = getNumericGroupId(selectedGroup.id);
+      if (numericGroupId !== null) {
+        try {
+          const response = await fetch(
+            `/api/groups/members?groupId=${numericGroupId}&userAddress=${encodeURIComponent(address)}`,
+            {
+              method: 'DELETE',
+              credentials: 'include',
+            }
+          );
+
+          if (!response.ok) {
+            alert('Failed to leave group. Please try again.');
+            return;
+          }
+        } catch {
+          alert('Failed to leave group. Please try again.');
+          return;
+        }
+      }
+
+      const updatedGroups = groups.filter(g => normalizeGroupId(g.id) !== normalizeGroupId(selectedGroup.id));
+      setGroups(updatedGroups);
+      localStorage.setItem(`vfide_groups_${address}`, JSON.stringify(updatedGroups));
+      setSelectedGroup(null);
+      setShowGroupMenu(false);
+    };
+
+    void performLeave();
   };
 
   return (
@@ -263,7 +617,7 @@ export function GroupMessaging() {
                               : 'bg-zinc-800 text-zinc-100'
                           }`}
                         >
-                          <p className="text-sm">{msg.content}</p>
+                          <p className="text-sm">{msg.decryptedContent || '[Encrypted]'}</p>
                         </div>
                         <div className="flex items-center gap-2 mt-1 px-2">
                           <p className="text-xs text-zinc-500">
@@ -286,7 +640,7 @@ export function GroupMessaging() {
               <div className="flex gap-2">
                 <input
                   type="text"
-                  placeholder="Type a message..."
+                  placeholder={encryptionStatus === 'encrypting' ? 'Encrypting...' : 'Type an encrypted message...'}
                   value={newMessage}
                   onChange={(e) => setNewMessage(e.target.value)}
                   onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
@@ -294,7 +648,7 @@ export function GroupMessaging() {
                 />
                 <button
                   onClick={sendMessage}
-                  disabled={!newMessage.trim()}
+                  disabled={!newMessage.trim() || encryptionStatus === 'encrypting'}
                   className="px-4 py-2 bg-cyan-400 text-zinc-950 rounded-lg font-semibold hover:bg-cyan-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <Send className="w-5 h-5" />
@@ -317,12 +671,67 @@ export function GroupMessaging() {
         {showCreateGroup && (
           <CreateGroupModal
             onClose={() => setShowCreateGroup(false)}
-            onCreate={(group) => {
+            onCreate={async (groupInput) => {
               if (!address) return;
-              const updatedGroups = [group, ...groups];
+
+              const fallbackGroup: Group = {
+                id: `group_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+                name: groupInput.name,
+                description: groupInput.description,
+                icon: groupInput.icon,
+                color: groupInput.color,
+                members: [
+                  { address, role: 'admin', joinedAt: Date.now() },
+                  ...groupInput.memberAddresses.map((memberAddress) => ({
+                    address: memberAddress,
+                    role: 'member' as const,
+                    joinedAt: Date.now(),
+                  })),
+                ],
+                createdBy: address,
+                createdAt: Date.now(),
+                lastActivity: Date.now(),
+              };
+
+              let createdGroup: Group = fallbackGroup;
+              try {
+                const response = await fetch(GROUPS_ROUTE, {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                  },
+                  credentials: 'include',
+                  body: JSON.stringify({
+                    name: groupInput.name,
+                    description: groupInput.description,
+                    isPrivate: false,
+                    icon: groupInput.icon,
+                    color: groupInput.color,
+                    memberAddresses: groupInput.memberAddresses,
+                  }),
+                });
+
+                if (response.ok) {
+                  const data = await response.json();
+                  if (data?.group) {
+                    createdGroup = data.group as Group;
+                  }
+                } else if (process.env.NODE_ENV === 'production') {
+                  alert('Failed to create secure backend group. Please try again.');
+                  return;
+                }
+              } catch {
+                if (process.env.NODE_ENV === 'production') {
+                  alert('Failed to create secure backend group. Please try again.');
+                  return;
+                }
+                // Fallback to local-only group on network/API failure in non-production.
+              }
+
+              const updatedGroups = [createdGroup, ...groups];
               setGroups(updatedGroups);
               localStorage.setItem(`vfide_groups_${address}`, JSON.stringify(updatedGroups));
-              setSelectedGroup(group);
+              setSelectedGroup(createdGroup);
               setShowCreateGroup(false);
             }}
             userAddress={address || ''}
@@ -335,7 +744,7 @@ export function GroupMessaging() {
 
 interface CreateGroupModalProps {
   onClose: () => void;
-  onCreate: (group: Group) => void;
+  onCreate: (group: GroupCreateInput) => void | Promise<void>;
   userAddress: string;
 }
 
@@ -361,26 +770,13 @@ function CreateGroupModal({ onClose, onCreate, userAddress }: CreateGroupModalPr
       return;
     }
 
-    const group: Group = {
-      id: `group_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+    void onCreate({
       name,
       description,
       icon,
       color,
-      members: [
-        { address: userAddress, role: 'admin', joinedAt: Date.now() },
-        ...selectedFriends.map(addr => ({
-          address: addr,
-          role: 'member' as const,
-          joinedAt: Date.now(),
-        })),
-      ],
-      createdBy: userAddress,
-      createdAt: Date.now(),
-      lastActivity: Date.now(),
-    };
-
-    onCreate(group);
+      memberAddresses: selectedFriends,
+    });
   };
 
   const icons = ['👥', '💼', '🎮', '📚', '🏠', '🎨', '⚽', '🍕'];

@@ -6,6 +6,14 @@ import { isAddress } from 'viem';
 
 const MAX_ID_LENGTH = 128;
 const MAX_CONTENT_LENGTH = 5000;
+const MAX_EPHEMERAL_PUBKEY_CHARS = 1024;
+const MAX_CIPHERTEXT_CHARS = 16384;
+const MAX_IV_CHARS = 256;
+const MAX_SIG_CHARS = 2048;
+const MAX_NONCE_CHARS = 128;
+const HEX_STRING_REGEX = /^[0-9a-fA-F]+$/;
+const BASE64_STRING_REGEX = /^[A-Za-z0-9+/]+={0,2}$/;
+const ETH_SIGNATURE_REGEX = /^0x[0-9a-fA-F]{130}$/;
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -15,6 +23,53 @@ function toNonEmptyString(value: unknown): string | null {
   if (typeof value !== 'string') return null;
   const trimmed = value.trim();
   return trimmed.length > 0 ? trimmed : null;
+}
+
+function isEncryptedDirectMessagePayload(content: string): boolean {
+  try {
+    const payload = JSON.parse(content) as Record<string, unknown>;
+    if (!payload || typeof payload !== 'object') return false;
+
+    const v = payload.v;
+    const ephemeralPublicKey = payload.ephemeralPublicKey;
+    const ciphertext = payload.ciphertext;
+    const iv = payload.iv;
+    const sig = payload.sig;
+    const ts = payload.ts;
+    const nonce = payload.nonce;
+
+    if (v !== 1) return false;
+    if (
+      typeof ephemeralPublicKey !== 'string' ||
+      ephemeralPublicKey.length < 64 ||
+      ephemeralPublicKey.length > MAX_EPHEMERAL_PUBKEY_CHARS ||
+      !HEX_STRING_REGEX.test(ephemeralPublicKey)
+    ) return false;
+    if (
+      typeof ciphertext !== 'string' ||
+      ciphertext.length < 16 ||
+      ciphertext.length > MAX_CIPHERTEXT_CHARS ||
+      !BASE64_STRING_REGEX.test(ciphertext)
+    ) return false;
+    if (
+      typeof iv !== 'string' ||
+      iv.length < 8 ||
+      iv.length > MAX_IV_CHARS ||
+      !BASE64_STRING_REGEX.test(iv)
+    ) return false;
+    if (typeof sig !== 'string' || sig.length > MAX_SIG_CHARS || !ETH_SIGNATURE_REGEX.test(sig)) return false;
+    if (typeof ts !== 'number' || !Number.isSafeInteger(ts) || ts <= 0) return false;
+    if (
+      typeof nonce !== 'string' ||
+      nonce.length < 16 ||
+      nonce.length > MAX_NONCE_CHARS ||
+      !HEX_STRING_REGEX.test(nonce)
+    ) return false;
+
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 export async function PATCH(request: NextRequest) {
@@ -80,6 +135,13 @@ export async function PATCH(request: NextRequest) {
     // Validate content length and sanitization happens in validation schema
     if (newContent.length < 1 || newContent.length > MAX_CONTENT_LENGTH) {
       return NextResponse.json({ error: `Content must be between 1 and ${MAX_CONTENT_LENGTH} characters` }, { status: 400 });
+    }
+
+    if (!isEncryptedDirectMessagePayload(newContent)) {
+      return NextResponse.json(
+        { error: 'Edited content must be a valid encrypted payload' },
+        { status: 400 }
+      );
     }
 
     await client.query('BEGIN');

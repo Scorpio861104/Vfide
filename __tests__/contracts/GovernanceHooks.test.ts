@@ -8,7 +8,11 @@ import { Address } from 'viem';
 const mockContractRead = jest.fn();
 const mockContractWrite = jest.fn();
 
-jest.mock('viem', () => ({ ...jest.requireActual('viem'), createPublicClient: jest.fn(), createWalletClient: jest.fn() }));
+jest.mock('viem', () => ({
+  ...jest.requireActual('viem'),
+  createPublicClient: jest.fn(),
+  createWalletClient: jest.fn(),
+}));
 
 describe('GovernanceHooks Contract', () => {
   let owner: Address, user1: Address, guardian: Address;
@@ -23,44 +27,63 @@ describe('GovernanceHooks Contract', () => {
   describe('Governance Hooks', () => {
     it('should handle on proposal created', async () => {
       mockContractWrite.mockResolvedValueOnce('0xhash');
-      expect(await mockContractWrite({ functionName: 'onProposalCreated', args: [1, user1] })).toBe('0xhash');
+      expect(await mockContractWrite({ functionName: 'onProposalCreated', args: [1, user1] })).toBe(
+        '0xhash'
+      );
     });
 
     it('should handle on vote cast', async () => {
       mockContractWrite.mockResolvedValueOnce('0xhash');
-      expect(await mockContractWrite({ functionName: 'onVoteCast', args: [user1, 1, 100] })).toBe('0xhash');
+      expect(await mockContractWrite({ functionName: 'onVoteCast', args: [user1, 1, 100] })).toBe(
+        '0xhash'
+      );
     });
 
     it('should handle on proposal queued', async () => {
       mockContractWrite.mockResolvedValueOnce('0xhash');
-      expect(await mockContractWrite({ functionName: 'onProposalQueued', args: [1, user1] })).toBe('0xhash');
+      expect(await mockContractWrite({ functionName: 'onProposalQueued', args: [1, user1] })).toBe(
+        '0xhash'
+      );
     });
 
     it('should handle on finalized', async () => {
       mockContractWrite.mockResolvedValueOnce('0xhash');
-      expect(await mockContractWrite({ functionName: 'onFinalized', args: [1, true, user1] })).toBe('0xhash');
+      expect(await mockContractWrite({ functionName: 'onFinalized', args: [1, true, user1] })).toBe(
+        '0xhash'
+      );
     });
 
     it('should reject unauthorized hook calls', async () => {
       mockContractWrite.mockRejectedValueOnce(new Error('Unauthorized'));
-      await expect(mockContractWrite({ functionName: 'onVoteCast', args: [user1, 1, 100] })).rejects.toThrow('Unauthorized');
+      await expect(
+        mockContractWrite({ functionName: 'onVoteCast', args: [user1, 1, 100] })
+      ).rejects.toThrow('Unauthorized');
     });
   });
 
   describe('Abuse Reporting', () => {
     it('should report governance abuse', async () => {
       mockContractWrite.mockResolvedValueOnce('0xhash');
-      expect(await mockContractWrite({ functionName: 'reportGovernanceAbuse', args: [user1, 'Spam voting'] })).toBe('0xhash');
+      expect(
+        await mockContractWrite({
+          functionName: 'reportGovernanceAbuse',
+          args: [user1, 'Spam voting'],
+        })
+      ).toBe('0xhash');
     });
 
     it('should reject unauthorized abuse report', async () => {
       mockContractWrite.mockRejectedValueOnce(new Error('Unauthorized'));
-      await expect(mockContractWrite({ functionName: 'reportGovernanceAbuse', args: [user1, 'Spam'] })).rejects.toThrow('Unauthorized');
+      await expect(
+        mockContractWrite({ functionName: 'reportGovernanceAbuse', args: [user1, 'Spam'] })
+      ).rejects.toThrow('Unauthorized');
     });
 
     it('should reject self-report', async () => {
       mockContractWrite.mockRejectedValueOnce(new Error('CannotReportSelf'));
-      await expect(mockContractWrite({ functionName: 'reportGovernanceAbuse', args: [user1, 'Spam'] })).rejects.toThrow('CannotReportSelf');
+      await expect(
+        mockContractWrite({ functionName: 'reportGovernanceAbuse', args: [user1, 'Spam'] })
+      ).rejects.toThrow('CannotReportSelf');
     });
   });
 
@@ -97,34 +120,49 @@ describe('GovernanceHooks Contract', () => {
 
     it('should set modules', async () => {
       mockContractWrite.mockResolvedValueOnce('0xhash');
-      expect(await mockContractWrite({ functionName: 'setModules', args: [user1, guardian, owner] })).toBe('0xhash');
+      expect(
+        await mockContractWrite({ functionName: 'setModules', args: [user1, guardian, owner] })
+      ).toBe('0xhash');
     });
 
     it('should transfer ownership', async () => {
       mockContractWrite.mockResolvedValueOnce('0xhash');
-      expect(await mockContractWrite({ functionName: 'transferOwnership', args: [user1] })).toBe('0xhash');
+      expect(await mockContractWrite({ functionName: 'transferOwnership', args: [user1] })).toBe(
+        '0xhash'
+      );
     });
 
     it('should reject non-owner config changes', async () => {
       mockContractWrite.mockRejectedValueOnce(new Error('Ownable: caller is not the owner'));
-      await expect(mockContractWrite({ functionName: 'setDAO', args: [owner] })).rejects.toThrow('Ownable: caller is not the owner');
+      await expect(mockContractWrite({ functionName: 'setDAO', args: [owner] })).rejects.toThrow(
+        'Ownable: caller is not the owner'
+      );
     });
   });
 
   describe('Edge Cases', () => {
     it('should handle invalid proposal ID', async () => {
       mockContractWrite.mockRejectedValueOnce(new Error('InvalidProposalId'));
-      await expect(mockContractWrite({ functionName: 'onVoteCast', args: [user1, 0, 100] })).rejects.toThrow('InvalidProposalId');
+      await expect(
+        mockContractWrite({ functionName: 'onVoteCast', args: [user1, 0, 100] })
+      ).rejects.toThrow('InvalidProposalId');
     });
 
     it('should handle zero vote weight', async () => {
       mockContractWrite.mockRejectedValueOnce(new Error('ZeroVoteWeight'));
-      await expect(mockContractWrite({ functionName: 'onVoteCast', args: [user1, 1, 0] })).rejects.toThrow('ZeroVoteWeight');
+      await expect(
+        mockContractWrite({ functionName: 'onVoteCast', args: [user1, 1, 0] })
+      ).rejects.toThrow('ZeroVoteWeight');
     });
 
     it('should handle zero address in hooks', async () => {
       mockContractWrite.mockRejectedValueOnce(new Error('InvalidAddress'));
-      await expect(mockContractWrite({ functionName: 'onProposalCreated', args: [1, '0x0000000000000000000000000000000000000000' as Address] })).rejects.toThrow('InvalidAddress');
+      await expect(
+        mockContractWrite({
+          functionName: 'onProposalCreated',
+          args: [1, '0x0000000000000000000000000000000000000000' as Address],
+        })
+      ).rejects.toThrow('InvalidAddress');
     });
   });
 });

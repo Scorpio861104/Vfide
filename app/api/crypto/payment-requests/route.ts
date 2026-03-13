@@ -7,6 +7,7 @@ import {
   getStepUpAndCooldownPolicy,
   recordSecurityEvent,
 } from '@/lib/security/accountProtection';
+import { getRequestIp } from '@/lib/security/requestContext';
 
 const USER_ID_REGEX = /^\d+$/;
 const DECIMAL_AMOUNT_REGEX = /^\d+(\.\d{1,18})?$/;
@@ -95,8 +96,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const requesterIp = (request.headers.get('x-forwarded-for') || '').split(',')[0]?.trim() || 'unknown';
-  const lock = getAccountLock(authAddress);
+  const { ip: requesterIp } = getRequestIp(request.headers);
+  const lock = await getAccountLock(authAddress);
   if (lock) {
     return NextResponse.json(
       { error: `Account temporarily locked due to security signals: ${lock.reason}` },
@@ -170,7 +171,7 @@ export async function POST(request: NextRequest) {
       const delayHeader = request.headers.get('x-vfide-delay-ack') || '';
 
       if (policy.requiresStepUp && stepUpHeader.toLowerCase() !== 'verified') {
-        recordSecurityEvent(authAddress, {
+        await recordSecurityEvent(authAddress, {
           ts: Date.now(),
           ip: requesterIp,
           type: 'payment_high_risk',
@@ -198,7 +199,7 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      const lockResult = recordSecurityEvent(authAddress, {
+      const lockResult = await recordSecurityEvent(authAddress, {
         ts: Date.now(),
         ip: requesterIp,
         type: 'payment_high_risk',

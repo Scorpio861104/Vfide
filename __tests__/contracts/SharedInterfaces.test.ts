@@ -8,7 +8,11 @@ import { Address } from 'viem';
 
 const mockContractRead = jest.fn();
 
-jest.mock('viem', () => ({ ...jest.requireActual('viem'), createPublicClient: jest.fn(), createWalletClient: jest.fn() }));
+jest.mock('viem', () => ({
+  ...jest.requireActual('viem'),
+  createPublicClient: jest.fn(),
+  createWalletClient: jest.fn(),
+}));
 
 describe('SharedInterfaces Contract', () => {
   let user1: Address;

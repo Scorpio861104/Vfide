@@ -8,7 +8,11 @@ import { Address, parseEther } from 'viem';
 const mockContractRead = jest.fn();
 const mockContractWrite = jest.fn();
 
-jest.mock('viem', () => ({ ...jest.requireActual('viem'), createPublicClient: jest.fn(), createWalletClient: jest.fn() }));
+jest.mock('viem', () => ({
+  ...jest.requireActual('viem'),
+  createPublicClient: jest.fn(),
+  createWalletClient: jest.fn(),
+}));
 
 describe('SanctumVault Contract', () => {
   let owner: Address, charity: Address, approver1: Address;
@@ -35,17 +39,24 @@ describe('SanctumVault Contract', () => {
   describe('Charity Management', () => {
     it('should approve charity', async () => {
       mockContractWrite.mockResolvedValueOnce('0xhash');
-      expect(await mockContractWrite({ functionName: 'approveCharity', args: [charity] })).toBe('0xhash');
+      expect(await mockContractWrite({ functionName: 'approveCharity', args: [charity] })).toBe(
+        '0xhash'
+      );
     });
 
     it('should get charities', async () => {
       mockContractRead.mockResolvedValueOnce({ approved: true, name: 'Test Charity' });
-      expect(await mockContractRead({ functionName: 'charities', args: [charity] })).toEqual({ approved: true, name: 'Test Charity' });
+      expect(await mockContractRead({ functionName: 'charities', args: [charity] })).toEqual({
+        approved: true,
+        name: 'Test Charity',
+      });
     });
 
     it('should reject duplicate charity approval', async () => {
       mockContractWrite.mockRejectedValueOnce(new Error('AlreadyApproved'));
-      await expect(mockContractWrite({ functionName: 'approveCharity', args: [charity] })).rejects.toThrow('AlreadyApproved');
+      await expect(
+        mockContractWrite({ functionName: 'approveCharity', args: [charity] })
+      ).rejects.toThrow('AlreadyApproved');
     });
 
     it('should reject unapproved charity', async () => {
@@ -57,12 +68,17 @@ describe('SanctumVault Contract', () => {
   describe('Approvers', () => {
     it('should add approver', async () => {
       mockContractWrite.mockResolvedValueOnce('0xhash');
-      expect(await mockContractWrite({ functionName: 'addApprover', args: [approver1] })).toBe('0xhash');
+      expect(await mockContractWrite({ functionName: 'addApprover', args: [approver1] })).toBe(
+        '0xhash'
+      );
     });
 
     it('should get approvers', async () => {
       mockContractRead.mockResolvedValueOnce([approver1, owner]);
-      expect(await mockContractRead({ functionName: 'approvers', args: [0] })).toEqual([approver1, owner]);
+      expect(await mockContractRead({ functionName: 'approvers', args: [0] })).toEqual([
+        approver1,
+        owner,
+      ]);
     });
 
     it('should get approvals required', async () => {
@@ -77,29 +93,39 @@ describe('SanctumVault Contract', () => {
 
     it('should reject duplicate approver', async () => {
       mockContractWrite.mockRejectedValueOnce(new Error('AlreadyApprover'));
-      await expect(mockContractWrite({ functionName: 'addApprover', args: [approver1] })).rejects.toThrow('AlreadyApprover');
+      await expect(
+        mockContractWrite({ functionName: 'addApprover', args: [approver1] })
+      ).rejects.toThrow('AlreadyApprover');
     });
 
     it('should reject approver removal that violates threshold', async () => {
       mockContractWrite.mockRejectedValueOnce(new Error('would violate threshold'));
-      await expect(mockContractWrite({ functionName: 'removeApprover', args: [approver1] })).rejects.toThrow('would violate threshold');
+      await expect(
+        mockContractWrite({ functionName: 'removeApprover', args: [approver1] })
+      ).rejects.toThrow('would violate threshold');
     });
   });
 
   describe('Disbursement', () => {
     it('should approve disbursement', async () => {
       mockContractWrite.mockResolvedValueOnce('0xhash');
-      expect(await mockContractWrite({ functionName: 'approveDisbursement', args: [1] })).toBe('0xhash');
+      expect(await mockContractWrite({ functionName: 'approveDisbursement', args: [1] })).toBe(
+        '0xhash'
+      );
     });
 
     it('should reject disbursement without enough approvals', async () => {
       mockContractWrite.mockRejectedValueOnce(new Error('InsufficientApprovals'));
-      await expect(mockContractWrite({ functionName: 'approveDisbursement', args: [1] })).rejects.toThrow('InsufficientApprovals');
+      await expect(
+        mockContractWrite({ functionName: 'approveDisbursement', args: [1] })
+      ).rejects.toThrow('InsufficientApprovals');
     });
 
     it('should reject disbursement to unapproved charity', async () => {
       mockContractWrite.mockRejectedValueOnce(new Error('CharityNotApproved'));
-      await expect(mockContractWrite({ functionName: 'approveDisbursement', args: [1] })).rejects.toThrow('CharityNotApproved');
+      await expect(
+        mockContractWrite({ functionName: 'approveDisbursement', args: [1] })
+      ).rejects.toThrow('CharityNotApproved');
     });
   });
 
@@ -116,7 +142,9 @@ describe('SanctumVault Contract', () => {
 
     it('should reject unauthorized ownership accept', async () => {
       mockContractWrite.mockRejectedValueOnce(new Error('NotPendingOwner'));
-      await expect(mockContractWrite({ functionName: 'acceptOwnership' })).rejects.toThrow('NotPendingOwner');
+      await expect(mockContractWrite({ functionName: 'acceptOwnership' })).rejects.toThrow(
+        'NotPendingOwner'
+      );
     });
   });
 
@@ -128,7 +156,9 @@ describe('SanctumVault Contract', () => {
 
     it('should reject recovery before timelock', async () => {
       mockContractWrite.mockRejectedValueOnce(new Error('TimelockActive'));
-      await expect(mockContractWrite({ functionName: 'emergencyRecover' })).rejects.toThrow('TimelockActive');
+      await expect(mockContractWrite({ functionName: 'emergencyRecover' })).rejects.toThrow(
+        'TimelockActive'
+      );
     });
 
     it('should reject emergency recovery request with zero token', async () => {
@@ -143,29 +173,45 @@ describe('SanctumVault Contract', () => {
 
     it('should reject cancel for missing emergency recovery request', async () => {
       mockContractWrite.mockRejectedValueOnce(new Error('not found'));
-      await expect(mockContractWrite({ functionName: 'cancelEmergencyRecovery', args: [9999, 'missing'] })).rejects.toThrow('not found');
+      await expect(
+        mockContractWrite({ functionName: 'cancelEmergencyRecovery', args: [9999, 'missing'] })
+      ).rejects.toThrow('not found');
     });
   });
 
   describe('Edge Cases', () => {
     it('should handle zero address charity', async () => {
       mockContractWrite.mockRejectedValueOnce(new Error('ZeroAddress'));
-      await expect(mockContractWrite({ functionName: 'approveCharity', args: ['0x0000000000000000000000000000000000000000' as Address] })).rejects.toThrow('ZeroAddress');
+      await expect(
+        mockContractWrite({
+          functionName: 'approveCharity',
+          args: ['0x0000000000000000000000000000000000000000' as Address],
+        })
+      ).rejects.toThrow('ZeroAddress');
     });
 
     it('should handle zero address approver', async () => {
       mockContractWrite.mockRejectedValueOnce(new Error('ZeroAddress'));
-      await expect(mockContractWrite({ functionName: 'addApprover', args: ['0x0000000000000000000000000000000000000000' as Address] })).rejects.toThrow('ZeroAddress');
+      await expect(
+        mockContractWrite({
+          functionName: 'addApprover',
+          args: ['0x0000000000000000000000000000000000000000' as Address],
+        })
+      ).rejects.toThrow('ZeroAddress');
     });
 
     it('should handle invalid disbursement ID', async () => {
       mockContractWrite.mockRejectedValueOnce(new Error('InvalidDisbursementId'));
-      await expect(mockContractWrite({ functionName: 'approveDisbursement', args: [9999] })).rejects.toThrow('InvalidDisbursementId');
+      await expect(
+        mockContractWrite({ functionName: 'approveDisbursement', args: [9999] })
+      ).rejects.toThrow('InvalidDisbursementId');
     });
 
     it('should handle double approval', async () => {
       mockContractWrite.mockRejectedValueOnce(new Error('AlreadyApproved'));
-      await expect(mockContractWrite({ functionName: 'approveDisbursement', args: [1] })).rejects.toThrow('AlreadyApproved');
+      await expect(
+        mockContractWrite({ functionName: 'approveDisbursement', args: [1] })
+      ).rejects.toThrow('AlreadyApproved');
     });
   });
 });

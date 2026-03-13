@@ -26,6 +26,17 @@ jest.mock('@/lib/auth/cookieAuth', () => ({
   clearAuthCookies: jest.fn(),
 }));
 
+jest.mock('@/lib/security/siweChallenge', () => ({
+  consumeAndValidateSiweChallenge: jest.fn(() => ({ ok: true })),
+  getRequestIp: jest.fn(() => '127.0.0.1'),
+}));
+
+jest.mock('@/lib/security/accountProtection', () => ({
+  clearAuthFailureSignals: jest.fn(),
+  getAccountLock: jest.fn(() => null),
+  recordSecurityEvent: jest.fn(),
+}));
+
 describe('/api/auth', () => {
   const { verifyMessage } = require('viem');
   const { generateToken, verifyToken, extractToken } = require('@/lib/auth/jwt');
@@ -40,7 +51,7 @@ describe('/api/auth', () => {
   describe('POST - Authentication', () => {
     const mockAddress = '0x1234567890123456789012345678901234567890';
     const mockSignature = '0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890ab';
-    const mockMessage = `Sign in to VFIDE\n\nTimestamp: ${Date.now()}`;
+    const mockMessage = `Sign in to VFIDE\n\nChain ID: 8453\nTimestamp: ${Date.now()}`;
 
     it('should authenticate user with valid signature', async () => {
       withRateLimit.mockResolvedValue(null);
@@ -74,7 +85,6 @@ describe('/api/auth', () => {
       expect(response.status).toBe(200);
       expect(data).toEqual({
         success: true,
-        token: 'mock-jwt-token',
         address: mockAddress,
         expiresIn: 86400,
       });
@@ -101,7 +111,7 @@ describe('/api/auth', () => {
       expect(data.error).toBe('Invalid request body');
     });
 
-    it('should return 400 for invalid message format', async () => {
+    it('should return 400 for missing chain ID in SIWE message', async () => {
       withRateLimit.mockResolvedValue(null);
       validateBody.mockResolvedValue({
         success: true,
@@ -125,12 +135,12 @@ describe('/api/auth', () => {
       const data = await response.json();
 
       expect(response.status).toBe(400);
-      expect(data.error).toBe('Invalid message format');
+      expect(data.error).toBe('SIWE message must include a valid Chain ID');
     });
 
     it('should return 400 for expired message', async () => {
       const expiredTimestamp = Date.now() - (10 * 60 * 1000); // 10 minutes ago
-      const expiredMessage = `Sign in to VFIDE\n\nTimestamp: ${expiredTimestamp}`;
+      const expiredMessage = `Sign in to VFIDE\n\nChain ID: 8453\nTimestamp: ${expiredTimestamp}`;
 
       withRateLimit.mockResolvedValue(null);
       validateBody.mockResolvedValue({
@@ -159,7 +169,7 @@ describe('/api/auth', () => {
     });
 
     it('should return 400 for message missing timestamp', async () => {
-      const noTimestampMessage = 'Sign in to VFIDE\n\nAddress: 0x1234';
+      const noTimestampMessage = 'Sign in to VFIDE\n\nChain ID: 8453\nAddress: 0x1234';
 
       withRateLimit.mockResolvedValue(null);
       validateBody.mockResolvedValue({
@@ -188,7 +198,7 @@ describe('/api/auth', () => {
     });
 
     it('should return 400 for non-numeric timestamp in message', async () => {
-      const invalidMessage = 'Sign in to VFIDE\n\nTimestamp: NaN';
+      const invalidMessage = 'Sign in to VFIDE\n\nChain ID: 8453\nTimestamp: NaN';
 
       withRateLimit.mockResolvedValue(null);
       validateBody.mockResolvedValue({
@@ -214,7 +224,7 @@ describe('/api/auth', () => {
     });
 
     it('should return 400 for mixed-format timestamp in message', async () => {
-      const invalidMessage = 'Sign in to VFIDE\n\nTimestamp: 123abc';
+      const invalidMessage = 'Sign in to VFIDE\n\nChain ID: 8453\nTimestamp: 123abc';
 
       withRateLimit.mockResolvedValue(null);
       validateBody.mockResolvedValue({
@@ -243,7 +253,7 @@ describe('/api/auth', () => {
     });
 
     it('should return 400 for unsafe integer timestamp in message', async () => {
-      const unsafeTimestampMessage = 'Sign in to VFIDE\n\nTimestamp: 9007199254740993';
+      const unsafeTimestampMessage = 'Sign in to VFIDE\n\nChain ID: 8453\nTimestamp: 9007199254740993';
 
       withRateLimit.mockResolvedValue(null);
       validateBody.mockResolvedValue({

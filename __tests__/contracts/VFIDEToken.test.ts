@@ -4,7 +4,14 @@
  */
 
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
-import { createPublicClient, createWalletClient, http, parseEther, formatEther, Address } from 'viem';
+import {
+  createPublicClient,
+  createWalletClient,
+  http,
+  parseEther,
+  formatEther,
+  Address,
+} from 'viem';
 import { sepolia } from 'viem/chains';
 
 // Mock contract interaction utilities
@@ -49,15 +56,15 @@ describe('VFIDEToken Contract', () => {
         mockContractWrite.mockResolvedValueOnce('0xhash');
 
         const amount = parseEther('100');
-        const result = await mockContractWrite({ 
-          functionName: 'transfer', 
-          args: [user2, amount] 
+        const result = await mockContractWrite({
+          functionName: 'transfer',
+          args: [user2, amount],
         });
 
         expect(result).toBe('0xhash');
         expect(mockContractWrite).toHaveBeenCalledWith({
           functionName: 'transfer',
-          args: [user2, amount]
+          args: [user2, amount],
         });
       });
 
@@ -65,7 +72,7 @@ describe('VFIDEToken Contract', () => {
         mockContractRead.mockResolvedValueOnce(parseEther('1000')); // balanceOf
         mockContractRead.mockResolvedValueOnce(parseEther('1000')); // dailyLimit
         mockContractRead.mockResolvedValueOnce(parseEther('950')); // dailyTransferred
-        
+
         const amount = parseEther('100'); // Would exceed limit
 
         await expect(async () => {
@@ -76,11 +83,11 @@ describe('VFIDEToken Contract', () => {
 
       it('should block transfer exceeding max transfer amount', async () => {
         mockContractRead.mockResolvedValueOnce(parseEther('10000')); // maxTransferAmount
-        
+
         const amount = parseEther('15000'); // Exceeds max
 
         mockContractWrite.mockRejectedValueOnce(new Error('VF_MaxTransferExceeded'));
-        
+
         await expect(async () => {
           await mockContractWrite({ functionName: 'transfer', args: [user2, amount] });
         }).rejects.toThrow('VF_MaxTransferExceeded');
@@ -89,7 +96,7 @@ describe('VFIDEToken Contract', () => {
       it('should enforce cooldown period between transfers', async () => {
         mockContractRead.mockResolvedValueOnce(60); // cooldown period (60 seconds)
         mockContractRead.mockResolvedValueOnce(Math.floor(Date.now() / 1000) - 30); // lastTransferTime (30 sec ago)
-        
+
         mockContractWrite.mockRejectedValueOnce(new Error('VF_TransferCooldown'));
 
         await expect(async () => {
@@ -100,7 +107,7 @@ describe('VFIDEToken Contract', () => {
       it('should respect max wallet balance limit', async () => {
         mockContractRead.mockResolvedValueOnce(parseEther('100000')); // maxWalletBalance
         mockContractRead.mockResolvedValueOnce(parseEther('95000')); // recipient current balance
-        
+
         const amount = parseEther('10000'); // Would exceed max wallet
 
         mockContractWrite.mockRejectedValueOnce(new Error('VF_MaxWalletExceeded'));
@@ -123,7 +130,10 @@ describe('VFIDEToken Contract', () => {
         mockContractWrite.mockRejectedValueOnce(new Error('VF_ZERO'));
 
         await expect(async () => {
-          await mockContractWrite({ functionName: 'transfer', args: [zeroAddress, parseEther('10')] });
+          await mockContractWrite({
+            functionName: 'transfer',
+            args: [zeroAddress, parseEther('10')],
+          });
         }).rejects.toThrow('VF_ZERO');
       });
     });
@@ -132,12 +142,12 @@ describe('VFIDEToken Contract', () => {
       it('should set allowance correctly', async () => {
         const spender = user2;
         const amount = parseEther('500');
-        
+
         mockContractWrite.mockResolvedValueOnce('0xhash');
-        
-        const result = await mockContractWrite({ 
-          functionName: 'approve', 
-          args: [spender, amount] 
+
+        const result = await mockContractWrite({
+          functionName: 'approve',
+          args: [spender, amount],
         });
 
         expect(result).toBe('0xhash');
@@ -147,9 +157,9 @@ describe('VFIDEToken Contract', () => {
         const allowanceAmount = parseEther('500');
         mockContractRead.mockResolvedValueOnce(allowanceAmount);
 
-        const result = await mockContractRead({ 
-          functionName: 'allowance', 
-          args: [user1, user2] 
+        const result = await mockContractRead({
+          functionName: 'allowance',
+          args: [user1, user2],
         });
 
         expect(result).toBe(allowanceAmount);
@@ -159,9 +169,9 @@ describe('VFIDEToken Contract', () => {
         mockContractRead.mockResolvedValueOnce(parseEther('100')); // current allowance
         mockContractWrite.mockResolvedValueOnce('0xhash');
 
-        const result = await mockContractWrite({ 
-          functionName: 'increaseAllowance', 
-          args: [user2, parseEther('50')] 
+        const result = await mockContractWrite({
+          functionName: 'increaseAllowance',
+          args: [user2, parseEther('50')],
         });
 
         expect(result).toBe('0xhash');
@@ -171,9 +181,9 @@ describe('VFIDEToken Contract', () => {
         mockContractRead.mockResolvedValueOnce(parseEther('100')); // current allowance
         mockContractWrite.mockResolvedValueOnce('0xhash');
 
-        const result = await mockContractWrite({ 
-          functionName: 'decreaseAllowance', 
-          args: [user2, parseEther('50')] 
+        const result = await mockContractWrite({
+          functionName: 'decreaseAllowance',
+          args: [user2, parseEther('50')],
         });
 
         expect(result).toBe('0xhash');
@@ -184,9 +194,9 @@ describe('VFIDEToken Contract', () => {
         mockContractWrite.mockRejectedValueOnce(new Error('ERC20: decreased allowance below zero'));
 
         await expect(async () => {
-          await mockContractWrite({ 
-            functionName: 'decreaseAllowance', 
-            args: [user2, parseEther('100')] 
+          await mockContractWrite({
+            functionName: 'decreaseAllowance',
+            args: [user2, parseEther('100')],
           });
         }).rejects.toThrow('decreased allowance below zero');
       });
@@ -198,9 +208,9 @@ describe('VFIDEToken Contract', () => {
         mockContractRead.mockResolvedValueOnce(parseEther('1000')); // balance
         mockContractWrite.mockResolvedValueOnce('0xhash');
 
-        const result = await mockContractWrite({ 
-          functionName: 'transferFrom', 
-          args: [user1, user2, parseEther('100')] 
+        const result = await mockContractWrite({
+          functionName: 'transferFrom',
+          args: [user1, user2, parseEther('100')],
         });
 
         expect(result).toBe('0xhash');
@@ -211,21 +221,23 @@ describe('VFIDEToken Contract', () => {
         mockContractWrite.mockRejectedValueOnce(new Error('ERC20: insufficient allowance'));
 
         await expect(async () => {
-          await mockContractWrite({ 
-            functionName: 'transferFrom', 
-            args: [user1, user2, parseEther('100')] 
+          await mockContractWrite({
+            functionName: 'transferFrom',
+            args: [user1, user2, parseEther('100')],
           });
         }).rejects.toThrow('insufficient allowance');
       });
 
       it('should handle infinite allowance (max uint256)', async () => {
-        const maxUint256 = BigInt('0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff');
+        const maxUint256 = BigInt(
+          '0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff'
+        );
         mockContractRead.mockResolvedValueOnce(maxUint256); // infinite allowance
         mockContractWrite.mockResolvedValueOnce('0xhash');
 
-        const result = await mockContractWrite({ 
-          functionName: 'transferFrom', 
-          args: [user1, user2, parseEther('100')] 
+        const result = await mockContractWrite({
+          functionName: 'transferFrom',
+          args: [user1, user2, parseEther('100')],
         });
 
         expect(result).toBe('0xhash');
@@ -265,9 +277,9 @@ describe('VFIDEToken Contract', () => {
         const dailyTransferred = parseEther('500');
         mockContractRead.mockResolvedValueOnce(dailyTransferred);
 
-        const result = await mockContractRead({ 
-          functionName: 'dailyTransferred', 
-          args: [user1] 
+        const result = await mockContractRead({
+          functionName: 'dailyTransferred',
+          args: [user1],
         });
 
         expect(result).toBe(dailyTransferred);
@@ -277,9 +289,9 @@ describe('VFIDEToken Contract', () => {
         const resetTime = Math.floor(Date.now() / 1000) + 86400; // 24 hours from now
         mockContractRead.mockResolvedValueOnce(resetTime);
 
-        const result = await mockContractRead({ 
-          functionName: 'dailyResetTime', 
-          args: [user1] 
+        const result = await mockContractRead({
+          functionName: 'dailyResetTime',
+          args: [user1],
         });
 
         expect(result).toBe(resetTime);
@@ -288,9 +300,9 @@ describe('VFIDEToken Contract', () => {
       it('should return remaining daily limit', async () => {
         mockContractRead.mockResolvedValueOnce(parseEther('7000')); // remainingDailyLimit
 
-        const result = await mockContractRead({ 
-          functionName: 'remainingDailyLimit', 
-          args: [user1] 
+        const result = await mockContractRead({
+          functionName: 'remainingDailyLimit',
+          args: [user1],
         });
 
         expect(result).toBe(parseEther('7000'));
@@ -299,9 +311,9 @@ describe('VFIDEToken Contract', () => {
       it('should exempt whale-limit-exempt addresses from daily limits', async () => {
         mockContractRead.mockResolvedValueOnce(true); // whaleLimitExempt
 
-        const isExempt = await mockContractRead({ 
-          functionName: 'whaleLimitExempt', 
-          args: [user1] 
+        const isExempt = await mockContractRead({
+          functionName: 'whaleLimitExempt',
+          args: [user1],
         });
 
         expect(isExempt).toBe(true);
@@ -319,9 +331,9 @@ describe('VFIDEToken Contract', () => {
       it('should calculate cooldown remaining time', async () => {
         mockContractRead.mockResolvedValueOnce(30); // 30 seconds remaining
 
-        const remaining = await mockContractRead({ 
-          functionName: 'cooldownRemaining', 
-          args: [user1] 
+        const remaining = await mockContractRead({
+          functionName: 'cooldownRemaining',
+          args: [user1],
         });
 
         expect(remaining).toBe(30);
@@ -330,9 +342,9 @@ describe('VFIDEToken Contract', () => {
       it('should return zero cooldown when period elapsed', async () => {
         mockContractRead.mockResolvedValueOnce(0); // no cooldown remaining
 
-        const remaining = await mockContractRead({ 
-          functionName: 'cooldownRemaining', 
-          args: [user1] 
+        const remaining = await mockContractRead({
+          functionName: 'cooldownRemaining',
+          args: [user1],
         });
 
         expect(remaining).toBe(0);
@@ -361,12 +373,12 @@ describe('VFIDEToken Contract', () => {
           dailyLimit: parseEther('10000'),
           maxTransfer: parseEther('5000'),
           maxWallet: parseEther('50000'),
-          cooldown: 60
+          cooldown: 60,
         });
 
-        const limits = await mockContractRead({ 
-          functionName: 'getTransferLimitsFor', 
-          args: [user1] 
+        const limits = await mockContractRead({
+          functionName: 'getTransferLimitsFor',
+          args: [user1],
         });
 
         expect(limits.dailyLimit).toBe(parseEther('10000'));
@@ -379,9 +391,9 @@ describe('VFIDEToken Contract', () => {
     it('should check if address is blacklisted', async () => {
       mockContractRead.mockResolvedValueOnce(true);
 
-      const result = await mockContractRead({ 
-        functionName: 'isBlacklisted', 
-        args: [blacklistedUser] 
+      const result = await mockContractRead({
+        functionName: 'isBlacklisted',
+        args: [blacklistedUser],
       });
 
       expect(result).toBe(true);
@@ -392,9 +404,9 @@ describe('VFIDEToken Contract', () => {
       mockContractWrite.mockRejectedValueOnce(new Error('Account is blacklisted'));
 
       await expect(async () => {
-        await mockContractWrite({ 
-          functionName: 'transfer', 
-          args: [user2, parseEther('10')] 
+        await mockContractWrite({
+          functionName: 'transfer',
+          args: [user2, parseEther('10')],
         });
       }).rejects.toThrow('blacklisted');
     });
@@ -405,9 +417,9 @@ describe('VFIDEToken Contract', () => {
       mockContractWrite.mockRejectedValueOnce(new Error('Account is blacklisted'));
 
       await expect(async () => {
-        await mockContractWrite({ 
-          functionName: 'transfer', 
-          args: [blacklistedUser, parseEther('10')] 
+        await mockContractWrite({
+          functionName: 'transfer',
+          args: [blacklistedUser, parseEther('10')],
         });
       }).rejects.toThrow('blacklisted');
     });
@@ -415,9 +427,9 @@ describe('VFIDEToken Contract', () => {
     it('should allow owner to add to blacklist', async () => {
       mockContractWrite.mockResolvedValueOnce('0xhash');
 
-      const result = await mockContractWrite({ 
-        functionName: 'setBlacklist', 
-        args: [blacklistedUser, true] 
+      const result = await mockContractWrite({
+        functionName: 'setBlacklist',
+        args: [blacklistedUser, true],
       });
 
       expect(result).toBe('0xhash');
@@ -426,9 +438,9 @@ describe('VFIDEToken Contract', () => {
     it('should allow owner to remove from blacklist', async () => {
       mockContractWrite.mockResolvedValueOnce('0xhash');
 
-      const result = await mockContractWrite({ 
-        functionName: 'setBlacklist', 
-        args: [blacklistedUser, false] 
+      const result = await mockContractWrite({
+        functionName: 'setBlacklist',
+        args: [blacklistedUser, false],
       });
 
       expect(result).toBe('0xhash');
@@ -438,9 +450,9 @@ describe('VFIDEToken Contract', () => {
       mockContractWrite.mockRejectedValueOnce(new Error('Ownable: caller is not the owner'));
 
       await expect(async () => {
-        await mockContractWrite({ 
-          functionName: 'setBlacklist', 
-          args: [blacklistedUser, true] 
+        await mockContractWrite({
+          functionName: 'setBlacklist',
+          args: [blacklistedUser, true],
         });
       }).rejects.toThrow('not the owner');
     });
@@ -450,9 +462,9 @@ describe('VFIDEToken Contract', () => {
     it('should check if account is frozen', async () => {
       mockContractRead.mockResolvedValueOnce(true);
 
-      const result = await mockContractRead({ 
-        functionName: 'isFrozen', 
-        args: [user1] 
+      const result = await mockContractRead({
+        functionName: 'isFrozen',
+        args: [user1],
       });
 
       expect(result).toBe(true);
@@ -463,9 +475,9 @@ describe('VFIDEToken Contract', () => {
       mockContractWrite.mockRejectedValueOnce(new Error('VF_LOCKED'));
 
       await expect(async () => {
-        await mockContractWrite({ 
-          functionName: 'transfer', 
-          args: [user2, parseEther('10')] 
+        await mockContractWrite({
+          functionName: 'transfer',
+          args: [user2, parseEther('10')],
         });
       }).rejects.toThrow('VF_LOCKED');
     });
@@ -473,9 +485,9 @@ describe('VFIDEToken Contract', () => {
     it('should allow owner to freeze account', async () => {
       mockContractWrite.mockResolvedValueOnce('0xhash');
 
-      const result = await mockContractWrite({ 
-        functionName: 'setFrozen', 
-        args: [user1, true] 
+      const result = await mockContractWrite({
+        functionName: 'setFrozen',
+        args: [user1, true],
       });
 
       expect(result).toBe('0xhash');
@@ -484,9 +496,9 @@ describe('VFIDEToken Contract', () => {
     it('should allow owner to unfreeze account', async () => {
       mockContractWrite.mockResolvedValueOnce('0xhash');
 
-      const result = await mockContractWrite({ 
-        functionName: 'setFrozen', 
-        args: [user1, false] 
+      const result = await mockContractWrite({
+        functionName: 'setFrozen',
+        args: [user1, false],
       });
 
       expect(result).toBe('0xhash');
@@ -504,9 +516,9 @@ describe('VFIDEToken Contract', () => {
       const freezeTime = Math.floor(Date.now() / 1000);
       mockContractRead.mockResolvedValueOnce(freezeTime);
 
-      const result = await mockContractRead({ 
-        functionName: 'freezeTime', 
-        args: [user1] 
+      const result = await mockContractRead({
+        functionName: 'freezeTime',
+        args: [user1],
       });
 
       expect(result).toBe(freezeTime);
@@ -526,9 +538,9 @@ describe('VFIDEToken Contract', () => {
       mockContractWrite.mockRejectedValueOnce(new Error('Circuit breaker is active'));
 
       await expect(async () => {
-        await mockContractWrite({ 
-          functionName: 'transfer', 
-          args: [user2, parseEther('10')] 
+        await mockContractWrite({
+          functionName: 'transfer',
+          args: [user2, parseEther('10')],
         });
       }).rejects.toThrow('Circuit breaker is active');
     });
@@ -537,9 +549,9 @@ describe('VFIDEToken Contract', () => {
       const duration = 3600; // 1 hour
       mockContractWrite.mockResolvedValueOnce('0xhash');
 
-      const result = await mockContractWrite({ 
-        functionName: 'setCircuitBreaker', 
-        args: [true, duration] 
+      const result = await mockContractWrite({
+        functionName: 'setCircuitBreaker',
+        args: [true, duration],
       });
 
       expect(result).toBe('0xhash');
@@ -558,9 +570,9 @@ describe('VFIDEToken Contract', () => {
       mockContractWrite.mockRejectedValueOnce(new Error('Duration exceeds maximum'));
 
       await expect(async () => {
-        await mockContractWrite({ 
-          functionName: 'setCircuitBreaker', 
-          args: [true, excessiveDuration] 
+        await mockContractWrite({
+          functionName: 'setCircuitBreaker',
+          args: [true, excessiveDuration],
         });
       }).rejects.toThrow('exceeds maximum');
     });
@@ -592,14 +604,14 @@ describe('VFIDEToken Contract', () => {
     it('should allow owner to set anti-whale parameters', async () => {
       mockContractWrite.mockResolvedValueOnce('0xhash');
 
-      const result = await mockContractWrite({ 
-        functionName: 'setAntiWhale', 
+      const result = await mockContractWrite({
+        functionName: 'setAntiWhale',
         args: [
           parseEther('10000'), // dailyLimit
-          parseEther('5000'),  // maxTransfer
+          parseEther('5000'), // maxTransfer
           parseEther('100000'), // maxWallet
-          60 // cooldown
-        ] 
+          60, // cooldown
+        ],
       });
 
       expect(result).toBe('0xhash');
@@ -609,9 +621,9 @@ describe('VFIDEToken Contract', () => {
       mockContractWrite.mockRejectedValueOnce(new Error('Ownable: caller is not the owner'));
 
       await expect(async () => {
-        await mockContractWrite({ 
-          functionName: 'setAntiWhale', 
-          args: [parseEther('10000'), parseEther('5000'), parseEther('100000'), 60] 
+        await mockContractWrite({
+          functionName: 'setAntiWhale',
+          args: [parseEther('10000'), parseEther('5000'), parseEther('100000'), 60],
         });
       }).rejects.toThrow('not the owner');
     });
@@ -619,9 +631,9 @@ describe('VFIDEToken Contract', () => {
     it('should allow owner to set whitelist', async () => {
       mockContractWrite.mockResolvedValueOnce('0xhash');
 
-      const result = await mockContractWrite({ 
-        functionName: 'setWhitelist', 
-        args: [user1, true] 
+      const result = await mockContractWrite({
+        functionName: 'setWhitelist',
+        args: [user1, true],
       });
 
       expect(result).toBe('0xhash');
@@ -630,9 +642,9 @@ describe('VFIDEToken Contract', () => {
     it('should allow owner to set whale limit exempt', async () => {
       mockContractWrite.mockResolvedValueOnce('0xhash');
 
-      const result = await mockContractWrite({ 
-        functionName: 'setWhaleLimitExempt', 
-        args: [user1, true] 
+      const result = await mockContractWrite({
+        functionName: 'setWhaleLimitExempt',
+        args: [user1, true],
       });
 
       expect(result).toBe('0xhash');
@@ -641,9 +653,9 @@ describe('VFIDEToken Contract', () => {
     it('should allow owner to set system exempt', async () => {
       mockContractWrite.mockResolvedValueOnce('0xhash');
 
-      const result = await mockContractWrite({ 
-        functionName: 'setSystemExempt', 
-        args: [user1, true] 
+      const result = await mockContractWrite({
+        functionName: 'setSystemExempt',
+        args: [user1, true],
       });
 
       expect(result).toBe('0xhash');
@@ -653,9 +665,9 @@ describe('VFIDEToken Contract', () => {
       const newOwner = user1;
       mockContractWrite.mockResolvedValueOnce('0xhash');
 
-      const result = await mockContractWrite({ 
-        functionName: 'transferOwnership', 
-        args: [newOwner] 
+      const result = await mockContractWrite({
+        functionName: 'transferOwnership',
+        args: [newOwner],
       });
 
       expect(result).toBe('0xhash');
@@ -690,9 +702,9 @@ describe('VFIDEToken Contract', () => {
       mockContractWrite.mockRejectedValueOnce(new Error('VF_POLICY_LOCKED'));
 
       await expect(async () => {
-        await mockContractWrite({ 
-          functionName: 'setAntiWhale', 
-          args: [parseEther('10000'), parseEther('5000'), parseEther('100000'), 60] 
+        await mockContractWrite({
+          functionName: 'setAntiWhale',
+          args: [parseEther('10000'), parseEther('5000'), parseEther('100000'), 60],
         });
       }).rejects.toThrow('VF_POLICY_LOCKED');
     });
@@ -707,9 +719,9 @@ describe('VFIDEToken Contract', () => {
     it('should check if transfer is allowed', async () => {
       mockContractRead.mockResolvedValueOnce(true);
 
-      const result = await mockContractRead({ 
-        functionName: 'canTransfer', 
-        args: [user1, user2, parseEther('100')] 
+      const result = await mockContractRead({
+        functionName: 'canTransfer',
+        args: [user1, user2, parseEther('100')],
       });
 
       expect(result).toBe(true);
@@ -721,9 +733,9 @@ describe('VFIDEToken Contract', () => {
       mockContractWrite.mockRejectedValueOnce(new Error('Token_NotVault'));
 
       await expect(async () => {
-        await mockContractWrite({ 
-          functionName: 'transfer', 
-          args: [user2, parseEther('10')] 
+        await mockContractWrite({
+          functionName: 'transfer',
+          args: [user2, parseEther('10')],
         });
       }).rejects.toThrow('Token_NotVault');
     });
@@ -731,9 +743,9 @@ describe('VFIDEToken Contract', () => {
     it('should check if address is whitelisted', async () => {
       mockContractRead.mockResolvedValueOnce(true);
 
-      const result = await mockContractRead({ 
-        functionName: 'whitelisted', 
-        args: [user1] 
+      const result = await mockContractRead({
+        functionName: 'whitelisted',
+        args: [user1],
       });
 
       expect(result).toBe(true);
@@ -761,9 +773,9 @@ describe('VFIDEToken Contract', () => {
       const nonce = 5;
       mockContractRead.mockResolvedValueOnce(nonce);
 
-      const result = await mockContractRead({ 
-        functionName: 'nonces', 
-        args: [user1] 
+      const result = await mockContractRead({
+        functionName: 'nonces',
+        args: [user1],
       });
 
       expect(result).toBe(nonce);
@@ -777,9 +789,9 @@ describe('VFIDEToken Contract', () => {
 
       mockContractWrite.mockResolvedValueOnce('0xhash');
 
-      const result = await mockContractWrite({ 
-        functionName: 'permit', 
-        args: [user1, user2, parseEther('1000'), deadline, v, r, s] 
+      const result = await mockContractWrite({
+        functionName: 'permit',
+        args: [user1, user2, parseEther('1000'), deadline, v, r, s],
       });
 
       expect(result).toBe('0xhash');
@@ -790,9 +802,9 @@ describe('VFIDEToken Contract', () => {
       mockContractWrite.mockRejectedValueOnce(new Error('ERC20Permit: expired deadline'));
 
       await expect(async () => {
-        await mockContractWrite({ 
-          functionName: 'permit', 
-          args: [user1, user2, parseEther('1000'), pastDeadline, 27, '0xabc', '0xdef'] 
+        await mockContractWrite({
+          functionName: 'permit',
+          args: [user1, user2, parseEther('1000'), pastDeadline, 27, '0xabc', '0xdef'],
         });
       }).rejects.toThrow('expired deadline');
     });
@@ -802,9 +814,9 @@ describe('VFIDEToken Contract', () => {
       mockContractWrite.mockRejectedValueOnce(new Error('ERC20Permit: invalid signature'));
 
       await expect(async () => {
-        await mockContractWrite({ 
-          functionName: 'permit', 
-          args: [user1, user2, parseEther('1000'), deadline, 28, '0xinvalid', '0xinvalid'] 
+        await mockContractWrite({
+          functionName: 'permit',
+          args: [user1, user2, parseEther('1000'), deadline, 28, '0xinvalid', '0xinvalid'],
         });
       }).rejects.toThrow('invalid signature');
     });
@@ -847,9 +859,9 @@ describe('VFIDEToken Contract', () => {
       const newVaultHub = '0xNewVaultHub123456789012345678901' as Address;
       mockContractWrite.mockResolvedValueOnce('0xhash');
 
-      const result = await mockContractWrite({ 
-        functionName: 'setVaultHub', 
-        args: [newVaultHub] 
+      const result = await mockContractWrite({
+        functionName: 'setVaultHub',
+        args: [newVaultHub],
       });
 
       expect(result).toBe('0xhash');
@@ -859,9 +871,9 @@ describe('VFIDEToken Contract', () => {
       const newBurnRouter = '0xNewBurnRouter12345678901234567890' as Address;
       mockContractWrite.mockResolvedValueOnce('0xhash');
 
-      const result = await mockContractWrite({ 
-        functionName: 'setBurnRouter', 
-        args: [newBurnRouter] 
+      const result = await mockContractWrite({
+        functionName: 'setBurnRouter',
+        args: [newBurnRouter],
       });
 
       expect(result).toBe('0xhash');
@@ -871,9 +883,9 @@ describe('VFIDEToken Contract', () => {
       const newLedger = '0xNewLedger1234567890123456789012345' as Address;
       mockContractWrite.mockResolvedValueOnce('0xhash');
 
-      const result = await mockContractWrite({ 
-        functionName: 'setLedger', 
-        args: [newLedger] 
+      const result = await mockContractWrite({
+        functionName: 'setLedger',
+        args: [newLedger],
       });
 
       expect(result).toBe('0xhash');
@@ -883,12 +895,12 @@ describe('VFIDEToken Contract', () => {
       mockContractRead.mockResolvedValueOnce({
         burnAmount: parseEther('1'),
         treasuryAmount: parseEther('1'),
-        netAmount: parseEther('98')
+        netAmount: parseEther('98'),
       });
 
-      const result = await mockContractRead({ 
-        functionName: 'previewTransferFees', 
-        args: [user1, user2, parseEther('100')] 
+      const result = await mockContractRead({
+        functionName: 'previewTransferFees',
+        args: [user1, user2, parseEther('100')],
       });
 
       expect(result.netAmount).toBe(parseEther('98'));
@@ -902,13 +914,13 @@ describe('VFIDEToken Contract', () => {
       mockContractWrite.mockResolvedValueOnce('0xhash1');
       mockContractWrite.mockResolvedValueOnce('0xhash2');
 
-      const result1 = await mockContractWrite({ 
-        functionName: 'transfer', 
-        args: [user2, parseEther('100')] 
+      const result1 = await mockContractWrite({
+        functionName: 'transfer',
+        args: [user2, parseEther('100')],
       });
-      const result2 = await mockContractWrite({ 
-        functionName: 'transfer', 
-        args: [user2, parseEther('100')] 
+      const result2 = await mockContractWrite({
+        functionName: 'transfer',
+        args: [user2, parseEther('100')],
       });
 
       expect(result1).toBe('0xhash1');
@@ -920,22 +932,24 @@ describe('VFIDEToken Contract', () => {
       mockContractWrite.mockRejectedValueOnce(new Error('ReentrancyGuard: reentrant call'));
 
       await expect(async () => {
-        await mockContractWrite({ 
-          functionName: 'transfer', 
-          args: [user2, parseEther('100')] 
+        await mockContractWrite({
+          functionName: 'transfer',
+          args: [user2, parseEther('100')],
         });
       }).rejects.toThrow('reentrant call');
     });
 
     it('should handle integer overflow/underflow safely', async () => {
-      const maxUint256 = BigInt('0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff');
+      const maxUint256 = BigInt(
+        '0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff'
+      );
       mockContractRead.mockResolvedValueOnce(maxUint256);
       mockContractWrite.mockRejectedValueOnce(new Error('SafeMath: addition overflow'));
 
       await expect(async () => {
-        await mockContractWrite({ 
-          functionName: 'transfer', 
-          args: [user2, 1n] 
+        await mockContractWrite({
+          functionName: 'transfer',
+          args: [user2, 1n],
         });
       }).rejects.toThrow('overflow');
     });
@@ -943,9 +957,9 @@ describe('VFIDEToken Contract', () => {
     it('should handle self-transfer correctly', async () => {
       mockContractWrite.mockResolvedValueOnce('0xhash');
 
-      const result = await mockContractWrite({ 
-        functionName: 'transfer', 
-        args: [user1, parseEther('100')] 
+      const result = await mockContractWrite({
+        functionName: 'transfer',
+        args: [user1, parseEther('100')],
       });
 
       expect(result).toBe('0xhash');
@@ -955,9 +969,9 @@ describe('VFIDEToken Contract', () => {
       const dustAmount = 1n; // 1 wei
       mockContractWrite.mockResolvedValueOnce('0xhash');
 
-      const result = await mockContractWrite({ 
-        functionName: 'transfer', 
-        args: [user2, dustAmount] 
+      const result = await mockContractWrite({
+        functionName: 'transfer',
+        args: [user2, dustAmount],
       });
 
       expect(result).toBe('0xhash');
@@ -967,9 +981,9 @@ describe('VFIDEToken Contract', () => {
       const preciseAmount = parseEther('0.123456789123456789');
       mockContractWrite.mockResolvedValueOnce('0xhash');
 
-      const result = await mockContractWrite({ 
-        functionName: 'transfer', 
-        args: [user2, preciseAmount] 
+      const result = await mockContractWrite({
+        functionName: 'transfer',
+        args: [user2, preciseAmount],
       });
 
       expect(result).toBe('0xhash');
@@ -980,9 +994,9 @@ describe('VFIDEToken Contract', () => {
       mockContractRead.mockResolvedValueOnce(parseEther('1000')); // balance before
       mockContractWrite.mockResolvedValueOnce('0xhash');
 
-      const result = await mockContractWrite({ 
-        functionName: 'transfer', 
-        args: [user2, parseEther('100')] 
+      const result = await mockContractWrite({
+        functionName: 'transfer',
+        args: [user2, parseEther('100')],
       });
 
       expect(result).toBe('0xhash');
@@ -993,24 +1007,24 @@ describe('VFIDEToken Contract', () => {
       mockContractWrite.mockRejectedValueOnce(new Error('Contract is in maintenance'));
 
       await expect(async () => {
-        await mockContractWrite({ 
-          functionName: 'transfer', 
-          args: [user2, parseEther('10')] 
+        await mockContractWrite({
+          functionName: 'transfer',
+          args: [user2, parseEther('10')],
         });
       }).rejects.toThrow('maintenance');
     });
 
     it('should handle gas limit attacks', async () => {
       // Test with multiple batch operations
-      const addresses = Array(100).fill(0).map((_, i) => 
-        `0x${i.toString().padStart(40, '0')}` as Address
-      );
-      
+      const addresses = Array(100)
+        .fill(0)
+        .map((_, i) => `0x${i.toString().padStart(40, '0')}` as Address);
+
       mockContractWrite.mockResolvedValueOnce('0xhash');
 
-      const result = await mockContractWrite({ 
-        functionName: 'transfer', 
-        args: [user2, parseEther('100')] 
+      const result = await mockContractWrite({
+        functionName: 'transfer',
+        args: [user2, parseEther('100')],
       });
 
       expect(result).toBe('0xhash');
@@ -1018,10 +1032,10 @@ describe('VFIDEToken Contract', () => {
 
     it('should properly emit events', async () => {
       mockContractWrite.mockResolvedValueOnce('0xhash');
-      
-      const result = await mockContractWrite({ 
-        functionName: 'transfer', 
-        args: [user2, parseEther('100')] 
+
+      const result = await mockContractWrite({
+        functionName: 'transfer',
+        args: [user2, parseEther('100')],
       });
 
       expect(result).toBe('0xhash');
@@ -1035,12 +1049,12 @@ describe('VFIDEToken Contract', () => {
         dailyLimit: parseEther('10000'),
         transferred: parseEther('3000'),
         remaining: parseEther('7000'),
-        resetTime: Math.floor(Date.now() / 1000) + 86400
+        resetTime: Math.floor(Date.now() / 1000) + 86400,
       });
 
-      const result = await mockContractRead({ 
-        functionName: 'getDailyTransferStats', 
-        args: [user1] 
+      const result = await mockContractRead({
+        functionName: 'getDailyTransferStats',
+        args: [user1],
       });
 
       expect(result.transferred).toBe(parseEther('3000'));

@@ -24,7 +24,7 @@ contract Phase1InfrastructureDeployer {
         );
         circuitBreaker = address(circuitBreakerContract);
 
-        WithdrawalQueueStub withdrawalQueueContract = new WithdrawalQueueStub(_admin, 1000000 * 10**18);
+        WithdrawalQueueStub withdrawalQueueContract = new WithdrawalQueueStub(_admin, 1_000_000 * 10**18);
         withdrawalQueue = address(withdrawalQueueContract);
     }
 }

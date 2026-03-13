@@ -114,8 +114,7 @@ export default function PayrollPage() {
       setShowCreateModal(false);
       setCreateForm({ payee: '', rate: '', deposit: '' });
       toast.success('Stream created successfully');
-    } catch (err) {
-      console.error('Failed to create stream:', err);
+    } catch {
       toast.error('Failed to create stream. Please try again.');
     }
   };
@@ -124,8 +123,7 @@ export default function PayrollPage() {
     try {
       await withdraw(BigInt(streamId));
       toast.success('Withdrawal successful');
-    } catch (err) {
-      console.error('Failed to withdraw:', err);
+    } catch {
       toast.error('Failed to withdraw. Please try again.');
     }
   };
@@ -134,8 +132,7 @@ export default function PayrollPage() {
     try {
       await pauseStreamAction(BigInt(streamId));
       toast.success('Stream paused');
-    } catch (err) {
-      console.error('Failed to pause stream:', err);
+    } catch {
       toast.error('Failed to pause stream. Please try again.');
     }
   };
@@ -144,8 +141,7 @@ export default function PayrollPage() {
     try {
       await resumeStreamAction(BigInt(streamId));
       toast.success('Stream resumed');
-    } catch (err) {
-      console.error('Failed to resume stream:', err);
+    } catch {
       toast.error('Failed to resume stream. Please try again.');
     }
   };
@@ -154,8 +150,7 @@ export default function PayrollPage() {
     try {
       await topUp(BigInt(streamId), amount);
       toast.success('Top up successful');
-    } catch (err) {
-      console.error('Failed to top up:', err);
+    } catch {
       toast.error('Failed to top up. Please try again.');
     }
   };

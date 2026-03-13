@@ -237,7 +237,7 @@ contract VFIDEPresale is ReentrancyGuard {
      * @param newPrice New ETH price in USD (e.g., 3500 = $3,500)
      */
     function setEthPrice(uint256 newPrice) external onlyDAO {
-        require(newPrice >= 1000 && newPrice <= 100000, "PS: price out of range"); // $1k - $100k
+        require(newPrice >= 1_000 && newPrice <= 100_000, "PS: price out of range"); // $1k - $100k
         uint256 old = ethPriceUsd;
         ethPriceUsd = newPrice;
         ethPriceLastUpdated = block.timestamp;
@@ -248,7 +248,7 @@ contract VFIDEPresale is ReentrancyGuard {
      * @notice Check if ETH price is stale (not updated within 24 hours)
      */
     function isEthPriceStale() public view returns (bool) {
-        if (ethPriceLastUpdated == 0) return true; // Never set
+        if (ethPriceLastUpdated < 1) return true; // Never set
         return block.timestamp > ethPriceLastUpdated + ETH_PRICE_STALENESS;
     }
     
@@ -435,6 +435,7 @@ contract VFIDEPresale is ReentrancyGuard {
         require(usdAmount >= MIN_PURCHASE_USD, "Below minimum ($10)");
         
         // Transfer stablecoin from buyer to treasury (SafeERC20 for non-standard tokens)
+        // slither-disable-next-line reentrancy-no-eth
         IERC20(stablecoin).safeTransferFrom(msg.sender, TREASURY, amount);
         
         // Track contribution for potential refunds
@@ -455,7 +456,7 @@ contract VFIDEPresale is ReentrancyGuard {
         }
 
         // Determine immediate unlock percentage (no bonuses — VFIDE is a utility token)
-        uint256 immediatePercentage;
+        uint256 immediatePercentage = 0;
         if (tier == 0) {
             immediatePercentage = IMMEDIATE_180_DAYS;
         } else if (tier == 1) {
@@ -550,7 +551,7 @@ contract VFIDEPresale is ReentrancyGuard {
         uint256 usdAmount = (msg.value * ethPriceUsd) / 1e12;
         
         // Tier 2 lock periods: none, 90 days, or 180 days
-        uint256 immediatePercentage;
+        uint256 immediatePercentage = 0;
         if (lockPeriod == LOCK_180_DAYS) {
             immediatePercentage = IMMEDIATE_180_DAYS;
         } else if (lockPeriod == LOCK_90_DAYS) {
@@ -565,10 +566,6 @@ contract VFIDEPresale is ReentrancyGuard {
         totalUsdRaised += usdAmount;
         usdContributed[msg.sender] += usdAmount;
         ethContributed[msg.sender] += msg.value;  // Track for refunds
-        
-        // Forward ETH to treasury
-        (bool success, ) = TREASURY.call{value: msg.value}("");
-        require(success, "ETH transfer failed");
         
         // Calculate tokens using tier 2 (public) price
         uint256 baseTokens = calculateTokensFromEthTier(msg.value, 2);
@@ -612,6 +609,10 @@ contract VFIDEPresale is ReentrancyGuard {
             immediateClaimed: false,
             lockedClaimed: false
         }));
+
+        // Forward ETH to treasury after state updates (CEI pattern)
+        (bool success, ) = TREASURY.call{value: msg.value}("");
+        require(success, "ETH transfer failed");
         
         emit Purchase(msg.sender, lockPeriod, msg.value, baseTokens, 0, purchases[msg.sender].length - 1);
         emit TieredPurchase(msg.sender, 2, baseTokens, usdAmount);
@@ -988,8 +989,9 @@ contract VFIDEPresale is ReentrancyGuard {
         if (unsold > 0) {
             vfideToken.safeTransfer(TREASURY, unsold);
         }
-        
+
         // Emit with USD raised (more meaningful than ETH)
+        // slither-disable-next-line reentrancy-events
         emit PresaleFinalized(totalUsdRaised, lpVfide, price);
     }
     

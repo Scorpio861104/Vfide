@@ -35,7 +35,7 @@ describe('ProofScoreBurnRouter Contract', () => {
 
       const score = await mockContractRead({
         functionName: 'calculateProofScore',
-        args: [user1]
+        args: [user1],
       });
 
       expect(score).toBe(500n);
@@ -46,7 +46,7 @@ describe('ProofScoreBurnRouter Contract', () => {
 
       const score = await mockContractRead({
         functionName: 'calculateScoreWithBurn',
-        args: [user1, parseEther('100')]
+        args: [user1, parseEther('100')],
       });
 
       expect(score).toBe(750n);
@@ -57,7 +57,7 @@ describe('ProofScoreBurnRouter Contract', () => {
 
       const score = await mockContractRead({
         functionName: 'calculateScoreWithMultiplier',
-        args: [user1, 200n] // 2x multiplier (basis points)
+        args: [user1, 200n], // 2x multiplier (basis points)
       });
 
       expect(score).toBe(1000n);
@@ -68,7 +68,7 @@ describe('ProofScoreBurnRouter Contract', () => {
 
       const score = await mockContractRead({
         functionName: 'getProofScore',
-        args: [user1]
+        args: [user1],
       });
 
       expect(score).toBe(600n);
@@ -79,7 +79,7 @@ describe('ProofScoreBurnRouter Contract', () => {
 
       const increase = await mockContractRead({
         functionName: 'calculateScoreIncrease',
-        args: [parseEther('100')]
+        args: [parseEther('100')],
       });
 
       expect(increase).toBe(150n);
@@ -90,7 +90,7 @@ describe('ProofScoreBurnRouter Contract', () => {
 
       const score = await mockContractRead({
         functionName: 'calculateDecayedScore',
-        args: [user1]
+        args: [user1],
       });
 
       expect(score).toBe(450n);
@@ -102,12 +102,12 @@ describe('ProofScoreBurnRouter Contract', () => {
         burnBonus: 100n,
         multiplier: 150n,
         decay: 50n,
-        finalScore: 700n
+        finalScore: 700n,
       });
 
       const breakdown = await mockContractRead({
         functionName: 'getScoreBreakdown',
-        args: [user1]
+        args: [user1],
       });
 
       expect(breakdown.finalScore).toBe(700n);
@@ -118,7 +118,7 @@ describe('ProofScoreBurnRouter Contract', () => {
 
       const projected = await mockContractRead({
         functionName: 'projectScore',
-        args: [user1, parseEther('200'), 30n] // amount, days
+        args: [user1, parseEther('200'), 30n], // amount, days
       });
 
       expect(projected).toBe(800n);
@@ -129,7 +129,7 @@ describe('ProofScoreBurnRouter Contract', () => {
 
       const score = await mockContractRead({
         functionName: 'getProofScore',
-        args: [user2]
+        args: [user2],
       });
 
       expect(score).toBe(0n);
@@ -139,7 +139,7 @@ describe('ProofScoreBurnRouter Contract', () => {
       mockContractRead.mockResolvedValueOnce(10000n); // max cap
 
       const maxScore = await mockContractRead({
-        functionName: 'MAX_PROOF_SCORE'
+        functionName: 'MAX_PROOF_SCORE',
       });
 
       expect(maxScore).toBe(10000n);
@@ -152,7 +152,7 @@ describe('ProofScoreBurnRouter Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'burnForScore',
-        args: [parseEther('100')]
+        args: [parseEther('100')],
       });
 
       expect(result).toBe('0xhash');
@@ -164,7 +164,7 @@ describe('ProofScoreBurnRouter Contract', () => {
       await expect(async () => {
         await mockContractWrite({
           functionName: 'burnForScore',
-          args: [0n]
+          args: [0n],
         });
       }).rejects.toThrow('greater than zero');
     });
@@ -175,7 +175,7 @@ describe('ProofScoreBurnRouter Contract', () => {
       await expect(async () => {
         await mockContractWrite({
           functionName: 'burnForScore',
-          args: [parseEther('100')]
+          args: [parseEther('100')],
         });
       }).rejects.toThrow('Insufficient allowance');
     });
@@ -186,7 +186,7 @@ describe('ProofScoreBurnRouter Contract', () => {
       await expect(async () => {
         await mockContractWrite({
           functionName: 'burnForScore',
-          args: [parseEther('100')]
+          args: [parseEther('100')],
         });
       }).rejects.toThrow('Insufficient balance');
     });
@@ -196,14 +196,14 @@ describe('ProofScoreBurnRouter Contract', () => {
 
       await mockContractWrite({
         functionName: 'burnForScore',
-        args: [parseEther('100')]
+        args: [parseEther('100')],
       });
 
       mockContractRead.mockResolvedValueOnce(parseEther('600')); // updated
 
       const total = await mockContractRead({
         functionName: 'getTotalBurned',
-        args: [user1]
+        args: [user1],
       });
 
       expect(total).toBe(parseEther('600'));
@@ -214,7 +214,7 @@ describe('ProofScoreBurnRouter Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'burnForScore',
-        args: [parseEther('100')]
+        args: [parseEther('100')],
       });
 
       expect(result).toBe('0xhash');
@@ -223,12 +223,12 @@ describe('ProofScoreBurnRouter Contract', () => {
     it('should track burn history', async () => {
       mockContractRead.mockResolvedValueOnce([
         { amount: parseEther('100'), timestamp: 1234567890n, scoreGained: 150n },
-        { amount: parseEther('200'), timestamp: 1234567900n, scoreGained: 300n }
+        { amount: parseEther('200'), timestamp: 1234567900n, scoreGained: 300n },
       ]);
 
       const history = await mockContractRead({
         functionName: 'getBurnHistory',
-        args: [user1]
+        args: [user1],
       });
 
       expect(history).toHaveLength(2);
@@ -238,7 +238,7 @@ describe('ProofScoreBurnRouter Contract', () => {
       mockContractRead.mockResolvedValueOnce(parseEther('10000'));
 
       const total = await mockContractRead({
-        functionName: 'totalBurned'
+        functionName: 'totalBurned',
       });
 
       expect(total).toBe(parseEther('10000'));
@@ -249,7 +249,7 @@ describe('ProofScoreBurnRouter Contract', () => {
 
       const score = await mockContractRead({
         functionName: 'calculateBoostedScore',
-        args: [parseEther('100')]
+        args: [parseEther('100')],
       });
 
       expect(score).toBe(250n);
@@ -261,7 +261,7 @@ describe('ProofScoreBurnRouter Contract', () => {
       await expect(async () => {
         await mockContractWrite({
           functionName: 'burnForScore',
-          args: [parseEther('5')]
+          args: [parseEther('5')],
         });
       }).rejects.toThrow('Below minimum');
     });
@@ -272,7 +272,7 @@ describe('ProofScoreBurnRouter Contract', () => {
       await expect(async () => {
         await mockContractWrite({
           functionName: 'burnForScore',
-          args: [parseEther('1500')]
+          args: [parseEther('1500')],
         });
       }).rejects.toThrow('Exceeds maximum');
     });
@@ -284,7 +284,7 @@ describe('ProofScoreBurnRouter Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'updateScore',
-        args: [user1, 750n]
+        args: [user1, 750n],
       });
 
       expect(result).toBe('0xhash');
@@ -296,7 +296,7 @@ describe('ProofScoreBurnRouter Contract', () => {
       await expect(async () => {
         await mockContractWrite({
           functionName: 'updateScore',
-          args: [user1, 750n]
+          args: [user1, 750n],
         });
       }).rejects.toThrow('Not authorized');
     });
@@ -306,7 +306,7 @@ describe('ProofScoreBurnRouter Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'updateScore',
-        args: [user1, 750n]
+        args: [user1, 750n],
       });
 
       expect(result).toBe('0xhash');
@@ -317,7 +317,7 @@ describe('ProofScoreBurnRouter Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'syncScoreToSeer',
-        args: [user1]
+        args: [user1],
       });
 
       expect(result).toBe('0xhash');
@@ -328,7 +328,7 @@ describe('ProofScoreBurnRouter Contract', () => {
 
       const timestamp = await mockContractRead({
         functionName: 'getLastUpdate',
-        args: [user1]
+        args: [user1],
       });
 
       expect(timestamp).toBe(1234567890n);
@@ -341,8 +341,8 @@ describe('ProofScoreBurnRouter Contract', () => {
         functionName: 'batchUpdateScores',
         args: [
           [user1, user2],
-          [700n, 800n]
-        ]
+          [700n, 800n],
+        ],
       });
 
       expect(result).toBe('0xhash');
@@ -354,7 +354,7 @@ describe('ProofScoreBurnRouter Contract', () => {
       await expect(async () => {
         await mockContractWrite({
           functionName: 'updateScore',
-          args: [user1, 99999n] // exceeds max
+          args: [user1, 99999n], // exceeds max
         });
       }).rejects.toThrow('exceeds maximum');
     });
@@ -362,12 +362,12 @@ describe('ProofScoreBurnRouter Contract', () => {
     it('should track score change history', async () => {
       mockContractRead.mockResolvedValueOnce([
         { oldScore: 500n, newScore: 650n, timestamp: 1234567890n },
-        { oldScore: 650n, newScore: 700n, timestamp: 1234567900n }
+        { oldScore: 650n, newScore: 700n, timestamp: 1234567900n },
       ]);
 
       const history = await mockContractRead({
         functionName: 'getScoreHistory',
-        args: [user1]
+        args: [user1],
       });
 
       expect(history).toHaveLength(2);
@@ -378,7 +378,7 @@ describe('ProofScoreBurnRouter Contract', () => {
 
       const velocity = await mockContractRead({
         functionName: 'getScoreVelocity',
-        args: [user1]
+        args: [user1],
       });
 
       expect(velocity).toBe(50n);
@@ -389,7 +389,7 @@ describe('ProofScoreBurnRouter Contract', () => {
 
       const percentile = await mockContractRead({
         functionName: 'getScorePercentile',
-        args: [user1]
+        args: [user1],
       });
 
       expect(percentile).toBe(85n);
@@ -401,7 +401,7 @@ describe('ProofScoreBurnRouter Contract', () => {
       mockContractRead.mockResolvedValueOnce(150n); // 1.5x rate (basis points)
 
       const rate = await mockContractRead({
-        functionName: 'getBurnRate'
+        functionName: 'getBurnRate',
       });
 
       expect(rate).toBe(150n);
@@ -412,7 +412,7 @@ describe('ProofScoreBurnRouter Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'setBurnRate',
-        args: [200n] // 2x
+        args: [200n], // 2x
       });
 
       expect(result).toBe('0xhash');
@@ -424,7 +424,7 @@ describe('ProofScoreBurnRouter Contract', () => {
       await expect(async () => {
         await mockContractWrite({
           functionName: 'setBurnRate',
-          args: [200n]
+          args: [200n],
         });
       }).rejects.toThrow('Not admin');
     });
@@ -435,7 +435,7 @@ describe('ProofScoreBurnRouter Contract', () => {
       await expect(async () => {
         await mockContractWrite({
           functionName: 'setBurnRate',
-          args: [1000n] // 10x - too high
+          args: [1000n], // 10x - too high
         });
       }).rejects.toThrow('out of bounds');
     });
@@ -445,7 +445,7 @@ describe('ProofScoreBurnRouter Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'setBurnRate',
-        args: [175n]
+        args: [175n],
       });
 
       expect(result).toBe('0xhash');
@@ -454,11 +454,11 @@ describe('ProofScoreBurnRouter Contract', () => {
     it('should get burn rate history', async () => {
       mockContractRead.mockResolvedValueOnce([
         { rate: 150n, timestamp: 1234567890n },
-        { rate: 175n, timestamp: 1234667890n }
+        { rate: 175n, timestamp: 1234667890n },
       ]);
 
       const history = await mockContractRead({
-        functionName: 'getBurnRateHistory'
+        functionName: 'getBurnRateHistory',
       });
 
       expect(history).toHaveLength(2);
@@ -470,7 +470,7 @@ describe('ProofScoreBurnRouter Contract', () => {
       mockContractRead.mockResolvedValueOnce(seerAddress);
 
       const addr = await mockContractRead({
-        functionName: 'seer'
+        functionName: 'seer',
       });
 
       expect(addr).toBe(seerAddress);
@@ -481,7 +481,7 @@ describe('ProofScoreBurnRouter Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'setSeer',
-        args: [seerAddress]
+        args: [seerAddress],
       });
 
       expect(result).toBe('0xhash');
@@ -492,7 +492,7 @@ describe('ProofScoreBurnRouter Contract', () => {
 
       const score = await mockContractRead({
         functionName: 'getSeerScore',
-        args: [user1]
+        args: [user1],
       });
 
       expect(score).toBe(650n);
@@ -503,7 +503,7 @@ describe('ProofScoreBurnRouter Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'syncToSeer',
-        args: [user1]
+        args: [user1],
       });
 
       expect(result).toBe('0xhash');
@@ -513,7 +513,7 @@ describe('ProofScoreBurnRouter Contract', () => {
       mockContractRead.mockResolvedValueOnce(true);
 
       const isActive = await mockContractRead({
-        functionName: 'isSeerIntegrationActive'
+        functionName: 'isSeerIntegrationActive',
       });
 
       expect(isActive).toBe(true);
@@ -526,12 +526,12 @@ describe('ProofScoreBurnRouter Contract', () => {
         totalBurned: parseEther('500'),
         burnCount: 10n,
         averageBurn: parseEther('50'),
-        scoreGained: 750n
+        scoreGained: 750n,
       });
 
       const stats = await mockContractRead({
         functionName: 'getUserBurnStats',
-        args: [user1]
+        args: [user1],
       });
 
       expect(stats.burnCount).toBe(10n);
@@ -542,11 +542,11 @@ describe('ProofScoreBurnRouter Contract', () => {
         totalBurned: parseEther('100000'),
         totalUsers: 500n,
         averageBurn: parseEther('200'),
-        totalScoreGenerated: 150000n
+        totalScoreGenerated: 150000n,
       });
 
       const stats = await mockContractRead({
-        functionName: 'getGlobalStats'
+        functionName: 'getGlobalStats',
       });
 
       expect(stats.totalUsers).toBe(500n);
@@ -555,12 +555,12 @@ describe('ProofScoreBurnRouter Contract', () => {
     it('should get leaderboard', async () => {
       mockContractRead.mockResolvedValueOnce([
         { user: user1, score: 1000n, burned: parseEther('700') },
-        { user: user2, score: 950n, burned: parseEther('650') }
+        { user: user2, score: 950n, burned: parseEther('650') },
       ]);
 
       const leaderboard = await mockContractRead({
         functionName: 'getLeaderboard',
-        args: [10n] // top 10
+        args: [10n], // top 10
       });
 
       expect(leaderboard).toHaveLength(2);
@@ -571,7 +571,7 @@ describe('ProofScoreBurnRouter Contract', () => {
 
       const rank = await mockContractRead({
         functionName: 'getUserRank',
-        args: [user1]
+        args: [user1],
       });
 
       expect(rank).toBe(25n);
@@ -582,7 +582,7 @@ describe('ProofScoreBurnRouter Contract', () => {
 
       const efficiency = await mockContractRead({
         functionName: 'getBurnEfficiency',
-        args: [user1]
+        args: [user1],
       });
 
       expect(efficiency).toBe(150n);
@@ -594,7 +594,7 @@ describe('ProofScoreBurnRouter Contract', () => {
       mockContractRead.mockResolvedValueOnce(admin);
 
       const result = await mockContractRead({
-        functionName: 'admin'
+        functionName: 'admin',
       });
 
       expect(result).toBe(admin);
@@ -606,7 +606,7 @@ describe('ProofScoreBurnRouter Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'setAdmin',
-        args: [newAdmin]
+        args: [newAdmin],
       });
 
       expect(result).toBe('0xhash');
@@ -617,7 +617,7 @@ describe('ProofScoreBurnRouter Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'pause',
-        args: []
+        args: [],
       });
 
       expect(result).toBe('0xhash');
@@ -628,7 +628,7 @@ describe('ProofScoreBurnRouter Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'unpause',
-        args: []
+        args: [],
       });
 
       expect(result).toBe('0xhash');
@@ -640,7 +640,7 @@ describe('ProofScoreBurnRouter Contract', () => {
       await expect(async () => {
         await mockContractWrite({
           functionName: 'burnForScore',
-          args: [parseEther('100')]
+          args: [parseEther('100')],
         });
       }).rejects.toThrow('paused');
     });
@@ -650,7 +650,7 @@ describe('ProofScoreBurnRouter Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'setScoreParams',
-        args: [150n, 10000n, 100n] // rate, max, decay
+        args: [150n, 10000n, 100n], // rate, max, decay
       });
 
       expect(result).toBe('0xhash');
@@ -661,7 +661,7 @@ describe('ProofScoreBurnRouter Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'emergencyWithdraw',
-        args: [tokenAddress]
+        args: [tokenAddress],
       });
 
       expect(result).toBe('0xhash');
@@ -674,7 +674,7 @@ describe('ProofScoreBurnRouter Contract', () => {
 
       const score = await mockContractRead({
         functionName: 'getProofScore',
-        args: [user2]
+        args: [user2],
       });
 
       expect(score).toBe(0n);
@@ -687,7 +687,7 @@ describe('ProofScoreBurnRouter Contract', () => {
       await expect(async () => {
         await mockContractWrite({
           functionName: 'burnFrom',
-          args: [zeroAddress, parseEther('100')]
+          args: [zeroAddress, parseEther('100')],
         });
       }).rejects.toThrow('Invalid address');
     });
@@ -696,7 +696,7 @@ describe('ProofScoreBurnRouter Contract', () => {
       mockContractRead.mockResolvedValueOnce(tokenAddress);
 
       const token = await mockContractRead({
-        functionName: 'token'
+        functionName: 'token',
       });
 
       expect(token).toBe(tokenAddress);
@@ -706,7 +706,7 @@ describe('ProofScoreBurnRouter Contract', () => {
       mockContractRead.mockResolvedValueOnce(1500n); // 15% APY
 
       const apy = await mockContractRead({
-        functionName: 'calculateBurnAPY'
+        functionName: 'calculateBurnAPY',
       });
 
       expect(apy).toBe(1500n);
@@ -717,7 +717,7 @@ describe('ProofScoreBurnRouter Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'burnForScore',
-        args: [parseEther('100')]
+        args: [parseEther('100')],
       });
 
       expect(result).toBe('0xhash');

@@ -4,6 +4,7 @@
  */
 
 import { validateEthereumAddress, ValidationError } from './cryptoValidation';
+import { formatUnits, parseUnits } from 'viem';
 
 // Type guards for error handling
 const isErrorWithMessage = (err: unknown): err is { message: string } => {
@@ -21,6 +22,23 @@ export const VFIDE_TOKEN_ADDRESS = process.env.NEXT_PUBLIC_VFIDE_TOKEN_ADDRESS |
  * Allows spender to transfer any amount without re-approval
  */
 export const MAX_UINT256 = '0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff';
+
+const ERC20_DECIMALS = 18;
+const DECIMAL_AMOUNT_REGEX = /^\d+(?:\.\d{1,18})?$/;
+
+function parseTokenAmountToWei(amount: string): bigint {
+  const normalized = amount.trim();
+  if (!DECIMAL_AMOUNT_REGEX.test(normalized)) {
+    throw new ValidationError('Amount must be a positive decimal with up to 18 decimals');
+  }
+
+  const parsed = parseUnits(normalized, ERC20_DECIMALS);
+  if (parsed <= BigInt(0)) {
+    throw new ValidationError('Amount must be greater than zero');
+  }
+
+  return parsed;
+}
 
 // ERC-20 ABI (minimal interface for approval and allowance)
 const _ERC20_ABI = [
@@ -77,8 +95,8 @@ export async function checkTokenAllowance(
       throw new ValidationError('Invalid spender address');
     }
 
-    // Convert amount to Wei (18 decimals)
-    const requiredAmountWei = BigInt(Math.floor(parseFloat(requiredAmount) * 1e18));
+    // Convert amount to wei with exact integer math.
+    const requiredAmountWei = parseTokenAmountToWei(requiredAmount);
 
     // Encode allowance function call
     const data = encodeAllowanceCall(ownerAddress, spenderAddress);
@@ -102,7 +120,7 @@ export async function checkTokenAllowance(
 
     return {
       hasApproval: !needsApproval,
-      currentAllowance: (Number(currentAllowance) / 1e18).toString(),
+      currentAllowance: formatUnits(currentAllowance, ERC20_DECIMALS),
       requiredAmount,
       needsApproval,
     };
@@ -142,16 +160,17 @@ export async function requestTokenApproval(
     const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
     const userAddress = accounts[0];
 
-    // Determine approval amount
+    // Determine approval amount. Unlimited approvals must be explicitly requested.
     let approvalAmount: string;
     if (unlimited) {
       approvalAmount = MAX_UINT256;
-    } else if (amount) {
-      // Convert to Wei
-      approvalAmount = '0x' + BigInt(Math.floor(parseFloat(amount) * 1e18)).toString(16);
     } else {
-      // Default to unlimited
-      approvalAmount = MAX_UINT256;
+      if (!amount) {
+        throw new ValidationError('Approval amount is required when unlimited is false');
+      }
+
+      const amountWei = parseTokenAmountToWei(amount);
+      approvalAmount = '0x' + amountWei.toString(16);
     }
 
     // Encode approve function call
@@ -284,7 +303,7 @@ export async function getTokenBalance(address: string): Promise<string> {
     });
 
     const balance = BigInt(result);
-    return (Number(balance) / 1e18).toString();
+    return formatUnits(balance, ERC20_DECIMALS);
   } catch (error) {
     console.error('Failed to get token balance:', error);
     return '0';

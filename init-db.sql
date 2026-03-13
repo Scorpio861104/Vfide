@@ -38,10 +38,16 @@ CREATE TABLE IF NOT EXISTS groups (
   id SERIAL PRIMARY KEY,
   name VARCHAR(100) NOT NULL,
   description TEXT,
+  icon VARCHAR(32),
+  color VARCHAR(7),
   creator_id INTEGER REFERENCES users(id),
   member_count INTEGER DEFAULT 1,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+-- Ensure older databases also have visual metadata columns
+ALTER TABLE groups ADD COLUMN IF NOT EXISTS icon VARCHAR(32);
+ALTER TABLE groups ADD COLUMN IF NOT EXISTS color VARCHAR(7);
 
 -- Group members table
 CREATE TABLE IF NOT EXISTS group_members (
@@ -51,6 +57,18 @@ CREATE TABLE IF NOT EXISTS group_members (
   role VARCHAR(20) DEFAULT 'member',
   joined_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   UNIQUE(group_id, user_id)
+);
+
+-- Group messages table
+CREATE TABLE IF NOT EXISTS group_messages (
+  id SERIAL PRIMARY KEY,
+  group_id INTEGER REFERENCES groups(id) ON DELETE CASCADE,
+  sender_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+  content TEXT NOT NULL,
+  is_encrypted BOOLEAN DEFAULT TRUE,
+  is_deleted BOOLEAN DEFAULT FALSE,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Group invites table
@@ -179,14 +197,75 @@ CREATE TABLE IF NOT EXISTS endorsements (
   UNIQUE(from_user_id, to_user_id, skill)
 );
 
+-- Security account protection tables
+CREATE TABLE IF NOT EXISTS security_account_events (
+  id BIGSERIAL PRIMARY KEY,
+  address TEXT NOT NULL,
+  ts TIMESTAMPTZ NOT NULL,
+  ip TEXT NOT NULL,
+  type TEXT NOT NULL,
+  amount NUMERIC,
+  created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS security_account_locks (
+  address TEXT PRIMARY KEY,
+  until_ts TIMESTAMPTZ NOT NULL,
+  reason TEXT NOT NULL,
+  updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS security_event_logs (
+  id BIGSERIAL PRIMARY KEY,
+  address TEXT NOT NULL,
+  ts TIMESTAMPTZ NOT NULL,
+  type TEXT NOT NULL,
+  severity TEXT NOT NULL,
+  message TEXT NOT NULL,
+  details JSONB,
+  user_agent TEXT,
+  location TEXT,
+  device_id TEXT,
+  ip_hash TEXT,
+  created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS security_alert_dispatches (
+  dedup_key TEXT PRIMARY KEY,
+  last_sent_at TIMESTAMPTZ NOT NULL,
+  suppressed_count INTEGER NOT NULL DEFAULT 0,
+  updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS security_webhook_replay_events (
+  id BIGSERIAL PRIMARY KEY,
+  ts TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  status TEXT NOT NULL,
+  reason TEXT,
+  source TEXT,
+  replay_key_hash TEXT,
+  event_timestamp BIGINT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Create indexes for better performance
 CREATE INDEX IF NOT EXISTS idx_users_wallet ON users(wallet_address);
 CREATE INDEX IF NOT EXISTS idx_messages_sender ON messages(sender_address);
 CREATE INDEX IF NOT EXISTS idx_messages_recipient ON messages(recipient_address);
+CREATE INDEX IF NOT EXISTS idx_messages_sender_recipient_created_at ON messages(sender_address, recipient_address, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_friends_user1 ON friends(user1_address);
 CREATE INDEX IF NOT EXISTS idx_friends_user2 ON friends(user2_address);
 CREATE INDEX IF NOT EXISTS idx_group_members_group ON group_members(group_id);
 CREATE INDEX IF NOT EXISTS idx_group_members_user ON group_members(user_id);
+CREATE INDEX IF NOT EXISTS idx_group_messages_group ON group_messages(group_id);
+CREATE INDEX IF NOT EXISTS idx_group_messages_sender ON group_messages(sender_id);
+CREATE INDEX IF NOT EXISTS idx_group_messages_group_sender_created_at ON group_messages(group_id, sender_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_notifications_user ON notifications(user_id);
 CREATE INDEX IF NOT EXISTS idx_proposals_status ON proposals(status);
 CREATE INDEX IF NOT EXISTS idx_transactions_user ON transactions(user_id);
+CREATE INDEX IF NOT EXISTS idx_security_account_events_address_ts ON security_account_events(address, ts DESC);
+CREATE INDEX IF NOT EXISTS idx_security_account_locks_until_ts ON security_account_locks(until_ts DESC);
+CREATE INDEX IF NOT EXISTS idx_security_event_logs_address_ts ON security_event_logs(address, ts DESC);
+CREATE INDEX IF NOT EXISTS idx_security_alert_dispatches_last_sent_at ON security_alert_dispatches(last_sent_at DESC);
+CREATE INDEX IF NOT EXISTS idx_security_webhook_replay_events_ts ON security_webhook_replay_events(ts DESC);
+CREATE INDEX IF NOT EXISTS idx_security_webhook_replay_events_status_ts ON security_webhook_replay_events(status, ts DESC);

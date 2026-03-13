@@ -31,6 +31,11 @@ import "./VFIDEPriceOracle.sol";
 contract DeployPhase3 {
     error DP3_Zero();
 
+    bytes32 private constant NAME_BSM = bytes32("BSM");
+    bytes32 private constant NAME_BRG = bytes32("BRG");
+    bytes32 private constant NAME_ORC = bytes32("ORC");
+    bytes32 private constant NAME_PHASE3 = bytes32("P3");
+
     struct DeploymentAddresses {
         // Phase 3: Bridge & Oracle (Howey-Safe)
         address vfideBridge;
@@ -45,8 +50,8 @@ contract DeployPhase3 {
 
     DeploymentAddresses public deployed;
 
-    event ContractDeployed(string indexed name, address indexed contractAddress);
-    event PhaseDeployed(uint256 indexed phase, string name);
+    event ContractDeployed(bytes32 indexed name, address indexed contractAddress);
+    event PhaseDeployed(uint256 indexed phase, bytes32 name);
 
     /**
      * @notice Deploy Phase 3 contracts (Bridge & Oracle)
@@ -83,9 +88,6 @@ contract DeployPhase3 {
         // - Phase 5: Liquidity Mining (creates profit expectation)
         // - Phase 6: Advanced DeFi (lending, flash loans)
 
-        // Configure contracts
-        _configureContracts();
-
         return deployed;
     }
 
@@ -103,19 +105,25 @@ contract DeployPhase3 {
         // Deploy Bridge Security Module
         BridgeSecurityModule securityModule = new BridgeSecurityModule(owner, address(0));
         deployed.bridgeSecurityModule = address(securityModule);
-        emit ContractDeployed("BSM", address(securityModule));
+        emit ContractDeployed(NAME_BSM, address(securityModule));
 
         // Deploy VFIDE Bridge
+        // slither-disable-next-line reentrancy-no-eth
         VFIDEBridge bridge = new VFIDEBridge(
             vfideToken,
             layerZeroEndpoint,
             owner
         );
         deployed.vfideBridge = address(bridge);
-        emit ContractDeployed("BRG", address(bridge));
+        // slither-disable-next-line reentrancy-events
+        emit ContractDeployed(NAME_BRG, address(bridge));
 
         // Update bridge address in security module
+        // slither-disable-next-line reentrancy-no-eth
         securityModule.setBridge(address(bridge));
+
+        // Configure bridge security module linkage
+        bridge.setSecurityModule(address(securityModule));
 
         // Deploy Price Oracle
         VFIDEPriceOracle priceOracle = new VFIDEPriceOracle(
@@ -126,35 +134,10 @@ contract DeployPhase3 {
             owner
         );
         deployed.priceOracle = address(priceOracle);
-        emit ContractDeployed("ORC", address(priceOracle));
+        // slither-disable-next-line reentrancy-events
+        emit ContractDeployed(NAME_ORC, address(priceOracle));
 
-        emit PhaseDeployed(3, "P3");
+        // slither-disable-next-line reentrancy-events
+        emit PhaseDeployed(3, NAME_PHASE3);
     }
-
-    // ============================================
-    // HOWEY COMPLIANCE: Phases 4-6 REMOVED
-    // - Phase 4: _deployPhase4() - Staking & Rewards - DELETED
-    // - Phase 5: _deployPhase5() - Liquidity Mining - DELETED
-    // - Phase 6: _deployPhase6() - Advanced DeFi - DELETED
-    // - _configureContracts() staking config - DELETED
-    // ============================================
-
-    /**
-     * @notice Configure contract integrations
-     */
-    function _configureContracts() internal {
-        // Configure Bridge (only Howey-safe operation)
-        VFIDEBridge(deployed.vfideBridge).setSecurityModule(deployed.bridgeSecurityModule);
-        
-        // Staking/DeFi configurations removed for Howey compliance
-    }
-
-    /**
-     * @notice Get all deployed addresses
-     * @return addresses All deployed contract addresses
-     */
-    function getDeployedAddresses() external view returns (DeploymentAddresses memory) {
-        return deployed;
-    }
-
 }

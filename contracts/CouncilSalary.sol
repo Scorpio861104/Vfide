@@ -129,13 +129,14 @@ contract CouncilSalary {
         // M-12 Fix: Ensure share is reasonable (at least 1 token per member)
         uint256 share = balance / eligibleCount;
         require(share > 0, "CS: share too small");
+
+        lastPayTime = block.timestamp;
         
         // 3. Pay
         for (uint256 i = 0; i < eligibleCount; i++) {
             token.safeTransfer(eligible[i], share);
         }
-
-        lastPayTime = block.timestamp;
+        // slither-disable-next-line reentrancy-events
         emit SalaryPaid(block.timestamp, balance);
     }
 

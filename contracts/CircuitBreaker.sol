@@ -3,6 +3,10 @@ pragma solidity 0.8.30;
 
 import "./VFIDEAccessControl.sol";
 
+interface IEmergencyController {
+    function emergencyPause() external;
+}
+
 /**
  * @title CircuitBreaker
  * @notice Auto-pause system based on monitoring key ecosystem metrics
@@ -162,13 +166,20 @@ contract CircuitBreaker is VFIDEAccessControl {
         require(msg.sender == priceOracle, "CircuitBreaker: not oracle");
         require(_newPrice > 0, "CircuitBreaker: invalid price");
 
-        if (monitoring.lastPrice > 0 && 
-            block.timestamp <= monitoring.lastPriceUpdate + config.monitoringWindow) {
+        uint256 lastPrice = monitoring.lastPrice;
+        uint256 lastPriceUpdate = monitoring.lastPriceUpdate;
+
+        // Persist the latest oracle sample before any potential external trigger path.
+        monitoring.lastPrice = _newPrice;
+        monitoring.lastPriceUpdate = block.timestamp;
+
+        if (lastPrice > 0 && 
+            block.timestamp <= lastPriceUpdate + config.monitoringWindow) {
             
             // Calculate price drop percentage
-            if (_newPrice < monitoring.lastPrice) {
-                uint256 drop = monitoring.lastPrice - _newPrice;
-                uint256 dropPercent = (drop * 100) / monitoring.lastPrice;
+            if (_newPrice < lastPrice) {
+                uint256 drop = lastPrice - _newPrice;
+                uint256 dropPercent = (drop * 100) / lastPrice;
 
                 if (dropPercent >= config.priceDropThreshold) {
                     _trigger(
@@ -178,9 +189,6 @@ contract CircuitBreaker is VFIDEAccessControl {
                 }
             }
         }
-
-        monitoring.lastPrice = _newPrice;
-        monitoring.lastPriceUpdate = block.timestamp;
     }
 
     /**
@@ -324,8 +332,7 @@ contract CircuitBreaker is VFIDEAccessControl {
 
         // Volume warning (80% of threshold)
         if (monitoring.totalValueLocked > 0) {
-            uint256 maxDailyVolume = (monitoring.totalValueLocked * config.dailyVolumeThreshold) / 100;
-            uint256 warningThreshold = (maxDailyVolume * 80) / 100;
+            uint256 warningThreshold = (monitoring.totalValueLocked * config.dailyVolumeThreshold * 80) / 10000;
             
             if (monitoring.dailyVolume > warningThreshold) {
                 tempWarnings[warningCount++] = "Volume approaching threshold";
@@ -367,19 +374,15 @@ contract CircuitBreaker is VFIDEAccessControl {
             triggeredBy: msg.sender
         }));
 
+        emit CircuitBreakerTriggered(_reason, _metricValue, block.timestamp, msg.sender);
+
         // Call emergency controller to pause contracts
-        // Use limited gas for safety - emergency controller should be simple
-        // For critical situations, governance can directly pause contracts
         if (emergencyController != address(0)) {
-            (bool success, ) = emergencyController.call{gas: 100000}(
-                abi.encodeWithSignature("emergencyPause()")
-            );
-            if (!success) {
+            try IEmergencyController(emergencyController).emergencyPause() {
+            } catch {
                 // Don't revert if emergency controller call fails
                 // Circuit breaker should still trigger
             }
         }
-
-        emit CircuitBreakerTriggered(_reason, _metricValue, block.timestamp, msg.sender);
     }
 }

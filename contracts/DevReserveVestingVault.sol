@@ -151,7 +151,7 @@ contract DevReserveVestingVault is ReentrancyGuard {
         }
 
         uint256 amount = claimable();
-        if (amount == 0) revert DV_NothingToClaim();
+        if (amount < 1) revert DV_NothingToClaim();
 
         totalClaimed += amount;
 

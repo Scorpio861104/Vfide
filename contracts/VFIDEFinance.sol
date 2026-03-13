@@ -92,7 +92,8 @@ contract EcoTreasuryVault {
         
         vfideToken.safeTransfer(to, amount);
         totalDisbursed += amount;
-        
+
+        // slither-disable-next-line reentrancy-events
         emit Sent(address(vfideToken), to, amount, reason);
         _logEv(to, "treasury_send", amount, reason);
     }
@@ -104,6 +105,7 @@ contract EcoTreasuryVault {
     function rescueToken(address token, address to, uint256 amount) external onlyDAO {
         if (token == address(0) || to == address(0) || amount == 0) revert FI_Zero();
         IERC20(token).safeTransfer(to, amount);
+        // slither-disable-next-line reentrancy-events
         emit Sent(token, to, amount, "rescue");
         _logEv(to, "treasury_rescue", amount, "");
     }
@@ -196,9 +198,9 @@ contract StablecoinRegistryLegacy {
     }
 
     // Minimal functions kept for test compatibility
-    function setDAO(address _dao) external onlyDAO { dao = _dao; emit DAOSet(_dao); }
+    function setDAO(address _dao) external onlyDAO { if (_dao == address(0)) revert FI_Zero(); dao = _dao; emit DAOSet(_dao); }
     function setLedger(address _ledger) external onlyDAO { ledger = IProofLedger(_ledger); emit LedgerSet(_ledger); }
-    function setTreasury(address _treasury) external onlyDAO { treasury = _treasury; emit TreasurySet(_treasury); }
+    function setTreasury(address _treasury) external onlyDAO { if (_treasury == address(0)) revert FI_Zero(); treasury = _treasury; emit TreasurySet(_treasury); }
 
     function addAsset(address token, string calldata symbolHint) external onlyDAO {
         if (token == address(0)) revert FI_Zero();

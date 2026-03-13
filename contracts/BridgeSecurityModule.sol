@@ -95,6 +95,7 @@ contract BridgeSecurityModule is Ownable, Pausable {
     }
 
     constructor(address _owner, address _bridge) Ownable(_owner) {
+        require(_bridge != address(0), "Invalid bridge");
         bridge = _bridge;
     }
 
@@ -302,7 +303,7 @@ contract BridgeSecurityModule is Ownable, Pausable {
     function getCurrentHourlyVolume() external view returns (uint256 volume) {
         uint256 currentHour = block.timestamp / 1 hours;
         HourlyVolume memory hourVol = hourlyVolume[currentHour];
-        return hourVol.timestamp == currentHour ? hourVol.amount : 0;
+        return (hourVol.timestamp >= currentHour && hourVol.timestamp < currentHour + 1) ? hourVol.amount : 0;
     }
 
     /**
@@ -312,7 +313,7 @@ contract BridgeSecurityModule is Ownable, Pausable {
     function getCurrentDailyVolume() external view returns (uint256 volume) {
         uint256 currentDay = block.timestamp / 1 days;
         DailyVolume memory dayVol = dailyVolume[currentDay];
-        return dayVol.timestamp == currentDay ? dayVol.amount : 0;
+        return (dayVol.timestamp >= currentDay && dayVol.timestamp < currentDay + 1) ? dayVol.amount : 0;
     }
 
     /**

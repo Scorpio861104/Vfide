@@ -32,7 +32,7 @@ describe('RevenueSplitter Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'addPayee',
-        args: [payee1, 100n] // 100 shares
+        args: [payee1, 100n], // 100 shares
       });
 
       expect(result).toBe('0xhash');
@@ -43,7 +43,7 @@ describe('RevenueSplitter Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'removePayee',
-        args: [payee1]
+        args: [payee1],
       });
 
       expect(result).toBe('0xhash');
@@ -54,7 +54,7 @@ describe('RevenueSplitter Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'updateShares',
-        args: [payee1, 200n]
+        args: [payee1, 200n],
       });
 
       expect(result).toBe('0xhash');
@@ -65,7 +65,7 @@ describe('RevenueSplitter Contract', () => {
 
       const result = await mockContractRead({
         functionName: 'getShares',
-        args: [payee1]
+        args: [payee1],
       });
 
       expect(result).toBe(150n);
@@ -75,7 +75,7 @@ describe('RevenueSplitter Contract', () => {
       mockContractRead.mockResolvedValueOnce(500n);
 
       const result = await mockContractRead({
-        functionName: 'totalShares'
+        functionName: 'totalShares',
       });
 
       expect(result).toBe(500n);
@@ -85,7 +85,7 @@ describe('RevenueSplitter Contract', () => {
       mockContractRead.mockResolvedValueOnce([payee1, payee2, payee3]);
 
       const result = await mockContractRead({
-        functionName: 'getPayees'
+        functionName: 'getPayees',
       });
 
       expect(result).toHaveLength(3);
@@ -97,7 +97,7 @@ describe('RevenueSplitter Contract', () => {
       await expect(async () => {
         await mockContractWrite({
           functionName: 'addPayee',
-          args: [payee1, 0n]
+          args: [payee1, 0n],
         });
       }).rejects.toThrow('Invalid shares');
     });
@@ -108,7 +108,7 @@ describe('RevenueSplitter Contract', () => {
       await expect(async () => {
         await mockContractWrite({
           functionName: 'addPayee',
-          args: [payee1, 100n]
+          args: [payee1, 100n],
         });
       }).rejects.toThrow('already exists');
     });
@@ -120,7 +120,7 @@ describe('RevenueSplitter Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'receive',
-        value: parseEther('10')
+        value: parseEther('10'),
       });
 
       expect(result).toBe('0xhash');
@@ -131,7 +131,7 @@ describe('RevenueSplitter Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'release',
-        args: [payee1]
+        args: [payee1],
       });
 
       expect(result).toBe('0xhash');
@@ -141,7 +141,7 @@ describe('RevenueSplitter Contract', () => {
       mockContractWrite.mockResolvedValueOnce('0xhash');
 
       const result = await mockContractWrite({
-        functionName: 'releaseAll'
+        functionName: 'releaseAll',
       });
 
       expect(result).toBe('0xhash');
@@ -152,7 +152,7 @@ describe('RevenueSplitter Contract', () => {
 
       const result = await mockContractRead({
         functionName: 'getPendingPayment',
-        args: [payee1]
+        args: [payee1],
       });
 
       expect(result).toBe(parseEther('2'));
@@ -163,7 +163,7 @@ describe('RevenueSplitter Contract', () => {
 
       const result = await mockContractRead({
         functionName: 'getTotalReleased',
-        args: [payee1]
+        args: [payee1],
       });
 
       expect(result).toBe(parseEther('50'));
@@ -173,7 +173,7 @@ describe('RevenueSplitter Contract', () => {
       mockContractRead.mockResolvedValueOnce(parseEther('100'));
 
       const result = await mockContractRead({
-        functionName: 'totalReceived'
+        functionName: 'totalReceived',
       });
 
       expect(result).toBe(parseEther('100'));
@@ -185,7 +185,7 @@ describe('RevenueSplitter Contract', () => {
       await expect(async () => {
         await mockContractWrite({
           functionName: 'release',
-          args: [payee1]
+          args: [payee1],
         });
       }).rejects.toThrow('No payment due');
     });
@@ -197,7 +197,7 @@ describe('RevenueSplitter Contract', () => {
 
       const result = await mockContractRead({
         functionName: 'getSharePercentage',
-        args: [payee1]
+        args: [payee1],
       });
 
       expect(result).toBe(2000n);
@@ -208,7 +208,7 @@ describe('RevenueSplitter Contract', () => {
 
       const result = await mockContractRead({
         functionName: 'calculatePayment',
-        args: [payee1, parseEther('10')]
+        args: [payee1, parseEther('10')],
       });
 
       expect(result).toBe(parseEther('2'));
@@ -220,7 +220,7 @@ describe('RevenueSplitter Contract', () => {
 
       const result = await mockContractRead({
         functionName: 'calculatePayment',
-        args: [payee1, parseEther('10')]
+        args: [payee1, parseEther('10')],
       });
 
       expect(result).toBe(parseEther('3.333333333333333333'));
@@ -234,7 +234,7 @@ describe('RevenueSplitter Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'releaseToken',
-        args: [tokenAddress, payee1]
+        args: [tokenAddress, payee1],
       });
 
       expect(result).toBe('0xhash');
@@ -246,7 +246,7 @@ describe('RevenueSplitter Contract', () => {
 
       const result = await mockContractRead({
         functionName: 'getPendingTokenPayment',
-        args: [tokenAddress, payee1]
+        args: [tokenAddress, payee1],
       });
 
       expect(result).toBe(parseEther('100'));
@@ -258,7 +258,7 @@ describe('RevenueSplitter Contract', () => {
 
       const result = await mockContractRead({
         functionName: 'getTotalTokenReleased',
-        args: [tokenAddress, payee1]
+        args: [tokenAddress, payee1],
       });
 
       expect(result).toBe(parseEther('500'));
@@ -272,7 +272,7 @@ describe('RevenueSplitter Contract', () => {
       await expect(async () => {
         await mockContractWrite({
           functionName: 'addPayee',
-          args: [payee1, 100n]
+          args: [payee1, 100n],
         });
       }).rejects.toThrow('Not owner');
     });
@@ -283,7 +283,7 @@ describe('RevenueSplitter Contract', () => {
       await expect(async () => {
         await mockContractWrite({
           functionName: 'removePayee',
-          args: [payee1]
+          args: [payee1],
         });
       }).rejects.toThrow('Not owner');
     });
@@ -294,7 +294,7 @@ describe('RevenueSplitter Contract', () => {
       await expect(async () => {
         await mockContractWrite({
           functionName: 'updateShares',
-          args: [payee1, 200n]
+          args: [payee1, 200n],
         });
       }).rejects.toThrow('Not owner');
     });
@@ -304,7 +304,7 @@ describe('RevenueSplitter Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'release',
-        args: [payee1]
+        args: [payee1],
       });
 
       expect(result).toBe('0xhash');
@@ -316,7 +316,7 @@ describe('RevenueSplitter Contract', () => {
       mockContractWrite.mockResolvedValueOnce('0xhash');
 
       const result = await mockContractWrite({
-        functionName: 'pause'
+        functionName: 'pause',
       });
 
       expect(result).toBe('0xhash');
@@ -328,7 +328,7 @@ describe('RevenueSplitter Contract', () => {
       await expect(async () => {
         await mockContractWrite({
           functionName: 'release',
-          args: [payee1]
+          args: [payee1],
         });
       }).rejects.toThrow('paused');
     });
@@ -337,7 +337,7 @@ describe('RevenueSplitter Contract', () => {
       mockContractWrite.mockResolvedValueOnce('0xhash');
 
       const result = await mockContractWrite({
-        functionName: 'unpause'
+        functionName: 'unpause',
       });
 
       expect(result).toBe('0xhash');
@@ -348,7 +348,7 @@ describe('RevenueSplitter Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'emergencyWithdraw',
-        args: [parseEther('10')]
+        args: [parseEther('10')],
       });
 
       expect(result).toBe('0xhash');
@@ -360,12 +360,12 @@ describe('RevenueSplitter Contract', () => {
       mockContractRead.mockResolvedValueOnce({
         shares: 100n,
         totalReleased: parseEther('50'),
-        pendingPayment: parseEther('5')
+        pendingPayment: parseEther('5'),
       });
 
       const result = await mockContractRead({
         functionName: 'getPayeeSummary',
-        args: [payee1]
+        args: [payee1],
       });
 
       expect(result.shares).toBe(100n);
@@ -375,7 +375,7 @@ describe('RevenueSplitter Contract', () => {
       mockContractRead.mockResolvedValueOnce(parseEther('20'));
 
       const result = await mockContractRead({
-        functionName: 'getBalance'
+        functionName: 'getBalance',
       });
 
       expect(result).toBe(parseEther('20'));
@@ -385,12 +385,12 @@ describe('RevenueSplitter Contract', () => {
       mockContractRead.mockResolvedValueOnce([
         { payee: payee1, amount: parseEther('2') },
         { payee: payee2, amount: parseEther('3') },
-        { payee: payee3, amount: parseEther('5') }
+        { payee: payee3, amount: parseEther('5') },
       ]);
 
       const result = await mockContractRead({
         functionName: 'previewDistribution',
-        args: [parseEther('10')]
+        args: [parseEther('10')],
       });
 
       expect(result).toHaveLength(3);
@@ -403,7 +403,7 @@ describe('RevenueSplitter Contract', () => {
 
       const result = await mockContractRead({
         functionName: 'calculatePayment',
-        args: [payee1, parseEther('10')]
+        args: [payee1, parseEther('10')],
       });
 
       expect(result).toBe(parseEther('10'));
@@ -414,7 +414,7 @@ describe('RevenueSplitter Contract', () => {
 
       const result = await mockContractRead({
         functionName: 'calculatePayment',
-        args: [payee1, 3n] // 1/3 of 3 wei
+        args: [payee1, 3n], // 1/3 of 3 wei
       });
 
       expect(result).toBe(1n);
@@ -426,7 +426,7 @@ describe('RevenueSplitter Contract', () => {
       await expect(async () => {
         await mockContractWrite({
           functionName: 'release',
-          args: [payee1]
+          args: [payee1],
         });
       }).rejects.toThrow('No shares');
     });
@@ -437,7 +437,7 @@ describe('RevenueSplitter Contract', () => {
       await expect(async () => {
         await mockContractWrite({
           functionName: 'release',
-          args: [payee1]
+          args: [payee1],
         });
       }).rejects.toThrow('reentrant call');
     });
@@ -449,7 +449,7 @@ describe('RevenueSplitter Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'addPayee',
-        args: [payee1, 100n]
+        args: [payee1, 100n],
       });
 
       expect(result).toBe('0xhash');
@@ -460,7 +460,7 @@ describe('RevenueSplitter Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'release',
-        args: [payee1]
+        args: [payee1],
       });
 
       expect(result).toBe('0xhash');
@@ -471,7 +471,7 @@ describe('RevenueSplitter Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'updateShares',
-        args: [payee1, 200n]
+        args: [payee1, 200n],
       });
 
       expect(result).toBe('0xhash');

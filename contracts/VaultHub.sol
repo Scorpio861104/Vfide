@@ -49,6 +49,7 @@ contract VaultHub is Ownable {
     error VH_NotDAO();
 
     constructor(address _vfideToken, address _securityHub, address _ledger, address _dao) {
+        if (_vfideToken == address(0) || _dao == address(0)) revert VH_Zero();
         vfideToken = _vfideToken;
         securityHub = ISecurityHub(_securityHub);
         ledger = IProofLedger(_ledger);
@@ -134,6 +135,7 @@ contract VaultHub is Ownable {
             }
         }
 
+        // slither-disable-next-line reentrancy-events
         emit VaultCreated(owner_, vault);
         _logEv(vault, "vault_created", 0, "");
     }
@@ -166,19 +168,26 @@ contract VaultHub is Ownable {
             require(candidate == newOwner, "VH:candidate-mismatch");
         }
         
+        bool approvalCasted = false;
+
         // Record approval for current nonce
         if (!recoveryApprovals[vault][msg.sender][nonce]) {
             recoveryApprovals[vault][msg.sender][nonce] = true;
             recoveryApprovalCount[vault]++;
-            _log("recovery_approval_cast");
+            approvalCasted = true;
         }
         
         // If threshold reached, initiate timelock
         if (recoveryApprovalCount[vault] >= RECOVERY_APPROVALS_REQUIRED) {
             recoveryProposedOwner[vault] = recoveryCandidateForNonce[vault][nonce];
             recoveryUnlockTime[vault] = uint64(block.timestamp + RECOVERY_DELAY);
+            // slither-disable-next-line reentrancy-events
             emit ForcedRecoveryInitiated(vault, recoveryProposedOwner[vault], recoveryUnlockTime[vault]);
             _logEv(vault, "force_recover_init", 0, "");
+        }
+
+        if (approvalCasted) {
+            _log("recovery_approval_cast");
         }
     }
     
@@ -229,15 +238,16 @@ contract VaultHub is Ownable {
         ownerOfVault[vault] = newOwner;
         vaultOf[newOwner] = vault;
 
-        UserVault(payable(vault)).__forceSetOwner(newOwner);
-        
-        // H-5 Fix: Clear multi-sig approval state
+        // H-5 Fix: Clear multi-sig approval state before external call
         delete recoveryProposedOwner[vault];
         delete recoveryUnlockTime[vault];
         delete recoveryApprovalCount[vault];
         // C-2 Fix: Clear all approvals for this vault to prevent stale votes
         recoveryNonce[vault]++;
 
+        UserVault(payable(vault)).__forceSetOwner(newOwner);
+
+        // slither-disable-next-line reentrancy-events
         emit ForcedRecovery(vault, newOwner);
         _logEv(vault, "force_recover_final", 0, "");
     }
@@ -248,6 +258,7 @@ contract VaultHub is Ownable {
     }
 
     function _creationCode(address owner_) internal view returns (bytes memory) {
+        // slither-disable-next-line too-many-digits
         return abi.encodePacked(
             type(UserVault).creationCode,
             abi.encode(address(this), vfideToken, owner_, address(securityHub), address(ledger))

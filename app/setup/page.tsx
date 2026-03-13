@@ -89,7 +89,6 @@ export default function SetupPage() {
       setAddSuccess(true)
     } catch (err) {
       const error = err as { code?: number; message?: string }
-      console.error('Add network error:', error)
       if (error.code === 4001) {
         setAddError('You rejected the request. Click the button again when ready.')
       } else {

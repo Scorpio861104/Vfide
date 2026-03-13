@@ -111,7 +111,8 @@ contract LiquidityIncentives is ReentrancyGuard {
         
         // Mark LP token as whale-exempt in VFIDE token
         try vfideToken.setWhaleLimitExempt(lpToken, true) {} catch {}
-        
+
+        // slither-disable-next-line reentrancy-events
         emit PoolAdded(lpToken, name);
     }
     
@@ -147,16 +148,16 @@ contract LiquidityIncentives is ReentrancyGuard {
         Pool storage pool = pools[lpToken];
         if (!pool.active) revert LP_NotActive();
         if (amount == 0) revert LP_Zero();
-        
-        // Transfer LP tokens from user
-        require(ILPToken(lpToken).transferFrom(msg.sender, address(this), amount), "LP: transfer failed");
-        
+
+        // Pull tokens before mutating stake accounting.
+        IERC20(lpToken).safeTransferFrom(msg.sender, address(this), amount);
+
         UserStake storage userStake = userStakes[lpToken][msg.sender];
-        
+
         if (userStake.stakedAt == 0) {
             userStake.stakedAt = block.timestamp;
         }
-        
+
         userStake.amount += amount;
         pool.totalStaked += amount;
         

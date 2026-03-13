@@ -57,6 +57,9 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
     /// @notice Total bridged in to this chain
     uint256 public totalBridgedIn;
 
+    /// @notice Monotonic nonce for unique outgoing bridge transaction IDs
+    uint256 public bridgeTxNonce;
+
     /// @notice User bridge statistics
     mapping(address => BridgeStats) public userStats;
 
@@ -171,6 +174,8 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
         address _owner
     ) OApp(_endpoint, _owner) Ownable(_owner) {
         require(_vfideToken != address(0), "Invalid token");
+        require(_endpoint != address(0), "Invalid endpoint");
+        require(_owner != address(0), "Invalid owner");
         vfideToken = IERC20(_vfideToken);
         feeCollector = _owner;
     }
@@ -217,8 +222,9 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
         bytes memory payload = abi.encode(_to, amountAfterFee);
 
         // Generate transaction ID
+        uint256 nonce = ++bridgeTxNonce;
         bytes32 txId = keccak256(
-            abi.encodePacked(msg.sender, _to, _amount, _dstChainId, block.timestamp)
+            abi.encodePacked(msg.sender, _to, _amount, _dstChainId, block.timestamp, nonce)
         );
 
         // Record transaction
@@ -353,6 +359,7 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
      * @param _securityModule New security module address
      */
     function setSecurityModule(address _securityModule) external onlyOwner {
+        // Intentional: zero address is allowed to disable module checks after timelock.
         uint64 effectiveAt = uint64(block.timestamp) + CONFIG_TIMELOCK_DELAY;
         pendingSecurityModule = _securityModule;
         pendingSecurityModuleAt = effectiveAt;

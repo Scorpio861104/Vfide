@@ -8,6 +8,5 @@
   "solc_remaps": [
     "@openzeppelin=node_modules/@openzeppelin",
     "hardhat=node_modules/hardhat"
-  ],
-  "markdown_root": "docs/security"
+  ]
 }

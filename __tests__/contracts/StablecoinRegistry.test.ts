@@ -8,7 +8,11 @@ import { Address } from 'viem';
 const mockContractRead = jest.fn();
 const mockContractWrite = jest.fn();
 
-jest.mock('viem', () => ({ ...jest.requireActual('viem'), createPublicClient: jest.fn(), createWalletClient: jest.fn() }));
+jest.mock('viem', () => ({
+  ...jest.requireActual('viem'),
+  createPublicClient: jest.fn(),
+  createWalletClient: jest.fn(),
+}));
 
 describe('StablecoinRegistry Contract', () => {
   let owner: Address, usdc: Address, usdt: Address;
@@ -23,12 +27,16 @@ describe('StablecoinRegistry Contract', () => {
   describe('Stablecoin Management', () => {
     it('should add stablecoin', async () => {
       mockContractWrite.mockResolvedValueOnce('0xhash');
-      expect(await mockContractWrite({ functionName: 'addStablecoin', args: [usdc, 6] })).toBe('0xhash');
+      expect(await mockContractWrite({ functionName: 'addStablecoin', args: [usdc, 6] })).toBe(
+        '0xhash'
+      );
     });
 
     it('should remove stablecoin', async () => {
       mockContractWrite.mockResolvedValueOnce('0xhash');
-      expect(await mockContractWrite({ functionName: 'removeStablecoin', args: [usdc] })).toBe('0xhash');
+      expect(await mockContractWrite({ functionName: 'removeStablecoin', args: [usdc] })).toBe(
+        '0xhash'
+      );
     });
 
     it('should check if allowed', async () => {
@@ -58,22 +66,30 @@ describe('StablecoinRegistry Contract', () => {
 
     it('should set allowed status', async () => {
       mockContractWrite.mockResolvedValueOnce('0xhash');
-      expect(await mockContractWrite({ functionName: 'setAllowed', args: [usdc, true] })).toBe('0xhash');
+      expect(await mockContractWrite({ functionName: 'setAllowed', args: [usdc, true] })).toBe(
+        '0xhash'
+      );
     });
 
     it('should reject duplicate stablecoin', async () => {
       mockContractWrite.mockRejectedValueOnce(new Error('AlreadyAdded'));
-      await expect(mockContractWrite({ functionName: 'addStablecoin', args: [usdc, 6] })).rejects.toThrow('AlreadyAdded');
+      await expect(
+        mockContractWrite({ functionName: 'addStablecoin', args: [usdc, 6] })
+      ).rejects.toThrow('AlreadyAdded');
     });
 
     it('should reject removing non-existent stablecoin', async () => {
       mockContractWrite.mockRejectedValueOnce(new Error('NotFound'));
-      await expect(mockContractWrite({ functionName: 'removeStablecoin', args: [usdc] })).rejects.toThrow('NotFound');
+      await expect(
+        mockContractWrite({ functionName: 'removeStablecoin', args: [usdc] })
+      ).rejects.toThrow('NotFound');
     });
 
     it('should reject unauthorized add', async () => {
       mockContractWrite.mockRejectedValueOnce(new Error('Ownable: caller is not the owner'));
-      await expect(mockContractWrite({ functionName: 'addStablecoin', args: [usdc, 6] })).rejects.toThrow('Ownable: caller is not the owner');
+      await expect(
+        mockContractWrite({ functionName: 'addStablecoin', args: [usdc, 6] })
+      ).rejects.toThrow('Ownable: caller is not the owner');
     });
   });
 
@@ -100,14 +116,18 @@ describe('StablecoinRegistry Contract', () => {
 
     it('should reject non-pending owner acceptance', async () => {
       mockContractWrite.mockRejectedValueOnce(new Error('NotPendingOwner'));
-      await expect(mockContractWrite({ functionName: 'acceptOwnership' })).rejects.toThrow('NotPendingOwner');
+      await expect(mockContractWrite({ functionName: 'acceptOwnership' })).rejects.toThrow(
+        'NotPendingOwner'
+      );
     });
   });
 
   describe('Edge Cases', () => {
     it('should reject empty stablecoin symbol', async () => {
       mockContractWrite.mockRejectedValueOnce(new Error('SR_Bounds'));
-      await expect(mockContractWrite({ functionName: 'addStablecoin', args: [usdc, 6, ''] })).rejects.toThrow('SR_Bounds');
+      await expect(
+        mockContractWrite({ functionName: 'addStablecoin', args: [usdc, 6, ''] })
+      ).rejects.toThrow('SR_Bounds');
     });
 
     it('should reject zero treasury address', async () => {
@@ -122,17 +142,26 @@ describe('StablecoinRegistry Contract', () => {
 
     it('should handle zero address stablecoin', async () => {
       mockContractWrite.mockRejectedValueOnce(new Error('ZeroAddress'));
-      await expect(mockContractWrite({ functionName: 'addStablecoin', args: ['0x0000000000000000000000000000000000000000' as Address, 6] })).rejects.toThrow('ZeroAddress');
+      await expect(
+        mockContractWrite({
+          functionName: 'addStablecoin',
+          args: ['0x0000000000000000000000000000000000000000' as Address, 6],
+        })
+      ).rejects.toThrow('ZeroAddress');
     });
 
     it('should handle invalid decimals', async () => {
       mockContractWrite.mockRejectedValueOnce(new Error('InvalidDecimals'));
-      await expect(mockContractWrite({ functionName: 'addStablecoin', args: [usdc, 0] })).rejects.toThrow('InvalidDecimals');
+      await expect(
+        mockContractWrite({ functionName: 'addStablecoin', args: [usdc, 0] })
+      ).rejects.toThrow('InvalidDecimals');
     });
 
     it('should handle decimals exceeding limit', async () => {
       mockContractWrite.mockRejectedValueOnce(new Error('DecimalsTooHigh'));
-      await expect(mockContractWrite({ functionName: 'addStablecoin', args: [usdc, 30] })).rejects.toThrow('DecimalsTooHigh');
+      await expect(
+        mockContractWrite({ functionName: 'addStablecoin', args: [usdc, 30] })
+      ).rejects.toThrow('DecimalsTooHigh');
     });
 
     it('should handle empty stablecoin list', async () => {

@@ -12,6 +12,7 @@ export default function POSPage() {
   return (
     <>
       <div className="pt-20">
+        <h1 className="sr-only">Point of Sale</h1>
         <MerchantPOS />
       </div>
       <Footer />

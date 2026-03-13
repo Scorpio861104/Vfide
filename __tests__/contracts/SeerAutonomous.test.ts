@@ -53,46 +53,48 @@ describe('SeerAutonomous Contract', () => {
   describe('Action Permission Checks', () => {
     it('should allow action when no restrictions', async () => {
       mockContractRead.mockResolvedValueOnce(true);
-      const result = await mockContractRead({ 
+      const result = await mockContractRead({
         functionName: 'canPerformAction',
-        args: [user1, 1, parseEther('100')]
+        args: [user1, 1, parseEther('100')],
       });
       expect(result).toBe(true);
     });
 
     it('should block action when restricted', async () => {
       mockContractRead.mockResolvedValueOnce(false);
-      const result = await mockContractRead({ 
+      const result = await mockContractRead({
         functionName: 'canPerformAction',
-        args: [user1, 1, parseEther('100')]
+        args: [user1, 1, parseEther('100')],
       });
       expect(result).toBe(false);
     });
 
     it('should process before action hook', async () => {
       mockContractWrite.mockResolvedValueOnce('0xhash');
-      const result = await mockContractWrite({ 
+      const result = await mockContractWrite({
         functionName: 'beforeAction',
-        args: [user1, 1, parseEther('100')]
+        args: [user1, 1, parseEther('100')],
       });
       expect(result).toBe('0xhash');
     });
 
     it('should reject unauthorized before action call', async () => {
       mockContractWrite.mockRejectedValueOnce(new Error('Unauthorized'));
-      await expect(mockContractWrite({ 
-        functionName: 'beforeAction',
-        args: [user1, 1, parseEther('100')]
-      })).rejects.toThrow('Unauthorized');
+      await expect(
+        mockContractWrite({
+          functionName: 'beforeAction',
+          args: [user1, 1, parseEther('100')],
+        })
+      ).rejects.toThrow('Unauthorized');
     });
   });
 
   describe('Rate Limiting', () => {
     it('should get rate limit for action type', async () => {
       mockContractRead.mockResolvedValueOnce(100);
-      const result = await mockContractRead({ 
+      const result = await mockContractRead({
         functionName: 'rateLimits',
-        args: [1]
+        args: [1],
       });
       expect(result).toBe(100);
     });
@@ -105,28 +107,30 @@ describe('SeerAutonomous Contract', () => {
 
     it('should allow DAO to set rate limit', async () => {
       mockContractWrite.mockResolvedValueOnce('0xhash');
-      const result = await mockContractWrite({ 
+      const result = await mockContractWrite({
         functionName: 'daoSetRateLimit',
-        args: [1, 200]
+        args: [1, 200],
       });
       expect(result).toBe('0xhash');
     });
 
     it('should reject non-DAO setting rate limit', async () => {
       mockContractWrite.mockRejectedValueOnce(new Error('OnlyDAO'));
-      await expect(mockContractWrite({ 
-        functionName: 'daoSetRateLimit',
-        args: [1, 200]
-      })).rejects.toThrow('OnlyDAO');
+      await expect(
+        mockContractWrite({
+          functionName: 'daoSetRateLimit',
+          args: [1, 200],
+        })
+      ).rejects.toThrow('OnlyDAO');
     });
   });
 
   describe('Activity Tracking', () => {
     it('should get action count today', async () => {
       mockContractRead.mockResolvedValueOnce(50);
-      const result = await mockContractRead({ 
+      const result = await mockContractRead({
         functionName: 'actionCountToday',
-        args: [user1]
+        args: [user1],
       });
       expect(result).toBe(50);
     });
@@ -134,9 +138,9 @@ describe('SeerAutonomous Contract', () => {
     it('should get last action time', async () => {
       const timestamp = Math.floor(Date.now() / 1000);
       mockContractRead.mockResolvedValueOnce(timestamp);
-      const result = await mockContractRead({ 
+      const result = await mockContractRead({
         functionName: 'lastActionTime',
-        args: [user1]
+        args: [user1],
       });
       expect(result).toBe(timestamp);
     });
@@ -145,12 +149,12 @@ describe('SeerAutonomous Contract', () => {
       const windows = {
         window1: 10,
         window2: 20,
-        window3: 15
+        window3: 15,
       };
       mockContractRead.mockResolvedValueOnce(windows);
-      const result = await mockContractRead({ 
+      const result = await mockContractRead({
         functionName: 'activityWindows',
-        args: [user1, 0]
+        args: [user1, 0],
       });
       expect(result).toEqual(windows);
     });
@@ -160,12 +164,12 @@ describe('SeerAutonomous Contract', () => {
         totalActions: 100,
         actionsToday: 10,
         lastActionTime: Math.floor(Date.now() / 1000),
-        isRestricted: false
+        isRestricted: false,
       };
       mockContractRead.mockResolvedValueOnce(summary);
-      const result = await mockContractRead({ 
+      const result = await mockContractRead({
         functionName: 'getActivitySummary',
-        args: [user1]
+        args: [user1],
       });
       expect(result).toEqual(summary);
     });
@@ -173,9 +177,9 @@ describe('SeerAutonomous Contract', () => {
     it('should get daily reset time', async () => {
       const resetTime = Math.floor(Date.now() / 1000);
       mockContractRead.mockResolvedValueOnce(resetTime);
-      const result = await mockContractRead({ 
+      const result = await mockContractRead({
         functionName: 'dailyResetTime',
-        args: [user1]
+        args: [user1],
       });
       expect(result).toBe(resetTime);
     });
@@ -184,18 +188,18 @@ describe('SeerAutonomous Contract', () => {
   describe('Restrictions', () => {
     it('should get restriction level', async () => {
       mockContractRead.mockResolvedValueOnce(1);
-      const result = await mockContractRead({ 
+      const result = await mockContractRead({
         functionName: 'restrictionLevel',
-        args: [user1]
+        args: [user1],
       });
       expect(result).toBe(1);
     });
 
     it('should get restriction reason', async () => {
       mockContractRead.mockResolvedValueOnce('Suspicious activity');
-      const result = await mockContractRead({ 
+      const result = await mockContractRead({
         functionName: 'restrictionReason',
-        args: [user1]
+        args: [user1],
       });
       expect(result).toBe('Suspicious activity');
     });
@@ -203,9 +207,9 @@ describe('SeerAutonomous Contract', () => {
     it('should get restriction expiry', async () => {
       const expiry = Math.floor(Date.now() / 1000) + 86400;
       mockContractRead.mockResolvedValueOnce(expiry);
-      const result = await mockContractRead({ 
+      const result = await mockContractRead({
         functionName: 'restrictionExpiry',
-        args: [user1]
+        args: [user1],
       });
       expect(result).toBe(expiry);
     });
@@ -215,12 +219,12 @@ describe('SeerAutonomous Contract', () => {
         level: 1,
         reason: 'Rate limit exceeded',
         expiry: Math.floor(Date.now() / 1000) + 86400,
-        canChallenge: true
+        canChallenge: true,
       };
       mockContractRead.mockResolvedValueOnce(info);
-      const result = await mockContractRead({ 
+      const result = await mockContractRead({
         functionName: 'getRestrictionInfo',
-        args: [user1]
+        args: [user1],
       });
       expect(result).toEqual(info);
     });
@@ -239,9 +243,9 @@ describe('SeerAutonomous Contract', () => {
 
     it('should allow DAO to set thresholds', async () => {
       mockContractWrite.mockResolvedValueOnce('0xhash');
-      const result = await mockContractWrite({ 
+      const result = await mockContractWrite({
         functionName: 'daoSetThresholds',
-        args: [150, 75]
+        args: [150, 75],
       });
       expect(result).toBe('0xhash');
     });
@@ -250,18 +254,18 @@ describe('SeerAutonomous Contract', () => {
   describe('Violations', () => {
     it('should get violation score', async () => {
       mockContractRead.mockResolvedValueOnce(75);
-      const result = await mockContractRead({ 
+      const result = await mockContractRead({
         functionName: 'getViolationScore',
-        args: [user1]
+        args: [user1],
       });
       expect(result).toBe(75);
     });
 
     it('should get total violation score', async () => {
       mockContractRead.mockResolvedValueOnce(75);
-      const result = await mockContractRead({ 
+      const result = await mockContractRead({
         functionName: 'totalViolationScore',
-        args: [user1]
+        args: [user1],
       });
       expect(result).toBe(75);
     });
@@ -269,18 +273,18 @@ describe('SeerAutonomous Contract', () => {
     it('should get last violation time', async () => {
       const timestamp = Math.floor(Date.now() / 1000);
       mockContractRead.mockResolvedValueOnce(timestamp);
-      const result = await mockContractRead({ 
+      const result = await mockContractRead({
         functionName: 'lastViolationTime',
-        args: [user1]
+        args: [user1],
       });
       expect(result).toBe(timestamp);
     });
 
     it('should get pattern violations', async () => {
       mockContractRead.mockResolvedValueOnce(5);
-      const result = await mockContractRead({ 
+      const result = await mockContractRead({
         functionName: 'patternViolations',
-        args: [user1, 1]
+        args: [user1, 1],
       });
       expect(result).toBe(5);
     });
@@ -304,7 +308,7 @@ describe('SeerAutonomous Contract', () => {
         totalActions: 10000,
         totalViolations: 100,
         averageRestrictionLevel: 1,
-        healthScore: 95
+        healthScore: 95,
       };
       mockContractRead.mockResolvedValueOnce(health);
       const result = await mockContractRead({ functionName: 'getNetworkHealth' });
@@ -336,115 +340,123 @@ describe('SeerAutonomous Contract', () => {
       const challenge = {
         challenger: user1,
         timestamp: Math.floor(Date.now() / 1000),
-        resolved: false
+        resolved: false,
       };
       mockContractRead.mockResolvedValueOnce(challenge);
-      const result = await mockContractRead({ 
+      const result = await mockContractRead({
         functionName: 'pendingChallenge',
-        args: [user1]
+        args: [user1],
       });
       expect(result).toEqual(challenge);
     });
 
     it('should allow resolving challenge', async () => {
       mockContractWrite.mockResolvedValueOnce('0xhash');
-      const result = await mockContractWrite({ 
+      const result = await mockContractWrite({
         functionName: 'resolveChallenge',
-        args: [user1, true]
+        args: [user1, true],
       });
       expect(result).toBe('0xhash');
     });
 
     it('should reject unauthorized challenge resolution', async () => {
       mockContractWrite.mockRejectedValueOnce(new Error('Unauthorized'));
-      await expect(mockContractWrite({ 
-        functionName: 'resolveChallenge',
-        args: [user1, true]
-      })).rejects.toThrow('Unauthorized');
+      await expect(
+        mockContractWrite({
+          functionName: 'resolveChallenge',
+          args: [user1, true],
+        })
+      ).rejects.toThrow('Unauthorized');
     });
   });
 
   describe('Score Change Callback', () => {
     it('should handle score change notification', async () => {
       mockContractWrite.mockResolvedValueOnce('0xhash');
-      const result = await mockContractWrite({ 
+      const result = await mockContractWrite({
         functionName: 'onScoreChange',
-        args: [user1, 750, 800]
+        args: [user1, 750, 800],
       });
       expect(result).toBe('0xhash');
     });
 
     it('should reject unauthorized score change', async () => {
       mockContractWrite.mockRejectedValueOnce(new Error('Unauthorized'));
-      await expect(mockContractWrite({ 
-        functionName: 'onScoreChange',
-        args: [user1, 750, 800]
-      })).rejects.toThrow('Unauthorized');
+      await expect(
+        mockContractWrite({
+          functionName: 'onScoreChange',
+          args: [user1, 750, 800],
+        })
+      ).rejects.toThrow('Unauthorized');
     });
   });
 
   describe('DAO Override', () => {
     it('should check if DAO overridden', async () => {
       mockContractRead.mockResolvedValueOnce(false);
-      const result = await mockContractRead({ 
+      const result = await mockContractRead({
         functionName: 'daoOverridden',
-        args: [user1]
+        args: [user1],
       });
       expect(result).toBe(false);
     });
 
     it('should allow DAO override', async () => {
       mockContractWrite.mockResolvedValueOnce('0xhash');
-      const result = await mockContractWrite({ 
+      const result = await mockContractWrite({
         functionName: 'daoOverride',
-        args: [user1, true, 'Manual review']
+        args: [user1, true, 'Manual review'],
       });
       expect(result).toBe('0xhash');
     });
 
     it('should allow DAO to remove override', async () => {
       mockContractWrite.mockResolvedValueOnce('0xhash');
-      const result = await mockContractWrite({ 
+      const result = await mockContractWrite({
         functionName: 'daoRemoveOverride',
-        args: [user1]
+        args: [user1],
       });
       expect(result).toBe('0xhash');
     });
 
     it('should reject non-DAO override attempt', async () => {
       mockContractWrite.mockRejectedValueOnce(new Error('OnlyDAO'));
-      await expect(mockContractWrite({ 
-        functionName: 'daoOverride',
-        args: [user1, true, 'Manual review']
-      })).rejects.toThrow('OnlyDAO');
+      await expect(
+        mockContractWrite({
+          functionName: 'daoOverride',
+          args: [user1, true, 'Manual review'],
+        })
+      ).rejects.toThrow('OnlyDAO');
     });
   });
 
   describe('Access Control', () => {
     it('should check operator status', async () => {
       mockContractRead.mockResolvedValueOnce(true);
-      const result = await mockContractRead({ 
+      const result = await mockContractRead({
         functionName: 'operators',
-        args: [operator]
+        args: [operator],
       });
       expect(result).toBe(true);
     });
 
     it('should allow setting operator', async () => {
       mockContractWrite.mockResolvedValueOnce('0xhash');
-      const result = await mockContractWrite({ 
+      const result = await mockContractWrite({
         functionName: 'setOperator',
-        args: [operator, true]
+        args: [operator, true],
       });
       expect(result).toBe('0xhash');
     });
 
     it('should reject non-owner setting operator', async () => {
       mockContractWrite.mockRejectedValueOnce(new Error('Ownable: caller is not the owner'));
-      await expect(mockContractWrite({ 
-        functionName: 'setOperator',
-        args: [operator, true]
-      })).rejects.toThrow('Ownable: caller is not the owner');
+      await expect(
+        mockContractWrite({
+          functionName: 'setOperator',
+          args: [operator, true],
+        })
+      ).rejects.toThrow('Ownable: caller is not the owner');
     });
   });
 
@@ -475,27 +487,27 @@ describe('SeerAutonomous Contract', () => {
 
     it('should allow setting DAO', async () => {
       mockContractWrite.mockResolvedValueOnce('0xhash');
-      const result = await mockContractWrite({ 
+      const result = await mockContractWrite({
         functionName: 'setDAO',
-        args: [daoAddress]
+        args: [daoAddress],
       });
       expect(result).toBe('0xhash');
     });
 
     it('should allow setting modules', async () => {
       mockContractWrite.mockResolvedValueOnce('0xhash');
-      const result = await mockContractWrite({ 
+      const result = await mockContractWrite({
         functionName: 'setModules',
-        args: [user1, user2, operator]
+        args: [user1, user2, operator],
       });
       expect(result).toBe('0xhash');
     });
 
     it('should allow setting risk oracle', async () => {
       mockContractWrite.mockResolvedValueOnce('0xhash');
-      const result = await mockContractWrite({ 
+      const result = await mockContractWrite({
         functionName: 'setRiskOracle',
-        args: [user1]
+        args: [user1],
       });
       expect(result).toBe('0xhash');
     });
@@ -504,18 +516,18 @@ describe('SeerAutonomous Contract', () => {
   describe('Edge Cases', () => {
     it('should handle zero action amount', async () => {
       mockContractRead.mockResolvedValueOnce(true);
-      const result = await mockContractRead({ 
+      const result = await mockContractRead({
         functionName: 'canPerformAction',
-        args: [user1, 1, parseEther('0')]
+        args: [user1, 1, parseEther('0')],
       });
       expect(result).toBe(true);
     });
 
     it('should handle very high action amount', async () => {
       mockContractRead.mockResolvedValueOnce(false);
-      const result = await mockContractRead({ 
+      const result = await mockContractRead({
         functionName: 'canPerformAction',
-        args: [user1, 1, parseEther('1000000')]
+        args: [user1, 1, parseEther('1000000')],
       });
       expect(result).toBe(false);
     });
@@ -523,27 +535,31 @@ describe('SeerAutonomous Contract', () => {
     it('should handle expired restriction', async () => {
       const expiry = Math.floor(Date.now() / 1000) - 3600; // 1 hour ago
       mockContractRead.mockResolvedValueOnce(expiry);
-      const result = await mockContractRead({ 
+      const result = await mockContractRead({
         functionName: 'restrictionExpiry',
-        args: [user1]
+        args: [user1],
       });
       expect(result).toBe(expiry);
     });
 
     it('should handle invalid action type', async () => {
       mockContractWrite.mockRejectedValueOnce(new Error('InvalidActionType'));
-      await expect(mockContractWrite({ 
-        functionName: 'beforeAction',
-        args: [user1, 9999, parseEther('100')]
-      })).rejects.toThrow('InvalidActionType');
+      await expect(
+        mockContractWrite({
+          functionName: 'beforeAction',
+          args: [user1, 9999, parseEther('100')],
+        })
+      ).rejects.toThrow('InvalidActionType');
     });
 
     it('should handle zero address in checks', async () => {
       mockContractRead.mockRejectedValueOnce(new Error('InvalidAddress'));
-      await expect(mockContractRead({ 
-        functionName: 'canPerformAction',
-        args: ['0x0000000000000000000000000000000000000000' as Address, 1, parseEther('100')]
-      })).rejects.toThrow('InvalidAddress');
+      await expect(
+        mockContractRead({
+          functionName: 'canPerformAction',
+          args: ['0x0000000000000000000000000000000000000000' as Address, 1, parseEther('100')],
+        })
+      ).rejects.toThrow('InvalidAddress');
     });
 
     it('should handle threshold adjustment timing', async () => {
@@ -558,17 +574,17 @@ describe('SeerAutonomous Contract', () => {
     it('should handle user action flow with restrictions', async () => {
       // Check if can perform action
       mockContractRead.mockResolvedValueOnce(true);
-      const canPerform = await mockContractRead({ 
+      const canPerform = await mockContractRead({
         functionName: 'canPerformAction',
-        args: [user1, 1, parseEther('100')]
+        args: [user1, 1, parseEther('100')],
       });
       expect(canPerform).toBe(true);
 
       // Perform before action hook
       mockContractWrite.mockResolvedValueOnce('0xhash');
-      await mockContractWrite({ 
+      await mockContractWrite({
         functionName: 'beforeAction',
-        args: [user1, 1, parseEther('100')]
+        args: [user1, 1, parseEther('100')],
       });
 
       // Check activity summary
@@ -576,11 +592,11 @@ describe('SeerAutonomous Contract', () => {
         totalActions: 101,
         actionsToday: 11,
         lastActionTime: Math.floor(Date.now() / 1000),
-        isRestricted: false
+        isRestricted: false,
       });
-      const summary = await mockContractRead({ 
+      const summary = await mockContractRead({
         functionName: 'getActivitySummary',
-        args: [user1]
+        args: [user1],
       });
       expect(summary.totalActions).toBe(101);
     });
@@ -588,9 +604,9 @@ describe('SeerAutonomous Contract', () => {
     it('should handle automatic restriction trigger', async () => {
       // Get current violation score
       mockContractRead.mockResolvedValueOnce(95);
-      const score = await mockContractRead({ 
+      const score = await mockContractRead({
         functionName: 'getViolationScore',
-        args: [user1]
+        args: [user1],
       });
 
       // Check threshold
@@ -602,13 +618,13 @@ describe('SeerAutonomous Contract', () => {
         level: 1,
         reason: 'Auto-restricted',
         expiry: Math.floor(Date.now() / 1000) + 86400,
-        canChallenge: true
+        canChallenge: true,
       });
-      const info = await mockContractRead({ 
+      const info = await mockContractRead({
         functionName: 'getRestrictionInfo',
-        args: [user1]
+        args: [user1],
       });
-      
+
       expect(info.level).toBe(1);
     });
 
@@ -617,30 +633,30 @@ describe('SeerAutonomous Contract', () => {
       mockContractRead.mockResolvedValueOnce({
         challenger: user1,
         timestamp: Math.floor(Date.now() / 1000),
-        resolved: false
+        resolved: false,
       });
-      const challenge = await mockContractRead({ 
+      const challenge = await mockContractRead({
         functionName: 'pendingChallenge',
-        args: [user1]
+        args: [user1],
       });
       expect(challenge.resolved).toBe(false);
 
       // Resolve challenge
       mockContractWrite.mockResolvedValueOnce('0xhash');
-      await mockContractWrite({ 
+      await mockContractWrite({
         functionName: 'resolveChallenge',
-        args: [user1, true]
+        args: [user1, true],
       });
 
       // Verify challenge resolved
       mockContractRead.mockResolvedValueOnce({
         challenger: user1,
         timestamp: Math.floor(Date.now() / 1000),
-        resolved: true
+        resolved: true,
       });
-      const resolved = await mockContractRead({ 
+      const resolved = await mockContractRead({
         functionName: 'pendingChallenge',
-        args: [user1]
+        args: [user1],
       });
       expect(resolved.resolved).toBe(true);
     });

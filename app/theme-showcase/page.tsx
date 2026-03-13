@@ -32,6 +32,7 @@ export default function ThemeShowcasePage() {
 
   return (
     <PageWrapper>
+      <h1 className="sr-only">VFIDE Theme Showcase</h1>
       <PageHeader
         title="VFIDE Theme Showcase"
         subtitle="Distinctive visual elements that make VFIDE memorable"

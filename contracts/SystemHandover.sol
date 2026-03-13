@@ -83,6 +83,7 @@ contract SystemHandover {
         if (newAdmin == address(0)) newAdmin = address(dao);
         dao.setAdmin(newAdmin);
         timelock.setAdmin(address(dao));
+        // slither-disable-next-line reentrancy-events
         emit Executed(address(dao), address(timelock), newAdmin, extensionsUsed);
         _log("handover_executed");
     }

@@ -59,6 +59,7 @@ export default function EndorsementsPage() {
       
       <div className="min-h-screen bg-black text-white pt-24 pb-16">
         <div className="max-w-6xl mx-auto px-4 md:px-8">
+          <h1 className="sr-only">Endorsements</h1>
           {/* Header */}
           <SectionHeading
             badge="Trust Network"

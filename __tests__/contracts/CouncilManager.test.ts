@@ -37,7 +37,7 @@ describe('CouncilManager Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'registerCandidate',
-        args: ['Platform Statement', 'https://profile.com']
+        args: ['Platform Statement', 'https://profile.com'],
       });
 
       expect(result).toBe('0xhash');
@@ -49,7 +49,7 @@ describe('CouncilManager Contract', () => {
       await expect(async () => {
         await mockContractWrite({
           functionName: 'registerCandidate',
-          args: ['Platform', 'https://url.com']
+          args: ['Platform', 'https://url.com'],
         });
       }).rejects.toThrow('score too low');
     });
@@ -59,7 +59,7 @@ describe('CouncilManager Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'registerCandidate',
-        args: ['Platform', 'https://url.com']
+        args: ['Platform', 'https://url.com'],
       });
 
       expect(result).toBe('0xhash');
@@ -72,12 +72,12 @@ describe('CouncilManager Contract', () => {
         profileURL: 'https://profile.com',
         votes: 500n,
         isActive: true,
-        registeredAt: 1234567890n
+        registeredAt: 1234567890n,
       });
 
       const details = await mockContractRead({
         functionName: 'getCandidate',
-        args: [candidate1]
+        args: [candidate1],
       });
 
       expect(details.address).toBe(candidate1);
@@ -88,7 +88,7 @@ describe('CouncilManager Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'startElection',
-        args: [604800n] // 7 days
+        args: [604800n], // 7 days
       });
 
       expect(result).toBe('0xhash');
@@ -100,7 +100,7 @@ describe('CouncilManager Contract', () => {
       await expect(async () => {
         await mockContractWrite({
           functionName: 'startElection',
-          args: [604800n]
+          args: [604800n],
         });
       }).rejects.toThrow('Not admin');
     });
@@ -109,7 +109,7 @@ describe('CouncilManager Contract', () => {
       mockContractRead.mockResolvedValueOnce(true);
 
       const isActive = await mockContractRead({
-        functionName: 'isElectionActive'
+        functionName: 'isElectionActive',
       });
 
       expect(isActive).toBe(true);
@@ -122,11 +122,11 @@ describe('CouncilManager Contract', () => {
         endTime: 1235172690n,
         totalCandidates: 10n,
         totalVotes: 5000n,
-        isActive: true
+        isActive: true,
       });
 
       const details = await mockContractRead({
-        functionName: 'getCurrentElection'
+        functionName: 'getCurrentElection',
       });
 
       expect(details.id).toBe(5n);
@@ -137,7 +137,7 @@ describe('CouncilManager Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'finalizeElection',
-        args: []
+        args: [],
       });
 
       expect(result).toBe('0xhash');
@@ -148,7 +148,7 @@ describe('CouncilManager Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'finalizeElection',
-        args: []
+        args: [],
       });
 
       expect(result).toBe('0xhash');
@@ -159,7 +159,7 @@ describe('CouncilManager Contract', () => {
 
       const winners = await mockContractRead({
         functionName: 'getElectionWinners',
-        args: [5n] // election ID
+        args: [5n], // election ID
       });
 
       expect(winners).toHaveLength(2);
@@ -172,7 +172,7 @@ describe('CouncilManager Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'voteForCandidate',
-        args: [candidate1]
+        args: [candidate1],
       });
 
       expect(result).toBe('0xhash');
@@ -184,7 +184,7 @@ describe('CouncilManager Contract', () => {
       await expect(async () => {
         await mockContractWrite({
           functionName: 'voteForCandidate',
-          args: [candidate1]
+          args: [candidate1],
         });
       }).rejects.toThrow('not active');
     });
@@ -195,7 +195,7 @@ describe('CouncilManager Contract', () => {
       await expect(async () => {
         await mockContractWrite({
           functionName: 'voteForCandidate',
-          args: [candidate1]
+          args: [candidate1],
         });
       }).rejects.toThrow('Already voted');
     });
@@ -206,7 +206,7 @@ describe('CouncilManager Contract', () => {
       await expect(async () => {
         await mockContractWrite({
           functionName: 'voteForCandidate',
-          args: [candidate1]
+          args: [candidate1],
         });
       }).rejects.toThrow('No voting power');
     });
@@ -216,7 +216,7 @@ describe('CouncilManager Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'voteForCandidate',
-        args: [candidate1]
+        args: [candidate1],
       });
 
       expect(result).toBe('0xhash');
@@ -225,12 +225,12 @@ describe('CouncilManager Contract', () => {
     it('should get voter voting history', async () => {
       mockContractRead.mockResolvedValueOnce([
         { electionId: 1n, candidate: candidate1, timestamp: 1234567890n },
-        { electionId: 2n, candidate: candidate2, timestamp: 1237159890n }
+        { electionId: 2n, candidate: candidate2, timestamp: 1237159890n },
       ]);
 
       const history = await mockContractRead({
         functionName: 'getVoterHistory',
-        args: [voter1]
+        args: [voter1],
       });
 
       expect(history).toHaveLength(2);
@@ -241,7 +241,7 @@ describe('CouncilManager Contract', () => {
 
       const hasVoted = await mockContractRead({
         functionName: 'hasVoted',
-        args: [voter1, 5n] // election ID
+        args: [voter1, 5n], // election ID
       });
 
       expect(hasVoted).toBe(true);
@@ -252,7 +252,7 @@ describe('CouncilManager Contract', () => {
 
       const votes = await mockContractRead({
         functionName: 'getCandidateVotes',
-        args: [candidate1]
+        args: [candidate1],
       });
 
       expect(votes).toBe(1250n);
@@ -263,7 +263,7 @@ describe('CouncilManager Contract', () => {
 
       const power = await mockContractRead({
         functionName: 'getVotingPower',
-        args: [voter1]
+        args: [voter1],
       });
 
       expect(power).toBe(parseEther('1000'));
@@ -274,7 +274,7 @@ describe('CouncilManager Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'delegateVote',
-        args: [voter2]
+        args: [voter2],
       });
 
       expect(result).toBe('0xhash');
@@ -287,21 +287,17 @@ describe('CouncilManager Contract', () => {
 
       const isMember = await mockContractRead({
         functionName: 'isCouncilMember',
-        args: [councilMember]
+        args: [councilMember],
       });
 
       expect(isMember).toBe(true);
     });
 
     it('should get current council members', async () => {
-      mockContractRead.mockResolvedValueOnce([
-        candidate1,
-        candidate2,
-        councilMember
-      ]);
+      mockContractRead.mockResolvedValueOnce([candidate1, candidate2, councilMember]);
 
       const members = await mockContractRead({
-        functionName: 'getCouncilMembers'
+        functionName: 'getCouncilMembers',
       });
 
       expect(members).toHaveLength(3);
@@ -314,12 +310,12 @@ describe('CouncilManager Contract', () => {
         termEnd: 1250308290n,
         votes: 2000n,
         salary: parseEther('5000'),
-        isActive: true
+        isActive: true,
       });
 
       const details = await mockContractRead({
         functionName: 'getCouncilMemberDetails',
-        args: [councilMember]
+        args: [councilMember],
       });
 
       expect(details.address).toBe(councilMember);
@@ -329,7 +325,7 @@ describe('CouncilManager Contract', () => {
       mockContractRead.mockResolvedValueOnce(7n);
 
       const size = await mockContractRead({
-        functionName: 'getCouncilSize'
+        functionName: 'getCouncilSize',
       });
 
       expect(size).toBe(7n);
@@ -340,7 +336,7 @@ describe('CouncilManager Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'setCouncilSize',
-        args: [9n]
+        args: [9n],
       });
 
       expect(result).toBe('0xhash');
@@ -351,7 +347,7 @@ describe('CouncilManager Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'resign',
-        args: ['Personal reasons']
+        args: ['Personal reasons'],
       });
 
       expect(result).toBe('0xhash');
@@ -362,7 +358,7 @@ describe('CouncilManager Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'resign',
-        args: ['Reason']
+        args: ['Reason'],
       });
 
       expect(result).toBe('0xhash');
@@ -373,7 +369,7 @@ describe('CouncilManager Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'removeCouncilMember',
-        args: [councilMember, 'Misconduct']
+        args: [councilMember, 'Misconduct'],
       });
 
       expect(result).toBe('0xhash');
@@ -384,12 +380,12 @@ describe('CouncilManager Contract', () => {
         proposalsCreated: 15n,
         votesParticipated: 45n,
         participationRate: 90n,
-        reputation: 850n
+        reputation: 850n,
       });
 
       const metrics = await mockContractRead({
         functionName: 'getMemberMetrics',
-        args: [councilMember]
+        args: [councilMember],
       });
 
       expect(metrics.proposalsCreated).toBe(15n);
@@ -402,7 +398,7 @@ describe('CouncilManager Contract', () => {
 
       const salary = await mockContractRead({
         functionName: 'getCouncilSalary',
-        args: [councilMember]
+        args: [councilMember],
       });
 
       expect(salary).toBe(parseEther('5000'));
@@ -413,7 +409,7 @@ describe('CouncilManager Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'setCouncilSalary',
-        args: [parseEther('6000')]
+        args: [parseEther('6000')],
       });
 
       expect(result).toBe('0xhash');
@@ -424,7 +420,7 @@ describe('CouncilManager Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'distributeSalaries',
-        args: []
+        args: [],
       });
 
       expect(result).toBe('0xhash');
@@ -435,7 +431,7 @@ describe('CouncilManager Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'distributeSalaries',
-        args: []
+        args: [],
       });
 
       expect(result).toBe('0xhash');
@@ -447,7 +443,7 @@ describe('CouncilManager Contract', () => {
       await expect(async () => {
         await mockContractWrite({
           functionName: 'distributeSalaries',
-          args: []
+          args: [],
         });
       }).rejects.toThrow('Insufficient balance');
     });
@@ -455,12 +451,12 @@ describe('CouncilManager Contract', () => {
     it('should get salary distribution history', async () => {
       mockContractRead.mockResolvedValueOnce([
         { amount: parseEther('5000'), timestamp: 1234567890n, recipient: councilMember },
-        { amount: parseEther('5000'), timestamp: 1237159890n, recipient: councilMember }
+        { amount: parseEther('5000'), timestamp: 1237159890n, recipient: councilMember },
       ]);
 
       const history = await mockContractRead({
         functionName: 'getSalaryHistory',
-        args: [councilMember]
+        args: [councilMember],
       });
 
       expect(history).toHaveLength(2);
@@ -471,7 +467,7 @@ describe('CouncilManager Contract', () => {
 
       const total = await mockContractRead({
         functionName: 'getTotalPaid',
-        args: [councilMember]
+        args: [councilMember],
       });
 
       expect(total).toBe(parseEther('60000'));
@@ -481,7 +477,7 @@ describe('CouncilManager Contract', () => {
       mockContractRead.mockResolvedValueOnce(1237159890n);
 
       const nextDate = await mockContractRead({
-        functionName: 'getNextSalaryDate'
+        functionName: 'getNextSalaryDate',
       });
 
       expect(nextDate).toBe(1237159890n);
@@ -492,7 +488,7 @@ describe('CouncilManager Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'claimSalary',
-        args: []
+        args: [],
       });
 
       expect(result).toBe('0xhash');
@@ -503,7 +499,7 @@ describe('CouncilManager Contract', () => {
 
       const unclaimed = await mockContractRead({
         functionName: 'getUnclaimedSalary',
-        args: [councilMember]
+        args: [councilMember],
       });
 
       expect(unclaimed).toBe(parseEther('10000'));
@@ -515,7 +511,7 @@ describe('CouncilManager Contract', () => {
       mockContractRead.mockResolvedValueOnce(5n);
 
       const term = await mockContractRead({
-        functionName: 'getCurrentTerm'
+        functionName: 'getCurrentTerm',
       });
 
       expect(term).toBe(5n);
@@ -525,7 +521,7 @@ describe('CouncilManager Contract', () => {
       mockContractRead.mockResolvedValueOnce(15778800n); // 6 months
 
       const duration = await mockContractRead({
-        functionName: 'getTermDuration'
+        functionName: 'getTermDuration',
       });
 
       expect(duration).toBe(15778800n);
@@ -536,7 +532,7 @@ describe('CouncilManager Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'setTermDuration',
-        args: [31557600n] // 1 year
+        args: [31557600n], // 1 year
       });
 
       expect(result).toBe('0xhash');
@@ -545,11 +541,11 @@ describe('CouncilManager Contract', () => {
     it('should get term start and end dates', async () => {
       mockContractRead.mockResolvedValueOnce({
         startDate: 1234567890n,
-        endDate: 1250346690n
+        endDate: 1250346690n,
       });
 
       const dates = await mockContractRead({
-        functionName: 'getTermDates'
+        functionName: 'getTermDates',
       });
 
       expect(dates.startDate).toBe(1234567890n);
@@ -560,7 +556,7 @@ describe('CouncilManager Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'startNewTerm',
-        args: []
+        args: [],
       });
 
       expect(result).toBe('0xhash');
@@ -571,7 +567,7 @@ describe('CouncilManager Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'startNewTerm',
-        args: []
+        args: [],
       });
 
       expect(result).toBe('0xhash');
@@ -581,7 +577,7 @@ describe('CouncilManager Contract', () => {
       mockContractRead.mockResolvedValueOnce(true);
 
       const hasEnded = await mockContractRead({
-        functionName: 'hasTermEnded'
+        functionName: 'hasTermEnded',
       });
 
       expect(hasEnded).toBe(true);
@@ -590,11 +586,11 @@ describe('CouncilManager Contract', () => {
     it('should get term history', async () => {
       mockContractRead.mockResolvedValueOnce([
         { termId: 1n, startDate: 1200000000n, endDate: 1215778800n, councilSize: 5n },
-        { termId: 2n, startDate: 1215778800n, endDate: 1231557600n, councilSize: 7n }
+        { termId: 2n, startDate: 1215778800n, endDate: 1231557600n, councilSize: 7n },
       ]);
 
       const history = await mockContractRead({
-        functionName: 'getTermHistory'
+        functionName: 'getTermHistory',
       });
 
       expect(history).toHaveLength(2);
@@ -605,7 +601,7 @@ describe('CouncilManager Contract', () => {
 
       const members = await mockContractRead({
         functionName: 'getTermMembers',
-        args: [3n]
+        args: [3n],
       });
 
       expect(members).toHaveLength(2);
@@ -616,7 +612,7 @@ describe('CouncilManager Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'extendTerm',
-        args: [2592000n, 'Emergency extension'] // 30 days
+        args: [2592000n, 'Emergency extension'], // 30 days
       });
 
       expect(result).toBe('0xhash');
@@ -628,7 +624,7 @@ describe('CouncilManager Contract', () => {
       mockContractRead.mockResolvedValueOnce([candidate1, candidate2]);
 
       const candidates = await mockContractRead({
-        functionName: 'getCandidates'
+        functionName: 'getCandidates',
       });
 
       expect(candidates).toHaveLength(2);
@@ -638,7 +634,7 @@ describe('CouncilManager Contract', () => {
       mockContractRead.mockResolvedValueOnce(15n);
 
       const count = await mockContractRead({
-        functionName: 'getCandidateCount'
+        functionName: 'getCandidateCount',
       });
 
       expect(count).toBe(15n);
@@ -649,7 +645,7 @@ describe('CouncilManager Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'withdrawCandidacy',
-        args: ['Personal reasons']
+        args: ['Personal reasons'],
       });
 
       expect(result).toBe('0xhash');
@@ -660,7 +656,7 @@ describe('CouncilManager Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'withdrawCandidacy',
-        args: ['Reason']
+        args: ['Reason'],
       });
 
       expect(result).toBe('0xhash');
@@ -669,11 +665,11 @@ describe('CouncilManager Contract', () => {
     it('should get candidates by votes descending', async () => {
       mockContractRead.mockResolvedValueOnce([
         { address: candidate1, votes: 2000n },
-        { address: candidate2, votes: 1500n }
+        { address: candidate2, votes: 1500n },
       ]);
 
       const sorted = await mockContractRead({
-        functionName: 'getCandidatesByVotes'
+        functionName: 'getCandidatesByVotes',
       });
 
       expect(sorted[0].votes).toBeGreaterThan(sorted[1].votes);
@@ -684,7 +680,7 @@ describe('CouncilManager Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'disqualifyCandidate',
-        args: [candidate1, 'Terms violation']
+        args: [candidate1, 'Terms violation'],
       });
 
       expect(result).toBe('0xhash');
@@ -697,11 +693,11 @@ describe('CouncilManager Contract', () => {
         currentTerm: 5n,
         councilSize: 7n,
         totalSalariesPaid: parseEther('500000'),
-        totalElections: 5n
+        totalElections: 5n,
       });
 
       const stats = await mockContractRead({
-        functionName: 'getCouncilStats'
+        functionName: 'getCouncilStats',
       });
 
       expect(stats.currentTerm).toBe(5n);
@@ -712,12 +708,12 @@ describe('CouncilManager Contract', () => {
         totalVotes: 5000n,
         uniqueVoters: 1200n,
         candidateCount: 15n,
-        participationRate: 60n
+        participationRate: 60n,
       });
 
       const stats = await mockContractRead({
         functionName: 'getElectionStats',
-        args: [5n]
+        args: [5n],
       });
 
       expect(stats.uniqueVoters).toBe(1200n);
@@ -728,7 +724,7 @@ describe('CouncilManager Contract', () => {
 
       const rate = await mockContractRead({
         functionName: 'getParticipationRate',
-        args: [5n]
+        args: [5n],
       });
 
       expect(rate).toBe(75n);
@@ -740,7 +736,7 @@ describe('CouncilManager Contract', () => {
       mockContractRead.mockResolvedValueOnce(admin);
 
       const result = await mockContractRead({
-        functionName: 'admin'
+        functionName: 'admin',
       });
 
       expect(result).toBe(admin);
@@ -752,7 +748,7 @@ describe('CouncilManager Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'setAdmin',
-        args: [newAdmin]
+        args: [newAdmin],
       });
 
       expect(result).toBe('0xhash');
@@ -763,7 +759,7 @@ describe('CouncilManager Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'pause',
-        args: []
+        args: [],
       });
 
       expect(result).toBe('0xhash');
@@ -775,7 +771,7 @@ describe('CouncilManager Contract', () => {
       await expect(async () => {
         await mockContractWrite({
           functionName: 'voteForCandidate',
-          args: [candidate1]
+          args: [candidate1],
         });
       }).rejects.toThrow('paused');
     });
@@ -785,7 +781,7 @@ describe('CouncilManager Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'emergencyEndElection',
-        args: ['Security concern']
+        args: ['Security concern'],
       });
 
       expect(result).toBe('0xhash');
@@ -805,7 +801,7 @@ describe('CouncilManager Contract', () => {
             '0x0000000000000000000000000000000000000000' as Address,
             '0x0000000000000000000000000000000000000000' as Address,
             '0x0000000000000000000000000000000000000000' as Address,
-          ]
+          ],
         })
       ).rejects.toThrow('CM: no updates');
     });
@@ -814,7 +810,7 @@ describe('CouncilManager Contract', () => {
       mockContractRead.mockResolvedValueOnce([]);
 
       const candidates = await mockContractRead({
-        functionName: 'getCandidates'
+        functionName: 'getCandidates',
       });
 
       expect(candidates).toHaveLength(0);
@@ -823,11 +819,11 @@ describe('CouncilManager Contract', () => {
     it('should handle tie in election votes', async () => {
       mockContractRead.mockResolvedValueOnce([
         { address: candidate1, votes: 1000n },
-        { address: candidate2, votes: 1000n }
+        { address: candidate2, votes: 1000n },
       ]);
 
       const results = await mockContractRead({
-        functionName: 'getCandidatesByVotes'
+        functionName: 'getCandidatesByVotes',
       });
 
       expect(results[0].votes).toBe(results[1].votes);
@@ -839,7 +835,7 @@ describe('CouncilManager Contract', () => {
       await expect(async () => {
         await mockContractWrite({
           functionName: 'voteForCandidate',
-          args: [candidate1] // voting for self
+          args: [candidate1], // voting for self
         });
       }).rejects.toThrow('Cannot vote for self');
     });

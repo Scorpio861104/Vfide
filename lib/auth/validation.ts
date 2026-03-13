@@ -124,6 +124,12 @@ export const createGroupSchema = z.object({
   isPrivate: z.boolean().default(false),
 });
 
+export const createGroupWithMembersSchema = createGroupSchema.extend({
+  memberAddresses: z.array(ethereumAddress).max(100).default([]),
+  icon: z.string().max(16).optional(),
+  color: z.string().regex(/^#[0-9a-fA-F]{6}$/, 'Invalid color format').optional(),
+});
+
 export const groupInviteSchema = z.object({
   groupId: z.coerce.number().int().positive(),
   maxUses: z.coerce.number().int().min(1).max(1000).optional(),
@@ -134,6 +140,11 @@ export const groupInviteSchema = z.object({
 
 export const joinGroupSchema = z.object({
   code: z.string().length(12, 'Invalid invite code'),
+});
+
+export const sendGroupMessageSchema = z.object({
+  groupId: z.coerce.number().int().positive(),
+  content: z.string().min(1, 'Message cannot be empty').max(50000, 'Message is too long').transform(sanitizeText),
 });
 
 // ==================== Badge Schemas ====================

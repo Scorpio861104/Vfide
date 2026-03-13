@@ -1,0 +1,40 @@
+name: Security Replay Monitor
+
+on:
+  schedule:
+    - cron: '17 * * * *'
+  workflow_dispatch:
+
+jobs:
+  replay-metrics-report:
+    name: Replay Metrics Report
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    env:
+      SECURITY_MONITOR_BASE_URL: ${{ secrets.SECURITY_MONITOR_BASE_URL }}
+      SECURITY_MONITOR_API_TOKEN: ${{ secrets.SECURITY_MONITOR_API_TOKEN }}
+      SECURITY_MONITOR_FAIL_ON_THRESHOLD: ${{ vars.SECURITY_MONITOR_FAIL_ON_THRESHOLD || 'false' }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci --prefer-offline
+
+      - name: Generate replay metrics report
+        run: npm run -s security:report:replay -- security-replay-metrics-report.md
+
+      - name: Upload replay metrics report artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: security-replay-metrics-report
+          path: security-replay-metrics-report.md
+          retention-days: 14

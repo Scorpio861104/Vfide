@@ -8,7 +8,11 @@ import { Address, parseEther } from 'viem';
 const mockContractRead = jest.fn();
 const mockContractWrite = jest.fn();
 
-jest.mock('viem', () => ({ ...jest.requireActual('viem'), createPublicClient: jest.fn(), createWalletClient: jest.fn() }));
+jest.mock('viem', () => ({
+  ...jest.requireActual('viem'),
+  createPublicClient: jest.fn(),
+  createWalletClient: jest.fn(),
+}));
 
 describe('DevReserveVestingVault Contract', () => {
   let owner: Address, beneficiary: Address;

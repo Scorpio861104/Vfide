@@ -97,6 +97,7 @@ export class APIClient {
       const response = await fetch(url, {
         ...options,
         headers,
+        credentials: options.credentials ?? 'include',
       });
 
       const data = await response.json();
@@ -140,7 +141,7 @@ export class APIClient {
   async authenticate(address: string, message: string, signature: string) {
     const response = await this.request<{
       success: boolean;
-      token: string;
+      token?: string;
       address: string;
       expiresIn: number;
     }>('/auth', {
@@ -148,7 +149,10 @@ export class APIClient {
       body: JSON.stringify({ address, message, signature }),
     });
 
-    this.setToken(response.token);
+    // Backward compatible with older auth responses that returned a token.
+    if (typeof response.token === 'string' && response.token.length > 0) {
+      this.setToken(response.token);
+    }
     return response;
   }
 
@@ -176,7 +180,13 @@ export class APIClient {
   }) {
     return this.request<{ success: boolean; message: Message }>('/messages', {
       method: 'POST',
-      body: JSON.stringify(data),
+      body: JSON.stringify({
+        from: data.from,
+        to: data.to,
+        content: data.encryptedContent,
+        conversationId: data.conversationId,
+        signature: data.signature,
+      }),
     });
   }
 

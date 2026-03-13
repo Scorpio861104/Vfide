@@ -1,0 +1,3 @@
+DROP INDEX IF EXISTS idx_security_webhook_replay_events_status_ts;
+DROP INDEX IF EXISTS idx_security_webhook_replay_events_ts;
+DROP TABLE IF EXISTS security_webhook_replay_events;

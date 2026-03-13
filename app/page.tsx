@@ -299,6 +299,7 @@ export default function Home() {
         ref={heroRef}
         className="relative min-h-screen flex items-center justify-center overflow-hidden bg-zinc-950 pt-20"
       >
+        <h1 className="sr-only">VFIDE Home</h1>
         <motion.div style={{ y: orbY, opacity: orbOpacity }} className="absolute inset-0">
           <motion.div style={{ opacity: heroGlow }}>
             <FloatingOrbs />

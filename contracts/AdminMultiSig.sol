@@ -1,12 +1,14 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
+import { ReentrancyGuard } from "./SharedInterfaces.sol";
+
 /**
  * @title AdminMultiSig
  * @notice Multi-signature requirement for critical operations with timelock delays and community veto
  * @dev Implements 3/5 council approval system with configurable delays and emergency override
  */
-contract AdminMultiSig {
+contract AdminMultiSig is ReentrancyGuard {
     uint256 public constant COUNCIL_SIZE = 5;
     uint256 public constant REQUIRED_APPROVALS = 3;
     uint256 public constant EMERGENCY_APPROVALS = 5;
@@ -182,6 +184,7 @@ contract AdminMultiSig {
     function executeProposal(uint256 _proposalId) 
         external 
         onlyCouncil 
+        nonReentrant
         proposalExists(_proposalId) 
     {
         Proposal storage proposal = proposals[_proposalId];
@@ -200,13 +203,16 @@ contract AdminMultiSig {
         proposal.status = ProposalStatus.Executed;
         executingProposalId = _proposalId;
 
+        emit ProposalExecuted(_proposalId, msg.sender);
+
         // Use 500k gas limit for safety - prevents gas griefing
         // Can be increased via governance if needed for complex operations
-        (bool success, ) = proposal.target.call{gas: 500000}(proposal.data);
+        // Intentional: emergency proposal execution may target this contract,
+        // while `nonReentrant` prevents nested `executeProposal` entry.
+        // slither-disable-next-line reentrancy-benign
+        (bool success, ) = proposal.target.call{gas: 500_000}(proposal.data);
         require(success, "AdminMultiSig: execution failed");
         executingProposalId = NO_ACTIVE_PROPOSAL;
-
-        emit ProposalExecuted(_proposalId, msg.sender);
     }
 
     /**

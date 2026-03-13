@@ -42,6 +42,7 @@ contract SanctumVault is Ownable, ReentrancyGuard {
     event DisbursementExecuted(uint256 indexed proposalId, address indexed charity, address token, uint256 amount);
     event DisbursementRejected(uint256 indexed proposalId, string reason);
     event Deposit(address indexed from, address indexed token, uint256 amount, string note);
+    event NativeWithdrawal(address indexed to, uint256 amount);
     event ApprovalsRequiredSet(uint8 required);
 
     /// DAO control (can be DAO contract or multisig)
@@ -267,6 +268,21 @@ contract SanctumVault is Ownable, ReentrancyGuard {
     receive() external payable {
         emit Deposit(msg.sender, address(0), msg.value, "native_deposit");
         _logEv(msg.sender, "sanctum_native_deposit", msg.value, "");
+    }
+
+    /**
+     * @notice Withdraw native asset held by this vault
+     * @dev DAO-only rescue path for forced ETH sends and native donations
+     */
+    function withdrawNative(address payable to, uint256 amount) external onlyDAO nonReentrant {
+        if (to == address(0) || amount < 1) revert SANCT_Zero();
+        require(amount <= address(this).balance, "insufficient native");
+
+        (bool sent, ) = to.call{value: amount}("");
+        require(sent, "native transfer failed");
+
+        emit NativeWithdrawal(to, amount);
+        _logEv(to, "sanctum_native_withdraw", amount, "");
     }
 
     // ─────────────────────────── Disbursements (charity payouts)

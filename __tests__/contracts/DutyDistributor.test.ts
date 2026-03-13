@@ -8,7 +8,11 @@ import { Address, parseEther } from 'viem';
 const mockContractRead = jest.fn();
 const mockContractWrite = jest.fn();
 
-jest.mock('viem', () => ({ ...jest.requireActual('viem'), createPublicClient: jest.fn(), createWalletClient: jest.fn() }));
+jest.mock('viem', () => ({
+  ...jest.requireActual('viem'),
+  createPublicClient: jest.fn(),
+  createWalletClient: jest.fn(),
+}));
 
 describe('DutyDistributor Contract', () => {
   let owner: Address, user1: Address;
@@ -55,39 +59,53 @@ describe('DutyDistributor Contract', () => {
 
     it('should reject claim exceeding cap', async () => {
       mockContractWrite.mockRejectedValueOnce(new Error('DailyCapExceeded'));
-      await expect(mockContractWrite({ functionName: 'claimRewards' })).rejects.toThrow('DailyCapExceeded');
+      await expect(mockContractWrite({ functionName: 'claimRewards' })).rejects.toThrow(
+        'DailyCapExceeded'
+      );
     });
 
     it('should reject claim with no rewards', async () => {
       mockContractWrite.mockRejectedValueOnce(new Error('NoRewards'));
-      await expect(mockContractWrite({ functionName: 'claimRewards' })).rejects.toThrow('NoRewards');
+      await expect(mockContractWrite({ functionName: 'claimRewards' })).rejects.toThrow(
+        'NoRewards'
+      );
     });
 
     it('should reject claim exceeding max per claim', async () => {
       mockContractWrite.mockRejectedValueOnce(new Error('ExceedsMaxClaim'));
-      await expect(mockContractWrite({ functionName: 'claimRewards' })).rejects.toThrow('ExceedsMaxClaim');
+      await expect(mockContractWrite({ functionName: 'claimRewards' })).rejects.toThrow(
+        'ExceedsMaxClaim'
+      );
     });
   });
 
   describe('Governance Hooks', () => {
     it('should handle on vote cast', async () => {
       mockContractWrite.mockResolvedValueOnce('0xhash');
-      expect(await mockContractWrite({ functionName: 'onVoteCast', args: [user1, 1, 100] })).toBe('0xhash');
+      expect(await mockContractWrite({ functionName: 'onVoteCast', args: [user1, 1, 100] })).toBe(
+        '0xhash'
+      );
     });
 
     it('should handle on proposal queued', async () => {
       mockContractWrite.mockResolvedValueOnce('0xhash');
-      expect(await mockContractWrite({ functionName: 'onProposalQueued', args: [1, owner] })).toBe('0xhash');
+      expect(await mockContractWrite({ functionName: 'onProposalQueued', args: [1, owner] })).toBe(
+        '0xhash'
+      );
     });
 
     it('should handle on finalized', async () => {
       mockContractWrite.mockResolvedValueOnce('0xhash');
-      expect(await mockContractWrite({ functionName: 'onFinalized', args: [1, true, owner] })).toBe('0xhash');
+      expect(await mockContractWrite({ functionName: 'onFinalized', args: [1, true, owner] })).toBe(
+        '0xhash'
+      );
     });
 
     it('should reject unauthorized hook calls', async () => {
       mockContractWrite.mockRejectedValueOnce(new Error('Unauthorized'));
-      await expect(mockContractWrite({ functionName: 'onVoteCast', args: [user1, 1, 100] })).rejects.toThrow('Unauthorized');
+      await expect(
+        mockContractWrite({ functionName: 'onVoteCast', args: [user1, 1, 100] })
+      ).rejects.toThrow('Unauthorized');
     });
   });
 
@@ -139,7 +157,9 @@ describe('DutyDistributor Contract', () => {
 
     it('should handle max points reached', async () => {
       mockContractWrite.mockRejectedValueOnce(new Error('MaxPointsReached'));
-      await expect(mockContractWrite({ functionName: 'onVoteCast', args: [user1, 1, 100] })).rejects.toThrow('MaxPointsReached');
+      await expect(
+        mockContractWrite({ functionName: 'onVoteCast', args: [user1, 1, 100] })
+      ).rejects.toThrow('MaxPointsReached');
     });
   });
 });

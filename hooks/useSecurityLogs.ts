@@ -2,7 +2,6 @@ import { useCallback, useEffect, useState } from 'react';
 import {
   SecurityLogEntry,
   SecurityEventType,
-  SECURITY_STORAGE_KEYS,
   formatSecurityEventType,
   generateDeviceFingerprint
 } from '@/config/security-advanced';
@@ -32,30 +31,81 @@ export interface UseSecurityLogsResult {
 
 const MAX_LOGS = 1000; // Keep only last 1000 logs
 
-const loadLogs = (): SecurityLogEntry[] => {
-  if (typeof window === 'undefined') return [];
+interface SecurityLogApiRecord {
+  id: string;
+  ts: string;
+  type: SecurityEventType;
+  severity: 'info' | 'warning' | 'critical';
+  message: string;
+  details: Record<string, any> | null;
+  user_agent?: string | null;
+  location?: string | null;
+  device_id?: string | null;
+}
 
-  try {
-    const stored = localStorage.getItem(SECURITY_STORAGE_KEYS.logs);
-    if (!stored) return [];
+function mapApiLogToEntry(record: SecurityLogApiRecord): SecurityLogEntry {
+  return {
+    id: record.id,
+    timestamp: new Date(record.ts),
+    type: record.type,
+    severity: record.severity,
+    message: record.message,
+    details: record.details || {},
+    userAgent: record.user_agent || undefined,
+    location: record.location || undefined,
+    deviceId: record.device_id || undefined,
+    ipAddress: 'server-validated',
+  };
+}
 
-    const parsed = JSON.parse(stored);
-    return parsed.map((log: { id: string; type: string; action: string; timestamp: string; details?: Record<string, unknown> }) => ({
-      ...log,
-      timestamp: new Date(log.timestamp)
-    }));
-  } catch (error) {
-    console.error('Failed to load security logs', error);
-    return [];
+async function fetchLogsFromServer(limit: number = MAX_LOGS): Promise<SecurityLogEntry[]> {
+  const response = await fetch(`/api/security/logs?limit=${limit}`, {
+    method: 'GET',
+    credentials: 'include',
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch security logs (${response.status})`);
   }
-};
 
-const saveLogs = (logs: SecurityLogEntry[]): void => {
-  if (typeof window === 'undefined') return;
-  // Keep only the most recent logs
-  const toSave = logs.slice(-MAX_LOGS);
-  localStorage.setItem(SECURITY_STORAGE_KEYS.logs, JSON.stringify(toSave));
-};
+  const payload = await response.json() as { logs?: SecurityLogApiRecord[] };
+  const records = Array.isArray(payload.logs) ? payload.logs : [];
+  return records.map(mapApiLogToEntry);
+}
+
+async function persistLogToServer(log: SecurityLogEntry): Promise<void> {
+  const response = await fetch('/api/security/logs', {
+    method: 'POST',
+    credentials: 'include',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      type: log.type,
+      severity: log.severity,
+      message: log.message,
+      details: log.details,
+      userAgent: log.userAgent,
+      location: log.location,
+      deviceId: log.deviceId,
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to store security log (${response.status})`);
+  }
+}
+
+async function clearLogsOnServer(): Promise<void> {
+  const response = await fetch('/api/security/logs', {
+    method: 'DELETE',
+    credentials: 'include',
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to clear security logs (${response.status})`);
+  }
+}
 
 const generateLogId = (): string => {
   return `log_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
@@ -82,7 +132,7 @@ const getClientInfo = () => {
 };
 
 export const useSecurityLogs = (): UseSecurityLogsResult => {
-  const [logs, setLogs] = useState<SecurityLogEntry[]>(loadLogs());
+  const [logs, setLogs] = useState<SecurityLogEntry[]>([]);
   const [filteredLogs, setFilteredLogs] = useState<SecurityLogEntry[]>([]);
   const [filters, setFilters] = useState<{
     type: SecurityEventType | null;
@@ -97,9 +147,25 @@ export const useSecurityLogs = (): UseSecurityLogsResult => {
   });
 
   useEffect(() => {
-    const loaded = loadLogs();
-    setLogs(loaded);
-    setFilteredLogs(loaded);
+    let mounted = true;
+
+    const load = async () => {
+      try {
+        const loaded = await fetchLogsFromServer(MAX_LOGS);
+        if (!mounted) return;
+        setLogs(loaded);
+        setFilteredLogs(loaded);
+      } catch (error) {
+        if (!mounted) return;
+        console.error('Failed to load security logs from backend', error);
+      }
+    };
+
+    void load();
+
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   // Apply filters whenever logs or filters change
@@ -151,10 +217,10 @@ export const useSecurityLogs = (): UseSecurityLogsResult => {
       ...clientInfo
     };
 
-    setLogs(prev => {
-      const updated = [...prev, newLog];
-      saveLogs(updated);
-      return updated;
+    setLogs(prev => [...prev, newLog].slice(-MAX_LOGS));
+
+    void persistLogToServer(newLog).catch((error) => {
+      console.error('Failed to persist security log to backend', error);
     });
   }, []);
 
@@ -225,9 +291,10 @@ export const useSecurityLogs = (): UseSecurityLogsResult => {
   const clearLogs = useCallback(() => {
     setLogs([]);
     setFilteredLogs([]);
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem(SECURITY_STORAGE_KEYS.logs);
-    }
+
+    void clearLogsOnServer().catch((error) => {
+      console.error('Failed to clear security logs on backend', error);
+    });
   }, []);
 
   const getLogCount = useCallback((severity?: 'info' | 'warning' | 'critical'): number => {

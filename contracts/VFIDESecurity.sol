@@ -200,11 +200,11 @@ contract GuardianLock {
         uint8 needed = registry.guardiansNeeded(vault);
         if (a >= needed && needed > 0) {
             locked[vault] = true;
-            emit Locked(vault, msg.sender, a, reason);
-            _logEv(vault, "guardian_lock", a, reason);
-            // H-9 Fix: Clean up votes after successful lock
+            // H-9 Fix: Clean up votes before external log call
             approvals[vault] = 0;
             lockNonce[vault]++;
+            emit Locked(vault, msg.sender, a, reason);
+            _logEv(vault, "guardian_lock", a, reason);
         } else {
             // vote recorded, not yet locked
             _logEv(vault, "guardian_vote", a, reason);
@@ -298,7 +298,7 @@ contract PanicGuard {
     /// @dev Register vault creation time (called by VaultHub on vault creation)
     function registerVault(address vault) external {
         require(msg.sender == address(vaultHub), "only VaultHub");
-        if (vaultCreationTime[vault] == 0) {
+        if (vaultCreationTime[vault] < 1) {
             vaultCreationTime[vault] = block.timestamp;
         }
     }

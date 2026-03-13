@@ -29,7 +29,7 @@ describe('EmergencyControl Contract', () => {
       mockContractWrite.mockResolvedValueOnce('0xhash');
 
       const result = await mockContractWrite({
-        functionName: 'pause'
+        functionName: 'pause',
       });
 
       expect(result).toBe('0xhash');
@@ -39,7 +39,7 @@ describe('EmergencyControl Contract', () => {
       mockContractRead.mockResolvedValueOnce(true);
 
       const result = await mockContractRead({
-        functionName: 'isPaused'
+        functionName: 'isPaused',
       });
 
       expect(result).toBe(true);
@@ -49,7 +49,7 @@ describe('EmergencyControl Contract', () => {
       mockContractWrite.mockResolvedValueOnce('0xhash');
 
       const result = await mockContractWrite({
-        functionName: 'unpause'
+        functionName: 'unpause',
       });
 
       expect(result).toBe('0xhash');
@@ -61,7 +61,7 @@ describe('EmergencyControl Contract', () => {
       await expect(async () => {
         await mockContractWrite({
           functionName: 'someOperation',
-          args: []
+          args: [],
         });
       }).rejects.toThrow('System paused');
     });
@@ -71,7 +71,7 @@ describe('EmergencyControl Contract', () => {
 
       await expect(async () => {
         await mockContractWrite({
-          functionName: 'pause'
+          functionName: 'pause',
         });
       }).rejects.toThrow('Not guardian');
     });
@@ -81,7 +81,7 @@ describe('EmergencyControl Contract', () => {
       mockContractRead.mockResolvedValueOnce(timestamp);
 
       const result = await mockContractRead({
-        functionName: 'pausedAt'
+        functionName: 'pausedAt',
       });
 
       expect(result).toBe(timestamp);
@@ -93,7 +93,7 @@ describe('EmergencyControl Contract', () => {
       mockContractRead.mockResolvedValueOnce(guardian);
 
       const result = await mockContractRead({
-        functionName: 'guardian'
+        functionName: 'guardian',
       });
 
       expect(result).toBe(guardian);
@@ -105,7 +105,7 @@ describe('EmergencyControl Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'setGuardian',
-        args: [newGuardian]
+        args: [newGuardian],
       });
 
       expect(result).toBe('0xhash');
@@ -117,7 +117,7 @@ describe('EmergencyControl Contract', () => {
       await expect(async () => {
         await mockContractWrite({
           functionName: 'setGuardian',
-          args: [guardian]
+          args: [guardian],
         });
       }).rejects.toThrow('Not owner');
     });
@@ -129,7 +129,7 @@ describe('EmergencyControl Contract', () => {
       await expect(async () => {
         await mockContractWrite({
           functionName: 'setGuardian',
-          args: [zeroAddress]
+          args: [zeroAddress],
         });
       }).rejects.toThrow('Invalid guardian');
     });
@@ -141,7 +141,7 @@ describe('EmergencyControl Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'activateCircuitBreaker',
-        args: [3600n] // 1 hour
+        args: [3600n], // 1 hour
       });
 
       expect(result).toBe('0xhash');
@@ -151,7 +151,7 @@ describe('EmergencyControl Contract', () => {
       mockContractRead.mockResolvedValueOnce(true);
 
       const result = await mockContractRead({
-        functionName: 'isCircuitBreakerActive'
+        functionName: 'isCircuitBreakerActive',
       });
 
       expect(result).toBe(true);
@@ -162,7 +162,7 @@ describe('EmergencyControl Contract', () => {
       mockContractRead.mockResolvedValueOnce(expiry);
 
       const result = await mockContractRead({
-        functionName: 'circuitBreakerExpiry'
+        functionName: 'circuitBreakerExpiry',
       });
 
       expect(result).toBe(expiry);
@@ -172,7 +172,7 @@ describe('EmergencyControl Contract', () => {
       mockContractRead.mockResolvedValueOnce(false);
 
       const result = await mockContractRead({
-        functionName: 'isCircuitBreakerActive'
+        functionName: 'isCircuitBreakerActive',
       });
 
       expect(result).toBe(false);
@@ -183,7 +183,7 @@ describe('EmergencyControl Contract', () => {
       mockContractRead.mockResolvedValueOnce(maxDuration);
 
       const result = await mockContractRead({
-        functionName: 'MAX_CIRCUIT_BREAKER_DURATION'
+        functionName: 'MAX_CIRCUIT_BREAKER_DURATION',
       });
 
       expect(result).toBe(maxDuration);
@@ -196,7 +196,7 @@ describe('EmergencyControl Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'emergencyWithdraw',
-        args: [parseEther('100')]
+        args: [parseEther('100')],
       });
 
       expect(result).toBe('0xhash');
@@ -208,7 +208,7 @@ describe('EmergencyControl Contract', () => {
       await expect(async () => {
         await mockContractWrite({
           functionName: 'emergencyWithdraw',
-          args: [parseEther('100')]
+          args: [parseEther('100')],
         });
       }).rejects.toThrow('Not owner');
     });
@@ -219,7 +219,7 @@ describe('EmergencyControl Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'emergencyWithdrawToken',
-        args: [tokenAddress, parseEther('1000')]
+        args: [tokenAddress, parseEther('1000')],
       });
 
       expect(result).toBe('0xhash');
@@ -231,7 +231,7 @@ describe('EmergencyControl Contract', () => {
       await expect(async () => {
         await mockContractWrite({
           functionName: 'emergencyWithdraw',
-          args: [parseEther('100')]
+          args: [parseEther('100')],
         });
       }).rejects.toThrow('Insufficient balance');
     });
@@ -242,7 +242,7 @@ describe('EmergencyControl Contract', () => {
       mockContractWrite.mockResolvedValueOnce('0xhash');
 
       const result = await mockContractWrite({
-        functionName: 'activateKillSwitch'
+        functionName: 'activateKillSwitch',
       });
 
       expect(result).toBe('0xhash');
@@ -252,7 +252,7 @@ describe('EmergencyControl Contract', () => {
       mockContractRead.mockResolvedValueOnce(true);
 
       const result = await mockContractRead({
-        functionName: 'isKillSwitchActive'
+        functionName: 'isKillSwitchActive',
       });
 
       expect(result).toBe(true);
@@ -264,7 +264,7 @@ describe('EmergencyControl Contract', () => {
       await expect(async () => {
         await mockContractWrite({
           functionName: 'anyOperation',
-          args: []
+          args: [],
         });
       }).rejects.toThrow('Kill switch active');
     });
@@ -274,7 +274,7 @@ describe('EmergencyControl Contract', () => {
 
       await expect(async () => {
         await mockContractWrite({
-          functionName: 'activateKillSwitch'
+          functionName: 'activateKillSwitch',
         });
       }).rejects.toThrow('Insufficient signatures');
     });
@@ -286,7 +286,7 @@ describe('EmergencyControl Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'addRestriction',
-        args: [user, 'Suspicious activity']
+        args: [user, 'Suspicious activity'],
       });
 
       expect(result).toBe('0xhash');
@@ -297,7 +297,7 @@ describe('EmergencyControl Contract', () => {
 
       const result = await mockContractRead({
         functionName: 'isRestricted',
-        args: [user]
+        args: [user],
       });
 
       expect(result).toBe(true);
@@ -308,7 +308,7 @@ describe('EmergencyControl Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'removeRestriction',
-        args: [user]
+        args: [user],
       });
 
       expect(result).toBe('0xhash');
@@ -319,7 +319,7 @@ describe('EmergencyControl Contract', () => {
 
       const result = await mockContractRead({
         functionName: 'getRestrictionReason',
-        args: [user]
+        args: [user],
       });
 
       expect(result).toBe('Suspicious activity');
@@ -332,11 +332,11 @@ describe('EmergencyControl Contract', () => {
         isPaused: false,
         isCircuitBreakerActive: false,
         isKillSwitchActive: false,
-        lastHealthCheck: Math.floor(Date.now() / 1000)
+        lastHealthCheck: Math.floor(Date.now() / 1000),
       });
 
       const result = await mockContractRead({
-        functionName: 'getSystemHealth'
+        functionName: 'getSystemHealth',
       });
 
       expect(result.isPaused).toBe(false);
@@ -346,7 +346,7 @@ describe('EmergencyControl Contract', () => {
       mockContractWrite.mockResolvedValueOnce('0xhash');
 
       const result = await mockContractWrite({
-        functionName: 'performHealthCheck'
+        functionName: 'performHealthCheck',
       });
 
       expect(result).toBe('0xhash');
@@ -357,7 +357,7 @@ describe('EmergencyControl Contract', () => {
       mockContractRead.mockResolvedValueOnce(timestamp);
 
       const result = await mockContractRead({
-        functionName: 'lastHealthCheck'
+        functionName: 'lastHealthCheck',
       });
 
       expect(result).toBe(timestamp);
@@ -370,7 +370,7 @@ describe('EmergencyControl Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'recordIncident',
-        args: ['Security breach detected', 3] // severity 3
+        args: ['Security breach detected', 3], // severity 3
       });
 
       expect(result).toBe('0xhash');
@@ -380,7 +380,7 @@ describe('EmergencyControl Contract', () => {
       mockContractRead.mockResolvedValueOnce(5n);
 
       const result = await mockContractRead({
-        functionName: 'getIncidentCount'
+        functionName: 'getIncidentCount',
       });
 
       expect(result).toBe(5n);
@@ -392,12 +392,12 @@ describe('EmergencyControl Contract', () => {
         description: 'Security breach',
         severity: 3,
         timestamp: 1234567890n,
-        resolved: false
+        resolved: false,
       });
 
       const result = await mockContractRead({
         functionName: 'getIncident',
-        args: [1n]
+        args: [1n],
       });
 
       expect(result.severity).toBe(3);
@@ -408,7 +408,7 @@ describe('EmergencyControl Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'resolveIncident',
-        args: [1n, 'Issue fixed']
+        args: [1n, 'Issue fixed'],
       });
 
       expect(result).toBe('0xhash');
@@ -420,7 +420,7 @@ describe('EmergencyControl Contract', () => {
       mockContractRead.mockResolvedValueOnce(3); // requires 3 signatures
 
       const result = await mockContractRead({
-        functionName: 'requiredSignatures'
+        functionName: 'requiredSignatures',
       });
 
       expect(result).toBe(3);
@@ -431,7 +431,7 @@ describe('EmergencyControl Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'signProposal',
-        args: [1n] // proposal ID
+        args: [1n], // proposal ID
       });
 
       expect(result).toBe('0xhash');
@@ -442,7 +442,7 @@ describe('EmergencyControl Contract', () => {
 
       const result = await mockContractRead({
         functionName: 'getSignatureCount',
-        args: [1n]
+        args: [1n],
       });
 
       expect(result).toBe(2n);
@@ -453,7 +453,7 @@ describe('EmergencyControl Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'executeProposal',
-        args: [1n]
+        args: [1n],
       });
 
       expect(result).toBe('0xhash');
@@ -465,7 +465,7 @@ describe('EmergencyControl Contract', () => {
       mockContractWrite.mockResolvedValueOnce('0xhash');
 
       const result = await mockContractWrite({
-        functionName: 'enterRecoveryMode'
+        functionName: 'enterRecoveryMode',
       });
 
       expect(result).toBe('0xhash');
@@ -475,7 +475,7 @@ describe('EmergencyControl Contract', () => {
       mockContractRead.mockResolvedValueOnce(true);
 
       const result = await mockContractRead({
-        functionName: 'isInRecoveryMode'
+        functionName: 'isInRecoveryMode',
       });
 
       expect(result).toBe(true);
@@ -485,7 +485,7 @@ describe('EmergencyControl Contract', () => {
       mockContractWrite.mockResolvedValueOnce('0xhash');
 
       const result = await mockContractWrite({
-        functionName: 'exitRecoveryMode'
+        functionName: 'exitRecoveryMode',
       });
 
       expect(result).toBe('0xhash');
@@ -496,7 +496,7 @@ describe('EmergencyControl Contract', () => {
 
       await expect(async () => {
         await mockContractWrite({
-          functionName: 'nonCriticalOperation'
+          functionName: 'nonCriticalOperation',
         });
       }).rejects.toThrow('Non-critical operation blocked');
     });
@@ -507,7 +507,7 @@ describe('EmergencyControl Contract', () => {
       mockContractWrite.mockResolvedValueOnce('0xhash');
 
       const result = await mockContractWrite({
-        functionName: 'pause'
+        functionName: 'pause',
       });
 
       expect(result).toBe('0xhash');
@@ -518,7 +518,7 @@ describe('EmergencyControl Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'activateCircuitBreaker',
-        args: [3600n]
+        args: [3600n],
       });
 
       expect(result).toBe('0xhash');
@@ -529,7 +529,7 @@ describe('EmergencyControl Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'recordIncident',
-        args: ['Security issue', 2]
+        args: ['Security issue', 2],
       });
 
       expect(result).toBe('0xhash');

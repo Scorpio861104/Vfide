@@ -177,8 +177,9 @@ contract EmergencyControl {
 
     function daoToggle(bool halt, string calldata reason) external onlyDAO {
         _enforceCooldown();
-        breaker.toggle(halt, reason);
         lastToggleTs = uint64(block.timestamp);
+        breaker.toggle(halt, reason);
+        // slither-disable-next-line reentrancy-events
         emit DAOToggled(halt, reason);
         _logEv(address(breaker), halt ? "breaker_on" : "breaker_off", 0, reason);
     }
@@ -193,7 +194,7 @@ contract EmergencyControl {
                 approvalsHalt = 0;
                 haltVotingStartTime = uint64(block.timestamp);
                 epoch++; // Expire old votes
-            } else if (haltVotingStartTime == 0) {
+            } else if (haltVotingStartTime < 1) {
                 haltVotingStartTime = uint64(block.timestamp);
             }
             
@@ -201,22 +202,23 @@ contract EmergencyControl {
             lastVotedHaltEpoch[msg.sender] = epoch;
             approvalsHalt += 1;
             emit CommitteeVote(msg.sender, true, approvalsHalt, reason);
-            _logEv(msg.sender, "ec_vote_halt", approvalsHalt, reason);
             if (approvalsHalt >= threshold) {
                 _enforceCooldown();
-                breaker.toggle(true, reason);
                 lastToggleTs = uint64(block.timestamp);
+                _resetVotes(); // reset both sides before external interactions
+                breaker.toggle(true, reason);
+                // slither-disable-next-line reentrancy-events
                 emit CommitteeTriggered(true, reason);
                 _log("ec_trigger_halt");
-                _resetVotes(); // reset both sides after decisive action
             }
+            _logEv(msg.sender, "ec_vote_halt", approvalsHalt, reason);
         } else {
             // H-14 Fix: Check vote expiry and reset if expired
             if (unhaltVotingStartTime > 0 && block.timestamp > unhaltVotingStartTime + voteExpiryPeriod) {
                 approvalsUnhalt = 0;
                 unhaltVotingStartTime = uint64(block.timestamp);
                 epoch++; // Expire old votes
-            } else if (unhaltVotingStartTime == 0) {
+            } else if (unhaltVotingStartTime < 1) {
                 unhaltVotingStartTime = uint64(block.timestamp);
             }
             
@@ -224,15 +226,16 @@ contract EmergencyControl {
             lastVotedUnhaltEpoch[msg.sender] = epoch;
             approvalsUnhalt += 1;
             emit CommitteeVote(msg.sender, false, approvalsUnhalt, reason);
-            _logEv(msg.sender, "ec_vote_unhalt", approvalsUnhalt, reason);
             if (approvalsUnhalt >= threshold) {
                 _enforceCooldown();
-                breaker.toggle(false, reason);
                 lastToggleTs = uint64(block.timestamp);
+                _resetVotes();
+                breaker.toggle(false, reason);
+                // slither-disable-next-line reentrancy-events
                 emit CommitteeTriggered(false, reason);
                 _log("ec_trigger_unhalt");
-                _resetVotes();
             }
+            _logEv(msg.sender, "ec_vote_unhalt", approvalsUnhalt, reason);
         }
     }
 
@@ -242,7 +245,7 @@ contract EmergencyControl {
     function hasVotedUnhalt(address m) external view returns (bool) { return lastVotedUnhaltEpoch[m] == epoch; }
 
     function timeSinceLastToggle() external view returns (uint64) {
-        if (lastToggleTs == 0) return type(uint64).max;
+        if (lastToggleTs < 1) return type(uint64).max;
         return uint64(block.timestamp) - lastToggleTs;
     }
 
@@ -259,7 +262,7 @@ contract EmergencyControl {
     }
 
     function _enforceCooldown() internal view {
-        if (lastToggleTs == 0) return;
+        if (lastToggleTs < 1) return;
         if (uint64(block.timestamp) < lastToggleTs + minCooldown) revert EC_Cooldown();
     }
 

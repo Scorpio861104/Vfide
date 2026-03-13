@@ -9,7 +9,11 @@ import { Address, parseEther } from 'viem';
 const mockContractRead = jest.fn();
 const mockContractWrite = jest.fn();
 
-jest.mock('viem', () => ({ ...jest.requireActual('viem'), createPublicClient: jest.fn(), createWalletClient: jest.fn() }));
+jest.mock('viem', () => ({
+  ...jest.requireActual('viem'),
+  createPublicClient: jest.fn(),
+  createWalletClient: jest.fn(),
+}));
 
 describe('CouncilElection Contract', () => {
   let owner: Address, user1: Address, user2: Address;
@@ -71,17 +75,24 @@ describe('CouncilElection Contract', () => {
 
     it('should get current council info', async () => {
       mockContractRead.mockResolvedValueOnce({ member: user1, score: 800 });
-      expect(await mockContractRead({ functionName: 'currentCouncil', args: [0] })).toEqual({ member: user1, score: 800 });
+      expect(await mockContractRead({ functionName: 'currentCouncil', args: [0] })).toEqual({
+        member: user1,
+        score: 800,
+      });
     });
 
     it('should get consecutive terms served', async () => {
       mockContractRead.mockResolvedValueOnce(2);
-      expect(await mockContractRead({ functionName: 'consecutiveTermsServed', args: [user1] })).toBe(2);
+      expect(
+        await mockContractRead({ functionName: 'consecutiveTermsServed', args: [user1] })
+      ).toBe(2);
     });
 
     it('should check if can serve next term', async () => {
       mockContractRead.mockResolvedValueOnce(true);
-      expect(await mockContractRead({ functionName: 'canServeNextTerm', args: [user1] })).toBe(true);
+      expect(await mockContractRead({ functionName: 'canServeNextTerm', args: [user1] })).toBe(
+        true
+      );
     });
   });
 
@@ -110,7 +121,10 @@ describe('CouncilElection Contract', () => {
 
     it('should get election status', async () => {
       mockContractRead.mockResolvedValueOnce({ active: true, endTime: 123456 });
-      expect(await mockContractRead({ functionName: 'getElectionStatus' })).toEqual({ active: true, endTime: 123456 });
+      expect(await mockContractRead({ functionName: 'getElectionStatus' })).toEqual({
+        active: true,
+        endTime: 123456,
+      });
     });
 
     it('should get last term end date', async () => {
@@ -121,7 +135,9 @@ describe('CouncilElection Contract', () => {
 
     it('should reject refresh before interval', async () => {
       mockContractWrite.mockRejectedValueOnce(new Error('RefreshTooEarly'));
-      await expect(mockContractWrite({ functionName: 'refreshCouncil' })).rejects.toThrow('RefreshTooEarly');
+      await expect(mockContractWrite({ functionName: 'refreshCouncil' })).rejects.toThrow(
+        'RefreshTooEarly'
+      );
     });
   });
 
@@ -140,12 +156,16 @@ describe('CouncilElection Contract', () => {
   describe('Edge Cases', () => {
     it('should handle invalid member index', async () => {
       mockContractRead.mockRejectedValueOnce(new Error('InvalidIndex'));
-      await expect(mockContractRead({ functionName: 'getCouncilMember', args: [999] })).rejects.toThrow('InvalidIndex');
+      await expect(
+        mockContractRead({ functionName: 'getCouncilMember', args: [999] })
+      ).rejects.toThrow('InvalidIndex');
     });
 
     it('should handle max terms reached', async () => {
       mockContractRead.mockResolvedValueOnce(false);
-      expect(await mockContractRead({ functionName: 'canServeNextTerm', args: [user1] })).toBe(false);
+      expect(await mockContractRead({ functionName: 'canServeNextTerm', args: [user1] })).toBe(
+        false
+      );
     });
 
     it('should handle cooldown period active', async () => {

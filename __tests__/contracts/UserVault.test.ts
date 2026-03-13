@@ -35,7 +35,7 @@ describe('UserVault Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'deposit',
-        args: [parseEther('100')]
+        args: [parseEther('100')],
       });
 
       expect(result).toBe('0xhash');
@@ -47,7 +47,7 @@ describe('UserVault Contract', () => {
       await expect(async () => {
         await mockContractWrite({
           functionName: 'deposit',
-          args: [parseEther('100')]
+          args: [parseEther('100')],
         });
       }).rejects.toThrow('locked');
     });
@@ -58,7 +58,7 @@ describe('UserVault Contract', () => {
       await expect(async () => {
         await mockContractWrite({
           functionName: 'deposit',
-          args: [0n]
+          args: [0n],
         });
       }).rejects.toThrow('greater than zero');
     });
@@ -69,7 +69,7 @@ describe('UserVault Contract', () => {
       await expect(async () => {
         await mockContractWrite({
           functionName: 'deposit',
-          args: [parseEther('100')]
+          args: [parseEther('100')],
         });
       }).rejects.toThrow('Insufficient allowance');
     });
@@ -79,13 +79,13 @@ describe('UserVault Contract', () => {
 
       await mockContractWrite({
         functionName: 'deposit',
-        args: [parseEther('100')]
+        args: [parseEther('100')],
       });
 
       mockContractRead.mockResolvedValueOnce(parseEther('600')); // updated
 
       const balance = await mockContractRead({
-        functionName: 'getBalance'
+        functionName: 'getBalance',
       });
 
       expect(balance).toBe(parseEther('600'));
@@ -96,7 +96,7 @@ describe('UserVault Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'deposit',
-        args: [parseEther('100')]
+        args: [parseEther('100')],
       });
 
       expect(result).toBe('0xhash');
@@ -107,7 +107,7 @@ describe('UserVault Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'depositToken',
-        args: [tokenAddress, parseEther('100')]
+        args: [tokenAddress, parseEther('100')],
       });
 
       expect(result).toBe('0xhash');
@@ -116,11 +116,11 @@ describe('UserVault Contract', () => {
     it('should track deposit history', async () => {
       mockContractRead.mockResolvedValueOnce([
         { amount: parseEther('100'), timestamp: 1234567890n },
-        { amount: parseEther('200'), timestamp: 1234567900n }
+        { amount: parseEther('200'), timestamp: 1234567900n },
       ]);
 
       const history = await mockContractRead({
-        functionName: 'getDepositHistory'
+        functionName: 'getDepositHistory',
       });
 
       expect(history).toHaveLength(2);
@@ -130,7 +130,7 @@ describe('UserVault Contract', () => {
       mockContractRead.mockResolvedValueOnce(parseEther('1500'));
 
       const total = await mockContractRead({
-        functionName: 'totalDeposited'
+        functionName: 'totalDeposited',
       });
 
       expect(total).toBe(parseEther('1500'));
@@ -141,7 +141,7 @@ describe('UserVault Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'depositFor',
-        args: [owner, parseEther('100')]
+        args: [owner, parseEther('100')],
       });
 
       expect(result).toBe('0xhash');
@@ -154,7 +154,7 @@ describe('UserVault Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'withdraw',
-        args: [parseEther('100')]
+        args: [parseEther('100')],
       });
 
       expect(result).toBe('0xhash');
@@ -166,7 +166,7 @@ describe('UserVault Contract', () => {
       await expect(async () => {
         await mockContractWrite({
           functionName: 'withdraw',
-          args: [parseEther('100')]
+          args: [parseEther('100')],
         });
       }).rejects.toThrow('locked');
     });
@@ -177,7 +177,7 @@ describe('UserVault Contract', () => {
       await expect(async () => {
         await mockContractWrite({
           functionName: 'withdraw',
-          args: [parseEther('100')]
+          args: [parseEther('100')],
         });
       }).rejects.toThrow('Insufficient balance');
     });
@@ -188,7 +188,7 @@ describe('UserVault Contract', () => {
       await expect(async () => {
         await mockContractWrite({
           functionName: 'withdraw',
-          args: [0n]
+          args: [0n],
         });
       }).rejects.toThrow('greater than zero');
     });
@@ -198,13 +198,13 @@ describe('UserVault Contract', () => {
 
       await mockContractWrite({
         functionName: 'withdraw',
-        args: [parseEther('100')]
+        args: [parseEther('100')],
       });
 
       mockContractRead.mockResolvedValueOnce(parseEther('400')); // updated
 
       const balance = await mockContractRead({
-        functionName: 'getBalance'
+        functionName: 'getBalance',
       });
 
       expect(balance).toBe(parseEther('400'));
@@ -216,7 +216,7 @@ describe('UserVault Contract', () => {
       await expect(async () => {
         await mockContractWrite({
           functionName: 'withdraw',
-          args: [parseEther('100')]
+          args: [parseEther('100')],
         });
       }).rejects.toThrow('Not vault owner');
     });
@@ -226,7 +226,7 @@ describe('UserVault Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'withdraw',
-        args: [parseEther('100')]
+        args: [parseEther('100')],
       });
 
       expect(result).toBe('0xhash');
@@ -237,7 +237,7 @@ describe('UserVault Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'withdrawToken',
-        args: [tokenAddress, parseEther('100')]
+        args: [tokenAddress, parseEther('100')],
       });
 
       expect(result).toBe('0xhash');
@@ -246,11 +246,11 @@ describe('UserVault Contract', () => {
     it('should track withdrawal history', async () => {
       mockContractRead.mockResolvedValueOnce([
         { amount: parseEther('50'), timestamp: 1234567890n },
-        { amount: parseEther('30'), timestamp: 1234567900n }
+        { amount: parseEther('30'), timestamp: 1234567900n },
       ]);
 
       const history = await mockContractRead({
-        functionName: 'getWithdrawalHistory'
+        functionName: 'getWithdrawalHistory',
       });
 
       expect(history).toHaveLength(2);
@@ -261,7 +261,7 @@ describe('UserVault Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'withdrawTo',
-        args: [user1, parseEther('100')]
+        args: [user1, parseEther('100')],
       });
 
       expect(result).toBe('0xhash');
@@ -273,7 +273,7 @@ describe('UserVault Contract', () => {
       await expect(async () => {
         await mockContractWrite({
           functionName: 'withdraw',
-          args: [parseEther('200')]
+          args: [parseEther('200')],
         });
       }).rejects.toThrow('Daily limit exceeded');
     });
@@ -284,7 +284,7 @@ describe('UserVault Contract', () => {
       mockContractRead.mockResolvedValueOnce(parseEther('1000'));
 
       const balance = await mockContractRead({
-        functionName: 'getBalance'
+        functionName: 'getBalance',
       });
 
       expect(balance).toBe(parseEther('1000'));
@@ -295,7 +295,7 @@ describe('UserVault Contract', () => {
 
       const balance = await mockContractRead({
         functionName: 'getTokenBalance',
-        args: [tokenAddress]
+        args: [tokenAddress],
       });
 
       expect(balance).toBe(parseEther('500'));
@@ -304,11 +304,11 @@ describe('UserVault Contract', () => {
     it('should get all token balances', async () => {
       mockContractRead.mockResolvedValueOnce([
         { token: tokenAddress, balance: parseEther('500') },
-        { token: user1, balance: parseEther('300') }
+        { token: user1, balance: parseEther('300') },
       ]);
 
       const balances = await mockContractRead({
-        functionName: 'getAllBalances'
+        functionName: 'getAllBalances',
       });
 
       expect(balances).toHaveLength(2);
@@ -318,7 +318,7 @@ describe('UserVault Contract', () => {
       mockContractRead.mockResolvedValueOnce(0n);
 
       const balance = await mockContractRead({
-        functionName: 'getBalance'
+        functionName: 'getBalance',
       });
 
       expect(balance).toBe(0n);
@@ -328,7 +328,7 @@ describe('UserVault Contract', () => {
       mockContractRead.mockResolvedValueOnce(parseEther('800')); // available
 
       const available = await mockContractRead({
-        functionName: 'getAvailableBalance'
+        functionName: 'getAvailableBalance',
       });
 
       expect(available).toBe(parseEther('800'));
@@ -338,7 +338,7 @@ describe('UserVault Contract', () => {
       mockContractRead.mockResolvedValueOnce(parseEther('200'));
 
       const locked = await mockContractRead({
-        functionName: 'getLockedBalance'
+        functionName: 'getLockedBalance',
       });
 
       expect(locked).toBe(parseEther('200'));
@@ -349,12 +349,12 @@ describe('UserVault Contract', () => {
         startBalance: parseEther('1000'),
         endBalance: parseEther('1500'),
         change: parseEther('500'),
-        percentChange: 50n
+        percentChange: 50n,
       });
 
       const change = await mockContractRead({
         functionName: 'getBalanceChange',
-        args: [1234567890n, 1234667890n]
+        args: [1234567890n, 1234667890n],
       });
 
       expect(change.change).toBe(parseEther('500'));
@@ -364,7 +364,7 @@ describe('UserVault Contract', () => {
       mockContractRead.mockResolvedValueOnce(parseEther('300')); // net positive
 
       const net = await mockContractRead({
-        functionName: 'getNetBalance'
+        functionName: 'getNetBalance',
       });
 
       expect(net).toBe(parseEther('300'));
@@ -377,7 +377,7 @@ describe('UserVault Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'lock',
-        args: []
+        args: [],
       });
 
       expect(result).toBe('0xhash');
@@ -388,7 +388,7 @@ describe('UserVault Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'unlock',
-        args: []
+        args: [],
       });
 
       expect(result).toBe('0xhash');
@@ -398,7 +398,7 @@ describe('UserVault Contract', () => {
       mockContractRead.mockResolvedValueOnce(true);
 
       const isLocked = await mockContractRead({
-        functionName: 'isLocked'
+        functionName: 'isLocked',
       });
 
       expect(isLocked).toBe(true);
@@ -410,7 +410,7 @@ describe('UserVault Contract', () => {
       await expect(async () => {
         await mockContractWrite({
           functionName: 'lock',
-          args: []
+          args: [],
         });
       }).rejects.toThrow('Not vault owner');
     });
@@ -420,7 +420,7 @@ describe('UserVault Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'lock',
-        args: []
+        args: [],
       });
 
       expect(result).toBe('0xhash');
@@ -431,7 +431,7 @@ describe('UserVault Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'unlock',
-        args: []
+        args: [],
       });
 
       expect(result).toBe('0xhash');
@@ -442,7 +442,7 @@ describe('UserVault Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'lockFor',
-        args: [86400n] // 24 hours
+        args: [86400n], // 24 hours
       });
 
       expect(result).toBe('0xhash');
@@ -452,7 +452,7 @@ describe('UserVault Contract', () => {
       mockContractRead.mockResolvedValueOnce(1234567890n);
 
       const expiry = await mockContractRead({
-        functionName: 'getLockExpiry'
+        functionName: 'getLockExpiry',
       });
 
       expect(expiry).toBe(1234567890n);
@@ -464,7 +464,7 @@ describe('UserVault Contract', () => {
       await expect(async () => {
         await mockContractWrite({
           functionName: 'unlock',
-          args: []
+          args: [],
         });
       }).rejects.toThrow('not expired');
     });
@@ -474,7 +474,7 @@ describe('UserVault Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'lockAmount',
-        args: [parseEther('500')]
+        args: [parseEther('500')],
       });
 
       expect(result).toBe('0xhash');
@@ -487,7 +487,7 @@ describe('UserVault Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'initiateRecovery',
-        args: []
+        args: [],
       });
 
       expect(result).toBe('0xhash');
@@ -499,7 +499,7 @@ describe('UserVault Contract', () => {
       await expect(async () => {
         await mockContractWrite({
           functionName: 'initiateRecovery',
-          args: []
+          args: [],
         });
       }).rejects.toThrow('Not recovery address');
     });
@@ -509,7 +509,7 @@ describe('UserVault Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'setRecoveryAddress',
-        args: [recoveryAddress]
+        args: [recoveryAddress],
       });
 
       expect(result).toBe('0xhash');
@@ -519,7 +519,7 @@ describe('UserVault Contract', () => {
       mockContractRead.mockResolvedValueOnce(recoveryAddress);
 
       const addr = await mockContractRead({
-        functionName: 'getRecoveryAddress'
+        functionName: 'getRecoveryAddress',
       });
 
       expect(addr).toBe(recoveryAddress);
@@ -531,7 +531,7 @@ describe('UserVault Contract', () => {
       await expect(async () => {
         await mockContractWrite({
           functionName: 'executeRecovery',
-          args: []
+          args: [],
         });
       }).rejects.toThrow('delay not passed');
     });
@@ -541,7 +541,7 @@ describe('UserVault Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'cancelRecovery',
-        args: []
+        args: [],
       });
 
       expect(result).toBe('0xhash');
@@ -552,7 +552,7 @@ describe('UserVault Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'executeRecovery',
-        args: []
+        args: [],
       });
 
       expect(result).toBe('0xhash');
@@ -563,13 +563,13 @@ describe('UserVault Contract', () => {
 
       await mockContractWrite({
         functionName: 'executeRecovery',
-        args: []
+        args: [],
       });
 
       mockContractRead.mockResolvedValueOnce(recoveryAddress);
 
       const newOwner = await mockContractRead({
-        functionName: 'owner'
+        functionName: 'owner',
       });
 
       expect(newOwner).toBe(recoveryAddress);
@@ -579,11 +579,11 @@ describe('UserVault Contract', () => {
       mockContractRead.mockResolvedValueOnce({
         inProgress: true,
         initiatedAt: 1234567890n,
-        eta: 1234654290n
+        eta: 1234654290n,
       });
 
       const status = await mockContractRead({
-        functionName: 'getRecoveryStatus'
+        functionName: 'getRecoveryStatus',
       });
 
       expect(status.inProgress).toBe(true);
@@ -594,7 +594,7 @@ describe('UserVault Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'initiateRecovery',
-        args: []
+        args: [],
       });
 
       expect(result).toBe('0xhash');
@@ -605,7 +605,7 @@ describe('UserVault Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'executeRecovery',
-        args: []
+        args: [],
       });
 
       expect(result).toBe('0xhash');
@@ -613,6 +613,17 @@ describe('UserVault Contract', () => {
   });
 
   describe('Edge Cases and Integration', () => {
+    it('should block initialize takeover attempts after deployment', async () => {
+      mockContractWrite.mockRejectedValueOnce(new Error('UV_AlreadyInitialized'));
+
+      await expect(
+        mockContractWrite({
+          functionName: 'initialize',
+          args: [vaultAddress, tokenAddress, user1, user2, recoveryAddress],
+        })
+      ).rejects.toThrow('UV_AlreadyInitialized');
+    });
+
     it('should reject duplicate guardian inheritance-cancel vote', async () => {
       mockContractWrite.mockRejectedValueOnce(new Error('UV_AlreadyVoted'));
 
@@ -629,11 +640,27 @@ describe('UserVault Contract', () => {
       ).rejects.toThrow('UV:immature');
     });
 
+    it('should block inheritance request while recovery is active', async () => {
+      mockContractWrite.mockRejectedValueOnce(new Error('UV_RecoveryActive'));
+
+      await expect(
+        mockContractWrite({ functionName: 'requestInheritance', args: [] })
+      ).rejects.toThrow('UV_RecoveryActive');
+    });
+
+    it('should block recovery request while inheritance is active', async () => {
+      mockContractWrite.mockRejectedValueOnce(new Error('UV_InheritanceActive'));
+
+      await expect(
+        mockContractWrite({ functionName: 'requestRecovery', args: [user1] })
+      ).rejects.toThrow('UV_InheritanceActive');
+    });
+
     it('should return vault owner', async () => {
       mockContractRead.mockResolvedValueOnce(owner);
 
       const vaultOwner = await mockContractRead({
-        functionName: 'owner'
+        functionName: 'owner',
       });
 
       expect(vaultOwner).toBe(owner);
@@ -646,7 +673,7 @@ describe('UserVault Contract', () => {
       await expect(async () => {
         await mockContractWrite({
           functionName: 'withdrawTo',
-          args: [zeroAddress, parseEther('100')]
+          args: [zeroAddress, parseEther('100')],
         });
       }).rejects.toThrow('Invalid address');
     });
@@ -655,7 +682,7 @@ describe('UserVault Contract', () => {
       mockContractRead.mockResolvedValueOnce(1234567890n);
 
       const created = await mockContractRead({
-        functionName: 'createdAt'
+        functionName: 'createdAt',
       });
 
       expect(created).toBe(1234567890n);
@@ -665,7 +692,7 @@ describe('UserVault Contract', () => {
       mockContractRead.mockResolvedValueOnce(true);
 
       const isActive = await mockContractRead({
-        functionName: 'isActive'
+        functionName: 'isActive',
       });
 
       expect(isActive).toBe(true);
@@ -675,7 +702,7 @@ describe('UserVault Contract', () => {
       mockContractRead.mockResolvedValueOnce(25n);
 
       const count = await mockContractRead({
-        functionName: 'getTransactionCount'
+        functionName: 'getTransactionCount',
       });
 
       expect(count).toBe(25n);
@@ -684,11 +711,11 @@ describe('UserVault Contract', () => {
     it('should get transaction history', async () => {
       mockContractRead.mockResolvedValueOnce([
         { type: 0, amount: parseEther('100'), timestamp: 1234567890n },
-        { type: 1, amount: parseEther('50'), timestamp: 1234567900n }
+        { type: 1, amount: parseEther('50'), timestamp: 1234567900n },
       ]);
 
       const history = await mockContractRead({
-        functionName: 'getTransactionHistory'
+        functionName: 'getTransactionHistory',
       });
 
       expect(history).toHaveLength(2);
@@ -699,7 +726,7 @@ describe('UserVault Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'emergencyWithdraw',
-        args: []
+        args: [],
       });
 
       expect(result).toBe('0xhash');
@@ -711,11 +738,11 @@ describe('UserVault Contract', () => {
         createdAt: 1234567890n,
         isLocked: false,
         isActive: true,
-        balance: parseEther('1000')
+        balance: parseEther('1000'),
       });
 
       const metadata = await mockContractRead({
-        functionName: 'getMetadata'
+        functionName: 'getMetadata',
       });
 
       expect(metadata.owner).toBe(owner);

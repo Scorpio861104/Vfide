@@ -9,7 +9,11 @@ import { Address, parseEther } from 'viem';
 const mockContractRead = jest.fn();
 const mockContractWrite = jest.fn();
 
-jest.mock('viem', () => ({ ...jest.requireActual('viem'), createPublicClient: jest.fn(), createWalletClient: jest.fn() }));
+jest.mock('viem', () => ({
+  ...jest.requireActual('viem'),
+  createPublicClient: jest.fn(),
+  createWalletClient: jest.fn(),
+}));
 
 describe('CouncilSalary Contract', () => {
   let owner: Address, user1: Address, keeper: Address;
@@ -29,12 +33,16 @@ describe('CouncilSalary Contract', () => {
 
     it('should reject distribution before pay interval', async () => {
       mockContractWrite.mockRejectedValueOnce(new Error('TooEarly'));
-      await expect(mockContractWrite({ functionName: 'distributeSalary' })).rejects.toThrow('TooEarly');
+      await expect(mockContractWrite({ functionName: 'distributeSalary' })).rejects.toThrow(
+        'TooEarly'
+      );
     });
 
     it('should reject distribution from non-keeper', async () => {
       mockContractWrite.mockRejectedValueOnce(new Error('OnlyKeeper'));
-      await expect(mockContractWrite({ functionName: 'distributeSalary' })).rejects.toThrow('OnlyKeeper');
+      await expect(mockContractWrite({ functionName: 'distributeSalary' })).rejects.toThrow(
+        'OnlyKeeper'
+      );
     });
 
     it('should get last pay time', async () => {
@@ -67,14 +75,18 @@ describe('CouncilSalary Contract', () => {
 
     it('should reject starting new term too early', async () => {
       mockContractWrite.mockRejectedValueOnce(new Error('TermNotReady'));
-      await expect(mockContractWrite({ functionName: 'startNewTerm' })).rejects.toThrow('TermNotReady');
+      await expect(mockContractWrite({ functionName: 'startNewTerm' })).rejects.toThrow(
+        'TermNotReady'
+      );
     });
   });
 
   describe('Voting System', () => {
     it('should vote to remove member', async () => {
       mockContractWrite.mockResolvedValueOnce('0xhash');
-      expect(await mockContractWrite({ functionName: 'voteToRemove', args: [user1] })).toBe('0xhash');
+      expect(await mockContractWrite({ functionName: 'voteToRemove', args: [user1] })).toBe(
+        '0xhash'
+      );
     });
 
     it('should get removal votes in term', async () => {
@@ -84,17 +96,23 @@ describe('CouncilSalary Contract', () => {
 
     it('should check if has voted to remove in term', async () => {
       mockContractRead.mockResolvedValueOnce(true);
-      expect(await mockContractRead({ functionName: 'hasVotedToRemoveInTerm', args: [user1, keeper] })).toBe(true);
+      expect(
+        await mockContractRead({ functionName: 'hasVotedToRemoveInTerm', args: [user1, keeper] })
+      ).toBe(true);
     });
 
     it('should reject duplicate vote', async () => {
       mockContractWrite.mockRejectedValueOnce(new Error('AlreadyVoted'));
-      await expect(mockContractWrite({ functionName: 'voteToRemove', args: [user1] })).rejects.toThrow('AlreadyVoted');
+      await expect(
+        mockContractWrite({ functionName: 'voteToRemove', args: [user1] })
+      ).rejects.toThrow('AlreadyVoted');
     });
 
     it('should reject voting for self', async () => {
       mockContractWrite.mockRejectedValueOnce(new Error('CannotVoteSelf'));
-      await expect(mockContractWrite({ functionName: 'voteToRemove', args: [user1] })).rejects.toThrow('CannotVoteSelf');
+      await expect(
+        mockContractWrite({ functionName: 'voteToRemove', args: [user1] })
+      ).rejects.toThrow('CannotVoteSelf');
     });
   });
 
@@ -106,7 +124,9 @@ describe('CouncilSalary Contract', () => {
 
     it('should reject payment to blacklisted', async () => {
       mockContractWrite.mockRejectedValueOnce(new Error('Blacklisted'));
-      await expect(mockContractWrite({ functionName: 'distributeSalary' })).rejects.toThrow('Blacklisted');
+      await expect(mockContractWrite({ functionName: 'distributeSalary' })).rejects.toThrow(
+        'Blacklisted'
+      );
     });
   });
 
@@ -118,7 +138,9 @@ describe('CouncilSalary Contract', () => {
 
     it('should reject payment below min score', async () => {
       mockContractWrite.mockRejectedValueOnce(new Error('ScoreTooLow'));
-      await expect(mockContractWrite({ functionName: 'distributeSalary' })).rejects.toThrow('ScoreTooLow');
+      await expect(mockContractWrite({ functionName: 'distributeSalary' })).rejects.toThrow(
+        'ScoreTooLow'
+      );
     });
   });
 
@@ -130,12 +152,16 @@ describe('CouncilSalary Contract', () => {
 
     it('should set keeper', async () => {
       mockContractWrite.mockResolvedValueOnce('0xhash');
-      expect(await mockContractWrite({ functionName: 'setKeeper', args: [keeper, true] })).toBe('0xhash');
+      expect(await mockContractWrite({ functionName: 'setKeeper', args: [keeper, true] })).toBe(
+        '0xhash'
+      );
     });
 
     it('should reject non-owner setting keeper', async () => {
       mockContractWrite.mockRejectedValueOnce(new Error('Ownable: caller is not the owner'));
-      await expect(mockContractWrite({ functionName: 'setKeeper', args: [keeper, true] })).rejects.toThrow('Ownable: caller is not the owner');
+      await expect(
+        mockContractWrite({ functionName: 'setKeeper', args: [keeper, true] })
+      ).rejects.toThrow('Ownable: caller is not the owner');
     });
   });
 
@@ -169,17 +195,26 @@ describe('CouncilSalary Contract', () => {
   describe('Edge Cases', () => {
     it('should handle empty council', async () => {
       mockContractWrite.mockRejectedValueOnce(new Error('NoCouncilMembers'));
-      await expect(mockContractWrite({ functionName: 'distributeSalary' })).rejects.toThrow('NoCouncilMembers');
+      await expect(mockContractWrite({ functionName: 'distributeSalary' })).rejects.toThrow(
+        'NoCouncilMembers'
+      );
     });
 
     it('should handle insufficient balance', async () => {
       mockContractWrite.mockRejectedValueOnce(new Error('InsufficientBalance'));
-      await expect(mockContractWrite({ functionName: 'distributeSalary' })).rejects.toThrow('InsufficientBalance');
+      await expect(mockContractWrite({ functionName: 'distributeSalary' })).rejects.toThrow(
+        'InsufficientBalance'
+      );
     });
 
     it('should handle zero address keeper', async () => {
       mockContractWrite.mockRejectedValueOnce(new Error('InvalidAddress'));
-      await expect(mockContractWrite({ functionName: 'setKeeper', args: ['0x0000000000000000000000000000000000000000' as Address, true] })).rejects.toThrow('InvalidAddress');
+      await expect(
+        mockContractWrite({
+          functionName: 'setKeeper',
+          args: ['0x0000000000000000000000000000000000000000' as Address, true],
+        })
+      ).rejects.toThrow('InvalidAddress');
     });
   });
 });

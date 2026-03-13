@@ -112,7 +112,7 @@ contract CouncilManager is ReentrancyGuard {
         address _councilSalary,
         address _token
     ) external onlyDAO {
-        bool updated;
+        bool updated = false;
         if (_election != address(0)) election = ICouncilElection(_election);
         if (_election != address(0)) updated = true;
         if (_seer != address(0)) seer = ISeer(_seer);
@@ -179,23 +179,25 @@ contract CouncilManager is ReentrancyGuard {
                 daysBelow700[member]++;
                 lastCheckTime[member] = block.timestamp;
 
+                // slither-disable-next-line reentrancy-events
                 emit MemberGracePeriod(member, daysBelow700[member], score);
 
                 // Auto-remove after 7 days
                 if (daysBelow700[member] >= 7) {
+                    daysBelow700[member] = 0;
+
                     // H-2 FIX: Use try/catch to handle potential removal failures
+                    // slither-disable-next-line reentrancy-no-eth
                     try election.removeCouncilMember(
                         member,
                         "ProofScore below 7000 for 7+ days (auto-removal)"
                     ) {
                         membersRemoved++;
+                        // slither-disable-next-line reentrancy-events
                         emit MemberAutoRemoved(member, 7, score);
                     } catch {
                         // Member may have already been removed or other issue
                     }
-                    
-                    // Reset tracking regardless
-                    daysBelow700[member] = 0;
                 }
             } else {
                 // Score recovered - reset counter
@@ -206,6 +208,7 @@ contract CouncilManager is ReentrancyGuard {
             }
         }
 
+        // slither-disable-next-line reentrancy-events
         emit ScoreCheckPerformed(membersChecked, membersRemoved, block.timestamp);
     }
 
@@ -225,8 +228,9 @@ contract CouncilManager is ReentrancyGuard {
             emit MemberGracePeriod(member, daysBelow700[member], score);
             
             if (daysBelow700[member] >= 7) {
-                election.removeCouncilMember(member, "Manual check: score below 700 for 7+ days");
                 daysBelow700[member] = 0;
+                election.removeCouncilMember(member, "Manual check: score below 700 for 7+ days");
+                // slither-disable-next-line reentrancy-events
                 emit MemberAutoRemoved(member, 7, score);
             }
         } else {
@@ -268,7 +272,7 @@ contract CouncilManager is ReentrancyGuard {
         // Priority 1: Transfer operations funding (remains in vault for DAO to spend)
         // Operations funds stay in EcosystemVault for DAO to payExpense()
         // We just mark the allocation (vault handles actual payments)
-        
+
         // Priority 2: Transfer council payment (employment compensation)
         if (councilAmount > 0) {
             // Transfer from EcosystemVault to CouncilSalary contract
@@ -286,16 +290,17 @@ contract CouncilManager is ReentrancyGuard {
             
             if (success) {
                 // CouncilSalary.distributeSalary() will be called by keeper or DAO separately
+                lastPaymentTime = block.timestamp;
                 emit PaymentDistributed(opsAmount, councilAmount, block.timestamp);
             } else {
                 // If council transfer fails, ops still gets 100%
+                // Keep interval open so keeper can retry without waiting a full cycle.
                 emit PaymentDistributed(opsAmount, 0, block.timestamp);
             }
         } else {
+            lastPaymentTime = block.timestamp;
             emit PaymentDistributed(opsAmount, 0, block.timestamp);
         }
-
-        lastPaymentTime = block.timestamp;
     }
 
     /**
@@ -318,13 +323,15 @@ contract CouncilManager is ReentrancyGuard {
                     councilAmount
                 )
             );
-            
+
+            // slither-disable-next-line reentrancy-events
             emit PaymentDistributed(
                 opsAmount,
                 success ? councilAmount : 0,
                 block.timestamp
             );
         } else {
+            // slither-disable-next-line reentrancy-events
             emit PaymentDistributed(opsAmount, 0, block.timestamp);
         }
 

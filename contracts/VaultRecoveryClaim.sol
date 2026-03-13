@@ -463,6 +463,7 @@ contract VaultRecoveryClaim is Ownable, ReentrancyGuard {
         // First, approve the recovery via VaultInfrastructure
         // This contract must be set as a recovery approver using:
         // VaultInfrastructure.setRecoveryApprover(address(this), true)
+        // slither-disable-next-line reentrancy-no-eth
         vaultHub.approveForceRecovery(claim.vault, claim.claimant);
         
         // Check if approval threshold is met and timelock has started
@@ -503,6 +504,7 @@ contract VaultRecoveryClaim is Ownable, ReentrancyGuard {
         // Call VaultInfrastructure to finalize
         // Note: This requires this contract or caller to have DAO role
         // If this fails, DAO must manually call finalizeForceRecovery
+        // slither-disable-next-line reentrancy-no-eth
         try vaultHub.finalizeForceRecovery(claim.vault) {
             claim.status = ClaimStatus.Executed;
             emit ClaimExecuted(claimId, claim.vault, claim.claimant, claim.originalOwner);

@@ -1,37 +1,37 @@
-import { ContractFactory, JsonRpcProvider } from "ethers";
-import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
+import { ContractFactory, JsonRpcProvider } from 'ethers';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 
 function loadArtifact(relativePath: string) {
   const filePath = resolve(process.cwd(), relativePath);
-  return JSON.parse(readFileSync(filePath, "utf8")) as {
+  return JSON.parse(readFileSync(filePath, 'utf8')) as {
     abi: any[];
     bytecode: string;
   };
 }
 
 async function increaseTime(provider: JsonRpcProvider, seconds: number) {
-  await provider.send("evm_increaseTime", [seconds]);
-  await provider.send("evm_mine", []);
+  await provider.send('evm_increaseTime', [seconds]);
+  await provider.send('evm_mine', []);
 }
 
 async function expectRevert(action: () => Promise<unknown>) {
   try {
     const tx = await action();
-    if (typeof tx === "object" && tx !== null && "wait" in tx) {
+    if (typeof tx === 'object' && tx !== null && 'wait' in tx) {
       await (tx as { wait: () => Promise<unknown> }).wait();
     }
-    throw new Error("Expected transaction to revert but it succeeded");
+    throw new Error('Expected transaction to revert but it succeeded');
   } catch (error) {
     const text = String(error);
-    if (text.includes("Expected transaction to revert but it succeeded")) {
+    if (text.includes('Expected transaction to revert but it succeeded')) {
       throw error;
     }
   }
 }
 
 async function main() {
-  const rpcUrl = process.env.RPC_URL ?? "http://127.0.0.1:8545";
+  const rpcUrl = process.env.RPC_URL ?? 'http://127.0.0.1:8545';
   const provider = new JsonRpcProvider(rpcUrl);
 
   const owner = await provider.getSigner(0);
@@ -45,39 +45,39 @@ async function main() {
   const guardian2Address = await guardian2.getAddress();
 
   const vfideArtifact = loadArtifact(
-    "artifacts/contracts/mocks/NextOfKinInheritanceVerifierMocks.sol/MockVFIDEForInheritance.json"
+    'artifacts/contracts/mocks/NextOfKinInheritanceVerifierMocks.sol/MockVFIDEForInheritance.json'
   );
   const hubArtifact = loadArtifact(
-    "artifacts/contracts/mocks/NextOfKinInheritanceVerifierMocks.sol/MockVaultHubForInheritance.json"
+    'artifacts/contracts/mocks/NextOfKinInheritanceVerifierMocks.sol/MockVaultHubForInheritance.json'
   );
-  const vaultArtifact = loadArtifact("artifacts/contracts/UserVault.sol/UserVault.json");
+  const vaultArtifact = loadArtifact('artifacts/contracts/UserVault.sol/UserVault.json');
 
   const vfideFactory = new ContractFactory(vfideArtifact.abi as any, vfideArtifact.bytecode, owner);
-  const vfide = await vfideFactory.deploy() as any;
+  const vfide = (await vfideFactory.deploy()) as any;
   await vfide.waitForDeployment();
 
   const hubFactory = new ContractFactory(hubArtifact.abi as any, hubArtifact.bytecode, owner);
-  const hub = await hubFactory.deploy() as any;
+  const hub = (await hubFactory.deploy()) as any;
   await hub.waitForDeployment();
 
   const vaultFactory = new ContractFactory(vaultArtifact.abi as any, vaultArtifact.bytecode, owner);
-  const vault = await vaultFactory.deploy(
+  const vault = (await vaultFactory.deploy(
     await hub.getAddress(),
     await vfide.getAddress(),
     ownerAddress,
-    "0x0000000000000000000000000000000000000000",
-    "0x0000000000000000000000000000000000000000"
-  ) as any;
+    '0x0000000000000000000000000000000000000000',
+    '0x0000000000000000000000000000000000000000'
+  )) as any;
   await vault.waitForDeployment();
 
   // Simulate that Next of Kin already has an existing vault in hub.
-  const kinVault = await vaultFactory.deploy(
+  const kinVault = (await vaultFactory.deploy(
     await hub.getAddress(),
     await vfide.getAddress(),
     kinAddress,
-    "0x0000000000000000000000000000000000000000",
-    "0x0000000000000000000000000000000000000000"
-  ) as any;
+    '0x0000000000000000000000000000000000000000',
+    '0x0000000000000000000000000000000000000000'
+  )) as any;
   await kinVault.waitForDeployment();
   await (await hub.setVault(kinAddress, await kinVault.getAddress())).wait();
 
@@ -98,7 +98,9 @@ async function main() {
 
   // While inheritance is active, guardian set changes must be blocked.
   await expectRevert(() => vault.setGuardian(ownerAddress, true));
-  await expectRevert(async () => vault.transferVFIDE(await kinVault.getAddress(), oneToken, { gasLimit: 6_000_000 }));
+  await expectRevert(async () =>
+    vault.transferVFIDE(await kinVault.getAddress(), oneToken, { gasLimit: 6_000_000 })
+  );
 
   // Need 2 approvals because snapshot was 2 guardians.
   await (await vault.connect(guardian).approveInheritance()).wait();
@@ -116,21 +118,23 @@ async function main() {
   }
 
   // Recovery-claim lock check: owner transfers must be blocked during active recovery.
-  const vaultR = await vaultFactory.deploy(
+  const vaultR = (await vaultFactory.deploy(
     await hub.getAddress(),
     await vfide.getAddress(),
     ownerAddress,
-    "0x0000000000000000000000000000000000000000",
-    "0x0000000000000000000000000000000000000000"
-  ) as any;
+    '0x0000000000000000000000000000000000000000',
+    '0x0000000000000000000000000000000000000000'
+  )) as any;
   await vaultR.waitForDeployment();
   await (await vfide.mint(await vaultR.getAddress(), 10n * oneToken)).wait();
   await (await vaultR.setGuardian(guardianAddress, true)).wait();
   await increaseTime(provider, 7 * 24 * 60 * 60 + 1);
   await (await vaultR.connect(guardian).requestRecovery(kinAddress)).wait();
-  await expectRevert(async () => vaultR.transferVFIDE(await kinVault.getAddress(), oneToken, { gasLimit: 6_000_000 }));
+  await expectRevert(async () =>
+    vaultR.transferVFIDE(await kinVault.getAddress(), oneToken, { gasLimit: 6_000_000 })
+  );
 
-  console.log("Next of Kin inheritance checks passed");
+  console.log('Next of Kin inheritance checks passed');
 }
 
 main().catch((error) => {

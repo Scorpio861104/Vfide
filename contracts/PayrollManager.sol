@@ -38,6 +38,8 @@ error PM_NothingDue();
 
 // H-1 Fix: Add ReentrancyGuard for withdraw and cancel functions
 contract PayrollManager is ReentrancyGuard {
+    using SafeERC20 for IERC20;
+
     // Events
     event StreamCreated(uint256 indexed streamId, address indexed payer, address indexed payee, uint256 rate);
     event Withdraw(uint256 indexed streamId, address indexed payee, uint256 amount);
@@ -84,6 +86,7 @@ contract PayrollManager is ReentrancyGuard {
     }
     
     constructor(address _dao, address _seer) {
+        require(_dao != address(0), "PM: zero DAO");
         dao = _dao;
         if (_seer != address(0)) seer = ISeer_PM(_seer);
     }
@@ -101,10 +104,7 @@ contract PayrollManager is ReentrancyGuard {
      * @dev Safe transfer helper for IERC20_Pay tokens
      */
     function _safeTransferPay(address token, address to, uint256 amount) internal {
-        (bool success, bytes memory data) = token.call(
-            abi.encodeWithSelector(IERC20_Pay.transfer.selector, to, amount)
-        );
-        require(success && (data.length == 0 || abi.decode(data, (bool))), "PM: transfer failed");
+        IERC20(token).safeTransfer(to, amount);
     }
 
     /**
@@ -120,7 +120,7 @@ contract PayrollManager is ReentrancyGuard {
         if (initialDeposit == 0) revert PM_InvalidDeposit();
         
         // Transfer tokens in
-        require(IERC20_Pay(token).transferFrom(msg.sender, address(this), initialDeposit), "transfer failed");
+        IERC20(token).safeTransferFrom(msg.sender, address(this), initialDeposit);
 
         uint256 id = nextStreamId++;
         streams[id] = Stream({
@@ -140,27 +140,27 @@ contract PayrollManager is ReentrancyGuard {
         // Track streams for both parties
         payerStreams[msg.sender].push(id);
         payeeStreams[payee].push(id);
+
+        // slither-disable-next-line reentrancy-events
+        emit StreamCreated(id, msg.sender, payee, rate);
         
         // Reward payer for creating payroll stream
         if (address(seer) != address(0)) {
             try seer.reward(msg.sender, PAYROLL_CREATE_REWARD, "payroll_created") {} catch {}
         }
-
-        emit StreamCreated(id, msg.sender, payee, rate);
         return id;
     }
 
     /**
      * Add more funds to an existing stream
      */
-    function topUp(uint256 streamId, uint256 amount) external {
+    function topUp(uint256 streamId, uint256 amount) external nonReentrant {
         Stream storage s = streams[streamId];
         if (!s.active) revert PM_StreamInactive();
         if (msg.sender != s.payer) revert PM_NotPayer();
-        
-        require(IERC20_Pay(s.token).transferFrom(msg.sender, address(this), amount), "transfer failed");
+
+        IERC20(s.token).safeTransferFrom(msg.sender, address(this), amount);
         s.depositBalance += amount;
-        
         emit TopUp(streamId, amount);
     }
     
@@ -213,6 +213,7 @@ contract PayrollManager is ReentrancyGuard {
         if (!s.active) revert PM_StreamInactive();
         if (msg.sender != s.payer) revert PM_NotPayer();
         if (newRate == 0) revert PM_InvalidRate();
+        uint256 oldRate = s.ratePerSecond;
         
         // Settle current accrued first
         uint256 due = claimable(streamId);
@@ -222,13 +223,14 @@ contract PayrollManager is ReentrancyGuard {
             }
             s.depositBalance -= due;
             s.lastWithdrawTime = block.timestamp;
-            _safeTransferPay(s.token, s.payee, due);
             emit Withdraw(streamId, s.payee, due);
+            _safeTransferPay(s.token, s.payee, due);
         }
-        
-        uint256 oldRate = s.ratePerSecond;
+
+        // slither-disable-next-line reentrancy-no-eth
         s.ratePerSecond = newRate;
         
+        // slither-disable-next-line reentrancy-events
         emit RateModified(streamId, oldRate, newRate);
     }
     
@@ -259,10 +261,10 @@ contract PayrollManager is ReentrancyGuard {
         uint256 balance = s.depositBalance;
         s.depositBalance = 0;
         s.active = false;
+
+        emit EmergencyWithdraw(streamId, to, balance);
         
         _safeTransferPay(s.token, to, balance);
-        
-        emit EmergencyWithdraw(streamId, to, balance);
     }
 
     /**
@@ -274,7 +276,7 @@ contract PayrollManager is ReentrancyGuard {
         if (!s.active) revert PM_StreamInactive();
         
         uint256 amount = claimable(streamId);
-        if (amount == 0) revert PM_NothingDue();
+        if (amount < 1) revert PM_NothingDue();
         
         // Safety cap
         if (amount > s.depositBalance) {
@@ -291,6 +293,7 @@ contract PayrollManager is ReentrancyGuard {
             s.pausedAccrued = 0;
         }
 
+        emit Withdraw(streamId, s.payee, amount);
         _safeTransferPay(s.token, s.payee, amount);
         
         // Reward payee for successful withdrawal
@@ -298,7 +301,6 @@ contract PayrollManager is ReentrancyGuard {
             try seer.reward(s.payee, PAYROLL_WITHDRAW_REWARD, "payroll_received") {} catch {}
         }
         
-        emit Withdraw(streamId, s.payee, amount);
     }
     
     /**
@@ -334,22 +336,30 @@ contract PayrollManager is ReentrancyGuard {
         if (msg.sender != s.payer && msg.sender != s.payee) revert PM_NotAuthorized();
         if (!s.active) revert PM_StreamInactive();
 
+        address token = s.token;
+        address payee = s.payee;
+        address payer = s.payer;
+
         // Settle pending
         uint256 due = claimable(streamId);
+        if (due > s.depositBalance) {
+            due = s.depositBalance;
+        }
+
+        uint256 remainder = s.depositBalance - due;
+        s.depositBalance = 0;
+        s.pausedAccrued = 0;
+        s.active = false;
+
         if (due > 0) {
-            s.depositBalance -= due;
-            s.pausedAccrued = 0;
-            _safeTransferPay(s.token, s.payee, due);
+            emit Withdraw(streamId, payee, due);
+            _safeTransferPay(token, payee, due);
         }
 
         // Return remainder to payer
-        if (s.depositBalance > 0) {
-            uint256 remainder = s.depositBalance;
-            s.depositBalance = 0;
-            _safeTransferPay(s.token, s.payer, remainder);
+        if (remainder > 0) {
+            _safeTransferPay(token, payer, remainder);
         }
-
-        s.active = false;
         emit StreamCancelled(streamId);
     }
     

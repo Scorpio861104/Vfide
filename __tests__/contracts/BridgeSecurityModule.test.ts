@@ -31,6 +31,16 @@ describe('BridgeSecurityModule Contract', () => {
       expect(await mockContractWrite({ functionName: 'setBridge', args: [bridge] })).toBe('0xhash');
     });
 
+    it('should reject zero bridge address', async () => {
+      mockContractWrite.mockRejectedValueOnce(new Error('Invalid bridge'));
+      await expect(
+        mockContractWrite({
+          functionName: 'setBridge',
+          args: ['0x0000000000000000000000000000000000000000' as Address],
+        })
+      ).rejects.toThrow('Invalid bridge');
+    });
+
     it('should reject zero user in whitelist setter', async () => {
       mockContractWrite.mockRejectedValueOnce(new Error('Invalid user'));
       await expect(
@@ -54,13 +64,18 @@ describe('BridgeSecurityModule Contract', () => {
     it('should reject inconsistent hourly and daily limits', async () => {
       mockContractWrite.mockRejectedValueOnce(new Error('Hourly exceeds daily'));
       await expect(
-        mockContractWrite({ functionName: 'setUserLimits', args: [parseEther('1000'), parseEther('500')] })
+        mockContractWrite({
+          functionName: 'setUserLimits',
+          args: [parseEther('1000'), parseEther('500')],
+        })
       ).rejects.toThrow('Hourly exceeds daily');
     });
 
     it('should reject zero limits', async () => {
       mockContractWrite.mockRejectedValueOnce(new Error('Invalid limits'));
-      await expect(mockContractWrite({ functionName: 'setUserLimits', args: [0, 0] })).rejects.toThrow('Invalid limits');
+      await expect(
+        mockContractWrite({ functionName: 'setUserLimits', args: [0, 0] })
+      ).rejects.toThrow('Invalid limits');
     });
   });
 

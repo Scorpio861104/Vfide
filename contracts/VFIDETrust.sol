@@ -198,6 +198,7 @@ contract Seer {
         bytes32 reasonHash;  // keccak256 of reason string for gas efficiency
     }
     
+    // slither-disable-next-line uninitialized-state
     mapping(address => ScoreChange[]) public scoreHistory;
     mapping(address => uint64) public lastActivity;  // For decay tracking
     uint8 public constant MAX_HISTORY_PER_USER = 50;  // Cap history storage
@@ -280,6 +281,7 @@ contract Seer {
      * @param _seerSocial The SeerSocial contract address
      */
     function setSeerSocial(address _seerSocial) external onlyDAO {
+        if (_seerSocial == address(0)) revert TRUST_Zero();
         seerSocial = _seerSocial;
         emit SeerSocialSet(_seerSocial);
     }
@@ -289,6 +291,7 @@ contract Seer {
      * @param _seerAutonomous The SeerAutonomous contract address
      */
     function setSeerAutonomous(address _seerAutonomous) external onlyDAO {
+        if (_seerAutonomous == address(0)) revert TRUST_Zero();
         seerAutonomous = _seerAutonomous;
         emit SeerAutonomousSet(_seerAutonomous);
     }
@@ -427,7 +430,7 @@ contract Seer {
         uint16 daoScore = _score[subject];
         
         // If no DAO-set score, use automated calculation (preserves original behavior)
-        if (daoScore == 0) {
+        if (daoScore < MIN_SCORE) {
             daoScore = calculateAutomatedScore(subject);
         }
         
@@ -1041,7 +1044,7 @@ contract Seer {
      */
     function requestScoreReview(string calldata reason) external {
         if (bytes(reason).length == 0 || bytes(reason).length > 500) revert TRUST_Bounds();
-        if (!(scoreDisputes[msg.sender].timestamp == 0 || scoreDisputes[msg.sender].resolved)) revert TRUST_AlreadySet();
+        if (scoreDisputes[msg.sender].timestamp > 0 && !scoreDisputes[msg.sender].resolved) revert TRUST_AlreadySet();
         
         scoreDisputes[msg.sender] = ScoreDispute({
             requester: msg.sender,
@@ -1145,7 +1148,7 @@ contract Seer {
         bool hasVault
     ) {
         daoSetScore = _score[subject];
-        if (daoSetScore == 0) {
+        if (daoSetScore < MIN_SCORE) {
             daoSetScore = calculateAutomatedScore(subject);
         }
         onChainScore = calculateOnChainScore(subject);
@@ -1189,8 +1192,7 @@ contract Seer {
         
         // Calculate decay: (daysInactive - decayStartDays) / 30 * decayPerMonth
         uint64 decayDays = daysInactive - decayStartDays;
-        uint64 decayMonths = decayDays / 30;
-        decayAmount = uint16(decayMonths * decayPerMonth);
+        decayAmount = uint16((decayDays * uint64(decayPerMonth)) / 30);
         
         // Decay toward neutral, not below/above
         if (rawScore > NEUTRAL) {
@@ -1364,6 +1366,7 @@ contract ProofScoreBurnRouterPlus {
 
     constructor(address _dao, address _seer, address _treasury) {
         if (_dao == address(0)) revert TRUST_Zero();
+        if (_treasury == address(0)) revert TRUST_Zero();
         dao = _dao;
         if (_seer != address(0)) seer = Seer(_seer);
         treasury = _treasury;

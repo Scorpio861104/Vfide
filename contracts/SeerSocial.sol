@@ -280,7 +280,7 @@ contract SeerSocial {
     ) {
         address[] storage stored = endorsersOf[subject];
         uint256 len = stored.length;
-        uint256 activeCount;
+        uint256 activeCount = 0;
 
         for (uint256 i = 0; i < len; i++) {
             Endorsement storage e = endorsements[subject][stored[i]];
@@ -294,7 +294,7 @@ contract SeerSocial {
         expiries = new uint64[](activeCount);
         timestamps = new uint64[](activeCount);
 
-        uint256 idx;
+        uint256 idx = 0;
         for (uint256 i = 0; i < len; i++) {
             Endorsement storage e = endorsements[subject][stored[i]];
             if (e.expiry > block.timestamp && e.weight > 0) {
@@ -435,7 +435,7 @@ contract SeerSocial {
 
     function requestScoreReview(string calldata reason) external {
         require(bytes(reason).length > 0 && bytes(reason).length <= 500, "SOCIAL: invalid reason length");
-        require(scoreDisputes[msg.sender].timestamp == 0 || scoreDisputes[msg.sender].resolved, "SOCIAL: dispute pending");
+        require(scoreDisputes[msg.sender].timestamp < 1 || scoreDisputes[msg.sender].resolved, "SOCIAL: dispute pending");
         
         scoreDisputes[msg.sender] = ScoreDispute({
             requester: msg.sender,

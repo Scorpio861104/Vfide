@@ -160,7 +160,8 @@ contract FiatRampRegistry {
         
         // Reward trust score for completed ramp activity (no on-chain identity tracking)
         _rewardRampUser(user);
-        
+
+        // slither-disable-next-line reentrancy-events
         emit RampTransactionRecorded(user, msg.sender, externalTxHash, isOnRamp);
     }
     
@@ -686,6 +687,7 @@ contract TerminalRegistry {
     event TerminalDeactivated(bytes32 indexed terminalId);
     event TerminalPayment(bytes32 indexed terminalId, address indexed customer, uint256 amount);
     event TerminalLocationUpdated(bytes32 indexed terminalId, string newLocation);
+    event TapLimitUpdated(uint256 oldLimit, uint256 newLimit);
     
     address public dao;
     IVaultHub public vaultHub;
@@ -844,7 +846,9 @@ contract TerminalRegistry {
      */
     function setTapLimit(uint256 newLimit) external onlyDAO {
         require(newLimit >= 10 * 1e18 && newLimit <= 500 * 1e18, "TR: invalid limit");
+        uint256 oldLimit = tapLimit;
         tapLimit = newLimit;
+        emit TapLimitUpdated(oldLimit, newLimit);
     }
 }
 
@@ -902,7 +906,13 @@ contract MultiCurrencyRouter {
         address _priceOracle,
         address _recommendedRouter
     ) {
-        require(_dao != address(0) && _vfide != address(0), "MCR: zero");
+        require(
+            _dao != address(0) &&
+            _vfide != address(0) &&
+            _priceOracle != address(0) &&
+            _recommendedRouter != address(0),
+            "MCR: zero"
+        );
         dao = _dao;
         vfideToken = _vfide;
         priceOracle = MainstreamPriceOracle(_priceOracle);
@@ -954,6 +964,7 @@ contract MultiCurrencyRouter {
      * @notice Update recommended router
      */
     function setRecommendedRouter(address router) external onlyDAO {
+        require(router != address(0), "MCR: zero router");
         address old = recommendedRouter;
         recommendedRouter = router;
         emit SwapRouterUpdated(old, router);

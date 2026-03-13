@@ -30,7 +30,7 @@ describe('VaultRegistry Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'registerVault',
-        args: [vaultAddress, user1]
+        args: [vaultAddress, user1],
       });
 
       expect(result).toBe('0xhash');
@@ -42,7 +42,7 @@ describe('VaultRegistry Contract', () => {
       await expect(async () => {
         await mockContractWrite({
           functionName: 'registerVault',
-          args: [vaultAddress, user1]
+          args: [vaultAddress, user1],
         });
       }).rejects.toThrow('already registered');
     });
@@ -52,7 +52,7 @@ describe('VaultRegistry Contract', () => {
 
       const result = await mockContractRead({
         functionName: 'isRegistered',
-        args: [vaultAddress]
+        args: [vaultAddress],
       });
 
       expect(result).toBe(true);
@@ -63,7 +63,7 @@ describe('VaultRegistry Contract', () => {
 
       const result = await mockContractRead({
         functionName: 'getVaultOwner',
-        args: [vaultAddress]
+        args: [vaultAddress],
       });
 
       expect(result).toBe(user1);
@@ -75,7 +75,7 @@ describe('VaultRegistry Contract', () => {
 
       const result = await mockContractRead({
         functionName: 'getVaultsByOwner',
-        args: [user1]
+        args: [user1],
       });
 
       expect(result).toHaveLength(2);
@@ -88,7 +88,7 @@ describe('VaultRegistry Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'deregisterVault',
-        args: [vaultAddress]
+        args: [vaultAddress],
       });
 
       expect(result).toBe('0xhash');
@@ -100,13 +100,25 @@ describe('VaultRegistry Contract', () => {
       await expect(async () => {
         await mockContractWrite({
           functionName: 'deregisterVault',
-          args: [vaultAddress]
+          args: [vaultAddress],
         });
       }).rejects.toThrow('Not vault owner');
     });
   });
 
   describe('Vault Metadata', () => {
+    it('should reject email recovery hash collision across vaults', async () => {
+      const emailHash = '0xabcd000000000000000000000000000000000000000000000000000000000000';
+      mockContractWrite.mockRejectedValueOnce(new Error('EmailAlreadyTaken'));
+
+      await expect(
+        mockContractWrite({
+          functionName: 'setEmailRecovery',
+          args: [vaultAddress, emailHash],
+        })
+      ).rejects.toThrow('EmailAlreadyTaken');
+    });
+
     it('should reject phone recovery hash collision across vaults', async () => {
       const phoneHash = '0x1234000000000000000000000000000000000000000000000000000000000000';
       mockContractWrite.mockRejectedValueOnce(new Error('PhoneAlreadyTaken'));
@@ -114,9 +126,20 @@ describe('VaultRegistry Contract', () => {
       await expect(
         mockContractWrite({
           functionName: 'setPhoneRecovery',
-          args: [vaultAddress, phoneHash]
+          args: [vaultAddress, phoneHash],
         })
       ).rejects.toThrow('PhoneAlreadyTaken');
+    });
+
+    it('should allow username replacement without stale reservation assumptions', async () => {
+      mockContractWrite.mockResolvedValueOnce('0xhash');
+
+      const result = await mockContractWrite({
+        functionName: 'setUsername',
+        args: [vaultAddress, 'updatedname'],
+      });
+
+      expect(result).toBe('0xhash');
     });
 
     it('should set vault metadata', async () => {
@@ -124,7 +147,7 @@ describe('VaultRegistry Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'setVaultMetadata',
-        args: [vaultAddress, 'My Vault', 'Description']
+        args: [vaultAddress, 'My Vault', 'Description'],
       });
 
       expect(result).toBe('0xhash');
@@ -134,13 +157,13 @@ describe('VaultRegistry Contract', () => {
       mockContractRead.mockResolvedValueOnce({
         name: 'My Vault',
         description: 'Description',
-        createdAt: 1234567890n
+        createdAt: 1234567890n,
       });
 
-      const result = await mockContractRead({
+      const result = (await mockContractRead({
         functionName: 'getVaultMetadata',
-        args: [vaultAddress]
-      }) as { name: string; description: string; createdAt: bigint };
+        args: [vaultAddress],
+      })) as { name: string; description: string; createdAt: bigint };
 
       expect(result.name).toBe('My Vault');
     });
@@ -152,7 +175,7 @@ describe('VaultRegistry Contract', () => {
 
       const result = await mockContractRead({
         functionName: 'guardianCountOfVault',
-        args: [vaultAddress]
+        args: [vaultAddress],
       });
 
       expect(result).toBe(0n);
@@ -162,7 +185,7 @@ describe('VaultRegistry Contract', () => {
       mockContractRead.mockResolvedValueOnce(100n);
 
       const result = await mockContractRead({
-        functionName: 'totalVaults'
+        functionName: 'totalVaults',
       });
 
       expect(result).toBe(100n);
@@ -173,7 +196,7 @@ describe('VaultRegistry Contract', () => {
 
       const result = await mockContractRead({
         functionName: 'vaultAt',
-        args: [50n]
+        args: [50n],
       });
 
       expect(result).toBe(vaultAddress);
@@ -187,7 +210,7 @@ describe('VaultRegistry Contract', () => {
       await expect(async () => {
         await mockContractWrite({
           functionName: 'registerVault',
-          args: [vaultAddress, user1]
+          args: [vaultAddress, user1],
         });
       }).rejects.toThrow('Not authorized');
     });

@@ -25,6 +25,7 @@ import { parseMessage, OutboundMessage } from './schema';
 
 const PORT = parseInt(process.env.WS_PORT || '8080', 10);
 const MAX_PAYLOAD_BYTES = 8 * 1024; // 8 KiB
+const IS_PRODUCTION = process.env.NODE_ENV === 'production';
 
 /**
  * Comma-separated list of allowed upgrade Origins.
@@ -43,6 +44,7 @@ let server: http.Server | https.Server;
 /**
  * If WS_TLS_CERT and WS_TLS_KEY are set, bind an HTTPS server directly.
  * Otherwise bind plain HTTP — TLS MUST then be terminated upstream.
+ * In production, plain HTTP startup is blocked unless WS_ALLOW_INSECURE_HTTP=true.
  */
 if (process.env.WS_TLS_CERT && process.env.WS_TLS_KEY) {
   server = https.createServer({
@@ -51,6 +53,13 @@ if (process.env.WS_TLS_CERT && process.env.WS_TLS_KEY) {
   });
   console.info('[ws] TLS mode: reading cert from', process.env.WS_TLS_CERT);
 } else {
+  if (IS_PRODUCTION && process.env.WS_ALLOW_INSECURE_HTTP !== 'true') {
+    throw new Error(
+      '[ws] Refusing to start in production without TLS. ' +
+      'Configure WS_TLS_CERT + WS_TLS_KEY, terminate TLS upstream, or set WS_ALLOW_INSECURE_HTTP=true to override.'
+    );
+  }
+
   server = http.createServer();
   console.warn(
     '[ws] Plain HTTP mode — TLS MUST be terminated upstream (nginx/Caddy). ' +

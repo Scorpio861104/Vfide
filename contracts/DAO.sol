@@ -120,7 +120,7 @@ contract DAO is ReentrancyGuard {
         // M-21 Fix: Validate parameters before setting
         if(_period<1 hours)_period=1 hours;
         require(_period <= 30 days, "DAO: voting period too long");
-        require(_minVotes <= 1000000, "DAO: minVotes too high");
+        require(_minVotes <= 1_000_000, "DAO: minVotes too high");
         votingPeriod=_period;
         minVotesRequired=_minVotes;
         emit ParamsSet(_period,_minVotes);
@@ -204,8 +204,9 @@ contract DAO is ReentrancyGuard {
         // Recover fatigue based on time passed
         if (info.lastVoteTime > 0) {
             uint256 elapsed = block.timestamp - info.lastVoteTime;
-            // forge-lint: disable-next-line(divide-before-multiply)
-            uint256 recovery = (elapsed / FATIGUE_RECOVERY_RATE) * 5; // 5% per day, division first is intentional for step recovery
+            // Intentional: use proportional time-based recovery (not stepwise daily buckets)
+            // to avoid edge gaming around day boundaries.
+            uint256 recovery = (elapsed * 5) / FATIGUE_RECOVERY_RATE; // 5% per day
             // H-4 Fix: Cap recovery to fatigue to prevent underflow
             if (recovery >= info.fatigue) {
                 info.fatigue = 0;
@@ -259,12 +260,13 @@ contract DAO is ReentrancyGuard {
         bool passed = qmet && p.forVotes > p.againstVotes;
         
         emit Finalized(id,passed);
-        if (address(hooks)!=address(0)) { try hooks.onFinalized(id,passed) {} catch {} }
         if (passed){
+            p.queued=true;
             bytes32 tlId = timelock.queueTx(p.target,p.value,p.data);
-            p.queued=true; emit Queued(id,tlId);
+            emit Queued(id,tlId);
             if (address(hooks)!=address(0)) { try hooks.onProposalQueued(id,p.target,p.value) {} catch {} }
         }
+        if (address(hooks)!=address(0)) { try hooks.onFinalized(id,passed) {} catch {} }
     }
 
     function markExecuted(uint256 id) external onlyAdmin {
@@ -286,8 +288,22 @@ contract DAO is ReentrancyGuard {
         // M-1 Fix: Record proposal hash before deleting to prevent re-submission
         bytes32 proposalHash = keccak256(abi.encode(p.ptype, p.target, p.value, p.data));
         withdrawnProposalHashes[proposalHash] = true;
-        
-        delete proposals[id];
+
+        // Reset scalar fields instead of deleting the struct, which contains mappings.
+        p.proposer = address(0);
+        p.target = address(0);
+        p.value = 0;
+        p.data = "";
+        p.description = "";
+        p.ptype = ProposalType.Generic;
+        p.start = 0;
+        p.end = 0;
+        p.executed = false;
+        p.queued = false;
+        p.forVotes = 0;
+        p.againstVotes = 0;
+        p.voterCount = 0;
+
         emit ProposalWithdrawn(id, msg.sender);
     }
 
@@ -382,7 +398,7 @@ contract DAO is ReentrancyGuard {
         
         if (info.lastVoteTime > 0) {
             uint256 elapsed = block.timestamp - info.lastVoteTime;
-            recoveredSince = (elapsed / FATIGUE_RECOVERY_RATE) * 5; // 5% per day
+            recoveredSince = (elapsed * 5) / FATIGUE_RECOVERY_RATE; // 5% per day
             
             if (recoveredSince >= info.fatigue) {
                 effectiveFatigue = 0;
@@ -415,7 +431,8 @@ contract DAO is ReentrancyGuard {
         // Calculate recovered fatigue
         if (info.lastVoteTime > 0) {
             uint256 elapsed = block.timestamp - info.lastVoteTime;
-            uint256 recovery = (elapsed / FATIGUE_RECOVERY_RATE) * 5;
+            // Intentional: mirrors proportional recovery in vote() for consistent preview math.
+            uint256 recovery = (elapsed * 5) / FATIGUE_RECOVERY_RATE;
             if (recovery >= fatigue) {
                 fatigue = 0;
             } else {

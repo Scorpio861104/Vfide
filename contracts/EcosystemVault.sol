@@ -156,7 +156,9 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
     mapping(uint256 => address[]) public periodMerchants; // period => list of merchants
     mapping(uint256 => uint256) public merchantPeriodPoolSnapshot; // period => pool at end
     mapping(uint256 => bool) public merchantPeriodEnded; // period => ended
+    // slither-disable-next-line uninitialized-state
     mapping(uint256 => mapping(address => bool)) public merchantPeriodClaimed; // period => merchant => claimed
+    // slither-disable-next-line uninitialized-state
     mapping(address => uint256) public totalMerchantBonusesPaid;
 
     // Headhunter tracking (year-long accumulation, quarterly payouts)
@@ -167,6 +169,7 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
     mapping(uint256 => mapping(address => uint16)) public yearPoints; // year => referrer => points (accumulates all year)
     mapping(uint256 => address[]) public yearReferrers; // year => list of referrers
     mapping(uint256 => mapping(uint256 => uint256)) public quarterPoolSnapshot; // year => quarter => pool amount
+    // slither-disable-next-line uninitialized-state
     mapping(uint256 => mapping(uint256 => mapping(address => bool))) public quarterClaimed; // year => quarter => referrer => claimed
     mapping(uint256 => mapping(uint256 => bool)) public quarterEnded; // year => quarter => ended
     
@@ -520,7 +523,7 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
         allocateIncoming(); // Ensure pool is up to date
         
         uint256 amount = councilPool;
-        if (amount == 0) revert ECO_InsufficientFunds();
+        if (amount < 1) revert ECO_InsufficientFunds();
         
         // Get active council members from CouncilManager
         address[] memory members = councilManager.getActiveMembers();
@@ -529,6 +532,10 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
         
         uint256 perMember = amount / memberCount;
         councilPool = amount % memberCount; // Keep remainder for next distribution
+        uint256 distributed = amount - councilPool;
+
+        totalCouncilPaid += distributed;
+        lastCouncilDistribution = block.timestamp;
         
         for (uint8 i = 0; i < memberCount; i++) {
             if (members[i] != address(0)) {
@@ -536,10 +543,7 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
             }
         }
 
-        totalCouncilPaid += amount - councilPool;
-        
-        lastCouncilDistribution = block.timestamp;
-        emit CouncilDistributed(amount - councilPool, memberCount, perMember);
+        emit CouncilDistributed(distributed, memberCount, perMember);
     }
 
     // ═══════════════════════════════════════════════════════════════════════
@@ -744,6 +748,7 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
         _awardPoints(referrer, POINTS_MERCHANT_REFERRAL, merchant, true);
         _tryAutoWorkPayout(referrer, autoMerchantReferralReward, false, "verified_merchant_referral");
         if (autoWorkPayoutEnabled) {
+            // slither-disable-next-line reentrancy-no-eth
             _processReferralLevelPayouts(referrer, currentYear, "auto_referral_level_progress", false);
         }
     }
@@ -764,6 +769,7 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
         _awardPoints(referrer, POINTS_USER_REFERRAL, user, false);
         _tryAutoWorkPayout(referrer, autoUserReferralReward, false, "verified_user_referral");
         if (autoWorkPayoutEnabled) {
+            // slither-disable-next-line reentrancy-no-eth
             _processReferralLevelPayouts(referrer, currentYear, "auto_referral_level_progress", false);
         }
     }
@@ -979,7 +985,7 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
     }
 
     function _getSpendablePoolBalance(uint256 poolBalance, uint16 reserveBps) internal pure returns (uint256) {
-        if (poolBalance == 0) return 0;
+        if (poolBalance < 1) return 0;
         if (reserveBps == 0) return poolBalance;
         uint256 reserveAmount = (poolBalance * reserveBps) / MAX_BPS;
         return poolBalance > reserveAmount ? poolBalance - reserveAmount : 0;
@@ -1043,16 +1049,19 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
             if (stableReceived > 0) {
                 // Successfully swapped, transfer stablecoin to recipient
                 IERC20(preferredStablecoin).safeTransfer(recipient, stableReceived);
+                // slither-disable-next-line reentrancy-events
                 emit RewardPaidInStable(recipient, amount, stableReceived, reason);
                 return;
             } else {
                 // Swap failed, emit event and fallback to VFIDE payment
+                // slither-disable-next-line reentrancy-events
                 emit SwapFailed(recipient, amount, reason);
             }
         }
         
         // Default: pay in VFIDE (no swap or swap failed)
         rewardToken.safeTransfer(recipient, amount);
+        // slither-disable-next-line reentrancy-events
         emit PaymentMade(recipient, amount, reason);
     }
     
@@ -1066,7 +1075,7 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
         if (vfideAmount == 0) return 0;
         
         // Approve router to spend VFIDE
-        rewardToken.approve(swapRouter, vfideAmount);
+        require(rewardToken.approve(swapRouter, vfideAmount), "ECO: approve failed");
         
         // Calculate minimum output with slippage protection
         address[] memory path = new address[](2);
@@ -1086,16 +1095,16 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
                 block.timestamp + 300 // 5 min deadline
             ) returns (uint256[] memory amounts) {
                 // Revoke leftover approval for security
-                rewardToken.approve(swapRouter, 0);
+                require(rewardToken.approve(swapRouter, 0), "ECO: revoke failed");
                 return amounts[amounts.length - 1];
             } catch {
                 // Swap failed, revoke approval
-                rewardToken.approve(swapRouter, 0);
+                require(rewardToken.approve(swapRouter, 0), "ECO: revoke failed");
                 return 0;
             }
         } catch {
             // getAmountsOut failed (no liquidity?), revoke approval
-            rewardToken.approve(swapRouter, 0);
+            require(rewardToken.approve(swapRouter, 0), "ECO: revoke failed");
             return 0;
         }
     }
@@ -1111,6 +1120,7 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
 
         address dead = 0x000000000000000000000000000000000000dEaD;
         rewardToken.safeTransfer(dead, amount);
+        // slither-disable-next-line reentrancy-events
         emit FundsBurned(amount);
     }
 

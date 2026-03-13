@@ -26,7 +26,11 @@ const MAX_MESSAGES_LIMIT = 200;
 const MAX_MESSAGES_OFFSET = 10000;
 const MAX_BULK_MESSAGE_IDS = 500;
 const MAX_CONVERSATION_ADDRESS_LENGTH = 64;
+const MAX_DIRECT_MESSAGES_PER_MINUTE_PER_SENDER = 30;
 const ADDRESS_LIKE_REGEX = /^0x[a-fA-F0-9]{3,40}$/;
+const HEX_STRING_REGEX = /^[0-9a-fA-F]+$/;
+const BASE64_STRING_REGEX = /^[A-Za-z0-9+/]+={0,2}$/;
+const ETH_SIGNATURE_REGEX = /^0x[0-9a-fA-F]{130}$/;
 
 function isAddressLike(value: string): boolean {
   return ADDRESS_LIKE_REGEX.test(value.trim());
@@ -43,6 +47,33 @@ function toNonEmptyString(value: unknown): string | null {
   if (typeof value !== 'string') return null;
   const trimmed = value.trim();
   return trimmed.length > 0 ? trimmed : null;
+}
+
+function isEncryptedDirectMessagePayload(content: string): boolean {
+  try {
+    const payload = JSON.parse(content) as Record<string, unknown>;
+    if (!payload || typeof payload !== 'object') return false;
+
+    const v = payload.v;
+    const ephemeralPublicKey = payload.ephemeralPublicKey;
+    const ciphertext = payload.ciphertext;
+    const iv = payload.iv;
+    const sig = payload.sig;
+    const ts = payload.ts;
+    const nonce = payload.nonce;
+
+    if (v !== 1) return false;
+    if (typeof ephemeralPublicKey !== 'string' || ephemeralPublicKey.length < 64 || !HEX_STRING_REGEX.test(ephemeralPublicKey)) return false;
+    if (typeof ciphertext !== 'string' || ciphertext.length < 16 || !BASE64_STRING_REGEX.test(ciphertext)) return false;
+    if (typeof iv !== 'string' || iv.length < 8 || !BASE64_STRING_REGEX.test(iv)) return false;
+    if (typeof sig !== 'string' || !ETH_SIGNATURE_REGEX.test(sig)) return false;
+    if (typeof ts !== 'number' || !Number.isFinite(ts) || ts <= 0) return false;
+    if (typeof nonce !== 'string' || nonce.length < 16 || !HEX_STRING_REGEX.test(nonce)) return false;
+
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 /**
@@ -247,7 +278,15 @@ export async function POST(request: NextRequest) {
     }
 
     const { from, to, content } = validation.data;
-    const isEncrypted = false; // Default to unencrypted
+
+    if (!isEncryptedDirectMessagePayload(content)) {
+      return NextResponse.json(
+        { error: 'Message content must be a valid encrypted payload' },
+        { status: 400 }
+      );
+    }
+
+    const isEncrypted = true;
     
     // Content is already sanitized by sendMessageSchema via validateBody
 
@@ -290,6 +329,43 @@ export async function POST(request: NextRequest) {
 
     const senderId = senderResult.rows[0].id;
     const recipientId = recipientResult.rows[0].id;
+
+    const recentSendCountResult = await client.query<{ count: string }>(
+      `SELECT COUNT(*) as count
+       FROM messages
+       WHERE sender_id = $1
+         AND recipient_id = $2
+         AND created_at > NOW() - INTERVAL '1 minute'`,
+      [senderId, recipientId]
+    );
+
+    const recentSendCount = Number.parseInt(recentSendCountResult.rows[0]?.count || '0', 10);
+    if (!Number.isNaN(recentSendCount) && recentSendCount >= MAX_DIRECT_MESSAGES_PER_MINUTE_PER_SENDER) {
+      await client.query('ROLLBACK');
+      return NextResponse.json(
+        { error: 'Direct message rate limit exceeded for this conversation' },
+        { status: 429 }
+      );
+    }
+
+    const replayResult = await client.query<{ id: number }>(
+      `SELECT id
+       FROM messages
+       WHERE sender_id = $1
+         AND recipient_id = $2
+         AND content = $3
+         AND created_at > NOW() - INTERVAL '10 minutes'
+       LIMIT 1`,
+      [senderId, recipientId, content]
+    );
+
+    if (replayResult.rows.length > 0) {
+      await client.query('ROLLBACK');
+      return NextResponse.json(
+        { error: 'Duplicate encrypted payload replay detected' },
+        { status: 409 }
+      );
+    }
 
     // Insert message
     const messageResult = await client.query(

@@ -34,7 +34,7 @@ describe('DAOTimelock Contract', () => {
       mockContractRead.mockResolvedValueOnce(172800n); // 48 hours
 
       const delay = await mockContractRead({
-        functionName: 'getMinDelay'
+        functionName: 'getMinDelay',
       });
 
       expect(delay).toBe(172800n);
@@ -45,7 +45,7 @@ describe('DAOTimelock Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'setMinDelay',
-        args: [259200n] // 72 hours
+        args: [259200n], // 72 hours
       });
 
       expect(result).toBe('0xhash');
@@ -57,7 +57,7 @@ describe('DAOTimelock Contract', () => {
       await expect(async () => {
         await mockContractWrite({
           functionName: 'setMinDelay',
-          args: [259200n]
+          args: [259200n],
         });
       }).rejects.toThrow('Not admin');
     });
@@ -68,7 +68,7 @@ describe('DAOTimelock Contract', () => {
       await expect(async () => {
         await mockContractWrite({
           functionName: 'setMinDelay',
-          args: [3600n] // 1 hour - too short
+          args: [3600n], // 1 hour - too short
         });
       }).rejects.toThrow('too short');
     });
@@ -78,7 +78,7 @@ describe('DAOTimelock Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'setMinDelay',
-        args: [259200n]
+        args: [259200n],
       });
 
       expect(result).toBe('0xhash');
@@ -88,7 +88,7 @@ describe('DAOTimelock Contract', () => {
       mockContractRead.mockResolvedValueOnce(2592000n); // 30 days
 
       const maxDelay = await mockContractRead({
-        functionName: 'getMaxDelay'
+        functionName: 'getMaxDelay',
       });
 
       expect(maxDelay).toBe(2592000n);
@@ -99,7 +99,7 @@ describe('DAOTimelock Contract', () => {
 
       const delay = await mockContractRead({
         functionName: 'calculateOperationDelay',
-        args: ['0xoperationId']
+        args: ['0xoperationId'],
       });
 
       expect(delay).toBe(172800n);
@@ -112,13 +112,7 @@ describe('DAOTimelock Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'queueOperation',
-        args: [
-          target,
-          parseEther('0'),
-          '0x1234',
-          '0x0000',
-          '0x5678'
-        ]
+        args: [target, parseEther('0'), '0x1234', '0x0000', '0x5678'],
       });
 
       expect(result).toBe('0xhash');
@@ -130,7 +124,7 @@ describe('DAOTimelock Contract', () => {
       await expect(async () => {
         await mockContractWrite({
           functionName: 'queueOperation',
-          args: [target, 0n, '0x1234', '0x0000', '0x5678']
+          args: [target, 0n, '0x1234', '0x0000', '0x5678'],
         });
       }).rejects.toThrow('Not proposer');
     });
@@ -140,7 +134,7 @@ describe('DAOTimelock Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'queueOperation',
-        args: [target, 0n, '0x1234', '0x0000', '0x5678']
+        args: [target, 0n, '0x1234', '0x0000', '0x5678'],
       });
 
       expect(result).toBe('0xhash');
@@ -152,7 +146,7 @@ describe('DAOTimelock Contract', () => {
       await expect(async () => {
         await mockContractWrite({
           functionName: 'queueOperation',
-          args: [target, 0n, '0x1234', '0x0000', '0x5678']
+          args: [target, 0n, '0x1234', '0x0000', '0x5678'],
         });
       }).rejects.toThrow('Already queued');
     });
@@ -165,12 +159,12 @@ describe('DAOTimelock Contract', () => {
         data: '0x1234',
         predecessor: '0x0000',
         salt: '0x5678',
-        timestamp: 1234567890n
+        timestamp: 1234567890n,
       });
 
       const details = await mockContractRead({
         functionName: 'getOperation',
-        args: ['0xopId']
+        args: ['0xopId'],
       });
 
       expect(details.target).toBe(target);
@@ -181,7 +175,7 @@ describe('DAOTimelock Contract', () => {
 
       const isQueued = await mockContractRead({
         functionName: 'isOperationQueued',
-        args: ['0xopId']
+        args: ['0xopId'],
       });
 
       expect(isQueued).toBe(true);
@@ -192,7 +186,7 @@ describe('DAOTimelock Contract', () => {
 
       const hash = await mockContractRead({
         functionName: 'hashOperation',
-        args: [target, 0n, '0x1234', '0x0000', '0x5678']
+        args: [target, 0n, '0x1234', '0x0000', '0x5678'],
       });
 
       expect(hash).toBe('0xhash123');
@@ -203,13 +197,7 @@ describe('DAOTimelock Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'queueBatch',
-        args: [
-          [target, target],
-          [0n, 0n],
-          ['0x1234', '0x5678'],
-          '0x0000',
-          '0xsalt'
-        ]
+        args: [[target, target], [0n, 0n], ['0x1234', '0x5678'], '0x0000', '0xsalt'],
       });
 
       expect(result).toBe('0xhash');
@@ -221,7 +209,7 @@ describe('DAOTimelock Contract', () => {
 
       const timestamp = await mockContractRead({
         functionName: 'getOperationTimestamp',
-        args: ['0xopId']
+        args: ['0xopId'],
       });
 
       expect(timestamp).toBe(readyTime);
@@ -232,7 +220,7 @@ describe('DAOTimelock Contract', () => {
 
       const isReady = await mockContractRead({
         functionName: 'isOperationReady',
-        args: ['0xopId']
+        args: ['0xopId'],
       });
 
       expect(isReady).toBe(true);
@@ -245,7 +233,7 @@ describe('DAOTimelock Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'executeOperation',
-        args: [target, 0n, '0x1234', '0x0000', '0x5678']
+        args: [target, 0n, '0x1234', '0x0000', '0x5678'],
       });
 
       expect(result).toBe('0xhash');
@@ -257,7 +245,7 @@ describe('DAOTimelock Contract', () => {
       await expect(async () => {
         await mockContractWrite({
           functionName: 'executeOperation',
-          args: [target, 0n, '0x1234', '0x0000', '0x5678']
+          args: [target, 0n, '0x1234', '0x0000', '0x5678'],
         });
       }).rejects.toThrow('Not executor');
     });
@@ -268,7 +256,7 @@ describe('DAOTimelock Contract', () => {
       await expect(async () => {
         await mockContractWrite({
           functionName: 'executeOperation',
-          args: [target, 0n, '0x1234', '0x0000', '0x5678']
+          args: [target, 0n, '0x1234', '0x0000', '0x5678'],
         });
       }).rejects.toThrow('not ready');
     });
@@ -278,7 +266,7 @@ describe('DAOTimelock Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'executeOperation',
-        args: [target, 0n, '0x1234', '0x0000', '0x5678']
+        args: [target, 0n, '0x1234', '0x0000', '0x5678'],
       });
 
       expect(result).toBe('0xhash');
@@ -290,7 +278,7 @@ describe('DAOTimelock Contract', () => {
       await expect(async () => {
         await mockContractWrite({
           functionName: 'executeOperation',
-          args: [target, 0n, '0x1234', '0x0000', '0x5678']
+          args: [target, 0n, '0x1234', '0x0000', '0x5678'],
         });
       }).rejects.toThrow('not queued');
     });
@@ -300,7 +288,7 @@ describe('DAOTimelock Contract', () => {
 
       const isExecuted = await mockContractRead({
         functionName: 'isOperationExecuted',
-        args: ['0xopId']
+        args: ['0xopId'],
       });
 
       expect(isExecuted).toBe(true);
@@ -311,13 +299,7 @@ describe('DAOTimelock Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'executeBatch',
-        args: [
-          [target, target],
-          [0n, 0n],
-          ['0x1234', '0x5678'],
-          '0x0000',
-          '0xsalt'
-        ]
+        args: [[target, target], [0n, 0n], ['0x1234', '0x5678'], '0x0000', '0xsalt'],
       });
 
       expect(result).toBe('0xhash');
@@ -329,7 +311,7 @@ describe('DAOTimelock Contract', () => {
       await expect(async () => {
         await mockContractWrite({
           functionName: 'executeOperation',
-          args: [target, 0n, '0x1234', '0x0000', '0x5678']
+          args: [target, 0n, '0x1234', '0x0000', '0x5678'],
         });
       }).rejects.toThrow('Execution failed');
     });
@@ -339,7 +321,7 @@ describe('DAOTimelock Contract', () => {
 
       const verified = await mockContractRead({
         functionName: 'isPredecessorExecuted',
-        args: ['0xpredecessorId']
+        args: ['0xpredecessorId'],
       });
 
       expect(verified).toBe(true);
@@ -351,7 +333,7 @@ describe('DAOTimelock Contract', () => {
       await expect(async () => {
         await mockContractWrite({
           functionName: 'executeOperation',
-          args: [target, 0n, '0x1234', '0xpredecessorId', '0x5678']
+          args: [target, 0n, '0x1234', '0xpredecessorId', '0x5678'],
         });
       }).rejects.toThrow('Predecessor not executed');
     });
@@ -363,7 +345,7 @@ describe('DAOTimelock Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'cancelOperation',
-        args: ['0xopId']
+        args: ['0xopId'],
       });
 
       expect(result).toBe('0xhash');
@@ -375,7 +357,7 @@ describe('DAOTimelock Contract', () => {
       await expect(async () => {
         await mockContractWrite({
           functionName: 'cancelOperation',
-          args: ['0xopId']
+          args: ['0xopId'],
         });
       }).rejects.toThrow('Not authorized');
     });
@@ -385,7 +367,7 @@ describe('DAOTimelock Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'cancelOperation',
-        args: ['0xopId']
+        args: ['0xopId'],
       });
 
       expect(result).toBe('0xhash');
@@ -397,7 +379,7 @@ describe('DAOTimelock Contract', () => {
       await expect(async () => {
         await mockContractWrite({
           functionName: 'cancelOperation',
-          args: ['0xopId']
+          args: ['0xopId'],
         });
       }).rejects.toThrow('Already executed');
     });
@@ -407,7 +389,7 @@ describe('DAOTimelock Contract', () => {
 
       const isCancelled = await mockContractRead({
         functionName: 'isOperationCancelled',
-        args: ['0xopId']
+        args: ['0xopId'],
       });
 
       expect(isCancelled).toBe(true);
@@ -419,7 +401,7 @@ describe('DAOTimelock Contract', () => {
       await expect(async () => {
         await mockContractWrite({
           functionName: 'executeOperation',
-          args: [target, 0n, '0x1234', '0x0000', '0x5678']
+          args: [target, 0n, '0x1234', '0x0000', '0x5678'],
         });
       }).rejects.toThrow('cancelled');
     });
@@ -429,7 +411,7 @@ describe('DAOTimelock Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'emergencyCancelOperation',
-        args: ['0xopId']
+        args: ['0xopId'],
       });
 
       expect(result).toBe('0xhash');
@@ -440,7 +422,7 @@ describe('DAOTimelock Contract', () => {
 
       const reason = await mockContractRead({
         functionName: 'getCancellationReason',
-        args: ['0xopId']
+        args: ['0xopId'],
       });
 
       expect(reason).toBe('Security concern');
@@ -453,7 +435,7 @@ describe('DAOTimelock Contract', () => {
 
       const hasRole = await mockContractRead({
         functionName: 'hasProposerRole',
-        args: [proposer]
+        args: [proposer],
       });
 
       expect(hasRole).toBe(true);
@@ -464,7 +446,7 @@ describe('DAOTimelock Contract', () => {
 
       const hasRole = await mockContractRead({
         functionName: 'hasExecutorRole',
-        args: [executor]
+        args: [executor],
       });
 
       expect(hasRole).toBe(true);
@@ -475,7 +457,7 @@ describe('DAOTimelock Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'grantProposerRole',
-        args: [proposer]
+        args: [proposer],
       });
 
       expect(result).toBe('0xhash');
@@ -486,7 +468,7 @@ describe('DAOTimelock Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'grantExecutorRole',
-        args: [executor]
+        args: [executor],
       });
 
       expect(result).toBe('0xhash');
@@ -497,7 +479,7 @@ describe('DAOTimelock Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'revokeProposerRole',
-        args: [proposer]
+        args: [proposer],
       });
 
       expect(result).toBe('0xhash');
@@ -508,7 +490,7 @@ describe('DAOTimelock Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'revokeExecutorRole',
-        args: [executor]
+        args: [executor],
       });
 
       expect(result).toBe('0xhash');
@@ -519,7 +501,7 @@ describe('DAOTimelock Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'grantProposerRole',
-        args: [proposer]
+        args: [proposer],
       });
 
       expect(result).toBe('0xhash');
@@ -530,7 +512,7 @@ describe('DAOTimelock Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'revokeProposerRole',
-        args: [proposer]
+        args: [proposer],
       });
 
       expect(result).toBe('0xhash');
@@ -540,7 +522,7 @@ describe('DAOTimelock Contract', () => {
       mockContractRead.mockResolvedValueOnce([proposer, daoAddress]);
 
       const proposers = await mockContractRead({
-        functionName: 'getAllProposers'
+        functionName: 'getAllProposers',
       });
 
       expect(proposers).toHaveLength(2);
@@ -550,7 +532,7 @@ describe('DAOTimelock Contract', () => {
       mockContractRead.mockResolvedValueOnce([executor, daoAddress]);
 
       const executors = await mockContractRead({
-        functionName: 'getAllExecutors'
+        functionName: 'getAllExecutors',
       });
 
       expect(executors).toHaveLength(2);
@@ -563,7 +545,7 @@ describe('DAOTimelock Contract', () => {
 
       const state = await mockContractRead({
         functionName: 'getOperationState',
-        args: ['0xopId']
+        args: ['0xopId'],
       });
 
       expect(state).toBe(1);
@@ -574,7 +556,7 @@ describe('DAOTimelock Contract', () => {
 
       const state = await mockContractRead({
         functionName: 'getOperationState',
-        args: ['0xopId']
+        args: ['0xopId'],
       });
 
       expect(state).toBe(2);
@@ -585,14 +567,14 @@ describe('DAOTimelock Contract', () => {
 
       await mockContractWrite({
         functionName: 'executeOperation',
-        args: [target, 0n, '0x1234', '0x0000', '0x5678']
+        args: [target, 0n, '0x1234', '0x0000', '0x5678'],
       });
 
       mockContractRead.mockResolvedValueOnce(3); // Executed
 
       const state = await mockContractRead({
         functionName: 'getOperationState',
-        args: ['0xopId']
+        args: ['0xopId'],
       });
 
       expect(state).toBe(3);
@@ -602,7 +584,7 @@ describe('DAOTimelock Contract', () => {
       mockContractRead.mockResolvedValueOnce(['0xop1', '0xop2', '0xop3']);
 
       const pending = await mockContractRead({
-        functionName: 'getPendingOperations'
+        functionName: 'getPendingOperations',
       });
 
       expect(pending).toHaveLength(3);
@@ -612,7 +594,7 @@ describe('DAOTimelock Contract', () => {
       mockContractRead.mockResolvedValueOnce(['0xop1', '0xop2']);
 
       const ready = await mockContractRead({
-        functionName: 'getReadyOperations'
+        functionName: 'getReadyOperations',
       });
 
       expect(ready).toHaveLength(2);
@@ -623,7 +605,7 @@ describe('DAOTimelock Contract', () => {
 
       const count = await mockContractRead({
         functionName: 'getOperationCountByState',
-        args: [1] // Queued
+        args: [1], // Queued
       });
 
       expect(count).toBe(5n);
@@ -635,7 +617,7 @@ describe('DAOTimelock Contract', () => {
       mockContractRead.mockResolvedValueOnce(150n);
 
       const total = await mockContractRead({
-        functionName: 'totalOperations'
+        functionName: 'totalOperations',
       });
 
       expect(total).toBe(150n);
@@ -645,7 +627,7 @@ describe('DAOTimelock Contract', () => {
       mockContractRead.mockResolvedValueOnce(120n);
 
       const executed = await mockContractRead({
-        functionName: 'executedOperations'
+        functionName: 'executedOperations',
       });
 
       expect(executed).toBe(120n);
@@ -655,7 +637,7 @@ describe('DAOTimelock Contract', () => {
       mockContractRead.mockResolvedValueOnce(15n);
 
       const cancelled = await mockContractRead({
-        functionName: 'cancelledOperations'
+        functionName: 'cancelledOperations',
       });
 
       expect(cancelled).toBe(15n);
@@ -667,11 +649,11 @@ describe('DAOTimelock Contract', () => {
         queued: 10n,
         executed: 120n,
         cancelled: 15n,
-        averageDelay: 172800n
+        averageDelay: 172800n,
       });
 
       const stats = await mockContractRead({
-        functionName: 'getStatistics'
+        functionName: 'getStatistics',
       });
 
       expect(stats.totalOperations).toBe(150n);
@@ -680,12 +662,12 @@ describe('DAOTimelock Contract', () => {
     it('should get operation history', async () => {
       mockContractRead.mockResolvedValueOnce([
         { id: '0xop1', state: 3, timestamp: 1234567890n },
-        { id: '0xop2', state: 3, timestamp: 1234667890n }
+        { id: '0xop2', state: 3, timestamp: 1234667890n },
       ]);
 
       const history = await mockContractRead({
         functionName: 'getOperationHistory',
-        args: [0n, 10n] // offset, limit
+        args: [0n, 10n], // offset, limit
       });
 
       expect(history).toHaveLength(2);
@@ -697,7 +679,7 @@ describe('DAOTimelock Contract', () => {
       mockContractRead.mockResolvedValueOnce(admin);
 
       const result = await mockContractRead({
-        functionName: 'admin'
+        functionName: 'admin',
       });
 
       expect(result).toBe(admin);
@@ -709,7 +691,7 @@ describe('DAOTimelock Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'setAdmin',
-        args: [newAdmin]
+        args: [newAdmin],
       });
 
       expect(result).toBe('0xhash');
@@ -720,7 +702,7 @@ describe('DAOTimelock Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'pause',
-        args: []
+        args: [],
       });
 
       expect(result).toBe('0xhash');
@@ -732,7 +714,7 @@ describe('DAOTimelock Contract', () => {
       await expect(async () => {
         await mockContractWrite({
           functionName: 'queueOperation',
-          args: [target, 0n, '0x1234', '0x0000', '0x5678']
+          args: [target, 0n, '0x1234', '0x0000', '0x5678'],
         });
       }).rejects.toThrow('paused');
     });
@@ -743,7 +725,7 @@ describe('DAOTimelock Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'setDAO',
-        args: [newDAO]
+        args: [newDAO],
       });
 
       expect(result).toBe('0xhash');
@@ -753,7 +735,7 @@ describe('DAOTimelock Contract', () => {
       mockContractRead.mockResolvedValueOnce(daoAddress);
 
       const dao = await mockContractRead({
-        functionName: 'dao'
+        functionName: 'dao',
       });
 
       expect(dao).toBe(daoAddress);
@@ -766,7 +748,7 @@ describe('DAOTimelock Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'queueOperation',
-        args: [target, 0n, '0x1234', '0x0000', '0x5678']
+        args: [target, 0n, '0x1234', '0x0000', '0x5678'],
       });
 
       expect(result).toBe('0xhash');
@@ -777,7 +759,7 @@ describe('DAOTimelock Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'queueOperation',
-        args: [target, parseEther('10'), '0x1234', '0x0000', '0x5678']
+        args: [target, parseEther('10'), '0x1234', '0x0000', '0x5678'],
       });
 
       expect(result).toBe('0xhash');
@@ -789,7 +771,7 @@ describe('DAOTimelock Contract', () => {
       await expect(async () => {
         await mockContractWrite({
           functionName: 'executeOperation',
-          args: [target, parseEther('10'), '0x1234', '0x0000', '0x5678']
+          args: [target, parseEther('10'), '0x1234', '0x0000', '0x5678'],
         });
       }).rejects.toThrow('Insufficient balance');
     });
@@ -798,7 +780,7 @@ describe('DAOTimelock Contract', () => {
       mockContractRead.mockResolvedValueOnce(parseEther('100'));
 
       const balance = await mockContractRead({
-        functionName: 'getBalance'
+        functionName: 'getBalance',
       });
 
       expect(balance).toBe(parseEther('100'));

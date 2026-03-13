@@ -1,10 +1,10 @@
-import { ContractFactory, JsonRpcProvider } from "ethers";
-import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
+import { ContractFactory, JsonRpcProvider } from 'ethers';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 
 function loadArtifact(relativePath: string) {
   const filePath = resolve(process.cwd(), relativePath);
-  return JSON.parse(readFileSync(filePath, "utf8")) as {
+  return JSON.parse(readFileSync(filePath, 'utf8')) as {
     abi: any[];
     bytecode: string;
   };
@@ -16,11 +16,11 @@ async function expectRevert(action: () => Promise<any>) {
   } catch {
     return;
   }
-  throw new Error("Expected transaction to revert");
+  throw new Error('Expected transaction to revert');
 }
 
 async function main() {
-  const rpcUrl = process.env.RPC_URL ?? "http://127.0.0.1:8545";
+  const rpcUrl = process.env.RPC_URL ?? 'http://127.0.0.1:8545';
   const provider = new JsonRpcProvider(rpcUrl);
 
   const owner = await provider.getSigner(0);
@@ -36,12 +36,12 @@ async function main() {
   const expenseRecipientAddress = await expenseRecipient.getAddress();
 
   const seerArtifact = loadArtifact(
-    "artifacts/contracts/mocks/EcosystemWorkRewardsVerifierMocks.sol/MockSeerForEcosystem.json"
+    'artifacts/contracts/mocks/EcosystemWorkRewardsVerifierMocks.sol/MockSeerForEcosystem.json'
   );
   const tokenArtifact = loadArtifact(
-    "artifacts/contracts/mocks/EcosystemWorkRewardsVerifierMocks.sol/MockTokenForEcosystem.json"
+    'artifacts/contracts/mocks/EcosystemWorkRewardsVerifierMocks.sol/MockTokenForEcosystem.json'
   );
-  const vaultArtifact = loadArtifact("artifacts/contracts/EcosystemVault.sol/EcosystemVault.json");
+  const vaultArtifact = loadArtifact('artifacts/contracts/EcosystemVault.sol/EcosystemVault.json');
 
   const seerFactory = new ContractFactory(seerArtifact.abi as any, seerArtifact.bytecode, owner);
   const seer = (await seerFactory.deploy()) as any;
@@ -68,18 +68,21 @@ async function main() {
   const initialHeadhunterPool = await vault.headhunterPool();
   const initialOperationsPool = await vault.operationsPool();
 
-  await (await vault.payExpense(expenseRecipientAddress, 200n * one, "ops_expense")).wait();
+  await (await vault.payExpense(expenseRecipientAddress, 200n * one, 'ops_expense')).wait();
 
   const merchantAfterExpense = await vault.merchantPool();
   const headhunterAfterExpense = await vault.headhunterPool();
   const operationsAfterExpense = await vault.operationsPool();
 
-  if (merchantAfterExpense !== initialMerchantPool || headhunterAfterExpense !== initialHeadhunterPool) {
-    throw new Error("payExpense must not debit merchant/headhunter pools");
+  if (
+    merchantAfterExpense !== initialMerchantPool ||
+    headhunterAfterExpense !== initialHeadhunterPool
+  ) {
+    throw new Error('payExpense must not debit merchant/headhunter pools');
   }
 
   if (operationsAfterExpense !== initialOperationsPool - 200n * one) {
-    throw new Error("payExpense did not debit operations pool by expected amount");
+    throw new Error('payExpense did not debit operations pool by expected amount');
   }
 
   const expensesTotal = await vault.totalExpensesPaid();
@@ -87,7 +90,9 @@ async function main() {
     throw new Error(`Expected totalExpensesPaid=200e18, got ${expensesTotal}`);
   }
 
-  await expectRevert(() => vault.payExpense(expenseRecipientAddress, operationsAfterExpense + one, "too_much"));
+  await expectRevert(() =>
+    vault.payExpense(expenseRecipientAddress, operationsAfterExpense + one, 'too_much')
+  );
 
   await (await vault.burnFunds(50n * one)).wait();
   const burnTotal = await vault.totalBurned();
@@ -107,7 +112,9 @@ async function main() {
 
   const merchantPaidTotal = await vault.totalMerchantBonusPaid();
   if (merchantPaidTotal !== 2n * one) {
-    throw new Error(`Expected totalMerchantBonusPaid=2e18 after auto merchant tx payout, got ${merchantPaidTotal}`);
+    throw new Error(
+      `Expected totalMerchantBonusPaid=2e18 after auto merchant tx payout, got ${merchantPaidTotal}`
+    );
   }
 
   await (await seer.setScore(referrerAddress, 7000)).wait();
@@ -116,25 +123,38 @@ async function main() {
 
   const referralPaidTotal = await vault.totalHeadhunterPaid();
   if (referralPaidTotal !== one) {
-    throw new Error(`Expected totalHeadhunterPaid=1e18 after user referral payout, got ${referralPaidTotal}`);
+    throw new Error(
+      `Expected totalHeadhunterPaid=1e18 after user referral payout, got ${referralPaidTotal}`
+    );
   }
 
-  const pending = (await vault.getPendingReferral(userAddress)) as readonly [string, string, boolean];
+  const pending = (await vault.getPendingReferral(userAddress)) as readonly [
+    string,
+    string,
+    boolean,
+  ];
   if (pending[2] !== true) {
-    throw new Error("Expected referral to be marked credited");
+    throw new Error('Expected referral to be marked credited');
   }
 
-  const health = (await vault.getVaultHealth()) as readonly [bigint, bigint, bigint, bigint, bigint, bigint];
+  const health = (await vault.getVaultHealth()) as readonly [
+    bigint,
+    bigint,
+    bigint,
+    bigint,
+    bigint,
+    bigint,
+  ];
   if (health[1] < health[2]) {
-    throw new Error("Vault health invariant violated: totalIn must be >= totalOut");
+    throw new Error('Vault health invariant violated: totalIn must be >= totalOut');
   }
 
   const pools = (await vault.getPoolBalances()) as readonly [bigint, bigint, bigint, bigint];
   if (pools[3] === 0n) {
-    throw new Error("Expected non-zero vault balance after invariant flow");
+    throw new Error('Expected non-zero vault balance after invariant flow');
   }
 
-  console.log("Ecosystem work-reward invariant checks passed");
+  console.log('Ecosystem work-reward invariant checks passed');
 }
 
 main().catch((error) => {

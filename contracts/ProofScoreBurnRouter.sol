@@ -100,13 +100,18 @@ contract ProofScoreBurnRouter is Ownable {
     uint256 public constant MAX_SCORE_SNAPSHOTS = 100; // Cap to prevent unbounded gas
     mapping(address => uint64) public lastScoreUpdate;
 
+    function _dayStart(uint256 timestamp) internal pure returns (uint256) {
+        // slither-disable-next-line divide-before-multiply
+        return (timestamp / 1 days) * 1 days;
+    }
+
     constructor(address _seer, address _sanctumSink, address _burnSink, address _ecosystemSink) {
         require(_seer != address(0), "zero seer");
         seer = ISeer(_seer);
         sanctumSink = _sanctumSink;
         burnSink = _burnSink;
         ecosystemSink = _ecosystemSink;
-        currentDayStart = block.timestamp;
+        currentDayStart = _dayStart(block.timestamp);
         emit ModulesSet(_seer, _sanctumSink, _burnSink, _ecosystemSink);
     }
     
@@ -428,9 +433,9 @@ contract ProofScoreBurnRouter is Ownable {
             }
         }
         
-        // Calculate amounts
-        burnAmount = (amount * burnBps) / 10000;
-        sanctumAmount = (amount * sanctumBps) / 10000;
+        // Compute burn/sanctum directly from totalBps to avoid chained divide-then-multiply paths.
+        burnAmount = (amount * totalBps * 40) / 1_000_000;
+        sanctumAmount = (amount * totalBps * 10) / 1_000_000;
         ecosystemAmount = (amount * ecosystemBps) / 10000;
         
         // ═══ SUSTAINABILITY CHECKS ═══
@@ -479,7 +484,7 @@ contract ProofScoreBurnRouter is Ownable {
         
         // Check if new day - reset counter
         if (block.timestamp >= currentDayStart + 1 days) {
-            currentDayStart = block.timestamp - (block.timestamp % 1 days);
+            currentDayStart = _dayStart(block.timestamp);
             dailyBurnedAmount = burnAmount;
             dailyVolumeTracked = 0; // Reset volume on new day
         } else {
@@ -496,7 +501,7 @@ contract ProofScoreBurnRouter is Ownable {
         
         // Check if new day - reset counter
         if (block.timestamp >= currentDayStart + 1 days) {
-            currentDayStart = block.timestamp - (block.timestamp % 1 days);
+            currentDayStart = _dayStart(block.timestamp);
             dailyVolumeTracked = amount;
             dailyBurnedAmount = 0; // Reset burns on new day
         } else {
@@ -539,6 +544,7 @@ contract ProofScoreBurnRouter is Ownable {
     ) {
         score = seer.getScore(user);
         
+        // slither-disable-next-line unused-return
         (burnAmount, sanctumAmount, ecosystemAmount,,,) = this.computeFees(user, address(0), amount);
         netAmount = amount - burnAmount - sanctumAmount - ecosystemAmount;
     }

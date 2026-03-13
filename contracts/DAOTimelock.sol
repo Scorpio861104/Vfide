@@ -104,7 +104,8 @@ contract DAOTimelock {
                 require(returnValue, "TL: ERC20 call returned false");
             }
         }
-        
+
+        // slither-disable-next-line reentrancy-events
         emit Executed(id); _log("tl_executed");
         return r;
     }
@@ -275,7 +276,7 @@ contract DAOTimelock {
      */
     function _removeFromQueuedIds(bytes32 id) internal {
         uint256 idx = queuedIdIndex[id];
-        if (idx == 0) return; // not tracked — safe no-op
+        if (idx < 1) return; // not tracked — safe no-op
 
         uint256 arrayIdx = idx - 1;            // convert 1-indexed → 0-indexed
         uint256 lastIdx  = queuedIds.length - 1;

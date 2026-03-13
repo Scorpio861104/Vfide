@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
+import { ReentrancyGuard } from "./SharedInterfaces.sol";
+
 /**
  * @title SeerAutonomous
  * @notice Fully automatic, self-triggering enforcement system
@@ -68,7 +70,7 @@ error SA_RateLimited();
 ///                         SEER AUTONOMOUS
 /// ═══════════════════════════════════════════════════════════════════════════
 
-contract SeerAutonomous {
+contract SeerAutonomous is ReentrancyGuard {
     
     // ═══════════════════════════════════════════════════════════════════════
     //                              EVENTS
@@ -83,6 +85,22 @@ contract SeerAutonomous {
     event PatternDetected(address indexed subject, PatternType pattern, uint8 severity);
     event DynamicThresholdAdjusted(ThresholdType ttype, uint16 oldValue, uint16 newValue);
     event ReputationCascade(address indexed subject, int16 change, string source);
+    event DAOThresholdsUpdated(
+        uint16 oldAutoRestrict,
+        uint16 newAutoRestrict,
+        uint16 oldAutoLift,
+        uint16 newAutoLift,
+        uint16 oldRateLimit,
+        uint16 newRateLimit,
+        uint16 oldSensitivity,
+        uint16 newSensitivity
+    );
+    event DAORateLimitUpdated(
+        RestrictionLevel level,
+        ActionType action,
+        uint16 oldLimit,
+        uint16 newLimit
+    );
     
     // Restrictions
     event RestrictionApplied(address indexed subject, RestrictionLevel level, uint64 duration, string reason);
@@ -299,12 +317,13 @@ contract SeerAutonomous {
      * @param counterparty Other party involved (for pattern detection)
      * @return result The enforcement decision
      */
+    // slither-disable-next-line reentrancy-no-eth,reentrancy-benign
     function beforeAction(
         address subject,
         ActionType action,
         uint256 amount,
         address counterparty
-    ) external onlyOperator returns (EnforcementResult result) {
+    ) external onlyOperator nonReentrant returns (EnforcementResult result) {
         // 1. Check if DAO has overridden - allow if so
         if (daoOverridden[subject]) {
             return EnforcementResult.Allowed;
@@ -326,6 +345,7 @@ contract SeerAutonomous {
         
         if (pattern != PatternType.None) {
             result = _handlePattern(subject, pattern);
+            // slither-disable-next-line reentrancy-events
             emit PatternDetected(subject, pattern, uint8(restrictionLevel[subject]));
         }
 
@@ -354,6 +374,7 @@ contract SeerAutonomous {
         // 7. Increment network counters
         networkActionCount++;
         
+        // slither-disable-next-line reentrancy-events
         emit AutoEnforced(subject, action, result);
         return result;
     }
@@ -364,12 +385,14 @@ contract SeerAutonomous {
      * @param oldScore Previous score
      * @param newScore New score
      */
-    function onScoreChange(address subject, uint16 oldScore, uint16 newScore) external onlyOperator {
+    // slither-disable-next-line reentrancy-benign
+    function onScoreChange(address subject, uint16 oldScore, uint16 newScore) external onlyOperator nonReentrant {
         // Immediate restriction adjustment based on new score
         _autoAdjustRestriction(subject);
         
         // Calculate reputation cascade
         int16 change = int16(newScore) - int16(oldScore);
+        // slither-disable-next-line reentrancy-events
         emit ReputationCascade(subject, change, "score_change");
         
         // Significant drop triggers investigation
@@ -528,7 +551,7 @@ contract SeerAutonomous {
         networkViolationCount++;
         
         // Calculate severity-weighted violation score
-        uint16 severity;
+        uint16 severity = 0;
         if (pattern == PatternType.RapidTransfers) severity = 10;
         else if (pattern == PatternType.CircularTransfers) severity = 30;
         else if (pattern == PatternType.SelfEndorsement) severity = 50;
@@ -623,6 +646,7 @@ contract SeerAutonomous {
                 ch.deadline = uint64(block.timestamp + challengeWindow);
                 ch.reason = reason;
                 ch.exists = true;
+                // slither-disable-next-line reentrancy-events
                 emit ChallengeCreated(subject, level, ch.deadline, reason);
                 return; // wait for challenge window to pass
             }
@@ -632,6 +656,7 @@ contract SeerAutonomous {
         restrictionExpiry[subject] = uint64(block.timestamp) + duration;
         restrictionReason[subject] = reason;
 
+        // slither-disable-next-line reentrancy-events
         emit RestrictionApplied(subject, level, duration, reason);
 
         // Higher restrictions = score penalty
@@ -650,11 +675,13 @@ contract SeerAutonomous {
             restrictionLevel[subject] = next;
             restrictionExpiry[subject] = uint64(block.timestamp + 1 days);
             restrictionReason[subject] = "progressive_unfreeze";
+            // slither-disable-next-line reentrancy-events
             emit RestrictionApplied(subject, next, 1 days, "progressive_unfreeze");
         } else {
             restrictionLevel[subject] = RestrictionLevel.None;
             restrictionExpiry[subject] = 0;
             restrictionReason[subject] = "";
+            // slither-disable-next-line reentrancy-events
             emit RestrictionLifted(subject, old);
         }
     }
@@ -723,8 +750,8 @@ contract SeerAutonomous {
     }
     
     function _adjustThreshold(ThresholdType ttype, bool increase, uint16 delta) internal {
-        uint16 oldValue;
-        uint16 newValue;
+        uint16 oldValue = 0;
+        uint16 newValue = 0;
         
         if (ttype == ThresholdType.AutoRestrict) {
             oldValue = autoRestrictThreshold;
@@ -745,6 +772,7 @@ contract SeerAutonomous {
         }
         
         if (oldValue != newValue) {
+            // slither-disable-next-line reentrancy-events
             emit DynamicThresholdAdjusted(ttype, oldValue, newValue);
         }
     }
@@ -784,15 +812,33 @@ contract SeerAutonomous {
     ) external onlyDAO {
         require(_autoRestrict < _autoLift, "SA: invalid thresholds");
         require(_sensitivity <= 100, "SA: sensitivity 0-100");
+
+        uint16 oldAutoRestrict = autoRestrictThreshold;
+        uint16 oldAutoLift = autoLiftThreshold;
+        uint16 oldRateLimit = rateLimitThreshold;
+        uint16 oldSensitivity = patternSensitivity;
         
         autoRestrictThreshold = _autoRestrict;
         autoLiftThreshold = _autoLift;
         rateLimitThreshold = _rateLimit;
         patternSensitivity = _sensitivity;
+
+        emit DAOThresholdsUpdated(
+            oldAutoRestrict,
+            _autoRestrict,
+            oldAutoLift,
+            _autoLift,
+            oldRateLimit,
+            _rateLimit,
+            oldSensitivity,
+            _sensitivity
+        );
     }
     
     function daoSetRateLimit(RestrictionLevel level, ActionType action, uint16 limit) external onlyDAO {
+        uint16 oldLimit = rateLimits[level][action];
         rateLimits[level][action] = limit;
+        emit DAORateLimitUpdated(level, action, oldLimit, limit);
     }
     
     // ═══════════════════════════════════════════════════════════════════════

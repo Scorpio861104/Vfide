@@ -15,6 +15,7 @@ export default function InsightsPage() {
         badgeColor="bg-cyan-400/15 text-cyan-200"
       />
       <div className="container mx-auto px-4 pb-24 md:pb-8">
+        <h1 className="sr-only">Insight Command</h1>
         <FinancialDashboard />
       </div>
     </PageWrapper>

@@ -107,6 +107,7 @@ contract VaultRegistry is Ownable, ReentrancyGuard {
     error NotVaultOwner();
     error InvalidVault();
     error RecoveryIdAlreadyTaken();
+    error EmailAlreadyTaken();
     error UsernameAlreadyTaken();
     error PhoneAlreadyTaken();
     error VaultNotFound();
@@ -150,7 +151,7 @@ contract VaultRegistry is Ownable, ReentrancyGuard {
         address owner = vaultHub.ownerOfVault(vault);
         require(msg.sender == owner || msg.sender == address(vaultHub), "not authorized");
         
-        if (vaultCreatedAt[vault] == 0) {
+        if (vaultCreatedAt[vault] < 1) {
             vaultIndex[vault] = allVaults.length;
             allVaults.push(vault);
             vaultCreatedAt[vault] = block.timestamp;
@@ -203,9 +204,13 @@ contract VaultRegistry is Ownable, ReentrancyGuard {
         address vault,
         bytes32 emailHash
     ) external onlyVaultOwner(vault) validVault(vault) {
+        if (vaultByEmailHash[emailHash] != address(0) && vaultByEmailHash[emailHash] != vault) {
+            revert EmailAlreadyTaken();
+        }
+
         // Clear old email if exists
         bytes32 oldEmail = _getStoredEmailHash(vault);
-        if (oldEmail != bytes32(0)) {
+        if (oldEmail != bytes32(0) && oldEmail != emailHash) {
             delete vaultByEmailHash[oldEmail];
         }
         
@@ -254,11 +259,15 @@ contract VaultRegistry is Ownable, ReentrancyGuard {
             revert UsernameAlreadyTaken();
         }
         
-        // Clear old username
-        // Note: We can't easily clear old username hash without storing it
+        bytes32 oldUsername = _usernameHashStorage[vault];
+        if (oldUsername != bytes32(0) && oldUsername != hashedUsername) {
+            delete vaultByUsernameHash[oldUsername];
+            usernameTaken[oldUsername] = false;
+        }
         
         vaultByUsernameHash[hashedUsername] = vault;
         usernameTaken[hashedUsername] = true;
+        _usernameHashStorage[vault] = hashedUsername;
         
         emit UsernameSet(vault, hashedUsername);
     }
@@ -638,6 +647,7 @@ contract VaultRegistry is Ownable, ReentrancyGuard {
     // Email hash storage (using a slot mapping pattern)
     mapping(address => bytes32) private _emailHashStorage;
     mapping(address => bytes32) private _phoneHashStorage;
+    mapping(address => bytes32) private _usernameHashStorage;
     
     function _getStoredEmailHash(address vault) internal view returns (bytes32) {
         return _emailHashStorage[vault];

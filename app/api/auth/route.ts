@@ -42,7 +42,7 @@ function parseChainId(message: string): number | null {
  * Security:
  * - Rate limited (10 requests/minute) to prevent brute force
  * - Validates wallet signature cryptographically
- * - Returns secure JWT token (not Base64)
+ * - Sets secure JWT in HTTPOnly cookie (token is not returned in JSON)
  */
 export async function POST(request: NextRequest) {
   // Apply rate limiting for auth endpoints
@@ -63,7 +63,7 @@ export async function POST(request: NextRequest) {
     const normalizedAddress = address.toLowerCase();
     const ip = getRequestIp(request.headers);
     const userAgent = request.headers.get('user-agent') || 'unknown';
-    const lock = getAccountLock(normalizedAddress);
+    const lock = await getAccountLock(normalizedAddress);
 
     if (lock) {
       return NextResponse.json(
@@ -91,7 +91,7 @@ export async function POST(request: NextRequest) {
       userAgent,
     });
     if (!challengeValidation.ok) {
-      recordSecurityEvent(normalizedAddress, { ts: Date.now(), ip, type: 'auth_fail' });
+      await recordSecurityEvent(normalizedAddress, { ts: Date.now(), ip, type: 'auth_fail' });
       return NextResponse.json({ error: challengeValidation.error }, { status: 400 });
     }
 
@@ -109,7 +109,7 @@ export async function POST(request: NextRequest) {
     const fiveMinutes = 5 * 60 * 1000;
 
     if (Math.abs(now - messageTimestamp) > fiveMinutes) {
-      recordSecurityEvent(normalizedAddress, { ts: Date.now(), ip, type: 'auth_fail' });
+      await recordSecurityEvent(normalizedAddress, { ts: Date.now(), ip, type: 'auth_fail' });
       return NextResponse.json(
         { error: 'Message expired. Please sign a new message.' },
         { status: 400 }
@@ -124,15 +124,15 @@ export async function POST(request: NextRequest) {
     });
 
     if (!isValid) {
-      recordSecurityEvent(normalizedAddress, { ts: Date.now(), ip, type: 'auth_fail' });
+      await recordSecurityEvent(normalizedAddress, { ts: Date.now(), ip, type: 'auth_fail' });
       return NextResponse.json(
         { error: 'Invalid signature' },
         { status: 401 }
       );
     }
 
-    recordSecurityEvent(normalizedAddress, { ts: Date.now(), ip, type: 'auth_success' });
-    clearAuthFailureSignals(normalizedAddress);
+    await recordSecurityEvent(normalizedAddress, { ts: Date.now(), ip, type: 'auth_success' });
+    await clearAuthFailureSignals(normalizedAddress);
 
     // Generate secure JWT token
     const tokenResponse = generateToken(normalizedAddress, chainId);
@@ -140,7 +140,6 @@ export async function POST(request: NextRequest) {
     // Create response with HTTPOnly cookie for enhanced security
     const response = NextResponse.json({
       success: true,
-      token: tokenResponse.token,
       address: tokenResponse.address,
       expiresIn: tokenResponse.expiresIn,
     });

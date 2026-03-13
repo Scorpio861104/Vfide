@@ -35,13 +35,7 @@ describe('EscrowManager Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'createEscrow',
-        args: [
-          seller,
-          parseEther('1000'),
-          tokenAddress,
-          'Product purchase',
-          arbiter
-        ]
+        args: [seller, parseEther('1000'), tokenAddress, 'Product purchase', arbiter],
       });
 
       expect(result).toBe('0xhash');
@@ -52,7 +46,7 @@ describe('EscrowManager Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'createEscrow',
-        args: [seller, parseEther('1000'), tokenAddress, 'Description', arbiter]
+        args: [seller, parseEther('1000'), tokenAddress, 'Description', arbiter],
       });
 
       expect(result).toBe('0xhash');
@@ -64,7 +58,7 @@ describe('EscrowManager Contract', () => {
       await expect(async () => {
         await mockContractWrite({
           functionName: 'createEscrow',
-          args: [seller, 0n, tokenAddress, 'Description', arbiter]
+          args: [seller, 0n, tokenAddress, 'Description', arbiter],
         });
       }).rejects.toThrow('greater than zero');
     });
@@ -75,7 +69,7 @@ describe('EscrowManager Contract', () => {
       await expect(async () => {
         await mockContractWrite({
           functionName: 'createEscrow',
-          args: [buyer, parseEther('1000'), tokenAddress, 'Description', arbiter]
+          args: [buyer, parseEther('1000'), tokenAddress, 'Description', arbiter],
         });
       }).rejects.toThrow('Buyer cannot be seller');
     });
@@ -90,12 +84,12 @@ describe('EscrowManager Contract', () => {
         description: 'Product purchase',
         arbiter: arbiter,
         state: 0, // Created
-        createdAt: 1234567890n
+        createdAt: 1234567890n,
       });
 
       const details = await mockContractRead({
         functionName: 'getEscrow',
-        args: [1n]
+        args: [1n],
       });
 
       expect(details.buyer).toBe(buyer);
@@ -106,13 +100,13 @@ describe('EscrowManager Contract', () => {
 
       await mockContractWrite({
         functionName: 'createEscrow',
-        args: [seller, parseEther('1000'), tokenAddress, 'Description', arbiter]
+        args: [seller, parseEther('1000'), tokenAddress, 'Description', arbiter],
       });
 
       mockContractRead.mockResolvedValueOnce(6n); // incremented
 
       const count = await mockContractRead({
-        functionName: 'totalEscrows'
+        functionName: 'totalEscrows',
       });
 
       expect(count).toBe(6n);
@@ -123,7 +117,7 @@ describe('EscrowManager Contract', () => {
 
       const escrows = await mockContractRead({
         functionName: 'getEscrowsByBuyer',
-        args: [buyer]
+        args: [buyer],
       });
 
       expect(escrows).toHaveLength(3);
@@ -134,7 +128,7 @@ describe('EscrowManager Contract', () => {
 
       const escrows = await mockContractRead({
         functionName: 'getEscrowsBySeller',
-        args: [seller]
+        args: [seller],
       });
 
       expect(escrows).toHaveLength(2);
@@ -145,7 +139,7 @@ describe('EscrowManager Contract', () => {
 
       const expiry = await mockContractRead({
         functionName: 'getEscrowExpiry',
-        args: [1n]
+        args: [1n],
       });
 
       expect(expiry).toBe(1237159890n);
@@ -158,7 +152,7 @@ describe('EscrowManager Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'deposit',
-        args: [1n]
+        args: [1n],
       });
 
       expect(result).toBe('0xhash');
@@ -170,7 +164,7 @@ describe('EscrowManager Contract', () => {
       await expect(async () => {
         await mockContractWrite({
           functionName: 'deposit',
-          args: [1n]
+          args: [1n],
         });
       }).rejects.toThrow('Not buyer');
     });
@@ -181,7 +175,7 @@ describe('EscrowManager Contract', () => {
       await expect(async () => {
         await mockContractWrite({
           functionName: 'deposit',
-          args: [1n]
+          args: [1n],
         });
       }).rejects.toThrow('Insufficient allowance');
     });
@@ -192,7 +186,7 @@ describe('EscrowManager Contract', () => {
       await expect(async () => {
         await mockContractWrite({
           functionName: 'deposit',
-          args: [1n]
+          args: [1n],
         });
       }).rejects.toThrow('Insufficient balance');
     });
@@ -202,7 +196,7 @@ describe('EscrowManager Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'deposit',
-        args: [1n]
+        args: [1n],
       });
 
       expect(result).toBe('0xhash');
@@ -213,14 +207,14 @@ describe('EscrowManager Contract', () => {
 
       await mockContractWrite({
         functionName: 'deposit',
-        args: [1n]
+        args: [1n],
       });
 
       mockContractRead.mockResolvedValueOnce(1); // Funded
 
       const state = await mockContractRead({
         functionName: 'getEscrowState',
-        args: [1n]
+        args: [1n],
       });
 
       expect(state).toBe(1);
@@ -232,7 +226,7 @@ describe('EscrowManager Contract', () => {
       await expect(async () => {
         await mockContractWrite({
           functionName: 'deposit',
-          args: [1n]
+          args: [1n],
         });
       }).rejects.toThrow('Already funded');
     });
@@ -242,7 +236,7 @@ describe('EscrowManager Contract', () => {
 
       const balance = await mockContractRead({
         functionName: 'getEscrowBalance',
-        args: [1n]
+        args: [1n],
       });
 
       expect(balance).toBe(parseEther('1000'));
@@ -253,7 +247,7 @@ describe('EscrowManager Contract', () => {
 
       const timestamp = await mockContractRead({
         functionName: 'getDepositTime',
-        args: [1n]
+        args: [1n],
       });
 
       expect(timestamp).toBe(1234567890n);
@@ -266,7 +260,7 @@ describe('EscrowManager Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'releaseFunds',
-        args: [1n]
+        args: [1n],
       });
 
       expect(result).toBe('0xhash');
@@ -278,7 +272,7 @@ describe('EscrowManager Contract', () => {
       await expect(async () => {
         await mockContractWrite({
           functionName: 'releaseFunds',
-          args: [1n]
+          args: [1n],
         });
       }).rejects.toThrow('Not buyer');
     });
@@ -289,7 +283,7 @@ describe('EscrowManager Contract', () => {
       await expect(async () => {
         await mockContractWrite({
           functionName: 'releaseFunds',
-          args: [1n]
+          args: [1n],
         });
       }).rejects.toThrow('not funded');
     });
@@ -299,7 +293,7 @@ describe('EscrowManager Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'releaseFunds',
-        args: [1n]
+        args: [1n],
       });
 
       expect(result).toBe('0xhash');
@@ -310,14 +304,14 @@ describe('EscrowManager Contract', () => {
 
       await mockContractWrite({
         functionName: 'releaseFunds',
-        args: [1n]
+        args: [1n],
       });
 
       mockContractRead.mockResolvedValueOnce(2); // Completed
 
       const state = await mockContractRead({
         functionName: 'getEscrowState',
-        args: [1n]
+        args: [1n],
       });
 
       expect(state).toBe(2);
@@ -328,7 +322,7 @@ describe('EscrowManager Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'releaseFunds',
-        args: [1n]
+        args: [1n],
       });
 
       expect(result).toBe('0xhash');
@@ -339,7 +333,7 @@ describe('EscrowManager Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'releasePartial',
-        args: [1n, parseEther('500')]
+        args: [1n, parseEther('500')],
       });
 
       expect(result).toBe('0xhash');
@@ -351,7 +345,7 @@ describe('EscrowManager Contract', () => {
       await expect(async () => {
         await mockContractWrite({
           functionName: 'releasePartial',
-          args: [1n, parseEther('1500')]
+          args: [1n, parseEther('1500')],
         });
       }).rejects.toThrow('exceeds balance');
     });
@@ -359,12 +353,12 @@ describe('EscrowManager Contract', () => {
     it('should get release history', async () => {
       mockContractRead.mockResolvedValueOnce([
         { amount: parseEther('500'), timestamp: 1234567890n },
-        { amount: parseEther('500'), timestamp: 1234667890n }
+        { amount: parseEther('500'), timestamp: 1234667890n },
       ]);
 
       const history = await mockContractRead({
         functionName: 'getReleaseHistory',
-        args: [1n]
+        args: [1n],
       });
 
       expect(history).toHaveLength(2);
@@ -375,7 +369,7 @@ describe('EscrowManager Contract', () => {
 
       const total = await mockContractRead({
         functionName: 'getTotalReleased',
-        args: [1n]
+        args: [1n],
       });
 
       expect(total).toBe(parseEther('750'));
@@ -388,7 +382,7 @@ describe('EscrowManager Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'refund',
-        args: [1n, 'Product unavailable']
+        args: [1n, 'Product unavailable'],
       });
 
       expect(result).toBe('0xhash');
@@ -400,7 +394,7 @@ describe('EscrowManager Contract', () => {
       await expect(async () => {
         await mockContractWrite({
           functionName: 'refund',
-          args: [1n, 'Reason']
+          args: [1n, 'Reason'],
         });
       }).rejects.toThrow('Not seller');
     });
@@ -410,7 +404,7 @@ describe('EscrowManager Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'refund',
-        args: [1n, 'Reason']
+        args: [1n, 'Reason'],
       });
 
       expect(result).toBe('0xhash');
@@ -421,14 +415,14 @@ describe('EscrowManager Contract', () => {
 
       await mockContractWrite({
         functionName: 'refund',
-        args: [1n, 'Reason']
+        args: [1n, 'Reason'],
       });
 
       mockContractRead.mockResolvedValueOnce(4); // Refunded
 
       const state = await mockContractRead({
         functionName: 'getEscrowState',
-        args: [1n]
+        args: [1n],
       });
 
       expect(state).toBe(4);
@@ -439,7 +433,7 @@ describe('EscrowManager Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'refund',
-        args: [1n, 'Reason']
+        args: [1n, 'Reason'],
       });
 
       expect(result).toBe('0xhash');
@@ -450,7 +444,7 @@ describe('EscrowManager Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'claimExpired',
-        args: [1n]
+        args: [1n],
       });
 
       expect(result).toBe('0xhash');
@@ -462,7 +456,7 @@ describe('EscrowManager Contract', () => {
       await expect(async () => {
         await mockContractWrite({
           functionName: 'claimExpired',
-          args: [1n]
+          args: [1n],
         });
       }).rejects.toThrow('not expired');
     });
@@ -474,7 +468,7 @@ describe('EscrowManager Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'raiseDispute',
-        args: [1n, 'Product not as described']
+        args: [1n, 'Product not as described'],
       });
 
       expect(result).toBe('0xhash');
@@ -485,7 +479,7 @@ describe('EscrowManager Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'raiseDispute',
-        args: [1n, 'Payment dispute']
+        args: [1n, 'Payment dispute'],
       });
 
       expect(result).toBe('0xhash');
@@ -497,7 +491,7 @@ describe('EscrowManager Contract', () => {
       await expect(async () => {
         await mockContractWrite({
           functionName: 'raiseDispute',
-          args: [1n, 'Reason']
+          args: [1n, 'Reason'],
         });
       }).rejects.toThrow('Not a party');
     });
@@ -507,7 +501,7 @@ describe('EscrowManager Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'raiseDispute',
-        args: [1n, 'Reason']
+        args: [1n, 'Reason'],
       });
 
       expect(result).toBe('0xhash');
@@ -518,14 +512,14 @@ describe('EscrowManager Contract', () => {
 
       await mockContractWrite({
         functionName: 'raiseDispute',
-        args: [1n, 'Reason']
+        args: [1n, 'Reason'],
       });
 
       mockContractRead.mockResolvedValueOnce(3); // Disputed
 
       const state = await mockContractRead({
         functionName: 'getEscrowState',
-        args: [1n]
+        args: [1n],
       });
 
       expect(state).toBe(3);
@@ -536,7 +530,7 @@ describe('EscrowManager Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'resolveDispute',
-        args: [1n, true, 'Ruling: Buyer favor'] // true = buyer wins
+        args: [1n, true, 'Ruling: Buyer favor'], // true = buyer wins
       });
 
       expect(result).toBe('0xhash');
@@ -548,7 +542,7 @@ describe('EscrowManager Contract', () => {
       await expect(async () => {
         await mockContractWrite({
           functionName: 'resolveDispute',
-          args: [1n, true, 'Ruling']
+          args: [1n, true, 'Ruling'],
         });
       }).rejects.toThrow('Not arbiter');
     });
@@ -558,7 +552,7 @@ describe('EscrowManager Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'resolveDispute',
-        args: [1n, false, 'Ruling: Seller favor']
+        args: [1n, false, 'Ruling: Seller favor'],
       });
 
       expect(result).toBe('0xhash');
@@ -570,12 +564,12 @@ describe('EscrowManager Contract', () => {
         initiator: buyer,
         reason: 'Product not as described',
         timestamp: 1234567890n,
-        isResolved: false
+        isResolved: false,
       });
 
       const details = await mockContractRead({
         functionName: 'getDispute',
-        args: [1n]
+        args: [1n],
       });
 
       expect(details.initiator).toBe(buyer);
@@ -586,7 +580,7 @@ describe('EscrowManager Contract', () => {
 
       const isDisputed = await mockContractRead({
         functionName: 'isDisputed',
-        args: [1n]
+        args: [1n],
       });
 
       expect(isDisputed).toBe(true);
@@ -597,7 +591,7 @@ describe('EscrowManager Contract', () => {
 
       const disputes = await mockContractRead({
         functionName: 'getArbiterDisputes',
-        args: [arbiter]
+        args: [arbiter],
       });
 
       expect(disputes).toHaveLength(3);
@@ -608,7 +602,7 @@ describe('EscrowManager Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'resolveSplit',
-        args: [1n, 60n, 40n, 'Split: 60% buyer, 40% seller']
+        args: [1n, 60n, 40n, 'Split: 60% buyer, 40% seller'],
       });
 
       expect(result).toBe('0xhash');
@@ -621,7 +615,7 @@ describe('EscrowManager Contract', () => {
 
       const state = await mockContractRead({
         functionName: 'getEscrowState',
-        args: [1n]
+        args: [1n],
       });
 
       expect(state).toBe(1);
@@ -632,7 +626,7 @@ describe('EscrowManager Contract', () => {
 
       const isActive = await mockContractRead({
         functionName: 'isEscrowActive',
-        args: [1n]
+        args: [1n],
       });
 
       expect(isActive).toBe(true);
@@ -643,7 +637,7 @@ describe('EscrowManager Contract', () => {
 
       const isCompleted = await mockContractRead({
         functionName: 'isEscrowCompleted',
-        args: [1n]
+        args: [1n],
       });
 
       expect(isCompleted).toBe(true);
@@ -653,12 +647,12 @@ describe('EscrowManager Contract', () => {
       mockContractRead.mockResolvedValueOnce([
         { state: 0, timestamp: 1234567890n },
         { state: 1, timestamp: 1234567900n },
-        { state: 2, timestamp: 1234667890n }
+        { state: 2, timestamp: 1234667890n },
       ]);
 
       const history = await mockContractRead({
         functionName: 'getStateHistory',
-        args: [1n]
+        args: [1n],
       });
 
       expect(history).toHaveLength(3);
@@ -669,7 +663,7 @@ describe('EscrowManager Contract', () => {
 
       const escrows = await mockContractRead({
         functionName: 'getEscrowsByState',
-        args: [1] // Funded
+        args: [1], // Funded
       });
 
       expect(escrows).toHaveLength(3);
@@ -681,7 +675,7 @@ describe('EscrowManager Contract', () => {
       await expect(async () => {
         await mockContractWrite({
           functionName: 'releaseFunds',
-          args: [1n]
+          args: [1n],
         });
       }).rejects.toThrow('Invalid state transition');
     });
@@ -692,7 +686,7 @@ describe('EscrowManager Contract', () => {
       mockContractRead.mockResolvedValueOnce(200n); // 2%
 
       const fee = await mockContractRead({
-        functionName: 'platformFee'
+        functionName: 'platformFee',
       });
 
       expect(fee).toBe(200n);
@@ -703,7 +697,7 @@ describe('EscrowManager Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'setPlatformFee',
-        args: [250n] // 2.5%
+        args: [250n], // 2.5%
       });
 
       expect(result).toBe('0xhash');
@@ -714,7 +708,7 @@ describe('EscrowManager Contract', () => {
 
       const fee = await mockContractRead({
         functionName: 'calculateFee',
-        args: [parseEther('1000')]
+        args: [parseEther('1000')],
       });
 
       expect(fee).toBe(parseEther('20'));
@@ -725,7 +719,7 @@ describe('EscrowManager Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'releaseFunds',
-        args: [1n]
+        args: [1n],
       });
 
       expect(result).toBe('0xhash');
@@ -735,7 +729,7 @@ describe('EscrowManager Contract', () => {
       mockContractRead.mockResolvedValueOnce(parseEther('500'));
 
       const total = await mockContractRead({
-        functionName: 'totalFeesCollected'
+        functionName: 'totalFeesCollected',
       });
 
       expect(total).toBe(parseEther('500'));
@@ -746,7 +740,7 @@ describe('EscrowManager Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'withdrawFees',
-        args: [parseEther('400')]
+        args: [parseEther('400')],
       });
 
       expect(result).toBe('0xhash');
@@ -758,7 +752,7 @@ describe('EscrowManager Contract', () => {
       mockContractRead.mockResolvedValueOnce(500n);
 
       const total = await mockContractRead({
-        functionName: 'totalEscrows'
+        functionName: 'totalEscrows',
       });
 
       expect(total).toBe(500n);
@@ -768,7 +762,7 @@ describe('EscrowManager Contract', () => {
       mockContractRead.mockResolvedValueOnce(450n);
 
       const completed = await mockContractRead({
-        functionName: 'completedEscrows'
+        functionName: 'completedEscrows',
       });
 
       expect(completed).toBe(450n);
@@ -778,7 +772,7 @@ describe('EscrowManager Contract', () => {
       mockContractRead.mockResolvedValueOnce(15n);
 
       const disputed = await mockContractRead({
-        functionName: 'disputedEscrows'
+        functionName: 'disputedEscrows',
       });
 
       expect(disputed).toBe(15n);
@@ -791,11 +785,11 @@ describe('EscrowManager Contract', () => {
         completedEscrows: 450n,
         disputedEscrows: 15n,
         totalVolume: parseEther('1000000'),
-        totalFees: parseEther('20000')
+        totalFees: parseEther('20000'),
       });
 
       const stats = await mockContractRead({
-        functionName: 'getPlatformStats'
+        functionName: 'getPlatformStats',
       });
 
       expect(stats.totalEscrows).toBe(500n);
@@ -806,12 +800,12 @@ describe('EscrowManager Contract', () => {
         totalEscrowsAsBuyer: 10n,
         totalEscrowsAsSeller: 5n,
         completedTransactions: 12n,
-        disputesRaised: 1n
+        disputesRaised: 1n,
       });
 
       const stats = await mockContractRead({
         functionName: 'getUserStats',
-        args: [buyer]
+        args: [buyer],
       });
 
       expect(stats.totalEscrowsAsBuyer).toBe(10n);
@@ -822,12 +816,12 @@ describe('EscrowManager Contract', () => {
         totalDisputes: 25n,
         resolvedDisputes: 20n,
         pendingDisputes: 5n,
-        successRate: 90n
+        successRate: 90n,
       });
 
       const stats = await mockContractRead({
         functionName: 'getArbiterStats',
-        args: [arbiter]
+        args: [arbiter],
       });
 
       expect(stats.totalDisputes).toBe(25n);
@@ -840,7 +834,7 @@ describe('EscrowManager Contract', () => {
 
       const isArbiter = await mockContractRead({
         functionName: 'isArbiter',
-        args: [arbiter]
+        args: [arbiter],
       });
 
       expect(isArbiter).toBe(true);
@@ -851,7 +845,7 @@ describe('EscrowManager Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'addArbiter',
-        args: [arbiter]
+        args: [arbiter],
       });
 
       expect(result).toBe('0xhash');
@@ -862,7 +856,7 @@ describe('EscrowManager Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'removeArbiter',
-        args: [arbiter]
+        args: [arbiter],
       });
 
       expect(result).toBe('0xhash');
@@ -873,7 +867,7 @@ describe('EscrowManager Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'addArbiter',
-        args: [arbiter]
+        args: [arbiter],
       });
 
       expect(result).toBe('0xhash');
@@ -883,7 +877,7 @@ describe('EscrowManager Contract', () => {
       mockContractRead.mockResolvedValueOnce([arbiter, admin]);
 
       const arbiters = await mockContractRead({
-        functionName: 'getAllArbiters'
+        functionName: 'getAllArbiters',
       });
 
       expect(arbiters).toHaveLength(2);
@@ -895,7 +889,7 @@ describe('EscrowManager Contract', () => {
       await expect(async () => {
         await mockContractWrite({
           functionName: 'addArbiter',
-          args: [arbiter]
+          args: [arbiter],
         });
       }).rejects.toThrow('Not admin');
     });
@@ -906,7 +900,7 @@ describe('EscrowManager Contract', () => {
       mockContractRead.mockResolvedValueOnce(admin);
 
       const result = await mockContractRead({
-        functionName: 'admin'
+        functionName: 'admin',
       });
 
       expect(result).toBe(admin);
@@ -918,7 +912,7 @@ describe('EscrowManager Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'setAdmin',
-        args: [newAdmin]
+        args: [newAdmin],
       });
 
       expect(result).toBe('0xhash');
@@ -929,7 +923,7 @@ describe('EscrowManager Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'pause',
-        args: []
+        args: [],
       });
 
       expect(result).toBe('0xhash');
@@ -941,7 +935,7 @@ describe('EscrowManager Contract', () => {
       await expect(async () => {
         await mockContractWrite({
           functionName: 'createEscrow',
-          args: [seller, parseEther('1000'), tokenAddress, 'Description', arbiter]
+          args: [seller, parseEther('1000'), tokenAddress, 'Description', arbiter],
         });
       }).rejects.toThrow('paused');
     });
@@ -951,7 +945,7 @@ describe('EscrowManager Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'emergencyRelease',
-        args: [1n, buyer, 'Security concern']
+        args: [1n, buyer, 'Security concern'],
       });
 
       expect(result).toBe('0xhash');
@@ -962,7 +956,7 @@ describe('EscrowManager Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'setExpiryDuration',
-        args: [2592000n] // 30 days
+        args: [2592000n], // 30 days
       });
 
       expect(result).toBe('0xhash');
@@ -975,7 +969,7 @@ describe('EscrowManager Contract', () => {
 
       const balance = await mockContractRead({
         functionName: 'getEscrowBalance',
-        args: [1n]
+        args: [1n],
       });
 
       expect(balance).toBe(0n);
@@ -987,7 +981,7 @@ describe('EscrowManager Contract', () => {
       await expect(async () => {
         await mockContractWrite({
           functionName: 'releaseFunds',
-          args: [1n]
+          args: [1n],
         });
       }).rejects.toThrow('cancelled');
     });
@@ -996,7 +990,7 @@ describe('EscrowManager Contract', () => {
       mockContractRead.mockResolvedValueOnce([1n, 2n, 3n]);
 
       const pending = await mockContractRead({
-        functionName: 'getPendingEscrows'
+        functionName: 'getPendingEscrows',
       });
 
       expect(pending).toHaveLength(3);
@@ -1007,7 +1001,7 @@ describe('EscrowManager Contract', () => {
 
       const result = await mockContractWrite({
         functionName: 'deposit',
-        args: [1n]
+        args: [1n],
       });
 
       expect(result).toBe('0xhash');
