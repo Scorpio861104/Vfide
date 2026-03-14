@@ -102,7 +102,7 @@
     "test:vitest:watch": "vitest --watch"
   },
   "dependencies": {
-    "@aws-sdk/client-s3": "^3.888.0",
+    "@aws-sdk/client-s3": "^3.1004.0",
     "@datadog/browser-rum": "^6.28.1",
     "@datadog/browser-rum-react": "^6.27.1",
     "@fontsource/inter": "^5.2.8",
