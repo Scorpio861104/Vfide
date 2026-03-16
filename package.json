@@ -143,7 +143,7 @@
     "tsx": "^4.21.0",
     "viem": "^2.47.0",
     "wagmi": "^2.19.5",
-    "web-vitals": "^4.2.4",
+    "web-vitals": "^5.1.0",
     "zod": "^4.3.6"
   },
   "devDependencies": {
