@@ -33,7 +33,7 @@ jobs:
 
       - name: Upload replay metrics report artifact
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: security-replay-metrics-report
           path: security-replay-metrics-report.md
