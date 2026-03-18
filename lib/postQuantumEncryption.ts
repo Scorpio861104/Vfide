@@ -691,6 +691,7 @@ export async function hybridVerify(
 
 const PQ_PUBLIC_KEY_STORAGE_KEY = 'vfide_pq_public_keys_v4';
 const PQ_PRIVATE_KEY_STORAGE_KEY = 'vfide_pq_private_keys_v4';
+const inMemoryPrivateKeys = new Map<string, PQKeyPair>();
 
 /**
  * Store hybrid public keys for a user address
@@ -726,24 +727,20 @@ export function getStoredPublicKeys(address: string): HybridPublicKey | null {
  * WARNING: In production, use a more secure storage mechanism!
  */
 export function storePrivateKeys(address: string, keyPair: PQKeyPair): void {
-  if (typeof window === 'undefined') return;
-  
-  // WARNING: This is simplified. In production, encrypt with user's password!
-  try {
-    const stored = JSON.parse(sessionStorage.getItem(PQ_PRIVATE_KEY_STORAGE_KEY) || '{}');
-    stored[address.toLowerCase()] = {
-      classicalPrivateKey: bytesToHex(keyPair.classicalPrivateKey),
-      classicalPublicKey: bytesToHex(keyPair.classicalPublicKey),
-      pqPrivateKey: bytesToHex(keyPair.pqPrivateKey),
-      pqPublicKey: bytesToHex(keyPair.pqPublicKey),
-      signPrivateKey: bytesToHex(keyPair.signPrivateKey),
-      signPublicKey: bytesToHex(keyPair.signPublicKey),
-      dilithiumPrivateKey: bytesToHex(keyPair.dilithiumPrivateKey),
-      dilithiumPublicKey: bytesToHex(keyPair.dilithiumPublicKey)
-    };
-    sessionStorage.setItem(PQ_PRIVATE_KEY_STORAGE_KEY, JSON.stringify(stored));
-  } catch (error) {
-    console.error('[PQ] Failed to store private keys:', error);
+  const normalizedAddress = address.toLowerCase();
+  inMemoryPrivateKeys.set(normalizedAddress, keyPair);
+
+  // Security hardening: remove legacy persisted private-key payloads if present.
+  if (typeof window !== 'undefined') {
+    try {
+      const stored = JSON.parse(sessionStorage.getItem(PQ_PRIVATE_KEY_STORAGE_KEY) || '{}');
+      if (stored[normalizedAddress]) {
+        delete stored[normalizedAddress];
+        sessionStorage.setItem(PQ_PRIVATE_KEY_STORAGE_KEY, JSON.stringify(stored));
+      }
+    } catch {
+      // Ignore malformed legacy storage and continue with in-memory keys only.
+    }
   }
 }
 
@@ -751,26 +748,8 @@ export function storePrivateKeys(address: string, keyPair: PQKeyPair): void {
  * Get stored private keys
  */
 export function getStoredPrivateKeys(address: string): PQKeyPair | null {
-  if (typeof window === 'undefined') return null;
-  
-  try {
-    const stored = JSON.parse(sessionStorage.getItem(PQ_PRIVATE_KEY_STORAGE_KEY) || '{}');
-    const keys = stored[address.toLowerCase()];
-    if (!keys) return null;
-    
-    return {
-      classicalPrivateKey: hexToBytes(keys.classicalPrivateKey),
-      classicalPublicKey: hexToBytes(keys.classicalPublicKey),
-      pqPrivateKey: hexToBytes(keys.pqPrivateKey),
-      pqPublicKey: hexToBytes(keys.pqPublicKey),
-      signPrivateKey: hexToBytes(keys.signPrivateKey),
-      signPublicKey: hexToBytes(keys.signPublicKey),
-      dilithiumPrivateKey: hexToBytes(keys.dilithiumPrivateKey),
-      dilithiumPublicKey: hexToBytes(keys.dilithiumPublicKey)
-    };
-  } catch {
-    return null;
-  }
+  const normalizedAddress = address.toLowerCase();
+  return inMemoryPrivateKeys.get(normalizedAddress) || null;
 }
 
 // ============================================================================

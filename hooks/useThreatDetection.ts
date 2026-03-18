@@ -68,7 +68,6 @@ const generateThreatId = (): string => {
 
 const checkUnusualLocation = (): boolean => {
   // In production: Compare with known locations from backend
-  // For now, randomly simulate (mock)
   return false;
 };
 

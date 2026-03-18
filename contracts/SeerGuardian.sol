@@ -22,6 +22,9 @@ pragma solidity 0.8.30;
 ///                              INTERFACES
 /// ═══════════════════════════════════════════════════════════════════════════
 
+// I-07 Fix: Fallback event for critical ledger logging failures
+event LedgerLogFailed(address indexed source, string action);
+
 interface ISeer_Guardian {
     function getScore(address) external view returns (uint16);
     function punish(address subject, uint16 delta, string calldata reason) external;
@@ -34,6 +37,19 @@ interface ISeer_Guardian {
 interface IDAO_Guardian {
     function admin() external view returns (address);
     function proposalCount() external view returns (uint256);
+    function getProposalDetails(uint256 id) external view returns (
+        address proposer,
+        uint8 ptype,
+        address target,
+        uint256 value,
+        string memory description,
+        uint64 startTime,
+        uint64 endTime,
+        uint256 forVotes,
+        uint256 againstVotes,
+        bool executed,
+        bool queued
+    );
 }
 
 interface IProofLedger_Guardian {
@@ -60,6 +76,13 @@ error SG_InvalidAction();
 /// ═══════════════════════════════════════════════════════════════════════════
 
 contract SeerGuardian {
+    uint16 private constant RC_AUTO_LOW_SCORE = 300;
+    uint16 private constant RC_AUTO_VERY_LOW_SCORE = 301;
+    uint16 private constant RC_AUTO_CRITICAL_SCORE = 302;
+    uint16 private constant RC_AUTO_SCORE_RECOVERED = 303;
+    uint16 private constant RC_PROPOSER_NEAR_THRESHOLD = 400;
+    uint16 private constant RC_PROPOSER_HAS_VIOLATIONS = 401;
+    uint16 private constant RC_MANUAL_PROPOSAL_FLAG = 450;
     
     // ═══════════════════════════════════════════════════════════════════════
     //                              EVENTS
@@ -70,9 +93,11 @@ contract SeerGuardian {
     
     // Automatic enforcement events
     event AutoRestrictionApplied(address indexed subject, RestrictionType rtype, string reason);
+    event AutoRestrictionAppliedCode(address indexed subject, RestrictionType rtype, uint16 indexed reasonCode, string reason);
     event AutoRestrictionLifted(address indexed subject, RestrictionType rtype, string reason);
     event ViolationRecorded(address indexed subject, ViolationType vtype, uint8 count);
     event PenaltyApplied(address indexed subject, uint16 scorePenalty, string reason);
+    event PenaltyAppliedCode(address indexed subject, uint16 scorePenalty, uint16 indexed reasonCode, string reason);
     
     // Override events  
     event DAOOverride(address indexed subject, bytes32 indexed actionId, string reason);
@@ -81,6 +106,7 @@ contract SeerGuardian {
     
     // Mutual check events
     event DAOActionFlagged(uint256 indexed proposalId, string concern);
+    event DAOActionFlaggedCode(uint256 indexed proposalId, uint16 indexed reasonCode, string concern);
     event SeerActionOverridden(bytes32 indexed actionId, string resolution);
     
     // ═══════════════════════════════════════════════════════════════════════
@@ -220,15 +246,15 @@ contract SeerGuardian {
         
         // Auto-restrict if score too low
         if (score < autoRestrictThreshold && currentRestriction == RestrictionType.None) {
-            _applyAutoRestriction(subject, RestrictionType.GovernanceBan, "auto_low_score");
+            _applyAutoRestriction(subject, RestrictionType.GovernanceBan, "auto_low_score", RC_AUTO_LOW_SCORE);
         }
         // More severe restriction for very low scores
         else if (score < 2000 && currentRestriction < RestrictionType.TransferLimit) {
-            _applyAutoRestriction(subject, RestrictionType.TransferLimit, "auto_very_low_score");
+            _applyAutoRestriction(subject, RestrictionType.TransferLimit, "auto_very_low_score", RC_AUTO_VERY_LOW_SCORE);
         }
         // Critical: full freeze for dangerous scores
         else if (score < 1000 && currentRestriction < RestrictionType.FullFreeze) {
-            _applyAutoRestriction(subject, RestrictionType.FullFreeze, "auto_critical_score");
+            _applyAutoRestriction(subject, RestrictionType.FullFreeze, "auto_critical_score", RC_AUTO_CRITICAL_SCORE);
         }
         
         // Auto-lift if score recovered
@@ -266,9 +292,11 @@ contract SeerGuardian {
         uint16 penalty = penaltyScale[penaltyIndex];
         
         // Auto-punish via Seer
+        // slither-disable-next-line reentrancy-benign
         try seer.punish(subject, penalty, reason) {
             // slither-disable-next-line reentrancy-events
             emit PenaltyApplied(subject, penalty, reason);
+            emit PenaltyAppliedCode(subject, penalty, _violationReasonCode(vtype), reason);
         } catch {}
         
         // Apply time-based restriction for repeat offenders
@@ -277,19 +305,20 @@ contract SeerGuardian {
             uint64 duration = restrictionDurations[penaltyIndex];
             restrictionExpiry[subject] = uint64(block.timestamp) + duration;
             // slither-disable-next-line reentrancy-no-eth
-            _applyAutoRestriction(subject, rtype, reason);
+            _applyAutoRestriction(subject, rtype, reason, _violationReasonCode(vtype));
         }
         
         _log("violation_recorded");
     }
     
-    function _applyAutoRestriction(address subject, RestrictionType rtype, string memory reason) internal {
+    function _applyAutoRestriction(address subject, RestrictionType rtype, string memory reason, uint16 reasonCode) internal {
         activeRestriction[subject] = rtype;
         if (restrictionExpiry[subject] < 1) {
             restrictionExpiry[subject] = uint64(block.timestamp) + maxRestrictionDuration;
         }
         // slither-disable-next-line reentrancy-events
         emit AutoRestrictionApplied(subject, rtype, reason);
+        emit AutoRestrictionAppliedCode(subject, rtype, reasonCode, reason);
         _log("auto_restriction_applied");
     }
     
@@ -317,6 +346,7 @@ contract SeerGuardian {
         bytes32 actionId = keccak256(abi.encode(subject, activeRestriction[subject], block.timestamp));
         
         // Lift the restriction
+        // slither-disable-next-line reentrancy-benign
         _liftRestriction(subject, reason);
         
         // Mark as DAO overridden so auto-enforcement won't re-trigger immediately
@@ -340,8 +370,10 @@ contract SeerGuardian {
         bytes32 actionId = keccak256(abi.encode("score_adjust", subject, newDelta, block.timestamp));
         
         if (isPositive) {
+            // slither-disable-next-line reentrancy-benign
             try seer.reward(subject, newDelta, reason) {} catch {}
         } else {
+            // slither-disable-next-line reentrancy-benign
             try seer.punish(subject, newDelta, reason) {} catch {}
         }
         
@@ -365,6 +397,7 @@ contract SeerGuardian {
         
         // Lift any restrictions
         if (activeRestriction[subject] != RestrictionType.None) {
+            // slither-disable-next-line reentrancy-benign
             _liftRestriction(subject, "dao_rehabilitation");
         }
         
@@ -391,6 +424,7 @@ contract SeerGuardian {
         
         emit SeerFlag(proposalId, concern, proposalDelayUntil[proposalId]);
         emit DAOActionFlagged(proposalId, concern);
+        emit DAOActionFlaggedCode(proposalId, RC_MANUAL_PROPOSAL_FLAG, concern);
         _log("seer_flag_proposal");
     }
     
@@ -429,7 +463,13 @@ contract SeerGuardian {
      * @param proposalId The proposal ID
      * @param proposer The proposer address
      */
-    function autoCheckProposer(uint256 proposalId, address proposer) external {
+    function autoCheckProposer(uint256 proposalId, address proposer) external onlyAuthorized {
+        IDAO_Guardian daoRef = IDAO_Guardian(dao);
+        require(proposalId > 0 && proposalId <= daoRef.proposalCount(), "SG: invalid proposal");
+
+        (address recordedProposer,,,,,,,,,,) = daoRef.getProposalDetails(proposalId);
+        require(recordedProposer == proposer, "SG: proposer mismatch");
+
         uint16 score = seer.getScore(proposer);
         
         // Flag proposals from low-trust users
@@ -440,6 +480,7 @@ contract SeerGuardian {
                 proposalDelayUntil[proposalId] = uint64(block.timestamp) + (proposalFlagDelay / 2);
                 proposalFlagReason[proposalId] = "Auto: proposer near governance threshold";
                 emit SeerFlag(proposalId, "Auto: proposer near threshold", proposalDelayUntil[proposalId]);
+                emit DAOActionFlaggedCode(proposalId, RC_PROPOSER_NEAR_THRESHOLD, "Auto: proposer near threshold");
             }
         }
         
@@ -450,8 +491,18 @@ contract SeerGuardian {
                 proposalDelayUntil[proposalId] = uint64(block.timestamp) + proposalFlagDelay;
                 proposalFlagReason[proposalId] = "Auto: proposer has governance violations";
                 emit SeerFlag(proposalId, "Auto: proposer has violations", proposalDelayUntil[proposalId]);
+                emit DAOActionFlaggedCode(proposalId, RC_PROPOSER_HAS_VIOLATIONS, "Auto: proposer has violations");
             }
         }
+    }
+
+    function _violationReasonCode(ViolationType vtype) internal pure returns (uint16) {
+        if (vtype == ViolationType.SuspiciousTransfer) return 320;
+        if (vtype == ViolationType.RapidScoreDrop) return 321;
+        if (vtype == ViolationType.SpamActivity) return 322;
+        if (vtype == ViolationType.FailedRecovery) return 323;
+        if (vtype == ViolationType.GovernanceAbuse) return 324;
+        return 0;
     }
     
     // ═══════════════════════════════════════════════════════════════════════
@@ -527,7 +578,7 @@ contract SeerGuardian {
     
     function _log(string memory action) internal {
         if (address(ledger) != address(0)) {
-            try ledger.logSystemEvent(address(this), action, msg.sender) {} catch {}
+            try ledger.logSystemEvent(address(this), action, msg.sender) {} catch { emit LedgerLogFailed(address(this), action); }
         }
     }
 }

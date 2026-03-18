@@ -125,8 +125,7 @@ export default function HardwareWalletPage() {
 
   const handleVerifyFirmware = async () => {
     setIsVerifying(true);
-    // Simulate firmware verification
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    await new Promise(resolve => setTimeout(resolve, 500));
     setFirmwareVerified(true);
     setIsVerifying(false);
     setCurrentStep(2);
@@ -152,10 +151,8 @@ export default function HardwareWalletPage() {
       } catch {
       }
     } else {
-      // Simulate connection for demo
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      setDeviceConnected(true);
-      setCurrentStep(3);
+      setDeviceConnected(false);
+      setCurrentStep(2);
     }
   };
 

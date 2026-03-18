@@ -50,7 +50,7 @@ const faqs = [
       },
       {
         q: "What happens if I lose access to my wallet?",
-        a: "Two recovery mechanisms: 1) CHAIN OF RETURN: Connect a new wallet to your EXISTING vault (guardian approval required). 2) NEXT OF KIN: Transfer your vault's funds to your inheritor's vault. Guardians help with WALLET RECOVERY, not fund withdrawal."
+        a: "Two recovery mechanisms: 1) CHAIN OF RETURN: Connect a new wallet to your EXISTING vault (guardian approval required). 2) NEXT OF KIN: Transfer your vault's funds to your inheritor's vault. Guardians help with WALLET RECOVERY, not fund withdrawal. Guardians are selected by each vault holder (family/friends) and are not part of an open system. VFIDE social tools can help networking and invitations, but assignment is still explicit owner choice."
       }
     ]
   },
@@ -175,6 +175,8 @@ const docSections = [
     icon: HelpCircle,
     color: "#FFA500",
     links: [
+      { name: "Seer Service Center", href: "/seer-service" },
+      { name: "Seer Academy (New User)", href: "/seer-academy" },
       { name: "FAQ", href: "#faq" },
       { name: "Legal & Terms", href: "/legal" },
       { name: "GitHub", href: "https://github.com/Scorpio861104/Vfide" },
@@ -335,6 +337,27 @@ export default function DocsPage() {
                       {level}
                     </button>
                   ))}
+                </div>
+
+                <div className="max-w-4xl mx-auto mb-8 p-4 sm:p-5 rounded-xl border border-cyan-400/30 bg-cyan-500/10">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                    <div>
+                      <div className="text-sm sm:text-base font-semibold text-cyan-300">New to crypto and trading?</div>
+                      <div className="text-xs sm:text-sm text-zinc-300">Start with Seer Academy for beginner-safe learning and trust-aware trading basics.</div>
+                    </div>
+                    <Link
+                      href="/seer-academy"
+                      className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-cyan-300/40 text-cyan-200 hover:bg-cyan-500/20 transition-colors text-sm"
+                    >
+                      Open Seer Academy
+                    </Link>
+                    <Link
+                      href="/seer-service"
+                      className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-emerald-300/40 text-emerald-200 hover:bg-emerald-500/20 transition-colors text-sm"
+                    >
+                      Open Seer Service Center
+                    </Link>
+                  </div>
                 </div>
 
                 {/* Lessons */}

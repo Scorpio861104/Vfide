@@ -6,7 +6,7 @@ import { useVaultHub } from "@/hooks/useVaultHub";
 import { TransactionHistory } from "@/components/vault/TransactionHistory";
 import { useToast } from "@/components/ui/toast";
 import { Skeleton } from "@/components/ui/Skeleton";
-import { useAccount, useWriteContract, useReadContract } from "wagmi";
+import { useAccount, useWriteContract, useReadContract, useChainId, useSignTypedData } from "wagmi";
 import { useState, useEffect } from "react";
 import { isAddress, parseUnits, formatUnits } from "viem";
 import { devLog } from "@/lib/utils";
@@ -18,7 +18,7 @@ import {
   Zap, DollarSign, TrendingUp, X, Loader2
 } from "lucide-react";
 import { safeParseFloat } from "@/lib/validation";
-import { CONTRACT_ADDRESSES, VFIDETokenABI, VaultHubABI, UserVaultABI } from "@/lib/contracts";
+import { CONTRACT_ADDRESSES, VFIDETokenABI, VaultHubABI, UserVaultABI, CARD_BOUND_VAULT_ABI, isCardBoundVaultMode } from "@/lib/contracts";
 
 // Animation variants
 const containerVariants = {
@@ -213,6 +213,9 @@ function VaultSecuritySection({ vaultAddress }: { vaultAddress: `0x${string}` | 
 function VaultContent() {
   const { showToast } = useToast();
   const { address } = useAccount();
+  const chainId = useChainId();
+  const { signTypedDataAsync } = useSignTypedData();
+  const cardBoundMode = isCardBoundVaultMode();
   
   const { vaultAddress, hasVault, isLoadingVault, createVault, isCreatingVault } = useVaultHub();
   const { balance: vaultBalance, isLoading: isLoadingBalance } = useVaultBalance();
@@ -263,8 +266,31 @@ function VaultContent() {
   });
   
   const walletBalanceFormatted = walletBalance ? formatUnits(walletBalance as bigint, 18) : '0';
+
+  const { data: transferNonce } = useReadContract({
+    address: vaultAddress || undefined,
+    abi: CARD_BOUND_VAULT_ABI,
+    functionName: 'nextNonce',
+    query: {
+      enabled: !!vaultAddress && cardBoundMode,
+    },
+  });
+
+  const { data: walletEpoch } = useReadContract({
+    address: vaultAddress || undefined,
+    abi: CARD_BOUND_VAULT_ABI,
+    functionName: 'walletEpoch',
+    query: {
+      enabled: !!vaultAddress && cardBoundMode,
+    },
+  });
   
   const handleDeposit = async () => {
+    if (cardBoundMode) {
+      showToast("CardBound vaults do not support direct wallet deposits. Use vault-to-vault transfer.", "error");
+      return;
+    }
+
     if (!depositAmount || parseFloat(depositAmount) <= 0) {
       showToast("Enter a valid amount", "error");
       return;
@@ -332,15 +358,74 @@ function VaultContent() {
     
     setIsWithdrawing(true);
     try {
-      showToast("Transferring from vault...", "info");
-      await writeContractAsync({
-        address: vaultAddress,
-        abi: UserVaultABI,
-        functionName: 'transferVFIDE',
-        args: [withdrawRecipient as `0x${string}`, amountWei],
-      });
+      if (cardBoundMode) {
+        if (transferNonce === undefined || walletEpoch === undefined) {
+          showToast("Vault transfer state unavailable. Please retry.", "error");
+          return;
+        }
+
+        const deadline = BigInt(Math.floor(Date.now() / 1000) + 3600);
+        const transferChainId = BigInt(chainId);
+
+        const signature = await signTypedDataAsync({
+          domain: {
+            name: 'CardBoundVault',
+            version: '1',
+            chainId,
+            verifyingContract: vaultAddress,
+          },
+          types: {
+            TransferIntent: [
+              { name: 'vault', type: 'address' },
+              { name: 'toVault', type: 'address' },
+              { name: 'amount', type: 'uint256' },
+              { name: 'nonce', type: 'uint256' },
+              { name: 'walletEpoch', type: 'uint64' },
+              { name: 'deadline', type: 'uint64' },
+              { name: 'chainId', type: 'uint256' },
+            ],
+          },
+          primaryType: 'TransferIntent',
+          message: {
+            vault: vaultAddress,
+            toVault: withdrawRecipient as `0x${string}`,
+            amount: amountWei,
+            nonce: transferNonce as bigint,
+            walletEpoch: walletEpoch as bigint,
+            deadline,
+            chainId: transferChainId,
+          },
+        });
+
+        showToast("Signing and sending vault-to-vault transfer...", "info");
+        await writeContractAsync({
+          address: vaultAddress,
+          abi: CARD_BOUND_VAULT_ABI,
+          functionName: 'executeVaultToVaultTransfer',
+          args: [
+            {
+              vault: vaultAddress,
+              toVault: withdrawRecipient as `0x${string}`,
+              amount: amountWei,
+              nonce: transferNonce as bigint,
+              walletEpoch: walletEpoch as bigint,
+              deadline,
+              chainId: transferChainId,
+            },
+            signature,
+          ],
+        });
+      } else {
+        showToast("Transferring from vault...", "info");
+        await writeContractAsync({
+          address: vaultAddress,
+          abi: UserVaultABI,
+          functionName: 'transferVFIDE',
+          args: [withdrawRecipient as `0x${string}`, amountWei],
+        });
+      }
       
-      showToast("Withdrawal successful!", "success");
+      showToast(cardBoundMode ? "Vault transfer successful!" : "Withdrawal successful!", "success");
       setWithdrawAmount("");
       setWithdrawRecipient("");
       setShowWithdrawModal(false);
@@ -595,28 +680,45 @@ function VaultContent() {
                     Quick Actions
                   </h2>
                   <p className="text-white/50 text-sm mb-5">Move funds or rebalance instantly from your vault.</p>
+                  {cardBoundMode && (
+                    <div className="mb-5 p-3 bg-cyan-500/10 border border-cyan-500/30 rounded-xl text-cyan-300 text-sm">
+                      CardBound mode is active: use vault-to-vault transfer. Direct wallet deposit/withdraw is disabled.
+                    </div>
+                  )}
                   
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <motion.button 
-                      onClick={() => setShowDepositModal(true)}
+                      onClick={() => {
+                        if (cardBoundMode) {
+                          showToast("CardBound vaults use vault-to-vault transfer only.", "info");
+                          return;
+                        }
+                        setShowDepositModal(true);
+                      }}
                       whileHover={{ scale: 1.02, y: -2 }}
                       whileTap={{ scale: 0.98 }}
-                      className="p-5 bg-gradient-to-r from-cyan-500 to-blue-600 text-white rounded-xl font-bold shadow-lg shadow-cyan-500/25 flex items-center justify-center gap-2"
+                      className={`p-5 rounded-xl font-bold flex items-center justify-center gap-2 ${cardBoundMode ? 'bg-white/5 border border-white/10 text-white/40 cursor-not-allowed' : 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-lg shadow-cyan-500/25'}`}
                     >
                       <ArrowDownToLine size={20} />
                       Deposit Funds
                     </motion.button>
                     <motion.button 
-                      onClick={() => setShowWithdrawModal(true)}
+                      onClick={() => {
+                        if (cardBoundMode) {
+                          showToast("CardBound vaults use vault-to-vault transfer only.", "info");
+                          return;
+                        }
+                        setShowWithdrawModal(true);
+                      }}
                       whileHover={{ scale: 1.02, y: -2 }}
                       whileTap={{ scale: 0.98 }}
-                      className="p-5 bg-white/5 border border-cyan-500/30 text-cyan-400 rounded-xl font-bold hover:bg-cyan-500/10 flex items-center justify-center gap-2"
+                      className={`p-5 rounded-xl font-bold flex items-center justify-center gap-2 ${cardBoundMode ? 'bg-white/5 border border-white/10 text-white/40 cursor-not-allowed' : 'bg-white/5 border border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/10'}`}
                     >
                       <ArrowUpFromLine size={20} />
                       Withdraw Funds
                     </motion.button>
                     <motion.button 
-                      onClick={() => { setWithdrawRecipient(vaultAddress || ''); setShowWithdrawModal(true); }}
+                      onClick={() => { setWithdrawRecipient(''); setShowWithdrawModal(true); }}
                       whileHover={{ scale: 1.02, y: -2 }}
                       whileTap={{ scale: 0.98 }}
                       className="p-5 bg-white/5 border border-white/10 text-white/80 rounded-xl font-bold hover:border-white/20 hover:text-white flex items-center justify-center gap-2"
@@ -896,7 +998,7 @@ function VaultContent() {
                 <div className="flex items-center justify-between mb-6">
                   <h3 className="text-xl font-bold text-white flex items-center gap-2">
                     <ArrowUpFromLine className="text-amber-400" size={24} />
-                    Withdraw VFIDE
+                    {cardBoundMode ? 'Transfer VFIDE to Vault' : 'Withdraw VFIDE'}
                   </h3>
                   <button
                     onClick={() => !isWithdrawing && setShowWithdrawModal(false)}
@@ -913,7 +1015,7 @@ function VaultContent() {
                 </div>
                 
                 <div className="mb-4">
-                  <label className="block text-white/60 text-sm mb-2">Recipient Address</label>
+                  <label className="block text-white/60 text-sm mb-2">{cardBoundMode ? 'Destination Vault Address' : 'Recipient Address'}</label>
                   <input
                     type="text"
                     value={withdrawRecipient}
@@ -924,6 +1026,7 @@ function VaultContent() {
                   {address && (
                     <button
                       onClick={() => setWithdrawRecipient(address)}
+                      disabled={cardBoundMode}
                       className="text-cyan-400 text-xs mt-1 hover:underline"
                     >
                       Use my wallet address
@@ -932,7 +1035,7 @@ function VaultContent() {
                 </div>
                 
                 <div className="mb-4">
-                  <label className="block text-white/60 text-sm mb-2">Amount to Withdraw</label>
+                  <label className="block text-white/60 text-sm mb-2">{cardBoundMode ? 'Amount to Transfer' : 'Amount to Withdraw'}</label>
                   <div className="relative">
                     <input
                       type="number"
@@ -950,10 +1053,17 @@ function VaultContent() {
                   </div>
                 </div>
                 
-                <div className="mb-4 p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl">
-                  <div className="text-amber-400 text-sm font-bold mb-1">⚠️ 24-Hour Cooldown</div>
-                  <div className="text-white/60 text-xs">Withdrawals have a 24-hour cooldown period between transactions for security.</div>
-                </div>
+                {cardBoundMode ? (
+                  <div className="mb-4 p-3 bg-cyan-500/10 border border-cyan-500/30 rounded-xl">
+                    <div className="text-cyan-300 text-sm font-bold mb-1">CardBound Signed Transfer</div>
+                    <div className="text-white/70 text-xs">You will sign a TransferIntent and execute a vault-to-vault transfer. Destination must be a registered vault.</div>
+                  </div>
+                ) : (
+                  <div className="mb-4 p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl">
+                    <div className="text-amber-400 text-sm font-bold mb-1">⚠️ 24-Hour Cooldown</div>
+                    <div className="text-white/60 text-xs">Withdrawals have a 24-hour cooldown period between transactions for security.</div>
+                  </div>
+                )}
                 
                 <motion.button
                   whileHover={{ scale: isWithdrawing ? 1 : 1.02 }}
@@ -965,12 +1075,12 @@ function VaultContent() {
                   {isWithdrawing ? (
                     <>
                       <Loader2 className="animate-spin" size={20} />
-                      Withdrawing...
+                      {cardBoundMode ? 'Transferring...' : 'Withdrawing...'}
                     </>
                   ) : (
                     <>
                       <ArrowUpFromLine size={20} />
-                      Withdraw from Vault
+                      {cardBoundMode ? 'Transfer to Vault' : 'Withdraw from Vault'}
                     </>
                   )}
                 </motion.button>

@@ -12,54 +12,21 @@ export default function ExplorerPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const router = useRouter()
 
-  // Mock data for recent activity
-  const recentActivity = [
-    {
-      id: '1',
-      type: 'payment',
-      from: '0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb',
-      to: '0x8626f6940E2eb28930eFb4CeF49B2d1F2C9C1199',
-      amount: '50.00',
-      timestamp: '2 minutes ago',
-      status: 'completed'
-    },
-    {
-      id: '2',
-      type: 'endorsement',
-      from: '0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC',
-      to: '0x90F79bf6EB2c4f870365E785982E1f101E93b906',
-      amount: '+5',
-      timestamp: '5 minutes ago',
-      status: 'completed'
-    },
-    {
-      id: '3',
-      type: 'payment',
-      from: '0x15d34AAf54267DB7D7c367839AAf71A00a2C6A65',
-      to: '0x9965507D1a55bcC2695C58ba16FB37d819B0A4dc',
-      amount: '125.50',
-      timestamp: '15 minutes ago',
-      status: 'completed'
-    }
-  ]
+  const recentActivity: Array<{
+    id: string
+    type: 'payment' | 'endorsement'
+    from: string
+    to: string
+    amount: string
+    timestamp: string
+    status: 'completed'
+  }> = []
 
-  const topAddresses = [
-    {
-      address: '0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb',
-      proofScore: 850,
-      transactions: 1234
-    },
-    {
-      address: '0x8626f6940E2eb28930eFb4CeF49B2d1F2C9C1199',
-      proofScore: 720,
-      transactions: 892
-    },
-    {
-      address: '0x5c6B0f7Bf3E7ce046039Bd8FABdfD3f9F5021678',
-      proofScore: 680,
-      transactions: 756
-    }
-  ]
+  const topAddresses: Array<{
+    address: string
+    proofScore: number
+    transactions: number
+  }> = []
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
@@ -119,8 +86,8 @@ export default function ExplorerPage() {
               </div>
               <h3 className="text-sm font-medium text-gray-400">Total Transactions</h3>
             </div>
-            <p className="text-3xl font-bold text-white">12,453</p>
-            <p className="text-sm text-cyan-400 mt-2">+15% this week</p>
+            <p className="text-3xl font-bold text-white">-</p>
+            <p className="text-sm text-cyan-400 mt-2">Live indexer data unavailable</p>
           </motion.div>
 
           <motion.div
@@ -135,8 +102,8 @@ export default function ExplorerPage() {
               </div>
               <h3 className="text-sm font-medium text-gray-400">Active Addresses</h3>
             </div>
-            <p className="text-3xl font-bold text-white">3,847</p>
-            <p className="text-sm text-purple-400 mt-2">+8% this week</p>
+            <p className="text-3xl font-bold text-white">-</p>
+            <p className="text-sm text-purple-400 mt-2">Live indexer data unavailable</p>
           </motion.div>
 
           <motion.div
@@ -151,8 +118,8 @@ export default function ExplorerPage() {
               </div>
               <h3 className="text-sm font-medium text-gray-400">Total Volume</h3>
             </div>
-            <p className="text-3xl font-bold text-white">$1.2M</p>
-            <p className="text-sm text-green-400 mt-2">+22% this week</p>
+            <p className="text-3xl font-bold text-white">-</p>
+            <p className="text-sm text-green-400 mt-2">Live indexer data unavailable</p>
           </motion.div>
         </div>
 
@@ -168,6 +135,11 @@ export default function ExplorerPage() {
             Recent Activity
           </h2>
           <div className="space-y-4">
+            {recentActivity.length === 0 ? (
+              <div className="p-4 rounded-lg border border-zinc-700 text-sm text-zinc-400">
+                Live explorer activity feed is not configured yet.
+              </div>
+            ) : null}
             {recentActivity.map((activity, index) => (
               <motion.div
                 key={activity.id}
@@ -227,6 +199,11 @@ export default function ExplorerPage() {
             Top Addresses
           </h2>
           <div className="space-y-4">
+            {topAddresses.length === 0 ? (
+              <div className="p-4 rounded-lg border border-zinc-700 text-sm text-zinc-400">
+                Top-address rankings will appear once indexer data is connected.
+              </div>
+            ) : null}
             {topAddresses.map((addr, index) => (
               <motion.div
                 key={addr.address}

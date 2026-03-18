@@ -90,6 +90,50 @@ describe('/api/groups/invites', () => {
       expect(data.error).toBe('Unauthorized');
       expect(query).not.toHaveBeenCalled();
     });
+
+    it('should return 404 for revoked invite code lookup', async () => {
+      withRateLimit.mockResolvedValue(null);
+
+      query.mockResolvedValueOnce({
+        rows: [{
+          id: 1,
+          code: 'ABC123',
+          is_active: false,
+          expires_at: null,
+          max_uses: null,
+          current_uses: 0,
+        }],
+      });
+
+      const request = new NextRequest('http://localhost:3000/api/groups/invites?code=ABC123');
+      const response = await GET(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(404);
+      expect(data.error).toContain('Invite not found');
+    });
+
+    it('should return 400 for expired invite code lookup', async () => {
+      withRateLimit.mockResolvedValue(null);
+
+      query.mockResolvedValueOnce({
+        rows: [{
+          id: 1,
+          code: 'ABC123',
+          is_active: true,
+          expires_at: '2000-01-01T00:00:00.000Z',
+          max_uses: null,
+          current_uses: 0,
+        }],
+      });
+
+      const request = new NextRequest('http://localhost:3000/api/groups/invites?code=ABC123');
+      const response = await GET(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(400);
+      expect(data.error).toContain('expired');
+    });
   });
 
   describe('POST', () => {
@@ -174,6 +218,27 @@ describe('/api/groups/invites', () => {
       expect(response.status).toBe(401);
       expect(data.error).toBe('Unauthorized');
       expect(query).not.toHaveBeenCalled();
+    });
+
+    it('should block regular members from creating invites', async () => {
+      withRateLimit.mockResolvedValue(null);
+      requireAuth.mockReturnValue({ user: { address: '0x1111111111111111111111111111111111111123' } });
+
+      query.mockResolvedValueOnce({ rows: [{ id: 1 }] });
+      query.mockResolvedValueOnce({ rows: [{ role: 'member' }] });
+
+      const request = new NextRequest('http://localhost:3000/api/groups/invites', {
+        method: 'POST',
+        body: JSON.stringify({
+          groupId: 1,
+        }),
+      });
+
+      const response = await POST(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(403);
+      expect(data.error).toContain('Not authorized to create invites');
     });
   });
 

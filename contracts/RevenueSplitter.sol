@@ -79,4 +79,23 @@ contract RevenueSplitter is ReentrancyGuard {
     function getPayees() external view returns (Payee[] memory) {
         return payees;
     }
+
+    /// @notice M-28 Fix: Allow owner to update payees (e.g., compromised address, org change)
+    function updatePayees(address[] calldata _accounts, uint256[] calldata _shares) external {
+        require(msg.sender == owner, "RS: not owner");
+        require(_accounts.length == _shares.length, "length mismatch");
+        require(_accounts.length > 0, "RS: no payees");
+
+        // Clear existing
+        delete payees;
+        totalShares = 0;
+
+        for (uint256 i = 0; i < _accounts.length; i++) {
+            require(_accounts[i] != address(0), "zero address");
+            require(_shares[i] > 0, "zero share");
+            payees.push(Payee({account: _accounts[i], shareBps: _shares[i]}));
+            totalShares += _shares[i];
+        }
+        require(totalShares == 10000, "must equal 100%");
+    }
 }

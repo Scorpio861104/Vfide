@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useCallback, useRef, useEffect } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Heart,
@@ -11,7 +11,6 @@ import {
   Smile,
   Search,
   Filter,
-  Zap,
   MoreHorizontal,
 } from 'lucide-react';
 import { SocialTipButton } from './SocialTipButton';
@@ -63,134 +62,9 @@ interface Comment {
   liked: boolean;
 }
 
-// ==================== MOCK DATA ====================
+// ==================== DATA ====================
 
-const generateMockPosts = (): FeedPost[] => [
-  {
-    id: 'p1',
-    author: {
-      id: 'u1',
-      avatar: '👨‍💼',
-      name: 'Alex Rivera',
-      username: 'alex_finance',
-      isVerified: true,
-      proofScore: 9200,
-    },
-    content: 'Just completed my 100th transaction on VFIDE! 🚀 The platform is incredibly smooth. DeFi is the future!',
-    type: 'activity',
-    timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000),
-    likes: 342,
-    comments: 48,
-    shares: 23,
-    liked: false,
-    saved: false,
-    metrics: { engagement: 94, reach: 2341, impressions: 12500 },
-    tags: ['DeFi', 'Milestone'],
-  },
-  {
-    id: 'p2',
-    author: {
-      id: 'u2',
-      avatar: '👩‍🎤',
-      name: 'Sara Chen',
-      username: 'sara_merchant',
-      isVerified: true,
-      proofScore: 7800,
-    },
-    content: 'Unlocked: Merchant Master Badge 🎖️ First 1,000 payments processed through my store. This platform is a game-changer for small businesses!',
-    type: 'achievement',
-    timestamp: new Date(Date.now() - 5 * 60 * 60 * 1000),
-    likes: 856,
-    comments: 142,
-    shares: 67,
-    liked: true,
-    saved: true,
-    metrics: { engagement: 156, reach: 4892, impressions: 28340 },
-    tags: ['Achievement', 'Commerce'],
-  },
-  {
-    id: 'p3',
-    author: {
-      id: 'u3',
-      avatar: '👨‍💻',
-      name: 'John Park',
-      username: 'dev_john',
-      isVerified: true,
-      proofScore: 8600,
-    },
-    content: 'Just deployed a new smart contract optimization that reduces gas costs by 35%. The technical community here is amazing! 💡',
-    type: 'status',
-    timestamp: new Date(Date.now() - 8 * 60 * 60 * 1000),
-    likes: 523,
-    comments: 89,
-    shares: 45,
-    liked: false,
-    saved: false,
-    metrics: { engagement: 127, reach: 3456, impressions: 19876 },
-    tags: ['Development', 'Tech'],
-  },
-  {
-    id: 'p4',
-    author: {
-      id: 'u4',
-      avatar: '🌙',
-      name: 'Luna Tech',
-      username: 'luna_dev',
-      isVerified: true,
-      proofScore: 8950,
-    },
-    content: 'Governance Proposal #142 passed with 78% approval! 🗳️ The community decided to adjust governance parameters. Democracy in action!',
-    type: 'proposal',
-    timestamp: new Date(Date.now() - 12 * 60 * 60 * 1000),
-    likes: 1204,
-    comments: 203,
-    shares: 134,
-    liked: false,
-    saved: false,
-    metrics: { engagement: 234, reach: 6234, impressions: 41203 },
-    tags: ['Governance', 'Voting'],
-  },
-  {
-    id: 'p5',
-    author: {
-      id: 'u5',
-      avatar: '🦊',
-      name: 'Felix Dev',
-      username: 'felix_codes',
-      isVerified: false,
-      proofScore: 6200,
-    },
-    content: 'Started my journey on VFIDE today! Excited to be part of this community. Any tips for beginners? 🚀',
-    type: 'status',
-    timestamp: new Date(Date.now() - 15 * 60 * 60 * 1000),
-    likes: 178,
-    comments: 32,
-    shares: 8,
-    liked: false,
-    saved: false,
-    metrics: { engagement: 42, reach: 1234, impressions: 5678 },
-    tags: ['Introduction', 'Newbie'],
-  },
-];
-
-const mockComments: Comment[] = [
-  {
-    id: 'c1',
-    author: { avatar: '👩‍🔬', name: 'Emma Wilson', username: 'emma_community' },
-    content: 'Congrats! This is amazing progress. 🎉',
-    timestamp: new Date(Date.now() - 1 * 60 * 60 * 1000),
-    likes: 45,
-    liked: false,
-  },
-  {
-    id: 'c2',
-    author: { avatar: '🧑‍💼', name: 'Mark Johnson', username: 'mark_vault' },
-    content: 'Welcome to the community! You\'re going to love it here.',
-    timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000),
-    likes: 32,
-    liked: true,
-  },
-];
+const commentsData: Comment[] = [];
 
 // ==================== COMPONENTS ====================
 
@@ -199,7 +73,7 @@ interface SocialFeedProps {
 }
 
 export function SocialFeed({ onPostCreated }: SocialFeedProps) {
-  const [posts, setPosts] = useState<FeedPost[]>(generateMockPosts());
+  const [posts, setPosts] = useState<FeedPost[]>([]);
   const [newPostContent, setNewPostContent] = useState('');
   const [filter, setFilter] = useState<FeedFilter>({ type: 'all', sortBy: 'latest' });
   const [showFilters, setShowFilters] = useState(false);
@@ -207,30 +81,7 @@ export function SocialFeed({ onPostCreated }: SocialFeedProps) {
   const [likedPosts, setLikedPosts] = useState<Set<string>>(new Set());
   const [savedPosts, setSavedPosts] = useState<Set<string>>(new Set());
   const [searchQuery, setSearchQuery] = useState('');
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
   const observerTarget = useRef<HTMLDivElement>(null);
-
-  // Simulate infinite scroll
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0]?.isIntersecting && !isLoadingMore) {
-          setIsLoadingMore(true);
-          setTimeout(() => {
-            setPosts((prev) => [...prev, ...generateMockPosts()]);
-            setIsLoadingMore(false);
-          }, 500);
-        }
-      },
-      { threshold: 0.5 },
-    );
-
-    if (observerTarget.current) {
-      observer.observe(observerTarget.current);
-    }
-
-    return () => observer.disconnect();
-  }, [isLoadingMore]);
 
   const filteredPosts = posts.filter((post) => {
     if (filter.type && filter.type !== 'all' && post.type !== filter.type) {
@@ -616,7 +467,7 @@ export function SocialFeed({ onPostCreated }: SocialFeedProps) {
                         className="mt-6 pt-6 border-t border-zinc-700"
                       >
                         <div className="space-y-4 mb-4">
-                          {mockComments.map((comment) => (
+                          {commentsData.map((comment) => (
                             <div key={comment.id} className="flex gap-3">
                               <div className="w-8 h-8 rounded-full bg-zinc-800 flex items-center justify-center text-sm shrink-0">
                                 {comment.author.avatar}
@@ -663,14 +514,8 @@ export function SocialFeed({ onPostCreated }: SocialFeedProps) {
           </AnimatePresence>
         </div>
 
-        {/* Infinite Scroll Trigger */}
-        <div ref={observerTarget} className="h-20 flex items-center justify-center mt-8">
-          {isLoadingMore && (
-            <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity }}>
-              <Zap className="w-6 h-6 text-cyan-400" />
-            </motion.div>
-          )}
-        </div>
+        {/* Load more sentinel */}
+        <div ref={observerTarget} className="h-20" />
       </div>
     </div>
   );

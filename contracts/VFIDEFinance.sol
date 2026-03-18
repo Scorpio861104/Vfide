@@ -89,9 +89,9 @@ contract EcoTreasuryVault {
     function sendVFIDE(address to, uint256 amount, string calldata reason) external onlyDAO {
         if (to == address(0) || amount == 0) revert FI_Zero();
         if (vfideToken.balanceOf(address(this)) < amount) revert FI_Insufficient();
-        
-        vfideToken.safeTransfer(to, amount);
+
         totalDisbursed += amount;
+        vfideToken.safeTransfer(to, amount);
 
         // slither-disable-next-line reentrancy-events
         emit Sent(address(vfideToken), to, amount, reason);
@@ -147,6 +147,7 @@ contract EcoTreasuryVault {
     ) {
         balances = new uint256[](tokens.length);
         for (uint256 i = 0; i < tokens.length; i++) {
+            // slither-disable-next-line calls-loop
             balances[i] = IERC20(tokens[i]).balanceOf(address(this));
         }
     }

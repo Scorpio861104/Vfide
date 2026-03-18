@@ -92,8 +92,8 @@ export async function GET(request: NextRequest) {
     //   }
     // }
 
-    // For now, return empty array when no subgraph is configured
-    // This is more honest than returning fake mock data
+    // Return an empty array when no subgraph is configured.
+    // This avoids fabricating leaderboard entries.
     const subgraphUrl = process.env.NEXT_PUBLIC_SUBGRAPH_URL;
     
     if (!subgraphUrl) {
@@ -137,7 +137,7 @@ export async function GET(request: NextRequest) {
     // Check if fetch was successful
     if (!response.ok) {
       console.error('Failed to fetch from subgraph:', response.status);
-      // Return mock data or empty leaderboard on fetch failure
+      // Return an empty leaderboard on fetch failure
       return NextResponse.json({
         success: true,
         data: [],

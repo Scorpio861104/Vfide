@@ -24,10 +24,12 @@ function isDatabaseUnavailableError(error: unknown): boolean {
     if (
       code === 'econnrefused' ||
       code === '57p01' ||
+      code === '28p01' ||
       code === '42p01' ||
       code === '42703' ||
       message.includes('econnrefused') ||
       message.includes('database query failed') ||
+      message.includes('password authentication failed') ||
       message.includes('connect') ||
       message.includes('connection terminated') ||
       message.includes('timeout expired') ||

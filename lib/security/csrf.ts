@@ -10,6 +10,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
+import { timingSafeEqual } from 'crypto';
 
 const CSRF_TOKEN_LENGTH = 32;
 const CSRF_COOKIE_NAME = 'csrf_token';
@@ -65,8 +66,16 @@ export function verifyCSRFToken(request: NextRequest): boolean {
     return false;
   }
   
-  // Tokens must match
-  return cookieToken === headerToken;
+  const cookieBuffer = Buffer.from(cookieToken);
+  const headerBuffer = Buffer.from(headerToken);
+
+  // Reject on length mismatch first to avoid timingSafeEqual throw.
+  if (cookieBuffer.length !== headerBuffer.length) {
+    return false;
+  }
+
+  // Tokens must match in constant time.
+  return timingSafeEqual(cookieBuffer, headerBuffer);
 }
 
 /**

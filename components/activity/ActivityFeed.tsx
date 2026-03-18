@@ -55,113 +55,6 @@ interface ActivityStats {
 
 // ==================== MOCK DATA ====================
 
-const generateMockActivities = (): Activity[] => {
-  const now = new Date();
-  const activities: Activity[] = [
-    {
-      id: '1',
-      type: 'transaction',
-      title: 'Payment Received',
-      description: 'Received 500 USDC from merchant portal',
-      timestamp: new Date(now.getTime() - 2 * 60 * 60 * 1000), // 2 hours ago
-      user: 'John Doe',
-      metadata: { amount: '500 USDC', status: 'completed' },
-      icon: '💰',
-    },
-    {
-      id: '2',
-      type: 'governance',
-      title: 'Voted on Proposal',
-      description: 'Voted YES on proposal #42: Treasury Allocation',
-      timestamp: new Date(now.getTime() - 5 * 60 * 60 * 1000), // 5 hours ago
-      user: 'John Doe',
-      metadata: { proposalId: '42', status: 'active' },
-      icon: '🗳️',
-    },
-    {
-      id: '3',
-      type: 'badge',
-      title: 'Badge Earned',
-      description: 'Earned "Early Adopter" badge',
-      timestamp: new Date(now.getTime() - 1 * 24 * 60 * 60 * 1000), // 1 day ago
-      user: 'John Doe',
-      metadata: { badgeName: 'Early Adopter', status: 'active' },
-      icon: '🏆',
-    },
-    {
-      id: '4',
-      type: 'merchant',
-      title: 'Merchant Profile Updated',
-      description: 'Updated business information and payment settings',
-      timestamp: new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000), // 2 days ago
-      user: 'John Doe',
-      metadata: { status: 'completed' },
-      icon: '🏪',
-    },
-    {
-      id: '5',
-      type: 'escrow',
-      title: 'Escrow Created',
-      description: 'Created escrow for transaction #1234',
-      timestamp: new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000), // 3 days ago
-      user: 'John Doe',
-      metadata: { amount: '1000 USDC', status: 'active' },
-      icon: '🔒',
-    },
-    {
-      id: '6',
-      type: 'wallet',
-      title: 'Wallet Connected',
-      description: 'Connected MetaMask wallet',
-      timestamp: new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000), // 7 days ago
-      user: 'John Doe',
-      metadata: { status: 'connected' },
-      icon: '👛',
-    },
-    {
-      id: '7',
-      type: 'transaction',
-      title: 'Payment Sent',
-      description: 'Sent 250 USDC to supplier',
-      timestamp: new Date(now.getTime() - 10 * 24 * 60 * 60 * 1000), // 10 days ago
-      user: 'John Doe',
-      metadata: { amount: '250 USDC', status: 'completed' },
-      icon: '💸',
-    },
-    {
-      id: '8',
-      type: 'governance',
-      title: 'Proposal Created',
-      description: 'Created proposal #43: Community Fund',
-      timestamp: new Date(now.getTime() - 15 * 24 * 60 * 60 * 1000), // 15 days ago
-      user: 'John Doe',
-      metadata: { proposalId: '43', status: 'pending' },
-      icon: '📝',
-    },
-    {
-      id: '9',
-      type: 'badge',
-      title: 'Badge Progress',
-      description: 'Made progress on "Transaction Master" badge (75%)',
-      timestamp: new Date(now.getTime() - 20 * 24 * 60 * 60 * 1000), // 20 days ago
-      user: 'John Doe',
-      metadata: { badgeName: 'Transaction Master', status: 'in-progress' },
-      icon: '⭐',
-    },
-    {
-      id: '10',
-      type: 'merchant',
-      title: 'Payout Received',
-      description: 'Received monthly payout of 2,500 USDC',
-      timestamp: new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000), // 30 days ago
-      user: 'John Doe',
-      metadata: { amount: '2500 USDC', status: 'completed' },
-      icon: '💵',
-    },
-  ];
-
-  return activities;
-};
 
 const calculateActivityStats = (activities: Activity[]): ActivityStats => {
   const now = new Date();
@@ -436,7 +329,7 @@ function StatCard({ label, value, icon, color = 'blue' }: StatCardProps) {
 
 export default function ActivityFeed() {
   // State
-  const [activities] = useState<Activity[]>(generateMockActivities());
+  const [activities] = useState<Activity[]>([]);
   const [filter, setFilter] = useState<ActivityFilter>({
     type: 'all',
     dateRange: 'all',

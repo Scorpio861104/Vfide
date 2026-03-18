@@ -156,6 +156,13 @@ server.on('upgrade', (req: http.IncomingMessage, socket, head) => {
     token = authHeader.slice(7);
   }
 
+  // Browser WebSocket clients cannot set custom Authorization headers.
+  // Allow token fallback via query string for ws:// upgrades.
+  if (!token && req.url) {
+    const url = new URL(req.url, 'http://localhost');
+    token = url.searchParams.get('token') || undefined;
+  }
+
   if (!token) {
     console.warn(`[ws] No token on upgrade from IP: ${ip}`);
     socket.write('HTTP/1.1 401 Unauthorized\r\n\r\n');
@@ -247,6 +254,17 @@ wss.on('connection', (ws: WebSocket, _req: http.IncomingMessage) => {
 
       case 'unsubscribe':
         ws.send(JSON.stringify({ type: 'unsubscribed', payload: { topic: msg.payload.topic } }));
+        break;
+
+      case 'message':
+        ws.send(JSON.stringify({
+          type: 'message',
+          payload: {
+            from: client.vfideAddress,
+            data: msg.payload,
+            timestamp: Date.now(),
+          },
+        }));
         break;
 
       default:

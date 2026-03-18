@@ -29,36 +29,13 @@ export default function StreamingPage() {
   const [duration, setDuration] = useState('30'); // days
   const [token, setToken] = useState('ETH');
 
-  // Mock data for demo
+  // Live data source is not wired yet; keep list empty until contract reads are connected.
   useEffect(() => {
-    if (address) {
-      setStreams([
-        {
-          id: '1',
-          recipient: '0x1234...5678',
-          token: 'ETH',
-          totalAmount: '1.0',
-          ratePerSecond: '0.000000385',
-          startTime: Date.now() - 7 * 24 * 60 * 60 * 1000,
-          endTime: Date.now() + 23 * 24 * 60 * 60 * 1000,
-          withdrawn: '0.233',
-          isPaused: false,
-          status: 'active',
-        },
-        {
-          id: '2',
-          recipient: '0xabcd...efgh',
-          token: 'USDC',
-          totalAmount: '1000',
-          ratePerSecond: '0.000385',
-          startTime: Date.now() - 30 * 24 * 60 * 60 * 1000,
-          endTime: Date.now() - 1 * 24 * 60 * 60 * 1000,
-          withdrawn: '1000',
-          isPaused: false,
-          status: 'completed',
-        },
-      ]);
+    if (!address) {
+      setStreams([]);
+      return;
     }
+    setStreams([]);
   }, [address]);
 
   const handleCreateStream = useCallback(() => {
@@ -174,7 +151,7 @@ export default function StreamingPage() {
       <div className="space-y-4">
         {streams.length === 0 ? (
           <div className="text-center py-12 text-muted-foreground">
-            No streams yet. Create your first payment stream!
+            No live streams found. Connect Payroll/Subscription contracts to display on-chain streams.
           </div>
         ) : (
           streams.map((stream) => (

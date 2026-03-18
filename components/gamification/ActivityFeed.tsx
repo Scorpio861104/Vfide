@@ -15,59 +15,11 @@ interface ActivityItem {
 }
 
 export function ActivityFeed({ limit = 10 }: { limit?: number }) {
-  const [baseNow] = useState(() => Date.now())
   const [now, setNow] = useState(() => Date.now())
 
   const activities = useMemo<ActivityItem[]>(() => {
-    const mockActivities: ActivityItem[] = [
-      {
-        id: '1',
-        type: 'badge_earned',
-        user: '0x1234...5678',
-        details: 'earned Pioneer badge',
-        timestamp: baseNow - 1000 * 60 * 5,
-        icon: <Award className="w-4 h-4" />,
-        color: 'text-amber-400',
-      },
-      {
-        id: '2',
-        type: 'level_up',
-        user: '0xabcd...ef01',
-        details: 'reached Level 10',
-        timestamp: baseNow - 1000 * 60 * 12,
-        icon: <TrendingUp className="w-4 h-4" />,
-        color: 'text-cyan-400',
-      },
-      {
-        id: '3',
-        type: 'badge_earned',
-        user: '0x9876...4321',
-        details: 'earned Active Trader badge',
-        timestamp: baseNow - 1000 * 60 * 18,
-        icon: <Award className="w-4 h-4" />,
-        color: 'text-emerald-400',
-      },
-      {
-        id: '4',
-        type: 'leaderboard_climb',
-        user: '0x5555...6666',
-        details: 'moved up 5 ranks to #12',
-        timestamp: baseNow - 1000 * 60 * 25,
-        icon: <Users className="w-4 h-4" />,
-        color: 'text-purple-400',
-      },
-      {
-        id: '5',
-        type: 'xp_gained',
-        user: '0x7777...8888',
-        details: 'gained 50 XP',
-        timestamp: baseNow - 1000 * 60 * 30,
-        icon: <Zap className="w-4 h-4" />,
-        color: 'text-blue-400',
-      },
-    ]
-    return mockActivities.slice(0, limit)
-  }, [baseNow, limit])
+    return ([] as ActivityItem[]).slice(0, limit)
+  }, [limit])
 
   useEffect(() => {
     const interval = setInterval(() => setNow(Date.now()), 30_000)

@@ -8,11 +8,12 @@ import { parseUnits } from "viem";
 import { motion, AnimatePresence } from "framer-motion";
 import { Heart, Shield, DollarSign, Users, CheckCircle, Clock, AlertTriangle, ExternalLink, Sparkles } from "lucide-react";
 import { safeParseFloat } from "@/lib/validation";
+import { CONTRACT_ADDRESSES } from "@/lib/contracts";
 
 // SanctumVault not deployed on Base Sepolia testnet yet
 // Contract addresses will be populated after mainnet deployment
-const SANCTUM_VAULT_ADDRESS = (process.env.NEXT_PUBLIC_SANCTUM_VAULT_ADDRESS || '0x0000000000000000000000000000000000000000') as `0x${string}`;
-const VFIDE_TOKEN_ADDRESS = (process.env.NEXT_PUBLIC_VFIDE_TOKEN_ADDRESS || '0xf57992ab9F8887650C2a220A34fe86ebD00c02f5') as `0x${string}`;
+const SANCTUM_VAULT_ADDRESS = CONTRACT_ADDRESSES.SanctumVault;
+const VFIDE_TOKEN_ADDRESS = CONTRACT_ADDRESSES.VFIDEToken;
 
 // Check if contracts are deployed
 const IS_SANCTUM_DEPLOYED = SANCTUM_VAULT_ADDRESS !== '0x0000000000000000000000000000000000000000';

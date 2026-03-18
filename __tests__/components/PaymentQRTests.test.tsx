@@ -3,13 +3,19 @@
  * Tests for PaymentQR component (0% coverage)
  */
 import { describe, it, expect, vi, beforeEach } from '@jest/globals'
-import { render, screen, fireEvent } from '@testing-library/react'
+import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { PaymentQR } from '@/components/merchant/PaymentQR'
+
+const mockSignMessageAsync = jest.fn(async () => '0xsigned')
 
 // Mock wagmi
 jest.mock('wagmi', () => ({
   useAccount: () => ({
     address: '0x1234567890123456789012345678901234567890',
+  }),
+  useSignMessage: () => ({
+    signMessageAsync: mockSignMessageAsync,
+    isPending: false,
   }),
 }))
 
@@ -48,7 +54,8 @@ describe('PaymentQR', () => {
   it('shows QR code', () => {
     render(<PaymentQR />)
     
-    expect(screen.getByTestId('qr-code')).toBeInTheDocument()
+      expect(screen.queryByTestId('qr-code')).not.toBeInTheDocument()
+      expect(screen.getByText(/tamper-proof QR/i)).toBeInTheDocument()
   })
 
   it('has amount input field', () => {
@@ -96,11 +103,21 @@ describe('PaymentQR', () => {
     expect(buttons.length).toBeGreaterThan(0)
   })
 
+    it('signs payload and renders secure QR code', async () => {
+      render(<PaymentQR defaultAmount="25" defaultOrderId="INV-1" />)
+
+      fireEvent.click(screen.getByRole('button', { name: /Sign & Lock QR/i }))
+
+      await waitFor(() => {
+        expect(mockSignMessageAsync).toHaveBeenCalled()
+        expect(screen.getByTestId('qr-code')).toBeInTheDocument()
+      })
+    })
+
   it('has QrCode icon in header', () => {
     render(<PaymentQR />)
-    
-    const svgs = document.querySelectorAll('svg')
-    expect(svgs.length).toBeGreaterThan(0)
+
+    expect(screen.getByTestId('icon-QrCode')).toBeInTheDocument()
   })
 
   it('renders order ID input', () => {

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
-import { ReentrancyGuard } from "./SharedInterfaces.sol";
+import { ReentrancyGuard, IERC20 } from "./SharedInterfaces.sol";
 
 /**
  * @title AdminMultiSig
@@ -54,10 +54,15 @@ contract AdminMultiSig is ReentrancyGuard {
     mapping(uint256 => Proposal) public proposals;
     
     uint256 public vetoThreshold = 100; // 100 veto votes needed
+    // H-05 Fix: Minimum VFIDE token stake required to cast a community veto.
+    // This makes Sybil attacks economically costly — 100 wallets × 10,000 VFIDE = 1M VFIDE locked.
+    uint256 public vetoMinStake = 10_000e18; // 10,000 VFIDE minimum to cast one veto vote
+    IERC20 public vfideToken; // VFIDE token reference for stake checks
     mapping(uint256 => mapping(address => bool)) public communityVetos;
 
     uint256 private constant NO_ACTIVE_PROPOSAL = type(uint256).max;
     uint256 private executingProposalId = NO_ACTIVE_PROPOSAL;
+    uint256 public executionGasLimit = 500_000; // M-12 Fix: Configurable gas limit
 
     event ProposalCreated(
         uint256 indexed proposalId,
@@ -72,6 +77,8 @@ contract AdminMultiSig is ReentrancyGuard {
     event ProposalVetoed(uint256 indexed proposalId, address indexed vetoer);
     event CommunityVeto(uint256 indexed proposalId, address indexed voter, uint256 vetoCount);
     event CouncilMemberUpdated(address indexed oldMember, address indexed newMember);
+    event VetoMinStakeSet(uint256 newMinStake);
+    event VFIDETokenSet(address token);
 
     modifier onlyCouncil() {
         require(isCouncilMember[msg.sender], "AdminMultiSig: caller not council member");
@@ -97,7 +104,7 @@ contract AdminMultiSig is ReentrancyGuard {
      * @notice Initialize council with 5 members
      * @param _council Array of 5 council member addresses
      */
-    constructor(address[COUNCIL_SIZE] memory _council) {
+    constructor(address[COUNCIL_SIZE] memory _council, address _vfideToken) {
         for (uint256 i = 0; i < COUNCIL_SIZE; i++) {
             require(_council[i] != address(0), "AdminMultiSig: zero address in council");
             require(!isCouncilMember[_council[i]], "AdminMultiSig: duplicate council member");
@@ -105,6 +112,23 @@ contract AdminMultiSig is ReentrancyGuard {
             council[i] = _council[i];
             isCouncilMember[_council[i]] = true;
         }
+        // H-05 Fix: Wire VFIDE token for stake-gated community veto
+        if (_vfideToken != address(0)) {
+            vfideToken = IERC20(_vfideToken);
+        }
+    }
+
+    /// @notice Set the VFIDE token address used for stake checks on community veto
+    function setVFIDEToken(address _token) external onlyCouncil {
+        require(_token != address(0), "AdminMultiSig: zero address");
+        vfideToken = IERC20(_token);
+        emit VFIDETokenSet(_token);
+    }
+
+    /// @notice Update the minimum VFIDE stake required to cast a community veto
+    function setVetoMinStake(uint256 _minStake) external onlyCouncil {
+        vetoMinStake = _minStake;
+        emit VetoMinStakeSet(_minStake);
     }
 
     /**
@@ -205,14 +229,21 @@ contract AdminMultiSig is ReentrancyGuard {
 
         emit ProposalExecuted(_proposalId, msg.sender);
 
-        // Use 500k gas limit for safety - prevents gas griefing
+        // Use configurable gas limit for safety - prevents gas griefing
         // Can be increased via governance if needed for complex operations
         // Intentional: emergency proposal execution may target this contract,
         // while `nonReentrant` prevents nested `executeProposal` entry.
         // slither-disable-next-line reentrancy-benign
-        (bool success, ) = proposal.target.call{gas: 500_000}(proposal.data);
+        (bool success, ) = proposal.target.call{gas: executionGasLimit}(proposal.data);
         require(success, "AdminMultiSig: execution failed");
         executingProposalId = NO_ACTIVE_PROPOSAL;
+    }
+
+    /// @notice M-12 Fix: Allow council to adjust execution gas limit via governance
+    function setExecutionGasLimit(uint256 _gasLimit) external {
+        require(executingProposalId != NO_ACTIVE_PROPOSAL, "AdminMultiSig: must be via proposal");
+        require(_gasLimit >= 100_000 && _gasLimit <= 10_000_000, "AdminMultiSig: invalid gas limit");
+        executionGasLimit = _gasLimit;
     }
 
     /**
@@ -240,6 +271,8 @@ contract AdminMultiSig is ReentrancyGuard {
 
     /**
      * @notice Community member votes to veto a proposal
+     * @dev H-05 Fix: Requires minimum VFIDE token balance to prevent Sybil attacks.
+     *      Attacker needs 100 wallets × vetoMinStake VFIDE, making mass veto economically costly.
      * @param _proposalId ID of the proposal to veto
      */
     function communityVeto(uint256 _proposalId) external proposalExists(_proposalId) {
@@ -251,6 +284,13 @@ contract AdminMultiSig is ReentrancyGuard {
             block.timestamp <= proposal.executionTime + VETO_WINDOW,
             "AdminMultiSig: veto window closed"
         );
+        // H-05 Fix: Enforce minimum token stake to prevent zero-cost Sybil veto attacks
+        if (vetoMinStake > 0 && address(vfideToken) != address(0)) {
+            require(
+                vfideToken.balanceOf(msg.sender) >= vetoMinStake,
+                "AdminMultiSig: insufficient VFIDE stake to veto"
+            );
+        }
 
         communityVetos[_proposalId][msg.sender] = true;
         proposal.vetoCount++;

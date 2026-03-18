@@ -56,158 +56,13 @@ interface CommunityHighlight {
   icon: string;
 }
 
-// ==================== MOCK DATA ====================
+// ==================== DATA ====================
 
-const mockUserCards: UserCard[] = [
-  {
-    id: 'u1',
-    username: 'alex_finance',
-    displayName: 'Alex Rivera',
-    avatar: '👨‍💼',
-    bio: 'DeFi strategist and governance participant',
-    proofScore: 9200,
-    followers: 542,
-    badges: 12,
-    isVerified: true,
-    matchScore: 94,
-    reason: 'Shared interests',
-    tags: ['DeFi', 'Governance', 'Trading'],
-  },
-  {
-    id: 'u2',
-    username: 'sara_merchant',
-    displayName: 'Sara Chen',
-    avatar: '👩‍🎤',
-    bio: 'Payment processor and merchant portal expert',
-    proofScore: 7800,
-    followers: 423,
-    badges: 9,
-    isVerified: true,
-    matchScore: 88,
-    reason: 'Mutual followers',
-    tags: ['Payments', 'Merchant', 'Finance'],
-  },
-  {
-    id: 'u3',
-    username: 'dev_john',
-    displayName: 'John Park',
-    avatar: '👨‍💻',
-    bio: 'Smart contract developer building on VFIDE',
-    proofScore: 8600,
-    followers: 367,
-    badges: 15,
-    isVerified: true,
-    matchScore: 82,
-    reason: 'Active contributor',
-    tags: ['Development', 'Smart Contracts', 'Tech'],
-  },
-  {
-    id: 'u4',
-    username: 'emma_community',
-    displayName: 'Emma Wilson',
-    avatar: '👩‍🔬',
-    bio: 'Community organizer and trust builder',
-    proofScore: 6900,
-    followers: 612,
-    badges: 8,
-    isVerified: false,
-    matchScore: 76,
-    reason: 'Similar activity',
-    tags: ['Community', 'Trust', 'Social'],
-  },
-  {
-    id: 'u5',
-    username: 'mark_vault',
-    displayName: 'Mark Johnson',
-    avatar: '🧑‍💼',
-    bio: 'Vault master with 500k+ locked',
-    proofScore: 7500,
-    followers: 289,
-    badges: 11,
-    isVerified: true,
-    matchScore: 79,
-    reason: 'Similar interests',
-    tags: ['Vault', 'Security', 'Finance'],
-  },
-];
+const userCards: UserCard[] = [];
 
-const mockTrendingUsers: TrendingUser[] = [
-  {
-    id: 't1',
-    displayName: 'Luna Tech',
-    avatar: '🌙',
-    trendingScore: 98,
-    trendingReason: 'Viral governance proposal',
-    newFollowers: 245,
-  },
-  {
-    id: 't2',
-    displayName: 'Crypto Kate',
-    avatar: '👑',
-    trendingScore: 94,
-    trendingReason: 'Record transaction volume',
-    newFollowers: 189,
-  },
-  {
-    id: 't3',
-    displayName: 'Felix Dev',
-    avatar: '🦊',
-    trendingScore: 89,
-    trendingReason: 'Major contract deployment',
-    newFollowers: 156,
-  },
-];
+const trendingUsers: TrendingUser[] = [];
 
-const mockHighlights: CommunityHighlight[] = [
-  {
-    id: 'h1',
-    title: 'Governance Enthusiasts',
-    description: 'Active participants in DAO proposals and voting',
-    participantCount: 2341,
-    activity: 'High',
-    icon: '🗳️',
-  },
-  {
-    id: 'h2',
-    title: 'DeFi Traders',
-    description: 'Strategic traders and governance participants',
-    participantCount: 1892,
-    activity: 'Very High',
-    icon: '📊',
-  },
-  {
-    id: 'h3',
-    title: 'Payment Merchants',
-    description: 'Accepting payments and building commerce',
-    participantCount: 1456,
-    activity: 'High',
-    icon: '💳',
-  },
-  {
-    id: 'h4',
-    title: 'Security & Vault Masters',
-    description: 'Protecting assets and managing vaults',
-    participantCount: 987,
-    activity: 'Medium',
-    icon: '🔒',
-  },
-  {
-    id: 'h5',
-    title: 'Community Builders',
-    description: 'Growing networks and mentoring users',
-    participantCount: 1234,
-    activity: 'High',
-    icon: '🤝',
-  },
-  {
-    id: 'h6',
-    title: 'Development Contributors',
-    description: 'Building and improving the protocol',
-    participantCount: 567,
-    activity: 'Medium',
-    icon: '⚙️',
-  },
-];
+const highlights: CommunityHighlight[] = [];
 
 // ==================== COMPONENTS ====================
 
@@ -223,7 +78,7 @@ export function SocialDiscovery({ onSelectUser }: SocialDiscoveryProps) {
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
 
   const filteredUsers = useMemo(() => {
-    let results = mockUserCards;
+    let results: UserCard[] = userCards;
 
     // Search filter
     if (searchQuery) {
@@ -269,7 +124,7 @@ export function SocialDiscovery({ onSelectUser }: SocialDiscoveryProps) {
     return sorted;
   }, [searchQuery, filter, selectedTag]);
 
-  const allTags = Array.from(new Set(mockUserCards.flatMap((u) => u.tags)));
+  const allTags = Array.from(new Set(userCards.flatMap((u) => u.tags)));
 
   const handleFollow = (userId: string) => {
     setFollowedUsers((prev) => {
@@ -421,7 +276,7 @@ export function SocialDiscovery({ onSelectUser }: SocialDiscoveryProps) {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {mockTrendingUsers.map((user, idx) => (
+            {trendingUsers.map((user, idx) => (
               <motion.div
                 key={user.id}
                 initial={{ opacity: 0, scale: 0.9 }}
@@ -474,7 +329,7 @@ export function SocialDiscovery({ onSelectUser }: SocialDiscoveryProps) {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {mockHighlights.map((highlight, idx) => (
+            {highlights.map((highlight, idx) => (
               <motion.div
                 key={highlight.id}
                 initial={{ opacity: 0, y: 20 }}

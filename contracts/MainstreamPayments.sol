@@ -113,6 +113,7 @@ contract FiatRampRegistry {
             txCount: 0,
             registeredAt: uint64(block.timestamp)
         });
+        require(providerList.length < 200, "FRR: provider cap"); // I-11
         providerList.push(provider);
         
         emit RampProviderRegistered(provider, name, licenseInfo);
@@ -351,6 +352,35 @@ contract MainstreamPriceOracle {
         isUpdater[updater] = status;
     }
     
+    /// @notice L-17 Fix: Fallback — any updater can push a price from a registered source
+    /// @dev Reads `lastPrice` from the registered PriceSource and applies it (with sanity check)
+    function updatePriceFromSource(address source) external onlyUpdater {
+        PriceSource storage ps = priceSources[source];
+        require(ps.active, "PO: source not active");
+        require(ps.lastPrice > 0, "PO: source has no price");
+        require(ps.lastUpdate + stalenessThreshold >= block.timestamp, "PO: source stale");
+
+        uint256 newPrice = ps.lastPrice;
+        uint256 maxChange = vfidePerUsd / 2;
+        require(
+            newPrice >= vfidePerUsd - maxChange && newPrice <= vfidePerUsd + maxChange + maxChange,
+            "PO: price change too large"
+        );
+
+        vfidePerUsd = newPrice;
+        lastUpdateTime = block.timestamp;
+        emit PriceUpdated(newPrice, block.timestamp, source);
+    }
+
+    /// @notice Allow a registered price source to push its latest price
+    function reportSourcePrice(uint256 price) external {
+        PriceSource storage ps = priceSources[msg.sender];
+        require(ps.active, "PO: not a source");
+        require(price > 0, "PO: zero price");
+        ps.lastPrice = price;
+        ps.lastUpdate = block.timestamp;
+    }
+
     /**
      * @notice Set staleness threshold
      */
@@ -443,14 +473,22 @@ contract MainstreamPriceOracle {
  * @notice Enables one-tap mobile payments via temporary session keys
  * @dev Session keys can make limited transactions without main wallet signature
  */
+interface ISeerAutonomous_SKM {
+    function beforeAction(address subject, uint8 action, uint256 amount, address counterparty) external returns (uint8);
+}
+
 contract SessionKeyManager {
     event SessionCreated(address indexed owner, address indexed sessionKey, uint256 spendLimit, uint64 expiry);
     event SessionRevoked(address indexed owner, address indexed sessionKey);
     event SessionUsed(address indexed owner, address indexed sessionKey, uint256 amount, uint256 remaining);
     event DefaultLimitsUpdated(uint256 spendLimit, uint64 duration);
+    event SeerAutonomousSet(address indexed seerAutonomous);
+
+    error SKM_ActionBlocked(uint8 result);
     
     address public dao;
     IVaultHub public vaultHub;
+    ISeerAutonomous_SKM public seerAutonomous;
     
     struct Session {
         address owner;           // Vault owner who created session
@@ -496,6 +534,11 @@ contract SessionKeyManager {
         require(recorder != address(0), "SKM: zero address");
         authorizedSpendRecorders[recorder] = authorized;
     }
+
+    function setSeerAutonomous(address _seerAutonomous) external onlyDAO {
+        seerAutonomous = ISeerAutonomous_SKM(_seerAutonomous);
+        emit SeerAutonomousSet(_seerAutonomous);
+    }
     
     /**
      * @notice Create a session key for mobile payments
@@ -534,6 +577,7 @@ contract SessionKeyManager {
             maxPerTx: maxPerTx
         });
         
+        require(ownerSessions[msg.sender].length < 50, "SKM: session cap"); // I-11
         ownerSessions[msg.sender].push(sessionKey);
         
         emit SessionCreated(msg.sender, sessionKey, spendLimit, expiry);
@@ -603,6 +647,7 @@ contract SessionKeyManager {
         s.spent += amount;
         
         emit SessionUsed(s.owner, sessionKey, amount, s.spendLimit - s.spent);
+        _enforceSeerAction(s.owner, 0, amount, msg.sender); // Transfer
         return true;
     }
     
@@ -670,6 +715,20 @@ contract SessionKeyManager {
         defaultDuration = duration;
         defaultMaxPerTx = maxPerTx;
         emit DefaultLimitsUpdated(spendLimit, duration);
+    }
+
+    function _enforceSeerAction(address subject, uint8 action, uint256 amount, address counterparty) internal {
+        if (address(seerAutonomous) == address(0)) return;
+
+        uint8 result = 0;
+        try seerAutonomous.beforeAction(subject, action, amount, counterparty) returns (uint8 r) {
+            result = r;
+        } catch {
+            revert SKM_ActionBlocked(255);
+        }
+
+        // 0=Allowed,1=Warned,2=Delayed,3=Blocked,4=Penalized
+        if (result >= 2) revert SKM_ActionBlocked(result);
     }
 }
 
@@ -739,6 +798,7 @@ contract TerminalRegistry {
             lastTxTime: 0
         });
         
+        require(merchantTerminals[msg.sender].length < 100, "TR: terminal cap"); // I-11
         merchantTerminals[msg.sender].push(terminalId);
         
         emit TerminalRegistered(terminalId, msg.sender, location);

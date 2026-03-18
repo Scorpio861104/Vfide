@@ -68,7 +68,16 @@ contract VFIDEEnterpriseGateway {
         address _oracle,
         address _merchantWallet
     ) {
-        if (_dao == address(0) || _token == address(0) || _seer == address(0)) revert ENT_Zero();
+        if (
+            _dao == address(0)
+                || _token == address(0)
+                || _seer == address(0)
+                || _vaultHub == address(0)
+                || _oracle == address(0)
+                || _merchantWallet == address(0)
+        ) {
+            revert ENT_Zero();
+        }
         dao = _dao;
         token = IERC20(_token);
         seer = ISeer(_seer);
@@ -178,6 +187,7 @@ contract VFIDEEnterpriseGateway {
      */
     function settleBatch(bytes32[] calldata orderIds) external onlyOracle {
         for (uint256 i = 0; i < orderIds.length; i++) {
+            // slither-disable-next-line calls-loop
             _settle(orderIds[i]);
         }
     }
@@ -214,6 +224,7 @@ contract VFIDEEnterpriseGateway {
         // 2. Reward Buyer (Trust Mining)
         // Reward scales with amount? For now, fixed reward for verified commerce.
         // Let's say 10 points for a verified enterprise purchase.
+        // slither-disable-next-line calls-loop
         try seer.reward(o.buyer, 10, "enterprise_purchase") {} catch {}
     }
     
@@ -226,28 +237,34 @@ contract VFIDEEnterpriseGateway {
         if (vfideAmount == 0) return 0;
         
         // Approve router
+        // slither-disable-next-line calls-loop
         require(token.approve(swapRouter, vfideAmount), "ENT: approve failed");
         
         // H-13 Fix: Calculate minimum output with slippage protection
         // Get expected output amount (use oracle or on-chain price if available)
         uint256 minAmountOut = 0;
+        // slither-disable-next-line calls-loop
         try ISwapRouter(swapRouter).getAmountsOut(vfideAmount, _getSwapPath()) returns (uint256[] memory amountsOut) {
             if (amountsOut.length == 0) {
+                // slither-disable-next-line calls-loop
                 require(token.approve(swapRouter, 0), "ENT: revoke failed");
                 return 0;
             }
             uint256 expectedOut = amountsOut[amountsOut.length - 1];
             minAmountOut = expectedOut * (10000 - maxSlippageBps) / 10000;
             if (minAmountOut == 0) {
+                // slither-disable-next-line calls-loop
                 require(token.approve(swapRouter, 0), "ENT: revoke failed");
                 return 0;
             }
         } catch {
+            // slither-disable-next-line calls-loop
             require(token.approve(swapRouter, 0), "ENT: revoke failed");
             return 0;
         }
         
         // Perform swap with slippage protection
+        // slither-disable-next-line calls-loop
         try ISwapRouter(swapRouter).swapExactTokensForTokens(
             vfideAmount,
             minAmountOut, // H-13 Fix: Enforce minimum output based on maxSlippageBps
@@ -256,10 +273,12 @@ contract VFIDEEnterpriseGateway {
             block.timestamp + 300 // 5 min deadline
         ) returns (uint256[] memory amounts) {
             // DEEP-C-1 FIX: Revoke leftover approval
+            // slither-disable-next-line calls-loop
             require(token.approve(swapRouter, 0), "ENT: revoke failed");
             return amounts[amounts.length - 1];
         } catch {
             // DEEP-C-1 FIX: Revoke approval on failure too
+            // slither-disable-next-line calls-loop
             require(token.approve(swapRouter, 0), "ENT: revoke failed");
             // Swap failed, return 0 to fallback to VFIDE settlement
             return 0;

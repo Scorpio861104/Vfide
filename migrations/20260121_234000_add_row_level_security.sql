@@ -36,44 +36,75 @@ CREATE POLICY users_update_own ON users
 
 ALTER TABLE messages ENABLE ROW LEVEL SECURITY;
 
--- Policy: Users can read their own messages
-CREATE POLICY messages_read_own ON messages
-  FOR SELECT
-  USING (
-    EXISTS (
-      SELECT 1 FROM users
-      WHERE users.id = messages.sender_id
-        AND users.wallet_address = current_setting('app.current_user_address', true)::text
-    )
-    OR
-    EXISTS (
-      SELECT 1 FROM users
-      WHERE users.id = messages.recipient_id
-        AND users.wallet_address = current_setting('app.current_user_address', true)::text
-    )
-  );
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1
+    FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'messages' AND column_name = 'sender_id'
+  ) AND EXISTS (
+    SELECT 1
+    FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'messages' AND column_name = 'recipient_id'
+  ) THEN
+    IF NOT EXISTS (
+      SELECT 1 FROM pg_policies
+      WHERE schemaname = 'public' AND tablename = 'messages' AND policyname = 'messages_read_own'
+    ) THEN
+      EXECUTE $policy$
+        CREATE POLICY messages_read_own ON messages
+          FOR SELECT
+          USING (
+            EXISTS (
+              SELECT 1 FROM users
+              WHERE users.id = messages.sender_id
+                AND users.wallet_address = current_setting('app.current_user_address', true)::text
+            )
+            OR
+            EXISTS (
+              SELECT 1 FROM users
+              WHERE users.id = messages.recipient_id
+                AND users.wallet_address = current_setting('app.current_user_address', true)::text
+            )
+          )
+      $policy$;
+    END IF;
 
--- Policy: Users can insert messages as themselves
-CREATE POLICY messages_insert_own ON messages
-  FOR INSERT
-  WITH CHECK (
-    EXISTS (
-      SELECT 1 FROM users
-      WHERE users.id = messages.sender_id
-        AND users.wallet_address = current_setting('app.current_user_address', true)::text
-    )
-  );
+    IF NOT EXISTS (
+      SELECT 1 FROM pg_policies
+      WHERE schemaname = 'public' AND tablename = 'messages' AND policyname = 'messages_insert_own'
+    ) THEN
+      EXECUTE $policy$
+        CREATE POLICY messages_insert_own ON messages
+          FOR INSERT
+          WITH CHECK (
+            EXISTS (
+              SELECT 1 FROM users
+              WHERE users.id = messages.sender_id
+                AND users.wallet_address = current_setting('app.current_user_address', true)::text
+            )
+          )
+      $policy$;
+    END IF;
 
--- Policy: Users can delete their own sent messages
-CREATE POLICY messages_delete_own ON messages
-  FOR DELETE
-  USING (
-    EXISTS (
-      SELECT 1 FROM users
-      WHERE users.id = messages.sender_id
-        AND users.wallet_address = current_setting('app.current_user_address', true)::text
-    )
-  );
+    IF NOT EXISTS (
+      SELECT 1 FROM pg_policies
+      WHERE schemaname = 'public' AND tablename = 'messages' AND policyname = 'messages_delete_own'
+    ) THEN
+      EXECUTE $policy$
+        CREATE POLICY messages_delete_own ON messages
+          FOR DELETE
+          USING (
+            EXISTS (
+              SELECT 1 FROM users
+              WHERE users.id = messages.sender_id
+                AND users.wallet_address = current_setting('app.current_user_address', true)::text
+            )
+          )
+      $policy$;
+    END IF;
+  END IF;
+END $$;
 
 -- ============================================================
 -- USER_REWARDS TABLE

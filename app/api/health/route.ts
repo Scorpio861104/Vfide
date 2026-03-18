@@ -19,6 +19,7 @@ export async function GET(request: NextRequest) {
 
   const envHealthy = checkEnvironmentVariables();
   const statusCode = envHealthy ? 200 : 503;
+  const status = envHealthy ? 'ok' : 'degraded';
 
   // Ops-safety hardening: avoid exposing process internals in production.
   // Keep payload minimal for public liveness checks while preserving rich
@@ -26,8 +27,8 @@ export async function GET(request: NextRequest) {
   if (process.env.NODE_ENV === 'production') {
     return NextResponse.json(
       {
-        ok: true,
-        status: 'ok',
+        ok: envHealthy,
+        status,
         timestamp: new Date().toISOString(),
         version: process.env.npm_package_version || '1.2.0',
       },
@@ -36,8 +37,8 @@ export async function GET(request: NextRequest) {
   }
 
   const healthData = {
-    ok: true,
-    status: 'ok',
+    ok: envHealthy,
+    status,
     timestamp: new Date().toISOString(),
     version: process.env.npm_package_version || '1.2.0',
     environment: process.env.NODE_ENV || 'development',

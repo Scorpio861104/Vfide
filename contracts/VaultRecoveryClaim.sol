@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
-import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+import "./SharedInterfaces.sol";
 import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import "./interfaces/IVaultInfrastructure.sol";
 
@@ -190,7 +189,7 @@ contract VaultRecoveryClaim is Ownable, ReentrancyGuard {
     constructor(
         address _vaultHub,
         address _vaultRegistry
-    ) Ownable(msg.sender) {
+    ) {
         if (_vaultHub == address(0)) revert ZeroAddress();
         vaultHub = IVaultInfrastructure(_vaultHub);
         vaultRegistry = IVaultRegistry(_vaultRegistry);
@@ -459,6 +458,8 @@ contract VaultRecoveryClaim is Ownable, ReentrancyGuard {
      */
     function _executeRecovery(uint256 claimId) internal {
         RecoveryClaim storage claim = claims[claimId];
+
+        activeClaimForVault[claim.vault] = 0;
         
         // First, approve the recovery via VaultInfrastructure
         // This contract must be set as a recovery approver using:
@@ -482,8 +483,6 @@ contract VaultRecoveryClaim is Ownable, ReentrancyGuard {
             // Need more approvals - keep in approved state
             claim.status = ClaimStatus.Approved;
         }
-        
-        activeClaimForVault[claim.vault] = 0;
         
         emit ClaimExecuted(claimId, claim.vault, claim.claimant, claim.originalOwner);
     }

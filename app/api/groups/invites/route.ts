@@ -156,6 +156,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Not a group member' }, { status: 403 });
     }
 
+    const requesterRole = String(memberResult.rows[0]?.role ?? '').toLowerCase();
+    if (!['admin', 'moderator'].includes(requesterRole)) {
+      return NextResponse.json({ error: 'Not authorized to create invites' }, { status: 403 });
+    }
+
     const normalizedDescription =
       typeof description === 'string' && description.trim().length > 0
         ? description.trim()
@@ -205,7 +210,21 @@ export async function GET(request: NextRequest) {
       if (result.rows.length === 0) {
         return NextResponse.json({ error: 'Invite not found' }, { status: 404 });
       }
-      return NextResponse.json({ invite: result.rows[0] });
+
+      const invite = result.rows[0] as GroupInvite;
+      if (!invite.is_active) {
+        return NextResponse.json({ error: 'Invite not found' }, { status: 404 });
+      }
+
+      if (invite.expires_at && new Date(invite.expires_at).getTime() < Date.now()) {
+        return NextResponse.json({ error: 'Invite has expired' }, { status: 400 });
+      }
+
+      if (invite.max_uses !== null && invite.max_uses !== undefined && invite.current_uses >= invite.max_uses) {
+        return NextResponse.json({ error: 'Invite usage limit reached' }, { status: 400 });
+      }
+
+      return NextResponse.json({ invite });
     }
 
     if (rawGroupId) {

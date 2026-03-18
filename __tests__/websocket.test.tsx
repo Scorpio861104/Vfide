@@ -6,43 +6,57 @@
 import { WebSocketManager, useWebSocket } from '@/lib/websocket';
 import { renderHook, waitFor } from '@testing-library/react';
 
-// Create mock socket instance
-const createMockSocket = () => ({
-  on: jest.fn((event: string, handler: Function) => {
-    // Auto-trigger 'connect' event
-    if (event === 'connect') {
-      setTimeout(() => handler(), 0);
+// Mock WebSocket instances
+let mockInstances: MockWebSocket[] = [];
+
+class MockWebSocket {
+  url: string;
+  readyState: number = 0; // CONNECTING
+  onopen: ((ev: Event) => void) | null = null;
+  onclose: ((ev: CloseEvent) => void) | null = null;
+  onerror: ((ev: Event) => void) | null = null;
+  onmessage: ((ev: MessageEvent) => void) | null = null;
+  send = jest.fn();
+  close = jest.fn(() => {
+    this.readyState = 3; // CLOSED
+    if (this.onclose) {
+      this.onclose({ code: 1000, reason: 'Normal closure' } as CloseEvent);
     }
-    return mockSocket;
-  }),
-  emit: jest.fn(),
-  off: jest.fn(),
-  disconnect: jest.fn(),
-  connected: false,
-  id: 'mock-socket-id',
-});
+  });
 
-let mockSocket = createMockSocket();
+  static CONNECTING = 0;
+  static OPEN = 1;
+  static CLOSING = 2;
+  static CLOSED = 3;
 
-// Mock Socket.IO client
-jest.mock('socket.io-client', () => {
-  return {
-    io: jest.fn(() => {
-      mockSocket = createMockSocket();
-      mockSocket.connected = true;
-      return mockSocket;
-    }),
-  };
-});
+  constructor(url: string) {
+    this.url = url;
+    mockInstances.push(this);
+    // Auto-connect after microtask
+    setTimeout(() => {
+      this.readyState = 1; // OPEN
+      if (this.onopen) this.onopen(new Event('open'));
+    }, 0);
+  }
 
-global.WebSocket = jest.fn() as any;
+  // Helper to simulate incoming messages in tests
+  simulateMessage(data: unknown) {
+    if (this.onmessage) {
+      this.onmessage({ data: JSON.stringify(data) } as MessageEvent);
+    }
+  }
+}
+
+// Replace global WebSocket
+(global as any).WebSocket = MockWebSocket;
 
 describe('WebSocket Manager', () => {
   let wsManager: WebSocketManager;
 
   beforeEach(() => {
     jest.clearAllMocks();
-    mockSocket = createMockSocket();
+    jest.useFakeTimers();
+    mockInstances = [];
     wsManager = new WebSocketManager({
       url: 'ws://localhost:8080',
       reconnectInterval: 1000,
@@ -50,49 +64,70 @@ describe('WebSocket Manager', () => {
     });
   });
 
+  afterEach(() => {
+    wsManager.disconnect();
+    jest.useRealTimers();
+  });
+
   describe('Connection Management', () => {
     it('establishes connection successfully', async () => {
-      await wsManager.connect('0x123');
-      
-      await waitFor(() => {
-        expect(mockSocket.on).toHaveBeenCalledWith('connect', expect.any(Function));
-      });
+      const connectPromise = wsManager.connect('0x123');
+      jest.advanceTimersByTime(10);
+      await connectPromise;
+
+      expect(mockInstances.length).toBe(1);
+      expect(mockInstances[0].readyState).toBe(1);
     });
 
     it('handles connection errors', async () => {
-      mockSocket.on = jest.fn((event: string, handler: Function) => {
-        if (event === 'connect_error') {
-          setTimeout(() => handler(new Error('Connection failed')), 0);
+      // Override auto-connect to trigger error instead
+      const OrigMock = (global as any).WebSocket;
+      (global as any).WebSocket = class extends MockWebSocket {
+        constructor(url: string) {
+          super(url);
+          // Override: trigger error instead of open
+          // Clear the auto-open behavior by resetting readyState
+          this.readyState = 0;
+          queueMicrotask(() => {
+            this.readyState = 3;
+            this.onopen = null; // Prevent auto-open from resolving
+            if (this.onerror) this.onerror(new Event('error'));
+          });
         }
-        return mockSocket;
-      });
+      };
 
       const connectPromise = wsManager.connect('0x123');
-      
-      // Connection should handle error gracefully
-      await expect(connectPromise).resolves.toBeUndefined();
+      jest.advanceTimersByTime(10);
+
+      await expect(connectPromise).rejects.toThrow('WebSocket connection failed');
+      (global as any).WebSocket = OrigMock;
     });
 
     it('disconnects cleanly', async () => {
-      await wsManager.connect('0x123');
-      
+      const connectPromise = wsManager.connect('0x123');
+      jest.advanceTimersByTime(10);
+      await connectPromise;
+
       wsManager.disconnect();
-      
-      expect(mockSocket.disconnect).toHaveBeenCalled();
+
+      expect(mockInstances[0].close).toHaveBeenCalled();
     });
 
     it('prevents multiple concurrent connections', async () => {
       const promise1 = wsManager.connect('0x123');
       const promise2 = wsManager.connect('0x123');
-      
+
       await expect(promise2).rejects.toThrow('Already connecting');
+      jest.advanceTimersByTime(10);
       await promise1;
     });
   });
 
   describe('Message Handling', () => {
     beforeEach(async () => {
-      await wsManager.connect('0x123');
+      const connectPromise = wsManager.connect('0x123');
+      jest.advanceTimersByTime(10);
+      await connectPromise;
     });
 
     it('sends messages successfully', () => {
@@ -101,154 +136,149 @@ describe('WebSocket Manager', () => {
         from: '0x123',
         data: { content: 'Hello' },
       });
-      
+
       expect(success).toBe(true);
-      expect(mockSocket.emit).toHaveBeenCalled();
+      expect(mockInstances[0].send).toHaveBeenCalled();
     });
 
     it('fails to send when disconnected', () => {
       wsManager.disconnect();
-      
+
       const success = wsManager.send({
         type: 'message',
         from: '0x123',
         data: { content: 'Hello' },
       });
-      
+
       expect(success).toBe(false);
     });
 
     it('receives and processes messages', async () => {
       const handler = jest.fn();
       wsManager.on('message', handler);
-      
-      // Simulate receiving message
-      const onHandler = mockSocket.on.mock.calls.find(
-        (call: any[]) => call[0] === 'message'
-      )?.[1];
-      
-      if (onHandler) {
-        onHandler({
-          type: 'message',
+
+      // Simulate incoming message
+      mockInstances[0].simulateMessage({
+        type: 'message',
+        payload: {
           from: '0x456',
           data: { content: 'Hi' },
           timestamp: Date.now(),
-        });
-      }
-
-      await waitFor(() => {
-        expect(handler).toHaveBeenCalled();
+        },
       });
+
+      expect(handler).toHaveBeenCalled();
     });
 
-    it('handles multiple message handlers', async () => {
+    it('handles multiple message handlers', () => {
       const handler1 = jest.fn();
       const handler2 = jest.fn();
-      
+
       wsManager.on('message', handler1);
       wsManager.on('message', handler2);
-      
-      // Simulate receiving message
-      const onHandler = mockSocket.on.mock.calls.find(
-        (call: any[]) => call[0] === 'message'
-      )?.[1];
-      
-      if (onHandler) {
-        onHandler({
-          type: 'message',
-          from: '0x456',
-          data: {},
-          timestamp: Date.now(),
-        });
-      }
 
-      await waitFor(() => {
-        expect(handler1).toHaveBeenCalled();
-        expect(handler2).toHaveBeenCalled();
+      mockInstances[0].simulateMessage({
+        type: 'message',
+        payload: { from: '0x456', data: {}, timestamp: Date.now() },
       });
+
+      expect(handler1).toHaveBeenCalled();
+      expect(handler2).toHaveBeenCalled();
     });
   });
 
   describe('Reconnection Logic', () => {
     it('attempts reconnection on disconnect', async () => {
-      await wsManager.connect('0x123');
-      
-      // Simulate disconnect
-      const disconnectHandler = mockSocket.on.mock.calls.find(
-        (call: any[]) => call[0] === 'disconnect'
-      )?.[1];
-      
-      if (disconnectHandler) {
-        disconnectHandler();
-      }
+      const connectPromise = wsManager.connect('0x123');
+      jest.advanceTimersByTime(10);
+      await connectPromise;
+
+      // Simulate disconnect from server
+      const ws = mockInstances[0];
+      ws.readyState = 3;
+      if (ws.onclose) ws.onclose({ code: 1006, reason: 'Abnormal closure' } as CloseEvent);
 
       // Manager handles disconnection
-      expect(mockSocket.on).toHaveBeenCalled();
+      expect(ws.readyState).toBe(3);
     });
 
     it('stops reconnecting after max attempts', async () => {
-      await wsManager.connect('0x123');
-      
-      // Manager has max reconnect attempts configured
-      expect(mockSocket.on).toHaveBeenCalled();
+      const connectPromise = wsManager.connect('0x123');
+      jest.advanceTimersByTime(10);
+      await connectPromise;
+
+      expect(mockInstances.length).toBe(1);
     });
 
     it('does not reconnect when explicitly closed', async () => {
-      await wsManager.connect('0x123');
-      
+      const connectPromise = wsManager.connect('0x123');
+      jest.advanceTimersByTime(10);
+      await connectPromise;
+
       wsManager.disconnect();
-      
-      expect(mockSocket.disconnect).toHaveBeenCalled();
+
+      expect(mockInstances[0].close).toHaveBeenCalled();
     });
   });
 
   describe('Heartbeat Mechanism', () => {
     it('starts heartbeat after connection', async () => {
-      await wsManager.connect('0x123');
-      
-      expect(mockSocket.on).toHaveBeenCalled();
+      const connectPromise = wsManager.connect('0x123');
+      jest.advanceTimersByTime(10);
+      await connectPromise;
+
+      expect(mockInstances[0].readyState).toBe(1);
     });
 
     it('stops heartbeat on disconnect', async () => {
-      await wsManager.connect('0x123');
-      
+      const connectPromise = wsManager.connect('0x123');
+      jest.advanceTimersByTime(10);
+      await connectPromise;
+
       wsManager.disconnect();
-      
-      expect(mockSocket.disconnect).toHaveBeenCalled();
+
+      expect(mockInstances[0].close).toHaveBeenCalled();
     });
 
     it('sends heartbeat messages periodically', async () => {
-      await wsManager.connect('0x123');
-      
-      mockSocket.emit.mockClear();
-      
-      // Heartbeat mechanism exists
-      expect(mockSocket.on).toHaveBeenCalled();
+      const connectPromise = wsManager.connect('0x123');
+      jest.advanceTimersByTime(10);
+      await connectPromise;
+
+      // Advance past heartbeat interval
+      mockInstances[0].send.mockClear();
+      jest.advanceTimersByTime(31000);
+
+      // Heartbeat should have sent a ping
+      expect(mockInstances[0].send).toHaveBeenCalled();
     });
   });
 
   describe('Subscription Management', () => {
     beforeEach(async () => {
-      await wsManager.connect('0x123');
+      const connectPromise = wsManager.connect('0x123');
+      jest.advanceTimersByTime(10);
+      await connectPromise;
     });
 
     it('subscribes to message types', () => {
       const handler = jest.fn();
       const unsubscribe = wsManager.on('typing', handler);
-      
+
       expect(unsubscribe).toBeInstanceOf(Function);
     });
 
-    it('unsubscribes from message types', async () => {
+    it('unsubscribes from message types', () => {
       const handler = jest.fn();
       const unsubscribe = wsManager.on('typing', handler);
-      
+
       unsubscribe();
-      
-      await waitFor(() => {
-        // Verify handler is not called after unsubscribe
-        expect(wsManager.on).toBeDefined();
-      });
+
+      // Simulate typing message
+      mockInstances[0].simulateMessage({ type: 'typing', payload: {} });
+
+      // Handler should NOT be called after unsubscribe
+      expect(handler).not.toHaveBeenCalled();
     });
   });
 });
@@ -256,13 +286,19 @@ describe('WebSocket Manager', () => {
 describe('useWebSocket Hook', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    jest.useFakeTimers();
+    mockInstances = [];
+  });
+
+  afterEach(() => {
+    jest.useRealTimers();
   });
 
   it('provides connection state', () => {
     const { result } = renderHook(() =>
       useWebSocket({ url: 'ws://localhost:8080' }, '0x123')
     );
-    
+
     expect(result.current.isConnected).toBeDefined();
   });
 
@@ -270,7 +306,7 @@ describe('useWebSocket Hook', () => {
     const { result } = renderHook(() =>
       useWebSocket({ url: 'ws://localhost:8080' }, '0x123')
     );
-    
+
     expect(result.current.send).toBeInstanceOf(Function);
   });
 
@@ -278,7 +314,7 @@ describe('useWebSocket Hook', () => {
     const { result } = renderHook(() =>
       useWebSocket({ url: 'ws://localhost:8080' }, '0x123')
     );
-    
+
     expect(result.current.subscribe).toBeInstanceOf(Function);
   });
 
@@ -286,10 +322,10 @@ describe('useWebSocket Hook', () => {
     const { unmount } = renderHook(() =>
       useWebSocket({ url: 'ws://localhost:8080' }, '0x123')
     );
-    
+
     const disconnectSpy = jest.spyOn(WebSocketManager.prototype, 'disconnect');
     unmount();
-    
+
     expect(disconnectSpy).toHaveBeenCalled();
   });
 });

@@ -24,6 +24,10 @@
    - What was accomplished
    - Files created
    - Validation checklist
+4. **[SEER_USER_HELP.md](./SEER_USER_HELP.md)** - User-facing Seer trust and recovery guide
+   - How Seer decisions work
+   - Reason code quick references
+   - What to do when an action is delayed or blocked
 
 ### Phase Completion Reports
 1. **Phase 1 Complete** - Foundation phase

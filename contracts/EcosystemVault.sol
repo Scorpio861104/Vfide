@@ -257,6 +257,7 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
         vfide = IERC20(_vfide);
         rewardToken = IERC20(_vfide);
         seer = ISeer(_seer);
+        // slither-disable-next-line missing-zero-check
         operationsWallet = _operationsWallet; // Can be address(0), must be set before withdrawals
         yearStartTime = block.timestamp;
         currentYear = 1;
@@ -349,6 +350,10 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
         uint16 _maxSlippageBps
     ) external onlyOwner {
         require(_maxSlippageBps <= 500, "ECO: slippage too high"); // Max 5%
+        if (_enabled) {
+            require(_router != address(0), "ECO: zero router");
+            require(_stablecoin != address(0), "ECO: zero stablecoin");
+        }
         swapRouter = _router;
         preferredStablecoin = _stablecoin;
         autoSwapEnabled = _enabled;
@@ -1109,6 +1114,10 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
         }
     }
 
+    /// @notice Permanently remove tokens from circulating supply.
+    /// @dev I-10 Note: Sends to 0xdEaD ("soft burn") because VFIDEToken has no public burn()
+    ///      function — transfer to address(0) reverts.  totalBurned tracks the removed amount
+    ///      so off-chain supply calculations can subtract it from totalSupply().
     function burnFunds(uint256 amount) external onlyManager {
         if (amount == 0) revert ECO_Zero();
 
@@ -1136,6 +1145,7 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
     uint256 public withdrawRequestCount;
     mapping(uint256 => WithdrawRequest) public withdrawRequests;
     uint256 public constant WITHDRAW_TIMELOCK = 2 days;
+    uint256 public maxWithdrawBps = 1000; // H-11 Fix: Max 10% of balance per withdrawal (in basis points)
     
     event WithdrawRequested(uint256 indexed id, address to, uint256 amount);
     event WithdrawCancelled(uint256 indexed id);
@@ -1144,6 +1154,9 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
     function requestWithdraw(address to, uint256 amount) external onlyOwner returns (uint256 id) {
         require(to != address(0), "zero to");
         require(amount > 0, "zero amount");
+        // H-11 Fix: Cap each withdrawal to maxWithdrawBps of current balance
+        uint256 bal = rewardToken.balanceOf(address(this));
+        require(amount <= bal * maxWithdrawBps / 10_000, "exceeds max withdraw");
         
         id = ++withdrawRequestCount;
         withdrawRequests[id] = WithdrawRequest({
@@ -1175,6 +1188,12 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
         req.executed = true;
         rewardToken.safeTransfer(req.to, req.amount);
         emit WithdrawExecuted(id, req.to, req.amount);
+    }
+
+    /// @notice H-11 Fix: Allow owner to adjust max withdrawal percentage (in basis points, max 5000 = 50%)
+    function setMaxWithdrawBps(uint256 _bps) external onlyOwner {
+        require(_bps > 0 && _bps <= 5000, "invalid bps");
+        maxWithdrawBps = _bps;
     }
 
     // ═══════════════════════════════════════════════════════════════════════

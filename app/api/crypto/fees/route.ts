@@ -1,11 +1,31 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createPublicClient, http, parseEther, formatEther } from 'viem';
-import { baseSepolia } from 'viem/chains';
+import { base, baseSepolia, polygon, polygonAmoy, zkSync, zkSyncSepoliaTestnet } from 'viem/chains';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 
+function getConfiguredChain() {
+  const chainId = Number.parseInt(process.env.NEXT_PUBLIC_CHAIN_ID || '', 10);
+  switch (chainId) {
+    case base.id:
+      return base;
+    case baseSepolia.id:
+      return baseSepolia;
+    case polygon.id:
+      return polygon;
+    case polygonAmoy.id:
+      return polygonAmoy;
+    case zkSync.id:
+      return zkSync;
+    case zkSyncSepoliaTestnet.id:
+      return zkSyncSepoliaTestnet;
+    default:
+      return baseSepolia;
+  }
+}
+
 const client = createPublicClient({
-  chain: baseSepolia,
-  transport: http(process.env.NEXT_PUBLIC_BASE_SEPOLIA_RPC || 'https://sepolia.base.org'),
+  chain: getConfiguredChain(),
+  transport: http(process.env.NEXT_PUBLIC_RPC_URL),
 });
 
 const FALLBACK_GAS_LIMIT = 200000n;

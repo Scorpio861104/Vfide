@@ -188,8 +188,7 @@ export class PaymasterService {
 
       return { sponsored: false, reason: data.error?.message || 'Sponsorship denied' };
     } catch {
-      // Fallback to simulated response for demo
-      return this.getSimulatedSponsorship(request);
+      return { sponsored: false, reason: 'Pimlico sponsorship unavailable' };
     }
   }
 
@@ -200,9 +199,8 @@ export class PaymasterService {
       return { sponsored: false, reason: 'Alchemy API key not configured' };
     }
 
-    // Alchemy Gas Manager check
-    // In production, this would call the Alchemy API
-    return this.getSimulatedSponsorship(request);
+    void request;
+    return { sponsored: false, reason: 'Alchemy sponsorship not implemented' };
   }
 
   private async checkCoinbaseSponsorship(
@@ -214,16 +212,8 @@ export class PaymasterService {
       // Add known Coinbase-sponsored contract addresses
     ];
 
-    // For Coinbase Smart Wallet, certain Base transactions are automatically sponsored
-    if (request.chainId === 8453) { // Base mainnet
-      return {
-        sponsored: true,
-        estimatedGas: BigInt(100000),
-        estimatedSavingsWei: BigInt(0.0001 * 1e18),
-      };
-    }
-
-    return this.getSimulatedSponsorship(request);
+    void request;
+    return { sponsored: false, reason: 'Coinbase sponsorship not implemented' };
   }
 
   private async checkZkSyncSponsorship(
@@ -234,26 +224,7 @@ export class PaymasterService {
       return { sponsored: false, reason: 'Not a zkSync chain' };
     }
 
-    // zkSync has native paymaster support
-    // In production, encode the paymaster params
-    return {
-      sponsored: true,
-      estimatedGas: BigInt(100000),
-      paymasterAndData: '0x' as Hex, // Would contain actual paymaster address and params
-    };
-  }
-
-  private getSimulatedSponsorship(
-    _request: SponsorshipRequest
-  ): SponsorshipResult {
-    // Simulated sponsorship for demo/testing
-    // In production, this would be removed
-    return {
-      sponsored: true,
-      estimatedGas: BigInt(100000),
-      estimatedSavingsWei: BigInt(0.0001 * 1e18),
-      paymasterAndData: '0x' as Hex,
-    };
+    return { sponsored: false, reason: 'zkSync sponsorship not implemented' };
   }
 }
 

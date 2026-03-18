@@ -2,6 +2,8 @@
  * Shared types, constants, and utilities for Governance components
  */
 
+import { CONTRACT_ADDRESSES } from '@/lib/contracts';
+
 // DAO Contract ABI
 export const DAO_ABI = [
   { name: 'propose', type: 'function', stateMutability: 'nonpayable', inputs: [{ name: 'ptype', type: 'uint8' }, { name: 'target', type: 'address' }, { name: 'value', type: 'uint256' }, { name: 'data', type: 'bytes' }, { name: 'description', type: 'string' }], outputs: [{ type: 'uint256' }] },
@@ -16,8 +18,8 @@ export const DAO_ABI = [
   { name: 'getVoterStats', type: 'function', stateMutability: 'view', inputs: [{ name: 'voter', type: 'address' }], outputs: [{ name: 'totalVotes', type: 'uint256' }, { name: 'forVotes', type: 'uint256' }, { name: 'againstVotes', type: 'uint256' }, { name: 'lastVoteTime', type: 'uint256' }] },
 ] as const;
 
-// Contract address from environment
-export const DAO_ADDRESS = (process.env.NEXT_PUBLIC_DAO_ADDRESS || '0xB75b08C5e42da4242e218C25B6A6B05d7BeF0728') as `0x${string}`;
+// Contract address from centralized registry
+export const DAO_ADDRESS = CONTRACT_ADDRESSES.DAO;
 
 // Constants
 export const PROMOTION_THRESHOLD = 50;

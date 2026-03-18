@@ -68,94 +68,6 @@ interface UnifiedActivityFeedProps {
   className?: string;
 }
 
-// ==================== MOCK DATA ====================
-
-const generateMockActivities = (): UnifiedActivity[] => [
-  {
-    id: 'a1',
-    type: 'tip_received',
-    timestamp: new Date(Date.now() - 30 * 60 * 1000),
-    actor: {
-      address: '0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb',
-      name: 'Alex Rivera',
-      avatar: '👨‍💼',
-    },
-    amount: '5',
-    currency: 'VFIDE',
-    content: 'Great post! Really insightful.',
-    metadata: {
-      postId: 'post_123',
-      txHash: '0xabc...def',
-    },
-  },
-  {
-    id: 'a2',
-    type: 'post',
-    timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000),
-    actor: {
-      address: '0x123...456',
-      name: 'You',
-      avatar: '👤',
-    },
-    content: 'Just completed my 100th transaction on VFIDE! The platform is incredibly smooth.',
-  },
-  {
-    id: 'a3',
-    type: 'content_sold',
-    timestamp: new Date(Date.now() - 3 * 60 * 60 * 1000),
-    actor: {
-      address: '0x123...456',
-      name: 'You',
-      avatar: '👤',
-    },
-    recipient: {
-      address: '0x789...abc',
-      name: 'Sara Chen',
-      avatar: '👩‍🎤',
-    },
-    amount: '10',
-    currency: 'VFIDE',
-    metadata: {
-      contentType: 'Premium Article',
-    },
-  },
-  {
-    id: 'a5',
-    type: 'achievement',
-    timestamp: new Date(Date.now() - 6 * 60 * 60 * 1000),
-    actor: {
-      address: '0x123...456',
-      name: 'You',
-      avatar: '👤',
-    },
-    metadata: {
-      achievementName: 'Social Butterfly',
-    },
-  },
-  {
-    id: 'a6',
-    type: 'tip_sent',
-    timestamp: new Date(Date.now() - 8 * 60 * 60 * 1000),
-    actor: {
-      address: '0x123...456',
-      name: 'You',
-      avatar: '👤',
-    },
-    recipient: {
-      address: '0xabc...def',
-      name: 'Emma Wilson',
-      avatar: '👩‍🔬',
-    },
-    amount: '3',
-    currency: 'VFIDE',
-    content: 'Amazing content!',
-    metadata: {
-      postId: 'post_456',
-      txHash: '0x123...abc',
-    },
-  },
-];
-
 // ==================== COMPONENT ====================
 
 export function UnifiedActivityFeed({
@@ -169,22 +81,8 @@ export function UnifiedActivityFeed({
   const loadActivities = useCallback(async () => {
     setIsLoading(true);
     try {
-      // In production, fetch from API
-      // const response = await fetch(`/api/activity?user=${userAddress}&filter=${filter}&limit=${limit}`);
-      // const data = await response.json();
-      
-      // Mock data for now
-      await new Promise((resolve) => setTimeout(resolve, 500));
-      let mockData = generateMockActivities();
-      
-      // Filter if needed
-      if (filter === 'social') {
-        mockData = mockData.filter(a => ['post', 'comment', 'like', 'achievement'].includes(a.type));
-      } else if (filter === 'financial') {
-        mockData = mockData.filter(a => !['post', 'comment', 'like', 'achievement'].includes(a.type));
-      }
-      
-      setActivities(mockData.slice(0, limit));
+      // TODO: fetch from /api/activity?user=${userAddress}&filter=${filter}&limit=${limit}
+      setActivities([]);
     } catch (error) {
       console.error('Failed to load activities:', error);
     } finally {

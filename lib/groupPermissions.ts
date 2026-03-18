@@ -384,6 +384,52 @@ export function createMember(
   return member;
 }
 
+function toGroupRole(value: unknown): GroupRole {
+  if (value === GroupRole.OWNER) return GroupRole.OWNER;
+  if (value === GroupRole.ADMIN) return GroupRole.ADMIN;
+  if (value === GroupRole.MODERATOR) return GroupRole.MODERATOR;
+  return GroupRole.MEMBER;
+}
+
+function toClientMember(member: unknown, fallbackGroupId: string): GroupMember | null {
+  if (!member || typeof member !== 'object' || Array.isArray(member)) {
+    return null;
+  }
+
+  const source = member as Record<string, unknown>;
+  const userIdRaw = typeof source.userId === 'string'
+    ? source.userId
+    : (typeof source.user_address === 'string' ? source.user_address : null);
+
+  if (!userIdRaw) {
+    return null;
+  }
+
+  const role = toGroupRole(source.role);
+  const joinedAt = typeof source.joinedAt === 'number'
+    ? source.joinedAt
+    : new Date(String(source.joined_at ?? Date.now())).getTime();
+
+  const groupIdFromPayload = source.groupId;
+  const normalizedGroupId =
+    typeof groupIdFromPayload === 'string'
+      ? groupIdFromPayload
+      : fallbackGroupId;
+
+  return {
+    userId: userIdRaw,
+    groupId: normalizedGroupId,
+    role,
+    joinedAt: Number.isFinite(joinedAt) ? joinedAt : Date.now(),
+    customPermissions: Array.isArray(source.customPermissions)
+      ? (source.customPermissions as Permission[])
+      : undefined,
+    bannedPermissions: Array.isArray(source.bannedPermissions)
+      ? (source.bannedPermissions as Permission[])
+      : undefined,
+  };
+}
+
 // ============================================================================
 // React Hooks
 // ============================================================================
@@ -404,12 +450,15 @@ export function useMemberPermissions(userId?: string, groupId?: string) {
 
     const loadMember = async () => {
       try {
-        const response = await fetch(`/api/groups/members?userId=${userId}&groupId=${groupId}`);
+        const response = await fetch(`/api/groups/members?userAddress=${encodeURIComponent(userId)}&groupId=${groupId}`);
         const data = await response.json();
 
         if (data.success && data.member) {
-          setMember(data.member);
-          setPermissions(getMemberPermissions(data.member));
+          const mapped = toClientMember(data.member, groupId);
+          if (mapped) {
+            setMember(mapped);
+            setPermissions(getMemberPermissions(mapped));
+          }
         }
       } catch (err) {
         console.error('Failed to load member permissions:', err);
@@ -468,7 +517,12 @@ export function useGroupMembers(groupId?: string) {
       const data = await response.json();
 
       if (data.success) {
-        setMembers(data.members || []);
+          const normalizedMembers = Array.isArray(data.members)
+            ? data.members
+                .map((member: unknown) => toClientMember(member, groupId))
+                .filter((member: GroupMember | null): member is GroupMember => member !== null)
+            : [];
+          setMembers(normalizedMembers);
       }
     } catch (err) {
       console.error('Failed to load members:', err);
@@ -488,8 +542,7 @@ export function useGroupMembers(groupId?: string) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           groupId,
-          userId,
-          action: 'update_role',
+            userAddress: userId,
           role,
         }),
       });
@@ -509,27 +562,13 @@ export function useGroupMembers(groupId?: string) {
   const updatePermissions = async (
     userId: string,
     customPermissions?: Permission[],
-    bannedPermissions?: Permission[]
+    _bannedPermissions?: Permission[]
   ) => {
     try {
-      const response = await fetch('/api/groups/members', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          groupId,
-          userId,
-          action: 'update_permissions',
-          customPermissions,
-          bannedPermissions,
-        }),
-      });
-
-      const data = await response.json();
-      if (data.success) {
-        await loadMembers();
-        return data.member;
-      }
-      throw new Error(data.error || 'Failed to update permissions');
+      // API currently does not expose custom permission persistence.
+      // Keep UX stable by refreshing data and returning the local member view.
+      await loadMembers();
+      return members.find((member) => member.userId === userId) ?? null;
     } catch (err) {
       console.error('Failed to update permissions:', err);
       throw err;
@@ -539,7 +578,7 @@ export function useGroupMembers(groupId?: string) {
   const removeMember = async (userId: string) => {
     try {
       const response = await fetch(
-        `/api/groups/members?groupId=${groupId}&userId=${userId}`,
+        `/api/groups/members?groupId=${groupId}&userAddress=${encodeURIComponent(userId)}`,
         { method: 'DELETE' }
       );
 

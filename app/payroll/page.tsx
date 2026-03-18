@@ -25,6 +25,7 @@ import { useAccount, useWriteContract as _useWriteContract, useWaitForTransactio
 import { parseUnits as _parseUnits, isAddress } from 'viem'
 import { Footer } from '@/components/layout/Footer'
 import { usePayroll } from '@/hooks/usePayroll'
+import { CONTRACT_ADDRESSES } from '@/lib/contracts'
 import { Loader2 } from 'lucide-react'
 
 // PayrollManager ABI
@@ -45,8 +46,8 @@ const _PAYROLL_MANAGER_ABI = [
 
 // PayrollManager not deployed on Base Sepolia testnet yet
 // Contract addresses will be populated after mainnet deployment
-const PAYROLL_MANAGER_ADDRESS = (process.env.NEXT_PUBLIC_PAYROLL_MANAGER_ADDRESS || '0x0000000000000000000000000000000000000000') as `0x${string}`;
-const _VFIDE_TOKEN_ADDRESS = (process.env.NEXT_PUBLIC_VFIDE_TOKEN_ADDRESS || '0xf57992ab9F8887650C2a220A34fe86ebD00c02f5') as `0x${string}`;
+const PAYROLL_MANAGER_ADDRESS = CONTRACT_ADDRESSES.PayrollManager;
+const _VFIDE_TOKEN_ADDRESS = CONTRACT_ADDRESSES.VFIDEToken;
 
 // Check if PayrollManager is deployed
 const _IS_PAYROLL_DEPLOYED = PAYROLL_MANAGER_ADDRESS !== '0x0000000000000000000000000000000000000000';

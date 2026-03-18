@@ -102,6 +102,27 @@ describe('/api/proposals', () => {
 
       expect(response.status).toBe(400);
     });
+
+    it('should return degraded response when database auth fails', async () => {
+      withRateLimit.mockResolvedValue(null);
+      const dbAuthError = Object.assign(new Error('password authentication failed for user "postgres"'), {
+        code: '28P01',
+      });
+      query.mockRejectedValue(dbAuthError);
+
+      const request = new NextRequest('http://localhost:3000/api/proposals?limit=5&offset=0');
+      const response = await GET(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(200);
+      expect(data).toMatchObject({
+        proposals: [],
+        total: 0,
+        limit: 50,
+        offset: 0,
+        degraded: true,
+      });
+    });
   });
 
   describe('POST', () => {

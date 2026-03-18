@@ -72,9 +72,14 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
     /// Policy settings
     bool public vaultOnly = true;                 // VAULT-ONLY ON BY DEFAULT (user security)
     bool public policyLocked = false;             // once locked, cannot disable vault-only
-    bool public circuitBreaker = false;           // emergency bypass
+    bool public circuitBreaker = false;           // emergency bypass (legacy — controls both)
     uint256 public circuitBreakerExpiry = 0;      // auto-disable timestamp (0 = indefinite)
     uint256 public constant MAX_CIRCUIT_BREAKER_DURATION = 7 days; // maximum allowed duration
+    // H-02 Fix: Independent bypass flags for security and fees
+    bool public securityBypass = false;           // bypass SecurityHub lock checks only
+    uint256 public securityBypassExpiry = 0;
+    bool public feeBypass = false;                // bypass BurnRouter fee calculation only
+    uint256 public feeBypassExpiry = 0;
     
     /// Exemptions
     mapping(address => bool) public systemExempt; // bypass all checks (presale, sinks, etc)
@@ -95,6 +100,12 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
     uint64  public pendingTreasurySinkAt;
     address public pendingSanctumSink;
     uint64  public pendingSanctumSinkAt;
+
+    // H-01 Fix: Timelocked admin changes for critical module addresses
+    address public pendingVaultHub;
+    uint64  public pendingVaultHubAt;
+    address public pendingSecurityHub;
+    uint64  public pendingSecurityHubAt;
     
     // Sanctions / Compliance
     mapping(address => bool) public isBlacklisted;
@@ -108,14 +119,18 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
     event FrozenSet(address indexed user, bool frozen, address indexed setBy);
 
     // EIP-2612 Permit
-    bytes32 public immutable DOMAIN_SEPARATOR;
+    // H-07 Fix: Dynamic DOMAIN_SEPARATOR — recomputed on chain forks / zkSync chain ID changes
+    bytes32 private _cachedDomainSeparator;
+    uint256 private _cachedChainId;
     // keccak256("Permit(address owner,address spender,uint256 value,uint256 nonce,uint256 deadline)");
     bytes32 public constant PERMIT_TYPEHASH = 0x6e71edae12b1b97f4d1f60370fef10105fa2faae0126114a169c64845d6126c9;
     mapping(address => uint256) public nonces;
 
     /// Events
     event VaultHubSet(address indexed hub);
+    event VaultHubScheduled(address indexed hub, uint64 effectiveAt); // H-01 Fix
     event SecurityHubSet(address indexed hub);
+    event SecurityHubScheduled(address indexed hub, uint64 effectiveAt); // H-01 Fix
     event LedgerSet(address indexed ledger);
     event BurnRouterSet(address indexed router);
     event BurnRouterScheduled(address indexed router, uint64 effectiveAt);
@@ -129,6 +144,7 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
     event ExemptSet(address indexed target, bool exempt);
     event PolicyLocked();
     event CircuitBreakerSet(bool active, uint256 expiry);
+    event ExternalCallFailed(string indexed context, bytes reason); // M-06 Fix: Log silent try-catch failures
     event PresaleContractSet(address indexed presale);
     event FeeApplied(address indexed from, address indexed to, uint256 burnAmount, uint256 sanctumAmount, uint256 ecosystemAmount, address indexed sanctumSink, address ecosystemSink);
     event Transfer(address indexed from, address indexed to, uint256 value);
@@ -191,15 +207,14 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
         whaleLimitExempt[_presaleContract] = true;
         whaleLimitExempt[treasury] = true;
 
-        // EIP-712 Domain Separator
-        uint256 chainId;
-        assembly { chainId := chainid() }
-        DOMAIN_SEPARATOR = keccak256(
+        // EIP-712 Domain Separator (H-07 Fix: cached + dynamic)
+        _cachedChainId = block.chainid;
+        _cachedDomainSeparator = keccak256(
             abi.encode(
                 keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"),
                 keccak256(bytes(name)),
                 keccak256(bytes("1")),
-                chainId,
+                block.chainid,
                 address(this)
             )
         );
@@ -246,12 +261,27 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
         return true;
     }
 
+    // H-07 Fix: Dynamic domain separator — returns cached value unless chain ID changed (fork detection)
+    function DOMAIN_SEPARATOR() public view returns (bytes32) {
+        if (block.chainid == _cachedChainId) {
+            return _cachedDomainSeparator;
+        }
+        return keccak256(
+            abi.encode(
+                keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"),
+                keccak256(bytes(name)),
+                keccak256(bytes("1")),
+                block.chainid,
+                address(this)
+            )
+        );
+    }
+
     function permit(address owner, address spender, uint256 value, uint256 deadline, uint8 v, bytes32 r, bytes32 s) external {
-        // M-4 Fix: Add upper bound on deadline to prevent indefinite approvals
+        // H-03 Fix: Removed 30-day upper bound — it breaks all major DeFi protocol integrations
         require(block.timestamp <= deadline, "VFIDE: expired deadline");
-        require(deadline <= block.timestamp + 30 days, "VFIDE: deadline too far");
         bytes32 structHash = keccak256(abi.encode(PERMIT_TYPEHASH, owner, spender, value, nonces[owner]++));
-        bytes32 hash = keccak256(abi.encodePacked("\x19\x01", DOMAIN_SEPARATOR, structHash));
+        bytes32 hash = keccak256(abi.encodePacked("\x19\x01", DOMAIN_SEPARATOR(), structHash));
         address signer = ecrecover(hash, v, r, s);
         require(signer != address(0) && signer == owner, "VFIDE: invalid signature");
         _approve(owner, spender, value);
@@ -274,16 +304,43 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
 
     // ─────────────────────────── Admin / Modules
 
+    // H-01 Fix: Schedule/apply pattern for VaultHub changes
     function setVaultHub(address hub) external onlyOwner {
         require(hub != address(0), "VF: zero address");
-        vaultHub = IVaultHub(hub);
-        emit VaultHubSet(hub);
+        uint64 effectiveAt = uint64(block.timestamp) + SINK_CHANGE_DELAY;
+        pendingVaultHub = hub;
+        pendingVaultHubAt = effectiveAt;
+        emit VaultHubScheduled(hub, effectiveAt);
+        _log("vault_hub_scheduled");
+    }
+
+    function applyVaultHub() external onlyOwner {
+        require(pendingVaultHubAt != 0, "VF: no pending");
+        require(block.timestamp >= pendingVaultHubAt, "VF: timelock");
+        vaultHub = IVaultHub(pendingVaultHub);
+        emit VaultHubSet(pendingVaultHub);
+        delete pendingVaultHub;
+        delete pendingVaultHubAt;
         _log("vault_hub_set");
     }
 
+    // H-01 Fix: Schedule/apply pattern for SecurityHub changes
     function setSecurityHub(address hub) external onlyOwner {
-        securityHub = ISecurityHub(hub);
-        emit SecurityHubSet(hub);
+        require(hub != address(0), "VF: zero address");
+        uint64 effectiveAt = uint64(block.timestamp) + SINK_CHANGE_DELAY;
+        pendingSecurityHub = hub;
+        pendingSecurityHubAt = effectiveAt;
+        emit SecurityHubScheduled(hub, effectiveAt);
+        _log("security_hub_scheduled");
+    }
+
+    function applySecurityHub() external onlyOwner {
+        require(pendingSecurityHubAt != 0, "VF: no pending");
+        require(block.timestamp >= pendingSecurityHubAt, "VF: timelock");
+        securityHub = ISecurityHub(pendingSecurityHub);
+        emit SecurityHubSet(pendingSecurityHub);
+        delete pendingSecurityHub;
+        delete pendingSecurityHubAt;
         _log("security_hub_set");
     }
 
@@ -384,7 +441,7 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
     /// Emergency switch to bypass external calls (SecurityHub/BurnRouter) if they fail.
     /// Can be toggled even if policyLocked is true, to ensure liveness.
     /**
-     * @notice Emergency switch to bypass external calls if they fail
+     * @notice Emergency switch to bypass external calls if they fail (legacy — activates both bypasses)
      * @dev Can be toggled even if policyLocked is true to ensure liveness
      * @dev Circuit breaker auto-disables after duration to prevent abuse
      * @param _active True to enable circuit breaker, false to disable
@@ -402,6 +459,32 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
         emit CircuitBreakerSet(_active, circuitBreakerExpiry);
         _log(_active ? "circuit_breaker_on" : "circuit_breaker_off");
     }
+
+    /// @notice H-02 Fix: Bypass SecurityHub lock checks only (does not disable fees)
+    function setSecurityBypass(bool _active, uint256 _duration) external onlyOwner {
+        if (_active) {
+            require(_duration > 0 && _duration <= MAX_CIRCUIT_BREAKER_DURATION, "VF: invalid duration");
+            securityBypass = true;
+            securityBypassExpiry = block.timestamp + _duration;
+        } else {
+            securityBypass = false;
+            securityBypassExpiry = 0;
+        }
+        _log(_active ? "security_bypass_on" : "security_bypass_off");
+    }
+
+    /// @notice H-02 Fix: Bypass BurnRouter fees only (does not disable security locks)
+    function setFeeBypass(bool _active, uint256 _duration) external onlyOwner {
+        if (_active) {
+            require(_duration > 0 && _duration <= MAX_CIRCUIT_BREAKER_DURATION, "VF: invalid duration");
+            feeBypass = true;
+            feeBypassExpiry = block.timestamp + _duration;
+        } else {
+            feeBypass = false;
+            feeBypassExpiry = 0;
+        }
+        _log(_active ? "fee_bypass_on" : "fee_bypass_off");
+    }
     
     /**
      * @notice Check if circuit breaker is currently active (respects expiry)
@@ -410,6 +493,22 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
     function isCircuitBreakerActive() public view returns (bool) {
         if (!circuitBreaker) return false;
         if (circuitBreakerExpiry > 0 && block.timestamp >= circuitBreakerExpiry) return false;
+        return true;
+    }
+
+    /// @notice H-02 Fix: Check if security bypass is active (independent of fee bypass)
+    function isSecurityBypassed() public view returns (bool) {
+        if (isCircuitBreakerActive()) return true; // legacy circuit breaker overrides
+        if (!securityBypass) return false;
+        if (securityBypassExpiry > 0 && block.timestamp >= securityBypassExpiry) return false;
+        return true;
+    }
+
+    /// @notice H-02 Fix: Check if fee bypass is active (independent of security bypass)
+    function isFeeBypassed() public view returns (bool) {
+        if (isCircuitBreakerActive()) return true; // legacy circuit breaker overrides
+        if (!feeBypass) return false;
+        if (feeBypassExpiry > 0 && block.timestamp >= feeBypassExpiry) return false;
         return true;
     }
 
@@ -491,13 +590,18 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
 
     // slither-disable-next-line reentrancy-no-eth
     function _transfer(address from, address to, uint256 amount) internal {
+        // C-03 Fix: Validate basic parameters before any external calls or expensive checks
+        if (from == address(0) || to == address(0)) revert VF_ZERO();
+        if (amount == 0) revert VF_ZERO();
+
         // 1. Sanctions check
         require(!isBlacklisted[from] && !isBlacklisted[to], "Sanctioned");
+        // C-03 Fix: Frozen addresses cannot transfer (freeze-before-blacklist protection)
+        require(!isFrozen[from] && !isFrozen[to], "Frozen");
 
         // 2. Anti-whale checks (skip for exempt addresses like exchanges, mints, burns)
         if (!whaleLimitExempt[from] && !whaleLimitExempt[to] && 
-            !systemExempt[from] && !systemExempt[to] &&
-            from != address(0) && to != address(0)) {
+            !systemExempt[from] && !systemExempt[to]) {
             _checkWhaleProtection(from, to, amount);
         }
 
@@ -508,6 +612,7 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
                 // Check if recipient owns a vault (handles recovery scenarios)
                 if (!_hasVault(to)) {
                     // Try to create vault - will revert if vaultHub not set or fails
+                    // slither-disable-next-line reentrancy-benign
                     try vaultHub.ensureVault(to) returns (address vault) {
                         // Vault created or already exists
                         _logEv(vault, "vault_auto_created", 0, "");
@@ -531,8 +636,7 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
             if (!toOk) revert Token_NotVault();
         }
 
-        if (from == address(0) || to == address(0)) revert VF_ZERO();
-        if (amount == 0) revert VF_ZERO();  // H-2 Fix: Reject zero amount transfers
+        // (Zero address and amount checks were moved to the top of _transfer — C-03 Fix)
 
         // Optimization: Fetch vaults once if needed for SecurityHub
         address fromVault = address(0);
@@ -543,7 +647,8 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
         }
 
         // SecurityHub lock check (if set and not bypassed)
-        if (address(securityHub) != address(0) && !isCircuitBreakerActive()) {
+        // H-02 Fix: Use isSecurityBypassed() for independent security bypass
+        if (address(securityHub) != address(0) && !isSecurityBypassed()) {
             if ((fromVault != address(0) && _locked(fromVault)) ||
                 (toVault   != address(0) && _locked(toVault))) {
                 revert VF_LOCKED();
@@ -558,7 +663,8 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
         uint256 remaining = amount;
 
         // Dynamic fees via burn router (if present and not exempt and not bypassed)
-        if (address(burnRouter) != address(0) && !isCircuitBreakerActive() && !(systemExempt[from] || systemExempt[to])) {
+        // H-02 Fix: Use isFeeBypassed() for independent fee bypass
+        if (address(burnRouter) != address(0) && !isFeeBypassed() && !(systemExempt[from] || systemExempt[to])) {
             (uint256 _burnAmt, uint256 _sanctumAmt, uint256 _ecoAmt, address _sanctumSink, address _ecoSink, address _burnSink) =
                 burnRouter.computeFees(from, to, amount);
 
@@ -568,7 +674,7 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
                 remaining -= _burnAmt;
                 
                 // Record burn for daily cap tracking (sustainability)
-                try IProofScoreBurnRouter(address(burnRouter)).recordBurn(_burnAmt) {} catch {}
+                try IProofScoreBurnRouter(address(burnRouter)).recordBurn(_burnAmt) {} catch (bytes memory reason) { emit ExternalCallFailed("recordBurn", reason); }
             }
             if (_sanctumAmt > 0) {
                 address sink2 = (_sanctumSink == address(0)) ? treasurySink : _sanctumSink;
@@ -590,10 +696,11 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
             }
             
             // Record volume for adaptive fee tracking (sustainability)
-            try IProofScoreBurnRouter(address(burnRouter)).recordVolume(amount) {} catch {}
+            try IProofScoreBurnRouter(address(burnRouter)).recordVolume(amount) {} catch (bytes memory reason) { emit ExternalCallFailed("recordVolume", reason); }
         } else {
+            // C-02 Fix: Circuit breaker must take absolute precedence — never block transfers when it's active
             // If policy is locked we require a router be present so fees cannot be bypassed
-            if (policyLocked) {
+            if (policyLocked && !isFeeBypassed()) {
                 require(address(burnRouter) != address(0), "router required");
             }
         }
@@ -689,25 +796,23 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
             }
         }
         
-        // 3. Daily transfer limit check (for sender)
+        // 3. Daily transfer limit tracking — M-04 Fix: always track regardless of limit state
+        // Reset daily counter if 24h has passed
+        // H-3 Fix: Align to consistent 24-hour periods to prevent gaming
+        // slither-disable-next-line divide-before-multiply
+        uint256 currentDayStart = (block.timestamp / 1 days) * 1 days;
+        // slither-disable-next-line divide-before-multiply
+        uint256 lastResetStart = (dailyResetTime[from] / 1 days) * 1 days;
+        if (currentDayStart > lastResetStart) {
+            dailyTransferred[from] = 0;
+            dailyResetTime[from] = currentDayStart;
+        }
+        dailyTransferred[from] += amount; // always update so data is accurate when limits are re-enabled
+
         if (dailyTransferLimit > 0) {
-            // Reset daily counter if 24h has passed
-            // H-3 Fix: Align to consistent 24-hour periods to prevent gaming
-            // slither-disable-next-line divide-before-multiply
-            uint256 currentDayStart = (block.timestamp / 1 days) * 1 days;
-            // slither-disable-next-line divide-before-multiply
-            uint256 lastResetStart = (dailyResetTime[from] / 1 days) * 1 days;
-            if (currentDayStart > lastResetStart) {
-                dailyTransferred[from] = 0;
-                dailyResetTime[from] = currentDayStart;
-            }
-            
-            if (dailyTransferred[from] + amount > dailyTransferLimit) {
+            if (dailyTransferred[from] > dailyTransferLimit) {
                 revert VF_DailyLimitExceeded();
             }
-            
-            // Update daily transferred amount
-            dailyTransferred[from] += amount;
         }
         
         // 4. Transfer cooldown check (for sender)
@@ -752,10 +857,10 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
     }
 
     function _log(string memory action) internal {
-        if (address(ledger) != address(0)) { try ledger.logSystemEvent(address(this), action, msg.sender) {} catch {} }
+        if (address(ledger) != address(0)) { try ledger.logSystemEvent(address(this), action, msg.sender) {} catch { emit LedgerLogFailed(address(this), action); } }
     }
     function _logEv(address who, string memory action, uint256 amount, string memory note) internal {
-        if (address(ledger) != address(0)) { try ledger.logEvent(who, action, amount, note) {} catch {} }
+        if (address(ledger) != address(0)) { try ledger.logEvent(who, action, amount, note) {} catch { emit LedgerLogFailed(who, action); } }
     }
     
     // ═══════════════════════════════════════════════════════════════════════
@@ -827,7 +932,8 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
         }
         
         // SecurityHub lock check
-        if (address(securityHub) != address(0) && !isCircuitBreakerActive()) {
+        // H-02 Fix: Use isSecurityBypassed()
+        if (address(securityHub) != address(0) && !isSecurityBypassed()) {
             address fromVault = _vaultOfAddr(from);
             address toVault = _vaultOfAddr(to);
             
@@ -859,7 +965,8 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
         uint256 netReceived
     ) {
         // No fees for exempt addresses or if router not set
-        if (systemExempt[from] || systemExempt[to] || address(burnRouter) == address(0) || isCircuitBreakerActive()) {
+        // H-02 Fix: Use isFeeBypassed()
+        if (systemExempt[from] || systemExempt[to] || address(burnRouter) == address(0) || isFeeBypassed()) {
             return (0, 0, 0, amount);
         }
         

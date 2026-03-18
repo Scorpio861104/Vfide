@@ -12,6 +12,7 @@ import {
   VaultInfrastructureABI,
   VaultHubABI,
   UserVaultABI,
+  CardBoundVaultABI,
   SeerABI,
   VFIDEBadgeNFTABI,
   DAOABI,
@@ -78,6 +79,8 @@ export const CONTRACT_ADDRESSES = {
   MerchantPortal: validateContractAddress(process.env.NEXT_PUBLIC_MERCHANT_PORTAL_ADDRESS, 'MerchantPortal'),
   VaultHub: validateContractAddress(process.env.NEXT_PUBLIC_VAULT_HUB_ADDRESS, 'VaultHub'),
   Seer: validateContractAddress(process.env.NEXT_PUBLIC_SEER_ADDRESS, 'Seer'),
+  SeerAutonomous: validateContractAddress(process.env.NEXT_PUBLIC_SEER_AUTONOMOUS_ADDRESS, 'SeerAutonomous'),
+  SeerGuardian: validateContractAddress(process.env.NEXT_PUBLIC_SEER_GUARDIAN_ADDRESS, 'SeerGuardian'),
   SeerView: validateContractAddress(process.env.NEXT_PUBLIC_SEER_VIEW_ADDRESS, 'SeerView'),
   DAO: validateContractAddress(process.env.NEXT_PUBLIC_DAO_ADDRESS, 'DAO'),
   DAOTimelock: validateContractAddress(process.env.NEXT_PUBLIC_DAO_TIMELOCK_ADDRESS, 'DAOTimelock'),
@@ -111,6 +114,18 @@ export const VFIDE_TOKEN_ABI = VFIDETokenABI;
 export const VAULT_HUB_ABI = VaultHubABI;
 // UserVault ABI for individual vault operations (Next of Kin, guardians, inheritance)
 export const USER_VAULT_ABI = UserVaultABI;
+// CardBoundVault ABI for ATM-card style authorization and vault-to-vault transfers.
+export const CARD_BOUND_VAULT_ABI = CardBoundVaultABI;
+
+export type VaultImplementation = 'uservault' | 'cardbound';
+
+export const ACTIVE_VAULT_IMPLEMENTATION: VaultImplementation =
+  process.env.NEXT_PUBLIC_VAULT_IMPLEMENTATION === 'uservault' ? 'uservault' : 'cardbound';
+
+export const ACTIVE_VAULT_ABI =
+  ACTIVE_VAULT_IMPLEMENTATION === 'cardbound' ? CARD_BOUND_VAULT_ABI : USER_VAULT_ABI;
+
+export const isCardBoundVaultMode = (): boolean => ACTIVE_VAULT_IMPLEMENTATION === 'cardbound';
 
 export {
   VFIDETokenABI,
@@ -119,6 +134,7 @@ export {
   VaultInfrastructureABI,
   VaultHubABI,
   UserVaultABI,
+  CardBoundVaultABI,
   SeerABI,
   VFIDEBadgeNFTABI,
   DAOABI,

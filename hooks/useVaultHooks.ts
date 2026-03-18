@@ -3,7 +3,7 @@
 import { useReadContract, useWriteContract, useAccount, useWaitForTransactionReceipt, useReadContracts } from 'wagmi'
 import { parseEther, formatEther, type Abi } from 'viem'
 import { useState, useEffect } from 'react'
-import { CONTRACT_ADDRESSES } from '../lib/contracts'
+import { CONTRACT_ADDRESSES, ACTIVE_VAULT_IMPLEMENTATION } from '../lib/contracts'
 import { ZERO_ADDRESS } from '../lib/constants'
 import { VaultHubABI, VFIDETokenABI, UserVaultABI } from '../lib/abis'
 import { validateAddress } from '../lib/validation'
@@ -45,6 +45,8 @@ export function useUserVault() {
     vaultAddress: hasVault ? (vaultAddress as `0x${string}`) : null,
     hasVault,
     isLoading,
+    implementation: ACTIVE_VAULT_IMPLEMENTATION,
+    isCardBound: ACTIVE_VAULT_IMPLEMENTATION === 'cardbound',
   }
 }
 
@@ -103,7 +105,7 @@ export function useVaultBalance() {
 
   // Cap at MAX_PENDING_TX_READ to avoid creating an excessively large batch of
   // contract reads. UserVault enforces a practical limit of ~10 pending
-  // transactions, but we guard against unexpectedly large values from the mock
+  // transactions, but we guard against unexpectedly large values from stale/local data
   // or misconfigured contracts.
   const MAX_PENDING_TX_READ = 50
   const pendingCount = Math.min(Number((pendingTxCount as bigint) || 0n), MAX_PENDING_TX_READ)

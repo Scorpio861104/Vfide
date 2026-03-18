@@ -154,7 +154,6 @@ contract EmergencyControl {
         }
 
         emit MemberRemoved(m);
-        _log("ec_member_remove");
         
         // H-1 FIX: Reset votes when membership changes to prevent threshold manipulation
         _resetVotes();
@@ -165,6 +164,8 @@ contract EmergencyControl {
         if (threshold > memberCount) {
             threshold = memberCount; // clamp for safety
         }
+
+        _log("ec_member_remove");
     }
 
     function setThreshold(uint8 _threshold) external onlyDAO {
@@ -267,9 +268,111 @@ contract EmergencyControl {
     }
 
     function _log(string memory action) internal {
-        if (address(ledger) != address(0)) { try ledger.logSystemEvent(address(this), action, msg.sender) {} catch {} }
+        if (address(ledger) != address(0)) { try ledger.logSystemEvent(address(this), action, msg.sender) {} catch { emit LedgerLogFailed(address(this), action); } }
     }
     function _logEv(address who, string memory action, uint256 amount, string memory note) internal {
-        if (address(ledger) != address(0)) { try ledger.logEvent(who, action, amount, note) {} catch {} }
+        if (address(ledger) != address(0)) { try ledger.logEvent(who, action, amount, note) {} catch { emit LedgerLogFailed(who, action); } }
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // I-12 FIX: LAST-RESORT RECOVERY — When both owner AND DAO are compromised
+    // ═══════════════════════════════════════════════════════════════════════
+    // Requirements:
+    //   1) System must already be halted (breaker active)
+    //   2) Supermajority of emergency committee (ALL members minus 1) must approve
+    //   3) 14-day timelock after approvals reached
+    //   4) Target contract must implement Ownable (transferOwnership)
+    // This is intentionally heavyweight to prevent abuse.
+
+    struct RecoveryProposal {
+        address target;      // The contract whose ownership to transfer
+        address newOwner;    // Proposed new owner
+        uint8   approvals;
+        uint64  unlockTime;
+        bool    executed;
+        uint256 epoch;       // Tied to committee epoch
+    }
+
+    mapping(bytes32 => RecoveryProposal) public recoveryProposals;
+    mapping(bytes32 => mapping(address => bool)) public recoveryVoted;
+
+    uint64 public constant RECOVERY_TIMELOCK = 14 days;
+
+    event RecoveryProposed(bytes32 indexed id, address target, address newOwner);
+    event RecoveryApproved(bytes32 indexed id, address member, uint8 approvals);
+    event RecoveryExecuted(bytes32 indexed id, address target, address newOwner);
+    event RecoveryCancelled(bytes32 indexed id);
+
+    function proposeRecovery(address target, address newOwner) external returns (bytes32 id) {
+        require(isMember[msg.sender], "EC: not member");
+        require(target != address(0) && newOwner != address(0), "EC: zero");
+        // System must be halted first
+        require(breaker.halted(), "EC: system must be halted");
+
+        id = keccak256(abi.encode(target, newOwner, epoch));
+        require(recoveryProposals[id].target == address(0), "EC: already proposed");
+
+        recoveryProposals[id] = RecoveryProposal({
+            target: target,
+            newOwner: newOwner,
+            approvals: 1,
+            unlockTime: 0,
+            executed: false,
+            epoch: epoch
+        });
+        recoveryVoted[id][msg.sender] = true;
+
+        emit RecoveryProposed(id, target, newOwner);
+        _log("recovery_proposed");
+    }
+
+    function approveRecovery(bytes32 id) external {
+        require(isMember[msg.sender], "EC: not member");
+        RecoveryProposal storage p = recoveryProposals[id];
+        require(p.target != address(0), "EC: no proposal");
+        require(!p.executed, "EC: already executed");
+        require(p.epoch == epoch, "EC: stale proposal");
+        require(!recoveryVoted[id][msg.sender], "EC: already voted");
+        require(breaker.halted(), "EC: system must be halted");
+
+        recoveryVoted[id][msg.sender] = true;
+        p.approvals++;
+
+        // Supermajority: all members minus 1
+        uint8 required = memberCount > 1 ? memberCount - 1 : 1;
+        if (p.approvals >= required && p.unlockTime == 0) {
+            p.unlockTime = uint64(block.timestamp) + RECOVERY_TIMELOCK;
+        }
+
+        emit RecoveryApproved(id, msg.sender, p.approvals);
+        _log("recovery_approved");
+    }
+
+    function executeRecovery(bytes32 id) external {
+        require(isMember[msg.sender], "EC: not member");
+        RecoveryProposal storage p = recoveryProposals[id];
+        require(p.target != address(0) && !p.executed, "EC: invalid");
+        require(p.epoch == epoch, "EC: stale proposal");
+        require(p.unlockTime > 0, "EC: not approved");
+        require(block.timestamp >= p.unlockTime, "EC: timelock active");
+        require(breaker.halted(), "EC: system must be halted");
+
+        p.executed = true;
+
+        // Transfer ownership of target contract
+        Ownable(p.target).transferOwnership(p.newOwner);
+
+        emit RecoveryExecuted(id, p.target, p.newOwner);
+        _log("recovery_executed");
+    }
+
+    function cancelRecovery(bytes32 id) external {
+        require(msg.sender == dao || isMember[msg.sender], "EC: not authorized");
+        RecoveryProposal storage p = recoveryProposals[id];
+        require(p.target != address(0) && !p.executed, "EC: invalid");
+
+        p.executed = true; // Prevent re-use
+        emit RecoveryCancelled(id);
+        _log("recovery_cancelled");
     }
 }

@@ -9,6 +9,7 @@ interface RecoveryStatus {
   isActive: boolean;
   proposedOwner: string | null;
   approvals: number;
+  threshold: number;
   expiryTime: number | null;
   daysRemaining: number | null;
 }
@@ -101,7 +102,7 @@ export function useVaultRecovery(vaultAddress?: `0x${string}`) {
     const data = recoveryData as [string, bigint, bigint, bigint, boolean] | undefined;
     
     if (data) {
-      const [candidate, approvals, _threshold, expiry, isActive] = data;
+      const [candidate, approvals, threshold, expiry, isActive] = data;
       const expiryMs = Number(expiry) * 1000;
       const daysRemaining = Math.max(0, Math.ceil((expiryMs - now) / (24 * 60 * 60 * 1000)));
       
@@ -109,6 +110,7 @@ export function useVaultRecovery(vaultAddress?: `0x${string}`) {
         isActive: isActive && candidate !== ZERO_ADDRESS,
         proposedOwner: candidate !== ZERO_ADDRESS ? candidate : null,
         approvals: Number(approvals),
+        threshold: Number(threshold),
         expiryTime: expiryMs > 0 ? expiryMs : null,
         daysRemaining: expiryMs > 0 ? daysRemaining : null,
       };
@@ -117,6 +119,7 @@ export function useVaultRecovery(vaultAddress?: `0x${string}`) {
       isActive: false,
       proposedOwner: null,
       approvals: 0,
+      threshold: 0,
       expiryTime: null,
       daysRemaining: null,
     };
@@ -407,7 +410,7 @@ export function useVaultRecovery(vaultAddress?: `0x${string}`) {
   };
 
   /**
-   * Deny inheritance claim (by a guardian)
+   * Deny inheritance claim (by owner)
    */
   const denyInheritance = async () => {
     if (!vaultAddress) throw new Error('Vault address not provided');

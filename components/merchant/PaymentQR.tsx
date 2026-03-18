@@ -6,8 +6,9 @@
 
 import { useEffect, useState } from 'react'
 import { QRCodeSVG } from 'qrcode.react'
-import { useAccount } from 'wagmi'
+import { useAccount, useSignMessage } from 'wagmi'
 import { useIsMerchant } from '@/lib/vfide-hooks'
+import { buildQrSignatureMessage } from '@/lib/payments/qrSignature'
 import { 
   QrCode, 
   Download, 
@@ -15,7 +16,9 @@ import {
   Check, 
   Store,
   DollarSign,
-  Share2 
+  Share2,
+  ShieldCheck,
+  Loader2
 } from 'lucide-react'
 
 interface PaymentQRProps {
@@ -27,6 +30,7 @@ interface PaymentQRProps {
 
 const QR_SETTLEMENT = 'instant'
 const QR_SOURCE = 'qr'
+const QR_SIGNATURE_TTL_SECONDS = 15 * 60
 
 export function PaymentQR({ defaultAmount, defaultOrderId }: PaymentQRProps) {
   const { address } = useAccount()
@@ -34,6 +38,19 @@ export function PaymentQR({ defaultAmount, defaultOrderId }: PaymentQRProps) {
   const [amount, setAmount] = useState(defaultAmount || '')
   const [orderId, setOrderId] = useState(defaultOrderId || '')
   const [copied, setCopied] = useState(false)
+  const [signature, setSignature] = useState<`0x${string}` | null>(null)
+  const [expiresAt, setExpiresAt] = useState<number | null>(null)
+  const [signatureError, setSignatureError] = useState<string | null>(null)
+  const { signMessageAsync, isPending: isSigning } = useSignMessage()
+
+  const securePayloadReady = !!signature && !!expiresAt
+
+  useEffect(() => {
+    // Changing payment fields invalidates the previously signed payload.
+    setSignature(null)
+    setExpiresAt(null)
+    setSignatureError(null)
+  }, [amount, orderId, address])
 
   // Create a payment deep link (could be customized for mobile wallets)
   const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://vfide.com'
@@ -46,6 +63,8 @@ export function PaymentQR({ defaultAmount, defaultOrderId }: PaymentQRProps) {
         })
         if (amount) paymentParams.set('amount', amount)
         if (orderId) paymentParams.set('orderId', orderId)
+        if (expiresAt) paymentParams.set('exp', String(expiresAt))
+        if (signature) paymentParams.set('sig', signature)
         return `${baseUrl}/pay?${paymentParams.toString()}`
       })()
     : ''
@@ -55,9 +74,33 @@ export function PaymentQR({ defaultAmount, defaultOrderId }: PaymentQRProps) {
   const usdValue = amount ? (parseFloat(amount) * REFERENCE_PRICE).toFixed(2) : '0.00'
 
   const copyPaymentLink = () => {
-    if (!paymentUrl) return
+    if (!paymentUrl || !securePayloadReady) return
     navigator.clipboard.writeText(paymentUrl)
     setCopied(true)
+  }
+
+  const signQrPayload = async () => {
+    if (!address) return
+    setSignatureError(null)
+
+    try {
+      const nextExpiry = Math.floor(Date.now() / 1000) + QR_SIGNATURE_TTL_SECONDS
+      const message = buildQrSignatureMessage({
+        merchant: address,
+        amount: amount || '',
+        orderId: orderId || '',
+        source: QR_SOURCE,
+        settlement: QR_SETTLEMENT,
+        expiresAt: nextExpiry,
+      })
+
+      const sig = await signMessageAsync({ message })
+      setExpiresAt(nextExpiry)
+      setSignature(sig as `0x${string}`)
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Signature rejected'
+      setSignatureError(message)
+    }
   }
 
   useEffect(() => {
@@ -67,6 +110,7 @@ export function PaymentQR({ defaultAmount, defaultOrderId }: PaymentQRProps) {
   }, [copied])
 
   const downloadQR = () => {
+    if (!securePayloadReady) return
     const svg = document.getElementById('payment-qr-code')
     if (!svg) return
 
@@ -94,7 +138,7 @@ export function PaymentQR({ defaultAmount, defaultOrderId }: PaymentQRProps) {
   }
 
   const sharePayment = async () => {
-    if (!paymentUrl) return
+    if (!paymentUrl || !securePayloadReady) return
     if (navigator.share) {
       try {
         await navigator.share({
@@ -147,7 +191,7 @@ export function PaymentQR({ defaultAmount, defaultOrderId }: PaymentQRProps) {
         {/* QR Code Display */}
         <div className="bg-zinc-800 border border-zinc-700 rounded-xl p-6 flex flex-col items-center">
           <div className="bg-white p-4 rounded-xl mb-4">
-            {paymentUrl ? (
+            {paymentUrl && securePayloadReady ? (
               <QRCodeSVG
                 id="payment-qr-code"
                 value={paymentUrl}
@@ -162,8 +206,9 @@ export function PaymentQR({ defaultAmount, defaultOrderId }: PaymentQRProps) {
                 }}
               />
             ) : (
-              <div className="w-[200px] h-[200px] flex items-center justify-center text-xs text-zinc-500 text-center">
-                Connect wallet to generate a payment QR
+              <div className="w-[200px] h-[200px] flex flex-col items-center justify-center text-xs text-zinc-500 text-center gap-2">
+                <ShieldCheck className="w-8 h-8 text-cyan-400" />
+                <span>Sign payment details to generate a tamper-proof QR</span>
               </div>
             )}
           </div>
@@ -183,8 +228,29 @@ export function PaymentQR({ defaultAmount, defaultOrderId }: PaymentQRProps) {
           {/* Merchant Name */}
           <div className="text-center text-zinc-100 font-bold mb-4 flex flex-col items-center gap-1">
             <span>{merchantInfo.businessName}</span>
-            <span className="text-xs text-zinc-500">Instant settlement via QR scan</span>
+            <span className="text-xs text-zinc-500">Instant settlement via signed QR scan</span>
           </div>
+
+          <div className={`mb-4 rounded-lg px-3 py-2 text-xs ${securePayloadReady ? 'bg-emerald-500/10 text-emerald-300 border border-emerald-500/30' : 'bg-amber-500/10 text-amber-300 border border-amber-500/30'}`}>
+            {securePayloadReady
+              ? `Signed QR active${expiresAt ? ` • expires ${new Date(expiresAt * 1000).toLocaleTimeString()}` : ''}`
+              : 'Unsigned QR cannot be paid. Sign to lock payment fields.'}
+          </div>
+
+          {signatureError && (
+            <div className="mb-4 w-full rounded-lg px-3 py-2 text-xs bg-red-500/10 text-red-300 border border-red-500/30">
+              Signature failed: {signatureError}
+            </div>
+          )}
+
+          <button
+            onClick={signQrPayload}
+            disabled={isSigning}
+            className="w-full mb-4 flex items-center justify-center gap-2 px-4 py-3 bg-emerald-500 hover:bg-emerald-600 rounded-lg text-white font-bold transition-colors disabled:opacity-60"
+          >
+            {isSigning ? <Loader2 className="animate-spin" size={18} /> : <ShieldCheck size={18} />}
+            {isSigning ? 'Signing...' : securePayloadReady ? 'Re-sign QR' : 'Sign & Lock QR'}
+          </button>
           
           {/* Order ID */}
           {orderId && (
@@ -197,6 +263,7 @@ export function PaymentQR({ defaultAmount, defaultOrderId }: PaymentQRProps) {
           <div className="flex gap-3 mt-4 w-full">
             <button
               onClick={downloadQR}
+              disabled={!securePayloadReady}
               className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-zinc-700 hover:bg-zinc-700 rounded-lg text-zinc-100 transition-colors"
             >
               <Download size={18} />
@@ -204,6 +271,7 @@ export function PaymentQR({ defaultAmount, defaultOrderId }: PaymentQRProps) {
             </button>
             <button
               onClick={sharePayment}
+              disabled={!securePayloadReady}
               className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-cyan-400 hover:bg-cyan-400 rounded-lg text-zinc-900 font-bold transition-colors"
             >
               <Share2 size={18} />
@@ -279,6 +347,7 @@ export function PaymentQR({ defaultAmount, defaultOrderId }: PaymentQRProps) {
               />
               <button
                 onClick={copyPaymentLink}
+                disabled={!securePayloadReady}
                 className="px-4 py-3 bg-zinc-700 hover:bg-zinc-700 rounded-lg transition-colors"
               >
                 {copied ? (
@@ -298,6 +367,7 @@ export function PaymentQR({ defaultAmount, defaultOrderId }: PaymentQRProps) {
         <ol className="text-sm text-zinc-400 space-y-1 list-decimal list-inside">
           <li>Set the payment amount (or leave empty for any amount)</li>
           <li>Optionally add an order ID for your records</li>
+          <li>Sign and lock the QR payload</li>
           <li>Customer scans QR code with their camera or wallet app</li>
           <li>Customer confirms payment and it settles instantly</li>
         </ol>

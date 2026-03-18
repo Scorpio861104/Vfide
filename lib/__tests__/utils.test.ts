@@ -275,12 +275,14 @@ describe('timeUntil', () => {
   })
 
   it('returns hours when less than a day', () => {
-    const futureDate = new Date(Date.now() + 5 * 60 * 60 * 1000)
+    // Add a 1-minute buffer to avoid occasional floor rounding to 4 hours on slow CI
+    const futureDate = new Date(Date.now() + 5 * 60 * 60 * 1000 + 60 * 1000)
     expect(timeUntil(futureDate)).toBe('5 hours')
   })
 
   it('returns singular hour', () => {
-    const futureDate = new Date(Date.now() + 1 * 60 * 60 * 1000)
+    // Add a small buffer to avoid boundary rounding to 0 hours
+    const futureDate = new Date(Date.now() + 1 * 60 * 60 * 1000 + 5000)
     expect(timeUntil(futureDate)).toBe('1 hour')
   })
 

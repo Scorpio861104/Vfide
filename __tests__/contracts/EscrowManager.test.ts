@@ -964,6 +964,50 @@ describe('EscrowManager Contract', () => {
   });
 
   describe('Edge Cases and Integration', () => {
+    it('should block escrow creation when Seer autonomous denies action', async () => {
+      mockContractWrite.mockRejectedValueOnce(new Error('ESC_ActionBlocked'));
+
+      await expect(async () => {
+        await mockContractWrite({
+          functionName: 'createEscrow',
+          args: [seller, tokenAddress, parseEther('1000'), 'Order-1'],
+        });
+      }).rejects.toThrow('ESC_ActionBlocked');
+    });
+
+    it('should block release when Seer autonomous denies action', async () => {
+      mockContractWrite.mockRejectedValueOnce(new Error('ESC_ActionBlocked'));
+
+      await expect(async () => {
+        await mockContractWrite({
+          functionName: 'release',
+          args: [1n],
+        });
+      }).rejects.toThrow('ESC_ActionBlocked');
+    });
+
+    it('should block refund when Seer autonomous denies action', async () => {
+      mockContractWrite.mockRejectedValueOnce(new Error('ESC_ActionBlocked'));
+
+      await expect(async () => {
+        await mockContractWrite({
+          functionName: 'refund',
+          args: [1n],
+        });
+      }).rejects.toThrow('ESC_ActionBlocked');
+    });
+
+    it('should block timeout claim when Seer autonomous denies action', async () => {
+      mockContractWrite.mockRejectedValueOnce(new Error('ESC_ActionBlocked'));
+
+      await expect(async () => {
+        await mockContractWrite({
+          functionName: 'claimTimeout',
+          args: [1n],
+        });
+      }).rejects.toThrow('ESC_ActionBlocked');
+    });
+
     it('should handle zero balance escrow', async () => {
       mockContractRead.mockResolvedValueOnce(0n);
 

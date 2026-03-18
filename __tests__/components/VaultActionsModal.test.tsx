@@ -1,26 +1,54 @@
 import { describe, it, expect, vi, beforeEach } from '@jest/globals';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { VaultActionsModal } from '@/components/vault/VaultActionsModal';
 
-// Mock wagmi hooks
-jest.mock('wagmi', () => ({
-  useAccount: jest.fn(() => ({ address: '0x1234567890123456789012345678901234567890' as const })),
-  useWriteContract: jest.fn(() => ({
-    writeContract: jest.fn(),
-    data: undefined,
-    isPending: false,
-    error: null,
-    reset: jest.fn(),
-  })),
-  useWaitForTransactionReceipt: jest.fn(() => ({
-    isLoading: false,
-    isSuccess: false,
-    isError: false,
-  })),
-  useReadContract: jest.fn(() => ({
+const mockWriteContract = jest.fn();
+const mockReset = jest.fn();
+const mockSignTypedDataAsync = jest.fn(async () => '0xsignature');
+const mockIsCardBoundVaultMode = jest.fn(() => false);
+const mockUseReadContract = jest.fn((config?: { functionName?: string }) => {
+  const functionName = config?.functionName;
+
+  if (functionName === 'nextNonce') {
+    return { data: 0n };
+  }
+  if (functionName === 'walletEpoch') {
+    return { data: 1n };
+  }
+
+  return {
     data: BigInt('1000000000000000000000'), // 1000 tokens
-  })),
-}));
+  };
+});
+
+// Mock wagmi hooks
+jest.mock('wagmi', () => {
+  const signTypedDataAsyncProxy = (...args: unknown[]) => mockSignTypedDataAsync(...args);
+  const writeContractProxy = (...args: unknown[]) => mockWriteContract(...args);
+  const resetProxy = (...args: unknown[]) => mockReset(...args);
+  const useReadContractProxy = (...args: unknown[]) => mockUseReadContract(...args);
+
+  return {
+    useAccount: jest.fn(() => ({ address: '0x1234567890123456789012345678901234567890' as const })),
+    useChainId: jest.fn(() => 8453),
+    useSignTypedData: jest.fn(() => ({
+      signTypedDataAsync: signTypedDataAsyncProxy,
+    })),
+    useWriteContract: jest.fn(() => ({
+      writeContract: writeContractProxy,
+      data: undefined,
+      isPending: false,
+      error: null,
+      reset: resetProxy,
+    })),
+    useWaitForTransactionReceipt: jest.fn(() => ({
+      isLoading: false,
+      isSuccess: false,
+      isError: false,
+    })),
+    useReadContract: useReadContractProxy,
+  };
+});
 
 // Mock useVaultBalance
 jest.mock('@/hooks/useVaultHooks', () => ({
@@ -46,6 +74,8 @@ jest.mock('@/lib/contracts', () => ({
     VFIDEToken: '0xVFIDEToken',
     VaultHub: '0xVaultHub',
   },
+  CARD_BOUND_VAULT_ABI: [],
+  isCardBoundVaultMode: () => mockIsCardBoundVaultMode(),
 }));
 
 // Mock framer-motion
@@ -63,6 +93,16 @@ describe('VaultActionsModal', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    mockIsCardBoundVaultMode.mockReturnValue(false);
+    mockSignTypedDataAsync.mockResolvedValue('0xsignature');
+    mockUseReadContract.mockImplementation((config?: { functionName?: string }) => {
+      const functionName = config?.functionName;
+
+      if (functionName === 'nextNonce') return { data: 0n };
+      if (functionName === 'walletEpoch') return { data: 1n };
+
+      return { data: BigInt('1000000000000000000000') };
+    });
   });
 
   describe('Deposit mode', () => {
@@ -353,6 +393,120 @@ describe('VaultActionsModal', () => {
       expect(screen.getByPlaceholderText('0.00')).toBeInTheDocument();
       expect(screen.getByPlaceholderText('0x...')).toBeInTheDocument();
       expect(screen.getByText('Continue')).toBeInTheDocument();
+    });
+  });
+
+  describe('CardBound mode', () => {
+    it('disables legacy deposit action in CardBound mode', () => {
+      mockIsCardBoundVaultMode.mockReturnValue(true);
+
+      render(
+        <VaultActionsModal
+          isOpen={true}
+          onClose={mockOnClose}
+          actionType="deposit"
+          vaultAddress={mockVaultAddress}
+        />
+      );
+
+      const continueButton = screen.getByText('Continue');
+      expect(continueButton).toBeDisabled();
+      expect(screen.getByText('CardBound mode supports signed vault-to-vault transfer only.')).toBeInTheDocument();
+    });
+
+    it('disables legacy withdraw action in CardBound mode', () => {
+      mockIsCardBoundVaultMode.mockReturnValue(true);
+
+      render(
+        <VaultActionsModal
+          isOpen={true}
+          onClose={mockOnClose}
+          actionType="withdraw"
+          vaultAddress={mockVaultAddress}
+        />
+      );
+
+      const continueButton = screen.getByText('Continue');
+      expect(continueButton).toBeDisabled();
+      expect(screen.getByText('CardBound mode supports signed vault-to-vault transfer only.')).toBeInTheDocument();
+    });
+
+    it('executes signed CardBound transfer in transfer mode', async () => {
+      mockIsCardBoundVaultMode.mockReturnValue(true);
+
+      render(
+        <VaultActionsModal
+          isOpen={true}
+          onClose={mockOnClose}
+          actionType="transfer"
+          vaultAddress={mockVaultAddress}
+        />
+      );
+
+      const amountInput = screen.getByPlaceholderText('0.00') as HTMLInputElement;
+      const recipientInput = screen.getByPlaceholderText('0x...') as HTMLInputElement;
+
+      fireEvent.input(amountInput, { target: { value: '100' } });
+      fireEvent.change(recipientInput, {
+        target: { value: '0x1111111111111111111111111111111111111111' },
+      });
+
+      await waitFor(() => {
+        expect(amountInput.value).toBe('100');
+      });
+
+      const continueButton = screen.getByText('Continue');
+      expect(continueButton).not.toBeDisabled();
+      fireEvent.click(continueButton);
+
+      const confirmButton = await screen.findByText('Confirm');
+      fireEvent.click(confirmButton);
+
+      await waitFor(() => {
+        expect(mockSignTypedDataAsync).toHaveBeenCalled();
+      });
+
+      await waitFor(() => {
+        expect(mockWriteContract).toHaveBeenCalledWith(
+          expect.objectContaining({
+            functionName: 'executeVaultToVaultTransfer',
+            address: mockVaultAddress,
+          })
+        );
+      });
+    });
+
+    it('shows error and skips signing when CardBound transfer state is missing', async () => {
+      mockIsCardBoundVaultMode.mockReturnValue(true);
+      mockUseReadContract.mockImplementation((config?: { functionName?: string }) => {
+        const functionName = config?.functionName;
+
+        if (functionName === 'nextNonce') return { data: undefined };
+        if (functionName === 'walletEpoch') return { data: undefined };
+
+        return { data: BigInt('1000000000000000000000') };
+      });
+
+      render(
+        <VaultActionsModal
+          isOpen={true}
+          onClose={mockOnClose}
+          actionType="transfer"
+          vaultAddress={mockVaultAddress}
+        />
+      );
+
+      fireEvent.input(screen.getByPlaceholderText('0.00'), { target: { value: '100' } });
+      fireEvent.change(screen.getByPlaceholderText('0x...'), {
+        target: { value: '0x1111111111111111111111111111111111111111' },
+      });
+
+      fireEvent.click(screen.getByText('Continue'));
+      fireEvent.click(await screen.findByText('Confirm'));
+
+      expect(await screen.findByText('Vault transfer state unavailable. Please retry.')).toBeInTheDocument();
+      expect(mockSignTypedDataAsync).not.toHaveBeenCalled();
+      expect(mockWriteContract).not.toHaveBeenCalled();
     });
   });
 });

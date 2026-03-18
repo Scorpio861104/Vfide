@@ -1,5 +1,10 @@
 -- VFIDE Database Schema
 -- Run this after creating your database
+--
+-- DEPRECATED:
+-- This bootstrap file is retained for local legacy compatibility only.
+-- The authoritative schema is in /migrations and should be applied via migrations.
+-- Running this file directly can create an incompatible messages schema.
 
 -- Users table
 CREATE TABLE IF NOT EXISTS users (

@@ -16,6 +16,7 @@ jest.mock('wagmi', () => ({
 // Mock viem
 jest.mock('viem', () => ({
   parseAbi: jest.fn(() => []),
+  isAddress: jest.fn((addr: string) => typeof addr === 'string' && addr.startsWith('0x') && addr.length === 42),
 }))
 
 describe('useVaultRecovery', () => {

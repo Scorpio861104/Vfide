@@ -99,12 +99,12 @@ function StatCard({ label, value, subValue, icon, color, trend, trendPercent }: 
 export function LiveSystemStats() {
   const { vaults: totalVaults, merchants: totalMerchants, transactions24h: totalTransactions, tvl: totalValueLocked } = useSystemStats()
   
-  // Calculate mock trends (in production, compare with previous values)
+  // Trend calculation is pending historical metrics wiring.
   const [trends] = useState({
-    vaults: { direction: 'up' as const, percent: 12.3 },
-    merchants: { direction: 'up' as const, percent: 8.7 },
-    transactions: { direction: 'up' as const, percent: 23.5 },
-    tvl: { direction: 'up' as const, percent: 15.2 },
+    vaults: { direction: 'neutral' as const, percent: 0 },
+    merchants: { direction: 'neutral' as const, percent: 0 },
+    transactions: { direction: 'neutral' as const, percent: 0 },
+    tvl: { direction: 'neutral' as const, percent: 0 },
   })
   
   return (

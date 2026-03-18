@@ -16,6 +16,14 @@ const VAULT_HUB_ADDRESS = process.env.NEXT_PUBLIC_VAULT_HUB_ADDRESS as `0x${stri
 // Type assertion for wagmi's strict chain ID type system
 const EXPECTED_CHAIN_ID = CURRENT_CHAIN_ID as 84532 | 8453 | 300 | 80002 | 137 | 324;
 
+function expectedChainLabel(): string {
+  const chain = getChainByChainId(CURRENT_CHAIN_ID);
+  if (!chain) {
+    return 'the configured network';
+  }
+  return isTestnetChainId(CURRENT_CHAIN_ID) ? chain.testnet.name : chain.mainnet.name;
+}
+
 // Helper to parse contract errors into user-friendly messages
 function parseContractError(error: unknown): string {
   if (error instanceof Error) {
@@ -33,12 +41,12 @@ function parseContractError(error: unknown): string {
     
     // Invalid address format (20 bytes / hex issue)
     if (message.includes('20') && (message.includes('byte') || message.includes('address') || message.includes('hex'))) {
-      return 'Invalid address format. Please ensure you are on the correct network (zkSync Sepolia).';
+      return `Invalid address format. Please ensure you are on the correct network (${expectedChainLabel()}).`;
     }
     
     // Wrong chain/network
     if (message.includes('chain') && (message.includes('unsupported') || message.includes('wrong') || message.includes('mismatch'))) {
-      return 'Please switch to zkSync Sepolia network and try again.';
+      return `Please switch to ${expectedChainLabel()} and try again.`;
     }
     
     // Contract revert errors - UV:zero means token/hub/owner not set
@@ -146,7 +154,7 @@ export function useVaultHub() {
         abi: PARSED_VAULT_HUB_ABI,
         // VaultInfrastructure uses ensureVault() which creates if doesn't exist
         functionName: 'ensureVault',
-        args: [],
+        args: [userAddress],
         chainId: EXPECTED_CHAIN_ID,
       });
       return result;

@@ -76,163 +76,6 @@ interface FriendInfo {
   isMutual: boolean;
 }
 
-// ==================== MOCK DATA ====================
-
-const mockUserProfile: UserProfile = {
-  id: 'user_123',
-  username: 'alice_blockchain',
-  displayName: 'Alice Chen',
-  avatar: '👩‍💼',
-  coverImage: 'url_to_cover',
-  bio: 'DeFi enthusiast | Governance advocate | Building trust on VFIDE 🚀',
-  location: 'San Francisco, CA',
-  joinedAt: new Date('2023-06-15'),
-  proofScore: 8450,
-  followers: 342,
-  following: 187,
-  friends: 54,
-  badges: [
-    {
-      id: 'b1',
-      name: 'Governance Pro',
-      description: 'Participated in 50+ proposals',
-      icon: '🗳️',
-      rarity: 'rare',
-      unlockedAt: new Date('2024-01-20'),
-    },
-    {
-      id: 'b2',
-      name: 'Payment Pioneer',
-      description: 'Completed 100 transactions',
-      icon: '💳',
-      rarity: 'uncommon',
-      unlockedAt: new Date('2023-12-10'),
-    },
-    {
-      id: 'b3',
-      name: 'Community Builder',
-      description: 'Referred 10+ successful users',
-      icon: '🤝',
-      rarity: 'rare',
-      unlockedAt: new Date('2024-02-05'),
-    },
-    {
-      id: 'b4',
-      name: 'Vault Master',
-      description: 'Maintained 500k+ vault balance for 30 days',
-      icon: '🔒',
-      rarity: 'epic',
-      unlockedAt: new Date('2024-01-15'),
-    },
-  ],
-  isVerified: true,
-  isFollowing: false,
-  isFriend: false,
-  activityStreak: 28,
-  totalPoints: 15430,
-  level: 12,
-  lastActive: new Date(Date.now() - 2 * 60 * 60 * 1000),
-};
-
-const mockAchievements: Achievement[] = [
-  {
-    id: 'a1',
-    title: 'Power User',
-    description: 'Reach ProofScore of 10,000',
-    progress: 8450,
-    maxProgress: 10000,
-    icon: '⚡',
-    isUnlocked: false,
-  },
-  {
-    id: 'a2',
-    title: 'Social Butterfly',
-    description: 'Get 100 followers',
-    progress: 342,
-    maxProgress: 100,
-    icon: '🦋',
-    isUnlocked: true,
-    unlockedAt: new Date('2024-01-10'),
-  },
-  {
-    id: 'a3',
-    title: 'Finance Master',
-    description: 'Complete 500 transactions',
-    progress: 287,
-    maxProgress: 500,
-    icon: '💰',
-    isUnlocked: false,
-  },
-  {
-    id: 'a4',
-    title: 'Governance Legend',
-    description: 'Vote on 100 proposals',
-    progress: 87,
-    maxProgress: 100,
-    icon: '🏛️',
-    isUnlocked: false,
-  },
-];
-
-const mockActivityItems: ActivityItem[] = [
-  {
-    id: 'act1',
-    type: 'badge',
-    title: 'Unlocked: Community Builder',
-    description: 'Successfully referred 10 users',
-    timestamp: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
-    icon: '🤝',
-  },
-  {
-    id: 'act2',
-    type: 'governance',
-    title: 'Voted on Proposal #142',
-    description: 'Proposal: Adjust governance parameters - Voted YES',
-    timestamp: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000),
-    icon: '🗳️',
-  },
-  {
-    id: 'act3',
-    type: 'transaction',
-    title: 'Payment Completed',
-    description: 'Received 2.5 ETH payment',
-    timestamp: new Date(Date.now() - 12 * 24 * 60 * 60 * 1000),
-    icon: '💸',
-  },
-  {
-    id: 'act4',
-    type: 'achievement',
-    title: 'Unlocked: Social Butterfly',
-    description: 'Reached 100 followers milestone',
-    timestamp: new Date(Date.now() - 25 * 24 * 60 * 60 * 1000),
-    icon: '🦋',
-  },
-];
-
-const mockFriends: FriendInfo[] = [
-  {
-    id: 'f1',
-    displayName: 'Bob Smith',
-    avatar: '👨‍💻',
-    proofScore: 7200,
-    isMutual: true,
-  },
-  {
-    id: 'f2',
-    displayName: 'Carol Johnson',
-    avatar: '👩‍🎤',
-    proofScore: 6800,
-    isMutual: true,
-  },
-  {
-    id: 'f3',
-    displayName: 'David Lee',
-    avatar: '👨‍🔬',
-    proofScore: 5400,
-    isMutual: false,
-  },
-];
-
 // ==================== COMPONENTS ====================
 
 interface UserProfileProps {
@@ -240,10 +83,18 @@ interface UserProfileProps {
   isOwnProfile?: boolean;
 }
 
-export function UserProfileComponent({ user = mockUserProfile, isOwnProfile = false }: UserProfileProps) {
+export function UserProfileComponent({ user, isOwnProfile = false }: UserProfileProps) {
   const [activeTab, setActiveTab] = useState<'activity' | 'friends' | 'achievements' | 'badges'>('activity');
   const [copied, setCopied] = useState(false);
   const [showShareMenu, setShowShareMenu] = useState(false);
+
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-zinc-950 via-[#1A1A2E] to-zinc-950 flex items-center justify-center">
+        <p className="text-zinc-400">Profile not available.</p>
+      </div>
+    );
+  }
 
   const handleCopyProfile = () => {
     navigator.clipboard.writeText(`https://vfide.app/profile/${user.username}`);
@@ -252,9 +103,9 @@ export function UserProfileComponent({ user = mockUserProfile, isOwnProfile = fa
   };
 
   const tabs = [
-    { key: 'activity', label: 'Activity', icon: '📊', count: mockActivityItems.length },
+    { key: 'activity', label: 'Activity', icon: '📊', count: 0 },
     { key: 'friends', label: 'Friends', icon: '👥', count: user.friends },
-    { key: 'achievements', label: 'Achievements', icon: '🎯', count: mockAchievements.filter(a => a.isUnlocked).length },
+    { key: 'achievements', label: 'Achievements', icon: '🎯', count: 0 },
     { key: 'badges', label: 'Badges', icon: '🏆', count: user.badges.length },
   ];
 
@@ -500,7 +351,7 @@ export function UserProfileComponent({ user = mockUserProfile, isOwnProfile = fa
               exit={{ opacity: 0, y: -20 }}
               className="space-y-4"
             >
-              {mockActivityItems.map((item, idx) => (
+              {([] as ActivityItem[]).map((item, idx) => (
                 <motion.div
                   key={item.id}
                   initial={{ opacity: 0, x: -20 }}
@@ -533,7 +384,7 @@ export function UserProfileComponent({ user = mockUserProfile, isOwnProfile = fa
               exit={{ opacity: 0, y: -20 }}
               className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
             >
-              {mockFriends.map((friend, idx) => (
+              {([] as FriendInfo[]).map((friend, idx) => (
                 <motion.div
                   key={friend.id}
                   initial={{ opacity: 0, scale: 0.9 }}
@@ -578,7 +429,7 @@ export function UserProfileComponent({ user = mockUserProfile, isOwnProfile = fa
               exit={{ opacity: 0, y: -20 }}
               className="grid grid-cols-1 md:grid-cols-2 gap-4"
             >
-              {mockAchievements.map((achievement, idx) => (
+              {([] as Achievement[]).map((achievement, idx) => (
                 <motion.div
                   key={achievement.id}
                   initial={{ opacity: 0, scale: 0.9 }}

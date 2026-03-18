@@ -3,7 +3,6 @@ pragma solidity 0.8.30;
 
 interface ISeerViewTarget {
     function getScore(address subject) external view returns (uint16);
-    function getStoredScore(address subject) external view returns (uint16);
     function NEUTRAL() external view returns (uint16);
     function lowTrustThreshold() external view returns (uint16);
     function highTrustThreshold() external view returns (uint16);
@@ -98,9 +97,11 @@ contract SeerView {
         uint256 activeCount = 0;
 
         for (uint256 i = 0; i < total; i++) {
+            // slither-disable-next-line calls-loop
             address endorser = useSocial
                 ? ISeerSocialViewTarget(social).getEndorserAt(subject, i)
                 : target.getEndorserAt(subject, i);
+            // slither-disable-next-line calls-loop
             // slither-disable-next-line unused-return
             (uint64 expiry, uint16 weight, ) = useSocial
                 ? ISeerSocialViewTarget(social).endorsements(subject, endorser)
@@ -117,9 +118,11 @@ contract SeerView {
 
         uint256 idx = 0;
         for (uint256 i = 0; i < total; i++) {
+            // slither-disable-next-line calls-loop
             address endorser = useSocial
                 ? ISeerSocialViewTarget(social).getEndorserAt(subject, i)
                 : target.getEndorserAt(subject, i);
+            // slither-disable-next-line calls-loop
             (uint64 expiry, uint16 weight, uint64 ts) = useSocial
                 ? ISeerSocialViewTarget(social).endorsements(subject, endorser)
                 : target.endorsements(subject, endorser);
@@ -135,13 +138,12 @@ contract SeerView {
 
     function getScores(address seer, address[] calldata subjects) external view returns (uint16[] memory scores) {
         ISeerViewTarget target = ISeerViewTarget(seer);
-        uint16 neutral = target.NEUTRAL();
         uint256 len = subjects.length;
 
         scores = new uint16[](len);
         for (uint256 i = 0; i < len; i++) {
-            uint16 stored = target.getStoredScore(subjects[i]);
-            scores[i] = stored == 0 ? neutral : stored;
+            // slither-disable-next-line calls-loop
+            scores[i] = target.getScore(subjects[i]);
         }
     }
 
@@ -152,6 +154,7 @@ contract SeerView {
 
         scores = new uint16[](len);
         for (uint256 i = 0; i < len; i++) {
+            // slither-disable-next-line calls-loop
             scores[i] = target.getScore(subjects[i]);
         }
     }

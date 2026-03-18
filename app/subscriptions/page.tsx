@@ -5,10 +5,11 @@ import { SubscriptionManagerABI } from "@/lib/abis";
 import { useState } from "react";
 import { useToast } from "@/components/ui/toast";
 import { useAccount, useWriteContract, useWaitForTransactionReceipt, useReadContract } from "wagmi";
+import { CONTRACT_ADDRESSES } from "@/lib/contracts";
 
 // Contract addresses (SubscriptionManager not deployed yet)
-const SUBSCRIPTION_MANAGER_ADDRESS = (process.env.NEXT_PUBLIC_SUBSCRIPTION_MANAGER_ADDRESS || '0x0000000000000000000000000000000000000000') as `0x${string}`;
-const _VFIDE_TOKEN_ADDRESS = (process.env.NEXT_PUBLIC_VFIDE_TOKEN_ADDRESS || '0x3249215721a21BC9635C01Ea05AdE032dd90961f') as `0x${string}`;
+const SUBSCRIPTION_MANAGER_ADDRESS = CONTRACT_ADDRESSES.SubscriptionManager;
+const _VFIDE_TOKEN_ADDRESS = CONTRACT_ADDRESSES.VFIDEToken;
 
 // Check if contract is deployed (not zero address)
 const IS_SUBSCRIPTION_DEPLOYED = SUBSCRIPTION_MANAGER_ADDRESS !== '0x0000000000000000000000000000000000000000';
@@ -80,7 +81,7 @@ export default function SubscriptionsPage() {
     });
   };
 
-  // Display mock or empty subscriptions for now
+  // Keep list empty until live subscription reads are wired.
   const [subscriptions, _setSubscriptions] = useState<Subscription[]>([]);
 
   return (

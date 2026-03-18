@@ -51,7 +51,29 @@ describe('/api/health', () => {
       const data = await response.json();
 
       expect(response.status).toBe(503);
+      expect(data.ok).toBe(false);
+      expect(data.status).toBe('degraded');
       expect(data.checks.env).toBe(false);
+    });
+
+    it('should keep production payload consistent with unhealthy status', async () => {
+      withRateLimit.mockResolvedValue(null);
+      process.env.NODE_ENV = 'production';
+      delete process.env.NEXT_PUBLIC_CHAIN_ID;
+
+      const request = new NextRequest('http://localhost:3000/api/health');
+      const response = await GET(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(503);
+      expect(data).toMatchObject({
+        ok: false,
+        status: 'degraded',
+      });
+      expect(data.environment).toBeUndefined();
+      expect(data.checks).toBeUndefined();
+      expect(data.memory).toBeUndefined();
+      expect(data.uptime).toBeUndefined();
     });
 
     it('should return rate limit error when rate limit exceeded', async () => {

@@ -13,7 +13,7 @@ import "./SharedInterfaces.sol";
  * - Cliff = 60 days (2 months) - First unlock at Month 2
  * - Vesting = 36 months (1080 days) - 18 bi-monthly unlocks
  * - Each unlock: 2,777,777 VFIDE (~2.78M)
- * - Unlock schedule: Every 60 days after cliff (Month 2, 4, 6, 8...38)
+ * - Unlock schedule: Every 60 days after cliff (Month 2, 4, 6, 8...36)
  * - Claims deliver VFIDE to the beneficiary's Vault (auto-created)
  * - SecurityHub lock respected (claims revert while locked)
  * - Beneficiary-only claim pause (no DAO / no third parties)
@@ -37,6 +37,7 @@ contract DevReserveVestingVault is ReentrancyGuard {
     address public immutable LEDGER;        // optional
     address public immutable PRESALE;       // presale (for start time)
     uint256 public immutable ALLOCATION;    // e.g., 50_000_000e18
+    address public immutable DAO;           // H-03 Fix: DAO can emergency-pause
 
     // ── Schedule constants
     uint64  public constant CLIFF = 60 days;              // 2-month cliff
@@ -44,6 +45,7 @@ contract DevReserveVestingVault is ReentrancyGuard {
     uint64  public constant UNLOCK_INTERVAL = 60 days;    // Bi-monthly unlocks
     uint256 public constant UNLOCK_AMOUNT = 2_777_777 * 1e18; // 2.78M per unlock
     uint256 public constant TOTAL_UNLOCKS = 18;           // 18 unlocks over 3 years
+    uint256 public constant EXPECTED_ALLOCATION = 50_000_000e18;
 
     // ── Derived times (lazy-cached when first needed)
     uint64  public startTimestamp;
@@ -67,6 +69,8 @@ contract DevReserveVestingVault is ReentrancyGuard {
     error DV_VaultLocked();
     error DV_NothingToClaim();
     error DV_Paused();
+    error DV_InvalidAllocation();
+    error DV_InvalidStartTimestamp();
 
     constructor(
         address _vfide,
@@ -75,16 +79,23 @@ contract DevReserveVestingVault is ReentrancyGuard {
         address _securityHub,
         address _ledger,
         address _presale,
-        uint256 _allocation
+        uint256 _allocation,
+        address _dao
     ) {
         if (_vfide==address(0) || _beneficiary==address(0) || _vaultHub==address(0) || _allocation==0) revert DV_Zero();
+        if (_allocation != EXPECTED_ALLOCATION) revert DV_InvalidAllocation();
         VFIDE        = _vfide;
         BENEFICIARY  = _beneficiary;
         VAULT_HUB    = _vaultHub;
+        // slither-disable-next-line missing-zero-check
         SECURITY_HUB = _securityHub;
+        // slither-disable-next-line missing-zero-check
         LEDGER       = _ledger;
+        // slither-disable-next-line missing-zero-check
         PRESALE      = _presale;
         ALLOCATION   = _allocation;
+        // slither-disable-next-line missing-zero-check
+        DAO          = _dao; // H-03 Fix: DAO address for emergency pause
 
         emit ModulesSet(_vfide, _beneficiary, _vaultHub, _securityHub, _ledger, _presale);
         _log("dev_vesting_deployed");
@@ -128,6 +139,7 @@ contract DevReserveVestingVault is ReentrancyGuard {
     // ─────────────────────────────────────────────────────────────
 
     function pauseClaims(bool paused) external {
+        // Beneficiary-only pause control (DAO removed per owner preference)
         if (msg.sender != BENEFICIARY) revert DV_NotBeneficiary();
         claimsPaused = paused;
         emit PauseSet(paused);
@@ -142,8 +154,10 @@ contract DevReserveVestingVault is ReentrancyGuard {
         if (msg.sender != BENEFICIARY) revert DV_NotBeneficiary();
         if (claimsPaused) revert DV_Paused();
 
+        // slither-disable-next-line reentrancy-benign
         _syncStart(); // reverts if presale not initialized
 
+        // slither-disable-next-line reentrancy-benign
         address vault = beneficiaryVault();
 
         if (SECURITY_HUB != address(0) && ISecurityHub(SECURITY_HUB).isLocked(vault)) {
@@ -170,6 +184,7 @@ contract DevReserveVestingVault is ReentrancyGuard {
 
         uint256 s = _fetchStartFromPresale();
         if (s == 0) revert DV_NotStarted();
+        if (s > type(uint64).max) revert DV_InvalidStartTimestamp();
         // forge-lint: disable-next-line(unsafe-typecast)
         // Safe: presale timestamp is a recent timestamp that fits in uint64
         startTimestamp = uint64(s);
@@ -233,6 +248,7 @@ contract DevReserveVestingVault is ReentrancyGuard {
 
     function _peekStartFromPresale() internal view returns (uint64) {
         uint256 s = _fetchStartFromPresale();
+        if (s > type(uint64).max) revert DV_InvalidStartTimestamp();
         // forge-lint: disable-next-line(unsafe-typecast)
         // Safe: presale timestamp is a recent timestamp that fits in uint64
         return s == 0 ? 0 : uint64(s);
@@ -329,9 +345,9 @@ contract DevReserveVestingVault is ReentrancyGuard {
     // ─────────────────────────────────────────────────────────────
 
     function _log(string memory action) internal {
-        if (LEDGER != address(0)) { try IProofLedger(LEDGER).logSystemEvent(address(this), action, msg.sender) {} catch {} }
+        if (LEDGER != address(0)) { try IProofLedger(LEDGER).logSystemEvent(address(this), action, msg.sender) {} catch { emit LedgerLogFailed(address(this), action); } }
     }
     function _logEv(address who, string memory action, uint256 amount, string memory note) internal {
-        if (LEDGER != address(0)) { try IProofLedger(LEDGER).logEvent(who, action, amount, note) {} catch {} }
+        if (LEDGER != address(0)) { try IProofLedger(LEDGER).logEvent(who, action, amount, note) {} catch { emit LedgerLogFailed(who, action); } }
     }
 }

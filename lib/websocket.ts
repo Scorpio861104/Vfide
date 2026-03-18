@@ -1,11 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { io, Socket } from 'socket.io-client';
 
-/**
- * WebSocket Message Types - aligned with Socket.IO server
- */
 export type WSMessageType =
   | 'connect'
   | 'disconnect'
@@ -14,7 +10,11 @@ export type WSMessageType =
   | 'read'
   | 'presence'
   | 'notification'
-  | 'error';
+  | 'error'
+  | 'connected'
+  | 'pong'
+  | 'subscribed'
+  | 'unsubscribed';
 
 export interface WSMessage {
   type: WSMessageType;
@@ -39,13 +39,6 @@ export interface WSConfig {
   };
 }
 
-/**
- * WebSocket Manager using Socket.IO for real-time messaging
- * Connects to VFIDE WebSocket server with authentication
- */
-/**
- * Get default chain ID from environment or fallback
- */
 function getDefaultChainId(): number {
   if (typeof process !== 'undefined' && process.env.NEXT_PUBLIC_DEFAULT_CHAIN_ID) {
     const chainId = parseInt(process.env.NEXT_PUBLIC_DEFAULT_CHAIN_ID, 10);
@@ -53,17 +46,21 @@ function getDefaultChainId(): number {
       return chainId;
     }
   }
-  return 8453; // Base mainnet
+  return 8453;
+}
+
+function toWebSocketUrl(url: string): string {
+  if (url.startsWith('http://')) return `ws://${url.slice('http://'.length)}`;
+  if (url.startsWith('https://')) return `wss://${url.slice('https://'.length)}`;
+  return url;
 }
 
 export class WebSocketManager {
-  private socket: Socket | null = null;
+  private socket: WebSocket | null = null;
   private config: WSConfig;
   private messageHandlers: Map<string, Set<(data: unknown) => void>> = new Map();
-  private socketListeners: Set<string> = new Set();
   private heartbeatTimer: ReturnType<typeof setInterval> | null = null;
   private isConnecting = false;
-  private isClosed = false;
 
   constructor(config: WSConfig) {
     this.config = {
@@ -75,109 +72,106 @@ export class WebSocketManager {
     };
   }
 
-  /**
-   * Connect to Socket.IO server with authentication
-   */
   connect(userAddress: string, signature?: string, message?: string, chainId?: number): Promise<void> {
     return new Promise((resolve, reject) => {
       if (this.isConnecting) {
-        return reject(new Error('Already connecting'));
+        reject(new Error('Already connecting'));
+        return;
       }
-
-      if (this.socket && this.socket.connected) {
-        return resolve();
+      if (this.socket && this.socket.readyState === WebSocket.OPEN) {
+        resolve();
+        return;
       }
 
       this.isConnecting = true;
-      this.isClosed = false;
+
+      const token = this.config.auth?.token;
+      const endpoint = new URL(toWebSocketUrl(this.config.url));
+      if (token) endpoint.searchParams.set('token', token);
+      endpoint.searchParams.set('address', userAddress);
+      endpoint.searchParams.set('chainId', String(chainId || this.config.auth?.chainId || getDefaultChainId()));
+      if (signature) endpoint.searchParams.set('signature', signature);
+      if (message) endpoint.searchParams.set('message', message);
 
       try {
-        // Create Socket.IO connection with authentication
-        this.socket = io(this.config.url, {
-          auth: {
-            ...this.config.auth,
-            signature,
-            message,
-            address: userAddress,
-            chainId: chainId || getDefaultChainId(),
-          },
-          reconnection: true,
-          reconnectionAttempts: this.config.maxReconnectAttempts,
-          reconnectionDelay: this.config.reconnectInterval,
-        });
+        this.socket = new WebSocket(endpoint.toString());
 
-        this.socketListeners.clear();
-        this.messageHandlers.forEach((_handlers, event) => {
-          this.registerSocketEvent(event);
-        });
-
-        this.socket.on('connect', () => {
-          console.log('[Socket.IO] Connected:', this.socket?.id);
+        this.socket.onopen = () => {
           this.isConnecting = false;
           this.setupHeartbeat();
-          this.emit('connect', { from: userAddress, data: null, timestamp: Date.now(), type: 'connect' });
+          this.dispatch('connect', { from: userAddress, data: null, timestamp: Date.now(), type: 'connect' });
           resolve();
-        });
+        };
 
-        this.socket.on('connect_error', (error) => {
-          console.error('[Socket.IO] Connection error:', error.message);
+        this.socket.onerror = () => {
           this.isConnecting = false;
-          this.emit('error', { from: '', data: error, timestamp: Date.now(), type: 'error' });
+          const error = new Error('WebSocket connection failed');
+          this.dispatch('error', { from: '', data: error.message, timestamp: Date.now(), type: 'error' });
           reject(error);
-        });
+        };
 
-        this.socket.on('disconnect', (reason) => {
-          console.log('[Socket.IO] Disconnected:', reason);
+        this.socket.onclose = (event) => {
           this.clearHeartbeat();
-          this.emit('disconnect', { from: userAddress, data: { reason }, timestamp: Date.now(), type: 'disconnect' });
-        });
+          this.dispatch('disconnect', {
+            from: userAddress,
+            data: { code: event.code, reason: event.reason },
+            timestamp: Date.now(),
+            type: 'disconnect',
+          });
+        };
 
-        this.socket.on('error', (error) => {
-          console.error('[Socket.IO] Error:', error);
-          this.emit('error', { from: '', data: error, timestamp: Date.now(), type: 'error' });
-        });
-      } catch (e) {
+        this.socket.onmessage = (event) => {
+          try {
+            const payload = JSON.parse(event.data as string) as { type?: string; payload?: unknown };
+            const type = payload.type || 'message';
+            this.dispatch(type, payload.payload ?? payload);
+          } catch {
+            this.dispatch('message', event.data);
+          }
+        };
+      } catch (error) {
         this.isConnecting = false;
-        reject(e);
+        reject(error);
       }
     });
   }
 
-  /**
-   * Disconnect from Socket.IO server
-   */
   disconnect() {
-    this.isClosed = true;
     this.clearHeartbeat();
-    this.socketListeners.clear();
-    
     if (this.socket) {
-      this.socket.disconnect();
+      this.socket.close();
       this.socket = null;
     }
   }
 
-  /**
-   * Emit event to Socket.IO server
-   */
   emit(event: string, data: unknown): boolean {
-    if (!this.socket || !this.socket.connected) {
-      console.error('[Socket.IO] Not connected');
+    if (!this.socket || this.socket.readyState !== WebSocket.OPEN) {
       return false;
     }
 
-    try {
-      this.socket.emit(event, data);
-      return true;
-    } catch (e) {
-      console.error('[Socket.IO] Failed to emit event:', e);
-      return false;
+    let outbound: unknown;
+    if (event === 'ping') {
+      outbound = { type: 'ping', payload: data || {} };
+    } else if (event === 'governance:subscribe') {
+      outbound = { type: 'subscribe', payload: { topic: 'governance' } };
+    } else if (event === 'notifications:subscribe') {
+      outbound = { type: 'subscribe', payload: { topic: 'notifications' } };
+    } else if (event === 'chat:channel:join' && typeof data === 'string') {
+      outbound = { type: 'subscribe', payload: { topic: `chat.${data}` } };
+    } else if (event === 'leave' && typeof data === 'string') {
+      outbound = { type: 'unsubscribe', payload: { topic: data } };
+    } else if (event === 'join' && typeof data === 'string') {
+      outbound = { type: 'subscribe', payload: { topic: data } };
+    } else if (event === 'message') {
+      outbound = { type: 'message', payload: data };
+    } else {
+      outbound = { type: 'message', payload: { event, data } };
     }
+
+    this.socket.send(JSON.stringify(outbound));
+    return true;
   }
 
-  /**
-   * Send message through WebSocket (backward compatibility)
-   */
   send(message: Omit<WSMessage, 'timestamp'>): boolean {
     return this.emit('message', {
       ...message,
@@ -185,66 +179,38 @@ export class WebSocketManager {
     });
   }
 
-  /**
-   * Subscribe to Socket.IO event
-   */
   on(event: string, handler: (data: unknown) => void) {
     if (!this.messageHandlers.has(event)) {
       this.messageHandlers.set(event, new Set());
     }
-    
-    // Safe: We just ensured this event exists in the map above
     this.messageHandlers.get(event)!.add(handler);
-    this.registerSocketEvent(event);
 
-    // Return unsubscribe function with proper cleanup
     return () => {
       const handlers = this.messageHandlers.get(event);
-      if (handlers) {
-        handlers.delete(handler);
-        // If no handlers left, remove the event listener and clean up the map
-        if (handlers.size === 0) {
-          this.socket?.off(event);
-          this.socketListeners.delete(event);
-          this.messageHandlers.delete(event);
-        }
+      if (!handlers) return;
+      handlers.delete(handler);
+      if (handlers.size === 0) {
+        this.messageHandlers.delete(event);
       }
     };
   }
 
-  /**
-   * Setup heartbeat mechanism
-   */
-  private setupHeartbeat() {
-    if (!this.socket) return;
-
-    this.clearHeartbeat();
-
-    if (this.config.heartbeatInterval && this.config.heartbeatInterval > 0) {
-      this.heartbeatTimer = setInterval(() => {
-        if (this.socket?.connected) {
-          this.socket.emit('ping', { timestamp: Date.now() });
-        }
-      }, this.config.heartbeatInterval);
+  private dispatch(event: string, data: unknown) {
+    const handlers = this.messageHandlers.get(event);
+    if (handlers) {
+      handlers.forEach((handler) => handler(data));
     }
-
-    // Listen for server heartbeat pings
-    this.socket.on('heartbeat:ping', (data) => {
-      // Respond with pong
-      this.socket?.emit('heartbeat:pong', data);
-    });
   }
 
-  private registerSocketEvent(event: string) {
-    if (!this.socket || this.socketListeners.has(event)) return;
+  private setupHeartbeat() {
+    this.clearHeartbeat();
+    if (!this.config.heartbeatInterval || this.config.heartbeatInterval <= 0) {
+      return;
+    }
 
-    this.socketListeners.add(event);
-    this.socket.on(event, (data: unknown) => {
-      const handlers = this.messageHandlers.get(event);
-      if (handlers) {
-        handlers.forEach(h => h(data));
-      }
-    });
+    this.heartbeatTimer = setInterval(() => {
+      this.emit('ping', { ts: Date.now() });
+    }, this.config.heartbeatInterval);
   }
 
   private clearHeartbeat() {
@@ -254,37 +220,22 @@ export class WebSocketManager {
     }
   }
 
-  /**
-   * Get connection state
-   */
   get isConnected(): boolean {
-    return this.socket !== null && this.socket.connected;
+    return this.socket !== null && this.socket.readyState === WebSocket.OPEN;
   }
 
-  /**
-   * Subscribe to governance updates
-   */
   subscribeToGovernance() {
     this.emit('governance:subscribe', {});
   }
 
-  /**
-   * Subscribe to specific proposal
-   */
   subscribeToProposal(proposalId: string) {
-    this.emit('governance:proposal:subscribe', proposalId);
+    this.emit('join', `proposal.${proposalId}`);
   }
 
-  /**
-   * Subscribe to chat channel
-   */
   subscribeToChat(channel: string) {
     this.emit('chat:channel:join', channel);
   }
 
-  /**
-   * Subscribe to personal notifications
-   */
   subscribeToNotifications() {
     this.emit('notifications:subscribe', {});
   }
@@ -298,9 +249,6 @@ export class WebSocketManager {
   }
 }
 
-/**
- * React hook for WebSocket connection
- */
 export function useWebSocket(config: WSConfig, userAddress?: string) {
   const wsRef = useRef<WebSocketManager | null>(null);
   const [isConnected, setIsConnected] = useState(false);
@@ -308,26 +256,18 @@ export function useWebSocket(config: WSConfig, userAddress?: string) {
   useEffect(() => {
     if (!userAddress || typeof window === 'undefined') return;
 
-    // Initialize WebSocket manager
     wsRef.current = new WebSocketManager(config);
 
-    // Connect to WebSocket server
-    wsRef.current.connect(userAddress).then(() => {
-      setIsConnected(true);
-    }).catch(e => {
-      console.error('[useWebSocket] Failed to connect:', e);
-    });
+    wsRef.current
+      .connect(userAddress)
+      .then(() => setIsConnected(true))
+      .catch((e) => {
+        console.error('[useWebSocket] Failed to connect:', e);
+      });
 
-    // Listen for connection status
-    const unsubscribeConnect = wsRef.current.on('connect', () => {
-      setIsConnected(true);
-    });
+    const unsubscribeConnect = wsRef.current.on('connect', () => setIsConnected(true));
+    const unsubscribeDisconnect = wsRef.current.on('disconnect', () => setIsConnected(false));
 
-    const unsubscribeDisconnect = wsRef.current.on('disconnect', () => {
-      setIsConnected(false);
-    });
-
-    // Cleanup on unmount
     return () => {
       unsubscribeConnect();
       unsubscribeDisconnect();
@@ -336,24 +276,12 @@ export function useWebSocket(config: WSConfig, userAddress?: string) {
     };
   }, [config.url, userAddress]);
 
-  const send = useCallback((message: Omit<WSMessage, 'timestamp'>) => {
-    return wsRef.current?.send(message) || false;
-  }, []);
+  const send = useCallback((message: Omit<WSMessage, 'timestamp'>) => wsRef.current?.send(message) || false, []);
 
   const subscribe = useCallback((type: WSMessageType, handler: (message: WSMessage) => void) => {
-    // Wrap handler to ensure type safety when receiving unknown data
     const wrappedHandler = (data: unknown) => {
-      // Type guard: ensure data is a valid WSMessage
-      if (
-        data &&
-        typeof data === 'object' &&
-        'type' in data &&
-        'from' in data &&
-        'timestamp' in data
-      ) {
+      if (data && typeof data === 'object' && 'type' in (data as Record<string, unknown>) && 'timestamp' in (data as Record<string, unknown>)) {
         handler(data as WSMessage);
-      } else {
-        console.warn('[useWebSocket] Received invalid message format:', data);
       }
     };
     return wsRef.current?.on(type, wrappedHandler) || (() => {});
@@ -375,30 +303,19 @@ export function useWebSocket(config: WSConfig, userAddress?: string) {
   };
 }
 
-/**
- * Get WebSocket URL from environment or default
- */
 export function getWebSocketURL(): string {
   if (typeof window === 'undefined') {
-    // Server-side rendering - use environment variable
-    return process.env.NEXT_PUBLIC_WS_URL || 'http://localhost:8080';
+    return process.env.NEXT_PUBLIC_WS_URL || 'ws://localhost:8080';
   }
-  
-  // Use environment variable if available
+
   if (process.env.NEXT_PUBLIC_WS_URL) {
-    return process.env.NEXT_PUBLIC_WS_URL;
+    return toWebSocketUrl(process.env.NEXT_PUBLIC_WS_URL);
   }
 
-  // Development: use localhost WebSocket server
   if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-    return 'http://localhost:8080';
+    return 'ws://localhost:8080';
   }
 
-  // Production: use same protocol as the web app
-  const protocol = window.location.protocol === 'https:' ? 'https:' : 'http:';
-  const host = window.location.host;
-  
-  // In production, you would deploy the WebSocket server separately
-  // and use its URL here (e.g., 'https://ws.vfide.com')
-  return process.env.NEXT_PUBLIC_WS_URL || `${protocol}//${host}`;
+  const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+  return `${protocol}//${window.location.host}`;
 }

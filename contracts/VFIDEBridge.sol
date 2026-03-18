@@ -12,11 +12,11 @@ import "@openzeppelin/contracts/utils/Pausable.sol";
 /**
  * @title VFIDEBridge
  * @notice LayerZero OFT implementation for cross-chain VFIDE token transfers
- * @dev Implements burn-on-source, mint-on-destination pattern with security controls
+ * @dev Implements lock-on-source, release-on-destination pattern with security controls
  * 
  * Features:
  * - Omnichain Fungible Token standard
- * - Burn on source, mint on destination
+ * - Lock on source, release on destination
  * - Fee management and refund handling
  * - Trusted remotes configuration
  * - Emergency pause capability
@@ -197,9 +197,11 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
         if (_amount < MIN_BRIDGE_AMOUNT || _amount > maxBridgeAmount) revert InvalidAmount();
         if (_to == address(0)) revert InvalidDestination();
         if (trustedRemotes[_dstChainId] == bytes32(0)) revert InvalidRemote();
+        require(_bridgeIsSystemExempt(), "VFIDEBridge: configure token systemExempt for bridge");
 
         // Check rate limits if security module is set
         if (securityModule != address(0)) {
+            // slither-disable-next-line reentrancy-benign
             require(
                 IBridgeSecurityModule(securityModule).checkRateLimit(msg.sender, _amount),
                 "Rate limit exceeded"
@@ -252,13 +254,23 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
             payable(msg.sender)
         );
 
-        // Burn tokens (they'll be minted on destination)
-        // Note: Token contract must support burn or transfer to dead address
-        vfideToken.safeTransfer(address(0xdead), amountAfterFee);
+        // Lock tokens on source chain; destination bridge releases pre-funded liquidity.
+        // This avoids mint-dependency failures and prevents burn-without-delivery scenarios.
 
         emit BridgeSent(msg.sender, _dstChainId, _to, amountAfterFee, fee, txId);
 
         return txId;
+    }
+
+    function _bridgeIsSystemExempt() internal view returns (bool) {
+        (bool ok, bytes memory data) = address(vfideToken).staticcall(
+            abi.encodeWithSignature("systemExempt(address)", address(this))
+        );
+        if (!ok || data.length < 32) {
+            // If token doesn't expose this helper, do not block bridging.
+            return true;
+        }
+        return abi.decode(data, (bool));
     }
 
     /**
@@ -295,9 +307,10 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
         userStats[receiver].totalReceived += amount;
         totalBridgedIn += amount;
 
-        // Mint tokens to receiver
-        // Note: This requires the bridge contract to have minting permissions
-        // Alternative: Pre-fund bridge with tokens
+        // Release tokens to receiver from destination bridge liquidity.
+        // C-05 Fix: Verify sufficient liquidity before release to prevent stranding
+        uint256 bridgeBalance = vfideToken.balanceOf(address(this));
+        require(bridgeBalance >= amount, "VFIDEBridge: insufficient liquidity");
         vfideToken.safeTransfer(receiver, amount);
 
         emit BridgeReceived(receiver, _origin.srcEid, amount, txId);
@@ -318,6 +331,11 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
         bytes memory payload = abi.encode(msg.sender, _amount);
         MessagingFee memory fee = _quote(_dstChainId, payload, _options, false);
         return fee.nativeFee;
+    }
+
+    /// @notice C-05 Fix: Check available bridge liquidity on this chain
+    function availableLiquidity() external view returns (uint256) {
+        return vfideToken.balanceOf(address(this));
     }
 
     /**
@@ -361,6 +379,7 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
     function setSecurityModule(address _securityModule) external onlyOwner {
         // Intentional: zero address is allowed to disable module checks after timelock.
         uint64 effectiveAt = uint64(block.timestamp) + CONFIG_TIMELOCK_DELAY;
+        // slither-disable-next-line missing-zero-check
         pendingSecurityModule = _securityModule;
         pendingSecurityModuleAt = effectiveAt;
         emit SecurityModuleScheduled(_securityModule, effectiveAt);
@@ -557,6 +576,10 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
      */
     function getUserStats(address _user) external view returns (BridgeStats memory) {
         return userStats[_user];
+    }
+
+    function renounceOwnership() public view override onlyOwner {
+        revert("VFIDEBridge: renounce disabled");
     }
 }
 

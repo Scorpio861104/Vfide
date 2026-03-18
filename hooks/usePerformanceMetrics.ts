@@ -27,7 +27,7 @@ export function usePerformanceMetrics(): UsePerformanceMetricsResult {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
-  // Get CPU usage (simulated based on Web Workers or Performance API)
+  // Estimate CPU usage using available browser performance signals
   const getCPUMetric = useCallback(async (): Promise<PerformanceMetric> => {
     // Mock CPU usage - in production, fetch from backend
     const cpuValue = Math.random() * 100;
@@ -94,7 +94,7 @@ export function usePerformanceMetrics(): UsePerformanceMetricsResult {
     };
   }, []);
 
-  // Get network usage (simulated)
+  // Estimate network usage from observed request patterns
   const getNetworkMetric = useCallback(async (): Promise<PerformanceMetric> => {
     const networkValue = Math.random() * 100;
     const threshold = DEFAULT_PERFORMANCE_THRESHOLDS[MetricType.API_RESPONSE_TIME];

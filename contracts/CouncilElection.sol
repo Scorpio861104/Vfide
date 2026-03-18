@@ -12,9 +12,12 @@ error CE_TermLimitReached();
 
 contract CouncilElection {
     uint8 public constant MIN_COUNCIL_SIZE = 1;
-    uint8 public constant MAX_COUNCIL_SIZE = 25;
-    uint64 public constant MIN_TERM_SECONDS = 30 days;
-    uint64 public constant MAX_TERM_SECONDS = 1460 days;
+    uint8 public constant MAX_COUNCIL_SIZE = 12;
+    uint8 public constant FIXED_MAX_CONSECUTIVE_TERMS = 1;
+    uint64 public constant FIXED_TERM_SECONDS = 365 days;
+    uint64 public constant FIXED_REELECTION_COOLDOWN = 365 days;
+    uint64 public constant MIN_TERM_SECONDS = FIXED_TERM_SECONDS;
+    uint64 public constant MAX_TERM_SECONDS = FIXED_TERM_SECONDS;
     uint64 public constant MIN_REFRESH_INTERVAL = 1 days;
     uint64 public constant MAX_REFRESH_INTERVAL = 180 days;
     uint64 public constant MAX_COOLDOWN_PERIOD = 3650 days;
@@ -38,12 +41,12 @@ contract CouncilElection {
     // Term limit tracking to prevent entrenchment
     mapping(address => uint8) public consecutiveTermsServed;
     mapping(address => uint64) public lastTermEndDate;
-    uint8 public maxConsecutiveTerms = 1; // Max 1 year continuous service before mandatory break
-    uint64 public cooldownPeriod = 365 days; // Must wait 1 year before re-eligibility
+    uint8 public maxConsecutiveTerms = FIXED_MAX_CONSECUTIVE_TERMS; // Fixed policy: single consecutive term
+    uint64 public cooldownPeriod = FIXED_REELECTION_COOLDOWN; // Fixed policy: must wait 1 year before re-eligibility
 
     uint8  public councilSize = 12;
     uint16 public minCouncilScore;       // default from Seer
-    uint64 public termSeconds = 365 days; // 1 year term
+    uint64 public termSeconds = FIXED_TERM_SECONDS; // Fixed policy: 1 year term
     uint64 public refreshInterval = 14 days;
     uint64 public termEnd;
 
@@ -73,7 +76,7 @@ contract CouncilElection {
         if (_size < MIN_COUNCIL_SIZE || _size > MAX_COUNCIL_SIZE) revert CE_BadSize();
         // M-11 Fix: Validate minimum score is reasonable (0-10000 scale for 10x precision)
         require(_minScore >= 5600 && _minScore <= 10000, "CE: invalid min score");
-        require(_term >= MIN_TERM_SECONDS && _term <= MAX_TERM_SECONDS, "CE: invalid term");
+        require(_term == FIXED_TERM_SECONDS, "CE: term fixed");
         require(
             _refresh >= MIN_REFRESH_INTERVAL &&
             _refresh <= MAX_REFRESH_INTERVAL &&
@@ -85,8 +88,8 @@ contract CouncilElection {
     }
 
     function setTermLimits(uint8 _maxConsecutive, uint64 _cooldown) external onlyDAO {
-        require(_maxConsecutive > 0 && _maxConsecutive <= 10, "CE: invalid max terms");
-        require(_cooldown >= 90 days && _cooldown <= MAX_COOLDOWN_PERIOD, "CE: invalid cooldown");
+        require(_maxConsecutive == FIXED_MAX_CONSECUTIVE_TERMS, "CE: max terms fixed");
+        require(_cooldown == FIXED_REELECTION_COOLDOWN, "CE: cooldown fixed");
         maxConsecutiveTerms = _maxConsecutive;
         cooldownPeriod = _cooldown;
         emit TermLimitsSet(_maxConsecutive, _cooldown);
@@ -99,6 +102,7 @@ contract CouncilElection {
         
         // Track in candidate list if not already there
         if (!inCandidateList[msg.sender]) {
+            require(candidateList.length < 200, "CE: max candidates"); // L-16 Fix
             candidateList.push(msg.sender);
             inCandidateList[msg.sender] = true;
         }
@@ -151,12 +155,11 @@ contract CouncilElection {
         uint256 membersLength = members.length;
         for (uint256 i=0; i<membersLength; ++i) {
             address member = members[i];
+            require(isCandidate[member], "CE: not candidate");
             if (!_eligible(member)) revert CE_NotEligible();
             
-            // L-11 Fix: Check for duplicate members
-            for (uint256 j = 0; j < i; ++j) {
-                require(members[j] != member, "CE: duplicate member");
-            }
+            // L-21 Fix: O(1) dedup via isCouncil mapping (set below, cleared above)
+            require(!isCouncil[member], "CE: duplicate member");
             
             // H-11 Fix: Enforce term limit properly
             // H-3 Fix: Use consecutiveThreshold instead of refreshInterval
@@ -185,6 +188,7 @@ contract CouncilElection {
             isCouncil[member] = true;
             currentCouncil.push(member);
         }
+        require(currentCouncil.length <= 100, "CE: max council"); // I-11: Cap council size
 
         termEnd = newTermEnd;
         emit CouncilSet(members, termEnd);
@@ -237,7 +241,7 @@ contract CouncilElection {
         
         // Log reason to ProofLedger
         if (address(ledger) != address(0)) {
-            try ledger.logSystemEvent(member, reason, msg.sender) {} catch {}
+            try ledger.logSystemEvent(member, reason, msg.sender) {} catch { emit LedgerLogFailed(member, reason); }
         }
     }
 
@@ -369,6 +373,6 @@ contract CouncilElection {
     }
 
     function _log(string memory action) internal {
-        if (address(ledger)!=address(0)) { try ledger.logSystemEvent(address(this), action, msg.sender) {} catch {} }
+        if (address(ledger)!=address(0)) { try ledger.logSystemEvent(address(this), action, msg.sender) {} catch { emit LedgerLogFailed(address(this), action); } }
     }
 }

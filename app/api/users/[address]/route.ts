@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
-import { getAvatarUrl } from '@/lib/constants';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { requireAuth } from '@/lib/auth/middleware';
 
@@ -386,34 +385,12 @@ export async function POST(
       );
     }
 
-    // In production:
-    // 1. Upload to S3/Cloudinary/IPFS
-    // 2. Process image (resize, optimize)
-    // 3. Update user profile with image URL
-
-    // For now, generate a placeholder URL using DiceBear
-    const avatarUrl = getAvatarUrl(address);
-    
-    // Update user avatar in database
-    const result = await query<User>(
-      `UPDATE users 
-       SET avatar_url = $2, updated_at = NOW()
-       WHERE wallet_address = $1
-       RETURNING avatar_url`,
-      [normalizedAddress, avatarUrl]
+    // Do not persist placeholder/generated avatars as uploaded assets.
+    // A real object storage integration must provide the final URL.
+    return NextResponse.json(
+      { error: 'Avatar upload backend is not configured' },
+      { status: 503 }
     );
-
-    if (result.rows.length === 0 || !result.rows[0]) {
-      return NextResponse.json(
-        { error: 'User not found' },
-        { status: 404 }
-      );
-    }
-
-    return NextResponse.json({
-      success: true,
-      avatarUrl: result.rows[0].avatar_url,
-    });
   } catch (error) {
     console.error('[Avatar Upload API] Error:', error);
     const errorMessage = error instanceof Error ? error.message : 'Failed to upload avatar';

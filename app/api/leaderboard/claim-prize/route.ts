@@ -6,8 +6,9 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { withAuth } from '@/lib/auth/middleware';
 
-export async function POST(_request: NextRequest) {
+export const POST = withAuth(async (_request: NextRequest) => {
   return NextResponse.json(
     {
       error:
@@ -15,4 +16,4 @@ export async function POST(_request: NextRequest) {
     },
     { status: 403 }
   );
-}
+});

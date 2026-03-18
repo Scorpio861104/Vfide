@@ -12,8 +12,10 @@ jest.mock('wagmi', () => ({
 jest.mock('@/lib/contracts', () => ({
   CONTRACT_ADDRESSES: {
     Seer: '0x1234567890123456789012345678901234567890',
+    BurnRouter: '0x0000000000000000000000000000000000000000',
   },
   SEER_ABI: [],
+  ProofScoreBurnRouterABI: [],
 }))
 
 import { useAccount, useReadContract } from 'wagmi'
@@ -27,6 +29,13 @@ import {
 describe('useProofScore - Comprehensive Tests', () => {
   const mockAddress = '0x1234567890123456789012345678901234567890' as `0x${string}`
   const mockBadgeId = '0xabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcd' as `0x${string}`
+
+  // Helper: mock score read (1st call) + BurnRouter read (2nd call returns undefined)
+  function mockScore(score: bigint) {
+    ;(useReadContract as Mock)
+      .mockReturnValueOnce({ data: score, isError: false, isLoading: false, refetch: jest.fn() })
+      .mockReturnValueOnce({ data: undefined, isError: false, isLoading: false, refetch: jest.fn() })
+  }
 
   beforeEach(() => {
     jest.clearAllMocks()
@@ -72,12 +81,7 @@ describe('useProofScore - Comprehensive Tests', () => {
   // ==================== useProofScore ====================
   describe('useProofScore', () => {
     it('should return Elite score with all permissions', () => {
-      ;(useReadContract as Mock).mockReturnValue({
-        data: BigInt(8500),
-        isError: false,
-        isLoading: false,
-        refetch: jest.fn(),
-      })
+      mockScore(BigInt(8500))
 
       const { result } = renderHook(() => useProofScore())
 
@@ -93,12 +97,7 @@ describe('useProofScore - Comprehensive Tests', () => {
     })
 
     it('should return High Trust score with council permissions', () => {
-      ;(useReadContract as Mock).mockReturnValue({
-        data: BigInt(7500),
-        isError: false,
-        isLoading: false,
-        refetch: jest.fn(),
-      })
+      mockScore(BigInt(7500))
 
       const { result } = renderHook(() => useProofScore())
 
@@ -114,12 +113,7 @@ describe('useProofScore - Comprehensive Tests', () => {
     })
 
     it('should return Trusted score with merchant permissions', () => {
-      ;(useReadContract as Mock).mockReturnValue({
-        data: BigInt(6000),
-        isError: false,
-        isLoading: false,
-        refetch: jest.fn(),
-      })
+      mockScore(BigInt(6000))
 
       const { result } = renderHook(() => useProofScore())
 
@@ -133,12 +127,7 @@ describe('useProofScore - Comprehensive Tests', () => {
     })
 
     it('should return Low Trust score with restricted permissions', () => {
-      ;(useReadContract as Mock).mockReturnValue({
-        data: BigInt(4500),
-        isError: false,
-        isLoading: false,
-        refetch: jest.fn(),
-      })
+      mockScore(BigInt(4500))
 
       const { result } = renderHook(() => useProofScore())
 
@@ -151,12 +140,7 @@ describe('useProofScore - Comprehensive Tests', () => {
     })
 
     it('should return Risky score with maximum fees', () => {
-      ;(useReadContract as Mock).mockReturnValue({
-        data: BigInt(2000),
-        isError: false,
-        isLoading: false,
-        refetch: jest.fn(),
-      })
+      mockScore(BigInt(2000))
 
       const { result } = renderHook(() => useProofScore())
 
@@ -172,12 +156,9 @@ describe('useProofScore - Comprehensive Tests', () => {
     })
 
     it('should use default neutral score when no data', () => {
-      ;(useReadContract as Mock).mockReturnValue({
-        data: undefined,
-        isError: false,
-        isLoading: false,
-        refetch: jest.fn(),
-      })
+      ;(useReadContract as Mock)
+        .mockReturnValueOnce({ data: undefined, isError: false, isLoading: false, refetch: jest.fn() })
+        .mockReturnValueOnce({ data: undefined, isError: false, isLoading: false, refetch: jest.fn() })
 
       const { result } = renderHook(() => useProofScore())
 
@@ -187,12 +168,7 @@ describe('useProofScore - Comprehensive Tests', () => {
 
     it('should use provided user address', () => {
       const targetAddress = '0x9876543210987654321098765432109876543210' as `0x${string}`
-      ;(useReadContract as Mock).mockReturnValue({
-        data: BigInt(7000),
-        isError: false,
-        isLoading: false,
-        refetch: jest.fn(),
-      })
+      mockScore(BigInt(7000))
 
       renderHook(() => useProofScore(targetAddress))
 
@@ -204,12 +180,9 @@ describe('useProofScore - Comprehensive Tests', () => {
     })
 
     it('should handle loading state', () => {
-      ;(useReadContract as Mock).mockReturnValue({
-        data: undefined,
-        isError: false,
-        isLoading: true,
-        refetch: jest.fn(),
-      })
+      ;(useReadContract as Mock)
+        .mockReturnValueOnce({ data: undefined, isError: false, isLoading: true, refetch: jest.fn() })
+        .mockReturnValueOnce({ data: undefined, isError: false, isLoading: false, refetch: jest.fn() })
 
       const { result } = renderHook(() => useProofScore())
 
@@ -217,12 +190,9 @@ describe('useProofScore - Comprehensive Tests', () => {
     })
 
     it('should handle error state', () => {
-      ;(useReadContract as Mock).mockReturnValue({
-        data: undefined,
-        isError: true,
-        isLoading: false,
-        refetch: jest.fn(),
-      })
+      ;(useReadContract as Mock)
+        .mockReturnValueOnce({ data: undefined, isError: true, isLoading: false, refetch: jest.fn() })
+        .mockReturnValueOnce({ data: undefined, isError: false, isLoading: false, refetch: jest.fn() })
 
       const { result } = renderHook(() => useProofScore())
 
@@ -231,12 +201,9 @@ describe('useProofScore - Comprehensive Tests', () => {
 
     it('should provide refetch function', () => {
       const mockRefetch = jest.fn()
-      ;(useReadContract as Mock).mockReturnValue({
-        data: BigInt(5000),
-        isError: false,
-        isLoading: false,
-        refetch: mockRefetch,
-      })
+      ;(useReadContract as Mock)
+        .mockReturnValueOnce({ data: BigInt(5000), isError: false, isLoading: false, refetch: mockRefetch })
+        .mockReturnValueOnce({ data: undefined, isError: false, isLoading: false, refetch: jest.fn() })
 
       const { result } = renderHook(() => useProofScore())
 
@@ -245,12 +212,7 @@ describe('useProofScore - Comprehensive Tests', () => {
 
     // Edge case: score exactly at thresholds
     it('should handle score exactly at 5400 (voting threshold)', () => {
-      ;(useReadContract as Mock).mockReturnValue({
-        data: BigInt(5400),
-        isError: false,
-        isLoading: false,
-        refetch: jest.fn(),
-      })
+      mockScore(BigInt(5400))
 
       const { result } = renderHook(() => useProofScore())
 
@@ -258,12 +220,7 @@ describe('useProofScore - Comprehensive Tests', () => {
     })
 
     it('should handle score exactly at 5600 (merchant threshold)', () => {
-      ;(useReadContract as Mock).mockReturnValue({
-        data: BigInt(5600),
-        isError: false,
-        isLoading: false,
-        refetch: jest.fn(),
-      })
+      mockScore(BigInt(5600))
 
       const { result } = renderHook(() => useProofScore())
 
@@ -373,60 +330,35 @@ describe('useProofScore - Comprehensive Tests', () => {
   // ==================== Boundary Tests for Burn Fee ====================
   describe('Burn Fee Calculations', () => {
     it('should return 0.25% fee for score >= 8000', () => {
-      ;(useReadContract as Mock).mockReturnValue({
-        data: BigInt(8000),
-        isError: false,
-        isLoading: false,
-        refetch: jest.fn(),
-      })
+      mockScore(BigInt(8000))
 
       const { result } = renderHook(() => useProofScore())
       expect(result.current.burnFee).toBe(0.25)
     })
 
     it('should return 1.0% fee for score >= 7000 and < 8000', () => {
-      ;(useReadContract as Mock).mockReturnValue({
-        data: BigInt(7999),
-        isError: false,
-        isLoading: false,
-        refetch: jest.fn(),
-      })
+      mockScore(BigInt(7999))
 
       const { result } = renderHook(() => useProofScore())
       expect(result.current.burnFee).toBe(1.0)
     })
 
     it('should return 2.0% fee for score >= 5000 and < 7000', () => {
-      ;(useReadContract as Mock).mockReturnValue({
-        data: BigInt(5000),
-        isError: false,
-        isLoading: false,
-        refetch: jest.fn(),
-      })
+      mockScore(BigInt(5000))
 
       const { result } = renderHook(() => useProofScore())
       expect(result.current.burnFee).toBe(2.0)
     })
 
     it('should return 3.5% fee for score >= 4000 and < 5000', () => {
-      ;(useReadContract as Mock).mockReturnValue({
-        data: BigInt(4999),
-        isError: false,
-        isLoading: false,
-        refetch: jest.fn(),
-      })
+      mockScore(BigInt(4999))
 
       const { result } = renderHook(() => useProofScore())
       expect(result.current.burnFee).toBe(3.5)
     })
 
     it('should return 5.0% fee for score < 4000', () => {
-      ;(useReadContract as Mock).mockReturnValue({
-        data: BigInt(3999),
-        isError: false,
-        isLoading: false,
-        refetch: jest.fn(),
-      })
+      mockScore(BigInt(3999))
 
       const { result } = renderHook(() => useProofScore())
       expect(result.current.burnFee).toBe(5.0)

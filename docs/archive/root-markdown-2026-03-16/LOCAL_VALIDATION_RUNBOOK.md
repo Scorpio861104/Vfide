@@ -13,9 +13,11 @@ Notes:
 - `.env.local.example` now includes safe local placeholders for required validation keys.
 - Do not commit real secrets in `.env.local`.
 
-## 2) Export Local Environment
+## 2) Environment Loading
 
-Run this once per shell session before validation commands:
+`lib/validateProduction.ts` auto-loads `.env.local`, so once copied you can run validation directly.
+
+Optional (for manual shell-based checks outside the validation script):
 
 ```bash
 set -a && source ./.env.local && set +a
@@ -52,6 +54,8 @@ Run these after full validation to verify high-value invariant surfaces:
 npm run -s contract:verify:governance-safety:local
 npm run -s contract:verify:merchant-payment-escrow:local
 npm run -s contract:verify:ecosystem-work-rewards:local
+npm run -s contract:verify:card-bound-vault:local
+npm run -s contract:verify:vault-hub-cardbound:local
 ```
 
 Expected success lines:
@@ -60,7 +64,7 @@ Expected success lines:
 ## 6) Troubleshooting
 
 If `validate:env` fails for required keys:
-- Ensure `.env.local` contains: `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID`, `NEXT_PUBLIC_APP_URL`, `DATABASE_URL`, `JWT_SECRET`.
+- Ensure `.env.local` exists (copy from `.env.local.example`) and contains: `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID`, `NEXT_PUBLIC_APP_URL`, `DATABASE_URL`, `JWT_SECRET`.
 - Re-export env in the current shell:
 
 ```bash
@@ -77,5 +81,7 @@ set -a && source ./.env.local && set +a && \
 npm run -s validate:production && \
 npm run -s contract:verify:governance-safety:local && \
 npm run -s contract:verify:merchant-payment-escrow:local && \
-npm run -s contract:verify:ecosystem-work-rewards:local
+npm run -s contract:verify:ecosystem-work-rewards:local && \
+npm run -s contract:verify:card-bound-vault:local && \
+npm run -s contract:verify:vault-hub-cardbound:local
 ```

@@ -15,10 +15,11 @@ import {
   getBadgeCategories, 
   getAllBadges
 } from '@/lib/badge-registry'
+import { CONTRACT_ADDRESSES } from '@/lib/contracts';
 import { safeParseInt } from '@/lib/validation';
 
-const BADGE_NFT_ADDRESS = (process.env.NEXT_PUBLIC_BADGE_NFT_ADDRESS || '0x0000000000000000000000000000000000000000') as `0x${string}`;
-const SEER_ADDRESS = (process.env.NEXT_PUBLIC_SEER_ADDRESS || '0xD22944d47bAD4Bd5fF1A366393c4bdbc9250fd8E') as `0x${string}`;
+const BADGE_NFT_ADDRESS = CONTRACT_ADDRESSES.BadgeNFT;
+const SEER_ADDRESS = CONTRACT_ADDRESSES.Seer;
 
 // Category icons and colors
 const categoryIcons: Record<string, React.ReactNode> = {
@@ -89,8 +90,6 @@ export default function BadgesPage() {
   const { writeContract, data: hash, isPending } = useWriteContract();
   const { isLoading: _isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash });
 
-  // Get current time once on component mount
-  const [currentTime] = useState(() => Date.now())
   const allBadges = getAllBadges()
   const categories = getBadgeCategories()
 
@@ -123,20 +122,10 @@ export default function BadgesPage() {
     }
   };
 
-  // Mock user badges - using currentTime to avoid render-time Date.now() calls
-  const mockUserBadges: Record<string, { earned: boolean; expiry?: number; minted: boolean; tokenId?: number }> = {
-    PIONEER: { earned: true, minted: true, tokenId: 2847 },
-    GENESIS_PRESALE: { earned: true, minted: false },
-    ACTIVE_TRADER: { earned: true, expiry: currentTime + 60 * 24 * 60 * 60 * 1000, minted: false },
-    GOVERNANCE_VOTER: { earned: false, minted: false },
-    POWER_USER: { earned: false, minted: false },
-    TRUSTED_ENDORSER: { earned: false, minted: false },
-    VERIFIED_MERCHANT: { earned: false, minted: false },
-    FOUNDING_MEMBER: { earned: false, minted: false },
-  };
+  const userBadges: Record<string, { earned: boolean; expiry?: number; minted: boolean; tokenId?: number }> = {};
 
   const filteredBadges = allBadges.filter(badge => {
-    const userBadge = mockUserBadges[badge.name]
+    const userBadge = userBadges[badge.name]
     
     if (searchQuery && !badge.name.toLowerCase().includes(searchQuery.toLowerCase()) && 
         !badge.description.toLowerCase().includes(searchQuery.toLowerCase())) {
@@ -153,9 +142,9 @@ export default function BadgesPage() {
     }
   })
 
-  const earnedCount = allBadges.filter(b => mockUserBadges[b.name]?.earned).length
-  const mintedCount = safeParseInt(nftBalance?.toString(), 0) || allBadges.filter(b => mockUserBadges[b.name]?.minted).length
-  const totalPoints = allBadges.filter(b => mockUserBadges[b.name]?.earned).reduce((sum, b) => sum + b.points, 0)
+  const earnedCount = allBadges.filter(b => userBadges[b.name]?.earned).length
+  const mintedCount = safeParseInt(nftBalance?.toString(), 0) || allBadges.filter(b => userBadges[b.name]?.minted).length
+  const totalPoints = allBadges.filter(b => userBadges[b.name]?.earned).reduce((sum, b) => sum + b.points, 0)
 
   const tabs: { id: TabId; label: string; count: number }[] = [
     { id: 'all', label: 'All Badges', count: allBadges.length },
@@ -304,7 +293,7 @@ export default function BadgesPage() {
             >
               <AnimatePresence mode="popLayout">
                 {filteredBadges.map((badge) => {
-                  const userBadge = mockUserBadges[badge.name]
+                  const userBadge = userBadges[badge.name]
                   const defaultRarity = { bg: 'bg-gray-500/20', border: 'border-gray-500/30', text: 'text-gray-400', glow: '' }
                   const rarity = rarityColors[badge.rarity] ?? rarityColors.Common ?? defaultRarity
                   const isEarned = userBadge?.earned

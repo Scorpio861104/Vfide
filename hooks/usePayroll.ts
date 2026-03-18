@@ -11,10 +11,11 @@ import { useAccount, useReadContract, useWriteContract, useWaitForTransactionRec
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { parseUnits, formatUnits, isAddress } from 'viem';
 import { PayrollManagerABI } from '@/lib/abis';
+import { CONTRACT_ADDRESSES } from '@/lib/contracts';
 
 // Contract addresses from environment
-const PAYROLL_MANAGER_ADDRESS = (process.env.NEXT_PUBLIC_PAYROLL_MANAGER_ADDRESS || '0x0000000000000000000000000000000000000000') as `0x${string}`;
-const VFIDE_TOKEN_ADDRESS = (process.env.NEXT_PUBLIC_VFIDE_TOKEN_ADDRESS || '0xf57992ab9F8887650C2a220A34fe86ebD00c02f5') as `0x${string}`;
+const PAYROLL_MANAGER_ADDRESS = CONTRACT_ADDRESSES.PayrollManager;
+const VFIDE_TOKEN_ADDRESS = CONTRACT_ADDRESSES.VFIDEToken;
 
 // Check if contract is deployed
 const IS_DEPLOYED = PAYROLL_MANAGER_ADDRESS !== '0x0000000000000000000000000000000000000000';

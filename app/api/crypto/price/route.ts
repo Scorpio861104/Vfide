@@ -1,15 +1,34 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createPublicClient, http } from 'viem';
-import { baseSepolia } from 'viem/chains';
+import { base, baseSepolia, polygon, polygonAmoy, zkSync, zkSyncSepoliaTestnet } from 'viem/chains';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 
-// VFIDE Token address - from environment or deployment
-const VFIDE_TOKEN_ADDRESS = process.env.NEXT_PUBLIC_VFIDE_TOKEN_ADDRESS || '0x0000000000000000000000000000000000000000';
+const VFIDE_TOKEN_ADDRESS = process.env.NEXT_PUBLIC_VFIDE_TOKEN_ADDRESS;
 
-// Create public client for Base Sepolia
+function getConfiguredChain() {
+  const chainId = Number.parseInt(process.env.NEXT_PUBLIC_CHAIN_ID || '', 10);
+  switch (chainId) {
+    case base.id:
+      return base;
+    case baseSepolia.id:
+      return baseSepolia;
+    case polygon.id:
+      return polygon;
+    case polygonAmoy.id:
+      return polygonAmoy;
+    case zkSync.id:
+      return zkSync;
+    case zkSyncSepoliaTestnet.id:
+      return zkSyncSepoliaTestnet;
+    default:
+      return baseSepolia;
+  }
+}
+
+const chain = getConfiguredChain();
 const client = createPublicClient({
-  chain: baseSepolia,
-  transport: http(process.env.NEXT_PUBLIC_BASE_SEPOLIA_RPC || 'https://sepolia.base.org'),
+  chain,
+  transport: http(process.env.NEXT_PUBLIC_RPC_URL),
 });
 
 // Uniswap V3 Pool ABI (minimal for price reading)
@@ -59,6 +78,10 @@ function parseRefreshParam(refreshParam: string | null): boolean | null {
  * Calculate price from Uniswap V3 sqrtPriceX96
  */
 function calculatePrice(sqrtPriceX96: bigint, token0: string, decimals0: number, decimals1: number): number {
+  if (!VFIDE_TOKEN_ADDRESS) {
+    throw new Error('VFIDE token address not configured');
+  }
+
   const sqrtPriceX96Number = Number(sqrtPriceX96);
   if (!Number.isFinite(sqrtPriceX96Number) || sqrtPriceX96Number <= 0) {
     throw new Error('Invalid sqrtPriceX96 value');
@@ -94,6 +117,10 @@ export async function GET(request: NextRequest) {
   // Rate limiting: 60 requests per minute
   const rateLimitResponse = await withRateLimit(request, 'read');
   if (rateLimitResponse) return rateLimitResponse;
+
+  if (!VFIDE_TOKEN_ADDRESS) {
+    return NextResponse.json({ error: 'NEXT_PUBLIC_VFIDE_TOKEN_ADDRESS not configured' }, { status: 500 });
+  }
   
   try {
     const { searchParams } = new URL(request.url);

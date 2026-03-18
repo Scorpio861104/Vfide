@@ -4,7 +4,7 @@ pragma solidity 0.8.30;
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
+import "./SharedInterfaces.sol";
 import { Seer } from "./VFIDETrust.sol";
 import "./BadgeRegistry.sol";
 
@@ -89,7 +89,7 @@ contract VFIDEBadgeNFT is ERC721, ERC721URIStorage, ERC721Enumerable, Ownable {
     constructor(
         address _seer,
         string memory _baseURI
-    ) ERC721("VFIDE Badge", "VBADGE") Ownable(msg.sender) {
+    ) ERC721("VFIDE Badge", "VBADGE") {
         seer = Seer(_seer);
         _baseTokenURI = _baseURI;
         _nextTokenId = 1; // Start at 1 (0 = unminted)
@@ -401,4 +401,6 @@ contract VFIDEBadgeNFT is ERC721, ERC721URIStorage, ERC721Enumerable, Ownable {
         // ERC-5192 interface ID
         return interfaceId == 0xb45a3c0e || super.supportsInterface(interfaceId);
     }
+
+    // H-18 Fix: Custom Ownable has no renounceOwnership — no override needed
 }

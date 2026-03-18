@@ -41,47 +41,11 @@ interface ShareMetrics {
   conversions: number;
 }
 
-// ==================== MOCK DATA ====================
+// ==================== DATA ====================
 
-const mockAchievements: ShareableAchievement[] = [
-  {
-    id: 'ach1',
-    title: 'Governance Master',
-    description: 'Participated in 50+ DAO proposals and helped shape the future of VFIDE',
-    icon: '🗳️',
-    rarity: 'rare',
-    unlockedDate: new Date('2024-02-15'),
-    shareUrl: 'vfide.app/share/ach_governance_master',
-    qrCode: 'data:image/qr',
-  },
-  {
-    id: 'ach2',
-    title: 'Payment Pioneer',
-    description: 'Processed 100+ transactions through VFIDE payment portal',
-    icon: '💳',
-    rarity: 'uncommon',
-    unlockedDate: new Date('2024-01-20'),
-    shareUrl: 'vfide.app/share/ach_payment_pioneer',
-    qrCode: 'data:image/qr',
-  },
-  {
-    id: 'ach3',
-    title: 'Vault Master',
-    description: 'Maintained 500k+ vault balance for 30+ consecutive days',
-    icon: '🔒',
-    rarity: 'epic',
-    unlockedDate: new Date('2024-02-10'),
-    shareUrl: 'vfide.app/share/ach_vault_master',
-    qrCode: 'data:image/qr',
-  },
-];
+const achievementsData: ShareableAchievement[] = [];
 
-const mockShareMetrics: ShareMetrics[] = [
-  { platform: 'twitter', shares: 342, clicks: 1203, conversions: 28 },
-  { platform: 'linkedin', shares: 156, clicks: 567, conversions: 34 },
-  { platform: 'email', shares: 89, clicks: 345, conversions: 42 },
-  { platform: 'whatsapp', shares: 203, clicks: 789, conversions: 19 },
-];
+const shareMetricsData: ShareMetrics[] = [];
 
 // ==================== COMPONENTS ====================
 
@@ -168,8 +132,8 @@ export function ShareSystem({ userId: _userId = 'current_user', onShare }: Share
   };
 
   const tabs = [
-    { key: 'achievements', label: 'Achievements', icon: '🏆', count: mockAchievements.length },
-    { key: 'certificates', label: 'Certificates', icon: '📜', count: mockAchievements.length },
+    { key: 'achievements', label: 'Achievements', icon: '🏆', count: achievementsData.length },
+    { key: 'certificates', label: 'Certificates', icon: '📜', count: achievementsData.length },
     { key: 'metrics', label: 'Share Metrics', icon: '📊', count: undefined },
   ];
 
@@ -223,7 +187,7 @@ export function ShareSystem({ userId: _userId = 'current_user', onShare }: Share
               className="space-y-6"
             >
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {mockAchievements.map((achievement, idx) => (
+                {achievementsData.map((achievement, idx) => (
                   <motion.div
                     key={achievement.id}
                     initial={{ opacity: 0, scale: 0.9 }}
@@ -346,7 +310,7 @@ export function ShareSystem({ userId: _userId = 'current_user', onShare }: Share
               exit={{ opacity: 0, y: -20 }}
               className="space-y-6"
             >
-              {mockAchievements.map((achievement, idx) => (
+              {achievementsData.map((achievement, idx) => (
                 <motion.div
                   key={`cert_${achievement.id}`}
                   initial={{ opacity: 0, scale: 0.95 }}
@@ -417,21 +381,21 @@ export function ShareSystem({ userId: _userId = 'current_user', onShare }: Share
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
                 <div className="bg-zinc-900 border border-zinc-700 rounded-lg p-6">
                   <div className="text-cyan-400 text-3xl font-bold mb-2">
-                    {mockShareMetrics.reduce((sum, m) => sum + m.shares, 0)}
+                    {shareMetricsData.reduce((sum, m) => sum + m.shares, 0)}
                   </div>
                   <div className="text-zinc-400 text-sm">Total Shares</div>
                 </div>
 
                 <div className="bg-zinc-900 border border-zinc-700 rounded-lg p-6">
                   <div className="text-violet-400 text-3xl font-bold mb-2">
-                    {mockShareMetrics.reduce((sum, m) => sum + m.clicks, 0)}
+                    {shareMetricsData.reduce((sum, m) => sum + m.clicks, 0)}
                   </div>
                   <div className="text-zinc-400 text-sm">Total Clicks</div>
                 </div>
 
                 <div className="bg-zinc-900 border border-zinc-700 rounded-lg p-6">
                   <div className="text-emerald-500 text-3xl font-bold mb-2">
-                    {mockShareMetrics.reduce((sum, m) => sum + m.conversions, 0)}
+                    {shareMetricsData.reduce((sum, m) => sum + m.conversions, 0)}
                   </div>
                   <div className="text-zinc-400 text-sm">Conversions</div>
                 </div>
@@ -439,8 +403,8 @@ export function ShareSystem({ userId: _userId = 'current_user', onShare }: Share
                 <div className="bg-zinc-900 border border-zinc-700 rounded-lg p-6">
                   <div className="text-pink-400 text-3xl font-bold mb-2">
                     {Math.round(
-                      (mockShareMetrics.reduce((sum, m) => sum + m.conversions, 0) /
-                        mockShareMetrics.reduce((sum, m) => sum + m.clicks, 0)) *
+                      (shareMetricsData.reduce((sum, m) => sum + m.conversions, 0) /
+                        shareMetricsData.reduce((sum, m) => sum + m.clicks, 0)) *
                         100,
                     )}
                     %
@@ -450,7 +414,7 @@ export function ShareSystem({ userId: _userId = 'current_user', onShare }: Share
               </div>
 
               <div className="space-y-4">
-                {mockShareMetrics.map((metric, idx) => {
+                {shareMetricsData.map((metric, idx) => {
                   const platformColors: Record<string, string> = {
                     twitter: 'from-[#1D9BF0]/20 border-sky-500/30',
                     linkedin: 'from-[#0A66C2]/20 border-blue-700/30',

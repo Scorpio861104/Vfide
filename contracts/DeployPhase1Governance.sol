@@ -19,7 +19,7 @@ contract Phase1GovernanceDeployer {
         VFIDEAccessControl accessControlContract = new VFIDEAccessControl(_admin);
         accessControl = address(accessControlContract);
 
-        AdminMultiSig multiSigContract = new AdminMultiSig(_council);
+        AdminMultiSig multiSigContract = new AdminMultiSig(_council, address(0)); // vfideToken wired post-deploy via setVFIDEToken()
         multiSig = address(multiSigContract);
 
         // Phase-1 bootstrap deployer wires a non-zero breaker placeholder; governance should set final modules post-deploy.

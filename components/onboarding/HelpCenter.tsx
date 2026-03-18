@@ -108,15 +108,30 @@ const helpTopics: HelpTopic[] = [
   },
   {
     id: "trust-score",
-    title: "Trust Score (ProofScore)",
+    title: "Seer Trust & ProofScore",
     icon: <Star size={24} />,
-    description: "Build reputation and unlock rewards",
+    description: "Understand score, restrictions, reason codes, and recovery",
     content: [
-      "Complete tasks to earn points (KYC, purchases, community participation)",
-      "Higher scores unlock better features and lower fees",
-      "Scores are transparent and verifiable on-chain",
-      "Merchants with high scores get priority visibility",
-      "Your score follows you across the entire VFIDE ecosystem"
+      "What Seer does: Seer evaluates trust signals to protect governance and payments while keeping a clear recovery path.",
+      "━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+      "How to improve your ProofScore:",
+      "• Complete legitimate activity (payments, participation, positive history)",
+      "• Avoid risky patterns (spam behavior, suspicious transaction bursts)",
+      "• Build social credibility through endorsements and consistent activity",
+      "━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+      "What score levels affect:",
+      "• Governance eligibility (proposal/voting thresholds)",
+      "• Merchant/payment trust pathways",
+      "• Access to higher-trust protocol actions",
+      "━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+      "If Seer blocks or delays an action:",
+      "1. Capture the wallet address, tx hash, and timestamp",
+      "2. Note any reason code or error message returned",
+      "3. Open an appeal/dispute request with evidence",
+      "4. Track resolution outcome and updated trust status",
+      "━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+      "Reason codes are machine-readable explanations for trust decisions. They help support and governance review your case faster.",
+      "Tip: See docs for the Seer reason-code registry and user guide."
     ]
   },
   {
@@ -300,6 +315,27 @@ export function HelpCenter() {
                         >
                           🎓 Restart Platform Tour
                         </button>
+                        <a
+                          href="/seer-service"
+                          onClick={() => setIsOpen(false)}
+                          className="block w-full px-4 py-2 bg-zinc-900 border border-zinc-700 hover:border-cyan-400 rounded-lg text-zinc-100 text-sm text-left transition-all"
+                        >
+                          🧭 Seer Service Center (All Tools)
+                        </a>
+                        <a
+                          href="/seer-academy"
+                          onClick={() => setIsOpen(false)}
+                          className="block w-full px-4 py-2 bg-zinc-900 border border-zinc-700 hover:border-cyan-400 rounded-lg text-zinc-100 text-sm text-left transition-all"
+                        >
+                          🎓 Seer Academy (Crypto + Trading Basics)
+                        </a>
+                        <a
+                          href="/appeals"
+                          onClick={() => setIsOpen(false)}
+                          className="block w-full px-4 py-2 bg-zinc-900 border border-zinc-700 hover:border-cyan-400 rounded-lg text-zinc-100 text-sm text-left transition-all"
+                        >
+                          🛡️ Seer Appeal Center
+                        </a>
                         <a
                           href="/docs"
                           onClick={() => setIsOpen(false)}

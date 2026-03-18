@@ -37,10 +37,16 @@ const UnsubscribeSchema = z.object({
   }),
 });
 
+const MessageSchema = z.object({
+  type: z.literal('message'),
+  payload: z.record(z.unknown()).or(z.string()),
+});
+
 export const InboundMessageSchema = z.discriminatedUnion('type', [
   PingSchema,
   SubscribeSchema,
   UnsubscribeSchema,
+  MessageSchema,
 ]);
 
 export type InboundMessage = z.infer<typeof InboundMessageSchema>;

@@ -13,6 +13,22 @@ jest.mock('@/lib/auth/middleware', () => ({
   requireAuth: jest.fn(),
 }));
 
+jest.mock('@/lib/security/accountProtection', () => ({
+  getAccountLock: jest.fn().mockResolvedValue(null),
+  getStepUpAndCooldownPolicy: jest.fn((amount: number) => ({
+    isHighRisk: amount >= 10000,
+    requiresStepUp: amount >= 10000,
+    requiresDelay: amount >= 10000,
+    cooldownSeconds: 300,
+    hardwareWalletRecommended: true,
+  })),
+  recordSecurityEvent: jest.fn().mockResolvedValue({ locked: false }),
+}));
+
+jest.mock('@/lib/security/requestContext', () => ({
+  getRequestIp: jest.fn(() => ({ ip: '127.0.0.1' })),
+}));
+
 describe('/api/crypto/payment-requests', () => {
   const { query } = require('@/lib/db');
   const { withRateLimit } = require('@/lib/auth/rateLimit');

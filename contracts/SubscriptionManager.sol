@@ -90,6 +90,7 @@ contract SubscriptionManager is ReentrancyGuard {
 
     constructor(address _vaultHub, address _dao, address _seer) {
         require(_vaultHub != address(0), "SM: zero vaultHub");
+        require(_dao != address(0), "SM: zero DAO");
         vaultHub = IVaultHub(_vaultHub);
         dao = _dao;
         if (_seer != address(0)) seer = ISeer_SM(_seer);
@@ -416,6 +417,7 @@ contract SubscriptionManager is ReentrancyGuard {
         uint256 failed
     ) {
         for (uint256 i = 0; i < subIds.length; i++) {
+            // slither-disable-next-line calls-loop
             try this.processPayment(subIds[i]) {
                 processed++;
             } catch {

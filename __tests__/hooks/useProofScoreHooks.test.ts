@@ -21,7 +21,10 @@ jest.mock('react', async () => {
 jest.mock('@/lib/contracts', () => ({
   CONTRACT_ADDRESSES: {
     Seer: '0x1234567890123456789012345678901234567890',
+    BurnRouter: '0x0000000000000000000000000000000000000000',
   },
+  SEER_ABI: [],
+  ProofScoreBurnRouterABI: [],
 }))
 
 // Mock ABIs
@@ -189,14 +192,15 @@ describe('useProofScoreHooks', () => {
 
       const { breakdown } = useScoreBreakdown()
       expect(breakdown.totalScore).toBe(10000)
-        expect(breakdown.baseScore).toBe(4000) // 40%
-        expect(breakdown.activityBonus).toBe(3000) // 30%
-        expect(breakdown.ageBonus).toBe(1000) // 10%
-        expect(breakdown.activityPoints).toBe(1500) // 15%
-        expect(breakdown.endorsementPoints).toBe(1000) // 10%
-        expect(breakdown.vaultBonus).toBe(0)
-        expect(breakdown.badgePoints).toBe(0)
-      expect(breakdown.hasDiversityBonus).toBe(true)
+      // Component-level breakdown is not yet available from on-chain reads
+      expect(breakdown.baseScore).toBe(0)
+      expect(breakdown.activityBonus).toBe(0)
+      expect(breakdown.ageBonus).toBe(0)
+      expect(breakdown.activityPoints).toBe(0)
+      expect(breakdown.endorsementPoints).toBe(0)
+      expect(breakdown.vaultBonus).toBe(0)
+      expect(breakdown.badgePoints).toBe(0)
+      expect(breakdown.hasDiversityBonus).toBe(false)
     })
 
     it('hasDiversityBonus is false below 7000', () => {

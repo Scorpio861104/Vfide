@@ -20,7 +20,7 @@ export default function CryptoDashboard() {
 
   // Format balance display
   const formattedBalance = ethBalance ? parseFloat(ethBalance.formatted).toFixed(4) : '0.0000';
-  const usdValue = ethBalance ? (parseFloat(ethBalance.formatted) * 2500).toFixed(2) : '0.00'; // Mock USD rate
+  const usdValue = null;
 
   if (!isConnected || !address) {
     return (
@@ -63,7 +63,9 @@ export default function CryptoDashboard() {
               <Wallet className="w-5 h-5 text-blue-400" />
             </div>
             <div className="text-white text-3xl font-bold mb-1">{formattedBalance}</div>
-            <div className="text-gray-400 text-sm">≈ ${usdValue} USD</div>
+            <div className="text-gray-400 text-sm">
+              {usdValue ? `≈ $${usdValue} USD` : 'USD conversion unavailable'}
+            </div>
           </motion.div>
 
           <motion.div

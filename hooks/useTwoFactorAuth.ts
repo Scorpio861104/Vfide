@@ -170,34 +170,11 @@ export const useTwoFactorAuth = (userEmail?: string): UseTwoFactorAuthResult => 
   }, [totpSecret, backupCodes, updateConfig]);
 
   const enableSMS = useCallback(async (_phoneNumber: string): Promise<boolean> => {
-    // In production: Send SMS verification code via Twilio/SNS
-    // For now, mock implementation
-    const codes = generateBackupCodes();
-    setBackupCodes(codes);
-
-    updateConfig({
-      enabled: true,
-      method: 'sms',
-      backupCodesRemaining: codes.length,
-      lastVerified: new Date()
-    });
-
-    return true;
+    return false;
   }, [updateConfig]);
 
   const enableEmail = useCallback(async (_email: string): Promise<boolean> => {
-    // In production: Send email verification code via SendGrid/SES
-    const codes = generateBackupCodes();
-    setBackupCodes(codes);
-
-    updateConfig({
-      enabled: true,
-      method: 'email',
-      backupCodesRemaining: codes.length,
-      lastVerified: new Date()
-    });
-
-    return true;
+    return false;
   }, [updateConfig]);
 
   const verifyTOTP = useCallback(async (code: string): Promise<boolean> => {

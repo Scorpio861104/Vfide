@@ -65,72 +65,10 @@ interface CommunityStats {
 
 // ==================== MOCK DATA ====================
 
-const mockSocialMetrics: SocialMetric[] = [
-  {
-    label: 'Total Followers',
-    value: 2847,
-    change: 312,
-    changePercent: 12.3,
-    icon: <Users className="w-6 h-6" />,
-    color: 'from-cyan-400 to-violet-400',
-  },
-  {
-    label: 'Total Likes',
-    value: 12450,
-    change: 2134,
-    changePercent: 20.6,
-    icon: <Heart className="w-6 h-6" />,
-    color: 'from-pink-400 to-rose-500',
-  },
-  {
-    label: 'Comments & Replies',
-    value: 3421,
-    change: 456,
-    changePercent: 15.4,
-    icon: <MessageCircle className="w-6 h-6" />,
-    color: 'from-violet-400 to-violet-600',
-  },
-  {
-    label: 'Total Shares',
-    value: 876,
-    change: 123,
-    changePercent: 16.3,
-    icon: <Share2 className="w-6 h-6" />,
-    color: 'from-emerald-500 to-[#00D084]',
-  },
-];
-
-const mockEngagementData: EngagementData[] = [
-  { date: 'Mon', likes: 245, comments: 42, shares: 15, followers: 2400 },
-  { date: 'Tue', likes: 312, comments: 58, shares: 22, followers: 2520 },
-  { date: 'Wed', likes: 289, comments: 51, shares: 19, followers: 2654 },
-  { date: 'Thu', likes: 456, comments: 78, shares: 34, followers: 2789 },
-  { date: 'Fri', likes: 523, comments: 92, shares: 41, followers: 2847 },
-  { date: 'Sat', likes: 418, comments: 71, shares: 28, followers: 2912 },
-  { date: 'Sun', likes: 387, comments: 65, shares: 25, followers: 2961 },
-];
-
-const mockInfluenceScore: InfluenceScore = {
-  score: 8420,
-  tier: 'gold',
-  ranking: 342,
-  totalUsers: 145000,
-  breakdown: {
-    engagement: 92,
-    reach: 87,
-    authority: 85,
-    growth: 78,
-  },
-};
-
-const mockCommunityStats: CommunityStats = {
-  totalMembers: 145000,
-  activeMembers: 89234,
-  newMembersThisWeek: 3421,
-  averageEngagementRate: 34.7,
-  topContributors: 245,
-  communityHealth: 'excellent',
-};
+const socialMetrics: SocialMetric[] = [];
+const engagementData: EngagementData[] = [];
+const influenceScore: InfluenceScore | null = null;
+const communityStats: CommunityStats | null = null;
 
 // ==================== COMPONENTS ====================
 
@@ -229,7 +167,12 @@ export default function SocialAnalyticsPage() {
             <h2 className="text-2xl font-bold text-zinc-100 mb-6">Key Metrics</h2>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              {mockSocialMetrics.map((metric, idx) => (
+              {socialMetrics.length === 0 ? (
+                <div className="md:col-span-2 lg:col-span-4 rounded-lg border border-zinc-700 bg-zinc-900 p-4 text-sm text-zinc-400">
+                  Social analytics metrics are not available until indexing is configured.
+                </div>
+              ) : null}
+              {socialMetrics.map((metric, idx) => (
                 <motion.div
                   key={metric.label}
                   initial={{ opacity: 0, y: 20 }}
@@ -280,7 +223,8 @@ export default function SocialAnalyticsPage() {
           >
             <h2 className="text-2xl font-bold text-zinc-100 mb-6">Influence Score</h2>
 
-            <div className={`bg-gradient-to-br ${getTierColor(mockInfluenceScore.tier)} border-2 rounded-lg p-8`}>
+            {influenceScore ? (
+            <div className={`bg-gradient-to-br ${getTierColor(influenceScore.tier)} border-2 rounded-lg p-8`}>
               <div className="grid md:grid-cols-2 gap-8">
                 {/* Score Display */}
                 <motion.div
@@ -304,26 +248,26 @@ export default function SocialAnalyticsPage() {
                         fill="none"
                         stroke="currentColor"
                         strokeWidth="8"
-                        strokeDasharray={`${(mockInfluenceScore.score / 10000) * 282.7} 282.7`}
+                        strokeDasharray={`${(influenceScore.score / 10000) * 282.7} 282.7`}
                         strokeLinecap="round"
                         initial={{ strokeDasharray: '0 282.7' }}
-                        animate={{ strokeDasharray: `${(mockInfluenceScore.score / 10000) * 282.7} 282.7` }}
+                        animate={{ strokeDasharray: `${(influenceScore.score / 10000) * 282.7} 282.7` }}
                         transition={{ duration: 2, delay: 0.2 }}
                       />
                     </motion.svg>
 
                     <div className="absolute inset-0 flex items-center justify-center">
                       <div className="text-center">
-                        <div className="text-4xl font-bold">{mockInfluenceScore.score}</div>
+                        <div className="text-4xl font-bold">{influenceScore.score}</div>
                         <div className="text-xs opacity-75">SCORE</div>
                       </div>
                     </div>
                   </div>
 
                   <div className="text-center">
-                    <div className="text-2xl font-bold mb-1 capitalize">{mockInfluenceScore.tier}</div>
+                    <div className="text-2xl font-bold mb-1 capitalize">{influenceScore.tier}</div>
                     <div className="text-sm opacity-75">
-                      Rank #{mockInfluenceScore.ranking} of {mockInfluenceScore.totalUsers.toLocaleString()}
+                      Rank #{influenceScore.ranking} of {influenceScore.totalUsers.toLocaleString()}
                     </div>
                   </div>
                 </motion.div>
@@ -332,7 +276,7 @@ export default function SocialAnalyticsPage() {
                 <div className="space-y-4">
                   <h3 className="text-lg font-bold mb-4">Score Breakdown</h3>
 
-                  {Object.entries(mockInfluenceScore.breakdown).map(([key, value], idx) => (
+                  {Object.entries(influenceScore.breakdown).map(([key, value], idx) => (
                     <motion.div
                       key={key}
                       initial={{ opacity: 0, x: 20 }}
@@ -358,6 +302,11 @@ export default function SocialAnalyticsPage() {
                 </div>
               </div>
             </div>
+            ) : (
+              <div className="rounded-lg border border-zinc-700 bg-zinc-900 p-4 text-sm text-zinc-400">
+                Influence scoring is unavailable until social analytics data sources are connected.
+              </div>
+            )}
           </motion.section>
 
           {/* Engagement Trend */}
@@ -370,9 +319,12 @@ export default function SocialAnalyticsPage() {
             <h2 className="text-2xl font-bold text-zinc-100 mb-6">Engagement Trends</h2>
 
             <div className="bg-zinc-900 border border-zinc-700 rounded-lg p-8">
+              {engagementData.length === 0 ? (
+                <div className="text-sm text-zinc-400">Engagement trend chart will appear once historical activity data is indexed.</div>
+              ) : null}
               {/* Chart Placeholder */}
               <div className="h-64 flex items-end justify-around gap-2 mb-6">
-                {mockEngagementData.map((data, idx) => (
+                {engagementData.map((data, idx) => (
                   <motion.div
                     key={data.date}
                     initial={{ height: 0 }}
@@ -392,7 +344,7 @@ export default function SocialAnalyticsPage() {
 
               {/* Legend */}
               <div className="flex justify-center gap-3 sm:gap-6 text-sm flex-wrap">
-                {mockEngagementData.map((data) => (
+                {engagementData.map((data) => (
                   <div key={data.date} className="text-center">
                     <div className="text-zinc-100 font-semibold">{data.date}</div>
                   </div>
@@ -410,9 +362,10 @@ export default function SocialAnalyticsPage() {
           >
             <h2 className="text-2xl font-bold text-zinc-100 mb-6">Community Health</h2>
 
+            {communityStats ? (
             <div className="grid md:grid-cols-2 gap-6">
               {/* Health Status */}
-              <div className={`border-2 rounded-lg p-6 ${getHealthColor(mockCommunityStats.communityHealth)}`}>
+              <div className={`border-2 rounded-lg p-6 ${getHealthColor(communityStats.communityHealth)}`}>
                 <div className="text-center">
                   <div className="text-3xl font-bold mb-2">EXCELLENT</div>
                   <div className="text-sm opacity-75">Community health status</div>
@@ -422,10 +375,10 @@ export default function SocialAnalyticsPage() {
               {/* Stats Grid */}
               <div className="grid grid-cols-2 gap-4">
                 {[
-                  { label: 'Total Members', value: mockCommunityStats.totalMembers },
-                  { label: 'Active Members', value: mockCommunityStats.activeMembers },
-                  { label: 'New This Week', value: mockCommunityStats.newMembersThisWeek },
-                  { label: 'Engagement Rate', value: `${mockCommunityStats.averageEngagementRate}%` },
+                  { label: 'Total Members', value: communityStats.totalMembers },
+                  { label: 'Active Members', value: communityStats.activeMembers },
+                  { label: 'New This Week', value: communityStats.newMembersThisWeek },
+                  { label: 'Engagement Rate', value: `${communityStats.averageEngagementRate}%` },
                 ].map((stat, idx) => (
                   <motion.div
                     key={stat.label}
@@ -443,6 +396,11 @@ export default function SocialAnalyticsPage() {
                 ))}
               </div>
             </div>
+            ) : (
+              <div className="rounded-lg border border-zinc-700 bg-zinc-900 p-4 text-sm text-zinc-400">
+                Community health metrics are unavailable until member activity indexing is configured.
+              </div>
+            )}
           </motion.section>
 
           {/* Top Contributors */}

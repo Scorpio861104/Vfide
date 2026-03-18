@@ -9,14 +9,22 @@ import "./SharedInterfaces.sol";
  * Single-file hub providing:
  *  - Deterministic Create2 factory for user vaults
  *  - Registry: vaultOf(owner) / ownerOf(vault)
- *  - Embedded UserVault implementation (guardians + recovery)
+ *  - Embedded UserVaultLegacy implementation (guardians + recovery)
  *  - SecurityHub lock enforcement (PanicGuard / GuardianLock)
  *  - ProofLedger best-effort logging
+ *
+ * M-21 Architecture Note:
+ *  The active vault implementation is CardBoundVault (deployed via VaultHub).
+ *  UserVaultLegacy is retained here solely for backward compatibility with
+ *  existing deployed vaults. New vaults MUST be created through VaultHub.
+ *  The standalone UserVault.sol has been removed as dead code.
  *
  * Pairs with VFIDEToken's "vaultOnly" transfer enforcement.
  */
 
-/// ─────────────────────────── User Vault (embedded)
+/// @dev DEPRECATED — Retained for backward compatibility with existing deployments.
+///      New vaults are deployed as CardBoundVault via VaultHub.ensureVault().
+/// ─────────────────────────── User Vault (embedded, legacy)
 contract UserVaultLegacy is ReentrancyGuard {
     using SafeERC20 for IERC20;
     
@@ -420,12 +428,11 @@ contract UserVaultLegacy is ReentrancyGuard {
         require(block.timestamp <= ptx.requestTime + PENDING_TX_EXPIRY, "UV: pending tx expired");
         
         ptx.executed = true;
+        lastWithdrawalTime = uint64(block.timestamp);
         
         // Execute the transfer
         require(IERC20(vfideToken).balanceOf(address(this)) >= ptx.amount, "UV: insufficient balance");
         IERC20(vfideToken).safeTransfer(ptx.toVault, ptx.amount);
-        
-        lastWithdrawalTime = uint64(block.timestamp);
         
         emit TransactionExecuted(txId, ptx.toVault, ptx.amount);
         emit VaultTransfer(ptx.toVault, ptx.amount);
@@ -728,6 +735,7 @@ contract UserVaultLegacy is ReentrancyGuard {
             
             emit AbnormalTransactionDetected(txId, toVault, amount);
             emit TransferPendingApproval(txId, toVault, amount); // Additional event for clarity
+            // slither-disable-next-line reentrancy-benign
             _logEv(toVault, "abnormal_tx_detected", amount, "");
             
             // CRITICAL: Revert with pending tx info so caller knows what happened
@@ -819,6 +827,7 @@ contract UserVaultLegacy is ReentrancyGuard {
             require(targets[i] != address(this), "UV:self-call");
             // H-19 Fix: Enforce max value per execution in batch too
             require(values[i] <= maxExecuteValue, "UV:value-exceeds-max");
+            // slither-disable-next-line calls-loop
             (bool success, bytes memory res) = targets[i].call{value: values[i]}(datas[i]);
             if (!success) {
                 assembly {
@@ -828,6 +837,7 @@ contract UserVaultLegacy is ReentrancyGuard {
                 }
             }
             results[i] = res;
+            // slither-disable-next-line calls-loop
             _logEv(targets[i], "vault_execute_batch", values[i], "");
         }
         
@@ -1257,6 +1267,7 @@ contract VaultInfrastructure is Ownable {
         if (!recoveryApprovals[vault][msg.sender][nonce]) {
             recoveryApprovals[vault][msg.sender][nonce] = true;
             recoveryApprovalCount[vault]++;
+            // slither-disable-next-line reentrancy-benign
             _log("recovery_approval_cast");
         }
         
@@ -1342,10 +1353,10 @@ contract VaultInfrastructure is Ownable {
     }
 
     function _log(string memory action) internal {
-        if (address(ledger) != address(0)) { try ledger.logSystemEvent(address(this), action, msg.sender) {} catch {} }
+        if (address(ledger) != address(0)) { try ledger.logSystemEvent(address(this), action, msg.sender) {} catch { emit LedgerLogFailed(address(this), action); } }
     }
     function _logEv(address who, string memory action, uint256 amount, string memory note) internal {
-        if (address(ledger) != address(0)) { try ledger.logEvent(who, action, amount, note) {} catch {} }
+        if (address(ledger) != address(0)) { try ledger.logEvent(who, action, amount, note) {} catch { emit LedgerLogFailed(who, action); } }
     }
     
     // ═══════════════════════════════════════════════════════════════════════

@@ -227,6 +227,7 @@ contract SeerSocial {
             weight: weight,
             timestamp: uint64(block.timestamp)
         });
+        require(endorsersOf[subject].length < 200, "SOCIAL: endorser cap"); // I-11
         endorsersOf[subject].push(msg.sender);
         endorsementsReceived[subject] = activeReceived + 1;
         endorsementsGiven[msg.sender] += 1;

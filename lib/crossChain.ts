@@ -245,125 +245,12 @@ export async function findRoutes(request: TransferRequest): Promise<Route[]> {
     throw new Error('Unsupported token');
   }
 
-  // Simulated routes - in production would come from bridge APIs
-  const routes: Route[] = [];
-
-  // Same chain - just swap
-  if (request.fromChain === request.toChain) {
-    if (request.fromToken !== request.toToken) {
-      routes.push({
-        id: 'swap-dex',
-        protocol: 'Uniswap',
-        fromChain,
-        toChain,
-        fromToken,
-        toToken,
-        fromAmount: request.amount,
-        toAmount: (parseFloat(request.amount) * 0.997).toString(), // 0.3% fee
-        estimatedTime: 30,
-        gasCost: { amount: '0.001', usd: 2.5 },
-        bridgeFee: { amount: '0', usd: 0 },
-        totalCost: 2.5,
-        steps: [
-          {
-            type: 'swap',
-            protocol: 'Uniswap',
-            fromToken,
-            toToken,
-            fromAmount: request.amount,
-            toAmount: (parseFloat(request.amount) * 0.997).toString(),
-            estimatedTime: 30,
-          },
-        ],
-        tags: ['cheapest', 'fastest', 'recommended'],
-      });
-    } else {
-      // Direct transfer
-      routes.push({
-        id: 'direct',
-        protocol: 'Direct',
-        fromChain,
-        toChain,
-        fromToken,
-        toToken,
-        fromAmount: request.amount,
-        toAmount: request.amount,
-        estimatedTime: 15,
-        gasCost: { amount: '0.0005', usd: 1.25 },
-        bridgeFee: { amount: '0', usd: 0 },
-        totalCost: 1.25,
-        steps: [],
-        tags: ['cheapest', 'fastest', 'recommended'],
-      });
-    }
-    return routes;
-  }
-
-  // Cross-chain - need bridge
-  const bridgeOptions = [
-    { name: 'Across', fee: 0.1, time: 120 },
-    { name: 'Stargate', fee: 0.06, time: 300 },
-    { name: 'Hop', fee: 0.15, time: 180 },
-    { name: 'Synapse', fee: 0.12, time: 600 },
-  ];
-
-  for (const bridge of bridgeOptions) {
-    const feeAmount = parseFloat(request.amount) * (bridge.fee / 100);
-    const outputAmount = parseFloat(request.amount) - feeAmount;
-
-    routes.push({
-      id: `bridge-${bridge.name.toLowerCase()}`,
-      protocol: bridge.name,
-      fromChain,
-      toChain,
-      fromToken,
-      toToken,
-      fromAmount: request.amount,
-      toAmount: outputAmount.toString(),
-      estimatedTime: bridge.time,
-      gasCost: { amount: '0.002', usd: 5 },
-      bridgeFee: { amount: feeAmount.toString(), usd: feeAmount * 1 }, // Assuming $1 token
-      totalCost: 5 + feeAmount,
-      steps: [
-        {
-          type: 'approve',
-          protocol: bridge.name,
-          fromToken,
-          toToken: fromToken,
-          fromAmount: request.amount,
-          toAmount: request.amount,
-          estimatedTime: 15,
-        },
-        {
-          type: 'bridge',
-          protocol: bridge.name,
-          fromToken,
-          toToken,
-          fromAmount: request.amount,
-          toAmount: outputAmount.toString(),
-          estimatedTime: bridge.time - 15,
-        },
-      ],
-      tags: [],
-    });
-  }
-
-  // Assign tags
-  routes.sort((a, b) => a.totalCost - b.totalCost);
-  if (routes[0]) routes[0].tags.push('cheapest');
-
-  routes.sort((a, b) => a.estimatedTime - b.estimatedTime);
-  if (routes[0]) routes[0].tags.push('fastest');
-
-  // Recommended = balance of cost and time
-  routes.sort((a, b) => {
-    const scoreA = a.totalCost + a.estimatedTime / 60;
-    const scoreB = b.totalCost + b.estimatedTime / 60;
-    return scoreA - scoreB;
-  });
-  if (routes[0]) routes[0].tags.push('recommended');
-
-  return routes;
+  void request;
+  void fromChain;
+  void toChain;
+  void fromToken;
+  void toToken;
+  return [];
 }
 
 // ============================================================================
@@ -377,6 +264,11 @@ export async function executeTransfer(
   request: TransferRequest,
   signer: { sendTransaction: (tx: unknown) => Promise<{ hash: string; wait: () => Promise<unknown> }> }
 ): Promise<string> {
+  void route;
+  void request;
+  void signer;
+  throw new Error('Cross-chain transfer execution is not configured');
+
   const transferId = `transfer-${Date.now()}-${Math.random().toString(36).slice(2)}`;
 
   const status: TransferStatus = {
@@ -419,7 +311,7 @@ export async function executeTransfer(
           status.fromTxHash = tx.hash;
           await tx.wait();
 
-          // Wait for bridge completion (simulated)
+          // Wait for bridge completion signal
           status.estimatedArrival = Date.now() + step.estimatedTime * 1000;
           await new Promise((resolve) => setTimeout(resolve, step.estimatedTime * 1000));
         }
@@ -447,48 +339,7 @@ export function getTransferStatus(transferId: string): TransferStatus | undefine
 export async function getAggregatedBalances(
   _address: string
 ): Promise<AggregatedBalance[]> {
-  const allBalances: Balance[] = [];
-
-  // In production, would query each chain's RPC
-  // For now, simulate
-  for (const chain of SUPPORTED_CHAINS.filter((c) => !c.isTestnet)) {
-    const tokens = COMMON_TOKENS[chain.id] || [];
-    for (const token of tokens) {
-      // Simulated balance
-      const balance = (Math.random() * 100).toFixed(4);
-      const usdValue = parseFloat(balance) * (token.symbol === 'ETH' ? 2500 : 1);
-
-      allBalances.push({
-        chainId: chain.id,
-        token,
-        balance,
-        usdValue,
-      });
-    }
-  }
-
-  // Aggregate by token symbol
-  const aggregated = new Map<string, AggregatedBalance>();
-
-  for (const balance of allBalances) {
-    const existing = aggregated.get(balance.token.symbol);
-    if (existing) {
-      existing.totalBalance = (
-        parseFloat(existing.totalBalance) + parseFloat(balance.balance)
-      ).toString();
-      existing.totalUsdValue += balance.usdValue;
-      existing.byChain.push(balance);
-    } else {
-      aggregated.set(balance.token.symbol, {
-        token: balance.token.symbol,
-        totalBalance: balance.balance,
-        totalUsdValue: balance.usdValue,
-        byChain: [balance],
-      });
-    }
-  }
-
-  return Array.from(aggregated.values());
+  return [];
 }
 
 // ============================================================================

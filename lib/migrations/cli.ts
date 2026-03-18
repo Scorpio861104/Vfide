@@ -14,6 +14,7 @@
 import { Pool } from 'pg';
 import { writeFile, mkdir } from 'fs/promises';
 import { join } from 'path';
+import { config as loadEnv } from 'dotenv';
 import {
   migrateUp,
   migrateDown,
@@ -22,6 +23,10 @@ import {
 } from './index';
 
 const MIGRATIONS_DIR = join(process.cwd(), 'migrations');
+
+// Prefer local overrides, then fall back to standard .env resolution.
+loadEnv({ path: join(process.cwd(), '.env.local') });
+loadEnv();
 
 async function getPool(): Promise<Pool> {
   if (!process.env.DATABASE_URL) {

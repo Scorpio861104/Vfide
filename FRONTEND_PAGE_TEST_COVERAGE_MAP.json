@@ -1,0 +1,594 @@
+[
+  {
+    "page": "app/about/page.tsx",
+    "expectedTest": "about-page.test.tsx",
+    "hasTest": true,
+    "handlers": 0,
+    "readHooks": 0,
+    "writeHooks": 0
+  },
+  {
+    "page": "app/achievements/page.tsx",
+    "expectedTest": "achievements-page.test.tsx",
+    "hasTest": true,
+    "handlers": 0,
+    "readHooks": 0,
+    "writeHooks": 0
+  },
+  {
+    "page": "app/admin/page.tsx",
+    "expectedTest": "admin-page.test.tsx",
+    "hasTest": true,
+    "handlers": 16,
+    "readHooks": 24,
+    "writeHooks": 1
+  },
+  {
+    "page": "app/appeals/page.tsx",
+    "expectedTest": "appeals-page.test.tsx",
+    "hasTest": true,
+    "handlers": 4,
+    "readHooks": 0,
+    "writeHooks": 0
+  },
+  {
+    "page": "app/badges/page.tsx",
+    "expectedTest": "badges-page.test.tsx",
+    "hasTest": true,
+    "handlers": 1,
+    "readHooks": 2,
+    "writeHooks": 1
+  },
+  {
+    "page": "app/benefits/page.tsx",
+    "expectedTest": "benefits-page.test.tsx",
+    "hasTest": true,
+    "handlers": 0,
+    "readHooks": 0,
+    "writeHooks": 0
+  },
+  {
+    "page": "app/budgets/page.tsx",
+    "expectedTest": "budgets-page.test.tsx",
+    "hasTest": true,
+    "handlers": 0,
+    "readHooks": 0,
+    "writeHooks": 0
+  },
+  {
+    "page": "app/buy/page.tsx",
+    "expectedTest": "buy-page.test.tsx",
+    "hasTest": true,
+    "handlers": 0,
+    "readHooks": 0,
+    "writeHooks": 0
+  },
+  {
+    "page": "app/control-panel/page.tsx",
+    "expectedTest": "control-panel-page.test.tsx",
+    "hasTest": true,
+    "handlers": 0,
+    "readHooks": 0,
+    "writeHooks": 0
+  },
+  {
+    "page": "app/council/page.tsx",
+    "expectedTest": "council-page.test.tsx",
+    "hasTest": true,
+    "handlers": 0,
+    "readHooks": 7,
+    "writeHooks": 1
+  },
+  {
+    "page": "app/cross-chain/page.tsx",
+    "expectedTest": "cross-chain-page.test.tsx",
+    "hasTest": true,
+    "handlers": 0,
+    "readHooks": 0,
+    "writeHooks": 0
+  },
+  {
+    "page": "app/crypto/page.tsx",
+    "expectedTest": "crypto-page.test.tsx",
+    "hasTest": true,
+    "handlers": 0,
+    "readHooks": 0,
+    "writeHooks": 0
+  },
+  {
+    "page": "app/dao-hub/page.tsx",
+    "expectedTest": "dao-hub-page.test.tsx",
+    "hasTest": true,
+    "handlers": 0,
+    "readHooks": 2,
+    "writeHooks": 0
+  },
+  {
+    "page": "app/dashboard/page.tsx",
+    "expectedTest": "dashboard-page.test.tsx",
+    "hasTest": true,
+    "handlers": 0,
+    "readHooks": 0,
+    "writeHooks": 0
+  },
+  {
+    "page": "app/demo/crypto-social/page.tsx",
+    "expectedTest": "demo-crypto-social-page.test.tsx",
+    "hasTest": true,
+    "handlers": 0,
+    "readHooks": 0,
+    "writeHooks": 0
+  },
+  {
+    "page": "app/developer/page.tsx",
+    "expectedTest": "developer-page.test.tsx",
+    "hasTest": true,
+    "handlers": 0,
+    "readHooks": 0,
+    "writeHooks": 0
+  },
+  {
+    "page": "app/docs/page.tsx",
+    "expectedTest": "docs-page.test.tsx",
+    "hasTest": true,
+    "handlers": 0,
+    "readHooks": 0,
+    "writeHooks": 0
+  },
+  {
+    "page": "app/endorsements/page.tsx",
+    "expectedTest": "endorsements-page.test.tsx",
+    "hasTest": true,
+    "handlers": 0,
+    "readHooks": 2,
+    "writeHooks": 0
+  },
+  {
+    "page": "app/enterprise/page.tsx",
+    "expectedTest": "enterprise-page.test.tsx",
+    "hasTest": true,
+    "handlers": 1,
+    "readHooks": 0,
+    "writeHooks": 0
+  },
+  {
+    "page": "app/escrow/page.tsx",
+    "expectedTest": "escrow-page.test.tsx",
+    "hasTest": true,
+    "handlers": 5,
+    "readHooks": 0,
+    "writeHooks": 0
+  },
+  {
+    "page": "app/explorer/[id]/page.tsx",
+    "expectedTest": "explorer-id-page.test.tsx",
+    "hasTest": true,
+    "handlers": 0,
+    "readHooks": 0,
+    "writeHooks": 0
+  },
+  {
+    "page": "app/explorer/page.tsx",
+    "expectedTest": "explorer-page.test.tsx",
+    "hasTest": true,
+    "handlers": 1,
+    "readHooks": 0,
+    "writeHooks": 0
+  },
+  {
+    "page": "app/feed/page.tsx",
+    "expectedTest": "feed-page.test.tsx",
+    "hasTest": true,
+    "handlers": 0,
+    "readHooks": 0,
+    "writeHooks": 0
+  },
+  {
+    "page": "app/flashlight/page.tsx",
+    "expectedTest": "flashlight-page.test.tsx",
+    "hasTest": true,
+    "handlers": 0,
+    "readHooks": 0,
+    "writeHooks": 0
+  },
+  {
+    "page": "app/governance/page.tsx",
+    "expectedTest": "governance-page.test.tsx",
+    "hasTest": true,
+    "handlers": 9,
+    "readHooks": 5,
+    "writeHooks": 3
+  },
+  {
+    "page": "app/guardians/page.tsx",
+    "expectedTest": "guardians-page.test.tsx",
+    "hasTest": true,
+    "handlers": 19,
+    "readHooks": 12,
+    "writeHooks": 2
+  },
+  {
+    "page": "app/hardware-wallet/page.tsx",
+    "expectedTest": "hardware-wallet-page.test.tsx",
+    "hasTest": true,
+    "handlers": 4,
+    "readHooks": 0,
+    "writeHooks": 0
+  },
+  {
+    "page": "app/headhunter/page.tsx",
+    "expectedTest": "headhunter-page.test.tsx",
+    "hasTest": true,
+    "handlers": 0,
+    "readHooks": 0,
+    "writeHooks": 0
+  },
+  {
+    "page": "app/insights/page.tsx",
+    "expectedTest": "insights-page.test.tsx",
+    "hasTest": true,
+    "handlers": 0,
+    "readHooks": 0,
+    "writeHooks": 0
+  },
+  {
+    "page": "app/invite/[code]/page.tsx",
+    "expectedTest": "invite-code-page.test.tsx",
+    "hasTest": true,
+    "handlers": 1,
+    "readHooks": 0,
+    "writeHooks": 0
+  },
+  {
+    "page": "app/invite/page.tsx",
+    "expectedTest": "invite-page.test.tsx",
+    "hasTest": true,
+    "handlers": 1,
+    "readHooks": 0,
+    "writeHooks": 0
+  },
+  {
+    "page": "app/leaderboard/page.tsx",
+    "expectedTest": "leaderboard-page.test.tsx",
+    "hasTest": true,
+    "handlers": 0,
+    "readHooks": 0,
+    "writeHooks": 0
+  },
+  {
+    "page": "app/legal/page.tsx",
+    "expectedTest": "legal-page.test.tsx",
+    "hasTest": true,
+    "handlers": 0,
+    "readHooks": 0,
+    "writeHooks": 0
+  },
+  {
+    "page": "app/live-demo/page.tsx",
+    "expectedTest": "live-demo-page.test.tsx",
+    "hasTest": true,
+    "handlers": 1,
+    "readHooks": 0,
+    "writeHooks": 0
+  },
+  {
+    "page": "app/merchant/page.tsx",
+    "expectedTest": "merchant-page.test.tsx",
+    "hasTest": true,
+    "handlers": 0,
+    "readHooks": 0,
+    "writeHooks": 0
+  },
+  {
+    "page": "app/multisig/page.tsx",
+    "expectedTest": "multisig-page.test.tsx",
+    "hasTest": true,
+    "handlers": 0,
+    "readHooks": 0,
+    "writeHooks": 0
+  },
+  {
+    "page": "app/notifications/page.tsx",
+    "expectedTest": "notifications-page.test.tsx",
+    "hasTest": true,
+    "handlers": 1,
+    "readHooks": 0,
+    "writeHooks": 0
+  },
+  {
+    "page": "app/page.tsx",
+    "expectedTest": "home-page.test.tsx",
+    "hasTest": true,
+    "handlers": 0,
+    "readHooks": 0,
+    "writeHooks": 0
+  },
+  {
+    "page": "app/paper-wallet/page.tsx",
+    "expectedTest": "paper-wallet-page.test.tsx",
+    "hasTest": true,
+    "handlers": 0,
+    "readHooks": 0,
+    "writeHooks": 0
+  },
+  {
+    "page": "app/pay/page.tsx",
+    "expectedTest": "pay-page.test.tsx",
+    "hasTest": true,
+    "handlers": 1,
+    "readHooks": 0,
+    "writeHooks": 0
+  },
+  {
+    "page": "app/payroll/page.tsx",
+    "expectedTest": "payroll-page.test.tsx",
+    "hasTest": true,
+    "handlers": 5,
+    "readHooks": 0,
+    "writeHooks": 0
+  },
+  {
+    "page": "app/performance/page.tsx",
+    "expectedTest": "performance-page.test.tsx",
+    "hasTest": true,
+    "handlers": 1,
+    "readHooks": 0,
+    "writeHooks": 0
+  },
+  {
+    "page": "app/pos/page.tsx",
+    "expectedTest": "pos-page.test.tsx",
+    "hasTest": true,
+    "handlers": 0,
+    "readHooks": 0,
+    "writeHooks": 0
+  },
+  {
+    "page": "app/price-alerts/page.tsx",
+    "expectedTest": "price-alerts-page.test.tsx",
+    "hasTest": true,
+    "handlers": 3,
+    "readHooks": 0,
+    "writeHooks": 0
+  },
+  {
+    "page": "app/profile/page.tsx",
+    "expectedTest": "profile-page.test.tsx",
+    "hasTest": true,
+    "handlers": 0,
+    "readHooks": 0,
+    "writeHooks": 0
+  },
+  {
+    "page": "app/quests/page.tsx",
+    "expectedTest": "quests-page.test.tsx",
+    "hasTest": true,
+    "handlers": 0,
+    "readHooks": 0,
+    "writeHooks": 0
+  },
+  {
+    "page": "app/reporting/page.tsx",
+    "expectedTest": "reporting-page.test.tsx",
+    "hasTest": true,
+    "handlers": 0,
+    "readHooks": 0,
+    "writeHooks": 0
+  },
+  {
+    "page": "app/rewards/page.tsx",
+    "expectedTest": "rewards-page.test.tsx",
+    "hasTest": true,
+    "handlers": 0,
+    "readHooks": 0,
+    "writeHooks": 0
+  },
+  {
+    "page": "app/sanctum/page.tsx",
+    "expectedTest": "sanctum-page.test.tsx",
+    "hasTest": true,
+    "handlers": 0,
+    "readHooks": 3,
+    "writeHooks": 1
+  },
+  {
+    "page": "app/security-center/page.tsx",
+    "expectedTest": "security-center-page.test.tsx",
+    "hasTest": true,
+    "handlers": 0,
+    "readHooks": 0,
+    "writeHooks": 0
+  },
+  {
+    "page": "app/seer-academy/page.tsx",
+    "expectedTest": "seer-academy-page.test.tsx",
+    "hasTest": true,
+    "handlers": 0,
+    "readHooks": 0,
+    "writeHooks": 0
+  },
+  {
+    "page": "app/seer-service/page.tsx",
+    "expectedTest": "seer-service-page.test.tsx",
+    "hasTest": true,
+    "handlers": 0,
+    "readHooks": 0,
+    "writeHooks": 0
+  },
+  {
+    "page": "app/setup/page.tsx",
+    "expectedTest": "setup-page.test.tsx",
+    "hasTest": true,
+    "handlers": 0,
+    "readHooks": 0,
+    "writeHooks": 0
+  },
+  {
+    "page": "app/social-hub/page.tsx",
+    "expectedTest": "social-hub-page.test.tsx",
+    "hasTest": true,
+    "handlers": 5,
+    "readHooks": 0,
+    "writeHooks": 0
+  },
+  {
+    "page": "app/social-messaging/page.tsx",
+    "expectedTest": "social-messaging-page.test.tsx",
+    "hasTest": true,
+    "handlers": 2,
+    "readHooks": 0,
+    "writeHooks": 0
+  },
+  {
+    "page": "app/social-payments/page.tsx",
+    "expectedTest": "social-payments-page.test.tsx",
+    "hasTest": true,
+    "handlers": 0,
+    "readHooks": 0,
+    "writeHooks": 0
+  },
+  {
+    "page": "app/social/page.tsx",
+    "expectedTest": "social-page.test.tsx",
+    "hasTest": true,
+    "handlers": 0,
+    "readHooks": 0,
+    "writeHooks": 0
+  },
+  {
+    "page": "app/stealth/page.tsx",
+    "expectedTest": "stealth-page.test.tsx",
+    "hasTest": true,
+    "handlers": 0,
+    "readHooks": 0,
+    "writeHooks": 0
+  },
+  {
+    "page": "app/stories/page.tsx",
+    "expectedTest": "stories-page.test.tsx",
+    "hasTest": true,
+    "handlers": 3,
+    "readHooks": 0,
+    "writeHooks": 0
+  },
+  {
+    "page": "app/streaming/page.tsx",
+    "expectedTest": "streaming-page.test.tsx",
+    "hasTest": true,
+    "handlers": 0,
+    "readHooks": 0,
+    "writeHooks": 0
+  },
+  {
+    "page": "app/subscriptions/page.tsx",
+    "expectedTest": "subscriptions-page.test.tsx",
+    "hasTest": true,
+    "handlers": 3,
+    "readHooks": 1,
+    "writeHooks": 1
+  },
+  {
+    "page": "app/support/page.tsx",
+    "expectedTest": "support-page.test.tsx",
+    "hasTest": true,
+    "handlers": 2,
+    "readHooks": 0,
+    "writeHooks": 0
+  },
+  {
+    "page": "app/taxes/page.tsx",
+    "expectedTest": "taxes-page.test.tsx",
+    "hasTest": true,
+    "handlers": 0,
+    "readHooks": 0,
+    "writeHooks": 0
+  },
+  {
+    "page": "app/testnet/page.tsx",
+    "expectedTest": "testnet-page.test.tsx",
+    "hasTest": true,
+    "handlers": 0,
+    "readHooks": 0,
+    "writeHooks": 0
+  },
+  {
+    "page": "app/theme-manager/page.tsx",
+    "expectedTest": "theme-manager-page.test.tsx",
+    "hasTest": true,
+    "handlers": 0,
+    "readHooks": 0,
+    "writeHooks": 0
+  },
+  {
+    "page": "app/theme-showcase/page.tsx",
+    "expectedTest": "theme-showcase-page.test.tsx",
+    "hasTest": true,
+    "handlers": 0,
+    "readHooks": 0,
+    "writeHooks": 0
+  },
+  {
+    "page": "app/theme/page.tsx",
+    "expectedTest": "theme-page.test.tsx",
+    "hasTest": true,
+    "handlers": 3,
+    "readHooks": 0,
+    "writeHooks": 0
+  },
+  {
+    "page": "app/time-locks/page.tsx",
+    "expectedTest": "time-locks-page.test.tsx",
+    "hasTest": true,
+    "handlers": 0,
+    "readHooks": 0,
+    "writeHooks": 0
+  },
+  {
+    "page": "app/token-launch/page.tsx",
+    "expectedTest": "token-launch-page.test.tsx",
+    "hasTest": true,
+    "handlers": 3,
+    "readHooks": 5,
+    "writeHooks": 2
+  },
+  {
+    "page": "app/treasury/page.tsx",
+    "expectedTest": "treasury-page.test.tsx",
+    "hasTest": true,
+    "handlers": 0,
+    "readHooks": 0,
+    "writeHooks": 0
+  },
+  {
+    "page": "app/vault/page.tsx",
+    "expectedTest": "vault-page.test.tsx",
+    "hasTest": true,
+    "handlers": 5,
+    "readHooks": 4,
+    "writeHooks": 1
+  },
+  {
+    "page": "app/vault/recover/page.tsx",
+    "expectedTest": "vault-recover-page.test.tsx",
+    "hasTest": true,
+    "handlers": 2,
+    "readHooks": 0,
+    "writeHooks": 0
+  },
+  {
+    "page": "app/vault/settings/page.tsx",
+    "expectedTest": "vault-settings-page.test.tsx",
+    "hasTest": true,
+    "handlers": 0,
+    "readHooks": 0,
+    "writeHooks": 0
+  },
+  {
+    "page": "app/vesting/page.tsx",
+    "expectedTest": "vesting-page.test.tsx",
+    "hasTest": true,
+    "handlers": 1,
+    "readHooks": 4,
+    "writeHooks": 1
+  }
+]

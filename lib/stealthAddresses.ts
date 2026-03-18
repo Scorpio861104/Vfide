@@ -132,13 +132,15 @@ async function _hkdfDerive(
 
 /**
  * Generate a stealth meta-address (one-time setup)
- * In production, this would use proper elliptic curve operations
+ * Disabled until full secp256k1/EIP-5564 implementation is available.
  */
 export async function generateStealthMetaAddress(): Promise<{
   metaAddress: StealthMetaAddress;
   spendingPrivKey: string;
   viewingPrivKey: string;
 }> {
+  throw new Error('Stealth addresses are temporarily disabled pending full EIP-5564 secp256k1 implementation.');
+
   // Generate spending key pair
   const spendingPrivKey = randomBytes(32);
   const spendingPubKey = await derivePublicKey(spendingPrivKey);
@@ -160,9 +162,12 @@ export async function generateStealthMetaAddress(): Promise<{
 
 /**
  * Derive public key from private key
- * Simplified - in production would use secp256k1
+ * Disabled because simplified derivation is unsafe for production fund routing.
  */
 async function derivePublicKey(privateKey: Uint8Array): Promise<Uint8Array> {
+  void privateKey;
+  throw new Error('Stealth addresses are temporarily disabled pending full EIP-5564 secp256k1 implementation.');
+
   // This is a simplified simulation
   // In production, use proper elliptic curve operations
   const hash = await sha256(privateKey);
@@ -179,6 +184,9 @@ async function derivePublicKey(privateKey: Uint8Array): Promise<Uint8Array> {
 export async function generateStealthAddress(
   recipientMetaAddress: StealthMetaAddress
 ): Promise<StealthAddress> {
+  void recipientMetaAddress;
+  throw new Error('Stealth addresses are temporarily disabled pending full EIP-5564 secp256k1 implementation.');
+
   // Generate ephemeral key pair
   const ephemeralPrivKey = randomBytes(32);
   const ephemeralPubKey = await derivePublicKey(ephemeralPrivKey);
@@ -219,6 +227,13 @@ export async function checkStealthAddress(
   viewingPrivKey: string,
   spendingPubKey: string
 ): Promise<boolean> {
+  void ephemeralPubKey;
+  void viewTag;
+  void stealthAddress;
+  void viewingPrivKey;
+  void spendingPubKey;
+  throw new Error('Stealth addresses are temporarily disabled pending full EIP-5564 secp256k1 implementation.');
+
   // Compute shared secret: viewingPrivKey * ephemeralPubKey
   const viewingPrivBytes = hexToBytes(viewingPrivKey);
   const ephemeralBytes = hexToBytes(ephemeralPubKey);
@@ -250,6 +265,11 @@ export async function deriveStealthPrivateKey(
   viewingPrivKey: string,
   spendingPrivKey: string
 ): Promise<string> {
+  void ephemeralPubKey;
+  void viewingPrivKey;
+  void spendingPrivKey;
+  throw new Error('Stealth addresses are temporarily disabled pending full EIP-5564 secp256k1 implementation.');
+
   // Compute shared secret
   const viewingPrivBytes = hexToBytes(viewingPrivKey);
   const ephemeralBytes = hexToBytes(ephemeralPubKey);

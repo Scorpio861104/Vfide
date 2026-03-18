@@ -290,6 +290,14 @@ Notes:
 	- `setTapLimit` now emits `TapLimitUpdated` whenever DAO changes the tap limit.
 - Added focused regression check in `__tests__/contracts/MainstreamPayments.test.ts` for successful `setTapLimit` update call path.
 - Validation run: compile + focused mainstream payments suite passed (`13/13`) for `__tests__/contracts/MainstreamPayments.test.ts`; follow-up Slither run no longer reports the prior `events-maths` warning for `setTapLimit`.
+
+- Twelfth-pass DAO anti-spam and policy-matrix hardening in `contracts/DAO.sol`:
+	- Added proposer cooldown control (`proposalCooldown`, `lastProposalAt`) with timelock-governed setter `setProposalCooldown(...)`.
+	- Added proposal type allowlist matrix for targets and function selectors:
+		- `setProposalTypeTargetPolicy(...)`
+		- `setProposalTypeSelectorPolicy(...)`
+	- `propose(...)` now enforces cooldown and applies configured type policy matrix (while preserving backward compatibility when no policy is configured for a type).
+- Added focused regression expectations in `__tests__/contracts/DAO.test.ts` for cooldown and policy-based proposal rejections.
 	- `__tests__/contracts/VFIDETrust.test.ts`
 	- `__tests__/contracts/BadgeManager.test.ts`
 - Full clean compile sweep (`hardhat clean` + compile) still reports deploy-size warnings on:

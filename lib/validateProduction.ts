@@ -5,6 +5,12 @@
  * Run this before deploying to production to catch configuration issues early.
  */
 
+import * as dotenv from 'dotenv';
+
+// Load local env files when running validation via npm scripts.
+dotenv.config({ path: '.env.local' });
+dotenv.config();
+
 interface EnvironmentConfig {
   name: string;
   required: boolean;
@@ -18,6 +24,19 @@ const REQUIRED_ENV_VARS: EnvironmentConfig[] = [
   { name: 'NEXT_PUBLIC_RPC_URL', required: true, category: 'blockchain' },
   { name: 'NEXT_PUBLIC_EXPLORER_URL', required: true, category: 'blockchain' },
   { name: 'NEXT_PUBLIC_IS_TESTNET', required: true, category: 'blockchain' },
+
+  // Core contract addresses
+  { name: 'NEXT_PUBLIC_VFIDE_TOKEN_ADDRESS', required: true, category: 'blockchain', production: true },
+  { name: 'NEXT_PUBLIC_VFIDE_PRESALE_ADDRESS', required: true, category: 'blockchain', production: true },
+  { name: 'NEXT_PUBLIC_STABLECOIN_REGISTRY_ADDRESS', required: true, category: 'blockchain', production: true },
+  { name: 'NEXT_PUBLIC_VAULT_HUB_ADDRESS', required: true, category: 'blockchain', production: true },
+  { name: 'NEXT_PUBLIC_DAO_ADDRESS', required: true, category: 'blockchain', production: true },
+  { name: 'NEXT_PUBLIC_SEER_ADDRESS', required: true, category: 'blockchain', production: true },
+  { name: 'NEXT_PUBLIC_VFIDE_COMMERCE_ADDRESS', required: true, category: 'blockchain', production: true },
+  { name: 'NEXT_PUBLIC_PAYROLL_MANAGER_ADDRESS', required: true, category: 'blockchain', production: true },
+  { name: 'NEXT_PUBLIC_SUBSCRIPTION_MANAGER_ADDRESS', required: true, category: 'blockchain', production: true },
+  { name: 'NEXT_PUBLIC_SANCTUM_VAULT_ADDRESS', required: true, category: 'blockchain', production: true },
+  { name: 'NEXT_PUBLIC_DEV_VAULT_ADDRESS', required: true, category: 'blockchain', production: true },
 
   // WalletConnect (optional but recommended)
   { name: 'NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID', required: false, category: 'blockchain' },

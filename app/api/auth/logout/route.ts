@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { clearAuthCookies } from '@/lib/auth/cookieAuth';
 import { revokeToken, hashToken } from '@/lib/auth/tokenRevocation';
-import { getRequestAuthToken } from '@/lib/auth/middleware';
+import { getRequestAuthToken, withAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 
 /**
@@ -13,7 +13,7 @@ import { withRateLimit } from '@/lib/auth/rateLimit';
  * - Clears HTTPOnly cookies
  * - Rate limited to prevent abuse
  */
-export async function POST(request: NextRequest) {
+export const POST = withAuth(async (request: NextRequest) => {
   // Apply rate limiting
   const rateLimitResponse = await withRateLimit(request, 'auth');
   if (rateLimitResponse) return rateLimitResponse;
@@ -54,4 +54,4 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+});

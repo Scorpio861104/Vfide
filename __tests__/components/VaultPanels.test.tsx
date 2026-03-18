@@ -120,10 +120,10 @@ describe('TransactionHistory', () => {
     expect(screen.getByText('Filter')).toBeInTheDocument()
   })
 
-  it('renders mock transaction data', () => {
+  it('renders empty state with no transactions', () => {
     render(<TransactionHistory />)
-    // Should show mock transactions
-    expect(screen.getByText('+500 VFIDE')).toBeInTheDocument()
+    // With no transactions prop, shows empty state
+    expect(screen.getByText(/No transactions found/i)).toBeInTheDocument()
   })
 
   it('renders with custom transactions', () => {

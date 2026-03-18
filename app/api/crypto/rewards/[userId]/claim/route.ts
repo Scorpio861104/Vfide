@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { createPublicClient, http, isAddress } from 'viem';
-import { baseSepolia } from 'viem/chains';
+import { base, baseSepolia, polygon, polygonAmoy, zkSync, zkSyncSepoliaTestnet } from 'viem/chains';
 import rewardABI from '@/lib/abis/UserRewards.json';
 
 const REWARD_ID_REGEX = /^[a-zA-Z0-9:_-]{1,128}$/;
@@ -13,9 +13,29 @@ function isObjectRecord(value: unknown): value is Record<string, unknown> {
 }
 
 // Initialize viem client for on-chain verification
+function getConfiguredChain() {
+  const chainId = Number.parseInt(process.env.NEXT_PUBLIC_CHAIN_ID || '', 10);
+  switch (chainId) {
+    case base.id:
+      return base;
+    case baseSepolia.id:
+      return baseSepolia;
+    case polygon.id:
+      return polygon;
+    case polygonAmoy.id:
+      return polygonAmoy;
+    case zkSync.id:
+      return zkSync;
+    case zkSyncSepoliaTestnet.id:
+      return zkSyncSepoliaTestnet;
+    default:
+      return baseSepolia;
+  }
+}
+
 const client = createPublicClient({
-  chain: baseSepolia,
-  transport: http(process.env.NEXT_PUBLIC_BASE_SEPOLIA_RPC || 'https://sepolia.base.org'),
+  chain: getConfiguredChain(),
+  transport: http(process.env.NEXT_PUBLIC_RPC_URL),
 });
 
 /**

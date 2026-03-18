@@ -1,0 +1,830 @@
+[
+  {
+    "rel": "app/about/page.tsx",
+    "exportedDefault": "AboutPage",
+    "handlers": [],
+    "readHooks": 0,
+    "writeHooks": 0,
+    "contractFns": []
+  },
+  {
+    "rel": "app/achievements/page.tsx",
+    "exportedDefault": "AchievementsPage",
+    "handlers": [],
+    "readHooks": 0,
+    "writeHooks": 0,
+    "contractFns": []
+  },
+  {
+    "rel": "app/admin/page.tsx",
+    "exportedDefault": "AdminPanel",
+    "handlers": [
+      "handleWhitelistAdd",
+      "handleWhitelistRemove",
+      "handleToggleVaultOnly",
+      "handleLockPolicy",
+      "handleToggleCircuitBreaker",
+      "handleSetModule",
+      "handleExemptAdd",
+      "handleExemptRemove",
+      "handleBlacklistAdd",
+      "handleBlacklistRemove",
+      "handleVaultBypassAdd",
+      "handleVaultBypassRemove",
+      "handleWhaleExemptAdd",
+      "handleWhaleExemptRemove",
+      "handleTransferOwnership",
+      "handleUpdateBurnPolicy"
+    ],
+    "readHooks": 24,
+    "writeHooks": 1,
+    "contractFns": [
+      "owner",
+      "vaultOnly",
+      "policyLocked",
+      "circuitBreaker",
+      "totalSupply",
+      "presaleMinted",
+      "systemWhitelist",
+      "systemExempt",
+      "isBlacklisted",
+      "whitelisted",
+      "whaleLimitExempt",
+      "vaultHub",
+      "securityHub",
+      "ledger",
+      "burnRouter",
+      "treasurySink",
+      "sanctumSink",
+      "presaleContract",
+      "baseBurnBps",
+      "baseSanctumBps",
+      "baseEcosystemBps",
+      "highTrustReduction",
+      "lowTrustPenalty",
+      "maxTotalBps",
+      "whitelistSystemContract",
+      "setVaultOnly",
+      "setCircuitBreaker",
+      "setSystemExempt",
+      "setBlacklist",
+      "setWhitelist",
+      "setWhaleLimitExempt",
+      "lockPolicy",
+      "transferOwnership",
+      "setPolicy"
+    ]
+  },
+  {
+    "rel": "app/appeals/page.tsx",
+    "exportedDefault": "AppealsPage",
+    "handlers": [
+      "handleSubmit",
+      "handleCopyBundle",
+      "handleDownloadBundle",
+      "handleResetPrivacyDefaults"
+    ],
+    "readHooks": 0,
+    "writeHooks": 0,
+    "contractFns": []
+  },
+  {
+    "rel": "app/badges/page.tsx",
+    "exportedDefault": "BadgesPage",
+    "handlers": [
+      "handleMintBadge"
+    ],
+    "readHooks": 2,
+    "writeHooks": 1,
+    "contractFns": [
+      "balanceOf",
+      "getScore",
+      "mintBadge"
+    ]
+  },
+  {
+    "rel": "app/benefits/page.tsx",
+    "exportedDefault": "BenefitsPage",
+    "handlers": [],
+    "readHooks": 0,
+    "writeHooks": 0,
+    "contractFns": []
+  },
+  {
+    "rel": "app/budgets/page.tsx",
+    "exportedDefault": "BudgetsPage",
+    "handlers": [],
+    "readHooks": 0,
+    "writeHooks": 0,
+    "contractFns": []
+  },
+  {
+    "rel": "app/buy/page.tsx",
+    "exportedDefault": "BuyPage",
+    "handlers": [],
+    "readHooks": 0,
+    "writeHooks": 0,
+    "contractFns": []
+  },
+  {
+    "rel": "app/control-panel/page.tsx",
+    "exportedDefault": "ControlPanelPage",
+    "handlers": [],
+    "readHooks": 0,
+    "writeHooks": 0,
+    "contractFns": []
+  },
+  {
+    "rel": "app/council/page.tsx",
+    "exportedDefault": "CouncilPage",
+    "handlers": [],
+    "readHooks": 7,
+    "writeHooks": 1,
+    "contractFns": [
+      "getCouncilMembers",
+      "getCandidates",
+      "getElectionStatus",
+      "isCandidate",
+      "isCouncilMember",
+      "getClaimable",
+      "canRegister",
+      "register",
+      "unregister",
+      "claimSalary"
+    ]
+  },
+  {
+    "rel": "app/cross-chain/page.tsx",
+    "exportedDefault": "CrossChainPage",
+    "handlers": [],
+    "readHooks": 0,
+    "writeHooks": 0,
+    "contractFns": []
+  },
+  {
+    "rel": "app/crypto/page.tsx",
+    "exportedDefault": "CryptoDashboard",
+    "handlers": [],
+    "readHooks": 0,
+    "writeHooks": 0,
+    "contractFns": []
+  },
+  {
+    "rel": "app/dao-hub/page.tsx",
+    "exportedDefault": "DaoHubPage",
+    "handlers": [],
+    "readHooks": 2,
+    "writeHooks": 0,
+    "contractFns": []
+  },
+  {
+    "rel": "app/dashboard/page.tsx",
+    "exportedDefault": "DashboardPage",
+    "handlers": [],
+    "readHooks": 0,
+    "writeHooks": 0,
+    "contractFns": []
+  },
+  {
+    "rel": "app/demo/crypto-social/page.tsx",
+    "exportedDefault": "CryptoSocialDemo",
+    "handlers": [],
+    "readHooks": 0,
+    "writeHooks": 0,
+    "contractFns": []
+  },
+  {
+    "rel": "app/developer/page.tsx",
+    "exportedDefault": "DeveloperPage",
+    "handlers": [],
+    "readHooks": 0,
+    "writeHooks": 0,
+    "contractFns": []
+  },
+  {
+    "rel": "app/docs/page.tsx",
+    "exportedDefault": "DocsPage",
+    "handlers": [],
+    "readHooks": 0,
+    "writeHooks": 0,
+    "contractFns": []
+  },
+  {
+    "rel": "app/endorsements/page.tsx",
+    "exportedDefault": "EndorsementsPage",
+    "handlers": [],
+    "readHooks": 2,
+    "writeHooks": 0,
+    "contractFns": [
+      "getActiveEndorsements",
+      "getEndorsementStats"
+    ]
+  },
+  {
+    "rel": "app/enterprise/page.tsx",
+    "exportedDefault": "EnterprisePage",
+    "handlers": [
+      "handleCreateOrder"
+    ],
+    "readHooks": 0,
+    "writeHooks": 0,
+    "contractFns": []
+  },
+  {
+    "rel": "app/escrow/page.tsx",
+    "exportedDefault": "EscrowPage",
+    "handlers": [
+      "handleCreateEscrow",
+      "handleRelease",
+      "handleDispute",
+      "handleRefund",
+      "handleClaimTimeout"
+    ],
+    "readHooks": 0,
+    "writeHooks": 0,
+    "contractFns": []
+  },
+  {
+    "rel": "app/explorer/[id]/page.tsx",
+    "exportedDefault": "AddressPage",
+    "handlers": [],
+    "readHooks": 0,
+    "writeHooks": 0,
+    "contractFns": []
+  },
+  {
+    "rel": "app/explorer/page.tsx",
+    "exportedDefault": "ExplorerPage",
+    "handlers": [
+      "handleSearch"
+    ],
+    "readHooks": 0,
+    "writeHooks": 0,
+    "contractFns": []
+  },
+  {
+    "rel": "app/feed/page.tsx",
+    "exportedDefault": "FeedPage",
+    "handlers": [],
+    "readHooks": 0,
+    "writeHooks": 0,
+    "contractFns": []
+  },
+  {
+    "rel": "app/flashlight/page.tsx",
+    "exportedDefault": "FlashlightPage",
+    "handlers": [],
+    "readHooks": 0,
+    "writeHooks": 0,
+    "contractFns": []
+  },
+  {
+    "rel": "app/governance/page.tsx",
+    "exportedDefault": "GovernancePage",
+    "handlers": [
+      "handleVote",
+      "handleFinalize",
+      "handlePropose",
+      "handleSubmit",
+      "handleAddComment",
+      "handleShare",
+      "handleNewThread",
+      "handleReply",
+      "handleRegister"
+    ],
+    "readHooks": 5,
+    "writeHooks": 3,
+    "contractFns": [
+      "getActiveProposals",
+      "getVotingPower",
+      "getVoterStats",
+      "isEligible",
+      "vote",
+      "finalize",
+      "propose",
+      "getProposalDetails",
+      "register"
+    ]
+  },
+  {
+    "rel": "app/guardians/page.tsx",
+    "exportedDefault": "GuardiansPage",
+    "handlers": [
+      "handleAddVault",
+      "handleApprove",
+      "handleReportFraud",
+      "handleCreateVault",
+      "handleAddGuardian",
+      "handleRemoveGuardian",
+      "handleIssueAttestation",
+      "handleSetNextOfKin",
+      "handleRequestInheritance",
+      "handleAddInboxVault",
+      "handleApproveInheritance",
+      "handleDenyInheritance",
+      "handleGuardianCancelInheritance",
+      "handleFinalizeInheritance",
+      "handleCancelInheritance",
+      "handleRequestRecovery",
+      "handleApproveRecovery",
+      "handleFinalizeRecovery",
+      "handleCancelRecovery"
+    ],
+    "readHooks": 12,
+    "writeHooks": 2,
+    "contractFns": [
+      "owner",
+      "isGuardian",
+      "isGuardianMature",
+      "getRecoveryStatus",
+      "approveRecovery",
+      "nextOfKin",
+      "getInheritanceStatus",
+      "requestInheritance"
+    ]
+  },
+  {
+    "rel": "app/hardware-wallet/page.tsx",
+    "exportedDefault": "HardwareWalletPage",
+    "handlers": [
+      "handleSelectWallet",
+      "handleVerifyFirmware",
+      "handleConnect",
+      "handleSavePreferences"
+    ],
+    "readHooks": 0,
+    "writeHooks": 0,
+    "contractFns": []
+  },
+  {
+    "rel": "app/headhunter/page.tsx",
+    "exportedDefault": "HeadhunterPage",
+    "handlers": [],
+    "readHooks": 0,
+    "writeHooks": 0,
+    "contractFns": []
+  },
+  {
+    "rel": "app/insights/page.tsx",
+    "exportedDefault": "InsightsPage",
+    "handlers": [],
+    "readHooks": 0,
+    "writeHooks": 0,
+    "contractFns": []
+  },
+  {
+    "rel": "app/invite/[code]/page.tsx",
+    "exportedDefault": "InvitePage",
+    "handlers": [
+      "handleJoin"
+    ],
+    "readHooks": 0,
+    "writeHooks": 0,
+    "contractFns": []
+  },
+  {
+    "rel": "app/invite/page.tsx",
+    "exportedDefault": "InviteFriendsPage",
+    "handlers": [
+      "handleCopy"
+    ],
+    "readHooks": 0,
+    "writeHooks": 0,
+    "contractFns": []
+  },
+  {
+    "rel": "app/leaderboard/page.tsx",
+    "exportedDefault": "LeaderboardPage",
+    "handlers": [],
+    "readHooks": 0,
+    "writeHooks": 0,
+    "contractFns": []
+  },
+  {
+    "rel": "app/legal/page.tsx",
+    "exportedDefault": "LegalPage",
+    "handlers": [],
+    "readHooks": 0,
+    "writeHooks": 0,
+    "contractFns": []
+  },
+  {
+    "rel": "app/live-demo/page.tsx",
+    "exportedDefault": "LiveDemoPage",
+    "handlers": [
+      "handleDemoTransaction"
+    ],
+    "readHooks": 0,
+    "writeHooks": 0,
+    "contractFns": []
+  },
+  {
+    "rel": "app/merchant/page.tsx",
+    "exportedDefault": "MerchantPage",
+    "handlers": [],
+    "readHooks": 0,
+    "writeHooks": 0,
+    "contractFns": []
+  },
+  {
+    "rel": "app/multisig/page.tsx",
+    "exportedDefault": "MultisigPage",
+    "handlers": [],
+    "readHooks": 0,
+    "writeHooks": 0,
+    "contractFns": []
+  },
+  {
+    "rel": "app/notifications/page.tsx",
+    "exportedDefault": "NotificationHubPage",
+    "handlers": [
+      "handleExport"
+    ],
+    "readHooks": 0,
+    "writeHooks": 0,
+    "contractFns": []
+  },
+  {
+    "rel": "app/page.tsx",
+    "exportedDefault": "Home",
+    "handlers": [],
+    "readHooks": 0,
+    "writeHooks": 0,
+    "contractFns": []
+  },
+  {
+    "rel": "app/paper-wallet/page.tsx",
+    "exportedDefault": "PaperWalletPage",
+    "handlers": [],
+    "readHooks": 0,
+    "writeHooks": 0,
+    "contractFns": []
+  },
+  {
+    "rel": "app/pay/page.tsx",
+    "exportedDefault": "PayPage",
+    "handlers": [
+      "handlePayment"
+    ],
+    "readHooks": 0,
+    "writeHooks": 0,
+    "contractFns": []
+  },
+  {
+    "rel": "app/payroll/page.tsx",
+    "exportedDefault": "PayrollPage",
+    "handlers": [
+      "handleCreateStream",
+      "handleWithdraw",
+      "handlePauseStream",
+      "handleResumeStream",
+      "handleTopUp"
+    ],
+    "readHooks": 0,
+    "writeHooks": 0,
+    "contractFns": []
+  },
+  {
+    "rel": "app/performance/page.tsx",
+    "exportedDefault": "PerformanceDashboardPage",
+    "handlers": [
+      "handleExportErrors"
+    ],
+    "readHooks": 0,
+    "writeHooks": 0,
+    "contractFns": []
+  },
+  {
+    "rel": "app/pos/page.tsx",
+    "exportedDefault": "POSPage",
+    "handlers": [],
+    "readHooks": 0,
+    "writeHooks": 0,
+    "contractFns": []
+  },
+  {
+    "rel": "app/price-alerts/page.tsx",
+    "exportedDefault": "PriceAlertsPage",
+    "handlers": [
+      "handleCreateAlert",
+      "handleDeleteAlert",
+      "handleToggleAlert"
+    ],
+    "readHooks": 0,
+    "writeHooks": 0,
+    "contractFns": []
+  },
+  {
+    "rel": "app/profile/page.tsx",
+    "exportedDefault": "ProfilePage",
+    "handlers": [],
+    "readHooks": 0,
+    "writeHooks": 0,
+    "contractFns": []
+  },
+  {
+    "rel": "app/quests/page.tsx",
+    "exportedDefault": "QuestsPage",
+    "handlers": [],
+    "readHooks": 0,
+    "writeHooks": 0,
+    "contractFns": []
+  },
+  {
+    "rel": "app/reporting/page.tsx",
+    "exportedDefault": "ReportingAnalyticsPage",
+    "handlers": [],
+    "readHooks": 0,
+    "writeHooks": 0,
+    "contractFns": []
+  },
+  {
+    "rel": "app/rewards/page.tsx",
+    "exportedDefault": "RewardsPage",
+    "handlers": [],
+    "readHooks": 0,
+    "writeHooks": 0,
+    "contractFns": []
+  },
+  {
+    "rel": "app/sanctum/page.tsx",
+    "exportedDefault": "SanctumPage",
+    "handlers": [],
+    "readHooks": 3,
+    "writeHooks": 1,
+    "contractFns": [
+      "getBalance",
+      "getCharityCount",
+      "_nextProposalId",
+      "deposit",
+      "approveDisbursement",
+      "executeDisbursement"
+    ]
+  },
+  {
+    "rel": "app/security-center/page.tsx",
+    "exportedDefault": "SecurityCenterPage",
+    "handlers": [],
+    "readHooks": 0,
+    "writeHooks": 0,
+    "contractFns": []
+  },
+  {
+    "rel": "app/seer-academy/page.tsx",
+    "exportedDefault": "SeerAcademyPage",
+    "handlers": [],
+    "readHooks": 0,
+    "writeHooks": 0,
+    "contractFns": []
+  },
+  {
+    "rel": "app/seer-service/page.tsx",
+    "exportedDefault": "SeerServicePage",
+    "handlers": [],
+    "readHooks": 0,
+    "writeHooks": 0,
+    "contractFns": []
+  },
+  {
+    "rel": "app/setup/page.tsx",
+    "exportedDefault": "SetupPage",
+    "handlers": [],
+    "readHooks": 0,
+    "writeHooks": 0,
+    "contractFns": []
+  },
+  {
+    "rel": "app/social-hub/page.tsx",
+    "exportedDefault": "SocialHubPage",
+    "handlers": [
+      "handleSubmit",
+      "handlePost",
+      "handleLike",
+      "handleBookmark",
+      "handleRefresh"
+    ],
+    "readHooks": 0,
+    "writeHooks": 0,
+    "contractFns": []
+  },
+  {
+    "rel": "app/social-messaging/page.tsx",
+    "exportedDefault": "SocialPage",
+    "handlers": [
+      "handleAcceptRequest",
+      "handleRejectRequest"
+    ],
+    "readHooks": 0,
+    "writeHooks": 0,
+    "contractFns": []
+  },
+  {
+    "rel": "app/social-payments/page.tsx",
+    "exportedDefault": "SocialPaymentsDashboard",
+    "handlers": [],
+    "readHooks": 0,
+    "writeHooks": 0,
+    "contractFns": []
+  },
+  {
+    "rel": "app/social/page.tsx",
+    "exportedDefault": "SocialAnalyticsPage",
+    "handlers": [],
+    "readHooks": 0,
+    "writeHooks": 0,
+    "contractFns": []
+  },
+  {
+    "rel": "app/stealth/page.tsx",
+    "exportedDefault": "StealthPage",
+    "handlers": [],
+    "readHooks": 0,
+    "writeHooks": 0,
+    "contractFns": []
+  },
+  {
+    "rel": "app/stories/page.tsx",
+    "exportedDefault": "StoriesPage",
+    "handlers": [
+      "handleCreateStory",
+      "handleViewStory",
+      "handleReactToStory"
+    ],
+    "readHooks": 0,
+    "writeHooks": 0,
+    "contractFns": []
+  },
+  {
+    "rel": "app/streaming/page.tsx",
+    "exportedDefault": "StreamingPage",
+    "handlers": [],
+    "readHooks": 0,
+    "writeHooks": 0,
+    "contractFns": []
+  },
+  {
+    "rel": "app/subscriptions/page.tsx",
+    "exportedDefault": "SubscriptionsPage",
+    "handlers": [
+      "handlePause",
+      "handleResume",
+      "handleCancel"
+    ],
+    "readHooks": 1,
+    "writeHooks": 1,
+    "contractFns": [
+      "getUserSubscriptions",
+      "pauseSubscription",
+      "resumeSubscription",
+      "cancelSubscription"
+    ]
+  },
+  {
+    "rel": "app/support/page.tsx",
+    "exportedDefault": "SupportPage",
+    "handlers": [
+      "handleCreateTicket",
+      "handleSendReply"
+    ],
+    "readHooks": 0,
+    "writeHooks": 0,
+    "contractFns": []
+  },
+  {
+    "rel": "app/taxes/page.tsx",
+    "exportedDefault": "TaxesPage",
+    "handlers": [],
+    "readHooks": 0,
+    "writeHooks": 0,
+    "contractFns": []
+  },
+  {
+    "rel": "app/testnet/page.tsx",
+    "exportedDefault": "TestnetPage",
+    "handlers": [],
+    "readHooks": 0,
+    "writeHooks": 0,
+    "contractFns": []
+  },
+  {
+    "rel": "app/theme-manager/page.tsx",
+    "exportedDefault": "ThemeManagerPage",
+    "handlers": [],
+    "readHooks": 0,
+    "writeHooks": 0,
+    "contractFns": []
+  },
+  {
+    "rel": "app/theme-showcase/page.tsx",
+    "exportedDefault": "ThemeShowcasePage",
+    "handlers": [],
+    "readHooks": 0,
+    "writeHooks": 0,
+    "contractFns": []
+  },
+  {
+    "rel": "app/theme/page.tsx",
+    "exportedDefault": "ThemeManagementPage",
+    "handlers": [
+      "handleExportTheme",
+      "handleImportTheme",
+      "handleCopyTheme"
+    ],
+    "readHooks": 0,
+    "writeHooks": 0,
+    "contractFns": []
+  },
+  {
+    "rel": "app/time-locks/page.tsx",
+    "exportedDefault": "TimeLocksPage",
+    "handlers": [],
+    "readHooks": 0,
+    "writeHooks": 0,
+    "contractFns": []
+  },
+  {
+    "rel": "app/token-launch/page.tsx",
+    "exportedDefault": "TokenLaunchPage",
+    "handlers": [
+      "handleApprove",
+      "handlePurchase",
+      "handleCheckboxChange"
+    ],
+    "readHooks": 5,
+    "writeHooks": 2,
+    "contractFns": [
+      "getTierRemaining",
+      "getUserInfo",
+      "allowance",
+      "approve",
+      "buyTokens",
+      "buyWithStable"
+    ]
+  },
+  {
+    "rel": "app/treasury/page.tsx",
+    "exportedDefault": "TreasuryPage",
+    "handlers": [],
+    "readHooks": 0,
+    "writeHooks": 0,
+    "contractFns": []
+  },
+  {
+    "rel": "app/vault/page.tsx",
+    "exportedDefault": "VaultPage",
+    "handlers": [
+      "handlePanic",
+      "handleDeposit",
+      "handleWithdraw",
+      "handleSetNextOfKin",
+      "handleAddGuardian"
+    ],
+    "readHooks": 4,
+    "writeHooks": 1,
+    "contractFns": [
+      "balanceOf",
+      "allowance",
+      "nextNonce",
+      "walletEpoch",
+      "approve",
+      "deposit",
+      "executeVaultToVaultTransfer",
+      "transferVFIDE"
+    ]
+  },
+  {
+    "rel": "app/vault/recover/page.tsx",
+    "exportedDefault": "VaultRecoveryPage",
+    "handlers": [
+      "handleMouseMove",
+      "handleSearch"
+    ],
+    "readHooks": 0,
+    "writeHooks": 0,
+    "contractFns": []
+  },
+  {
+    "rel": "app/vault/settings/page.tsx",
+    "exportedDefault": "VaultSettingsPage",
+    "handlers": [],
+    "readHooks": 0,
+    "writeHooks": 0,
+    "contractFns": []
+  },
+  {
+    "rel": "app/vesting/page.tsx",
+    "exportedDefault": "VestingPage",
+    "handlers": [
+      "handleClaim"
+    ],
+    "readHooks": 4,
+    "writeHooks": 1,
+    "contractFns": [
+      "getVestingStatus",
+      "getVestingSchedule",
+      "claimsPaused",
+      "beneficiary",
+      "claim"
+    ]
+  }
+]

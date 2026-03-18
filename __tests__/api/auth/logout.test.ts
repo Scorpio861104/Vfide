@@ -8,6 +8,16 @@ jest.mock('@/lib/auth/cookieAuth', () => ({
 
 jest.mock('@/lib/auth/middleware', () => ({
   getRequestAuthToken: jest.fn(),
+  withAuth: jest.fn((handler: Function) => handler),
+}));
+
+jest.mock('@/lib/auth/tokenRevocation', () => ({
+  revokeToken: jest.fn(),
+  hashToken: jest.fn(async () => 'mocked-hash'),
+}));
+
+jest.mock('@/lib/auth/rateLimit', () => ({
+  withRateLimit: jest.fn().mockResolvedValue(null),
 }));
 
 describe('/api/auth/logout', () => {

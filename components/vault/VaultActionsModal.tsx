@@ -3,9 +3,9 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, ArrowDownToLine, ArrowUpFromLine, RefreshCw, AlertCircle, CheckCircle2, Loader2 } from 'lucide-react';
-import { useAccount, useWriteContract, useWaitForTransactionReceipt, useReadContract } from 'wagmi';
+import { useAccount, useWriteContract, useWaitForTransactionReceipt, useReadContract, useChainId, useSignTypedData } from 'wagmi';
 import { parseEther, formatEther, isAddress } from 'viem';
-import { CONTRACT_ADDRESSES } from '@/lib/contracts';
+import { CARD_BOUND_VAULT_ABI, CONTRACT_ADDRESSES, isCardBoundVaultMode } from '@/lib/contracts';
 import { VFIDETokenABI, UserVaultABI } from '@/lib/abis';
 import { useVaultBalance } from '@/hooks/useVaultHooks';
 import { useToast } from '@/components/ui/toast';
@@ -21,7 +21,10 @@ interface VaultActionsModalProps {
 
 export function VaultActionsModal({ isOpen, onClose, actionType, vaultAddress }: VaultActionsModalProps) {
   const { address } = useAccount();
+  const chainId = useChainId();
+  const { signTypedDataAsync } = useSignTypedData();
   const { showToast } = useToast();
+  const cardBoundMode = isCardBoundVaultMode();
   const [amount, setAmount] = useState('');
   const [recipientAddress, setRecipientAddress] = useState('');
   const [step, setStep] = useState<'input' | 'confirm' | 'pending' | 'success' | 'error'>('input');
@@ -38,6 +41,24 @@ export function VaultActionsModal({ isOpen, onClose, actionType, vaultAddress }:
 
   // Get vault balance
   const { balance: vaultBalanceFormatted, balanceRaw: vaultBalance } = useVaultBalance();
+
+  const { data: transferNonce } = useReadContract({
+    address: vaultAddress || undefined,
+    abi: CARD_BOUND_VAULT_ABI,
+    functionName: 'nextNonce',
+    query: {
+      enabled: !!vaultAddress && cardBoundMode && actionType === 'transfer',
+    },
+  });
+
+  const { data: walletEpoch } = useReadContract({
+    address: vaultAddress || undefined,
+    abi: CARD_BOUND_VAULT_ABI,
+    functionName: 'walletEpoch',
+    query: {
+      enabled: !!vaultAddress && cardBoundMode && actionType === 'transfer',
+    },
+  });
 
   // Write contract for transfers
   const { writeContract, data: txHash, isPending, error: writeError, reset } = useWriteContract();
@@ -75,6 +96,7 @@ export function VaultActionsModal({ isOpen, onClose, actionType, vaultAddress }:
   }, [isPending, isConfirming, txSuccess, txError, writeError, showToast, actionType]);
 
   const getActionTitle = () => {
+    if (cardBoundMode && actionType === 'transfer') return 'CardBound Vault Transfer';
     switch (actionType) {
       case 'deposit': return 'Deposit to Vault';
       case 'withdraw': return 'Withdraw from Vault';
@@ -102,6 +124,11 @@ export function VaultActionsModal({ isOpen, onClose, actionType, vaultAddress }:
   };
 
   const validateInput = (): boolean => {
+    if (cardBoundMode && (actionType === 'deposit' || actionType === 'withdraw')) {
+      setErrorMessage('CardBound mode disables direct wallet deposit and withdrawal in this modal.');
+      return false;
+    }
+
     if (!amount || parseFloat(amount) <= 0) {
       setErrorMessage('Please enter a valid amount');
       return false;
@@ -136,13 +163,70 @@ export function VaultActionsModal({ isOpen, onClose, actionType, vaultAddress }:
     setStep('confirm');
   };
 
-  const executeAction = () => {
+  const executeAction = async () => {
     if (!vaultAddress) return;
 
     const amountBigInt = parseEther(amount);
 
     try {
-      if (actionType === 'deposit') {
+      if (cardBoundMode && actionType === 'transfer') {
+        if (transferNonce === undefined || walletEpoch === undefined) {
+          setErrorMessage('Vault transfer state unavailable. Please retry.');
+          setStep('error');
+          return;
+        }
+
+        const deadline = BigInt(Math.floor(Date.now() / 1000) + 3600);
+        const transferChainId = BigInt(chainId);
+
+        const signature = await signTypedDataAsync({
+          domain: {
+            name: 'CardBoundVault',
+            version: '1',
+            chainId,
+            verifyingContract: vaultAddress,
+          },
+          types: {
+            TransferIntent: [
+              { name: 'vault', type: 'address' },
+              { name: 'toVault', type: 'address' },
+              { name: 'amount', type: 'uint256' },
+              { name: 'nonce', type: 'uint256' },
+              { name: 'walletEpoch', type: 'uint64' },
+              { name: 'deadline', type: 'uint64' },
+              { name: 'chainId', type: 'uint256' },
+            ],
+          },
+          primaryType: 'TransferIntent',
+          message: {
+            vault: vaultAddress,
+            toVault: recipientAddress as `0x${string}`,
+            amount: amountBigInt,
+            nonce: transferNonce as bigint,
+            walletEpoch: walletEpoch as bigint,
+            deadline,
+            chainId: transferChainId,
+          },
+        });
+
+        writeContract({
+          address: vaultAddress,
+          abi: CARD_BOUND_VAULT_ABI,
+          functionName: 'executeVaultToVaultTransfer',
+          args: [
+            {
+              vault: vaultAddress,
+              toVault: recipientAddress as `0x${string}`,
+              amount: amountBigInt,
+              nonce: transferNonce as bigint,
+              walletEpoch: walletEpoch as bigint,
+              deadline,
+              chainId: transferChainId,
+            },
+            signature,
+          ],
+        });
+      } else if (actionType === 'deposit') {
         // Transfer VFIDE from wallet to vault (standard ERC20 transfer)
         writeContract({
           address: CONTRACT_ADDRESSES.VFIDEToken,
@@ -265,10 +349,17 @@ export function VaultActionsModal({ isOpen, onClose, actionType, vaultAddress }:
                 </div>
               )}
 
+              {cardBoundMode && (actionType === 'deposit' || actionType === 'withdraw') && (
+                <div className="flex items-center gap-2 p-3 bg-cyan-500/10 border border-cyan-500/30 rounded-xl text-cyan-300 text-sm">
+                  <AlertCircle size={16} />
+                  CardBound mode supports signed vault-to-vault transfer only.
+                </div>
+              )}
+
               {/* Action Button */}
               <button
                 onClick={handleConfirm}
-                disabled={!amount || parseFloat(amount) <= 0}
+                disabled={!amount || parseFloat(amount) <= 0 || (cardBoundMode && (actionType === 'deposit' || actionType === 'withdraw'))}
                 className={`w-full py-4 rounded-xl font-bold text-white transition-all ${
                   actionType === 'deposit' ? 'bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700' :
                   actionType === 'withdraw' ? 'bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700' :

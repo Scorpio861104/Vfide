@@ -117,10 +117,8 @@ contract PayrollManager is ReentrancyGuard {
     function createStream(address payee, address token, uint256 rate, uint256 initialDeposit) external returns (uint256) {
         if (payee == address(0)) revert PM_InvalidPayee();
         if (rate == 0) revert PM_InvalidRate();
+        require(rate >= 1e12, "PM: rate too low"); // L-18 Fix: Prevent token-locking streams
         if (initialDeposit == 0) revert PM_InvalidDeposit();
-        
-        // Transfer tokens in
-        IERC20(token).safeTransferFrom(msg.sender, address(this), initialDeposit);
 
         uint256 id = nextStreamId++;
         streams[id] = Stream({
@@ -137,9 +135,14 @@ contract PayrollManager is ReentrancyGuard {
             pausedAccrued: 0
         });
         
-        // Track streams for both parties
+        // Track streams for both parties (I-11: capped)
+        require(payerStreams[msg.sender].length < 200, "PM: payer stream cap");
         payerStreams[msg.sender].push(id);
+        require(payeeStreams[payee].length < 200, "PM: payee stream cap");
         payeeStreams[payee].push(id);
+
+        // Transfer tokens in
+        IERC20(token).safeTransferFrom(msg.sender, address(this), initialDeposit);
 
         // slither-disable-next-line reentrancy-events
         emit StreamCreated(id, msg.sender, payee, rate);
@@ -159,8 +162,8 @@ contract PayrollManager is ReentrancyGuard {
         if (!s.active) revert PM_StreamInactive();
         if (msg.sender != s.payer) revert PM_NotPayer();
 
-        IERC20(s.token).safeTransferFrom(msg.sender, address(this), amount);
         s.depositBalance += amount;
+        IERC20(s.token).safeTransferFrom(msg.sender, address(this), amount);
         emit TopUp(streamId, amount);
     }
     

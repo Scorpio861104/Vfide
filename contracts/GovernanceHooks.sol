@@ -44,9 +44,10 @@ contract GovernanceHooks {
     error GH_VoterRestricted();
 
     modifier onlyOwner() { require(msg.sender == owner, "not owner"); _; }
-    modifier onlyDAO() { if (msg.sender != dao && msg.sender != owner) revert GH_NotAuthorized(); _; }
+    modifier onlyDAO() { if (msg.sender != dao) revert GH_NotAuthorized(); _; }
 
     constructor(address _ledger, address _seer, address _dao) { 
+        require(_dao != address(0), "zero dao");
         owner = msg.sender;
         dao = _dao;
         ledger=IProofLedger_GH(_ledger); 
@@ -56,7 +57,7 @@ contract GovernanceHooks {
         emit OwnershipTransferred(address(0), msg.sender);
     }
 
-    function setDAO(address _dao) external onlyOwner {
+    function setDAO(address _dao) external onlyDAO {
         require(_dao != address(0), "zero dao");
         dao = _dao;
         emit DAOSet(_dao);

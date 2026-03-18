@@ -515,16 +515,9 @@ export function useVaultSearch() {
     setSearchResult(null);
 
     try {
-      // In production, this would call the appropriate contract read
-      // For now, simulate the search
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Mock: return null for not found, or mock address for demo
-      if (query.toLowerCase() === 'demo' || query.length > 5) {
-        setSearchResult('0x1234567890abcdef1234567890abcdef12345678' as Address);
-      } else {
-        setError('No vault found with that identifier');
-      }
+      void type;
+      void query;
+      setError('Vault search endpoint is not connected yet');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Search failed');
     } finally {

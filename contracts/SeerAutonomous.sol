@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
-import { ReentrancyGuard } from "./SharedInterfaces.sol";
+import { ReentrancyGuard, ISeer } from "./SharedInterfaces.sol";
 
 /**
  * @title SeerAutonomous
@@ -37,15 +37,7 @@ import { ReentrancyGuard } from "./SharedInterfaces.sol";
 ///                              INTERFACES
 /// ═══════════════════════════════════════════════════════════════════════════
 
-interface ISeer_Auto {
-    function getScore(address) external view returns (uint16);
-    function punish(address subject, uint16 delta, string calldata reason) external;
-    function reward(address subject, uint16 delta, string calldata reason) external;
-    function lowTrustThreshold() external view returns (uint16);
-    function highTrustThreshold() external view returns (uint16);
-    function minForGovernance() external view returns (uint16);
-    function NEUTRAL() external view returns (uint16);
-}
+// L-14 Fix: Removed local ISeer_Auto — using shared ISeer from SharedInterfaces.sol
 
 /// @notice Optional risk oracle for off-chain anomaly scoring
 interface IRiskOracle_Auto {
@@ -71,6 +63,17 @@ error SA_RateLimited();
 /// ═══════════════════════════════════════════════════════════════════════════
 
 contract SeerAutonomous is ReentrancyGuard {
+    uint16 private constant RC_CRITICAL_SCORE = 100;
+    uint16 private constant RC_VERY_LOW_SCORE = 101;
+    uint16 private constant RC_LOW_SCORE = 102;
+    uint16 private constant RC_BELOW_RATE_THRESHOLD = 103;
+    uint16 private constant RC_REPEATED_PATTERN = 120;
+    uint16 private constant RC_PATTERN_VIOLATION = 121;
+    uint16 private constant RC_SUSPICIOUS_PATTERN = 122;
+    uint16 private constant RC_PATTERN_DETECTED = 123;
+    uint16 private constant RC_ORACLE_HIGH_RISK = 130;
+    uint16 private constant RC_ORACLE_MEDIUM_RISK = 131;
+    uint16 private constant RC_PROGRESSIVE_UNFREEZE = 140;
     
     // ═══════════════════════════════════════════════════════════════════════
     //                              EVENTS
@@ -101,13 +104,16 @@ contract SeerAutonomous is ReentrancyGuard {
         uint16 oldLimit,
         uint16 newLimit
     );
+    event DAOMaxAutonomyProfileApplied(address indexed by);
     
     // Restrictions
     event RestrictionApplied(address indexed subject, RestrictionLevel level, uint64 duration, string reason);
+    event RestrictionAppliedCode(address indexed subject, RestrictionLevel level, uint16 indexed reasonCode, string reason);
     event RestrictionLifted(address indexed subject, RestrictionLevel oldLevel);
     event DAOOverride(address indexed subject, string reason);
     event ChallengeCreated(address indexed subject, RestrictionLevel target, uint64 deadline, string reason);
     event ChallengeResolved(address indexed subject, bool upheld, string reason);
+    event ChallengeResolvedCode(address indexed subject, bool upheld, uint16 indexed reasonCode, string reason);
     
     // ═══════════════════════════════════════════════════════════════════════
     //                              ENUMS
@@ -163,7 +169,7 @@ contract SeerAutonomous is ReentrancyGuard {
     // ═══════════════════════════════════════════════════════════════════════
     
     address public dao;
-    ISeer_Auto public seer;
+    ISeer public seer;
     IProofLedger_Auto public ledger;
     IRiskOracle_Auto public riskOracle;
     
@@ -264,7 +270,7 @@ contract SeerAutonomous is ReentrancyGuard {
     constructor(address _dao, address _seer, address _ledger) {
         if (_dao == address(0) || _seer == address(0)) revert SA_Zero();
         dao = _dao;
-        seer = ISeer_Auto(_seer);
+        seer = ISeer(_seer);
         if (_ledger != address(0)) ledger = IProofLedger_Auto(_ledger);
         
         // Initialize default rate limits
@@ -281,27 +287,63 @@ contract SeerAutonomous is ReentrancyGuard {
     function _initializeRateLimits() internal {
         // None: unlimited
         rateLimits[RestrictionLevel.None][ActionType.Transfer] = 1000;
+        rateLimits[RestrictionLevel.None][ActionType.VaultDeposit] = 1000;
+        rateLimits[RestrictionLevel.None][ActionType.VaultWithdraw] = 1000;
         rateLimits[RestrictionLevel.None][ActionType.GovernanceVote] = 100;
+        rateLimits[RestrictionLevel.None][ActionType.GovernancePropose] = 20;
+        rateLimits[RestrictionLevel.None][ActionType.Endorse] = 100;
+        rateLimits[RestrictionLevel.None][ActionType.Stake] = 200;
+        rateLimits[RestrictionLevel.None][ActionType.Trade] = 1000;
         
         // Monitored: normal limits
         rateLimits[RestrictionLevel.Monitored][ActionType.Transfer] = 100;
+        rateLimits[RestrictionLevel.Monitored][ActionType.VaultDeposit] = 100;
+        rateLimits[RestrictionLevel.Monitored][ActionType.VaultWithdraw] = 100;
         rateLimits[RestrictionLevel.Monitored][ActionType.GovernanceVote] = 50;
+        rateLimits[RestrictionLevel.Monitored][ActionType.GovernancePropose] = 10;
+        rateLimits[RestrictionLevel.Monitored][ActionType.Endorse] = 50;
+        rateLimits[RestrictionLevel.Monitored][ActionType.Stake] = 50;
+        rateLimits[RestrictionLevel.Monitored][ActionType.Trade] = 100;
         
         // Limited: reduced
         rateLimits[RestrictionLevel.Limited][ActionType.Transfer] = 20;
+        rateLimits[RestrictionLevel.Limited][ActionType.VaultDeposit] = 20;
+        rateLimits[RestrictionLevel.Limited][ActionType.VaultWithdraw] = 20;
         rateLimits[RestrictionLevel.Limited][ActionType.GovernanceVote] = 10;
+        rateLimits[RestrictionLevel.Limited][ActionType.GovernancePropose] = 3;
+        rateLimits[RestrictionLevel.Limited][ActionType.Endorse] = 10;
+        rateLimits[RestrictionLevel.Limited][ActionType.Stake] = 10;
+        rateLimits[RestrictionLevel.Limited][ActionType.Trade] = 20;
         
         // Restricted: minimal
         rateLimits[RestrictionLevel.Restricted][ActionType.Transfer] = 5;
+        rateLimits[RestrictionLevel.Restricted][ActionType.VaultDeposit] = 2;
+        rateLimits[RestrictionLevel.Restricted][ActionType.VaultWithdraw] = 2;
         rateLimits[RestrictionLevel.Restricted][ActionType.GovernanceVote] = 0;
+        rateLimits[RestrictionLevel.Restricted][ActionType.GovernancePropose] = 0;
+        rateLimits[RestrictionLevel.Restricted][ActionType.Endorse] = 2;
+        rateLimits[RestrictionLevel.Restricted][ActionType.Stake] = 2;
+        rateLimits[RestrictionLevel.Restricted][ActionType.Trade] = 5;
         
         // Suspended: emergency only
         rateLimits[RestrictionLevel.Suspended][ActionType.Transfer] = 1;
+        rateLimits[RestrictionLevel.Suspended][ActionType.VaultDeposit] = 0;
+        rateLimits[RestrictionLevel.Suspended][ActionType.VaultWithdraw] = 0;
         rateLimits[RestrictionLevel.Suspended][ActionType.GovernanceVote] = 0;
+        rateLimits[RestrictionLevel.Suspended][ActionType.GovernancePropose] = 0;
+        rateLimits[RestrictionLevel.Suspended][ActionType.Endorse] = 0;
+        rateLimits[RestrictionLevel.Suspended][ActionType.Stake] = 0;
+        rateLimits[RestrictionLevel.Suspended][ActionType.Trade] = 0;
         
         // Frozen: nothing
         rateLimits[RestrictionLevel.Frozen][ActionType.Transfer] = 0;
+        rateLimits[RestrictionLevel.Frozen][ActionType.VaultDeposit] = 0;
+        rateLimits[RestrictionLevel.Frozen][ActionType.VaultWithdraw] = 0;
         rateLimits[RestrictionLevel.Frozen][ActionType.GovernanceVote] = 0;
+        rateLimits[RestrictionLevel.Frozen][ActionType.GovernancePropose] = 0;
+        rateLimits[RestrictionLevel.Frozen][ActionType.Endorse] = 0;
+        rateLimits[RestrictionLevel.Frozen][ActionType.Stake] = 0;
+        rateLimits[RestrictionLevel.Frozen][ActionType.Trade] = 0;
     }
     
     // ═══════════════════════════════════════════════════════════════════════
@@ -354,10 +396,10 @@ contract SeerAutonomous is ReentrancyGuard {
             uint8 risk = riskOracle.getRiskScore(subject);
             if (risk > 80) {
                 // High risk: escalate to at least Restricted for a short period
-                _applyRestriction(subject, RestrictionLevel.Restricted, 3 days, "oracle_high_risk");
+                _applyRestriction(subject, RestrictionLevel.Restricted, 3 days, "oracle_high_risk", RC_ORACLE_HIGH_RISK);
                 result = EnforcementResult.Delayed;
             } else if (risk > 50 && restrictionLevel[subject] < RestrictionLevel.Limited) {
-                _applyRestriction(subject, RestrictionLevel.Limited, 1 days, "oracle_medium_risk");
+                _applyRestriction(subject, RestrictionLevel.Limited, 1 days, "oracle_medium_risk", RC_ORACLE_MEDIUM_RISK);
                 if (result == EnforcementResult.Allowed) result = EnforcementResult.Warned;
             }
         }
@@ -423,6 +465,8 @@ contract SeerAutonomous is ReentrancyGuard {
         uint16 limit = rateLimits[level][action];
         if (limit == 0 && level >= RestrictionLevel.Restricted) {
             return EnforcementResult.Blocked;
+        } else if (limit == 0) {
+            return EnforcementResult.Allowed;
         }
         
         // Check daily count
@@ -572,19 +616,19 @@ contract SeerAutonomous is ReentrancyGuard {
         
         // Escalating response based on violation count
         if (count >= 5) {
-            _applyRestriction(subject, RestrictionLevel.Suspended, 7 days, "repeated_pattern_violation");
+            _applyRestriction(subject, RestrictionLevel.Suspended, 7 days, "repeated_pattern_violation", RC_REPEATED_PATTERN);
             _punish(subject, 200, "repeated_pattern_violation");
             return EnforcementResult.Blocked;
         } else if (count >= 3) {
-            _applyRestriction(subject, RestrictionLevel.Restricted, 3 days, "pattern_violation");
+            _applyRestriction(subject, RestrictionLevel.Restricted, 3 days, "pattern_violation", RC_PATTERN_VIOLATION);
             _punish(subject, 100, "pattern_violation");
             return EnforcementResult.Blocked;
         } else if (count >= 2) {
-            _applyRestriction(subject, RestrictionLevel.Limited, 1 days, "suspicious_pattern");
+            _applyRestriction(subject, RestrictionLevel.Limited, 1 days, "suspicious_pattern", RC_SUSPICIOUS_PATTERN);
             _punish(subject, 50, "suspicious_pattern");
             return EnforcementResult.Delayed;
         } else {
-            _applyRestriction(subject, RestrictionLevel.Monitored, 6 hours, "pattern_detected");
+            _applyRestriction(subject, RestrictionLevel.Monitored, 6 hours, "pattern_detected", RC_PATTERN_DETECTED);
             return EnforcementResult.Warned;
         }
     }
@@ -617,13 +661,13 @@ contract SeerAutonomous is ReentrancyGuard {
         
         // Score-based automatic adjustment
         if (score < 1000 && current < RestrictionLevel.Frozen) {
-            _applyRestriction(subject, RestrictionLevel.Frozen, 30 days, "critical_score");
+            _applyRestriction(subject, RestrictionLevel.Frozen, 30 days, "critical_score", RC_CRITICAL_SCORE);
         } else if (score < 2000 && current < RestrictionLevel.Suspended) {
-            _applyRestriction(subject, RestrictionLevel.Suspended, 14 days, "very_low_score");
+            _applyRestriction(subject, RestrictionLevel.Suspended, 14 days, "very_low_score", RC_VERY_LOW_SCORE);
         } else if (score < autoRestrictThreshold && current < RestrictionLevel.Restricted) {
-            _applyRestriction(subject, RestrictionLevel.Restricted, 7 days, "low_score");
+            _applyRestriction(subject, RestrictionLevel.Restricted, 7 days, "low_score", RC_LOW_SCORE);
         } else if (score < rateLimitThreshold && current < RestrictionLevel.Limited) {
-            _applyRestriction(subject, RestrictionLevel.Limited, 3 days, "below_rate_threshold");
+            _applyRestriction(subject, RestrictionLevel.Limited, 3 days, "below_rate_threshold", RC_BELOW_RATE_THRESHOLD);
         } else if (score >= autoLiftThreshold && current != RestrictionLevel.None) {
             // Good score - lift restrictions
             _liftRestriction(subject);
@@ -634,7 +678,8 @@ contract SeerAutonomous is ReentrancyGuard {
         address subject,
         RestrictionLevel level,
         uint64 duration,
-        string memory reason
+        string memory reason,
+        uint16 reasonCode
     ) internal {
         // Only escalate, never downgrade automatically
         if (level <= restrictionLevel[subject]) return;
@@ -658,6 +703,7 @@ contract SeerAutonomous is ReentrancyGuard {
 
         // slither-disable-next-line reentrancy-events
         emit RestrictionApplied(subject, level, duration, reason);
+        emit RestrictionAppliedCode(subject, level, reasonCode, reason);
 
         // Higher restrictions = score penalty
         if (level >= RestrictionLevel.Restricted) {
@@ -677,6 +723,7 @@ contract SeerAutonomous is ReentrancyGuard {
             restrictionReason[subject] = "progressive_unfreeze";
             // slither-disable-next-line reentrancy-events
             emit RestrictionApplied(subject, next, 1 days, "progressive_unfreeze");
+            emit RestrictionAppliedCode(subject, next, RC_PROGRESSIVE_UNFREEZE, "progressive_unfreeze");
         } else {
             restrictionLevel[subject] = RestrictionLevel.None;
             restrictionExpiry[subject] = 0;
@@ -726,6 +773,9 @@ contract SeerAutonomous is ReentrancyGuard {
         restrictionExpiry[subject] = uint64(block.timestamp + 7 days);
         restrictionReason[subject] = ch.reason;
         emit RestrictionApplied(subject, ch.targetLevel, 7 days, ch.reason);
+        emit RestrictionAppliedCode(subject, ch.targetLevel, 0, ch.reason);
+        emit ChallengeResolved(subject, true, ch.reason);
+        emit ChallengeResolvedCode(subject, true, 0, ch.reason);
         delete pendingChallenge[subject];
     }
 
@@ -743,11 +793,17 @@ contract SeerAutonomous is ReentrancyGuard {
             restrictionExpiry[subject] = uint64(block.timestamp + 7 days);
             restrictionReason[subject] = ch.reason;
             emit RestrictionApplied(subject, ch.targetLevel, 7 days, ch.reason);
+            emit RestrictionAppliedCode(subject, ch.targetLevel, 0, ch.reason);
+            emit ChallengeResolved(subject, true, ch.reason);
+            emit ChallengeResolvedCode(subject, true, 0, ch.reason);
         } else {
             emit ChallengeResolved(subject, false, ch.reason);
+            emit ChallengeResolvedCode(subject, false, 0, ch.reason);
         }
         delete pendingChallenge[subject];
     }
+
+    // _reasonCode removed: challenge-derived codes use 0; direct calls pass RC_ constants
     
     function _adjustThreshold(ThresholdType ttype, bool increase, uint16 delta) internal {
         uint16 oldValue = 0;
@@ -836,9 +892,98 @@ contract SeerAutonomous is ReentrancyGuard {
     }
     
     function daoSetRateLimit(RestrictionLevel level, ActionType action, uint16 limit) external onlyDAO {
+        _setRateLimitWithEvent(level, action, limit);
+    }
+
+    /// @notice Apply a strict autonomy profile in one governance call.
+    /// @dev Raises sensitivity and tightens rate limits to maximize automated enforcement.
+    function daoApplyMaxAutonomyProfile() external onlyDAO {
+        uint16 oldAutoRestrict = autoRestrictThreshold;
+        uint16 oldAutoLift = autoLiftThreshold;
+        uint16 oldRateLimit = rateLimitThreshold;
+        uint16 oldSensitivity = patternSensitivity;
+
+        // Strict threshold profile
+        autoRestrictThreshold = 4500;
+        autoLiftThreshold = 6200;
+        rateLimitThreshold = 5200;
+        patternSensitivity = 100;
+
+        emit DAOThresholdsUpdated(
+            oldAutoRestrict,
+            autoRestrictThreshold,
+            oldAutoLift,
+            autoLiftThreshold,
+            oldRateLimit,
+            rateLimitThreshold,
+            oldSensitivity,
+            patternSensitivity
+        );
+
+        // Tighten rate limits across all restriction levels and action types.
+        _setRateLimitWithEvent(RestrictionLevel.None, ActionType.Transfer, 300);
+        _setRateLimitWithEvent(RestrictionLevel.None, ActionType.VaultDeposit, 300);
+        _setRateLimitWithEvent(RestrictionLevel.None, ActionType.VaultWithdraw, 300);
+        _setRateLimitWithEvent(RestrictionLevel.None, ActionType.GovernanceVote, 30);
+        _setRateLimitWithEvent(RestrictionLevel.None, ActionType.GovernancePropose, 6);
+        _setRateLimitWithEvent(RestrictionLevel.None, ActionType.Endorse, 30);
+        _setRateLimitWithEvent(RestrictionLevel.None, ActionType.Stake, 60);
+        _setRateLimitWithEvent(RestrictionLevel.None, ActionType.Trade, 300);
+
+        _setRateLimitWithEvent(RestrictionLevel.Monitored, ActionType.Transfer, 40);
+        _setRateLimitWithEvent(RestrictionLevel.Monitored, ActionType.VaultDeposit, 40);
+        _setRateLimitWithEvent(RestrictionLevel.Monitored, ActionType.VaultWithdraw, 40);
+        _setRateLimitWithEvent(RestrictionLevel.Monitored, ActionType.GovernanceVote, 15);
+        _setRateLimitWithEvent(RestrictionLevel.Monitored, ActionType.GovernancePropose, 3);
+        _setRateLimitWithEvent(RestrictionLevel.Monitored, ActionType.Endorse, 15);
+        _setRateLimitWithEvent(RestrictionLevel.Monitored, ActionType.Stake, 15);
+        _setRateLimitWithEvent(RestrictionLevel.Monitored, ActionType.Trade, 40);
+
+        _setRateLimitWithEvent(RestrictionLevel.Limited, ActionType.Transfer, 8);
+        _setRateLimitWithEvent(RestrictionLevel.Limited, ActionType.VaultDeposit, 8);
+        _setRateLimitWithEvent(RestrictionLevel.Limited, ActionType.VaultWithdraw, 8);
+        _setRateLimitWithEvent(RestrictionLevel.Limited, ActionType.GovernanceVote, 3);
+        _setRateLimitWithEvent(RestrictionLevel.Limited, ActionType.GovernancePropose, 1);
+        _setRateLimitWithEvent(RestrictionLevel.Limited, ActionType.Endorse, 4);
+        _setRateLimitWithEvent(RestrictionLevel.Limited, ActionType.Stake, 4);
+        _setRateLimitWithEvent(RestrictionLevel.Limited, ActionType.Trade, 8);
+
+        _setRateLimitWithEvent(RestrictionLevel.Restricted, ActionType.Transfer, 2);
+        _setRateLimitWithEvent(RestrictionLevel.Restricted, ActionType.VaultDeposit, 1);
+        _setRateLimitWithEvent(RestrictionLevel.Restricted, ActionType.VaultWithdraw, 1);
+        _setRateLimitWithEvent(RestrictionLevel.Restricted, ActionType.GovernanceVote, 0);
+        _setRateLimitWithEvent(RestrictionLevel.Restricted, ActionType.GovernancePropose, 0);
+        _setRateLimitWithEvent(RestrictionLevel.Restricted, ActionType.Endorse, 1);
+        _setRateLimitWithEvent(RestrictionLevel.Restricted, ActionType.Stake, 1);
+        _setRateLimitWithEvent(RestrictionLevel.Restricted, ActionType.Trade, 2);
+
+        _setRateLimitWithEvent(RestrictionLevel.Suspended, ActionType.Transfer, 0);
+        _setRateLimitWithEvent(RestrictionLevel.Suspended, ActionType.VaultDeposit, 0);
+        _setRateLimitWithEvent(RestrictionLevel.Suspended, ActionType.VaultWithdraw, 0);
+        _setRateLimitWithEvent(RestrictionLevel.Suspended, ActionType.GovernanceVote, 0);
+        _setRateLimitWithEvent(RestrictionLevel.Suspended, ActionType.GovernancePropose, 0);
+        _setRateLimitWithEvent(RestrictionLevel.Suspended, ActionType.Endorse, 0);
+        _setRateLimitWithEvent(RestrictionLevel.Suspended, ActionType.Stake, 0);
+        _setRateLimitWithEvent(RestrictionLevel.Suspended, ActionType.Trade, 0);
+
+        _setRateLimitWithEvent(RestrictionLevel.Frozen, ActionType.Transfer, 0);
+        _setRateLimitWithEvent(RestrictionLevel.Frozen, ActionType.VaultDeposit, 0);
+        _setRateLimitWithEvent(RestrictionLevel.Frozen, ActionType.VaultWithdraw, 0);
+        _setRateLimitWithEvent(RestrictionLevel.Frozen, ActionType.GovernanceVote, 0);
+        _setRateLimitWithEvent(RestrictionLevel.Frozen, ActionType.GovernancePropose, 0);
+        _setRateLimitWithEvent(RestrictionLevel.Frozen, ActionType.Endorse, 0);
+        _setRateLimitWithEvent(RestrictionLevel.Frozen, ActionType.Stake, 0);
+        _setRateLimitWithEvent(RestrictionLevel.Frozen, ActionType.Trade, 0);
+
+        emit DAOMaxAutonomyProfileApplied(msg.sender);
+    }
+
+    function _setRateLimitWithEvent(RestrictionLevel level, ActionType action, uint16 limit) internal {
         uint16 oldLimit = rateLimits[level][action];
         rateLimits[level][action] = limit;
-        emit DAORateLimitUpdated(level, action, oldLimit, limit);
+        if (oldLimit != limit) {
+            emit DAORateLimitUpdated(level, action, oldLimit, limit);
+        }
     }
     
     // ═══════════════════════════════════════════════════════════════════════
@@ -854,7 +999,7 @@ contract SeerAutonomous is ReentrancyGuard {
     
     function setModules(address _seer, address _ledger) external onlyDAO {
         if (_seer == address(0)) revert SA_Zero();
-        seer = ISeer_Auto(_seer);
+        seer = ISeer(_seer);
         if (_ledger != address(0)) ledger = IProofLedger_Auto(_ledger);
         emit ModulesSet(_seer, dao, _ledger);
     }
@@ -890,6 +1035,8 @@ contract SeerAutonomous is ReentrancyGuard {
         uint16 limit = rateLimits[level][action];
         if (limit == 0 && level >= RestrictionLevel.Restricted) {
             return (false, "action_blocked");
+        } else if (limit == 0) {
+            return (true, "allowed");
         }
         
         uint16 count = actionCountToday[subject][action];

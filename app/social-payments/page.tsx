@@ -29,19 +29,7 @@ export default function SocialPaymentsDashboard() {
   const { address: _address, isConnected: _isConnected } = useAccount();
   const [activeTab, setActiveTab] = useState<'feed' | 'activity' | 'earnings'>('feed');
 
-  // Mock stats for demo
-  const mockStats = {
-    totalTipsReceived: '124.5 VFIDE',
-    totalTipsSent: '89.2 VFIDE',
-    contentSales: 12,
-    totalContentRevenue: '340 VFIDE',
-    endorsementRewards: 8,
-    topTippers: [
-      { name: 'Alex Rivera', amount: '25 VFIDE', avatar: '👨‍💼' },
-      { name: 'Sara Chen', amount: '18 VFIDE', avatar: '👩‍🎤' },
-      { name: 'John Park', amount: '15 VFIDE', avatar: '👨‍💻' },
-    ],
-  };
+  const statsUnavailable = 'Live data pending';
 
   return (
     <div className="min-h-screen bg-zinc-950">
@@ -84,7 +72,7 @@ export default function SocialPaymentsDashboard() {
               <TrendingUp className="w-5 h-5 text-green-400" />
             </div>
             <div className="text-2xl font-bold text-zinc-100 mb-1">
-              {mockStats.totalTipsReceived}
+              {statsUnavailable}
             </div>
             <div className="text-sm text-green-400">Tips Received</div>
           </motion.div>
@@ -100,7 +88,7 @@ export default function SocialPaymentsDashboard() {
               <Heart className="w-5 h-5 text-purple-400" />
             </div>
             <div className="text-2xl font-bold text-zinc-100 mb-1">
-              {mockStats.totalTipsSent}
+              {statsUnavailable}
             </div>
             <div className="text-sm text-purple-400">Tips Sent</div>
           </motion.div>
@@ -116,11 +104,11 @@ export default function SocialPaymentsDashboard() {
               <DollarSign className="w-5 h-5 text-blue-400" />
             </div>
             <div className="text-2xl font-bold text-zinc-100 mb-1">
-              {mockStats.contentSales}
+              {statsUnavailable}
             </div>
             <div className="text-sm text-blue-400">Content Sales</div>
             <div className="text-xs text-zinc-500 mt-1">
-              {mockStats.totalContentRevenue} earned
+              Integrate indexed sales events to populate this card
             </div>
           </motion.div>
 
@@ -135,7 +123,7 @@ export default function SocialPaymentsDashboard() {
               <Users className="w-5 h-5 text-yellow-400" />
             </div>
             <div className="text-2xl font-bold text-zinc-100 mb-1">
-              {mockStats.endorsementRewards}
+              {statsUnavailable}
             </div>
             <div className="text-sm text-yellow-400">Endorsement Rewards</div>
           </motion.div>
@@ -152,24 +140,8 @@ export default function SocialPaymentsDashboard() {
             <Sparkles className="w-5 h-5 text-purple-400" />
             Top Supporters
           </h3>
-          <div className="space-y-3">
-            {mockStats.topTippers.map((tipper, idx) => (
-              <div
-                key={idx}
-                className="flex items-center justify-between p-3 bg-zinc-950 rounded-lg hover:bg-zinc-800 transition-colors"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-zinc-800 flex items-center justify-center text-lg">
-                    {tipper.avatar}
-                  </div>
-                  <span className="font-medium text-zinc-100">{tipper.name}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <DollarSign className="w-4 h-4 text-purple-400" />
-                  <span className="font-bold text-purple-400">{tipper.amount}</span>
-                </div>
-              </div>
-            ))}
+          <div className="p-3 bg-zinc-950 rounded-lg text-sm text-zinc-400">
+            Top supporter rankings will appear once payment-tip events are indexed.
           </div>
         </motion.div>
 
@@ -220,23 +192,8 @@ export default function SocialPaymentsDashboard() {
                   <ArrowDownLeft className="w-5 h-5 text-green-400" />
                   Recent Tips Received
                 </h3>
-                <div className="space-y-3">
-                  {[
-                    { from: 'Alex Rivera', amount: '5 VFIDE', time: '2h ago' },
-                    { from: 'Sara Chen', amount: '3 VFIDE', time: '5h ago' },
-                    { from: 'John Park', amount: '2.5 VFIDE', time: '8h ago' },
-                  ].map((tip, idx) => (
-                    <div
-                      key={idx}
-                      className="p-3 bg-zinc-950 rounded-lg flex items-center justify-between"
-                    >
-                      <div>
-                        <div className="font-medium text-zinc-100">{tip.from}</div>
-                        <div className="text-xs text-zinc-500">{tip.time}</div>
-                      </div>
-                      <div className="font-bold text-green-400">+{tip.amount}</div>
-                    </div>
-                  ))}
+                <div className="p-3 bg-zinc-950 rounded-lg text-sm text-zinc-400">
+                  Live tip history is not available yet.
                 </div>
               </div>
 
@@ -246,25 +203,8 @@ export default function SocialPaymentsDashboard() {
                   <Lock className="w-5 h-5 text-blue-400" />
                   Content Sales
                 </h3>
-                <div className="space-y-3">
-                  {[
-                    { item: 'Premium Article', buyer: 'Sara Chen', amount: '10 VFIDE', time: '1d ago' },
-                    { item: 'Group Access', buyer: 'John Park', amount: '15 VFIDE', time: '2d ago' },
-                    { item: 'Premium Post', buyer: 'Emma Wilson', amount: '5 VFIDE', time: '3d ago' },
-                  ].map((sale, idx) => (
-                    <div
-                      key={idx}
-                      className="p-3 bg-zinc-950 rounded-lg"
-                    >
-                      <div className="flex items-center justify-between mb-1">
-                        <div className="font-medium text-zinc-100">{sale.item}</div>
-                        <div className="font-bold text-blue-400">+{sale.amount}</div>
-                      </div>
-                      <div className="text-xs text-zinc-500">
-                        to {sale.buyer} • {sale.time}
-                      </div>
-                    </div>
-                  ))}
+                <div className="p-3 bg-zinc-950 rounded-lg text-sm text-zinc-400">
+                  Live content-sale settlements are not available yet.
                 </div>
               </div>
             </div>

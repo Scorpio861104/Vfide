@@ -93,120 +93,9 @@ interface SuggestedUser {
   verified: boolean;
 }
 
-// ============================================================================
-// MOCK DATA
-// ============================================================================
-
-const mockStories: Story[] = [
-  { id: '1', author: { address: '0x1234', name: 'You', avatar: '✨' }, preview: '', viewed: false, isLive: false },
-  { id: '2', author: { address: '0x2345', name: 'CryptoKing', avatar: '👑' }, preview: 'https://picsum.photos/100/180?1', viewed: false, isLive: true },
-  { id: '3', author: { address: '0x3456', name: 'DeFiQueen', avatar: '💎' }, preview: 'https://picsum.photos/100/180?2', viewed: false, isLive: false },
-  { id: '4', author: { address: '0x4567', name: 'NFTArtist', avatar: '🎨' }, preview: 'https://picsum.photos/100/180?3', viewed: true, isLive: false },
-  { id: '5', author: { address: '0x5678', name: 'DAOBuilder', avatar: '🏗️' }, preview: 'https://picsum.photos/100/180?4', viewed: true, isLive: false },
-  { id: '6', author: { address: '0x6789', name: 'TokenTrader', avatar: '📊' }, preview: 'https://picsum.photos/100/180?5', viewed: false, isLive: false },
-];
-
-const _mockPosts: Post[] = [
-  {
-    id: '1',
-    author: {
-      address: '0xCrypto...King',
-      name: 'CryptoKing',
-      avatar: '👑',
-      verified: true,
-      proofScore: 95,
-    },
-    content: 'Just hit 1000 successful transactions on VFIDE! The trust protocol is working exactly as designed. Loving the seamless P2P experience 🚀\n\n#VFIDE #DeFi #TrustProtocol',
-    media: [{ type: 'image', url: 'https://picsum.photos/600/400?1' }],
-    timestamp: Date.now() - 1000 * 60 * 30,
-    likes: 234,
-    comments: 45,
-    shares: 12,
-    views: 1420,
-    liked: false,
-    bookmarked: false,
-    isFollowing: true,
-    tags: ['VFIDE', 'DeFi', 'TrustProtocol'],
-  },
-  {
-    id: '2',
-    author: {
-      address: '0xDeFi...Queen',
-      name: 'DeFiQueen',
-      avatar: '💎',
-      verified: true,
-      proofScore: 88,
-    },
-    content: 'PSA: Always check ProofScore before transacting with new addresses. Just avoided a potential scam thanks to the reputation system! 🛡️\n\nStay safe out there, friends.',
-    timestamp: Date.now() - 1000 * 60 * 120,
-    likes: 567,
-    comments: 89,
-    shares: 156,
-    views: 3240,
-    liked: true,
-    bookmarked: true,
-    isFollowing: false,
-    tags: ['Security', 'ProofScore'],
-  },
-  {
-    id: '3',
-    author: {
-      address: '0xNFT...Artist',
-      name: 'NFTArtist',
-      avatar: '🎨',
-      verified: false,
-      proofScore: 72,
-    },
-    content: 'New collection dropping next week! All payments will be through VFIDE for that sweet escrow protection. Preview coming soon 👀',
-    media: [
-      { type: 'image', url: 'https://picsum.photos/600/400?2' },
-      { type: 'image', url: 'https://picsum.photos/600/400?3' },
-    ],
-    timestamp: Date.now() - 1000 * 60 * 240,
-    likes: 892,
-    comments: 156,
-    shares: 78,
-    views: 5670,
-    liked: false,
-    bookmarked: false,
-    isFollowing: true,
-    tags: ['NFT', 'Art', 'ComingSoon'],
-  },
-  {
-    id: '4',
-    author: {
-      address: '0xDAO...Builder',
-      name: 'DAOBuilder',
-      avatar: '🏗️',
-      verified: true,
-      proofScore: 91,
-    },
-    content: 'Proposal #42 passed! Our community decided to allocate 10% of treasury to developer grants. This is what decentralized governance looks like! 🗳️\n\nThank you to everyone who participated in the vote.',
-    timestamp: Date.now() - 1000 * 60 * 360,
-    likes: 1203,
-    comments: 234,
-    shares: 189,
-    views: 8900,
-    liked: true,
-    bookmarked: false,
-    isFollowing: true,
-    tags: ['DAO', 'Governance', 'Community'],
-  },
-];
-
-const mockTrending: TrendingTopic[] = [
-  { id: '1', tag: '#VFIDE', posts: 12450, trending: 'up' },
-  { id: '2', tag: '#DeFi', posts: 8920, trending: 'up' },
-  { id: '3', tag: '#ProofScore', posts: 5670, trending: 'stable' },
-  { id: '4', tag: '#Web3', posts: 4230, trending: 'up' },
-  { id: '5', tag: '#NFT', posts: 3890, trending: 'down' },
-];
-
-const mockSuggested: SuggestedUser[] = [
-  { address: '0x7890', name: 'WhaleWatcher', avatar: '🐋', bio: 'Tracking big moves', followers: 45000, mutualFriends: 12, verified: true },
-  { address: '0x8901', name: 'YieldFarmer', avatar: '🌾', bio: 'Max APY seeker', followers: 23000, mutualFriends: 8, verified: true },
-  { address: '0x9012', name: 'GasOptimizer', avatar: '⛽', bio: 'Saving you fees', followers: 18000, mutualFriends: 5, verified: false },
-];
+const EMPTY_STORIES: Story[] = [];
+const EMPTY_TRENDING: TrendingTopic[] = [];
+const EMPTY_SUGGESTED: SuggestedUser[] = [];
 
 // ============================================================================
 // HELPER FUNCTIONS
@@ -466,7 +355,7 @@ function PostCard({ post, onLike, onBookmark }: { post: Post; onLike: () => void
   );
 }
 
-function TrendingSidebar() {
+function TrendingSidebar({ trending, suggested }: { trending: TrendingTopic[]; suggested: SuggestedUser[] }) {
   return (
       <div className="space-y-6">
         {/* Quick Links */}
@@ -502,7 +391,10 @@ function TrendingSidebar() {
             Trending
           </h3>
         <div className="space-y-3">
-          {mockTrending.map((topic, index) => (
+          {trending.length === 0 ? (
+            <div className="text-sm text-zinc-500">Trending topics will appear when live activity indexing is available.</div>
+          ) : null}
+          {trending.map((topic, index) => (
             <div key={topic.id} className="flex items-center justify-between group cursor-pointer">
               <div>
                 <div className="flex items-center gap-2">
@@ -525,7 +417,10 @@ function TrendingSidebar() {
             Who to Follow
           </h3>
         <div className="space-y-4">
-          {mockSuggested.map((user) => (
+          {suggested.length === 0 ? (
+            <div className="text-sm text-zinc-500">Suggested accounts will appear once social graph data is available.</div>
+          ) : null}
+          {suggested.map((user) => (
             <div key={user.address} className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-gradient-to-br from-cyan-400 to-violet-400 flex items-center justify-center text-lg">
                 {user.avatar}
@@ -554,24 +449,7 @@ function TrendingSidebar() {
             <Award className="w-5 h-5 text-amber-400" />
             Your Stats
           </h3>
-        <div className="grid grid-cols-2 gap-4">
-          <div className="text-center">
-            <div className="text-2xl font-bold text-cyan-400">1.2K</div>
-            <div className="text-xs text-zinc-500">Followers</div>
-          </div>
-          <div className="text-center">
-            <div className="text-2xl font-bold text-violet-400">847</div>
-            <div className="text-xs text-zinc-500">Following</div>
-          </div>
-          <div className="text-center">
-            <div className="text-2xl font-bold text-pink-400">15.2K</div>
-            <div className="text-xs text-zinc-500">Total Likes</div>
-          </div>
-          <div className="text-center">
-            <div className="text-2xl font-bold text-emerald-500">89</div>
-            <div className="text-xs text-zinc-500">ProofScore</div>
-          </div>
-        </div>
+        <div className="text-sm text-zinc-500">Personal social stats are not available until profile analytics is connected.</div>
       </div>
     </div>
   );
@@ -584,9 +462,9 @@ function TrendingSidebar() {
 export default function SocialHubPage() {
   const { address, isConnected } = useAccount();
   const [posts, setPosts] = useState<Post[]>([]);
-  const [_stories, setStories] = useState<Story[]>([]);
-  const [_trending, setTrending] = useState<TrendingTopic[]>([]);
-  const [_suggested, setSuggested] = useState<SuggestedUser[]>([]);
+  const [stories, setStories] = useState<Story[]>(EMPTY_STORIES);
+  const [trending, setTrending] = useState<TrendingTopic[]>(EMPTY_TRENDING);
+  const [suggested, setSuggested] = useState<SuggestedUser[]>(EMPTY_SUGGESTED);
   const [feedFilter, setFeedFilter] = useState<'all' | 'following' | 'trending'>('all');
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [_isLoading, setIsLoading] = useState(true);
@@ -753,7 +631,10 @@ export default function SocialHubPage() {
                     className="bg-zinc-900/80 backdrop-blur-xl border border-zinc-700 rounded-2xl p-4 ring-effect"
                   >
                     <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide">
-                      {mockStories.map((story) => (
+                      {stories.length === 0 ? (
+                        <div className="text-sm text-zinc-500 px-2 py-1">No live stories available yet.</div>
+                      ) : null}
+                      {stories.map((story) => (
                         <StoryRing
                           key={story.id}
                           story={story}
@@ -830,7 +711,7 @@ export default function SocialHubPage() {
                 {/* Sidebar */}
                 <div className="hidden lg:block">
                   <div className="sticky top-24">
-                    <TrendingSidebar />
+                    <TrendingSidebar trending={trending} suggested={suggested} />
                   </div>
                 </div>
               </div>

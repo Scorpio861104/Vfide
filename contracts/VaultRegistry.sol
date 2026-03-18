@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
-import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+import "./SharedInterfaces.sol";
 import "./interfaces/IVaultInfrastructure.sol";
 
 /**
@@ -117,7 +116,7 @@ contract VaultRegistry is Ownable, ReentrancyGuard {
     // CONSTRUCTOR
     // ═══════════════════════════════════════════════════════════════════════════════
     
-    constructor(address _vaultHub, address _badgeManager, address _proofScoreManager) Ownable(msg.sender) {
+    constructor(address _vaultHub, address _badgeManager, address _proofScoreManager) {
         if (_vaultHub == address(0)) revert ZeroAddress();
         vaultHub = IVaultInfrastructure(_vaultHub);
         badgeManager = IBadgeManager(_badgeManager);
@@ -153,6 +152,7 @@ contract VaultRegistry is Ownable, ReentrancyGuard {
         
         if (vaultCreatedAt[vault] < 1) {
             vaultIndex[vault] = allVaults.length;
+            require(allVaults.length < 100000, "VR: vault cap"); // I-11
             allVaults.push(vault);
             vaultCreatedAt[vault] = block.timestamp;
         }
@@ -282,6 +282,7 @@ contract VaultRegistry is Ownable, ReentrancyGuard {
     ) external onlyVaultOwner(vault) validVault(vault) {
         if (!_isGuardianOf[guardian][vault]) {
             _isGuardianOf[guardian][vault] = true;
+            require(vaultsGuardedBy[guardian].length < 100, "VR: guardian cap"); // I-11
             vaultsGuardedBy[guardian].push(vault);
             guardianCountOfVault[vault]++;
             emit GuardianRegistered(vault, guardian);
@@ -513,6 +514,7 @@ contract VaultRegistry is Ownable, ReentrancyGuard {
         
         for (uint256 i = 0; i < maxToCheck && matchCount < limit; i++) {
             address vault = allVaults[i];
+            // slither-disable-next-line calls-loop
             address owner = vaultHub.ownerOfVault(vault);
             
             if (bytes4(bytes20(owner)) == addressPrefix) {
@@ -526,6 +528,7 @@ contract VaultRegistry is Ownable, ReentrancyGuard {
         
         for (uint256 i = 0; i < maxToCheck && idx < matchCount; i++) {
             address vault = allVaults[i];
+            // slither-disable-next-line calls-loop
             address owner = vaultHub.ownerOfVault(vault);
             
             if (bytes4(bytes20(owner)) == addressPrefix) {
@@ -543,12 +546,15 @@ contract VaultRegistry is Ownable, ReentrancyGuard {
      * @notice Get detailed vault info for search results
      */
     function getVaultInfo(address vault) public view returns (VaultInfo memory info) {
+        // slither-disable-next-line calls-loop
         if (!vaultHub.isVault(vault)) revert InvalidVault();
         
+        // slither-disable-next-line calls-loop
         address owner = vaultHub.ownerOfVault(vault);
         
         uint256 proofScore = 0;
         if (address(proofScoreManager) != address(0)) {
+            // slither-disable-next-line calls-loop
             try proofScoreManager.getProofScore(owner) returns (uint256 score) {
                 proofScore = score;
             } catch {}
@@ -556,6 +562,7 @@ contract VaultRegistry is Ownable, ReentrancyGuard {
         
         uint256 badgeCount = 0;
         if (address(badgeManager) != address(0)) {
+            // slither-disable-next-line calls-loop
             try badgeManager.getUserBadges(owner) returns (uint256[] memory badges) {
                 badgeCount = badges.length;
             } catch {}

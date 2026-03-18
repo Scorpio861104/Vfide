@@ -22,6 +22,7 @@ jest.mock('wagmi', () => ({
 // Mock viem
 jest.mock('viem', () => ({
   parseAbi: (abi: string[]) => abi,
+  isAddress: (addr: string) => typeof addr === 'string' && addr.startsWith('0x') && addr.length === 42,
 }))
 
 // Import hooks after mocks
@@ -136,6 +137,7 @@ describe('useVaultRecovery', () => {
       isActive: false,
       proposedOwner: null,
       approvals: 0,
+      threshold: 0,
       expiryTime: null,
       daysRemaining: null,
     })
@@ -159,6 +161,7 @@ describe('useVaultRecovery', () => {
     expect(result.current.recoveryStatus.isActive).toBe(true)
     expect(result.current.recoveryStatus.proposedOwner).toBe('0xabc')
     expect(result.current.recoveryStatus.approvals).toBe(2)
+    expect(result.current.recoveryStatus.threshold).toBe(2)
 
     expect(result.current.inheritanceStatus.isActive).toBe(true)
     expect(result.current.inheritanceStatus.approvals).toBe(1)

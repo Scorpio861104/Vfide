@@ -453,7 +453,7 @@ export const lessonContentData: Record<string, LessonContent> = {
       },
       {
         heading: "Score Manipulation & Sybil Resistance",
-        content: "VFIDE's algorithm is designed to resist gaming and fake accounts:",
+        content: "VFIDE's algorithm is designed to resist gaming and Sybil account patterns:",
         points: [
           "Creating multiple wallets won't multiply score (network age + transaction costs)",
           "Circular transactions are detected and penalized",

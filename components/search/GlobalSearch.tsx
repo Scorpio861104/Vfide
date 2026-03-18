@@ -419,6 +419,7 @@ export function GlobalSearch() {
         if (storedGroups) {
           const groups: Group[] = JSON.parse(storedGroups);
           groups.forEach(group => {
+            const groupId = String(group.id);
             const matches =
               fuzzyMatch(group.name, q) ||
               fuzzyMatch(group.description || '', q);
@@ -426,11 +427,11 @@ export function GlobalSearch() {
             if (matches) {
               searchResults.push({
                 type: 'group',
-                id: group.id,
+                id: groupId,
                 title: group.name,
                 subtitle: `${group.members.length} members`,
                 icon: <MessageSquare className="w-5 h-5" />,
-                action: () => router.push(`/social-messaging?group=${group.id}`),
+                action: () => router.push(`/social-messaging?group=${groupId}`),
                 category: 'people',
               });
             }

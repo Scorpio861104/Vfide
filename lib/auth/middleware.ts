@@ -157,3 +157,18 @@ export async function optionalAuth(request: NextRequest): Promise<JWTPayload | n
   const result = await verifyAuth(request);
   return result.user;
 }
+
+type AuthenticatedHandler<T = Promise<NextResponse>> = (request: NextRequest, user: JWTPayload) => T;
+
+/**
+ * Wrap an API handler and require authentication before invoking it.
+ */
+export function withAuth(handler: AuthenticatedHandler) {
+  return async (request: NextRequest): Promise<NextResponse> => {
+    const authResult = await requireAuth(request);
+    if (authResult instanceof NextResponse) {
+      return authResult;
+    }
+    return handler(request, authResult.user);
+  };
+}

@@ -7,10 +7,12 @@ jest.mock('viem', () => ({
 }));
 
 jest.mock('viem/chains', () => ({
-  baseSepolia: {
-    id: 84532,
-    name: 'Base Sepolia',
-  },
+  base: { id: 8453, name: 'Base' },
+  baseSepolia: { id: 84532, name: 'Base Sepolia' },
+  polygon: { id: 137, name: 'Polygon' },
+  polygonAmoy: { id: 80002, name: 'Polygon Amoy' },
+  zkSync: { id: 324, name: 'zkSync Era' },
+  zkSyncSepoliaTestnet: { id: 300, name: 'zkSync Sepolia Testnet' },
 }));
 
 jest.mock('@/lib/auth/rateLimit', () => ({

@@ -18,8 +18,47 @@ interface GroupMember {
 const VALID_GROUP_MEMBER_ROLES = ['member', 'moderator', 'admin'] as const;
 const GROUP_ID_REGEX = /^\d+$/;
 
+const ROLE_RANK: Record<string, number> = {
+  member: 1,
+  moderator: 2,
+  admin: 3,
+  owner: 4,
+};
+
 function isObjectRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function normalizeAddress(value: string): string {
+  return value.trim().toLowerCase();
+}
+
+function getRoleRank(role: string | null | undefined): number {
+  if (!role) return 0;
+  return ROLE_RANK[role.toLowerCase()] ?? 0;
+}
+
+function canAssignRole(actorRole: string, desiredRole: string): boolean {
+  const normalizedActorRole = actorRole.toLowerCase();
+  const normalizedDesiredRole = desiredRole.toLowerCase();
+
+  if (normalizedActorRole === 'owner') {
+    return ['admin', 'moderator', 'member'].includes(normalizedDesiredRole);
+  }
+
+  if (normalizedActorRole === 'admin') {
+    return ['moderator', 'member'].includes(normalizedDesiredRole);
+  }
+
+  if (normalizedActorRole === 'moderator') {
+    return normalizedDesiredRole === 'member';
+  }
+
+  return false;
+}
+
+function canManageTarget(actorRole: string, targetRole: string): boolean {
+  return getRoleRank(actorRole) > getRoleRank(targetRole);
 }
 
 export async function GET(request: NextRequest) {
@@ -27,18 +66,53 @@ export async function GET(request: NextRequest) {
   const rateLimit = await withRateLimit(request, 'api');
   if (rateLimit) return rateLimit;
 
+  // Authentication
+  const authResult = await requireAuth(request);
+  if (authResult instanceof NextResponse) return authResult;
+
+  const authenticatedAddress = typeof authResult.user?.address === 'string'
+    ? normalizeAddress(authResult.user.address)
+    : '';
+  if (!authenticatedAddress || !isAddress(authenticatedAddress)) {
+    return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+  }
+
   try {
     const { searchParams } = new URL(request.url);
     const groupId = searchParams.get('groupId');
     const userAddress = searchParams.get('userAddress');
 
-    if (groupId && userAddress) {
-      if (!GROUP_ID_REGEX.test(groupId)) {
-        return NextResponse.json({ success: false, error: 'Invalid groupId format' }, { status: 400 });
-      }
+    if (!groupId) {
+      return NextResponse.json({ success: false, error: 'groupId required' }, { status: 400 });
+    }
 
+    if (!GROUP_ID_REGEX.test(groupId)) {
+      return NextResponse.json({ success: false, error: 'Invalid groupId format' }, { status: 400 });
+    }
+
+    const requesterMembershipResult = await query<{ role: string }>(
+      `SELECT gm.role
+       FROM group_members gm
+       JOIN users u ON gm.user_id = u.id
+       WHERE gm.group_id = $1 AND u.wallet_address = $2`,
+      [groupId, authenticatedAddress]
+    );
+
+    const requesterMembership = requesterMembershipResult.rows[0];
+    if (!requesterMembership) {
+      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 403 });
+    }
+
+    if (groupId && userAddress) {
       if (!isAddress(userAddress)) {
         return NextResponse.json({ success: false, error: 'Invalid userAddress format' }, { status: 400 });
+      }
+
+      const normalizedUserAddress = normalizeAddress(userAddress);
+      const canReadTargetMember =
+        normalizedUserAddress === authenticatedAddress || ['admin', 'moderator'].includes(requesterMembership.role);
+      if (!canReadTargetMember) {
+        return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 403 });
       }
 
       const result = await query<GroupMember>(
@@ -46,7 +120,7 @@ export async function GET(request: NextRequest) {
          FROM group_members gm
          JOIN users u ON gm.user_id = u.id
          WHERE gm.group_id = $1 AND u.wallet_address = $2`,
-        [groupId, userAddress.toLowerCase()]
+        [groupId, normalizedUserAddress]
       );
 
       if (result.rows.length === 0) {
@@ -56,24 +130,16 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ success: true, member: result.rows[0] });
     }
 
-    if (groupId) {
-      if (!GROUP_ID_REGEX.test(groupId)) {
-        return NextResponse.json({ success: false, error: 'Invalid groupId format' }, { status: 400 });
-      }
+    const result = await query<GroupMember>(
+      `SELECT gm.*, u.wallet_address as user_address, u.username, u.avatar_url
+       FROM group_members gm
+       JOIN users u ON gm.user_id = u.id
+       WHERE gm.group_id = $1
+       ORDER BY gm.role DESC, gm.joined_at ASC`,
+      [groupId]
+    );
 
-      const result = await query<GroupMember>(
-        `SELECT gm.*, u.wallet_address as user_address, u.username, u.avatar_url, u.proof_score
-         FROM group_members gm
-         JOIN users u ON gm.user_id = u.id
-         WHERE gm.group_id = $1
-         ORDER BY gm.role DESC, gm.joined_at ASC`,
-        [groupId]
-      );
-
-      return NextResponse.json({ success: true, members: result.rows, total: result.rows.length });
-    }
-
-    return NextResponse.json({ success: false, error: 'groupId required' }, { status: 400 });
+    return NextResponse.json({ success: true, members: result.rows, total: result.rows.length });
   } catch (error) {
     console.error('[Group Members GET] Error:', error);
     return NextResponse.json({ success: false, error: 'Internal server error' }, { status: 500 });
@@ -151,6 +217,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 403 });
     }
 
+    if (!canAssignRole(actor.role, roleValue)) {
+      return NextResponse.json({ success: false, error: 'Insufficient role to assign requested role' }, { status: 403 });
+    }
+
     const userResult = await query('SELECT id FROM users WHERE wallet_address = $1', [userAddressValue.toLowerCase()]);
     if (userResult.rows.length === 0) {
       return NextResponse.json({ success: false, error: 'User not found' }, { status: 404 });
@@ -159,6 +229,15 @@ export async function POST(request: NextRequest) {
     const userIdVal = userResult.rows[0]?.id;
     if (!userIdVal) {
       return NextResponse.json({ success: false, error: 'User not found' }, { status: 404 });
+    }
+
+    const existingMembershipResult = await query(
+      'SELECT id FROM group_members WHERE group_id = $1 AND user_id = $2',
+      [groupIdValue, userIdVal]
+    );
+
+    if (existingMembershipResult.rows.length > 0) {
+      return NextResponse.json({ success: false, error: 'User is already a group member' }, { status: 409 });
     }
 
     const result = await query<GroupMember>(
@@ -204,7 +283,7 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
 
-    if (!groupId || !userAddress || !role || !actorAddress) {
+    if (!groupId || !userAddress || !role) {
       return NextResponse.json({ success: false, error: 'Missing required fields' }, { status: 400 });
     }
 
@@ -214,7 +293,7 @@ export async function PATCH(request: NextRequest) {
     const roleValue = typeof role === 'string' ? role : null;
     const actorAddressValue = typeof actorAddress === 'string' ? actorAddress : null;
 
-    if (!groupIdValue || !userAddressValue || !roleValue || !actorAddressValue) {
+    if (!groupIdValue || !userAddressValue || !roleValue) {
       return NextResponse.json({ success: false, error: 'Invalid groupId, userAddress, role, or actorAddress type' }, { status: 400 });
     }
 
@@ -222,7 +301,7 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'Invalid groupId format' }, { status: 400 });
     }
 
-    if (!isAddress(userAddressValue) || !isAddress(actorAddressValue)) {
+    if (!isAddress(userAddressValue) || (actorAddressValue !== null && !isAddress(actorAddressValue))) {
       return NextResponse.json({ success: false, error: 'Invalid address format' }, { status: 400 });
     }
 
@@ -230,7 +309,7 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'Invalid role value' }, { status: 400 });
     }
 
-    if (actorAddressValue.toLowerCase() !== authenticatedAddress) {
+    if (actorAddressValue && actorAddressValue.toLowerCase() !== authenticatedAddress) {
       return NextResponse.json({ success: false, error: 'Unauthorized actor' }, { status: 403 });
     }
 
@@ -244,6 +323,31 @@ export async function PATCH(request: NextRequest) {
     const actor = actorResult.rows[0];
     if (actorResult.rows.length === 0 || !actor || !['admin', 'moderator'].includes(actor.role)) {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 403 });
+    }
+
+    const targetResult = await query<{ role: string }>(
+      `SELECT gm.role
+       FROM group_members gm
+       JOIN users u ON gm.user_id = u.id
+       WHERE gm.group_id = $1 AND u.wallet_address = $2`,
+      [groupIdValue, userAddressValue.toLowerCase()]
+    );
+
+    const target = targetResult.rows[0];
+    if (!target) {
+      return NextResponse.json({ success: false, error: 'Member not found' }, { status: 404 });
+    }
+
+    if (userAddressValue.toLowerCase() === authenticatedAddress) {
+      return NextResponse.json({ success: false, error: 'You cannot change your own role' }, { status: 403 });
+    }
+
+    if (!canManageTarget(actor.role, target.role)) {
+      return NextResponse.json({ success: false, error: 'Insufficient role to manage target member' }, { status: 403 });
+    }
+
+    if (!canAssignRole(actor.role, roleValue)) {
+      return NextResponse.json({ success: false, error: 'Insufficient role to assign requested role' }, { status: 403 });
     }
 
     const result = await query(
@@ -312,7 +416,7 @@ export async function DELETE(request: NextRequest) {
     const isSelfRemoval = targetAddress === authenticatedAddress;
 
     if (!isSelfRemoval) {
-      const actorResult = await query(
+      const actorResult = await query<{ role: string }>(
         `SELECT gm.role FROM group_members gm
          JOIN users u ON gm.user_id = u.id
          WHERE gm.group_id = $1 AND u.wallet_address = $2`,
@@ -322,6 +426,23 @@ export async function DELETE(request: NextRequest) {
       const actor = actorResult.rows[0];
       if (actorResult.rows.length === 0 || !actor || !['admin', 'moderator'].includes(actor.role)) {
         return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 403 });
+      }
+
+      const targetRoleResult = await query<{ role: string }>(
+        `SELECT gm.role
+         FROM group_members gm
+         JOIN users u ON gm.user_id = u.id
+         WHERE gm.group_id = $1 AND u.wallet_address = $2`,
+        [groupId, targetAddress]
+      );
+
+      const targetRole = targetRoleResult.rows[0]?.role;
+      if (!targetRole) {
+        return NextResponse.json({ success: false, error: 'Member not found' }, { status: 404 });
+      }
+
+      if (!canManageTarget(actor.role, targetRole)) {
+        return NextResponse.json({ success: false, error: 'Insufficient role to manage target member' }, { status: 403 });
       }
     }
 

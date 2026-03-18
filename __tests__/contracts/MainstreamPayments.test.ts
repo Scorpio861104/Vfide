@@ -135,5 +135,15 @@ describe('MainstreamPayments Contract', () => {
         })
       ).rejects.toThrow('MCR: zero router');
     });
+
+    it('should block session spend recording when Seer autonomous denies action', async () => {
+      mockContractWrite.mockRejectedValueOnce(new Error('SKM_ActionBlocked'));
+      await expect(
+        mockContractWrite({
+          functionName: 'recordSpend',
+          args: [user1, parseEther('1')],
+        })
+      ).rejects.toThrow('SKM_ActionBlocked');
+    });
   });
 });

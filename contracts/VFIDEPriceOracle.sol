@@ -2,8 +2,7 @@
 pragma solidity 0.8.30;
 
 import "./interfaces/AggregatorV3Interface.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/utils/Pausable.sol";
+import "./SharedInterfaces.sol";
 
 /**
  * @title VFIDEPriceOracle
@@ -108,6 +107,7 @@ contract VFIDEPriceOracle is Ownable, Pausable {
     error PriceManipulation();
     error UpdateTooFrequent();
 
+    // H-18/M-29 Fix: Custom Ownable has no renounceOwnership — no override needed
     /**
      * @notice Constructor
      * @param _vfideToken VFIDE token address
@@ -122,9 +122,11 @@ contract VFIDEPriceOracle is Ownable, Pausable {
         address _chainlinkFeed,
         address _uniswapPool,
         address _owner
-    ) Ownable(_owner) {
+    ) {
         require(_vfideToken != address(0), "Invalid VFIDE token");
         require(_quoteToken != address(0), "Invalid quote token");
+        require(_owner != address(0), "Invalid owner");
+        owner = _owner; // H-18: Override default msg.sender
         
         vfideToken = _vfideToken;
         quoteToken = _quoteToken;

@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
-import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/utils/Pausable.sol";
+import "./SharedInterfaces.sol";
 
 /**
  * @title BridgeSecurityModule
@@ -94,8 +93,10 @@ contract BridgeSecurityModule is Ownable, Pausable {
         _;
     }
 
-    constructor(address _owner, address _bridge) Ownable(_owner) {
+    constructor(address _owner, address _bridge) {
+        require(_owner != address(0), "Invalid owner");
         require(_bridge != address(0), "Invalid bridge");
+        owner = _owner; // H-18: Override default msg.sender
         bridge = _bridge;
     }
 

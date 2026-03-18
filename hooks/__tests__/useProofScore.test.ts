@@ -3,7 +3,14 @@ import { useProofScore, getScoreTier, useSeerThresholds, useHasBadge } from '../
 import * as wagmi from 'wagmi'
 
 jest.mock('wagmi')
-jest.mock('@/lib/contracts')
+jest.mock('@/lib/contracts', () => ({
+  CONTRACT_ADDRESSES: {
+    Seer: '0x1234567890123456789012345678901234567890',
+    BurnRouter: '0x0000000000000000000000000000000000000000',
+  },
+  SEER_ABI: [],
+  ProofScoreBurnRouterABI: [],
+}))
 
 describe('useProofScore', () => {
   beforeEach(() => {
@@ -13,13 +20,14 @@ describe('useProofScore', () => {
     })
   })
 
+  const mockScore = (score: bigint) => {
+    ;(wagmi.useReadContract as jest.Mock)
+      .mockReturnValueOnce({ data: score, isError: false, isLoading: false, refetch: jest.fn() })
+      .mockReturnValueOnce({ data: undefined, isError: false, isLoading: false, refetch: jest.fn() })
+  }
+
   it('returns score data', () => {
-    ;(wagmi.useReadContract as jest.Mock).mockReturnValue({
-      data: BigInt(7500),
-      isError: false,
-      isLoading: false,
-      refetch: jest.fn(),
-    })
+    mockScore(BigInt(7500))
 
     const { result } = renderHook(() => useProofScore())
 
@@ -30,12 +38,7 @@ describe('useProofScore', () => {
   })
 
   it('calculates elite tier score', () => {
-    ;(wagmi.useReadContract as jest.Mock).mockReturnValue({
-      data: BigInt(8500),
-      isError: false,
-      isLoading: false,
-      refetch: jest.fn(),
-    })
+    mockScore(BigInt(8500))
 
     const { result } = renderHook(() => useProofScore())
 
@@ -45,12 +48,7 @@ describe('useProofScore', () => {
   })
 
   it('calculates high trust score', () => {
-    ;(wagmi.useReadContract as jest.Mock).mockReturnValue({
-      data: BigInt(7200),
-      isError: false,
-      isLoading: false,
-      refetch: jest.fn(),
-    })
+    mockScore(BigInt(7200))
 
     const { result } = renderHook(() => useProofScore())
 
@@ -60,12 +58,7 @@ describe('useProofScore', () => {
   })
 
   it('calculates neutral score', () => {
-    ;(wagmi.useReadContract as jest.Mock).mockReturnValue({
-      data: BigInt(5500),
-      isError: false,
-      isLoading: false,
-      refetch: jest.fn(),
-    })
+    mockScore(BigInt(5500))
 
     const { result } = renderHook(() => useProofScore())
 
@@ -75,12 +68,7 @@ describe('useProofScore', () => {
   })
 
   it('calculates low score', () => {
-    ;(wagmi.useReadContract as jest.Mock).mockReturnValue({
-      data: BigInt(4200),
-      isError: false,
-      isLoading: false,
-      refetch: jest.fn(),
-    })
+    mockScore(BigInt(4200))
 
     const { result } = renderHook(() => useProofScore())
 
@@ -89,12 +77,7 @@ describe('useProofScore', () => {
   })
 
   it('calculates risky score', () => {
-    ;(wagmi.useReadContract as jest.Mock).mockReturnValue({
-      data: BigInt(3000),
-      isError: false,
-      isLoading: false,
-      refetch: jest.fn(),
-    })
+    mockScore(BigInt(3000))
 
     const { result } = renderHook(() => useProofScore())
 
@@ -103,12 +86,9 @@ describe('useProofScore', () => {
   })
 
   it('defaults to neutral score when no data', () => {
-    ;(wagmi.useReadContract as jest.Mock).mockReturnValue({
-      data: undefined,
-      isError: false,
-      isLoading: false,
-      refetch: jest.fn(),
-    })
+    ;(wagmi.useReadContract as jest.Mock)
+      .mockReturnValueOnce({ data: undefined, isError: false, isLoading: false, refetch: jest.fn() })
+      .mockReturnValueOnce({ data: undefined, isError: false, isLoading: false, refetch: jest.fn() })
 
     const { result } = renderHook(() => useProofScore())
 
@@ -116,12 +96,7 @@ describe('useProofScore', () => {
   })
 
   it('determines voting eligibility', () => {
-    ;(wagmi.useReadContract as jest.Mock).mockReturnValue({
-      data: BigInt(5500),
-      isError: false,
-      isLoading: false,
-      refetch: jest.fn(),
-    })
+    mockScore(BigInt(5500))
 
     const { result } = renderHook(() => useProofScore())
 
@@ -129,12 +104,7 @@ describe('useProofScore', () => {
   })
 
   it('denies voting for low scores', () => {
-    ;(wagmi.useReadContract as jest.Mock).mockReturnValue({
-      data: BigInt(5000),
-      isError: false,
-      isLoading: false,
-      refetch: jest.fn(),
-    })
+    mockScore(BigInt(5000))
 
     const { result } = renderHook(() => useProofScore())
 
@@ -142,12 +112,7 @@ describe('useProofScore', () => {
   })
 
   it('determines merchant eligibility', () => {
-    ;(wagmi.useReadContract as jest.Mock).mockReturnValue({
-      data: BigInt(5800),
-      isError: false,
-      isLoading: false,
-      refetch: jest.fn(),
-    })
+    mockScore(BigInt(5800))
 
     const { result } = renderHook(() => useProofScore())
 
@@ -155,12 +120,7 @@ describe('useProofScore', () => {
   })
 
   it('determines council eligibility', () => {
-    ;(wagmi.useReadContract as jest.Mock).mockReturnValue({
-      data: BigInt(7200),
-      isError: false,
-      isLoading: false,
-      refetch: jest.fn(),
-    })
+    mockScore(BigInt(7200))
 
     const { result } = renderHook(() => useProofScore())
 
@@ -168,12 +128,7 @@ describe('useProofScore', () => {
   })
 
   it('uses custom address when provided', () => {
-    ;(wagmi.useReadContract as jest.Mock).mockReturnValue({
-      data: BigInt(6000),
-      isError: false,
-      isLoading: false,
-      refetch: jest.fn(),
-    })
+    mockScore(BigInt(6000))
 
     const customAddress = '0xabcdefabcdefabcdefabcdefabcdefabcdefabcd' as `0x${string}`
     const { result } = renderHook(() => useProofScore(customAddress))
@@ -182,12 +137,9 @@ describe('useProofScore', () => {
   })
 
   it('handles loading state', () => {
-    ;(wagmi.useReadContract as jest.Mock).mockReturnValue({
-      data: undefined,
-      isError: false,
-      isLoading: true,
-      refetch: jest.fn(),
-    })
+    ;(wagmi.useReadContract as jest.Mock)
+      .mockReturnValueOnce({ data: undefined, isError: false, isLoading: true, refetch: jest.fn() })
+      .mockReturnValueOnce({ data: undefined, isError: false, isLoading: false, refetch: jest.fn() })
 
     const { result } = renderHook(() => useProofScore())
 
@@ -195,12 +147,9 @@ describe('useProofScore', () => {
   })
 
   it('handles error state', () => {
-    ;(wagmi.useReadContract as jest.Mock).mockReturnValue({
-      data: undefined,
-      isError: true,
-      isLoading: false,
-      refetch: jest.fn(),
-    })
+    ;(wagmi.useReadContract as jest.Mock)
+      .mockReturnValueOnce({ data: undefined, isError: true, isLoading: false, refetch: jest.fn() })
+      .mockReturnValueOnce({ data: undefined, isError: false, isLoading: false, refetch: jest.fn() })
 
     const { result } = renderHook(() => useProofScore())
 
@@ -209,12 +158,9 @@ describe('useProofScore', () => {
 
   it('provides refetch function', () => {
     const mockRefetch = jest.fn()
-    ;(wagmi.useReadContract as jest.Mock).mockReturnValue({
-      data: BigInt(5000),
-      isError: false,
-      isLoading: false,
-      refetch: mockRefetch,
-    })
+    ;(wagmi.useReadContract as jest.Mock)
+      .mockReturnValueOnce({ data: BigInt(5000), isError: false, isLoading: false, refetch: mockRefetch })
+      .mockReturnValueOnce({ data: undefined, isError: false, isLoading: false, refetch: jest.fn() })
 
     const { result } = renderHook(() => useProofScore())
 

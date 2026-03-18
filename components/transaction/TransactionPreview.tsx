@@ -127,32 +127,9 @@ function useTransactionSimulation(tx: TransactionDetails) {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const simulate = async () => {
-      setIsSimulating(true);
-      setError(null);
-
-      try {
-        // In production, this would call a simulation API like Tenderly
-        // For now, we'll use basic validation
-        await new Promise((resolve) => setTimeout(resolve, 500));
-        
-        setSimulation({
-          success: true,
-          gasUsed: tx.gasLimit || BigInt(21000),
-        });
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Simulation failed');
-        setSimulation({
-          success: false,
-          gasUsed: BigInt(0),
-          error: err instanceof Error ? err.message : 'Unknown error',
-        });
-      } finally {
-        setIsSimulating(false);
-      }
-    };
-
-    simulate();
+    setIsSimulating(false);
+    setSimulation(null);
+    setError('Transaction simulation backend is not configured');
   }, [tx]);
 
   return { simulation, isSimulating, error };
@@ -383,7 +360,7 @@ export const TransactionPreview: React.FC<TransactionPreviewProps> = ({
   const { data: balance } = useBalance({ address });
   const { data: feeData } = useFeeData();
   
-  const { simulation, isSimulating } = useTransactionSimulation(transaction);
+  const { simulation, isSimulating, error: simulationError } = useTransactionSimulation(transaction);
   const warnings = useRiskAnalysis(transaction, allowlistedRecipients);
   const intentSummary = decodeTransactionIntent(transaction);
 
@@ -505,6 +482,11 @@ export const TransactionPreview: React.FC<TransactionPreviewProps> = ({
               <Loader2 className="w-5 h-5 text-blue-400 animate-spin" />
               <span className="text-gray-400">Simulating transaction...</span>
             </>
+          ) : simulationError ? (
+            <>
+              <AlertCircle className="w-5 h-5 text-amber-400" />
+              <span className="text-gray-300">{simulationError}</span>
+            </>
           ) : simulation?.success ? (
             <>
               <CheckCircle className="w-5 h-5 text-green-400" />
@@ -513,7 +495,7 @@ export const TransactionPreview: React.FC<TransactionPreviewProps> = ({
           ) : (
             <>
               <XCircle className="w-5 h-5 text-red-400" />
-              <span className="text-gray-300">Simulation failed: {simulation?.error}</span>
+              <span className="text-gray-300">Simulation failed: {simulation?.error || 'Unknown error'}</span>
             </>
           )}
         </div>

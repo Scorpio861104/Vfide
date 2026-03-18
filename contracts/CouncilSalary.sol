@@ -24,6 +24,16 @@ contract CouncilSalary {
     event SalaryPaid(uint256 indexed cycleId, uint256 totalDistributed);
     event MemberRemoved(address indexed member, address indexed by);
     event VoteCast(address indexed voter, address indexed target, bool support);
+    event MemberReinstated(address indexed member);
+
+    // H-19 Fix: Add reentrancy guard
+    uint256 private _reentrancyStatus = 1;
+    modifier nonReentrant() {
+        require(_reentrancyStatus == 1, "ReentrancyGuard: reentrant call");
+        _reentrancyStatus = 2;
+        _;
+        _reentrancyStatus = 1;
+    }
 
     ICouncilElection public election;
     ISeer public seer;
@@ -53,6 +63,7 @@ contract CouncilSalary {
     uint256 public distributionNonce;
 
     constructor(address _election, address _seer, address _token, address _dao) {
+        require(_dao != address(0), "zero dao");
         election = ICouncilElection(_election);
         seer = ISeer(_seer);
         token = IERC20(_token);
@@ -88,7 +99,7 @@ contract CouncilSalary {
      * NOTE: Council salaries are EMPLOYMENT COMPENSATION (not investment returns).
      * Payments should be made via auto-swap to ETH/USDC, not VFIDE.
      */
-    function distributeSalary() external {
+    function distributeSalary() external nonReentrant {
         // C-1 FIX: Only DAO or authorized keepers can distribute
         require(msg.sender == dao || isKeeper[msg.sender], "CS: not authorized");
         require(block.timestamp >= lastPayTime + payInterval, "too early");
@@ -110,6 +121,7 @@ contract CouncilSalary {
         uint256 eligibleCount = 0;
 
         for (uint256 i = 0; i < size; i++) {
+            // slither-disable-next-line calls-loop
             address member = election.getCouncilMember(i);
             if (member == address(0)) continue;
             
@@ -117,6 +129,7 @@ contract CouncilSalary {
             if (isBlacklisted[member]) continue;
 
             // Check Score
+            // slither-disable-next-line calls-loop
             if (seer.getScore(member) < minScoreToPay) continue;
 
             eligible[eligibleCount] = member;
@@ -166,8 +179,13 @@ contract CouncilSalary {
     }
     
     /**
-     * Reset blacklist status (e.g. if re-elected or forgiven by DAO)
-     * Only callable by DAO/Admin (owner logic omitted for brevity, assuming DAO controls this)
+     * M-26 Fix: Reinstate a previously blacklisted member
+     * Only callable by DAO
      */
-    // function reinstate(address target) external onlyDAO ...
+    function reinstate(address target) external {
+        require(msg.sender == dao, "not dao");
+        require(isBlacklisted[target], "not blacklisted");
+        isBlacklisted[target] = false;
+        emit MemberReinstated(target);
+    }
 }

@@ -6,8 +6,19 @@ dotenv.config();
 
 const privateKey = process.env.PRIVATE_KEY;
 const accounts = privateKey ? [privateKey] : [];
+const allowUnlimitedContractSize = process.env.HARDHAT_ALLOW_UNLIMITED_CONTRACT_SIZE === "true";
 
 const config = defineConfig({
+  /*
+   * Compiler version rationale (L-04 / hostile audit):
+   * 0.8.30 is used intentionally for:
+   *   - Transient storage (EIP-1153) support — used by SeerPolicyGuard
+   *   - MCOPY opcode (EIP-5656) available via Prague/Cancun EVM target
+   *   - All 0.8.x overflow checks present
+   * Risk acknowledged: newer compiler versions carry less production exposure time.
+   * Mitigation: viaIR + optimizer used; Hardhat tests run on every commit.
+   * Revisit to 0.8.19 LTS only if a breaking bug is discovered in 0.8.30.
+   */
   solidity: {
     compilers: [
       {
@@ -23,12 +34,13 @@ const config = defineConfig({
       },
     ],
     overrides: {
-      "contracts/VFIDETrust.sol": {
+      // L-01: Seer.sol is the large file after the VFIDETrust.sol monolith split; keep runs:1 to avoid bytecode-size issues
+      "contracts/Seer.sol": {
         version: "0.8.30",
         settings: {
           optimizer: {
             enabled: true,
-            runs: 0,
+            runs: 1,
           },
           metadata: {
             bytecodeHash: "none",
@@ -79,12 +91,26 @@ const config = defineConfig({
           viaIR: true,
         },
       },
+      "contracts/SeerAutonomous.sol": {
+        version: "0.8.30",
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 1,
+          },
+          metadata: {
+            bytecodeHash: "none",
+          },
+          viaIR: true,
+        },
+      },
     },
   },
   networks: {
     hardhat: {
       type: "edr-simulated" as const,
       chainId: 31337,
+      allowUnlimitedContractSize,
       forking: process.env.FORK_MAINNET === "true"
         ? {
             url: process.env.MAINNET_RPC_URL || "https://eth.llamarpc.com",

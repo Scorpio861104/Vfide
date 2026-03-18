@@ -10,6 +10,10 @@ interface ISeerGuardian_DAO {
     function autoCheckProposer(uint256 proposalId, address proposer) external;
 }
 
+interface ISeerAutonomous_DAO {
+    function beforeAction(address subject, uint8 action, uint256 amount, address counterparty) external returns (uint8);
+}
+
 error DAO_NotAdmin();
 error DAO_NotTimelock();
 error DAO_Zero();
@@ -19,6 +23,10 @@ error DAO_AlreadyVoted();
 error DAO_VoteEnded();
 error DAO_VoteNotStarted();
 error DAO_ProposalFlagged(string reason);
+error DAO_ProposalCooldownActive(uint256 readyAt);
+error DAO_ProposalTargetNotAllowed(uint8 ptype, address target);
+error DAO_ProposalSelectorNotAllowed(uint8 ptype, bytes4 selector);
+error DAO_ActionBlocked(uint8 result);
 
 contract DAO is ReentrancyGuard {
     enum ProposalType { Generic, Financial, ProtocolChange, SecurityAction }
@@ -35,6 +43,10 @@ contract DAO is ReentrancyGuard {
     event DisputeFlagged(address indexed user, address indexed caller, string reason);
     event VoteDelegated(address indexed delegator, address indexed delegate);
     event ProposalWithdrawn(uint256 id, address indexed proposer);
+    event ProposalCooldownSet(uint64 cooldown);
+    event ProposalTypeTargetPolicySet(ProposalType indexed ptype, address indexed target, bool allowed);
+    event ProposalTypeSelectorPolicySet(ProposalType indexed ptype, bytes4 indexed selector, bool allowed);
+    event SeerAutonomousSet(address seerAutonomous);
 
     address public admin;
     IDAOTimelock public timelock;
@@ -43,11 +55,21 @@ contract DAO is ReentrancyGuard {
     IGovernanceHooks public hooks; // optional callbacks (logs/penalties)
     IProofLedger public ledger; // optional via hooks
     ISeerGuardian_DAO public guardian; // SeerGuardian for mutual oversight
+    ISeerAutonomous_DAO public seerAutonomous; // optional proactive Seer automation checks
 
     uint64 public votingPeriod = 3 days;
     uint64 public votingDelay = 1 days; // Flash loan protection: vote cannot start immediately
+    uint64 public proposalCooldown = 1 hours;
     uint256 public minVotesRequired = 5000; // Absolute number of vote-points (Score) required to pass
-    uint256 public minParticipation = 2; // FLOW-2 FIX: Minimum unique voters required
+    uint256 public minParticipation = 10; // M-02 Fix: Require meaningful participation (was 2, any 2 users could pass proposals)
+
+    // H-04 Fix: Per-voter daily vote reward cap to prevent ProofScore farming via proposal spam
+    mapping(address => uint256) public lastVoteRewardDay;
+    mapping(address => uint64) public lastProposalAt;
+    mapping(ProposalType => mapping(address => bool)) public proposalTypeTargetAllowed;
+    mapping(ProposalType => uint256) public proposalTypeTargetPolicyCount;
+    mapping(ProposalType => mapping(bytes4 => bool)) public proposalTypeSelectorAllowed;
+    mapping(ProposalType => uint256) public proposalTypeSelectorPolicyCount;
 
     struct Proposal {
         address proposer;
@@ -55,7 +77,7 @@ contract DAO is ReentrancyGuard {
         uint256 value;
         bytes   data;
         string  description;
-        ProposalType ptype;
+        ProposalType proposalType; // L-02: renamed from ptype for clarity (ptype was inconsistent with the type name)
         uint64  start;
         uint64  end;
         bool    executed;
@@ -115,6 +137,12 @@ contract DAO is ReentrancyGuard {
         guardian = ISeerGuardian_DAO(_guardian);
     }
 
+    /// @notice Set SeerAutonomous for proactive pre-action governance enforcement
+    function setSeerAutonomous(address _seerAutonomous) external onlyTimelock {
+        seerAutonomous = ISeerAutonomous_DAO(_seerAutonomous);
+        emit SeerAutonomousSet(_seerAutonomous);
+    }
+
     function setAdmin(address _admin) external onlyTimelock { require(_admin!=address(0),"zero"); admin=_admin; emit AdminSet(_admin); }
     function setParams(uint64 _period, uint256 _minVotes) external onlyTimelock {
         // M-21 Fix: Validate parameters before setting
@@ -133,6 +161,52 @@ contract DAO is ReentrancyGuard {
         minParticipation = _minParticipation;
     }
 
+    /// @notice Set minimum spacing between proposals by the same proposer
+    function setProposalCooldown(uint64 _cooldown) external onlyTimelock {
+        require(_cooldown <= 30 days, "DAO: cooldown too long");
+        proposalCooldown = _cooldown;
+        emit ProposalCooldownSet(_cooldown);
+    }
+
+    /// @notice Configure allowlist policy for proposal type targets
+    function setProposalTypeTargetPolicy(ProposalType ptype, address target, bool allowed) external onlyTimelock {
+        require(target != address(0), "DAO: invalid target policy");
+        bool current = proposalTypeTargetAllowed[ptype][target];
+        if (current == allowed) return;
+
+        proposalTypeTargetAllowed[ptype][target] = allowed;
+        if (allowed) {
+            proposalTypeTargetPolicyCount[ptype] += 1;
+        } else {
+            proposalTypeTargetPolicyCount[ptype] -= 1;
+        }
+
+        emit ProposalTypeTargetPolicySet(ptype, target, allowed);
+    }
+
+    /// @notice Configure allowlist policy for proposal type function selectors
+    function setProposalTypeSelectorPolicy(ProposalType ptype, bytes4 selector, bool allowed) external onlyTimelock {
+        require(selector != bytes4(0), "DAO: invalid selector policy");
+        bool current = proposalTypeSelectorAllowed[ptype][selector];
+        if (current == allowed) return;
+
+        proposalTypeSelectorAllowed[ptype][selector] = allowed;
+        if (allowed) {
+            proposalTypeSelectorPolicyCount[ptype] += 1;
+        } else {
+            proposalTypeSelectorPolicyCount[ptype] -= 1;
+        }
+
+        emit ProposalTypeSelectorPolicySet(ptype, selector, allowed);
+    }
+
+    function _selector(bytes calldata data) internal pure returns (bytes4 selector) {
+        if (data.length < 4) return bytes4(0);
+        assembly {
+            selector := calldataload(data.offset)
+        }
+    }
+
     function _eligible(address a) internal view returns (bool) {
         // L-8 Fix: Cache external calls to save gas
         address vault = vaultHub.vaultOf(a);
@@ -147,16 +221,36 @@ contract DAO is ReentrancyGuard {
     function propose(ProposalType ptype, address target, uint256 value, bytes calldata data, string calldata description) external returns (uint256 id) {
         if(!_eligible(msg.sender)) revert DAO_NotEligible();
         // H-2 Fix: Validate proposal parameters
-        require(target != address(0) || ptype == ProposalType.Generic, "DAO: invalid target");
+        require(target != address(0), "DAO: invalid target");
         require(bytes(description).length > 0, "DAO: empty description");
+
+        if (proposalCooldown > 0 && lastProposalAt[msg.sender] > 0) {
+            uint256 readyAt = uint256(lastProposalAt[msg.sender]) + proposalCooldown;
+            if (block.timestamp < readyAt) revert DAO_ProposalCooldownActive(readyAt);
+        }
+
+        // Optional allowlist matrix by proposal type.
+        // Policies are enforced only when configured for a given type, preserving backward compatibility.
+        if (target != address(0) && proposalTypeTargetPolicyCount[ptype] > 0 && !proposalTypeTargetAllowed[ptype][target]) {
+            revert DAO_ProposalTargetNotAllowed(uint8(ptype), target);
+        }
+        if (proposalTypeSelectorPolicyCount[ptype] > 0) {
+            bytes4 selector = _selector(data);
+            if (!proposalTypeSelectorAllowed[ptype][selector]) {
+                revert DAO_ProposalSelectorNotAllowed(uint8(ptype), selector);
+            }
+        }
         
-        // M-1 Fix: Check if this exact proposal was previously withdrawn
-        bytes32 proposalHash = keccak256(abi.encode(ptype, target, value, data));
+        // C-06 Fix: Hash only immutable fields (target, value, data) — ptype can be changed on withdrawal
+        // and description is mutable, so including either enables trivial bypass of the protection
+        bytes32 proposalHash = keccak256(abi.encode(target, value, data));
         require(!withdrawnProposalHashes[proposalHash], "DAO: proposal was previously withdrawn");
+
+        lastProposalAt[msg.sender] = uint64(block.timestamp);
         
         id=++proposalCount;
         Proposal storage p=proposals[id];
-        p.proposer=msg.sender; p.ptype=ptype; p.target=target; p.value=value; p.data=data; p.description=description;
+        p.proposer=msg.sender; p.proposalType=ptype; p.target=target; p.value=value; p.data=data; p.description=description;
         // Flash loan protection: voting starts after votingDelay
         p.start=uint64(block.timestamp) + votingDelay; p.end=p.start+votingPeriod;
         emit ProposalCreated(id,msg.sender,ptype,target,value,data,description);
@@ -165,6 +259,8 @@ contract DAO is ReentrancyGuard {
         if (address(guardian) != address(0)) {
             try guardian.autoCheckProposer(id, msg.sender) {} catch {}
         }
+
+        _enforceSeerAction(msg.sender, 4, value, target); // GovernancePropose
     }
 
     // function delegateVote(address delegate) external { ... } // Removed
@@ -185,17 +281,20 @@ contract DAO is ReentrancyGuard {
         p.hasVoted[voter] = true;
         p.voterCount++; // FLOW-2 FIX: Track unique voter count
         
-        // Track voter history
+        // Track voter history (I-11: capped to prevent unbounded storage growth)
+        require(voterProposals[voter].length < 500, "DAO: voter history full");
         voterProposals[voter].push(id);
         
         // H-5 Fix: Score-Weighted Voting with snapshot protection
-        // Snapshot score on first vote to prevent mid-proposal score manipulation
+        // M-01 Fix: Use +1 encoding to distinguish "unset" (0) from "explicitly snapshotted as 0"
+        uint256 rawSnapshot = p.scoreSnapshot[voter];
         uint256 weight;
-        if (p.scoreSnapshot[voter] == 0) {
+        if (rawSnapshot == 0) {
+            // First vote: take snapshot and store as weight+1
             weight = uint256(seer.getScore(voter));
-            p.scoreSnapshot[voter] = weight;
+            p.scoreSnapshot[voter] = weight + 1; // +1 so score-0 is stored as 1, not confused with unset
         } else {
-            weight = p.scoreSnapshot[voter];
+            weight = rawSnapshot - 1; // decode: subtract the +1 offset
         }
 
         // Governance Fatigue: Reduce weight if voting too frequently
@@ -227,13 +326,21 @@ contract DAO is ReentrancyGuard {
         info.lastVoteTime = block.timestamp;
         
         if (support) p.forVotes += weight; else p.againstVotes += weight;
+
+        _enforceSeerAction(voter, 3, 0, address(0)); // GovernanceVote
         
         emit Voted(id, voter, support);
-        
-        // Award activity points for governance participation (+5 per vote)
-        // This helps users earn ProofScore through democratic engagement
-        try seer.reward(voter, 5, "dao_vote") {} catch {}
-        
+
+        // Avoid double rewards when hooks are configured and already reward voting.
+        // H-04 Fix: Only reward once per calendar day per voter to prevent farming
+        if (address(hooks) == address(0)) {
+            uint256 today = block.timestamp / 1 days;
+            if (lastVoteRewardDay[voter] < today) {
+                lastVoteRewardDay[voter] = today;
+                try seer.reward(voter, 5, "dao_vote") {} catch {}
+            }
+        }
+
         if (address(hooks) != address(0)) {
             try hooks.onVoteCast(id, voter, support) {} catch {}
         }
@@ -285,8 +392,8 @@ contract DAO is ReentrancyGuard {
         require(block.timestamp < p.start || (p.forVotes == 0 && p.againstVotes == 0), 
             "DAO: cannot withdraw after votes cast");
         
-        // M-1 Fix: Record proposal hash before deleting to prevent re-submission
-        bytes32 proposalHash = keccak256(abi.encode(p.ptype, p.target, p.value, p.data));
+        // C-06 Fix: Store hash of immutable fields only before any mutation
+        bytes32 proposalHash = keccak256(abi.encode(p.target, p.value, p.data));
         withdrawnProposalHashes[proposalHash] = true;
 
         // Reset scalar fields instead of deleting the struct, which contains mappings.
@@ -295,7 +402,7 @@ contract DAO is ReentrancyGuard {
         p.value = 0;
         p.data = "";
         p.description = "";
-        p.ptype = ProposalType.Generic;
+        p.proposalType = ProposalType.Generic;
         p.start = 0;
         p.end = 0;
         p.executed = false;
@@ -319,25 +426,30 @@ contract DAO is ReentrancyGuard {
     // ═══════════════════════════════════════════════════════════════════════
     
     /**
-     * @notice Get all active proposals
+     * @notice Get active proposals with pagination (L-01 Fix)
+     * @param offset Starting proposal ID to scan from (0 = start from 1)
+     * @param limit Maximum number of active proposals to return
      * @return ids Array of active proposal IDs
      */
-    function getActiveProposals() external view returns (uint256[] memory ids) {
-        // Count active proposals
-        uint256 count = 0;
-        for (uint256 i = 1; i <= proposalCount; i++) {
+    function getActiveProposals(uint256 offset, uint256 limit) public view returns (uint256[] memory ids) {
+        if (offset == 0) offset = 1;
+        if (limit == 0 || limit > 100) limit = 100; // L-01 Fix: Cap at 100 per page
+        uint256[] memory tmp = new uint256[](limit);
+        uint256 found = 0;
+        for (uint256 i = offset; i <= proposalCount && found < limit; i++) {
             if (proposals[i].end > block.timestamp && !proposals[i].executed && !proposals[i].queued) {
-                count++;
+                tmp[found++] = i;
             }
         }
-        
-        ids = new uint256[](count);
-        uint256 idx = 0;
-        for (uint256 i = 1; i <= proposalCount; i++) {
-            if (proposals[i].end > block.timestamp && !proposals[i].executed && !proposals[i].queued) {
-                ids[idx++] = i;
-            }
+        ids = new uint256[](found);
+        for (uint256 j = 0; j < found; j++) {
+            ids[j] = tmp[j];
         }
+    }
+
+    /// @notice Legacy convenience alias — returns first 100 active proposals
+    function getActiveProposals() external view returns (uint256[] memory) {
+        return getActiveProposals(0, 100);
     }
     
     /**
@@ -359,7 +471,7 @@ contract DAO is ReentrancyGuard {
     ) {
         Proposal storage p = proposals[id];
         proposer = p.proposer;
-        ptype = p.ptype;
+        ptype = p.proposalType;
         target = p.target;
         value = p.value;
         description = p.description;
@@ -473,7 +585,7 @@ contract DAO is ReentrancyGuard {
         }
         
         uint256 total = p.forVotes + p.againstVotes;
-        quorumMet = total >= minVotesRequired;
+        quorumMet = total >= minVotesRequired && p.voterCount >= minParticipation;
         passing = quorumMet && p.forVotes > p.againstVotes;
         timeRemaining = block.timestamp < p.end ? p.end - block.timestamp : 0;
     }
@@ -486,12 +598,27 @@ contract DAO is ReentrancyGuard {
     mapping(address => uint256[]) private voterProposals;
     
     /**
-     * @notice Get all proposal IDs a voter has voted on
+     * @notice Get paginated proposal IDs a voter has voted on (L-07 Fix)
      * @param voter Voter address
+     * @param offset Starting index
+     * @param limit Maximum results (capped at 200)
      * @return proposalIds Array of proposal IDs
      */
-    function getVoterHistory(address voter) external view returns (uint256[] memory proposalIds) {
-        return voterProposals[voter];
+    function getVoterHistory(address voter, uint256 offset, uint256 limit) public view returns (uint256[] memory proposalIds) {
+        uint256[] storage all = voterProposals[voter];
+        if (offset >= all.length) return new uint256[](0);
+        if (limit == 0 || limit > 200) limit = 200;
+        uint256 end = offset + limit;
+        if (end > all.length) end = all.length;
+        proposalIds = new uint256[](end - offset);
+        for (uint256 i = offset; i < end; i++) {
+            proposalIds[i - offset] = all[i];
+        }
+    }
+
+    /// @notice Legacy alias — returns first 200 voter proposals
+    function getVoterHistory(address voter) external view returns (uint256[] memory) {
+        return getVoterHistory(voter, 0, 200);
     }
     
     /**
@@ -542,5 +669,20 @@ contract DAO is ReentrancyGuard {
             executedFlags[i] = p.executed;
             queuedFlags[i] = p.queued;
         }
+    }
+
+    function _enforceSeerAction(address subject, uint8 action, uint256 amount, address counterparty) internal {
+        address sa = address(seerAutonomous);
+        if (sa == address(0)) return;
+
+        uint8 result = 0;
+        try seerAutonomous.beforeAction(subject, action, amount, counterparty) returns (uint8 r) {
+            result = r;
+        } catch {
+            revert DAO_ActionBlocked(type(uint8).max);
+        }
+
+        // Allowed (0) and Warned (1) may proceed; delayed/blocked/penalized are denied.
+        if (result >= 2) revert DAO_ActionBlocked(result);
     }
 }

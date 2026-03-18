@@ -2,16 +2,27 @@
 
 import { Footer } from "@/components/layout/Footer";
 import { VFIDEPresaleABI, ERC20ABI } from "@/lib/abis";
+import { CONTRACT_ADDRESSES } from "@/lib/contracts";
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { useAccount, useWriteContract, useWaitForTransactionReceipt, useReadContract, useGasPrice } from "wagmi";
-import { parseUnits, formatEther } from "viem";
+import { parseUnits, parseEther, formatEther } from "viem";
 import { Loader2, CheckCircle, Wallet, Fuel, Sparkles } from "lucide-react";
 import { useToast } from "@/components/ui/toast";
 import { safeParseFloat } from "@/lib/validation";
+import { useEthPrice } from "@/hooks/useEthPrice";
 
 // Contract addresses from environment - Base Sepolia deployment
-const PRESALE_ADDRESS = (process.env.NEXT_PUBLIC_VFIDE_PRESALE_ADDRESS || '0x89aefb047B6CB2bB302FE2734DDa452985eF1658') as `0x${string}`;
+const PRESALE_ADDRESS = CONTRACT_ADDRESSES.VFIDEPresale;
+const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000';
+if (PRESALE_ADDRESS === ZERO_ADDRESS) {
+  throw new Error('NEXT_PUBLIC_VFIDE_PRESALE_ADDRESS not set');
+}
+
+const STABLECOIN_ADDRESSES = {
+  usdc: process.env.NEXT_PUBLIC_USDC_ADDRESS as `0x${string}` | undefined,
+  usdt: process.env.NEXT_PUBLIC_USDT_ADDRESS as `0x${string}` | undefined,
+} as const;
 // Note: USDC/USDT are not available on Base Sepolia testnet
 // Users must use ETH for testnet purchases
 const STABLECOINS_AVAILABLE = false; // Set to true when stablecoins are deployed
@@ -37,10 +48,11 @@ export default function TokenLaunchPage() {
 
   // Gas price for fee estimate
   const { data: gasPrice } = useGasPrice();
+  const { ethPrice } = useEthPrice();
   const estimatedGas = BigInt(150000); // Typical presale tx gas
   const gasCostWei = gasPrice ? estimatedGas * gasPrice : BigInt(0);
   const gasCostEth = safeParseFloat(formatEther(gasCostWei), 0);
-  const gasCostUsd = gasCostEth * 2500; // Rough ETH price
+  const gasCostUsd = gasCostEth * (ethPrice || 2500);
 
   // Read tier availability
   const { data: _foundingRemaining } = useReadContract({
@@ -75,22 +87,27 @@ export default function TokenLaunchPage() {
   // Stablecoin allowance - disabled on testnet since no stablecoins available
   // This will be enabled when USDC/USDT are deployed on mainnet
   const { data: allowance } = useReadContract({
-    address: PRESALE_ADDRESS, // Placeholder - won't be used since stablecoins disabled
+    address: paymentMethod === 'usdt' ? STABLECOIN_ADDRESSES.usdt : STABLECOIN_ADDRESSES.usdc,
     abi: ERC20ABI,
     functionName: 'allowance',
     args: address ? [address, PRESALE_ADDRESS] : undefined,
     query: {
-      enabled: STABLECOINS_AVAILABLE && paymentMethod !== 'eth',
+      enabled:
+        STABLECOINS_AVAILABLE &&
+        paymentMethod !== 'eth' &&
+        !!(paymentMethod === 'usdt' ? STABLECOIN_ADDRESSES.usdt : STABLECOIN_ADDRESSES.usdc),
     }
   });
 
   // Handle approve - only for stablecoins (disabled on testnet)
   const handleApprove = () => {
     if (!STABLECOINS_AVAILABLE) return;
+    const tokenAddress = paymentMethod === 'usdt' ? STABLECOIN_ADDRESSES.usdt : STABLECOIN_ADDRESSES.usdc;
+    if (!tokenAddress) return;
     const usdAmount = calculateTotal();
     const amountWithBuffer = parseUnits((usdAmount * 1.01).toFixed(6), 6); // 1% buffer for rounding
     writeApprove({
-      address: PRESALE_ADDRESS, // Will be replaced with actual stablecoin address
+      address: tokenAddress,
       abi: ERC20ABI,
       functionName: 'approve',
       args: [PRESALE_ADDRESS, amountWithBuffer],
@@ -109,24 +126,23 @@ export default function TokenLaunchPage() {
     // Only ETH payments are available on testnet
     // Stablecoin payments will be enabled on mainnet
     if (paymentMethod === 'eth' || !STABLECOINS_AVAILABLE) {
-      // ETH payments require oracle price feed integration
-      // Currently using placeholder value - production will use Chainlink price feeds
       writeContract({
         address: PRESALE_ADDRESS,
         abi: VFIDEPresaleABI,
         functionName: 'buyTokens',
         args: [lockPeriod],
-        value: parseUnits('0.01', 18), // Placeholder - needs oracle
+        value: parseEther(amount),
       });
     } else {
       // Stablecoin payments - disabled on testnet
       // This code path is kept for mainnet deployment
-      const stablecoinPlaceholder = PRESALE_ADDRESS; // Will be replaced with actual USDC/USDT address
+      const stablecoinAddress = paymentMethod === 'usdt' ? STABLECOIN_ADDRESSES.usdt : STABLECOIN_ADDRESSES.usdc;
+      if (!stablecoinAddress) return;
       writeContract({
         address: PRESALE_ADDRESS,
         abi: VFIDEPresaleABI,
         functionName: 'buyWithStable',
-        args: [stablecoinPlaceholder, stableAmount, tier, lockPeriod],
+        args: [stablecoinAddress, stableAmount, tier, lockPeriod],
       });
     }
   };

@@ -249,6 +249,25 @@ describe('SeerAutonomous Contract', () => {
       });
       expect(result).toBe('0xhash');
     });
+
+    it('should allow DAO to apply max autonomy profile', async () => {
+      mockContractWrite.mockResolvedValueOnce('0xhash');
+      const result = await mockContractWrite({
+        functionName: 'daoApplyMaxAutonomyProfile',
+        args: [],
+      });
+      expect(result).toBe('0xhash');
+    });
+
+    it('should reject non-DAO applying max autonomy profile', async () => {
+      mockContractWrite.mockRejectedValueOnce(new Error('SA_NotAuthorized'));
+      await expect(
+        mockContractWrite({
+          functionName: 'daoApplyMaxAutonomyProfile',
+          args: [],
+        })
+      ).rejects.toThrow('SA_NotAuthorized');
+    });
   });
 
   describe('Violations', () => {

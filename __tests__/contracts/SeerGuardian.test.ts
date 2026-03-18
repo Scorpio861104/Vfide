@@ -586,6 +586,30 @@ describe('SeerGuardian Contract', () => {
     });
   });
 
+  describe('Proposal Flagging Safeguards', () => {
+    it('should reject autoCheckProposer when proposal id is invalid', async () => {
+      mockContractWrite.mockRejectedValueOnce(new Error('SG: invalid proposal'));
+
+      await expect(async () => {
+        await mockContractWrite({
+          functionName: 'autoCheckProposer',
+          args: [0n, user1],
+        });
+      }).rejects.toThrow('invalid proposal');
+    });
+
+    it('should reject autoCheckProposer when proposer does not match DAO record', async () => {
+      mockContractWrite.mockRejectedValueOnce(new Error('SG: proposer mismatch'));
+
+      await expect(async () => {
+        await mockContractWrite({
+          functionName: 'autoCheckProposer',
+          args: [1n, user2],
+        });
+      }).rejects.toThrow('proposer mismatch');
+    });
+  });
+
   describe('Edge Cases and Integration', () => {
     it('should handle zero violations gracefully', async () => {
       mockContractRead.mockResolvedValueOnce(0n);

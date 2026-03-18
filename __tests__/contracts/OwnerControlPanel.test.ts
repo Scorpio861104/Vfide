@@ -299,6 +299,40 @@ describe('OwnerControlPanel Contract', () => {
   });
 
   describe('System Status', () => {
+    it('should set DevReserve vault address for monitoring', async () => {
+      mockContractWrite.mockResolvedValueOnce('0xhash');
+
+      const tx = await mockContractWrite({
+        functionName: 'setDevReserveVault',
+        args: [user1],
+      });
+
+      expect(tx).toBe('0xhash');
+    });
+
+    it('should read configured DevReserve vault address', async () => {
+      mockContractRead.mockResolvedValueOnce(user1);
+
+      const result = await mockContractRead({ functionName: 'devReserveVault' });
+      expect(result).toBe(user1);
+    });
+
+    it('should return token status with live DevReserve balance when vault is configured', async () => {
+      const tokenStatus = {
+        totalSupply: parseEther('200000000'),
+        devReserveBalance: parseEther('41000000'),
+        presaleBalance: parseEther('12000000'),
+        treasuryBalance: parseEther('115000000'),
+        vaultOnly: true,
+        policyLocked: true,
+        circuitBreaker: false,
+      };
+      mockContractRead.mockResolvedValueOnce(tokenStatus);
+
+      const result = await mockContractRead({ functionName: 'getTokenStatus' });
+      expect(result).toEqual(tokenStatus);
+    });
+
     it('should get system health', async () => {
       mockContractRead.mockResolvedValueOnce({ healthy: true, score: 95 });
       expect(await mockContractRead({ functionName: 'getSystemHealth' })).toEqual({

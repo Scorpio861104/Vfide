@@ -136,6 +136,24 @@ describe('/api/leaderboard/monthly', () => {
       expect(mockRelease).toHaveBeenCalled();
     });
 
+    it('should return degraded payload for database auth failures', async () => {
+      withRateLimit.mockResolvedValue(null);
+      const dbAuthError = Object.assign(new Error('password authentication failed for user "postgres"'), {
+        code: '28P01',
+      });
+      mockQuery.mockRejectedValue(dbAuthError);
+
+      const request = new NextRequest('http://localhost:3000/api/leaderboard/monthly');
+      const response = await GET(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(200);
+      expect(data.degraded).toBe(true);
+      expect(Array.isArray(data.leaderboard)).toBe(true);
+      expect(data.leaderboard).toHaveLength(0);
+      expect(mockRelease).toHaveBeenCalled();
+    });
+
     it('should support limit parameter with cap at 100', async () => {
       withRateLimit.mockResolvedValue(null);
       mockQuery

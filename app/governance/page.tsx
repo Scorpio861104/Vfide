@@ -4,7 +4,7 @@ import { Footer } from "@/components/layout/Footer";
 import { DAOABI } from "@/lib/abis";
 import { useState, useEffect, useMemo } from "react";
 import { useProofScore, useDAOProposals } from "@/lib/vfide-hooks";
-import { useAccount, useWriteContract, useWaitForTransactionReceipt, useReadContract } from "wagmi";
+import { useAccount, useWriteContract, useWaitForTransactionReceipt, useReadContract, usePublicClient } from "wagmi";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Bell, Search, Vote, Users, Clock, ChevronRight, Sparkles, Crown, Lightbulb, MessageSquare, History, BarChart3, FileText, Plus } from "lucide-react";
 import { sanitizeString } from "@/lib/validation";
@@ -13,8 +13,8 @@ import { toast } from "@/lib/toast";
 import { CouncilElectionABI } from "@/lib/abis";
 import { CONTRACT_ADDRESSES } from "@/lib/contracts";
 
-// Contract address from environment
-const DAO_ADDRESS = (process.env.NEXT_PUBLIC_DAO_ADDRESS || '0xB75b08C5e42da4242e218C25B6A6B05d7BeF0728') as `0x${string}`;
+// Contract address from centralized registry
+const DAO_ADDRESS = CONTRACT_ADDRESSES.DAO;
 
 type TabType = 'overview' | 'proposals' | 'create' | 'council' | 'suggestions' | 'discussions' | 'members' | 'history' | 'stats';
 
@@ -502,18 +502,108 @@ function DeadlineCard({ id, title, hoursRemaining, voted }: { id: number; title:
 }
 
 function ProposalsTab({ searchQuery, onVote }: { searchQuery: string; onVote: (proposalId: number, support: boolean) => void }) {
+  const publicClient = usePublicClient();
   const [selectedProposal, setSelectedProposal] = useState<Proposal | null>(null);
   const [filterType, setFilterType] = useState<string>('all');
-  const [baseTime] = useState(() => Date.now());
+  const [proposals, setProposals] = useState<Proposal[]>([]);
+
+  const { data: activeProposalIds, isLoading: isLoadingProposalIds, refetch } = useReadContract({
+    address: DAO_ADDRESS,
+    abi: DAOABI,
+    functionName: 'getActiveProposals',
+  });
+
+  useEffect(() => {
+    const loadProposalDetails = async () => {
+      if (!publicClient || !activeProposalIds) {
+        setProposals([]);
+        return;
+      }
+
+      const proposalIds = activeProposalIds as readonly bigint[];
+
+      const formatType = (ptype: number): string => {
+        if (ptype === 0) return 'PARAMETER';
+        if (ptype === 1) return 'TREASURY';
+        if (ptype === 2) return 'UPGRADE';
+        if (ptype === 3) return 'POLICY';
+        return 'OTHER';
+      };
+
+      const formatAddress = (value: `0x${string}`): string => `${value.slice(0, 6)}...${value.slice(-4)}`;
+
+      const formatTimeLeft = (endTimeMs: number): string => {
+        const diff = endTimeMs - Date.now();
+        if (diff <= 0) return 'Ended';
+
+        const totalHours = Math.floor(diff / (1000 * 60 * 60));
+        const days = Math.floor(totalHours / 24);
+        const hours = totalHours % 24;
+
+        if (days > 0) {
+          return `${days}d ${hours}h`;
+        }
+
+        if (totalHours > 0) {
+          return `${totalHours}h`;
+        }
+
+        const minutes = Math.floor(diff / (1000 * 60));
+        return `${Math.max(minutes, 1)}m`;
+      };
+
+      const toSafeNumber = (value: bigint): number => {
+        return value > BigInt(Number.MAX_SAFE_INTEGER) ? Number.MAX_SAFE_INTEGER : Number(value);
+      };
+
+      const details = await Promise.all(
+        proposalIds.map(async (proposalId) => {
+          const proposal = await publicClient.readContract({
+            address: DAO_ADDRESS,
+            abi: DAOABI,
+            functionName: 'getProposalDetails',
+            args: [proposalId],
+          }) as readonly [
+            `0x${string}`,
+            number,
+            `0x${string}`,
+            bigint,
+            string,
+            bigint,
+            bigint,
+            bigint,
+            bigint,
+            boolean,
+            boolean
+          ];
+
+          const [proposer, ptype, _target, _value, description, _startTime, endTime, forVotes, againstVotes] = proposal;
+          const endTimeMs = Number(endTime) * 1000;
+
+          return {
+            id: Number(proposalId),
+            type: formatType(ptype),
+            title: description || `Proposal #${proposalId.toString()}`,
+            author: formatAddress(proposer),
+            timeLeft: formatTimeLeft(endTimeMs),
+            endTime: endTimeMs,
+            forVotes: toSafeNumber(forVotes),
+            againstVotes: toSafeNumber(againstVotes),
+            voted: false,
+            description,
+          } satisfies Proposal;
+        })
+      );
+
+      setProposals(details);
+    };
+
+    loadProposalDetails().catch(() => {
+      setProposals([]);
+    });
+  }, [activeProposalIds, publicClient]);
   
   const filteredProposals = useMemo(() => {
-    const now = baseTime;
-    const proposals: Proposal[] = [
-      { id: 140, type: 'PARAMETER', title: 'Reduce Merchant Fee to 0.20%', author: '0x742d...bEb', timeLeft: '2 days', endTime: now + 48 * 60 * 60 * 1000, forVotes: 12450, againstVotes: 5820, voted: false, description: 'This proposal aims to reduce the merchant transaction fee from 0.25% to 0.20% to increase competitiveness and merchant adoption.' },
-      { id: 142, type: 'TREASURY', title: 'Allocate $50k for Security Audit', author: 'Council', timeLeft: '5 hours', endTime: now + 5 * 60 * 60 * 1000, forVotes: 18900, againstVotes: 1640, voted: false, description: 'Request treasury allocation of $50,000 to conduct comprehensive security audit by leading firm.' },
-      { id: 141, type: 'UPGRADE', title: 'Enable Multi-Chain Support (Arbitrum)', author: '0x1a2b...3c4d', timeLeft: '1 day', endTime: now + 24 * 60 * 60 * 1000, forVotes: 9240, againstVotes: 7860, voted: false, description: 'Deploy VFIDE protocol on Arbitrum to expand ecosystem reach and reduce transaction costs.' }
-    ];
-    
     return proposals.filter(p => {
       const matchesSearch = searchQuery === '' || 
         p.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -521,7 +611,7 @@ function ProposalsTab({ searchQuery, onVote }: { searchQuery: string; onVote: (p
       const matchesType = filterType === 'all' || p.type === filterType;
       return matchesSearch && matchesType;
     });
-  }, [searchQuery, filterType, baseTime]);
+  }, [searchQuery, filterType, proposals]);
 
   return (
     <section className="py-8">
@@ -555,7 +645,7 @@ function ProposalsTab({ searchQuery, onVote }: { searchQuery: string; onVote: (p
             </div>
             
             <div className="flex gap-2 overflow-x-auto pb-2">
-              {['all', 'PARAMETER', 'TREASURY', 'UPGRADE'].map(type => (
+              {['all', 'PARAMETER', 'TREASURY', 'UPGRADE', 'POLICY', 'OTHER'].map(type => (
                 <button
                   key={type}
                   onClick={() => setFilterType(type)}
@@ -572,6 +662,9 @@ function ProposalsTab({ searchQuery, onVote }: { searchQuery: string; onVote: (p
           </div>
           
           <div className="space-y-4">
+            {isLoadingProposalIds ? (
+              <div className="text-center py-12 text-zinc-400">Loading active proposals from chain...</div>
+            ) : null}
             {filteredProposals.length === 0 ? (
               <div className="text-center py-12 text-zinc-400">
                 No proposals found matching your search.
@@ -579,7 +672,7 @@ function ProposalsTab({ searchQuery, onVote }: { searchQuery: string; onVote: (p
             ) : null}
             {filteredProposals.map(prop => {
               const total = prop.forVotes + prop.againstVotes;
-              const forPercent = Math.round((prop.forVotes / total) * 100);
+              const forPercent = total > 0 ? Math.round((prop.forVotes / total) * 100) : 0;
               
               return (
                 <div key={prop.id} className="bg-zinc-900 border border-zinc-700 rounded-xl p-6 hover:border-cyan-400 transition-colors">
@@ -677,7 +770,7 @@ function ProposalsTab({ searchQuery, onVote }: { searchQuery: string; onVote: (p
                     <span className="text-red-600">AGAINST: {selectedProposal.againstVotes.toLocaleString()} votes</span>
                   </div>
                   <div className="w-full h-3 bg-zinc-900 rounded-full overflow-hidden">
-                    <div className="h-full bg-emerald-500" style={{ width: `${(selectedProposal.forVotes / (selectedProposal.forVotes + selectedProposal.againstVotes)) * 100}%` }} />
+                    <div className="h-full bg-emerald-500" style={{ width: `${(selectedProposal.forVotes / Math.max(selectedProposal.forVotes + selectedProposal.againstVotes, 1)) * 100}%` }} />
                   </div>
                 </div>
               </div>

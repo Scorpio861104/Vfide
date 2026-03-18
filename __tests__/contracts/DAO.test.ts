@@ -703,6 +703,61 @@ describe('DAO Governance Contract', () => {
       }).rejects.toThrow('Rate limit');
     });
 
+    it('should enforce proposer cooldown between proposals', async () => {
+      mockContractWrite.mockRejectedValueOnce(new Error('DAO_ProposalCooldownActive'));
+
+      await expect(async () => {
+        await mockContractWrite({
+          functionName: 'propose',
+          args: [['0xTarget'], [0n], ['0x1234'], 'Cooldown blocked proposal'],
+        });
+      }).rejects.toThrow('DAO_ProposalCooldownActive');
+    });
+
+    it('should reject proposal target when type policy disallows it', async () => {
+      mockContractWrite.mockRejectedValueOnce(new Error('DAO_ProposalTargetNotAllowed'));
+
+      await expect(async () => {
+        await mockContractWrite({
+          functionName: 'propose',
+          args: [['0xTarget'], [0n], ['0x1234'], 'Disallowed target policy proposal'],
+        });
+      }).rejects.toThrow('DAO_ProposalTargetNotAllowed');
+    });
+
+    it('should reject proposal selector when type policy disallows it', async () => {
+      mockContractWrite.mockRejectedValueOnce(new Error('DAO_ProposalSelectorNotAllowed'));
+
+      await expect(async () => {
+        await mockContractWrite({
+          functionName: 'propose',
+          args: [['0xTarget'], [0n], ['0x1234'], 'Disallowed selector policy proposal'],
+        });
+      }).rejects.toThrow('DAO_ProposalSelectorNotAllowed');
+    });
+
+    it('should block proposal when Seer autonomous denies action', async () => {
+      mockContractWrite.mockRejectedValueOnce(new Error('DAO_ActionBlocked'));
+
+      await expect(async () => {
+        await mockContractWrite({
+          functionName: 'propose',
+          args: [['0xTarget'], [0n], ['0x1234'], 'Seer-blocked proposal'],
+        });
+      }).rejects.toThrow('DAO_ActionBlocked');
+    });
+
+    it('should block vote when Seer autonomous denies action', async () => {
+      mockContractWrite.mockRejectedValueOnce(new Error('DAO_ActionBlocked'));
+
+      await expect(async () => {
+        await mockContractWrite({
+          functionName: 'vote',
+          args: [1n, 1],
+        });
+      }).rejects.toThrow('DAO_ActionBlocked');
+    });
+
     it('should handle vote changing before finalization', async () => {
       mockContractWrite.mockResolvedValueOnce('0xhash');
 

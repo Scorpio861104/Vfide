@@ -9,6 +9,7 @@ import { useAuth, useMessages, useUserProfile } from '../../../hooks/useAPI';
 // Mock wagmi hooks
 jest.mock('wagmi', () => ({
   useAccount: jest.fn(() => ({ address: '0x1234567890123456789012345678901234567890' })),
+  useChainId: jest.fn(() => 8453),
   useSignMessage: jest.fn(() => ({
     signMessageAsync: jest.fn().mockResolvedValue('0xsignature'),
   })),
@@ -17,6 +18,7 @@ jest.mock('wagmi', () => ({
 // Mock api-client
 jest.mock('@/lib/api-client', () => ({
   apiClient: {
+    getAuthChallenge: jest.fn().mockResolvedValue({ message: 'Sign in to VFIDE' }),
     authenticate: jest.fn().mockResolvedValue({ token: 'test-token' }),
     clearToken: jest.fn(),
     getToken: jest.fn().mockReturnValue(null),

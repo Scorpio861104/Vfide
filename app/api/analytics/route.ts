@@ -37,7 +37,17 @@ const VALID_EVENT_TYPES = [
   'badge_viewed',
   'page_load_time',
   'api_response_time',
-  'error_occurred'
+  'error_occurred',
+  'seer_score_set',
+  'seer_action_allowed',
+  'seer_action_warned',
+  'seer_action_delayed',
+  'seer_action_blocked',
+  'seer_reason_code',
+  'seer_appeal_opened',
+  'seer_appeal_resolved',
+  'seer_policy_shadow_eval',
+  'seer_service_view'
 ];
 
 function isObjectRecord(value: unknown): value is Record<string, unknown> {

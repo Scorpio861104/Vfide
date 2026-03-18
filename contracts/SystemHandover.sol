@@ -2,7 +2,7 @@
 pragma solidity 0.8.30;
 
 interface ISeer_SH { function minForGovernance() external view returns (uint16); }
-interface IVFIDEPresaleLike_SH { function presaleStartTime() external view returns (uint256); }
+interface IVFIDEPresaleLike_SH { function saleStartTime() external view returns (uint256); }
 interface IDAO_SH { function setAdmin(address _admin) external; }
 interface IDAOTimelock_SH { function setAdmin(address _admin) external; }
 interface IProofLedger_SH { function logSystemEvent(address who, string calldata action, address by) external; }
@@ -10,6 +10,9 @@ interface IProofLedger_SH { function logSystemEvent(address who, string calldata
 error SH_NotDev();
 error SH_TooEarly();
 error SH_Zero();
+
+/// @dev I-07 Fix: Fallback event when ledger logging fails
+event LedgerLogFailed(address indexed source, string action);
 
 contract SystemHandover {
     event Armed(uint64 start, uint64 handoverAt);
@@ -49,7 +52,7 @@ contract SystemHandover {
     /// Anyone can arm after presale has started; prevents forgetting.
     function armFromPresale(address presale) external {
         if (start!=0) return; // idempotent
-        uint256 t0 = IVFIDEPresaleLike_SH(presale).presaleStartTime();
+        uint256 t0 = IVFIDEPresaleLike_SH(presale).saleStartTime();
         require(t0!=0,"presale not started");
         // forge-lint: disable-next-line(unsafe-typecast)
         // Safe: presaleStartTime is a recent timestamp that fits in uint64
@@ -68,8 +71,10 @@ contract SystemHandover {
     }
 
     /// If network trust is low at deadline, dev can extend once (failsafe).
-    function extendOnceIfNeeded(uint16 networkAvgScore) external onlyDev {
+    /// M-01 Fix: Read score from seer on-chain instead of self-reported parameter
+    function extendOnceIfNeeded() external onlyDev {
         require(extensionsUsed < maxExtensions, "no_ext_left");
+        uint16 networkAvgScore = seer.minForGovernance();
         if (networkAvgScore < minAvgCouncilScore) {
             handoverAt += extensionSpan;
             extensionsUsed += 1;
@@ -91,6 +96,6 @@ contract SystemHandover {
     function setLedger(address _ledger) external onlyDev { ledger=IProofLedger_SH(_ledger); emit LedgerSet(_ledger); }
 
     function _log(string memory action) internal {
-        if (address(ledger)!=address(0)) { try ledger.logSystemEvent(address(this), action, msg.sender) {} catch {} }
+        if (address(ledger)!=address(0)) { try ledger.logSystemEvent(address(this), action, msg.sender) {} catch { emit LedgerLogFailed(address(this), action); } }
     }
 }

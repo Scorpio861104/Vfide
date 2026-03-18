@@ -149,9 +149,6 @@ contract LiquidityIncentives is ReentrancyGuard {
         if (!pool.active) revert LP_NotActive();
         if (amount == 0) revert LP_Zero();
 
-        // Pull tokens before mutating stake accounting.
-        IERC20(lpToken).safeTransferFrom(msg.sender, address(this), amount);
-
         UserStake storage userStake = userStakes[lpToken][msg.sender];
 
         if (userStake.stakedAt == 0) {
@@ -160,6 +157,9 @@ contract LiquidityIncentives is ReentrancyGuard {
 
         userStake.amount += amount;
         pool.totalStaked += amount;
+
+        // Interaction after state effects; transaction reverts atomically on transfer failure.
+        IERC20(lpToken).safeTransferFrom(msg.sender, address(this), amount);
         
         emit Staked(msg.sender, lpToken, amount);
     }

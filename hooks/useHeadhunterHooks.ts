@@ -383,13 +383,8 @@ export function useQuarterlyPoolEstimate() {
 /**
  * Get referral activity history
  * 
- * NOTE: This hook returns demo data for UI preview purposes.
- * In production with a deployed subgraph, this would fetch real
- * on-chain referral events. The subgraph would index:
- * - UserReferred events from EcosystemVault
- * - MerchantReferred events from EcosystemVault
- * 
- * For now, mock data provides a realistic UI experience for testing.
+ * This hook should return indexed on-chain referral activity.
+ * Until indexer support is wired, it returns an empty list.
  */
 export interface ReferralActivity {
   id: string;
@@ -413,28 +408,8 @@ export function useReferralActivity() {
       return;
     }
 
-    // In production, fetch from subgraph or event logs
-    // For now, return mock data
-    setActivity([
-      {
-        id: '1',
-        type: 'merchant',
-        address: '0xABCDEF1234567890ABCDEF1234567890ABCDEF12' as `0x${string}`,
-        status: 'credited',
-        timestamp: Date.now() - 2 * 24 * 60 * 60 * 1000,
-        points: 3,
-        txHash: '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef' as `0x${string}`,
-      },
-      {
-        id: '2',
-        type: 'user',
-        address: '0x1234567890ABCDEF1234567890ABCDEF12345678' as `0x${string}`,
-        status: 'pending',
-        timestamp: Date.now() - 5 * 24 * 60 * 60 * 1000,
-        points: 1,
-        txHash: '0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890' as `0x${string}`,
-      },
-    ]);
+    // TODO: fetch from subgraph or contract event indexer.
+    setActivity([]);
     setIsLoading(false);
   }, [address]);
 
@@ -447,12 +422,8 @@ export function useReferralActivity() {
 /**
  * Get top 20 leaderboard
  * 
- * NOTE: This hook returns demo data for UI preview purposes.
- * In production with a deployed subgraph, this would query aggregated
- * referral points per address, sorted by total points descending.
- * The subgraph would maintain running totals per year/quarter.
- * 
- * For now, mock data provides a realistic UI experience for testing.
+ * This hook should return indexed leaderboard standings.
+ * Until indexer support is wired, it returns an empty list.
  */
 export interface LeaderboardEntry {
   rank: number;
@@ -476,16 +447,9 @@ export function useLeaderboard(year: bigint, quarter: bigint) {
       return;
     }
 
-    // In production, fetch from subgraph or contract
-    // For now, return mock data
-    const mockData: LeaderboardEntry[] = [
-      { rank: 1, address: '0x1234567890ABCDEF1234567890ABCDEF12345678' as `0x${string}`, points: 45, userReferrals: 30, merchantReferrals: 5, estimatedReward: 'Manager-assigned fixed work payout', isCurrentUser: false },
-      { rank: 2, address: '0x2345678901BCDEF23456789012CDEF3456789012' as `0x${string}`, points: 38, userReferrals: 26, merchantReferrals: 4, estimatedReward: 'Manager-assigned fixed work payout', isCurrentUser: false },
-      { rank: 3, address: '0x3456789012CDEF34567890123DEF45678901234' as `0x${string}`, points: 32, userReferrals: 23, merchantReferrals: 3, estimatedReward: 'Manager-assigned fixed work payout', isCurrentUser: false },
-      { rank: 7, address: address || ('0x0000000000000000000000000000000000000000' as `0x${string}`), points: 18, userReferrals: 4, merchantReferrals: 2, estimatedReward: 'Manager-assigned fixed work payout', isCurrentUser: true },
-    ];
-
-    setLeaderboard(mockData);
+    void address;
+    // TODO: fetch from subgraph or contract event indexer.
+    setLeaderboard([]);
     setIsLoading(false);
   }, [year, quarter, address]);
 

@@ -44,6 +44,9 @@ docs/
 
 ## 🚀 Quick Links
 
+### Archived Root Markdown Cleanup
+- [Root markdown archive (2026-03-16)](archive/root-markdown-2026-03-16/) - Former top-level status/audit markdown files moved from repository root to reduce clutter while preserving history.
+
 ### Getting Started
 - [Frontend README](README_FRONTEND.md) - Setup and development guide
 - [Quick Reference](QUICK-REFERENCE.md) - Common commands and patterns
@@ -53,6 +56,7 @@ docs/
 - [Mobile Development](guides/MOBILE-FIRST-GUIDE.md)
 - [Governance System](guides/GOVERNANCE-IMPLEMENTATION-GUIDE.md)
 - [Notifications](guides/NOTIFICATION-GUIDE.md)
+- [Seer User Help](SEER_USER_HELP.md)
 
 ### Testing
 - [Testing Strategy](testing/TESTING_STRATEGY.md)

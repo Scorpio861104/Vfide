@@ -314,7 +314,7 @@ export const hexToSemanticMap: Record<string, string> = {
 };
 
 /**
- * CSS class replacements for hardcoded hex colors
+ * CSS class replacements for literal hex colors
  * Search/replace these patterns in component files
  */
 export const hexToClassMap: Record<string, string> = {

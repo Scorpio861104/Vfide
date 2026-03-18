@@ -83,6 +83,7 @@ abstract contract WithdrawalQueue is VFIDEAccessControl, VFIDEReentrancyGuard {
             executionTime += WITHDRAWAL_DELAY;
         }
 
+        require(withdrawalQueue.length < 10000, "WQ: queue full"); // I-11: Cap queue size
         queueIndex = withdrawalQueue.length;
         
         withdrawalQueue.push(WithdrawalRequest({
@@ -95,6 +96,7 @@ abstract contract WithdrawalQueue is VFIDEAccessControl, VFIDEReentrancyGuard {
             reason: _reason
         }));
 
+        require(userWithdrawals[msg.sender].length < 200, "WQ: user limit"); // I-11
         userWithdrawals[msg.sender].push(queueIndex);
 
         emit WithdrawalRequested(msg.sender, queueIndex, _amount, executionTime);

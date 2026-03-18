@@ -5,8 +5,10 @@ import VFIDETokenABI from './VFIDEToken.json'
 import VFIDEPresaleABI from './VFIDEPresale.json'
 import StablecoinRegistryABI from './StablecoinRegistry.json'
 import VaultInfrastructureABI from './VaultInfrastructure.json'
+import VaultHubLiteABI from './VaultHubLite.json'
 import UserVaultLiteABI from './UserVaultLite.json'
 import UserVaultABI from './UserVault.json'
+import CardBoundVaultABI from './CardBoundVault.json'
 import SeerABI from './Seer.json'
 import VFIDEBadgeNFTABI from './VFIDEBadgeNFT.json'
 import DAOABI from './DAO.json'
@@ -56,6 +58,7 @@ validateABI(StablecoinRegistryABI, 'StablecoinRegistry');
 validateABI(VaultInfrastructureABI, 'VaultInfrastructure');
 validateABI(UserVaultLiteABI, 'UserVaultLite');
 validateABI(UserVaultABI, 'UserVault');
+validateABI(CardBoundVaultABI, 'CardBoundVault');
 validateABI(SeerABI, 'Seer');
 validateABI(VFIDEBadgeNFTABI, 'VFIDEBadgeNFT');
 validateABI(DAOABI, 'DAO');
@@ -87,10 +90,8 @@ validateABI(SeerViewABI, 'SeerView');
 validateABI(UserRewardsABI, 'UserRewards');
 validateABI(PromotionalTreasuryABI, 'PromotionalTreasury');
 
-// VaultHub ABI - use VaultInfrastructure for full features
-const VaultHubABI = VaultInfrastructureABI
-// Legacy alias preserved for callers still importing VaultHubLiteABI
-const VaultHubLiteABI = VaultInfrastructureABI
+// VaultHub ABI should point to the dedicated VaultHub ABI surface.
+const VaultHubABI = VaultHubLiteABI
 
 export {
   VFIDETokenABI,
@@ -101,6 +102,7 @@ export {
   VaultHubLiteABI,
   UserVaultLiteABI,
   UserVaultABI,
+  CardBoundVaultABI,
   SeerABI,
   VFIDEBadgeNFTABI,
   DAOABI,

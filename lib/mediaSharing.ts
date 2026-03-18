@@ -168,8 +168,8 @@ export async function uploadFile(
     throw new Error(validation.error);
   }
 
-  // In production, this would upload to IPFS or cloud storage
-  // For now, use data URLs for demo
+  // In local mode, store attachment as a data URL until
+  // object storage upload is integrated.
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
 
@@ -195,6 +195,7 @@ export async function uploadFile(
           uploadedBy: '', // Will be set by caller
         };
 
+        if (onProgress) onProgress(100);
         resolve(attachment);
       } catch (error) {
         reject(error);
@@ -202,16 +203,6 @@ export async function uploadFile(
     };
 
     reader.onerror = () => reject(new Error('Failed to read file'));
-
-    // Simulate progress
-    if (onProgress) {
-      let progress = 0;
-      const interval = setInterval(() => {
-        progress += 10;
-        onProgress(progress);
-        if (progress >= 90) clearInterval(interval);
-      }, 100);
-    }
 
     reader.readAsDataURL(file);
   });

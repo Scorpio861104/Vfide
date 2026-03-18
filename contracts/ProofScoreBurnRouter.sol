@@ -17,12 +17,15 @@ import "./SharedInterfaces.sol";
 error BURN_Zero();
 error BURN_NotDAO();
 
-contract ProofScoreBurnRouter is Ownable {
+contract ProofScoreBurnRouter is Ownable, Pausable {
     event ModulesSet(address seer, address sanctumSink, address burnSink, address ecosystemSink);
     event PolicySet(uint16 baseBurnBps, uint16 baseSanctumBps, uint16 baseEcosystemBps, uint16 highTrustReduction, uint16 lowTrustPenalty);
     event FeesComputed(address indexed from, address indexed to, uint256 burnAmount, uint256 sanctumAmount, uint256 ecosystemAmount, uint16 score);
     event SustainabilitySet(uint256 dailyBurnCap, uint256 minimumSupplyFloor, uint16 ecosystemMinBps);
     event BurnCapReached(uint256 dailyBurned, uint256 dailyCap, uint256 redirectedToEcosystem);
+    // L-03: Emitted when seer returns score 0 for a user, which silently applies max fees.
+    // Monitoring systems should alert on this — it may indicate a misconfigured seer address.
+    event SeerScoreZeroWarning(address indexed user, address indexed seerAddr);
 
     ISeer public seer;
     address public sanctumSink;   // SanctumVault address
@@ -99,6 +102,8 @@ contract ProofScoreBurnRouter is Ownable {
     uint64 public constant SCORE_WINDOW = 7 days; // 7-day time-weighted average
     uint256 public constant MAX_SCORE_SNAPSHOTS = 100; // Cap to prevent unbounded gas
     mapping(address => uint64) public lastScoreUpdate;
+    // H-07 Fix: Circular buffer write index to avoid O(n) array shift
+    mapping(address => uint256) public scoreHistoryHead;
 
     function _dayStart(uint256 timestamp) internal pure returns (uint256) {
         // slither-disable-next-line divide-before-multiply
@@ -107,6 +112,9 @@ contract ProofScoreBurnRouter is Ownable {
 
     constructor(address _seer, address _sanctumSink, address _burnSink, address _ecosystemSink) {
         require(_seer != address(0), "zero seer");
+        if (_sanctumSink == address(0) || _burnSink == address(0) || _ecosystemSink == address(0)) {
+            revert BURN_Zero();
+        }
         seer = ISeer(_seer);
         sanctumSink = _sanctumSink;
         burnSink = _burnSink;
@@ -216,10 +224,44 @@ contract ProofScoreBurnRouter is Ownable {
         return currentSupply <= minimumSupplyFloor;
     }
 
+    /**
+     * @notice Check whether the configured seer appears responsive.
+     * @dev Returns false if seer is unset or returns score 0 for a sample address,
+     *      which would silently apply maximum fees to all users (L-03 finding).
+     *      Use this in monitoring / keeper scripts before relying on fee computation.
+     * @param sampleUser Any user known to have a non-zero ProofScore (e.g. treasury)
+     * @return healthy True if seer is set and returns a non-zero score for sampleUser
+     */
+    function seerHealthy(address sampleUser) external view returns (bool healthy) {
+        if (address(seer) == address(0)) return false;
+        try seer.getScore(sampleUser) returns (uint16 score) {
+            healthy = score > 0;
+        } catch {
+            healthy = false;
+        }
+    }
+
+    /**
+     * @notice Emit SeerScoreZeroWarning if seer returns 0 for a user.
+     * @dev Call this from off-chain monitoring or a keeper when computeFees appears to
+     *      apply unexpectedly high fees. Emitting here (rather than in the view) keeps
+     *      computeFees gas-free while still producing an on-chain alert trail.
+     * @param user Address to probe
+     */
+    function warnIfSeerMisconfigured(address user) external {
+        uint16 score = seer.getScore(user);
+        if (score == 0) {
+            emit SeerScoreZeroWarning(user, address(seer));
+        }
+    }
+
     // ─────────────────────────── Admin
 
     function setModules(address _seer, address _sanctumSink, address _burnSink, address _ecosystemSink) external onlyOwner {
         if (_seer == address(0)) revert BURN_Zero();
+        if (_sanctumSink == address(0) || _burnSink == address(0) || _ecosystemSink == address(0)) {
+            revert BURN_Zero();
+        }
         seer = ISeer(_seer);
         sanctumSink = _sanctumSink;
         burnSink = _burnSink;
@@ -235,68 +277,51 @@ contract ProofScoreBurnRouter is Ownable {
         uint16 currentScore = seer.getScore(user);
         uint64 now_ = uint64(block.timestamp);
         
-        // Add snapshot
-        scoreHistory[user].push(ScoreSnapshot({
+        ScoreSnapshot memory snap = ScoreSnapshot({
             score: currentScore,
             timestamp: now_
-        }));
+        });
         
         lastScoreUpdate[user] = now_;
         
-        // Cap total snapshots to prevent unbounded gas (keep most recent 100)
         uint256 len = scoreHistory[user].length;
-        if (len > MAX_SCORE_SNAPSHOTS) {
-            // Remove oldest snapshot
-            for (uint256 i = 1; i < len; i++) {
-                scoreHistory[user][i - 1] = scoreHistory[user][i];
-            }
-            scoreHistory[user].pop();
-            len = scoreHistory[user].length;
-        }
-        
-        // Clean up old snapshots (keep only SCORE_WINDOW worth)
-        if (len > 1) {
-            uint256 cutoff = now_ > SCORE_WINDOW ? now_ - SCORE_WINDOW : 0;
-            uint256 keepFrom = 0;
-            for (uint256 i = 0; i < len; i++) {
-                if (scoreHistory[user][i].timestamp >= cutoff) {
-                    keepFrom = i;
-                    break;
-                }
-            }
-            
-            // Keep at least 1 snapshot for reference
-            if (keepFrom > 0 && keepFrom < len) {
-                // Shift array to remove old entries
-                for (uint256 i = keepFrom; i < len; i++) {
-                    scoreHistory[user][i - keepFrom] = scoreHistory[user][i];
-                }
-                // Remove tail
-                for (uint256 i = 0; i < keepFrom; i++) {
-                    scoreHistory[user].pop();
-                }
-            }
+        // H-07 Fix: Use circular buffer — overwrite oldest entry instead of shifting
+        if (len < MAX_SCORE_SNAPSHOTS) {
+            scoreHistory[user].push(snap);
+        } else {
+            uint256 head = scoreHistoryHead[user];
+            scoreHistory[user][head] = snap;
+            scoreHistoryHead[user] = (head + 1) % MAX_SCORE_SNAPSHOTS;
         }
     }
     
     // C-11 Fix: Calculate time-weighted average score over SCORE_WINDOW
+    // H-07 Fix: Handles circular buffer — entries may not be chronologically ordered once buffer wraps
     function getTimeWeightedScore(address user) public view returns (uint16) {
         uint256 len = scoreHistory[user].length;
         if (len == 0) {
-            // No history yet, use current score
-            return seer.getScore(user);
+            // No history yet — use cached score (I-13: avoids gas amplification)
+            return seer.getCachedScore(user);
         }
         
         uint64 now_ = uint64(block.timestamp);
         uint64 windowStart = now_ > SCORE_WINDOW ? now_ - SCORE_WINDOW : 0;
         
-        // If latest snapshot is older than window, do not trust stale snapshot history.
-        // Fall back to current Seer score so fee computation cannot be frozen.
-        if (scoreHistory[user][len - 1].timestamp < windowStart) {
-            return seer.getScore(user);
+        // Collect all in-window snapshots sorted by timestamp
+        // Since circular buffer may wrap, find the latest timestamp first
+        uint64 latestTs = 0;
+        for (uint256 i = 0; i < len; i++) {
+            if (scoreHistory[user][i].timestamp > latestTs) {
+                latestTs = scoreHistory[user][i].timestamp;
+            }
         }
         
-        // Calculate weighted average
+        // If latest snapshot is older than window, fall back to cached Seer score (I-13)
+        if (latestTs < windowStart) {
+            return seer.getCachedScore(user);
+        }
+        
+        // Calculate weighted average using all in-window snapshots
         uint256 totalWeight = 0;
         uint256 weightedSum = 0;
         
@@ -304,17 +329,18 @@ contract ProofScoreBurnRouter is Ownable {
             uint64 snapshotTime = scoreHistory[user][i].timestamp;
             if (snapshotTime < windowStart) continue;
             
-            // Weight is time duration this score was active
-            uint64 endTime = (i + 1 < len) ? scoreHistory[user][i + 1].timestamp : now_;
-            uint64 duration = endTime - snapshotTime;
+            // For time-weighted, use simple equal weighting since circular buffer
+            // doesn't guarantee ordering. Each snapshot contributes equally.
+            // Weight by time since snapshot (more recent = higher weight)
+            uint64 age = now_ - snapshotTime;
+            uint64 weight = age < SCORE_WINDOW ? SCORE_WINDOW - age : 1;
             
-            totalWeight += duration;
-            weightedSum += uint256(scoreHistory[user][i].score) * duration;
+            totalWeight += weight;
+            weightedSum += uint256(scoreHistory[user][i].score) * weight;
         }
         
         if (totalWeight == 0) {
-            // Fallback to current
-            return seer.getScore(user);
+            return seer.getCachedScore(user);
         }
         
         return uint16(weightedSum / totalWeight);
@@ -434,9 +460,12 @@ contract ProofScoreBurnRouter is Ownable {
         }
         
         // Compute burn/sanctum directly from totalBps to avoid chained divide-then-multiply paths.
-        burnAmount = (amount * totalBps * 40) / 1_000_000;
-        sanctumAmount = (amount * totalBps * 10) / 1_000_000;
-        ecosystemAmount = (amount * ecosystemBps) / 10000;
+        // C-04 Fix: Use burnBps/sanctumBps (which may be adjusted for ecosystemMinBps) so all
+        // three amounts are derived consistently.  Ecosystem absorbs any rounding dust.
+        uint256 totalFee = (amount * totalBps) / 10000;
+        burnAmount    = (amount * burnBps) / 10000;
+        sanctumAmount = (amount * sanctumBps) / 10000;
+        ecosystemAmount = totalFee - burnAmount - sanctumAmount;
         
         // ═══ SUSTAINABILITY CHECKS ═══
         
@@ -479,33 +508,30 @@ contract ProofScoreBurnRouter is Ownable {
      * @notice Update daily burn tracking (called by token after transfer)
      * @dev This allows accurate daily cap enforcement
      */
-    function recordBurn(uint256 burnAmount) external {
+    function recordBurn(uint256 burnAmount) external whenNotPaused {
         require(msg.sender == token, "only token");
-        
-        // Check if new day - reset counter
-        if (block.timestamp >= currentDayStart + 1 days) {
-            currentDayStart = _dayStart(block.timestamp);
-            dailyBurnedAmount = burnAmount;
-            dailyVolumeTracked = 0; // Reset volume on new day
-        } else {
-            dailyBurnedAmount += burnAmount;
-        }
+        // M-07 Fix: Single atomic day reset to prevent race condition
+        _resetDayIfNeeded();
+        dailyBurnedAmount += burnAmount;
     }
     
     /**
      * @notice Record transfer volume (called by token after transfer)
      * @dev Used for adaptive fee calculations
      */
-    function recordVolume(uint256 amount) external {
+    function recordVolume(uint256 amount) external whenNotPaused {
         require(msg.sender == token, "only token");
-        
-        // Check if new day - reset counter
+        // M-07 Fix: Single atomic day reset to prevent race condition
+        _resetDayIfNeeded();
+        dailyVolumeTracked += amount;
+    }
+
+    /// @dev M-07 Fix: Atomically reset both counters when a new day starts
+    function _resetDayIfNeeded() internal {
         if (block.timestamp >= currentDayStart + 1 days) {
             currentDayStart = _dayStart(block.timestamp);
-            dailyVolumeTracked = amount;
-            dailyBurnedAmount = 0; // Reset burns on new day
-        } else {
-            dailyVolumeTracked += amount;
+            dailyBurnedAmount = 0;
+            dailyVolumeTracked = 0;
         }
     }
     
@@ -572,6 +598,10 @@ contract ProofScoreBurnRouter is Ownable {
         // Return as percentage with 2 decimal precision (e.g., 175 = 1.75%)
         feePercent = totalBps;
     }
+
+    // I-09 Fix: Emergency pause
+    function pause() external onlyOwner { _pause(); }
+    function unpause() external onlyOwner { _unpause(); }
 
     /**
      * Calculate split ratio (for transparency)

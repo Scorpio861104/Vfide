@@ -20,7 +20,6 @@ export default function CrossChainTransfer() {
     error,
     supportedChains,
     findOptimalRoutes,
-    initiateTransfer,
     getChain,
     refreshBalances,
   } = useCrossChain(address);
@@ -99,28 +98,8 @@ export default function CrossChainTransfer() {
       return;
     }
 
-    const request: TransferRequest = {
-      fromChain,
-      toChain,
-      fromToken,
-      toToken,
-      amount,
-      recipient: recipient || address,
-    };
-
-    // In production, this would use the actual wallet signer
-    const mockSigner = {
-      sendTransaction: async (_tx: unknown) => ({
-        hash: '0x' + Math.random().toString(16).slice(2),
-        wait: async () => ({}),
-      }),
-    };
-
-    const transferId = await initiateTransfer(selectedRoute, request, mockSigner);
-    if (transferId) {
-      toast.success('Transfer initiated');
-    }
-  }, [selectedRoute, address, fromChain, toChain, fromToken, toToken, amount, recipient, initiateTransfer]);
+    toast.error('Cross-chain transfer is not configured yet');
+  }, [selectedRoute, address]);
 
   const _fromChainData = getChain(fromChain);
   const _toChainData = getChain(toChain);

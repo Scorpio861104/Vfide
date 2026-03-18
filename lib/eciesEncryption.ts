@@ -143,9 +143,9 @@ export async function deriveKeyPair(_walletAddress: string, signature: string): 
   privateKey: Buffer;
   publicKey: Buffer;
 }> {
-  // Use signature hash as seed for key generation
+  // Keep deterministic signature hashing for internal checks only; do not persist raw key material.
   const hash = keccak256(toBytes(signature));
-  const seed = hexToBytes(hash);
+  hexToBytes(hash);
   
   // Generate a new key pair (deterministic from seed would require more complex implementation)
   // For now, we store the key pair after first generation
@@ -153,11 +153,6 @@ export async function deriveKeyPair(_walletAddress: string, signature: string): 
   
   const publicKeyBytes = await exportPublicKey(keyPair.publicKey);
   const privateKeyBytes = await exportPrivateKey(keyPair.privateKey);
-  
-  // Also store seed for verification
-  if (typeof window !== 'undefined') {
-    localStorage.setItem('vfide_key_seed', bytesToHex(seed));
-  }
   
   return {
     privateKey: toBuffer(privateKeyBytes),

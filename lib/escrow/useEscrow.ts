@@ -8,7 +8,7 @@
  * - Type-safe contract interactions
  */
 
-import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
+import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt, usePublicClient } from 'wagmi';
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { parseUnits, formatUnits } from 'viem';
 import { ESCROW_ABI, VFIDE_TOKEN_ABI } from './abis';
@@ -37,6 +37,7 @@ const STATE_MAP: Record<number, EscrowState> = {
 
 export function useEscrow() {
   const { address, chainId } = useAccount();
+  const publicClient = usePublicClient();
   const [escrows, setEscrows] = useState<Escrow[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -52,44 +53,79 @@ export function useEscrow() {
   });
 
   // Contract write hooks
-  const { writeContract, data: hash, isPending, error: writeError } = useWriteContract();
+  const { writeContractAsync, data: hash, isPending, error: writeError } = useWriteContract();
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash });
 
   // ============ HELPER FUNCTIONS (defined first) ============
 
   // Helper: Check token allowance
-  // Parameters prefixed with _ as they're reserved for future contract read implementation
-  const checkAllowance = useCallback(async (_owner: `0x${string}`, _spender: `0x${string}`): Promise<bigint> => {
-    // Implementation would use contract read
-    return BigInt(0);
-  }, []);
+  const checkAllowance = useCallback(async (owner: `0x${string}`, spender: `0x${string}`): Promise<bigint> => {
+    if (!publicClient) {
+      throw new Error('Wallet client not available');
+    }
+
+    const allowance = await publicClient.readContract({
+      address: tokenAddress,
+      abi: VFIDE_TOKEN_ABI,
+      functionName: 'allowance',
+      args: [owner, spender],
+    });
+
+    return allowance as bigint;
+  }, [publicClient, tokenAddress]);
 
   // Helper: Approve token
   const approveToken = useCallback(async (spender: `0x${string}`, amount: bigint) => {
-    writeContract({
+    if (!publicClient) {
+      throw new Error('Wallet client not available');
+    }
+
+    const approvalHash = await writeContractAsync({
       address: tokenAddress,
       abi: VFIDE_TOKEN_ABI,
       functionName: 'approve',
       args: [spender, amount],
     });
-  }, [tokenAddress, writeContract]);
+
+    await publicClient.waitForTransactionReceipt({ hash: approvalHash });
+  }, [publicClient, tokenAddress, writeContractAsync]);
 
   // Read single escrow
   const readEscrow = useCallback(async (id: bigint): Promise<Escrow> => {
-    // This would use useReadContract in real implementation
-    // For now, return mock structure
+    if (!publicClient) {
+      throw new Error('Wallet client not available');
+    }
+
+    const data = await publicClient.readContract({
+      address: escrowAddress,
+      abi: ESCROW_ABI,
+      functionName: 'escrows',
+      args: [id],
+    });
+
+    const [buyer, merchant, token, amount, createdAt, releaseTime, state, orderId] = data as readonly [
+      `0x${string}`,
+      `0x${string}`,
+      `0x${string}`,
+      bigint,
+      bigint,
+      bigint,
+      number,
+      string
+    ];
+
     return {
       id,
-      buyer: '0x0000000000000000000000000000000000000000' as `0x${string}`,
-      merchant: '0x0000000000000000000000000000000000000000' as `0x${string}`,
-      token: tokenAddress,
-      amount: BigInt(0),
-      createdAt: BigInt(Date.now() / 1000),
-      releaseTime: BigInt(Date.now() / 1000 + 604800), // 7 days
-      state: 0,
-      orderId: ''
+      buyer,
+      merchant,
+      token,
+      amount,
+      createdAt,
+      releaseTime,
+      state,
+      orderId,
     };
-  }, [tokenAddress]);
+  }, [escrowAddress, publicClient]);
 
   // Format helpers
   const formatEscrowAmount = useCallback((amount: bigint): string => {
@@ -114,22 +150,34 @@ export function useEscrow() {
   }, []);
 
   // Check timeout status
-  const checkTimeout = useCallback(async (): Promise<{
+  const checkTimeout = useCallback(async (id: bigint): Promise<{
     isNearTimeout: boolean;
     timeRemaining: bigint;
   }> => {
-    // Would use useReadContract in production
+    if (!publicClient) {
+      throw new Error('Wallet client not available');
+    }
+
+    const timeoutData = await publicClient.readContract({
+      address: escrowAddress,
+      abi: ESCROW_ABI,
+      functionName: 'checkTimeout',
+      args: [id],
+    });
+
+    const [isNearTimeout, timeRemaining] = timeoutData as readonly [boolean, bigint];
+
     return {
-      isNearTimeout: false,
-      timeRemaining: BigInt(0)
+      isNearTimeout,
+      timeRemaining,
     };
-  }, []);
+  }, [escrowAddress, publicClient]);
 
   // ============ MAIN FUNCTIONS (use helpers) ============
 
   // Load all escrows for current user
   const loadEscrows = useCallback(async () => {
-    if (!escrowCount || !address) return;
+    if (!escrowCount || !address || !publicClient) return;
     
     setLoading(true);
     setError(null);
@@ -142,7 +190,8 @@ export function useEscrow() {
       for (let i = 1; i <= count; i++) {
         try {
           const escrow = await readEscrow(BigInt(i));
-          if (escrow.buyer === address || escrow.merchant === address) {
+          const normalizedUser = address.toLowerCase();
+          if (escrow.buyer.toLowerCase() === normalizedUser || escrow.merchant.toLowerCase() === normalizedUser) {
             userEscrows.push(escrow);
           }
         } catch {
@@ -157,7 +206,7 @@ export function useEscrow() {
     } finally {
       setLoading(false);
     }
-  }, [escrowCount, address, readEscrow]);
+  }, [escrowCount, address, publicClient, readEscrow]);
 
   // Create escrow (with automatic token approval)
   const createEscrow = useCallback(async (
@@ -182,7 +231,7 @@ export function useEscrow() {
       }
 
       // Step 2: Create escrow
-      writeContract({
+      await writeContractAsync({
         address: escrowAddress,
         abi: ESCROW_ABI,
         functionName: 'createEscrow',
@@ -195,7 +244,7 @@ export function useEscrow() {
     } finally {
       setLoading(false);
     }
-  }, [address, escrowAddress, tokenAddress, writeContract, approveToken, checkAllowance]);
+  }, [address, escrowAddress, tokenAddress, writeContractAsync, approveToken, checkAllowance]);
 
   // Release funds to merchant
   const releaseEscrow = useCallback(async (id: bigint) => {
@@ -203,7 +252,7 @@ export function useEscrow() {
     setError(null);
 
     try {
-      writeContract({
+      await writeContractAsync({
         address: escrowAddress,
         abi: ESCROW_ABI,
         functionName: 'release',
@@ -215,7 +264,7 @@ export function useEscrow() {
     } finally {
       setLoading(false);
     }
-  }, [escrowAddress, writeContract]);
+  }, [escrowAddress, writeContractAsync]);
 
   // Refund buyer (merchant initiated)
   const refundEscrow = useCallback(async (id: bigint) => {
@@ -223,7 +272,7 @@ export function useEscrow() {
     setError(null);
 
     try {
-      writeContract({
+      await writeContractAsync({
         address: escrowAddress,
         abi: ESCROW_ABI,
         functionName: 'refund',
@@ -235,7 +284,7 @@ export function useEscrow() {
     } finally {
       setLoading(false);
     }
-  }, [escrowAddress, writeContract]);
+  }, [escrowAddress, writeContractAsync]);
 
   // Claim timeout (merchant claims after release time)
   const claimTimeout = useCallback(async (id: bigint) => {
@@ -243,7 +292,7 @@ export function useEscrow() {
     setError(null);
 
     try {
-      writeContract({
+      await writeContractAsync({
         address: escrowAddress,
         abi: ESCROW_ABI,
         functionName: 'claimTimeout',
@@ -255,7 +304,7 @@ export function useEscrow() {
     } finally {
       setLoading(false);
     }
-  }, [escrowAddress, writeContract]);
+  }, [escrowAddress, writeContractAsync]);
 
   // Raise dispute
   const raiseDispute = useCallback(async (id: bigint) => {
@@ -263,7 +312,7 @@ export function useEscrow() {
     setError(null);
 
     try {
-      writeContract({
+      await writeContractAsync({
         address: escrowAddress,
         abi: ESCROW_ABI,
         functionName: 'raiseDispute',
@@ -275,7 +324,67 @@ export function useEscrow() {
     } finally {
       setLoading(false);
     }
-  }, [escrowAddress, writeContract]);
+  }, [escrowAddress, writeContractAsync]);
+
+  // Resolve dispute (DAO arbiter)
+  const resolveDispute = useCallback(async (id: bigint, refundBuyer: boolean) => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      await writeContractAsync({
+        address: escrowAddress,
+        abi: ESCROW_ABI,
+        functionName: 'resolveDispute',
+        args: [id, refundBuyer],
+      });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to resolve dispute');
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, [escrowAddress, writeContractAsync]);
+
+  // Resolve dispute with split payout (DAO arbiter)
+  const resolveDisputePartial = useCallback(async (id: bigint, buyerShareBps: bigint) => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      await writeContractAsync({
+        address: escrowAddress,
+        abi: ESCROW_ABI,
+        functionName: 'resolveDisputePartial',
+        args: [id, buyerShareBps],
+      });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to resolve dispute with split payout');
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, [escrowAddress, writeContractAsync]);
+
+  // Notify near-timeout to trigger event-driven monitoring
+  const notifyTimeout = useCallback(async (id: bigint) => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      await writeContractAsync({
+        address: escrowAddress,
+        abi: ESCROW_ABI,
+        functionName: 'notifyTimeout',
+        args: [id],
+      });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to notify timeout');
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, [escrowAddress, writeContractAsync]);
 
   // ============ EFFECTS ============
 
@@ -286,6 +395,11 @@ export function useEscrow() {
       loadEscrows();
     }
   }, [isSuccess, refetchCount, loadEscrows]);
+
+  // Initial and dependency-driven load
+  useEffect(() => {
+    loadEscrows();
+  }, [loadEscrows]);
 
   // Error handling
   useEffect(() => {
@@ -313,6 +427,9 @@ export function useEscrow() {
     refundEscrow,
     claimTimeout,
     raiseDispute,
+    resolveDispute,
+    resolveDisputePartial,
+    notifyTimeout,
     checkTimeout,
     refresh: loadEscrows,
     

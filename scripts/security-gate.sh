@@ -13,6 +13,15 @@ npx jest --runInBand \
   __tests__/api/security/2fa-initiate.test.ts
 
 echo "[security-gate] Running strict static smart-contract analysis"
-npm run -s contract:analyze:strict
+bash scripts/slither-regression-gate.sh
+
+echo "[security-gate] Compiling contracts for Seer watcher verifiers"
+npm run -s contract:compile
+
+echo "[security-gate] Running Seer watcher verifiers (challenge + strict runtime reason codes)"
+npm run -s contract:verify:seer:watcher:local
+
+echo "[security-gate] Running DevReserve on-chain verifier"
+npm run -s contract:verify:devreserve:onchain:local
 
 echo "[security-gate] All checks passed"

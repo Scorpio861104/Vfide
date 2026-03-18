@@ -2,15 +2,26 @@
 pragma solidity 0.8.30;
 
 /**
- * EscrowManager (zkSync Era ready) — FINAL
- * ---------------------------------------------
- * Provides "Safe Buy" functionality for commerce.
- * - Holds funds until delivery is confirmed or timeout expires.
- * - Dynamic release times based on Merchant ProofScore.
- * - Dispute resolution via DAO or designated Arbiter.
+ * @title EscrowManager (zkSync Era ready) — FINAL
+ * @notice High-security escrow for commerce with ProofScore-based protections.
+ * @dev I-14 Architecture Note: Two escrow systems exist by design:
+ *   - EscrowManager (this): For high-value/custom trades requiring arbiter
+ *     dispute resolution, ProofScore-dynamic lock periods, and DAO oversight.
+ *   - CommerceEscrow (VFIDECommerce.sol): For standard e-commerce payments
+ *     via the MerchantPortal with simpler state-machine flow.
+ *
+ * Key differences from CommerceEscrow:
+ *   - Arbiter-based dispute resolution (vs DAO-only)
+ *   - ProofScore-dynamic release timeouts
+ *   - Higher-value trade support with DAO approval for large amounts
+ *   - SeerAutonomous behavioral pre-checks
  */
 
 import "./SharedInterfaces.sol";
+
+interface ISeerAutonomous_ESC {
+    function beforeAction(address subject, uint8 action, uint256 amount, address counterparty) external returns (uint8);
+}
 
 error ESC_Zero();
 error ESC_BadState();
@@ -19,6 +30,7 @@ error ESC_NotBuyer();
 error ESC_NotMerchant();
 error ESC_TooEarly();
 error ESC_HighValueRequiresDAO();
+error ESC_ActionBlocked(uint8 result);
 
 // C-4 Fix: Add ReentrancyGuard for security
 contract EscrowManager is ReentrancyGuard {
@@ -49,6 +61,7 @@ contract EscrowManager is ReentrancyGuard {
     
     address public arbiter; // DAO or specialized court
     ISeer public seer;
+    ISeerAutonomous_ESC public seerAutonomous;
     address public dao; // For high-value disputes
     /// @notice Threshold above which disputes require DAO approval (10,000 VFIDE)
     uint256 public constant HIGH_VALUE_THRESHOLD = 10_000 * 1e18;
@@ -77,9 +90,6 @@ contract EscrowManager is ReentrancyGuard {
         require(msg.sender != address(0), "buyer zero address");
         require(amount > 0, "zero amount");
 
-        // C-5 Fix: Use safeTransferFrom for non-standard tokens (USDT, etc.)
-        IERC20(token).safeTransferFrom(msg.sender, address(this), amount);
-
         // Calculate Release Time based on Trust (0-10000 scale)
         uint256 lockPeriod = 14 days; // Default
         if (address(seer) != address(0)) {
@@ -100,6 +110,11 @@ contract EscrowManager is ReentrancyGuard {
             orderId: orderId
         });
 
+        _enforceSeerAction(msg.sender, 7, amount, merchant); // Trade
+
+        // C-5 Fix: Use safeTransferFrom for non-standard tokens (USDT, etc.)
+        IERC20(token).safeTransferFrom(msg.sender, address(this), amount);
+
         emit EscrowCreated(id, msg.sender, merchant, amount, escrows[id].releaseTime, lockPeriod, block.timestamp);
         return id;
     }
@@ -112,6 +127,7 @@ contract EscrowManager is ReentrancyGuard {
         require(e.state == State.CREATED, "bad state");
 
         e.state = State.RELEASED;
+        _enforceSeerAction(msg.sender, 7, e.amount, e.merchant); // Trade
         IERC20(e.token).safeTransfer(e.merchant, e.amount);
         
         // WHITEPAPER: Commerce Incentives (FREE) - Buyer +2, Merchant +5 ProofScore points
@@ -131,6 +147,7 @@ contract EscrowManager is ReentrancyGuard {
         require(e.state == State.CREATED, "bad state"); // H-19: Cannot refund during dispute
 
         e.state = State.REFUNDED;
+        _enforceSeerAction(msg.sender, 7, e.amount, e.buyer); // Trade
         IERC20(e.token).safeTransfer(e.buyer, e.amount);
         
         emit EscrowRefunded(id);
@@ -145,6 +162,7 @@ contract EscrowManager is ReentrancyGuard {
         require(block.timestamp >= e.releaseTime, "too early");
 
         e.state = State.RELEASED;
+        _enforceSeerAction(msg.sender, 7, e.amount, e.buyer); // Trade
         IERC20(e.token).safeTransfer(e.merchant, e.amount);
         
         emit EscrowReleased(id, e.merchant);
@@ -195,11 +213,32 @@ contract EscrowManager is ReentrancyGuard {
     
     // L-1 FIX: Add event for arbiter change
     event ArbiterChanged(address indexed oldArbiter, address indexed newArbiter);
+    event SeerAutonomousSet(address indexed seerAutonomous);
     
     function setDAO(address newDAO) external {
         require(msg.sender == dao, "only DAO");
         require(newDAO != address(0), "zero address");
         dao = newDAO;
+    }
+
+    function setSeerAutonomous(address _seerAutonomous) external {
+        require(msg.sender == dao, "only DAO");
+        seerAutonomous = ISeerAutonomous_ESC(_seerAutonomous);
+        emit SeerAutonomousSet(_seerAutonomous);
+    }
+
+    function _enforceSeerAction(address subject, uint8 action, uint256 amount, address counterparty) internal {
+        if (address(seerAutonomous) == address(0)) return;
+
+        uint8 result = 0;
+        try seerAutonomous.beforeAction(subject, action, amount, counterparty) returns (uint8 r) {
+            result = r;
+        } catch {
+            revert ESC_ActionBlocked(255);
+        }
+
+        // 0=Allowed,1=Warned,2=Delayed,3=Blocked,4=Penalized
+        if (result >= 2) revert ESC_ActionBlocked(result);
     }
     
     // H-8 Fix: View function to check escrows nearing timeout

@@ -62,7 +62,7 @@ export function CreatorDashboard() {
     recentTransactions: [],
   });
   const [isLoading, setIsLoading] = useState(true);
-  const [ethPrice] = useState(2500); // Mock ETH price in USD
+  const [ethPrice] = useState(0);
   const [showClaimCelebration, setShowClaimCelebration] = useState(false);
   const { playSuccess, playNotification: _playNotification } = useTransactionSounds();
 
@@ -72,40 +72,14 @@ export function CreatorDashboard() {
 
       setIsLoading(true);
       try {
-        // Mock data - in production, fetch from API
+        // TODO: load creator analytics from API/indexer.
         setStats({
-          totalEarnings: '2.45',
-          totalTips: 127,
-          totalUnlocks: 18,
-          totalSubscribers: 42,
-          topSupporters: [
-            { address: '0x742d...bEb', displayName: 'CryptoWhale', amount: '0.85' },
-            { address: '0x1234...567', displayName: 'NFTCollector', amount: '0.52' },
-            { address: '0x9876...321', displayName: 'DeFiFan', amount: '0.38' },
-          ],
-          recentTransactions: [
-            {
-              id: '1',
-              type: 'tip',
-              amount: '0.05',
-              from: '0x742d...bEb',
-              timestamp: new Date(Date.now() - 1000 * 60 * 15),
-            },
-            {
-              id: '2',
-              type: 'subscription',
-              amount: '0.12',
-              from: '0x1234...567',
-              timestamp: new Date(Date.now() - 1000 * 60 * 60),
-            },
-            {
-              id: '3',
-              type: 'unlock',
-              amount: '0.10',
-              from: '0x9876...321',
-              timestamp: new Date(Date.now() - 1000 * 60 * 120),
-            },
-          ],
+          totalEarnings: '0',
+          totalTips: 0,
+          totalUnlocks: 0,
+          totalSubscribers: 0,
+          topSupporters: [],
+          recentTransactions: [],
         });
       } catch (error) {
         console.error('Failed to load creator stats:', error);

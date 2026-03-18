@@ -117,7 +117,7 @@ export function CreateProposalTab({
 
               {!DAO_DEPLOYED && (
                 <div className="bg-cyan-400/10 border border-cyan-400/50 rounded-lg p-3 mb-4 text-sm text-cyan-400">
-                  This is a test environment. Proposals here are for demonstration purposes.
+                  DAO proposal contracts are not deployed on this network yet. Proposal submission is disabled until deployment.
                 </div>
               )}
 

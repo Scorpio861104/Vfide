@@ -245,7 +245,7 @@ export function WalletQRCode({ isOpen, onClose }: WalletQRCodeProps) {
  * Uses a simple canvas-based QR generation
  */
 async function generateQRCode(data: string): Promise<string> {
-  // Create a simple QR-like pattern (for demo - in production use qrcode library)
+  // Create a simple QR-like pattern until a full QR encoder is integrated.
   const size = 256;
   const canvas = document.createElement('canvas');
   canvas.width = size;

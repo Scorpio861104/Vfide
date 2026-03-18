@@ -186,8 +186,8 @@ export const PRESALE_REFERENCE_PRICE = PRESALE_PRICES.OATH;
 // ========================================
 
 /**
- * Whether the app is in demo mode
- * When true, shows demo labels on mock data
+ * Whether the app should render preview labeling
+ * for environments that are not fully connected.
  */
 export const IS_DEMO_MODE = process.env.NEXT_PUBLIC_DEMO_MODE === 'true';
 

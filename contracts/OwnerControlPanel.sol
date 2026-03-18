@@ -21,11 +21,10 @@ interface IVFIDEPresaleOCP {
     function extendSale(uint256 additionalDays) external;
     function setMaxGasPrice(uint256 newMaxGasPrice) external;
     function withdrawUnsold(address recipient) external;
-    function finalizePresale(address uniRouter, address uniFactory) external;
+    function finalizePresale() external;
     function enableRefunds() external;
     function emergencyWithdraw() external;
     function fundRefunds() external payable;
-    function verifyTokenBalance() external view returns (bool sufficient, uint256 balance);
     function totalBaseSold() external view returns (uint256);
     function totalSold() external view returns (uint256);
     function paused() external view returns (bool);
@@ -66,13 +65,19 @@ interface IEcosystemVaultAdmin {
 contract OwnerControlPanel {
     using SafeERC20 for IERC20;
     
-    address public immutable owner;
+    // M-05 Fix: Replace immutable owner with two-step transfer to allow key rotation
+    address public owner;
+    address public pendingOwner;
+
+    event OwnershipTransferStarted(address indexed previousOwner, address indexed newOwner);
+    event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
     
     IVFIDEToken public vfideToken;
     IVFIDEPresaleOCP public presale;
     IVaultHub public vaultHub;
     IProofScoreBurnRouter public burnRouter;
     ISeer public seer;
+    address public devReserveVault;
     
     // New contract references for enhanced configuration
     IEcosystemVaultAdmin public ecosystemVault;
@@ -83,6 +88,7 @@ contract OwnerControlPanel {
 
     uint16 public maxAutoSwapSlippageBps = 500;
     uint16 public constant MAX_ALLOWED_AUTOSWAP_SLIPPAGE_BPS = 2000;
+    uint256 public constant DEV_RESERVE_SUPPLY = 50_000_000e18;
 
     uint256 public minAutoWorkPayoutWei;
     uint256 public maxAutoWorkPayoutWei = 10_000 ether;
@@ -102,8 +108,10 @@ contract OwnerControlPanel {
     event GovernanceDelayUpdated(uint256 oldDelay, uint256 newDelay);
     event AutoSwapSlippageLimitUpdated(uint16 oldLimit, uint16 newLimit);
     event AutoWorkPayoutBoundsUpdated(uint256 minReward, uint256 maxReward);
+    event DevReserveVaultUpdated(address indexed previousVault, address indexed newVault);
     
     error OCP_NotOwner();
+    error OCP_NotPendingOwner();
     error OCP_Zero();
     error OCP_InvalidRange();
     error OCP_ActionNotQueued();
@@ -113,6 +121,22 @@ contract OwnerControlPanel {
     modifier onlyOwner() {
         if (msg.sender != owner) revert OCP_NotOwner();
         _;
+    }
+
+    /// @notice Step 1: current owner nominates a new owner
+    function transferOwnership(address newOwner) external onlyOwner {
+        if (newOwner == address(0)) revert OCP_Zero();
+        pendingOwner = newOwner;
+        emit OwnershipTransferStarted(owner, newOwner);
+    }
+
+    /// @notice Step 2: nominated owner accepts — prevents fat-finger transfers
+    function acceptOwnership() external {
+        if (msg.sender != pendingOwner) revert OCP_NotPendingOwner();
+        address previous = owner;
+        owner = pendingOwner;
+        pendingOwner = address(0);
+        emit OwnershipTransferred(previous, owner);
     }
 
     function _consumeQueuedAction(bytes32 actionId) internal {
@@ -174,6 +198,15 @@ contract OwnerControlPanel {
     ) external onlyOwner {
         if (_ecosystemVault != address(0)) ecosystemVault = IEcosystemVaultAdmin(_ecosystemVault);
         emit EcosystemContractsUpdated(_ecosystemVault);
+    }
+
+    /**
+     * @notice Set DevReserve vesting vault address for live monitoring views
+     */
+    function setDevReserveVault(address _devReserveVault) external onlyOwner {
+        address previous = devReserveVault;
+        devReserveVault = _devReserveVault;
+        emit DevReserveVaultUpdated(previous, _devReserveVault);
     }
 
     // ═══════════════════════════════════════════════════════════════════════
@@ -338,6 +371,7 @@ contract OwnerControlPanel {
      */
     function token_batchWhitelist(address[] calldata addrs, bool status) external onlyOwner {
         for (uint256 i = 0; i < addrs.length; i++) {
+            // slither-disable-next-line calls-loop
             vfideToken.setWhitelist(addrs[i], status);
         }
     }
@@ -387,9 +421,13 @@ contract OwnerControlPanel {
     
     /**
      * @notice Batch blacklist multiple addresses
+     * @dev H-09 Fix: Each address requires its own queued action to prevent timelock bypass
      */
     function token_batchBlacklist(address[] calldata users, bool status) external onlyOwner {
         for (uint256 i = 0; i < users.length; i++) {
+            // H-09 Fix: Enforce timelock for each address in batch
+            _consumeQueuedAction(actionId_token_setBlacklist(users[i], status));
+            // slither-disable-next-line calls-loop
             vfideToken.setBlacklist(users[i], status);
         }
     }
@@ -426,6 +464,7 @@ contract OwnerControlPanel {
      */
     function token_batchWhaleLimitExempt(address[] calldata addrs, bool exempt) external onlyOwner {
         for (uint256 i = 0; i < addrs.length; i++) {
+            // slither-disable-next-line calls-loop
             vfideToken.setWhaleLimitExempt(addrs[i], exempt);
         }
     }
@@ -692,10 +731,11 @@ contract OwnerControlPanel {
     }
     
     /**
-     * @notice Finalize presale and create liquidity pool
+     * @notice Finalize presale
+     * @dev H-14 Fix: Aligned with actual VFIDEPresale.finalizePresale() (no params)
      */
-    function presale_finalize(address uniRouter, address uniFactory) external onlyOwner {
-        presale.finalizePresale(uniRouter, uniFactory);
+    function presale_finalize() external onlyOwner {
+        presale.finalizePresale();
     }
     
     /**
@@ -809,8 +849,12 @@ contract OwnerControlPanel {
         vaultOnly = vfideToken.vaultOnly();
         policyLocked = vfideToken.policyLocked();
         circuitBreaker = vfideToken.circuitBreaker();
-        devReserveBalance = 0;
-        treasuryBalance = 0;
+        if (devReserveVault != address(0)) {
+            devReserveBalance = vfideToken.balanceOf(devReserveVault);
+        } else {
+            devReserveBalance = DEV_RESERVE_SUPPLY;
+        }
+        treasuryBalance = vfideToken.balanceOf(owner);
         
         // Get balances if addresses are set
         if (address(presale) != address(0)) {
@@ -839,7 +883,9 @@ contract OwnerControlPanel {
         startTime = presale.saleStartTime();
         endTime = presale.saleEndTime();
         
-        (hasSufficientTokens, tokenBalance) = presale.verifyTokenBalance();
+        // H-15 Fix: Use balanceOf instead of non-existent verifyTokenBalance()
+        tokenBalance = vfideToken.balanceOf(address(presale));
+        hasSufficientTokens = tokenBalance > 0;
         
         if (block.timestamp < endTime) {
             timeRemaining = endTime - block.timestamp;
@@ -898,9 +944,9 @@ contract OwnerControlPanel {
         tokenHealthy = vfideToken.totalSupply() > 0;
         
         // Presale health: has tokens, not paused (or finalized)
-        // slither-disable-next-line unused-return
-        (bool sufficient, ) = presale.verifyTokenBalance();
-        presaleHealthy = sufficient && (!presale.paused() || presale.finalized());
+        // H-15 Fix: Use balanceOf instead of non-existent verifyTokenBalance()
+        uint256 presaleTokenBalance = vfideToken.balanceOf(address(presale));
+        presaleHealthy = presaleTokenBalance > 0 && (!presale.paused() || presale.finalized());
         
         // Vault health: has vaults created
         vaultHealthy = vaultHub.totalVaultsCreated() > 0;

@@ -7,6 +7,7 @@ import { useAccount, useReadContract, useWriteContract, useWaitForTransactionRec
 import { formatUnits } from "viem";
 import { motion, AnimatePresence } from "framer-motion";
 import { safeBigIntToNumber } from "@/lib/validation";
+import { CONTRACT_ADDRESSES } from "@/lib/contracts";
 import { 
   Lock, 
   Unlock, 
@@ -20,7 +21,7 @@ import {
 } from "lucide-react";
 
 // Contract address from environment
-const DEV_RESERVE_VESTING_ADDRESS = (process.env.NEXT_PUBLIC_DEV_VAULT_ADDRESS || '0xFd26e4b02b55baA45A2421fFf0D47107CCE1D5E6') as `0x${string}`;
+const DEV_RESERVE_VESTING_ADDRESS = CONTRACT_ADDRESSES.DevReserveVesting;
 
 type TabType = 'overview' | 'schedule' | 'claim';
 

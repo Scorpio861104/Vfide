@@ -239,7 +239,7 @@ export class CallManager {
     // In production, send via WebSocket to signaling server
     console.log('Send signal:', type, data);
     
-    // For demo, store in localStorage for same-device testing
+    // Store locally for same-device testing
     const signals = JSON.parse(localStorage.getItem('vfide_call_signals') || '[]');
     signals.push({ type, data, timestamp: Date.now() });
     localStorage.setItem('vfide_call_signals', JSON.stringify(signals));
@@ -425,7 +425,7 @@ function sendCallSignal(recipient: string, type: string, data: Record<string, un
   // In production, send via WebSocket/signaling server
   console.log('Send call signal to', recipient, ':', type, data);
   
-  // For demo, use localStorage
+  // Use localStorage fallback for local testing
   const key = `vfide_call_signal_${recipient}`;
   const signals = JSON.parse(localStorage.getItem(key) || '[]');
   signals.push({ type, data, timestamp: Date.now() });

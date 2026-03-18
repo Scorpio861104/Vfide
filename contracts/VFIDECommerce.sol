@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
-// Copied from /contracts/VFIDECommerce.sol (trimmed/adjusted for contracts-min usage)
+import "./SharedInterfaces.sol"; // M-24 Fix: Use shared IERC20 and SafeERC20
 
 interface IVaultHub_COM {
     function vaultOf(address owner) external view returns (address);
@@ -16,28 +16,6 @@ interface IProofLedger_COM {
 }
 interface ISecurityHub_COM {
     function isLocked(address vault) external view returns (bool);
-}
-interface IERC20_COM {
-    function balanceOf(address) external view returns (uint256);
-    function transfer(address to, uint256 value) external returns (bool);
-    function transferFrom(address from, address to, uint256 value) external returns (bool);
-}
-
-/// @notice SafeERC20 library for non-standard tokens (USDT, etc.)
-library SafeERC20_COM {
-    function safeTransfer(IERC20_COM token, address to, uint256 value) internal {
-        (bool success, bytes memory data) = address(token).call(
-            abi.encodeWithSelector(token.transfer.selector, to, value)
-        );
-        require(success && (data.length == 0 || abi.decode(data, (bool))), "SafeERC20: transfer failed");
-    }
-
-    function safeTransferFrom(IERC20_COM token, address from, address to, uint256 value) internal {
-        (bool success, bytes memory data) = address(token).call(
-            abi.encodeWithSelector(token.transferFrom.selector, from, to, value)
-        );
-        require(success && (data.length == 0 || abi.decode(data, (bool))), "SafeERC20: transferFrom failed");
-    }
 }
 
 error COM_NotDAO();
@@ -67,7 +45,7 @@ contract MerchantRegistry {
     enum Status { NONE, ACTIVE, SUSPENDED, DELISTED }
 
     address public immutable dao;
-    IERC20_COM public immutable token;
+    IERC20 public immutable token;
     IVaultHub_COM public immutable vaultHub;
     ISeer_COM public immutable seer;
     ISecurityHub_COM public immutable security;
@@ -91,7 +69,7 @@ contract MerchantRegistry {
 
     constructor(address _dao, address _token, address _hub, address _seer, address _sec, address _ledger) {
         if (_dao==address(0)||_token==address(0)||_hub==address(0)||_seer==address(0)) revert COM_Zero();
-        dao=_dao; token=IERC20_COM(_token); vaultHub=IVaultHub_COM(_hub); seer=ISeer_COM(_seer);
+        dao=_dao; token=IERC20(_token); vaultHub=IVaultHub_COM(_hub); seer=ISeer_COM(_seer);
         security = ISecurityHub_COM(_sec);
         ledger = IProofLedger_COM(_ledger);
         minScore = ISeer_COM(_seer).minForMerchant();
@@ -114,7 +92,8 @@ contract MerchantRegistry {
             metaHash: metaHash
         });
 
-        ledger.logSystemEvent(msg.sender, "MerchantAdded", msg.sender);
+        // H-17 Fix: Wrap ledger call in try-catch so ledger failure doesn't block registrations
+        try ledger.logSystemEvent(msg.sender, "MerchantAdded", msg.sender) {} catch {}
         // slither-disable-next-line reentrancy-events
         emit MerchantAdded(msg.sender, v, metaHash);
     }
@@ -123,7 +102,12 @@ contract MerchantRegistry {
     address public authorizedEscrow;
     
     function setAuthorizedEscrow(address _escrow) external onlyDAO {
+        if (_escrow == address(0)) revert COM_Zero();
         authorizedEscrow = _escrow;
+    }
+
+    function clearAuthorizedEscrow() external onlyDAO {
+        authorizedEscrow = address(0);
     }
     
     function _noteRefund(address owner) external {
@@ -154,16 +138,40 @@ contract MerchantRegistry {
 }
 
 
+/**
+ * @title CommerceEscrow
+ * @notice Standard e-commerce escrow for MerchantPortal payments.
+ * @dev I-14 Architecture Note: Two escrow systems exist by design:
+ *   - CommerceEscrow (this): For standard e-commerce payments through
+ *     the MerchantPortal. Simpler state-machine (OPEN→FUNDED→RELEASED).
+ *   - EscrowManager (EscrowManager.sol): For high-value/custom trades
+ *     requiring arbiter dispute resolution and ProofScore-dynamic locks.
+ *
+ * Key differences from EscrowManager:
+ *   - DAO-only dispute resolution (no arbiter)
+ *   - Fixed timeouts (no ProofScore gating)
+ *   - Integrated with MerchantRegistry for merchant verification
+ */
+// C-07 Fix: Add ReentrancyGuard to CommerceEscrow
 contract CommerceEscrow {
-    using SafeERC20_COM for IERC20_COM;
+    using SafeERC20 for IERC20;
     
     enum State { NONE, OPEN, FUNDED, RELEASED, REFUNDED, DISPUTED, RESOLVED }
 
     address public dao;
-    IERC20_COM     public token;
+    IERC20     public token;
     IVaultHub_COM  public vaultHub;
     MerchantRegistry public merchants;
     ISecurityHub_COM public security;
+
+    // C-07 Fix: Reentrancy guard
+    uint256 private _reentrancyStatus = 1;
+    modifier nonReentrant() {
+        require(_reentrancyStatus == 1, "ReentrancyGuard: reentrant call");
+        _reentrancyStatus = 2;
+        _;
+        _reentrancyStatus = 1;
+    }
 
     struct Escrow {
         address buyerOwner;
@@ -175,6 +183,9 @@ contract CommerceEscrow {
         bytes32 metaHash;
     }
 
+    // H-16 Fix: Track per-escrow deposited amounts
+    mapping(uint256 => uint256) public escrowDeposited;
+
     uint256 public escrowCount;
     mapping(uint256 => Escrow) public escrows;
 
@@ -182,7 +193,7 @@ contract CommerceEscrow {
 
     constructor(address _dao, address _token, address _hub, address _merchants, address _sec, address /*_ledger*/) {
         if (_dao==address(0)||_token==address(0)||_hub==address(0)||_merchants==address(0)) revert COM_Zero();
-        dao=_dao; token=IERC20_COM(_token); vaultHub=IVaultHub_COM(_hub); merchants=MerchantRegistry(_merchants);
+        dao=_dao; token=IERC20(_token); vaultHub=IVaultHub_COM(_hub); merchants=MerchantRegistry(_merchants);
         security = ISecurityHub_COM(_sec);
     }
 
@@ -207,15 +218,20 @@ contract CommerceEscrow {
         });
     }
 
+    // H-16 Fix: Add access control (buyer or merchant only) and per-escrow deposit tracking
     function markFunded(uint256 id) external {
         Escrow storage e = escrows[id];
         if (e.state != State.OPEN) revert COM_BadState();
-        uint256 bal = token.balanceOf(address(this));
-        if (bal < e.amount) revert COM_NotFunded();
+        // H-16 Fix: Only buyer or merchant can mark funded
+        if (msg.sender != e.buyerOwner && msg.sender != e.merchantOwner && msg.sender != dao) revert COM_NotAllowed();
+        // H-16 Fix: Transfer tokens from buyer vault into escrow (per-escrow accounting)
+        token.safeTransferFrom(e.buyerVault, address(this), e.amount);
+        escrowDeposited[id] = e.amount;
         e.state = State.FUNDED;
     }
 
-    function release(uint256 id) external {
+    // C-07 Fix: Add nonReentrant to all token-transferring functions
+    function release(uint256 id) external nonReentrant {
         Escrow storage e = escrows[id];
         if (e.state != State.FUNDED) revert COM_BadState();
         if (msg.sender != e.buyerOwner && msg.sender != dao) revert COM_NotAllowed();
@@ -223,7 +239,7 @@ contract CommerceEscrow {
         token.safeTransfer(e.sellerVault, e.amount);
     }
 
-    function refund(uint256 id) external {
+    function refund(uint256 id) external nonReentrant {
         Escrow storage e = escrows[id];
         if (e.state != State.FUNDED && e.state != State.DISPUTED) revert COM_BadState();
         if (msg.sender != e.merchantOwner && msg.sender != dao) revert COM_NotAllowed();
@@ -241,7 +257,8 @@ contract CommerceEscrow {
         merchants._noteDispute(e.merchantOwner);
     }
 
-    function resolve(uint256 id, bool buyerWins) external onlyDAO {
+    // C-07 Fix: Add nonReentrant
+    function resolve(uint256 id, bool buyerWins) external nonReentrant onlyDAO {
         Escrow storage e = escrows[id];
         if (e.state != State.DISPUTED) revert COM_BadState();
         e.state = State.RESOLVED;

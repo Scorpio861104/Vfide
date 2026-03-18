@@ -69,9 +69,15 @@ export interface TokenResponse {
  * Always signs with the current JWT_SECRET.
  */
 export function generateToken(address: string, chainId?: number): TokenResponse {
+  const envChainId = Number.parseInt(process.env.NEXT_PUBLIC_CHAIN_ID || '', 10);
+  const resolvedChainId = chainId ?? (Number.isFinite(envChainId) ? envChainId : undefined);
+  if (resolvedChainId === undefined) {
+    throw new Error('chainId is required when generating JWT tokens');
+  }
+
   const payload: JWTPayload = {
     address: address.toLowerCase(),
-    chainId: chainId || 8453, // Default to Base
+    chainId: resolvedChainId,
   };
 
   const token = jwt.sign(payload, getSecret(), {

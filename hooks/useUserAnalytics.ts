@@ -90,7 +90,7 @@ export function useUserAnalytics(): UseUserAnalyticsResult {
 
   // Get session metrics
   const getSessionMetrics = useCallback((): UserAnalytics => {
-    // Calculate total users (simulated - unique session IDs)
+    // Calculate total users from unique session IDs
     const uniqueSessions = new Set(events.map((e) => e.sessionId)).size;
 
     // Calculate active users (last 30 minutes)
@@ -183,7 +183,7 @@ export function useUserAnalytics(): UseUserAnalyticsResult {
         ? (singlePageSessions / Object.values(sessionDurations).length) * 100
         : 0;
 
-    // Calculate conversion rate (mock - based on conversion events)
+    // Calculate conversion rate based on conversion-like events
     const conversionEvents = events.filter(
       (e) => e.eventName.includes('conversion') || e.eventName.includes('purchase')
     ).length;

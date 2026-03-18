@@ -275,6 +275,7 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
             payoutAddress: address(0)
         });
         
+        require(merchantList.length < 10000, "MP: merchant cap"); // I-11
         merchantList.push(msg.sender);
         
         emit MerchantRegistered(msg.sender, businessName, category);
@@ -359,8 +360,10 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
             completed: false
         });
         
-        // Track refunds for both parties
+        // Track refunds for both parties (I-11: capped)
+        require(customerRefunds[customer].length < 500, "MP: customer refund cap");
         customerRefunds[customer].push(refundId);
+        require(merchantRefunds[msg.sender].length < 500, "MP: merchant refund cap");
         merchantRefunds[msg.sender].push(refundId);
         
         emit RefundInitiated(customer, msg.sender, orderId, amount);
@@ -981,13 +984,13 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
 
     function _log(string memory action) internal {
         if (address(ledger) != address(0)) {
-            try ledger.logSystemEvent(address(this), action, msg.sender) {} catch {}
+            try ledger.logSystemEvent(address(this), action, msg.sender) {} catch { emit LedgerLogFailed(address(this), action); }
         }
     }
 
     function _logEv(address who, string memory action, uint256 amount, string memory note) internal {
         if (address(ledger) != address(0)) {
-            try ledger.logEvent(who, action, amount, note) {} catch {}
+            try ledger.logEvent(who, action, amount, note) {} catch { emit LedgerLogFailed(who, action); }
         }
     }
 }

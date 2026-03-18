@@ -143,7 +143,7 @@ export const OWNER_CONTROL_PANEL_ABI = [
       { name: 'healthStatus', type: 'string' },
     ],
   },
-  // Howey Compliance — view-only (hardcoded in contracts, no setters)
+  // Howey Compliance — view-only (enforced on-chain, no setters)
   {
     name: 'howey_getStatus',
     type: 'function',

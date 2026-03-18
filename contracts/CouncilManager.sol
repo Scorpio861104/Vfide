@@ -158,6 +158,7 @@ contract CouncilManager is ReentrancyGuard {
         // This prevents issues with array modification during iteration
         address[] memory membersToCheck = new address[](councilSize);
         for (uint256 i = 0; i < councilSize; i++) {
+            // slither-disable-next-line calls-loop
             membersToCheck[i] = election.getCouncilMember(i);
         }
 
@@ -172,6 +173,7 @@ contract CouncilManager is ReentrancyGuard {
             }
 
             membersChecked++;
+            // slither-disable-next-line calls-loop
             uint16 score = seer.getScore(member);
 
             if (score < COUNCIL_MIN_SCORE) {
@@ -187,6 +189,7 @@ contract CouncilManager is ReentrancyGuard {
                     daysBelow700[member] = 0;
 
                     // H-2 FIX: Use try/catch to handle potential removal failures
+                    // slither-disable-next-line calls-loop
                     // slither-disable-next-line reentrancy-no-eth
                     try election.removeCouncilMember(
                         member,
@@ -265,6 +268,9 @@ contract CouncilManager is ReentrancyGuard {
         uint256 vaultBalance = token.balanceOf(ecosystemVault);
         require(vaultBalance > 0, "CM: no funds");
 
+        // Effects first: timestamp is rolled back automatically if downstream call reverts.
+        lastPaymentTime = block.timestamp;
+
         // Calculate split (60% ops, 40% council)
         uint256 opsAmount = (vaultBalance * OPS_PERCENTAGE) / 100;
         uint256 councilAmount = vaultBalance - opsAmount; // Remainder to council
@@ -290,7 +296,6 @@ contract CouncilManager is ReentrancyGuard {
             
             if (success) {
                 // CouncilSalary.distributeSalary() will be called by keeper or DAO separately
-                lastPaymentTime = block.timestamp;
                 emit PaymentDistributed(opsAmount, councilAmount, block.timestamp);
             } else {
                 // If council transfer fails, ops still gets 100%
@@ -298,7 +303,6 @@ contract CouncilManager is ReentrancyGuard {
                 emit PaymentDistributed(opsAmount, 0, block.timestamp);
             }
         } else {
-            lastPaymentTime = block.timestamp;
             emit PaymentDistributed(opsAmount, 0, block.timestamp);
         }
     }
@@ -314,6 +318,9 @@ contract CouncilManager is ReentrancyGuard {
 
         uint256 opsAmount = (vaultBalance * OPS_PERCENTAGE) / 100;
         uint256 councilAmount = vaultBalance - opsAmount;
+
+        // Effects first; downstream call revert will roll back this assignment.
+        lastPaymentTime = block.timestamp;
 
         if (councilAmount > 0) {
             (bool success, ) = ecosystemVault.call(
@@ -334,8 +341,6 @@ contract CouncilManager is ReentrancyGuard {
             // slither-disable-next-line reentrancy-events
             emit PaymentDistributed(opsAmount, 0, block.timestamp);
         }
-
-        lastPaymentTime = block.timestamp;
     }
 
     // ────────────────────────── View Functions ──────────────────────────
@@ -422,9 +427,11 @@ contract CouncilManager is ReentrancyGuard {
         uint256 riskCount = 0;
 
         for (uint256 i = 0; i < councilSize; i++) {
+            // slither-disable-next-line calls-loop
             address member = election.getCouncilMember(i);
             if (member == address(0)) continue;
 
+            // slither-disable-next-line calls-loop
             uint16 score = seer.getScore(member);
             if (score < COUNCIL_MIN_SCORE || daysBelow700[member] > 0) {
                 tempMembers[riskCount] = member;

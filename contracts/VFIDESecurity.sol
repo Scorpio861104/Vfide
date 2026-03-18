@@ -101,15 +101,19 @@ contract GuardianRegistry {
         // If threshold > count, DAO should reset threshold; we tolerate and clamp on read.
     }
 
-    /// @dev Check if a guardian can be safely removed (no active votes)
+    /// @dev L-11 Fix: Check if a guardian can be safely removed
     /// @param vault The vault to check
     /// @param guardian The guardian to check
-    /// @return canRemove True if guardian has no active votes or vault is already locked
+    /// @return canRemove True if removing this guardian won't break threshold requirements
     function canRemoveGuardian(address vault, address guardian) external view returns (bool canRemove) {
         // Can always remove if not a guardian
         if (!isGuardian[vault][guardian]) return true;
-        // If someone wants to check via external contract, they can call this helper
-        return true; // Registry doesn't track votes; GuardianLock does
+        // L-11 Fix: Don't allow removal if it would make count < threshold
+        uint8 count = guardianCount[vault];
+        uint8 t = threshold[vault];
+        // If removing would drop below threshold, disallow
+        if (t > 0 && count <= t) return false;
+        return true;
     }
 
     function setThreshold(address vault, uint8 mOfN) external {
@@ -200,10 +204,11 @@ contract GuardianLock {
         uint8 needed = registry.guardiansNeeded(vault);
         if (a >= needed && needed > 0) {
             locked[vault] = true;
+            // M-17 Fix: Emit event before clearing state for clean log data
+            emit Locked(vault, msg.sender, a, reason);
             // H-9 Fix: Clean up votes before external log call
             approvals[vault] = 0;
             lockNonce[vault]++;
-            emit Locked(vault, msg.sender, a, reason);
             _logEv(vault, "guardian_lock", a, reason);
         } else {
             // vote recorded, not yet locked
@@ -254,6 +259,7 @@ contract PanicGuard {
     address public dao;
     IProofLedger public ledger;
     IVaultHub public vaultHub;
+    address public securityHub; // C-06 Fix: SecurityHub address for registerVault passthrough
 
     // per-vault quarantine until timestamp (0 = not quarantined)
     mapping(address => uint64) public quarantineUntil;
@@ -295,9 +301,14 @@ contract PanicGuard {
         _log("panicguard_hub_set");
     }
 
-    /// @dev Register vault creation time (called by VaultHub on vault creation)
+    /// C-06 Fix: Allow SecurityHub to call registerVault
+    function setSecurityHub(address _secHub) external onlyDAO {
+        securityHub = _secHub;
+    }
+
+    /// @dev Register vault creation time (called by VaultHub via SecurityHub)
     function registerVault(address vault) external {
-        require(msg.sender == address(vaultHub), "only VaultHub");
+        require(msg.sender == address(vaultHub) || msg.sender == securityHub, "only VaultHub/SecurityHub");
         if (vaultCreationTime[vault] < 1) {
             vaultCreationTime[vault] = block.timestamp;
         }
@@ -343,6 +354,20 @@ contract PanicGuard {
         
         // User can set any duration within policy limits
         _quarantine(vault, duration, 100, "self_panic");
+    }
+
+    /// @notice L-12 Fix: Allow user to cancel their own self-panic
+    /// @dev Only cancels quarantines the user initiated (via selfPanic), requires 1h minimum hold
+    function cancelSelfPanic() external {
+        if (address(vaultHub) == address(0)) revert SEC_Zero();
+        address vault = vaultHub.vaultOf(msg.sender);
+        require(vault != address(0), "no vault");
+        require(quarantineUntil[vault] > block.timestamp, "not quarantined");
+        // Must wait at least 1 hour (prevents abuse / accidental toggle)
+        require(block.timestamp >= lastSelfPanic[msg.sender] + 1 hours, "SEC: cancel too soon");
+        quarantineUntil[vault] = 0;
+        emit Cleared(vault, "self_panic_cancelled");
+        _logEv(vault, "self_panic_cancelled", 0, "user_cancel");
     }
 
     function _quarantine(address vault, uint64 duration, uint8 severity, string memory reason) internal {
@@ -516,5 +541,12 @@ contract SecurityHub {
     function _log(string memory action) internal {
         address L = address(ledger);
         if (L != address(0)) { try ledger.logSystemEvent(address(this), action, msg.sender) {} catch {} }
+    }
+
+    /// C-06 Fix: Passthrough to PanicGuard so VaultHub's registerVault call reaches PanicGuard
+    function registerVault(address vault) external {
+        if (address(panicGuard) != address(0)) {
+            panicGuard.registerVault(vault);
+        }
     }
 }

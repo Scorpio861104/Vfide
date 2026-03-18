@@ -169,7 +169,7 @@ describe('JWT Authentication', () => {
       const result = generateToken(testAddress);
       const decoded = await verifyToken(result.token);
       
-      expect(decoded?.chainId).toBe(8453); // Base mainnet
+      expect(decoded?.chainId).toBe(84532); // Base Sepolia (test env)
     });
   });
 

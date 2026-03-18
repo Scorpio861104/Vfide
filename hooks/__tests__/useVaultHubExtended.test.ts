@@ -162,7 +162,7 @@ describe('useVaultHub - Extended Tests', () => {
         try {
           await result.current.createVault()
         } catch (e: unknown) {
-          expect((e as Error).message).toContain('zkSync Sepolia')
+          expect((e as Error).message).toContain('Base Sepolia')
         }
       })
     })

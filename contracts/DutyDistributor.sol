@@ -49,6 +49,7 @@ contract DutyDistributor is Ownable, IGovernanceHooks {
     uint256 public maxPointsPerUser = 10_000;
 
     constructor(address _dao) {
+        require(_dao != address(0), "DD: zero dao");
         dao = _dao;
     }
 
@@ -60,13 +61,14 @@ contract DutyDistributor is Ownable, IGovernanceHooks {
         require(msg.sender == dao, "not dao");
     }
 
-    function setPointsPerVote(uint256 _pointsPerVote) external onlyOwner {
+    // L-20 Fix: Unified access — both config and hooks use onlyDAO
+    function setPointsPerVote(uint256 _pointsPerVote) external onlyDAO {
         require(_pointsPerVote > 0 && _pointsPerVote <= MAX_POINTS_PER_VOTE, "DD: invalid pointsPerVote");
         require(_pointsPerVote <= maxPointsPerUser, "DD: pointsPerVote exceeds cap");
         pointsPerVote = _pointsPerVote;
     }
     
-    function setMaxPointsPerUser(uint256 _maxPoints) external onlyOwner {
+    function setMaxPointsPerUser(uint256 _maxPoints) external onlyDAO {
         require(
             _maxPoints >= MIN_POINTS_PER_USER_CAP && _maxPoints <= MAX_POINTS_PER_USER_CAP,
             "DD: invalid max points"

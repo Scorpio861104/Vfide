@@ -99,7 +99,7 @@ export async function connectWallet(): Promise<Wallet> {
     
     const ethBalance = balanceWei / 1e18;
 
-    // Get VFIDE token balance (mock for now)
+    // Get VFIDE token balance
     const tokenBalance = await getTokenBalance(address);
 
     // Get USD value
@@ -125,8 +125,6 @@ export async function connectWallet(): Promise<Wallet> {
  * Get VFIDE token balance
  */
 async function getTokenBalance(address: string): Promise<string> {
-  // In production, call token contract
-  // For now, return mock data from API
   try {
     const response = await fetch(`/api/crypto/balance/${address}`);
     const data = await response.json();
@@ -141,12 +139,14 @@ async function getTokenBalance(address: string): Promise<string> {
  */
 async function getUsdValue(ethAmount: number): Promise<number> {
   try {
-    // In production, call price API (CoinGecko, etc.)
     const response = await fetch('/api/crypto/price');
     const data = await response.json();
-    return ethAmount * (data.ethPrice || 2000);
+    if (typeof data.ethPrice !== 'number' || !Number.isFinite(data.ethPrice) || data.ethPrice <= 0) {
+      return 0;
+    }
+    return ethAmount * data.ethPrice;
   } catch {
-    return ethAmount * 2000; // Fallback price
+    return 0;
   }
 }
 

@@ -97,8 +97,8 @@ export function SubscriptionManager({
     setIsProcessing(true);
 
     try {
-      // In production, this would call the SubscriptionManager contract
-      // For now, we'll simulate with a direct transfer
+      // Calls subscribe on the creator's contract address directly.
+      // Replace with a proper SubscriptionManager contract address once deployed.
       await writeContract({
         address: creatorAddress as `0x${string}`,
         abi: [

@@ -25,27 +25,7 @@ export default function TimeLocksPage() {
 
   useEffect(() => {
     if (address) {
-      // Mock data
-      setTimeLocks([
-        {
-          id: '1',
-          token: 'ETH',
-          to: '0x1234...5678',
-          amount: '5.0',
-          createdAt: Date.now() - 2 * 60 * 60 * 1000,
-          unlockAt: Date.now() + 4 * 60 * 60 * 1000,
-          status: 'pending',
-        },
-        {
-          id: '2',
-          token: 'USDC',
-          to: '0xabcd...efgh',
-          amount: '500',
-          createdAt: Date.now() - 24 * 60 * 60 * 1000,
-          unlockAt: Date.now() - 1 * 60 * 60 * 1000,
-          status: 'ready',
-        },
-      ]);
+      setTimeLocks([]);
     }
   }, [address]);
 

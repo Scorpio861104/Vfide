@@ -175,6 +175,7 @@ contract SanctumVault is Ownable, ReentrancyGuard {
         require(_approver != address(0), "zero");
         require(!isApprover[_approver], "already approver");
         isApprover[_approver] = true;
+        require(approvers.length < 50, "sanctum: approver cap"); // I-11
         approverIndex[_approver] = approvers.length; // M-4 Fix: Track index before push
         approvers.push(_approver);
         _log("sanctum_approver_added");
@@ -217,6 +218,7 @@ contract SanctumVault is Ownable, ReentrancyGuard {
             approvedAt: uint64(block.timestamp)
         });
         
+        require(charityList.length < 200, "sanctum: charity cap"); // I-11
         charityList.push(charity);
         
         emit CharityApproved(charity, name, category);
@@ -227,6 +229,16 @@ contract SanctumVault is Ownable, ReentrancyGuard {
         require(charities[charity].approved, "not approved");
         
         charities[charity].approved = false;
+        
+        // L-15 Fix: Remove from charityList using swap-and-pop
+        uint256 len = charityList.length;
+        for (uint256 i = 0; i < len; i++) {
+            if (charityList[i] == charity) {
+                charityList[i] = charityList[len - 1];
+                charityList.pop();
+                break;
+            }
+        }
         
         emit CharityRemoved(charity, reason);
         _logEv(charity, "charity_removed", 0, reason);
@@ -278,7 +290,8 @@ contract SanctumVault is Ownable, ReentrancyGuard {
         if (to == address(0) || amount < 1) revert SANCT_Zero();
         require(amount <= address(this).balance, "insufficient native");
 
-        (bool sent, ) = to.call{value: amount}("");
+        // M-14 Fix: Cap gas to prevent expensive fallback reentrancy
+        (bool sent, ) = to.call{value: amount, gas: 10_000}("");
         require(sent, "native transfer failed");
 
         emit NativeWithdrawal(to, amount);
@@ -305,9 +318,8 @@ contract SanctumVault is Ownable, ReentrancyGuard {
         if (!charities[charity].approved) revert SANCT_NotApproved();
         require(token != address(0) && amount > 0, "invalid proposal");
         
-        // Check balance
-        uint256 balance = IERC20(token).balanceOf(address(this));
-        if (balance < amount) revert SANCT_InsufficientBalance();
+        // M-20 Fix: Removed balance check at proposal time — execution-time check is sufficient.
+        // Funds may arrive between proposal and execution.
         
         proposalId = ++disbursementCount;
         Disbursement storage d = disbursements[proposalId];
@@ -432,13 +444,13 @@ contract SanctumVault is Ownable, ReentrancyGuard {
 
     function _log(string memory action) internal {
         if (address(ledger) != address(0)) {
-            try ledger.logSystemEvent(address(this), action, msg.sender) {} catch {}
+            try ledger.logSystemEvent(address(this), action, msg.sender) {} catch { emit LedgerLogFailed(address(this), action); }
         }
     }
 
     function _logEv(address who, string memory action, uint256 amount, string memory note) internal {
         if (address(ledger) != address(0)) {
-            try ledger.logEvent(who, action, amount, note) {} catch {}
+            try ledger.logEvent(who, action, amount, note) {} catch { emit LedgerLogFailed(who, action); }
         }
     }
 

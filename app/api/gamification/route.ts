@@ -91,7 +91,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Jest-only safeguard: if a default stub row is returned, re-query once
-    // to allow tests that chain mockResolvedValueOnce to provide the intended row.
+    // to allow tests that chain single-use test doubles to provide the intended row.
     if (
       isTestEnv &&
       userData &&

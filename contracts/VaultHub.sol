@@ -2,20 +2,24 @@
 pragma solidity 0.8.30;
 
 import "./SharedInterfaces.sol";
-import "./UserVault.sol";
+import "./CardBoundVault.sol";
 
 /**
  * @title VaultHub
  * @notice Factory and registry for non-custodial VFIDE vaults
- * @dev Deploys UserVault contracts via CREATE2 for deterministic addresses
- *      Separated from UserVault to stay under 24KB contract size limit
+ * @dev Deploys CardBoundVault contracts via CREATE2 for deterministic addresses
+ *      Vault custody remains contract-side; wallet acts as authorization-only key.
  */
-contract VaultHub is Ownable {
+contract VaultHub is Ownable, Pausable {
     /// Modules & config
     address public vfideToken;
     ISecurityHub public securityHub;  // shared lock view
     IProofLedger public ledger;       // optional ledger
     address public dao;               // DAO can force recover
+
+    uint8 public constant CARD_GUARDIAN_THRESHOLD = 1;
+    uint256 public constant CARD_MAX_PER_TRANSFER = 100 * 1e18;
+    uint256 public constant CARD_DAILY_TRANSFER_LIMIT = 300 * 1e18;
 
     /// Registry
     mapping(address => address) public vaultOf;
@@ -32,7 +36,8 @@ contract VaultHub is Ownable {
     uint8 public constant RECOVERY_APPROVALS_REQUIRED = 3; // H-5: Multi-sig requirement
     mapping(address => bool) public isRecoveryApprover;
 
-    // Track total vaults created
+    /// @dev Creation counter only — increments on vault creation, never decremented (vaults are never destroyed).
+    ///      Use totalVaultsCreated() for the named external API.
     uint256 public totalVaults;
     mapping(address => uint256) public vaultCreatedAt;
 
@@ -54,6 +59,7 @@ contract VaultHub is Ownable {
         securityHub = ISecurityHub(_securityHub);
         ledger = IProofLedger(_ledger);
         dao = _dao;
+
         emit ModulesSet(_vfideToken, _securityHub, _ledger, _dao);
     }
 
@@ -73,6 +79,40 @@ contract VaultHub is Ownable {
         vfideToken = _vfide;
         emit VFIDESet(_vfide);
         _log("hub_vfide_set");
+    }
+
+    // IVaultHub compatibility wrapper
+    function setVFIDEToken(address token) external onlyOwner {
+        if (token == address(0)) revert VH_Zero();
+        vfideToken = token;
+        emit VFIDESet(token);
+        _log("hub_vfide_set");
+    }
+
+    // IVaultHub compatibility wrapper
+    function setSecurityHub(address security) external onlyOwner {
+        securityHub = ISecurityHub(security);
+        _log("hub_security_set");
+    }
+
+    // IVaultHub compatibility wrapper
+    function setProofLedger(address proofLedger) external onlyOwner {
+        ledger = IProofLedger(proofLedger);
+        _log("hub_ledger_set");
+    }
+
+    // IVaultHub compatibility wrapper
+    function setDAORecoveryMultisig(address multisig) external onlyOwner {
+        if (multisig == address(0)) revert VH_Zero();
+        isRecoveryApprover[multisig] = true;
+        _log("recovery_multisig_set");
+    }
+
+    // IVaultHub compatibility wrapper
+    function setRecoveryTimelock(uint256 timelock) external pure {
+        // Recovery timelock is intentionally immutable in this version.
+        timelock;
+        revert("VH: immutable timelock");
     }
 
     function setDAO(address _dao) external onlyOwner {
@@ -109,7 +149,7 @@ contract VaultHub is Ownable {
     }
 
     // ——— Auto-create (anyone can sponsor)
-    function ensureVault(address owner_) public returns (address vault) {
+    function ensureVault(address owner_) public whenNotPaused returns (address vault) {
         if (owner_ == address(0)) revert VH_Zero();
         if (vfideToken == address(0)) revert VH_Zero(); // Ensure token is set
         vault = vaultOf[owner_];
@@ -164,6 +204,7 @@ contract VaultHub is Ownable {
         address candidate = recoveryCandidateForNonce[vault][nonce];
         if (candidate == address(0)) {
             recoveryCandidateForNonce[vault][nonce] = newOwner;
+            recoveryApprovalCount[vault] = 0; // H-08 Fix: Reset count for new candidate at this nonce
         } else {
             require(candidate == newOwner, "VH:candidate-mismatch");
         }
@@ -192,7 +233,7 @@ contract VaultHub is Ownable {
     }
     
     // Legacy function kept for compatibility but now requires multi-sig first
-    function initiateForceRecovery(address vault, address newOwner) external {
+    function initiateForceRecovery(address vault, address newOwner) public {
         if (msg.sender != dao) revert VH_NotDAO();
         if (vault == address(0) || newOwner == address(0)) revert VH_Zero();
         address current = ownerOfVault[vault];
@@ -218,7 +259,7 @@ contract VaultHub is Ownable {
         _logEv(vault, "force_recover_init", 0, "");
     }
 
-    function finalizeForceRecovery(address vault) external {
+    function finalizeForceRecovery(address vault) public {
         if (msg.sender != dao) revert VH_NotDAO();
         require(recoveryUnlockTime[vault] != 0, "VH:no-req");
         require(block.timestamp >= recoveryUnlockTime[vault], "VH:timelock");
@@ -245,11 +286,37 @@ contract VaultHub is Ownable {
         // C-2 Fix: Clear all approvals for this vault to prevent stale votes
         recoveryNonce[vault]++;
 
-        UserVault(payable(vault)).__forceSetOwner(newOwner);
+        (bool ok, ) = vault.call(abi.encodeWithSignature("__forceSetOwner(address)", newOwner));
+        require(ok, "VH:force-owner-failed");
 
         // slither-disable-next-line reentrancy-events
         emit ForcedRecovery(vault, newOwner);
         _logEv(vault, "force_recover_final", 0, "");
+    }
+
+    // IVaultHub compatibility wrapper
+    function requestDAORecovery(address vault, address newOwner) external {
+        initiateForceRecovery(vault, newOwner);
+    }
+
+    // IVaultHub compatibility wrapper
+    function finalizeDAORecovery(address vault) external {
+        finalizeForceRecovery(vault);
+    }
+
+    // IVaultHub compatibility wrapper
+    function cancelDAORecovery(address vault) external {
+        if (msg.sender != dao && msg.sender != owner) revert VH_NotDAO();
+        delete recoveryProposedOwner[vault];
+        delete recoveryUnlockTime[vault];
+        delete recoveryApprovalCount[vault];
+        recoveryNonce[vault]++;
+        _logEv(vault, "force_recover_cancel", 0, "");
+    }
+
+    // IVaultHub compatibility wrapper
+    function totalVaultsCreated() external view returns (uint256) {
+        return totalVaults;
     }
 
     // ——— Internals
@@ -258,18 +325,31 @@ contract VaultHub is Ownable {
     }
 
     function _creationCode(address owner_) internal view returns (bytes memory) {
-        // slither-disable-next-line too-many-digits
+        address[] memory guardians = new address[](1);
+        guardians[0] = owner_;
+
         return abi.encodePacked(
-            type(UserVault).creationCode,
-            abi.encode(address(this), vfideToken, owner_, address(securityHub), address(ledger))
+            type(CardBoundVault).creationCode,
+            abi.encode(
+                address(this),
+                vfideToken,
+                owner_,
+                owner_,
+                guardians,
+                CARD_GUARDIAN_THRESHOLD,
+                CARD_MAX_PER_TRANSFER,
+                CARD_DAILY_TRANSFER_LIMIT,
+                address(securityHub),
+                address(ledger)
+            )
         );
     }
 
     function _log(string memory action) internal {
-        if (address(ledger) != address(0)) { try ledger.logSystemEvent(address(this), action, msg.sender) {} catch {} }
+        if (address(ledger) != address(0)) { try ledger.logSystemEvent(address(this), action, msg.sender) {} catch { emit LedgerLogFailed(address(this), action); } }
     }
     function _logEv(address who, string memory action, uint256 amount, string memory note) internal {
-        if (address(ledger) != address(0)) { try ledger.logEvent(who, action, amount, note) {} catch {} }
+        if (address(ledger) != address(0)) { try ledger.logEvent(who, action, amount, note) {} catch { emit LedgerLogFailed(who, action); } }
     }
     
     // ═══════════════════════════════════════════════════════════════════════
@@ -313,4 +393,8 @@ contract VaultHub is Ownable {
         hasVault = vaultAddress != address(0);
         isVaultContract = ownerOfVault[addr] != address(0);
     }
+
+    // I-09 Fix: Emergency pause
+    function pause() external onlyOwner { _pause(); }
+    function unpause() external onlyOwner { _unpause(); }
 }

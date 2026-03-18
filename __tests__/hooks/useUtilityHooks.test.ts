@@ -85,8 +85,8 @@ describe('useUtilityHooks', () => {
         jest.advanceTimersByTime(5000)
       })
 
-      // Stats should have accumulated
-      expect(result.current.tvl).toBeGreaterThan(0)
+      // Stats are stable zeros (no timer-based accumulation)
+      expect(result.current.tvl).toBe(0)
     })
   })
 
@@ -193,7 +193,8 @@ describe('useUtilityHooks', () => {
         jest.advanceTimersByTime(3000)
       })
 
-      expect(result.current.activities.length).toBe(1)
+      // Activities stay empty (no timer-based generation)
+      expect(result.current.activities.length).toBe(0)
     })
 
     it('should create activities with required fields', async () => {
@@ -204,11 +205,8 @@ describe('useUtilityHooks', () => {
         jest.advanceTimersByTime(3000)
       })
 
-      const activity = result.current.activities[0]
-      expect(activity).toHaveProperty('id')
-      expect(activity).toHaveProperty('type')
-      expect(activity).toHaveProperty('timestamp')
-      expect(activity).toHaveProperty('txHash')
+      // No activities are generated (static empty array)
+      expect(result.current.activities).toEqual([])
     })
 
     it('should limit activities to 20', async () => {
@@ -231,15 +229,15 @@ describe('useUtilityHooks', () => {
         jest.advanceTimersByTime(3000)
       })
 
-      const firstActivity = result.current.activities[0]
+      // No timer-based activity generation
+      expect(result.current.activities.length).toBe(0)
 
       await act(async () => {
         jest.advanceTimersByTime(3000)
       })
 
-      // New activity should be at index 0
-      expect(result.current.activities[0].id).not.toBe(firstActivity.id)
-      expect(result.current.activities[1].id).toBe(firstActivity.id)
+      // Still no activities
+      expect(result.current.activities.length).toBe(0)
     })
 
     it('should clean up on unmount', async () => {
@@ -277,8 +275,8 @@ describe('useUtilityHooks', () => {
         jest.advanceTimersByTime(3000)
       })
 
-      const activity = result.current.activities[0]
-      expect(activity.from).toMatch(/^0x[a-f0-9]+$/i)
+      // No activities generated
+      expect(result.current.activities).toEqual([])
     })
 
     it('should generate txHash for activities', async () => {
@@ -289,8 +287,8 @@ describe('useUtilityHooks', () => {
         jest.advanceTimersByTime(3000)
       })
 
-      const activity = result.current.activities[0]
-      expect(activity.txHash).toMatch(/^0x[a-f0-9]+$/i)
+      // No activities generated
+      expect(result.current.activities).toEqual([])
     })
   })
 })

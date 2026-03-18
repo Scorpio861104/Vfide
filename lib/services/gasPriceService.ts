@@ -313,42 +313,10 @@ class GasPriceService {
       return cached.data;
     }
 
-    // In production, this would fetch from a database or external API
-    // For now, generate mock historical data
-    const history = this.generateMockHistory(hours);
-    historyCache.set(cacheKey, { data: history, timestamp: Date.now() });
-    return history;
-  }
-
-  /**
-   * Generate mock historical data for development
-   */
-  private generateMockHistory(hours: number): GasPriceHistory[] {
+    void chainId;
+    void hours;
     const history: GasPriceHistory[] = [];
-    const now = Date.now();
-    const interval = 5 * 60 * 1000; // 5 minute intervals
-    const points = Math.floor((hours * 60 * 60 * 1000) / interval);
-
-    let baseFee = 25 + Math.random() * 20; // Start with random base fee
-
-    for (let i = points; i >= 0; i--) {
-      // Simulate realistic gas price fluctuations
-      const hourOfDay = new Date(now - i * interval).getUTCHours();
-      
-      // Higher during business hours
-      const businessHourMultiplier = hourOfDay >= 13 && hourOfDay <= 21 ? 1.3 : 1;
-      
-      // Random walk
-      baseFee += (Math.random() - 0.5) * 5;
-      baseFee = Math.max(10, Math.min(150, baseFee)); // Clamp between 10-150 gwei
-
-      history.push({
-        timestamp: now - i * interval,
-        baseFee: baseFee * businessHourMultiplier,
-        normal: baseFee * businessHourMultiplier * 1.1,
-      });
-    }
-
+    historyCache.set(cacheKey, { data: history, timestamp: Date.now() });
     return history;
   }
 
@@ -366,6 +334,18 @@ class GasPriceService {
 
     const currentNormalGwei = Number(current.normal.maxFeePerGas) / 1e9;
     const _target = targetGasPrice || currentNormalGwei * 0.8; // 20% savings target
+
+    if (history.length === 0) {
+      return {
+        currentPrice: currentNormalGwei,
+        estimatedOptimalPrice: currentNormalGwei,
+        estimatedTime: 0,
+        savingsPercent: 0,
+        confidence: 0.5,
+        recommendation: 'Historical gas data is unavailable. Proceed based on current network conditions.',
+        urgency: 'ok-to-proceed',
+      };
+    }
 
     // Analyze historical patterns
     const avgPrice = history.reduce((sum, h) => sum + h.normal, 0) / history.length;

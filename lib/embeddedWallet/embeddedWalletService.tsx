@@ -207,40 +207,21 @@ export class EmbeddedWalletService {
       throw new Error('Invalid email address');
     }
 
-    // In production, this would:
-    // 1. Send magic link to email
-    // 2. Wait for user to click link
-    // 3. Create/retrieve wallet
-    
-    // Simulated response for demo
-    await this.simulateNetworkDelay();
-    
-    return this.createMockUser(email, 'email');
+    void email;
+    throw new Error('Embedded wallet email login is not configured');
   }
 
   private async loginWithOAuth(
     provider: AuthMethod,
     _redirectUrl?: string
   ): Promise<EmbeddedUser> {
-    // In production, this would:
-    // 1. Open OAuth popup/redirect
-    // 2. Handle callback
-    // 3. Create/retrieve wallet
-    
-    await this.simulateNetworkDelay();
-    
-    return this.createMockUser(`user@${provider}.com`, provider);
+    void provider;
+    throw new Error('Embedded wallet OAuth login is not configured');
   }
 
   private async loginWithSMS(phone: string): Promise<EmbeddedUser> {
-    // In production, this would:
-    // 1. Send OTP to phone
-    // 2. Verify OTP
-    // 3. Create/retrieve wallet
-    
-    await this.simulateNetworkDelay();
-    
-    return this.createMockUser(phone, 'sms');
+    void phone;
+    throw new Error('Embedded wallet SMS login is not configured');
   }
 
   private createMockUser(identifier: string, method: AuthMethod): EmbeddedUser {
@@ -281,10 +262,6 @@ export class EmbeddedWalletService {
     
     // Return first 40 characters (20 bytes) for Ethereum address
     return result.slice(0, 40);
-  }
-
-  private async simulateNetworkDelay(): Promise<void> {
-    await new Promise(resolve => setTimeout(resolve, 1000));
   }
 
   private updateState(updates: Partial<EmbeddedWalletState>): void {

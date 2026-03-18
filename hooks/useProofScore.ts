@@ -1,5 +1,5 @@
 import { useReadContract, useAccount } from 'wagmi'
-import { CONTRACT_ADDRESSES, SEER_ABI } from '@/lib/contracts'
+import { CONTRACT_ADDRESSES, SEER_ABI, ProofScoreBurnRouterABI } from '@/lib/contracts'
 import { PROOF_SCORE_PERMISSIONS, PROOF_SCORE_TIERS } from '@/lib/constants'
 
 /**
@@ -20,6 +20,18 @@ export function useProofScore(userAddress?: `0x${string}`) {
     }
   })
 
+  const { data: onChainBurnRateBps } = useReadContract({
+    address: CONTRACT_ADDRESSES.BurnRouter,
+    abi: ProofScoreBurnRouterABI,
+    functionName: 'getEffectiveBurnRate',
+    args: targetAddress ? [targetAddress] : undefined,
+    query: {
+      enabled:
+        !!targetAddress &&
+        CONTRACT_ADDRESSES.BurnRouter !== '0x0000000000000000000000000000000000000000',
+    },
+  })
+
   const scoreNum = data ? Number(data) : 5000 // Default neutral score (10x scale)
   
   // Get current tier from unified constants
@@ -27,12 +39,19 @@ export function useProofScore(userAddress?: `0x${string}`) {
   
   // Calculate burn fee based on ProofScore
   // Contract: minTotalBps=25 (0.25%) at score≥8000, maxTotalBps=500 (5%) at score≤4000
-  const burnFee = 
+  const fallbackBurnFee =
     scoreNum >= 8000 ? 0.25 :
     scoreNum >= 7000 ? 1.0 :
     scoreNum >= 5000 ? 2.0 :
     scoreNum >= 4000 ? 3.5 :
     5.0
+  const burnFee = onChainBurnRateBps !== undefined
+    ? (
+        Array.isArray(onChainBurnRateBps)
+          ? Number(onChainBurnRateBps[0] ?? 0n) / 100 + Number(onChainBurnRateBps[1] ?? 0n) / 100 + Number(onChainBurnRateBps[2] ?? 0n) / 100
+          : Number(onChainBurnRateBps) / 100
+      )
+    : fallbackBurnFee
 
   return {
     score: scoreNum,

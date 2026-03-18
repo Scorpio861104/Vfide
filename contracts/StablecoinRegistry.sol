@@ -8,7 +8,7 @@ import "./SharedInterfaces.sol";
  * @notice Manages allowed stablecoins for presale and other ecosystem uses
  * @dev Stores decimals and enabled status for each stablecoin
  */
-contract StablecoinRegistry is Ownable {
+contract StablecoinRegistry is Ownable, Pausable {
     struct StablecoinInfo {
         bool allowed;
         uint8 decimals;
@@ -39,7 +39,7 @@ contract StablecoinRegistry is Ownable {
      * @param decimals Decimals of the token (e.g., 6 for USDC/USDT, 18 for DAI)
      * @param symbol Symbol for reference (e.g., "USDC")
      */
-    function addStablecoin(address token, uint8 decimals, string calldata symbol) external onlyOwner {
+    function addStablecoin(address token, uint8 decimals, string calldata symbol) external onlyOwner whenNotPaused {
         if (token == address(0)) revert SR_Zero();
         if (stablecoins[token].allowed) revert SR_AlreadyAdded();
         if (decimals < MIN_DECIMALS || decimals > MAX_DECIMALS) revert SR_Bounds();
@@ -60,10 +60,21 @@ contract StablecoinRegistry is Ownable {
      * @notice Remove a stablecoin from the registry
      * @param token Address of the stablecoin to remove
      */
-    function removeStablecoin(address token) external onlyOwner {
+    function removeStablecoin(address token) external onlyOwner whenNotPaused {
         if (!stablecoins[token].allowed) revert SR_NotFound();
         
         stablecoins[token].allowed = false;
+        
+        // M-13 Fix: Remove from stablecoinList using swap-and-pop
+        uint256 len = stablecoinList.length;
+        for (uint256 i = 0; i < len; i++) {
+            if (stablecoinList[i] == token) {
+                stablecoinList[i] = stablecoinList[len - 1];
+                stablecoinList.pop();
+                break;
+            }
+        }
+        
         emit StablecoinRemoved(token);
     }
     
@@ -151,4 +162,8 @@ contract StablecoinRegistry is Ownable {
             }
         }
     }
+
+    // I-09 Fix: Emergency pause
+    function pause() external onlyOwner { _pause(); }
+    function unpause() external onlyOwner { _unpause(); }
 }

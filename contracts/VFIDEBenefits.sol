@@ -179,7 +179,7 @@ contract VFIDEBenefits {
         
         // Log the event
         if (address(ledger) != address(0)) {
-            try ledger.logEvent(buyer, "CommerceReward", amount, "escrow_complete") {} catch {}
+            try ledger.logEvent(buyer, "CommerceReward", amount, "escrow_complete") {} catch { emit LedgerLogFailed(buyer, "CommerceReward"); }
         }
     }
 

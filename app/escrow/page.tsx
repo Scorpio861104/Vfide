@@ -27,6 +27,7 @@ import { useAccount, useWriteContract as _useWriteContract, useWaitForTransactio
 import { parseUnits as _parseUnits } from 'viem'
 import { Footer } from '@/components/layout/Footer'
 import { useEscrow } from '@/lib/escrow/useEscrow'
+import { CONTRACT_ADDRESSES } from '@/lib/contracts'
 import { Loader2 } from 'lucide-react'
 
 // EscrowManager ABI
@@ -42,8 +43,8 @@ const _ESCROW_MANAGER_ABI = [
 ] as const;
 
 // Contract addresses from environment
-const _ESCROW_MANAGER_ADDRESS = (process.env.NEXT_PUBLIC_VFIDE_COMMERCE_ADDRESS || '0x2167C57dDfcd1bD2a6aDDB2bf510a05c48e7aC15') as `0x${string}`;
-const _VFIDE_TOKEN_ADDRESS = (process.env.NEXT_PUBLIC_VFIDE_TOKEN_ADDRESS || '0x3249215721a21BC9635C01Ea05AdE032dd90961f') as `0x${string}`;
+const _ESCROW_MANAGER_ADDRESS = CONTRACT_ADDRESSES.VFIDECommerce;
+const _VFIDE_TOKEN_ADDRESS = CONTRACT_ADDRESSES.VFIDEToken;
 
 // Escrow States (from contract)
 enum EscrowState {
@@ -87,6 +88,8 @@ export default function EscrowPage() {
     refundEscrow,
     raiseDispute,
     claimTimeout,
+    notifyTimeout,
+    checkTimeout,
     formatEscrowAmount,
     getTimeRemaining,
     refresh
@@ -152,6 +155,10 @@ export default function EscrowPage() {
 
   const handleClaimTimeout = async (id: number) => {
     try {
+      const timeoutStatus = await checkTimeout(BigInt(id));
+      if (timeoutStatus.isNearTimeout) {
+        await notifyTimeout(BigInt(id));
+      }
       await claimTimeout(BigInt(id));
       toast.success('Timeout claim submitted successfully');
     } catch {

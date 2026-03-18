@@ -38,7 +38,9 @@ describe('useProofScore hook', () => {
 
   test('uses provided address and returned score', () => {
     mockedUseAccount.mockReturnValue({ address: '0xabc' } as any)
-    mockedUseReadContract.mockReturnValue({ data: BigInt(9000), isError: false, isLoading: false, refetch: jest.fn() } as any)
+    mockedUseReadContract
+      .mockReturnValueOnce({ data: BigInt(9000), isError: false, isLoading: false, refetch: jest.fn() } as any)
+      .mockReturnValueOnce({ data: undefined, isError: false, isLoading: false, refetch: jest.fn() } as any)
 
     const { result } = renderHook(() => useProofScore('0x1111111111111111111111111111111111111111'))
     expect(result.current.score).toBe(9000)

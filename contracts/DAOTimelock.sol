@@ -58,6 +58,16 @@ contract DAOTimelock {
         emit DelaySet(_delay); 
         _log("tl_delay_set"); 
     }
+
+    /// @notice M-15 Fix: Emergency delay reduction — admin can reduce delay directly without timelock
+    /// @dev Can only REDUCE delay (never increase), still bounded by MIN_DELAY
+    function emergencyReduceDelay(uint64 _newDelay) external onlyAdmin {
+        require(_newDelay >= MIN_DELAY, "TL: below minimum");
+        require(_newDelay < delay, "TL: must reduce");
+        delay = _newDelay;
+        emit DelaySet(_newDelay);
+        _log("tl_emergency_delay_reduce");
+    }
     function setLedger(address _ledger) external onlyTimelockSelf { ledger=IProofLedger(_ledger); emit LedgerSet(_ledger); _log("tl_ledger_set"); }
     function setPanicGuard(address _pg) external onlyTimelockSelf { panicGuard=IPanicGuard(_pg); emit PanicGuardSet(_pg); _log("tl_panicguard_set"); }
 
@@ -111,7 +121,7 @@ contract DAOTimelock {
     }
 
     function _log(string memory action) internal {
-        if(address(ledger)!=address(0)){ try ledger.logSystemEvent(address(this),action,msg.sender) {} catch {} }
+        if(address(ledger)!=address(0)){ try ledger.logSystemEvent(address(this),action,msg.sender) {} catch { emit LedgerLogFailed(address(this), action); } }
     }
     
     // ═══════════════════════════════════════════════════════════════════════
@@ -145,6 +155,7 @@ contract DAOTimelock {
         id = keccak256(abi.encode(target, value, data, eta, currentNonce));
         if(queue[id].eta != 0) revert TL_AlreadyQueued();
         queue[id] = Op({target: target, value: value, data: data, eta: eta, done: false});
+        require(queuedIds.length < 500, "TL: queue full"); // I-11: Cap pending operations
         queuedIds.push(id);
         queuedIdIndex[id] = queuedIds.length; // 1-indexed
         emit Queued(id, target, value, data, eta);

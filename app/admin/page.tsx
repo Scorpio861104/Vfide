@@ -24,6 +24,105 @@ type BatchAction = {
   description: string;
 };
 
+type QrSignatureSummary = {
+  sinceMinutes: number;
+  total: number;
+  byEventType: {
+    missing: number;
+    invalid: number;
+    expired: number;
+  };
+  topMerchants: Array<{
+    merchant: string;
+    count: number;
+  }>;
+};
+
+type QrSignatureEvent = {
+  eventType: 'missing' | 'invalid' | 'expired';
+  source: 'qr' | 'checkout' | 'unknown';
+  settlement: 'instant' | 'escrow' | 'unknown';
+  merchant: string;
+  orderId: string;
+  exp: number | null;
+  sigPrefix: string;
+  reason: string;
+  userAgent: string;
+  ts: string;
+};
+
+type RecoveryFraudSummary = {
+  sinceMinutes: number;
+  total: number;
+  bySource: {
+    'guardian-inbox': number;
+    'guardians-page': number;
+    unknown: number;
+  };
+};
+
+type RecoveryFraudEvent = {
+  vault: string;
+  label: string;
+  source: 'guardian-inbox' | 'guardians-page' | 'unknown';
+  proposedOwner: string;
+  approvals: number;
+  threshold: number;
+  active: boolean;
+  watcher: string;
+  userAgent: string;
+  ts: string;
+};
+
+type NextOfKinFraudSummary = {
+  sinceMinutes: number;
+  total: number;
+  bySource: {
+    'next-of-kin-inbox': number;
+    'next-of-kin-tab': number;
+    unknown: number;
+  };
+};
+
+type NextOfKinFraudEvent = {
+  vault: string;
+  label: string;
+  source: 'next-of-kin-inbox' | 'next-of-kin-tab' | 'unknown';
+  nextOfKin: string;
+  approvals: number;
+  threshold: number;
+  active: boolean;
+  denied: boolean;
+  watcher: string;
+  userAgent: string;
+  ts: string;
+};
+
+type GuardianAttestationSummary = {
+  sinceMinutes: number;
+  total: number;
+  active: number;
+  expiringSoon: number;
+  topOwners: Array<{
+    owner: string;
+    count: number;
+  }>;
+  topGuardians: Array<{
+    guardian: string;
+    count: number;
+  }>;
+};
+
+type GuardianAttestationEvent = {
+  ts: string;
+  owner: string;
+  guardian: string;
+  vault: string;
+  issuedAt: number;
+  expiresAt: number;
+  signaturePrefix: string;
+};
+
 type PendingAdminAction =
   | 'lockPolicy'
   | 'transferOwnership'
@@ -392,6 +491,22 @@ export default function AdminPanel() {
   const [showHealthDashboard, setShowHealthDashboard] = useState(true);
   const [pendingAdminAction, setPendingAdminAction] = useState<PendingAdminAction | null>(null);
   const [adminValidationError, setAdminValidationError] = useState<string | null>(null);
+  const [qrSummary, setQrSummary] = useState<QrSignatureSummary | null>(null);
+  const [qrEvents, setQrEvents] = useState<QrSignatureEvent[]>([]);
+  const [isQrSummaryLoading, setIsQrSummaryLoading] = useState(false);
+  const [qrSummaryError, setQrSummaryError] = useState<string | null>(null);
+  const [recoveryFraudSummary, setRecoveryFraudSummary] = useState<RecoveryFraudSummary | null>(null);
+  const [recoveryFraudEvents, setRecoveryFraudEvents] = useState<RecoveryFraudEvent[]>([]);
+  const [isRecoveryFraudLoading, setIsRecoveryFraudLoading] = useState(false);
+  const [recoveryFraudError, setRecoveryFraudError] = useState<string | null>(null);
+  const [nextOfKinFraudSummary, setNextOfKinFraudSummary] = useState<NextOfKinFraudSummary | null>(null);
+  const [nextOfKinFraudEvents, setNextOfKinFraudEvents] = useState<NextOfKinFraudEvent[]>([]);
+  const [isNextOfKinFraudLoading, setIsNextOfKinFraudLoading] = useState(false);
+  const [nextOfKinFraudError, setNextOfKinFraudError] = useState<string | null>(null);
+  const [attestationSummary, setAttestationSummary] = useState<GuardianAttestationSummary | null>(null);
+  const [attestationEvents, setAttestationEvents] = useState<GuardianAttestationEvent[]>([]);
+  const [isAttestationLoading, setIsAttestationLoading] = useState(false);
+  const [attestationError, setAttestationError] = useState<string | null>(null);
 
   // Read contract owner
   const { data: owner } = useReadContract({
@@ -873,6 +988,181 @@ export default function AdminPanel() {
     }
   }, [isSuccess, adminValidationError, pendingAdminAction]);
 
+  useEffect(() => {
+    let cancelled = false;
+
+    const fetchQrSummary = async () => {
+      setIsQrSummaryLoading(true);
+      try {
+        const response = await fetch('/api/security/qr-signature-events?sinceMinutes=60&limit=100');
+        if (!response.ok) {
+          throw new Error(`QR telemetry fetch failed (${response.status})`);
+        }
+        const payload = (await response.json()) as { summary?: QrSignatureSummary; events?: QrSignatureEvent[] };
+        if (!cancelled) {
+          setQrSummary(payload.summary || null);
+          setQrEvents(Array.isArray(payload.events) ? payload.events : []);
+          setQrSummaryError(null);
+        }
+      } catch (error) {
+        if (!cancelled) {
+          const message = error instanceof Error ? error.message : 'Failed to load QR telemetry';
+          setQrSummaryError(message);
+        }
+      } finally {
+        if (!cancelled) {
+          setIsQrSummaryLoading(false);
+        }
+      }
+    };
+
+    void fetchQrSummary();
+    const interval = setInterval(() => {
+      void fetchQrSummary();
+    }, 30_000);
+
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const fetchNextOfKinFraudSummary = async () => {
+      setIsNextOfKinFraudLoading(true);
+      try {
+        const response = await fetch('/api/security/next-of-kin-fraud-events?sinceMinutes=60&limit=100');
+        if (!response.ok) {
+          throw new Error(`Next of Kin fraud telemetry fetch failed (${response.status})`);
+        }
+
+        const payload = (await response.json()) as {
+          summary?: NextOfKinFraudSummary;
+          events?: NextOfKinFraudEvent[];
+        };
+
+        const summary = payload.summary;
+        const validSummary = summary
+          && typeof summary.total === 'number'
+          && typeof summary.sinceMinutes === 'number'
+          && summary.bySource
+          && typeof summary.bySource['next-of-kin-inbox'] === 'number'
+          && typeof summary.bySource['next-of-kin-tab'] === 'number'
+          && typeof summary.bySource.unknown === 'number'
+          ? summary
+          : null;
+
+        if (!cancelled) {
+          setNextOfKinFraudSummary(validSummary);
+          setNextOfKinFraudEvents(Array.isArray(payload.events) ? payload.events : []);
+          setNextOfKinFraudError(null);
+        }
+      } catch (error) {
+        if (!cancelled) {
+          const message = error instanceof Error ? error.message : 'Failed to load Next of Kin fraud telemetry';
+          setNextOfKinFraudError(message);
+        }
+      } finally {
+        if (!cancelled) {
+          setIsNextOfKinFraudLoading(false);
+        }
+      }
+    };
+
+    void fetchNextOfKinFraudSummary();
+    const interval = setInterval(() => {
+      void fetchNextOfKinFraudSummary();
+    }, 30_000);
+
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const fetchAttestationSummary = async () => {
+      setIsAttestationLoading(true);
+      try {
+        const response = await fetch('/api/security/guardian-attestations?mode=summary&sinceMinutes=60&limit=100');
+        if (!response.ok) {
+          throw new Error(`Guardian attestation telemetry fetch failed (${response.status})`);
+        }
+        const payload = (await response.json()) as {
+          summary?: GuardianAttestationSummary;
+          events?: GuardianAttestationEvent[];
+        };
+        if (!cancelled) {
+          setAttestationSummary(payload.summary || null);
+          setAttestationEvents(Array.isArray(payload.events) ? payload.events : []);
+          setAttestationError(null);
+        }
+      } catch (error) {
+        if (!cancelled) {
+          const message = error instanceof Error ? error.message : 'Failed to load guardian attestation telemetry';
+          setAttestationError(message);
+        }
+      } finally {
+        if (!cancelled) {
+          setIsAttestationLoading(false);
+        }
+      }
+    };
+
+    void fetchAttestationSummary();
+    const interval = setInterval(() => {
+      void fetchAttestationSummary();
+    }, 30_000);
+
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const fetchRecoveryFraudSummary = async () => {
+      setIsRecoveryFraudLoading(true);
+      try {
+        const response = await fetch('/api/security/recovery-fraud-events?sinceMinutes=60&limit=100');
+        if (!response.ok) {
+          throw new Error(`Recovery fraud telemetry fetch failed (${response.status})`);
+        }
+        const payload = (await response.json()) as { summary?: RecoveryFraudSummary; events?: RecoveryFraudEvent[] };
+        if (!cancelled) {
+          setRecoveryFraudSummary(payload.summary || null);
+          setRecoveryFraudEvents(Array.isArray(payload.events) ? payload.events : []);
+          setRecoveryFraudError(null);
+        }
+      } catch (error) {
+        if (!cancelled) {
+          const message = error instanceof Error ? error.message : 'Failed to load recovery fraud telemetry';
+          setRecoveryFraudError(message);
+        }
+      } finally {
+        if (!cancelled) {
+          setIsRecoveryFraudLoading(false);
+        }
+      }
+    };
+
+    void fetchRecoveryFraudSummary();
+    const interval = setInterval(() => {
+      void fetchRecoveryFraudSummary();
+    }, 30_000);
+
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
+  }, []);
+
   // Track transaction for history - integrate with write functions
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const addToHistory = (hash: string, action: string, params?: string) => {
@@ -928,6 +1218,198 @@ export default function AdminPanel() {
     a.href = url;
     a.download = `vfide-admin-config-${Date.now()}.json`;
     a.click();
+  };
+
+  const exportQrTelemetryCsv = () => {
+    if (!qrEvents.length) {
+      setAdminValidationError('No QR signature events available to export.');
+      return;
+    }
+
+    const escapeCsv = (value: string | number | null) => {
+      const raw = value === null ? '' : String(value);
+      return `"${raw.replace(/"/g, '""')}"`;
+    };
+
+    const headers = [
+      'timestamp',
+      'eventType',
+      'source',
+      'settlement',
+      'merchant',
+      'orderId',
+      'exp',
+      'sigPrefix',
+      'reason',
+      'userAgent',
+    ];
+
+    const lines = [headers.join(',')];
+    for (const event of qrEvents) {
+      lines.push([
+        escapeCsv(event.ts),
+        escapeCsv(event.eventType),
+        escapeCsv(event.source),
+        escapeCsv(event.settlement),
+        escapeCsv(event.merchant),
+        escapeCsv(event.orderId),
+        escapeCsv(event.exp),
+        escapeCsv(event.sigPrefix),
+        escapeCsv(event.reason),
+        escapeCsv(event.userAgent),
+      ].join(','));
+    }
+
+    const blob = new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `vfide-qr-signature-events-${Date.now()}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const exportRecoveryFraudCsv = () => {
+    if (!recoveryFraudEvents.length) {
+      setAdminValidationError('No recovery fraud events available to export.');
+      return;
+    }
+
+    const escapeCsv = (value: string | number | boolean | null) => {
+      const raw = value === null ? '' : String(value);
+      return `"${raw.replace(/"/g, '""')}"`;
+    };
+
+    const headers = [
+      'timestamp',
+      'source',
+      'vault',
+      'label',
+      'proposedOwner',
+      'approvals',
+      'threshold',
+      'active',
+      'watcher',
+      'userAgent',
+    ];
+
+    const lines = [headers.join(',')];
+    for (const event of recoveryFraudEvents) {
+      lines.push([
+        escapeCsv(event.ts),
+        escapeCsv(event.source),
+        escapeCsv(event.vault),
+        escapeCsv(event.label),
+        escapeCsv(event.proposedOwner),
+        escapeCsv(event.approvals),
+        escapeCsv(event.threshold),
+        escapeCsv(event.active),
+        escapeCsv(event.watcher),
+        escapeCsv(event.userAgent),
+      ].join(','));
+    }
+
+    const blob = new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `vfide-recovery-fraud-events-${Date.now()}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const exportNextOfKinFraudCsv = () => {
+    if (!nextOfKinFraudEvents.length) {
+      setAdminValidationError('No Next of Kin fraud events available to export.');
+      return;
+    }
+
+    const escapeCsv = (value: string | number | boolean | null) => {
+      const raw = value === null ? '' : String(value);
+      return `"${raw.replace(/"/g, '""')}"`;
+    };
+
+    const headers = [
+      'timestamp',
+      'source',
+      'vault',
+      'label',
+      'nextOfKin',
+      'approvals',
+      'threshold',
+      'active',
+      'denied',
+      'watcher',
+      'userAgent',
+    ];
+
+    const lines = [headers.join(',')];
+    for (const event of nextOfKinFraudEvents) {
+      lines.push([
+        escapeCsv(event.ts),
+        escapeCsv(event.source),
+        escapeCsv(event.vault),
+        escapeCsv(event.label),
+        escapeCsv(event.nextOfKin),
+        escapeCsv(event.approvals),
+        escapeCsv(event.threshold),
+        escapeCsv(event.active),
+        escapeCsv(event.denied),
+        escapeCsv(event.watcher),
+        escapeCsv(event.userAgent),
+      ].join(','));
+    }
+
+    const blob = new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `vfide-next-of-kin-fraud-events-${Date.now()}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const exportAttestationCsv = () => {
+    if (!attestationEvents.length) {
+      setAdminValidationError('No guardian attestation events available to export.');
+      return;
+    }
+
+    const escapeCsv = (value: string | number | null) => {
+      const raw = value === null ? '' : String(value);
+      return `"${raw.replace(/"/g, '""')}"`;
+    };
+
+    const headers = [
+      'timestamp',
+      'owner',
+      'guardian',
+      'vault',
+      'issuedAt',
+      'expiresAt',
+      'signaturePrefix',
+    ];
+
+    const lines = [headers.join(',')];
+    for (const event of attestationEvents) {
+      lines.push([
+        escapeCsv(event.ts),
+        escapeCsv(event.owner),
+        escapeCsv(event.guardian),
+        escapeCsv(event.vault),
+        escapeCsv(event.issuedAt),
+        escapeCsv(event.expiresAt),
+        escapeCsv(event.signaturePrefix),
+      ].join(','));
+    }
+
+    const blob = new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `vfide-guardian-attestations-${Date.now()}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
   };
 
   const handleUpdateBurnPolicy = () => {
@@ -1050,6 +1532,294 @@ export default function AdminPanel() {
             color="purple"
             icon="💎"
           />
+        </div>
+
+        <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 mb-8">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+            <h2 className="text-2xl font-bold text-white">🛡️ QR Signature Security Monitor</h2>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-gray-400">Rolling window: last 60 minutes</span>
+              <button
+                onClick={exportQrTelemetryCsv}
+                disabled={!qrEvents.length}
+                className="bg-cyan-600 hover:bg-cyan-700 disabled:bg-gray-700 disabled:text-gray-400 text-white text-xs font-bold py-2 px-3 rounded-lg transition-colors"
+              >
+                Export QR CSV
+              </button>
+            </div>
+          </div>
+
+          {isQrSummaryLoading && (
+            <p className="text-gray-300 text-sm">Loading QR telemetry…</p>
+          )}
+
+          {qrSummaryError && (
+            <div className="bg-red-500/20 border border-red-500 rounded-lg p-3 mb-4 text-red-200 text-sm">
+              {qrSummaryError}
+            </div>
+          )}
+
+          {qrSummary && (
+            <>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-5">
+                <div className="bg-black/30 rounded-lg p-4">
+                  <p className="text-gray-400 text-xs uppercase tracking-wide">Total Events</p>
+                  <p className="text-white text-2xl font-bold">{qrSummary.total}</p>
+                </div>
+                <div className="bg-black/30 rounded-lg p-4">
+                  <p className="text-gray-400 text-xs uppercase tracking-wide">Missing Signature</p>
+                  <p className="text-amber-300 text-2xl font-bold">{qrSummary.byEventType.missing}</p>
+                </div>
+                <div className="bg-black/30 rounded-lg p-4">
+                  <p className="text-gray-400 text-xs uppercase tracking-wide">Invalid Signature</p>
+                  <p className="text-red-300 text-2xl font-bold">{qrSummary.byEventType.invalid}</p>
+                </div>
+                <div className="bg-black/30 rounded-lg p-4">
+                  <p className="text-gray-400 text-xs uppercase tracking-wide">Expired Signature</p>
+                  <p className="text-orange-300 text-2xl font-bold">{qrSummary.byEventType.expired}</p>
+                </div>
+              </div>
+
+              <div className="bg-black/30 rounded-lg p-4">
+                <p className="text-gray-300 text-sm font-semibold mb-3">Top merchants by QR signature failures</p>
+                {qrSummary.topMerchants.length === 0 ? (
+                  <p className="text-gray-500 text-sm">No QR signature failures in this window.</p>
+                ) : (
+                  <div className="space-y-2">
+                    {qrSummary.topMerchants.map((entry) => (
+                      <div key={entry.merchant} className="flex items-center justify-between text-sm">
+                        <span className="font-mono text-gray-300">{entry.merchant}</span>
+                        <span className="text-white font-bold">{entry.count}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </>
+          )}
+        </div>
+
+        <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 mb-8">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+            <h2 className="text-2xl font-bold text-white">🧬 Chain of Return Fraud Monitor</h2>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-gray-400">Rolling window: last 60 minutes</span>
+              <button
+                onClick={exportRecoveryFraudCsv}
+                disabled={!recoveryFraudEvents.length}
+                className="bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-700 disabled:text-gray-400 text-white text-xs font-bold py-2 px-3 rounded-lg transition-colors"
+              >
+                Export Recovery CSV
+              </button>
+            </div>
+          </div>
+
+          {isRecoveryFraudLoading && (
+            <p className="text-gray-300 text-sm">Loading recovery fraud telemetry…</p>
+          )}
+
+          {recoveryFraudError && (
+            <div className="bg-red-500/20 border border-red-500 rounded-lg p-3 mb-4 text-red-200 text-sm">
+              {recoveryFraudError}
+            </div>
+          )}
+
+          {recoveryFraudSummary && (
+            <>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-5">
+                <div className="bg-black/30 rounded-lg p-4">
+                  <p className="text-gray-400 text-xs uppercase tracking-wide">Total Events</p>
+                  <p className="text-white text-2xl font-bold">{recoveryFraudSummary.total}</p>
+                </div>
+                <div className="bg-black/30 rounded-lg p-4">
+                  <p className="text-gray-400 text-xs uppercase tracking-wide">Guardian Inbox</p>
+                  <p className="text-amber-300 text-2xl font-bold">{recoveryFraudSummary.bySource['guardian-inbox']}</p>
+                </div>
+                <div className="bg-black/30 rounded-lg p-4">
+                  <p className="text-gray-400 text-xs uppercase tracking-wide">Guardians Page</p>
+                  <p className="text-yellow-300 text-2xl font-bold">{recoveryFraudSummary.bySource['guardians-page']}</p>
+                </div>
+                <div className="bg-black/30 rounded-lg p-4">
+                  <p className="text-gray-400 text-xs uppercase tracking-wide">Unknown Source</p>
+                  <p className="text-gray-200 text-2xl font-bold">{recoveryFraudSummary.bySource.unknown}</p>
+                </div>
+              </div>
+
+              <div className="bg-black/30 rounded-lg p-4">
+                <p className="text-gray-300 text-sm font-semibold mb-3">Recent fraud reports</p>
+                {recoveryFraudEvents.length === 0 ? (
+                  <p className="text-gray-500 text-sm">No fraud reports in this window.</p>
+                ) : (
+                  <div className="space-y-2">
+                    {recoveryFraudEvents.slice(0, 5).map((event) => (
+                      <div key={`${event.ts}-${event.vault}-${event.watcher}`} className="flex items-center justify-between text-sm">
+                        <div className="min-w-0 pr-4">
+                          <p className="font-mono text-gray-300 truncate">{event.vault}</p>
+                          <p className="text-xs text-gray-500">{event.source} • approvals {event.approvals}/{event.threshold}</p>
+                        </div>
+                        <span className={`font-bold ${event.active ? 'text-red-300' : 'text-green-300'}`}>
+                          {event.active ? 'Active' : 'Inactive'}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </>
+          )}
+        </div>
+
+        <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 mb-8">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+            <h2 className="text-2xl font-bold text-white">🪪 Guardian Attestation Monitor</h2>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-gray-400">Rolling window: last 60 minutes</span>
+              <button
+                onClick={exportAttestationCsv}
+                disabled={!attestationEvents.length}
+                className="bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-700 disabled:text-gray-400 text-white text-xs font-bold py-2 px-3 rounded-lg transition-colors"
+              >
+                Export Attestation CSV
+              </button>
+            </div>
+          </div>
+
+          {isAttestationLoading && (
+            <p className="text-gray-300 text-sm">Loading guardian attestation telemetry…</p>
+          )}
+
+          {attestationError && (
+            <div className="bg-red-500/20 border border-red-500 rounded-lg p-3 mb-4 text-red-200 text-sm">
+              {attestationError}
+            </div>
+          )}
+
+          {attestationSummary && (
+            <>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-5">
+                <div className="bg-black/30 rounded-lg p-4">
+                  <p className="text-gray-400 text-xs uppercase tracking-wide">Total Attestations</p>
+                  <p className="text-white text-2xl font-bold">{attestationSummary.total}</p>
+                </div>
+                <div className="bg-black/30 rounded-lg p-4">
+                  <p className="text-gray-400 text-xs uppercase tracking-wide">Active</p>
+                  <p className="text-emerald-300 text-2xl font-bold">{attestationSummary.active}</p>
+                </div>
+                <div className="bg-black/30 rounded-lg p-4">
+                  <p className="text-gray-400 text-xs uppercase tracking-wide">Expiring In 72h</p>
+                  <p className="text-amber-300 text-2xl font-bold">{attestationSummary.expiringSoon}</p>
+                </div>
+                <div className="bg-black/30 rounded-lg p-4">
+                  <p className="text-gray-400 text-xs uppercase tracking-wide">Top Owners Tracked</p>
+                  <p className="text-indigo-300 text-2xl font-bold">{attestationSummary.topOwners.length}</p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <div className="bg-black/30 rounded-lg p-4">
+                  <p className="text-gray-300 text-sm font-semibold mb-3">Top owners by active attestations</p>
+                  {attestationSummary.topOwners.length === 0 ? (
+                    <p className="text-gray-500 text-sm">No active owner attestations in this window.</p>
+                  ) : (
+                    <div className="space-y-2">
+                      {attestationSummary.topOwners.map((entry) => (
+                        <div key={entry.owner} className="flex items-center justify-between text-sm">
+                          <span className="font-mono text-gray-300">{entry.owner}</span>
+                          <span className="text-white font-bold">{entry.count}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                <div className="bg-black/30 rounded-lg p-4">
+                  <p className="text-gray-300 text-sm font-semibold mb-3">Top guardians by active attestations</p>
+                  {attestationSummary.topGuardians.length === 0 ? (
+                    <p className="text-gray-500 text-sm">No active guardian attestations in this window.</p>
+                  ) : (
+                    <div className="space-y-2">
+                      {attestationSummary.topGuardians.map((entry) => (
+                        <div key={entry.guardian} className="flex items-center justify-between text-sm">
+                          <span className="font-mono text-gray-300">{entry.guardian}</span>
+                          <span className="text-white font-bold">{entry.count}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </>
+          )}
+        </div>
+
+        <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 mb-8">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+            <h2 className="text-2xl font-bold text-white">💠 Next of Kin Fraud Monitor</h2>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-gray-400">Rolling window: last 60 minutes</span>
+              <button
+                onClick={exportNextOfKinFraudCsv}
+                disabled={!nextOfKinFraudEvents.length}
+                className="bg-fuchsia-600 hover:bg-fuchsia-700 disabled:bg-gray-700 disabled:text-gray-400 text-white text-xs font-bold py-2 px-3 rounded-lg transition-colors"
+              >
+                Export Next of Kin CSV
+              </button>
+            </div>
+          </div>
+
+          {isNextOfKinFraudLoading && (
+            <p className="text-gray-300 text-sm">Loading Next of Kin fraud telemetry…</p>
+          )}
+
+          {nextOfKinFraudError && (
+            <div className="bg-red-500/20 border border-red-500 rounded-lg p-3 mb-4 text-red-200 text-sm">
+              {nextOfKinFraudError}
+            </div>
+          )}
+
+          {nextOfKinFraudSummary && (
+            <>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-5">
+                <div className="bg-black/30 rounded-lg p-4">
+                  <p className="text-gray-400 text-xs uppercase tracking-wide">Total Events</p>
+                  <p className="text-white text-2xl font-bold">{nextOfKinFraudSummary.total}</p>
+                </div>
+                <div className="bg-black/30 rounded-lg p-4">
+                  <p className="text-gray-400 text-xs uppercase tracking-wide">Kin Inbox</p>
+                  <p className="text-fuchsia-300 text-2xl font-bold">{nextOfKinFraudSummary.bySource['next-of-kin-inbox']}</p>
+                </div>
+                <div className="bg-black/30 rounded-lg p-4">
+                  <p className="text-gray-400 text-xs uppercase tracking-wide">Kin Tab</p>
+                  <p className="text-pink-300 text-2xl font-bold">{nextOfKinFraudSummary.bySource['next-of-kin-tab']}</p>
+                </div>
+                <div className="bg-black/30 rounded-lg p-4">
+                  <p className="text-gray-400 text-xs uppercase tracking-wide">Unknown Source</p>
+                  <p className="text-gray-200 text-2xl font-bold">{nextOfKinFraudSummary.bySource.unknown}</p>
+                </div>
+              </div>
+
+              <div className="bg-black/30 rounded-lg p-4">
+                <p className="text-gray-300 text-sm font-semibold mb-3">Recent Next of Kin fraud reports</p>
+                {nextOfKinFraudEvents.length === 0 ? (
+                  <p className="text-gray-500 text-sm">No Next of Kin fraud reports in this window.</p>
+                ) : (
+                  <div className="space-y-2">
+                    {nextOfKinFraudEvents.slice(0, 5).map((event) => (
+                      <div key={`${event.ts}-${event.vault}-${event.watcher}`} className="flex items-center justify-between text-sm">
+                        <div className="min-w-0 pr-4">
+                          <p className="font-mono text-gray-300 truncate">{event.vault}</p>
+                          <p className="text-xs text-gray-500">{event.source} • approvals {event.approvals}/{event.threshold} • denied {event.denied ? 'yes' : 'no'}</p>
+                        </div>
+                        <span className={`font-bold ${event.active ? 'text-red-300' : 'text-green-300'}`}>
+                          {event.active ? 'Active' : 'Inactive'}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </>
+          )}
         </div>
 
         {/* Simulation Mode Banner */}

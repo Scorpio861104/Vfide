@@ -1,6 +1,10 @@
 import { NextRequest } from 'next/server';
 import { POST } from '@/app/api/leaderboard/claim-prize/route';
 
+jest.mock('@/lib/auth/middleware', () => ({
+  withAuth: jest.fn((handler: Function) => handler),
+}));
+
 describe('/api/leaderboard/claim-prize', () => {
   describe('POST', () => {
     it('should return 403 - monthly competition prizes are not available (Howey compliance)', async () => {
