@@ -93,7 +93,10 @@ contract DAO is ReentrancyGuard {
     mapping(uint256 => Proposal) public proposals;
     
     // M-1 Fix: Track withdrawn proposal hashes to prevent vote reset abuse
-    mapping(bytes32 => bool) public withdrawnProposalHashes;
+    // M-03 Fix: Changed from bool to uint64 timestamp — use cooldown instead of permanent block
+    //           so identical proposals can be re-submitted after the cooldown window elapses.
+    uint64 public withdrawnHashCooldown = 7 days;
+    mapping(bytes32 => uint64) public withdrawnProposalHashes; // stores block.timestamp when withdrawn
 
     /**
      * Allow vote delegation - REMOVED for security/simplicity in v1
@@ -166,6 +169,14 @@ contract DAO is ReentrancyGuard {
         require(_cooldown <= 30 days, "DAO: cooldown too long");
         proposalCooldown = _cooldown;
         emit ProposalCooldownSet(_cooldown);
+    }
+
+    /// @notice M-03 Fix: Set cooldown before a withdrawn proposal can be re-submitted.
+    /// @dev Capped at 90 days — beyond that proposals lose political relevance and
+    ///      community members should be free to re-introduce them without restriction.
+    function setWithdrawnHashCooldown(uint64 _cooldown) external onlyTimelock {
+        require(_cooldown <= 90 days, "DAO: cooldown too long");
+        withdrawnHashCooldown = _cooldown;
     }
 
     /// @notice Configure allowlist policy for proposal type targets
@@ -244,7 +255,13 @@ contract DAO is ReentrancyGuard {
         // C-06 Fix: Hash only immutable fields (target, value, data) — ptype can be changed on withdrawal
         // and description is mutable, so including either enables trivial bypass of the protection
         bytes32 proposalHash = keccak256(abi.encode(target, value, data));
-        require(!withdrawnProposalHashes[proposalHash], "DAO: proposal was previously withdrawn");
+        // M-03 Fix: Use cooldown-based block instead of permanent block so identical proposals
+        //           can be re-submitted after the withdrawnHashCooldown window elapses.
+        uint64 withdrawnAt = withdrawnProposalHashes[proposalHash];
+        require(
+            withdrawnAt == 0 || block.timestamp >= withdrawnAt + withdrawnHashCooldown,
+            "DAO: resubmission cooldown active"
+        );
 
         lastProposalAt[msg.sender] = uint64(block.timestamp);
         
@@ -393,8 +410,9 @@ contract DAO is ReentrancyGuard {
             "DAO: cannot withdraw after votes cast");
         
         // C-06 Fix: Store hash of immutable fields only before any mutation
+        // M-03 Fix: Store timestamp so cooldown can be checked on re-submission
         bytes32 proposalHash = keccak256(abi.encode(p.target, p.value, p.data));
-        withdrawnProposalHashes[proposalHash] = true;
+        withdrawnProposalHashes[proposalHash] = uint64(block.timestamp);
 
         // Reset scalar fields instead of deleting the struct, which contains mappings.
         p.proposer = address(0);
