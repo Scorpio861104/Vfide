@@ -19,6 +19,8 @@ interface DeploymentConfig {
   vaultHub: string;
   ledger: string;
   treasurySink: string;
+  /** Optional: pre-deployed VFIDE token address for AdminMultiSig stake-gated veto (H-05 fix) */
+  vfideToken?: string;
   pausers: string[];
   blacklistManagers: string[];
   configManagers: string[];
@@ -106,6 +108,9 @@ function getDeploymentConfig(): DeploymentConfig {
     vaultHub: process.env.VAULT_HUB_ADDRESS || '',
     ledger: process.env.PROOF_LEDGER_ADDRESS || '',
     treasurySink: process.env.TREASURY_SINK_ADDRESS || '',
+    // Optional — if VFIDEToken is already deployed (upgrade scenario), pass it here
+    // so AdminMultiSig can enforce token-stake-gated community veto (H-05 fix).
+    vfideToken: process.env.VFIDE_TOKEN || undefined,
     pausers: (process.env.PAUSERS || '').split(',').filter(Boolean),
     blacklistManagers: (process.env.BLACKLIST_MANAGERS || '').split(',').filter(Boolean),
     configManagers: (process.env.CONFIG_MANAGERS || '').split(',').filter(Boolean),
@@ -142,7 +147,10 @@ async function deployContracts(config: DeploymentConfig): Promise<DeployedContra
   // 2. Deploy AdminMultiSig
   console.log('2️⃣  Deploying AdminMultiSig...');
   const MultiSig = await ethers.getContractFactory('AdminMultiSig');
-  const multiSig = await MultiSig.deploy(config.council);
+  // H-05 Fix: AdminMultiSig now requires _vfideToken as second arg for stake-gated veto.
+  // Pass zero address at deploy time — wire the real token address via vfideToken setter after
+  // VFIDEToken is deployed (or pass config.vfideToken if it is already deployed).
+  const multiSig = await MultiSig.deploy(config.council, config.vfideToken || ethers.ZeroAddress);
   await multiSig.waitForDeployment();
   console.log(`   ✓ Deployed at: ${await multiSig.getAddress()}`);
 
@@ -165,9 +173,9 @@ async function deployContracts(config: DeploymentConfig): Promise<DeployedContra
   await circuitBreaker.waitForDeployment();
   console.log(`   ✓ Deployed at: ${await circuitBreaker.getAddress()}`);
 
-  // 5. Deploy WithdrawalQueue
-  console.log('5️⃣  Deploying WithdrawalQueue...');
-  const WithdrawalQueue = await ethers.getContractFactory('WithdrawalQueue');
+  // 5. Deploy WithdrawalQueue (use WithdrawalQueueStub — base contract is abstract)
+  console.log('5️⃣  Deploying WithdrawalQueueStub...');
+  const WithdrawalQueue = await ethers.getContractFactory('WithdrawalQueueStub');
   const minimumDelayAmount = ethers.parseEther('1000000'); // 1M tokens
   const withdrawalQueue = await WithdrawalQueue.deploy(config.admin, minimumDelayAmount);
   await withdrawalQueue.waitForDeployment();
