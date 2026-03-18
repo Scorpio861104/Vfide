@@ -72,6 +72,9 @@ contract SubscriptionManager is ReentrancyGuard {
     // NEW: Configuration
     uint256 public constant GRACE_PERIOD = 3 days;
     uint256 public constant MAX_FAILED_PAYMENTS = 3;
+    // M-22/M-30 Fix: Merchant has exclusive calling rights for 24h after payment is due.
+    //               After this window anyone (keeper/bot) may process to prevent stalling.
+    uint256 public constant MERCHANT_EXCLUSIVE_WINDOW = 24 hours;
     
     // NEW: DAO for emergency controls
     address public dao;
@@ -217,12 +220,19 @@ contract SubscriptionManager is ReentrancyGuard {
 
     // 3. Merchant (or anyone) processes the payment
     // H-16 Fix: Add nonReentrant to prevent reentrancy via malicious tokens
+    // M-22/M-30 Fix: Within MERCHANT_EXCLUSIVE_WINDOW after due time, only the merchant
+    //                can call — prevents third-party griefing during brief balance dips.
     // slither-disable-next-line arbitrary-send-erc20
     function processPayment(uint256 subId) external nonReentrant {
         Subscription storage sub = subscriptions[subId];
         if (!sub.active) revert SM_InactiveSubscription();
         if (sub.paused) revert SM_SubscriptionPaused(); // Cannot process while paused
         if (block.timestamp < sub.nextPayment) revert SM_PaymentTooEarly();
+
+        // M-22/M-30 Fix: During the merchant-exclusive window only the merchant may trigger
+        if (block.timestamp < sub.nextPayment + MERCHANT_EXCLUSIVE_WINDOW) {
+            if (msg.sender != sub.merchant) revert SM_NotMerchant();
+        }
         
         // Check grace period
         if (sub.graceEndTime > 0 && block.timestamp > sub.graceEndTime) {

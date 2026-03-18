@@ -211,6 +211,8 @@ contract UserVaultLegacy is ReentrancyGuard {
     // H-1 & H-17 Fix: Track guardian add time for flash endorsement protection
     mapping(address => uint64) public guardianAddTime;
     uint64 public constant GUARDIAN_MATURITY_PERIOD = 7 days;
+    // M-10 Fix: Cap guardian count so recovery threshold stays manageable
+    uint8 public constant MAX_GUARDIANS = 20;
 
     function setGuardian(address g, bool active) external onlyOwner notLocked {
         if (g == address(0)) revert UV_Zero();
@@ -227,6 +229,8 @@ contract UserVaultLegacy is ReentrancyGuard {
         if (isGuardian[g] != active) {
             isGuardian[g] = active;
             if (active) {
+                // M-10 Fix: Enforce maximum guardian count to prevent unworkable threshold
+                require(guardianCount < MAX_GUARDIANS, "UV: guardian limit reached");
                 guardianCount++;
                 guardianAddTime[g] = uint64(block.timestamp); // H-1: Track add time
                 guardianList.push(g); // Track for enumeration
