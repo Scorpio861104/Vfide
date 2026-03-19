@@ -55,6 +55,12 @@ contract UserVaultLegacy is ReentrancyGuard {
     
     // M-7 Fix: Maximum ETH value for execute() calls
     uint256 public maxExecuteValue = 1 ether; // Default 1 ETH max per execute call
+
+    // H-05 Fix: Target whitelist for execute() — prevents arbitrary external contract calls
+    mapping(address => bool) public allowedExecuteTarget;
+    bool public executeWhitelistEnforced; // When true, only whitelisted targets may be called
+    event ExecuteTargetSet(address indexed target, bool allowed);
+    event ExecuteWhitelistEnforced(bool enforced);
     
     /// User-controlled security features
     bool public frozen; // User can freeze vault like freezing ATM card
@@ -794,6 +800,11 @@ contract UserVaultLegacy is ReentrancyGuard {
         // Security check: Prevent calling the Vault itself (reentrancy/self-destruct protection)
         require(target != address(this), "UV:self-call");
 
+        // H-05 Fix: Enforce target whitelist when enabled
+        if (executeWhitelistEnforced) {
+            require(allowedExecuteTarget[target], "UV:target-not-whitelisted");
+        }
+
         // Update execute timestamp before external interaction to minimize reentrancy surface.
         lastExecuteTime = uint64(block.timestamp);
         
@@ -831,6 +842,10 @@ contract UserVaultLegacy is ReentrancyGuard {
             require(targets[i] != address(this), "UV:self-call");
             // H-19 Fix: Enforce max value per execution in batch too
             require(values[i] <= maxExecuteValue, "UV:value-exceeds-max");
+            // H-05 Fix: Enforce target whitelist in batch too
+            if (executeWhitelistEnforced) {
+                require(allowedExecuteTarget[targets[i]], "UV:target-not-whitelisted");
+            }
             // slither-disable-next-line calls-loop
             (bool success, bytes memory res) = targets[i].call{value: values[i]}(datas[i]);
             if (!success) {
@@ -845,6 +860,25 @@ contract UserVaultLegacy is ReentrancyGuard {
             _logEv(targets[i], "vault_execute_batch", values[i], "");
         }
         
+    }
+
+    // H-05 Fix: Manage the execute() target whitelist
+    /// @notice Allow or disallow a target address for execute() calls
+    /// @dev Can only be called by vault owner or hub
+    function setAllowedTarget(address target, bool allowed) external {
+        require(msg.sender == owner || msg.sender == hub, "UV:unauthorized");
+        require(target != address(0), "UV:zero");
+        require(target != address(this), "UV:self-call");
+        allowedExecuteTarget[target] = allowed;
+        emit ExecuteTargetSet(target, allowed);
+    }
+
+    /// @notice Toggle whitelist enforcement for execute()
+    /// @dev Hub-only — ensures protocol-level control over enforcement
+    function enforceExecuteWhitelist(bool enforce) external {
+        require(msg.sender == hub, "UV:only-hub");
+        executeWhitelistEnforced = enforce;
+        emit ExecuteWhitelistEnforced(enforce);
     }
 
     // ——— Internals: ledger logging (best-effort)

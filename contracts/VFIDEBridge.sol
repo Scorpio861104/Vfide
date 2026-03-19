@@ -530,6 +530,34 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
         _unpause();
     }
 
+    // ── H-18 Fix: Two-step ownership (overrides OApp/Ownable single-step transferOwnership)
+    address private _pendingBridgeOwner;
+
+    event OwnershipTransferStarted(address indexed previousOwner, address indexed newOwner);
+
+    function pendingOwner() public view returns (address) {
+        return _pendingBridgeOwner;
+    }
+
+    /// @notice Initiate ownership transfer — new owner must accept within 7 days
+    function transferOwnership(address newOwner) public override onlyOwner {
+        require(newOwner != address(0), "VFIDEBridge: zero address");
+        _pendingBridgeOwner = newOwner;
+        emit OwnershipTransferStarted(owner(), newOwner);
+    }
+
+    /// @notice Complete ownership transfer (called by pending owner)
+    function acceptOwnership() external {
+        require(msg.sender == _pendingBridgeOwner, "VFIDEBridge: not pending owner");
+        _transferOwnership(msg.sender);
+        _pendingBridgeOwner = address(0);
+    }
+
+    /// @notice Cancel a pending ownership transfer
+    function cancelOwnershipTransfer() external onlyOwner {
+        _pendingBridgeOwner = address(0);
+    }
+
     /**
      * @notice Emergency withdraw tokens
      * @param _token Token address

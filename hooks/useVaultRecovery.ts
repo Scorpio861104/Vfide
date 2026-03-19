@@ -320,7 +320,7 @@ export function useVaultRecovery(vaultAddress?: `0x${string}`) {
       return await writeContractAsync({
         address: vaultAddress,
         abi: USER_VAULT_ABI,
-        functionName: 'approveRecovery',
+        functionName: 'guardianApproveRecovery',
       });
     } catch (error) {
       logError('approveRecovery', error);

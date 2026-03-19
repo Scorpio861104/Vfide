@@ -266,7 +266,14 @@ const TOKEN_ABI = [
       { name: 'who', type: 'address' },
       { name: 'isExempt', type: 'bool' },
     ],
-    name: 'setSystemExempt',
+    name: 'proposeSystemExempt',
+    outputs: [],
+    stateMutability: 'nonpayable',
+    type: 'function',
+  },
+  {
+    inputs: [],
+    name: 'confirmSystemExempt',
     outputs: [],
     stateMutability: 'nonpayable',
     type: 'function',
@@ -286,7 +293,14 @@ const TOKEN_ABI = [
       { name: 'addr', type: 'address' },
       { name: 'status', type: 'bool' },
     ],
-    name: 'setWhitelist',
+    name: 'proposeWhitelist',
+    outputs: [],
+    stateMutability: 'nonpayable',
+    type: 'function',
+  },
+  {
+    inputs: [],
+    name: 'confirmWhitelist',
     outputs: [],
     stateMutability: 'nonpayable',
     type: 'function',
@@ -770,7 +784,7 @@ export default function AdminPanel() {
     writeContract({
       address: TOKEN_ADDRESS,
       abi: TOKEN_ABI,
-      functionName: 'setSystemExempt',
+      functionName: 'proposeSystemExempt',
       args: [exemptAddress as `0x${string}`, true],
     });
   };
@@ -780,8 +794,17 @@ export default function AdminPanel() {
     writeContract({
       address: TOKEN_ADDRESS,
       abi: TOKEN_ABI,
-      functionName: 'setSystemExempt',
+      functionName: 'proposeSystemExempt',
       args: [exemptAddress as `0x${string}`, false],
+    });
+  };
+
+  const handleExemptConfirm = () => {
+    writeContract({
+      address: TOKEN_ADDRESS,
+      abi: TOKEN_ABI,
+      functionName: 'confirmSystemExempt',
+      args: [],
     });
   };
 
@@ -805,13 +828,13 @@ export default function AdminPanel() {
     });
   };
 
-  // Vault-only bypass whitelist (for exchanges)
+  // Vault-only bypass whitelist (for exchanges) — timelocked: propose first, then confirm after 48h
   const handleVaultBypassAdd = () => {
     if (!vaultBypassAddress) return;
     writeContract({
       address: TOKEN_ADDRESS,
       abi: TOKEN_ABI,
-      functionName: 'setWhitelist',
+      functionName: 'proposeWhitelist',
       args: [vaultBypassAddress as `0x${string}`, true],
     });
   };
@@ -821,8 +844,17 @@ export default function AdminPanel() {
     writeContract({
       address: TOKEN_ADDRESS,
       abi: TOKEN_ABI,
-      functionName: 'setWhitelist',
+      functionName: 'proposeWhitelist',
       args: [vaultBypassAddress as `0x${string}`, false],
+    });
+  };
+
+  const handleVaultBypassConfirm = () => {
+    writeContract({
+      address: TOKEN_ADDRESS,
+      abi: TOKEN_ABI,
+      functionName: 'confirmWhitelist',
+      args: [],
     });
   };
 
@@ -2175,14 +2207,21 @@ export default function AdminPanel() {
                 disabled={!exemptAddress || isPending || isConfirming}
                 className="flex-1 bg-green-600 hover:bg-green-700 disabled:bg-gray-600 text-white font-bold py-3 px-6 rounded-lg transition-colors"
               >
-                ✅ Add Exemption
+                ✅ Propose Add (48h)
               </button>
               <button
                 onClick={handleExemptRemove}
                 disabled={!exemptAddress || isPending || isConfirming}
                 className="flex-1 bg-red-600 hover:bg-red-700 disabled:bg-gray-600 text-white font-bold py-3 px-6 rounded-lg transition-colors"
               >
-                ❌ Remove
+                ❌ Propose Remove (48h)
+              </button>
+              <button
+                onClick={handleExemptConfirm}
+                disabled={isPending || isConfirming}
+                className="flex-1 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-600 text-white font-bold py-3 px-6 rounded-lg transition-colors"
+              >
+                ✔ Confirm
               </button>
             </div>
 
@@ -2274,14 +2313,21 @@ export default function AdminPanel() {
                 disabled={!vaultBypassAddress || isPending || isConfirming}
                 className="flex-1 bg-green-600 hover:bg-green-700 disabled:bg-gray-600 text-white font-bold py-3 px-6 rounded-lg transition-colors"
               >
-                ✅ Whitelist
+                ✅ Propose (48h)
               </button>
               <button
                 onClick={handleVaultBypassRemove}
                 disabled={!vaultBypassAddress || isPending || isConfirming}
                 className="flex-1 bg-red-600 hover:bg-red-700 disabled:bg-gray-600 text-white font-bold py-3 px-6 rounded-lg transition-colors"
               >
-                ❌ Remove
+                ❌ Propose Remove (48h)
+              </button>
+              <button
+                onClick={handleVaultBypassConfirm}
+                disabled={isPending || isConfirming}
+                className="flex-1 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-600 text-white font-bold py-3 px-6 rounded-lg transition-colors"
+              >
+                ✔ Confirm
               </button>
             </div>
 

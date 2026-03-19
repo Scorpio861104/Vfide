@@ -14,6 +14,8 @@ import { useIsMerchant, useFeeCalculator } from '@/lib/vfide-hooks'
 import { CONTRACT_ADDRESSES } from '@/lib/contracts'
 import { MerchantPortalABI } from '@/lib/abis'
 import { safeParseFloat } from '@/lib/validation'
+import { DEFAULT_VFIDE_PRICE } from '@/lib/price-utils'
+import { getAuthHeaders } from '@/lib/auth/client'
 
 interface Product {
   id: string
@@ -32,12 +34,37 @@ export function MerchantPOS() {
   const { address } = useAccount()
   const { isMerchant, businessName } = useIsMerchant(address)
   
-  // Product Management
-  const [products, setProducts] = useState<Product[]>([
-    { id: '1', name: 'Espresso', price: 3.50, category: 'Coffee', description: 'Single shot' },
-    { id: '2', name: 'Latte', price: 4.50, category: 'Coffee', description: '12oz with steamed milk' },
-    { id: '3', name: 'Croissant', price: 3.00, category: 'Food', description: 'Fresh baked' },
-  ])
+  // Product Management — DB-backed, persisted via /api/merchant/products
+  const [products, setProducts] = useState<Product[]>([])
+  const [productsLoaded, setProductsLoaded] = useState(false)
+
+  // Fetch products from DB on mount
+  useEffect(() => {
+    if (!address) return
+    fetch(`/api/merchant/products?merchant=${encodeURIComponent(address)}`)
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        if (data?.products?.length) {
+          setProducts(data.products.map((p: { id: string; name: string; price: string; category_name?: string; description?: string; images?: string[] }) => ({
+            id: p.id,
+            name: p.name,
+            price: parseFloat(p.price),
+            category: p.category_name || 'Other',
+            description: p.description || undefined,
+            image: p.images?.[0],
+          })))
+        } else if (!productsLoaded) {
+          // Seed defaults on first load if no products exist yet
+          setProducts([
+            { id: 'default-1', name: 'Espresso', price: 3.50, category: 'Coffee', description: 'Single shot' },
+            { id: 'default-2', name: 'Latte', price: 4.50, category: 'Coffee', description: '12oz with steamed milk' },
+            { id: 'default-3', name: 'Croissant', price: 3.00, category: 'Food', description: 'Fresh baked' },
+          ])
+        }
+        setProductsLoaded(true)
+      })
+      .catch(() => setProductsLoaded(true))
+  }, [address, productsLoaded])
   
   // Cart
   const [cart, setCart] = useState<CartItem[]>([])
@@ -77,7 +104,7 @@ export function MerchantPOS() {
   // Calculate totals
   const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0)
   const calculator = useFeeCalculator(subtotal.toString())
-  const vfideAmount = (subtotal / 1).toFixed(2) // Assuming 1 VFIDE = 1 USD for simplicity
+  const vfideAmount = (subtotal / DEFAULT_VFIDE_PRICE).toFixed(2)
   
   // Multi-processor comparison
   const calculateProcessorFees = (amount: number) => {
@@ -152,11 +179,15 @@ export function MerchantPOS() {
   const handlePaymentConfirmed = useCallback((customerAddress: `0x${string}` | string, amount: string) => {
     if (!pendingPaymentRef.current) return
     
+    // Capture and clear pending ref FIRST to prevent double-processing
+    const pending = pendingPaymentRef.current
+    pendingPaymentRef.current = null
+    
     const timestamp = new Date().getTime()
     const sale: Sale = {
       id: timestamp.toString(),
       timestamp: timestamp,
-      items: [...pendingPaymentRef.current.cartSnapshot],
+      items: [...pending.cartSnapshot],
       subtotal: subtotal,
       vfideAmount: amount,
       fee: processorFees.vfide,
@@ -170,24 +201,56 @@ export function MerchantPOS() {
     setShowQRPayment(false)
     setShowEmailPrompt(true) // Ask for email after payment confirmed
     clearCart()
-    pendingPaymentRef.current = null
+
+    // Notify server for webhook dispatch (fire-and-forget)
+    fetch('/api/merchant/payments/confirm', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+      body: JSON.stringify({
+        customer_address: customerAddress,
+        amount,
+        token: 'VFIDE',
+        order_id: sale.id,
+      }),
+    }).catch(() => { /* non-critical */ })
   }, [subtotal, processorFees.vfide])
 
-  // Add product to catalog
-  const handleAddProduct = () => {
+  // Add product to catalog (persisted to DB)
+  const handleAddProduct = async () => {
     if (!newProduct.name || !newProduct.price) return
     
+    const price = safeParseFloat(newProduct.price, 0)
     const product: Product = {
       id: Date.now().toString(),
       name: newProduct.name,
-      price: safeParseFloat(newProduct.price, 0),
+      price,
       category: newProduct.category || 'Other',
       description: newProduct.description,
     }
     
+    // Optimistic update
     setProducts([...products, product])
     setNewProduct({ name: '', price: '', category: '', description: '' })
     setShowAddProduct(false)
+
+    // Persist to DB
+    try {
+      const res = await fetch('/api/merchant/products', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+        body: JSON.stringify({
+          name: product.name,
+          price: product.price,
+          description: product.description || '',
+          product_type: 'physical',
+        }),
+      })
+      if (res.ok) {
+        const data = await res.json()
+        // Replace temp id with real DB id
+        setProducts(prev => prev.map(p => p.id === product.id ? { ...p, id: data.product.id } : p))
+      }
+    } catch { /* optimistic update already applied */ }
   }
   
   // Add to cart
@@ -273,9 +336,10 @@ export function MerchantPOS() {
     const params = new URLSearchParams({
       merchant: address || '',
       amount: vfideAmount,
-      subtotal: subtotal.toFixed(2),
-      items: cart.length.toString(),
+      source: 'qr',
+      settlement: 'instant',
     })
+    if (cart.length > 0) params.set('orderId', `POS-${Date.now()}`)
     return `${window.location.origin}/pay?${params.toString()}`
   }
   

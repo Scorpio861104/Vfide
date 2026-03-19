@@ -79,6 +79,7 @@ contract AdminMultiSig is ReentrancyGuard {
     event CouncilMemberUpdated(address indexed oldMember, address indexed newMember);
     event VetoMinStakeSet(uint256 newMinStake);
     event VFIDETokenSet(address token);
+    event ExecutionGasLimitSet(uint256 newGasLimit);
 
     modifier onlyCouncil() {
         require(isCouncilMember[msg.sender], "AdminMultiSig: caller not council member");
@@ -244,6 +245,7 @@ contract AdminMultiSig is ReentrancyGuard {
         require(executingProposalId != NO_ACTIVE_PROPOSAL, "AdminMultiSig: must be via proposal");
         require(_gasLimit >= 100_000 && _gasLimit <= 10_000_000, "AdminMultiSig: invalid gas limit");
         executionGasLimit = _gasLimit;
+        emit ExecutionGasLimitSet(_gasLimit);
     }
 
     /**

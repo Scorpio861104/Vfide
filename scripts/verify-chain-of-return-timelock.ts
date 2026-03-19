@@ -71,7 +71,7 @@ async function main() {
 
   await expectRevert(() => vaultA.finalizeRecovery({ gasLimit: 5_000_000 }));
 
-  await (await vaultA.connect(guardian2).approveRecovery()).wait();
+  await (await vaultA.connect(guardian2).guardianApproveRecovery()).wait();
 
   const statusA2 = (await vaultA.getRecoveryStatus()) as [string, bigint, bigint, bigint, boolean];
   if (statusA2[1] !== 2n)

@@ -243,6 +243,7 @@ contract MainstreamPriceOracle {
     event PriceUpdated(uint256 vfidePerUsd, uint256 timestamp, address indexed updater);
     event PriceSourceAdded(address indexed source, string name, uint8 priority);
     event PriceSourceRemoved(address indexed source);
+    event PriceSourceReported(address indexed source, uint256 price, uint256 timestamp);
     event StalenessThresholdUpdated(uint256 oldThreshold, uint256 newThreshold);
     
     address public dao;
@@ -379,6 +380,7 @@ contract MainstreamPriceOracle {
         require(price > 0, "PO: zero price");
         ps.lastPrice = price;
         ps.lastUpdate = block.timestamp;
+        emit PriceSourceReported(msg.sender, price, block.timestamp);
     }
 
     /**

@@ -1,78 +1,1166 @@
 [
   {
-    "type": "function",
-    "name": "becomeMentor",
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_seer",
+        "type": "address"
+      }
+    ],
     "stateMutability": "nonpayable",
+    "type": "constructor"
+  },
+  {
     "inputs": [],
-    "outputs": []
+    "name": "SOCIAL_Bounds",
+    "type": "error"
   },
   {
-    "type": "function",
-    "name": "sponsorMentee",
-    "stateMutability": "nonpayable",
-    "inputs": [{ "name": "mentee", "type": "address" }],
-    "outputs": []
+    "inputs": [],
+    "name": "SOCIAL_EndorseExists",
+    "type": "error"
   },
   {
-    "type": "function",
-    "name": "getMentees",
-    "stateMutability": "view",
-    "inputs": [{ "name": "mentor", "type": "address" }],
-    "outputs": [{ "name": "", "type": "address[]" }]
+    "inputs": [],
+    "name": "SOCIAL_EndorseLimit",
+    "type": "error"
   },
   {
-    "type": "function",
-    "name": "getMentorInfo",
-    "stateMutability": "view",
-    "inputs": [{ "name": "subject", "type": "address" }],
-    "outputs": [
-      { "name": "isMentorUser", "type": "bool" },
-      { "name": "mentor", "type": "address" },
-      { "name": "menteeCount", "type": "uint16" },
-      { "name": "hasMentor", "type": "bool" },
-      { "name": "canBecome", "type": "bool" },
-      { "name": "minScore", "type": "uint16" },
-      { "name": "currentScore", "type": "uint16" }
-    ]
+    "inputs": [],
+    "name": "SOCIAL_InvalidEndorse",
+    "type": "error"
   },
   {
-    "type": "function",
-    "name": "getActiveEndorsements",
-    "stateMutability": "view",
-    "inputs": [{ "name": "subject", "type": "address" }],
-    "outputs": [
-      { "name": "endorsers", "type": "address[]" },
-      { "name": "weights", "type": "uint16[]" },
-      { "name": "expiries", "type": "uint64[]" },
-      { "name": "timestamps", "type": "uint64[]" }
-    ]
+    "inputs": [],
+    "name": "SOCIAL_NotDAO",
+    "type": "error"
   },
   {
-    "type": "function",
+    "inputs": [],
+    "name": "SOCIAL_Paused",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "SOCIAL_Zero",
+    "type": "error"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "subject",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "string",
+        "name": "reason",
+        "type": "string"
+      }
+    ],
+    "name": "AppealFiled",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "subject",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "bool",
+        "name": "approved",
+        "type": "bool"
+      },
+      {
+        "indexed": false,
+        "internalType": "string",
+        "name": "resolution",
+        "type": "string"
+      }
+    ],
+    "name": "AppealResolved",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [],
+    "name": "EndorsementPolicySet",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "mentor",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "mentee",
+        "type": "address"
+      }
+    ],
+    "name": "MenteeRemoved",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "mentor",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "mentee",
+        "type": "address"
+      }
+    ],
+    "name": "MenteeSponsored",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint16",
+        "name": "minScore",
+        "type": "uint16"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint16",
+        "name": "maxMentees",
+        "type": "uint16"
+      }
+    ],
+    "name": "MentorConfigUpdated",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "mentor",
+        "type": "address"
+      }
+    ],
+    "name": "MentorRegistered",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "mentor",
+        "type": "address"
+      }
+    ],
+    "name": "MentorRevoked",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "subject",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "string",
+        "name": "reason",
+        "type": "string"
+      }
+    ],
+    "name": "ScoreDisputeRequested",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "subject",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "bool",
+        "name": "approved",
+        "type": "bool"
+      },
+      {
+        "indexed": false,
+        "internalType": "int256",
+        "name": "adjustment",
+        "type": "int256"
+      }
+    ],
+    "name": "ScoreDisputeResolved",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "endorser",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "subject",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint16",
+        "name": "weight",
+        "type": "uint16"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint64",
+        "name": "expiry",
+        "type": "uint64"
+      },
+      {
+        "indexed": false,
+        "internalType": "string",
+        "name": "reason",
+        "type": "string"
+      }
+    ],
+    "name": "UserEndorsed",
+    "type": "event"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
     "name": "appeals",
-    "stateMutability": "view",
-    "inputs": [{ "name": "user", "type": "address" }],
     "outputs": [
-      { "name": "requester", "type": "address" },
-      { "name": "reason", "type": "string" },
-      { "name": "timestamp", "type": "uint64" },
-      { "name": "resolved", "type": "bool" },
-      { "name": "approved", "type": "bool" },
-      { "name": "resolution", "type": "string" }
-    ]
-  },
-  {
-    "type": "function",
-    "name": "fileAppeal",
-    "stateMutability": "nonpayable",
-    "inputs": [{ "name": "reason", "type": "string" }],
-    "outputs": []
-  },
-  {
-    "type": "function",
-    "name": "pendingAppealCount",
+      {
+        "internalType": "address",
+        "name": "requester",
+        "type": "address"
+      },
+      {
+        "internalType": "string",
+        "name": "reason",
+        "type": "string"
+      },
+      {
+        "internalType": "uint64",
+        "name": "timestamp",
+        "type": "uint64"
+      },
+      {
+        "internalType": "bool",
+        "name": "resolved",
+        "type": "bool"
+      },
+      {
+        "internalType": "bool",
+        "name": "approved",
+        "type": "bool"
+      },
+      {
+        "internalType": "string",
+        "name": "resolution",
+        "type": "string"
+      }
+    ],
     "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [],
-    "outputs": [{ "name": "", "type": "uint256" }]
+    "name": "becomeMentor",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "subject",
+        "type": "address"
+      }
+    ],
+    "name": "calculateEndorsementBonus",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "bonus",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "subject",
+        "type": "address"
+      },
+      {
+        "internalType": "string",
+        "name": "reason",
+        "type": "string"
+      }
+    ],
+    "name": "endorse",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "endorsementBaseValue",
+    "outputs": [
+      {
+        "internalType": "uint16",
+        "name": "",
+        "type": "uint16"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "endorsementBonusCap",
+    "outputs": [
+      {
+        "internalType": "uint16",
+        "name": "",
+        "type": "uint16"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "endorsementCooldown",
+    "outputs": [
+      {
+        "internalType": "uint64",
+        "name": "",
+        "type": "uint64"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "endorsementMaxPerEndorser",
+    "outputs": [
+      {
+        "internalType": "uint16",
+        "name": "",
+        "type": "uint16"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "endorsementValidity",
+    "outputs": [
+      {
+        "internalType": "uint64",
+        "name": "",
+        "type": "uint64"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "name": "endorsements",
+    "outputs": [
+      {
+        "internalType": "uint64",
+        "name": "expiry",
+        "type": "uint64"
+      },
+      {
+        "internalType": "uint16",
+        "name": "weight",
+        "type": "uint16"
+      },
+      {
+        "internalType": "uint64",
+        "name": "timestamp",
+        "type": "uint64"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "name": "endorsementsGiven",
+    "outputs": [
+      {
+        "internalType": "uint16",
+        "name": "",
+        "type": "uint16"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "name": "endorsementsReceived",
+    "outputs": [
+      {
+        "internalType": "uint16",
+        "name": "",
+        "type": "uint16"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "string",
+        "name": "reason",
+        "type": "string"
+      }
+    ],
+    "name": "fileAppeal",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "subject",
+        "type": "address"
+      }
+    ],
+    "name": "getActiveEndorsements",
+    "outputs": [
+      {
+        "internalType": "address[]",
+        "name": "endorsers",
+        "type": "address[]"
+      },
+      {
+        "internalType": "uint16[]",
+        "name": "weights",
+        "type": "uint16[]"
+      },
+      {
+        "internalType": "uint64[]",
+        "name": "expiries",
+        "type": "uint64[]"
+      },
+      {
+        "internalType": "uint64[]",
+        "name": "timestamps",
+        "type": "uint64[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "subject",
+        "type": "address"
+      }
+    ],
+    "name": "getAppealInfo",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "hasAppeal",
+        "type": "bool"
+      },
+      {
+        "internalType": "bool",
+        "name": "appealResolved",
+        "type": "bool"
+      },
+      {
+        "internalType": "bool",
+        "name": "appealApproved",
+        "type": "bool"
+      },
+      {
+        "internalType": "uint64",
+        "name": "appealTimestamp",
+        "type": "uint64"
+      },
+      {
+        "internalType": "string",
+        "name": "appealReason",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "appealResolution",
+        "type": "string"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "subject",
+        "type": "address"
+      }
+    ],
+    "name": "getDisputeInfo",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "hasDispute",
+        "type": "bool"
+      },
+      {
+        "internalType": "bool",
+        "name": "disputeResolved",
+        "type": "bool"
+      },
+      {
+        "internalType": "bool",
+        "name": "disputeApproved",
+        "type": "bool"
+      },
+      {
+        "internalType": "uint64",
+        "name": "disputeTimestamp",
+        "type": "uint64"
+      },
+      {
+        "internalType": "string",
+        "name": "disputeReason",
+        "type": "string"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "subject",
+        "type": "address"
+      }
+    ],
+    "name": "getEndorsementStats",
+    "outputs": [
+      {
+        "internalType": "uint16",
+        "name": "activeEndorsers",
+        "type": "uint16"
+      },
+      {
+        "internalType": "uint16",
+        "name": "activeBonus",
+        "type": "uint16"
+      },
+      {
+        "internalType": "uint16",
+        "name": "endorsementsYouGave",
+        "type": "uint16"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "subject",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "index",
+        "type": "uint256"
+      }
+    ],
+    "name": "getEndorserAt",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "subject",
+        "type": "address"
+      }
+    ],
+    "name": "getEndorserCount",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "mentor",
+        "type": "address"
+      }
+    ],
+    "name": "getMentees",
+    "outputs": [
+      {
+        "internalType": "address[]",
+        "name": "",
+        "type": "address[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "subject",
+        "type": "address"
+      }
+    ],
+    "name": "getMentorInfo",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "isMentorUser",
+        "type": "bool"
+      },
+      {
+        "internalType": "address",
+        "name": "mentor",
+        "type": "address"
+      },
+      {
+        "internalType": "uint16",
+        "name": "menteeCount",
+        "type": "uint16"
+      },
+      {
+        "internalType": "bool",
+        "name": "hasMentor",
+        "type": "bool"
+      },
+      {
+        "internalType": "bool",
+        "name": "canBecome",
+        "type": "bool"
+      },
+      {
+        "internalType": "uint16",
+        "name": "minScore",
+        "type": "uint16"
+      },
+      {
+        "internalType": "uint16",
+        "name": "currentScore",
+        "type": "uint16"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "name": "lastActivity",
+    "outputs": [
+      {
+        "internalType": "uint64",
+        "name": "",
+        "type": "uint64"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "name": "lastEndorseTime",
+    "outputs": [
+      {
+        "internalType": "uint64",
+        "name": "",
+        "type": "uint64"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "maxActiveGivenPerUser",
+    "outputs": [
+      {
+        "internalType": "uint16",
+        "name": "",
+        "type": "uint16"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "maxEndorsersPerSubject",
+    "outputs": [
+      {
+        "internalType": "uint16",
+        "name": "",
+        "type": "uint16"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "maxMenteesPerMentor",
+    "outputs": [
+      {
+        "internalType": "uint16",
+        "name": "",
+        "type": "uint16"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "name": "mentorOf",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "name": "mentors",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "minScoreToEndorse",
+    "outputs": [
+      {
+        "internalType": "uint16",
+        "name": "",
+        "type": "uint16"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "minScoreToMentor",
+    "outputs": [
+      {
+        "internalType": "uint16",
+        "name": "",
+        "type": "uint16"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "pendingAppealCount",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "pendingDisputeCount",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "subject",
+        "type": "address"
+      }
+    ],
+    "name": "pruneEndorsements",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "mentee",
+        "type": "address"
+      }
+    ],
+    "name": "removeMentee",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "string",
+        "name": "reason",
+        "type": "string"
+      }
+    ],
+    "name": "requestScoreReview",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "subject",
+        "type": "address"
+      },
+      {
+        "internalType": "bool",
+        "name": "approved",
+        "type": "bool"
+      },
+      {
+        "internalType": "string",
+        "name": "resolution",
+        "type": "string"
+      }
+    ],
+    "name": "resolveAppeal",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "subject",
+        "type": "address"
+      },
+      {
+        "internalType": "bool",
+        "name": "approved",
+        "type": "bool"
+      },
+      {
+        "internalType": "int16",
+        "name": "adjustment",
+        "type": "int16"
+      }
+    ],
+    "name": "resolveScoreDispute",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "mentor",
+        "type": "address"
+      }
+    ],
+    "name": "revokeMentor",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "name": "scoreDisputes",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "requester",
+        "type": "address"
+      },
+      {
+        "internalType": "string",
+        "name": "reason",
+        "type": "string"
+      },
+      {
+        "internalType": "uint64",
+        "name": "timestamp",
+        "type": "uint64"
+      },
+      {
+        "internalType": "bool",
+        "name": "resolved",
+        "type": "bool"
+      },
+      {
+        "internalType": "bool",
+        "name": "approved",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "seer",
+    "outputs": [
+      {
+        "internalType": "contract ISeerCore",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint16",
+        "name": "baseValue",
+        "type": "uint16"
+      },
+      {
+        "internalType": "uint16",
+        "name": "maxPerEndorser",
+        "type": "uint16"
+      },
+      {
+        "internalType": "uint16",
+        "name": "bonusCap",
+        "type": "uint16"
+      },
+      {
+        "internalType": "uint16",
+        "name": "maxPerSubject",
+        "type": "uint16"
+      },
+      {
+        "internalType": "uint16",
+        "name": "maxGiven",
+        "type": "uint16"
+      },
+      {
+        "internalType": "uint64",
+        "name": "validity",
+        "type": "uint64"
+      },
+      {
+        "internalType": "uint64",
+        "name": "cooldown",
+        "type": "uint64"
+      },
+      {
+        "internalType": "uint16",
+        "name": "minScore",
+        "type": "uint16"
+      }
+    ],
+    "name": "setEndorsementPolicy",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint16",
+        "name": "minScore",
+        "type": "uint16"
+      },
+      {
+        "internalType": "uint16",
+        "name": "maxMentees",
+        "type": "uint16"
+      }
+    ],
+    "name": "setMentorConfig",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_seer",
+        "type": "address"
+      }
+    ],
+    "name": "setSeer",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "mentee",
+        "type": "address"
+      }
+    ],
+    "name": "sponsorMentee",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
   }
 ]

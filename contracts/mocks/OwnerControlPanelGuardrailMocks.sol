@@ -11,8 +11,11 @@ contract MockVFIDETokenForOwnerControlPanel {
     function setBurnRouter(address) external {}
     function setTreasurySink(address) external {}
     function setSanctumSink(address) external {}
-    function setSystemExempt(address, bool) external {}
-    function setWhitelist(address, bool) external {}
+    // H-01 Fix: two-step propose/confirm (stubs)
+    function proposeSystemExempt(address, bool) external {}
+    function confirmSystemExempt() external {}
+    function proposeWhitelist(address, bool) external {}
+    function confirmWhitelist() external {}
     function setVaultOnly(bool) external {}
     function setBlacklist(address, bool) external {}
     function setWhaleLimitExempt(address, bool) external {}

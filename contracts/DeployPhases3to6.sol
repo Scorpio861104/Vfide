@@ -7,7 +7,9 @@ import "./VFIDEBridge.sol";
 ///      to resolve name collision between OZ (VFIDEBridge) and custom (SharedInterfaces) primitives.
 
 interface ISystemExemptToken {
-    function setSystemExempt(address who, bool isExempt) external;
+    // H-01 Fix: Two-step propose/confirm pattern for system exemptions
+    function proposeSystemExempt(address who, bool isExempt) external;
+    function confirmSystemExempt() external;
 }
 
 /// @dev Minimal interfaces for deploy-time wiring (BSM/Oracle deployed separately)
@@ -125,7 +127,9 @@ contract DeployPhase3 {
         bridge.setSecurityModule(preDeployedBSM);
 
         // Required for vault-only mode: allow bridge contract transfers.
-        ISystemExemptToken(vfideToken).setSystemExempt(address(bridge), true);
+        // H-01 Fix: Bridge exemption requires timelock — propose now, confirm after 48h
+        //           In production: call confirmSystemExempt() after SINK_CHANGE_DELAY elapses
+        ISystemExemptToken(vfideToken).proposeSystemExempt(address(bridge), true);
 
         // slither-disable-next-line reentrancy-events
         emit PhaseDeployed(3, NAME_PHASE3);

@@ -230,13 +230,37 @@ export const OWNER_CONTROL_PANEL_ABI = [
     outputs: [],
   },
   {
-    name: 'token_setWhitelist',
+    name: 'token_proposeSystemExempt',
+    type: 'function',
+    stateMutability: 'nonpayable',
+    inputs: [
+      { name: 'who', type: 'address' },
+      { name: 'isExempt', type: 'bool' },
+    ],
+    outputs: [],
+  },
+  {
+    name: 'token_confirmSystemExempt',
+    type: 'function',
+    stateMutability: 'nonpayable',
+    inputs: [],
+    outputs: [],
+  },
+  {
+    name: 'token_proposeWhitelist',
     type: 'function',
     stateMutability: 'nonpayable',
     inputs: [
       { name: 'addr', type: 'address' },
       { name: 'status', type: 'bool' },
     ],
+    outputs: [],
+  },
+  {
+    name: 'token_confirmWhitelist',
+    type: 'function',
+    stateMutability: 'nonpayable',
+    inputs: [],
     outputs: [],
   },
   {

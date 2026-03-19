@@ -628,11 +628,11 @@ describe('VFIDEToken Contract', () => {
       }).rejects.toThrow('not the owner');
     });
 
-    it('should allow owner to set whitelist', async () => {
+    it('should allow owner to propose whitelist (timelocked)', async () => {
       mockContractWrite.mockResolvedValueOnce('0xhash');
 
       const result = await mockContractWrite({
-        functionName: 'setWhitelist',
+        functionName: 'proposeWhitelist',
         args: [user1, true],
       });
 
@@ -650,11 +650,11 @@ describe('VFIDEToken Contract', () => {
       expect(result).toBe('0xhash');
     });
 
-    it('should allow owner to set system exempt', async () => {
+    it('should allow owner to propose system exempt (timelocked)', async () => {
       mockContractWrite.mockResolvedValueOnce('0xhash');
 
       const result = await mockContractWrite({
-        functionName: 'setSystemExempt',
+        functionName: 'proposeSystemExempt',
         args: [user1, true],
       });
 

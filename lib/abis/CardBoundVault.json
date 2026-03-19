@@ -142,6 +142,11 @@
   },
   {
     "inputs": [],
+    "name": "CBV_TransferFailed",
+    "type": "error"
+  },
+  {
+    "inputs": [],
     "name": "CBV_TransferLimit",
     "type": "error"
   },
@@ -218,6 +223,44 @@
       }
     ],
     "name": "GuardianThresholdSet",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "source",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "string",
+        "name": "action",
+        "type": "string"
+      }
+    ],
+    "name": "LedgerLogFailed",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "to",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      }
+    ],
+    "name": "NativeRescue",
     "type": "event"
   },
   {
@@ -754,6 +797,24 @@
       }
     ],
     "name": "proposeWalletRotation",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address payable",
+        "name": "to",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      }
+    ],
+    "name": "rescueNative",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

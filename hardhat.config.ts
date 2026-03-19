@@ -1,5 +1,6 @@
 import { defineConfig } from "hardhat/config";
-import "@nomicfoundation/hardhat-ethers";
+import hardhatEthers from "@nomicfoundation/hardhat-ethers";
+import hardhatNetworkHelpers from "@nomicfoundation/hardhat-network-helpers";
 import * as dotenv from "dotenv";
 
 dotenv.config();
@@ -9,6 +10,8 @@ const accounts = privateKey ? [privateKey] : [];
 const allowUnlimitedContractSize = process.env.HARDHAT_ALLOW_UNLIMITED_CONTRACT_SIZE === "true";
 
 const config = defineConfig({
+  plugins: [hardhatEthers, hardhatNetworkHelpers],
+
   /*
    * Compiler version rationale (L-04 / hostile audit):
    * 0.8.30 is used intentionally for:
@@ -149,7 +152,7 @@ const config = defineConfig({
     },
   },
   paths: {
-    sources: "./contracts",
+    sources: ["./contracts", "./test/contracts/helpers"],
     tests: "./__tests__/contracts",
     cache: "./cache",
     artifacts: "./artifacts",

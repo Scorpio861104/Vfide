@@ -159,8 +159,11 @@ interface IVFIDEToken is IERC20 {
     function setBurnRouter(address router) external;
     function setTreasurySink(address treasury) external;
     function setSanctumSink(address sanctum) external;
-    function setSystemExempt(address who, bool isExempt) external;
-    function setWhitelist(address addr, bool status) external;
+    // H-01 Fix: setSystemExempt/setWhitelist replaced with timelocked propose/confirm pattern
+    function proposeSystemExempt(address who, bool isExempt) external;
+    function confirmSystemExempt() external;
+    function proposeWhitelist(address addr, bool status) external;
+    function confirmWhitelist() external;
     function setVaultOnly(bool enabled) external;
     function setCircuitBreaker(bool active, uint256 duration) external;
     function setBlacklist(address user, bool status) external;

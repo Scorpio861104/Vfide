@@ -1,74 +1,182 @@
 [
   {
-    "type": "function",
-    "name": "getMentorInfo",
-    "stateMutability": "view",
     "inputs": [
-      { "name": "seer", "type": "address" },
-      { "name": "subject", "type": "address" }
+      {
+        "internalType": "address",
+        "name": "seer",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "subject",
+        "type": "address"
+      }
     ],
-    "outputs": [
-      { "name": "isMentorUser", "type": "bool" },
-      { "name": "mentor", "type": "address" },
-      { "name": "menteeCount", "type": "uint16" },
-      { "name": "hasMentor", "type": "bool" },
-      { "name": "canBecome", "type": "bool" },
-      { "name": "minScore", "type": "uint16" },
-      { "name": "currentScore", "type": "uint16" }
-    ]
-  },
-  {
-    "type": "function",
     "name": "getActiveEndorsements",
-    "stateMutability": "view",
-    "inputs": [
-      { "name": "seer", "type": "address" },
-      { "name": "subject", "type": "address" }
-    ],
     "outputs": [
-      { "name": "endorsers", "type": "address[]" },
-      { "name": "weights", "type": "uint16[]" },
-      { "name": "expiries", "type": "uint64[]" },
-      { "name": "timestamps", "type": "uint64[]" }
-    ]
+      {
+        "internalType": "address[]",
+        "name": "endorsers",
+        "type": "address[]"
+      },
+      {
+        "internalType": "uint16[]",
+        "name": "weights",
+        "type": "uint16[]"
+      },
+      {
+        "internalType": "uint64[]",
+        "name": "expiries",
+        "type": "uint64[]"
+      },
+      {
+        "internalType": "uint64[]",
+        "name": "timestamps",
+        "type": "uint64[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
   },
   {
-    "type": "function",
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "seer",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "subject",
+        "type": "address"
+      }
+    ],
+    "name": "getMentorInfo",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "isMentorUser",
+        "type": "bool"
+      },
+      {
+        "internalType": "address",
+        "name": "mentor",
+        "type": "address"
+      },
+      {
+        "internalType": "uint16",
+        "name": "menteeCount",
+        "type": "uint16"
+      },
+      {
+        "internalType": "bool",
+        "name": "hasMentor",
+        "type": "bool"
+      },
+      {
+        "internalType": "bool",
+        "name": "canBecome",
+        "type": "bool"
+      },
+      {
+        "internalType": "uint16",
+        "name": "minScore",
+        "type": "uint16"
+      },
+      {
+        "internalType": "uint16",
+        "name": "currentScore",
+        "type": "uint16"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "seer",
+        "type": "address"
+      },
+      {
+        "internalType": "address[]",
+        "name": "subjects",
+        "type": "address[]"
+      }
+    ],
     "name": "getScores",
-    "stateMutability": "view",
-    "inputs": [
-      { "name": "seer", "type": "address" },
-      { "name": "subjects", "type": "address[]" }
-    ],
     "outputs": [
-      { "name": "scores", "type": "uint16[]" }
-    ]
+      {
+        "internalType": "uint16[]",
+        "name": "scores",
+        "type": "uint16[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
   },
   {
-    "type": "function",
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "seer",
+        "type": "address"
+      },
+      {
+        "internalType": "address[]",
+        "name": "subjects",
+        "type": "address[]"
+      }
+    ],
     "name": "getScoresBatch",
-    "stateMutability": "view",
-    "inputs": [
-      { "name": "seer", "type": "address" },
-      { "name": "subjects", "type": "address[]" }
-    ],
     "outputs": [
-      { "name": "scores", "type": "uint16[]" }
-    ]
+      {
+        "internalType": "uint16[]",
+        "name": "scores",
+        "type": "uint16[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
   },
   {
-    "type": "function",
-    "name": "getTrustLevel",
-    "stateMutability": "view",
     "inputs": [
-      { "name": "seer", "type": "address" },
-      { "name": "subject", "type": "address" }
+      {
+        "internalType": "address",
+        "name": "seer",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "subject",
+        "type": "address"
+      }
     ],
+    "name": "getTrustLevel",
     "outputs": [
-      { "name": "level", "type": "uint8" },
-      { "name": "levelName", "type": "string" },
-      { "name": "canVote", "type": "bool" },
-      { "name": "canBeMerchant", "type": "bool" }
-    ]
+      {
+        "internalType": "uint8",
+        "name": "level",
+        "type": "uint8"
+      },
+      {
+        "internalType": "string",
+        "name": "levelName",
+        "type": "string"
+      },
+      {
+        "internalType": "bool",
+        "name": "canVote",
+        "type": "bool"
+      },
+      {
+        "internalType": "bool",
+        "name": "canBeMerchant",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
   }
 ]

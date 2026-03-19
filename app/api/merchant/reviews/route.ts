@@ -1,0 +1,243 @@
+/**
+ * Merchant Reviews & Ratings API
+ *
+ * GET   — List reviews for a merchant or product (public)
+ * POST  — Submit a review (authenticated customer, purchase-verified)
+ * PATCH — Merchant reply or moderate review
+ */
+
+import { NextRequest, NextResponse } from 'next/server';
+import { query } from '@/lib/db';
+import { requireAuth } from '@/lib/auth/middleware';
+import { withRateLimit } from '@/lib/auth/rateLimit';
+
+const ADDRESS_LIKE_REGEX = /^0x[a-fA-F0-9]{3,40}$/;
+
+async function getAuthAddress(request: NextRequest): Promise<string | NextResponse> {
+  const authResult = await requireAuth(request);
+  if (authResult instanceof NextResponse) return authResult;
+  const address = typeof authResult.user?.address === 'string'
+    ? authResult.user.address.trim().toLowerCase() : '';
+  if (!address || !ADDRESS_LIKE_REGEX.test(address)) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+  return address;
+}
+
+// ─────────────────────────── GET: List reviews
+export async function GET(request: NextRequest) {
+  const rateLimitResponse = await withRateLimit(request, 'read');
+  if (rateLimitResponse) return rateLimitResponse;
+
+  const { searchParams } = new URL(request.url);
+  const merchant = searchParams.get('merchant');
+  const productId = searchParams.get('product_id');
+  const page = Math.max(1, Number(searchParams.get('page')) || 1);
+  const limit = Math.min(50, Math.max(1, Number(searchParams.get('limit')) || 20));
+  const offset = (page - 1) * limit;
+  const sort = searchParams.get('sort') || 'newest';
+
+  if (!merchant && !productId) {
+    return NextResponse.json({ error: 'merchant or product_id required' }, { status: 400 });
+  }
+
+  try {
+    const conditions = ["r.status = 'published'"];
+    const params: (string | number)[] = [];
+    let pi = 1;
+
+    if (merchant && ADDRESS_LIKE_REGEX.test(merchant)) {
+      conditions.push(`r.merchant_address = $${pi++}`);
+      params.push(merchant.toLowerCase());
+    }
+    if (productId) {
+      conditions.push(`r.product_id = $${pi++}`);
+      params.push(Number(productId));
+    }
+
+    const where = conditions.join(' AND ');
+    const orderBy = sort === 'highest' ? 'r.rating DESC'
+      : sort === 'lowest' ? 'r.rating ASC'
+      : sort === 'helpful' ? 'r.helpful_count DESC'
+      : 'r.created_at DESC';
+
+    const [reviews, countResult, statsResult] = await Promise.all([
+      query(
+        `SELECT r.id, r.rating, r.title, r.body, r.verified_purchase,
+                r.helpful_count, r.reviewer_address, r.merchant_reply,
+                r.merchant_replied_at, r.created_at,
+                p.name as product_name
+         FROM merchant_reviews r
+         LEFT JOIN merchant_products p ON r.product_id = p.id
+         WHERE ${where}
+         ORDER BY ${orderBy}
+         LIMIT $${pi++} OFFSET $${pi}`,
+        [...params, limit, offset]
+      ),
+      query(`SELECT COUNT(*) as total FROM merchant_reviews r WHERE ${where}`, params),
+      query(
+        `SELECT rating, COUNT(*) as count FROM merchant_reviews r WHERE ${where} GROUP BY rating ORDER BY rating`,
+        params
+      ),
+    ]);
+
+    // Build rating distribution
+    const distribution: Record<number, number> = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+    for (const row of statsResult.rows) {
+      distribution[Number(row?.rating) || 0] = Number(row?.count) || 0;
+    }
+
+    const total = Number(countResult.rows[0]?.total ?? 0);
+    const totalRatings = Object.values(distribution).reduce((a, b) => a + b, 0);
+    const avgRating = totalRatings > 0
+      ? Math.round((Object.entries(distribution).reduce((sum, [r, c]) => sum + Number(r) * c, 0) / totalRatings) * 10) / 10
+      : 0;
+
+    return NextResponse.json({
+      reviews: reviews.rows,
+      stats: { total, avg_rating: avgRating, distribution },
+      pagination: { page, limit, total, pages: Math.ceil(total / limit) },
+    });
+  } catch (error) {
+    console.error('[Reviews GET] Error:', error);
+    return NextResponse.json({ error: 'Failed to fetch reviews' }, { status: 500 });
+  }
+}
+
+// ─────────────────────────── POST: Submit review
+export async function POST(request: NextRequest) {
+  const rateLimitResponse = await withRateLimit(request, 'write');
+  if (rateLimitResponse) return rateLimitResponse;
+
+  const authAddress = await getAuthAddress(request);
+  if (authAddress instanceof NextResponse) return authAddress;
+
+  try {
+    const body = await request.json() as Record<string, unknown>;
+    const { merchant_address, product_id, rating, title, body: reviewBody } = body;
+
+    if (typeof merchant_address !== 'string' || !ADDRESS_LIKE_REGEX.test(merchant_address)) {
+      return NextResponse.json({ error: 'Valid merchant_address required' }, { status: 400 });
+    }
+    if (typeof rating !== 'number' || rating < 1 || rating > 5 || !Number.isInteger(rating)) {
+      return NextResponse.json({ error: 'Rating must be 1-5 integer' }, { status: 400 });
+    }
+    if (typeof product_id !== 'number') {
+      return NextResponse.json({ error: 'product_id required' }, { status: 400 });
+    }
+
+    // Can't review own store
+    if (authAddress === (merchant_address as string).toLowerCase()) {
+      return NextResponse.json({ error: 'Cannot review your own store' }, { status: 400 });
+    }
+
+    // Check for existing review
+    const existingResult = await query(
+      'SELECT id FROM merchant_reviews WHERE reviewer_address = $1 AND product_id = $2',
+      [authAddress, product_id]
+    );
+    if (existingResult.rows.length > 0) {
+      return NextResponse.json({ error: 'You already reviewed this product' }, { status: 409 });
+    }
+
+    // Check purchase verification
+    const purchaseResult = await query(
+      `SELECT id FROM merchant_order_items oi
+       JOIN merchant_orders o ON oi.order_id = o.id
+       WHERE o.customer_address = $1 AND oi.product_id = $2 AND o.payment_status = 'paid'
+       LIMIT 1`,
+      [authAddress, product_id]
+    );
+    const verifiedPurchase = purchaseResult.rows.length > 0;
+
+    // Get order_id if verified
+    let orderId: number | null = null;
+    if (verifiedPurchase && purchaseResult.rows[0]) {
+      const orderResult = await query(
+        `SELECT o.id FROM merchant_orders o
+         JOIN merchant_order_items oi ON oi.order_id = o.id
+         WHERE o.customer_address = $1 AND oi.product_id = $2 AND o.payment_status = 'paid'
+         LIMIT 1`,
+        [authAddress, product_id]
+      );
+      orderId = orderResult.rows[0]?.id as number ?? null;
+    }
+
+    const result = await query(
+      `INSERT INTO merchant_reviews
+       (merchant_address, product_id, reviewer_address, order_id, rating, title, body, verified_purchase)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+       RETURNING *`,
+      [
+        (merchant_address as string).toLowerCase(),
+        product_id,
+        authAddress,
+        orderId,
+        rating,
+        typeof title === 'string' ? title.slice(0, 200) : null,
+        typeof reviewBody === 'string' ? reviewBody.slice(0, 5000) : null,
+        verifiedPurchase,
+      ]
+    );
+
+    return NextResponse.json({ review: result.rows[0] }, { status: 201 });
+  } catch (error) {
+    console.error('[Reviews POST] Error:', error);
+    return NextResponse.json({ error: 'Failed to submit review' }, { status: 500 });
+  }
+}
+
+// ─────────────────────────── PATCH: Merchant reply or moderate
+export async function PATCH(request: NextRequest) {
+  const rateLimitResponse = await withRateLimit(request, 'write');
+  if (rateLimitResponse) return rateLimitResponse;
+
+  const authAddress = await getAuthAddress(request);
+  if (authAddress instanceof NextResponse) return authAddress;
+
+  try {
+    const body = await request.json() as Record<string, unknown>;
+    const { id, merchant_reply, status } = body;
+
+    if (typeof id !== 'number') {
+      return NextResponse.json({ error: 'Review ID required' }, { status: 400 });
+    }
+
+    // Verify merchant owns the review's merchant_address
+    const existing = await query(
+      'SELECT id, merchant_address FROM merchant_reviews WHERE id = $1',
+      [id]
+    );
+    if (existing.rows.length === 0) {
+      return NextResponse.json({ error: 'Review not found' }, { status: 404 });
+    }
+    if ((existing.rows[0]?.merchant_address as string) !== authAddress) {
+      return NextResponse.json({ error: 'Not your review to manage' }, { status: 403 });
+    }
+
+    const updates: string[] = ['updated_at = NOW()'];
+    const params: (string | number)[] = [];
+    let pi = 1;
+
+    if (typeof merchant_reply === 'string') {
+      updates.push(`merchant_reply = $${pi++}`);
+      params.push(merchant_reply.slice(0, 2000));
+      updates.push('merchant_replied_at = NOW()');
+    }
+    if (typeof status === 'string' && ['published', 'hidden'].includes(status)) {
+      updates.push(`status = $${pi++}`);
+      params.push(status);
+    }
+
+    params.push(id);
+    const result = await query(
+      `UPDATE merchant_reviews SET ${updates.join(', ')} WHERE id = $${pi} RETURNING *`,
+      params
+    );
+
+    return NextResponse.json({ review: result.rows[0] });
+  } catch (error) {
+    console.error('[Reviews PATCH] Error:', error);
+    return NextResponse.json({ error: 'Failed to update review' }, { status: 500 });
+  }
+}

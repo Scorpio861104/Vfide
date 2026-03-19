@@ -79,6 +79,8 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
     event FeeUpdated(uint256 feeBasisPoints);
     event MinScoreUpdated(uint16 minScore);
     event FeeSinkSet(address sink);
+    event AutoConvertSet(address indexed merchant, bool enabled);
+    event PayoutAddressSet(address indexed merchant, address payoutAddress);
 
     /// External modules
     IVaultHub public vaultHub;
@@ -276,7 +278,12 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
         });
         
         require(merchantList.length < 10000, "MP: merchant cap"); // I-11
-        merchantList.push(msg.sender);
+        // Avoid duplicates when a deregistered merchant re-registers
+        bool alreadyInList = false;
+        for (uint256 i = 0; i < merchantList.length; i++) {
+            if (merchantList[i] == msg.sender) { alreadyInList = true; break; }
+        }
+        if (!alreadyInList) merchantList.push(msg.sender);
         
         emit MerchantRegistered(msg.sender, businessName, category);
         _logEv(msg.sender, "merchant_registered", 0, category);
@@ -347,7 +354,7 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
     ) external onlyMerchant returns (bytes32 refundId) {
         require(customer != address(0) && amount > 0, "Invalid refund params");
         
-        refundId = keccak256(abi.encode(msg.sender, customer, orderId, block.timestamp));
+        refundId = keccak256(abi.encode(msg.sender, customer, orderId, block.timestamp, customerRefunds[customer].length));
         
         refundRequests[refundId] = RefundRequest({
             customer: customer,
@@ -501,9 +508,6 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
         merchant.totalVolume += amount;
         merchant.txCount += 1;
         
-        // Final merchant score check before transfer (prevent mid-payment demotion)
-        _checkMerchantScore(msg.sender);
-        
         // Transfer fee first to fee sink (if fee > 0)
         if (fee > 0 && feeSink != address(0)) {
             // Vault custody model: charge fee from the customer's registered vault.
@@ -591,68 +595,10 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
             IERC20(token).safeTransferFrom(customerVault, feeSink, fee);
         }
         
-        // STABLE-PAY LOGIC with Slippage Protection
-        bool converted = false;
-        if (autoConvert[merchant] && token != stablecoin && address(swapRouter) != address(0) && stablecoin != address(0)) {
-            // 1. Pull to Portal
-            IERC20(token).safeTransferFrom(customerVault, address(this), netAmount);
-            
-            // 2. Approve Router
-            require(IERC20(token).approve(address(swapRouter), netAmount), "MP: approve failed");
-            
-            // 3. Get swap path (multi-hop if configured, otherwise direct)
-            address[] memory path;
-            if (tokenSwapPaths[token].length >= 2) {
-                path = tokenSwapPaths[token];
-            } else {
-                path = new address[](2);
-                path[0] = token;
-                path[1] = stablecoin;
-            }
-            
-            // 4. Calculate minimum output from router quote (token-price aware)
-            uint256 minOut = 0;
-            bool quoteAvailable = false;
-            try swapRouter.getAmountsOut(netAmount, path) returns (uint256[] memory quoteOut) {
-                if (quoteOut.length > 0) {
-                    uint256 expectedOut = quoteOut[quoteOut.length - 1];
-                    minOut = (expectedOut * minSwapOutputBps) / 10000;
-                    quoteAvailable = minOut > 0;
-                }
-            } catch {}
-
-            // 5. Swap with slippage protection, or fallback if quote unavailable
-            if (quoteAvailable) {
-                try swapRouter.swapExactTokensForTokens(
-                    netAmount,
-                    minOut,
-                    path,
-                    recipient,
-                    block.timestamp + 300
-                ) returns (uint256[] memory amountsOut) {
-                    converted = amountsOut.length > 0;
-                    // C-4 FIX: Revoke approval after successful swap
-                    require(IERC20(token).approve(address(swapRouter), 0), "MP: revoke failed");
-                } catch {
-                    // C-4 FIX: Revoke approval after failed swap to prevent lingering approvals
-                    require(IERC20(token).approve(address(swapRouter), 0), "MP: revoke failed");
-                    // Fallback: Send original token if swap fails
-                    IERC20(token).safeTransfer(recipient, netAmount);
-                }
-            } else {
-                // No safe quote available; fallback to direct token settlement.
-                require(IERC20(token).approve(address(swapRouter), 0), "MP: revoke failed");
-                IERC20(token).safeTransfer(recipient, netAmount);
-            }
-        } else {
-            // Normal Transfer
-            IERC20(token).safeTransferFrom(customerVault, recipient, netAmount);
-        }
+        // Transfer net amount (with STABLE-PAY auto-convert if enabled)
+        _transferWithAutoConvert(token, customerVault, recipient, netAmount, merchant);
         
         // Note: Stats already updated before external calls (C-3 fix)
-        
-        // Final merchant score check
-        _checkMerchantScore(merchant);
         
         emit PaymentProcessed(
             customer,
@@ -673,6 +619,7 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
      */
     function setAutoConvert(bool enabled) external onlyMerchant {
         autoConvert[msg.sender] = enabled;
+        emit AutoConvertSet(msg.sender, enabled);
     }
 
     /**
@@ -681,6 +628,7 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
      */
     function setPayoutAddress(address payout) external onlyMerchant {
         merchants[msg.sender].payoutAddress = payout;
+        emit PayoutAddressSet(msg.sender, payout);
     }
 
     // ─────────────────────────── Channel-Specific Payments
@@ -817,23 +765,11 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
                 IERC20(token).safeTransferFrom(customerVault, feeSink, fee);
             }
             
-            // Transfer net amount
-            IERC20(token).safeTransferFrom(customerVault, recipient, netAmount);
+            // Transfer net amount (with STABLE-PAY auto-convert if enabled)
+            _transferWithAutoConvert(token, customerVault, recipient, netAmount, merchant);
         }
         
-        // Emit enhanced event with channel
-        emit PaymentWithChannel(
-            customer,
-            merchant,
-            token,
-            amount,
-            amount - netAmount, // fee
-            orderId,
-            customerScore,
-            channel
-        );
-        
-        // Also emit PaymentProcessed with channel for unified interface
+        // Emit payment event with channel tracking
         emit PaymentProcessed(
             customer,
             merchant,
@@ -849,6 +785,74 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
     }
 
     // ─────────────────────────── View Functions
+
+    /**
+     * @notice Shared transfer helper with STABLE-PAY auto-convert
+     * @dev Used by both _processPaymentInternal and _processPaymentWithChannel
+     */
+    function _transferWithAutoConvert(
+        address token,
+        address customerVault,
+        address recipient,
+        uint256 netAmount,
+        address merchant
+    ) internal {
+        if (autoConvert[merchant] && token != stablecoin && address(swapRouter) != address(0) && stablecoin != address(0)) {
+            // 1. Pull to Portal
+            IERC20(token).safeTransferFrom(customerVault, address(this), netAmount);
+            
+            // 2. Approve Router
+            require(IERC20(token).approve(address(swapRouter), netAmount), "MP: approve failed");
+            
+            // 3. Get swap path (multi-hop if configured, otherwise direct)
+            address[] memory path;
+            if (tokenSwapPaths[token].length >= 2) {
+                path = tokenSwapPaths[token];
+            } else {
+                path = new address[](2);
+                path[0] = token;
+                path[1] = stablecoin;
+            }
+            
+            // 4. Calculate minimum output from router quote (token-price aware)
+            uint256 minOut = 0;
+            bool quoteAvailable = false;
+            try swapRouter.getAmountsOut(netAmount, path) returns (uint256[] memory quoteOut) {
+                if (quoteOut.length > 0) {
+                    uint256 expectedOut = quoteOut[quoteOut.length - 1];
+                    minOut = (expectedOut * minSwapOutputBps) / 10000;
+                    quoteAvailable = minOut > 0;
+                }
+            } catch {}
+
+            // 5. Swap with slippage protection, or fallback if quote unavailable
+            if (quoteAvailable) {
+                try swapRouter.swapExactTokensForTokens(
+                    netAmount,
+                    minOut,
+                    path,
+                    recipient,
+                    block.timestamp + 300
+                ) returns (uint256[] memory amountsOut) {
+                    if (amountsOut.length > 0) {} // converted
+                    // Revoke approval after successful swap
+                    require(IERC20(token).approve(address(swapRouter), 0), "MP: revoke failed");
+                } catch {
+                    // Revoke approval after failed swap to prevent lingering approvals
+                    require(IERC20(token).approve(address(swapRouter), 0), "MP: revoke failed");
+                    // Fallback: Send original token if swap fails
+                    IERC20(token).safeTransfer(recipient, netAmount);
+                }
+            } else {
+                // No safe quote available; fallback to direct token settlement.
+                require(IERC20(token).approve(address(swapRouter), 0), "MP: revoke failed");
+                IERC20(token).safeTransfer(recipient, netAmount);
+            }
+        } else {
+            // Normal Transfer
+            IERC20(token).safeTransferFrom(customerVault, recipient, netAmount);
+        }
+    }
 
     /**
      * Get customer's trust assessment (read-only for merchants)

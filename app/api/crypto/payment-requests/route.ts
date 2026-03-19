@@ -40,29 +40,41 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const userIdParam = searchParams.get('userId');
+    const userAddressParam = searchParams.get('userAddress');
 
-    if (!userIdParam) {
-      return NextResponse.json({ error: 'userId required' }, { status: 400 });
-    }
-
-    const requestedUserId = parsePositiveInteger(userIdParam);
-    if (!requestedUserId) {
-      return NextResponse.json({ error: 'Invalid userId parameter' }, { status: 400 });
-    }
-
-    // Verify authenticated user matches requested userId
-    // This prevents users from accessing other users' payment requests
+    // Resolve the authenticated user's DB id
     const userResult = await query(
       'SELECT id FROM users WHERE wallet_address = $1',
       [authAddress]
     );
 
+    if (userResult.rows.length === 0) {
+      return NextResponse.json({ error: 'User not found' }, { status: 403 });
+    }
     const userId = userResult.rows[0]?.id;
-    if (userResult.rows.length === 0 || !userId || userId.toString() !== requestedUserId.toString()) {
-      return NextResponse.json(
-        { error: 'You can only view your own payment requests' },
-        { status: 403 }
-      );
+
+    // Accept either userId or userAddress — verify caller owns the requested data
+    if (userIdParam) {
+      const requestedUserId = parsePositiveInteger(userIdParam);
+      if (!requestedUserId) {
+        return NextResponse.json({ error: 'Invalid userId parameter' }, { status: 400 });
+      }
+      if (!userId || userId.toString() !== requestedUserId.toString()) {
+        return NextResponse.json(
+          { error: 'You can only view your own payment requests' },
+          { status: 403 }
+        );
+      }
+    } else if (userAddressParam) {
+      // Verify the requested address matches the authenticated user
+      if (userAddressParam.trim().toLowerCase() !== authAddress) {
+        return NextResponse.json(
+          { error: 'You can only view your own payment requests' },
+          { status: 403 }
+        );
+      }
+    } else {
+      return NextResponse.json({ error: 'userId or userAddress required' }, { status: 400 });
     }
 
     const result = await query(
@@ -117,22 +129,56 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const { fromUserId, toUserId, amount, token, memo } = body;
+    const { fromUserId, toUserId, toAddress, amount, token, memo } = body;
 
-    if (!fromUserId || !toUserId || !amount) {
+    // Resolve sender: use authenticated wallet address to look up fromUserId
+    const senderResult = await query(
+      'SELECT id FROM users WHERE wallet_address = $1',
+      [authAddress]
+    );
+    if (senderResult.rows.length === 0) {
+      return NextResponse.json({ error: 'Sender account not found' }, { status: 403 });
+    }
+    const resolvedFromUserId = (senderResult.rows[0] as { id: number }).id.toString();
+
+    // Resolve recipient: accept toUserId (numeric) or toAddress (wallet address)
+    let resolvedToUserId: string | null = null;
+    if (toUserId) {
+      const toUserIdValue =
+        typeof toUserId === 'number' || typeof toUserId === 'string' ? toUserId.toString() : null;
+      if (!toUserIdValue || !USER_ID_REGEX.test(toUserIdValue)) {
+        return NextResponse.json({ error: 'toUserId must be a positive integer' }, { status: 400 });
+      }
+      resolvedToUserId = toUserIdValue;
+    } else if (toAddress && typeof toAddress === 'string' && ADDRESS_LIKE_REGEX.test(toAddress.trim())) {
+      const recipientResult = await query(
+        'SELECT id FROM users WHERE wallet_address = $1',
+        [toAddress.trim().toLowerCase()]
+      );
+      if (recipientResult.rows.length === 0) {
+        return NextResponse.json({ error: 'Recipient address not found' }, { status: 404 });
+      }
+      resolvedToUserId = (recipientResult.rows[0] as { id: number }).id.toString();
+    } else {
+      return NextResponse.json({ error: 'toUserId or toAddress required' }, { status: 400 });
+    }
+
+    // Validate fromUserId if explicitly provided — must match authenticated user
+    if (fromUserId) {
+      const fromUserIdValue =
+        typeof fromUserId === 'number' || typeof fromUserId === 'string' ? fromUserId.toString() : null;
+      if (fromUserIdValue && fromUserIdValue !== resolvedFromUserId) {
+        return NextResponse.json(
+          { error: 'You can only create payment requests from your own account' },
+          { status: 403 }
+        );
+      }
+    }
+    const fromUserIdValue = resolvedFromUserId;
+    const toUserIdValue = resolvedToUserId;
+
+    if (!amount) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
-    }
-
-    const fromUserIdValue =
-      typeof fromUserId === 'number' || typeof fromUserId === 'string' ? fromUserId.toString() : null;
-    const toUserIdValue =
-      typeof toUserId === 'number' || typeof toUserId === 'string' ? toUserId.toString() : null;
-    if (!fromUserIdValue || !toUserIdValue) {
-      return NextResponse.json({ error: 'fromUserId and toUserId must be strings or numbers' }, { status: 400 });
-    }
-
-    if (!USER_ID_REGEX.test(fromUserIdValue) || !USER_ID_REGEX.test(toUserIdValue)) {
-      return NextResponse.json({ error: 'fromUserId and toUserId must be positive integers' }, { status: 400 });
     }
 
     if (fromUserIdValue === toUserIdValue) {
@@ -239,19 +285,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Verify authenticated user matches fromUserId
-    const userResult = await query(
-      'SELECT id FROM users WHERE wallet_address = $1',
-      [authAddress]
-    );
-
-    const userId = userResult.rows[0]?.id;
-    if (userResult.rows.length === 0 || !userId || userId.toString() !== fromUserIdValue) {
-      return NextResponse.json(
-        { error: 'You can only create payment requests from your own account' },
-        { status: 403 }
-      );
-    }
+    // Sender already verified via authenticated address — no redundant lookup needed
 
     const memoValue = typeof memo === 'string' ? memo : null;
 

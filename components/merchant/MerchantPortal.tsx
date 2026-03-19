@@ -19,7 +19,7 @@ import { MobileButton, MobileInput, MobileSelect } from '@/components/mobile/Mob
 import { responsiveGrids } from '@/lib/mobile';
 import { safeParseFloat } from '@/lib/validation';
 import { useTransactionSounds } from '@/hooks/useTransactionSounds';
-import { Key, Upload, CreditCard, BarChart3 } from 'lucide-react';
+import { Key, Upload, CreditCard, BarChart3, Bell, FileText, Repeat, Package, ShoppingCart, Star, Calendar, Download } from 'lucide-react';
 import { useEffect } from 'react';
 import { useAccount } from 'wagmi';
 import { getAuthHeaders } from '@/lib/auth/client';
@@ -431,6 +431,14 @@ export default function MerchantPortal() {
         {[
           { id: 'requests', label: 'Payment Requests', icon: CreditCard },
           { id: 'revenue', label: 'Revenue', icon: BarChart3 },
+          { id: 'products', label: 'Products', icon: Package },
+          { id: 'orders', label: 'Orders', icon: ShoppingCart },
+          { id: 'invoices', label: 'Invoices', icon: FileText },
+          { id: 'subscriptions', label: 'Subscriptions', icon: Repeat },
+          { id: 'reviews', label: 'Reviews', icon: Star },
+          { id: 'bookings', label: 'Bookings', icon: Calendar },
+          { id: 'digital', label: 'Digital Goods', icon: Download },
+          { id: 'webhooks', label: 'Webhooks', icon: Bell },
           { id: 'bulk', label: 'Bulk Payments', icon: Upload },
           { id: 'api', label: 'API Keys', icon: Key },
         ].map((tab) => (
@@ -489,6 +497,38 @@ export default function MerchantPortal() {
 
           {activeTab === 'revenue' && (
             <RevenueSection data={revenueData} />
+          )}
+
+          {activeTab === 'products' && address && (
+            <ProductsSection merchantAddress={address} />
+          )}
+
+          {activeTab === 'orders' && address && (
+            <OrdersSection merchantAddress={address} />
+          )}
+
+          {activeTab === 'invoices' && address && (
+            <InvoicesSection merchantAddress={address} />
+          )}
+
+          {activeTab === 'subscriptions' && address && (
+            <SubscriptionsSection merchantAddress={address} />
+          )}
+
+          {activeTab === 'reviews' && address && (
+            <ReviewsSection merchantAddress={address} />
+          )}
+
+          {activeTab === 'bookings' && address && (
+            <BookingsSection merchantAddress={address} />
+          )}
+
+          {activeTab === 'digital' && address && (
+            <DigitalGoodsSection merchantAddress={address} />
+          )}
+
+          {activeTab === 'webhooks' && address && (
+            <WebhooksSection merchantAddress={address} />
           )}
 
           {activeTab === 'bulk' && (
@@ -1200,5 +1240,949 @@ function ApiKeyCard({
         </div>
       </div>
     </motion.div>
+  );
+}
+
+// ==================== NEW FEATURE SECTIONS ====================
+
+interface WebhookEndpoint {
+  id: number;
+  url: string;
+  events: string[];
+  description: string;
+  status: string;
+  failure_count: number;
+  created_at: string;
+}
+
+function WebhooksSection({ merchantAddress }: { merchantAddress: string }) {
+  const [endpoints, setEndpoints] = useState<WebhookEndpoint[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [newUrl, setNewUrl] = useState('');
+  const [newEvents, setNewEvents] = useState<string[]>(['payment.completed']);
+  const [newDescription, setNewDescription] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [shownSecret, setShownSecret] = useState<string | null>(null);
+
+  const allEventTypes = [
+    'payment.completed', 'payment.failed', 'refund.initiated', 'refund.completed',
+    'escrow.created', 'escrow.funded', 'escrow.released', 'escrow.disputed',
+    'invoice.created', 'invoice.paid', 'invoice.overdue',
+    'subscription.created', 'subscription.renewed', 'subscription.cancelled',
+    'merchant.suspended', 'merchant.reinstated',
+  ];
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await fetch('/api/merchant/webhooks', {
+          headers: getAuthHeaders(),
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setEndpoints(data.endpoints || []);
+        }
+      } catch { /* ignore */ }
+      setLoading(false);
+    })();
+  }, [merchantAddress]);
+
+  const handleCreate = async () => {
+    if (!newUrl || newEvents.length === 0) return;
+    setSubmitting(true);
+    try {
+      const res = await fetch('/api/merchant/webhooks', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+        body: JSON.stringify({ url: newUrl, events: newEvents, description: newDescription }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setShownSecret(data.secret);
+        setEndpoints(prev => [data.endpoint, ...prev]);
+        setNewUrl('');
+        setNewDescription('');
+      }
+    } catch { /* ignore */ }
+    setSubmitting(false);
+  };
+
+  const handleDelete = async (id: number) => {
+    try {
+      const res = await fetch('/api/merchant/webhooks', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+        body: JSON.stringify({ id }),
+      });
+      if (res.ok) {
+        setEndpoints(prev => prev.filter(e => e.id !== id));
+      }
+    } catch { /* ignore */ }
+  };
+
+  const toggleEvent = (event: string) => {
+    setNewEvents(prev =>
+      prev.includes(event) ? prev.filter(e => e !== event) : [...prev, event]
+    );
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Create Webhook */}
+      <div className="bg-white dark:bg-gray-800 rounded-lg p-4 md:p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+        <h2 className="text-lg md:text-xl font-bold text-gray-900 dark:text-white mb-4">
+          Add Webhook Endpoint
+        </h2>
+        <div className="space-y-4">
+          <MobileInput
+            label="Endpoint URL (HTTPS)"
+            placeholder="https://your-server.com/webhook"
+            value={newUrl}
+            onChange={(e) => setNewUrl(e.target.value)}
+          />
+          <MobileInput
+            label="Description"
+            placeholder="Order fulfillment webhook"
+            value={newDescription}
+            onChange={(e) => setNewDescription(e.target.value)}
+          />
+          <div>
+            <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Events</p>
+            <div className="flex flex-wrap gap-2">
+              {allEventTypes.map(event => (
+                <button
+                  key={event}
+                  onClick={() => toggleEvent(event)}
+                  className={`px-2 py-1 rounded text-xs font-medium transition-colors ${
+                    newEvents.includes(event)
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
+                  }`}
+                >
+                  {event}
+                </button>
+              ))}
+            </div>
+          </div>
+          <MobileButton onClick={handleCreate} disabled={submitting || !newUrl}>
+            {submitting ? 'Creating...' : 'Create Endpoint'}
+          </MobileButton>
+        </div>
+      </div>
+
+      {/* Shown Secret (one-time) */}
+      {shownSecret && (
+        <div className="bg-yellow-50 dark:bg-yellow-900/20 rounded-lg p-4 border border-yellow-300 dark:border-yellow-700">
+          <p className="text-sm font-bold text-yellow-800 dark:text-yellow-300 mb-2">
+            Webhook Signing Secret (shown once — copy now!)
+          </p>
+          <code className="text-sm font-mono break-all text-yellow-900 dark:text-yellow-200">
+            {shownSecret}
+          </code>
+          <div className="mt-2">
+            <button
+              onClick={() => {
+                navigator.clipboard.writeText(shownSecret);
+                setShownSecret(null);
+              }}
+              className="text-xs text-blue-600 dark:text-blue-400 hover:underline"
+            >
+              Copy & Dismiss
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Endpoints List */}
+      <div className="bg-white dark:bg-gray-800 rounded-lg p-4 md:p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+        <h2 className="text-lg md:text-xl font-bold text-gray-900 dark:text-white mb-4">
+          Webhook Endpoints ({endpoints.length})
+        </h2>
+        {loading && <p className="text-sm text-gray-500">Loading...</p>}
+        {!loading && endpoints.length === 0 && (
+          <p className="text-sm text-gray-500">No webhook endpoints configured.</p>
+        )}
+        <div className="space-y-3">
+          {endpoints.map(ep => (
+            <div key={ep.id} className="rounded-lg p-4 bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600">
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex-1 min-w-0">
+                  <p className="font-bold text-gray-900 dark:text-white truncate">{ep.url}</p>
+                  {ep.description && (
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{ep.description}</p>
+                  )}
+                  <div className="flex flex-wrap gap-1 mt-2">
+                    {ep.events.map(e => (
+                      <span key={e} className="px-2 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded text-xs">
+                        {e}
+                      </span>
+                    ))}
+                  </div>
+                  <p className="text-xs text-gray-500 mt-2">
+                    Status: {ep.status} · Failures: {ep.failure_count}
+                  </p>
+                </div>
+                <button
+                  onClick={() => handleDelete(ep.id)}
+                  className="px-3 py-1 text-xs text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded"
+                >
+                  Delete
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+interface Invoice {
+  id: number;
+  invoice_number: string;
+  customer_name: string;
+  customer_address: string;
+  status: string;
+  total: number;
+  currency_display: string;
+  payment_link_id: string;
+  created_at: string;
+  due_date: string | null;
+}
+
+function InvoicesSection({ merchantAddress }: { merchantAddress: string }) {
+  const [invoices, setInvoices] = useState<Invoice[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [statusFilter, setStatusFilter] = useState('');
+  const [showCreate, setShowCreate] = useState(false);
+  const [newInvoice, setNewInvoice] = useState({
+    customer_name: '',
+    customer_address: '',
+    token: 'VFIDE',
+    memo: '',
+    tax_rate: '0',
+    items: [{ description: '', quantity: '1', unit_price: '' }],
+  });
+  const [submitting, setSubmitting] = useState(false);
+
+  const fetchInvoices = async () => {
+    try {
+      const url = statusFilter
+        ? `/api/merchant/invoices?status=${statusFilter}`
+        : '/api/merchant/invoices';
+      const res = await fetch(url, { headers: getAuthHeaders() });
+      if (res.ok) {
+        const data = await res.json();
+        setInvoices(data.invoices || []);
+      }
+    } catch { /* ignore */ }
+    setLoading(false);
+  };
+
+  useEffect(() => { fetchInvoices(); }, [merchantAddress, statusFilter]);
+
+  const handleCreate = async () => {
+    setSubmitting(true);
+    try {
+      const items = newInvoice.items
+        .filter(i => i.description && i.unit_price)
+        .map(i => ({
+          description: i.description,
+          quantity: Number(i.quantity) || 1,
+          unit_price: Number(i.unit_price),
+        }));
+      const res = await fetch('/api/merchant/invoices', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+        body: JSON.stringify({
+          customer_name: newInvoice.customer_name,
+          customer_address: newInvoice.customer_address || undefined,
+          token: newInvoice.token,
+          memo: newInvoice.memo || undefined,
+          tax_rate: Number(newInvoice.tax_rate) || 0,
+          items,
+          send_immediately: true,
+        }),
+      });
+      if (res.ok) {
+        setShowCreate(false);
+        setNewInvoice({
+          customer_name: '', customer_address: '', token: 'VFIDE', memo: '', tax_rate: '0',
+          items: [{ description: '', quantity: '1', unit_price: '' }],
+        });
+        fetchInvoices();
+      }
+    } catch { /* ignore */ }
+    setSubmitting(false);
+  };
+
+  const addLineItem = () => {
+    setNewInvoice(prev => ({
+      ...prev,
+      items: [...prev.items, { description: '', quantity: '1', unit_price: '' }],
+    }));
+  };
+
+  const updateItem = (index: number, field: string, value: string) => {
+    setNewInvoice(prev => ({
+      ...prev,
+      items: prev.items.map((item, i) => i === index ? { ...item, [field]: value } : item),
+    }));
+  };
+
+  const statusColors: Record<string, string> = {
+    draft: 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300',
+    sent: 'bg-blue-100 dark:bg-blue-900/20 text-blue-800 dark:text-blue-300',
+    viewed: 'bg-purple-100 dark:bg-purple-900/20 text-purple-800 dark:text-purple-300',
+    paid: 'bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-300',
+    overdue: 'bg-red-100 dark:bg-red-900/20 text-red-800 dark:text-red-300',
+    cancelled: 'bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-400',
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="flex gap-2">
+          {['', 'draft', 'sent', 'paid', 'overdue'].map(s => (
+            <button
+              key={s || 'all'}
+              onClick={() => setStatusFilter(s)}
+              className={`px-3 py-1 rounded text-xs font-medium transition-colors ${
+                statusFilter === s
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
+              }`}
+            >
+              {s || 'All'}
+            </button>
+          ))}
+        </div>
+        <MobileButton onClick={() => setShowCreate(!showCreate)}>
+          {showCreate ? 'Cancel' : '+ New Invoice'}
+        </MobileButton>
+      </div>
+
+      {/* Create Form */}
+      {showCreate && (
+        <div className="bg-white dark:bg-gray-800 rounded-lg p-4 md:p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+          <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Create Invoice</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <MobileInput label="Customer Name" value={newInvoice.customer_name}
+              onChange={(e) => setNewInvoice(prev => ({ ...prev, customer_name: e.target.value }))} />
+            <MobileInput label="Customer Wallet (optional)" placeholder="0x..."
+              value={newInvoice.customer_address}
+              onChange={(e) => setNewInvoice(prev => ({ ...prev, customer_address: e.target.value }))} />
+            <MobileInput label="Tax Rate (%)" type="number" value={newInvoice.tax_rate}
+              onChange={(e) => setNewInvoice(prev => ({ ...prev, tax_rate: e.target.value }))} />
+            <MobileInput label="Memo" value={newInvoice.memo}
+              onChange={(e) => setNewInvoice(prev => ({ ...prev, memo: e.target.value }))} />
+          </div>
+          <h3 className="text-sm font-bold text-gray-900 dark:text-white mb-2">Line Items</h3>
+          {newInvoice.items.map((item, i) => (
+            <div key={i} className="grid grid-cols-3 gap-2 mb-2">
+              <MobileInput placeholder="Description" value={item.description}
+                onChange={(e) => updateItem(i, 'description', e.target.value)} />
+              <MobileInput placeholder="Qty" type="number" value={item.quantity}
+                onChange={(e) => updateItem(i, 'quantity', e.target.value)} />
+              <MobileInput placeholder="Unit Price" type="number" value={item.unit_price}
+                onChange={(e) => updateItem(i, 'unit_price', e.target.value)} />
+            </div>
+          ))}
+          <button onClick={addLineItem} className="text-xs text-blue-600 dark:text-blue-400 hover:underline mb-4">
+            + Add Line Item
+          </button>
+          <MobileButton fullWidth onClick={handleCreate} disabled={submitting}>
+            {submitting ? 'Creating...' : 'Create & Send Invoice'}
+          </MobileButton>
+        </div>
+      )}
+
+      {/* Invoices List */}
+      <div className="bg-white dark:bg-gray-800 rounded-lg p-4 md:p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+        <h2 className="text-lg md:text-xl font-bold text-gray-900 dark:text-white mb-4">
+          Invoices ({invoices.length})
+        </h2>
+        {loading && <p className="text-sm text-gray-500">Loading...</p>}
+        {!loading && invoices.length === 0 && (
+          <p className="text-sm text-gray-500">No invoices found.</p>
+        )}
+        <div className="space-y-3">
+          {invoices.map(inv => (
+            <div key={inv.id} className="rounded-lg p-4 bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600">
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex-1 min-w-0">
+                  <p className="font-bold text-gray-900 dark:text-white">
+                    {inv.invoice_number} · {inv.customer_name || 'Unknown'}
+                  </p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                    {inv.total} {inv.currency_display}
+                    {inv.due_date && ` · Due ${new Date(inv.due_date).toLocaleDateString()}`}
+                  </p>
+                </div>
+                <div className="flex flex-col items-end gap-2">
+                  <span className={`px-2 py-1 rounded text-xs font-medium ${statusColors[inv.status] || ''}`}>
+                    {inv.status}
+                  </span>
+                  {inv.payment_link_id && (
+                    <button
+                      onClick={() => navigator.clipboard.writeText(`${window.location.origin}/checkout/${inv.payment_link_id}`)}
+                      className="text-xs text-blue-600 dark:text-blue-400 hover:underline"
+                    >
+                      Copy Payment Link
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+interface SubscriptionPlan {
+  id: number;
+  name: string;
+  description: string;
+  token: string;
+  amount: number;
+  interval: string;
+  trial_days: number;
+  max_subscribers: number | null;
+  active_subscribers: number;
+  status: string;
+  created_at: string;
+}
+
+function SubscriptionsSection({ merchantAddress }: { merchantAddress: string }) {
+  const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [showCreate, setShowCreate] = useState(false);
+  const [newPlan, setNewPlan] = useState({
+    name: '', description: '', token: 'VFIDE', amount: '',
+    interval: 'monthly', trial_days: '0', max_subscribers: '',
+  });
+  const [submitting, setSubmitting] = useState(false);
+
+  const fetchPlans = async () => {
+    try {
+      const res = await fetch('/api/merchant/subscriptions', { headers: getAuthHeaders() });
+      if (res.ok) {
+        const data = await res.json();
+        setPlans(data.plans || []);
+      }
+    } catch { /* ignore */ }
+    setLoading(false);
+  };
+
+  useEffect(() => { fetchPlans(); }, [merchantAddress]);
+
+  const handleCreate = async () => {
+    if (!newPlan.name || !newPlan.amount) return;
+    setSubmitting(true);
+    try {
+      const res = await fetch('/api/merchant/subscriptions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+        body: JSON.stringify({
+          name: newPlan.name,
+          description: newPlan.description || undefined,
+          token: newPlan.token,
+          amount: Number(newPlan.amount),
+          interval: newPlan.interval,
+          trial_days: Number(newPlan.trial_days) || 0,
+          max_subscribers: newPlan.max_subscribers ? Number(newPlan.max_subscribers) : undefined,
+        }),
+      });
+      if (res.ok) {
+        setShowCreate(false);
+        setNewPlan({ name: '', description: '', token: 'VFIDE', amount: '', interval: 'monthly', trial_days: '0', max_subscribers: '' });
+        fetchPlans();
+      }
+    } catch { /* ignore */ }
+    setSubmitting(false);
+  };
+
+  const handleArchive = async (id: number) => {
+    try {
+      await fetch('/api/merchant/subscriptions', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+        body: JSON.stringify({ id, status: 'archived' }),
+      });
+      fetchPlans();
+    } catch { /* ignore */ }
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="flex justify-end">
+        <MobileButton onClick={() => setShowCreate(!showCreate)}>
+          {showCreate ? 'Cancel' : '+ New Plan'}
+        </MobileButton>
+      </div>
+
+      {showCreate && (
+        <div className="bg-white dark:bg-gray-800 rounded-lg p-4 md:p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+          <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Create Subscription Plan</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <MobileInput label="Plan Name" placeholder="Pro Plan" value={newPlan.name}
+              onChange={(e) => setNewPlan(prev => ({ ...prev, name: e.target.value }))} />
+            <MobileInput label="Amount" type="number" placeholder="10" value={newPlan.amount}
+              onChange={(e) => setNewPlan(prev => ({ ...prev, amount: e.target.value }))} />
+            <MobileSelect label="Interval"
+              options={[
+                { value: 'weekly', label: 'Weekly' },
+                { value: 'monthly', label: 'Monthly' },
+                { value: 'quarterly', label: 'Quarterly' },
+                { value: 'yearly', label: 'Yearly' },
+              ]}
+              value={newPlan.interval}
+              onChange={(e) => setNewPlan(prev => ({ ...prev, interval: e.target.value }))} />
+            <MobileInput label="Trial Days" type="number" value={newPlan.trial_days}
+              onChange={(e) => setNewPlan(prev => ({ ...prev, trial_days: e.target.value }))} />
+            <MobileInput label="Max Subscribers (empty = unlimited)" type="number" value={newPlan.max_subscribers}
+              onChange={(e) => setNewPlan(prev => ({ ...prev, max_subscribers: e.target.value }))} />
+            <MobileInput label="Description" value={newPlan.description}
+              onChange={(e) => setNewPlan(prev => ({ ...prev, description: e.target.value }))} />
+          </div>
+          <MobileButton fullWidth onClick={handleCreate} disabled={submitting} className="mt-4">
+            {submitting ? 'Creating...' : 'Create Plan'}
+          </MobileButton>
+        </div>
+      )}
+
+      <div className="bg-white dark:bg-gray-800 rounded-lg p-4 md:p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+        <h2 className="text-lg md:text-xl font-bold text-gray-900 dark:text-white mb-4">
+          Subscription Plans ({plans.length})
+        </h2>
+        {loading && <p className="text-sm text-gray-500">Loading...</p>}
+        {!loading && plans.length === 0 && (
+          <p className="text-sm text-gray-500">No subscription plans yet.</p>
+        )}
+        <div className="space-y-3">
+          {plans.map(plan => (
+            <div key={plan.id} className="rounded-lg p-4 bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600">
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <p className="font-bold text-gray-900 dark:text-white">{plan.name}</p>
+                    <span className={`px-2 py-0.5 rounded text-xs font-medium ${
+                      plan.status === 'active'
+                        ? 'bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-300'
+                        : 'bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-400'
+                    }`}>{plan.status}</span>
+                  </div>
+                  {plan.description && (
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{plan.description}</p>
+                  )}
+                  <p className="text-sm text-gray-700 dark:text-gray-300 mt-1">
+                    {plan.amount} {plan.token} / {plan.interval}
+                    {plan.trial_days > 0 && ` · ${plan.trial_days}d trial`}
+                    {' · '}{plan.active_subscribers}{plan.max_subscribers ? `/${plan.max_subscribers}` : ''} subscribers
+                  </p>
+                </div>
+                {plan.status === 'active' && (
+                  <button
+                    onClick={() => handleArchive(plan.id)}
+                    className="px-3 py-1 text-xs text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded"
+                  >
+                    Archive
+                  </button>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ─── Products Section ─── */
+function ProductsSection({ merchantAddress }: { merchantAddress: string }) {
+  const [products, setProducts] = useState<Array<{ id: string; name: string; price: string; status: string; product_type: string; inventory_count: number | null; sold_count: number }>>([]);
+  const [loading, setLoading] = useState(true);
+  const [showAdd, setShowAdd] = useState(false);
+  const [form, setForm] = useState({ name: '', price: '', description: '', product_type: 'physical', platform_category_id: '' });
+  const [platformCategories, setPlatformCategories] = useState<Array<{ id: number; name: string; slug: string; children?: Array<{ id: number; name: string; slug: string }> }>>([]);
+
+  useEffect(() => {
+    fetch(`/api/merchant/products?merchant=${encodeURIComponent(merchantAddress)}`)
+      .then(r => r.ok ? r.json() : null)
+      .then(d => { if (d?.products) setProducts(d.products); })
+      .finally(() => setLoading(false));
+    // Fetch platform categories for the dropdown
+    fetch('/api/platform/categories')
+      .then(r => r.ok ? r.json() : null)
+      .then(d => { if (d?.categories) setPlatformCategories(d.categories); })
+      .catch(() => {});
+  }, [merchantAddress]);
+
+  const addProduct = async () => {
+    if (!form.name || !form.price) return;
+    const payload: Record<string, unknown> = { ...form, price: Number(form.price) };
+    if (form.platform_category_id) payload.platform_category_id = Number(form.platform_category_id);
+    else delete payload.platform_category_id;
+    const res = await fetch('/api/merchant/products', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+      body: JSON.stringify(payload),
+    });
+    if (res.ok) {
+      const d = await res.json();
+      setProducts(prev => [d.product, ...prev]);
+      setForm({ name: '', price: '', description: '', product_type: 'physical', platform_category_id: '' });
+      setShowAdd(false);
+    }
+  };
+
+  const archiveProduct = async (id: string) => {
+    const res = await fetch(`/api/merchant/products?id=${id}`, {
+      method: 'DELETE',
+      headers: getAuthHeaders(),
+    });
+    if (res.ok) setProducts(prev => prev.filter(p => p.id !== id));
+  };
+
+  if (loading) return <div className="py-8 text-center text-gray-500">Loading products...</div>;
+
+  return (
+    <div className="space-y-4">
+      <div className="flex justify-between items-center">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Product Catalog ({products.length})</h3>
+        <button onClick={() => setShowAdd(!showAdd)} className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700">
+          + Add Product
+        </button>
+      </div>
+      {showAdd && (
+        <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 space-y-3">
+          <input placeholder="Product name" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} className="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white" />
+          <input placeholder="Price" type="number" step="0.01" value={form.price} onChange={e => setForm(f => ({ ...f, price: e.target.value }))} className="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white" />
+          <input placeholder="Description" value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} className="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white" />
+          <select value={form.product_type} onChange={e => setForm(f => ({ ...f, product_type: e.target.value }))} className="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+            <option value="physical">Physical</option>
+            <option value="digital">Digital</option>
+            <option value="service">Service</option>
+          </select>
+          <select value={form.platform_category_id} onChange={e => setForm(f => ({ ...f, platform_category_id: e.target.value }))} className="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+            <option value="">Marketplace Category (optional)</option>
+            {platformCategories.map(cat => (
+              <optgroup key={cat.id} label={cat.name}>
+                <option value={cat.id}>{cat.name} (All)</option>
+                {cat.children?.map(sub => (
+                  <option key={sub.id} value={sub.id}>{sub.name}</option>
+                ))}
+              </optgroup>
+            ))}
+          </select>
+          <button onClick={addProduct} className="px-4 py-2 bg-green-600 text-white rounded-lg text-sm hover:bg-green-700">Save Product</button>
+        </div>
+      )}
+      <div className="space-y-2">
+        {products.map(p => (
+          <div key={p.id} className="flex items-center justify-between bg-white dark:bg-gray-800 rounded-lg p-3 border border-gray-200 dark:border-gray-700">
+            <div>
+              <span className="font-medium text-gray-900 dark:text-white">{p.name}</span>
+              <span className="ml-2 text-sm text-gray-500">${parseFloat(p.price).toFixed(2)}</span>
+              <span className="ml-2 text-xs text-gray-400">{p.product_type}</span>
+              {p.sold_count > 0 && <span className="ml-2 text-xs text-green-600">{p.sold_count} sold</span>}
+            </div>
+            <button onClick={() => archiveProduct(p.id)} className="text-xs text-red-500 hover:text-red-700">Archive</button>
+          </div>
+        ))}
+        {products.length === 0 && <p className="text-center text-gray-400 py-4">No products yet</p>}
+      </div>
+    </div>
+  );
+}
+
+/* ─── Orders Section ─── */
+function OrdersSection({ merchantAddress }: { merchantAddress: string }) {
+  const [orders, setOrders] = useState<Array<{ id: string; order_number: string; status: string; payment_status: string; total_amount: string; customer_address: string; created_at: string; items: Array<{ product_name: string; quantity: number }> }>>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch(`/api/merchant/orders?role=merchant`, { headers: getAuthHeaders() })
+      .then(r => r.ok ? r.json() : null)
+      .then(d => { if (d?.orders) setOrders(d.orders); })
+      .finally(() => setLoading(false));
+  }, [merchantAddress]);
+
+  const updateStatus = async (id: string, status: string) => {
+    const res = await fetch('/api/merchant/orders', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+      body: JSON.stringify({ order_id: id, status }),
+    });
+    if (res.ok) {
+      setOrders(prev => prev.map(o => o.id === id ? { ...o, status } : o));
+    }
+  };
+
+  const statusColors: Record<string, string> = {
+    pending: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/20 dark:text-yellow-400',
+    confirmed: 'bg-blue-100 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400',
+    processing: 'bg-purple-100 text-purple-700 dark:bg-purple-900/20 dark:text-purple-400',
+    shipped: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/20 dark:text-indigo-400',
+    delivered: 'bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-400',
+    completed: 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-300',
+    cancelled: 'bg-red-100 text-red-700 dark:bg-red-900/20 dark:text-red-400',
+  };
+
+  const nextStatus: Record<string, string> = {
+    pending: 'confirmed',
+    confirmed: 'processing',
+    processing: 'shipped',
+    shipped: 'delivered',
+    delivered: 'completed',
+  };
+
+  if (loading) return <div className="py-8 text-center text-gray-500">Loading orders...</div>;
+
+  return (
+    <div className="space-y-4">
+      <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Orders ({orders.length})</h3>
+      <div className="space-y-3">
+        {orders.map(order => (
+          <div key={order.id} className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+            <div className="flex items-center justify-between mb-2">
+              <div>
+                <span className="font-mono font-medium text-gray-900 dark:text-white text-sm">{order.order_number}</span>
+                <span className={`ml-2 px-2 py-0.5 rounded text-xs font-medium ${statusColors[order.status] || 'bg-gray-100 text-gray-700'}`}>{order.status}</span>
+              </div>
+              <span className="font-bold text-gray-900 dark:text-white">${parseFloat(order.total_amount).toFixed(2)}</span>
+            </div>
+            <p className="text-xs text-gray-500 mb-2">
+              {order.customer_address.slice(0, 6)}...{order.customer_address.slice(-4)} · {new Date(order.created_at).toLocaleDateString()}
+            </p>
+            <div className="text-xs text-gray-500 mb-2">
+              {order.items?.map((item, i) => <span key={i}>{i > 0 && ', '}{item.product_name} ×{item.quantity}</span>)}
+            </div>
+            {nextStatus[order.status] && (
+              <button
+                onClick={() => updateStatus(order.id, nextStatus[order.status])}
+                className="text-xs px-3 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+              >
+                Mark {nextStatus[order.status]}
+              </button>
+            )}
+          </div>
+        ))}
+        {orders.length === 0 && <p className="text-center text-gray-400 py-4">No orders yet</p>}
+      </div>
+    </div>
+  );
+}
+
+/* ─── Reviews Section ─── */
+function ReviewsSection({ merchantAddress }: { merchantAddress: string }) {
+  const [reviews, setReviews] = useState<Array<{ id: string; rating: number; title: string | null; body: string | null; reviewer_address: string; merchant_reply: string | null; created_at: string; product_name?: string }>>([]);
+  const [stats, setStats] = useState<{ avg_rating: number; total_reviews: number } | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [replyText, setReplyText] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    fetch(`/api/merchant/reviews?merchant=${encodeURIComponent(merchantAddress)}`)
+      .then(r => r.ok ? r.json() : null)
+      .then(d => {
+        if (d?.reviews) setReviews(d.reviews);
+        if (d?.stats) setStats(d.stats);
+      })
+      .finally(() => setLoading(false));
+  }, [merchantAddress]);
+
+  const submitReply = async (reviewId: string) => {
+    const reply = replyText[reviewId];
+    if (!reply?.trim()) return;
+    const res = await fetch('/api/merchant/reviews', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+      body: JSON.stringify({ review_id: reviewId, merchant_reply: reply }),
+    });
+    if (res.ok) {
+      setReviews(prev => prev.map(r => r.id === reviewId ? { ...r, merchant_reply: reply } : r));
+      setReplyText(prev => { const n = { ...prev }; delete n[reviewId]; return n; });
+    }
+  };
+
+  if (loading) return <div className="py-8 text-center text-gray-500">Loading reviews...</div>;
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center gap-4">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Reviews</h3>
+        {stats && (
+          <span className="text-sm text-gray-500">
+            ★ {stats.avg_rating.toFixed(1)} · {stats.total_reviews} review{stats.total_reviews !== 1 ? 's' : ''}
+          </span>
+        )}
+      </div>
+      <div className="space-y-3">
+        {reviews.map(review => (
+          <div key={review.id} className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+            <div className="flex items-center gap-2 mb-1">
+              <div className="flex">{[1,2,3,4,5].map(s => <span key={s} className={s <= review.rating ? 'text-yellow-500' : 'text-gray-300'}>★</span>)}</div>
+              <span className="text-xs text-gray-400">{new Date(review.created_at).toLocaleDateString()}</span>
+            </div>
+            {review.title && <p className="font-medium text-gray-900 dark:text-white text-sm">{review.title}</p>}
+            {review.body && <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{review.body}</p>}
+            <p className="text-xs text-gray-400 mt-1">{review.reviewer_address.slice(0, 6)}...{review.reviewer_address.slice(-4)}</p>
+            {review.merchant_reply ? (
+              <div className="mt-2 pl-3 border-l-2 border-blue-300 dark:border-blue-700">
+                <p className="text-xs text-blue-600 dark:text-blue-400 font-medium">Your Reply</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">{review.merchant_reply}</p>
+              </div>
+            ) : (
+              <div className="mt-2 flex gap-2">
+                <input
+                  placeholder="Write a reply..."
+                  value={replyText[review.id] || ''}
+                  onChange={e => setReplyText(prev => ({ ...prev, [review.id]: e.target.value }))}
+                  className="flex-1 px-2 py-1 text-sm border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                />
+                <button onClick={() => submitReply(review.id)} className="text-xs px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700">Reply</button>
+              </div>
+            )}
+          </div>
+        ))}
+        {reviews.length === 0 && <p className="text-center text-gray-400 py-4">No reviews yet</p>}
+      </div>
+    </div>
+  );
+}
+
+/* ─── Bookings Section ─── */
+function BookingsSection({ merchantAddress }: { merchantAddress: string }) {
+  const [bookings, setBookings] = useState<Array<{ id: string; customer_address: string; service_name: string; slot_date: string; start_time: string; end_time: string; status: string; notes: string | null }>>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch(`/api/merchant/bookings?role=merchant`, { headers: getAuthHeaders() })
+      .then(r => r.ok ? r.json() : null)
+      .then(d => { if (d?.bookings) setBookings(d.bookings); })
+      .finally(() => setLoading(false));
+  }, [merchantAddress]);
+
+  const updateBookingStatus = async (id: string, status: string) => {
+    const res = await fetch('/api/merchant/bookings', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+      body: JSON.stringify({ booking_id: id, status }),
+    });
+    if (res.ok) setBookings(prev => prev.map(b => b.id === id ? { ...b, status } : b));
+  };
+
+  if (loading) return <div className="py-8 text-center text-gray-500">Loading bookings...</div>;
+
+  return (
+    <div className="space-y-4">
+      <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Bookings ({bookings.length})</h3>
+      <div className="space-y-3">
+        {bookings.map(b => (
+          <div key={b.id} className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+            <div className="flex items-center justify-between mb-1">
+              <span className="font-medium text-gray-900 dark:text-white text-sm">{b.service_name || 'Appointment'}</span>
+              <span className={`px-2 py-0.5 rounded text-xs font-medium ${
+                b.status === 'confirmed' ? 'bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-400' :
+                b.status === 'cancelled' ? 'bg-red-100 text-red-700 dark:bg-red-900/20 dark:text-red-400' :
+                'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/20 dark:text-yellow-400'
+              }`}>{b.status}</span>
+            </div>
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              {new Date(b.slot_date).toLocaleDateString()} · {b.start_time} – {b.end_time}
+            </p>
+            <p className="text-xs text-gray-400 mt-1">{b.customer_address.slice(0, 6)}...{b.customer_address.slice(-4)}</p>
+            {b.notes && <p className="text-xs text-gray-500 mt-1 italic">{b.notes}</p>}
+            {b.status === 'pending' && (
+              <div className="flex gap-2 mt-2">
+                <button onClick={() => updateBookingStatus(b.id, 'confirmed')} className="text-xs px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700">Confirm</button>
+                <button onClick={() => updateBookingStatus(b.id, 'cancelled')} className="text-xs px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700">Cancel</button>
+              </div>
+            )}
+          </div>
+        ))}
+        {bookings.length === 0 && <p className="text-center text-gray-400 py-4">No bookings yet</p>}
+      </div>
+    </div>
+  );
+}
+
+/* ─── Digital Goods Section ─── */
+function DigitalGoodsSection({ merchantAddress }: { merchantAddress: string }) {
+  const [assets, setAssets] = useState<Array<{ id: string; product_name: string; file_name: string; file_size: number; license_keys_remaining: number; total_deliveries: number }>>([]);
+  const [loading, setLoading] = useState(true);
+  const [showAdd, setShowAdd] = useState(false);
+  const [form, setForm] = useState({ product_id: '', file_name: '', file_url: '', file_size: '', license_keys: '' });
+
+  useEffect(() => {
+    fetch(`/api/merchant/digital?role=merchant`, { headers: getAuthHeaders() })
+      .then(r => r.ok ? r.json() : null)
+      .then(d => { if (d?.assets) setAssets(d.assets); })
+      .finally(() => setLoading(false));
+  }, [merchantAddress]);
+
+  const addAsset = async () => {
+    if (!form.product_id || !form.file_name || !form.file_url) return;
+    const body: Record<string, unknown> = {
+      product_id: form.product_id,
+      file_name: form.file_name,
+      file_url: form.file_url,
+      file_size: parseInt(form.file_size) || 0,
+    };
+    if (form.license_keys.trim()) {
+      body.license_keys = form.license_keys.split('\n').map(k => k.trim()).filter(Boolean);
+    }
+    const res = await fetch('/api/merchant/digital', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+      body: JSON.stringify(body),
+    });
+    if (res.ok) {
+      const d = await res.json();
+      setAssets(prev => [d.asset, ...prev]);
+      setForm({ product_id: '', file_name: '', file_url: '', file_size: '', license_keys: '' });
+      setShowAdd(false);
+    }
+  };
+
+  if (loading) return <div className="py-8 text-center text-gray-500">Loading digital goods...</div>;
+
+  return (
+    <div className="space-y-4">
+      <div className="flex justify-between items-center">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Digital Assets ({assets.length})</h3>
+        <button onClick={() => setShowAdd(!showAdd)} className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700">
+          + Add Asset
+        </button>
+      </div>
+      {showAdd && (
+        <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 space-y-3">
+          <input placeholder="Product ID" value={form.product_id} onChange={e => setForm(f => ({ ...f, product_id: e.target.value }))} className="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white" />
+          <input placeholder="File name" value={form.file_name} onChange={e => setForm(f => ({ ...f, file_name: e.target.value }))} className="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white" />
+          <input placeholder="File URL" value={form.file_url} onChange={e => setForm(f => ({ ...f, file_url: e.target.value }))} className="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white" />
+          <input placeholder="File size (bytes)" type="number" value={form.file_size} onChange={e => setForm(f => ({ ...f, file_size: e.target.value }))} className="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white" />
+          <textarea placeholder="License keys (one per line)" value={form.license_keys} onChange={e => setForm(f => ({ ...f, license_keys: e.target.value }))} className="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white" rows={3} />
+          <button onClick={addAsset} className="px-4 py-2 bg-green-600 text-white rounded-lg text-sm hover:bg-green-700">Save Asset</button>
+        </div>
+      )}
+      <div className="space-y-2">
+        {assets.map(a => (
+          <div key={a.id} className="flex items-center justify-between bg-white dark:bg-gray-800 rounded-lg p-3 border border-gray-200 dark:border-gray-700">
+            <div>
+              <span className="font-medium text-gray-900 dark:text-white">{a.product_name || a.file_name}</span>
+              <span className="ml-2 text-xs text-gray-400">{(a.file_size / 1024).toFixed(0)} KB</span>
+            </div>
+            <div className="flex items-center gap-3 text-xs text-gray-500">
+              {a.license_keys_remaining > 0 && <span>{a.license_keys_remaining} keys left</span>}
+              <span>{a.total_deliveries} delivered</span>
+            </div>
+          </div>
+        ))}
+        {assets.length === 0 && <p className="text-center text-gray-400 py-4">No digital assets yet</p>}
+      </div>
+    </div>
   );
 }

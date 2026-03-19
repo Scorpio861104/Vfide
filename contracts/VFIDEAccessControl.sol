@@ -32,6 +32,20 @@ contract VFIDEAccessControl is AccessControlEnumerable {
     }
 
     /**
+     * @notice L-08 Fix: Transfer DEFAULT_ADMIN_ROLE to a new admin (e.g. DAO timelock) and
+     *         renounce the caller's own admin role in one atomic step.
+     *         Call this after deployment to transfer control from the deploy EOA to governance.
+     * @param newAdmin Address to receive DEFAULT_ADMIN_ROLE (should be DAO timelock)
+     */
+    function transferAdminRole(address newAdmin) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        require(newAdmin != address(0), "VFIDEAccessControl: new admin is zero address");
+        require(newAdmin != msg.sender, "VFIDEAccessControl: already admin");
+        _grantRole(DEFAULT_ADMIN_ROLE, newAdmin);
+        _revokeRole(DEFAULT_ADMIN_ROLE, msg.sender);
+        // Both events emit naturally via OZ AccessControl's internal hooks
+    }
+
+    /**
      * @notice Grant a role to an account with logged reason
      * @param role The role to grant
      * @param account The account to receive the role

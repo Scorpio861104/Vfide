@@ -75,6 +75,8 @@
     "migrate:status": "tsx lib/migrations/cli.ts status",
     "migrate:create": "tsx lib/migrations/cli.ts create",
     "test": "jest",
+    "test:onchain": "npx tsx --test 'test/hardhat/**/*.test.ts'",
+    "test:stubs:generate": "node scripts/generate-onchain-test-stubs.mjs",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "test:ci": "jest --coverage --ci",

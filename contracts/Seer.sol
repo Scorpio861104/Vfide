@@ -85,6 +85,9 @@ contract Seer {
 
     // 0 == uninitialized → treated as NEUTRAL = 5000 (50% on 0-10000 scale)
     mapping(address => uint16) private _score;
+
+    // M-18 Fix: Guard against circular _delta calls (score source calling back into Seer)
+    mapping(address => bool) private _deltaInProgress;
     
     // Badge system for VFIDEBadgeNFT integration
     mapping(address => mapping(bytes32 => bool)) public hasBadge;
@@ -724,6 +727,10 @@ contract Seer {
     }
 
     function _delta(address subject, int256 d, string calldata reason, uint16 reasonCode) internal {
+        // M-18 Fix: Prevent circular scoring (score source calling back into _delta for same subject)
+        require(!_deltaInProgress[subject], "SEER: circular delta");
+        _deltaInProgress[subject] = true;
+
         // M-18 Fix: Use raw stored score instead of getScore() to avoid circular dependency
         // with on-chain score sources that may call back to Seer
         uint16 cur = _score[subject];
@@ -749,6 +756,9 @@ contract Seer {
         if (seerAutonomous != address(0)) {
             try ISeerAutonomous(seerAutonomous).onScoreChange(subject, cur, newScore) {} catch {}
         }
+
+        // M-18 Fix: Clear guard after all operations (including cascade) complete
+        _deltaInProgress[subject] = false;
     }
     
     function _recordHistory(address subject, uint16 oldScore, uint16 newScore, string calldata reason) internal {

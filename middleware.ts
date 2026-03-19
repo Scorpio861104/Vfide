@@ -27,6 +27,19 @@ function buildCsp(nonce: string): string {
   ].join('; ');
 }
 
+function timingSafeEqual(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  const encoder = new TextEncoder();
+  const bufA = encoder.encode(a);
+  const bufB = encoder.encode(b);
+  // Constant-time XOR comparison — always processes all bytes
+  let result = 0;
+  for (let i = 0; i < bufA.length; i++) {
+    result |= bufA[i] ^ bufB[i];
+  }
+  return result === 0;
+}
+
 function validateCsrfInMiddleware(request: NextRequest): NextResponse | null {
   const stateChangingMethods = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
   if (!stateChangingMethods.has(request.method)) {
@@ -44,7 +57,7 @@ function validateCsrfInMiddleware(request: NextRequest): NextResponse | null {
   const cookieToken = request.cookies.get('csrf_token')?.value;
   const headerToken = request.headers.get('x-csrf-token') || undefined;
 
-  if (!cookieToken || !headerToken || cookieToken !== headerToken) {
+  if (!cookieToken || !headerToken || !timingSafeEqual(cookieToken, headerToken)) {
     return NextResponse.json(
       {
         error: 'CSRF token validation failed',

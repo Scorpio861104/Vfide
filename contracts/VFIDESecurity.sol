@@ -334,6 +334,7 @@ contract PanicGuard {
         if (address(vaultHub) == address(0)) revert SEC_Zero();
         address vault = vaultHub.vaultOf(msg.sender);
         require(vault != address(0), "no vault");
+        require(vaultCreationTime[vault] > 0, "SEC: vault not registered"); // M-25 Fix
         
         // C-10: Rate limiting - max 1 self-panic per 24 hours
         require(

@@ -5,6 +5,7 @@ import VFIDETokenABI from './VFIDEToken.json'
 import VFIDEPresaleABI from './VFIDEPresale.json'
 import StablecoinRegistryABI from './StablecoinRegistry.json'
 import VaultInfrastructureABI from './VaultInfrastructure.json'
+import VaultHubFullABI from './VaultHub.json'
 import VaultHubLiteABI from './VaultHubLite.json'
 import UserVaultLiteABI from './UserVaultLite.json'
 import UserVaultABI from './UserVault.json'
@@ -90,8 +91,9 @@ validateABI(SeerViewABI, 'SeerView');
 validateABI(UserRewardsABI, 'UserRewards');
 validateABI(PromotionalTreasuryABI, 'PromotionalTreasury');
 
-// VaultHub ABI should point to the dedicated VaultHub ABI surface.
-const VaultHubABI = VaultHubLiteABI
+// VaultHub ABI points to the full compiled artifact (includes ensureVault, getVaultInfo, etc.).
+validateABI(VaultHubFullABI, 'VaultHub');
+const VaultHubABI = VaultHubFullABI
 
 export {
   VFIDETokenABI,

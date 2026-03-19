@@ -98,6 +98,9 @@ contract VaultRegistry is Ownable, ReentrancyGuard {
     event GuardianRemoved(address indexed vault, address indexed guardian);
     event BadgeFingerprintUpdated(address indexed vault, bytes32 indexed fingerprint);
     event VaultActivityUpdated(address indexed vault, uint256 timestamp);
+    event VaultHubSet(address indexed newVaultHub);
+    event BadgeManagerSet(address indexed newBadgeManager);
+    event ProofScoreManagerSet(address indexed newProofScoreManager);
     
     // ═══════════════════════════════════════════════════════════════════════════════
     // ERRORS
@@ -618,14 +621,17 @@ contract VaultRegistry is Ownable, ReentrancyGuard {
     function setVaultHub(address _vaultHub) external onlyOwner {
         if (_vaultHub == address(0)) revert ZeroAddress();
         vaultHub = IVaultInfrastructure(_vaultHub);
+        emit VaultHubSet(_vaultHub);
     }
     
     function setBadgeManager(address _badgeManager) external onlyOwner {
         badgeManager = IBadgeManager(_badgeManager);
+        emit BadgeManagerSet(_badgeManager);
     }
     
     function setProofScoreManager(address _proofScoreManager) external onlyOwner {
         proofScoreManager = IProofScoreManager(_proofScoreManager);
+        emit ProofScoreManagerSet(_proofScoreManager);
     }
     
     // ═══════════════════════════════════════════════════════════════════════════════

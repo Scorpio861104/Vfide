@@ -269,7 +269,7 @@ describe('useVaultRecovery', () => {
       })
       
       expect(mockWriteContractAsync).toHaveBeenCalledWith(expect.objectContaining({
-        functionName: 'approveRecovery',
+        functionName: 'guardianApproveRecovery',
       }))
     })
 

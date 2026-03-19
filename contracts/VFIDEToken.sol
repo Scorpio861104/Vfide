@@ -106,6 +106,14 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
     uint64  public pendingVaultHubAt;
     address public pendingSecurityHub;
     uint64  public pendingSecurityHubAt;
+
+    // H-01 Fix: Timelocked admin changes for systemExempt and whitelist
+    address public pendingExemptAddr;
+    bool    public pendingExemptStatus;
+    uint64  public pendingExemptAt;
+    address public pendingWhitelistAddr;
+    bool    public pendingWhitelistStatus;
+    uint64  public pendingWhitelistAt;
     
     // Sanctions / Compliance
     mapping(address => bool) public isBlacklisted;
@@ -139,6 +147,8 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
     event SanctumSinkSet(address indexed sink);
     event SanctumSinkScheduled(address indexed sink, uint64 effectiveAt);
     event SystemExemptSet(address indexed who, bool isExempt);
+    event SystemExemptProposed(address indexed who, bool isExempt, uint64 effectiveAt); // H-01 Fix
+    event WhitelistProposed(address indexed addr, bool status, uint64 effectiveAt);   // H-01 Fix
     event Whitelisted(address indexed addr, bool status);
     event VaultOnlySet(bool enabled);
     event ExemptSet(address indexed target, bool exempt);
@@ -408,20 +418,52 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
         _log("sanctum_sink_set");
     }
 
-    /// @notice Exempt address from all checks (fees + vault-only) - use for system contracts
-    function setSystemExempt(address who, bool isExempt) external onlyOwner {
+    /// @notice H-01 Fix: Propose system exemption with 48-hour timelock (grants bypass of ALL fees and vault rules)
+    function proposeSystemExempt(address who, bool isExempt) external onlyOwner {
         require(who != address(0), "VF: zero address");
-        systemExempt[who] = isExempt;
-        emit SystemExemptSet(who, isExempt);
-        _logEv(who, isExempt ? "exempt_on" : "exempt_off", 0, "");
+        pendingExemptAddr = who;
+        pendingExemptStatus = isExempt;
+        pendingExemptAt = uint64(block.timestamp) + SINK_CHANGE_DELAY;
+        emit SystemExemptProposed(who, isExempt, pendingExemptAt);
+        _logEv(who, "exempt_proposed", 0, "");
     }
-    
-    /// @notice Whitelist address to bypass vault-only rule - use for exchanges/DEXs
-    function setWhitelist(address addr, bool status) external onlyOwner {
+
+    /// @notice H-01 Fix: Confirm a pending system exempt after timelock elapses
+    function confirmSystemExempt() external onlyOwner {
+        require(pendingExemptAt != 0, "VF: no pending exempt");
+        require(block.timestamp >= pendingExemptAt, "VF: timelock active");
+        address who = pendingExemptAddr;
+        bool status = pendingExemptStatus;
+        systemExempt[who] = status;
+        emit SystemExemptSet(who, status);
+        _logEv(who, status ? "exempt_on" : "exempt_off", 0, "");
+        delete pendingExemptAddr;
+        delete pendingExemptStatus;
+        delete pendingExemptAt;
+    }
+
+    /// @notice H-01 Fix: Propose whitelist entry with 48-hour timelock (grants bypass of vault-only)
+    function proposeWhitelist(address addr, bool status) external onlyOwner {
         require(addr != address(0), "VF: zero address");
+        pendingWhitelistAddr = addr;
+        pendingWhitelistStatus = status;
+        pendingWhitelistAt = uint64(block.timestamp) + SINK_CHANGE_DELAY;
+        emit WhitelistProposed(addr, status, pendingWhitelistAt);
+        _logEv(addr, "whitelist_proposed", 0, "");
+    }
+
+    /// @notice H-01 Fix: Confirm a pending whitelist change after timelock elapses
+    function confirmWhitelist() external onlyOwner {
+        require(pendingWhitelistAt != 0, "VF: no pending whitelist");
+        require(block.timestamp >= pendingWhitelistAt, "VF: timelock active");
+        address addr = pendingWhitelistAddr;
+        bool status = pendingWhitelistStatus;
         whitelisted[addr] = status;
         emit Whitelisted(addr, status);
         _logEv(addr, status ? "whitelist_add" : "whitelist_remove", 0, "");
+        delete pendingWhitelistAddr;
+        delete pendingWhitelistStatus;
+        delete pendingWhitelistAt;
     }
 
     function setVaultOnly(bool enabled) external onlyOwner {
@@ -505,8 +547,9 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
     }
 
     /// @notice H-02 Fix: Check if fee bypass is active (independent of security bypass)
+    /// Fees are NEVER disabled by the legacy circuit breaker — prevents fee-bypass exploit.
     function isFeeBypassed() public view returns (bool) {
-        if (isCircuitBreakerActive()) return true; // legacy circuit breaker overrides
+        // H-02 Fix: Removed legacy circuit breaker override — fees cannot be globally disabled
         if (!feeBypass) return false;
         if (feeBypassExpiry > 0 && block.timestamp >= feeBypassExpiry) return false;
         return true;

@@ -830,7 +830,7 @@ function GuardianPendingRecoveryCard({
       const txHash = await writeContractAsync({
         address: entry.address,
         abi: USER_VAULT_ABI,
-        functionName: 'approveRecovery',
+        functionName: 'guardianApproveRecovery',
       });
       const txHashText = String(txHash);
       setTxHashPreview(txHashText);

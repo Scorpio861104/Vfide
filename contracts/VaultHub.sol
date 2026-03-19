@@ -41,6 +41,9 @@ contract VaultHub is Ownable, Pausable {
     uint256 public totalVaults;
     mapping(address => uint256) public vaultCreatedAt;
 
+    // M-11 Fix: council address so council members can participate as recovery approvers
+    address public council;
+
     /// Events
     event ModulesSet(address vfide, address securityHub, address ledger, address dao);
     event VaultCreated(address indexed owner, address indexed vault);
@@ -48,6 +51,7 @@ contract VaultHub is Ownable, Pausable {
     event ForcedRecovery(address indexed vault, address indexed newOwner);
     event VFIDESet(address vfide);
     event DAOSet(address dao);
+    event CouncilSet(address council); // M-11 Fix
 
     /// Errors
     error VH_Zero();
@@ -129,6 +133,14 @@ contract VaultHub is Ownable, Pausable {
         _log(status ? "recovery_approver_added" : "recovery_approver_removed");
     }
 
+    // M-11 Fix: Set council address so council members count as recovery approvers
+    function setCouncil(address _council) external onlyOwner {
+        require(_council != address(0), "VH:zero");
+        council = _council;
+        emit CouncilSet(_council);
+        _log("hub_council_set");
+    }
+
     // ——— Deterministic address prediction for UX
     function predictVault(address owner_) public view returns (address predicted) {
         if (owner_ == address(0)) return address(0);
@@ -192,7 +204,10 @@ contract VaultHub is Ownable, Pausable {
 
     // ——— DAO forced recovery with Multi-Sig (H-5 Fix)
     function approveForceRecovery(address vault, address newOwner) external {
-        require(isRecoveryApprover[msg.sender], "VH:not-approver");
+        // M-11 Fix: council members are also eligible recovery approvers
+        bool isApprover = isRecoveryApprover[msg.sender] ||
+            (council != address(0) && ICouncilElection(council).isCouncil(msg.sender));
+        require(isApprover, "VH:not-approver");
         if (vault == address(0) || newOwner == address(0)) revert VH_Zero();
         address current = ownerOfVault[vault];
         require(current != address(0), "unknown vault");

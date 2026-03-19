@@ -1,11 +1,960 @@
 [
-  { "name": "createSubscription", "type": "function", "stateMutability": "nonpayable", "inputs": [{ "name": "merchant", "type": "address" }, { "name": "token", "type": "address" }, { "name": "amount", "type": "uint256" }, { "name": "interval", "type": "uint256" }, { "name": "maxPayments", "type": "uint256" }], "outputs": [{ "type": "uint256" }] },
-  { "name": "cancelSubscription", "type": "function", "stateMutability": "nonpayable", "inputs": [{ "name": "subId", "type": "uint256" }], "outputs": [] },
-  { "name": "pauseSubscription", "type": "function", "stateMutability": "nonpayable", "inputs": [{ "name": "subId", "type": "uint256" }], "outputs": [] },
-  { "name": "resumeSubscription", "type": "function", "stateMutability": "nonpayable", "inputs": [{ "name": "subId", "type": "uint256" }], "outputs": [] },
-  { "name": "processPayment", "type": "function", "stateMutability": "nonpayable", "inputs": [{ "name": "subId", "type": "uint256" }], "outputs": [] },
-  { "name": "getSubscription", "type": "function", "stateMutability": "view", "inputs": [{ "name": "subId", "type": "uint256" }], "outputs": [{ "name": "sub", "type": "tuple", "components": [{ "name": "subscriber", "type": "address" }, { "name": "merchant", "type": "address" }, { "name": "token", "type": "address" }, { "name": "amount", "type": "uint256" }, { "name": "interval", "type": "uint256" }, { "name": "lastPayment", "type": "uint256" }, { "name": "paymentsRemaining", "type": "uint256" }, { "name": "totalPaid", "type": "uint256" }, { "name": "active", "type": "bool" }, { "name": "paused", "type": "bool" }] }] },
-  { "name": "getUserSubscriptions", "type": "function", "stateMutability": "view", "inputs": [{ "name": "user", "type": "address" }], "outputs": [{ "type": "uint256[]" }] },
-  { "name": "getNextPaymentInfo", "type": "function", "stateMutability": "view", "inputs": [{ "name": "subId", "type": "uint256" }], "outputs": [{ "name": "nextPaymentTime", "type": "uint256" }, { "name": "amount", "type": "uint256" }, { "name": "canProcess", "type": "bool" }] },
-  { "name": "canProcess", "type": "function", "stateMutability": "view", "inputs": [{ "name": "subId", "type": "uint256" }], "outputs": [{ "name": "processable", "type": "bool" }, { "name": "reason", "type": "string" }] }
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_vaultHub",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_dao",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_seer",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "constructor"
+  },
+  {
+    "inputs": [],
+    "name": "SM_AlreadyPaused",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "SM_GracePeriodExpired",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "SM_InactiveSubscription",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "SM_InvalidAmount",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "SM_InvalidInterval",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "SM_InvalidMerchant",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "SM_NotAuthorized",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "SM_NotPaused",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "SM_NotSubscriber",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "SM_PaymentTooEarly",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "SM_SubscriptionPaused",
+    "type": "error"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "subId",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "cancelledBy",
+        "type": "address"
+      }
+    ],
+    "name": "EmergencyCancelled",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "subId",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "graceEndTime",
+        "type": "uint256"
+      }
+    ],
+    "name": "GracePeriodStarted",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "subId",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "timestamp",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "string",
+        "name": "reason",
+        "type": "string"
+      }
+    ],
+    "name": "PaymentFailed",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "subId",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "timestamp",
+        "type": "uint256"
+      }
+    ],
+    "name": "PaymentProcessed",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "subId",
+        "type": "uint256"
+      }
+    ],
+    "name": "SubscriptionCancelled",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "subId",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "subscriber",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "merchant",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "interval",
+        "type": "uint256"
+      }
+    ],
+    "name": "SubscriptionCreated",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "subId",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "oldAmount",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "newAmount",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "oldInterval",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "newInterval",
+        "type": "uint256"
+      }
+    ],
+    "name": "SubscriptionModified",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "subId",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "pausedBy",
+        "type": "address"
+      }
+    ],
+    "name": "SubscriptionPaused",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "subId",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "resumedBy",
+        "type": "address"
+      }
+    ],
+    "name": "SubscriptionResumed",
+    "type": "event"
+  },
+  {
+    "inputs": [],
+    "name": "GRACE_PERIOD",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "MAX_FAILED_PAYMENTS",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "SUBSCRIPTION_MERCHANT_REWARD",
+    "outputs": [
+      {
+        "internalType": "uint16",
+        "name": "",
+        "type": "uint16"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "SUBSCRIPTION_PAYER_REWARD",
+    "outputs": [
+      {
+        "internalType": "uint16",
+        "name": "",
+        "type": "uint16"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256[]",
+        "name": "subIds",
+        "type": "uint256[]"
+      }
+    ],
+    "name": "batchProcessPayments",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "processed",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "failed",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "subId",
+        "type": "uint256"
+      }
+    ],
+    "name": "canProcess",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "processable",
+        "type": "bool"
+      },
+      {
+        "internalType": "string",
+        "name": "reason",
+        "type": "string"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "subId",
+        "type": "uint256"
+      }
+    ],
+    "name": "cancelSubscription",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "merchant",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "token",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "interval",
+        "type": "uint256"
+      },
+      {
+        "internalType": "string",
+        "name": "memo",
+        "type": "string"
+      }
+    ],
+    "name": "createSubscription",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "subId",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "dao",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "subId",
+        "type": "uint256"
+      }
+    ],
+    "name": "emergencyCancel",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "merchant",
+        "type": "address"
+      }
+    ],
+    "name": "getMerchantStats",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "totalSubscriptions",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "activeCount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "pausedCount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "totalMRR",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "totalValuePerInterval",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "merchant",
+        "type": "address"
+      }
+    ],
+    "name": "getMerchantSubscriptions",
+    "outputs": [
+      {
+        "internalType": "uint256[]",
+        "name": "",
+        "type": "uint256[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "subId",
+        "type": "uint256"
+      }
+    ],
+    "name": "getNextPaymentInfo",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "nextPaymentTime",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bool",
+        "name": "isPaused",
+        "type": "bool"
+      },
+      {
+        "internalType": "bool",
+        "name": "isInGracePeriod",
+        "type": "bool"
+      },
+      {
+        "internalType": "uint256",
+        "name": "graceTimeRemaining",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "failedPaymentCount",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getReadyForProcessing",
+    "outputs": [
+      {
+        "internalType": "uint256[]",
+        "name": "ready",
+        "type": "uint256[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "subId",
+        "type": "uint256"
+      }
+    ],
+    "name": "getSubscription",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "subscriber",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "merchant",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "token",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "amount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "interval",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "nextPayment",
+            "type": "uint256"
+          },
+          {
+            "internalType": "bool",
+            "name": "active",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "paused",
+            "type": "bool"
+          },
+          {
+            "internalType": "uint256",
+            "name": "pausedAt",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "graceEndTime",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "failedPayments",
+            "type": "uint256"
+          },
+          {
+            "internalType": "string",
+            "name": "memo",
+            "type": "string"
+          }
+        ],
+        "internalType": "struct SubscriptionManager.Subscription",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256[]",
+        "name": "subIds",
+        "type": "uint256[]"
+      }
+    ],
+    "name": "getSubscriptionsBatch",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "subscriber",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "merchant",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "token",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "amount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "interval",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "nextPayment",
+            "type": "uint256"
+          },
+          {
+            "internalType": "bool",
+            "name": "active",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "paused",
+            "type": "bool"
+          },
+          {
+            "internalType": "uint256",
+            "name": "pausedAt",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "graceEndTime",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "failedPayments",
+            "type": "uint256"
+          },
+          {
+            "internalType": "string",
+            "name": "memo",
+            "type": "string"
+          }
+        ],
+        "internalType": "struct SubscriptionManager.Subscription[]",
+        "name": "results",
+        "type": "tuple[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "user",
+        "type": "address"
+      }
+    ],
+    "name": "getUserSubscriptions",
+    "outputs": [
+      {
+        "internalType": "uint256[]",
+        "name": "",
+        "type": "uint256[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "subId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "newAmount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "newInterval",
+        "type": "uint256"
+      }
+    ],
+    "name": "modifySubscription",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "subId",
+        "type": "uint256"
+      }
+    ],
+    "name": "pauseSubscription",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "subId",
+        "type": "uint256"
+      }
+    ],
+    "name": "processPayment",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "subId",
+        "type": "uint256"
+      }
+    ],
+    "name": "resumeSubscription",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "seer",
+    "outputs": [
+      {
+        "internalType": "contract ISeer_SM",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_dao",
+        "type": "address"
+      }
+    ],
+    "name": "setDAO",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_seer",
+        "type": "address"
+      }
+    ],
+    "name": "setSeer",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "subCount",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "name": "subscriptions",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "subscriber",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "merchant",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "token",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "interval",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "nextPayment",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bool",
+        "name": "active",
+        "type": "bool"
+      },
+      {
+        "internalType": "bool",
+        "name": "paused",
+        "type": "bool"
+      },
+      {
+        "internalType": "uint256",
+        "name": "pausedAt",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "graceEndTime",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "failedPayments",
+        "type": "uint256"
+      },
+      {
+        "internalType": "string",
+        "name": "memo",
+        "type": "string"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "vaultHub",
+    "outputs": [
+      {
+        "internalType": "contract IVaultHub",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  }
 ]

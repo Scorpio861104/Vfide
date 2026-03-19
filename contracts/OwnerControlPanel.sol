@@ -353,27 +353,32 @@ contract OwnerControlPanel {
     }
     
     /**
-     * @notice Exempt address from vault-only and fees (for system contracts)
+     * @notice Propose system exemption with 48-hour timelock (H-01 Fix)
+     * @dev Exempts address from vault-only enforcement and all fees
      */
-    function token_setSystemExempt(address who, bool isExempt) external onlyOwner {
-        vfideToken.setSystemExempt(who, isExempt);
+    function token_proposeSystemExempt(address who, bool isExempt) external onlyOwner {
+        vfideToken.proposeSystemExempt(who, isExempt);
+    }
+
+    /**
+     * @notice Confirm a pending system exemption after timelock elapses (H-01 Fix)
+     */
+    function token_confirmSystemExempt() external onlyOwner {
+        vfideToken.confirmSystemExempt();
     }
     
     /**
-     * @notice Whitelist address to bypass vault-only (for exchanges/DEXs)
+     * @notice Propose whitelist entry with 48-hour timelock (H-01 Fix)
      */
-    function token_setWhitelist(address addr, bool status) external onlyOwner {
-        vfideToken.setWhitelist(addr, status);
+    function token_proposeWhitelist(address addr, bool status) external onlyOwner {
+        vfideToken.proposeWhitelist(addr, status);
     }
-    
+
     /**
-     * @notice Batch whitelist multiple addresses (gas efficient)
+     * @notice Confirm a pending whitelist change (H-01 Fix)
      */
-    function token_batchWhitelist(address[] calldata addrs, bool status) external onlyOwner {
-        for (uint256 i = 0; i < addrs.length; i++) {
-            // slither-disable-next-line calls-loop
-            vfideToken.setWhitelist(addrs[i], status);
-        }
+    function token_confirmWhitelist() external onlyOwner {
+        vfideToken.confirmWhitelist();
     }
     
     /**

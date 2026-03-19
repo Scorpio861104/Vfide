@@ -60,6 +60,7 @@ contract DevReserveVestingVault is ReentrancyGuard {
     event SyncedStart(uint64 start, uint64 cliff, uint64 end);
     event Claimed(address indexed beneficiary, address indexed vault, uint256 amount);
     event PauseSet(bool paused);
+    event EmergencyFreeze(address indexed by); // H-03 Fix
     event ModulesSet(address vfide, address beneficiary, address vaultHub, address securityHub, address ledger, address presale);
 
     // ── Errors
@@ -139,11 +140,19 @@ contract DevReserveVestingVault is ReentrancyGuard {
     // ─────────────────────────────────────────────────────────────
 
     function pauseClaims(bool paused) external {
-        // Beneficiary-only pause control (DAO removed per owner preference)
-        if (msg.sender != BENEFICIARY) revert DV_NotBeneficiary();
+        // H-03 Fix: Both BENEFICIARY and DAO can pause — prevents single-key compromise draining 25% supply
+        require(msg.sender == BENEFICIARY || msg.sender == DAO, "DV: unauthorized");
         claimsPaused = paused;
         emit PauseSet(paused);
         _log(paused ? "claims_paused" : "claims_unpaused");
+    }
+
+    // H-03 Fix: DAO can emergency-freeze independently (handles compromised beneficiary key)
+    function emergencyFreeze() external {
+        require(msg.sender == DAO, "DV: only DAO");
+        claimsPaused = true;
+        emit EmergencyFreeze(msg.sender);
+        _log("emergency_freeze");
     }
 
     // ─────────────────────────────────────────────────────────────
