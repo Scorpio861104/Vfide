@@ -16,6 +16,7 @@ contract AdminMultiSig is ReentrancyGuard {
     uint256 public constant CONFIG_DELAY = 24 hours;
     uint256 public constant CRITICAL_DELAY = 48 hours;
     uint256 public constant VETO_WINDOW = 24 hours;
+    uint256 public constant PROPOSAL_EXPIRY = 30 days;
 
     enum ProposalType {
         CONFIG,
@@ -213,6 +214,7 @@ contract AdminMultiSig is ReentrancyGuard {
         
         require(proposal.status == ProposalStatus.Approved, "AdminMultiSig: not approved");
         require(block.timestamp >= proposal.executionTime, "AdminMultiSig: too early");
+        require(block.timestamp <= proposal.createdAt + PROPOSAL_EXPIRY, "AdminMultiSig: proposal expired");
         require(proposal.vetoCount < vetoThreshold, "AdminMultiSig: community vetoed");
 
         if (proposal.proposalType != ProposalType.EMERGENCY) {

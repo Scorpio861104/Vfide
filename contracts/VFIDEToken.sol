@@ -280,6 +280,7 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
     }
 
     function permit(address owner, address spender, uint256 value, uint256 deadline, uint8 v, bytes32 r, bytes32 s) external {
+        require(!isBlacklisted[spender], "Spender blacklisted");
         require(block.timestamp <= deadline, "VFIDE: expired deadline");
         bytes32 structHash = keccak256(abi.encode(PERMIT_TYPEHASH, owner, spender, value, nonces[owner]++));
         bytes32 hash = keccak256(abi.encodePacked("\x19\x01", DOMAIN_SEPARATOR(), structHash));
@@ -388,7 +389,7 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
     }
 
     function setSanctumSink(address _sanctum) external onlyOwner {
-        if (policyLocked) require(_sanctum != address(0), "VF: cannot set zero when locked");
+        if (policyLocked && _sanctum == address(0)) revert VF_POLICY_LOCKED();
         require(_sanctum != address(0), "VF: zero address");
         uint64 effectiveAt = uint64(block.timestamp) + SINK_CHANGE_DELAY;
         pendingSanctumSink = _sanctum;
@@ -692,6 +693,9 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
         if (address(burnRouter) != address(0) && !isFeeBypassed() && !(systemExempt[from] || systemExempt[to])) {
             (uint256 _burnAmt, uint256 _sanctumAmt, uint256 _ecoAmt, address _sanctumSink, address _ecoSink, address _burnSink) =
                 burnRouter.computeFees(from, to, amount);
+
+            // Validate fee sum cannot exceed transfer amount (prevents malicious router DoS)
+            require(_burnAmt + _sanctumAmt + _ecoAmt <= amount, "VF: fees exceed amount");
 
             if (_burnAmt > 0) {
                 address sink = (_burnSink == address(0)) ? address(0) : _burnSink;

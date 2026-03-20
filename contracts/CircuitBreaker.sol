@@ -48,6 +48,7 @@ contract CircuitBreaker is VFIDEAccessControl {
     uint256 public lastTriggerTime;
     
     TriggerEvent[] public triggerHistory;
+    uint256 public constant MAX_TRIGGER_HISTORY = 1000;
 
     event CircuitBreakerConfigured(
         uint256 dailyVolumeThreshold,
@@ -290,7 +291,13 @@ contract CircuitBreaker is VFIDEAccessControl {
      * @return history Array of trigger events
      */
     function getTriggerHistory() external view returns (TriggerEvent[] memory history) {
-        return triggerHistory;
+        uint256 len = triggerHistory.length;
+        uint256 start = len > MAX_TRIGGER_HISTORY ? len - MAX_TRIGGER_HISTORY : 0;
+        uint256 count = len - start;
+        history = new TriggerEvent[](count);
+        for (uint256 i = 0; i < count; i++) {
+            history[i] = triggerHistory[start + i];
+        }
     }
 
     /**

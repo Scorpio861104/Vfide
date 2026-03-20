@@ -368,4 +368,21 @@ contract EmergencyControl {
         emit RecoveryCancelled(id);
         _log("recovery_cancelled");
     }
+
+    /// @notice Refresh a recovery proposal's epoch after committee reset so it is not stale
+    /// @dev Only callable by DAO when recovery is in progress but committee was reset
+    function refreshRecoveryEpoch(bytes32 id) external {
+        require(msg.sender == dao, "EC: not DAO");
+        RecoveryProposal storage p = recoveryProposals[id];
+        require(p.target != address(0) && !p.executed, "EC: invalid");
+        require(p.epoch != epoch, "EC: already current");
+        require(breaker.halted(), "EC: system must be halted");
+
+        p.epoch = epoch;
+        // Reset approvals — new committee must re-approve
+        p.approvals = 0;
+        p.unlockTime = 0;
+
+        _log("recovery_epoch_refreshed");
+    }
 }

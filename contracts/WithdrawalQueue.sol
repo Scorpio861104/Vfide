@@ -138,6 +138,7 @@ abstract contract WithdrawalQueue is VFIDEAccessControl, VFIDEReentrancyGuard {
      * @param _indices Array of queue indices to execute
      */
     function batchExecuteWithdrawals(uint256[] calldata _indices) external nonReentrant {
+        require(_indices.length <= 100, "WQ: batch too large");
         uint256 today = block.timestamp / 1 days;
         uint256 dailyCap = (totalVaultBalance * DAILY_WITHDRAWAL_CAP_PERCENT) / 100;
         uint256 totalAmount = 0;
@@ -190,6 +191,24 @@ abstract contract WithdrawalQueue is VFIDEAccessControl, VFIDEReentrancyGuard {
         request.cancelled = true;
 
         emit WithdrawalCancelled(_queueIndex, request.user, _reason);
+    }
+
+    /**
+     * @notice Cancel own pending withdrawal request
+     * @param _queueIndex Index in the withdrawal queue
+     */
+    function cancelOwnWithdrawal(uint256 _queueIndex) external {
+        require(_queueIndex < withdrawalQueue.length, "WithdrawalQueue: invalid index");
+        
+        WithdrawalRequest storage request = withdrawalQueue[_queueIndex];
+        
+        require(msg.sender == request.user, "WithdrawalQueue: not requester");
+        require(!request.executed, "WithdrawalQueue: already executed");
+        require(!request.cancelled, "WithdrawalQueue: already cancelled");
+
+        request.cancelled = true;
+
+        emit WithdrawalCancelled(_queueIndex, msg.sender, "user_cancelled");
     }
 
     /**
