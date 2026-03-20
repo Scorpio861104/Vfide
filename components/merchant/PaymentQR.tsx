@@ -9,6 +9,7 @@ import { QRCodeSVG } from 'qrcode.react'
 import { useAccount, useSignMessage } from 'wagmi'
 import { useIsMerchant } from '@/lib/vfide-hooks'
 import { buildQrSignatureMessage } from '@/lib/payments/qrSignature'
+import { PRESALE_REFERENCE_PRICE } from '@/lib/constants'
 import { 
   QrCode, 
   Download, 
@@ -69,9 +70,8 @@ export function PaymentQR({ defaultAmount, defaultOrderId }: PaymentQRProps) {
       })()
     : ''
 
-  // USD estimate (using $0.07 presale price as reference)
-  const REFERENCE_PRICE = 0.07
-  const usdValue = amount ? (parseFloat(amount) * REFERENCE_PRICE).toFixed(2) : '0.00'
+  // USD estimate using canonical presale reference price
+  const usdValue = amount ? (parseFloat(amount) * PRESALE_REFERENCE_PRICE).toFixed(2) : '0.00'
 
   const copyPaymentLink = () => {
     if (!paymentUrl || !securePayloadReady) return
