@@ -25,7 +25,6 @@ import {
   Flame
 } from 'lucide-react';
 
-
 // Types
 type WalletType = 'ethereum' | 'bitcoin' | 'multi';
 

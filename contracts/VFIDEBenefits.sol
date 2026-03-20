@@ -158,7 +158,6 @@ contract VFIDEBenefits {
         // Award FREE ProofScore to buyer
         if (buyerScorePerTx > 0) {
             try seer.reward(buyer, buyerScorePerTx, "commerce_buyer") {
-                // slither-disable-next-line reentrancy-events
                 emit ProofScoreAwarded(buyer, buyerScorePerTx, "commerce_buyer");
             } catch {}
         }
@@ -166,7 +165,6 @@ contract VFIDEBenefits {
         // Award FREE ProofScore to merchant
         if (merchantScorePerTx > 0) {
             try seer.reward(merchant, merchantScorePerTx, "commerce_merchant") {
-                // slither-disable-next-line reentrancy-events
                 emit ProofScoreAwarded(merchant, merchantScorePerTx, "commerce_merchant");
             } catch {}
         }

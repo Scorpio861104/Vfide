@@ -162,7 +162,6 @@ contract FiatRampRegistry {
         // Reward trust score for completed ramp activity (no on-chain identity tracking)
         _rewardRampUser(user);
 
-        // slither-disable-next-line reentrancy-events
         emit RampTransactionRecorded(user, msg.sender, externalTxHash, isOnRamp);
     }
     
@@ -353,7 +352,7 @@ contract MainstreamPriceOracle {
         isUpdater[updater] = status;
     }
     
-    /// @notice L-17 Fix: Fallback — any updater can push a price from a registered source
+    /// @notice Fallback — any updater can push a price from a registered source
     /// @dev Reads `lastPrice` from the registered PriceSource and applies it (with sanity check)
     function updatePriceFromSource(address source) external onlyUpdater {
         PriceSource storage ps = priceSources[source];
@@ -504,7 +503,6 @@ contract SessionKeyManager {
     mapping(address => Session) public sessions;  // sessionKey => Session
     mapping(address => address[]) private ownerSessions; // owner => sessionKeys
     
-    // H-16 Fix: Track authorized spend recorders
     mapping(address => bool) public authorizedSpendRecorders;
     
     // Default limits
@@ -517,7 +515,6 @@ contract SessionKeyManager {
         _;
     }
     
-    // H-16 Fix: Modifier for authorized spend recorders
     modifier onlyAuthorizedRecorder() {
         require(authorizedSpendRecorders[msg.sender], "SKM: not authorized recorder");
         _;
@@ -530,7 +527,7 @@ contract SessionKeyManager {
     }
     
     /**
-     * @notice H-16 Fix: Set authorized spend recorders (MerchantPortal, etc.)
+     * @notice Set authorized spend recorders (MerchantPortal, etc.)
      */
     function setAuthorizedRecorder(address recorder, bool authorized) external onlyDAO {
         require(recorder != address(0), "SKM: zero address");
@@ -635,7 +632,7 @@ contract SessionKeyManager {
     
     /**
      * @notice Record spending (called by payment contracts)
-     * @dev H-16 Fix: Only callable by authorized contracts (MerchantPortal, etc.)
+     * @dev Only callable by authorized contracts (MerchantPortal, etc.)
      */
     function recordSpend(address sessionKey, uint256 amount) external onlyAuthorizedRecorder returns (bool) {
         Session storage s = sessions[sessionKey];

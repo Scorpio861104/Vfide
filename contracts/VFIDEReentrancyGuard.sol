@@ -57,5 +57,4 @@ abstract contract VFIDEReentrancyGuard {
 
 }
 
-// L-19 Fix: Example contracts (VaultWithReentrancyProtection, TokenWithReentrancyProtection)
 // moved to contracts/test/ to prevent deployment in production.

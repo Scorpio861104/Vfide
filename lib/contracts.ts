@@ -50,7 +50,7 @@ import {
 const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000' as const
 
 /**
- * H-5 Fix: Validate contract address at runtime
+ * Validate contract address at runtime
  * Returns properly typed address, or zero address if invalid/missing
  * Runtime validation logs warnings for debugging
  */

@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
-// L-01 Fix: Extracted from VFIDETrust.sol monolith.
 // ProofLedger (and the TRUST_NotDAO / TRUST_Zero errors) live in ProofLedger.sol.
 import "./ProofLedger.sol";
 
@@ -86,7 +85,6 @@ contract Seer {
     // 0 == uninitialized → treated as NEUTRAL = 5000 (50% on 0-10000 scale)
     mapping(address => uint16) private _score;
 
-    // M-18 Fix: Guard against circular _delta calls (score source calling back into Seer)
     mapping(address => bool) private _deltaInProgress;
     
     // Badge system for VFIDEBadgeNFT integration
@@ -130,11 +128,9 @@ contract Seer {
     mapping(address => mapping(address => uint16)) public dailyOperatorRewardTotal;
     uint16 public maxDailyOperatorReward = 200; // Max 2% score change per day per operator-subject pair
     uint16 public maxSingleReward = 100; // Max 1% score change per call
-    // H-08 Fix: Global per-operator daily cap to prevent systemic inflation by a single compromised operator
     mapping(address => uint64) public operatorGlobalDailyResetTime;
     mapping(address => uint32) public operatorGlobalDailyTotal;
     uint32 public maxDailyOperatorGlobalReward = 50_000; // Max 50k points globally per operator per day
-    // H-13 Fix: Rate limiting for punishments (mirrors reward limits)
     mapping(address => mapping(address => uint64)) public lastOperatorPunishTime;
     mapping(address => mapping(address => uint16)) public dailyOperatorPunishTotal;
     uint16 public maxDailyOperatorPunish = 200; // Max 2% score reduction per day per operator-subject pair
@@ -150,7 +146,6 @@ contract Seer {
         bytes32 reasonHash;  // keccak256 of reason string for gas efficiency
     }
     
-    // slither-disable-next-line uninitialized-state
     mapping(address => ScoreChange[]) public scoreHistory;
     mapping(address => uint64) public lastActivity;  // For decay tracking
     uint8 public constant MAX_HISTORY_PER_USER = 50;  // Cap history storage
@@ -405,7 +400,7 @@ contract Seer {
         }
     }
 
-    // ═══ I-13 Fix: Score cache to avoid gas amplification on transfers ═══
+    // ═══ Score cache to avoid gas amplification on transfers ═══
     // When onChainScoreWeight > 0, getScore() iterates external source contracts.
     // This cache lets callers (VFIDEToken transfers) use getCachedScore() for a
     // bounded-gas read, while refreshScoreCache() updates the cache off-path.
@@ -469,7 +464,6 @@ contract Seer {
     /**
      * @notice Calculate score from on-chain sources only
      */
-    // slither-disable-start calls-loop
     // Intentional: score aggregation queries independent external scoring modules per source.
     function calculateOnChainScore(address subject) public view returns (uint16) {
         if (subject == address(0)) return NEUTRAL;
@@ -509,10 +503,8 @@ contract Seer {
         
         return uint16(finalScore);
     }
-    // slither-disable-end calls-loop
 
     /// Automated ProofScore calculation based on behavioral metrics
-    // slither-disable-start calls-loop
     // Intentional: automated score composes optional module reads in a bounded control flow.
     function calculateAutomatedScore(address subject) public view returns (uint16) {
         if (subject == address(0)) return NEUTRAL;
@@ -541,7 +533,6 @@ contract Seer {
         // Safe: score is clamped to MAX_SCORE (10000) which fits in uint16
         return uint16(score);
     }
-    // slither-disable-end calls-loop
     
     /**
      * @notice Calculate ProofScore bonus from active badges
@@ -623,7 +614,6 @@ contract Seer {
         return bonus;
     }
 
-    // slither-disable-start calls-loop
     // Intentional: social bonus retrieval delegates to configured social module.
     function _calculateEndorsementBonus(address subject) internal view returns (uint256 bonus) {
         address social = seerSocial;
@@ -634,7 +624,6 @@ contract Seer {
             return 0;
         }
     }
-    // slither-disable-end calls-loop
     
     /**
      * @notice Check if badge is active (exists and not expired)
@@ -664,7 +653,6 @@ contract Seer {
         // C-2 FIX: Rate limit operator rewards to prevent score inflation
         if (delta > maxSingleReward) revert TRUST_Bounds();
         
-        // H-08 Fix: Check global daily cap first to bound blast radius of any single operator
         if (operatorGlobalDailyResetTime[msg.sender] == 0 ||
             block.timestamp >= uint256(operatorGlobalDailyResetTime[msg.sender]) + 1 days) {
             operatorGlobalDailyResetTime[msg.sender] = uint64(block.timestamp);
@@ -691,7 +679,6 @@ contract Seer {
         // C-2 FIX: Rate limit punishments too
         if (delta > maxSingleReward) revert TRUST_Bounds();
         
-        // H-13 Fix: Daily rate limit for punishments (matches reward pattern)
         if (operatorGlobalDailyResetTime[msg.sender] == 0 ||
             block.timestamp >= uint256(operatorGlobalDailyResetTime[msg.sender]) + 1 days) {
             operatorGlobalDailyResetTime[msg.sender] = uint64(block.timestamp);
@@ -707,7 +694,6 @@ contract Seer {
             dailyOperatorPunishTotal[msg.sender][subject] = 0;
         }
         
-        // H-13 Fix: Check daily limit per subject for punishments
         if (dailyOperatorPunishTotal[msg.sender][subject] + delta > maxDailyOperatorPunish) revert TRUST_Limit();
         
         dailyOperatorPunishTotal[msg.sender][subject] += delta;
@@ -727,11 +713,9 @@ contract Seer {
     }
 
     function _delta(address subject, int256 d, string calldata reason, uint16 reasonCode) internal {
-        // M-18 Fix: Prevent circular scoring (score source calling back into _delta for same subject)
         require(!_deltaInProgress[subject], "SEER: circular delta");
         _deltaInProgress[subject] = true;
 
-        // M-18 Fix: Use raw stored score instead of getScore() to avoid circular dependency
         // with on-chain score sources that may call back to Seer
         uint16 cur = _score[subject];
         int256 next = int256(uint256(cur)) + d;
@@ -757,7 +741,6 @@ contract Seer {
             try ISeerAutonomous(seerAutonomous).onScoreChange(subject, cur, newScore) {} catch {}
         }
 
-        // M-18 Fix: Clear guard after all operations (including cascade) complete
         _deltaInProgress[subject] = false;
     }
     
@@ -821,7 +804,7 @@ contract Seer {
         return exp == 0 || exp > block.timestamp;
     }
     
-    /// @notice L-3 Fix: Batch set badges for gas efficiency
+    /// @notice Batch set badges for gas efficiency
     /// @param subjects Array of user addresses
     /// @param badge The badge ID to set for all subjects
     /// @param active True to grant, false to revoke

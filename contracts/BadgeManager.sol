@@ -140,7 +140,6 @@ contract BadgeManager {
      */
     function awardBadge(address user, bytes32 badge) public onlyOperator {
         // Skip if user already has this badge
-        // slither-disable-next-line calls-loop
         if (seer.hasBadge(user, badge)) {
             // Check if renewable and needs renewal
             _checkRenewal(user, badge);
@@ -155,17 +154,14 @@ contract BadgeManager {
         }
         
         // Award badge in Seer
-        // slither-disable-next-line calls-loop
         try seer.setBadge(user, badge, true, expiry) {
             // Boost ProofScore by badge weight
             uint16 scoreBoost = BadgeRegistry.getRecommendedWeight(badge);
             if (scoreBoost > 0) {
                 string memory reason = string(abi.encodePacked("Badge: ", BadgeRegistry.getName(badge)));
-                // slither-disable-next-line calls-loop
                 try seer.reward(user, scoreBoost, reason) {} catch {}
             }
 
-            // slither-disable-next-line reentrancy-events
             emit BadgeEarned(user, badge, expiry, scoreBoost);
         } catch {}
     }
@@ -187,7 +183,6 @@ contract BadgeManager {
                 try seer.punish(user, scorePenalty, reason) {} catch {}
             }
 
-            // slither-disable-next-line reentrancy-events
             emit BadgeRevoked(user, badge, reason);
         } catch {}
     }
@@ -201,7 +196,6 @@ contract BadgeManager {
         // Skip if badge is permanent
         if (BadgeRegistry.isPermanent(badge)) return;
         
-        // slither-disable-next-line calls-loop
         uint256 expiry = seer.badgeExpiry(user, badge);
         
         // Check if expired
@@ -227,21 +221,16 @@ contract BadgeManager {
             uint256 duration = BadgeRegistry.getRecommendedDuration(badge);
             uint256 newExpiry = block.timestamp + duration;
             
-            // slither-disable-next-line calls-loop
             try seer.setBadge(user, badge, true, newExpiry) {
-                // slither-disable-next-line reentrancy-events
                 emit BadgeRenewed(user, badge, newExpiry);
             } catch {}
         } else {
             // Revoke expired badge
-            // slither-disable-next-line calls-loop
             try seer.setBadge(user, badge, false, 0) {
                 uint16 scorePenalty = BadgeRegistry.getRecommendedWeight(badge);
                 if (scorePenalty > 0) {
-                    // slither-disable-next-line calls-loop
                     try seer.punish(user, scorePenalty, "Badge expired - not re-qualified") {} catch {}
                 }
-                // slither-disable-next-line reentrancy-events
                 emit BadgeRevoked(user, badge, "Failed to re-qualify");
             } catch {}
         }
@@ -255,10 +244,8 @@ contract BadgeManager {
      */
     function _checkBadgeQualification(address user, bytes32 badge) internal view returns (bool qualified) {
         UserStats memory stats = userStats[user];
-        // slither-disable-next-line calls-loop
         uint16 score = seer.getScore(user);
 
-        // slither-disable-next-line calls-loop
         return qualificationRules.checkQualification(
             stats.commerceTxCount,
             stats.consecutiveDays,
@@ -295,7 +282,6 @@ contract BadgeManager {
         _updateActivity(user);
         _checkBadgeEligibility(user);
 
-        // slither-disable-next-line reentrancy-events
         emit StatsUpdated(user, "commerceTx", stats.commerceTxCount);
     }
     
@@ -310,7 +296,6 @@ contract BadgeManager {
         _updateActivity(user);
         _checkBadgeEligibility(user);
 
-        // slither-disable-next-line reentrancy-events
         emit StatsUpdated(user, "governanceVotes", stats.governanceVotes);
     }
     
@@ -324,7 +309,6 @@ contract BadgeManager {
         
         _checkBadgeEligibility(user);
 
-        // slither-disable-next-line reentrancy-events
         emit StatsUpdated(user, "endorsements", stats.endorsementsReceived);
     }
     
@@ -342,7 +326,6 @@ contract BadgeManager {
         
         _checkBadgeEligibility(referrer);
 
-        // slither-disable-next-line reentrancy-events
         emit StatsUpdated(referrer, "referrals", stats.referralsMade);
     }
     
@@ -356,7 +339,6 @@ contract BadgeManager {
         
         _checkBadgeEligibility(reporter);
 
-        // slither-disable-next-line reentrancy-events
         emit StatsUpdated(reporter, "fraudReports", stats.fraudReports);
     }
     
@@ -370,7 +352,6 @@ contract BadgeManager {
         
         _checkBadgeEligibility(creator);
 
-        // slither-disable-next-line reentrancy-events
         emit StatsUpdated(creator, "education", stats.educationalContent);
     }
     
@@ -461,11 +442,9 @@ contract BadgeManager {
             // First activity
             stats.consecutiveDays = 1;
             stats.lastActivityDay = currentDay;
-        // slither-disable-next-line incorrect-equality
         } else if (currentDay == stats.lastActivityDay) {
             // Same day, no change
             return;
-        // slither-disable-next-line incorrect-equality
         } else if (currentDay == stats.lastActivityDay + 1) {
             // Consecutive day, increment streak
             stats.consecutiveDays++;

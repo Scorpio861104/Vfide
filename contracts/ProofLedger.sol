@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
-// L-01 Fix: Extracted from VFIDETrust.sol monolith.
 // Errors shared with Seer.sol are defined here; Seer.sol imports this file.
 
 error TRUST_NotDAO();
@@ -37,14 +36,13 @@ contract ProofLedger {
         dao = _dao;
     }
 
-    /// @notice Authorize or deauthorize a contract to write log entries (C-01 Fix)
+    /// @notice Authorize or deauthorize a contract to write log entries
     function setLogger(address logger, bool authorized) external onlyDAO {
         if (logger == address(0)) revert TRUST_Zero();
         authorizedLoggers[logger] = authorized;
         emit LoggerSet(logger, authorized);
     }
 
-    // C-01 Fix: Only authorized loggers (DAO or registered system contracts) may write
     function logSystemEvent(address who, string calldata action, address by) external onlyLogger {
         emit SystemEvent(who, action, by);
     }

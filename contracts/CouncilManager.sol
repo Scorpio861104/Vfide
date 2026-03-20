@@ -29,7 +29,6 @@ error CM_Zero();
 error CM_NotKeeper();
 error CM_TooSoon();
 
-// H-9 Fix: Add ReentrancyGuard to prevent reentrancy via external calls
 contract CouncilManager is ReentrancyGuard {
     event ModulesSet(address election, address seer, address ecosystemVault, address councilSalary);
     event KeeperSet(address indexed keeper, bool authorized);
@@ -158,7 +157,6 @@ contract CouncilManager is ReentrancyGuard {
         // This prevents issues with array modification during iteration
         address[] memory membersToCheck = new address[](councilSize);
         for (uint256 i = 0; i < councilSize; i++) {
-            // slither-disable-next-line calls-loop
             membersToCheck[i] = election.getCouncilMember(i);
         }
 
@@ -173,7 +171,6 @@ contract CouncilManager is ReentrancyGuard {
             }
 
             membersChecked++;
-            // slither-disable-next-line calls-loop
             uint16 score = seer.getScore(member);
 
             if (score < COUNCIL_MIN_SCORE) {
@@ -181,7 +178,6 @@ contract CouncilManager is ReentrancyGuard {
                 daysBelow700[member]++;
                 lastCheckTime[member] = block.timestamp;
 
-                // slither-disable-next-line reentrancy-events
                 emit MemberGracePeriod(member, daysBelow700[member], score);
 
                 // Auto-remove after 7 days
@@ -189,14 +185,11 @@ contract CouncilManager is ReentrancyGuard {
                     daysBelow700[member] = 0;
 
                     // H-2 FIX: Use try/catch to handle potential removal failures
-                    // slither-disable-next-line calls-loop
-                    // slither-disable-next-line reentrancy-no-eth
                     try election.removeCouncilMember(
                         member,
                         "ProofScore below 7000 for 7+ days (auto-removal)"
                     ) {
                         membersRemoved++;
-                        // slither-disable-next-line reentrancy-events
                         emit MemberAutoRemoved(member, 7, score);
                     } catch {
                         // Member may have already been removed or other issue
@@ -211,7 +204,6 @@ contract CouncilManager is ReentrancyGuard {
             }
         }
 
-        // slither-disable-next-line reentrancy-events
         emit ScoreCheckPerformed(membersChecked, membersRemoved, block.timestamp);
     }
 
@@ -233,7 +225,6 @@ contract CouncilManager is ReentrancyGuard {
             if (daysBelow700[member] >= 7) {
                 daysBelow700[member] = 0;
                 election.removeCouncilMember(member, "Manual check: score below 700 for 7+ days");
-                // slither-disable-next-line reentrancy-events
                 emit MemberAutoRemoved(member, 7, score);
             }
         } else {
@@ -257,7 +248,7 @@ contract CouncilManager is ReentrancyGuard {
      * @notice Distribute payments with priority: Operations FIRST, Council SECOND
      * @dev Called monthly (or per paymentInterval)
      * Operations always funded before council
-     * H-9 Fix: Added nonReentrant to prevent reentrancy via external call
+     * Added nonReentrant to prevent reentrancy via external call
      * 
      * NOTE: Council payments are EMPLOYMENT COMPENSATION (not investment returns).
      * Payments are transferred to CouncilSalary contract for distribution.
@@ -331,14 +322,12 @@ contract CouncilManager is ReentrancyGuard {
                 )
             );
 
-            // slither-disable-next-line reentrancy-events
             emit PaymentDistributed(
                 opsAmount,
                 success ? councilAmount : 0,
                 block.timestamp
             );
         } else {
-            // slither-disable-next-line reentrancy-events
             emit PaymentDistributed(opsAmount, 0, block.timestamp);
         }
     }
@@ -427,11 +416,9 @@ contract CouncilManager is ReentrancyGuard {
         uint256 riskCount = 0;
 
         for (uint256 i = 0; i < councilSize; i++) {
-            // slither-disable-next-line calls-loop
             address member = election.getCouncilMember(i);
             if (member == address(0)) continue;
 
-            // slither-disable-next-line calls-loop
             uint16 score = seer.getScore(member);
             if (score < COUNCIL_MIN_SCORE || daysBelow700[member] > 0) {
                 tempMembers[riskCount] = member;

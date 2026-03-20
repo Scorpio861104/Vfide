@@ -49,14 +49,11 @@ contract UserVaultLegacy is ReentrancyGuard {
     uint64 public withdrawalCooldown = 24 hours; // Default 24h cooldown
     uint256 public largeTransferThreshold = 10000 * 1e18; // Default 10k VFIDE (legacy, optional)
     
-    // H-18 Fix: Execute cooldown to prevent rapid malicious calls
     uint64 public lastExecuteTime;
     uint64 public executeCooldown = 1 hours; // Default 1h cooldown for execute()
     
-    // M-7 Fix: Maximum ETH value for execute() calls
     uint256 public maxExecuteValue = 1 ether; // Default 1 ETH max per execute call
 
-    // H-05 Fix: Target whitelist for execute() — prevents arbitrary external contract calls
     mapping(address => bool) public allowedExecuteTarget;
     bool public executeWhitelistEnforced; // When true, only whitelisted targets may be called
     event ExecuteTargetSet(address indexed target, bool allowed);
@@ -87,11 +84,8 @@ contract UserVaultLegacy is ReentrancyGuard {
         address proposedOwner;
         uint8 approvals;               // guardian approvals count
         uint64 readyTime;              // Minimum time before finalization
-        uint64 expiryTime;             // H-2 Fix: Recovery expires after 30 days
-        uint8 guardianCountSnapshot;   // Lock guardian count at request time
-        uint256 nonce;                 // H-2 Fix: Nonce to invalidate old votes
-        mapping(address => mapping(uint256 => bool)) voted;  // H-2 Fix: nonce => voted
-    }
+        uint64 expiryTime;        uint8 guardianCountSnapshot;   // Lock guardian count at request time
+        uint256 nonce;        mapping(address => mapping(uint256 => bool)) voted;    }
     Recovery private _recovery;
     uint64 public constant RECOVERY_MIN_DELAY = 7 days;
     uint64 public constant RECOVERY_EXPIRY = 30 days;
@@ -103,9 +97,7 @@ contract UserVaultLegacy is ReentrancyGuard {
         uint64 expiryTime;             // Inheritance expires after 30 days
         uint8 guardianCountSnapshot;   // Lock guardian count at request time
         bool ownerDenied;              // Owner explicitly denied (prevents gaming)
-        uint256 nonce;                 // H-3 Fix: Nonce to invalidate old votes
-        mapping(address => mapping(uint256 => bool)) voted;  // H-3 Fix: nonce => voted
-    }
+        uint256 nonce;        mapping(address => mapping(uint256 => bool)) voted;    }
     Inheritance private _inheritance;
     uint64 public constant INHERITANCE_MIN_DELAY = 7 days;
     uint64 public constant INHERITANCE_EXPIRY = 30 days;
@@ -209,15 +201,13 @@ contract UserVaultLegacy is ReentrancyGuard {
         if (newOwner == address(0)) revert UV_Zero();
         owner = newOwner;
         _logSys("vault_force_owner");
-        // slither-disable-next-line reentrancy-events
         emit OwnerSet(newOwner);
     }
 
     // ——— Owner controls
-    // H-1 & H-17 Fix: Track guardian add time for flash endorsement protection
+    // Track guardian add time for flash endorsement protection
     mapping(address => uint64) public guardianAddTime;
     uint64 public constant GUARDIAN_MATURITY_PERIOD = 7 days;
-    // M-10 Fix: Cap guardian count so recovery threshold stays manageable
     uint8 public constant MAX_GUARDIANS = 20;
 
     function setGuardian(address g, bool active) external onlyOwner notLocked {
@@ -235,7 +225,6 @@ contract UserVaultLegacy is ReentrancyGuard {
         if (isGuardian[g] != active) {
             isGuardian[g] = active;
             if (active) {
-                // M-10 Fix: Enforce maximum guardian count to prevent unworkable threshold
                 require(guardianCount < MAX_GUARDIANS, "UV: guardian limit reached");
                 guardianCount++;
                 guardianAddTime[g] = uint64(block.timestamp); // H-1: Track add time
@@ -257,10 +246,8 @@ contract UserVaultLegacy is ReentrancyGuard {
         }
     }
 
-    // H-17 Fix: Explicit function to check if guardian can participate in recovery
     function isGuardianMature(address g) public view returns (bool) {
         if (!isGuardian[g]) return false;
-        // H-1 Fix: Guardian must be active for GUARDIAN_MATURITY_PERIOD before participating
         return block.timestamp >= guardianAddTime[g] + GUARDIAN_MATURITY_PERIOD;
     }
 
@@ -268,7 +255,6 @@ contract UserVaultLegacy is ReentrancyGuard {
         if (kin == address(0)) revert UV_Zero();
         nextOfKin = kin;
         _logEv(kin, "next_of_kin_set", 0, "");
-        // slither-disable-next-line reentrancy-events
         emit NextOfKinSet(kin);
     }
 
@@ -276,7 +262,6 @@ contract UserVaultLegacy is ReentrancyGuard {
     
     function setWithdrawalCooldown(uint64 cooldown) external onlyOwner notLocked {
         require(cooldown <= 7 days, "UV:cooldown-too-long");
-        // M-17 Fix: Validate minimum cooldown
         require(cooldown >= 1 hours || cooldown == 0, "UV:cooldown-too-short");
         withdrawalCooldown = cooldown;
         emit WithdrawalCooldownSet(cooldown);
@@ -284,7 +269,6 @@ contract UserVaultLegacy is ReentrancyGuard {
     }
 
     function setLargeTransferThreshold(uint256 threshold) external onlyOwner notLocked {
-        // M-16 Fix: Validate threshold is reasonable
         require(threshold >= 100 * 1e18, "UV: threshold too low");
         require(threshold <= 1_000_000 * 1e18, "UV: threshold too high");
         largeTransferThreshold = threshold;
@@ -469,14 +453,12 @@ contract UserVaultLegacy is ReentrancyGuard {
             _recovery.guardianCountSnapshot = 0;
             
             _logEv(proposedOwner, "recovery_requested_kin", 0, "7-day wait required");
-            // slither-disable-next-line reentrancy-events
             emit RecoveryRequested(proposedOwner);
             return;
         }
 
-        // reset recovery with expiry time (H-2 Fix)
-        _recovery.nonce++;  // H-2 Fix: Increment nonce to invalidate old votes
-        _recovery.proposedOwner = proposedOwner;
+        // reset recovery with expiry time
+        _recovery.nonce++;        _recovery.proposedOwner = proposedOwner;
         _recovery.approvals = 0;
         _recovery.readyTime = uint64(block.timestamp + RECOVERY_MIN_DELAY);
         _recovery.expiryTime = uint64(block.timestamp + RECOVERY_EXPIRY);
@@ -489,29 +471,24 @@ contract UserVaultLegacy is ReentrancyGuard {
         }
         
         _logEv(proposedOwner, "recovery_requested", 0, "");
-        // slither-disable-next-line reentrancy-events
         emit RecoveryRequested(proposedOwner);
     }
 
     function guardianApproveRecovery() external notLocked {
         if (!isGuardian[msg.sender]) revert UV_NotGuardian();
-        // H-1 Fix: Require guardian maturity to prevent flash endorsement
         require(isGuardianMature(msg.sender), "UV: guardian not mature");
         if (_recovery.proposedOwner == address(0)) revert UV_NoRecovery();
-        // H-2 Fix: Check if recovery has expired
         require(block.timestamp <= _recovery.expiryTime, "UV: recovery expired");
         if (_recovery.voted[msg.sender][_recovery.nonce]) revert UV_AlreadyVoted();
         _recovery.voted[msg.sender][_recovery.nonce] = true;
         _recovery.approvals += 1;
         _logEv(msg.sender, "recovery_approval", _recovery.approvals, "");
-        // slither-disable-next-line reentrancy-events
         emit RecoveryApproved(msg.sender, _recovery.proposedOwner, _recovery.approvals);
     }
 
     function finalizeRecovery() external notLocked {
         if (_recovery.proposedOwner == address(0)) revert UV_NoRecovery();
         require(block.timestamp >= _recovery.readyTime, "UV: recovery timelock");
-        // H-2 Fix: Check if recovery has expired
         require(block.timestamp <= _recovery.expiryTime, "UV: recovery expired");
         
         // Use locked guardian count from request time to prevent threshold manipulation
@@ -521,7 +498,7 @@ contract UserVaultLegacy is ReentrancyGuard {
         address newOwner = _recovery.proposedOwner;
         owner = newOwner;
 
-        // clear request (H-2 Fix: also clear expiry) and vote state
+        // clear request (also clear expiry) and vote state
         _recovery.proposedOwner = address(0);
         _recovery.approvals = 0;
         _recovery.readyTime = 0;
@@ -531,7 +508,6 @@ contract UserVaultLegacy is ReentrancyGuard {
         // They will be overwritten on next recovery request
 
         _logSys("recovery_finalized");
-        // slither-disable-next-line reentrancy-events
         emit RecoveryFinalized(newOwner);
     }
 
@@ -547,7 +523,6 @@ contract UserVaultLegacy is ReentrancyGuard {
         _recovery.guardianCountSnapshot = 0;
         
         _logEv(cancelled, "recovery_cancelled", 0, "");
-        // slither-disable-next-line reentrancy-events
         emit RecoveryCancelled(msg.sender);
     }
 
@@ -566,8 +541,7 @@ contract UserVaultLegacy is ReentrancyGuard {
         require(!_inheritance.active, "UV: inheritance already active");
         require(!_inheritance.ownerDenied, "UV: owner denied inheritance");
         
-        _inheritance.nonce++;  // H-3 Fix: Increment nonce to invalidate old votes
-        _inheritance.active = true;
+        _inheritance.nonce++;        _inheritance.active = true;
         _inheritance.approvals = 0;
         _inheritance.readyTime = uint64(block.timestamp + INHERITANCE_MIN_DELAY);
         _inheritance.expiryTime = uint64(block.timestamp + INHERITANCE_EXPIRY);
@@ -575,7 +549,6 @@ contract UserVaultLegacy is ReentrancyGuard {
         _inheritance.ownerDenied = false;
         
         _logEv(msg.sender, "inheritance_requested", 0, "");
-        // slither-disable-next-line reentrancy-events
         emit InheritanceRequested(msg.sender);
     }
     
@@ -597,7 +570,6 @@ contract UserVaultLegacy is ReentrancyGuard {
         _inheritance.approvals++;
         
         _logEv(msg.sender, "inheritance_approved", _inheritance.approvals, "");
-        // slither-disable-next-line reentrancy-events
         emit InheritanceApproved(msg.sender, _inheritance.approvals);
     }
     
@@ -616,7 +588,6 @@ contract UserVaultLegacy is ReentrancyGuard {
         _inheritance.guardianCountSnapshot = 0;
         
         _logEv(msg.sender, "inheritance_denied", 0, "");
-        // slither-disable-next-line reentrancy-events
         emit InheritanceDenied(msg.sender);
     }
     
@@ -661,7 +632,6 @@ contract UserVaultLegacy is ReentrancyGuard {
             _logEv(msg.sender, "inheritance_cancelled_by_guardians", threshold, "");
             // forge-lint: disable-next-line(unsafe-typecast)
             // Safe: threshold is bounded by guardian count (max 255) fits in uint8
-            // slither-disable-next-line reentrancy-events
             emit InheritanceCancelledByGuardians(msg.sender, uint8(threshold));
         } else {
             _logEv(msg.sender, "inheritance_cancel_vote", _inheritanceCancellationApprovals, "");
@@ -723,7 +693,6 @@ contract UserVaultLegacy is ReentrancyGuard {
     
     function transferVFIDE(address toVault, uint256 amount) external onlyOwner notLocked notFrozen noActiveClaims nonReentrant returns (bool) {
         if (toVault == address(0)) revert UV_Zero();
-        // M-18 Fix: Validate amount and balance
         require(amount > 0, "UV: zero amount");
         uint256 currentBalance = IERC20(vfideToken).balanceOf(address(this));
         require(currentBalance >= amount, "UV: insufficient balance");
@@ -745,7 +714,6 @@ contract UserVaultLegacy is ReentrancyGuard {
             
             emit AbnormalTransactionDetected(txId, toVault, amount);
             emit TransferPendingApproval(txId, toVault, amount); // Additional event for clarity
-            // slither-disable-next-line reentrancy-benign
             _logEv(toVault, "abnormal_tx_detected", amount, "");
             
             // CRITICAL: Revert with pending tx info so caller knows what happened
@@ -780,7 +748,6 @@ contract UserVaultLegacy is ReentrancyGuard {
         bool ok = IERC20(vfideToken).approve(spender, amount);
         require(ok, "UV:approve-failed");
         _logEv(spender, "vault_approve", amount, "");
-        // slither-disable-next-line reentrancy-events
         emit VaultApprove(spender, amount);
         return ok;
     }
@@ -789,10 +756,8 @@ contract UserVaultLegacy is ReentrancyGuard {
     function execute(address target, uint256 value, bytes calldata data) external onlyOwner notLocked noActiveClaims nonReentrant returns (bytes memory result) {
         if (target == address(0)) revert UV_Zero();
         
-        // M-7 Fix: Enforce maximum value threshold for ETH transfers
         require(value <= maxExecuteValue, "UV:value-exceeds-max");
         
-        // H-18 Fix: Enforce execute cooldown
         if (executeCooldown > 0 && lastExecuteTime > 0) {
             require(block.timestamp >= lastExecuteTime + executeCooldown, "UV:execute-cooldown-active");
         }
@@ -800,7 +765,6 @@ contract UserVaultLegacy is ReentrancyGuard {
         // Security check: Prevent calling the Vault itself (reentrancy/self-destruct protection)
         require(target != address(this), "UV:self-call");
 
-        // H-05 Fix: Enforce target whitelist when enabled
         if (executeWhitelistEnforced) {
             require(allowedExecuteTarget[target], "UV:target-not-whitelisted");
         }
@@ -828,7 +792,6 @@ contract UserVaultLegacy is ReentrancyGuard {
     function executeBatch(address[] calldata targets, uint256[] calldata values, bytes[] calldata datas) external onlyOwner notLocked nonReentrant returns (bytes[] memory results) {
         require(targets.length == values.length && values.length == datas.length, "UV:length-mismatch");
         
-        // H-18 Fix: Enforce execute cooldown for batch operations too
         if (executeCooldown > 0 && lastExecuteTime > 0) {
             require(block.timestamp >= lastExecuteTime + executeCooldown, "UV:execute-cooldown-active");
         }
@@ -840,13 +803,10 @@ contract UserVaultLegacy is ReentrancyGuard {
         for (uint256 i = 0; i < targets.length; i++) {
             if (targets[i] == address(0)) revert UV_Zero();
             require(targets[i] != address(this), "UV:self-call");
-            // H-19 Fix: Enforce max value per execution in batch too
             require(values[i] <= maxExecuteValue, "UV:value-exceeds-max");
-            // H-05 Fix: Enforce target whitelist in batch too
             if (executeWhitelistEnforced) {
                 require(allowedExecuteTarget[targets[i]], "UV:target-not-whitelisted");
             }
-            // slither-disable-next-line calls-loop
             (bool success, bytes memory res) = targets[i].call{value: values[i]}(datas[i]);
             if (!success) {
                 assembly {
@@ -856,13 +816,11 @@ contract UserVaultLegacy is ReentrancyGuard {
                 }
             }
             results[i] = res;
-            // slither-disable-next-line calls-loop
             _logEv(targets[i], "vault_execute_batch", values[i], "");
         }
         
     }
 
-    // H-05 Fix: Manage the execute() target whitelist
     /// @notice Allow or disallow a target address for execute() calls
     /// @dev Can only be called by vault owner or hub
     function setAllowedTarget(address target, bool allowed) external {
@@ -908,7 +866,7 @@ contract UserVaultLegacy is ReentrancyGuard {
     /**
      * @notice Rescue stuck ETH accidentally sent to vault
      * @dev Owner can withdraw ETH that was accidentally sent to the vault
-     * H-4 Fix: Added nonReentrant to prevent reentrancy via malicious recipient
+     * Added nonReentrant to prevent reentrancy via malicious recipient
      */
     function rescueETH(address payable recipient) external onlyOwner notLocked notFrozen nonReentrant {
         require(recipient != address(0), "UV: zero recipient");
@@ -1144,7 +1102,6 @@ contract UserVaultBytecodeProvider is IUserVaultBytecodeProvider {
         address securityHub,
         address ledger
     ) external pure returns (bytes memory) {
-        // slither-disable-next-line too-many-digits
         return abi.encodePacked(
             type(UserVaultLegacy).creationCode,
             abi.encode(hub, vfide, owner_, securityHub, ledger)
@@ -1165,13 +1122,11 @@ contract VaultInfrastructure is Ownable {
     mapping(address => address) public vaultOf;
     mapping(address => address) public ownerOfVault;
 
-    // Recovery Timelock with Multi-Sig (H-5 Fix)
+    // Recovery Timelock with Multi-Sig
     mapping(address => uint64) public recoveryUnlockTime;
     mapping(address => address) public recoveryProposedOwner;
-    mapping(address => mapping(address => mapping(uint256 => bool))) public recoveryApprovals; // C-2 Fix: nonce-based
-    mapping(address => uint8) public recoveryApprovalCount;
-    mapping(address => uint256) public recoveryNonce; // C-2 Fix: Nonce to invalidate old approvals
-    uint64 public constant RECOVERY_DELAY = 7 days; // H-5: Increased from 3 to 7 days
+    mapping(address => mapping(address => mapping(uint256 => bool))) public recoveryApprovals;    mapping(address => uint8) public recoveryApprovalCount;
+    mapping(address => uint256) public recoveryNonce;    uint64 public constant RECOVERY_DELAY = 7 days; // H-5: Increased from 3 to 7 days
     uint8 public constant RECOVERY_APPROVALS_REQUIRED = 3; // H-5: Multi-sig requirement
     mapping(address => bool) public isRecoveryApprover;
 
@@ -1232,7 +1187,6 @@ contract VaultInfrastructure is Ownable {
         _log("hub_bytecode_provider_set");
     }
     
-    // H-5 Fix: Multi-sig approver management
     function setRecoveryApprover(address approver, bool status) external onlyOwner {
         require(approver != address(0), "VI:zero");
         isRecoveryApprover[approver] = status;
@@ -1280,7 +1234,6 @@ contract VaultInfrastructure is Ownable {
             }
         }
 
-        // slither-disable-next-line reentrancy-events
         emit VaultCreated(owner_, vault);
         _logEv(vault, "vault_created", 0, "");
     }
@@ -1290,7 +1243,7 @@ contract VaultInfrastructure is Ownable {
         return ownerOfVault[a] != address(0) && vaultOf[ ownerOfVault[a] ] == a;
     }
 
-    // ——— DAO forced recovery with Multi-Sig (H-5 Fix)
+    // ——— DAO forced recovery with Multi-Sig
     function approveForceRecovery(address vault, address newOwner) external {
         require(isRecoveryApprover[msg.sender], "VI:not-approver");
         if (vault == address(0) || newOwner == address(0)) revert VI_Zero();
@@ -1298,14 +1251,12 @@ contract VaultInfrastructure is Ownable {
         require(current != address(0), "unknown vault");
         require(vaultOf[newOwner] == address(0), "target has vault");
         
-        // C-2 Fix: Use nonce to prevent stale approval reuse
         uint256 nonce = recoveryNonce[vault];
         
         // Record approval for current nonce
         if (!recoveryApprovals[vault][msg.sender][nonce]) {
             recoveryApprovals[vault][msg.sender][nonce] = true;
             recoveryApprovalCount[vault]++;
-            // slither-disable-next-line reentrancy-benign
             _log("recovery_approval_cast");
         }
         
@@ -1313,7 +1264,6 @@ contract VaultInfrastructure is Ownable {
         if (recoveryApprovalCount[vault] >= RECOVERY_APPROVALS_REQUIRED) {
             recoveryProposedOwner[vault] = newOwner;
             recoveryUnlockTime[vault] = uint64(block.timestamp + RECOVERY_DELAY);
-            // slither-disable-next-line reentrancy-events
             emit ForcedRecoveryInitiated(vault, newOwner, recoveryUnlockTime[vault]);
             _logEv(vault, "force_recover_init", 0, "");
         }
@@ -1327,13 +1277,11 @@ contract VaultInfrastructure is Ownable {
         require(current != address(0), "unknown vault");
         require(vaultOf[newOwner] == address(0), "target has vault");
         
-        // H-5 Fix: Require multi-sig approvals first
         require(recoveryApprovalCount[vault] >= RECOVERY_APPROVALS_REQUIRED, "VI:insufficient-approvals");
 
         recoveryProposedOwner[vault] = newOwner;
         recoveryUnlockTime[vault] = uint64(block.timestamp + RECOVERY_DELAY);
         
-        // slither-disable-next-line reentrancy-events
         emit ForcedRecoveryInitiated(vault, newOwner, recoveryUnlockTime[vault]);
         _logEv(vault, "force_recover_init", 0, "");
     }
@@ -1358,17 +1306,14 @@ contract VaultInfrastructure is Ownable {
         ownerOfVault[vault] = newOwner;
         vaultOf[newOwner] = vault;
 
-        // H-5 Fix: Clear multi-sig approval state before external call
         delete recoveryProposedOwner[vault];
         delete recoveryUnlockTime[vault];
         delete recoveryApprovalCount[vault];
-        // C-2 Fix: Clear all approvals for this vault to prevent stale votes
         // Note: We clear by incrementing a nonce rather than iterating (gas efficient)
         recoveryNonce[vault]++;
 
         UserVaultLegacy(payable(vault)).__forceSetOwner(newOwner);
 
-        // slither-disable-next-line reentrancy-events
         emit ForcedRecovery(vault, newOwner);
         _logEv(vault, "force_recover_final", 0, "");
     }

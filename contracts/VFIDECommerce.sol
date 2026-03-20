@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
-import "./SharedInterfaces.sol"; // M-24 Fix: Use shared IERC20 and SafeERC20
-
+import "./SharedInterfaces.sol";
 interface IVaultHub_COM {
     function vaultOf(address owner) external view returns (address);
 }
@@ -92,13 +91,10 @@ contract MerchantRegistry {
             metaHash: metaHash
         });
 
-        // H-17 Fix: Wrap ledger call in try-catch so ledger failure doesn't block registrations
         try ledger.logSystemEvent(msg.sender, "MerchantAdded", msg.sender) {} catch {}
-        // slither-disable-next-line reentrancy-events
         emit MerchantAdded(msg.sender, v, metaHash);
     }
 
-    // C-6 Fix: Track authorized callers for _noteRefund/_noteDispute
     address public authorizedEscrow;
     
     function setAuthorizedEscrow(address _escrow) external onlyDAO {
@@ -111,7 +107,6 @@ contract MerchantRegistry {
     }
     
     function _noteRefund(address owner) external {
-        // C-6 Fix: Only authorized escrow contract can call this
         require(msg.sender == authorizedEscrow || msg.sender == dao, "COM: not authorized");
         Merchant storage m = merchants[owner];
         if (m.status == Status.NONE) revert COM_NotMerchant();
@@ -123,7 +118,6 @@ contract MerchantRegistry {
     }
 
     function _noteDispute(address owner) external {
-        // C-6 Fix: Only authorized escrow contract can call this
         require(msg.sender == authorizedEscrow || msg.sender == dao, "COM: not authorized");
         Merchant storage m = merchants[owner];
         if (m.status == Status.NONE) revert COM_NotMerchant();
@@ -136,7 +130,6 @@ contract MerchantRegistry {
 
     function info(address owner) external view returns (Merchant memory) { return merchants[owner]; }
 }
-
 
 /**
  * @title CommerceEscrow
@@ -152,7 +145,6 @@ contract MerchantRegistry {
  *   - Fixed timeouts (no ProofScore gating)
  *   - Integrated with MerchantRegistry for merchant verification
  */
-// C-07 Fix: Add ReentrancyGuard to CommerceEscrow
 contract CommerceEscrow {
     using SafeERC20 for IERC20;
     
@@ -164,7 +156,6 @@ contract CommerceEscrow {
     MerchantRegistry public merchants;
     ISecurityHub_COM public security;
 
-    // C-07 Fix: Reentrancy guard
     uint256 private _reentrancyStatus = 1;
     modifier nonReentrant() {
         require(_reentrancyStatus == 1, "ReentrancyGuard: reentrant call");
@@ -183,7 +174,6 @@ contract CommerceEscrow {
         bytes32 metaHash;
     }
 
-    // H-16 Fix: Track per-escrow deposited amounts
     mapping(uint256 => uint256) public escrowDeposited;
 
     uint256 public escrowCount;
@@ -218,19 +208,15 @@ contract CommerceEscrow {
         });
     }
 
-    // H-16 Fix: Add access control (buyer or merchant only) and per-escrow deposit tracking
     function markFunded(uint256 id) external {
         Escrow storage e = escrows[id];
         if (e.state != State.OPEN) revert COM_BadState();
-        // H-16 Fix: Only buyer or merchant can mark funded
         if (msg.sender != e.buyerOwner && msg.sender != e.merchantOwner && msg.sender != dao) revert COM_NotAllowed();
-        // H-16 Fix: Transfer tokens from buyer vault into escrow (per-escrow accounting)
         token.safeTransferFrom(e.buyerVault, address(this), e.amount);
         escrowDeposited[id] = e.amount;
         e.state = State.FUNDED;
     }
 
-    // C-07 Fix: Add nonReentrant to all token-transferring functions
     function release(uint256 id) external nonReentrant {
         Escrow storage e = escrows[id];
         if (e.state != State.FUNDED) revert COM_BadState();
@@ -244,7 +230,6 @@ contract CommerceEscrow {
         if (e.state != State.FUNDED && e.state != State.DISPUTED) revert COM_BadState();
         if (msg.sender != e.merchantOwner && msg.sender != dao) revert COM_NotAllowed();
         e.state = State.REFUNDED;
-        // C-7 Fix: Update merchant state BEFORE external token transfer (CEI pattern)
         merchants._noteRefund(e.merchantOwner);
         token.safeTransfer(e.buyerVault, e.amount);
     }
@@ -257,7 +242,6 @@ contract CommerceEscrow {
         merchants._noteDispute(e.merchantOwner);
     }
 
-    // C-07 Fix: Add nonReentrant
     function resolve(uint256 id, bool buyerWins) external nonReentrant onlyDAO {
         Escrow storage e = escrows[id];
         if (e.state != State.DISPUTED) revert COM_BadState();

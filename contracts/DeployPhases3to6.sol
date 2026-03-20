@@ -3,11 +3,10 @@ pragma solidity 0.8.30;
 
 import "./VFIDEBridge.sol";
 
-/// @dev H-18 Fix: BSM and VFIDEPriceOracle moved to DeployPhase3Peripherals.sol
+/// @dev BSM and VFIDEPriceOracle moved to DeployPhase3Peripherals.sol
 ///      to resolve name collision between OZ (VFIDEBridge) and custom (SharedInterfaces) primitives.
 
 interface ISystemExemptToken {
-    // H-01 Fix: Two-step propose/confirm pattern for system exemptions
     function proposeSystemExempt(address who, bool isExempt) external;
     function confirmSystemExempt() external;
 }
@@ -111,27 +110,22 @@ contract DeployPhase3 {
         emit ContractDeployed(NAME_ORC, preDeployedOracle);
 
         // Deploy VFIDE Bridge (OZ-based, required by LayerZero OApp)
-        // slither-disable-next-line reentrancy-no-eth
         VFIDEBridge bridge = new VFIDEBridge(
             vfideToken,
             layerZeroEndpoint,
             owner
         );
         deployed.vfideBridge = address(bridge);
-        // slither-disable-next-line reentrancy-events
         emit ContractDeployed(NAME_BRG, address(bridge));
 
         // Wire BSM ↔ Bridge linkage
-        // slither-disable-next-line reentrancy-no-eth
         IBridgeSecurityModule_Deploy(preDeployedBSM).setBridge(address(bridge));
         bridge.setSecurityModule(preDeployedBSM);
 
         // Required for vault-only mode: allow bridge contract transfers.
-        // H-01 Fix: Bridge exemption requires timelock — propose now, confirm after 48h
         //           In production: call confirmSystemExempt() after SINK_CHANGE_DELAY elapses
         ISystemExemptToken(vfideToken).proposeSystemExempt(address(bridge), true);
 
-        // slither-disable-next-line reentrancy-events
         emit PhaseDeployed(3, NAME_PHASE3);
     }
 }

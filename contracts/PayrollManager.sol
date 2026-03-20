@@ -36,7 +36,6 @@ error PM_InvalidPayee();
 error PM_InvalidDeposit();
 error PM_NothingDue();
 
-// H-1 Fix: Add ReentrancyGuard for withdraw and cancel functions
 contract PayrollManager is ReentrancyGuard {
     using SafeERC20 for IERC20;
 
@@ -117,8 +116,7 @@ contract PayrollManager is ReentrancyGuard {
     function createStream(address payee, address token, uint256 rate, uint256 initialDeposit) external returns (uint256) {
         if (payee == address(0)) revert PM_InvalidPayee();
         if (rate == 0) revert PM_InvalidRate();
-        require(rate >= 1e12, "PM: rate too low"); // L-18 Fix: Prevent token-locking streams
-        if (initialDeposit == 0) revert PM_InvalidDeposit();
+        require(rate >= 1e12, "PM: rate too low");        if (initialDeposit == 0) revert PM_InvalidDeposit();
 
         uint256 id = nextStreamId++;
         streams[id] = Stream({
@@ -144,7 +142,6 @@ contract PayrollManager is ReentrancyGuard {
         // Transfer tokens in
         IERC20(token).safeTransferFrom(msg.sender, address(this), initialDeposit);
 
-        // slither-disable-next-line reentrancy-events
         emit StreamCreated(id, msg.sender, payee, rate);
         
         // Reward payer for creating payroll stream
@@ -230,10 +227,8 @@ contract PayrollManager is ReentrancyGuard {
             _safeTransferPay(s.token, s.payee, due);
         }
 
-        // slither-disable-next-line reentrancy-no-eth
         s.ratePerSecond = newRate;
         
-        // slither-disable-next-line reentrancy-events
         emit RateModified(streamId, oldRate, newRate);
     }
     
@@ -272,7 +267,7 @@ contract PayrollManager is ReentrancyGuard {
 
     /**
      * Employee withdraws earned funds
-     * H-1 Fix: Add nonReentrant to prevent reentrancy via malicious tokens
+     * Add nonReentrant to prevent reentrancy via malicious tokens
      */
     function withdraw(uint256 streamId) external nonReentrant {
         Stream storage s = streams[streamId];
@@ -332,7 +327,7 @@ contract PayrollManager is ReentrancyGuard {
 
     /**
      * Cancel stream and return remaining funds to payer
-     * H-1 Fix: Add nonReentrant to prevent reentrancy via malicious tokens
+     * Add nonReentrant to prevent reentrancy via malicious tokens
      */
     function cancelStream(uint256 streamId) external nonReentrant {
         Stream storage s = streams[streamId];

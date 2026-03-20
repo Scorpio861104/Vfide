@@ -30,7 +30,6 @@ error MERCH_EscrowRequired();
 
 // Removed local Ownable to use SharedInterfaces.sol
 
-
 // Removed local ReentrancyGuard to use SharedInterfaces.sol
 
 /// @notice Payment channel types for differentiation and analytics
@@ -149,7 +148,6 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
         address _ledger,
         address _feeSink
     ) {
-        // M-3 Fix: Require feeSink to be non-zero to prevent fee loss
         require(_dao != address(0) && _vaultHub != address(0), "zero");
         require(_feeSink != address(0), "MerchantPortal: feeSink cannot be zero");
         dao = _dao;
@@ -208,7 +206,6 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
     }
 
     function setSwapConfig(address _router, address _stable) external onlyDAO {
-        // M-10 Fix: Validate addresses if swap is enabled
         if (_router != address(0)) {
             require(_stable != address(0), "MP: stable required with router");
             require(acceptedTokens[_stable] || _stable == stablecoin, "MP: stable not accepted");
@@ -381,7 +378,6 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
      * @notice Complete a refund (transfer tokens back to customer)
      * @param refundId The refund ID from initiateRefund
      */
-    // slither-disable-next-line arbitrary-send-erc20
     function completeRefund(bytes32 refundId) external nonReentrant {
         RefundRequest storage r = refundRequests[refundId];
         require(r.amount > 0, "Refund not found");
@@ -397,7 +393,6 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
         require(merchantVault != address(0) && customerVault != address(0), "Missing vaults");
         
         // Vault-to-vault refund pull is intentional: merchant vault custody model.
-        // slither-disable-next-line arbitrary-send-erc20
         // Transfer from merchant vault to customer vault
         IERC20(r.token).safeTransferFrom(merchantVault, customerVault, r.amount);
         
@@ -465,8 +460,6 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
      * @param amount Payment amount
      * @param orderId Merchant's order/transaction ID for reference
      */
-    // slither-disable-next-line arbitrary-send-erc20
-    // slither-disable-next-line reentrancy-no-eth
     function processPayment(
         address customer,
         address token,
@@ -504,20 +497,17 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
         uint256 fee = (amount * protocolFeeBps) / 10000;
         netAmount = amount - fee;
         
-        // H-3 Fix: Update state BEFORE external calls (Checks-Effects-Interactions)
         merchant.totalVolume += amount;
         merchant.txCount += 1;
         
         // Transfer fee first to fee sink (if fee > 0)
         if (fee > 0 && feeSink != address(0)) {
             // Vault custody model: charge fee from the customer's registered vault.
-            // slither-disable-next-line arbitrary-send-erc20
             IERC20(token).safeTransferFrom(customerVault, feeSink, fee);
         }
         
         // Vault custody model: settle payment from the customer's registered vault.
         // Transfer from customer vault to merchant vault
-        // slither-disable-next-line arbitrary-send-erc20
         IERC20(token).safeTransferFrom(customerVault, merchantVault, netAmount);
         
         emit PaymentProcessed(
@@ -552,7 +542,6 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
         return _processPaymentInternal(msg.sender, merchant, token, amount, orderId);
     }
 
-    // slither-disable-next-line reentrancy-no-eth
     function _processPaymentInternal(
         address customer,
         address merchant,
@@ -721,7 +710,6 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
     /**
      * @notice Internal payment processor with channel tracking
      */
-    // slither-disable-next-line reentrancy-no-eth
     function _processPaymentWithChannel(
         address customer,
         address merchant,

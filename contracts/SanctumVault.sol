@@ -83,8 +83,7 @@ contract SanctumVault is Ownable, ReentrancyGuard {
     /// Governance
     uint8 public approvalsRequired = 1; // Default to 1 (DAO only)
     mapping(address => bool) public isApprover; // DAO members who can approve
-    mapping(address => uint256) public approverIndex; // M-4 Fix: O(1) removal index
-    address[] public approvers;
+    mapping(address => uint256) public approverIndex;    address[] public approvers;
 
     modifier onlyDAO() {
         _checkDAO();
@@ -112,8 +111,7 @@ contract SanctumVault is Ownable, ReentrancyGuard {
         
         // DAO is initial approver
         isApprover[_dao] = true;
-        approverIndex[_dao] = 0; // M-4 Fix: Track index
-        approvers.push(_dao);
+        approverIndex[_dao] = 0;        approvers.push(_dao);
         
         emit DAOSet(_dao);
         if (_ledger != address(0)) emit LedgerSet(_ledger);
@@ -176,8 +174,7 @@ contract SanctumVault is Ownable, ReentrancyGuard {
         require(!isApprover[_approver], "already approver");
         isApprover[_approver] = true;
         require(approvers.length < 50, "sanctum: approver cap"); // I-11
-        approverIndex[_approver] = approvers.length; // M-4 Fix: Track index before push
-        approvers.push(_approver);
+        approverIndex[_approver] = approvers.length;        approvers.push(_approver);
         _log("sanctum_approver_added");
     }
 
@@ -186,7 +183,6 @@ contract SanctumVault is Ownable, ReentrancyGuard {
         require(approvers.length > approvalsRequired, "would violate threshold");
         isApprover[_approver] = false;
         
-        // M-4 Fix: O(1) swap-and-pop with index tracking
         uint256 idx = approverIndex[_approver];
         uint256 lastIdx = approvers.length - 1;
         
@@ -230,7 +226,6 @@ contract SanctumVault is Ownable, ReentrancyGuard {
         
         charities[charity].approved = false;
         
-        // L-15 Fix: Remove from charityList using swap-and-pop
         uint256 len = charityList.length;
         for (uint256 i = 0; i < len; i++) {
             if (charityList[i] == charity) {
@@ -257,12 +252,11 @@ contract SanctumVault is Ownable, ReentrancyGuard {
     /**
      * Receive VFIDE or stablecoins into Sanctum
      * Can be called by fee routers, donation campaigns, or direct transfers
-     * H-4 Fix: Use SafeERC20 for non-standard tokens like USDT
+     * Use SafeERC20 for non-standard tokens like USDT
      */
     function deposit(address token, uint256 amount, string calldata note) external nonReentrant {
         require(token != address(0) && amount > 0, "invalid deposit");
         
-        // H-4 Fix: Use safeTransferFrom for compatibility with USDT and other non-standard tokens
         IERC20(token).safeTransferFrom(msg.sender, address(this), amount);
         
         // Reward donor with ProofScore boost
@@ -290,7 +284,6 @@ contract SanctumVault is Ownable, ReentrancyGuard {
         if (to == address(0) || amount < 1) revert SANCT_Zero();
         require(amount <= address(this).balance, "insufficient native");
 
-        // M-14 Fix: Cap gas to prevent expensive fallback reentrancy
         (bool sent, ) = to.call{value: amount, gas: 10_000}("");
         require(sent, "native transfer failed");
 
@@ -318,7 +311,6 @@ contract SanctumVault is Ownable, ReentrancyGuard {
         if (!charities[charity].approved) revert SANCT_NotApproved();
         require(token != address(0) && amount > 0, "invalid proposal");
         
-        // M-20 Fix: Removed balance check at proposal time — execution-time check is sufficient.
         // Funds may arrive between proposal and execution.
         
         proposalId = ++disbursementCount;

@@ -133,7 +133,7 @@ describe("VFIDEToken", () => {
       const cbActive = await token.isCircuitBreakerActive();
       assert.equal(cbActive, true);
 
-      // H-02 Fix: circuitBreaker must NOT bypass fee calculation
+      // circuitBreaker must NOT bypass fee calculation
       const feeBypassed = await token.isFeeBypassed();
       assert.equal(feeBypassed, false);
     });

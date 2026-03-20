@@ -784,7 +784,7 @@ export default function TokenLaunchPage() {
                 },
                 {
                   q: "Can I get a refund?",
-                  a: "No. All token purchases are final. Tokens are delivered immediately to your vault upon purchase. This is standard for blockchain transactions (immutable once confirmed)."
+                  a: "If the presale does not meet its minimum fundraising goal ($612,500 USD or 8.75M tokens), the DAO will enable refunds and you can reclaim your ETH or stablecoin contribution within 90 days. If the goal is met and the presale finalizes successfully, purchases are final."
                 },
                 {
                   q: "What are the risks?",
@@ -824,8 +824,8 @@ export default function TokenLaunchPage() {
                   <ul className="space-y-2 text-sm text-gray-400">
                     <li className="flex items-center gap-2"><span className="text-cyan-400">•</span> Total Supply: 200,000,000 VFIDE (fixed)</li>
                     <li className="flex items-center gap-2"><span className="text-cyan-400">•</span> Dev Reserve: 50,000,000 (25%, 36-month vesting)</li>
-                    <li className="flex items-center gap-2"><span className="text-cyan-400">•</span> Presale: 50,000,000 (25%)</li>
-                    <li className="flex items-center gap-2"><span className="text-cyan-400">•</span> Treasury/Operations: 100,000,000 (50%)</li>
+                    <li className="flex items-center gap-2"><span className="text-cyan-400">•</span> Presale: 35,000,000 (17.5%)</li>
+                    <li className="flex items-center gap-2"><span className="text-cyan-400">•</span> Treasury/Operations: 115,000,000 (57.5%)</li>
                     <li className="flex items-center gap-2"><span className="text-cyan-400">•</span> Deflationary burn mechanism (0.25-5%)</li>
                     <li className="flex items-center gap-2"><span className="text-cyan-400">•</span> ProofScore-based fee discounts</li>
                   </ul>

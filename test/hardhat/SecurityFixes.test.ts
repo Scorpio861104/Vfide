@@ -40,7 +40,7 @@ describe("VaultHub (M-11: council as recovery approver)", () => {
     await council.addCouncilMember(councilMember.address);
     await hub.setCouncil(await council.getAddress());
 
-    // Council member calls approveForceRecovery — should work (M-11 Fix)
+    // Council member calls approveForceRecovery — should work
     await hub.connect(councilMember).approveForceRecovery(vaultAddr, newOwner.address);
     assert.equal(await hub.recoveryApprovalCount(vaultAddr), 1n);
   });
@@ -71,7 +71,7 @@ describe("DevReserveVestingVault (H-03: DAO pause claims)", () => {
     );
     await vault.waitForDeployment();
 
-    // DAO pauses claims (H-03 Fix: DAO can pause)
+    // DAO pauses claims
     await vault.connect(dao).pauseClaims(true);
     assert.equal(await vault.claimsPaused(), true);
   });
@@ -97,7 +97,7 @@ describe("DevReserveVestingVault (H-03: DAO pause claims)", () => {
     );
     await vault.waitForDeployment();
 
-    // DAO calls emergencyFreeze (H-03 Fix: DAO-only freeze)
+    // DAO calls emergencyFreeze
     await vault.connect(dao).emergencyFreeze();
     assert.equal(await vault.claimsPaused(), true);
   });
@@ -157,7 +157,7 @@ describe("PanicGuard (M-25: vault registration check)", () => {
     // Wire hub: user → vault
     await hubStub.setVault(user.address, await fakeVault.getAddress());
 
-    // selfPanic must revert — vault not registered (M-25 Fix)
+    // selfPanic must revert — vault not registered
     await assert.rejects(
       async () => {
         await panicGuard.connect(user).selfPanic(1 * 24 * 60 * 60);
@@ -219,7 +219,7 @@ describe("VFIDEAccessControl (L-08: atomic admin transfer)", () => {
     const DEFAULT_ADMIN_ROLE = await ac.DEFAULT_ADMIN_ROLE();
     assert.equal(await ac.hasRole(DEFAULT_ADMIN_ROLE, initialAdmin.address), true);
 
-    // Transfer admin (L-08 Fix: atomic)
+    // Transfer admin
     await ac.connect(initialAdmin).transferAdminRole(newAdmin.address);
 
     // Check roles switched

@@ -74,7 +74,6 @@ contract CouncilElection {
 
     function setParams(uint8 _size, uint16 _minScore, uint64 _term, uint64 _refresh) external onlyDAO {
         if (_size < MIN_COUNCIL_SIZE || _size > MAX_COUNCIL_SIZE) revert CE_BadSize();
-        // M-11 Fix: Validate minimum score is reasonable (0-10000 scale for 10x precision)
         require(_minScore >= 5600 && _minScore <= 10000, "CE: invalid min score");
         require(_term == FIXED_TERM_SECONDS, "CE: term fixed");
         require(
@@ -102,7 +101,7 @@ contract CouncilElection {
         
         // Track in candidate list if not already there
         if (!inCandidateList[msg.sender]) {
-            require(candidateList.length < 200, "CE: max candidates"); // L-16 Fix
+            require(candidateList.length < 200, "CE: max candidates");
             candidateList.push(msg.sender);
             inCandidateList[msg.sender] = true;
         }
@@ -113,7 +112,6 @@ contract CouncilElection {
     function unregister() external {
         isCandidate[msg.sender] = false;
         
-        // H-8 Fix: Remove from candidateList to prevent unbounded growth
         if (inCandidateList[msg.sender]) {
             _removeFromCandidateList(msg.sender);
             inCandidateList[msg.sender] = false;
@@ -123,7 +121,7 @@ contract CouncilElection {
         _log("ce_unregister");
     }
     
-    /// @dev H-8 Fix: Internal helper to remove from candidateList array
+    /// @dev Internal helper to remove from candidateList array
     function _removeFromCandidateList(address candidate) internal {
         uint256 len = candidateList.length;
         for (uint256 i = 0; i < len; i++) {
@@ -139,7 +137,6 @@ contract CouncilElection {
         if (members.length==0 || members.length>councilSize) revert CE_ArrayMismatch();
         
         // Clear old council state
-        // L-1 Fix: Already caching length for gas optimization
         uint256 councilLength = currentCouncil.length;
         for (uint256 i = 0; i < councilLength; ++i) {
             isCouncil[currentCouncil[i]] = false;
@@ -148,7 +145,6 @@ contract CouncilElection {
 
         uint64 newTermEnd = uint64(block.timestamp) + termSeconds;
         
-        // H-3 Fix: Use half the term length as threshold for "consecutive" terms
         // This prevents gaming by waiting 15 days to reset consecutive count
         uint64 consecutiveThreshold = termSeconds / 2;
         
@@ -158,15 +154,11 @@ contract CouncilElection {
             require(isCandidate[member], "CE: not candidate");
             if (!_eligible(member)) revert CE_NotEligible();
             
-            // L-21 Fix: O(1) dedup via isCouncil mapping (set below, cleared above)
             require(!isCouncil[member], "CE: duplicate member");
             
-            // H-11 Fix: Enforce term limit properly
-            // H-3 Fix: Use consecutiveThreshold instead of refreshInterval
             bool isConsecutive = lastTermEndDate[member] > 0 && lastTermEndDate[member] >= block.timestamp - consecutiveThreshold;
             
             if (isConsecutive) {
-                // H-11 Fix: Check BEFORE incrementing to prevent bypass
                 if (consecutiveTermsServed[member] >= maxConsecutiveTerms) revert CE_TermLimitReached();
                 consecutiveTermsServed[member]++;
             } else {
@@ -181,7 +173,6 @@ contract CouncilElection {
                 }
             }
             
-            // H-11 Fix: Additional safety check
             if (consecutiveTermsServed[member] > maxConsecutiveTerms) revert CE_TermLimitReached();
             
             lastTermEndDate[member] = newTermEnd;
@@ -196,14 +187,12 @@ contract CouncilElection {
     }
 
     /// Called periodically off-chain or by DAO keepers to remove members who fell below score.
-    /// M-2 Fix: Also updates currentCouncil array for consistency
     function refreshCouncil(address[] calldata current) external onlyDAO {
         uint256 length = current.length;
         for (uint256 i=0;i<length;++i){
             address m=current[i];
             if (isCouncil[m] && !_eligible(m)) { 
                 isCouncil[m]=false;
-                // M-2 Fix: Remove from currentCouncil array
                 _removeFromCouncilArray(m);
             }
         }

@@ -54,10 +54,9 @@ uint256 constant SHARED_INTERFACES_VERSION = 2; // Bumped: March 2026 hostile-re
 //   GHSA-7grf-83vw-6f5x — SafeERC20: not applicable (local forceApprove logic reviewed)
 string constant PATCHED_ADVISORIES = "GHSA-g4vp-m682-qqmp,GHSA-93hq-5wgc-jc87,GHSA-7grf-83vw-6f5x";
 
-/// @dev I-07 Fix: Fallback event emitted when ProofLedger logging fails.
+/// @dev Fallback event emitted when ProofLedger logging fails.
 ///      Ensures an on-chain record exists even if the ledger is misconfigured or reverts.
 event LedgerLogFailed(address indexed source, string action);
-
 
 interface IVaultHub {
     function vaultOf(address owner) external view returns (address);
@@ -159,7 +158,6 @@ interface IVFIDEToken is IERC20 {
     function setBurnRouter(address router) external;
     function setTreasurySink(address treasury) external;
     function setSanctumSink(address sanctum) external;
-    // H-01 Fix: setSystemExempt/setWhitelist replaced with timelocked propose/confirm pattern
     function proposeSystemExempt(address who, bool isExempt) external;
     function confirmSystemExempt() external;
     function proposeWhitelist(address addr, bool status) external;
@@ -193,8 +191,7 @@ interface ISeer {
     function minForMerchant() external view returns (uint16);
     function highTrustThreshold() external view returns (uint16);
     function lowTrustThreshold() external view returns (uint16);
-    function NEUTRAL() external view returns (uint16); // L-14 Fix: Added for SeerAutonomous compatibility
-    function setModules(address _ledger, address _hub) external;
+    function NEUTRAL() external view returns (uint16);    function setModules(address _ledger, address _hub) external;
     function setThresholds(uint16 low, uint16 high, uint16 minGov, uint16 minMerch) external;
     function reward(address subject, uint16 delta, string calldata reason) external;
     function punish(address subject, uint16 delta, string calldata reason) external;
@@ -280,8 +277,7 @@ abstract contract Ownable {
     
     address public owner;
     address public pendingOwner;
-    uint64  public ownershipTransferDeadline; // L-02 Fix: Timeout for pending transfer
-    
+    uint64  public ownershipTransferDeadline;    
     constructor() { owner = msg.sender; emit OwnershipTransferred(address(0), msg.sender); }
     modifier onlyOwner() { _checkOwner(); _; }
     function _checkOwner() internal view { require(msg.sender == owner, "OWN: not owner"); }
@@ -290,14 +286,13 @@ abstract contract Ownable {
     function transferOwnership(address newOwner) external onlyOwner {
         require(newOwner != address(0), "OWN: zero");
         pendingOwner = newOwner;
-        ownershipTransferDeadline = uint64(block.timestamp + 7 days); // L-02 Fix: 7-day acceptance window
-        emit OwnershipTransferStarted(owner, newOwner);
+        ownershipTransferDeadline = uint64(block.timestamp + 7 days);        emit OwnershipTransferStarted(owner, newOwner);
     }
     
     /// @notice Complete ownership transfer (must be called by pending owner)
     function acceptOwnership() external {
         require(msg.sender == pendingOwner, "OWN: not pending owner");
-        require(block.timestamp <= ownershipTransferDeadline, "OWN: transfer expired"); // L-02 Fix
+        require(block.timestamp <= ownershipTransferDeadline, "OWN: transfer expired");
         emit OwnershipTransferred(owner, msg.sender);
         owner = msg.sender;
         pendingOwner = address(0);
@@ -331,7 +326,7 @@ abstract contract ReentrancyGuard {
     }
 }
 
-/// @notice H-18 Fix: Custom Pausable — matches OZ Pausable interface (paused, _pause, _unpause, whenNotPaused, whenPaused)
+/// @notice Custom Pausable — matches OZ Pausable interface (paused, _pause, _unpause, whenNotPaused, whenPaused)
 abstract contract Pausable {
     event Paused(address account);
     event Unpaused(address account);
@@ -358,7 +353,7 @@ abstract contract AccessControl {
     event RoleRevoked(bytes32 indexed role, address indexed account, address indexed sender);
     event RoleAdminChanged(bytes32 indexed role, bytes32 indexed previousAdminRole, bytes32 indexed newAdminRole);
     
-    /// @dev L-08 Fix: Auto-grant DEFAULT_ADMIN_ROLE to deployer to prevent bootstrap deadlock
+    /// @dev Auto-grant DEFAULT_ADMIN_ROLE to deployer to prevent bootstrap deadlock
     constructor() {
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }

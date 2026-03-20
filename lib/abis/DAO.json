@@ -1450,6 +1450,19 @@
     "type": "function"
   },
   {
+    "inputs": [
+      {
+        "internalType": "uint64",
+        "name": "_cooldown",
+        "type": "uint64"
+      }
+    ],
+    "name": "setWithdrawnHashCooldown",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
     "inputs": [],
     "name": "timelock",
     "outputs": [
@@ -1557,6 +1570,19 @@
     "type": "function"
   },
   {
+    "inputs": [],
+    "name": "withdrawnHashCooldown",
+    "outputs": [
+      {
+        "internalType": "uint64",
+        "name": "",
+        "type": "uint64"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [
       {
         "internalType": "bytes32",
@@ -1567,9 +1593,9 @@
     "name": "withdrawnProposalHashes",
     "outputs": [
       {
-        "internalType": "bool",
+        "internalType": "uint64",
         "name": "",
-        "type": "bool"
+        "type": "uint64"
       }
     ],
     "stateMutability": "view",

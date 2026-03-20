@@ -11,7 +11,7 @@ error SH_NotDev();
 error SH_TooEarly();
 error SH_Zero();
 
-/// @dev I-07 Fix: Fallback event when ledger logging fails
+/// @dev Fallback event when ledger logging fails
 event LedgerLogFailed(address indexed source, string action);
 
 contract SystemHandover {
@@ -71,7 +71,6 @@ contract SystemHandover {
     }
 
     /// If network trust is low at deadline, dev can extend once (failsafe).
-    /// M-01 Fix: Read score from seer on-chain instead of self-reported parameter
     function extendOnceIfNeeded() external onlyDev {
         require(extensionsUsed < maxExtensions, "no_ext_left");
         uint16 networkAvgScore = seer.minForGovernance();
@@ -88,7 +87,6 @@ contract SystemHandover {
         if (newAdmin == address(0)) newAdmin = address(dao);
         dao.setAdmin(newAdmin);
         timelock.setAdmin(address(dao));
-        // slither-disable-next-line reentrancy-events
         emit Executed(address(dao), address(timelock), newAdmin, extensionsUsed);
         _log("handover_executed");
     }

@@ -57,6 +57,11 @@
   },
   {
     "inputs": [],
+    "name": "SM_NotMerchant",
+    "type": "error"
+  },
+  {
+    "inputs": [],
     "name": "SM_NotPaused",
     "type": "error"
   },
@@ -298,6 +303,19 @@
   {
     "inputs": [],
     "name": "MAX_FAILED_PAYMENTS",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "MERCHANT_EXCLUSIVE_WINDOW",
     "outputs": [
       {
         "internalType": "uint256",

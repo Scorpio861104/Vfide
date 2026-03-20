@@ -1,6 +1,6 @@
 /**
  * Environment Variable Validation with Zod
- * M-3 Fix: Centralized env validation with runtime type checking
+ * Centralized env validation with runtime type checking
  * 
  * This module validates all environment variables at runtime,
  * ensuring type safety and providing clear error messages for misconfiguration.

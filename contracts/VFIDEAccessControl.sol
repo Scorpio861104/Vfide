@@ -32,7 +32,7 @@ contract VFIDEAccessControl is AccessControlEnumerable {
     }
 
     /**
-     * @notice L-08 Fix: Transfer DEFAULT_ADMIN_ROLE to a new admin (e.g. DAO timelock) and
+     * @notice Transfer DEFAULT_ADMIN_ROLE to a new admin (e.g. DAO timelock) and
      *         renounce the caller's own admin role in one atomic step.
      *         Call this after deployment to transfer control from the deploy EOA to governance.
      * @param newAdmin Address to receive DEFAULT_ADMIN_ROLE (should be DAO timelock)

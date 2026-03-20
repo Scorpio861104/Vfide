@@ -101,14 +101,13 @@ contract GuardianRegistry {
         // If threshold > count, DAO should reset threshold; we tolerate and clamp on read.
     }
 
-    /// @dev L-11 Fix: Check if a guardian can be safely removed
+    /// @dev Check if a guardian can be safely removed
     /// @param vault The vault to check
     /// @param guardian The guardian to check
     /// @return canRemove True if removing this guardian won't break threshold requirements
     function canRemoveGuardian(address vault, address guardian) external view returns (bool canRemove) {
         // Can always remove if not a guardian
         if (!isGuardian[vault][guardian]) return true;
-        // L-11 Fix: Don't allow removal if it would make count < threshold
         uint8 count = guardianCount[vault];
         uint8 t = threshold[vault];
         // If removing would drop below threshold, disallow
@@ -204,9 +203,7 @@ contract GuardianLock {
         uint8 needed = registry.guardiansNeeded(vault);
         if (a >= needed && needed > 0) {
             locked[vault] = true;
-            // M-17 Fix: Emit event before clearing state for clean log data
             emit Locked(vault, msg.sender, a, reason);
-            // H-9 Fix: Clean up votes before external log call
             approvals[vault] = 0;
             lockNonce[vault]++;
             _logEv(vault, "guardian_lock", a, reason);
@@ -259,8 +256,7 @@ contract PanicGuard {
     address public dao;
     IProofLedger public ledger;
     IVaultHub public vaultHub;
-    address public securityHub; // C-06 Fix: SecurityHub address for registerVault passthrough
-
+    address public securityHub;
     // per-vault quarantine until timestamp (0 = not quarantined)
     mapping(address => uint64) public quarantineUntil;
     
@@ -301,7 +297,6 @@ contract PanicGuard {
         _log("panicguard_hub_set");
     }
 
-    /// C-06 Fix: Allow SecurityHub to call registerVault
     function setSecurityHub(address _secHub) external onlyDAO {
         securityHub = _secHub;
     }
@@ -334,7 +329,7 @@ contract PanicGuard {
         if (address(vaultHub) == address(0)) revert SEC_Zero();
         address vault = vaultHub.vaultOf(msg.sender);
         require(vault != address(0), "no vault");
-        require(vaultCreationTime[vault] > 0, "SEC: vault not registered"); // M-25 Fix
+        require(vaultCreationTime[vault] > 0, "SEC: vault not registered");
         
         // C-10: Rate limiting - max 1 self-panic per 24 hours
         require(
@@ -357,7 +352,7 @@ contract PanicGuard {
         _quarantine(vault, duration, 100, "self_panic");
     }
 
-    /// @notice L-12 Fix: Allow user to cancel their own self-panic
+    /// @notice Allow user to cancel their own self-panic
     /// @dev Only cancels quarantines the user initiated (via selfPanic), requires 1h minimum hold
     function cancelSelfPanic() external {
         if (address(vaultHub) == address(0)) revert SEC_Zero();
@@ -430,7 +425,6 @@ contract EmergencyBreaker {
 
     bool public halted;
     
-    // L-7 Fix: Cooldown to prevent rapid toggle abuse
     uint64 public lastToggleTime;
     uint64 public toggleCooldown = 1 hours; // Default 1 hour cooldown between toggles
 
@@ -455,7 +449,7 @@ contract EmergencyBreaker {
         _log("breaker_ledger_set");
     }
     
-    /// @notice L-7 Fix: Set toggle cooldown (DAO-only)
+    /// @notice Set toggle cooldown (DAO-only)
     function setToggleCooldown(uint64 _cooldown) external onlyDAO {
         toggleCooldown = _cooldown;
         emit CooldownSet(_cooldown);
@@ -463,7 +457,6 @@ contract EmergencyBreaker {
     }
 
     function toggle(bool on, string calldata reason) external onlyDAO {
-        // L-7 Fix: Enforce cooldown (skip on first toggle or emergency activation)
         if (toggleCooldown > 0 && lastToggleTime > 0 && !on) {
             // Only enforce cooldown when deactivating (turning off)
             // Activation (turning on) is always allowed for emergencies
@@ -544,7 +537,6 @@ contract SecurityHub {
         if (L != address(0)) { try ledger.logSystemEvent(address(this), action, msg.sender) {} catch {} }
     }
 
-    /// C-06 Fix: Passthrough to PanicGuard so VaultHub's registerVault call reaches PanicGuard
     function registerVault(address vault) external {
         if (address(panicGuard) != address(0)) {
             panicGuard.registerVault(vault);

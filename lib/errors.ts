@@ -1,6 +1,6 @@
 /**
  * Error Handling Utilities
- * H-4 Fix: Centralized error handling with proper logging and user feedback
+ * Centralized error handling with proper logging and user feedback
  * 
  * This module provides utilities for handling errors in async operations,
  * contract interactions, and data fetching with consistent error messages.
@@ -51,7 +51,7 @@ export class CustomError extends Error implements AppError {
 
 /**
  * Parse a contract error to a user-friendly message
- * H-4 Fix: Handles common contract error patterns
+ * Handles common contract error patterns
  */
 export function parseContractError(error: unknown): string {
   if (error instanceof Error) {
@@ -76,7 +76,7 @@ export function parseContractError(error: unknown): string {
 
 /**
  * Safe async operation wrapper with error handling
- * H-4 Fix: Catches and logs all async errors consistently
+ * Catches and logs all async errors consistently
  * 
  * @param operation - Async function to execute
  * @param context - Context information for error logging
@@ -102,7 +102,7 @@ export async function safeAsync<T>(
 
 /**
  * Safe async operation with retry logic
- * H-4 Fix: Implements exponential backoff retry strategy
+ * Implements exponential backoff retry strategy
  * 
  * @param operation - Async function to execute
  * @param maxRetries - Maximum number of retry attempts (default: 3)
@@ -148,7 +148,7 @@ export async function safeAsyncWithRetry<T>(
 
 /**
  * Handle errors in event listeners and callbacks
- * H-4 Fix: Catches errors that might otherwise fail silently
+ * Catches errors that might otherwise fail silently
  * 
  * @param handler - Function to execute
  * @param context - Context information for error logging
@@ -176,7 +176,7 @@ export function safeEventHandler<T extends (...args: unknown[]) => void | Promis
 
 /**
  * Create a loading state with timeout protection
- * H-4 Fix: Prevents infinite loading states
+ * Prevents infinite loading states
  * 
  * @param timeoutMs - Timeout in milliseconds (default: 30000ms = 30 seconds)
  * @param context - Context information for error logging
@@ -220,7 +220,7 @@ export function createLoadingTimeout(
 
 /**
  * Validate required fields and throw if missing
- * H-4 Fix: Prevents operations with incomplete data
+ * Prevents operations with incomplete data
  * 
  * @param data - Object to validate
  * @param requiredFields - Array of required field names
@@ -246,7 +246,7 @@ export function validateRequiredFields(
 
 /**
  * Format error for user display
- * H-4 Fix: Provides consistent, user-friendly error messages
+ * Provides consistent, user-friendly error messages
  */
 export function formatErrorForUser(error: unknown, defaultMessage = 'Something went wrong'): string {
   if (error instanceof CustomError) {
@@ -265,7 +265,7 @@ export function formatErrorForUser(error: unknown, defaultMessage = 'Something w
 
 /**
  * Log error with full context (for debugging)
- * H-4 Fix: Centralized error logging
+ * Centralized error logging
  */
 export function logError(error: unknown, context: Record<string, unknown> = {}): void {
   if (error instanceof CustomError) {

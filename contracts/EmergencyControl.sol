@@ -57,7 +57,6 @@ contract EmergencyControl {
     uint8 public approvalsHalt;
     uint8 public approvalsUnhalt;
     
-    // H-14 Fix: Vote expiry
     uint64 public voteExpiryPeriod = 7 days;
     uint64 public haltVotingStartTime;
     uint64 public unhaltVotingStartTime;
@@ -125,7 +124,6 @@ contract EmergencyControl {
 
     function resetVotes() external onlyDAO {
         _resetVotes();
-        // H-14 Fix: Reset vote timers
         haltVotingStartTime = 0;
         unhaltVotingStartTime = 0;
         _log("ec_votes_reset");
@@ -180,7 +178,6 @@ contract EmergencyControl {
         _enforceCooldown();
         lastToggleTs = uint64(block.timestamp);
         breaker.toggle(halt, reason);
-        // slither-disable-next-line reentrancy-events
         emit DAOToggled(halt, reason);
         _logEv(address(breaker), halt ? "breaker_on" : "breaker_off", 0, reason);
     }
@@ -190,7 +187,6 @@ contract EmergencyControl {
         if (!isMember[msg.sender]) revert EC_NotMember();
 
         if (halt) {
-            // H-14 Fix: Check vote expiry and reset if expired
             if (haltVotingStartTime > 0 && block.timestamp > haltVotingStartTime + voteExpiryPeriod) {
                 approvalsHalt = 0;
                 haltVotingStartTime = uint64(block.timestamp);
@@ -208,13 +204,11 @@ contract EmergencyControl {
                 lastToggleTs = uint64(block.timestamp);
                 _resetVotes(); // reset both sides before external interactions
                 breaker.toggle(true, reason);
-                // slither-disable-next-line reentrancy-events
                 emit CommitteeTriggered(true, reason);
                 _log("ec_trigger_halt");
             }
             _logEv(msg.sender, "ec_vote_halt", approvalsHalt, reason);
         } else {
-            // H-14 Fix: Check vote expiry and reset if expired
             if (unhaltVotingStartTime > 0 && block.timestamp > unhaltVotingStartTime + voteExpiryPeriod) {
                 approvalsUnhalt = 0;
                 unhaltVotingStartTime = uint64(block.timestamp);
@@ -232,7 +226,6 @@ contract EmergencyControl {
                 lastToggleTs = uint64(block.timestamp);
                 _resetVotes();
                 breaker.toggle(false, reason);
-                // slither-disable-next-line reentrancy-events
                 emit CommitteeTriggered(false, reason);
                 _log("ec_trigger_unhalt");
             }

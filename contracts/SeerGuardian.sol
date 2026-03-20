@@ -22,7 +22,6 @@ pragma solidity 0.8.30;
 ///                              INTERFACES
 /// ═══════════════════════════════════════════════════════════════════════════
 
-// I-07 Fix: Fallback event for critical ledger logging failures
 event LedgerLogFailed(address indexed source, string action);
 
 interface ISeer_Guardian {
@@ -261,7 +260,6 @@ contract SeerGuardian {
         if (score >= autoLiftThreshold && currentRestriction != RestrictionType.None) {
             // Only lift if restriction has expired or score is high enough
             if (block.timestamp >= restrictionExpiry[subject] || score >= seer.highTrustThreshold()) {
-                // slither-disable-next-line reentrancy-no-eth
                 _liftRestriction(subject, "auto_score_recovered");
             }
         }
@@ -292,9 +290,7 @@ contract SeerGuardian {
         uint16 penalty = penaltyScale[penaltyIndex];
         
         // Auto-punish via Seer
-        // slither-disable-next-line reentrancy-benign
         try seer.punish(subject, penalty, reason) {
-            // slither-disable-next-line reentrancy-events
             emit PenaltyApplied(subject, penalty, reason);
             emit PenaltyAppliedCode(subject, penalty, _violationReasonCode(vtype), reason);
         } catch {}
@@ -304,7 +300,6 @@ contract SeerGuardian {
             RestrictionType rtype = count >= 5 ? RestrictionType.FullFreeze : RestrictionType.GovernanceBan;
             uint64 duration = restrictionDurations[penaltyIndex];
             restrictionExpiry[subject] = uint64(block.timestamp) + duration;
-            // slither-disable-next-line reentrancy-no-eth
             _applyAutoRestriction(subject, rtype, reason, _violationReasonCode(vtype));
         }
         
@@ -316,7 +311,6 @@ contract SeerGuardian {
         if (restrictionExpiry[subject] < 1) {
             restrictionExpiry[subject] = uint64(block.timestamp) + maxRestrictionDuration;
         }
-        // slither-disable-next-line reentrancy-events
         emit AutoRestrictionApplied(subject, rtype, reason);
         emit AutoRestrictionAppliedCode(subject, rtype, reasonCode, reason);
         _log("auto_restriction_applied");
@@ -326,7 +320,6 @@ contract SeerGuardian {
         activeRestriction[subject] = RestrictionType.None;
         restrictionExpiry[subject] = 0;
         daoOverridden[subject] = false;
-        // slither-disable-next-line reentrancy-events
         emit AutoRestrictionLifted(subject, RestrictionType.None, reason);
         _log("restriction_lifted");
     }
@@ -346,15 +339,12 @@ contract SeerGuardian {
         bytes32 actionId = keccak256(abi.encode(subject, activeRestriction[subject], block.timestamp));
         
         // Lift the restriction
-        // slither-disable-next-line reentrancy-benign
         _liftRestriction(subject, reason);
         
         // Mark as DAO overridden so auto-enforcement won't re-trigger immediately
         daoOverridden[subject] = true;
         
-        // slither-disable-next-line reentrancy-events
         emit DAOOverride(subject, actionId, reason);
-        // slither-disable-next-line reentrancy-events
         emit SeerActionOverridden(actionId, reason);
         _log("dao_override_seer");
     }
@@ -370,15 +360,12 @@ contract SeerGuardian {
         bytes32 actionId = keccak256(abi.encode("score_adjust", subject, newDelta, block.timestamp));
         
         if (isPositive) {
-            // slither-disable-next-line reentrancy-benign
             try seer.reward(subject, newDelta, reason) {} catch {}
         } else {
-            // slither-disable-next-line reentrancy-benign
             try seer.punish(subject, newDelta, reason) {} catch {}
         }
         
         actionOverridden[actionId] = true;
-        // slither-disable-next-line reentrancy-events
         emit SeerActionOverridden(actionId, reason);
         _log("dao_adjust_score");
     }
@@ -397,7 +384,6 @@ contract SeerGuardian {
         
         // Lift any restrictions
         if (activeRestriction[subject] != RestrictionType.None) {
-            // slither-disable-next-line reentrancy-benign
             _liftRestriction(subject, "dao_rehabilitation");
         }
         

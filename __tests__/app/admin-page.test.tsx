@@ -34,7 +34,7 @@ jest.mock('wagmi', () => ({
       return { data: mockOwnerAddress };
     }
 
-    if (functionName === 'totalSupply' || functionName === 'presaleMinted') {
+    if (functionName === 'totalSupply' || functionName === 'PRESALE_CAP') {
       return { data: 0n };
     }
 

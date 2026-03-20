@@ -308,47 +308,39 @@ describe('Presale Lock & Unlock Mechanisms', () => {
     });
   });
 
-  describe('Bonus Tier Comparison', () => {
-    it('should reflect higher bonus for longer locks', () => {
-      // Simulated bonus multipliers
-      const bonusMultipliers = {
-        noLock: 1.0, // No bonus
-        lock90: 1.10, // 10% bonus
-        lock180: 1.20, // 20% bonus
+  describe('Tier Pricing Comparison (no bonuses)', () => {
+    it('should reflect lower price for longer commitment', () => {
+      // Tier prices in USD — longer lock = lower price (no bonus multipliers)
+      const tierPrices = {
+        founding: 0.03, // 180-day mandatory lock
+        oath: 0.05,     // 90-day mandatory lock
+        public: 0.07,   // no lock required
       };
 
-      const baseAmount = 1000;
+      const investment = 1000; // $1000
       
-      const noLockAmount = baseAmount * bonusMultipliers.noLock;
-      const lock90Amount = baseAmount * bonusMultipliers.lock90;
-      const lock180Amount = baseAmount * bonusMultipliers.lock180;
+      const foundingTokens = investment / tierPrices.founding;
+      const oathTokens = investment / tierPrices.oath;
+      const publicTokens = investment / tierPrices.public;
       
-      expect(noLockAmount).toBe(1000);
-      expect(lock90Amount).toBe(1100);
-      expect(lock180Amount).toBe(1200);
+      // More tokens per dollar at lower tiers
+      expect(foundingTokens).toBeCloseTo(33333.33, 0);
+      expect(oathTokens).toBe(20000);
+      expect(publicTokens).toBeCloseTo(14285.71, 0);
       
-      // Longer lock = more tokens
-      expect(lock180Amount).toBeGreaterThan(lock90Amount);
-      expect(lock90Amount).toBeGreaterThan(noLockAmount);
+      // Longer lock = more tokens per dollar
+      expect(foundingTokens).toBeGreaterThan(oathTokens);
+      expect(oathTokens).toBeGreaterThan(publicTokens);
     });
 
-    it('should calculate ROI benefit of lock periods', () => {
-      const investment = 1000; // $1000
-      const tokenPrice = 0.10; // $0.10 per token
+    it('should calculate value ratio between tiers', () => {
+      // Founding is 2.33x value vs Public ($0.03 vs $0.07)
+      const foundingRatio = 0.07 / 0.03;
+      expect(foundingRatio).toBeCloseTo(2.33, 1);
       
-      // Base tokens
-      const baseTokens = investment / tokenPrice;
-      
-      // With bonuses
-      const tokens90Day = baseTokens * 1.10;
-      const tokens180Day = baseTokens * 1.20;
-      
-      // Additional tokens gained
-      const bonus90 = tokens90Day - baseTokens;
-      const bonus180 = tokens180Day - baseTokens;
-      
-      expect(bonus90).toBe(1000); // 10% of 10000 = 1000 extra tokens
-      expect(bonus180).toBe(2000); // 20% of 10000 = 2000 extra tokens
+      // Oath is 1.4x value vs Public ($0.05 vs $0.07)
+      const oathRatio = 0.07 / 0.05;
+      expect(oathRatio).toBeCloseTo(1.4, 1);
     });
   });
 

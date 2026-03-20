@@ -25,14 +25,12 @@ contract VaultHub is Ownable, Pausable {
     mapping(address => address) public vaultOf;
     mapping(address => address) public ownerOfVault;
 
-    // Recovery Timelock with Multi-Sig (H-5 Fix)
+    // Recovery Timelock with Multi-Sig
     mapping(address => uint64) public recoveryUnlockTime;
     mapping(address => address) public recoveryProposedOwner;
-    mapping(address => mapping(address => mapping(uint256 => bool))) public recoveryApprovals; // C-2 Fix: nonce-based
-    mapping(address => mapping(uint256 => address)) public recoveryCandidateForNonce;
+    mapping(address => mapping(address => mapping(uint256 => bool))) public recoveryApprovals;    mapping(address => mapping(uint256 => address)) public recoveryCandidateForNonce;
     mapping(address => uint8) public recoveryApprovalCount;
-    mapping(address => uint256) public recoveryNonce; // C-2 Fix: Nonce to invalidate old approvals
-    uint64 public constant RECOVERY_DELAY = 7 days; // H-5: Increased from 3 to 7 days
+    mapping(address => uint256) public recoveryNonce;    uint64 public constant RECOVERY_DELAY = 7 days; // H-5: Increased from 3 to 7 days
     uint8 public constant RECOVERY_APPROVALS_REQUIRED = 3; // H-5: Multi-sig requirement
     mapping(address => bool) public isRecoveryApprover;
 
@@ -41,7 +39,6 @@ contract VaultHub is Ownable, Pausable {
     uint256 public totalVaults;
     mapping(address => uint256) public vaultCreatedAt;
 
-    // M-11 Fix: council address so council members can participate as recovery approvers
     address public council;
 
     /// Events
@@ -51,7 +48,7 @@ contract VaultHub is Ownable, Pausable {
     event ForcedRecovery(address indexed vault, address indexed newOwner);
     event VFIDESet(address vfide);
     event DAOSet(address dao);
-    event CouncilSet(address council); // M-11 Fix
+    event CouncilSet(address council);
 
     /// Errors
     error VH_Zero();
@@ -126,14 +123,12 @@ contract VaultHub is Ownable, Pausable {
         _log("hub_dao_set");
     }
     
-    // H-5 Fix: Multi-sig approver management
     function setRecoveryApprover(address approver, bool status) external onlyOwner {
         require(approver != address(0), "VH:zero");
         isRecoveryApprover[approver] = status;
         _log(status ? "recovery_approver_added" : "recovery_approver_removed");
     }
 
-    // M-11 Fix: Set council address so council members count as recovery approvers
     function setCouncil(address _council) external onlyOwner {
         require(_council != address(0), "VH:zero");
         council = _council;
@@ -187,7 +182,6 @@ contract VaultHub is Ownable, Pausable {
             }
         }
 
-        // slither-disable-next-line reentrancy-events
         emit VaultCreated(owner_, vault);
         _logEv(vault, "vault_created", 0, "");
     }
@@ -202,9 +196,8 @@ contract VaultHub is Ownable, Pausable {
         return ownerOfVault[a] != address(0) && vaultOf[ ownerOfVault[a] ] == a;
     }
 
-    // ——— DAO forced recovery with Multi-Sig (H-5 Fix)
+    // ——— DAO forced recovery with Multi-Sig
     function approveForceRecovery(address vault, address newOwner) external {
-        // M-11 Fix: council members are also eligible recovery approvers
         bool isApprover = isRecoveryApprover[msg.sender] ||
             (council != address(0) && ICouncilElection(council).isCouncil(msg.sender));
         require(isApprover, "VH:not-approver");
@@ -213,14 +206,12 @@ contract VaultHub is Ownable, Pausable {
         require(current != address(0), "unknown vault");
         require(vaultOf[newOwner] == address(0), "target has vault");
         
-        // C-2 Fix: Use nonce to prevent stale approval reuse
         uint256 nonce = recoveryNonce[vault];
 
         address candidate = recoveryCandidateForNonce[vault][nonce];
         if (candidate == address(0)) {
             recoveryCandidateForNonce[vault][nonce] = newOwner;
-            recoveryApprovalCount[vault] = 0; // H-08 Fix: Reset count for new candidate at this nonce
-        } else {
+            recoveryApprovalCount[vault] = 0;        } else {
             require(candidate == newOwner, "VH:candidate-mismatch");
         }
         
@@ -237,7 +228,6 @@ contract VaultHub is Ownable, Pausable {
         if (recoveryApprovalCount[vault] >= RECOVERY_APPROVALS_REQUIRED) {
             recoveryProposedOwner[vault] = recoveryCandidateForNonce[vault][nonce];
             recoveryUnlockTime[vault] = uint64(block.timestamp + RECOVERY_DELAY);
-            // slither-disable-next-line reentrancy-events
             emit ForcedRecoveryInitiated(vault, recoveryProposedOwner[vault], recoveryUnlockTime[vault]);
             _logEv(vault, "force_recover_init", 0, "");
         }
@@ -255,7 +245,6 @@ contract VaultHub is Ownable, Pausable {
         require(current != address(0), "unknown vault");
         require(vaultOf[newOwner] == address(0), "target has vault");
         
-        // H-5 Fix: Require multi-sig approvals first
         require(recoveryApprovalCount[vault] >= RECOVERY_APPROVALS_REQUIRED, "VH:insufficient-approvals");
 
         uint256 nonce = recoveryNonce[vault];
@@ -294,17 +283,14 @@ contract VaultHub is Ownable, Pausable {
         ownerOfVault[vault] = newOwner;
         vaultOf[newOwner] = vault;
 
-        // H-5 Fix: Clear multi-sig approval state before external call
         delete recoveryProposedOwner[vault];
         delete recoveryUnlockTime[vault];
         delete recoveryApprovalCount[vault];
-        // C-2 Fix: Clear all approvals for this vault to prevent stale votes
         recoveryNonce[vault]++;
 
         (bool ok, ) = vault.call(abi.encodeWithSignature("__forceSetOwner(address)", newOwner));
         require(ok, "VH:force-owner-failed");
 
-        // slither-disable-next-line reentrancy-events
         emit ForcedRecovery(vault, newOwner);
         _logEv(vault, "force_recover_final", 0, "");
     }
@@ -409,7 +395,6 @@ contract VaultHub is Ownable, Pausable {
         isVaultContract = ownerOfVault[addr] != address(0);
     }
 
-    // I-09 Fix: Emergency pause
     function pause() external onlyOwner { _pause(); }
     function unpause() external onlyOwner { _unpause(); }
 }

@@ -40,7 +40,6 @@ interface ILPToken {
     function transferFrom(address from, address to, uint256 amount) external returns (bool);
 }
 
-// H-2 Fix: Add ReentrancyGuard for stake/unstake functions
 contract LiquidityIncentives is ReentrancyGuard {
     using SafeERC20 for IERC20;
 
@@ -112,7 +111,6 @@ contract LiquidityIncentives is ReentrancyGuard {
         // Mark LP token as whale-exempt in VFIDE token
         try vfideToken.setWhaleLimitExempt(lpToken, true) {} catch {}
 
-        // slither-disable-next-line reentrancy-events
         emit PoolAdded(lpToken, name);
     }
     
@@ -142,7 +140,7 @@ contract LiquidityIncentives is ReentrancyGuard {
     
     /**
      * @notice Stake LP tokens (utility tracking only, no rewards)
-     * H-2 Fix: Add nonReentrant to prevent reentrancy via malicious LP tokens
+     * Add nonReentrant to prevent reentrancy via malicious LP tokens
      */
     function stake(address lpToken, uint256 amount) external nonReentrant {
         Pool storage pool = pools[lpToken];
@@ -166,7 +164,7 @@ contract LiquidityIncentives is ReentrancyGuard {
     
     /**
      * @notice Unstake LP tokens
-     * H-2 Fix: Add nonReentrant to prevent reentrancy via malicious LP tokens
+     * Add nonReentrant to prevent reentrancy via malicious LP tokens
      */
     function unstake(address lpToken, uint256 amount) external nonReentrant {
         UserStake storage userStake = userStakes[lpToken][msg.sender];

@@ -37,8 +37,6 @@ import { ReentrancyGuard, ISeer } from "./SharedInterfaces.sol";
 ///                              INTERFACES
 /// ═══════════════════════════════════════════════════════════════════════════
 
-// L-14 Fix: Removed local ISeer_Auto — using shared ISeer from SharedInterfaces.sol
-
 /// @notice Optional risk oracle for off-chain anomaly scoring
 interface IRiskOracle_Auto {
     /// @dev Bounded to 0-100 (percentage risk)
@@ -359,7 +357,6 @@ contract SeerAutonomous is ReentrancyGuard {
      * @param counterparty Other party involved (for pattern detection)
      * @return result The enforcement decision
      */
-    // slither-disable-next-line reentrancy-no-eth,reentrancy-benign
     function beforeAction(
         address subject,
         ActionType action,
@@ -387,7 +384,6 @@ contract SeerAutonomous is ReentrancyGuard {
         
         if (pattern != PatternType.None) {
             result = _handlePattern(subject, pattern);
-            // slither-disable-next-line reentrancy-events
             emit PatternDetected(subject, pattern, uint8(restrictionLevel[subject]));
         }
 
@@ -416,7 +412,6 @@ contract SeerAutonomous is ReentrancyGuard {
         // 7. Increment network counters
         networkActionCount++;
         
-        // slither-disable-next-line reentrancy-events
         emit AutoEnforced(subject, action, result);
         return result;
     }
@@ -427,14 +422,12 @@ contract SeerAutonomous is ReentrancyGuard {
      * @param oldScore Previous score
      * @param newScore New score
      */
-    // slither-disable-next-line reentrancy-benign
     function onScoreChange(address subject, uint16 oldScore, uint16 newScore) external onlyOperator nonReentrant {
         // Immediate restriction adjustment based on new score
         _autoAdjustRestriction(subject);
         
         // Calculate reputation cascade
         int16 change = int16(newScore) - int16(oldScore);
-        // slither-disable-next-line reentrancy-events
         emit ReputationCascade(subject, change, "score_change");
         
         // Significant drop triggers investigation
@@ -691,7 +684,6 @@ contract SeerAutonomous is ReentrancyGuard {
                 ch.deadline = uint64(block.timestamp + challengeWindow);
                 ch.reason = reason;
                 ch.exists = true;
-                // slither-disable-next-line reentrancy-events
                 emit ChallengeCreated(subject, level, ch.deadline, reason);
                 return; // wait for challenge window to pass
             }
@@ -701,7 +693,6 @@ contract SeerAutonomous is ReentrancyGuard {
         restrictionExpiry[subject] = uint64(block.timestamp) + duration;
         restrictionReason[subject] = reason;
 
-        // slither-disable-next-line reentrancy-events
         emit RestrictionApplied(subject, level, duration, reason);
         emit RestrictionAppliedCode(subject, level, reasonCode, reason);
 
@@ -721,14 +712,12 @@ contract SeerAutonomous is ReentrancyGuard {
             restrictionLevel[subject] = next;
             restrictionExpiry[subject] = uint64(block.timestamp + 1 days);
             restrictionReason[subject] = "progressive_unfreeze";
-            // slither-disable-next-line reentrancy-events
             emit RestrictionApplied(subject, next, 1 days, "progressive_unfreeze");
             emit RestrictionAppliedCode(subject, next, RC_PROGRESSIVE_UNFREEZE, "progressive_unfreeze");
         } else {
             restrictionLevel[subject] = RestrictionLevel.None;
             restrictionExpiry[subject] = 0;
             restrictionReason[subject] = "";
-            // slither-disable-next-line reentrancy-events
             emit RestrictionLifted(subject, old);
         }
     }
@@ -828,7 +817,6 @@ contract SeerAutonomous is ReentrancyGuard {
         }
         
         if (oldValue != newValue) {
-            // slither-disable-next-line reentrancy-events
             emit DynamicThresholdAdjusted(ttype, oldValue, newValue);
         }
     }

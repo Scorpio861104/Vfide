@@ -87,10 +87,8 @@ contract GovernanceHooks {
         // Auto-check proposer via SeerGuardian
         if (address(guardian) != address(0)) {
             try guardian.autoCheckProposer(id, proposer) {
-                // slither-disable-next-line reentrancy-events
                 emit ProposalAutoChecked(id, proposer, true);
             } catch {
-                // slither-disable-next-line reentrancy-events
                 emit ProposalAutoChecked(id, proposer, false);
             }
         }
@@ -122,7 +120,6 @@ contract GovernanceHooks {
         // Check if voter is restricted by SeerGuardian
         if (address(guardian) != address(0)) {
             if (!guardian.canParticipateInGovernance(voter)) {
-                // slither-disable-next-line reentrancy-events
                 emit VoterRestricted(voter, "governance_banned");
                 revert GH_VoterRestricted();
             }

@@ -75,7 +75,7 @@ contract VFIDEPresale is ReentrancyGuard {
     event StablecoinRegistryUpdated(address oldRegistry, address newRegistry);
     event TierEnabled(uint8 tier, bool enabled);
     event PurchaseCancelled(address indexed buyer, uint256 indexed index, uint256 tokensReturned);
-    event SubscriptionCancelled(uint256 indexed index); // Kept for backwards compatibility
+    event TokensDeposited(uint256 amount);
 
     // Immutable config
     address public immutable DAO;
@@ -86,8 +86,7 @@ contract VFIDEPresale is ReentrancyGuard {
     uint256 public constant BASE_SUPPLY = 35_000_000 * 1e18;    // 35M base tokens
     uint256 public constant TOTAL_SUPPLY = 35_000_000 * 1e18;   // 35M total (no bonus pool — rewards are not available)
     uint256 public constant MAX_PER_WALLET = 500_000 * 1e18;    // 500K per wallet
-    uint256 public constant MAX_PER_TX     = 50_000  * 1e18;     // L-10 Fix: Named constant — 50K per transaction
-    uint256 public constant MIN_PURCHASE_USD = 10 * 1e6;         // Min $10 (6 decimals for USDC/USDT)
+    uint256 public constant MAX_PER_TX     = 50_000  * 1e18;    uint256 public constant MIN_PURCHASE_USD = 10 * 1e6;         // Min $10 (6 decimals for USDC/USDT)
     uint256 public constant MIN_PURCHASE_ETH = 0.01 ether;       // Min 0.01 ETH (if ETH accepted)
     
     // Three USD Price Tiers (microUSD where 1e6 = $1)
@@ -156,9 +155,11 @@ contract VFIDEPresale is ReentrancyGuard {
     // Sale extension
     bool public saleExtended;
     uint256 public constant MAX_EXTENSION = 30 days;
+
+    // Refund deadline - users have 90 days after refunds enabled to claim
+    uint64 public refundDeadline;
     
     // Circuit breakers
-    uint256 public maxGasPrice = 500 gwei;
     uint256 public constant MAX_PURCHASES_PER_WALLET = 100;
     
     // Purchase tracking
@@ -172,7 +173,6 @@ contract VFIDEPresale is ReentrancyGuard {
         uint8 tier;                 // Which tier (0, 1, or 2) for cancelPurchase tracking
         bool immediateClaimed;      // Immediate portion claimed?
         bool lockedClaimed;         // Locked portion claimed?
-        // C-04 Fix: Track per-purchase payment for correct refund accounting on cancel
         uint256 ethPaid;            // ETH paid for this purchase (0 if stable purchase)
         address stablecoin;         // Stablecoin used (address(0) if ETH purchase)
         uint256 stablePaid;         // Stablecoin amount paid (0 if ETH purchase)
@@ -223,7 +223,6 @@ contract VFIDEPresale is ReentrancyGuard {
         
         saleStartTime = _startTime;
         saleEndTime = _startTime + SALE_DURATION;
-        // H-02 Fix: Initialize ethPriceLastUpdated so ETH purchases work on first use
         ethPriceLastUpdated = block.timestamp;
     }
 
@@ -247,7 +246,6 @@ contract VFIDEPresale is ReentrancyGuard {
     function setEthPrice(uint256 newPrice) external onlyDAO {
         require(newPrice >= 1_000 && newPrice <= 100_000, "PS: price out of range"); // $1k - $100k
         uint256 old = ethPriceUsd;
-        // M-05 Fix: Cap single-update change to ±50% to prevent oracle manipulation
         if (old > 0) {
             require(newPrice <= old * 150 / 100 && newPrice >= old * 50 / 100, "PS: price change >50%");
         }
@@ -394,6 +392,7 @@ contract VFIDEPresale is ReentrancyGuard {
         require(balance >= TOTAL_SUPPLY, "Insufficient pre-minted balance");
         
         tokensDeposited = true;
+        emit TokensDeposited(balance);
     }
     
     /**
@@ -449,7 +448,6 @@ contract VFIDEPresale is ReentrancyGuard {
         // Transfer stablecoin from buyer to treasury (SafeERC20 for non-standard tokens)
         // Record actual amount received to safely support fee-on-transfer tokens.
         uint256 treasuryBefore = IERC20(stablecoin).balanceOf(TREASURY);
-        // slither-disable-next-line reentrancy-benign,reentrancy-no-eth
         IERC20(stablecoin).safeTransferFrom(msg.sender, TREASURY, amount);
         uint256 received = IERC20(stablecoin).balanceOf(TREASURY) - treasuryBefore;
         
@@ -563,7 +561,6 @@ contract VFIDEPresale is ReentrancyGuard {
         require(msg.value >= MIN_PURCHASE_ETH, "Below minimum");
         require(!isEthPriceStale(), "PS: ETH price stale - use stablecoin or wait for DAO update");
         
-        // H-12 Fix: tx.gasprice check removed — unreliable on zkSync Era fee model
         
         // Calculate USD equivalent (6 decimals)
         uint256 usdAmount = (msg.value * ethPriceUsd) / 1e12;
@@ -651,7 +648,6 @@ contract VFIDEPresale is ReentrancyGuard {
         require(indices.length > 0, "Empty indices");
         require(indices.length <= 50, "Too many indices"); // Gas limit protection
         uint256 totalClaimable = 0;
-        // M-09 Fix: O(1) bitmap duplicate check (max 256 purchases per wallet)
         uint256 seen = 0;
         
         for (uint256 i = 0; i < indices.length; i++) {
@@ -674,8 +670,7 @@ contract VFIDEPresale is ReentrancyGuard {
         
         if (totalClaimable == 0) revert PS_NoTokens();
         
-        totalClaimed += totalClaimable; // C-11 Fix: Update totalClaimed for proper accounting
-        vfideToken.safeTransfer(msg.sender, totalClaimable);
+        totalClaimed += totalClaimable;        vfideToken.safeTransfer(msg.sender, totalClaimable);
         emit ClaimImmediate(msg.sender, totalClaimable);
     }
 
@@ -688,7 +683,6 @@ contract VFIDEPresale is ReentrancyGuard {
         require(indices.length > 0, "Empty indices");
         require(indices.length <= 50, "Too many indices"); // Gas limit protection
         uint256 totalClaimable = 0;
-        // M-09 Fix: O(1) bitmap duplicate check (max 256 purchases per wallet)
         uint256 seen = 0;
         
         for (uint256 i = 0; i < indices.length; i++) {
@@ -749,12 +743,13 @@ contract VFIDEPresale is ReentrancyGuard {
         totalClaimed += totalClaimable;
         vfideToken.safeTransfer(msg.sender, totalClaimable);
         emit ClaimImmediate(msg.sender, totalClaimable);
+        emit ClaimLocked(msg.sender, 0); // signal that locked claims may have been included
     }
-    
+
     /**
      * @notice Forfeit a purchase before claiming (only if not yet claimed)
      * @param index Index of the purchase to forfeit
-     * @dev M-02 Fix: Renamed from cancelPurchase. Returns token ALLOCATION to presale pool only.
+     * @dev Renamed from cancelPurchase. Returns token ALLOCATION to presale pool only.
      *      Payment (ETH/stablecoin) is NOT refunded — it was already forwarded to treasury.
      *      This is a forfeit operation, not a refund. Contribution tracking is decremented
      *      so users can make new purchases within their wallet limits.
@@ -785,12 +780,14 @@ contract VFIDEPresale is ReentrancyGuard {
             tier2Sold -= p.baseAmount;
         }
         
-        // C-04 Fix: Decrement contribution tracking so cancelled purchases can't be refunded
         if (p.ethPaid > 0) {
             if (ethContributed[msg.sender] >= p.ethPaid) {
                 ethContributed[msg.sender] -= p.ethPaid;
             } else {
                 ethContributed[msg.sender] = 0; // safety floor
+            }
+            if (totalEthRaised >= p.ethPaid) {
+                totalEthRaised -= p.ethPaid;
             }
         }
         if (p.stablePaid > 0 && p.stablecoin != address(0)) {
@@ -805,6 +802,9 @@ contract VFIDEPresale is ReentrancyGuard {
                 usdContributed[msg.sender] -= p.usdEquiv;
             } else {
                 usdContributed[msg.sender] = 0;
+            }
+            if (totalUsdRaised >= p.usdEquiv) {
+                totalUsdRaised -= p.usdEquiv;
             }
         }
 
@@ -1044,7 +1044,6 @@ contract VFIDEPresale is ReentrancyGuard {
         }
 
         // Emit with USD raised (more meaningful than ETH)
-        // slither-disable-next-line reentrancy-events
         emit PresaleFinalized(totalUsdRaised, lpVfide, price);
     }
     
@@ -1093,8 +1092,7 @@ contract VFIDEPresale is ReentrancyGuard {
         require(block.timestamp > saleEndTime, "Sale not ended");
         require(!finalized, "Already finalized");
         
-        // Can only enable refunds if minimum goal NOT met
-        if (totalBaseSold >= MINIMUM_GOAL) revert PS_GoalAlreadyMet();
+        if (totalBaseSold >= MINIMUM_GOAL || totalUsdRaised >= MINIMUM_GOAL_USD) revert PS_GoalAlreadyMet();
         
         refundsEnabled = true;
         refundDeadline = uint64(block.timestamp + 90 days); // 90-day refund window
@@ -1129,7 +1127,6 @@ contract VFIDEPresale is ReentrancyGuard {
      */
     function claimRefund() external nonReentrant {
         if (!refundsEnabled) revert PS_RefundsNotEnabled();
-        // C-05 Fix: Enforce refund deadline so treasury can close out after 90 days
         require(refundDeadline == 0 || block.timestamp <= refundDeadline, "PS: Refund period expired");
         
         uint256 refundAmount = ethContributed[msg.sender];
@@ -1142,7 +1139,6 @@ contract VFIDEPresale is ReentrancyGuard {
         // Contract needs ETH balance to process refund
         require(address(this).balance >= refundAmount, "Insufficient balance - treasury must fund refunds first");
         
-        // C-3 Fix: Use .call() instead of .transfer() for smart contract wallet compatibility
         (bool success, ) = payable(msg.sender).call{value: refundAmount}("");
         require(success, "Refund transfer failed");
         emit RefundClaimed(msg.sender, refundAmount);
@@ -1155,7 +1151,6 @@ contract VFIDEPresale is ReentrancyGuard {
      */
     function claimStableRefund(address stablecoin) external nonReentrant {
         if (!refundsEnabled) revert PS_RefundsNotEnabled();
-        // C-05 Fix: Enforce refund deadline
         require(refundDeadline == 0 || block.timestamp <= refundDeadline, "PS: Refund period expired");
         
         uint256 refundAmount = stableContributed[msg.sender][stablecoin];
@@ -1210,18 +1205,17 @@ contract VFIDEPresale is ReentrancyGuard {
     /**
      * @notice Update max gas price for circuit breaker
      * @param newMaxGasPrice New maximum gas price in wei
+     * @dev P1-NOTE: Gas price checks removed (unreliable on L2s). Setter retained for interface compat.
      */
     function setMaxGasPrice(uint256 newMaxGasPrice) external onlyDAO {
         require(newMaxGasPrice >= 100 gwei && newMaxGasPrice <= 2000 gwei, "Invalid gas price");
-        uint256 oldPrice = maxGasPrice;
-        maxGasPrice = newMaxGasPrice;
-        emit MaxGasPriceUpdated(oldPrice, newMaxGasPrice);
+        emit MaxGasPriceUpdated(0, newMaxGasPrice);
     }
 
     /**
      * @notice Emergency withdraw of contract balance (ONLY before sale or after finalization)
      * @dev Cannot be used during sale, during refund period, or if refunds enabled
-     * H-25 Fix: Use call instead of deprecated transfer() for better gas handling
+     * Use call instead of deprecated transfer() for better gas handling
      */
     function emergencyWithdraw() external onlyDAO {
         require(block.timestamp < saleStartTime || (finalized && !refundsEnabled), "Cannot withdraw");
@@ -1245,7 +1239,7 @@ contract VFIDEPresale is ReentrancyGuard {
      * @dev Allows treasury to return stablecoins for refund claims
      * @param stablecoin The stablecoin address to fund
      * @param amount The amount to send (from treasury)
-     * H-24 Fix: Use SafeERC20 for non-standard tokens like USDT
+     * Use SafeERC20 for non-standard tokens like USDT
      */
     function fundStableRefunds(address stablecoin, uint256 amount) external onlyDAO {
         require(refundsEnabled, "Refunds not enabled");
@@ -1254,7 +1248,6 @@ contract VFIDEPresale is ReentrancyGuard {
     }
     
     // Refund deadline - users have 90 days after refunds enabled to claim
-    uint64 public refundDeadline;
     
     /**
      * @notice Get refund status for a user
@@ -1275,7 +1268,7 @@ contract VFIDEPresale is ReentrancyGuard {
     
     /**
      * @notice Recover unclaimed refund funds after deadline (treasury use)
-     * @dev Only after 90-day refund window closes
+     * @dev Only after 90-day refund window closes. Recovers both ETH and stablecoins.
      */
     function recoverUnclaimedRefunds() external onlyDAO {
         require(refundsEnabled, "Refunds not enabled");
@@ -1287,4 +1280,22 @@ contract VFIDEPresale is ReentrancyGuard {
             require(success, "ETH transfer failed");
         }
     }
+    
+    /**
+     * @notice Recover unclaimed stablecoin refund funds after deadline
+     * @param stablecoin Address of the stablecoin to recover
+     * @dev Added to prevent stablecoins being stuck forever after refund deadline
+     */
+    function recoverUnclaimedStableRefunds(address stablecoin) external onlyDAO {
+        require(refundsEnabled, "Refunds not enabled");
+        require(refundDeadline > 0 && block.timestamp > refundDeadline, "Refund period not expired");
+        
+        uint256 balance = IERC20(stablecoin).balanceOf(address(this));
+        if (balance > 0) {
+            IERC20(stablecoin).safeTransfer(DAO, balance);
+        }
+    }
+    
+    /// @notice Accept ETH for refund funding
+    receive() external payable {}
 }

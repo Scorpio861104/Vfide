@@ -59,7 +59,7 @@ contract DAOTimelock {
         _log("tl_delay_set"); 
     }
 
-    /// @notice M-15 Fix: Emergency delay reduction — admin can reduce delay directly without timelock
+    /// @notice Emergency delay reduction — admin can reduce delay directly without timelock
     /// @dev Can only REDUCE delay (never increase), still bounded by MIN_DELAY
     function emergencyReduceDelay(uint64 _newDelay) external onlyAdmin {
         require(_newDelay >= MIN_DELAY, "TL: below minimum");
@@ -98,7 +98,6 @@ contract DAOTimelock {
         (bool ok, bytes memory r) = op.target.call{value:op.value}(op.data);
         require(ok, "exec failed");
         
-        // H-2 Fix: Check return value ONLY for known ERC20 calls that return bool
         // Only validate bool return for transfer/transferFrom/approve selectors
         if (r.length == 32 && op.data.length >= 4) {
             bytes4 selector;
@@ -115,7 +114,6 @@ contract DAOTimelock {
             }
         }
 
-        // slither-disable-next-line reentrancy-events
         emit Executed(id); _log("tl_executed");
         return r;
     }

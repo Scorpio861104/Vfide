@@ -2,7 +2,7 @@
 pragma solidity 0.8.30;
 
 /**
- * VFIDETrust.sol — Compatibility shim (L-01 Fix: monolith split).
+ * VFIDETrust.sol — Compatibility shim (monolith split).
  *
  * The three contracts that lived here have been moved to dedicated files:
  *   - ProofLedger             →  contracts/ProofLedger.sol

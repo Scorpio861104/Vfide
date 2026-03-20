@@ -107,7 +107,7 @@ contract VFIDEPriceOracle is Ownable, Pausable {
     error PriceManipulation();
     error UpdateTooFrequent();
 
-    // H-18/M-29 Fix: Custom Ownable has no renounceOwnership — no override needed
+    // Custom Ownable has no renounceOwnership — no override needed
     /**
      * @notice Constructor
      * @param _vfideToken VFIDE token address
@@ -206,13 +206,11 @@ contract VFIDEPriceOracle is Ownable, Pausable {
             uint8 decimals = chainlinkFeed.decimals();
             uint256 chainlinkPrice = uint256(answer);
 
-            // slither-disable-start divide-before-multiply
             if (decimals < 18) {
                 chainlinkPrice = chainlinkPrice * 10 ** (18 - decimals);
             } else if (decimals > 18) {
                 chainlinkPrice = chainlinkPrice / 10 ** (decimals - 18);
             }
-            // slither-disable-end divide-before-multiply
 
             return (chainlinkPrice, PriceSource.CHAINLINK);
         } catch {

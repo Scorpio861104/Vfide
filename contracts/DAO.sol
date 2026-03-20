@@ -61,9 +61,7 @@ contract DAO is ReentrancyGuard {
     uint64 public votingDelay = 1 days; // Flash loan protection: vote cannot start immediately
     uint64 public proposalCooldown = 1 hours;
     uint256 public minVotesRequired = 5000; // Absolute number of vote-points (Score) required to pass
-    uint256 public minParticipation = 10; // M-02 Fix: Require meaningful participation (was 2, any 2 users could pass proposals)
-
-    // H-04 Fix: Per-voter daily vote reward cap to prevent ProofScore farming via proposal spam
+    uint256 public minParticipation = 10;
     mapping(address => uint256) public lastVoteRewardDay;
     mapping(address => uint64) public lastProposalAt;
     mapping(ProposalType => mapping(address => bool)) public proposalTypeTargetAllowed;
@@ -86,14 +84,11 @@ contract DAO is ReentrancyGuard {
         uint256 againstVotes;  // Score-weighted
         uint256 voterCount;    // FLOW-2 FIX: Track unique voter count
         mapping(address => bool) hasVoted;
-        // H-5 Fix: Store score snapshot at vote time to prevent mid-vote gaming
         mapping(address => uint256) scoreSnapshot;
     }
     uint256 public proposalCount;
     mapping(uint256 => Proposal) public proposals;
     
-    // M-1 Fix: Track withdrawn proposal hashes to prevent vote reset abuse
-    // M-03 Fix: Changed from bool to uint64 timestamp — use cooldown instead of permanent block
     //           so identical proposals can be re-submitted after the cooldown window elapses.
     uint64 public withdrawnHashCooldown = 7 days;
     mapping(bytes32 => uint64) public withdrawnProposalHashes; // stores block.timestamp when withdrawn
@@ -148,7 +143,6 @@ contract DAO is ReentrancyGuard {
 
     function setAdmin(address _admin) external onlyTimelock { require(_admin!=address(0),"zero"); admin=_admin; emit AdminSet(_admin); }
     function setParams(uint64 _period, uint256 _minVotes) external onlyTimelock {
-        // M-21 Fix: Validate parameters before setting
         if(_period<1 hours)_period=1 hours;
         require(_period <= 30 days, "DAO: voting period too long");
         require(_minVotes <= 1_000_000, "DAO: minVotes too high");
@@ -171,7 +165,7 @@ contract DAO is ReentrancyGuard {
         emit ProposalCooldownSet(_cooldown);
     }
 
-    /// @notice M-03 Fix: Set cooldown before a withdrawn proposal can be re-submitted.
+    /// @notice Set cooldown before a withdrawn proposal can be re-submitted.
     /// @dev Capped at 90 days — beyond that proposals lose political relevance and
     ///      community members should be free to re-introduce them without restriction.
     function setWithdrawnHashCooldown(uint64 _cooldown) external onlyTimelock {
@@ -219,7 +213,6 @@ contract DAO is ReentrancyGuard {
     }
 
     function _eligible(address a) internal view returns (bool) {
-        // L-8 Fix: Cache external calls to save gas
         address vault = vaultHub.vaultOf(a);
         if (vault == address(0)) return false;
         // Check SeerGuardian restrictions (Seer keeps DAO in check)
@@ -231,7 +224,6 @@ contract DAO is ReentrancyGuard {
 
     function propose(ProposalType ptype, address target, uint256 value, bytes calldata data, string calldata description) external returns (uint256 id) {
         if(!_eligible(msg.sender)) revert DAO_NotEligible();
-        // H-2 Fix: Validate proposal parameters
         require(target != address(0), "DAO: invalid target");
         require(bytes(description).length > 0, "DAO: empty description");
 
@@ -252,10 +244,8 @@ contract DAO is ReentrancyGuard {
             }
         }
         
-        // C-06 Fix: Hash only immutable fields (target, value, data) — ptype can be changed on withdrawal
         // and description is mutable, so including either enables trivial bypass of the protection
         bytes32 proposalHash = keccak256(abi.encode(target, value, data));
-        // M-03 Fix: Use cooldown-based block instead of permanent block so identical proposals
         //           can be re-submitted after the withdrawnHashCooldown window elapses.
         uint64 withdrawnAt = withdrawnProposalHashes[proposalHash];
         require(
@@ -292,7 +282,6 @@ contract DAO is ReentrancyGuard {
         if (!_eligible(voter)) revert DAO_NotEligible();
         if (p.hasVoted[voter]) revert DAO_AlreadyVoted();
         
-        // M-8 Fix: Validate proposal hasn't been executed or queued
         require(!p.executed && !p.queued, "DAO: proposal already processed");
         
         p.hasVoted[voter] = true;
@@ -302,8 +291,6 @@ contract DAO is ReentrancyGuard {
         require(voterProposals[voter].length < 500, "DAO: voter history full");
         voterProposals[voter].push(id);
         
-        // H-5 Fix: Score-Weighted Voting with snapshot protection
-        // M-01 Fix: Use +1 encoding to distinguish "unset" (0) from "explicitly snapshotted as 0"
         uint256 rawSnapshot = p.scoreSnapshot[voter];
         uint256 weight;
         if (rawSnapshot == 0) {
@@ -323,7 +310,6 @@ contract DAO is ReentrancyGuard {
             // Intentional: use proportional time-based recovery (not stepwise daily buckets)
             // to avoid edge gaming around day boundaries.
             uint256 recovery = (elapsed * 5) / FATIGUE_RECOVERY_RATE; // 5% per day
-            // H-4 Fix: Cap recovery to fatigue to prevent underflow
             if (recovery >= info.fatigue) {
                 info.fatigue = 0;
             } else {
@@ -349,7 +335,6 @@ contract DAO is ReentrancyGuard {
         emit Voted(id, voter, support);
 
         // Avoid double rewards when hooks are configured and already reward voting.
-        // H-04 Fix: Only reward once per calendar day per voter to prevent farming
         if (address(hooks) == address(0)) {
             uint256 today = block.timestamp / 1 days;
             if (lastVoteRewardDay[voter] < today) {
@@ -363,7 +348,6 @@ contract DAO is ReentrancyGuard {
         }
     }
 
-    // H-5 Fix: Add nonReentrant to prevent reentrancy via malicious hooks
     function finalize(uint256 id) external nonReentrant {
         Proposal storage p=proposals[id];
         // FLOW-3 FIX: Check proposal exists (both start and end must be set)
@@ -409,8 +393,6 @@ contract DAO is ReentrancyGuard {
         require(block.timestamp < p.start || (p.forVotes == 0 && p.againstVotes == 0), 
             "DAO: cannot withdraw after votes cast");
         
-        // C-06 Fix: Store hash of immutable fields only before any mutation
-        // M-03 Fix: Store timestamp so cooldown can be checked on re-submission
         bytes32 proposalHash = keccak256(abi.encode(p.target, p.value, p.data));
         withdrawnProposalHashes[proposalHash] = uint64(block.timestamp);
 
@@ -444,15 +426,14 @@ contract DAO is ReentrancyGuard {
     // ═══════════════════════════════════════════════════════════════════════
     
     /**
-     * @notice Get active proposals with pagination (L-01 Fix)
+     * @notice Get active proposals with pagination
      * @param offset Starting proposal ID to scan from (0 = start from 1)
      * @param limit Maximum number of active proposals to return
      * @return ids Array of active proposal IDs
      */
     function getActiveProposals(uint256 offset, uint256 limit) public view returns (uint256[] memory ids) {
         if (offset == 0) offset = 1;
-        if (limit == 0 || limit > 100) limit = 100; // L-01 Fix: Cap at 100 per page
-        uint256[] memory tmp = new uint256[](limit);
+        if (limit == 0 || limit > 100) limit = 100;        uint256[] memory tmp = new uint256[](limit);
         uint256 found = 0;
         for (uint256 i = offset; i <= proposalCount && found < limit; i++) {
             if (proposals[i].end > block.timestamp && !proposals[i].executed && !proposals[i].queued) {
@@ -616,7 +597,7 @@ contract DAO is ReentrancyGuard {
     mapping(address => uint256[]) private voterProposals;
     
     /**
-     * @notice Get paginated proposal IDs a voter has voted on (L-07 Fix)
+     * @notice Get paginated proposal IDs a voter has voted on
      * @param voter Voter address
      * @param offset Starting index
      * @param limit Maximum results (capped at 200)

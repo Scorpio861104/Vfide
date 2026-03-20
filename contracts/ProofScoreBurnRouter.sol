@@ -33,7 +33,6 @@ contract ProofScoreBurnRouter is Ownable, Pausable {
     address public ecosystemSink; // EcosystemVault address
 
     // Policy: basis points (100 = 1%)
-    // L-2 Fix: Use named constants for clarity
     uint16 public constant DEFAULT_BURN_BPS = 150;  // 1.5% base burn
     uint16 public constant DEFAULT_SANCTUM_BPS = 5;  // 0.05% base Sanctum
     uint16 public constant DEFAULT_ECOSYSTEM_BPS = 20;  // 0.2% base Ecosystem
@@ -92,7 +91,6 @@ contract ProofScoreBurnRouter is Ownable, Pausable {
     // Daily volume tracking
     uint256 public dailyVolumeTracked;
 
-    // C-11 Fix: Time-weighted score tracking to prevent flash manipulation
     // Note: Scores now on 0-10000 scale for better sensitivity
     struct ScoreSnapshot {
         uint16 score;
@@ -102,11 +100,9 @@ contract ProofScoreBurnRouter is Ownable, Pausable {
     uint64 public constant SCORE_WINDOW = 7 days; // 7-day time-weighted average
     uint256 public constant MAX_SCORE_SNAPSHOTS = 100; // Cap to prevent unbounded gas
     mapping(address => uint64) public lastScoreUpdate;
-    // H-07 Fix: Circular buffer write index to avoid O(n) array shift
     mapping(address => uint256) public scoreHistoryHead;
 
     function _dayStart(uint256 timestamp) internal pure returns (uint256) {
-        // slither-disable-next-line divide-before-multiply
         return (timestamp / 1 days) * 1 days;
     }
 
@@ -269,7 +265,6 @@ contract ProofScoreBurnRouter is Ownable, Pausable {
         emit ModulesSet(_seer, _sanctumSink, _burnSink, _ecosystemSink);
     }
 
-    // C-11 Fix: Update time-weighted score (called when score changes)
     function updateScore(address user) external {
         // Allow Seer or owner to update score snapshots
         require(msg.sender == address(seer) || msg.sender == owner, "Not authorized");
@@ -285,7 +280,6 @@ contract ProofScoreBurnRouter is Ownable, Pausable {
         lastScoreUpdate[user] = now_;
         
         uint256 len = scoreHistory[user].length;
-        // H-07 Fix: Use circular buffer — overwrite oldest entry instead of shifting
         if (len < MAX_SCORE_SNAPSHOTS) {
             scoreHistory[user].push(snap);
         } else {
@@ -295,8 +289,6 @@ contract ProofScoreBurnRouter is Ownable, Pausable {
         }
     }
     
-    // C-11 Fix: Calculate time-weighted average score over SCORE_WINDOW
-    // H-07 Fix: Handles circular buffer — entries may not be chronologically ordered once buffer wraps
     function getTimeWeightedScore(address user) public view returns (uint16) {
         uint256 len = scoreHistory[user].length;
         if (len == 0) {
@@ -432,7 +424,6 @@ contract ProofScoreBurnRouter is Ownable, Pausable {
     ) {
         if (amount == 0) return (0, 0, 0, sanctumSink, ecosystemSink, burnSink);
 
-        // C-11 Fix: Use time-weighted score to prevent flash manipulation
         // Get time-weighted ProofScore for sender (primary actor)
         uint16 scoreFrom = getTimeWeightedScore(from);
         
@@ -460,7 +451,6 @@ contract ProofScoreBurnRouter is Ownable, Pausable {
         }
         
         // Compute burn/sanctum directly from totalBps to avoid chained divide-then-multiply paths.
-        // C-04 Fix: Use burnBps/sanctumBps (which may be adjusted for ecosystemMinBps) so all
         // three amounts are derived consistently.  Ecosystem absorbs any rounding dust.
         uint256 totalFee = (amount * totalBps) / 10000;
         burnAmount    = (amount * burnBps) / 10000;
@@ -495,7 +485,6 @@ contract ProofScoreBurnRouter is Ownable, Pausable {
             }
         }
         
-        // H-10 Fix: Verify total fees don't exceed amount (safety check)
         uint256 totalFees = burnAmount + sanctumAmount + ecosystemAmount;
         require(totalFees <= amount, "BURN: fees exceed amount");
         
@@ -510,7 +499,6 @@ contract ProofScoreBurnRouter is Ownable, Pausable {
      */
     function recordBurn(uint256 burnAmount) external whenNotPaused {
         require(msg.sender == token, "only token");
-        // M-07 Fix: Single atomic day reset to prevent race condition
         _resetDayIfNeeded();
         dailyBurnedAmount += burnAmount;
     }
@@ -521,12 +509,11 @@ contract ProofScoreBurnRouter is Ownable, Pausable {
      */
     function recordVolume(uint256 amount) external whenNotPaused {
         require(msg.sender == token, "only token");
-        // M-07 Fix: Single atomic day reset to prevent race condition
         _resetDayIfNeeded();
         dailyVolumeTracked += amount;
     }
 
-    /// @dev M-07 Fix: Atomically reset both counters when a new day starts
+    /// @dev Atomically reset both counters when a new day starts
     function _resetDayIfNeeded() internal {
         if (block.timestamp >= currentDayStart + 1 days) {
             currentDayStart = _dayStart(block.timestamp);
@@ -570,7 +557,6 @@ contract ProofScoreBurnRouter is Ownable, Pausable {
     ) {
         score = seer.getScore(user);
         
-        // slither-disable-next-line unused-return
         (burnAmount, sanctumAmount, ecosystemAmount,,,) = this.computeFees(user, address(0), amount);
         netAmount = amount - burnAmount - sanctumAmount - ecosystemAmount;
     }
@@ -599,7 +585,6 @@ contract ProofScoreBurnRouter is Ownable, Pausable {
         feePercent = totalBps;
     }
 
-    // I-09 Fix: Emergency pause
     function pause() external onlyOwner { _pause(); }
     function unpause() external onlyOwner { _unpause(); }
 

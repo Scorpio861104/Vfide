@@ -130,7 +130,6 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
     uint16 public headhunterBps = 2500;   // 25% - Referral rewards
     uint16 public operationsBps = 2500;   // 25% - Team operations/sustainability
     
-    // M-5 Fix: Minimum allocation thresholds (10% = 1000 bps)
     uint16 public constant MIN_ALLOCATION_BPS = 500; // Reduced to 5% to allow 4-way split
     
     // Operations wallet for team sustainability
@@ -156,9 +155,7 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
     mapping(uint256 => address[]) public periodMerchants; // period => list of merchants
     mapping(uint256 => uint256) public merchantPeriodPoolSnapshot; // period => pool at end
     mapping(uint256 => bool) public merchantPeriodEnded; // period => ended
-    // slither-disable-next-line uninitialized-state
     mapping(uint256 => mapping(address => bool)) public merchantPeriodClaimed; // period => merchant => claimed
-    // slither-disable-next-line uninitialized-state
     mapping(address => uint256) public totalMerchantBonusesPaid;
 
     // Headhunter tracking (year-long accumulation, quarterly payouts)
@@ -169,7 +166,6 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
     mapping(uint256 => mapping(address => uint16)) public yearPoints; // year => referrer => points (accumulates all year)
     mapping(uint256 => address[]) public yearReferrers; // year => list of referrers
     mapping(uint256 => mapping(uint256 => uint256)) public quarterPoolSnapshot; // year => quarter => pool amount
-    // slither-disable-next-line uninitialized-state
     mapping(uint256 => mapping(uint256 => mapping(address => bool))) public quarterClaimed; // year => quarter => referrer => claimed
     mapping(uint256 => mapping(uint256 => bool)) public quarterEnded; // year => quarter => ended
     
@@ -257,7 +253,6 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
         vfide = IERC20(_vfide);
         rewardToken = IERC20(_vfide);
         seer = ISeer(_seer);
-        // slither-disable-next-line missing-zero-check
         operationsWallet = _operationsWallet; // Can be address(0), must be set before withdrawals
         yearStartTime = block.timestamp;
         currentYear = 1;
@@ -294,7 +289,6 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
     function setAllocations(uint16 _councilBps, uint16 _merchantBps, uint16 _headhunterBps) external onlyOwner {
         uint16 nonOps = _councilBps + _merchantBps + _headhunterBps;
         require(nonOps <= MAX_BPS, "allocations exceed 100%");
-        // M-5 Fix: Enforce minimum allocation thresholds
         require(_councilBps >= MIN_ALLOCATION_BPS, "ECO: council below minimum");
         require(_merchantBps >= MIN_ALLOCATION_BPS, "ECO: merchant below minimum");
         require(_headhunterBps >= MIN_ALLOCATION_BPS, "ECO: headhunter below minimum");
@@ -635,7 +629,6 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
         uint8 rank = 1;
         address[] storage merchants = periodMerchants[period];
         
-        // C-8 Fix: If more merchants than MAX_RANK_ITERATIONS, we can't accurately rank
         // Instead of returning wrong rank, cap rank at MERCHANT_RANKS (100) for unranked merchants
         if (merchants.length > MAX_RANK_ITERATIONS) {
             // For large merchant counts, we need to sample or use a different approach
@@ -753,7 +746,6 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
         _awardPoints(referrer, POINTS_MERCHANT_REFERRAL, merchant, true);
         _tryAutoWorkPayout(referrer, autoMerchantReferralReward, false, "verified_merchant_referral");
         if (autoWorkPayoutEnabled) {
-            // slither-disable-next-line reentrancy-no-eth
             _processReferralLevelPayouts(referrer, currentYear, "auto_referral_level_progress", false);
         }
     }
@@ -774,7 +766,6 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
         _awardPoints(referrer, POINTS_USER_REFERRAL, user, false);
         _tryAutoWorkPayout(referrer, autoUserReferralReward, false, "verified_user_referral");
         if (autoWorkPayoutEnabled) {
-            // slither-disable-next-line reentrancy-no-eth
             _processReferralLevelPayouts(referrer, currentYear, "auto_referral_level_progress", false);
         }
     }
@@ -1054,19 +1045,16 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
             if (stableReceived > 0) {
                 // Successfully swapped, transfer stablecoin to recipient
                 IERC20(preferredStablecoin).safeTransfer(recipient, stableReceived);
-                // slither-disable-next-line reentrancy-events
                 emit RewardPaidInStable(recipient, amount, stableReceived, reason);
                 return;
             } else {
                 // Swap failed, emit event and fallback to VFIDE payment
-                // slither-disable-next-line reentrancy-events
                 emit SwapFailed(recipient, amount, reason);
             }
         }
         
         // Default: pay in VFIDE (no swap or swap failed)
         rewardToken.safeTransfer(recipient, amount);
-        // slither-disable-next-line reentrancy-events
         emit PaymentMade(recipient, amount, reason);
     }
     
@@ -1129,7 +1117,6 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
 
         address dead = 0x000000000000000000000000000000000000dEaD;
         rewardToken.safeTransfer(dead, amount);
-        // slither-disable-next-line reentrancy-events
         emit FundsBurned(amount);
     }
 
@@ -1145,8 +1132,7 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
     uint256 public withdrawRequestCount;
     mapping(uint256 => WithdrawRequest) public withdrawRequests;
     uint256 public constant WITHDRAW_TIMELOCK = 2 days;
-    uint256 public maxWithdrawBps = 1000; // H-11 Fix: Max 10% of balance per withdrawal (in basis points)
-    
+    uint256 public maxWithdrawBps = 1000;    
     event WithdrawRequested(uint256 indexed id, address to, uint256 amount);
     event WithdrawCancelled(uint256 indexed id);
     event WithdrawExecuted(uint256 indexed id, address to, uint256 amount);
@@ -1154,7 +1140,6 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
     function requestWithdraw(address to, uint256 amount) external onlyOwner returns (uint256 id) {
         require(to != address(0), "zero to");
         require(amount > 0, "zero amount");
-        // H-11 Fix: Cap each withdrawal to maxWithdrawBps of current balance
         uint256 bal = rewardToken.balanceOf(address(this));
         require(amount <= bal * maxWithdrawBps / 10_000, "exceeds max withdraw");
         
@@ -1190,7 +1175,7 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
         emit WithdrawExecuted(id, req.to, req.amount);
     }
 
-    /// @notice H-11 Fix: Allow owner to adjust max withdrawal percentage (in basis points, max 5000 = 50%)
+    /// @notice Allow owner to adjust max withdrawal percentage (in basis points, max 5000 = 50%)
     function setMaxWithdrawBps(uint256 _bps) external onlyOwner {
         require(_bps > 0 && _bps <= 5000, "invalid bps");
         maxWithdrawBps = _bps;

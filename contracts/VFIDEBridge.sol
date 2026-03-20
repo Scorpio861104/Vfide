@@ -201,7 +201,6 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
 
         // Check rate limits if security module is set
         if (securityModule != address(0)) {
-            // slither-disable-next-line reentrancy-benign
             require(
                 IBridgeSecurityModule(securityModule).checkRateLimit(msg.sender, _amount),
                 "Rate limit exceeded"
@@ -308,7 +307,6 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
         totalBridgedIn += amount;
 
         // Release tokens to receiver from destination bridge liquidity.
-        // C-05 Fix: Verify sufficient liquidity before release to prevent stranding
         uint256 bridgeBalance = vfideToken.balanceOf(address(this));
         require(bridgeBalance >= amount, "VFIDEBridge: insufficient liquidity");
         vfideToken.safeTransfer(receiver, amount);
@@ -333,7 +331,7 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
         return fee.nativeFee;
     }
 
-    /// @notice C-05 Fix: Check available bridge liquidity on this chain
+    /// @notice Check available bridge liquidity on this chain
     function availableLiquidity() external view returns (uint256) {
         return vfideToken.balanceOf(address(this));
     }
@@ -379,7 +377,6 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
     function setSecurityModule(address _securityModule) external onlyOwner {
         // Intentional: zero address is allowed to disable module checks after timelock.
         uint64 effectiveAt = uint64(block.timestamp) + CONFIG_TIMELOCK_DELAY;
-        // slither-disable-next-line missing-zero-check
         pendingSecurityModule = _securityModule;
         pendingSecurityModuleAt = effectiveAt;
         emit SecurityModuleScheduled(_securityModule, effectiveAt);
@@ -530,7 +527,7 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
         _unpause();
     }
 
-    // ── H-18 Fix: Two-step ownership (overrides OApp/Ownable single-step transferOwnership)
+    // ── Two-step ownership (overrides OApp/Ownable single-step transferOwnership)
     address private _pendingBridgeOwner;
 
     event OwnershipTransferStarted(address indexed previousOwner, address indexed newOwner);

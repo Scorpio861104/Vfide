@@ -74,7 +74,6 @@ const ecosystemLoadout = [
   },
 ];
 
-
 function GlassCard({ children, className = "", hover = true }: { 
   children: React.ReactNode; 
   className?: string;

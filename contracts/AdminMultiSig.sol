@@ -54,7 +54,6 @@ contract AdminMultiSig is ReentrancyGuard {
     mapping(uint256 => Proposal) public proposals;
     
     uint256 public vetoThreshold = 100; // 100 veto votes needed
-    // H-05 Fix: Minimum VFIDE token stake required to cast a community veto.
     // This makes Sybil attacks economically costly — 100 wallets × 10,000 VFIDE = 1M VFIDE locked.
     uint256 public vetoMinStake = 10_000e18; // 10,000 VFIDE minimum to cast one veto vote
     IERC20 public vfideToken; // VFIDE token reference for stake checks
@@ -62,8 +61,7 @@ contract AdminMultiSig is ReentrancyGuard {
 
     uint256 private constant NO_ACTIVE_PROPOSAL = type(uint256).max;
     uint256 private executingProposalId = NO_ACTIVE_PROPOSAL;
-    uint256 public executionGasLimit = 500_000; // M-12 Fix: Configurable gas limit
-
+    uint256 public executionGasLimit = 500_000;
     event ProposalCreated(
         uint256 indexed proposalId,
         address indexed proposer,
@@ -113,7 +111,6 @@ contract AdminMultiSig is ReentrancyGuard {
             council[i] = _council[i];
             isCouncilMember[_council[i]] = true;
         }
-        // H-05 Fix: Wire VFIDE token for stake-gated community veto
         if (_vfideToken != address(0)) {
             vfideToken = IERC20(_vfideToken);
         }
@@ -234,13 +231,12 @@ contract AdminMultiSig is ReentrancyGuard {
         // Can be increased via governance if needed for complex operations
         // Intentional: emergency proposal execution may target this contract,
         // while `nonReentrant` prevents nested `executeProposal` entry.
-        // slither-disable-next-line reentrancy-benign
         (bool success, ) = proposal.target.call{gas: executionGasLimit}(proposal.data);
         require(success, "AdminMultiSig: execution failed");
         executingProposalId = NO_ACTIVE_PROPOSAL;
     }
 
-    /// @notice M-12 Fix: Allow council to adjust execution gas limit via governance
+    /// @notice Allow council to adjust execution gas limit via governance
     function setExecutionGasLimit(uint256 _gasLimit) external {
         require(executingProposalId != NO_ACTIVE_PROPOSAL, "AdminMultiSig: must be via proposal");
         require(_gasLimit >= 100_000 && _gasLimit <= 10_000_000, "AdminMultiSig: invalid gas limit");
@@ -273,7 +269,7 @@ contract AdminMultiSig is ReentrancyGuard {
 
     /**
      * @notice Community member votes to veto a proposal
-     * @dev H-05 Fix: Requires minimum VFIDE token balance to prevent Sybil attacks.
+     * @dev Requires minimum VFIDE token balance to prevent Sybil attacks.
      *      Attacker needs 100 wallets × vetoMinStake VFIDE, making mass veto economically costly.
      * @param _proposalId ID of the proposal to veto
      */
@@ -286,7 +282,6 @@ contract AdminMultiSig is ReentrancyGuard {
             block.timestamp <= proposal.executionTime + VETO_WINDOW,
             "AdminMultiSig: veto window closed"
         );
-        // H-05 Fix: Enforce minimum token stake to prevent zero-cost Sybil veto attacks
         if (vetoMinStake > 0 && address(vfideToken) != address(0)) {
             require(
                 vfideToken.balanceOf(msg.sender) >= vetoMinStake,

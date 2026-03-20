@@ -37,8 +37,7 @@ contract DevReserveVestingVault is ReentrancyGuard {
     address public immutable LEDGER;        // optional
     address public immutable PRESALE;       // presale (for start time)
     uint256 public immutable ALLOCATION;    // e.g., 50_000_000e18
-    address public immutable DAO;           // H-03 Fix: DAO can emergency-pause
-
+    address public immutable DAO;
     // ── Schedule constants
     uint64  public constant CLIFF = 60 days;              // 2-month cliff
     uint64  public constant VESTING = 36 * 30 days;       // 36 months total (1080 days)
@@ -60,7 +59,7 @@ contract DevReserveVestingVault is ReentrancyGuard {
     event SyncedStart(uint64 start, uint64 cliff, uint64 end);
     event Claimed(address indexed beneficiary, address indexed vault, uint256 amount);
     event PauseSet(bool paused);
-    event EmergencyFreeze(address indexed by); // H-03 Fix
+    event EmergencyFreeze(address indexed by);
     event ModulesSet(address vfide, address beneficiary, address vaultHub, address securityHub, address ledger, address presale);
 
     // ── Errors
@@ -88,16 +87,11 @@ contract DevReserveVestingVault is ReentrancyGuard {
         VFIDE        = _vfide;
         BENEFICIARY  = _beneficiary;
         VAULT_HUB    = _vaultHub;
-        // slither-disable-next-line missing-zero-check
         SECURITY_HUB = _securityHub;
-        // slither-disable-next-line missing-zero-check
         LEDGER       = _ledger;
-        // slither-disable-next-line missing-zero-check
         PRESALE      = _presale;
         ALLOCATION   = _allocation;
-        // slither-disable-next-line missing-zero-check
-        DAO          = _dao; // H-03 Fix: DAO address for emergency pause
-
+        DAO          = _dao;
         emit ModulesSet(_vfide, _beneficiary, _vaultHub, _securityHub, _ledger, _presale);
         _log("dev_vesting_deployed");
     }
@@ -140,14 +134,12 @@ contract DevReserveVestingVault is ReentrancyGuard {
     // ─────────────────────────────────────────────────────────────
 
     function pauseClaims(bool paused) external {
-        // H-03 Fix: Both BENEFICIARY and DAO can pause — prevents single-key compromise draining 25% supply
         require(msg.sender == BENEFICIARY || msg.sender == DAO, "DV: unauthorized");
         claimsPaused = paused;
         emit PauseSet(paused);
         _log(paused ? "claims_paused" : "claims_unpaused");
     }
 
-    // H-03 Fix: DAO can emergency-freeze independently (handles compromised beneficiary key)
     function emergencyFreeze() external {
         require(msg.sender == DAO, "DV: only DAO");
         claimsPaused = true;
@@ -163,10 +155,8 @@ contract DevReserveVestingVault is ReentrancyGuard {
         if (msg.sender != BENEFICIARY) revert DV_NotBeneficiary();
         if (claimsPaused) revert DV_Paused();
 
-        // slither-disable-next-line reentrancy-benign
         _syncStart(); // reverts if presale not initialized
 
-        // slither-disable-next-line reentrancy-benign
         address vault = beneficiaryVault();
 
         if (SECURITY_HUB != address(0) && ISecurityHub(SECURITY_HUB).isLocked(vault)) {

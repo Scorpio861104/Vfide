@@ -65,7 +65,6 @@ contract RevenueSplitter is ReentrancyGuard {
             
             if (amount > 0) {
                 distributed += amount;
-                // C-12 Fix: Use SafeERC20 for safe transfers - reverts on failure
                 // This ensures atomic distribution (all or nothing)
                 IERC20(token).safeTransfer(payees[i].account, amount);
                 payeesSucceeded++;
@@ -80,7 +79,7 @@ contract RevenueSplitter is ReentrancyGuard {
         return payees;
     }
 
-    /// @notice M-28 Fix: Allow owner to update payees (e.g., compromised address, org change)
+    /// @notice Allow owner to update payees (e.g., compromised address, org change)
     function updatePayees(address[] calldata _accounts, uint256[] calldata _shares) external {
         require(msg.sender == owner, "RS: not owner");
         require(_accounts.length == _shares.length, "length mismatch");

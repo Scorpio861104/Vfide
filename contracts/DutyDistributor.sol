@@ -61,7 +61,6 @@ contract DutyDistributor is Ownable, IGovernanceHooks {
         require(msg.sender == dao, "not dao");
     }
 
-    // L-20 Fix: Unified access — both config and hooks use onlyDAO
     function setPointsPerVote(uint256 _pointsPerVote) external onlyDAO {
         require(_pointsPerVote > 0 && _pointsPerVote <= MAX_POINTS_PER_VOTE, "DD: invalid pointsPerVote");
         require(_pointsPerVote <= maxPointsPerUser, "DD: pointsPerVote exceeds cap");

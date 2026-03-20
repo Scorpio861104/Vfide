@@ -169,7 +169,7 @@ const TOKEN_ABI = [
   },
   {
     inputs: [],
-    name: 'presaleMinted',
+    name: 'PRESALE_CAP',
     outputs: [{ type: 'uint256' }],
     stateMutability: 'view',
     type: 'function',
@@ -559,10 +559,10 @@ export default function AdminPanel() {
     query: { enabled: IS_TOKEN_DEPLOYED },
   });
 
-  const { data: presaleMinted } = useReadContract({
+  const { data: presaleCap } = useReadContract({
     address: TOKEN_ADDRESS,
     abi: TOKEN_ABI,
-    functionName: 'presaleMinted',
+    functionName: 'PRESALE_CAP',
     query: { enabled: IS_TOKEN_DEPLOYED },
   });
 
@@ -1941,15 +1941,15 @@ export default function AdminPanel() {
               </p>
             </div>
             <div className="bg-black/30 rounded-lg p-4">
-              <p className="text-gray-400 text-sm">Presale Minted</p>
+              <p className="text-gray-400 text-sm">Presale Allocation</p>
               <p className="text-white text-2xl font-bold">
-                {presaleMinted ? formatEther(presaleMinted).slice(0, -18) : '0'} VFIDE
+                {presaleCap ? Number(formatEther(presaleCap)).toLocaleString() : '35,000,000'} VFIDE
               </p>
             </div>
             <div className="bg-black/30 rounded-lg p-4">
-              <p className="text-gray-400 text-sm">Presale Remaining</p>
+              <p className="text-gray-400 text-sm">Presale Cap</p>
               <p className="text-white text-2xl font-bold">
-                {presaleMinted ? (50_000_000 - Number(formatEther(presaleMinted))).toLocaleString() : '50,000,000'} VFIDE
+                35,000,000 VFIDE
               </p>
             </div>
           </div>

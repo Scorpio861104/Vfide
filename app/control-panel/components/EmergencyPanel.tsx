@@ -187,7 +187,7 @@ export function EmergencyPanel() {
         <h3 className="text-white font-bold mb-2">⚠️ Important Information</h3>
         <ul className="text-slate-300 text-sm space-y-2">
           <li><strong>Pause All:</strong> Stops presale and enables token circuit breaker (24 hours default)</li>
-          <li><strong>Resume All:</strong> Unpauases presale and disables token circuit breaker</li>
+          <li><strong>Resume All:</strong> Unpauses presale and disables token circuit breaker</li>
           <li><strong>Circuit Breaker:</strong> Bypasses SecurityHub and BurnRouter checks for emergency transfers</li>
           <li><strong>Max Duration:</strong> Circuit breaker automatically expires after 7 days</li>
           <li><strong>Use Case:</strong> Critical bug fixes, security incidents, or emergency migrations</li>

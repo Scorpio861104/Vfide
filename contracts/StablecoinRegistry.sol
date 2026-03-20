@@ -65,7 +65,6 @@ contract StablecoinRegistry is Ownable, Pausable {
         
         stablecoins[token].allowed = false;
         
-        // M-13 Fix: Remove from stablecoinList using swap-and-pop
         uint256 len = stablecoinList.length;
         for (uint256 i = 0; i < len; i++) {
             if (stablecoinList[i] == token) {
@@ -163,7 +162,6 @@ contract StablecoinRegistry is Ownable, Pausable {
         }
     }
 
-    // I-09 Fix: Emergency pause
     function pause() external onlyOwner { _pause(); }
     function unpause() external onlyOwner { _unpause(); }
 }

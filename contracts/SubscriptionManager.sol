@@ -39,7 +39,6 @@ error SM_PaymentTooEarly();
 error SM_GracePeriodActive();
 error SM_GracePeriodExpired();
 
-// H-16 Fix: Add ReentrancyGuard for token transfer functions
 contract SubscriptionManager is ReentrancyGuard {
     event SubscriptionCreated(uint256 indexed subId, address indexed subscriber, address indexed merchant, uint256 amount, uint256 interval);
     event SubscriptionCancelled(uint256 indexed subId);
@@ -72,7 +71,7 @@ contract SubscriptionManager is ReentrancyGuard {
     // NEW: Configuration
     uint256 public constant GRACE_PERIOD = 3 days;
     uint256 public constant MAX_FAILED_PAYMENTS = 3;
-    // M-22/M-30 Fix: Merchant has exclusive calling rights for 24h after payment is due.
+    // Merchant has exclusive calling rights for 24h after payment is due.
     //               After this window anyone (keeper/bot) may process to prevent stalling.
     uint256 public constant MERCHANT_EXCLUSIVE_WINDOW = 24 hours;
     
@@ -219,17 +218,15 @@ contract SubscriptionManager is ReentrancyGuard {
     }
 
     // 3. Merchant (or anyone) processes the payment
-    // H-16 Fix: Add nonReentrant to prevent reentrancy via malicious tokens
-    // M-22/M-30 Fix: Within MERCHANT_EXCLUSIVE_WINDOW after due time, only the merchant
+    // Within MERCHANT_EXCLUSIVE_WINDOW after due time, only the merchant
     //                can call — prevents third-party griefing during brief balance dips.
-    // slither-disable-next-line arbitrary-send-erc20
     function processPayment(uint256 subId) external nonReentrant {
         Subscription storage sub = subscriptions[subId];
         if (!sub.active) revert SM_InactiveSubscription();
         if (sub.paused) revert SM_SubscriptionPaused(); // Cannot process while paused
         if (block.timestamp < sub.nextPayment) revert SM_PaymentTooEarly();
 
-        // M-22/M-30 Fix: During the merchant-exclusive window only the merchant may trigger
+        // During the merchant-exclusive window only the merchant may trigger
         if (block.timestamp < sub.nextPayment + MERCHANT_EXCLUSIVE_WINDOW) {
             if (msg.sender != sub.merchant) revert SM_NotMerchant();
         }
@@ -282,7 +279,6 @@ contract SubscriptionManager is ReentrancyGuard {
         sub.nextPayment += sub.interval;
 
         // This pull uses user vault custody by design (not arbitrary user-provided from-address).
-        // slither-disable-next-line arbitrary-send-erc20
         // Execute Transfer (using SafeERC20 for non-standard tokens)
         IERC20(sub.token).safeTransferFrom(userVault, merchantVault, sub.amount);
         
@@ -427,7 +423,6 @@ contract SubscriptionManager is ReentrancyGuard {
         uint256 failed
     ) {
         for (uint256 i = 0; i < subIds.length; i++) {
-            // slither-disable-next-line calls-loop
             try this.processPayment(subIds[i]) {
                 processed++;
             } catch {

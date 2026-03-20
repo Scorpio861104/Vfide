@@ -1,6 +1,7 @@
 /**
  * VFIDEPresale Contract Tests
- * Comprehensive test suite for the VFIDE presale contract with tiered pricing and referrals
+ * Mock-based test suite for the VFIDE presale contract interface with tiered pricing
+ * NOTE: These are interface-level mock tests. Real on-chain tests are in test/hardhat/.
  */
 
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
@@ -43,33 +44,33 @@ describe('VFIDEPresale Contract', () => {
 
   describe('Presale Configuration', () => {
     it('should return correct base supply', async () => {
-      mockContractRead.mockResolvedValueOnce(parseEther('175000000'));
+      mockContractRead.mockResolvedValueOnce(parseEther('35000000'));
       const result = await mockContractRead({ functionName: 'BASE_SUPPLY' });
-      expect(result).toBe(parseEther('175000000'));
+      expect(result).toBe(parseEther('35000000'));
     });
 
     it('should return correct total supply', async () => {
-      mockContractRead.mockResolvedValueOnce(parseEther('280000000'));
+      mockContractRead.mockResolvedValueOnce(parseEther('35000000'));
       const result = await mockContractRead({ functionName: 'TOTAL_SUPPLY' });
-      expect(result).toBe(parseEther('280000000'));
+      expect(result).toBe(parseEther('35000000'));
     });
 
     it('should return correct sale duration', async () => {
-      mockContractRead.mockResolvedValueOnce(7 * 24 * 60 * 60); // 7 days
+      mockContractRead.mockResolvedValueOnce(30 * 24 * 60 * 60); // 30 days
       const result = await mockContractRead({ functionName: 'SALE_DURATION' });
-      expect(result).toBe(7 * 24 * 60 * 60);
+      expect(result).toBe(30 * 24 * 60 * 60);
     });
 
     it('should return correct minimum goal', async () => {
-      mockContractRead.mockResolvedValueOnce(parseEther('1200'));
+      mockContractRead.mockResolvedValueOnce(parseEther('8750000'));
       const result = await mockContractRead({ functionName: 'MINIMUM_GOAL' });
-      expect(result).toBe(parseEther('1200'));
+      expect(result).toBe(parseEther('8750000'));
     });
 
     it('should return correct max per wallet', async () => {
-      mockContractRead.mockResolvedValueOnce(parseEther('50'));
+      mockContractRead.mockResolvedValueOnce(parseEther('500000'));
       const result = await mockContractRead({ functionName: 'MAX_PER_WALLET' });
-      expect(result).toBe(parseEther('50'));
+      expect(result).toBe(parseEther('500000'));
     });
 
     it('should return correct minimum purchase in ETH', async () => {
@@ -79,53 +80,53 @@ describe('VFIDEPresale Contract', () => {
     });
 
     it('should return correct minimum purchase in USD', async () => {
-      mockContractRead.mockResolvedValueOnce(parseEther('25'));
+      mockContractRead.mockResolvedValueOnce(10_000_000n); // 10 USD in 6 decimals
       const result = await mockContractRead({ functionName: 'MIN_PURCHASE_USD' });
-      expect(result).toBe(parseEther('25'));
+      expect(result).toBe(10_000_000n);
     });
 
     it('should return correct max purchases per wallet', async () => {
-      mockContractRead.mockResolvedValueOnce(50);
+      mockContractRead.mockResolvedValueOnce(100);
       const result = await mockContractRead({ functionName: 'MAX_PURCHASES_PER_WALLET' });
-      expect(result).toBe(50);
+      expect(result).toBe(100);
     });
   });
 
   describe('Tier Configuration', () => {
     it('should return Tier 0 price', async () => {
-      mockContractRead.mockResolvedValueOnce(parseEther('0.0004'));
+      mockContractRead.mockResolvedValueOnce(30_000n); // $0.03 in microUSD
       const result = await mockContractRead({ functionName: 'TIER_0_PRICE' });
-      expect(result).toBe(parseEther('0.0004'));
+      expect(result).toBe(30_000n);
     });
 
     it('should return Tier 0 cap', async () => {
-      mockContractRead.mockResolvedValueOnce(parseEther('50000000'));
+      mockContractRead.mockResolvedValueOnce(parseEther('10000000'));
       const result = await mockContractRead({ functionName: 'TIER_0_CAP' });
-      expect(result).toBe(parseEther('50000000'));
+      expect(result).toBe(parseEther('10000000'));
     });
 
     it('should return Tier 1 price', async () => {
-      mockContractRead.mockResolvedValueOnce(parseEther('0.0005'));
+      mockContractRead.mockResolvedValueOnce(50_000n); // $0.05 in microUSD
       const result = await mockContractRead({ functionName: 'TIER_1_PRICE' });
-      expect(result).toBe(parseEther('0.0005'));
+      expect(result).toBe(50_000n);
     });
 
     it('should return Tier 1 cap', async () => {
-      mockContractRead.mockResolvedValueOnce(parseEther('75000000'));
+      mockContractRead.mockResolvedValueOnce(parseEther('10000000'));
       const result = await mockContractRead({ functionName: 'TIER_1_CAP' });
-      expect(result).toBe(parseEther('75000000'));
+      expect(result).toBe(parseEther('10000000'));
     });
 
     it('should return Tier 2 price', async () => {
-      mockContractRead.mockResolvedValueOnce(parseEther('0.0006'));
+      mockContractRead.mockResolvedValueOnce(70_000n); // $0.07 in microUSD
       const result = await mockContractRead({ functionName: 'TIER_2_PRICE' });
-      expect(result).toBe(parseEther('0.0006'));
+      expect(result).toBe(70_000n);
     });
 
     it('should return Tier 2 cap', async () => {
-      mockContractRead.mockResolvedValueOnce(parseEther('50000000'));
+      mockContractRead.mockResolvedValueOnce(parseEther('15000000'));
       const result = await mockContractRead({ functionName: 'TIER_2_CAP' });
-      expect(result).toBe(parseEther('50000000'));
+      expect(result).toBe(parseEther('15000000'));
     });
 
     it('should check tier availability', async () => {
@@ -141,15 +142,15 @@ describe('VFIDEPresale Contract', () => {
     });
 
     it('should get tier price', async () => {
-      mockContractRead.mockResolvedValueOnce(parseEther('0.0004'));
+      mockContractRead.mockResolvedValueOnce(30_000n); // $0.03 in microUSD
       const result = await mockContractRead({ functionName: 'getTierPrice', args: [0] });
-      expect(result).toBe(parseEther('0.0004'));
+      expect(result).toBe(30_000n);
     });
 
     it('should get tier required lock', async () => {
-      mockContractRead.mockResolvedValueOnce(0);
+      mockContractRead.mockResolvedValueOnce(180 * 24 * 3600); // Tier 0 = 180 days
       const result = await mockContractRead({ functionName: 'getTierRequiredLock', args: [0] });
-      expect(result).toBe(0);
+      expect(result).toBe(180 * 24 * 3600);
     });
   });
 
@@ -161,21 +162,21 @@ describe('VFIDEPresale Contract', () => {
     });
 
     it('should return no lock immediate release percentage', async () => {
-      mockContractRead.mockResolvedValueOnce(10000); // 100%
+      mockContractRead.mockResolvedValueOnce(100); // 100% immediate
       const result = await mockContractRead({ functionName: 'IMMEDIATE_NO_LOCK' });
-      expect(result).toBe(10000);
+      expect(result).toBe(100);
     });
 
     it('should return 90 days immediate release percentage', async () => {
-      mockContractRead.mockResolvedValueOnce(2000); // 20%
+      mockContractRead.mockResolvedValueOnce(20); // 20% immediate
       const result = await mockContractRead({ functionName: 'IMMEDIATE_90_DAYS' });
-      expect(result).toBe(2000);
+      expect(result).toBe(20);
     });
 
     it('should return 180 days immediate release percentage', async () => {
-      mockContractRead.mockResolvedValueOnce(1000); // 10%
+      mockContractRead.mockResolvedValueOnce(10); // 10% immediate
       const result = await mockContractRead({ functionName: 'IMMEDIATE_180_DAYS' });
-      expect(result).toBe(1000);
+      expect(result).toBe(10);
     });
   });
 
@@ -259,15 +260,6 @@ describe('VFIDEPresale Contract', () => {
       ).rejects.toThrow('StalePrice');
     });
 
-    it('should reject purchase exceeding max gas price', async () => {
-      mockContractWrite.mockRejectedValueOnce(new Error('GasPriceTooHigh'));
-      await expect(
-        mockContractWrite({
-          functionName: 'buyTokens',
-          args: [0],
-        })
-      ).rejects.toThrow('GasPriceTooHigh');
-    });
   });
 
   describe('Buy Tokens - Stablecoins', () => {
@@ -411,15 +403,6 @@ describe('VFIDEPresale Contract', () => {
       expect(result).toBe(true);
     });
 
-    it('should check if user can claim stable refund', async () => {
-      mockContractRead.mockResolvedValueOnce(true);
-      const result = await mockContractRead({
-        functionName: 'canClaimStableRefund',
-        args: [buyer1],
-      });
-      expect(result).toBe(true);
-    });
-
     it('should allow claiming ETH refund', async () => {
       mockContractWrite.mockResolvedValueOnce('0xhash');
       const result = await mockContractWrite({ functionName: 'claimRefund' });
@@ -438,15 +421,9 @@ describe('VFIDEPresale Contract', () => {
       expect(result).toBe('0xhash');
     });
 
-    it('should fund refunds', async () => {
+    it('should recover unclaimed stable refunds', async () => {
       mockContractWrite.mockResolvedValueOnce('0xhash');
-      const result = await mockContractWrite({ functionName: 'fundRefunds' });
-      expect(result).toBe('0xhash');
-    });
-
-    it('should fund stable refunds', async () => {
-      mockContractWrite.mockResolvedValueOnce('0xhash');
-      const result = await mockContractWrite({ functionName: 'fundStableRefunds' });
+      const result = await mockContractWrite({ functionName: 'recoverUnclaimedStableRefunds' });
       expect(result).toBe('0xhash');
     });
 
@@ -489,7 +466,6 @@ describe('VFIDEPresale Contract', () => {
       mockContractWrite.mockResolvedValueOnce('0xhash');
       const result = await mockContractWrite({
         functionName: 'depositTokens',
-        args: [parseEther('280000000')],
       });
       expect(result).toBe('0xhash');
     });
@@ -513,7 +489,7 @@ describe('VFIDEPresale Contract', () => {
       mockContractWrite.mockResolvedValueOnce('0xhash');
       const result = await mockContractWrite({
         functionName: 'cancelPurchase',
-        args: [buyer1, 0],
+        args: [0],
       });
       expect(result).toBe('0xhash');
     });
@@ -521,12 +497,6 @@ describe('VFIDEPresale Contract', () => {
     it('should allow withdrawing unsold tokens', async () => {
       mockContractWrite.mockResolvedValueOnce('0xhash');
       const result = await mockContractWrite({ functionName: 'withdrawUnsold' });
-      expect(result).toBe('0xhash');
-    });
-
-    it('should allow emergency withdraw', async () => {
-      mockContractWrite.mockResolvedValueOnce('0xhash');
-      const result = await mockContractWrite({ functionName: 'emergencyWithdraw' });
       expect(result).toBe('0xhash');
     });
 
@@ -573,15 +543,6 @@ describe('VFIDEPresale Contract', () => {
       const result = await mockContractWrite({
         functionName: 'setEthPrice',
         args: [parseEther('2500')],
-      });
-      expect(result).toBe('0xhash');
-    });
-
-    it('should allow setting max gas price', async () => {
-      mockContractWrite.mockResolvedValueOnce('0xhash');
-      const result = await mockContractWrite({
-        functionName: 'setMaxGasPrice',
-        args: [parseEther('0.0001')],
       });
       expect(result).toBe('0xhash');
     });
@@ -698,18 +659,6 @@ describe('VFIDEPresale Contract', () => {
       mockContractRead.mockResolvedValueOnce(stats);
       const result = await mockContractRead({ functionName: 'getRaiseStats' });
       expect(result).toEqual(stats);
-    });
-
-    it('should get refund status', async () => {
-      const status = {
-        refundsEnabled: true,
-        refundDeadline: Math.floor(Date.now() / 1000) + 86400,
-        userCanClaim: true,
-        ethRefundAmount: parseEther('1'),
-      };
-      mockContractRead.mockResolvedValueOnce(status);
-      const result = await mockContractRead({ functionName: 'getRefundStatus', args: [buyer1] });
-      expect(result).toEqual(status);
     });
 
     it('should get user stable contributions', async () => {

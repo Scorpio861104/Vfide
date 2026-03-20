@@ -61,7 +61,6 @@ contract EcoTreasuryVault {
         _log("treasury_modules_set");
     }
 
-    // H-27 Fix: Track authorized callers for noteVFIDE
     mapping(address => bool) public authorizedNotifiers;
     
     event NotifierAuthorized(address indexed notifier, bool authorized);
@@ -76,7 +75,6 @@ contract EcoTreasuryVault {
      * @notice Record incoming VFIDE (called by authorized fee distribution contracts)
      */
     function noteVFIDE(uint256 amount, address from) external {
-        // H-27 Fix: Only authorized contracts can update accounting
         require(authorizedNotifiers[msg.sender], "FI: not authorized notifier");
         totalReceived += amount;
         emit ReceivedVFIDE(amount, from);
@@ -93,7 +91,6 @@ contract EcoTreasuryVault {
         totalDisbursed += amount;
         vfideToken.safeTransfer(to, amount);
 
-        // slither-disable-next-line reentrancy-events
         emit Sent(address(vfideToken), to, amount, reason);
         _logEv(to, "treasury_send", amount, reason);
     }
@@ -105,7 +102,6 @@ contract EcoTreasuryVault {
     function rescueToken(address token, address to, uint256 amount) external onlyDAO {
         if (token == address(0) || to == address(0) || amount == 0) revert FI_Zero();
         IERC20(token).safeTransfer(to, amount);
-        // slither-disable-next-line reentrancy-events
         emit Sent(token, to, amount, "rescue");
         _logEv(to, "treasury_rescue", amount, "");
     }
@@ -147,7 +143,6 @@ contract EcoTreasuryVault {
     ) {
         balances = new uint256[](tokens.length);
         for (uint256 i = 0; i < tokens.length; i++) {
-            // slither-disable-next-line calls-loop
             balances[i] = IERC20(tokens[i]).balanceOf(address(this));
         }
     }

@@ -11,7 +11,7 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 /**
- * M-2 Fix: Utility functions for common className patterns
+ * Utility functions for common className patterns
  * Reduces duplication and makes styling more consistent
  */
 
@@ -145,7 +145,7 @@ export function buttonVariant(
 /**
  * Validate and checksum an Ethereum address
  * Returns checksummed address or null if invalid
- * H-4 Fix: Adds proper checksum validation for addresses
+ * Adds proper checksum validation for addresses
  */
 export function validateAddress(address: string | undefined): `0x${string}` | null {
   if (!address) return null;
@@ -167,7 +167,7 @@ export function validateAddress(address: string | undefined): `0x${string}` | nu
 
 /**
  * Check if a string is a valid Ethereum address format
- * H-5 Fix: Simple validation without checksum verification
+ * Simple validation without checksum verification
  */
 export function isValidAddress(address: string | undefined | null): boolean {
   if (!address) return false;
@@ -184,7 +184,7 @@ export function isValidAddress(address: string | undefined | null): boolean {
 
 /**
  * Check if an address is valid and not the zero address
- * H-5 Fix: Prevents zero address submissions
+ * Prevents zero address submissions
  */
 export function isNonZeroAddress(address: string | undefined | null): boolean {
   return isValidAddress(address) && address !== ZERO_ADDRESS;
@@ -192,7 +192,7 @@ export function isNonZeroAddress(address: string | undefined | null): boolean {
 
 /**
  * Truncate an Ethereum address for display
- * H-5 Fix: Safe address truncation with validation
+ * Safe address truncation with validation
  */
 export function truncateAddress(address: string, startChars = 6, endChars = 4): string {
   if (!isValidAddress(address)) return address;
@@ -202,7 +202,7 @@ export function truncateAddress(address: string, startChars = 6, endChars = 4): 
 
 /**
  * Safe localStorage wrapper that handles errors
- * M-1 Fix: Prevents crashes in private browsing mode
+ * Prevents crashes in private browsing mode
  * SSR-safe: Returns null/false when window is undefined
  */
 export const safeLocalStorage = {
@@ -353,7 +353,7 @@ export const devLog = {
 
 /**
  * Safe Number parsing with fallback value
- * H-7 Fix: Prevents NaN from unsafe Number() conversions
+ * Prevents NaN from unsafe Number() conversions
  * @param value - Value to parse (string, bigint, number, etc)
  * @param fallback - Default value if parsing fails (default: 0)
  * @returns Parsed number or fallback value
@@ -367,7 +367,7 @@ export function safeNumber(value: unknown, fallback: number = 0): number {
 
 /**
  * Safe integer parsing
- * H-7 Fix: Ensures integer results with fallback
+ * Ensures integer results with fallback
  * @param value - Value to parse
  * @param fallback - Default value if parsing fails (default: 0)
  * @returns Parsed integer or fallback value
@@ -379,7 +379,7 @@ export function safeInt(value: unknown, fallback: number = 0): number {
 
 /**
  * Safe BigInt parsing
- * H-7 Fix: Safely converts to BigInt with fallback
+ * Safely converts to BigInt with fallback
  * @param value - Value to parse (string or number)
  * @param fallback - Default value if parsing fails (default: 0n)
  * @returns Parsed BigInt or fallback value
@@ -401,7 +401,7 @@ export function safeBigInt(value: unknown, fallback: bigint = 0n): bigint {
 
 /**
  * Parse integer percentage (0-100) with validation
- * H-7 Fix: Validates percentage range
+ * Validates percentage range
  * @param value - Value to parse
  * @param fallback - Default value if invalid (default: 0)
  * @returns Parsed percentage clamped to 0-100, or fallback
@@ -414,7 +414,7 @@ export function safePercentage(value: unknown, fallback: number = 0): number {
 
 /**
  * Parse positive number (0+) with validation
- * H-7 Fix: Ensures non-negative values
+ * Ensures non-negative values
  * @param value - Value to parse
  * @param fallback - Default value if invalid (default: 0)
  * @returns Parsed non-negative number or fallback

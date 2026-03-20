@@ -402,5 +402,4 @@ contract VFIDEBadgeNFT is ERC721, ERC721URIStorage, ERC721Enumerable, Ownable {
         return interfaceId == 0xb45a3c0e || super.supportsInterface(interfaceId);
     }
 
-    // H-18 Fix: Custom Ownable has no renounceOwnership — no override needed
 }

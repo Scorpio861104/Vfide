@@ -65,7 +65,6 @@ interface IEcosystemVaultAdmin {
 contract OwnerControlPanel {
     using SafeERC20 for IERC20;
     
-    // M-05 Fix: Replace immutable owner with two-step transfer to allow key rotation
     address public owner;
     address public pendingOwner;
 
@@ -353,7 +352,7 @@ contract OwnerControlPanel {
     }
     
     /**
-     * @notice Propose system exemption with 48-hour timelock (H-01 Fix)
+     * @notice Propose system exemption with 48-hour timelock
      * @dev Exempts address from vault-only enforcement and all fees
      */
     function token_proposeSystemExempt(address who, bool isExempt) external onlyOwner {
@@ -361,21 +360,21 @@ contract OwnerControlPanel {
     }
 
     /**
-     * @notice Confirm a pending system exemption after timelock elapses (H-01 Fix)
+     * @notice Confirm a pending system exemption after timelock elapses
      */
     function token_confirmSystemExempt() external onlyOwner {
         vfideToken.confirmSystemExempt();
     }
     
     /**
-     * @notice Propose whitelist entry with 48-hour timelock (H-01 Fix)
+     * @notice Propose whitelist entry with 48-hour timelock
      */
     function token_proposeWhitelist(address addr, bool status) external onlyOwner {
         vfideToken.proposeWhitelist(addr, status);
     }
 
     /**
-     * @notice Confirm a pending whitelist change (H-01 Fix)
+     * @notice Confirm a pending whitelist change
      */
     function token_confirmWhitelist() external onlyOwner {
         vfideToken.confirmWhitelist();
@@ -405,7 +404,6 @@ contract OwnerControlPanel {
     function token_setCircuitBreaker(bool active, uint256 duration) external onlyOwner {
         _consumeQueuedAction(actionId_token_setCircuitBreaker(active, duration));
         vfideToken.setCircuitBreaker(active, duration);
-        // slither-disable-next-line reentrancy-events
         emit EmergencyAction(active ? "circuit_breaker_on" : "circuit_breaker_off", address(vfideToken));
     }
     
@@ -426,13 +424,11 @@ contract OwnerControlPanel {
     
     /**
      * @notice Batch blacklist multiple addresses
-     * @dev H-09 Fix: Each address requires its own queued action to prevent timelock bypass
+     * @dev Each address requires its own queued action to prevent timelock bypass
      */
     function token_batchBlacklist(address[] calldata users, bool status) external onlyOwner {
         for (uint256 i = 0; i < users.length; i++) {
-            // H-09 Fix: Enforce timelock for each address in batch
             _consumeQueuedAction(actionId_token_setBlacklist(users[i], status));
-            // slither-disable-next-line calls-loop
             vfideToken.setBlacklist(users[i], status);
         }
     }
@@ -469,7 +465,6 @@ contract OwnerControlPanel {
      */
     function token_batchWhaleLimitExempt(address[] calldata addrs, bool exempt) external onlyOwner {
         for (uint256 i = 0; i < addrs.length; i++) {
-            // slither-disable-next-line calls-loop
             vfideToken.setWhaleLimitExempt(addrs[i], exempt);
         }
     }
@@ -523,7 +518,6 @@ contract OwnerControlPanel {
      */
     function fees_setPolicy(uint16 minBps, uint16 maxBps) external onlyOwner {
         burnRouter.setFeePolicy(minBps, maxBps);
-        // slither-disable-next-line reentrancy-events
         emit FeePolicyUpdated(minBps, maxBps);
     }
     
@@ -540,7 +534,6 @@ contract OwnerControlPanel {
      * @return totalBps Total fee in basis points
      */
     function fees_previewForScore(uint16 score) external view returns (uint256 totalBps) {
-        // slither-disable-next-line unused-return
         (totalBps,) = burnRouter.getFeeForScore(score);
     }
     
@@ -552,7 +545,6 @@ contract OwnerControlPanel {
         uint16 sanctumBps,
         uint16 ecosystemBps
     ) {
-        // slither-disable-next-line unused-return
         return burnRouter.getEffectiveBurnRate(user);
     }
     
@@ -566,7 +558,6 @@ contract OwnerControlPanel {
         uint256 netAmount,
         uint16 score
     ) {
-        // slither-disable-next-line unused-return
         return burnRouter.previewFees(user, amount);
     }
     
@@ -589,7 +580,6 @@ contract OwnerControlPanel {
         uint16 ecosystemMinBps
     ) external onlyOwner {
         burnRouter.setSustainability(dailyBurnCap, minimumSupplyFloor, ecosystemMinBps);
-        // slither-disable-next-line reentrancy-events
         emit SustainabilityUpdated(dailyBurnCap, minimumSupplyFloor, ecosystemMinBps);
     }
     
@@ -615,7 +605,6 @@ contract OwnerControlPanel {
             highVolMultiplier,
             enabled
         );
-        // slither-disable-next-line reentrancy-events
         emit AdaptiveFeesUpdated(lowVolumeThreshold, highVolumeThreshold, lowVolMultiplier, highVolMultiplier, enabled);
     }
     
@@ -638,7 +627,6 @@ contract OwnerControlPanel {
         uint256 supplyFloor,
         uint256 currentSupply
     ) {
-        // slither-disable-next-line unused-return
         return burnRouter.getSustainabilityStatus();
     }
     
@@ -710,7 +698,6 @@ contract OwnerControlPanel {
      */
     function presale_setPaused(bool paused) external onlyOwner {
         presale.setPaused(paused);
-        // slither-disable-next-line reentrancy-events
         emit EmergencyAction(paused ? "presale_paused" : "presale_unpaused", address(presale));
     }
     
@@ -737,7 +724,7 @@ contract OwnerControlPanel {
     
     /**
      * @notice Finalize presale
-     * @dev H-14 Fix: Aligned with actual VFIDEPresale.finalizePresale() (no params)
+     * @dev Aligned with actual VFIDEPresale.finalizePresale() (no params)
      */
     function presale_finalize() external onlyOwner {
         presale.finalizePresale();
@@ -748,7 +735,6 @@ contract OwnerControlPanel {
      */
     function presale_enableRefunds() external onlyOwner {
         presale.enableRefunds();
-        // slither-disable-next-line reentrancy-events
         emit EmergencyAction("refunds_enabled", address(presale));
     }
     
@@ -757,7 +743,6 @@ contract OwnerControlPanel {
      */
     function presale_emergencyWithdraw() external onlyOwner {
         presale.emergencyWithdraw();
-        // slither-disable-next-line reentrancy-events
         emit EmergencyAction("emergency_withdraw", address(presale));
     }
     
@@ -804,7 +789,6 @@ contract OwnerControlPanel {
      */
     function vault_requestDAORecovery(address vault, address newOwner) external onlyOwner {
         vaultHub.requestDAORecovery(vault, newOwner);
-        // slither-disable-next-line reentrancy-events
         emit EmergencyAction("dao_recovery_requested", vault);
     }
     
@@ -813,7 +797,6 @@ contract OwnerControlPanel {
      */
     function vault_finalizeDAORecovery(address vault) external onlyOwner {
         vaultHub.finalizeDAORecovery(vault);
-        // slither-disable-next-line reentrancy-events
         emit EmergencyAction("dao_recovery_finalized", vault);
     }
     
@@ -830,7 +813,6 @@ contract OwnerControlPanel {
      */
     function vault_freezeVault(address vault, bool frozen) external onlyOwner {
         IUserVaultOCP(vault).setFrozen(frozen);
-        // slither-disable-next-line reentrancy-events
         emit EmergencyAction(frozen ? "vault_frozen" : "vault_unfrozen", vault);
     }
     
@@ -888,7 +870,6 @@ contract OwnerControlPanel {
         startTime = presale.saleStartTime();
         endTime = presale.saleEndTime();
         
-        // H-15 Fix: Use balanceOf instead of non-existent verifyTokenBalance()
         tokenBalance = vfideToken.balanceOf(address(presale));
         hasSufficientTokens = tokenBalance > 0;
         
@@ -949,7 +930,6 @@ contract OwnerControlPanel {
         tokenHealthy = vfideToken.totalSupply() > 0;
         
         // Presale health: has tokens, not paused (or finalized)
-        // H-15 Fix: Use balanceOf instead of non-existent verifyTokenBalance()
         uint256 presaleTokenBalance = vfideToken.balanceOf(address(presale));
         presaleHealthy = presaleTokenBalance > 0 && (!presale.paused() || presale.finalized());
         
@@ -1017,7 +997,6 @@ contract OwnerControlPanel {
         if (maxSlippageBps > maxAutoSwapSlippageBps) revert OCP_SlippageTooHigh();
         _consumeQueuedAction(actionId_autoSwap_configure(router, stablecoin, enabled, maxSlippageBps));
         ecosystemVault.configureAutoSwap(router, stablecoin, enabled, maxSlippageBps);
-        // slither-disable-next-line reentrancy-events
         emit AutoSwapConfigured(router, stablecoin, enabled, maxSlippageBps);
     }
     
@@ -1033,7 +1012,6 @@ contract OwnerControlPanel {
         
         // Reconfigure with new enabled status
         ecosystemVault.configureAutoSwap(router, stablecoin, enabled, slippage);
-        // slither-disable-next-line reentrancy-events
         emit AutoSwapConfigured(router, stablecoin, enabled, slippage);
     }
     
@@ -1063,7 +1041,6 @@ contract OwnerControlPanel {
         if (100 > maxAutoSwapSlippageBps) revert OCP_SlippageTooHigh();
         _consumeQueuedAction(actionId_autoSwap_quickSetupUSDC(router, usdc));
         ecosystemVault.configureAutoSwap(router, usdc, true, 100); // 1% slippage
-        // slither-disable-next-line reentrancy-events
         emit AutoSwapConfigured(router, usdc, true, 100);
     }
     
@@ -1176,7 +1153,6 @@ contract OwnerControlPanel {
             ecosystemVault.configureAutoSwap(router, stablecoin, false, slippage);
         }
         
-        // slither-disable-next-line reentrancy-events
         emit EmergencyAction("production_safe_defaults_set", address(this));
     }
     
@@ -1193,7 +1169,6 @@ contract OwnerControlPanel {
             ecosystemVault.configureAutoSwap(dexRouter, usdc, true, 100);
         }
         
-        // slither-disable-next-line reentrancy-events
         emit EmergencyAction("production_with_autoswap_set", address(this));
     }
     
@@ -1248,7 +1223,6 @@ contract OwnerControlPanel {
         // Enable circuit breaker on token (24 hour default for emergency)
         vfideToken.setCircuitBreaker(true, 1 days);
         
-        // slither-disable-next-line reentrancy-events
         emit EmergencyAction("system_paused", address(this));
     }
     
@@ -1263,7 +1237,6 @@ contract OwnerControlPanel {
         // Disable circuit breaker on token
         vfideToken.setCircuitBreaker(false, 0);
         
-        // slither-disable-next-line reentrancy-events
         emit EmergencyAction("system_resumed", address(this));
     }
     
@@ -1277,7 +1250,6 @@ contract OwnerControlPanel {
         if (balance > 0) {
             (bool success, ) = recipient.call{value: balance}("");
             require(success, "ETH transfer failed");
-            // slither-disable-next-line reentrancy-events
             emit EmergencyAction("eth_recovered", recipient);
         }
     }
@@ -1289,7 +1261,6 @@ contract OwnerControlPanel {
         _consumeQueuedAction(actionId_emergency_recoverTokens(token, recipient, amount));
         if (token == address(0) || recipient == address(0)) revert OCP_Zero();
         IERC20(token).safeTransfer(recipient, amount);
-        // slither-disable-next-line reentrancy-events
         emit EmergencyAction("tokens_recovered", token);
     }
     

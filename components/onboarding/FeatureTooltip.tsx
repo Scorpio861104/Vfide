@@ -116,7 +116,7 @@ export function FeatureTooltip({
 
 // Hook to manage tooltip visibility
 export function useFeatureTooltip(id: string) {
-  // M-4 Fix: Initialize as false to avoid SSR hydration mismatch
+  // Initialize as false to avoid SSR hydration mismatch
   const [isVisible, setIsVisible] = useState(false);
   
   // Check localStorage after mount to avoid hydration issues

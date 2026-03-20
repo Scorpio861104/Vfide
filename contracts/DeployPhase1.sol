@@ -116,7 +116,6 @@ contract Phase1Deployer {
             addresses.multiSig
         );
 
-        // slither-disable-next-line reentrancy-events
         emit Phase1Deployed(msg.sender, addresses, block.timestamp);
 
         return addresses;
@@ -140,7 +139,6 @@ contract Phase1Deployer {
 
         // Grant emergency pauser roles
         for (uint256 i = 0; i < _pausers.length; i++) {
-            // slither-disable-next-line calls-loop
             accessControl.grantRoleWithReason(
                 accessControl.EMERGENCY_PAUSER_ROLE(),
                 _pausers[i],
@@ -151,14 +149,12 @@ contract Phase1Deployer {
 
         // Grant blacklist manager roles
         for (uint256 i = 0; i < _blacklistManagers.length; i++) {
-            // slither-disable-next-line calls-loop
             accessControl.grantRoleWithReason(
                 accessControl.BLACKLIST_MANAGER_ROLE(),
                 _blacklistManagers[i],
                 "Phase 1 deployment"
             );
             
-            // slither-disable-next-line calls-loop
             circuitBreaker.grantRoleWithReason(
                 circuitBreaker.BLACKLIST_MANAGER_ROLE(),
                 _blacklistManagers[i],
@@ -168,14 +164,12 @@ contract Phase1Deployer {
 
         // Grant config manager roles
         for (uint256 i = 0; i < _configManagers.length; i++) {
-            // slither-disable-next-line calls-loop
             accessControl.grantRoleWithReason(
                 accessControl.CONFIG_MANAGER_ROLE(),
                 _configManagers[i],
                 "Phase 1 deployment"
             );
             
-            // slither-disable-next-line calls-loop
             circuitBreaker.grantRoleWithReason(
                 circuitBreaker.CONFIG_MANAGER_ROLE(),
                 _configManagers[i],

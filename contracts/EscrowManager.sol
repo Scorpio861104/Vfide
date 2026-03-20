@@ -32,7 +32,6 @@ error ESC_TooEarly();
 error ESC_HighValueRequiresDAO();
 error ESC_ActionBlocked(uint8 result);
 
-// C-4 Fix: Add ReentrancyGuard for security
 contract EscrowManager is ReentrancyGuard {
     using SafeERC20 for IERC20;
     
@@ -41,7 +40,7 @@ contract EscrowManager is ReentrancyGuard {
     event EscrowRefunded(uint256 indexed escrowId);
     event DisputeRaised(uint256 indexed escrowId, address indexed by);
     event DisputeResolved(uint256 indexed escrowId, address indexed winner);
-    event EscrowNearTimeout(uint256 indexed escrowId, uint256 timeRemaining); // H-8 Fix
+    event EscrowNearTimeout(uint256 indexed escrowId, uint256 timeRemaining);
 
     enum State { CREATED, RELEASED, REFUNDED, DISPUTED }
 
@@ -79,7 +78,6 @@ contract EscrowManager is ReentrancyGuard {
     }
 
     // 1. Create Escrow (Buyer pays)
-    // C-4 Fix: Add nonReentrant modifier
     function createEscrow(
         address merchant,
         address token,
@@ -112,7 +110,6 @@ contract EscrowManager is ReentrancyGuard {
 
         _enforceSeerAction(msg.sender, 7, amount, merchant); // Trade
 
-        // C-5 Fix: Use safeTransferFrom for non-standard tokens (USDT, etc.)
         IERC20(token).safeTransferFrom(msg.sender, address(this), amount);
 
         emit EscrowCreated(id, msg.sender, merchant, amount, escrows[id].releaseTime, lockPeriod, block.timestamp);
@@ -120,7 +117,6 @@ contract EscrowManager is ReentrancyGuard {
     }
 
     // 2. Release Funds (Buyer confirms receipt)
-    // C-4 Fix: Add nonReentrant modifier
     function release(uint256 id) external nonReentrant {
         Escrow storage e = escrows[id];
         require(msg.sender == e.buyer, "not buyer");
@@ -140,7 +136,6 @@ contract EscrowManager is ReentrancyGuard {
     }
 
     // 3. Refund (Merchant cancels/refunds)
-    // C-4 Fix: Add nonReentrant modifier
     function refund(uint256 id) external nonReentrant {
         Escrow storage e = escrows[id];
         require(msg.sender == e.merchant, "not merchant");
@@ -154,7 +149,6 @@ contract EscrowManager is ReentrancyGuard {
     }
 
     // 4. Claim Timeout (Merchant claims after wait period)
-    // C-4 Fix: Add nonReentrant modifier
     function claimTimeout(uint256 id) external nonReentrant {
         Escrow storage e = escrows[id];
         require(msg.sender == e.merchant, "not merchant");
@@ -241,7 +235,6 @@ contract EscrowManager is ReentrancyGuard {
         if (result >= 2) revert ESC_ActionBlocked(result);
     }
     
-    // H-8 Fix: View function to check escrows nearing timeout
     function checkTimeout(uint256 id) external view returns (bool isNearTimeout, uint256 timeRemaining) {
         Escrow storage e = escrows[id];
         if (e.state != State.CREATED) return (false, 0);
@@ -255,7 +248,6 @@ contract EscrowManager is ReentrancyGuard {
         isNearTimeout = timeRemaining <= 24 hours;
     }
     
-    // H-8 Fix: Anyone can trigger timeout warning (off-chain monitoring)
     function notifyTimeout(uint256 id) external {
         Escrow storage e = escrows[id];
         require(e.state == State.CREATED, "escrow not active");
@@ -268,13 +260,10 @@ contract EscrowManager is ReentrancyGuard {
     }
     
     // 6. Resolve Dispute (Arbiter decides, DAO for high-value)
-    // C-4 Fix: Add nonReentrant modifier
-    // H-6 Fix: Add conflict of interest check
     function resolveDispute(uint256 id, bool refundBuyer) external nonReentrant {
         Escrow storage e = escrows[id];
         require(e.state == State.DISPUTED, "not disputed");
         
-        // H-6 Fix: Prevent arbiter from resolving disputes where they are a party
         require(msg.sender != e.buyer && msg.sender != e.merchant, "ES: conflict of interest");
         
         // C-5: High-value disputes require DAO, normal disputes require arbiter
@@ -314,7 +303,6 @@ contract EscrowManager is ReentrancyGuard {
      * @param buyerShareBps Buyer's share in basis points (0-10000)
      * @dev Allows arbiter to split funds fairly when both parties have valid claims
      */
-    // C-4 Fix: Add nonReentrant modifier
     function resolveDisputePartial(uint256 id, uint256 buyerShareBps) external nonReentrant {
         require(buyerShareBps <= 10000, "ES: invalid bps");
         

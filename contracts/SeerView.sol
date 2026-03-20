@@ -97,12 +97,9 @@ contract SeerView {
         uint256 activeCount = 0;
 
         for (uint256 i = 0; i < total; i++) {
-            // slither-disable-next-line calls-loop
             address endorser = useSocial
                 ? ISeerSocialViewTarget(social).getEndorserAt(subject, i)
                 : target.getEndorserAt(subject, i);
-            // slither-disable-next-line calls-loop
-            // slither-disable-next-line unused-return
             (uint64 expiry, uint16 weight, ) = useSocial
                 ? ISeerSocialViewTarget(social).endorsements(subject, endorser)
                 : target.endorsements(subject, endorser);
@@ -118,11 +115,9 @@ contract SeerView {
 
         uint256 idx = 0;
         for (uint256 i = 0; i < total; i++) {
-            // slither-disable-next-line calls-loop
             address endorser = useSocial
                 ? ISeerSocialViewTarget(social).getEndorserAt(subject, i)
                 : target.getEndorserAt(subject, i);
-            // slither-disable-next-line calls-loop
             (uint64 expiry, uint16 weight, uint64 ts) = useSocial
                 ? ISeerSocialViewTarget(social).endorsements(subject, endorser)
                 : target.endorsements(subject, endorser);
@@ -142,7 +137,6 @@ contract SeerView {
 
         scores = new uint16[](len);
         for (uint256 i = 0; i < len; i++) {
-            // slither-disable-next-line calls-loop
             scores[i] = target.getScore(subjects[i]);
         }
     }
@@ -154,7 +148,6 @@ contract SeerView {
 
         scores = new uint16[](len);
         for (uint256 i = 0; i < len; i++) {
-            // slither-disable-next-line calls-loop
             scores[i] = target.getScore(subjects[i]);
         }
     }
