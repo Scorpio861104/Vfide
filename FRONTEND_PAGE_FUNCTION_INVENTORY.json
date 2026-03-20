@@ -44,7 +44,7 @@
       "policyLocked",
       "circuitBreaker",
       "totalSupply",
-      "presaleMinted",
+      "PRESALE_CAP",
       "systemWhitelist",
       "systemExempt",
       "isBlacklisted",

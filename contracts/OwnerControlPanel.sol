@@ -25,6 +25,14 @@ interface IVFIDEPresaleOCP {
     function enableRefunds() external;
     function emergencyWithdraw() external;
     function fundRefunds() external payable;
+    function depositTokens() external;
+    function setStablecoinRegistry(address _registry) external;
+    function setEthPrice(uint256 newPrice) external;
+    function setEthAccepted(bool accepted) external;
+    function setTierEnabled(uint8 tier, bool enabled) external;
+    function fundStableRefunds(address stablecoin, uint256 amount) external;
+    function recoverUnclaimedRefunds() external;
+    function recoverUnclaimedStableRefunds(address stablecoin) external;
     function totalBaseSold() external view returns (uint256);
     function totalSold() external view returns (uint256);
     function paused() external view returns (bool);
@@ -736,6 +744,62 @@ contract OwnerControlPanel {
     function presale_enableRefunds() external onlyOwner {
         presale.enableRefunds();
         emit EmergencyAction("refunds_enabled", address(presale));
+    }
+    
+    /**
+     * @notice Verify token deposit in presale contract
+     */
+    function presale_depositTokens() external onlyOwner {
+        presale.depositTokens();
+    }
+    
+    /**
+     * @notice Set stablecoin registry for presale
+     */
+    function presale_setStablecoinRegistry(address _registry) external onlyOwner {
+        presale.setStablecoinRegistry(_registry);
+    }
+    
+    /**
+     * @notice Update ETH/USD price for ETH purchases
+     */
+    function presale_setEthPrice(uint256 newPrice) external onlyOwner {
+        presale.setEthPrice(newPrice);
+    }
+    
+    /**
+     * @notice Enable/disable ETH purchases
+     */
+    function presale_setEthAccepted(bool accepted) external onlyOwner {
+        presale.setEthAccepted(accepted);
+    }
+    
+    /**
+     * @notice Enable/disable a presale tier
+     */
+    function presale_setTierEnabled(uint8 tier, bool enabled) external onlyOwner {
+        presale.setTierEnabled(tier, enabled);
+    }
+    
+    /**
+     * @notice Fund stablecoin refunds
+     */
+    function presale_fundStableRefunds(address stablecoin, uint256 amount) external onlyOwner {
+        presale.fundStableRefunds(stablecoin, amount);
+    }
+    
+    /**
+     * @notice Recover unclaimed ETH refunds after deadline
+     */
+    function presale_recoverUnclaimedRefunds() external onlyOwner {
+        presale.recoverUnclaimedRefunds();
+    }
+    
+    /**
+     * @notice Recover unclaimed stablecoin refunds after deadline
+     */
+    function presale_recoverUnclaimedStableRefunds(address stablecoin) external onlyOwner {
+        presale.recoverUnclaimedStableRefunds(stablecoin);
     }
     
     /**

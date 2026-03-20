@@ -553,7 +553,7 @@ describe('E2E Smoke Tests - Critical User Journeys', () => {
         '/leaderboard',
         '/governance',
         '/payroll',
-        '/presale',
+        '/token-launch',
       ];
 
       routes.forEach(route => {

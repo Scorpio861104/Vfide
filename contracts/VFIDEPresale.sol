@@ -1118,7 +1118,8 @@ contract VFIDEPresale is ReentrancyGuard {
         shouldEnable = block.timestamp > saleEndTime 
             && !finalized 
             && !refundsEnabled 
-            && totalBaseSold < MINIMUM_GOAL;
+            && totalBaseSold < MINIMUM_GOAL
+            && totalUsdRaised < MINIMUM_GOAL_USD;
     }
 
     /**

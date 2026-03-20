@@ -1103,7 +1103,7 @@ describe('VFIDEToken Contract', () => {
     });
 
     it('should return presale cap', async () => {
-      const presaleCap = parseEther('10000000'); // 10M tokens
+      const presaleCap = parseEther('35000000'); // 35M tokens
       mockContractRead.mockResolvedValueOnce(presaleCap);
 
       const result = await mockContractRead({ functionName: 'PRESALE_CAP' });
@@ -1111,7 +1111,7 @@ describe('VFIDEToken Contract', () => {
     });
 
     it('should return dev reserve supply', async () => {
-      const devReserve = parseEther('5000000'); // 5M tokens
+      const devReserve = parseEther('50000000'); // 50M tokens
       mockContractRead.mockResolvedValueOnce(devReserve);
 
       const result = await mockContractRead({ functionName: 'DEV_RESERVE_SUPPLY' });

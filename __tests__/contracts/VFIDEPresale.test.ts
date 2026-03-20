@@ -620,7 +620,7 @@ describe('VFIDEPresale Contract', () => {
       const details = {
         ethAmount: parseEther('1'),
         tokensBase: parseEther('2500'),
-        tokensBonus: parseEther('500'),
+        tokensBonus: parseEther('0'),
         lockPeriod: 90,
         purchaseTime: Math.floor(Date.now() / 1000),
       };
