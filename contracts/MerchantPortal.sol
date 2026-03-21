@@ -110,6 +110,7 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
     }
     mapping(address => MerchantInfo) public merchants;
     address[] public merchantList;
+    mapping(address => bool) private merchantInList;
 
     /// Supported payment tokens (VFIDE + stablecoins)
     mapping(address => bool) public acceptedTokens;
@@ -275,12 +276,10 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
         });
         
         require(merchantList.length < 10000, "MP: merchant cap"); // I-11
-        // Avoid duplicates when a deregistered merchant re-registers
-        bool alreadyInList = false;
-        for (uint256 i = 0; i < merchantList.length; i++) {
-            if (merchantList[i] == msg.sender) { alreadyInList = true; break; }
+        if (!merchantInList[msg.sender]) {
+            merchantList.push(msg.sender);
+            merchantInList[msg.sender] = true;
         }
-        if (!alreadyInList) merchantList.push(msg.sender);
         
         emit MerchantRegistered(msg.sender, businessName, category);
         _logEv(msg.sender, "merchant_registered", 0, category);

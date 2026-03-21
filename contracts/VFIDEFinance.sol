@@ -34,6 +34,7 @@ contract EcoTreasuryVault {
     event Sent(address indexed token, address to, uint256 amount, string reason);
 
     address public dao;
+    address public pendingDAO;
     IProofLedger public ledger;
     IERC20 public vfideToken;
     
@@ -54,11 +55,18 @@ contract EcoTreasuryVault {
 
     function setModules(address _dao, address _ledger, address _vfide) external onlyDAO {
         if (_dao == address(0) || _vfide == address(0)) revert FI_Zero();
-        dao = _dao; 
+        pendingDAO = _dao;
         ledger = IProofLedger(_ledger); 
         vfideToken = IERC20(_vfide);
         emit ModulesSet(_dao, _ledger, _vfide);
         _log("treasury_modules_set");
+    }
+
+    function acceptDAO() external {
+        require(msg.sender == pendingDAO, "FI: not pending DAO");
+        dao = pendingDAO;
+        pendingDAO = address(0);
+        _log("treasury_dao_accepted");
     }
 
     mapping(address => bool) public authorizedNotifiers;

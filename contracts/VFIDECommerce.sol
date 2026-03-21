@@ -110,7 +110,7 @@ contract MerchantRegistry {
         require(msg.sender == authorizedEscrow || msg.sender == dao, "COM: not authorized");
         Merchant storage m = merchants[owner];
         if (m.status == Status.NONE) revert COM_NotMerchant();
-        unchecked { m.refunds += 1; }
+        m.refunds += 1;
         if (m.refunds >= autoSuspendRefunds) {
             m.status = Status.SUSPENDED;
             emit AutoFlagged(owner, "refund_threshold");
@@ -121,7 +121,7 @@ contract MerchantRegistry {
         require(msg.sender == authorizedEscrow || msg.sender == dao, "COM: not authorized");
         Merchant storage m = merchants[owner];
         if (m.status == Status.NONE) revert COM_NotMerchant();
-        unchecked { m.disputes += 1; }
+        m.disputes += 1;
         if (m.disputes >= autoSuspendDisputes) {
             m.status = Status.SUSPENDED;
             emit AutoFlagged(owner, "dispute_threshold");

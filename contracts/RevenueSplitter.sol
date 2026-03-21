@@ -65,10 +65,18 @@ contract RevenueSplitter is ReentrancyGuard {
             
             if (amount > 0) {
                 distributed += amount;
-                // This ensures atomic distribution (all or nothing)
-                IERC20(token).safeTransfer(payees[i].account, amount);
-                payeesSucceeded++;
-                emit PayeeDistribution(payees[i].account, token, amount, true);
+                try IERC20(token).transfer(payees[i].account, amount) returns (bool success) {
+                    if (success) {
+                        payeesSucceeded++;
+                        emit PayeeDistribution(payees[i].account, token, amount, true);
+                    } else {
+                        payeesFailed++;
+                        emit PayeeDistribution(payees[i].account, token, amount, false);
+                    }
+                } catch {
+                    payeesFailed++;
+                    emit PayeeDistribution(payees[i].account, token, amount, false);
+                }
             }
         }
         

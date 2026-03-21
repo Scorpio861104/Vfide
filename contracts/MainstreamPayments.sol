@@ -157,6 +157,7 @@ contract FiatRampRegistry {
         });
         
         userRampHistory[user].push(recordId);
+        require(userRampHistory[user].length <= 1000, "FRR: history full");
         providers[msg.sender].txCount++;
         
         // Reward trust score for completed ramp activity (no on-chain identity tracking)
@@ -552,10 +553,20 @@ contract SessionKeyManager {
         uint64 duration,
         uint256 maxPerTx
     ) external returns (uint64 expiry) {
+        return _createSessionInternal(msg.sender, sessionKey, spendLimit, duration, maxPerTx);
+    }
+
+    function _createSessionInternal(
+        address caller,
+        address sessionKey,
+        uint256 spendLimit,
+        uint64 duration,
+        uint256 maxPerTx
+    ) internal returns (uint64 expiry) {
         require(sessionKey != address(0), "SKM: zero key");
-        require(sessionKey != msg.sender, "SKM: cannot be self");
+        require(sessionKey != caller, "SKM: cannot be self");
         require(sessions[sessionKey].owner == address(0), "SKM: key already used");
-        require(vaultHub.vaultOf(msg.sender) != address(0), "SKM: no vault");
+        require(vaultHub.vaultOf(caller) != address(0), "SKM: no vault");
         
         // Apply limits
         if (spendLimit == 0) spendLimit = defaultSpendLimit;
@@ -568,7 +579,7 @@ contract SessionKeyManager {
         expiry = uint64(block.timestamp) + duration;
         
         sessions[sessionKey] = Session({
-            owner: msg.sender,
+            owner: caller,
             spendLimit: spendLimit,
             spent: 0,
             expiry: expiry,
@@ -576,17 +587,17 @@ contract SessionKeyManager {
             maxPerTx: maxPerTx
         });
         
-        require(ownerSessions[msg.sender].length < 50, "SKM: session cap"); // I-11
-        ownerSessions[msg.sender].push(sessionKey);
+        require(ownerSessions[caller].length < 50, "SKM: session cap"); // I-11
+        ownerSessions[caller].push(sessionKey);
         
-        emit SessionCreated(msg.sender, sessionKey, spendLimit, expiry);
+        emit SessionCreated(caller, sessionKey, spendLimit, expiry);
     }
     
     /**
      * @notice Create session with default limits (quick setup)
      */
     function createQuickSession(address sessionKey) external returns (uint64 expiry) {
-        return this.createSession(sessionKey, defaultSpendLimit, defaultDuration, defaultMaxPerTx);
+        return _createSessionInternal(msg.sender, sessionKey, defaultSpendLimit, defaultDuration, defaultMaxPerTx);
     }
     
     /**

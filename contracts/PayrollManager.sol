@@ -208,7 +208,7 @@ contract PayrollManager is ReentrancyGuard {
      * @notice Modify stream rate (payer only)
      * @dev Settles current accrued before changing rate
      */
-    function setRate(uint256 streamId, uint256 newRate) external {
+    function setRate(uint256 streamId, uint256 newRate) external nonReentrant {
         Stream storage s = streams[streamId];
         if (!s.active) revert PM_StreamInactive();
         if (msg.sender != s.payer) revert PM_NotPayer();

@@ -143,6 +143,7 @@ contract VFIDEBadgeNFT is ERC721, ERC721URIStorage, ERC721Enumerable, Ownable {
      * @return tokenIds Array of minted token IDs
      */
     function mintBadges(bytes32[] calldata badges) external returns (uint256[] memory tokenIds) {
+        require(badges.length <= 28, "BADGE: batch too large");
         tokenIds = new uint256[](badges.length);
         
         for (uint256 i = 0; i < badges.length; i++) {

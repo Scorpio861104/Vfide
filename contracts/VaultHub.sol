@@ -10,7 +10,7 @@ import "./CardBoundVault.sol";
  * @dev Deploys CardBoundVault contracts via CREATE2 for deterministic addresses
  *      Vault custody remains contract-side; wallet acts as authorization-only key.
  */
-contract VaultHub is Ownable, Pausable {
+contract VaultHub is Ownable, Pausable, ReentrancyGuard {
     /// Modules & config
     address public vfideToken;
     ISecurityHub public securityHub;  // shared lock view
@@ -49,6 +49,7 @@ contract VaultHub is Ownable, Pausable {
     event VFIDESet(address vfide);
     event DAOSet(address dao);
     event CouncilSet(address council);
+    event SecurityHubRegistrationFailed(address indexed vault);
 
     /// Errors
     error VH_Zero();
@@ -156,7 +157,7 @@ contract VaultHub is Ownable, Pausable {
     }
 
     // ——— Auto-create (anyone can sponsor)
-    function ensureVault(address owner_) public whenNotPaused returns (address vault) {
+    function ensureVault(address owner_) public whenNotPaused nonReentrant returns (address vault) {
         if (owner_ == address(0)) revert VH_Zero();
         if (vfideToken == address(0)) revert VH_Zero(); // Ensure token is set
         vault = vaultOf[owner_];
@@ -178,7 +179,7 @@ contract VaultHub is Ownable, Pausable {
         // Register vault with SecurityHub for vault age tracking (self-panic requirements)
         if (address(securityHub) != address(0)) {
             try securityHub.registerVault(vault) {} catch {
-                // Best-effort registration, don't fail vault creation if SecurityHub registration fails
+                emit SecurityHubRegistrationFailed(vault);
             }
         }
 
@@ -197,9 +198,13 @@ contract VaultHub is Ownable, Pausable {
     }
 
     // ——— DAO forced recovery with Multi-Sig
-    function approveForceRecovery(address vault, address newOwner) external {
-        bool isApprover = isRecoveryApprover[msg.sender] ||
-            (council != address(0) && ICouncilElection(council).isCouncil(msg.sender));
+    function approveForceRecovery(address vault, address newOwner) external nonReentrant {
+        bool isApprover = isRecoveryApprover[msg.sender];
+        if (!isApprover && council != address(0)) {
+            try ICouncilElection(council).isCouncil(msg.sender) returns (bool c) {
+                isApprover = c;
+            } catch {}
+        }
         require(isApprover, "VH:not-approver");
         if (vault == address(0) || newOwner == address(0)) revert VH_Zero();
         address current = ownerOfVault[vault];
@@ -263,7 +268,7 @@ contract VaultHub is Ownable, Pausable {
         _logEv(vault, "force_recover_init", 0, "");
     }
 
-    function finalizeForceRecovery(address vault) public {
+    function finalizeForceRecovery(address vault) public nonReentrant {
         if (msg.sender != dao) revert VH_NotDAO();
         require(recoveryUnlockTime[vault] != 0, "VH:no-req");
         require(block.timestamp >= recoveryUnlockTime[vault], "VH:timelock");
@@ -275,21 +280,23 @@ contract VaultHub is Ownable, Pausable {
         require(vaultOf[newOwner] == address(0), "target has vault");
 
         address current = ownerOfVault[vault];
-        
-        // update registry and tell vault
-        if (current != address(0)) {
-            vaultOf[current] = address(0);
-        }
-        ownerOfVault[vault] = newOwner;
-        vaultOf[newOwner] = vault;
 
+        // Clean up recovery state first
         delete recoveryProposedOwner[vault];
         delete recoveryUnlockTime[vault];
         delete recoveryApprovalCount[vault];
         recoveryNonce[vault]++;
 
+        // CEI: External call to vault BEFORE registry update
         (bool ok, ) = vault.call(abi.encodeWithSignature("__forceSetOwner(address)", newOwner));
         require(ok, "VH:force-owner-failed");
+
+        // Update registry AFTER successful vault ownership transfer
+        if (current != address(0)) {
+            vaultOf[current] = address(0);
+        }
+        ownerOfVault[vault] = newOwner;
+        vaultOf[newOwner] = vault;
 
         emit ForcedRecovery(vault, newOwner);
         _logEv(vault, "force_recover_final", 0, "");

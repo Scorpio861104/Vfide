@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
-interface ISeer_SH { function minForGovernance() external view returns (uint16); }
+interface ISeer_SH { function minForGovernance() external view returns (uint16); function getScore(address subject) external view returns (uint16); }
+interface ICouncilElection_SH { function getActualCouncilSize() external view returns (uint256); function getCouncilMember(uint256 index) external view returns (address); }
 interface IVFIDEPresaleLike_SH { function saleStartTime() external view returns (uint256); }
 interface IDAO_SH { function setAdmin(address _admin) external; }
 interface IDAOTimelock_SH { function setAdmin(address _admin) external; }
@@ -24,6 +25,7 @@ contract SystemHandover {
     IDAO_SH public dao;
     IDAOTimelock_SH public timelock;
     ISeer_SH public seer;
+    ICouncilElection_SH public councilElection;
     IProofLedger_SH public ledger; // optional
 
     uint64 public start;
@@ -43,9 +45,9 @@ contract SystemHandover {
         if (msg.sender != devMultisig) revert SH_NotDev();
     }
 
-    constructor(address _dev, address _dao, address _timelock, address _seer, address _ledger){
-        if(_dev==address(0)||_dao==address(0)||_timelock==address(0)||_seer==address(0)) revert SH_Zero();
-        devMultisig=_dev; dao=IDAO_SH(_dao); timelock=IDAOTimelock_SH(_timelock); seer=ISeer_SH(_seer); ledger=IProofLedger_SH(_ledger);
+    constructor(address _dev, address _dao, address _timelock, address _seer, address _council, address _ledger){
+        if(_dev==address(0)||_dao==address(0)||_timelock==address(0)||_seer==address(0)||_council==address(0)) revert SH_Zero();
+        devMultisig=_dev; dao=IDAO_SH(_dao); timelock=IDAOTimelock_SH(_timelock); seer=ISeer_SH(_seer); councilElection=ICouncilElection_SH(_council); ledger=IProofLedger_SH(_ledger);
         minAvgCouncilScore = seer.minForGovernance();
     }
 
@@ -70,11 +72,20 @@ contract SystemHandover {
         _log("handover_params");
     }
 
-    /// If network trust is low at deadline, dev can extend once (failsafe).
+    /// If average council proof score is below threshold at deadline, dev can extend once (failsafe).
     function extendOnceIfNeeded() external onlyDev {
         require(extensionsUsed < maxExtensions, "no_ext_left");
-        uint16 networkAvgScore = seer.minForGovernance();
-        if (networkAvgScore < minAvgCouncilScore) {
+        uint256 size = councilElection.getActualCouncilSize();
+        require(size > 0, "SH: no council");
+        uint256 total;
+        for (uint256 i = 0; i < size; i++) {
+            address member = councilElection.getCouncilMember(i);
+            if (member != address(0)) {
+                total += seer.getScore(member);
+            }
+        }
+        uint16 avgScore = uint16(total / size);
+        if (avgScore < minAvgCouncilScore) {
             handoverAt += extensionSpan;
             extensionsUsed += 1;
             _log("handover_extended");
