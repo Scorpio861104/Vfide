@@ -164,6 +164,8 @@ contract GuardianLock {
     mapping(address => uint256) public lockNonce;
     // vault => locked flag
     mapping(address => bool) public locked;
+    // vault => guardian count snapshot (set on first vote of a round)
+    mapping(address => uint8) public lockGuardianSnapshot;
 
     modifier onlyDAO() { _checkDAOGL(); _; }
     function _checkDAOGL() internal view { if (msg.sender != dao) revert SEC_NotDAO(); }
@@ -200,11 +202,17 @@ contract GuardianLock {
         uint8 a = approvals[vault] + 1;
         approvals[vault] = a;
 
-        uint8 needed = registry.guardiansNeeded(vault);
+        // Snapshot guardian count on first vote to prevent threshold manipulation
+        if (a == 1) {
+            lockGuardianSnapshot[vault] = registry.guardianCount(vault);
+        }
+
+        uint8 needed = _guardiansNeededFromSnapshot(vault);
         if (a >= needed && needed > 0) {
             locked[vault] = true;
             emit Locked(vault, msg.sender, a, reason);
             approvals[vault] = 0;
+            lockGuardianSnapshot[vault] = 0;
             lockNonce[vault]++;
             _logEv(vault, "guardian_lock", a, reason);
         } else {
@@ -220,6 +228,7 @@ contract GuardianLock {
 
         locked[vault] = false;
         approvals[vault] = 0;
+        lockGuardianSnapshot[vault] = 0;
         lockNonce[vault]++; // Increment nonce to invalidate previous votes
         emit Unlocked(vault, msg.sender, reason);
         _logEv(vault, "guardian_unlock", 0, reason);
@@ -228,9 +237,23 @@ contract GuardianLock {
     /// DAO can cancel an in-flight vote accumulation (not yet locked).
     function cancel(address vault) external onlyDAO {
         approvals[vault] = 0;
+        lockGuardianSnapshot[vault] = 0;
         lockNonce[vault]++; // Increment nonce to invalidate previous votes
         emit Cancelled(vault, msg.sender);
         _logEv(vault, "guardian_cancel", 0, "");
+    }
+
+    /// @dev Use snapshot count (set on first vote) to prevent threshold manipulation via guardian removals
+    function _guardiansNeededFromSnapshot(address vault) internal view returns (uint8 needed) {
+        uint8 n = lockGuardianSnapshot[vault];
+        if (n == 0) return 0;
+        uint8 t = registry.threshold(vault);
+        if (t == 0) {
+            needed = uint8((uint256(n) + 1) / 2);
+        } else {
+            needed = t;
+        }
+        if (needed > n) needed = n;
     }
 
     function _log(string memory action) internal {

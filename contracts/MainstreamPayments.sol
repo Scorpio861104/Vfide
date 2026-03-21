@@ -297,7 +297,7 @@ contract MainstreamPriceOracle {
         // Sanity check: price shouldn't change more than 50% in one update
         uint256 maxChange = vfidePerUsd / 2;
         require(
-            newPrice >= vfidePerUsd - maxChange && newPrice <= vfidePerUsd + maxChange + maxChange,
+            newPrice >= vfidePerUsd - maxChange && newPrice <= vfidePerUsd + maxChange,
             "PO: price change too large"
         );
         
@@ -364,7 +364,7 @@ contract MainstreamPriceOracle {
         uint256 newPrice = ps.lastPrice;
         uint256 maxChange = vfidePerUsd / 2;
         require(
-            newPrice >= vfidePerUsd - maxChange && newPrice <= vfidePerUsd + maxChange + maxChange,
+            newPrice >= vfidePerUsd - maxChange && newPrice <= vfidePerUsd + maxChange,
             "PO: price change too large"
         );
 
