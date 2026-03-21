@@ -273,15 +273,13 @@ contract CouncilManager is ReentrancyGuard {
         // Priority 2: Transfer council payment (employment compensation)
         if (councilAmount > 0) {
             // Transfer from EcosystemVault to CouncilSalary contract
-            // Requires EcosystemVault to have transfer approval or we call payExpense
-            
-            // Call EcosystemVault.payExpense("council_salary", councilAmount)
-            // This transfers councilAmount to councilSalary contract
+            // EcosystemVault.payExpense(address recipient, uint256 amount, string reason)
             (bool success, ) = ecosystemVault.call(
                 abi.encodeWithSignature(
-                    "payExpense(string,uint256)",
-                    "council_salary",
-                    councilAmount
+                    "payExpense(address,uint256,string)",
+                    councilSalary,
+                    councilAmount,
+                    "council_salary"
                 )
             );
             
@@ -314,11 +312,13 @@ contract CouncilManager is ReentrancyGuard {
         lastPaymentTime = block.timestamp;
 
         if (councilAmount > 0) {
+            // EcosystemVault.payExpense(address recipient, uint256 amount, string reason)
             (bool success, ) = ecosystemVault.call(
                 abi.encodeWithSignature(
-                    "payExpense(string,uint256)",
-                    "council_salary_emergency",
-                    councilAmount
+                    "payExpense(address,uint256,string)",
+                    councilSalary,
+                    councilAmount,
+                    "council_salary_emergency"
                 )
             );
 
