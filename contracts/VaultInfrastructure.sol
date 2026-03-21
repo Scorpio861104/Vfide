@@ -262,6 +262,7 @@ contract UserVaultLegacy is ReentrancyGuard {
 
     function setNextOfKin(address kin) external onlyOwner notLocked {
         if (kin == address(0)) revert UV_Zero();
+        if (_inheritance.active) revert UV_InheritanceActive();
         nextOfKin = kin;
         _logEv(kin, "next_of_kin_set", 0, "");
         emit NextOfKinSet(kin);

@@ -145,7 +145,7 @@ contract DAO is ReentrancyGuard {
     function setParams(uint64 _period, uint256 _minVotes) external onlyTimelock {
         if(_period<1 hours)_period=1 hours;
         require(_period <= 30 days, "DAO: voting period too long");
-        require(_minVotes <= 1_000_000, "DAO: minVotes too high");
+        require(_minVotes >= 100 && _minVotes <= 1_000_000, "DAO: minVotes out of range");
         votingPeriod=_period;
         minVotesRequired=_minVotes;
         emit ParamsSet(_period,_minVotes);
@@ -154,7 +154,7 @@ contract DAO is ReentrancyGuard {
     /// @notice Set minimum participation requirement (FLOW-2 FIX)
     /// @param _minParticipation Minimum unique voters required for quorum
     function setMinParticipation(uint256 _minParticipation) external onlyTimelock {
-        require(_minParticipation >= 1 && _minParticipation <= 100, "DAO: invalid participation");
+        require(_minParticipation >= 3 && _minParticipation <= 100, "DAO: invalid participation");
         minParticipation = _minParticipation;
     }
 

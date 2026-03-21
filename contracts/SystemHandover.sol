@@ -51,8 +51,8 @@ contract SystemHandover {
         minAvgCouncilScore = seer.minForGovernance();
     }
 
-    /// Anyone can arm after presale has started; prevents forgetting.
-    function armFromPresale(address presale) external {
+    /// Arm handover countdown from presale start time.
+    function armFromPresale(address presale) external onlyDev {
         if (start!=0) return; // idempotent
         uint256 t0 = IVFIDEPresaleLike_SH(presale).saleStartTime();
         require(t0!=0,"presale not started");
