@@ -110,6 +110,23 @@ export async function GET(request: NextRequest) {
       });
     }
 
+    // Validate subgraph URL against known hosts to prevent SSRF
+    const ALLOWED_SUBGRAPH_HOSTS = [
+      'api.thegraph.com',
+      'gateway.thegraph.com',
+      'api.studio.thegraph.com',
+      'subgraph.satsuma-prod.com',
+    ];
+    let parsedUrl: URL;
+    try {
+      parsedUrl = new URL(subgraphUrl);
+    } catch {
+      return NextResponse.json({ error: 'Invalid subgraph URL configured' }, { status: 500 });
+    }
+    if (parsedUrl.protocol !== 'https:' || !ALLOWED_SUBGRAPH_HOSTS.includes(parsedUrl.hostname)) {
+      return NextResponse.json({ error: 'Subgraph URL not in allowed hosts' }, { status: 500 });
+    }
+
     // When subgraph is available, fetch real data
     const response = await fetch(subgraphUrl, {
       method: 'POST',

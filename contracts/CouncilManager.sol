@@ -273,20 +273,14 @@ contract CouncilManager is ReentrancyGuard {
         // Priority 2: Transfer council payment (employment compensation)
         if (councilAmount > 0) {
             // Transfer from EcosystemVault to CouncilSalary contract
-            // EcosystemVault.payExpense(address recipient, uint256 amount, string reason)
-            (bool success, ) = ecosystemVault.call(
-                abi.encodeWithSignature(
-                    "payExpense(address,uint256,string)",
-                    councilSalary,
-                    councilAmount,
-                    "council_salary"
-                )
-            );
-            
-            if (success) {
+            try IEcosystemVault(ecosystemVault).payExpense(
+                councilSalary,
+                councilAmount,
+                "council_salary"
+            ) {
                 // CouncilSalary.distributeSalary() will be called by keeper or DAO separately
                 emit PaymentDistributed(opsAmount, councilAmount, block.timestamp);
-            } else {
+            } catch {
                 // If council transfer fails, ops still gets 100%
                 // Keep interval open so keeper can retry without waiting a full cycle.
                 emit PaymentDistributed(opsAmount, 0, block.timestamp);
@@ -312,15 +306,14 @@ contract CouncilManager is ReentrancyGuard {
         lastPaymentTime = block.timestamp;
 
         if (councilAmount > 0) {
-            // EcosystemVault.payExpense(address recipient, uint256 amount, string reason)
-            (bool success, ) = ecosystemVault.call(
-                abi.encodeWithSignature(
-                    "payExpense(address,uint256,string)",
-                    councilSalary,
-                    councilAmount,
-                    "council_salary_emergency"
-                )
-            );
+            bool success = true;
+            try IEcosystemVault(ecosystemVault).payExpense(
+                councilSalary,
+                councilAmount,
+                "council_salary_emergency"
+            ) {} catch {
+                success = false;
+            }
 
             emit PaymentDistributed(
                 opsAmount,

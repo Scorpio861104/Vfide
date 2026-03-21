@@ -18,24 +18,27 @@ CREATE TABLE IF NOT EXISTS users (
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Messages table
+-- Messages table (aligned with migrations schema — uses user IDs, not raw addresses)
 CREATE TABLE IF NOT EXISTS messages (
   id SERIAL PRIMARY KEY,
-  sender_address VARCHAR(42) NOT NULL,
-  recipient_address VARCHAR(42) NOT NULL,
+  sender_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+  recipient_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
   content TEXT NOT NULL,
+  is_encrypted BOOLEAN DEFAULT FALSE,
   is_read BOOLEAN DEFAULT FALSE,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Friends table
-CREATE TABLE IF NOT EXISTS friends (
+-- Friendships table (aligned with migrations schema — uses user IDs, not raw addresses)
+CREATE TABLE IF NOT EXISTS friendships (
   id SERIAL PRIMARY KEY,
-  user1_address VARCHAR(42) NOT NULL,
-  user2_address VARCHAR(42) NOT NULL,
+  user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+  friend_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
   status VARCHAR(20) DEFAULT 'pending',
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  UNIQUE(user1_address, user2_address)
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE(user_id, friend_id)
 );
 
 -- Groups table
@@ -255,11 +258,11 @@ CREATE TABLE IF NOT EXISTS security_webhook_replay_events (
 
 -- Create indexes for better performance
 CREATE INDEX IF NOT EXISTS idx_users_wallet ON users(wallet_address);
-CREATE INDEX IF NOT EXISTS idx_messages_sender ON messages(sender_address);
-CREATE INDEX IF NOT EXISTS idx_messages_recipient ON messages(recipient_address);
-CREATE INDEX IF NOT EXISTS idx_messages_sender_recipient_created_at ON messages(sender_address, recipient_address, created_at DESC);
-CREATE INDEX IF NOT EXISTS idx_friends_user1 ON friends(user1_address);
-CREATE INDEX IF NOT EXISTS idx_friends_user2 ON friends(user2_address);
+CREATE INDEX IF NOT EXISTS idx_messages_sender ON messages(sender_id);
+CREATE INDEX IF NOT EXISTS idx_messages_recipient ON messages(recipient_id);
+CREATE INDEX IF NOT EXISTS idx_messages_sender_recipient_created_at ON messages(sender_id, recipient_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_friendships_user ON friendships(user_id);
+CREATE INDEX IF NOT EXISTS idx_friendships_friend ON friendships(friend_id);
 CREATE INDEX IF NOT EXISTS idx_group_members_group ON group_members(group_id);
 CREATE INDEX IF NOT EXISTS idx_group_members_user ON group_members(user_id);
 CREATE INDEX IF NOT EXISTS idx_group_messages_group ON group_messages(group_id);

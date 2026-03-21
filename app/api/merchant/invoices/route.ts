@@ -8,7 +8,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { randomBytes } from 'crypto';
-import { query } from '@/lib/db';
+import { query, getClient } from '@/lib/db';
 import { requireAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { dispatchWebhook } from '@/lib/webhooks/merchantWebhookDispatcher';
@@ -59,29 +59,27 @@ export async function GET(request: NextRequest) {
     const limit = Math.min(Number(searchParams.get('limit')) || 50, 200);
     const offset = Math.max(Number(searchParams.get('offset')) || 0, 0);
 
-    let sql = `SELECT * FROM merchant_invoices WHERE merchant_address = $1`;
+    let sql = `SELECT i.*,
+              COALESCE(
+                (SELECT json_agg(sub ORDER BY sub.sort_order)
+                 FROM (
+                   SELECT ii.* FROM merchant_invoice_items ii
+                   WHERE ii.invoice_id = i.id ORDER BY ii.sort_order
+                 ) sub),
+                '[]'::json
+              ) AS items
+       FROM merchant_invoices i WHERE i.merchant_address = $1`;
     const params: (string | number | boolean | null)[] = [authAddress];
 
     if (status && VALID_STATUSES.includes(status as typeof VALID_STATUSES[number])) {
-      sql += ` AND status = $2`;
+      sql += ` AND i.status = $2`;
       params.push(status);
     }
 
-    sql += ` ORDER BY created_at DESC LIMIT $${params.length + 1} OFFSET $${params.length + 2}`;
+    sql += ` ORDER BY i.created_at DESC LIMIT $${params.length + 1} OFFSET $${params.length + 2}`;
     params.push(limit, offset);
 
     const invoicesResult = await query(sql, params);
-
-    // Fetch line items for each invoice
-    const invoices = await Promise.all(
-      invoicesResult.rows.map(async (inv) => {
-        const items = await query(
-          'SELECT * FROM merchant_invoice_items WHERE invoice_id = $1 ORDER BY sort_order',
-          [inv.id]
-        );
-        return { ...inv, items: items.rows };
-      })
-    );
 
     // Get summary counts
     const countsResult = await query(
@@ -92,7 +90,7 @@ export async function GET(request: NextRequest) {
     );
 
     return NextResponse.json({
-      invoices,
+      invoices: invoicesResult.rows,
       summary: countsResult.rows,
       pagination: { limit, offset },
     });
@@ -175,52 +173,67 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Insert invoice
-    const invoiceResult = await query(
-      `INSERT INTO merchant_invoices
-       (invoice_number, merchant_address, customer_address, customer_email, customer_name,
-        status, token, subtotal, tax_rate, tax_amount, total, currency_display, memo, due_date, payment_link_id)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
-       RETURNING *`,
-      [
-        invoiceNumber,
-        authAddress,
-        typeof customer_address === 'string' ? customer_address.toLowerCase() : null,
-        typeof customer_email === 'string' ? customer_email.slice(0, 255) : null,
-        typeof customer_name === 'string' ? customer_name.slice(0, 200) : null,
-        status,
-        token,
-        subtotal,
-        taxRateNum,
-        taxAmount,
-        total,
-        typeof currency_display === 'string' ? currency_display.slice(0, 10) : 'VFIDE',
-        typeof memo === 'string' ? memo.slice(0, 2000) : null,
-        dueDateValue,
-        paymentLinkId,
-      ]
-    );
+    // Insert invoice + line items in a transaction
+    const client = await getClient();
+    let invoice: Record<string, unknown>;
+    let itemsRows: Record<string, unknown>[];
+    try {
+      await client.query('BEGIN');
 
-    const invoice = invoiceResult.rows[0]!;
-
-    // Insert line items
-    for (let i = 0; i < validatedItems.length; i++) {
-      const item = validatedItems[i]!;
-      await query(
-        `INSERT INTO merchant_invoice_items
-         (invoice_id, description, quantity, unit_price, amount, sort_order)
-         VALUES ($1, $2, $3, $4, $5, $6)`,
-        [invoice.id, item.description, item.quantity, item.unit_price, item.quantity * item.unit_price, i]
+      const invoiceResult = await client.query(
+        `INSERT INTO merchant_invoices
+         (invoice_number, merchant_address, customer_address, customer_email, customer_name,
+          status, token, subtotal, tax_rate, tax_amount, total, currency_display, memo, due_date, payment_link_id)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
+         RETURNING *`,
+        [
+          invoiceNumber,
+          authAddress,
+          typeof customer_address === 'string' ? customer_address.toLowerCase() : null,
+          typeof customer_email === 'string' ? customer_email.slice(0, 255) : null,
+          typeof customer_name === 'string' ? customer_name.slice(0, 200) : null,
+          status,
+          token,
+          subtotal,
+          taxRateNum,
+          taxAmount,
+          total,
+          typeof currency_display === 'string' ? currency_display.slice(0, 10) : 'VFIDE',
+          typeof memo === 'string' ? memo.slice(0, 2000) : null,
+          dueDateValue,
+          paymentLinkId,
+        ]
       );
+
+      invoice = invoiceResult.rows[0]!;
+
+      // Insert line items
+      for (let i = 0; i < validatedItems.length; i++) {
+        const item = validatedItems[i]!;
+        await client.query(
+          `INSERT INTO merchant_invoice_items
+           (invoice_id, description, quantity, unit_price, amount, sort_order)
+           VALUES ($1, $2, $3, $4, $5, $6)`,
+          [invoice.id, item.description, item.quantity, item.unit_price, item.quantity * item.unit_price, i]
+        );
+      }
+
+      // Fetch items back
+      const itemsResult = await client.query(
+        'SELECT * FROM merchant_invoice_items WHERE invoice_id = $1 ORDER BY sort_order',
+        [invoice.id]
+      );
+      itemsRows = itemsResult.rows;
+
+      await client.query('COMMIT');
+    } catch (txError) {
+      await client.query('ROLLBACK');
+      throw txError;
+    } finally {
+      client.release();
     }
 
-    // Fetch items back
-    const itemsResult = await query(
-      'SELECT * FROM merchant_invoice_items WHERE invoice_id = $1 ORDER BY sort_order',
-      [invoice.id]
-    );
-
-    // Dispatch webhook
+    // Dispatch webhook (outside transaction)
     dispatchWebhook(authAddress, 'invoice.created', {
       invoice_number: invoiceNumber,
       total,
@@ -230,7 +243,7 @@ export async function POST(request: NextRequest) {
     });
 
     return NextResponse.json({
-      invoice: { ...invoice, items: itemsResult.rows },
+      invoice: { ...invoice, items: itemsRows },
       payment_url: `/checkout/${paymentLinkId}`,
     }, { status: 201 });
   } catch (error) {

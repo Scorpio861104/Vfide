@@ -8,7 +8,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { randomBytes } from 'crypto';
-import { query } from '@/lib/db';
+import { query, getClient } from '@/lib/db';
 import { requireAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { dispatchWebhook } from '@/lib/webhooks/merchantWebhookDispatcher';
@@ -186,94 +186,107 @@ export async function POST(request: NextRequest) {
 
     const orderNumber = generateOrderNumber();
 
-    const orderResult = await query(
-      `INSERT INTO merchant_orders
-       (order_number, merchant_address, customer_address, customer_email, customer_name,
-        status, payment_status, tx_hash, token, subtotal, tax_amount,
-        shipping_amount, discount_amount, total, shipping_address, shipping_method, customer_notes)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17)
-       RETURNING *`,
-      [
-        orderNumber,
-        (merchant_address as string).toLowerCase(),
-        authAddress,
-        typeof customer_email === 'string' ? customer_email.slice(0, 254) : null,
-        typeof customer_name === 'string' ? customer_name.slice(0, 200) : null,
-        orderStatus,
-        paymentStatus,
-        validTxHash,
-        typeof token === 'string' ? token.slice(0, 20) : 'VFIDE',
-        subtotal,
-        tax,
-        shipping,
-        discount,
-        total,
-        shipping_address && typeof shipping_address === 'object' ? JSON.stringify(shipping_address) : null,
-        typeof shipping_method === 'string' ? shipping_method.slice(0, 100) : null,
-        typeof customer_notes === 'string' ? customer_notes.slice(0, 1000) : null,
-      ]
-    );
+    const client = await getClient();
+    try {
+      await client.query('BEGIN');
 
-    const order = orderResult.rows[0];
-    if (!order) {
-      return NextResponse.json({ error: 'Failed to create order' }, { status: 500 });
-    }
-
-    // Insert line items
-    for (const item of validatedItems) {
-      const lineTotal = Math.round(item.quantity * item.unit_price * 100) / 100;
-      await query(
-        `INSERT INTO merchant_order_items
-         (order_id, product_id, variant_id, name, sku, quantity, unit_price, total, product_type)
-         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
+      const orderResult = await client.query(
+        `INSERT INTO merchant_orders
+         (order_number, merchant_address, customer_address, customer_email, customer_name,
+          status, payment_status, tx_hash, token, subtotal, tax_amount,
+          shipping_amount, discount_amount, total, shipping_address, shipping_method, customer_notes)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17)
+         RETURNING *`,
         [
-          order.id,
-          item.product_id ?? null,
-          item.variant_id ?? null,
-          item.name,
-          item.sku ?? null,
-          item.quantity,
-          item.unit_price,
-          lineTotal,
-          item.product_type ?? 'physical',
+          orderNumber,
+          (merchant_address as string).toLowerCase(),
+          authAddress,
+          typeof customer_email === 'string' ? customer_email.slice(0, 254) : null,
+          typeof customer_name === 'string' ? customer_name.slice(0, 200) : null,
+          orderStatus,
+          paymentStatus,
+          validTxHash,
+          typeof token === 'string' ? token.slice(0, 20) : 'VFIDE',
+          subtotal,
+          tax,
+          shipping,
+          discount,
+          total,
+          shipping_address && typeof shipping_address === 'object' ? JSON.stringify(shipping_address) : null,
+          typeof shipping_method === 'string' ? shipping_method.slice(0, 100) : null,
+          typeof customer_notes === 'string' ? customer_notes.slice(0, 1000) : null,
         ]
       );
-    }
 
-    // Update sold counts
-    const productIds = validatedItems
-      .filter(i => i.product_id)
-      .map(i => ({ id: i.product_id!, qty: i.quantity }));
-    for (const { id, qty } of productIds) {
-      await query(
-        'UPDATE merchant_products SET sold_count = sold_count + $1 WHERE id = $2',
-        [qty, id]
-      );
-    }
+      const order = orderResult.rows[0];
+      if (!order) {
+        await client.query('ROLLBACK');
+        return NextResponse.json({ error: 'Failed to create order' }, { status: 500 });
+      }
 
-    // Decrement inventory if tracking
-    for (const item of validatedItems) {
-      if (item.product_id) {
-        await query(
-          `UPDATE merchant_products
-           SET inventory_count = GREATEST(0, inventory_count - $1)
-           WHERE id = $2 AND inventory_tracking = true AND inventory_count IS NOT NULL`,
-          [item.quantity, item.product_id]
+      // Insert line items
+      for (const item of validatedItems) {
+        const lineTotal = Math.round(item.quantity * item.unit_price * 100) / 100;
+        await client.query(
+          `INSERT INTO merchant_order_items
+           (order_id, product_id, variant_id, name, sku, quantity, unit_price, total, product_type)
+           VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
+          [
+            order.id,
+            item.product_id ?? null,
+            item.variant_id ?? null,
+            item.name,
+            item.sku ?? null,
+            item.quantity,
+            item.unit_price,
+            lineTotal,
+            item.product_type ?? 'physical',
+          ]
         );
       }
+
+      // Update sold counts
+      const productIds = validatedItems
+        .filter(i => i.product_id)
+        .map(i => ({ id: i.product_id!, qty: i.quantity }));
+      for (const { id, qty } of productIds) {
+        await client.query(
+          'UPDATE merchant_products SET sold_count = sold_count + $1 WHERE id = $2',
+          [qty, id]
+        );
+      }
+
+      // Decrement inventory if tracking
+      for (const item of validatedItems) {
+        if (item.product_id) {
+          await client.query(
+            `UPDATE merchant_products
+             SET inventory_count = GREATEST(0, inventory_count - $1)
+             WHERE id = $2 AND inventory_tracking = true AND inventory_count IS NOT NULL`,
+            [item.quantity, item.product_id]
+          );
+        }
+      }
+
+      await client.query('COMMIT');
+
+      // Dispatch webhook (outside transaction — fire-and-forget)
+      dispatchWebhook((merchant_address as string).toLowerCase(), 'payment.completed', {
+        order_number: orderNumber,
+        total,
+        token: typeof token === 'string' ? token : 'VFIDE',
+        tx_hash: validTxHash,
+        customer_address: authAddress,
+        items_count: validatedItems.length,
+      });
+
+      return NextResponse.json({ order }, { status: 201 });
+    } catch (txError) {
+      await client.query('ROLLBACK');
+      throw txError;
+    } finally {
+      client.release();
     }
-
-    // Dispatch webhook
-    dispatchWebhook((merchant_address as string).toLowerCase(), 'payment.completed', {
-      order_number: orderNumber,
-      total,
-      token: typeof token === 'string' ? token : 'VFIDE',
-      tx_hash: validTxHash,
-      customer_address: authAddress,
-      items_count: validatedItems.length,
-    });
-
-    return NextResponse.json({ order }, { status: 201 });
   } catch (error) {
     console.error('[Orders POST] Error:', error);
     return NextResponse.json({ error: 'Failed to create order' }, { status: 500 });

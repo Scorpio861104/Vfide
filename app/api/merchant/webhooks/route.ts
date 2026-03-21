@@ -67,30 +67,26 @@ export async function GET(request: NextRequest) {
 
   try {
     const result = await query(
-      `SELECT id, url, events, status, description, failure_count,
-              last_success_at, last_failure_at, created_at
-       FROM merchant_webhook_endpoints
-       WHERE merchant_address = $1
-       ORDER BY created_at DESC`,
+      `SELECT e.id, e.url, e.events, e.status, e.description, e.failure_count,
+              e.last_success_at, e.last_failure_at, e.created_at,
+              COALESCE(
+                (SELECT json_agg(sub ORDER BY sub.created_at DESC)
+                 FROM (
+                   SELECT d.id, d.event_type, d.response_status, d.delivered, d.attempt, d.created_at
+                   FROM merchant_webhook_deliveries d
+                   WHERE d.endpoint_id = e.id
+                   ORDER BY d.created_at DESC
+                   LIMIT 10
+                 ) sub),
+                '[]'::json
+              ) AS recent_deliveries
+       FROM merchant_webhook_endpoints e
+       WHERE e.merchant_address = $1
+       ORDER BY e.created_at DESC`,
       [authAddress]
     );
 
-    // Fetch recent deliveries for each endpoint
-    const endpoints = await Promise.all(
-      result.rows.map(async (ep) => {
-        const deliveries = await query(
-          `SELECT id, event_type, response_status, delivered, attempt, created_at
-           FROM merchant_webhook_deliveries
-           WHERE endpoint_id = $1
-           ORDER BY created_at DESC
-           LIMIT 10`,
-          [ep.id]
-        );
-        return { ...ep, recent_deliveries: deliveries.rows };
-      })
-    );
-
-    return NextResponse.json({ endpoints });
+    return NextResponse.json({ endpoints: result.rows });
   } catch (error) {
     console.error('[Webhooks GET] Error:', error);
     return NextResponse.json({ error: 'Failed to fetch webhooks' }, { status: 500 });

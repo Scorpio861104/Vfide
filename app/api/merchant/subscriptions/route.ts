@@ -61,30 +61,26 @@ export async function GET(request: NextRequest) {
   try {
     const result = await query(
       `SELECT p.*,
-              (SELECT COUNT(*) FROM subscriptions s WHERE s.plan_id = p.id AND s.status = 'active') as current_subscribers
+              (SELECT COUNT(*) FROM subscriptions s WHERE s.plan_id = p.id AND s.status = 'active') as current_subscribers,
+              COALESCE(
+                (SELECT json_agg(sub ORDER BY sub.created_at DESC)
+                 FROM (
+                   SELECT s.id, s.user_id, s.status, s.next_payment, s.trial_ends_at,
+                          s.last_payment_at, s.failure_count, s.created_at
+                   FROM subscriptions s
+                   WHERE s.plan_id = p.id
+                   ORDER BY s.created_at DESC
+                   LIMIT 50
+                 ) sub),
+                '[]'::json
+              ) AS subscribers
        FROM merchant_subscription_plans p
        WHERE p.merchant_address = $1
        ORDER BY p.created_at DESC`,
       [authAddress]
     );
 
-    // Get subscriber details for each plan
-    const plans = await Promise.all(
-      result.rows.map(async (plan) => {
-        const subs = await query(
-          `SELECT s.id, s.user_id, s.status, s.next_payment, s.trial_ends_at,
-                  s.last_payment_at, s.failure_count, s.created_at
-           FROM subscriptions s
-           WHERE s.plan_id = $1
-           ORDER BY s.created_at DESC
-           LIMIT 50`,
-          [plan.id]
-        );
-        return { ...plan, subscribers: subs.rows };
-      })
-    );
-
-    return NextResponse.json({ plans });
+    return NextResponse.json({ plans: result.rows });
   } catch (error) {
     console.error('[Subscriptions GET] Error:', error);
     return NextResponse.json({ error: 'Failed to fetch plans' }, { status: 500 });
