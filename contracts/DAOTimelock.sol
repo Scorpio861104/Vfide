@@ -9,7 +9,7 @@ error TL_NotQueued();
 error TL_TooEarly();
 error TL_OnlyTimelock();
 
-contract DAOTimelock {
+contract DAOTimelock is ReentrancyGuard {
     event AdminSet(address admin);
     event DelaySet(uint64 delay);
     event LedgerSet(address ledger);
@@ -82,7 +82,7 @@ contract DAOTimelock {
 
     function cancel(bytes32 id) external onlyAdmin { if(queue[id].eta==0) revert TL_NotQueued(); delete queue[id]; _removeFromQueuedIds(id); emit Cancelled(id); _log("tl_cancelled"); }
 
-    function execute(bytes32 id) external payable returns(bytes memory res){
+    function execute(bytes32 id) external payable nonReentrant returns(bytes memory res){
         // H-23: Only admin (DAO) can execute to prevent front-running
         require(msg.sender == admin, "TL: only admin can execute");
         

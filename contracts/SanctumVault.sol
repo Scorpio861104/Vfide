@@ -356,6 +356,7 @@ contract SanctumVault is Ownable, ReentrancyGuard {
         require(d.proposedAt != 0, "not found");
         require(!d.executed && !d.rejected, "already finalized");
         require(d.approvalCount >= approvalsRequired, "insufficient approvals");
+        require(block.timestamp >= d.proposedAt + 1 days, "SANCT: 24h delay");
         
         // Check balance again
         uint256 balance = IERC20(d.token).balanceOf(address(this));
