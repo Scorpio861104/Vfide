@@ -763,7 +763,7 @@ contract UserVaultLegacy is ReentrancyGuard {
     }
 
     // ——— Generic Execution (Smart Account)
-    function execute(address target, uint256 value, bytes calldata data) external onlyOwner notLocked noActiveClaims nonReentrant returns (bytes memory result) {
+    function execute(address target, uint256 value, bytes calldata data) external onlyOwner notLocked notFrozen noActiveClaims nonReentrant returns (bytes memory result) {
         if (target == address(0)) revert UV_Zero();
         
         require(value <= maxExecuteValue, "UV:value-exceeds-max");
@@ -799,7 +799,7 @@ contract UserVaultLegacy is ReentrancyGuard {
     }
 
     // ——— Batch Execution (UX improvement)
-    function executeBatch(address[] calldata targets, uint256[] calldata values, bytes[] calldata datas) external onlyOwner notLocked nonReentrant returns (bytes[] memory results) {
+    function executeBatch(address[] calldata targets, uint256[] calldata values, bytes[] calldata datas) external onlyOwner notLocked notFrozen noActiveClaims nonReentrant returns (bytes[] memory results) {
         require(targets.length == values.length && values.length == datas.length, "UV:length-mismatch");
         
         if (executeCooldown > 0 && lastExecuteTime > 0) {

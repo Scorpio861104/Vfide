@@ -208,13 +208,13 @@ contract CommerceEscrow {
         });
     }
 
-    function markFunded(uint256 id) external {
+    function markFunded(uint256 id) external nonReentrant {
         Escrow storage e = escrows[id];
         if (e.state != State.OPEN) revert COM_BadState();
         if (msg.sender != e.buyerOwner && msg.sender != e.merchantOwner && msg.sender != dao) revert COM_NotAllowed();
-        token.safeTransferFrom(e.buyerVault, address(this), e.amount);
-        escrowDeposited[id] = e.amount;
         e.state = State.FUNDED;
+        escrowDeposited[id] = e.amount;
+        token.safeTransferFrom(e.buyerVault, address(this), e.amount);
     }
 
     function release(uint256 id) external nonReentrant {

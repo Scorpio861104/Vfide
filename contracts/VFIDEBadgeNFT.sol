@@ -121,13 +121,13 @@ contract VFIDEBadgeNFT is ERC721, ERC721URIStorage, ERC721Enumerable, Ownable {
         badgeMintCount[badge]++;
         uint256 badgeNum = badgeMintCount[badge];
         
-        _safeMint(msg.sender, tokenId);
-        
-        // Store metadata
+        // Store metadata BEFORE _safeMint to prevent reentrancy via onERC721Received
         tokenBadge[tokenId] = badge;
         userBadgeToken[msg.sender][badge] = tokenId;
         mintTimestamp[tokenId] = block.timestamp;
         badgeNumber[tokenId] = badgeNum;
+        
+        _safeMint(msg.sender, tokenId);
         
         // Lock the token (soulbound)
         emit Locked(tokenId);
