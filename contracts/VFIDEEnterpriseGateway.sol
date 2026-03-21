@@ -27,6 +27,7 @@ contract VFIDEEnterpriseGateway {
 
     struct Order {
         address buyer;
+        address payer;  // Actual source of funds (vault or EOA)
         uint256 amount;
         Status status;
         uint256 timestamp;
@@ -125,7 +126,8 @@ contract VFIDEEnterpriseGateway {
 
         orders[orderId] = Order({
             buyer: msg.sender, // The EOA initiating
-            amount: received, // Record actual amount received
+            payer: payer,      // Actual source of funds (vault or EOA)
+            amount: received,  // Record actual amount received
             status: Status.PENDING,
             timestamp: block.timestamp
         });
@@ -294,10 +296,10 @@ contract VFIDEEnterpriseGateway {
 
         o.status = Status.REFUNDED;
 
-        // Return funds to Buyer
-        token.safeTransfer(o.buyer, o.amount);
+        // Return funds to original payer (vault or EOA)
+        token.safeTransfer(o.payer, o.amount);
 
-        emit OrderRefunded(orderId, o.buyer, o.amount, reason);
+        emit OrderRefunded(orderId, o.payer, o.amount, reason);
     }
 }
 
