@@ -47,6 +47,9 @@ contract DAO is ReentrancyGuard {
     event ProposalTypeTargetPolicySet(ProposalType indexed ptype, address indexed target, bool allowed);
     event ProposalTypeSelectorPolicySet(ProposalType indexed ptype, bytes4 indexed selector, bool allowed);
     event SeerAutonomousSet(address seerAutonomous);
+    event EmergencyQuorumRescueInitiated(uint256 readyAt);
+    event EmergencyQuorumRescueExecuted(uint256 newMinVotes, uint256 newMinParticipation);
+    event EmergencyQuorumRescueCancelled();
 
     address public admin;
     IDAOTimelock public timelock;
@@ -62,6 +65,10 @@ contract DAO is ReentrancyGuard {
     uint64 public proposalCooldown = 1 hours;
     uint256 public minVotesRequired = 5000; // Absolute number of vote-points (Score) required to pass
     uint256 public minParticipation = 10;
+    
+    /// @notice Emergency quorum rescue — breaks governance deadlock when quorum is unreachable
+    uint256 public constant EMERGENCY_RESCUE_DELAY = 14 days;
+    uint64 public emergencyRescueReadyAt; // 0 = not initiated
     mapping(address => uint256) public lastVoteRewardDay;
     mapping(address => uint64) public lastProposalAt;
     mapping(ProposalType => mapping(address => bool)) public proposalTypeTargetAllowed;
@@ -156,6 +163,40 @@ contract DAO is ReentrancyGuard {
     function setMinParticipation(uint256 _minParticipation) external onlyTimelock {
         require(_minParticipation >= 3 && _minParticipation <= 100, "DAO: invalid participation");
         minParticipation = _minParticipation;
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    //             EMERGENCY QUORUM RESCUE (governance deadlock breaker)
+    // ═══════════════════════════════════════════════════════════════════════
+
+    /// @notice Initiate emergency quorum rescue — 14-day warmup before execution
+    /// @dev Only admin can initiate. Provides on-chain notice period for community awareness.
+    function initiateEmergencyQuorumRescue() external onlyAdmin {
+        emergencyRescueReadyAt = uint64(block.timestamp + EMERGENCY_RESCUE_DELAY);
+        emit EmergencyQuorumRescueInitiated(emergencyRescueReadyAt);
+    }
+
+    /// @notice Cancel a pending emergency quorum rescue
+    function cancelEmergencyQuorumRescue() external onlyAdmin {
+        require(emergencyRescueReadyAt != 0, "DAO: no rescue pending");
+        emergencyRescueReadyAt = 0;
+        emit EmergencyQuorumRescueCancelled();
+    }
+
+    /// @notice Execute emergency quorum rescue after warmup period
+    /// @dev Can only REDUCE quorum parameters. Bounded by same minimums as setParams/setMinParticipation.
+    /// @param _minVotes New minVotesRequired (must be < current, >= 100)
+    /// @param _minParticipation New minParticipation (must be <= current, >= 3)
+    function executeEmergencyQuorumRescue(uint256 _minVotes, uint256 _minParticipation) external onlyAdmin {
+        require(emergencyRescueReadyAt != 0, "DAO: no rescue pending");
+        require(block.timestamp >= emergencyRescueReadyAt, "DAO: rescue warmup not elapsed");
+        require(_minVotes >= 100 && _minVotes < minVotesRequired, "DAO: must reduce minVotes (>= 100)");
+        require(_minParticipation >= 3 && _minParticipation <= minParticipation, "DAO: must reduce or keep minParticipation (>= 3)");
+        
+        emergencyRescueReadyAt = 0;
+        minVotesRequired = _minVotes;
+        minParticipation = _minParticipation;
+        emit EmergencyQuorumRescueExecuted(_minVotes, _minParticipation);
     }
 
     /// @notice Set minimum spacing between proposals by the same proposer

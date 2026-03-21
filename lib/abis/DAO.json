@@ -170,6 +170,44 @@
   },
   {
     "anonymous": false,
+    "inputs": [],
+    "name": "EmergencyQuorumRescueCancelled",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "newMinVotes",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "newMinParticipation",
+        "type": "uint256"
+      }
+    ],
+    "name": "EmergencyQuorumRescueExecuted",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "readyAt",
+        "type": "uint256"
+      }
+    ],
+    "name": "EmergencyQuorumRescueInitiated",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
     "inputs": [
       {
         "indexed": false,
@@ -490,6 +528,19 @@
   },
   {
     "inputs": [],
+    "name": "EMERGENCY_RESCUE_DELAY",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "FATIGUE_PER_VOTE",
     "outputs": [
       {
@@ -528,6 +579,13 @@
     "type": "function"
   },
   {
+    "inputs": [],
+    "name": "cancelEmergencyQuorumRescue",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
     "inputs": [
       {
         "internalType": "address",
@@ -541,6 +599,37 @@
       }
     ],
     "name": "disputeFlag",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "emergencyRescueReadyAt",
+    "outputs": [
+      {
+        "internalType": "uint64",
+        "name": "",
+        "type": "uint64"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_minVotes",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_minParticipation",
+        "type": "uint256"
+      }
+    ],
+    "name": "executeEmergencyQuorumRescue",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -925,6 +1014,13 @@
       }
     ],
     "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "initiateEmergencyQuorumRescue",
+    "outputs": [],
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
