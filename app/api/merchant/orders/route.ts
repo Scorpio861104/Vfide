@@ -152,7 +152,7 @@ export async function POST(request: NextRequest) {
       const i = item as Record<string, unknown>;
       if (typeof i.name !== 'string' || !i.name.trim()) continue;
       const qty = typeof i.quantity === 'number' ? Math.max(1, Math.floor(i.quantity)) : 1;
-      const price = typeof i.unit_price === 'number' ? i.unit_price : 0;
+      const price = typeof i.unit_price === 'number' && i.unit_price >= 0 ? i.unit_price : 0;
       const lineTotal = Math.round(qty * price * 100) / 100;
       subtotal += lineTotal;
       validatedItems.push({
@@ -171,10 +171,14 @@ export async function POST(request: NextRequest) {
     }
 
     subtotal = Math.round(subtotal * 100) / 100;
-    const tax = typeof tax_amount === 'number' ? Math.round(tax_amount * 100) / 100 : 0;
-    const shipping = typeof shipping_amount === 'number' ? Math.round(shipping_amount * 100) / 100 : 0;
-    const discount = typeof discount_amount === 'number' ? Math.round(discount_amount * 100) / 100 : 0;
+    const tax = typeof tax_amount === 'number' && tax_amount >= 0 ? Math.round(tax_amount * 100) / 100 : 0;
+    const shipping = typeof shipping_amount === 'number' && shipping_amount >= 0 ? Math.round(shipping_amount * 100) / 100 : 0;
+    const discount = typeof discount_amount === 'number' && discount_amount >= 0 ? Math.round(discount_amount * 100) / 100 : 0;
     const total = Math.round((subtotal + tax + shipping - discount) * 100) / 100;
+
+    if (total < 0) {
+      return NextResponse.json({ error: 'Order total cannot be negative' }, { status: 400 });
+    }
 
     const validTxHash = typeof tx_hash === 'string' && TX_HASH_REGEX.test(tx_hash) ? tx_hash : null;
     const paymentStatus = validTxHash ? 'paid' : 'unpaid';

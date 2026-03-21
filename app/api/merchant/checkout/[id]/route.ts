@@ -102,7 +102,7 @@ export async function PATCH(
     }
 
     if (action === 'pay') {
-      // Mark as paid
+      // Mark as pending confirmation (requires valid tx_hash for on-chain verification)
       if (invoice.status === 'paid') {
         return NextResponse.json({ error: 'Already paid' }, { status: 400 });
       }
@@ -110,24 +110,28 @@ export async function PATCH(
         return NextResponse.json({ error: 'Invoice cancelled' }, { status: 400 });
       }
 
-      const validTxHash = typeof tx_hash === 'string' && TX_HASH_REGEX.test(tx_hash) ? tx_hash : null;
+      // Require a valid transaction hash — payment confirmation should be verified on-chain
+      if (typeof tx_hash !== 'string' || !TX_HASH_REGEX.test(tx_hash)) {
+        return NextResponse.json({ error: 'Valid tx_hash required' }, { status: 400 });
+      }
 
+      // Mark as pending_confirmation, not paid — merchant or backend job verifies on-chain
       await query(
         `UPDATE merchant_invoices
-         SET status = 'paid', paid_at = NOW(), tx_hash = $1, updated_at = NOW()
-         WHERE id = $2`,
-        [validTxHash, invoice.id]
+         SET status = 'pending_confirmation', tx_hash = $1, updated_at = NOW()
+         WHERE id = $2 AND status NOT IN ('paid', 'cancelled')`,
+        [tx_hash, invoice.id]
       );
 
       // Dispatch webhook
       dispatchWebhook(
         invoice.merchant_address as string,
-        'invoice.paid',
+        'payment.completed',
         {
           invoice_number: invoice.invoice_number,
           total: invoice.total,
           currency: invoice.currency_display,
-          tx_hash: validTxHash,
+          tx_hash: tx_hash,
           customer_address: invoice.customer_address,
         }
       );

@@ -71,8 +71,11 @@ export async function GET(request: NextRequest) {
     const limit = Math.min(parsedLimit, MAX_VIOLATIONS_LIMIT);
 
     const result = await query(
-      `SELECT * FROM security_violations ORDER BY detected_at DESC LIMIT $1`,
-      [limit]
+      `SELECT sv.* FROM security_violations sv
+       JOIN users u ON sv.user_id = u.id
+       WHERE u.wallet_address = $1
+       ORDER BY sv.detected_at DESC LIMIT $2`,
+      [authAddress, limit]
     );
 
     return NextResponse.json({ violations: result.rows });

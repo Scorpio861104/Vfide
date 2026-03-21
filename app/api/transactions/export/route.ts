@@ -257,17 +257,18 @@ async function formatAsPDF(
 ): Promise<string> {
   // For PDF, we generate an HTML string that will be rendered as PDF
   // In production, use a library like puppeteer or jspdf
+  const esc = (s: unknown) => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   const rows = transactions
     .slice(0, 1000) // Limit for PDF
     .map(
       (tx) => `
     <tr>
-      <td>${new Date(tx.timestamp).toLocaleDateString()}</td>
-      <td>${tx.type}</td>
-      <td>${tx.token_symbol || 'ETH'}</td>
-      <td>${tx.amount}</td>
-      ${options.includeUsdValue ? `<td>$${tx.usd_value || '0'}</td>` : ''}
-      <td>${tx.status}</td>
+      <td>${esc(new Date(tx.timestamp).toLocaleDateString())}</td>
+      <td>${esc(tx.type)}</td>
+      <td>${esc(tx.token_symbol || 'ETH')}</td>
+      <td>${esc(tx.amount)}</td>
+      ${options.includeUsdValue ? `<td>$${esc(tx.usd_value || '0')}</td>` : ''}
+      <td>${esc(tx.status)}</td>
     </tr>
   `
     )
@@ -292,8 +293,8 @@ async function formatAsPDF(
   <div class="header">
     <h1>Transaction History</h1>
     <p class="meta">
-      Address: ${address}<br>
-      Date Range: ${options.dateRange.start} to ${options.dateRange.end}<br>
+      Address: ${esc(address)}<br>
+      Date Range: ${esc(options.dateRange.start)} to ${esc(options.dateRange.end)}<br>
       Exported: ${new Date().toISOString()}<br>
       Total Transactions: ${transactions.length}
     </p>

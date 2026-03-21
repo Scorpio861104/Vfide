@@ -192,12 +192,15 @@ export async function GET(request: NextRequest) {
     const where = conditions.join(' AND ');
 
     // Sort order — use ts_rank() for relevance when text search is active
-    const relevanceExpr = hasSearch
-      ? `ts_rank(to_tsvector('english', coalesce(p.name,'') || ' ' || coalesce(p.description,'') || ' ' || coalesce(p.short_description,'')), plainto_tsquery('english', '${search!.replace(/'/g, "''")}'))`
-      : '0';
-    let orderClause = hasSearch
-      ? `${relevanceExpr} DESC, p.featured DESC, p.sold_count DESC`
-      : 'p.featured DESC, p.sort_order, p.created_at DESC';
+    // Use parameterized query for search term to prevent SQL injection
+    let orderClause: string;
+    if (hasSearch) {
+      params.push(search!);
+      const searchParamIdx = paramIdx++;
+      orderClause = `ts_rank(to_tsvector('english', coalesce(p.name,'') || ' ' || coalesce(p.description,'') || ' ' || coalesce(p.short_description,'')), plainto_tsquery('english', $${searchParamIdx})) DESC, p.featured DESC, p.sold_count DESC`;
+    } else {
+      orderClause = 'p.featured DESC, p.sort_order, p.created_at DESC';
+    }
     switch (sortBy) {
       case 'price_asc': orderClause = 'p.price ASC'; break;
       case 'price_desc': orderClause = 'p.price DESC'; break;
