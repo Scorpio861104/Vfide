@@ -111,6 +111,7 @@ contract SeerAutonomous is ReentrancyGuard {
     event RestrictionLifted(address indexed subject, RestrictionLevel oldLevel);
     event DAOOverride(address indexed subject, string reason);
     event ChallengeCreated(address indexed subject, RestrictionLevel target, uint64 deadline, string reason);
+    event ChallengeRequested(address indexed subject, string note);
     event ChallengeResolved(address indexed subject, bool upheld, string reason);
     event ChallengeResolvedCode(address indexed subject, bool upheld, uint16 indexed reasonCode, string reason);
     
@@ -192,6 +193,7 @@ contract SeerAutonomous is ReentrancyGuard {
         bool exists;
     }
     mapping(address => PendingChallenge) public pendingChallenge;
+    mapping(address => bool) public challengeRequested;
     
     // ─────────────────────────────────────────────────────────────────
     //                    ACTIVITY TRACKING (for patterns)
@@ -818,6 +820,8 @@ contract SeerAutonomous is ReentrancyGuard {
     function _maybeFinalizeChallenge(address subject) internal {
         PendingChallenge storage ch = pendingChallenge[subject];
         if (!ch.exists) return;
+        // Once user explicitly challenges, DAO must resolve.
+        if (challengeRequested[subject]) return;
         if (block.timestamp < ch.deadline) return;
 
         // Apply the target restriction now
@@ -829,6 +833,20 @@ contract SeerAutonomous is ReentrancyGuard {
         emit ChallengeResolved(subject, true, ch.reason);
         emit ChallengeResolvedCode(subject, true, 0, ch.reason);
         delete pendingChallenge[subject];
+        delete challengeRequested[subject];
+    }
+
+    /**
+     * @notice Subject explicitly challenges a pending severe restriction for DAO review.
+     * @param note Optional reason/note for off-chain governance context.
+     */
+    function challengeRestriction(string calldata note) external {
+        PendingChallenge storage ch = pendingChallenge[msg.sender];
+        require(ch.exists, "SA: no challenge");
+        require(block.timestamp < ch.deadline, "SA: challenge window passed");
+
+        challengeRequested[msg.sender] = true;
+        emit ChallengeRequested(msg.sender, note);
     }
 
     /**
@@ -853,6 +871,7 @@ contract SeerAutonomous is ReentrancyGuard {
             emit ChallengeResolvedCode(subject, false, 0, ch.reason);
         }
         delete pendingChallenge[subject];
+        delete challengeRequested[subject];
     }
 
     // _reasonCode removed: challenge-derived codes use 0; direct calls pass RC_ constants
