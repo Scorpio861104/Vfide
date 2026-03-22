@@ -85,6 +85,8 @@ contract GuardianRegistry {
     function addGuardian(address vault, address guardian) external {
         if (msg.sender != dao && msg.sender != vault) revert SEC_NotDAO();
         if (vault == address(0) || guardian == address(0)) revert SEC_Zero();
+        // SEC-06 FIX: Vault cannot add itself as a guardian (prevents self-approval loops)
+        if (guardian == vault) revert("SEC: vault cannot be own guardian");
         if (isGuardian[vault][guardian]) revert SEC_AlreadyMember();
         isGuardian[vault][guardian] = true;
         guardianCount[vault] += 1;
