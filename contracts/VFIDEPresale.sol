@@ -184,7 +184,7 @@ contract VFIDEPresale is ReentrancyGuard {
     mapping(address => PurchaseRecord[]) public purchases;
     mapping(address => uint256) public totalAllocated;
     mapping(address => uint256) public lastPurchaseTime;
-    /// @notice F-03 FIX: Track cancelled tokens separately so contribution mappings are preserved for refund eligibility
+    /// @notice Track cancelled tokens for user/accounting visibility.
     mapping(address => uint256) public cancelledTokens;
         /// @notice F-29 FIX: High-water mark for listing price calc — only goes up, preventing coordinated cancellation attacks
         uint256 public highWaterMarkUsdRaised;
@@ -772,14 +772,8 @@ contract VFIDEPresale is ReentrancyGuard {
      * @param index Index of the purchase to forfeit
      * @dev Renamed from cancelPurchase. Returns token ALLOCATION to presale pool only.
      *      Payment (ETH/stablecoin) is NOT refunded — it was already forwarded to treasury.
-     *      This is a forfeit operation, not a refund. Contribution tracking is decremented
-     *      so users can make new purchases within their wallet limits.
-        * 
-        * ⚠️ CRITICAL WARNING: Calling cancelPurchase removes your refund eligibility!
-        *      If the presale FAILS to meet its minimum goal, refunds will be enabled.
-        *      However, users who called cancelPurchase lose their refund rights permanently!
-        *      Your ethContributed[msg.sender] is zeroed, so you cannot claim a refund later.
-        *      This is a PERMANENT FORFEIT - you lose both tokens AND future refund rights.
+      *      This is a forfeit operation, not a refund. Contribution tracking is decremented
+      *      for this purchase so users cannot inflate refund eligibility via cancel/rebuy loops.
      */
     function cancelPurchase(uint256 index) external nonReentrant {
         require(index < purchases[msg.sender].length, "Invalid index");
@@ -808,21 +802,38 @@ contract VFIDEPresale is ReentrancyGuard {
         }
         
         if (p.ethPaid > 0) {
-            // F-03 FIX: Do NOT decrement ethContributed — preserves refund eligibility if presale fails.
-            // Only decrement totalEthRaised for accounting accuracy.
+            // Cancelling forfeits this purchase's refund eligibility.
+            if (ethContributed[msg.sender] >= p.ethPaid) {
+                ethContributed[msg.sender] -= p.ethPaid;
+            } else {
+                ethContributed[msg.sender] = 0;
+            }
             if (totalEthRaised >= p.ethPaid) {
                 totalEthRaised -= p.ethPaid;
+            } else {
+                totalEthRaised = 0;
             }
         }
         if (p.stablePaid > 0 && p.stablecoin != address(0)) {
-            // F-03 FIX: Do NOT decrement stableContributed — preserves refund eligibility.
-            // (no global totalStableRaised to update)
+            // Cancelling forfeits this purchase's stablecoin refund eligibility.
+            uint256 stableUserContribution = stableContributed[msg.sender][p.stablecoin];
+            if (stableUserContribution >= p.stablePaid) {
+                stableContributed[msg.sender][p.stablecoin] = stableUserContribution - p.stablePaid;
+            } else {
+                stableContributed[msg.sender][p.stablecoin] = 0;
+            }
         }
         if (p.usdEquiv > 0) {
-            // F-03 FIX: Do NOT decrement usdContributed — preserves refund eligibility.
-            // totalUsdRaised IS decremented so calculateListingPrice() reflects actual state.
+            // Keep refund/accounting aligned to active purchases only.
+            if (usdContributed[msg.sender] >= p.usdEquiv) {
+                usdContributed[msg.sender] -= p.usdEquiv;
+            } else {
+                usdContributed[msg.sender] = 0;
+            }
             if (totalUsdRaised >= p.usdEquiv) {
                 totalUsdRaised -= p.usdEquiv;
+            } else {
+                totalUsdRaised = 0;
             }
         }
 
