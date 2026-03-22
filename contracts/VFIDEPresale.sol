@@ -141,6 +141,7 @@ contract VFIDEPresale is ReentrancyGuard {
     uint256 public totalClaimed;     // Track total tokens claimed for accurate _pendingClaims
     bool public paused;
     bool public finalized;
+    bool public unsoldWithdrawn;
     uint256 public listingPrice;
     uint256 public lpVfideAmount;
     uint256 public totalUsdRaised;   // Total USD raised (in 6 decimals, like USDC)
@@ -408,11 +409,13 @@ contract VFIDEPresale is ReentrancyGuard {
     function withdrawUnsold(address recipient) external onlyDAO {
         require(finalized, "Not finalized");
         require(recipient != address(0), "Invalid recipient");
+        require(!unsoldWithdrawn, "Unsold already handled");
         
         uint256 unsold = TOTAL_SUPPLY - totalSold;
         if (unsold > 0) {
             vfideToken.safeTransfer(recipient, unsold);
         }
+        unsoldWithdrawn = true;
     }
 
     // ──────────────────────────── Purchase Functions ────────────────────────────
@@ -1082,9 +1085,12 @@ contract VFIDEPresale is ReentrancyGuard {
         finalized = true;
         
         // Return any unsold tokens to treasury
-        uint256 unsold = vfideToken.balanceOf(address(this)) - _pendingClaims();
-        if (unsold > 0) {
-            vfideToken.safeTransfer(TREASURY, unsold);
+        if (!unsoldWithdrawn) {
+            uint256 unsold = vfideToken.balanceOf(address(this)) - _pendingClaims();
+            if (unsold > 0) {
+                vfideToken.safeTransfer(TREASURY, unsold);
+            }
+            unsoldWithdrawn = true;
         }
 
         // Emit with USD raised (more meaningful than ETH)
