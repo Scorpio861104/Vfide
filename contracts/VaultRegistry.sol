@@ -340,13 +340,21 @@ contract VaultRegistry is Ownable, ReentrancyGuard {
     
     /**
      * @notice Update vault activity timestamp
-     * @dev Called on significant vault actions to track activity
+     * @dev Restricted to vault owner, vault contract itself, vaultHub, or registry owner
+     *      to prevent arbitrary manipulation of trust signals.
      */
     function updateActivity(address vault) external {
-        if (vaultHub.isVault(vault)) {
-            vaultLastActiveAt[vault] = block.timestamp;
-            emit VaultActivityUpdated(vault, block.timestamp);
-        }
+        if (!vaultHub.isVault(vault)) return;
+        address vaultOwner = vaultHub.ownerOfVault(vault);
+        require(
+            msg.sender == vaultOwner ||
+            msg.sender == vault ||
+            msg.sender == address(vaultHub) ||
+            msg.sender == owner,
+            "VR: not authorized"
+        );
+        vaultLastActiveAt[vault] = block.timestamp;
+        emit VaultActivityUpdated(vault, block.timestamp);
     }
     
     // ═══════════════════════════════════════════════════════════════════════════════
@@ -444,40 +452,42 @@ contract VaultRegistry is Ownable, ReentrancyGuard {
      * @param limit Maximum results to return
      * @return matches Array of matching vault info
      */
+    /// @param offset Start index into allVaults for pagination (0 = beginning).
+    ///               Call again with returned nextOffset to continue scanning.
     function searchByCreationTime(
         uint256 startTime,
         uint256 endTime,
-        uint256 limit
-    ) external view returns (VaultInfo[] memory matches) {
+        uint256 limit,
+        uint256 offset
+    ) external view returns (VaultInfo[] memory matches, uint256 nextOffset) {
         require(startTime < endTime, "invalid range");
         require(limit > 0 && limit <= 50, "limit 1-50");
-        
-        // Count matches first
+
+        uint256 total = allVaults.length;
+        uint256 batchEnd = offset + 1000; // scan up to 1000 entries per call
+        if (batchEnd > total) batchEnd = total;
+
+        // Single-pass: collect up to `limit` matches into a temp array
+        VaultInfo[] memory tmp = new VaultInfo[](limit);
         uint256 matchCount = 0;
-        uint256 maxToCheck = allVaults.length > 1000 ? 1000 : allVaults.length;
-        
-        for (uint256 i = 0; i < maxToCheck && matchCount < limit; i++) {
+        uint256 lastChecked = batchEnd;
+
+        for (uint256 i = offset; i < batchEnd && matchCount < limit; i++) {
             address vault = allVaults[i];
             uint256 created = vaultCreatedAt[vault];
-            
             if (created >= startTime && created <= endTime) {
+                tmp[matchCount] = getVaultInfo(vault);
                 matchCount++;
             }
+            lastChecked = i + 1;
         }
-        
-        // Populate results
+
         matches = new VaultInfo[](matchCount);
-        uint256 idx = 0;
-        
-        for (uint256 i = 0; i < maxToCheck && idx < matchCount; i++) {
-            address vault = allVaults[i];
-            uint256 created = vaultCreatedAt[vault];
-            
-            if (created >= startTime && created <= endTime) {
-                matches[idx] = getVaultInfo(vault);
-                idx++;
-            }
+        for (uint256 j = 0; j < matchCount; j++) {
+            matches[j] = tmp[j];
         }
+        // nextOffset == total signals caller that the full range has been scanned
+        nextOffset = lastChecked < total ? lastChecked : total;
     }
     
     /**
@@ -507,36 +517,37 @@ contract VaultRegistry is Ownable, ReentrancyGuard {
      * @param limit Maximum results to return
      * @return matches Array of matching vault info
      */
+    /// @param offset Start index into allVaults for pagination (0 = beginning).
     function searchByAddressPrefix(
         bytes4 addressPrefix,
-        uint256 limit
-    ) external view returns (VaultInfo[] memory matches) {
-        // Count matches first
+        uint256 limit,
+        uint256 offset
+    ) external view returns (VaultInfo[] memory matches, uint256 nextOffset) {
+        require(limit > 0 && limit <= 50, "limit 1-50");
+
+        uint256 total = allVaults.length;
+        uint256 batchEnd = offset + 1000;
+        if (batchEnd > total) batchEnd = total;
+
+        VaultInfo[] memory tmp = new VaultInfo[](limit);
         uint256 matchCount = 0;
-        uint256 maxToCheck = allVaults.length > 1000 ? 1000 : allVaults.length;
-        
-        for (uint256 i = 0; i < maxToCheck && matchCount < limit; i++) {
+        uint256 lastChecked = batchEnd;
+
+        for (uint256 i = offset; i < batchEnd && matchCount < limit; i++) {
             address vault = allVaults[i];
-            address owner = vaultHub.ownerOfVault(vault);
-            
-            if (bytes4(bytes20(owner)) == addressPrefix) {
+            address vaultOwner = vaultHub.ownerOfVault(vault);
+            if (bytes4(bytes20(vaultOwner)) == addressPrefix) {
+                tmp[matchCount] = getVaultInfo(vault);
                 matchCount++;
             }
+            lastChecked = i + 1;
         }
-        
-        // Populate results
+
         matches = new VaultInfo[](matchCount);
-        uint256 idx = 0;
-        
-        for (uint256 i = 0; i < maxToCheck && idx < matchCount; i++) {
-            address vault = allVaults[i];
-            address owner = vaultHub.ownerOfVault(vault);
-            
-            if (bytes4(bytes20(owner)) == addressPrefix) {
-                matches[idx] = getVaultInfo(vault);
-                idx++;
-            }
+        for (uint256 j = 0; j < matchCount; j++) {
+            matches[j] = tmp[j];
         }
+        nextOffset = lastChecked < total ? lastChecked : total;
     }
     
     // ═══════════════════════════════════════════════════════════════════════════════

@@ -285,8 +285,9 @@ contract DAO is ReentrancyGuard {
             }
         }
         
-        // and description is mutable, so including either enables trivial bypass of the protection
-        bytes32 proposalHash = keccak256(abi.encode(target, value, data));
+        // Proposer is included in the hash so withdrawal cooldown is scoped per-proposer;
+        // this prevents one user's withdrawal from blocking others from submitting the same payload.
+        bytes32 proposalHash = keccak256(abi.encode(msg.sender, target, value, data));
         //           can be re-submitted after the withdrawnHashCooldown window elapses.
         uint64 withdrawnAt = withdrawnProposalHashes[proposalHash];
         require(
@@ -434,7 +435,8 @@ contract DAO is ReentrancyGuard {
         require(block.timestamp < p.start || (p.forVotes == 0 && p.againstVotes == 0), 
             "DAO: cannot withdraw after votes cast");
         
-        bytes32 proposalHash = keccak256(abi.encode(p.target, p.value, p.data));
+        // Must match the proposer-scoped hash used in propose()
+        bytes32 proposalHash = keccak256(abi.encode(msg.sender, p.target, p.value, p.data));
         withdrawnProposalHashes[proposalHash] = uint64(block.timestamp);
 
         // Reset scalar fields instead of deleting the struct, which contains mappings.

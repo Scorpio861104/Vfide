@@ -47,13 +47,14 @@ export function useSimpleVault() {
             stateMutability: 'nonpayable',
             inputs: [
               { name: 'target', type: 'address' },
+              { name: 'value', type: 'uint256' },
               { name: 'data', type: 'bytes' },
             ],
             outputs: [],
           },
         ],
         functionName: 'execute',
-        args: [targetContract as `0x${string}`, callData as `0x${string}`],
+        args: [targetContract as `0x${string}`, 0n, callData as `0x${string}`],
       });
 
       setActionStatus('confirming');

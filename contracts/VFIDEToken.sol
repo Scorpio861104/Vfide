@@ -799,7 +799,8 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
 
     function _locked(address vault) internal view returns (bool) {
         (bool ok, bytes memory d) = address(securityHub).staticcall(abi.encodeWithSelector(ISecurityHub.isLocked.selector, vault));
-        if (!ok || d.length < 32) return false;
+        // Fail closed: if lock status cannot be determined, treat vault as locked.
+        if (!ok || d.length < 32) return true;
         return abi.decode(d, (bool));
     }
     

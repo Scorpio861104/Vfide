@@ -40,7 +40,7 @@ export function useBadgeNFTs(address?: `0x${string}`) {
     functionName: 'getBadgesOfUser',
     args: targetAddress ? [targetAddress] : undefined,
     query: {
-      enabled: !!targetAddress && !!CONTRACT_ADDRESSES.BadgeNFT,
+      enabled: !!targetAddress && CONTRACT_ADDRESSES.BadgeNFT !== '0x0000000000000000000000000000000000000000',
     }
   })
   
@@ -86,7 +86,7 @@ export function useCanMintBadge(badgeId: `0x${string}`, address?: `0x${string}`)
     functionName: 'canMintBadge',
     args: targetAddress && badgeId ? [targetAddress, badgeId] : undefined,
     query: {
-      enabled: !!targetAddress && !!badgeId && !!CONTRACT_ADDRESSES.BadgeNFT,
+      enabled: !!targetAddress && !!badgeId && CONTRACT_ADDRESSES.BadgeNFT !== '0x0000000000000000000000000000000000000000',
     }
   })
   

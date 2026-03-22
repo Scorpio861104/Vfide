@@ -118,6 +118,11 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
     }
     PendingEmergencyWithdraw public pendingEmergencyWithdraw;
 
+    /// @notice Emergency bypass for token exemption probe failures (fail-closed by default)
+    bool public exemptCheckBypass;
+    uint256 public exemptCheckBypassExpiry;
+    uint256 public constant MAX_EXEMPT_CHECK_BYPASS_DURATION = 7 days;
+
     // Events
     event BridgeSent(
         address indexed sender,
@@ -153,6 +158,7 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
     event EmergencyWithdrawScheduled(address indexed token, uint256 amount, uint64 effectiveAt);
     event EmergencyWithdrawExecuted(address indexed token, uint256 amount);
     event EmergencyWithdrawCancelled();
+    event ExemptCheckBypassSet(bool active, uint256 expiry);
 
     error InvalidAmount();
     error InvalidDestination();
@@ -266,10 +272,35 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
             abi.encodeWithSignature("systemExempt(address)", address(this))
         );
         if (!ok || data.length < 32) {
-            // If token doesn't expose this helper, do not block bridging.
-            return true;
+            // Balanced fail-closed behavior: allow a temporary owner-controlled bypass.
+            if (isExemptCheckBypassActive()) {
+                return true;
+            }
+            return false;
         }
         return abi.decode(data, (bool));
+    }
+
+    /// @notice Enable/disable temporary bypass when token exemption probe fails.
+    /// @dev Default is fail-closed. Bypass is for emergency liveness only and auto-expires.
+    function setExemptCheckBypass(bool active, uint256 duration) external onlyOwner {
+        if (active) {
+            require(duration > 0 && duration <= MAX_EXEMPT_CHECK_BYPASS_DURATION, "VFIDEBridge: invalid duration");
+            exemptCheckBypass = true;
+            exemptCheckBypassExpiry = block.timestamp + duration;
+        } else {
+            exemptCheckBypass = false;
+            exemptCheckBypassExpiry = 0;
+        }
+
+        emit ExemptCheckBypassSet(active, exemptCheckBypassExpiry);
+    }
+
+    /// @notice Returns true only while bypass is enabled and not expired.
+    function isExemptCheckBypassActive() public view returns (bool) {
+        if (!exemptCheckBypass) return false;
+        if (exemptCheckBypassExpiry > 0 && block.timestamp >= exemptCheckBypassExpiry) return false;
+        return true;
     }
 
     /**

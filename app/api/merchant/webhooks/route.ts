@@ -9,6 +9,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { randomBytes } from 'crypto';
+import { isIP } from 'node:net';
 import { query } from '@/lib/db';
 import { requireAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
@@ -39,7 +40,40 @@ const VALID_EVENTS = [
 function isValidUrl(url: string): boolean {
   try {
     const parsed = new URL(url);
-    return parsed.protocol === 'https:';
+    if (parsed.protocol !== 'https:') return false;
+
+    const hostname = parsed.hostname.toLowerCase();
+    if (!hostname) return false;
+
+    // Block obvious local targets.
+    if (hostname === 'localhost' || hostname.endsWith('.local')) return false;
+
+    // Block private/link-local/loopback literal IPs.
+    const ipVersion = isIP(hostname);
+    if (ipVersion === 4) {
+      if (
+        hostname.startsWith('10.') ||
+        hostname.startsWith('127.') ||
+        hostname.startsWith('192.168.') ||
+        hostname.startsWith('169.254.')
+      ) {
+        return false;
+      }
+
+      const octets = hostname.split('.').map((v) => Number(v));
+      if (octets.length === 4 && octets[0] === 172 && octets[1] >= 16 && octets[1] <= 31) {
+        return false;
+      }
+    }
+
+    if (ipVersion === 6) {
+      const normalized = hostname.replace(/\[|\]/g, '').toLowerCase();
+      if (normalized === '::1' || normalized.startsWith('fe80:') || normalized.startsWith('fc') || normalized.startsWith('fd')) {
+        return false;
+      }
+    }
+
+    return true;
   } catch {
     return false;
   }

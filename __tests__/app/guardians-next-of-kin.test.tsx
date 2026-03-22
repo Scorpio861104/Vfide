@@ -69,6 +69,11 @@ jest.mock('@/hooks/useVaultRecovery', () => ({
   useVaultRecovery: () => mockVaultRecoveryState,
 }));
 
+jest.mock('@/lib/contracts', () => ({
+  USER_VAULT_ABI: [],
+  isCardBoundVaultMode: () => false,
+}));
+
 jest.mock('wagmi', () => ({
   useAccount: () => ({
     isConnected: true,

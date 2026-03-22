@@ -26,7 +26,7 @@ export function useIsMerchant(address?: `0x${string}`) {
     functionName: 'getMerchantInfo',
     args: targetAddress ? [targetAddress] : undefined,
     query: {
-      enabled: !!targetAddress && !!CONTRACT_ADDRESSES.MerchantPortal,
+      enabled: !!targetAddress && CONTRACT_ADDRESSES.MerchantPortal !== '0x0000000000000000000000000000000000000000',
     }
   })
   
@@ -183,7 +183,7 @@ export function useCustomerTrustScore(customerAddress?: `0x${string}`) {
     functionName: 'getCustomerTrustScore',
     args: customerAddress ? [customerAddress] : undefined,
     query: {
-      enabled: !!customerAddress && !!CONTRACT_ADDRESSES.MerchantPortal,
+      enabled: !!customerAddress && CONTRACT_ADDRESSES.MerchantPortal !== '0x0000000000000000000000000000000000000000',
     }
   })
   

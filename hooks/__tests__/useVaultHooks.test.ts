@@ -22,7 +22,14 @@ import {
 } from '../useVaultHooks'
 
 jest.mock('wagmi')
-jest.mock('@/lib/contracts')
+jest.mock('@/lib/contracts', () => ({
+  CONTRACT_ADDRESSES: {
+    VaultHub: '0x1000000000000000000000000000000000000001',
+    VFIDEToken: '0x1000000000000000000000000000000000000002',
+  },
+  ACTIVE_VAULT_IMPLEMENTATION: 'cardbound',
+  ACTIVE_VAULT_ABI: [],
+}))
 
 // Mock the abis module - must match exact import path from useVaultHooks.ts
 jest.mock('../../lib/abis', () => ({

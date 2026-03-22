@@ -3,9 +3,9 @@
 import { useReadContract, useWriteContract, useAccount, useWaitForTransactionReceipt, useReadContracts } from 'wagmi'
 import { parseEther, formatEther, type Abi } from 'viem'
 import { useState, useEffect } from 'react'
-import { CONTRACT_ADDRESSES, ACTIVE_VAULT_IMPLEMENTATION } from '../lib/contracts'
+import { CONTRACT_ADDRESSES, ACTIVE_VAULT_IMPLEMENTATION, ACTIVE_VAULT_ABI } from '../lib/contracts'
 import { ZERO_ADDRESS } from '../lib/constants'
-import { VaultHubABI, VFIDETokenABI, UserVaultABI } from '../lib/abis'
+import { VaultHubABI, VFIDETokenABI } from '../lib/abis'
 import { validateAddress } from '../lib/validation'
 import { parseContractError, logError } from '@/lib/errorHandling';
 import { useAppStore } from '@/lib/store/appStore';
@@ -23,8 +23,9 @@ import { useAppStore } from '@/lib/store/appStore';
 // Use VaultHub (VaultInfrastructure) ABI for hub operations
 const HUB_ABI = VaultHubABI
 
-// Use UserVault ABI for individual vault operations
-const VAULT_ABI = UserVaultABI
+// Use active vault ABI that matches deployed vault type (CardBoundVault or UserVault-style)
+// CRITICAL: Must use ACTIVE_VAULT_ABI to match actually deployed contract
+const VAULT_ABI = ACTIVE_VAULT_ABI
 
 export function useUserVault() {
   const { address } = useAccount()

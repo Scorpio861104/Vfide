@@ -79,8 +79,8 @@ describe('/api/security/violations', () => {
 
       expect(response.status).toBe(200);
       expect(query).toHaveBeenCalledWith(
-        expect.stringContaining('LIMIT $1'),
-        [500]
+        expect.stringContaining('LIMIT $2'),
+        ['0x1111111111111111111111111111111111111123', 500]
       );
     });
 

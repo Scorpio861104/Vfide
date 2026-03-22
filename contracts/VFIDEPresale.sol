@@ -717,33 +717,37 @@ contract VFIDEPresale is ReentrancyGuard {
      * @dev Claims both immediate and locked (if unlocked) for all purchases
      */
     function claimAll() external nonReentrant {
-        uint256 totalClaimable = 0;
         uint256 purchaseCount = purchases[msg.sender].length;
-        
+
         require(purchaseCount > 0, "No purchases");
-        
+
+        uint256 immediateClaimable = 0;
+        uint256 lockedClaimable = 0;
+
         for (uint256 i = 0; i < purchaseCount; i++) {
             PurchaseRecord storage p = purchases[msg.sender][i];
-            
+
             // Claim immediate if not claimed
             if (!p.immediateClaimed && p.immediateAmount > 0) {
                 p.immediateClaimed = true;
-                totalClaimable += p.immediateAmount;
+                immediateClaimable += p.immediateAmount;
             }
-            
+
             // Claim locked if unlocked and not claimed
             if (!p.lockedClaimed && p.lockedAmount > 0 && block.timestamp >= p.unlockTime) {
                 p.lockedClaimed = true;
-                totalClaimable += p.lockedAmount;
+                lockedClaimable += p.lockedAmount;
             }
         }
-        
+
+        uint256 totalClaimable = immediateClaimable + lockedClaimable;
         if (totalClaimable == 0) revert PS_NoTokens();
-        
+
         totalClaimed += totalClaimable;
         vfideToken.safeTransfer(msg.sender, totalClaimable);
-        emit ClaimImmediate(msg.sender, totalClaimable);
-        emit ClaimLocked(msg.sender, 0); // signal that locked claims may have been included
+        // Emit accurate amounts for each category so indexers report correct data
+        if (immediateClaimable > 0) emit ClaimImmediate(msg.sender, immediateClaimable);
+        if (lockedClaimable > 0) emit ClaimLocked(msg.sender, lockedClaimable);
     }
 
     /**
@@ -753,6 +757,12 @@ contract VFIDEPresale is ReentrancyGuard {
      *      Payment (ETH/stablecoin) is NOT refunded — it was already forwarded to treasury.
      *      This is a forfeit operation, not a refund. Contribution tracking is decremented
      *      so users can make new purchases within their wallet limits.
+        * 
+        * ⚠️ CRITICAL WARNING: Calling cancelPurchase removes your refund eligibility!
+        *      If the presale FAILS to meet its minimum goal, refunds will be enabled.
+        *      However, users who called cancelPurchase lose their refund rights permanently!
+        *      Your ethContributed[msg.sender] is zeroed, so you cannot claim a refund later.
+        *      This is a PERMANENT FORFEIT - you lose both tokens AND future refund rights.
      */
     function cancelPurchase(uint256 index) external nonReentrant {
         require(index < purchases[msg.sender].length, "Invalid index");

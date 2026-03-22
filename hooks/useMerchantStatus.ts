@@ -12,7 +12,7 @@ export function useMerchantStatus(address?: `0x${string}`) {
     functionName: 'getMerchantInfo',
     args: address ? [address] : undefined,
     query: {
-      enabled: !!address && !!CONTRACT_ADDRESSES.MerchantPortal,
+      enabled: !!address && CONTRACT_ADDRESSES.MerchantPortal !== '0x0000000000000000000000000000000000000000',
     }
   })
 

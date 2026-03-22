@@ -7,7 +7,7 @@ import { isAddress } from "viem";
 import { motion, AnimatePresence } from "framer-motion";
 import { useVaultHub } from "@/hooks/useVaultHub";
 import { useVaultRecovery } from "@/hooks/useVaultRecovery";
-import { USER_VAULT_ABI } from "@/lib/contracts";
+import { USER_VAULT_ABI, isCardBoundVaultMode } from "@/lib/contracts";
 import { buildGuardianAttestationMessage, type GuardianAttestationPayload } from "@/lib/recovery/guardianAttestation";
 import { Shield, Users, Clock, CheckCircle2, AlertCircle, Key, Heart, UserPlus, UserMinus, RefreshCw, ArrowRightCircle, Timer, Lock, FileText } from "lucide-react";
 
@@ -680,10 +680,13 @@ function GuardianResponsibilitiesCard({
   userAddress?: `0x${string}`;
   onRemove?: () => void;
 }) {
+  const recoverySupported = !isCardBoundVaultMode();
+
   const { data: owner } = useReadContract({
     address: entry.address,
     abi: USER_VAULT_ABI,
     functionName: 'owner',
+    query: { enabled: recoverySupported },
   });
 
   const { data: isGuardian } = useReadContract({
@@ -691,7 +694,7 @@ function GuardianResponsibilitiesCard({
     abi: USER_VAULT_ABI,
     functionName: 'isGuardian',
     args: userAddress ? [userAddress] : undefined,
-    query: { enabled: !!userAddress },
+    query: { enabled: recoverySupported && !!userAddress },
   });
 
   const { data: isGuardianMature } = useReadContract({
@@ -699,13 +702,14 @@ function GuardianResponsibilitiesCard({
     abi: USER_VAULT_ABI,
     functionName: 'isGuardianMature',
     args: userAddress ? [userAddress] : undefined,
-    query: { enabled: !!userAddress && !!isGuardian },
+    query: { enabled: recoverySupported && !!userAddress && !!isGuardian },
   });
 
   const { data: recoveryStatus } = useReadContract({
     address: entry.address,
     abi: USER_VAULT_ABI,
     functionName: 'getRecoveryStatus',
+    query: { enabled: recoverySupported },
   });
 
   const recovery = recoveryStatus as [string, bigint, bigint, bigint, boolean] | undefined;
@@ -754,6 +758,7 @@ function GuardianPendingRecoveryCard({
   userAddress?: `0x${string}`;
   onRemove?: () => void;
 }) {
+  const recoverySupported = !isCardBoundVaultMode();
   const [actionNotice, setActionNotice] = useState<string | null>(null);
   const [actionTone, setActionTone] = useState<'info' | 'success' | 'error'>('info');
   const [isReportingFraud, setIsReportingFraud] = useState(false);
@@ -767,7 +772,7 @@ function GuardianPendingRecoveryCard({
     abi: USER_VAULT_ABI,
     functionName: 'isGuardian',
     args: userAddress ? [userAddress] : undefined,
-    query: { enabled: !!userAddress },
+    query: { enabled: recoverySupported && !!userAddress },
   });
 
   const { data: isGuardianMature } = useReadContract({
@@ -775,14 +780,14 @@ function GuardianPendingRecoveryCard({
     abi: USER_VAULT_ABI,
     functionName: 'isGuardianMature',
     args: userAddress ? [userAddress] : undefined,
-    query: { enabled: !!userAddress && !!isGuardian },
+    query: { enabled: recoverySupported && !!userAddress && !!isGuardian },
   });
 
   const { data: recoveryStatus, refetch: refetchRecoveryStatus } = useReadContract({
     address: entry.address,
     abi: USER_VAULT_ABI,
     functionName: 'getRecoveryStatus',
-    query: { refetchInterval: 15000 },
+    query: { enabled: recoverySupported, refetchInterval: 15000 },
   });
 
   const recovery = recoveryStatus as [string, bigint, bigint, bigint, boolean] | undefined;
@@ -808,6 +813,12 @@ function GuardianPendingRecoveryCard({
   const handleApprove = async () => {
     setActionNotice(null);
     setActionTone('info');
+
+    if (!recoverySupported) {
+      setActionTone('error');
+      setActionNotice('Recovery approvals are not supported in CardBound vault mode.');
+      return;
+    }
 
     if (!active) {
       setActionTone('error');
@@ -1821,6 +1832,7 @@ function NextOfKinInboxCard({
   userAddress?: `0x${string}`;
   onRemove: () => void;
 }) {
+  const recoverySupported = !isCardBoundVaultMode();
   const [actionNotice, setActionNotice] = useState<string | null>(null);
   const [actionTone, setActionTone] = useState<'info' | 'success' | 'error'>('info');
   const [isReportingFraud, setIsReportingFraud] = useState(false);
@@ -1833,12 +1845,14 @@ function NextOfKinInboxCard({
     address: entry.address,
     abi: USER_VAULT_ABI,
     functionName: 'owner',
+    query: { enabled: recoverySupported },
   });
 
   const { data: nextOfKin } = useReadContract({
     address: entry.address,
     abi: USER_VAULT_ABI,
     functionName: 'nextOfKin',
+    query: { enabled: recoverySupported },
   });
 
   const { data: isGuardian } = useReadContract({
@@ -1846,7 +1860,7 @@ function NextOfKinInboxCard({
     abi: USER_VAULT_ABI,
     functionName: 'isGuardian',
     args: userAddress ? [userAddress] : undefined,
-    query: { enabled: !!userAddress },
+    query: { enabled: recoverySupported && !!userAddress },
   });
 
   const { data: isGuardianMature } = useReadContract({
@@ -1854,14 +1868,14 @@ function NextOfKinInboxCard({
     abi: USER_VAULT_ABI,
     functionName: 'isGuardianMature',
     args: userAddress ? [userAddress] : undefined,
-    query: { enabled: !!userAddress && !!isGuardian },
+    query: { enabled: recoverySupported && !!userAddress && !!isGuardian },
   });
 
   const { data: inheritanceStatus, refetch: refetchInheritanceStatus } = useReadContract({
     address: entry.address,
     abi: USER_VAULT_ABI,
     functionName: 'getInheritanceStatus',
-    query: { refetchInterval: 15000 },
+    query: { enabled: recoverySupported, refetchInterval: 15000 },
   });
 
   const inheritance = inheritanceStatus as [boolean, bigint, bigint, bigint, boolean] | undefined;
@@ -1881,6 +1895,12 @@ function NextOfKinInboxCard({
   const execute = async (functionName: 'requestInheritance' | 'finalizeInheritance' | 'approveInheritance' | 'guardianCancelInheritance' | 'denyInheritance' | 'cancelInheritance') => {
     setActionNotice(null);
     setActionTone('info');
+
+    if (!recoverySupported) {
+      setActionTone('error');
+      setActionNotice('Inheritance actions are not supported in CardBound vault mode.');
+      return;
+    }
 
     try {
       setTxStage('signing');

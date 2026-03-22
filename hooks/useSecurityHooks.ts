@@ -26,7 +26,7 @@ export function useIsVaultLocked(vaultAddress?: `0x${string}`) {
     functionName: 'isLocked',
     args: vaultAddress ? [vaultAddress] : undefined,
     query: {
-      enabled: !!vaultAddress && !!CONTRACT_ADDRESSES.SecurityHub,
+      enabled: !!vaultAddress && CONTRACT_ADDRESSES.SecurityHub !== '0x0000000000000000000000000000000000000000',
     }
   })
   
@@ -47,7 +47,7 @@ export function useQuarantineStatus(vaultAddress?: `0x${string}`) {
     functionName: 'quarantineUntil',
     args: vaultAddress ? [vaultAddress] : undefined,
     query: {
-      enabled: !!vaultAddress && !!CONTRACT_ADDRESSES.PanicGuard,
+      enabled: !!vaultAddress && CONTRACT_ADDRESSES.PanicGuard !== '0x0000000000000000000000000000000000000000',
     }
   })
   
@@ -86,7 +86,7 @@ export function useCanSelfPanic() {
     functionName: 'lastSelfPanic',
     args: address ? [address] : undefined,
     query: {
-      enabled: !!address && !!CONTRACT_ADDRESSES.PanicGuard,
+      enabled: !!address && CONTRACT_ADDRESSES.PanicGuard !== '0x0000000000000000000000000000000000000000',
     }
   })
   
@@ -96,7 +96,7 @@ export function useCanSelfPanic() {
     functionName: 'vaultCreationTime',
     args: vaultAddress ? [vaultAddress] : undefined,
     query: {
-      enabled: !!vaultAddress && !!CONTRACT_ADDRESSES.PanicGuard,
+      enabled: !!vaultAddress && CONTRACT_ADDRESSES.PanicGuard !== '0x0000000000000000000000000000000000000000',
     }
   })
   
@@ -128,7 +128,7 @@ export function useSelfPanic() {
   })
   
   // Check if PanicGuard is deployed
-  const isAvailable = !!CONTRACT_ADDRESSES.PanicGuard && CONTRACT_ADDRESSES.PanicGuard !== '0x' && CONTRACT_ADDRESSES.PanicGuard.length === 42
+  const isAvailable = CONTRACT_ADDRESSES.PanicGuard !== '0x0000000000000000000000000000000000000000' && CONTRACT_ADDRESSES.PanicGuard !== '0x' && CONTRACT_ADDRESSES.PanicGuard.length === 42
   
   const selfPanic = (durationHours: number = 24) => {
     if (!isAvailable) {
@@ -165,7 +165,7 @@ export function useVaultGuardians(vaultAddress?: `0x${string}`) {
     functionName: 'guardianCount',
     args: vaultAddress ? [vaultAddress] : undefined,
     query: {
-      enabled: !!vaultAddress && !!CONTRACT_ADDRESSES.GuardianRegistry,
+      enabled: !!vaultAddress && CONTRACT_ADDRESSES.GuardianRegistry !== '0x0000000000000000000000000000000000000000',
     }
   })
   
@@ -175,7 +175,7 @@ export function useVaultGuardians(vaultAddress?: `0x${string}`) {
     functionName: 'guardiansNeeded',
     args: vaultAddress ? [vaultAddress] : undefined,
     query: {
-      enabled: !!vaultAddress && !!CONTRACT_ADDRESSES.GuardianRegistry,
+      enabled: !!vaultAddress && CONTRACT_ADDRESSES.GuardianRegistry !== '0x0000000000000000000000000000000000000000',
     }
   })
   
@@ -195,7 +195,7 @@ export function useIsGuardian(vaultAddress?: `0x${string}`, guardianAddress?: `0
     functionName: 'isGuardian',
     args: vaultAddress && guardianAddress ? [vaultAddress, guardianAddress] : undefined,
     query: {
-      enabled: !!vaultAddress && !!guardianAddress && !!CONTRACT_ADDRESSES.GuardianRegistry,
+      enabled: !!vaultAddress && !!guardianAddress && CONTRACT_ADDRESSES.GuardianRegistry !== '0x0000000000000000000000000000000000000000',
     }
   })
   
@@ -212,7 +212,7 @@ export function useGuardianLockStatus(vaultAddress?: `0x${string}`) {
     functionName: 'locked',
     args: vaultAddress ? [vaultAddress] : undefined,
     query: {
-      enabled: !!vaultAddress && !!CONTRACT_ADDRESSES.GuardianLock,
+      enabled: !!vaultAddress && CONTRACT_ADDRESSES.GuardianLock !== '0x0000000000000000000000000000000000000000',
     }
   })
   
@@ -222,7 +222,7 @@ export function useGuardianLockStatus(vaultAddress?: `0x${string}`) {
     functionName: 'approvals',
     args: vaultAddress ? [vaultAddress] : undefined,
     query: {
-      enabled: !!vaultAddress && !!CONTRACT_ADDRESSES.GuardianLock,
+      enabled: !!vaultAddress && CONTRACT_ADDRESSES.GuardianLock !== '0x0000000000000000000000000000000000000000',
     }
   })
   
@@ -268,7 +268,7 @@ export function useEmergencyStatus() {
     abi: EmergencyBreakerABI,
     functionName: 'halted',
     query: {
-      enabled: !!CONTRACT_ADDRESSES.EmergencyBreaker,
+      enabled: CONTRACT_ADDRESSES.EmergencyBreaker !== '0x0000000000000000000000000000000000000000',
       refetchInterval: 10000, // Check every 10 seconds
     }
   })
@@ -278,7 +278,7 @@ export function useEmergencyStatus() {
     abi: PanicGuardABI,
     functionName: 'globalRisk',
     query: {
-      enabled: !!CONTRACT_ADDRESSES.PanicGuard,
+      enabled: CONTRACT_ADDRESSES.PanicGuard !== '0x0000000000000000000000000000000000000000',
       refetchInterval: 10000,
     }
   })
