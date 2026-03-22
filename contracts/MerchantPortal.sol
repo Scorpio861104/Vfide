@@ -393,9 +393,8 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
         address customerVault = vaultHub.vaultOf(r.customer);
         require(merchantVault != address(0) && customerVault != address(0), "Missing vaults");
         
-        // Vault-to-vault refund pull is intentional: merchant vault custody model.
-        // Transfer from merchant vault to customer vault
-        IERC20(r.token).safeTransferFrom(merchantVault, customerVault, r.amount);
+        // Pull refund from the merchant caller to avoid requiring approvals from vault contracts.
+        IERC20(r.token).safeTransferFrom(msg.sender, customerVault, r.amount);
         
         emit RefundCompleted(r.customer, r.merchant, r.orderId, r.amount);
         _logEv(r.customer, "refund_completed", r.amount, r.orderId);

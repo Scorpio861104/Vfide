@@ -35,6 +35,7 @@ error PM_InvalidRate();
 error PM_InvalidPayee();
 error PM_InvalidDeposit();
 error PM_NothingDue();
+error PM_StreamNotExpired();
 
 contract PayrollManager is ReentrancyGuard {
     using SafeERC20 for IERC20;
@@ -49,6 +50,7 @@ contract PayrollManager is ReentrancyGuard {
     event RateModified(uint256 indexed streamId, uint256 oldRate, uint256 newRate);
     event PayeeUpdated(uint256 indexed streamId, address indexed oldPayee, address indexed newPayee);
     event EmergencyWithdraw(uint256 indexed streamId, address indexed to, uint256 amount);
+    event StreamExpired(uint256 indexed streamId, address indexed reclaimedBy, uint256 amount);
 
     struct Stream {
         address payer;
@@ -62,6 +64,7 @@ contract PayrollManager is ReentrancyGuard {
         bool paused;           // NEW: Pause state
         uint256 pausedAt;      // NEW: When paused
         uint256 pausedAccrued; // NEW: Accrued before pause
+        uint256 expiryTime;
     }
 
     mapping(uint256 => Stream) public streams;
@@ -74,6 +77,7 @@ contract PayrollManager is ReentrancyGuard {
     ISeer_PM public seer;
     uint16 public constant PAYROLL_CREATE_REWARD = 5;     // +0.5 for creating stream
     uint16 public constant PAYROLL_WITHDRAW_REWARD = 1;   // +0.1 per withdrawal
+    uint256 public constant MAX_STREAM_DURATION = 365 days;
     
     // NEW: Track streams by payer and payee
     mapping(address => uint256[]) private payerStreams;
@@ -130,7 +134,8 @@ contract PayrollManager is ReentrancyGuard {
             active: true,
             paused: false,
             pausedAt: 0,
-            pausedAccrued: 0
+            pausedAccrued: 0,
+            expiryTime: block.timestamp + MAX_STREAM_DURATION
         });
         
         // Track streams for both parties (I-11: capped)
@@ -313,7 +318,15 @@ contract PayrollManager is ReentrancyGuard {
             return s.pausedAccrued;
         }
         
-        uint256 timeDelta = block.timestamp - s.lastWithdrawTime;
+        uint256 effectiveNow = block.timestamp;
+        if (s.expiryTime > 0 && effectiveNow > s.expiryTime) {
+            effectiveNow = s.expiryTime;
+        }
+        if (effectiveNow <= s.lastWithdrawTime) {
+            return s.pausedAccrued;
+        }
+
+        uint256 timeDelta = effectiveNow - s.lastWithdrawTime;
         uint256 due = timeDelta * s.ratePerSecond;
         
         // Add any paused accrued (if resumed but not yet withdrawn)
@@ -359,6 +372,23 @@ contract PayrollManager is ReentrancyGuard {
             _safeTransferPay(token, payer, remainder);
         }
         emit StreamCancelled(streamId);
+    }
+
+    /// @notice Reclaim remaining stream balance after hard expiry.
+    function claimExpiredStream(uint256 streamId) external nonReentrant {
+        Stream storage s = streams[streamId];
+        if (!s.active) revert PM_StreamInactive();
+        if (block.timestamp < s.expiryTime) revert PM_StreamNotExpired();
+
+        uint256 remaining = s.depositBalance;
+        s.depositBalance = 0;
+        s.active = false;
+        s.pausedAccrued = 0;
+
+        if (remaining > 0) {
+            _safeTransferPay(s.token, s.payer, remaining);
+        }
+        emit StreamExpired(streamId, msg.sender, remaining);
     }
     
     // ═══════════════════════════════════════════════════════════════════════
