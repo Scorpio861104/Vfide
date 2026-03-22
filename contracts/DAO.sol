@@ -381,10 +381,12 @@ contract DAO is ReentrancyGuard {
             p.scoreSnapshot[voter] = weight + 1; // +1 so score-0 is stored as 1, not confused with unset
                     // F-28 FIX: Require voter's score to have been established before the proposal was created.
                     // Prevents a coalition of operators from temporarily boosting a voter's score to manipulate vote weight.
+                    // DAO-04 FIX: Also require activity within 90 days (not stale > 90 days)
                     uint64 voterLastActivity = seer.lastActivity(voter);
                     require(
-                        voterLastActivity > 0 && voterLastActivity < p.start - votingDelay,
-                        "DAO: score not stable long enough before proposal"
+                        voterLastActivity > 0 && voterLastActivity < p.start - votingDelay &&
+                        voterLastActivity > block.timestamp - 90 days,
+                        "DAO: score not recently established"
                     );
         } else {
             weight = rawSnapshot - 1; // decode: subtract the +1 offset
@@ -466,7 +468,9 @@ contract DAO is ReentrancyGuard {
         if (address(hooks)!=address(0)) { try hooks.onFinalized(id,passed) {} catch {} }
     }
 
-    function markExecuted(uint256 id) external onlyAdmin {
+    /// @notice DAO-07 FIX: Only timelock can mark proposals executed (prevents admin soft veto)
+    function markExecuted(uint256 id) external {
+        require(msg.sender == address(timelock), "DAO: only timelock can mark executed");
         Proposal storage p=proposals[id];
         require(p.queued&&!p.executed,"bad");
         p.executed=true; emit Executed(id);
