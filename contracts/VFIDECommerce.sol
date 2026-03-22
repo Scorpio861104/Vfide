@@ -187,6 +187,15 @@ contract CommerceEscrow {
         security = ISecurityHub_COM(_sec);
     }
 
+    /**
+     * @notice Returns the exact approval pair required before `markFunded` can transfer tokens.
+     * @dev Buyers must approve this escrow contract as spender from their vault address.
+     */
+    function getRequiredApproval(address buyerOwner) external view returns (address buyerVault, address spender) {
+        buyerVault = vaultHub.vaultOf(buyerOwner);
+        spender = address(this);
+    }
+
     function open(address merchantOwner, uint256 amount, bytes32 metaHash) external returns (uint256 id) {
         if (amount == 0) revert COM_BadAmount();
         MerchantRegistry.Merchant memory m = merchants.info(merchantOwner);
