@@ -452,12 +452,22 @@ contract OwnerControlPanel {
      * @param dailyLimit Max tokens transferred per 24h (0 = disabled)
      * @param cooldown Seconds between transfers (0 = disabled)
      */
+    // F-14 FIX: actionId helpers for newly-queued functions
+    function actionId_token_setAntiWhale(uint256 maxTransfer, uint256 maxWallet, uint256 dailyLimit, uint256 cooldown) public pure returns (bytes32) {
+        return keccak256(abi.encode("token_setAntiWhale", maxTransfer, maxWallet, dailyLimit, cooldown));
+    }
+    function actionId_token_setWhaleLimitExempt(address addr, bool exempt) public pure returns (bytes32) {
+        return keccak256(abi.encode("token_setWhaleLimitExempt", addr, exempt));
+    }
+
     function token_setAntiWhale(
         uint256 maxTransfer,
         uint256 maxWallet,
         uint256 dailyLimit,
         uint256 cooldown
     ) external onlyOwner {
+        // F-14 FIX: require governance queue before execution
+        _consumeQueuedAction(actionId_token_setAntiWhale(maxTransfer, maxWallet, dailyLimit, cooldown));
         vfideToken.setAntiWhale(maxTransfer, maxWallet, dailyLimit, cooldown);
     }
     
@@ -465,6 +475,8 @@ contract OwnerControlPanel {
      * @notice Exempt address from whale limits (for exchanges, liquidity pools)
      */
     function token_setWhaleLimitExempt(address addr, bool exempt) external onlyOwner {
+        // F-14 FIX: require governance queue before execution
+        _consumeQueuedAction(actionId_token_setWhaleLimitExempt(addr, exempt));
         vfideToken.setWhaleLimitExempt(addr, exempt);
     }
     
@@ -473,6 +485,8 @@ contract OwnerControlPanel {
      */
     function token_batchWhaleLimitExempt(address[] calldata addrs, bool exempt) external onlyOwner {
         for (uint256 i = 0; i < addrs.length; i++) {
+            // F-14 FIX: require governance queue per-address before execution
+            _consumeQueuedAction(actionId_token_setWhaleLimitExempt(addrs[i], exempt));
             vfideToken.setWhaleLimitExempt(addrs[i], exempt);
         }
     }
@@ -524,7 +538,13 @@ contract OwnerControlPanel {
      * @param minBps Minimum fee in basis points (e.g., 25 = 0.25%) for high-trust users
      * @param maxBps Maximum fee in basis points (e.g., 500 = 5%) for low-trust users
      */
+    function actionId_fees_setPolicy(uint16 minBps, uint16 maxBps) public pure returns (bytes32) {
+        return keccak256(abi.encode("fees_setPolicy", minBps, maxBps));
+    }
+
     function fees_setPolicy(uint16 minBps, uint16 maxBps) external onlyOwner {
+        // F-14 FIX: require governance queue before execution
+        _consumeQueuedAction(actionId_fees_setPolicy(minBps, maxBps));
         burnRouter.setFeePolicy(minBps, maxBps);
         emit FeePolicyUpdated(minBps, maxBps);
     }
@@ -763,7 +783,13 @@ contract OwnerControlPanel {
     /**
      * @notice Update ETH/USD price for ETH purchases
      */
+    function actionId_presale_setEthPrice(uint256 newPrice) public pure returns (bytes32) {
+        return keccak256(abi.encode("presale_setEthPrice", newPrice));
+    }
+
     function presale_setEthPrice(uint256 newPrice) external onlyOwner {
+        // F-14 FIX: require governance queue before execution
+        _consumeQueuedAction(actionId_presale_setEthPrice(newPrice));
         presale.setEthPrice(newPrice);
     }
     
@@ -1069,12 +1095,11 @@ contract OwnerControlPanel {
      * @param enabled True to enable, false to disable
      */
     function autoSwap_setEnabled(bool enabled) external onlyOwner {
-        // Get current config
+        // F-14 FIX: use same actionId as autoSwap_configure (same config, just toggling enabled)
         address router = ecosystemVault.swapRouter();
         address stablecoin = ecosystemVault.preferredStablecoin();
         uint16 slippage = ecosystemVault.maxSlippageBps();
-        
-        // Reconfigure with new enabled status
+        _consumeQueuedAction(actionId_autoSwap_configure(router, stablecoin, enabled, slippage));
         ecosystemVault.configureAutoSwap(router, stablecoin, enabled, slippage);
         emit AutoSwapConfigured(router, stablecoin, enabled, slippage);
     }
@@ -1117,7 +1142,13 @@ contract OwnerControlPanel {
      * @param manager Address to grant/revoke manager role
      * @param active True to grant, false to revoke
      */
+    function actionId_ecosystem_setManager(address manager, bool active) public pure returns (bytes32) {
+        return keccak256(abi.encode("ecosystem_setManager", manager, active));
+    }
+
     function ecosystem_setManager(address manager, bool active) external onlyOwner {
+        // F-14 FIX: require governance queue before execution
+        _consumeQueuedAction(actionId_ecosystem_setManager(manager, active));
         ecosystemVault.setManager(manager, active);
     }
     

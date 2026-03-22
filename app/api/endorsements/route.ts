@@ -106,6 +106,10 @@ export async function GET(request: NextRequest) {
   const rateLimitResponse = await withRateLimit(request, 'api');
   if (rateLimitResponse) return rateLimitResponse;
 
+  // F-08 FIX: Require authentication to prevent unauthenticated enumeration of wallet addresses
+  const authResult = await requireAuth(request);
+  if (authResult instanceof NextResponse) return authResult;
+
   try {
     const searchParams = request.nextUrl.searchParams;
     const rawEndorsedAddress = searchParams.get('endorsedAddress');

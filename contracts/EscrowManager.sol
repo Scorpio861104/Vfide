@@ -33,6 +33,7 @@ error ESC_HighValueRequiresDAO();
 error ESC_ActionBlocked(uint8 result);
 
 contract EscrowManager is ReentrancyGuard {
+        uint256 public constant MIN_LOCK_PERIOD = 3 days; // F-18 FIX: Enforce minimum lock period regardless of score
     using SafeERC20 for IERC20;
     
     event EscrowCreated(uint256 indexed escrowId, address indexed buyer, address indexed merchant, uint256 amount, uint256 releaseTime, uint256 lockPeriod, uint256 timestamp);
@@ -91,10 +92,14 @@ contract EscrowManager is ReentrancyGuard {
         // Calculate Release Time based on Trust (0-10000 scale)
         uint256 lockPeriod = 14 days; // Default
         if (address(seer) != address(0)) {
-            uint16 score = seer.getScore(merchant);
+            // F-18 FIX: Use getCachedScore (reflects longer-term cached behavior) instead of live getScore
+            // to reduce the impact of temporary score pump-and-dump attacks.
+            uint16 score = seer.getCachedScore(merchant);
             if (score >= 8000) lockPeriod = 3 days;       // High Trust (80%+)
             else if (score >= 6000) lockPeriod = 7 days;  // Medium Trust (60%+)
         }
+        // F-18 FIX: Enforce minimum lock period as a safety net
+        require(lockPeriod >= MIN_LOCK_PERIOD, "ESC: lock period too short");
 
         uint256 id = ++escrowCount;
         escrows[id] = Escrow({

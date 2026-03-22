@@ -18,7 +18,18 @@ import { isTokenRevoked, hashToken } from './tokenRevocation';
 // JWT Configuration
 // No fallback secret - fail fast if not set
 function getJWTSecret(): string {
-  const secret = process.env.JWT_SECRET || process.env.NEXTAUTH_SECRET;
+  const jwtSecret = process.env.JWT_SECRET;
+  const nextAuthSecret = process.env.NEXTAUTH_SECRET;
+
+  // F-10 FIX: Fail if both secrets are set with different values to prevent
+  // signing/verification inconsistency depending on module initialization order.
+  if (jwtSecret && nextAuthSecret && jwtSecret !== nextAuthSecret) {
+    throw new Error(
+      'Both JWT_SECRET and NEXTAUTH_SECRET are set with different values. Use only one.'
+    );
+  }
+
+  const secret = jwtSecret || nextAuthSecret;
   if (!secret) {
     throw new Error(
       'JWT_SECRET or NEXTAUTH_SECRET environment variable must be set. ' +

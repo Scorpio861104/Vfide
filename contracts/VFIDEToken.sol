@@ -104,6 +104,9 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
     uint64  public pendingVaultHubAt;
     address public pendingSecurityHub;
     uint64  public pendingSecurityHubAt;
+    /// F-05 FIX: Add timelock state for ledger changes (matches other module setters)
+    address public pendingLedger;
+    uint64  public pendingLedgerAt;
 
     address public pendingExemptAddr;
     bool    public pendingExemptStatus;
@@ -134,6 +137,7 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
     event SecurityHubSet(address indexed hub);
     event SecurityHubScheduled(address indexed hub, uint64 effectiveAt);
     event LedgerSet(address indexed ledger);
+    event LedgerScheduled(address indexed ledger, uint64 effectiveAt);
     event BurnRouterSet(address indexed router);
     event BurnRouterScheduled(address indexed router, uint64 effectiveAt);
     event TreasurySinkSet(address indexed sink);
@@ -282,6 +286,12 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
     function permit(address owner, address spender, uint256 value, uint256 deadline, uint8 v, bytes32 r, bytes32 s) external {
         require(!isBlacklisted[spender], "Spender blacklisted");
         require(block.timestamp <= deadline, "VFIDE: expired deadline");
+        // F-01 FIX: Reject malleable signatures (EIP-2 / secp256k1 upper bound on s)
+        require(
+            uint256(s) <= 0x7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF5D576E7357A4501DDFE92F46681B20A0,
+            "VFIDE: invalid s value"
+        );
+        require(v == 27 || v == 28, "VFIDE: invalid v value");
         bytes32 structHash = keccak256(abi.encode(PERMIT_TYPEHASH, owner, spender, value, nonces[owner]++));
         bytes32 hash = keccak256(abi.encodePacked("\x19\x01", DOMAIN_SEPARATOR(), structHash));
         address signer = ecrecover(hash, v, r, s);
@@ -344,9 +354,22 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
         _log("security_hub_set");
     }
 
+    /// F-05 FIX: setLedger now uses 48h timelock (matches all other module setters)
     function setLedger(address _ledger) external onlyOwner {
-        ledger = IProofLedger(_ledger);
-        emit LedgerSet(_ledger);
+        uint64 effectiveAt = uint64(block.timestamp) + SINK_CHANGE_DELAY;
+        pendingLedger = _ledger;
+        pendingLedgerAt = effectiveAt;
+        emit LedgerScheduled(_ledger, effectiveAt);
+        _log("ledger_scheduled");
+    }
+
+    function applyLedger() external onlyOwner {
+        require(pendingLedgerAt != 0, "VF: no pending ledger");
+        require(block.timestamp >= pendingLedgerAt, "VF: timelock");
+        ledger = IProofLedger(pendingLedger);
+        emit LedgerSet(pendingLedger);
+        delete pendingLedger;
+        delete pendingLedgerAt;
         _log("ledger_set");
     }
 
@@ -411,11 +434,21 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
     /// @notice Propose system exemption with 48-hour timelock (grants bypass of ALL fees and vault rules)
     function proposeSystemExempt(address who, bool isExempt) external onlyOwner {
         require(who != address(0), "VF: zero address");
+        // F-06 FIX: Revert if a pending proposal already exists (prevents silent override)
+        require(pendingExemptAt == 0, "VF: existing proposal pending");
         pendingExemptAddr = who;
         pendingExemptStatus = isExempt;
         pendingExemptAt = uint64(block.timestamp) + SINK_CHANGE_DELAY;
         emit SystemExemptProposed(who, isExempt, pendingExemptAt);
         _logEv(who, "exempt_proposed", 0, "");
+    }
+
+    /// @notice Cancel a pending system exempt proposal (F-06 FIX added)
+    function cancelPendingExempt() external onlyOwner {
+        require(pendingExemptAt != 0, "VF: nothing pending");
+        delete pendingExemptAddr;
+        delete pendingExemptStatus;
+        delete pendingExemptAt;
     }
 
     /// @notice Confirm a pending system exempt after timelock elapses
@@ -537,8 +570,10 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
     }
 
     /// @notice Check if fee bypass is active (independent of security bypass)
-    /// Fees are NEVER disabled by the legacy circuit breaker — prevents fee-bypass exploit.
+    /// F-04 FIX: Circuit breaker also bypasses fees for consistency.
+    /// During an emergency, locked vaults can transact and should not pay fees to potentially compromised sinks.
     function isFeeBypassed() public view returns (bool) {
+        if (isCircuitBreakerActive()) return true; // F-04: circuit breaker now bypasses fees too
         if (!feeBypass) return false;
         if (feeBypassExpiry > 0 && block.timestamp >= feeBypassExpiry) return false;
         return true;
@@ -697,6 +732,21 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
             // Validate fee sum cannot exceed transfer amount (prevents malicious router DoS)
             require(_burnAmt + _sanctumAmt + _ecoAmt <= amount, "VF: fees exceed amount");
 
+            // F-17 FIX: Validate returned sink addresses match token-level configured sinks.
+            // Prevents a malicious/compromised burn router from redirecting fees to attacker wallets.
+            if (_sanctumSink != address(0)) {
+                require(
+                    _sanctumSink == sanctumSink || _sanctumSink == treasurySink,
+                    "VF: invalid sanctum sink"
+                );
+            }
+            if (_ecoSink != address(0)) {
+                require(
+                    _ecoSink == treasurySink || _ecoSink == sanctumSink,
+                    "VF: invalid eco sink"
+                );
+            }
+
             if (_burnAmt > 0) {
                 address sink = (_burnSink == address(0)) ? address(0) : _burnSink;
                 _applyBurn(from, sink, _burnAmt);
@@ -736,6 +786,10 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
         // Deliver net to receiver
         _balances[to] += remaining;
         emit Transfer(from, to, remaining);
+
+    // F-31 FIX: Basic transfer invariant check for defense-in-depth monitoring.
+    // The receiver's net amount can never exceed the original transfer amount.
+    assert(remaining <= amount);
 
         _logEv(from, "transfer", amount, "");
     }
@@ -1099,3 +1153,8 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
         }
     }
 }
+
+    /// @notice F-31 FIX: Monitoring helper for burn accounting
+    function totalBurnedToDate() external view returns (uint256) {
+        return MAX_SUPPLY - totalSupply;
+    }

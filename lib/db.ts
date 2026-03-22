@@ -18,10 +18,15 @@ function getPool(): Pool {
     }
 
     _pool = new Pool({
-      connectionString: process.env.DATABASE_URL || 
-        (process.env.NODE_ENV === 'production' 
-          ? undefined // Fail in production if not set
-          : 'postgresql://postgres:postgres@localhost:5432/vfide_testnet'), // Dev fallback only
+      connectionString: process.env.DATABASE_URL ||
+        // F-09 FIX: Require explicit ALLOW_DEV_DB=true opt-in for dev fallback.
+        // Prevents staging/other non-prod envs (NODE_ENV != 'production') from silently using dev DB.
+        (process.env.NODE_ENV === 'development' && process.env.ALLOW_DEV_DB === 'true'
+          ? 'postgresql://postgres:postgres@localhost:5432/vfide_testnet'
+          : (() => { throw new Error(
+              'DATABASE_URL is required. Set ALLOW_DEV_DB=true in development to use the local fallback.'
+            ); })()
+        ),
       max: 20,
       idleTimeoutMillis: 30000,
       connectionTimeoutMillis: 2000,
@@ -68,6 +73,31 @@ export async function query<T extends QueryResultRow = QueryResultRow>(
     }
     throw error;
   }
+}
+
+/**
+ * F-32 FIX: Safer helper for dynamic WHERE clause composition.
+ * Use '?' placeholder in each condition clause, this helper rewrites them to
+ * positional '$n' parameters and executes a parameterized query.
+ */
+export async function safeQuery<T extends QueryResultRow = QueryResultRow>(
+  baseQuery: string,
+  conditions: Array<{ clause: string; param: unknown }>,
+  suffix = ''
+): Promise<QueryResult<T>> {
+  const params: unknown[] = [];
+  let fullQuery = baseQuery;
+
+  for (const { clause, param } of conditions) {
+    params.push(param);
+    fullQuery += ` ${clause.replace('?', `$${params.length}`)}`;
+  }
+
+  if (suffix) {
+    fullQuery += ` ${suffix}`;
+  }
+
+  return query<T>(fullQuery, params as (string | number | boolean | null | Date | undefined | unknown[])[]);
 }
 
 export async function getClient() {

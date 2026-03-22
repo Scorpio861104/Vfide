@@ -134,6 +134,15 @@ contract Seer {
     mapping(address => mapping(address => uint64)) public lastOperatorPunishTime;
     mapping(address => mapping(address => uint16)) public dailyOperatorPunishTotal;
     uint16 public maxDailyOperatorPunish = 200; // Max 2% score reduction per day per operator-subject pair
+
+        // F-15 FIX: Cross-operator per-subject daily cap to prevent coordinated operator abuse
+        mapping(address => uint64) public subjectGlobalRewardResetTime;
+        mapping(address => uint32) public subjectGlobalRewardTotal;
+        mapping(address => uint64) public subjectGlobalPunishResetTime;
+        mapping(address => uint32) public subjectGlobalPunishTotal;
+        uint32 public maxDailySubjectDelta = 300; // Max 3% per day from ALL operators combined
+        /// F-16 FIX: Limit the maximum score delta any single DAO setScore() call can make
+        uint16 public maxDAOScoreChange = 2000; // Max 20% change per call
     
     // ═══════════════════════════════════════════════════════════════════════
     // SCORE HISTORY - Track score changes for analytics and dispute resolution
@@ -642,6 +651,9 @@ contract Seer {
         if (subject == address(0)) revert TRUST_Zero();
         if (newScore > MAX_SCORE) revert TRUST_Bounds();
         uint16 old = getScore(subject);
+        uint16 delta = old > newScore ? old - newScore : newScore - old;
+        // F-16 FIX: Cap the maximum change per setScore() call to prevent instant trust manipulation
+        require(delta <= maxDAOScoreChange, "SEER: delta too large");
         _score[subject] = newScore;
         emit ScoreSet(subject, old, newScore, reason);
         emit ScoreReasonCode(subject, 500, int16(newScore) - int16(old), msg.sender);
@@ -672,6 +684,14 @@ contract Seer {
         if (dailyOperatorRewardTotal[msg.sender][subject] + delta > maxDailyOperatorReward) revert TRUST_Limit();
         
         dailyOperatorRewardTotal[msg.sender][subject] += delta;
+        // F-15 FIX: Cross-operator per-subject daily reward cap
+        if (subjectGlobalRewardResetTime[subject] == 0 ||
+            block.timestamp >= uint256(subjectGlobalRewardResetTime[subject]) + 1 days) {
+            subjectGlobalRewardResetTime[subject] = uint64(block.timestamp);
+            subjectGlobalRewardTotal[subject] = 0;
+        }
+        if (uint256(subjectGlobalRewardTotal[subject]) + delta > maxDailySubjectDelta) revert TRUST_Limit();
+        subjectGlobalRewardTotal[subject] += delta;
         _delta(subject, int256(uint256(delta)), reason, 501);
     }
 
@@ -697,6 +717,14 @@ contract Seer {
         if (dailyOperatorPunishTotal[msg.sender][subject] + delta > maxDailyOperatorPunish) revert TRUST_Limit();
         
         dailyOperatorPunishTotal[msg.sender][subject] += delta;
+        // F-15 FIX: Cross-operator per-subject daily punish cap
+        if (subjectGlobalPunishResetTime[subject] == 0 ||
+            block.timestamp >= uint256(subjectGlobalPunishResetTime[subject]) + 1 days) {
+            subjectGlobalPunishResetTime[subject] = uint64(block.timestamp);
+            subjectGlobalPunishTotal[subject] = 0;
+        }
+        if (uint256(subjectGlobalPunishTotal[subject]) + delta > maxDailySubjectDelta) revert TRUST_Limit();
+        subjectGlobalPunishTotal[subject] += delta;
         _delta(subject, -int256(uint256(delta)), reason, 502);
     }
     

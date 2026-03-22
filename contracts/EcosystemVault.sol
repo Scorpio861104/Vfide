@@ -180,7 +180,7 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
     // DEX router for VFIDE → Stablecoin swaps when paying rewards
     address public swapRouter;
     address public preferredStablecoin;  // e.g., USDC
-    bool public autoSwapEnabled;         // Enable/disable auto-swap
+    bool public autoSwapEnabled;         // F-24 FIX: Disabled by default — vulnerable to sandwich attacks until oracle integration
     uint16 public maxSlippageBps = 100;  // 1% max slippage (default)
     
     event AutoSwapConfigured(address router, address stablecoin, bool enabled, uint16 maxSlippageBps);
@@ -344,6 +344,8 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
         uint16 _maxSlippageBps
     ) external onlyOwner {
         require(_maxSlippageBps <= 500, "ECO: slippage too high"); // Max 5%
+        // F-24 FIX: Keep auto-swap disabled until oracle-based minAmountOut is integrated.
+        require(!_enabled, "ECO: auto-swap disabled pending oracle");
         if (_enabled) {
             require(_router != address(0), "ECO: zero router");
             require(_stablecoin != address(0), "ECO: zero stablecoin");

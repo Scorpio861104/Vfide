@@ -113,7 +113,9 @@ contract VFIDEPresale is ReentrancyGuard {
     bool public ethAccepted = true;                              // Can disable ETH to force stablecoin only
     uint256 public ethPriceUsd = 3500;                           // ETH/USD rate (updatable by DAO)
     uint256 public ethPriceLastUpdated;                          // Timestamp of last price update
-    uint256 public constant ETH_PRICE_STALENESS = 24 hours;      // Max age before price considered stale
+    uint256 public constant ETH_PRICE_STALENESS = 4 hours;       // F-02 FIX: Reduced from 24h to limit oracle manipulation window
+    uint256 public constant MAX_ETH_PER_BLOCK = 10 ether;         // F-02 FIX: Per-block ETH purchase cap to slow oracle attacks
+    mapping(uint256 => uint256) public ethPerBlock;               // F-02 FIX: ETH purchased per block
     
     // Stablecoin registry
     IStablecoinRegistry public stablecoinRegistry;
@@ -182,6 +184,10 @@ contract VFIDEPresale is ReentrancyGuard {
     mapping(address => PurchaseRecord[]) public purchases;
     mapping(address => uint256) public totalAllocated;
     mapping(address => uint256) public lastPurchaseTime;
+    /// @notice F-03 FIX: Track cancelled tokens separately so contribution mappings are preserved for refund eligibility
+    mapping(address => uint256) public cancelledTokens;
+        /// @notice F-29 FIX: High-water mark for listing price calc — only goes up, preventing coordinated cancellation attacks
+        uint256 public highWaterMarkUsdRaised;
     
     modifier onlyDAO() {
         _checkDAO();
@@ -455,6 +461,10 @@ contract VFIDEPresale is ReentrancyGuard {
         stableContributed[msg.sender][stablecoin] += received;
         usdContributed[msg.sender] += usdAmount;
         totalUsdRaised += usdAmount;
+                // F-29 FIX: Update high-water mark
+                if (totalUsdRaised > highWaterMarkUsdRaised) {
+                    highWaterMarkUsdRaised = totalUsdRaised;
+                }
         
         // Process purchase with tier pricing
         uint256 baseTokens = calculateTokensFromUsdTier(usdAmount, tier);
@@ -560,6 +570,9 @@ contract VFIDEPresale is ReentrancyGuard {
         if (!isTierAvailable(2)) revert PS_TierDisabled(); // ETH uses tier 2 (public)
         require(msg.value >= MIN_PURCHASE_ETH, "Below minimum");
         require(!isEthPriceStale(), "PS: ETH price stale - use stablecoin or wait for DAO update");
+        // F-02 FIX: Per-block ETH cap to limit rapid oracle manipulation
+        ethPerBlock[block.number] += msg.value;
+        require(ethPerBlock[block.number] <= MAX_ETH_PER_BLOCK, "PS: block cap exceeded");
         
         
         // Calculate USD equivalent (6 decimals)
@@ -581,6 +594,10 @@ contract VFIDEPresale is ReentrancyGuard {
         totalUsdRaised += usdAmount;
         usdContributed[msg.sender] += usdAmount;
         ethContributed[msg.sender] += msg.value;  // Track for refunds
+                // F-29 FIX: Update high-water mark
+                if (totalUsdRaised > highWaterMarkUsdRaised) {
+                    highWaterMarkUsdRaised = totalUsdRaised;
+                }
         
         // Calculate tokens using tier 2 (public) price
         uint256 baseTokens = calculateTokensFromEthTier(msg.value, 2);
@@ -791,32 +808,26 @@ contract VFIDEPresale is ReentrancyGuard {
         }
         
         if (p.ethPaid > 0) {
-            if (ethContributed[msg.sender] >= p.ethPaid) {
-                ethContributed[msg.sender] -= p.ethPaid;
-            } else {
-                ethContributed[msg.sender] = 0; // safety floor
-            }
+            // F-03 FIX: Do NOT decrement ethContributed — preserves refund eligibility if presale fails.
+            // Only decrement totalEthRaised for accounting accuracy.
             if (totalEthRaised >= p.ethPaid) {
                 totalEthRaised -= p.ethPaid;
             }
         }
         if (p.stablePaid > 0 && p.stablecoin != address(0)) {
-            if (stableContributed[msg.sender][p.stablecoin] >= p.stablePaid) {
-                stableContributed[msg.sender][p.stablecoin] -= p.stablePaid;
-            } else {
-                stableContributed[msg.sender][p.stablecoin] = 0;
-            }
+            // F-03 FIX: Do NOT decrement stableContributed — preserves refund eligibility.
+            // (no global totalStableRaised to update)
         }
         if (p.usdEquiv > 0) {
-            if (usdContributed[msg.sender] >= p.usdEquiv) {
-                usdContributed[msg.sender] -= p.usdEquiv;
-            } else {
-                usdContributed[msg.sender] = 0;
-            }
+            // F-03 FIX: Do NOT decrement usdContributed — preserves refund eligibility.
+            // totalUsdRaised IS decremented so calculateListingPrice() reflects actual state.
             if (totalUsdRaised >= p.usdEquiv) {
                 totalUsdRaised -= p.usdEquiv;
             }
         }
+
+        // Track cancelled tokens separately for accounting
+        cancelledTokens[msg.sender] += totalTokens;
 
         // Clear the purchase record (tier preserved for audit trail)
         p.baseAmount = 0;
@@ -995,7 +1006,8 @@ contract VFIDEPresale is ReentrancyGuard {
      */
     function calculateListingPrice() public view returns (uint256 priceUsd, uint256 lpVfide) {
         // Total USD raised (6 decimals)
-        uint256 fundsRaisedUsd = totalUsdRaised;
+        // F-29 FIX: Use high-water mark to prevent coordinated cancellations from depressing listing price
+        uint256 fundsRaisedUsd = highWaterMarkUsdRaised > 0 ? highWaterMarkUsdRaised : totalUsdRaised;
         
         // Thresholds in USD (6 decimals)
         uint256 halfRaise = 1_225_000 * 1e6;    // $1.225M

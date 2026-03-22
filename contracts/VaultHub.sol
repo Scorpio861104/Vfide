@@ -31,6 +31,7 @@ contract VaultHub is Ownable, Pausable, ReentrancyGuard {
     mapping(address => mapping(address => mapping(uint256 => bool))) public recoveryApprovals;    mapping(address => mapping(uint256 => address)) public recoveryCandidateForNonce;
     mapping(address => uint8) public recoveryApprovalCount;
     mapping(address => uint256) public recoveryNonce;    uint64 public constant RECOVERY_DELAY = 7 days; // H-5: Increased from 3 to 7 days
+        uint64 public constant DAO_RECOVERY_DELAY = 14 days; // F-23 FIX: DAO-triggered recovery uses extended delay
     uint8 public constant RECOVERY_APPROVALS_REQUIRED = 3; // H-5: Multi-sig requirement
     mapping(address => bool) public isRecoveryApprover;
 
@@ -41,8 +42,14 @@ contract VaultHub is Ownable, Pausable, ReentrancyGuard {
 
     address public council;
 
+    // F-20 FIX: Timelock state for SecurityHub changes to prevent instant vault unlock attacks
+    uint64 public constant SECURITY_HUB_CHANGE_DELAY = 48 hours;
+    address public pendingSecurityHub_VH;
+    uint64  public pendingSecurityHubAt_VH;
+
     /// Events
     event ModulesSet(address vfide, address securityHub, address ledger, address dao);
+        event SecurityHubScheduled_VH(address indexed hub, uint64 effectiveAt);
     event VaultCreated(address indexed owner, address indexed vault);
     event ForcedRecoveryInitiated(address indexed vault, address indexed newOwner, uint64 unlockTime);
     event ForcedRecovery(address indexed vault, address indexed newOwner);
@@ -93,7 +100,19 @@ contract VaultHub is Ownable, Pausable, ReentrancyGuard {
 
     // IVaultHub compatibility wrapper
     function setSecurityHub(address security) external onlyOwner {
-        securityHub = ISecurityHub(security);
+        // F-20 FIX: SecurityHub changes now require 48h timelock
+        uint64 effectiveAt = uint64(block.timestamp) + SECURITY_HUB_CHANGE_DELAY;
+        pendingSecurityHub_VH = security;
+        pendingSecurityHubAt_VH = effectiveAt;
+        emit SecurityHubScheduled_VH(security, effectiveAt);
+        _log("hub_security_scheduled");
+    }
+
+    function applySecurityHub() external onlyOwner {
+        require(pendingSecurityHubAt_VH != 0 && block.timestamp >= pendingSecurityHubAt_VH, "VH: timelock");
+        securityHub = ISecurityHub(pendingSecurityHub_VH);
+        delete pendingSecurityHub_VH;
+        delete pendingSecurityHubAt_VH;
         _log("hub_security_set");
     }
 
@@ -262,7 +281,7 @@ contract VaultHub is Ownable, Pausable, ReentrancyGuard {
         }
 
         recoveryProposedOwner[vault] = recoveryCandidateForNonce[vault][nonce];
-        recoveryUnlockTime[vault] = uint64(block.timestamp + RECOVERY_DELAY);
+        recoveryUnlockTime[vault] = uint64(block.timestamp + DAO_RECOVERY_DELAY);
         
         emit ForcedRecoveryInitiated(vault, recoveryProposedOwner[vault], recoveryUnlockTime[vault]);
         _logEv(vault, "force_recover_init", 0, "");

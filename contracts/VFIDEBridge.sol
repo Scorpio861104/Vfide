@@ -152,6 +152,10 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
     event BridgeFeeUpdated(uint256 oldFee, uint256 newFee);
     event BridgeFeeScheduled(uint256 pendingFee, uint64 effectiveAt);
     event BridgeFeeCancelled();
+        event BridgeRefunded(address indexed sender, bytes32 indexed txId, uint256 amount);
+        /// F-25 FIX: Refund window — if destination bridge fails to execute, sender can claim refund after 7 days
+        uint256 public constant BRIDGE_REFUND_DELAY = 7 days;
+        mapping(bytes32 => uint256) public bridgeRefundableAfter; // txId => timestamp after which refund is claimable
     event FeeCollectorUpdated(address indexed oldCollector, address indexed newCollector);
     event FeeCollectorScheduled(address indexed pendingCollector, uint64 effectiveAt);
     event FeeCollectorCancelled();
@@ -263,6 +267,8 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
         // This avoids mint-dependency failures and prevents burn-without-delivery scenarios.
 
         emit BridgeSent(msg.sender, _dstChainId, _to, amountAfterFee, fee, txId);
+    // F-25 FIX: Set refund window — if the destination bridge never executes, sender can claim a refund
+    bridgeRefundableAfter[txId] = block.timestamp + BRIDGE_REFUND_DELAY;
 
         return txId;
     }
@@ -638,6 +644,41 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
         revert("VFIDEBridge: renounce disabled");
     }
 }
+
+    /**
+     * @notice F-25 FIX: Claim a refund for a stuck bridge transaction.
+     * @dev If the destination bridge never executed the transfer (insufficient liquidity),
+     *      the original sender can reclaim their locked tokens after BRIDGE_REFUND_DELAY.
+     * @param txId The transaction ID returned by bridge()
+     */
+    function claimBridgeRefund(bytes32 txId) external nonReentrant whenNotPaused {
+        BridgeTransaction storage btx = bridgeTransactions[txId];
+        require(btx.sender == msg.sender, "VFIDEBridge: not sender");
+        require(!btx.executed, "VFIDEBridge: already executed");
+        require(bridgeRefundableAfter[txId] > 0, "VFIDEBridge: not refundable");
+        require(block.timestamp >= bridgeRefundableAfter[txId], "VFIDEBridge: refund too early");
+
+        btx.executed = true; // Prevent double-claim
+        uint256 amount = btx.amount;
+        totalBridgedOut -= amount;
+        userStats[msg.sender].totalSent -= amount;
+        delete bridgeRefundableAfter[txId];
+
+        vfideToken.safeTransfer(msg.sender, amount);
+        emit BridgeRefunded(msg.sender, txId, amount);
+
+        /**
+         * @notice F-25 FIX: Admin can cancel a refund window after confirming the bridge delivery succeeded.
+         * @dev Used when destination execution was confirmed but source bridge doesn't receive a callback.
+         */
+        function adminMarkBridgeExecuted(bytes32 txId) external onlyOwner {
+            require(bridgeRefundableAfter[txId] > 0, "VFIDEBridge: no refund window");
+            BridgeTransaction storage btx = bridgeTransactions[txId];
+            require(!btx.executed, "VFIDEBridge: already executed");
+            btx.executed = true;
+            delete bridgeRefundableAfter[txId];
+        }
+    }
 
 /**
  * @notice Interface for BridgeSecurityModule

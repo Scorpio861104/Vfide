@@ -1961,14 +1961,18 @@ function OrdersSection({ merchantAddress }: { merchantAddress: string }) {
             <div className="text-xs text-gray-500 mb-2">
               {order.items?.map((item, i) => <span key={i}>{i > 0 && ', '}{item.product_name} ×{item.quantity}</span>)}
             </div>
-            {nextStatus[order.status] && (
-              <button
-                onClick={() => updateStatus(order.id, nextStatus[order.status])}
-                className="text-xs px-3 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-              >
-                Mark {nextStatus[order.status]}
-              </button>
-            )}
+            {(() => {
+              const next = nextStatus[order.status];
+              if (!next) return null;
+              return (
+                <button
+                  onClick={() => updateStatus(order.id, next)}
+                  className="text-xs px-3 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                >
+                  Mark {next}
+                </button>
+              );
+            })()}
           </div>
         ))}
         {orders.length === 0 && <p className="text-center text-gray-400 py-4">No orders yet</p>}

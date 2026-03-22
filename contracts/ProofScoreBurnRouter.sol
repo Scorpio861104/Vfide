@@ -266,8 +266,9 @@ contract ProofScoreBurnRouter is Ownable, Pausable {
     }
 
     function updateScore(address user) external {
-        // Allow Seer or owner to update score snapshots
-        require(msg.sender == address(seer) || msg.sender == owner, "Not authorized");
+        // F-26 FIX: Only Seer can write score history. Removing owner authorization
+        // prevents the owner from injecting arbitrary score snapshots to manipulate fees.
+        require(msg.sender == address(seer), "only seer");
         
         uint16 currentScore = seer.getScore(user);
         uint64 now_ = uint64(block.timestamp);
@@ -388,7 +389,12 @@ contract ProofScoreBurnRouter is Ownable, Pausable {
     ) external onlyOwner {
         require(_minTotalBps <= _maxTotalBps, "min > max");
         require(_maxTotalBps <= 1000, "max cannot exceed 10%");
-        
+        // F-27 FIX: Limit rate of change to prevent instantly multiplying fees for value extraction attacks
+        if (maxTotalBps > 0) { // Not first-time setup
+            require(_maxTotalBps <= maxTotalBps * 2, "BURN: max increase >2x");
+            require(_minTotalBps >= minTotalBps / 2 || _minTotalBps == 0, "BURN: min decrease >50%");
+        }
+
         minTotalBps = _minTotalBps;
         maxTotalBps = _maxTotalBps;
         
@@ -467,11 +473,13 @@ contract ProofScoreBurnRouter is Ownable, Pausable {
         
         // Check daily burn cap (view approximation - actual tracking happens on-chain)
         if (dailyBurnCap > 0 && burnAmount > 0) {
+            // F-30 FIX: mirror recordBurn() day-boundary behavior in view path.
+            // This avoids frontend/quote discrepancies exactly at day rollover boundaries.
             uint256 effectiveDaily = dailyBurnedAmount;
-            // Reset if new day
             if (block.timestamp >= currentDayStart + 1 days) {
                 effectiveDaily = 0;
             }
+
             
             // If burn would exceed cap, redirect excess to ecosystem
             if (effectiveDaily + burnAmount > dailyBurnCap) {

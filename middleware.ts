@@ -35,7 +35,7 @@ function timingSafeEqual(a: string, b: string): boolean {
   // Constant-time XOR comparison — always processes all bytes
   let result = 0;
   for (let i = 0; i < bufA.length; i++) {
-    result |= bufA[i] ^ bufB[i];
+    result |= (bufA[i] ?? 0) ^ (bufB[i] ?? 0);
   }
   return result === 0;
 }
@@ -50,7 +50,15 @@ function validateCsrfInMiddleware(request: NextRequest): NextResponse | null {
     return null;
   }
 
-  if (request.nextUrl.pathname.startsWith('/api/auth/') || request.nextUrl.pathname === '/api/health') {
+  // F-07 FIX: Only exempt pre-auth endpoints from CSRF validation.
+  // /api/auth/logout and /api/auth/revoke are state-changing and must be protected.
+  const CSRF_EXEMPT_PATHS = new Set([
+    '/api/auth',           // POST login (initial auth, no session yet)
+    '/api/auth/challenge', // POST challenge request (pre-auth)
+    '/api/health',         // Health check
+  ]);
+
+  if (CSRF_EXEMPT_PATHS.has(request.nextUrl.pathname)) {
     return null;
   }
 

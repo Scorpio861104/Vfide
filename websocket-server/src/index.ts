@@ -37,6 +37,11 @@ const ALLOWED_ORIGINS: Set<string> = new Set(
   ALLOWED_ORIGINS_RAW.split(',').map((o) => o.trim()).filter(Boolean),
 );
 
+// F-11 FIX: Reject wildcard origin in production to prevent accidental open-CORS deployment
+if (IS_PRODUCTION && ALLOWED_ORIGINS.has('*')) {
+  throw new Error('[ws] ALLOWED_ORIGINS=* is not permitted in production. Set explicit origin allowlist.');
+}
+
 // ─── Server Setup ──────────────────────────────────────────────────────────
 
 let server: http.Server | https.Server;

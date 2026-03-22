@@ -61,7 +61,8 @@ function isValidUrl(url: string): boolean {
       }
 
       const octets = hostname.split('.').map((v) => Number(v));
-      if (octets.length === 4 && octets[0] === 172 && octets[1] >= 16 && octets[1] <= 31) {
+      const secondOctet = octets.length === 4 ? octets[1] : undefined;
+      if (octets.length === 4 && octets[0] === 172 && typeof secondOctet === 'number' && secondOctet >= 16 && secondOctet <= 31) {
         return false;
       }
     }

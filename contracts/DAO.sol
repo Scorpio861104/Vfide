@@ -50,6 +50,8 @@ contract DAO is ReentrancyGuard {
     event EmergencyQuorumRescueInitiated(uint256 readyAt);
     event EmergencyQuorumRescueExecuted(uint256 newMinVotes, uint256 newMinParticipation);
     event EmergencyQuorumRescueCancelled();
+    event EmergencyTimelockReplacementProposed(address indexed newTimelock, uint64 readyAt);
+    event EmergencyTimelockReplacementExecuted(address indexed newTimelock);
 
     address public admin;
     IDAOTimelock public timelock;
@@ -69,6 +71,10 @@ contract DAO is ReentrancyGuard {
     /// @notice Emergency quorum rescue — breaks governance deadlock when quorum is unreachable
     uint256 public constant EMERGENCY_RESCUE_DELAY = 14 days;
     uint64 public emergencyRescueReadyAt; // 0 = not initiated
+        // F-22 FIX: Emergency timelock replacement for DAO circular dependency recovery
+        uint256 public constant EMERGENCY_TIMELOCK_DELAY = 30 days;
+        address public pendingEmergencyTimelock;
+        uint64  public emergencyTimelockReadyAt;
     mapping(address => uint256) public lastVoteRewardDay;
     mapping(address => uint64) public lastProposalAt;
     mapping(ProposalType => mapping(address => bool)) public proposalTypeTargetAllowed;
@@ -190,8 +196,11 @@ contract DAO is ReentrancyGuard {
     function executeEmergencyQuorumRescue(uint256 _minVotes, uint256 _minParticipation) external onlyAdmin {
         require(emergencyRescueReadyAt != 0, "DAO: no rescue pending");
         require(block.timestamp >= emergencyRescueReadyAt, "DAO: rescue warmup not elapsed");
-        require(_minVotes >= 100 && _minVotes < minVotesRequired, "DAO: must reduce minVotes (>= 100)");
-        require(_minParticipation >= 3 && _minParticipation <= minParticipation, "DAO: must reduce or keep minParticipation (>= 3)");
+        // F-21 FIX: New quorum must be >= 10% of the current value to prevent essentially zeroing quorum
+        require(_minVotes >= minVotesRequired / 10, "DAO: quorum too low (must be >= 10% of current)");
+        require(_minVotes < minVotesRequired, "DAO: must reduce minVotes");
+        require(_minParticipation >= 3, "DAO: min participation too low");
+        require(_minParticipation <= minParticipation, "DAO: must reduce or keep minParticipation");
         
         emergencyRescueReadyAt = 0;
         minVotesRequired = _minVotes;
@@ -201,6 +210,25 @@ contract DAO is ReentrancyGuard {
 
     /// @notice Set minimum spacing between proposals by the same proposer
     function setProposalCooldown(uint64 _cooldown) external onlyTimelock {
+            /// @notice F-22 FIX: Propose a new timelock address for emergency replacement (30-day delay)
+            /// @dev Required when the timelock contract has a bug or key compromise and DAO cannot govern itself.
+            function proposeEmergencyTimelockReplacement(address newTimelock) external onlyAdmin {
+                require(newTimelock != address(0), "DAO: zero");
+                pendingEmergencyTimelock = newTimelock;
+                emergencyTimelockReadyAt = uint64(block.timestamp) + uint64(EMERGENCY_TIMELOCK_DELAY);
+                emit EmergencyTimelockReplacementProposed(newTimelock, emergencyTimelockReadyAt);
+            }
+
+            /// @notice F-22 FIX: Execute emergency timelock replacement after 30-day delay
+            function executeEmergencyTimelockReplacement() external onlyAdmin {
+                require(emergencyTimelockReadyAt > 0 && block.timestamp >= emergencyTimelockReadyAt, "DAO: not ready");
+                address newTimelock = pendingEmergencyTimelock;
+                timelock = IDAOTimelock(newTimelock);
+                delete pendingEmergencyTimelock;
+                delete emergencyTimelockReadyAt;
+                emit EmergencyTimelockReplacementExecuted(newTimelock);
+            }
+
         require(_cooldown <= 30 days, "DAO: cooldown too long");
         proposalCooldown = _cooldown;
         emit ProposalCooldownSet(_cooldown);
@@ -339,6 +367,13 @@ contract DAO is ReentrancyGuard {
             // First vote: take snapshot and store as weight+1
             weight = uint256(seer.getScore(voter));
             p.scoreSnapshot[voter] = weight + 1; // +1 so score-0 is stored as 1, not confused with unset
+                    // F-28 FIX: Require voter's score to have been established before the proposal was created.
+                    // Prevents a coalition of operators from temporarily boosting a voter's score to manipulate vote weight.
+                    uint64 voterLastActivity = seer.lastActivity(voter);
+                    require(
+                        voterLastActivity > 0 && voterLastActivity < p.start - votingDelay,
+                        "DAO: score not stable long enough before proposal"
+                    );
         } else {
             weight = rawSnapshot - 1; // decode: subtract the +1 offset
         }

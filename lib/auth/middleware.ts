@@ -131,6 +131,43 @@ export function isAdmin(user: JWTPayload): boolean {
 }
 
 /**
+ * F-19 FIX: On-chain admin verification for sensitive operations.
+ * Cross-checks the authenticated address against the on-chain OCP owner.
+ * Falls back gracefully if OCP_ADDRESS or RPC_URL is not configured.
+ *
+ * Usage: Call this in addition to requireAdmin() for high-impact admin endpoints.
+ */
+export async function verifyOnChainAdmin(address: string): Promise<boolean> {
+  const ocpAddress = process.env.OCP_ADDRESS;
+  const rpcUrl = process.env.RPC_URL || process.env.NEXT_PUBLIC_RPC_URL;
+  if (!ocpAddress || !rpcUrl) {
+    // On-chain verification not configured — fall back to env-var check only.
+    return ADMIN_ADDRESSES.has(address.toLowerCase());
+  }
+  try {
+    const response = await fetch(rpcUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        jsonrpc: '2.0',
+        method: 'eth_call',
+        params: [{ to: ocpAddress, data: '0x8da5cb5b' }, 'latest'], // owner() selector
+        id: 1,
+      }),
+    });
+    const json = await response.json();
+    if (json.result) {
+      const onChainOwner = ('0x' + json.result.slice(-40)).toLowerCase();
+      return onChainOwner === address.toLowerCase();
+    }
+  } catch {
+    // RPC failure — deny rather than grant on uncertainty
+    return false;
+  }
+  return false;
+}
+
+/**
  * Require admin role
  */
 export async function requireAdmin(request: NextRequest): Promise<{ user: JWTPayload } | NextResponse> {
