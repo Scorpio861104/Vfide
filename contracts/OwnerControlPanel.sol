@@ -188,6 +188,7 @@ contract OwnerControlPanel {
         address _burnRouter,
         address _seer
     ) external onlyOwner {
+        _consumeQueuedAction(keccak256(abi.encode("setContracts", _token, _presale, _vaultHub, _burnRouter, _seer)));
         if (_token != address(0)) vfideToken = IVFIDEToken(_token);
         if (_presale != address(0)) presale = IVFIDEPresaleOCP(_presale);
         if (_vaultHub != address(0)) vaultHub = IVaultHub(_vaultHub);

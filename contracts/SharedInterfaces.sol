@@ -186,6 +186,7 @@ interface IVFIDEToken is IERC20 {
 interface ISeer {
     function getScore(address subject) external view returns (uint16);
     function getCachedScore(address subject) external view returns (uint16); // I-13: Gas-efficient for transfer path
+    function lastActivity(address subject) external view returns (uint64);
     function hasBadge(address subject, bytes32 badge) external view returns (bool);
     function minForGovernance() external view returns (uint16);
     function minForMerchant() external view returns (uint16);

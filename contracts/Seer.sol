@@ -933,8 +933,8 @@ contract Seer {
         dispute.approved = approved;
         
         if (approved && adjustment != 0) {
-            // Apply adjustment directly instead of using _delta which expects calldata
-            uint16 cur = getScore(subject);
+            // Apply against DAO baseline score to avoid double-counting weighted on-chain score.
+            uint16 cur = _score[subject];
             int256 next = int256(uint256(cur)) + int256(adjustment);
             if (next < int256(uint256(MIN_SCORE))) next = int256(uint256(MIN_SCORE));
             if (next > int256(uint256(MAX_SCORE))) next = int256(uint256(MAX_SCORE));

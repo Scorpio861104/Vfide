@@ -1152,9 +1152,9 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
             nextResetTime = resetTime + 24 hours;
         }
     }
-}
 
     /// @notice F-31 FIX: Monitoring helper for burn accounting
     function totalBurnedToDate() external view returns (uint256) {
         return MAX_SUPPLY - totalSupply;
     }
+}

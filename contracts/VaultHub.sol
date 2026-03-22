@@ -353,7 +353,7 @@ contract VaultHub is Ownable, Pausable, ReentrancyGuard {
 
     function _creationCode(address owner_) internal view returns (bytes memory) {
         address[] memory guardians = new address[](1);
-        guardians[0] = owner_;
+        guardians[0] = dao;
 
         return abi.encodePacked(
             type(CardBoundVault).creationCode,

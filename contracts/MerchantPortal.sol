@@ -114,6 +114,8 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
 
     /// Supported payment tokens (VFIDE + stablecoins)
     mapping(address => bool) public acceptedTokens;
+    mapping(address => mapping(address => bool)) public merchantPullApproved; // customer => merchant => approved
+    event MerchantPullApprovalSet(address indexed customer, address indexed merchant, bool approved);
 
     ISwapRouter public swapRouter;
     address public stablecoin; // Target stablecoin (e.g. USDC)
@@ -483,6 +485,7 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
         // Get customer's vault
         address customerVault = vaultHub.vaultOf(customer);
         require(customerVault != address(0), "no vault");
+        require(merchantPullApproved[customer][msg.sender], "merchant not approved by customer");
         
         // Security check
         if (address(securityHub) != address(0) && securityHub.isLocked(customerVault)) {
@@ -521,6 +524,13 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
         );
         
         _logEv(customer, "merchant_payment", amount, orderId);
+    }
+
+    /// @notice Allow or revoke merchant permission to initiate pulls from your vault via processPayment.
+    function setMerchantPullApproval(address merchant, bool approved) external {
+        if (!merchants[merchant].registered) revert MERCH_NotRegistered();
+        merchantPullApproved[msg.sender][merchant] = approved;
+        emit MerchantPullApprovalSet(msg.sender, merchant, approved);
     }
 
     /**

@@ -208,27 +208,27 @@ contract DAO is ReentrancyGuard {
         emit EmergencyQuorumRescueExecuted(_minVotes, _minParticipation);
     }
 
+    /// @notice F-22 FIX: Propose a new timelock address for emergency replacement (30-day delay)
+    /// @dev Required when the timelock contract has a bug or key compromise and DAO cannot govern itself.
+    function proposeEmergencyTimelockReplacement(address newTimelock) external onlyAdmin {
+        require(newTimelock != address(0), "DAO: zero");
+        pendingEmergencyTimelock = newTimelock;
+        emergencyTimelockReadyAt = uint64(block.timestamp) + uint64(EMERGENCY_TIMELOCK_DELAY);
+        emit EmergencyTimelockReplacementProposed(newTimelock, emergencyTimelockReadyAt);
+    }
+
+    /// @notice F-22 FIX: Execute emergency timelock replacement after 30-day delay
+    function executeEmergencyTimelockReplacement() external onlyAdmin {
+        require(emergencyTimelockReadyAt > 0 && block.timestamp >= emergencyTimelockReadyAt, "DAO: not ready");
+        address newTimelock = pendingEmergencyTimelock;
+        timelock = IDAOTimelock(newTimelock);
+        delete pendingEmergencyTimelock;
+        delete emergencyTimelockReadyAt;
+        emit EmergencyTimelockReplacementExecuted(newTimelock);
+    }
+
     /// @notice Set minimum spacing between proposals by the same proposer
     function setProposalCooldown(uint64 _cooldown) external onlyTimelock {
-            /// @notice F-22 FIX: Propose a new timelock address for emergency replacement (30-day delay)
-            /// @dev Required when the timelock contract has a bug or key compromise and DAO cannot govern itself.
-            function proposeEmergencyTimelockReplacement(address newTimelock) external onlyAdmin {
-                require(newTimelock != address(0), "DAO: zero");
-                pendingEmergencyTimelock = newTimelock;
-                emergencyTimelockReadyAt = uint64(block.timestamp) + uint64(EMERGENCY_TIMELOCK_DELAY);
-                emit EmergencyTimelockReplacementProposed(newTimelock, emergencyTimelockReadyAt);
-            }
-
-            /// @notice F-22 FIX: Execute emergency timelock replacement after 30-day delay
-            function executeEmergencyTimelockReplacement() external onlyAdmin {
-                require(emergencyTimelockReadyAt > 0 && block.timestamp >= emergencyTimelockReadyAt, "DAO: not ready");
-                address newTimelock = pendingEmergencyTimelock;
-                timelock = IDAOTimelock(newTimelock);
-                delete pendingEmergencyTimelock;
-                delete emergencyTimelockReadyAt;
-                emit EmergencyTimelockReplacementExecuted(newTimelock);
-            }
-
         require(_cooldown <= 30 days, "DAO: cooldown too long");
         proposalCooldown = _cooldown;
         emit ProposalCooldownSet(_cooldown);

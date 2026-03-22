@@ -765,6 +765,7 @@ contract UserVaultLegacy is ReentrancyGuard {
     // ——— Generic Execution (Smart Account)
     function execute(address target, uint256 value, bytes calldata data) external onlyOwner notLocked notFrozen noActiveClaims nonReentrant returns (bytes memory result) {
         if (target == address(0)) revert UV_Zero();
+        require(target != vfideToken, "UV:use-transferVFIDE");
         
         require(value <= maxExecuteValue, "UV:value-exceeds-max");
         
@@ -812,6 +813,7 @@ contract UserVaultLegacy is ReentrancyGuard {
         results = new bytes[](targets.length);
         for (uint256 i = 0; i < targets.length; i++) {
             if (targets[i] == address(0)) revert UV_Zero();
+            require(targets[i] != vfideToken, "UV:use-transferVFIDE");
             require(targets[i] != address(this), "UV:self-call");
             require(values[i] <= maxExecuteValue, "UV:value-exceeds-max");
             if (executeWhitelistEnforced) {

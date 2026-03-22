@@ -282,6 +282,7 @@ contract PanicGuard {
     address public securityHub;
     // per-vault quarantine until timestamp (0 = not quarantined)
     mapping(address => uint64) public quarantineUntil;
+    mapping(address => uint64) public selfPanicUntil;
     
     // C-10: Self-panic rate limiting
     mapping(address => uint256) public lastSelfPanic;
@@ -371,6 +372,13 @@ contract PanicGuard {
         
         lastSelfPanic[msg.sender] = block.timestamp;
         
+        // Track self-panic window so cancelSelfPanic cannot clear DAO-imposed quarantines.
+        uint64 appliedDuration = duration;
+        if (appliedDuration < minDuration) appliedDuration = minDuration;
+        if (appliedDuration > maxDuration) appliedDuration = maxDuration;
+        uint64 selfUntil = uint64(block.timestamp) + appliedDuration;
+        selfPanicUntil[vault] = selfUntil;
+
         // User can set any duration within policy limits
         _quarantine(vault, duration, 100, "self_panic");
     }
@@ -384,7 +392,10 @@ contract PanicGuard {
         require(quarantineUntil[vault] > block.timestamp, "not quarantined");
         // Must wait at least 1 hour (prevents abuse / accidental toggle)
         require(block.timestamp >= lastSelfPanic[msg.sender] + 1 hours, "SEC: cancel too soon");
+        require(selfPanicUntil[vault] != 0, "SEC: no self panic");
+        require(quarantineUntil[vault] == selfPanicUntil[vault], "SEC: overridden quarantine");
         quarantineUntil[vault] = 0;
+        delete selfPanicUntil[vault];
         emit Cleared(vault, "self_panic_cancelled");
         _logEv(vault, "self_panic_cancelled", 0, "user_cancel");
     }
@@ -405,6 +416,7 @@ contract PanicGuard {
 
     function clear(address vault, string calldata reason) external onlyDAO {
         quarantineUntil[vault] = 0;
+        delete selfPanicUntil[vault];
         emit Cleared(vault, reason);
         _logEv(vault, "panic_cleared", 0, reason);
     }

@@ -640,11 +640,6 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
         return userStats[_user];
     }
 
-    function renounceOwnership() public view override onlyOwner {
-        revert("VFIDEBridge: renounce disabled");
-    }
-}
-
     /**
      * @notice F-25 FIX: Claim a refund for a stuck bridge transaction.
      * @dev If the destination bridge never executed the transfer (insufficient liquidity),
@@ -666,19 +661,25 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
 
         vfideToken.safeTransfer(msg.sender, amount);
         emit BridgeRefunded(msg.sender, txId, amount);
-
-        /**
-         * @notice F-25 FIX: Admin can cancel a refund window after confirming the bridge delivery succeeded.
-         * @dev Used when destination execution was confirmed but source bridge doesn't receive a callback.
-         */
-        function adminMarkBridgeExecuted(bytes32 txId) external onlyOwner {
-            require(bridgeRefundableAfter[txId] > 0, "VFIDEBridge: no refund window");
-            BridgeTransaction storage btx = bridgeTransactions[txId];
-            require(!btx.executed, "VFIDEBridge: already executed");
-            btx.executed = true;
-            delete bridgeRefundableAfter[txId];
-        }
     }
+
+    /**
+     * @notice F-25 FIX: Admin can cancel a refund window after confirming the bridge delivery succeeded.
+     * @dev Used when destination execution was confirmed but source bridge doesn't receive a callback.
+     */
+    function adminMarkBridgeExecuted(bytes32 txId) external onlyOwner {
+        require(bridgeRefundableAfter[txId] > 0, "VFIDEBridge: no refund window");
+        BridgeTransaction storage btx = bridgeTransactions[txId];
+        require(!btx.executed, "VFIDEBridge: already executed");
+        btx.executed = true;
+        delete bridgeRefundableAfter[txId];
+    }
+
+    function renounceOwnership() public view override onlyOwner {
+        revert("VFIDEBridge: renounce disabled");
+    }
+
+}
 
 /**
  * @notice Interface for BridgeSecurityModule

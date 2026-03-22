@@ -549,15 +549,25 @@ contract SeerAutonomous is ReentrancyGuard {
             }
         }
         
-        // Check for circular patterns (A→B→A)
-        if (counterparty != address(0)) {
+        // Check for circular patterns (A<->B recurring both directions), not normal repeated merchant payments.
+        if (action == ActionType.Transfer && counterparty != address(0)) {
+            ActivityWindow storage cpWindow = activityWindows[counterparty];
+            bool seenCounterpartyBefore = false;
+            bool seenSubjectFromCounterparty = false;
             for (uint256 i = 0; i < window.recentCounterparties.length; i++) {
                 if (window.recentCounterparties[i] == counterparty) {
-                    // Same counterparty multiple times
-                    if (i > 0) {
-                        return PatternType.CircularTransfers;
-                    }
+                    seenCounterpartyBefore = true;
+                    break;
                 }
+            }
+            for (uint256 j = 0; j < cpWindow.recentCounterparties.length; j++) {
+                if (cpWindow.recentCounterparties[j] == subject) {
+                    seenSubjectFromCounterparty = true;
+                    break;
+                }
+            }
+            if (seenCounterpartyBefore && seenSubjectFromCounterparty) {
+                return PatternType.CircularTransfers;
             }
         }
         
