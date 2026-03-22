@@ -200,6 +200,9 @@ contract UserVaultLegacy is ReentrancyGuard {
         require(msg.sender == hub, "UV:onlyHub");
         if (newOwner == address(0)) revert UV_Zero();
         owner = newOwner;
+        
+        // VI-04 FIX: Reset ALL security state when owner is forced (prevent recovery/inheritance exploits after transfer)
+        
         // Reset any active inheritance to prevent nextOfKin from draining after recovery
         if (_inheritance.active) {
             _inheritance.active = false;
@@ -209,6 +212,17 @@ contract UserVaultLegacy is ReentrancyGuard {
             _inheritance.guardianCountSnapshot = 0;
             _inheritance.ownerDenied = false;
         }
+        
+        // Reset any active recovery to prevent old claimants from finalizing after ownership transfer
+        if (_recovery.proposedOwner != address(0)) {
+            _recovery.proposedOwner = address(0);
+            _recovery.approvals = 0;
+            _recovery.readyTime = 0;
+            _recovery.expiryTime = 0;
+            _recovery.guardianCountSnapshot = 0;
+            _recovery.nonce++;
+        }
+        
         _logSys("vault_force_owner");
         emit OwnerSet(newOwner);
     }
