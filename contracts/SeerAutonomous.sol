@@ -630,15 +630,12 @@ contract SeerAutonomous is ReentrancyGuard {
         // Escalating response based on violation count
         if (count >= 5) {
             _applyRestriction(subject, RestrictionLevel.Suspended, 7 days, "repeated_pattern_violation", RC_REPEATED_PATTERN);
-            _punish(subject, 200, "repeated_pattern_violation");
             return EnforcementResult.Blocked;
         } else if (count >= 3) {
             _applyRestriction(subject, RestrictionLevel.Restricted, 3 days, "pattern_violation", RC_PATTERN_VIOLATION);
-            _punish(subject, 100, "pattern_violation");
             return EnforcementResult.Blocked;
         } else if (count >= 2) {
             _applyRestriction(subject, RestrictionLevel.Limited, 1 days, "suspicious_pattern", RC_SUSPICIOUS_PATTERN);
-            _punish(subject, 50, "suspicious_pattern");
             return EnforcementResult.Delayed;
         } else {
             _applyRestriction(subject, RestrictionLevel.Monitored, 6 hours, "pattern_detected", RC_PATTERN_DETECTED);
