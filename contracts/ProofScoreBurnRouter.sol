@@ -31,6 +31,17 @@ contract ProofScoreBurnRouter is Ownable, Pausable {
     address public sanctumSink;   // SanctumVault address
     address public burnSink;      // Optional burn sink (if zero, hard burn to address(0))
     address public ecosystemSink; // EcosystemVault address
+    
+    // BR-04 FIX: Pending modules with timelock to prevent instant sink replacement
+    uint64 public constant MODULE_CHANGE_DELAY = 7 days;
+    struct PendingModules {
+        address seer_;
+        address sanctumSink_;
+        address burnSink_;
+        address ecosystemSink_;
+    }
+    PendingModules public pendingModules;
+    uint64 public pendingModulesAt;
 
     // Policy: basis points (100 = 1%)
     uint16 public constant DEFAULT_BURN_BPS = 150;  // 1.5% base burn
@@ -253,7 +264,44 @@ contract ProofScoreBurnRouter is Ownable, Pausable {
 
     // ─────────────────────────── Admin
 
+    /// @notice BR-04 FIX: Propose new modules (takes effect after timelock)
+    function proposeModules(address _seer, address _sanctumSink, address _burnSink, address _ecosystemSink) external onlyOwner {
+        if (_seer == address(0)) revert BURN_Zero();
+        if (_sanctumSink == address(0) || _burnSink == address(0) || _ecosystemSink == address(0)) {
+            revert BURN_Zero();
+        }
+        pendingModules = PendingModules({
+            seer_: _seer,
+            sanctumSink_: _sanctumSink,
+            burnSink_: _burnSink,
+            ecosystemSink_: _ecosystemSink
+        });
+        pendingModulesAt = uint64(block.timestamp) + MODULE_CHANGE_DELAY;
+    }
+
+    /// @notice BR-04 FIX: Apply pending modules after timelock expires
+    function applyModules() external onlyOwner {
+        require(pendingModulesAt != 0 && block.timestamp >= pendingModulesAt, "BR: timelock");
+        seer = ISeer(pendingModules.seer_);
+        sanctumSink = pendingModules.sanctumSink_;
+        burnSink = pendingModules.burnSink_;
+        ecosystemSink = pendingModules.ecosystemSink_;
+        emit ModulesSet(address(seer), sanctumSink, burnSink, ecosystemSink);
+        delete pendingModules;
+        delete pendingModulesAt;
+    }
+
+    /// @notice Cancel pending modules change
+    function cancelProposeModules() external onlyOwner {
+        delete pendingModules;
+        delete pendingModulesAt;
+    }
+
+    // ─────────────────────────── Admin (LEGACY - kept for compatibility, use proposeModules + applyModules)
+    
     function setModules(address _seer, address _sanctumSink, address _burnSink, address _ecosystemSink) external onlyOwner {
+        // For backwards compatibility during transition, allow instant set if no pending proposal exists
+        if (pendingModulesAt != 0) revert("BR: use applyModules for pending, or cancelProposeModules");
         if (_seer == address(0)) revert BURN_Zero();
         if (_sanctumSink == address(0) || _burnSink == address(0) || _ecosystemSink == address(0)) {
             revert BURN_Zero();
