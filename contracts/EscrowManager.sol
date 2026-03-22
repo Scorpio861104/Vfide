@@ -68,12 +68,13 @@ contract EscrowManager is ReentrancyGuard {
     address public pendingArbiter;
     uint256 public arbiterChangeTime;
     uint256 public constant ARBITER_TIMELOCK = 7 days;
+    uint256 public constant DISPUTE_TIMEOUT = 90 days;
 
     constructor(address _arbiter, address _seer) {
         require(_arbiter != address(0) && _seer != address(0), "zero address");
         arbiter = _arbiter;
         seer = ISeer(_seer);
-        dao = _arbiter; // Initially DAO is arbiter
+        dao = msg.sender; // Keep DAO governance independent from arbiter role
         // C-2 FIX: Initialize arbiterChangeTime to max to prevent instant execution
         arbiterChangeTime = type(uint256).max;
     }
@@ -343,5 +344,17 @@ contract EscrowManager is ReentrancyGuard {
         }
         
         emit DisputeResolvedPartial(id, buyerAmount, merchantAmount);
+    }
+
+    /// @notice Fallback resolution path if a dispute is deadlocked for too long.
+    /// @dev Returns funds to buyer after long unresolved period.
+    function timeoutResolve(uint256 id) external nonReentrant {
+        Escrow storage e = escrows[id];
+        require(e.state == State.DISPUTED, "not disputed");
+        require(block.timestamp >= e.createdAt + DISPUTE_TIMEOUT, "ESC: timeout not reached");
+
+        e.state = State.REFUNDED;
+        IERC20(e.token).safeTransfer(e.buyer, e.amount);
+        emit DisputeResolved(id, e.buyer);
     }
 }

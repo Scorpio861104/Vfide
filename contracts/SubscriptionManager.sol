@@ -226,9 +226,14 @@ contract SubscriptionManager is ReentrancyGuard {
         if (sub.paused) revert SM_SubscriptionPaused(); // Cannot process while paused
         if (block.timestamp < sub.nextPayment) revert SM_PaymentTooEarly();
 
-        // During the merchant-exclusive window only the merchant may trigger
+        // During the merchant-exclusive window only the merchant may trigger.
         if (block.timestamp < sub.nextPayment + MERCHANT_EXCLUSIVE_WINDOW) {
             if (msg.sender != sub.merchant) revert SM_NotMerchant();
+        } else {
+            // After the exclusive window, only merchant/subscriber/DAO may trigger.
+            if (msg.sender != sub.merchant && msg.sender != sub.subscriber && msg.sender != dao) {
+                revert SM_NotAuthorized();
+            }
         }
         
         // Check grace period

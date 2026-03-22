@@ -255,6 +255,7 @@ contract CouncilManager is ReentrancyGuard {
      */
     function distributePayments() external onlyKeeper nonReentrant {
         require(block.timestamp >= lastPaymentTime + paymentInterval, "CM: too soon");
+        IEcosystemVault(ecosystemVault).allocateIncoming();
         
         uint256 vaultBalance = token.balanceOf(ecosystemVault);
         require(vaultBalance > 0, "CM: no funds");
@@ -296,6 +297,7 @@ contract CouncilManager is ReentrancyGuard {
      * Council payments are employment compensation (not investment returns)
      */
     function forcePaymentDistribution() external onlyDAO {
+        IEcosystemVault(ecosystemVault).allocateIncoming();
         uint256 vaultBalance = token.balanceOf(ecosystemVault);
         require(vaultBalance > 0, "CM: no funds");
 

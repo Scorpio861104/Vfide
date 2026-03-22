@@ -203,6 +203,7 @@ interface ISeer {
 }
 
 interface IEcosystemVault {
+    function allocateIncoming() external;
     function payExpense(address recipient, uint256 amount, string calldata reason) external;
     function payMerchantWorkReward(address worker, uint256 amount, string calldata reason) external;
     function payReferralWorkReward(address worker, uint256 amount, string calldata reason) external;

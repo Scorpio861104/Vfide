@@ -58,6 +58,7 @@ contract SeerPolicyGuard {
     function schedulePolicyChange(bytes4 selector, uint8 pclass) external onlyDAO returns (bytes32 changeId, uint64 readyAt) {
         if (selector == bytes4(0) || pclass > POLICY_CLASS_OPERATIONAL) revert SPG_InvalidState();
         changeId = getPolicyChangeId(selector, pclass);
+        if (policyChangeReadyAt[changeId] != 0) revert SPG_InvalidState();
         readyAt = uint64(block.timestamp + _policyDelay(pclass));
         policyChangeReadyAt[changeId] = readyAt;
         emit PolicyChangeScheduled(changeId, selector, pclass, readyAt);

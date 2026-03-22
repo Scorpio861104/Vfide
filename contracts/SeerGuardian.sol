@@ -144,6 +144,7 @@ contract SeerGuardian {
     mapping(address => bool) public daoOverridden;  // DAO has overridden automatic action
     
     // Violation tracking for escalating penalties
+    mapping(address => uint64) public lastEnforceCheck;
     mapping(address => mapping(ViolationType => uint8)) public violationCount;
     mapping(address => uint64) public lastViolationTime;
     
@@ -239,6 +240,8 @@ contract SeerGuardian {
      */
     function checkAndEnforce(address subject) external {
         if (daoOverridden[subject]) return; // DAO has overridden, skip auto-enforcement
+        require(block.timestamp >= lastEnforceCheck[subject] + 1 hours, "SG: cooldown");
+        lastEnforceCheck[subject] = uint64(block.timestamp);
         
         uint16 score = seer.getScore(subject);
         RestrictionType currentRestriction = activeRestriction[subject];
