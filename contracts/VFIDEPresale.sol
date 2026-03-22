@@ -457,17 +457,28 @@ contract VFIDEPresale is ReentrancyGuard {
         IERC20(stablecoin).safeTransferFrom(msg.sender, TREASURY, amount);
         uint256 received = IERC20(stablecoin).balanceOf(TREASURY) - treasuryBefore;
         
+        // Recompute USD from actual received amount to support fee-on-transfer tokens.
+        uint256 actualUsdAmount;
+        if (decimals == 6) {
+            actualUsdAmount = received;
+        } else if (decimals == 18) {
+            actualUsdAmount = (received + 1e12 - 1) / 1e12;
+        } else {
+            actualUsdAmount = (received * 1e6) / (10 ** decimals);
+        }
+        require(actualUsdAmount >= MIN_PURCHASE_USD, "Below minimum ($10)");
+
         // Track contribution for potential refunds
         stableContributed[msg.sender][stablecoin] += received;
-        usdContributed[msg.sender] += usdAmount;
-        totalUsdRaised += usdAmount;
-                // F-29 FIX: Update high-water mark
-                if (totalUsdRaised > highWaterMarkUsdRaised) {
-                    highWaterMarkUsdRaised = totalUsdRaised;
-                }
-        
+        usdContributed[msg.sender] += actualUsdAmount;
+        totalUsdRaised += actualUsdAmount;
+        // F-29 FIX: Update high-water mark
+        if (totalUsdRaised > highWaterMarkUsdRaised) {
+            highWaterMarkUsdRaised = totalUsdRaised;
+        }
+
         // Process purchase with tier pricing
-        uint256 baseTokens = calculateTokensFromUsdTier(usdAmount, tier);
+        uint256 baseTokens = calculateTokensFromUsdTier(actualUsdAmount, tier);
 
         // Validate lock-period rules per tier
         if (tier == 0) {
@@ -547,11 +558,11 @@ contract VFIDEPresale is ReentrancyGuard {
             ethPaid: 0,
             stablecoin: stablecoin,
             stablePaid: received,
-            usdEquiv: usdAmount
+            usdEquiv: actualUsdAmount
         }));
         
         emit StablePurchase(msg.sender, stablecoin, lockPeriod, amount, baseTokens, 0, purchases[msg.sender].length - 1);
-        emit TieredPurchase(msg.sender, tier, baseTokens, usdAmount);
+        emit TieredPurchase(msg.sender, tier, baseTokens, actualUsdAmount);
     }
     
     /**
