@@ -1050,9 +1050,6 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
 
         _allocateIncoming();
         if (operationsPool < amount) revert ECO_InsufficientFunds();
-
-        operationsPool -= amount;
-        totalExpensesPaid += amount;
         
         // If auto-swap is enabled and configured, convert VFIDE to stablecoin
         if (autoSwapEnabled && swapRouter != address(0) && preferredStablecoin != address(0)) {
@@ -1060,6 +1057,8 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
             if (stableReceived > 0) {
                 // Successfully swapped, transfer stablecoin to recipient
                 IERC20(preferredStablecoin).safeTransfer(recipient, stableReceived);
+                operationsPool -= amount;
+                totalExpensesPaid += amount;
                 emit RewardPaidInStable(recipient, amount, stableReceived, reason);
                 return;
             } else {
@@ -1070,6 +1069,8 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
         
         // Default: pay in VFIDE (no swap or swap failed)
         rewardToken.safeTransfer(recipient, amount);
+        operationsPool -= amount;
+        totalExpensesPaid += amount;
         emit PaymentMade(recipient, amount, reason);
     }
     
