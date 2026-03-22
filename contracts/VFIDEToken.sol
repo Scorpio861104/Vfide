@@ -356,6 +356,7 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
 
     /// F-05 FIX: setLedger now uses 48h timelock (matches all other module setters)
     function setLedger(address _ledger) external onlyOwner {
+        if (policyLocked && _ledger == address(0)) revert VF_POLICY_LOCKED();
         uint64 effectiveAt = uint64(block.timestamp) + SINK_CHANGE_DELAY;
         pendingLedger = _ledger;
         pendingLedgerAt = effectiveAt;
@@ -468,6 +469,7 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
     /// @notice Propose whitelist entry with 48-hour timelock (grants bypass of vault-only)
     function proposeWhitelist(address addr, bool status) external onlyOwner {
         require(addr != address(0), "VF: zero address");
+        require(pendingWhitelistAt == 0, "VF: pending whitelist exists");
         pendingWhitelistAddr = addr;
         pendingWhitelistStatus = status;
         pendingWhitelistAt = uint64(block.timestamp) + SINK_CHANGE_DELAY;
@@ -848,7 +850,11 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
 
     function _vaultOfAddr(address a) internal view returns (address) {
         if (address(vaultHub) == address(0)) return address(0);
-        return vaultHub.vaultOf(a);
+        try vaultHub.vaultOf(a) returns (address vault) {
+            return vault;
+        } catch {
+            return address(0);
+        }
     }
 
     function _locked(address vault) internal view returns (bool) {

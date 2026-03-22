@@ -60,8 +60,13 @@ contract Seer {
     event SeerSocialSet(address indexed seerSocial);
     event SeerAutonomousSet(address indexed seerAutonomous);
     event PolicyVersionUpdated(bytes32 indexed policyHash, string policyURI, address indexed updatedBy);
+    event DAOChangeProposed(address indexed newDAO, uint64 effectiveAt);
+    event DAOChangeCancelled();
 
     address public dao;
+    address public pendingDAO;
+    uint64 public pendingDAOAt;
+    uint64 public constant DAO_CHANGE_DELAY = 48 hours;
     ProofLedger public ledger;
     IVaultHub_Trust public vaultHub;
     
@@ -263,10 +268,26 @@ contract Seer {
      */
     function setDAO(address newDAO) external onlyDAO {
         if (newDAO == address(0)) revert TRUST_Zero();
+        pendingDAO = newDAO;
+        pendingDAOAt = uint64(block.timestamp) + DAO_CHANGE_DELAY;
+        emit DAOChangeProposed(newDAO, pendingDAOAt);
+    }
+
+    function applyDAOChange() external onlyDAO {
+        require(pendingDAOAt != 0 && block.timestamp >= pendingDAOAt, "SEER: timelock");
         address oldDAO = dao;
-        dao = newDAO;
-        emit DAOSet(oldDAO, newDAO);
+        dao = pendingDAO;
+        delete pendingDAO;
+        delete pendingDAOAt;
+        emit DAOSet(oldDAO, dao);
         _logSystem();
+    }
+
+    function cancelDAOChange() external onlyDAO {
+        require(pendingDAOAt != 0, "SEER: no pending DAO");
+        delete pendingDAO;
+        delete pendingDAOAt;
+        emit DAOChangeCancelled();
     }
     
     /**
@@ -1033,7 +1054,10 @@ contract Seer {
         uint64 daysInactive,
         uint16 decayAmount
     ) {
-        uint16 rawScore = getScore(subject);
+        uint16 rawScore = _score[subject];
+        if (rawScore < MIN_SCORE) {
+            rawScore = calculateAutomatedScore(subject);
+        }
         uint64 lastAct = lastActivity[subject];
         
         // No activity recorded = no decay (new user)

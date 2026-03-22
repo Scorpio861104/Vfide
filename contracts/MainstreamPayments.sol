@@ -71,6 +71,8 @@ contract FiatRampRegistry {
     // Trust score bonuses for verified ramp users
     uint16 public constant FIRST_RAMP_BONUS = 50;
     uint16 public constant RAMP_TX_BONUS = 5;
+    uint256 public constant MAX_RAMP_REWARDS_PER_PROVIDER_USER = 5;
+    mapping(address => mapping(address => uint256)) public rampRewardCount;
     
     modifier onlyDAO() {
         require(msg.sender == dao, "FRR: not DAO");
@@ -220,6 +222,8 @@ contract FiatRampRegistry {
     
     function _rewardRampUser(address user) internal {
         if (address(seer) == address(0)) return;
+        if (rampRewardCount[msg.sender][user] >= MAX_RAMP_REWARDS_PER_PROVIDER_USER) return;
+        rampRewardCount[msg.sender][user]++;
         
         uint16 currentScore = seer.getScore(user);
         if (currentScore < 100) {
@@ -312,6 +316,11 @@ contract MainstreamPriceOracle {
      */
     function forceSetPrice(uint256 newPrice) external onlyDAO {
         require(newPrice > 0, "PO: zero price");
+        uint256 maxChange = vfidePerUsd / 2;
+        require(
+            newPrice >= vfidePerUsd - maxChange && newPrice <= vfidePerUsd + maxChange,
+            "PO: price change too large"
+        );
         vfidePerUsd = newPrice;
         lastUpdateTime = block.timestamp;
         emit PriceUpdated(newPrice, block.timestamp, msg.sender);
@@ -850,6 +859,8 @@ contract TerminalRegistry {
      */
     function recordPayment(bytes32 terminalId, address customer, uint256 amount) external {
         Terminal storage t = terminals[terminalId];
+        require(t.merchant != address(0), "TR: terminal not found");
+        require(msg.sender == t.merchant || msg.sender == dao, "TR: not authorized");
         require(t.active, "TR: terminal inactive");
         
         t.txCount++;
@@ -951,6 +962,7 @@ contract MultiCurrencyRouter {
     address public dao;
     address public vfideToken;
     MainstreamPriceOracle public priceOracle;
+    mapping(address => bool) public authorizedRecorder;
     
     // Recommended DEX routers (user chooses which to use)
     address public recommendedRouter;  // e.g., Uniswap V3 Router
@@ -987,6 +999,7 @@ contract MultiCurrencyRouter {
         vfideToken = _vfide;
         priceOracle = MainstreamPriceOracle(_priceOracle);
         recommendedRouter = _recommendedRouter;
+        authorizedRecorder[_dao] = true;
         
         // VFIDE doesn't need routing
         routes[_vfide] = TokenRoute({
@@ -1038,6 +1051,11 @@ contract MultiCurrencyRouter {
         address old = recommendedRouter;
         recommendedRouter = router;
         emit SwapRouterUpdated(old, router);
+    }
+
+    function setAuthorizedRecorder(address recorder, bool authorized) external onlyDAO {
+        require(recorder != address(0), "MCR: zero recorder");
+        authorizedRecorder[recorder] = authorized;
     }
     
     // ═══════════════════════════════════════════════════════════════════════
@@ -1107,6 +1125,7 @@ contract MultiCurrencyRouter {
         uint256 paymentAmount,
         string calldata orderId
     ) external {
+        require(authorizedRecorder[msg.sender], "MCR: not authorized");
         emit DirectPaymentRecorded(msg.sender, merchant, paymentToken, paymentAmount, orderId);
     }
     

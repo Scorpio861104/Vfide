@@ -166,6 +166,8 @@ contract GuardianLock {
     mapping(address => bool) public locked;
     // vault => guardian count snapshot (set on first vote of a round)
     mapping(address => uint8) public lockGuardianSnapshot;
+    // vault => threshold snapshot (set on first vote of a round)
+    mapping(address => uint8) public lockThresholdSnapshot;
 
     modifier onlyDAO() { _checkDAOGL(); _; }
     function _checkDAOGL() internal view { if (msg.sender != dao) revert SEC_NotDAO(); }
@@ -204,7 +206,14 @@ contract GuardianLock {
 
         // Snapshot guardian count on first vote to prevent threshold manipulation
         if (a == 1) {
-            lockGuardianSnapshot[vault] = registry.guardianCount(vault);
+            uint8 n = registry.guardianCount(vault);
+            lockGuardianSnapshot[vault] = n;
+            uint8 t = registry.threshold(vault);
+            if (t == 0) {
+                lockThresholdSnapshot[vault] = uint8((uint256(n) + 1) / 2);
+            } else {
+                lockThresholdSnapshot[vault] = t > n ? n : t;
+            }
         }
 
         uint8 needed = _guardiansNeededFromSnapshot(vault);
@@ -213,6 +222,7 @@ contract GuardianLock {
             emit Locked(vault, msg.sender, a, reason);
             approvals[vault] = 0;
             lockGuardianSnapshot[vault] = 0;
+            lockThresholdSnapshot[vault] = 0;
             lockNonce[vault]++;
             _logEv(vault, "guardian_lock", a, reason);
         } else {
@@ -229,6 +239,7 @@ contract GuardianLock {
         locked[vault] = false;
         approvals[vault] = 0;
         lockGuardianSnapshot[vault] = 0;
+        lockThresholdSnapshot[vault] = 0;
         lockNonce[vault]++; // Increment nonce to invalidate previous votes
         emit Unlocked(vault, msg.sender, reason);
         _logEv(vault, "guardian_unlock", 0, reason);
@@ -238,6 +249,7 @@ contract GuardianLock {
     function cancel(address vault) external onlyDAO {
         approvals[vault] = 0;
         lockGuardianSnapshot[vault] = 0;
+        lockThresholdSnapshot[vault] = 0;
         lockNonce[vault]++; // Increment nonce to invalidate previous votes
         emit Cancelled(vault, msg.sender);
         _logEv(vault, "guardian_cancel", 0, "");
@@ -247,12 +259,8 @@ contract GuardianLock {
     function _guardiansNeededFromSnapshot(address vault) internal view returns (uint8 needed) {
         uint8 n = lockGuardianSnapshot[vault];
         if (n == 0) return 0;
-        uint8 t = registry.threshold(vault);
-        if (t == 0) {
-            needed = uint8((uint256(n) + 1) / 2);
-        } else {
-            needed = t;
-        }
+        needed = lockThresholdSnapshot[vault];
+        if (needed == 0) needed = uint8((uint256(n) + 1) / 2);
         if (needed > n) needed = n;
     }
 
@@ -546,6 +554,10 @@ contract SecurityHub {
     }
 
     function setModules(address _guardianLock, address _panicGuard, address _breaker, address _ledger) external onlyDAO {
+        require(
+            _guardianLock != address(0) || _panicGuard != address(0) || _breaker != address(0),
+            "SEC: all modules zero"
+        );
         guardianLock = GuardianLock(_guardianLock);
         panicGuard   = PanicGuard(_panicGuard);
         breaker      = EmergencyBreaker(_breaker);

@@ -90,8 +90,8 @@ contract OwnerControlPanel {
     IEcosystemVaultAdmin public ecosystemVault;
 
     uint256 public governanceDelay = 1 days;
-    uint256 public constant MIN_GOVERNANCE_DELAY = 1 hours;
-    uint256 public constant MAX_GOVERNANCE_DELAY = 7 days;
+    uint256 public constant MIN_GOVERNANCE_DELAY = 24 hours;
+    uint256 public constant MAX_GOVERNANCE_DELAY = 30 days;
 
     uint16 public maxAutoSwapSlippageBps = 500;
     uint16 public constant MAX_ALLOWED_AUTOSWAP_SLIPPAGE_BPS = 2000;
@@ -204,6 +204,7 @@ contract OwnerControlPanel {
     function setEcosystemContracts(
         address _ecosystemVault
     ) external onlyOwner {
+        _consumeQueuedAction(keccak256(abi.encode("setEcosystemContracts", _ecosystemVault)));
         if (_ecosystemVault != address(0)) ecosystemVault = IEcosystemVaultAdmin(_ecosystemVault);
         emit EcosystemContractsUpdated(_ecosystemVault);
     }
@@ -226,6 +227,9 @@ contract OwnerControlPanel {
             revert OCP_InvalidRange();
         }
         uint256 oldDelay = governanceDelay;
+        if (newDelay < oldDelay) {
+            require(newDelay >= oldDelay / 2, "OCP: max 50% reduction");
+        }
         governanceDelay = newDelay;
         emit GovernanceDelayUpdated(oldDelay, newDelay);
     }
@@ -347,6 +351,13 @@ contract OwnerControlPanel {
         if (security != address(0)) vfideToken.setSecurityHub(security);
         if (ledger != address(0)) vfideToken.setLedger(ledger);
         if (router != address(0)) vfideToken.setBurnRouter(router);
+    }
+
+    function token_applyModules() external onlyOwner {
+        vfideToken.applyVaultHub();
+        vfideToken.applySecurityHub();
+        vfideToken.applyLedger();
+        vfideToken.applyBurnRouter();
     }
     
     /**
@@ -926,7 +937,7 @@ contract OwnerControlPanel {
         totalSupply = vfideToken.totalSupply();
         vaultOnly = vfideToken.vaultOnly();
         policyLocked = vfideToken.policyLocked();
-        circuitBreaker = vfideToken.circuitBreaker();
+        circuitBreaker = vfideToken.isCircuitBreakerActive();
         if (devReserveVault != address(0)) {
             devReserveBalance = vfideToken.balanceOf(devReserveVault);
         } else {

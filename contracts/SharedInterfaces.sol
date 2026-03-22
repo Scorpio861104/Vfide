@@ -154,8 +154,12 @@ interface IERC20 {
 interface IVFIDEToken is IERC20 {
     function setSecurityHub(address hub) external;
     function setVaultHub(address hub) external;
+    function applyVaultHub() external;
+    function applySecurityHub() external;
     function setLedger(address ledger) external;
+    function applyLedger() external;
     function setBurnRouter(address router) external;
+    function applyBurnRouter() external;
     function setTreasurySink(address treasury) external;
     function setSanctumSink(address sanctum) external;
     function proposeSystemExempt(address who, bool isExempt) external;
