@@ -148,6 +148,10 @@ contract Seer {
         uint32 public maxDailySubjectDelta = 300; // Max 3% per day from ALL operators combined
         /// F-16 FIX: Limit the maximum score delta any single DAO setScore() call can make
         uint16 public maxDAOScoreChange = 2000; // Max 20% change per call
+        
+        // S-04 FIX: Rate limit DAO score changes to prevent rapid cascading manipulation
+        mapping(address => uint64) public lastDAOScoreChange;
+        uint64 public constant DAO_SCORE_COOLDOWN = 1 hours;
     
     // ═══════════════════════════════════════════════════════════════════════
     // SCORE HISTORY - Track score changes for analytics and dispute resolution
@@ -671,15 +675,19 @@ contract Seer {
     function setScore(address subject, uint16 newScore, string calldata reason) external onlyDAO {
         if (subject == address(0)) revert TRUST_Zero();
         if (newScore > MAX_SCORE) revert TRUST_Bounds();
+        // S-04 FIX: Enforce per-subject cooldown on DAO score changes (max 1 per hour)
+        require(block.timestamp >= lastDAOScoreChange[subject] + DAO_SCORE_COOLDOWN, "SEER: DAO score cooldown active");
         uint16 old = getScore(subject);
         uint16 delta = old > newScore ? old - newScore : newScore - old;
         // F-16 FIX: Cap the maximum change per setScore() call to prevent instant trust manipulation
         require(delta <= maxDAOScoreChange, "SEER: delta too large");
         _score[subject] = newScore;
+        lastDAOScoreChange[subject] = uint64(block.timestamp);
         emit ScoreSet(subject, old, newScore, reason);
         emit ScoreReasonCode(subject, 500, int16(newScore) - int16(old), msg.sender);
         _logEv(subject, newScore, reason);
     }
+
 
     /// Light-weight behavior hooks (can be called by authorized modules).
     function reward(address subject, uint16 delta, string calldata reason) external onlyOperator onlyNotPaused {
