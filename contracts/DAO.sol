@@ -52,6 +52,7 @@ contract DAO is ReentrancyGuard {
     event EmergencyQuorumRescueCancelled();
     event EmergencyTimelockReplacementProposed(address indexed newTimelock, uint64 readyAt);
     event EmergencyTimelockReplacementExecuted(address indexed newTimelock);
+    event EmergencyTimelockReplacementCancelled();
 
     address public admin;
     IDAOTimelock public timelock;
@@ -70,6 +71,8 @@ contract DAO is ReentrancyGuard {
     
     /// @notice Emergency quorum rescue — breaks governance deadlock when quorum is unreachable
     uint256 public constant EMERGENCY_RESCUE_DELAY = 14 days;
+    /// @notice Absolute minimum quorum to prevent cascading reduction (DAO-02 FIX)
+    uint256 public constant ABSOLUTE_MIN_QUORUM = 500;
     uint64 public emergencyRescueReadyAt; // 0 = not initiated
         // F-22 FIX: Emergency timelock replacement for DAO circular dependency recovery
         uint256 public constant EMERGENCY_TIMELOCK_DELAY = 30 days;
@@ -191,14 +194,14 @@ contract DAO is ReentrancyGuard {
 
     /// @notice Execute emergency quorum rescue after warmup period
     /// @dev Can only REDUCE quorum parameters. Bounded by same minimums as setParams/setMinParticipation.
-    /// @param _minVotes New minVotesRequired (must be < current, >= 100)
+    /// @param _minVotes New minVotesRequired (must be < current, >= ABSOLUTE_MIN_QUORUM)
     /// @param _minParticipation New minParticipation (must be <= current, >= 3)
     function executeEmergencyQuorumRescue(uint256 _minVotes, uint256 _minParticipation) external onlyAdmin {
         require(emergencyRescueReadyAt != 0, "DAO: no rescue pending");
         require(block.timestamp >= emergencyRescueReadyAt, "DAO: rescue warmup not elapsed");
         // F-21 FIX: New quorum must be >= 10% of the current value to prevent essentially zeroing quorum
         require(_minVotes >= minVotesRequired / 10, "DAO: quorum too low (must be >= 10% of current)");
-        require(_minVotes >= 100, "DAO: quorum below absolute minimum");
+        require(_minVotes >= ABSOLUTE_MIN_QUORUM, "DAO: below absolute minimum quorum");
         require(_minVotes < minVotesRequired, "DAO: must reduce minVotes");
         require(_minParticipation >= 3, "DAO: min participation too low");
         require(_minParticipation <= minParticipation, "DAO: must reduce or keep minParticipation");
@@ -226,6 +229,14 @@ contract DAO is ReentrancyGuard {
         delete pendingEmergencyTimelock;
         delete emergencyTimelockReadyAt;
         emit EmergencyTimelockReplacementExecuted(newTimelock);
+    }
+
+    /// @notice F-22 FIX: Cancel a pending emergency timelock replacement
+    function cancelEmergencyTimelockReplacement() external onlyAdmin {
+        require(pendingEmergencyTimelock != address(0), "DAO: no pending replacement");
+        delete pendingEmergencyTimelock;
+        delete emergencyTimelockReadyAt;
+        emit EmergencyTimelockReplacementCancelled();
     }
 
     /// @notice Set minimum spacing between proposals by the same proposer
