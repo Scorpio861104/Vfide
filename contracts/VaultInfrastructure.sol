@@ -753,8 +753,22 @@ contract UserVaultLegacy is ReentrancyGuard {
         return true;
     }
 
-    function approveVFIDE(address spender, uint256 amount) external onlyOwner notLocked noActiveClaims returns (bool) {
+    function approveVFIDE(address spender, uint256 amount) external onlyOwner notLocked notFrozen noActiveClaims returns (bool) {
         if (spender == address(0)) revert UV_Zero();
+        
+        // VI-05 FIX: Apply same protections as transferVFIDE
+        if (amount > 0) {
+            // Check abnormal transaction threshold
+            uint256 currentThreshold = getAbnormalTransactionThreshold();
+            require(!(currentThreshold > 0 && amount >= currentThreshold), "UV: approval exceeds abnormal threshold");
+            
+            // Withdrawal cooldown check
+            if (withdrawalCooldown > 0 && lastWithdrawalTime > 0) {
+                require(block.timestamp >= lastWithdrawalTime + withdrawalCooldown, "UV:cooldown-active");
+            }
+            lastWithdrawalTime = uint64(block.timestamp);
+        }
+        
         bool ok = IERC20(vfideToken).approve(spender, amount);
         require(ok, "UV:approve-failed");
         _logEv(spender, "vault_approve", amount, "");
