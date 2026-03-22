@@ -877,8 +877,21 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
         }
         
         // 2. Max wallet balance check (for recipient)
+        // T-02 FIX: Check against net amount after fees, not gross amount
         if (maxWalletBalance > 0) {
-            uint256 recipientNewBalance = _balances[to] + amount;
+            uint256 netAmount = amount;
+            
+            // Compute expected net amount if fees apply
+            if (address(burnRouter) != address(0) && !isFeeBypassed() && !(systemExempt[from] || systemExempt[to])) {
+                try this.getExpectedNetAmount(from, to, amount) returns (uint256 expectedNet) {
+                    netAmount = expectedNet;
+                } catch {
+                    // On error, assume worst case (maximum fees, default to 5%)
+                    netAmount = (amount * 9500) / 10000;
+                }
+            }
+            
+            uint256 recipientNewBalance = _balances[to] + netAmount;
             if (recipientNewBalance > maxWalletBalance) {
                 revert VF_MaxWalletExceeded();
             }
@@ -908,6 +921,21 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
             }
             lastTransferTime[from] = block.timestamp;
         }
+    }
+    
+    /// @notice T-02 FIX: Helper to compute expected net amount after fees
+    function getExpectedNetAmount(address from, address to, uint256 amount) external view returns (uint256) {
+        if (address(burnRouter) == address(0) || isFeeBypassed() || systemExempt[from] || systemExempt[to]) {
+            return amount; // No fees
+        }
+        
+        (uint256 burnAmt, uint256 sanctumAmt, uint256 ecoAmt, , , ) = 
+            burnRouter.computeFees(from, to, amount);
+        
+        uint256 totalFees = burnAmt + sanctumAmt + ecoAmt;
+        require(totalFees <= amount, "VF: fees exceed amount");
+        
+        return amount - totalFees;
     }
     
     /**
