@@ -493,7 +493,9 @@ contract EmergencyBreaker {
     }
     
     /// @notice Set toggle cooldown (DAO-only)
+    /// @dev SEC-05 FIX: Enforce minimum cooldown to prevent rapid toggle abuse
     function setToggleCooldown(uint64 _cooldown) external onlyDAO {
+        require(_cooldown >= 10 minutes, "SEC: minimum cooldown 10 minutes");
         toggleCooldown = _cooldown;
         emit CooldownSet(_cooldown);
         _log("breaker_cooldown_set");
