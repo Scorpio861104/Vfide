@@ -59,6 +59,10 @@ contract ProofScoreBurnRouter is Ownable, Pausable {
     uint16 public constant HIGH_SCORE_THRESHOLD = 8000; // ≥8000 pays min fee (80%)
     uint16 public minTotalBps = 25;   // 0.25% minimum fee for score ≥8000
     uint16 public maxTotalBps = 500;  // 5% maximum fee for score ≤4000
+    
+    // BR-05 FIX: Rate limit fee policy changes (max 1 per day)
+    uint64 public lastFeePolicyChange;
+    uint64 public constant FEE_POLICY_COOLDOWN = 1 days;
 
     // ═══════════════════════════════════════════════════════════════════════════
     // SUSTAINABILITY CONTROLS - Protects token economy in high/low volume periods
@@ -435,6 +439,8 @@ contract ProofScoreBurnRouter is Ownable, Pausable {
         uint16 _minTotalBps,
         uint16 _maxTotalBps
     ) external onlyOwner {
+        // BR-05 FIX: Enforce per-day rate limit on fee policy changes
+        require(block.timestamp >= lastFeePolicyChange + FEE_POLICY_COOLDOWN, "BR: fee policy cooldown active");
         require(_minTotalBps <= _maxTotalBps, "min > max");
         require(_maxTotalBps <= 1000, "max cannot exceed 10%");
         // F-27 FIX: Limit rate of change to prevent instantly multiplying fees for value extraction attacks
@@ -445,6 +451,7 @@ contract ProofScoreBurnRouter is Ownable, Pausable {
 
         minTotalBps = _minTotalBps;
         maxTotalBps = _maxTotalBps;
+        lastFeePolicyChange = uint64(block.timestamp);
         
         emit PolicySet(baseBurnBps, baseSanctumBps, baseEcosystemBps, 0, 0);
     }
