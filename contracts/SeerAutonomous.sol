@@ -72,6 +72,7 @@ contract SeerAutonomous is ReentrancyGuard {
     uint16 private constant RC_ORACLE_HIGH_RISK = 130;
     uint16 private constant RC_ORACLE_MEDIUM_RISK = 131;
     uint16 private constant RC_PROGRESSIVE_UNFREEZE = 140;
+    uint64 private constant DAO_OVERRIDE_DURATION = 30 days;
     
     // ═══════════════════════════════════════════════════════════════════════
     //                              EVENTS
@@ -181,6 +182,7 @@ contract SeerAutonomous is ReentrancyGuard {
     mapping(address => RestrictionLevel) public restrictionLevel;
     mapping(address => uint64) public restrictionExpiry;
     mapping(address => bool) public daoOverridden;
+    mapping(address => uint64) public daoOverrideExpiry;
     mapping(address => string) public restrictionReason;
 
     struct PendingChallenge {
@@ -228,6 +230,7 @@ contract SeerAutonomous is ReentrancyGuard {
     // Network health metrics (for dynamic adjustment)
     uint256 public networkViolationCount;
     uint256 public networkActionCount;
+    uint256 public networkBlockedCount;
     uint64 public lastThresholdAdjustment;
     uint64 public constant ADJUSTMENT_INTERVAL = 1 days;
     
@@ -365,8 +368,14 @@ contract SeerAutonomous is ReentrancyGuard {
     ) external onlyOperator nonReentrant returns (EnforcementResult result) {
         // 1. Check if DAO has overridden - allow if so
         if (daoOverridden[subject]) {
-            return EnforcementResult.Allowed;
+            if (block.timestamp < daoOverrideExpiry[subject]) {
+                return EnforcementResult.Allowed;
+            }
+            daoOverridden[subject] = false;
+            daoOverrideExpiry[subject] = 0;
         }
+
+        _decayViolationScore(subject);
 
         // If a severe restriction is pending challenge and window passed, finalize
         _maybeFinalizeChallenge(subject);
@@ -374,6 +383,7 @@ contract SeerAutonomous is ReentrancyGuard {
         // 2. Check restriction level and rate limits
         result = _checkRestrictions(subject, action);
         if (result == EnforcementResult.Blocked) {
+            networkBlockedCount++;
             emit AutoEnforced(subject, action, result);
             return result;
         }
@@ -637,6 +647,7 @@ contract SeerAutonomous is ReentrancyGuard {
     }
     
     function _recordViolation(address subject, PatternType pattern, string memory reason) internal {
+        _decayViolationScore(subject);
         if (pattern != PatternType.None) {
             patternViolations[subject][pattern]++;
         }
@@ -651,7 +662,13 @@ contract SeerAutonomous is ReentrancyGuard {
     // ═══════════════════════════════════════════════════════════════════════
     
     function _autoAdjustRestriction(address subject) internal {
-        if (daoOverridden[subject]) return;
+        if (daoOverridden[subject]) {
+            if (block.timestamp < daoOverrideExpiry[subject]) {
+                return;
+            }
+            daoOverridden[subject] = false;
+            daoOverrideExpiry[subject] = 0;
+        }
         
         uint16 score = seer.getScore(subject);
         RestrictionLevel current = restrictionLevel[subject];
@@ -716,20 +733,57 @@ contract SeerAutonomous is ReentrancyGuard {
         RestrictionLevel old = restrictionLevel[subject];
         if (old == RestrictionLevel.None) return;
 
-        // Progressive unfreeze: step down one level at a time
-        if (old > RestrictionLevel.None) {
-            RestrictionLevel next = RestrictionLevel(uint8(old) - 1);
-            restrictionLevel[subject] = next;
-            restrictionExpiry[subject] = uint64(block.timestamp + 1 days);
-            restrictionReason[subject] = "progressive_unfreeze";
-            emit RestrictionApplied(subject, next, 1 days, "progressive_unfreeze");
-            emit RestrictionAppliedCode(subject, next, RC_PROGRESSIVE_UNFREEZE, "progressive_unfreeze");
-        } else {
+        uint16 score = seer.getScore(subject);
+        RestrictionLevel target = RestrictionLevel.None;
+
+        if (score < 1000) {
+            target = RestrictionLevel.Frozen;
+        } else if (score < 2000) {
+            target = RestrictionLevel.Suspended;
+        } else if (score < autoRestrictThreshold) {
+            target = RestrictionLevel.Restricted;
+        } else if (score < rateLimitThreshold) {
+            target = RestrictionLevel.Limited;
+        } else if (score < autoLiftThreshold) {
+            target = RestrictionLevel.Monitored;
+        }
+
+        if (target == RestrictionLevel.None) {
             restrictionLevel[subject] = RestrictionLevel.None;
             restrictionExpiry[subject] = 0;
             restrictionReason[subject] = "";
             emit RestrictionLifted(subject, old);
+            return;
         }
+
+        restrictionLevel[subject] = target;
+        restrictionExpiry[subject] = uint64(block.timestamp + 1 days);
+        restrictionReason[subject] = "score_recalibrated";
+        emit RestrictionApplied(subject, target, 1 days, "score_recalibrated");
+        emit RestrictionAppliedCode(subject, target, RC_PROGRESSIVE_UNFREEZE, "score_recalibrated");
+    }
+
+    function _decayViolationScore(address subject) internal {
+        uint64 last = lastViolationTime[subject];
+        if (last == 0 || block.timestamp <= last) return;
+
+        uint256 elapsed = block.timestamp - last;
+        uint16 decay = uint16(elapsed / 30 days);
+        if (decay == 0) return;
+
+        uint16 raw = totalViolationScore[subject];
+        totalViolationScore[subject] = decay >= raw ? 0 : raw - decay;
+        lastViolationTime[subject] = uint64(block.timestamp);
+    }
+
+    function getEffectiveViolationScore(address subject) public view returns (uint16) {
+        uint16 raw = totalViolationScore[subject];
+        uint64 last = lastViolationTime[subject];
+        if (raw == 0 || last == 0 || block.timestamp <= last) return raw;
+
+        uint256 elapsed = block.timestamp - last;
+        uint16 decay = uint16(elapsed / 30 days);
+        return decay >= raw ? 0 : raw - decay;
     }
     
     // ═══════════════════════════════════════════════════════════════════════
@@ -741,9 +795,10 @@ contract SeerAutonomous is ReentrancyGuard {
         lastThresholdAdjustment = uint64(block.timestamp);
         
         // Calculate network health (violation rate)
-        if (networkActionCount == 0) return;
+        uint256 totalActions = networkActionCount + networkBlockedCount;
+        if (totalActions == 0) return;
         
-        uint256 violationRate = (networkViolationCount * 10000) / networkActionCount;
+        uint256 violationRate = (networkViolationCount * 10000) / totalActions;
         
         // High violation rate = tighten thresholds
         if (violationRate > 500) { // >5% violation rate
@@ -759,6 +814,7 @@ contract SeerAutonomous is ReentrancyGuard {
         // Reset counters for next period
         networkViolationCount = 0;
         networkActionCount = 0;
+        networkBlockedCount = 0;
     }
 
     /// @notice Finalize a pending challenge if window has elapsed
@@ -837,16 +893,15 @@ contract SeerAutonomous is ReentrancyGuard {
     
     function daoOverride(address subject, string calldata reason) external onlyDAO {
         daoOverridden[subject] = true;
-        _liftRestriction(subject);
-        
-        // Clear violation history
-        patternViolations[subject][PatternType.RapidTransfers] = 0;
-        patternViolations[subject][PatternType.CircularTransfers] = 0;
-        patternViolations[subject][PatternType.SelfEndorsement] = 0;
-        patternViolations[subject][PatternType.VoteManipulation] = 0;
-        patternViolations[subject][PatternType.WashTrading] = 0;
-        patternViolations[subject][PatternType.SybilActivity] = 0;
-        totalViolationScore[subject] = 0;
+        daoOverrideExpiry[subject] = uint64(block.timestamp + DAO_OVERRIDE_DURATION);
+
+        RestrictionLevel old = restrictionLevel[subject];
+        restrictionLevel[subject] = RestrictionLevel.None;
+        restrictionExpiry[subject] = 0;
+        restrictionReason[subject] = "dao_override";
+        if (old != RestrictionLevel.None) {
+            emit RestrictionLifted(subject, old);
+        }
         
         emit DAOOverride(subject, reason);
         _log("dao_override");
@@ -854,6 +909,7 @@ contract SeerAutonomous is ReentrancyGuard {
     
     function daoRemoveOverride(address subject) external onlyDAO {
         daoOverridden[subject] = false;
+        daoOverrideExpiry[subject] = 0;
         // Re-evaluate immediately
         _autoAdjustRestriction(subject);
     }

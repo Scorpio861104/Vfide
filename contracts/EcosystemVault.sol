@@ -277,6 +277,10 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
 
     function setRewardToken(address token) external onlyOwner {
         if (token == address(0)) revert ECO_Zero();
+        require(
+            councilPool == 0 && merchantPool == 0 && headhunterPool == 0 && operationsPool == 0,
+            "ECO: drain pools first"
+        );
         address oldToken = address(rewardToken);
         rewardToken = IERC20(token);
         emit RewardTokenUpdated(oldToken, token);
@@ -312,14 +316,16 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
      * @notice Set operations allocation percentage
      */
     function setOperationsAllocation(uint16 _operationsBps) external onlyOwner {
-        require(_operationsBps >= MIN_ALLOCATION_BPS && _operationsBps <= 4000, "ECO: invalid bps");
-        
-        // Recalculate other allocations to maintain 100% total
+        require(_operationsBps >= MIN_ALLOCATION_BPS, "ECO: invalid bps");
+        require(_operationsBps <= MAX_BPS - (3 * MIN_ALLOCATION_BPS), "ECO: ops exceeds max");
+
         uint16 remaining = MAX_BPS - _operationsBps;
-        councilBps = remaining / 3;
-        merchantBps = remaining / 3;
-        headhunterBps = remaining - councilBps - merchantBps;
+        require(councilBps >= MIN_ALLOCATION_BPS, "ECO: council below minimum");
+        require(merchantBps >= MIN_ALLOCATION_BPS, "ECO: merchant below minimum");
+        require(headhunterBps >= MIN_ALLOCATION_BPS, "ECO: headhunter below minimum");
+        require(councilBps + merchantBps + headhunterBps == remaining, "ECO: remaining mismatch");
         operationsBps = _operationsBps;
+        emit AllocationUpdated(councilBps, merchantBps, headhunterBps);
     }
     
     /**
@@ -441,6 +447,13 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
     // ═══════════════════════════════════════════════════════════════════════
     
     function allocateIncoming() public {
+        if (!isManager[msg.sender] && msg.sender != owner && msg.sender != address(this)) {
+            revert ECO_NotAuthorized();
+        }
+        _allocateIncoming();
+    }
+
+    function _allocateIncoming() internal {
         uint256 balance = rewardToken.balanceOf(address(this));
         uint256 allocated = councilPool + merchantPool + headhunterPool + operationsPool;
         uint256 unallocated = balance > allocated ? balance - allocated : 0;
@@ -479,7 +492,7 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
         require(operationsWallet != address(0), "ECO: no ops wallet");
         require(block.timestamp >= lastOperationsWithdrawal + operationsWithdrawalCooldown, "ECO: cooldown");
         
-        allocateIncoming(); // Ensure pool is up to date
+        _allocateIncoming(); // Ensure pool is up to date
         
         uint256 amount = operationsPool;
         require(amount > 0, "ECO: no funds");
@@ -521,15 +534,15 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
         if (block.timestamp < lastCouncilDistribution + MONTH) revert ECO_TooEarly();
         if (address(councilManager) == address(0)) revert ECO_Zero();
         
-        allocateIncoming(); // Ensure pool is up to date
+        _allocateIncoming(); // Ensure pool is up to date
         
         uint256 amount = councilPool;
         if (amount < 1) revert ECO_InsufficientFunds();
         
         // Get active council members from CouncilManager
         address[] memory members = councilManager.getActiveMembers();
-        uint8 memberCount = uint8(members.length);
-        if (memberCount == 0) revert ECO_Zero();
+        uint256 memberCount = members.length;
+        if (memberCount == 0 || memberCount > type(uint8).max) revert ECO_Zero();
         
         uint256 perMember = amount / memberCount;
         councilPool = amount % memberCount; // Keep remainder for next distribution
@@ -538,13 +551,13 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
         totalCouncilPaid += distributed;
         lastCouncilDistribution = block.timestamp;
         
-        for (uint8 i = 0; i < memberCount; i++) {
+        for (uint256 i = 0; i < memberCount; i++) {
             if (members[i] != address(0)) {
                 rewardToken.safeTransfer(members[i], perMember);
             }
         }
 
-        emit CouncilDistributed(distributed, memberCount, perMember);
+        emit CouncilDistributed(distributed, uint8(memberCount), perMember);
     }
 
     // ═══════════════════════════════════════════════════════════════════════
@@ -584,7 +597,7 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
     function endMerchantPeriod() external onlyManager {
         if (block.timestamp < lastMerchantDistribution + MONTH) revert ECO_TooEarly();
         
-        allocateIncoming();
+        _allocateIncoming();
         
         // Snapshot the pool for this period
         merchantPeriodPoolSnapshot[currentMerchantPeriod] = merchantPool;
@@ -613,7 +626,7 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
     function payMerchantWorkReward(address worker, uint256 amount, string calldata reason) external onlyManager nonReentrant {
         if (worker == address(0) || amount == 0) revert ECO_Zero();
 
-        allocateIncoming();
+        _allocateIncoming();
         uint256 spendable = _getSpendablePoolBalance(merchantPool, merchantPoolReserveBps);
         if (amount > spendable) revert ECO_InsufficientFunds();
 
@@ -794,7 +807,7 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
             return false;
         }
 
-        allocateIncoming();
+        _allocateIncoming();
 
         if (useMerchantPool) {
             uint256 merchantSpendable = _getSpendablePoolBalance(merchantPool, merchantPoolReserveBps);
@@ -826,7 +839,7 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
     function endHeadhunterQuarter() external onlyManager {
         if (block.timestamp < yearStartTime + (QUARTER * currentQuarter)) revert ECO_TooEarly();
         
-        allocateIncoming();
+        _allocateIncoming();
         
         quarterPoolSnapshot[currentYear][currentQuarter] = headhunterPool;
         quarterEnded[currentYear][currentQuarter] = true;
@@ -861,7 +874,7 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
     function payReferralWorkReward(address worker, uint256 amount, string calldata reason) external onlyManager nonReentrant {
         if (worker == address(0) || amount == 0) revert ECO_Zero();
 
-        allocateIncoming();
+        _allocateIncoming();
         uint256 spendable = _getSpendablePoolBalance(headhunterPool, headhunterPoolReserveBps);
         if (amount > spendable) revert ECO_InsufficientFunds();
 
@@ -927,7 +940,7 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
             return (0, 0);
         }
 
-        allocateIncoming();
+        _allocateIncoming();
 
         uint8 nextLevel = alreadyPaidLevel + 1;
         uint8 finalPaidLevel = alreadyPaidLevel;
@@ -1035,7 +1048,7 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
     function payExpense(address recipient, uint256 amount, string calldata reason) external onlyManager {
         if (recipient == address(0) || amount == 0) revert ECO_Zero();
 
-        allocateIncoming();
+        _allocateIncoming();
         if (operationsPool < amount) revert ECO_InsufficientFunds();
 
         operationsPool -= amount;
@@ -1111,7 +1124,7 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
     function burnFunds(uint256 amount) external onlyManager {
         if (amount == 0) revert ECO_Zero();
 
-        allocateIncoming();
+        _allocateIncoming();
         if (operationsPool < amount) revert ECO_InsufficientFunds();
 
         operationsPool -= amount;
