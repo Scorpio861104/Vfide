@@ -24,6 +24,7 @@ contract VaultHub is Ownable, Pausable, ReentrancyGuard {
     /// Registry
     mapping(address => address) public vaultOf;
     mapping(address => address) public ownerOfVault;
+    mapping(address => bool) public guardianSetupComplete;
 
     // Recovery Timelock with Multi-Sig
     mapping(address => uint64) public recoveryUnlockTime;
@@ -57,6 +58,7 @@ contract VaultHub is Ownable, Pausable, ReentrancyGuard {
     event DAOSet(address dao);
     event CouncilSet(address council);
     event SecurityHubRegistrationFailed(address indexed vault);
+    event GuardianSetupCompleted(address indexed owner, address indexed vault);
 
     /// Errors
     error VH_Zero();
@@ -190,6 +192,7 @@ contract VaultHub is Ownable, Pausable, ReentrancyGuard {
 
         vaultOf[owner_] = vault;
         ownerOfVault[vault] = owner_;
+        guardianSetupComplete[vault] = false;
         
         // Track vault creation
         totalVaults++;
@@ -344,6 +347,24 @@ contract VaultHub is Ownable, Pausable, ReentrancyGuard {
     // IVaultHub compatibility wrapper
     function totalVaultsCreated() external view returns (uint256) {
         return totalVaults;
+    }
+
+    /**
+     * @notice Marks guardian bootstrap complete once vault uses a multi-guardian threshold.
+     * @dev Enforces minimum 2 guardians and threshold >= 2 for independent recovery/rotation approvals.
+     */
+    function completeGuardianSetup(address vault) external {
+        address owner_ = ownerOfVault[vault];
+        require(owner_ != address(0), "VH: unknown vault");
+        require(msg.sender == owner_, "VH: not owner");
+
+        CardBoundVault v = CardBoundVault(payable(vault));
+        require(v.guardianCount() >= 2, "VH: need 2 guardians");
+        require(v.guardianThreshold() >= 2, "VH: threshold too low");
+
+        guardianSetupComplete[vault] = true;
+        emit GuardianSetupCompleted(owner_, vault);
+        _logEv(vault, "guardian_setup_complete", 0, "");
     }
 
     // ——— Internals

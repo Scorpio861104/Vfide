@@ -3,6 +3,10 @@ pragma solidity 0.8.30;
 
 import "./SharedInterfaces.sol";
 
+interface IVaultHubGuardianSetup {
+    function guardianSetupComplete(address vault) external view returns (bool);
+}
+
 /**
  * @title CardBoundVault
  * @notice Active vault implementation — wallet is authorization-only (ATM-card model).
@@ -122,6 +126,7 @@ contract CardBoundVault is ReentrancyGuard {
     error CBV_NoRotation();
     error CBV_OnlyHub();
     error CBV_TransferFailed();
+    error CBV_GuardianSetupRequired();
 
     modifier onlyAdmin() {
         if (msg.sender != admin) revert CBV_NotAdmin();
@@ -257,6 +262,9 @@ contract CardBoundVault is ReentrancyGuard {
     }
 
     function proposeWalletRotation(address newWallet, uint64 delaySeconds) external onlyAdmin {
+        if (!IVaultHubGuardianSetup(hub).guardianSetupComplete(address(this))) {
+            revert CBV_GuardianSetupRequired();
+        }
         if (newWallet == address(0)) revert CBV_Zero();
         if (delaySeconds < MIN_ROTATION_DELAY || delaySeconds > MAX_ROTATION_DELAY) revert CBV_RotationNotReady();
 
@@ -272,6 +280,9 @@ contract CardBoundVault is ReentrancyGuard {
     }
 
     function approveWalletRotation() external onlyGuardian {
+        if (!IVaultHubGuardianSetup(hub).guardianSetupComplete(address(this))) {
+            revert CBV_GuardianSetupRequired();
+        }
         WalletRotation memory current = pendingRotation;
         if (current.newWallet == address(0)) revert CBV_NoRotation();
 
@@ -286,6 +297,9 @@ contract CardBoundVault is ReentrancyGuard {
     }
 
     function finalizeWalletRotation() external {
+        if (!IVaultHubGuardianSetup(hub).guardianSetupComplete(address(this))) {
+            revert CBV_GuardianSetupRequired();
+        }
         if (msg.sender != admin && !isGuardian[msg.sender]) {
             revert CBV_NotGuardian();
         }
