@@ -198,6 +198,7 @@ contract DAO is ReentrancyGuard {
         require(block.timestamp >= emergencyRescueReadyAt, "DAO: rescue warmup not elapsed");
         // F-21 FIX: New quorum must be >= 10% of the current value to prevent essentially zeroing quorum
         require(_minVotes >= minVotesRequired / 10, "DAO: quorum too low (must be >= 10% of current)");
+        require(_minVotes >= 100, "DAO: quorum below absolute minimum");
         require(_minVotes < minVotesRequired, "DAO: must reduce minVotes");
         require(_minParticipation >= 3, "DAO: min participation too low");
         require(_minParticipation <= minParticipation, "DAO: must reduce or keep minParticipation");

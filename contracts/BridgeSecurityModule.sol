@@ -122,8 +122,8 @@ contract BridgeSecurityModule is Ownable, Pausable {
         uint256 currentHour = block.timestamp / 1 hours;
         uint256 currentDay = block.timestamp / 1 days;
 
-        // Check global hourly limit
-        HourlyVolume memory hourVol = hourlyVolume[currentHour];
+        // Load and refresh rolling buckets in storage first, then enforce + update in one flow.
+        HourlyVolume storage hourVol = hourlyVolume[currentHour];
         if (hourVol.timestamp != currentHour) {
             hourVol.amount = 0;
             hourVol.timestamp = currentHour;
@@ -132,8 +132,7 @@ contract BridgeSecurityModule is Ownable, Pausable {
             revert RateLimitExceeded();
         }
 
-        // Check global daily limit
-        DailyVolume memory dayVol = dailyVolume[currentDay];
+        DailyVolume storage dayVol = dailyVolume[currentDay];
         if (dayVol.timestamp != currentDay) {
             dayVol.amount = 0;
             dayVol.timestamp = currentDay;
@@ -158,10 +157,8 @@ contract BridgeSecurityModule is Ownable, Pausable {
         _checkSuspiciousActivity(user, amount);
 
         // Update volumes
-        hourlyVolume[currentHour].amount = hourVol.amount + amount;
-        hourlyVolume[currentHour].timestamp = currentHour;
-        dailyVolume[currentDay].amount = dayVol.amount + amount;
-        dailyVolume[currentDay].timestamp = currentDay;
+        hourVol.amount += amount;
+        dayVol.amount += amount;
         userHourlyVolume[user][currentHour] += amount;
         userDailyVolume[user][currentDay] += amount;
 

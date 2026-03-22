@@ -616,6 +616,7 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
      * Enable or disable automatic conversion for stable-pay merchants
      */
     function setAutoConvert(bool enabled) external onlyMerchant {
+        require(!enabled, "MP: auto-convert temporarily disabled");
         autoConvert[msg.sender] = enabled;
         emit AutoConvertSet(msg.sender, enabled);
     }
