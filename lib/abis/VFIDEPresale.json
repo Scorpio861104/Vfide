@@ -127,6 +127,11 @@
   },
   {
     "inputs": [],
+    "name": "PS_GeoBlocked",
+    "type": "error"
+  },
+  {
+    "inputs": [],
     "name": "PS_Zero",
     "type": "error"
   },
@@ -225,19 +230,13 @@
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "ethRaised",
+        "name": "totalUsdRaised",
         "type": "uint256"
       },
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "lpVfide",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "listingPrice",
+        "name": "totalTokensSold",
         "type": "uint256"
       }
     ],
@@ -495,6 +494,25 @@
     "type": "event"
   },
   {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "account",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "bool",
+        "name": "blocked",
+        "type": "bool"
+      }
+    ],
+    "name": "GeoBlockSet",
+    "type": "event"
+  },
+  {
     "inputs": [],
     "name": "BASE_SUPPLY",
     "outputs": [
@@ -743,7 +761,7 @@
   },
   {
     "inputs": [],
-    "name": "TIER_0_PRICE",
+    "name": "TOKEN_PRICE",
     "outputs": [
       {
         "internalType": "uint256",
@@ -769,33 +787,7 @@
   },
   {
     "inputs": [],
-    "name": "TIER_1_PRICE",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
     "name": "TIER_2_CAP",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "TIER_2_PRICE",
     "outputs": [
       {
         "internalType": "uint256",
@@ -871,24 +863,6 @@
     "name": "buyWithStable",
     "outputs": [],
     "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "calculateListingPrice",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "priceUsd",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "lpVfide",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
     "type": "function"
   },
   {
@@ -1460,11 +1434,6 @@
         "internalType": "uint256",
         "name": "lpTokens",
         "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "priceUsd",
-        "type": "uint256"
       }
     ],
     "stateMutability": "view",
@@ -1831,19 +1800,6 @@
   },
   {
     "inputs": [],
-    "name": "listingPrice",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
     "name": "lpVfideAmount",
     "outputs": [
       {
@@ -2118,6 +2074,43 @@
     "name": "setTierEnabled",
     "outputs": [],
     "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address[]",
+        "name": "accounts",
+        "type": "address[]"
+      },
+      {
+        "internalType": "bool",
+        "name": "blocked",
+        "type": "bool"
+      }
+    ],
+    "name": "setGeoBlock",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "name": "geoBlocked",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
     "type": "function"
   },
   {

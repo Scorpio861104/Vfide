@@ -190,9 +190,17 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
     bool public autoSwapEnabled;         // F-24 FIX: Disabled by default — vulnerable to sandwich attacks until oracle integration
     uint16 public maxSlippageBps = 100;  // 1% max slippage (default)
     
+    // HOWEY FIX: When true, ALL work reward payments (merchant, referral, level payouts)
+    // MUST be paid in stablecoin via _swapToStable(). Receiving a potentially-appreciating
+    // VFIDE token as "work compensation" creates a profit expectation (Howey Prong 3).
+    // Paying in stablecoin makes the work-for-pay relationship unambiguous.
+    // Requires swapRouter and preferredStablecoin to be configured before enabling.
+    bool public stablecoinOnlyMode;
+    
     event AutoSwapConfigured(address router, address stablecoin, bool enabled, uint16 maxSlippageBps);
     event RewardPaidInStable(address indexed recipient, uint256 vfideAmount, uint256 stableAmount, string reason);
     event SwapFailed(address indexed recipient, uint256 vfideAmount, string reason);
+    event StablecoinOnlyModeSet(bool enabled);
     event AutoWorkPayoutConfigured(
         bool enabled,
         uint256 merchantTxReward,
@@ -369,6 +377,30 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
         autoSwapEnabled = _enabled;
         maxSlippageBps = _maxSlippageBps;
         emit AutoSwapConfigured(_router, _stablecoin, _enabled, _maxSlippageBps);
+    }
+
+    /**
+     * @notice Enable or disable stablecoin-only mode for all work reward payments.
+     * @dev HOWEY FIX: When enabled, payMerchantWorkReward, payReferralWorkReward, and all
+     *      automatic work payouts route through _swapToStable() instead of transferring VFIDE.
+     *      Distributing a potentially-appreciating VFIDE token as "compensation" creates an
+     *      implicit profit expectation (Howey Prong 3). Paying in stablecoins makes the
+     *      work-for-pay relationship legally unambiguous.
+     *
+     *      REQUIREMENTS before enabling:
+     *      - swapRouter must be set (call configureAutoSwap with router/stablecoin first)
+     *      - preferredStablecoin must be set
+     *      - Sufficient VFIDE liquidity must exist on the configured DEX
+     *
+     * @param _enabled True to require stablecoin payments; false to revert to VFIDE payments.
+     */
+    function setStablecoinOnlyMode(bool _enabled) external onlyOwner {
+        if (_enabled) {
+            require(swapRouter != address(0), "ECO: set swap router first");
+            require(preferredStablecoin != address(0), "ECO: set preferred stablecoin first");
+        }
+        stablecoinOnlyMode = _enabled;
+        emit StablecoinOnlyModeSet(_enabled);
     }
 
     /**
@@ -629,7 +661,10 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
 
     /**
      * @notice Pay fixed compensation for verified merchant work
-     * @dev Uses merchant pool only; not a rank/percentage payout
+     * @dev Uses merchant pool only; not a rank/percentage payout.
+     *      HOWEY FIX: When stablecoinOnlyMode is enabled, payment is swapped to
+     *      preferredStablecoin via _swapToStable() before transfer. This eliminates
+     *      the implicit profit expectation created by distributing appreciable VFIDE.
      */
     function payMerchantWorkReward(address worker, uint256 amount, string calldata reason) external onlyManager nonReentrant {
         if (worker == address(0) || amount == 0) revert ECO_Zero();
@@ -640,9 +675,8 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
 
         merchantPool -= amount;
         totalMerchantBonusPaid += amount;
-        rewardToken.safeTransfer(worker, amount);
-
-        emit WorkRewardPaid(worker, amount, "merchant_work", reason);
+        bool ok = _deliverWorkReward(worker, amount, "merchant_work", reason);
+        require(ok, "ECO: stablecoin swap failed");
     }
 
     function _calculateMerchantRank(uint256 period, address merchant) internal view returns (uint8) {
@@ -824,8 +858,12 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
 
             merchantPool -= amount;
             totalMerchantBonusPaid += amount;
-            rewardToken.safeTransfer(worker, amount);
-            emit WorkRewardPaid(worker, amount, "merchant_work", reason);
+            if (!_deliverWorkReward(worker, amount, "merchant_work", reason)) {
+                // Swap failed — rollback accounting and signal caller
+                merchantPool += amount;
+                totalMerchantBonusPaid -= amount;
+                return false;
+            }
             return true;
         }
 
@@ -835,8 +873,34 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
 
         headhunterPool -= amount;
         totalHeadhunterPaid += amount;
-        rewardToken.safeTransfer(worker, amount);
-        emit WorkRewardPaid(worker, amount, "referral_work", reason);
+        if (!_deliverWorkReward(worker, amount, "referral_work", reason)) {
+            headhunterPool += amount;
+            totalHeadhunterPaid -= amount;
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * @notice Internal: deliver a work reward in stablecoin (if stablecoinOnlyMode) or VFIDE.
+     * @dev Returns false only when stablecoinOnlyMode is on and the swap produces 0 output.
+     *      Callers must roll back pool accounting when false is returned.
+     */
+    function _deliverWorkReward(
+        address worker,
+        uint256 amount,
+        string memory program,
+        string memory reason
+    ) internal returns (bool success) {
+        if (stablecoinOnlyMode) {
+            uint256 stableReceived = _swapToStable(amount);
+            if (stableReceived == 0) return false;
+            IERC20(preferredStablecoin).safeTransfer(worker, stableReceived);
+            emit RewardPaidInStable(worker, amount, stableReceived, reason);
+        } else {
+            rewardToken.safeTransfer(worker, amount);
+            emit WorkRewardPaid(worker, amount, program, reason);
+        }
         return true;
     }
 
@@ -877,7 +941,9 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
 
     /**
      * @notice Pay fixed compensation for verified referral/acquisition work
-     * @dev Uses headhunter pool only; not a rank/percentage payout
+     * @dev Uses headhunter pool only; not a rank/percentage payout.
+     *      HOWEY FIX: When stablecoinOnlyMode is enabled, payment is swapped to
+     *      preferredStablecoin before transfer.
      */
     function payReferralWorkReward(address worker, uint256 amount, string calldata reason) external onlyManager nonReentrant {
         if (worker == address(0) || amount == 0) revert ECO_Zero();
@@ -888,9 +954,8 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
 
         headhunterPool -= amount;
         totalHeadhunterPaid += amount;
-        rewardToken.safeTransfer(worker, amount);
-
-        emit WorkRewardPaid(worker, amount, "referral_work", reason);
+        bool ok = _deliverWorkReward(worker, amount, "referral_work", reason);
+        require(ok, "ECO: stablecoin swap failed");
     }
 
     /**
@@ -983,8 +1048,8 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
         }
 
         referralLevelPaid[year][worker] = finalPaidLevel;
-        rewardToken.safeTransfer(worker, totalAmount);
-        emit WorkRewardPaid(worker, totalAmount, "referral_work_level", reason);
+        bool ok = _deliverWorkReward(worker, totalAmount, "referral_work_level", reason);
+        require(ok, "ECO: stablecoin swap failed");
     }
 
     function _getReferralWorkLevel(uint16 points) internal view returns (uint8) {

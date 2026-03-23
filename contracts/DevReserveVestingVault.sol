@@ -11,13 +11,18 @@ import "./SharedInterfaces.sol";
  * - VFIDEToken DEV_RESERVE_SUPPLY constant = 50M (aligned)
  * - Starts automatically from Presale's launch time (first claim sync)
  * - Cliff = 60 days (2 months) - First unlock at Month 2
- * - Vesting = 36 months (1080 days) - 18 bi-monthly unlocks
- * - Each unlock: 2,777,777 VFIDE (~2.78M)
- * - Unlock schedule: Every 60 days after cliff (Month 2, 4, 6, 8...36)
+ * - Vesting = 60 months (1800 days) - 30 bi-monthly unlocks over 5 years
+ * - Each unlock: 1,666,666 VFIDE (~1.67M); last unlock covers rounding remainder
+ * - Unlock schedule: Every 60 days after cliff (Month 2, 4, 6, 8...60)
  * - Claims deliver VFIDE to the beneficiary's Vault (auto-created)
  * - SecurityHub lock respected (claims revert while locked)
  * - Beneficiary-only claim pause (no DAO / no third parties)
  * - ProofLedger logs (best-effort)
+ *
+ * HOWEY NOTE: Extended from 36 months to 60 months to reduce "efforts of others"
+ * exposure (Howey Prong 4). A longer vesting period signals long-term commitment
+ * rather than short-term extraction, and delays the point at which founder tokens
+ * enter circulation — reducing the "vertical commonality" argument (Howey Prong 2).
  */
 
 // Presale time selectors (any one may exist)
@@ -40,10 +45,10 @@ contract DevReserveVestingVault is ReentrancyGuard {
     address public immutable DAO;
     // ── Schedule constants
     uint64  public constant CLIFF = 60 days;              // 2-month cliff
-    uint64  public constant VESTING = 36 * 30 days;       // 36 months total (1080 days)
+    uint64  public constant VESTING = 60 * 30 days;       // 60 months total (1800 days) — 5-year vest
     uint64  public constant UNLOCK_INTERVAL = 60 days;    // Bi-monthly unlocks
-    uint256 public constant UNLOCK_AMOUNT = 2_777_777 * 1e18; // 2.78M per unlock
-    uint256 public constant TOTAL_UNLOCKS = 18;           // 18 unlocks over 3 years
+    uint256 public constant UNLOCK_AMOUNT = 1_666_666 * 1e18; // 1.67M per unlock; last unlock covers remainder
+    uint256 public constant TOTAL_UNLOCKS = 30;           // 30 unlocks over 5 years
     uint256 public constant EXPECTED_ALLOCATION = 50_000_000e18;
 
     // ── Derived times (lazy-cached when first needed)
@@ -103,7 +108,7 @@ contract DevReserveVestingVault is ReentrancyGuard {
     function vested() public view returns (uint256) {
         (uint64 s, uint64 c, uint64 e) = _projTimesView();
         if (s == 0 || block.timestamp < c) return 0;  // Before cliff: 0 vested
-        if (block.timestamp >= e) return ALLOCATION;  // After 36 months: all vested
+        if (block.timestamp >= e) return ALLOCATION;  // After 60 months: all vested
         
         // Bi-monthly unlocks: First unlock at cliff end, then every 60 days
         // At cliff (elapsed = 0): unlocksPassed = 1 (first unlock available)

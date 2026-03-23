@@ -166,16 +166,16 @@ export default function TokenLaunchPage() {
   const tiers = {
     founding: {
       name: "Founding",
-      price: 0.03,
-      priceDisplay: "$0.03",
+      price: 0.05,
+      priceDisplay: "$0.05",
       commitment: "180 days (mandatory)",
       immediateUnlock: "10%",
       supply: "10,000,000 VFIDE",
       maxPurchase: "500,000 VFIDE",
       color: "#FFD700",
       features: [
+        "Earliest access window (vault holders)",
         "180-day lock required (10% immediate, 90% locked)",
-        "Best price: 2.33x value vs Public tier",
         "Early supporter recognition",
         "No processor fees (burn + gas apply)",
         "ProofScore reputation building"
@@ -191,8 +191,8 @@ export default function TokenLaunchPage() {
       maxPurchase: "500,000 VFIDE",
       color: "#00F0FF",
       features: [
+        "General early access window",
         "90-day lock required (20% immediate, 80% locked)",
-        "1.4x value vs Public tier",
         "Priority governance access",
         "No processor fees (burn + gas apply)",
         "ProofScore reputation building"
@@ -200,14 +200,15 @@ export default function TokenLaunchPage() {
     },
     public: {
       name: "Public",
-      price: 0.07,
-      priceDisplay: "$0.07",
+      price: 0.05,
+      priceDisplay: "$0.05",
       commitment: "Optional",
       immediateUnlock: "Varies",
       supply: "15,000,000 VFIDE",
       maxPurchase: "500,000 VFIDE",
       color: "#0080FF",
       features: [
+        "Open public access window",
         "No lock required (or optional lock)",
         "180-day lock: 10% immediate, 90% locked",
         "90-day lock: 20% immediate, 80% locked",

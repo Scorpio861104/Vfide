@@ -6,25 +6,26 @@ import "./SharedInterfaces.sol";
 using SafeERC20 for IERC20;
 
 /**
- * VFIDEPresale - Fair Launch Presale with Tiered Pricing
+ * VFIDEPresale - Fair Launch Presale with Flat Pricing
  * 
- * PRICING MODEL: Fixed USD price tiers
+ * PRICING MODEL: Single flat price ($0.05 per VFIDE) for all tiers
  * - PAYMENT: Stablecoins preferred (USDC, USDT, DAI) - exact USD pricing
  * - ETH also accepted with configurable conversion rate
  * - Optional lock periods for release scheduling
+ * - Access tiers differentiate by window and lock requirements, NOT by price
  * 
  * SUPPLY BREAKDOWN:
  * - VFIDEToken allocates: 35M VFIDE to presale contract at genesis
  * - Base Supply: 35M VFIDE — no bonus pool (rewards are not available)
  * - Total Presale Distribution: 35M VFIDE
  * - LP tokens come from Treasury allocation (not presale)
- * - Max Raise: $2.45M (35M × $0.07 if 100% sells)
- * 
- * DYNAMIC LISTING PRICE:
- * - Listing price scales with presale results
+ * - Max Raise: $1.75M (35M × $0.05 flat)
  * 
  * HOWEY COMPLIANCE:
  * - Lock bonuses and referral bonuses are permanently disabled
+ * - Single flat price eliminates "buy early = buy cheap = profit" signalling
+ * - No dynamic listing price — secondary market price discovery is left to the market
+ * - Geo-blocking prevents participation by restricted-jurisdiction addresses
  */
 
 // IStablecoinRegistry already defined in SharedInterfaces.sol
@@ -57,6 +58,7 @@ error PS_InvalidTier();
 error PS_TierDisabled();
 error PS_TierSoldOut();
 error PS_TierLockRequired();
+error PS_GeoBlocked();
 
 contract VFIDEPresale is ReentrancyGuard {
     // Events
@@ -65,7 +67,7 @@ contract VFIDEPresale is ReentrancyGuard {
     event TieredPurchase(address indexed buyer, uint8 tier, uint256 baseTokens, uint256 usdPaid);
     event ClaimImmediate(address indexed user, uint256 amount);
     event ClaimLocked(address indexed user, uint256 amount);
-    event PresaleFinalized(uint256 ethRaised, uint256 lpVfide, uint256 listingPrice);
+    event PresaleFinalized(uint256 totalUsdRaised, uint256 totalTokensSold);
     event EmergencyPause(bool paused);
     event SaleExtended(uint256 newEndTime, uint256 additionalDays);
     event RefundsEnabled(uint256 timestamp);
@@ -77,6 +79,7 @@ contract VFIDEPresale is ReentrancyGuard {
     event TierEnabled(uint8 tier, bool enabled);
     event PurchaseCancelled(address indexed buyer, uint256 indexed index, uint256 tokensReturned);
     event TokensDeposited(uint256 amount);
+    event GeoBlockSet(address indexed account, bool blocked);
 
     // Immutable config
     address public immutable DAO;
@@ -91,14 +94,15 @@ contract VFIDEPresale is ReentrancyGuard {
     uint256 public constant MIN_PURCHASE_ETH = 0.01 ether;       // Min 0.01 ETH (if ETH accepted)
     
     // Three USD Price Tiers (microUSD where 1e6 = $1)
-    uint256 public constant TIER_0_PRICE = 30_000;   // $0.03 per VFIDE - Founding Tier
-    uint256 public constant TIER_1_PRICE = 50_000;   // $0.05 per VFIDE - Oath Tier
-    uint256 public constant TIER_2_PRICE = 70_000;   // $0.07 per VFIDE - Public Tier
+    // HOWEY FIX: Single flat price for all tiers — access windows differentiate tiers, not price.
+    // Tiered pricing ($0.03/$0.05/$0.07) was removed because it created an explicit
+    // "buy early = buy cheap = profit" signal that satisfies Howey Prong 3.
+    uint256 public constant TOKEN_PRICE = 50_000;    // $0.05 per VFIDE — flat for all tiers
     
-    // Tier supply caps (how many base tokens per tier)
-    uint256 public constant TIER_0_CAP = 10_000_000 * 1e18;  // 10M at $0.03
-    uint256 public constant TIER_1_CAP = 10_000_000 * 1e18;  // 10M at $0.05
-    uint256 public constant TIER_2_CAP = 15_000_000 * 1e18;  // 15M at $0.07
+    // Tier supply caps (how many base tokens per tier; access window differentiation only)
+    uint256 public constant TIER_0_CAP = 10_000_000 * 1e18;  // 10M — Vault-holder early access window
+    uint256 public constant TIER_1_CAP = 10_000_000 * 1e18;  // 10M — General early access window
+    uint256 public constant TIER_2_CAP = 15_000_000 * 1e18;  // 15M — Public window
     
     // Tier sold tracking
     uint256 public tier0Sold;
@@ -144,13 +148,12 @@ contract VFIDEPresale is ReentrancyGuard {
     bool public paused;
     bool public finalized;
     bool public unsoldWithdrawn;
-    uint256 public listingPrice;
     uint256 public lpVfideAmount;
     uint256 public totalUsdRaised;   // Total USD raised (in 6 decimals, like USDC)
     uint256 public totalEthRaised;   // ETH raised (for mixed payment tracking)
     
     // Minimum goal and refunds (in USD, 6 decimals)
-    uint256 public constant MINIMUM_GOAL_USD = 612_500 * 1e6;  // $612,500 (25% of $2.45M)
+    uint256 public constant MINIMUM_GOAL_USD = 437_500 * 1e6;  // $437,500 (25% of $1.75M flat-price max raise)
     uint256 public constant MINIMUM_GOAL = 8_750_000 * 1e18;   // 8.75M base tokens (legacy)
     bool public refundsEnabled;
     mapping(address => uint256) public usdContributed;  // Track USD per user for refunds (6 decimals)
@@ -191,6 +194,11 @@ contract VFIDEPresale is ReentrancyGuard {
     mapping(address => uint256) public cancelledTokens;
         /// @notice F-29 FIX: High-water mark for listing price calc — only goes up, preventing coordinated cancellation attacks
         uint256 public highWaterMarkUsdRaised;
+    
+    /// @notice HOWEY FIX: Addresses blocked from participating due to jurisdictional restrictions.
+    /// @dev The DAO can block addresses belonging to restricted jurisdictions (e.g. US persons)
+    ///      before or during the sale to reduce securities-law exposure.
+    mapping(address => bool) public geoBlocked;
     
     modifier onlyDAO() {
         _checkDAO();
@@ -296,17 +304,32 @@ contract VFIDEPresale is ReentrancyGuard {
         else revert PS_InvalidTier();
         emit TierEnabled(tier, enabled);
     }
+
+    /**
+     * @notice Block or unblock addresses from participating in the presale
+     * @dev HOWEY FIX: Used to prevent participation by restricted-jurisdiction addresses
+     *      (e.g. US persons) to reduce securities-law exposure. The DAO should maintain
+     *      this list proactively based on KYC/geo-IP screening off-chain.
+     * @param accounts Addresses to update
+     * @param blocked True to block, false to unblock
+     */
+    function setGeoBlock(address[] calldata accounts, bool blocked) external onlyDAO {
+        for (uint256 i = 0; i < accounts.length; i++) {
+            geoBlocked[accounts[i]] = blocked;
+            emit GeoBlockSet(accounts[i], blocked);
+        }
+    }
     
     /**
      * @notice Get price for a tier in microUSD (1e6 = $1)
-     * @param tier 0=Founding ($0.03), 1=Oath ($0.05), 2=Public ($0.07)
+     * @dev HOWEY FIX: All tiers now use the same flat TOKEN_PRICE ($0.05).
+     *      Tiers differentiate access windows and lock requirements, not price.
+     * @param tier 0=Founding, 1=Oath, 2=Public (all return TOKEN_PRICE)
      * @return price Price in microUSD
      */
     function getTierPrice(uint8 tier) public pure returns (uint256 price) {
-        if (tier == 0) return TIER_0_PRICE;
-        if (tier == 1) return TIER_1_PRICE;
-        if (tier == 2) return TIER_2_PRICE;
-        revert PS_InvalidTier();
+        if (tier > 2) revert PS_InvalidTier();
+        return TOKEN_PRICE;
     }
     
     /**
@@ -335,33 +358,34 @@ contract VFIDEPresale is ReentrancyGuard {
     
     /**
      * @notice Calculate base tokens from USD amount for a specific tier
+     * @dev HOWEY FIX: All tiers use TOKEN_PRICE ($0.05). The tier parameter is
+     *      validated for range-correctness but no longer affects the price.
      * @param usdAmount Amount in USD (6 decimals, like USDC)
-     * @param tier 0=Founding ($0.03), 1=Oath ($0.05), 2=Public ($0.07)
+     * @param tier 0=Founding, 1=Oath, 2=Public (all use TOKEN_PRICE)
      * @return baseTokens Tokens in 18 decimals
      */
     function calculateTokensFromUsdTier(uint256 usdAmount, uint8 tier) public pure returns (uint256 baseTokens) {
         uint256 price = getTierPrice(tier);
         // usdAmount is in 6 decimals (1e6 = $1)
-        // price is in microUSD (e.g., 30000 = $0.03)
+        // price is in microUSD (e.g., 50000 = $0.05)
         // baseTokens = (usdAmount * 1e18) / price
         baseTokens = (usdAmount * 1e18) / price;
     }
     
     /**
-     * @notice Calculate base tokens from USD amount (uses tier 2 - public price)
+     * @notice Calculate base tokens from USD amount (uses flat TOKEN_PRICE)
      * @param usdAmount Amount in USD (6 decimals, like USDC)
      * @return baseTokens Tokens in 18 decimals
-     * @dev Legacy function for backward compatibility, defaults to tier 2
      */
     function calculateTokensFromUsd(uint256 usdAmount) public pure returns (uint256 baseTokens) {
-        baseTokens = calculateTokensFromUsdTier(usdAmount, 2); // Default to tier 2 (public)
+        baseTokens = (usdAmount * 1e18) / TOKEN_PRICE;
     }
     
     /**
      * @notice Calculate base tokens from ETH amount using current ETH/USD rate
      * @param ethAmount Amount in ETH (18 decimals)
      * @return baseTokens Tokens in 18 decimals
-     * @dev Uses tier 2 (public) price
+     * @dev Uses flat TOKEN_PRICE
      */
     function calculateTokensFromEth(uint256 ethAmount) public view returns (uint256 baseTokens) {
         // Convert ETH to USD (6 decimals)
@@ -432,16 +456,19 @@ contract VFIDEPresale is ReentrancyGuard {
      * @notice Purchase VFIDE tokens with stablecoin (USDC, USDT, DAI, etc.)
      * @param stablecoin Address of the stablecoin to use
      * @param amount Amount of stablecoin to spend (in stablecoin decimals)
-     * @param tier Price tier: 0=Founding ($0.03), 1=Oath ($0.05), 2=Public ($0.07)
+     * @param tier Access tier: 0=Founding (vault holders, 180-day lock), 1=Oath (90-day lock), 2=Public (no lock req.)
      * @param lockPeriod Lock duration: 0 (no lock), 90 days, or 180 days
-     * @dev PREFERRED METHOD - exact USD pricing, no volatility
-     *      Requires prior approval of stablecoin to this contract
+     * @dev PREFERRED METHOD - exact USD pricing, no volatility.
+     *      HOWEY FIX: All tiers use the same TOKEN_PRICE ($0.05). Tiers control
+     *      access windows and lock requirements, not price.
+     *      Requires prior approval of stablecoin to this contract.
      */
     function buyWithStable(address stablecoin, uint256 amount, uint8 tier, uint256 lockPeriod) external nonReentrant whenNotPaused {
         require(tokensDeposited, "PS: tokens not yet deposited");
         require(block.timestamp >= saleStartTime, "Not started");
         require(block.timestamp <= saleEndTime, "Ended");
         require(totalBaseSold < BASE_SUPPLY, "Sold out");
+        if (geoBlocked[msg.sender]) revert PS_GeoBlocked();
         if (purchases[msg.sender].length >= MAX_PURCHASES_PER_WALLET) revert PS_TooManyPurchases();
         require(address(stablecoinRegistry) != address(0), "PS: no registry");
         if (!stablecoinRegistry.isWhitelisted(stablecoin)) revert PS_InvalidStablecoin();
@@ -577,16 +604,17 @@ contract VFIDEPresale is ReentrancyGuard {
     }
     
     /**
-     * @notice Purchase VFIDE tokens with ETH (legacy support, uses tier 2 public price)
+     * @notice Purchase VFIDE tokens with ETH (legacy support, uses flat TOKEN_PRICE)
      * @param lockPeriod Lock duration: 0 (no lock), 90 days, or 180 days
-     * @dev Stablecoins preferred for exact USD pricing
-     *      ETH uses tier 2 (public) at $0.07 + configurable ethPriceUsd rate
+     * @dev Stablecoins preferred for exact USD pricing.
+     *      HOWEY FIX: ETH uses flat TOKEN_PRICE ($0.05), same as stablecoin purchases.
      */
     function buyTokens(uint256 lockPeriod) external payable nonReentrant whenNotPaused {
         require(tokensDeposited, "Tokens not deposited");
         require(block.timestamp >= saleStartTime, "Not started");
         require(block.timestamp <= saleEndTime, "Ended");
         require(totalBaseSold < BASE_SUPPLY, "Sold out");
+        if (geoBlocked[msg.sender]) revert PS_GeoBlocked();
         if (purchases[msg.sender].length >= MAX_PURCHASES_PER_WALLET) revert PS_TooManyPurchases();
         if (!ethAccepted) revert PS_ETHNotAccepted();
         if (!isTierAvailable(2)) revert PS_TierDisabled(); // ETH uses tier 2 (public)
@@ -621,8 +649,8 @@ contract VFIDEPresale is ReentrancyGuard {
                     highWaterMarkUsdRaised = totalUsdRaised;
                 }
         
-        // Calculate tokens using tier 2 (public) price
-        uint256 baseTokens = calculateTokensFromEthTier(msg.value, 2);
+        // Calculate tokens using flat TOKEN_PRICE
+        uint256 baseTokens = calculateTokensFromUsd(usdAmount);
 
         // No bonus tokens — rewards are not offered
         uint256 totalTokens = baseTokens;
@@ -963,7 +991,7 @@ contract VFIDEPresale is ReentrancyGuard {
     /**
      * @notice Calculate tokens for a USD amount (stablecoin purchase preview)
      * @param usdAmount Amount in USD (6 decimals, e.g., 100e6 = $100)
-     * @param tier Price tier: 0=Founding ($0.03), 1=Oath ($0.05), 2=Public ($0.07)
+     * @param tier Access tier (0/1/2 — all use TOKEN_PRICE; tier param is range-checked only)
      */
     function calculateTokensFromUsdPreview(uint256 usdAmount, uint8 tier) external pure returns (
         uint256 base180, uint256 bonus180, uint256 total180,
@@ -1015,51 +1043,12 @@ contract VFIDEPresale is ReentrancyGuard {
     // ──────────────────────────── Finalization & Listing ────────────────────────────
 
     /**
-     * @notice Calculate listing price based on presale results
-     * @dev Listing price scales with presale success (in USD terms):
-     *      - < 50% sold ($1.225M) → $0.10 listing (minimum)
-     *      - >= 50% sold → Price scales from $0.10 to $0.14
-     * @return priceUsd Price in microUSD (1e6 = $1)
-     * @return lpVfide Suggested LP allocation in tokens
-     */
-    function calculateListingPrice() public view returns (uint256 priceUsd, uint256 lpVfide) {
-        // Total USD raised (6 decimals)
-        // F-29 FIX: Use high-water mark to prevent coordinated cancellations from depressing listing price
-        uint256 fundsRaisedUsd = highWaterMarkUsdRaised > 0 ? highWaterMarkUsdRaised : totalUsdRaised;
-        
-        // Thresholds in USD (6 decimals)
-        uint256 halfRaise = 1_225_000 * 1e6;    // $1.225M
-        uint256 fullRaise = 2_450_000 * 1e6;    // $2.45M
-        
-        // Prices in microUSD
-        uint256 minListingPrice = 100_000;       // $0.10
-        uint256 maxListingPrice = 140_000;       // $0.14
-        
-        if (fundsRaisedUsd <= halfRaise) {
-            priceUsd = minListingPrice;
-        } else if (fundsRaisedUsd >= fullRaise) {
-            priceUsd = maxListingPrice;
-        } else {
-            // Linear scale from $0.10 to $0.14
-            uint256 excess = fundsRaisedUsd - halfRaise;
-            uint256 range = fullRaise - halfRaise;
-            priceUsd = minListingPrice + ((maxListingPrice - minListingPrice) * excess) / range;
-        }
-        
-        // Calculate LP allocation: use raised USD / listing price
-        // lpVfide = (fundsRaisedUsd * 1e18) / priceUsd
-        lpVfide = (fundsRaisedUsd * 1e18) / priceUsd;
-        
-        // Cap at 40M VFIDE for LP
-        if (lpVfide > 40_000_000 * 1e18) {
-            lpVfide = 40_000_000 * 1e18;
-        }
-    }
-
-    /**
-     * @notice Finalize presale and calculate listing price
-     * @dev LP tokens come from Treasury, not presale contract
-     *      Unsold tokens are returned to treasury
+     * @notice Finalize presale
+     * @dev LP tokens come from Treasury, not presale contract.
+     *      Unsold tokens are returned to treasury.
+     *      HOWEY FIX: The dynamic listing price calculation has been removed.
+     *      Secondary-market price is determined by the market, not set by the team.
+     *      lpVfideAmount is left at 0 — the DAO manages LP seeding separately.
      */
     function finalizePresale() external onlyDAO {
         if (finalized) revert PS_AlreadyFinalized();
@@ -1070,11 +1059,6 @@ contract VFIDEPresale is ReentrancyGuard {
             revert PS_MinimumGoalNotMet();
         }
         
-        // Calculate listing price (for reference/events)
-        (uint256 price, uint256 lpVfide) = calculateListingPrice();
-        
-        listingPrice = price;
-        lpVfideAmount = lpVfide;
         finalized = true;
         
         // Return any unsold tokens to treasury
@@ -1086,8 +1070,7 @@ contract VFIDEPresale is ReentrancyGuard {
             unsoldWithdrawn = true;
         }
 
-        // Emit with USD raised (more meaningful than ETH)
-        emit PresaleFinalized(totalUsdRaised, lpVfide, price);
+        emit PresaleFinalized(totalUsdRaised, totalSold);
     }
     
     /// @notice Calculate total tokens still owed to buyers (not yet claimed)
@@ -1099,13 +1082,11 @@ contract VFIDEPresale is ReentrancyGuard {
     function getFinalizationDetails() external view returns (
         bool isFinalized,
         uint256 totalRaisedUsd,
-        uint256 lpTokens,
-        uint256 priceUsd
+        uint256 lpTokens
     ) {
         isFinalized = finalized;
-        // Return total USD raised (6 decimals)
         totalRaisedUsd = totalUsdRaised;
-        (priceUsd, lpTokens) = calculateListingPrice();
+        lpTokens = lpVfideAmount;
     }
     
     /**

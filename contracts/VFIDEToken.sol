@@ -1308,8 +1308,21 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
         }
     }
 
-    /// @notice F-31 FIX: Monitoring helper for burn accounting
+    /// @notice F-31 FIX: Monitoring helper for burn accounting.
+    /// @dev HOWEY NOTE: This metric tracks cumulative tokens removed via transaction
+    ///      processing fees (ProofScoreBurnRouter). It should be presented in UIs as
+    ///      "transaction fees processed" — NOT as a "supply reduction / scarcity" metric.
+    ///      Using deflationary scarcity narratives creates an implicit profit expectation
+    ///      (Howey Prong 3). See also: transactionFeesProcessed() for the preferred alias.
     function totalBurnedToDate() external view returns (uint256) {
+        return MAX_SUPPLY - totalSupply;
+    }
+
+    /// @notice Howey-neutral alias for totalBurnedToDate().
+    /// @dev Preferred name for public-facing displays and integrations.
+    ///      Frames the metric as cumulative network processing fees paid, not as
+    ///      a measure of token scarcity or value accrual.
+    function transactionFeesProcessed() external view returns (uint256) {
         return MAX_SUPPLY - totalSupply;
     }
 
