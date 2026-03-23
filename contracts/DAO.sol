@@ -48,13 +48,17 @@ contract DAO is ReentrancyGuard {
     event ProposalTypeSelectorPolicySet(ProposalType indexed ptype, bytes4 indexed selector, bool allowed);
     event SeerAutonomousSet(address seerAutonomous);
     event EmergencyQuorumRescueInitiated(uint256 readyAt);
+    event EmergencyQuorumRescueApproved(); // DAO-03 FIX: Track secondary approval
     event EmergencyQuorumRescueExecuted(uint256 newMinVotes, uint256 newMinParticipation);
     event EmergencyQuorumRescueCancelled();
     event EmergencyTimelockReplacementProposed(address indexed newTimelock, uint64 readyAt);
+    event EmergencyTimelockReplacementApproved(); // DAO-03 FIX: Track secondary approval
     event EmergencyTimelockReplacementExecuted(address indexed newTimelock);
     event EmergencyTimelockReplacementCancelled();
 
     address public admin;
+    /// @notice DAO-03 FIX: Secondary admin required to co-approve emergency actions (prevent sole admin bypass)
+    address public emergencyApprover;
     IDAOTimelock public timelock;
     ISeer public seer;
     IVaultHub public vaultHub;
@@ -74,16 +78,25 @@ contract DAO is ReentrancyGuard {
     /// @notice Absolute minimum quorum to prevent cascading reduction (DAO-02 FIX)
     uint256 public constant ABSOLUTE_MIN_QUORUM = 500;
     uint64 public emergencyRescueReadyAt; // 0 = not initiated
-        // F-22 FIX: Emergency timelock replacement for DAO circular dependency recovery
-        uint256 public constant EMERGENCY_TIMELOCK_DELAY = 30 days;
-        address public pendingEmergencyTimelock;
-        uint64  public emergencyTimelockReadyAt;
+    bool public emergencyRescueApproved; // DAO-03 FIX: Track secondary approval
+    address public emergencyRescueInitiator; // DAO-03 hardening: initiator cannot self-approve
+    // F-22 FIX: Emergency timelock replacement for DAO circular dependency recovery
+    uint256 public constant EMERGENCY_TIMELOCK_DELAY = 30 days;
+    address public pendingEmergencyTimelock;
+    uint64  public emergencyTimelockReadyAt;
+    bool public emergencyTimelockApproved; // DAO-03 FIX: Track secondary approval for timelock replacement
+    address public emergencyTimelockInitiator; // DAO-03 hardening: initiator cannot self-approve
     mapping(address => uint256) public lastVoteRewardDay;
     mapping(address => uint64) public lastProposalAt;
     mapping(ProposalType => mapping(address => bool)) public proposalTypeTargetAllowed;
     mapping(ProposalType => uint256) public proposalTypeTargetPolicyCount;
     mapping(ProposalType => mapping(bytes4 => bool)) public proposalTypeSelectorAllowed;
     mapping(ProposalType => uint256) public proposalTypeSelectorPolicyCount;
+
+    /// @notice DAO-10 FIX: Cap total proposals to prevent unbounded iteration
+    uint256 public constant MAX_PROPOSALS = 200;
+    /// @notice DAO-12 FIX: Queued proposals expire after 30 days if not executed
+    uint256 public constant QUEUE_EXPIRY = 30 days;
 
     struct Proposal {
         address proposer;
@@ -94,6 +107,7 @@ contract DAO is ReentrancyGuard {
         ProposalType proposalType; // L-02: renamed from ptype for clarity (ptype was inconsistent with the type name)
         uint64  start;
         uint64  end;
+        uint64  queuedAt;     // DAO-12 FIX: Track when proposal was queued for expiry
         bool    executed;
         bool    queued;
         uint256 forVotes;      // Score-weighted
@@ -119,6 +133,9 @@ contract DAO is ReentrancyGuard {
     mapping(address => VoterInfo) public voterInfo;
     uint256 public constant FATIGUE_RECOVERY_RATE = 1 days; // Recover 5% per day
     uint256 public constant FATIGUE_PER_VOTE = 5; // 5% fatigue per vote
+    /// @notice DAO-05 FIX: Score must have been established at least 2 days before proposal creation
+    /// @dev Prevents last-minute ProofScore pumping just before a proposal is submitted
+    uint256 public constant SCORE_SETTLEMENT_WINDOW = 2 days;
 
     modifier onlyAdmin() {
         _checkAdmin();
@@ -157,7 +174,17 @@ contract DAO is ReentrancyGuard {
         emit SeerAutonomousSet(_seerAutonomous);
     }
 
-    function setAdmin(address _admin) external onlyTimelock { require(_admin!=address(0),"zero"); admin=_admin; emit AdminSet(_admin); }
+    function setAdmin(address _admin) external onlyTimelock { 
+        require(_admin!=address(0),"zero"); 
+        admin=_admin; 
+        emit AdminSet(_admin); 
+    }
+    
+    /// @notice DAO-03 FIX: Set emergency approver (secondary check for emergency actions)
+    function setEmergencyApprover(address _approver) external onlyTimelock {
+        require(_approver != address(0), "zero");
+        emergencyApprover = _approver;
+    }
     function setParams(uint64 _period, uint256 _minVotes) external onlyTimelock {
         if(_period<1 hours)_period=1 hours;
         require(_period <= 30 days, "DAO: voting period too long");
@@ -179,16 +206,37 @@ contract DAO is ReentrancyGuard {
     // ═══════════════════════════════════════════════════════════════════════
 
     /// @notice Initiate emergency quorum rescue — 14-day warmup before execution
-    /// @dev Only admin can initiate. Provides on-chain notice period for community awareness.
-    function initiateEmergencyQuorumRescue() external onlyAdmin {
+    /// @dev DAO-03 FIX: Requires approval from both admin and emergencyApprover to prevent sole-admin bypass
+    function initiateEmergencyQuorumRescue() external {
+        require(msg.sender == admin || msg.sender == emergencyApprover, "DAO: not authorized");
+        require(emergencyRescueReadyAt == 0, "DAO: rescue already pending");
+        
         emergencyRescueReadyAt = uint64(block.timestamp + EMERGENCY_RESCUE_DELAY);
+        emergencyRescueApproved = false; // Reset approval flag
+        emergencyRescueInitiator = msg.sender;
         emit EmergencyQuorumRescueInitiated(emergencyRescueReadyAt);
+    }
+    
+    /// @notice Approve emergency quorum rescue (secondary sign-off)
+    /// @dev DAO-03 FIX: Must be called by the other party (admin or emergencyApprover)
+    function approveEmergencyQuorumRescue() external {
+        require(emergencyRescueReadyAt != 0, "DAO: no rescue pending");
+        require(msg.sender == admin || msg.sender == emergencyApprover, "DAO: not authorized");
+        require(emergencyRescueInitiator != address(0), "DAO: no initiator");
+        require(msg.sender != emergencyRescueInitiator, "DAO: initiator cannot self-approve");
+        
+        emergencyRescueApproved = true;
+        emit EmergencyQuorumRescueApproved();
     }
 
     /// @notice Cancel a pending emergency quorum rescue
-    function cancelEmergencyQuorumRescue() external onlyAdmin {
+    /// @dev DAO-03 FIX: Can be called by admin or emergencyApprover to prevent unwanted execution
+    function cancelEmergencyQuorumRescue() external {
+        require(msg.sender == admin || msg.sender == emergencyApprover, "DAO: not authorized");
         require(emergencyRescueReadyAt != 0, "DAO: no rescue pending");
         emergencyRescueReadyAt = 0;
+        emergencyRescueApproved = false; // Reset approval flag when cancelled
+        emergencyRescueInitiator = address(0);
         emit EmergencyQuorumRescueCancelled();
     }
 
@@ -199,6 +247,7 @@ contract DAO is ReentrancyGuard {
     function executeEmergencyQuorumRescue(uint256 _minVotes, uint256 _minParticipation) external onlyAdmin {
         require(emergencyRescueReadyAt != 0, "DAO: no rescue pending");
         require(block.timestamp >= emergencyRescueReadyAt, "DAO: rescue warmup not elapsed");
+        require(emergencyRescueApproved, "DAO: secondary approval required"); // DAO-03 FIX: Require approval from emergencyApprover
         // F-21 FIX: New quorum must be >= 10% of the current value to prevent essentially zeroing quorum
         require(_minVotes >= minVotesRequired / 10, "DAO: quorum too low (must be >= 10% of current)");
         require(_minVotes >= ABSOLUTE_MIN_QUORUM, "DAO: below absolute minimum quorum");
@@ -207,6 +256,8 @@ contract DAO is ReentrancyGuard {
         require(_minParticipation <= minParticipation, "DAO: must reduce or keep minParticipation");
         
         emergencyRescueReadyAt = 0;
+        emergencyRescueApproved = false; // Reset flag after execution
+        emergencyRescueInitiator = address(0);
         minVotesRequired = _minVotes;
         minParticipation = _minParticipation;
         emit EmergencyQuorumRescueExecuted(_minVotes, _minParticipation);
@@ -214,28 +265,53 @@ contract DAO is ReentrancyGuard {
 
     /// @notice F-22 FIX: Propose a new timelock address for emergency replacement (30-day delay)
     /// @dev Required when the timelock contract has a bug or key compromise and DAO cannot govern itself.
-    function proposeEmergencyTimelockReplacement(address newTimelock) external onlyAdmin {
+    /// @dev DAO-03 FIX: Requires approval from both admin and emergencyApprover
+    function proposeEmergencyTimelockReplacement(address newTimelock) external {
+        require(msg.sender == admin || msg.sender == emergencyApprover, "DAO: not authorized");
         require(newTimelock != address(0), "DAO: zero");
         pendingEmergencyTimelock = newTimelock;
         emergencyTimelockReadyAt = uint64(block.timestamp) + uint64(EMERGENCY_TIMELOCK_DELAY);
+        emergencyTimelockApproved = false; // Reset approval flag
+        emergencyTimelockInitiator = msg.sender;
         emit EmergencyTimelockReplacementProposed(newTimelock, emergencyTimelockReadyAt);
+    }
+    
+    /// @notice Approve emergency timelock replacement (secondary sign-off)
+    /// @dev DAO-03 FIX: Must be called by the other party (admin or emergencyApprover)
+    function approveEmergencyTimelockReplacement() external {
+        require(pendingEmergencyTimelock != address(0), "DAO: no pending replacement");
+        require(msg.sender == admin || msg.sender == emergencyApprover, "DAO: not authorized");
+        require(emergencyTimelockInitiator != address(0), "DAO: no initiator");
+        require(msg.sender != emergencyTimelockInitiator, "DAO: initiator cannot self-approve");
+        
+        emergencyTimelockApproved = true;
+        emit EmergencyTimelockReplacementApproved();
     }
 
     /// @notice F-22 FIX: Execute emergency timelock replacement after 30-day delay
-    function executeEmergencyTimelockReplacement() external onlyAdmin {
+    /// @dev DAO-03 FIX: Requires secondary approval from emergencyApprover
+    function executeEmergencyTimelockReplacement() external {
+        require(msg.sender == admin || msg.sender == emergencyApprover, "DAO: not authorized");
         require(emergencyTimelockReadyAt > 0 && block.timestamp >= emergencyTimelockReadyAt, "DAO: not ready");
+        require(emergencyTimelockApproved, "DAO: secondary approval required"); // DAO-03 FIX
         address newTimelock = pendingEmergencyTimelock;
         timelock = IDAOTimelock(newTimelock);
         delete pendingEmergencyTimelock;
         delete emergencyTimelockReadyAt;
+        emergencyTimelockApproved = false; // Reset flag after execution
+        emergencyTimelockInitiator = address(0);
         emit EmergencyTimelockReplacementExecuted(newTimelock);
     }
 
     /// @notice F-22 FIX: Cancel a pending emergency timelock replacement
-    function cancelEmergencyTimelockReplacement() external onlyAdmin {
+    /// @dev DAO-03 FIX: Can be called by admin or emergencyApprover to prevent unwanted execution
+    function cancelEmergencyTimelockReplacement() external {
+        require(msg.sender == admin || msg.sender == emergencyApprover, "DAO: not authorized");
         require(pendingEmergencyTimelock != address(0), "DAO: no pending replacement");
         delete pendingEmergencyTimelock;
         delete emergencyTimelockReadyAt;
+        emergencyTimelockApproved = false; // Reset approval flag
+        emergencyTimelockInitiator = address(0);
         emit EmergencyTimelockReplacementCancelled();
     }
 
@@ -337,6 +413,8 @@ contract DAO is ReentrancyGuard {
 
         lastProposalAt[msg.sender] = uint64(block.timestamp);
         
+        // DAO-10 FIX: Cap total proposals to prevent unbounded array iteration
+        require(proposalCount < MAX_PROPOSALS, "DAO: proposal cap reached");
         id=++proposalCount;
         Proposal storage p=proposals[id];
         p.proposer=msg.sender; p.proposalType=ptype; p.target=target; p.value=value; p.data=data; p.description=description;
@@ -380,11 +458,14 @@ contract DAO is ReentrancyGuard {
             weight = uint256(seer.getScore(voter));
             p.scoreSnapshot[voter] = weight + 1; // +1 so score-0 is stored as 1, not confused with unset
                     // F-28 FIX: Require voter's score to have been established before the proposal was created.
-                    // Prevents a coalition of operators from temporarily boosting a voter's score to manipulate vote weight.
                     // DAO-04 FIX: Also require activity within 90 days (not stale > 90 days)
+                    // DAO-05 FIX: Score must predate proposal creation by at least SCORE_SETTLEMENT_WINDOW (2 days)
+                    // to prevent last-minute ProofScore pumping right before a proposal is submitted.
                     uint64 voterLastActivity = seer.lastActivity(voter);
+                    uint256 scoreDeadline = p.start - votingDelay; // = proposal creation timestamp
                     require(
-                        voterLastActivity > 0 && voterLastActivity < p.start - votingDelay &&
+                        voterLastActivity > 0 &&
+                        voterLastActivity + SCORE_SETTLEMENT_WINDOW < scoreDeadline &&
                         voterLastActivity > block.timestamp - 90 days,
                         "DAO: score not recently established"
                     );
@@ -461,6 +542,7 @@ contract DAO is ReentrancyGuard {
         emit Finalized(id,passed);
         if (passed){
             p.queued=true;
+            p.queuedAt=uint64(block.timestamp); // DAO-12 FIX: Record queue time for expiry
             bytes32 tlId = timelock.queueTx(p.target,p.value,p.data);
             emit Queued(id,tlId);
             if (address(hooks)!=address(0)) { try hooks.onProposalQueued(id,p.target,p.value) {} catch {} }
@@ -473,7 +555,20 @@ contract DAO is ReentrancyGuard {
         require(msg.sender == address(timelock), "DAO: only timelock can mark executed");
         Proposal storage p=proposals[id];
         require(p.queued&&!p.executed,"bad");
+        // DAO-12 FIX: Prevent execution of expired queued proposals
+        require(block.timestamp < uint256(p.queuedAt) + QUEUE_EXPIRY, "DAO: queued proposal expired");
         p.executed=true; emit Executed(id);
+    }
+
+    /// @notice DAO-12 FIX: Expire stale queued proposals that were never executed
+    /// @dev Anyone can call — this reclaims proposal slot when timelock fails to execute
+    function expireQueuedProposal(uint256 id) external {
+        Proposal storage p = proposals[id];
+        require(p.queued && !p.executed, "DAO: not queued or already executed");
+        require(p.queuedAt > 0, "DAO: no queue timestamp");
+        require(block.timestamp >= uint256(p.queuedAt) + QUEUE_EXPIRY, "DAO: expiry not reached");
+        p.queued = false;
+        emit ProposalStateChanged(id, "queued", "expired");
     }
 
     function withdrawProposal(uint256 id) external {
@@ -481,10 +576,9 @@ contract DAO is ReentrancyGuard {
         require(p.proposer == msg.sender, "Not proposer");
         require(!p.executed && !p.queued, "Already processed");
         
-        // FLOW-6 FIX: Cannot withdraw proposal once voting has started and votes cast
-        // This prevents gaming by withdrawing losing proposals
-        require(block.timestamp < p.start || (p.forVotes == 0 && p.againstVotes == 0), 
-            "DAO: cannot withdraw after votes cast");
+        // DAO-08 FIX: Cannot withdraw once voting has started, regardless of vote count.
+        // This prevents gaming by submitting proposals before withdrawing to avoid scrutiny.
+        require(block.timestamp < p.start, "DAO: voting has started");
         
         // Must match the proposer-scoped hash used in propose()
         bytes32 proposalHash = keccak256(abi.encode(msg.sender, p.target, p.value, p.data));
@@ -510,6 +604,9 @@ contract DAO is ReentrancyGuard {
 
     function disputeFlag(address user, string calldata reason) external {
         require(msg.sender != address(0), "Invalid caller");
+        // DAO-09 FIX: Require minimum ProofScore to prevent spam dispute flooding
+        // Only users with governance eligibility (same threshold as proposing) may file disputes
+        require(_eligible(msg.sender), "DAO: insufficient ProofScore to dispute");
         // Log the dispute for DAO review
         emit DisputeFlagged(user, msg.sender, reason);
         // DAO can review and override Seer decisions

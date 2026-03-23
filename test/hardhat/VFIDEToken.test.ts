@@ -4,7 +4,7 @@
  * Covers:
  *  - H-01: proposeSystemExempt / confirmSystemExempt 48-hour timelock
  *  - H-01: proposeWhitelist  / confirmWhitelist     48-hour timelock
- *  - H-02: circuitBreaker does NOT bypass fees (isFeeBypassed independent)
+ *  - H-02: circuitBreaker bypasses fees during emergency mode
  *  - Core: deployment, supply distribution, owner can set vaultOnly
  */
 import { describe, it } from "node:test";
@@ -122,9 +122,9 @@ describe("VFIDEToken", () => {
     });
   });
 
-  // ─── H-02: circuitBreaker does NOT bypass fees ────────────────────────────
-  describe("H-02: circuit breaker does not bypass fees", () => {
-    it("isFeeBypassed is false even when circuitBreaker is active", async () => {
+  // ─── H-02: circuitBreaker bypasses fees in emergency mode ─────────────────
+  describe("H-02: circuit breaker bypasses fees", () => {
+    it("isFeeBypassed is true when circuitBreaker is active", async () => {
       const { token, owner } = await deployToken();
       const MAX = 7 * 24 * 60 * 60;
 
@@ -133,9 +133,9 @@ describe("VFIDEToken", () => {
       const cbActive = await token.isCircuitBreakerActive();
       assert.equal(cbActive, true);
 
-      // circuitBreaker must NOT bypass fee calculation
+      // circuitBreaker must bypass fee calculation in emergency mode
       const feeBypassed = await token.isFeeBypassed();
-      assert.equal(feeBypassed, false);
+      assert.equal(feeBypassed, true);
     });
   });
 
@@ -145,6 +145,23 @@ describe("VFIDEToken", () => {
       const { token, owner } = await deployToken();
       await token.connect(owner).setVaultOnly(true);
       assert.equal(await token.vaultOnly(), true);
+    });
+  });
+
+  describe("transfer preview", () => {
+    it("reports frozen sender and recipient consistently with live transfer rules", async () => {
+      const { token, owner, user1 } = await deployToken();
+
+      await token.connect(owner).setFrozen(owner.address, true);
+      let result = await token.canTransfer(owner.address, user1.address, 1n);
+      assert.equal(result[0], false);
+      assert.equal(result[1], "Sender frozen");
+
+      await token.connect(owner).setFrozen(owner.address, false);
+      await token.connect(owner).setFrozen(user1.address, true);
+      result = await token.canTransfer(owner.address, user1.address, 1n);
+      assert.equal(result[0], false);
+      assert.equal(result[1], "Recipient frozen");
     });
   });
 });
