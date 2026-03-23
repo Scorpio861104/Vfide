@@ -48,6 +48,7 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
     uint256 public constant MIN_SWAP_OUTPUT_BPS = 9000;
     uint256 public constant MAX_SWAP_OUTPUT_BPS = 10000;
     uint256 public constant MAX_SWAP_PATH_LENGTH = 5;
+    uint256 public constant REFUND_COMPLETION_WINDOW = 30 days;
     
     /// Events
     event ModulesSet(address vaultHub, address seer, address securityHub, address ledger);
@@ -80,6 +81,7 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
     event FeeSinkSet(address sink);
     event AutoConvertSet(address indexed merchant, bool enabled);
     event PayoutAddressSet(address indexed merchant, address payoutAddress);
+    event AutoConvertFallback(address indexed merchant, address indexed tokenIn, uint256 amountIn, string reason);
 
     /// External modules
     IVaultHub public vaultHub;
@@ -111,6 +113,7 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
     mapping(address => MerchantInfo) public merchants;
     address[] public merchantList;
     mapping(address => bool) private merchantInList;
+    mapping(address => uint256) private merchantIndexPlusOne;
 
     /// Supported payment tokens (VFIDE + stablecoins)
     mapping(address => bool) public acceptedTokens;
@@ -281,6 +284,7 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
         if (!merchantInList[msg.sender]) {
             merchantList.push(msg.sender);
             merchantInList[msg.sender] = true;
+            merchantIndexPlusOne[msg.sender] = merchantList.length;
         }
         
         emit MerchantRegistered(msg.sender, businessName, category);
@@ -308,6 +312,20 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
     function deregisterMerchant() external onlyMerchant {
         MerchantInfo storage m = merchants[msg.sender];
         require(!m.suspended, "Cannot deregister while suspended");
+        require(!_hasPendingRefunds(msg.sender), "Cannot deregister with pending refunds");
+
+        if (merchantInList[msg.sender]) {
+            uint256 idx = merchantIndexPlusOne[msg.sender] - 1;
+            uint256 lastIdx = merchantList.length - 1;
+            if (idx != lastIdx) {
+                address moved = merchantList[lastIdx];
+                merchantList[idx] = moved;
+                merchantIndexPlusOne[moved] = idx + 1;
+            }
+            merchantList.pop();
+            merchantInList[msg.sender] = false;
+            merchantIndexPlusOne[msg.sender] = 0;
+        }
         
         m.registered = false;
         
@@ -385,6 +403,7 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
         require(r.approved, "Refund not approved");
         require(!r.completed, "Already completed");
         require(msg.sender == r.merchant, "Only merchant can complete");
+        require(block.timestamp <= uint256(r.requestTime) + REFUND_COMPLETION_WINDOW, "Refund completion expired");
         
         r.completed = true;
         
@@ -625,6 +644,7 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
      * If set to address(0), funds go to the merchant's Vault.
      */
     function setPayoutAddress(address payout) external onlyMerchant {
+        require(payout == address(0) || vaultHub.isVault(payout), "MP: payout must be vault");
         merchants[msg.sender].payoutAddress = payout;
         emit PayoutAddressSet(msg.sender, payout);
     }
@@ -838,11 +858,13 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
                     // Revoke approval after failed swap to prevent lingering approvals
                     require(IERC20(token).approve(address(swapRouter), 0), "MP: revoke failed");
                     // Fallback: Send original token if swap fails
+                    emit AutoConvertFallback(merchant, token, netAmount, "swap_failed");
                     IERC20(token).safeTransfer(recipient, netAmount);
                 }
             } else {
                 // No safe quote available; fallback to direct token settlement.
                 require(IERC20(token).approve(address(swapRouter), 0), "MP: revoke failed");
+                emit AutoConvertFallback(merchant, token, netAmount, "quote_unavailable");
                 IERC20(token).safeTransfer(recipient, netAmount);
             }
         } else {
@@ -979,6 +1001,16 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
         if (m.txCount > 0) {
             refundRate = (refundCount * 10000) / m.txCount;
         }
+    }
+
+    function _hasPendingRefunds(address merchant) internal view returns (bool) {
+        bytes32[] storage refundIds = merchantRefunds[merchant];
+        for (uint256 i = 0; i < refundIds.length; i++) {
+            if (!refundRequests[refundIds[i]].completed) {
+                return true;
+            }
+        }
+        return false;
     }
 
     // ─────────────────────────── Internal Helpers

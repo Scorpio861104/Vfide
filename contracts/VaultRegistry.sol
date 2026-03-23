@@ -40,8 +40,10 @@ contract VaultRegistry is Ownable, ReentrancyGuard {
     IProofScoreManager public proofScoreManager;
     
     // Recovery identifiers (all hashed for privacy)
-    // recoveryIdHash => vault address
+    // recoveryIdHash => primary vault address (backward compatibility)
     mapping(bytes32 => address) public vaultByRecoveryId;
+    // FINAL-06: collision-safe storage of all vaults sharing the same recovery hash
+    mapping(bytes32 => address[]) public vaultsByRecoveryId;
     
     // Vault => recovery ID hash (for verification)
     mapping(address => bytes32) public recoveryIdOfVault;
@@ -180,18 +182,13 @@ contract VaultRegistry is Ownable, ReentrancyGuard {
     ) external onlyVaultOwner(vault) validVault(vault) {
         bytes32 hashedId = keccak256(abi.encodePacked(recoveryId));
         
-        // Ensure not already taken by another vault
-        if (vaultByRecoveryId[hashedId] != address(0) && vaultByRecoveryId[hashedId] != vault) {
-            revert RecoveryIdAlreadyTaken();
-        }
-        
         // Clear old recovery ID if exists
         bytes32 oldId = recoveryIdOfVault[vault];
-        if (oldId != bytes32(0)) {
-            delete vaultByRecoveryId[oldId];
+        if (oldId != bytes32(0) && oldId != hashedId) {
+            _removeRecoveryVault(oldId, vault);
         }
-        
-        vaultByRecoveryId[hashedId] = vault;
+
+        _addRecoveryVault(hashedId, vault);
         recoveryIdOfVault[vault] = hashedId;
         
         emit RecoveryIdSet(vault, hashedId);
@@ -368,7 +365,17 @@ contract VaultRegistry is Ownable, ReentrancyGuard {
      */
     function searchByRecoveryId(string calldata recoveryId) external view returns (address vault) {
         bytes32 hashedId = keccak256(abi.encodePacked(recoveryId));
-        return vaultByRecoveryId[hashedId];
+        address[] storage matches = vaultsByRecoveryId[hashedId];
+        if (matches.length == 0) return address(0);
+        return matches[0];
+    }
+
+    /**
+     * @notice FINAL-06: Return all vault matches for a recovery ID hash (collision-safe lookup)
+     */
+    function searchByRecoveryIdAll(string calldata recoveryId) external view returns (address[] memory vaults) {
+        bytes32 hashedId = keccak256(abi.encodePacked(recoveryId));
+        return vaultsByRecoveryId[hashedId];
     }
     
     /**
@@ -608,7 +615,47 @@ contract VaultRegistry is Ownable, ReentrancyGuard {
      */
     function isRecoveryIdAvailable(string calldata recoveryId) external view returns (bool) {
         bytes32 hashedId = keccak256(abi.encodePacked(recoveryId));
-        return vaultByRecoveryId[hashedId] == address(0);
+        return vaultsByRecoveryId[hashedId].length == 0;
+    }
+
+    function _addRecoveryVault(bytes32 hashedId, address vault) internal {
+        address[] storage matches = vaultsByRecoveryId[hashedId];
+        for (uint256 i = 0; i < matches.length; i++) {
+            if (matches[i] == vault) {
+                // Already present: keep primary pointer consistent and return.
+                if (vaultByRecoveryId[hashedId] == address(0)) {
+                    vaultByRecoveryId[hashedId] = vault;
+                }
+                return;
+            }
+        }
+        matches.push(vault);
+        if (vaultByRecoveryId[hashedId] == address(0)) {
+            vaultByRecoveryId[hashedId] = vault;
+        }
+    }
+
+    function _removeRecoveryVault(bytes32 hashedId, address vault) internal {
+        address[] storage matches = vaultsByRecoveryId[hashedId];
+        uint256 len = matches.length;
+        if (len == 0) {
+            if (vaultByRecoveryId[hashedId] == vault) delete vaultByRecoveryId[hashedId];
+            return;
+        }
+
+        for (uint256 i = 0; i < len; i++) {
+            if (matches[i] == vault) {
+                matches[i] = matches[len - 1];
+                matches.pop();
+                break;
+            }
+        }
+
+        if (matches.length == 0) {
+            delete vaultByRecoveryId[hashedId];
+        } else {
+            vaultByRecoveryId[hashedId] = matches[0];
+        }
     }
     
     /**

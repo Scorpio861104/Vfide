@@ -3,6 +3,7 @@
  *
  * Contract: DAO
  * ABI constructor: constructor(address _admin, address _timelock, address _seer, address _hub, address _hooks)
+ * Note: emergencyApprover initializes to _timelock by default in constructor.
  *
  * Notes:
  * - This test is intentionally skipped until assertions are implemented.

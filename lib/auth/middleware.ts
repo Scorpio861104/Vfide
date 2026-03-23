@@ -184,6 +184,14 @@ export async function requireAdmin(request: NextRequest): Promise<{ user: JWTPay
     );
   }
 
+   const verifiedOnChain = await verifyOnChainAdmin(authResult.user.address);
+   if (!verifiedOnChain) {
+     return NextResponse.json(
+       { error: 'On-chain admin verification failed' },
+       { status: 403 }
+     );
+   }
+
   return authResult;
 }
 

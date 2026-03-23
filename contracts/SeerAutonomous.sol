@@ -55,6 +55,10 @@ error SA_NotAuthorized();
 error SA_Zero();
 error SA_Restricted(string reason);
 error SA_RateLimited();
+error SA_NoChallenge();
+error SA_ChallengeWindowPassed();
+error SA_InvalidThresholds();
+error SA_InvalidSensitivity();
 
 /// ═══════════════════════════════════════════════════════════════════════════
 ///                         SEER AUTONOMOUS
@@ -404,10 +408,10 @@ contract SeerAutonomous is ReentrancyGuard {
             uint8 risk = riskOracle.getRiskScore(subject);
             if (risk > 80) {
                 // High risk: escalate to at least Restricted for a short period
-                _applyRestriction(subject, RestrictionLevel.Restricted, 3 days, "oracle_high_risk", RC_ORACLE_HIGH_RISK);
+                _applyRestriction(subject, RestrictionLevel.Restricted, 3 days, "oracle_high_risk", RC_ORACLE_HIGH_RISK, false);
                 result = EnforcementResult.Delayed;
             } else if (risk > 50 && restrictionLevel[subject] < RestrictionLevel.Limited) {
-                _applyRestriction(subject, RestrictionLevel.Limited, 1 days, "oracle_medium_risk", RC_ORACLE_MEDIUM_RISK);
+                _applyRestriction(subject, RestrictionLevel.Limited, 1 days, "oracle_medium_risk", RC_ORACLE_MEDIUM_RISK, false);
                 if (result == EnforcementResult.Allowed) result = EnforcementResult.Warned;
             }
         }
@@ -631,16 +635,16 @@ contract SeerAutonomous is ReentrancyGuard {
         
         // Escalating response based on violation count
         if (count >= 5) {
-            _applyRestriction(subject, RestrictionLevel.Suspended, 7 days, "repeated_pattern_violation", RC_REPEATED_PATTERN);
+            _applyRestriction(subject, RestrictionLevel.Suspended, 7 days, "repeated_pattern_violation", RC_REPEATED_PATTERN, true);
             return EnforcementResult.Blocked;
         } else if (count >= 3) {
-            _applyRestriction(subject, RestrictionLevel.Restricted, 3 days, "pattern_violation", RC_PATTERN_VIOLATION);
+            _applyRestriction(subject, RestrictionLevel.Restricted, 3 days, "pattern_violation", RC_PATTERN_VIOLATION, true);
             return EnforcementResult.Blocked;
         } else if (count >= 2) {
-            _applyRestriction(subject, RestrictionLevel.Limited, 1 days, "suspicious_pattern", RC_SUSPICIOUS_PATTERN);
+            _applyRestriction(subject, RestrictionLevel.Limited, 1 days, "suspicious_pattern", RC_SUSPICIOUS_PATTERN, false);
             return EnforcementResult.Delayed;
         } else {
-            _applyRestriction(subject, RestrictionLevel.Monitored, 6 hours, "pattern_detected", RC_PATTERN_DETECTED);
+            _applyRestriction(subject, RestrictionLevel.Monitored, 6 hours, "pattern_detected", RC_PATTERN_DETECTED, false);
             return EnforcementResult.Warned;
         }
     }
@@ -680,13 +684,13 @@ contract SeerAutonomous is ReentrancyGuard {
         
         // Score-based automatic adjustment
         if (score < 1000 && current < RestrictionLevel.Frozen) {
-            _applyRestriction(subject, RestrictionLevel.Frozen, 30 days, "critical_score", RC_CRITICAL_SCORE);
+            _applyRestriction(subject, RestrictionLevel.Frozen, 30 days, "critical_score", RC_CRITICAL_SCORE, false);
         } else if (score < 2000 && current < RestrictionLevel.Suspended) {
-            _applyRestriction(subject, RestrictionLevel.Suspended, 14 days, "very_low_score", RC_VERY_LOW_SCORE);
+            _applyRestriction(subject, RestrictionLevel.Suspended, 14 days, "very_low_score", RC_VERY_LOW_SCORE, false);
         } else if (score < autoRestrictThreshold && current < RestrictionLevel.Restricted) {
-            _applyRestriction(subject, RestrictionLevel.Restricted, 7 days, "low_score", RC_LOW_SCORE);
+            _applyRestriction(subject, RestrictionLevel.Restricted, 7 days, "low_score", RC_LOW_SCORE, false);
         } else if (score < rateLimitThreshold && current < RestrictionLevel.Limited) {
-            _applyRestriction(subject, RestrictionLevel.Limited, 3 days, "below_rate_threshold", RC_BELOW_RATE_THRESHOLD);
+            _applyRestriction(subject, RestrictionLevel.Limited, 3 days, "below_rate_threshold", RC_BELOW_RATE_THRESHOLD, false);
         } else if (score >= autoLiftThreshold && current != RestrictionLevel.None) {
             // Good score - lift restrictions
             _liftRestriction(subject);
@@ -698,7 +702,8 @@ contract SeerAutonomous is ReentrancyGuard {
         RestrictionLevel level,
         uint64 duration,
         string memory reason,
-        uint16 reasonCode
+        uint16 reasonCode,
+        bool applyPenalty
     ) internal {
         // Only escalate, never downgrade automatically
         if (level <= restrictionLevel[subject]) return;
@@ -722,9 +727,10 @@ contract SeerAutonomous is ReentrancyGuard {
         emit RestrictionApplied(subject, level, duration, reason);
         emit RestrictionAppliedCode(subject, level, reasonCode, reason);
 
-        // Higher restrictions = score penalty
-        if (level >= RestrictionLevel.Restricted) {
-            _punish(subject, 50, reason);
+        // SA-06 hardening: autonomous restrictions must not mutate Seer score directly.
+        // Restriction level itself is the enforcement primitive; score changes are DAO/operator-controlled.
+        if (applyPenalty) {
+            // reserved for compatibility/no-op
         }
     }
     
@@ -842,8 +848,8 @@ contract SeerAutonomous is ReentrancyGuard {
      */
     function challengeRestriction(string calldata note) external {
         PendingChallenge storage ch = pendingChallenge[msg.sender];
-        require(ch.exists, "SA: no challenge");
-        require(block.timestamp < ch.deadline, "SA: challenge window passed");
+        if (!ch.exists) revert SA_NoChallenge();
+        if (block.timestamp >= ch.deadline) revert SA_ChallengeWindowPassed();
 
         challengeRequested[msg.sender] = true;
         emit ChallengeRequested(msg.sender, note);
@@ -856,7 +862,7 @@ contract SeerAutonomous is ReentrancyGuard {
      */
     function resolveChallenge(address subject, bool uphold) external onlyDAO {
         PendingChallenge storage ch = pendingChallenge[subject];
-        require(ch.exists, "SA: no challenge");
+        if (!ch.exists) revert SA_NoChallenge();
 
         if (uphold) {
             restrictionLevel[subject] = ch.targetLevel;
@@ -936,8 +942,8 @@ contract SeerAutonomous is ReentrancyGuard {
         uint16 _rateLimit,
         uint16 _sensitivity
     ) external onlyDAO {
-        require(_autoRestrict < _autoLift, "SA: invalid thresholds");
-        require(_sensitivity <= 100, "SA: sensitivity 0-100");
+        if (_autoRestrict >= _autoLift) revert SA_InvalidThresholds();
+        if (_sensitivity > 100) revert SA_InvalidSensitivity();
 
         uint16 oldAutoRestrict = autoRestrictThreshold;
         uint16 oldAutoLift = autoLiftThreshold;
@@ -1155,9 +1161,10 @@ contract SeerAutonomous is ReentrancyGuard {
         uint256 violationRate,
         uint16 currentSensitivity
     ) {
-        totalActions = networkActionCount;
+        // SA-04: include blocked actions so health metrics reflect all enforcement attempts.
+        totalActions = networkActionCount + networkBlockedCount;
         totalViolations = networkViolationCount;
-        violationRate = networkActionCount > 0 ? (networkViolationCount * 10000) / networkActionCount : 0;
+        violationRate = totalActions > 0 ? (networkViolationCount * 10000) / totalActions : 0;
         currentSensitivity = patternSensitivity;
     }
     
@@ -1165,9 +1172,6 @@ contract SeerAutonomous is ReentrancyGuard {
     //                            INTERNAL
     // ═══════════════════════════════════════════════════════════════════════
     
-    function _punish(address subject, uint16 delta, string memory reason) internal {
-        try seer.punish(subject, delta, reason) {} catch {}
-    }
     
     function _log(string memory action) internal {
         if (address(ledger) != address(0)) {

@@ -107,6 +107,45 @@ const config = defineConfig({
           viaIR: true,
         },
       },
+      "contracts/VFIDEToken.sol": {
+        version: "0.8.30",
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 1,
+          },
+          metadata: {
+            bytecodeHash: "none",
+          },
+          viaIR: true,
+        },
+      },
+      "contracts/EcosystemVault.sol": {
+        version: "0.8.30",
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 1,
+          },
+          metadata: {
+            bytecodeHash: "none",
+          },
+          viaIR: true,
+        },
+      },
+      "contracts/OwnerControlPanel.sol": {
+        version: "0.8.30",
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 1,
+          },
+          metadata: {
+            bytecodeHash: "none",
+          },
+          viaIR: true,
+        },
+      },
     },
   },
   networks: {

@@ -22,6 +22,8 @@ contract VFIDEEnterpriseGateway {
     event OrderRefunded(bytes32 indexed orderId, address indexed buyer, uint256 amount, string reason);
     event OracleSet(address indexed oracle);
     event MerchantWalletSet(address indexed merchantWallet);
+    event MerchantWalletChangeScheduled(address indexed merchantWallet, uint64 effectiveAt);
+    event MerchantWalletChangeCancelled(address indexed merchantWallet);
 
     enum Status { NONE, PENDING, SETTLED, REFUNDED }
 
@@ -36,6 +38,9 @@ contract VFIDEEnterpriseGateway {
     address public dao;
     address public oracle; // The Enterprise API Key (Amazon)
     address public merchantWallet; // Where funds go (Amazon's Wallet)
+    uint64 public constant MERCHANT_WALLET_CHANGE_DELAY = 48 hours;
+    address public pendingMerchantWallet;
+    uint64 public pendingMerchantWalletAt;
     
     IERC20 public token;
     ISeer public seer;
@@ -79,6 +84,7 @@ contract VFIDEEnterpriseGateway {
         ) {
             revert ENT_Zero();
         }
+        require(_oracle != _dao, "ENT: oracle must differ from DAO");
         dao = _dao;
         token = IERC20(_token);
         seer = ISeer(_seer);
@@ -89,14 +95,31 @@ contract VFIDEEnterpriseGateway {
 
     function setOracle(address _oracle) external onlyDAO {
         if (_oracle == address(0)) revert ENT_Zero();
+        require(_oracle != dao, "ENT: oracle must differ from DAO");
         oracle = _oracle;
         emit OracleSet(_oracle);
     }
 
     function setMerchantWallet(address _wallet) external onlyDAO {
         if (_wallet == address(0)) revert ENT_Zero();
-        merchantWallet = _wallet;
-        emit MerchantWalletSet(_wallet);
+        pendingMerchantWallet = _wallet;
+        pendingMerchantWalletAt = uint64(block.timestamp) + MERCHANT_WALLET_CHANGE_DELAY;
+        emit MerchantWalletChangeScheduled(_wallet, pendingMerchantWalletAt);
+    }
+
+    function applyMerchantWallet() external onlyDAO {
+        if (pendingMerchantWalletAt == 0 || block.timestamp < pendingMerchantWalletAt) revert ENT_NotPending();
+        merchantWallet = pendingMerchantWallet;
+        emit MerchantWalletSet(merchantWallet);
+        delete pendingMerchantWallet;
+        delete pendingMerchantWalletAt;
+    }
+
+    function cancelMerchantWalletChange() external onlyDAO {
+        address pending = pendingMerchantWallet;
+        delete pendingMerchantWallet;
+        delete pendingMerchantWalletAt;
+        emit MerchantWalletChangeCancelled(pending);
     }
 
     /**

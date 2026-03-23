@@ -69,6 +69,14 @@ contract CardBoundVault is ReentrancyGuard {
     uint256 public rotationNonce;
     mapping(address => mapping(uint256 => bool)) public rotationApprovalByGuardian;
 
+    // CBV-03: Timelock for guardian changes
+    struct PendingGuardianChange {
+        address guardian;
+        bool active;
+        uint64 effectiveAt;
+    }
+    PendingGuardianChange public pendingGuardianChange;
+
     struct TransferIntent {
         address vault;
         address toVault;
@@ -84,6 +92,8 @@ contract CardBoundVault is ReentrancyGuard {
 
     event GuardianSet(address indexed guardian, bool active);
     event GuardianThresholdSet(uint8 threshold);
+    event GuardianChangeProposed(address indexed guardian, bool active, uint64 effectiveAt);
+    event GuardianChangeCancelled(address indexed guardian);
 
     event WalletRotationProposed(
         address indexed oldWallet,
@@ -214,8 +224,29 @@ contract CardBoundVault is ReentrancyGuard {
         emit AdminTransferred(old, admin);
     }
 
-    function setGuardian(address guardian, bool active) external onlyAdmin {
+    /// @notice Propose a guardian change with 24-hour timelock (CBV-03)
+    function proposeGuardianChange(address guardian, bool active) external onlyAdmin {
         if (guardian == address(0)) revert CBV_Zero();
+        pendingGuardianChange = PendingGuardianChange(guardian, active, uint64(block.timestamp) + 1 days);
+        emit GuardianChangeProposed(guardian, active, uint64(block.timestamp) + 1 days);
+    }
+
+    /// @notice Apply a previously proposed guardian change after timelock expires (CBV-03)
+    function applyGuardianChange() external onlyAdmin {
+        PendingGuardianChange memory p = pendingGuardianChange;
+        if (p.effectiveAt == 0 || block.timestamp < p.effectiveAt) revert CBV_InvalidThreshold();
+        delete pendingGuardianChange;
+        _applyGuardianChange(p.guardian, p.active);
+    }
+
+    /// @notice Cancel a pending guardian change (CBV-03)
+    function cancelGuardianChange() external onlyAdmin {
+        address g = pendingGuardianChange.guardian;
+        delete pendingGuardianChange;
+        emit GuardianChangeCancelled(g);
+    }
+
+    function _applyGuardianChange(address guardian, bool active) internal {
         if (isGuardian[guardian] == active) return;
 
         isGuardian[guardian] = active;
@@ -231,6 +262,12 @@ contract CardBoundVault is ReentrancyGuard {
 
         if (guardianCount == 0 || guardianThreshold == 0) revert CBV_InvalidThreshold();
         emit GuardianSet(guardian, active);
+    }
+
+    /// @dev Legacy: kept for compatibility during deployment bootstrap but restricted to admin
+    function setGuardian(address guardian, bool active) external onlyAdmin {
+        if (guardian == address(0)) revert CBV_Zero();
+        _applyGuardianChange(guardian, active);
     }
 
     function setGuardianThreshold(uint8 threshold) external onlyAdmin {
@@ -343,8 +380,11 @@ contract CardBoundVault is ReentrancyGuard {
         notLocked
         whenNotPaused
     {
+        if (!IVaultHubGuardianSetup(hub).guardianSetupComplete(address(this))) {
+            revert CBV_GuardianSetupRequired();
+        }
         if (intent.vault != address(this)) revert CBV_InvalidSignature();
-        if (intent.toVault == address(0) || intent.toVault == address(this)) revert CBV_NotVault();
+        if (intent.toVault == address(0) || intent.toVault == address(this) || intent.toVault == address(0x000000000000000000000000000000000000dEaD)) revert CBV_NotVault(); // CBV-02: block burn/dead addresses
         if (!IVaultHub(hub).isVault(intent.toVault)) revert CBV_NotVault();
         if (intent.chainId != block.chainid) revert CBV_InvalidChain();
         if (intent.walletEpoch != walletEpoch) revert CBV_InvalidEpoch();

@@ -13,6 +13,34 @@ contract TokenStub {
     function approve(address, uint256) external pure returns (bool) { return true; }
 }
 
+/// @dev Mintable ERC20 stub for tests that require deterministic balances.
+contract MintableTokenStub {
+    mapping(address => uint256) public balanceOf;
+    mapping(address => mapping(address => uint256)) public allowance;
+
+    function mint(address to, uint256 amount) external {
+        balanceOf[to] += amount;
+    }
+
+    function transfer(address to, uint256 amount) external returns (bool) {
+        balanceOf[msg.sender] -= amount;
+        balanceOf[to] += amount;
+        return true;
+    }
+
+    function transferFrom(address from, address to, uint256 amount) external returns (bool) {
+        allowance[from][msg.sender] -= amount;
+        balanceOf[from] -= amount;
+        balanceOf[to] += amount;
+        return true;
+    }
+
+    function approve(address spender, uint256 amount) external returns (bool) {
+        allowance[msg.sender][spender] = amount;
+        return true;
+    }
+}
+
 /// @dev Minimal presale stub — satisfies extcodesize > 0 + IPresaleStart interface.
 contract PresaleStub {
     uint256 public saleStartTime;
@@ -74,5 +102,98 @@ contract CircularSeerAttacker {
         } catch {
             callbackReverted = true;
         }
+    }
+}
+
+/// @dev Minimal Seer stub compiled in Hardhat helper sources for router/DAO/escrow tests.
+contract SeerScoreStub {
+    mapping(address => uint16) public scores;
+    mapping(address => uint64) public activity;
+    mapping(address => mapping(uint64 => uint16)) public scoresAt;
+    uint16 public minGov = 1000;
+    uint16 public minMerch = 5600;
+    uint16 public highTrust = 7000;
+    uint16 public lowTrust = 4000;
+    uint16 public neutralScore = 5000;
+
+    function setScore(address who, uint16 score) external {
+        scores[who] = score;
+    }
+
+    function setActivity(address who, uint64 ts) external {
+        activity[who] = ts;
+    }
+
+    function setScoreAt(address who, uint64 ts, uint16 score) external {
+        scoresAt[who][ts] = score;
+    }
+
+    function setMinGov(uint16 val) external {
+        minGov = val;
+    }
+
+    function setMinMerchant(uint16 val) external {
+        minMerch = val;
+    }
+
+    function getScore(address who) external view returns (uint16) {
+        return scores[who];
+    }
+
+    function getCachedScore(address who) external view returns (uint16) {
+        return scores[who];
+    }
+
+    function getScoreAt(address who, uint64 ts) external view returns (uint16) {
+        uint16 historical = scoresAt[who][ts];
+        if (historical != 0) {
+            return historical;
+        }
+        return scores[who];
+    }
+
+    function lastActivity(address who) external view returns (uint64) {
+        return activity[who];
+    }
+
+    function minForGovernance() external view returns (uint16) {
+        return minGov;
+    }
+
+    function hasBadge(address, bytes32) external pure returns (bool) {
+        return false;
+    }
+
+    function minForMerchant() external view returns (uint16) {
+        return minMerch;
+    }
+
+    function highTrustThreshold() external view returns (uint16) {
+        return highTrust;
+    }
+
+    function lowTrustThreshold() external view returns (uint16) {
+        return lowTrust;
+    }
+
+    function NEUTRAL() external view returns (uint16) {
+        return neutralScore;
+    }
+
+    function setModules(address, address) external {}
+
+    function setThresholds(uint16 low, uint16 high, uint16 minGovVal, uint16 minMerchVal) external {
+        lowTrust = low;
+        highTrust = high;
+        minGov = minGovVal;
+        minMerch = minMerchVal;
+    }
+
+    function reward(address subject, uint16 delta, string calldata) external {
+        scores[subject] += delta;
+    }
+
+    function punish(address subject, uint16 delta, string calldata) external {
+        scores[subject] -= delta;
     }
 }

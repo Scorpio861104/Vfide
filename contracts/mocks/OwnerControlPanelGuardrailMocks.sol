@@ -12,8 +12,10 @@ contract MockVFIDETokenForOwnerControlPanel {
     function setTreasurySink(address) external {}
     function setSanctumSink(address) external {}
     function proposeSystemExempt(address, bool) external {}
+    function cancelPendingExempt() external {}
     function confirmSystemExempt() external {}
     function proposeWhitelist(address, bool) external {}
+    function cancelPendingWhitelist() external {}
     function confirmWhitelist() external {}
     function setVaultOnly(bool) external {}
     function setBlacklist(address, bool) external {}

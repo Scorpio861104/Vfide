@@ -12,6 +12,7 @@ interface ISecurityHub_Trust { function isLocked(address vault) external view re
 interface ISeerSocial { function calculateEndorsementBonus(address subject) external view returns (uint256); }
 interface ISeerAutonomous { function onScoreChange(address subject, uint16 oldScore, uint16 newScore) external; }
 interface ISeerPolicyGuard { function consume(bytes4 selector, uint8 pclass) external; }
+interface IProofScoreBurnRouterSync { function updateScore(address user) external; }
 // ISeerSocialOps: callers should use SeerSocial contract directly
 
 /// ────────────────────────── Errors (Seer-specific; TRUST_NotDAO / TRUST_Zero from ProofLedger.sol)
@@ -59,6 +60,7 @@ contract Seer {
     event AppealResolved(address indexed subject, bool approved, string resolution);
     event SeerSocialSet(address indexed seerSocial);
     event SeerAutonomousSet(address indexed seerAutonomous);
+    event BurnRouterSet(address indexed burnRouter);
     event PolicyVersionUpdated(bytes32 indexed policyHash, string policyURI, address indexed updatedBy);
     event DAOChangeProposed(address indexed newDAO, uint64 effectiveAt);
     event DAOChangeCancelled();
@@ -75,6 +77,7 @@ contract Seer {
     
     // Reference to SeerAutonomous for automatic enforcement cascading
     address public seerAutonomous;
+    address public burnRouter;
     address public policyGuard;
 
     // Canonical policy publication metadata for Seer governance.
@@ -164,9 +167,11 @@ contract Seer {
         bytes32 reasonHash;  // keccak256 of reason string for gas efficiency
     }
     
-    mapping(address => ScoreChange[]) public scoreHistory;
+    mapping(address => ScoreChange[50]) public scoreHistory;
+    mapping(address => uint8) public scoreHistoryHead;   // S-05 FIX: circular buffer write pointer
+    mapping(address => uint8) public scoreHistoryCount;  // S-05 FIX: number of valid entries (0..50)
     mapping(address => uint64) public lastActivity;  // For decay tracking
-    uint8 public constant MAX_HISTORY_PER_USER = 50;  // Cap history storage
+    uint8 public constant MAX_HISTORY_PER_USER = 50;  // Cap history storage (fixed-size circular buffer)
     
     // ═══════════════════════════════════════════════════════════════════════
     // SCORE DECAY - Inactive users slowly drift toward neutral
@@ -261,6 +266,12 @@ contract Seer {
         emit SeerAutonomousSet(_seerAutonomous);
     }
 
+    /// @notice Set ProofScoreBurnRouter for score snapshot synchronization
+    function setBurnRouter(address _burnRouter) external onlyDAO {
+        burnRouter = _burnRouter;
+        emit BurnRouterSet(_burnRouter);
+    }
+
     function setPolicyGuard(address _policyGuard) external onlyDAO {
         if (_policyGuard == address(0)) revert TRUST_Zero();
         policyGuard = _policyGuard;
@@ -278,7 +289,7 @@ contract Seer {
     }
 
     function applyDAOChange() external onlyDAO {
-        require(pendingDAOAt != 0 && block.timestamp >= pendingDAOAt, "SEER: timelock");
+           if (pendingDAOAt == 0 || block.timestamp < pendingDAOAt) revert TRUST_InvalidState();
         address oldDAO = dao;
         dao = pendingDAO;
         delete pendingDAO;
@@ -288,7 +299,7 @@ contract Seer {
     }
 
     function cancelDAOChange() external onlyDAO {
-        require(pendingDAOAt != 0, "SEER: no pending DAO");
+        if (pendingDAOAt == 0) revert TRUST_NotSet();
         delete pendingDAO;
         delete pendingDAOAt;
         emit DAOChangeCancelled();
@@ -365,7 +376,7 @@ contract Seer {
         if (source == address(0)) revert TRUST_Zero();
         if (weight > 100) revert TRUST_Bounds();
         if (scoreSourceIndex[source] != 0) revert TRUST_AlreadySet();
-        require(scoreSources.length < MAX_SCORE_SOURCES, "SEER: max sources");
+        if (scoreSources.length >= MAX_SCORE_SOURCES) revert TRUST_Limit();
         
         scoreSources.push(ScoreSourceInfo({
             source: source,
@@ -443,7 +454,7 @@ contract Seer {
     uint64 public scoreCacheTTL = 1 hours; // Cache validity window
 
     function setScoreCacheTTL(uint64 ttl) external onlyDAO {
-        require(ttl >= 5 minutes && ttl <= 1 days, "SEER: ttl bounds");
+        if (ttl < 5 minutes || ttl > 1 days) revert TRUST_Bounds();
         scoreCacheTTL = ttl;
     }
 
@@ -493,6 +504,29 @@ contract Seer {
         if (combined < MIN_SCORE) combined = MIN_SCORE;
         
         return uint16(combined);
+    }
+
+    /// @notice Best-effort historical score lookup using the bounded score history ring buffer.
+    function getScoreAt(address subject, uint64 timestamp) external view returns (uint16) {
+        uint8 count = scoreHistoryCount[subject];
+        if (count == 0) {
+            return getScore(subject);
+        }
+
+        uint8 head = scoreHistoryHead[subject];
+        ScoreChange memory oldest;
+
+        for (uint8 i = 0; i < count; i++) {
+            uint8 idx = uint8((uint256(head) + MAX_HISTORY_PER_USER - 1 - i) % MAX_HISTORY_PER_USER);
+            ScoreChange memory change = scoreHistory[subject][idx];
+            oldest = change;
+
+            if (change.timestamp <= timestamp) {
+                return change.newScore;
+            }
+        }
+
+        return oldest.oldScore;
     }
     
     /**
@@ -574,78 +608,24 @@ contract Seer {
      * @return bonus Total score bonus from all active badges
      */
     function _calculateBadgeBonus(address subject) internal view returns (uint256 bonus) {
-        // Import BadgeRegistry constants to check each badge
-        // For gas efficiency, we only check badges that contribute to score
-        
-        // Pioneer badges (permanent)
-        if (_checkActiveBadge(subject, BADGE_PIONEER)) {
-            bonus += 30;
+        bytes32[17] memory ids;
+        ids[0]  = BADGE_PIONEER;           ids[1]  = BADGE_GENESIS_PRESALE;
+        ids[2]  = BADGE_FOUNDING_MEMBER;   ids[3]  = BADGE_EARLY_TESTER;
+        ids[4]  = BADGE_ACTIVE_TRADER;     ids[5]  = BADGE_GOVERNANCE_VOTER;
+        ids[6]  = BADGE_POWER_USER;        ids[7]  = BADGE_TRUSTED_ENDORSER;
+        ids[8]  = BADGE_COMMUNITY_BUILDER; ids[9]  = BADGE_VERIFIED_MERCHANT;
+        ids[10] = BADGE_ELITE_MERCHANT;    ids[11] = BADGE_ELITE_ACHIEVER;
+        ids[12] = BADGE_FRAUD_HUNTER;      ids[13] = BADGE_GUARDIAN;
+        ids[14] = BADGE_CLEAN_RECORD;      ids[15] = BADGE_CONTRIBUTOR;
+        ids[16] = BADGE_EDUCATOR;
+        uint16[17] memory pts;
+        pts[0]=30;  pts[1]=40;  pts[2]=50;  pts[3]=25;  pts[4]=20;  pts[5]=25;  pts[6]=40;
+        pts[7]=30;  pts[8]=35;  pts[9]=40;  pts[10]=60; pts[11]=50; pts[12]=50;
+        pts[13]=40; pts[14]=20; pts[15]=40; pts[16]=30;
+        for (uint256 i = 0; i < 17;) {
+            if (_checkActiveBadge(subject, ids[i])) bonus += pts[i];
+            unchecked { ++i; }
         }
-        if (_checkActiveBadge(subject, BADGE_GENESIS_PRESALE)) {
-            bonus += 40;
-        }
-        if (_checkActiveBadge(subject, BADGE_FOUNDING_MEMBER)) {
-            bonus += 50;
-        }
-        if (_checkActiveBadge(subject, BADGE_EARLY_TESTER)) {
-            bonus += 25;
-        }
-        
-        // Activity badges (renewable)
-        if (_checkActiveBadge(subject, BADGE_ACTIVE_TRADER)) {
-            bonus += 20;
-        }
-        if (_checkActiveBadge(subject, BADGE_GOVERNANCE_VOTER)) {
-            bonus += 25;
-        }
-        if (_checkActiveBadge(subject, BADGE_POWER_USER)) {
-            bonus += 40;
-        }
-        
-        // Trust badges (permanent/renewable)
-        if (_checkActiveBadge(subject, BADGE_TRUSTED_ENDORSER)) {
-            bonus += 30;
-        }
-        if (_checkActiveBadge(subject, BADGE_COMMUNITY_BUILDER)) {
-            bonus += 35;
-        }
-        
-        // Merchant badges (renewable)
-        if (_checkActiveBadge(subject, BADGE_VERIFIED_MERCHANT)) {
-            bonus += 40;
-        }
-        if (_checkActiveBadge(subject, BADGE_ELITE_MERCHANT)) {
-            bonus += 60;
-        }
-        
-        // Achievement badges (permanent)
-        if (_checkActiveBadge(subject, BADGE_ELITE_ACHIEVER)) {
-            bonus += 50;
-        }
-        if (_checkActiveBadge(subject, BADGE_FRAUD_HUNTER)) {
-            bonus += 50;
-        }
-        
-        // Security badges
-        if (_checkActiveBadge(subject, BADGE_GUARDIAN)) {
-            bonus += 40;
-        }
-        if (_checkActiveBadge(subject, BADGE_CLEAN_RECORD)) {
-            bonus += 20;
-        }
-        
-        // Contribution badges
-        if (_checkActiveBadge(subject, BADGE_CONTRIBUTOR)) {
-            bonus += 40;
-        }
-        if (_checkActiveBadge(subject, BADGE_EDUCATOR)) {
-            bonus += 30;
-        }
-        
-        // Note: For gas efficiency, only the most impactful badges are checked here
-        // Full badge listing is available in BadgeRegistry
-        
-        return bonus;
     }
 
     // Intentional: social bonus retrieval delegates to configured social module.
@@ -676,13 +656,14 @@ contract Seer {
         if (subject == address(0)) revert TRUST_Zero();
         if (newScore > MAX_SCORE) revert TRUST_Bounds();
         // S-04 FIX: Enforce per-subject cooldown on DAO score changes (max 1 per hour)
-        require(block.timestamp >= lastDAOScoreChange[subject] + DAO_SCORE_COOLDOWN, "SEER: DAO score cooldown active");
+        if (block.timestamp < lastDAOScoreChange[subject] + DAO_SCORE_COOLDOWN) revert TRUST_InvalidState();
         uint16 old = getScore(subject);
         uint16 delta = old > newScore ? old - newScore : newScore - old;
         // F-16 FIX: Cap the maximum change per setScore() call to prevent instant trust manipulation
-        require(delta <= maxDAOScoreChange, "SEER: delta too large");
+        if (delta > maxDAOScoreChange) revert TRUST_Bounds();
         _score[subject] = newScore;
         lastDAOScoreChange[subject] = uint64(block.timestamp);
+        _syncBurnRouterScore(subject);
         emit ScoreSet(subject, old, newScore, reason);
         emit ScoreReasonCode(subject, 500, int16(newScore) - int16(old), msg.sender);
         _logEv(subject, newScore, reason);
@@ -770,7 +751,7 @@ contract Seer {
     }
 
     function _delta(address subject, int256 d, string calldata reason, uint16 reasonCode) internal {
-        require(!_deltaInProgress[subject], "SEER: circular delta");
+        if (_deltaInProgress[subject]) revert TRUST_InvalidState();
         _deltaInProgress[subject] = true;
 
         // with on-chain score sources that may call back to Seer
@@ -782,6 +763,7 @@ contract Seer {
         // Safe: next is clamped between MIN_SCORE (10) and MAX_SCORE (10000)
         uint16 newScore = uint16(uint256(next));
         _score[subject] = newScore;
+        _syncBurnRouterScore(subject);
         
         // Record in history (capped to prevent unbounded growth)
         _recordHistory(subject, cur, newScore, reason);
@@ -802,23 +784,26 @@ contract Seer {
     }
     
     function _recordHistory(address subject, uint16 oldScore, uint16 newScore, string calldata reason) internal {
-        ScoreChange[] storage history = scoreHistory[subject];
-        
-        // Cap history to prevent unbounded storage
-        if (history.length >= MAX_HISTORY_PER_USER) {
-            // Remove oldest entry by shifting
-            for (uint256 i = 1; i < history.length; i++) {
-                history[i - 1] = history[i];
-            }
-            history.pop();
-        }
-        
-        history.push(ScoreChange({
+        // S-05 FIX: Use circular buffer (O(1)) instead of O(n) array shift
+        uint8 head = scoreHistoryHead[subject];
+        scoreHistory[subject][head] = ScoreChange({
             oldScore: oldScore,
             newScore: newScore,
             timestamp: uint64(block.timestamp),
             reasonHash: keccak256(bytes(reason))
-        }));
+        });
+        scoreHistoryHead[subject] = uint8((uint256(head) + 1) % MAX_HISTORY_PER_USER);
+        uint8 count = scoreHistoryCount[subject];
+        if (count < MAX_HISTORY_PER_USER) {
+            scoreHistoryCount[subject] = count + 1;
+        }
+    }
+
+    function _syncBurnRouterScore(address subject) internal {
+        address router = burnRouter;
+        if (router != address(0)) {
+            try IProofScoreBurnRouterSync(router).updateScore(subject) {} catch {}
+        }
     }
 
     function _logSystem() internal {
@@ -968,6 +953,7 @@ contract Seer {
             if (next < int256(uint256(MIN_SCORE))) next = int256(uint256(MIN_SCORE));
             if (next > int256(uint256(MAX_SCORE))) next = int256(uint256(MAX_SCORE));
             _score[subject] = uint16(uint256(next));
+            _syncBurnRouterScore(subject);
             emit ScoreSet(subject, cur, _score[subject], "disp_ok");
             emit ScoreReasonCode(subject, 503, int16(_score[subject]) - int16(cur), msg.sender);
         }
@@ -1124,6 +1110,7 @@ contract Seer {
         if (decayAmount > 0) {
             uint16 oldScore = _score[subject];
             _score[subject] = adjustedScore;
+            _syncBurnRouterScore(subject);
             lastActivity[subject] = uint64(block.timestamp);  // Reset decay timer
             
             emit DecayApplied(subject, oldScore, adjustedScore, daysInactive);
@@ -1153,6 +1140,7 @@ contract Seer {
             if (decayAmount > 0) {
                 uint16 oldScore = _score[subject];
                 _score[subject] = adjustedScore;
+                _syncBurnRouterScore(subject);
                 lastActivity[subject] = uint64(block.timestamp);
                 emit DecayApplied(subject, oldScore, adjustedScore, daysInactive);
             }
@@ -1173,15 +1161,16 @@ contract Seer {
         uint256 count,
         ScoreChange[] memory recentChanges
     ) {
-        ScoreChange[] storage history = scoreHistory[subject];
-        count = history.length;
-        
+        // S-05 FIX: Read from circular buffer in chronological order
+        count = scoreHistoryCount[subject];
         uint256 returnCount = count > 10 ? 10 : count;
         recentChanges = new ScoreChange[](returnCount);
         
-        // Return most recent entries
+        uint8 head = scoreHistoryHead[subject];
+        // Walk backwards from the most-recent slot
         for (uint256 i = 0; i < returnCount; i++) {
-            recentChanges[i] = history[count - returnCount + i];
+            uint8 idx = uint8((uint256(head) + MAX_HISTORY_PER_USER - 1 - i) % MAX_HISTORY_PER_USER);
+            recentChanges[returnCount - 1 - i] = scoreHistory[subject][idx];
         }
     }
     
@@ -1197,12 +1186,14 @@ contract Seer {
         uint64 timestamp
     ) {
         bytes32 targetHash = keccak256(bytes(reason));
-        ScoreChange[] storage history = scoreHistory[subject];
+        uint8 count = scoreHistoryCount[subject];
+        uint8 head = scoreHistoryHead[subject];
         
-        // Search from most recent
-        for (uint256 i = history.length; i > 0; i--) {
-            if (history[i - 1].reasonHash == targetHash) {
-                return (true, history[i - 1].timestamp);
+        // S-05 FIX: Search circular buffer from newest to oldest
+        for (uint8 i = 0; i < count; i++) {
+            uint8 idx = uint8((uint256(head) + MAX_HISTORY_PER_USER - 1 - uint256(i)) % MAX_HISTORY_PER_USER);
+            if (scoreHistory[subject][idx].reasonHash == targetHash) {
+                return (true, scoreHistory[subject][idx].timestamp);
             }
         }
         return (false, 0);
@@ -1224,7 +1215,7 @@ contract Seer {
         currentScore = getScore(subject);
         (decayAdjustedScore, daysInactive, ) = getDecayAdjustedScore(subject);
         lastActivityTime = lastActivity[subject];
-        historyCount = scoreHistory[subject].length;
+        historyCount = scoreHistoryCount[subject]; // S-05 FIX: use circular buffer count
         hasPendingDispute = scoreDisputes[subject].timestamp > 0 && !scoreDisputes[subject].resolved;
         isOperator = operators[subject];
     }

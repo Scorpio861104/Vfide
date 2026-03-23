@@ -257,7 +257,7 @@ contract CouncilManager is ReentrancyGuard {
         require(block.timestamp >= lastPaymentTime + paymentInterval, "CM: too soon");
         IEcosystemVault(ecosystemVault).allocateIncoming();
         
-        uint256 vaultBalance = token.balanceOf(ecosystemVault);
+        uint256 vaultBalance = IEcosystemVault(ecosystemVault).councilPool(); // BATCH-04: read pool balance not raw token balance
         require(vaultBalance > 0, "CM: no funds");
 
         // Effects first: timestamp is rolled back automatically if downstream call reverts.

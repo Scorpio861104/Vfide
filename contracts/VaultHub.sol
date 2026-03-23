@@ -361,6 +361,7 @@ contract VaultHub is Ownable, Pausable, ReentrancyGuard {
         CardBoundVault v = CardBoundVault(payable(vault));
         require(v.guardianCount() >= 2, "VH: need 2 guardians");
         require(v.guardianThreshold() >= 2, "VH: threshold too low");
+        require(_hasIndependentGuardian(v, owner_), "VH: need independent guardian");
 
         guardianSetupComplete[vault] = true;
         emit GuardianSetupCompleted(owner_, vault);
@@ -374,7 +375,7 @@ contract VaultHub is Ownable, Pausable, ReentrancyGuard {
 
     function _creationCode(address owner_) internal view returns (bytes memory) {
         address[] memory guardians = new address[](1);
-        guardians[0] = dao;
+        guardians[0] = owner_;
 
         return abi.encodePacked(
             type(CardBoundVault).creationCode,
@@ -391,6 +392,10 @@ contract VaultHub is Ownable, Pausable, ReentrancyGuard {
                 address(ledger)
             )
         );
+    }
+
+    function _hasIndependentGuardian(CardBoundVault vault, address owner_) internal view returns (bool) {
+        return !(vault.guardianCount() == 2 && vault.isGuardian(owner_) && vault.isGuardian(dao));
     }
 
     function _log(string memory action) internal {

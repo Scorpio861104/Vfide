@@ -88,10 +88,13 @@ contract OwnerControlPanel {
     
     // New contract references for enhanced configuration
     IEcosystemVaultAdmin public ecosystemVault;
+    IPanicGuard public panicGuard; // OCP-05: route vault freeze through PanicGuard
 
     uint256 public governanceDelay = 1 days;
     uint256 public constant MIN_GOVERNANCE_DELAY = 24 hours;
     uint256 public constant MAX_GOVERNANCE_DELAY = 30 days;
+    uint256 public constant DELAY_REDUCTION_COOLDOWN = 30 days;
+    uint256 public lastGovernanceDelayReductionAt;
 
     uint16 public maxAutoSwapSlippageBps = 500;
     uint16 public constant MAX_ALLOWED_AUTOSWAP_SLIPPAGE_BPS = 2000;
@@ -105,6 +108,7 @@ contract OwnerControlPanel {
     
     event ContractsUpdated(address token, address presale, address vaultHub, address burnRouter, address seer);
     event EcosystemContractsUpdated(address ecosystemVault);
+    event PanicGuardUpdated(address panicGuard);
     event EmergencyAction(string action, address target);
     event FeePolicyUpdated(uint16 minBps, uint16 maxBps);
     event AntiWhaleUpdated(uint256 maxTransfer, uint256 maxWallet, uint256 dailyLimit, uint256 cooldown);
@@ -124,6 +128,11 @@ contract OwnerControlPanel {
     error OCP_ActionNotQueued();
     error OCP_ActionNotReady(uint256 executeAfter);
     error OCP_SlippageTooHigh();
+        error OCP_CooldownActive();
+        error OCP_ReduceTooLarge();
+        error OCP_PanicGuardNotSet();
+        error OCP_ETHTransferFailed();
+            error OCP_UnfreezeViaDAO();
     
     modifier onlyOwner() {
         if (msg.sender != owner) revert OCP_NotOwner();
@@ -213,6 +222,7 @@ contract OwnerControlPanel {
      * @notice Set DevReserve vesting vault address for live monitoring views
      */
     function setDevReserveVault(address _devReserveVault) external onlyOwner {
+        _consumeQueuedAction(actionId_setDevReserveVault(_devReserveVault));
         address previous = devReserveVault;
         devReserveVault = _devReserveVault;
         emit DevReserveVaultUpdated(previous, _devReserveVault);
@@ -228,14 +238,20 @@ contract OwnerControlPanel {
         }
         uint256 oldDelay = governanceDelay;
         if (newDelay < oldDelay) {
-            require(newDelay >= oldDelay / 2, "OCP: max 50% reduction");
+            if (lastGovernanceDelayReductionAt != 0 &&
+                    block.timestamp < lastGovernanceDelayReductionAt + DELAY_REDUCTION_COOLDOWN)
+                revert OCP_CooldownActive();
+            if (newDelay < oldDelay / 2) revert OCP_ReduceTooLarge();
+            lastGovernanceDelayReductionAt = block.timestamp;
         }
+        _consumeQueuedAction(actionId_governance_setDelay(newDelay));
         governanceDelay = newDelay;
         emit GovernanceDelayUpdated(oldDelay, newDelay);
     }
 
     function governance_setMaxAutoSwapSlippageBps(uint16 newLimit) external onlyOwner {
         if (newLimit > MAX_ALLOWED_AUTOSWAP_SLIPPAGE_BPS) revert OCP_InvalidRange();
+        _consumeQueuedAction(actionId_governance_setMaxAutoSwapSlippageBps(newLimit));
         uint16 oldLimit = maxAutoSwapSlippageBps;
         maxAutoSwapSlippageBps = newLimit;
         emit AutoSwapSlippageLimitUpdated(oldLimit, newLimit);
@@ -245,6 +261,7 @@ contract OwnerControlPanel {
         if (minReward > maxReward || maxReward > MAX_ALLOWED_AUTO_WORK_PAYOUT_WEI) {
             revert OCP_InvalidRange();
         }
+        _consumeQueuedAction(actionId_governance_setAutoWorkPayoutBounds(minReward, maxReward));
         minAutoWorkPayoutWei = minReward;
         maxAutoWorkPayoutWei = maxReward;
         emit AutoWorkPayoutBoundsUpdated(minReward, maxReward);
@@ -260,7 +277,7 @@ contract OwnerControlPanel {
         emit GovernanceActionCancelled(actionId);
     }
 
-    function actionId_token_lockPolicy() public pure returns (bytes32) {
+    function actionId_token_lockPolicy() private pure returns (bytes32) {
         return keccak256(abi.encode("token_lockPolicy"));
     }
 
@@ -269,31 +286,198 @@ contract OwnerControlPanel {
         address stablecoin,
         bool enabled,
         uint16 maxSlippageBps
-    ) public pure returns (bytes32) {
+    ) private pure returns (bytes32) {
         return keccak256(abi.encode("autoSwap_configure", router, stablecoin, enabled, maxSlippageBps));
     }
 
-    function actionId_autoSwap_quickSetupUSDC(address router, address usdc) public pure returns (bytes32) {
+    function actionId_autoSwap_quickSetupUSDC(address router, address usdc) private pure returns (bytes32) {
         return keccak256(abi.encode("autoSwap_quickSetupUSDC", router, usdc));
     }
 
-    function actionId_token_setVaultOnly(bool enabled) public pure returns (bytes32) {
+    function actionId_token_setVaultOnly(bool enabled) private pure returns (bytes32) {
         return keccak256(abi.encode("token_setVaultOnly", enabled));
     }
 
-    function actionId_token_setCircuitBreaker(bool active, uint256 duration) public pure returns (bytes32) {
+    function actionId_token_setCircuitBreaker(bool active, uint256 duration) private pure returns (bytes32) {
         return keccak256(abi.encode("token_setCircuitBreaker", active, duration));
     }
 
-    function actionId_token_setBlacklist(address user, bool status) public pure returns (bytes32) {
+    function actionId_token_setBlacklist(address user, bool status) private pure returns (bytes32) {
         return keccak256(abi.encode("token_setBlacklist", user, status));
     }
 
-    function actionId_emergency_pauseAll() public pure returns (bytes32) {
+    function actionId_token_setModules(
+        address hub,
+        address security,
+        address ledger,
+        address router
+    ) private pure returns (bytes32) {
+        return keccak256(abi.encode("token_setModules", hub, security, ledger, router));
+    }
+
+    function actionId_token_setSinks(address treasury, address sanctum) private pure returns (bytes32) {
+        return keccak256(abi.encode("token_setSinks", treasury, sanctum));
+    }
+
+    function actionId_sustainability_setBurnLimits(
+        uint256 dailyBurnCap,
+        uint256 minimumSupplyFloor,
+        uint16 ecosystemMinBps
+    ) private pure returns (bytes32) {
+        return keccak256(
+            abi.encode("sustainability_setBurnLimits", dailyBurnCap, minimumSupplyFloor, ecosystemMinBps)
+        );
+    }
+
+    function actionId_sustainability_setAdaptiveFees(
+        uint256 lowVolumeThreshold,
+        uint256 highVolumeThreshold,
+        uint16 lowVolMultiplier,
+        uint16 highVolMultiplier,
+        bool enabled
+    ) private pure returns (bytes32) {
+        return keccak256(
+            abi.encode(
+                "sustainability_setAdaptiveFees",
+                lowVolumeThreshold,
+                highVolumeThreshold,
+                lowVolMultiplier,
+                highVolMultiplier,
+                enabled
+            )
+        );
+    }
+
+    function actionId_sustainability_setTokenReference(address token) private pure returns (bytes32) {
+        return keccak256(abi.encode("sustainability_setTokenReference", token));
+    }
+
+    function actionId_seer_setThresholds(
+        uint16 lowTrust,
+        uint16 highTrust,
+        uint16 minGovernance,
+        uint16 minMerchant
+    ) private pure returns (bytes32) {
+        return keccak256(abi.encode("seer_setThresholds", lowTrust, highTrust, minGovernance, minMerchant));
+    }
+
+    function actionId_presale_setPaused(bool paused) private pure returns (bytes32) {
+        return keccak256(abi.encode("presale_setPaused", paused));
+    }
+
+    function actionId_presale_extendSale(uint256 additionalDays) private pure returns (bytes32) {
+        return keccak256(abi.encode("presale_extendSale", additionalDays));
+    }
+
+    function actionId_presale_setMaxGasPrice(uint256 newMaxGasPrice) private pure returns (bytes32) {
+        return keccak256(abi.encode("presale_setMaxGasPrice", newMaxGasPrice));
+    }
+
+    function actionId_presale_withdrawUnsold(address recipient) private pure returns (bytes32) {
+        return keccak256(abi.encode("presale_withdrawUnsold", recipient));
+    }
+
+    function actionId_presale_finalize() private pure returns (bytes32) {
+        return keccak256(abi.encode("presale_finalize"));
+    }
+
+    function actionId_presale_enableRefunds() private pure returns (bytes32) {
+        return keccak256(abi.encode("presale_enableRefunds"));
+    }
+
+    function actionId_presale_depositTokens() private pure returns (bytes32) {
+        return keccak256(abi.encode("presale_depositTokens"));
+    }
+
+    function actionId_presale_setStablecoinRegistry(address registry) private pure returns (bytes32) {
+        return keccak256(abi.encode("presale_setStablecoinRegistry", registry));
+    }
+
+    function actionId_presale_setEthAccepted(bool accepted) private pure returns (bytes32) {
+        return keccak256(abi.encode("presale_setEthAccepted", accepted));
+    }
+
+    function actionId_presale_setTierEnabled(uint8 tier, bool enabled) private pure returns (bytes32) {
+        return keccak256(abi.encode("presale_setTierEnabled", tier, enabled));
+    }
+
+    function actionId_presale_fundStableRefunds(address stablecoin, uint256 amount) private pure returns (bytes32) {
+        return keccak256(abi.encode("presale_fundStableRefunds", stablecoin, amount));
+    }
+
+    function actionId_presale_recoverUnclaimedRefunds() private pure returns (bytes32) {
+        return keccak256(abi.encode("presale_recoverUnclaimedRefunds"));
+    }
+
+    function actionId_presale_recoverUnclaimedStableRefunds(address stablecoin) private pure returns (bytes32) {
+        return keccak256(abi.encode("presale_recoverUnclaimedStableRefunds", stablecoin));
+    }
+
+    function actionId_presale_emergencyWithdraw() private pure returns (bytes32) {
+        return keccak256(abi.encode("presale_emergencyWithdraw"));
+    }
+
+    function actionId_vault_requestDAORecovery(address vault, address newOwner) private pure returns (bytes32) {
+        return keccak256(abi.encode("vault_requestDAORecovery", vault, newOwner));
+    }
+
+    function actionId_vault_finalizeDAORecovery(address vault) private pure returns (bytes32) {
+        return keccak256(abi.encode("vault_finalizeDAORecovery", vault));
+    }
+
+    function actionId_vault_cancelDAORecovery(address vault) private pure returns (bytes32) {
+        return keccak256(abi.encode("vault_cancelDAORecovery", vault));
+    }
+
+    function actionId_governance_setDelay(uint256 newDelay) private pure returns (bytes32) {
+        return keccak256(abi.encode("governance_setDelay", newDelay));
+    }
+
+    function actionId_setDevReserveVault(address vault) private pure returns (bytes32) {
+        return keccak256(abi.encode("setDevReserveVault", vault));
+    }
+
+    function actionId_vault_setModules(address token, address security, address ledger) private pure returns (bytes32) {
+        return keccak256(abi.encode("vault_setModules", token, security, ledger));
+    }
+
+    function actionId_vault_setDAOMultisig(address multisig) private pure returns (bytes32) {
+        return keccak256(abi.encode("vault_setDAOMultisig", multisig));
+    }
+
+    function actionId_vault_setRecoveryTimelock(uint64 timelock) private pure returns (bytes32) {
+        return keccak256(abi.encode("vault_setRecoveryTimelock", timelock));
+    }
+
+    function actionId_setPanicGuard(address panicGuardAddr) private pure returns (bytes32) {
+        return keccak256(abi.encode("setPanicGuard", panicGuardAddr));
+    }
+
+    function actionId_vault_freezeVault(address vault, bool frozen) private pure returns (bytes32) {
+        return keccak256(abi.encode("vault_freezeVault", vault, frozen));
+    }
+
+    function actionId_production_setupSafeDefaults() private pure returns (bytes32) {
+        return keccak256(abi.encode("production_setupSafeDefaults"));
+    }
+
+    function actionId_production_setupWithAutoSwap(address dexRouter, address usdc) private pure returns (bytes32) {
+        return keccak256(abi.encode("production_setupWithAutoSwap", dexRouter, usdc));
+    }
+
+    function actionId_governance_setMaxAutoSwapSlippageBps(uint16 newLimit) private pure returns (bytes32) {
+        return keccak256(abi.encode("governance_setMaxAutoSwapSlippageBps", newLimit));
+    }
+
+    function actionId_governance_setAutoWorkPayoutBounds(uint256 minReward, uint256 maxReward) private pure returns (bytes32) {
+        return keccak256(abi.encode("governance_setAutoWorkPayoutBounds", minReward, maxReward));
+    }
+
+    function actionId_emergency_pauseAll() private pure returns (bytes32) {
         return keccak256(abi.encode("emergency_pauseAll"));
     }
 
-    function actionId_emergency_resumeAll() public pure returns (bytes32) {
+    function actionId_emergency_resumeAll() private pure returns (bytes32) {
         return keccak256(abi.encode("emergency_resumeAll"));
     }
 
@@ -301,7 +485,7 @@ contract OwnerControlPanel {
         uint16 councilBps,
         uint16 merchantBps,
         uint16 headhunterBps
-    ) public pure returns (bytes32) {
+    ) private pure returns (bytes32) {
         return keccak256(abi.encode("ecosystem_setAllocations", councilBps, merchantBps, headhunterBps));
     }
 
@@ -310,7 +494,7 @@ contract OwnerControlPanel {
         uint256 merchantTxReward,
         uint256 merchantReferralReward,
         uint256 userReferralReward
-    ) public pure returns (bytes32) {
+    ) private pure returns (bytes32) {
         return keccak256(
             abi.encode(
                 "ecosystem_configureAutoWorkPayout",
@@ -322,7 +506,7 @@ contract OwnerControlPanel {
         );
     }
 
-    function actionId_emergency_recoverETH(address recipient) public pure returns (bytes32) {
+    function actionId_emergency_recoverETH(address recipient) private pure returns (bytes32) {
         return keccak256(abi.encode("emergency_recoverETH", recipient));
     }
 
@@ -330,7 +514,7 @@ contract OwnerControlPanel {
         address token,
         address recipient,
         uint256 amount
-    ) public pure returns (bytes32) {
+    ) private pure returns (bytes32) {
         return keccak256(abi.encode("emergency_recoverTokens", token, recipient, amount));
     }
     
@@ -347,6 +531,7 @@ contract OwnerControlPanel {
         address ledger,
         address router
     ) external onlyOwner {
+        _consumeQueuedAction(actionId_token_setModules(hub, security, ledger, router));
         if (hub != address(0)) vfideToken.setVaultHub(hub);
         if (security != address(0)) vfideToken.setSecurityHub(security);
         if (ledger != address(0)) vfideToken.setLedger(ledger);
@@ -359,6 +544,14 @@ contract OwnerControlPanel {
         vfideToken.applyLedger();
         vfideToken.applyBurnRouter();
     }
+
+    function token_cancelModules() external onlyOwner {
+        // Best-effort: cancel each pending module change if present.
+        try vfideToken.cancelVaultHub() {} catch {}
+        try vfideToken.cancelSecurityHub() {} catch {}
+        try vfideToken.cancelLedger() {} catch {}
+        try vfideToken.cancelBurnRouter() {} catch {}
+    }
     
     /**
      * @notice Configure token sinks (Treasury, Sanctum)
@@ -367,6 +560,7 @@ contract OwnerControlPanel {
         address treasury,
         address sanctum
     ) external onlyOwner {
+        _consumeQueuedAction(actionId_token_setSinks(treasury, sanctum));
         if (treasury != address(0)) vfideToken.setTreasurySink(treasury);
         if (sanctum != address(0)) vfideToken.setSanctumSink(sanctum);
     }
@@ -385,6 +579,13 @@ contract OwnerControlPanel {
     function token_confirmSystemExempt() external onlyOwner {
         vfideToken.confirmSystemExempt();
     }
+
+    /**
+     * @notice Cancel a pending system exemption proposal
+     */
+    function token_cancelPendingSystemExempt() external onlyOwner {
+        vfideToken.cancelPendingExempt();
+    }
     
     /**
      * @notice Propose whitelist entry with 48-hour timelock
@@ -398,6 +599,13 @@ contract OwnerControlPanel {
      */
     function token_confirmWhitelist() external onlyOwner {
         vfideToken.confirmWhitelist();
+    }
+
+    /**
+     * @notice Cancel a pending whitelist change
+     */
+    function token_cancelPendingWhitelist() external onlyOwner {
+        vfideToken.cancelPendingWhitelist();
     }
     
     /**
@@ -430,10 +638,6 @@ contract OwnerControlPanel {
     /**
      * @notice Check if circuit breaker is currently active
      */
-    function token_isCircuitBreakerActive() external view returns (bool) {
-        return vfideToken.isCircuitBreakerActive();
-    }
-    
     /**
      * @notice Blacklist address for compliance (sanctions)
      */
@@ -465,10 +669,10 @@ contract OwnerControlPanel {
      * @param cooldown Seconds between transfers (0 = disabled)
      */
     // F-14 FIX: actionId helpers for newly-queued functions
-    function actionId_token_setAntiWhale(uint256 maxTransfer, uint256 maxWallet, uint256 dailyLimit, uint256 cooldown) public pure returns (bytes32) {
+    function actionId_token_setAntiWhale(uint256 maxTransfer, uint256 maxWallet, uint256 dailyLimit, uint256 cooldown) private pure returns (bytes32) {
         return keccak256(abi.encode("token_setAntiWhale", maxTransfer, maxWallet, dailyLimit, cooldown));
     }
-    function actionId_token_setWhaleLimitExempt(address addr, bool exempt) public pure returns (bytes32) {
+    function actionId_token_setWhaleLimitExempt(address addr, bool exempt) private pure returns (bytes32) {
         return keccak256(abi.encode("token_setWhaleLimitExempt", addr, exempt));
     }
 
@@ -503,44 +707,6 @@ contract OwnerControlPanel {
         }
     }
     
-    /**
-     * @notice Get current anti-whale configuration
-     */
-    function token_getAntiWhaleConfig() external view returns (
-        uint256 maxTransfer,
-        uint256 maxWallet,
-        uint256 dailyLimit,
-        uint256 cooldown
-    ) {
-        return (
-            vfideToken.maxTransferAmount(),
-            vfideToken.maxWalletBalance(),
-            vfideToken.dailyTransferLimit(),
-            vfideToken.transferCooldown()
-        );
-    }
-    
-    /**
-     * @notice Check if address is exempt from whale limits
-     */
-    function token_isWhaleLimitExempt(address addr) external view returns (bool) {
-        return vfideToken.whaleLimitExempt(addr);
-    }
-    
-    /**
-     * @notice Check remaining daily transfer limit for address
-     */
-    function token_remainingDailyLimit(address addr) external view returns (uint256) {
-        return vfideToken.remainingDailyLimit(addr);
-    }
-    
-    /**
-     * @notice Check cooldown remaining for address
-     */
-    function token_cooldownRemaining(address addr) external view returns (uint256) {
-        return vfideToken.cooldownRemaining(addr);
-    }
-    
     // ═══════════════════════════════════════════════════════════════════════
     //                          FEE CURVE MANAGEMENT
     // ═══════════════════════════════════════════════════════════════════════
@@ -550,7 +716,7 @@ contract OwnerControlPanel {
      * @param minBps Minimum fee in basis points (e.g., 25 = 0.25%) for high-trust users
      * @param maxBps Maximum fee in basis points (e.g., 500 = 5%) for low-trust users
      */
-    function actionId_fees_setPolicy(uint16 minBps, uint16 maxBps) public pure returns (bytes32) {
+    function actionId_fees_setPolicy(uint16 minBps, uint16 maxBps) private pure returns (bytes32) {
         return keccak256(abi.encode("fees_setPolicy", minBps, maxBps));
     }
 
@@ -559,46 +725,6 @@ contract OwnerControlPanel {
         _consumeQueuedAction(actionId_fees_setPolicy(minBps, maxBps));
         burnRouter.setFeePolicy(minBps, maxBps);
         emit FeePolicyUpdated(minBps, maxBps);
-    }
-    
-    /**
-     * @notice Get current fee curve configuration
-     */
-    function fees_getPolicy() external view returns (uint16 minBps, uint16 maxBps) {
-        return (burnRouter.minTotalBps(), burnRouter.maxTotalBps());
-    }
-    
-    /**
-     * @notice Preview fee for a specific ProofScore
-     * @param score ProofScore (0-10000)
-     * @return totalBps Total fee in basis points
-     */
-    function fees_previewForScore(uint16 score) external view returns (uint256 totalBps) {
-        (totalBps,) = burnRouter.getFeeForScore(score);
-    }
-    
-    /**
-     * @notice Get effective fee rates for a user
-     */
-    function fees_getEffectiveRates(address user) external view returns (
-        uint16 burnBps,
-        uint16 sanctumBps,
-        uint16 ecosystemBps
-    ) {
-        return burnRouter.getEffectiveBurnRate(user);
-    }
-    
-    /**
-     * @notice Preview fees for a transfer
-     */
-    function fees_previewTransfer(address user, uint256 amount) external view returns (
-        uint256 burnAmount,
-        uint256 sanctumAmount,
-        uint256 ecosystemAmount,
-        uint256 netAmount,
-        uint16 score
-    ) {
-        return burnRouter.previewFees(user, amount);
     }
     
     // ═══════════════════════════════════════════════════════════════════════
@@ -619,6 +745,7 @@ contract OwnerControlPanel {
         uint256 minimumSupplyFloor,
         uint16 ecosystemMinBps
     ) external onlyOwner {
+        _consumeQueuedAction(actionId_sustainability_setBurnLimits(dailyBurnCap, minimumSupplyFloor, ecosystemMinBps));
         burnRouter.setSustainability(dailyBurnCap, minimumSupplyFloor, ecosystemMinBps);
         emit SustainabilityUpdated(dailyBurnCap, minimumSupplyFloor, ecosystemMinBps);
     }
@@ -638,6 +765,15 @@ contract OwnerControlPanel {
         uint16 highVolMultiplier,
         bool enabled
     ) external onlyOwner {
+        _consumeQueuedAction(
+            actionId_sustainability_setAdaptiveFees(
+                lowVolumeThreshold,
+                highVolumeThreshold,
+                lowVolMultiplier,
+                highVolMultiplier,
+                enabled
+            )
+        );
         burnRouter.setAdaptiveFees(
             lowVolumeThreshold,
             highVolumeThreshold,
@@ -652,41 +788,8 @@ contract OwnerControlPanel {
      * @notice Set token reference on burn router (required for supply checks)
      */
     function sustainability_setTokenReference(address token) external onlyOwner {
+        _consumeQueuedAction(actionId_sustainability_setTokenReference(token));
         burnRouter.setToken(token);
-    }
-    
-    /**
-     * @notice Get current sustainability status
-     */
-    function sustainability_getStatus() external view returns (
-        uint256 dailyBurned,
-        uint256 burnCapacity,
-        uint256 dailyVolume,
-        uint16 volumeMultiplier,
-        bool burnsPausedFlag,
-        uint256 supplyFloor,
-        uint256 currentSupply
-    ) {
-        return burnRouter.getSustainabilityStatus();
-    }
-    
-    /**
-     * @notice Get sustainability configuration
-     */
-    function sustainability_getConfig() external view returns (
-        uint256 dailyBurnCap,
-        uint256 minimumSupplyFloor,
-        uint16 ecosystemMinBps,
-        bool adaptiveEnabled,
-        uint16 volumeMultiplier
-    ) {
-        return (
-            burnRouter.dailyBurnCap(),
-            burnRouter.minimumSupplyFloor(),
-            burnRouter.ecosystemMinBps(),
-            burnRouter.adaptiveFeesEnabled(),
-            burnRouter.getVolumeMultiplier()
-        );
     }
     
     // ═══════════════════════════════════════════════════════════════════════
@@ -702,31 +805,8 @@ contract OwnerControlPanel {
         uint16 minGovernance,
         uint16 minMerchant
     ) external onlyOwner {
+        _consumeQueuedAction(actionId_seer_setThresholds(lowTrust, highTrust, minGovernance, minMerchant));
         seer.setThresholds(lowTrust, highTrust, minGovernance, minMerchant);
-    }
-    
-    /**
-     * @notice Get current ProofScore thresholds
-     */
-    function seer_getThresholds() external view returns (
-        uint16 lowTrust,
-        uint16 highTrust,
-        uint16 minGovernance,
-        uint16 minMerchant
-    ) {
-        return (
-            seer.lowTrustThreshold(),
-            seer.highTrustThreshold(),
-            seer.minForGovernance(),
-            seer.minForMerchant()
-        );
-    }
-    
-    /**
-     * @notice Get ProofScore for a user
-     */
-    function seer_getScore(address user) external view returns (uint16) {
-        return seer.getScore(user);
     }
     
     // ═══════════════════════════════════════════════════════════════════════
@@ -737,6 +817,7 @@ contract OwnerControlPanel {
      * @notice Pause/unpause presale
      */
     function presale_setPaused(bool paused) external onlyOwner {
+        _consumeQueuedAction(actionId_presale_setPaused(paused));
         presale.setPaused(paused);
         emit EmergencyAction(paused ? "presale_paused" : "presale_unpaused", address(presale));
     }
@@ -745,6 +826,7 @@ contract OwnerControlPanel {
      * @notice Extend presale duration (one-time, max 30 days)
      */
     function presale_extendSale(uint256 additionalDays) external onlyOwner {
+        _consumeQueuedAction(actionId_presale_extendSale(additionalDays));
         presale.extendSale(additionalDays);
     }
     
@@ -752,6 +834,7 @@ contract OwnerControlPanel {
      * @notice Update max gas price circuit breaker
      */
     function presale_setMaxGasPrice(uint256 newMaxGasPrice) external onlyOwner {
+        _consumeQueuedAction(actionId_presale_setMaxGasPrice(newMaxGasPrice));
         presale.setMaxGasPrice(newMaxGasPrice);
     }
     
@@ -759,6 +842,7 @@ contract OwnerControlPanel {
      * @notice Withdraw unsold tokens + excess allocation to treasury
      */
     function presale_withdrawUnsold(address recipient) external onlyOwner {
+        _consumeQueuedAction(actionId_presale_withdrawUnsold(recipient));
         presale.withdrawUnsold(recipient);
     }
     
@@ -767,6 +851,7 @@ contract OwnerControlPanel {
      * @dev Aligned with actual VFIDEPresale.finalizePresale() (no params)
      */
     function presale_finalize() external onlyOwner {
+        _consumeQueuedAction(actionId_presale_finalize());
         presale.finalizePresale();
     }
     
@@ -774,6 +859,7 @@ contract OwnerControlPanel {
      * @notice Enable refunds if presale failed to meet goal
      */
     function presale_enableRefunds() external onlyOwner {
+        _consumeQueuedAction(actionId_presale_enableRefunds());
         presale.enableRefunds();
         emit EmergencyAction("refunds_enabled", address(presale));
     }
@@ -782,6 +868,7 @@ contract OwnerControlPanel {
      * @notice Verify token deposit in presale contract
      */
     function presale_depositTokens() external onlyOwner {
+        _consumeQueuedAction(actionId_presale_depositTokens());
         presale.depositTokens();
     }
     
@@ -789,13 +876,14 @@ contract OwnerControlPanel {
      * @notice Set stablecoin registry for presale
      */
     function presale_setStablecoinRegistry(address _registry) external onlyOwner {
+        _consumeQueuedAction(actionId_presale_setStablecoinRegistry(_registry));
         presale.setStablecoinRegistry(_registry);
     }
     
     /**
      * @notice Update ETH/USD price for ETH purchases
      */
-    function actionId_presale_setEthPrice(uint256 newPrice) public pure returns (bytes32) {
+    function actionId_presale_setEthPrice(uint256 newPrice) private pure returns (bytes32) {
         return keccak256(abi.encode("presale_setEthPrice", newPrice));
     }
 
@@ -809,6 +897,7 @@ contract OwnerControlPanel {
      * @notice Enable/disable ETH purchases
      */
     function presale_setEthAccepted(bool accepted) external onlyOwner {
+        _consumeQueuedAction(actionId_presale_setEthAccepted(accepted));
         presale.setEthAccepted(accepted);
     }
     
@@ -816,6 +905,7 @@ contract OwnerControlPanel {
      * @notice Enable/disable a presale tier
      */
     function presale_setTierEnabled(uint8 tier, bool enabled) external onlyOwner {
+        _consumeQueuedAction(actionId_presale_setTierEnabled(tier, enabled));
         presale.setTierEnabled(tier, enabled);
     }
     
@@ -823,6 +913,7 @@ contract OwnerControlPanel {
      * @notice Fund stablecoin refunds
      */
     function presale_fundStableRefunds(address stablecoin, uint256 amount) external onlyOwner {
+        _consumeQueuedAction(actionId_presale_fundStableRefunds(stablecoin, amount));
         presale.fundStableRefunds(stablecoin, amount);
     }
     
@@ -830,6 +921,7 @@ contract OwnerControlPanel {
      * @notice Recover unclaimed ETH refunds after deadline
      */
     function presale_recoverUnclaimedRefunds() external onlyOwner {
+        _consumeQueuedAction(actionId_presale_recoverUnclaimedRefunds());
         presale.recoverUnclaimedRefunds();
     }
     
@@ -837,6 +929,7 @@ contract OwnerControlPanel {
      * @notice Recover unclaimed stablecoin refunds after deadline
      */
     function presale_recoverUnclaimedStableRefunds(address stablecoin) external onlyOwner {
+        _consumeQueuedAction(actionId_presale_recoverUnclaimedStableRefunds(stablecoin));
         presale.recoverUnclaimedStableRefunds(stablecoin);
     }
     
@@ -844,6 +937,7 @@ contract OwnerControlPanel {
      * @notice Emergency withdraw (only before sale or after finalization)
      */
     function presale_emergencyWithdraw() external onlyOwner {
+        _consumeQueuedAction(actionId_presale_emergencyWithdraw());
         presale.emergencyWithdraw();
         emit EmergencyAction("emergency_withdraw", address(presale));
     }
@@ -867,6 +961,7 @@ contract OwnerControlPanel {
         address security,
         address ledger
     ) external onlyOwner {
+        _consumeQueuedAction(actionId_vault_setModules(token, security, ledger));
         if (token != address(0)) vaultHub.setVFIDEToken(token);
         if (security != address(0)) vaultHub.setSecurityHub(security);
         if (ledger != address(0)) vaultHub.setProofLedger(ledger);
@@ -876,6 +971,7 @@ contract OwnerControlPanel {
      * @notice Set DAO recovery multisig
      */
     function vault_setDAOMultisig(address multisig) external onlyOwner {
+        _consumeQueuedAction(actionId_vault_setDAOMultisig(multisig));
         vaultHub.setDAORecoveryMultisig(multisig);
     }
     
@@ -883,6 +979,7 @@ contract OwnerControlPanel {
      * @notice Set DAO recovery timelock duration
      */
     function vault_setRecoveryTimelock(uint64 timelock) external onlyOwner {
+        _consumeQueuedAction(actionId_vault_setRecoveryTimelock(timelock));
         vaultHub.setRecoveryTimelock(timelock);
     }
     
@@ -890,6 +987,7 @@ contract OwnerControlPanel {
      * @notice Initiate DAO emergency recovery for a vault
      */
     function vault_requestDAORecovery(address vault, address newOwner) external onlyOwner {
+        _consumeQueuedAction(actionId_vault_requestDAORecovery(vault, newOwner));
         vaultHub.requestDAORecovery(vault, newOwner);
         emit EmergencyAction("dao_recovery_requested", vault);
     }
@@ -898,6 +996,7 @@ contract OwnerControlPanel {
      * @notice Finalize DAO recovery after timelock
      */
     function vault_finalizeDAORecovery(address vault) external onlyOwner {
+        _consumeQueuedAction(actionId_vault_finalizeDAORecovery(vault));
         vaultHub.finalizeDAORecovery(vault);
         emit EmergencyAction("dao_recovery_finalized", vault);
     }
@@ -906,6 +1005,7 @@ contract OwnerControlPanel {
      * @notice Cancel DAO recovery request
      */
     function vault_cancelDAORecovery(address vault) external onlyOwner {
+        _consumeQueuedAction(actionId_vault_cancelDAORecovery(vault));
         vaultHub.cancelDAORecovery(vault);
     }
     
@@ -913,8 +1013,24 @@ contract OwnerControlPanel {
      * @notice Emergency freeze a specific vault (via vault owner)
      * @dev Requires vault owner cooperation or DAO recovery process
      */
+    function setPanicGuard(address _panicGuard) external onlyOwner {
+        if (_panicGuard == address(0)) revert OCP_Zero();
+        _consumeQueuedAction(actionId_setPanicGuard(_panicGuard));
+        panicGuard = IPanicGuard(_panicGuard);
+        emit PanicGuardUpdated(_panicGuard);
+    }
+
+    /// @notice Freeze/unfreeze a vault via PanicGuard (does not call vault directly — OCP is not vault owner)
+    /// @dev Freeze: reports high-severity risk to PanicGuard (panicGuard must be set). Unfreeze: clears via DAO process.
     function vault_freezeVault(address vault, bool frozen) external onlyOwner {
-        IUserVaultOCP(vault).setFrozen(frozen);
+        _consumeQueuedAction(actionId_vault_freezeVault(vault, frozen));
+        if (address(panicGuard) == address(0)) revert OCP_PanicGuardNotSet();
+        if (frozen) {
+            panicGuard.reportRisk(vault, 30 days, 100, "ocp_freeze");
+        } else {
+            // Unfreeze requires PanicGuard.clear() which is onlyDAO — emit for off-chain handling
+            revert OCP_UnfreezeViaDAO();
+        }
         emit EmergencyAction(frozen ? "vault_frozen" : "vault_unfrozen", vault);
     }
     
@@ -1154,7 +1270,7 @@ contract OwnerControlPanel {
      * @param manager Address to grant/revoke manager role
      * @param active True to grant, false to revoke
      */
-    function actionId_ecosystem_setManager(address manager, bool active) public pure returns (bytes32) {
+    function actionId_ecosystem_setManager(address manager, bool active) private pure returns (bytes32) {
         return keccak256(abi.encode("ecosystem_setManager", manager, active));
     }
 
@@ -1252,6 +1368,7 @@ contract OwnerControlPanel {
      *      Howey-safe mode is hardcoded — no calls needed.
      */
     function production_setupSafeDefaults() external onlyOwner {
+        _consumeQueuedAction(actionId_production_setupSafeDefaults());
         // Disable auto-swap (start conservatively)
         if (address(ecosystemVault) != address(0)) {
             address router = ecosystemVault.swapRouter();
@@ -1271,6 +1388,7 @@ contract OwnerControlPanel {
      * @param usdc USDC token address (or other preferred stablecoin)
      */
     function production_setupWithAutoSwap(address dexRouter, address usdc) external onlyOwner {
+        _consumeQueuedAction(actionId_production_setupWithAutoSwap(dexRouter, usdc));
         // Enable auto-swap with conservative 1% slippage
         if (address(ecosystemVault) != address(0)) {
             ecosystemVault.configureAutoSwap(dexRouter, usdc, true, 100);
@@ -1356,7 +1474,7 @@ contract OwnerControlPanel {
         uint256 balance = address(this).balance;
         if (balance > 0) {
             (bool success, ) = recipient.call{value: balance}("");
-            require(success, "ETH transfer failed");
+            if (!success) revert OCP_ETHTransferFailed();
             emit EmergencyAction("eth_recovered", recipient);
         }
     }

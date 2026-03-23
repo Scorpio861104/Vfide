@@ -17,6 +17,7 @@ contract StablecoinRegistry is Ownable, Pausable {
     
     mapping(address => StablecoinInfo) public stablecoins;
     address[] public stablecoinList;
+    mapping(address => uint256) private stablecoinIndexPlusOne;
     
     event StablecoinAdded(address indexed token, uint8 decimals, string symbol);
     event StablecoinRemoved(address indexed token);
@@ -52,6 +53,7 @@ contract StablecoinRegistry is Ownable, Pausable {
             symbol: symbol
         });
         stablecoinList.push(token);
+        stablecoinIndexPlusOne[token] = stablecoinList.length;
         
         emit StablecoinAdded(token, decimals, symbol);
     }
@@ -64,14 +66,18 @@ contract StablecoinRegistry is Ownable, Pausable {
         if (!stablecoins[token].allowed) revert SR_NotFound();
         
         stablecoins[token].allowed = false;
-        
-        uint256 len = stablecoinList.length;
-        for (uint256 i = 0; i < len; i++) {
-            if (stablecoinList[i] == token) {
-                stablecoinList[i] = stablecoinList[len - 1];
-                stablecoinList.pop();
-                break;
+
+        uint256 idxPlusOne = stablecoinIndexPlusOne[token];
+        if (idxPlusOne != 0) {
+            uint256 idx = idxPlusOne - 1;
+            uint256 lastIdx = stablecoinList.length - 1;
+            if (idx != lastIdx) {
+                address moved = stablecoinList[lastIdx];
+                stablecoinList[idx] = moved;
+                stablecoinIndexPlusOne[moved] = idx + 1;
             }
+            stablecoinList.pop();
+            stablecoinIndexPlusOne[token] = 0;
         }
         
         emit StablecoinRemoved(token);

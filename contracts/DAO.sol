@@ -105,6 +105,7 @@ contract DAO is ReentrancyGuard {
         bytes   data;
         string  description;
         ProposalType proposalType; // L-02: renamed from ptype for clarity (ptype was inconsistent with the type name)
+        uint64  createdAt;
         uint64  start;
         uint64  end;
         uint64  queuedAt;     // DAO-12 FIX: Track when proposal was queued for expiry
@@ -154,6 +155,9 @@ contract DAO is ReentrancyGuard {
     constructor(address _admin, address _timelock, address _seer, address _hub, address _hooks) {
         require(_admin!=address(0) && _timelock!=address(0) && _seer!=address(0) && _hub!=address(0), "zero");
         admin=_admin; timelock=IDAOTimelock(_timelock); seer=ISeer(_seer); vaultHub=IVaultHub(_hub); hooks=IGovernanceHooks(_hooks);
+        // NEW-08 hardening: initialize emergency approver at deployment so
+        // emergency controls are not dead-on-arrival before a timelock update.
+        emergencyApprover = _timelock;
         emit ModulesSet(_timelock,_seer,_hub,_hooks,address(0)); emit AdminSet(_admin);
     }
 
@@ -209,6 +213,7 @@ contract DAO is ReentrancyGuard {
     /// @dev DAO-03 FIX: Requires approval from both admin and emergencyApprover to prevent sole-admin bypass
     function initiateEmergencyQuorumRescue() external {
         require(msg.sender == admin || msg.sender == emergencyApprover, "DAO: not authorized");
+        require(emergencyApprover != address(0), "DAO: emergency approver not set");
         require(emergencyRescueReadyAt == 0, "DAO: rescue already pending");
         
         emergencyRescueReadyAt = uint64(block.timestamp + EMERGENCY_RESCUE_DELAY);
@@ -221,6 +226,7 @@ contract DAO is ReentrancyGuard {
     /// @dev DAO-03 FIX: Must be called by the other party (admin or emergencyApprover)
     function approveEmergencyQuorumRescue() external {
         require(emergencyRescueReadyAt != 0, "DAO: no rescue pending");
+        require(emergencyApprover != address(0), "DAO: emergency approver not set");
         require(msg.sender == admin || msg.sender == emergencyApprover, "DAO: not authorized");
         require(emergencyRescueInitiator != address(0), "DAO: no initiator");
         require(msg.sender != emergencyRescueInitiator, "DAO: initiator cannot self-approve");
@@ -246,6 +252,7 @@ contract DAO is ReentrancyGuard {
     /// @param _minParticipation New minParticipation (must be <= current, >= 3)
     function executeEmergencyQuorumRescue(uint256 _minVotes, uint256 _minParticipation) external onlyAdmin {
         require(emergencyRescueReadyAt != 0, "DAO: no rescue pending");
+        require(emergencyApprover != address(0), "DAO: emergency approver not set");
         require(block.timestamp >= emergencyRescueReadyAt, "DAO: rescue warmup not elapsed");
         require(emergencyRescueApproved, "DAO: secondary approval required"); // DAO-03 FIX: Require approval from emergencyApprover
         // F-21 FIX: New quorum must be >= 10% of the current value to prevent essentially zeroing quorum
@@ -268,6 +275,7 @@ contract DAO is ReentrancyGuard {
     /// @dev DAO-03 FIX: Requires approval from both admin and emergencyApprover
     function proposeEmergencyTimelockReplacement(address newTimelock) external {
         require(msg.sender == admin || msg.sender == emergencyApprover, "DAO: not authorized");
+        require(emergencyApprover != address(0), "DAO: emergency approver not set");
         require(newTimelock != address(0), "DAO: zero");
         pendingEmergencyTimelock = newTimelock;
         emergencyTimelockReadyAt = uint64(block.timestamp) + uint64(EMERGENCY_TIMELOCK_DELAY);
@@ -280,6 +288,7 @@ contract DAO is ReentrancyGuard {
     /// @dev DAO-03 FIX: Must be called by the other party (admin or emergencyApprover)
     function approveEmergencyTimelockReplacement() external {
         require(pendingEmergencyTimelock != address(0), "DAO: no pending replacement");
+        require(emergencyApprover != address(0), "DAO: emergency approver not set");
         require(msg.sender == admin || msg.sender == emergencyApprover, "DAO: not authorized");
         require(emergencyTimelockInitiator != address(0), "DAO: no initiator");
         require(msg.sender != emergencyTimelockInitiator, "DAO: initiator cannot self-approve");
@@ -292,6 +301,7 @@ contract DAO is ReentrancyGuard {
     /// @dev DAO-03 FIX: Requires secondary approval from emergencyApprover
     function executeEmergencyTimelockReplacement() external {
         require(msg.sender == admin || msg.sender == emergencyApprover, "DAO: not authorized");
+        require(emergencyApprover != address(0), "DAO: emergency approver not set");
         require(emergencyTimelockReadyAt > 0 && block.timestamp >= emergencyTimelockReadyAt, "DAO: not ready");
         require(emergencyTimelockApproved, "DAO: secondary approval required"); // DAO-03 FIX
         address newTimelock = pendingEmergencyTimelock;
@@ -418,6 +428,7 @@ contract DAO is ReentrancyGuard {
         id=++proposalCount;
         Proposal storage p=proposals[id];
         p.proposer=msg.sender; p.proposalType=ptype; p.target=target; p.value=value; p.data=data; p.description=description;
+        p.createdAt = uint64(block.timestamp);
         // Flash loan protection: voting starts after votingDelay
         p.start=uint64(block.timestamp) + votingDelay; p.end=p.start+votingPeriod;
         emit ProposalCreated(id,msg.sender,ptype,target,value,data,description);
@@ -454,21 +465,20 @@ contract DAO is ReentrancyGuard {
         uint256 rawSnapshot = p.scoreSnapshot[voter];
         uint256 weight;
         if (rawSnapshot == 0) {
-            // First vote: take snapshot and store as weight+1
-            weight = uint256(seer.getScore(voter));
+            // F-28 FIX: Require voter's score to have been established before the proposal was created.
+            // DAO-04 FIX: Also require activity within 90 days (not stale > 90 days).
+            // DAO-05 FIX: Freeze vote weight at proposal creation time instead of first-vote time.
+            uint64 voterLastActivity = seer.lastActivity(voter);
+            uint64 scoreDeadline = p.createdAt;
+            require(
+                voterLastActivity > 0 &&
+                voterLastActivity + SCORE_SETTLEMENT_WINDOW <= scoreDeadline &&
+                voterLastActivity > block.timestamp - 90 days,
+                "DAO: score not recently established"
+            );
+
+            weight = uint256(seer.getScoreAt(voter, scoreDeadline));
             p.scoreSnapshot[voter] = weight + 1; // +1 so score-0 is stored as 1, not confused with unset
-                    // F-28 FIX: Require voter's score to have been established before the proposal was created.
-                    // DAO-04 FIX: Also require activity within 90 days (not stale > 90 days)
-                    // DAO-05 FIX: Score must predate proposal creation by at least SCORE_SETTLEMENT_WINDOW (2 days)
-                    // to prevent last-minute ProofScore pumping right before a proposal is submitted.
-                    uint64 voterLastActivity = seer.lastActivity(voter);
-                    uint256 scoreDeadline = p.start - votingDelay; // = proposal creation timestamp
-                    require(
-                        voterLastActivity > 0 &&
-                        voterLastActivity + SCORE_SETTLEMENT_WINDOW < scoreDeadline &&
-                        voterLastActivity > block.timestamp - 90 days,
-                        "DAO: score not recently established"
-                    );
         } else {
             weight = rawSnapshot - 1; // decode: subtract the +1 offset
         }
@@ -591,6 +601,7 @@ contract DAO is ReentrancyGuard {
         p.data = "";
         p.description = "";
         p.proposalType = ProposalType.Generic;
+        p.createdAt = 0;
         p.start = 0;
         p.end = 0;
         p.executed = false;

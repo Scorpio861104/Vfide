@@ -54,6 +54,7 @@ contract DAOTimelock is ReentrancyGuard {
         // C-1 FIX: Enforce minimum and maximum delay to prevent timelock bypass
         require(_delay >= MIN_DELAY, "TL: delay below minimum");
         require(_delay <= MAX_DELAY, "TL: delay above maximum");
+        emergencyDelayReduced = false;
         delay=_delay; 
         emit DelaySet(_delay); 
         _log("tl_delay_set"); 
@@ -63,13 +64,16 @@ contract DAOTimelock is ReentrancyGuard {
     /// @dev Can only REDUCE delay (never increase), bounded by MIN_DELAY, max 50% reduction per call
     uint64 public lastEmergencyReduceTime;
     uint64 public constant ABSOLUTE_MIN_DELAY = 24 hours;
+    bool public emergencyDelayReduced;
 
     function emergencyReduceDelay(uint64 _newDelay) external onlyAdmin {
+        require(!emergencyDelayReduced, "TL: emergency reduction already used");
         require(_newDelay >= ABSOLUTE_MIN_DELAY, "TL: below absolute minimum");
         require(_newDelay < delay, "TL: must reduce");
         require(_newDelay >= delay / 2, "TL: max 50% reduction per call");
         require(block.timestamp >= lastEmergencyReduceTime + 24 hours, "TL: reduce cooldown");
         lastEmergencyReduceTime = uint64(block.timestamp);
+        emergencyDelayReduced = true;
         delay = _newDelay;
         emit DelaySet(_newDelay);
         _log("tl_emergency_delay_reduce");
@@ -237,7 +241,7 @@ contract DAOTimelock is ReentrancyGuard {
      * @notice Clean up expired transaction (anyone can call to free storage)
      * @param id Transaction ID to clean up
      */
-    function cleanupExpired(bytes32 id) external {
+    function cleanupExpired(bytes32 id) external onlyAdmin { // TL-03: restrict to admin
         Op storage op = queue[id];
         require(op.eta > 0, "TL: not queued");
         require(!op.done, "TL: already executed");

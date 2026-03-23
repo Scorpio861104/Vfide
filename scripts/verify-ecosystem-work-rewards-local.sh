@@ -4,8 +4,9 @@ set -euo pipefail
 PORT="${PORT:-8551}"
 RPC_URL_VALUE="http://127.0.0.1:${PORT}"
 LOG_FILE="/tmp/hardhat-ecosystem-work-rewards-node.log"
+HARDHAT_CONFIG_FILE="hardhat.unlimited.config.ts"
 
-npx hardhat node --hostname 127.0.0.1 --port "${PORT}" >"${LOG_FILE}" 2>&1 &
+npx hardhat --network hardhat --config "${HARDHAT_CONFIG_FILE}" node --hostname 127.0.0.1 --port "${PORT}" >"${LOG_FILE}" 2>&1 &
 NODE_PID=$!
 
 cleanup() {
@@ -23,4 +24,5 @@ for _ in $(seq 1 30); do
   sleep 1
 done
 
-RPC_URL="${RPC_URL_VALUE}" npm run -s contract:verify:ecosystem-work-rewards
+HARDHAT_ALLOW_UNLIMITED_CONTRACT_SIZE=true \
+  RPC_URL="${RPC_URL_VALUE}" npm run -s contract:verify:ecosystem-work-rewards

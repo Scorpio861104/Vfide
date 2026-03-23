@@ -55,7 +55,7 @@ contract UserVaultLegacy is ReentrancyGuard {
     uint256 public maxExecuteValue = 1 ether; // Default 1 ETH max per execute call
 
     mapping(address => bool) public allowedExecuteTarget;
-    bool public executeWhitelistEnforced; // When true, only whitelisted targets may be called
+    bool public executeWhitelistEnforced = true; // Legacy vaults default to whitelist-on
     event ExecuteTargetSet(address indexed target, bool allowed);
     event ExecuteWhitelistEnforced(bool enforced);
     
@@ -191,6 +191,7 @@ contract UserVaultLegacy is ReentrancyGuard {
         owner = _owner;
         securityHub = ISecurityHub(_securityHub);
         ledger = IProofLedger(_ledger);
+        executeWhitelistEnforced = true;
         _logSys("vault_created");
         emit OwnerSet(_owner);
     }
@@ -1175,6 +1176,7 @@ contract VaultInfrastructure is Ownable {
     event VaultCreated(address indexed owner, address indexed vault);
     event ForcedRecoveryInitiated(address indexed vault, address indexed newOwner, uint64 unlockTime);
     event ForcedRecovery(address indexed vault, address indexed newOwner);
+    event ForcedRecoveryCancelled(address indexed vault); // VI-06 FIX
     event VFIDESet(address vfide);
     event DAOSet(address dao);
     event VaultBytecodeProviderSet(address provider);
@@ -1357,8 +1359,22 @@ contract VaultInfrastructure is Ownable {
         emit ForcedRecovery(vault, newOwner);
         _logEv(vault, "force_recover_final", 0, "");
     }
-
-    // ——— Internals
+    
+    /// @notice VI-06 FIX: Cancel a pending forced recovery — callable by DAO to abort compromised approvals
+    function cancelForceRecovery(address vault) external {
+        if (msg.sender != dao) revert VI_NotDAO();
+        require(vault != address(0), "VI:zero");
+        require(recoveryUnlockTime[vault] != 0 || recoveryApprovalCount[vault] > 0, "VI:no-pending-recovery");
+        
+        delete recoveryProposedOwner[vault];
+        delete recoveryUnlockTime[vault];
+        delete recoveryApprovalCount[vault];
+        // Increment nonce to invalidate any outstanding signed approvals
+        recoveryNonce[vault]++;
+        
+        emit ForcedRecoveryCancelled(vault);
+        _logEv(vault, "force_recover_cancelled", 0, "");
+    }
     function _salt(address owner_) internal pure returns (bytes32) {
         return keccak256(abi.encodePacked(owner_));
     }

@@ -36,6 +36,13 @@ error ECO_InvalidRank();
 error ECO_ArrayCapReached();
 /// @notice Permanently reverts — token rewards for referrals or merchant ranking are not available (Howey compliance)
 error ECO_RewardsNotAvailable();
+error ECO_CouncilBelowMinimum();
+error ECO_MerchantBelowMinimum();
+error ECO_HeadhunterBelowMinimum();
+error ECO_RevokeFailed();
+error ECO_AlreadyExecuted();
+error ECO_AlreadyCancelled();
+error ECO_TimelockNotPassed();
 
 contract EcosystemVault is Ownable, ReentrancyGuard {
     using SafeERC20 for IERC20;
@@ -51,7 +58,7 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
     event HeadhunterQuarterEnded(uint256 year, uint256 quarter, uint256 totalPool);
     event HeadhunterRewardClaimed(address indexed referrer, uint256 year, uint256 quarter, uint256 amount, uint8 rank);
     event ReferralRecorded(address indexed referrer, address indexed referred, bool isMerchant, uint16 points);
-    event AllocationUpdated(uint16 councilBps, uint16 merchantBps, uint16 headhunterBps);
+    event AllocationUpdated(uint16 councilBps, uint16 merchantBps, uint16 headhunterBps, uint16 operationsBps);
     event MerchantPeriodEnded(uint256 period, uint256 poolSnapshot);
     event MerchantRewardClaimed(address indexed merchant, uint256 period, uint256 reward, uint8 rank);
     event SeerUpdated(address indexed oldSeer, address indexed newSeer);
@@ -293,15 +300,15 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
     function setAllocations(uint16 _councilBps, uint16 _merchantBps, uint16 _headhunterBps) external onlyOwner {
         uint16 nonOps = _councilBps + _merchantBps + _headhunterBps;
         require(nonOps <= MAX_BPS, "allocations exceed 100%");
-        require(_councilBps >= MIN_ALLOCATION_BPS, "ECO: council below minimum");
-        require(_merchantBps >= MIN_ALLOCATION_BPS, "ECO: merchant below minimum");
-        require(_headhunterBps >= MIN_ALLOCATION_BPS, "ECO: headhunter below minimum");
+        if (_councilBps < MIN_ALLOCATION_BPS) revert ECO_CouncilBelowMinimum();
+        if (_merchantBps < MIN_ALLOCATION_BPS) revert ECO_MerchantBelowMinimum();
+        if (_headhunterBps < MIN_ALLOCATION_BPS) revert ECO_HeadhunterBelowMinimum();
         require(MAX_BPS - nonOps >= MIN_ALLOCATION_BPS, "ECO: operations below minimum");
         councilBps = _councilBps;
         merchantBps = _merchantBps;
         headhunterBps = _headhunterBps;
         operationsBps = MAX_BPS - nonOps;
-        emit AllocationUpdated(_councilBps, _merchantBps, _headhunterBps);
+        emit AllocationUpdated(_councilBps, _merchantBps, _headhunterBps, MAX_BPS - nonOps);
     }
     
     /**
@@ -320,18 +327,19 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
         require(_operationsBps <= MAX_BPS - (3 * MIN_ALLOCATION_BPS), "ECO: ops exceeds max");
 
         uint16 remaining = MAX_BPS - _operationsBps;
-        require(councilBps >= MIN_ALLOCATION_BPS, "ECO: council below minimum");
-        require(merchantBps >= MIN_ALLOCATION_BPS, "ECO: merchant below minimum");
-        require(headhunterBps >= MIN_ALLOCATION_BPS, "ECO: headhunter below minimum");
+        if (councilBps < MIN_ALLOCATION_BPS) revert ECO_CouncilBelowMinimum();
+        if (merchantBps < MIN_ALLOCATION_BPS) revert ECO_MerchantBelowMinimum();
+        if (headhunterBps < MIN_ALLOCATION_BPS) revert ECO_HeadhunterBelowMinimum();
         require(councilBps + merchantBps + headhunterBps == remaining, "ECO: remaining mismatch");
         operationsBps = _operationsBps;
-        emit AllocationUpdated(councilBps, merchantBps, headhunterBps);
+        emit AllocationUpdated(councilBps, merchantBps, headhunterBps, _operationsBps);
     }
     
     /**
      * @notice Set operations withdrawal cooldown
      */
     function setOperationsCooldown(uint256 _cooldown) external onlyOwner {
+        require(_cooldown >= 1 hours, "ECO: cooldown too short");
         require(_cooldown <= 90 days, "ECO: cooldown too long");
         operationsWithdrawalCooldown = _cooldown;
     }
@@ -1045,7 +1053,7 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
      * @param amount Amount of VFIDE to pay (will be converted if autoSwap enabled)
      * @param reason Description of the payment
      */
-    function payExpense(address recipient, uint256 amount, string calldata reason) external onlyManager {
+    function payExpense(address recipient, uint256 amount, string calldata reason) external onlyManager nonReentrant {
         if (recipient == address(0) || amount == 0) revert ECO_Zero();
 
         _allocateIncoming();
@@ -1055,10 +1063,10 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
         if (autoSwapEnabled && swapRouter != address(0) && preferredStablecoin != address(0)) {
             uint256 stableReceived = _swapToStable(amount);
             if (stableReceived > 0) {
-                // Successfully swapped, transfer stablecoin to recipient
-                IERC20(preferredStablecoin).safeTransfer(recipient, stableReceived);
                 operationsPool -= amount;
                 totalExpensesPaid += amount;
+                // Successfully swapped, transfer stablecoin to recipient
+                IERC20(preferredStablecoin).safeTransfer(recipient, stableReceived);
                 emit RewardPaidInStable(recipient, amount, stableReceived, reason);
                 return;
             } else {
@@ -1068,9 +1076,9 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
         }
         
         // Default: pay in VFIDE (no swap or swap failed)
-        rewardToken.safeTransfer(recipient, amount);
         operationsPool -= amount;
         totalExpensesPaid += amount;
+        rewardToken.safeTransfer(recipient, amount);
         emit PaymentMade(recipient, amount, reason);
     }
     
@@ -1104,16 +1112,16 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
                 block.timestamp + 300 // 5 min deadline
             ) returns (uint256[] memory amounts) {
                 // Revoke leftover approval for security
-                require(rewardToken.approve(swapRouter, 0), "ECO: revoke failed");
+                if (!rewardToken.approve(swapRouter, 0)) revert ECO_RevokeFailed();
                 return amounts[amounts.length - 1];
             } catch {
                 // Swap failed, revoke approval
-                require(rewardToken.approve(swapRouter, 0), "ECO: revoke failed");
+                if (!rewardToken.approve(swapRouter, 0)) revert ECO_RevokeFailed();
                 return 0;
             }
         } catch {
             // getAmountsOut failed (no liquidity?), revoke approval
-            require(rewardToken.approve(swapRouter, 0), "ECO: revoke failed");
+            if (!rewardToken.approve(swapRouter, 0)) revert ECO_RevokeFailed();
             return 0;
         }
     }
@@ -1173,19 +1181,18 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
     
     function cancelWithdraw(uint256 id) external onlyOwner {
         WithdrawRequest storage req = withdrawRequests[id];
-        require(!req.executed, "already executed");
-        require(!req.cancelled, "already cancelled");
-        
+        if (req.executed) revert ECO_AlreadyExecuted();
+        if (req.cancelled) revert ECO_AlreadyCancelled();
         req.cancelled = true;
         emit WithdrawCancelled(id);
     }
     
     function executeWithdraw(uint256 id) external onlyOwner nonReentrant {
         WithdrawRequest storage req = withdrawRequests[id];
-        require(!req.executed, "already executed");
-        require(!req.cancelled, "cancelled");
-        require(block.timestamp >= req.requestedAt + WITHDRAW_TIMELOCK, "timelock not passed");
-        
+        if (req.executed) revert ECO_AlreadyExecuted();
+        if (req.cancelled) revert ECO_AlreadyCancelled();
+        if (block.timestamp < req.requestedAt + WITHDRAW_TIMELOCK) revert ECO_TimelockNotPassed();
+
         req.executed = true;
         rewardToken.safeTransfer(req.to, req.amount);
         emit WithdrawExecuted(id, req.to, req.amount);

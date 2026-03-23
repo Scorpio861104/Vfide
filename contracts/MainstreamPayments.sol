@@ -127,6 +127,14 @@ contract FiatRampRegistry {
     function removeProvider(address provider) external onlyDAO {
         require(providers[provider].registered, "FRR: not registered");
         providers[provider].registered = false;
+        // MP-07: keep providerList compact via swap-and-pop.
+        for (uint256 i = 0; i < providerList.length; i++) {
+            if (providerList[i] == provider) {
+                providerList[i] = providerList[providerList.length - 1];
+                providerList.pop();
+                break;
+            }
+        }
         emit RampProviderRemoved(provider);
     }
     
@@ -158,8 +166,8 @@ contract FiatRampRegistry {
             timestamp: uint64(block.timestamp)
         });
         
+        require(userRampHistory[user].length < 1000, "FRR: history full");
         userRampHistory[user].push(recordId);
-        require(userRampHistory[user].length <= 1000, "FRR: history full");
         providers[msg.sender].txCount++;
         
         // Reward trust score for completed ramp activity (no on-chain identity tracking)
@@ -494,6 +502,7 @@ contract SessionKeyManager {
     event SessionUsed(address indexed owner, address indexed sessionKey, uint256 amount, uint256 remaining);
     event DefaultLimitsUpdated(uint256 spendLimit, uint64 duration);
     event SeerAutonomousSet(address indexed seerAutonomous);
+    event SessionRecorderPermissionSet(address indexed owner, address indexed sessionKey, address indexed recorder, bool allowed);
 
     error SKM_ActionBlocked(uint8 result);
     
@@ -514,6 +523,7 @@ contract SessionKeyManager {
     mapping(address => address[]) private ownerSessions; // owner => sessionKeys
     
     mapping(address => bool) public authorizedSpendRecorders;
+    mapping(address => mapping(address => bool)) public sessionRecorderAllowed; // sessionKey => recorder => allowed
     
     // Default limits
     uint256 public defaultSpendLimit = 1000 * 1e18;  // 1000 VFIDE
@@ -547,6 +557,18 @@ contract SessionKeyManager {
     function setSeerAutonomous(address _seerAutonomous) external onlyDAO {
         seerAutonomous = ISeerAutonomous_SKM(_seerAutonomous);
         emit SeerAutonomousSet(_seerAutonomous);
+    }
+
+    /**
+     * @notice Allow or revoke a specific authorized recorder for one session key.
+     * @dev Session owner must explicitly opt-in each recorder before it can call recordSpend.
+     */
+    function setSessionRecorderPermission(address sessionKey, address recorder, bool allowed) external {
+        Session storage s = sessions[sessionKey];
+        require(s.owner == msg.sender, "SKM: not owner");
+        require(recorder != address(0), "SKM: zero address");
+        sessionRecorderAllowed[sessionKey][recorder] = allowed;
+        emit SessionRecorderPermissionSet(msg.sender, sessionKey, recorder, allowed);
     }
     
     /**
@@ -658,6 +680,7 @@ contract SessionKeyManager {
         Session storage s = sessions[sessionKey];
         
         require(s.owner != address(0), "SKM: session not found");
+        require(sessionRecorderAllowed[sessionKey][msg.sender], "SKM: recorder not approved by session owner");
         require(!s.revoked, "SKM: session revoked");
         require(block.timestamp < s.expiry, "SKM: session expired");
         require(amount <= s.maxPerTx, "SKM: exceeds per-tx limit");
@@ -763,6 +786,7 @@ contract SessionKeyManager {
 contract TerminalRegistry {
     event TerminalRegistered(bytes32 indexed terminalId, address indexed merchant, string location);
     event TerminalDeactivated(bytes32 indexed terminalId);
+    event TerminalReactivated(bytes32 indexed terminalId);
     event TerminalPayment(bytes32 indexed terminalId, address indexed customer, uint256 amount);
     event TerminalLocationUpdated(bytes32 indexed terminalId, string newLocation);
     event TapLimitUpdated(uint256 oldLimit, uint256 newLimit);
@@ -773,6 +797,7 @@ contract TerminalRegistry {
     struct Terminal {
         address merchant;
         bool active;
+        bool deactivatedByDAO;
         string location;        // Physical location description
         uint256 txCount;
         uint256 totalVolume;
@@ -810,6 +835,7 @@ contract TerminalRegistry {
         terminals[terminalId] = Terminal({
             merchant: msg.sender,
             active: true,
+            deactivatedByDAO: false,
             location: location,
             txCount: 0,
             totalVolume: 0,
@@ -832,6 +858,7 @@ contract TerminalRegistry {
         require(t.active, "TR: already inactive");
         
         t.active = false;
+        t.deactivatedByDAO = (msg.sender == dao);
         emit TerminalDeactivated(terminalId);
     }
     
@@ -840,8 +867,15 @@ contract TerminalRegistry {
      */
     function reactivateTerminal(bytes32 terminalId) external {
         Terminal storage t = terminals[terminalId];
-        require(t.merchant == msg.sender, "TR: not merchant");
+        // MP-08: DAO deactivations require DAO reactivation.
+        if (t.deactivatedByDAO) {
+            require(msg.sender == dao, "TR: DAO reactivation required");
+        } else {
+            require(t.merchant == msg.sender, "TR: not merchant");
+        }
         t.active = true;
+        t.deactivatedByDAO = false;
+        emit TerminalReactivated(terminalId);
     }
     
     /**
@@ -1150,9 +1184,12 @@ contract MultiCurrencyRouter {
             // No swap needed (already VFIDE)
             estimatedVfide = amountIn;
         } else {
-            // Would call DEX for real quote
-            // For now, placeholder - frontend should query DEX directly
-            estimatedVfide = amountIn;  
+            // MP-09: return actual quote when router supports it.
+            try ISwapRouter(recommendedRouter).getAmountsOut(amountIn, path) returns (uint256[] memory amounts) {
+                estimatedVfide = amounts.length > 0 ? amounts[amounts.length - 1] : 0;
+            } catch {
+                estimatedVfide = 0;
+            }
         }
         
         usdValue = priceOracle.vfideToUsd(estimatedVfide);

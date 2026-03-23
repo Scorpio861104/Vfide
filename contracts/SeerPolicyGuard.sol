@@ -19,11 +19,13 @@ contract SeerPolicyGuard {
     address public seer;
 
     mapping(bytes32 => uint64) public policyChangeReadyAt;
+    uint256 public policyNonce; // BATCH-06: ensures unique changeId per scheduling call
 
     event DAOSet(address indexed oldDAO, address indexed newDAO);
     event SeerSet(address indexed oldSeer, address indexed newSeer);
     event PolicyChangeScheduled(bytes32 indexed changeId, bytes4 indexed selector, uint8 indexed policyClass, uint64 readyAt);
     event PolicyChangeConsumed(bytes32 indexed changeId, bytes4 indexed selector, uint8 indexed policyClass);
+    event PolicyChangeCancelled(bytes32 indexed changeId, bytes4 indexed selector, uint8 indexed policyClass);
 
     modifier onlyDAO() {
         if (msg.sender != dao) revert SPG_NotDAO();
@@ -62,6 +64,14 @@ contract SeerPolicyGuard {
         readyAt = uint64(block.timestamp + _policyDelay(pclass));
         policyChangeReadyAt[changeId] = readyAt;
         emit PolicyChangeScheduled(changeId, selector, pclass, readyAt);
+    }
+
+    function cancelPolicyChange(bytes4 selector, uint8 pclass) external onlyDAO {
+        bytes32 changeId = getPolicyChangeId(selector, pclass);
+        if (policyChangeReadyAt[changeId] == 0) revert SPG_InvalidState();
+
+        delete policyChangeReadyAt[changeId];
+        emit PolicyChangeCancelled(changeId, selector, pclass);
     }
 
     function consume(bytes4 selector, uint8 pclass) external onlySeer {

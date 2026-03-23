@@ -107,6 +107,35 @@ describe("DevReserveVestingVault (H-03: DAO pause claims)", () => {
 // H-05: VaultInfrastructure + Execute Whitelist
 // ──────────────────────────────────────────────────────────────────────────────
 describe("UserVaultLegacy (H-05: execute whitelist)", () => {
+  it("blocks execute to non-whitelisted targets by default", async () => {
+    const { ethers } = await network.connect();
+    const [hubAddr, owner] = await ethers.getSigners();
+
+    const TokenStub = await ethers.getContractFactory("TokenStub");
+    const token = await TokenStub.deploy();
+    await token.waitForDeployment();
+
+    const Placeholder = await ethers.getContractFactory("Placeholder");
+    const hubContract = await Placeholder.deploy();
+    await hubContract.waitForDeployment();
+
+    const Vault = await ethers.getContractFactory("UserVaultLegacy");
+    const vault = await Vault.deploy(
+      await hubContract.getAddress(), await token.getAddress(), owner.address,
+      ethers.ZeroAddress, ethers.ZeroAddress
+    );
+    await vault.waitForDeployment();
+
+    assert.equal(await vault.executeWhitelistEnforced(), true);
+
+    await assert.rejects(
+      async () => {
+        await vault.connect(owner).execute(hubAddr.address, 0, "0x");
+      },
+      /UV:target-not-whitelisted/
+    );
+  });
+
   it("enforces execute whitelist when enabled", async () => {
     const { ethers } = await network.connect();
     const [hubAddr, owner] = await ethers.getSigners();
@@ -117,9 +146,7 @@ describe("UserVaultLegacy (H-05: execute whitelist)", () => {
 
     const Placeholder = await ethers.getContractFactory("Placeholder");
     const hubContract = await Placeholder.deploy();
-    const target = await Placeholder.deploy();
     await hubContract.waitForDeployment();
-    await target.waitForDeployment();
 
     const Vault = await ethers.getContractFactory("UserVaultLegacy");
     const vault = await Vault.deploy(
@@ -129,8 +156,10 @@ describe("UserVaultLegacy (H-05: execute whitelist)", () => {
     await vault.waitForDeployment();
 
     // Owner adds target to whitelist
-    await vault.connect(owner).setAllowedTarget(await target.getAddress(), true);
-    assert.equal(await vault.allowedExecuteTarget(await target.getAddress()), true);
+    await vault.connect(owner).setAllowedTarget(hubAddr.address, true);
+    assert.equal(await vault.allowedExecuteTarget(hubAddr.address), true);
+
+    await vault.connect(owner).execute(hubAddr.address, 0, "0x");
   });
 });
 
@@ -172,20 +201,28 @@ describe("PanicGuard (M-25: vault registration check)", () => {
 // ──────────────────────────────────────────────────────────────────────────────
 describe("Seer (M-18: circular delta guard)", () => {
   it("setScore works and caches score", async () => {
-    const { ethers } = await network.connect();
+    const { ethers } = await network.connect({
+      override: {
+        allowUnlimitedContractSize: true,
+      },
+    });
     const [dao, user] = await ethers.getSigners();
 
     const Seer = await ethers.getContractFactory("Seer");
     const seer = await Seer.deploy(dao.address, ethers.ZeroAddress, ethers.ZeroAddress);
     await seer.waitForDeployment();
 
-    // DAO sets score
-    await seer.connect(dao).setScore(user.address, 7500, "initial");
-    assert.equal(await seer.getScore(user.address), 7500n);
+    // DAO sets score within maxDAOScoreChange (default score is 5000)
+    await seer.connect(dao).setScore(user.address, 7000, "initial");
+    assert.equal(await seer.getScore(user.address), 7000n);
   });
 
   it("operator can reward user", async () => {
-    const { ethers } = await network.connect();
+    const { ethers } = await network.connect({
+      override: {
+        allowUnlimitedContractSize: true,
+      },
+    });
     const [dao, operator, user] = await ethers.getSigners();
 
     const Seer = await ethers.getContractFactory("Seer");
@@ -201,6 +238,106 @@ describe("Seer (M-18: circular delta guard)", () => {
     // Operator rewards
     await seer.connect(operator).reward(user.address, 100n, "good");
     assert.equal(await seer.getScore(user.address), 5100n);
+  });
+
+  it("pushes score snapshots to BurnRouter on DAO score updates", async () => {
+    const { ethers } = await network.connect({
+      override: {
+        allowUnlimitedContractSize: true,
+      },
+    });
+    const [dao, user, sanctum, burn, eco] = await ethers.getSigners();
+
+    const Seer = await ethers.getContractFactory("Seer");
+    const seer = await Seer.deploy(dao.address, ethers.ZeroAddress, ethers.ZeroAddress);
+    await seer.waitForDeployment();
+
+    const Router = await ethers.getContractFactory("ProofScoreBurnRouter");
+    const router = await Router.deploy(
+      await seer.getAddress(),
+      sanctum.address,
+      burn.address,
+      eco.address,
+    );
+    await router.waitForDeployment();
+
+    await seer.connect(dao).setBurnRouter(await router.getAddress());
+
+    await seer.connect(dao).setScore(user.address, 7000, "sync-check");
+
+    const updatedAt = await router.lastScoreUpdate(user.address);
+    const snapshot = await router.scoreHistory(user.address, 0);
+    assert.ok(updatedAt > 0n);
+    assert.equal(snapshot[0], 7000n);
+  });
+
+  it("does not punish again when auto restriction is triggered by low score", async () => {
+    const { ethers } = await network.connect({
+      override: {
+        allowUnlimitedContractSize: true,
+      },
+    });
+    const [dao, operator, user] = await ethers.getSigners();
+
+    const Seer = await ethers.getContractFactory("Seer");
+    const seer = await Seer.deploy(dao.address, ethers.ZeroAddress, ethers.ZeroAddress);
+    await seer.waitForDeployment();
+
+    const SeerAutonomous = await ethers.getContractFactory("SeerAutonomous");
+    const autonomous = await SeerAutonomous.deploy(dao.address, await seer.getAddress(), ethers.ZeroAddress);
+    await autonomous.waitForDeployment();
+
+    await autonomous.connect(dao).setOperator(operator.address, true);
+    // Seer enforces maxDAOScoreChange (20%) per call, so step down in two calls.
+    await seer.connect(dao).setScore(user.address, 4000, "seed-1");
+    await ethers.provider.send("evm_increaseTime", [3600]);
+    await ethers.provider.send("evm_mine", []);
+    await seer.connect(dao).setScore(user.address, 2900, "seed-2");
+    const scoreBefore = await seer.getScore(user.address);
+
+    await autonomous.connect(operator).onScoreChange(user.address, 3900, 2900);
+
+    const scoreAfter = await seer.getScore(user.address);
+    const restriction = await autonomous.restrictionLevel(user.address);
+
+    assert.equal(scoreBefore, 2900n);
+    assert.equal(scoreAfter, scoreBefore);
+    assert.equal(restriction, 3n);
+  });
+
+  it("does not reduce Seer score when pattern escalation reaches restricted", async () => {
+    const { ethers } = await network.connect({
+      override: {
+        allowUnlimitedContractSize: true,
+      },
+    });
+    const [dao, operator, user, counterparty] = await ethers.getSigners();
+
+    const Seer = await ethers.getContractFactory("Seer");
+    const seer = await Seer.deploy(dao.address, ethers.ZeroAddress, ethers.ZeroAddress);
+    await seer.waitForDeployment();
+
+    const SeerAutonomous = await ethers.getContractFactory("SeerAutonomous");
+    const autonomous = await SeerAutonomous.deploy(dao.address, await seer.getAddress(), ethers.ZeroAddress);
+    await autonomous.waitForDeployment();
+
+    await autonomous.connect(dao).setOperator(operator.address, true);
+    // Keep score above restrict threshold but below auto-lift threshold so pattern restriction persists.
+    await seer.connect(dao).setScore(user.address, 4500, "stable");
+
+    const scoreBefore = await seer.getScore(user.address);
+
+    // Default sensitivity (50) flags rapid transfers once count exceeds threshold.
+    // Repeating transfer actions escalates violations to Restricted.
+    for (let i = 0; i < 16; i++) {
+      await autonomous.connect(operator).beforeAction(user.address, 0, 1n, counterparty.address);
+    }
+
+    const scoreAfter = await seer.getScore(user.address);
+    const restriction = await autonomous.restrictionLevel(user.address);
+
+    assert.equal(restriction, 3n);
+    assert.equal(scoreAfter, scoreBefore);
   });
 });
 
@@ -244,3 +381,4 @@ describe("VFIDEAccessControl (L-08: atomic admin transfer)", () => {
     assert.equal(await ac.hasRole(TREASURY_MANAGER_ROLE, other.address), true);
   });
 });
+

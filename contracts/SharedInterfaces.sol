@@ -97,6 +97,19 @@ interface IProofScoreBurnRouterToken {
         address ecosystemSink,
         address burnSink
     );
+
+    function computeFeesAndReserve(
+        address from,
+        address to,
+        uint256 amount
+    ) external returns (
+        uint256 burnAmount,
+        uint256 sanctumAmount,
+        uint256 ecosystemAmount,
+        address sanctumSink,
+        address ecosystemSink,
+        address burnSink
+    );
 }
 
 interface IProofScoreBurnRouter {
@@ -155,16 +168,22 @@ interface IVFIDEToken is IERC20 {
     function setSecurityHub(address hub) external;
     function setVaultHub(address hub) external;
     function applyVaultHub() external;
+    function cancelVaultHub() external;
     function applySecurityHub() external;
+    function cancelSecurityHub() external;
     function setLedger(address ledger) external;
     function applyLedger() external;
+    function cancelLedger() external;
     function setBurnRouter(address router) external;
     function applyBurnRouter() external;
+    function cancelBurnRouter() external;
     function setTreasurySink(address treasury) external;
     function setSanctumSink(address sanctum) external;
     function proposeSystemExempt(address who, bool isExempt) external;
+    function cancelPendingExempt() external;
     function confirmSystemExempt() external;
     function proposeWhitelist(address addr, bool status) external;
+    function cancelPendingWhitelist() external;
     function confirmWhitelist() external;
     function setVaultOnly(bool enabled) external;
     function setCircuitBreaker(bool active, uint256 duration) external;
@@ -190,6 +209,7 @@ interface IVFIDEToken is IERC20 {
 interface ISeer {
     function getScore(address subject) external view returns (uint16);
     function getCachedScore(address subject) external view returns (uint16); // I-13: Gas-efficient for transfer path
+    function getScoreAt(address subject, uint64 timestamp) external view returns (uint16);
     function lastActivity(address subject) external view returns (uint64);
     function hasBadge(address subject, bytes32 badge) external view returns (bool);
     function minForGovernance() external view returns (uint16);
@@ -204,6 +224,7 @@ interface ISeer {
 
 interface IEcosystemVault {
     function allocateIncoming() external;
+    function councilPool() external view returns (uint256); // BATCH-04
     function payExpense(address recipient, uint256 amount, string calldata reason) external;
     function payMerchantWorkReward(address worker, uint256 amount, string calldata reason) external;
     function payReferralWorkReward(address worker, uint256 amount, string calldata reason) external;
@@ -271,6 +292,7 @@ interface IGovernanceHooks {
 interface IPanicGuard {
     function globalRisk() external view returns (bool);
     function setHub(address _hub) external;
+    function reportRisk(address vault, uint64 duration, uint8 severity, string calldata reason) external;
 }
 
 /// ─────────────────────────── Shared Abstracts

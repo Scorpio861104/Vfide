@@ -72,6 +72,7 @@ contract VFIDEPresale is ReentrancyGuard {
     event RefundClaimed(address indexed user, uint256 amount);
     event MaxGasPriceUpdated(uint256 oldPrice, uint256 newPrice);
     event ETHPriceUpdated(uint256 oldPrice, uint256 newPrice);
+    event EthAcceptedSet(bool accepted); // P-13 FIX: emit when ETH mode changes
     event StablecoinRegistryUpdated(address oldRegistry, address newRegistry);
     event TierEnabled(uint8 tier, bool enabled);
     event PurchaseCancelled(address indexed buyer, uint256 indexed index, uint256 tokensReturned);
@@ -114,6 +115,7 @@ contract VFIDEPresale is ReentrancyGuard {
     uint256 public ethPriceUsd = 3500;                           // ETH/USD rate (updatable by DAO)
     uint256 public ethPriceLastUpdated;                          // Timestamp of last price update
     uint256 public constant ETH_PRICE_STALENESS = 4 hours;       // F-02 FIX: Reduced from 24h to limit oracle manipulation window
+    uint256 public constant PRICE_UPDATE_COOLDOWN = 1 hours;     // P-07/P-10 FIX: Minimum time between ETH price updates
     uint256 public constant MAX_ETH_PER_BLOCK = 10 ether;         // F-02 FIX: Per-block ETH purchase cap to slow oracle attacks
     mapping(uint256 => uint256) public ethPerBlock;               // F-02 FIX: ETH purchased per block
     
@@ -252,6 +254,11 @@ contract VFIDEPresale is ReentrancyGuard {
      */
     function setEthPrice(uint256 newPrice) external onlyDAO {
         require(newPrice >= 1_000 && newPrice <= 100_000, "PS: price out of range"); // $1k - $100k
+        // P-07/P-10 FIX: Enforce cooldown between price updates to prevent rapid exponential manipulation
+        require(
+            ethPriceLastUpdated == 0 || block.timestamp >= ethPriceLastUpdated + PRICE_UPDATE_COOLDOWN,
+            "PS: price update cooldown active"
+        );
         uint256 old = ethPriceUsd;
         if (old > 0) {
             require(newPrice <= old * 150 / 100 && newPrice >= old * 50 / 100, "PS: price change >50%");
@@ -274,6 +281,7 @@ contract VFIDEPresale is ReentrancyGuard {
      */
     function setEthAccepted(bool accepted) external onlyDAO {
         ethAccepted = accepted;
+        emit EthAcceptedSet(accepted); // P-13 FIX
     }
     
     /**
@@ -817,38 +825,23 @@ contract VFIDEPresale is ReentrancyGuard {
         
         if (p.ethPaid > 0) {
             // Cancelling forfeits this purchase's refund eligibility.
-            if (ethContributed[msg.sender] >= p.ethPaid) {
-                ethContributed[msg.sender] -= p.ethPaid;
-            } else {
-                ethContributed[msg.sender] = 0;
-            }
-            if (totalEthRaised >= p.ethPaid) {
-                totalEthRaised -= p.ethPaid;
-            } else {
-                totalEthRaised = 0;
-            }
+            require(ethContributed[msg.sender] >= p.ethPaid, "PS: eth accounting mismatch");
+            ethContributed[msg.sender] -= p.ethPaid;
+            require(totalEthRaised >= p.ethPaid, "PS: total eth accounting mismatch");
+            totalEthRaised -= p.ethPaid;
         }
         if (p.stablePaid > 0 && p.stablecoin != address(0)) {
             // Cancelling forfeits this purchase's stablecoin refund eligibility.
             uint256 stableUserContribution = stableContributed[msg.sender][p.stablecoin];
-            if (stableUserContribution >= p.stablePaid) {
-                stableContributed[msg.sender][p.stablecoin] = stableUserContribution - p.stablePaid;
-            } else {
-                stableContributed[msg.sender][p.stablecoin] = 0;
-            }
+            require(stableUserContribution >= p.stablePaid, "PS: stable accounting mismatch");
+            stableContributed[msg.sender][p.stablecoin] = stableUserContribution - p.stablePaid;
         }
         if (p.usdEquiv > 0) {
             // Keep refund/accounting aligned to active purchases only.
-            if (usdContributed[msg.sender] >= p.usdEquiv) {
-                usdContributed[msg.sender] -= p.usdEquiv;
-            } else {
-                usdContributed[msg.sender] = 0;
-            }
-            if (totalUsdRaised >= p.usdEquiv) {
-                totalUsdRaised -= p.usdEquiv;
-            } else {
-                totalUsdRaised = 0;
-            }
+            require(usdContributed[msg.sender] >= p.usdEquiv, "PS: usd accounting mismatch");
+            usdContributed[msg.sender] -= p.usdEquiv;
+            require(totalUsdRaised >= p.usdEquiv, "PS: total usd accounting mismatch");
+            totalUsdRaised -= p.usdEquiv;
         }
 
         // Track cancelled tokens separately for accounting

@@ -113,19 +113,18 @@ contract ProofScoreBurnRouter is Ownable, Pausable {
     }
     mapping(address => ScoreSnapshot[]) public scoreHistory;
     uint64 public constant SCORE_WINDOW = 7 days; // 7-day time-weighted average
-    uint256 public constant MAX_SCORE_SNAPSHOTS = 100; // Cap to prevent unbounded gas
+    uint256 public constant MAX_SCORE_SNAPSHOTS = 32; // Hard cap to bound score-history iteration gas
     mapping(address => uint64) public lastScoreUpdate;
+    mapping(address => uint64) public scoreHistoryLatestTs;
     mapping(address => uint256) public scoreHistoryHead;
+    mapping(address => uint16) public cachedTimeWeightedScore;
 
     function _dayStart(uint256 timestamp) internal pure returns (uint256) {
         return (timestamp / 1 days) * 1 days;
     }
 
     constructor(address _seer, address _sanctumSink, address _burnSink, address _ecosystemSink) {
-        require(_seer != address(0), "zero seer");
-        if (_sanctumSink == address(0) || _burnSink == address(0) || _ecosystemSink == address(0)) {
-            revert BURN_Zero();
-        }
+        _validateModules(_seer, _sanctumSink, _burnSink, _ecosystemSink);
         seer = ISeer(_seer);
         sanctumSink = _sanctumSink;
         burnSink = _burnSink;
@@ -259,7 +258,7 @@ contract ProofScoreBurnRouter is Ownable, Pausable {
      *      computeFees gas-free while still producing an on-chain alert trail.
      * @param user Address to probe
      */
-    function warnIfSeerMisconfigured(address user) external {
+    function warnIfSeerMisconfigured(address user) external onlyOwner {
         uint16 score = seer.getScore(user);
         if (score == 0) {
             emit SeerScoreZeroWarning(user, address(seer));
@@ -270,10 +269,7 @@ contract ProofScoreBurnRouter is Ownable, Pausable {
 
     /// @notice BR-04 FIX: Propose new modules (takes effect after timelock)
     function proposeModules(address _seer, address _sanctumSink, address _burnSink, address _ecosystemSink) external onlyOwner {
-        if (_seer == address(0)) revert BURN_Zero();
-        if (_sanctumSink == address(0) || _burnSink == address(0) || _ecosystemSink == address(0)) {
-            revert BURN_Zero();
-        }
+        _validateModules(_seer, _sanctumSink, _burnSink, _ecosystemSink);
         pendingModules = PendingModules({
             seer_: _seer,
             sanctumSink_: _sanctumSink,
@@ -286,6 +282,12 @@ contract ProofScoreBurnRouter is Ownable, Pausable {
     /// @notice BR-04 FIX: Apply pending modules after timelock expires
     function applyModules() external onlyOwner {
         require(pendingModulesAt != 0 && block.timestamp >= pendingModulesAt, "BR: timelock");
+        _validateModules(
+            pendingModules.seer_,
+            pendingModules.sanctumSink_,
+            pendingModules.burnSink_,
+            pendingModules.ecosystemSink_
+        );
         seer = ISeer(pendingModules.seer_);
         sanctumSink = pendingModules.sanctumSink_;
         burnSink = pendingModules.burnSink_;
@@ -301,20 +303,10 @@ contract ProofScoreBurnRouter is Ownable, Pausable {
         delete pendingModulesAt;
     }
 
-    // ─────────────────────────── Admin (LEGACY - kept for compatibility, use proposeModules + applyModules)
+    // ─────────────────────────── Admin (LEGACY entrypoint disabled)
     
-    function setModules(address _seer, address _sanctumSink, address _burnSink, address _ecosystemSink) external onlyOwner {
-        // For backwards compatibility during transition, allow instant set if no pending proposal exists
-        if (pendingModulesAt != 0) revert("BR: use applyModules for pending, or cancelProposeModules");
-        if (_seer == address(0)) revert BURN_Zero();
-        if (_sanctumSink == address(0) || _burnSink == address(0) || _ecosystemSink == address(0)) {
-            revert BURN_Zero();
-        }
-        seer = ISeer(_seer);
-        sanctumSink = _sanctumSink;
-        burnSink = _burnSink;
-        ecosystemSink = _ecosystemSink;
-        emit ModulesSet(_seer, _sanctumSink, _burnSink, _ecosystemSink);
+    function setModules(address, address, address, address) external pure {
+        revert("BR: use proposeModules/applyModules");
     }
 
     function updateScore(address user) external {
@@ -331,6 +323,7 @@ contract ProofScoreBurnRouter is Ownable, Pausable {
         });
         
         lastScoreUpdate[user] = now_;
+        scoreHistoryLatestTs[user] = now_;
         
         uint256 len = scoreHistory[user].length;
         if (len < MAX_SCORE_SNAPSHOTS) {
@@ -340,55 +333,68 @@ contract ProofScoreBurnRouter is Ownable, Pausable {
             scoreHistory[user][head] = snap;
             scoreHistoryHead[user] = (head + 1) % MAX_SCORE_SNAPSHOTS;
         }
+
+        // BR-02 FIX: Recompute the weighted score when history changes so
+        // transfer-path fee calculation can use an O(1) cached value.
+        cachedTimeWeightedScore[user] = _computeTimeWeightedScore(user, now_);
     }
-    
-    function getTimeWeightedScore(address user) public view returns (uint16) {
+
+    function _computeTimeWeightedScore(address user, uint64 now_) internal view returns (uint16) {
         uint256 len = scoreHistory[user].length;
         if (len == 0) {
             // No history yet — use cached score (I-13: avoids gas amplification)
             return seer.getCachedScore(user);
         }
-        
-        uint64 now_ = uint64(block.timestamp);
+
         uint64 windowStart = now_ > SCORE_WINDOW ? now_ - SCORE_WINDOW : 0;
-        
-        // Collect all in-window snapshots sorted by timestamp
-        // Since circular buffer may wrap, find the latest timestamp first
-        uint64 latestTs = 0;
-        for (uint256 i = 0; i < len; i++) {
-            if (scoreHistory[user][i].timestamp > latestTs) {
-                latestTs = scoreHistory[user][i].timestamp;
-            }
-        }
-        
+
+        uint64 latestTs = scoreHistoryLatestTs[user];
+
         // If latest snapshot is older than window, fall back to cached Seer score (I-13)
         if (latestTs < windowStart) {
             return seer.getCachedScore(user);
         }
-        
+
         // Calculate weighted average using all in-window snapshots
         uint256 totalWeight = 0;
         uint256 weightedSum = 0;
-        
+
         for (uint256 i = 0; i < len; i++) {
             uint64 snapshotTime = scoreHistory[user][i].timestamp;
             if (snapshotTime < windowStart) continue;
-            
+
             // For time-weighted, use simple equal weighting since circular buffer
             // doesn't guarantee ordering. Each snapshot contributes equally.
             // Weight by time since snapshot (more recent = higher weight)
             uint64 age = now_ - snapshotTime;
             uint64 weight = age < SCORE_WINDOW ? SCORE_WINDOW - age : 1;
-            
+
             totalWeight += weight;
             weightedSum += uint256(scoreHistory[user][i].score) * weight;
         }
-        
+
         if (totalWeight == 0) {
             return seer.getCachedScore(user);
         }
-        
+
         return uint16(weightedSum / totalWeight);
+    }
+
+    function getTimeWeightedScore(address user) public view returns (uint16) {
+        if (scoreHistory[user].length == 0) {
+            // No history yet — use cached score (I-13: avoids gas amplification)
+            return seer.getCachedScore(user);
+        }
+
+        uint64 now_ = uint64(block.timestamp);
+        uint64 windowStart = now_ > SCORE_WINDOW ? now_ - SCORE_WINDOW : 0;
+
+        // If the cached weighted score is stale, fall back to Seer's current cached score.
+        if (scoreHistoryLatestTs[user] < windowStart) {
+            return seer.getCachedScore(user);
+        }
+
+        return cachedTimeWeightedScore[user];
     }
 
     /**
@@ -475,7 +481,7 @@ contract ProofScoreBurnRouter is Ownable, Pausable {
         address from,
         address /*to*/,
         uint256 amount
-    ) external view returns (
+    ) public view returns (
         uint256 burnAmount,
         uint256 sanctumAmount,
         uint256 ecosystemAmount,
@@ -555,6 +561,34 @@ contract ProofScoreBurnRouter is Ownable, Pausable {
         ecosystemSink_ = ecosystemSink;
         burnSink_ = burnSink;
     }
+
+    /**
+     * @notice BR-01 FIX: Compute fees and atomically reserve daily burn usage.
+     * @dev Called by VFIDEToken in transfer path to remove same-block TOCTOU on burn cap.
+     */
+    function computeFeesAndReserve(
+        address from,
+        address to,
+        uint256 amount
+    ) external whenNotPaused returns (
+        uint256 burnAmount,
+        uint256 sanctumAmount,
+        uint256 ecosystemAmount,
+        address sanctumSink_,
+        address ecosystemSink_,
+        address burnSink_
+    ) {
+        require(msg.sender == token, "only token");
+
+        // Reuse canonical fee computation via internal call, then reserve burn in the same tx.
+        (burnAmount, sanctumAmount, ecosystemAmount, sanctumSink_, ecosystemSink_, burnSink_) =
+            computeFees(from, to, amount);
+
+        if (burnAmount > 0) {
+            _resetDayIfNeeded();
+            dailyBurnedAmount += burnAmount;
+        }
+    }
     
     /**
      * @notice Update daily burn tracking (called by token after transfer)
@@ -583,6 +617,15 @@ contract ProofScoreBurnRouter is Ownable, Pausable {
             dailyBurnedAmount = 0;
             dailyVolumeTracked = 0;
         }
+    }
+
+    function _validateModules(address _seer, address _sanctumSink, address _burnSink, address _ecosystemSink) internal pure {
+        if (_seer == address(0) || _sanctumSink == address(0) || _burnSink == address(0) || _ecosystemSink == address(0)) {
+            revert BURN_Zero();
+        }
+        require(_sanctumSink != _burnSink, "BR: duplicate sinks");
+        require(_sanctumSink != _ecosystemSink, "BR: duplicate sinks");
+        require(_burnSink != _ecosystemSink, "BR: duplicate sinks");
     }
     
     /**
@@ -620,7 +663,7 @@ contract ProofScoreBurnRouter is Ownable, Pausable {
     ) {
         score = seer.getScore(user);
         
-        (burnAmount, sanctumAmount, ecosystemAmount,,,) = this.computeFees(user, address(0), amount);
+        (burnAmount, sanctumAmount, ecosystemAmount,,,) = computeFees(user, address(0), amount);
         netAmount = amount - burnAmount - sanctumAmount - ecosystemAmount;
     }
 
