@@ -16,6 +16,9 @@ let mockVaultHubState: {
   isLoadingVault: boolean;
   createVault: () => Promise<void>;
   isCreatingVault: boolean;
+  isOnCorrectChain: boolean;
+  expectedChainName: string;
+  refetchVault: () => void;
 };
 
 let mockVaultRecoveryState: {
@@ -50,6 +53,13 @@ jest.mock('@/components/ui/Skeleton', () => ({
 
 jest.mock('@/components/ui/toast', () => ({
   useToast: () => ({ showToast: mockShowToast }),
+}));
+
+jest.mock('@rainbow-me/rainbowkit', () => ({
+  ConnectButton: {
+    Custom: ({ children }: { children: (props: { openConnectModal: () => void; openChainModal: () => void; mounted: boolean }) => React.ReactNode }) =>
+      children({ openConnectModal: jest.fn(), openChainModal: jest.fn(), mounted: true }),
+  },
 }));
 
 jest.mock('@/hooks/useVaultHub', () => ({
@@ -165,6 +175,9 @@ describe('Vault page logic pathways', () => {
       isLoadingVault: false,
       createVault: mockCreateVault,
       isCreatingVault: false,
+      isOnCorrectChain: true,
+      expectedChainName: 'Base Sepolia',
+      refetchVault: jest.fn(),
     };
     mockVaultRecoveryState = {
       vaultOwner: mockAddress,
@@ -244,5 +257,44 @@ describe('Vault page logic pathways', () => {
 
     expect(mockAddGuardian).not.toHaveBeenCalled();
     expect(mockShowToast).toHaveBeenCalledWith('Invalid address format', 'error');
+  });
+
+  it('shows a connect wallet button in the not-connected state', () => {
+    mockAddress = undefined;
+    mockVaultHubState = { ...mockVaultHubState, hasVault: false, vaultAddress: undefined };
+
+    renderVaultPage();
+
+    expect(screen.getByText(/Wallet Not Connected/i)).toBeTruthy();
+    expect(screen.getByRole('button', { name: /Connect your wallet/i })).toBeTruthy();
+  });
+
+  it('shows wrong network banner when wallet is connected but on the wrong chain', () => {
+    mockVaultHubState = { ...mockVaultHubState, isOnCorrectChain: false, expectedChainName: 'Base Sepolia' };
+
+    renderVaultPage();
+
+    expect(screen.getByText(/Wrong Network/i)).toBeTruthy();
+    expect(screen.getByText(/Base Sepolia/i)).toBeTruthy();
+    expect(screen.getByRole('button', { name: /Switch to Base Sepolia/i })).toBeTruthy();
+  });
+
+  it('calls refetchVault after successful vault creation', async () => {
+    const mockRefetchVault = jest.fn();
+    mockVaultHubState = {
+      ...mockVaultHubState,
+      hasVault: false,
+      vaultAddress: undefined,
+      refetchVault: mockRefetchVault,
+    };
+
+    renderVaultPage();
+
+    fireEvent.click(screen.getByRole('button', { name: /Create Vault/i }));
+
+    await waitFor(() => {
+      expect(mockCreateVault).toHaveBeenCalledTimes(1);
+      expect(mockRefetchVault).toHaveBeenCalledTimes(1);
+    });
   });
 });

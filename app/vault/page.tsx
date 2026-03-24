@@ -7,6 +7,7 @@ import { TransactionHistory } from "@/components/vault/TransactionHistory";
 import { useToast } from "@/components/ui/toast";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { useAccount, useWriteContract, useReadContract, useChainId, useSignTypedData } from "wagmi";
+import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { useState, useEffect } from "react";
 import { isAddress, parseUnits, formatUnits } from "viem";
 import { devLog } from "@/lib/utils";
@@ -218,7 +219,7 @@ function VaultContent() {
   const { signTypedDataAsync } = useSignTypedData();
   const cardBoundMode = isCardBoundVaultMode();
   
-  const { vaultAddress, hasVault, isLoadingVault, createVault, isCreatingVault } = useVaultHub();
+  const { vaultAddress, hasVault, isLoadingVault, createVault, isCreatingVault, isOnCorrectChain, expectedChainName, refetchVault } = useVaultHub();
   const { balance: vaultBalance, isLoading: isLoadingBalance } = useVaultBalance();
   const usdValue = (safeParseFloat(vaultBalance, 0) * PRESALE_REFERENCE_PRICE).toFixed(2);
   
@@ -528,6 +529,7 @@ function VaultContent() {
                         try {
                           await createVault();
                           showToast("Vault created successfully!", "success");
+                          refetchVault();
                         } catch (error) {
                           devLog.error('Vault creation error:', error);
                           const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
@@ -559,9 +561,50 @@ function VaultContent() {
             
             {!address && (
               <GlassCard className="p-6 border-red-500/30" gradient="red" hover={false}>
-                <div className="text-center py-4">
-                  <p className="text-red-400 font-bold mb-2">Wallet Not Connected</p>
+                <div className="flex flex-col items-center gap-4 py-4">
+                  <p className="text-red-400 font-bold">Wallet Not Connected</p>
                   <p className="text-white/60">Please connect your wallet to view your vault</p>
+                  <ConnectButton.Custom>
+                    {({ openConnectModal, mounted }) => (
+                      <motion.button
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={openConnectModal}
+                        disabled={!mounted}
+                        aria-label="Connect your wallet"
+                        className="px-6 py-3 bg-gradient-to-r from-cyan-500 to-blue-600 text-white rounded-xl font-bold shadow-lg shadow-cyan-500/25 disabled:opacity-50"
+                      >
+                        Connect Wallet
+                      </motion.button>
+                    )}
+                  </ConnectButton.Custom>
+                </div>
+              </GlassCard>
+            )}
+
+            {address && isOnCorrectChain === false && (
+              <GlassCard className="p-6 border-amber-500/30" gradient="gold" hover={false}>
+                <div className="flex flex-col md:flex-row items-center justify-between gap-4 py-2">
+                  <div>
+                    <p className="text-amber-400 font-bold mb-1">Wrong Network</p>
+                    <p className="text-white/60 text-sm">
+                      Please switch to {expectedChainName ?? 'the correct network'} to use your vault
+                    </p>
+                  </div>
+                  <ConnectButton.Custom>
+                    {({ openChainModal, mounted }) => (
+                      <motion.button
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={openChainModal}
+                        disabled={!mounted}
+                        aria-label={`Switch to ${expectedChainName ?? 'the correct network'}`}
+                        className="px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl font-bold shadow-lg shadow-amber-500/25 disabled:opacity-50"
+                      >
+                        Switch Network
+                      </motion.button>
+                    )}
+                  </ConnectButton.Custom>
                 </div>
               </GlassCard>
             )}
