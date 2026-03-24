@@ -175,4 +175,57 @@ contract SeerView {
         canVote = score >= target.minForGovernance();
         canBeMerchant = score >= target.minForMerchant();
     }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    //                  SEER AUTONOMOUS MONITORING VIEW
+    // ─────────────────────────────────────────────────────────────────────────
+
+    /// @dev Minimal read interface for SeerAutonomous monitoring state.
+    interface ISeerAutonomousMonitor {
+        function ecosystemVault() external view returns (address);
+        function getNetworkHealth() external view returns (
+            uint256 totalActions,
+            uint256 totalViolations,
+            uint256 violationRate,
+            uint16 currentSensitivity
+        );
+    }
+
+    /// @dev Minimal read interface for the ecosystem scheduler (EcosystemVault).
+    interface IEcosystemSchedulerView {
+        function checkUpkeep(bytes calldata) external view returns (bool upkeepNeeded, bytes memory performData);
+    }
+
+    /**
+     * @notice Returns the Seer autonomous monitoring status in a single call.
+     * @param seerAutonomous Address of the deployed SeerAutonomous contract.
+     * @return vault            Address of the configured EcosystemVault (zero = not set).
+     * @return tasksReady       Whether EcosystemVault has at least one task ready to run.
+     * @return tasksBitmask     Bitmask of tasks currently due (0 when vault not set or none due).
+     * @return totalActions     Network actions counted in the current period.
+     * @return violationRate    Network violation rate (basis points, 0–10000).
+     * @return sensitivity      Current pattern-detection sensitivity (0–100).
+     */
+    function getMonitorStatus(address seerAutonomous) external view returns (
+        address vault,
+        bool tasksReady,
+        uint8 tasksBitmask,
+        uint256 totalActions,
+        uint256 violationRate,
+        uint16 sensitivity
+    ) {
+        ISeerAutonomousMonitor sa = ISeerAutonomousMonitor(seerAutonomous);
+        vault = sa.ecosystemVault();
+
+        (totalActions, , violationRate, sensitivity) = sa.getNetworkHealth();
+
+        if (vault != address(0)) {
+            try IEcosystemSchedulerView(vault).checkUpkeep("") returns (bool needed, bytes memory performData) {
+                tasksReady = needed;
+                if (needed && performData.length >= 32) {
+                    tasksBitmask = abi.decode(performData, (uint8));
+                }
+            } catch {}
+        }
+    }
 }
