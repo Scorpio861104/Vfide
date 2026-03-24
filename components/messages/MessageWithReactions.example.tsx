@@ -99,8 +99,8 @@ export function MessageWithReactions({ message }: { message: Message }) {
         const nextReactions = result.message.reactions ?? {};
         setReactions(nextReactions as Record<string, ReactionData>);
       }
-    } catch (error) {
-      console.error('Failed to add reaction:', error);
+    } catch {
+      // reaction add failed; isLoading reset in finally
     } finally {
       setIsLoading(false);
     }
@@ -143,8 +143,8 @@ export function MessageWithReactions({ message }: { message: Message }) {
 
       // Refetch reactions
       // In production, you'd get this from the API response or WebSocket update
-    } catch (error) {
-      console.error('Failed to toggle reaction:', error);
+    } catch {
+      // toggle failed; isLoading reset in finally
     } finally {
       setIsLoading(false);
     }
@@ -231,8 +231,8 @@ export function QuickReactionBar({ messageId, conversationId }: { messageId: str
         { type: 'emoji', emoji },
         address
       );
-    } catch (error) {
-      console.error('Failed to add reaction:', error);
+    } catch {
+      // reaction add failed silently; UI stays unchanged
     }
   };
 

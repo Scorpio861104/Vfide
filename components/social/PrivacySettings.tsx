@@ -33,8 +33,8 @@ export function PrivacySettings() {
     if (storedSettings) {
       try {
         setSettings(JSON.parse(storedSettings));
-      } catch (e) {
-        console.error('Failed to load privacy settings:', e);
+      } catch {
+        // settings keep their defaults on parse failure
       }
     }
 
@@ -42,8 +42,8 @@ export function PrivacySettings() {
     if (storedBlocked) {
       try {
         setBlockedUsers(JSON.parse(storedBlocked));
-      } catch (e) {
-        console.error('Failed to load blocked users:', e);
+      } catch {
+        // blocked users stay empty on parse failure
       }
     }
   }, [address]);

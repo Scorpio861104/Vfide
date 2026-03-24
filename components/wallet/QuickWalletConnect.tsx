@@ -151,8 +151,7 @@ export function QuickWalletConnect({ size = 'md' }: QuickWalletConnectProps) {
           throw new Error('Copy command failed');
         }
       } catch {
-        // Silent fail for copy - user can still manually copy
-        console.warn('Failed to copy address');
+        // Silent fail for copy - user can still manually copy the address
       }
     }
   };

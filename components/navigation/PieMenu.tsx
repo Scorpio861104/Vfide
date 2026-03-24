@@ -731,11 +731,8 @@ export function PieMenu() {
       gain.connect(context.destination);
       oscillator.start();
       oscillator.stop(finalRampEndTime);
-    } catch (error) {
+    } catch {
       // Ignore audio errors for unsupported contexts
-      if (process.env.NODE_ENV !== 'production') {
-        console.warn('Pie menu audio cue failed', error);
-      }
     }
   }, []);
 

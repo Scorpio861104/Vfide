@@ -81,8 +81,7 @@ export function CreatorDashboard() {
           topSupporters: [],
           recentTransactions: [],
         });
-      } catch (error) {
-        console.error('Failed to load creator stats:', error);
+      } catch {
       } finally {
         setIsLoading(false);
       }

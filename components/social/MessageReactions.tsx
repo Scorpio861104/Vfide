@@ -127,8 +127,8 @@ export function useMessageReactions(conversationId: string, currentUserAddress: 
       if (stored) {
         setReactions(JSON.parse(stored));
       }
-    } catch (e) {
-      console.error('Failed to load reactions:', e);
+    } catch {
+      // reactions stay empty on parse failure
     }
   }, [conversationId]);
 

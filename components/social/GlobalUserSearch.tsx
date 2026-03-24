@@ -33,8 +33,8 @@ export function GlobalUserSearch() {
       // Search by username
       const results = UserProfileService.searchByUsername(query);
       setSearchResults(results);
-    } catch (error) {
-      console.error('Search failed:', error);
+    } catch {
+      setSearchResults([]);
     } finally {
       setSearching(false);
     }

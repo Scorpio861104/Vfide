@@ -54,8 +54,7 @@ export function FriendCirclesManager({ friends }: FriendCirclesManagerProps) {
     if (storedCircles) {
       try {
         setCircles(JSON.parse(storedCircles));
-      } catch (e) {
-        console.error('Failed to load circles:', e);
+      } catch {
         initializeDefaultCircles();
       }
     } else {
@@ -66,8 +65,8 @@ export function FriendCirclesManager({ friends }: FriendCirclesManagerProps) {
     if (storedMembers) {
       try {
         setCircleMembers(JSON.parse(storedMembers));
-      } catch (e) {
-        console.error('Failed to load circle members:', e);
+      } catch {
+        // circle members stay empty on parse failure
       }
     }
   }, [address]);

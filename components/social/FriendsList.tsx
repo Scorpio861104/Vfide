@@ -52,8 +52,8 @@ export function FriendsList({ onSelectFriend, selectedFriend }: FriendsListProps
     if (stored) {
       try {
         setFriends(JSON.parse(stored));
-      } catch (e) {
-        console.error('Failed to load friends:', e);
+      } catch {
+        // friends list stays empty on parse failure
       }
     }
   }, [address]);

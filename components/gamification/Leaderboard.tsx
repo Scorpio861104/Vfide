@@ -52,8 +52,7 @@ export function Leaderboard() {
       // Get all user progress from gamification system
       const allProgress = getAllUserProgress();
       setRawProgress(allProgress);
-    } catch (e) {
-      console.error('Failed to load leaderboard:', e);
+    } catch {
       setRawProgress([]);
     } finally {
       setIsLoading(false);

@@ -46,8 +46,7 @@ export function MutualFriends({ userAddress, currentUserAddress }: MutualFriends
         );
 
         setMutualFriends(mutual);
-      } catch (error) {
-        console.error('Failed to find mutual friends:', error);
+      } catch {
         setMutualFriends([]);
       } finally {
         setLoading(false);

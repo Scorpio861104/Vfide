@@ -83,8 +83,8 @@ export function UnifiedActivityFeed({
     try {
       // TODO: fetch from /api/activity?user=${userAddress}&filter=${filter}&limit=${limit}
       setActivities([]);
-    } catch (error) {
-      console.error('Failed to load activities:', error);
+    } catch {
+      // activities stay empty; UI shows empty state
     } finally {
       setIsLoading(false);
     }

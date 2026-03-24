@@ -37,8 +37,8 @@ export function FriendRequestsPanel({ onAccept, onReject }: FriendRequestsPanelP
           !r.expiresAt || r.expiresAt > now
         );
         setRequests(validRequests);
-      } catch (e) {
-        console.error('Failed to load friend requests:', e);
+      } catch {
+        // requests stay empty on parse failure
       }
     }
   }, [address]);
