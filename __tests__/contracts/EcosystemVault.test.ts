@@ -115,4 +115,80 @@ describe('EcosystemVault Contract', () => {
       expect(minVault).toBe(parseEther('100'));
     });
   });
+
+  // ─────────────────────────────────────────────────────────────────────
+  // Stablecoin Direct Reserve (Howey-safe work-compensation path)
+  // ─────────────────────────────────────────────────────────────────────
+  describe('Stablecoin Reserve — Howey-safe compensation', () => {
+    const USDC = '0xUSDC0000000000000000000000000000000000000' as Address;
+
+    it('should return zero reserve for a token that has not been funded', async () => {
+      mockContractRead.mockResolvedValueOnce(BigInt(0));
+      const balance = await mockContractRead({ functionName: 'stablecoinReserves', args: [USDC] });
+      expect(balance).toBe(BigInt(0));
+    });
+
+    it('should accept a stablecoin deposit from an authorised manager', async () => {
+      const amount = BigInt(1000_000_000); // 1 000 USDC (6 decimals)
+      mockContractWrite.mockResolvedValueOnce('0xtxhash_deposit');
+      const hash = await mockContractWrite({ functionName: 'depositStablecoinReserve', args: [USDC, amount] });
+      expect(hash).toBe('0xtxhash_deposit');
+    });
+
+    it('should reflect deposited balance in the reserve mapping', async () => {
+      const amount = BigInt(500_000_000); // 500 USDC
+      mockContractRead.mockResolvedValueOnce(amount);
+      const balance = await mockContractRead({ functionName: 'stablecoinReserves', args: [USDC] });
+      expect(balance).toBe(amount);
+    });
+
+    it('should allow owner to withdraw from the reserve', async () => {
+      mockContractWrite.mockResolvedValueOnce('0xtxhash_withdraw');
+      const hash = await mockContractWrite({
+        functionName: 'withdrawStablecoinReserve',
+        args: [USDC, BigInt(100_000_000), owner],
+      });
+      expect(hash).toBe('0xtxhash_withdraw');
+    });
+
+    it('should enable stablecoin-only mode when reserve is funded', async () => {
+      mockContractWrite.mockResolvedValueOnce('0xtxhash_mode');
+      const hash = await mockContractWrite({ functionName: 'setStablecoinOnlyMode', args: [true] });
+      expect(hash).toBe('0xtxhash_mode');
+    });
+
+    it('should pay merchant work reward from stablecoin reserve when mode is on', async () => {
+      const amount = BigInt(10_000_000); // 10 USDC
+      mockContractWrite.mockResolvedValueOnce('0xtxhash_merchant_reward');
+      const hash = await mockContractWrite({
+        functionName: 'payMerchantWorkReward',
+        args: [user1, amount, 'verified_merchant_tx'],
+      });
+      expect(hash).toBe('0xtxhash_merchant_reward');
+    });
+
+    it('should pay referral work reward from stablecoin reserve when mode is on', async () => {
+      const amount = BigInt(5_000_000); // 5 USDC
+      mockContractWrite.mockResolvedValueOnce('0xtxhash_referral_reward');
+      const hash = await mockContractWrite({
+        functionName: 'payReferralWorkReward',
+        args: [user1, amount, 'verified_user_referral'],
+      });
+      expect(hash).toBe('0xtxhash_referral_reward');
+    });
+
+    it('claimHeadhunterReward remains permanently disabled (rank/percentage claims not allowed)', async () => {
+      mockContractWrite.mockRejectedValueOnce(new Error('ECO_RewardsNotAvailable'));
+      await expect(
+        mockContractWrite({ functionName: 'claimHeadhunterReward', args: [BigInt(2024), BigInt(1)] })
+      ).rejects.toThrow('ECO_RewardsNotAvailable');
+    });
+
+    it('claimMerchantReward remains permanently disabled (rank/percentage claims not allowed)', async () => {
+      mockContractWrite.mockRejectedValueOnce(new Error('ECO_RewardsNotAvailable'));
+      await expect(
+        mockContractWrite({ functionName: 'claimMerchantReward', args: [BigInt(1)] })
+      ).rejects.toThrow('ECO_RewardsNotAvailable');
+    });
+  });
 });

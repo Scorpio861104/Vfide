@@ -182,25 +182,34 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
     mapping(address => bool) public referralCredited;           // referred => already credited
 
     // ═══════════════════════════════════════════════════════════════════════
-    //                   AUTO-SWAP TO STABLECOIN (for Rewards)
+    //                   STABLECOIN WORK-COMPENSATION (Howey-safe)
     // ═══════════════════════════════════════════════════════════════════════
     // DEX router for VFIDE → Stablecoin swaps when paying rewards
     address public swapRouter;
     address public preferredStablecoin;  // e.g., USDC
     bool public autoSwapEnabled;         // F-24 FIX: Disabled by default — vulnerable to sandwich attacks until oracle integration
     uint16 public maxSlippageBps = 100;  // 1% max slippage (default)
-    
+
+    // HOWEY FIX: Direct stablecoin reserve — owner/manager pre-funds with USDC/USDT.
+    // Work rewards are drawn directly from this reserve with no DEX swap required.
+    // This eliminates both the sandwich-attack risk and any expectation-of-profit argument:
+    // workers receive a fixed-dollar service fee, not an appreciating VFIDE token.
+    mapping(address => uint256) public stablecoinReserves;
+
     // HOWEY FIX: When true, ALL work reward payments (merchant, referral, level payouts)
-    // MUST be paid in stablecoin via _swapToStable(). Receiving a potentially-appreciating
-    // VFIDE token as "work compensation" creates a profit expectation (Howey Prong 3).
-    // Paying in stablecoin makes the work-for-pay relationship unambiguous.
-    // Requires swapRouter and preferredStablecoin to be configured before enabling.
+    // are paid in stablecoin — first from the direct reserve, then via DEX swap if needed.
+    // Receiving a potentially-appreciating VFIDE token as "work compensation" creates a
+    // profit expectation (Howey Prong 3). A fixed stablecoin service fee is unambiguous.
+    // Requires preferredStablecoin to be set before enabling; swapRouter is optional when
+    // the direct reserve is funded.
     bool public stablecoinOnlyMode;
-    
+
     event AutoSwapConfigured(address router, address stablecoin, bool enabled, uint16 maxSlippageBps);
-    event RewardPaidInStable(address indexed recipient, uint256 vfideAmount, uint256 stableAmount, string reason);
+    event RewardPaidInStable(address indexed recipient, uint256 stableAmount, string reason);
     event SwapFailed(address indexed recipient, uint256 vfideAmount, string reason);
     event StablecoinOnlyModeSet(bool enabled);
+    event StablecoinDeposited(address indexed token, address indexed from, uint256 amount);
+    event StablecoinReserveWithdrawn(address indexed token, uint256 amount, address indexed recipient);
     event AutoWorkPayoutConfigured(
         bool enabled,
         uint256 merchantTxReward,
@@ -382,25 +391,65 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
     /**
      * @notice Enable or disable stablecoin-only mode for all work reward payments.
      * @dev HOWEY FIX: When enabled, payMerchantWorkReward, payReferralWorkReward, and all
-     *      automatic work payouts route through _swapToStable() instead of transferring VFIDE.
+     *      automatic work payouts are paid in stablecoin.
+     *
+     *      Payment routing (in order):
+     *        1. Direct reserve (stablecoinReserves[preferredStablecoin]) — preferred, no DEX.
+     *           Fund via depositStablecoinReserve(). No sandwich-attack risk.
+     *        2. DEX swap via _swapToStable() — fallback if reserve is insufficient and
+     *           swapRouter is configured. Disabled until oracle integration (F-24).
+     *
      *      Distributing a potentially-appreciating VFIDE token as "compensation" creates an
-     *      implicit profit expectation (Howey Prong 3). Paying in stablecoins makes the
-     *      work-for-pay relationship legally unambiguous.
+     *      implicit profit expectation (Howey Prong 3). Fixed stablecoin service fees make
+     *      the work-for-pay relationship legally unambiguous.
      *
      *      REQUIREMENTS before enabling:
-     *      - swapRouter must be set (call configureAutoSwap with router/stablecoin first)
      *      - preferredStablecoin must be set
-     *      - Sufficient VFIDE liquidity must exist on the configured DEX
+     *      - Either the direct reserve must be funded (recommended) OR swapRouter must be set
      *
      * @param _enabled True to require stablecoin payments; false to revert to VFIDE payments.
      */
     function setStablecoinOnlyMode(bool _enabled) external onlyOwner {
         if (_enabled) {
-            require(swapRouter != address(0), "ECO: set swap router first");
             require(preferredStablecoin != address(0), "ECO: set preferred stablecoin first");
+            // At least one payment path must be ready: direct reserve OR swap router
+            bool hasReserve = stablecoinReserves[preferredStablecoin] > 0;
+            bool hasRouter = swapRouter != address(0);
+            require(hasReserve || hasRouter, "ECO: fund reserve or set swap router first");
         }
         stablecoinOnlyMode = _enabled;
         emit StablecoinOnlyModeSet(_enabled);
+    }
+
+    /**
+     * @notice Deposit stablecoin into the direct work-compensation reserve.
+     * @dev HOWEY FIX — recommended path: pre-fund this reserve with USDC/USDT so that all
+     *      merchant and headhunter work rewards are paid as fixed-dollar service fees with no
+     *      DEX swap required. The depositor must have approved this contract first.
+     * @param stablecoin Address of the stablecoin to deposit (must match preferredStablecoin
+     *        when stablecoinOnlyMode is active, or any token otherwise for future use).
+     * @param amount Amount to deposit (in stablecoin's native decimals).
+     */
+    function depositStablecoinReserve(address stablecoin, uint256 amount) external onlyManager nonReentrant {
+        require(stablecoin != address(0), "ECO: zero stablecoin");
+        require(amount > 0, "ECO: zero amount");
+        IERC20(stablecoin).safeTransferFrom(msg.sender, address(this), amount);
+        stablecoinReserves[stablecoin] += amount;
+        emit StablecoinDeposited(stablecoin, msg.sender, amount);
+    }
+
+    /**
+     * @notice Emergency withdrawal of stablecoin reserve (owner only).
+     * @param stablecoin Token to withdraw.
+     * @param amount Amount to withdraw.
+     * @param recipient Destination address.
+     */
+    function withdrawStablecoinReserve(address stablecoin, uint256 amount, address recipient) external onlyOwner nonReentrant {
+        require(stablecoin != address(0) && recipient != address(0), "ECO: zero address");
+        require(amount > 0 && amount <= stablecoinReserves[stablecoin], "ECO: insufficient reserve");
+        stablecoinReserves[stablecoin] -= amount;
+        IERC20(stablecoin).safeTransfer(recipient, amount);
+        emit StablecoinReserveWithdrawn(stablecoin, amount, recipient);
     }
 
     /**
@@ -883,7 +932,10 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
 
     /**
      * @notice Internal: deliver a work reward in stablecoin (if stablecoinOnlyMode) or VFIDE.
-     * @dev Returns false only when stablecoinOnlyMode is on and the swap produces 0 output.
+     * @dev When stablecoinOnlyMode is true, payment routing is:
+     *        1. Direct reserve (stablecoinReserves[preferredStablecoin]) — preferred, no DEX.
+     *        2. DEX swap via _swapToStable() — fallback if reserve insufficient and router set.
+     *      Returns false only when stablecoinOnlyMode is on and both paths fail.
      *      Callers must roll back pool accounting when false is returned.
      */
     function _deliverWorkReward(
@@ -893,10 +945,23 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
         string memory reason
     ) internal returns (bool success) {
         if (stablecoinOnlyMode) {
-            uint256 stableReceived = _swapToStable(amount);
-            if (stableReceived == 0) return false;
-            IERC20(preferredStablecoin).safeTransfer(worker, stableReceived);
-            emit RewardPaidInStable(worker, amount, stableReceived, reason);
+            // Path 1: direct stablecoin reserve (Howey-safe, no DEX required)
+            if (stablecoinReserves[preferredStablecoin] >= amount) {
+                stablecoinReserves[preferredStablecoin] -= amount;
+                IERC20(preferredStablecoin).safeTransfer(worker, amount);
+                emit RewardPaidInStable(worker, amount, reason);
+                return true;
+            }
+            // Path 2: DEX swap fallback (requires swapRouter to be configured)
+            if (swapRouter != address(0)) {
+                uint256 stableReceived = _swapToStable(amount);
+                if (stableReceived == 0) return false;
+                IERC20(preferredStablecoin).safeTransfer(worker, stableReceived);
+                emit RewardPaidInStable(worker, stableReceived, reason);
+                return true;
+            }
+            // Neither path available
+            return false;
         } else {
             rewardToken.safeTransfer(worker, amount);
             emit WorkRewardPaid(worker, amount, program, reason);
@@ -1132,7 +1197,7 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
                 totalExpensesPaid += amount;
                 // Successfully swapped, transfer stablecoin to recipient
                 IERC20(preferredStablecoin).safeTransfer(recipient, stableReceived);
-                emit RewardPaidInStable(recipient, amount, stableReceived, reason);
+                emit RewardPaidInStable(recipient, stableReceived, reason);
                 return;
             } else {
                 // Swap failed, emit event and fallback to VFIDE payment

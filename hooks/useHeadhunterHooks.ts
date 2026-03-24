@@ -458,3 +458,51 @@ export function useLeaderboard(year: bigint, quarter: bigint) {
     isLoading,
   };
 }
+
+/**
+ * Manager/owner hook: deposit stablecoin into the EcosystemVault direct reserve.
+ *
+ * This is the recommended Howey-safe payment path for headhunter and top-merchant
+ * work compensation.  Pre-fund this reserve with USDC/USDT so that all work rewards
+ * are paid as fixed-dollar service fees with no DEX swap required:
+ *
+ *   1. Approve the EcosystemVault to spend your stablecoin:
+ *        usdc.approve(ECOSYSTEM_VAULT_ADDRESS, amount)
+ *   2. Call depositStablecoinReserve(usdcAddress, amount)
+ *   3. Enable stablecoinOnlyMode via setStablecoinOnlyMode(true)
+ *
+ * Once funded and stablecoinOnlyMode is active, payMerchantWorkReward /
+ * payReferralWorkReward / claimReferralLevelRewards all draw from this reserve.
+ */
+export function useDepositStablecoinReserve() {
+  const { writeContractAsync, isPending, isSuccess, error } = useWriteContract();
+
+  const depositStablecoinReserve = async (stablecoin: `0x${string}`, amount: bigint) => {
+    return writeContractAsync({
+      address: ECOSYSTEM_VAULT_ADDRESS,
+      abi: EcosystemVaultABI,
+      functionName: 'depositStablecoinReserve',
+      args: [stablecoin, amount],
+    });
+  };
+
+  return {
+    depositStablecoinReserve,
+    isPending,
+    isSuccess,
+    error,
+  };
+}
+
+/**
+ * Read the current stablecoin reserve balance for a given token.
+ */
+export function useStablecoinReserveBalance(stablecoin: `0x${string}` | undefined) {
+  return useReadContract({
+    address: ECOSYSTEM_VAULT_ADDRESS,
+    abi: EcosystemVaultABI,
+    functionName: 'stablecoinReserves',
+    args: stablecoin ? [stablecoin] : undefined,
+    query: { enabled: !!stablecoin },
+  });
+}
