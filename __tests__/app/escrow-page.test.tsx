@@ -119,6 +119,12 @@ describe('Escrow page logic pathways', () => {
 
     const createBtn = screen.getByRole('button', { name: /Create new escrow/i });
     expect((createBtn as HTMLButtonElement).disabled).toBe(true);
+
+    // Clicking the disabled button must not open the modal or invoke createEscrow
+    fireEvent.click(createBtn);
+    // The modal form (with merchant address input) must not appear
+    expect(screen.queryByPlaceholderText('0x...')).toBeNull();
+    expect(mockCreateEscrow).not.toHaveBeenCalled();
   });
 
   it('shows empty state and refresh action when no escrows exist', () => {

@@ -11,6 +11,7 @@ import { Loader2, CheckCircle, Wallet, Fuel, Sparkles } from "lucide-react";
 import { useToast } from "@/components/ui/toast";
 import { safeParseFloat } from "@/lib/validation";
 import { useEthPrice } from "@/hooks/useEthPrice";
+import { QuickWalletConnect } from "@/components/wallet/QuickWalletConnect";
 
 // Contract addresses from environment - Base Sepolia deployment
 const PRESALE_ADDRESS = CONTRACT_ADDRESSES.VFIDEPresale;
@@ -126,12 +127,15 @@ export default function TokenLaunchPage() {
     // Only ETH payments are available on testnet
     // Stablecoin payments will be enabled on mainnet
     if (paymentMethod === 'eth' || !STABLECOINS_AVAILABLE) {
+      // usdAmount = VFIDE count × tier price (USD). Convert to ETH using live price
+      // (ethPrice from useEthPrice hook; fallback 2500 USD/ETH if unavailable).
+      const ethToSend = usdAmount / (ethPrice || 2500);
       writeContract({
         address: PRESALE_ADDRESS,
         abi: VFIDEPresaleABI,
         functionName: 'buyTokens',
         args: [lockPeriod],
-        value: parseEther(amount),
+        value: parseEther(ethToSend.toFixed(18)),
       });
     } else {
       // Stablecoin payments - disabled on testnet
@@ -166,8 +170,8 @@ export default function TokenLaunchPage() {
   const tiers = {
     founding: {
       name: "Founding",
-      price: 0.05,
-      priceDisplay: "$0.05",
+      price: 0.03,
+      priceDisplay: "$0.03",
       commitment: "180 days (mandatory)",
       immediateUnlock: "10%",
       supply: "10,000,000 VFIDE",
@@ -200,8 +204,8 @@ export default function TokenLaunchPage() {
     },
     public: {
       name: "Public",
-      price: 0.05,
-      priceDisplay: "$0.05",
+      price: 0.07,
+      priceDisplay: "$0.07",
       commitment: "Optional",
       immediateUnlock: "Varies",
       supply: "15,000,000 VFIDE",
@@ -634,13 +638,7 @@ export default function TokenLaunchPage() {
                       </div>
                       <h3 className="text-xl font-bold text-white mb-2">Connect Wallet</h3>
                       <p className="text-gray-400 mb-4">Connect your wallet to purchase VFIDE tokens</p>
-                      <motion.button 
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
-                        className="px-8 py-3 bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-bold rounded-xl shadow-lg shadow-cyan-500/25 transition-all"
-                      >
-                        Connect Wallet
-                      </motion.button>
+                      <QuickWalletConnect size="lg" />
                     </motion.div>
                   ) : isSuccess ? (
                     <motion.div 
