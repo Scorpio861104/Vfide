@@ -16,15 +16,28 @@ jest.mock('@/components/onboarding/OnboardingTour', () => ({
   ),
 }))
 
+// Mock safeLocalStorage so we control new-user vs returning-user scenarios
+jest.mock('@/lib/utils', () => ({
+  ...jest.requireActual('@/lib/utils'),
+  safeLocalStorage: {
+    getItem: jest.fn(),
+    setItem: jest.fn(),
+    removeItem: jest.fn(),
+  },
+}))
+
+import { safeLocalStorage } from '@/lib/utils'
 import { OnboardingManager } from '@/components/onboarding/OnboardingManager'
 
 describe('OnboardingManager', () => {
   beforeEach(() => {
     jest.clearAllMocks()
+    // Default: returning user (tour already seen)
+    ;(safeLocalStorage.getItem as jest.Mock).mockReturnValue('true')
   })
 
   describe('Initial State', () => {
-    it('should not show tour by default', () => {
+    it('should not show tour by default for a returning user', () => {
       render(<OnboardingManager />)
 
       expect(screen.queryByTestId('onboarding-tour')).not.toBeInTheDocument()
@@ -34,6 +47,14 @@ describe('OnboardingManager', () => {
       const { container } = render(<OnboardingManager />)
 
       expect(container.firstChild).toBeNull()
+    })
+
+    it('should auto-start tour for a new user', () => {
+      // Simulate first-time visitor
+      ;(safeLocalStorage.getItem as jest.Mock).mockReturnValue(null)
+      render(<OnboardingManager />)
+
+      expect(screen.getByTestId('onboarding-tour')).toBeInTheDocument()
     })
   })
 

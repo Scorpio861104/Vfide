@@ -16,6 +16,18 @@ jest.mock('@/components/onboarding/OnboardingTour', () => ({
   ),
 }))
 
+// Mock safeLocalStorage so we control whether the user is new or returning
+jest.mock('@/lib/utils', () => ({
+  ...jest.requireActual('@/lib/utils'),
+  safeLocalStorage: {
+    getItem: jest.fn(),
+    setItem: jest.fn(),
+    removeItem: jest.fn(),
+  },
+}))
+
+import { safeLocalStorage } from '@/lib/utils'
+
 describe('OnboardingManager', () => {
   let windowWithTour: any
 
@@ -23,13 +35,26 @@ describe('OnboardingManager', () => {
     jest.clearAllMocks()
     windowWithTour = window as any
     delete windowWithTour.startVFIDETour
+    // Default: simulate a returning user (tour already seen)
+    ;(safeLocalStorage.getItem as jest.Mock).mockReturnValue('true')
   })
 
   afterEach(() => {
     delete windowWithTour.startVFIDETour
   })
 
-  it('should not show tour initially', async () => {
+  it('should auto-start tour for a new user (no localStorage entry)', async () => {
+    // Simulate first-time visitor
+    ;(safeLocalStorage.getItem as jest.Mock).mockReturnValue(null)
+    const { OnboardingManager } = await import('@/components/onboarding/OnboardingManager')
+    render(<OnboardingManager />)
+
+    expect(screen.getByTestId('onboarding-tour')).toBeInTheDocument()
+  })
+
+  it('should not show tour initially for a returning user', async () => {
+    // Returning user already has the key set
+    ;(safeLocalStorage.getItem as jest.Mock).mockReturnValue('true')
     const { OnboardingManager } = await import('@/components/onboarding/OnboardingManager')
     render(<OnboardingManager />)
     
@@ -47,7 +72,7 @@ describe('OnboardingManager', () => {
     const { OnboardingManager } = await import('@/components/onboarding/OnboardingManager')
     render(<OnboardingManager />)
     
-    // Initially no tour
+    // Initially no tour for returning user
     expect(screen.queryByTestId('onboarding-tour')).not.toBeInTheDocument()
     
     // Trigger tour via global function
@@ -119,7 +144,7 @@ describe('OnboardingManager', () => {
     const { OnboardingManager } = await import('@/components/onboarding/OnboardingManager')
     const { container } = render(<OnboardingManager />)
     
-    // Component should render nothing
+    // Returning user — component should render nothing
     expect(container.firstChild).toBeNull()
   })
 
