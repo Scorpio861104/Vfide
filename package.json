@@ -66,6 +66,7 @@
     "ops:seer:analytics:rollup": "tsx scripts/refresh-seer-analytics-rollup.ts",
     "contract:verify:governance-safety:local": "npm run -s contract:verify:ocp-guardrails:local && npm run -s contract:verify:chain-of-return:local && npm run -s contract:verify:next-of-kin:local && npm run -s contract:verify:feature9:governance:local",
     "contract:deploy": "hardhat run scripts/deploy.ts --network",
+    "deploy:wizard": "bash contracts/scripts/deploy-wizard.sh",
     "deploy:solo:sepolia": "hardhat run contracts/scripts/deploy-solo.ts --network sepolia",
     "deploy:solo:mainnet": "hardhat run contracts/scripts/deploy-solo.ts --network mainnet",
     "deploy:solo:base": "hardhat run contracts/scripts/deploy-solo.ts --network base",
