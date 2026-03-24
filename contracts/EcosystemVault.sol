@@ -187,8 +187,13 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
     // DEX router for VFIDE → Stablecoin swaps when paying rewards
     address public swapRouter;
     address public preferredStablecoin;  // e.g., USDC
-    bool public autoSwapEnabled;         // F-24 FIX: Disabled by default — vulnerable to sandwich attacks until oracle integration
+    bool public autoSwapEnabled;         // Disabled by default; enable after liquidity is established
     uint16 public maxSlippageBps = 100;  // 1% max slippage (default)
+
+    // Admin-set floor price: stablecoin units per 1e18 VFIDE, used as minAmountOut in DEX swaps.
+    // Protects against sandwich attacks without requiring a live on-chain oracle.
+    // Example: 950000 = 0.95 USDC (6-decimal) per 1 VFIDE.  Must be set before enabling auto-swap.
+    uint256 public minOutputPerVfide;
 
     // HOWEY FIX: Direct stablecoin reserve — owner/manager pre-funds with USDC/USDT.
     // Work rewards are drawn directly from this reserve with no DEX swap required.
@@ -205,6 +210,7 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
     bool public stablecoinOnlyMode;
 
     event AutoSwapConfigured(address router, address stablecoin, bool enabled, uint16 maxSlippageBps);
+    event MinOutputPerVfideSet(uint256 minOutput);
     event RewardPaidInStable(address indexed recipient, uint256 stableAmount, string reason);
     event SwapFailed(address indexed recipient, uint256 vfideAmount, string reason);
     event StablecoinOnlyModeSet(bool enabled);
@@ -362,7 +368,10 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
     }
     
     /**
-     * @notice Configure automatic VFIDE to stablecoin conversion for reward payments
+     * @notice Configure automatic VFIDE to stablecoin conversion for reward payments.
+     * @dev Safe to enable once the VFIDE/stablecoin liquidity pool is established (phased
+     *      deployment guarantees this before rewards go live).  minOutputPerVfide must be set
+     *      first to prevent sandwich attacks without requiring a live oracle.
      * @param _router DEX router address (Uniswap V2 compatible)
      * @param _stablecoin Preferred stablecoin address (USDC, USDT, DAI, etc.)
      * @param _enabled Whether to enable automatic conversion
@@ -375,17 +384,30 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
         uint16 _maxSlippageBps
     ) external onlyOwner {
         require(_maxSlippageBps <= 500, "ECO: slippage too high"); // Max 5%
-        // F-24 FIX: Keep auto-swap disabled until oracle-based minAmountOut is integrated.
-        require(!_enabled, "ECO: auto-swap disabled pending oracle");
         if (_enabled) {
             require(_router != address(0), "ECO: zero router");
             require(_stablecoin != address(0), "ECO: zero stablecoin");
+            require(minOutputPerVfide > 0, "ECO: set min output price first");
         }
         swapRouter = _router;
         preferredStablecoin = _stablecoin;
         autoSwapEnabled = _enabled;
         maxSlippageBps = _maxSlippageBps;
         emit AutoSwapConfigured(_router, _stablecoin, _enabled, _maxSlippageBps);
+    }
+
+    /**
+     * @notice Set the floor price used as minAmountOut in DEX swaps to prevent sandwich attacks.
+     * @dev Express in stablecoin units per 1e18 VFIDE.
+     *      Example: 950000 means 0.95 USDC (6 decimals) per 1 VFIDE.
+     *      Keep this value current; if VFIDE price falls significantly, lower the floor so swaps
+     *      are not blocked.  Must be called before configureAutoSwap can be enabled.
+     * @param _minOutput Floor price in stablecoin units per 1e18 VFIDE.
+     */
+    function setMinOutputPerVfide(uint256 _minOutput) external onlyOwner {
+        require(_minOutput > 0, "ECO: zero price");
+        minOutputPerVfide = _minOutput;
+        emit MinOutputPerVfideSet(_minOutput);
     }
 
     /**
@@ -397,7 +419,7 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
      *        1. Direct reserve (stablecoinReserves[preferredStablecoin]) — preferred, no DEX.
      *           Fund via depositStablecoinReserve(). No sandwich-attack risk.
      *        2. DEX swap via _swapToStable() — fallback if reserve is insufficient and
-     *           swapRouter is configured. Disabled until oracle integration (F-24).
+     *           swapRouter is configured (requires autoSwapEnabled and minOutputPerVfide > 0).
      *
      *      Distributing a potentially-appreciating VFIDE token as "compensation" creates an
      *      implicit profit expectation (Howey Prong 3). Fixed stablecoin service fees make
@@ -1213,44 +1235,37 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
     }
     
     /**
-     * @notice Internal: Swap VFIDE to preferred stablecoin via DEX
-     * @dev Uses Uniswap V2-compatible router interface
+     * @notice Internal: Swap VFIDE to preferred stablecoin via DEX.
+     * @dev Uses admin-set minOutputPerVfide floor as minAmountOut to prevent sandwich attacks.
+     *      The owner keeps this value current via setMinOutputPerVfide().
      * @param vfideAmount Amount of VFIDE to swap
      * @return stableAmount Amount of stablecoin received (0 if swap fails)
      */
     function _swapToStable(uint256 vfideAmount) internal returns (uint256) {
         if (vfideAmount == 0) return 0;
-        
+
         // Approve router to spend VFIDE
         require(rewardToken.approve(swapRouter, vfideAmount), "ECO: approve failed");
-        
-        // Calculate minimum output with slippage protection
+
         address[] memory path = new address[](2);
         path[0] = address(rewardToken);  // VFIDE
         path[1] = preferredStablecoin;   // e.g., USDC
-        
-        try ISwapRouter(swapRouter).getAmountsOut(vfideAmount, path) returns (uint256[] memory amountsOut) {
-            uint256 expectedOut = amountsOut[amountsOut.length - 1];
-            uint256 minAmountOut = expectedOut * (10000 - maxSlippageBps) / 10000;
-            
-            // Perform swap with slippage protection
-            try ISwapRouter(swapRouter).swapExactTokensForTokens(
-                vfideAmount,
-                minAmountOut,
-                path,
-                address(this),
-                block.timestamp + 300 // 5 min deadline
-            ) returns (uint256[] memory amounts) {
-                // Revoke leftover approval for security
-                if (!rewardToken.approve(swapRouter, 0)) revert ECO_RevokeFailed();
-                return amounts[amounts.length - 1];
-            } catch {
-                // Swap failed, revoke approval
-                if (!rewardToken.approve(swapRouter, 0)) revert ECO_RevokeFailed();
-                return 0;
-            }
+
+        // Use admin-set floor price — no self-referential router quote, no sandwich vector.
+        uint256 minAmountOut = vfideAmount * minOutputPerVfide / 1e18;
+
+        try ISwapRouter(swapRouter).swapExactTokensForTokens(
+            vfideAmount,
+            minAmountOut,
+            path,
+            address(this),
+            block.timestamp + 300 // 5 min deadline
+        ) returns (uint256[] memory amounts) {
+            // Revoke leftover approval for security
+            if (!rewardToken.approve(swapRouter, 0)) revert ECO_RevokeFailed();
+            return amounts[amounts.length - 1];
         } catch {
-            // getAmountsOut failed (no liquidity?), revoke approval
+            // Swap failed (price below floor or no liquidity), revoke approval
             if (!rewardToken.approve(swapRouter, 0)) revert ECO_RevokeFailed();
             return 0;
         }

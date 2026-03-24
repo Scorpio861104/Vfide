@@ -146,6 +146,19 @@
     "inputs": [
       {
         "indexed": false,
+        "internalType": "uint256",
+        "name": "minOutput",
+        "type": "uint256"
+      }
+    ],
+    "name": "MinOutputPerVfideSet",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
         "internalType": "bool",
         "name": "enabled",
         "type": "bool"
@@ -2151,6 +2164,19 @@
   },
   {
     "inputs": [],
+    "name": "minOutputPerVfide",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "maxWithdrawBps",
     "outputs": [
       {
@@ -3137,6 +3163,19 @@
       }
     ],
     "name": "setMaxWithdrawBps",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_minOutput",
+        "type": "uint256"
+      }
+    ],
+    "name": "setMinOutputPerVfide",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

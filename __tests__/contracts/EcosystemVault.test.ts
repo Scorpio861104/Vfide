@@ -191,4 +191,60 @@ describe('EcosystemVault Contract', () => {
       ).rejects.toThrow('ECO_RewardsNotAvailable');
     });
   });
+
+  // ─────────────────────────────────────────────────────────────────────
+  // Auto-swap (DEX path) — available once liquidity is established
+  // ─────────────────────────────────────────────────────────────────────
+  describe('Auto-swap configuration — phased deployment', () => {
+    const ROUTER = '0xRouter000000000000000000000000000000000' as Address;
+    const USDC = '0xUSDC0000000000000000000000000000000000000' as Address;
+    // 0.95 USDC (6 decimals) per 1 VFIDE (18 decimals): 950000 * 1e12
+    const MIN_OUTPUT = BigInt(950_000) * BigInt(1_000_000_000_000);
+
+    it('should return zero minOutputPerVfide before it is set', async () => {
+      mockContractRead.mockResolvedValueOnce(BigInt(0));
+      const value = await mockContractRead({ functionName: 'minOutputPerVfide' });
+      expect(value).toBe(BigInt(0));
+    });
+
+    it('should allow owner to set minOutputPerVfide', async () => {
+      mockContractWrite.mockResolvedValueOnce('0xtxhash_set_min_output');
+      const hash = await mockContractWrite({
+        functionName: 'setMinOutputPerVfide',
+        args: [MIN_OUTPUT],
+      });
+      expect(hash).toBe('0xtxhash_set_min_output');
+    });
+
+    it('should reflect the updated minOutputPerVfide', async () => {
+      mockContractRead.mockResolvedValueOnce(MIN_OUTPUT);
+      const value = await mockContractRead({ functionName: 'minOutputPerVfide' });
+      expect(value).toBe(MIN_OUTPUT);
+    });
+
+    it('should allow configureAutoSwap with _enabled=true once minOutputPerVfide is set', async () => {
+      mockContractWrite.mockResolvedValueOnce('0xtxhash_configure_swap');
+      const hash = await mockContractWrite({
+        functionName: 'configureAutoSwap',
+        args: [ROUTER, USDC, true, 100],
+      });
+      expect(hash).toBe('0xtxhash_configure_swap');
+    });
+
+    it('should reject configureAutoSwap with _enabled=true when minOutputPerVfide is zero', async () => {
+      mockContractWrite.mockRejectedValueOnce(new Error('ECO: set min output price first'));
+      await expect(
+        mockContractWrite({ functionName: 'configureAutoSwap', args: [ROUTER, USDC, true, 100] })
+      ).rejects.toThrow('ECO: set min output price first');
+    });
+
+    it('should allow configureAutoSwap to disable auto-swap without a floor price', async () => {
+      mockContractWrite.mockResolvedValueOnce('0xtxhash_disable_swap');
+      const hash = await mockContractWrite({
+        functionName: 'configureAutoSwap',
+        args: ['0x0000000000000000000000000000000000000000', USDC, false, 100],
+      });
+      expect(hash).toBe('0xtxhash_disable_swap');
+    });
+  });
 });
