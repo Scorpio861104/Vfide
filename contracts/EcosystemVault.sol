@@ -1195,7 +1195,7 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
     }
 
     // ═══════════════════════════════════════════════════════════════════════
-    //                         LEGACY FUNCTIONS
+    //                         UTILITY FUNCTIONS
     // ═══════════════════════════════════════════════════════════════════════
     
     /**
