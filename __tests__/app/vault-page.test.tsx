@@ -280,6 +280,7 @@ describe('Vault page logic pathways', () => {
   });
 
   it('calls refetchVault after successful vault creation', async () => {
+    jest.useFakeTimers();
     const mockRefetchVault = jest.fn();
     mockVaultHubState = {
       ...mockVaultHubState,
@@ -294,7 +295,12 @@ describe('Vault page logic pathways', () => {
 
     await waitFor(() => {
       expect(mockCreateVault).toHaveBeenCalledTimes(1);
-      expect(mockRefetchVault).toHaveBeenCalledTimes(1);
     });
+
+    // The refetch is fired after a 2-second delay
+    jest.advanceTimersByTime(2000);
+    expect(mockRefetchVault).toHaveBeenCalledTimes(1);
+
+    jest.useRealTimers();
   });
 });

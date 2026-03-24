@@ -35,13 +35,28 @@ export function NetworkSwitchOverlay() {
   // Check if user prefers auto-switch
   const AUTO_SWITCH_KEY = 'vfide-auto-switch-network'
 
+  const handleSwitch = useCallback(async (remember: boolean = false) => {
+    if (remember) {
+      safeLocalStorage.setItem(AUTO_SWITCH_KEY, 'true')
+    }
+
+    try {
+      switchChain({ chainId: expectedChainId as 84532 | 8453 })
+    } catch (e) {
+      logger.error('Network switch failed', e, { 
+        expectedChainId, 
+        currentChainId: chainId 
+      })
+    }
+  }, [switchChain, expectedChainId, chainId])
+
   useEffect(() => {
     const autoSwitch = safeLocalStorage.getItem(AUTO_SWITCH_KEY) === 'true'
     if (autoSwitch && isWrongNetwork && !isPending && !dismissed) {
       handleSwitch(true)
     }
      
-  }, [isWrongNetwork])
+  }, [isWrongNetwork, isPending, dismissed, handleSwitch])
 
   // Show success animation briefly
   useEffect(() => {
@@ -65,21 +80,6 @@ export function NetworkSwitchOverlay() {
       setDismissed(false)
     }
   }, [isWrongNetwork])
-
-  const handleSwitch = useCallback(async (remember: boolean = false) => {
-    if (remember) {
-      safeLocalStorage.setItem(AUTO_SWITCH_KEY, 'true')
-    }
-
-    try {
-      switchChain({ chainId: expectedChainId as 84532 | 8453 })
-    } catch (e) {
-      logger.error('Network switch failed', e, { 
-        expectedChainId, 
-        currentChainId: chainId 
-      })
-    }
-  }, [switchChain, expectedChainId, chainId])
 
   const handleDismiss = () => {
     setDismissed(true)

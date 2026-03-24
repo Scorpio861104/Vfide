@@ -44,7 +44,7 @@ export function QuickWalletConnect({ size = 'md' }: QuickWalletConnectProps) {
   const { data: balance } = useBalance({ address });
   const { pendingCount } = usePendingTransactions();
   const { playConnect, playClick } = useTransactionSounds();
-  const { isReconnecting: isAutoReconnecting, minutesUntilDisconnect } = useWalletPersistence();
+  const { isReconnecting: isAutoReconnecting, reconnectError, minutesUntilDisconnect } = useWalletPersistence();
   
   const [isOpen, setIsOpen] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -248,6 +248,18 @@ export function QuickWalletConnect({ size = 'md' }: QuickWalletConnectProps) {
           <Zap size={iconSizes[size]} />
           <span>Connect</span>
         </motion.button>
+
+        {/* Reconnection error hint */}
+        {reconnectError && (
+          <motion.p
+            initial={{ opacity: 0, y: 4 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="absolute top-full mt-1 left-0 right-0 text-center text-xs text-red-400"
+            role="alert"
+          >
+            Auto-reconnect failed
+          </motion.p>
+        )}
       </div>
     );
   }

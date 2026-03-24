@@ -529,7 +529,9 @@ function VaultContent() {
                         try {
                           await createVault();
                           showToast("Vault created successfully!", "success");
-                          refetchVault();
+                          // Delay the refetch slightly so the chain has time to index
+                          // the new vault before the read resolves.
+                          setTimeout(() => refetchVault(), 2000);
                         } catch (error) {
                           devLog.error('Vault creation error:', error);
                           const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
