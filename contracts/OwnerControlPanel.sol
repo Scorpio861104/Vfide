@@ -33,6 +33,7 @@ interface IVFIDEPresaleOCP {
     function fundStableRefunds(address stablecoin, uint256 amount) external;
     function recoverUnclaimedRefunds() external;
     function recoverUnclaimedStableRefunds(address stablecoin) external;
+    function setVaultHub(address _vaultHub) external;
     function totalBaseSold() external view returns (uint256);
     function totalSold() external view returns (uint256);
     function paused() external view returns (bool);
@@ -391,6 +392,10 @@ contract OwnerControlPanel {
 
     function actionId_presale_setStablecoinRegistry(address registry) private pure returns (bytes32) {
         return keccak256(abi.encode("presale_setStablecoinRegistry", registry));
+    }
+
+    function actionId_presale_setVaultHub(address vaultHub) private pure returns (bytes32) {
+        return keccak256(abi.encode("presale_setVaultHub", vaultHub));
     }
 
     function actionId_presale_setEthAccepted(bool accepted) private pure returns (bytes32) {
@@ -881,6 +886,17 @@ contract OwnerControlPanel {
     function presale_setStablecoinRegistry(address _registry) external onlyOwner {
         _consumeQueuedAction(actionId_presale_setStablecoinRegistry(_registry));
         presale.setStablecoinRegistry(_registry);
+    }
+
+    /**
+     * @notice Configure the VaultHub used for vault-creation onboarding during the presale.
+     * @dev HOWEY FIX: Once set, every presale purchase auto-creates a CardBoundVault for the
+     *      buyer, framing token acquisition as utility-system onboarding rather than investment.
+     *      Claims route to the buyer's vault address when vaultHub is configured.
+     */
+    function presale_setVaultHub(address _vaultHub) external onlyOwner {
+        _consumeQueuedAction(actionId_presale_setVaultHub(_vaultHub));
+        presale.setVaultHub(_vaultHub);
     }
     
     /**

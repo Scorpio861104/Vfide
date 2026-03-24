@@ -86,6 +86,7 @@ contract VFIDEPresale is ReentrancyGuard {
     event PurchaseCancelled(address indexed buyer, uint256 indexed index, uint256 tokensReturned);
     event TokensDeposited(uint256 amount);
     event GeoBlockSet(address indexed account, bool blocked);
+    event VaultHubSet(address indexed oldHub, address indexed newHub);
 
     // Immutable config
     address public immutable DAO;
@@ -131,6 +132,15 @@ contract VFIDEPresale is ReentrancyGuard {
     
     // Stablecoin registry
     IStablecoinRegistry public stablecoinRegistry;
+
+    /// @notice HOWEY FIX: Optional VaultHub reference.
+    /// @dev When set, every purchase call to buyWithStable/buyTokens will call
+    ///      ensureVault(msg.sender), automatically creating a CardBoundVault for the
+    ///      buyer if they don't have one.  This frames presale participation as
+    ///      ecosystem onboarding (acquiring a utility vault), not as an investment.
+    ///      Claimed tokens are routed to the buyer's vault address.
+    ///      Can be set to address(0) to disable the vault requirement.
+    IVaultHub public vaultHub;
     
     // Immediate unlock percentages (lock bonuses are not offered — VFIDE is a utility token, not investment)
     uint256 public constant IMMEDIATE_180_DAYS = 10;             // 10% immediate (tier 0 & 1 mandatory lock)
@@ -223,6 +233,24 @@ contract VFIDEPresale is ReentrancyGuard {
     function _checkNotPaused() internal view {
         if (paused) revert PS_Paused();
     }
+
+    /// @notice HOWEY FIX: If vaultHub is configured, ensure the buyer has a CardBoundVault
+    ///         and return its address.  The vault is created automatically if it does not
+    ///         exist.  Returns address(0) when vaultHub is not set (no requirement enforced).
+    function _ensureBuyerVault(address buyer) internal returns (address) {
+        IVaultHub hub = vaultHub;
+        if (address(hub) == address(0)) return address(0);
+        return hub.ensureVault(buyer);
+    }
+
+    /// @notice Return the buyer's vault address if one exists, or the buyer EOA otherwise.
+    ///         Used in claim functions to route tokens to the vault when configured.
+    function _claimRecipient(address buyer) internal view returns (address) {
+        IVaultHub hub = vaultHub;
+        if (address(hub) == address(0)) return buyer;
+        address v = hub.vaultOf(buyer);
+        return v == address(0) ? buyer : v;
+    }
     
     // Track if tokens have been deposited
     bool public tokensDeposited;
@@ -260,6 +288,21 @@ contract VFIDEPresale is ReentrancyGuard {
         address old = address(stablecoinRegistry);
         stablecoinRegistry = IStablecoinRegistry(_registry);
         emit StablecoinRegistryUpdated(old, _registry);
+    }
+
+    /**
+     * @notice Configure the VaultHub used to auto-create buyer vaults.
+     * @dev HOWEY FIX: When a non-zero address is provided, every purchase call will
+     *      invoke VaultHub.ensureVault(buyer), creating a CardBoundVault if the buyer
+     *      does not already have one.  Claimed tokens are then routed to the vault
+     *      rather than directly to the buyer EOA, framing token acquisition as
+     *      onboarding into a utility system.  Pass address(0) to disable.
+     * @param _vaultHub Address of the VaultHub contract (or address(0) to disable).
+     */
+    function setVaultHub(address _vaultHub) external onlyDAO {
+        address old = address(vaultHub);
+        vaultHub = IVaultHub(_vaultHub);
+        emit VaultHubSet(old, _vaultHub);
     }
     
     /**
@@ -478,6 +521,9 @@ contract VFIDEPresale is ReentrancyGuard {
         require(totalBaseSold < BASE_SUPPLY, "Sold out");
         if (geoBlocked[msg.sender]) revert PS_GeoBlocked();
         if (purchases[msg.sender].length >= MAX_PURCHASES_PER_WALLET) revert PS_TooManyPurchases();
+        // HOWEY FIX: If vaultHub is configured, create the buyer's CardBoundVault on purchase.
+        // This frames presale participation as utility-system onboarding, not passive investment.
+        _ensureBuyerVault(msg.sender);
         require(address(stablecoinRegistry) != address(0), "PS: no registry");
         if (!stablecoinRegistry.isWhitelisted(stablecoin)) revert PS_InvalidStablecoin();
         if (!isTierAvailable(tier)) revert PS_TierDisabled();
@@ -624,6 +670,9 @@ contract VFIDEPresale is ReentrancyGuard {
         require(totalBaseSold < BASE_SUPPLY, "Sold out");
         if (geoBlocked[msg.sender]) revert PS_GeoBlocked();
         if (purchases[msg.sender].length >= MAX_PURCHASES_PER_WALLET) revert PS_TooManyPurchases();
+        // HOWEY FIX: If vaultHub is configured, create the buyer's CardBoundVault on purchase.
+        // This frames presale participation as utility-system onboarding, not passive investment.
+        _ensureBuyerVault(msg.sender);
         if (!ethAccepted) revert PS_ETHNotAccepted();
         if (!isTierAvailable(2)) revert PS_TierDisabled(); // ETH uses tier 2 (public)
         require(msg.value >= MIN_PURCHASE_ETH, "Below minimum");
@@ -745,7 +794,7 @@ contract VFIDEPresale is ReentrancyGuard {
         
         if (totalClaimable == 0) revert PS_NoTokens();
         
-        totalClaimed += totalClaimable;        vfideToken.safeTransfer(msg.sender, totalClaimable);
+        totalClaimed += totalClaimable;        vfideToken.safeTransfer(_claimRecipient(msg.sender), totalClaimable);
         emit ClaimImmediate(msg.sender, totalClaimable);
     }
 
@@ -783,7 +832,7 @@ contract VFIDEPresale is ReentrancyGuard {
         if (totalClaimable == 0) revert PS_NoTokens();
         
         totalClaimed += totalClaimable;
-        vfideToken.safeTransfer(msg.sender, totalClaimable);
+        vfideToken.safeTransfer(_claimRecipient(msg.sender), totalClaimable);
         emit ClaimLocked(msg.sender, totalClaimable);
     }
     
@@ -819,7 +868,7 @@ contract VFIDEPresale is ReentrancyGuard {
         if (totalClaimable == 0) revert PS_NoTokens();
 
         totalClaimed += totalClaimable;
-        vfideToken.safeTransfer(msg.sender, totalClaimable);
+        vfideToken.safeTransfer(_claimRecipient(msg.sender), totalClaimable);
         // Emit accurate amounts for each category so indexers report correct data
         if (immediateClaimable > 0) emit ClaimImmediate(msg.sender, immediateClaimable);
         if (lockedClaimable > 0) emit ClaimLocked(msg.sender, lockedClaimable);
