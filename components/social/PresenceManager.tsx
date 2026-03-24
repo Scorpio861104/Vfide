@@ -25,8 +25,7 @@ export function PresenceManager() {
   // Send offline status when unmounting
   useEffect(() => {
     return () => {
-      if (address) {
-        // In production, send offline status to backend
+      if (address && process.env.NODE_ENV === 'development') {
         console.log('[Presence] Disconnecting:', address);
       }
     };

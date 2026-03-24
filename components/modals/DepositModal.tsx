@@ -23,17 +23,19 @@ export default function DepositModal({
   const [amount, setAmount] = useState('');
   const [token, setToken] = useState('VFIDE');
   const [loading, setLoading] = useState(false);
+  const [txError, setTxError] = useState<string | null>(null);
 
   const handleDeposit = async () => {
     if (!amount || safeParseFloat(amount, 0) <= 0) return;
 
     setLoading(true);
+    setTxError(null);
     try {
       await onDeposit?.(amount, token);
       setAmount('');
       onClose();
     } catch (error) {
-      console.error('Deposit failed:', error);
+      setTxError(error instanceof Error ? error.message : 'Deposit failed. Please check your token approval and balance, then try again.');
     } finally {
       setLoading(false);
     }
@@ -128,6 +130,13 @@ export default function DepositModal({
               {amount || '0'} {token}
             </p>
           </div>
+
+          {/* Error Display */}
+          {txError && (
+            <div className="p-3 bg-red-900/20 border border-red-500/40 rounded-lg mb-6 text-sm text-red-300">
+              {txError}
+            </div>
+          )}
 
           {/* Action Buttons */}
           <div className="grid grid-cols-2 gap-3">

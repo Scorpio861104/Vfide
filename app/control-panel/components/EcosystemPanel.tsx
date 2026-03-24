@@ -46,8 +46,8 @@ export function EcosystemPanel() {
       });
 
       setTimeout(() => refetch(), 2000);
-    } catch (transactionError) {
-      console.error('Transaction failed:', transactionError);
+    } catch {
+      // Error is surfaced via wagmi error state in TransactionStatus
     }
   };
 

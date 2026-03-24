@@ -135,8 +135,8 @@ export function GovernancePanel() {
         args: [actionId],
       });
       setTimeout(() => refetchEta(), 2000);
-    } catch (transactionError) {
-      console.error('Queue action failed:', transactionError);
+    } catch {
+      // Error is surfaced via wagmi error state in TransactionStatus
     }
   };
 
@@ -151,8 +151,8 @@ export function GovernancePanel() {
         args: [actionId],
       });
       setTimeout(() => refetchEta(), 2000);
-    } catch (transactionError) {
-      console.error('Cancel action failed:', transactionError);
+    } catch {
+      // Error is surfaced via wagmi error state in TransactionStatus
     }
   };
 
@@ -194,8 +194,8 @@ export function GovernancePanel() {
       }
 
       setTimeout(() => refetchEta(), 2000);
-    } catch (transactionError) {
-      console.error('Execute action failed:', transactionError);
+    } catch {
+      // Error is surfaced via wagmi error state in TransactionStatus
     }
   };
 

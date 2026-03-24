@@ -31,8 +31,8 @@ export function EmergencyPanel() {
         abi: OWNER_CONTROL_PANEL_ABI,
         functionName: 'emergency_pauseAll',
       });
-    } catch (err) {
-      console.error('Transaction failed:', err);
+    } catch {
+      // Error is surfaced via wagmi error state in TransactionStatus
     } finally {
       setLoading(false);
     }
@@ -48,8 +48,8 @@ export function EmergencyPanel() {
         abi: OWNER_CONTROL_PANEL_ABI,
         functionName: 'emergency_resumeAll',
       });
-    } catch (err) {
-      console.error('Transaction failed:', err);
+    } catch {
+      // Error is surfaced via wagmi error state in TransactionStatus
     } finally {
       setLoading(false);
     }
@@ -66,8 +66,8 @@ export function EmergencyPanel() {
         functionName: 'token_setCircuitBreaker',
         args: [circuitBreakerActive, BigInt(circuitBreakerDuration)],
       });
-    } catch (err) {
-      console.error('Transaction failed:', err);
+    } catch {
+      // Error is surfaced via wagmi error state in TransactionStatus
     } finally {
       setLoading(false);
     }

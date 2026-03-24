@@ -53,10 +53,8 @@ export function PaymentInterface() {
         )
       }
       
-    } catch (err) {
-      // Errors are surfaced via hook state; this prevents unhandled rejections.
-      const context = isEscrowMode ? 'Escrow creation failed' : 'Instant payment failed'
-      console.error(context, err)
+    } catch {
+      // Errors are surfaced via hook state (combinedError); this prevents unhandled rejections.
     }
   }
 
