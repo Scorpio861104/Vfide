@@ -7,7 +7,6 @@
 import { isAddress } from 'viem'
 import {
   VFIDETokenABI,
-  VFIDEPresaleABI,
   StablecoinRegistryABI,
   VaultInfrastructureABI,
   VaultHubABI,
@@ -73,7 +72,6 @@ function validateContractAddress(address: string | undefined, name: string): `0x
 
 export const CONTRACT_ADDRESSES = {
   VFIDEToken: validateContractAddress(process.env.NEXT_PUBLIC_VFIDE_TOKEN_ADDRESS, 'VFIDEToken'),
-  VFIDEPresale: validateContractAddress(process.env.NEXT_PUBLIC_VFIDE_PRESALE_ADDRESS, 'VFIDEPresale'),
   StablecoinRegistry: validateContractAddress(process.env.NEXT_PUBLIC_STABLECOIN_REGISTRY_ADDRESS, 'StablecoinRegistry'),
   VFIDECommerce: validateContractAddress(process.env.NEXT_PUBLIC_VFIDE_COMMERCE_ADDRESS, 'VFIDECommerce'),
   MerchantPortal: validateContractAddress(process.env.NEXT_PUBLIC_MERCHANT_PORTAL_ADDRESS, 'MerchantPortal'),
@@ -129,7 +127,6 @@ export const isCardBoundVaultMode = (): boolean => ACTIVE_VAULT_IMPLEMENTATION =
 
 export {
   VFIDETokenABI,
-  VFIDEPresaleABI,
   StablecoinRegistryABI,
   VaultInfrastructureABI,
   VaultHubABI,

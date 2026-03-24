@@ -1,6 +1,5 @@
 import { describe, it, expect } from '@jest/globals'
 import {
-  PRESALE_PRICES,
   DEFAULT_VFIDE_PRICE,
   vfideToUsd,
   formatVfideWithUsd,
@@ -8,13 +7,7 @@ import {
 
 describe('price-utils', () => {
   describe('constants', () => {
-    it('has correct presale prices', () => {
-      expect(PRESALE_PRICES.founding).toBe(0.03)
-      expect(PRESALE_PRICES.oath).toBe(0.05)
-      expect(PRESALE_PRICES.public).toBe(0.07)
-    })
-
-    it('has default price set to oath tier', () => {
+    it('has default price', () => {
       expect(DEFAULT_VFIDE_PRICE).toBe(0.05)
     })
   })

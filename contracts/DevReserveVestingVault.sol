@@ -9,7 +9,7 @@ import "./SharedInterfaces.sol";
  * FOUNDER VESTING: 50M VFIDE (25% of 200M supply)
  * - Allocation: 50,000,000e18 (passed in constructor, pre-minted in VFIDEToken.sol)
  * - VFIDEToken DEV_RESERVE_SUPPLY constant = 50M (aligned)
- * - Starts automatically from Presale's launch time (first claim sync)
+ * - Vesting start set explicitly via setVestingStart() by beneficiary or DAO
  * - Cliff = 60 days (2 months) - First unlock at Month 2
  * - Vesting = 60 months (1800 days) - 30 bi-monthly unlocks over 5 years
  * - Each unlock: 1,666,666 VFIDE (~1.67M); last unlock covers rounding remainder
@@ -25,12 +25,6 @@ import "./SharedInterfaces.sol";
  * enter circulation — reducing the "vertical commonality" argument (Howey Prong 2).
  */
 
-// Presale time selectors (any one may exist)
-interface IPresaleStart_saleStartTime    { function saleStartTime()    external view returns (uint256); }
-interface IPresaleStart_presaleStartTime { function presaleStartTime() external view returns (uint256); }
-interface IPresaleStart_launchTimestamp { function launchTimestamp()   external view returns (uint256); }
-interface IPresaleStart_startTime      { function startTime()         external view returns (uint256); }
-
 contract DevReserveVestingVault is ReentrancyGuard {
     using SafeERC20 for IERC20;
     
@@ -40,7 +34,6 @@ contract DevReserveVestingVault is ReentrancyGuard {
     address public immutable VAULT_HUB;     // VaultInfrastructure
     address public immutable SECURITY_HUB;  // optional
     address public immutable LEDGER;        // optional
-    address public immutable PRESALE;       // presale (for start time)
     uint256 public immutable ALLOCATION;    // e.g., 50_000_000e18
     address public immutable DAO;
     // ── Schedule constants
@@ -51,7 +44,7 @@ contract DevReserveVestingVault is ReentrancyGuard {
     uint256 public constant TOTAL_UNLOCKS = 30;           // 30 unlocks over 5 years
     uint256 public constant EXPECTED_ALLOCATION = 50_000_000e18;
 
-    // ── Derived times (lazy-cached when first needed)
+    // ── Derived times (set once via setVestingStart)
     uint64  public startTimestamp;
     uint64  public cliffTimestamp;
     uint64  public endTimestamp;
@@ -65,7 +58,7 @@ contract DevReserveVestingVault is ReentrancyGuard {
     event Claimed(address indexed beneficiary, address indexed vault, uint256 amount);
     event PauseSet(bool paused);
     event EmergencyFreeze(address indexed by);
-    event ModulesSet(address vfide, address beneficiary, address vaultHub, address securityHub, address ledger, address presale);
+    event ModulesSet(address vfide, address beneficiary, address vaultHub, address securityHub, address ledger);
 
     // ── Errors
     error DV_Zero();
@@ -76,6 +69,7 @@ contract DevReserveVestingVault is ReentrancyGuard {
     error DV_Paused();
     error DV_InvalidAllocation();
     error DV_InvalidStartTimestamp();
+    error DV_AlreadyStarted();
 
     constructor(
         address _vfide,
@@ -83,7 +77,6 @@ contract DevReserveVestingVault is ReentrancyGuard {
         address _vaultHub,
         address _securityHub,
         address _ledger,
-        address _presale,
         uint256 _allocation,
         address _dao
     ) {
@@ -94,11 +87,32 @@ contract DevReserveVestingVault is ReentrancyGuard {
         VAULT_HUB    = _vaultHub;
         SECURITY_HUB = _securityHub;
         LEDGER       = _ledger;
-        PRESALE      = _presale;
         ALLOCATION   = _allocation;
         DAO          = _dao;
-        emit ModulesSet(_vfide, _beneficiary, _vaultHub, _securityHub, _ledger, _presale);
+        emit ModulesSet(_vfide, _beneficiary, _vaultHub, _securityHub, _ledger);
         _log("dev_vesting_deployed");
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // Start time (called once by beneficiary or DAO at launch)
+    // ─────────────────────────────────────────────────────────────
+
+    /**
+     * @notice Set the vesting start timestamp (one-time, callable by beneficiary or DAO).
+     * @dev    Called at protocol launch in place of reading from a presale contract.
+     *         The timestamp must be in the past or present (not more than 7 days in the future)
+     *         to prevent accidental future-dating.
+     */
+    function setVestingStart(uint64 timestamp) external {
+        require(msg.sender == BENEFICIARY || msg.sender == DAO, "DV: unauthorized");
+        if (startTimestamp != 0) revert DV_AlreadyStarted();
+        if (timestamp == 0) revert DV_Zero();
+        if (timestamp > block.timestamp + 7 days) revert DV_InvalidStartTimestamp();
+        startTimestamp  = timestamp;
+        cliffTimestamp  = timestamp + CLIFF;
+        endTimestamp    = timestamp + VESTING;
+        _log("dev_vesting_synced");
+        emit SyncedStart(startTimestamp, cliffTimestamp, endTimestamp);
     }
 
     // ─────────────────────────────────────────────────────────────
@@ -160,7 +174,7 @@ contract DevReserveVestingVault is ReentrancyGuard {
         if (msg.sender != BENEFICIARY) revert DV_NotBeneficiary();
         if (claimsPaused) revert DV_Paused();
 
-        _syncStart(); // reverts if presale not initialized
+        if (startTimestamp == 0) revert DV_NotStarted();
 
         address vault = beneficiaryVault();
 
@@ -180,82 +194,15 @@ contract DevReserveVestingVault is ReentrancyGuard {
     }
 
     // ─────────────────────────────────────────────────────────────
-    // Internal: start sync & helpers
+    // Internal: projection helper
     // ─────────────────────────────────────────────────────────────
-
-    function _syncStart() internal {
-        if (startTimestamp != 0) return;
-
-        uint256 s = _fetchStartFromPresale();
-        if (s == 0) revert DV_NotStarted();
-        if (s > type(uint64).max) revert DV_InvalidStartTimestamp();
-        // forge-lint: disable-next-line(unsafe-typecast)
-        // Safe: presale timestamp is a recent timestamp that fits in uint64
-        startTimestamp = uint64(s);
-        cliffTimestamp = startTimestamp + CLIFF;
-        // 36-month vesting horizon is measured from startTimestamp.
-        endTimestamp = startTimestamp + VESTING;
-
-        _log("dev_vesting_synced");
-        emit SyncedStart(startTimestamp, cliffTimestamp, endTimestamp);
-    }
 
     function _projTimesView() internal view returns (uint64 s, uint64 c, uint64 e) {
         s = startTimestamp;
-        if (s == 0) {
-            // peek without state change
-            s = _peekStartFromPresale();
-        }
         if (s != 0) {
             c = s + CLIFF;
             e = s + VESTING;
         }
-    }
-
-    function _fetchStartFromPresale() internal view returns (uint256) {
-        if (PRESALE == address(0)) return 0;
-
-        (bool ok0, bytes memory d0) = PRESALE.staticcall(
-            abi.encodeWithSelector(IPresaleStart_saleStartTime.saleStartTime.selector)
-        );
-        if (ok0 && d0.length >= 32) {
-            uint256 s0 = abi.decode(d0, (uint256));
-            if (s0 != 0) return s0;
-        }
-
-        (bool ok1, bytes memory d1) = PRESALE.staticcall(
-            abi.encodeWithSelector(IPresaleStart_presaleStartTime.presaleStartTime.selector)
-        );
-        if (ok1 && d1.length >= 32) {
-            uint256 s1 = abi.decode(d1, (uint256));
-            if (s1 != 0) return s1;
-        }
-
-        (bool ok2, bytes memory d2) = PRESALE.staticcall(
-            abi.encodeWithSelector(IPresaleStart_launchTimestamp.launchTimestamp.selector)
-        );
-        if (ok2 && d2.length >= 32) {
-            uint256 s2 = abi.decode(d2, (uint256));
-            if (s2 != 0) return s2;
-        }
-
-        (bool ok3, bytes memory d3) = PRESALE.staticcall(
-            abi.encodeWithSelector(IPresaleStart_startTime.startTime.selector)
-        );
-        if (ok3 && d3.length >= 32) {
-            uint256 s3 = abi.decode(d3, (uint256));
-            if (s3 != 0) return s3;
-        }
-
-        return 0;
-    }
-
-    function _peekStartFromPresale() internal view returns (uint64) {
-        uint256 s = _fetchStartFromPresale();
-        if (s > type(uint64).max) revert DV_InvalidStartTimestamp();
-        // forge-lint: disable-next-line(unsafe-typecast)
-        // Safe: presale timestamp is a recent timestamp that fits in uint64
-        return s == 0 ? 0 : uint64(s);
     }
     
     // ═══════════════════════════════════════════════════════════════════════

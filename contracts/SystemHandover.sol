@@ -3,7 +3,6 @@ pragma solidity 0.8.30;
 
 interface ISeer_SH { function minForGovernance() external view returns (uint16); function getScore(address subject) external view returns (uint16); }
 interface ICouncilElection_SH { function getActualCouncilSize() external view returns (uint256); function getCouncilMember(uint256 index) external view returns (address); }
-interface IVFIDEPresaleLike_SH { function saleStartTime() external view returns (uint256); }
 interface IDAO_SH { function setAdmin(address _admin) external; }
 interface IDAOTimelock_SH { function setAdmin(address _admin) external; }
 interface IProofLedger_SH { function logSystemEvent(address who, string calldata action, address by) external; }
@@ -51,14 +50,11 @@ contract SystemHandover {
         minAvgCouncilScore = seer.minForGovernance();
     }
 
-    /// Arm handover countdown from presale start time.
-    function armFromPresale(address presale) external onlyDev {
+    /// Arm handover countdown from an explicit launch timestamp.
+    function arm(uint64 t0) external onlyDev {
         if (start!=0) return; // idempotent
-        uint256 t0 = IVFIDEPresaleLike_SH(presale).saleStartTime();
-        require(t0!=0,"presale not started");
-        // forge-lint: disable-next-line(unsafe-typecast)
-        // Safe: presaleStartTime is a recent timestamp that fits in uint64
-        start = uint64(t0);
+        require(t0!=0,"SH: zero timestamp");
+        start = t0;
         handoverAt = start + monthsDelay;
         emit Armed(start,handoverAt);
         _log("handover_armed");

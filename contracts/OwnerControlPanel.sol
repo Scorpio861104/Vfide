@@ -16,32 +16,6 @@ import "./SharedInterfaces.sol";
  * - No fund custody (just passes through calls)
  */
 
-interface IVFIDEPresaleOCP {
-    function setPaused(bool _paused) external;
-    function extendSale(uint256 additionalDays) external;
-    function setMaxGasPrice(uint256 newMaxGasPrice) external;
-    function withdrawUnsold() external;
-    function finalizePresale() external;
-    function enableRefunds() external;
-    function emergencyWithdraw() external;
-    function fundRefunds() external payable;
-    function depositTokens() external;
-    function setStablecoinRegistry(address _registry) external;
-    function setEthPrice(uint256 newPrice) external;
-    function setEthAccepted(bool accepted) external;
-    function setTierEnabled(uint8 tier, bool enabled) external;
-    function fundStableRefunds(address stablecoin, uint256 amount) external;
-    function recoverUnclaimedRefunds() external;
-    function recoverUnclaimedStableRefunds(address stablecoin) external;
-    function setVaultHub(address _vaultHub) external;
-    function totalBaseSold() external view returns (uint256);
-    function totalSold() external view returns (uint256);
-    function paused() external view returns (bool);
-    function finalized() external view returns (bool);
-    function saleStartTime() external view returns (uint256);
-    function saleEndTime() external view returns (uint256);
-}
-
 interface IUserVaultOCP {
     function setFrozen(bool _frozen) external;
     function setAbnormalTransactionThreshold(uint256 threshold) external;
@@ -81,7 +55,6 @@ contract OwnerControlPanel {
     event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
     
     IVFIDEToken public vfideToken;
-    IVFIDEPresaleOCP public presale;
     IVaultHub public vaultHub;
     IProofScoreBurnRouter public burnRouter;
     ISeer public seer;
@@ -107,7 +80,7 @@ contract OwnerControlPanel {
 
     mapping(bytes32 => uint256) public queuedActionEta;
     
-    event ContractsUpdated(address token, address presale, address vaultHub, address burnRouter, address seer);
+    event ContractsUpdated(address token, address vaultHub, address burnRouter, address seer);
     event EcosystemContractsUpdated(address ecosystemVault);
     event PanicGuardUpdated(address panicGuard);
     event EmergencyAction(string action, address target);
@@ -173,7 +146,6 @@ contract OwnerControlPanel {
     constructor(
         address _owner,
         address _token,
-        address _presale,
         address _vaultHub,
         address _burnRouter,
         address _seer
@@ -182,7 +154,6 @@ contract OwnerControlPanel {
         owner = _owner;
         
         if (_token != address(0)) vfideToken = IVFIDEToken(_token);
-        if (_presale != address(0)) presale = IVFIDEPresaleOCP(_presale);
         if (_vaultHub != address(0)) vaultHub = IVaultHub(_vaultHub);
         if (_burnRouter != address(0)) burnRouter = IProofScoreBurnRouter(_burnRouter);
         if (_seer != address(0)) seer = ISeer(_seer);
@@ -193,18 +164,16 @@ contract OwnerControlPanel {
      */
     function setContracts(
         address _token,
-        address _presale,
         address _vaultHub,
         address _burnRouter,
         address _seer
     ) external onlyOwner {
-        _consumeQueuedAction(keccak256(abi.encode("setContracts", _token, _presale, _vaultHub, _burnRouter, _seer)));
+        _consumeQueuedAction(keccak256(abi.encode("setContracts", _token, _vaultHub, _burnRouter, _seer)));
         if (_token != address(0)) vfideToken = IVFIDEToken(_token);
-        if (_presale != address(0)) presale = IVFIDEPresaleOCP(_presale);
         if (_vaultHub != address(0)) vaultHub = IVaultHub(_vaultHub);
         if (_burnRouter != address(0)) burnRouter = IProofScoreBurnRouter(_burnRouter);
         if (_seer != address(0)) seer = ISeer(_seer);
-        emit ContractsUpdated(_token, _presale, _vaultHub, _burnRouter, _seer);
+        emit ContractsUpdated(_token, _vaultHub, _burnRouter, _seer);
     }
     
     /**
@@ -360,66 +329,6 @@ contract OwnerControlPanel {
         uint16 minMerchant
     ) private pure returns (bytes32) {
         return keccak256(abi.encode("seer_setThresholds", lowTrust, highTrust, minGovernance, minMerchant));
-    }
-
-    function actionId_presale_setPaused(bool paused) private pure returns (bytes32) {
-        return keccak256(abi.encode("presale_setPaused", paused));
-    }
-
-    function actionId_presale_extendSale(uint256 additionalDays) private pure returns (bytes32) {
-        return keccak256(abi.encode("presale_extendSale", additionalDays));
-    }
-
-    function actionId_presale_setMaxGasPrice(uint256 newMaxGasPrice) private pure returns (bytes32) {
-        return keccak256(abi.encode("presale_setMaxGasPrice", newMaxGasPrice));
-    }
-
-    function actionId_presale_withdrawUnsold() private pure returns (bytes32) {
-        return keccak256(abi.encode("presale_withdrawUnsold"));
-    }
-
-    function actionId_presale_finalize() private pure returns (bytes32) {
-        return keccak256(abi.encode("presale_finalize"));
-    }
-
-    function actionId_presale_enableRefunds() private pure returns (bytes32) {
-        return keccak256(abi.encode("presale_enableRefunds"));
-    }
-
-    function actionId_presale_depositTokens() private pure returns (bytes32) {
-        return keccak256(abi.encode("presale_depositTokens"));
-    }
-
-    function actionId_presale_setStablecoinRegistry(address registry) private pure returns (bytes32) {
-        return keccak256(abi.encode("presale_setStablecoinRegistry", registry));
-    }
-
-    function actionId_presale_setVaultHub(address vaultHub) private pure returns (bytes32) {
-        return keccak256(abi.encode("presale_setVaultHub", vaultHub));
-    }
-
-    function actionId_presale_setEthAccepted(bool accepted) private pure returns (bytes32) {
-        return keccak256(abi.encode("presale_setEthAccepted", accepted));
-    }
-
-    function actionId_presale_setTierEnabled(uint8 tier, bool enabled) private pure returns (bytes32) {
-        return keccak256(abi.encode("presale_setTierEnabled", tier, enabled));
-    }
-
-    function actionId_presale_fundStableRefunds(address stablecoin, uint256 amount) private pure returns (bytes32) {
-        return keccak256(abi.encode("presale_fundStableRefunds", stablecoin, amount));
-    }
-
-    function actionId_presale_recoverUnclaimedRefunds() private pure returns (bytes32) {
-        return keccak256(abi.encode("presale_recoverUnclaimedRefunds"));
-    }
-
-    function actionId_presale_recoverUnclaimedStableRefunds(address stablecoin) private pure returns (bytes32) {
-        return keccak256(abi.encode("presale_recoverUnclaimedStableRefunds", stablecoin));
-    }
-
-    function actionId_presale_emergencyWithdraw() private pure returns (bytes32) {
-        return keccak256(abi.encode("presale_emergencyWithdraw"));
     }
 
     function actionId_vault_requestDAORecovery(address vault, address newOwner) private pure returns (bytes32) {
@@ -815,160 +724,6 @@ contract OwnerControlPanel {
     }
     
     // ═══════════════════════════════════════════════════════════════════════
-    //                          PRESALE MANAGEMENT
-    // ═══════════════════════════════════════════════════════════════════════
-    
-    /**
-     * @notice Pause/unpause presale
-     */
-    function presale_setPaused(bool paused) external onlyOwner {
-        _consumeQueuedAction(actionId_presale_setPaused(paused));
-        presale.setPaused(paused);
-        emit EmergencyAction(paused ? "presale_paused" : "presale_unpaused", address(presale));
-    }
-    
-    /**
-     * @notice Extend presale duration (one-time, max 30 days)
-     */
-    function presale_extendSale(uint256 additionalDays) external onlyOwner {
-        _consumeQueuedAction(actionId_presale_extendSale(additionalDays));
-        presale.extendSale(additionalDays);
-    }
-    
-    /**
-     * @notice Update max gas price circuit breaker
-     */
-    function presale_setMaxGasPrice(uint256 newMaxGasPrice) external onlyOwner {
-        _consumeQueuedAction(actionId_presale_setMaxGasPrice(newMaxGasPrice));
-        presale.setMaxGasPrice(newMaxGasPrice);
-    }
-    
-    /**
-     * @notice Burn unsold presale tokens, permanently reducing totalSupply.
-     * @dev Calls VFIDEPresale.withdrawUnsold() which invokes VFIDEToken.burn() so that
-     *      exchange trackers (CoinGecko, CoinMarketCap, DEX Screener) reflect the
-     *      real circulating supply immediately after the burn is confirmed on-chain.
-     */
-    function presale_withdrawUnsold() external onlyOwner {
-        _consumeQueuedAction(actionId_presale_withdrawUnsold());
-        presale.withdrawUnsold();
-    }
-    
-    /**
-     * @notice Finalize presale
-     * @dev Aligned with actual VFIDEPresale.finalizePresale() (no params)
-     */
-    function presale_finalize() external onlyOwner {
-        _consumeQueuedAction(actionId_presale_finalize());
-        presale.finalizePresale();
-    }
-    
-    /**
-     * @notice Enable refunds if presale failed to meet goal
-     */
-    function presale_enableRefunds() external onlyOwner {
-        _consumeQueuedAction(actionId_presale_enableRefunds());
-        presale.enableRefunds();
-        emit EmergencyAction("refunds_enabled", address(presale));
-    }
-    
-    /**
-     * @notice Verify token deposit in presale contract
-     */
-    function presale_depositTokens() external onlyOwner {
-        _consumeQueuedAction(actionId_presale_depositTokens());
-        presale.depositTokens();
-    }
-    
-    /**
-     * @notice Set stablecoin registry for presale
-     */
-    function presale_setStablecoinRegistry(address _registry) external onlyOwner {
-        _consumeQueuedAction(actionId_presale_setStablecoinRegistry(_registry));
-        presale.setStablecoinRegistry(_registry);
-    }
-
-    /**
-     * @notice Configure the VaultHub used for vault-creation onboarding during the presale.
-     * @dev HOWEY FIX: Once set, every presale purchase auto-creates a CardBoundVault for the
-     *      buyer, framing token acquisition as utility-system onboarding rather than investment.
-     *      Claims route to the buyer's vault address when vaultHub is configured.
-     */
-    function presale_setVaultHub(address _vaultHub) external onlyOwner {
-        _consumeQueuedAction(actionId_presale_setVaultHub(_vaultHub));
-        presale.setVaultHub(_vaultHub);
-    }
-    
-    /**
-     * @notice Update ETH/USD price for ETH purchases
-     */
-    function actionId_presale_setEthPrice(uint256 newPrice) private pure returns (bytes32) {
-        return keccak256(abi.encode("presale_setEthPrice", newPrice));
-    }
-
-    function presale_setEthPrice(uint256 newPrice) external onlyOwner {
-        // F-14 FIX: require governance queue before execution
-        _consumeQueuedAction(actionId_presale_setEthPrice(newPrice));
-        presale.setEthPrice(newPrice);
-    }
-    
-    /**
-     * @notice Enable/disable ETH purchases
-     */
-    function presale_setEthAccepted(bool accepted) external onlyOwner {
-        _consumeQueuedAction(actionId_presale_setEthAccepted(accepted));
-        presale.setEthAccepted(accepted);
-    }
-    
-    /**
-     * @notice Enable/disable a presale tier
-     */
-    function presale_setTierEnabled(uint8 tier, bool enabled) external onlyOwner {
-        _consumeQueuedAction(actionId_presale_setTierEnabled(tier, enabled));
-        presale.setTierEnabled(tier, enabled);
-    }
-    
-    /**
-     * @notice Fund stablecoin refunds
-     */
-    function presale_fundStableRefunds(address stablecoin, uint256 amount) external onlyOwner {
-        _consumeQueuedAction(actionId_presale_fundStableRefunds(stablecoin, amount));
-        presale.fundStableRefunds(stablecoin, amount);
-    }
-    
-    /**
-     * @notice Recover unclaimed ETH refunds after deadline
-     */
-    function presale_recoverUnclaimedRefunds() external onlyOwner {
-        _consumeQueuedAction(actionId_presale_recoverUnclaimedRefunds());
-        presale.recoverUnclaimedRefunds();
-    }
-    
-    /**
-     * @notice Recover unclaimed stablecoin refunds after deadline
-     */
-    function presale_recoverUnclaimedStableRefunds(address stablecoin) external onlyOwner {
-        _consumeQueuedAction(actionId_presale_recoverUnclaimedStableRefunds(stablecoin));
-        presale.recoverUnclaimedStableRefunds(stablecoin);
-    }
-    
-    /**
-     * @notice Emergency withdraw (only before sale or after finalization)
-     */
-    function presale_emergencyWithdraw() external onlyOwner {
-        _consumeQueuedAction(actionId_presale_emergencyWithdraw());
-        presale.emergencyWithdraw();
-        emit EmergencyAction("emergency_withdraw", address(presale));
-    }
-    
-    /**
-     * @notice Fund refunds by sending ETH to presale contract
-     */
-    function presale_fundRefunds() external payable onlyOwner {
-        presale.fundRefunds{value: msg.value}();
-    }
-    
-    // ═══════════════════════════════════════════════════════════════════════
     //                          VAULT MANAGEMENT
     // ═══════════════════════════════════════════════════════════════════════
     
@@ -1063,7 +818,6 @@ contract OwnerControlPanel {
     function getTokenStatus() external view returns (
         uint256 totalSupply,
         uint256 devReserveBalance,
-        uint256 presaleBalance,
         uint256 treasuryBalance,
         bool vaultOnly,
         bool policyLocked,
@@ -1079,40 +833,6 @@ contract OwnerControlPanel {
             devReserveBalance = DEV_RESERVE_SUPPLY;
         }
         treasuryBalance = vfideToken.balanceOf(owner);
-        
-        // Get balances if addresses are set
-        if (address(presale) != address(0)) {
-            presaleBalance = vfideToken.balanceOf(address(presale));
-        }
-    }
-    
-    /**
-     * @notice Get presale status
-     */
-    function getPresaleStatus() external view returns (
-        uint256 totalBaseSold,
-        uint256 totalSold,
-        uint256 tokenBalance,
-        bool hasSufficientTokens,
-        bool paused,
-        bool finalized,
-        uint256 startTime,
-        uint256 endTime,
-        uint256 timeRemaining
-    ) {
-        totalBaseSold = presale.totalBaseSold();
-        totalSold = presale.totalSold();
-        paused = presale.paused();
-        finalized = presale.finalized();
-        startTime = presale.saleStartTime();
-        endTime = presale.saleEndTime();
-        
-        tokenBalance = vfideToken.balanceOf(address(presale));
-        hasSufficientTokens = tokenBalance > 0;
-        
-        if (block.timestamp < endTime) {
-            timeRemaining = endTime - block.timestamp;
-        }
     }
     
     /**
@@ -1159,26 +879,19 @@ contract OwnerControlPanel {
      */
     function getSystemHealth() external view returns (
         bool tokenHealthy,
-        bool presaleHealthy,
         bool vaultHealthy,
         string memory status
     ) {
-        // Token health: has supply, vault-only working
+        // Token health: has supply
         tokenHealthy = vfideToken.totalSupply() > 0;
-        
-        // Presale health: has tokens, not paused (or finalized)
-        uint256 presaleTokenBalance = vfideToken.balanceOf(address(presale));
-        presaleHealthy = presaleTokenBalance > 0 && (!presale.paused() || presale.finalized());
         
         // Vault health: has vaults created
         vaultHealthy = vaultHub.totalVaultsCreated() > 0;
         
-        if (tokenHealthy && presaleHealthy && vaultHealthy) {
+        if (tokenHealthy && vaultHealthy) {
             status = "All systems operational";
         } else if (!tokenHealthy) {
             status = "Token issue detected";
-        } else if (!presaleHealthy) {
-            status = "Presale issue detected";
         } else {
             status = "Vault issue detected";
         }
@@ -1194,16 +907,15 @@ contract OwnerControlPanel {
     
     /**
      * @notice Returns the Howey-safe status for each ecosystem contract.
-     * @dev Always (true, true, true, true, true) — hardcoded in each contract.
+     * @dev Always (true, true, true, true) — hardcoded in each contract.
      */
     function howey_getStatus() external pure returns (
         bool dutyDistributorSafe,
         bool councilSalarySafe,
         bool councilManagerSafe,
-        bool presaleSafe,
         bool liquidityIncentivesSafe
     ) {
-        return (true, true, true, true, true);
+        return (true, true, true, true);
     }
     
     /**
@@ -1461,9 +1173,6 @@ contract OwnerControlPanel {
      */
     function emergency_pauseAll() external onlyOwner {
         _consumeQueuedAction(actionId_emergency_pauseAll());
-        // Pause presale
-        presale.setPaused(true);
-        
         // Enable circuit breaker on token (24 hour default for emergency)
         vfideToken.setCircuitBreaker(true, 1 days);
         
@@ -1475,9 +1184,6 @@ contract OwnerControlPanel {
      */
     function emergency_resumeAll() external onlyOwner {
         _consumeQueuedAction(actionId_emergency_resumeAll());
-        // Unpause presale
-        presale.setPaused(false);
-        
         // Disable circuit breaker on token
         vfideToken.setCircuitBreaker(false, 0);
         
@@ -1508,6 +1214,6 @@ contract OwnerControlPanel {
         emit EmergencyAction("tokens_recovered", token);
     }
     
-    // Allow contract to receive ETH for presale funding
+    // Allow contract to receive ETH for emergency recovery
     receive() external payable {}
 }

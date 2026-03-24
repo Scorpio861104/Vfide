@@ -46,7 +46,6 @@ export interface ChainConfig {
 export interface ChainContracts {
   vfideToken: string
   vaultHub: string
-  presale: string
   seer: string
 }
 
@@ -67,14 +66,12 @@ export const CHAINS: Record<SupportedChain, ChainConfig> = {
       mainnet: {
         vfideToken: '', // Deploy pending
         vaultHub: '',
-        presale: '',
         seer: '',
       },
       testnet: {
         // Deployed on Base Sepolia - Dec 25, 2025
         vfideToken: process.env.NEXT_PUBLIC_VFIDE_TOKEN_ADDRESS || '',
         vaultHub: process.env.NEXT_PUBLIC_VAULT_HUB_ADDRESS || '',
-        presale: process.env.NEXT_PUBLIC_VFIDE_PRESALE_ADDRESS || '',
         seer: process.env.NEXT_PUBLIC_SEER_ADDRESS || '',
       },
     },
@@ -95,13 +92,11 @@ export const CHAINS: Record<SupportedChain, ChainConfig> = {
       mainnet: {
         vfideToken: '', // Deploy pending
         vaultHub: '',
-        presale: '',
         seer: '',
       },
       testnet: {
         vfideToken: '', // Deploy pending
         vaultHub: '',
-        presale: '',
         seer: '',
       },
     },
@@ -122,14 +117,12 @@ export const CHAINS: Record<SupportedChain, ChainConfig> = {
       mainnet: {
         vfideToken: '', // Deploy pending
         vaultHub: '',
-        presale: '',
         seer: '',
       },
       testnet: {
         // Already deployed!
         vfideToken: '0x3249215721a21BC9635C01Ea05AdE032dd90961f',
         vaultHub: '0xe34dF8582fccC39CdE15e9a1aae73cd3890744Cc',
-        presale: '0x338926cd13aAA99da8e846732e8010b16d1369ea',
         seer: '0xD22944d47bAD4Bd5fF1A366393c4bdbc9250fd8E',
       },
     },

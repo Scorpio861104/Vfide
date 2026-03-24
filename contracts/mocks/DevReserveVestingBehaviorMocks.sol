@@ -43,11 +43,3 @@ contract MockSecurityHub {
         return locked;
     }
 }
-
-contract MockPresaleStart {
-    uint256 public saleStartTime;
-
-    constructor(uint256 _saleStartTime) {
-        saleStartTime = _saleStartTime;
-    }
-}

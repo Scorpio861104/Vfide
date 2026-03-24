@@ -1,15 +1,8 @@
-import { formatPrice, parsePrice, PRESALE_PRICES, DEFAULT_VFIDE_PRICE, vfideToUsd, formatVfideWithUsd } from '../price-utils'
+import { formatPrice, parsePrice, DEFAULT_VFIDE_PRICE, vfideToUsd, formatVfideWithUsd } from '../price-utils'
 
 describe('Price Utils', () => {
   describe('constants', () => {
-    it('has correct presale prices from VFIDEPresale.sol', () => {
-      // HOWEY FIX: All tiers use flat TOKEN_PRICE ($0.05) — no tiered discounts
-      expect(PRESALE_PRICES.founding).toBe(0.05)
-      expect(PRESALE_PRICES.oath).toBe(0.05)
-      expect(PRESALE_PRICES.public).toBe(0.05)
-    })
-
-    it('has correct default price (Oath tier)', () => {
+    it('has correct default price', () => {
       expect(DEFAULT_VFIDE_PRICE).toBe(0.05)
     })
   })

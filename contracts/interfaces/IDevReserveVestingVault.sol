@@ -6,6 +6,7 @@ interface IDevReserveVestingVault {
     function vested() external view returns (uint256);
     function claim() external;
     function pauseClaims(bool paused) external;
+    function setVestingStart(uint64 timestamp) external;
     function beneficiaryVault() external returns (address);
 
     function VFIDE() external view returns (address);
@@ -13,7 +14,6 @@ interface IDevReserveVestingVault {
     function VAULT_HUB() external view returns (address);
     function SECURITY_HUB() external view returns (address);
     function LEDGER() external view returns (address);
-    function PRESALE() external view returns (address);
     function ALLOCATION() external view returns (uint256);
 
     function startTimestamp() external view returns (uint64);

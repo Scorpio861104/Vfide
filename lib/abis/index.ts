@@ -2,7 +2,6 @@
 // Run: ./scripts/generate-abis.sh to regenerate
 
 import VFIDETokenABI from './VFIDEToken.json'
-import VFIDEPresaleABI from './VFIDEPresale.json'
 import StablecoinRegistryABI from './StablecoinRegistry.json'
 import VaultInfrastructureABI from './VaultInfrastructure.json'
 import VaultHubFullABI from './VaultHub.json'
@@ -55,7 +54,6 @@ function validateABI(abi: unknown, name: string): unknown[] {
 
 // Validate all imported ABIs
 validateABI(VFIDETokenABI, 'VFIDEToken');
-validateABI(VFIDEPresaleABI, 'VFIDEPresale');
 validateABI(StablecoinRegistryABI, 'StablecoinRegistry');
 validateABI(VaultInfrastructureABI, 'VaultInfrastructure');
 validateABI(UserVaultLiteABI, 'UserVaultLite');
@@ -99,7 +97,6 @@ const VaultHubABI = VaultHubFullABI
 
 export {
   VFIDETokenABI,
-  VFIDEPresaleABI,
   StablecoinRegistryABI,
   VaultInfrastructureABI,
   VaultHubABI,

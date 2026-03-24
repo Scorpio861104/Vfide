@@ -42,11 +42,6 @@ async function deployFixture() {
   const token: any = await tokenFactory.deploy();
   await token.waitForDeployment();
 
-  const presaleArtifact = loadArtifact('artifacts/contracts/mocks/DevReserveVestingBehaviorMocks.sol/MockPresaleStart.json');
-  const presaleFactory = new ContractFactory(presaleArtifact.abi, presaleArtifact.bytecode, deployer);
-  const presale: any = await presaleFactory.deploy(startTs);
-  await presale.waitForDeployment();
-
   const vaultHubArtifact = loadArtifact('artifacts/contracts/mocks/DevReserveVestingBehaviorMocks.sol/MockVaultHub.json');
   const vaultHubFactory = new ContractFactory(vaultHubArtifact.abi, vaultHubArtifact.bytecode, deployer);
   const vaultHub: any = await vaultHubFactory.deploy(vaultAddress);
@@ -65,14 +60,18 @@ async function deployFixture() {
     await vaultHub.getAddress(),
     await securityHub.getAddress(),
     ZeroAddress,
-    await presale.getAddress(),
-    ALLOCATION
+    ALLOCATION,
+    ZeroAddress // DAO
   );
   await vestingVault.waitForDeployment();
 
   await token.mint(await vestingVault.getAddress(), ALLOCATION);
 
-  return { beneficiary, vaultAddress, startTs, token, vaultHub, securityHub, presale, vestingVault };
+  // Set vesting start via explicit call (replaces presale-based start time)
+  await setTime(startTs);
+  await vestingVault.connect(beneficiary).setVestingStart(startTs);
+
+  return { beneficiary, vaultAddress, startTs, token, vaultHub, securityHub, vestingVault };
 }
 
 async function verifyInvalidAllocationReverts(fx: any) {
@@ -88,8 +87,8 @@ async function verifyInvalidAllocationReverts(fx: any) {
       await fx.vaultHub.getAddress(),
       await fx.securityHub.getAddress(),
       ZeroAddress,
-      await fx.presale.getAddress(),
-      ALLOCATION - 1n
+      ALLOCATION - 1n,
+      ZeroAddress
     );
   } catch {
     reverted = true;
