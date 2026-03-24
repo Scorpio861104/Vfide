@@ -352,8 +352,7 @@ export function SettingsDashboard({
       setStatus('saved');
       setSyncStatus('synced');
       setTimeout(() => setStatus('idle'), 1500);
-    } catch (err) {
-      console.error(err);
+    } catch {
       setStatus('error');
       setSyncStatus('error');
       playError();

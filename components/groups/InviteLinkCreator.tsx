@@ -81,8 +81,7 @@ export function InviteLinkCreator({
       } else {
         announce(`Error: ${data.error}`, 'assertive');
       }
-    } catch (error) {
-      console.error('Failed to create invite:', error);
+    } catch {
       announce('Failed to create invite link', 'assertive');
     } finally {
       setIsCreating(false);
@@ -258,8 +257,8 @@ export function InviteLinkCard({ link, onRevoke, onDelete }: InviteLinkCardProps
       setCopied(true);
       announce('Link copied to clipboard', 'polite');
       setTimeout(() => setCopied(false), 2000);
-    } catch (error) {
-      console.error('Failed to copy:', error);
+    } catch {
+      announce('Failed to copy link. Please copy manually.', 'assertive');
     }
   };
 

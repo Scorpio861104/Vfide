@@ -114,8 +114,8 @@ export function SubscriptionManager({
         args: [BigInt(tier.duration)],
         value: parseEther(tier.price),
       });
-    } catch (err) {
-      console.error('Subscription failed:', err);
+    } catch {
+      // Error is surfaced via wagmi error state (handled in useEffect above)
       setIsProcessing(false);
     }
   };

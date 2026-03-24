@@ -28,6 +28,7 @@ export function ProfileSettings() {
   });
   const [isSaving, setIsSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   // Load profile data
   useEffect(() => {
@@ -54,6 +55,7 @@ export function ProfileSettings() {
 
     setIsSaving(true);
     setSaveSuccess(false);
+    setSaveError(null);
 
     try {
       // Sanitize inputs
@@ -72,7 +74,7 @@ export function ProfileSettings() {
         setSaveSuccess(false);
       }, 3000);
     } catch (err) {
-      console.error('Failed to save profile:', err);
+      setSaveError(err instanceof Error ? err.message : 'Failed to save profile. Please try again.');
     } finally {
       setIsSaving(false);
     }
@@ -252,6 +254,15 @@ export function ProfileSettings() {
                   className="text-sm text-green-400"
                 >
                   ✓ Profile saved successfully
+                </motion.p>
+              )}
+              {saveError && (
+                <motion.p
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  className="text-sm text-red-400"
+                >
+                  {saveError}
                 </motion.p>
               )}
               {error && (

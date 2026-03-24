@@ -121,9 +121,8 @@ export function MessagingCenter({ friend, hasVault = false }: MessagingCenterPro
           setMessages(decryptedMsgs);
           setEncryptionStatus('idle');
         }
-      } catch (e) {
+      } catch {
         if (isActive && !abortController.signal.aborted) {
-          console.error('Failed to load messages:', e);
           setEncryptionStatus('error');
         }
       }
@@ -272,8 +271,7 @@ export function MessagingCenter({ friend, hasVault = false }: MessagingCenterPro
           : msg
       );
       localStorage.setItem(`${STORAGE_KEYS.MESSAGES}_${conversationId}`, JSON.stringify(updatedMessages));
-    } catch (error) {
-      console.error('Failed to edit message:', error);
+    } catch {
       alert('Failed to edit message. Please try again.');
     }
   };
@@ -301,8 +299,7 @@ export function MessagingCenter({ friend, hasVault = false }: MessagingCenterPro
           : msg
       );
       localStorage.setItem(`${STORAGE_KEYS.MESSAGES}_${conversationId}`, JSON.stringify(updatedMessages));
-    } catch (error) {
-      console.error('Failed to delete message:', error);
+    } catch {
       alert('Failed to delete message. Please try again.');
     }
   };
@@ -311,9 +308,9 @@ export function MessagingCenter({ friend, hasVault = false }: MessagingCenterPro
   const handleCopyMessage = async (content: string) => {
     try {
       await navigator.clipboard.writeText(content);
-      // Optional: show toast notification
-    } catch (error) {
-      console.error('Failed to copy:', error);
+      announce('Message copied to clipboard', 'polite');
+    } catch {
+      announce('Failed to copy. Please select and copy manually.', 'assertive');
     }
   };
 

@@ -25,6 +25,7 @@ export default function DailyRewardsWidget() {
   const [canClaim, setCanClaim] = useState(true);
   const [claiming, setClaiming] = useState(false);
   const [claimed, setClaimed] = useState(false);
+  const [claimError, setClaimError] = useState<string | null>(null);
   const [streak] = useState(7);
   const [nextRewardTime, setNextRewardTime] = useState<number | null>(null);
   const [weekCheckIns, setWeekCheckIns] = useState<DailyCheckIn[]>([]);
@@ -65,6 +66,7 @@ export default function DailyRewardsWidget() {
 
   const claimDailyCheckIn = async () => {
     setClaiming(true);
+    setClaimError(null);
     try {
       await new Promise((resolve) => setTimeout(resolve, 800));
       localStorage.setItem('lastDailyClaim', Date.now().toString());
@@ -72,8 +74,8 @@ export default function DailyRewardsWidget() {
       setClaimed(true);
       playSuccess();
       setNextRewardTime(Date.now() + 24 * 60 * 60 * 1000);
-    } catch (error) {
-      console.error('Failed to claim daily check-in:', error);
+    } catch {
+      setClaimError('Check-in failed. Please try again.');
     } finally {
       setClaiming(false);
     }
@@ -195,6 +197,16 @@ export default function DailyRewardsWidget() {
 
       {/* Streak info */}
       <AnimatePresence>
+        {claimError && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0 }}
+            className="text-center text-sm text-red-400 font-medium mb-2"
+          >
+            {claimError}
+          </motion.div>
+        )}
         {claimed && (
           <motion.div
             initial={{ opacity: 0, y: 10 }}

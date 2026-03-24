@@ -254,7 +254,6 @@ export function GasPriceOptimizer({
         }
       }
     } catch (err) {
-      console.error('Failed to fetch gas prices:', err);
       setError(err instanceof Error ? err.message : 'Failed to fetch gas prices');
     } finally {
       setIsLoading(false);

@@ -79,7 +79,6 @@ export function TokenApproval({
       });
     } catch (error) {
       onError?.(error as Error);
-      console.error('Approval failed:', error);
     }
   };
 

@@ -47,9 +47,8 @@ export default function StealthAddressUI() {
       const addr = await getReceiveAddress();
       setReceiveAddress(addr);
       toast.success('New stealth address generated');
-    } catch (err) {
+    } catch {
       toast.error('Failed to generate address');
-      console.error(err);
     }
   }, [getReceiveAddress]);
 
@@ -63,9 +62,8 @@ export default function StealthAddressUI() {
       const addr = await createPaymentAddress(recipientMetaAddress);
       setGeneratedAddress(addr);
       toast.success('Payment address created');
-    } catch (err) {
+    } catch {
       toast.error('Invalid meta-address or failed to create address');
-      console.error(err);
     }
   }, [recipientMetaAddress, createPaymentAddress]);
 
