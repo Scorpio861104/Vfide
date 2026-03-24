@@ -198,8 +198,10 @@ describe('EcosystemVault Contract', () => {
   describe('Auto-swap configuration — phased deployment', () => {
     const ROUTER = '0xRouter000000000000000000000000000000000' as Address;
     const USDC = '0xUSDC0000000000000000000000000000000000000' as Address;
-    // 0.95 USDC (6 decimals) per 1 VFIDE (18 decimals): 950000 * 1e12
-    const MIN_OUTPUT = BigInt(950_000) * BigInt(1_000_000_000_000);
+    // Conversion factor: USDC has 6 decimals, VFIDE has 18 decimals → scale by 1e12
+    const USDC_TO_VFIDE_DECIMAL_FACTOR = BigInt(1_000_000_000_000); // 1e12
+    // Floor price: 0.95 USDC (6 decimals) per 1 VFIDE (18 decimals)
+    const MIN_OUTPUT = BigInt(950_000) * USDC_TO_VFIDE_DECIMAL_FACTOR;
 
     it('should return zero minOutputPerVfide before it is set', async () => {
       mockContractRead.mockResolvedValueOnce(BigInt(0));

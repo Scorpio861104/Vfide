@@ -1253,6 +1253,13 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
 
         // Use admin-set floor price — no self-referential router quote, no sandwich vector.
         uint256 minAmountOut = vfideAmount * minOutputPerVfide / 1e18;
+        // Guard against precision underflow: if vfideAmount is too small relative to 1e18,
+        // the integer division above truncates to 0, leaving no slippage floor.
+        // Treat this as an unswappable amount and fall back to VFIDE payment.
+        if (minAmountOut == 0) {
+            if (!rewardToken.approve(swapRouter, 0)) revert ECO_RevokeFailed();
+            return 0;
+        }
 
         try ISwapRouter(swapRouter).swapExactTokensForTokens(
             vfideAmount,
@@ -1420,6 +1427,9 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
                     totalCouncilPaid += distributed;
                     lastCouncilDistribution = block.timestamp;
                     for (uint256 i = 0; i < memberCount; i++) {
+                        // Mirrors the behaviour of the explicit distributeCouncilRewards():
+                        // if a single member's transfer reverts (e.g. token blacklist), the
+                        // entire council block reverts and the keeper will retry next call.
                         if (members[i] != address(0)) rewardToken.safeTransfer(members[i], perMember);
                     }
                     emit CouncilDistributed(distributed, uint8(memberCount), perMember);
