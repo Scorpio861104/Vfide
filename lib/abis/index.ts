@@ -11,6 +11,7 @@ import UserVaultLiteABI from './UserVaultLite.json'
 import UserVaultABI from './UserVault.json'
 import CardBoundVaultABI from './CardBoundVault.json'
 import SeerABI from './Seer.json'
+import SeerAutonomousABI from './SeerAutonomous.json'
 import VFIDEBadgeNFTABI from './VFIDEBadgeNFT.json'
 import DAOABI from './DAO.json'
 import DAOTimelockABI from './DAOTimelock.json'
@@ -61,6 +62,7 @@ validateABI(UserVaultLiteABI, 'UserVaultLite');
 validateABI(UserVaultABI, 'UserVault');
 validateABI(CardBoundVaultABI, 'CardBoundVault');
 validateABI(SeerABI, 'Seer');
+validateABI(SeerAutonomousABI, 'SeerAutonomous');
 validateABI(VFIDEBadgeNFTABI, 'VFIDEBadgeNFT');
 validateABI(DAOABI, 'DAO');
 validateABI(DAOTimelockABI, 'DAOTimelock');
@@ -106,6 +108,7 @@ export {
   UserVaultABI,
   CardBoundVaultABI,
   SeerABI,
+  SeerAutonomousABI,
   VFIDEBadgeNFTABI,
   DAOABI,
   DAOTimelockABI,

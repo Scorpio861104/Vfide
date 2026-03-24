@@ -1,0 +1,641 @@
+[
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_dao",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_seer",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_ledger",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "constructor"
+  },
+  {
+    "inputs": [],
+    "name": "SA_ChallengeWindowPassed",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "SA_InvalidSensitivity",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "SA_InvalidThresholds",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "SA_NoChallenge",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "SA_NotAuthorized",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "SA_RateLimited",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "string",
+        "name": "reason",
+        "type": "string"
+      }
+    ],
+    "name": "SA_Restricted",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "SA_Zero",
+    "type": "error"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "oldDAO",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "newDAO",
+        "type": "address"
+      }
+    ],
+    "name": "DAOSet",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "by",
+        "type": "address"
+      }
+    ],
+    "name": "DAOMaxAutonomyProfileApplied",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "vault",
+        "type": "address"
+      }
+    ],
+    "name": "EcosystemVaultSet",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint8",
+        "name": "tasksBitmask",
+        "type": "uint8"
+      }
+    ],
+    "name": "EcosystemTasksTriggered",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "subject",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint8",
+        "name": "action",
+        "type": "uint8"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint8",
+        "name": "result",
+        "type": "uint8"
+      }
+    ],
+    "name": "AutoEnforced",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "subject",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint8",
+        "name": "pattern",
+        "type": "uint8"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint8",
+        "name": "severity",
+        "type": "uint8"
+      }
+    ],
+    "name": "PatternDetected",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "subject",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint8",
+        "name": "level",
+        "type": "uint8"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint64",
+        "name": "duration",
+        "type": "uint64"
+      },
+      {
+        "indexed": false,
+        "internalType": "string",
+        "name": "reason",
+        "type": "string"
+      }
+    ],
+    "name": "RestrictionApplied",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "subject",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint8",
+        "name": "oldLevel",
+        "type": "uint8"
+      }
+    ],
+    "name": "RestrictionLifted",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "subject",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "string",
+        "name": "reason",
+        "type": "string"
+      }
+    ],
+    "name": "DAOOverride",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "operator",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "bool",
+        "name": "authorized",
+        "type": "bool"
+      }
+    ],
+    "name": "OperatorSet",
+    "type": "event"
+  },
+  {
+    "inputs": [],
+    "name": "ADJUSTMENT_INTERVAL",
+    "outputs": [
+      {
+        "internalType": "uint64",
+        "name": "",
+        "type": "uint64"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "WINDOW_DURATION",
+    "outputs": [
+      {
+        "internalType": "uint64",
+        "name": "",
+        "type": "uint64"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "dao",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "ecosystemVault",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_vault",
+        "type": "address"
+      }
+    ],
+    "name": "setEcosystemVault",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "monitorEcosystemVault",
+    "outputs": [
+      {
+        "internalType": "uint8",
+        "name": "ranTasks",
+        "type": "uint8"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "subject",
+        "type": "address"
+      },
+      {
+        "internalType": "uint8",
+        "name": "action",
+        "type": "uint8"
+      },
+      {
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      }
+    ],
+    "name": "beforeAction",
+    "outputs": [
+      {
+        "internalType": "uint8",
+        "name": "",
+        "type": "uint8"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "subject",
+        "type": "address"
+      },
+      {
+        "internalType": "uint16",
+        "name": "oldScore",
+        "type": "uint16"
+      },
+      {
+        "internalType": "uint16",
+        "name": "newScore",
+        "type": "uint16"
+      }
+    ],
+    "name": "onScoreChange",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "subject",
+        "type": "address"
+      },
+      {
+        "internalType": "uint8",
+        "name": "action",
+        "type": "uint8"
+      }
+    ],
+    "name": "canPerformAction",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "allowed",
+        "type": "bool"
+      },
+      {
+        "internalType": "string",
+        "name": "reason",
+        "type": "string"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "subject",
+        "type": "address"
+      }
+    ],
+    "name": "getRestrictionInfo",
+    "outputs": [
+      {
+        "internalType": "uint8",
+        "name": "level",
+        "type": "uint8"
+      },
+      {
+        "internalType": "uint64",
+        "name": "expiry",
+        "type": "uint64"
+      },
+      {
+        "internalType": "bool",
+        "name": "overridden",
+        "type": "bool"
+      },
+      {
+        "internalType": "string",
+        "name": "reason",
+        "type": "string"
+      },
+      {
+        "internalType": "uint16",
+        "name": "violationScore",
+        "type": "uint16"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "subject",
+        "type": "address"
+      }
+    ],
+    "name": "getViolationScore",
+    "outputs": [
+      {
+        "internalType": "uint16",
+        "name": "",
+        "type": "uint16"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getNetworkHealth",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "totalActions",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "totalViolations",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "violationRate",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint16",
+        "name": "currentSensitivity",
+        "type": "uint16"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_newDAO",
+        "type": "address"
+      }
+    ],
+    "name": "setDAO",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_seer",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_ledger",
+        "type": "address"
+      }
+    ],
+    "name": "setModules",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "operator",
+        "type": "address"
+      },
+      {
+        "internalType": "bool",
+        "name": "authorized",
+        "type": "bool"
+      }
+    ],
+    "name": "setOperator",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_oracle",
+        "type": "address"
+      }
+    ],
+    "name": "setRiskOracle",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "subject",
+        "type": "address"
+      },
+      {
+        "internalType": "string",
+        "name": "reason",
+        "type": "string"
+      }
+    ],
+    "name": "daoOverride",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "subject",
+        "type": "address"
+      }
+    ],
+    "name": "daoRemoveOverride",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "daoApplyMaxAutonomyProfile",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "string",
+        "name": "note",
+        "type": "string"
+      }
+    ],
+    "name": "challengeRestriction",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "subject",
+        "type": "address"
+      },
+      {
+        "internalType": "bool",
+        "name": "uphold",
+        "type": "bool"
+      }
+    ],
+    "name": "resolveChallenge",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  }
+]

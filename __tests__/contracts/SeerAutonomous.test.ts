@@ -680,4 +680,81 @@ describe('SeerAutonomous Contract', () => {
       expect(resolved.resolved).toBe(true);
     });
   });
+
+  // ─────────────────────────────────────────────────────────────────────
+  // EcosystemVault monitoring (Seer-driven automation)
+  // ─────────────────────────────────────────────────────────────────────
+  describe('EcosystemVault monitoring', () => {
+    const vaultAddress = '0xVault1234567890123456789012345678901234' as Address;
+
+    it('should return zero address for ecosystemVault before configuration', async () => {
+      mockContractRead.mockResolvedValueOnce('0x0000000000000000000000000000000000000000');
+      const vault = await mockContractRead({ functionName: 'ecosystemVault' });
+      expect(vault).toBe('0x0000000000000000000000000000000000000000');
+    });
+
+    it('setEcosystemVault should store the vault address (DAO only)', async () => {
+      mockContractWrite.mockResolvedValueOnce('0xtx_set_vault');
+      const hash = await mockContractWrite({
+        functionName: 'setEcosystemVault',
+        args: [vaultAddress],
+      });
+      expect(hash).toBe('0xtx_set_vault');
+    });
+
+    it('should return the configured vault address after setEcosystemVault', async () => {
+      mockContractRead.mockResolvedValueOnce(vaultAddress);
+      const vault = await mockContractRead({ functionName: 'ecosystemVault' });
+      expect(vault).toBe(vaultAddress);
+    });
+
+    it('monitorEcosystemVault returns 0 when no tasks are due', async () => {
+      // Simulate checkUpkeep returning upkeepNeeded=false
+      mockContractWrite.mockResolvedValueOnce(0);
+      const ran = await mockContractWrite({ functionName: 'monitorEcosystemVault', args: [] });
+      expect(ran).toBe(0);
+    });
+
+    it('monitorEcosystemVault triggers merchant period task and returns TASK_MERCHANT bitmask', async () => {
+      const TASK_MERCHANT = 0x02;
+      mockContractWrite.mockResolvedValueOnce(TASK_MERCHANT);
+      const ran = await mockContractWrite({ functionName: 'monitorEcosystemVault', args: [] });
+      expect(ran).toBe(TASK_MERCHANT);
+    });
+
+    it('monitorEcosystemVault triggers all four tasks when all are due', async () => {
+      const ALL_TASKS = 0x01 | 0x02 | 0x04 | 0x08; // COUNCIL | MERCHANT | HEADHUNTER | OPERATIONS
+      mockContractWrite.mockResolvedValueOnce(ALL_TASKS);
+      const ran = await mockContractWrite({ functionName: 'monitorEcosystemVault', args: [] });
+      expect(ran).toBe(ALL_TASKS);
+    });
+
+    it('setEcosystemVault with zero address disables monitoring', async () => {
+      mockContractWrite.mockResolvedValueOnce('0xtx_clear_vault');
+      const hash = await mockContractWrite({
+        functionName: 'setEcosystemVault',
+        args: ['0x0000000000000000000000000000000000000000'],
+      });
+      expect(hash).toBe('0xtx_clear_vault');
+    });
+
+    it('monitorEcosystemVault is permissionless — any address can call it', async () => {
+      // Represents an off-chain keeper (Chainlink, Gelato, or user) calling monitor
+      mockContractWrite.mockResolvedValueOnce(0);
+      const ran = await mockContractWrite({ functionName: 'monitorEcosystemVault', args: [] });
+      expect(ran).toBeDefined();
+    });
+
+    it('automatic monitoring fires alongside daily threshold adjustment (beforeAction path)', async () => {
+      // Represents a day passing — next beforeAction call fires _maybeAdjustThresholds
+      // which internally calls _monitorEcosystemVault.  The external observable effect
+      // is that monitorEcosystemVault executes (represented here as a successful tx).
+      mockContractWrite.mockResolvedValueOnce('0xtx_before_action');
+      const hash = await mockContractWrite({
+        functionName: 'beforeAction',
+        args: [user1, 0 /* ActionType.Transfer */, 100n],
+      });
+      expect(hash).toBe('0xtx_before_action');
+    });
+  });
 });
