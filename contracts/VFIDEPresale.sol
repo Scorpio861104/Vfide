@@ -60,6 +60,11 @@ error PS_TierSoldOut();
 error PS_TierLockRequired();
 error PS_GeoBlocked();
 
+/// @dev Minimal interface to call burn() on VFIDEToken, which hard-reduces totalSupply.
+interface IVFIDEBurnable {
+    function burn(uint256 amount) external;
+}
+
 contract VFIDEPresale is ReentrancyGuard {
     // Events
     event Purchase(address indexed buyer, uint256 indexed lockPeriod, uint256 ethSpent, uint256 baseTokens, uint256 bonusTokens, uint256 purchaseIndex);
@@ -68,6 +73,7 @@ contract VFIDEPresale is ReentrancyGuard {
     event ClaimImmediate(address indexed user, uint256 amount);
     event ClaimLocked(address indexed user, uint256 amount);
     event PresaleFinalized(uint256 totalUsdRaised, uint256 totalTokensSold);
+    event UnsoldBurned(uint256 amount);
     event EmergencyPause(bool paused);
     event SaleExtended(uint256 newEndTime, uint256 additionalDays);
     event RefundsEnabled(uint256 timestamp);
@@ -435,17 +441,19 @@ contract VFIDEPresale is ReentrancyGuard {
     }
     
     /**
-     * @notice Withdraw unsold tokens after finalization (goes to treasury/burn)
-     * @dev Can only be called after finalization, sends unsold presale allocation
+     * @notice Burn any remaining unsold tokens after finalization.
+     * @dev Safety-net for edge cases where finalizePresale() did not already burn.
+     *      Calls VFIDEToken.burn() so totalSupply is permanently reduced and
+     *      exchange trackers (CoinGecko, CMC, DEX Screener) reflect the real figure.
      */
-    function withdrawUnsold(address recipient) external onlyDAO {
+    function withdrawUnsold() external onlyDAO {
         require(finalized, "Not finalized");
-        require(recipient != address(0), "Invalid recipient");
         require(!unsoldWithdrawn, "Unsold already handled");
         
         uint256 unsold = TOTAL_SUPPLY - totalSold;
         if (unsold > 0) {
-            vfideToken.safeTransfer(recipient, unsold);
+            IVFIDEBurnable(address(vfideToken)).burn(unsold);
+            emit UnsoldBurned(unsold);
         }
         unsoldWithdrawn = true;
     }
@@ -1045,7 +1053,8 @@ contract VFIDEPresale is ReentrancyGuard {
     /**
      * @notice Finalize presale
      * @dev LP tokens come from Treasury, not presale contract.
-     *      Unsold tokens are returned to treasury.
+     *      Unsold tokens are hard-burned (totalSupply reduced) so exchange trackers
+     *      (CoinGecko, CoinMarketCap, DEX Screener) reflect the real circulating supply.
      *      HOWEY FIX: The dynamic listing price calculation has been removed.
      *      Secondary-market price is determined by the market, not set by the team.
      *      lpVfideAmount is left at 0 — the DAO manages LP seeding separately.
@@ -1061,11 +1070,13 @@ contract VFIDEPresale is ReentrancyGuard {
         
         finalized = true;
         
-        // Return any unsold tokens to treasury
+        // Burn any unsold tokens — hard-reduces totalSupply so exchange trackers
+        // (CoinGecko, CoinMarketCap, DEX Screener) reflect the real circulating figure.
         if (!unsoldWithdrawn) {
             uint256 unsold = vfideToken.balanceOf(address(this)) - _pendingClaims();
             if (unsold > 0) {
-                vfideToken.safeTransfer(TREASURY, unsold);
+                IVFIDEBurnable(address(vfideToken)).burn(unsold);
+                emit UnsoldBurned(unsold);
             }
             unsoldWithdrawn = true;
         }

@@ -20,7 +20,7 @@ interface IVFIDEPresaleOCP {
     function setPaused(bool _paused) external;
     function extendSale(uint256 additionalDays) external;
     function setMaxGasPrice(uint256 newMaxGasPrice) external;
-    function withdrawUnsold(address recipient) external;
+    function withdrawUnsold() external;
     function finalizePresale() external;
     function enableRefunds() external;
     function emergencyWithdraw() external;
@@ -373,8 +373,8 @@ contract OwnerControlPanel {
         return keccak256(abi.encode("presale_setMaxGasPrice", newMaxGasPrice));
     }
 
-    function actionId_presale_withdrawUnsold(address recipient) private pure returns (bytes32) {
-        return keccak256(abi.encode("presale_withdrawUnsold", recipient));
+    function actionId_presale_withdrawUnsold() private pure returns (bytes32) {
+        return keccak256(abi.encode("presale_withdrawUnsold"));
     }
 
     function actionId_presale_finalize() private pure returns (bytes32) {
@@ -839,11 +839,14 @@ contract OwnerControlPanel {
     }
     
     /**
-     * @notice Withdraw unsold tokens + excess allocation to treasury
+     * @notice Burn unsold presale tokens, permanently reducing totalSupply.
+     * @dev Calls VFIDEPresale.withdrawUnsold() which invokes VFIDEToken.burn() so that
+     *      exchange trackers (CoinGecko, CoinMarketCap, DEX Screener) reflect the
+     *      real circulating supply immediately after the burn is confirmed on-chain.
      */
-    function presale_withdrawUnsold(address recipient) external onlyOwner {
-        _consumeQueuedAction(actionId_presale_withdrawUnsold(recipient));
-        presale.withdrawUnsold(recipient);
+    function presale_withdrawUnsold() external onlyOwner {
+        _consumeQueuedAction(actionId_presale_withdrawUnsold());
+        presale.withdrawUnsold();
     }
     
     /**

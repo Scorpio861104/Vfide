@@ -327,6 +327,22 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
         return true;
     }
 
+    /// @notice Permanently remove tokens from circulation, reducing totalSupply.
+    /// @dev Hard-burns the caller's own tokens by decrementing their balance and totalSupply,
+    ///      then emitting Transfer(..., address(0), ...).  Exchange trackers (CoinGecko,
+    ///      CoinMarketCap, DEX Screener) read totalSupply() directly — this ensures
+    ///      unsold presale tokens vanish from that figure the moment they are destroyed.
+    function burn(uint256 amount) external nonReentrant {
+        if (amount == 0) revert VF_ZERO();
+        if (isBlacklisted[msg.sender] || isFrozen[msg.sender]) revert VF_SanctionedAddress();
+        uint256 bal = _balances[msg.sender];
+        if (bal < amount) revert VF_InsufficientBalance();
+        unchecked { _balances[msg.sender] = bal - amount; }
+        totalSupply -= amount;
+        emit Transfer(msg.sender, address(0), amount);
+        _logEv(msg.sender, "burn", amount, "");
+    }
+
     // ─────────────────────────── Admin / Modules
 
     function setVaultHub(address hub) external onlyOwner {
