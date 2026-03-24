@@ -247,4 +247,88 @@ describe('EcosystemVault Contract', () => {
       expect(hash).toBe('0xtxhash_disable_swap');
     });
   });
+
+  // ─────────────────────────────────────────────────────────────────────
+  // Chainlink Automation / keeper interface
+  // ─────────────────────────────────────────────────────────────────────
+  describe('Scheduled task automation (checkUpkeep / performUpkeep / runScheduledTasks)', () => {
+    // Bitmask constants mirrored from the contract
+    const TASK_COUNCIL    = 0x01;
+    const TASK_MERCHANT   = 0x02;
+    const TASK_HEADHUNTER = 0x04;
+    const TASK_OPERATIONS = 0x08;
+
+    it('should expose TASK_* bitmask constants', async () => {
+      mockContractRead.mockResolvedValueOnce(TASK_COUNCIL);
+      expect(await mockContractRead({ functionName: 'TASK_COUNCIL' })).toBe(TASK_COUNCIL);
+
+      mockContractRead.mockResolvedValueOnce(TASK_MERCHANT);
+      expect(await mockContractRead({ functionName: 'TASK_MERCHANT' })).toBe(TASK_MERCHANT);
+
+      mockContractRead.mockResolvedValueOnce(TASK_HEADHUNTER);
+      expect(await mockContractRead({ functionName: 'TASK_HEADHUNTER' })).toBe(TASK_HEADHUNTER);
+
+      mockContractRead.mockResolvedValueOnce(TASK_OPERATIONS);
+      expect(await mockContractRead({ functionName: 'TASK_OPERATIONS' })).toBe(TASK_OPERATIONS);
+    });
+
+    it('checkUpkeep returns upkeepNeeded=false when no tasks are due', async () => {
+      mockContractRead.mockResolvedValueOnce({ upkeepNeeded: false, performData: '0x00' });
+      const result = await mockContractRead({ functionName: 'checkUpkeep', args: ['0x'] });
+      expect(result.upkeepNeeded).toBe(false);
+    });
+
+    it('checkUpkeep returns upkeepNeeded=true and a non-zero bitmask when a task is due', async () => {
+      // Simulate merchant period being due (bit 1)
+      mockContractRead.mockResolvedValueOnce({ upkeepNeeded: true, performData: '0x02' });
+      const result = await mockContractRead({ functionName: 'checkUpkeep', args: ['0x'] });
+      expect(result.upkeepNeeded).toBe(true);
+      expect(result.performData).toBe('0x02');
+    });
+
+    it('checkUpkeep returns all-set bitmask when all four tasks are due', async () => {
+      const allTasks = TASK_COUNCIL | TASK_MERCHANT | TASK_HEADHUNTER | TASK_OPERATIONS;
+      mockContractRead.mockResolvedValueOnce({ upkeepNeeded: true, performData: `0x0${allTasks.toString(16)}` });
+      const result = await mockContractRead({ functionName: 'checkUpkeep', args: ['0x'] });
+      expect(result.upkeepNeeded).toBe(true);
+    });
+
+    it('runScheduledTasks returns 0 when no tasks are due', async () => {
+      mockContractWrite.mockResolvedValueOnce(0);
+      const ran = await mockContractWrite({ functionName: 'runScheduledTasks', args: [] });
+      expect(ran).toBe(0);
+    });
+
+    it('runScheduledTasks returns TASK_MERCHANT bitmask when merchant period is due', async () => {
+      mockContractWrite.mockResolvedValueOnce(TASK_MERCHANT);
+      const ran = await mockContractWrite({ functionName: 'runScheduledTasks', args: [] });
+      expect(ran).toBe(TASK_MERCHANT);
+    });
+
+    it('runScheduledTasks returns combined bitmask for all due tasks', async () => {
+      const allTasks = TASK_COUNCIL | TASK_MERCHANT | TASK_HEADHUNTER | TASK_OPERATIONS;
+      mockContractWrite.mockResolvedValueOnce(allTasks);
+      const ran = await mockContractWrite({ functionName: 'runScheduledTasks', args: [] });
+      expect(ran).toBe(allTasks);
+    });
+
+    it('performUpkeep accepts bitmask from checkUpkeep and executes pending tasks', async () => {
+      // Keeper bot flow: read checkUpkeep, pass performData to performUpkeep
+      mockContractWrite.mockResolvedValueOnce('0xtxhash_perform_upkeep');
+      const hash = await mockContractWrite({
+        functionName: 'performUpkeep',
+        args: [new Uint8Array([TASK_MERCHANT])],
+      });
+      expect(hash).toBe('0xtxhash_perform_upkeep');
+    });
+
+    it('performUpkeep is a no-op (does not revert) when bitmask tasks are not yet due', async () => {
+      mockContractWrite.mockResolvedValueOnce('0xtxhash_noop');
+      const hash = await mockContractWrite({
+        functionName: 'performUpkeep',
+        args: [new Uint8Array([TASK_COUNCIL])],  // council not due yet
+      });
+      expect(hash).toBe('0xtxhash_noop');
+    });
+  });
 });

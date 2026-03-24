@@ -1350,6 +1350,136 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
     }
 
     // ═══════════════════════════════════════════════════════════════════════
+    //             CHAINLINK AUTOMATION / KEEPER INTERFACE
+    // ═══════════════════════════════════════════════════════════════════════
+
+    /// @dev Bitmask values for scheduled tasks returned/consumed by checkUpkeep/performUpkeep.
+    uint8 public constant TASK_COUNCIL    = 0x01;
+    uint8 public constant TASK_MERCHANT   = 0x02;
+    uint8 public constant TASK_HEADHUNTER = 0x04;
+    uint8 public constant TASK_OPERATIONS = 0x08;
+
+    event ScheduledTasksRan(uint8 tasksBitmask);
+
+    /**
+     * @notice Chainlink Automation-compatible upkeep check.  Also usable by any off-chain keeper.
+     * @dev Returns upkeepNeeded=true when at least one scheduled task is ready to run.
+     *      performData is an ABI-encoded uint8 bitmask of the pending tasks.
+     */
+    function checkUpkeep(bytes calldata) external view returns (bool upkeepNeeded, bytes memory performData) {
+        uint8 pending;
+        if (block.timestamp >= lastCouncilDistribution + MONTH && address(councilManager) != address(0))
+            pending |= TASK_COUNCIL;
+        if (block.timestamp >= lastMerchantDistribution + MONTH)
+            pending |= TASK_MERCHANT;
+        if (block.timestamp >= yearStartTime + (QUARTER * currentQuarter))
+            pending |= TASK_HEADHUNTER;
+        if (operationsWallet != address(0) && block.timestamp >= lastOperationsWithdrawal + operationsWithdrawalCooldown)
+            pending |= TASK_OPERATIONS;
+        return (pending != 0, abi.encode(pending));
+    }
+
+    /**
+     * @notice Chainlink Automation performUpkeep entrypoint.
+     * @dev Accepts the bitmask produced by checkUpkeep.  Time guards are re-validated
+     *      on-chain before each task to guard against stale performData.
+     */
+    function performUpkeep(bytes calldata performData) external nonReentrant {
+        uint8 tasks = abi.decode(performData, (uint8));
+        _runScheduledTasks(tasks);
+    }
+
+    /**
+     * @notice Run all currently-due scheduled tasks in a single transaction.
+     * @dev Permissionless keeper entrypoint — any address may call this.
+     *      Time guards on each task prevent premature execution.
+     *      Returns a bitmask of the tasks that were actually executed.
+     */
+    function runScheduledTasks() external nonReentrant returns (uint8 ran) {
+        return _runScheduledTasks(TASK_COUNCIL | TASK_MERCHANT | TASK_HEADHUNTER | TASK_OPERATIONS);
+    }
+
+    /**
+     * @notice Internal: execute the subset of scheduled tasks indicated by `tasks`.
+     */
+    function _runScheduledTasks(uint8 tasks) internal returns (uint8 ran) {
+        _allocateIncoming();
+
+        // ── Council distribution (monthly) ───────────────────────────────────
+        if ((tasks & TASK_COUNCIL) != 0
+            && block.timestamp >= lastCouncilDistribution + MONTH
+            && address(councilManager) != address(0)) {
+            uint256 amount = councilPool;
+            if (amount >= 1) {
+                address[] memory members = councilManager.getActiveMembers();
+                uint256 memberCount = members.length;
+                if (memberCount > 0 && memberCount <= type(uint8).max) {
+                    uint256 perMember = amount / memberCount;
+                    councilPool = amount % memberCount;
+                    uint256 distributed = amount - councilPool;
+                    totalCouncilPaid += distributed;
+                    lastCouncilDistribution = block.timestamp;
+                    for (uint256 i = 0; i < memberCount; i++) {
+                        if (members[i] != address(0)) rewardToken.safeTransfer(members[i], perMember);
+                    }
+                    emit CouncilDistributed(distributed, uint8(memberCount), perMember);
+                    ran |= TASK_COUNCIL;
+                }
+            } else {
+                // Advance the timer even when the pool is empty so the keeper
+                // does not fire on every block until funds arrive.
+                lastCouncilDistribution = block.timestamp;
+                ran |= TASK_COUNCIL;
+            }
+        }
+
+        // ── Merchant period end (monthly) ────────────────────────────────────
+        if ((tasks & TASK_MERCHANT) != 0
+            && block.timestamp >= lastMerchantDistribution + MONTH) {
+            merchantPeriodPoolSnapshot[currentMerchantPeriod] = merchantPool;
+            merchantPeriodEnded[currentMerchantPeriod] = true;
+            merchantPool = 0;
+            emit MerchantPeriodEnded(currentMerchantPeriod, merchantPeriodPoolSnapshot[currentMerchantPeriod]);
+            lastMerchantDistribution = block.timestamp;
+            currentMerchantPeriod++;
+            ran |= TASK_MERCHANT;
+        }
+
+        // ── Headhunter quarter end (quarterly) ───────────────────────────────
+        if ((tasks & TASK_HEADHUNTER) != 0
+            && block.timestamp >= yearStartTime + (QUARTER * currentQuarter)) {
+            quarterPoolSnapshot[currentYear][currentQuarter] = headhunterPool;
+            quarterEnded[currentYear][currentQuarter] = true;
+            headhunterPool = 0;
+            emit HeadhunterQuarterEnded(currentYear, currentQuarter, quarterPoolSnapshot[currentYear][currentQuarter]);
+            if (currentQuarter == 4) {
+                currentQuarter = 1;
+                currentYear++;
+                yearStartTime = block.timestamp;
+            } else {
+                currentQuarter++;
+            }
+            lastQuarterPayout = block.timestamp;
+            ran |= TASK_HEADHUNTER;
+        }
+
+        // ── Operations withdrawal (cooldown-gated) ───────────────────────────
+        if ((tasks & TASK_OPERATIONS) != 0
+            && operationsWallet != address(0)
+            && block.timestamp >= lastOperationsWithdrawal + operationsWithdrawalCooldown
+            && operationsPool > 0) {
+            uint256 amount = operationsPool;
+            operationsPool = 0;
+            lastOperationsWithdrawal = block.timestamp;
+            rewardToken.safeTransfer(operationsWallet, amount);
+            emit OperationsWithdrawal(operationsWallet, amount);
+            ran |= TASK_OPERATIONS;
+        }
+
+        emit ScheduledTasksRan(ran);
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════
     //                         VIEW FUNCTIONS
     // ═══════════════════════════════════════════════════════════════════════
     
