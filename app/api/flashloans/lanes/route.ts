@@ -3,6 +3,7 @@ import { requireAuth } from '@/lib/auth/middleware'
 import { withRateLimit } from '@/lib/auth/rateLimit'
 import { createLane, listLanesForAddress } from '@/lib/flashloans/repository'
 import { sanitizeTerms, validateSimulationState, type LoanSimulationState, type LoanTerms } from '@/lib/flashloans/engine'
+import { logger } from '@/lib/logger';
 
 const ADDRESS_RE = /^0x[a-fA-F0-9]{40}$/
 
@@ -40,7 +41,7 @@ export async function GET(request: NextRequest) {
     const lanes = await listLanesForAddress(authAddress, limit)
     return NextResponse.json({ lanes })
   } catch (error) {
-    console.error('[Flashloans GET] Error:', error)
+    logger.error('[Flashloans GET] Error:', error)
     return NextResponse.json({ error: 'Failed to list lanes' }, { status: 500 })
   }
 }
@@ -109,7 +110,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ lane }, { status: 201 })
   } catch (error) {
-    console.error('[Flashloans POST] Error:', error)
+    logger.error('[Flashloans POST] Error:', error)
     return NextResponse.json({ error: 'Failed to create lane' }, { status: 500 })
   }
 }

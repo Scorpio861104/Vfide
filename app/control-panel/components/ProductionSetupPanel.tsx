@@ -36,8 +36,8 @@ export function ProductionSetupPanel() {
         abi: OWNER_CONTROL_PANEL_ABI,
         functionName: 'production_setupSafeDefaults',
       });
-    } catch (err) {
-      console.error('Transaction failed:', err);
+    } catch {
+      // Error is surfaced via wagmi error state in TransactionStatus
     } finally {
       setLoading(false);
     }
@@ -54,8 +54,8 @@ export function ProductionSetupPanel() {
         functionName: 'production_setupWithAutoSwap',
         args: [dexRouter as `0x${string}`, usdc as `0x${string}`],
       });
-    } catch (err) {
-      console.error('Transaction failed:', err);
+    } catch {
+      // Error is surfaced via wagmi error state in TransactionStatus
     } finally {
       setLoading(false);
     }

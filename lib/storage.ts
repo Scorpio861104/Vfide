@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 /**
  * Safe localStorage operations with error handling
  * Prevents crashes in private browsing mode, quota exceeded errors, and SecurityError
@@ -22,7 +23,7 @@ export function safeGetItem(key: string, defaultValue = ''): string {
     return localStorage.getItem(key) ?? defaultValue;
   } catch (error) {
     // SecurityError in private browsing, QuotaExceededError, etc.
-    console.warn(`localStorage.getItem failed for key "${key}":`, error);
+    logger.warn(`localStorage.getItem failed for key "${key}":`, error);
     return defaultValue;
   }
 }
@@ -42,7 +43,7 @@ export function safeSetItem(key: string, value: string): boolean {
     return true;
   } catch (error) {
     // QuotaExceededError, SecurityError in private browsing, etc.
-    console.warn(`localStorage.setItem failed for key "${key}":`, error);
+    logger.warn(`localStorage.setItem failed for key "${key}":`, error);
     return false;
   }
 }
@@ -60,7 +61,7 @@ export function safeRemoveItem(key: string): boolean {
     localStorage.removeItem(key);
     return true;
   } catch (error) {
-    console.warn(`localStorage.removeItem failed for key "${key}":`, error);
+    logger.warn(`localStorage.removeItem failed for key "${key}":`, error);
     return false;
   }
 }
@@ -83,7 +84,7 @@ export function safeGetJSON<T>(key: string, defaultValue: T): T {
     return JSON.parse(item) as T;
   } catch (error) {
     // JSON parse error, SecurityError, etc.
-    console.warn(`localStorage.getItem/JSON.parse failed for key "${key}":`, error);
+    logger.warn(`localStorage.getItem/JSON.parse failed for key "${key}":`, error);
     return defaultValue;
   }
 }
@@ -103,7 +104,7 @@ export function safeSetJSON<T>(key: string, value: T): boolean {
     return true;
   } catch (error) {
     // JSON stringify error, QuotaExceededError, SecurityError, etc.
-    console.warn(`localStorage.setItem/JSON.stringify failed for key "${key}":`, error);
+    logger.warn(`localStorage.setItem/JSON.stringify failed for key "${key}":`, error);
     return false;
   }
 }
@@ -120,7 +121,7 @@ export function safeClear(): boolean {
     localStorage.clear();
     return true;
   } catch (error) {
-    console.warn('localStorage.clear failed:', error);
+    logger.warn('localStorage.clear failed:', error);
     return false;
   }
 }

@@ -25,6 +25,7 @@ export function DataExport<T = Record<string, unknown>>({
 }: DataExportProps<T>) {
   const [isExporting, setIsExporting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [exportError, setExportError] = useState<string | null>(null);
   const [options, setOptions] = useState<ExportOptions>({
     format: 'csv',
     includeHeaders: true,
@@ -76,6 +77,7 @@ export function DataExport<T = Record<string, unknown>>({
 
   const handleExport = async () => {
     setIsExporting(true);
+    setExportError(null);
 
     try {
       if (onExport) {
@@ -108,7 +110,7 @@ export function DataExport<T = Record<string, unknown>>({
       playSuccess();
       setTimeout(() => setShowSuccess(false), 2000);
     } catch (error) {
-      console.error('Export failed:', error);
+      setExportError(error instanceof Error ? error.message : 'Export failed. Please try again.');
     } finally {
       setIsExporting(false);
     }
@@ -237,6 +239,20 @@ export function DataExport<T = Record<string, unknown>>({
           )}
         </motion.button>
       </motion.div>
+
+      {/* Export Error */}
+      <AnimatePresence>
+        {exportError && (
+          <motion.div
+            className="fixed bottom-8 right-8 bg-red-600 text-white px-6 py-3 rounded-lg shadow-lg flex items-center gap-2 max-w-sm"
+            initial={{ opacity: 0, y: 50, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 50, scale: 0.9 }}
+          >
+            {exportError}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Success Toast */}
       <AnimatePresence>

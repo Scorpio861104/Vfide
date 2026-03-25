@@ -6,6 +6,7 @@
 
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { useParams } from 'next/navigation';
+import Image from 'next/image';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -321,7 +322,7 @@ export default function ProductDetailPage() {
                     }`}
                   >
                     {img.url ? (
-                      <img src={img.url} alt="" className="w-full h-full object-cover" />
+                      <Image src={img.url} alt="" width={64} height={64} className="w-full h-full object-cover" />
                     ) : (
                       <div className="w-full h-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
                         <Package className="w-4 h-4 text-gray-400" />
@@ -609,7 +610,9 @@ export default function ProductDetailPage() {
                     whileHover={{ y: -2 }}
                   >
                     {rp.images?.[0]?.url ? (
-                      <img src={rp.images[0].url} alt="" className="w-full aspect-square object-cover" />
+                      <div className="relative w-full aspect-square overflow-hidden">
+                        <Image src={rp.images[0].url} alt="" fill className="object-cover" sizes="128px" />
+                      </div>
                     ) : (
                       <div className="w-full aspect-square bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
                         <Package className="w-6 h-6 text-gray-400" />
@@ -639,7 +642,9 @@ export default function ProductDetailPage() {
                 <Link key={rv.id} href={`/product/${rv.id}`} className="flex-shrink-0 w-32">
                   <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden hover:shadow-sm transition-shadow">
                     {rv.image ? (
-                      <img src={rv.image} alt="" className="w-full aspect-square object-cover" />
+                      <div className="relative w-full aspect-square overflow-hidden">
+                        <Image src={rv.image} alt="" fill className="object-cover" sizes="128px" />
+                      </div>
                     ) : (
                       <div className="w-full aspect-square bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
                         <Package className="w-5 h-5 text-gray-400" />

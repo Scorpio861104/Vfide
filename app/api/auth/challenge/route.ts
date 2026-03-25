@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { isAddress } from 'viem';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { createSiweChallenge, getRequestIp } from '@/lib/security/siweChallenge';
+import { logger } from '@/lib/logger';
 
 function toPositiveInteger(value: unknown, fallback: number): number {
   if (typeof value === 'number' && Number.isInteger(value) && value > 0) return value;
@@ -53,7 +54,7 @@ export async function POST(request: NextRequest) {
       expiresAt: challenge.expiresAt,
     });
   } catch (error) {
-    console.error('[Auth Challenge] Error:', error);
+    logger.error('[Auth Challenge] Error:', error);
     return NextResponse.json({ error: 'Failed to create auth challenge' }, { status: 500 });
   }
 }

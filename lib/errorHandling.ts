@@ -4,6 +4,7 @@
  */
 
 import { BaseError, ContractFunctionRevertedError } from 'viem';
+import { logger } from '@/lib/logger';
 
 export interface ParsedError {
   message: string;
@@ -184,7 +185,7 @@ export async function withErrorHandling<T>(
  */
 export function logError(context: string, error: unknown): void {
   if (process.env.NODE_ENV === 'development') {
-    console.error(`[${context}]`, error);
+    logger.error(`[${context}]`, error);
   }
 }
 

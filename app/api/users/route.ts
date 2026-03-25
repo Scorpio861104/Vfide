@@ -13,6 +13,7 @@ import {
   parseFieldsParam,
 } from '@/lib/optimization/apiOptimization';
 import { trackApiCallSimple } from '@/lib/optimization/monitoring';
+import { logger } from '@/lib/logger';
 
 interface User {
   id: string;
@@ -125,7 +126,7 @@ export async function GET(request: NextRequest) {
     return addCacheHeaders(response, { maxAge: 30, sMaxAge: 60, staleWhileRevalidate: 120 });
   } catch (error: unknown) {
     trackApiCallSimple('/api/users', 'GET', 500, Date.now() - startTime);
-    console.error('Error fetching users:', error);
+    logger.error('Error fetching users:', error);
     return NextResponse.json(
       { error: 'Failed to fetch users', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
@@ -261,7 +262,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ user });
   } catch (error: unknown) {
-    console.error('Error creating/updating user:', error);
+    logger.error('Error creating/updating user:', error);
     return NextResponse.json(
       { error: 'Failed to create/update user', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }

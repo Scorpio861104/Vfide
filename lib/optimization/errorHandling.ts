@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 /**
  * Error Handling Enhancements
  * 
@@ -270,7 +271,7 @@ export async function withFallback<T>(
     return await fn();
   } catch (error) {
     if (options.logError) {
-      console.error('Operation failed, using fallback:', error);
+      logger.error('Operation failed, using fallback:', error);
     }
     return fallback;
   }

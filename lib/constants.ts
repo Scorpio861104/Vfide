@@ -117,13 +117,16 @@ export const DEFAULT_PAYROLL_TOPUP = '5000';
 // ========================================
 
 /**
- * Presale tier prices in USD (from VFIDEPresale.sol)
+ * Presale price in USD (from VFIDEPresale.sol — HOWEY FIX: flat pricing)
  * 
  * Supply breakdown:
- * - Tier 0 (Founding): $0.03 per VFIDE, 10M cap — 180-day lock required
+ * - Tier 0 (Founding): $0.05 per VFIDE, 10M cap — 180-day lock required
  * - Tier 1 (Oath): $0.05 per VFIDE, 10M cap — 90-day lock required
- * - Tier 2 (Public): $0.07 per VFIDE, 15M cap — optional lock
+ * - Tier 2 (Public): $0.05 per VFIDE, 15M cap — optional lock
  * - Total: 35M base tokens
+ * 
+ * All tiers share the same TOKEN_PRICE. Tiers differentiate access windows
+ * and lock requirements only — there is no price advantage for early buyers.
  * 
  * Lock periods (no bonus tokens — locking reflects commitment, not investment return):
  * - 180-day lock: 10% immediate, 90% locked
@@ -131,15 +134,15 @@ export const DEFAULT_PAYROLL_TOPUP = '5000';
  * - No lock: 100% immediate
  */
 export const PRESALE_PRICES = {
-  FOUNDING: 0.03,  // Tier 0: $0.03 per VFIDE
-  OATH: 0.05,      // Tier 1: $0.05 per VFIDE
-  PUBLIC: 0.07,    // Tier 2: $0.07 per VFIDE
+  FOUNDING: 0.05,  // Tier 0: $0.05 per VFIDE (flat)
+  OATH: 0.05,      // Tier 1: $0.05 per VFIDE (flat)
+  PUBLIC: 0.05,    // Tier 2: $0.05 per VFIDE (flat)
 } as const;
 
 export const PRESALE_CAPS = {
-  FOUNDING: 10_000_000,  // 10M tokens at $0.03
-  OATH: 10_000_000,      // 10M tokens at $0.05
-  PUBLIC: 15_000_000,    // 15M tokens at $0.07
+  FOUNDING: 10_000_000,  // 10M max supply in founding (vault-holder) access window
+  OATH: 10_000_000,      // 10M max supply in oath (general early) access window
+  PUBLIC: 15_000_000,    // 15M max supply in public access window
 } as const;
 
 /**

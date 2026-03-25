@@ -2,9 +2,11 @@
 
 import { AnimatePresence, motion } from "framer-motion";
 import { Book, ChevronRight, Droplets, Globe, HelpCircle, Shield, Star, Store, Vote, Wallet, X } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useChainId } from "wagmi";
 import { isTestnetChainId } from "@/lib/chains";
+import { WIZARD_ENABLED_KEY, TOUR_COMPLETED_KEY, BEGINNER_COMPLETED_KEY } from "@/components/onboarding/OnboardingManager";
+import { GuardianWizard } from "@/components/onboarding/GuardianWizard";
 
 interface HelpTopic {
   id: string;
@@ -197,8 +199,35 @@ const helpTopics: HelpTopic[] = [
 export function HelpCenter() {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedTopic, setSelectedTopic] = useState<HelpTopic | null>(null);
+  const [wizardEnabled, setWizardEnabled] = useState(true);
+  const [showGuardianWizard, setShowGuardianWizard] = useState(false);
   const chainId = useChainId();
   const isTestnet = chainId ? isTestnetChainId(chainId) : false;
+
+  // Read wizard enabled state from localStorage (after mount to avoid SSR mismatch)
+  useEffect(() => {
+    setWizardEnabled(localStorage.getItem(WIZARD_ENABLED_KEY) !== "false");
+  }, [isOpen]);
+
+  const handleToggleWizard = () => {
+    interface WindowWithWizard extends Window {
+      enableVFIDEWizard?: () => void;
+      disableVFIDEWizard?: () => void;
+    }
+    const win = window as WindowWithWizard;
+    if (wizardEnabled) {
+      localStorage.setItem(WIZARD_ENABLED_KEY, "false");
+      setWizardEnabled(false);
+      win.disableVFIDEWizard?.();
+    } else {
+      localStorage.removeItem(WIZARD_ENABLED_KEY);
+      localStorage.removeItem(TOUR_COMPLETED_KEY);
+      localStorage.removeItem(BEGINNER_COMPLETED_KEY);
+      setWizardEnabled(true);
+      win.enableVFIDEWizard?.();
+      setIsOpen(false);
+    }
+  };
 
   return (
     <>
@@ -314,6 +343,16 @@ export function HelpCenter() {
                           className="w-full px-4 py-2 bg-zinc-900 border border-zinc-700 hover:border-cyan-400 rounded-lg text-zinc-100 text-sm text-left transition-all"
                         >
                           🎓 Restart Platform Tour
+                        </button>
+                        <button
+                          onClick={handleToggleWizard}
+                          className={`w-full px-4 py-2 bg-zinc-900 border rounded-lg text-sm text-left transition-all ${
+                            wizardEnabled
+                              ? "border-zinc-700 hover:border-red-400 text-zinc-100"
+                              : "border-emerald-500/50 hover:border-emerald-400 text-emerald-400"
+                          }`}
+                        >
+                          {wizardEnabled ? "🔕 Disable Onboarding Wizard" : "🔔 Enable Onboarding Wizard"}
                         </button>
                         <a
                           href="/seer-service"

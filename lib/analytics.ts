@@ -7,6 +7,7 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
+import { logger } from '@/lib/logger';
 
 // ============================================================================
 // Types & Interfaces
@@ -509,7 +510,7 @@ export function useMetricSummary(
         setSummary(data.summary);
       }
     } catch (err) {
-      console.error('Failed to load metric summary:', err);
+      logger.error('Failed to load metric summary:', err);
     } finally {
       setLoading(false);
     }
@@ -547,7 +548,7 @@ export function useTimeSeriesData(
         setData(result.data);
       }
     } catch (err) {
-      console.error('Failed to load time series data:', err);
+      logger.error('Failed to load time series data:', err);
     } finally {
       setLoading(false);
     }
@@ -582,7 +583,7 @@ export function usePlatformAnalytics(
         setAnalytics(data.analytics);
       }
     } catch (err) {
-      console.error('Failed to load platform analytics:', err);
+      logger.error('Failed to load platform analytics:', err);
     } finally {
       setLoading(false);
     }

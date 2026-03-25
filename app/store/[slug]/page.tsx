@@ -6,6 +6,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
+import Image from 'next/image';
 import Link from 'next/link';
 import { Star, MapPin, Package, ShoppingCart, ArrowLeft, ExternalLink, Globe, X, Plus, Minus, Search } from 'lucide-react';
 
@@ -166,7 +167,7 @@ export default function StorefrontPage() {
       {/* Banner */}
       <div className="relative h-48 md:h-64" style={{ backgroundColor: themeColor }}>
         {profile.banner_url && (
-          <img src={profile.banner_url} alt="" className="absolute inset-0 w-full h-full object-cover" />
+          <Image src={profile.banner_url} alt="" fill className="object-cover" sizes="100vw" />
         )}
         <div className="absolute inset-0 bg-black/20" />
         <Link
@@ -307,7 +308,9 @@ export default function StorefrontPage() {
                       whileHover={{ y: -2 }}
                     >
                       {product.images?.[0] ? (
-                        <img src={product.images[0]} alt="" className="w-full h-40 object-cover" />
+                        <div className="relative w-full h-40 overflow-hidden">
+                          <Image src={product.images[0]} alt="" fill className="object-cover" sizes="(max-width: 768px) 50vw, 25vw" />
+                        </div>
                       ) : (
                         <div className="w-full h-40 bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
                           <Package className="w-8 h-8 text-gray-400" />

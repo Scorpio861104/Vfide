@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 import { isAdmin, requireAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
+import { logger } from '@/lib/logger';
 
 // Constants
 const MAX_ACTIVITIES_LIMIT = 100;
@@ -209,7 +210,7 @@ export async function GET(request: NextRequest) {
       offset,
     });
   } catch (error) {
-    console.error('[Activities GET API] Error:', error);
+    logger.error('[Activities GET API] Error:', error);
 
     if (isDatabaseUnavailableError(error)) {
       return NextResponse.json({
@@ -371,7 +372,7 @@ export async function POST(request: NextRequest) {
       activity: result.rows[0],
     }, { status: 201 });
   } catch (error) {
-    console.error('[Activities POST API] Error:', error);
+    logger.error('[Activities POST API] Error:', error);
     return NextResponse.json(
       { error: 'Failed to create activity' },
       { status: 500 }

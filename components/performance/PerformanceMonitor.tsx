@@ -18,6 +18,30 @@ import {
 
 // ==================== TYPES ====================
 
+/**
+ * Network Information API — non-standard, Chrome-only.
+ * https://developer.mozilla.org/en-US/docs/Web/API/NetworkInformation
+ */
+interface NetworkInformation {
+  downlink: number;
+  effectiveType: string;
+  rtt: number;
+  saveData: boolean;
+  addEventListener(type: 'change', listener: () => void): void;
+  removeEventListener(type: 'change', listener: () => void): void;
+}
+
+/** LayoutShift performance entry — not yet in lib.dom.d.ts for all TS versions. */
+interface LayoutShiftEntry extends PerformanceEntry {
+  hadRecentInput: boolean;
+  value: number;
+}
+
+/** PerformanceEventTiming entry for First Input Delay. */
+interface PerformanceEventTimingEntry extends PerformanceEntry {
+  processingStart: number;
+}
+
 interface PerformanceMetrics {
   fps: number;
   memory: {
@@ -128,7 +152,7 @@ export function usePerformanceMetrics(sampleInterval = 1000) {
   // Network info
   useEffect(() => {
     const updateNetworkInfo = () => {
-      const connection = (navigator as any)?.connection;
+      const connection = (navigator as Navigator & { connection?: NetworkInformation })?.connection;
       if (connection) {
         setMetrics((prev) => ({
           ...prev,
@@ -143,10 +167,10 @@ export function usePerformanceMetrics(sampleInterval = 1000) {
     };
 
     updateNetworkInfo();
-    (navigator as any)?.connection?.addEventListener('change', updateNetworkInfo);
+    (navigator as Navigator & { connection?: NetworkInformation })?.connection?.addEventListener('change', updateNetworkInfo);
 
     return () => {
-      (navigator as any)?.connection?.removeEventListener('change', updateNetworkInfo);
+      (navigator as Navigator & { connection?: NetworkInformation })?.connection?.removeEventListener('change', updateNetworkInfo);
     };
   }, []);
 
@@ -196,7 +220,7 @@ export function usePerformanceMetrics(sampleInterval = 1000) {
     let clsValue = 0;
     const clsObserver = new PerformanceObserver((list) => {
       for (const entry of list.getEntries()) {
-        const layoutShiftEntry = entry as any;
+        const layoutShiftEntry = entry as LayoutShiftEntry;
         if (!layoutShiftEntry.hadRecentInput) {
           clsValue += layoutShiftEntry.value;
           setMetrics((prev) => ({ ...prev, cls: Math.round(clsValue * 1000) / 1000 }));
@@ -213,7 +237,7 @@ export function usePerformanceMetrics(sampleInterval = 1000) {
     // FID Observer
     const fidObserver = new PerformanceObserver((list) => {
       for (const entry of list.getEntries()) {
-        const firstInputEntry = entry as any;
+        const firstInputEntry = entry as PerformanceEventTimingEntry;
         const fid = firstInputEntry.processingStart - entry.startTime;
         setMetrics((prev) => ({ ...prev, fid: Math.round(fid) }));
       }

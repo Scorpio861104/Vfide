@@ -8,6 +8,7 @@
 'use client';
 
 import { useState, useCallback, useEffect } from 'react';
+import { logger } from '@/lib/logger';
 
 // ============================================================================
 // Types
@@ -359,7 +360,7 @@ export function useCrossChain(userAddress: string | undefined) {
 
     getAggregatedBalances(userAddress)
       .then(setBalances)
-      .catch(console.error);
+      .catch((err: unknown) => logger.error('Failed to load aggregated balances', err instanceof Error ? err : new Error(String(err))));
   }, [userAddress]);
 
   const findOptimalRoutes = useCallback(async (request: TransferRequest) => {

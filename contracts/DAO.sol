@@ -441,8 +441,6 @@ contract DAO is ReentrancyGuard {
         _enforceSeerAction(msg.sender, 4, value, target); // GovernancePropose
     }
 
-    // function delegateVote(address delegate) external { ... } // Removed
-
     function vote(uint256 id, bool support) external nonReentrant {
         address voter = msg.sender;
         Proposal storage p = proposals[id];

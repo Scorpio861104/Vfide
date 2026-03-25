@@ -4,6 +4,7 @@ import { query } from '@/lib/db';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { requireAuth } from '@/lib/auth/middleware';
 import { getRequestCorrelationContext } from '@/lib/security/requestContext';
+import { logger } from '@/lib/logger';
 
 const DEFAULT_LOGS_LIMIT = 200;
 const MAX_LOGS_LIMIT = 1000;
@@ -238,7 +239,7 @@ async function maybeRunSecurityLogsCleanup(): Promise<void> {
        WHERE last_sent_at < NOW() - INTERVAL '7 days'`
     );
   } catch (error) {
-    console.warn('[Security Logs Cleanup] Failed:', error);
+    logger.warn('[Security Logs Cleanup] Failed:', error);
   }
 }
 
@@ -307,7 +308,7 @@ async function shouldDispatchCriticalAlert(params: {
     return { shouldDispatch: true, suppressedCount: 0 };
   } catch (error) {
     // Fail-open to avoid suppressing critical alerts due infra issues.
-    console.warn('[Security Logs Alert] Dedup check failed, dispatching alert:', error);
+    logger.warn('[Security Logs Alert] Dedup check failed, dispatching alert:', error);
     return { shouldDispatch: true, suppressedCount: 0 };
   }
 }
@@ -366,10 +367,10 @@ async function notifyCriticalSecurityLog(params: {
     });
 
     if (!response.ok) {
-      console.warn('[Security Logs Alert] Webhook returned non-success status', response.status);
+      logger.warn('[Security Logs Alert] Webhook returned non-success status', response.status);
     }
   } catch (error) {
-    console.warn('[Security Logs Alert] Webhook dispatch failed:', error);
+    logger.warn('[Security Logs Alert] Webhook dispatch failed:', error);
   } finally {
     clearTimeout(timeout);
   }
@@ -430,7 +431,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ logs: result.rows });
   } catch (error) {
-    console.error('[Security Logs GET] Error:', error);
+    logger.error('[Security Logs GET] Error:', error);
     return NextResponse.json({ error: 'Failed to fetch security logs' }, { status: 500 });
   }
 }
@@ -525,7 +526,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true, log: result.rows[0] });
   } catch (error) {
-    console.error('[Security Logs POST] Error:', error);
+    logger.error('[Security Logs POST] Error:', error);
     return NextResponse.json({ error: 'Failed to store security log' }, { status: 500 });
   }
 }
@@ -554,7 +555,7 @@ export async function DELETE(request: NextRequest) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('[Security Logs DELETE] Error:', error);
+    logger.error('[Security Logs DELETE] Error:', error);
     return NextResponse.json({ error: 'Failed to clear security logs' }, { status: 500 });
   }
 }

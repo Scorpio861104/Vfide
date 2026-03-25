@@ -6,6 +6,7 @@
  */
 
 import { useEffect, useRef } from 'react';
+import { logger } from '@/lib/logger';
 
 /**
  * Measure component render time
@@ -19,7 +20,7 @@ export function useRenderCount(componentName: string, logThreshold: number = 5) 
     const renderTime = Date.now() - startTime.current;
 
     if (renderCount.current >= logThreshold) {
-      console.log(
+      logger.info(
         `[Performance] ${componentName} rendered ${renderCount.current} times ` +
         `(avg: ${(renderTime / renderCount.current).toFixed(2)}ms per render)`
       );
@@ -53,7 +54,7 @@ export function useWhyDidYouUpdate(name: string, props: Record<string, unknown>)
       });
 
       if (Object.keys(changedProps).length > 0) {
-        console.log('[Performance]', name, 'props changed:', changedProps);
+        logger.info('[Performance]', { name, changedProps });
       }
     }
 
@@ -111,7 +112,7 @@ export function usePerformanceMark(label: string) {
       const duration = m?.duration || 0;
       
       if (duration > 16) {
-        console.warn(`[Performance] ${markName} took ${duration.toFixed(2)}ms`);
+        logger.warn(`[Performance] ${markName} took ${duration.toFixed(2)}ms`);
       }
       
       performance.clearMarks(markName);

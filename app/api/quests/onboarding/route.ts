@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getClient } from '@/lib/db';
 import { isAdmin, requireAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
+import { logger } from '@/lib/logger';
 
 const VALID_ONBOARDING_STEPS = new Set([
   'connectWallet',
@@ -115,7 +116,7 @@ export async function GET(request: NextRequest) {
       client.release();
     }
   } catch (error) {
-    console.error('Error fetching onboarding progress:', error);
+    logger.error('Error fetching onboarding progress:', error);
     return NextResponse.json(
       { error: 'Failed to fetch onboarding progress' },
       { status: 500 }
@@ -255,7 +256,7 @@ export async function PATCH(request: NextRequest) {
       client.release();
     }
   } catch (error) {
-    console.error('Error updating onboarding progress:', error);
+    logger.error('Error updating onboarding progress:', error);
     return NextResponse.json(
       { error: 'Failed to update onboarding progress' },
       { status: 500 }
@@ -387,7 +388,7 @@ export async function POST(request: NextRequest) {
       client.release();
     }
   } catch (error) {
-    console.error('Error claiming onboarding reward:', error);
+    logger.error('Error claiming onboarding reward:', error);
     return NextResponse.json(
       { error: 'Failed to claim onboarding reward' },
       { status: 500 }

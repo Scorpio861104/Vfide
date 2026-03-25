@@ -2,6 +2,8 @@
  * Error handling and retry logic for crypto operations
  */
 
+import { logger } from '@/lib/logger';
+
 export class CryptoError extends Error {
   constructor(
     message: string,
@@ -180,7 +182,7 @@ export async function withRetry<T>(
         onRetry(attempt, lastError);
       }
 
-      console.log(`Retry attempt ${attempt}/${retryConfig.maxAttempts} after ${delay}ms`);
+      logger.info(`Retry attempt ${attempt}/${retryConfig.maxAttempts} after ${delay}ms`);
 
       // Wait before retry
       await sleep(delay);
@@ -302,7 +304,7 @@ export function useCryptoError() {
 
       try {
         const result = await withRetry(fn, {}, (attempt, retryError) => {
-          console.log(`Retry attempt ${attempt}:`, retryError.message);
+          logger.info(`Retry attempt ${attempt}:`, { message: retryError.message });
         });
         return result;
       } catch (err: unknown) {
@@ -377,7 +379,7 @@ export class CircuitBreaker {
       // Open circuit if threshold reached
       if (this.failures >= this.threshold) {
         this.state = 'OPEN';
-        console.warn(`Circuit breaker opened after ${this.failures} failures`);
+        logger.warn(`Circuit breaker opened after ${this.failures} failures`);
       }
 
       throw error;

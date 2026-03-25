@@ -253,7 +253,7 @@ export default function DashboardPage() {
             <div className="absolute bottom-1/4 right-0 w-125 h-125 bg-purple-500/5 rounded-full blur-[100px]" />
           </div>
 
-        <section className="relative py-8 border-b border-white/5">
+        <section data-onboarding="dashboard" className="relative py-8 border-b border-white/5">
           <div className="container mx-auto px-3 sm:px-4">
             <motion.div 
               initial={{ opacity: 0, y: 20 }}
@@ -292,7 +292,7 @@ export default function DashboardPage() {
                     </a>
                   </motion.div>
                   
-                  <motion.div whileHover={{ scale: 1.05 }} className="px-4 py-2 bg-gradient-to-r from-cyan-500/20 to-cyan-500/5 border border-cyan-500/30 rounded-full">
+                  <motion.div whileHover={{ scale: 1.05 }} data-onboarding="proof-score" className="px-4 py-2 bg-gradient-to-r from-cyan-500/20 to-cyan-500/5 border border-cyan-500/30 rounded-full">
                     <span className="text-cyan-400 font-bold text-sm flex items-center gap-2">
                       <Zap size={14} />
                       ProofScore {proofscore}

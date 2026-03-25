@@ -93,7 +93,7 @@ export class PaymasterService {
           return { sponsored: false, reason: 'Unknown paymaster provider' };
       }
     } catch (error) {
-      console.error('Paymaster check failed:', error);
+      logger.error('Paymaster check failed:', error);
       return { 
         sponsored: false, 
         reason: error instanceof Error ? error.message : 'Sponsorship check failed' 
@@ -252,6 +252,7 @@ export function getPaymasterService(config?: PaymasterConfig): PaymasterService 
 
 import { useState, useEffect, useCallback } from 'react';
 import { useAccount, useChainId } from 'wagmi';
+import { logger } from '@/lib/logger';
 
 export interface UsePaymasterResult {
   /** Check if a transaction can be sponsored */

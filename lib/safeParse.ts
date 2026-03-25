@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 /**
  * Safe JSON parsing utilities to prevent application crashes from malformed JSON
  * Addresses Critical Issue #4: Wrap all JSON.parse in try-catch
@@ -30,8 +31,8 @@ export function safeJSONParse<T>(
     return parsed as T;
   } catch (error) {
     if (logErrors) {
-      console.warn('[SafeParse] JSON parse failed:', error);
-      console.warn('[SafeParse] Input:', jsonString?.substring(0, 100));
+      logger.warn('[SafeParse] JSON parse failed:', error);
+      logger.warn('[SafeParse] Input:', jsonString?.substring(0, 100));
     }
     return fallback;
   }

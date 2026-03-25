@@ -134,7 +134,7 @@ describe('3-Year Developer Vesting Schedule', () => {
   });
 
   describe('Full 3-Year Journey', () => {
-    it('should vest over exactly 36 months (from presale launch)', () => {
+    it('should vest over exactly 36 months (from vesting start)', () => {
       const completion = vestingSchedule.atCompletion();
       const duration = (completion - startTime) / 1000;
       const expectedDuration = 60 * TIME.DAY + 48 * 60 * TIME.DAY; // cliff + 48 milestones

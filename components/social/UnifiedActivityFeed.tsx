@@ -70,6 +70,47 @@ interface UnifiedActivityFeedProps {
 
 // ==================== COMPONENT ====================
 
+const SOCIAL_TYPES: ActivityType[] = ['post', 'comment', 'like'];
+const FINANCIAL_TYPES: ActivityType[] = [
+  'tip_sent', 'tip_received',
+  'content_purchased', 'content_sold',
+  'payment_sent', 'payment_received',
+];
+
+interface ApiActivity {
+  id: number;
+  activity_type: string;
+  title: string;
+  description: string;
+  data: Record<string, unknown>;
+  created_at: string;
+  user_address?: string;
+  user_username?: string;
+  user_avatar?: string;
+}
+
+function mapApiActivity(a: ApiActivity): UnifiedActivity {
+  const address = a.user_address ?? '';
+  return {
+    id: String(a.id),
+    type: a.activity_type as ActivityType,
+    timestamp: new Date(a.created_at),
+    actor: {
+      address,
+      name: a.user_username ?? (address ? `${address.slice(0, 6)}…${address.slice(-4)}` : 'Unknown'),
+      avatar: a.user_avatar ?? '',
+    },
+    content: a.description || a.title || undefined,
+    amount: typeof a.data?.amount === 'string' ? a.data.amount : undefined,
+    currency: a.data?.currency === 'ETH' || a.data?.currency === 'VFIDE' ? a.data.currency : undefined,
+    metadata: {
+      txHash: typeof a.data?.txHash === 'string' ? a.data.txHash : undefined,
+      contentType: typeof a.data?.contentType === 'string' ? a.data.contentType : undefined,
+      achievementName: typeof a.data?.achievementName === 'string' ? a.data.achievementName : undefined,
+    },
+  };
+}
+
 export function UnifiedActivityFeed({
   filter = 'all',
   limit = 20,
@@ -81,10 +122,20 @@ export function UnifiedActivityFeed({
   const loadActivities = useCallback(async () => {
     setIsLoading(true);
     try {
-      // TODO: fetch from /api/activity?user=${userAddress}&filter=${filter}&limit=${limit}
+      const params = new URLSearchParams({ limit: String(limit) });
+      const res = await fetch(`/api/activities?${params.toString()}`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const json = (await res.json()) as { activities: ApiActivity[] };
+      const mapped = (json.activities ?? []).map(mapApiActivity);
+      const filtered =
+        filter === 'social'
+          ? mapped.filter((a) => SOCIAL_TYPES.includes(a.type))
+          : filter === 'financial'
+          ? mapped.filter((a) => FINANCIAL_TYPES.includes(a.type))
+          : mapped;
+      setActivities(filtered);
+    } catch {
       setActivities([]);
-    } catch (error) {
-      console.error('Failed to load activities:', error);
     } finally {
       setIsLoading(false);
     }

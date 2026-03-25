@@ -11,6 +11,7 @@ import { randomBytes } from 'crypto';
 import { query } from '@/lib/db';
 import { requireAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
+import { logger } from '@/lib/logger';
 
 const ADDRESS_LIKE_REGEX = /^0x[a-fA-F0-9]{3,40}$/;
 
@@ -79,7 +80,7 @@ export async function GET(request: NextRequest) {
         },
       });
     } catch (error) {
-      console.error('[Digital GET] Error:', error);
+      logger.error('[Digital GET] Error:', error);
       return NextResponse.json({ error: 'Failed to process download' }, { status: 500 });
     }
   }
@@ -99,7 +100,7 @@ export async function GET(request: NextRequest) {
       );
       return NextResponse.json({ assets: result.rows });
     } catch (error) {
-      console.error('[Digital GET assets] Error:', error);
+      logger.error('[Digital GET assets] Error:', error);
       return NextResponse.json({ error: 'Failed to fetch assets' }, { status: 500 });
     }
   }
@@ -168,7 +169,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ asset: result.rows[0] }, { status: 201 });
   } catch (error) {
-    console.error('[Digital POST] Error:', error);
+    logger.error('[Digital POST] Error:', error);
     return NextResponse.json({ error: 'Failed to create digital asset' }, { status: 500 });
   }
 }
@@ -255,7 +256,7 @@ export async function PATCH(request: NextRequest) {
       download_url: `/api/merchant/digital?token=${downloadToken}`,
     });
   } catch (error) {
-    console.error('[Digital PATCH] Error:', error);
+    logger.error('[Digital PATCH] Error:', error);
     return NextResponse.json({ error: 'Failed to fulfill delivery' }, { status: 500 });
   }
 }

@@ -24,18 +24,20 @@ export default function WithdrawModal({
   const [token, setToken] = useState('VFIDE');
   const [toAddress, setToAddress] = useState('');
   const [loading, setLoading] = useState(false);
+  const [txError, setTxError] = useState<string | null>(null);
 
   const handleWithdraw = async () => {
     if (!amount || safeParseFloat(amount, 0) <= 0 || !toAddress) return;
 
     setLoading(true);
+    setTxError(null);
     try {
       await onWithdraw?.(amount, token, toAddress);
       setAmount('');
       setToAddress('');
       onClose();
     } catch (error) {
-      console.error('Withdraw failed:', error);
+      setTxError(error instanceof Error ? error.message : 'Withdrawal failed. Please check your balance and network connection, then try again.');
     } finally {
       setLoading(false);
     }
@@ -159,6 +161,13 @@ export default function WithdrawModal({
               </div>
             </div>
           </div>
+
+          {/* Error Display */}
+          {txError && (
+            <div className="p-3 bg-red-900/20 border border-red-500/40 rounded-lg mb-6 text-sm text-red-300">
+              {txError}
+            </div>
+          )}
 
           {/* Action Buttons */}
           <div className="grid grid-cols-2 gap-3">

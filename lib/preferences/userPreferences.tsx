@@ -8,6 +8,7 @@
  */
 
 import { useState, useEffect, useCallback, useMemo, createContext, useContext, type ReactNode } from 'react';
+import { logger } from '@/lib/logger';
 
 // ==================== TYPES ====================
 
@@ -146,7 +147,7 @@ function loadFromStorage(): UserPreferences {
     // Merge with defaults to handle new preferences
     return { ...DEFAULT_PREFERENCES, ...stored.preferences };
   } catch (e) {
-    console.error('Failed to load preferences:', e);
+    logger.error('Failed to load preferences:', e);
     return DEFAULT_PREFERENCES;
   }
 }
@@ -162,7 +163,7 @@ function saveToStorage(preferences: UserPreferences): void {
     };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(stored));
   } catch (e) {
-    console.error('Failed to save preferences:', e);
+    logger.error('Failed to save preferences:', e);
   }
 }
 

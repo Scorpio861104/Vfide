@@ -7,6 +7,7 @@ import { safeParseFloat } from '@/lib/validation';
 import { Check, Copy, Droplets, ExternalLink } from 'lucide-react';
 import { useState } from 'react';
 import { useAccount, useBalance, useChainId } from 'wagmi';
+import { formatUnits } from 'viem';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTransactionSounds } from '@/hooks/useTransactionSounds';
 
@@ -25,7 +26,7 @@ export function FaucetButton() {
   // Only show on testnet chains when connected
   if (!isConnected || !chainId || !isTestnetChainId(chainId)) return null;
 
-  const ethBalance = balance ? safeParseFloat(balance.formatted, 0) : 0;
+  const ethBalance = balance ? safeParseFloat(formatUnits(balance.value, balance.decimals), 0) : 0;
   const isLowBalance = ethBalance < 0.01;
 
   const copyAddress = () => {
@@ -48,6 +49,7 @@ export function FaucetButton() {
           setIsOpen(!isOpen);
           playNotification();
         }}
+        data-onboarding="faucet-button"
         className={`flex items-center gap-1.5 px-2 sm:px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-colors ${
           isLowBalance
             ? 'bg-amber-500/20 text-amber-400 hover:bg-amber-500/30'

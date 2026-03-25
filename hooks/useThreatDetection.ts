@@ -13,6 +13,7 @@ import {
   generateDeviceFingerprint,
   DEFAULT_RATE_LIMITS
 } from '@/config/security-advanced';
+import { logger } from '@/lib/logger';
 
 export interface UseThreatDetectionResult {
   threatLevel: ThreatLevel;
@@ -52,7 +53,7 @@ const loadThreats = (): ThreatAlert[] => {
       detected: new Date(threat.detected)
     }));
   } catch (error) {
-    console.error('Failed to load threats', error);
+    logger.error('Failed to load threats', error);
     return [];
   }
 };

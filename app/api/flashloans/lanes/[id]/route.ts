@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth } from '@/lib/auth/middleware'
 import { withRateLimit } from '@/lib/auth/rateLimit'
 import { getLaneById, getLaneEvents } from '@/lib/flashloans/repository'
+import { logger } from '@/lib/logger';
 
 const ADDRESS_RE = /^0x[a-fA-F0-9]{40}$/
 
@@ -58,7 +59,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     const events = await getLaneEvents(laneId, 100)
     return NextResponse.json({ lane, events })
   } catch (error) {
-    console.error('[Flashloans GET lane] Error:', error)
+    logger.error('[Flashloans GET lane] Error:', error)
     return NextResponse.json({ error: 'Failed to fetch lane' }, { status: 500 })
   }
 }

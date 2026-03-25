@@ -2,6 +2,7 @@ import { type ClassValue, clsx } from "clsx"
 import { twMerge } from "tailwind-merge"
 import { isAddress, getAddress } from "viem"
 import { ZERO_ADDRESS, ETH_ADDRESS_REGEX, ETH_ADDRESS_LENGTH } from "./constants"
+import { logger } from '@/lib/logger';
 
 /**
  * Merge Tailwind CSS classes
@@ -336,17 +337,17 @@ export function timeUntil(futureDate: Date): string {
 export const devLog = {
   error: (message: string, ...args: unknown[]) => {
     if (process.env.NODE_ENV !== 'production') {
-      console.error(`[DEV] ${message}`, ...args);
+      logger.error(`[DEV] ${message}`, ...args);
     }
   },
   warn: (message: string, ...args: unknown[]) => {
     if (process.env.NODE_ENV !== 'production') {
-      console.warn(`[DEV] ${message}`, ...args);
+      logger.warn(`[DEV] ${message}`, ...args);
     }
   },
   log: (message: string, ...args: unknown[]) => {
     if (process.env.NODE_ENV !== 'production') {
-      console.log(`[DEV] ${message}`, ...args);
+      logger.info(`[DEV] ${message}`, ...args);
     }
   },
 };

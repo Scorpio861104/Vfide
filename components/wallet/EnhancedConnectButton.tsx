@@ -92,7 +92,6 @@ function useNetworkStatus() {
   const validateAndSwitchChain = (targetChainId: number) => {
     const supportedIds = [8453, 137, 324, 84532, 80002, 300];
     if (!supportedIds.includes(targetChainId)) {
-      console.warn(`Unsupported chain ID: ${targetChainId}`);
       showToast('Unsupported network', 'error', 3000);
       return;
     }

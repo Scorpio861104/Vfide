@@ -22,7 +22,17 @@
   },
   {
     "inputs": [],
+    "name": "ECO_AlreadyCancelled",
+    "type": "error"
+  },
+  {
+    "inputs": [],
     "name": "ECO_AlreadyClaimed",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "ECO_AlreadyExecuted",
     "type": "error"
   },
   {
@@ -32,7 +42,22 @@
   },
   {
     "inputs": [],
+    "name": "ECO_CouncilBelowMinimum",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "ECO_HeadhunterBelowMinimum",
+    "type": "error"
+  },
+  {
+    "inputs": [],
     "name": "ECO_InsufficientFunds",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "ECO_MerchantBelowMinimum",
     "type": "error"
   },
   {
@@ -47,7 +72,17 @@
   },
   {
     "inputs": [],
+    "name": "ECO_RevokeFailed",
+    "type": "error"
+  },
+  {
+    "inputs": [],
     "name": "ECO_RewardsNotAvailable",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "ECO_TimelockNotPassed",
     "type": "error"
   },
   {
@@ -79,6 +114,12 @@
         "indexed": false,
         "internalType": "uint16",
         "name": "headhunterBps",
+        "type": "uint16"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint16",
+        "name": "operationsBps",
         "type": "uint16"
       }
     ],
@@ -370,6 +411,19 @@
     "anonymous": false,
     "inputs": [
       {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "minOutput",
+        "type": "uint256"
+      }
+    ],
+    "name": "MinOutputPerVfideSet",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
         "indexed": true,
         "internalType": "address",
         "name": "wallet",
@@ -608,12 +662,6 @@
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "vfideAmount",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
         "name": "stableAmount",
         "type": "uint256"
       },
@@ -650,6 +698,19 @@
     "anonymous": false,
     "inputs": [
       {
+        "indexed": false,
+        "internalType": "uint8",
+        "name": "tasksBitmask",
+        "type": "uint8"
+      }
+    ],
+    "name": "ScheduledTasksRan",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
         "indexed": true,
         "internalType": "address",
         "name": "oldSeer",
@@ -663,6 +724,69 @@
       }
     ],
     "name": "SeerUpdated",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "token",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "from",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      }
+    ],
+    "name": "StablecoinDeposited",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "bool",
+        "name": "enabled",
+        "type": "bool"
+      }
+    ],
+    "name": "StablecoinOnlyModeSet",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "token",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "recipient",
+        "type": "address"
+      }
+    ],
+    "name": "StablecoinReserveWithdrawn",
     "type": "event"
   },
   {
@@ -1000,6 +1124,58 @@
   },
   {
     "inputs": [],
+    "name": "TASK_COUNCIL",
+    "outputs": [
+      {
+        "internalType": "uint8",
+        "name": "",
+        "type": "uint8"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "TASK_HEADHUNTER",
+    "outputs": [
+      {
+        "internalType": "uint8",
+        "name": "",
+        "type": "uint8"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "TASK_MERCHANT",
+    "outputs": [
+      {
+        "internalType": "uint8",
+        "name": "",
+        "type": "uint8"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "TASK_OPERATIONS",
+    "outputs": [
+      {
+        "internalType": "uint8",
+        "name": "",
+        "type": "uint8"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "TIER1_MULTIPLIER",
     "outputs": [
       {
@@ -1238,6 +1414,30 @@
     "name": "checkHeadhunterReward",
     "outputs": [],
     "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes",
+        "name": "",
+        "type": "bytes"
+      }
+    ],
+    "name": "checkUpkeep",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "upkeepNeeded",
+        "type": "bool"
+      },
+      {
+        "internalType": "bytes",
+        "name": "performData",
+        "type": "bytes"
+      }
+    ],
+    "stateMutability": "view",
     "type": "function"
   },
   {
@@ -1529,6 +1729,24 @@
       }
     ],
     "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "stablecoin",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      }
+    ],
+    "name": "depositStablecoinReserve",
+    "outputs": [],
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
@@ -2221,6 +2439,19 @@
   },
   {
     "inputs": [],
+    "name": "minOutputPerVfide",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "operationsBps",
     "outputs": [
       {
@@ -2438,6 +2669,19 @@
       }
     ],
     "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes",
+        "name": "performData",
+        "type": "bytes"
+      }
+    ],
+    "name": "performUpkeep",
+    "outputs": [],
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
@@ -2959,6 +3203,19 @@
   },
   {
     "inputs": [],
+    "name": "runScheduledTasks",
+    "outputs": [
+      {
+        "internalType": "uint8",
+        "name": "ran",
+        "type": "uint8"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "seer",
     "outputs": [
       {
@@ -3040,6 +3297,19 @@
   {
     "inputs": [
       {
+        "internalType": "uint256",
+        "name": "_minOutput",
+        "type": "uint256"
+      }
+    ],
+    "name": "setMinOutputPerVfide",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "uint16",
         "name": "_operationsBps",
         "type": "uint16"
@@ -3100,6 +3370,51 @@
     "name": "setSeer",
     "outputs": [],
     "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bool",
+        "name": "_enabled",
+        "type": "bool"
+      }
+    ],
+    "name": "setStablecoinOnlyMode",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "stablecoinOnlyMode",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "name": "stablecoinReserves",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
     "type": "function"
   },
   {
@@ -3295,6 +3610,29 @@
       }
     ],
     "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "stablecoin",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "recipient",
+        "type": "address"
+      }
+    ],
+    "name": "withdrawStablecoinReserve",
+    "outputs": [],
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {

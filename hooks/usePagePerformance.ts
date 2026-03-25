@@ -7,6 +7,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { PagePerformance, ApiPerformance } from '@/config/performance-dashboard';
+import { logger } from '@/lib/logger';
 
 interface UsePagePerformanceResult {
   pageMetrics: PagePerformance | null;
@@ -45,7 +46,7 @@ export function usePagePerformance(): UsePagePerformanceResult {
         setApiMetrics(JSON.parse(apiStored));
       }
     } catch (e) {
-      console.error('Failed to load performance metrics:', e);
+      logger.error('Failed to load performance metrics:', e);
     }
   }, []);
 
@@ -110,7 +111,7 @@ export function usePagePerformance(): UsePagePerformanceResult {
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(metrics));
       } catch (e) {
-        console.error('Failed to save page metrics:', e);
+        logger.error('Failed to save page metrics:', e);
       }
     } catch (err) {
       setError(
@@ -158,7 +159,7 @@ export function usePagePerformance(): UsePagePerformanceResult {
           try {
             localStorage.setItem(API_STORAGE_KEY, JSON.stringify(updated));
           } catch (e) {
-            console.error('Failed to save API metrics:', e);
+            logger.error('Failed to save API metrics:', e);
           }
 
           return updated;
@@ -180,7 +181,7 @@ export function usePagePerformance(): UsePagePerformanceResult {
           try {
             localStorage.setItem(API_STORAGE_KEY, JSON.stringify(updated));
           } catch (e) {
-            console.error('Failed to save API metrics:', e);
+            logger.error('Failed to save API metrics:', e);
           }
 
           return updated;

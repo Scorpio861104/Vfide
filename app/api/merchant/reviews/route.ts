@@ -10,6 +10,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 import { requireAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
+import { logger } from '@/lib/logger';
 
 const ADDRESS_LIKE_REGEX = /^0x[a-fA-F0-9]{3,40}$/;
 
@@ -99,7 +100,7 @@ export async function GET(request: NextRequest) {
       pagination: { page, limit, total, pages: Math.ceil(total / limit) },
     });
   } catch (error) {
-    console.error('[Reviews GET] Error:', error);
+    logger.error('[Reviews GET] Error:', error);
     return NextResponse.json({ error: 'Failed to fetch reviews' }, { status: 500 });
   }
 }
@@ -182,7 +183,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ review: result.rows[0] }, { status: 201 });
   } catch (error) {
-    console.error('[Reviews POST] Error:', error);
+    logger.error('[Reviews POST] Error:', error);
     return NextResponse.json({ error: 'Failed to submit review' }, { status: 500 });
   }
 }
@@ -237,7 +238,7 @@ export async function PATCH(request: NextRequest) {
 
     return NextResponse.json({ review: result.rows[0] });
   } catch (error) {
-    console.error('[Reviews PATCH] Error:', error);
+    logger.error('[Reviews PATCH] Error:', error);
     return NextResponse.json({ error: 'Failed to update review' }, { status: 500 });
   }
 }

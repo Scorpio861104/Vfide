@@ -8,6 +8,7 @@
 'use client';
 
 import { useMemo, useState, useCallback, useEffect } from 'react';
+import { logger } from '@/lib/logger';
 
 // ============================================================================
 // Types
@@ -539,7 +540,7 @@ export function useFinancialIntelligence(userAddress: string | undefined) {
         if (storedHoldings) setHoldings(JSON.parse(storedHoldings));
         if (storedBudgets) setBudgets(JSON.parse(storedBudgets));
       } catch (error) {
-        console.error('Failed to load financial data:', error);
+        logger.error('Failed to load financial data:', error);
       } finally {
         setLoading(false);
       }

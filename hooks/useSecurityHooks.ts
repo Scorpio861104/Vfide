@@ -10,6 +10,7 @@ import {
   EmergencyBreakerABI,
   VaultHubABI 
 } from '../lib/abis'
+import { logger } from '@/lib/logger';
 
 // ============================================
 // SECURITY SYSTEM HOOKS - VFIDESecurity.sol
@@ -133,7 +134,7 @@ export function useSelfPanic() {
   const selfPanic = (durationHours: number = 24) => {
     if (!isAvailable) {
       if (process.env.NODE_ENV === 'development') {
-        console.error('PanicGuard contract not deployed - selfPanic unavailable')
+        logger.error('PanicGuard contract not deployed - selfPanic unavailable')
       }
       return
     }

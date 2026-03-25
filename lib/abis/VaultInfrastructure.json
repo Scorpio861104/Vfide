@@ -80,6 +80,19 @@
         "internalType": "address",
         "name": "vault",
         "type": "address"
+      }
+    ],
+    "name": "ForcedRecoveryCancelled",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "vault",
+        "type": "address"
       },
       {
         "indexed": true,
@@ -277,6 +290,19 @@
       }
     ],
     "name": "approveForceRecovery",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "vault",
+        "type": "address"
+      }
+    ],
+    "name": "cancelForceRecovery",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

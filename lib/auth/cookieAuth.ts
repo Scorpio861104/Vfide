@@ -7,6 +7,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
+import { logger } from '@/lib/logger';
 
 // Cookie configuration
 const AUTH_COOKIE_NAME = 'vfide_auth_token';
@@ -137,7 +138,7 @@ export function getLocalStorageToken(): string | null {
 
     return null;
   } catch (error) {
-    console.error('[Cookie Auth] Error reading localStorage:', error);
+    logger.error('[Cookie Auth] Error reading localStorage:', error as Error);
     return null;
   }
 }
@@ -160,9 +161,9 @@ export function clearLocalStorageTokens(): void {
       localStorage.removeItem(key);
     });
 
-    console.log('[Cookie Auth] LocalStorage tokens cleared after migration');
+    logger.info('[Cookie Auth] LocalStorage tokens cleared after migration');
   } catch (error) {
-    console.error('[Cookie Auth] Error clearing localStorage:', error);
+    logger.error('[Cookie Auth] Error clearing localStorage:', error as Error);
   }
 }
 
@@ -207,7 +208,7 @@ export async function migrateToHttpOnlyCookies(
 
     return response;
   } catch (error) {
-    console.error('[Cookie Auth] Migration error:', error);
+    logger.error('[Cookie Auth] Migration error:', error as Error);
     return NextResponse.json(
       { error: 'Failed to migrate tokens' },
       { status: 500 }

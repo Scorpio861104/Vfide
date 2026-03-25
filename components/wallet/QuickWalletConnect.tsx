@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAccount, useConnect, useDisconnect, useBalance, useChainId, useSwitchChain } from 'wagmi';
+import { formatUnits } from 'viem';
 import { Wallet, ChevronDown, Check, Copy, ExternalLink, LogOut, RefreshCw, Zap, Keyboard, Clock, WifiOff, QrCode } from 'lucide-react';
 import { baseSepolia, base } from 'wagmi/chains';
 import { IS_TESTNET } from '@/lib/chains';
@@ -44,7 +45,7 @@ export function QuickWalletConnect({ size = 'md' }: QuickWalletConnectProps) {
   const { data: balance } = useBalance({ address });
   const { pendingCount } = usePendingTransactions();
   const { playConnect, playClick } = useTransactionSounds();
-  const { isReconnecting: isAutoReconnecting, minutesUntilDisconnect } = useWalletPersistence();
+  const { isReconnecting: isAutoReconnecting, reconnectError, minutesUntilDisconnect } = useWalletPersistence();
   
   const [isOpen, setIsOpen] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -151,8 +152,7 @@ export function QuickWalletConnect({ size = 'md' }: QuickWalletConnectProps) {
           throw new Error('Copy command failed');
         }
       } catch {
-        // Silent fail for copy - user can still manually copy
-        console.warn('Failed to copy address');
+        // Silent fail for copy - user can still manually copy the address
       }
     }
   };
@@ -160,7 +160,7 @@ export function QuickWalletConnect({ size = 'md' }: QuickWalletConnectProps) {
   // Format balance
   const formatBalance = (bal: typeof balance) => {
     if (!bal) return '0.00';
-    const value = parseFloat(bal.formatted);
+    const value = parseFloat(formatUnits(bal.value, bal.decimals));
     if (value < 0.0001) return '< 0.0001';
     return value.toFixed(4);
   };
@@ -244,11 +244,25 @@ export function QuickWalletConnect({ size = 'md' }: QuickWalletConnectProps) {
           onClick={handleQuickConnect}
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
+          data-wallet-connect
+          data-onboarding="wallet-button"
           className={`flex items-center gap-2 ${sizeClasses[size]} bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-semibold rounded-xl hover:shadow-lg hover:shadow-cyan-500/25 transition-shadow`}
         >
           <Zap size={iconSizes[size]} />
           <span>Connect</span>
         </motion.button>
+
+        {/* Reconnection error hint */}
+        {reconnectError && (
+          <motion.p
+            initial={{ opacity: 0, y: 4 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="absolute top-full mt-1 left-0 right-0 text-center text-xs text-red-400"
+            role="alert"
+          >
+            Auto-reconnect failed
+          </motion.p>
+        )}
       </div>
     );
   }

@@ -21,7 +21,6 @@ export interface ChainConfig {
 export interface ChainContracts {
   vfideToken: string
   vaultHub: string
-  presale: string
   seer: string
 }
 
@@ -38,13 +37,11 @@ export const CHAINS: Record<SupportedChain, ChainConfig> = {
       mainnet: {
         vfideToken: '0x1111111111111111111111111111111111111111',
         vaultHub: '0x2222222222222222222222222222222222222222',
-        presale: '0x3333333333333333333333333333333333333333',
         seer: '0x4444444444444444444444444444444444444444',
       },
       testnet: {
         vfideToken: '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
         vaultHub: '0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
-        presale: '0xcccccccccccccccccccccccccccccccccccccccc',
         seer: '0xdddddddddddddddddddddddddddddddddddddddd',
       },
     },
@@ -64,13 +61,11 @@ export const CHAINS: Record<SupportedChain, ChainConfig> = {
       mainnet: {
         vfideToken: '0x5555555555555555555555555555555555555555',
         vaultHub: '0x6666666666666666666666666666666666666666',
-        presale: '0x7777777777777777777777777777777777777777',
         seer: '0x8888888888888888888888888888888888888888',
       },
       testnet: {
         vfideToken: '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
         vaultHub: '0xffffffffffffffffffffffffffffffffffffffff',
-        presale: '0x0000000000000000000000000000000000000001',
         seer: '0x0000000000000000000000000000000000000002',
       },
     },
@@ -89,13 +84,11 @@ export const CHAINS: Record<SupportedChain, ChainConfig> = {
       mainnet: {
         vfideToken: '0x9999999999999999999999999999999999999999',
         vaultHub: '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
-        presale: '0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
         seer: '0xcccccccccccccccccccccccccccccccccccccccc',
       },
       testnet: {
         vfideToken: '0x0000000000000000000000000000000000000003',
         vaultHub: '0x0000000000000000000000000000000000000004',
-        presale: '0x0000000000000000000000000000000000000005',
         seer: '0x0000000000000000000000000000000000000006',
       },
     },

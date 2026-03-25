@@ -9,6 +9,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { dispatchWebhook } from '@/lib/webhooks/merchantWebhookDispatcher';
+import { logger } from '@/lib/logger';
 
 const TX_HASH_REGEX = /^0x[a-fA-F0-9]{64}$/;
 
@@ -55,7 +56,7 @@ export async function GET(
       invoice: { ...publicInvoice, items: itemsResult.rows },
     });
   } catch (error) {
-    console.error('[Checkout GET] Error:', error);
+    logger.error('[Checkout GET] Error:', error);
     return NextResponse.json({ error: 'Failed to load checkout' }, { status: 500 });
   }
 }
@@ -141,7 +142,7 @@ export async function PATCH(
 
     return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
   } catch (error) {
-    console.error('[Checkout PATCH] Error:', error);
+    logger.error('[Checkout PATCH] Error:', error);
     return NextResponse.json({ error: 'Failed to update checkout' }, { status: 500 });
   }
 }

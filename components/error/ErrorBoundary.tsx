@@ -4,6 +4,7 @@ import React, { Component, ReactNode } from 'react'
 import { AlertTriangle, RefreshCw, Home } from 'lucide-react'
 import Link from 'next/link'
 import { errorMonitor } from '@/lib/errorMonitoring'
+import { logger } from '@/lib/logger';
 
 interface Props {
   children: ReactNode
@@ -52,7 +53,7 @@ export class ErrorBoundary extends Component<Props, State> {
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
     // Log error to console in development
     if (process.env.NODE_ENV === 'development') {
-      console.error('ErrorBoundary caught an error:', error, errorInfo)
+      logger.error('ErrorBoundary caught an error:', error, errorInfo)
     }
 
     // Track error with monitoring system
@@ -172,7 +173,7 @@ export class SectionErrorBoundary extends Component<Props, State> {
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
     if (process.env.NODE_ENV === 'development') {
-      console.error('SectionErrorBoundary caught an error:', error, errorInfo)
+      logger.error('SectionErrorBoundary caught an error:', error, errorInfo)
     }
     this.props.onError?.(error, errorInfo)
     this.setState({ errorInfo })

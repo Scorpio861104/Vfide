@@ -2,6 +2,7 @@ import { query } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
+import { logger } from '@/lib/logger';
 
 const ADDRESS_LIKE_REGEX = /^0x[a-fA-F0-9]{3,40}$/;
 
@@ -57,7 +58,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
     return NextResponse.json({ attachment: result.rows[0] });
   } catch (error) {
-    console.error('[Attachments GET] Error:', error);
+    logger.error('[Attachments GET] Error:', error);
     const errorMessage = error instanceof Error ? error.message : 'Failed to fetch attachment';
     return NextResponse.json(
       { error: errorMessage },
@@ -111,7 +112,7 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
 
     return NextResponse.json({ success: true, attachment: result.rows[0] });
   } catch (error) {
-    console.error('[Attachments DELETE] Error:', error);
+    logger.error('[Attachments DELETE] Error:', error);
     const errorMessage = error instanceof Error ? error.message : 'Failed to delete attachment';
     return NextResponse.json(
       { error: errorMessage },

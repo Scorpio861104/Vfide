@@ -1102,14 +1102,6 @@ describe('VFIDEToken Contract', () => {
       expect(result).toBe(18);
     });
 
-    it('should return presale cap', async () => {
-      const presaleCap = parseEther('35000000'); // 35M tokens
-      mockContractRead.mockResolvedValueOnce(presaleCap);
-
-      const result = await mockContractRead({ functionName: 'PRESALE_CAP' });
-      expect(result).toBe(presaleCap);
-    });
-
     it('should return dev reserve supply', async () => {
       const devReserve = parseEther('50000000'); // 50M tokens
       mockContractRead.mockResolvedValueOnce(devReserve);

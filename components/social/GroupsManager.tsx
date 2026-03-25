@@ -43,8 +43,8 @@ export function GroupsManager({ friends, onSelectGroup, selectedGroup }: GroupsM
     if (stored) {
       try {
         setGroups(JSON.parse(stored));
-      } catch (e) {
-        console.error('Failed to load groups:', e);
+      } catch {
+        // groups stay empty on parse failure
       }
     }
   }, [address]);

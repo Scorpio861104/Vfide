@@ -6,6 +6,7 @@
  */
 
 import { safeLocalStorage } from './utils';
+import { logger } from '@/lib/logger';
 
 // Storage keys
 const PASSKEY_CREDENTIAL_KEY = 'vfide-passkey-credential';
@@ -167,7 +168,7 @@ export async function registerPasskey(walletAddress: string): Promise<boolean> {
 
     return true;
   } catch (error) {
-    console.error('Passkey registration failed:', error);
+    logger.error('Passkey registration failed:', error);
     throw error;
   }
 }
@@ -212,7 +213,7 @@ export async function authenticateWithPasskey(): Promise<string | null> {
 
     return storedCredential.walletAddress;
   } catch (error) {
-    console.error('Passkey authentication failed:', error);
+    logger.error('Passkey authentication failed:', error);
     throw error;
   }
 }

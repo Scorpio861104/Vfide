@@ -3,6 +3,7 @@
  */
 
 import { parseEther } from 'viem';
+import { logger } from '@/lib/logger';
 
 export class ValidationError extends Error {
   constructor(message: string) {
@@ -152,7 +153,7 @@ export async function checkSufficientBalance(
     // Get balance
     let balance: string;
     if (currency === 'ETH') {
-      const balanceWei = await window.ethereum.request({
+      const balanceWei = await window.ethereum!.request({
         method: 'eth_getBalance',
         params: [address, 'latest'],
       });
@@ -232,7 +233,7 @@ export async function estimateGas(
     const valueWei = `0x${parseEther(value).toString(16)}`;
 
     // Estimate gas limit
-    const gasLimit = await window.ethereum.request({
+    const gasLimit = await window.ethereum!.request({
       method: 'eth_estimateGas',
       params: [{
         from,
@@ -242,7 +243,7 @@ export async function estimateGas(
     });
 
     // Get gas price
-    const gasPrice = await window.ethereum.request({
+    const gasPrice = await window.ethereum!.request({
       method: 'eth_gasPrice',
       params: [],
     });
@@ -259,7 +260,7 @@ export async function estimateGas(
 
     return gasCost;
   } catch (error) {
-    console.error('Gas estimation failed:', error);
+    logger.error('Gas estimation failed:', error);
     // Return default estimate
     return 0.002; // ~$4 at 2000 USD/ETH
   }

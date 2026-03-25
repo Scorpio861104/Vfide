@@ -7,6 +7,7 @@
 import { useState, useEffect, useCallback } from 'react';
 // Crypto validation types - ValidationError used in type definitions
 import type { ValidationError as _ValidationError } from './cryptoValidation';
+import { logger } from '@/lib/logger';
 
 // ============================================================================
 // Types & Interfaces
@@ -79,14 +80,14 @@ export async function connectWallet(): Promise<Wallet> {
 
   try {
     // Request accounts
-    const accounts = await window.ethereum.request({
+    const accounts = await window.ethereum!.request({
       method: 'eth_requestAccounts',
     });
 
     const address = accounts[0];
 
     // Get balance
-    const balance = await window.ethereum.request({
+    const balance = await window.ethereum!.request({
       method: 'eth_getBalance',
       params: [address, 'latest'],
     });
@@ -116,7 +117,7 @@ export async function connectWallet(): Promise<Wallet> {
       ensName,
     };
   } catch (error) {
-    console.error('Wallet connection error:', error);
+    logger.error('Wallet connection error:', error);
     throw new Error('Failed to connect wallet');
   }
 }
@@ -223,7 +224,7 @@ export async function sendPayment(
 
     return transaction;
   } catch (error) {
-    console.error('Payment error:', error);
+    logger.error('Payment error:', error);
     throw new Error('Payment failed');
   }
 }
@@ -243,7 +244,7 @@ async function sendEthTransaction(to: string, amount: string): Promise<string> {
 
   const amountWei = '0x' + (amountFloat * 1e18).toString(16);
 
-  const txHash = await window.ethereum.request({
+  const txHash = await window.ethereum!.request({
     method: 'eth_sendTransaction',
     params: [
       {
@@ -376,7 +377,7 @@ async function getCurrentWalletAddress(): Promise<string> {
     throw new Error('Wallet not connected');
   }
 
-  const accounts = await window.ethereum.request({
+  const accounts = await window.ethereum!.request({
     method: 'eth_accounts',
   });
 
@@ -451,7 +452,8 @@ export function useWallet() {
 
   // Listen for account changes
   useEffect(() => {
-    if (typeof window.ethereum !== 'undefined') {
+    const ethereum = window.ethereum;
+    if (typeof ethereum !== 'undefined') {
       const handleAccountsChanged = (accounts: string[]) => {
         if (accounts.length === 0) {
           disconnect();
@@ -460,10 +462,10 @@ export function useWallet() {
         }
       };
 
-      window.ethereum.on('accountsChanged', handleAccountsChanged);
+      ethereum.on('accountsChanged', handleAccountsChanged);
 
       return () => {
-        window.ethereum.removeListener('accountsChanged', handleAccountsChanged);
+        ethereum.removeListener('accountsChanged', handleAccountsChanged);
       };
     }
     return undefined;
@@ -493,7 +495,7 @@ export function useTransactions(userId: string) {
         const data = await response.json();
         setTransactions(data.transactions || []);
       } catch (error) {
-        console.error('Failed to fetch transactions:', error);
+        logger.error('Failed to fetch transactions:', error);
       } finally {
         setLoading(false);
       }
@@ -524,7 +526,7 @@ export function usePaymentRequests(userId: string) {
         const data = await response.json();
         setRequests(data.requests || []);
       } catch (error) {
-        console.error('Failed to fetch payment requests:', error);
+        logger.error('Failed to fetch payment requests:', error);
       } finally {
         setLoading(false);
       }

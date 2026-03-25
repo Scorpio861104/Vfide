@@ -4,6 +4,7 @@ import { Footer } from '@/components/layout/Footer';
 import { MerchantDashboard } from '@/components/merchant/MerchantDashboard';
 import { PaymentInterface } from '@/components/merchant/PaymentInterface';
 import { PaymentQR } from '@/components/merchant/PaymentQR';
+import { ErrorBoundary } from '@/components/error/ErrorBoundary';
 import { motion } from 'framer-motion';
 import {
     ArrowRight,
@@ -352,7 +353,9 @@ export default function MerchantPage() {
                 </div>
                 <h2 className="text-xl font-bold text-white">Merchant Dashboard</h2>
               </div>
-              <MerchantDashboard />
+              <ErrorBoundary>
+                <MerchantDashboard />
+              </ErrorBoundary>
             </motion.div>
 
             {/* Payment Interface Section */}
@@ -363,7 +366,9 @@ export default function MerchantPage() {
                 </div>
                 <h2 className="text-xl font-bold text-white">Make Payment</h2>
               </div>
-              <PaymentInterface />
+              <ErrorBoundary>
+                <PaymentInterface />
+              </ErrorBoundary>
             </motion.div>
           </motion.div>
 
@@ -375,7 +380,9 @@ export default function MerchantPage() {
               </div>
               <h2 className="text-xl font-bold text-white">Generate Payment QR Code</h2>
             </div>
-            <PaymentQR />
+            <ErrorBoundary>
+              <PaymentQR />
+            </ErrorBoundary>
           </motion.div>
 
           {/* Features Section */}

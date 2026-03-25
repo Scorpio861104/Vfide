@@ -407,8 +407,8 @@ export function GlobalSearch() {
             }
           });
         }
-      } catch (e) {
-        console.error('Failed to search friends:', e);
+      } catch {
+        // friend search results simply excluded on failure
       }
     }
 
@@ -437,8 +437,8 @@ export function GlobalSearch() {
             }
           });
         }
-      } catch (e) {
-        console.error('Failed to search groups:', e);
+      } catch {
+        // group search results simply excluded on failure
       }
     }
 

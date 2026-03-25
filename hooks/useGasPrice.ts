@@ -86,7 +86,7 @@ export function useGasPrice() {
         throw new Error('No wallet connected');
       }
 
-      const gasPriceHex = await window.ethereum.request({
+      const gasPriceHex = await window.ethereum!.request({
         method: 'eth_gasPrice',
         params: [],
       });

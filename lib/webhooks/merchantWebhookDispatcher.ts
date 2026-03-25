@@ -10,6 +10,7 @@
 
 import { createHmac, randomUUID } from 'crypto';
 import { query } from '@/lib/db';
+import { logger } from '@/lib/logger';
 
 // ─────────────────────────── Types
 
@@ -103,7 +104,7 @@ export async function dispatchWebhook(
     // Don't await — let them complete in background
     Promise.allSettled(deliveries).catch(() => {});
   } catch (err) {
-    console.error('[Webhook] dispatch error:', err);
+    logger.error('[Webhook] dispatch error:', err);
   }
 }
 
@@ -201,7 +202,7 @@ async function logDelivery(
       [endpointId, eventType, JSON.stringify(payload), responseStatus, responseBody?.slice(0, 1000), attempt, delivered, error ?? null]
     );
   } catch (err) {
-    console.error('[Webhook] Failed to log delivery:', err);
+    logger.error('[Webhook] Failed to log delivery:', err);
   }
 }
 

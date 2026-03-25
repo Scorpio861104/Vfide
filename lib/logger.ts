@@ -41,6 +41,21 @@ function isLevelEnabled(level: LogLevel): boolean {
 }
 
 /**
+ * Normalize an arbitrary context value into a LogContext object.
+ * Plain objects pass through; primitives and arrays are wrapped.
+ */
+function normalizeContext(context: unknown): LogContext | undefined {
+  if (context === undefined || context === null) return undefined;
+  if (typeof context === 'object' && !Array.isArray(context) && !(context instanceof Error)) {
+    return context as LogContext;
+  }
+  if (context instanceof Error) {
+    return { message: context.message, stack: context.stack };
+  }
+  return { value: String(context) };
+}
+
+/**
  * Format log message with context
  */
 function formatMessage(message: string, context?: LogContext): string {
@@ -57,34 +72,34 @@ class Logger {
   /**
    * Debug level logging (development only)
    */
-  debug(message: string, context?: LogContext): void {
+  debug(message: string, context?: unknown): void {
     if (isLevelEnabled('debug')) {
-      console.debug(`[DEBUG] ${formatMessage(message, context)}`);
+      console.debug(`[DEBUG] ${formatMessage(message, normalizeContext(context))}`);
     }
   }
 
   /**
    * Info level logging (development only)
    */
-  info(message: string, context?: LogContext): void {
+  info(message: string, context?: unknown): void {
     if (isLevelEnabled('info')) {
-      console.info(`[INFO] ${formatMessage(message, context)}`);
+      console.info(`[INFO] ${formatMessage(message, normalizeContext(context))}`);
     }
   }
 
   /**
    * Warning level logging (development and test)
    */
-  warn(message: string, context?: LogContext): void {
+  warn(message: string, context?: unknown): void {
     if (isLevelEnabled('warn')) {
-      console.warn(`[WARN] ${formatMessage(message, context)}`);
+      console.warn(`[WARN] ${formatMessage(message, normalizeContext(context))}`);
       
       // Send warnings to Sentry in production (if configured)
       if (process.env.NODE_ENV === 'production') {
         try {
           Sentry.captureMessage(message, {
             level: 'warning',
-            extra: context,
+            extra: normalizeContext(context),
           });
         } catch {
           // Sentry not configured - fail silently
@@ -97,20 +112,20 @@ class Logger {
    * Error level logging (always enabled)
    * Automatically reports to Sentry if configured
    */
-  error(message: string, error?: Error | unknown, context?: LogContext): void {
+  error(message: string, error?: unknown, context?: unknown): void {
     if (isLevelEnabled('error')) {
-      console.error(`[ERROR] ${formatMessage(message, context)}`, error);
+      console.error(`[ERROR] ${formatMessage(message, normalizeContext(context))}`, error);
       
       // Always report errors to Sentry (if configured)
       try {
         if (error instanceof Error) {
           Sentry.captureException(error, {
-            extra: { message, ...context },
+            extra: { message, ...normalizeContext(context) },
           });
         } else {
           Sentry.captureMessage(message, {
             level: 'error',
-            extra: { error, ...context },
+            extra: { error, ...normalizeContext(context) },
           });
         }
       } catch {

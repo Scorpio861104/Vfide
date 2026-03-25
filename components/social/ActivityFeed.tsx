@@ -46,8 +46,7 @@ export function ActivityFeed({ userAddress }: ActivityFeedProps) {
       if (stored) {
         setActivities(JSON.parse(stored));
       }
-    } catch (e) {
-      console.error('Failed to load activity feed:', e);
+    } catch {
       setActivities([]);
     }
   }, [userAddress, isClient]);
@@ -215,7 +214,7 @@ export function addActivity(
     }
     
     localStorage.setItem(`vfide_activity_feed_${userAddress}`, JSON.stringify(activities));
-  } catch (error) {
-    console.error('Failed to add activity:', error);
+  } catch {
+    // localStorage write failure; activity is captured in-memory for the session
   }
 }

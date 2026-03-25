@@ -1,6 +1,7 @@
 'use client';
 
 import { analytics } from './socialAnalytics';
+import { logger } from '@/lib/logger';
 
 /**
  * Gamification system for VFIDE
@@ -403,7 +404,7 @@ class GamificationEngine {
         return parsed;
       }
     } catch (error) {
-      console.error('Failed to load gamification progress:', error);
+      logger.error('Failed to load gamification progress:', error);
     }
 
     return this.getDefaultProgress();
@@ -416,7 +417,7 @@ class GamificationEngine {
     try {
       localStorage.setItem(`${this.storageKey}_${userAddress}`, JSON.stringify(progress));
     } catch (error) {
-      console.error('Failed to save gamification progress:', error);
+      logger.error('Failed to save gamification progress:', error);
     }
   }
 
@@ -726,7 +727,7 @@ export function getAllUserProgress(): Array<UserProgress & { address: string; al
           });
         }
       } catch (e) {
-        console.error('Failed to parse gamification data:', e);
+        logger.error('Failed to parse gamification data:', e);
       }
     }
   }

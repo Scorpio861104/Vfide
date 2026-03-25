@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getClient } from '@/lib/db';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { requireAuth } from '@/lib/auth/middleware';
+import { logger } from '@/lib/logger';
 
 const ADDRESS_PATTERN = /^0x[a-fA-F0-9]{3,64}$/;
 const MONTH_PATTERN = /^\d{4}-(0[1-9]|1[0-2])$/;
@@ -277,7 +278,7 @@ export async function GET(request: NextRequest) {
       client.release();
     }
   } catch (error) {
-    console.error('Error fetching monthly leaderboard:', error);
+    logger.error('Error fetching monthly leaderboard:', error);
 
     // Graceful degradation for local/offline environments where DB is unavailable.
     if (isDatabaseUnavailableError(error)) {
@@ -448,7 +449,7 @@ export async function POST(request: NextRequest) {
       client.release();
     }
   } catch (error) {
-    console.error('Error updating monthly leaderboard:', error);
+    logger.error('Error updating monthly leaderboard:', error);
     return NextResponse.json(
       { error: 'Failed to update monthly leaderboard' },
       { status: 500 }

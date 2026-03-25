@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import Image from 'next/image';
 import {
   Users,
   Calendar,
@@ -118,7 +119,7 @@ export function UserProfileComponent({ user, isOwnProfile = false }: UserProfile
         className="relative h-48 md:h-64 bg-gradient-to-r from-cyan-400/20 via-violet-400/20 to-rose-500/20"
       >
         {user.coverImage && (
-          <img src={user.coverImage} alt="cover" className="w-full h-full object-cover" />
+          <Image src={user.coverImage} alt="cover" fill className="object-cover" sizes="100vw" />
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 to-transparent" />
       </motion.div>

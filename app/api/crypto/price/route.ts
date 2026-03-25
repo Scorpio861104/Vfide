@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createPublicClient, http } from 'viem';
 import { base, baseSepolia, polygon, polygonAmoy, zkSync, zkSyncSepoliaTestnet } from 'viem/chains';
 import { withRateLimit } from '@/lib/auth/rateLimit';
+import { logger } from '@/lib/logger';
 
 const VFIDE_TOKEN_ADDRESS = process.env.NEXT_PUBLIC_VFIDE_TOKEN_ADDRESS;
 
@@ -142,7 +143,7 @@ export async function GET(request: NextRequest) {
     
     // Check if fetch was successful
     if (!ethPriceResponse.ok) {
-      console.error('Failed to fetch ETH price:', ethPriceResponse.status);
+      logger.error('Failed to fetch ETH price:', ethPriceResponse.status);
       // Use fallback price if fetch fails
       const ethPrice = DEFAULT_ETH_PRICE_USD;
       const vfidePrice = 0.10;
@@ -197,7 +198,7 @@ export async function GET(request: NextRequest) {
         priceSource = 'uniswap';
       } catch {
         // Pool read failed, continue with tokenomics price
-        console.warn('[Price API] Pool read failed, using tokenomics price');
+        logger.warn('[Price API] Pool read failed, using tokenomics price');
       }
     }
 
@@ -227,7 +228,7 @@ export async function GET(request: NextRequest) {
       source: priceSource,
     });
   } catch (error) {
-    console.error('[Price API] Error:', error);
+    logger.error('[Price API] Error:', error);
     
     // Fallback to base prices
     return NextResponse.json({

@@ -12,6 +12,7 @@ import {
   X
 } from 'lucide-react';
 import { useFormContext, FieldError, FieldValues, Path, UseFormRegister, UseFormWatch } from 'react-hook-form';
+import { logger } from '@/lib/logger';
 
 // ==================== TYPES ====================
 
@@ -425,7 +426,7 @@ export function FormFieldWrapper<T extends FieldValues>({
   const formContext = useFormContext<T>();
 
   if (!formContext) {
-    console.warn('FormFieldWrapper must be used within a FormProvider');
+    logger.warn('FormFieldWrapper must be used within a FormProvider');
     return null;
   }
 

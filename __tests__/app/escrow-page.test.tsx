@@ -112,6 +112,21 @@ describe('Escrow page logic pathways', () => {
     expect(screen.getByText(/Connect your wallet to view and manage your escrows/i)).toBeTruthy();
   });
 
+  it('disables Create Escrow button when wallet is not connected', () => {
+    mockAccountState = { isConnected: false, address: undefined as unknown as `0x${string}` };
+
+    renderEscrowPage();
+
+    const createBtn = screen.getByRole('button', { name: /Create new escrow/i });
+    expect((createBtn as HTMLButtonElement).disabled).toBe(true);
+
+    // Clicking the disabled button must not open the modal or invoke createEscrow
+    fireEvent.click(createBtn);
+    // The modal form (with merchant address input) must not appear
+    expect(screen.queryByPlaceholderText('0x...')).toBeNull();
+    expect(mockCreateEscrow).not.toHaveBeenCalled();
+  });
+
   it('shows empty state and refresh action when no escrows exist', () => {
     renderEscrowPage();
 
@@ -123,11 +138,13 @@ describe('Escrow page logic pathways', () => {
   it('creates escrow and validates merchant address before submission', async () => {
     renderEscrowPage();
 
-    fireEvent.click(screen.getByRole('button', { name: /Create Escrow/i }));
+    // Open the create modal via the aria-label button
+    fireEvent.click(screen.getByRole('button', { name: /Create new escrow/i }));
     fireEvent.change(screen.getByPlaceholderText('0x...'), { target: { value: 'bad-address' } });
     fireEvent.change(screen.getByPlaceholderText('1000'), { target: { value: '25' } });
     fireEvent.change(screen.getByPlaceholderText('ORD-2026-0001'), { target: { value: 'ORD-1' } });
-    fireEvent.click(screen.getAllByRole('button', { name: /Create Escrow/i })[1]);
+    // Second "Create Escrow" button is the modal submit
+    fireEvent.click(screen.getAllByRole('button', { name: /Create Escrow/i })[0]);
 
     expect(mockToastError).toHaveBeenCalled();
     expect(mockCreateEscrow).not.toHaveBeenCalled();
@@ -135,7 +152,7 @@ describe('Escrow page logic pathways', () => {
     fireEvent.change(screen.getByPlaceholderText('0x...'), {
       target: { value: '0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb' },
     });
-    fireEvent.click(screen.getAllByRole('button', { name: /Create Escrow/i })[1]);
+    fireEvent.click(screen.getAllByRole('button', { name: /Create Escrow/i })[0]);
 
     await waitFor(() => {
       expect(mockCreateEscrow).toHaveBeenCalledWith('0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb', '25', 'ORD-1');

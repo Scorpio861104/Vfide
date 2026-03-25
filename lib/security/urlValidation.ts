@@ -4,6 +4,8 @@
  * Provides safe URL validation and redirection to prevent open redirect vulnerabilities
  */
 
+import { logger } from '@/lib/logger';
+
 /**
  * List of allowed domains for redirects
  * In production, load from environment variables
@@ -41,7 +43,7 @@ export function isUrlSafe(url: string, allowRelative: boolean = true): boolean {
 
     // Check protocol
     if (!ALLOWED_PROTOCOLS.includes(parsed.protocol)) {
-      console.warn(`[URL Validation] Blocked unsafe protocol: ${parsed.protocol}`);
+      logger.warn(`[URL Validation] Blocked unsafe protocol: ${parsed.protocol}`);
       return false;
     }
 
@@ -55,14 +57,14 @@ export function isUrlSafe(url: string, allowRelative: boolean = true): boolean {
       });
 
       if (!isAllowed) {
-        console.warn(`[URL Validation] Blocked redirect to unauthorized domain: ${hostname}`);
+        logger.warn(`[URL Validation] Blocked redirect to unauthorized domain: ${hostname}`);
         return false;
       }
     }
 
     return true;
   } catch (error) {
-    console.error('[URL Validation] Invalid URL format:', error);
+    logger.error('[URL Validation] Invalid URL format:', error);
     return false;
   }
 }
@@ -74,14 +76,14 @@ export function isUrlSafe(url: string, allowRelative: boolean = true): boolean {
  */
 export function safeRedirect(url: string, fallbackUrl: string = '/'): void {
   if (typeof window === 'undefined') {
-    console.warn('[URL Validation] Cannot redirect on server side');
+    logger.warn('[URL Validation] Cannot redirect on server side');
     return;
   }
 
   const targetUrl = isUrlSafe(url) ? url : fallbackUrl;
   
   if (targetUrl !== url) {
-    console.warn(`[URL Validation] Redirect blocked, using fallback: ${fallbackUrl}`);
+    logger.warn(`[URL Validation] Redirect blocked, using fallback: ${fallbackUrl}`);
   }
 
   window.location.href = targetUrl;
@@ -94,14 +96,14 @@ export function safeRedirect(url: string, fallbackUrl: string = '/'): void {
  */
 export function safeLocationAssign(url: string, fallbackUrl: string = '/'): void {
   if (typeof window === 'undefined') {
-    console.warn('[URL Validation] Cannot assign location on server side');
+    logger.warn('[URL Validation] Cannot assign location on server side');
     return;
   }
 
   const targetUrl = isUrlSafe(url) ? url : fallbackUrl;
   
   if (targetUrl !== url) {
-    console.warn(`[URL Validation] Location assignment blocked, using fallback: ${fallbackUrl}`);
+    logger.warn(`[URL Validation] Location assignment blocked, using fallback: ${fallbackUrl}`);
   }
 
   window.location.assign(targetUrl);
@@ -117,7 +119,7 @@ export function validateNotificationUrl(actionUrl: string | undefined): string |
 
   // Notification URLs should always be relative or same-origin
   if (!isUrlSafe(actionUrl, true)) {
-    console.warn('[URL Validation] Notification action URL blocked:', actionUrl);
+    logger.warn('[URL Validation] Notification action URL blocked:', { actionUrl });
     return null;
   }
 
@@ -138,12 +140,12 @@ export function getAllowedDomains(): readonly string[] {
  */
 export function addAllowedDomain(domain: string): void {
   if (!domain || domain.includes('*') || domain.includes('..')) {
-    console.error('[URL Validation] Invalid domain format:', domain);
+    logger.error('[URL Validation] Invalid domain format:', new Error(domain));
     return;
   }
 
   if (!ALLOWED_DOMAINS.includes(domain)) {
     ALLOWED_DOMAINS.push(domain);
-    console.log('[URL Validation] Added allowed domain:', domain);
+    logger.info('[URL Validation] Added allowed domain:', { domain });
   }
 }

@@ -249,8 +249,7 @@ export default function MerchantPortal() {
           ? data.requests.map(mapPaymentRequestRow)
           : [];
         setPaymentRequests(nextRequests);
-      } catch (error) {
-        console.error('Failed to load payment requests:', error);
+      } catch {
         setRequestsError('Unable to load payment requests');
       } finally {
         setIsLoadingRequests(false);
@@ -305,8 +304,7 @@ export default function MerchantPortal() {
       const data = await response.json();
       setPaymentRequests((prev) => [mapPaymentRequestRow(data.request), ...prev]);
       setNewRequest({ amount: '', currency: 'USDC', address: '', memo: '' });
-    } catch (error) {
-      console.error('Failed to create payment request:', error);
+    } catch {
       setRequestsError('Unable to create payment request');
     } finally {
       setIsSubmittingRequest(false);

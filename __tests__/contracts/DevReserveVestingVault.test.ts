@@ -69,11 +69,6 @@ describe('DevReserveVestingVault Contract', () => {
       expect(await mockContractRead({ functionName: 'VAULT_HUB' })).toBe(owner);
     });
 
-    it('should get presale address', async () => {
-      mockContractRead.mockResolvedValueOnce(owner);
-      expect(await mockContractRead({ functionName: 'PRESALE' })).toBe(owner);
-    });
-
     it('should get security hub address', async () => {
       mockContractRead.mockResolvedValueOnce(owner);
       expect(await mockContractRead({ functionName: 'SECURITY_HUB' })).toBe(owner);

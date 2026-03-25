@@ -9,6 +9,7 @@
  */
 
 import { Redis } from '@upstash/redis';
+import { logger } from '@/lib/logger';
 
 // Initialize Redis client
 let redis: Redis | null = null;
@@ -21,7 +22,7 @@ try {
     });
   }
 } catch (error) {
-  console.error('[Anomaly Detection] Failed to initialize Redis:', error);
+  logger.error('[Anomaly Detection] Failed to initialize Redis:', error);
 }
 
 // In-memory fallback for development
@@ -84,7 +85,7 @@ export async function recordActivity(
       // Store back
       await redis.setex(key, 3600, JSON.stringify(limited));
     } catch (error) {
-      console.error('[Anomaly Detection] Redis error:', error);
+      logger.error('[Anomaly Detection] Redis error:', error);
       // Fallback to memory
       recordActivityMemory(userAddress, activity);
     }
@@ -148,7 +149,7 @@ async function getRecentActivities(userAddress: string): Promise<TokenActivity[]
       const data = await redis.get(key);
       return data ? JSON.parse(data as string) : [];
     } catch (error) {
-      console.error('[Anomaly Detection] Error fetching activities:', error);
+      logger.error('[Anomaly Detection] Error fetching activities:', error);
     }
   }
   
@@ -275,7 +276,7 @@ export async function clearActivityHistory(userAddress: string): Promise<void> {
     try {
       await redis.del(key);
     } catch (error) {
-      console.error('[Anomaly Detection] Error clearing history:', error);
+      logger.error('[Anomaly Detection] Error clearing history:', error);
     }
   }
   

@@ -11,6 +11,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 import { requireAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
+import { logger } from '@/lib/logger';
 
 const ADDRESS_LIKE_REGEX = /^0x[a-fA-F0-9]{3,40}$/;
 
@@ -54,7 +55,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ categories: result.rows });
   } catch (error) {
-    console.error('[Categories GET] Error:', error);
+    logger.error('[Categories GET] Error:', error);
     return NextResponse.json({ error: 'Failed to fetch categories' }, { status: 500 });
   }
 }
@@ -99,7 +100,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ category: result.rows[0] }, { status: 201 });
   } catch (error) {
-    console.error('[Categories POST] Error:', error);
+    logger.error('[Categories POST] Error:', error);
     return NextResponse.json({ error: 'Failed to create category' }, { status: 500 });
   }
 }
@@ -150,7 +151,7 @@ export async function PATCH(request: NextRequest) {
 
     return NextResponse.json({ category: result.rows[0] });
   } catch (error) {
-    console.error('[Categories PATCH] Error:', error);
+    logger.error('[Categories PATCH] Error:', error);
     return NextResponse.json({ error: 'Failed to update category' }, { status: 500 });
   }
 }
@@ -182,7 +183,7 @@ export async function DELETE(request: NextRequest) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('[Categories DELETE] Error:', error);
+    logger.error('[Categories DELETE] Error:', error);
     return NextResponse.json({ error: 'Failed to delete category' }, { status: 500 });
   }
 }

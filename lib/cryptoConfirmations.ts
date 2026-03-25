@@ -30,7 +30,7 @@ export async function waitForConfirmation(
   try {
     while (Date.now() - startTime < MAX_WAIT_TIME) {
       // Get transaction receipt
-      const receipt = await window.ethereum.request({
+      const receipt = await window.ethereum!.request({
         method: 'eth_getTransactionReceipt',
         params: [txHash],
       });
@@ -59,7 +59,7 @@ export async function waitForConfirmation(
       }
 
       // Get current block number
-      const currentBlock = await window.ethereum.request({
+      const currentBlock = await window.ethereum!.request({
         method: 'eth_blockNumber',
         params: [],
       });
@@ -99,7 +99,7 @@ export async function waitForConfirmation(
       error: 'Confirmation timeout - transaction may still be pending',
     };
   } catch (error) {
-    console.error('Failed to wait for confirmation:', error);
+    logger.error('Failed to wait for confirmation:', error);
     return {
       confirmed: false,
       confirmations: 0,
@@ -114,7 +114,7 @@ export async function waitForConfirmation(
  */
 export async function getTransactionStatus(txHash: string): Promise<ConfirmationStatus> {
   try {
-    const receipt = await window.ethereum.request({
+    const receipt = await window.ethereum!.request({
       method: 'eth_getTransactionReceipt',
       params: [txHash],
     });
@@ -143,7 +143,7 @@ export async function getTransactionStatus(txHash: string): Promise<Confirmation
       };
     }
 
-    const currentBlock = await window.ethereum.request({
+    const currentBlock = await window.ethereum!.request({
       method: 'eth_blockNumber',
       params: [],
     });
@@ -168,7 +168,7 @@ export async function getTransactionStatus(txHash: string): Promise<Confirmation
       status: confirmations >= REQUIRED_CONFIRMATIONS ? 'confirmed' : 'pending',
     };
   } catch (error) {
-    console.error('Failed to get transaction status:', error);
+    logger.error('Failed to get transaction status:', error);
     return {
       confirmed: false,
       confirmations: 0,
@@ -238,7 +238,7 @@ export async function waitForMultipleConfirmations(
  */
 export async function isTransactionPending(txHash: string): Promise<boolean> {
   try {
-    const tx = await window.ethereum.request({
+    const tx = await window.ethereum!.request({
       method: 'eth_getTransactionByHash',
       params: [txHash],
     });
@@ -247,14 +247,14 @@ export async function isTransactionPending(txHash: string): Promise<boolean> {
       return false; // Transaction not found
     }
 
-    const receipt = await window.ethereum.request({
+    const receipt = await window.ethereum!.request({
       method: 'eth_getTransactionReceipt',
       params: [txHash],
     });
 
     return !receipt; // Pending if no receipt yet
   } catch (error) {
-    console.error('Failed to check if transaction pending:', error);
+    logger.error('Failed to check if transaction pending:', error);
     return false;
   }
 }
@@ -373,3 +373,4 @@ export function useTransactionConfirmation(txHash: string | null) {
 
 // For non-React contexts
 import * as React from 'react';
+import { logger } from '@/lib/logger';

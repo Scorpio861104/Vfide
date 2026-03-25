@@ -182,17 +182,40 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
     mapping(address => bool) public referralCredited;           // referred => already credited
 
     // ═══════════════════════════════════════════════════════════════════════
-    //                   AUTO-SWAP TO STABLECOIN (for Rewards)
+    //                   STABLECOIN WORK-COMPENSATION (Howey-safe)
     // ═══════════════════════════════════════════════════════════════════════
     // DEX router for VFIDE → Stablecoin swaps when paying rewards
     address public swapRouter;
     address public preferredStablecoin;  // e.g., USDC
-    bool public autoSwapEnabled;         // F-24 FIX: Disabled by default — vulnerable to sandwich attacks until oracle integration
+    bool public autoSwapEnabled;         // Disabled by default; enable after liquidity is established
     uint16 public maxSlippageBps = 100;  // 1% max slippage (default)
-    
+
+    // Admin-set floor price: stablecoin units per 1e18 VFIDE, used as minAmountOut in DEX swaps.
+    // Protects against sandwich attacks without requiring a live on-chain oracle.
+    // Example: 950000 = 0.95 USDC (6-decimal) per 1 VFIDE.  Must be set before enabling auto-swap.
+    uint256 public minOutputPerVfide;
+
+    // HOWEY FIX: Direct stablecoin reserve — owner/manager pre-funds with USDC/USDT.
+    // Work rewards are drawn directly from this reserve with no DEX swap required.
+    // This eliminates both the sandwich-attack risk and any expectation-of-profit argument:
+    // workers receive a fixed-dollar service fee, not an appreciating VFIDE token.
+    mapping(address => uint256) public stablecoinReserves;
+
+    // HOWEY FIX: When true, ALL work reward payments (merchant, referral, level payouts)
+    // are paid in stablecoin — first from the direct reserve, then via DEX swap if needed.
+    // Receiving a potentially-appreciating VFIDE token as "work compensation" creates a
+    // profit expectation (Howey Prong 3). A fixed stablecoin service fee is unambiguous.
+    // Requires preferredStablecoin to be set before enabling; swapRouter is optional when
+    // the direct reserve is funded.
+    bool public stablecoinOnlyMode;
+
     event AutoSwapConfigured(address router, address stablecoin, bool enabled, uint16 maxSlippageBps);
-    event RewardPaidInStable(address indexed recipient, uint256 vfideAmount, uint256 stableAmount, string reason);
+    event MinOutputPerVfideSet(uint256 minOutput);
+    event RewardPaidInStable(address indexed recipient, uint256 stableAmount, string reason);
     event SwapFailed(address indexed recipient, uint256 vfideAmount, string reason);
+    event StablecoinOnlyModeSet(bool enabled);
+    event StablecoinDeposited(address indexed token, address indexed from, uint256 amount);
+    event StablecoinReserveWithdrawn(address indexed token, uint256 amount, address indexed recipient);
     event AutoWorkPayoutConfigured(
         bool enabled,
         uint256 merchantTxReward,
@@ -345,7 +368,10 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
     }
     
     /**
-     * @notice Configure automatic VFIDE to stablecoin conversion for reward payments
+     * @notice Configure automatic VFIDE to stablecoin conversion for reward payments.
+     * @dev Safe to enable once the VFIDE/stablecoin liquidity pool is established (phased
+     *      deployment guarantees this before rewards go live).  minOutputPerVfide must be set
+     *      first to prevent sandwich attacks without requiring a live oracle.
      * @param _router DEX router address (Uniswap V2 compatible)
      * @param _stablecoin Preferred stablecoin address (USDC, USDT, DAI, etc.)
      * @param _enabled Whether to enable automatic conversion
@@ -358,17 +384,94 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
         uint16 _maxSlippageBps
     ) external onlyOwner {
         require(_maxSlippageBps <= 500, "ECO: slippage too high"); // Max 5%
-        // F-24 FIX: Keep auto-swap disabled until oracle-based minAmountOut is integrated.
-        require(!_enabled, "ECO: auto-swap disabled pending oracle");
         if (_enabled) {
             require(_router != address(0), "ECO: zero router");
             require(_stablecoin != address(0), "ECO: zero stablecoin");
+            require(minOutputPerVfide > 0, "ECO: set min output price first");
         }
         swapRouter = _router;
         preferredStablecoin = _stablecoin;
         autoSwapEnabled = _enabled;
         maxSlippageBps = _maxSlippageBps;
         emit AutoSwapConfigured(_router, _stablecoin, _enabled, _maxSlippageBps);
+    }
+
+    /**
+     * @notice Set the floor price used as minAmountOut in DEX swaps to prevent sandwich attacks.
+     * @dev Express in stablecoin units per 1e18 VFIDE.
+     *      Example: 950000 means 0.95 USDC (6 decimals) per 1 VFIDE.
+     *      Keep this value current; if VFIDE price falls significantly, lower the floor so swaps
+     *      are not blocked.  Must be called before configureAutoSwap can be enabled.
+     * @param _minOutput Floor price in stablecoin units per 1e18 VFIDE.
+     */
+    function setMinOutputPerVfide(uint256 _minOutput) external onlyOwner {
+        require(_minOutput > 0, "ECO: zero price");
+        minOutputPerVfide = _minOutput;
+        emit MinOutputPerVfideSet(_minOutput);
+    }
+
+    /**
+     * @notice Enable or disable stablecoin-only mode for all work reward payments.
+     * @dev HOWEY FIX: When enabled, payMerchantWorkReward, payReferralWorkReward, and all
+     *      automatic work payouts are paid in stablecoin.
+     *
+     *      Payment routing (in order):
+     *        1. Direct reserve (stablecoinReserves[preferredStablecoin]) — preferred, no DEX.
+     *           Fund via depositStablecoinReserve(). No sandwich-attack risk.
+     *        2. DEX swap via _swapToStable() — fallback if reserve is insufficient and
+     *           swapRouter is configured (requires autoSwapEnabled and minOutputPerVfide > 0).
+     *
+     *      Distributing a potentially-appreciating VFIDE token as "compensation" creates an
+     *      implicit profit expectation (Howey Prong 3). Fixed stablecoin service fees make
+     *      the work-for-pay relationship legally unambiguous.
+     *
+     *      REQUIREMENTS before enabling:
+     *      - preferredStablecoin must be set
+     *      - Either the direct reserve must be funded (recommended) OR swapRouter must be set
+     *
+     * @param _enabled True to require stablecoin payments; false to revert to VFIDE payments.
+     */
+    function setStablecoinOnlyMode(bool _enabled) external onlyOwner {
+        if (_enabled) {
+            require(preferredStablecoin != address(0), "ECO: set preferred stablecoin first");
+            // At least one payment path must be ready: direct reserve OR swap router
+            bool hasReserve = stablecoinReserves[preferredStablecoin] > 0;
+            bool hasRouter = swapRouter != address(0);
+            require(hasReserve || hasRouter, "ECO: fund reserve or set swap router first");
+        }
+        stablecoinOnlyMode = _enabled;
+        emit StablecoinOnlyModeSet(_enabled);
+    }
+
+    /**
+     * @notice Deposit stablecoin into the direct work-compensation reserve.
+     * @dev HOWEY FIX — recommended path: pre-fund this reserve with USDC/USDT so that all
+     *      merchant and headhunter work rewards are paid as fixed-dollar service fees with no
+     *      DEX swap required. The depositor must have approved this contract first.
+     * @param stablecoin Address of the stablecoin to deposit (must match preferredStablecoin
+     *        when stablecoinOnlyMode is active, or any token otherwise for future use).
+     * @param amount Amount to deposit (in stablecoin's native decimals).
+     */
+    function depositStablecoinReserve(address stablecoin, uint256 amount) external onlyManager nonReentrant {
+        require(stablecoin != address(0), "ECO: zero stablecoin");
+        require(amount > 0, "ECO: zero amount");
+        IERC20(stablecoin).safeTransferFrom(msg.sender, address(this), amount);
+        stablecoinReserves[stablecoin] += amount;
+        emit StablecoinDeposited(stablecoin, msg.sender, amount);
+    }
+
+    /**
+     * @notice Emergency withdrawal of stablecoin reserve (owner only).
+     * @param stablecoin Token to withdraw.
+     * @param amount Amount to withdraw.
+     * @param recipient Destination address.
+     */
+    function withdrawStablecoinReserve(address stablecoin, uint256 amount, address recipient) external onlyOwner nonReentrant {
+        require(stablecoin != address(0) && recipient != address(0), "ECO: zero address");
+        require(amount > 0 && amount <= stablecoinReserves[stablecoin], "ECO: insufficient reserve");
+        stablecoinReserves[stablecoin] -= amount;
+        IERC20(stablecoin).safeTransfer(recipient, amount);
+        emit StablecoinReserveWithdrawn(stablecoin, amount, recipient);
     }
 
     /**
@@ -629,7 +732,10 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
 
     /**
      * @notice Pay fixed compensation for verified merchant work
-     * @dev Uses merchant pool only; not a rank/percentage payout
+     * @dev Uses merchant pool only; not a rank/percentage payout.
+     *      HOWEY FIX: When stablecoinOnlyMode is enabled, payment is swapped to
+     *      preferredStablecoin via _swapToStable() before transfer. This eliminates
+     *      the implicit profit expectation created by distributing appreciable VFIDE.
      */
     function payMerchantWorkReward(address worker, uint256 amount, string calldata reason) external onlyManager nonReentrant {
         if (worker == address(0) || amount == 0) revert ECO_Zero();
@@ -640,9 +746,8 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
 
         merchantPool -= amount;
         totalMerchantBonusPaid += amount;
-        rewardToken.safeTransfer(worker, amount);
-
-        emit WorkRewardPaid(worker, amount, "merchant_work", reason);
+        bool ok = _deliverWorkReward(worker, amount, "merchant_work", reason);
+        require(ok, "ECO: stablecoin swap failed");
     }
 
     function _calculateMerchantRank(uint256 period, address merchant) internal view returns (uint8) {
@@ -824,8 +929,12 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
 
             merchantPool -= amount;
             totalMerchantBonusPaid += amount;
-            rewardToken.safeTransfer(worker, amount);
-            emit WorkRewardPaid(worker, amount, "merchant_work", reason);
+            if (!_deliverWorkReward(worker, amount, "merchant_work", reason)) {
+                // Swap failed — rollback accounting and signal caller
+                merchantPool += amount;
+                totalMerchantBonusPaid -= amount;
+                return false;
+            }
             return true;
         }
 
@@ -835,8 +944,50 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
 
         headhunterPool -= amount;
         totalHeadhunterPaid += amount;
-        rewardToken.safeTransfer(worker, amount);
-        emit WorkRewardPaid(worker, amount, "referral_work", reason);
+        if (!_deliverWorkReward(worker, amount, "referral_work", reason)) {
+            headhunterPool += amount;
+            totalHeadhunterPaid -= amount;
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * @notice Internal: deliver a work reward in stablecoin (if stablecoinOnlyMode) or VFIDE.
+     * @dev When stablecoinOnlyMode is true, payment routing is:
+     *        1. Direct reserve (stablecoinReserves[preferredStablecoin]) — preferred, no DEX.
+     *        2. DEX swap via _swapToStable() — fallback if reserve insufficient and router set.
+     *      Returns false only when stablecoinOnlyMode is on and both paths fail.
+     *      Callers must roll back pool accounting when false is returned.
+     */
+    function _deliverWorkReward(
+        address worker,
+        uint256 amount,
+        string memory program,
+        string memory reason
+    ) internal returns (bool success) {
+        if (stablecoinOnlyMode) {
+            // Path 1: direct stablecoin reserve (Howey-safe, no DEX required)
+            if (stablecoinReserves[preferredStablecoin] >= amount) {
+                stablecoinReserves[preferredStablecoin] -= amount;
+                IERC20(preferredStablecoin).safeTransfer(worker, amount);
+                emit RewardPaidInStable(worker, amount, reason);
+                return true;
+            }
+            // Path 2: DEX swap fallback (requires swapRouter to be configured)
+            if (swapRouter != address(0)) {
+                uint256 stableReceived = _swapToStable(amount);
+                if (stableReceived == 0) return false;
+                IERC20(preferredStablecoin).safeTransfer(worker, stableReceived);
+                emit RewardPaidInStable(worker, stableReceived, reason);
+                return true;
+            }
+            // Neither path available
+            return false;
+        } else {
+            rewardToken.safeTransfer(worker, amount);
+            emit WorkRewardPaid(worker, amount, program, reason);
+        }
         return true;
     }
 
@@ -877,7 +1028,9 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
 
     /**
      * @notice Pay fixed compensation for verified referral/acquisition work
-     * @dev Uses headhunter pool only; not a rank/percentage payout
+     * @dev Uses headhunter pool only; not a rank/percentage payout.
+     *      HOWEY FIX: When stablecoinOnlyMode is enabled, payment is swapped to
+     *      preferredStablecoin before transfer.
      */
     function payReferralWorkReward(address worker, uint256 amount, string calldata reason) external onlyManager nonReentrant {
         if (worker == address(0) || amount == 0) revert ECO_Zero();
@@ -888,9 +1041,8 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
 
         headhunterPool -= amount;
         totalHeadhunterPaid += amount;
-        rewardToken.safeTransfer(worker, amount);
-
-        emit WorkRewardPaid(worker, amount, "referral_work", reason);
+        bool ok = _deliverWorkReward(worker, amount, "referral_work", reason);
+        require(ok, "ECO: stablecoin swap failed");
     }
 
     /**
@@ -983,8 +1135,8 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
         }
 
         referralLevelPaid[year][worker] = finalPaidLevel;
-        rewardToken.safeTransfer(worker, totalAmount);
-        emit WorkRewardPaid(worker, totalAmount, "referral_work_level", reason);
+        bool ok = _deliverWorkReward(worker, totalAmount, "referral_work_level", reason);
+        require(ok, "ECO: stablecoin swap failed");
     }
 
     function _getReferralWorkLevel(uint16 points) internal view returns (uint8) {
@@ -1043,7 +1195,7 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
     }
 
     // ═══════════════════════════════════════════════════════════════════════
-    //                         LEGACY FUNCTIONS
+    //                         UTILITY FUNCTIONS
     // ═══════════════════════════════════════════════════════════════════════
     
     /**
@@ -1067,7 +1219,7 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
                 totalExpensesPaid += amount;
                 // Successfully swapped, transfer stablecoin to recipient
                 IERC20(preferredStablecoin).safeTransfer(recipient, stableReceived);
-                emit RewardPaidInStable(recipient, amount, stableReceived, reason);
+                emit RewardPaidInStable(recipient, stableReceived, reason);
                 return;
             } else {
                 // Swap failed, emit event and fallback to VFIDE payment
@@ -1083,44 +1235,44 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
     }
     
     /**
-     * @notice Internal: Swap VFIDE to preferred stablecoin via DEX
-     * @dev Uses Uniswap V2-compatible router interface
+     * @notice Internal: Swap VFIDE to preferred stablecoin via DEX.
+     * @dev Uses admin-set minOutputPerVfide floor as minAmountOut to prevent sandwich attacks.
+     *      The owner keeps this value current via setMinOutputPerVfide().
      * @param vfideAmount Amount of VFIDE to swap
      * @return stableAmount Amount of stablecoin received (0 if swap fails)
      */
     function _swapToStable(uint256 vfideAmount) internal returns (uint256) {
         if (vfideAmount == 0) return 0;
-        
+
         // Approve router to spend VFIDE
         require(rewardToken.approve(swapRouter, vfideAmount), "ECO: approve failed");
-        
-        // Calculate minimum output with slippage protection
+
         address[] memory path = new address[](2);
         path[0] = address(rewardToken);  // VFIDE
         path[1] = preferredStablecoin;   // e.g., USDC
-        
-        try ISwapRouter(swapRouter).getAmountsOut(vfideAmount, path) returns (uint256[] memory amountsOut) {
-            uint256 expectedOut = amountsOut[amountsOut.length - 1];
-            uint256 minAmountOut = expectedOut * (10000 - maxSlippageBps) / 10000;
-            
-            // Perform swap with slippage protection
-            try ISwapRouter(swapRouter).swapExactTokensForTokens(
-                vfideAmount,
-                minAmountOut,
-                path,
-                address(this),
-                block.timestamp + 300 // 5 min deadline
-            ) returns (uint256[] memory amounts) {
-                // Revoke leftover approval for security
-                if (!rewardToken.approve(swapRouter, 0)) revert ECO_RevokeFailed();
-                return amounts[amounts.length - 1];
-            } catch {
-                // Swap failed, revoke approval
-                if (!rewardToken.approve(swapRouter, 0)) revert ECO_RevokeFailed();
-                return 0;
-            }
+
+        // Use admin-set floor price — no self-referential router quote, no sandwich vector.
+        uint256 minAmountOut = vfideAmount * minOutputPerVfide / 1e18;
+        // Guard against precision underflow: if vfideAmount is too small relative to 1e18,
+        // the integer division above truncates to 0, leaving no slippage floor.
+        // Treat this as an unswappable amount and fall back to VFIDE payment.
+        if (minAmountOut == 0) {
+            if (!rewardToken.approve(swapRouter, 0)) revert ECO_RevokeFailed();
+            return 0;
+        }
+
+        try ISwapRouter(swapRouter).swapExactTokensForTokens(
+            vfideAmount,
+            minAmountOut,
+            path,
+            address(this),
+            block.timestamp + 300 // 5 min deadline
+        ) returns (uint256[] memory amounts) {
+            // Revoke leftover approval for security
+            if (!rewardToken.approve(swapRouter, 0)) revert ECO_RevokeFailed();
+            return amounts[amounts.length - 1];
         } catch {
-            // getAmountsOut failed (no liquidity?), revoke approval
+            // Swap failed (price below floor or no liquidity), revoke approval
             if (!rewardToken.approve(swapRouter, 0)) revert ECO_RevokeFailed();
             return 0;
         }
@@ -1202,6 +1354,139 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
     function setMaxWithdrawBps(uint256 _bps) external onlyOwner {
         require(_bps > 0 && _bps <= 5000, "invalid bps");
         maxWithdrawBps = _bps;
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    //             CHAINLINK AUTOMATION / KEEPER INTERFACE
+    // ═══════════════════════════════════════════════════════════════════════
+
+    /// @dev Bitmask values for scheduled tasks returned/consumed by checkUpkeep/performUpkeep.
+    uint8 public constant TASK_COUNCIL    = 0x01;
+    uint8 public constant TASK_MERCHANT   = 0x02;
+    uint8 public constant TASK_HEADHUNTER = 0x04;
+    uint8 public constant TASK_OPERATIONS = 0x08;
+
+    event ScheduledTasksRan(uint8 tasksBitmask);
+
+    /**
+     * @notice Chainlink Automation-compatible upkeep check.  Also usable by any off-chain keeper.
+     * @dev Returns upkeepNeeded=true when at least one scheduled task is ready to run.
+     *      performData is an ABI-encoded uint8 bitmask of the pending tasks.
+     */
+    function checkUpkeep(bytes calldata) external view returns (bool upkeepNeeded, bytes memory performData) {
+        uint8 pending;
+        if (block.timestamp >= lastCouncilDistribution + MONTH && address(councilManager) != address(0))
+            pending |= TASK_COUNCIL;
+        if (block.timestamp >= lastMerchantDistribution + MONTH)
+            pending |= TASK_MERCHANT;
+        if (block.timestamp >= yearStartTime + (QUARTER * currentQuarter))
+            pending |= TASK_HEADHUNTER;
+        if (operationsWallet != address(0) && block.timestamp >= lastOperationsWithdrawal + operationsWithdrawalCooldown)
+            pending |= TASK_OPERATIONS;
+        return (pending != 0, abi.encode(pending));
+    }
+
+    /**
+     * @notice Chainlink Automation performUpkeep entrypoint.
+     * @dev Accepts the bitmask produced by checkUpkeep.  Time guards are re-validated
+     *      on-chain before each task to guard against stale performData.
+     */
+    function performUpkeep(bytes calldata performData) external nonReentrant {
+        uint8 tasks = abi.decode(performData, (uint8));
+        _runScheduledTasks(tasks);
+    }
+
+    /**
+     * @notice Run all currently-due scheduled tasks in a single transaction.
+     * @dev Permissionless keeper entrypoint — any address may call this.
+     *      Time guards on each task prevent premature execution.
+     *      Returns a bitmask of the tasks that were actually executed.
+     */
+    function runScheduledTasks() external nonReentrant returns (uint8 ran) {
+        return _runScheduledTasks(TASK_COUNCIL | TASK_MERCHANT | TASK_HEADHUNTER | TASK_OPERATIONS);
+    }
+
+    /**
+     * @notice Internal: execute the subset of scheduled tasks indicated by `tasks`.
+     */
+    function _runScheduledTasks(uint8 tasks) internal returns (uint8 ran) {
+        _allocateIncoming();
+
+        // ── Council distribution (monthly) ───────────────────────────────────
+        if ((tasks & TASK_COUNCIL) != 0
+            && block.timestamp >= lastCouncilDistribution + MONTH
+            && address(councilManager) != address(0)) {
+            uint256 amount = councilPool;
+            if (amount >= 1) {
+                address[] memory members = councilManager.getActiveMembers();
+                uint256 memberCount = members.length;
+                if (memberCount > 0 && memberCount <= type(uint8).max) {
+                    uint256 perMember = amount / memberCount;
+                    councilPool = amount % memberCount;
+                    uint256 distributed = amount - councilPool;
+                    totalCouncilPaid += distributed;
+                    lastCouncilDistribution = block.timestamp;
+                    for (uint256 i = 0; i < memberCount; i++) {
+                        // Mirrors the behaviour of the explicit distributeCouncilRewards():
+                        // if a single member's transfer reverts (e.g. token blacklist), the
+                        // entire council block reverts and the keeper will retry next call.
+                        if (members[i] != address(0)) rewardToken.safeTransfer(members[i], perMember);
+                    }
+                    emit CouncilDistributed(distributed, uint8(memberCount), perMember);
+                    ran |= TASK_COUNCIL;
+                }
+            } else {
+                // Advance the timer even when the pool is empty so the keeper
+                // does not fire on every block until funds arrive.
+                lastCouncilDistribution = block.timestamp;
+                ran |= TASK_COUNCIL;
+            }
+        }
+
+        // ── Merchant period end (monthly) ────────────────────────────────────
+        if ((tasks & TASK_MERCHANT) != 0
+            && block.timestamp >= lastMerchantDistribution + MONTH) {
+            merchantPeriodPoolSnapshot[currentMerchantPeriod] = merchantPool;
+            merchantPeriodEnded[currentMerchantPeriod] = true;
+            merchantPool = 0;
+            emit MerchantPeriodEnded(currentMerchantPeriod, merchantPeriodPoolSnapshot[currentMerchantPeriod]);
+            lastMerchantDistribution = block.timestamp;
+            currentMerchantPeriod++;
+            ran |= TASK_MERCHANT;
+        }
+
+        // ── Headhunter quarter end (quarterly) ───────────────────────────────
+        if ((tasks & TASK_HEADHUNTER) != 0
+            && block.timestamp >= yearStartTime + (QUARTER * currentQuarter)) {
+            quarterPoolSnapshot[currentYear][currentQuarter] = headhunterPool;
+            quarterEnded[currentYear][currentQuarter] = true;
+            headhunterPool = 0;
+            emit HeadhunterQuarterEnded(currentYear, currentQuarter, quarterPoolSnapshot[currentYear][currentQuarter]);
+            if (currentQuarter == 4) {
+                currentQuarter = 1;
+                currentYear++;
+                yearStartTime = block.timestamp;
+            } else {
+                currentQuarter++;
+            }
+            lastQuarterPayout = block.timestamp;
+            ran |= TASK_HEADHUNTER;
+        }
+
+        // ── Operations withdrawal (cooldown-gated) ───────────────────────────
+        if ((tasks & TASK_OPERATIONS) != 0
+            && operationsWallet != address(0)
+            && block.timestamp >= lastOperationsWithdrawal + operationsWithdrawalCooldown
+            && operationsPool > 0) {
+            uint256 amount = operationsPool;
+            operationsPool = 0;
+            lastOperationsWithdrawal = block.timestamp;
+            rewardToken.safeTransfer(operationsWallet, amount);
+            emit OperationsWithdrawal(operationsWallet, amount);
+            ran |= TASK_OPERATIONS;
+        }
+
+        emit ScheduledTasksRan(ran);
     }
 
     // ═══════════════════════════════════════════════════════════════════════

@@ -37,8 +37,7 @@ export function SocialNotifications() {
         setNotifications(notifs);
         setUnreadCount(notifs.filter(n => !n.read).length);
       }
-    } catch (e) {
-      console.error('Failed to load notifications:', e);
+    } catch {
       setNotifications([]);
     }
   }, [address, isClient]);
@@ -49,8 +48,8 @@ export function SocialNotifications() {
     try {
       localStorage.setItem(`vfide_notifications_${address}`, JSON.stringify(notifications));
       setUnreadCount(notifications.filter(n => !n.read).length);
-    } catch (e) {
-      console.error('Failed to save notifications:', e);
+    } catch {
+      // save failure is non-critical; in-memory state remains correct
     }
   }, [address, notifications, isClient]);
 
@@ -308,7 +307,7 @@ export function addNotification(address: string, notification: Omit<Notification
     
     // Trigger custom event for real-time updates
     window.dispatchEvent(new CustomEvent('vfide-notification', { detail: newNotif }));
-  } catch (error) {
-    console.error('Failed to add notification:', error);
+  } catch {
+    // notification persistence failure is non-critical
   }
 }

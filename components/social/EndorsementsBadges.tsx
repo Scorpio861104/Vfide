@@ -57,8 +57,7 @@ export function EndorsementsBadges({ userAddress, showGiveEndorsement, onGiveEnd
         const endorsementsData: Endorsement[] = JSON.parse(storedEndorsements);
         setEndorsements(endorsementsData);
       }
-    } catch (e) {
-      console.error('Failed to load endorsements:', e);
+    } catch {
       setEndorsements([]);
     }
 
@@ -68,8 +67,7 @@ export function EndorsementsBadges({ userAddress, showGiveEndorsement, onGiveEnd
       if (storedBadges) {
         setBadges(JSON.parse(storedBadges));
       }
-    } catch (e) {
-      console.error('Failed to load badges:', e);
+    } catch {
       setBadges([]);
     }
   }, [userAddress, isClient]);

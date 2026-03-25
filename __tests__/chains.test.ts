@@ -68,7 +68,7 @@ describe('chains', () => {
         })
 
         it('contract addresses have required keys', () => {
-          const requiredKeys = ['vfideToken', 'vaultHub', 'presale', 'seer']
+          const requiredKeys = ['vfideToken', 'vaultHub', 'seer']
           
           requiredKeys.forEach((key) => {
             expect(chain.contracts.mainnet).toHaveProperty(key)
@@ -135,7 +135,6 @@ describe('chains', () => {
         const contracts = getChainContracts('base')
         expect(contracts).toHaveProperty('vfideToken')
         expect(contracts).toHaveProperty('vaultHub')
-        expect(contracts).toHaveProperty('presale')
         expect(contracts).toHaveProperty('seer')
       })
 

@@ -2,6 +2,7 @@
 
 import { keccak256, toBytes } from 'viem';
 import React from 'react';
+import { logger } from '@/lib/logger';
 
 /**
  * ECIES-like encryption using Web Crypto API
@@ -252,7 +253,7 @@ export async function encryptMessage(
     
     return Buffer.from(JSON.stringify(payload)).toString('base64');
   } catch (error) {
-    console.error('[ECIES] Encryption failed:', error);
+    logger.error('[ECIES] Encryption failed:', error);
     throw new Error('Failed to encrypt message');
   }
 }
@@ -293,7 +294,7 @@ export async function decryptMessage(
     
     return new TextDecoder().decode(decrypted);
   } catch (error) {
-    console.error('[ECIES] Decryption failed:', error);
+    logger.error('[ECIES] Decryption failed:', error);
     throw new Error('Failed to decrypt message');
   }
 }
@@ -327,7 +328,7 @@ export async function signMessageData(
     
     return bytesToHex(new Uint8Array(signature));
   } catch (error) {
-    console.error('[ECIES] Signing failed:', error);
+    logger.error('[ECIES] Signing failed:', error);
     throw new Error('Failed to sign message');
   }
 }
@@ -361,7 +362,7 @@ export async function verifyMessageSignature(
       messageHash.buffer as ArrayBuffer
     );
   } catch (error) {
-    console.error('[ECIES] Verification failed:', error);
+    logger.error('[ECIES] Verification failed:', error);
     return false;
   }
 }
@@ -405,7 +406,7 @@ export async function decryptMessageCompat(
   }
   
   if (isVersion1Encryption(encryptedPayload)) {
-    console.warn('[ECIES] Version 1 encryption detected. Please re-encrypt messages.');
+    logger.warn('[ECIES] Version 1 encryption detected. Please re-encrypt messages.');
     throw new Error('Version 1 encryption no longer supported. Please re-encrypt.');
   }
   
@@ -431,7 +432,7 @@ export function useEncryption(userAddress?: string) {
       storePublicKey(userAddress, keys.publicKey);
       setIsReady(true);
     } catch (error) {
-      console.error('[useEncryption] Failed to initialize keys:', error);
+      logger.error('[useEncryption] Failed to initialize keys:', error);
     }
   }, [userAddress]);
 

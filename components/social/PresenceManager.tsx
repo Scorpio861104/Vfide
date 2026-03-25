@@ -15,20 +15,10 @@ export function PresenceManager() {
   const { address } = useAccount();
   const { status, isOnline, isAway, isOffline: _isOffline } = usePresence(address);
 
-  // Log status changes in development
-  useEffect(() => {
-    if (process.env.NODE_ENV === 'development') {
-      console.log('[Presence]', address, status);
-    }
-  }, [address, status]);
-
   // Send offline status when unmounting
   useEffect(() => {
     return () => {
-      if (address) {
-        // In production, send offline status to backend
-        console.log('[Presence] Disconnecting:', address);
-      }
+      // cleanup on unmount
     };
   }, [address]);
 

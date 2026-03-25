@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { requireAuth } from '@/lib/auth/middleware';
+import { logger } from '@/lib/logger';
 
 interface User {
   wallet_address: string;
@@ -159,7 +160,7 @@ export async function GET(
       }
     });
   } catch (error) {
-    console.error('[User GET API] Error:', error);
+    logger.error('[User GET API] Error:', error);
 
     if (isDatabaseUnavailableError(error)) {
       return NextResponse.json({
@@ -303,7 +304,7 @@ export async function PUT(
       user: result.rows[0],
     });
   } catch (error) {
-    console.error('[User PUT API] Error:', error);
+    logger.error('[User PUT API] Error:', error);
     const errorMessage = error instanceof Error ? error.message : 'Failed to update user';
     return NextResponse.json(
       { error: errorMessage },
@@ -392,7 +393,7 @@ export async function POST(
       { status: 503 }
     );
   } catch (error) {
-    console.error('[Avatar Upload API] Error:', error);
+    logger.error('[Avatar Upload API] Error:', error);
     const errorMessage = error instanceof Error ? error.message : 'Failed to upload avatar';
     return NextResponse.json(
       { error: errorMessage },

@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 /**
  * Security Utilities
  * 
@@ -104,7 +105,7 @@ export function reportCSPViolation(violation: {
   columnNumber?: number;
 }) {
   if (process.env.NODE_ENV === 'development') {
-    console.warn('[CSP Violation]', violation);
+    logger.warn('[CSP Violation]', violation);
   } else {
     // In production, send to monitoring service
     fetch('/api/security/csp-report', {
@@ -117,7 +118,7 @@ export function reportCSPViolation(violation: {
         userAgent: navigator.userAgent,
       }),
     }).catch(err => {
-      console.error('Failed to report CSP violation:', err);
+      logger.error('Failed to report CSP violation:', err);
     });
   }
 }
@@ -316,7 +317,7 @@ export class SecurityMonitor {
         body: JSON.stringify(violation),
       });
     } catch (err) {
-      console.error('Failed to report security violation:', err);
+      logger.error('Failed to report security violation:', err);
     }
   }
 }

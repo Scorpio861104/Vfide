@@ -14,6 +14,7 @@
 
 import jwt from 'jsonwebtoken';
 import { isTokenRevoked, hashToken } from './tokenRevocation';
+import { logger } from '@/lib/logger';
 
 // JWT Configuration
 // No fallback secret - fail fast if not set
@@ -126,11 +127,11 @@ export async function verifyToken(token: string): Promise<JWTPayload | null> {
         decoded = jwt.verify(token, prevSecret, verifyOptions) as JWTPayload;
       } catch (prevErr) {
         // Token is invalid against both secrets
-        console.error('[JWT] Token verification failed against both current and previous secrets:',
+        logger.error('[JWT] Token verification failed against both current and previous secrets:',
           prevErr instanceof Error ? prevErr.message : 'Unknown error');
       }
     } else {
-      console.error('[JWT] Token verification failed:',
+      logger.error('[JWT] Token verification failed:',
         currentErr instanceof Error ? currentErr.message : 'Unknown error');
     }
   }
@@ -144,7 +145,7 @@ export async function verifyToken(token: string): Promise<JWTPayload | null> {
   const revoked = await isTokenRevoked(tokenHash);
   
   if (revoked) {
-    console.warn('[JWT] Token has been revoked');
+    logger.warn('[JWT] Token has been revoked');
     return null;
   }
 

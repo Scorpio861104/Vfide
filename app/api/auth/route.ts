@@ -13,6 +13,7 @@ import {
   getAccountLock,
   recordSecurityEvent,
 } from '@/lib/security/accountProtection';
+import { logger } from '@/lib/logger';
 
 function parseMessageTimestamp(message: string): number | null {
   const timestampMatch = message.match(/^Timestamp:\s*(\d+)\s*$/m);
@@ -149,7 +150,7 @@ export async function POST(request: NextRequest) {
 
     return response;
   } catch (error) {
-    console.error('[Auth API] Error:', error);
+    logger.error('[Auth API] Error:', error);
     return NextResponse.json(
       { error: 'Authentication failed' },
       { status: 500 }
@@ -201,7 +202,7 @@ export async function GET(request: NextRequest) {
       expiresAt: payload.exp,
     });
   } catch (error) {
-    console.error('[Auth Verify API] Error:', error);
+    logger.error('[Auth Verify API] Error:', error);
     return NextResponse.json(
       { error: 'Token verification failed' },
       { status: 401 }

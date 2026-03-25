@@ -195,8 +195,8 @@ export function AddressDisplay({
       await navigator.clipboard.writeText(address);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
-    } catch (error) {
-      console.error('Failed to copy:', error);
+    } catch {
+      // copy failed; button stays in un-copied state, user can copy manually
     }
   };
 

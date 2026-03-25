@@ -10,6 +10,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 import { requireAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
+import { logger } from '@/lib/logger';
 
 const ADDRESS_LIKE_REGEX = /^0x[a-fA-F0-9]{3,40}$/;
 const SLUG_REGEX = /^[a-z0-9][a-z0-9-]{1,58}$/;
@@ -102,7 +103,7 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('[Profile GET] Error:', error);
+    logger.error('[Profile GET] Error:', error);
     return NextResponse.json({ error: 'Failed to fetch profile' }, { status: 500 });
   }
 }
@@ -186,7 +187,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ profile: result.rows[0] }, { status: 201 });
   } catch (error) {
-    console.error('[Profile POST] Error:', error);
+    logger.error('[Profile POST] Error:', error);
     return NextResponse.json({ error: 'Failed to create profile' }, { status: 500 });
   }
 }
@@ -269,7 +270,7 @@ export async function PATCH(request: NextRequest) {
 
     return NextResponse.json({ profile: result.rows[0] });
   } catch (error) {
-    console.error('[Profile PATCH] Error:', error);
+    logger.error('[Profile PATCH] Error:', error);
     return NextResponse.json({ error: 'Failed to update profile' }, { status: 500 });
   }
 }

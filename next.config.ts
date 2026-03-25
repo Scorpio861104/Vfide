@@ -42,7 +42,7 @@ const nextConfig: NextConfig = {
   // Image optimization
   images: {
     remotePatterns: [
-      // Restrict to specific trusted domains for security
+      // Specific trusted domains (highest-priority, most common)
       {
         protocol: 'https',
         hostname: 'avatars.githubusercontent.com',
@@ -63,7 +63,13 @@ const nextConfig: NextConfig = {
         protocol: 'https',
         hostname: '*.amazonaws.com',
       },
-      // Add more trusted domains as needed
+      // Allow any https origin for user-generated content (avatars, story
+      // previews, merchant logos, product images, IPFS gateways, etc.).
+      // img-src in the CSP header already enforces https-only for images.
+      {
+        protocol: 'https',
+        hostname: '**',
+      },
     ],
   },
 

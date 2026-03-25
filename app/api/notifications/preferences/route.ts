@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 import { requireOwnership } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
+import { logger } from '@/lib/logger';
 
 const ADDRESS_PATTERN = /^0x[a-fA-F0-9]{3,64}$/;
 const ALLOWED_PREFERENCE_KEYS = new Set(['messages', 'proposals', 'endorsements', 'system_updates']);
@@ -57,7 +58,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ preferences: result.rows[0] });
   } catch (error) {
-    console.error('[Notification Preferences GET] Error:', error);
+    logger.error('[Notification Preferences GET] Error:', error);
     return NextResponse.json({ error: 'Failed to fetch preferences' }, { status: 500 });
   }
 }
@@ -129,7 +130,7 @@ export async function PUT(request: NextRequest) {
 
     return NextResponse.json({ success: true, preferences: result.rows[0] });
   } catch (error) {
-    console.error('[Notification Preferences PUT] Error:', error);
+    logger.error('[Notification Preferences PUT] Error:', error);
     return NextResponse.json({ error: 'Failed to update preferences' }, { status: 500 });
   }
 }

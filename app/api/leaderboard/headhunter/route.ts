@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { withRateLimit } from '@/lib/auth/rateLimit';
+import { logger } from '@/lib/logger';
 
 /**
  * GET /api/leaderboard/headhunter
@@ -153,7 +154,7 @@ export async function GET(request: NextRequest) {
 
     // Check if fetch was successful
     if (!response.ok) {
-      console.error('Failed to fetch from subgraph:', response.status);
+      logger.error('Failed to fetch from subgraph:', response.status);
       // Return an empty leaderboard on fetch failure
       return NextResponse.json({
         success: true,
@@ -168,7 +169,7 @@ export async function GET(request: NextRequest) {
     
     // Validate response structure
     if (!result.data) {
-      console.error('Invalid subgraph response structure');
+      logger.error('Invalid subgraph response structure');
       return NextResponse.json({
         success: true,
         data: [],
@@ -210,7 +211,7 @@ export async function GET(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('[Leaderboard API] Error:', error);
+    logger.error('[Leaderboard API] Error:', error);
     return NextResponse.json(
       { error: 'Failed to fetch leaderboard data' },
       { status: 500 }

@@ -8,6 +8,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { sendPayment } from './crypto';
 import { validateAmount, validateEthereumAddress } from './cryptoValidation';
+import { logger } from '@/lib/logger';
 
 // ============================================================================
 // Types
@@ -99,7 +100,7 @@ export async function tipPost(
 
     return tip;
   } catch (error) {
-    console.error('Tip error:', error);
+    logger.error('Tip error:', error);
     throw new Error('Failed to send tip');
   }
 }
@@ -144,7 +145,7 @@ export async function tipComment(
 
     return tip;
   } catch (error) {
-    console.error('Tip error:', error);
+    logger.error('Tip error:', error);
     throw new Error('Failed to send tip');
   }
 }
@@ -200,7 +201,7 @@ export async function purchaseContent(
 
     return payment;
   } catch (error) {
-    console.error('Content purchase error:', error);
+    logger.error('Content purchase error:', error);
     throw new Error('Failed to purchase content');
   }
 }
@@ -317,7 +318,7 @@ export function useTipping(postId?: string, commentId?: string) {
       setTips(tipsData);
       setTotal(totalsData);
     } catch (error) {
-      console.error('Failed to load tips:', error);
+      logger.error('Failed to load tips:', error);
     }
   }, [postId]);
 
@@ -338,7 +339,7 @@ export function useTipping(postId?: string, commentId?: string) {
         await loadPostTips();
         return tip;
       } catch (error) {
-        console.error('Failed to send tip:', error);
+        logger.error('Failed to send tip:', error);
         throw error;
       } finally {
         setIsLoading(false);
@@ -375,7 +376,7 @@ export function usePremiumContent(contentId: string, userAddress?: string) {
       const access = await hasContentAccess(contentId, userAddress);
       setHasAccess(access);
     } catch (error) {
-      console.error('Failed to check access:', error);
+      logger.error('Failed to check access:', error);
     } finally {
       setIsChecking(false);
     }
@@ -404,7 +405,7 @@ export function usePremiumContent(contentId: string, userAddress?: string) {
         setHasAccess(payment.accessGranted);
         return payment;
       } catch (error) {
-        console.error('Failed to purchase content:', error);
+        logger.error('Failed to purchase content:', error);
         throw error;
       } finally {
         setIsPurchasing(false);
@@ -436,7 +437,7 @@ export function useSocialPaymentStats(userAddress?: string) {
       const data = await getSocialPaymentStats(userAddress);
       setStats(data);
     } catch (error) {
-      console.error('Failed to load stats:', error);
+      logger.error('Failed to load stats:', error);
     } finally {
       setIsLoading(false);
     }

@@ -5,6 +5,8 @@
  * Helps understand feature adoption and user flows
  */
 
+import { logger } from '@/lib/logger';
+
 type EventType = 
   | 'wallet_connected'
   | 'vault_created'
@@ -35,7 +37,7 @@ class SocialAnalytics {
    */
   track(event: EventType, data: EventData = {}) {
     if (!this.enabled) {
-      console.log('[Analytics]', event, data);
+      logger.info('[Analytics]', { event, data });
       return;
     }
 
@@ -77,7 +79,7 @@ class SocialAnalytics {
 
       localStorage.setItem('vfide_analytics_events', JSON.stringify(events));
     } catch (error) {
-      console.error('Failed to store analytics event:', error);
+      logger.error('Failed to store analytics event:', error);
     }
   }
 

@@ -3,6 +3,8 @@
  * WebRTC-based peer-to-peer voice and video calls
  */
 
+import { logger } from '@/lib/logger';
+
 export interface Call {
   id: string;
   type: 'voice' | 'video';
@@ -71,7 +73,7 @@ export class CallManager {
 
       return this.localStream;
     } catch (error: unknown) {
-      console.error('Failed to get user media:', error);
+      logger.error('Failed to get user media:', error);
 
       const errorName =
         error instanceof DOMException || error instanceof Error ? error.name : undefined;
@@ -117,7 +119,7 @@ export class CallManager {
 
     // Handle connection state changes
     this.peerConnection.onconnectionstatechange = () => {
-      console.log('Connection state:', this.peerConnection?.connectionState);
+      logger.info('Connection state:', { connectionState: this.peerConnection?.connectionState });
       
       if (this.peerConnection?.connectionState === 'failed') {
         this.handleCallFailed();
@@ -237,7 +239,7 @@ export class CallManager {
    */
   private sendSignal(type: string, data: Record<string, unknown>): void {
     // In production, send via WebSocket to signaling server
-    console.log('Send signal:', type, data);
+    logger.info('Send signal:', { type, data });
     
     // Store locally for same-device testing
     const signals = JSON.parse(localStorage.getItem('vfide_call_signals') || '[]');
@@ -315,7 +317,7 @@ export function useCall() {
 
       return call;
     } catch (error) {
-      console.error('Failed to initiate call:', error);
+      logger.error('Failed to initiate call:', error);
       throw error;
     }
   }, [callManager]);
@@ -341,7 +343,7 @@ export function useCall() {
 
       setState((prev) => ({ ...prev, call: activeCall }));
     } catch (error) {
-      console.error('Failed to answer call:', error);
+      logger.error('Failed to answer call:', error);
       throw error;
     }
   }, [callManager]);
@@ -423,7 +425,7 @@ export function useCall() {
  */
 function sendCallSignal(recipient: string, type: string, data: Record<string, unknown>): void {
   // In production, send via WebSocket/signaling server
-  console.log('Send call signal to', recipient, ':', type, data);
+  logger.info('Send call signal to', { recipient, type, data });
   
   // Use localStorage fallback for local testing
   const key = `vfide_call_signal_${recipient}`;
@@ -480,7 +482,7 @@ export async function requestMediaPermissions(
       video: type === 'video',
     };
   } catch (error: unknown) {
-    console.error('Permission denied:', error);
+    logger.error('Permission denied:', error);
     return {
       audio: false,
       video: false,

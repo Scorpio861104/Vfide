@@ -7,6 +7,7 @@
 
 import * as React from 'react';
 import { onCLS, onINP, onFCP, onLCP, onTTFB, onFID, Metric } from 'web-vitals';
+import { logger } from '@/lib/logger';
 
 export interface WebVitalsMetrics {
   CLS: number; // Cumulative Layout Shift
@@ -56,7 +57,7 @@ function getRating(name: string, value: number): 'good' | 'needs-improvement' | 
  */
 async function sendMetric(metric: PerformanceMetric) {
   if (process.env.NODE_ENV === 'development') {
-    console.log('[Performance]', metric);
+    logger.info('[Performance]', { metric });
   }
 
   metricsStore.push(metric);
@@ -77,7 +78,7 @@ async function sendMetric(metric: PerformanceMetric) {
         keepalive: true,
       });
     } catch (error) {
-      console.error('Failed to send performance metric:', error);
+      logger.error('Failed to send performance metric:', error);
     }
   }
 }
@@ -211,7 +212,7 @@ export function observeLongTasks(callback: (duration: number) => void) {
     observer.observe({ entryTypes: ['longtask'] });
     return () => observer.disconnect();
   } catch (error) {
-    console.error('Long tasks observation not supported:', error);
+    logger.error('Long tasks observation not supported:', error);
     return () => {};
   }
 }
@@ -445,11 +446,11 @@ export function measurePerformance(label: string) {
       try {
         const result = await originalMethod.apply(this, args);
         const end = performance.now();
-        console.log(`${label}: ${(end - start).toFixed(2)}ms`);
+        logger.info(`${label}: ${(end - start).toFixed(2)}ms`);
         return result;
       } catch (error) {
         const end = performance.now();
-        console.error(`${label} failed after ${(end - start).toFixed(2)}ms:`, error);
+        logger.error(`${label} failed after ${(end - start).toFixed(2)}ms:`, error);
         throw error;
       }
     };
@@ -473,7 +474,7 @@ export function detectMemoryLeaks() {
       const diff = currentMemory - initialMemory;
       
       if (diff > 10 * 1024 * 1024) { // 10MB threshold
-        console.warn(`Potential memory leak detected: +${(diff / 1024 / 1024).toFixed(2)}MB`);
+        logger.warn(`Potential memory leak detected: +${(diff / 1024 / 1024).toFixed(2)}MB`);
       }
 
       return {
@@ -494,14 +495,14 @@ export function detectLongTasks() {
   try {
     const observer = new PerformanceObserver((list) => {
       for (const entry of list.getEntries()) {
-        console.warn(`Long Task detected: ${(entry.duration).toFixed(2)}ms`, entry);
+        logger.warn(`Long Task detected: ${(entry.duration).toFixed(2)}ms`);
       }
     });
 
     observer.observe({ entryTypes: ['longtask'] });
     return observer;
   } catch (_error) {
-    console.log('Long Task monitoring not available');
+    logger.info('Long Task monitoring not available');
     return null;
   }
 }

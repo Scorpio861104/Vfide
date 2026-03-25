@@ -3,6 +3,8 @@
  * Provides secure storage for sensitive data like JWT tokens, private keys, and user preferences
  */
 
+import { logger } from '@/lib/logger';
+
 const ENCRYPTION_ALGORITHM = 'AES-GCM';
 const KEY_LENGTH = 256;
 const IV_LENGTH = 12; // 96 bits recommended for AES-GCM
@@ -89,7 +91,7 @@ export async function encryptData(data: string): Promise<string> {
     // Convert to base64 for storage
     return btoa(String.fromCharCode(...combined));
   } catch (error) {
-    console.error('Encryption failed:', error);
+    logger.error('Encryption failed:', error);
     throw new Error('Failed to encrypt data');
   }
 }
@@ -125,7 +127,7 @@ export async function decryptData(encryptedData: string): Promise<string> {
     const decoder = new TextDecoder();
     return decoder.decode(decryptedBuffer);
   } catch (error) {
-    console.error('Decryption failed:', error);
+    logger.error('Decryption failed:', error);
     throw new Error('Failed to decrypt data');
   }
 }
@@ -138,10 +140,10 @@ export async function setEncryptedItem(key: string, value: string): Promise<void
     const encrypted = await encryptData(value);
     localStorage.setItem(`encrypted_${key}`, encrypted);
   } catch (error) {
-    console.error(`Failed to set encrypted item ${key}:`, error);
+    logger.error(`Failed to set encrypted item ${key}:`, error);
     // Fallback to unencrypted storage (log warning in production)
     if (process.env.NODE_ENV === 'production') {
-      console.warn(`Storing ${key} unencrypted due to encryption failure`);
+      logger.warn(`Storing ${key} unencrypted due to encryption failure`);
     }
     localStorage.setItem(key, value);
   }
@@ -159,7 +161,7 @@ export async function getEncryptedItem(key: string): Promise<string | null> {
     }
     return await decryptData(encrypted);
   } catch (error) {
-    console.error(`Failed to get encrypted item ${key}:`, error);
+    logger.error(`Failed to get encrypted item ${key}:`, error);
     // Try fallback to unencrypted key
     return localStorage.getItem(key);
   }
@@ -187,7 +189,7 @@ export function isEncryptionSupported(): boolean {
  */
 export async function migrateToEncryptedStorage(keys: string[]): Promise<void> {
   if (!isEncryptionSupported()) {
-    console.warn('Encryption not supported in this environment');
+    logger.warn('Encryption not supported in this environment');
     return;
   }
 
@@ -197,9 +199,9 @@ export async function migrateToEncryptedStorage(keys: string[]): Promise<void> {
       try {
         await setEncryptedItem(key, value);
         localStorage.removeItem(key); // Remove unencrypted version
-        console.log(`Migrated ${key} to encrypted storage`);
+        logger.info(`Migrated ${key} to encrypted storage`);
       } catch (error) {
-        console.error(`Failed to migrate ${key}:`, error);
+        logger.error(`Failed to migrate ${key}:`, error);
       }
     }
   }
@@ -223,7 +225,7 @@ export const SENSITIVE_KEYS = [
  */
 export async function initializeEncryptedStorage(): Promise<void> {
   if (!isEncryptionSupported()) {
-    console.warn('Web Crypto API not available - encryption disabled');
+    logger.warn('Web Crypto API not available - encryption disabled');
     return;
   }
 

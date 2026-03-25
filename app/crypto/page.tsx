@@ -12,6 +12,7 @@ import { Wallet, TrendingUp, History } from 'lucide-react';
 import { WalletButton as _WalletButton } from '@/components/crypto/WalletButton';
 import { TransactionHistory } from '@/components/crypto/TransactionHistory';
 import { useAccount, useBalance } from 'wagmi';
+import { formatUnits } from 'viem';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 
 export default function CryptoDashboard() {
@@ -19,7 +20,7 @@ export default function CryptoDashboard() {
   const { data: ethBalance } = useBalance({ address });
 
   // Format balance display
-  const formattedBalance = ethBalance ? parseFloat(ethBalance.formatted).toFixed(4) : '0.0000';
+  const formattedBalance = ethBalance ? parseFloat(formatUnits(ethBalance.value, ethBalance.decimals)).toFixed(4) : '0.0000';
   const usdValue = null;
 
   if (!isConnected || !address) {

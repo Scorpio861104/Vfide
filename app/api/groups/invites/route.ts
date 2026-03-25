@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { isAddress } from 'viem';
+import { logger } from '@/lib/logger';
 
 interface GroupInvite {
   id: number;
@@ -177,7 +178,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true, invite: result.rows[0] }, { status: 201 });
   } catch (error) {
-    console.error('[Group Invites POST] Error:', error);
+    logger.error('[Group Invites POST] Error:', error);
     return NextResponse.json({ error: 'Failed to create invite' }, { status: 500 });
   }
 }
@@ -275,7 +276,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ error: 'groupId or code required' }, { status: 400 });
   } catch (error) {
-    console.error('[Group Invites GET] Error:', error);
+    logger.error('[Group Invites GET] Error:', error);
     return NextResponse.json({ error: 'Failed to fetch invites' }, { status: 500 });
   }
 }
@@ -381,7 +382,7 @@ export async function PATCH(request: NextRequest) {
         );
     }
   } catch (error) {
-    console.error('Error updating invite link:', error);
+    logger.error('Error updating invite link:', error);
     return NextResponse.json(
       { error: 'Failed to update invite link' },
       { status: 500 }
@@ -463,7 +464,7 @@ export async function DELETE(request: NextRequest) {
       message: 'Invite link deleted',
     });
   } catch (error) {
-    console.error('Error deleting invite link:', error);
+    logger.error('Error deleting invite link:', error);
     return NextResponse.json(
       { error: 'Failed to delete invite link' },
       { status: 500 }

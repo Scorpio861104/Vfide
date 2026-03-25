@@ -7,6 +7,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 import { withRateLimit } from '@/lib/auth/rateLimit';
+import { logger } from '@/lib/logger';
 
 export async function GET(request: NextRequest) {
   const rateLimitResponse = await withRateLimit(request, 'read');
@@ -81,7 +82,7 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('[Directory GET] Error:', error);
+    logger.error('[Directory GET] Error:', error);
     return NextResponse.json({ error: 'Failed to fetch directory' }, { status: 500 });
   }
 }

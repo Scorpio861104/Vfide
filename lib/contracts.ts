@@ -7,7 +7,6 @@
 import { isAddress } from 'viem'
 import {
   VFIDETokenABI,
-  VFIDEPresaleABI,
   StablecoinRegistryABI,
   VaultInfrastructureABI,
   VaultHubABI,
@@ -45,6 +44,7 @@ import {
   UserRewardsABI,
   PromotionalTreasuryABI,
 } from './abis'
+import { logger } from '@/lib/logger';
 
 // Zero address placeholder for missing contracts
 const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000' as const
@@ -56,16 +56,18 @@ const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000' as const
  */
 function validateContractAddress(address: string | undefined, name: string): `0x${string}` {
   if (!address) {
-    if (process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test') {
-      // Convert camelCase name to SCREAMING_SNAKE_CASE for env var name
-      // Examples: vfideToken -> VFIDE_TOKEN, StablecoinRegistry -> STABLECOIN_REGISTRY
-      const envVarName = `NEXT_PUBLIC_${name.replace(/([a-z0-9])([A-Z])/g, '$1_$2').toUpperCase()}_ADDRESS`;
-      console.warn(`[VFIDE] Missing contract address: ${name}. Using ZERO_ADDRESS. Set ${envVarName} in environment.`)
+    // Convert camelCase name to SCREAMING_SNAKE_CASE for env var name
+    // Examples: vfideToken -> VFIDE_TOKEN, StablecoinRegistry -> STABLECOIN_REGISTRY
+    const envVarName = `NEXT_PUBLIC_${name.replace(/([a-z0-9])([A-Z])/g, '$1_$2').toUpperCase()}_ADDRESS`;
+    if (process.env.NODE_ENV === 'production') {
+      logger.error(`[VFIDE] Missing contract address in production: ${name}. Set ${envVarName} in environment. All calls to this contract will fail.`)
+    } else {
+      logger.warn(`[VFIDE] Missing contract address: ${name}. Using ZERO_ADDRESS. Set ${envVarName} in environment.`)
     }
     return ZERO_ADDRESS
   }
   if (!isAddress(address)) {
-    console.error(`[VFIDE] Invalid contract address for ${name}: ${address}. This is a configuration error!`)
+    logger.error(`[VFIDE] Invalid contract address for ${name}: ${address}. This is a configuration error!`)
     return ZERO_ADDRESS
   }
   return address as `0x${string}`
@@ -73,7 +75,6 @@ function validateContractAddress(address: string | undefined, name: string): `0x
 
 export const CONTRACT_ADDRESSES = {
   VFIDEToken: validateContractAddress(process.env.NEXT_PUBLIC_VFIDE_TOKEN_ADDRESS, 'VFIDEToken'),
-  VFIDEPresale: validateContractAddress(process.env.NEXT_PUBLIC_VFIDE_PRESALE_ADDRESS, 'VFIDEPresale'),
   StablecoinRegistry: validateContractAddress(process.env.NEXT_PUBLIC_STABLECOIN_REGISTRY_ADDRESS, 'StablecoinRegistry'),
   VFIDECommerce: validateContractAddress(process.env.NEXT_PUBLIC_VFIDE_COMMERCE_ADDRESS, 'VFIDECommerce'),
   MerchantPortal: validateContractAddress(process.env.NEXT_PUBLIC_MERCHANT_PORTAL_ADDRESS, 'MerchantPortal'),
@@ -129,7 +130,6 @@ export const isCardBoundVaultMode = (): boolean => ACTIVE_VAULT_IMPLEMENTATION =
 
 export {
   VFIDETokenABI,
-  VFIDEPresaleABI,
   StablecoinRegistryABI,
   VaultInfrastructureABI,
   VaultHubABI,

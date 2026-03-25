@@ -168,15 +168,6 @@ const TOKEN_ABI = [
     type: 'function',
   },
   {
-    inputs: [],
-    name: 'PRESALE_CAP',
-    outputs: [{ type: 'uint256' }],
-    stateMutability: 'view',
-    type: 'function',
-  },
-  {
-    inputs: [{ name: 'addr', type: 'address' }],
-    name: 'systemWhitelist',
     outputs: [{ type: 'bool' }],
     stateMutability: 'view',
     type: 'function',
@@ -250,13 +241,6 @@ const TOKEN_ABI = [
   {
     inputs: [{ name: '_sanctum', type: 'address' }],
     name: 'setSanctumSink',
-    outputs: [],
-    stateMutability: 'nonpayable',
-    type: 'function',
-  },
-  {
-    inputs: [{ name: '_presale', type: 'address' }],
-    name: 'setPresaleContract',
     outputs: [],
     stateMutability: 'nonpayable',
     type: 'function',
@@ -386,13 +370,6 @@ const TOKEN_ABI = [
     type: 'function',
   },
   {
-    inputs: [],
-    name: 'presaleContract',
-    outputs: [{ type: 'address' }],
-    stateMutability: 'view',
-    type: 'function',
-  },
-  {
     inputs: [{ name: 'newOwner', type: 'address' }],
     name: 'transferOwnership',
     outputs: [],
@@ -486,7 +463,7 @@ export default function AdminPanel() {
   const [vaultBypassAddress, setVaultBypassAddress] = useState('');
   const [whaleExemptAddress, setWhaleExemptAddress] = useState('');
   const [moduleAddress, setModuleAddress] = useState('');
-  const [moduleType, setModuleType] = useState<'vaultHub' | 'securityHub' | 'ledger' | 'burnRouter' | 'treasurySink' | 'sanctumSink' | 'presale'>('vaultHub');
+  const [moduleType, setModuleType] = useState<'vaultHub' | 'securityHub' | 'ledger' | 'burnRouter' | 'treasurySink' | 'sanctumSink'>('vaultHub');
   const [newOwner, setNewOwner] = useState('');
   const [burnParams, setBurnParams] = useState({
     baseBurnBps: '',
@@ -523,48 +500,54 @@ export default function AdminPanel() {
   const [attestationError, setAttestationError] = useState<string | null>(null);
 
   // Read contract owner
-  const { data: owner } = useReadContract({
+  const { data: ownerRaw } = useReadContract({
     address: TOKEN_ADDRESS,
     abi: TOKEN_ABI,
     functionName: 'owner',
     query: { enabled: IS_TOKEN_DEPLOYED },
   });
+  const owner = ownerRaw as string | undefined;
 
   // Read contract state
-  const { data: vaultOnly } = useReadContract({
+  const { data: vaultOnlyRaw } = useReadContract({
     address: TOKEN_ADDRESS,
     abi: TOKEN_ABI,
     functionName: 'vaultOnly',
     query: { enabled: IS_TOKEN_DEPLOYED },
   });
+  const vaultOnly = vaultOnlyRaw as boolean | undefined;
 
-  const { data: policyLocked } = useReadContract({
+  const { data: policyLockedRaw } = useReadContract({
     address: TOKEN_ADDRESS,
     abi: TOKEN_ABI,
     functionName: 'policyLocked',
     query: { enabled: IS_TOKEN_DEPLOYED },
   });
+  const policyLocked = policyLockedRaw as boolean | undefined;
 
-  const { data: circuitBreaker } = useReadContract({
+  const { data: circuitBreakerRaw } = useReadContract({
     address: TOKEN_ADDRESS,
     abi: TOKEN_ABI,
     functionName: 'circuitBreaker',
     query: { enabled: IS_TOKEN_DEPLOYED },
   });
+  const circuitBreaker = circuitBreakerRaw as boolean | undefined;
 
-  const { data: totalSupply } = useReadContract({
+  const { data: totalSupplyRaw } = useReadContract({
     address: TOKEN_ADDRESS,
     abi: TOKEN_ABI,
     functionName: 'totalSupply',
     query: { enabled: IS_TOKEN_DEPLOYED },
   });
+  const totalSupply = totalSupplyRaw as bigint | undefined;
 
-  const { data: presaleCap } = useReadContract({
+  const { data: presaleCapRaw } = useReadContract({
     address: TOKEN_ADDRESS,
     abi: TOKEN_ABI,
-    functionName: 'PRESALE_CAP',
+    functionName: 'presaleCap',
     query: { enabled: IS_TOKEN_DEPLOYED },
   });
+  const presaleCap = presaleCapRaw as bigint | undefined;
 
   const { data: isWhitelisted } = useReadContract({
     address: TOKEN_ADDRESS,
@@ -762,19 +745,18 @@ export default function AdminPanel() {
 
   const handleSetModule = () => {
     if (!moduleAddress) return;
-    const functionMap: Record<string, 'setVaultHub' | 'setSecurityHub' | 'setLedger' | 'setBurnRouter' | 'setTreasurySink' | 'setSanctumSink' | 'setPresaleContract'> = {
+    const functionMap: Record<string, 'setVaultHub' | 'setSecurityHub' | 'setLedger' | 'setBurnRouter' | 'setTreasurySink' | 'setSanctumSink'> = {
       vaultHub: 'setVaultHub',
       securityHub: 'setSecurityHub',
       ledger: 'setLedger',
       burnRouter: 'setBurnRouter',
       treasurySink: 'setTreasurySink',
       sanctumSink: 'setSanctumSink',
-      presale: 'setPresaleContract',
     };
     writeContract({
       address: TOKEN_ADDRESS,
       abi: TOKEN_ABI,
-      functionName: functionMap[moduleType] as 'setVaultHub' | 'setSecurityHub' | 'setLedger' | 'setBurnRouter' | 'setTreasurySink' | 'setSanctumSink' | 'setPresaleContract',
+      functionName: functionMap[moduleType] as 'setVaultHub' | 'setSecurityHub' | 'setLedger' | 'setBurnRouter' | 'setTreasurySink' | 'setSanctumSink',
       args: [moduleAddress as `0x${string}`],
     });
   };
@@ -1231,7 +1213,6 @@ export default function AdminPanel() {
         burnRouter: burnRouterAddress,
         treasurySink: treasurySinkAddress,
         sanctumSink: sanctumSinkAddress,
-        presale: presaleContractAddress,
       },
       security: {
         vaultOnly,

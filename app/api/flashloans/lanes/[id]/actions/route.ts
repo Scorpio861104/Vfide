@@ -15,6 +15,7 @@ import {
   type LoanAction,
   type LoanTerms,
 } from '@/lib/flashloans/engine'
+import { logger } from '@/lib/logger';
 
 const ADDRESS_RE = /^0x[a-fA-F0-9]{40}$/
 const ACTIONS: LoanAction[] = [
@@ -146,7 +147,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       return NextResponse.json({ error: message }, { status: 400 })
     }
 
-    console.error('[Flashloans POST action] Error:', error)
+    logger.error('[Flashloans POST action] Error:', error)
     return NextResponse.json({ error: 'Failed to apply action' }, { status: 500 })
   }
 }

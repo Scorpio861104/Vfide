@@ -173,7 +173,6 @@ export function ExportDialog({ isOpen, onClose, userId }: ExportDialogProps) {
         setExportStatus('idle');
       }, 2000);
     } catch (error) {
-      console.error('Export error:', error);
       setErrorMessage(error instanceof Error ? error.message : 'Export failed');
       setExportStatus('error');
     } finally {

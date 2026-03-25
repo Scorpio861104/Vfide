@@ -36,9 +36,11 @@ export default function MonthlyLeaderboard() {
   const [userPosition, setUserPosition] = useState<UserPosition | null>(null);
   const [monthYear] = useState(new Date().toISOString().slice(0, 7));
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState<string | null>(null);
 
   const fetchLeaderboard = useCallback(async () => {
     setLoading(true);
+    setFetchError(null);
     try {
       const params = new URLSearchParams({
         month: monthYear,
@@ -53,8 +55,8 @@ export default function MonthlyLeaderboard() {
 
       setLeaderboard(data.leaderboard || []);
       setUserPosition(data.userPosition);
-    } catch (error) {
-      console.error('Error fetching leaderboard:', error);
+    } catch {
+      setFetchError('Failed to load leaderboard. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -172,6 +174,12 @@ export default function MonthlyLeaderboard() {
                 <tr>
                   <td colSpan={7} className="px-4 py-8 text-center text-gray-400">
                     Loading leaderboard...
+                  </td>
+                </tr>
+              ) : fetchError ? (
+                <tr>
+                  <td colSpan={7} className="px-4 py-8 text-center text-red-400">
+                    {fetchError}
                   </td>
                 </tr>
               ) : leaderboard.length === 0 ? (

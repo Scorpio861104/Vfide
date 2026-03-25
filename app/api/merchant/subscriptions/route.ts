@@ -12,6 +12,7 @@ import { query } from '@/lib/db';
 import { requireAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { dispatchWebhook } from '@/lib/webhooks/merchantWebhookDispatcher';
+import { logger } from '@/lib/logger';
 
 const ADDRESS_LIKE_REGEX = /^0x[a-fA-F0-9]{3,40}$/;
 const VALID_INTERVALS = ['weekly', 'monthly', 'quarterly', 'yearly'] as const;
@@ -49,7 +50,7 @@ export async function GET(request: NextRequest) {
       );
       return NextResponse.json({ plans: result.rows });
     } catch (error) {
-      console.error('[Subscriptions GET] Error:', error);
+      logger.error('[Subscriptions GET] Error:', error);
       return NextResponse.json({ error: 'Failed to fetch plans' }, { status: 500 });
     }
   }
@@ -82,7 +83,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ plans: result.rows });
   } catch (error) {
-    console.error('[Subscriptions GET] Error:', error);
+    logger.error('[Subscriptions GET] Error:', error);
     return NextResponse.json({ error: 'Failed to fetch plans' }, { status: 500 });
   }
 }
@@ -146,7 +147,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ plan: result.rows[0] }, { status: 201 });
   } catch (error) {
-    console.error('[Subscriptions POST] Error:', error);
+    logger.error('[Subscriptions POST] Error:', error);
     return NextResponse.json({ error: 'Failed to create plan' }, { status: 500 });
   }
 }
@@ -213,7 +214,7 @@ export async function PATCH(request: NextRequest) {
 
     return NextResponse.json({ plan: result.rows[0] });
   } catch (error) {
-    console.error('[Subscriptions PATCH] Error:', error);
+    logger.error('[Subscriptions PATCH] Error:', error);
     return NextResponse.json({ error: 'Failed to update plan' }, { status: 500 });
   }
 }
@@ -308,7 +309,7 @@ export async function subscribeCustomer(
 
     return { success: true, subscription: result.rows[0] };
   } catch (error) {
-    console.error('[Subscribe] Error:', error);
+    logger.error('[Subscribe] Error:', error);
     return { success: false, error: 'Failed to create subscription' };
   }
 }

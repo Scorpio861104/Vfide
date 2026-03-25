@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { logger } from '@/lib/logger';
 
 export type WSMessageType =
   | 'connect'
@@ -262,7 +263,7 @@ export function useWebSocket(config: WSConfig, userAddress?: string) {
       .connect(userAddress)
       .then(() => setIsConnected(true))
       .catch((e) => {
-        console.error('[useWebSocket] Failed to connect:', e);
+        logger.error('[useWebSocket] Failed to connect:', e);
       });
 
     const unsubscribeConnect = wsRef.current.on('connect', () => setIsConnected(true));

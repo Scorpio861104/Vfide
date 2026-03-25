@@ -47,8 +47,8 @@ export function AutoSwapPanel() {
       
       // Refetch configuration after transaction
       setTimeout(() => refetch(), 2000);
-    } catch (err) {
-      console.error('Transaction failed:', err);
+    } catch {
+      // Error is surfaced via wagmi error state in TransactionStatus
     } finally {
       setLoading(false);
     }
@@ -72,8 +72,8 @@ export function AutoSwapPanel() {
       });
       
       setTimeout(() => refetch(), 2000);
-    } catch (err) {
-      console.error('Transaction failed:', err);
+    } catch {
+      // Error is surfaced via wagmi error state in TransactionStatus
     } finally {
       setLoading(false);
     }
@@ -90,8 +90,8 @@ export function AutoSwapPanel() {
       });
       
       setTimeout(() => refetch(), 2000);
-    } catch (err) {
-      console.error('Transaction failed:', err);
+    } catch {
+      // Error is surfaced via wagmi error state in TransactionStatus
     } finally {
       setLoading(false);
     }

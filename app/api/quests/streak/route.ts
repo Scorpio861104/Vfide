@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getClient } from '@/lib/db';
 import { isAdmin, requireAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
+import { logger } from '@/lib/logger';
 
 const STREAK_TYPE_REGEX = /^[a-z_]{1,32}$/;
 const ADDRESS_PATTERN = /^0x[a-fA-F0-9]{3,64}$/;
@@ -127,7 +128,7 @@ export async function GET(request: NextRequest) {
       client.release();
     }
   } catch (error) {
-    console.error('Error fetching streak:', error);
+    logger.error('Error fetching streak:', error);
     return NextResponse.json(
       { error: 'Failed to fetch streak' },
       { status: 500 }
@@ -241,7 +242,7 @@ export async function POST(request: NextRequest) {
       client.release();
     }
   } catch (error) {
-    console.error('Error updating streak:', error);
+    logger.error('Error updating streak:', error);
     return NextResponse.json(
       { error: 'Failed to update streak' },
       { status: 500 }

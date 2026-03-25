@@ -5,6 +5,7 @@ import { withRateLimit } from '@/lib/auth/rateLimit';
 import { createPublicClient, http, isAddress } from 'viem';
 import { base, baseSepolia, polygon, polygonAmoy, zkSync, zkSyncSepoliaTestnet } from 'viem/chains';
 import rewardABI from '@/lib/abis/UserRewards.json';
+import { logger } from '@/lib/logger';
 
 const REWARD_ID_REGEX = /^[a-zA-Z0-9:_-]{1,128}$/;
 
@@ -193,7 +194,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
             );
           }
         } catch (error) {
-          console.error(`[Reward Claim] On-chain verification failed for reward ${reward.id}:`, error);
+          logger.error(`[Reward Claim] On-chain verification failed for reward ${reward.id}:`, error);
           // Fail-safe: block claim when on-chain check throws to prevent unauthorised claims
           return NextResponse.json(
             { error: 'On-chain verification failed. Please try again later.' },
@@ -224,7 +225,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       rewards: result.rows
     });
   } catch (error) {
-    console.error('[Rewards Claim] Error:', error);
+    logger.error('[Rewards Claim] Error:', error);
     const errorMessage = error instanceof Error ? error.message : 'Failed to claim rewards';
     return NextResponse.json(
       { error: errorMessage },

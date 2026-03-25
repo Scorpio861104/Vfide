@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { withRateLimit } from '@/lib/auth/rateLimit';
+import { logger } from '@/lib/logger';
 
 const ADDRESS_REGEX = /^0x[a-fA-F0-9]{40}$/;
 const SOURCE_TYPES = ['guardian-inbox', 'guardians-page', 'unknown'] as const;
@@ -83,7 +84,7 @@ export async function POST(request: NextRequest) {
     recoveryFraudStore.splice(0, recoveryFraudStore.length - MAX_EVENTS);
   }
 
-  console.warn('[Security][Recovery Fraud Event]', event);
+  logger.warn('[Security][Recovery Fraud Event]', event);
 
   return NextResponse.json({ success: true });
 }

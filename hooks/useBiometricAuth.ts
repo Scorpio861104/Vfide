@@ -6,6 +6,7 @@ import {
   SECURITY_STORAGE_KEYS
 } from '@/config/security-advanced';
 import { safeLocalStorage } from '@/lib/utils';
+import { logger } from '@/lib/logger';
 
 // Wallet linking storage key
 const LINKED_WALLET_KEY = 'vfide-biometric-wallet';
@@ -102,7 +103,7 @@ const loadConfig = (): BiometricConfig => {
       }))
     };
   } catch (error) {
-    console.error('Failed to load biometric config', error);
+    logger.error('Failed to load biometric config', error);
     return {
       enabled: false,
       credentials: [],
@@ -121,7 +122,7 @@ const saveConfig = (config: BiometricConfig): void => {
   try {
     localStorage.setItem(SECURITY_STORAGE_KEYS.biometric, JSON.stringify(config));
   } catch (e) {
-    console.error('Failed to save biometric config', e);
+    logger.error('Failed to save biometric config', e);
   }
 };
 
@@ -155,7 +156,7 @@ export const useBiometricAuth = (userId?: string): UseBiometricAuthResult => {
     type: BiometricType = 'passkey'
   ): Promise<BiometricCredential | null> => {
     if (!config.platformSupport.webauthn) {
-      console.error('WebAuthn not supported');
+      logger.error('WebAuthn not supported');
       return null;
     }
 
@@ -215,7 +216,7 @@ export const useBiometricAuth = (userId?: string): UseBiometricAuthResult => {
 
       return newCredential;
     } catch (error) {
-      console.error('Failed to enroll biometric', error);
+      logger.error('Failed to enroll biometric', error);
       return null;
     }
   }, [config.platformSupport, config.credentials, userId, updateConfig]);
@@ -235,7 +236,7 @@ export const useBiometricAuth = (userId?: string): UseBiometricAuthResult => {
 
       return true;
     } catch (error) {
-      console.error('Failed to remove biometric', error);
+      logger.error('Failed to remove biometric', error);
       return false;
     }
   }, [config.credentials, updateConfig]);
@@ -275,7 +276,7 @@ export const useBiometricAuth = (userId?: string): UseBiometricAuthResult => {
       // In production, verify signature on backend
       return true;
     } catch (error) {
-      console.error('Biometric verification failed', error);
+      logger.error('Biometric verification failed', error);
       return false;
     }
   }, [config.platformSupport, config.credentials, updateConfig]);

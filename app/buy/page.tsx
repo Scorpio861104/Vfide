@@ -58,7 +58,7 @@ const FIAT_PROVIDERS: FiatProvider[] = [
     getUrl: (address: string, amount?: number) => {
       const baseUrl = 'https://buy.moonpay.com';
       const params = new URLSearchParams({
-        apiKey: process.env.NEXT_PUBLIC_MOONPAY_API_KEY || 'pk_test_key',
+        apiKey: process.env.NEXT_PUBLIC_MOONPAY_API_KEY || '',
         currencyCode: 'eth',
         walletAddress: address,
         colorCode: '#00FFB2', // Digital Jade
@@ -83,7 +83,7 @@ const FIAT_PROVIDERS: FiatProvider[] = [
     getUrl: (address: string, amount?: number) => {
       const baseUrl = 'https://global.transak.com';
       const params = new URLSearchParams({
-        apiKey: process.env.NEXT_PUBLIC_TRANSAK_API_KEY || 'test_api_key',
+        apiKey: process.env.NEXT_PUBLIC_TRANSAK_API_KEY || '',
         cryptoCurrencyCode: 'ETH',
         network: 'base',
         walletAddress: address,
@@ -109,7 +109,7 @@ const FIAT_PROVIDERS: FiatProvider[] = [
     getUrl: (address: string, amount?: number) => {
       const baseUrl = 'https://app.ramp.network';
       const params = new URLSearchParams({
-        hostApiKey: process.env.NEXT_PUBLIC_RAMP_API_KEY || 'test_key',
+        hostApiKey: process.env.NEXT_PUBLIC_RAMP_API_KEY || '',
         swapAsset: 'BASE_ETH',
         userAddress: address,
         ...(amount ? { fiatValue: amount.toString() } : {})

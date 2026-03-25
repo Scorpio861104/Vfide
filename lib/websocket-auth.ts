@@ -4,6 +4,7 @@
  */
 
 import { type Address } from 'viem';
+import { logger } from '@/lib/logger';
 
 /**
  * WebSocket Authentication Message Format
@@ -155,7 +156,7 @@ export function validateWSAuthMessage(auth: WSAuthMessage): { valid: boolean; er
  *     ws.onmessage = (event) => {
  *       const data = JSON.parse(event.data);
  *       if (data.type === 'auth_success') {
- *         console.log('WebSocket authenticated successfully');
+ *         logger.info('WebSocket authenticated successfully');
  *       }
  *     };
  *   };

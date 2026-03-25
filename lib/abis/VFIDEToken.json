@@ -8,11 +8,6 @@
       },
       {
         "internalType": "address",
-        "name": "_presaleContract",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
         "name": "treasury",
         "type": "address"
       },
@@ -52,6 +47,21 @@
   },
   {
     "inputs": [],
+    "name": "VF_FrozenAddress",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "VF_InsufficientBalance",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "VF_InvalidDuration",
+    "type": "error"
+  },
+  {
+    "inputs": [],
     "name": "VF_LOCKED",
     "type": "error"
   },
@@ -67,7 +77,22 @@
   },
   {
     "inputs": [],
+    "name": "VF_NoPending",
+    "type": "error"
+  },
+  {
+    "inputs": [],
     "name": "VF_POLICY_LOCKED",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "VF_SanctionedAddress",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "VF_TimelockActive",
     "type": "error"
   },
   {
@@ -78,6 +103,11 @@
   {
     "inputs": [],
     "name": "VF_ZERO",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "VF_ZeroAddress",
     "type": "error"
   },
   {
@@ -303,6 +333,25 @@
     "anonymous": false,
     "inputs": [
       {
+        "indexed": false,
+        "internalType": "bool",
+        "name": "active",
+        "type": "bool"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "expiry",
+        "type": "uint256"
+      }
+    ],
+    "name": "FeeBypassSet",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
         "indexed": true,
         "internalType": "address",
         "name": "user",
@@ -341,6 +390,25 @@
       }
     ],
     "name": "LedgerLogFailed",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "ledger",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint64",
+        "name": "effectiveAt",
+        "type": "uint64"
+      }
+    ],
+    "name": "LedgerScheduled",
     "type": "event"
   },
   {
@@ -406,19 +474,6 @@
       {
         "indexed": true,
         "internalType": "address",
-        "name": "presale",
-        "type": "address"
-      }
-    ],
-    "name": "PresaleContractSet",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
-        "internalType": "address",
         "name": "sink",
         "type": "address"
       },
@@ -443,6 +498,25 @@
       }
     ],
     "name": "SanctumSinkSet",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "bool",
+        "name": "active",
+        "type": "bool"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "expiry",
+        "type": "uint256"
+      }
+    ],
+    "name": "SecurityBypassSet",
     "type": "event"
   },
   {
@@ -766,19 +840,6 @@
   },
   {
     "inputs": [],
-    "name": "PRESALE_CAP",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
     "name": "SINK_CHANGE_DELAY",
     "outputs": [
       {
@@ -824,6 +885,13 @@
   {
     "inputs": [],
     "name": "applyBurnRouter",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "applyLedger",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -900,6 +968,19 @@
     "type": "function"
   },
   {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      }
+    ],
+    "name": "burn",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
     "inputs": [],
     "name": "burnRouter",
     "outputs": [
@@ -948,7 +1029,49 @@
   },
   {
     "inputs": [],
+    "name": "cancelBurnRouter",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "cancelLedger",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "cancelOwnershipTransfer",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "cancelPendingExempt",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "cancelPendingWhitelist",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "cancelSecurityHub",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "cancelVaultHub",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -1178,6 +1301,35 @@
       {
         "internalType": "uint256",
         "name": "nextResetTime",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "from",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "to",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      }
+    ],
+    "name": "getExpectedNetAmount",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
         "type": "uint256"
       }
     ],
@@ -1524,6 +1676,32 @@
   },
   {
     "inputs": [],
+    "name": "pendingLedger",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "pendingLedgerAt",
+    "outputs": [
+      {
+        "internalType": "uint64",
+        "name": "",
+        "type": "uint64"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "pendingOwner",
     "outputs": [
       {
@@ -1735,19 +1913,6 @@
     "type": "function"
   },
   {
-    "inputs": [],
-    "name": "presaleContract",
-    "outputs": [
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
     "inputs": [
       {
         "internalType": "address",
@@ -1843,6 +2008,13 @@
         "type": "uint256"
       }
     ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "renounceOwnership",
+    "outputs": [],
     "stateMutability": "view",
     "type": "function"
   },
@@ -2139,6 +2311,13 @@
     "type": "function"
   },
   {
+    "inputs": [],
+    "name": "syncEmergencyFlags",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
     "inputs": [
       {
         "internalType": "address",
@@ -2159,7 +2338,33 @@
   },
   {
     "inputs": [],
+    "name": "totalBurnedToDate",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "totalSupply",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "transactionFeesProcessed",
     "outputs": [
       {
         "internalType": "uint256",

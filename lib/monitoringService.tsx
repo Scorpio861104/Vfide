@@ -4,6 +4,7 @@
  */
 
 import React from 'react';
+import { logger } from '@/lib/logger';
 
 interface PerformanceMetric {
   componentName: string;
@@ -73,7 +74,7 @@ class MonitoringService {
 
     // Warn on slow renders (>100ms)
     if (renderTime > 100) {
-      console.warn(
+      logger.warn(
         `[MonitoringService] Slow render detected: ${componentName} took ${renderTime.toFixed(2)}ms`,
         props
       );
@@ -100,7 +101,7 @@ class MonitoringService {
       this.errorLogs.shift();
     }
 
-    console.error(`[MonitoringService] Error in ${componentName}:`, error, errorInfo, context);
+    logger.error(`[MonitoringService] Error in ${componentName}:`, error, { ...context, componentStack: errorInfo?.componentStack ?? undefined });
   }
 
   /**

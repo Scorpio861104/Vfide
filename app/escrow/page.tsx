@@ -316,10 +316,12 @@ export default function EscrowPage() {
               </div>
             
               <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
+                whileHover={{ scale: isConnected ? 1.02 : 1 }}
+                whileTap={{ scale: isConnected ? 0.98 : 1 }}
                 onClick={() => setShowCreateModal(true)}
-                className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-cyan-500 to-emerald-500 text-white rounded-xl font-semibold shadow-lg shadow-cyan-500/25 hover:shadow-cyan-500/40 transition-all"
+                disabled={!isConnected}
+                aria-label="Create new escrow (requires wallet connection)"
+                className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-cyan-500 to-emerald-500 text-white rounded-xl font-semibold shadow-lg shadow-cyan-500/25 hover:shadow-cyan-500/40 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <Plus className="w-4 h-4" />
                 Create Escrow
@@ -727,7 +729,7 @@ export default function EscrowPage() {
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={handleCreateEscrow}
-                  disabled={escrowLoading || !createForm.merchant || !createForm.amount || !createForm.orderId}
+                  disabled={escrowLoading || !isConnected || !createForm.merchant || !createForm.amount || !createForm.orderId}
                   className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-cyan-500 to-emerald-500 text-white rounded-xl font-medium shadow-lg shadow-cyan-500/25 hover:shadow-cyan-500/40 transition-all disabled:opacity-50"
                 >
                   {escrowLoading ? (

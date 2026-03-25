@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { withRateLimit } from '@/lib/auth/rateLimit';
+import { logger } from '@/lib/logger';
 
 /**
  * Health check endpoint for the frontend application
@@ -73,8 +74,8 @@ function checkEnvironmentVariables(): boolean {
   });
 
   if (missing.length > 0) {
-    console.warn('⚠️ Missing environment variables:', missing);
-    console.warn('💡 For local dev, see REALITY_CHECK.md or copy .env.local.example');
+    logger.warn('⚠️ Missing environment variables:', missing);
+    logger.warn('💡 For local dev, see REALITY_CHECK.md or copy .env.local.example');
   }
 
   return missing.length === 0;

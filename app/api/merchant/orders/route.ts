@@ -12,6 +12,7 @@ import { query, getClient } from '@/lib/db';
 import { requireAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { dispatchWebhook } from '@/lib/webhooks/merchantWebhookDispatcher';
+import { logger } from '@/lib/logger';
 
 const ADDRESS_LIKE_REGEX = /^0x[a-fA-F0-9]{3,40}$/;
 const TX_HASH_REGEX = /^0x[a-fA-F0-9]{64}$/;
@@ -119,7 +120,7 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('[Orders GET] Error:', error);
+    logger.error('[Orders GET] Error:', error);
     return NextResponse.json({ error: 'Failed to fetch orders' }, { status: 500 });
   }
 }
@@ -288,7 +289,7 @@ export async function POST(request: NextRequest) {
       client.release();
     }
   } catch (error) {
-    console.error('[Orders POST] Error:', error);
+    logger.error('[Orders POST] Error:', error);
     return NextResponse.json({ error: 'Failed to create order' }, { status: 500 });
   }
 }
@@ -368,7 +369,7 @@ export async function PATCH(request: NextRequest) {
 
     return NextResponse.json({ order: result.rows[0] });
   } catch (error) {
-    console.error('[Orders PATCH] Error:', error);
+    logger.error('[Orders PATCH] Error:', error);
     return NextResponse.json({ error: 'Failed to update order' }, { status: 500 });
   }
 }

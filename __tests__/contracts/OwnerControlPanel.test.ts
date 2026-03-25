@@ -321,8 +321,7 @@ describe('OwnerControlPanel Contract', () => {
       const tokenStatus = {
         totalSupply: parseEther('200000000'),
         devReserveBalance: parseEther('41000000'),
-        presaleBalance: parseEther('12000000'),
-        treasuryBalance: parseEther('115000000'),
+        treasuryBalance: parseEther('150000000'),
         vaultOnly: true,
         policyLocked: true,
         circuitBreaker: false,
@@ -338,14 +337,6 @@ describe('OwnerControlPanel Contract', () => {
       expect(await mockContractRead({ functionName: 'getSystemHealth' })).toEqual({
         healthy: true,
         score: 95,
-      });
-    });
-
-    it('should get presale status', async () => {
-      mockContractRead.mockResolvedValueOnce({ active: true, raised: parseEther('1000') });
-      expect(await mockContractRead({ functionName: 'getPresaleStatus' })).toEqual({
-        active: true,
-        raised: parseEther('1000'),
       });
     });
 

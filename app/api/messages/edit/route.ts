@@ -3,6 +3,7 @@ import { getClient } from '@/lib/db';
 import { requireAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { isAddress } from 'viem';
+import { logger } from '@/lib/logger';
 
 const MAX_ID_LENGTH = 128;
 const MAX_CONTENT_LENGTH = 5000;
@@ -193,7 +194,7 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json({ success: true, message: updateResult.rows[0] });
   } catch (error) {
     await client.query('ROLLBACK');
-    console.error('[Message Edit] Error:', error);
+    logger.error('[Message Edit] Error:', error);
     return NextResponse.json({ error: 'Failed to edit message' }, { status: 500 });
   } finally {
     client.release();

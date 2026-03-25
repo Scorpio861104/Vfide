@@ -25,6 +25,7 @@
  */
 
 import React from 'react';
+import { logger } from '@/lib/logger';
 
 // ============================================================================
 // Type Definitions
@@ -200,11 +201,22 @@ export async function pqDecapsulate(
 // Dilithium Post-Quantum Signatures
 // ============================================================================
 
-let dilithiumModule: typeof import('@theqrl/dilithium5') | null = null;
+/**
+ * Minimal type interface for @theqrl/dilithium5 module.
+ * The package does not ship TypeScript declarations, so we declare what we use.
+ */
+interface DilithiumModule {
+  newKeyPair(): Promise<{ getPublicKey(): Uint8Array; getSecretKey(): Uint8Array }>;
+  sign(message: Uint8Array, privateKey: Uint8Array): Promise<Uint8Array>;
+  verify(message: Uint8Array, signature: Uint8Array, publicKey: Uint8Array): Promise<boolean>;
+}
 
-async function getDilithium() {
+let dilithiumModule: DilithiumModule | null = null;
+
+async function getDilithium(): Promise<DilithiumModule> {
   if (!dilithiumModule) {
-    dilithiumModule = await import('@theqrl/dilithium5');
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    dilithiumModule = (await import('@theqrl/dilithium5')) as unknown as DilithiumModule;
   }
   return dilithiumModule;
 }
@@ -218,7 +230,7 @@ export async function generateDilithiumKeyPair(): Promise<{
   privateKey: Uint8Array;
 }> {
   const dilithium = await getDilithium();
-  const keyPair = await (dilithium as any).newKeyPair();
+  const keyPair = await dilithium.newKeyPair();
   return {
     publicKey: keyPair.getPublicKey(),
     privateKey: keyPair.getSecretKey()
@@ -233,7 +245,7 @@ export async function dilithiumSign(
   privateKey: Uint8Array
 ): Promise<Uint8Array> {
   const dilithium = await getDilithium();
-  return (dilithium as any).sign(message, privateKey);
+  return dilithium.sign(message, privateKey);
 }
 
 /**
@@ -246,7 +258,7 @@ export async function dilithiumVerify(
 ): Promise<boolean> {
   const dilithium = await getDilithium();
   try {
-    return (dilithium as any).verify(message, signature, publicKey);
+    return dilithium.verify(message, signature, publicKey);
   } catch {
     return false;
   }
@@ -704,7 +716,7 @@ export function storePublicKeys(address: string, publicKeys: HybridPublicKey): v
     stored[address.toLowerCase()] = publicKeys;
     localStorage.setItem(PQ_PUBLIC_KEY_STORAGE_KEY, JSON.stringify(stored));
   } catch (error) {
-    console.error('[PQ] Failed to store public keys:', error);
+    logger.error('[PQ] Failed to store public keys:', error);
   }
 }
 
@@ -828,7 +840,7 @@ export function usePQEncryption(userAddress?: string): UsePQEncryptionResult {
     setError(null);
     
     try {
-      console.log('[PQ] Generating post-quantum keys...');
+      logger.info('[PQ] Generating post-quantum keys...');
       const keys = await deriveHybridKeyPair(userAddress, signature);
       
       // Store keys
@@ -837,11 +849,11 @@ export function usePQEncryption(userAddress?: string): UsePQEncryptionResult {
       
       setKeyPair(keys);
       setIsReady(true);
-      console.log('[PQ] Post-quantum keys initialized successfully');
+      logger.info('[PQ] Post-quantum keys initialized successfully');
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to initialize keys';
       setError(errorMessage);
-      console.error('[PQ] Key initialization failed:', err);
+      logger.error('[PQ] Key initialization failed:', err);
     } finally {
       setIsInitializing(false);
     }

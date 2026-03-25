@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createPublicClient, http, parseEther, formatEther } from 'viem';
 import { base, baseSepolia, polygon, polygonAmoy, zkSync, zkSyncSepoliaTestnet } from 'viem/chains';
 import { withRateLimit } from '@/lib/auth/rateLimit';
+import { logger } from '@/lib/logger';
 
 function getConfiguredChain() {
   const chainId = Number.parseInt(process.env.NEXT_PUBLIC_CHAIN_ID || '', 10);
@@ -131,7 +132,7 @@ export async function GET(request: NextRequest) {
       timestamp: Date.now(),
     });
   } catch (error) {
-    console.error('[Fee API] Error:', error);
+    logger.error('[Fee API] Error:', error);
     return NextResponse.json({
       success: true,
       fees: {

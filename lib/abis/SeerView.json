@@ -96,6 +96,50 @@
     "inputs": [
       {
         "internalType": "address",
+        "name": "seerAutonomous",
+        "type": "address"
+      }
+    ],
+    "name": "getMonitorStatus",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "vault",
+        "type": "address"
+      },
+      {
+        "internalType": "bool",
+        "name": "tasksReady",
+        "type": "bool"
+      },
+      {
+        "internalType": "uint8",
+        "name": "tasksBitmask",
+        "type": "uint8"
+      },
+      {
+        "internalType": "uint256",
+        "name": "totalActions",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "violationRate",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint16",
+        "name": "sensitivity",
+        "type": "uint16"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
         "name": "seer",
         "type": "address"
       },

@@ -134,8 +134,8 @@ export function GroupMessaging() {
         if (stored) {
           localGroups = JSON.parse(stored) as Group[];
         }
-      } catch (e) {
-        console.error('Failed to load local groups:', e);
+      } catch {
+        // local groups stay empty on parse failure
       }
 
       try {
@@ -159,8 +159,7 @@ export function GroupMessaging() {
           setGroups(mergedGroups);
           localStorage.setItem(`vfide_groups_${address}`, JSON.stringify(mergedGroups));
         }
-      } catch (error) {
-        console.error('Failed to load remote groups:', error);
+      } catch {
         if (isActive) {
           setGroups(localGroups.sort((a, b) => b.lastActivity - a.lastActivity));
         }
@@ -219,8 +218,8 @@ export function GroupMessaging() {
             }
             return;
           }
-        } catch (error) {
-          console.error('Failed to load remote group messages:', error);
+        } catch {
+          // fall back to local messages below
         }
       }
 
@@ -246,8 +245,7 @@ export function GroupMessaging() {
         } else if (isActive) {
           setMessages([]);
         }
-      } catch (e) {
-        console.error('Failed to load group messages:', e);
+      } catch {
         if (isActive) {
           setMessages([]);
         }

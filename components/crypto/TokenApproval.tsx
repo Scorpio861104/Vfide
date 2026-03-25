@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { parseUnits, formatUnits, type Address } from 'viem';
-import { useContractWrite, useWaitForTransactionReceipt } from 'wagmi';
+import { useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
 import { ERC20ABI } from '@/lib/abis';
 
 /**
@@ -37,7 +37,7 @@ export function TokenApproval({
   const needsApproval = currentAllowance < requiredAmount;
 
   // Contract write for approval
-  const { writeContract, data: hash, isPending } = useContractWrite();
+  const { writeContract, data: hash, isPending } = useWriteContract();
 
   // Wait for transaction
   const { isLoading: isConfirming } = useWaitForTransactionReceipt({
@@ -79,7 +79,6 @@ export function TokenApproval({
       });
     } catch (error) {
       onError?.(error as Error);
-      console.error('Approval failed:', error);
     }
   };
 

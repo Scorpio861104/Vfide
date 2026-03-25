@@ -8,6 +8,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { logger } from '@/lib/logger';
 
 // ============================================================================
 // Types
@@ -190,7 +191,7 @@ export async function registerServiceWorker(): Promise<ServiceWorkerRegistration
         newWorker.addEventListener('statechange', () => {
           if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
             // New version available
-            console.log('New version available! Refresh to update.');
+            logger.info('New version available! Refresh to update.');
           }
         });
       }
@@ -198,7 +199,7 @@ export async function registerServiceWorker(): Promise<ServiceWorkerRegistration
 
     return registration;
   } catch (error) {
-    console.error('Service worker registration failed:', error);
+    logger.error('Service worker registration failed:', error);
     return null;
   }
 }
@@ -219,7 +220,7 @@ export function useOfflineQueue() {
   useEffect(() => {
     getAllFromStore()
       .then((queue) => setState((s) => ({ ...s, queue })))
-      .catch(console.error);
+      .catch((err: unknown) => logger.error('Failed to load offline queue:', err));
   }, []);
 
   // Listen for online/offline events
@@ -297,7 +298,7 @@ export function useOfflineQueue() {
   const processOperation = async (operation: QueuedOperation): Promise<boolean> => {
     const processor = processors[operation.type];
     if (!processor) {
-      console.error(`No processor for operation type: ${operation.type}`);
+      logger.error(`No processor for operation type: ${operation.type}`);
       return false;
     }
 

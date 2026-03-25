@@ -3,6 +3,7 @@ import { clearAuthCookies } from '@/lib/auth/cookieAuth';
 import { revokeToken, hashToken } from '@/lib/auth/tokenRevocation';
 import { getRequestAuthToken, withAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
+import { logger } from '@/lib/logger';
 
 /**
  * POST /api/auth/logout
@@ -31,11 +32,11 @@ export const POST = withAuth(async (request: NextRequest) => {
         await revokeToken(tokenHash, expiresAt, 'logout');
       } catch (error) {
         // Log but don't fail - token might already be expired
-        console.warn('[Logout] Token revocation warning:', error);
+        logger.warn('[Logout] Token revocation warning:', error);
       }
     } else if (token !== null && token !== undefined) {
       // Do not fail logout for malformed token shapes from upstream extraction.
-      console.warn('[Logout] Ignoring malformed token payload');
+      logger.warn('[Logout] Ignoring malformed token payload');
     }
 
     // Clear cookies
@@ -48,7 +49,7 @@ export const POST = withAuth(async (request: NextRequest) => {
 
     return response;
   } catch (error) {
-    console.error('[Logout API] Error:', error);
+    logger.error('[Logout API] Error:', error);
     return NextResponse.json(
       { error: 'Logout failed' },
       { status: 500 }

@@ -9,6 +9,7 @@
 
 import { useEffect } from 'react';
 import { initWebVitals, observeLongTasks } from '@/lib/performance';
+import { logger } from '@/lib/logger';
 
 export function PerformanceProvider() {
   useEffect(() => {
@@ -18,7 +19,7 @@ export function PerformanceProvider() {
     // Observe long tasks
     const cleanup = observeLongTasks((duration) => {
       if (process.env.NODE_ENV === 'development') {
-        console.warn(`[Performance] Long task detected: ${duration.toFixed(2)}ms`);
+        logger.warn(`[Performance] Long task detected: ${duration.toFixed(2)}ms`);
       }
     });
 
@@ -31,7 +32,7 @@ export function PerformanceProvider() {
         setTimeout(() => {
           const navigation = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming;
           if (navigation) {
-            console.log('[Performance] Navigation timing:', {
+            logger.info('[Performance] Navigation timing:', {
               'DNS': `${(navigation.domainLookupEnd - navigation.domainLookupStart).toFixed(0)}ms`,
               'TCP': `${(navigation.connectEnd - navigation.connectStart).toFixed(0)}ms`,
               'Request': `${(navigation.responseStart - navigation.requestStart).toFixed(0)}ms`,

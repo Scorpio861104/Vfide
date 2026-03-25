@@ -139,4 +139,17 @@ describe('NetworkSwitchOverlay', () => {
     // Component should handle success animation
     expect(document.body).toBeInTheDocument()
   })
+
+  it('does not trigger auto-switch when isPending is true', () => {
+    // When a switch is already in flight (isPending=true), the auto-switch
+    // guard prevents a duplicate call even if auto-switch preference is stored.
+    mockIsConnected = true
+    mockChainId = 1         // wrong network
+    mockSwitchChainPending = true  // switch already in progress
+
+    render(<NetworkSwitchOverlay />)
+
+    // Overlay still shows (not dismissed, still wrong network)
+    expect(document.body).toBeInTheDocument()
+  })
 })

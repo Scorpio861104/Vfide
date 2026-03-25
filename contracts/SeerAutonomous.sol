@@ -47,6 +47,14 @@ interface IProofLedger_Auto {
     function logSystemEvent(address who, string calldata action, address by) external;
 }
 
+/// @notice Minimal interface for EcosystemVault's keeper/automation methods
+interface IEcosystemScheduler {
+    /// @dev Chainlink Automation-compatible: returns whether tasks are due and an ABI-encoded bitmask.
+    function checkUpkeep(bytes calldata) external view returns (bool upkeepNeeded, bytes memory performData);
+    /// @dev Execute the tasks indicated by the bitmask encoded in performData.
+    function performUpkeep(bytes calldata performData) external;
+}
+
 /// ═══════════════════════════════════════════════════════════════════════════
 ///                                ERRORS
 /// ═══════════════════════════════════════════════════════════════════════════
@@ -108,7 +116,11 @@ contract SeerAutonomous is ReentrancyGuard {
         uint16 newLimit
     );
     event DAOMaxAutonomyProfileApplied(address indexed by);
-    
+
+    // EcosystemVault monitoring
+    event EcosystemVaultSet(address indexed vault);
+    event EcosystemTasksTriggered(uint8 indexed tasksBitmask);
+
     // Restrictions
     event RestrictionApplied(address indexed subject, RestrictionLevel level, uint64 duration, string reason);
     event RestrictionAppliedCode(address indexed subject, RestrictionLevel level, uint16 indexed reasonCode, string reason);
@@ -176,6 +188,8 @@ contract SeerAutonomous is ReentrancyGuard {
     ISeer public seer;
     IProofLedger_Auto public ledger;
     IRiskOracle_Auto public riskOracle;
+    /// @notice EcosystemVault to monitor and trigger scheduled tasks on.
+    address public ecosystemVault;
     
     // Operator permissions (trusted contracts that can trigger checks)
     mapping(address => bool) public operators;
@@ -820,6 +834,10 @@ contract SeerAutonomous is ReentrancyGuard {
         networkViolationCount = 0;
         networkActionCount = 0;
         networkBlockedCount = 0;
+
+        // Automatically trigger any due EcosystemVault scheduled tasks on the
+        // same daily cadence — no separate keeper bot needed.
+        _monitorEcosystemVault();
     }
 
     /// @notice Finalize a pending challenge if window has elapsed
@@ -1065,7 +1083,27 @@ contract SeerAutonomous is ReentrancyGuard {
     // ═══════════════════════════════════════════════════════════════════════
     //                         ADMIN
     // ═══════════════════════════════════════════════════════════════════════
-    
+
+    /**
+     * @notice Set the EcosystemVault to monitor for scheduled tasks.
+     * @dev DAO-only. Pass address(0) to disable vault monitoring.
+     */
+    function setEcosystemVault(address _vault) external onlyDAO {
+        ecosystemVault = _vault;
+        emit EcosystemVaultSet(_vault);
+    }
+
+    /**
+     * @notice Permissionless keeper entrypoint: check and execute any due
+     *         EcosystemVault scheduled tasks in a single call.
+     * @dev Any address (Chainlink Automation, Gelato, cron-bot, user) may call
+     *      this.  All time guards are enforced by EcosystemVault itself.
+     *      Returns the bitmask of tasks that were actually executed.
+     */
+    function monitorEcosystemVault() external nonReentrant returns (uint8 ranTasks) {
+        return _monitorEcosystemVault();
+    }
+
     function setDAO(address _newDAO) external onlyDAO {
         if (_newDAO == address(0)) revert SA_Zero();
         address old = dao;
@@ -1171,8 +1209,29 @@ contract SeerAutonomous is ReentrancyGuard {
     // ═══════════════════════════════════════════════════════════════════════
     //                            INTERNAL
     // ═══════════════════════════════════════════════════════════════════════
-    
-    
+
+    /**
+     * @dev Called automatically from _maybeAdjustThresholds (daily cadence) and
+     *      directly via monitorEcosystemVault().  Uses checkUpkeep/performUpkeep
+     *      so all per-task time guards are enforced inside EcosystemVault.
+     *      Wrapped in try/catch so a vault misconfiguration never reverts Seer
+     *      enforcement checks.
+     */
+    function _monitorEcosystemVault() internal returns (uint8 ranTasks) {
+        if (ecosystemVault == address(0)) return 0;
+        try IEcosystemScheduler(ecosystemVault).checkUpkeep("") returns (bool needed, bytes memory performData) {
+            if (!needed) return 0;
+            IEcosystemScheduler(ecosystemVault).performUpkeep(performData);
+            // performData is abi.encode(uint8 bitmask) — decode to report which tasks ran.
+            if (performData.length >= 32) {
+                ranTasks = abi.decode(performData, (uint8));
+            }
+            emit EcosystemTasksTriggered(ranTasks);
+        } catch {
+            // Silently skip: vault not ready, paused, or misconfigured.
+        }
+    }
+
     function _log(string memory action) internal {
         if (address(ledger) != address(0)) {
             try ledger.logSystemEvent(address(this), action, msg.sender) {} catch {}

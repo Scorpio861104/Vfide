@@ -7,6 +7,7 @@
 
 import { useState, useCallback, useEffect } from 'react';
 import { AnalyticsEvent, UserAnalytics } from '@/config/performance-dashboard';
+import { logger } from '@/lib/logger';
 
 interface UseUserAnalyticsResult {
   events: AnalyticsEvent[];
@@ -57,7 +58,7 @@ export function useUserAnalytics(): UseUserAnalyticsResult {
         setEvents(Array.isArray(parsed) ? parsed : []);
       }
     } catch (e) {
-      console.error('Failed to load analytics events:', e);
+      logger.error('Failed to load analytics events:', e);
     }
   }, []);
 
@@ -66,7 +67,7 @@ export function useUserAnalytics(): UseUserAnalyticsResult {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(events));
     } catch (e) {
-      console.error('Failed to save analytics events:', e);
+      logger.error('Failed to save analytics events:', e);
     }
   }, [events]);
 

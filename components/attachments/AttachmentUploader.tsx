@@ -68,8 +68,8 @@ export function AttachmentUploader({ messageId, userId, onUploaded }: Attachment
       if (onUploaded) {
         onUploaded(uploaded);
       }
-    } catch (err) {
-      console.error('Upload error:', err);
+    } catch {
+      // Error is surfaced via the useFileUpload hook's error state in the UI
     }
   };
 

@@ -8,6 +8,7 @@
  */
 
 import { useState, useCallback, useRef, useEffect } from 'react';
+import { logger } from '@/lib/logger';
 
 // ==================== TYPES ====================
 
@@ -223,7 +224,7 @@ export function useSmartSearch(sources: SearchSource[], options: SearchOptions =
               score: r.score * (source.priority || 1),
             }));
           } catch (e) {
-            console.error(`Search source ${source.id} failed:`, e);
+            logger.error(`Search source ${source.id} failed:`, e);
             return [];
           }
         })

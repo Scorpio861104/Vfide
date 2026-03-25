@@ -9,13 +9,12 @@ import "./SharedInterfaces.sol";
  * SUPPLY (ALL MINTED AT GENESIS):
  * - Total supply: 200,000,000 VFIDE (18 decimals)
  * - Dev reserve: 50,000,000 → DevReserveVestingVault (locked)
- * - Presale allocation: 35,000,000 → PresaleContract (no bonus pool)
- * - Treasury/Operations: 115,000,000 → Treasury (liquidity, CEX, operations)
+ * - Treasury/Operations: 150,000,000 → Treasury (liquidity, DEX, CEX, operations, ecosystem)
  * 
  * VAULT-ONLY (ON BY DEFAULT):
  * - Users MUST use vaults for transfers (enables recovery/ProofScore)
  * - Exchanges/contracts can be whitelisted by owner
- * - System contracts (presale, sinks) auto-exempt
+ * - System contracts (sinks) auto-exempt
  * - Mints/burns always allowed
  * 
  * FEATURES:
@@ -37,7 +36,6 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
 
     uint256 public constant MAX_SUPPLY = 200_000_000e18;
     uint256 public constant DEV_RESERVE_SUPPLY = 50_000_000e18;
-    uint256 public constant PRESALE_CAP = 35_000_000e18;
     bytes32 private constant EMPTY_CODE_HASH = keccak256("");
 
     // ─────────────────────────── Anti-Whale Protection
@@ -82,11 +80,8 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
     uint256 public feeBypassExpiry = 0;
     
     /// Exemptions
-    mapping(address => bool) public systemExempt; // bypass all checks (presale, sinks, etc)
+    mapping(address => bool) public systemExempt; // bypass all checks (sinks, etc)
     mapping(address => bool) public whitelisted;  // bypass vault-only (exchanges)
-
-    // Presale control (set at genesis, receives 35M tokens)
-    address public presaleContract;
 
     // Sinks (fallbacks if router is unset or returns zero sinks)
     address public treasurySink;  // sanctuary/treasury receiver for charity share
@@ -155,7 +150,7 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
     event CircuitBreakerSet(bool active, uint256 expiry);
     event SecurityBypassSet(bool active, uint256 expiry); // T-12 FIX: emit on bypass change
     event FeeBypassSet(bool active, uint256 expiry);      // T-12 FIX: emit on bypass change
-    event ExternalCallFailed(string indexed context, bytes reason);    event PresaleContractSet(address indexed presale);
+    event ExternalCallFailed(string indexed context, bytes reason);
     event FeeApplied(address indexed from, address indexed to, uint256 burnAmount, uint256 sanctumAmount, uint256 ecosystemAmount, address indexed sanctumSink, address ecosystemSink);
     event Transfer(address indexed from, address indexed to, uint256 value);
     event Approval(address indexed owner, address indexed spender, uint256 value);
@@ -181,22 +176,18 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
     /// Constructor: mint full supply and distribute at genesis
     constructor(
         address devReserveVestingVault, // MUST be deployed before token (receives 50M locked)
-        address _presaleContract,       // MUST be deployed before token (receives 35M for sale)
-        address treasury,               // Treasury/Owner address (receives 115M for operations/liquidity)
+        address treasury,               // Treasury/Owner address (receives 150M for operations/liquidity)
         address _vaultHub,              // MAY be zero at deploy; can be set later
         address _ledger,                // optional
         address _treasurySink           // recommended: EcoTreasuryVault
     ) {
         if (devReserveVestingVault == address(0)) revert VF_ZERO();
-        if (_presaleContract == address(0)) revert VF_ZERO();
         if (treasury == address(0)) revert VF_ZERO();
 
-        // Require dev vault and presale are contracts to prevent misconfig
+        // Require dev vault is a contract to prevent misconfig
         uint256 size;
         assembly { size := extcodesize(devReserveVestingVault) }
         require(size > 0, "devVault !contract");
-        assembly { size := extcodesize(_presaleContract) }
-        require(size > 0, "presale !contract");
         // Treasury can be EOA or contract (for multisig/DAO)
 
         // Optional modules (can be set later)
@@ -213,15 +204,8 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
             emit TreasurySinkSet(_treasurySink);
         }
 
-        // Set presale contract
-        presaleContract = _presaleContract;
-        systemExempt[_presaleContract] = true;
-        emit PresaleContractSet(_presaleContract);
-        emit SystemExemptSet(_presaleContract, true);
-        
         // Exempt genesis allocation addresses from whale limits
         whaleLimitExempt[devReserveVestingVault] = true;
-        whaleLimitExempt[_presaleContract] = true;
         whaleLimitExempt[treasury] = true;
 
         // EIP-712 Domain Separator (cached + dynamic)
@@ -244,16 +228,11 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
         emit Transfer(address(0), devReserveVestingVault, DEV_RESERVE_SUPPLY);
         _logEv(devReserveVestingVault, "premint_dev_reserve", DEV_RESERVE_SUPPLY, "50M locked");
         
-        // 35M to Presale Contract (no bonus pool — rewards are not available)
-        _balances[_presaleContract] = PRESALE_CAP;
-        emit Transfer(address(0), _presaleContract, PRESALE_CAP);
-        _logEv(_presaleContract, "premint_presale", PRESALE_CAP, "35M for presale");
-        
-        // 115M to Treasury (operations, liquidity, CEX, trading: 200M - 50M dev - 35M presale)
-        uint256 treasuryAmount = MAX_SUPPLY - DEV_RESERVE_SUPPLY - PRESALE_CAP;
+        // 150M to Treasury (operations, liquidity, DEX seeding, CEX, ecosystem: 200M - 50M dev)
+        uint256 treasuryAmount = MAX_SUPPLY - DEV_RESERVE_SUPPLY;
         _balances[treasury] = treasuryAmount;
         emit Transfer(address(0), treasury, treasuryAmount);
-        _logEv(treasury, "premint_treasury", treasuryAmount, "115M for operations");
+        _logEv(treasury, "premint_treasury", treasuryAmount, "150M for operations");
     }
 
     // ─────────────────────────── ERC20 standard
@@ -325,6 +304,21 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
         _approve(from, msg.sender, cur - amount);
         _transfer(from, to, amount);
         return true;
+    }
+
+    /// @notice Permanently remove tokens from circulation, reducing totalSupply.
+    /// @dev Hard-burns the caller's own tokens by decrementing their balance and totalSupply,
+    ///      then emitting Transfer(..., address(0), ...).  Exchange trackers (CoinGecko,
+    ///      CoinMarketCap, DEX Screener) read totalSupply() directly.
+    function burn(uint256 amount) external nonReentrant {
+        if (amount == 0) revert VF_ZERO();
+        if (isBlacklisted[msg.sender] || isFrozen[msg.sender]) revert VF_SanctionedAddress();
+        uint256 bal = _balances[msg.sender];
+        if (bal < amount) revert VF_InsufficientBalance();
+        unchecked { _balances[msg.sender] = bal - amount; }
+        totalSupply -= amount;
+        emit Transfer(msg.sender, address(0), amount);
+        _logEv(msg.sender, "burn", amount, "");
     }
 
     // ─────────────────────────── Admin / Modules
@@ -1308,9 +1302,27 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
         }
     }
 
-    /// @notice F-31 FIX: Monitoring helper for burn accounting
-    function totalBurnedToDate() external view returns (uint256) {
+    /// @dev Internal burn accounting helper. Use transactionFeesProcessed() for public reads.
+    function _totalBurnedInternal() private view returns (uint256) {
         return MAX_SUPPLY - totalSupply;
+    }
+
+    /// @notice DEPRECATED: Use transactionFeesProcessed() instead.
+    /// @dev Retained for ABI backwards compatibility but hidden from public indexers.
+    ///      HOWEY NOTE: Exposing a "burned to date" metric encourages scarcity narratives
+    ///      which create an implicit profit expectation (Howey Prong 3). The preferred
+    ///      alias transactionFeesProcessed() frames the metric as a network cost, not
+    ///      as a value-accrual signal.
+    function totalBurnedToDate() external view returns (uint256) {
+        return _totalBurnedInternal();
+    }
+
+    /// @notice Howey-neutral alias for totalBurnedToDate().
+    /// @dev Preferred name for public-facing displays and integrations.
+    ///      Frames the metric as cumulative network processing fees paid, not as
+    ///      a measure of token scarcity or value accrual.
+    function transactionFeesProcessed() external view returns (uint256) {
+        return _totalBurnedInternal();
     }
 
     /// @notice T-14 FIX: Prevent accidental renounceOwnership which would permanently lock the contract

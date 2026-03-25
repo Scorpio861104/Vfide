@@ -24,17 +24,19 @@ export default function SwapModal({
   const [toToken, setToToken] = useState('VFIDE');
   const [amount, setAmount] = useState('');
   const [loading, setLoading] = useState(false);
+  const [txError, setTxError] = useState<string | null>(null);
 
   const handleSwap = async () => {
     if (!amount || safeParseFloat(amount, 0) <= 0) return;
 
     setLoading(true);
+    setTxError(null);
     try {
       await onSwap?.(fromToken, toToken, amount);
       setAmount('');
       onClose();
     } catch (error) {
-      console.error('Swap failed:', error);
+      setTxError(error instanceof Error ? error.message : 'Swap failed. Please verify token balances and slippage settings, then try again.');
     } finally {
       setLoading(false);
     }
@@ -152,6 +154,13 @@ export default function SwapModal({
               <span className="text-white">{amount ? (safeParseFloat(amount, 0) * 0.003).toFixed(6) : '0'} {fromToken}</span>
             </div>
           </div>
+
+          {/* Error Display */}
+          {txError && (
+            <div className="p-3 bg-red-900/20 border border-red-500/40 rounded-lg mb-6 text-sm text-red-300">
+              {txError}
+            </div>
+          )}
 
           {/* Action Buttons */}
           <div className="grid grid-cols-2 gap-3">

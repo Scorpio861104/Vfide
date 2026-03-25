@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { isAddress } from 'viem';
 import { requireAuth } from '@/lib/auth/middleware';
+import { logger } from '@/lib/logger';
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ address: string }> }) {
   // Rate limiting: 100 requests per minute for balance lookups
@@ -55,7 +56,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
     return NextResponse.json({ balances: result.rows });
   } catch (error) {
-    console.error('[Balance API] Error:', error);
+    logger.error('[Balance API] Error:', error);
     const errorMessage = error instanceof Error ? error.message : 'Failed to fetch balances';
     return NextResponse.json(
       { error: errorMessage },

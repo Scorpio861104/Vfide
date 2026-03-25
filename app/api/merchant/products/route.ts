@@ -11,6 +11,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 import { requireAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
+import { logger } from '@/lib/logger';
 
 const ADDRESS_LIKE_REGEX = /^0x[a-fA-F0-9]{3,40}$/;
 const SLUG_REGEX = /^[a-z0-9][a-z0-9-]{1,198}$/;
@@ -97,7 +98,7 @@ export async function GET(request: NextRequest) {
 
       return NextResponse.json({ product, related: relatedResult.rows });
     } catch (error) {
-      console.error('[Products GET detail] Error:', error);
+      logger.error('[Products GET detail] Error:', error);
       return NextResponse.json({ error: 'Failed to fetch product' }, { status: 500 });
     }
   }
@@ -279,7 +280,7 @@ export async function GET(request: NextRequest) {
       facets: facetResult.rows[0] ?? null,
     });
   } catch (error) {
-    console.error('[Products GET] Error:', error);
+    logger.error('[Products GET] Error:', error);
     return NextResponse.json({ error: 'Failed to fetch products' }, { status: 500 });
   }
 }
@@ -381,7 +382,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ product: result.rows[0] }, { status: 201 });
   } catch (error) {
-    console.error('[Products POST] Error:', error);
+    logger.error('[Products POST] Error:', error);
     return NextResponse.json({ error: 'Failed to create product' }, { status: 500 });
   }
 }
@@ -480,7 +481,7 @@ export async function PATCH(request: NextRequest) {
 
     return NextResponse.json({ product: result.rows[0] });
   } catch (error) {
-    console.error('[Products PATCH] Error:', error);
+    logger.error('[Products PATCH] Error:', error);
     return NextResponse.json({ error: 'Failed to update product' }, { status: 500 });
   }
 }
@@ -510,7 +511,7 @@ export async function DELETE(request: NextRequest) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('[Products DELETE] Error:', error);
+    logger.error('[Products DELETE] Error:', error);
     return NextResponse.json({ error: 'Failed to archive product' }, { status: 500 });
   }
 }

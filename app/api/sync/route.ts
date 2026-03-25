@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 import { requireAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
+import { logger } from '@/lib/logger';
 
 const USER_ID_REGEX = /^\d+$/;
 const ENTITY_REGEX = /^[a-zA-Z0-9:_-]{1,64}$/;
@@ -63,7 +64,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ syncState: result.rows[0] || null });
   } catch (error) {
-    console.error('[Sync GET] Error:', error);
+    logger.error('[Sync GET] Error:', error);
     return NextResponse.json({ error: 'Failed to fetch sync state' }, { status: 500 });
   }
 }
@@ -155,7 +156,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true, syncState: result.rows[0] });
   } catch (error) {
-    console.error('[Sync POST] Error:', error);
+    logger.error('[Sync POST] Error:', error);
     return NextResponse.json({ error: 'Failed to update sync state' }, { status: 500 });
   }
 }

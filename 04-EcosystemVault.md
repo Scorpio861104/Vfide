@@ -43,12 +43,15 @@ function allocateIncoming() external {
 
 ---
 
-## EV-03 · CRITICAL — `_swapToStable` sandwich attack
+## EV-03 · CRITICAL — `_swapToStable` sandwich attack ✅ FIXED
 
 **Description:**  
-Uses `getAmountsOut` from the same router for slippage protection. F-24 FIX disables auto-swap but dead code remains exploitable if re-enabled.
+Used `getAmountsOut` from the same router for slippage protection — a sandwich attack vector.
 
-**Fix:** Replace with Chainlink TWAP oracle for minimum output calculation, or remove dead code entirely.
+**Fix applied:** Removed the self-referential `getAmountsOut` call. `_swapToStable` now derives
+`minAmountOut` from an admin-set floor price (`minOutputPerVfide`, set via `setMinOutputPerVfide`).
+The phased deployment timeline (liquidity established before rewards launch) makes this path safe
+to enable. `configureAutoSwap` enforces `minOutputPerVfide > 0` before auto-swap can be turned on.
 
 ---
 
@@ -109,7 +112,7 @@ uint256 perMember = councilPool / memberCount; // use uint256 division
 
 ## EV-13 to EV-16 · LOW
 
-- **EV-13:** `configureAutoSwap` hardcoded `require(!_enabled)` — fix to `require(_enabled != autoSwapEnabled)`.
+- **EV-13:** `configureAutoSwap` hardcoded `require(!_enabled)` ✅ **FIXED** — removed; `configureAutoSwap` now accepts `_enabled=true` when `minOutputPerVfide > 0`.
 - **EV-14:** Dead `HEADHUNTER_RANK_SHARE_BPS` storage — remove.
 - **EV-15:** `getPoolBalances` total can diverge — recalculate total from pool sum.
 - **EV-16:** `AllocationUpdated` event missing operationsBps — add it.

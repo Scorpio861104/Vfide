@@ -13,6 +13,7 @@ import { isIP } from 'node:net';
 import { query } from '@/lib/db';
 import { requireAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
+import { logger } from '@/lib/logger';
 
 const ADDRESS_LIKE_REGEX = /^0x[a-fA-F0-9]{3,40}$/;
 
@@ -123,7 +124,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ endpoints: result.rows });
   } catch (error) {
-    console.error('[Webhooks GET] Error:', error);
+    logger.error('[Webhooks GET] Error:', error);
     return NextResponse.json({ error: 'Failed to fetch webhooks' }, { status: 500 });
   }
 }
@@ -179,7 +180,7 @@ export async function POST(request: NextRequest) {
       secret, // Show once — merchant must store it
     }, { status: 201 });
   } catch (error) {
-    console.error('[Webhooks POST] Error:', error);
+    logger.error('[Webhooks POST] Error:', error);
     return NextResponse.json({ error: 'Failed to create webhook' }, { status: 500 });
   }
 }
@@ -250,7 +251,7 @@ export async function PATCH(request: NextRequest) {
 
     return NextResponse.json({ endpoint: result.rows[0] });
   } catch (error) {
-    console.error('[Webhooks PATCH] Error:', error);
+    logger.error('[Webhooks PATCH] Error:', error);
     return NextResponse.json({ error: 'Failed to update webhook' }, { status: 500 });
   }
 }
@@ -281,7 +282,7 @@ export async function DELETE(request: NextRequest) {
 
     return NextResponse.json({ deleted: true });
   } catch (error) {
-    console.error('[Webhooks DELETE] Error:', error);
+    logger.error('[Webhooks DELETE] Error:', error);
     return NextResponse.json({ error: 'Failed to delete webhook' }, { status: 500 });
   }
 }

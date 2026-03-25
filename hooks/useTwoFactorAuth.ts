@@ -9,6 +9,7 @@ import {
   validateBackupCode,
   generateBackupCodes
 } from '@/config/security-advanced';
+import { logger } from '@/lib/logger';
 
 export interface UseTwoFactorAuthResult {
   config: TwoFactorConfig;
@@ -97,7 +98,7 @@ const loadConfig = (): TwoFactorConfig => {
       lastVerified: parsed.lastVerified ? new Date(parsed.lastVerified) : null
     };
   } catch (error) {
-    console.error('Failed to load 2FA config', error);
+    logger.error('Failed to load 2FA config', error);
     return {
       enabled: false,
       method: null,
@@ -112,7 +113,7 @@ const saveConfig = (config: TwoFactorConfig): void => {
   try {
     localStorage.setItem(SECURITY_STORAGE_KEYS.twoFactor, JSON.stringify(config));
   } catch (e) {
-    console.error('Failed to save 2FA config', e);
+    logger.error('Failed to save 2FA config', e);
   }
 };
 

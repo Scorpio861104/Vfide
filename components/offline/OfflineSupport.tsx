@@ -12,6 +12,7 @@ import {
   AlertTriangle,
   Upload
 } from 'lucide-react';
+import { logger } from '@/lib/logger';
 
 // ==================== TYPES ====================
 
@@ -213,7 +214,7 @@ async function processAction(action: QueuedAction): Promise<void> {
       });
       break;
     default:
-      console.warn('Unknown action type:', action.type);
+      logger.warn('Unknown action type:', action.type);
   }
 }
 

@@ -14,6 +14,7 @@ import {
   recordSecurityEvent,
 } from '@/lib/security/accountProtection';
 import { getRequestIp } from '@/lib/security/requestContext';
+import { logger } from '@/lib/logger';
 
 interface KeyDirectoryRow {
   address: string;
@@ -61,7 +62,7 @@ export async function GET(request: NextRequest) {
       updatedAt: row.updated_at,
     });
   } catch (error) {
-    console.error('[Key Directory GET] Error:', error);
+    logger.error('[Key Directory GET] Error:', error);
     return NextResponse.json({ error: 'Failed to fetch encryption key' }, { status: 500 });
   }
 }
@@ -157,7 +158,7 @@ export async function PUT(request: NextRequest) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('[Key Directory PUT] Error:', error);
+    logger.error('[Key Directory PUT] Error:', error);
     return NextResponse.json({ error: 'Failed to publish encryption key' }, { status: 500 });
   }
 }

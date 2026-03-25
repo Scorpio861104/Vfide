@@ -6,6 +6,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { withRateLimit } from '@/lib/auth/rateLimit';
+import { logger } from '@/lib/logger';
 
 interface CSPViolation {
   'document-uri'?: string;
@@ -128,7 +129,7 @@ export async function POST(request: NextRequest) {
 
     // Log in development
     if (process.env.NODE_ENV === 'development') {
-      console.warn('[CSP Violation]', {
+      logger.warn('[CSP Violation]', {
         directive: violation['violated-directive'],
         blocked: violation['blocked-uri'],
         source: violation['source-file'],
@@ -142,7 +143,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true }, { status: 200 });
   } catch (error) {
-    console.error('Error processing CSP report:', error);
+    logger.error('Error processing CSP report:', error);
     return NextResponse.json({ error: 'Internal error' }, { status: 500 });
   }
 }

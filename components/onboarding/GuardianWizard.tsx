@@ -2,7 +2,11 @@
 
 import { useState, ReactNode } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { encodeFunctionData } from "viem";
 import { useSimpleVault } from "@/hooks/useSimpleVault";
+import { useVaultHub } from "@/hooks/useVaultHub";
+import { CONTRACT_ADDRESSES } from "@/lib/contracts";
+import GuardianRegistryABI from "@/lib/abis/GuardianRegistry.json";
 import { Shield, Users, PenLine, CheckCircle } from "lucide-react";
 
 interface Step {
@@ -17,6 +21,7 @@ export function GuardianWizard({ onClose }: { onClose: () => void }) {
   const [step, setStep] = useState(0);
   const [guardians, setGuardians] = useState(['', '', '']);
   const { executeVaultAction, userMessage, actionStatus } = useSimpleVault();
+  const { vaultAddress } = useVaultHub();
 
   const steps: Step[] = [
     {
@@ -54,12 +59,29 @@ export function GuardianWizard({ onClose }: { onClose: () => void }) {
       return;
     }
 
-    // Encode guardian setup call via GuardianRegistry
-    await executeVaultAction(
-      'Setup Guardians',
-      '0x...', // GuardianRegistry contract
-      '0x...' // encoded setGuardians(addresses[])
-    );
+    // Encode guardian setup: call addGuardian for each valid guardian address
+    const guardianRegistryAddress = CONTRACT_ADDRESSES.GuardianRegistry;
+    if (!guardianRegistryAddress) {
+      alert('Guardian registry contract not configured.');
+      return;
+    }
+    if (!vaultAddress) {
+      alert('No vault found. Please create a vault first.');
+      return;
+    }
+
+    for (const guardian of validGuardians) {
+      const callData = encodeFunctionData({
+        abi: GuardianRegistryABI,
+        functionName: 'addGuardian',
+        args: [vaultAddress, guardian as `0x${string}`],
+      });
+      await executeVaultAction(
+        `Add Guardian ${guardian.slice(0, 6)}…`,
+        guardianRegistryAddress,
+        callData
+      );
+    }
   };
 
   return (

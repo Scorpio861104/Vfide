@@ -30,4 +30,18 @@ contract MockSeerAuto {
         uint32 next = uint32(current) + uint32(delta);
         _score[subject] = next > 10000 ? 10000 : uint16(next);
     }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    //          EcosystemVault monitoring stubs (mirrors SeerAutonomous)
+    // ─────────────────────────────────────────────────────────────────────────
+
+    address public ecosystemVault;
+
+    function setEcosystemVault(address _vault) external {
+        ecosystemVault = _vault;
+    }
+
+    function monitorEcosystemVault() external returns (uint8) {
+        return 0; // Mock: no actual vault calls
+    }
 }

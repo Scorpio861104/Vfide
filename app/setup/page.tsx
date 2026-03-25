@@ -6,6 +6,7 @@ import {
   Copy, Check, ExternalLink, AlertTriangle, CheckCircle, ArrowRight, Globe
 } from 'lucide-react'
 import { useAccount, useChainId, useBalance } from 'wagmi'
+import { formatUnits } from 'viem'
 import { ConnectButton } from '@rainbow-me/rainbowkit'
 import { CURRENT_CHAIN_ID, FAUCET_URLS } from '@/lib/testnet'
 import { safeParseFloat } from '@/lib/validation';
@@ -32,8 +33,8 @@ export default function SetupPage() {
   const [addSuccess, setAddSuccess] = useState(false)
 
   const isCorrectNetwork = chainId === CURRENT_CHAIN_ID
-  const hasBalance = balance && safeParseFloat(balance.formatted, 0) > 0.001
-  const ethBalance = balance ? safeParseFloat(balance.formatted, 0) : 0
+  const hasBalance = balance && safeParseFloat(formatUnits(balance.value, balance.decimals), 0) > 0.001
+  const ethBalance = balance ? safeParseFloat(formatUnits(balance.value, balance.decimals), 0) : 0
 
   // Direct MetaMask add network
   const addToMetaMask = useCallback(async () => {

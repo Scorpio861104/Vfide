@@ -56,8 +56,7 @@ export function NotificationSettings({ userId }: NotificationSettingsProps) {
 
       await subscribe();
       announce('Notifications enabled', 'polite');
-    } catch (error) {
-      console.error('Failed to enable notifications:', error);
+    } catch {
       announce('Failed to enable notifications', 'assertive');
     }
   };
@@ -67,8 +66,7 @@ export function NotificationSettings({ userId }: NotificationSettingsProps) {
       await unsubscribe();
       await updatePreferences({ enabled: false });
       announce('Notifications disabled', 'polite');
-    } catch (error) {
-      console.error('Failed to disable notifications:', error);
+    } catch {
       announce('Failed to disable notifications', 'assertive');
     }
   };
@@ -87,8 +85,7 @@ export function NotificationSettings({ userId }: NotificationSettingsProps) {
         badge: '/icons/badge-72x72.png',
       });
       announce('Test notification sent', 'polite');
-    } catch (error) {
-      console.error('Failed to send test notification:', error);
+    } catch {
       announce('Failed to send test notification', 'assertive');
     } finally {
       setTestingNotification(false);
@@ -106,8 +103,7 @@ export function NotificationSettings({ userId }: NotificationSettingsProps) {
     try {
       await updatePreferences({ types: updated });
       announce(`${getTypeLabel(type)} notifications ${updated[type] ? 'enabled' : 'disabled'}`, 'polite');
-    } catch (error) {
-      console.error('Failed to update notification type:', error);
+    } catch {
       announce('Failed to update notification settings', 'assertive');
     }
   };
@@ -123,8 +119,7 @@ export function NotificationSettings({ userId }: NotificationSettingsProps) {
         },
       });
       announce(`Quiet hours ${!preferences.quietHours.enabled ? 'enabled' : 'disabled'}`, 'polite');
-    } catch (error) {
-      console.error('Failed to toggle quiet hours:', error);
+    } catch {
       announce('Failed to update quiet hours', 'assertive');
     }
   };

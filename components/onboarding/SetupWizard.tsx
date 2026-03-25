@@ -11,6 +11,7 @@ import { ConnectButton } from '@rainbow-me/rainbowkit'
 import { CURRENT_CHAIN_ID, FAUCET_URLS } from '@/lib/testnet'
 import { IS_TESTNET as _IS_TESTNET, isTestnetChainId as _isTestnetChainId } from '@/lib/chains'
 import { safeParseFloat } from '@/lib/validation'
+import { formatUnits } from 'viem'
 
 // Base Sepolia network configuration
 const BASE_SEPOLIA_CONFIG = {
@@ -45,7 +46,7 @@ export function SetupWizard({ onComplete }: SetupWizardProps) {
   const [hasSeenWizard, setHasSeenWizard] = useState(false)
 
   const isCorrectNetwork = chainId === CURRENT_CHAIN_ID
-  const hasBalance = balance && safeParseFloat(balance.formatted, 0) > 0.001
+  const hasBalance = balance && safeParseFloat(formatUnits(balance.value, balance.decimals), 0) > 0.001
 
   // Check if user needs the wizard
   useEffect(() => {
@@ -347,7 +348,7 @@ export function SetupWizard({ onComplete }: SetupWizardProps) {
                     <div className="bg-zinc-800/50 rounded-lg p-4 text-center">
                       <p className="text-sm text-zinc-500">Your Balance</p>
                       <p className={`text-2xl font-bold ${hasBalance ? 'text-green-400' : 'text-amber-400'}`}>
-                        {balance ? safeParseFloat(balance.formatted, 0).toFixed(4) : '0.0000'} ETH
+                        {balance ? safeParseFloat(formatUnits(balance.value, balance.decimals), 0).toFixed(4) : '0.0000'} ETH
                       </p>
                       {hasBalance && (
                         <p className="text-sm text-green-400 mt-1">✓ You&apos;re ready to go!</p>

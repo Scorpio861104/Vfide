@@ -4,6 +4,7 @@ import { requireAuth, checkOwnership } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { createProposalSchema } from '@/lib/auth/validation';
 import { isAddress } from 'viem';
+import { logger } from '@/lib/logger';
 
 const MAX_PROPOSALS_LIMIT = 100;
 const MAX_PROPOSALS_OFFSET = 10000;
@@ -189,7 +190,7 @@ export async function GET(request: NextRequest) {
       offset,
     });
   } catch (error) {
-    console.error('[Proposals GET API] Error:', error);
+    logger.error('[Proposals GET API] Error:', error);
 
     // Graceful degradation for local/offline environments where DB is unavailable.
     if (isDatabaseUnavailableError(error)) {
@@ -322,7 +323,7 @@ export async function POST(request: NextRequest) {
       proposal: result.rows[0],
     }, { status: 201 });
   } catch (error) {
-    console.error('[Proposals POST API] Error:', error);
+    logger.error('[Proposals POST API] Error:', error);
     return NextResponse.json(
       { error: 'Failed to create proposal' },
       { status: 500 }
@@ -372,7 +373,7 @@ export async function GET_BY_ID(
       proposal: result.rows[0],
     });
   } catch (error) {
-    console.error('[Proposal GET BY ID API] Error:', error);
+    logger.error('[Proposal GET BY ID API] Error:', error);
     return NextResponse.json(
       { error: 'Failed to fetch proposal' },
       { status: 500 }

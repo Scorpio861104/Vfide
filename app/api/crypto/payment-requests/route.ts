@@ -8,6 +8,7 @@ import {
   recordSecurityEvent,
 } from '@/lib/security/accountProtection';
 import { getRequestIp } from '@/lib/security/requestContext';
+import { logger } from '@/lib/logger';
 
 const USER_ID_REGEX = /^\d+$/;
 const DECIMAL_AMOUNT_REGEX = /^\d+(\.\d{1,18})?$/;
@@ -86,7 +87,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ requests: result.rows });
   } catch (error) {
-    console.error('[Payment Requests GET] Error:', error);
+    logger.error('[Payment Requests GET] Error:', error);
     return NextResponse.json({ error: 'Failed to fetch requests' }, { status: 500 });
   }
 }
@@ -298,7 +299,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true, request: result.rows[0] });
   } catch (error) {
-    console.error('[Payment Requests POST] Error:', error);
+    logger.error('[Payment Requests POST] Error:', error);
     return NextResponse.json({ error: 'Failed to create request' }, { status: 500 });
   }
 }

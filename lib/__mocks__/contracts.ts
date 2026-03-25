@@ -1,6 +1,5 @@
 export const CONTRACT_ADDRESSES = {
   VFIDEToken: '0x1234567890123456789012345678901234567890' as `0x${string}`,
-  VFIDEPresale: '0x1234567890123456789012345678901234567891' as `0x${string}`,
   StablecoinRegistry: '0x1234567890123456789012345678901234567892' as `0x${string}`,
   VFIDECommerce: '0x1234567890123456789012345678901234567893' as `0x${string}`,
   MerchantPortal: '0x1234567890123456789012345678901234567894' as `0x${string}`,
@@ -49,5 +48,4 @@ export const MERCHANT_PORTAL_ABI = [
 
 export const VAULT_HUB_ABI = [] as const
 export const BADGE_NFT_ABI = [] as const
-export const PRESALE_ABI = [] as const
 export const STABLECOIN_REGISTRY_ABI = [] as const

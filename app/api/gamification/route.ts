@@ -3,6 +3,7 @@ import { query } from '@/lib/db';
 import { requireAdmin, requireAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { validateBody, awardXpSchema } from '@/lib/auth/validation';
+import { logger } from '@/lib/logger';
 
 /** Maximum XP awardable per wallet per calendar day (mirrors lib/gamification.ts). */
 const SERVER_MAX_XP_PER_DAY = 500;
@@ -144,7 +145,7 @@ export async function GET(request: NextRequest) {
       xpProgress,
     });
   } catch (error) {
-    console.error('[Gamification GET] Error:', error);
+    logger.error('[Gamification GET] Error:', error);
     return NextResponse.json(
       { error: 'Failed to fetch gamification data' },
       { status: 500 }
@@ -257,7 +258,7 @@ export async function POST(request: NextRequest) {
       ...userData,
     });
   } catch (error) {
-    console.error('[Gamification POST] Error:', error);
+    logger.error('[Gamification POST] Error:', error);
     return NextResponse.json(
       { error: 'Failed to award XP' },
       { status: 500 }
