@@ -9,6 +9,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Smile, Image as ImageIcon, X } from 'lucide-react';
+import Image from 'next/image';
 
 interface ReactionPickerProps {
   onSelect: (reaction: { 
@@ -294,10 +295,12 @@ export function ReactionDisplay({ reactions, currentUserAddress, onToggle }: Rea
             {reaction.type === 'emoji' ? (
               <span className="text-base">{reaction.emoji}</span>
             ) : (
-              <img 
-                src={reaction.imageUrl} 
-                alt={reaction.imageName || 'reaction'} 
-                className="w-5 h-5 rounded object-cover"
+              <Image
+                src={reaction.imageUrl}
+                alt={reaction.imageName || 'reaction'}
+                width={20}
+                height={20}
+                className="rounded object-cover"
               />
             )}
             <span className="font-medium">{count}</span>

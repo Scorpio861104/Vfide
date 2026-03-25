@@ -5,6 +5,7 @@ import { PageWrapper } from '@/components/ui/PageLayout';
 import { StoryViewer } from '@/components/social/StoryViewer';
 import { StoryCreator } from '@/components/social/StoryCreator';
 import { StoryRing } from '@/components/social/StoryRing';
+import { ErrorBoundary } from '@/components/error/ErrorBoundary';
 import { useAccount } from 'wagmi';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -253,27 +254,31 @@ export default function StoriesPage() {
           {/* Story Creator Modal */}
           <AnimatePresence>
             {showCreator && address && (
-              <StoryCreator
-                onClose={() => setShowCreator(false)}
-                onCreate={handleCreateStory}
-                userAddress={address}
-                userName={address.slice(0, 6) + '...' + address.slice(-4)}
-                userAvatar="✨"
-              />
+              <ErrorBoundary>
+                <StoryCreator
+                  onClose={() => setShowCreator(false)}
+                  onCreate={handleCreateStory}
+                  userAddress={address}
+                  userName={address.slice(0, 6) + '...' + address.slice(-4)}
+                  userAvatar="✨"
+                />
+              </ErrorBoundary>
             )}
           </AnimatePresence>
 
           {/* Story Viewer Modal */}
           <AnimatePresence>
             {viewingStories && address && (
-              <StoryViewer
-                stories={viewingStories.stories}
-                initialIndex={viewingStories.index}
-                onClose={() => setViewingStories(null)}
-                onView={handleViewStory}
-                onReact={handleReactToStory}
-                userAddress={address}
-              />
+              <ErrorBoundary>
+                <StoryViewer
+                  stories={viewingStories.stories}
+                  initialIndex={viewingStories.index}
+                  onClose={() => setViewingStories(null)}
+                  onView={handleViewStory}
+                  onReact={handleReactToStory}
+                  userAddress={address}
+                />
+              </ErrorBoundary>
             )}
           </AnimatePresence>
         </main>

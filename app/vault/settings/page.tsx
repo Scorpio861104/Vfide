@@ -7,6 +7,7 @@
 import { Footer } from '@/components/layout/Footer'
 import { VaultSettingsPanel } from '@/components/vault/VaultSettingsPanel'
 import { GuardianManagementPanel } from '@/components/security/GuardianManagementPanel'
+import { ErrorBoundary } from '@/components/error/ErrorBoundary'
 import { Vault, Shield, Settings } from 'lucide-react'
 import { motion } from 'framer-motion'
 
@@ -39,7 +40,9 @@ export default function VaultSettingsPage() {
               <Settings className="w-6 h-6 text-purple-400" />
               <h2 className="text-2xl font-bold">Transaction Controls</h2>
             </div>
-            <VaultSettingsPanel />
+            <ErrorBoundary>
+              <VaultSettingsPanel />
+            </ErrorBoundary>
           </motion.div>
 
           {/* Guardian Management */}
@@ -52,7 +55,9 @@ export default function VaultSettingsPage() {
               <Shield className="w-6 h-6 text-blue-400" />
               <h2 className="text-2xl font-bold">Guardian Protection</h2>
             </div>
-            <GuardianManagementPanel />
+            <ErrorBoundary>
+              <GuardianManagementPanel />
+            </ErrorBoundary>
           </motion.div>
         </div>
 

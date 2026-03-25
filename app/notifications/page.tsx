@@ -6,6 +6,7 @@ import { useNotificationHub } from '@/hooks/useNotificationHub';
 import { NotificationList } from '@/components/notifications/NotificationList';
 import { NotificationPreferences } from '@/components/notifications/NotificationPreferences';
 import { NotificationStats } from '@/components/notifications/NotificationStats';
+import { ErrorBoundary } from '@/components/error/ErrorBoundary';
 import {
   NotificationFilter,
   NotificationType,
@@ -162,7 +163,9 @@ export default function NotificationHubPage() {
             className="space-y-6"
           >
             {/* Stats */}
-            <NotificationStats stats={stats} />
+            <ErrorBoundary>
+              <NotificationStats stats={stats} />
+            </ErrorBoundary>
 
             {/* Search and Filters */}
             <div className="bg-slate-900/50 border border-slate-800 rounded-lg p-6 space-y-4">
@@ -230,11 +233,13 @@ export default function NotificationHubPage() {
             </div>
 
             {/* Notification List */}
-            <NotificationList
-              notifications={filteredNotifications}
-              onMarkAsRead={markAsRead}
-              onDismiss={dismissNotification}
-            />
+            <ErrorBoundary>
+              <NotificationList
+                notifications={filteredNotifications}
+                onMarkAsRead={markAsRead}
+                onDismiss={dismissNotification}
+              />
+            </ErrorBoundary>
           </motion.div>
         ) : (
           <motion.div
@@ -244,11 +249,13 @@ export default function NotificationHubPage() {
             className="space-y-6"
           >
             <div className="bg-slate-900/50 border border-slate-800 rounded-lg p-6">
-              <NotificationPreferences
-                preferences={preferences}
-                onUpdatePreference={updatePreference}
-                onReset={resetPreferences}
-              />
+              <ErrorBoundary>
+                <NotificationPreferences
+                  preferences={preferences}
+                  onUpdatePreference={updatePreference}
+                  onReset={resetPreferences}
+                />
+              </ErrorBoundary>
             </div>
           </motion.div>
         )}

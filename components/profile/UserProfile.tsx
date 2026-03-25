@@ -19,6 +19,7 @@ import { MobileButton, MobileInput } from '@/components/mobile/MobileForm';
 import { ResponsiveContainer } from '@/lib/mobile';
 import { AvatarUploadCompact } from './AvatarUpload';
 import { motion, AnimatePresence, useMotionValue, useTransform, animate } from 'framer-motion';
+import Image from 'next/image';
 import { 
   Share2, Copy, Check, QrCode, ChevronLeft, ChevronRight, 
   Edit2, X, ExternalLink, Twitter, Github, Globe, MapPin, 
@@ -832,7 +833,7 @@ export default function UserProfile() {
                 <div className="w-32 h-32 rounded-2xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-6xl shadow-lg shadow-yellow-500/20">
                   {profile.avatar ? (
                     typeof profile.avatar === 'string' && profile.avatar.startsWith('http') ? (
-                      <img src={profile.avatar} alt="Avatar" className="w-full h-full rounded-2xl object-cover" />
+                      <Image src={profile.avatar} alt="Avatar" width={128} height={128} className="w-full h-full rounded-2xl object-cover" />
                     ) : (
                       profile.avatar
                     )
