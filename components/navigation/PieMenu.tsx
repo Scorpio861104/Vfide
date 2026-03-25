@@ -81,6 +81,7 @@ interface NavItem {
   color: string;
   children?: NavItem[];
   badge?: string;
+  dataOnboarding?: string;
 }
 
 // ============================================================================
@@ -131,8 +132,9 @@ const navigationItems: NavItem[] = [
     label: 'Merchant',
     icon: Store,
     color: '#10B981',
+    dataOnboarding: 'nav-merchant',
     children: [
-      { id: 'merchant-main', label: 'Merchant Hub', href: '/merchant', icon: Store, color: '#10B981' },
+      { id: 'merchant-main', label: 'Merchant Hub', href: '/merchant', icon: Store, color: '#10B981', dataOnboarding: 'nav-merchant' },
       { id: 'pos', label: 'POS Terminal', href: '/pos', icon: CreditCard, color: '#10B981' },
       { id: 'buy', label: 'Buy Tokens', href: '/buy', icon: Globe, color: '#10B981' },
       { id: 'flashlight', label: 'Flashloans P2P', href: '/flashlight', icon: Flashlight, color: '#10B981', badge: 'P2P' },
@@ -150,8 +152,9 @@ const navigationItems: NavItem[] = [
     label: 'Social',
     icon: MessageCircle,
     color: '#F59E0B',
+    dataOnboarding: 'nav-social',
     children: [
-      { id: 'social-hub', label: 'Social Hub', href: '/social-hub', icon: Rss, color: '#F59E0B' },
+      { id: 'social-hub', label: 'Social Hub', href: '/social-hub', icon: Rss, color: '#F59E0B', dataOnboarding: 'nav-social' },
       { id: 'feed', label: 'Feed', href: '/feed', icon: Rss, color: '#F59E0B' },
       { id: 'stories', label: 'Stories', href: '/stories', icon: Camera, color: '#F59E0B' },
       { id: 'messages', label: 'Messages', href: '/social-messaging', icon: Mail, color: '#F59E0B' },
@@ -164,10 +167,11 @@ const navigationItems: NavItem[] = [
     label: 'Governance',
     icon: Vote,
     color: '#6366F1',
+    dataOnboarding: 'nav-governance',
     children: [
       { id: 'dao-hub', label: 'DAO Hub', href: '/dao-hub', icon: Crown, color: '#6366F1', badge: 'DAO' },
-      { id: 'governance-main', label: 'Proposals', href: '/governance', icon: Scroll, color: '#6366F1' },
-      { id: 'council', label: 'Council', href: '/council', icon: Gavel, color: '#6366F1' },
+      { id: 'governance-main', label: 'Proposals', href: '/governance', icon: Scroll, color: '#6366F1', dataOnboarding: 'nav-governance' },
+      { id: 'council', label: 'Council', href: '/council', icon: Gavel, color: '#6366F1', dataOnboarding: 'nav-council' },
       { id: 'appeals', label: 'Appeals', href: '/appeals', icon: AlertTriangle, color: '#6366F1' },
       { id: 'treasury', label: 'Treasury', href: '/treasury', icon: Landmark, color: '#6366F1' },
     ],
@@ -291,6 +295,7 @@ function CompactTile({
       onMouseLeave={() => onHover(false)}
       aria-label={`Navigate to ${item.label}${item.children ? ' (has submenu)' : ''}`}
       aria-current={isActive ? 'page' : undefined}
+      {...(item.dataOnboarding ? { 'data-onboarding': item.dataOnboarding } : {})}
       className={`
         relative w-full flex items-center gap-3 px-3 py-2.5 rounded-xl
         transition-all duration-200 group overflow-hidden

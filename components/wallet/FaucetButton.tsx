@@ -48,6 +48,7 @@ export function FaucetButton() {
           setIsOpen(!isOpen);
           playNotification();
         }}
+        data-onboarding="faucet-button"
         className={`flex items-center gap-1.5 px-2 sm:px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-colors ${
           isLowBalance
             ? 'bg-amber-500/20 text-amber-400 hover:bg-amber-500/30'

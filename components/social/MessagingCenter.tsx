@@ -611,6 +611,7 @@ export function MessagingCenter({ friend, hasVault = false }: MessagingCenterPro
             onClick={handleSendMessage}
             disabled={!inputMessage.trim() || isSending || !canEncryptForRecipient}
             aria-label={isSending ? 'Sending message' : 'Send message'}
+            data-onboarding="message-button"
             className="p-2 rounded-lg bg-cyan-400 text-zinc-950 hover:bg-cyan-400 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             <Send className="w-5 h-5" />

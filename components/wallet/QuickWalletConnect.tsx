@@ -243,6 +243,8 @@ export function QuickWalletConnect({ size = 'md' }: QuickWalletConnectProps) {
           onClick={handleQuickConnect}
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
+          data-wallet-connect
+          data-onboarding="wallet-button"
           className={`flex items-center gap-2 ${sizeClasses[size]} bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-semibold rounded-xl hover:shadow-lg hover:shadow-cyan-500/25 transition-shadow`}
         >
           <Zap size={iconSizes[size]} />

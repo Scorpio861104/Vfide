@@ -4,6 +4,8 @@ import { useState, useEffect } from "react";
 import { useAccount } from "wagmi";
 import { OnboardingTour } from "@/components/onboarding/OnboardingTour";
 import { BeginnerWizard } from "@/components/onboarding/BeginnerWizard";
+import { SetupWizard } from "@/components/onboarding/SetupWizard";
+import { OnboardingTooltip } from "@/components/onboarding/OnboardingTooltip";
 import { OnboardingProvider, OnboardingTrigger } from "@/components/onboarding/OnboardingFlow";
 import { safeLocalStorage } from "@/lib/utils";
 
@@ -103,6 +105,8 @@ export function OnboardingManager() {
       {wizardEnabled && showBeginner && (
         <BeginnerWizard onComplete={handleBeginnerComplete} />
       )}
+      {wizardEnabled && <SetupWizard />}
+      {wizardEnabled && <OnboardingTooltip />}
       {wizardEnabled && <OnboardingTrigger />}
     </OnboardingProvider>
   );

@@ -6,6 +6,7 @@ import { useState, useEffect } from "react";
 import { useChainId } from "wagmi";
 import { isTestnetChainId } from "@/lib/chains";
 import { WIZARD_ENABLED_KEY, TOUR_COMPLETED_KEY, BEGINNER_COMPLETED_KEY } from "@/components/onboarding/OnboardingManager";
+import { GuardianWizard } from "@/components/onboarding/GuardianWizard";
 
 interface HelpTopic {
   id: string;
@@ -199,6 +200,7 @@ export function HelpCenter() {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedTopic, setSelectedTopic] = useState<HelpTopic | null>(null);
   const [wizardEnabled, setWizardEnabled] = useState(true);
+  const [showGuardianWizard, setShowGuardianWizard] = useState(false);
   const chainId = useChainId();
   const isTestnet = chainId ? isTestnetChainId(chainId) : false;
 
