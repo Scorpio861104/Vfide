@@ -16,6 +16,26 @@ jest.mock('@/components/onboarding/OnboardingTour', () => ({
   ),
 }))
 
+// Mock BeginnerWizard
+jest.mock('@/components/onboarding/BeginnerWizard', () => ({
+  BeginnerWizard: ({ onComplete }: { onComplete?: () => void }) => (
+    <div data-testid="beginner-wizard">
+      <button onClick={onComplete} data-testid="complete-beginner">Complete Beginner</button>
+    </div>
+  ),
+}))
+
+// Mock OnboardingFlow (Provider just renders children; Trigger renders nothing)
+jest.mock('@/components/onboarding/OnboardingFlow', () => ({
+  OnboardingProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+  OnboardingTrigger: () => null,
+}))
+
+// Mock wagmi
+jest.mock('wagmi', () => ({
+  useAccount: () => ({ isConnected: false }),
+}))
+
 // Mock safeLocalStorage so we control new-user vs returning-user scenarios
 jest.mock('@/lib/utils', () => ({
   ...jest.requireActual('@/lib/utils'),

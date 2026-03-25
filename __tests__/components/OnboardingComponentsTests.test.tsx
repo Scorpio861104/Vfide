@@ -34,6 +34,9 @@ jest.mock('wagmi', () => ({
   useAccount: () => ({
     isConnected: true,
   }),
+  useChainId: () => 84532,
+  useWriteContract: () => ({ writeContractAsync: jest.fn(), isPending: false }),
+  useReadContract: () => ({ data: undefined, isLoading: false }),
 }))
 
 // Mock hooks
@@ -42,6 +45,13 @@ jest.mock('@/hooks/useSimpleVault', () => ({
     executeVaultAction: jest.fn(),
     userMessage: '',
     actionStatus: 'idle',
+  }),
+}))
+
+jest.mock('@/hooks/useVaultHub', () => ({
+  useVaultHub: () => ({
+    vaultAddress: '0x1234567890123456789012345678901234567890' as const,
+    hasVault: true,
   }),
 }))
 
