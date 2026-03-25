@@ -11,8 +11,7 @@
 import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt, usePublicClient } from 'wagmi';
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { parseUnits, formatUnits } from 'viem';
-import { ESCROW_ABI, VFIDE_TOKEN_ABI } from './abis';
-import { getEscrowAddress, getTokenAddress } from './addresses';
+import { CommerceEscrowABI, CONTRACT_ADDRESSES, VFIDE_TOKEN_ABI } from '@/lib/contracts';
 
 export interface Escrow {
   id: bigint;
@@ -36,20 +35,26 @@ const STATE_MAP: Record<number, EscrowState> = {
 };
 
 export function useEscrow() {
-  const { address, chainId } = useAccount();
+  const { address } = useAccount();
   const publicClient = usePublicClient();
   const [escrows, setEscrows] = useState<Escrow[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const escrowAddress = getEscrowAddress(chainId);
-  const tokenAddress = getTokenAddress(chainId);
+  const escrowAddress = CONTRACT_ADDRESSES.CommerceEscrow;
+  const tokenAddress = CONTRACT_ADDRESSES.VFIDEToken;
+  const hasEscrowConfig =
+    escrowAddress !== '0x0000000000000000000000000000000000000000' &&
+    tokenAddress !== '0x0000000000000000000000000000000000000000';
 
   // Get total escrow count
   const { data: escrowCount, refetch: refetchCount } = useReadContract({
     address: escrowAddress,
-    abi: ESCROW_ABI,
+    abi: CommerceEscrowABI,
     functionName: 'escrowCount',
+    query: {
+      enabled: hasEscrowConfig,
+    },
   });
 
   // Contract write hooks
@@ -98,7 +103,7 @@ export function useEscrow() {
 
     const data = await publicClient.readContract({
       address: escrowAddress,
-      abi: ESCROW_ABI,
+      abi: CommerceEscrowABI,
       functionName: 'escrows',
       args: [id],
     });
@@ -160,7 +165,7 @@ export function useEscrow() {
 
     const timeoutData = await publicClient.readContract({
       address: escrowAddress,
-      abi: ESCROW_ABI,
+      abi: CommerceEscrowABI,
       functionName: 'checkTimeout',
       args: [id],
     });
@@ -177,7 +182,7 @@ export function useEscrow() {
 
   // Load all escrows for current user
   const loadEscrows = useCallback(async () => {
-    if (!escrowCount || !address || !publicClient) return;
+    if (!hasEscrowConfig || !escrowCount || !address || !publicClient) return;
     
     setLoading(true);
     setError(null);
@@ -206,7 +211,7 @@ export function useEscrow() {
     } finally {
       setLoading(false);
     }
-  }, [escrowCount, address, publicClient, readEscrow]);
+  }, [address, escrowCount, hasEscrowConfig, publicClient, readEscrow]);
 
   // Create escrow (with automatic token approval)
   const createEscrow = useCallback(async (
@@ -215,6 +220,7 @@ export function useEscrow() {
     orderId: string
   ) => {
     if (!address) throw new Error('Wallet not connected');
+    if (!hasEscrowConfig) throw new Error('Escrow contracts are not configured');
     
     setLoading(true);
     setError(null);
@@ -233,7 +239,7 @@ export function useEscrow() {
       // Step 2: Create escrow
       await writeContractAsync({
         address: escrowAddress,
-        abi: ESCROW_ABI,
+        abi: CommerceEscrowABI,
         functionName: 'createEscrow',
         args: [merchant, tokenAddress, amountWei, orderId],
       });
@@ -244,7 +250,7 @@ export function useEscrow() {
     } finally {
       setLoading(false);
     }
-  }, [address, escrowAddress, tokenAddress, writeContractAsync, approveToken, checkAllowance]);
+  }, [address, approveToken, checkAllowance, escrowAddress, hasEscrowConfig, tokenAddress, writeContractAsync]);
 
   // Release funds to merchant
   const releaseEscrow = useCallback(async (id: bigint) => {
@@ -254,7 +260,7 @@ export function useEscrow() {
     try {
       await writeContractAsync({
         address: escrowAddress,
-        abi: ESCROW_ABI,
+        abi: CommerceEscrowABI,
         functionName: 'release',
         args: [id],
       });
@@ -274,7 +280,7 @@ export function useEscrow() {
     try {
       await writeContractAsync({
         address: escrowAddress,
-        abi: ESCROW_ABI,
+        abi: CommerceEscrowABI,
         functionName: 'refund',
         args: [id],
       });
@@ -294,7 +300,7 @@ export function useEscrow() {
     try {
       await writeContractAsync({
         address: escrowAddress,
-        abi: ESCROW_ABI,
+        abi: CommerceEscrowABI,
         functionName: 'claimTimeout',
         args: [id],
       });
@@ -314,7 +320,7 @@ export function useEscrow() {
     try {
       await writeContractAsync({
         address: escrowAddress,
-        abi: ESCROW_ABI,
+        abi: CommerceEscrowABI,
         functionName: 'raiseDispute',
         args: [id],
       });
@@ -334,7 +340,7 @@ export function useEscrow() {
     try {
       await writeContractAsync({
         address: escrowAddress,
-        abi: ESCROW_ABI,
+        abi: CommerceEscrowABI,
         functionName: 'resolveDispute',
         args: [id, refundBuyer],
       });
@@ -354,7 +360,7 @@ export function useEscrow() {
     try {
       await writeContractAsync({
         address: escrowAddress,
-        abi: ESCROW_ABI,
+        abi: CommerceEscrowABI,
         functionName: 'resolveDisputePartial',
         args: [id, buyerShareBps],
       });
@@ -374,7 +380,7 @@ export function useEscrow() {
     try {
       await writeContractAsync({
         address: escrowAddress,
-        abi: ESCROW_ABI,
+        abi: CommerceEscrowABI,
         functionName: 'notifyTimeout',
         args: [id],
       });

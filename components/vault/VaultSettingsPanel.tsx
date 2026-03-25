@@ -37,6 +37,7 @@ import {
   useExecutePendingTransaction,
   useCleanupExpiredTransaction,
 } from '@/lib/vfide-hooks'
+import { isCardBoundVaultMode } from '@/lib/contracts'
 import { safeParseInt } from '@/lib/validation';
 
 // Dummy address for hooks when vault is not yet available
@@ -46,6 +47,7 @@ export function VaultSettingsPanel() {
   const { address } = useAccount()
   const { vaultAddress } = useUserVault()
   const { balanceRaw } = useVaultBalance()
+  const cardBoundMode = isCardBoundVaultMode()
   
   // Use zero address as fallback (hooks will return default values)
   const safeVaultAddress = vaultAddress ?? ZERO_ADDRESS
@@ -68,6 +70,39 @@ export function VaultSettingsPanel() {
       <div className="bg-gray-900 border border-gray-700 rounded-2xl p-8 text-center">
         <Shield className="w-16 h-16 mx-auto mb-4 text-gray-600" />
         <p className="text-gray-400">Connect wallet to access vault settings</p>
+      </div>
+    )
+  }
+
+  if (cardBoundMode) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center gap-3">
+          <Settings className="w-6 h-6 text-purple-400" />
+          <h2 className="text-2xl font-bold">Vault Settings</h2>
+        </div>
+
+        <div className="bg-gray-900 border border-gray-700 rounded-2xl p-8">
+          <div className="flex items-start gap-3">
+            <Shield className="w-6 h-6 text-cyan-400 mt-0.5" />
+            <div className="space-y-3">
+              <div>
+                <h3 className="text-lg font-bold text-white">CardBound Vault Mode Active</h3>
+                <p className="text-sm text-gray-400 mt-1">
+                  Advanced legacy vault controls are unavailable for CardBound vaults.
+                </p>
+              </div>
+              <div className="text-sm text-gray-300 space-y-2">
+                <p>
+                  Balance snapshots, abnormal transaction queues, and legacy pending transaction approval flows belong to the older UserVault implementation and are not exposed by the active CardBound vault contract.
+                </p>
+                <p>
+                  Use CardBound transfer authorization, guardian controls, and hub-managed security features instead.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     )
   }

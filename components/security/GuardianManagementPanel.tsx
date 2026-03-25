@@ -13,7 +13,7 @@ import {
   useInheritanceStatus,
 } from '@/lib/vfide-hooks'
 import { useAccount, useWriteContract, useWaitForTransactionReceipt } from 'wagmi'
-import { CONTRACT_ADDRESSES } from '@/lib/contracts'
+import { CONTRACT_ADDRESSES, isCardBoundVaultMode } from '@/lib/contracts'
 import { Users, Plus, X, Shield, AlertTriangle, Clock } from 'lucide-react'
 import { isAddress, zeroAddress } from 'viem'
 import { safeParseInt } from '@/lib/validation'
@@ -23,6 +23,7 @@ const ZERO_ADDRESS = zeroAddress
 export function GuardianManagementPanel() {
   const { address: userAddress } = useAccount()
   const { vaultAddress } = useUserVault()
+  const cardBoundMode = isCardBoundVaultMode()
   const guardians = useVaultGuardians(vaultAddress || undefined)
   
   const [newGuardian, setNewGuardian] = useState('')
@@ -341,20 +342,41 @@ export function GuardianManagementPanel() {
         </div>
       </motion.div>
 
-      {/* Inheritance Cancellation (Guardian Protection) */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.3 }}
-        className="bg-gradient-to-br from-orange-900/20 to-red-900/20 border-2 border-orange-500/30 rounded-2xl p-6"
-      >
-        <div className="flex items-center gap-3 mb-4">
-          <AlertTriangle className="w-6 h-6 text-orange-400" />
-          <h3 className="text-xl font-bold text-orange-400">Inheritance Protection</h3>
-        </div>
+      {!cardBoundMode ? (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+          className="bg-gradient-to-br from-orange-900/20 to-red-900/20 border-2 border-orange-500/30 rounded-2xl p-6"
+        >
+          <div className="flex items-center gap-3 mb-4">
+            <AlertTriangle className="w-6 h-6 text-orange-400" />
+            <h3 className="text-xl font-bold text-orange-400">Inheritance Protection</h3>
+          </div>
 
-        <InheritanceCancellationSection vaultAddress={vaultAddress} />
-      </motion.div>
+          <InheritanceCancellationSection vaultAddress={vaultAddress} />
+        </motion.div>
+      ) : (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+          className="bg-gradient-to-br from-gray-900/60 to-gray-800/60 border-2 border-gray-700 rounded-2xl p-6"
+        >
+          <div className="flex items-center gap-3 mb-4">
+            <AlertTriangle className="w-6 h-6 text-amber-400" />
+            <h3 className="text-xl font-bold text-amber-300">Legacy Inheritance Controls Disabled</h3>
+          </div>
+          <div className="text-sm text-gray-300 space-y-2">
+            <p>
+              Next-of-kin inheritance cancellation is part of the legacy UserVault recovery model and is not supported in CardBound vault mode.
+            </p>
+            <p>
+              CardBound vault security relies on guardian governance, wallet rotation, and hub-level protections instead of inheritance request workflows.
+            </p>
+          </div>
+        </motion.div>
+      )}
 
       {/* Info Box */}
       <div className="bg-blue-900/10 border border-blue-500/20 rounded-lg p-4">

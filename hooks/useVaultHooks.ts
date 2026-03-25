@@ -26,6 +26,7 @@ const HUB_ABI = VaultHubABI
 // Use active vault ABI that matches deployed vault type (CardBoundVault or UserVault-style)
 // CRITICAL: Must use ACTIVE_VAULT_ABI to match actually deployed contract
 const VAULT_ABI = ACTIVE_VAULT_ABI
+const LEGACY_VAULT_UNSUPPORTED_MESSAGE = 'This action is not supported in CardBound vault mode.'
 
 export function useUserVault() {
   const { address } = useAccount()
@@ -313,12 +314,14 @@ export function useSetGuardian(vaultAddress: `0x${string}`) {
  * Get abnormal transaction threshold (dynamic based on settings)
  */
 export function useAbnormalTransactionThreshold(vaultAddress?: `0x${string}`) {
+  const isLegacyMode = ACTIVE_VAULT_IMPLEMENTATION === 'uservault'
+
   const { data: threshold } = useReadContract({
     address: vaultAddress,
     abi: VAULT_ABI,
     functionName: 'abnormalTransactionThreshold',
     query: {
-      enabled: !!vaultAddress,
+      enabled: isLegacyMode && !!vaultAddress,
     }
   })
 
@@ -327,7 +330,7 @@ export function useAbnormalTransactionThreshold(vaultAddress?: `0x${string}`) {
     abi: VAULT_ABI,
     functionName: 'usePercentageThreshold',
     query: {
-      enabled: !!vaultAddress,
+      enabled: isLegacyMode && !!vaultAddress,
     }
   })
 
@@ -336,7 +339,7 @@ export function useAbnormalTransactionThreshold(vaultAddress?: `0x${string}`) {
     abi: VAULT_ABI,
     functionName: 'abnormalTransactionPercentageBps',
     query: {
-      enabled: !!vaultAddress,
+      enabled: isLegacyMode && !!vaultAddress,
     }
   })
 
@@ -353,12 +356,17 @@ export function useAbnormalTransactionThreshold(vaultAddress?: `0x${string}`) {
 export function useSetBalanceSnapshotMode(vaultAddress: `0x${string}`) {
   const { writeContractAsync } = useWriteContract()
   const [txHash, setTxHash] = useState<`0x${string}` | null>(null)
+  const isLegacyMode = ACTIVE_VAULT_IMPLEMENTATION === 'uservault'
 
   const { isSuccess, isLoading } = useWaitForTransactionReceipt({
     hash: txHash || undefined,
   })
 
   const setSnapshotMode = async (useSnapshot: boolean) => {
+    if (!isLegacyMode) {
+      return { success: false, error: LEGACY_VAULT_UNSUPPORTED_MESSAGE }
+    }
+
     try {
       const hash = await writeContractAsync({
         address: vaultAddress,
@@ -389,12 +397,17 @@ export function useSetBalanceSnapshotMode(vaultAddress: `0x${string}`) {
 export function useUpdateBalanceSnapshot(vaultAddress: `0x${string}`) {
   const { writeContractAsync } = useWriteContract()
   const [txHash, setTxHash] = useState<`0x${string}` | null>(null)
+  const isLegacyMode = ACTIVE_VAULT_IMPLEMENTATION === 'uservault'
 
   const { isSuccess, isLoading } = useWaitForTransactionReceipt({
     hash: txHash || undefined,
   })
 
   const updateSnapshot = async () => {
+    if (!isLegacyMode) {
+      return { success: false, error: LEGACY_VAULT_UNSUPPORTED_MESSAGE }
+    }
+
     try {
       const hash = await writeContractAsync({
         address: vaultAddress,
@@ -422,12 +435,14 @@ export function useUpdateBalanceSnapshot(vaultAddress: `0x${string}`) {
  * Get balance snapshot info
  */
 export function useBalanceSnapshot(vaultAddress?: `0x${string}`) {
+  const isLegacyMode = ACTIVE_VAULT_IMPLEMENTATION === 'uservault'
+
   const { data: useSnapshot } = useReadContract({
     address: vaultAddress,
     abi: VAULT_ABI,
     functionName: 'useBalanceSnapshot',
     query: {
-      enabled: !!vaultAddress,
+      enabled: isLegacyMode && !!vaultAddress,
     }
   })
 
@@ -436,7 +451,7 @@ export function useBalanceSnapshot(vaultAddress?: `0x${string}`) {
     abi: VAULT_ABI,
     functionName: 'balanceSnapshot',
     query: {
-      enabled: !!vaultAddress,
+      enabled: isLegacyMode && !!vaultAddress,
     }
   })
 
@@ -450,13 +465,15 @@ export function useBalanceSnapshot(vaultAddress?: `0x${string}`) {
  * Get pending transaction details
  */
 export function usePendingTransaction(vaultAddress?: `0x${string}`, txId?: number) {
+  const isLegacyMode = ACTIVE_VAULT_IMPLEMENTATION === 'uservault'
+
   const { data: pendingTx } = useReadContract({
     address: vaultAddress,
     abi: VAULT_ABI,
     functionName: 'pendingTransactions',
     args: txId !== undefined ? [BigInt(txId)] : undefined,
     query: {
-      enabled: !!vaultAddress && txId !== undefined,
+      enabled: isLegacyMode && !!vaultAddress && txId !== undefined,
     }
   })
 
@@ -465,7 +482,7 @@ export function usePendingTransaction(vaultAddress?: `0x${string}`, txId?: numbe
     abi: VAULT_ABI,
     functionName: 'pendingTxCount',
     query: {
-      enabled: !!vaultAddress,
+      enabled: isLegacyMode && !!vaultAddress,
     }
   })
 
@@ -489,12 +506,17 @@ export function usePendingTransaction(vaultAddress?: `0x${string}`, txId?: numbe
 export function useApprovePendingTransaction(vaultAddress: `0x${string}`) {
   const { writeContractAsync } = useWriteContract()
   const [txHash, setTxHash] = useState<`0x${string}` | null>(null)
+  const isLegacyMode = ACTIVE_VAULT_IMPLEMENTATION === 'uservault'
 
   const { isSuccess, isLoading } = useWaitForTransactionReceipt({
     hash: txHash || undefined,
   })
 
   const approve = async (txId: number) => {
+    if (!isLegacyMode) {
+      return { success: false, error: LEGACY_VAULT_UNSUPPORTED_MESSAGE }
+    }
+
     try {
       const hash = await writeContractAsync({
         address: vaultAddress,
@@ -525,12 +547,17 @@ export function useApprovePendingTransaction(vaultAddress: `0x${string}`) {
 export function useExecutePendingTransaction(vaultAddress: `0x${string}`) {
   const { writeContractAsync } = useWriteContract()
   const [txHash, setTxHash] = useState<`0x${string}` | null>(null)
+  const isLegacyMode = ACTIVE_VAULT_IMPLEMENTATION === 'uservault'
 
   const { isSuccess, isLoading } = useWaitForTransactionReceipt({
     hash: txHash || undefined,
   })
 
   const execute = async (txId: number) => {
+    if (!isLegacyMode) {
+      return { success: false, error: LEGACY_VAULT_UNSUPPORTED_MESSAGE }
+    }
+
     try {
       const hash = await writeContractAsync({
         address: vaultAddress,
@@ -561,12 +588,17 @@ export function useExecutePendingTransaction(vaultAddress: `0x${string}`) {
 export function useCleanupExpiredTransaction(vaultAddress: `0x${string}`) {
   const { writeContractAsync } = useWriteContract()
   const [txHash, setTxHash] = useState<`0x${string}` | null>(null)
+  const isLegacyMode = ACTIVE_VAULT_IMPLEMENTATION === 'uservault'
 
   const { isSuccess, isLoading } = useWaitForTransactionReceipt({
     hash: txHash || undefined,
   })
 
   const cleanup = async (txId: number) => {
+    if (!isLegacyMode) {
+      return { success: false, error: LEGACY_VAULT_UNSUPPORTED_MESSAGE }
+    }
+
     try {
       const hash = await writeContractAsync({
         address: vaultAddress,
@@ -597,12 +629,17 @@ export function useCleanupExpiredTransaction(vaultAddress: `0x${string}`) {
 export function useGuardianCancelInheritance(vaultAddress: `0x${string}`) {
   const { writeContractAsync } = useWriteContract()
   const [txHash, setTxHash] = useState<`0x${string}` | null>(null)
+  const isLegacyMode = ACTIVE_VAULT_IMPLEMENTATION === 'uservault'
 
   const { isSuccess, isLoading } = useWaitForTransactionReceipt({
     hash: txHash || undefined,
   })
 
   const cancelInheritance = async () => {
+    if (!isLegacyMode) {
+      return { success: false, error: LEGACY_VAULT_UNSUPPORTED_MESSAGE }
+    }
+
     try {
       const hash = await writeContractAsync({
         address: vaultAddress,
@@ -628,12 +665,14 @@ export function useGuardianCancelInheritance(vaultAddress: `0x${string}`) {
  * Get inheritance request status with cancellation tracking
  */
 export function useInheritanceStatus(vaultAddress?: `0x${string}`) {
+  const isLegacyMode = ACTIVE_VAULT_IMPLEMENTATION === 'uservault'
+
   const { data: nextOfKin } = useReadContract({
     address: vaultAddress,
     abi: VAULT_ABI,
     functionName: 'nextOfKin',
     query: {
-      enabled: !!vaultAddress,
+      enabled: isLegacyMode && !!vaultAddress,
     }
   })
 
