@@ -6,6 +6,7 @@
 import { Ratelimit } from '@upstash/ratelimit';
 import { Redis } from '@upstash/redis';
 import { NextRequest, NextResponse } from 'next/server';
+import { logger } from '@/lib/logger';
 
 // Rate limit configurations for different endpoint types
 export const RATE_LIMITS = {
@@ -119,10 +120,10 @@ function getUpstashLimiters(): Map<RateLimitType, Ratelimit> | null {
         })
       );
 
-      console.log('[RateLimit] Using Upstash Redis');
+      logger.info('[RateLimit] Using Upstash Redis');
       return upstashLimiters;
     } catch (_error) {
-      console.warn('[RateLimit] Failed to initialize Upstash Redis, using in-memory fallback');
+      logger.warn('[RateLimit] Failed to initialize Upstash Redis, using in-memory fallback');
     }
   }
 
@@ -138,7 +139,7 @@ function getInMemoryLimiter(): InMemoryRateLimiter {
       setInterval(() => inMemoryLimiter?.cleanup(), 300000);
     }
 
-    console.log('[RateLimit] Using in-memory rate limiting');
+    logger.info('[RateLimit] Using in-memory rate limiting');
   }
   return inMemoryLimiter;
 }
@@ -217,7 +218,7 @@ export async function rateLimit(
     
     return { success: true };
   } catch (error) {
-    console.error('[RateLimit] Error:', error);
+    logger.error('[RateLimit] Error:', error as Error);
     // On error, allow the request to proceed
     return { success: true };
   }

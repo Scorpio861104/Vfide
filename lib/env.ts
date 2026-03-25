@@ -217,11 +217,15 @@ function parseEnv(): Environment {
   const result = envSchema.safeParse(raw);
 
   if (!result.success) {
-    // Log warnings but don't crash - use defaults
-    console.warn('⚠️  Some environment variables are missing or invalid. Using defaults.');
-    console.warn('For production, set these in Vercel: NEXT_PUBLIC_WAGMI_PROJECT_ID, NEXT_PUBLIC_CHAIN_ID, NEXT_PUBLIC_RPC_URL');
-    
-    // Return safe defaults
+    if (process.env.NODE_ENV === 'production') {
+      // In production, missing/invalid vars are a deployment error — surface them loudly.
+      console.error('❌ Environment variable validation failed in production. Check your deployment configuration.');
+      console.error('Missing/invalid vars:', result.error.flatten().fieldErrors);
+    } else {
+      console.warn('⚠️  Some environment variables are missing or invalid. Using defaults.');
+      console.warn('For production, set these in Vercel: NEXT_PUBLIC_WAGMI_PROJECT_ID, NEXT_PUBLIC_CHAIN_ID, NEXT_PUBLIC_RPC_URL');
+    }
+    // Return safe defaults so the app can still render an error page
     return envSchema.parse({});
   }
 

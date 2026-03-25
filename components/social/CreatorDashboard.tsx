@@ -5,6 +5,7 @@ import { useAccount } from 'wagmi';
 import { motion, AnimatePresence, useMotionValue, useTransform, animate } from 'framer-motion';
 import { useTransactionSounds } from '@/hooks/useTransactionSounds';
 import { Sparkles } from 'lucide-react';
+import { logger } from '@/lib/logger';
 
 /**
  * CreatorDashboard - Comprehensive analytics and earnings management for creators
@@ -81,7 +82,8 @@ export function CreatorDashboard() {
           topSupporters: [],
           recentTransactions: [],
         });
-      } catch {
+      } catch (error) {
+        logger.error('Failed to load creator stats', error as Error);
       } finally {
         setIsLoading(false);
       }

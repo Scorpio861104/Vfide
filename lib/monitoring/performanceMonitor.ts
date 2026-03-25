@@ -9,6 +9,13 @@
 
 // ==================== TYPES ====================
 
+/** Chrome-only non-standard memory API on the Performance object. */
+interface PerformanceMemoryInfo {
+  usedJSHeapSize: number;
+  totalJSHeapSize: number;
+  jsHeapSizeLimit: number;
+}
+
 export interface WebVitals {
   // Core Web Vitals
   lcp: number | null;  // Largest Contentful Paint
@@ -367,7 +374,7 @@ class PerformanceMonitor {
 
     // Add memory info if available
     if (typeof window !== 'undefined' && 'memory' in performance) {
-      const memory = (performance as unknown as { memory: { usedJSHeapSize: number; totalJSHeapSize: number; jsHeapSizeLimit: number } }).memory;
+      const memory = (performance as Performance & { memory: PerformanceMemoryInfo }).memory;
       report.memory = {
         usedJSHeapSize: memory.usedJSHeapSize,
         totalJSHeapSize: memory.totalJSHeapSize,
