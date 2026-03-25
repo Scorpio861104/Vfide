@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 // Message encryption utilities using Web Crypto API and ECIES-like encryption
 
 /**
@@ -168,7 +169,7 @@ export async function encryptMessage(
     
     return JSON.stringify(payload);
   } catch (error) {
-    console.error('Encryption failed:', error);
+    logger.error('Encryption failed:', error);
     throw new Error('Failed to encrypt message');
   }
 }
@@ -242,7 +243,7 @@ export async function decryptMessage(
       verified,
     };
   } catch (error) {
-    console.error('Decryption failed:', error);
+    logger.error('Decryption failed:', error);
     throw new Error('Failed to decrypt message');
   }
 }
@@ -395,7 +396,7 @@ export async function decryptGroupMessage(
       groupId,
     };
   } catch (error) {
-    console.error('Group decryption failed:', error);
+    logger.error('Group decryption failed:', error);
     throw new Error('Failed to decrypt group message');
   }
 }

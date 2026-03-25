@@ -5,6 +5,7 @@
  */
 
 import { CACHE_TTL } from './walletConstants';
+import { logger } from '@/lib/logger';
 
 export interface GasEstimate {
   slow: string;
@@ -58,7 +59,7 @@ export async function fetchGasPrice(rpcUrl: string, chainId: number): Promise<Ga
     
     return null;
   } catch (error) {
-    console.warn('Failed to fetch gas price:', error);
+    logger.warn('Failed to fetch gas price:', error);
     return null;
   }
 }

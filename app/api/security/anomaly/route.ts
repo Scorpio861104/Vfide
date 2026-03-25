@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/auth/middleware';
 import { getAnomalyStats, recordActivity, getClientIP, getUserAgent } from '@/lib/security/anomalyDetection';
 import { withRateLimit } from '@/lib/auth/rateLimit';
+import { logger } from '@/lib/logger';
 
 const ADDRESS_PATTERN = /^0x[a-fA-F0-9]{3,64}$/;
 
@@ -48,7 +49,7 @@ export async function GET(request: NextRequest) {
         endpoint: '/api/security/anomaly',
       });
     } catch (recordingError) {
-      console.error('[Anomaly API] Failed to record activity:', recordingError);
+      logger.error('[Anomaly API] Failed to record activity:', recordingError);
     }
 
     return NextResponse.json({
@@ -56,7 +57,7 @@ export async function GET(request: NextRequest) {
       stats,
     });
   } catch (error) {
-    console.error('[Anomaly API] Error:', error);
+    logger.error('[Anomaly API] Error:', error);
     return NextResponse.json(
       { error: 'Failed to fetch anomaly statistics' },
       { status: 500 }

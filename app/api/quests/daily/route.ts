@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getClient } from '@/lib/db';
 import { isAdmin, requireAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
+import { logger } from '@/lib/logger';
 
 const ADDRESS_PATTERN = /^0x[a-fA-F0-9]{3,64}$/;
 
@@ -110,7 +111,7 @@ export async function GET(request: NextRequest) {
       client.release();
     }
   } catch (error) {
-    console.error('Error fetching daily quests:', error);
+    logger.error('Error fetching daily quests:', error);
     return NextResponse.json(
       { error: 'Failed to fetch daily quests' },
       { status: 500 }

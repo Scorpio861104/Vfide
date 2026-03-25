@@ -6,6 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { generateCSRFToken } from '@/lib/security/csrf';
 import { withRateLimit } from '@/lib/auth/rateLimit';
+import { logger } from '@/lib/logger';
 
 export async function GET(request: NextRequest) {
   // Rate limiting to prevent token generation attacks
@@ -36,7 +37,7 @@ export async function GET(request: NextRequest) {
 
     return response;
   } catch (error) {
-    console.error('[CSRF API] Error generating token:', error);
+    logger.error('[CSRF API] Error generating token:', error);
     // Don't expose internal error details
     return NextResponse.json(
       {

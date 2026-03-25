@@ -9,6 +9,7 @@ import { getClient } from '@/lib/db';
 import { requireAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { isAddress } from 'viem';
+import { logger } from '@/lib/logger';
 
 const MAX_INVITE_CODE_LENGTH = 64;
 
@@ -193,7 +194,7 @@ export async function POST(request: NextRequest) {
     if (client) {
       await client.query('ROLLBACK');
     }
-    console.error('[Join Group API] Error:', error);
+    logger.error('[Join Group API] Error:', error);
     return NextResponse.json(
       { error: 'Failed to join group' },
       { status: 500 }

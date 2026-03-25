@@ -3,6 +3,7 @@ import { query } from '@/lib/db';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { requireAuth } from '@/lib/auth/middleware';
 import crypto from 'crypto';
+import { logger } from '@/lib/logger';
 
 const CODE_TTL_MINUTES = 5;
 const ADDRESS_PATTERN = /^0x[a-fA-F0-9]{3,64}$/;
@@ -60,7 +61,7 @@ const sendEmailCode = async (destination: string, code: string) => {
   if (!response.ok) {
     const body = await response.text();
     // Log the full error for debugging but don't expose to client
-    console.error('[SendGrid] Error response:', response.status, body);
+    logger.error('[SendGrid] Error response:', response.status, body);
     throw new Error('Email delivery service unavailable');
   }
 };
@@ -92,7 +93,7 @@ const sendSmsCode = async (destination: string, code: string) => {
   if (!response.ok) {
     const body = await response.text();
     // Log the full error for debugging but don't expose to client
-    console.error('[Twilio] Error response:', response.status, body);
+    logger.error('[Twilio] Error response:', response.status, body);
     throw new Error('SMS delivery service unavailable');
   }
 };
@@ -198,7 +199,7 @@ export async function POST(request: NextRequest) {
       expiresAt: expiresAt.toISOString(),
     });
   } catch (error) {
-    console.error('[2FA Initiate] Error:', error);
+    logger.error('[2FA Initiate] Error:', error);
     return NextResponse.json({ error: 'Failed to initiate verification' }, { status: 500 });
   }
 }

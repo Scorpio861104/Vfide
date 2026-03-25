@@ -2,6 +2,7 @@ import { query } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
+import { logger } from '@/lib/logger';
 
 const ADDRESS_PATTERN = /^0x[a-fA-F0-9]{3,64}$/;
 
@@ -83,7 +84,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       claimed: total - totalUnclaimed
     });
   } catch (error) {
-    console.error('[Rewards GET] Error:', error);
+    logger.error('[Rewards GET] Error:', error);
     const errorMessage = error instanceof Error ? error.message : 'Failed to fetch rewards';
     return NextResponse.json(
       { error: errorMessage },

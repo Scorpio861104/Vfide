@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { requireAuth } from '@/lib/auth/middleware';
+import { logger } from '@/lib/logger';
 
 const DEFAULT_VIOLATIONS_LIMIT = 100;
 const MAX_VIOLATIONS_LIMIT = 500;
@@ -80,7 +81,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ violations: result.rows });
   } catch (error) {
-    console.error('[Security Violations] Error:', error);
+    logger.error('[Security Violations] Error:', error);
     return NextResponse.json({ error: 'Failed to fetch violations' }, { status: 500 });
   }
 }
@@ -167,7 +168,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true, violation: result.rows[0] });
   } catch (error) {
-    console.error('[Security Violations POST] Error:', error);
+    logger.error('[Security Violations POST] Error:', error);
     return NextResponse.json({ error: 'Failed to log violation' }, { status: 500 });
   }
 }

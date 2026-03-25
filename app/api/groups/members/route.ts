@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { isAddress } from 'viem';
+import { logger } from '@/lib/logger';
 
 interface GroupMember {
   id: number;
@@ -141,7 +142,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ success: true, members: result.rows, total: result.rows.length });
   } catch (error) {
-    console.error('[Group Members GET] Error:', error);
+    logger.error('[Group Members GET] Error:', error);
     return NextResponse.json({ success: false, error: 'Internal server error' }, { status: 500 });
   }
 }
@@ -249,7 +250,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true, member: result.rows[0] }, { status: 201 });
   } catch (error) {
-    console.error('[Group Members POST] Error:', error);
+    logger.error('[Group Members POST] Error:', error);
     return NextResponse.json({ success: false, error: 'Failed to add member' }, { status: 500 });
   }
 }
@@ -365,7 +366,7 @@ export async function PATCH(request: NextRequest) {
 
     return NextResponse.json({ success: true, member: result.rows[0] });
   } catch (error) {
-    console.error('[Group Members PATCH] Error:', error);
+    logger.error('[Group Members PATCH] Error:', error);
     return NextResponse.json({ success: false, error: 'Failed to update member' }, { status: 500 });
   }
 }
@@ -461,7 +462,7 @@ export async function DELETE(request: NextRequest) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('[Group Members DELETE] Error:', error);
+    logger.error('[Group Members DELETE] Error:', error);
     return NextResponse.json({ success: false, error: 'Failed to remove member' }, { status: 500 });
   }
 }

@@ -7,6 +7,7 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
+import { logger } from '@/lib/logger';
 
 // ============================================================================
 // Types & Interfaces
@@ -461,7 +462,7 @@ export function useMemberPermissions(userId?: string, groupId?: string) {
           }
         }
       } catch (err) {
-        console.error('Failed to load member permissions:', err);
+        logger.error('Failed to load member permissions:', err);
       } finally {
         setLoading(false);
       }
@@ -525,7 +526,7 @@ export function useGroupMembers(groupId?: string) {
           setMembers(normalizedMembers);
       }
     } catch (err) {
-      console.error('Failed to load members:', err);
+      logger.error('Failed to load members:', err);
     } finally {
       setLoading(false);
     }
@@ -554,7 +555,7 @@ export function useGroupMembers(groupId?: string) {
       }
       throw new Error(data.error || 'Failed to update role');
     } catch (err) {
-      console.error('Failed to update role:', err);
+      logger.error('Failed to update role:', err);
       throw err;
     }
   };
@@ -570,7 +571,7 @@ export function useGroupMembers(groupId?: string) {
       await loadMembers();
       return members.find((member) => member.userId === userId) ?? null;
     } catch (err) {
-      console.error('Failed to update permissions:', err);
+      logger.error('Failed to update permissions:', err);
       throw err;
     }
   };
@@ -589,7 +590,7 @@ export function useGroupMembers(groupId?: string) {
       }
       throw new Error(data.error || 'Failed to remove member');
     } catch (err) {
-      console.error('Failed to remove member:', err);
+      logger.error('Failed to remove member:', err);
       throw err;
     }
   };

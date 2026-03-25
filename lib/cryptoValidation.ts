@@ -3,6 +3,7 @@
  */
 
 import { parseEther } from 'viem';
+import { logger } from '@/lib/logger';
 
 export class ValidationError extends Error {
   constructor(message: string) {
@@ -259,7 +260,7 @@ export async function estimateGas(
 
     return gasCost;
   } catch (error) {
-    console.error('Gas estimation failed:', error);
+    logger.error('Gas estimation failed:', error);
     // Return default estimate
     return 0.002; // ~$4 at 2000 USD/ETH
   }

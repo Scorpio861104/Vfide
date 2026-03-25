@@ -10,6 +10,7 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useAccount, usePublicClient } from 'wagmi';
 import { type Address } from 'viem';
+import { logger } from '@/lib/logger';
 
 // ==================== TYPES ====================
 
@@ -126,7 +127,7 @@ async function detectWalletType(
     // Generic smart contract wallet
     return { type: 'smart-contract', implementation: null };
   } catch (error) {
-    console.error('Wallet type detection failed:', error);
+    logger.error('Wallet type detection failed:', error);
     return { type: 'unknown', implementation: null };
   }
 }

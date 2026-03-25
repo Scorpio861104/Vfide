@@ -3,6 +3,7 @@
 import { useAccount, useReadContract } from 'wagmi';
 import { useMemo } from 'react';
 import { VaultHubABI } from '@/lib/abis';
+import { logger } from '@/lib/logger';
 
 // VaultHub address (from deployment)
 // Base: 0x090014f269f642656394E2FEaB038b92387B4db3
@@ -35,7 +36,7 @@ export function useHasVault() {
 
   // Log errors for debugging
   if (isError && error) {
-    console.error('Error checking vault status:', error);
+    logger.error('Error checking vault status:', error);
   }
 
   return {

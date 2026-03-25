@@ -3,6 +3,7 @@ import { query } from '@/lib/db';
 import { validateBody, pushSubscriptionSchema, pushUnsubscribeSchema } from '@/lib/auth/validation';
 import { requireAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
+import { logger } from '@/lib/logger';
 
 const ADDRESS_PATTERN = /^0x[a-fA-F0-9]{3,64}$/;
 
@@ -67,7 +68,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true, subscription: result.rows[0] });
   } catch (error) {
-    console.error('[Push Subscribe] Error:', error);
+    logger.error('[Push Subscribe] Error:', error);
     return NextResponse.json({ error: 'Failed to subscribe' }, { status: 500 });
   }
 }
@@ -121,7 +122,7 @@ export async function DELETE(request: NextRequest) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('[Push Unsubscribe] Error:', error);
+    logger.error('[Push Unsubscribe] Error:', error);
     return NextResponse.json({ error: 'Failed to unsubscribe' }, { status: 500 });
   }
 }

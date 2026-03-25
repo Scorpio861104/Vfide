@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import {
+import { logger } from '@/lib/logger';
   ThreatDetectionResult,
   ThreatAlert,
   ThreatLevel,
@@ -52,7 +53,7 @@ const loadThreats = (): ThreatAlert[] => {
       detected: new Date(threat.detected)
     }));
   } catch (error) {
-    console.error('Failed to load threats', error);
+    logger.error('Failed to load threats', error);
     return [];
   }
 };

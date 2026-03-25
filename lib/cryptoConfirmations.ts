@@ -99,7 +99,7 @@ export async function waitForConfirmation(
       error: 'Confirmation timeout - transaction may still be pending',
     };
   } catch (error) {
-    console.error('Failed to wait for confirmation:', error);
+    logger.error('Failed to wait for confirmation:', error);
     return {
       confirmed: false,
       confirmations: 0,
@@ -168,7 +168,7 @@ export async function getTransactionStatus(txHash: string): Promise<Confirmation
       status: confirmations >= REQUIRED_CONFIRMATIONS ? 'confirmed' : 'pending',
     };
   } catch (error) {
-    console.error('Failed to get transaction status:', error);
+    logger.error('Failed to get transaction status:', error);
     return {
       confirmed: false,
       confirmations: 0,
@@ -254,7 +254,7 @@ export async function isTransactionPending(txHash: string): Promise<boolean> {
 
     return !receipt; // Pending if no receipt yet
   } catch (error) {
-    console.error('Failed to check if transaction pending:', error);
+    logger.error('Failed to check if transaction pending:', error);
     return false;
   }
 }
@@ -373,3 +373,4 @@ export function useTransactionConfirmation(txHash: string | null) {
 
 // For non-React contexts
 import * as React from 'react';
+import { logger } from '@/lib/logger';

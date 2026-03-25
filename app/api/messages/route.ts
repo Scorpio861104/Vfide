@@ -4,6 +4,7 @@ import { requireAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { validateBody, sendMessageSchema } from '@/lib/auth/validation';
 import { isAddress } from 'viem';
+import { logger } from '@/lib/logger';
 
 interface Message {
   id: number;
@@ -234,7 +235,7 @@ export async function GET(request: NextRequest) {
       });
     }
   } catch (error) {
-    console.error('[Messages GET API] Error:', error);
+    logger.error('[Messages GET API] Error:', error);
     const errorMessage = error instanceof Error ? error.message : 'Failed to fetch messages';
     return NextResponse.json(
       { error: errorMessage },
@@ -396,7 +397,7 @@ export async function POST(request: NextRequest) {
     }, { status: 201 });
   } catch (error) {
     await client.query('ROLLBACK');
-    console.error('[Messages POST API] Error:', error);
+    logger.error('[Messages POST API] Error:', error);
     const errorMessage = error instanceof Error ? error.message : 'Failed to send message';
     return NextResponse.json(
       { error: errorMessage },
@@ -558,7 +559,7 @@ export async function PATCH(request: NextRequest) {
       );
     }
   } catch (error) {
-    console.error('[Messages PATCH API] Error:', error);
+    logger.error('[Messages PATCH API] Error:', error);
     return NextResponse.json(
       { error: 'Failed to update messages' },
       { status: 500 }

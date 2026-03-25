@@ -12,6 +12,7 @@ import type {
   NotificationFilter,
 } from '@/config/notification-hub';
 import {
+import { logger } from '@/lib/logger';
   NotificationStatus,
   NotificationStats,
   NotificationType,
@@ -81,7 +82,7 @@ export function useNotificationHub(): UseNotificationHubResult {
         setPreferences(parsed);
       }
     } catch (e) {
-      console.error('Failed to load notifications:', e);
+      logger.error('Failed to load notifications:', e);
     }
   }, []);
 
@@ -90,7 +91,7 @@ export function useNotificationHub(): UseNotificationHubResult {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(notifications));
     } catch (e) {
-      console.error('Failed to save notifications:', e);
+      logger.error('Failed to save notifications:', e);
     }
   }, [notifications]);
 
@@ -99,7 +100,7 @@ export function useNotificationHub(): UseNotificationHubResult {
     try {
       localStorage.setItem(PREFS_STORAGE_KEY, JSON.stringify(preferences));
     } catch (e) {
-      console.error('Failed to save preferences:', e);
+      logger.error('Failed to save preferences:', e);
     }
   }, [preferences]);
 

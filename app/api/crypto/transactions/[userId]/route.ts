@@ -2,6 +2,7 @@ import { query } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
+import { logger } from '@/lib/logger';
 
 const MAX_TRANSACTIONS_LIMIT = 100;
 const MAX_TRANSACTIONS_OFFSET = 10000;
@@ -98,7 +99,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
     return NextResponse.json({ transactions: result.rows, total: result.rows.length });
   } catch (error) {
-    console.error('[Transactions API] Error:', error);
+    logger.error('[Transactions API] Error:', error);
     const errorMessage = error instanceof Error ? error.message : 'Failed to fetch transactions';
     return NextResponse.json(
       { error: errorMessage },

@@ -3,6 +3,7 @@
 import { useReadContract, useWriteContract, useAccount, useWaitForTransactionReceipt } from 'wagmi'
 import { CONTRACT_ADDRESSES } from '../lib/contracts'
 import { 
+import { logger } from '@/lib/logger';
   SecurityHubABI, 
   PanicGuardABI, 
   GuardianRegistryABI, 
@@ -133,7 +134,7 @@ export function useSelfPanic() {
   const selfPanic = (durationHours: number = 24) => {
     if (!isAvailable) {
       if (process.env.NODE_ENV === 'development') {
-        console.error('PanicGuard contract not deployed - selfPanic unavailable')
+        logger.error('PanicGuard contract not deployed - selfPanic unavailable')
       }
       return
     }

@@ -4,6 +4,7 @@
  */
 
 import React from 'react';
+import { logger } from '@/lib/logger';
 
 type StorageKey = 
   | `vfide_notifications_${string}`
@@ -42,7 +43,7 @@ export class StorageService {
 
       return parsed._data !== undefined ? parsed._data : parsed;
     } catch (error) {
-      console.error(`[StorageService] Failed to get ${key}:`, error);
+      logger.error(`[StorageService] Failed to get ${key}:`, error);
       return defaultValue;
     }
   }
@@ -72,10 +73,10 @@ export class StorageService {
       return true;
     } catch (error) {
       if (error instanceof Error && error.name === 'QuotaExceededError') {
-        console.error('[StorageService] Storage quota exceeded');
+        logger.error('[StorageService] Storage quota exceeded');
         this.clearOldest();
       } else {
-        console.error(`[StorageService] Failed to set ${key}:`, error);
+        logger.error(`[StorageService] Failed to set ${key}:`, error);
       }
       return false;
     }
@@ -93,7 +94,7 @@ export class StorageService {
       localStorage.removeItem(key);
       return true;
     } catch (error) {
-      console.error(`[StorageService] Failed to remove ${key}:`, error);
+      logger.error(`[StorageService] Failed to remove ${key}:`, error);
       return false;
     }
   }
@@ -114,7 +115,7 @@ export class StorageService {
         }
       });
     } catch (error) {
-      console.error('[StorageService] Failed to clear all:', error);
+      logger.error('[StorageService] Failed to clear all:', error);
     }
   }
 
@@ -140,7 +141,7 @@ export class StorageService {
 
       return { used, available, percentUsed };
     } catch (error) {
-      console.error('[StorageService] Failed to get usage info:', error);
+      logger.error('[StorageService] Failed to get usage info:', error);
       return { used: 0, available: 0, percentUsed: 0 };
     }
   }
@@ -163,7 +164,7 @@ export class StorageService {
         // Cleared oldest item for space
       }
     } catch (error) {
-      console.error('[StorageService] Failed to clear oldest:', error);
+      logger.error('[StorageService] Failed to clear oldest:', error);
     }
   }
 
@@ -206,7 +207,7 @@ export class StorageService {
       });
       return true;
     } catch (error) {
-      console.error('[StorageService] Batch set failed:', error);
+      logger.error('[StorageService] Batch set failed:', error);
       return false;
     }
   }
@@ -226,7 +227,7 @@ export function useLocalStorage<T>(key: StorageKey, defaultValue: T, options?: S
       setValue(valueToStore);
       StorageService.set(key, valueToStore, options);
     } catch (error) {
-      console.error(`[useLocalStorage] Failed to set ${key}:`, error);
+      logger.error(`[useLocalStorage] Failed to set ${key}:`, error);
     }
   }, [key, value, options]);
 

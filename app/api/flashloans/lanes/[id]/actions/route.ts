@@ -9,6 +9,7 @@ import {
   updateLaneState,
 } from '@/lib/flashloans/repository'
 import {
+import { logger } from '@/lib/logger';
   performAction,
   sanitizeTerms,
   type ActorRole,
@@ -146,7 +147,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       return NextResponse.json({ error: message }, { status: 400 })
     }
 
-    console.error('[Flashloans POST action] Error:', error)
+    logger.error('[Flashloans POST action] Error:', error)
     return NextResponse.json({ error: 'Failed to apply action' }, { status: 500 })
   }
 }

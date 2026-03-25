@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 import { requireAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
+import { logger } from '@/lib/logger';
 
 // File validation constants
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
@@ -143,7 +144,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true, attachment: result.rows[0] });
   } catch (error) {
-    console.error('[Attachments Upload] Error:', error);
+    logger.error('[Attachments Upload] Error:', error);
     return NextResponse.json({ error: 'Failed to upload attachment' }, { status: 500 });
   }
 }

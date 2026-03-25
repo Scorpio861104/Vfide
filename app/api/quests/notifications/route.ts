@@ -6,6 +6,7 @@ const MAX_QUEST_NOTIFICATION_IDS = 500;
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const ADDRESS_PATTERN = /^0x[a-fA-F0-9]{3,64}$/;
 import { withRateLimit } from '@/lib/auth/rateLimit';
+import { logger } from '@/lib/logger';
 
 function normalizeAddress(value: string): string {
   return value.trim().toLowerCase();
@@ -101,7 +102,7 @@ export async function GET(request: NextRequest) {
       client.release();
     }
   } catch (error) {
-    console.error('Error fetching notifications:', error);
+    logger.error('Error fetching notifications:', error);
     return NextResponse.json(
       { error: 'Failed to fetch notifications' },
       { status: 500 }
@@ -212,7 +213,7 @@ export async function PATCH(request: NextRequest) {
       client.release();
     }
   } catch (error) {
-    console.error('Error marking notifications as shown:', error);
+    logger.error('Error marking notifications as shown:', error);
     return NextResponse.json(
       { error: 'Failed to mark notifications as shown' },
       { status: 500 }

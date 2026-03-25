@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { requireAdmin, requireAuth } from '@/lib/auth/middleware';
+import { logger } from '@/lib/logger';
 
 const MAX_ERROR_LOG_LIMIT = 200;
 const DEFAULT_ERROR_LOG_LIMIT = 100;
@@ -89,7 +90,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ errors: result.rows, total: result.rows.length });
   } catch (error) {
-    console.error('[Errors GET] Error:', error);
+    logger.error('[Errors GET] Error:', error);
     return NextResponse.json({ error: 'Failed to fetch errors' }, { status: 500 });
   }
 }
@@ -198,7 +199,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true, error: result.rows[0] });
   } catch (error) {
-    console.error('[Errors POST] Error:', error);
+    logger.error('[Errors POST] Error:', error);
     return NextResponse.json({ error: 'Failed to log error' }, { status: 500 });
   }
 }

@@ -6,6 +6,7 @@
  */
 
 import * as dotenv from 'dotenv';
+import { logger } from '@/lib/logger';
 
 // Load local env files when running validation via npm scripts.
 dotenv.config({ path: '.env.local' });
@@ -249,32 +250,32 @@ export function validateProductionEnvironment(): ValidationResult {
 }
 
 export function printValidationResults(result: ValidationResult): void {
-  console.log('\n🔍 Production Environment Validation\n');
-  console.log('='.repeat(50));
+  logger.info('\n🔍 Production Environment Validation\n');
+  logger.info('='.repeat(50));
 
   if (result.errors.length > 0) {
-    console.log('\n❌ ERRORS (Must Fix):');
-    result.errors.forEach(err => console.log(`  ${err}`));
+    logger.info('\n❌ ERRORS (Must Fix):');
+    result.errors.forEach(err => logger.info(`  ${err}`));
   }
 
   if (result.warnings.length > 0) {
-    console.log('\n⚠️  WARNINGS (Recommended):');
-    result.warnings.forEach(warn => console.log(`  ${warn}`));
+    logger.info('\n⚠️  WARNINGS (Recommended):');
+    result.warnings.forEach(warn => logger.info(`  ${warn}`));
   }
 
   if (result.info.length > 0 && process.env.VERBOSE) {
-    console.log('\n✅ CONFIGURED:');
-    result.info.forEach(info => console.log(`  ${info}`));
+    logger.info('\n✅ CONFIGURED:');
+    result.info.forEach(info => logger.info(`  ${info}`));
   }
 
-  console.log('\n' + '='.repeat(50));
-  console.log(result.valid ? '✅ Environment validation passed' : '❌ Environment validation failed');
-  console.log('='.repeat(50) + '\n');
+  logger.info('\n' + '='.repeat(50));
+  logger.info(result.valid ? '✅ Environment validation passed' : '❌ Environment validation failed');
+  logger.info('='.repeat(50) + '\n');
 
   if (!result.valid) {
-    console.log('Missing required variables:');
-    result.missing.forEach(name => console.log(`  - ${name}`));
-    console.log('');
+    logger.info('Missing required variables:');
+    result.missing.forEach(name => logger.info(`  - ${name}`));
+    logger.info('');
   }
 }
 
@@ -292,18 +293,18 @@ if (isMainModule) {
 
   if (isCI && !result.valid) {
     if (frontendOnly) {
-      console.log('⚠️  Running in CI/Deployment with frontend-only mode enabled');
-      console.log('⚠️  Backend-only integrations may be disabled by missing variables');
+      logger.info('⚠️  Running in CI/Deployment with frontend-only mode enabled');
+      logger.info('⚠️  Backend-only integrations may be disabled by missing variables');
       process.exit(0);
     }
 
-    console.log('❌ Running in CI/Deployment environment - validation errors must be fixed');
-    console.log('❌ Configure all required environment variables in your deployment platform');
+    logger.info('❌ Running in CI/Deployment environment - validation errors must be fixed');
+    logger.info('❌ Configure all required environment variables in your deployment platform');
     process.exit(1); // Fail the build to prevent deployment with missing config
   }
 
   if (!isCI && !result.valid) {
-    console.log('⚠️  Local environment has missing/partial config; continuing outside CI/deployment');
+    logger.info('⚠️  Local environment has missing/partial config; continuing outside CI/deployment');
     process.exit(0);
   }
 

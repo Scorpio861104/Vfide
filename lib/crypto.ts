@@ -7,6 +7,7 @@
 import { useState, useEffect, useCallback } from 'react';
 // Crypto validation types - ValidationError used in type definitions
 import type { ValidationError as _ValidationError } from './cryptoValidation';
+import { logger } from '@/lib/logger';
 
 // ============================================================================
 // Types & Interfaces
@@ -116,7 +117,7 @@ export async function connectWallet(): Promise<Wallet> {
       ensName,
     };
   } catch (error) {
-    console.error('Wallet connection error:', error);
+    logger.error('Wallet connection error:', error);
     throw new Error('Failed to connect wallet');
   }
 }
@@ -223,7 +224,7 @@ export async function sendPayment(
 
     return transaction;
   } catch (error) {
-    console.error('Payment error:', error);
+    logger.error('Payment error:', error);
     throw new Error('Payment failed');
   }
 }
@@ -493,7 +494,7 @@ export function useTransactions(userId: string) {
         const data = await response.json();
         setTransactions(data.transactions || []);
       } catch (error) {
-        console.error('Failed to fetch transactions:', error);
+        logger.error('Failed to fetch transactions:', error);
       } finally {
         setLoading(false);
       }
@@ -524,7 +525,7 @@ export function usePaymentRequests(userId: string) {
         const data = await response.json();
         setRequests(data.requests || []);
       } catch (error) {
-        console.error('Failed to fetch payment requests:', error);
+        logger.error('Failed to fetch payment requests:', error);
       } finally {
         setLoading(false);
       }

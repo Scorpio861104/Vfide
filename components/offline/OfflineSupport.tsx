@@ -3,6 +3,7 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
+import { logger } from '@/lib/logger';
   WifiOff, 
   Wifi, 
   RefreshCw, 
@@ -213,7 +214,7 @@ async function processAction(action: QueuedAction): Promise<void> {
       });
       break;
     default:
-      console.warn('Unknown action type:', action.type);
+      logger.warn('Unknown action type:', action.type);
   }
 }
 

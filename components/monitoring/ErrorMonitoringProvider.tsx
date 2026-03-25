@@ -9,6 +9,7 @@
 import { errorMonitor } from '@/lib/errorMonitoring';
 import React, { useEffect } from 'react';
 import { useAccount } from 'wagmi';
+import { logger } from '@/lib/logger';
 
 export function ErrorMonitoringProvider() {
   const { address } = useAccount();
@@ -26,7 +27,7 @@ export function ErrorMonitoringProvider() {
       // Add listener to log errors in development
       const unsubscribe = errorMonitor.onError((error) => {
         if (error.severity === 'critical' || error.severity === 'high') {
-          console.error('🚨 Error detected:', error);
+          logger.error('🚨 Error detected:', error);
         }
       });
 

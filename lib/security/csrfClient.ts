@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 /**
  * Client-side CSRF Utilities
  *
@@ -33,7 +34,7 @@ export async function getCsrfToken(forceRefresh = false): Promise<string | null>
     });
 
     if (!res.ok) {
-      console.error('[csrfClient] Failed to fetch CSRF token:', res.status);
+      logger.error('[csrfClient] Failed to fetch CSRF token:', res.status);
       return null;
     }
 
@@ -41,7 +42,7 @@ export async function getCsrfToken(forceRefresh = false): Promise<string | null>
     cachedToken = data.token ?? null;
     return cachedToken;
   } catch (error) {
-    console.error('[csrfClient] Error fetching CSRF token:', error);
+    logger.error('[csrfClient] Error fetching CSRF token:', error);
     return null;
   }
 }

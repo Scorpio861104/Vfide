@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 /**
  * Monitoring and Observability Enhancements
  * 
@@ -306,7 +307,7 @@ async function flushMetrics() {
     });
   } catch (error) {
     // Silently fail - don't block user experience
-    console.error('Failed to send metrics:', error);
+    logger.error('Failed to send metrics:', error);
   }
 }
 

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getClient } from '@/lib/db';
 import { isAdmin, requireAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
+import { logger } from '@/lib/logger';
 
 const MILESTONE_KEY_REGEX = /^[a-z0-9_:-]{1,64}$/;
 const MAX_PROGRESS_VALUE = 1000000000;
@@ -127,7 +128,7 @@ export async function GET(request: NextRequest) {
       client.release();
     }
   } catch (error) {
-    console.error('Error fetching achievements:', error);
+    logger.error('Error fetching achievements:', error);
     return NextResponse.json(
       { error: 'Failed to fetch achievements' },
       { status: 500 }
@@ -289,7 +290,7 @@ export async function POST(request: NextRequest) {
       client.release();
     }
   } catch (error) {
-    console.error('Error updating achievement progress:', error);
+    logger.error('Error updating achievement progress:', error);
     return NextResponse.json(
       { error: 'Failed to update achievement progress' },
       { status: 500 }

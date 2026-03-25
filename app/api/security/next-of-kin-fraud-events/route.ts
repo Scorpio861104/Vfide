@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { withRateLimit } from '@/lib/auth/rateLimit';
+import { logger } from '@/lib/logger';
 
 const ADDRESS_REGEX = /^0x[a-fA-F0-9]{40}$/;
 const SOURCE_TYPES = ['next-of-kin-inbox', 'next-of-kin-tab', 'unknown'] as const;
@@ -85,7 +86,7 @@ export async function POST(request: NextRequest) {
     nextOfKinFraudStore.splice(0, nextOfKinFraudStore.length - MAX_EVENTS);
   }
 
-  console.warn('[Security][Next of Kin Fraud Event]', event);
+  logger.warn('[Security][Next of Kin Fraud Event]', event);
 
   return NextResponse.json({ success: true });
 }

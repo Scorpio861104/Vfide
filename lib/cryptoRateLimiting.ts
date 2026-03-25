@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 /**
  * Rate limiting for reward system
  * Prevents token farming and abuse
@@ -312,7 +313,7 @@ export function withRateLimit(
         headers,
       });
     } catch (error) {
-      console.error('Rate limit middleware error:', error);
+      logger.error('Rate limit middleware error:', error);
       return Response.json({ error: 'Internal server error' }, { status: 500 });
     }
   };

@@ -8,6 +8,7 @@
 
 import { useState, useEffect } from 'react'
 import { useQuery, useQueryClient as _useQueryClient } from '@tanstack/react-query'
+import { logger } from '@/lib/logger';
 
 interface PriceData {
   vfide: {
@@ -132,7 +133,7 @@ export function useTransactionFees(amount: string, fromAddress?: string) {
       } catch (err) {
         if (isMounted) {
           setError(err instanceof Error ? err.message : 'Unknown error')
-          console.error('[useTransactionFees] Error:', err)
+          logger.error('[useTransactionFees] Error:', err)
         }
       } finally {
         if (isMounted) {

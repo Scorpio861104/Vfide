@@ -5,6 +5,7 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
+import { logger } from '@/lib/logger';
 
 // ============================================================================
 // Types & Interfaces
@@ -497,7 +498,7 @@ export function useSyncQueue() {
       const actions = await getQueuedActions();
       setQueue(actions);
     } catch (error) {
-      console.error('Failed to load sync queue:', error);
+      logger.error('Failed to load sync queue:', error);
     } finally {
       setLoading(false);
     }
@@ -516,7 +517,7 @@ export function useSyncQueue() {
       await loadQueue();
       return result;
     } catch (error) {
-      console.error('Sync failed:', error);
+      logger.error('Sync failed:', error);
       throw error;
     } finally {
       setSyncing(false);
@@ -533,7 +534,7 @@ export function useSyncQueue() {
         await queueAction(type, action, data);
         await loadQueue();
       } catch (error) {
-        console.error('Failed to queue action:', error);
+        logger.error('Failed to queue action:', error);
         throw error;
       }
     },

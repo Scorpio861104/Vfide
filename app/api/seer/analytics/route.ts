@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 import { withRateLimit } from '@/lib/auth/rateLimit';
+import { logger } from '@/lib/logger';
 
 const DEFAULT_WINDOW_HOURS = 24 * 7;
 const MAX_WINDOW_HOURS = 24 * 90;
@@ -389,7 +390,7 @@ export async function GET(request: NextRequest) {
       })),
     });
   } catch (error) {
-    console.error('[Seer Analytics] Error:', error);
+    logger.error('[Seer Analytics] Error:', error);
 
     if (isDatabaseUnavailableError(error)) {
       return NextResponse.json({

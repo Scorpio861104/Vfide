@@ -1,6 +1,7 @@
 // User Profile & Username Management
 
 import { UserProfile, UsernameRegistry } from '@/types/userProfile';
+import { logger } from '@/lib/logger';
 
 const STORAGE_KEYS = {
   PROFILE: 'vfide_profile',
@@ -18,7 +19,7 @@ export class UserProfileService {
       }
       return null;
     } catch (e) {
-      console.error('Failed to load profile:', e);
+      logger.error('Failed to load profile:', e);
       return null;
     }
   }
@@ -38,7 +39,7 @@ export class UserProfileService {
       
       return true;
     } catch (e) {
-      console.error('Failed to save profile:', e);
+      logger.error('Failed to save profile:', e);
       return false;
     }
   }
@@ -53,7 +54,7 @@ export class UserProfileService {
       }
       return null;
     } catch (e) {
-      console.error('Failed to get cached profile:', e);
+      logger.error('Failed to get cached profile:', e);
       return null;
     }
   }
@@ -66,7 +67,7 @@ export class UserProfileService {
       profiles[profile.address.toLowerCase()] = profile;
       localStorage.setItem(STORAGE_KEYS.PROFILES_CACHE, JSON.stringify(profiles));
     } catch (e) {
-      console.error('Failed to cache profile:', e);
+      logger.error('Failed to cache profile:', e);
     }
   }
 
@@ -77,7 +78,7 @@ export class UserProfileService {
       const owner = registry[username.toLowerCase()];
       return !owner || owner.toLowerCase() === myAddress.toLowerCase();
     } catch (e) {
-      console.error('Failed to check username availability:', e);
+      logger.error('Failed to check username availability:', e);
       return false;
     }
   }
@@ -99,7 +100,7 @@ export class UserProfileService {
       registry[username.toLowerCase()] = address;
       localStorage.setItem(STORAGE_KEYS.USERNAME_REGISTRY, JSON.stringify(registry));
     } catch (e) {
-      console.error('Failed to register username:', e);
+      logger.error('Failed to register username:', e);
     }
   }
 
@@ -109,7 +110,7 @@ export class UserProfileService {
       const stored = localStorage.getItem(STORAGE_KEYS.USERNAME_REGISTRY);
       return stored ? JSON.parse(stored) : {};
     } catch (e) {
-      console.error('Failed to load username registry:', e);
+      logger.error('Failed to load username registry:', e);
       return {};
     }
   }
@@ -152,7 +153,7 @@ export class UserProfileService {
         profile.displayName?.toLowerCase().includes(lowerQuery)
       );
     } catch (e) {
-      console.error('Failed to search profiles:', e);
+      logger.error('Failed to search profiles:', e);
       return [];
     }
   }

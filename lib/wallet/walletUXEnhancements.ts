@@ -11,6 +11,7 @@
 
 import { base, baseSepolia } from 'wagmi/chains';
 import { IS_TESTNET } from '@/lib/chains';
+import { logger } from '@/lib/logger';
 
 export const PREFERRED_CHAIN = IS_TESTNET ? baseSepolia : base;
 export const PREFERRED_CHAIN_NAME = IS_TESTNET ? 'Base Sepolia' : 'Base';
@@ -41,7 +42,7 @@ export function getWalletPreferences(): WalletPreferences {
       return { ...getDefaultPreferences(), ...JSON.parse(stored) };
     }
   } catch (error) {
-    console.warn('Failed to load wallet preferences:', error);
+    logger.warn('Failed to load wallet preferences:', error);
   }
 
   return getDefaultPreferences();
@@ -55,7 +56,7 @@ export function saveWalletPreferences(prefs: Partial<WalletPreferences>): void {
     const updated = { ...current, ...prefs };
     localStorage.setItem(PREFERENCES_KEY, JSON.stringify(updated));
   } catch (error) {
-    console.warn('Failed to save wallet preferences:', error);
+    logger.warn('Failed to save wallet preferences:', error);
   }
 }
 
@@ -310,7 +311,7 @@ export async function autoSwitchToBaseIfNeeded(
     return true;
   } catch (error) {
     const err = error instanceof Error ? error : new Error('Unknown error during chain switch');
-    console.warn('Auto-switch to Base failed:', err);
+    logger.warn('Auto-switch to Base failed:', err);
     
     // Call error callback if provided
     if (onError) {

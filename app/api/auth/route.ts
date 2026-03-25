@@ -9,6 +9,7 @@ import {
   getRequestIp,
 } from '@/lib/security/siweChallenge';
 import {
+import { logger } from '@/lib/logger';
   clearAuthFailureSignals,
   getAccountLock,
   recordSecurityEvent,
@@ -149,7 +150,7 @@ export async function POST(request: NextRequest) {
 
     return response;
   } catch (error) {
-    console.error('[Auth API] Error:', error);
+    logger.error('[Auth API] Error:', error);
     return NextResponse.json(
       { error: 'Authentication failed' },
       { status: 500 }
@@ -201,7 +202,7 @@ export async function GET(request: NextRequest) {
       expiresAt: payload.exp,
     });
   } catch (error) {
-    console.error('[Auth Verify API] Error:', error);
+    logger.error('[Auth Verify API] Error:', error);
     return NextResponse.json(
       { error: 'Token verification failed' },
       { status: 401 }

@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { logger } from '@/lib/logger';
 
 /**
  * Transaction Sound Effects Hook
@@ -125,7 +126,7 @@ export function useTransactionSounds() {
         oscillator.stop(endTime);
       });
     } catch (err) {
-      console.warn('Audio playback failed:', err);
+      logger.warn('Audio playback failed:', err);
     }
   }, [settings.enabled, settings.volume, initAudioContext]);
 

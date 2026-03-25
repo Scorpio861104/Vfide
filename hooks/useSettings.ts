@@ -11,6 +11,7 @@ import {
   ThemeOption
 } from '@/config/settings';
 import { safeGetItem, safeSetJSON } from '@/lib/storage';
+import { logger } from '@/lib/logger';
 
 const STORAGE_KEY = 'vfide:settings';
 
@@ -48,7 +49,7 @@ const loadFromStorage = (): SettingsState => {
 
     return defaultSettings;
   } catch (error) {
-    console.warn('Failed to load settings, using defaults', error);
+    logger.warn('Failed to load settings, using defaults', error);
     return defaultSettings;
   }
 };

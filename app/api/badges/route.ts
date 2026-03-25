@@ -3,6 +3,7 @@ import { query } from '@/lib/db';
 import { isAdmin, requireAdmin, requireAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { validateBody, awardBadgeSchema } from '@/lib/auth/validation';
+import { logger } from '@/lib/logger';
 
 const ADDRESS_LIKE_REGEX = /^0x[a-fA-F0-9]{3,40}$/;
 
@@ -145,7 +146,7 @@ export async function GET(request: NextRequest) {
       });
     }
   } catch (error) {
-    console.error('[Badges GET API] Error:', error);
+    logger.error('[Badges GET API] Error:', error);
 
     if (isDatabaseUnavailableError(error)) {
       return NextResponse.json({
@@ -263,7 +264,7 @@ export async function POST(request: NextRequest) {
       userBadge: result.rows[0],
     }, { status: 201 });
   } catch (error) {
-    console.error('[Badges POST API] Error:', error);
+    logger.error('[Badges POST API] Error:', error);
     return NextResponse.json(
       { error: 'Failed to award badge' },
       { status: 500 }
@@ -347,7 +348,7 @@ export async function DELETE(request: NextRequest) {
       deleted: result.rowCount || 0,
     });
   } catch (error) {
-    console.error('[Badges DELETE API] Error:', error);
+    logger.error('[Badges DELETE API] Error:', error);
     return NextResponse.json(
       { error: 'Failed to remove badge' },
       { status: 500 }

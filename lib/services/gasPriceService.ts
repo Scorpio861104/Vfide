@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 /**
  * Gas Price Service
  * 
@@ -90,7 +91,7 @@ class GasPriceService {
       this.lastFetchTime.set(chainId, Date.now());
       return data;
     } catch (error) {
-      console.error('Failed to fetch gas prices:', error);
+      logger.error('Failed to fetch gas prices:', error);
       // Return cached data if available
       if (cached) return cached.data;
       throw error;

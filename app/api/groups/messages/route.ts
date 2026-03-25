@@ -361,7 +361,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    console.error('[Group Messages GET] Error:', error);
+    logger.error('[Group Messages GET] Error:', error);
     return NextResponse.json({ error: 'Failed to fetch group messages' }, { status: 500 });
   }
 }
@@ -493,7 +493,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.error('[Group Messages POST] Error:', error);
+    logger.error('[Group Messages POST] Error:', error);
     return NextResponse.json({ error: 'Failed to send group message' }, { status: 500 });
   }
 }

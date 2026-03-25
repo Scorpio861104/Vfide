@@ -7,6 +7,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 import { withRateLimit } from '@/lib/auth/rateLimit';
+import { logger } from '@/lib/logger';
 
 export async function GET(request: NextRequest) {
   const rateLimitResponse = await withRateLimit(request, 'read');
@@ -61,7 +62,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ categories: tree, all });
   } catch (error) {
-    console.error('[Platform Categories GET] Error:', error);
+    logger.error('[Platform Categories GET] Error:', error);
     return NextResponse.json({ error: 'Failed to fetch categories' }, { status: 500 });
   }
 }

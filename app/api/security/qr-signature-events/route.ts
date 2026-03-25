@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { withRateLimit } from '@/lib/auth/rateLimit';
+import { logger } from '@/lib/logger';
 
 const EVENT_TYPES = ['missing', 'invalid', 'expired'] as const;
 const SOURCE_TYPES = ['qr', 'checkout', 'unknown'] as const;
@@ -107,7 +108,7 @@ export async function POST(request: NextRequest) {
   }
 
   // Structured telemetry log for ops pipelines.
-  console.warn('[Security][QR Signature Event]', event);
+  logger.warn('[Security][QR Signature Event]', event);
 
   return NextResponse.json({ success: true });
 }

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 import { requireAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
+import { logger } from '@/lib/logger';
 
 const MAX_EXPORT_DATE_RANGE_DAYS = 366;
 const MAX_EXPORT_DATE_RANGE_MS = MAX_EXPORT_DATE_RANGE_DAYS * 24 * 60 * 60 * 1000;
@@ -639,7 +640,7 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('[Export API] Error:', error);
+    logger.error('[Export API] Error:', error);
     const errorMessage =
       error instanceof Error ? error.message : 'Failed to export transactions';
     return NextResponse.json({ error: errorMessage }, { status: 500 });

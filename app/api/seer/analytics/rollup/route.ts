@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 import { requireAdmin } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
+import { logger } from '@/lib/logger';
 
 const DEFAULT_LOOKBACK_DAYS = 30;
 const MAX_LOOKBACK_DAYS = 180;
@@ -73,7 +74,7 @@ export async function POST(request: NextRequest) {
       rowsUpdated: row?.rows_updated ?? 0,
     });
   } catch (error) {
-    console.error('[Seer Analytics Rollup] Error:', error);
+    logger.error('[Seer Analytics Rollup] Error:', error);
     return NextResponse.json({ error: 'Failed to refresh Seer analytics rollup' }, { status: 500 });
   }
 }

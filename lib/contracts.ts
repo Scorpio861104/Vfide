@@ -6,6 +6,7 @@
  */
 import { isAddress } from 'viem'
 import {
+import { logger } from '@/lib/logger';
   VFIDETokenABI,
   StablecoinRegistryABI,
   VaultInfrastructureABI,
@@ -59,14 +60,14 @@ function validateContractAddress(address: string | undefined, name: string): `0x
     // Examples: vfideToken -> VFIDE_TOKEN, StablecoinRegistry -> STABLECOIN_REGISTRY
     const envVarName = `NEXT_PUBLIC_${name.replace(/([a-z0-9])([A-Z])/g, '$1_$2').toUpperCase()}_ADDRESS`;
     if (process.env.NODE_ENV === 'production') {
-      console.error(`[VFIDE] Missing contract address in production: ${name}. Set ${envVarName} in environment. All calls to this contract will fail.`)
+      logger.error(`[VFIDE] Missing contract address in production: ${name}. Set ${envVarName} in environment. All calls to this contract will fail.`)
     } else {
-      console.warn(`[VFIDE] Missing contract address: ${name}. Using ZERO_ADDRESS. Set ${envVarName} in environment.`)
+      logger.warn(`[VFIDE] Missing contract address: ${name}. Using ZERO_ADDRESS. Set ${envVarName} in environment.`)
     }
     return ZERO_ADDRESS
   }
   if (!isAddress(address)) {
-    console.error(`[VFIDE] Invalid contract address for ${name}: ${address}. This is a configuration error!`)
+    logger.error(`[VFIDE] Invalid contract address for ${name}: ${address}. This is a configuration error!`)
     return ZERO_ADDRESS
   }
   return address as `0x${string}`

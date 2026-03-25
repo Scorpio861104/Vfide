@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 /**
  * Toast utility for use outside of React components
  * 
@@ -26,7 +27,7 @@ export const toast = {
         new CustomEvent('toast', { detail: { message, type: 'success' } })
       );
     }
-    console.log('✅', message);
+    logger.info('✅', message);
   },
   
   error: (message: string) => {
@@ -35,7 +36,7 @@ export const toast = {
         new CustomEvent('toast', { detail: { message, type: 'error' } })
       );
     }
-    console.error('❌', message);
+    logger.error('❌', message);
   },
   
   info: (message: string) => {
@@ -44,7 +45,7 @@ export const toast = {
         new CustomEvent('toast', { detail: { message, type: 'info' } })
       );
     }
-    console.info('ℹ️', message);
+    logger.info('ℹ️', message);
   },
 };
 

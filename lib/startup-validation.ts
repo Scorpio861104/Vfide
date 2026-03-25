@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 /**
  * Startup validation for critical environment variables
  * This ensures the application fails fast if required configuration is missing
@@ -18,7 +19,7 @@ export function validateEnvironment(): void {
   // Skip validation during build phase
   // During build, pages are statically generated and env vars will be set in production
   if (typeof window === 'undefined' && process.env.NEXT_PHASE === 'phase-production-build') {
-    console.log('⏭️  Skipping environment validation during build phase');
+    logger.info('⏭️  Skipping environment validation during build phase');
     return;
   }
 
@@ -67,7 +68,7 @@ export function validateEnvironment(): void {
         errors.push('WARNING: PREV_JWT_SECRET should be at least 32 characters long for security');
       } else {
         // Rotation window is active — warn so ops team remembers to remove it after 24 h
-        console.warn(
+        logger.warn(
           '⚠️  PREV_JWT_SECRET is set: JWT rotation window is active. ' +
           'Old tokens will be accepted until they expire (max 24 h). ' +
           'Remove PREV_JWT_SECRET after 24 h to complete the rotation.'
@@ -78,8 +79,8 @@ export function validateEnvironment(): void {
 
   // If there are errors, fail fast
   if (errors.length > 0) {
-    console.error('❌ Environment validation failed:');
-    errors.forEach(error => console.error(`  - ${error}`));
+    logger.error('❌ Environment validation failed:');
+    errors.forEach(error => logger.error(`  - ${error}`));
     
     // Only crash in production runtime, not during build
     if (process.env.NODE_ENV === 'production' && !process.env.NEXT_PHASE) {
@@ -90,10 +91,10 @@ export function validateEnvironment(): void {
       );
     } else {
       // In development or build phase, just warn
-      console.warn('⚠️  The application will continue, but these issues should be fixed for production.');
+      logger.warn('⚠️  The application will continue, but these issues should be fixed for production.');
     }
   } else {
-    console.log('✅ Environment validation passed');
+    logger.info('✅ Environment validation passed');
   }
 
   // Warn when Redis is absent in production — rate limiting and token revocation
@@ -102,7 +103,7 @@ export function validateEnvironment(): void {
     const redisUrl = process.env.UPSTASH_REDIS_REST_URL;
     const redisToken = process.env.UPSTASH_REDIS_REST_TOKEN;
     if (!redisUrl || !redisToken) {
-      console.warn(
+      logger.warn(
         '⚠️  UPSTASH_REDIS_REST_URL / UPSTASH_REDIS_REST_TOKEN are not set. ' +
         'Rate limiting and JWT token revocation are using in-memory stores. ' +
         'This is unsafe in multi-instance (horizontally-scaled) deployments because ' +

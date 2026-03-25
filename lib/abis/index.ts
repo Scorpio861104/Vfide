@@ -40,6 +40,7 @@ import SeerSocialABI from './SeerSocial.json'
 import SeerViewABI from './SeerView.json'
 import UserRewardsABI from './UserRewards.json'
 import PromotionalTreasuryABI from './PromotionalTreasury.json'
+import { logger } from '@/lib/logger';
 
 // Runtime validation: Ensure ABIs are valid arrays
 function validateABI(abi: unknown, name: string): unknown[] {
@@ -47,7 +48,7 @@ function validateABI(abi: unknown, name: string): unknown[] {
     throw new Error(`Invalid ABI for ${name}: Expected array, got ${typeof abi}`);
   }
   if (abi.length === 0) {
-    console.warn(`[VFIDE] Warning: Empty ABI for ${name}`);
+    logger.warn(`[VFIDE] Warning: Empty ABI for ${name}`);
   }
   return abi;
 }

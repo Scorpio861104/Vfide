@@ -12,6 +12,7 @@ import { query, getClient } from '@/lib/db';
 import { requireAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { dispatchWebhook } from '@/lib/webhooks/merchantWebhookDispatcher';
+import { logger } from '@/lib/logger';
 
 const ADDRESS_LIKE_REGEX = /^0x[a-fA-F0-9]{3,40}$/;
 const VALID_STATUSES = ['draft', 'sent', 'viewed', 'paid', 'overdue', 'cancelled', 'refunded'] as const;
@@ -95,7 +96,7 @@ export async function GET(request: NextRequest) {
       pagination: { limit, offset },
     });
   } catch (error) {
-    console.error('[Invoices GET] Error:', error);
+    logger.error('[Invoices GET] Error:', error);
     return NextResponse.json({ error: 'Failed to fetch invoices' }, { status: 500 });
   }
 }
@@ -247,7 +248,7 @@ export async function POST(request: NextRequest) {
       payment_url: `/checkout/${paymentLinkId}`,
     }, { status: 201 });
   } catch (error) {
-    console.error('[Invoices POST] Error:', error);
+    logger.error('[Invoices POST] Error:', error);
     return NextResponse.json({ error: 'Failed to create invoice' }, { status: 500 });
   }
 }
@@ -327,7 +328,7 @@ export async function PATCH(request: NextRequest) {
 
     return NextResponse.json({ invoice: result.rows[0] });
   } catch (error) {
-    console.error('[Invoices PATCH] Error:', error);
+    logger.error('[Invoices PATCH] Error:', error);
     return NextResponse.json({ error: 'Failed to update invoice' }, { status: 500 });
   }
 }

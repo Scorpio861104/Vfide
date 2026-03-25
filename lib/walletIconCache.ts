@@ -12,6 +12,7 @@
 // Type import for React
 import * as React from 'react';
 import { CACHE_TTL, CACHE_LIMITS } from './walletConstants';
+import { logger } from '@/lib/logger';
 
 interface CachedIcon {
   data: string; // base64 encoded image
@@ -68,7 +69,7 @@ class WalletIconCache {
       return base64;
     } catch (error) {
       // If caching fails, return original URL
-      console.warn('Failed to cache wallet icon:', error);
+      logger.warn('Failed to cache wallet icon:', error);
       return url;
     }
   }

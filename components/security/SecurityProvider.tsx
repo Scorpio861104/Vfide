@@ -9,6 +9,7 @@
 
 import { useEffect } from 'react';
 import { initCSPReporting } from '@/lib/security';
+import { logger } from '@/lib/logger';
 
 export function SecurityProvider() {
   useEffect(() => {
@@ -26,7 +27,7 @@ export function SecurityProvider() {
         mutations.forEach((mutation) => {
           mutation.addedNodes.forEach((node) => {
             if (node.nodeName === 'SCRIPT' && (node as HTMLScriptElement).innerHTML) {
-              console.warn('[Security] Inline script detected:', {
+              logger.warn('[Security] Inline script detected:', {
                 content: (node as HTMLScriptElement).innerHTML.slice(0, 100),
                 location: window.location.href,
               });

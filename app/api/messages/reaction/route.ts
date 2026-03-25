@@ -9,6 +9,7 @@ import { query } from '@/lib/db';
 import { requireAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { isAddress } from 'viem';
+import { logger } from '@/lib/logger';
 
 interface ReactionRequest {
   messageId: string;
@@ -291,7 +292,7 @@ export async function POST(request: NextRequest) {
       reactions,
     });
   } catch (error) {
-    console.error('Error updating reaction:', error);
+    logger.error('Error updating reaction:', error);
     return NextResponse.json(
       { error: 'Failed to update reaction' },
       { status: 500 }
@@ -397,7 +398,7 @@ export async function DELETE(request: NextRequest) {
       message: 'Reaction removed',
     });
   } catch (error) {
-    console.error('Error removing reaction:', error);
+    logger.error('Error removing reaction:', error);
     return NextResponse.json(
       { error: 'Failed to remove reaction' },
       { status: 500 }

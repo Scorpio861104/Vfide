@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { requireAdmin, requireAuth } from '@/lib/auth/middleware';
+import { logger } from '@/lib/logger';
 
 // Constants for validation
 const MAX_ANALYTICS_LIMIT = 1000;
@@ -148,7 +149,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ events: result.rows, total: result.rows.length });
   } catch (error) {
-    console.error('[Analytics] Error:', error);
+    logger.error('[Analytics] Error:', error);
     return NextResponse.json({ error: 'Failed to fetch analytics' }, { status: 500 });
   }
 }
@@ -330,7 +331,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true, event: result.rows[0] });
   } catch (error) {
-    console.error('[Analytics POST] Error:', error);
+    logger.error('[Analytics POST] Error:', error);
     return NextResponse.json({ error: 'Failed to log event' }, { status: 500 });
   }
 }

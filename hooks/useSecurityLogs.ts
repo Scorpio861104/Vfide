@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import {
+import { logger } from '@/lib/logger';
   SecurityLogEntry,
   SecurityEventType,
   formatSecurityEventType,
@@ -157,7 +158,7 @@ export const useSecurityLogs = (): UseSecurityLogsResult => {
         setFilteredLogs(loaded);
       } catch (error) {
         if (!mounted) return;
-        console.error('Failed to load security logs from backend', error);
+        logger.error('Failed to load security logs from backend', error);
       }
     };
 
@@ -220,7 +221,7 @@ export const useSecurityLogs = (): UseSecurityLogsResult => {
     setLogs(prev => [...prev, newLog].slice(-MAX_LOGS));
 
     void persistLogToServer(newLog).catch((error) => {
-      console.error('Failed to persist security log to backend', error);
+      logger.error('Failed to persist security log to backend', error);
     });
   }, []);
 
@@ -293,7 +294,7 @@ export const useSecurityLogs = (): UseSecurityLogsResult => {
     setFilteredLogs([]);
 
     void clearLogsOnServer().catch((error) => {
-      console.error('Failed to clear security logs on backend', error);
+      logger.error('Failed to clear security logs on backend', error);
     });
   }, []);
 

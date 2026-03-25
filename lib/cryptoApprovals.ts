@@ -125,7 +125,7 @@ export async function checkTokenAllowance(
       needsApproval,
     };
   } catch (error) {
-    console.error('Failed to check token allowance:', error);
+    logger.error('Failed to check token allowance:', error);
     throw new Error('Failed to check token approval status');
   }
 }
@@ -193,7 +193,7 @@ export async function requestTokenApproval(
       txHash,
     };
   } catch (error: unknown) {
-    console.error('Token approval failed:', error);
+    logger.error('Token approval failed:', error);
     
     // Type guard for errors with code
     const isErrorWithCode = (err: unknown): err is { code: number; message?: string } => {
@@ -264,7 +264,7 @@ export async function ensureTokenAllowance(
 
     return approvalResult;
   } catch (error: unknown) {
-    console.error('Failed to ensure token allowance:', error);
+    logger.error('Failed to ensure token allowance:', error);
     
     return {
       success: false,
@@ -305,7 +305,7 @@ export async function getTokenBalance(address: string): Promise<string> {
     const balance = BigInt(result);
     return formatUnits(balance, ERC20_DECIMALS);
   } catch (error) {
-    console.error('Failed to get token balance:', error);
+    logger.error('Failed to get token balance:', error);
     return '0';
   }
 }
@@ -350,7 +350,7 @@ export async function revokeTokenApproval(
 
     return { success: true, txHash };
   } catch (error: unknown) {
-    console.error('Failed to revoke approval:', error);
+    logger.error('Failed to revoke approval:', error);
     
     return {
       success: false,
@@ -480,3 +480,4 @@ export function useTokenApproval(spenderAddress: string, amount: string) {
 
 // For React hook
 import * as React from 'react';
+import { logger } from '@/lib/logger';

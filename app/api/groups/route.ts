@@ -5,6 +5,7 @@ import { requireAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { createGroupWithMembersSchema, validateBody } from '@/lib/auth/validation';
 import { isAddress } from 'viem';
+import { logger } from '@/lib/logger';
 
 interface GroupRow {
   id: number;
@@ -166,7 +167,7 @@ export async function GET(request: NextRequest) {
       offset,
     });
   } catch (error) {
-    console.error('[Groups GET API] Error:', error);
+    logger.error('[Groups GET API] Error:', error);
     return NextResponse.json({ error: 'Failed to fetch groups' }, { status: 500 });
   }
 }
@@ -303,7 +304,7 @@ export async function POST(request: NextRequest) {
     if (client) {
       await client.query('ROLLBACK');
     }
-    console.error('[Groups POST API] Error:', error);
+    logger.error('[Groups POST API] Error:', error);
     return NextResponse.json({ error: 'Failed to create group' }, { status: 500 });
   } finally {
     if (client) {

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { logger } from '@/lib/logger';
 
 // Default ETH price as fallback
 const DEFAULT_ETH_PRICE = 2500
@@ -51,7 +52,7 @@ async function fetchEthPrice(): Promise<number> {
   } catch (error) {
     // Log only in development
     if (process.env.NODE_ENV === 'development') {
-      console.warn('[useEthPrice] Failed to fetch ETH price, using default:', error)
+      logger.warn('[useEthPrice] Failed to fetch ETH price, using default:', error)
     }
     
     // Return cached price if available, otherwise default

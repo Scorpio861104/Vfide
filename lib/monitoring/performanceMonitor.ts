@@ -140,7 +140,7 @@ class PerformanceMonitor {
       lcpObserver.observe({ type: 'largest-contentful-paint', buffered: true });
       this.observers.push(lcpObserver);
     } catch (_e) {
-      console.debug('LCP not supported');
+      logger.debug('LCP not supported');
     }
 
     // FID Observer
@@ -156,7 +156,7 @@ class PerformanceMonitor {
       fidObserver.observe({ type: 'first-input', buffered: true });
       this.observers.push(fidObserver);
     } catch (_e) {
-      console.debug('FID not supported');
+      logger.debug('FID not supported');
     }
 
     // CLS Observer
@@ -173,7 +173,7 @@ class PerformanceMonitor {
       clsObserver.observe({ type: 'layout-shift', buffered: true });
       this.observers.push(clsObserver);
     } catch (_e) {
-      console.debug('CLS not supported');
+      logger.debug('CLS not supported');
     }
 
     // FCP Observer
@@ -187,7 +187,7 @@ class PerformanceMonitor {
       fcpObserver.observe({ type: 'paint', buffered: true });
       this.observers.push(fcpObserver);
     } catch (_e) {
-      console.debug('FCP not supported');
+      logger.debug('FCP not supported');
     }
 
     // TTFB from Navigation Timing
@@ -223,7 +223,7 @@ class PerformanceMonitor {
       resourceObserver.observe({ type: 'resource', buffered: true });
       this.observers.push(resourceObserver);
     } catch (_e) {
-      console.debug('Resource timing not supported');
+      logger.debug('Resource timing not supported');
     }
   }
 
@@ -245,7 +245,7 @@ class PerformanceMonitor {
       longTaskObserver.observe({ type: 'longtask', buffered: true });
       this.observers.push(longTaskObserver);
     } catch (_e) {
-      console.debug('Long task timing not supported');
+      logger.debug('Long task timing not supported');
     }
   }
 
@@ -404,7 +404,7 @@ class PerformanceMonitor {
       try {
         callback(report);
       } catch (e) {
-        console.error('Error in performance report callback:', e);
+        logger.error('Error in performance report callback:', e);
       }
     }
   }
@@ -456,6 +456,7 @@ export function getWebVitals(): WebVitals {
 // ==================== REACT HOOKS ====================
 
 import { useState, useEffect, useRef } from 'react';
+import { logger } from '@/lib/logger';
 
 /**
  * Hook to track component render performance
