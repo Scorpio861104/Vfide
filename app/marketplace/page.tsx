@@ -35,6 +35,21 @@ interface PlatformCategory {
   children?: PlatformCategory[];
 }
 
+interface FilterContentProps {
+  platformCategories: PlatformCategory[];
+  platformCategory: string;
+  expandedCats: Set<string>;
+  typeFilter: string;
+  facets: Facets | null;
+  minPrice: string;
+  maxPrice: string;
+  minRating: string;
+  applyFilter: (key: string, value: string) => void;
+  toggleCatExpand: (slug: string) => void;
+  setMinPrice: (value: string) => void;
+  setMaxPrice: (value: string) => void;
+}
+
 const TYPE_LABELS: Record<string, string> = { physical: 'Physical', digital: 'Digital', service: 'Service' };
 const SORT_OPTIONS = [
   { value: '', label: 'Featured' },
@@ -81,6 +96,159 @@ function toggleWishlist(id: string): boolean {
     localStorage.setItem('vfide_wishlist', JSON.stringify(list));
     return idx < 0;
   } catch { return false; }
+}
+
+/* ─── FilterContent Component (shared between desktop & mobile) ─── */
+function FilterContent({
+  platformCategories,
+  platformCategory,
+  expandedCats,
+  typeFilter,
+  facets,
+  minPrice,
+  maxPrice,
+  minRating,
+  applyFilter,
+  toggleCatExpand,
+  setMinPrice,
+  setMaxPrice,
+}: FilterContentProps) {
+  return (
+    <div className="space-y-6">
+      {/* Platform Categories */}
+      {platformCategories.length > 0 && (
+        <div>
+          <h3 className="font-semibold text-gray-900 dark:text-white text-sm mb-2">Department</h3>
+          <button
+            onClick={() => applyFilter('platform_category', '')}
+            className={`block w-full text-left py-1 text-sm transition ${!platformCategory ? 'font-bold text-blue-600 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white'}`}
+          >
+            All Departments
+          </button>
+          {platformCategories.map(cat => {
+            const isActive = platformCategory === cat.slug;
+            const hasChildren = cat.children && cat.children.length > 0;
+            const isExpanded = expandedCats.has(cat.slug) || isActive || (cat.children?.some(c => c.slug === platformCategory));
+            return (
+              <div key={cat.slug}>
+                <div className="flex items-center">
+                  {hasChildren && (
+                    <button onClick={() => toggleCatExpand(cat.slug)} className="p-0.5 text-gray-400 hover:text-gray-600">
+                      <ChevronRight className={`w-3 h-3 transition-transform ${isExpanded ? 'rotate-90' : ''}`} />
+                    </button>
+                  )}
+                  <button
+                    onClick={() => applyFilter('platform_category', isActive ? '' : cat.slug)}
+                    className={`flex-1 text-left py-1 text-sm transition truncate ${isActive ? 'font-bold text-blue-600 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white'} ${!hasChildren ? 'pl-4' : ''}`}
+                  >
+                    {cat.name}
+                    {cat.product_count != null && cat.product_count > 0 && (
+                      <span className="text-xs text-gray-400 ml-1">({cat.product_count})</span>
+                    )}
+                  </button>
+                </div>
+                {hasChildren && isExpanded && (
+                  <div className="pl-4">
+                    {cat.children!.map(sub => {
+                      const subActive = platformCategory === sub.slug;
+                      return (
+                        <button
+                          key={sub.slug}
+                          onClick={() => applyFilter('platform_category', subActive ? '' : sub.slug)}
+                          className={`block w-full text-left py-0.5 text-xs transition truncate ${subActive ? 'font-bold text-blue-600 dark:text-blue-400' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'}`}
+                        >
+                          {sub.name}
+                          {sub.product_count != null && sub.product_count > 0 && (
+                            <span className="text-gray-400 ml-1">({sub.product_count})</span>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Product Type */}
+      <div>
+        <h3 className="font-semibold text-gray-900 dark:text-white text-sm mb-2">Product Type</h3>
+        {(['', 'physical', 'digital', 'service'] as const).map(t => (
+          <label key={t} className="flex items-center gap-2 py-1 cursor-pointer text-sm text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white">
+            <input
+              type="radio" name="type" checked={typeFilter === t}
+              onChange={() => applyFilter('type', t)}
+              className="accent-blue-600"
+            />
+            <span>{t ? TYPE_LABELS[t] : 'All Types'}</span>
+            {t && facets && (
+              <span className="text-xs text-gray-400 ml-auto">
+                ({t === 'physical' ? facets.physical_count : t === 'digital' ? facets.digital_count : facets.service_count})
+              </span>
+            )}
+          </label>
+        ))}
+      </div>
+
+      {/* Price Range */}
+      <div>
+        <h3 className="font-semibold text-gray-900 dark:text-white text-sm mb-2">Price</h3>
+        {PRICE_RANGES.map(pr => {
+          const active = minPrice === String(pr.min) && maxPrice === String(pr.max);
+          return (
+            <button
+              key={pr.label}
+              onClick={() => {
+                if (active) { applyFilter('min_price', ''); applyFilter('max_price', ''); }
+                else { applyFilter('min_price', String(pr.min)); applyFilter('max_price', pr.max ? String(pr.max) : ''); }
+              }}
+              className={`block w-full text-left py-1 text-sm transition ${active ? 'font-bold text-blue-600 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white'}`}
+            >
+              {pr.label}
+            </button>
+          );
+        })}
+        {/* Custom range */}
+        <div className="flex items-center gap-1 mt-2">
+          <input
+            type="number" placeholder="Min" min="0"
+            value={minPrice} onChange={e => setMinPrice(e.target.value)}
+            className="w-16 px-2 py-1 text-xs border rounded dark:bg-gray-800 dark:border-gray-600 dark:text-white"
+          />
+          <span className="text-gray-400 text-xs">—</span>
+          <input
+            type="number" placeholder="Max" min="0"
+            value={maxPrice} onChange={e => setMaxPrice(e.target.value)}
+            className="w-16 px-2 py-1 text-xs border rounded dark:bg-gray-800 dark:border-gray-600 dark:text-white"
+          />
+          <button
+            onClick={() => { applyFilter('min_price', minPrice); applyFilter('max_price', maxPrice); }}
+            className="px-2 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700"
+          >Go</button>
+        </div>
+      </div>
+
+      {/* Customer Reviews */}
+      <div>
+        <h3 className="font-semibold text-gray-900 dark:text-white text-sm mb-2">Customer Review</h3>
+        {RATING_FILTERS.map(r => {
+          const active = minRating === String(r);
+          return (
+            <button
+              key={r}
+              onClick={() => applyFilter('min_rating', active ? '' : String(r))}
+              className={`flex items-center gap-1.5 w-full py-1 text-sm transition ${active ? 'font-bold' : 'hover:text-gray-900 dark:hover:text-white'}`}
+            >
+              <StarRow rating={r} />
+              <span className="text-gray-600 dark:text-gray-400">& Up</span>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
 }
 
 /* ─── Main Page ─── */
@@ -232,144 +400,6 @@ export default function MarketplacePage() {
     });
   };
 
-  /* ─── Filter Sidebar Content (shared between desktop & mobile) ─── */
-  const FilterContent = () => (
-    <div className="space-y-6">
-      {/* Platform Categories */}
-      {platformCategories.length > 0 && (
-        <div>
-          <h3 className="font-semibold text-gray-900 dark:text-white text-sm mb-2">Department</h3>
-          <button
-            onClick={() => applyFilter('platform_category', '')}
-            className={`block w-full text-left py-1 text-sm transition ${!platformCategory ? 'font-bold text-blue-600 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white'}`}
-          >
-            All Departments
-          </button>
-          {platformCategories.map(cat => {
-            const isActive = platformCategory === cat.slug;
-            const hasChildren = cat.children && cat.children.length > 0;
-            const isExpanded = expandedCats.has(cat.slug) || isActive || (cat.children?.some(c => c.slug === platformCategory));
-            return (
-              <div key={cat.slug}>
-                <div className="flex items-center">
-                  {hasChildren && (
-                    <button onClick={() => toggleCatExpand(cat.slug)} className="p-0.5 text-gray-400 hover:text-gray-600">
-                      <ChevronRight className={`w-3 h-3 transition-transform ${isExpanded ? 'rotate-90' : ''}`} />
-                    </button>
-                  )}
-                  <button
-                    onClick={() => applyFilter('platform_category', isActive ? '' : cat.slug)}
-                    className={`flex-1 text-left py-1 text-sm transition truncate ${isActive ? 'font-bold text-blue-600 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white'} ${!hasChildren ? 'pl-4' : ''}`}
-                  >
-                    {cat.name}
-                    {cat.product_count != null && cat.product_count > 0 && (
-                      <span className="text-xs text-gray-400 ml-1">({cat.product_count})</span>
-                    )}
-                  </button>
-                </div>
-                {hasChildren && isExpanded && (
-                  <div className="pl-4">
-                    {cat.children!.map(sub => {
-                      const subActive = platformCategory === sub.slug;
-                      return (
-                        <button
-                          key={sub.slug}
-                          onClick={() => applyFilter('platform_category', subActive ? '' : sub.slug)}
-                          className={`block w-full text-left py-0.5 text-xs transition truncate ${subActive ? 'font-bold text-blue-600 dark:text-blue-400' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'}`}
-                        >
-                          {sub.name}
-                          {sub.product_count != null && sub.product_count > 0 && (
-                            <span className="text-gray-400 ml-1">({sub.product_count})</span>
-                          )}
-                        </button>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      )}
-
-      {/* Product Type */}
-      <div>
-        <h3 className="font-semibold text-gray-900 dark:text-white text-sm mb-2">Product Type</h3>
-        {(['', 'physical', 'digital', 'service'] as const).map(t => (
-          <label key={t} className="flex items-center gap-2 py-1 cursor-pointer text-sm text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white">
-            <input
-              type="radio" name="type" checked={typeFilter === t}
-              onChange={() => applyFilter('type', t)}
-              className="accent-blue-600"
-            />
-            <span>{t ? TYPE_LABELS[t] : 'All Types'}</span>
-            {t && facets && (
-              <span className="text-xs text-gray-400 ml-auto">
-                ({t === 'physical' ? facets.physical_count : t === 'digital' ? facets.digital_count : facets.service_count})
-              </span>
-            )}
-          </label>
-        ))}
-      </div>
-
-      {/* Price Range */}
-      <div>
-        <h3 className="font-semibold text-gray-900 dark:text-white text-sm mb-2">Price</h3>
-        {PRICE_RANGES.map(pr => {
-          const active = minPrice === String(pr.min) && maxPrice === String(pr.max);
-          return (
-            <button
-              key={pr.label}
-              onClick={() => {
-                if (active) { applyFilter('min_price', ''); applyFilter('max_price', ''); }
-                else { applyFilter('min_price', String(pr.min)); applyFilter('max_price', pr.max ? String(pr.max) : ''); }
-              }}
-              className={`block w-full text-left py-1 text-sm transition ${active ? 'font-bold text-blue-600 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white'}`}
-            >
-              {pr.label}
-            </button>
-          );
-        })}
-        {/* Custom range */}
-        <div className="flex items-center gap-1 mt-2">
-          <input
-            type="number" placeholder="Min" min="0"
-            value={minPrice} onChange={e => setMinPrice(e.target.value)}
-            className="w-16 px-2 py-1 text-xs border rounded dark:bg-gray-800 dark:border-gray-600 dark:text-white"
-          />
-          <span className="text-gray-400 text-xs">—</span>
-          <input
-            type="number" placeholder="Max" min="0"
-            value={maxPrice} onChange={e => setMaxPrice(e.target.value)}
-            className="w-16 px-2 py-1 text-xs border rounded dark:bg-gray-800 dark:border-gray-600 dark:text-white"
-          />
-          <button
-            onClick={() => { applyFilter('min_price', minPrice); applyFilter('max_price', maxPrice); }}
-            className="px-2 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700"
-          >Go</button>
-        </div>
-      </div>
-
-      {/* Customer Reviews */}
-      <div>
-        <h3 className="font-semibold text-gray-900 dark:text-white text-sm mb-2">Customer Review</h3>
-        {RATING_FILTERS.map(r => {
-          const active = minRating === String(r);
-          return (
-            <button
-              key={r}
-              onClick={() => applyFilter('min_rating', active ? '' : String(r))}
-              className={`flex items-center gap-1.5 w-full py-1 text-sm transition ${active ? 'font-bold' : 'hover:text-gray-900 dark:hover:text-white'}`}
-            >
-              <StarRow rating={r} />
-              <span className="text-gray-600 dark:text-gray-400">& Up</span>
-            </button>
-          );
-        })}
-      </div>
-    </div>
-  );
-
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* ═══ Top Search Bar ═══ */}
@@ -495,7 +525,20 @@ export default function MarketplacePage() {
         <div className="flex gap-6">
           {/* ═══ Desktop Filter Sidebar ═══ */}
           <aside className="hidden lg:block w-56 flex-shrink-0">
-            <FilterContent />
+            <FilterContent
+              platformCategories={platformCategories}
+              platformCategory={platformCategory}
+              expandedCats={expandedCats}
+              typeFilter={typeFilter}
+              facets={facets}
+              minPrice={minPrice}
+              maxPrice={maxPrice}
+              minRating={minRating}
+              applyFilter={applyFilter}
+              toggleCatExpand={toggleCatExpand}
+              setMinPrice={setMinPrice}
+              setMaxPrice={setMaxPrice}
+            />
           </aside>
 
           {/* ═══ Mobile Filter Drawer ═══ */}
@@ -512,7 +555,20 @@ export default function MarketplacePage() {
                     <h2 className="font-bold text-gray-900 dark:text-white">Filters</h2>
                     <button onClick={() => setShowMobileFilters(false)}><X className="w-5 h-5" /></button>
                   </div>
-                  <FilterContent />
+                  <FilterContent
+              platformCategories={platformCategories}
+              platformCategory={platformCategory}
+              expandedCats={expandedCats}
+              typeFilter={typeFilter}
+              facets={facets}
+              minPrice={minPrice}
+              maxPrice={maxPrice}
+              minRating={minRating}
+              applyFilter={applyFilter}
+              toggleCatExpand={toggleCatExpand}
+              setMinPrice={setMinPrice}
+              setMaxPrice={setMaxPrice}
+            />
                 </motion.div>
               </>
             )}
