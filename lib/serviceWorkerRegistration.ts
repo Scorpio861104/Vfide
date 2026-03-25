@@ -4,12 +4,14 @@
  * Provides helpers to register and manage the service worker
  */
 
+import { logger } from '@/lib/logger';
+
 /**
  * Register service worker
  */
 export async function registerServiceWorker(): Promise<ServiceWorkerRegistration | null> {
   if (typeof window === 'undefined' || !('serviceWorker' in navigator)) {
-    console.log('[Service Worker] Not supported in this environment');
+    logger.info('[Service Worker] Not supported in this environment');
     return null;
   }
 
@@ -18,18 +20,18 @@ export async function registerServiceWorker(): Promise<ServiceWorkerRegistration
       scope: '/',
     });
 
-    console.log('[Service Worker] Registered successfully');
+    logger.info('[Service Worker] Registered successfully');
 
     // Check for updates
     registration.addEventListener('updatefound', () => {
       const newWorker = registration.installing;
-      console.log('[Service Worker] Update found');
+      logger.info('[Service Worker] Update found');
 
       if (newWorker) {
         newWorker.addEventListener('statechange', () => {
           if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
             // New service worker available
-            console.log('[Service Worker] New version available');
+            logger.info('[Service Worker] New version available');
             
             // Notify user about update
             if (window.confirm('A new version is available. Reload to update?')) {
@@ -43,12 +45,12 @@ export async function registerServiceWorker(): Promise<ServiceWorkerRegistration
 
     // Listen for controlling service worker changes
     navigator.serviceWorker.addEventListener('controllerchange', () => {
-      console.log('[Service Worker] Controller changed');
+      logger.info('[Service Worker] Controller changed');
     });
 
     return registration;
   } catch (error) {
-    console.error('[Service Worker] Registration failed:', error);
+    logger.error('[Service Worker] Registration failed:', error);
     return null;
   }
 }
@@ -65,12 +67,12 @@ export async function unregisterServiceWorker(): Promise<boolean> {
     const registration = await navigator.serviceWorker.getRegistration();
     if (registration) {
       await registration.unregister();
-      console.log('[Service Worker] Unregistered successfully');
+      logger.info('[Service Worker] Unregistered successfully');
       return true;
     }
     return false;
   } catch (error) {
-    console.error('[Service Worker] Unregistration failed:', error);
+    logger.error('[Service Worker] Unregistration failed:', error);
     return false;
   }
 }
@@ -87,10 +89,10 @@ export async function clearServiceWorkerCaches(): Promise<void> {
     const registration = await navigator.serviceWorker.getRegistration();
     if (registration && registration.active) {
       registration.active.postMessage({ type: 'CLEAR_CACHE' });
-      console.log('[Service Worker] Cache clear requested');
+      logger.info('[Service Worker] Cache clear requested');
     }
   } catch (error) {
-    console.error('[Service Worker] Failed to clear caches:', error);
+    logger.error('[Service Worker] Failed to clear caches:', error);
   }
 }
 
@@ -135,7 +137,7 @@ export async function getServiceWorkerStatus(): Promise<{
       waiting: registration?.waiting !== undefined && registration?.waiting !== null,
     };
   } catch (error) {
-    console.error('[Service Worker] Status check failed:', error);
+    logger.error('[Service Worker] Status check failed:', error);
     return {
       supported: true,
       registered: false,
@@ -157,9 +159,9 @@ export async function updateServiceWorker(): Promise<void> {
     const registration = await navigator.serviceWorker.getRegistration();
     if (registration) {
       await registration.update();
-      console.log('[Service Worker] Update check completed');
+      logger.info('[Service Worker] Update check completed');
     }
   } catch (error) {
-    console.error('[Service Worker] Update failed:', error);
+    logger.error('[Service Worker] Update failed:', error);
   }
 }

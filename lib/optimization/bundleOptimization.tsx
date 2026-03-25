@@ -9,6 +9,7 @@
  */
 
 import React, { Suspense } from 'react';
+import { logger } from '@/lib/logger';
 
 /**
  * Lazy load a component with preload capability
@@ -138,7 +139,7 @@ export const CODE_SPLITTING_CONFIG = {
  */
 export async function analyzeBundleSize() {
   if (process.env.NODE_ENV !== 'development') {
-    console.warn('Bundle analysis only available in development');
+    logger.warn('Bundle analysis only available in development');
     return [];
   }
 
@@ -189,7 +190,7 @@ export function trackBundleMetrics() {
 
     // Log to analytics or monitoring
     if (process.env.NODE_ENV === 'development') {
-      console.log('Bundle Load Metrics:', metrics);
+      logger.info('Bundle Load Metrics:', metrics);
     }
 
     return metrics;

@@ -5,6 +5,7 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
+import { logger } from '@/lib/logger';
 
 // ============================================================================
 // Types & Interfaces
@@ -86,7 +87,7 @@ export function isPushSupported(): boolean {
  */
 export async function registerServiceWorker(): Promise<ServiceWorkerRegistration | null> {
   if (!isServiceWorkerSupported()) {
-    console.warn('Service workers are not supported');
+    logger.warn('Service workers are not supported');
     return null;
   }
 
@@ -95,10 +96,10 @@ export async function registerServiceWorker(): Promise<ServiceWorkerRegistration
       scope: '/',
     });
 
-    console.log('Service worker registered:', registration.scope);
+    logger.info('Service worker registered:', { scope: registration.scope });
     return registration;
   } catch (error) {
-    console.error('Service worker registration failed:', error);
+    logger.error('Service worker registration failed:', error);
     return null;
   }
 }
@@ -114,7 +115,7 @@ export async function getServiceWorkerRegistration(): Promise<ServiceWorkerRegis
   try {
     return await navigator.serviceWorker.ready;
   } catch (error) {
-    console.error('Failed to get service worker registration:', error);
+    logger.error('Failed to get service worker registration:', error);
     return null;
   }
 }
@@ -189,7 +190,7 @@ export async function subscribeToPush(
 
     return subscription.toJSON();
   } catch (error) {
-    console.error('Failed to subscribe to push:', error);
+    logger.error('Failed to subscribe to push:', error);
     throw error;
   }
 }
@@ -211,7 +212,7 @@ export async function getCurrentPushSubscription(): Promise<PushSubscriptionJSON
     const subscription = await registration.pushManager.getSubscription();
     return subscription ? subscription.toJSON() : null;
   } catch (error) {
-    console.error('Failed to get push subscription:', error);
+    logger.error('Failed to get push subscription:', error);
     return null;
   }
 }
@@ -237,7 +238,7 @@ export async function unsubscribeFromPush(): Promise<boolean> {
     }
     return false;
   } catch (error) {
-    console.error('Failed to unsubscribe from push:', error);
+    logger.error('Failed to unsubscribe from push:', error);
     return false;
   }
 }
@@ -365,7 +366,7 @@ export function usePushNotifications(userId?: string) {
         setSubscription(sub);
         setIsSubscribed(!!sub);
       } catch (error) {
-        console.error('Failed to check subscription:', error);
+        logger.error('Failed to check subscription:', error);
       } finally {
         setLoading(false);
       }
@@ -412,7 +413,7 @@ export function usePushNotifications(userId?: string) {
 
       return sub;
     } catch (error) {
-      console.error('Failed to subscribe:', error);
+      logger.error('Failed to subscribe:', error);
       throw error;
     } finally {
       setLoading(false);
@@ -439,7 +440,7 @@ export function usePushNotifications(userId?: string) {
       setSubscription(null);
       setIsSubscribed(false);
     } catch (error) {
-      console.error('Failed to unsubscribe:', error);
+      logger.error('Failed to unsubscribe:', error);
       throw error;
     } finally {
       setLoading(false);
@@ -452,7 +453,7 @@ export function usePushNotifications(userId?: string) {
       setPermission(perm);
       return perm;
     } catch (error) {
-      console.error('Failed to request permission:', error);
+      logger.error('Failed to request permission:', error);
       throw error;
     }
   }, []);
@@ -494,7 +495,7 @@ export function useNotificationPreferences(userId?: string) {
           setPreferences(getDefaultPreferences(userId));
         }
       } catch (error) {
-        console.error('Failed to load preferences:', error);
+        logger.error('Failed to load preferences:', error);
         setPreferences(getDefaultPreferences(userId));
       } finally {
         setLoading(false);
@@ -527,7 +528,7 @@ export function useNotificationPreferences(userId?: string) {
           throw new Error(data.error || 'Failed to update preferences');
         }
       } catch (error) {
-        console.error('Failed to update preferences:', error);
+        logger.error('Failed to update preferences:', error);
         throw error;
       }
     },

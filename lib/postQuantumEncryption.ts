@@ -25,6 +25,7 @@
  */
 
 import React from 'react';
+import { logger } from '@/lib/logger';
 
 // ============================================================================
 // Type Definitions
@@ -715,7 +716,7 @@ export function storePublicKeys(address: string, publicKeys: HybridPublicKey): v
     stored[address.toLowerCase()] = publicKeys;
     localStorage.setItem(PQ_PUBLIC_KEY_STORAGE_KEY, JSON.stringify(stored));
   } catch (error) {
-    console.error('[PQ] Failed to store public keys:', error);
+    logger.error('[PQ] Failed to store public keys:', error);
   }
 }
 
@@ -839,7 +840,7 @@ export function usePQEncryption(userAddress?: string): UsePQEncryptionResult {
     setError(null);
     
     try {
-      console.log('[PQ] Generating post-quantum keys...');
+      logger.info('[PQ] Generating post-quantum keys...');
       const keys = await deriveHybridKeyPair(userAddress, signature);
       
       // Store keys
@@ -848,11 +849,11 @@ export function usePQEncryption(userAddress?: string): UsePQEncryptionResult {
       
       setKeyPair(keys);
       setIsReady(true);
-      console.log('[PQ] Post-quantum keys initialized successfully');
+      logger.info('[PQ] Post-quantum keys initialized successfully');
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to initialize keys';
       setError(errorMessage);
-      console.error('[PQ] Key initialization failed:', err);
+      logger.error('[PQ] Key initialization failed:', err);
     } finally {
       setIsInitializing(false);
     }
