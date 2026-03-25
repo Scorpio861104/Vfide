@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react';
 import { registerServiceWorker } from '@/lib/serviceWorkerRegistration';
+import { logger } from '@/lib/logger';
 
 /**
  * Service Worker Registration Component
@@ -18,7 +19,7 @@ export function ServiceWorkerRegistration() {
     if (process.env.NODE_ENV === 'production' || process.env.NEXT_PUBLIC_ENABLE_SW === 'true') {
       registerServiceWorker().then((registration) => {
         if (registration) {
-          console.log('[VFIDE] Service worker registered successfully');
+          logger.info('[VFIDE] Service worker registered successfully');
         }
       });
     }

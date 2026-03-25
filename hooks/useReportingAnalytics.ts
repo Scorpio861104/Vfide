@@ -19,6 +19,7 @@ import {
   defaultReports,
   getDateRangeTimestamps,
 } from '@/config/reporting-analytics';
+import { logger } from '@/lib/logger';
 
 interface ReportingAnalyticsState {
   reports: Report[];
@@ -58,7 +59,7 @@ export function useReportingAnalytics() {
         }));
       }
     } catch (e) {
-      console.error('Failed to load analytics state:', e);
+      logger.error('Failed to load analytics state:', e);
     }
   }, []);
 
@@ -67,7 +68,7 @@ export function useReportingAnalytics() {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
     } catch (e) {
-      console.error('Failed to persist analytics state:', e);
+      logger.error('Failed to persist analytics state:', e);
     }
   }, [state]);
 
@@ -247,7 +248,7 @@ export function useReportingAnalytics() {
     setState((prev) => ({ ...prev, isLoading: true, error: null }));
     try {
       // In a real app, this would call an API
-      console.log('Executing query:', query);
+      logger.info('Executing query:', { query });
 
       // Simulate network delay
       await new Promise((resolve) => setTimeout(resolve, 500));
