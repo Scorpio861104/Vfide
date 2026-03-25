@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAccount, useConnect, useDisconnect, useBalance, useChainId, useSwitchChain } from 'wagmi';
+import { formatUnits } from 'viem';
 import { Wallet, ChevronDown, Check, Copy, ExternalLink, LogOut, RefreshCw, Zap, Keyboard, Clock, WifiOff, QrCode } from 'lucide-react';
 import { baseSepolia, base } from 'wagmi/chains';
 import { IS_TESTNET } from '@/lib/chains';
@@ -159,7 +160,7 @@ export function QuickWalletConnect({ size = 'md' }: QuickWalletConnectProps) {
   // Format balance
   const formatBalance = (bal: typeof balance) => {
     if (!bal) return '0.00';
-    const value = parseFloat(bal.formatted);
+    const value = parseFloat(formatUnits(bal.value, bal.decimals));
     if (value < 0.0001) return '< 0.0001';
     return value.toFixed(4);
   };

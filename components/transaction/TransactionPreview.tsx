@@ -19,7 +19,7 @@ import {
   Wallet
 } from 'lucide-react';
 import { formatEther, formatUnits, type Address, type Hex } from 'viem';
-import { useAccount, useBalance, useFeeData } from 'wagmi';
+import { useAccount, useBalance, useEstimateFeesPerGas } from 'wagmi';
 import { useChainId } from 'wagmi';
 
 // ==================== TYPES ====================
@@ -358,7 +358,7 @@ export const TransactionPreview: React.FC<TransactionPreviewProps> = ({
   const { address } = useAccount();
   const chainId = useChainId();
   const { data: balance } = useBalance({ address });
-  const { data: feeData } = useFeeData();
+  const { data: feeData } = useEstimateFeesPerGas();
   
   const { simulation, isSimulating, error: simulationError } = useTransactionSimulation(transaction);
   const warnings = useRiskAnalysis(transaction, allowlistedRecipients);

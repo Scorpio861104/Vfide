@@ -101,7 +101,7 @@ class MonitoringService {
       this.errorLogs.shift();
     }
 
-    logger.error(`[MonitoringService] Error in ${componentName}:`, error, errorInfo, context);
+    logger.error(`[MonitoringService] Error in ${componentName}:`, error, { ...context, componentStack: errorInfo?.componentStack ?? undefined });
   }
 
   /**

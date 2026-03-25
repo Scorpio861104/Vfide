@@ -500,41 +500,54 @@ export default function AdminPanel() {
   const [attestationError, setAttestationError] = useState<string | null>(null);
 
   // Read contract owner
-  const { data: owner } = useReadContract({
+  const { data: ownerRaw } = useReadContract({
     address: TOKEN_ADDRESS,
     abi: TOKEN_ABI,
     functionName: 'owner',
     query: { enabled: IS_TOKEN_DEPLOYED },
   });
+  const owner = ownerRaw as string | undefined;
 
   // Read contract state
-  const { data: vaultOnly } = useReadContract({
+  const { data: vaultOnlyRaw } = useReadContract({
     address: TOKEN_ADDRESS,
     abi: TOKEN_ABI,
     functionName: 'vaultOnly',
     query: { enabled: IS_TOKEN_DEPLOYED },
   });
+  const vaultOnly = vaultOnlyRaw as boolean | undefined;
 
-  const { data: policyLocked } = useReadContract({
+  const { data: policyLockedRaw } = useReadContract({
     address: TOKEN_ADDRESS,
     abi: TOKEN_ABI,
     functionName: 'policyLocked',
     query: { enabled: IS_TOKEN_DEPLOYED },
   });
+  const policyLocked = policyLockedRaw as boolean | undefined;
 
-  const { data: circuitBreaker } = useReadContract({
+  const { data: circuitBreakerRaw } = useReadContract({
     address: TOKEN_ADDRESS,
     abi: TOKEN_ABI,
     functionName: 'circuitBreaker',
     query: { enabled: IS_TOKEN_DEPLOYED },
   });
+  const circuitBreaker = circuitBreakerRaw as boolean | undefined;
 
-  const { data: totalSupply } = useReadContract({
+  const { data: totalSupplyRaw } = useReadContract({
     address: TOKEN_ADDRESS,
     abi: TOKEN_ABI,
     functionName: 'totalSupply',
     query: { enabled: IS_TOKEN_DEPLOYED },
   });
+  const totalSupply = totalSupplyRaw as bigint | undefined;
+
+  const { data: presaleCapRaw } = useReadContract({
+    address: TOKEN_ADDRESS,
+    abi: TOKEN_ABI,
+    functionName: 'presaleCap',
+    query: { enabled: IS_TOKEN_DEPLOYED },
+  });
+  const presaleCap = presaleCapRaw as bigint | undefined;
 
   const { data: isWhitelisted } = useReadContract({
     address: TOKEN_ADDRESS,

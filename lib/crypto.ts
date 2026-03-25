@@ -80,14 +80,14 @@ export async function connectWallet(): Promise<Wallet> {
 
   try {
     // Request accounts
-    const accounts = await window.ethereum.request({
+    const accounts = await window.ethereum!.request({
       method: 'eth_requestAccounts',
     });
 
     const address = accounts[0];
 
     // Get balance
-    const balance = await window.ethereum.request({
+    const balance = await window.ethereum!.request({
       method: 'eth_getBalance',
       params: [address, 'latest'],
     });
@@ -244,7 +244,7 @@ async function sendEthTransaction(to: string, amount: string): Promise<string> {
 
   const amountWei = '0x' + (amountFloat * 1e18).toString(16);
 
-  const txHash = await window.ethereum.request({
+  const txHash = await window.ethereum!.request({
     method: 'eth_sendTransaction',
     params: [
       {
@@ -377,7 +377,7 @@ async function getCurrentWalletAddress(): Promise<string> {
     throw new Error('Wallet not connected');
   }
 
-  const accounts = await window.ethereum.request({
+  const accounts = await window.ethereum!.request({
     method: 'eth_accounts',
   });
 
@@ -452,7 +452,8 @@ export function useWallet() {
 
   // Listen for account changes
   useEffect(() => {
-    if (typeof window.ethereum !== 'undefined') {
+    const ethereum = window.ethereum;
+    if (typeof ethereum !== 'undefined') {
       const handleAccountsChanged = (accounts: string[]) => {
         if (accounts.length === 0) {
           disconnect();
@@ -461,10 +462,10 @@ export function useWallet() {
         }
       };
 
-      window.ethereum.on('accountsChanged', handleAccountsChanged);
+      ethereum.on('accountsChanged', handleAccountsChanged);
 
       return () => {
-        window.ethereum.removeListener('accountsChanged', handleAccountsChanged);
+        ethereum.removeListener('accountsChanged', handleAccountsChanged);
       };
     }
     return undefined;

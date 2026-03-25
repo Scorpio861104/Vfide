@@ -296,7 +296,7 @@ export function ReactionDisplay({ reactions, currentUserAddress, onToggle }: Rea
               <span className="text-base">{reaction.emoji}</span>
             ) : (
               <Image
-                src={reaction.imageUrl}
+                src={reaction.imageUrl ?? ''}
                 alt={reaction.imageName || 'reaction'}
                 width={20}
                 height={20}

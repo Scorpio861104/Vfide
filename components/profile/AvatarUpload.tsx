@@ -10,7 +10,7 @@
 import React, { useState, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Upload, Camera, X, Check, AlertCircle, Loader2, Image as ImageIcon } from 'lucide-react';
-import Image from 'next/image';
+import NextImage from 'next/image';
 import { useAccount } from 'wagmi';
 import { apiClient } from '@/lib/api-client';
 
@@ -385,7 +385,7 @@ export function AvatarUploadCompact({
 
       <div className="relative w-20 h-20 rounded-full overflow-hidden cursor-pointer">
         {currentAvatar ? (
-          <Image src={currentAvatar} alt="Avatar" fill className="object-cover" sizes="80px" />
+          <NextImage src={currentAvatar} alt="Avatar" fill className="object-cover" sizes="80px" />
         ) : (
           <div className="w-full h-full bg-gradient-to-br from-cyan-400 to-violet-400 flex items-center justify-center">
             <ImageIcon className="w-8 h-8 text-white/50" />

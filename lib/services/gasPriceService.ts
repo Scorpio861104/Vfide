@@ -190,7 +190,7 @@ class GasPriceService {
       throw new Error('No provider available');
     }
 
-    const gasPriceHex = await window.ethereum.request({
+    const gasPriceHex = await window.ethereum!.request({
       method: 'eth_gasPrice',
       params: [],
     });
@@ -201,7 +201,7 @@ class GasPriceService {
     // Estimate fee history for better accuracy
     let baseFee = gasPrice;
     try {
-      const feeHistory = await window.ethereum.request({
+      const feeHistory = await window.ethereum!.request({
         method: 'eth_feeHistory',
         params: ['0x5', 'latest', [25, 50, 75]],
       });
