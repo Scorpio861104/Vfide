@@ -6,7 +6,6 @@
  */
 import { isAddress } from 'viem'
 import {
-import { logger } from '@/lib/logger';
   VFIDETokenABI,
   StablecoinRegistryABI,
   VaultInfrastructureABI,
@@ -45,6 +44,7 @@ import { logger } from '@/lib/logger';
   UserRewardsABI,
   PromotionalTreasuryABI,
 } from './abis'
+import { logger } from '@/lib/logger';
 
 // Zero address placeholder for missing contracts
 const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000' as const

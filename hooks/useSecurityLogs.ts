@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useState } from 'react';
 import {
-import { logger } from '@/lib/logger';
   SecurityLogEntry,
   SecurityEventType,
   formatSecurityEventType,
   generateDeviceFingerprint
 } from '@/config/security-advanced';
+import { logger } from '@/lib/logger';
 
 export interface UseSecurityLogsResult {
   logs: SecurityLogEntry[];

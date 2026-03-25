@@ -3,7 +3,6 @@
 import { useReadContract, useWriteContract, useAccount, useWaitForTransactionReceipt } from 'wagmi'
 import { CONTRACT_ADDRESSES } from '../lib/contracts'
 import { 
-import { logger } from '@/lib/logger';
   SecurityHubABI, 
   PanicGuardABI, 
   GuardianRegistryABI, 
@@ -11,6 +10,7 @@ import { logger } from '@/lib/logger';
   EmergencyBreakerABI,
   VaultHubABI 
 } from '../lib/abis'
+import { logger } from '@/lib/logger';
 
 // ============================================
 // SECURITY SYSTEM HOOKS - VFIDESecurity.sol

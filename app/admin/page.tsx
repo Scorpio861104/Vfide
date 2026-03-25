@@ -536,9 +536,6 @@ export default function AdminPanel() {
     query: { enabled: IS_TOKEN_DEPLOYED },
   });
 
-    address: TOKEN_ADDRESS,
-    abi: TOKEN_ABI,
-
   const { data: isWhitelisted } = useReadContract({
     address: TOKEN_ADDRESS,
     abi: TOKEN_ABI,

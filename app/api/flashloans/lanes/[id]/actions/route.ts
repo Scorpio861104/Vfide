@@ -9,13 +9,13 @@ import {
   updateLaneState,
 } from '@/lib/flashloans/repository'
 import {
-import { logger } from '@/lib/logger';
   performAction,
   sanitizeTerms,
   type ActorRole,
   type LoanAction,
   type LoanTerms,
 } from '@/lib/flashloans/engine'
+import { logger } from '@/lib/logger';
 
 const ADDRESS_RE = /^0x[a-fA-F0-9]{40}$/
 const ACTIONS: LoanAction[] = [

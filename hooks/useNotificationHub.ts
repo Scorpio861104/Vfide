@@ -12,7 +12,6 @@ import type {
   NotificationFilter,
 } from '@/config/notification-hub';
 import {
-import { logger } from '@/lib/logger';
   NotificationStatus,
   NotificationStats,
   NotificationType,
@@ -22,6 +21,7 @@ import { logger } from '@/lib/logger';
   calculateNotificationStats,
   groupNotificationsByType as _groupNotificationsByType,
 } from '@/config/notification-hub';
+import { logger } from '@/lib/logger';
 
 interface UseNotificationHubResult {
   notifications: Notification[];

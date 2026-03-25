@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { authenticator } from 'otplib';
 import {
-import { logger } from '@/lib/logger';
   TwoFactorConfig,
   TwoFactorMethod,
   TOTPSetup,
@@ -10,6 +9,7 @@ import { logger } from '@/lib/logger';
   validateBackupCode,
   generateBackupCodes
 } from '@/config/security-advanced';
+import { logger } from '@/lib/logger';
 
 export interface UseTwoFactorAuthResult {
   config: TwoFactorConfig;

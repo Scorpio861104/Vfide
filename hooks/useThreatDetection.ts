@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
 import {
-import { logger } from '@/lib/logger';
   ThreatDetectionResult,
   ThreatAlert,
   ThreatLevel,
@@ -14,6 +13,7 @@ import { logger } from '@/lib/logger';
   generateDeviceFingerprint,
   DEFAULT_RATE_LIMITS
 } from '@/config/security-advanced';
+import { logger } from '@/lib/logger';
 
 export interface UseThreatDetectionResult {
   threatLevel: ThreatLevel;

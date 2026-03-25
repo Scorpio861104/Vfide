@@ -9,11 +9,11 @@ import {
   getRequestIp,
 } from '@/lib/security/siweChallenge';
 import {
-import { logger } from '@/lib/logger';
   clearAuthFailureSignals,
   getAccountLock,
   recordSecurityEvent,
 } from '@/lib/security/accountProtection';
+import { logger } from '@/lib/logger';
 
 function parseMessageTimestamp(message: string): number | null {
   const timestampMatch = message.match(/^Timestamp:\s*(\d+)\s*$/m);

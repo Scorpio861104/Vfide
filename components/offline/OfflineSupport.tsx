@@ -3,7 +3,6 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-import { logger } from '@/lib/logger';
   WifiOff, 
   Wifi, 
   RefreshCw, 
@@ -13,6 +12,7 @@ import { logger } from '@/lib/logger';
   AlertTriangle,
   Upload
 } from 'lucide-react';
+import { logger } from '@/lib/logger';
 
 // ==================== TYPES ====================
 
