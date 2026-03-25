@@ -200,11 +200,22 @@ export async function pqDecapsulate(
 // Dilithium Post-Quantum Signatures
 // ============================================================================
 
-let dilithiumModule: typeof import('@theqrl/dilithium5') | null = null;
+/**
+ * Minimal type interface for @theqrl/dilithium5 module.
+ * The package does not ship TypeScript declarations, so we declare what we use.
+ */
+interface DilithiumModule {
+  newKeyPair(): Promise<{ getPublicKey(): Uint8Array; getSecretKey(): Uint8Array }>;
+  sign(message: Uint8Array, privateKey: Uint8Array): Promise<Uint8Array>;
+  verify(message: Uint8Array, signature: Uint8Array, publicKey: Uint8Array): Promise<boolean>;
+}
 
-async function getDilithium() {
+let dilithiumModule: DilithiumModule | null = null;
+
+async function getDilithium(): Promise<DilithiumModule> {
   if (!dilithiumModule) {
-    dilithiumModule = await import('@theqrl/dilithium5');
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    dilithiumModule = (await import('@theqrl/dilithium5')) as unknown as DilithiumModule;
   }
   return dilithiumModule;
 }
@@ -218,7 +229,7 @@ export async function generateDilithiumKeyPair(): Promise<{
   privateKey: Uint8Array;
 }> {
   const dilithium = await getDilithium();
-  const keyPair = await (dilithium as any).newKeyPair();
+  const keyPair = await dilithium.newKeyPair();
   return {
     publicKey: keyPair.getPublicKey(),
     privateKey: keyPair.getSecretKey()
@@ -233,7 +244,7 @@ export async function dilithiumSign(
   privateKey: Uint8Array
 ): Promise<Uint8Array> {
   const dilithium = await getDilithium();
-  return (dilithium as any).sign(message, privateKey);
+  return dilithium.sign(message, privateKey);
 }
 
 /**
@@ -246,7 +257,7 @@ export async function dilithiumVerify(
 ): Promise<boolean> {
   const dilithium = await getDilithium();
   try {
-    return (dilithium as any).verify(message, signature, publicKey);
+    return dilithium.verify(message, signature, publicKey);
   } catch {
     return false;
   }

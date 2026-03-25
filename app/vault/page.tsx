@@ -88,7 +88,7 @@ function VaultSecuritySection({ vaultAddress }: { vaultAddress: `0x${string}` | 
   const canPanic = isPanicAvailable && cooldownRemaining === 0 && !isQuarantined;
   
   const handlePanic = () => {
-    if (!isPanicAvailable) return;
+    if (!canPanic || isPanicking) return;
     selfPanic(panicDuration);
     setShowPanicConfirm(false);
   };
