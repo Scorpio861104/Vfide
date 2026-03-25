@@ -717,6 +717,11 @@
         "internalType": "uint256",
         "name": "limit",
         "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "offset",
+        "type": "uint256"
       }
     ],
     "name": "searchByAddressPrefix",
@@ -772,6 +777,11 @@
         "internalType": "struct VaultRegistry.VaultInfo[]",
         "name": "matches",
         "type": "tuple[]"
+      },
+      {
+        "internalType": "uint256",
+        "name": "nextOffset",
+        "type": "uint256"
       }
     ],
     "stateMutability": "view",
@@ -811,6 +821,11 @@
       {
         "internalType": "uint256",
         "name": "limit",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "offset",
         "type": "uint256"
       }
     ],
@@ -867,6 +882,11 @@
         "internalType": "struct VaultRegistry.VaultInfo[]",
         "name": "matches",
         "type": "tuple[]"
+      },
+      {
+        "internalType": "uint256",
+        "name": "nextOffset",
+        "type": "uint256"
       }
     ],
     "stateMutability": "view",
@@ -943,6 +963,25 @@
         "internalType": "address",
         "name": "vault",
         "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "string",
+        "name": "recoveryId",
+        "type": "string"
+      }
+    ],
+    "name": "searchByRecoveryIdAll",
+    "outputs": [
+      {
+        "internalType": "address[]",
+        "name": "vaults",
+        "type": "address[]"
       }
     ],
     "stateMutability": "view",
@@ -1446,6 +1485,30 @@
         "internalType": "uint256",
         "name": "",
         "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "name": "vaultsByRecoveryId",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
       }
     ],
     "stateMutability": "view",

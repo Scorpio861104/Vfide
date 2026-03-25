@@ -67,6 +67,11 @@
   },
   {
     "inputs": [],
+    "name": "CBV_GuardianSetupRequired",
+    "type": "error"
+  },
+  {
+    "inputs": [],
     "name": "CBV_InvalidChain",
     "type": "error"
   },
@@ -191,6 +196,44 @@
       }
     ],
     "name": "AdminTransferred",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "guardian",
+        "type": "address"
+      }
+    ],
+    "name": "GuardianChangeCancelled",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "guardian",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "bool",
+        "name": "active",
+        "type": "bool"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint64",
+        "name": "effectiveAt",
+        "type": "uint64"
+      }
+    ],
+    "name": "GuardianChangeProposed",
     "type": "event"
   },
   {
@@ -519,7 +562,21 @@
   },
   {
     "inputs": [],
+    "name": "applyGuardianChange",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "approveWalletRotation",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "cancelGuardianChange",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -757,6 +814,29 @@
   },
   {
     "inputs": [],
+    "name": "pendingGuardianChange",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "guardian",
+        "type": "address"
+      },
+      {
+        "internalType": "bool",
+        "name": "active",
+        "type": "bool"
+      },
+      {
+        "internalType": "uint64",
+        "name": "effectiveAt",
+        "type": "uint64"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "pendingRotation",
     "outputs": [
       {
@@ -781,6 +861,24 @@
       }
     ],
     "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "guardian",
+        "type": "address"
+      },
+      {
+        "internalType": "bool",
+        "name": "active",
+        "type": "bool"
+      }
+    ],
+    "name": "proposeGuardianChange",
+    "outputs": [],
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {

@@ -41,6 +41,22 @@ interface ISeerSocialViewTarget {
     function getEndorserAt(address subject, uint256 index) external view returns (address);
 }
 
+/// @dev Minimal read interface for SeerAutonomous monitoring state.
+interface ISeerAutonomousMonitor {
+    function ecosystemVault() external view returns (address);
+    function getNetworkHealth() external view returns (
+        uint256 totalActions,
+        uint256 totalViolations,
+        uint256 violationRate,
+        uint16 currentSensitivity
+    );
+}
+
+/// @dev Minimal read interface for the ecosystem scheduler (EcosystemVault).
+interface IEcosystemSchedulerView {
+    function checkUpkeep(bytes calldata) external view returns (bool upkeepNeeded, bytes memory performData);
+}
+
 contract SeerView {
     function getMentorInfo(address seer, address subject) external view returns (
         bool isMentorUser,
@@ -179,22 +195,6 @@ contract SeerView {
     // ─────────────────────────────────────────────────────────────────────────
     //                  SEER AUTONOMOUS MONITORING VIEW
     // ─────────────────────────────────────────────────────────────────────────
-
-    /// @dev Minimal read interface for SeerAutonomous monitoring state.
-    interface ISeerAutonomousMonitor {
-        function ecosystemVault() external view returns (address);
-        function getNetworkHealth() external view returns (
-            uint256 totalActions,
-            uint256 totalViolations,
-            uint256 violationRate,
-            uint16 currentSensitivity
-        );
-    }
-
-    /// @dev Minimal read interface for the ecosystem scheduler (EcosystemVault).
-    interface IEcosystemSchedulerView {
-        function checkUpkeep(bytes calldata) external view returns (bool upkeepNeeded, bytes memory performData);
-    }
 
     /**
      * @notice Returns the Seer autonomous monitoring status in a single call.

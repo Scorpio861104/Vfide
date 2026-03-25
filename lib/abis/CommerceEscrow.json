@@ -195,6 +195,30 @@
   {
     "inputs": [
       {
+        "internalType": "address",
+        "name": "buyerOwner",
+        "type": "address"
+      }
+    ],
+    "name": "getRequiredApproval",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "buyerVault",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "spender",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "uint256",
         "name": "id",
         "type": "uint256"

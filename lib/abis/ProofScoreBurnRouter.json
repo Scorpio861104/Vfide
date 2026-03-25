@@ -315,6 +315,19 @@
   },
   {
     "inputs": [],
+    "name": "FEE_POLICY_COOLDOWN",
+    "outputs": [
+      {
+        "internalType": "uint64",
+        "name": "",
+        "type": "uint64"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "HIGH_SCORE_THRESHOLD",
     "outputs": [
       {
@@ -354,6 +367,19 @@
   },
   {
     "inputs": [],
+    "name": "MODULE_CHANGE_DELAY",
+    "outputs": [
+      {
+        "internalType": "uint64",
+        "name": "",
+        "type": "uint64"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "SCORE_WINDOW",
     "outputs": [
       {
@@ -383,6 +409,13 @@
       }
     ],
     "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "applyModules",
+    "outputs": [],
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
@@ -451,8 +484,34 @@
     "type": "function"
   },
   {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "name": "cachedTimeWeightedScore",
+    "outputs": [
+      {
+        "internalType": "uint16",
+        "name": "",
+        "type": "uint16"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [],
     "name": "cancelOwnershipTransfer",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "cancelProposeModules",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -509,6 +568,60 @@
       }
     ],
     "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "from",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "to",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      }
+    ],
+    "name": "computeFeesAndReserve",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "burnAmount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "sanctumAmount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "ecosystemAmount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "sanctumSink_",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "ecosystemSink_",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "burnSink_",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
@@ -767,6 +880,19 @@
     "type": "function"
   },
   {
+    "inputs": [],
+    "name": "lastFeePolicyChange",
+    "outputs": [
+      {
+        "internalType": "uint64",
+        "name": "",
+        "type": "uint64"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [
       {
         "internalType": "address",
@@ -898,6 +1024,47 @@
   },
   {
     "inputs": [],
+    "name": "pendingModules",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "seer_",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "sanctumSink_",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "burnSink_",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "ecosystemSink_",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "pendingModulesAt",
+    "outputs": [
+      {
+        "internalType": "uint64",
+        "name": "",
+        "type": "uint64"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "pendingOwner",
     "outputs": [
       {
@@ -951,6 +1118,34 @@
       }
     ],
     "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_seer",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_sanctumSink",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_burnSink",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_ecosystemSink",
+        "type": "address"
+      }
+    ],
+    "name": "proposeModules",
+    "outputs": [],
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
@@ -1054,6 +1249,25 @@
     "type": "function"
   },
   {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "name": "scoreHistoryLatestTs",
+    "outputs": [
+      {
+        "internalType": "uint64",
+        "name": "",
+        "type": "uint64"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [],
     "name": "seer",
     "outputs": [
@@ -1140,28 +1354,28 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "_seer",
+        "name": "",
         "type": "address"
       },
       {
         "internalType": "address",
-        "name": "_sanctumSink",
+        "name": "",
         "type": "address"
       },
       {
         "internalType": "address",
-        "name": "_burnSink",
+        "name": "",
         "type": "address"
       },
       {
         "internalType": "address",
-        "name": "_ecosystemSink",
+        "name": "",
         "type": "address"
       }
     ],
     "name": "setModules",
     "outputs": [],
-    "stateMutability": "nonpayable",
+    "stateMutability": "pure",
     "type": "function"
   },
   {

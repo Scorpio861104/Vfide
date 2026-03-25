@@ -591,6 +591,19 @@
   },
   {
     "inputs": [],
+    "name": "MAX_GUARDIANS",
+    "outputs": [
+      {
+        "internalType": "uint8",
+        "name": "",
+        "type": "uint8"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "PENDING_TX_EXPIRY",
     "outputs": [
       {
