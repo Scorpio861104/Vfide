@@ -147,6 +147,10 @@ contract DAOTimelock is ReentrancyGuard {
      * @notice TL-02 FIX: Secondary executor path — can run a queued tx after `eta + SECONDARY_EXECUTOR_DELAY`.
      * @dev This is a backup in case the primary admin is unable to execute. Requires the secondary executor
      *      role, which must be set by governance via setSecondaryExecutor().
+     *
+     * Window: secondary executor may act between `eta + SECONDARY_EXECUTOR_DELAY (3d)` and
+     * `eta + EXPIRY_WINDOW (7d)` — a 4-day window. Governance should queue transactions at least
+     * 3 days before the 7-day expiry to leave a meaningful secondary-executor window.
      */
     function executeBySecondary(bytes32 id) external payable nonReentrant returns (bytes memory res) {
         require(secondaryExecutor != address(0), "TL: secondary executor not set");

@@ -158,13 +158,10 @@ contract SeerSocial {
         if (_seer == address(0)) revert SOCIAL_Zero();
         seer = ISeerCore(_seer);
     }
-    
-    function setSeer(address _seer) external onlyDAO {
-        if (_seer == address(0)) revert SOCIAL_Zero();
-        seer = ISeerCore(_seer);
-    }
 
     /// @notice BATCH-14 FIX: Propose a new Seer reference with a 48-hour timelock.
+    /// @dev Use proposeSeer + applySeer for all Seer reference changes.
+    ///      The legacy instant setSeer() has been removed to enforce the timelock.
     function proposeSeer(address _seer) external onlyDAO {
         if (_seer == address(0)) revert SOCIAL_Zero();
         pendingSeer = _seer;

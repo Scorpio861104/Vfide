@@ -1183,10 +1183,15 @@ contract OwnerControlPanel {
     
     /**
      * @notice Emergency pause all systems
+     * @dev H-02 FIX: Explicitly activates security+fee bypass (circuit breaker no longer does this implicitly).
+     *      Security and fee bypasses are instant; circuit breaker activation is queued (48h timelock).
      */
     function emergency_pauseAll() external onlyOwner {
         _consumeQueuedAction(actionId_emergency_pauseAll());
-        // Enable circuit breaker on token (24 hour default for emergency)
+        // Immediately bypass SecurityHub checks and BurnRouter fees (independent controls per H-02)
+        vfideToken.setSecurityBypass(true, 1 days);
+        vfideToken.setFeeBypass(true, 1 days);
+        // Queue circuit breaker activation (requires confirmCircuitBreaker() after 48h)
         vfideToken.setCircuitBreaker(true, 1 days);
         
         emit EmergencyAction("system_paused", address(this));
@@ -1197,7 +1202,9 @@ contract OwnerControlPanel {
      */
     function emergency_resumeAll() external onlyOwner {
         _consumeQueuedAction(actionId_emergency_resumeAll());
-        // Disable circuit breaker on token
+        // Disable all bypasses immediately
+        vfideToken.setSecurityBypass(false, 0);
+        vfideToken.setFeeBypass(false, 0);
         vfideToken.setCircuitBreaker(false, 0);
         
         emit EmergencyAction("system_resumed", address(this));

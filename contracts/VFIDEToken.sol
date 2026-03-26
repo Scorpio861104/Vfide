@@ -71,7 +71,7 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
     /// Policy settings
     bool public vaultOnly = true;                 // VAULT-ONLY ON BY DEFAULT (user security)
     bool public policyLocked = false;             // once locked, cannot disable vault-only
-    bool public circuitBreaker = false;           // emergency bypass (legacy — controls both)
+    bool public circuitBreaker = false;           // H-02 FIX: emergency status flag; does NOT implicitly bypass fees/security (use setSecurityBypass/setFeeBypass separately)
     uint256 public circuitBreakerExpiry = 0;      // auto-disable timestamp (0 = indefinite)
     uint256 public constant MAX_CIRCUIT_BREAKER_DURATION = 7 days; // maximum allowed duration
     bool public securityBypass = false;           // bypass SecurityHub lock checks only
@@ -639,19 +639,21 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
         return true;
     }
 
-    /// @notice Check if security bypass is active (independent of fee bypass)
+    /// @notice Check if security bypass is active (independent of fee bypass and circuit breaker).
+    /// @dev H-02 FIX: Circuit breaker no longer implicitly enables security bypass.
+    ///      Use setSecurityBypass() to explicitly disable SecurityHub checks.
+    ///      This prevents the circuit breaker from silently overriding security controls.
     function isSecurityBypassed() public view returns (bool) {
-        if (isCircuitBreakerActive()) return true; // legacy circuit breaker overrides
         if (!securityBypass) return false;
         if (securityBypassExpiry > 0 && block.timestamp >= securityBypassExpiry) return false;
         return true;
     }
 
-    /// @notice Check if fee bypass is active (independent of security bypass)
-    /// F-04 FIX: Circuit breaker also bypasses fees for consistency.
-    /// During an emergency, locked vaults can transact and should not pay fees to potentially compromised sinks.
+    /// @notice Check if fee bypass is active (independent of security bypass and circuit breaker).
+    /// @dev H-02 FIX: Circuit breaker no longer implicitly enables fee bypass.
+    ///      Use setFeeBypass() to explicitly disable BurnRouter fee collection.
+    ///      Keeping bypasses independent means each must be explicitly activated.
     function isFeeBypassed() public view returns (bool) {
-        if (isCircuitBreakerActive()) return true; // F-04: circuit breaker now bypasses fees too
         if (!feeBypass) return false;
         if (feeBypassExpiry > 0 && block.timestamp >= feeBypassExpiry) return false;
         return true;
