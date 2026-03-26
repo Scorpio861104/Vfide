@@ -272,6 +272,11 @@ contract OwnerControlPanel {
         return keccak256(abi.encode("token_setCircuitBreaker", active, duration));
     }
 
+    /// @notice H-01 FIX: Action ID for confirming a pending circuit breaker activation.
+    function actionId_token_confirmCircuitBreaker() private pure returns (bytes32) {
+        return keccak256(abi.encode("token_confirmCircuitBreaker"));
+    }
+
     function actionId_token_setBlacklist(address user, bool status) private pure returns (bytes32) {
         return keccak256(abi.encode("token_setBlacklist", user, status));
     }
@@ -547,6 +552,14 @@ contract OwnerControlPanel {
         _consumeQueuedAction(actionId_token_setCircuitBreaker(active, duration));
         vfideToken.setCircuitBreaker(active, duration);
         emit EmergencyAction(active ? "circuit_breaker_on" : "circuit_breaker_off", address(vfideToken));
+    }
+
+    /// @notice H-01 FIX: Confirm a pending circuit breaker activation after its 48-hour timelock.
+    /// @dev Must be called after `token_setCircuitBreaker(true, ...)` + 48h delay to complete activation.
+    function token_confirmCircuitBreaker() external onlyOwner {
+        _consumeQueuedAction(actionId_token_confirmCircuitBreaker());
+        vfideToken.confirmCircuitBreaker();
+        emit EmergencyAction("circuit_breaker_confirmed", address(vfideToken));
     }
     
     /**

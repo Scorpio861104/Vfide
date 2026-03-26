@@ -566,6 +566,10 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
 
     // ── Two-step ownership (overrides OApp/Ownable single-step transferOwnership)
     address private _pendingBridgeOwner;
+    /// @notice M-04 FIX: Track when ownership transfer was initiated so it can expire.
+    uint64 private _pendingOwnerInitiatedAt;
+    /// @notice Ownership transfer must be accepted within 7 days or it expires.
+    uint64 public constant OWNERSHIP_TRANSFER_EXPIRY = 7 days;
 
     event OwnershipTransferStarted(address indexed previousOwner, address indexed newOwner);
 
@@ -577,19 +581,27 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
     function transferOwnership(address newOwner) public override onlyOwner {
         require(newOwner != address(0), "VFIDEBridge: zero address");
         _pendingBridgeOwner = newOwner;
+        _pendingOwnerInitiatedAt = uint64(block.timestamp);
         emit OwnershipTransferStarted(owner(), newOwner);
     }
 
     /// @notice Complete ownership transfer (called by pending owner)
+    /// @dev M-04 FIX: Enforces 7-day expiry — pending owner must accept before it lapses.
     function acceptOwnership() external {
         require(msg.sender == _pendingBridgeOwner, "VFIDEBridge: not pending owner");
+        require(
+            block.timestamp <= _pendingOwnerInitiatedAt + OWNERSHIP_TRANSFER_EXPIRY,
+            "VFIDEBridge: ownership transfer expired"
+        );
         _transferOwnership(msg.sender);
         _pendingBridgeOwner = address(0);
+        _pendingOwnerInitiatedAt = 0;
     }
 
     /// @notice Cancel a pending ownership transfer
     function cancelOwnershipTransfer() external onlyOwner {
         _pendingBridgeOwner = address(0);
+        _pendingOwnerInitiatedAt = 0;
     }
 
     /**

@@ -187,6 +187,7 @@ interface IVFIDEToken is IERC20 {
     function confirmWhitelist() external;
     function setVaultOnly(bool enabled) external;
     function setCircuitBreaker(bool active, uint256 duration) external;
+    function confirmCircuitBreaker() external; // H-01 FIX: confirm pending circuit breaker activation
     function setBlacklist(address user, bool status) external;
     function lockPolicy() external;
     function vaultOnly() external view returns (bool);

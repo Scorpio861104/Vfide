@@ -7,6 +7,7 @@ error TL_NotAdmin();
 error TL_AlreadyQueued();
 error TL_NotQueued();
 error TL_TooEarly();
+error TL_AlreadyExecuted(); // TL-02 FIX: distinct error for already-executed ops
 error TL_OnlyTimelock();
 
 contract DAOTimelock is ReentrancyGuard {
@@ -18,8 +19,16 @@ contract DAOTimelock is ReentrancyGuard {
     event Cancelled(bytes32 id);
     event Executed(bytes32 id);
     event GracePeriodExpired(bytes32 id);
+    /// @notice TL-02 FIX: Events for secondary executor role
+    event SecondaryExecutorSet(address indexed executor);
+    event ExecutedBySecondary(bytes32 indexed id);
 
     address public admin;
+    /// @notice TL-02 FIX: Secondary executor that can execute txs after an extended grace period.
+    ///         This provides a backup execution path if the primary admin is unable to execute.
+    address public secondaryExecutor;
+    /// @notice TL-02 FIX: Additional delay on top of ETA before secondary executor can act.
+    uint64  public constant SECONDARY_EXECUTOR_DELAY = 3 days;
     uint64  public delay = 48 hours;
     uint64  public constant EXPIRY_WINDOW = 7 days; // H-15: Transactions expire 7 days after ETA
     IProofLedger public ledger;      // optional
@@ -50,6 +59,12 @@ contract DAOTimelock is ReentrancyGuard {
     uint64 public constant MAX_DELAY = 30 days;
     
     function setAdmin(address _admin) external onlyTimelockSelf { require(_admin!=address(0),"admin=0"); admin=_admin; emit AdminSet(_admin); _log("tl_admin_set"); }
+    /// @notice TL-02 FIX: Set or remove the secondary executor (backup execution role).
+    function setSecondaryExecutor(address _executor) external onlyTimelockSelf {
+        secondaryExecutor = _executor;
+        emit SecondaryExecutorSet(_executor);
+        _log("tl_secondary_executor_set");
+    }
     function setDelay(uint64 _delay) external onlyTimelockSelf { 
         // C-1 FIX: Enforce minimum and maximum delay to prevent timelock bypass
         require(_delay >= MIN_DELAY, "TL: delay below minimum");
@@ -93,7 +108,7 @@ contract DAOTimelock is ReentrancyGuard {
         
         Op storage op=queue[id];
         if(op.eta==0) revert TL_NotQueued();
-        if(op.done)   revert TL_TooEarly();
+        if(op.done)   revert TL_AlreadyExecuted();
         
         // H-15: Check transaction hasn't expired
         require(block.timestamp <= op.eta + EXPIRY_WINDOW, "TL: transaction expired");
@@ -125,6 +140,33 @@ contract DAOTimelock is ReentrancyGuard {
         }
 
         emit Executed(id); _log("tl_executed");
+        return r;
+    }
+
+    /**
+     * @notice TL-02 FIX: Secondary executor path — can run a queued tx after `eta + SECONDARY_EXECUTOR_DELAY`.
+     * @dev This is a backup in case the primary admin is unable to execute. Requires the secondary executor
+     *      role, which must be set by governance via setSecondaryExecutor().
+     */
+    function executeBySecondary(bytes32 id) external payable nonReentrant returns (bytes memory res) {
+        require(secondaryExecutor != address(0), "TL: secondary executor not set");
+        require(msg.sender == secondaryExecutor, "TL: not secondary executor");
+
+        Op storage op = queue[id];
+        if (op.eta == 0) revert TL_NotQueued();
+        if (op.done)     revert TL_AlreadyExecuted();
+
+        // Secondary executor must wait eta + SECONDARY_EXECUTOR_DELAY
+        require(block.timestamp >= op.eta + SECONDARY_EXECUTOR_DELAY, "TL: secondary delay not elapsed");
+        // Transaction must not have expired
+        require(block.timestamp <= op.eta + EXPIRY_WINDOW, "TL: transaction expired");
+
+        op.done = true;
+        (bool ok, bytes memory r) = op.target.call{value: op.value}(op.data);
+        require(ok, "TL: secondary exec failed");
+
+        emit ExecutedBySecondary(id);
+        _log("tl_executed_by_secondary");
         return r;
     }
 

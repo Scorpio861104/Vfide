@@ -110,6 +110,11 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
     address public pendingWhitelistAddr;
     bool    public pendingWhitelistStatus;
     uint64  public pendingWhitelistAt;
+
+    /// H-01 FIX: Timelock for circuit-breaker activation (48-hour delay to prevent surprise bypass).
+    bool    public pendingCircuitBreakerActive;
+    uint256 public pendingCircuitBreakerDuration;
+    uint64  public pendingCircuitBreakerAt;
     
     // Sanctions / Compliance
     mapping(address => bool) public isBlacklisted;
@@ -148,6 +153,7 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
     event ExemptSet(address indexed target, bool exempt);
     event PolicyLocked();
     event CircuitBreakerSet(bool active, uint256 expiry);
+    event CircuitBreakerProposed(bool active, uint256 duration, uint64 effectiveAt); // H-01 FIX
     event SecurityBypassSet(bool active, uint256 expiry); // T-12 FIX: emit on bypass change
     event FeeBypassSet(bool active, uint256 expiry);      // T-12 FIX: emit on bypass change
     event ExternalCallFailed(string indexed context, bytes reason);
@@ -556,24 +562,41 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
     /// Emergency switch to bypass external calls (SecurityHub/BurnRouter) if they fail.
     /// Can be toggled even if policyLocked is true, to ensure liveness.
     /**
-     * @notice Emergency switch to bypass external calls if they fail (legacy — activates both bypasses)
-     * @dev Can be toggled even if policyLocked is true to ensure liveness
-     * @dev Circuit breaker auto-disables after duration to prevent abuse
-     * @param _active True to enable circuit breaker, false to disable
+     * @notice H-01 FIX: Propose activating the circuit breaker with a 48-hour timelock.
+     * @dev Deactivation remains instant for liveness. Only activation requires a timelock.
+     * @param _active True to propose enabling; false to immediately disable.
      * @param _duration Duration in seconds (max 7 days). Ignored when disabling.
      */
     function setCircuitBreaker(bool _active, uint256 _duration) external onlyOwner {
         _syncEmergencyFlags();
-        if (_active) {
-            if (_duration == 0 || _duration > MAX_CIRCUIT_BREAKER_DURATION) revert VF_InvalidDuration();
-            circuitBreaker = true;
-            circuitBreakerExpiry = block.timestamp + _duration;
-        } else {
+        if (!_active) {
+            // Immediate disable is always allowed for liveness
             circuitBreaker = false;
             circuitBreakerExpiry = 0;
+            pendingCircuitBreakerAt = 0;
+            emit CircuitBreakerSet(false, 0);
+            _log("circuit_breaker_off");
+        } else {
+            // Activation requires a 48-hour timelock
+            if (_duration == 0 || _duration > MAX_CIRCUIT_BREAKER_DURATION) revert VF_InvalidDuration();
+            pendingCircuitBreakerActive = true;
+            pendingCircuitBreakerDuration = _duration;
+            pendingCircuitBreakerAt = uint64(block.timestamp) + SINK_CHANGE_DELAY;
+            emit CircuitBreakerProposed(true, _duration, pendingCircuitBreakerAt);
+            _log("circuit_breaker_proposed");
         }
-        emit CircuitBreakerSet(_active, circuitBreakerExpiry);
-        _log(_active ? "circuit_breaker_on" : "circuit_breaker_off");
+    }
+
+    /// @notice Apply a pending circuit breaker activation after the 48-hour timelock.
+    function confirmCircuitBreaker() external onlyOwner {
+        if (pendingCircuitBreakerAt == 0) revert VF_NoPending();
+        if (block.timestamp < pendingCircuitBreakerAt) revert VF_TimelockActive();
+        _syncEmergencyFlags();
+        circuitBreaker = true;
+        circuitBreakerExpiry = block.timestamp + pendingCircuitBreakerDuration;
+        pendingCircuitBreakerAt = 0;
+        emit CircuitBreakerSet(true, circuitBreakerExpiry);
+        _log("circuit_breaker_on");
     }
 
     /// @notice Bypass SecurityHub lock checks only (does not disable fees)
