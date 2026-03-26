@@ -20,7 +20,7 @@ import {
 } from "lucide-react";
 import { safeParseFloat } from "@/lib/validation";
 import { CONTRACT_ADDRESSES, VFIDETokenABI, VaultHubABI, UserVaultABI, CARD_BOUND_VAULT_ABI, isCardBoundVaultMode } from "@/lib/contracts";
-import { PRESALE_REFERENCE_PRICE } from "@/lib/constants";
+import { TOKEN_REFERENCE_PRICE } from "@/lib/constants";
 
 // Animation variants
 const containerVariants = {
@@ -221,7 +221,7 @@ function VaultContent() {
   
   const { vaultAddress, hasVault, isLoadingVault, createVault, isCreatingVault, isOnCorrectChain, expectedChainName, refetchVault } = useVaultHub();
   const { balance: vaultBalance, isLoading: isLoadingBalance } = useVaultBalance();
-  const usdValue = (safeParseFloat(vaultBalance, 0) * PRESALE_REFERENCE_PRICE).toFixed(2);
+  const usdValue = (safeParseFloat(vaultBalance, 0) * TOKEN_REFERENCE_PRICE).toFixed(2);
   
   const {
     vaultOwner,

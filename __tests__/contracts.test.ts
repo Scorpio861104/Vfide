@@ -5,7 +5,6 @@ describe('contracts', () => {
   describe('CONTRACT_ADDRESSES', () => {
     it('has all required contract address keys', () => {
       expect(CONTRACT_ADDRESSES).toHaveProperty('VFIDEToken')
-      expect(CONTRACT_ADDRESSES).toHaveProperty('VFIDEPresale')
       expect(CONTRACT_ADDRESSES).toHaveProperty('StablecoinRegistry')
       expect(CONTRACT_ADDRESSES).toHaveProperty('MerchantPortal')
       expect(CONTRACT_ADDRESSES).toHaveProperty('VaultHub')
@@ -63,12 +62,6 @@ describe('contracts', () => {
       const { VFIDEBadgeNFTABI } = await import('@/lib/contracts')
       expect(VFIDEBadgeNFTABI).toBeDefined()
       expect(Array.isArray(VFIDEBadgeNFTABI)).toBe(true)
-    })
-
-    it('exports VFIDEPresaleABI', async () => {
-      const { VFIDEPresaleABI } = await import('@/lib/contracts')
-      expect(VFIDEPresaleABI).toBeDefined()
-      expect(Array.isArray(VFIDEPresaleABI)).toBe(true)
     })
   })
 })

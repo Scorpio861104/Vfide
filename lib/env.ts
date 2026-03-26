@@ -34,7 +34,6 @@ const envSchema = z.object({
 
   // Core Token Contracts
   NEXT_PUBLIC_VFIDE_TOKEN_ADDRESS: optionalEthAddress,
-  NEXT_PUBLIC_VFIDE_PRESALE_ADDRESS: optionalEthAddress,
 
   // Governance Contracts
   NEXT_PUBLIC_DAO_ADDRESS: optionalEthAddress,
@@ -137,7 +136,6 @@ function parseEnv(): Environment {
     
     // Core Token Contracts
     NEXT_PUBLIC_VFIDE_TOKEN_ADDRESS: process.env.NEXT_PUBLIC_VFIDE_TOKEN_ADDRESS,
-    NEXT_PUBLIC_VFIDE_PRESALE_ADDRESS: process.env.NEXT_PUBLIC_VFIDE_PRESALE_ADDRESS,
     
     // Governance Contracts
     NEXT_PUBLIC_DAO_ADDRESS: process.env.NEXT_PUBLIC_DAO_ADDRESS,

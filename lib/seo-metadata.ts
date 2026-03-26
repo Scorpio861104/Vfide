@@ -108,8 +108,8 @@ export const pageMetadata = {
   
   tokenLaunch: generatePageMetadata({
     title: 'Token Launch',
-    description: 'Learn about the VFIDE token launch, presale, and tokenomics.',
-    keywords: ['token', 'presale', 'ICO', 'tokenomics', 'launch'],
+    description: 'Learn about the VFIDE token launch and tokenomics.',
+    keywords: ['token', 'tokenomics', 'launch'],
   }),
   
   social: generatePageMetadata({

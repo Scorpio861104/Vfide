@@ -41,19 +41,7 @@ export const BADGE_REGISTRY: Record<string, BadgeMetadata> = {
     rarity: 'Legendary',
     earnRequirement: 'Be among the first 10,000 users to join',
   },
-  GENESIS_PRESALE: {
-    id: getBadgeId('GENESIS_PRESALE'),
-    name: 'GENESIS_PRESALE',
-    displayName: 'Genesis Presale',
-    description: 'Participated in the initial presale and supported VFIDE from day one',
-    category: 'Pioneer & Foundation',
-    icon: '💎',
-    points: 40,
-    duration: 0,
-    isPermanent: true,
-    rarity: 'Legendary',
-    earnRequirement: 'Participate in the genesis presale',
-  },
+
   FOUNDING_MEMBER: {
     id: getBadgeId('FOUNDING_MEMBER'),
     name: 'FOUNDING_MEMBER',

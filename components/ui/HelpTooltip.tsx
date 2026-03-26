@@ -29,7 +29,7 @@ const glossary: Record<string, string> = {
   'Council': 'A 12-member elected body that provides oversight and can approve emergency actions. Requires 70%+ ProofScore.',
   'Tier': 'Your trust level based on ProofScore: Elite (8000+), Verified (7000+), Trusted (5000+), Neutral (below 5000).',
   'Transfer Fee': 'Fee applied when sending VFIDE tokens. Ranges from 0.25% (Elite) to 5% (Low Trust). Split between burn, Sanctum, and ecosystem.',
-  'Commitment Period': 'Time during which presale tokens are locked. Founding tier = 180 days, Oath tier = 90 days.',
+  'Commitment Period': 'Time during which locked tokens are held. 180-day lock: 10% immediate, 90% vested. 90-day lock: 20% immediate, 80% vested.',
   'Badge': 'On-chain achievement that boosts your ProofScore. Can be minted as soulbound NFTs.',
   'Soulbound': 'NFTs that cannot be transferred. They stay with the original wallet forever, proving authentic achievements.',
   'Gas': 'Network fees paid to blockchain validators. On Base, typically $0.01-0.10 per transaction.',

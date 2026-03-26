@@ -39,7 +39,6 @@ contract BadgeManager {
         uint64 lastActivityDay;           // Last day of activity (for streak tracking)
         uint64 firstActivity;             // First interaction timestamp
         uint64 lastScoreDropBelow700;     // Last time score dropped below 700
-        bool hasPresaleParticipation;     // Participated in presale
         bool hasContributed;              // Made code/design contribution
         bool hasTranslated;               // Translated docs
     }
@@ -353,20 +352,6 @@ contract BadgeManager {
         _checkBadgeEligibility(creator);
 
         emit StatsUpdated(creator, "education", stats.educationalContent);
-    }
-    
-    /**
-     * @notice Record presale participation
-     * @param user The user address
-     */
-    function recordPresaleParticipation(address user) external onlyOperator {
-        UserStats storage stats = userStats[user];
-        if (!stats.hasPresaleParticipation) {
-            stats.hasPresaleParticipation = true;
-            
-            // Auto-award Genesis Presale badge
-            awardBadge(user, BadgeRegistry.GENESIS_PRESALE);
-        }
     }
     
     /**

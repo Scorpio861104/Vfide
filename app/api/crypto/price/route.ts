@@ -204,7 +204,7 @@ export async function GET(request: NextRequest) {
 
     // Market data
     const marketCap = 200_000_000 * vfidePrice; // Total supply * price
-    const circulatingSupply = 35_000_000; // Presale allocation (35M) — actual circulating depends on claims
+    const circulatingSupply = 35_000_000; // Initial circulating supply — actual circulating depends on claims
     const circulatingMarketCap = circulatingSupply * vfidePrice;
 
     return NextResponse.json({

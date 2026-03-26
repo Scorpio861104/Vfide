@@ -100,7 +100,6 @@ contract Seer {
     mapping(address => mapping(bytes32 => uint256)) public badgeExpiry;
 
     bytes32 private constant BADGE_PIONEER = 0xa03d1a4a2c4366d3db0c7243a29eef9c5e849fe7328823e0b7288dab59d52310;
-    bytes32 private constant BADGE_GENESIS_PRESALE = 0x7866cd9bf5624adbb572bdf0ef2c6611719c1bd1dd881d077900477122585f51;
     bytes32 private constant BADGE_FOUNDING_MEMBER = 0xcd25a284806e0931bbfbd59e48ca09094f95cc8a54899ac7cf670a7bc084e4c8;
     bytes32 private constant BADGE_EARLY_TESTER = 0x0320a6eadcaf07ad703766ce2aae1e5a2302fd7b9236ecdacdc6089d556ee661;
     bytes32 private constant BADGE_ACTIVE_TRADER = 0xfe3c33b66e28f14b3d890787766ee667031d474e01f41afd2282c6ddd242b134;
@@ -608,21 +607,20 @@ contract Seer {
      * @return bonus Total score bonus from all active badges
      */
     function _calculateBadgeBonus(address subject) internal view returns (uint256 bonus) {
-        bytes32[17] memory ids;
-        ids[0]  = BADGE_PIONEER;           ids[1]  = BADGE_GENESIS_PRESALE;
-        ids[2]  = BADGE_FOUNDING_MEMBER;   ids[3]  = BADGE_EARLY_TESTER;
-        ids[4]  = BADGE_ACTIVE_TRADER;     ids[5]  = BADGE_GOVERNANCE_VOTER;
-        ids[6]  = BADGE_POWER_USER;        ids[7]  = BADGE_TRUSTED_ENDORSER;
-        ids[8]  = BADGE_COMMUNITY_BUILDER; ids[9]  = BADGE_VERIFIED_MERCHANT;
-        ids[10] = BADGE_ELITE_MERCHANT;    ids[11] = BADGE_ELITE_ACHIEVER;
-        ids[12] = BADGE_FRAUD_HUNTER;      ids[13] = BADGE_GUARDIAN;
-        ids[14] = BADGE_CLEAN_RECORD;      ids[15] = BADGE_CONTRIBUTOR;
-        ids[16] = BADGE_EDUCATOR;
-        uint16[17] memory pts;
-        pts[0]=30;  pts[1]=40;  pts[2]=50;  pts[3]=25;  pts[4]=20;  pts[5]=25;  pts[6]=40;
-        pts[7]=30;  pts[8]=35;  pts[9]=40;  pts[10]=60; pts[11]=50; pts[12]=50;
-        pts[13]=40; pts[14]=20; pts[15]=40; pts[16]=30;
-        for (uint256 i = 0; i < 17;) {
+        bytes32[16] memory ids;
+        ids[0]  = BADGE_PIONEER;           ids[1]  = BADGE_FOUNDING_MEMBER;
+        ids[2]  = BADGE_EARLY_TESTER;      ids[3]  = BADGE_ACTIVE_TRADER;
+        ids[4]  = BADGE_GOVERNANCE_VOTER;  ids[5]  = BADGE_POWER_USER;
+        ids[6]  = BADGE_TRUSTED_ENDORSER;  ids[7]  = BADGE_COMMUNITY_BUILDER;
+        ids[8]  = BADGE_VERIFIED_MERCHANT; ids[9]  = BADGE_ELITE_MERCHANT;
+        ids[10] = BADGE_ELITE_ACHIEVER;    ids[11] = BADGE_FRAUD_HUNTER;
+        ids[12] = BADGE_GUARDIAN;          ids[13] = BADGE_CLEAN_RECORD;
+        ids[14] = BADGE_CONTRIBUTOR;       ids[15] = BADGE_EDUCATOR;
+        uint16[16] memory pts;
+        pts[0]=30;  pts[1]=50;  pts[2]=25;  pts[3]=20;  pts[4]=25;  pts[5]=40;
+        pts[6]=30;  pts[7]=35;  pts[8]=40;  pts[9]=60;  pts[10]=50; pts[11]=50;
+        pts[12]=40; pts[13]=20; pts[14]=40; pts[15]=30;
+        for (uint256 i = 0; i < 16;) {
             if (_checkActiveBadge(subject, ids[i])) bonus += pts[i];
             unchecked { ++i; }
         }

@@ -28,7 +28,6 @@ const REQUIRED_ENV_VARS: EnvironmentConfig[] = [
 
   // Core contract addresses
   { name: 'NEXT_PUBLIC_VFIDE_TOKEN_ADDRESS', required: true, category: 'blockchain', production: true },
-  { name: 'NEXT_PUBLIC_VFIDE_PRESALE_ADDRESS', required: true, category: 'blockchain', production: true },
   { name: 'NEXT_PUBLIC_STABLECOIN_REGISTRY_ADDRESS', required: true, category: 'blockchain', production: true },
   { name: 'NEXT_PUBLIC_VAULT_HUB_ADDRESS', required: true, category: 'blockchain', production: true },
   { name: 'NEXT_PUBLIC_DAO_ADDRESS', required: true, category: 'blockchain', production: true },

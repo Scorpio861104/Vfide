@@ -16,7 +16,7 @@ describe('badge-registry', () => {
 
     it('returns different hash for different inputs', () => {
       const id1 = getBadgeId('PIONEER')
-      const id2 = getBadgeId('GENESIS_PRESALE')
+      const id2 = getBadgeId('FOUNDING_MEMBER')
       expect(id1).not.toBe(id2)
     })
 
@@ -32,11 +32,6 @@ describe('badge-registry', () => {
       expect(BADGE_REGISTRY.PIONEER).toBeDefined()
       expect(BADGE_REGISTRY.PIONEER.name).toBe('PIONEER')
       expect(BADGE_REGISTRY.PIONEER.displayName).toBe('Pioneer')
-    })
-
-    it('contains GENESIS_PRESALE badge', () => {
-      expect(BADGE_REGISTRY.GENESIS_PRESALE).toBeDefined()
-      expect(BADGE_REGISTRY.GENESIS_PRESALE.points).toBe(40)
     })
 
     it('contains FOUNDING_MEMBER badge', () => {

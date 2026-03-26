@@ -14,9 +14,6 @@ library BadgeRegistry {
     /// @notice First 10,000 users to join VFIDE (+30 points, permanent)
     bytes32 public constant PIONEER = keccak256("PIONEER");
     
-    /// @notice Participated in initial presale (+40 points, permanent)
-    bytes32 public constant GENESIS_PRESALE = keccak256("GENESIS_PRESALE");
-    
     /// @notice First 1,000 users to reach 800+ ProofScore (+50 points, permanent)
     bytes32 public constant FOUNDING_MEMBER = keccak256("FOUNDING_MEMBER");
     
@@ -122,7 +119,6 @@ library BadgeRegistry {
      */
     function getName(bytes32 badge) public pure returns (string memory) {
         if (badge == PIONEER) return "Pioneer";
-        if (badge == GENESIS_PRESALE) return "Genesis Presale";
         if (badge == FOUNDING_MEMBER) return "Founding Member";
         if (badge == EARLY_TESTER) return "Early Tester";
         if (badge == ACTIVE_TRADER) return "Active Trader";
@@ -159,7 +155,6 @@ library BadgeRegistry {
      */
     function isValidBadge(bytes32 badge) public pure returns (bool) {
         return badge == PIONEER
-            || badge == GENESIS_PRESALE
             || badge == FOUNDING_MEMBER
             || badge == EARLY_TESTER
             || badge == ACTIVE_TRADER
@@ -195,7 +190,7 @@ library BadgeRegistry {
      */
     function getCategory(bytes32 badge) public pure returns (string memory) {
         // Pioneer & Foundation
-        if (badge == PIONEER || badge == GENESIS_PRESALE || badge == FOUNDING_MEMBER || badge == EARLY_TESTER) {
+        if (badge == PIONEER || badge == FOUNDING_MEMBER || badge == EARLY_TESTER) {
             return "Pioneer & Foundation";
         }
         
@@ -246,7 +241,6 @@ library BadgeRegistry {
     function isPermanent(bytes32 badge) public pure returns (bool) {
         return (
             badge == PIONEER ||
-            badge == GENESIS_PRESALE ||
             badge == FOUNDING_MEMBER ||
             badge == EARLY_TESTER ||
             badge == TRUSTED_ENDORSER ||
@@ -272,7 +266,6 @@ library BadgeRegistry {
      */
     function getRecommendedWeight(bytes32 badge) public pure returns (uint16) {
         if (badge == PIONEER) return 30;
-        if (badge == GENESIS_PRESALE) return 40;
         if (badge == FOUNDING_MEMBER) return 50;
         if (badge == EARLY_TESTER) return 25;
         if (badge == ACTIVE_TRADER) return 20;

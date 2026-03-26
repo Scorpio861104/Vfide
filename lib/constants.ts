@@ -42,8 +42,8 @@ export const HOURS_24 = 24 * SECONDS_PER_HOUR;    // 86,400 seconds (1 day)
 export const HOURS_48 = 48 * SECONDS_PER_HOUR;    // 172,800 seconds (2 days)
 export const DAYS_7 = 7 * SECONDS_PER_DAY;        // 604,800 seconds (1 week)
 export const DAYS_30 = 30 * SECONDS_PER_DAY;      // 2,592,000 seconds (~1 month)
-export const DAYS_90 = 90 * SECONDS_PER_DAY;      // Oath presale lock period
-export const DAYS_180 = 180 * SECONDS_PER_DAY;    // Founding presale lock period
+export const DAYS_90 = 90 * SECONDS_PER_DAY;      // 90-day lock period
+export const DAYS_180 = 180 * SECONDS_PER_DAY;    // 180-day lock period
 
 // Time periods in milliseconds (for Date.now() calculations)
 export const HOURS_5_MS = 5 * MILLISECONDS_PER_HOUR;
@@ -117,45 +117,15 @@ export const DEFAULT_PAYROLL_TOPUP = '5000';
 // ========================================
 
 /**
- * Presale price in USD (from VFIDEPresale.sol — HOWEY FIX: flat pricing)
- * 
- * Supply breakdown:
- * - Tier 0 (Founding): $0.05 per VFIDE, 10M cap — 180-day lock required
- * - Tier 1 (Oath): $0.05 per VFIDE, 10M cap — 90-day lock required
- * - Tier 2 (Public): $0.05 per VFIDE, 15M cap — optional lock
- * - Total: 35M base tokens
- * 
- * All tiers share the same TOKEN_PRICE. Tiers differentiate access windows
- * and lock requirements only — there is no price advantage for early buyers.
- * 
- * Lock periods (no bonus tokens — locking reflects commitment, not investment return):
- * - 180-day lock: 10% immediate, 90% locked
- * - 90-day lock: 20% immediate, 80% locked
- * - No lock: 100% immediate
+ * Reference price for VFIDE token in USD.
+ * Used for displaying estimated USD values in the UI.
+ * When tokens are listed on DEX, this should be replaced with a live
+ * price oracle (e.g., from Seer or a DEX aggregator).
  */
-export const PRESALE_PRICES = {
-  FOUNDING: 0.05,  // Tier 0: $0.05 per VFIDE (flat)
-  OATH: 0.05,      // Tier 1: $0.05 per VFIDE (flat)
-  PUBLIC: 0.05,    // Tier 2: $0.05 per VFIDE (flat)
-} as const;
-
-export const PRESALE_CAPS = {
-  FOUNDING: 10_000_000,  // 10M max supply in founding (vault-holder) access window
-  OATH: 10_000_000,      // 10M max supply in oath (general early) access window
-  PUBLIC: 15_000_000,    // 15M max supply in public access window
-} as const;
+export const TOKEN_REFERENCE_PRICE = 0.05;
 
 /**
- * Total presale supply: 35M base allocation
- * No bonus pool — rewards are not offered
- */
-export const PRESALE_SUPPLY = {
-  BASE: 35_000_000,
-  TOTAL: 35_000_000,
-} as const;
-
-/**
- * Lock period unlock schedules (no bonus tokens — locking reflects commitment only)
+ * Lock period unlock schedules (locking reflects commitment only)
  */
 export const LOCK_SCHEDULES = {
   LOCK_180_DAYS: { immediate: 0.10, days: 180 },  // 10% immediate, 90% locked
@@ -163,26 +133,13 @@ export const LOCK_SCHEDULES = {
   NO_LOCK:       { immediate: 1.0,  days: 0   },  // 100% immediate
 } as const;
 
-/** @deprecated Use LOCK_SCHEDULES — bonus field was always 0 */
-export const LOCK_BONUSES = LOCK_SCHEDULES;
-
 /**
- * Dynamic listing price range based on presale completion
+ * Listing price range
  */
 export const LISTING_PRICE = {
-  MIN: 0.10,  // At 25% sold
-  MAX: 0.14,  // At 100% sold
+  MIN: 0.10,
+  MAX: 0.14,
 } as const;
-
-/**
- * Reference price for VFIDE token in USD
- * Used for displaying estimated USD values in the UI
- * 
- * Using the middle tier (Oath) as a balanced reference point.
- * When tokens are listed on DEX, this should be updated to use
- * a live price oracle (e.g., from Seer or a DEX aggregator).
- */
-export const PRESALE_REFERENCE_PRICE = PRESALE_PRICES.OATH;
 
 // ========================================
 // FEATURE FLAGS

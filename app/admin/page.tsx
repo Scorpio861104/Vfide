@@ -541,14 +541,6 @@ export default function AdminPanel() {
   });
   const totalSupply = totalSupplyRaw as bigint | undefined;
 
-  const { data: presaleCapRaw } = useReadContract({
-    address: TOKEN_ADDRESS,
-    abi: TOKEN_ABI,
-    functionName: 'presaleCap',
-    query: { enabled: IS_TOKEN_DEPLOYED },
-  });
-  const presaleCap = presaleCapRaw as bigint | undefined;
-
   const { data: isWhitelisted } = useReadContract({
     address: TOKEN_ADDRESS,
     abi: TOKEN_ABI,
@@ -631,13 +623,6 @@ export default function AdminPanel() {
     address: TOKEN_ADDRESS,
     abi: TOKEN_ABI,
     functionName: 'sanctumSink',
-    query: { enabled: IS_TOKEN_DEPLOYED },
-  });
-
-  const { data: presaleContractAddress } = useReadContract({
-    address: TOKEN_ADDRESS,
-    abi: TOKEN_ABI,
-    functionName: 'presaleContract',
     query: { enabled: IS_TOKEN_DEPLOYED },
   });
 
@@ -1921,18 +1906,6 @@ export default function AdminPanel() {
                 {totalSupply ? formatEther(totalSupply).slice(0, -18) : '0'} VFIDE
               </p>
             </div>
-            <div className="bg-black/30 rounded-lg p-4">
-              <p className="text-gray-400 text-sm">Presale Allocation</p>
-              <p className="text-white text-2xl font-bold">
-                {presaleCap ? Number(formatEther(presaleCap)).toLocaleString() : '35,000,000'} VFIDE
-              </p>
-            </div>
-            <div className="bg-black/30 rounded-lg p-4">
-              <p className="text-gray-400 text-sm">Presale Cap</p>
-              <p className="text-white text-2xl font-bold">
-                35,000,000 VFIDE
-              </p>
-            </div>
           </div>
         </div>
 
@@ -2105,7 +2078,6 @@ export default function AdminPanel() {
                 <option value="burnRouter">Burn Router</option>
                 <option value="treasurySink">Treasury Sink</option>
                 <option value="sanctumSink">Sanctum Sink</option>
-                <option value="presale">Presale Contract</option>
               </select>
             </div>
 
@@ -2155,10 +2127,6 @@ export default function AdminPanel() {
                 <div className="bg-black/30 rounded p-2">
                   <span className="text-gray-400">Sanctum:</span>
                   <p className="text-white font-mono break-all">{sanctumSinkAddress as string || 'Not set'}</p>
-                </div>
-                <div className="bg-black/30 rounded p-2">
-                  <span className="text-gray-400">Presale:</span>
-                  <p className="text-white font-mono break-all">{presaleContractAddress as string || 'Not set'}</p>
                 </div>
               </div>
             </div>
