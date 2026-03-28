@@ -71,7 +71,7 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
     /// Policy settings
     bool public vaultOnly = true;                 // VAULT-ONLY ON BY DEFAULT (user security)
     bool public policyLocked = false;             // once locked, cannot disable vault-only
-    bool public circuitBreaker = false;           // emergency bypass (legacy — controls both)
+    bool public circuitBreaker = false;           // H-02 FIX: emergency status flag; does NOT implicitly bypass fees/security (use setSecurityBypass/setFeeBypass separately)
     uint256 public circuitBreakerExpiry = 0;      // auto-disable timestamp (0 = indefinite)
     uint256 public constant MAX_CIRCUIT_BREAKER_DURATION = 7 days; // maximum allowed duration
     bool public securityBypass = false;           // bypass SecurityHub lock checks only
@@ -110,6 +110,11 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
     address public pendingWhitelistAddr;
     bool    public pendingWhitelistStatus;
     uint64  public pendingWhitelistAt;
+
+    /// H-01 FIX: Timelock for circuit-breaker activation (48-hour delay to prevent surprise bypass).
+    bool    public pendingCircuitBreakerActive;
+    uint256 public pendingCircuitBreakerDuration;
+    uint64  public pendingCircuitBreakerAt;
     
     // Sanctions / Compliance
     mapping(address => bool) public isBlacklisted;
@@ -148,6 +153,7 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
     event ExemptSet(address indexed target, bool exempt);
     event PolicyLocked();
     event CircuitBreakerSet(bool active, uint256 expiry);
+    event CircuitBreakerProposed(bool active, uint256 duration, uint64 effectiveAt); // H-01 FIX
     event SecurityBypassSet(bool active, uint256 expiry); // T-12 FIX: emit on bypass change
     event FeeBypassSet(bool active, uint256 expiry);      // T-12 FIX: emit on bypass change
     event ExternalCallFailed(string indexed context, bytes reason);
@@ -556,24 +562,41 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
     /// Emergency switch to bypass external calls (SecurityHub/BurnRouter) if they fail.
     /// Can be toggled even if policyLocked is true, to ensure liveness.
     /**
-     * @notice Emergency switch to bypass external calls if they fail (legacy — activates both bypasses)
-     * @dev Can be toggled even if policyLocked is true to ensure liveness
-     * @dev Circuit breaker auto-disables after duration to prevent abuse
-     * @param _active True to enable circuit breaker, false to disable
+     * @notice H-01 FIX: Propose activating the circuit breaker with a 48-hour timelock.
+     * @dev Deactivation remains instant for liveness. Only activation requires a timelock.
+     * @param _active True to propose enabling; false to immediately disable.
      * @param _duration Duration in seconds (max 7 days). Ignored when disabling.
      */
     function setCircuitBreaker(bool _active, uint256 _duration) external onlyOwner {
         _syncEmergencyFlags();
-        if (_active) {
-            if (_duration == 0 || _duration > MAX_CIRCUIT_BREAKER_DURATION) revert VF_InvalidDuration();
-            circuitBreaker = true;
-            circuitBreakerExpiry = block.timestamp + _duration;
-        } else {
+        if (!_active) {
+            // Immediate disable is always allowed for liveness
             circuitBreaker = false;
             circuitBreakerExpiry = 0;
+            pendingCircuitBreakerAt = 0;
+            emit CircuitBreakerSet(false, 0);
+            _log("circuit_breaker_off");
+        } else {
+            // Activation requires a 48-hour timelock
+            if (_duration == 0 || _duration > MAX_CIRCUIT_BREAKER_DURATION) revert VF_InvalidDuration();
+            pendingCircuitBreakerActive = true;
+            pendingCircuitBreakerDuration = _duration;
+            pendingCircuitBreakerAt = uint64(block.timestamp) + SINK_CHANGE_DELAY;
+            emit CircuitBreakerProposed(true, _duration, pendingCircuitBreakerAt);
+            _log("circuit_breaker_proposed");
         }
-        emit CircuitBreakerSet(_active, circuitBreakerExpiry);
-        _log(_active ? "circuit_breaker_on" : "circuit_breaker_off");
+    }
+
+    /// @notice Apply a pending circuit breaker activation after the 48-hour timelock.
+    function confirmCircuitBreaker() external onlyOwner {
+        if (pendingCircuitBreakerAt == 0) revert VF_NoPending();
+        if (block.timestamp < pendingCircuitBreakerAt) revert VF_TimelockActive();
+        _syncEmergencyFlags();
+        circuitBreaker = true;
+        circuitBreakerExpiry = block.timestamp + pendingCircuitBreakerDuration;
+        pendingCircuitBreakerAt = 0;
+        emit CircuitBreakerSet(true, circuitBreakerExpiry);
+        _log("circuit_breaker_on");
     }
 
     /// @notice Bypass SecurityHub lock checks only (does not disable fees)
@@ -616,19 +639,21 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
         return true;
     }
 
-    /// @notice Check if security bypass is active (independent of fee bypass)
+    /// @notice Check if security bypass is active (independent of fee bypass and circuit breaker).
+    /// @dev H-02 FIX: Circuit breaker no longer implicitly enables security bypass.
+    ///      Use setSecurityBypass() to explicitly disable SecurityHub checks.
+    ///      This prevents the circuit breaker from silently overriding security controls.
     function isSecurityBypassed() public view returns (bool) {
-        if (isCircuitBreakerActive()) return true; // legacy circuit breaker overrides
         if (!securityBypass) return false;
         if (securityBypassExpiry > 0 && block.timestamp >= securityBypassExpiry) return false;
         return true;
     }
 
-    /// @notice Check if fee bypass is active (independent of security bypass)
-    /// F-04 FIX: Circuit breaker also bypasses fees for consistency.
-    /// During an emergency, locked vaults can transact and should not pay fees to potentially compromised sinks.
+    /// @notice Check if fee bypass is active (independent of security bypass and circuit breaker).
+    /// @dev H-02 FIX: Circuit breaker no longer implicitly enables fee bypass.
+    ///      Use setFeeBypass() to explicitly disable BurnRouter fee collection.
+    ///      Keeping bypasses independent means each must be explicitly activated.
     function isFeeBypassed() public view returns (bool) {
-        if (isCircuitBreakerActive()) return true; // F-04: circuit breaker now bypasses fees too
         if (!feeBypass) return false;
         if (feeBypassExpiry > 0 && block.timestamp >= feeBypassExpiry) return false;
         return true;

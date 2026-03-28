@@ -58,12 +58,20 @@ contract SeerSocial {
     event ScoreDisputeRequested(address indexed subject, string reason);
     event ScoreDisputeResolved(address indexed subject, bool approved, int256 adjustment);
     event EndorsementPolicySet();
+    /// @notice BATCH-14 FIX: Events for Seer reference timelock
+    event SeerChangeProposed(address indexed pending, uint64 effectiveAt);
+    event SeerChangeCancelled();
+    event SeerChanged(address indexed newSeer);
 
     // ═══════════════════════════════════════════════════════════════════════
     // STATE
     // ═══════════════════════════════════════════════════════════════════════
     
     ISeerCore public seer;
+    /// @notice BATCH-14 FIX: Timelock state for Seer reference changes (48-hour delay).
+    address public pendingSeer;
+    uint64  public pendingSeerAt;
+    uint64  public constant SEER_CHANGE_DELAY = 48 hours;
     
     // ═══════════════════════════════════════════════════════════════════════
     // ENDORSEMENTS - Social proof with decay/limits
@@ -150,10 +158,32 @@ contract SeerSocial {
         if (_seer == address(0)) revert SOCIAL_Zero();
         seer = ISeerCore(_seer);
     }
-    
-    function setSeer(address _seer) external onlyDAO {
+
+    /// @notice BATCH-14 FIX: Propose a new Seer reference with a 48-hour timelock.
+    /// @dev Use proposeSeer + applySeer for all Seer reference changes.
+    ///      The legacy instant setSeer() has been removed to enforce the timelock.
+    function proposeSeer(address _seer) external onlyDAO {
         if (_seer == address(0)) revert SOCIAL_Zero();
-        seer = ISeerCore(_seer);
+        pendingSeer = _seer;
+        pendingSeerAt = uint64(block.timestamp) + SEER_CHANGE_DELAY;
+        emit SeerChangeProposed(_seer, pendingSeerAt);
+    }
+
+    /// @notice Apply the pending Seer reference after the timelock has elapsed.
+    function applySeer() external onlyDAO {
+        require(pendingSeer != address(0), "SOCIAL: no pending seer");
+        require(block.timestamp >= pendingSeerAt, "SOCIAL: seer timelock active");
+        seer = ISeerCore(pendingSeer);
+        emit SeerChanged(pendingSeer);
+        pendingSeer = address(0);
+        pendingSeerAt = 0;
+    }
+
+    /// @notice Cancel a pending Seer reference change.
+    function cancelSeerChange() external onlyDAO {
+        pendingSeer = address(0);
+        pendingSeerAt = 0;
+        emit SeerChangeCancelled();
     }
 
     // ═══════════════════════════════════════════════════════════════════════

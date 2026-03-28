@@ -158,7 +158,8 @@ async function deployContracts(config: DeploymentConfig): Promise<DeployedContra
   console.log('3️⃣  Deploying EmergencyControl...');
   const EmergencyControl = await ethers.getContractFactory('EmergencyControl');
   // Bootstrap with non-zero breaker placeholder; wire real breaker after deployment.
-  const emergencyControl = await EmergencyControl.deploy(config.admin, config.admin, config.ledger);
+  // FINAL-10 FIX: pass foundation address (defaults to admin; update via governance post-deploy)
+  const emergencyControl = await EmergencyControl.deploy(config.admin, config.admin, config.ledger, config.admin);
   await emergencyControl.waitForDeployment();
   console.log(`   ✓ Deployed at: ${await emergencyControl.getAddress()}`);
 

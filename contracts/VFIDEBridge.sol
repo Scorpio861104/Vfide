@@ -374,6 +374,37 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
     }
 
     /**
+     * @notice C-05: Pool health view — shows net bridge position to detect cross-chain supply imbalance.
+     * @dev    In a lock/release bridge model (vs burn/mint), the total VFIDE locked here should equal
+     *         the total VFIDE released on all destination chains. If netFlow diverges from the on-chain
+     *         balance this indicates a discrepancy (bridge attack, stuck txs, or manual sweeps).
+     * @return lockedBalance  VFIDE currently held in this bridge contract (tokens locked by outbound bridges).
+     * @return totalOut       Cumulative VFIDE locked out across all bridge() calls (lifetime).
+     * @return totalIn        Cumulative VFIDE released in on this chain across all receive() calls (lifetime).
+     * @return netFlow        totalOut - totalIn: positive = more locked than released (expected on source chain).
+     * @return isHealthy      True if lockedBalance >= (totalOut - totalIn), i.e. contract holds at least what it owes.
+     */
+    function getPoolHealth() external view returns (
+        uint256 lockedBalance,
+        uint256 totalOut,
+        uint256 totalIn,
+        int256  netFlow,
+        bool    isHealthy
+    ) {
+        lockedBalance = vfideToken.balanceOf(address(this));
+        totalOut      = totalBridgedOut;
+        totalIn       = totalBridgedIn;
+        netFlow       = int256(totalOut) - int256(totalIn);
+        // Healthy if balance covers the outstanding net outflow.
+        // Use explicit branch to avoid ambiguity around uint256-casting a negative int256.
+        if (netFlow <= 0) {
+            isHealthy = true; // more released in than locked out — no deficit on this chain
+        } else {
+            isHealthy = lockedBalance >= uint256(netFlow);
+        }
+    }
+
+    /**
      * @notice Schedule a trusted remote update (takes effect after 48h timelock)
      * @param _chainId Chain ID
      * @param _remote Remote bridge address
@@ -566,6 +597,10 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
 
     // ── Two-step ownership (overrides OApp/Ownable single-step transferOwnership)
     address private _pendingBridgeOwner;
+    /// @notice M-04 FIX: Track when ownership transfer was initiated so it can expire.
+    uint64 private _pendingOwnerInitiatedAt;
+    /// @notice Ownership transfer must be accepted within 7 days or it expires.
+    uint64 public constant OWNERSHIP_TRANSFER_EXPIRY = 7 days;
 
     event OwnershipTransferStarted(address indexed previousOwner, address indexed newOwner);
 
@@ -577,19 +612,27 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
     function transferOwnership(address newOwner) public override onlyOwner {
         require(newOwner != address(0), "VFIDEBridge: zero address");
         _pendingBridgeOwner = newOwner;
+        _pendingOwnerInitiatedAt = uint64(block.timestamp);
         emit OwnershipTransferStarted(owner(), newOwner);
     }
 
     /// @notice Complete ownership transfer (called by pending owner)
+    /// @dev M-04 FIX: Enforces 7-day expiry — pending owner must accept before it lapses.
     function acceptOwnership() external {
         require(msg.sender == _pendingBridgeOwner, "VFIDEBridge: not pending owner");
+        require(
+            block.timestamp <= _pendingOwnerInitiatedAt + OWNERSHIP_TRANSFER_EXPIRY,
+            "VFIDEBridge: ownership transfer expired"
+        );
         _transferOwnership(msg.sender);
         _pendingBridgeOwner = address(0);
+        _pendingOwnerInitiatedAt = 0;
     }
 
     /// @notice Cancel a pending ownership transfer
     function cancelOwnershipTransfer() external onlyOwner {
         _pendingBridgeOwner = address(0);
+        _pendingOwnerInitiatedAt = 0;
     }
 
     /**

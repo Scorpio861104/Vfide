@@ -499,5 +499,14 @@ contract CardBoundVault is ReentrancyGuard {
         emit NativeRescue(to, amount);
     }
 
+    /// @notice CBV-05 FIX: Rescue accidentally sent non-VFIDE ERC20 tokens.
+    /// @dev Prevents rescuing the primary VFIDE token to avoid misuse. All VFIDE
+    ///      custody must flow through the normal vault transfer mechanism.
+    function rescueERC20(address token, address to, uint256 amount) external onlyAdmin nonReentrant {
+        if (to == address(0)) revert CBV_Zero();
+        require(token != vfideToken, "CBV: cannot rescue VFIDE via rescueERC20");
+        IERC20(token).safeTransfer(to, amount);
+    }
+
     receive() external payable {}
 }

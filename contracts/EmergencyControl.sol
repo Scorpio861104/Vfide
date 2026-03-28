@@ -37,6 +37,9 @@ contract EmergencyControl {
     event DAOToggled(bool halt, string reason);
 
     address public dao;
+    /// @notice FINAL-10 FIX: Immutable foundation address that can manage committee members
+    ///         independent of the DAO, preventing a compromised DAO from locking out emergency control.
+    address public immutable foundation;
     IEmergencyBreaker public breaker;
     IProofLedger public ledger; // optional
 
@@ -66,13 +69,21 @@ contract EmergencyControl {
         _;
     }
 
+    /// @notice FINAL-10 FIX: Allow either DAO or foundation to manage committee membership.
+    modifier onlyDAOOrFoundation() {
+        require(msg.sender == dao || msg.sender == foundation, "EC: not DAO or foundation");
+        _;
+    }
+
     function _checkDAO() internal view {
         if (msg.sender != dao) revert EC_NotDAO();
     }
 
-    constructor(address _dao, address _breaker, address _ledger) {
+    constructor(address _dao, address _breaker, address _ledger, address _foundation) {
         if (_dao == address(0) || _breaker == address(0)) revert EC_Zero();
+        require(_foundation != address(0), "EC: foundation=0");
         dao = _dao;
+        foundation = _foundation;
         breaker = IEmergencyBreaker(_breaker);
         ledger = IProofLedger(_ledger);
         epoch = 1;
@@ -129,7 +140,7 @@ contract EmergencyControl {
         _log("ec_votes_reset");
     }
 
-    function addMember(address m) external onlyDAO {
+    function addMember(address m) external onlyDAOOrFoundation {
         if (m == address(0)) revert EC_Zero();
         if (isMember[m]) revert EC_AlreadyMember();
         isMember[m] = true; memberCount += 1;
@@ -139,7 +150,7 @@ contract EmergencyControl {
         // threshold unchanged; DAO should adjust separately if desired
     }
 
-    function removeMember(address m) external onlyDAO {
+    function removeMember(address m) external onlyDAOOrFoundation {
         if (!isMember[m]) revert EC_NotMember();
         isMember[m] = false; memberCount -= 1;
         
