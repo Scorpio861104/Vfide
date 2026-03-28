@@ -1556,7 +1556,10 @@ SharedInterfaces implements custom Ownable, ReentrancyGuard, SafeERC20, Pausable
 
 ### I-03: Deploy Scripts Reference Non-Existent Contracts ✅ VERIFIED OK
 
-Need to verify all contracts referenced in deploy-phase1.ts and deploy-phases-3-6.ts actually exist in the contracts directory.
+Deploy scripts have been updated for current active deployments.
+- **Active:** `deploy-phase1.ts` (Phase 1 - Token + Security)
+- **Active:** `deploy-phase3.ts` (Phase 3 - Bridge + Oracle)
+- **Legacy:** `deploy-phases-3-6.ts` (Phases 4-6 removed for Howey compliance; kept for reference)
 
 ---
 

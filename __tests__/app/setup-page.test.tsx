@@ -8,7 +8,7 @@ let mockAccountState = {
 };
 
 let mockChainId = 84532;
-let mockBalance = { formatted: '0.1000' } as { formatted: string } | undefined;
+let mockBalance = { value: 100000000000000000n, decimals: 18 } as { value: bigint; decimals: number } | undefined;
 
 const mockCopyWithId = jest.fn();
 
@@ -60,7 +60,7 @@ describe('Setup page pathways', () => {
       address: '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
     };
     mockChainId = 84532;
-    mockBalance = { formatted: '0.1000' };
+    mockBalance = { value: 100000000000000000n, decimals: 18 };
 
     const win = window as unknown as { ethereum?: { request: (args: { method: string }) => Promise<unknown> } };
     if (!win.ethereum) {
@@ -103,10 +103,10 @@ describe('Setup page pathways', () => {
 
   it('attempts add-network flow and supports copy actions in manual setup', async () => {
     mockChainId = 1;
-    mockBalance = { formatted: '0.0000' };
+    mockBalance = { value: 0n, decimals: 18 };
     renderSetupPage();
 
-    fireEvent.click(screen.getByRole('button', { name: /Add Base Sepolia to MetaMask/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Add .* to MetaMask/i }));
 
     await waitFor(() => {
       expect(screen.getByText(/Network added!/i)).toBeTruthy();

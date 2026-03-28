@@ -110,6 +110,12 @@ library BadgeRegistry {
     /// @notice Translated docs/UI to new language (+25 points, permanent)
     bytes32 public constant TRANSLATOR = keccak256("TRANSLATOR");
     
+    // ============ HEADHUNTER COMPETITION ============
+    // Quarterly recognition for top community recruiters
+    
+    /// @notice Top 20 quarterly recruiters — governance badge: +25% voting weight, proposal rights (+35 points, renewable: 90 days)
+    bytes32 public constant HEADHUNTER = keccak256("HEADHUNTER");
+    
     // ============ HELPER FUNCTIONS ============
     
     /**
@@ -145,6 +151,7 @@ library BadgeRegistry {
         if (badge == CONTRIBUTOR) return "Contributor";
         if (badge == BUG_BOUNTY) return "Bug Bounty";
         if (badge == TRANSLATOR) return "Translator";
+        if (badge == HEADHUNTER) return "Headhunter";
         return "Unknown Badge";
     }
     
@@ -180,7 +187,8 @@ library BadgeRegistry {
             || badge == EDUCATOR
             || badge == CONTRIBUTOR
             || badge == BUG_BOUNTY
-            || badge == TRANSLATOR;
+            || badge == TRANSLATOR
+            || badge == HEADHUNTER;
     }
     
     /**
@@ -230,6 +238,11 @@ library BadgeRegistry {
             return "Education & Contribution";
         }
         
+        // Headhunter Competition
+        if (badge == HEADHUNTER) {
+            return "Headhunter Competition";
+        }
+        
         return "Unknown";
     }
     
@@ -256,6 +269,7 @@ library BadgeRegistry {
             badge == CONTRIBUTOR ||
             badge == BUG_BOUNTY ||
             badge == TRANSLATOR
+            // HEADHUNTER is NOT permanent — renewable quarterly (90 days)
         );
     }
     
@@ -292,6 +306,7 @@ library BadgeRegistry {
         if (badge == CONTRIBUTOR) return 40;
         if (badge == BUG_BOUNTY) return 50; // Variable in practice
         if (badge == TRANSLATOR) return 25;
+        if (badge == HEADHUNTER) return 35;
         return 0;
     }
     
@@ -312,6 +327,7 @@ library BadgeRegistry {
         if (badge == ZERO_DISPUTE) return 180 days;
         if (badge == CLEAN_RECORD) return 365 days;
         if (badge == EDUCATOR) return 180 days;
+        if (badge == HEADHUNTER) return 90 days;
         
         return 0; // Permanent
     }

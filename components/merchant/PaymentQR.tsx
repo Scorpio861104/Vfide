@@ -70,7 +70,7 @@ export function PaymentQR({ defaultAmount, defaultOrderId }: PaymentQRProps) {
       })()
     : ''
 
-  // USD estimate using canonical presale reference price
+  // USD estimate using canonical token reference price
   const usdValue = amount ? (parseFloat(amount) * TOKEN_REFERENCE_PRICE).toFixed(2) : '0.00'
 
   const copyPaymentLink = () => {

@@ -57,16 +57,14 @@ describe("DevReserveVestingVault (H-03: DAO pause claims)", () => {
     const TokenStub = await ethers.getContractFactory("TokenStub");
     const token = await TokenStub.deploy();
     const vaultHub = await TokenStub.deploy();
-    const presale = await TokenStub.deploy();
     await token.waitForDeployment();
     await vaultHub.waitForDeployment();
-    await presale.waitForDeployment();
 
     const EXPECTED_ALLOC = 50_000_000n * 10n ** 18n;
     const DRVV = await ethers.getContractFactory("DevReserveVestingVault");
     const vault = await DRVV.deploy(
       await token.getAddress(), bene.address, await vaultHub.getAddress(),
-      ethers.ZeroAddress, ethers.ZeroAddress, await presale.getAddress(),
+      ethers.ZeroAddress, ethers.ZeroAddress,
       EXPECTED_ALLOC, dao.address
     );
     await vault.waitForDeployment();
@@ -83,16 +81,14 @@ describe("DevReserveVestingVault (H-03: DAO pause claims)", () => {
     const TokenStub = await ethers.getContractFactory("TokenStub");
     const token = await TokenStub.deploy();
     const vaultHub = await TokenStub.deploy();
-    const presale = await TokenStub.deploy();
     await token.waitForDeployment();
     await vaultHub.waitForDeployment();
-    await presale.waitForDeployment();
 
     const EXPECTED_ALLOC = 50_000_000n * 10n ** 18n;
     const DRVV = await ethers.getContractFactory("DevReserveVestingVault");
     const vault = await DRVV.deploy(
       await token.getAddress(), bene.address, await vaultHub.getAddress(),
-      ethers.ZeroAddress, ethers.ZeroAddress, await presale.getAddress(),
+      ethers.ZeroAddress, ethers.ZeroAddress,
       EXPECTED_ALLOC, dao.address
     );
     await vault.waitForDeployment();

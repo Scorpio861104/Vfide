@@ -67,7 +67,7 @@ async function deployFixture() {
 
   await token.mint(await vestingVault.getAddress(), ALLOCATION);
 
-  // Set vesting start via explicit call (replaces presale-based start time)
+  // Set vesting start via explicit call
   await setTime(startTs);
   await vestingVault.connect(beneficiary).setVestingStart(startTs);
 

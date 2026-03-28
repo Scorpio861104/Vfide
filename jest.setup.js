@@ -2,11 +2,10 @@ import '@testing-library/jest-dom'
 
 // Set up environment variables for tests
 process.env.JWT_SECRET = 'test-jwt-secret-for-jest-testing-12345';
-process.env.NEXTAUTH_SECRET = 'test-nextauth-secret-for-jest-testing-12345';
+process.env.NEXTAUTH_SECRET = process.env.JWT_SECRET;
 process.env.NEXTAUTH_URL = 'http://localhost:3000';
 process.env.NEXT_PUBLIC_DEFAULT_CHAIN_ID = '84532'; // Base Sepolia for testing
 process.env.NEXT_PUBLIC_CHAIN_ID = '84532'; // Required by lib/auth/jwt.ts generateToken()
-process.env.NEXT_PUBLIC_VFIDE_PRESALE_ADDRESS = '0x1234567890123456789012345678901234567890'; // Required by token-launch page
 process.env.NEXT_PUBLIC_VFIDE_TOKEN_ADDRESS = '0x1234567890123456789012345678901234567890'; // Required by crypto/price route
 process.env.NEXT_PUBLIC_VFIDE_WETH_POOL_ADDRESS = '0x0000000000000000000000000000000000000000'; // Default no pool
 

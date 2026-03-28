@@ -5,6 +5,7 @@
 
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import { Address } from 'viem';
+import fs from 'node:fs';
 
 const mockContractRead = jest.fn();
 
@@ -26,7 +27,9 @@ describe('SharedInterfaces Contract', () => {
     it('should verify contract deployed', async () => {
       // SharedInterfaces is typically a library/interface collection
       // Testing that it can be referenced/imported
-      expect(true).toBe(true);
+      const source = fs.readFileSync('contracts/SharedInterfaces.sol', 'utf-8');
+      expect(source.length).toBeGreaterThan(0);
+      expect(source).toMatch(/interface|abstract contract/);
     });
 
     it('should handle interface queries', async () => {
@@ -40,7 +43,9 @@ describe('SharedInterfaces Contract', () => {
   describe('Edge Cases', () => {
     it('should handle empty interface calls', async () => {
       // SharedInterfaces typically don't have implementations
-      expect(true).toBe(true);
+      const source = fs.readFileSync('contracts/SharedInterfaces.sol', 'utf-8');
+      expect(source).toContain('interface IVaultHub');
+      expect(source).toContain('interface IERC20');
     });
 
     it('should validate interface structure', async () => {

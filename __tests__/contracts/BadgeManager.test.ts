@@ -115,15 +115,6 @@ describe('BadgeManager Contract', () => {
   });
 
   describe('Activity Recording', () => {
-    it('should record presale participation', async () => {
-      mockContractWrite.mockResolvedValueOnce('0xhash');
-      const result = await mockContractWrite({
-        functionName: 'recordPresaleParticipation',
-        args: [user1, parseEther('1000')],
-      });
-      expect(result).toBe('0xhash');
-    });
-
     it('should record governance vote', async () => {
       mockContractWrite.mockResolvedValueOnce('0xhash');
       const result = await mockContractWrite({
@@ -187,7 +178,29 @@ describe('BadgeManager Contract', () => {
       expect(result).toBe('0xhash');
     });
 
-    it('should record translation', async () => {
+    it('should reject recording from unauthorized address', async () => {
+      mockContractWrite.mockRejectedValueOnce(new Error('Unauthorized'));
+      await expect(
+        mockContractWrite({
+          functionName: 'recordGovernanceVote',
+          args: [user1, 1],
+        })
+      ).rejects.toThrow('Unauthorized');
+    });
+  });
+
+  describe('User Stats', () => {
+    it('should get user stats', async () => {
+      const stats = {
+        governanceVotes: 10,
+        referrals: 5,
+        commerceTxs: 20,
+        endorsementsGiven: 3,
+        endorsementsReceived: 7,
+        fraudReportsValid: 2,
+        educationalContent: 5,
+        translationWords: 5000,
+      };
       mockContractWrite.mockResolvedValueOnce('0xhash');
       const result = await mockContractWrite({
         functionName: 'recordTranslation',
@@ -200,8 +213,8 @@ describe('BadgeManager Contract', () => {
       mockContractWrite.mockRejectedValueOnce(new Error('Unauthorized'));
       await expect(
         mockContractWrite({
-          functionName: 'recordPresaleParticipation',
-          args: [user1, parseEther('1000')],
+          functionName: 'recordGovernanceVote',
+          args: [user1, 1],
         })
       ).rejects.toThrow('Unauthorized');
     });
@@ -210,7 +223,6 @@ describe('BadgeManager Contract', () => {
   describe('User Stats', () => {
     it('should get user stats', async () => {
       const stats = {
-        presaleAmount: parseEther('1000'),
         governanceVotes: 10,
         referrals: 5,
         commerceTxs: 20,
@@ -385,16 +397,6 @@ describe('BadgeManager Contract', () => {
   });
 
   describe('Edge Cases', () => {
-    it('should handle zero amount in presale participation', async () => {
-      mockContractWrite.mockRejectedValueOnce(new Error('InvalidAmount'));
-      await expect(
-        mockContractWrite({
-          functionName: 'recordPresaleParticipation',
-          args: [user1, parseEther('0')],
-        })
-      ).rejects.toThrow('InvalidAmount');
-    });
-
     it('should handle zero amount in commerce tx', async () => {
       mockContractWrite.mockRejectedValueOnce(new Error('InvalidAmount'));
       await expect(
@@ -471,31 +473,6 @@ describe('BadgeManager Contract', () => {
   });
 
   describe('Integration Scenarios', () => {
-    it('should track user journey from presale to badges', async () => {
-      // Record presale
-      mockContractWrite.mockResolvedValueOnce('0xhash1');
-      await mockContractWrite({
-        functionName: 'recordPresaleParticipation',
-        args: [user1, parseEther('1000')],
-      });
-
-      // Record governance votes
-      mockContractWrite.mockResolvedValueOnce('0xhash2');
-      await mockContractWrite({
-        functionName: 'recordGovernanceVote',
-        args: [user1, 1],
-      });
-
-      // Check eligible badges
-      mockContractRead.mockResolvedValueOnce([1, 5]);
-      const badges = await mockContractRead({
-        functionName: 'getEligibleBadges',
-        args: [user1],
-      });
-
-      expect(badges).toEqual([1, 5]);
-    });
-
     it('should handle founding member badge award process', async () => {
       // Check current count
       mockContractRead.mockResolvedValueOnce(50);

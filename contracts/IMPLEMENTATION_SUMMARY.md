@@ -26,9 +26,9 @@ All contracts for Phases 3-6 have been successfully implemented with production-
 - ✅ **CollateralManager.sol** - Multi-token collateral management (398 lines)
 
 ### Deployment & Documentation
-- ✅ **DeployPhases3to6.sol** - Solidity deployment contract (273 lines)
-- ✅ **deploy-phases-3-6.ts** - TypeScript deployment script (317 lines)
-- ✅ **IMPLEMENTATION_README.md** - Comprehensive documentation (400+ lines)
+- ✅ **deploy-phase1.ts** - Phase 1 deployment script (ACTIVE)
+- ⚠️ **deploy-phases-3-6.ts** - Phases 3-6 script (LEGACY - kept for reference, use deploy-phase1.ts and deploy-phase3.ts instead)
+- ✅ **IMPLEMENTATION_README.md** - Comprehensive documentation (updated for current deployments)
 - ✅ **IMPLEMENTATION_SUMMARY.md** - This summary
 
 ## 📊 Statistics

@@ -7,7 +7,6 @@ import { HelpCenter } from "@/components/onboarding/HelpCenter";
 import { ToastProvider } from "@/components/ui/toast";
 // Network-agnostic: Works on testnet and mainnet identically
 import { NetworkSwitchOverlay } from "@/components/wallet/NetworkSwitchOverlay";
-import { EnhancedNetworkBanner } from "@/components/wallet/EnhancedNetworkBanner";
 import { DemoModeBanner } from "@/components/layout/DemoModeBanner";
 import { TestnetNotification } from "@/components/ui/TestnetNotification";
 import { ErrorBoundary } from "@/components/error/ErrorBoundary";
@@ -112,7 +111,6 @@ export default async function RootLayout({
                   <MockServiceWorker />
                   <ZustandHydration />
                   <WebVitalsTracker />
-                  <EnhancedNetworkBanner />
                   <NetworkSwitchOverlay />
                   <TestnetNotification />
                   {/* Network detection handled by wallet connection */}

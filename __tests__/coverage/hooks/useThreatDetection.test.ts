@@ -91,9 +91,8 @@ describe('useThreatDetection Hook', () => {
     act(() => {
       result.current.dismissThreat('test-threat-id');
     });
-    
-    // Should not throw
-    expect(true).toBe(true);
+
+    expect(Array.isArray(result.current.threats)).toBe(true);
   });
 
   it('should get recommendations', () => {

@@ -124,7 +124,7 @@ describe('Error Page', () => {
 
     render(<ErrorPage error={mockError} reset={mockReset} />)
 
-    expect(consoleSpy).toHaveBeenCalledWith('Application error:', mockError)
+    expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('Application error:'), mockError)
     consoleSpy.mockRestore()
   })
 })

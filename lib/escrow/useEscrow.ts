@@ -10,8 +10,8 @@
 
 import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt, usePublicClient } from 'wagmi';
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { parseUnits, formatUnits } from 'viem';
-import { CommerceEscrowABI, CONTRACT_ADDRESSES, VFIDE_TOKEN_ABI } from '@/lib/contracts';
+import { parseUnits, formatUnits, keccak256, stringToHex } from 'viem';
+import { ACTIVE_VAULT_ABI, CommerceEscrowABI, CONTRACT_ADDRESSES, VFIDE_TOKEN_ABI } from '@/lib/contracts';
 
 export interface Escrow {
   id: bigint;
@@ -28,10 +28,12 @@ export interface Escrow {
 export type EscrowState = 'CREATED' | 'RELEASED' | 'REFUNDED' | 'DISPUTED';
 
 const STATE_MAP: Record<number, EscrowState> = {
-  0: 'CREATED',
-  1: 'RELEASED',
-  2: 'REFUNDED',
-  3: 'DISPUTED'
+  1: 'CREATED',  // OPEN
+  2: 'CREATED',  // FUNDED
+  3: 'RELEASED',
+  4: 'REFUNDED',
+  5: 'DISPUTED',
+  6: 'RELEASED', // RESOLVED
 };
 
 export function useEscrow() {
@@ -79,21 +81,38 @@ export function useEscrow() {
     return allowance as bigint;
   }, [publicClient, tokenAddress]);
 
-  // Helper: Approve token
-  const approveToken = useCallback(async (spender: `0x${string}`, amount: bigint) => {
+  // Helper: Approve token spending from the caller's vault
+  const approveToken = useCallback(async (vaultAddress: `0x${string}`, spender: `0x${string}`, amount: bigint) => {
     if (!publicClient) {
       throw new Error('Wallet client not available');
     }
 
     const approvalHash = await writeContractAsync({
-      address: tokenAddress,
-      abi: VFIDE_TOKEN_ABI,
-      functionName: 'approve',
+      address: vaultAddress,
+      abi: ACTIVE_VAULT_ABI,
+      functionName: 'approveVFIDE',
       args: [spender, amount],
     });
 
     await publicClient.waitForTransactionReceipt({ hash: approvalHash });
-  }, [publicClient, tokenAddress, writeContractAsync]);
+  }, [publicClient, writeContractAsync]);
+
+  // Helper: Read required vault/spender pair from CommerceEscrow
+  const getRequiredApproval = useCallback(async (owner: `0x${string}`): Promise<{ buyerVault: `0x${string}`; spender: `0x${string}` }> => {
+    if (!publicClient) {
+      throw new Error('Wallet client not available');
+    }
+
+    const approvalData = await publicClient.readContract({
+      address: escrowAddress,
+      abi: CommerceEscrowABI,
+      functionName: 'getRequiredApproval',
+      args: [owner],
+    });
+
+    const [buyerVault, spender] = approvalData as readonly [`0x${string}`, `0x${string}`];
+    return { buyerVault, spender };
+  }, [escrowAddress, publicClient]);
 
   // Read single escrow
   const readEscrow = useCallback(async (id: bigint): Promise<Escrow> => {
@@ -108,29 +127,28 @@ export function useEscrow() {
       args: [id],
     });
 
-    const [buyer, merchant, token, amount, createdAt, releaseTime, state, orderId] = data as readonly [
+    const [buyerOwner, merchantOwner, _buyerVault, _sellerVault, amount, state, metaHash] = data as readonly [
       `0x${string}`,
       `0x${string}`,
       `0x${string}`,
-      bigint,
-      bigint,
+      `0x${string}`,
       bigint,
       number,
-      string
+      `0x${string}`
     ];
 
     return {
       id,
-      buyer,
-      merchant,
-      token,
+      buyer: buyerOwner,
+      merchant: merchantOwner,
+      token: tokenAddress,
       amount,
-      createdAt,
-      releaseTime,
+      createdAt: 0n,
+      releaseTime: 0n,
       state,
-      orderId,
+      orderId: metaHash,
     };
-  }, [escrowAddress, publicClient]);
+  }, [escrowAddress, publicClient, tokenAddress]);
 
   // Format helpers
   const formatEscrowAmount = useCallback((amount: bigint): string => {
@@ -142,6 +160,8 @@ export function useEscrow() {
   }, []);
 
   const getTimeRemaining = useCallback((releaseTime: bigint): string => {
+    if (releaseTime === 0n) return 'N/A';
+
     const now = BigInt(Math.floor(Date.now() / 1000));
     const diff = releaseTime - now;
     
@@ -159,24 +179,16 @@ export function useEscrow() {
     isNearTimeout: boolean;
     timeRemaining: bigint;
   }> => {
-    if (!publicClient) {
-      throw new Error('Wallet client not available');
-    }
-
-    const timeoutData = await publicClient.readContract({
-      address: escrowAddress,
-      abi: CommerceEscrowABI,
-      functionName: 'checkTimeout',
-      args: [id],
-    });
-
-    const [isNearTimeout, timeRemaining] = timeoutData as readonly [boolean, bigint];
+    // CommerceEscrow does not implement timeout windows like EscrowManager.
+    void id;
+    const isNearTimeout = false;
+    const timeRemaining = 0n;
 
     return {
       isNearTimeout,
       timeRemaining,
     };
-  }, [escrowAddress, publicClient]);
+  }, []);
 
   // ============ MAIN FUNCTIONS (use helpers) ============
 
@@ -227,21 +239,40 @@ export function useEscrow() {
 
     try {
       const amountWei = parseUnits(amount, 18);
+      const metaHash = keccak256(stringToHex(orderId || `order-${Date.now()}`));
+      const nextEscrowId = (escrowCount as bigint | undefined ? (escrowCount as bigint) + 1n : undefined);
+      const openId = nextEscrowId ?? 1n;
       
-      // Step 1: Check/request token approval
-      const allowance = await checkAllowance(address, escrowAddress);
-      if (allowance < amountWei) {
-        await approveToken(escrowAddress, amountWei);
-        // Wait for approval confirmation
-        await new Promise(resolve => setTimeout(resolve, 3000));
+      // Step 1: Check/request vault token approval required by CommerceEscrow
+      const { buyerVault, spender } = await getRequiredApproval(address as `0x${string}`);
+      if (buyerVault === '0x0000000000000000000000000000000000000000') {
+        throw new Error('No vault found for this wallet. Create a vault before using escrow checkout.');
       }
 
-      // Step 2: Create escrow
+      const allowance = await checkAllowance(buyerVault, spender);
+      if (allowance < amountWei) {
+        await approveToken(buyerVault, spender, amountWei);
+      }
+
+      // Step 2: Open escrow order
+      const openHash = await writeContractAsync({
+        address: escrowAddress,
+        abi: CommerceEscrowABI,
+        functionName: 'open',
+        args: [merchant, amountWei, metaHash],
+      });
+
+      if (!publicClient) {
+        throw new Error('Wallet client not available');
+      }
+      await publicClient.waitForTransactionReceipt({ hash: openHash });
+
+      // Step 3: Mark escrow funded (pulls from buyer vault to escrow contract)
       await writeContractAsync({
         address: escrowAddress,
         abi: CommerceEscrowABI,
-        functionName: 'createEscrow',
-        args: [merchant, tokenAddress, amountWei, orderId],
+        functionName: 'markFunded',
+        args: [openId],
       });
 
     } catch (err) {
@@ -250,7 +281,7 @@ export function useEscrow() {
     } finally {
       setLoading(false);
     }
-  }, [address, approveToken, checkAllowance, escrowAddress, hasEscrowConfig, tokenAddress, writeContractAsync]);
+  }, [address, approveToken, checkAllowance, escrowAddress, escrowCount, getRequiredApproval, hasEscrowConfig, publicClient, writeContractAsync]);
 
   // Release funds to merchant
   const releaseEscrow = useCallback(async (id: bigint) => {
@@ -298,12 +329,8 @@ export function useEscrow() {
     setError(null);
 
     try {
-      await writeContractAsync({
-        address: escrowAddress,
-        abi: CommerceEscrowABI,
-        functionName: 'claimTimeout',
-        args: [id],
-      });
+      void id;
+      throw new Error('Timeout claim is not supported by CommerceEscrow. Use release, refund, or dispute resolution.');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to claim timeout');
       throw err;
@@ -321,8 +348,8 @@ export function useEscrow() {
       await writeContractAsync({
         address: escrowAddress,
         abi: CommerceEscrowABI,
-        functionName: 'raiseDispute',
-        args: [id],
+        functionName: 'dispute',
+        args: [id, 'user_dispute'],
       });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to raise dispute');
@@ -341,7 +368,7 @@ export function useEscrow() {
       await writeContractAsync({
         address: escrowAddress,
         abi: CommerceEscrowABI,
-        functionName: 'resolveDispute',
+        functionName: 'resolve',
         args: [id, refundBuyer],
       });
     } catch (err) {
@@ -358,12 +385,9 @@ export function useEscrow() {
     setError(null);
 
     try {
-      await writeContractAsync({
-        address: escrowAddress,
-        abi: CommerceEscrowABI,
-        functionName: 'resolveDisputePartial',
-        args: [id, buyerShareBps],
-      });
+      void id;
+      void buyerShareBps;
+      throw new Error('Partial dispute resolution is not supported by CommerceEscrow.');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to resolve dispute with split payout');
       throw err;
@@ -378,12 +402,8 @@ export function useEscrow() {
     setError(null);
 
     try {
-      await writeContractAsync({
-        address: escrowAddress,
-        abi: CommerceEscrowABI,
-        functionName: 'notifyTimeout',
-        args: [id],
-      });
+      void id;
+      throw new Error('Timeout notifications are not supported by CommerceEscrow.');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to notify timeout');
       throw err;
@@ -416,9 +436,9 @@ export function useEscrow() {
 
   // ============ COMPUTED VALUES ============
 
-  const activeEscrows = useMemo(() => escrows.filter(e => e.state === 0), [escrows]);
-  const completedEscrows = useMemo(() => escrows.filter(e => e.state === 1 || e.state === 2), [escrows]);
-  const disputedEscrows = useMemo(() => escrows.filter(e => e.state === 3), [escrows]);
+  const activeEscrows = useMemo(() => escrows.filter(e => e.state === 1 || e.state === 2), [escrows]);
+  const completedEscrows = useMemo(() => escrows.filter(e => e.state === 3 || e.state === 4 || e.state === 6), [escrows]);
+  const disputedEscrows = useMemo(() => escrows.filter(e => e.state === 5), [escrows]);
 
   return {
     // Data

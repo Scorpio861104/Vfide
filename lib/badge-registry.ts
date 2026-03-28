@@ -55,7 +55,21 @@ export const BADGE_REGISTRY: Record<string, BadgeMetadata> = {
     rarity: 'Mythic',
     earnRequirement: 'Be in the first 1,000 to reach 800+ ProofScore',
   },
-  
+
+  EARLY_TESTER: {
+    id: getBadgeId('EARLY_TESTER'),
+    name: 'EARLY_TESTER',
+    displayName: 'Early Tester',
+    description: 'Tested the platform before mainnet launch — helping shape the final product',
+    category: 'Pioneer & Foundation',
+    icon: '🔬',
+    points: 25,
+    duration: 0,
+    isPermanent: true,
+    rarity: 'Rare',
+    earnRequirement: 'Participated in testnet before mainnet (DAO verified)',
+  },
+
   // Activity & Participation
   ACTIVE_TRADER: {
     id: getBadgeId('ACTIVE_TRADER'),
@@ -150,6 +164,19 @@ export const BADGE_REGISTRY: Record<string, BadgeMetadata> = {
     rarity: 'Rare',
     earnRequirement: 'Help 5 new users reach 540+ ProofScore',
   },
+  PEACEMAKER: {
+    id: getBadgeId('PEACEMAKER'),
+    name: 'PEACEMAKER',
+    displayName: 'Peacemaker',
+    description: 'Resolved 3+ disputes through mediation, keeping the community healthy',
+    category: 'Trust & Community',
+    icon: '☮️',
+    points: 25,
+    duration: 0,
+    isPermanent: true,
+    rarity: 'Rare',
+    earnRequirement: 'Successfully mediate 3+ disputes (DAO verified)',
+  },
   
   // Commerce & Merchants
   VERIFIED_MERCHANT: {
@@ -177,6 +204,19 @@ export const BADGE_REGISTRY: Record<string, BadgeMetadata> = {
     isPermanent: false,
     rarity: 'Epic',
     earnRequirement: '1,000+ transactions, $100k+ volume, 4.8+ rating',
+  },
+  INSTANT_SETTLEMENT: {
+    id: getBadgeId('INSTANT_SETTLEMENT'),
+    name: 'INSTANT_SETTLEMENT',
+    displayName: 'Instant Settlement',
+    description: 'Qualified for instant merchant rebates — 800+ ProofScore demonstrates top-tier trust',
+    category: 'Commerce & Merchants',
+    icon: '⚡💰',
+    points: 20,
+    duration: 90 * 24 * 60 * 60,
+    isPermanent: false,
+    rarity: 'Rare',
+    earnRequirement: 'Maintain 800+ ProofScore as an active merchant',
   },
   ZERO_DISPUTE: {
     id: getBadgeId('ZERO_DISPUTE'),
@@ -260,6 +300,19 @@ export const BADGE_REGISTRY: Record<string, BadgeMetadata> = {
     rarity: 'Epic',
     earnRequirement: 'Reach ProofScore 900+',
   },
+  CENTURY_ENDORSER: {
+    id: getBadgeId('CENTURY_ENDORSER'),
+    name: 'CENTURY_ENDORSER',
+    displayName: 'Century Endorser',
+    description: 'Received 100+ endorsements from community members over time',
+    category: 'Achievements & Milestones',
+    icon: '💯',
+    points: 35,
+    duration: 0,
+    isPermanent: true,
+    rarity: 'Epic',
+    earnRequirement: 'Accumulate 100+ endorsements from other users',
+  },
   WHALE_SLAYER: {
     id: getBadgeId('WHALE_SLAYER'),
     name: 'WHALE_SLAYER',
@@ -340,6 +393,21 @@ export const BADGE_REGISTRY: Record<string, BadgeMetadata> = {
     rarity: 'Rare',
     earnRequirement: 'Complete translation package for new language',
   },
+
+  // Headhunter Competition
+  HEADHUNTER: {
+    id: getBadgeId('HEADHUNTER'),
+    name: 'HEADHUNTER',
+    displayName: 'Headhunter',
+    description: 'Top 20 quarterly recruiter — earned governance recognition with +25% voting weight, proposal rights, and council eligibility',
+    category: 'Headhunter Competition',
+    icon: '🎯',
+    points: 35,
+    duration: 90 * 24 * 60 * 60,
+    isPermanent: false,
+    rarity: 'Epic',
+    earnRequirement: 'Finish in the top 20 on the quarterly recruiter leaderboard',
+  },
 }
 
 // Helper functions
@@ -353,6 +421,15 @@ export const getBadgeByName = (name: string): BadgeMetadata | undefined => {
 
 export const getBadgeById = (id: `0x${string}`): BadgeMetadata | undefined => {
   return getAllBadges().find(badge => badge.id === id)
+}
+
+export const getBadgePath = (name: string): string => {
+  return name.toLowerCase()
+}
+
+export const getBadgeByPath = (path: string): BadgeMetadata | undefined => {
+  const normalized = path.trim().toLowerCase()
+  return getAllBadges().find((badge) => getBadgePath(badge.name) === normalized)
 }
 
 export const getBadgesByCategory = (category: string): BadgeMetadata[] => {

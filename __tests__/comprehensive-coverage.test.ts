@@ -1,381 +1,163 @@
-// Comprehensive test file covering multiple simple utility components and functions
+import {
+  safeJSONParse,
+  safeJSONParseWithResult,
+  safeLocalStorageParse,
+  safeJSONParseArray,
+  safeJSONParseObject,
+  safeParseInt,
+  safeParseFloat,
+  safeToNumber,
+  safeParsePagination,
+} from '@/lib/safeParse';
+import {
+  checkRateLimit,
+  getClientIdentifier,
+  getRateLimitHeaders,
+} from '@/lib/rateLimit';
 
-// Mock all dependencies
-jest.mock('wagmi')
-jest.mock('viem')
-jest.mock('next/navigation')
-jest.mock('framer-motion')
+let warnMock: jest.Mock;
 
-describe('Comprehensive Component Coverage', () => {
-  describe('UI Components Snapshot Tests', () => {
-    it('renders various button variants', () => {
-      // Button component coverage
-      const buttonElement = document.createElement('button')
-      buttonElement.className = 'btn-primary'
-      expect(buttonElement).toBeDefined()
-    })
+jest.mock('@/lib/logger', () => ({
+  logger: {
+    warn: (...args: unknown[]) => warnMock(...args),
+  },
+}));
 
-    it('renders card components', () => {
-      // Card component coverage
-      const cardElement = document.createElement('div')
-      cardElement.className = 'card'
-      expect(cardElement).toBeDefined()
-    })
+jest.mock('next/server', () => ({
+  NextResponse: {
+    json: (body: unknown, init?: { status?: number; headers?: Record<string, string> }) => ({
+      body,
+      status: init?.status ?? 200,
+      headers: init?.headers ?? {},
+    }),
+  },
+}));
 
-    it('renders dialog components', () => {
-      // Dialog component coverage
-      const dialogElement = document.createElement('div')
-      dialogElement.setAttribute('role', 'dialog')
-      expect(dialogElement).toBeDefined()
-    })
+describe('Comprehensive Coverage (real behaviors)', () => {
+  beforeEach(() => {
+    if (!warnMock) {
+      warnMock = jest.fn();
+    }
+    jest.clearAllMocks();
+    localStorage.clear();
+  });
 
-    it('renders tabs components', () => {
-      // Tabs component coverage
-      const tabsElement = document.createElement('div')
-      tabsElement.setAttribute('role', 'tablist')
-      expect(tabsElement).toBeDefined()
-    })
-  })
+  describe('safeParse utilities', () => {
+    it('parses valid JSON and falls back for invalid input', () => {
+      expect(safeJSONParse('{"a":1}', { a: 0 })).toEqual({ a: 1 });
+      expect(safeJSONParse('{bad json', { a: 0 })).toEqual({ a: 0 });
+      expect(safeJSONParse(null, { a: 0 })).toEqual({ a: 0 });
+    });
 
-  describe('Utility Functions Coverage', () => {
-    it('handles basic string operations', () => {
-      const result = 'test'.toUpperCase()
-      expect(result).toBe('TEST')
-    })
+    it('returns detailed parse result metadata', () => {
+      const success = safeJSONParseWithResult<{ ok: boolean }>('{"ok":true}');
+      expect(success.success).toBe(true);
+      expect(success.data).toEqual({ ok: true });
 
-    it('handles numeric operations', () => {
-      const sum = 1 + 2
-      expect(sum).toBe(3)
-    })
+      const failure = safeJSONParseWithResult<{ ok: boolean }>('oops');
+      expect(failure.success).toBe(false);
+      expect(failure.error).toBeTruthy();
+    });
 
-    it('handles array operations', () => {
-      const arr = [1, 2, 3]
-      expect(arr.length).toBe(3)
-    })
+    it('logs warnings when explicitly enabled for malformed JSON', () => {
+      const fallback = { ok: false };
+      expect(safeJSONParse('{broken', fallback, true)).toEqual(fallback);
+      expect(warnMock).toHaveBeenCalled();
+    });
 
-    it('handles object operations', () => {
-      const obj = { key: 'value' }
-      expect(obj.key).toBe('value')
-    })
-  })
+    it('parses localStorage values safely', () => {
+      localStorage.setItem('good', '{"theme":"dark"}');
+      localStorage.setItem('bad', '{broken');
 
-  describe('Type Safety Coverage', () => {
-    it('validates string types', () => {
-      const str: string = 'test'
-      expect(typeof str).toBe('string')
-    })
+      expect(safeLocalStorageParse('good', { theme: 'light' })).toEqual({ theme: 'dark' });
+      expect(safeLocalStorageParse('bad', { theme: 'light' })).toEqual({ theme: 'light' });
+      expect(safeLocalStorageParse('missing', { theme: 'light' })).toEqual({ theme: 'light' });
+    });
 
-    it('validates number types', () => {
-      const num: number = 42
-      expect(typeof num).toBe('number')
-    })
+    it('guards array/object parse shapes', () => {
+      expect(safeJSONParseArray<number>('[1,2,3]')).toEqual([1, 2, 3]);
+      expect(safeJSONParseArray<number>('{"x":1}', [9])).toEqual([9]);
 
-    it('validates boolean types', () => {
-      const bool: boolean = true
-      expect(typeof bool).toBe('boolean')
-    })
+      expect(safeJSONParseObject<{ x: number }>('{"x":1}', { x: 0 })).toEqual({ x: 1 });
+      expect(safeJSONParseObject<{ x: number }>('[1,2]', { x: 0 })).toEqual({ x: 0 });
+    });
 
-    it('validates array types', () => {
-      const arr: number[] = [1, 2, 3]
-      expect(Array.isArray(arr)).toBe(true)
-    })
-  })
+    it('enforces numeric fallbacks and bounds', () => {
+      expect(safeParseInt('42', 0)).toBe(42);
+      expect(safeParseInt('nope', 7)).toBe(7);
+      expect(safeParseInt('500', 0, { max: 100 })).toBe(100);
+      expect(safeParseInt('-2', 0, { min: 0 })).toBe(0);
 
-  describe('Error Handling Coverage', () => {
-    it('handles try-catch blocks', () => {
-      try {
-        throw new Error('Test error')
-      } catch (error) {
-        expect(error).toBeDefined()
-      }
-    })
+      expect(safeParseFloat('3.14', 0)).toBeCloseTo(3.14);
+      expect(safeParseFloat('-1.2', 9, { allowNegative: false })).toBe(9);
+      expect(safeParseFloat('200.5', 0, { max: 100 })).toBe(100);
+    });
 
-    it('handles null checks', () => {
-      const value = null
-      expect(value).toBeNull()
-    })
+    it('converts values and pagination params safely', () => {
+      expect(safeToNumber('5', 0)).toBe(5);
+      expect(safeToNumber('', 12)).toBe(12);
+      expect(safeToNumber('nan', 12)).toBe(12);
 
-    it('handles undefined checks', () => {
-      let value
-      expect(value).toBeUndefined()
-    })
+      expect(safeParsePagination('999', '-10', { limit: 20, maxLimit: 100 })).toEqual({
+        limit: 100,
+        offset: 0,
+      });
+      expect(safeParsePagination(undefined, undefined, { limit: 25 })).toEqual({
+        limit: 25,
+        offset: 0,
+      });
+    });
+  });
 
-    it('handles truthy checks', () => {
-      expect(true).toBeTruthy()
-      expect(1).toBeTruthy()
-      expect('string').toBeTruthy()
-    })
+  describe('rateLimit utilities', () => {
+    it('allows requests up to limit then blocks with 429 payload', () => {
+      const key = `suite-${Date.now()}-${Math.random()}`;
 
-    it('handles falsy checks', () => {
-      expect(false).toBeFalsy()
-      expect(0).toBeFalsy()
-      expect('').toBeFalsy()
-    })
-  })
+      const first = checkRateLimit(key, { maxRequests: 2, windowMs: 60_000 });
+      expect(first.success).toBe(true);
+      expect(first.remaining).toBe(1);
 
-  describe('Conditional Logic Coverage', () => {
-    it('handles if statements', () => {
-      const value = true
-      if (value) {
-        expect(value).toBe(true)
-      }
-    })
+      const second = checkRateLimit(key, { maxRequests: 2, windowMs: 60_000 });
+      expect(second.success).toBe(true);
+      expect(second.remaining).toBe(0);
 
-    it('handles if-else statements', () => {
-      const value = false
-      if (value) {
-        fail('Should not reach here')
-      } else {
-        expect(value).toBe(false)
-      }
-    })
+      const third = checkRateLimit(key, { maxRequests: 2, windowMs: 60_000 });
+      expect(third.success).toBe(false);
+      expect(third.retryAfter).toBeGreaterThan(0);
+      expect(third.errorResponse?.status).toBe(429);
+      expect(third.errorResponse?.body).toEqual(
+        expect.objectContaining({ error: 'Too many requests' })
+      );
+    });
 
-    it('handles ternary operators', () => {
-      const result = true ? 'yes' : 'no'
-      expect(result).toBe('yes')
-    })
+    it('extracts client identifiers from request headers', () => {
+      const withForwarded = new Request('https://example.com', {
+        headers: { 'x-forwarded-for': '1.1.1.1, 2.2.2.2' },
+      });
+      const withRealIp = new Request('https://example.com', {
+        headers: { 'x-real-ip': '3.3.3.3' },
+      });
+      const withCf = new Request('https://example.com', {
+        headers: { 'cf-connecting-ip': '4.4.4.4' },
+      });
+      const unknown = new Request('https://example.com');
 
-    it('handles switch statements', () => {
-      const value: string = 'a'
-      let result
-      switch (value) {
-        case 'a':
-          result = 1
-          break
-        case 'b':
-          result = 2
-          break
-        default:
-          result = 0
-      }
-      expect(result).toBe(1)
-    })
-  })
+      expect(getClientIdentifier(withForwarded)).toBe('1.1.1.1');
+      expect(getClientIdentifier(withRealIp)).toBe('3.3.3.3');
+      expect(getClientIdentifier(withCf)).toBe('4.4.4.4');
+      expect(getClientIdentifier(unknown)).toBe('unknown');
+    });
 
-  describe('Loop Coverage', () => {
-    it('handles for loops', () => {
-      let count = 0
-      for (let i = 0; i < 5; i++) {
-        count++
-      }
-      expect(count).toBe(5)
-    })
+    it('builds response headers from rate limit state', () => {
+      const blocked = checkRateLimit(`headers-${Date.now()}-${Math.random()}`, {
+        maxRequests: 0,
+        windowMs: 60_000,
+      });
+      const headers = getRateLimitHeaders(blocked);
 
-    it('handles while loops', () => {
-      let count = 0
-      while (count < 3) {
-        count++
-      }
-      expect(count).toBe(3)
-    })
-
-    it('handles forEach', () => {
-      const arr = [1, 2, 3]
-      let sum = 0
-      arr.forEach(n => sum += n)
-      expect(sum).toBe(6)
-    })
-
-    it('handles map', () => {
-      const arr = [1, 2, 3]
-      const doubled = arr.map(n => n * 2)
-      expect(doubled).toEqual([2, 4, 6])
-    })
-
-    it('handles filter', () => {
-      const arr = [1, 2, 3, 4, 5]
-      const evens = arr.filter(n => n % 2 === 0)
-      expect(evens).toEqual([2, 4])
-    })
-
-    it('handles reduce', () => {
-      const arr = [1, 2, 3, 4]
-      const sum = arr.reduce((acc, n) => acc + n, 0)
-      expect(sum).toBe(10)
-    })
-  })
-
-  describe('Async Operations Coverage', () => {
-    it('handles promises', async () => {
-      const promise = Promise.resolve(42)
-      const result = await promise
-      expect(result).toBe(42)
-    })
-
-    it('handles async functions', async () => {
-      const asyncFunc = async () => 'result'
-      const result = await asyncFunc()
-      expect(result).toBe('result')
-    })
-
-    it('handles promise rejections', async () => {
-      const promise = Promise.reject(new Error('fail'))
-      await expect(promise).rejects.toThrow('fail')
-    })
-
-    it('handles timeouts', async () => {
-      const promise = new Promise(resolve => setTimeout(() => resolve('done'), 10))
-      const result = await promise
-      expect(result).toBe('done')
-    })
-  })
-
-  describe('Class and Object Coverage', () => {
-    it('handles class instantiation', () => {
-      class TestClass {
-        value: number
-        constructor(val: number) {
-          this.value = val
-        }
-        getValue() {
-          return this.value
-        }
-      }
-      const instance = new TestClass(42)
-      expect(instance.getValue()).toBe(42)
-    })
-
-    it('handles object destructuring', () => {
-      const obj = { a: 1, b: 2, c: 3 }
-      const { a, b } = obj
-      expect(a).toBe(1)
-      expect(b).toBe(2)
-    })
-
-    it('handles spread operators', () => {
-      const obj1 = { a: 1 }
-      const obj2 = { b: 2 }
-      const merged = { ...obj1, ...obj2 }
-      expect(merged).toEqual({ a: 1, b: 2 })
-    })
-
-    it('handles rest parameters', () => {
-      const func = (...args: number[]) => args.reduce((a, b) => a + b, 0)
-      expect(func(1, 2, 3, 4)).toBe(10)
-    })
-  })
-
-  describe('String Operations Coverage', () => {
-    it('handles string concatenation', () => {
-      const result = 'hello' + ' ' + 'world'
-      expect(result).toBe('hello world')
-    })
-
-    it('handles template literals', () => {
-      const name = 'world'
-      const result = `Hello ${name}`
-      expect(result).toBe('Hello world')
-    })
-
-    it('handles string methods', () => {
-      expect('test'.toUpperCase()).toBe('TEST')
-      expect('TEST'.toLowerCase()).toBe('test')
-      expect('  test  '.trim()).toBe('test')
-      expect('hello'.includes('ell')).toBe(true)
-      expect('hello'.startsWith('hel')).toBe(true)
-      expect('hello'.endsWith('lo')).toBe(true)
-    })
-  })
-
-  describe('Number Operations Coverage', () => {
-    it('handles arithmetic operations', () => {
-      expect(5 + 3).toBe(8)
-      expect(5 - 3).toBe(2)
-      expect(5 * 3).toBe(15)
-      expect(6 / 3).toBe(2)
-      expect(7 % 3).toBe(1)
-    })
-
-    it('handles number methods', () => {
-      expect(Math.round(4.7)).toBe(5)
-      expect(Math.floor(4.7)).toBe(4)
-      expect(Math.ceil(4.3)).toBe(5)
-      expect(Math.max(1, 5, 3)).toBe(5)
-      expect(Math.min(1, 5, 3)).toBe(1)
-    })
-
-    it('handles number parsing', () => {
-      expect(parseInt('42')).toBe(42)
-      expect(parseFloat('3.14')).toBe(3.14)
-      expect(Number('42')).toBe(42)
-    })
-  })
-
-  describe('Date Operations Coverage', () => {
-    it('handles date creation', () => {
-      const date = new Date('2024-01-01')
-      expect(date.getFullYear()).toBe(2024)
-    })
-
-    it('handles date methods', () => {
-      const date = new Date('2024-06-15')
-      expect(date.getMonth()).toBe(5) // 0-indexed
-      expect(date.getDate()).toBe(15)
-    })
-  })
-
-  describe('Regular Expression Coverage', () => {
-    it('handles regex matching', () => {
-      const regex = /\d+/
-      expect(regex.test('123')).toBe(true)
-      expect(regex.test('abc')).toBe(false)
-    })
-
-    it('handles regex replacement', () => {
-      const result = 'hello123'.replace(/\d+/, 'world')
-      expect(result).toBe('helloworld')
-    })
-  })
-
-  describe('JSON Operations Coverage', () => {
-    it('handles JSON stringify', () => {
-      const obj = { a: 1, b: 2 }
-      const json = JSON.stringify(obj)
-      expect(json).toBe('{"a":1,"b":2}')
-    })
-
-    it('handles JSON parse', () => {
-      const json = '{"a":1,"b":2}'
-      const obj = JSON.parse(json)
-      expect(obj).toEqual({ a: 1, b: 2 })
-    })
-  })
-
-  describe('Set and Map Coverage', () => {
-    it('handles Set operations', () => {
-      const set = new Set([1, 2, 3])
-      expect(set.has(2)).toBe(true)
-      expect(set.size).toBe(3)
-      set.add(4)
-      expect(set.size).toBe(4)
-    })
-
-    it('handles Map operations', () => {
-      const map = new Map([['a', 1], ['b', 2]])
-      expect(map.get('a')).toBe(1)
-      expect(map.size).toBe(2)
-      map.set('c', 3)
-      expect(map.size).toBe(3)
-    })
-  })
-
-  describe('Type Conversion Coverage', () => {
-    it('handles explicit conversions', () => {
-      expect(String(42)).toBe('42')
-      expect(Number('42')).toBe(42)
-      expect(Boolean(1)).toBe(true)
-      expect(Boolean(0)).toBe(false)
-    })
-
-    it('handles implicit conversions', () => {
-      expect('5' + 5).toBe('55')
-      // TypeScript implicit conversion: string to number
-      expect(Number('5') - 2).toBe(3)
-      // Truthy/falsy checks
-      const emptyString = ''
-      const nonEmptyString = 'test'
-      expect(!emptyString).toBe(true)
-      expect(!!nonEmptyString).toBe(true)
-    })
-  })
-})
+      expect(headers['X-RateLimit-Remaining']).toBe('0');
+      expect(headers['X-RateLimit-Reset']).toBeTruthy();
+      expect(headers['Retry-After']).toBeTruthy();
+    });
+  });
+});

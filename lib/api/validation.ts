@@ -3,7 +3,7 @@
  * Addresses Critical Issue #2: Add Zod validation to 32 API endpoints
  */
 
-import { z } from 'zod';
+import { z } from 'zod4';
 import { isAddress } from 'viem';
 
 // Custom Ethereum address validator

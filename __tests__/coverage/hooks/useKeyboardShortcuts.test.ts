@@ -141,9 +141,9 @@ describe('useKeyboardShortcuts Hook', () => {
     rerender({ 
       shortcuts: [{ key: 'b', handler: handler2, description: 'B' }] as KeyboardShortcut[]
     });
-    
-    // Should not throw
-    expect(true).toBe(true);
+
+    expect(handler1).not.toHaveBeenCalled();
+    expect(handler2).not.toHaveBeenCalled();
   });
 
   it('should update when enabled state changes', () => {
@@ -157,9 +157,8 @@ describe('useKeyboardShortcuts Hook', () => {
     );
     
     rerender({ enabled: false });
-    
-    // Should not throw
-    expect(true).toBe(true);
+
+    expect(shortcuts[0].handler).not.toHaveBeenCalled();
   });
 });
 

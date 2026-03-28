@@ -81,6 +81,7 @@ export function useWalletPersistence() {
     safeLocalStorage.setItem(SESSION_KEY, JSON.stringify(session));
     safeLocalStorage.setItem(LAST_WALLET_KEY, connector.id);
     safeLocalStorage.setItem(LAST_CHAIN_KEY, chain.id.toString());
+    lastActivityTime.current = Date.now();
     
     // Also link this wallet for multi-wallet support
     linkWallet(address);
@@ -253,6 +254,7 @@ export function useWalletPersistence() {
   // Save session when connection state changes
   useEffect(() => {
     if (isConnected && address && connector && chain) {
+      lastActivityTime.current = Date.now();
       saveSession();
     }
   }, [isConnected, address, connector, chain, saveSession]);

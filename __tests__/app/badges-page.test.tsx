@@ -45,18 +45,18 @@ jest.mock('@/lib/badge-registry', () => ({
       points: 100,
     },
     {
-      name: 'GENESIS_PRESALE',
-      category: 'Pioneer & Foundation',
-      rarity: 'Epic',
-      description: 'Genesis contributor',
-      points: 80,
-    },
-    {
       name: 'GOVERNANCE_VOTER',
       category: 'Activity & Participation',
       rarity: 'Rare',
       description: 'Participated in governance',
       points: 40,
+    },
+    {
+      name: 'ACTIVE_TRADER',
+      category: 'Activity & Participation',
+      rarity: 'Uncommon',
+      description: '50+ commerce transactions in 90 days',
+      points: 20,
     },
   ],
 }));

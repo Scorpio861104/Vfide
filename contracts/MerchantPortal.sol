@@ -118,7 +118,10 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
     /// Supported payment tokens (VFIDE + stablecoins)
     mapping(address => bool) public acceptedTokens;
     mapping(address => mapping(address => bool)) public merchantPullApproved; // customer => merchant => approved
+    mapping(address => mapping(address => uint256)) public merchantPullRemaining; // customer => merchant => remaining pull amount
+    mapping(address => mapping(address => uint64)) public merchantPullExpiry; // customer => merchant => expiry timestamp (0 = no expiry)
     event MerchantPullApprovalSet(address indexed customer, address indexed merchant, bool approved);
+    event MerchantPullPermitSet(address indexed customer, address indexed merchant, uint256 maxAmount, uint64 expiresAt);
 
     ISwapRouter public swapRouter;
     address public stablecoin; // Target stablecoin (e.g. USDC)
@@ -504,6 +507,11 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
         address customerVault = vaultHub.vaultOf(customer);
         require(customerVault != address(0), "no vault");
         require(merchantPullApproved[customer][msg.sender], "merchant not approved by customer");
+        uint64 permitExpiry = merchantPullExpiry[customer][msg.sender];
+        require(permitExpiry == 0 || block.timestamp <= permitExpiry, "merchant approval expired");
+        uint256 remainingPull = merchantPullRemaining[customer][msg.sender];
+        require(remainingPull >= amount, "merchant pull limit exceeded");
+        unchecked { merchantPullRemaining[customer][msg.sender] = remainingPull - amount; }
         
         // Security check
         if (address(securityHub) != address(0) && securityHub.isLocked(customerVault)) {
@@ -547,8 +555,28 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
     /// @notice Allow or revoke merchant permission to initiate pulls from your vault via processPayment.
     function setMerchantPullApproval(address merchant, bool approved) external {
         if (!merchants[merchant].registered) revert MERCH_NotRegistered();
-        merchantPullApproved[msg.sender][merchant] = approved;
-        emit MerchantPullApprovalSet(msg.sender, merchant, approved);
+        if (approved) {
+            revert("MP: use setMerchantPullPermit");
+        }
+        merchantPullApproved[msg.sender][merchant] = false;
+        merchantPullRemaining[msg.sender][merchant] = 0;
+        merchantPullExpiry[msg.sender][merchant] = 0;
+        emit MerchantPullApprovalSet(msg.sender, merchant, false);
+    }
+
+    /// @notice Set a scoped merchant pull permit with amount and optional expiry.
+    /// @param merchant Merchant being authorized.
+    /// @param maxAmount Maximum cumulative amount merchant can pull via processPayment.
+    /// @param expiresAt Unix timestamp when permit expires (0 = no expiry).
+    function setMerchantPullPermit(address merchant, uint256 maxAmount, uint64 expiresAt) external {
+        if (!merchants[merchant].registered) revert MERCH_NotRegistered();
+        require(maxAmount > 0, "MP: invalid permit amount");
+        require(expiresAt == 0 || expiresAt > block.timestamp, "MP: invalid permit expiry");
+        merchantPullApproved[msg.sender][merchant] = true;
+        merchantPullRemaining[msg.sender][merchant] = maxAmount;
+        merchantPullExpiry[msg.sender][merchant] = expiresAt;
+        emit MerchantPullApprovalSet(msg.sender, merchant, true);
+        emit MerchantPullPermitSet(msg.sender, merchant, maxAmount, expiresAt);
     }
 
     /**

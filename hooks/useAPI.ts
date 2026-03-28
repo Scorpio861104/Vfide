@@ -91,6 +91,9 @@ export function useAuth() {
   }, [address, signMessageAsync, chainId]);
 
   const logout = useCallback(() => {
+    void apiClient.logout().catch(() => {
+      // Local state must still clear even if network call fails.
+    });
     apiClient.clearToken();
     setIsAuthenticated(false);
   }, []);

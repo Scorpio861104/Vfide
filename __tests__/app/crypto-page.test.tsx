@@ -8,7 +8,8 @@ let mockAccount = {
 };
 
 let mockBalance = {
-  formatted: '1.2345',
+  value: 1234500000000000000n,
+  decimals: 18,
 };
 
 const renderCryptoPage = () => {
@@ -53,7 +54,8 @@ describe('Crypto dashboard page pathways', () => {
       isConnected: true,
     };
     mockBalance = {
-      formatted: '1.2345',
+      value: 1234500000000000000n,
+      decimals: 18,
     };
   });
 

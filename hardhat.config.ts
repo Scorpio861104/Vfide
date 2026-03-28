@@ -1,5 +1,7 @@
 import { defineConfig } from "hardhat/config";
 import hardhatEthers from "@nomicfoundation/hardhat-ethers";
+import hardhatEthersChaiMatchers from "@nomicfoundation/hardhat-ethers-chai-matchers";
+import hardhatMocha from "@nomicfoundation/hardhat-mocha";
 import hardhatNetworkHelpers from "@nomicfoundation/hardhat-network-helpers";
 import * as dotenv from "dotenv";
 
@@ -10,7 +12,7 @@ const accounts = privateKey ? [privateKey] : [];
 const allowUnlimitedContractSize = process.env.HARDHAT_ALLOW_UNLIMITED_CONTRACT_SIZE === "true";
 
 const config = defineConfig({
-  plugins: [hardhatEthers, hardhatNetworkHelpers],
+  plugins: [hardhatEthers, hardhatEthersChaiMatchers, hardhatMocha, hardhatNetworkHelpers],
 
   /*
    * Compiler version rationale (L-04 / hostile audit):
@@ -32,6 +34,16 @@ const config = defineConfig({
             runs: 200,
           },
           // viaIR increases compilation time but helps avoid stack-too-deep errors
+          viaIR: true,
+        },
+      },
+      {
+        version: "0.8.19",
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 200,
+          },
           viaIR: true,
         },
       },
@@ -191,8 +203,10 @@ const config = defineConfig({
     },
   },
   paths: {
-    sources: ["./contracts", "./test/contracts/helpers"],
-    tests: "./__tests__/contracts",
+    sources: ["./contracts", "./test/contracts/helpers", "./test/contracts/mocks"],
+    tests: {
+      mocha: "./test/contracts",
+    },
     cache: "./cache",
     artifacts: "./artifacts",
   },

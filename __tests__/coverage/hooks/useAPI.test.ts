@@ -20,6 +20,7 @@ jest.mock('@/lib/api-client', () => ({
   apiClient: {
     getAuthChallenge: jest.fn().mockResolvedValue({ message: 'Sign in to VFIDE' }),
     authenticate: jest.fn().mockResolvedValue({ token: 'test-token' }),
+    logout: jest.fn().mockResolvedValue({ success: true }),
     clearToken: jest.fn(),
     getToken: jest.fn().mockReturnValue(null),
     verifyToken: jest.fn().mockResolvedValue(true),

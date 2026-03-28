@@ -3,7 +3,7 @@
  * Centralized validation for all API endpoints
  */
 
-import { z } from 'zod';
+import { z } from 'zod4';
 
 // ==================== Common Validators ====================
 

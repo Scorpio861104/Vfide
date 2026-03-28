@@ -1,5 +1,5 @@
 /**
- * MainstreamPayments Contract Tests (Placeholder - contract artifact may not exist)
+ * MainstreamPayments contract compatibility tests.
  */
 
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';

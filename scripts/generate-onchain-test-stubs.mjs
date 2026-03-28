@@ -18,6 +18,54 @@ const SKIP_ALREADY_COVERED = new Set([
   "VFIDEAccessControl"
 ]);
 
+const EIP170_MAX_RUNTIME_BYTECODE = 24576;
+
+function hasLinkReferences(artifact) {
+  const refs = artifact?.linkReferences || {};
+  return Object.keys(refs).length > 0;
+}
+
+function getBytecodeSize(artifact) {
+  const bytecode = String(artifact?.bytecode || "0x");
+  if (!bytecode.startsWith("0x")) return 0;
+  return Math.max(0, (bytecode.length - 2) / 2);
+}
+
+function hasDynamicArrayParam(ctorInputs) {
+  return (ctorInputs || []).some((input) =>
+    String(input?.type || "").match(/\[\]$/)
+  );
+}
+
+function hasManyAddressParams(ctorInputs) {
+  const addressCount = (ctorInputs || []).filter((input) => {
+    const t = String(input?.type || "");
+    return t === "address";
+  }).length;
+  return addressCount >= 4;
+}
+
+function detectUnsupportedDeployReason(artifact, ctorInputs) {
+  if (hasLinkReferences(artifact)) {
+    return "library-links-required";
+  }
+
+  const bytecodeSize = getBytecodeSize(artifact);
+  if (bytecodeSize > EIP170_MAX_RUNTIME_BYTECODE) {
+    return "bytecode-too-large";
+  }
+
+  if (hasDynamicArrayParam(ctorInputs)) {
+    return "dynamic-array-constructor";
+  }
+
+  if (hasManyAddressParams(ctorInputs)) {
+    return "multi-dependency-constructor";
+  }
+
+  return null;
+}
+
 function parseArgs(argv) {
   const args = new Set(argv.slice(2));
   return {
@@ -111,7 +159,7 @@ function renderGeneratedTest(contractName, ctorInputs) {
  * ABI constructor: ${signature}
  *
  * Notes:
- * - This test is intentionally skipped until assertions are implemented.
+ * - This test performs a deploy smoke check.
  * - Deploy args are generated from ABI types and may need refinement.
  */
 import { describe, it } from "node:test";
@@ -119,7 +167,7 @@ import assert from "node:assert/strict";
 import { network } from "hardhat";
 
 describe("${contractName} (generated stub)", () => {
-  it.skip("deploy smoke test", async () => {
+  it("deploy smoke test", async () => {
     const { ethers } = await network.connect();
     const signers = await ethers.getSigners();
 
@@ -144,11 +192,20 @@ async function main() {
 
   await fs.mkdir(OUTPUT_DIR, { recursive: true });
 
+  if (force) {
+    const existing = await fs.readdir(OUTPUT_DIR);
+    const generatedTests = existing.filter((name) => name.endsWith(".generated.test.ts"));
+    await Promise.all(
+      generatedTests.map((name) => fs.unlink(path.join(OUTPUT_DIR, name)))
+    );
+  }
+
   const report = {
     generated: [],
     skippedNoArtifact: [],
     skippedCovered: [],
-    skippedExists: []
+    skippedExists: [],
+    skippedUnsupported: []
   };
 
   for (const testFile of mockTests) {
@@ -180,6 +237,15 @@ async function main() {
     const artifact = JSON.parse(await fs.readFile(artifactPath, "utf8"));
     const ctor = (artifact.abi || []).find((item) => item.type === "constructor");
     const ctorInputs = ctor?.inputs || [];
+
+    const unsupportedReason = detectUnsupportedDeployReason(artifact, ctorInputs);
+    if (unsupportedReason) {
+      report.skippedUnsupported.push({
+        contract: contractName,
+        reason: unsupportedReason
+      });
+      continue;
+    }
 
     const content = renderGeneratedTest(contractName, ctorInputs);
     await fs.writeFile(outFile, content, "utf8");

@@ -34,7 +34,7 @@ describe('E2E Smoke Tests - Critical User Journeys', () => {
       expect(initialScore).toBe(500);
       expect(user.hasScore).toBe(true);
 
-      // Step 4: Purchase tokens (presale)
+      // Step 4: Acquire tokens
       const purchase = {
         amount: 10000,
         tier: 'PUBLIC',

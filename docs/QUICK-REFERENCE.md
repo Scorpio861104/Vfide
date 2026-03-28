@@ -299,7 +299,7 @@ Notes:
 | Mobile Design | MOBILE-FIRST-GUIDE.md | 400 | ✅ |
 | Mobile Integration | MOBILE-INTEGRATION-GUIDE.md | 500 | ✅ |
 | Accessibility | ACCESSIBILITY-AUDIT.md | 500 | ✅ |
-| Phase 1 Status | PHASE1_COMPLETE.md | 400 | ✅ |
+| Phase 1 Deployment | DEPLOY_PHASE1_INSTRUCTIONS.md | 400 | ✅ |
 | Phase 2 Status | PHASE2-MOBILE-COMPLETE.md | 500 | ✅ |
 | Phase 3 Status | PHASE3-ITEM6-COMPLETE.md | 300 | ✅ |
 | Full Progress | COMPREHENSIVE-PROGRESS-REPORT.md | 600 | ✅ |

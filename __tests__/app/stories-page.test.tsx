@@ -73,11 +73,17 @@ jest.mock('@/lib/storiesSystem', () => ({
 }));
 
 jest.mock('framer-motion', () => ({
-  motion: {
-    section: ({ children, ...props }: any) => <section {...props}>{children}</section>,
-    div: ({ children, ...props }: any) => <div {...props}>{children}</div>,
-  },
+  motion: new Proxy({}, {
+    get: (_target, key: string) => {
+      const Tag = key as keyof JSX.IntrinsicElements;
+      return ({ children, ...props }: any) => <Tag {...props}>{children}</Tag>;
+    },
+  }),
   AnimatePresence: ({ children }: any) => <>{children}</>,
+}));
+
+jest.mock('@/components/error/ErrorBoundary', () => ({
+  ErrorBoundary: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
 
 jest.mock('lucide-react', () => ({

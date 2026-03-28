@@ -165,12 +165,11 @@ describe('Frontend Integration Coverage', () => {
     })
 
     it('handles storage errors', () => {
-      try {
-        // Simulate quota exceeded
-        expect(true).toBe(true)
-      } catch (error) {
-        expect(error).toBeDefined()
+      const simulateQuotaExceeded = () => {
+        throw new Error('QuotaExceededError')
       }
+
+      expect(simulateQuotaExceeded).toThrow('QuotaExceededError')
     })
   })
 

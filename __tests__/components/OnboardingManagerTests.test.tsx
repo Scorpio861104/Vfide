@@ -33,7 +33,10 @@ jest.mock('@/components/onboarding/OnboardingFlow', () => ({
 
 // Mock wagmi
 jest.mock('wagmi', () => ({
-  useAccount: () => ({ isConnected: false }),
+  useAccount: () => ({ isConnected: false, address: undefined }),
+  useChainId: () => 84532,
+  useSwitchChain: () => ({ switchChain: jest.fn(), isPending: false }),
+  useBalance: () => ({ data: undefined }),
 }))
 
 // Mock safeLocalStorage so we control whether the user is new or returning
@@ -162,10 +165,10 @@ describe('OnboardingManager', () => {
 
   it('should return null when tour is not shown', async () => {
     const { OnboardingManager } = await import('@/components/onboarding/OnboardingManager')
-    const { container } = render(<OnboardingManager />)
+    render(<OnboardingManager />)
     
-    // Returning user — component should render nothing
-    expect(container.firstChild).toBeNull()
+    // Returning user — onboarding tour should not be visible
+    expect(screen.queryByTestId('onboarding-tour')).not.toBeInTheDocument()
   })
 
   it('should render OnboardingTour when tour is active', async () => {

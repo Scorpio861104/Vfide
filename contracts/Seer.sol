@@ -115,6 +115,18 @@ contract Seer {
     bytes32 private constant BADGE_CLEAN_RECORD = 0x8f1a39279a10a884ddf0b6a95d0e46f341a5809f447de8f39f0c29e43a914272;
     bytes32 private constant BADGE_CONTRIBUTOR = 0xa0bb1af1c90aa52ed052b92714ff0087008cc720049bf1af77cca2600b31e80c;
     bytes32 private constant BADGE_EDUCATOR = 0x9f56690334c710be9812966692e10c040bde4927265518b422c82505f65961ec;
+    bytes32 private constant BADGE_HEADHUNTER = 0x2dc8346db034c7eff3ea2652cae6a78f72280626c9d475257c4476e92e18e9df;
+    bytes32 private constant BADGE_DAILY_CHAMPION        = 0xd33d23312f0938ef21668aa46fd5bd7b72db718fcdd7e30d1e9db0ea46420720;
+    bytes32 private constant BADGE_PEACEMAKER            = 0xacf4336c61c8a8031abec411f918f29aa8a8d0d7d07ae250391d186289fb4999;
+    bytes32 private constant BADGE_MENTOR                = 0x4ad701a62eb4bddf2c4f992ebf56952b66972847c21daeab6931b6b4aa89a4eb;
+    bytes32 private constant BADGE_INSTANT_SETTLEMENT    = 0xe2a717c0595726a19d429ba65a7be318c309e2bbfbe0d178266ba0266404b280;
+    bytes32 private constant BADGE_ZERO_DISPUTE          = 0x8cd7ae4080d5a7057c8858e5c9e0a698fbc88b319a304fbaaae0f5c2be242349;
+    bytes32 private constant BADGE_REDEMPTION            = 0xf55c3c85690d0abf93de8c24ececede3ee62e529020683594957b8e0c109ace1;
+    bytes32 private constant BADGE_CENTURY_ENDORSER      = 0x66071085b8de5ddfb56be1bbf93230fbaa1b5a4a7ed21f7ca2ec8b760127b082;
+    bytes32 private constant BADGE_WHALE_SLAYER          = 0x27b035d29cbd235e68f8e722fb80b6f9a31122fb2c3bce79340725e804fc9992;
+    bytes32 private constant BADGE_DIVERSIFICATION_MASTER = 0x7c3d6722688d7e04217fd02beb9ee0abaf5dd8c4c65c6ad4846a80aae94ca27d;
+    bytes32 private constant BADGE_BUG_BOUNTY            = 0x5c96081090ee4a64cc21b4a34b2247212174b7b9afec075a3d09fd229b01e550;
+    bytes32 private constant BADGE_TRANSLATOR            = 0x372cedd1d27b066a923b896eea7904ca9ef57e79d18aa00ae08d276de72c77b1;
 
     // ═══════════════════════════════════════════════════════════════════════
     // ═══════════════════════════════════════════════════════════════════════
@@ -607,20 +619,28 @@ contract Seer {
      * @return bonus Total score bonus from all active badges
      */
     function _calculateBadgeBonus(address subject) internal view returns (uint256 bonus) {
-        bytes32[16] memory ids;
-        ids[0]  = BADGE_PIONEER;           ids[1]  = BADGE_FOUNDING_MEMBER;
-        ids[2]  = BADGE_EARLY_TESTER;      ids[3]  = BADGE_ACTIVE_TRADER;
-        ids[4]  = BADGE_GOVERNANCE_VOTER;  ids[5]  = BADGE_POWER_USER;
-        ids[6]  = BADGE_TRUSTED_ENDORSER;  ids[7]  = BADGE_COMMUNITY_BUILDER;
-        ids[8]  = BADGE_VERIFIED_MERCHANT; ids[9]  = BADGE_ELITE_MERCHANT;
-        ids[10] = BADGE_ELITE_ACHIEVER;    ids[11] = BADGE_FRAUD_HUNTER;
-        ids[12] = BADGE_GUARDIAN;          ids[13] = BADGE_CLEAN_RECORD;
-        ids[14] = BADGE_CONTRIBUTOR;       ids[15] = BADGE_EDUCATOR;
-        uint16[16] memory pts;
+        bytes32[28] memory ids;
+        ids[0]  = BADGE_PIONEER;              ids[1]  = BADGE_FOUNDING_MEMBER;
+        ids[2]  = BADGE_EARLY_TESTER;         ids[3]  = BADGE_ACTIVE_TRADER;
+        ids[4]  = BADGE_GOVERNANCE_VOTER;     ids[5]  = BADGE_POWER_USER;
+        ids[6]  = BADGE_TRUSTED_ENDORSER;     ids[7]  = BADGE_COMMUNITY_BUILDER;
+        ids[8]  = BADGE_VERIFIED_MERCHANT;    ids[9]  = BADGE_ELITE_MERCHANT;
+        ids[10] = BADGE_ELITE_ACHIEVER;       ids[11] = BADGE_FRAUD_HUNTER;
+        ids[12] = BADGE_GUARDIAN;             ids[13] = BADGE_CLEAN_RECORD;
+        ids[14] = BADGE_CONTRIBUTOR;          ids[15] = BADGE_EDUCATOR;
+        ids[16] = BADGE_HEADHUNTER;           ids[17] = BADGE_DAILY_CHAMPION;
+        ids[18] = BADGE_PEACEMAKER;           ids[19] = BADGE_MENTOR;
+        ids[20] = BADGE_INSTANT_SETTLEMENT;   ids[21] = BADGE_ZERO_DISPUTE;
+        ids[22] = BADGE_REDEMPTION;           ids[23] = BADGE_CENTURY_ENDORSER;
+        ids[24] = BADGE_WHALE_SLAYER;         ids[25] = BADGE_DIVERSIFICATION_MASTER;
+        ids[26] = BADGE_BUG_BOUNTY;           ids[27] = BADGE_TRANSLATOR;
+        uint16[28] memory pts;
         pts[0]=30;  pts[1]=50;  pts[2]=25;  pts[3]=20;  pts[4]=25;  pts[5]=40;
         pts[6]=30;  pts[7]=35;  pts[8]=40;  pts[9]=60;  pts[10]=50; pts[11]=50;
-        pts[12]=40; pts[13]=20; pts[14]=40; pts[15]=30;
-        for (uint256 i = 0; i < 16;) {
+        pts[12]=40; pts[13]=20; pts[14]=40; pts[15]=30; pts[16]=35; pts[17]=15;
+        pts[18]=25; pts[19]=30; pts[20]=20; pts[21]=25; pts[22]=30; pts[23]=35;
+        pts[24]=25; pts[25]=30; pts[26]=50; pts[27]=25;
+        for (uint256 i = 0; i < 28;) {
             if (_checkActiveBadge(subject, ids[i])) bonus += pts[i];
             unchecked { ++i; }
         }

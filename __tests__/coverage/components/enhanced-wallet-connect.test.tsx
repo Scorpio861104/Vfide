@@ -288,8 +288,8 @@ describe('EnhancedWalletConnect Component', () => {
       const { unmount } = render(<EnhancedWalletConnect />);
       
       unmount();
-      
-      expect(true).toBe(true);
+
+      expect(screen.queryByRole('heading', { name: /connect wallet/i })).not.toBeInTheDocument();
     });
   });
 

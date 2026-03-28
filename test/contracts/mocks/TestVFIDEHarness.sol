@@ -1,18 +1,17 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
-import "../VFIDEToken.sol";
+import "../../../contracts/VFIDEToken.sol";
 
 contract TestVFIDEHarness is VFIDEToken {
     constructor(
         address devReserveVestingVault,
-        address presaleContract,
         address treasury,
         address vaultHub,
         address ledger,
         address treasurySink
     )
-        VFIDEToken(devReserveVestingVault, presaleContract, treasury, vaultHub, ledger, treasurySink)
+        VFIDEToken(devReserveVestingVault, treasury, vaultHub, ledger, treasurySink)
     {}
 
     // expose _mint for testing purposes

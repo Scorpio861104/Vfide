@@ -14,7 +14,7 @@ interface DeploymentConfig {
   council: [string, string, string, string, string];
   priceOracle: string;
   devReserveVestingVault: string;
-  presaleContract: string;
+  tokenDistribContract?: string; // kept for backward compat; no longer passed to VFIDEToken
   treasury: string;
   vaultHub: string;
   ledger: string;
@@ -58,7 +58,6 @@ async function main() {
   console.log(`   Admin: ${config.admin}`);
   console.log(`   Council Size: ${config.council.length}`);
   console.log(`   Dev Reserve Vault: ${config.devReserveVestingVault}`);
-  console.log(`   Presale Contract: ${config.presaleContract}`);
   console.log(`   Treasury: ${config.treasury}\n`);
 
   // Deploy contracts
@@ -103,7 +102,7 @@ function getDeploymentConfig(): DeploymentConfig {
     ],
     priceOracle: process.env.PRICE_ORACLE_ADDRESS || '',
     devReserveVestingVault: process.env.DEV_RESERVE_VESTING_VAULT || '',
-    presaleContract: process.env.PRESALE_CONTRACT || '',
+    tokenDistribContract: process.env.TOKEN_DISTRIB_CONTRACT || undefined,
     treasury: process.env.TREASURY_ADDRESS || '',
     vaultHub: process.env.VAULT_HUB_ADDRESS || '',
     ledger: process.env.PROOF_LEDGER_ADDRESS || '',
@@ -121,7 +120,6 @@ function getDeploymentConfig(): DeploymentConfig {
   if (config.council.some(addr => !addr)) throw new Error('All council members must be configured');
   if (!config.priceOracle) throw new Error('Price oracle address not configured');
   if (!config.devReserveVestingVault) throw new Error('DevReserveVestingVault address not configured');
-  if (!config.presaleContract) throw new Error('Presale contract address not configured');
   if (!config.treasury) throw new Error('Treasury address not configured');
 
   return config;
@@ -157,7 +155,7 @@ async function deployContracts(config: DeploymentConfig): Promise<DeployedContra
   // 3. Deploy EmergencyControl
   console.log('3️⃣  Deploying EmergencyControl...');
   const EmergencyControl = await ethers.getContractFactory('EmergencyControl');
-  // Bootstrap with non-zero breaker placeholder; wire real breaker after deployment.
+  // Bootstrap with a temporary non-zero breaker; wire the production breaker after deployment.
   const emergencyControl = await EmergencyControl.deploy(config.admin, config.admin, config.ledger);
   await emergencyControl.waitForDeployment();
   console.log(`   ✓ Deployed at: ${await emergencyControl.getAddress()}`);
@@ -186,7 +184,6 @@ async function deployContracts(config: DeploymentConfig): Promise<DeployedContra
   const Token = await ethers.getContractFactory('VFIDEToken');
   const token = await Token.deploy(
     config.devReserveVestingVault,
-    config.presaleContract,
     config.treasury,
     config.vaultHub,
     config.ledger,
@@ -355,7 +352,6 @@ async function verifyContracts(contracts: DeployedContracts, config: DeploymentC
   ]);
   await verifyContract(await contracts.token.getAddress(), [
     config.devReserveVestingVault,
-    config.presaleContract,
     config.treasury,
     config.vaultHub,
     config.ledger,

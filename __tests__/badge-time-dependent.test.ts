@@ -44,7 +44,6 @@ describe('Badge Time-Dependent Features', () => {
       expect(BADGE_REGISTRY.GOVERNANCE_VOTER.duration).toBe(180 * TIME.DAY);
       expect(BADGE_REGISTRY.CLEAN_RECORD.duration).toBe(365 * TIME.DAY);
       expect(BADGE_REGISTRY.PIONEER.duration).toBe(0);
-      expect(BADGE_REGISTRY.GENESIS_PRESALE.duration).toBe(0);
     });
   });
 
@@ -159,7 +158,6 @@ describe('Badge Time-Dependent Features', () => {
   describe('Permanent Badge Behavior', () => {
     const permanentBadges = [
       { name: 'PIONEER', badge: BADGE_REGISTRY.PIONEER },
-      { name: 'GENESIS_PRESALE', badge: BADGE_REGISTRY.GENESIS_PRESALE },
       { name: 'FOUNDING_MEMBER', badge: BADGE_REGISTRY.FOUNDING_MEMBER },
       { name: 'TRUSTED_ENDORSER', badge: BADGE_REGISTRY.TRUSTED_ENDORSER },
     ];

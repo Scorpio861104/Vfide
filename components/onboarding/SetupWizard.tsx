@@ -9,21 +9,26 @@ import {
 } from 'lucide-react'
 import { ConnectButton } from '@rainbow-me/rainbowkit'
 import { CURRENT_CHAIN_ID, FAUCET_URLS } from '@/lib/testnet'
-import { IS_TESTNET as _IS_TESTNET, isTestnetChainId as _isTestnetChainId } from '@/lib/chains'
+import { getChainByChainId } from '@/lib/chains'
 import { safeParseFloat } from '@/lib/validation'
 import { formatUnits } from 'viem'
+import { baseSepolia } from 'wagmi/chains'
 
-// Base Sepolia network configuration
-const BASE_SEPOLIA_CONFIG = {
-  chainId: '0x14A34', // 84532 in hex
-  chainName: 'Base Sepolia',
-  nativeCurrency: {
+const targetChainConfig = getChainByChainId(CURRENT_CHAIN_ID)
+const targetNetwork = targetChainConfig
+  ? (targetChainConfig.mainnet.id === CURRENT_CHAIN_ID ? targetChainConfig.mainnet : targetChainConfig.testnet)
+  : baseSepolia
+
+const NETWORK_CONFIG = {
+  chainId: `0x${targetNetwork.id.toString(16).toUpperCase()}`,
+  chainName: targetNetwork.name || 'Base Sepolia',
+  nativeCurrency: targetNetwork.nativeCurrency || {
     name: 'Sepolia Ether',
     symbol: 'ETH',
     decimals: 18,
   },
-  rpcUrls: ['https://sepolia.base.org'],
-  blockExplorerUrls: ['https://sepolia.basescan.org'],
+  rpcUrls: [targetNetwork.rpcUrls?.default?.http?.[0] || 'https://sepolia.base.org'],
+  blockExplorerUrls: [targetNetwork.blockExplorers?.default?.url || 'https://sepolia.basescan.org'],
 }
 
 type Step = 'wallet' | 'network' | 'faucet' | 'complete'
@@ -36,6 +41,7 @@ export function SetupWizard({ onComplete }: SetupWizardProps) {
   const { isConnected, address } = useAccount()
   const chainId = useChainId()
   const { switchChain, isPending: isSwitching } = useSwitchChain()
+  type SwitchChainId = Parameters<typeof switchChain>[0]['chainId']
   const { data: balance } = useBalance({ address })
   
   const [isOpen, setIsOpen] = useState(false)
@@ -104,7 +110,7 @@ export function SetupWizard({ onComplete }: SetupWizardProps) {
       try {
         await ethereum.request({
           method: 'wallet_switchEthereumChain',
-          params: [{ chainId: BASE_SEPOLIA_CONFIG.chainId }],
+          params: [{ chainId: NETWORK_CONFIG.chainId }],
         })
         return
       } catch (switchError) {
@@ -116,7 +122,7 @@ export function SetupWizard({ onComplete }: SetupWizardProps) {
       // Add the network
       await ethereum.request({
         method: 'wallet_addEthereumChain',
-        params: [BASE_SEPOLIA_CONFIG],
+        params: [NETWORK_CONFIG],
       })
     } catch (err) {
       const error = err as { code?: number; message?: string }
@@ -133,7 +139,7 @@ export function SetupWizard({ onComplete }: SetupWizardProps) {
   const handleSwitchNetwork = async () => {
     setNetworkError(null)
     try {
-      switchChain({ chainId: CURRENT_CHAIN_ID as 84532 })
+      switchChain({ chainId: CURRENT_CHAIN_ID as SwitchChainId })
     } catch {
       // If switch fails, try adding
       await addNetworkToWallet()
@@ -266,7 +272,7 @@ export function SetupWizard({ onComplete }: SetupWizardProps) {
                       </div>
                       <h3 className="text-2xl font-bold text-white mb-2">Connect to Supported Network</h3>
                       <p className="text-zinc-400">
-                        Switch to a supported VFIDE network (Base or Base Sepolia)
+                        Switch to {NETWORK_CONFIG.chainName}
                       </p>
                     </div>
 
@@ -289,7 +295,7 @@ export function SetupWizard({ onComplete }: SetupWizardProps) {
                       ) : (
                         <>
                           <Globe size={20} />
-                          Switch to Base Sepolia
+                          Switch to {NETWORK_CONFIG.chainName}
                         </>
                       )}
                     </button>
@@ -308,23 +314,23 @@ export function SetupWizard({ onComplete }: SetupWizardProps) {
                       <div className="space-y-2 text-sm font-mono">
                         <div className="flex justify-between">
                           <span className="text-zinc-500">Network:</span>
-                          <span className="text-zinc-300">Base Sepolia</span>
+                          <span className="text-zinc-300">{NETWORK_CONFIG.chainName}</span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-zinc-500">RPC:</span>
-                          <span className="text-cyan-400 text-xs">https://sepolia.base.org</span>
+                          <span className="text-cyan-400 text-xs">{NETWORK_CONFIG.rpcUrls[0]}</span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-zinc-500">Chain ID:</span>
-                          <span className="text-zinc-300">84532</span>
+                          <span className="text-zinc-300">{targetNetwork.id}</span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-zinc-500">Symbol:</span>
-                          <span className="text-zinc-300">ETH</span>
+                          <span className="text-zinc-300">{NETWORK_CONFIG.nativeCurrency.symbol}</span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-zinc-500">Explorer:</span>
-                          <span className="text-cyan-400 text-xs">sepolia.basescan.org</span>
+                          <span className="text-cyan-400 text-xs">{NETWORK_CONFIG.blockExplorerUrls[0]}</span>
                         </div>
                       </div>
                     </div>
@@ -431,7 +437,7 @@ export function SetupWizard({ onComplete }: SetupWizardProps) {
                       </motion.div>
                       <h3 className="text-2xl font-bold text-white mb-2">You&apos;re All Set! 🎉</h3>
                       <p className="text-zinc-400">
-                        Your wallet is connected to Base Sepolia with test ETH
+                        Your wallet is connected to {NETWORK_CONFIG.chainName} with test ETH
                       </p>
                     </div>
 

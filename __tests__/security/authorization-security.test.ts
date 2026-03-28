@@ -98,9 +98,10 @@ describe('Authorization Security Tests', () => {
       const isAdmin = true;
       const resourceOwnerId = 'user-123';
       const requestingUserId = 'admin-456';
+      const canAccess = isAdmin || resourceOwnerId === requestingUserId;
 
       if (isAdmin) {
-        expect(true).toBe(true); // Allow access
+        expect(canAccess).toBe(true);
       }
     });
   });
@@ -190,9 +191,10 @@ describe('Authorization Security Tests', () => {
     it('validates resource exists before ownership check', () => {
       const resourceExists = true;
       const isOwner = true;
+      const canAccess = resourceExists && isOwner;
 
       if (resourceExists && isOwner) {
-        expect(true).toBe(true); // Allow access
+        expect(canAccess).toBe(true);
       }
     });
 

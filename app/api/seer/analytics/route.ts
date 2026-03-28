@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 import { withRateLimit } from '@/lib/auth/rateLimit';
+import { requireAuth } from '@/lib/auth/middleware';
 import { logger } from '@/lib/logger';
 
 const DEFAULT_WINDOW_HOURS = 24 * 7;
@@ -62,6 +63,11 @@ function parseWindowHours(raw: string | null): number | null {
 export async function GET(request: NextRequest) {
   const rateLimit = await withRateLimit(request, 'api');
   if (rateLimit) return rateLimit;
+
+  const authResult = await requireAuth(request);
+  if (authResult instanceof NextResponse) {
+    return authResult;
+  }
 
   try {
     const { searchParams } = new URL(request.url);

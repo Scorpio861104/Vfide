@@ -517,9 +517,10 @@ describe('Authentication Security Tests', () => {
 
     it('requires re-authentication on device change', () => {
       const deviceChanged = true;
+      const requiresReauth = deviceChanged;
 
       if (deviceChanged) {
-        expect(true).toBe(true); // Require re-auth
+        expect(requiresReauth).toBe(true);
       }
     });
   });

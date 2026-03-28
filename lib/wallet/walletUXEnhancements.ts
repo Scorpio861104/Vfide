@@ -10,11 +10,17 @@
  */
 
 import { base, baseSepolia } from 'wagmi/chains';
-import { IS_TESTNET } from '@/lib/chains';
+import { getChainByChainId } from '@/lib/chains';
+import { CURRENT_CHAIN_ID } from '@/lib/testnet';
 import { logger } from '@/lib/logger';
 
-export const PREFERRED_CHAIN = IS_TESTNET ? baseSepolia : base;
-export const PREFERRED_CHAIN_NAME = IS_TESTNET ? 'Base Sepolia' : 'Base';
+const preferredChainConfig = getChainByChainId(CURRENT_CHAIN_ID);
+
+export const PREFERRED_CHAIN = preferredChainConfig
+  ? (preferredChainConfig.mainnet.id === CURRENT_CHAIN_ID ? preferredChainConfig.mainnet : preferredChainConfig.testnet)
+  : (CURRENT_CHAIN_ID === base.id ? base : baseSepolia);
+
+export const PREFERRED_CHAIN_NAME = PREFERRED_CHAIN.name;
 
 // ========================================
 // WALLET UX PREFERENCES

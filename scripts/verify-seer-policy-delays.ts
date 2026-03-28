@@ -29,7 +29,7 @@ async function main() {
   const provider = new JsonRpcProvider(rpcUrl);
   const dao = await provider.getSigner(0);
 
-  const seerArtifact = loadArtifact('artifacts/contracts/VFIDETrust.sol/Seer.json');
+  const seerArtifact = loadArtifact('artifacts/contracts/Seer.sol/Seer.json');
   const guardArtifact = loadArtifact('artifacts/contracts/SeerPolicyGuard.sol/SeerPolicyGuard.json');
   const seerFactory = new ContractFactory(seerArtifact.abi as any, seerArtifact.bytecode, dao);
   const seer = (await seerFactory.deploy(

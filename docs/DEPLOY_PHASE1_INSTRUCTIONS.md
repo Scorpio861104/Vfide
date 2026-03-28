@@ -1,30 +1,35 @@
 # Deploy Phase 1 Instructions
 
-Step-by-step guide for deploying Phase 1 security enhancements.
+**CURRENT METHOD:** Use TypeScript deployment scripts (recommended).  
+**LEGACY METHOD:** Solidity deployer contracts (kept for reference; not recommended for production).
+
+## Current Deployment (Recommended)
+
+```bash
+npx hardhat run contracts/scripts/deploy-phase1.ts --network <network>
+```
+
+This handles all Phase 1 deployments (Token + Security contracts) with proper error handling and gas optimization.
 
 ## Prerequisites
 
-1. Admin wallet with sufficient gas (estimate: 0.1 ETH mainnet)
+1. Admin wallet with sufficient gas (estimate: 0.1 ETH on mainnet)
 2. 5 council member addresses (hardware wallets recommended)
 3. Price oracle address
 4. Lists of emergency pausers, blacklist managers, and config managers
+5. Configured `.env` file with network RPC, deployer private key, and addresses
 
-## Deployment Steps
+## Legacy Solidity Deployer (Deprecated)
 
-1. Deploy split deployers:
-   - `Phase1GovernanceDeployer`
-   - `Phase1InfrastructureDeployer`
-   - `Phase1TokenDeployer`
-   - `Phase1Deployer` (orchestrator)
-   - `npx hardhat run scripts/deployPhase1Deployer.ts --network <network>`
-2. Call `deployPhase1(...)` on orchestrator with deployer addresses and params:
-   - `_governanceDeployer`
-   - `_infrastructureDeployer`
-   - `_tokenDeployer`
-   - `_admin, _council, _priceOracle, _tokenName, _tokenSymbol, _initialSupply`
-3. Call `configureContracts(...)`
-4. Verify contracts on explorer
-5. Test on testnet first, then mainnet
+⚠️ **Not recommended for production** — use TypeScript scripts above instead.
+
+The following Solidity deployer contracts exist for reference only and should not be used:
+   - `Phase1TokenDeployer` — **LEGACY** (disabled with revert)
+   - `Phase1GovernanceDeployer` — outdated
+   - `Phase1InfrastructureDeployer` — outdated
+   - `Phase1Deployer` — outdated orchestrator
+
+Reason: Solidity deployers cannot safely inject all required constructor parameters (e.g., real DevReserveVestingVault address). TypeScript scripts provide full dependency control and are maintainable.
 
 ## Post-deployment
 

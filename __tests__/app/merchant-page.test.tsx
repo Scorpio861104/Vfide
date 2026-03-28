@@ -26,13 +26,16 @@ jest.mock('@/components/merchant/PaymentQR', () => ({
 }));
 
 jest.mock('framer-motion', () => ({
-  motion: {
-    div: ({ children, ...props }: any) => <div {...props}>{children}</div>,
-    section: ({ children, ...props }: any) => <section {...props}>{children}</section>,
-    tr: ({ children, ...props }: any) => <tr {...props}>{children}</tr>,
-    tbody: ({ children, ...props }: any) => <tbody {...props}>{children}</tbody>,
-    p: ({ children, ...props }: any) => <p {...props}>{children}</p>,
-  },
+  motion: new Proxy({}, {
+    get: (_target, key: string) => {
+      const Tag = key as keyof JSX.IntrinsicElements;
+      return ({ children, ...props }: any) => <Tag {...props}>{children}</Tag>;
+    },
+  }),
+}));
+
+jest.mock('@/components/error/ErrorBoundary', () => ({
+  ErrorBoundary: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
 
 jest.mock('lucide-react', () => {

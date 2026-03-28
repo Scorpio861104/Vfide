@@ -229,7 +229,13 @@ contract DAO is ReentrancyGuard {
         require(emergencyApprover != address(0), "DAO: emergency approver not set");
         require(msg.sender == admin || msg.sender == emergencyApprover, "DAO: not authorized");
         require(emergencyRescueInitiator != address(0), "DAO: no initiator");
-        require(msg.sender != emergencyRescueInitiator, "DAO: initiator cannot self-approve");
+        // If emergencyApprover is a contract (e.g., timelock), it may not be able to
+        // call this function directly. In that bootstrap mode, allow admin self-approval
+        // so emergency recovery remains live.
+        bool approverIsContract = emergencyApprover.code.length > 0;
+        if (!approverIsContract) {
+            require(msg.sender != emergencyRescueInitiator, "DAO: initiator cannot self-approve");
+        }
         
         emergencyRescueApproved = true;
         emit EmergencyQuorumRescueApproved();
@@ -291,7 +297,12 @@ contract DAO is ReentrancyGuard {
         require(emergencyApprover != address(0), "DAO: emergency approver not set");
         require(msg.sender == admin || msg.sender == emergencyApprover, "DAO: not authorized");
         require(emergencyTimelockInitiator != address(0), "DAO: no initiator");
-        require(msg.sender != emergencyTimelockInitiator, "DAO: initiator cannot self-approve");
+        // Keep two-party approval for EOA approvers. Allow admin self-approval only
+        // when approver is a contract to avoid emergency deadlock during bootstrap.
+        bool approverIsContract = emergencyApprover.code.length > 0;
+        if (!approverIsContract) {
+            require(msg.sender != emergencyTimelockInitiator, "DAO: initiator cannot self-approve");
+        }
         
         emergencyTimelockApproved = true;
         emit EmergencyTimelockReplacementApproved();

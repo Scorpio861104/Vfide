@@ -86,6 +86,7 @@ const customJestConfig = {
   testPathIgnorePatterns: [
     '/node_modules/',
     '/__mocks__/',
+    '/vfide-complete/',
     '<rootDir>/playwright/',
     '/e2e/',  // E2E tests run via Playwright, not Jest
   ],

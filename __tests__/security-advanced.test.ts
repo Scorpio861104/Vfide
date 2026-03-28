@@ -143,10 +143,27 @@ describe('CSRF Protection', () => {
 describe('JWT Authentication', () => {
   const testAddress = '0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb0';
   const testChainId = 8453;
+  const originalJwtSecret = process.env.JWT_SECRET;
+  const originalNextAuthSecret = process.env.NEXTAUTH_SECRET;
 
   beforeAll(() => {
     // Set required env vars for JWT
     process.env.JWT_SECRET = 'test-secret-for-testing-only-min-32-chars';
+    process.env.NEXTAUTH_SECRET = process.env.JWT_SECRET;
+  });
+
+  afterAll(() => {
+    if (originalJwtSecret === undefined) {
+      delete process.env.JWT_SECRET;
+    } else {
+      process.env.JWT_SECRET = originalJwtSecret;
+    }
+
+    if (originalNextAuthSecret === undefined) {
+      delete process.env.NEXTAUTH_SECRET;
+    } else {
+      process.env.NEXTAUTH_SECRET = originalNextAuthSecret;
+    }
   });
 
   describe('Token Generation', () => {
@@ -368,15 +385,7 @@ describe('Environment Validation', () => {
 });
 
 describe('Security Headers', () => {
-  it('validates Content-Type for POST requests', () => {
-    // This would require importing and testing the middleware
-    // For now, document that middleware.ts handles this
-    expect(true).toBe(true);
-  });
+  it.todo('validates Content-Type for POST requests');
 
-  it('enforces request size limits', () => {
-    // This would require importing and testing the middleware
-    // For now, document that middleware.ts handles this
-    expect(true).toBe(true);
-  });
+  it.todo('enforces request size limits');
 });

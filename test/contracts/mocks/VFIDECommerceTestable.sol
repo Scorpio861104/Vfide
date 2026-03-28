@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
-import "../SharedInterfaces.sol";
+import "../../../contracts/SharedInterfaces.sol";
 
 // Copied from /contracts/VFIDECommerce.sol and modified for testing
 

@@ -84,7 +84,7 @@ export function EmergencyPanel() {
       <div className="bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-white/10">
         <h2 className="text-2xl font-bold text-white mb-4">🚨 System-Wide Emergency Controls</h2>
         <p className="text-slate-400 mb-6">
-          Pause or resume all protocol operations. When paused, presale stops and token transfers are restricted.
+          Pause or resume all protocol operations. When paused, token transfers are restricted.
         </p>
 
         <div className="grid gap-4 md:grid-cols-2">
@@ -112,7 +112,7 @@ export function EmergencyPanel() {
             <p className="text-slate-300 text-sm">
               Restore normal protocol operations.
               <br />
-              Unpause presale and re-enable token transfers.
+              Re-enable token transfers.
             </p>
           </button>
         </div>
@@ -186,8 +186,8 @@ export function EmergencyPanel() {
       <div className="bg-yellow-500/20 border border-yellow-500/50 rounded-xl p-6">
         <h3 className="text-white font-bold mb-2">⚠️ Important Information</h3>
         <ul className="text-slate-300 text-sm space-y-2">
-          <li><strong>Pause All:</strong> Stops presale and enables token circuit breaker (24 hours default)</li>
-          <li><strong>Resume All:</strong> Unpauses presale and disables token circuit breaker</li>
+          <li><strong>Pause All:</strong> Enables token circuit breaker (24 hours default)</li>
+          <li><strong>Resume All:</strong> Disables token circuit breaker</li>
           <li><strong>Circuit Breaker:</strong> Bypasses SecurityHub and BurnRouter checks for emergency transfers</li>
           <li><strong>Max Duration:</strong> Circuit breaker automatically expires after 7 days</li>
           <li><strong>Use Case:</strong> Critical bug fixes, security incidents, or emergency migrations</li>
@@ -200,7 +200,7 @@ export function EmergencyPanel() {
         onClose={() => setShowPauseConfirm(false)}
         onConfirm={handlePauseAll}
         title="⚠️ Pause All Systems"
-        message="This will immediately pause the presale and enable the circuit breaker on the token contract. Are you absolutely sure you want to proceed?"
+        message="This will immediately enable the circuit breaker on the token contract. Are you absolutely sure you want to proceed?"
         confirmText="Yes, Pause Everything"
         isDangerous={true}
       />

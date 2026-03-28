@@ -62,6 +62,9 @@ describe("EcosystemVault (EV-07: payExpense accounting order)", () => {
     await rewardToken.mint(await vault.getAddress(), 1_000n);
     await stableToken.mint(await router.getAddress(), 1_000n);
     await vault.forceAutoSwapConfig(await router.getAddress(), await stableToken.getAddress(), true, 100);
+    // Set a non-zero price floor so _swapToStable doesn't bail early (minAmountOut must be > 0)
+    // Formula: minAmountOut = amount * minOutputPerVfide / 1e18 — with amount=100 we need floor >= 1e16
+    await vault.forceMinOutputPerVfide(10n ** 16n); // 0.01 per VFIDE — trivially satisfied by mock
 
     await vault.connect(manager).payExpense(recipient.address, 100n, "stable payout");
 

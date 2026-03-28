@@ -37,6 +37,7 @@ import {
   useIsMerchant,
   useRegisterMerchant,
   useProcessPayment,
+  useSetMerchantPullPermit,
   usePayMerchant,
   useCustomerTrustScore,
   useSetAutoConvert,
@@ -65,6 +66,68 @@ describe('useMerchantHooks - Extended Tests', () => {
     ;(useWaitForTransactionReceipt as Mock).mockReturnValue({
       isSuccess: false,
       isLoading: false,
+    })
+  })
+
+  describe('useSetMerchantPullPermit', () => {
+    it('should set merchant pull permit successfully', async () => {
+      const mockWriteAsync = jest.fn().mockResolvedValue(mockTxHash)
+      ;(useWriteContract as Mock).mockReturnValue({
+        writeContractAsync: mockWriteAsync,
+        data: mockTxHash,
+        isPending: false,
+      })
+
+      const { result } = renderHook(() => useSetMerchantPullPermit())
+
+      await act(async () => {
+        const response = await result.current.setMerchantPullPermit(
+          mockMerchantAddress,
+          '125.5',
+          1_900_000_000
+        )
+        expect(response.success).toBe(true)
+      })
+
+      expect(mockWriteAsync).toHaveBeenCalledWith(
+        expect.objectContaining({
+          functionName: 'setMerchantPullPermit',
+          args: [mockMerchantAddress, expect.any(BigInt), 1900000000n],
+        })
+      )
+    })
+
+    it('should handle permit errors', async () => {
+      const mockWriteAsync = jest.fn().mockRejectedValue(new Error('permit expired'))
+      ;(useWriteContract as Mock).mockReturnValue({
+        writeContractAsync: mockWriteAsync,
+        data: undefined,
+        isPending: false,
+      })
+
+      const { result } = renderHook(() => useSetMerchantPullPermit())
+
+      await act(async () => {
+        const response = await result.current.setMerchantPullPermit(
+          mockMerchantAddress,
+          '10',
+          0
+        )
+        expect(response.success).toBe(false)
+        expect(response.error).toContain('permit expired')
+      })
+    })
+
+    it('should track permit transaction state', () => {
+      ;(useWriteContract as Mock).mockReturnValue({
+        writeContractAsync: jest.fn(),
+        data: mockTxHash,
+        isPending: true,
+      })
+
+      const { result } = renderHook(() => useSetMerchantPullPermit())
+
+      expect(result.current.isSetting).toBe(true)
     })
   })
 

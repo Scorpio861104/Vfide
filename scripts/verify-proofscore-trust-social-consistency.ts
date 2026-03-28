@@ -48,7 +48,7 @@ async function main() {
   const menteeAddress = await mentee.getAddress();
   const operatorAddress = await operator.getAddress();
 
-  const seerArtifact = loadArtifact('artifacts/contracts/VFIDETrust.sol/Seer.json');
+  const seerArtifact = loadArtifact('artifacts/contracts/Seer.sol/Seer.json');
   const socialArtifact = loadArtifact('artifacts/contracts/SeerSocial.sol/SeerSocial.json');
   const viewArtifact = loadArtifact('artifacts/contracts/SeerView.sol/SeerView.json');
 
@@ -64,14 +64,17 @@ async function main() {
   const social = (await socialFactory.deploy(await seer.getAddress())) as any;
   await social.waitForDeployment();
 
+  await (await social.setMentorConfig(7000, 50)).wait();
+
   const viewFactory = new ContractFactory(viewArtifact.abi as any, viewArtifact.bytecode, dao);
   const seerView = (await viewFactory.deploy()) as any;
   await seerView.waitForDeployment();
 
   await (await seer.setSeerSocial(await social.getAddress())).wait();
 
-  await (await seer.setScore(endorserAddress, 8200, 'seed_endorser')).wait();
-  await (await seer.setScore(mentorAddress, 8300, 'seed_mentor')).wait();
+  // Keep DAO score set deltas within maxDAOScoreChange bounds from neutral baseline.
+  await (await seer.setScore(endorserAddress, 7000, 'seed_endorser')).wait();
+  await (await seer.setScore(mentorAddress, 7000, 'seed_mentor')).wait();
 
   await (await social.connect(endorser).endorse(subjectAddress, 'peer verified')).wait();
 
@@ -91,9 +94,9 @@ async function main() {
   await (await social.connect(mentor).becomeMentor()).wait();
   await (await social.connect(mentor).sponsorMentee(menteeAddress)).wait();
 
-  const coreMentorState = await seer.mentors(mentorAddress);
-  if (coreMentorState) {
-    throw new Error('Unexpected: core Seer mentor state should remain false in this verifier');
+  const socialMentorState = await social.mentors(mentorAddress);
+  if (!socialMentorState) {
+    throw new Error('Expected mentor to be registered in SeerSocial');
   }
 
   const mentorInfo = (await seerView.getMentorInfo(
@@ -110,7 +113,6 @@ async function main() {
   }
 
   await (await seer.setOperator(operatorAddress, true)).wait();
-  await (await seer.setOperatorLimits(100, 200)).wait();
 
   await (await seer.connect(operator).reward(subjectAddress, 100, 'op_reward_1')).wait();
   await (await seer.connect(operator).reward(subjectAddress, 100, 'op_reward_2')).wait();

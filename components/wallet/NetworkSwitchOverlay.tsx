@@ -1,8 +1,8 @@
 'use client'
 
 import { CURRENT_CHAIN_ID } from '@/lib/testnet'
-import { IS_TESTNET, getSupportedChainFromId as _getSupportedChainFromId } from '@/lib/chains'
-import { base, baseSepolia } from 'wagmi/chains'
+import { getChainByChainId } from '@/lib/chains'
+import { baseSepolia } from 'wagmi/chains'
 import { safeLocalStorage } from '@/lib/utils'
 import { AnimatePresence, motion } from 'framer-motion'
 import { AlertTriangle, ArrowRight, Check, Loader2, X, Zap } from 'lucide-react'
@@ -25,11 +25,18 @@ export function NetworkSwitchOverlay() {
   const { isConnected, address } = useAccount()
   const chainId = useChainId()
   const { switchChain, isPending, isError, isSuccess, error } = useSwitchChain()
+  type SwitchChainId = Parameters<typeof switchChain>[0]['chainId']
   const [dismissed, setDismissed] = useState(false)
   const [showSuccess, setShowSuccess] = useState(false)
 
   const expectedChainId = CURRENT_CHAIN_ID
-  const expectedChain = IS_TESTNET ? baseSepolia : base
+  const expectedChainConfig = getChainByChainId(expectedChainId)
+  const expectedChain = expectedChainConfig
+    ? (expectedChainConfig.mainnet.id === expectedChainId ? expectedChainConfig.mainnet : expectedChainConfig.testnet)
+    : { id: expectedChainId, name: `Chain ${expectedChainId}` }
+  const docsUrl = expectedChainId === baseSepolia.id
+    ? 'https://docs.base.org/using-base#step-2-switch-to-base-sepolia-testnet'
+    : 'https://docs.base.org/using-base'
   const isWrongNetwork = isConnected && chainId !== expectedChainId
 
   // Check if user prefers auto-switch
@@ -41,7 +48,7 @@ export function NetworkSwitchOverlay() {
     }
 
     try {
-      switchChain({ chainId: expectedChainId as 84532 | 8453 })
+      switchChain({ chainId: expectedChainId as SwitchChainId })
     } catch (e) {
       logger.error('Network switch failed', e, { 
         expectedChainId, 
@@ -259,7 +266,7 @@ export function NetworkSwitchOverlay() {
                 <p className="text-xs text-gray-500 text-center">
                   💡 Need help? Check your wallet extension or{' '}
                   <a 
-                    href={IS_TESTNET ? 'https://docs.base.org/using-base#step-2-switch-to-base-sepolia-testnet' : 'https://docs.base.org/using-base'}
+                    href={docsUrl}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-cyan-400 hover:text-cyan-300 underline"

@@ -129,6 +129,10 @@ npm run start            # Start production server
 
 # Testing
 npm run test             # Run unit tests
+npm run test:security    # Run Jest-based security suites
+npm run test:onchain     # Run blocking Hardhat onchain suites (non-generated)
+npm run test:onchain:generated # Run generated deploy-smoke stubs
+npm run test:security:all # Run the blocking security gate
 npm run test:e2e         # Run E2E tests
 npm run test:ci          # Run all tests for CI
 npm run test:a11y        # Run accessibility tests
@@ -147,6 +151,12 @@ npm run migrate:status   # Check migration status
 npm run validate:env         # Validate environment variables
 npm run validate:production  # Full production validation
 ```
+
+## Testing Workflow
+
+- `npm run test:security:all` is the blocking security gate. It runs the Jest security suites and the core onchain Hardhat suites.
+- `npm run test:onchain` runs the maintained onchain suites under `test/hardhat` and excludes generated smoke stubs.
+- `npm run test:onchain:generated` runs generated deploy-smoke coverage separately. This lane is non-blocking and is intended to catch simple artifact drift for contracts that support literal constructor-based smoke deployment.
 
 ## Deployed Contracts
 

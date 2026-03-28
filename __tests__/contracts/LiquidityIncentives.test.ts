@@ -71,7 +71,7 @@ describe('LiquidityIncentives Contract', () => {
     });
   });
 
-  describe('Staking Operations', () => {
+  describe('Incentive Operations', () => {
     it('should get user stake', async () => {
       const stake = { amount: parseEther('100'), rewardDebt: parseEther('10'), stakeTime: 123456 };
       mockContractRead.mockResolvedValueOnce(stake);

@@ -90,6 +90,10 @@ jest.mock('lucide-react', () => {
   return new Proxy({}, { get: () => Icon });
 });
 
+jest.mock('@/components/error/ErrorBoundary', () => ({
+  ErrorBoundary: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+}));
+
 describe('Notifications page pathways', () => {
   beforeEach(() => {
     jest.clearAllMocks();
@@ -123,14 +127,7 @@ describe('Notifications page pathways', () => {
       value: jest.fn(),
     });
 
-    const clickSpy = jest.fn();
-    const anchorMock = { click: clickSpy, href: '', download: '' };
-    jest.spyOn(document, 'createElement').mockImplementation((tagName: string) => {
-      if (tagName === 'a') {
-        return anchorMock as unknown as HTMLElement;
-      }
-      return originalCreateElement(tagName);
-    });
+    jest.restoreAllMocks();
   });
 
   it('renders all tab content with stats and unread controls', () => {
@@ -159,6 +156,20 @@ describe('Notifications page pathways', () => {
   });
 
   it('switches to preferences tab and triggers exports', () => {
+    const clickSpy = jest.fn();
+    jest.spyOn(document, 'createElement').mockImplementation((tagName: string) => {
+      if (tagName === 'a') {
+        const anchor = originalCreateElement('a');
+        Object.defineProperty(anchor, 'click', {
+          configurable: true,
+          writable: true,
+          value: clickSpy,
+        });
+        return anchor;
+      }
+      return originalCreateElement(tagName);
+    });
+
     renderNotificationsPage();
 
     fireEvent.click(screen.getByRole('button', { name: /Settings/i }));

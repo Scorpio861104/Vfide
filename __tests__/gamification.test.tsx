@@ -16,8 +16,8 @@ describe('Badge System & Gamification', () => {
 
     it('should generate unique IDs for different badges', () => {
       const pioneer = getBadgeId('PIONEER')
-      const genesis = getBadgeId('GENESIS_PRESALE')
-      expect(pioneer).not.toBe(genesis)
+      const founder = getBadgeId('FOUNDING_MEMBER')
+      expect(pioneer).not.toBe(founder)
     })
   })
 
@@ -44,6 +44,7 @@ describe('Badge System & Gamification', () => {
         'Security & Integrity',
         'Achievements & Milestones',
         'Education & Contribution',
+        'Headhunter Competition',
       ]
       
       Object.values(BADGE_REGISTRY).forEach(badge => {

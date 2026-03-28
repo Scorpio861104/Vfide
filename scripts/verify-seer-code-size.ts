@@ -14,7 +14,7 @@ function byteLength(hex: string): number {
 }
 
 function main() {
-  const artifactPath = resolve(process.cwd(), 'artifacts/contracts/VFIDETrust.sol/Seer.json');
+  const artifactPath = resolve(process.cwd(), 'artifacts/contracts/Seer.sol/Seer.json');
   const artifact = JSON.parse(readFileSync(artifactPath, 'utf8')) as {
     bytecode: string;
     deployedBytecode: string;

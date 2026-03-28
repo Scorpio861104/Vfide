@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
-import "../SharedInterfaces.sol";
+import "../../../contracts/SharedInterfaces.sol";
 
 contract MockVaultHub is IVaultHub {
     mapping(address => address) public vaults;

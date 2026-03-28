@@ -22,40 +22,34 @@ async function deployToken() {
   });
   const [owner, user1] = await ethers.getSigners();
 
-  // DevReserveVestingVault and presale must be contracts (extcodesize > 0)
+  // DevReserveVestingVault must be a contract (extcodesize > 0)
   const Placeholder = await ethers.getContractFactory("Placeholder");
   const devVault = await Placeholder.deploy();
-  const presale = await Placeholder.deploy();
   await devVault.waitForDeployment();
-  await presale.waitForDeployment();
 
   const Token = await ethers.getContractFactory("VFIDEToken");
   const token = await Token.deploy(
     await devVault.getAddress(),
-    await presale.getAddress(),
     owner.address,  // treasury (EOA ok)
     ethers.ZeroAddress, // vaultHub — optional
     ethers.ZeroAddress, // ledger   — optional
     ethers.ZeroAddress  // treasurySink — optional
   );
   await token.waitForDeployment();
-  return { token, owner, user1, devVault, presale, ethers };
+  return { token, owner, user1, devVault, ethers };
 }
 
 describe("VFIDEToken", () => {
   // ─── Deployment ──────────────────────────────────────────────────────────
   describe("deployment", () => {
     it("mints 200M total supply and distributes at genesis", async () => {
-      const { token, devVault, presale } = await deployToken();
+      const { token, devVault } = await deployToken();
 
       const totalSupply = await token.totalSupply();
       assert.equal(totalSupply, 200_000_000n * 10n ** 18n, "total supply must be 200M");
 
       const devBal = await token.balanceOf(await devVault.getAddress());
       assert.equal(devBal, 50_000_000n * 10n ** 18n, "devVault must hold 50M");
-
-      const presaleBal = await token.balanceOf(await presale.getAddress());
-      assert.equal(presaleBal, 35_000_000n * 10n ** 18n, "presale must hold 35M");
     });
 
     it("reverts if devVault is zero address", async () => {
@@ -71,8 +65,13 @@ describe("VFIDEToken", () => {
 
       const Token = await ethers.getContractFactory("VFIDEToken");
       await assert.rejects(
-        async () => Token.deploy(ethers.ZeroAddress, await real.getAddress(), owner.address,
-                           ethers.ZeroAddress, ethers.ZeroAddress, ethers.ZeroAddress),
+        async () => Token.deploy(
+          ethers.ZeroAddress,
+          owner.address,
+          ethers.ZeroAddress,
+          ethers.ZeroAddress,
+          ethers.ZeroAddress
+        ),
         /revert/
       );
     });

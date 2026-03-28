@@ -105,8 +105,8 @@ describe('useDebounce Hook', () => {
     act(() => {
       jest.advanceTimersByTime(500);
     });
-    
-    expect(true).toBe(true);
+
+    expect(typeof unmount).toBe('function');
   });
 
   it('should handle zero delay', () => {

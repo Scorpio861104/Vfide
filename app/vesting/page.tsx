@@ -260,7 +260,7 @@ function OverviewTab({ vestingStatus }: { vestingStatus?: readonly [bigint, bigi
             { title: 'Linear Vesting', desc: 'Tokens unlock bi-monthly over 36 months', bgColor: 'bg-cyan-500/20', iconColor: 'text-cyan-400' },
             { title: 'Claim Anytime', desc: 'Claim vested tokens whenever convenient', bgColor: 'bg-emerald-500/20', iconColor: 'text-emerald-400' },
             { title: 'Beneficiary Only', desc: 'Only designated beneficiary can claim', bgColor: 'bg-amber-500/20', iconColor: 'text-amber-400' },
-            { title: 'Presale Sync', desc: 'Vesting starts from presale launch', bgColor: 'bg-violet-500/20', iconColor: 'text-violet-400' },
+            { title: 'Protocol Sync', desc: 'Vesting starts from protocol launch', bgColor: 'bg-violet-500/20', iconColor: 'text-violet-400' },
             { title: 'Pause Protection', desc: 'Claims can be paused for emergencies', bgColor: 'bg-rose-500/20', iconColor: 'text-rose-400' },
           ].map((item, idx) => (
             <motion.div 
@@ -327,7 +327,7 @@ function ScheduleTab({ schedule }: { schedule?: readonly Milestone[] }) {
                   <td className="px-4 py-3 text-gray-400">
                     {Number(milestone.unlockTime) > 0 
                       ? new Date(Number(milestone.unlockTime) * 1000).toLocaleDateString()
-                      : 'TBD'}
+                      : 'Not Scheduled'}
                   </td>
                   <td className="px-4 py-3 text-center">
                     <span className={`px-3 py-1 rounded-full text-xs font-bold ${
@@ -360,7 +360,7 @@ function ScheduleTab({ schedule }: { schedule?: readonly Milestone[] }) {
           </div>
           <div className="text-sm text-gray-400">
             <strong className="text-white">Dev Reserve Schedule:</strong> 25% of total supply allocated 
-            to developer reserve. Tokens vest linearly over 36 months starting from presale launch, 
+            to developer reserve. Tokens vest linearly over 36 months starting from protocol launch, 
             with a 60-day cliff period. Unlocks occur bi-monthly (every 60 days).
           </div>
         </div>

@@ -2,6 +2,8 @@ import { useReadContract, useAccount } from 'wagmi'
 import { CONTRACT_ADDRESSES, SEER_ABI, ProofScoreBurnRouterABI } from '@/lib/contracts'
 import { PROOF_SCORE_PERMISSIONS, PROOF_SCORE_TIERS } from '@/lib/constants'
 
+const FEE_QUOTE_AMOUNT = 10_000n * 10n ** 18n
+
 /**
  * Hook to fetch user's ProofScore from the Seer contract
  * ProofScore is a reputation score (0-10000 scale) that affects transfer fees
@@ -20,11 +22,11 @@ export function useProofScore(userAddress?: `0x${string}`) {
     }
   })
 
-  const { data: onChainBurnRateBps } = useReadContract({
+  const { data: onChainFeeQuote } = useReadContract({
     address: CONTRACT_ADDRESSES.BurnRouter,
     abi: ProofScoreBurnRouterABI,
-    functionName: 'getEffectiveBurnRate',
-    args: targetAddress ? [targetAddress] : undefined,
+    functionName: 'computeFees',
+    args: targetAddress ? [targetAddress, targetAddress, FEE_QUOTE_AMOUNT] : undefined,
     query: {
       enabled:
         !!targetAddress &&
@@ -45,12 +47,15 @@ export function useProofScore(userAddress?: `0x${string}`) {
     scoreNum >= 5000 ? 2.0 :
     scoreNum >= 4000 ? 3.5 :
     5.0
-  const burnFee = onChainBurnRateBps !== undefined
-    ? (
-        Array.isArray(onChainBurnRateBps)
-          ? Number(onChainBurnRateBps[0] ?? 0n) / 100 + Number(onChainBurnRateBps[1] ?? 0n) / 100 + Number(onChainBurnRateBps[2] ?? 0n) / 100
-          : Number(onChainBurnRateBps) / 100
-      )
+  const burnFee = onChainFeeQuote !== undefined
+    ? (() => {
+        if (!Array.isArray(onChainFeeQuote)) return fallbackBurnFee
+        const burnAmount = Number(onChainFeeQuote[0] ?? 0n)
+        const sanctumAmount = Number(onChainFeeQuote[1] ?? 0n)
+        const ecosystemAmount = Number(onChainFeeQuote[2] ?? 0n)
+        const totalFees = burnAmount + sanctumAmount + ecosystemAmount
+        return (totalFees / Number(FEE_QUOTE_AMOUNT)) * 100
+      })()
     : fallbackBurnFee
 
   return {

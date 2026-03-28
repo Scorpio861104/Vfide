@@ -197,6 +197,49 @@ describe('/api/auth', () => {
       expect(data.error).toBe('Message must contain a timestamp');
     });
 
+    it('should authenticate when SIWE message uses Issued At instead of Timestamp', async () => {
+      const issuedAtMessage = [
+        'vfide.io wants you to sign in with your Ethereum account:',
+        mockAddress,
+        '',
+        'Sign in to VFIDE',
+        '',
+        'URI: https://vfide.io',
+        'Version: 1',
+        'Chain ID: 8453',
+        'Nonce: abc123',
+        `Issued At: ${new Date(Date.now() - 60_000).toISOString()}`,
+      ].join('\n');
+
+      withRateLimit.mockResolvedValue(null);
+      validateBody.mockResolvedValue({
+        success: true,
+        data: {
+          address: mockAddress,
+          message: issuedAtMessage,
+          signature: mockSignature,
+        },
+      });
+      verifyMessage.mockResolvedValue(true);
+      generateToken.mockReturnValue({
+        token: 'mock-jwt-token',
+        address: mockAddress,
+        expiresIn: 86400,
+      });
+
+      const request = new NextRequest('http://localhost:3000/api/auth', {
+        method: 'POST',
+        body: JSON.stringify({
+          address: mockAddress,
+          message: issuedAtMessage,
+          signature: mockSignature,
+        }),
+      });
+
+      const response = await POST(request);
+      expect(response.status).toBe(200);
+    });
+
     it('should return 400 for non-numeric timestamp in message', async () => {
       const invalidMessage = 'Sign in to VFIDE\n\nChain ID: 8453\nTimestamp: NaN';
 

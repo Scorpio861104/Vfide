@@ -6,7 +6,6 @@ export function HoweySafeModePanel() {
     { name: 'CouncilSalary', icon: '👥', description: 'Council employment compensation in stablecoins — not investment returns' },
     { name: 'CouncilManager', icon: '🏛️', description: 'Council oversight — operational costs only, not profit-sharing' },
     { name: 'LiquidityIncentives', icon: '💧', description: 'LP participation tracking only — no yield, no profit from providing liquidity' },
-    { name: 'VFIDEPresale', icon: '🚀', description: 'Lock bonuses and referral incentives permanently removed' },
     { name: 'EcosystemVault — Headhunter', icon: '🎯', description: 'Fixed stablecoin service fees for verified referral work — rank/percentage claims permanently disabled' },
     { name: 'EcosystemVault — Top Merchant', icon: '🏪', description: 'Fixed stablecoin service fees for verified merchant transaction activity — rank/percentage claims permanently disabled' },
     { name: 'EcosystemVault — DAO Payments', icon: '🏛️', description: 'Operations and treasury disbursements in stablecoin — not distributions to token holders' },

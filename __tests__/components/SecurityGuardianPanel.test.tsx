@@ -61,6 +61,7 @@ jest.mock('@/lib/contracts', () => ({
   CONTRACT_ADDRESSES: {
     GuardianRegistry: '0x9999999999999999999999999999999999999999',
   },
+  isCardBoundVaultMode: () => false,
 }))
 
 // Mock lucide-react

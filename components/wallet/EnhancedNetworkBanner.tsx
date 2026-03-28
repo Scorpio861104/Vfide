@@ -26,6 +26,7 @@ export function EnhancedNetworkBanner() {
   const { isConnected } = useAccount();
   const chainId = useChainId();
   const { switchChain, isPending, isSuccess, error } = useSwitchChain();
+  type SwitchChainId = Parameters<typeof switchChain>[0]['chainId'];
 
   const [showBanner, setShowBanner] = useState(false);
   const [showSteps, setShowSteps] = useState(false);
@@ -52,7 +53,7 @@ export function EnhancedNetworkBanner() {
 
   // Handle switch
   const handleSwitch = () => {
-    switchChain({ chainId: PREFERRED_CHAIN.id });
+    switchChain({ chainId: PREFERRED_CHAIN.id as SwitchChainId });
   };
 
   // Handle dismiss (user wants to stay on wrong network)
@@ -191,6 +192,7 @@ export function NetworkSwitchWidget() {
   const { isConnected } = useAccount();
   const chainId = useChainId();
   const { switchChain, isPending } = useSwitchChain();
+  type WidgetSwitchChainId = Parameters<typeof switchChain>[0]['chainId'];
 
   const isWrongNetwork = isConnected && chainId !== PREFERRED_CHAIN.id;
 
@@ -212,7 +214,7 @@ export function NetworkSwitchWidget() {
       <AlertCircle size={16} className="text-orange-400" />
       <span className="text-sm text-orange-400">Wrong network</span>
       <button
-        onClick={() => switchChain({ chainId: PREFERRED_CHAIN.id })}
+        onClick={() => switchChain({ chainId: PREFERRED_CHAIN.id as WidgetSwitchChainId })}
         disabled={isPending}
         className="ml-2 px-3 py-1 bg-orange-500 text-white text-xs font-medium rounded hover:bg-orange-600 transition-colors disabled:opacity-50"
       >

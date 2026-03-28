@@ -20,7 +20,7 @@ export default function TokenLaunchPage() {
           </h1>
           <p className="text-gray-300 text-lg mb-6">
             The VFIDE token is now available through the treasury. Token distribution
-            is managed directly — no presale required.
+            is managed directly.
           </p>
           <p className="text-gray-400 mb-8">
             Head to your vault or the DEX to acquire VFIDE and start building

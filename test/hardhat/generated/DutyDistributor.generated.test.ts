@@ -5,7 +5,7 @@
  * ABI constructor: constructor(address _dao)
  *
  * Notes:
- * - This test is intentionally skipped until assertions are implemented.
+ * - This test performs a deploy smoke check.
  * - Deploy args are generated from ABI types and may need refinement.
  */
 import { describe, it } from "node:test";

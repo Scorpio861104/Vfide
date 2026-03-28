@@ -177,8 +177,8 @@ async function verifyContracts(addresses: Phase3Addresses, config: Phase3Config)
     }
   };
 
-  // BridgeSecurityModule(owner, bridge=zero at construction)
-  await tryVerify(addresses.bridgeSecurityModule, [config.owner, ethers.ZeroAddress]);
+  // BridgeSecurityModule(owner, bridge=owner temporary bootstrap value)
+  await tryVerify(addresses.bridgeSecurityModule, [config.owner, config.owner]);
 
   // VFIDEPriceOracle(vfideToken, quoteToken, chainlinkFeed, uniswapPool, owner)
   await tryVerify(addresses.priceOracle, [

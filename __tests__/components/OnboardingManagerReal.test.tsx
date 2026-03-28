@@ -33,7 +33,10 @@ jest.mock('@/components/onboarding/OnboardingFlow', () => ({
 
 // Mock wagmi
 jest.mock('wagmi', () => ({
-  useAccount: () => ({ isConnected: false }),
+  useAccount: () => ({ isConnected: false, address: undefined }),
+  useChainId: () => 84532,
+  useSwitchChain: () => ({ switchChain: jest.fn(), isPending: false }),
+  useBalance: () => ({ data: undefined }),
 }))
 
 // Mock safeLocalStorage so we control new-user vs returning-user scenarios
@@ -64,9 +67,9 @@ describe('OnboardingManager', () => {
     })
 
     it('should return null when tour is not active', () => {
-      const { container } = render(<OnboardingManager />)
+      render(<OnboardingManager />)
 
-      expect(container.firstChild).toBeNull()
+      expect(screen.queryByTestId('onboarding-tour')).not.toBeInTheDocument()
     })
 
     it('should auto-start tour for a new user', () => {

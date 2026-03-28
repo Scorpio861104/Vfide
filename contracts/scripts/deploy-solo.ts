@@ -1,6 +1,6 @@
 /**
  * @fileoverview Solo-developer deployment script for VFIDE core contracts
- * @description Deploys all 9 core contracts in a single run without a presale contract
+ * @description Deploys all 9 core contracts in a single run.
  *              or pre-deployed infrastructure. Handles the DevReserveVestingVault ↔
  *              VFIDEToken circular dependency via deterministic address pre-computation
  *              (ethers v6 getCreateAddress), matching the exact nonce sequence used here.
@@ -198,7 +198,7 @@ async function deployContracts(config: SoloConfig): Promise<{
     securityHubAddr,        // SECURITY_HUB (optional but wired now)
     ledgerAddr,             // LEDGER (optional but wired now)
     DEV_RESERVE_ALLOCATION, // ALLOCATION — must equal EXPECTED_ALLOCATION (50M)
-    config.owner,           // DAO placeholder (update via governance later)
+    config.owner,           // DAO bootstrap authority (update via governance later)
   ];
   const Vault = await ethers.getContractFactory('DevReserveVestingVault');
   const devVault: Contract = await Vault.deploy(...constructorArgs.DevReserveVestingVault);
@@ -284,14 +284,14 @@ async function deployContracts(config: SoloConfig): Promise<{
   // ── 9. SystemHandover ─────────────────────────────────────────────────────
   console.log('9️⃣  Deploying SystemHandover…');
   // For a solo deploy the dao/timelock/council slots are populated with the
-  // owner address as placeholders.  Replace with real governance contracts
+  // owner address as temporary bootstrap values. Replace with real governance contracts
   // before calling arm().
   constructorArgs.SystemHandover = [
     config.owner,  // devMultisig
-    config.owner,  // dao       (placeholder — replace before arm())
-    config.owner,  // timelock  (placeholder — replace before arm())
+    config.owner,  // dao       (bootstrap value — replace before arm())
+    config.owner,  // timelock  (bootstrap value — replace before arm())
     seerAddr,
-    config.owner,  // councilElection (placeholder)
+    config.owner,  // councilElection (bootstrap value)
     ledgerAddr,
   ];
   const Handover = await ethers.getContractFactory('SystemHandover');
@@ -332,7 +332,7 @@ async function wireContracts(
 ): Promise<void> {
   console.log('\n⚙️  Post-deploy wiring…\n');
 
-  const { ledger, token, seer, burnRouter } = contracts;
+  const { ledger, token, burnRouter } = contracts;
 
   // Authorise Seer and VaultHub as ProofLedger loggers (immediate, no timelock)
   console.log('   Authorising Seer as ProofLedger logger…');

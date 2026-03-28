@@ -3,6 +3,10 @@ pragma solidity 0.8.30;
 
 import "./VFIDEToken.sol";
 
+/// @notice LEGACY — Do not use. Exists for historical contract verification only.
+/// @dev This factory cannot safely provide canonical constructor dependencies (e.g., real
+///      DevReserveVestingVault address). Always use contracts/scripts/deploy-phase1.ts instead,
+///      which handles all dependencies through TypeScript configuration.
 contract Phase1TokenDeployer {
     function deployToken(
         string memory _tokenName,
@@ -17,8 +21,6 @@ contract Phase1TokenDeployer {
         _admin;
         _multiSig;
 
-        // This legacy deployer shape cannot safely provide canonical constructor dependencies
-        // (real DevReserveVestingVault address). Fail closed to prevent accidental misuse.
-        revert("Phase1TokenDeployer deprecated: use contracts/scripts/deploy-phase1.ts with explicit dev reserve address");
+        revert("Phase1TokenDeployer: LEGACY factory disabled. Use contracts/scripts/deploy-phase1.ts for production.");
     }
 }

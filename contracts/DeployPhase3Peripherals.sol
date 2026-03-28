@@ -25,7 +25,10 @@ contract DeployPhase3Peripherals {
     ) external returns (address bsm_, address oracle_) {
         if (vfideToken == address(0) || owner == address(0)) revert DPP_Zero();
 
-        BridgeSecurityModule securityModule = new BridgeSecurityModule(owner, address(0));
+        // BSM requires a non-zero bridge at construction. Use the owner as a temporary
+        // bootstrap value, then DeployPhases3to6/phase3 wiring replaces it with the real bridge
+        // via setBridge(address(bridge)) immediately after bridge deployment.
+        BridgeSecurityModule securityModule = new BridgeSecurityModule(owner, owner);
         bsm_ = address(securityModule);
         bsm = bsm_;
         emit PeripheralDeployed(bytes32("BSM"), bsm_);

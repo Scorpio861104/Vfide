@@ -99,7 +99,7 @@ contract DevReserveVestingVault is ReentrancyGuard {
 
     /**
      * @notice Set the vesting start timestamp (one-time, callable by beneficiary or DAO).
-     * @dev    Called at protocol launch in place of reading from a presale contract.
+     * @dev    Called at protocol launch to initialize the vesting start timestamp.
      *         The timestamp must be in the past or present (not more than 7 days in the future)
      *         to prevent accidental future-dating.
      */

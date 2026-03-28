@@ -68,46 +68,12 @@ function updatePrice()
 function resetCircuitBreaker()
 ```
 
-### Phase 4: Staking & Rewards
+### Phase 4: Legacy Staking (Removed)
 
-#### VFIDEStaking.sol
-Core staking contract with time-locked positions and reward multipliers.
+Phases 4-6 staking and yield-style components were removed for Howey-compliance.
+The active implementation scope uses service/payment language and utility-based flows.
 
-**Lock Periods & Multipliers:**
-- 1 week → 1.0x multiplier
-- 4 weeks → 1.25x multiplier
-- 13 weeks → 1.5x multiplier
-- 52 weeks → 2.0x multiplier
-
-**Features:**
-- Time-locked staking positions
-- Reward multipliers based on lock duration
-- Early unstake penalties (20%)
-- Auto-compound option
-- Emergency withdrawal
-
-**Key Functions:**
-```solidity
-function stake(uint256 amount, LockPeriod lockPeriod) returns (uint256 stakeId)
-function unstake(uint256 stakeId)
-function claimRewards(uint256 stakeId)
-function setCompound(uint256 stakeId, bool enabled)
-```
-
-#### StakingRewards.sol
-Reward calculation and distribution engine.
-
-**Reward Distribution:**
-- 50% ProofScore acceleration
-- 30% Governance voting power
-- 20% Protocol fee rebates
-
-**Key Functions:**
-```solidity
-function calculateReward(address user, uint256 baseReward, uint256 multiplier) returns (uint256)
-function claimRewards(address user) returns (uint256)
-function distributeFees()
-```
+For current deployment paths, use the active phase scripts and contracts documented in this README.
 
 #### GovernancePower.sol
 Checkpoint-based voting power tracking with delegation support.
@@ -267,15 +233,15 @@ BASESCAN_API_KEY=your_key
 
 ### Deploy All Phases
 
+For current deployments, use:
+- **Phase 1 (Token + Security):** `contracts/scripts/deploy-phase1.ts`
+- **Phase 3 (Bridge + Oracle):** `contracts/scripts/deploy-phase3.ts`
+
+Phases 4-6 (Staking, Liquidity Mining, Advanced DeFi) were removed for Howey Test compliance.
+
 ```bash
-# Deploy to Base
-npx hardhat run contracts/scripts/deploy-phases-3-6.ts --network base
-
-# Deploy to Polygon
-npx hardhat run contracts/scripts/deploy-phases-3-6.ts --network polygon
-
-# Deploy to zkSync
-npx hardhat run contracts/scripts/deploy-phases-3-6.ts --network zkSync
+# Example: Deploy Phase 1 to Base
+npx hardhat run contracts/scripts/deploy-phase1.ts --network base
 ```
 
 ### Deploy Individual Phases

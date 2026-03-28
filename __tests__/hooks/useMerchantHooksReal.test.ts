@@ -46,6 +46,7 @@ import {
   useIsMerchant,
   useRegisterMerchant,
   useProcessPayment,
+  useSetMerchantPullPermit,
 } from '../../hooks/useMerchantHooks'
 
 describe('useIsMerchant', () => {
@@ -308,6 +309,64 @@ describe('useProcessPayment', () => {
       )
       expect(response.success).toBe(false)
       expect(response.error).toContain('Insufficient')
+    })
+  })
+})
+
+describe('useSetMerchantPullPermit', () => {
+  const mockWriteContractAsync = jest.fn()
+
+  beforeEach(() => {
+    jest.clearAllMocks()
+    mockUseWriteContract.mockReturnValue({
+      writeContractAsync: mockWriteContractAsync,
+      data: undefined,
+      isPending: false,
+    })
+    mockUseWaitForTransactionReceipt.mockReturnValue({
+      isLoading: false,
+      isSuccess: false,
+    })
+  })
+
+  it('provides setMerchantPullPermit function', () => {
+    const { result } = renderHook(() => useSetMerchantPullPermit())
+
+    expect(typeof result.current.setMerchantPullPermit).toBe('function')
+  })
+
+  it('calls writeContractAsync with permit args', async () => {
+    mockWriteContractAsync.mockResolvedValue({ hash: '0xabc' })
+
+    const { result } = renderHook(() => useSetMerchantPullPermit())
+
+    await act(async () => {
+      await result.current.setMerchantPullPermit(
+        '0xMerchant' as `0x${string}`,
+        '75',
+        1_900_000_000
+      )
+    })
+
+    expect(mockWriteContractAsync).toHaveBeenCalledWith(expect.objectContaining({
+      functionName: 'setMerchantPullPermit',
+      args: ['0xMerchant', expect.any(BigInt), 1900000000n],
+    }))
+  })
+
+  it('returns error on permit failure', async () => {
+    mockWriteContractAsync.mockRejectedValue(new Error('invalid permit'))
+
+    const { result } = renderHook(() => useSetMerchantPullPermit())
+
+    await act(async () => {
+      const response = await result.current.setMerchantPullPermit(
+        '0xMerchant' as `0x${string}`,
+        '25',
+        0
+      )
+      expect(response.success).toBe(false)
+      expect(response.error).toContain('invalid permit')
     })
   })
 })

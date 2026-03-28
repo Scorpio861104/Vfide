@@ -6,7 +6,7 @@
  * ensuring type safety and providing clear error messages for misconfiguration.
  */
 
-import { z } from 'zod';
+import { z } from 'zod4';
 import { logger } from '@/lib/logger';
 
 // Ethereum address regex validator

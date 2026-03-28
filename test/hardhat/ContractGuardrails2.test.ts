@@ -109,7 +109,6 @@ describe("OwnerControlPanel (governance delay reduction cooldown)", () => {
       ethers.ZeroAddress,
       ethers.ZeroAddress,
       ethers.ZeroAddress,
-      ethers.ZeroAddress,
     );
     await panel.waitForDeployment();
 
@@ -196,7 +195,7 @@ describe("DAO (F-21: emergency quorum rescue 10% floor)", () => {
     );
     await dao.waitForDeployment();
 
-    return { dao, admin };
+    return { ethers, dao, admin, timelock };
   }
 
   async function deployDAO() {
@@ -300,6 +299,21 @@ describe("DAO (F-21: emergency quorum rescue 10% floor)", () => {
     );
   });
 
+  it("allows rescue self-approval when the emergency approver is a contract", async () => {
+    const { ethers, dao, admin, timelock } = await deployDAOWithoutApprover();
+
+    assert.equal(await dao.emergencyApprover(), await timelock.getAddress());
+
+    await dao.connect(admin).initiateEmergencyQuorumRescue();
+    await dao.connect(admin).approveEmergencyQuorumRescue();
+
+    await ethers.provider.send("evm_increaseTime", [14 * 24 * 60 * 60]);
+    await ethers.provider.send("evm_mine", []);
+
+    await dao.connect(admin).executeEmergencyQuorumRescue(500n, 3n);
+    assert.equal(await dao.minVotesRequired(), 500n);
+  });
+
   it("initializes emergency approver to timelock at deployment", async () => {
     const { dao, admin } = await deployDAOWithoutApprover();
     const timelockAddr = await dao.timelock();
@@ -385,6 +399,90 @@ describe("DAO (F-21: emergency quorum rescue 10% floor)", () => {
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
+// MerchantPortal scoped pull permit hardening
+// Merchant-initiated pulls must respect remaining amount, expiry, and revocation.
+// ─────────────────────────────────────────────────────────────────────────────
+describe("MerchantPortal (scoped pull permits)", { concurrency: 1 }, () => {
+  async function deployPortal() {
+    const { ethers } = (await network.connect()) as any;
+    const [dao, merchant, customer, feeSink] = await ethers.getSigners();
+
+    const VaultHub = await ethers.getContractFactory("VaultHubStub");
+    const hub = await VaultHub.deploy();
+    await hub.waitForDeployment();
+
+    const Seer = await ethers.getContractFactory("SeerScoreStub");
+    const seer = await Seer.deploy();
+    await seer.waitForDeployment();
+
+    const Token = await ethers.getContractFactory("TokenStub");
+    const token = await Token.deploy();
+    await token.waitForDeployment();
+
+    const Portal = await ethers.getContractFactory("MerchantPortal");
+    const portal = await Portal.deploy(
+      dao.address,
+      await hub.getAddress(),
+      await seer.getAddress(),
+      ethers.ZeroAddress,
+      ethers.ZeroAddress,
+      feeSink.address,
+    );
+    await portal.waitForDeployment();
+
+    await seer.setScore(merchant.address, 7000);
+    await portal.connect(dao).setProtocolFee(0);
+    await portal.connect(dao).setAcceptedToken(await token.getAddress(), true);
+    await portal.connect(merchant).registerMerchant("Merchant", "Retail");
+    await hub.setVault(customer.address, customer.address);
+    await hub.setVault(merchant.address, merchant.address);
+
+    return { ethers, portal, token, merchant, customer };
+  }
+
+  it("decrements remaining permit amount after each merchant pull", async () => {
+    const { portal, token, merchant, customer } = await deployPortal();
+
+    await portal.connect(customer).setMerchantPullPermit(merchant.address, 1000n, 0);
+    await portal.connect(merchant).processPayment(customer.address, await token.getAddress(), 400n, "order-1", { gasLimit: 3_000_000n });
+
+    assert.equal(await portal.merchantPullRemaining(customer.address, merchant.address), 600n);
+  });
+
+  it("rejects merchant pulls after permit expiry", async () => {
+    const { ethers, portal, token, merchant, customer } = await deployPortal();
+
+    const latest = await ethers.provider.getBlock("latest");
+    const expiresAt = BigInt((latest?.timestamp ?? 0) + 60);
+    await portal.connect(customer).setMerchantPullPermit(merchant.address, 1000n, expiresAt);
+
+    await ethers.provider.send("evm_increaseTime", [61]);
+    await ethers.provider.send("evm_mine", []);
+
+    await assert.rejects(
+      async () => portal.connect(merchant).processPayment(customer.address, await token.getAddress(), 100n, "order-expired"),
+      /merchant approval expired/
+    );
+  });
+
+  it("clears permit state on revoke and blocks further pulls", async () => {
+    const { portal, token, merchant, customer } = await deployPortal();
+
+    await portal.connect(customer).setMerchantPullPermit(merchant.address, 1000n, 0);
+    await portal.connect(customer).setMerchantPullApproval(merchant.address, false);
+
+    assert.equal(await portal.merchantPullApproved(customer.address, merchant.address), false);
+    assert.equal(await portal.merchantPullRemaining(customer.address, merchant.address), 0n);
+    assert.equal(await portal.merchantPullExpiry(customer.address, merchant.address), 0n);
+
+    await assert.rejects(
+      async () => portal.connect(merchant).processPayment(customer.address, await token.getAddress(), 100n, "order-revoked"),
+      /merchant not approved by customer/
+    );
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
 // F-18: EscrowManager minimum lock period ≥ 3 days
 // Even for the highest-trust merchants the lock period must be at least 3 days.
 // ─────────────────────────────────────────────────────────────────────────────
@@ -446,148 +544,6 @@ describe("EscrowManager (F-18: minimum lock period)", () => {
     const { escrow } = await deployEscrow();
     const threeDays = 3n * 24n * 60n * 60n;
     assert.equal(await escrow.MIN_LOCK_PERIOD(), threeDays);
-  });
-});
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Presale accounting hardening
-// cancelPurchase should exactly decrement user/global contribution tracking.
-// ─────────────────────────────────────────────────────────────────────────────
-describe("VFIDEPresale (accounting: cancelPurchase exact decrements)", () => {
-  it("decrements ETH and USD contribution totals for cancelled purchase", async () => {
-    const { ethers } = (await network.connect()) as any;
-    const [dao, buyer, treasury] = await ethers.getSigners();
-
-    const Token = await ethers.getContractFactory("MintableTokenStub");
-    const token = await Token.deploy();
-    await token.waitForDeployment();
-
-    const now = (await ethers.provider.getBlock("latest")).timestamp;
-    const Presale = await ethers.getContractFactory("VFIDEPresale");
-    const presale = await Presale.deploy(
-      dao.address,
-      await token.getAddress(),
-      treasury.address,
-      ethers.ZeroAddress,
-      now + 1,
-    );
-    await presale.waitForDeployment();
-
-    const totalSupply = await presale.TOTAL_SUPPLY();
-    await token.mint(await presale.getAddress(), totalSupply);
-    await presale.connect(dao).depositTokens();
-
-    await ethers.provider.send("evm_increaseTime", [2]);
-    await ethers.provider.send("evm_mine", []);
-
-    const payAmount = ethers.parseEther("0.05");
-    await presale.connect(buyer).buyTokens(0, { value: payAmount });
-
-    assert.equal(await presale.ethContributed(buyer.address), payAmount);
-    assert.ok((await presale.usdContributed(buyer.address)) > 0n);
-    assert.equal(await presale.totalEthRaised(), payAmount);
-
-    await presale.connect(buyer).cancelPurchase(0);
-
-    assert.equal(await presale.ethContributed(buyer.address), 0n);
-    assert.equal(await presale.usdContributed(buyer.address), 0n);
-    assert.equal(await presale.totalEthRaised(), 0n);
-    assert.equal(await presale.totalUsdRaised(), 0n);
-  });
-
-  it("reverts when purchase accounting is corrupted instead of silently saturating balances", async () => {
-    const { ethers } = (await network.connect()) as any;
-    const [dao, buyer, treasury] = await ethers.getSigners();
-
-    const Token = await ethers.getContractFactory("MintableTokenStub");
-    const token = await Token.deploy();
-    await token.waitForDeployment();
-
-    const now = (await ethers.provider.getBlock("latest")).timestamp;
-    const PresaleHarness = await ethers.getContractFactory("VFIDEPresaleHarness");
-    const presale = await PresaleHarness.deploy(
-      dao.address,
-      await token.getAddress(),
-      treasury.address,
-      ethers.ZeroAddress,
-      now + 1,
-    );
-    await presale.waitForDeployment();
-
-    const totalSupply = await presale.TOTAL_SUPPLY();
-    await token.mint(await presale.getAddress(), totalSupply);
-    await presale.connect(dao).depositTokens();
-
-    await ethers.provider.send("evm_increaseTime", [2]);
-    await ethers.provider.send("evm_mine", []);
-
-    const payAmount = ethers.parseEther("0.05");
-    await presale.connect(buyer).buyTokens(0, { value: payAmount });
-
-    await presale.setEthContributed(buyer.address, 0n);
-
-    await assert.rejects(
-      () => presale.connect(buyer).cancelPurchase(0),
-      /PS: eth accounting mismatch/
-    );
-
-    assert.equal(await presale.ethContributed(buyer.address), 0n);
-    assert.equal(await presale.totalEthRaised(), payAmount);
-  });
-
-  it("retains enough balance for pending locked claims after finalizePresale handles unsold tokens", async () => {
-    const { ethers } = (await network.connect()) as any;
-    const [dao, buyer, treasury] = await ethers.getSigners();
-
-    const Token = await ethers.getContractFactory("MintableTokenStub");
-    const token = await Token.deploy();
-    await token.waitForDeployment();
-
-    const now = (await ethers.provider.getBlock("latest")).timestamp;
-    const PresaleHarness = await ethers.getContractFactory("VFIDEPresaleHarness");
-    const presale = await PresaleHarness.deploy(
-      dao.address,
-      await token.getAddress(),
-      treasury.address,
-      ethers.ZeroAddress,
-      now + 1,
-    );
-    await presale.waitForDeployment();
-
-    const totalSupply = await presale.TOTAL_SUPPLY();
-    await token.mint(await presale.getAddress(), totalSupply);
-    await presale.connect(dao).depositTokens();
-
-    await ethers.provider.send("evm_increaseTime", [2]);
-    await ethers.provider.send("evm_mine", []);
-
-    await presale.connect(buyer).buyTokens(180n * 24n * 60n * 60n, { value: ethers.parseEther("0.05") });
-
-    const purchase = await presale.getPurchaseDetails(buyer.address, 0);
-    const immediateAmount = purchase[2];
-    const lockedAmount = purchase[3];
-    assert.ok(immediateAmount > 0n);
-    assert.ok(lockedAmount > 0n);
-
-    await presale.connect(buyer).claimImmediate([0]);
-    assert.equal(await token.balanceOf(buyer.address), immediateAmount);
-
-    // Satisfy minimum-goal gate for deterministic finalization in this isolated test.
-    await presale.setTotalUsdRaised(await presale.MINIMUM_GOAL_USD());
-
-    const saleEnd = Number(await presale.saleEndTime());
-    const currentTs = (await ethers.provider.getBlock("latest")).timestamp;
-    await ethers.provider.send("evm_increaseTime", [saleEnd - currentTs + 1]);
-    await ethers.provider.send("evm_mine", []);
-
-    await presale.connect(dao).finalizePresale();
-    assert.equal(await presale.unsoldWithdrawn(), true);
-
-    await ethers.provider.send("evm_increaseTime", [180 * 24 * 60 * 60 + 1]);
-    await ethers.provider.send("evm_mine", []);
-
-    await presale.connect(buyer).claimLocked([0]);
-    assert.equal(await token.balanceOf(buyer.address), immediateAmount + lockedAmount);
   });
 });
 

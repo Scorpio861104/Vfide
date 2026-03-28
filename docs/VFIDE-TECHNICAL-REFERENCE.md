@@ -395,28 +395,28 @@ Event TransferWithBurn {
 BURN_ADDRESS = 0x000000000000000000000000000000000000dEaD
 ```
 
-### 4.3 Staking Rewards (SEER Auto-Distribution)
+### 4.3 Service Payments (SEER Auto-Distribution)
 
 ```typescript
-// Staking rewards calculated and paid automatically
-Contract StakingRewards {
+// Service payments are calculated and paid automatically
+Contract ServicePaymentManager {
   // Auto-calculation based on:
-  - Staked amount
-  - Staking duration
-  - User's ProofScore (multiplier)
-  - Ecosystem fund balance (10% allocation)
+  - completed on-chain work records
+  - governance participation events
+  - policy-configured payment rates
+  - ecosystem fund availability
   
-  // Automatic distribution every epoch (7 days)
-  function distributeRewards() public {
-    // Called by SEER contract automatically
+  // Automatic distribution on settlement cadence
+  function distributeServicePayments() public {
+    // Called by SEER-managed automation
     // No manual intervention required
   }
 }
 
-// User can claim at any time
-useClaimStakingRewards(): {
+// User can claim eligible payments at any time
+useClaimServicePayments(): {
   claim: () => Promise<Transaction>
-  pendingRewards: bigint
+  pendingPayments: bigint
 }
 ```
 
@@ -504,7 +504,7 @@ Contract EcosystemFund {
   development: 25%     // $11.4M/year
   security: 15%        // $6.8M/year
   marketing: 15%       // $6.8M/year
-  staking: 10%         // $4.6M/year (rewards pool)
+  servicePayments: 10% // $4.6M/year (work/governance compensation pool)
   council: 5%          // $2.3M/year (salaries)
   reserve: 50% of surplus // Emergency fund
   

@@ -417,7 +417,7 @@ describe('Memory Leak Tests', () => {
       // Skip test if memory API is not available
       if (memoryReadings.every(m => m === 0)) {
         console.log('Memory API not available, skipping memory growth test');
-        expect(true).toBe(true);
+        expect(memoryReadings.every(m => m === 0)).toBe(true);
         return;
       }
 

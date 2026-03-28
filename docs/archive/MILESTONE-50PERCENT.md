@@ -393,12 +393,12 @@ Per Component:
 ## 📚 Documentation Deliverables
 
 ### Feature Documentation (8 Major Guides)
-1. **MOBILE-DASHBOARD-GUIDE.md** (800+ lines)
-   - Complete dashboard implementation
+1. **MOBILE-FIRST-GUIDE.md** (current replacement)
+   - Complete mobile/dashboard implementation guidance
    - Component usage examples
    - Integration instructions
 
-2. **MOBILE-DESIGN-SYSTEM.md** (1,000+ lines)
+2. **COMPONENT-LIBRARY.md** (current replacement)
    - Component API reference
    - Usage patterns
    - Customization guide

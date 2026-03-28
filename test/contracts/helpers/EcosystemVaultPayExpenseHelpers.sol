@@ -19,6 +19,11 @@ contract EcosystemVaultTestable is EcosystemVault {
         autoSwapEnabled = enabled;
         maxSlippageBps = slippageBps;
     }
+
+    /// @dev Bypasses the onlyOwner gate for test harness — sets the sandwich-prevention floor.
+    function forceMinOutputPerVfide(uint256 floorPrice) external {
+        minOutputPerVfide = floorPrice;
+    }
 }
 
 contract ObservedOpsToken {

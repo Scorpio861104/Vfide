@@ -381,8 +381,8 @@ describe('Performance Benchmarks', () => {
         });
       }
 
-      // If we reach here without running out of memory, test passes
-      expect(true).toBe(true);
+      expect(users.length).toBe(100);
+      expect(users[0].badges.length).toBeGreaterThanOrEqual(0);
     });
 
     it('should handle large snapshot series efficiently', () => {

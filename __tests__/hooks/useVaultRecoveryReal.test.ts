@@ -11,6 +11,7 @@ const mockUseAccount = jest.fn()
 const mockUseReadContract = jest.fn()
 const mockUseWriteContract = jest.fn()
 const mockUseWatchContractEvent = jest.fn()
+const mockIsCardBoundVaultMode = jest.fn(() => false)
 
 jest.mock('wagmi', () => ({
   useAccount: () => mockUseAccount(),
@@ -25,6 +26,14 @@ jest.mock('viem', () => ({
   isAddress: (addr: string) => typeof addr === 'string' && addr.startsWith('0x') && addr.length === 42,
 }))
 
+jest.mock('@/lib/contracts', () => {
+  const actual = jest.requireActual('@/lib/contracts')
+  return {
+    ...actual,
+    isCardBoundVaultMode: () => mockIsCardBoundVaultMode(),
+  }
+})
+
 // Import hooks after mocks
 import { useVaultRecovery } from '../../hooks/useVaultRecovery'
 
@@ -34,6 +43,7 @@ describe('useVaultRecovery', () => {
 
   beforeEach(() => {
     jest.clearAllMocks()
+    mockIsCardBoundVaultMode.mockReturnValue(false)
     mockUseAccount.mockReturnValue({ address: '0xuser' })
     mockUseWriteContract.mockReturnValue({
       writeContractAsync: mockWriteContractAsync,
@@ -324,6 +334,18 @@ describe('useVaultRecovery', () => {
       
       await expect(result.current.cancelRecovery())
         .rejects.toThrow('Vault address not provided')
+    })
+  })
+
+  describe('CardBound vault mode restrictions', () => {
+    it('blocks recovery actions when CardBound mode is enabled', async () => {
+      mockIsCardBoundVaultMode.mockReturnValue(true)
+      const { result } = renderHook(() => useVaultRecovery(testVaultAddress))
+
+      await expect(result.current.setNextOfKinAddress('0xkin'))
+        .rejects.toThrow('Recovery/inheritance is not supported in CardBound vault mode')
+      await expect(result.current.requestRecovery('0xnewowner'))
+        .rejects.toThrow('Recovery/inheritance is not supported in CardBound vault mode')
     })
   })
 })

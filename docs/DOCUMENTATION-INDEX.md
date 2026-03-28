@@ -301,10 +301,10 @@ STATUS-DASHBOARD.md           ← Start here for overview
 ├── SESSION-COMPLETION-SUMMARY.md
 ├── COMPREHENSIVE-PROGRESS-REPORT.md
 │
-├── PHASE1_COMPLETE.md
+├── DEPLOY_PHASE1_INSTRUCTIONS.md
 │   ├── COMPONENT-LIBRARY.md
 │   ├── ACCESSIBILITY-AUDIT.md
-│   └── (Performance details)
+│   └── (Phase 1 deployment details)
 │
 ├── PHASE2-MOBILE-COMPLETE.md
 │   ├── MOBILE-FIRST-GUIDE.md
@@ -328,10 +328,10 @@ STATUS-DASHBOARD.md           ← Start here for overview
 - [Mobile Components](./components/mobile/)
 - [Dashboard Analytics](./components/dashboard/EnhancedAnalytics.tsx)
 - [Responsive Utilities](./lib/mobile.ts)
-- [Tests](./`__tests__/`)
+- [Tests](../__tests__/)
 
 ### Status
-- [Phase 1 Status](./PHASE1_COMPLETE.md)
+- [Phase 1 Deployment](./DEPLOY_PHASE1_INSTRUCTIONS.md)
 - [Phase 2 Status](./PHASE2-MOBILE-COMPLETE.md)
 - [Phase 3 Status](./PHASE3-ITEM6-COMPLETE.md)
 - [Overall Progress](./COMPREHENSIVE-PROGRESS-REPORT.md)
@@ -349,7 +349,7 @@ STATUS-DASHBOARD.md           ← Start here for overview
 | Integration examples | MOBILE-INTEGRATION-GUIDE.md |
 | Accessibility details | ACCESSIBILITY-AUDIT.md |
 | Full technical details | COMPREHENSIVE-PROGRESS-REPORT.md |
-| Phase 1 info | PHASE1_COMPLETE.md |
+| Phase 1 info | DEPLOY_PHASE1_INSTRUCTIONS.md |
 | Phase 2 info | PHASE2-MOBILE-COMPLETE.md |
 | Phase 3 info | PHASE3-ITEM6-COMPLETE.md |
 | This session's work | SESSION-COMPLETION-SUMMARY.md |

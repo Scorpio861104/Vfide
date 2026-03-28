@@ -14,7 +14,7 @@
 ✅ **Automatic Fee Distribution** - Every transaction fee is instantly split (40% burn, 10% Sanctum, 50% ecosystem)  
 ✅ **Real-Time Burns** - Deflationary tokens sent to burn address atomically  
 ✅ **DAO Reward Payments** - Governance participation rewards distributed automatically  
-✅ **Staking Distributions** - Staking rewards calculated and paid by SEER contracts  
+✅ **Service Payment Distributions** - Work and governance payments are computed and paid by SEER contracts  
 ✅ **Council Compensation** - Governance council salaries automated on schedule  
 ✅ **Sanctum Allocations** - Charitable fund accumulations happen with each transfer  
 ✅ **Ecosystem Fund Deposits** - Operational budgets funded continuously by SEER
@@ -96,7 +96,7 @@ if (proofScore <= 40%) {
 - ✅ Sanctum charitable allocations (10%)
 - ✅ Ecosystem fund distributions (50%)
 - ✅ DAO governance reward payments
-- ✅ Staking reward calculations and distributions
+- ✅ Service payment calculations and distributions
 - ✅ Council compensation automation
 
 **Zero Manual Intervention Required** - The SEER smart contract system handles all economic operations trustlessly and transparently on-chain.
@@ -266,34 +266,28 @@ const dailyInfraFees = dailyFees * 0.15; // 15% allocation
 
 **Annual Budget:** $400,000-600,000
 
-#### 3e. Staking Rewards (10% of Ecosystem Fund = 5% of total fees)
+#### 3e. Service Payment Reserve (10% of Ecosystem Fund = 5% of total fees)
 
-**Purpose:** Incentivize long-term holding and governance participation
+**Purpose:** Fund work compensation and governance execution services
 
 **Automation (via SEER System):**
-- SEER automatically calculates and distributes staking rewards
-- Rewards accrue in real-time based on stake duration and amount
-- **Fully automated payouts** - no manual claiming or distribution required
-- ProofScore multipliers applied automatically by SEER contracts
-- Governance participation bonuses calculated and paid by SEER
+- SEER automatically calculates and settles eligible service payments
+- Payments accrue based on completed work records and governance activity
+- **Fully automated payouts** - no manual processing required
+- ProofScore-informed risk controls are applied by SEER contracts
+- Governance participation compensation is calculated and paid by SEER
 
 **Distribution:**
-- Paid to VFIDE stakers proportionally
-- Minimum stake duration: 30 days
-- Boosted rewards for governance voters
-- Additional multipliers for ProofScore
+- Paid to eligible contributors and governance operators
+- Eligibility windows are policy-defined
+- Governance participation compensation can be boosted by approved policy
+- Additional multipliers may be applied by protocol policy
 
-**APY Projections:**
+**Budget Projection:**
 ```typescript
 // Conservative estimates
-const totalStaked = 100_000_000; // 50% of supply staked
-const annualStakingFees = dailyFees * 0.05 * 365;
-// Annual staking pool: $4.5M
-// 
-// Average APY: 4.5% (if 50% supply staked)
-// Plus governance boost: +1-2%
-// Plus ProofScore boost: +0.5-1%
-// Effective APY: 6-7.5%
+const annualServicePaymentBudget = dailyFees * 0.05 * 365;
+// Annual service payment reserve: ~$4.5M at baseline assumptions
 ```
 
 #### 3f. Council Compensation (5% of Ecosystem Fund = 2.5% of total fees)
@@ -343,7 +337,7 @@ const infrastructure = $45.625M * 0.30 = $13.688M
 const development = $45.625M * 0.25 = $11.406M
 const security = $45.625M * 0.15 = $6.844M
 const marketing = $45.625M * 0.15 = $6.844M
-const staking = $45.625M * 0.10 = $4.563M
+const servicePayments = $45.625M * 0.10 = $4.563M
 const council = $45.625M * 0.05 = $2.281M
 ```
 
@@ -355,14 +349,14 @@ const council = $45.625M * 0.05 = $2.281M
 | Development | $1.2M | $11.406M | +$10.206M |
 | Security & Audits | $800K | $6.844M | +$6.044M |
 | Marketing & Growth | $600K | $6.844M | +$6.244M |
-| Staking Rewards | $4.563M | $4.563M | $0 |
+| Service Payments | $4.563M | $4.563M | $0 |
 | Council Comp | $315K | $2.281M | +$1.966M |
 | **TOTAL** | **$7.778M** | **$45.625M** | **+$37.847M** |
 
 **Surplus Allocation:**
 - 50% → Reserve fund (economic downturn buffer)
 - 30% → Accelerated development (new features)
-- 20% → Additional staking rewards (boost APY)
+- 20% → Additional service payment reserve (policy-managed)
 
 ---
 
@@ -472,22 +466,22 @@ Year 10 Cumulative: ~1.8% supply reduction
 - Year 5 after burns: ~79.28M tokens
 - Long-term trend: Deflationary pressure increases token value
 
-### Staking Economics
+### Holder Economics
 
-**Dual Benefit for Stakers:**
-1. **Staking Rewards:** 5% of ecosystem fees
+**Dual Benefit for Holders:**
+1. **Service-Driven Utility Demand:** Fee-funded operations and payment rails increase utility
 2. **Burn Deflation:** Proportional value increase from supply reduction
 
-**Total Holder Benefit:**
+**Illustrative Holder Impact:**
 ```typescript
-// Example: 10,000 VFIDE staked
-const stakingAPY = 0.065; // 6.5% average
+// Example: 10,000 VFIDE held
+const utilityGrowth = 0.05; // Example utility-driven demand effect
 const burnDeflation = 0.0018; // 0.18% annual
 
-// Year 1 gains:
-const stakingRewards = 10_000 * 0.065 = 650 tokens
-const deflationBenefit = 10_000 * 0.0018 = 18 tokens value increase
-// Total benefit: 650 + 18 = 668 tokens (~6.68% effective return)
+// Year 1 illustrative impact:
+const utilityEffect = 10_000 * utilityGrowth;
+const deflationBenefit = 10_000 * burnDeflation;
+const combinedEffect = utilityEffect + deflationBenefit;
 ```
 
 ### Price Appreciation Drivers
@@ -495,7 +489,7 @@ const deflationBenefit = 10_000 * 0.0018 = 18 tokens value increase
 1. **Burn Deflation** - Reduces supply continuously
 2. **Usage Growth** - More transactions = more burns
 3. **Network Effects** - More merchants = more payment volume
-4. **Staking Lock-Up** - Reduces circulating supply
+4. **Long-Term Holder Alignment** - Encourages sustained participation
 5. **ProofScore Incentive** - Users build trust to reduce fees
 6. **Governance Rights** - Voting power creates demand
 
@@ -682,7 +676,7 @@ The fee model becomes **more robust** under stress:
 - ✅ Utility services, not investment instruments
 - ✅ Fees fund operations, not returns
 - ✅ No profit promises or ROI claims
-- ✅ Staking rewards come from usage fees, not external funding
+- ✅ Service payments come from usage fees, not external funding
 
 **4. Efforts of Others?**
 - ✅ Value from user participation and network effects
@@ -733,7 +727,7 @@ The fee model becomes **more robust** under stress:
 | ↳ Development | 12.5% | $11.406M | Core development, audits |
 | ↳ Security | 7.5% | $6.844M | Audits, bug bounties, monitoring |
 | ↳ Marketing | 7.5% | $6.844M | User acquisition, partnerships |
-| ↳ Staking Rewards | 5% | $4.563M | Incentivize holding & governance |
+| ↳ Service Payments | 5% | $4.563M | Work and governance compensation |
 | ↳ Council Compensation | 2.5% | $2.281M | Governance workload |
 | **TOTAL** | **100%** | **$91.25M** | Complete sustainability model |
 

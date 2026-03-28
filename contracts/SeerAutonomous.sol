@@ -93,6 +93,7 @@ contract SeerAutonomous is ReentrancyGuard {
     event ModulesSet(address seer, address dao, address ledger);
     event DAOSet(address indexed oldDAO, address indexed newDAO);
     event OperatorSet(address indexed operator, bool authorized);
+    event RiskOracleSet(address indexed oldOracle, address indexed newOracle);
     
     // Automatic enforcement
     event AutoEnforced(address indexed subject, ActionType action, EnforcementResult result);
@@ -302,7 +303,9 @@ contract SeerAutonomous is ReentrancyGuard {
 
     /// @notice Set optional risk oracle (DAO only)
     function setRiskOracle(address _oracle) external onlyDAO {
+        address oldOracle = address(riskOracle);
         riskOracle = IRiskOracle_Auto(_oracle);
+        emit RiskOracleSet(oldOracle, _oracle);
     }
     
     function _initializeRateLimits() internal {

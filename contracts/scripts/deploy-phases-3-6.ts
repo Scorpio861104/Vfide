@@ -1,10 +1,9 @@
 /**
- * DEPRECATED — This file has been replaced.
+ * LEGACY — Phases 4-6 (Staking, Liquidity Mining, Advanced DeFi) were removed for
+ * Howey Test compliance. This file exists for historical reference only.
+ * See `DeployPhases3to6.sol` for the compliance notice.
  *
- * Phases 4-6 (Staking, Liquidity Mining, Advanced DeFi) were removed for
- * Howey Test compliance.  See `DeployPhases3to6.sol` for the compliance notice.
- *
- * Use the following scripts instead:
+ * For current deployments, use:
  *   - Phase 1 (Token + Security):  contracts/scripts/deploy-phase1.ts
  *   - Phase 3 (Bridge + Oracle):   contracts/scripts/deploy-phase3.ts
  *

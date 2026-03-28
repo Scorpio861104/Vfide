@@ -4,6 +4,34 @@ pragma solidity 0.8.30;
 /// @dev Minimal placeholder contract — satisfies extcodesize > 0 checks.
 contract Placeholder {}
 
+/// @dev Minimal emergency controller stub for CircuitBreaker tests.
+contract EmergencyControllerStub {
+    bool public paused;
+
+    function emergencyPause() external {
+        paused = true;
+    }
+}
+
+/// @dev Minimal deployer stubs for Phase1 orchestration coverage.
+contract Phase1GovernanceDeployerStub {
+    function deployGovernance(address, address[5] memory) external returns (address, address, address) {
+        return (address(new Placeholder()), address(new Placeholder()), address(new Placeholder()));
+    }
+}
+
+contract Phase1InfrastructureDeployerStub {
+    function deployInfrastructure(address, address, address) external returns (address, address) {
+        return (address(new Placeholder()), address(new Placeholder()));
+    }
+}
+
+contract Phase1TokenDeployerStub {
+    function deployToken(string memory, string memory, uint256, address, address) external returns (address) {
+        return address(new Placeholder());
+    }
+}
+
 /// @dev Minimal ERC20 stub that returns true for transfer (satisfies IERC20).
 contract TokenStub {
     function transfer(address, uint256) external pure returns (bool) { return true; }
@@ -41,8 +69,8 @@ contract MintableTokenStub {
     }
 }
 
-/// @dev Minimal presale stub — satisfies extcodesize > 0 + IPresaleStart interface.
-contract PresaleStub {
+/// @dev Minimal contract stub — satisfies extcodesize > 0 + IPresaleStart interface.
+contract SaleStartStub {
     uint256 public saleStartTime;
     constructor() { saleStartTime = block.timestamp; }
 }
@@ -58,6 +86,15 @@ contract VaultHubStub {
     // VaultHub.vaultOf() signature used by PanicGuard
     function vaultOf(address owner) external view returns (address) {
         return vaults[owner];
+    }
+
+    function ensureVault(address owner) external returns (address) {
+        address vault = vaults[owner];
+        if (vault == address(0)) {
+            vault = owner;
+            vaults[owner] = vault;
+        }
+        return vault;
     }
 }
 

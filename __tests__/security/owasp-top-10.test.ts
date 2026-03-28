@@ -320,10 +320,7 @@ describe('OWASP Top 10 Security Tests', () => {
       }
     });
 
-    it('disables directory listing', () => {
-      // Next.js doesn't expose directory listing by default
-      expect(true).toBe(true);
-    });
+    it.todo('disables directory listing');
 
     it('removes unnecessary HTTP headers', () => {
       const headers = {
@@ -345,10 +342,7 @@ describe('OWASP Top 10 Security Tests', () => {
 
   // ==================== A06:2021 – Vulnerable and Outdated Components ====================
   describe('A06:2021 - Vulnerable and Outdated Components', () => {
-    it('uses up-to-date dependencies', () => {
-      // This should be checked with npm audit
-      expect(true).toBe(true);
-    });
+    it.todo('uses up-to-date dependencies');
 
     it('avoids deprecated packages', () => {
       // Check package.json doesn't contain known deprecated packages
@@ -419,10 +413,7 @@ describe('OWASP Top 10 Security Tests', () => {
       expect(parsed.role).toBe('user');
     });
 
-    it('validates CI/CD pipeline integrity', () => {
-      // Should use signed commits, protected branches
-      expect(true).toBe(true);
-    });
+    it.todo('validates CI/CD pipeline integrity');
   });
 
   // ==================== A09:2021 – Security Logging and Monitoring Failures ====================

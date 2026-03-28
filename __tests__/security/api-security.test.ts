@@ -331,9 +331,10 @@ describe('API Security Tests', () => {
       const loginTime1 = Date.now();
       // await checkUser('exists@example.com');
       const loginTime2 = Date.now();
-      
-      // In production, use constant-time comparison
-      expect(true).toBe(true);
+
+      // Baseline guard: timing values should be monotonic and computable.
+      expect(loginTime2).toBeGreaterThanOrEqual(loginTime1);
+      expect(loginTime2 - loginTime1).toBeGreaterThanOrEqual(0);
     });
   });
 

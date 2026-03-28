@@ -78,3 +78,8 @@ next-env.d.ts
 # Deployment wizard state
 .deploy-state.json
 deployments-solo-*.json
+
+# Segment A hygiene quarantine (non-destructive)
+/VFIDE_Complete_Package.zip
+/VFIDE_Full_Audit_v2.docx
+/vfide-complete/

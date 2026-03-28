@@ -1,37 +1,21 @@
 {
   "generated": [
-    "BadgeManager",
     "BadgeRegistry",
     "BridgeSecurityModule",
-    "CardBoundVault",
-    "CouncilElection",
-    "CouncilManager",
-    "CouncilSalary",
-    "DAO",
     "DAOTimelock",
     "DutyDistributor",
-    "EcosystemVault",
     "EmergencyControl",
     "EscrowManager",
     "GovernanceHooks",
     "LiquidityIncentives",
-    "MerchantPortal",
-    "OwnerControlPanel",
     "PayrollManager",
-    "ProofScoreBurnRouter",
-    "RevenueSplitter",
     "SanctumVault",
-    "SeerAutonomous",
-    "SeerGuardian",
     "SeerSocial",
+    "SeerView",
     "StablecoinRegistry",
     "SubscriptionManager",
-    "SystemHandover",
     "TempVault",
-    "VFIDEBadgeNFT",
     "VFIDEBenefits",
-    "VFIDEEnterpriseGateway",
-    "VFIDEPresale",
     "VaultRecoveryClaim",
     "VaultRegistry"
   ],
@@ -52,5 +36,71 @@
     "VaultHub",
     "VaultInfrastructure"
   ],
-  "skippedExists": []
+  "skippedExists": [],
+  "skippedUnsupported": [
+    {
+      "contract": "BadgeManager",
+      "reason": "library-links-required"
+    },
+    {
+      "contract": "CardBoundVault",
+      "reason": "dynamic-array-constructor"
+    },
+    {
+      "contract": "CouncilElection",
+      "reason": "multi-dependency-constructor"
+    },
+    {
+      "contract": "CouncilManager",
+      "reason": "multi-dependency-constructor"
+    },
+    {
+      "contract": "CouncilSalary",
+      "reason": "multi-dependency-constructor"
+    },
+    {
+      "contract": "DAO",
+      "reason": "multi-dependency-constructor"
+    },
+    {
+      "contract": "EcosystemVault",
+      "reason": "bytecode-too-large"
+    },
+    {
+      "contract": "MerchantPortal",
+      "reason": "multi-dependency-constructor"
+    },
+    {
+      "contract": "OwnerControlPanel",
+      "reason": "multi-dependency-constructor"
+    },
+    {
+      "contract": "ProofScoreBurnRouter",
+      "reason": "multi-dependency-constructor"
+    },
+    {
+      "contract": "RevenueSplitter",
+      "reason": "dynamic-array-constructor"
+    },
+    {
+      "contract": "SeerAutonomous",
+      "reason": "bytecode-too-large"
+    },
+    {
+      "contract": "SeerGuardian",
+      "reason": "multi-dependency-constructor"
+    },
+    {
+      "contract": "SystemHandover",
+      "reason": "multi-dependency-constructor"
+    },
+    {
+      "contract": "VFIDEBadgeNFT",
+      "reason": "library-links-required"
+    },
+    {
+      "contract": "VFIDEEnterpriseGateway",
+      "reason": "multi-dependency-constructor"
+    }
+  ]
 }

@@ -5,6 +5,7 @@
 
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import { Address, parseEther } from 'viem';
+import fs from 'node:fs';
 
 const mockContractRead = jest.fn();
 const mockContractWrite = jest.fn();
@@ -216,14 +217,18 @@ describe('VFIDEBenefits Contract', () => {
     });
 
     it('confirms referral bonuses are not available in this protocol', () => {
-      // claimReferralBonus has been removed from VFIDEPresale.
+      // Referral bonuses are not part of this protocol.
       // VFIDE has no referral reward system.
-      expect(true).toBe(true);
+      const source = fs.readFileSync('contracts/VFIDEBenefits.sol', 'utf-8');
+      expect(source).not.toContain('referralBonus');
+      expect(source).not.toContain('claimReferralBonus');
     });
 
     it('confirms referral reward calculations are not available', () => {
       // getReferralRewards has been removed. No referral tracking exists.
-      expect(true).toBe(true);
+      const source = fs.readFileSync('contracts/VFIDEBenefits.sol', 'utf-8');
+      expect(source).not.toContain('getReferralRewards');
+      expect(source).not.toContain('calculateReferralRewards');
     });
   });
 

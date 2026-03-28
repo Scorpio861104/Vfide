@@ -291,8 +291,10 @@ describe('Accessibility: Motion', () => {
 
     if (matches) {
       // Animations should be disabled
-      expect(true).toBe(true);
+      expect(matches).toBe(true);
     }
+
+    expect(typeof matches).toBe('boolean');
   });
 });
 

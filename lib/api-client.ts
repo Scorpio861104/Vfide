@@ -157,7 +157,13 @@ export class APIClient {
   }
 
   async verifyToken() {
-    return this.request<{ valid: boolean; address: string }>('/auth/verify');
+    return this.request<{ valid: boolean; address: string }>('/auth');
+  }
+
+  async logout() {
+    return this.request<{ success: boolean; message: string }>('/auth/logout', {
+      method: 'POST',
+    });
   }
 
   // ============ Messages ============

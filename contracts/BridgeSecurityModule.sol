@@ -113,6 +113,9 @@ contract BridgeSecurityModule is Ownable, Pausable {
         // Check blacklist
         if (blacklist[user]) revert Blacklisted();
 
+        // BSM-01: Reject flagged users — suspicious-activity flag must be manually cleared by admin
+        if (suspiciousActivity[user].flagged) revert SuspiciousActivity();
+
         // Whitelist bypasses limits
         if (whitelist[user]) {
             emit RateLimitChecked(user, amount, true);

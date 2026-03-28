@@ -14,6 +14,10 @@ contract MockSeerForEscrow {
         return _scores[account];
     }
 
+    function getCachedScore(address account) external view returns (uint16) {
+        return _scores[account];
+    }
+
     function reward(address subject, uint16 delta, string calldata) external {
         rewarded[subject] += delta;
     }

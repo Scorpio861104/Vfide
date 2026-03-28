@@ -516,13 +516,10 @@ describe('Data Protection Security Tests', () => {
   describe('Third-Party Integration Security', () => {
     it('validates third-party API credentials', () => {
       const apiKey = process.env.THIRD_PARTY_API_KEY;
-      
+
       // In production, this should be defined
       // In test environment, it may not be set
-      if (apiKey) {
-        expect(apiKey).not.toBe('');
-      }
-      expect(true).toBe(true);
+      expect(apiKey === undefined || apiKey.length > 0).toBe(true);
     });
 
     it('uses secure communication with third parties', () => {

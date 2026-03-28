@@ -197,6 +197,11 @@ function PayContent() {
       return;
     }
 
+    if (selectedMethod !== 'vfide') {
+      showToast('Stablecoin checkout is not enabled on this route yet. Please select VFIDE.', 'error');
+      return;
+    }
+
     if (!qrReadyForPayment) {
       showToast('QR signature validation failed. Request a newly signed QR code.', 'error');
       return;
@@ -349,8 +354,8 @@ function PayContent() {
               <div className="space-y-3">
                 {[
                   { id: 'vfide' as const, label: 'VFIDE Token', desc: `0.25-5% burn fee (ProofScore-based) • ${settlementTone.method}` },
-                  { id: 'usdc' as const, label: 'USDC', desc: 'Stablecoin • Auto-converted to VFIDE' },
-                  { id: 'usdt' as const, label: 'USDT', desc: 'Stablecoin • Auto-converted to VFIDE' },
+                  { id: 'usdc' as const, label: 'USDC', desc: 'Stablecoin • Coming soon on this checkout route' },
+                  { id: 'usdt' as const, label: 'USDT', desc: 'Stablecoin • Coming soon on this checkout route' },
                 ].map((method) => (
                   <motion.button 
                     key={method.id}

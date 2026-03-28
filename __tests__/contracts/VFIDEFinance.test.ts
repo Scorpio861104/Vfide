@@ -94,7 +94,7 @@ describe('VFIDEFinance Contract', () => {
     });
   });
 
-  describe('Staking', () => {
+  describe('Service Payment Compatibility', () => {
     it('should stake tokens', async () => {
       mockContractWrite.mockResolvedValueOnce('0xhash');
       expect(await mockContractWrite({ functionName: 'stake', args: [parseEther('100')] })).toBe(

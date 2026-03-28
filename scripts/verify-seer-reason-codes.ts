@@ -22,7 +22,7 @@ async function main() {
   const operator = await provider.getSigner(1);
   const subject = await provider.getSigner(2);
 
-  const seerArtifact = loadArtifact('artifacts/contracts/VFIDETrust.sol/Seer.json');
+  const seerArtifact = loadArtifact('artifacts/contracts/Seer.sol/Seer.json');
   const seerFixtureArtifact = loadArtifact('artifacts/contracts/mocks/MockSeerAuto.sol/MockSeerAuto.json');
   const guardianArtifact = loadArtifact('artifacts/contracts/SeerGuardian.sol/SeerGuardian.json');
 

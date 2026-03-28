@@ -1,4 +1,4 @@
-import { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { GET } from '../../../app/api/seer/analytics/route';
 
 jest.mock('@/lib/auth/rateLimit', () => ({
@@ -9,12 +9,35 @@ jest.mock('@/lib/db', () => ({
   query: jest.fn(),
 }));
 
+jest.mock('@/lib/auth/middleware', () => ({
+  requireAuth: jest.fn(),
+}));
+
 describe('/api/seer/analytics', () => {
   const { withRateLimit } = require('@/lib/auth/rateLimit');
   const { query } = require('@/lib/db');
+  const { requireAuth } = require('@/lib/auth/middleware');
 
   beforeEach(() => {
     jest.clearAllMocks();
+    requireAuth.mockResolvedValue({
+      user: {
+        address: '0x1234567890123456789012345678901234567890',
+        chainId: 8453,
+        iat: 0,
+        exp: 0,
+      },
+    });
+  });
+
+  it('returns 401 when authentication fails', async () => {
+    withRateLimit.mockResolvedValue(null);
+    requireAuth.mockResolvedValue(NextResponse.json({ error: 'Authentication required' }, { status: 401 }));
+
+    const request = new NextRequest('http://localhost:3000/api/seer/analytics');
+    const response = await GET(request);
+
+    expect(response.status).toBe(401);
   });
 
   it('returns 400 for invalid windowHours', async () => {

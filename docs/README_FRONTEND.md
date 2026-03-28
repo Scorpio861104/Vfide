@@ -246,7 +246,7 @@ function MyComponent() {
 
 None currently tracked. See GitHub Issues for bugs and feature requests.
 
-## 🚧 TODO
+## 🚧 Backlog
 
 - [ ] Implement QR code generation (library installed, needs integration)
 - [ ] Add loading states for all async operations

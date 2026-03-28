@@ -246,17 +246,19 @@ contract SeerGuardian {
         uint16 score = seer.getScore(subject);
         RestrictionType currentRestriction = activeRestriction[subject];
         
-        // Auto-restrict if score too low
-        if (score < autoRestrictThreshold && currentRestriction == RestrictionType.None) {
-            _applyAutoRestriction(subject, RestrictionType.GovernanceBan, "auto_low_score", RC_AUTO_LOW_SCORE);
+        // SG-01 FIX: Check most-severe conditions first so a single call applies the
+        // harshest applicable restriction immediately (no multi-call escalation needed).
+        // Critical: full freeze for dangerous scores (< 1000 — highest priority)
+        if (score < 1000 && currentRestriction < RestrictionType.FullFreeze) {
+            _applyAutoRestriction(subject, RestrictionType.FullFreeze, "auto_critical_score", RC_AUTO_CRITICAL_SCORE);
         }
-        // More severe restriction for very low scores
+        // More severe restriction for very low scores (< 2000) — only if not already FullFreeze
         else if (score < 2000 && currentRestriction < RestrictionType.TransferLimit) {
             _applyAutoRestriction(subject, RestrictionType.TransferLimit, "auto_very_low_score", RC_AUTO_VERY_LOW_SCORE);
         }
-        // Critical: full freeze for dangerous scores
-        else if (score < 1000 && currentRestriction < RestrictionType.FullFreeze) {
-            _applyAutoRestriction(subject, RestrictionType.FullFreeze, "auto_critical_score", RC_AUTO_CRITICAL_SCORE);
+        // Base governance ban for generally low scores
+        else if (score < autoRestrictThreshold && currentRestriction == RestrictionType.None) {
+            _applyAutoRestriction(subject, RestrictionType.GovernanceBan, "auto_low_score", RC_AUTO_LOW_SCORE);
         }
         
         // Auto-lift if score recovered

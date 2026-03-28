@@ -6,7 +6,7 @@
  * to prevent prototype pollution and unexpected state mutations.
  */
 
-import { z } from 'zod';
+import { z } from 'zod4';
 
 // ─── Topic names ────────────────────────────────────────────────────────────
 

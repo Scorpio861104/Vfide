@@ -17,16 +17,25 @@ import { logger } from '@/lib/logger';
 
 function parseMessageTimestamp(message: string): number | null {
   const timestampMatch = message.match(/^Timestamp:\s*(\d+)\s*$/m);
-  if (!timestampMatch || !timestampMatch[1]) {
+  if (timestampMatch && timestampMatch[1]) {
+    const parsed = Number.parseInt(timestampMatch[1], 10);
+    if (Number.isSafeInteger(parsed) && parsed > 0) {
+      return parsed;
+    }
+  }
+
+  // Backward-compatible support for SIWE-standard "Issued At" lines.
+  const issuedAtMatch = message.match(/^Issued At:\s*(.+)\s*$/m);
+  if (!issuedAtMatch || !issuedAtMatch[1]) {
     return null;
   }
 
-  const parsed = Number.parseInt(timestampMatch[1], 10);
-  if (!Number.isSafeInteger(parsed) || parsed <= 0) {
+  const issuedAtMs = Date.parse(issuedAtMatch[1]);
+  if (Number.isNaN(issuedAtMs) || issuedAtMs <= 0) {
     return null;
   }
 
-  return parsed;
+  return issuedAtMs;
 }
 
 function parseChainId(message: string): number | null {

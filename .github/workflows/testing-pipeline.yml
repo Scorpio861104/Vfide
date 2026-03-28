@@ -1,0 +1,309 @@
+name: VFIDE Comprehensive Test Suite
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+env:
+  NODE_VERSION: "20"
+  SOLC_VERSION: "0.8.19"
+
+jobs:
+  # ───────────────────────────────────────────
+  # 1. Smart Contract Tests (Hardhat)
+  # ───────────────────────────────────────────
+  contract-tests:
+    name: "Contracts: Unit + Integration"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+      - run: npm ci
+      - run: npx hardhat compile
+      - run: npx hardhat test --parallel
+        env:
+          REPORT_GAS: true
+      - name: Upload gas report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: gas-report
+          path: gas-report.txt
+
+  # ───────────────────────────────────────────
+  # 2. Coverage (must meet thresholds)
+  # ───────────────────────────────────────────
+  coverage:
+    name: "Contracts: Coverage"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+      - run: npm ci
+      - run: npx hardhat coverage
+      - name: Check coverage thresholds
+        run: |
+          # Verify minimum coverage percentages
+          node -e "
+          const report = require('./coverage/coverage-summary.json');
+          const totals = report.total;
+          const MIN = 80;
+          const checks = ['statements', 'branches', 'functions', 'lines'];
+          let failed = false;
+          for (const check of checks) {
+            const pct = totals[check].pct;
+            if (pct < MIN) {
+              console.error('FAIL: ' + check + ' coverage ' + pct + '% < ' + MIN + '%');
+              failed = true;
+            } else {
+              console.log('PASS: ' + check + ' coverage ' + pct + '%');
+            }
+          }
+          if (failed) process.exit(1);
+          "
+      - name: Upload coverage
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage-report
+          path: coverage/
+
+  # ───────────────────────────────────────────
+  # 3. Contract Size Check (L-05)
+  # ───────────────────────────────────────────
+  contract-size:
+    name: "Contracts: Size Check (24KB EVM limit)"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+      - run: npm ci
+      - run: npx hardhat compile
+      - name: Check contract sizes
+        run: |
+          npx hardhat size-contracts 2>&1 | tee size-report.txt
+          if grep -q "exceeds" size-report.txt; then
+            echo "::error::One or more contracts exceed the 24KB EVM limit"
+            exit 1
+          fi
+
+  # ───────────────────────────────────────────
+  # 4. Slither Static Analysis
+  # ───────────────────────────────────────────
+  slither:
+    name: "Security: Slither"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+      - run: npm ci
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install slither-analyzer
+      - run: npx hardhat compile
+      - name: Run Slither
+        run: |
+          slither . \
+            --config-file slither/slither.config.json \
+            --sarif reports/slither.sarif \
+            --json reports/slither.json \
+            || true
+      - name: Upload SARIF
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: reports/slither.sarif
+      - name: Upload Slither report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: slither-report
+          path: reports/
+
+  # ───────────────────────────────────────────
+  # 5. Mythril Deep Analysis (scheduled)
+  # ───────────────────────────────────────────
+  mythril:
+    name: "Security: Mythril (critical contracts)"
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+      - run: npm ci
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install mythril
+      - run: npx hardhat compile
+      - name: Run Mythril on critical contracts
+        run: |
+          chmod +x scripts/run-mythril.sh
+          ./scripts/run-mythril.sh --critical-only
+        timeout-minutes: 60
+      - name: Upload Mythril reports
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: mythril-reports
+          path: reports/mythril/
+
+  # ───────────────────────────────────────────
+  # 6. API Tests (Jest)
+  # ───────────────────────────────────────────
+  api-tests:
+    name: "API: Route Tests"
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: vfide_test
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      redis:
+        image: redis:7
+        ports:
+          - 6379:6379
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+      - run: npm ci
+      - name: Run migrations
+        run: npm run db:migrate
+        env:
+          DATABASE_URL: postgres://test:test@localhost:5432/vfide_test
+      - name: Start API server
+        run: npm run dev &
+        env:
+          DATABASE_URL: postgres://test:test@localhost:5432/vfide_test
+          REDIS_URL: redis://localhost:6379
+          JWT_SECRET: test-jwt-secret-for-ci
+          NODE_ENV: test
+      - name: Wait for server
+        run: npx wait-on http://localhost:3000/api/health -t 30000
+      - name: Run API tests
+        run: npx jest test/api/ --forceExit --detectOpenHandles
+        env:
+          TEST_API_URL: http://localhost:3000
+
+  # ───────────────────────────────────────────
+  # 7. Frontend Tests (Jest + RTL)
+  # ───────────────────────────────────────────
+  frontend-tests:
+    name: "Frontend: Component + Security"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+      - run: npm ci
+      - run: npx jest test/frontend/ --forceExit
+
+  # ───────────────────────────────────────────
+  # 8. Infrastructure Tests
+  # ───────────────────────────────────────────
+  infra-tests:
+    name: "Infrastructure: Config + Docker + Migrations"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+      - run: npm ci
+      - run: npx jest test/infrastructure/
+
+  # ───────────────────────────────────────────
+  # 9. Security Regression Suite
+  # ───────────────────────────────────────────
+  security-regressions:
+    name: "Security: Regression Suite (44 findings)"
+    runs-on: ubuntu-latest
+    needs: [contract-tests]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+      - run: npm ci
+      - run: npx hardhat compile
+      - run: npx hardhat test test/security/regressions.test.ts
+
+  # ───────────────────────────────────────────
+  # 10. E2E Tests (Playwright, on main only)
+  # ───────────────────────────────────────────
+  e2e-tests:
+    name: "E2E: Playwright"
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    needs: [api-tests, frontend-tests]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+      - run: npm ci
+      - run: npx playwright install --with-deps
+      - name: Start app
+        run: npm run build && npm start &
+        env:
+          NODE_ENV: production
+      - name: Run E2E
+        run: npx playwright test
+      - name: Upload E2E results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-report
+          path: playwright-report/
+
+  # ───────────────────────────────────────────
+  # 11. Linting
+  # ───────────────────────────────────────────
+  lint:
+    name: "Lint: Solhint + ESLint + Prettier"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+      - run: npm ci
+      - run: npx solhint 'contracts/**/*.sol'
+      - run: npx eslint . --ext .ts,.tsx || true
+      - run: npx prettier --check 'contracts/**/*.sol' 'test/**/*.ts'

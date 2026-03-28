@@ -126,6 +126,49 @@ export function useProcessPayment() {
 }
 
 /**
+ * Set a scoped merchant pull permit for merchant-initiated payments.
+ */
+export function useSetMerchantPullPermit() {
+  const { writeContractAsync, data, isPending } = useWriteContract()
+  const [error, setError] = useState<string | null>(null)
+
+  const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({
+    hash: data,
+  })
+
+  const setMerchantPullPermit = async (
+    merchant: `0x${string}`,
+    maxAmount: string,
+    expiresAt: bigint | number = 0
+  ) => {
+    setError(null)
+    try {
+      await writeContractAsync({
+        address: CONTRACT_ADDRESSES.MerchantPortal,
+        abi: MerchantPortalABI,
+        functionName: 'setMerchantPullPermit',
+        args: [merchant, parseEther(maxAmount), BigInt(expiresAt)],
+      })
+      return { success: true }
+    } catch (err: unknown) {
+      logError('setMerchantPullPermit', err);
+      const parsed = parseContractError(err);
+      const errorMsg = `Failed to set merchant pull permit: ${parsed.userMessage}`;
+      setError(errorMsg)
+      return { success: false, error: errorMsg }
+    }
+  }
+
+  return {
+    setMerchantPullPermit,
+    isSetting: isPending || isConfirming,
+    isSuccess,
+    txHash: data,
+    error,
+  }
+}
+
+/**
  * Pay merchant (customer-initiated)
  */
 export function usePayMerchant() {

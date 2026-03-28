@@ -5,7 +5,7 @@ import "./SharedInterfaces.sol";
 
 /**
  * @title StablecoinRegistry
- * @notice Manages allowed stablecoins for presale and other ecosystem uses
+ * @notice Manages allowed stablecoins for ecosystem uses
  * @dev Stores decimals and enabled status for each stablecoin
  */
 contract StablecoinRegistry is Ownable, Pausable {
