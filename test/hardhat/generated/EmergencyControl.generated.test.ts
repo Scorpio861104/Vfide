@@ -22,6 +22,7 @@ describe("EmergencyControl (generated stub)", () => {
     signers[0].address, // address _dao
     signers[1].address, // address _breaker
     signers[2].address, // address _ledger
+    signers[3].address, // address _foundation (FINAL-10 FIX)
   ];
 
     const contract = await Factory.deploy(...deployArgs);

@@ -42,6 +42,7 @@ contract EscrowManager is ReentrancyGuard {
     event DisputeRaised(uint256 indexed escrowId, address indexed by);
     event DisputeResolved(uint256 indexed escrowId, address indexed winner);
     event EscrowNearTimeout(uint256 indexed escrowId, uint256 timeRemaining);
+    event BuyerClaimedTimeout(uint256 indexed escrowId, address indexed buyer); // BATCH-08 FIX
 
     enum State { CREATED, RELEASED, REFUNDED, DISPUTED }
 
@@ -356,5 +357,18 @@ contract EscrowManager is ReentrancyGuard {
         e.state = State.REFUNDED;
         IERC20(e.token).safeTransfer(e.buyer, e.amount);
         emit DisputeResolved(id, e.buyer);
+    }
+
+    /// @notice BATCH-08 FIX: Buyer can reclaim funds if merchant never claims after releaseTime + 30 days.
+    /// @dev Protects buyers from funds being locked when the merchant is unresponsive after delivery window.
+    function buyerClaimTimeout(uint256 id) external nonReentrant {
+        Escrow storage e = escrows[id];
+        require(msg.sender == e.buyer, "ESC: not buyer");
+        require(e.state == State.CREATED, "ESC: bad state");
+        require(block.timestamp >= e.releaseTime + 30 days, "ESC: merchant grace period active");
+
+        e.state = State.REFUNDED;
+        IERC20(e.token).safeTransfer(e.buyer, e.amount);
+        emit BuyerClaimedTimeout(id, e.buyer);
     }
 }

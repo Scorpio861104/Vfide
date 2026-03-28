@@ -238,6 +238,34 @@ contract CircuitBreaker is VFIDEAccessControl {
     }
 
     /**
+     * @notice FINAL-09 FIX: Public permissionless check that automatically triggers the circuit
+     *         breaker if any configured threshold is currently exceeded.
+     * @dev Allows high-frequency paths (e.g., token transfers) or off-chain keepers to call this
+     *      without requiring a specific role. No state is written if thresholds are not exceeded.
+     * @return triggered True if the circuit breaker was triggered by this call.
+     */
+    function checkAndTrigger() external notTriggered returns (bool triggered) {
+        if (!config.enabled) return false;
+
+        // Check daily volume threshold
+        if (monitoring.totalValueLocked > 0 && config.dailyVolumeThreshold > 0) {
+            uint256 volumeThreshold = (monitoring.totalValueLocked * config.dailyVolumeThreshold) / 100;
+            if (monitoring.dailyVolume >= volumeThreshold) {
+                _trigger("auto: daily volume threshold exceeded", monitoring.dailyVolume);
+                return true;
+            }
+        }
+
+        // Check blacklist threshold
+        if (config.blacklistThreshold > 0 && monitoring.blacklistCount24h >= config.blacklistThreshold) {
+            _trigger("auto: blacklist threshold exceeded", monitoring.blacklistCount24h);
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
      * @notice Reset circuit breaker
      * @dev Can only be called by governance to resume operations
      */

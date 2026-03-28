@@ -26,7 +26,8 @@ contract Phase1GovernanceDeployer {
         EmergencyControlCore emergencyControlContract = new EmergencyControlCore(
             _admin,
             _admin,
-            address(0)
+            address(0),
+            _admin   // FINAL-10 FIX: foundation defaults to admin at deploy; governance should update post-deploy
         );
         emergencyControl = address(emergencyControlContract);
     }

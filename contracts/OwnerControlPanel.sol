@@ -272,6 +272,11 @@ contract OwnerControlPanel {
         return keccak256(abi.encode("token_setCircuitBreaker", active, duration));
     }
 
+    /// @notice H-01 FIX: Action ID for confirming a pending circuit breaker activation.
+    function actionId_token_confirmCircuitBreaker() private pure returns (bytes32) {
+        return keccak256(abi.encode("token_confirmCircuitBreaker"));
+    }
+
     function actionId_token_setBlacklist(address user, bool status) private pure returns (bytes32) {
         return keccak256(abi.encode("token_setBlacklist", user, status));
     }
@@ -547,6 +552,14 @@ contract OwnerControlPanel {
         _consumeQueuedAction(actionId_token_setCircuitBreaker(active, duration));
         vfideToken.setCircuitBreaker(active, duration);
         emit EmergencyAction(active ? "circuit_breaker_on" : "circuit_breaker_off", address(vfideToken));
+    }
+
+    /// @notice H-01 FIX: Confirm a pending circuit breaker activation after its 48-hour timelock.
+    /// @dev Must be called after `token_setCircuitBreaker(true, ...)` + 48h delay to complete activation.
+    function token_confirmCircuitBreaker() external onlyOwner {
+        _consumeQueuedAction(actionId_token_confirmCircuitBreaker());
+        vfideToken.confirmCircuitBreaker();
+        emit EmergencyAction("circuit_breaker_confirmed", address(vfideToken));
     }
     
     /**
@@ -1170,10 +1183,15 @@ contract OwnerControlPanel {
     
     /**
      * @notice Emergency pause all systems
+     * @dev H-02 FIX: Explicitly activates security+fee bypass (circuit breaker no longer does this implicitly).
+     *      Security and fee bypasses are instant; circuit breaker activation is queued (48h timelock).
      */
     function emergency_pauseAll() external onlyOwner {
         _consumeQueuedAction(actionId_emergency_pauseAll());
-        // Enable circuit breaker on token (24 hour default for emergency)
+        // Immediately bypass SecurityHub checks and BurnRouter fees (independent controls per H-02)
+        vfideToken.setSecurityBypass(true, 1 days);
+        vfideToken.setFeeBypass(true, 1 days);
+        // Queue circuit breaker activation (requires confirmCircuitBreaker() after 48h)
         vfideToken.setCircuitBreaker(true, 1 days);
         
         emit EmergencyAction("system_paused", address(this));
@@ -1184,7 +1202,9 @@ contract OwnerControlPanel {
      */
     function emergency_resumeAll() external onlyOwner {
         _consumeQueuedAction(actionId_emergency_resumeAll());
-        // Disable circuit breaker on token
+        // Disable all bypasses immediately
+        vfideToken.setSecurityBypass(false, 0);
+        vfideToken.setFeeBypass(false, 0);
         vfideToken.setCircuitBreaker(false, 0);
         
         emit EmergencyAction("system_resumed", address(this));

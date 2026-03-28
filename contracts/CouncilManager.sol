@@ -298,7 +298,9 @@ contract CouncilManager is ReentrancyGuard {
      */
     function forcePaymentDistribution() external onlyDAO {
         IEcosystemVault(ecosystemVault).allocateIncoming();
-        uint256 vaultBalance = token.balanceOf(ecosystemVault);
+        // BATCH-04 FIX: Use councilPool() to read the earmarked council balance,
+        // not the raw token balance which includes all pools.
+        uint256 vaultBalance = IEcosystemVault(ecosystemVault).councilPool();
         require(vaultBalance > 0, "CM: no funds");
 
         uint256 opsAmount = (vaultBalance * OPS_PERCENTAGE) / 100;
