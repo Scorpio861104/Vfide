@@ -1,18 +1,56 @@
 {
+  "generatedAt": "2026-03-29T15:56:52.676Z",
   "totalAbiFunctions": 1170,
-  "totalMissingBindings": 47,
-  "filesWithMissingBindings": 16,
-  "missingBindingsByFile": {
-    "app/vesting/page.tsx": [
+  "totalFunctionBindingsScanned": 307,
+  "classificationCounts": {
+    "global-abi": 272,
+    "local-inline-abi": 12,
+    "external-interface": 0,
+    "unresolved": 23
+  },
+  "totalUnresolvedBindings": 23,
+  "filesWithUnresolvedBindings": 6,
+  "unresolvedBindingsByFile": {
+    "app/control-panel/components/AutoSwapPanel.tsx": [
       {
-        "line": 57,
-        "fn": "beneficiary"
+        "line": 28,
+        "fn": "autoSwap_getConfig"
+      },
+      {
+        "line": 44,
+        "fn": "autoSwap_configure"
+      },
+      {
+        "line": 70,
+        "fn": "autoSwap_quickSetupUSDC"
+      },
+      {
+        "line": 88,
+        "fn": "autoSwap_setEnabled"
       }
     ],
-    "app/sanctum/page.tsx": [
+    "app/control-panel/components/EcosystemPanel.tsx": [
       {
-        "line": 54,
-        "fn": "_nextProposalId"
+        "line": 25,
+        "fn": "ecosystem_getAutoWorkPayoutConfig"
+      },
+      {
+        "line": 39,
+        "fn": "ecosystem_configureAutoWorkPayout"
+      }
+    ],
+    "app/control-panel/components/EmergencyPanel.tsx": [
+      {
+        "line": 32,
+        "fn": "emergency_pauseAll"
+      },
+      {
+        "line": 49,
+        "fn": "emergency_resumeAll"
+      },
+      {
+        "line": 66,
+        "fn": "token_setCircuitBreaker"
       }
     ],
     "app/control-panel/components/GovernancePanel.tsx": [
@@ -57,54 +95,6 @@
         "fn": "ecosystem_configureAutoWorkPayout"
       }
     ],
-    "app/control-panel/components/EcosystemPanel.tsx": [
-      {
-        "line": 25,
-        "fn": "ecosystem_getAutoWorkPayoutConfig"
-      },
-      {
-        "line": 39,
-        "fn": "ecosystem_configureAutoWorkPayout"
-      }
-    ],
-    "app/control-panel/components/AutoSwapPanel.tsx": [
-      {
-        "line": 28,
-        "fn": "autoSwap_getConfig"
-      },
-      {
-        "line": 44,
-        "fn": "autoSwap_configure"
-      },
-      {
-        "line": 70,
-        "fn": "autoSwap_quickSetupUSDC"
-      },
-      {
-        "line": 88,
-        "fn": "autoSwap_setEnabled"
-      }
-    ],
-    "app/control-panel/components/SystemStatusPanel.tsx": [
-      {
-        "line": 10,
-        "fn": "system_getStatus"
-      }
-    ],
-    "app/control-panel/components/EmergencyPanel.tsx": [
-      {
-        "line": 32,
-        "fn": "emergency_pauseAll"
-      },
-      {
-        "line": 49,
-        "fn": "emergency_resumeAll"
-      },
-      {
-        "line": 66,
-        "fn": "token_setCircuitBreaker"
-      }
-    ],
     "app/control-panel/components/ProductionSetupPanel.tsx": [
       {
         "line": 26,
@@ -119,108 +109,10 @@
         "fn": "production_setupWithAutoSwap"
       }
     ],
-    "app/api/crypto/price/route.ts": [
+    "app/control-panel/components/SystemStatusPanel.tsx": [
       {
-        "line": 179,
-        "fn": "slot0"
-      },
-      {
-        "line": 184,
-        "fn": "token0"
-      }
-    ],
-    "app/council/page.tsx": [
-      {
-        "line": 77,
-        "fn": "isCouncilMember"
-      },
-      {
-        "line": 86,
-        "fn": "getClaimable"
-      },
-      {
-        "line": 121,
-        "fn": "claimSalary"
-      }
-    ],
-    "app/dao-hub/page.tsx": [
-      {
-        "line": 201,
-        "fn": "isCouncilMember"
-      }
-    ],
-    "app/admin/page.tsx": [
-      {
-        "line": 547,
-        "fn": "systemWhitelist"
-      },
-      {
-        "line": 654,
-        "fn": "highTrustReduction"
-      },
-      {
-        "line": 661,
-        "fn": "lowTrustPenalty"
-      },
-      {
-        "line": 694,
-        "fn": "whitelistSystemContract"
-      },
-      {
-        "line": 704,
-        "fn": "whitelistSystemContract"
-      }
-    ],
-    "hooks/useVaultRecovery.ts": [
-      {
-        "line": 484,
-        "fn": "cancelInheritance"
-      }
-    ],
-    "hooks/useVaultRegistry.ts": [
-      {
-        "line": 795,
-        "fn": "initiateClaim"
-      },
-      {
-        "line": 816,
-        "fn": "getClaim"
-      },
-      {
-        "line": 838,
-        "fn": "getActiveClaimForVault"
-      },
-      {
-        "line": 867,
-        "fn": "guardianVote"
-      },
-      {
-        "line": 891,
-        "fn": "challengeClaim"
-      },
-      {
-        "line": 915,
-        "fn": "finalizeClaim"
-      },
-      {
-        "line": 935,
-        "fn": "canFinalize"
-      },
-      {
-        "line": 958,
-        "fn": "challengeTimeRemaining"
-      }
-    ],
-    "components/social/SubscriptionManager.tsx": [
-      {
-        "line": 113,
-        "fn": "subscribe"
-      }
-    ],
-    "lib/services/transactionBatcher.ts": [
-      {
-        "line": 257,
-        "fn": "aggregate3"
+        "line": 10,
+        "fn": "system_getStatus"
       }
     ]
   }

@@ -1,5 +1,6 @@
-import { useWriteContract } from 'wagmi';
+import { useWriteContract, usePublicClient } from 'wagmi';
 import { useState } from 'react';
+import { isAddress } from 'viem';
 import { useVaultHub } from './useVaultHub';
 import { devLog } from '../lib/utils';
 
@@ -8,7 +9,8 @@ import { devLog } from '../lib/utils';
  * Shows user-friendly messages instead of raw transactions
  */
 export function useSimpleVault() {
-  const { writeContract } = useWriteContract();
+  const publicClient = usePublicClient();
+  const { writeContractAsync } = useWriteContract();
   const { vaultAddress } = useVaultHub();
   const [actionStatus, setActionStatus] = useState<'idle' | 'preparing' | 'signing' | 'confirming' | 'success' | 'error'>('idle');
   const [userMessage, setUserMessage] = useState('');
@@ -28,6 +30,18 @@ export function useSimpleVault() {
       return;
     }
 
+    if (!isAddress(targetContract)) {
+      setActionStatus('error');
+      setUserMessage('❌ Invalid target contract address.');
+      return;
+    }
+
+    if (!callData || !callData.startsWith('0x')) {
+      setActionStatus('error');
+      setUserMessage('❌ Invalid call data.');
+      return;
+    }
+
     try {
       setActionStatus('preparing');
       setUserMessage(`${emoji} Getting your vault ready to ${actionName.toLowerCase()}...`);
@@ -38,7 +52,7 @@ export function useSimpleVault() {
       setUserMessage(`✍️ Please sign the transaction in your wallet`);
 
       // Execute through vault
-      await writeContract({
+      const txHash = await writeContractAsync({
         address: vaultAddress,
         abi: [
           {
@@ -60,8 +74,11 @@ export function useSimpleVault() {
       setActionStatus('confirming');
       setUserMessage(`⏳ Your vault is ${actionName.toLowerCase()}... (this takes ~10 seconds)`);
 
-      // Wait for confirmation (in real implementation, use waitForTransaction)
-      await new Promise(resolve => setTimeout(resolve, 3000));
+      if (publicClient) {
+        await publicClient.waitForTransactionReceipt({ hash: txHash });
+      } else {
+        await new Promise(resolve => setTimeout(resolve, 3000));
+      }
 
       setActionStatus('success');
       setUserMessage(`✅ ${actionName} successful!`);

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { useAccount, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
+import { useAccount, useWriteContract, useWaitForTransactionReceipt, usePublicClient } from 'wagmi';
 import { parseUnits, maxUint256 } from 'viem';
 import { CONTRACT_ADDRESSES, VFIDETokenABI } from '@/lib/contracts';
 import { SubscriptionManagerABI } from '@/lib/abis';
@@ -73,6 +73,8 @@ const SUBSCRIPTION_TIERS: SubscriptionTier[] = [
   },
 ];
 
+const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000' as const;
+
 export function SubscriptionManager({
   creatorAddress,
   creatorName,
@@ -84,7 +86,8 @@ export function SubscriptionManager({
   const [showSuccess, setShowSuccess] = useState(false);
   const { playSuccess, playNotification, playError } = useTransactionSounds();
 
-  const { writeContract, data: hash, error } = useWriteContract();
+  const publicClient = usePublicClient();
+  const { writeContractAsync, data: hash, error } = useWriteContract();
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({
     hash,
   });
@@ -100,6 +103,14 @@ export function SubscriptionManager({
       return;
     }
 
+    if (
+      CONTRACT_ADDRESSES.SubscriptionManager === ZERO_ADDRESS ||
+      CONTRACT_ADDRESSES.VFIDEToken === ZERO_ADDRESS
+    ) {
+      alert('Subscription contracts are not configured for this environment');
+      return;
+    }
+
     setSelectedTier(tier);
     setIsProcessing(true);
 
@@ -108,15 +119,18 @@ export function SubscriptionManager({
       const intervalSeconds = BigInt(tier.duration * 86400);
 
       // Step 1: Approve SubscriptionManager to pull VFIDE for recurring payments
-      await writeContract({
+      const approveHash = await writeContractAsync({
         address: CONTRACT_ADDRESSES.VFIDEToken,
         abi: VFIDETokenABI,
         functionName: 'approve',
         args: [CONTRACT_ADDRESSES.SubscriptionManager, maxUint256],
       });
+      if (publicClient) {
+        await publicClient.waitForTransactionReceipt({ hash: approveHash });
+      }
 
       // Step 2: Create subscription on SubscriptionManager
-      await writeContract({
+      await writeContractAsync({
         address: CONTRACT_ADDRESSES.SubscriptionManager,
         abi: SubscriptionManagerABI,
         functionName: 'createSubscription',

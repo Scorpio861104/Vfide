@@ -37,7 +37,7 @@ export function TokenApproval({
   const needsApproval = currentAllowance < requiredAmount;
 
   // Contract write for approval
-  const { writeContract, data: hash, isPending } = useWriteContract();
+  const { writeContractAsync, data: hash, isPending } = useWriteContract();
 
   // Wait for transaction
   const { isLoading: isConfirming } = useWaitForTransactionReceipt({
@@ -71,7 +71,7 @@ export function TokenApproval({
         );
       }
 
-      await writeContract({
+      await writeContractAsync({
         address: tokenAddress,
         abi: ERC20ABI,
         functionName: 'approve',
