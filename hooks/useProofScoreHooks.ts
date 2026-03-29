@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useReadContract, useWriteContract, useAccount, useWaitForTransactionReceipt } from 'wagmi'
 import { CONTRACT_ADDRESSES } from '../lib/contracts'
-import { SeerABI } from '../lib/abis'
+import { SeerABI, SeerSocialABI } from '../lib/abis'
 import { ZERO_ADDRESS } from '../lib/constants'
 import { parseContractError, logError } from '@/lib/errorHandling';
 import { safeBigIntToNumber } from '@/lib/validation';
@@ -83,8 +83,8 @@ export function useEndorse(targetAddress?: `0x${string}`) {
     }
     try {
       await writeContractAsync({
-        address: CONTRACT_ADDRESSES.Seer,
-        abi: SeerABI,
+        address: CONTRACT_ADDRESSES.SeerSocial,
+        abi: SeerSocialABI,
         functionName: 'endorse',
         args: [targetAddress, reason],
       })

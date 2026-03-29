@@ -297,32 +297,24 @@ function VaultContent() {
       return;
     }
     
+    if (!vaultAddress) {
+      showToast("No vault found. Create a vault first.", "error");
+      return;
+    }
+
     const amountWei = parseUnits(depositAmount, 18);
-    const currentAllowance = allowance as bigint || 0n;
-    
+
     setIsDepositing(true);
+    setDepositStep('deposit');
     try {
-      // Step 1: Approve if needed
-      if (currentAllowance < amountWei) {
-        setDepositStep('approve');
-        showToast("Approving VFIDE tokens...", "info");
-        await writeContractAsync({
-          address: CONTRACT_ADDRESSES.VFIDEToken,
-          abi: VFIDETokenABI,
-          functionName: 'approve',
-          args: [CONTRACT_ADDRESSES.VaultHub, amountWei],
-        });
-        await refetchAllowance();
-      }
-      
-      // Step 2: Deposit
-      setDepositStep('deposit');
+      // UserVault holds VFIDE directly — transfer tokens to the vault address.
+      // VaultHub has no deposit() function; ERC20.transfer requires no prior approval.
       showToast("Depositing to vault...", "info");
       await writeContractAsync({
-        address: CONTRACT_ADDRESSES.VaultHub,
-        abi: VaultHubABI,
-        functionName: 'deposit',
-        args: [amountWei],
+        address: CONTRACT_ADDRESSES.VFIDEToken,
+        abi: VFIDETokenABI,
+        functionName: 'transfer',
+        args: [vaultAddress, amountWei],
       });
       
       showToast("Deposit successful!", "success");

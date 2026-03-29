@@ -2,7 +2,9 @@
 
 import React, { useState } from 'react';
 import { useAccount, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
-import { parseEther } from 'viem';
+import { parseUnits, maxUint256 } from 'viem';
+import { CONTRACT_ADDRESSES, VFIDETokenABI } from '@/lib/contracts';
+import { SubscriptionManagerABI } from '@/lib/abis';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTransactionSounds } from '@/hooks/useTransactionSounds';
 import { Check, Sparkles, Crown, Zap, Star } from 'lucide-react';
@@ -39,7 +41,7 @@ function SuccessConfetti() {
 
 interface SubscriptionTier {
   duration: number; // days
-  price: string; // ETH
+  price: string; // VFIDE token amount (18 decimals)
   label: string;
   features: string[];
 }
@@ -53,19 +55,19 @@ interface SubscriptionManagerProps {
 const SUBSCRIPTION_TIERS: SubscriptionTier[] = [
   {
     duration: 30,
-    price: '0.05',
+    price: '50',
     label: 'Monthly',
     features: ['All premium content', 'Exclusive Discord access', 'Monthly Q&A sessions'],
   },
   {
     duration: 90,
-    price: '0.12',
+    price: '130',
     label: 'Quarterly',
     features: ['All premium content', 'Exclusive Discord access', 'Monthly Q&A sessions', 'Early content access', '20% savings'],
   },
   {
     duration: 365,
-    price: '0.40',
+    price: '400',
     label: 'Annual',
     features: ['All premium content', 'Exclusive Discord access', 'Monthly Q&A sessions', 'Early content access', '1-on-1 consultation', '33% savings'],
   },
@@ -102,22 +104,29 @@ export function SubscriptionManager({
     setIsProcessing(true);
 
     try {
-      // Calls subscribe on the creator's contract address directly.
-      // Replace with a proper SubscriptionManager contract address once deployed.
+      const amountWei = parseUnits(tier.price, 18);
+      const intervalSeconds = BigInt(tier.duration * 86400);
+
+      // Step 1: Approve SubscriptionManager to pull VFIDE for recurring payments
       await writeContract({
-        address: creatorAddress as `0x${string}`,
-        abi: [
-          {
-            name: 'subscribe',
-            type: 'function',
-            stateMutability: 'payable',
-            inputs: [{ name: 'duration', type: 'uint256' }],
-            outputs: [],
-          },
+        address: CONTRACT_ADDRESSES.VFIDEToken,
+        abi: VFIDETokenABI,
+        functionName: 'approve',
+        args: [CONTRACT_ADDRESSES.SubscriptionManager, maxUint256],
+      });
+
+      // Step 2: Create subscription on SubscriptionManager
+      await writeContract({
+        address: CONTRACT_ADDRESSES.SubscriptionManager,
+        abi: SubscriptionManagerABI,
+        functionName: 'createSubscription',
+        args: [
+          creatorAddress as `0x${string}`,
+          CONTRACT_ADDRESSES.VFIDEToken,
+          amountWei,
+          intervalSeconds,
+          tier.label,
         ],
-        functionName: 'subscribe',
-        args: [BigInt(tier.duration)],
-        value: parseEther(tier.price),
       });
     } catch {
       // Error is surfaced via wagmi error state (handled in useEffect above)

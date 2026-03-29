@@ -4,7 +4,7 @@ import { useReadContract, useAccount } from 'wagmi'
 import { motion } from 'framer-motion'
 import { Users, TrendingUp, Clock } from 'lucide-react'
 import { CONTRACT_ADDRESSES } from '@/lib/contracts'
-import { SeerABI } from '@/lib/abis'
+import { SeerSocialABI } from '@/lib/abis'
 import { safeBigIntToNumber } from '@/lib/validation'
 
 interface EndorsementStatsProps {
@@ -20,8 +20,8 @@ export function EndorsementStats({
   const targetAddress = address || connectedAddress
 
   const { data: statsData, isLoading } = useReadContract({
-    address: CONTRACT_ADDRESSES.Seer,
-    abi: SeerABI,
+    address: CONTRACT_ADDRESSES.SeerSocial,
+    abi: SeerSocialABI,
     functionName: 'getEndorsementStats',
     args: targetAddress ? [targetAddress] : undefined,
     query: {
