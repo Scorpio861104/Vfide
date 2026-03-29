@@ -84,9 +84,12 @@
       "handleDownloadBundle",
       "handleResetPrivacyDefaults"
     ],
-    "readHooks": 0,
-    "writeHooks": 0,
-    "contractFns": []
+    "readHooks": 1,
+    "writeHooks": 1,
+    "contractFns": [
+      "appeals",
+      "fileAppeal"
+    ]
   },
   {
     "rel": "app/badges/page.tsx",
@@ -125,6 +128,18 @@
     "readHooks": 0,
     "writeHooks": 0,
     "contractFns": []
+  },
+  {
+    "rel": "app/checkout/[id]/page.tsx",
+    "exportedDefault": "CheckoutPage",
+    "handlers": [
+      "handlePay"
+    ],
+    "readHooks": 1,
+    "writeHooks": 1,
+    "contractFns": [
+      "pay"
+    ]
   },
   {
     "rel": "app/control-panel/page.tsx",
@@ -173,9 +188,14 @@
     "rel": "app/dao-hub/page.tsx",
     "exportedDefault": "DaoHubPage",
     "handlers": [],
-    "readHooks": 2,
+    "readHooks": 3,
     "writeHooks": 0,
-    "contractFns": []
+    "contractFns": [
+      "getScore",
+      "computeFees",
+      "isCouncilMember",
+      "canServeNextTerm"
+    ]
   },
   {
     "rel": "app/dashboard/page.tsx",
@@ -419,9 +439,34 @@
     "contractFns": []
   },
   {
+    "rel": "app/marketplace/page.tsx",
+    "exportedDefault": "MarketplacePage",
+    "handlers": [
+      "fetchProducts",
+      "fetchSuggestions",
+      "applyFilter",
+      "toggleCatExpand",
+      "onToggleWishlist"
+    ],
+    "readHooks": 0,
+    "writeHooks": 0,
+    "contractFns": []
+  },
+  {
     "rel": "app/merchant/page.tsx",
     "exportedDefault": "MerchantPage",
     "handlers": [],
+    "readHooks": 0,
+    "writeHooks": 0,
+    "contractFns": []
+  },
+  {
+    "rel": "app/merchants/page.tsx",
+    "exportedDefault": "MerchantDirectoryPage",
+    "handlers": [
+      "fetchMerchants",
+      "handleSearch"
+    ],
     "readHooks": 0,
     "writeHooks": 0,
     "contractFns": []
@@ -509,6 +554,16 @@
       "handleCreateAlert",
       "handleDeleteAlert",
       "handleToggleAlert"
+    ],
+    "readHooks": 0,
+    "writeHooks": 0,
+    "contractFns": []
+  },
+  {
+    "rel": "app/product/[id]/page.tsx",
+    "exportedDefault": "ProductDetailPage",
+    "handlers": [
+      "handleImageNav"
     ],
     "readHooks": 0,
     "writeHooks": 0,
@@ -638,6 +693,17 @@
     "rel": "app/stealth/page.tsx",
     "exportedDefault": "StealthPage",
     "handlers": [],
+    "readHooks": 0,
+    "writeHooks": 0,
+    "contractFns": []
+  },
+  {
+    "rel": "app/store/[slug]/page.tsx",
+    "exportedDefault": "StorefrontPage",
+    "handlers": [
+      "addToCart",
+      "updateCartQty"
+    ],
     "readHooks": 0,
     "writeHooks": 0,
     "contractFns": []

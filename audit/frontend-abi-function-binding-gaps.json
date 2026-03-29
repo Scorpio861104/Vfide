@@ -1,0 +1,227 @@
+{
+  "totalAbiFunctions": 1170,
+  "totalMissingBindings": 47,
+  "filesWithMissingBindings": 16,
+  "missingBindingsByFile": {
+    "app/vesting/page.tsx": [
+      {
+        "line": 57,
+        "fn": "beneficiary"
+      }
+    ],
+    "app/sanctum/page.tsx": [
+      {
+        "line": 54,
+        "fn": "_nextProposalId"
+      }
+    ],
+    "app/control-panel/components/GovernancePanel.tsx": [
+      {
+        "line": 33,
+        "fn": "governanceDelay"
+      },
+      {
+        "line": 39,
+        "fn": "maxAutoSwapSlippageBps"
+      },
+      {
+        "line": 45,
+        "fn": "minAutoWorkPayoutWei"
+      },
+      {
+        "line": 51,
+        "fn": "maxAutoWorkPayoutWei"
+      },
+      {
+        "line": 101,
+        "fn": "queuedActionEta"
+      },
+      {
+        "line": 134,
+        "fn": "governance_queueAction"
+      },
+      {
+        "line": 150,
+        "fn": "governance_cancelAction"
+      },
+      {
+        "line": 167,
+        "fn": "token_lockPolicy"
+      },
+      {
+        "line": 174,
+        "fn": "autoSwap_configure"
+      },
+      {
+        "line": 186,
+        "fn": "ecosystem_configureAutoWorkPayout"
+      }
+    ],
+    "app/control-panel/components/EcosystemPanel.tsx": [
+      {
+        "line": 25,
+        "fn": "ecosystem_getAutoWorkPayoutConfig"
+      },
+      {
+        "line": 39,
+        "fn": "ecosystem_configureAutoWorkPayout"
+      }
+    ],
+    "app/control-panel/components/AutoSwapPanel.tsx": [
+      {
+        "line": 28,
+        "fn": "autoSwap_getConfig"
+      },
+      {
+        "line": 44,
+        "fn": "autoSwap_configure"
+      },
+      {
+        "line": 70,
+        "fn": "autoSwap_quickSetupUSDC"
+      },
+      {
+        "line": 88,
+        "fn": "autoSwap_setEnabled"
+      }
+    ],
+    "app/control-panel/components/SystemStatusPanel.tsx": [
+      {
+        "line": 10,
+        "fn": "system_getStatus"
+      }
+    ],
+    "app/control-panel/components/EmergencyPanel.tsx": [
+      {
+        "line": 32,
+        "fn": "emergency_pauseAll"
+      },
+      {
+        "line": 49,
+        "fn": "emergency_resumeAll"
+      },
+      {
+        "line": 66,
+        "fn": "token_setCircuitBreaker"
+      }
+    ],
+    "app/control-panel/components/ProductionSetupPanel.tsx": [
+      {
+        "line": 26,
+        "fn": "system_getStatus"
+      },
+      {
+        "line": 37,
+        "fn": "production_setupSafeDefaults"
+      },
+      {
+        "line": 54,
+        "fn": "production_setupWithAutoSwap"
+      }
+    ],
+    "app/api/crypto/price/route.ts": [
+      {
+        "line": 179,
+        "fn": "slot0"
+      },
+      {
+        "line": 184,
+        "fn": "token0"
+      }
+    ],
+    "app/council/page.tsx": [
+      {
+        "line": 77,
+        "fn": "isCouncilMember"
+      },
+      {
+        "line": 86,
+        "fn": "getClaimable"
+      },
+      {
+        "line": 121,
+        "fn": "claimSalary"
+      }
+    ],
+    "app/dao-hub/page.tsx": [
+      {
+        "line": 201,
+        "fn": "isCouncilMember"
+      }
+    ],
+    "app/admin/page.tsx": [
+      {
+        "line": 547,
+        "fn": "systemWhitelist"
+      },
+      {
+        "line": 654,
+        "fn": "highTrustReduction"
+      },
+      {
+        "line": 661,
+        "fn": "lowTrustPenalty"
+      },
+      {
+        "line": 694,
+        "fn": "whitelistSystemContract"
+      },
+      {
+        "line": 704,
+        "fn": "whitelistSystemContract"
+      }
+    ],
+    "hooks/useVaultRecovery.ts": [
+      {
+        "line": 484,
+        "fn": "cancelInheritance"
+      }
+    ],
+    "hooks/useVaultRegistry.ts": [
+      {
+        "line": 795,
+        "fn": "initiateClaim"
+      },
+      {
+        "line": 816,
+        "fn": "getClaim"
+      },
+      {
+        "line": 838,
+        "fn": "getActiveClaimForVault"
+      },
+      {
+        "line": 867,
+        "fn": "guardianVote"
+      },
+      {
+        "line": 891,
+        "fn": "challengeClaim"
+      },
+      {
+        "line": 915,
+        "fn": "finalizeClaim"
+      },
+      {
+        "line": 935,
+        "fn": "canFinalize"
+      },
+      {
+        "line": 958,
+        "fn": "challengeTimeRemaining"
+      }
+    ],
+    "components/social/SubscriptionManager.tsx": [
+      {
+        "line": 113,
+        "fn": "subscribe"
+      }
+    ],
+    "lib/services/transactionBatcher.ts": [
+      {
+        "line": 257,
+        "fn": "aggregate3"
+      }
+    ]
+  }
+}

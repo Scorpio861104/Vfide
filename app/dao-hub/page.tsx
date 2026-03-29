@@ -198,7 +198,7 @@ export default function DaoHubPage() {
   const { data: isCouncilMember } = useReadContract({
     address: councilAddress,
     abi: CouncilElectionABI,
-    functionName: "isCouncilMember",
+    functionName: "isCouncil",
     args: address ? [address] : undefined,
     query: { enabled: isCouncilDeployed && !!address },
   });

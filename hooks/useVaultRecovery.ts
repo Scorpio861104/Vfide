@@ -481,7 +481,7 @@ export function useVaultRecovery(vaultAddress?: `0x${string}`) {
       return await writeContractAsync({
         address: vaultAddress,
         abi: USER_VAULT_ABI,
-        functionName: 'cancelInheritance',
+        functionName: 'denyInheritance',
       });
     } catch (error) {
       logError('cancelInheritance', error);

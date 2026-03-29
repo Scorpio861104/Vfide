@@ -93,6 +93,11 @@ export function SubscriptionManager({
       return;
     }
 
+    if (!creatorAddress || !/^0x[a-fA-F0-9]{40}$/.test(creatorAddress)) {
+      alert('Invalid creator contract address');
+      return;
+    }
+
     setSelectedTier(tier);
     setIsProcessing(true);
 

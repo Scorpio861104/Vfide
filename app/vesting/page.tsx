@@ -54,7 +54,7 @@ export default function VestingPage() {
   const { data: beneficiary } = useReadContract({
     address: DEV_RESERVE_VESTING_ADDRESS,
     abi: DevReserveVestingABI,
-    functionName: 'beneficiary',
+    functionName: 'BENEFICIARY',
   });
 
   const beneficiaryAddress = beneficiary as `0x${string}` | undefined;

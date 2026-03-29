@@ -8,7 +8,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 import { withRateLimit } from '@/lib/auth/rateLimit';
-import { dispatchWebhook } from '@/lib/webhooks/merchantWebhookDispatcher';
 import { logger } from '@/lib/logger';
 
 const TX_HASH_REGEX = /^0x[a-fA-F0-9]{64}$/;
@@ -124,18 +123,8 @@ export async function PATCH(
         [tx_hash, invoice.id]
       );
 
-      // Dispatch webhook
-      dispatchWebhook(
-        invoice.merchant_address as string,
-        'payment.completed',
-        {
-          invoice_number: invoice.invoice_number,
-          total: invoice.total,
-          currency: invoice.currency_display,
-          tx_hash: tx_hash,
-          customer_address: invoice.customer_address,
-        }
-      );
+      // Do not emit payment.completed here.
+      // Confirmation flow dispatches webhooks after on-chain event verification.
 
       return NextResponse.json({ success: true });
     }

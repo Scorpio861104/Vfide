@@ -45,9 +45,13 @@ export async function GET(request: NextRequest) {
 
     const where = conditions.join(' AND ');
 
-    const orderClause = search
-      ? `ts_rank(to_tsvector('english', coalesce(mp.display_name,'') || ' ' || coalesce(mp.tagline,'') || ' ' || coalesce(mp.description,'')), plainto_tsquery('english', '${search.replace(/'/g, "''")}')) DESC, mp.featured DESC`
-      : 'mp.featured DESC, mp.created_at DESC';
+    let orderClause = 'mp.featured DESC, mp.created_at DESC';
+    if (search && search.length <= 100) {
+      const searchSortParamIdx = pi;
+      params.push(search);
+      pi += 1;
+      orderClause = `ts_rank(to_tsvector('english', coalesce(mp.display_name,'') || ' ' || coalesce(mp.tagline,'') || ' ' || coalesce(mp.description,'')), plainto_tsquery('english', $${searchSortParamIdx})) DESC, mp.featured DESC`;
+    }
 
     const [merchants, countResult] = await Promise.all([
       query(

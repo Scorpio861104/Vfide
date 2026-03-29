@@ -12,6 +12,8 @@ import { useState, useCallback } from 'react';
 // Contract addresses (will be updated after deployment)
 const VAULT_REGISTRY_ADDRESS = process.env.NEXT_PUBLIC_VAULT_REGISTRY_ADDRESS as Address || '0x0000000000000000000000000000000000000000';
 const VAULT_RECOVERY_CLAIM_ADDRESS = process.env.NEXT_PUBLIC_VAULT_RECOVERY_CLAIM_ADDRESS as Address || '0x0000000000000000000000000000000000000000';
+const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000' as const;
+const IS_VAULT_RECOVERY_CLAIM_DEPLOYED = VAULT_RECOVERY_CLAIM_ADDRESS !== ZERO_ADDRESS;
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // ABIs (minimal required functions)
@@ -789,6 +791,9 @@ export function useInitiateClaim() {
     reason: string,
     evidenceHash: `0x${string}` = '0x0000000000000000000000000000000000000000000000000000000000000000'
   ) => {
+    if (!IS_VAULT_RECOVERY_CLAIM_DEPLOYED) {
+      throw new Error('Vault recovery claim contract is not deployed. Set NEXT_PUBLIC_VAULT_RECOVERY_CLAIM_ADDRESS.');
+    }
     writeContract({
       address: VAULT_RECOVERY_CLAIM_ADDRESS,
       abi: VAULT_RECOVERY_CLAIM_ABI,
@@ -816,7 +821,7 @@ export function useGetClaim(claimId: bigint | undefined) {
     functionName: 'getClaim',
     args: claimId !== undefined ? [claimId] : undefined,
     query: {
-      enabled: claimId !== undefined
+      enabled: IS_VAULT_RECOVERY_CLAIM_DEPLOYED && claimId !== undefined
     }
   });
 
@@ -838,7 +843,7 @@ export function useActiveClaimForVault(vaultAddress: Address | undefined) {
     functionName: 'getActiveClaimForVault',
     args: vaultAddress ? [vaultAddress] : undefined,
     query: {
-      enabled: !!vaultAddress
+      enabled: IS_VAULT_RECOVERY_CLAIM_DEPLOYED && !!vaultAddress
     }
   });
 
@@ -861,6 +866,9 @@ export function useGuardianVote() {
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash });
 
   const vote = useCallback((claimId: bigint, approve: boolean) => {
+    if (!IS_VAULT_RECOVERY_CLAIM_DEPLOYED) {
+      throw new Error('Vault recovery claim contract is not deployed. Set NEXT_PUBLIC_VAULT_RECOVERY_CLAIM_ADDRESS.');
+    }
     writeContract({
       address: VAULT_RECOVERY_CLAIM_ADDRESS,
       abi: VAULT_RECOVERY_CLAIM_ABI,
@@ -885,6 +893,9 @@ export function useChallengeClaim() {
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash });
 
   const challenge = useCallback((claimId: bigint, reason: string) => {
+    if (!IS_VAULT_RECOVERY_CLAIM_DEPLOYED) {
+      throw new Error('Vault recovery claim contract is not deployed. Set NEXT_PUBLIC_VAULT_RECOVERY_CLAIM_ADDRESS.');
+    }
     writeContract({
       address: VAULT_RECOVERY_CLAIM_ADDRESS,
       abi: VAULT_RECOVERY_CLAIM_ABI,
@@ -909,6 +920,9 @@ export function useFinalizeClaim() {
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash });
 
   const finalize = useCallback((claimId: bigint) => {
+    if (!IS_VAULT_RECOVERY_CLAIM_DEPLOYED) {
+      throw new Error('Vault recovery claim contract is not deployed. Set NEXT_PUBLIC_VAULT_RECOVERY_CLAIM_ADDRESS.');
+    }
     writeContract({
       address: VAULT_RECOVERY_CLAIM_ADDRESS,
       abi: VAULT_RECOVERY_CLAIM_ABI,
@@ -935,7 +949,7 @@ export function useCanFinalize(claimId: bigint | undefined) {
     functionName: 'canFinalize',
     args: claimId !== undefined ? [claimId] : undefined,
     query: {
-      enabled: claimId !== undefined
+      enabled: IS_VAULT_RECOVERY_CLAIM_DEPLOYED && claimId !== undefined
     }
   });
 
@@ -958,7 +972,7 @@ export function useChallengeTimeRemaining(claimId: bigint | undefined) {
     functionName: 'challengeTimeRemaining',
     args: claimId !== undefined ? [claimId] : undefined,
     query: {
-      enabled: claimId !== undefined,
+      enabled: IS_VAULT_RECOVERY_CLAIM_DEPLOYED && claimId !== undefined,
       refetchInterval: 60000 // Refetch every minute
     }
   });

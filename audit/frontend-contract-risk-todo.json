@@ -1,0 +1,310 @@
+{
+  "generatedAt": "2026-03-29T05:38:01.108Z",
+  "strictPolicy": "no accepted-risk",
+  "items": [
+    {
+      "id": "FE-TRACE-001",
+      "severity": "high",
+      "status": "open",
+      "title": "Page behavior lacks contract trace",
+      "page": "app/enterprise/page.tsx",
+      "evidence": {
+        "handlers": 1,
+        "readHooks": 0,
+        "writeHooks": 0,
+        "contractFns": []
+      }
+    },
+    {
+      "id": "FE-TRACE-002",
+      "severity": "high",
+      "status": "open",
+      "title": "Page behavior lacks contract trace",
+      "page": "app/escrow/page.tsx",
+      "evidence": {
+        "handlers": 5,
+        "readHooks": 0,
+        "writeHooks": 0,
+        "contractFns": []
+      }
+    },
+    {
+      "id": "FE-TRACE-003",
+      "severity": "high",
+      "status": "open",
+      "title": "Page behavior lacks contract trace",
+      "page": "app/explorer/page.tsx",
+      "evidence": {
+        "handlers": 1,
+        "readHooks": 0,
+        "writeHooks": 0,
+        "contractFns": []
+      }
+    },
+    {
+      "id": "FE-TRACE-004",
+      "severity": "high",
+      "status": "open",
+      "title": "Page behavior lacks contract trace",
+      "page": "app/hardware-wallet/page.tsx",
+      "evidence": {
+        "handlers": 4,
+        "readHooks": 0,
+        "writeHooks": 0,
+        "contractFns": []
+      }
+    },
+    {
+      "id": "FE-TRACE-005",
+      "severity": "high",
+      "status": "open",
+      "title": "Page behavior lacks contract trace",
+      "page": "app/invite/[code]/page.tsx",
+      "evidence": {
+        "handlers": 1,
+        "readHooks": 0,
+        "writeHooks": 0,
+        "contractFns": []
+      }
+    },
+    {
+      "id": "FE-TRACE-006",
+      "severity": "high",
+      "status": "open",
+      "title": "Page behavior lacks contract trace",
+      "page": "app/invite/page.tsx",
+      "evidence": {
+        "handlers": 1,
+        "readHooks": 0,
+        "writeHooks": 0,
+        "contractFns": []
+      }
+    },
+    {
+      "id": "FE-TRACE-007",
+      "severity": "high",
+      "status": "open",
+      "title": "Page behavior lacks contract trace",
+      "page": "app/live-demo/page.tsx",
+      "evidence": {
+        "handlers": 1,
+        "readHooks": 0,
+        "writeHooks": 0,
+        "contractFns": []
+      }
+    },
+    {
+      "id": "FE-TRACE-008",
+      "severity": "high",
+      "status": "open",
+      "title": "Page behavior lacks contract trace",
+      "page": "app/marketplace/page.tsx",
+      "evidence": {
+        "handlers": 5,
+        "readHooks": 0,
+        "writeHooks": 0,
+        "contractFns": []
+      }
+    },
+    {
+      "id": "FE-TRACE-009",
+      "severity": "high",
+      "status": "open",
+      "title": "Page behavior lacks contract trace",
+      "page": "app/merchants/page.tsx",
+      "evidence": {
+        "handlers": 2,
+        "readHooks": 0,
+        "writeHooks": 0,
+        "contractFns": []
+      }
+    },
+    {
+      "id": "FE-TRACE-010",
+      "severity": "high",
+      "status": "open",
+      "title": "Page behavior lacks contract trace",
+      "page": "app/notifications/page.tsx",
+      "evidence": {
+        "handlers": 1,
+        "readHooks": 0,
+        "writeHooks": 0,
+        "contractFns": []
+      }
+    },
+    {
+      "id": "FE-TRACE-011",
+      "severity": "high",
+      "status": "open",
+      "title": "Page behavior lacks contract trace",
+      "page": "app/pay/page.tsx",
+      "evidence": {
+        "handlers": 1,
+        "readHooks": 0,
+        "writeHooks": 0,
+        "contractFns": []
+      }
+    },
+    {
+      "id": "FE-TRACE-012",
+      "severity": "high",
+      "status": "open",
+      "title": "Page behavior lacks contract trace",
+      "page": "app/payroll/page.tsx",
+      "evidence": {
+        "handlers": 5,
+        "readHooks": 0,
+        "writeHooks": 0,
+        "contractFns": []
+      }
+    },
+    {
+      "id": "FE-TRACE-013",
+      "severity": "high",
+      "status": "open",
+      "title": "Page behavior lacks contract trace",
+      "page": "app/performance/page.tsx",
+      "evidence": {
+        "handlers": 1,
+        "readHooks": 0,
+        "writeHooks": 0,
+        "contractFns": []
+      }
+    },
+    {
+      "id": "FE-TRACE-014",
+      "severity": "high",
+      "status": "open",
+      "title": "Page behavior lacks contract trace",
+      "page": "app/price-alerts/page.tsx",
+      "evidence": {
+        "handlers": 3,
+        "readHooks": 0,
+        "writeHooks": 0,
+        "contractFns": []
+      }
+    },
+    {
+      "id": "FE-TRACE-015",
+      "severity": "high",
+      "status": "open",
+      "title": "Page behavior lacks contract trace",
+      "page": "app/product/[id]/page.tsx",
+      "evidence": {
+        "handlers": 1,
+        "readHooks": 0,
+        "writeHooks": 0,
+        "contractFns": []
+      }
+    },
+    {
+      "id": "FE-TRACE-016",
+      "severity": "high",
+      "status": "open",
+      "title": "Page behavior lacks contract trace",
+      "page": "app/social-hub/page.tsx",
+      "evidence": {
+        "handlers": 5,
+        "readHooks": 0,
+        "writeHooks": 0,
+        "contractFns": []
+      }
+    },
+    {
+      "id": "FE-TRACE-017",
+      "severity": "high",
+      "status": "open",
+      "title": "Page behavior lacks contract trace",
+      "page": "app/social-messaging/page.tsx",
+      "evidence": {
+        "handlers": 2,
+        "readHooks": 0,
+        "writeHooks": 0,
+        "contractFns": []
+      }
+    },
+    {
+      "id": "FE-TRACE-018",
+      "severity": "high",
+      "status": "open",
+      "title": "Page behavior lacks contract trace",
+      "page": "app/store/[slug]/page.tsx",
+      "evidence": {
+        "handlers": 2,
+        "readHooks": 0,
+        "writeHooks": 0,
+        "contractFns": []
+      }
+    },
+    {
+      "id": "FE-TRACE-019",
+      "severity": "high",
+      "status": "open",
+      "title": "Page behavior lacks contract trace",
+      "page": "app/stories/page.tsx",
+      "evidence": {
+        "handlers": 3,
+        "readHooks": 0,
+        "writeHooks": 0,
+        "contractFns": []
+      }
+    },
+    {
+      "id": "FE-TRACE-020",
+      "severity": "high",
+      "status": "open",
+      "title": "Page behavior lacks contract trace",
+      "page": "app/support/page.tsx",
+      "evidence": {
+        "handlers": 2,
+        "readHooks": 0,
+        "writeHooks": 0,
+        "contractFns": []
+      }
+    },
+    {
+      "id": "FE-TRACE-021",
+      "severity": "high",
+      "status": "open",
+      "title": "Page behavior lacks contract trace",
+      "page": "app/theme/page.tsx",
+      "evidence": {
+        "handlers": 3,
+        "readHooks": 0,
+        "writeHooks": 0,
+        "contractFns": []
+      }
+    },
+    {
+      "id": "FE-TRACE-022",
+      "severity": "high",
+      "status": "open",
+      "title": "Page behavior lacks contract trace",
+      "page": "app/vault/recover/page.tsx",
+      "evidence": {
+        "handlers": 2,
+        "readHooks": 0,
+        "writeHooks": 0,
+        "contractFns": []
+      }
+    },
+    {
+      "id": "FE-TRACE-023",
+      "severity": "critical",
+      "status": "fixed",
+      "title": "Merchant directory rank sort used interpolated search text in SQL ORDER BY",
+      "fixedIn": [
+        "app/api/merchant/directory/route.ts"
+      ]
+    },
+    {
+      "id": "FE-TRACE-024",
+      "severity": "critical",
+      "status": "fixed",
+      "title": "Checkout route emitted payment.completed before on-chain confirmation",
+      "fixedIn": [
+        "app/api/merchant/checkout/[id]/route.ts"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,920 @@
+{
+  "summary": {
+    "generatedAt": "2026-03-29T05:38:01.107Z",
+    "totals": {
+      "pages": 79,
+      "directOnchain": 14,
+      "gapNoContractTrace": 22,
+      "staticNoOnchainBehavior": 43,
+      "missingInInventory": 0
+    }
+  },
+  "matrix": [
+    {
+      "page": "app/about/page.tsx",
+      "source": "inventory",
+      "exportedDefault": "AboutPage",
+      "handlers": 0,
+      "readHooks": 0,
+      "writeHooks": 0,
+      "contractFns": [],
+      "traceStatus": "static-no-onchain-behavior"
+    },
+    {
+      "page": "app/achievements/page.tsx",
+      "source": "inventory",
+      "exportedDefault": "AchievementsPage",
+      "handlers": 0,
+      "readHooks": 0,
+      "writeHooks": 0,
+      "contractFns": [],
+      "traceStatus": "static-no-onchain-behavior"
+    },
+    {
+      "page": "app/admin/page.tsx",
+      "source": "inventory",
+      "exportedDefault": "AdminPanel",
+      "handlers": 16,
+      "readHooks": 24,
+      "writeHooks": 1,
+      "contractFns": [
+        "owner",
+        "vaultOnly",
+        "policyLocked",
+        "circuitBreaker",
+        "totalSupply",
+        "systemWhitelist",
+        "systemExempt",
+        "isBlacklisted",
+        "whitelisted",
+        "whaleLimitExempt",
+        "vaultHub",
+        "securityHub",
+        "ledger",
+        "burnRouter",
+        "treasurySink",
+        "sanctumSink",
+        "baseBurnBps",
+        "baseSanctumBps",
+        "baseEcosystemBps",
+        "highTrustReduction",
+        "lowTrustPenalty",
+        "maxTotalBps",
+        "whitelistSystemContract",
+        "setVaultOnly",
+        "setCircuitBreaker",
+        "proposeSystemExempt",
+        "confirmSystemExempt",
+        "setBlacklist",
+        "proposeWhitelist",
+        "confirmWhitelist",
+        "setWhaleLimitExempt",
+        "lockPolicy",
+        "transferOwnership",
+        "setPolicy"
+      ],
+      "traceStatus": "direct-onchain"
+    },
+    {
+      "page": "app/appeals/page.tsx",
+      "source": "inventory",
+      "exportedDefault": "AppealsPage",
+      "handlers": 4,
+      "readHooks": 1,
+      "writeHooks": 1,
+      "contractFns": [
+        "appeals",
+        "fileAppeal"
+      ],
+      "traceStatus": "direct-onchain"
+    },
+    {
+      "page": "app/badges/page.tsx",
+      "source": "inventory",
+      "exportedDefault": "BadgesPage",
+      "handlers": 1,
+      "readHooks": 2,
+      "writeHooks": 1,
+      "contractFns": [
+        "balanceOf",
+        "getScore",
+        "mintBadge"
+      ],
+      "traceStatus": "direct-onchain"
+    },
+    {
+      "page": "app/benefits/page.tsx",
+      "source": "inventory",
+      "exportedDefault": "BenefitsPage",
+      "handlers": 0,
+      "readHooks": 0,
+      "writeHooks": 0,
+      "contractFns": [],
+      "traceStatus": "static-no-onchain-behavior"
+    },
+    {
+      "page": "app/budgets/page.tsx",
+      "source": "inventory",
+      "exportedDefault": "BudgetsPage",
+      "handlers": 0,
+      "readHooks": 0,
+      "writeHooks": 0,
+      "contractFns": [],
+      "traceStatus": "static-no-onchain-behavior"
+    },
+    {
+      "page": "app/buy/page.tsx",
+      "source": "inventory",
+      "exportedDefault": "BuyPage",
+      "handlers": 0,
+      "readHooks": 0,
+      "writeHooks": 0,
+      "contractFns": [],
+      "traceStatus": "static-no-onchain-behavior"
+    },
+    {
+      "page": "app/checkout/[id]/page.tsx",
+      "source": "inventory",
+      "exportedDefault": "CheckoutPage",
+      "handlers": 1,
+      "readHooks": 1,
+      "writeHooks": 1,
+      "contractFns": [
+        "pay"
+      ],
+      "traceStatus": "direct-onchain"
+    },
+    {
+      "page": "app/control-panel/page.tsx",
+      "source": "inventory",
+      "exportedDefault": "ControlPanelPage",
+      "handlers": 0,
+      "readHooks": 0,
+      "writeHooks": 0,
+      "contractFns": [],
+      "traceStatus": "static-no-onchain-behavior"
+    },
+    {
+      "page": "app/council/page.tsx",
+      "source": "inventory",
+      "exportedDefault": "CouncilPage",
+      "handlers": 0,
+      "readHooks": 7,
+      "writeHooks": 1,
+      "contractFns": [
+        "getCouncilMembers",
+        "getCandidates",
+        "getElectionStatus",
+        "isCandidate",
+        "isCouncilMember",
+        "getClaimable",
+        "canRegister",
+        "register",
+        "unregister",
+        "claimSalary"
+      ],
+      "traceStatus": "direct-onchain"
+    },
+    {
+      "page": "app/cross-chain/page.tsx",
+      "source": "inventory",
+      "exportedDefault": "CrossChainPage",
+      "handlers": 0,
+      "readHooks": 0,
+      "writeHooks": 0,
+      "contractFns": [],
+      "traceStatus": "static-no-onchain-behavior"
+    },
+    {
+      "page": "app/crypto/page.tsx",
+      "source": "inventory",
+      "exportedDefault": "CryptoDashboard",
+      "handlers": 0,
+      "readHooks": 0,
+      "writeHooks": 0,
+      "contractFns": [],
+      "traceStatus": "static-no-onchain-behavior"
+    },
+    {
+      "page": "app/dao-hub/page.tsx",
+      "source": "inventory",
+      "exportedDefault": "DaoHubPage",
+      "handlers": 0,
+      "readHooks": 3,
+      "writeHooks": 0,
+      "contractFns": [
+        "getScore",
+        "computeFees",
+        "isCouncilMember",
+        "canServeNextTerm"
+      ],
+      "traceStatus": "direct-onchain"
+    },
+    {
+      "page": "app/dashboard/page.tsx",
+      "source": "inventory",
+      "exportedDefault": "DashboardPage",
+      "handlers": 0,
+      "readHooks": 0,
+      "writeHooks": 0,
+      "contractFns": [],
+      "traceStatus": "static-no-onchain-behavior"
+    },
+    {
+      "page": "app/demo/crypto-social/page.tsx",
+      "source": "inventory",
+      "exportedDefault": "CryptoSocialDemo",
+      "handlers": 0,
+      "readHooks": 0,
+      "writeHooks": 0,
+      "contractFns": [],
+      "traceStatus": "static-no-onchain-behavior"
+    },
+    {
+      "page": "app/developer/page.tsx",
+      "source": "inventory",
+      "exportedDefault": "DeveloperPage",
+      "handlers": 0,
+      "readHooks": 0,
+      "writeHooks": 0,
+      "contractFns": [],
+      "traceStatus": "static-no-onchain-behavior"
+    },
+    {
+      "page": "app/docs/page.tsx",
+      "source": "inventory",
+      "exportedDefault": "DocsPage",
+      "handlers": 0,
+      "readHooks": 0,
+      "writeHooks": 0,
+      "contractFns": [],
+      "traceStatus": "static-no-onchain-behavior"
+    },
+    {
+      "page": "app/endorsements/page.tsx",
+      "source": "inventory",
+      "exportedDefault": "EndorsementsPage",
+      "handlers": 0,
+      "readHooks": 2,
+      "writeHooks": 0,
+      "contractFns": [
+        "getActiveEndorsements",
+        "getEndorsementStats"
+      ],
+      "traceStatus": "direct-onchain"
+    },
+    {
+      "page": "app/enterprise/page.tsx",
+      "source": "inventory",
+      "exportedDefault": "EnterprisePage",
+      "handlers": 1,
+      "readHooks": 0,
+      "writeHooks": 0,
+      "contractFns": [],
+      "traceStatus": "gap-no-contract-trace"
+    },
+    {
+      "page": "app/escrow/page.tsx",
+      "source": "inventory",
+      "exportedDefault": "EscrowPage",
+      "handlers": 5,
+      "readHooks": 0,
+      "writeHooks": 0,
+      "contractFns": [],
+      "traceStatus": "gap-no-contract-trace"
+    },
+    {
+      "page": "app/explorer/[id]/page.tsx",
+      "source": "inventory",
+      "exportedDefault": "AddressPage",
+      "handlers": 0,
+      "readHooks": 0,
+      "writeHooks": 0,
+      "contractFns": [],
+      "traceStatus": "static-no-onchain-behavior"
+    },
+    {
+      "page": "app/explorer/page.tsx",
+      "source": "inventory",
+      "exportedDefault": "ExplorerPage",
+      "handlers": 1,
+      "readHooks": 0,
+      "writeHooks": 0,
+      "contractFns": [],
+      "traceStatus": "gap-no-contract-trace"
+    },
+    {
+      "page": "app/feed/page.tsx",
+      "source": "inventory",
+      "exportedDefault": "FeedPage",
+      "handlers": 0,
+      "readHooks": 0,
+      "writeHooks": 0,
+      "contractFns": [],
+      "traceStatus": "static-no-onchain-behavior"
+    },
+    {
+      "page": "app/flashlight/page.tsx",
+      "source": "inventory",
+      "exportedDefault": "FlashlightPage",
+      "handlers": 0,
+      "readHooks": 0,
+      "writeHooks": 0,
+      "contractFns": [],
+      "traceStatus": "static-no-onchain-behavior"
+    },
+    {
+      "page": "app/governance/page.tsx",
+      "source": "inventory",
+      "exportedDefault": "GovernancePage",
+      "handlers": 9,
+      "readHooks": 5,
+      "writeHooks": 3,
+      "contractFns": [
+        "getActiveProposals",
+        "getVotingPower",
+        "getVoterStats",
+        "isEligible",
+        "vote",
+        "finalize",
+        "propose",
+        "getProposalDetails",
+        "register"
+      ],
+      "traceStatus": "direct-onchain"
+    },
+    {
+      "page": "app/guardians/page.tsx",
+      "source": "inventory",
+      "exportedDefault": "GuardiansPage",
+      "handlers": 19,
+      "readHooks": 12,
+      "writeHooks": 2,
+      "contractFns": [
+        "owner",
+        "isGuardian",
+        "isGuardianMature",
+        "getRecoveryStatus",
+        "approveRecovery",
+        "nextOfKin",
+        "getInheritanceStatus",
+        "requestInheritance"
+      ],
+      "traceStatus": "direct-onchain"
+    },
+    {
+      "page": "app/hardware-wallet/page.tsx",
+      "source": "inventory",
+      "exportedDefault": "HardwareWalletPage",
+      "handlers": 4,
+      "readHooks": 0,
+      "writeHooks": 0,
+      "contractFns": [],
+      "traceStatus": "gap-no-contract-trace"
+    },
+    {
+      "page": "app/headhunter/page.tsx",
+      "source": "inventory",
+      "exportedDefault": "HeadhunterPage",
+      "handlers": 0,
+      "readHooks": 0,
+      "writeHooks": 0,
+      "contractFns": [],
+      "traceStatus": "static-no-onchain-behavior"
+    },
+    {
+      "page": "app/insights/page.tsx",
+      "source": "inventory",
+      "exportedDefault": "InsightsPage",
+      "handlers": 0,
+      "readHooks": 0,
+      "writeHooks": 0,
+      "contractFns": [],
+      "traceStatus": "static-no-onchain-behavior"
+    },
+    {
+      "page": "app/invite/[code]/page.tsx",
+      "source": "inventory",
+      "exportedDefault": "InvitePage",
+      "handlers": 1,
+      "readHooks": 0,
+      "writeHooks": 0,
+      "contractFns": [],
+      "traceStatus": "gap-no-contract-trace"
+    },
+    {
+      "page": "app/invite/page.tsx",
+      "source": "inventory",
+      "exportedDefault": "InviteFriendsPage",
+      "handlers": 1,
+      "readHooks": 0,
+      "writeHooks": 0,
+      "contractFns": [],
+      "traceStatus": "gap-no-contract-trace"
+    },
+    {
+      "page": "app/leaderboard/page.tsx",
+      "source": "inventory",
+      "exportedDefault": "LeaderboardPage",
+      "handlers": 0,
+      "readHooks": 0,
+      "writeHooks": 0,
+      "contractFns": [],
+      "traceStatus": "static-no-onchain-behavior"
+    },
+    {
+      "page": "app/legal/page.tsx",
+      "source": "inventory",
+      "exportedDefault": "LegalPage",
+      "handlers": 0,
+      "readHooks": 0,
+      "writeHooks": 0,
+      "contractFns": [],
+      "traceStatus": "static-no-onchain-behavior"
+    },
+    {
+      "page": "app/live-demo/page.tsx",
+      "source": "inventory",
+      "exportedDefault": "LiveDemoPage",
+      "handlers": 1,
+      "readHooks": 0,
+      "writeHooks": 0,
+      "contractFns": [],
+      "traceStatus": "gap-no-contract-trace"
+    },
+    {
+      "page": "app/marketplace/page.tsx",
+      "source": "inventory",
+      "exportedDefault": "MarketplacePage",
+      "handlers": 5,
+      "readHooks": 0,
+      "writeHooks": 0,
+      "contractFns": [],
+      "traceStatus": "gap-no-contract-trace"
+    },
+    {
+      "page": "app/merchant/page.tsx",
+      "source": "inventory",
+      "exportedDefault": "MerchantPage",
+      "handlers": 0,
+      "readHooks": 0,
+      "writeHooks": 0,
+      "contractFns": [],
+      "traceStatus": "static-no-onchain-behavior"
+    },
+    {
+      "page": "app/merchants/page.tsx",
+      "source": "inventory",
+      "exportedDefault": "MerchantDirectoryPage",
+      "handlers": 2,
+      "readHooks": 0,
+      "writeHooks": 0,
+      "contractFns": [],
+      "traceStatus": "gap-no-contract-trace"
+    },
+    {
+      "page": "app/multisig/page.tsx",
+      "source": "inventory",
+      "exportedDefault": "MultisigPage",
+      "handlers": 0,
+      "readHooks": 0,
+      "writeHooks": 0,
+      "contractFns": [],
+      "traceStatus": "static-no-onchain-behavior"
+    },
+    {
+      "page": "app/notifications/page.tsx",
+      "source": "inventory",
+      "exportedDefault": "NotificationHubPage",
+      "handlers": 1,
+      "readHooks": 0,
+      "writeHooks": 0,
+      "contractFns": [],
+      "traceStatus": "gap-no-contract-trace"
+    },
+    {
+      "page": "app/page.tsx",
+      "source": "inventory",
+      "exportedDefault": "Home",
+      "handlers": 0,
+      "readHooks": 0,
+      "writeHooks": 0,
+      "contractFns": [],
+      "traceStatus": "static-no-onchain-behavior"
+    },
+    {
+      "page": "app/paper-wallet/page.tsx",
+      "source": "inventory",
+      "exportedDefault": "PaperWalletPage",
+      "handlers": 0,
+      "readHooks": 0,
+      "writeHooks": 0,
+      "contractFns": [],
+      "traceStatus": "static-no-onchain-behavior"
+    },
+    {
+      "page": "app/pay/page.tsx",
+      "source": "inventory",
+      "exportedDefault": "PayPage",
+      "handlers": 1,
+      "readHooks": 0,
+      "writeHooks": 0,
+      "contractFns": [],
+      "traceStatus": "gap-no-contract-trace"
+    },
+    {
+      "page": "app/payroll/page.tsx",
+      "source": "inventory",
+      "exportedDefault": "PayrollPage",
+      "handlers": 5,
+      "readHooks": 0,
+      "writeHooks": 0,
+      "contractFns": [],
+      "traceStatus": "gap-no-contract-trace"
+    },
+    {
+      "page": "app/performance/page.tsx",
+      "source": "inventory",
+      "exportedDefault": "PerformanceDashboardPage",
+      "handlers": 1,
+      "readHooks": 0,
+      "writeHooks": 0,
+      "contractFns": [],
+      "traceStatus": "gap-no-contract-trace"
+    },
+    {
+      "page": "app/pos/page.tsx",
+      "source": "inventory",
+      "exportedDefault": "POSPage",
+      "handlers": 0,
+      "readHooks": 0,
+      "writeHooks": 0,
+      "contractFns": [],
+      "traceStatus": "static-no-onchain-behavior"
+    },
+    {
+      "page": "app/price-alerts/page.tsx",
+      "source": "inventory",
+      "exportedDefault": "PriceAlertsPage",
+      "handlers": 3,
+      "readHooks": 0,
+      "writeHooks": 0,
+      "contractFns": [],
+      "traceStatus": "gap-no-contract-trace"
+    },
+    {
+      "page": "app/product/[id]/page.tsx",
+      "source": "inventory",
+      "exportedDefault": "ProductDetailPage",
+      "handlers": 1,
+      "readHooks": 0,
+      "writeHooks": 0,
+      "contractFns": [],
+      "traceStatus": "gap-no-contract-trace"
+    },
+    {
+      "page": "app/profile/page.tsx",
+      "source": "inventory",
+      "exportedDefault": "ProfilePage",
+      "handlers": 0,
+      "readHooks": 0,
+      "writeHooks": 0,
+      "contractFns": [],
+      "traceStatus": "static-no-onchain-behavior"
+    },
+    {
+      "page": "app/quests/page.tsx",
+      "source": "inventory",
+      "exportedDefault": "QuestsPage",
+      "handlers": 0,
+      "readHooks": 0,
+      "writeHooks": 0,
+      "contractFns": [],
+      "traceStatus": "static-no-onchain-behavior"
+    },
+    {
+      "page": "app/reporting/page.tsx",
+      "source": "inventory",
+      "exportedDefault": "ReportingAnalyticsPage",
+      "handlers": 0,
+      "readHooks": 0,
+      "writeHooks": 0,
+      "contractFns": [],
+      "traceStatus": "static-no-onchain-behavior"
+    },
+    {
+      "page": "app/rewards/page.tsx",
+      "source": "inventory",
+      "exportedDefault": "RewardsPage",
+      "handlers": 0,
+      "readHooks": 0,
+      "writeHooks": 0,
+      "contractFns": [],
+      "traceStatus": "static-no-onchain-behavior"
+    },
+    {
+      "page": "app/sanctum/page.tsx",
+      "source": "inventory",
+      "exportedDefault": "SanctumPage",
+      "handlers": 0,
+      "readHooks": 3,
+      "writeHooks": 1,
+      "contractFns": [
+        "getBalance",
+        "getCharityCount",
+        "_nextProposalId",
+        "deposit",
+        "approveDisbursement",
+        "executeDisbursement"
+      ],
+      "traceStatus": "direct-onchain"
+    },
+    {
+      "page": "app/security-center/page.tsx",
+      "source": "inventory",
+      "exportedDefault": "SecurityCenterPage",
+      "handlers": 0,
+      "readHooks": 0,
+      "writeHooks": 0,
+      "contractFns": [],
+      "traceStatus": "static-no-onchain-behavior"
+    },
+    {
+      "page": "app/seer-academy/page.tsx",
+      "source": "inventory",
+      "exportedDefault": "SeerAcademyPage",
+      "handlers": 0,
+      "readHooks": 0,
+      "writeHooks": 0,
+      "contractFns": [],
+      "traceStatus": "static-no-onchain-behavior"
+    },
+    {
+      "page": "app/seer-service/page.tsx",
+      "source": "inventory",
+      "exportedDefault": "SeerServicePage",
+      "handlers": 0,
+      "readHooks": 0,
+      "writeHooks": 0,
+      "contractFns": [],
+      "traceStatus": "static-no-onchain-behavior"
+    },
+    {
+      "page": "app/setup/page.tsx",
+      "source": "inventory",
+      "exportedDefault": "SetupPage",
+      "handlers": 0,
+      "readHooks": 0,
+      "writeHooks": 0,
+      "contractFns": [],
+      "traceStatus": "static-no-onchain-behavior"
+    },
+    {
+      "page": "app/social-hub/page.tsx",
+      "source": "inventory",
+      "exportedDefault": "SocialHubPage",
+      "handlers": 5,
+      "readHooks": 0,
+      "writeHooks": 0,
+      "contractFns": [],
+      "traceStatus": "gap-no-contract-trace"
+    },
+    {
+      "page": "app/social-messaging/page.tsx",
+      "source": "inventory",
+      "exportedDefault": "SocialPage",
+      "handlers": 2,
+      "readHooks": 0,
+      "writeHooks": 0,
+      "contractFns": [],
+      "traceStatus": "gap-no-contract-trace"
+    },
+    {
+      "page": "app/social-payments/page.tsx",
+      "source": "inventory",
+      "exportedDefault": "SocialPaymentsDashboard",
+      "handlers": 0,
+      "readHooks": 0,
+      "writeHooks": 0,
+      "contractFns": [],
+      "traceStatus": "static-no-onchain-behavior"
+    },
+    {
+      "page": "app/social/page.tsx",
+      "source": "inventory",
+      "exportedDefault": "SocialAnalyticsPage",
+      "handlers": 0,
+      "readHooks": 0,
+      "writeHooks": 0,
+      "contractFns": [],
+      "traceStatus": "static-no-onchain-behavior"
+    },
+    {
+      "page": "app/stealth/page.tsx",
+      "source": "inventory",
+      "exportedDefault": "StealthPage",
+      "handlers": 0,
+      "readHooks": 0,
+      "writeHooks": 0,
+      "contractFns": [],
+      "traceStatus": "static-no-onchain-behavior"
+    },
+    {
+      "page": "app/store/[slug]/page.tsx",
+      "source": "inventory",
+      "exportedDefault": "StorefrontPage",
+      "handlers": 2,
+      "readHooks": 0,
+      "writeHooks": 0,
+      "contractFns": [],
+      "traceStatus": "gap-no-contract-trace"
+    },
+    {
+      "page": "app/stories/page.tsx",
+      "source": "inventory",
+      "exportedDefault": "StoriesPage",
+      "handlers": 3,
+      "readHooks": 0,
+      "writeHooks": 0,
+      "contractFns": [],
+      "traceStatus": "gap-no-contract-trace"
+    },
+    {
+      "page": "app/streaming/page.tsx",
+      "source": "inventory",
+      "exportedDefault": "StreamingPage",
+      "handlers": 0,
+      "readHooks": 0,
+      "writeHooks": 0,
+      "contractFns": [],
+      "traceStatus": "static-no-onchain-behavior"
+    },
+    {
+      "page": "app/subscriptions/page.tsx",
+      "source": "inventory",
+      "exportedDefault": "SubscriptionsPage",
+      "handlers": 3,
+      "readHooks": 1,
+      "writeHooks": 1,
+      "contractFns": [
+        "getUserSubscriptions",
+        "pauseSubscription",
+        "resumeSubscription",
+        "cancelSubscription"
+      ],
+      "traceStatus": "direct-onchain"
+    },
+    {
+      "page": "app/support/page.tsx",
+      "source": "inventory",
+      "exportedDefault": "SupportPage",
+      "handlers": 2,
+      "readHooks": 0,
+      "writeHooks": 0,
+      "contractFns": [],
+      "traceStatus": "gap-no-contract-trace"
+    },
+    {
+      "page": "app/taxes/page.tsx",
+      "source": "inventory",
+      "exportedDefault": "TaxesPage",
+      "handlers": 0,
+      "readHooks": 0,
+      "writeHooks": 0,
+      "contractFns": [],
+      "traceStatus": "static-no-onchain-behavior"
+    },
+    {
+      "page": "app/testnet/page.tsx",
+      "source": "inventory",
+      "exportedDefault": "TestnetPage",
+      "handlers": 0,
+      "readHooks": 0,
+      "writeHooks": 0,
+      "contractFns": [],
+      "traceStatus": "static-no-onchain-behavior"
+    },
+    {
+      "page": "app/theme-manager/page.tsx",
+      "source": "inventory",
+      "exportedDefault": "ThemeManagerPage",
+      "handlers": 0,
+      "readHooks": 0,
+      "writeHooks": 0,
+      "contractFns": [],
+      "traceStatus": "static-no-onchain-behavior"
+    },
+    {
+      "page": "app/theme-showcase/page.tsx",
+      "source": "inventory",
+      "exportedDefault": "ThemeShowcasePage",
+      "handlers": 0,
+      "readHooks": 0,
+      "writeHooks": 0,
+      "contractFns": [],
+      "traceStatus": "static-no-onchain-behavior"
+    },
+    {
+      "page": "app/theme/page.tsx",
+      "source": "inventory",
+      "exportedDefault": "ThemeManagementPage",
+      "handlers": 3,
+      "readHooks": 0,
+      "writeHooks": 0,
+      "contractFns": [],
+      "traceStatus": "gap-no-contract-trace"
+    },
+    {
+      "page": "app/time-locks/page.tsx",
+      "source": "inventory",
+      "exportedDefault": "TimeLocksPage",
+      "handlers": 0,
+      "readHooks": 0,
+      "writeHooks": 0,
+      "contractFns": [],
+      "traceStatus": "static-no-onchain-behavior"
+    },
+    {
+      "page": "app/token-launch/page.tsx",
+      "source": "inventory",
+      "exportedDefault": "TokenLaunchPage",
+      "handlers": 3,
+      "readHooks": 5,
+      "writeHooks": 2,
+      "contractFns": [
+        "getTierRemaining",
+        "getUserInfo",
+        "allowance",
+        "approve",
+        "buyTokens",
+        "buyWithStable"
+      ],
+      "traceStatus": "direct-onchain"
+    },
+    {
+      "page": "app/treasury/page.tsx",
+      "source": "inventory",
+      "exportedDefault": "TreasuryPage",
+      "handlers": 0,
+      "readHooks": 0,
+      "writeHooks": 0,
+      "contractFns": [],
+      "traceStatus": "static-no-onchain-behavior"
+    },
+    {
+      "page": "app/vault/page.tsx",
+      "source": "inventory",
+      "exportedDefault": "VaultPage",
+      "handlers": 5,
+      "readHooks": 4,
+      "writeHooks": 1,
+      "contractFns": [
+        "balanceOf",
+        "allowance",
+        "nextNonce",
+        "walletEpoch",
+        "approve",
+        "deposit",
+        "executeVaultToVaultTransfer",
+        "transferVFIDE"
+      ],
+      "traceStatus": "direct-onchain"
+    },
+    {
+      "page": "app/vault/recover/page.tsx",
+      "source": "inventory",
+      "exportedDefault": "VaultRecoveryPage",
+      "handlers": 2,
+      "readHooks": 0,
+      "writeHooks": 0,
+      "contractFns": [],
+      "traceStatus": "gap-no-contract-trace"
+    },
+    {
+      "page": "app/vault/settings/page.tsx",
+      "source": "inventory",
+      "exportedDefault": "VaultSettingsPage",
+      "handlers": 0,
+      "readHooks": 0,
+      "writeHooks": 0,
+      "contractFns": [],
+      "traceStatus": "static-no-onchain-behavior"
+    },
+    {
+      "page": "app/vesting/page.tsx",
+      "source": "inventory",
+      "exportedDefault": "VestingPage",
+      "handlers": 1,
+      "readHooks": 4,
+      "writeHooks": 1,
+      "contractFns": [
+        "getVestingStatus",
+        "getVestingSchedule",
+        "claimsPaused",
+        "beneficiary",
+        "claim"
+      ],
+      "traceStatus": "direct-onchain"
+    }
+  ]
+}

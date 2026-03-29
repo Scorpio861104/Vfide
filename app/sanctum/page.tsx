@@ -51,7 +51,7 @@ export default function SanctumPage() {
   const { data: _nextProposalId } = useReadContract({
     address: SANCTUM_VAULT_ADDRESS,
     abi: SanctumVaultABI,
-    functionName: '_nextProposalId',
+    functionName: 'disbursementCount',
     query: { enabled: IS_SANCTUM_DEPLOYED },
   });
 

@@ -25,7 +25,6 @@ const COUNCIL_SALARY_ADDRESS = (process.env.NEXT_PUBLIC_COUNCIL_SALARY_ADDRESS |
 
 // Check if contracts are deployed (not zero address)
 const IS_COUNCIL_ELECTION_DEPLOYED = COUNCIL_ELECTION_ADDRESS !== '0x0000000000000000000000000000000000000000';
-const IS_COUNCIL_SALARY_DEPLOYED = COUNCIL_SALARY_ADDRESS !== '0x0000000000000000000000000000000000000000';
 
 type TabType = 'overview' | 'members' | 'salary' | 'voting';
 
@@ -74,18 +73,9 @@ export default function CouncilPage() {
   const { data: _isCouncilMember } = useReadContract({
     address: COUNCIL_ELECTION_ADDRESS,
     abi: CouncilElectionABI,
-    functionName: 'isCouncilMember',
+    functionName: 'isCouncil',
     args: address ? [address] : undefined,
     query: { enabled: IS_COUNCIL_ELECTION_DEPLOYED && !!address },
-  });
-
-  // Read claimable salary
-  const { data: _claimableSalary } = useReadContract({
-    address: COUNCIL_SALARY_ADDRESS,
-    abi: CouncilSalaryABI,
-    functionName: 'getClaimable',
-    args: address ? [address] : undefined,
-    query: { enabled: IS_COUNCIL_SALARY_DEPLOYED && !!address },
   });
 
   // Read can register
@@ -115,10 +105,11 @@ export default function CouncilPage() {
   };
 
   const _handleClaimSalary = () => {
+    // distributeSalary distributes to all current council members; no per-member claim exists
     writeContract({
       address: COUNCIL_SALARY_ADDRESS,
       abi: CouncilSalaryABI,
-      functionName: 'claimSalary',
+      functionName: 'distributeSalary',
     });
   };
 

@@ -64,6 +64,14 @@
     "writeHooks": 0
   },
   {
+    "page": "app/checkout/[id]/page.tsx",
+    "expectedTest": "checkout-id-page-param-guard.test.tsx",
+    "hasTest": true,
+    "handlers": 1,
+    "readHooks": 1,
+    "writeHooks": 1
+  },
+  {
     "page": "app/control-panel/page.tsx",
     "expectedTest": "control-panel-page.test.tsx",
     "hasTest": true,
@@ -272,10 +280,26 @@
     "writeHooks": 0
   },
   {
+    "page": "app/marketplace/page.tsx",
+    "expectedTest": "marketplace-page.test.tsx",
+    "hasTest": false,
+    "handlers": 5,
+    "readHooks": 0,
+    "writeHooks": 0
+  },
+  {
     "page": "app/merchant/page.tsx",
     "expectedTest": "merchant-page.test.tsx",
     "hasTest": true,
     "handlers": 0,
+    "readHooks": 0,
+    "writeHooks": 0
+  },
+  {
+    "page": "app/merchants/page.tsx",
+    "expectedTest": "merchants-page.test.tsx",
+    "hasTest": false,
+    "handlers": 2,
     "readHooks": 0,
     "writeHooks": 0
   },
@@ -348,6 +372,14 @@
     "expectedTest": "price-alerts-page.test.tsx",
     "hasTest": true,
     "handlers": 3,
+    "readHooks": 0,
+    "writeHooks": 0
+  },
+  {
+    "page": "app/product/[id]/page.tsx",
+    "expectedTest": "product-id-page-param-guard.test.tsx",
+    "hasTest": true,
+    "handlers": 1,
     "readHooks": 0,
     "writeHooks": 0
   },
@@ -460,6 +492,14 @@
     "expectedTest": "stealth-page.test.tsx",
     "hasTest": true,
     "handlers": 0,
+    "readHooks": 0,
+    "writeHooks": 0
+  },
+  {
+    "page": "app/store/[slug]/page.tsx",
+    "expectedTest": "store-slug-page-param-guard.test.tsx",
+    "hasTest": true,
+    "handlers": 2,
     "readHooks": 0,
     "writeHooks": 0
   },

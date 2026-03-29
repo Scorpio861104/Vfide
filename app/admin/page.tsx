@@ -168,6 +168,8 @@ const TOKEN_ABI = [
     type: 'function',
   },
   {
+    inputs: [{ name: 'addr', type: 'address' }],
+    name: 'whitelisted',
     outputs: [{ type: 'bool' }],
     stateMutability: 'view',
     type: 'function',
@@ -177,7 +179,7 @@ const TOKEN_ABI = [
       { name: 'addr', type: 'address' },
       { name: 'status', type: 'bool' },
     ],
-    name: 'whitelistSystemContract',
+    name: 'proposeWhitelist',
     outputs: [],
     stateMutability: 'nonpayable',
     type: 'function',
@@ -419,35 +421,24 @@ const BURN_ROUTER_ABI = [
   },
   {
     inputs: [],
-    name: 'highTrustReduction',
-    outputs: [{ type: 'uint16' }],
-    stateMutability: 'view',
-    type: 'function',
-  },
-  {
-    inputs: [],
-    name: 'lowTrustPenalty',
-    outputs: [{ type: 'uint16' }],
-    stateMutability: 'view',
-    type: 'function',
-  },
-  {
-    inputs: [],
     name: 'maxTotalBps',
     outputs: [{ type: 'uint16' }],
     stateMutability: 'view',
     type: 'function',
   },
   {
+    inputs: [],
+    name: 'minTotalBps',
+    outputs: [{ type: 'uint16' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
     inputs: [
-      { name: '_baseBurnBps', type: 'uint16' },
-      { name: '_baseSanctumBps', type: 'uint16' },
-      { name: '_baseEcosystemBps', type: 'uint16' },
-      { name: '_highTrustReduction', type: 'uint16' },
-      { name: '_lowTrustPenalty', type: 'uint16' },
+      { name: '_minTotalBps', type: 'uint16' },
       { name: '_maxTotalBps', type: 'uint16' },
     ],
-    name: 'setPolicy',
+    name: 'setFeePolicy',
     outputs: [],
     stateMutability: 'nonpayable',
     type: 'function',
@@ -466,12 +457,8 @@ export default function AdminPanel() {
   const [moduleType, setModuleType] = useState<'vaultHub' | 'securityHub' | 'ledger' | 'burnRouter' | 'treasurySink' | 'sanctumSink'>('vaultHub');
   const [newOwner, setNewOwner] = useState('');
   const [burnParams, setBurnParams] = useState({
-    baseBurnBps: '',
-    baseSanctumBps: '',
-    baseEcosystemBps: '',
-    highTrustReduction: '',
-    lowTrustPenalty: '',
-    maxTotalBps: '',
+    minTotalBps: '',
+    maxTotalBps: ''
   });
   const [txHistory, setTxHistory] = useState<AdminTransaction[]>([]);
   const [batchActions, setBatchActions] = useState<BatchAction[]>([]);
@@ -544,7 +531,7 @@ export default function AdminPanel() {
   const { data: isWhitelisted } = useReadContract({
     address: TOKEN_ADDRESS,
     abi: TOKEN_ABI,
-    functionName: 'systemWhitelist',
+    functionName: 'whitelisted',
     args: checkAddress ? [checkAddress as `0x${string}`] : undefined,
     query: { enabled: IS_TOKEN_DEPLOYED && !!checkAddress },
   });
@@ -648,24 +635,17 @@ export default function AdminPanel() {
     query: { enabled: IS_BURN_ROUTER_DEPLOYED },
   });
 
-  const { data: highTrustReduction } = useReadContract({
-    address: BURN_ROUTER_ADDRESS,
-    abi: BURN_ROUTER_ABI,
-    functionName: 'highTrustReduction',
-    query: { enabled: IS_BURN_ROUTER_DEPLOYED },
-  });
-
-  const { data: lowTrustPenalty } = useReadContract({
-    address: BURN_ROUTER_ADDRESS,
-    abi: BURN_ROUTER_ABI,
-    functionName: 'lowTrustPenalty',
-    query: { enabled: IS_BURN_ROUTER_DEPLOYED },
-  });
-
   const { data: maxTotalBps } = useReadContract({
     address: BURN_ROUTER_ADDRESS,
     abi: BURN_ROUTER_ABI,
     functionName: 'maxTotalBps',
+    query: { enabled: IS_BURN_ROUTER_DEPLOYED },
+  });
+
+  const { data: minTotalBps } = useReadContract({
+    address: BURN_ROUTER_ADDRESS,
+    abi: BURN_ROUTER_ABI,
+    functionName: 'minTotalBps',
     query: { enabled: IS_BURN_ROUTER_DEPLOYED },
   });
 
@@ -691,7 +671,7 @@ export default function AdminPanel() {
     writeContract({
       address: TOKEN_ADDRESS,
       abi: TOKEN_ABI,
-      functionName: 'whitelistSystemContract',
+      functionName: 'proposeWhitelist',
       args: [whitelistAddress as `0x${string}`, true],
     });
   };
@@ -701,7 +681,7 @@ export default function AdminPanel() {
     writeContract({
       address: TOKEN_ADDRESS,
       abi: TOKEN_ABI,
-      functionName: 'whitelistSystemContract',
+      functionName: 'proposeWhitelist',
       args: [whitelistAddress as `0x${string}`, false],
     });
   };
@@ -1412,11 +1392,7 @@ export default function AdminPanel() {
 
   const handleUpdateBurnPolicy = () => {
     const params = {
-      baseBurnBps: safeParseInt(burnParams.baseBurnBps, safeParseInt(baseBurnBps, 0), { min: 0, max: 10000 }),
-      baseSanctumBps: safeParseInt(burnParams.baseSanctumBps, safeParseInt(baseSanctumBps, 0), { min: 0, max: 10000 }),
-      baseEcosystemBps: safeParseInt(burnParams.baseEcosystemBps, safeParseInt(baseEcosystemBps, 0), { min: 0, max: 10000 }),
-      highTrustReduction: safeParseInt(burnParams.highTrustReduction, safeParseInt(highTrustReduction, 0), { min: 0, max: 10000 }),
-      lowTrustPenalty: safeParseInt(burnParams.lowTrustPenalty, safeParseInt(lowTrustPenalty, 0), { min: 0, max: 10000 }),
+      minTotalBps: safeParseInt(burnParams.minTotalBps, safeParseInt(minTotalBps, 0), { min: 0, max: 10000 }),
       maxTotalBps: safeParseInt(burnParams.maxTotalBps, safeParseInt(maxTotalBps, 0), { min: 0, max: 10000 }),
     };
 
@@ -1425,8 +1401,8 @@ export default function AdminPanel() {
       setAdminValidationError('Max total BPS cannot exceed 1000 (10%).');
       return;
     }
-    if (params.baseBurnBps + params.baseSanctumBps + params.baseEcosystemBps > params.maxTotalBps) {
-      setAdminValidationError('Base fees exceed max total BPS.');
+    if (params.minTotalBps > params.maxTotalBps) {
+      setAdminValidationError('Min total BPS cannot exceed max total BPS.');
       return;
     }
 
@@ -1435,13 +1411,9 @@ export default function AdminPanel() {
     writeContract({
       address: BURN_ROUTER_ADDRESS,
       abi: BURN_ROUTER_ABI,
-      functionName: 'setPolicy',
+      functionName: 'setFeePolicy',
       args: [
-        params.baseBurnBps,
-        params.baseSanctumBps,
-        params.baseEcosystemBps,
-        params.highTrustReduction,
-        params.lowTrustPenalty,
+        params.minTotalBps,
         params.maxTotalBps,
       ],
     });
@@ -2378,12 +2350,8 @@ export default function AdminPanel() {
                   <span className="text-white font-bold ml-2">{Number(maxTotalBps) || 0} bps ({((Number(maxTotalBps) || 0) / 100).toFixed(2)}%)</span>
                 </div>
                 <div>
-                  <span className="text-gray-400">High Trust Reduction:</span>
-                  <span className="text-green-400 font-bold ml-2">-{Number(highTrustReduction) || 0} bps</span>
-                </div>
-                <div>
-                  <span className="text-gray-400">Low Trust Penalty:</span>
-                  <span className="text-red-400 font-bold ml-2">+{Number(lowTrustPenalty) || 0} bps</span>
+                  <span className="text-gray-400">Min Total:</span>
+                  <span className="text-white font-bold ml-2">{Number(minTotalBps) || 0} bps ({((Number(minTotalBps) || 0) / 100).toFixed(2)}%)</span>
                 </div>
               </div>
             </div>
@@ -2392,32 +2360,12 @@ export default function AdminPanel() {
             <div className="space-y-3">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-gray-300 text-xs mb-1">Base Burn (bps)</label>
+                  <label className="block text-gray-300 text-xs mb-1">Min Total (bps)</label>
                   <input
                     type="number"
-                    value={burnParams.baseBurnBps}
-                    onChange={(e) => setBurnParams({...burnParams, baseBurnBps: e.target.value})}
-                    placeholder={String(baseBurnBps || 150)}
-                    className="w-full bg-black/30 text-white rounded px-3 py-2 text-sm border border-gray-600 focus:border-orange-500 focus:outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="block text-gray-300 text-xs mb-1">Base Sanctum (bps)</label>
-                  <input
-                    type="number"
-                    value={burnParams.baseSanctumBps}
-                    onChange={(e) => setBurnParams({...burnParams, baseSanctumBps: e.target.value})}
-                    placeholder={String(baseSanctumBps || 5)}
-                    className="w-full bg-black/30 text-white rounded px-3 py-2 text-sm border border-gray-600 focus:border-orange-500 focus:outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="block text-gray-300 text-xs mb-1">Base Ecosystem (bps)</label>
-                  <input
-                    type="number"
-                    value={burnParams.baseEcosystemBps}
-                    onChange={(e) => setBurnParams({...burnParams, baseEcosystemBps: e.target.value})}
-                    placeholder={String(baseEcosystemBps || 20)}
+                    value={burnParams.minTotalBps}
+                    onChange={(e) => setBurnParams({...burnParams, minTotalBps: e.target.value})}
+                    placeholder={String(minTotalBps || 50)}
                     className="w-full bg-black/30 text-white rounded px-3 py-2 text-sm border border-gray-600 focus:border-orange-500 focus:outline-none"
                   />
                 </div>
@@ -2429,26 +2377,6 @@ export default function AdminPanel() {
                     onChange={(e) => setBurnParams({...burnParams, maxTotalBps: e.target.value})}
                     placeholder={String(maxTotalBps || 500)}
                     className="w-full bg-black/30 text-white rounded px-3 py-2 text-sm border border-gray-600 focus:border-orange-500 focus:outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="block text-gray-300 text-xs mb-1">High Trust Reduction (bps)</label>
-                  <input
-                    type="number"
-                    value={burnParams.highTrustReduction}
-                    onChange={(e) => setBurnParams({...burnParams, highTrustReduction: e.target.value})}
-                    placeholder={String(highTrustReduction || 125)}
-                    className="w-full bg-black/30 text-white rounded px-3 py-2 text-sm border border-gray-600 focus:border-green-500 focus:outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="block text-gray-300 text-xs mb-1">Low Trust Penalty (bps)</label>
-                  <input
-                    type="number"
-                    value={burnParams.lowTrustPenalty}
-                    onChange={(e) => setBurnParams({...burnParams, lowTrustPenalty: e.target.value})}
-                    placeholder={String(lowTrustPenalty || 325)}
-                    className="w-full bg-black/30 text-white rounded px-3 py-2 text-sm border border-gray-600 focus:border-red-500 focus:outline-none"
                   />
                 </div>
               </div>
@@ -2465,10 +2393,9 @@ export default function AdminPanel() {
                 <p className="text-blue-400 font-bold">💡 Basis Points Guide:</p>
                 <ul className="text-gray-300 mt-1 space-y-1">
                   <li>• 100 bps = 1%</li>
+                  <li>• Min total must be less than or equal to max total</li>
                   <li>• Max 1000 bps (10%) total fees</li>
-                  <li>• High trust users get fee reduction</li>
-                  <li>• Low trust users get fee penalty</li>
-                  <li>• Defaults: 150 burn, 5 sanctum, 20 ecosystem</li>
+                  <li>• Leave blank to keep current on-chain values</li>
                 </ul>
               </div>
             </div>
