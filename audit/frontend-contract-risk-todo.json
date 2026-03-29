@@ -5,7 +5,7 @@
     {
       "id": "FE-TRACE-001",
       "severity": "high",
-      "status": "open",
+      "status": "acceptedRisk",
       "title": "Page behavior lacks contract trace",
       "page": "app/enterprise/page.tsx",
       "evidence": {
@@ -13,12 +13,14 @@
         "readHooks": 0,
         "writeHooks": 0,
         "contractFns": []
-      }
+      },
+      "resolution": "Audited: page contains no on-chain contract calls. All handlers are API-only (fetch to /api/enterprise/orders). No ABI binding gap.",
+      "resolvedDate": "2026-03-29"
     },
     {
       "id": "FE-TRACE-002",
       "severity": "high",
-      "status": "open",
+      "status": "resolved",
       "title": "Page behavior lacks contract trace",
       "page": "app/escrow/page.tsx",
       "evidence": {
@@ -26,12 +28,14 @@
         "readHooks": 0,
         "writeHooks": 0,
         "contractFns": []
-      }
+      },
+      "resolution": "Audited: uses useEscrow hook (lib/escrow/useEscrow.ts). All bindings against CommerceEscrowABI verified: escrowCount, getRequiredApproval, escrows, open, markFunded, release, refund, dispute, resolve \u2014 all present in CommerceEscrow.json. approveVFIDE on ACTIVE_VAULT_ABI verified in UserVault.json.",
+      "resolvedDate": "2026-03-29"
     },
     {
       "id": "FE-TRACE-003",
       "severity": "high",
-      "status": "open",
+      "status": "acceptedRisk",
       "title": "Page behavior lacks contract trace",
       "page": "app/explorer/page.tsx",
       "evidence": {
@@ -39,12 +43,14 @@
         "readHooks": 0,
         "writeHooks": 0,
         "contractFns": []
-      }
+      },
+      "resolution": "Audited: no contract calls. UI-only page.",
+      "resolvedDate": "2026-03-29"
     },
     {
       "id": "FE-TRACE-004",
       "severity": "high",
-      "status": "open",
+      "status": "acceptedRisk",
       "title": "Page behavior lacks contract trace",
       "page": "app/hardware-wallet/page.tsx",
       "evidence": {
@@ -52,12 +58,14 @@
         "readHooks": 0,
         "writeHooks": 0,
         "contractFns": []
-      }
+      },
+      "resolution": "Audited: no contract calls. UI-only page.",
+      "resolvedDate": "2026-03-29"
     },
     {
       "id": "FE-TRACE-005",
       "severity": "high",
-      "status": "open",
+      "status": "acceptedRisk",
       "title": "Page behavior lacks contract trace",
       "page": "app/invite/[code]/page.tsx",
       "evidence": {
@@ -65,12 +73,14 @@
         "readHooks": 0,
         "writeHooks": 0,
         "contractFns": []
-      }
+      },
+      "resolution": "Audited: API-only (fetch /api/groups/invites, /api/groups/join). No contract calls.",
+      "resolvedDate": "2026-03-29"
     },
     {
       "id": "FE-TRACE-006",
       "severity": "high",
-      "status": "open",
+      "status": "acceptedRisk",
       "title": "Page behavior lacks contract trace",
       "page": "app/invite/page.tsx",
       "evidence": {
@@ -78,12 +88,14 @@
         "readHooks": 0,
         "writeHooks": 0,
         "contractFns": []
-      }
+      },
+      "resolution": "Audited: API-only (fetch /api/groups/invites). No contract calls.",
+      "resolvedDate": "2026-03-29"
     },
     {
       "id": "FE-TRACE-007",
       "severity": "high",
-      "status": "open",
+      "status": "acceptedRisk",
       "title": "Page behavior lacks contract trace",
       "page": "app/live-demo/page.tsx",
       "evidence": {
@@ -91,12 +103,14 @@
         "readHooks": 0,
         "writeHooks": 0,
         "contractFns": []
-      }
+      },
+      "resolution": "Audited: no contract calls. UI-only page.",
+      "resolvedDate": "2026-03-29"
     },
     {
       "id": "FE-TRACE-008",
       "severity": "high",
-      "status": "open",
+      "status": "acceptedRisk",
       "title": "Page behavior lacks contract trace",
       "page": "app/marketplace/page.tsx",
       "evidence": {
@@ -104,12 +118,14 @@
         "readHooks": 0,
         "writeHooks": 0,
         "contractFns": []
-      }
+      },
+      "resolution": "Audited: API-only (fetch /api/merchant/products, categories). No contract calls.",
+      "resolvedDate": "2026-03-29"
     },
     {
       "id": "FE-TRACE-009",
       "severity": "high",
-      "status": "open",
+      "status": "acceptedRisk",
       "title": "Page behavior lacks contract trace",
       "page": "app/merchants/page.tsx",
       "evidence": {
@@ -117,12 +133,14 @@
         "readHooks": 0,
         "writeHooks": 0,
         "contractFns": []
-      }
+      },
+      "resolution": "Audited: API-only (fetch /api/merchant/directory). No contract calls.",
+      "resolvedDate": "2026-03-29"
     },
     {
       "id": "FE-TRACE-010",
       "severity": "high",
-      "status": "open",
+      "status": "acceptedRisk",
       "title": "Page behavior lacks contract trace",
       "page": "app/notifications/page.tsx",
       "evidence": {
@@ -130,12 +148,14 @@
         "readHooks": 0,
         "writeHooks": 0,
         "contractFns": []
-      }
+      },
+      "resolution": "Audited: no contract calls. UI-only page.",
+      "resolvedDate": "2026-03-29"
     },
     {
       "id": "FE-TRACE-011",
       "severity": "high",
-      "status": "open",
+      "status": "resolved",
       "title": "Page behavior lacks contract trace",
       "page": "app/pay/page.tsx",
       "evidence": {
@@ -143,12 +163,14 @@
         "readHooks": 0,
         "writeHooks": 0,
         "contractFns": []
-      }
+      },
+      "resolution": "Audited: CONTRACT_ADDRESSES.VFIDEToken used for display context only. verifyMessage is off-chain ECDSA signature verification via viem, not an on-chain transaction. No ABI binding gap.",
+      "resolvedDate": "2026-03-29"
     },
     {
       "id": "FE-TRACE-012",
       "severity": "high",
-      "status": "open",
+      "status": "resolved",
       "title": "Page behavior lacks contract trace",
       "page": "app/payroll/page.tsx",
       "evidence": {
@@ -156,12 +178,14 @@
         "readHooks": 0,
         "writeHooks": 0,
         "contractFns": []
-      }
+      },
+      "resolution": "Audited: CONTRACT_ADDRESSES.VFIDEToken used for display context only. verifyMessage is off-chain ECDSA signature verification via viem, not an on-chain transaction. No ABI binding gap.",
+      "resolvedDate": "2026-03-29"
     },
     {
       "id": "FE-TRACE-013",
       "severity": "high",
-      "status": "open",
+      "status": "acceptedRisk",
       "title": "Page behavior lacks contract trace",
       "page": "app/performance/page.tsx",
       "evidence": {
@@ -169,12 +193,14 @@
         "readHooks": 0,
         "writeHooks": 0,
         "contractFns": []
-      }
+      },
+      "resolution": "Audited: no contract calls. UI/analytics-only page.",
+      "resolvedDate": "2026-03-29"
     },
     {
       "id": "FE-TRACE-014",
       "severity": "high",
-      "status": "open",
+      "status": "acceptedRisk",
       "title": "Page behavior lacks contract trace",
       "page": "app/price-alerts/page.tsx",
       "evidence": {
@@ -182,12 +208,14 @@
         "readHooks": 0,
         "writeHooks": 0,
         "contractFns": []
-      }
+      },
+      "resolution": "Audited: no contract calls. UI-only page.",
+      "resolvedDate": "2026-03-29"
     },
     {
       "id": "FE-TRACE-015",
       "severity": "high",
-      "status": "open",
+      "status": "acceptedRisk",
       "title": "Page behavior lacks contract trace",
       "page": "app/product/[id]/page.tsx",
       "evidence": {
@@ -195,12 +223,14 @@
         "readHooks": 0,
         "writeHooks": 0,
         "contractFns": []
-      }
+      },
+      "resolution": "Audited: API-only (fetch /api/merchant/products, reviews). No contract calls.",
+      "resolvedDate": "2026-03-29"
     },
     {
       "id": "FE-TRACE-016",
       "severity": "high",
-      "status": "open",
+      "status": "acceptedRisk",
       "title": "Page behavior lacks contract trace",
       "page": "app/social-hub/page.tsx",
       "evidence": {
@@ -208,12 +238,14 @@
         "readHooks": 0,
         "writeHooks": 0,
         "contractFns": []
-      }
+      },
+      "resolution": "Audited: API-only (fetch /api/community/posts). No contract calls.",
+      "resolvedDate": "2026-03-29"
     },
     {
       "id": "FE-TRACE-017",
       "severity": "high",
-      "status": "open",
+      "status": "acceptedRisk",
       "title": "Page behavior lacks contract trace",
       "page": "app/social-messaging/page.tsx",
       "evidence": {
@@ -221,12 +253,14 @@
         "readHooks": 0,
         "writeHooks": 0,
         "contractFns": []
-      }
+      },
+      "resolution": "Audited: no contract calls. UI-only page.",
+      "resolvedDate": "2026-03-29"
     },
     {
       "id": "FE-TRACE-018",
       "severity": "high",
-      "status": "open",
+      "status": "acceptedRisk",
       "title": "Page behavior lacks contract trace",
       "page": "app/store/[slug]/page.tsx",
       "evidence": {
@@ -234,12 +268,14 @@
         "readHooks": 0,
         "writeHooks": 0,
         "contractFns": []
-      }
+      },
+      "resolution": "Audited: API-only (merchant profile/products/reviews). No contract calls.",
+      "resolvedDate": "2026-03-29"
     },
     {
       "id": "FE-TRACE-019",
       "severity": "high",
-      "status": "open",
+      "status": "acceptedRisk",
       "title": "Page behavior lacks contract trace",
       "page": "app/stories/page.tsx",
       "evidence": {
@@ -247,12 +283,14 @@
         "readHooks": 0,
         "writeHooks": 0,
         "contractFns": []
-      }
+      },
+      "resolution": "Audited: API-only (fetch /api/community/stories). No contract calls.",
+      "resolvedDate": "2026-03-29"
     },
     {
       "id": "FE-TRACE-020",
       "severity": "high",
-      "status": "open",
+      "status": "acceptedRisk",
       "title": "Page behavior lacks contract trace",
       "page": "app/support/page.tsx",
       "evidence": {
@@ -260,12 +298,14 @@
         "readHooks": 0,
         "writeHooks": 0,
         "contractFns": []
-      }
+      },
+      "resolution": "Audited: no contract calls. UI-only page.",
+      "resolvedDate": "2026-03-29"
     },
     {
       "id": "FE-TRACE-021",
       "severity": "high",
-      "status": "open",
+      "status": "acceptedRisk",
       "title": "Page behavior lacks contract trace",
       "page": "app/theme/page.tsx",
       "evidence": {
@@ -273,12 +313,14 @@
         "readHooks": 0,
         "writeHooks": 0,
         "contractFns": []
-      }
+      },
+      "resolution": "Audited: no contract calls. UI-only page.",
+      "resolvedDate": "2026-03-29"
     },
     {
       "id": "FE-TRACE-022",
       "severity": "high",
-      "status": "open",
+      "status": "resolved",
       "title": "Page behavior lacks contract trace",
       "page": "app/vault/recover/page.tsx",
       "evidence": {
@@ -286,7 +328,9 @@
         "readHooks": 0,
         "writeHooks": 0,
         "contractFns": []
-      }
+      },
+      "resolution": "Audited: uses publicClient.readContract directly (not wagmi hooks). All 4 bindings confirmed valid: VaultRegistry (searchByRecoveryId/Email/Username/Guardian), VaultHub (getVaultInfo), Seer (getScore), VFIDEBadgeNFT (balanceOf). Scanner missed these because they are not useReadContract calls.",
+      "resolvedDate": "2026-03-29"
     },
     {
       "id": "FE-TRACE-023",
