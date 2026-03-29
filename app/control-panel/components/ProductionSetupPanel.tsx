@@ -2,8 +2,9 @@
 
 import { useState } from 'react';
 import { isAddress } from 'viem';
-import { useWriteContract, useWaitForTransactionReceipt, useReadContract } from 'wagmi';
+import { useChainId, useWriteContract, useWaitForTransactionReceipt, useReadContract } from 'wagmi';
 import { OWNER_CONTROL_PANEL_ADDRESS, OWNER_CONTROL_PANEL_ABI } from '../config/contracts';
+import { CURRENT_CHAIN_ID } from '@/lib/testnet';
 import {
   AddressInput,
   ConfirmationModal,
@@ -13,11 +14,13 @@ import {
 const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000' as const;
 
 export function ProductionSetupPanel() {
+  const chainId = useChainId();
   const [showSafeDefaultsConfirm, setShowSafeDefaultsConfirm] = useState(false);
   const [showAutoSwapConfirm, setShowAutoSwapConfirm] = useState(false);
   const [dexRouter, setDexRouter] = useState('');
   const [usdc, setUsdc] = useState('');
   const [loading, setLoading] = useState(false);
+  const [localError, setLocalError] = useState<string | null>(null);
 
   const { writeContractAsync, data: hash, error } = useWriteContract();
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash });
@@ -30,7 +33,13 @@ export function ProductionSetupPanel() {
   });
 
   const handleSafeDefaults = async () => {
+    setLocalError(null);
+    if (chainId !== CURRENT_CHAIN_ID) {
+      setLocalError('Switch to the configured network before running production setup.');
+      return;
+    }
     if (OWNER_CONTROL_PANEL_ADDRESS === ZERO_ADDRESS) {
+      setLocalError('Owner control panel is not configured in this environment.');
       setLoading(false);
       return;
     }
@@ -42,6 +51,7 @@ export function ProductionSetupPanel() {
         address: OWNER_CONTROL_PANEL_ADDRESS,
         abi: OWNER_CONTROL_PANEL_ABI,
         functionName: 'production_setupSafeDefaults',
+        chainId: CURRENT_CHAIN_ID,
       });
     } catch {
       // Error is surfaced via wagmi error state in TransactionStatus
@@ -51,14 +61,22 @@ export function ProductionSetupPanel() {
   };
 
   const handleAutoSwapSetup = async () => {
+    setLocalError(null);
+    if (chainId !== CURRENT_CHAIN_ID) {
+      setLocalError('Switch to the configured network before configuring auto-swap.');
+      return;
+    }
     if (OWNER_CONTROL_PANEL_ADDRESS === ZERO_ADDRESS) {
+      setLocalError('Owner control panel is not configured in this environment.');
       setLoading(false);
       return;
     }
     if (!isAddress(dexRouter) || dexRouter.toLowerCase() === ZERO_ADDRESS) {
+      setLocalError('DEX router must be a valid non-zero address.');
       return;
     }
     if (!isAddress(usdc) || usdc.toLowerCase() === ZERO_ADDRESS) {
+      setLocalError('Stablecoin must be a valid non-zero address.');
       return;
     }
     setShowAutoSwapConfirm(false);
@@ -70,6 +88,7 @@ export function ProductionSetupPanel() {
         abi: OWNER_CONTROL_PANEL_ABI,
         functionName: 'production_setupWithAutoSwap',
         args: [dexRouter as `0x${string}`, usdc as `0x${string}`],
+        chainId: CURRENT_CHAIN_ID,
       });
     } catch {
       // Error is surfaced via wagmi error state in TransactionStatus
@@ -78,7 +97,7 @@ export function ProductionSetupPanel() {
     }
   };
 
-  const txStatus = isConfirming ? 'pending' : isSuccess ? 'success' : error ? 'error' : 'idle';
+  const txStatus = localError ? 'error' : isConfirming ? 'pending' : isSuccess ? 'success' : error ? 'error' : 'idle';
   const _isConfigured = systemStatus && systemStatus[0]; // Check if Howey-safe mode is enabled
 
   return (

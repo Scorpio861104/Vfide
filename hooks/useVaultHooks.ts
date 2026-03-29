@@ -1,11 +1,12 @@
 'use client'
 
-import { useReadContract, useWriteContract, useAccount, useWaitForTransactionReceipt, useReadContracts, usePublicClient } from 'wagmi'
+import { useReadContract, useWriteContract, useAccount, useWaitForTransactionReceipt, useReadContracts, usePublicClient, useChainId } from 'wagmi'
 import { parseEther, formatEther, type Abi } from 'viem'
 import { useState, useEffect } from 'react'
 import { CONTRACT_ADDRESSES, ACTIVE_VAULT_IMPLEMENTATION, ACTIVE_VAULT_ABI } from '../lib/contracts'
 import { ZERO_ADDRESS } from '../lib/constants'
 import { VaultHubABI, VFIDETokenABI } from '../lib/abis'
+import { CURRENT_CHAIN_ID } from '../lib/testnet'
 import { validateAddress } from '../lib/validation'
 import { parseContractError, logError } from '@/lib/errorHandling';
 import { useAppStore } from '@/lib/store/appStore';
@@ -53,6 +54,7 @@ export function useUserVault() {
 }
 
 export function useCreateVault() {
+  const chainId = useChainId()
   const publicClient = usePublicClient()
   const { address } = useAccount()
   const { writeContractAsync, data, isPending } = useWriteContract()
@@ -67,11 +69,15 @@ export function useCreateVault() {
     if (CONTRACT_ADDRESSES.VaultHub === ZERO_ADDRESS) {
       throw new Error('VaultHub is not configured in this environment')
     }
+    if (chainId !== CURRENT_CHAIN_ID) {
+      throw new Error('Switch to the configured network before creating a vault')
+    }
     const hash = await writeContractAsync({
       address: CONTRACT_ADDRESSES.VaultHub,
       abi: HUB_ABI,
       functionName: 'ensureVault',
       args: [address],
+      chainId: CURRENT_CHAIN_ID,
     })
     if (publicClient) {
       await publicClient.waitForTransactionReceipt({ hash })
@@ -175,6 +181,7 @@ export function useVaultBalance() {
 }
 
 export function useTransferVFIDE() {
+  const chainId = useChainId()
   const { vaultAddress } = useUserVault()
   const { writeContract, data, isPending } = useWriteContract()
   
@@ -197,12 +204,17 @@ export function useTransferVFIDE() {
       throw new Error('Amount must be a positive number')
     }
     
+    if (chainId !== CURRENT_CHAIN_ID) {
+      throw new Error('Switch to the configured network before transferring VFIDE')
+    }
+
     // UserVault uses 'transferVFIDE' function (matches ABI)
     writeContract({
       address: vaultAddress as `0x${string}`,
       abi: VAULT_ABI,
       functionName: 'transferVFIDE',
       args: [toVault, parseEther(amount)],
+      chainId: CURRENT_CHAIN_ID,
     })
   }
   

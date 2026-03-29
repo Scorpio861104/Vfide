@@ -7,6 +7,7 @@ import { validateEthereumAddress, ValidationError } from './cryptoValidation';
 import { formatUnits, parseUnits } from 'viem';
 import * as React from 'react';
 import { logger } from '@/lib/logger';
+import { CURRENT_CHAIN_ID } from '@/lib/testnet';
 
 // Type guards for error handling
 const isErrorWithMessage = (err: unknown): err is { message: string } => {
@@ -39,8 +40,11 @@ export const VFIDE_TOKEN_ADDRESS = process.env.NEXT_PUBLIC_VFIDE_TOKEN_ADDRESS |
  */
 export const MAX_UINT256 = '0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff';
 
+const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000';
 const ERC20_DECIMALS = 18;
 const DECIMAL_AMOUNT_REGEX = /^\d+(?:\.\d{1,18})?$/;
+const RECEIPT_POLL_INTERVAL_MS = 1000;
+const MAX_RECEIPT_POLLS = 120;
 
 function parseTokenAmountToWei(amount: string): bigint {
   const normalized = amount.trim();
@@ -54,6 +58,57 @@ function parseTokenAmountToWei(amount: string): bigint {
   }
 
   return parsed;
+}
+
+function getEthereumProvider() {
+  if (typeof window === 'undefined' || !window.ethereum) {
+    throw new Error('Ethereum wallet provider is not available');
+  }
+  return window.ethereum;
+}
+
+function assertConfiguredTokenAddress() {
+  if (!validateEthereumAddress(VFIDE_TOKEN_ADDRESS) || VFIDE_TOKEN_ADDRESS.toLowerCase() === ZERO_ADDRESS) {
+    throw new ValidationError('VFIDE token contract is not configured');
+  }
+}
+
+function assertNonZeroAddress(address: string, label: string) {
+  if (!validateEthereumAddress(address) || address.toLowerCase() === ZERO_ADDRESS) {
+    throw new ValidationError(`${label} must be a valid non-zero address`);
+  }
+}
+
+async function assertCorrectChain() {
+  const provider = getEthereumProvider();
+  const rawChainId = await provider.request({ method: 'eth_chainId' }) as unknown;
+  const chainIdHex = asHexString(rawChainId, 'chain id');
+  const chainId = Number.parseInt(chainIdHex, 16);
+  if (chainId !== CURRENT_CHAIN_ID) {
+    throw new ValidationError(`Wrong network connected. Switch to chain ${CURRENT_CHAIN_ID}.`);
+  }
+}
+
+async function waitForTransactionReceiptSuccess(txHash: string) {
+  const provider = getEthereumProvider();
+
+  for (let attempt = 0; attempt < MAX_RECEIPT_POLLS; attempt++) {
+    const receipt = await provider.request({
+      method: 'eth_getTransactionReceipt',
+      params: [txHash],
+    }) as { status?: string } | null;
+
+    if (receipt) {
+      if (receipt.status === '0x1') {
+        return receipt;
+      }
+      throw new Error('Transaction failed on-chain');
+    }
+
+    await new Promise((resolve) => setTimeout(resolve, RECEIPT_POLL_INTERVAL_MS));
+  }
+
+  throw new Error('Timed out waiting for transaction confirmation');
 }
 
 // ERC-20 ABI (minimal interface for approval and allowance)
@@ -103,13 +158,12 @@ export async function checkTokenAllowance(
   requiredAmount: string
 ): Promise<ApprovalStatus> {
   try {
+    assertConfiguredTokenAddress();
+    await assertCorrectChain();
+
     // Validate addresses
-    if (!validateEthereumAddress(ownerAddress)) {
-      throw new ValidationError('Invalid owner address');
-    }
-    if (!validateEthereumAddress(spenderAddress)) {
-      throw new ValidationError('Invalid spender address');
-    }
+    assertNonZeroAddress(ownerAddress, 'Owner address');
+    assertNonZeroAddress(spenderAddress, 'Spender address');
 
     // Convert amount to wei with exact integer math.
     const requiredAmountWei = parseTokenAmountToWei(requiredAmount);
@@ -117,8 +171,10 @@ export async function checkTokenAllowance(
     // Encode allowance function call
     const data = encodeAllowanceCall(ownerAddress, spenderAddress);
 
+    const provider = getEthereumProvider();
+
     // Call contract
-    const result = await window.ethereum!.request({
+    const result = await provider.request({
       method: 'eth_call',
       params: [
         {
@@ -167,19 +223,22 @@ export async function requestTokenApproval(
   unlimited: boolean = false
 ): Promise<{ success: boolean; txHash?: string; error?: string }> {
   try {
+    assertConfiguredTokenAddress();
+    await assertCorrectChain();
+
     // Validate spender address
-    if (!validateEthereumAddress(spenderAddress)) {
-      throw new ValidationError('Invalid spender address');
-    }
+    assertNonZeroAddress(spenderAddress, 'Spender address');
 
     // Get user's address
+    const provider = getEthereumProvider();
     const accounts = asAddressArray(
-      await window.ethereum!.request({ method: 'eth_requestAccounts' }),
+      await provider.request({ method: 'eth_requestAccounts' }),
       'accounts'
     );
     const userAddress = accounts[0];
+    assertNonZeroAddress(userAddress, 'Wallet address');
 
-    // Determine approval amount. Unlimited approvals must be explicitly requested.
+    // Determine approval amount. Unlimited approvals remain opt-in only.
     let approvalAmount: string;
     if (unlimited) {
       approvalAmount = MAX_UINT256;
@@ -196,7 +255,7 @@ export async function requestTokenApproval(
     const data = encodeApproveCall(spenderAddress, approvalAmount);
 
     // Send approval transaction
-    const txHash = asHexString(await window.ethereum!.request({
+    const txHash = asHexString(await provider.request({
       method: 'eth_sendTransaction',
       params: [
         {
@@ -206,6 +265,8 @@ export async function requestTokenApproval(
         },
       ],
     }), 'transaction hash');
+
+    await waitForTransactionReceiptSuccess(txHash);
 
     return {
       success: true,
@@ -258,8 +319,9 @@ export async function ensureTokenAllowance(
     // Get user address if not provided
     let address = userAddress;
     if (!address) {
+      const provider = getEthereumProvider();
       const accounts = asAddressArray(
-        await window.ethereum!.request({ method: 'eth_requestAccounts' }),
+        await provider.request({ method: 'eth_requestAccounts' }),
         'accounts'
       );
       address = accounts[0];
@@ -269,6 +331,7 @@ export async function ensureTokenAllowance(
       }
     }
 
+    assertNonZeroAddress(address, 'Wallet address');
     // Check current allowance
     const status = await checkTokenAllowance(address, spenderAddress, requiredAmount);
 
@@ -307,13 +370,14 @@ export async function ensureTokenAllowance(
  */
 export async function getTokenBalance(address: string): Promise<string> {
   try {
-    if (!validateEthereumAddress(address)) {
-      throw new ValidationError('Invalid address');
-    }
+    assertConfiguredTokenAddress();
+    await assertCorrectChain();
+    assertNonZeroAddress(address, 'Address');
 
     const data = encodeBalanceOfCall(address);
+    const provider = getEthereumProvider();
 
-    const result = await window.ethereum!.request({
+    const result = await provider.request({
       method: 'eth_call',
       params: [
         {
@@ -349,20 +413,22 @@ export async function revokeTokenApproval(
   spenderAddress: string
 ): Promise<{ success: boolean; txHash?: string; error?: string }> {
   try {
-    if (!validateEthereumAddress(spenderAddress)) {
-      throw new ValidationError('Invalid spender address');
-    }
+    assertConfiguredTokenAddress();
+    await assertCorrectChain();
+    assertNonZeroAddress(spenderAddress, 'Spender address');
 
+    const provider = getEthereumProvider();
     const accounts = asAddressArray(
-      await window.ethereum!.request({ method: 'eth_requestAccounts' }),
+      await provider.request({ method: 'eth_requestAccounts' }),
       'accounts'
     );
     const userAddress = accounts[0];
+    assertNonZeroAddress(userAddress, 'Wallet address');
 
     // Encode approve(spender, 0)
     const data = encodeApproveCall(spenderAddress, '0x0');
 
-    const txHash = asHexString(await window.ethereum!.request({
+    const txHash = asHexString(await provider.request({
       method: 'eth_sendTransaction',
       params: [
         {
@@ -372,6 +438,8 @@ export async function revokeTokenApproval(
         },
       ],
     }), 'transaction hash');
+
+    await waitForTransactionReceiptSuccess(txHash);
 
     return { success: true, txHash };
   } catch (error: unknown) {
@@ -476,16 +544,14 @@ export function useTokenApproval(spenderAddress: string, amount: string) {
         return false;
       }
 
-      // Wait a moment then re-check allowance
-      setTimeout(async () => {
-          const accounts = asAddressArray(
-            await window.ethereum!.request({ method: 'eth_accounts' }),
-            'accounts'
-          );
-        if (accounts[0]) {
-          await checkAllowance(accounts[0]);
-        }
-      }, 2000);
+      const provider = getEthereumProvider();
+      const accounts = asAddressArray(
+        await provider.request({ method: 'eth_accounts' }),
+        'accounts'
+      );
+      if (accounts[0]) {
+        await checkAllowance(accounts[0]);
+      }
 
       return true;
     } catch (err: unknown) {

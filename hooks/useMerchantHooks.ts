@@ -1,9 +1,10 @@
 'use client'
 
-import { useReadContract, useWriteContract, useAccount, useWaitForTransactionReceipt, usePublicClient } from 'wagmi'
+import { useReadContract, useWriteContract, useAccount, useWaitForTransactionReceipt, usePublicClient, useChainId } from 'wagmi'
 import { parseEther, formatEther, isAddress } from 'viem'
 import { useState } from 'react'
 import { CONTRACT_ADDRESSES } from '../lib/contracts'
+import { CURRENT_CHAIN_ID } from '../lib/testnet'
 import { MerchantPortalABI } from '../lib/abis'
 import { parseContractError, logError } from '@/lib/errorHandling';
 import { safeBigIntToNumber } from '@/lib/validation';
@@ -48,6 +49,7 @@ export function useIsMerchant(address?: `0x${string}`) {
 }
 
 export function useRegisterMerchant() {
+  const chainId = useChainId()
   const publicClient = usePublicClient()
   const { writeContractAsync, data, isPending } = useWriteContract()
   const [error, setError] = useState<string | null>(null)
@@ -65,11 +67,15 @@ export function useRegisterMerchant() {
       if (!businessName.trim() || !category.trim()) {
         throw new Error('Business name and category are required')
       }
+      if (chainId !== CURRENT_CHAIN_ID) {
+        throw new Error('Switch to the configured network before registering a merchant')
+      }
       const hash = await writeContractAsync({
         address: CONTRACT_ADDRESSES.MerchantPortal,
         abi: MerchantPortalABI,
         functionName: 'registerMerchant',
         args: [businessName.trim(), category.trim()],
+        chainId: CURRENT_CHAIN_ID,
       })
       if (publicClient) {
         await publicClient.waitForTransactionReceipt({ hash })
@@ -97,6 +103,7 @@ export function useRegisterMerchant() {
  * Process payment from customer to merchant (merchant-initiated)
  */
 export function useProcessPayment() {
+  const chainId = useChainId()
   const publicClient = usePublicClient()
   const { writeContractAsync, data, isPending } = useWriteContract()
   const [error, setError] = useState<string | null>(null)
@@ -128,11 +135,15 @@ export function useProcessPayment() {
       if (!orderId.trim()) {
         throw new Error('Order ID is required')
       }
+      if (chainId !== CURRENT_CHAIN_ID) {
+        throw new Error('Switch to the configured network before processing payments')
+      }
       const hash = await writeContractAsync({
         address: CONTRACT_ADDRESSES.MerchantPortal,
         abi: MerchantPortalABI,
         functionName: 'processPayment',
         args: [customer, token, parseEther(amount), orderId.trim()],
+        chainId: CURRENT_CHAIN_ID,
       })
       if (publicClient) {
         await publicClient.waitForTransactionReceipt({ hash })
@@ -160,6 +171,7 @@ export function useProcessPayment() {
  * Set a scoped merchant pull permit for merchant-initiated payments.
  */
 export function useSetMerchantPullPermit() {
+  const chainId = useChainId()
   const publicClient = usePublicClient()
   const { writeContractAsync, data, isPending } = useWriteContract()
   const [error, setError] = useState<string | null>(null)
@@ -184,11 +196,15 @@ export function useSetMerchantPullPermit() {
       if (!maxAmount || Number(maxAmount) <= 0) {
         throw new Error('Maximum amount must be greater than zero')
       }
+      if (chainId !== CURRENT_CHAIN_ID) {
+        throw new Error('Switch to the configured network before setting merchant pull permits')
+      }
       const hash = await writeContractAsync({
         address: CONTRACT_ADDRESSES.MerchantPortal,
         abi: MerchantPortalABI,
         functionName: 'setMerchantPullPermit',
         args: [merchant, parseEther(maxAmount), BigInt(expiresAt)],
+        chainId: CURRENT_CHAIN_ID,
       })
       if (publicClient) {
         await publicClient.waitForTransactionReceipt({ hash })
@@ -216,6 +232,7 @@ export function useSetMerchantPullPermit() {
  * Pay merchant (customer-initiated)
  */
 export function usePayMerchant() {
+  const chainId = useChainId()
   const publicClient = usePublicClient()
   const { writeContractAsync, data, isPending } = useWriteContract()
   const [error, setError] = useState<string | null>(null)
@@ -247,11 +264,15 @@ export function usePayMerchant() {
       if (!orderId.trim()) {
         throw new Error('Order ID is required')
       }
+      if (chainId !== CURRENT_CHAIN_ID) {
+        throw new Error('Switch to the configured network before paying merchants')
+      }
       const hash = await writeContractAsync({
         address: CONTRACT_ADDRESSES.MerchantPortal,
         abi: MerchantPortalABI,
         functionName: 'pay',
         args: [merchant, token, parseEther(amount), orderId.trim()],
+        chainId: CURRENT_CHAIN_ID,
       })
       if (publicClient) {
         await publicClient.waitForTransactionReceipt({ hash })

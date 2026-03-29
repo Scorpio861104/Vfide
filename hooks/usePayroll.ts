@@ -7,11 +7,12 @@
  * - Type-safe contract interactions
  */
 
-import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt, usePublicClient } from 'wagmi';
+import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt, usePublicClient, useChainId } from 'wagmi';
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { parseUnits, formatUnits, isAddress } from 'viem';
 import { PayrollManagerABI } from '@/lib/abis';
 import { CONTRACT_ADDRESSES } from '@/lib/contracts';
+import { CURRENT_CHAIN_ID } from '@/lib/testnet';
 
 // Contract addresses from environment
 const PAYROLL_MANAGER_ADDRESS = CONTRACT_ADDRESSES.PayrollManager;
@@ -41,6 +42,7 @@ export interface PayrollStream {
 }
 
 export function usePayroll() {
+  const chainId = useChainId();
   const publicClient = usePublicClient();
   const { address } = useAccount();
   const [streams, setStreams] = useState<PayrollStream[]>([]);
@@ -181,6 +183,7 @@ export function usePayroll() {
     if (!isAddress(payee)) throw new Error('Invalid payee address');
     if (!IS_DEPLOYED) throw new Error('PayrollManager not deployed on this network');
     if (!HAS_TOKEN_CONFIG) throw new Error('VFIDE token not configured on this network');
+    if (chainId !== CURRENT_CHAIN_ID) throw new Error('Switch to the configured network before creating payroll streams');
 
     // Convert monthly rate to per-second rate
     const monthlyWei = parseUnits(monthlyRate, 18);

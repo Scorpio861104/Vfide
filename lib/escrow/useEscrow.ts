@@ -8,10 +8,11 @@
  * - Type-safe contract interactions
  */
 
-import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt, usePublicClient } from 'wagmi';
+import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt, usePublicClient, useChainId } from 'wagmi';
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { parseUnits, formatUnits, keccak256, stringToHex, isAddress } from 'viem';
 import { ACTIVE_VAULT_ABI, CommerceEscrowABI, CONTRACT_ADDRESSES, VFIDETokenABI } from '@/lib/contracts';
+import { CURRENT_CHAIN_ID } from '@/lib/testnet';
 
 export interface Escrow {
   id: bigint;
@@ -38,6 +39,7 @@ const STATE_MAP: Record<number, EscrowState> = {
 
 export function useEscrow() {
   const { address } = useAccount();
+  const chainId = useChainId();
   const publicClient = usePublicClient();
   const [escrows, setEscrows] = useState<Escrow[]>([]);
   const [loading, setLoading] = useState(false);
@@ -48,6 +50,14 @@ export function useEscrow() {
   const hasEscrowConfig =
     escrowAddress !== '0x0000000000000000000000000000000000000000' &&
     tokenAddress !== '0x0000000000000000000000000000000000000000';
+  const assertEscrowWriteReady = () => {
+    if (!hasEscrowConfig) {
+      throw new Error('Escrow contracts are not configured');
+    }
+    if (chainId !== CURRENT_CHAIN_ID) {
+      throw new Error('Switch to the configured network before using escrow actions');
+    }
+  };
 
   // Get total escrow count
   const { data: escrowCount, refetch: refetchCount } = useReadContract({
@@ -86,12 +96,17 @@ export function useEscrow() {
     if (!publicClient) {
       throw new Error('Wallet client not available');
     }
+    assertEscrowWriteReady();
+    if (spender === '0x0000000000000000000000000000000000000000') {
+      throw new Error('Escrow spender is not configured');
+    }
 
     const approvalHash = await writeContractAsync({
       address: vaultAddress,
       abi: ACTIVE_VAULT_ABI,
       functionName: 'approveVFIDE',
       args: [spender, amount],
+      chainId: CURRENT_CHAIN_ID,
     });
 
     await publicClient.waitForTransactionReceipt({ hash: approvalHash });
@@ -232,7 +247,7 @@ export function useEscrow() {
     orderId: string
   ) => {
     if (!address) throw new Error('Wallet not connected');
-    if (!hasEscrowConfig) throw new Error('Escrow contracts are not configured');
+    assertEscrowWriteReady();
     if (!isAddress(merchant) || merchant === '0x0000000000000000000000000000000000000000') {
       throw new Error('Merchant must be a valid non-zero address');
     }
@@ -266,6 +281,7 @@ export function useEscrow() {
         abi: CommerceEscrowABI,
         functionName: 'open',
         args: [merchant, amountWei, metaHash],
+        chainId: CURRENT_CHAIN_ID,
       });
 
       if (!publicClient) {
@@ -279,6 +295,7 @@ export function useEscrow() {
         abi: CommerceEscrowABI,
         functionName: 'markFunded',
         args: [openId],
+        chainId: CURRENT_CHAIN_ID,
       });
       await publicClient.waitForTransactionReceipt({ hash: fundedHash });
 
@@ -296,11 +313,13 @@ export function useEscrow() {
     setError(null);
 
     try {
+      assertEscrowWriteReady();
       await writeContractAsync({
         address: escrowAddress,
         abi: CommerceEscrowABI,
         functionName: 'release',
         args: [id],
+        chainId: CURRENT_CHAIN_ID,
       });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to release escrow');
@@ -316,11 +335,13 @@ export function useEscrow() {
     setError(null);
 
     try {
+      assertEscrowWriteReady();
       await writeContractAsync({
         address: escrowAddress,
         abi: CommerceEscrowABI,
         functionName: 'refund',
         args: [id],
+        chainId: CURRENT_CHAIN_ID,
       });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to refund escrow');
@@ -352,11 +373,13 @@ export function useEscrow() {
     setError(null);
 
     try {
+      assertEscrowWriteReady();
       await writeContractAsync({
         address: escrowAddress,
         abi: CommerceEscrowABI,
         functionName: 'dispute',
         args: [id, 'user_dispute'],
+        chainId: CURRENT_CHAIN_ID,
       });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to raise dispute');
@@ -372,11 +395,13 @@ export function useEscrow() {
     setError(null);
 
     try {
+      assertEscrowWriteReady();
       await writeContractAsync({
         address: escrowAddress,
         abi: CommerceEscrowABI,
         functionName: 'resolve',
         args: [id, refundBuyer],
+        chainId: CURRENT_CHAIN_ID,
       });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to resolve dispute');

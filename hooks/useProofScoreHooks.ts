@@ -1,10 +1,11 @@
 'use client'
 
 import { useState } from 'react'
-import { useReadContract, useWriteContract, useAccount, useWaitForTransactionReceipt, usePublicClient } from 'wagmi'
+import { useReadContract, useWriteContract, useAccount, useWaitForTransactionReceipt, usePublicClient, useChainId } from 'wagmi'
 import { CONTRACT_ADDRESSES } from '../lib/contracts'
 import { SeerABI, SeerSocialABI } from '../lib/abis'
 import { ZERO_ADDRESS } from '../lib/constants'
+import { CURRENT_CHAIN_ID } from '../lib/testnet'
 import { parseContractError, logError } from '@/lib/errorHandling';
 import { safeBigIntToNumber } from '@/lib/validation';
 
@@ -68,6 +69,7 @@ export function useProofScore(userAddress?: `0x${string}`) {
 }
 
 export function useEndorse(targetAddress?: `0x${string}`) {
+  const chainId = useChainId()
   const publicClient = usePublicClient()
   const { writeContractAsync, data, isPending } = useWriteContract()
   const [error, setError] = useState<string | null>(null)
@@ -87,12 +89,18 @@ export function useEndorse(targetAddress?: `0x${string}`) {
       setError(message)
       return { success: false, error: message }
     }
+    if (chainId !== CURRENT_CHAIN_ID) {
+      const message = 'Switch to the configured network before endorsing'
+      setError(message)
+      return { success: false, error: message }
+    }
     try {
       const hash = await writeContractAsync({
         address: CONTRACT_ADDRESSES.SeerSocial,
         abi: SeerSocialABI,
         functionName: 'endorse',
         args: [targetAddress, reason],
+        chainId: CURRENT_CHAIN_ID,
       })
       if (publicClient) {
         await publicClient.waitForTransactionReceipt({ hash })

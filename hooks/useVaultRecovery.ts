@@ -1,8 +1,9 @@
-import { useAccount, useWriteContract, useReadContract, useWatchContractEvent } from 'wagmi';
+import { useAccount, useWriteContract, useReadContract, useWatchContractEvent, useChainId } from 'wagmi';
 import { useMemo, useEffect, useState } from 'react';
 import { isAddress } from 'viem';
 import { USER_VAULT_ABI, isCardBoundVaultMode } from '@/lib/contracts';
 import { parseContractError, logError } from '@/lib/errorHandling';
+import { CURRENT_CHAIN_ID } from '@/lib/testnet';
 
 const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000' as const;
 
@@ -26,12 +27,16 @@ interface InheritanceStatus {
 
 export function useVaultRecovery(vaultAddress?: `0x${string}`) {
   const { address: userAddress } = useAccount();
+  const chainId = useChainId();
   const { writeContractAsync, isPending: isWritePending } = useWriteContract();
   const recoverySupported = !isCardBoundVaultMode();
 
   const assertRecoverySupported = () => {
     if (!recoverySupported) {
       throw new Error('Recovery/inheritance is not supported in CardBound vault mode');
+    }
+    if (chainId !== CURRENT_CHAIN_ID) {
+      throw new Error('Switch to the configured network before using recovery actions');
     }
   };
 

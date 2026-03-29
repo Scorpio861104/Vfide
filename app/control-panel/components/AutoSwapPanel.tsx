@@ -1,15 +1,19 @@
 'use client';
 
 import { useState } from 'react';
-import { useWriteContract, useReadContract, useWaitForTransactionReceipt } from 'wagmi';
+import { useChainId, useWriteContract, useReadContract, useWaitForTransactionReceipt } from 'wagmi';
 import { OWNER_CONTROL_PANEL_ADDRESS, OWNER_CONTROL_PANEL_ABI } from '../config/contracts';
+import { CURRENT_CHAIN_ID } from '@/lib/testnet';
 import {
   AddressInput,
   ConfirmationModal,
   TransactionStatus,
 } from './SecurityComponents';
 
+const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000' as const;
+
 export function AutoSwapPanel() {
+  const chainId = useChainId();
   const [router, setRouter] = useState('');
   const [stablecoin, setStablecoin] = useState('');
   const [formError, setFormError] = useState<string | null>(null);
@@ -34,6 +38,15 @@ export function AutoSwapPanel() {
   const currentSlippage = currentConfig?.[3] as number | undefined;
 
   const handleConfigure = async () => {
+    setFormError(null);
+    if (chainId !== CURRENT_CHAIN_ID) {
+      setFormError('Switch to the configured network before changing auto-swap settings.');
+      return;
+    }
+    if (OWNER_CONTROL_PANEL_ADDRESS === ZERO_ADDRESS) {
+      setFormError('Owner control panel is not configured in this environment.');
+      return;
+    }
     setShowConfirmation(false);
     setLoading(true);
     
@@ -43,6 +56,7 @@ export function AutoSwapPanel() {
         abi: OWNER_CONTROL_PANEL_ABI,
         functionName: 'autoSwap_configure',
         args: [router as `0x${string}`, stablecoin as `0x${string}`, enabled, slippageBps],
+        chainId: CURRENT_CHAIN_ID,
       });
       
       // Refetch configuration after transaction
@@ -55,6 +69,14 @@ export function AutoSwapPanel() {
   };
 
   const handleQuickSetupUSDC = async () => {
+    if (chainId !== CURRENT_CHAIN_ID) {
+      setFormError('Switch to the configured network before configuring auto-swap.');
+      return;
+    }
+    if (OWNER_CONTROL_PANEL_ADDRESS === ZERO_ADDRESS) {
+      setFormError('Owner control panel is not configured in this environment.');
+      return;
+    }
     if (!router || !stablecoin) {
       setFormError('Please enter both router and USDC addresses.');
       return;
@@ -69,6 +91,7 @@ export function AutoSwapPanel() {
         abi: OWNER_CONTROL_PANEL_ABI,
         functionName: 'autoSwap_quickSetupUSDC',
         args: [router as `0x${string}`, stablecoin as `0x${string}`],
+        chainId: CURRENT_CHAIN_ID,
       });
       
       setTimeout(() => refetch(), 2000);
@@ -80,6 +103,15 @@ export function AutoSwapPanel() {
   };
 
   const handleToggle = async () => {
+    setFormError(null);
+    if (chainId !== CURRENT_CHAIN_ID) {
+      setFormError('Switch to the configured network before toggling auto-swap.');
+      return;
+    }
+    if (OWNER_CONTROL_PANEL_ADDRESS === ZERO_ADDRESS) {
+      setFormError('Owner control panel is not configured in this environment.');
+      return;
+    }
     setLoading(true);
     try {
       await writeContractAsync({
@@ -87,6 +119,7 @@ export function AutoSwapPanel() {
         abi: OWNER_CONTROL_PANEL_ABI,
         functionName: 'autoSwap_setEnabled',
         args: [!currentEnabled],
+        chainId: CURRENT_CHAIN_ID,
       });
       
       setTimeout(() => refetch(), 2000);
@@ -97,7 +130,7 @@ export function AutoSwapPanel() {
     }
   };
 
-  const txStatus = isConfirming ? 'pending' : isSuccess ? 'success' : error ? 'error' : 'idle';
+  const txStatus = formError ? 'error' : isConfirming ? 'pending' : isSuccess ? 'success' : error ? 'error' : 'idle';
 
   return (
     <div className="space-y-6">

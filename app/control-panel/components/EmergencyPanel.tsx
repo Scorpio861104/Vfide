@@ -1,8 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
+import { useChainId, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
 import { OWNER_CONTROL_PANEL_ADDRESS, OWNER_CONTROL_PANEL_ABI } from '../config/contracts';
+import { CURRENT_CHAIN_ID } from '@/lib/testnet';
 import {
   ConfirmationModal,
   TransactionStatus,
@@ -10,18 +11,31 @@ import {
   NumberInput,
 } from './SecurityComponents';
 
+const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000' as const;
+
 export function EmergencyPanel() {
+  const chainId = useChainId();
   const [showPauseConfirm, setShowPauseConfirm] = useState(false);
   const [showResumeConfirm, setShowResumeConfirm] = useState(false);
   const [showCircuitBreakerConfirm, setShowCircuitBreakerConfirm] = useState(false);
   const [circuitBreakerActive, setCircuitBreakerActive] = useState(false);
   const [circuitBreakerDuration, setCircuitBreakerDuration] = useState(86400); // 24 hours in seconds
   const [loading, setLoading] = useState(false);
+  const [localError, setLocalError] = useState<string | null>(null);
 
   const { writeContractAsync, data: hash, error } = useWriteContract();
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash });
 
   const handlePauseAll = async () => {
+    setLocalError(null);
+    if (chainId !== CURRENT_CHAIN_ID) {
+      setLocalError('Switch to the configured network before using emergency controls.');
+      return;
+    }
+    if (OWNER_CONTROL_PANEL_ADDRESS === ZERO_ADDRESS) {
+      setLocalError('Owner control panel is not configured in this environment.');
+      return;
+    }
     setShowPauseConfirm(false);
     setLoading(true);
     
@@ -30,6 +44,7 @@ export function EmergencyPanel() {
         address: OWNER_CONTROL_PANEL_ADDRESS,
         abi: OWNER_CONTROL_PANEL_ABI,
         functionName: 'emergency_pauseAll',
+        chainId: CURRENT_CHAIN_ID,
       });
     } catch {
       // Error is surfaced via wagmi error state in TransactionStatus
@@ -39,6 +54,15 @@ export function EmergencyPanel() {
   };
 
   const handleResumeAll = async () => {
+    setLocalError(null);
+    if (chainId !== CURRENT_CHAIN_ID) {
+      setLocalError('Switch to the configured network before using emergency controls.');
+      return;
+    }
+    if (OWNER_CONTROL_PANEL_ADDRESS === ZERO_ADDRESS) {
+      setLocalError('Owner control panel is not configured in this environment.');
+      return;
+    }
     setShowResumeConfirm(false);
     setLoading(true);
     
@@ -47,6 +71,7 @@ export function EmergencyPanel() {
         address: OWNER_CONTROL_PANEL_ADDRESS,
         abi: OWNER_CONTROL_PANEL_ABI,
         functionName: 'emergency_resumeAll',
+        chainId: CURRENT_CHAIN_ID,
       });
     } catch {
       // Error is surfaced via wagmi error state in TransactionStatus
@@ -56,6 +81,15 @@ export function EmergencyPanel() {
   };
 
   const handleCircuitBreaker = async () => {
+    setLocalError(null);
+    if (chainId !== CURRENT_CHAIN_ID) {
+      setLocalError('Switch to the configured network before toggling the circuit breaker.');
+      return;
+    }
+    if (OWNER_CONTROL_PANEL_ADDRESS === ZERO_ADDRESS) {
+      setLocalError('Owner control panel is not configured in this environment.');
+      return;
+    }
     setShowCircuitBreakerConfirm(false);
     setLoading(true);
     
@@ -65,6 +99,7 @@ export function EmergencyPanel() {
         abi: OWNER_CONTROL_PANEL_ABI,
         functionName: 'token_setCircuitBreaker',
         args: [circuitBreakerActive, BigInt(circuitBreakerDuration)],
+        chainId: CURRENT_CHAIN_ID,
       });
     } catch {
       // Error is surfaced via wagmi error state in TransactionStatus
@@ -73,7 +108,7 @@ export function EmergencyPanel() {
     }
   };
 
-  const txStatus = isConfirming ? 'pending' : isSuccess ? 'success' : error ? 'error' : 'idle';
+  const txStatus = localError ? 'error' : isConfirming ? 'pending' : isSuccess ? 'success' : error ? 'error' : 'idle';
 
   return (
     <div className="space-y-6">

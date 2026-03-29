@@ -1,20 +1,25 @@
 'use client';
 
 import { useState } from 'react';
-import { useReadContract, useWaitForTransactionReceipt, useWriteContract } from 'wagmi';
+import { useChainId, useReadContract, useWaitForTransactionReceipt, useWriteContract } from 'wagmi';
 import { OWNER_CONTROL_PANEL_ABI, OWNER_CONTROL_PANEL_ADDRESS } from '../config/contracts';
+import { CURRENT_CHAIN_ID } from '@/lib/testnet';
 import {
   ConfirmationModal,
   NumberInput,
   TransactionStatus,
 } from './SecurityComponents';
 
+const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000' as const;
+
 export function EcosystemPanel() {
+  const chainId = useChainId();
   const [enabled, setEnabled] = useState(false);
   const [merchantTxReward, setMerchantTxReward] = useState(0);
   const [merchantReferralReward, setMerchantReferralReward] = useState(0);
   const [userReferralReward, setUserReferralReward] = useState(0);
   const [showConfirmation, setShowConfirmation] = useState(false);
+  const [localError, setLocalError] = useState<string | null>(null);
 
   const { writeContractAsync, data: hash, error } = useWriteContract();
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash });
@@ -31,6 +36,15 @@ export function EcosystemPanel() {
   const currentUserReferralReward = currentConfig?.[3] as bigint | undefined;
 
   const handleConfigure = async () => {
+    setLocalError(null);
+    if (chainId !== CURRENT_CHAIN_ID) {
+      setLocalError('Switch to the configured network before changing ecosystem payout settings.');
+      return;
+    }
+    if (OWNER_CONTROL_PANEL_ADDRESS === ZERO_ADDRESS) {
+      setLocalError('Owner control panel is not configured in this environment.');
+      return;
+    }
     setShowConfirmation(false);
     try {
       await writeContractAsync({
@@ -43,6 +57,7 @@ export function EcosystemPanel() {
           BigInt(merchantReferralReward),
           BigInt(userReferralReward),
         ],
+        chainId: CURRENT_CHAIN_ID,
       });
 
       setTimeout(() => refetch(), 2000);
@@ -51,7 +66,7 @@ export function EcosystemPanel() {
     }
   };
 
-  const txStatus = isConfirming ? 'pending' : isSuccess ? 'success' : error ? 'error' : 'idle';
+  const txStatus = localError ? 'error' : isConfirming ? 'pending' : isSuccess ? 'success' : error ? 'error' : 'idle';
 
   return (
     <div className="space-y-6">

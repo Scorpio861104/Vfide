@@ -1,14 +1,16 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { useReadContract, useWaitForTransactionReceipt, useWriteContract } from 'wagmi';
+import { useChainId, useReadContract, useWaitForTransactionReceipt, useWriteContract } from 'wagmi';
 import { OWNER_CONTROL_PANEL_ABI, OWNER_CONTROL_PANEL_ADDRESS } from '../config/contracts';
+import { CURRENT_CHAIN_ID } from '@/lib/testnet';
 import { AddressInput, NumberInput, TransactionStatus } from './SecurityComponents';
 
 type GuardedAction = 'tokenLockPolicy' | 'autoSwapConfigure' | 'autoWorkPayoutConfigure';
 const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000' as const;
 
 export function GovernancePanel() {
+  const chainId = useChainId();
   const [selectedAction, setSelectedAction] = useState<GuardedAction>('tokenLockPolicy');
 
   const [router, setRouter] = useState('');
@@ -23,6 +25,7 @@ export function GovernancePanel() {
 
   const [currentActionId, setCurrentActionId] = useState<`0x${string}` | null>(null);
   const [nowTs, setNowTs] = useState(() => Math.floor(Date.now() / 1000));
+  const [localError, setLocalError] = useState<string | null>(null);
 
   const { writeContractAsync, data: hash, error } = useWriteContract();
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash });
@@ -51,7 +54,7 @@ export function GovernancePanel() {
     functionName: 'maxAutoWorkPayoutWei',
   });
 
-  const txStatus = isConfirming ? 'pending' : isSuccess ? 'success' : error ? 'error' : 'idle';
+  const txStatus = localError ? 'error' : isConfirming ? 'pending' : isSuccess ? 'success' : error ? 'error' : 'idle';
 
   const delaySeconds = governanceDelay ? Number(governanceDelay) : 0;
   const actionIdArgs = useMemo(() => {
@@ -125,6 +128,15 @@ export function GovernancePanel() {
   }, []);
 
   const handleQueue = async () => {
+    setLocalError(null);
+    if (chainId !== CURRENT_CHAIN_ID) {
+      setLocalError('Switch to the configured network before queuing governance actions.');
+      return;
+    }
+    if (OWNER_CONTROL_PANEL_ADDRESS === ZERO_ADDRESS) {
+      setLocalError('Owner control panel is not configured in this environment.');
+      return;
+    }
     if (!actionId) return;
     setCurrentActionId(actionId);
     try {
@@ -133,6 +145,7 @@ export function GovernancePanel() {
         abi: OWNER_CONTROL_PANEL_ABI,
         functionName: 'governance_queueAction',
         args: [actionId],
+        chainId: CURRENT_CHAIN_ID,
       });
       setTimeout(() => refetchEta(), 2000);
     } catch {
@@ -141,6 +154,15 @@ export function GovernancePanel() {
   };
 
   const handleCancel = async () => {
+    setLocalError(null);
+    if (chainId !== CURRENT_CHAIN_ID) {
+      setLocalError('Switch to the configured network before cancelling governance actions.');
+      return;
+    }
+    if (OWNER_CONTROL_PANEL_ADDRESS === ZERO_ADDRESS) {
+      setLocalError('Owner control panel is not configured in this environment.');
+      return;
+    }
     if (!actionId) return;
     setCurrentActionId(actionId);
     try {
@@ -149,6 +171,7 @@ export function GovernancePanel() {
         abi: OWNER_CONTROL_PANEL_ABI,
         functionName: 'governance_cancelAction',
         args: [actionId],
+        chainId: CURRENT_CHAIN_ID,
       });
       setTimeout(() => refetchEta(), 2000);
     } catch {
@@ -157,6 +180,15 @@ export function GovernancePanel() {
   };
 
   const handleExecute = async () => {
+    setLocalError(null);
+    if (chainId !== CURRENT_CHAIN_ID) {
+      setLocalError('Switch to the configured network before executing governance actions.');
+      return;
+    }
+    if (OWNER_CONTROL_PANEL_ADDRESS === ZERO_ADDRESS) {
+      setLocalError('Owner control panel is not configured in this environment.');
+      return;
+    }
     if (!isQueued || waitRemaining > 0) return;
 
     try {
@@ -166,6 +198,7 @@ export function GovernancePanel() {
           abi: OWNER_CONTROL_PANEL_ABI,
           functionName: 'token_lockPolicy',
           args: [],
+          chainId: CURRENT_CHAIN_ID,
         });
       } else if (selectedAction === 'autoSwapConfigure') {
         await writeContractAsync({
@@ -178,6 +211,7 @@ export function GovernancePanel() {
             autoSwapEnabled,
             slippageBps,
           ],
+          chainId: CURRENT_CHAIN_ID,
         });
       } else {
         await writeContractAsync({
@@ -190,6 +224,7 @@ export function GovernancePanel() {
             BigInt(merchantReferralReward),
             BigInt(userReferralReward),
           ],
+          chainId: CURRENT_CHAIN_ID,
         });
       }
 
@@ -341,7 +376,7 @@ export function GovernancePanel() {
 
         {(hash || error) && (
           <div className="mt-6">
-            <TransactionStatus status={txStatus} hash={hash} error={error?.message} />
+            <TransactionStatus status={txStatus} hash={hash} error={localError ?? error?.message} />
           </div>
         )}
       </div>
