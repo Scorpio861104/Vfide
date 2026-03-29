@@ -215,7 +215,6 @@ let dilithiumModule: DilithiumModule | null = null;
 
 async function getDilithium(): Promise<DilithiumModule> {
   if (!dilithiumModule) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     dilithiumModule = (await import('@theqrl/dilithium5')) as unknown as DilithiumModule;
   }
   return dilithiumModule;

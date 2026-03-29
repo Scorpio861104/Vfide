@@ -1,4 +1,4 @@
-import { ContractFactory, JsonRpcProvider } from 'ethers';
+import { AbiCoder, ContractFactory, JsonRpcProvider, keccak256 } from 'ethers';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
@@ -64,21 +64,33 @@ async function main() {
     await token.getAddress(),
     '0x0000000000000000000000000000000000000000',
     '0x0000000000000000000000000000000000000000',
-    '0x0000000000000000000000000000000000000000',
     '0x0000000000000000000000000000000000000000'
   )) as any;
   await ocp.waitForDeployment();
 
-  await (await ocp.setEcosystemContracts(await eco.getAddress())).wait();
+  const ecosystemAddress = await eco.getAddress();
+  const setEcosystemActionId = keccak256(
+    AbiCoder.defaultAbiCoder().encode(['string', 'address'], ['setEcosystemContracts', ecosystemAddress])
+  );
+  await (await ocp.governance_queueAction(setEcosystemActionId)).wait();
+  const initialDelay = await ocp.governanceDelay();
+  await increaseTime(provider, Number(initialDelay) + 1);
+  await (await ocp.setEcosystemContracts(ecosystemAddress)).wait();
+
+  const actionId = (label: string, types: string[] = [], values: unknown[] = []): string =>
+    keccak256(
+      AbiCoder.defaultAbiCoder().encode(['string', ...types], [label, ...values])
+    );
 
   await expectRevert(() => ocp.token_lockPolicy({ gasLimit: 5_000_000 }));
 
-  const lockActionId = await ocp.actionId_token_lockPolicy();
+  const lockActionId = actionId('token_lockPolicy');
   await (await ocp.governance_queueAction(lockActionId)).wait();
 
   await expectRevert(() => ocp.token_lockPolicy({ gasLimit: 5_000_000 }));
 
-  await increaseTime(provider, 24 * 60 * 60 + 1);
+  const lockDelay = await ocp.governanceDelay();
+  await increaseTime(provider, Number(lockDelay) + 1);
   await (await ocp.token_lockPolicy()).wait();
 
   const isLocked = await token.policyLocked();
@@ -86,14 +98,22 @@ async function main() {
     throw new Error('Expected token policy to be locked after queued execution');
   }
 
-  await (await ocp.governance_setDelay(2 * 60 * 60)).wait();
+  const currentDelay = await ocp.governanceDelay();
+  const updatedDelay = 2n * 24n * 60n * 60n;
+  const setDelayActionId = actionId('governance_setDelay', ['uint256'], [updatedDelay]);
+  await (await ocp.governance_queueAction(setDelayActionId)).wait();
+  await increaseTime(provider, Number(currentDelay) + 1);
+  await (await ocp.governance_setDelay(updatedDelay)).wait();
   const delay = await ocp.governanceDelay();
-  if (delay !== 2n * 60n * 60n) {
+  if (delay !== updatedDelay) {
     throw new Error(`Unexpected governance delay: ${delay}`);
   }
 
   await expectRevert(() => ocp.governance_setDelay(30, { gasLimit: 5_000_000 }));
 
+  const setSlippageActionId = actionId('governance_setMaxAutoSwapSlippageBps', ['uint16'], [300]);
+  await (await ocp.governance_queueAction(setSlippageActionId)).wait();
+  await increaseTime(provider, Number(await ocp.governanceDelay()) + 1);
   await (await ocp.governance_setMaxAutoSwapSlippageBps(300)).wait();
   await expectRevert(async () =>
     ocp.autoSwap_configure(await other.getAddress(), await owner.getAddress(), true, 400, {
@@ -105,20 +125,26 @@ async function main() {
   const halfEth = 500_000_000_000_000_000n;
   const quarterEth = 250_000_000_000_000_000n;
 
+  const setPayoutBoundsActionId = actionId(
+    'governance_setAutoWorkPayoutBounds',
+    ['uint256', 'uint256'],
+    [2n, 10n * oneEth]
+  );
+  await (await ocp.governance_queueAction(setPayoutBoundsActionId)).wait();
+  await increaseTime(provider, Number(await ocp.governanceDelay()) + 1);
   await (await ocp.governance_setAutoWorkPayoutBounds(2, 10n * oneEth)).wait();
   await expectRevert(() =>
     ocp.ecosystem_configureAutoWorkPayout(true, 1, 1, 1, { gasLimit: 5_000_000 })
   );
 
-  const workActionId = await ocp.actionId_ecosystem_configureAutoWorkPayout(
-    true,
-    oneEth,
-    halfEth,
-    quarterEth
+  const workActionId = actionId(
+    'ecosystem_configureAutoWorkPayout',
+    ['bool', 'uint256', 'uint256', 'uint256'],
+    [true, oneEth, halfEth, quarterEth]
   );
   await (await ocp.governance_queueAction(workActionId)).wait();
 
-  await increaseTime(provider, 2 * 60 * 60 + 1);
+  await increaseTime(provider, Number(await ocp.governanceDelay()) + 1);
   await (await ocp.ecosystem_configureAutoWorkPayout(true, oneEth, halfEth, quarterEth)).wait();
 
   const config = await ocp.ecosystem_getAutoWorkPayoutConfig();
@@ -126,9 +152,10 @@ async function main() {
     throw new Error('Expected auto work payout to be enabled');
   }
 
-  const cancelActionId = await ocp.actionId_autoSwap_quickSetupUSDC(
-    await owner.getAddress(),
-    await other.getAddress()
+  const cancelActionId = actionId(
+    'autoSwap_quickSetupUSDC',
+    ['address', 'address'],
+    [await owner.getAddress(), await other.getAddress()]
   );
   await (await ocp.governance_queueAction(cancelActionId)).wait();
   await (await ocp.governance_cancelAction(cancelActionId)).wait();

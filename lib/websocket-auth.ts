@@ -4,7 +4,6 @@
  */
 
 import { type Address } from 'viem';
-import { logger } from '@/lib/logger';
 
 /**
  * WebSocket Authentication Message Format

@@ -14,7 +14,12 @@ jobs:
     env:
       SECURITY_MONITOR_BASE_URL: ${{ secrets.SECURITY_MONITOR_BASE_URL }}
       SECURITY_MONITOR_API_TOKEN: ${{ secrets.SECURITY_MONITOR_API_TOKEN }}
+      SECURITY_MONITOR_FAIL_ON_CANARY: ${{ vars.SECURITY_MONITOR_FAIL_ON_CANARY || 'true' }}
       SECURITY_MONITOR_FAIL_ON_THRESHOLD: ${{ vars.SECURITY_MONITOR_FAIL_ON_THRESHOLD || 'false' }}
+      SECURITY_MONITOR_FAIL_ON_SLO: ${{ vars.SECURITY_MONITOR_FAIL_ON_SLO || 'true' }}
+      SECURITY_MONITOR_REPLAY_REJECT_RATE_SLO: ${{ vars.SECURITY_MONITOR_REPLAY_REJECT_RATE_SLO || '0.05' }}
+      SECURITY_MONITOR_REPLAY_ERROR_BUDGET_24H: ${{ vars.SECURITY_MONITOR_REPLAY_ERROR_BUDGET_24H || '500' }}
+      SECURITY_MONITOR_REPLAY_BURN_RATE_THRESHOLD: ${{ vars.SECURITY_MONITOR_REPLAY_BURN_RATE_THRESHOLD || '2' }}
 
     steps:
       - uses: actions/checkout@v4
@@ -28,8 +33,19 @@ jobs:
       - name: Install dependencies
         run: npm ci --prefer-offline
 
+      - name: Run synthetic canary monitor
+        run: npm run -s security:canary -- security-monitor-canary-report.json
+
       - name: Generate replay metrics report
         run: npm run -s security:report:replay -- security-replay-metrics-report.md
+
+      - name: Upload synthetic canary report artifact
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: security-monitor-canary-report
+          path: security-monitor-canary-report.json
+          retention-days: 14
 
       - name: Upload replay metrics report artifact
         if: always()

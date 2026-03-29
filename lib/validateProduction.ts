@@ -22,21 +22,23 @@ interface EnvironmentConfig {
 const REQUIRED_ENV_VARS: EnvironmentConfig[] = [
   // Blockchain Configuration
   { name: 'NEXT_PUBLIC_CHAIN_ID', required: true, category: 'blockchain' },
+  { name: 'NEXT_PUBLIC_DEPLOYMENT_CHAIN_ID', required: false, category: 'blockchain', production: true },
   { name: 'NEXT_PUBLIC_RPC_URL', required: true, category: 'blockchain' },
   { name: 'NEXT_PUBLIC_EXPLORER_URL', required: true, category: 'blockchain' },
   { name: 'NEXT_PUBLIC_IS_TESTNET', required: true, category: 'blockchain' },
 
   // Core contract addresses
-  { name: 'NEXT_PUBLIC_VFIDE_TOKEN_ADDRESS', required: true, category: 'blockchain', production: true },
-  { name: 'NEXT_PUBLIC_STABLECOIN_REGISTRY_ADDRESS', required: true, category: 'blockchain', production: true },
-  { name: 'NEXT_PUBLIC_VAULT_HUB_ADDRESS', required: true, category: 'blockchain', production: true },
-  { name: 'NEXT_PUBLIC_DAO_ADDRESS', required: true, category: 'blockchain', production: true },
-  { name: 'NEXT_PUBLIC_SEER_ADDRESS', required: true, category: 'blockchain', production: true },
-  { name: 'NEXT_PUBLIC_VFIDE_COMMERCE_ADDRESS', required: true, category: 'blockchain', production: true },
-  { name: 'NEXT_PUBLIC_PAYROLL_MANAGER_ADDRESS', required: true, category: 'blockchain', production: true },
-  { name: 'NEXT_PUBLIC_SUBSCRIPTION_MANAGER_ADDRESS', required: true, category: 'blockchain', production: true },
-  { name: 'NEXT_PUBLIC_SANCTUM_VAULT_ADDRESS', required: true, category: 'blockchain', production: true },
-  { name: 'NEXT_PUBLIC_DEV_VAULT_ADDRESS', required: true, category: 'blockchain', production: true },
+  { name: 'NEXT_PUBLIC_VFIDE_TOKEN_ADDRESS', required: false, category: 'blockchain', production: true },
+  { name: 'NEXT_PUBLIC_STABLECOIN_REGISTRY_ADDRESS', required: false, category: 'blockchain', production: true },
+  { name: 'NEXT_PUBLIC_VAULT_HUB_ADDRESS', required: false, category: 'blockchain', production: true },
+  { name: 'NEXT_PUBLIC_VAULT_IMPLEMENTATION', required: false, category: 'blockchain' },
+  { name: 'NEXT_PUBLIC_DAO_ADDRESS', required: false, category: 'blockchain', production: true },
+  { name: 'NEXT_PUBLIC_SEER_ADDRESS', required: false, category: 'blockchain', production: true },
+  { name: 'NEXT_PUBLIC_VFIDE_COMMERCE_ADDRESS', required: false, category: 'blockchain', production: true },
+  { name: 'NEXT_PUBLIC_PAYROLL_MANAGER_ADDRESS', required: false, category: 'blockchain', production: true },
+  { name: 'NEXT_PUBLIC_SUBSCRIPTION_MANAGER_ADDRESS', required: false, category: 'blockchain', production: true },
+  { name: 'NEXT_PUBLIC_SANCTUM_VAULT_ADDRESS', required: false, category: 'blockchain', production: true },
+  { name: 'NEXT_PUBLIC_DEV_VAULT_ADDRESS', required: false, category: 'blockchain', production: true },
 
   // WalletConnect (optional but recommended)
   { name: 'NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID', required: false, category: 'blockchain' },
@@ -80,6 +82,9 @@ const REQUIRED_ENV_VARS: EnvironmentConfig[] = [
   { name: 'NEXT_PUBLIC_ENABLE_ANALYTICS', required: false, category: 'feature' },
   { name: 'NEXT_PUBLIC_ENABLE_CHAT', required: false, category: 'feature' },
   { name: 'NEXT_PUBLIC_ENABLE_GOVERNANCE', required: false, category: 'feature' },
+  { name: 'NEXT_PUBLIC_ENABLE_SW', required: false, category: 'feature' },
+  { name: 'NEXT_PUBLIC_ENABLE_PERSISTENT_SESSION_KEYS', required: false, category: 'feature' },
+  { name: 'NEXT_PUBLIC_SESSION_KEY_MAX_DURATION_SECONDS', required: false, category: 'feature' },
 ];
 
 interface ValidationResult {
@@ -160,7 +165,11 @@ export function validateProductionEnvironment(): ValidationResult {
     } else if (treatAsOptional && isEmpty) {
       result.warnings.push(`⚠️  ${config.name} is not set (frontend-only mode)`);
     } else if (!config.required && isEmpty) {
-      result.warnings.push(`⚠️  ${config.name} is not set (optional for ${config.category})`);
+      if (config.production) {
+        result.warnings.push(`⚠️  ${config.name} is not set (required in production; optional for ${config.category} in local/dev)`);
+      } else {
+        result.warnings.push(`⚠️  ${config.name} is not set (optional for ${config.category})`);
+      }
     } else if (value) {
       if (!process.env[config.name] && config.name.startsWith('NEXT_PUBLIC_')) {
         result.info.push(`✅ ${config.name} using inferred default`);
@@ -172,6 +181,43 @@ export function validateProductionEnvironment(): ValidationResult {
 
   // Additional validations
   if (strictProduction) {
+    const runtimeChainRaw = getEnvValue('NEXT_PUBLIC_CHAIN_ID') || '';
+    const deploymentChainRaw = getEnvValue('NEXT_PUBLIC_DEPLOYMENT_CHAIN_ID') || '';
+
+    if (runtimeChainRaw && !/^\d+$/.test(runtimeChainRaw)) {
+      result.errors.push(`❌ NEXT_PUBLIC_CHAIN_ID must be a positive integer, got "${runtimeChainRaw}"`);
+      result.valid = false;
+    }
+
+    if (deploymentChainRaw && !/^\d+$/.test(deploymentChainRaw)) {
+      result.errors.push(`❌ NEXT_PUBLIC_DEPLOYMENT_CHAIN_ID must be a positive integer, got "${deploymentChainRaw}"`);
+      result.valid = false;
+    }
+
+    const runtimeChainId = Number.parseInt(runtimeChainRaw, 10);
+    const deploymentChainId = Number.parseInt(deploymentChainRaw, 10);
+    if (Number.isInteger(runtimeChainId) && Number.isInteger(deploymentChainId) && runtimeChainId !== deploymentChainId) {
+      result.errors.push(
+        `❌ NEXT_PUBLIC_CHAIN_ID (${runtimeChainId}) does not match NEXT_PUBLIC_DEPLOYMENT_CHAIN_ID (${deploymentChainId})`
+      );
+      result.valid = false;
+    }
+
+    const vaultImplementation = (process.env.NEXT_PUBLIC_VAULT_IMPLEMENTATION || 'cardbound').toLowerCase();
+    if (vaultImplementation !== 'cardbound' && vaultImplementation !== 'uservault') {
+      result.errors.push('❌ NEXT_PUBLIC_VAULT_IMPLEMENTATION must be either "cardbound" or "uservault"');
+      result.valid = false;
+    }
+
+    if (vaultImplementation === 'cardbound' && !getEnvValue('NEXT_PUBLIC_VAULT_REGISTRY_ADDRESS')) {
+      result.errors.push('❌ NEXT_PUBLIC_VAULT_REGISTRY_ADDRESS is required when NEXT_PUBLIC_VAULT_IMPLEMENTATION=cardbound in production');
+      result.valid = false;
+    }
+
+    if (vaultImplementation === 'uservault' && !getEnvValue('NEXT_PUBLIC_VAULT_RECOVERY_CLAIM_ADDRESS')) {
+      result.warnings.push('⚠️  NEXT_PUBLIC_VAULT_RECOVERY_CLAIM_ADDRESS is not set for uservault mode; recovery claim flows may be unavailable');
+    }
+
     // Production-specific checks
     if (isTestnet) {
       result.warnings.push('⚠️  NEXT_PUBLIC_IS_TESTNET is true in production mode');

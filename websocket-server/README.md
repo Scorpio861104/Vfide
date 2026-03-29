@@ -24,6 +24,8 @@ Secure, authenticated WebSocket server for VFIDE real-time updates.
 | `WS_PORT` | No | Listening port (default: `8080`) |
 | `WS_TLS_CERT` | No | Path to TLS certificate file |
 | `WS_TLS_KEY` | No | Path to TLS private key file |
+| `WS_TOPIC_ACL_PATH` | No | Path to topic ACL snapshot JSON (`version`, `updatedAt`, `grants`) |
+| `WS_TOPIC_ACL_REFRESH_MS` | No | ACL snapshot refresh interval in milliseconds (default: `30000`) |
 
 ## TLS Configuration (Recommended: nginx proxy)
 
@@ -83,10 +85,16 @@ websocket:
 ### Client → Server
 
 ```json
+{ "type": "auth", "payload": { "token": "<jwt>" } }
 { "type": "ping" }
 { "type": "subscribe",   "payload": { "topic": "vault.0xABC" } }
 { "type": "unsubscribe", "payload": { "topic": "vault.0xABC" } }
 ```
+
+Notes:
+
+- The first privileged client message must be `auth`; unauthenticated sockets are rejected with `AUTH_REQUIRED` and closed after timeout.
+- When `WS_TOPIC_ACL_PATH` is configured, subscribe/unsubscribe authorization is evaluated against the periodically refreshed ACL snapshot.
 
 ### Server → Client
 

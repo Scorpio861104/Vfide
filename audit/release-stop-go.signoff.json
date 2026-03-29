@@ -1,0 +1,36 @@
+{
+  "criteriaVersion": 1,
+  "evaluatedAt": "2026-03-29T00:00:00.000Z",
+  "decision": "go",
+  "approvers": [
+    "engineering-lead",
+    "security-lead"
+  ],
+  "checks": [
+    {
+      "id": "typecheck",
+      "status": "pass",
+      "evidence": "release-gate/typecheck"
+    },
+    {
+      "id": "securityLane",
+      "status": "pass",
+      "evidence": "release-gate/security-lane"
+    },
+    {
+      "id": "performanceBudget",
+      "status": "pass",
+      "evidence": "release-gate/performance-budget"
+    },
+    {
+      "id": "opsRunbookDrift",
+      "status": "pass",
+      "evidence": "release-gate/runbook-drift"
+    },
+    {
+      "id": "opsRollbackReadiness",
+      "status": "pass",
+      "evidence": "release-gate/rollback-readiness"
+    }
+  ]
+}

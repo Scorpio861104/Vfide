@@ -84,7 +84,12 @@ export default function StorefrontPage() {
 
   // Fetch profile + products + reviews in parallel
   useEffect(() => {
-    if (!slug) return;
+    if (!slug) {
+      setError('Merchant not found');
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
 
     Promise.all([

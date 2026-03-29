@@ -44,6 +44,10 @@ export interface OptimalTimingRecommendation {
   urgency: 'wait' | 'ok-to-proceed' | 'send-now';
 }
 
+interface FeeHistoryResponse {
+  baseFeePerGas?: string[];
+}
+
 // ==================== CACHE ====================
 
 interface CacheEntry<T> {
@@ -193,7 +197,7 @@ class GasPriceService {
     const gasPriceHex = await window.ethereum!.request({
       method: 'eth_gasPrice',
       params: [],
-    });
+    }) as string;
 
     const gasPrice = BigInt(gasPriceHex);
     const gasPriceGwei = Number(gasPrice) / 1e9;
@@ -204,10 +208,14 @@ class GasPriceService {
       const feeHistory = await window.ethereum!.request({
         method: 'eth_feeHistory',
         params: ['0x5', 'latest', [25, 50, 75]],
-      });
+      }) as FeeHistoryResponse;
 
-      if (feeHistory?.baseFeePerGas?.length > 0) {
-        baseFee = BigInt(feeHistory.baseFeePerGas[feeHistory.baseFeePerGas.length - 1]);
+      const baseFees = feeHistory.baseFeePerGas;
+      if (Array.isArray(baseFees) && baseFees.length > 0) {
+        const latestBaseFee = baseFees[baseFees.length - 1];
+        if (typeof latestBaseFee === 'string') {
+          baseFee = BigInt(latestBaseFee);
+        }
       }
     } catch {
       // Fee history not supported

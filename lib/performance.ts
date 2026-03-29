@@ -27,6 +27,21 @@ export interface PerformanceMetric {
   navigationType?: string;
 }
 
+export type DevicePerformanceTier = 'low' | 'standard' | 'high';
+
+type NavigatorConnectionInfo = {
+  effectiveType?: string;
+  saveData?: boolean;
+};
+
+export interface DevicePerformanceProfile {
+  hardwareConcurrency: number | null;
+  deviceMemoryGb: number | null;
+  effectiveConnectionType: string | null;
+  saveData: boolean;
+  tier: DevicePerformanceTier;
+}
+
 // Metrics store
 const metricsStore: PerformanceMetric[] = [];
 const MAX_METRICS = 1000;
@@ -124,6 +139,51 @@ export function trackMetric(name: string, value: number) {
   sendMetric(metric);
 }
 
+export function getDevicePerformanceProfile(): DevicePerformanceProfile {
+  if (typeof window === 'undefined') {
+    return {
+      hardwareConcurrency: null,
+      deviceMemoryGb: null,
+      effectiveConnectionType: null,
+      saveData: false,
+      tier: 'standard',
+    };
+  }
+
+  const nav = window.navigator as Navigator & {
+    deviceMemory?: number;
+    connection?: NavigatorConnectionInfo;
+  };
+
+  const hardwareConcurrency = Number.isFinite(nav.hardwareConcurrency) ? nav.hardwareConcurrency : null;
+  const deviceMemoryGb = typeof nav.deviceMemory === 'number' && Number.isFinite(nav.deviceMemory)
+    ? nav.deviceMemory
+    : null;
+  const effectiveConnectionType = nav.connection?.effectiveType ?? null;
+  const saveData = Boolean(nav.connection?.saveData);
+
+  const lowCpu = hardwareConcurrency !== null && hardwareConcurrency <= 4;
+  const lowMemory = deviceMemoryGb !== null && deviceMemoryGb <= 4;
+  const slowNetwork = effectiveConnectionType === '2g' || effectiveConnectionType === 'slow-2g';
+  const premiumCpu = hardwareConcurrency !== null && hardwareConcurrency >= 8;
+  const premiumMemory = deviceMemoryGb !== null && deviceMemoryGb >= 8;
+
+  let tier: DevicePerformanceTier = 'standard';
+  if (lowCpu || lowMemory || slowNetwork || saveData) {
+    tier = 'low';
+  } else if (premiumCpu && premiumMemory && !saveData) {
+    tier = 'high';
+  }
+
+  return {
+    hardwareConcurrency,
+    deviceMemoryGb,
+    effectiveConnectionType,
+    saveData,
+    tier,
+  };
+}
+
 /**
  * Measure component render time
  */
@@ -194,17 +254,29 @@ export function getMemoryUsage() {
 /**
  * Observe long tasks
  */
-export function observeLongTasks(callback: (duration: number) => void) {
+export function observeLongTasks(
+  callback: (duration: number) => void,
+  options?: {
+    thresholdMs?: number;
+    profile?: DevicePerformanceProfile;
+  }
+) {
   if (typeof window === 'undefined' || !('PerformanceObserver' in window)) {
     return () => {};
   }
 
+  const thresholdMs = options?.thresholdMs ?? 50;
+  const profile = options?.profile;
+
   try {
     const observer = new PerformanceObserver((list) => {
       for (const entry of list.getEntries()) {
-        if (entry.duration > 50) {
+        if (entry.duration > thresholdMs) {
           callback(entry.duration);
           trackMetric('long-task', entry.duration);
+          if (profile) {
+            trackMetric(`long-task-${profile.tier}`, entry.duration);
+          }
         }
       }
     });

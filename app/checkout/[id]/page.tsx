@@ -59,7 +59,10 @@ export default function CheckoutPage() {
 
   // Fetch invoice data
   useEffect(() => {
-    if (!paymentLinkId) return;
+    if (!paymentLinkId) {
+      setStatus('not_found');
+      return;
+    }
 
     const fetchInvoice = async () => {
       try {

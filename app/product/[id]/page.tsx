@@ -4,15 +4,15 @@
  */
 'use client';
 
-import React, { useEffect, useState, useCallback, useMemo } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useParams } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import {
-  Star, ChevronLeft, ChevronRight, ShoppingCart, Heart, Share2,
+  Star, ChevronLeft, ChevronRight, ShoppingCart, Heart,
   Truck, ShieldCheck, Package, Zap, Check, AlertTriangle,
-  MapPin, Store, ArrowLeft, MessageSquare, ThumbsUp, ChevronDown,
+  Store, ArrowLeft, MessageSquare, ThumbsUp, ChevronDown,
 } from 'lucide-react';
 
 /* ─── Types ─── */
@@ -144,7 +144,12 @@ export default function ProductDetailPage() {
 
   // Fetch product + reviews
   useEffect(() => {
-    if (!id) return;
+    if (!id) {
+      setError('Product not found');
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
     setSelectedImage(0);
     setQuantity(1);

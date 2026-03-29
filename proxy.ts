@@ -33,6 +33,80 @@ function generateNonce(): string {
   return btoa(String.fromCharCode(...crypto.getRandomValues(new Uint8Array(16))));
 }
 
+function asOrigin(value: string | undefined): string | null {
+  if (!value || value.trim() === '') return null;
+
+  try {
+    const parsed = new URL(value);
+    return `${parsed.protocol}//${parsed.host}`;
+  } catch {
+    return null;
+  }
+}
+
+function getConnectSrcAllowlist(): string {
+  const allowlist = new Set<string>([
+    "'self'",
+    'https://*.walletconnect.com',
+    'https://*.walletconnect.org',
+    'wss://*.walletconnect.com',
+    'wss://*.walletconnect.org',
+  ]);
+
+  const configuredOrigins = [
+    asOrigin(process.env.NEXT_PUBLIC_RPC_URL),
+    asOrigin(process.env.RPC_URL),
+    asOrigin(process.env.NEXT_PUBLIC_API_URL),
+    asOrigin(process.env.NEXT_PUBLIC_WEBSOCKET_URL),
+    asOrigin(process.env.NEXT_PUBLIC_WS_URL),
+    asOrigin(process.env.NEXT_PUBLIC_APP_URL),
+    asOrigin(process.env.NEXT_PUBLIC_EXPLORER_URL),
+    asOrigin(process.env.NEXT_PUBLIC_BLOCK_EXPLORER_URL),
+    asOrigin(process.env.NEXT_PUBLIC_SENTRY_DSN),
+  ];
+
+  for (const origin of configuredOrigins) {
+    if (origin) {
+      allowlist.add(origin);
+    }
+  }
+
+  if (process.env.NODE_ENV !== 'production') {
+    allowlist.add('http://localhost:*');
+    allowlist.add('ws://localhost:*');
+    allowlist.add('http://127.0.0.1:*');
+    allowlist.add('ws://127.0.0.1:*');
+  }
+
+  return [...allowlist].join(' ');
+}
+
+function buildCsp(nonce: string): string {
+  const connectSrc = getConnectSrcAllowlist();
+
+  return [
+    "default-src 'self'",
+    `script-src 'self' 'nonce-${nonce}' 'unsafe-eval' https://vercel.live https://*.walletconnect.com https://*.walletconnect.org`,
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+    "img-src 'self' data: https: blob:",
+    "font-src 'self' data: https://fonts.gstatic.com",
+    `connect-src ${connectSrc}`,
+    "frame-src 'self' https://*.walletconnect.com",
+    "media-src 'self' blob:",
+    "object-src 'none'",
+    "base-uri 'self'",
+    "form-action 'self'",
+    "frame-ancestors 'none'",
+    ...(process.env.NODE_ENV === 'production' ? ["upgrade-insecure-requests"] : []),
+  ].join('; ');
+}
+
+function applySecurityHeaders(response: NextResponse, nonce: string, csp: string): NextResponse {
+  response.headers.set('x-nonce', nonce);
+  response.headers.set('Content-Security-Policy', csp);
+  return response;
+}
+
 /**
  * Get appropriate body size limit for the request
  */
@@ -72,6 +146,8 @@ function formatBytes(bytes: number): string {
 
 export function proxy(request: NextRequest) {
   const pathname = new URL(request.url).pathname;
+  const nonce = generateNonce();
+  const csp = buildCsp(nonce);
 
   // Check request body size for write operations (POST, PUT, PATCH, DELETE)
   if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(request.method)) {
@@ -83,7 +159,7 @@ export function proxy(request: NextRequest) {
 
       // Enforce size limit
       if (!isNaN(bodySize) && bodySize > maxSize) {
-        return NextResponse.json(
+        const response = NextResponse.json(
           {
             error: 'Request payload too large',
             message: `Request size ${formatBytes(bodySize)} exceeds maximum allowed size of ${formatBytes(maxSize)}`,
@@ -98,50 +174,30 @@ export function proxy(request: NextRequest) {
             },
           }
         );
+        return applySecurityHeaders(response, nonce, csp);
       }
     }
 
     // Validate Content-Type for write operations
     const contentTypeError = validateContentType(request);
     if (contentTypeError) {
-      return contentTypeError;
+      return applySecurityHeaders(contentTypeError, nonce, csp);
     }
 
     // Validate CSRF token for state-changing operations
     const csrfError = validateCSRF(request);
     if (csrfError) {
-      return csrfError;
+      return applySecurityHeaders(csrfError, nonce, csp);
     }
   }
-
-  // Generate nonce for this request
-  const nonce = generateNonce();
-
-  const csp = [
-    "default-src 'self'",
-    `script-src 'self' 'nonce-${nonce}' 'unsafe-eval' https://vercel.live https://*.walletconnect.com https://*.walletconnect.org`,
-    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-    "img-src 'self' data: https: blob:",
-    "font-src 'self' data: https://fonts.gstatic.com",
-    "connect-src 'self' wss: ws: https: https://*.walletconnect.com https://*.walletconnect.org https://*.base.org https://*.polygon.technology https://*.zksync.io",
-    "frame-src 'self' https://*.walletconnect.com",
-    "media-src 'self' blob:",
-    "object-src 'none'",
-    "base-uri 'self'",
-    "form-action 'self'",
-    "frame-ancestors 'none'",
-    "upgrade-insecure-requests",
-  ].join('; ');
 
   // Pass nonce into downstream request headers for app/layout.tsx
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set('x-nonce', nonce);
 
-  const response = NextResponse.next({
+  const response = applySecurityHeaders(NextResponse.next({
     request: { headers: requestHeaders },
-  });
-  response.headers.set('x-nonce', nonce);
-  response.headers.set('Content-Security-Policy', csp);
+  }), nonce, csp);
 
   return response;
 }

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useEnsName, useEnsAvatar } from 'wagmi';
 import { normalize } from 'viem/ens';
 import { mainnet } from 'wagmi/chains';
+import { getCachePolicy } from '@/lib/cache/cacheInvalidationPolicy';
 
 /**
  * ENS Name Resolution Hook
@@ -11,6 +12,7 @@ import { mainnet } from 'wagmi/chains';
  * Phase 3: Resolve ENS names for addresses
  */
 export function useENS(address: string | undefined) {
+  const ensCachePolicy = getCachePolicy('reactQuery:ens');
   const [ensName, setEnsName] = useState<string | null>(null);
   const [ensAvatar, setEnsAvatar] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -21,7 +23,7 @@ export function useENS(address: string | undefined) {
     chainId: mainnet.id as number as 8453, // Cast for wagmi type compatibility
     query: {
       enabled: !!address,
-      staleTime: 1000 * 60 * 60, // 1 hour cache
+      staleTime: ensCachePolicy.ttlMs,
     },
   });
 
@@ -30,7 +32,7 @@ export function useENS(address: string | undefined) {
     chainId: mainnet.id as number as 8453, // Cast for wagmi type compatibility
     query: {
       enabled: !!resolvedName,
-      staleTime: 1000 * 60 * 60, // 1 hour cache
+      staleTime: ensCachePolicy.ttlMs,
     },
   });
 

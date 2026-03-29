@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
+import { getEnv } from '@/lib/env';
 import { registerServiceWorker } from '@/lib/serviceWorkerRegistration';
 import { logger } from '@/lib/logger';
 
@@ -15,8 +16,10 @@ import { logger } from '@/lib/logger';
  */
 export function ServiceWorkerRegistration() {
   useEffect(() => {
+    const env = getEnv();
+
     // Only register in production or if explicitly enabled
-    if (process.env.NODE_ENV === 'production' || process.env.NEXT_PUBLIC_ENABLE_SW === 'true') {
+    if (process.env.NODE_ENV === 'production' || env.NEXT_PUBLIC_ENABLE_SW) {
       registerServiceWorker().then((registration) => {
         if (registration) {
           logger.info('[VFIDE] Service worker registered successfully');

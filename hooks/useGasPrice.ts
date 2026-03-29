@@ -89,7 +89,7 @@ export function useGasPrice() {
       const gasPriceHex = await window.ethereum!.request({
         method: 'eth_gasPrice',
         params: [],
-      });
+      }) as string;
 
       const gasPriceWei = parseInt(gasPriceHex, 16);
       if (isNaN(gasPriceWei) || !isFinite(gasPriceWei)) {

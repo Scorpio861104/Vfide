@@ -1,0 +1,31 @@
+{
+  "version": 1,
+  "executedAt": "2026-03-29T00:00:00.000Z",
+  "scenario": "Sev-1 API outage and stakeholder escalation",
+  "participants": [
+    "incident-commander",
+    "technical-lead",
+    "communications-lead"
+  ],
+  "timeline": [
+    {
+      "offsetMinutes": 0,
+      "event": "Incident declared",
+      "owner": "incident-commander"
+    },
+    {
+      "offsetMinutes": 10,
+      "event": "Initial stakeholder communication sent",
+      "owner": "communications-lead"
+    },
+    {
+      "offsetMinutes": 40,
+      "event": "Progress update issued",
+      "owner": "communications-lead"
+    }
+  ],
+  "actionItems": [
+    "Automate status-page draft generation from incident template",
+    "Rehearse executive escalation handoff for unresolved Sev-1 beyond 2 hours"
+  ]
+}

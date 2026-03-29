@@ -18,6 +18,21 @@ const REQUIRED_CONFIRMATIONS = 2; // Wait for 2 block confirmations
 const POLL_INTERVAL = 2000; // Poll every 2 seconds
 const MAX_WAIT_TIME = 5 * 60 * 1000; // Maximum 5 minutes wait
 
+interface EthereumReceipt {
+  status?: string;
+  blockNumber?: string;
+  blockHash?: string;
+  gasUsed?: string;
+  effectiveGasPrice?: string;
+}
+
+function asHexString(value: unknown, name: string): string {
+  if (typeof value !== 'string') {
+    throw new Error(`Invalid ${name} from provider`);
+  }
+  return value;
+}
+
 /**
  * Wait for transaction confirmation on blockchain
  */
@@ -33,7 +48,7 @@ export async function waitForConfirmation(
       const receipt = await window.ethereum!.request({
         method: 'eth_getTransactionReceipt',
         params: [txHash],
-      });
+      }) as EthereumReceipt | null;
 
       // If receipt doesn't exist yet, transaction is still pending
       if (!receipt) {
@@ -43,7 +58,7 @@ export async function waitForConfirmation(
 
       // Check if transaction failed
       if (receipt.status === '0x0') {
-        const blockNum = parseInt(receipt.blockNumber, 16);
+        const blockNum = parseInt(asHexString(receipt.blockNumber, 'receipt.blockNumber'), 16);
         if (isNaN(blockNum) || !isFinite(blockNum)) {
           throw new Error('Invalid block number in receipt');
         }
@@ -62,10 +77,10 @@ export async function waitForConfirmation(
       const currentBlock = await window.ethereum!.request({
         method: 'eth_blockNumber',
         params: [],
-      });
+      }) as unknown;
 
-      const txBlockNumber = parseInt(receipt.blockNumber, 16);
-      const currentBlockNumber = parseInt(currentBlock, 16);
+      const txBlockNumber = parseInt(asHexString(receipt.blockNumber, 'receipt.blockNumber'), 16);
+      const currentBlockNumber = parseInt(asHexString(currentBlock, 'current block number'), 16);
       
       if (isNaN(txBlockNumber) || isNaN(currentBlockNumber) || 
           !isFinite(txBlockNumber) || !isFinite(currentBlockNumber)) {
@@ -117,7 +132,7 @@ export async function getTransactionStatus(txHash: string): Promise<Confirmation
     const receipt = await window.ethereum!.request({
       method: 'eth_getTransactionReceipt',
       params: [txHash],
-    });
+    }) as EthereumReceipt | null;
 
     if (!receipt) {
       return {
@@ -128,7 +143,7 @@ export async function getTransactionStatus(txHash: string): Promise<Confirmation
     }
 
     if (receipt.status === '0x0') {
-      const blockNum = parseInt(receipt.blockNumber, 16);
+      const blockNum = parseInt(asHexString(receipt.blockNumber, 'receipt.blockNumber'), 16);
       if (isNaN(blockNum) || !isFinite(blockNum)) {
         throw new Error('Invalid block number in receipt');
       }
@@ -146,10 +161,10 @@ export async function getTransactionStatus(txHash: string): Promise<Confirmation
     const currentBlock = await window.ethereum!.request({
       method: 'eth_blockNumber',
       params: [],
-    });
+    }) as unknown;
 
-    const txBlockNumber = parseInt(receipt.blockNumber, 16);
-    const currentBlockNumber = parseInt(currentBlock, 16);
+    const txBlockNumber = parseInt(asHexString(receipt.blockNumber, 'receipt.blockNumber'), 16);
+    const currentBlockNumber = parseInt(asHexString(currentBlock, 'current block number'), 16);
     
     if (isNaN(txBlockNumber) || isNaN(currentBlockNumber) || 
         !isFinite(txBlockNumber) || !isFinite(currentBlockNumber)) {

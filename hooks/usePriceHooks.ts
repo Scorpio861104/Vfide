@@ -9,6 +9,7 @@
 import { useState, useEffect } from 'react'
 import { useQuery, useQueryClient as _useQueryClient } from '@tanstack/react-query'
 import { logger } from '@/lib/logger';
+import { getCachePolicy } from '@/lib/cache/cacheInvalidationPolicy';
 
 interface PriceData {
   vfide: {
@@ -69,11 +70,13 @@ async function fetchVfidePrice(): Promise<PriceData> {
 }
 
 export function useVfidePrice() {
+  const vfidePriceCachePolicy = getCachePolicy('reactQuery:vfide-price');
+
   const { data, isLoading, error, isStale } = useQuery({
-    queryKey: ['vfide-price'],
+    queryKey: vfidePriceCachePolicy.queryKey,
     queryFn: fetchVfidePrice,
-    staleTime: 30 * 1000, // Consider stale after 30 seconds
-    gcTime: 5 * 60 * 1000, // Keep in cache for 5 minutes (renamed from cacheTime in v5)
+    staleTime: vfidePriceCachePolicy.ttlMs,
+    gcTime: vfidePriceCachePolicy.gcMs,
     refetchInterval: 60 * 1000, // Refetch every 60 seconds
     refetchOnWindowFocus: true, // Refetch when tab becomes active
     retry: 2,

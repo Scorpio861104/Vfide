@@ -11,7 +11,7 @@
 import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt, usePublicClient } from 'wagmi';
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { parseUnits, formatUnits, keccak256, stringToHex } from 'viem';
-import { ACTIVE_VAULT_ABI, CommerceEscrowABI, CONTRACT_ADDRESSES, VFIDE_TOKEN_ABI } from '@/lib/contracts';
+import { ACTIVE_VAULT_ABI, CommerceEscrowABI, CONTRACT_ADDRESSES, VFIDETokenABI } from '@/lib/contracts';
 
 export interface Escrow {
   id: bigint;
@@ -73,7 +73,7 @@ export function useEscrow() {
 
     const allowance = await publicClient.readContract({
       address: tokenAddress,
-      abi: VFIDE_TOKEN_ABI,
+      abi: VFIDETokenABI,
       functionName: 'allowance',
       args: [owner, spender],
     });

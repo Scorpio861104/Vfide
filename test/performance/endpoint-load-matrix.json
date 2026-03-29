@@ -1,0 +1,94 @@
+{
+  "version": 1,
+  "description": "Hot API endpoint load matrix for sustained and spike coverage",
+  "endpoints": [
+    {
+      "id": "health",
+      "path": "/api/health",
+      "method": "GET",
+      "criticality": "critical",
+      "auth": "none",
+      "expectedStatuses": [200],
+      "slo": {
+        "p95Ms": 150,
+        "p99Ms": 300
+      }
+    },
+    {
+      "id": "governanceProposals",
+      "path": "/api/governance/proposals?page=1&limit=10",
+      "method": "GET",
+      "criticality": "high",
+      "auth": "session",
+      "expectedStatuses": [200, 401, 429],
+      "slo": {
+        "p95Ms": 500,
+        "p99Ms": 900
+      }
+    },
+    {
+      "id": "merchantList",
+      "path": "/api/merchants?page=1&limit=20",
+      "method": "GET",
+      "criticality": "high",
+      "auth": "session",
+      "expectedStatuses": [200, 401, 429],
+      "slo": {
+        "p95Ms": 500,
+        "p99Ms": 900
+      }
+    },
+    {
+      "id": "seerAnalytics",
+      "path": "/api/seer/analytics?range=30d",
+      "method": "GET",
+      "criticality": "high",
+      "auth": "session",
+      "expectedStatuses": [200, 401, 429],
+      "slo": {
+        "p95Ms": 1500,
+        "p99Ms": 2500
+      }
+    },
+    {
+      "id": "webhookReplayMetrics",
+      "path": "/api/security/webhook-replay-metrics",
+      "method": "GET",
+      "criticality": "high",
+      "auth": "machine-token",
+      "expectedStatuses": [200, 401, 403, 429],
+      "slo": {
+        "p95Ms": 800,
+        "p99Ms": 1500
+      }
+    }
+  ],
+  "scenarios": {
+    "sustained": {
+      "executor": "ramping-vus",
+      "startVUs": 0,
+      "stages": [
+        { "duration": "2m", "target": 80 },
+        { "duration": "8m", "target": 80 },
+        { "duration": "2m", "target": 0 }
+      ]
+    },
+    "spike": {
+      "executor": "ramping-vus",
+      "startVUs": 0,
+      "stages": [
+        { "duration": "15s", "target": 600 },
+        { "duration": "90s", "target": 600 },
+        { "duration": "15s", "target": 0 }
+      ]
+    },
+    "rateLimiterSaturation": {
+      "executor": "constant-arrival-rate",
+      "rate": 250,
+      "timeUnit": "1s",
+      "duration": "90s",
+      "preAllocatedVUs": 80,
+      "maxVUs": 300
+    }
+  }
+}

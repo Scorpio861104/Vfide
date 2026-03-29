@@ -9,6 +9,7 @@ const mockAddGuardian = jest.fn(async (_address: `0x${string}`) => {});
 const mockRefetchAllowance = jest.fn(async () => ({ data: 0n }));
 
 let mockAddress: `0x${string}` | undefined;
+let mockRainbowMounted = true;
 
 let mockVaultHubState: {
   vaultAddress?: `0x${string}`;
@@ -58,7 +59,7 @@ jest.mock('@/components/ui/toast', () => ({
 jest.mock('@rainbow-me/rainbowkit', () => ({
   ConnectButton: {
     Custom: ({ children }: { children: (props: { openConnectModal: () => void; openChainModal: () => void; mounted: boolean }) => React.ReactNode }) =>
-      children({ openConnectModal: jest.fn(), openChainModal: jest.fn(), mounted: true }),
+      children({ openConnectModal: jest.fn(), openChainModal: jest.fn(), mounted: mockRainbowMounted }),
   },
 }));
 
@@ -169,6 +170,7 @@ describe('Vault page logic pathways', () => {
     jest.clearAllMocks();
 
     mockAddress = '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa';
+    mockRainbowMounted = true;
     mockVaultHubState = {
       vaultAddress: '0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
       hasVault: true,
@@ -206,6 +208,20 @@ describe('Vault page logic pathways', () => {
 
     expect(screen.getByText(/Wallet Not Connected/i)).toBeTruthy();
     expect(screen.getByText(/Please connect your wallet/i)).toBeTruthy();
+  });
+
+  it('keeps wallet connect action disabled until the wallet UI is mounted', () => {
+    mockAddress = undefined;
+    mockRainbowMounted = false;
+    mockVaultHubState = {
+      ...mockVaultHubState,
+      hasVault: false,
+      vaultAddress: undefined,
+    };
+
+    renderVaultPage();
+
+    expect(screen.getByRole('button', { name: /Connect your wallet/i })).toBeDisabled();
   });
 
   it('creates a vault from empty state and reports success toast', async () => {

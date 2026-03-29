@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "updatedAt": "2026-03-29T00:00:00.000Z",
+  "grants": {
+    "governance": [
+      "*"
+    ],
+    "notifications": [
+      "*"
+    ],
+    "chat.room-alpha": [
+      "0x1234567890abcdef1234567890abcdef12345678",
+      "0xabcdefabcdefabcdefabcdefabcdefabcdefabcd"
+    ],
+    "proposal.*": [
+      "*"
+    ],
+    "presence.*": [
+      "*"
+    ]
+  }
+}

@@ -61,7 +61,12 @@ export default function InvitePage() {
 
   // Load invite data
   useEffect(() => {
-    if (!code) return;
+    if (!code) {
+      setError('Invalid invite link');
+      setLoading(false);
+      announce('Invalid invite link', 'assertive');
+      return;
+    }
 
     const loadInvite = async () => {
       try {

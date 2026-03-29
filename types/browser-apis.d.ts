@@ -87,12 +87,9 @@ declare global {
     webkitAudioContext?: typeof AudioContext;
     /** EIP-1193 Ethereum provider injected by wallets (MetaMask, etc.) */
     ethereum?: {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      request: (args: { method: string; params?: any[] }) => Promise<any>;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      on: (event: string, handler: (...args: any[]) => void) => void;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      removeListener: (event: string, handler: (...args: any[]) => void) => void;
+      request: (args: { method: string; params?: unknown[] }) => Promise<unknown>;
+      on: (event: string, handler: (...args: unknown[]) => void) => void;
+      removeListener: (event: string, handler: (...args: unknown[]) => void) => void;
       isMetaMask?: boolean;
       isConnected?: () => boolean;
       selectedAddress?: string | null;

@@ -50,6 +50,24 @@ jobs:
       - name: Validate environment
         run: npm run -s validate:env
 
+      - name: Runbook drift gate
+        run: npm run -s ops:runbook:drift
+
+      - name: Rollback readiness gate
+        run: npm run -s ops:rollback:readiness
+
+      - name: Backup restore readiness gate
+        run: npm run -s ops:backup:restore:readiness
+
+      - name: Dual-approval policy gate
+        run: npm run -s ops:dual-approval
+
+      - name: Release stop/go criteria gate
+        run: npm run -s ops:release:stop-go
+
+      - name: Performance budget gate
+        run: npm run -s test:performance
+
       - name: Governance safety invariants
         run: npm run -s contract:verify:governance-safety:local
 

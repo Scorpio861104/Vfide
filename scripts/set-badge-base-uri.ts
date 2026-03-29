@@ -4,8 +4,6 @@ import { VFIDEBadgeNFTABI } from '../lib/abis'
 
 type Address = `0x${string}`
 
-type Hex = `0x${string}`
-
 function getArg(flag: string): string | undefined {
   const i = process.argv.indexOf(flag)
   if (i === -1) return undefined

@@ -70,6 +70,31 @@ const eslintConfig = defineConfig([
       "react/no-danger": "warn",
     },
   },
+  {
+    files: ["**/*.{ts,tsx}"],
+    ignores: [
+      "lib/crypto.ts",
+      "lib/cryptoApprovals.ts",
+      "lib/cryptoConfirmations.ts",
+      "lib/cryptoValidation.ts",
+      "lib/services/gasPriceService.ts",
+      "hooks/useGasPrice.ts",
+      "lib/ethereumProvider.ts",
+    ],
+    rules: {
+      "no-restricted-syntax": [
+        "error",
+        {
+          "selector": "CallExpression[callee.type='MemberExpression'][callee.property.name='request'][callee.object.type='MemberExpression'][callee.object.object.name='window'][callee.object.property.name='ethereum']",
+          "message": "Use the typed requestEthereum() helper instead of calling window.ethereum.request() directly.",
+        },
+        {
+          "selector": "CallExpression[callee.type='MemberExpression'][callee.property.name='request'][callee.object.name='ethereum']",
+          "message": "Use the typed requestEthereum() helper instead of calling ethereum.request() directly.",
+        }
+      ],
+    },
+  },
 ]);
 
 export default eslintConfig;

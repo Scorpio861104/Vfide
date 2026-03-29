@@ -11,6 +11,7 @@ import { ConnectButton } from '@rainbow-me/rainbowkit'
 import { CURRENT_CHAIN_ID, FAUCET_URLS } from '@/lib/testnet'
 import { getChainByChainId } from '@/lib/chains'
 import { safeParseFloat } from '@/lib/validation'
+import { getEthereumProvider, getProviderErrorCode, requestEthereum } from '@/lib/ethereumProvider'
 import { formatUnits } from 'viem'
 import { baseSepolia } from 'wagmi/chains'
 
@@ -96,11 +97,7 @@ export function SetupWizard({ onComplete }: SetupWizardProps) {
     setNetworkError(null)
     
     try {
-      interface EthereumProvider {
-        request: (args: { method: string; params?: unknown[] }) => Promise<unknown>
-      }
-      
-      const ethereum = (window as { ethereum?: EthereumProvider }).ethereum
+      const ethereum = getEthereumProvider()
       if (!ethereum) {
         setNetworkError('No wallet detected. Please install MetaMask.')
         return
@@ -108,25 +105,25 @@ export function SetupWizard({ onComplete }: SetupWizardProps) {
 
       // Try to switch first
       try {
-        await ethereum.request({
+        await requestEthereum(ethereum, {
           method: 'wallet_switchEthereumChain',
           params: [{ chainId: NETWORK_CONFIG.chainId }],
-        })
+        }, () => undefined)
         return
       } catch (switchError) {
-        if ((switchError as { code?: number }).code !== 4902) {
+        if (getProviderErrorCode(switchError) !== 4902) {
           throw switchError
         }
       }
 
       // Add the network
-      await ethereum.request({
+      await requestEthereum(ethereum, {
         method: 'wallet_addEthereumChain',
         params: [NETWORK_CONFIG],
-      })
+      }, () => undefined)
     } catch (err) {
       const error = err as { code?: number; message?: string }
-      if (error.code === 4001) {
+      if (getProviderErrorCode(error) === 4001) {
         setNetworkError('Request cancelled. Try again when ready.')
       } else {
         setNetworkError('Failed to add network. Try manually.')

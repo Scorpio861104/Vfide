@@ -8,6 +8,8 @@
 
 import { z } from 'zod4';
 
+export const CURRENT_PROTOCOL_VERSION = 1 as const;
+
 // ─── Topic names ────────────────────────────────────────────────────────────
 
 const TopicSchema = z
@@ -19,11 +21,13 @@ const TopicSchema = z
 // ─── Inbound message schemas ────────────────────────────────────────────────
 
 const PingSchema = z.object({
+  v: z.literal(CURRENT_PROTOCOL_VERSION).optional(),
   type: z.literal('ping'),
   payload: z.object({}).optional(),
 });
 
 const SubscribeSchema = z.object({
+  v: z.literal(CURRENT_PROTOCOL_VERSION).optional(),
   type: z.literal('subscribe'),
   payload: z.object({
     topic: TopicSchema,
@@ -31,6 +35,7 @@ const SubscribeSchema = z.object({
 });
 
 const UnsubscribeSchema = z.object({
+  v: z.literal(CURRENT_PROTOCOL_VERSION).optional(),
   type: z.literal('unsubscribe'),
   payload: z.object({
     topic: TopicSchema,
@@ -38,11 +43,21 @@ const UnsubscribeSchema = z.object({
 });
 
 const MessageSchema = z.object({
+  v: z.literal(CURRENT_PROTOCOL_VERSION).optional(),
   type: z.literal('message'),
-  payload: z.record(z.unknown()).or(z.string()),
+  payload: z.record(z.string(), z.unknown()).or(z.string()),
+});
+
+const AuthSchema = z.object({
+  v: z.literal(CURRENT_PROTOCOL_VERSION).optional(),
+  type: z.literal('auth'),
+  payload: z.object({
+    token: z.string().min(10).max(4096),
+  }),
 });
 
 export const InboundMessageSchema = z.discriminatedUnion('type', [
+  AuthSchema,
   PingSchema,
   SubscribeSchema,
   UnsubscribeSchema,
@@ -59,7 +74,7 @@ export type InboundMessage = z.infer<typeof InboundMessageSchema>;
  */
 export function parseMessage(
   raw: unknown,
-): z.SafeParseReturnType<unknown, InboundMessage> {
+): ReturnType<typeof InboundMessageSchema.safeParse> {
   return InboundMessageSchema.safeParse(raw);
 }
 

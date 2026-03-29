@@ -27,9 +27,7 @@ async function withAddress<T extends { getAddress(): Promise<string> }>(signer: 
 }
 
 function wrapContract<T extends object>(contract: T): T & { address: string; deployed(): Promise<T> } {
-  let proxy: T & { address: string; deployed(): Promise<T> };
-
-  proxy = new Proxy(contract as T, {
+  const proxy = new Proxy(contract as T, {
     get(target, prop, receiver) {
       if (prop === "address") {
         const deployedAddress = Reflect.get(target as object, "target", receiver);

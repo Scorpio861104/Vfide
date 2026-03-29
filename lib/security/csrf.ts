@@ -11,6 +11,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { timingSafeEqual } from 'crypto';
+import { isCsrfExemptPath } from './csrfPolicy';
 
 const CSRF_TOKEN_LENGTH = 32;
 const CSRF_COOKIE_NAME = 'csrf_token';
@@ -103,10 +104,14 @@ export function validateCSRF(request: NextRequest): NextResponse | null {
     return null; // Not a state-changing request, no validation needed
   }
   
-  // Skip CSRF check for authentication endpoints (use other security measures)
+  // Only enforce CSRF on API routes.
   const pathname = new URL(request.url).pathname;
-  const skipPaths = ['/api/auth/', '/api/health'];
-  if (skipPaths.some(path => pathname.startsWith(path))) {
+  if (!pathname.startsWith('/api/')) {
+    return null;
+  }
+
+  // Skip CSRF check only for pre-auth endpoints.
+  if (isCsrfExemptPath(pathname)) {
     return null;
   }
   

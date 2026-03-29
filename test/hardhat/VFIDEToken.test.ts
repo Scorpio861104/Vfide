@@ -159,24 +159,35 @@ describe("VFIDEToken", () => {
 
   // ─── H-02: circuitBreaker bypasses fees in emergency mode ─────────────────
   describe("H-02: circuit breaker bypasses fees", () => {
-    it("isFeeBypassed is true when circuitBreaker is active", async () => {
-      const { token, owner } = await deployToken();
+    it("circuit breaker activation is timelocked and does not imply fee bypass", async () => {
+      const { token, owner, ethers } = await deployToken();
       const MAX = 7 * 24 * 60 * 60;
 
-      // Activate circuitBreaker
+      // Propose circuit breaker activation.
       await token.connect(owner).setCircuitBreaker(true, MAX);
+      // Timelock means circuit breaker is not active yet.
+      assert.equal(await token.isCircuitBreakerActive(), false);
+
+      await ethers.provider.send("evm_increaseTime", [H48]);
+      await ethers.provider.send("evm_mine", []);
+      await token.connect(owner).confirmCircuitBreaker();
+
       const cbActive = await token.isCircuitBreakerActive();
       assert.equal(cbActive, true);
 
-      // circuitBreaker must bypass fee calculation in emergency mode
+      // H-02: circuit breaker no longer implies fee bypass.
       const feeBypassed = await token.isFeeBypassed();
-      assert.equal(feeBypassed, true);
+      assert.equal(feeBypassed, false);
     });
 
     it("cleans expired circuit breaker state on transfer", async () => {
       const { token, owner, user1, ethers } = await deployToken();
 
       await token.connect(owner).setCircuitBreaker(true, 1);
+      await ethers.provider.send("evm_increaseTime", [H48]);
+      await ethers.provider.send("evm_mine", []);
+      await token.connect(owner).confirmCircuitBreaker();
+
       await ethers.provider.send("evm_increaseTime", [2]);
       await ethers.provider.send("evm_mine", []);
 
@@ -193,6 +204,9 @@ describe("VFIDEToken", () => {
       const { token, owner, ethers } = await deployToken();
 
       await token.connect(owner).setCircuitBreaker(true, 1);
+      await ethers.provider.send("evm_increaseTime", [H48]);
+      await ethers.provider.send("evm_mine", []);
+      await token.connect(owner).confirmCircuitBreaker();
       await token.connect(owner).setSecurityBypass(true, 1);
       await token.connect(owner).setFeeBypass(true, 1);
 

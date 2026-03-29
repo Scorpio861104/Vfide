@@ -18,6 +18,7 @@ const SECURITY_LOG_RETENTION_DAYS_ENV = 'SECURITY_LOG_RETENTION_DAYS';
 const SECURITY_ALERT_WEBHOOK_URL_ENV = 'SECURITY_ALERT_WEBHOOK_URL';
 const SECURITY_ALERT_WEBHOOK_TIMEOUT_MS_ENV = 'SECURITY_ALERT_WEBHOOK_TIMEOUT_MS';
 const SECURITY_ALERT_WEBHOOK_SECRET_ENV = 'SECURITY_ALERT_WEBHOOK_SECRET';
+const SECURITY_ALERT_RUNBOOK_URL_ENV = 'SECURITY_ALERT_RUNBOOK_URL';
 const SECURITY_ALERT_DEDUP_WINDOW_SECONDS_ENV = 'SECURITY_ALERT_DEDUP_WINDOW_SECONDS';
 const SECURITY_ALERT_DEDUP_KEY_SALT_ENV = 'SECURITY_ALERT_DEDUP_KEY_SALT';
 const DEFAULT_SECURITY_LOG_RETENTION_DAYS = 30;
@@ -328,6 +329,7 @@ async function notifyCriticalSecurityLog(params: {
   }
 
   const webhookSecret = process.env[SECURITY_ALERT_WEBHOOK_SECRET_ENV]?.trim();
+  const runbookUrl = process.env[SECURITY_ALERT_RUNBOOK_URL_ENV]?.trim() || null;
 
   const timeoutMs = resolveAlertTimeoutMs();
   const controller = new AbortController();
@@ -343,6 +345,7 @@ async function notifyCriticalSecurityLog(params: {
     requestId: params.requestId,
     ipHash: params.ipHash,
     ipSource: params.ipSource,
+    runbook_url: runbookUrl,
     timestamp: new Date().toISOString(),
   };
   const body = JSON.stringify(payload);

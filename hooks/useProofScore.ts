@@ -1,5 +1,5 @@
 import { useReadContract, useAccount } from 'wagmi'
-import { CONTRACT_ADDRESSES, SEER_ABI, ProofScoreBurnRouterABI } from '@/lib/contracts'
+import { CONTRACT_ADDRESSES, SeerABI, ProofScoreBurnRouterABI } from '@/lib/contracts'
 import { PROOF_SCORE_PERMISSIONS, PROOF_SCORE_TIERS } from '@/lib/constants'
 
 const FEE_QUOTE_AMOUNT = 10_000n * 10n ** 18n
@@ -14,7 +14,7 @@ export function useProofScore(userAddress?: `0x${string}`) {
 
   const { data, isError, isLoading, refetch } = useReadContract({
     address: CONTRACT_ADDRESSES.Seer,
-    abi: SEER_ABI,
+    abi: SeerABI,
     functionName: 'getScore',
     args: targetAddress ? [targetAddress] : undefined,
     query: {
@@ -112,25 +112,25 @@ function getTierColor(score: number): string {
 export function useSeerThresholds() {
   const { data: minForGovernance } = useReadContract({
     address: CONTRACT_ADDRESSES.Seer,
-    abi: SEER_ABI,
+    abi: SeerABI,
     functionName: 'minForGovernance',
   })
   
   const { data: minForMerchant } = useReadContract({
     address: CONTRACT_ADDRESSES.Seer,
-    abi: SEER_ABI,
+    abi: SeerABI,
     functionName: 'minForMerchant',
   })
   
   const { data: lowTrustThreshold } = useReadContract({
     address: CONTRACT_ADDRESSES.Seer,
-    abi: SEER_ABI,
+    abi: SeerABI,
     functionName: 'lowTrustThreshold',
   })
   
   const { data: highTrustThreshold } = useReadContract({
     address: CONTRACT_ADDRESSES.Seer,
-    abi: SEER_ABI,
+    abi: SeerABI,
     functionName: 'highTrustThreshold',
   })
 
@@ -151,7 +151,7 @@ export function useHasBadge(badgeId: `0x${string}`, userAddress?: `0x${string}`)
 
   const { data, isLoading } = useReadContract({
     address: CONTRACT_ADDRESSES.Seer,
-    abi: SEER_ABI,
+    abi: SeerABI,
     functionName: 'hasBadge',
     args: targetAddress && badgeId ? [targetAddress, badgeId] : undefined,
     query: {

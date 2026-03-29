@@ -1,7 +1,6 @@
 'use client'
 
 import { motion, AnimatePresence } from 'framer-motion'
-import { Award, TrendingUp, Users, Zap } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 
 interface ActivityItem {

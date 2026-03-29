@@ -13,6 +13,7 @@ import {
   Loader2,
   ExternalLink
 } from 'lucide-react';
+import { getEthereumProvider, requestEthereum } from '@/lib/ethereumProvider';
 import { IS_TESTNET } from '@/lib/chains';
 import { logger } from '@/lib/logger';
 
@@ -40,8 +41,26 @@ interface Transaction {
   chainId: number;
 }
 
+interface EthereumReceipt {
+  status?: string;
+  gasUsed?: string;
+}
+
 const STORAGE_KEY = 'vfide-pending-txs';
 const MAX_TRANSACTIONS = 10;
+
+function asEthereumReceipt(value: unknown): EthereumReceipt | null {
+  if (value === null) return null;
+  if (typeof value !== 'object' || value === null) {
+    throw new Error('Invalid transaction receipt from provider');
+  }
+
+  const receipt = value as { status?: unknown; gasUsed?: unknown };
+  return {
+    status: typeof receipt.status === 'string' ? receipt.status : undefined,
+    gasUsed: typeof receipt.gasUsed === 'string' ? receipt.gasUsed : undefined,
+  };
+}
 
 export function usePendingTransactions() {
   const { address } = useAccount();
@@ -94,15 +113,16 @@ export function usePendingTransactions() {
 
   // Poll for pending transaction status
   const pollTransaction = async (hash: string, txHash: string, txChainId: number) => {
-    if (!window.ethereum) return;
+    const provider = getEthereumProvider();
+    if (!provider) return;
     
     setIsPolling(true);
     
     try {
-      const receipt = await window.ethereum.request({
+      const receipt = await requestEthereum(provider, {
         method: 'eth_getTransactionReceipt',
         params: [hash],
-      });
+      }, asEthereumReceipt);
       
       if (receipt) {
         const status = receipt.status === '0x1' ? 'confirmed' : 'failed';

@@ -81,9 +81,13 @@ describe('Enhanced WebSocket Integration Tests', () => {
       await p;
 
       expect(mockInstances.length).toBe(1);
-      expect(mockInstances[0].url).toContain('token=test-token');
-      expect(mockInstances[0].url).toContain('address=0x123');
-      expect(mockInstances[0].url).toContain('chainId=8453');
+      expect(mockInstances[0].url).toBe('ws://localhost:8080/');
+      expect(mockInstances[0].send).toHaveBeenCalled();
+      const authFrame = JSON.parse(mockInstances[0].send.mock.calls[0][0]);
+      expect(authFrame.type).toBe('auth');
+      expect(authFrame.payload.token).toBe('test-token');
+      expect(authFrame.payload.address).toBe('0x123');
+      expect(authFrame.payload.chainId).toBe(8453);
 
       wsManager.disconnect();
     });
@@ -461,19 +465,22 @@ describe('Enhanced WebSocket Integration Tests', () => {
   });
 
   describe('Authentication over WebSocket', () => {
-    it('should authenticate with signature', async () => {
+    it('should authenticate by sending auth frame', async () => {
       const wsManager = new WebSocketManager({
         url: 'ws://localhost:8080',
-        auth: { signature: 'test-signature', message: 'test-message', address: '0x123' },
+        auth: { token: 'test-token', signature: 'test-signature', message: 'test-message', address: '0x123' },
       });
 
       const p = wsManager.connect('0x123', 'test-signature', 'test-message');
       jest.advanceTimersByTime(10);
       await p;
 
-      expect(mockInstances[0].url).toContain('signature=test-signature');
-      expect(mockInstances[0].url).toContain('message=test-message');
-      expect(mockInstances[0].url).toContain('address=0x123');
+      const authFrame = JSON.parse(mockInstances[0].send.mock.calls[0][0]);
+      expect(authFrame.type).toBe('auth');
+      expect(authFrame.payload.token).toBe('test-token');
+      expect(authFrame.payload.signature).toBe('test-signature');
+      expect(authFrame.payload.message).toBe('test-message');
+      expect(authFrame.payload.address).toBe('0x123');
 
       wsManager.disconnect();
     });
@@ -501,7 +508,7 @@ describe('Enhanced WebSocket Integration Tests', () => {
     it('should re-authenticate on reconnection', async () => {
       const wsManager = new WebSocketManager({
         url: 'ws://localhost:8080',
-        auth: { signature: 'test-signature', address: '0x123' },
+        auth: { token: 'test-token', signature: 'test-signature', address: '0x123' },
       });
 
       const p = wsManager.connect('0x123', 'test-signature');

@@ -5,6 +5,7 @@ import { config } from '@/lib/wagmi';
 import { useState, type ReactNode } from 'react';
 import { RainbowKitWrapper } from './RainbowKitWrapper';
 import { useWalletPersistence } from '@/hooks/useWalletPersistence';
+import { getCachePolicy } from '@/lib/cache/cacheInvalidationPolicy';
 
 /**
  * Internal component that uses wallet persistence hook
@@ -34,13 +35,14 @@ function WalletPersistenceManager({ children }: { children: ReactNode }) {
  * - Proper SSR hydration handling
  */
 export function Web3Provider({ children }: { children: ReactNode }) {
+  const walletStateCachePolicy = getCachePolicy('reactQuery:wallet-state');
+
   // Create QueryClient inside component to avoid SSR hydration issues
   // Optimized settings for faster wallet connection responsiveness
   const [queryClient] = useState(() => new QueryClient({
     defaultOptions: {
       queries: {
-        // Reduced stale time for faster updates during connection
-        staleTime: 1000 * 30, // 30 seconds (was 2 minutes)
+        staleTime: walletStateCachePolicy.ttlMs,
         // Enable refetch on window focus for better wallet state sync
         refetchOnWindowFocus: true,
         // Reduced retries for faster failure feedback

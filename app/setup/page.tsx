@@ -11,6 +11,7 @@ import { ConnectButton } from '@rainbow-me/rainbowkit'
 import { CURRENT_CHAIN_ID, FAUCET_URLS } from '@/lib/testnet'
 import { getChainByChainId } from '@/lib/chains'
 import { baseSepolia } from 'wagmi/chains'
+import { getEthereumProvider, getProviderErrorCode, requestEthereum } from '@/lib/ethereumProvider'
 import { safeParseFloat } from '@/lib/validation';
 import { useCopyWithId } from '@/lib/hooks/useCopyToClipboard';
 
@@ -48,13 +49,9 @@ export default function SetupPage() {
     setAddError(null)
     setAddSuccess(false)
 
-    interface EthereumProvider {
-      request: (args: { method: string; params?: unknown[] }) => Promise<unknown>
-    }
-
     try {
       // Check if MetaMask is available
-      const ethereum = (window as { ethereum?: EthereumProvider }).ethereum
+      const ethereum = getEthereumProvider()
       if (!ethereum) {
         setAddError('MetaMask not detected. Please install MetaMask first.')
         setAddingNetwork(false)
@@ -63,22 +60,22 @@ export default function SetupPage() {
 
       // First try to switch (in case already added)
       try {
-        await ethereum.request({
+        await requestEthereum(ethereum, {
           method: 'wallet_switchEthereumChain',
           params: [{ chainId: NETWORK_CONFIG.chainIdHex }],
-        })
+        }, () => undefined)
         setAddSuccess(true)
         setAddingNetwork(false)
         return
       } catch (switchError) {
         // 4902 = chain not added yet, continue to add
-        if ((switchError as { code?: number }).code !== 4902) {
+        if (getProviderErrorCode(switchError) !== 4902) {
           throw switchError
         }
       }
 
       // Add the network
-      await ethereum.request({
+      await requestEthereum(ethereum, {
         method: 'wallet_addEthereumChain',
         params: [{
           chainId: NETWORK_CONFIG.chainIdHex,
@@ -91,12 +88,12 @@ export default function SetupPage() {
           rpcUrls: [NETWORK_CONFIG.rpc],
           blockExplorerUrls: [NETWORK_CONFIG.explorer],
         }],
-      })
+      }, () => undefined)
       
       setAddSuccess(true)
     } catch (err) {
       const error = err as { code?: number; message?: string }
-      if (error.code === 4001) {
+      if (getProviderErrorCode(error) === 4001) {
         setAddError('You rejected the request. Click the button again when ready.')
       } else {
         setAddError(error.message || 'Failed to add network. Try adding manually below.')

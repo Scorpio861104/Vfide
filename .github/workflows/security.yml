@@ -28,6 +28,9 @@ jobs:
       - name: Run npm audit (fail on high/critical)
         run: npm audit --audit-level=high
 
+      - name: Verify supply-chain controls
+        run: npm run -s security:supply-chain
+
   # ── CodeQL SAST (JavaScript / TypeScript) ──────────────────────────────
   codeql:
     name: CodeQL SAST

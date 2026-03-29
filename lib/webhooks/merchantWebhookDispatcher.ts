@@ -9,6 +9,8 @@
  */
 
 import { createHmac, randomUUID } from 'crypto';
+import { lookup } from 'dns/promises';
+import { isIP } from 'node:net';
 import { query } from '@/lib/db';
 import { logger } from '@/lib/logger';
 
@@ -56,6 +58,71 @@ const MAX_RETRIES = 3;
 const RETRY_DELAYS_MS = [1000, 5000, 30000]; // 1s, 5s, 30s
 const MAX_FAILURES_BEFORE_DISABLE = 10;
 const DELIVERY_TIMEOUT_MS = 10000; // 10s per delivery attempt
+
+function isBlockedIpAddress(ip: string): boolean {
+  const version = isIP(ip);
+  if (version === 4) {
+    const parts = ip.split('.').map((part) => Number.parseInt(part, 10));
+    if (parts.length !== 4 || parts.some((part) => Number.isNaN(part) || part < 0 || part > 255)) {
+      return true;
+    }
+
+    const [a, b] = parts;
+    if (a === undefined || b === undefined) return true;
+    if (a === 10 || a === 127 || a === 0) return true;
+    if (a === 192 && b === 168) return true;
+    if (a === 169 && b === 254) return true;
+    if (a === 172 && b >= 16 && b <= 31) return true;
+    if (a === 100 && b >= 64 && b <= 127) return true;
+    return false;
+  }
+
+  if (version === 6) {
+    const normalized = ip.toLowerCase();
+    if (normalized === '::1' || normalized === '::') return true;
+    if (normalized.startsWith('fe80:')) return true;
+    if (normalized.startsWith('fc') || normalized.startsWith('fd')) return true;
+    if (normalized.startsWith('::ffff:127.') || normalized.startsWith('::ffff:10.')) return true;
+    return false;
+  }
+
+  return true;
+}
+
+async function validateWebhookDeliveryTarget(url: string): Promise<{ ok: true } | { ok: false; error: string }> {
+  let parsed: URL;
+  try {
+    parsed = new URL(url);
+  } catch {
+    return { ok: false, error: 'Invalid webhook URL' };
+  }
+
+  if (parsed.protocol !== 'https:') {
+    return { ok: false, error: 'Webhook URL must use HTTPS' };
+  }
+
+  const hostname = parsed.hostname.toLowerCase();
+  if (hostname === 'localhost' || hostname.endsWith('.local')) {
+    return { ok: false, error: 'Webhook URL cannot target local hosts' };
+  }
+
+  try {
+    const records = await lookup(hostname, { all: true, verbatim: true });
+    if (records.length === 0) {
+      return { ok: false, error: 'Webhook hostname did not resolve to any address' };
+    }
+
+    for (const record of records) {
+      if (isBlockedIpAddress(record.address)) {
+        return { ok: false, error: 'Webhook hostname resolves to a blocked private or loopback address' };
+      }
+    }
+  } catch {
+    return { ok: false, error: 'Failed to resolve webhook hostname' };
+  }
+
+  return { ok: true };
+}
 
 // ─────────────────────────── Signature
 
@@ -114,6 +181,21 @@ async function deliverWithRetries(
   endpoint: WebhookEndpoint,
   payload: WebhookPayload
 ): Promise<void> {
+  const targetValidation = await validateWebhookDeliveryTarget(endpoint.url);
+  if (!targetValidation.ok) {
+    await logDelivery(endpoint.id, payload.event, payload, null, null, 1, false, targetValidation.error);
+    await query(
+      `UPDATE merchant_webhook_endpoints
+       SET failure_count = failure_count + 1,
+           status = 'disabled',
+           last_failure_at = NOW(),
+           updated_at = NOW()
+       WHERE id = $1`,
+      [endpoint.id]
+    );
+    return;
+  }
+
   const body = JSON.stringify(payload);
   const signature = signPayload(body, endpoint.secret);
   const timestamp = Math.floor(Date.now() / 1000).toString();
@@ -125,6 +207,7 @@ async function deliverWithRetries(
 
       const response = await fetch(endpoint.url, {
         method: 'POST',
+        redirect: 'manual',
         headers: {
           'Content-Type': 'application/json',
           'X-Webhook-Id': payload.id,

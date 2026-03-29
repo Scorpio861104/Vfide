@@ -5,10 +5,26 @@
 
 import { validateEthereumAddress, ValidationError } from './cryptoValidation';
 import { formatUnits, parseUnits } from 'viem';
+import * as React from 'react';
+import { logger } from '@/lib/logger';
 
 // Type guards for error handling
 const isErrorWithMessage = (err: unknown): err is { message: string } => {
   return typeof err === 'object' && err !== null && 'message' in err && typeof (err as { message: unknown }).message === 'string';
+};
+
+const asHexString = (value: unknown, name: string): string => {
+  if (typeof value !== 'string') {
+    throw new Error(`Invalid ${name} from provider`);
+  }
+  return value;
+};
+
+const asAddressArray = (value: unknown, name: string): string[] => {
+  if (!Array.isArray(value) || !value.every((item) => typeof item === 'string')) {
+    throw new Error(`Invalid ${name} from provider`);
+  }
+  return value;
 };
 
 /**
@@ -111,10 +127,10 @@ export async function checkTokenAllowance(
         },
         'latest',
       ],
-    });
+    }) as unknown;
 
     // Decode result (uint256)
-    const currentAllowance = BigInt(result);
+    const currentAllowance = BigInt(asHexString(result, 'allowance'));
 
     const needsApproval = currentAllowance < requiredAmountWei;
 
@@ -157,7 +173,10 @@ export async function requestTokenApproval(
     }
 
     // Get user's address
-    const accounts = await window.ethereum!.request({ method: 'eth_requestAccounts' });
+    const accounts = asAddressArray(
+      await window.ethereum!.request({ method: 'eth_requestAccounts' }),
+      'accounts'
+    );
     const userAddress = accounts[0];
 
     // Determine approval amount. Unlimited approvals must be explicitly requested.
@@ -177,7 +196,7 @@ export async function requestTokenApproval(
     const data = encodeApproveCall(spenderAddress, approvalAmount);
 
     // Send approval transaction
-    const txHash = await window.ethereum!.request({
+    const txHash = asHexString(await window.ethereum!.request({
       method: 'eth_sendTransaction',
       params: [
         {
@@ -186,7 +205,7 @@ export async function requestTokenApproval(
           data,
         },
       ],
-    });
+    }), 'transaction hash');
 
     return {
       success: true,
@@ -239,7 +258,10 @@ export async function ensureTokenAllowance(
     // Get user address if not provided
     let address = userAddress;
     if (!address) {
-      const accounts = await window.ethereum!.request({ method: 'eth_requestAccounts' });
+      const accounts = asAddressArray(
+        await window.ethereum!.request({ method: 'eth_requestAccounts' }),
+        'accounts'
+      );
       address = accounts[0];
       
       if (!address) {
@@ -300,9 +322,9 @@ export async function getTokenBalance(address: string): Promise<string> {
         },
         'latest',
       ],
-    });
+    }) as unknown;
 
-    const balance = BigInt(result);
+    const balance = BigInt(asHexString(result, 'token balance'));
     return formatUnits(balance, ERC20_DECIMALS);
   } catch (error) {
     logger.error('Failed to get token balance:', error);
@@ -331,13 +353,16 @@ export async function revokeTokenApproval(
       throw new ValidationError('Invalid spender address');
     }
 
-    const accounts = await window.ethereum!.request({ method: 'eth_requestAccounts' });
+    const accounts = asAddressArray(
+      await window.ethereum!.request({ method: 'eth_requestAccounts' }),
+      'accounts'
+    );
     const userAddress = accounts[0];
 
     // Encode approve(spender, 0)
     const data = encodeApproveCall(spenderAddress, '0x0');
 
-    const txHash = await window.ethereum!.request({
+    const txHash = asHexString(await window.ethereum!.request({
       method: 'eth_sendTransaction',
       params: [
         {
@@ -346,7 +371,7 @@ export async function revokeTokenApproval(
           data,
         },
       ],
-    });
+    }), 'transaction hash');
 
     return { success: true, txHash };
   } catch (error: unknown) {
@@ -453,7 +478,10 @@ export function useTokenApproval(spenderAddress: string, amount: string) {
 
       // Wait a moment then re-check allowance
       setTimeout(async () => {
-        const accounts = await window.ethereum!.request({ method: 'eth_accounts' });
+          const accounts = asAddressArray(
+            await window.ethereum!.request({ method: 'eth_accounts' }),
+            'accounts'
+          );
         if (accounts[0]) {
           await checkAllowance(accounts[0]);
         }
@@ -478,6 +506,3 @@ export function useTokenApproval(spenderAddress: string, amount: string) {
   };
 }
 
-// For React hook
-import * as React from 'react';
-import { logger } from '@/lib/logger';

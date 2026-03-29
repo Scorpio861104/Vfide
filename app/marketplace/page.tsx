@@ -11,8 +11,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import {
   Search, Package, X, ShoppingBag, Star, SlidersHorizontal,
-  Grid3X3, List, ChevronDown, ChevronRight, Zap, Truck, Heart,
-  TrendingUp, ArrowUpDown,
+  Grid3X3, List, ChevronRight, Zap, Heart, ArrowUpDown,
 } from 'lucide-react';
 
 /* ─── Types ─── */
@@ -82,10 +81,6 @@ function StarRow({ rating }: { rating: number }) {
 function pctOff(price: string, compare: string): number {
   const p = parseFloat(price), c = parseFloat(compare);
   return c > p && c > 0 ? Math.round(((c - p) / c) * 100) : 0;
-}
-
-function isInWishlist(id: string): boolean {
-  try { return (JSON.parse(localStorage.getItem('vfide_wishlist') || '[]') as string[]).includes(id); } catch { return false; }
 }
 
 function toggleWishlist(id: string): boolean {
@@ -387,7 +382,15 @@ export default function MarketplacePage() {
 
   const handleWishlist = (id: string) => {
     const added = toggleWishlist(id);
-    setWishlistedIds(prev => { const next = new Set(prev); added ? next.add(id) : next.delete(id); return next; });
+    setWishlistedIds(prev => {
+      const next = new Set(prev);
+      if (added) {
+        next.add(id);
+      } else {
+        next.delete(id);
+      }
+      return next;
+    });
   };
 
   const hasFilters = query || typeFilter || sortBy || minPrice || maxPrice || minRating || platformCategory;
@@ -395,7 +398,11 @@ export default function MarketplacePage() {
   const toggleCatExpand = (slug: string) => {
     setExpandedCats(prev => {
       const next = new Set(prev);
-      next.has(slug) ? next.delete(slug) : next.add(slug);
+      if (next.has(slug)) {
+        next.delete(slug);
+      } else {
+        next.add(slug);
+      }
       return next;
     });
   };

@@ -94,7 +94,10 @@ async function main() {
 
   currentStep = 'mint-and-transfer';
   await (await token.connect(deployer).mint(vaultAAddr, parseUnits('50', 18))).wait();
-  await (await vaultAAsOwner.setGuardianThreshold(1)).wait();
+  await (await vaultAAsOwner.setGuardian(await approver1.getAddress(), true)).wait();
+  await (await vaultAAsOwner.setGuardian(await approver2.getAddress(), true)).wait();
+  await (await vaultAAsOwner.setGuardianThreshold(2)).wait();
+  await (await hub.connect(ownerA).completeGuardianSetup(vaultAAddr)).wait();
   const chainId = (await provider.getNetwork()).chainId;
   const nonce = await vaultA.nextNonce();
   const epoch = await vaultA.walletEpoch();

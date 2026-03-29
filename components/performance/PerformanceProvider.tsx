@@ -8,7 +8,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { initWebVitals, observeLongTasks } from '@/lib/performance';
+import { getDevicePerformanceProfile, initWebVitals, observeLongTasks, trackMetric } from '@/lib/performance';
 import { logger } from '@/lib/logger';
 
 export function PerformanceProvider() {
@@ -16,16 +16,28 @@ export function PerformanceProvider() {
     // Initialize Web Vitals tracking
     initWebVitals();
 
+    const profile = getDevicePerformanceProfile();
+    const thresholdMs = profile.tier === 'low' ? 40 : 50;
+
+    if (profile.tier === 'low') {
+      // Marks low-end sessions for later trend analysis.
+      trackMetric('low-end-device-session', 1);
+    }
+
     // Observe long tasks
     const cleanup = observeLongTasks((duration) => {
       if (process.env.NODE_ENV === 'development') {
-        logger.warn(`[Performance] Long task detected: ${duration.toFixed(2)}ms`);
+        logger.warn(`[Performance] Long task detected (${profile.tier}): ${duration.toFixed(2)}ms`);
       }
+    }, {
+      thresholdMs,
+      profile,
     });
 
     // Log initial performance info in development
     if (process.env.NODE_ENV === 'development') {
       // Performance monitoring initialized
+      logger.info('[Performance] Device profile:', profile);
       
       // Report after page load
       window.addEventListener('load', () => {

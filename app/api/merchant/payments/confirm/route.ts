@@ -6,12 +6,206 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { createPublicClient, decodeEventLog, getAddress, http, parseAbiItem } from 'viem';
 import { requireAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
+import { query } from '@/lib/db';
 import { dispatchWebhook } from '@/lib/webhooks/merchantWebhookDispatcher';
 
 const TX_HASH_REGEX = /^0x[a-fA-F0-9]{64}$/;
 const ADDRESS_LIKE_REGEX = /^0x[a-fA-F0-9]{40}$/;
+const INTEGER_STRING_REGEX = /^\d+$/;
+const DEFAULT_MIN_CONFIRMATIONS = 2n;
+
+let initMerchantPaymentConfirmationsPromise: Promise<void> | null = null;
+
+const PAYMENT_PROCESSED_EVENT = parseAbiItem(
+  'event PaymentProcessed(address indexed customer, address indexed merchant, address token, uint256 amount, uint256 fee, string orderId, uint16 customerScore, uint8 channel)'
+);
+const PAYMENT_WITH_CHANNEL_EVENT = parseAbiItem(
+  'event PaymentWithChannel(address indexed customer, address indexed merchant, address token, uint256 amount, uint256 fee, string orderId, uint16 customerScore, uint8 channel)'
+);
+
+async function ensureMerchantPaymentConfirmationsTable(): Promise<void> {
+  if (initMerchantPaymentConfirmationsPromise) {
+    await initMerchantPaymentConfirmationsPromise;
+    return;
+  }
+
+  initMerchantPaymentConfirmationsPromise = (async () => {
+    await query(
+      `CREATE TABLE IF NOT EXISTS merchant_payment_confirmations (
+         id BIGSERIAL PRIMARY KEY,
+         merchant_address TEXT NOT NULL,
+         tx_hash TEXT NOT NULL,
+         customer_address TEXT NOT NULL,
+         amount TEXT NOT NULL,
+         token TEXT,
+         order_id TEXT,
+         created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+         UNIQUE(merchant_address, tx_hash)
+       )`
+    );
+
+    await query(
+      'CREATE INDEX IF NOT EXISTS idx_merchant_payment_confirmations_merchant_created ON merchant_payment_confirmations(merchant_address, created_at DESC)'
+    );
+  })().catch((error) => {
+    initMerchantPaymentConfirmationsPromise = null;
+    throw error;
+  });
+
+  await initMerchantPaymentConfirmationsPromise;
+}
+
+async function claimPaymentConfirmationIdempotency(params: {
+  merchant: string;
+  txHash: string;
+  customer: string;
+  amount: bigint;
+  token?: string;
+  orderId?: string;
+}): Promise<boolean> {
+  await ensureMerchantPaymentConfirmationsTable();
+
+  const result = await query<{ id: string }>(
+    `INSERT INTO merchant_payment_confirmations (
+       merchant_address,
+       tx_hash,
+       customer_address,
+       amount,
+       token,
+       order_id
+     )
+     VALUES ($1, $2, $3, $4, $5, $6)
+     ON CONFLICT (merchant_address, tx_hash) DO NOTHING
+     RETURNING id::text`,
+    [
+      params.merchant.toLowerCase(),
+      params.txHash.toLowerCase(),
+      params.customer.toLowerCase(),
+      params.amount.toString(),
+      params.token ?? null,
+      params.orderId ?? null,
+    ]
+  );
+
+  return result.rows.length > 0;
+}
+
+function parseAmountToUnits(value: unknown): bigint | null {
+  if (typeof value === 'number') {
+    if (!Number.isInteger(value) || value <= 0) return null;
+    return BigInt(value);
+  }
+
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    if (!INTEGER_STRING_REGEX.test(trimmed) || trimmed === '0') return null;
+    return BigInt(trimmed);
+  }
+
+  return null;
+}
+
+function getMerchantPortalAddress(): string | null {
+  const value = process.env.MERCHANT_PORTAL_ADDRESS || process.env.NEXT_PUBLIC_MERCHANT_PORTAL_ADDRESS;
+  if (!value) return null;
+  const normalized = value.trim();
+  return ADDRESS_LIKE_REGEX.test(normalized) ? normalized : null;
+}
+
+function getRpcUrl(): string | null {
+  const value = process.env.RPC_URL || process.env.NEXT_PUBLIC_RPC_URL;
+  if (!value) return null;
+  const normalized = value.trim();
+  return normalized.length > 0 ? normalized : null;
+}
+
+function getMinConfirmations(): bigint {
+  const configured = process.env.MERCHANT_PAYMENT_MIN_CONFIRMATIONS;
+  if (!configured || !INTEGER_STRING_REGEX.test(configured)) {
+    return DEFAULT_MIN_CONFIRMATIONS;
+  }
+
+  const parsed = BigInt(configured);
+  if (parsed < 1n) return DEFAULT_MIN_CONFIRMATIONS;
+  return parsed;
+}
+
+async function verifyPaymentEventOnChain(params: {
+  txHash: `0x${string}`;
+  merchant: string;
+  customer: string;
+  amount: bigint;
+  token?: string;
+  orderId?: string;
+}): Promise<{ ok: true } | { ok: false; error: string }> {
+  const rpcUrl = getRpcUrl();
+  const merchantPortalAddress = getMerchantPortalAddress();
+
+  if (!rpcUrl || !merchantPortalAddress) {
+    return { ok: false, error: 'Payment confirmation is unavailable due to missing chain configuration' };
+  }
+
+  const expectedMerchant = getAddress(params.merchant);
+  const expectedCustomer = getAddress(params.customer);
+  const expectedPortal = getAddress(merchantPortalAddress);
+  const expectedToken = params.token && ADDRESS_LIKE_REGEX.test(params.token) ? getAddress(params.token) : null;
+
+  const client = createPublicClient({ transport: http(rpcUrl) });
+
+  const receipt = await client.getTransactionReceipt({ hash: params.txHash });
+  if (receipt.status !== 'success') {
+    return { ok: false, error: 'Transaction did not succeed on-chain' };
+  }
+
+  if (!receipt.to || getAddress(receipt.to) !== expectedPortal) {
+    return { ok: false, error: 'Transaction target does not match MerchantPortal contract' };
+  }
+
+  const currentBlock = await client.getBlockNumber();
+  const confirmations = currentBlock - receipt.blockNumber + 1n;
+  if (confirmations < getMinConfirmations()) {
+    return { ok: false, error: 'Transaction does not have enough confirmations yet' };
+  }
+
+  for (const log of receipt.logs) {
+    if (getAddress(log.address) !== expectedPortal) continue;
+
+    try {
+      const decoded = decodeEventLog({
+        abi: [PAYMENT_PROCESSED_EVENT, PAYMENT_WITH_CHANNEL_EVENT],
+        data: log.data,
+        topics: log.topics,
+      });
+
+      if (!decoded || (decoded.eventName !== 'PaymentProcessed' && decoded.eventName !== 'PaymentWithChannel')) {
+        continue;
+      }
+
+      const args = decoded.args as {
+        customer: string;
+        merchant: string;
+        token: string;
+        amount: bigint;
+        orderId: string;
+      };
+
+      if (getAddress(args.customer) !== expectedCustomer) continue;
+      if (getAddress(args.merchant) !== expectedMerchant) continue;
+      if (args.amount !== params.amount) continue;
+      if (typeof params.orderId === 'string' && params.orderId.length > 0 && args.orderId !== params.orderId) continue;
+      if (expectedToken && getAddress(args.token) !== expectedToken) continue;
+
+      return { ok: true };
+    } catch {
+      continue;
+    }
+  }
+
+  return { ok: false, error: 'Transaction receipt does not contain a matching payment event' };
+}
 
 export async function POST(request: NextRequest) {
   const rateLimitResponse = await withRateLimit(request, 'write');
@@ -39,18 +233,47 @@ export async function POST(request: NextRequest) {
   if (!customer_address || typeof customer_address !== 'string' || !ADDRESS_LIKE_REGEX.test(customer_address.toLowerCase())) {
     return NextResponse.json({ error: 'Valid customer_address required' }, { status: 400 });
   }
-  if (!amount || (typeof amount !== 'string' && typeof amount !== 'number')) {
+  const amountUnits = parseAmountToUnits(amount);
+  if (amountUnits === null) {
     return NextResponse.json({ error: 'amount required' }, { status: 400 });
   }
-  const validTxHash = typeof tx_hash === 'string' && TX_HASH_REGEX.test(tx_hash) ? tx_hash : null;
+  if (typeof tx_hash !== 'string' || !TX_HASH_REGEX.test(tx_hash)) {
+    return NextResponse.json({ error: 'Valid tx_hash required' }, { status: 400 });
+  }
+
+  const verification = await verifyPaymentEventOnChain({
+    txHash: tx_hash as `0x${string}`,
+    merchant: authAddress,
+    customer: customer_address,
+    amount: amountUnits,
+    token: typeof token === 'string' ? token : undefined,
+    orderId: typeof order_id === 'string' ? order_id : undefined,
+  });
+
+  if (!verification.ok) {
+    return NextResponse.json({ error: verification.error }, { status: 422 });
+  }
+
+  const idempotencyClaimed = await claimPaymentConfirmationIdempotency({
+    merchant: authAddress,
+    txHash: tx_hash,
+    customer: customer_address,
+    amount: amountUnits,
+    token: typeof token === 'string' ? token : undefined,
+    orderId: typeof order_id === 'string' ? order_id : undefined,
+  });
+
+  if (!idempotencyClaimed) {
+    return NextResponse.json({ success: true, idempotent: true, duplicate: true });
+  }
 
   // Dispatch webhook to merchant (the authenticated user is the merchant)
-  dispatchWebhook(authAddress, 'payment.completed', {
+  await dispatchWebhook(authAddress, 'payment.completed', {
     customer_address: (customer_address as string).toLowerCase(),
-    amount: String(amount),
+    amount: amountUnits.toString(),
     token: typeof token === 'string' ? token : 'VFIDE',
     order_id: typeof order_id === 'string' ? order_id : undefined,
-    tx_hash: validTxHash,
+    tx_hash,
     confirmed_at: new Date().toISOString(),
   });
 

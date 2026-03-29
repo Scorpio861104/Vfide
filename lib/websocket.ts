@@ -4,6 +4,8 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { logger } from '@/lib/logger';
 
 export type WSMessageType =
+  | 'authenticated'
+  | 'auth_error'
   | 'connect'
   | 'disconnect'
   | 'message'
@@ -16,6 +18,8 @@ export type WSMessageType =
   | 'pong'
   | 'subscribed'
   | 'unsubscribed';
+
+const WS_PROTOCOL_VERSION = 1;
 
 export interface WSMessage {
   type: WSMessageType;
@@ -85,20 +89,17 @@ export class WebSocketManager {
       }
 
       this.isConnecting = true;
-
-      const token = this.config.auth?.token;
       const endpoint = new URL(toWebSocketUrl(this.config.url));
-      if (token) endpoint.searchParams.set('token', token);
-      endpoint.searchParams.set('address', userAddress);
-      endpoint.searchParams.set('chainId', String(chainId || this.config.auth?.chainId || getDefaultChainId()));
-      if (signature) endpoint.searchParams.set('signature', signature);
-      if (message) endpoint.searchParams.set('message', message);
+      const authPayload = this.buildAuthPayload(userAddress, signature, message, chainId);
 
       try {
         this.socket = new WebSocket(endpoint.toString());
 
         this.socket.onopen = () => {
           this.isConnecting = false;
+          if (authPayload) {
+            this.emit('auth', authPayload);
+          }
           this.setupHeartbeat();
           this.dispatch('connect', { from: userAddress, data: null, timestamp: Date.now(), type: 'connect' });
           resolve();
@@ -153,6 +154,8 @@ export class WebSocketManager {
     let outbound: unknown;
     if (event === 'ping') {
       outbound = { type: 'ping', payload: data || {} };
+    } else if (event === 'auth' && data && typeof data === 'object') {
+      outbound = { type: 'auth', payload: data };
     } else if (event === 'governance:subscribe') {
       outbound = { type: 'subscribe', payload: { topic: 'governance' } };
     } else if (event === 'notifications:subscribe') {
@@ -167,6 +170,10 @@ export class WebSocketManager {
       outbound = { type: 'message', payload: data };
     } else {
       outbound = { type: 'message', payload: { event, data } };
+    }
+
+    if (outbound && typeof outbound === 'object') {
+      (outbound as Record<string, unknown>).v = WS_PROTOCOL_VERSION;
     }
 
     this.socket.send(JSON.stringify(outbound));
@@ -248,34 +255,105 @@ export class WebSocketManager {
   leaveRoom(room: string) {
     this.emit('leave', room);
   }
+
+  private buildAuthPayload(userAddress: string, signature?: string, message?: string, chainId?: number): Record<string, unknown> | null {
+    const token = this.config.auth?.token;
+    if (!token) {
+      return null;
+    }
+
+    const payload: Record<string, unknown> = {
+      token,
+      address: userAddress,
+      chainId: chainId || this.config.auth?.chainId || getDefaultChainId(),
+    };
+
+    if (signature || this.config.auth?.signature) {
+      payload.signature = signature || this.config.auth?.signature;
+    }
+    if (message || this.config.auth?.message) {
+      payload.message = message || this.config.auth?.message;
+    }
+
+    return Object.keys(payload).length > 0 ? payload : null;
+  }
 }
 
 export function useWebSocket(config: WSConfig, userAddress?: string) {
   const wsRef = useRef<WebSocketManager | null>(null);
   const [isConnected, setIsConnected] = useState(false);
+  const reconnectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const reconnectAttemptRef = useRef(0);
 
   useEffect(() => {
     if (!userAddress || typeof window === 'undefined') return;
 
     wsRef.current = new WebSocketManager(config);
 
+    const maxReconnectAttempts = config.maxReconnectAttempts ?? 5;
+    const baseReconnectInterval = config.reconnectInterval ?? 3000;
+    let isUnmounted = false;
+
+    const clearReconnectTimer = () => {
+      if (reconnectTimerRef.current) {
+        clearTimeout(reconnectTimerRef.current);
+        reconnectTimerRef.current = null;
+      }
+    };
+
+    const scheduleReconnect = () => {
+      if (isUnmounted || reconnectAttemptRef.current >= maxReconnectAttempts) {
+        return;
+      }
+
+      const exponentialDelay = Math.min(baseReconnectInterval * Math.pow(2, reconnectAttemptRef.current), 30000);
+      const jitter = Math.floor(Math.random() * 500);
+      reconnectAttemptRef.current += 1;
+
+      clearReconnectTimer();
+      reconnectTimerRef.current = setTimeout(() => {
+        if (!isUnmounted && wsRef.current) {
+          wsRef.current
+            .connect(userAddress)
+            .then(() => setIsConnected(true))
+            .catch((e) => {
+              logger.error('[useWebSocket] Reconnect attempt failed:', e);
+              scheduleReconnect();
+            });
+        }
+      }, exponentialDelay + jitter);
+    };
+
     wsRef.current
       .connect(userAddress)
-      .then(() => setIsConnected(true))
+      .then(() => {
+        reconnectAttemptRef.current = 0;
+        setIsConnected(true);
+      })
       .catch((e) => {
         logger.error('[useWebSocket] Failed to connect:', e);
+        scheduleReconnect();
       });
 
-    const unsubscribeConnect = wsRef.current.on('connect', () => setIsConnected(true));
-    const unsubscribeDisconnect = wsRef.current.on('disconnect', () => setIsConnected(false));
+    const unsubscribeConnect = wsRef.current.on('connect', () => {
+      reconnectAttemptRef.current = 0;
+      clearReconnectTimer();
+      setIsConnected(true);
+    });
+    const unsubscribeDisconnect = wsRef.current.on('disconnect', () => {
+      setIsConnected(false);
+      scheduleReconnect();
+    });
 
     return () => {
+      isUnmounted = true;
+      clearReconnectTimer();
       unsubscribeConnect();
       unsubscribeDisconnect();
       wsRef.current?.disconnect();
       wsRef.current = null;
     };
-  }, [config.url, userAddress]);
+  }, [config.url, config.reconnectInterval, config.maxReconnectAttempts, userAddress]);
 
   const send = useCallback((message: Omit<WSMessage, 'timestamp'>) => wsRef.current?.send(message) || false, []);
 

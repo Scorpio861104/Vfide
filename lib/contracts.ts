@@ -49,18 +49,53 @@ import { logger } from '@/lib/logger';
 // Zero address placeholder for missing contracts
 const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000' as const
 
+const CONTRACT_ENV_VAR_MAP: Record<string, string> = {
+  VFIDEToken: 'NEXT_PUBLIC_VFIDE_TOKEN_ADDRESS',
+  StablecoinRegistry: 'NEXT_PUBLIC_STABLECOIN_REGISTRY_ADDRESS',
+  VFIDECommerce: 'NEXT_PUBLIC_VFIDE_COMMERCE_ADDRESS',
+  MerchantPortal: 'NEXT_PUBLIC_MERCHANT_PORTAL_ADDRESS',
+  VaultHub: 'NEXT_PUBLIC_VAULT_HUB_ADDRESS',
+  Seer: 'NEXT_PUBLIC_SEER_ADDRESS',
+  SeerAutonomous: 'NEXT_PUBLIC_SEER_AUTONOMOUS_ADDRESS',
+  SeerGuardian: 'NEXT_PUBLIC_SEER_GUARDIAN_ADDRESS',
+  SeerView: 'NEXT_PUBLIC_SEER_VIEW_ADDRESS',
+  DAO: 'NEXT_PUBLIC_DAO_ADDRESS',
+  DAOTimelock: 'NEXT_PUBLIC_DAO_TIMELOCK_ADDRESS',
+  TrustGateway: 'NEXT_PUBLIC_TRUST_GATEWAY_ADDRESS',
+  BadgeNFT: 'NEXT_PUBLIC_BADGE_NFT_ADDRESS',
+  SecurityHub: 'NEXT_PUBLIC_SECURITY_HUB_ADDRESS',
+  GuardianRegistry: 'NEXT_PUBLIC_GUARDIAN_REGISTRY_ADDRESS',
+  GuardianLock: 'NEXT_PUBLIC_GUARDIAN_LOCK_ADDRESS',
+  PanicGuard: 'NEXT_PUBLIC_PANIC_GUARD_ADDRESS',
+  EmergencyBreaker: 'NEXT_PUBLIC_EMERGENCY_BREAKER_ADDRESS',
+  BurnRouter: 'NEXT_PUBLIC_BURN_ROUTER_ADDRESS',
+  LiquidityIncentives: 'NEXT_PUBLIC_LIQUIDITY_INCENTIVES_ADDRESS',
+  DutyDistributor: 'NEXT_PUBLIC_DUTY_DISTRIBUTOR_ADDRESS',
+  PayrollManager: 'NEXT_PUBLIC_PAYROLL_MANAGER_ADDRESS',
+  CouncilElection: 'NEXT_PUBLIC_COUNCIL_ELECTION_ADDRESS',
+  CouncilSalary: 'NEXT_PUBLIC_COUNCIL_SALARY_ADDRESS',
+  SubscriptionManager: 'NEXT_PUBLIC_SUBSCRIPTION_MANAGER_ADDRESS',
+  SanctumVault: 'NEXT_PUBLIC_SANCTUM_VAULT_ADDRESS',
+  DevReserveVesting: 'NEXT_PUBLIC_DEV_VAULT_ADDRESS',
+  SeerSocial: 'NEXT_PUBLIC_SEER_SOCIAL_ADDRESS',
+  EcosystemVault: 'NEXT_PUBLIC_ECOSYSTEM_VAULT_ADDRESS',
+  VaultRegistry: 'NEXT_PUBLIC_VAULT_REGISTRY_ADDRESS',
+  CommerceEscrow: 'NEXT_PUBLIC_COMMERCE_ESCROW_ADDRESS',
+};
+
 /**
  * Validate contract address at runtime
  * Returns properly typed address, or zero address if invalid/missing
  * Runtime validation logs warnings for debugging
  */
 function validateContractAddress(address: string | undefined, name: string): `0x${string}` {
+  const isProduction = process.env.NODE_ENV === 'production';
+
   if (!address) {
-    // Convert camelCase name to SCREAMING_SNAKE_CASE for env var name
-    // Examples: vfideToken -> VFIDE_TOKEN, StablecoinRegistry -> STABLECOIN_REGISTRY
-    const envVarName = `NEXT_PUBLIC_${name.replace(/([a-z0-9])([A-Z])/g, '$1_$2').toUpperCase()}_ADDRESS`;
-    if (process.env.NODE_ENV === 'production') {
+    const envVarName = CONTRACT_ENV_VAR_MAP[name] ?? `NEXT_PUBLIC_${name.replace(/([a-z0-9])([A-Z])/g, '$1_$2').toUpperCase()}_ADDRESS`;
+    if (isProduction) {
       logger.error(`[VFIDE] Missing contract address in production: ${name}. Set ${envVarName} in environment. All calls to this contract will fail.`)
+      throw new Error(`[VFIDE] Missing required contract address in production: ${name}`)
     } else {
       logger.warn(`[VFIDE] Missing contract address: ${name}. Using ZERO_ADDRESS. Set ${envVarName} in environment.`)
     }
@@ -68,6 +103,9 @@ function validateContractAddress(address: string | undefined, name: string): `0x
   }
   if (!isAddress(address)) {
     logger.error(`[VFIDE] Invalid contract address for ${name}: ${address}. This is a configuration error!`)
+    if (isProduction) {
+      throw new Error(`[VFIDE] Invalid contract address in production for ${name}`)
+    }
     return ZERO_ADDRESS
   }
   return address as `0x${string}`
@@ -121,8 +159,28 @@ export const CARD_BOUND_VAULT_ABI = CardBoundVaultABI;
 
 export type VaultImplementation = 'uservault' | 'cardbound';
 
-export const ACTIVE_VAULT_IMPLEMENTATION: VaultImplementation =
-  process.env.NEXT_PUBLIC_VAULT_IMPLEMENTATION === 'uservault' ? 'uservault' : 'cardbound';
+function resolveVaultImplementation(): VaultImplementation {
+  const configured = process.env.NEXT_PUBLIC_VAULT_IMPLEMENTATION;
+  const isProduction = process.env.NODE_ENV === 'production';
+
+  if (!configured || configured.trim() === '') {
+    return 'cardbound';
+  }
+
+  if (configured === 'cardbound' || configured === 'uservault') {
+    return configured;
+  }
+
+  const message = `[VFIDE] Invalid NEXT_PUBLIC_VAULT_IMPLEMENTATION value: ${configured}. Expected "cardbound" or "uservault".`;
+  if (isProduction) {
+    throw new Error(message);
+  }
+
+  logger.warn(`${message} Falling back to "cardbound" for non-production runtime.`);
+  return 'cardbound';
+}
+
+export const ACTIVE_VAULT_IMPLEMENTATION: VaultImplementation = resolveVaultImplementation();
 
 export const ACTIVE_VAULT_ABI =
   ACTIVE_VAULT_IMPLEMENTATION === 'cardbound' ? CARD_BOUND_VAULT_ABI : USER_VAULT_ABI;

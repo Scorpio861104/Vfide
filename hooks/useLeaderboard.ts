@@ -8,7 +8,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { usePublicClient, useAccount, useReadContract } from 'wagmi';
-import { CONTRACT_ADDRESSES, SEER_ABI } from '@/lib/contracts';
+import { CONTRACT_ADDRESSES, SeerABI } from '@/lib/contracts';
 import { getScoreTier as _getScoreTier } from './useProofScore';
 import { parseAbiItem } from 'viem';
 import { safeGetJSON, safeSetJSON, safeRemoveItem } from '@/lib/storage';
@@ -176,7 +176,7 @@ export function useLeaderboard(limit: number = 50): LeaderboardState & {
         try {
           const score = await publicClient.readContract({
             address: CONTRACT_ADDRESSES.Seer,
-            abi: SEER_ABI,
+            abi: SeerABI,
             functionName: 'getScore',
             args: [addr],
           });
@@ -257,7 +257,7 @@ export function useUserRank() {
   
   const { data: score } = useReadContract({
     address: CONTRACT_ADDRESSES.Seer,
-    abi: SEER_ABI,
+    abi: SeerABI,
     functionName: 'getScore',
     args: address ? [address] : undefined,
     query: { enabled: !!address },

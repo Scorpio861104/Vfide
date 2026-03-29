@@ -15,6 +15,7 @@
  */
 
 import { type Address, type Hex, keccak256, toBytes } from 'viem';
+import { getEnv } from '@/lib/env';
 
 // ==================== TYPES ====================
 
@@ -86,17 +87,12 @@ export interface SessionCallResult {
 // ==================== SESSION KEY STORAGE ====================
 
 const SESSION_STORAGE_KEY = 'vfide_session_keys';
-const PERSISTENT_SESSION_KEYS_ENV = 'NEXT_PUBLIC_ENABLE_PERSISTENT_SESSION_KEYS';
-const SESSION_KEY_MAX_DURATION_ENV = 'NEXT_PUBLIC_SESSION_KEY_MAX_DURATION_SECONDS';
 const SESSION_KEY_MIN_DURATION_SECONDS = 60;
 const SESSION_KEY_DEFAULT_DURATION_SECONDS = 1800;
 const SESSION_KEY_MAX_DURATION_SECONDS = 4 * 60 * 60;
 
 function resolveMaxSessionDurationSeconds(): number {
-  const configured = process.env[SESSION_KEY_MAX_DURATION_ENV];
-  if (!configured) return SESSION_KEY_MAX_DURATION_SECONDS;
-
-  const parsed = Number.parseInt(configured, 10);
+  const parsed = getEnv().NEXT_PUBLIC_SESSION_KEY_MAX_DURATION_SECONDS;
   if (!Number.isInteger(parsed) || parsed < SESSION_KEY_MIN_DURATION_SECONDS) {
     return SESSION_KEY_MAX_DURATION_SECONDS;
   }
@@ -107,7 +103,7 @@ function resolveMaxSessionDurationSeconds(): number {
 function getSessionStorageBackend(): Storage | null {
   if (typeof window === 'undefined') return null;
 
-  if (process.env[PERSISTENT_SESSION_KEYS_ENV] === 'true') {
+  if (getEnv().NEXT_PUBLIC_ENABLE_PERSISTENT_SESSION_KEYS) {
     return window.localStorage;
   }
 

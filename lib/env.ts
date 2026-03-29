@@ -18,6 +18,7 @@ const envSchema = z.object({
   // Network Configuration
   NEXT_PUBLIC_NETWORK: z.enum(['base-sepolia', 'base', 'zksync', 'localhost']).default('base-sepolia'),
   NEXT_PUBLIC_CHAIN_ID: z.coerce.number().int().positive().default(84532),
+  NEXT_PUBLIC_DEPLOYMENT_CHAIN_ID: z.coerce.number().int().positive().optional(),
   NEXT_PUBLIC_RPC_URL: z.string().url().default('https://sepolia.base.org'),
   NEXT_PUBLIC_IS_TESTNET: z.string().default('true').transform(v => v !== 'false'),
   NEXT_PUBLIC_DEFAULT_CHAIN: z.string().default('base-sepolia'),
@@ -43,6 +44,7 @@ const envSchema = z.object({
 
   // Vault Contracts
   NEXT_PUBLIC_VAULT_HUB_ADDRESS: optionalEthAddress,
+  NEXT_PUBLIC_VAULT_IMPLEMENTATION: z.enum(['cardbound', 'uservault']).default('cardbound'),
   NEXT_PUBLIC_SANCTUM_VAULT_ADDRESS: optionalEthAddress,
   NEXT_PUBLIC_DEV_VAULT_ADDRESS: optionalEthAddress,
   NEXT_PUBLIC_ECOSYSTEM_VAULT_ADDRESS: optionalEthAddress,
@@ -85,8 +87,13 @@ const envSchema = z.object({
   NEXT_PUBLIC_ENABLE_FAUCET: z.string().default('true').transform(v => v !== 'false'),
   NEXT_PUBLIC_ENABLE_DEMO_MODE: z.string().default('false').transform(v => v === 'true'),
   NEXT_PUBLIC_ENABLE_ANALYTICS: z.string().default('false').transform(v => v === 'true'),
+  NEXT_PUBLIC_ENABLE_CHAT: z.string().default('false').transform(v => v === 'true'),
+  NEXT_PUBLIC_ENABLE_GOVERNANCE: z.string().default('false').transform(v => v === 'true'),
   NEXT_PUBLIC_ENABLE_SANCTUM: z.string().default('false').transform(v => v === 'true'),
   NEXT_PUBLIC_ENABLE_BETA_FEATURES: z.string().default('false').transform(v => v === 'true'),
+  NEXT_PUBLIC_ENABLE_SW: z.string().default('false').transform(v => v === 'true'),
+  NEXT_PUBLIC_ENABLE_PERSISTENT_SESSION_KEYS: z.string().default('false').transform(v => v === 'true'),
+  NEXT_PUBLIC_SESSION_KEY_MAX_DURATION_SECONDS: z.coerce.number().int().positive().default(14400),
 
   // Analytics
   NEXT_PUBLIC_GA_ID: z.string().optional(),
@@ -122,6 +129,7 @@ function parseEnv(): Environment {
     // Network Configuration
     NEXT_PUBLIC_NETWORK: process.env.NEXT_PUBLIC_NETWORK,
     NEXT_PUBLIC_CHAIN_ID: process.env.NEXT_PUBLIC_CHAIN_ID,
+    NEXT_PUBLIC_DEPLOYMENT_CHAIN_ID: process.env.NEXT_PUBLIC_DEPLOYMENT_CHAIN_ID,
     NEXT_PUBLIC_RPC_URL: process.env.NEXT_PUBLIC_RPC_URL,
     NEXT_PUBLIC_IS_TESTNET: process.env.NEXT_PUBLIC_IS_TESTNET,
     NEXT_PUBLIC_DEFAULT_CHAIN: process.env.NEXT_PUBLIC_DEFAULT_CHAIN,
@@ -145,6 +153,7 @@ function parseEnv(): Environment {
     
     // Vault Contracts
     NEXT_PUBLIC_VAULT_HUB_ADDRESS: process.env.NEXT_PUBLIC_VAULT_HUB_ADDRESS,
+    NEXT_PUBLIC_VAULT_IMPLEMENTATION: process.env.NEXT_PUBLIC_VAULT_IMPLEMENTATION,
     NEXT_PUBLIC_SANCTUM_VAULT_ADDRESS: process.env.NEXT_PUBLIC_SANCTUM_VAULT_ADDRESS,
     NEXT_PUBLIC_DEV_VAULT_ADDRESS: process.env.NEXT_PUBLIC_DEV_VAULT_ADDRESS,
     NEXT_PUBLIC_ECOSYSTEM_VAULT_ADDRESS: process.env.NEXT_PUBLIC_ECOSYSTEM_VAULT_ADDRESS,
@@ -187,8 +196,13 @@ function parseEnv(): Environment {
     NEXT_PUBLIC_ENABLE_FAUCET: process.env.NEXT_PUBLIC_ENABLE_FAUCET,
     NEXT_PUBLIC_ENABLE_DEMO_MODE: process.env.NEXT_PUBLIC_ENABLE_DEMO_MODE,
     NEXT_PUBLIC_ENABLE_ANALYTICS: process.env.NEXT_PUBLIC_ENABLE_ANALYTICS,
+    NEXT_PUBLIC_ENABLE_CHAT: process.env.NEXT_PUBLIC_ENABLE_CHAT,
+    NEXT_PUBLIC_ENABLE_GOVERNANCE: process.env.NEXT_PUBLIC_ENABLE_GOVERNANCE,
     NEXT_PUBLIC_ENABLE_SANCTUM: process.env.NEXT_PUBLIC_ENABLE_SANCTUM,
     NEXT_PUBLIC_ENABLE_BETA_FEATURES: process.env.NEXT_PUBLIC_ENABLE_BETA_FEATURES,
+    NEXT_PUBLIC_ENABLE_SW: process.env.NEXT_PUBLIC_ENABLE_SW,
+    NEXT_PUBLIC_ENABLE_PERSISTENT_SESSION_KEYS: process.env.NEXT_PUBLIC_ENABLE_PERSISTENT_SESSION_KEYS,
+    NEXT_PUBLIC_SESSION_KEY_MAX_DURATION_SECONDS: process.env.NEXT_PUBLIC_SESSION_KEY_MAX_DURATION_SECONDS,
     
     // Analytics
     NEXT_PUBLIC_GA_ID: process.env.NEXT_PUBLIC_GA_ID,
@@ -220,12 +234,13 @@ function parseEnv(): Environment {
       // In production, missing/invalid vars are a deployment error — surface them loudly.
       logger.error('❌ Environment variable validation failed in production. Check your deployment configuration.');
       logger.error('Missing/invalid vars:', result.error.flatten().fieldErrors);
+      throw new Error('Environment validation failed in production');
     } else {
       logger.warn('⚠️  Some environment variables are missing or invalid. Using defaults.');
       logger.warn('For production, set these in Vercel: NEXT_PUBLIC_WAGMI_PROJECT_ID, NEXT_PUBLIC_CHAIN_ID, NEXT_PUBLIC_RPC_URL');
+      // Return safe defaults in non-production so local development can continue.
+      return envSchema.parse({});
     }
-    // Return safe defaults so the app can still render an error page
-    return envSchema.parse({});
   }
 
   return result.data;
@@ -273,7 +288,7 @@ export function getEnvVar<K extends keyof Environment>(
  * @returns Boolean indicating if feature is enabled
  */
 export function isFeatureEnabled(
-  feature: 'FAUCET' | 'DEMO_MODE' | 'ANALYTICS'
+  feature: 'FAUCET' | 'DEMO_MODE' | 'ANALYTICS' | 'CHAT' | 'GOVERNANCE' | 'SANCTUM' | 'BETA_FEATURES' | 'SW' | 'PERSISTENT_SESSION_KEYS'
 ): boolean {
   const env = getEnv();
   const key = `NEXT_PUBLIC_ENABLE_${feature}` as const;

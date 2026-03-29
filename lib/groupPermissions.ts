@@ -562,7 +562,7 @@ export function useGroupMembers(groupId?: string) {
 
   const updatePermissions = async (
     userId: string,
-    customPermissions?: Permission[],
+    _customPermissions?: Permission[],
     _bannedPermissions?: Permission[]
   ) => {
     try {

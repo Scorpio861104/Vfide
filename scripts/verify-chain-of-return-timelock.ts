@@ -39,7 +39,7 @@ async function main() {
   const guardian = await provider.getSigner(2);
   const guardian2 = await provider.getSigner(3);
 
-  const vaultArtifact = loadArtifact('artifacts/contracts/UserVault.sol/UserVault.json');
+  const vaultArtifact = loadArtifact('artifacts/contracts/VaultInfrastructure.sol/UserVaultLegacy.json');
   const vaultFactory = new ContractFactory(vaultArtifact.abi as any, vaultArtifact.bytecode, owner);
 
   const ownerAddress = await owner.getAddress();
@@ -65,17 +65,17 @@ async function main() {
   await increaseTime(provider, sevenDays + 1);
   await (await vaultA.connect(guardian).requestRecovery(proposedOwnerAddress)).wait();
 
-  const statusA = (await vaultA.getRecoveryStatus()) as [string, bigint, bigint, bigint, boolean];
-  if (!statusA[4]) throw new Error('Expected active recovery');
-  if (statusA[1] !== 1n) throw new Error(`Expected approvals=1 after request, got ${statusA[1]}`);
+  const statusA = (await vaultA.getRecoveryStatus()) as [boolean, string, bigint, bigint, bigint];
+  if (!statusA[0]) throw new Error('Expected active recovery');
+  if (statusA[2] !== 1n) throw new Error(`Expected approvals=1 after request, got ${statusA[2]}`);
 
   await expectRevert(() => vaultA.finalizeRecovery({ gasLimit: 5_000_000 }));
 
   await (await vaultA.connect(guardian2).guardianApproveRecovery()).wait();
 
-  const statusA2 = (await vaultA.getRecoveryStatus()) as [string, bigint, bigint, bigint, boolean];
-  if (statusA2[1] !== 2n)
-    throw new Error(`Expected approvals=2 after second guardian, got ${statusA2[1]}`);
+  const statusA2 = (await vaultA.getRecoveryStatus()) as [boolean, string, bigint, bigint, bigint];
+  if (statusA2[2] !== 2n)
+    throw new Error(`Expected approvals=2 after second guardian, got ${statusA2[2]}`);
 
   await increaseTime(provider, sevenDays + 1);
   await (await vaultA.finalizeRecovery()).wait();

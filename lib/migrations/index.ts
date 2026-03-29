@@ -37,12 +37,12 @@ export interface MigrationStatus {
   applied_at: Date | null;
 }
 
-function requiresNonTransactionalExecution(sql: string): boolean {
+export function requiresNonTransactionalExecution(sql: string): boolean {
   const pattern = /\bindex\s+concurrently\b|\breindex\b[\s\S]*\bconcurrently\b|\bvacuum\b|\bcluster\b/i;
   return pattern.test(sql);
 }
 
-function splitSqlStatements(sql: string): string[] {
+export function splitSqlStatements(sql: string): string[] {
   const statements: string[] = [];
   let current = '';
   let i = 0;

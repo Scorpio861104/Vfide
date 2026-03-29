@@ -156,7 +156,7 @@ export async function checkSufficientBalance(
       const balanceWei = await window.ethereum!.request({
         method: 'eth_getBalance',
         params: [address, 'latest'],
-      });
+      }) as string;
       balance = (parseInt(balanceWei, 16) / 1e18).toString();
       
       // Validate parsed balance
@@ -240,13 +240,13 @@ export async function estimateGas(
         to,
         value: valueWei,
       }],
-    });
+    }) as string;
 
     // Get gas price
     const gasPrice = await window.ethereum!.request({
       method: 'eth_gasPrice',
       params: [],
-    });
+    }) as string;
 
     // Calculate total gas cost in ETH
     const gasLimitNum = parseInt(gasLimit, 16);

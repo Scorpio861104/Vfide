@@ -10,6 +10,8 @@ interface IProofLedger_SH { function logSystemEvent(address who, string calldata
 error SH_NotDev();
 error SH_TooEarly();
 error SH_Zero();
+error SH_NotArmed();
+error SH_AlreadyExecuted();
 
 /// @dev Fallback event when ledger logging fails
 event LedgerLogFailed(address indexed source, string action);
@@ -34,6 +36,7 @@ contract SystemHandover {
     uint8  public maxExtensions = 1;          // allow at most one deferral
     uint8  public extensionsUsed;
     uint64 public extensionSpan = 60 days;    // extra time if network trust too low
+    bool public handoverExecuted;
 
     modifier onlyDev() {
         _checkDev();
@@ -90,10 +93,14 @@ contract SystemHandover {
 
     /// Transfer control to DAO (DAO becomes its own admin; timelock admin = DAO).
     function executeHandover(address newAdmin) external onlyDev {
+        if (start == 0) revert SH_NotArmed();
+        if (handoverExecuted) revert SH_AlreadyExecuted();
         if (block.timestamp < handoverAt) revert SH_TooEarly();
         if (newAdmin == address(0)) newAdmin = address(dao);
         dao.setAdmin(newAdmin);
         timelock.setAdmin(address(dao));
+        handoverExecuted = true;
+        devMultisig = address(0);
         emit Executed(address(dao), address(timelock), newAdmin, extensionsUsed);
         _log("handover_executed");
     }

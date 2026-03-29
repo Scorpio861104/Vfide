@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "minimumDistinctApprovers": 2,
+  "requiredRoles": [
+    "operator",
+    "reviewer"
+  ],
+  "operationTypes": [
+    "mainnet-deploy",
+    "emergency-pause",
+    "production-rollback",
+    "signing-key-rotation"
+  ]
+}

@@ -15,6 +15,7 @@ import http from "k6/http";
 import ws from "k6/ws";
 import { check, sleep, group } from "k6";
 import { Rate, Trend, Counter } from "k6/metrics";
+import endpointLoadMatrix from "./endpoint-load-matrix.json";
 
 const BASE_URL = __ENV.API_URL || "http://localhost:3000";
 
@@ -22,6 +23,59 @@ const BASE_URL = __ENV.API_URL || "http://localhost:3000";
 const errorRate = new Rate("errors");
 const apiLatency = new Trend("api_latency");
 const rateLimitHits = new Counter("rate_limit_hits");
+const gracefulDegradationHits = new Counter("graceful_degradation_hits");
+
+const endpointLatency = endpointLoadMatrix.endpoints.reduce((metrics, endpoint) => {
+  metrics[endpoint.id] = new Trend(`endpoint_${endpoint.id}_latency`);
+  return metrics;
+}, {});
+
+const rateLimitedStatuses = new Set([429, 503]);
+
+function authHeadersFor(endpoint) {
+  if (endpoint.auth === "session") {
+    return {
+      Cookie: "auth=test-jwt-token",
+      "X-CSRF-Token": "test-csrf",
+      "Content-Type": "application/json",
+    };
+  }
+
+  if (endpoint.auth === "machine-token") {
+    return {
+      Authorization: "Bearer test-machine-token",
+      Accept: "application/json",
+    };
+  }
+
+  return {
+    Accept: "application/json",
+  };
+}
+
+function hitEndpoint(endpoint) {
+  const res = http.get(`${BASE_URL}${endpoint.path}`, {
+    headers: authHeadersFor(endpoint),
+    tags: {
+      endpoint_id: endpoint.id,
+      endpoint_criticality: endpoint.criticality,
+    },
+  });
+
+  apiLatency.add(res.timings.duration);
+  endpointLatency[endpoint.id].add(res.timings.duration);
+
+  if (rateLimitedStatuses.has(res.status)) {
+    rateLimitHits.add(1);
+    gracefulDegradationHits.add(1);
+  }
+
+  check(res, {
+    [`${endpoint.id} status expected`]: (r) => endpoint.expectedStatuses.includes(r.status),
+  });
+
+  return res;
+}
 
 // ═══════════════════════════════════════════════
 // Test Configuration
@@ -36,17 +90,11 @@ export const options = {
       startTime: "0s",
       tags: { scenario: "smoke" },
     },
-    // Load test: normal expected traffic
+    // Sustained test: expected hot-path traffic profile
     load: {
-      executor: "ramping-vus",
-      startVUs: 0,
-      stages: [
-        { duration: "2m", target: 50 },   // Ramp up
-        { duration: "5m", target: 50 },   // Steady state
-        { duration: "2m", target: 0 },    // Ramp down
-      ],
+      ...endpointLoadMatrix.scenarios.sustained,
       startTime: "30s",
-      tags: { scenario: "load" },
+      tags: { scenario: "sustained" },
     },
     // Stress test: beyond normal capacity
     stress: {
@@ -61,23 +109,24 @@ export const options = {
       startTime: "10m",
       tags: { scenario: "stress" },
     },
-    // Spike test: sudden burst
+    // Spike test: sudden burst to validate graceful degradation
     spike: {
-      executor: "ramping-vus",
-      startVUs: 0,
-      stages: [
-        { duration: "10s", target: 500 }, // Instant spike
-        { duration: "1m", target: 500 },  // Hold
-        { duration: "10s", target: 0 },   // Drop
-      ],
+      ...endpointLoadMatrix.scenarios.spike,
       startTime: "20m",
       tags: { scenario: "spike" },
+    },
+    // Rate limiter saturation profile under high arrival rate
+    rateLimiterSaturation: {
+      ...endpointLoadMatrix.scenarios.rateLimiterSaturation,
+      startTime: "22m",
+      tags: { scenario: "rate-limiter-saturation" },
     },
   },
   thresholds: {
     http_req_duration: ["p(95)<500", "p(99)<1000"], // 95th < 500ms, 99th < 1s
     errors: ["rate<0.05"],                           // Error rate < 5%
     api_latency: ["p(95)<300"],                      // API p95 < 300ms
+    graceful_degradation_hits: ["count>=1"],         // Throttling path observed under saturation/spike
   },
 };
 
@@ -85,6 +134,13 @@ export const options = {
 // Test Scenarios
 // ═══════════════════════════════════════════════
 export default function () {
+  group("Matrix-defined hot endpoints", () => {
+    for (const endpoint of endpointLoadMatrix.endpoints) {
+      const res = hitEndpoint(endpoint);
+      errorRate.add(res.status >= 500);
+    }
+  });
+
   group("Public endpoints", () => {
     // Health check
     let res = http.get(`${BASE_URL}/api/health`);

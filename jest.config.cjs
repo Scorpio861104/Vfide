@@ -81,12 +81,14 @@ const customJestConfig = {
     '**/?(*.)+(spec|test).[jt]s?(x)',
   ],
   transformIgnorePatterns: [
-    'node_modules/(?!(wagmi|@wagmi|viem|@tanstack|@rainbow-me|@walletconnect|@noble|@scure|abitype|ox|uncrypto|@upstash)/)',
+    'node_modules/(?!(wagmi|@wagmi|viem|@tanstack|@rainbow-me|@walletconnect|@noble|@scure|abitype|ox|uncrypto|@upstash|chai)/)',
   ],
   testPathIgnorePatterns: [
     '/node_modules/',
     '/__mocks__/',
     '/vfide-complete/',
+    '/test/integration/', // Hardhat/Chai integration specs should run via on-chain test runner
+    '/test/performance/load.test.js', // k6 scenario; execute with `k6 run`, not Jest
     '<rootDir>/playwright/',
     '/e2e/',  // E2E tests run via Playwright, not Jest
   ],
