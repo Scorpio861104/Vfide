@@ -308,9 +308,9 @@ describe('R-060 – Payment replay in frontend retries', () => {
     expect(paymentsApiSrc).toMatch(/if \(args\.amount !== params\.amount\) continue/);
   });
 
-  it('no explicit idempotency-key store exists in confirmation route (residual risk)', () => {
-    expect(paymentsApiSrc).not.toMatch(/idempotency/i);
-    expect(paymentsApiSrc).not.toMatch(/unique\s*\(.*tx_hash/i);
+  it('idempotency guard is implemented in confirmation route preventing double-claim', () => {
+    expect(paymentsApiSrc).toMatch(/idempotency/i);
+    expect(paymentsApiSrc).toMatch(/claimPaymentConfirmationIdempotency/);
   });
 
   describe('TypeScript model: UI submit lock blocks rapid double-click', () => {
