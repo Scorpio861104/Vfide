@@ -5,6 +5,7 @@ import { DAOABI } from "@/lib/abis";
 import { useState, useEffect, useMemo } from "react";
 import { useProofScore, useDAOProposals } from "@/lib/vfide-hooks";
 import { useAccount, useWriteContract, useWaitForTransactionReceipt, useReadContract, usePublicClient } from "wagmi";
+import { isAddress } from "viem";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Bell, Search, Vote, Users, Clock, ChevronRight, Sparkles, Crown, Lightbulb, MessageSquare, History, BarChart3, FileText, Plus } from "lucide-react";
 import { sanitizeString } from "@/lib/validation";
@@ -15,6 +16,7 @@ import { CONTRACT_ADDRESSES } from "@/lib/contracts";
 
 // Contract address from centralized registry
 const DAO_ADDRESS = CONTRACT_ADDRESSES.DAO;
+const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000' as const;
 
 type TabType = 'overview' | 'proposals' | 'create' | 'council' | 'suggestions' | 'discussions' | 'members' | 'history' | 'stats';
 
@@ -122,6 +124,10 @@ export default function GovernancePage() {
 
   // Vote handler - wired to ProposalsTab buttons
   const handleVote = (proposalId: number, support: boolean) => {
+    if (DAO_ADDRESS === ZERO_ADDRESS) {
+      toast.error('DAO contract is not configured in this environment.');
+      return;
+    }
     writeContract({
       address: DAO_ADDRESS,
       abi: DAOABI,
@@ -133,6 +139,10 @@ export default function GovernancePage() {
   // Finalize handler (kept for future UI use)
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const handleFinalize = (proposalId: number) => {
+    if (DAO_ADDRESS === ZERO_ADDRESS) {
+      toast.error('DAO contract is not configured in this environment.');
+      return;
+    }
     writeContract({
       address: DAO_ADDRESS,
       abi: DAOABI,
@@ -144,6 +154,18 @@ export default function GovernancePage() {
   // Create proposal handler (kept for future UI use)
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const handlePropose = (ptype: number, target: string, value: bigint, data: string, description: string) => {
+    if (DAO_ADDRESS === ZERO_ADDRESS) {
+      toast.error('DAO contract is not configured in this environment.');
+      return;
+    }
+    if (!isAddress(target) || target.toLowerCase() === ZERO_ADDRESS) {
+      toast.error('Proposal target must be a valid non-zero address.');
+      return;
+    }
+    if (!data.startsWith('0x')) {
+      toast.error('Proposal calldata must be valid hex data.');
+      return;
+    }
     writeContract({
       address: DAO_ADDRESS,
       abi: DAOABI,

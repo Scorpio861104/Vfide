@@ -1,5 +1,6 @@
 import { useAccount, useWriteContract, useReadContract, useWatchContractEvent } from 'wagmi';
 import { useMemo, useEffect, useState } from 'react';
+import { isAddress } from 'viem';
 import { USER_VAULT_ABI, isCardBoundVaultMode } from '@/lib/contracts';
 import { parseContractError, logError } from '@/lib/errorHandling';
 
@@ -31,6 +32,12 @@ export function useVaultRecovery(vaultAddress?: `0x${string}`) {
   const assertRecoverySupported = () => {
     if (!recoverySupported) {
       throw new Error('Recovery/inheritance is not supported in CardBound vault mode');
+    }
+  };
+
+  const assertNonZeroAddress = (value: string, label: string) => {
+    if (!isAddress(value) || value.toLowerCase() === ZERO_ADDRESS.toLowerCase()) {
+      throw new Error(`${label} must be a valid non-zero address`);
     }
   };
   
@@ -245,6 +252,7 @@ export function useVaultRecovery(vaultAddress?: `0x${string}`) {
   const setNextOfKinAddress = async (nextOfKinAddress: `0x${string}`) => {
     assertRecoverySupported();
     if (!vaultAddress) throw new Error('Vault address not provided');
+    assertNonZeroAddress(nextOfKinAddress, 'Next of Kin address');
     
     try {
       return await writeContractAsync({
@@ -271,6 +279,7 @@ export function useVaultRecovery(vaultAddress?: `0x${string}`) {
   const setGuardian = async (guardianAddress: `0x${string}`, active: boolean) => {
     assertRecoverySupported();
     if (!vaultAddress) throw new Error('Vault address not provided');
+    assertNonZeroAddress(guardianAddress, 'Guardian address');
     
     try {
       return await writeContractAsync({

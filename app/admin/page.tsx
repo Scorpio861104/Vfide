@@ -3,7 +3,7 @@
 import { Footer } from '@/components/layout/Footer';
 import { safeBigIntToNumber, safeParseInt } from '@/lib/validation';
 import { useEffect, useState } from 'react';
-import { formatEther } from 'viem';
+import { formatEther, isAddress } from 'viem';
 import { useAccount, useReadContract, useWaitForTransactionReceipt, useWriteContract } from 'wagmi';
 
 // Transaction history type
@@ -655,6 +655,39 @@ export default function AdminPanel() {
 
   const isOwner = address && owner && address.toLowerCase() === owner.toLowerCase();
 
+  const requireTokenDeployment = () => {
+    if (!IS_TOKEN_DEPLOYED) {
+      setAdminValidationError('VFIDE token contract is not configured in this environment.');
+      return false;
+    }
+    return true;
+  };
+
+  const requireBurnRouterDeployment = () => {
+    if (!IS_BURN_ROUTER_DEPLOYED) {
+      setAdminValidationError('Burn router contract is not configured in this environment.');
+      return false;
+    }
+    return true;
+  };
+
+  const requireNonZeroAddress = (value: string, label: string): `0x${string}` | null => {
+    if (!value) {
+      setAdminValidationError(`${label} is required.`);
+      return null;
+    }
+    if (!isAddress(value)) {
+      setAdminValidationError(`${label} is not a valid address.`);
+      return null;
+    }
+    if (value.toLowerCase() === ZERO_ADDRESS.toLowerCase()) {
+      setAdminValidationError(`${label} cannot be the zero address.`);
+      return null;
+    }
+    setAdminValidationError(null);
+    return value as `0x${string}`;
+  };
+
   // Reset success message after 5 seconds
   useEffect(() => {
     if (isSuccess) {
@@ -667,26 +700,31 @@ export default function AdminPanel() {
   }, [isSuccess]);
 
   const handleWhitelistAdd = () => {
-    if (!whitelistAddress) return;
+    if (!requireTokenDeployment()) return;
+    const target = requireNonZeroAddress(whitelistAddress, 'Whitelist address');
+    if (!target) return;
     writeContract({
       address: TOKEN_ADDRESS,
       abi: TOKEN_ABI,
       functionName: 'proposeWhitelist',
-      args: [whitelistAddress as `0x${string}`, true],
+      args: [target, true],
     });
   };
 
   const handleWhitelistRemove = () => {
-    if (!whitelistAddress) return;
+    if (!requireTokenDeployment()) return;
+    const target = requireNonZeroAddress(whitelistAddress, 'Whitelist address');
+    if (!target) return;
     writeContract({
       address: TOKEN_ADDRESS,
       abi: TOKEN_ABI,
       functionName: 'proposeWhitelist',
-      args: [whitelistAddress as `0x${string}`, false],
+      args: [target, false],
     });
   };
 
   const handleToggleVaultOnly = () => {
+    if (!requireTokenDeployment()) return;
     writeContract({
       address: TOKEN_ADDRESS,
       abi: TOKEN_ABI,
@@ -700,6 +738,7 @@ export default function AdminPanel() {
   };
 
   const handleToggleCircuitBreaker = () => {
+    if (!requireTokenDeployment()) return;
     writeContract({
       address: TOKEN_ADDRESS,
       abi: TOKEN_ABI,
@@ -709,7 +748,9 @@ export default function AdminPanel() {
   };
 
   const handleSetModule = () => {
-    if (!moduleAddress) return;
+    if (!requireTokenDeployment()) return;
+    const target = requireNonZeroAddress(moduleAddress, 'Module address');
+    if (!target) return;
     const functionMap: Record<string, 'setVaultHub' | 'setSecurityHub' | 'setLedger' | 'setBurnRouter' | 'setTreasurySink' | 'setSanctumSink'> = {
       vaultHub: 'setVaultHub',
       securityHub: 'setSecurityHub',
@@ -722,31 +763,36 @@ export default function AdminPanel() {
       address: TOKEN_ADDRESS,
       abi: TOKEN_ABI,
       functionName: functionMap[moduleType] as 'setVaultHub' | 'setSecurityHub' | 'setLedger' | 'setBurnRouter' | 'setTreasurySink' | 'setSanctumSink',
-      args: [moduleAddress as `0x${string}`],
+      args: [target],
     });
   };
 
   const handleExemptAdd = () => {
-    if (!exemptAddress) return;
+    if (!requireTokenDeployment()) return;
+    const target = requireNonZeroAddress(exemptAddress, 'Exempt address');
+    if (!target) return;
     writeContract({
       address: TOKEN_ADDRESS,
       abi: TOKEN_ABI,
       functionName: 'proposeSystemExempt',
-      args: [exemptAddress as `0x${string}`, true],
+      args: [target, true],
     });
   };
 
   const handleExemptRemove = () => {
-    if (!exemptAddress) return;
+    if (!requireTokenDeployment()) return;
+    const target = requireNonZeroAddress(exemptAddress, 'Exempt address');
+    if (!target) return;
     writeContract({
       address: TOKEN_ADDRESS,
       abi: TOKEN_ABI,
       functionName: 'proposeSystemExempt',
-      args: [exemptAddress as `0x${string}`, false],
+      args: [target, false],
     });
   };
 
   const handleExemptConfirm = () => {
+    if (!requireTokenDeployment()) return;
     writeContract({
       address: TOKEN_ADDRESS,
       abi: TOKEN_ABI,
@@ -756,47 +802,56 @@ export default function AdminPanel() {
   };
 
   const handleBlacklistAdd = () => {
-    if (!blacklistAddress) return;
+    if (!requireTokenDeployment()) return;
+    const target = requireNonZeroAddress(blacklistAddress, 'Blacklist address');
+    if (!target) return;
     writeContract({
       address: TOKEN_ADDRESS,
       abi: TOKEN_ABI,
       functionName: 'setBlacklist',
-      args: [blacklistAddress as `0x${string}`, true],
+      args: [target, true],
     });
   };
 
   const handleBlacklistRemove = () => {
-    if (!blacklistAddress) return;
+    if (!requireTokenDeployment()) return;
+    const target = requireNonZeroAddress(blacklistAddress, 'Blacklist address');
+    if (!target) return;
     writeContract({
       address: TOKEN_ADDRESS,
       abi: TOKEN_ABI,
       functionName: 'setBlacklist',
-      args: [blacklistAddress as `0x${string}`, false],
+      args: [target, false],
     });
   };
 
   // Vault-only bypass whitelist (for exchanges) — timelocked: propose first, then confirm after 48h
   const handleVaultBypassAdd = () => {
-    if (!vaultBypassAddress) return;
+    if (!requireTokenDeployment()) return;
+    const target = requireNonZeroAddress(vaultBypassAddress, 'Vault bypass address');
+    if (!target) return;
     writeContract({
       address: TOKEN_ADDRESS,
       abi: TOKEN_ABI,
       functionName: 'proposeWhitelist',
-      args: [vaultBypassAddress as `0x${string}`, true],
+      args: [target, true],
     });
   };
 
   const handleVaultBypassRemove = () => {
-    if (!vaultBypassAddress) return;
+    if (!requireTokenDeployment()) return;
+    const target = requireNonZeroAddress(vaultBypassAddress, 'Vault bypass address');
+    if (!target) return;
     writeContract({
       address: TOKEN_ADDRESS,
       abi: TOKEN_ABI,
       functionName: 'proposeWhitelist',
-      args: [vaultBypassAddress as `0x${string}`, false],
+      args: [target, false],
     });
   };
 
   const handleVaultBypassConfirm = () => {
+    if (!requireTokenDeployment()) return;
     writeContract({
       address: TOKEN_ADDRESS,
       abi: TOKEN_ABI,
@@ -807,22 +862,26 @@ export default function AdminPanel() {
 
   // Whale limit exemptions (for large holders/contracts)
   const handleWhaleExemptAdd = () => {
-    if (!whaleExemptAddress) return;
+    if (!requireTokenDeployment()) return;
+    const target = requireNonZeroAddress(whaleExemptAddress, 'Whale exempt address');
+    if (!target) return;
     writeContract({
       address: TOKEN_ADDRESS,
       abi: TOKEN_ABI,
       functionName: 'setWhaleLimitExempt',
-      args: [whaleExemptAddress as `0x${string}`, true],
+      args: [target, true],
     });
   };
 
   const handleWhaleExemptRemove = () => {
-    if (!whaleExemptAddress) return;
+    if (!requireTokenDeployment()) return;
+    const target = requireNonZeroAddress(whaleExemptAddress, 'Whale exempt address');
+    if (!target) return;
     writeContract({
       address: TOKEN_ADDRESS,
       abi: TOKEN_ABI,
       functionName: 'setWhaleLimitExempt',
-      args: [whaleExemptAddress as `0x${string}`, false],
+      args: [target, false],
     });
   };
 
@@ -838,6 +897,10 @@ export default function AdminPanel() {
     if (!pendingAdminAction) return;
 
     if (pendingAdminAction === 'lockPolicy') {
+      if (!requireTokenDeployment()) {
+        setPendingAdminAction(null);
+        return;
+      }
       writeContract({
         address: TOKEN_ADDRESS,
         abi: TOKEN_ABI,
@@ -848,8 +911,12 @@ export default function AdminPanel() {
     }
 
     if (pendingAdminAction === 'transferOwnership') {
-      if (!newOwner) {
-        setAdminValidationError('New owner address is missing.');
+      if (!requireTokenDeployment()) {
+        setPendingAdminAction(null);
+        return;
+      }
+      const target = requireNonZeroAddress(newOwner, 'New owner address');
+      if (!target) {
         setPendingAdminAction(null);
         return;
       }
@@ -857,7 +924,7 @@ export default function AdminPanel() {
         address: TOKEN_ADDRESS,
         abi: TOKEN_ABI,
         functionName: 'transferOwnership',
-        args: [newOwner as `0x${string}`],
+        args: [target],
       });
       setPendingAdminAction(null);
       return;
@@ -1391,6 +1458,7 @@ export default function AdminPanel() {
   };
 
   const handleUpdateBurnPolicy = () => {
+    if (!requireBurnRouterDeployment()) return;
     const params = {
       minTotalBps: safeParseInt(burnParams.minTotalBps, safeParseInt(minTotalBps, 0), { min: 0, max: 10000 }),
       maxTotalBps: safeParseInt(burnParams.maxTotalBps, safeParseInt(maxTotalBps, 0), { min: 0, max: 10000 }),

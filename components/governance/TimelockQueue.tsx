@@ -1,12 +1,15 @@
 'use client';
 
 import { useState, useEffect } from "react";
+import { isAddress } from "viem";
 import { useReadContract, useWriteContract, useWaitForTransactionReceipt } from "wagmi"; 
 import { motion, AnimatePresence } from "framer-motion";
 import { Clock, CheckCircle, XCircle, AlertTriangle, PlayCircle, Loader2 } from "lucide-react";
 import { CONTRACT_ADDRESSES } from "@/lib/contracts";
 import { useToast } from "@/components/ui/toast";
 import { DAOTimelockABI } from "@/lib/abis";
+
+const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000' as const;
 
 function useNowSeconds(intervalMs: number = 1000) {
   const [now, setNow] = useState(() => Math.floor(Date.now() / 1000));
@@ -97,6 +100,20 @@ export function TimelockQueue() {
     : [];
 
   const handleExecute = (txId: string) => {
+    if (CONTRACT_ADDRESSES.DAOTimelock === ZERO_ADDRESS) {
+      toast({
+        title: "Timelock Unavailable",
+        description: "DAOTimelock is not configured in this environment.",
+      });
+      return;
+    }
+    if (!isAddress(txId) || txId.toLowerCase() === ZERO_ADDRESS) {
+      toast({
+        title: "Invalid Transaction ID",
+        description: "Queued transaction ID must be a valid non-zero hash address value.",
+      });
+      return;
+    }
     executeWrite({
       address: CONTRACT_ADDRESSES.DAOTimelock,
       abi: DAOTimelockABI,
@@ -106,6 +123,20 @@ export function TimelockQueue() {
   };
 
   const handleCancel = (txId: string) => {
+    if (CONTRACT_ADDRESSES.DAOTimelock === ZERO_ADDRESS) {
+      toast({
+        title: "Timelock Unavailable",
+        description: "DAOTimelock is not configured in this environment.",
+      });
+      return;
+    }
+    if (!isAddress(txId) || txId.toLowerCase() === ZERO_ADDRESS) {
+      toast({
+        title: "Invalid Transaction ID",
+        description: "Queued transaction ID must be a valid non-zero hash address value.",
+      });
+      return;
+    }
     cancelWrite({
       address: CONTRACT_ADDRESSES.DAOTimelock,
       abi: DAOTimelockABI,

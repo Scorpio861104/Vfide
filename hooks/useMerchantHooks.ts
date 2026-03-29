@@ -1,12 +1,14 @@
 'use client'
 
-import { useReadContract, useWriteContract, useAccount, useWaitForTransactionReceipt } from 'wagmi'
-import { parseEther, formatEther } from 'viem'
+import { useReadContract, useWriteContract, useAccount, useWaitForTransactionReceipt, usePublicClient } from 'wagmi'
+import { parseEther, formatEther, isAddress } from 'viem'
 import { useState } from 'react'
 import { CONTRACT_ADDRESSES } from '../lib/contracts'
 import { MerchantPortalABI } from '../lib/abis'
 import { parseContractError, logError } from '@/lib/errorHandling';
 import { safeBigIntToNumber } from '@/lib/validation';
+
+const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000' as const
 
 // ============================================
 // MERCHANT HOOKS - No processor fees (burn + gas apply)
@@ -46,6 +48,7 @@ export function useIsMerchant(address?: `0x${string}`) {
 }
 
 export function useRegisterMerchant() {
+  const publicClient = usePublicClient()
   const { writeContractAsync, data, isPending } = useWriteContract()
   const [error, setError] = useState<string | null>(null)
   
@@ -56,13 +59,22 @@ export function useRegisterMerchant() {
   const registerMerchant = async (businessName: string, category: string) => {
     setError(null)
     try {
-      await writeContractAsync({
+      if (CONTRACT_ADDRESSES.MerchantPortal === ZERO_ADDRESS) {
+        throw new Error('MerchantPortal is not configured in this environment')
+      }
+      if (!businessName.trim() || !category.trim()) {
+        throw new Error('Business name and category are required')
+      }
+      const hash = await writeContractAsync({
         address: CONTRACT_ADDRESSES.MerchantPortal,
         abi: MerchantPortalABI,
         functionName: 'registerMerchant',
-        args: [businessName, category],
+        args: [businessName.trim(), category.trim()],
       })
-      return { success: true }
+      if (publicClient) {
+        await publicClient.waitForTransactionReceipt({ hash })
+      }
+      return { success: true, hash }
     } catch (err: unknown) {
       logError('registerMerchant', err);
       const parsed = parseContractError(err);
@@ -85,6 +97,7 @@ export function useRegisterMerchant() {
  * Process payment from customer to merchant (merchant-initiated)
  */
 export function useProcessPayment() {
+  const publicClient = usePublicClient()
   const { writeContractAsync, data, isPending } = useWriteContract()
   const [error, setError] = useState<string | null>(null)
   
@@ -100,13 +113,31 @@ export function useProcessPayment() {
   ) => {
     setError(null)
     try {
-      await writeContractAsync({
+      if (CONTRACT_ADDRESSES.MerchantPortal === ZERO_ADDRESS) {
+        throw new Error('MerchantPortal is not configured in this environment')
+      }
+      if (!isAddress(customer) || customer.toLowerCase() === ZERO_ADDRESS) {
+        throw new Error('Customer must be a valid non-zero address')
+      }
+      if (!isAddress(token) || token.toLowerCase() === ZERO_ADDRESS) {
+        throw new Error('Payment token must be a valid non-zero address')
+      }
+      if (!amount || Number(amount) <= 0) {
+        throw new Error('Amount must be greater than zero')
+      }
+      if (!orderId.trim()) {
+        throw new Error('Order ID is required')
+      }
+      const hash = await writeContractAsync({
         address: CONTRACT_ADDRESSES.MerchantPortal,
         abi: MerchantPortalABI,
         functionName: 'processPayment',
-        args: [customer, token, parseEther(amount), orderId],
+        args: [customer, token, parseEther(amount), orderId.trim()],
       })
-      return { success: true }
+      if (publicClient) {
+        await publicClient.waitForTransactionReceipt({ hash })
+      }
+      return { success: true, hash }
     } catch (err: unknown) {
       logError('processPayment', err);
       const parsed = parseContractError(err);
@@ -129,6 +160,7 @@ export function useProcessPayment() {
  * Set a scoped merchant pull permit for merchant-initiated payments.
  */
 export function useSetMerchantPullPermit() {
+  const publicClient = usePublicClient()
   const { writeContractAsync, data, isPending } = useWriteContract()
   const [error, setError] = useState<string | null>(null)
 
@@ -143,13 +175,25 @@ export function useSetMerchantPullPermit() {
   ) => {
     setError(null)
     try {
-      await writeContractAsync({
+      if (CONTRACT_ADDRESSES.MerchantPortal === ZERO_ADDRESS) {
+        throw new Error('MerchantPortal is not configured in this environment')
+      }
+      if (!isAddress(merchant) || merchant.toLowerCase() === ZERO_ADDRESS) {
+        throw new Error('Merchant must be a valid non-zero address')
+      }
+      if (!maxAmount || Number(maxAmount) <= 0) {
+        throw new Error('Maximum amount must be greater than zero')
+      }
+      const hash = await writeContractAsync({
         address: CONTRACT_ADDRESSES.MerchantPortal,
         abi: MerchantPortalABI,
         functionName: 'setMerchantPullPermit',
         args: [merchant, parseEther(maxAmount), BigInt(expiresAt)],
       })
-      return { success: true }
+      if (publicClient) {
+        await publicClient.waitForTransactionReceipt({ hash })
+      }
+      return { success: true, hash }
     } catch (err: unknown) {
       logError('setMerchantPullPermit', err);
       const parsed = parseContractError(err);
@@ -172,6 +216,7 @@ export function useSetMerchantPullPermit() {
  * Pay merchant (customer-initiated)
  */
 export function usePayMerchant() {
+  const publicClient = usePublicClient()
   const { writeContractAsync, data, isPending } = useWriteContract()
   const [error, setError] = useState<string | null>(null)
   
@@ -187,13 +232,31 @@ export function usePayMerchant() {
   ) => {
     setError(null)
     try {
-      await writeContractAsync({
+      if (CONTRACT_ADDRESSES.MerchantPortal === ZERO_ADDRESS) {
+        throw new Error('MerchantPortal is not configured in this environment')
+      }
+      if (!isAddress(merchant) || merchant.toLowerCase() === ZERO_ADDRESS) {
+        throw new Error('Merchant must be a valid non-zero address')
+      }
+      if (!isAddress(token) || token.toLowerCase() === ZERO_ADDRESS) {
+        throw new Error('Payment token must be a valid non-zero address')
+      }
+      if (!amount || Number(amount) <= 0) {
+        throw new Error('Amount must be greater than zero')
+      }
+      if (!orderId.trim()) {
+        throw new Error('Order ID is required')
+      }
+      const hash = await writeContractAsync({
         address: CONTRACT_ADDRESSES.MerchantPortal,
         abi: MerchantPortalABI,
         functionName: 'pay',
-        args: [merchant, token, parseEther(amount), orderId],
+        args: [merchant, token, parseEther(amount), orderId.trim()],
       })
-      return { success: true }
+      if (publicClient) {
+        await publicClient.waitForTransactionReceipt({ hash })
+      }
+      return { success: true, hash }
     } catch (err: unknown) {
       logError('payMerchant', err);
       const parsed = parseContractError(err);
