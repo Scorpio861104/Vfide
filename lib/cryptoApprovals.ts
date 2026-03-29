@@ -60,7 +60,7 @@ function parseTokenAmountToWei(amount: string): bigint {
   return parsed;
 }
 
-function getEthereumProvider() {
+export function getEthereumProvider() {
   if (typeof window === 'undefined' || !window.ethereum) {
     throw new Error('Ethereum wallet provider is not available');
   }
@@ -73,13 +73,13 @@ function assertConfiguredTokenAddress() {
   }
 }
 
-function assertNonZeroAddress(address: string, label: string) {
+export function assertNonZeroAddress(address: string, label: string) {
   if (!validateEthereumAddress(address) || address.toLowerCase() === ZERO_ADDRESS) {
     throw new ValidationError(`${label} must be a valid non-zero address`);
   }
 }
 
-async function assertCorrectChain() {
+export async function assertCorrectChain() {
   const provider = getEthereumProvider();
   const rawChainId = await provider.request({ method: 'eth_chainId' }) as unknown;
   const chainIdHex = asHexString(rawChainId, 'chain id');
@@ -89,7 +89,7 @@ async function assertCorrectChain() {
   }
 }
 
-async function waitForTransactionReceiptSuccess(txHash: string) {
+export async function waitForTransactionReceiptSuccess(txHash: string) {
   const provider = getEthereumProvider();
 
   for (let attempt = 0; attempt < MAX_RECEIPT_POLLS; attempt++) {

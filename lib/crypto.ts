@@ -7,6 +7,7 @@
 import { useState, useEffect, useCallback } from 'react';
 // Crypto validation types - ValidationError used in type definitions
 import type { ValidationError as _ValidationError } from './cryptoValidation';
+import { getEthereumProvider, assertCorrectChain, assertNonZeroAddress, waitForTransactionReceiptSuccess } from './cryptoApprovals';
 import { logger } from '@/lib/logger';
 
 function asString(value: unknown, name: string): string {
@@ -87,14 +88,11 @@ export interface CryptoBadge {
  * Connect wallet (MetaMask, WalletConnect, etc.)
  */
 export async function connectWallet(): Promise<Wallet> {
-  // Check if MetaMask is installed
-  if (typeof window.ethereum === 'undefined') {
-    throw new Error('MetaMask not installed');
-  }
+  const provider = getEthereumProvider();
 
   try {
     // Request accounts
-    const accounts = asStringArray(await window.ethereum!.request({
+    const accounts = asStringArray(await provider.request({
       method: 'eth_requestAccounts',
     }), 'accounts');
 
@@ -104,7 +102,7 @@ export async function connectWallet(): Promise<Wallet> {
     }
 
     // Get balance
-    const balance = asString(await window.ethereum!.request({
+    const balance = asString(await provider.request({
       method: 'eth_getBalance',
       params: [address, 'latest'],
     }), 'balance');
@@ -250,9 +248,9 @@ export async function sendPayment(
  * Send ETH transaction
  */
 async function sendEthTransaction(to: string, amount: string): Promise<string> {
-  if (typeof window.ethereum === 'undefined') {
-    throw new Error('MetaMask not installed');
-  }
+  const provider = getEthereumProvider();
+  assertNonZeroAddress(to, 'recipient');
+  await assertCorrectChain();
 
   const amountFloat = parseFloat(amount);
   if (isNaN(amountFloat) || !isFinite(amountFloat) || amountFloat <= 0) {
@@ -261,7 +259,7 @@ async function sendEthTransaction(to: string, amount: string): Promise<string> {
 
   const amountWei = '0x' + (amountFloat * 1e18).toString(16);
 
-  const txHash = asString(await window.ethereum!.request({
+  const txHash = asString(await provider.request({
     method: 'eth_sendTransaction',
     params: [
       {
@@ -271,6 +269,7 @@ async function sendEthTransaction(to: string, amount: string): Promise<string> {
     ],
   }), 'transaction hash');
 
+  await waitForTransactionReceiptSuccess(txHash);
   return txHash;
 }
 
@@ -390,11 +389,9 @@ export async function payPaymentRequest(requestId: string): Promise<Transaction>
 // ============================================================================
 
 async function getCurrentWalletAddress(): Promise<string> {
-  if (typeof window.ethereum === 'undefined') {
-    throw new Error('Wallet not connected');
-  }
+  const provider = getEthereumProvider();
 
-  const accounts = asStringArray(await window.ethereum!.request({
+  const accounts = asStringArray(await provider.request({
     method: 'eth_accounts',
   }), 'accounts');
 
