@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { useReadContract, useWriteContract, useAccount, useWaitForTransactionReceipt } from 'wagmi'
+import { useReadContract, useWriteContract, useAccount, useWaitForTransactionReceipt, usePublicClient } from 'wagmi'
 import { CONTRACT_ADDRESSES } from '../lib/contracts'
 import { SeerABI, SeerSocialABI } from '../lib/abis'
 import { ZERO_ADDRESS } from '../lib/constants'
@@ -68,6 +68,7 @@ export function useProofScore(userAddress?: `0x${string}`) {
 }
 
 export function useEndorse(targetAddress?: `0x${string}`) {
+  const publicClient = usePublicClient()
   const { writeContractAsync, data, isPending } = useWriteContract()
   const [error, setError] = useState<string | null>(null)
   
@@ -81,14 +82,22 @@ export function useEndorse(targetAddress?: `0x${string}`) {
       setError('Invalid target address')
       return { success: false, error: 'Invalid target address' }
     }
+    if (CONTRACT_ADDRESSES.SeerSocial === ZERO_ADDRESS) {
+      const message = 'SeerSocial contract is not configured'
+      setError(message)
+      return { success: false, error: message }
+    }
     try {
-      await writeContractAsync({
+      const hash = await writeContractAsync({
         address: CONTRACT_ADDRESSES.SeerSocial,
         abi: SeerSocialABI,
         functionName: 'endorse',
         args: [targetAddress, reason],
       })
-      return { success: true }
+      if (publicClient) {
+        await publicClient.waitForTransactionReceipt({ hash })
+      }
+      return { success: true, hash }
     } catch (err: unknown) {
       logError('endorse', err);
       const parsed = parseContractError(err);

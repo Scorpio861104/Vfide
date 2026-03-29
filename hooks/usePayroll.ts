@@ -7,7 +7,7 @@
  * - Type-safe contract interactions
  */
 
-import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
+import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt, usePublicClient } from 'wagmi';
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { parseUnits, formatUnits, isAddress } from 'viem';
 import { PayrollManagerABI } from '@/lib/abis';
@@ -16,9 +16,11 @@ import { CONTRACT_ADDRESSES } from '@/lib/contracts';
 // Contract addresses from environment
 const PAYROLL_MANAGER_ADDRESS = CONTRACT_ADDRESSES.PayrollManager;
 const VFIDE_TOKEN_ADDRESS = CONTRACT_ADDRESSES.VFIDEToken;
+const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000' as const;
 
 // Check if contract is deployed
 const IS_DEPLOYED = PAYROLL_MANAGER_ADDRESS !== '0x0000000000000000000000000000000000000000';
+const HAS_TOKEN_CONFIG = VFIDE_TOKEN_ADDRESS !== ZERO_ADDRESS;
 
 export interface PayrollStream {
   id: bigint;
@@ -39,6 +41,7 @@ export interface PayrollStream {
 }
 
 export function usePayroll() {
+  const publicClient = usePublicClient();
   const { address } = useAccount();
   const [streams, setStreams] = useState<PayrollStream[]>([]);
   const [loading, setLoading] = useState(false);
@@ -46,7 +49,7 @@ export function usePayroll() {
   const [currentTime, setCurrentTime] = useState(Date.now());
 
   // Contract write hooks
-  const { writeContract, data: hash, isPending, error: writeError } = useWriteContract();
+  const { writeContractAsync, data: hash, isPending, error: writeError } = useWriteContract();
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash });
 
   // Read payer streams
@@ -177,81 +180,111 @@ export function usePayroll() {
     if (!address) throw new Error('Wallet not connected');
     if (!isAddress(payee)) throw new Error('Invalid payee address');
     if (!IS_DEPLOYED) throw new Error('PayrollManager not deployed on this network');
+    if (!HAS_TOKEN_CONFIG) throw new Error('VFIDE token not configured on this network');
 
     // Convert monthly rate to per-second rate
     const monthlyWei = parseUnits(monthlyRate, 18);
     const ratePerSecond = monthlyWei / BigInt(30 * 24 * 60 * 60);
     const deposit = parseUnits(initialDeposit, 18);
 
-    writeContract({
+    const hash = await writeContractAsync({
       address: PAYROLL_MANAGER_ADDRESS,
       abi: PayrollManagerABI,
       functionName: 'createStream',
       args: [payee as `0x${string}`, VFIDE_TOKEN_ADDRESS, ratePerSecond, deposit],
     });
-  }, [address, writeContract]);
+    if (publicClient) {
+      await publicClient.waitForTransactionReceipt({ hash });
+    }
+    return hash;
+  }, [address, publicClient, writeContractAsync]);
 
   // Withdraw claimable funds
   const withdraw = useCallback(async (streamId: bigint) => {
     if (!IS_DEPLOYED) throw new Error('PayrollManager not deployed');
+    if (!HAS_TOKEN_CONFIG) throw new Error('VFIDE token not configured on this network');
 
-    writeContract({
+    const hash = await writeContractAsync({
       address: PAYROLL_MANAGER_ADDRESS,
       abi: PayrollManagerABI,
       functionName: 'withdraw',
       args: [streamId],
     });
-  }, [writeContract]);
+    if (publicClient) {
+      await publicClient.waitForTransactionReceipt({ hash });
+    }
+    return hash;
+  }, [publicClient, writeContractAsync]);
 
   // Pause a stream
   const pauseStream = useCallback(async (streamId: bigint) => {
     if (!IS_DEPLOYED) throw new Error('PayrollManager not deployed');
+    if (!HAS_TOKEN_CONFIG) throw new Error('VFIDE token not configured on this network');
 
-    writeContract({
+    const hash = await writeContractAsync({
       address: PAYROLL_MANAGER_ADDRESS,
       abi: PayrollManagerABI,
       functionName: 'pauseStream',
       args: [streamId],
     });
-  }, [writeContract]);
+    if (publicClient) {
+      await publicClient.waitForTransactionReceipt({ hash });
+    }
+    return hash;
+  }, [publicClient, writeContractAsync]);
 
   // Resume a stream
   const resumeStream = useCallback(async (streamId: bigint) => {
     if (!IS_DEPLOYED) throw new Error('PayrollManager not deployed');
+    if (!HAS_TOKEN_CONFIG) throw new Error('VFIDE token not configured on this network');
 
-    writeContract({
+    const hash = await writeContractAsync({
       address: PAYROLL_MANAGER_ADDRESS,
       abi: PayrollManagerABI,
       functionName: 'resumeStream',
       args: [streamId],
     });
-  }, [writeContract]);
+    if (publicClient) {
+      await publicClient.waitForTransactionReceipt({ hash });
+    }
+    return hash;
+  }, [publicClient, writeContractAsync]);
 
   // Cancel a stream
   const cancelStream = useCallback(async (streamId: bigint) => {
     if (!IS_DEPLOYED) throw new Error('PayrollManager not deployed');
+    if (!HAS_TOKEN_CONFIG) throw new Error('VFIDE token not configured on this network');
 
-    writeContract({
+    const hash = await writeContractAsync({
       address: PAYROLL_MANAGER_ADDRESS,
       abi: PayrollManagerABI,
       functionName: 'cancelStream',
       args: [streamId],
     });
-  }, [writeContract]);
+    if (publicClient) {
+      await publicClient.waitForTransactionReceipt({ hash });
+    }
+    return hash;
+  }, [publicClient, writeContractAsync]);
 
   // Top up a stream
   const topUp = useCallback(async (streamId: bigint, amount: string) => {
     if (!IS_DEPLOYED) throw new Error('PayrollManager not deployed');
+    if (!HAS_TOKEN_CONFIG) throw new Error('VFIDE token not configured on this network');
 
     const amountWei = parseUnits(amount, 18);
     
-    writeContract({
+    const hash = await writeContractAsync({
       address: PAYROLL_MANAGER_ADDRESS,
       abi: PayrollManagerABI,
       functionName: 'topUp',
       args: [streamId, amountWei],
     });
-  }, [writeContract]);
+    if (publicClient) {
+      await publicClient.waitForTransactionReceipt({ hash });
+    }
+    return hash;
+  }, [publicClient, writeContractAsync]);
 
   // Refresh data
   const refresh = useCallback(() => {

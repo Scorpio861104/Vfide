@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { isAddress } from 'viem';
 import { useWriteContract, useWaitForTransactionReceipt, useReadContract } from 'wagmi';
 import { OWNER_CONTROL_PANEL_ADDRESS, OWNER_CONTROL_PANEL_ABI } from '../config/contracts';
 import {
@@ -8,6 +9,8 @@ import {
   ConfirmationModal,
   TransactionStatus,
 } from './SecurityComponents';
+
+const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000' as const;
 
 export function ProductionSetupPanel() {
   const [showSafeDefaultsConfirm, setShowSafeDefaultsConfirm] = useState(false);
@@ -27,6 +30,10 @@ export function ProductionSetupPanel() {
   });
 
   const handleSafeDefaults = async () => {
+    if (OWNER_CONTROL_PANEL_ADDRESS === ZERO_ADDRESS) {
+      setLoading(false);
+      return;
+    }
     setShowSafeDefaultsConfirm(false);
     setLoading(true);
     
@@ -44,6 +51,16 @@ export function ProductionSetupPanel() {
   };
 
   const handleAutoSwapSetup = async () => {
+    if (OWNER_CONTROL_PANEL_ADDRESS === ZERO_ADDRESS) {
+      setLoading(false);
+      return;
+    }
+    if (!isAddress(dexRouter) || dexRouter.toLowerCase() === ZERO_ADDRESS) {
+      return;
+    }
+    if (!isAddress(usdc) || usdc.toLowerCase() === ZERO_ADDRESS) {
+      return;
+    }
     setShowAutoSwapConfirm(false);
     setLoading(true);
     

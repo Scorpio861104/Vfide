@@ -10,7 +10,7 @@
 
 import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt, usePublicClient } from 'wagmi';
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { parseUnits, formatUnits, keccak256, stringToHex } from 'viem';
+import { parseUnits, formatUnits, keccak256, stringToHex, isAddress } from 'viem';
 import { ACTIVE_VAULT_ABI, CommerceEscrowABI, CONTRACT_ADDRESSES, VFIDETokenABI } from '@/lib/contracts';
 
 export interface Escrow {
@@ -233,6 +233,12 @@ export function useEscrow() {
   ) => {
     if (!address) throw new Error('Wallet not connected');
     if (!hasEscrowConfig) throw new Error('Escrow contracts are not configured');
+    if (!isAddress(merchant) || merchant === '0x0000000000000000000000000000000000000000') {
+      throw new Error('Merchant must be a valid non-zero address');
+    }
+    if (!amount || Number(amount) <= 0) {
+      throw new Error('Escrow amount must be greater than zero');
+    }
     
     setLoading(true);
     setError(null);
@@ -268,12 +274,13 @@ export function useEscrow() {
       await publicClient.waitForTransactionReceipt({ hash: openHash });
 
       // Step 3: Mark escrow funded (pulls from buyer vault to escrow contract)
-      await writeContractAsync({
+      const fundedHash = await writeContractAsync({
         address: escrowAddress,
         abi: CommerceEscrowABI,
         functionName: 'markFunded',
         args: [openId],
       });
+      await publicClient.waitForTransactionReceipt({ hash: fundedHash });
 
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to create escrow');

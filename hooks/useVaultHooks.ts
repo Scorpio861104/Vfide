@@ -1,6 +1,6 @@
 'use client'
 
-import { useReadContract, useWriteContract, useAccount, useWaitForTransactionReceipt, useReadContracts } from 'wagmi'
+import { useReadContract, useWriteContract, useAccount, useWaitForTransactionReceipt, useReadContracts, usePublicClient } from 'wagmi'
 import { parseEther, formatEther, type Abi } from 'viem'
 import { useState, useEffect } from 'react'
 import { CONTRACT_ADDRESSES, ACTIVE_VAULT_IMPLEMENTATION, ACTIVE_VAULT_ABI } from '../lib/contracts'
@@ -53,22 +53,30 @@ export function useUserVault() {
 }
 
 export function useCreateVault() {
+  const publicClient = usePublicClient()
   const { address } = useAccount()
-  const { writeContract, data, isPending } = useWriteContract()
+  const { writeContractAsync, data, isPending } = useWriteContract()
   
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({
     hash: data,
   })
   
   // VaultHub ensureVault() creates if doesn't exist, returns existing vault if it does
-  const createVault = () => {
-    if (!address) return
-    writeContract({
+  const createVault = async () => {
+    if (!address) return null
+    if (CONTRACT_ADDRESSES.VaultHub === ZERO_ADDRESS) {
+      throw new Error('VaultHub is not configured in this environment')
+    }
+    const hash = await writeContractAsync({
       address: CONTRACT_ADDRESSES.VaultHub,
       abi: HUB_ABI,
       functionName: 'ensureVault',
       args: [address],
     })
+    if (publicClient) {
+      await publicClient.waitForTransactionReceipt({ hash })
+    }
+    return hash
   }
   
   return {
@@ -254,6 +262,7 @@ export function useIsGuardianMature(vaultAddress?: `0x${string}`, guardianAddres
  * @param active True to add, false to remove
  */
 export function useSetGuardian(vaultAddress: `0x${string}`) {
+  const publicClient = usePublicClient()
   const { writeContractAsync } = useWriteContract()
   const [txHash, setTxHash] = useState<`0x${string}` | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -280,6 +289,9 @@ export function useSetGuardian(vaultAddress: `0x${string}`) {
         functionName: 'setGuardian',
         args: [guardianAddress, active],
       })
+      if (publicClient) {
+        await publicClient.waitForTransactionReceipt({ hash })
+      }
       setTxHash(hash)
       return { success: true, txHash: hash }
     } catch (err: unknown) {
@@ -354,6 +366,7 @@ export function useAbnormalTransactionThreshold(vaultAddress?: `0x${string}`) {
  * Set balance snapshot mode for abnormal transaction detection
  */
 export function useSetBalanceSnapshotMode(vaultAddress: `0x${string}`) {
+  const publicClient = usePublicClient()
   const { writeContractAsync } = useWriteContract()
   const [txHash, setTxHash] = useState<`0x${string}` | null>(null)
   const isLegacyMode = ACTIVE_VAULT_IMPLEMENTATION === 'uservault'
@@ -374,6 +387,9 @@ export function useSetBalanceSnapshotMode(vaultAddress: `0x${string}`) {
         functionName: 'setBalanceSnapshotMode',
         args: [useSnapshot],
       })
+      if (publicClient) {
+        await publicClient.waitForTransactionReceipt({ hash })
+      }
       setTxHash(hash)
       return { success: true, txHash: hash }
     } catch (err: unknown) {
@@ -395,6 +411,7 @@ export function useSetBalanceSnapshotMode(vaultAddress: `0x${string}`) {
  * Update balance snapshot
  */
 export function useUpdateBalanceSnapshot(vaultAddress: `0x${string}`) {
+  const publicClient = usePublicClient()
   const { writeContractAsync } = useWriteContract()
   const [txHash, setTxHash] = useState<`0x${string}` | null>(null)
   const isLegacyMode = ACTIVE_VAULT_IMPLEMENTATION === 'uservault'
@@ -414,6 +431,9 @@ export function useUpdateBalanceSnapshot(vaultAddress: `0x${string}`) {
         abi: VAULT_ABI,
         functionName: 'updateBalanceSnapshot',
       })
+      if (publicClient) {
+        await publicClient.waitForTransactionReceipt({ hash })
+      }
       setTxHash(hash)
       return { success: true, txHash: hash }
     } catch (err: unknown) {
@@ -504,6 +524,7 @@ export function usePendingTransaction(vaultAddress?: `0x${string}`, txId?: numbe
  * Approve pending abnormal transaction
  */
 export function useApprovePendingTransaction(vaultAddress: `0x${string}`) {
+  const publicClient = usePublicClient()
   const { writeContractAsync } = useWriteContract()
   const [txHash, setTxHash] = useState<`0x${string}` | null>(null)
   const isLegacyMode = ACTIVE_VAULT_IMPLEMENTATION === 'uservault'
@@ -524,6 +545,9 @@ export function useApprovePendingTransaction(vaultAddress: `0x${string}`) {
         functionName: 'approvePendingTransaction',
         args: [BigInt(txId)],
       })
+      if (publicClient) {
+        await publicClient.waitForTransactionReceipt({ hash })
+      }
       setTxHash(hash)
       return { success: true, txHash: hash }
     } catch (err: unknown) {
@@ -545,6 +569,7 @@ export function useApprovePendingTransaction(vaultAddress: `0x${string}`) {
  * Execute approved pending transaction
  */
 export function useExecutePendingTransaction(vaultAddress: `0x${string}`) {
+  const publicClient = usePublicClient()
   const { writeContractAsync } = useWriteContract()
   const [txHash, setTxHash] = useState<`0x${string}` | null>(null)
   const isLegacyMode = ACTIVE_VAULT_IMPLEMENTATION === 'uservault'
@@ -565,6 +590,9 @@ export function useExecutePendingTransaction(vaultAddress: `0x${string}`) {
         functionName: 'executePendingTransaction',
         args: [BigInt(txId)],
       })
+      if (publicClient) {
+        await publicClient.waitForTransactionReceipt({ hash })
+      }
       setTxHash(hash)
       return { success: true, txHash: hash }
     } catch (err: unknown) {
@@ -586,6 +614,7 @@ export function useExecutePendingTransaction(vaultAddress: `0x${string}`) {
  * Cleanup expired pending transaction
  */
 export function useCleanupExpiredTransaction(vaultAddress: `0x${string}`) {
+  const publicClient = usePublicClient()
   const { writeContractAsync } = useWriteContract()
   const [txHash, setTxHash] = useState<`0x${string}` | null>(null)
   const isLegacyMode = ACTIVE_VAULT_IMPLEMENTATION === 'uservault'
@@ -606,6 +635,9 @@ export function useCleanupExpiredTransaction(vaultAddress: `0x${string}`) {
         functionName: 'cleanupExpiredTransaction',
         args: [BigInt(txId)],
       })
+      if (publicClient) {
+        await publicClient.waitForTransactionReceipt({ hash })
+      }
       setTxHash(hash)
       return { success: true, txHash: hash }
     } catch (err: unknown) {
@@ -627,6 +659,7 @@ export function useCleanupExpiredTransaction(vaultAddress: `0x${string}`) {
  * Guardian votes to cancel fraudulent inheritance request
  */
 export function useGuardianCancelInheritance(vaultAddress: `0x${string}`) {
+  const publicClient = usePublicClient()
   const { writeContractAsync } = useWriteContract()
   const [txHash, setTxHash] = useState<`0x${string}` | null>(null)
   const isLegacyMode = ACTIVE_VAULT_IMPLEMENTATION === 'uservault'
@@ -646,6 +679,9 @@ export function useGuardianCancelInheritance(vaultAddress: `0x${string}`) {
         abi: VAULT_ABI,
         functionName: 'guardianCancelInheritance',
       })
+      if (publicClient) {
+        await publicClient.waitForTransactionReceipt({ hash })
+      }
       setTxHash(hash)
       return { success: true, txHash: hash }
     } catch (err: unknown) {
