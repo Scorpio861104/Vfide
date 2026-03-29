@@ -73,7 +73,7 @@ export function useVfidePrice() {
   const vfidePriceCachePolicy = getCachePolicy('reactQuery:vfide-price');
 
   const { data, isLoading, error, isStale } = useQuery({
-    queryKey: vfidePriceCachePolicy.queryKey,
+    queryKey: vfidePriceCachePolicy.queryKey ?? ['vfide-price'],
     queryFn: fetchVfidePrice,
     staleTime: vfidePriceCachePolicy.ttlMs,
     gcTime: vfidePriceCachePolicy.gcMs,

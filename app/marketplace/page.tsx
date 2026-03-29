@@ -316,7 +316,7 @@ export default function MarketplacePage() {
     fetch('/api/platform/categories')
       .then(r => r.ok ? r.json() : null)
       .then(data => { if (data?.categories) setPlatformCategories(data.categories); })
-      .catch(() => {});
+      .catch((err: unknown) => { console.warn('[marketplace] categories fetch failed:', err); });
   }, []);
 
   // Load wishlist state

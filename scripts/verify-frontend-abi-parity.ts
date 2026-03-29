@@ -47,7 +47,7 @@ function readJson(filePath: string): unknown {
 
 function getExportedAbiFiles(indexContents: string): string[] {
   const matches = [...indexContents.matchAll(/import\s+\w+\s+from\s+'\.\/([^']+\.json)'/g)];
-  const files = matches.map((m) => m[1]);
+  const files = matches.map((m) => m[1]).filter((x): x is string => x !== undefined);
   return [...new Set(files)].sort();
 }
 
@@ -67,7 +67,7 @@ function findArtifactByBasename(basename: string): string | null {
   }
 
   walk(artifactsRoot);
-  if (hit.length === 1) return hit[0];
+  if (hit.length === 1) return hit[0] ?? null;
   if (hit.length === 0) return null;
   throw new Error(`Ambiguous artifact basename ${basename}: ${hit.map((p) => path.relative(root, p)).join(', ')}`);
 }
@@ -122,7 +122,7 @@ function main(): void {
       mismatches.push({
         file: abiFile,
         missingCount: missingFragments.length,
-        firstMissing: missingFragments[0],
+        firstMissing: missingFragments[0] ?? '',
       });
     }
   }

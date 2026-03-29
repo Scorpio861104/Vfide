@@ -169,7 +169,7 @@ export async function dispatchWebhook(
     );
 
     // Don't await — let them complete in background
-    Promise.allSettled(deliveries).catch(() => {});
+    void Promise.allSettled(deliveries);
   } catch (err) {
     logger.error('[Webhook] dispatch error:', err);
   }

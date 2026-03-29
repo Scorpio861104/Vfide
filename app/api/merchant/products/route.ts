@@ -78,7 +78,9 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({ error: 'Product not found' }, { status: 404 });
       }
       // Increment view count (fire-and-forget)
-      query('UPDATE merchant_products SET view_count = view_count + 1 WHERE id = $1', [productId]).catch(() => {});
+      query('UPDATE merchant_products SET view_count = view_count + 1 WHERE id = $1', [productId]).catch((err: unknown) => {
+        logger.warn('[products] view_count increment failed:', err);
+      });
 
       // Fetch related products (same category or merchant, exclude self)
       const product = result.rows[0] as Record<string, unknown>;

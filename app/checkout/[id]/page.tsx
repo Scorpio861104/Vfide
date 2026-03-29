@@ -95,7 +95,7 @@ export default function CheckoutPage() {
               method: 'PATCH',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ action: 'view' }),
-            }).catch(() => {});
+            }).catch((err: unknown) => { console.warn('[checkout] view tracking failed:', err); });
           }
         }
       } catch {

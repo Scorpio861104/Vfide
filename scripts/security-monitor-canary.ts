@@ -1,3 +1,5 @@
+export {};
+
 type CanaryProbe = {
   id: string;
   method: 'GET';

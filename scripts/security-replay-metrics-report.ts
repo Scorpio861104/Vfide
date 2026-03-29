@@ -1,3 +1,5 @@
+export {};
+
 type ReplayMetricsPayload = {
   success: boolean;
   accessMode?: 'machine-token' | 'user-auth';
