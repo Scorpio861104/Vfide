@@ -154,7 +154,7 @@
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1004.0",
-    "@datadog/browser-rum": "^6.28.1",
+    "@datadog/browser-rum": "^6.32.0",
     "@datadog/browser-rum-react": "^6.31.0",
     "@fontsource/inter": "^5.2.8",
     "@fontsource/space-grotesk": "^5.2.10",
