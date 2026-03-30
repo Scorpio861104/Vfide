@@ -308,6 +308,7 @@ contract PanicGuard {
     // policy: default min/max quarantine duration (can be overridden by DAO later)
     uint64 public minDuration = 1 hours;
     uint64 public maxDuration = 30 days;
+    uint64 public constant ABSOLUTE_MAX_QUARANTINE = 90 days;
 
     modifier onlyDAO() { _checkDAOPG(); _; }
     function _checkDAOPG() internal view { if (msg.sender != dao) revert SEC_NotDAO(); }
@@ -345,6 +346,7 @@ contract PanicGuard {
 
     function setPolicy(uint64 _minDuration, uint64 _maxDuration) external onlyDAO {
         if (_minDuration == 0 || _maxDuration < _minDuration) revert SEC_ExpiryTooShort();
+        require(_maxDuration <= ABSOLUTE_MAX_QUARANTINE, "SEC: max duration exceeded");
         minDuration = _minDuration;
         maxDuration = _maxDuration;
         emit PolicySet(_minDuration, _maxDuration);

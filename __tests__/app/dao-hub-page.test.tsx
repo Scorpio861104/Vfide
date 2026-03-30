@@ -26,7 +26,7 @@ const renderDaoHubPage = () => {
 jest.mock('wagmi', () => ({
   useAccount: () => mockAccountState,
   useReadContract: ({ functionName }: { functionName: string }) => {
-    if (functionName === 'isCouncilMember') {
+    if (functionName === 'isCouncil') {
       return { data: mockReadResponses.isCouncilMember };
     }
     if (functionName === 'canServeNextTerm') {

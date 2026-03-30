@@ -19,7 +19,7 @@ const renderVestingPage = () => {
 jest.mock('wagmi', () => ({
   useAccount: () => mockAccount,
   useReadContract: ({ functionName }: { functionName: string }) => {
-    if (functionName === 'beneficiary') {
+    if (functionName === 'BENEFICIARY') {
       return { data: '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' };
     }
     if (functionName === 'claimsPaused') {

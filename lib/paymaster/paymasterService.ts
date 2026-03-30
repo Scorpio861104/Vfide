@@ -200,7 +200,7 @@ export class PaymasterService {
     }
 
     void request;
-    return { sponsored: false, reason: 'Alchemy sponsorship not implemented' };
+    return { sponsored: false, reason: 'Alchemy Gas Manager not configured for this deployment' };
   }
 
   private async checkCoinbaseSponsorship(
@@ -213,7 +213,7 @@ export class PaymasterService {
     ];
 
     void request;
-    return { sponsored: false, reason: 'Coinbase sponsorship not implemented' };
+    return { sponsored: false, reason: 'Coinbase paymaster not configured for this deployment' };
   }
 
   private async checkZkSyncSponsorship(
@@ -224,7 +224,7 @@ export class PaymasterService {
       return { sponsored: false, reason: 'Not a zkSync chain' };
     }
 
-    return { sponsored: false, reason: 'zkSync sponsorship not implemented' };
+    return { sponsored: false, reason: 'zkSync native paymaster not configured for this deployment' };
   }
 }
 

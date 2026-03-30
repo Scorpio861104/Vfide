@@ -143,17 +143,27 @@ class VFIDESDK {
       throw new Error('Container not found');
     }
 
-    // Create button element
+    // Create button element with explicit DOM nodes to avoid HTML parsing sinks.
     const button = document.createElement('button');
     button.className = 'vfide-payment-button';
-    button.innerHTML = `
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="M12 2L2 7l10 5 10-5-10-5z"/>
-        <path d="M2 17l10 5 10-5"/>
-        <path d="M2 12l10 5 10-5"/>
-      </svg>
-      <span>Pay ${request.amount} ${request.token || 'ETH'}</span>
-    `;
+    const svgNs = 'http://www.w3.org/2000/svg';
+    const icon = document.createElementNS(svgNs, 'svg');
+    icon.setAttribute('width', '20');
+    icon.setAttribute('height', '20');
+    icon.setAttribute('viewBox', '0 0 24 24');
+    icon.setAttribute('fill', 'none');
+    icon.setAttribute('stroke', 'currentColor');
+    icon.setAttribute('stroke-width', '2');
+    ['M12 2L2 7l10 5 10-5-10-5z', 'M2 17l10 5 10-5', 'M2 12l10 5 10-5'].forEach((d) => {
+      const path = document.createElementNS(svgNs, 'path');
+      path.setAttribute('d', d);
+      icon.appendChild(path);
+    });
+    button.appendChild(icon);
+
+    const label = document.createElement('span');
+    label.textContent = `Pay ${request.amount} ${request.token || 'ETH'}`;
+    button.appendChild(label);
 
     this.applyStyles(button, {
       display: 'inline-flex',
@@ -207,30 +217,48 @@ class VFIDESDK {
 
     const widget = document.createElement('div');
     widget.className = 'vfide-donation-widget';
-    
+
     const amounts = donation.suggestedAmounts || ['1', '5', '10', '25'];
-    
-    widget.innerHTML = `
-      <div class="vfide-donation-header">
-        <h3>${donation.message || 'Support us'}</h3>
-      </div>
-      <div class="vfide-donation-amounts">
-        ${amounts.map((amt) => `
-          <button class="vfide-amount-btn" data-amount="${amt}">
-            ${amt} ${donation.token || 'ETH'}
-          </button>
-        `).join('')}
-        ${donation.allowCustom !== false ? `
-          <input type="number" class="vfide-custom-amount" placeholder="Custom" min="0" step="0.01" />
-        ` : ''}
-      </div>
-      <button class="vfide-donate-btn">Donate</button>
-      ${options.showBranding !== false ? `
-        <div class="vfide-branding">
-          Powered by VFIDE
-        </div>
-      ` : ''}
-    `;
+    const tokenLabel = donation.token || 'ETH';
+
+    const headerWrap = document.createElement('div');
+    headerWrap.className = 'vfide-donation-header';
+    const headerTitle = document.createElement('h3');
+    headerTitle.textContent = donation.message || 'Support us';
+    headerWrap.appendChild(headerTitle);
+    widget.appendChild(headerWrap);
+
+    const amountWrap = document.createElement('div');
+    amountWrap.className = 'vfide-donation-amounts';
+    amounts.forEach((amt) => {
+      const amountButton = document.createElement('button');
+      amountButton.className = 'vfide-amount-btn';
+      amountButton.dataset.amount = amt;
+      amountButton.textContent = `${amt} ${tokenLabel}`;
+      amountWrap.appendChild(amountButton);
+    });
+    if (donation.allowCustom !== false) {
+      const custom = document.createElement('input');
+      custom.type = 'number';
+      custom.className = 'vfide-custom-amount';
+      custom.placeholder = 'Custom';
+      custom.min = '0';
+      custom.step = '0.01';
+      amountWrap.appendChild(custom);
+    }
+    widget.appendChild(amountWrap);
+
+    const donateButton = document.createElement('button');
+    donateButton.className = 'vfide-donate-btn';
+    donateButton.textContent = 'Donate';
+    widget.appendChild(donateButton);
+
+    if (options.showBranding !== false) {
+      const branding = document.createElement('div');
+      branding.className = 'vfide-branding';
+      branding.textContent = 'Powered by VFIDE';
+      widget.appendChild(branding);
+    }
 
     this.applyStyles(widget, {
       display: 'flex',
@@ -377,34 +405,57 @@ class VFIDESDK {
 
     const widget = document.createElement('div');
     widget.className = 'vfide-subscription-widget';
-    
+
     const intervalText = {
       daily: 'per day',
       weekly: 'per week',
       monthly: 'per month',
     }[subscription.interval];
 
-    widget.innerHTML = `
-      <div class="vfide-sub-header">
-        <h3>${subscription.description || 'Subscribe'}</h3>
-        <div class="vfide-sub-price">
-          <span class="vfide-amount">${subscription.amount}</span>
-          <span class="vfide-token">${subscription.token || 'ETH'}</span>
-          <span class="vfide-interval">${intervalText}</span>
-        </div>
-      </div>
-      ${subscription.trialDays ? `
-        <div class="vfide-trial">
-          ${subscription.trialDays}-day free trial
-        </div>
-      ` : ''}
-      <button class="vfide-subscribe-btn">
-        Subscribe with VFIDE
-      </button>
-      <p class="vfide-sub-terms">
-        Payments stream continuously. Cancel anytime.
-      </p>
-    `;
+    const subHeader = document.createElement('div');
+    subHeader.className = 'vfide-sub-header';
+
+    const subTitle = document.createElement('h3');
+    subTitle.textContent = subscription.description || 'Subscribe';
+    subHeader.appendChild(subTitle);
+
+    const subPrice = document.createElement('div');
+    subPrice.className = 'vfide-sub-price';
+
+    const amountSpan = document.createElement('span');
+    amountSpan.className = 'vfide-amount';
+    amountSpan.textContent = subscription.amount;
+    subPrice.appendChild(amountSpan);
+
+    const tokenSpan = document.createElement('span');
+    tokenSpan.className = 'vfide-token';
+    tokenSpan.textContent = subscription.token || 'ETH';
+    subPrice.appendChild(tokenSpan);
+
+    const intervalSpan = document.createElement('span');
+    intervalSpan.className = 'vfide-interval';
+    intervalSpan.textContent = intervalText;
+    subPrice.appendChild(intervalSpan);
+
+    subHeader.appendChild(subPrice);
+    widget.appendChild(subHeader);
+
+    if (subscription.trialDays) {
+      const trial = document.createElement('div');
+      trial.className = 'vfide-trial';
+      trial.textContent = `${subscription.trialDays}-day free trial`;
+      widget.appendChild(trial);
+    }
+
+    const subscribeButton = document.createElement('button');
+    subscribeButton.className = 'vfide-subscribe-btn';
+    subscribeButton.textContent = 'Subscribe with VFIDE';
+    widget.appendChild(subscribeButton);
+
+    const termsText = document.createElement('p');
+    termsText.className = 'vfide-sub-terms';
+    termsText.textContent = 'Payments stream continuously. Cancel anytime.';
+    widget.appendChild(termsText);
 
     this.applyStyles(widget, {
       display: 'flex',

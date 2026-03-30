@@ -83,10 +83,10 @@ const CHAINS: Omit<ChainBalance, 'balance' | 'balanceUSD'>[] = [
   },
 ];
 
-// Approximate prices (in production, fetch from price API)
-const APPROX_PRICES: Record<string, number> = {
-  ETH: 2500,
-  MATIC: 0.80,
+// Fallback prices when price API is unavailable (updated manually)
+const FALLBACK_PRICES: Record<string, number> = {
+  ETH: 0,
+  MATIC: 0,
 };
 
 interface MultiChainBalanceProps {
@@ -124,7 +124,7 @@ export function MultiChainBalance({ compact = false }: MultiChainBalanceProps) {
           const data = await response.json();
           const balanceWei = parseInt(data.result || '0', 16);
           const balanceEth = balanceWei / 1e18;
-          const price = APPROX_PRICES[chain.symbol] || 0;
+          const price = FALLBACK_PRICES[chain.symbol] || 0;
           const balanceUSD = balanceEth * price;
           
           return {

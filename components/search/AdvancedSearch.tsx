@@ -86,161 +86,6 @@ type DateRange = 'all' | 'today' | 'week' | 'month' | 'year' | 'custom';
 type SortBy = 'relevance' | 'date' | 'score' | 'popular';
 
 // ============================================================================
-// Mock Data Generators
-// ============================================================================
-
-const generateMockSearchResult = (id: string, type: ContentType): SearchResult => {
-  const titles: Record<ContentType, string[]> = {
-    proposal: ['Increase Staking Rewards', 'Update Governance Rules', 'Community Fund Allocation'],
-    user: ['Alice Developer', 'Bob Merchant', 'Carol Validator'],
-    transaction: ['Payment to Merchant #123', 'Staking Reward Claimed', 'Token Transfer'],
-    activity: ['Voted on Proposal #42', 'Joined Council Election', 'Earned Achievement Badge'],
-    post: ['Introducing New Feature', 'Community Update', 'Technical Discussion'],
-    comment: ['Great proposal!', 'I agree with this approach', 'Some concerns about implementation'],
-    all: ['Mixed Content Item']
-  };
-
-  const categories = ['Governance', 'Finance', 'Technical', 'Community', 'General'];
-  const statuses: SearchStatus[] = ['active', 'completed', 'pending', 'archived'];
-
-  return {
-    id,
-    type,
-    title: (titles[type] ?? titles.all)[Math.floor(Math.random() * (titles[type] ?? titles.all).length)] ?? 'Mixed Content Item',
-    description: `This is a detailed description of the ${type} item. It contains relevant information that matches your search query with highlighted terms.`,
-    author: {
-      id: `user${id}`,
-      username: `user${id}`,
-      displayName: `User ${id}`,
-      avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=user${id}`
-    },
-    createdAt: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000),
-    score: Math.floor(Math.random() * 100),
-    category: categories[Math.floor(Math.random() * categories.length)] ?? 'General',
-    status: statuses[Math.floor(Math.random() * statuses.length)] ?? 'active',
-    highlights: ['search term', 'matched phrase', 'relevant keyword'],
-    tags: ['tag1', 'tag2', 'tag3'].slice(0, Math.floor(Math.random() * 3) + 1),
-    attachments: Math.random() > 0.5 ? Math.floor(Math.random() * 5) : 0
-  };
-};
-
-const mockSearchHistory = (): SearchHistoryItem[] => [
-  {
-    id: 'h1',
-    query: 'governance proposal',
-    filters: {
-      contentType: ['proposal'],
-      dateRange: 'month',
-      category: ['Governance'],
-      users: [],
-      status: ['active']
-    },
-    timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000),
-    resultsCount: 15
-  },
-  {
-    id: 'h2',
-    query: 'governance vote',
-    filters: {
-      contentType: ['transaction', 'proposal'],
-      dateRange: 'week',
-      category: ['Finance'],
-      users: [],
-      status: ['all']
-    },
-    timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000),
-    resultsCount: 42
-  },
-  {
-    id: 'h3',
-    query: 'community fund',
-    filters: {
-      contentType: ['all'],
-      dateRange: 'all',
-      category: [],
-      users: [],
-      status: ['active']
-    },
-    timestamp: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
-    resultsCount: 28
-  },
-  {
-    id: 'h4',
-    query: 'staking rewards',
-    filters: {
-      contentType: ['transaction'],
-      dateRange: 'week',
-      category: ['Finance'],
-      users: [],
-      status: ['all']
-    },
-    timestamp: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
-    resultsCount: 9
-  }
-];
-
-const mockSavedSearches = (): SavedSearch[] => [
-  {
-    id: 's1',
-    name: 'Active Proposals',
-    query: 'proposal',
-    filters: {
-      contentType: ['proposal'],
-      dateRange: 'all',
-      category: ['Governance'],
-      users: [],
-      status: ['active']
-    },
-    createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
-    lastUsed: new Date(Date.now() - 12 * 60 * 60 * 1000),
-    useCount: 12
-  },
-  {
-    id: 's2',
-    name: 'My Transactions',
-    query: 'transaction',
-    filters: {
-      contentType: ['transaction'],
-      dateRange: 'month',
-      category: [],
-      users: ['currentUser'],
-      status: ['all']
-    },
-    createdAt: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000),
-    lastUsed: new Date(Date.now() - 24 * 60 * 60 * 1000),
-    useCount: 34
-  },
-  {
-    id: 's3',
-    name: 'High Score Posts',
-    query: '',
-    filters: {
-      contentType: ['post'],
-      dateRange: 'month',
-      category: [],
-      users: [],
-      status: ['all'],
-      minScore: 80
-    },
-    createdAt: new Date(Date.now() - 21 * 24 * 60 * 60 * 1000),
-    useCount: 8
-  }
-];
-
-const mockSearchResults = (): SearchResult[] => {
-  return [
-    generateMockSearchResult('r1', 'proposal'),
-    generateMockSearchResult('r2', 'user'),
-    generateMockSearchResult('r3', 'transaction'),
-    generateMockSearchResult('r4', 'activity'),
-    generateMockSearchResult('r5', 'post'),
-    generateMockSearchResult('r6', 'proposal'),
-    generateMockSearchResult('r7', 'comment'),
-    generateMockSearchResult('r8', 'user')
-  ];
-};
-
-// ============================================================================
 // Helper Functions
 // ============================================================================
 
@@ -491,8 +336,8 @@ export default function AdvancedSearch({
   });
   const [showFilters, setShowFilters] = useState(false);
   const [sortBy, setSortBy] = useState<SortBy>('relevance');
-  const [searchHistory, setSearchHistory] = useState<SearchHistoryItem[]>(mockSearchHistory());
-  const [savedSearches, setSavedSearches] = useState<SavedSearch[]>(mockSavedSearches());
+  const [searchHistory, setSearchHistory] = useState<SearchHistoryItem[]>([]);
+  const [savedSearches, setSavedSearches] = useState<SavedSearch[]>([]);
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
@@ -509,22 +354,20 @@ export default function AdvancedSearch({
     setShowSaved(false);
     setShowAutocomplete(false);
 
-    // Simulate API call
+    // Search API integration pending
     setTimeout(() => {
-      const results = mockSearchResults();
-      setSearchResults(results);
+      setSearchResults([]);
       setIsSearching(false);
 
-      // Add to history
       const historyItem: SearchHistoryItem = {
         id: `h${Date.now()}`,
         query: searchQuery,
         filters: { ...filters },
         timestamp: new Date(),
-        resultsCount: results.length
+        resultsCount: 0
       };
       setSearchHistory(prev => [historyItem, ...prev.slice(0, 19)]);
-    }, 800);
+    }, 300);
   }, [searchQuery, filters]);
 
   const handleClearSearch = useCallback(() => {

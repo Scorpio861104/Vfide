@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
   const userAgent = request.headers.get('user-agent') || 'unknown';
 
   try {
-    const challenge = createSiweChallenge({
+    const challenge = await createSiweChallenge({
       address: rawAddress,
       domain,
       chainId,

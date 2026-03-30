@@ -7,10 +7,11 @@
 import { useReadContract, useWriteContract, useAccount } from 'wagmi';
 import { useState, useEffect } from 'react';
 import { parseEther, formatEther } from 'viem';
-import { EcosystemVaultABI } from '@/lib/abis';
+import { EcosystemVaultABI, EcosystemVaultViewABI } from '@/lib/abis';
 
 // Contract address (update with deployed address)
 const ECOSYSTEM_VAULT_ADDRESS = (process.env.NEXT_PUBLIC_ECOSYSTEM_VAULT_ADDRESS || '0x0000000000000000000000000000000000000000') as `0x${string}`;
+const ECOSYSTEM_VAULT_VIEW_ADDRESS = (process.env.NEXT_PUBLIC_ECOSYSTEM_VAULT_VIEW_ADDRESS || process.env.NEXT_PUBLIC_ECOSYSTEM_VAULT_ADDRESS || '0x0000000000000000000000000000000000000000') as `0x${string}`;
 
 export interface HeadhunterStats {
   currentYearPoints: number;
@@ -59,8 +60,8 @@ export function useHeadhunterStats(): HeadhunterStats {
   const { address } = useAccount();
   
   const { data, isLoading, error } = useReadContract({
-    address: ECOSYSTEM_VAULT_ADDRESS,
-    abi: EcosystemVaultABI,
+    address: ECOSYSTEM_VAULT_VIEW_ADDRESS,
+    abi: EcosystemVaultViewABI,
     functionName: 'getHeadhunterStats',
     args: address ? [address] : undefined,
     query: {
@@ -103,8 +104,8 @@ export function useHeadhunterReward(year: bigint, quarter: bigint): HeadhunterRe
   const { address } = useAccount();
 
   const { data, isLoading, error } = useReadContract({
-    address: ECOSYSTEM_VAULT_ADDRESS,
-    abi: EcosystemVaultABI,
+    address: ECOSYSTEM_VAULT_VIEW_ADDRESS,
+    abi: EcosystemVaultViewABI,
     functionName: 'previewHeadhunterReward',
     args: address && year && quarter ? [year, quarter, address] : undefined,
     query: {
@@ -146,8 +147,8 @@ export function useHeadhunterReward(year: bigint, quarter: bigint): HeadhunterRe
  */
 export function usePendingReferral(referred: `0x${string}` | undefined): PendingReferral {
   const { data, isLoading, error } = useReadContract({
-    address: ECOSYSTEM_VAULT_ADDRESS,
-    abi: EcosystemVaultABI,
+    address: ECOSYSTEM_VAULT_VIEW_ADDRESS,
+    abi: EcosystemVaultViewABI,
     functionName: 'getPendingReferral',
     args: referred ? [referred] : undefined,
     query: {
@@ -186,8 +187,8 @@ export function useReferralLevelStatus(year?: bigint): ReferralLevelStatus {
   const selectedYear = year ?? 1n;
 
   const { data, isLoading, error } = useReadContract({
-    address: ECOSYSTEM_VAULT_ADDRESS,
-    abi: EcosystemVaultABI,
+    address: ECOSYSTEM_VAULT_VIEW_ADDRESS,
+    abi: EcosystemVaultViewABI,
     functionName: 'getReferralLevelStatus',
     args: address ? [address, selectedYear] : undefined,
     query: {

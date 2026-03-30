@@ -7,6 +7,10 @@ import "@openzeppelin/contracts/utils/Pausable.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
+interface IVFIDEBurnable is IERC20 {
+    function burn(uint256 amount) external;
+}
+
 /// @title FeeDistributor — Sustainable Fee Revenue Splitter
 /// @notice Receives burn fee revenue from VFIDEToken transfers and splits
 ///         it across 5 protocol channels. Everything is fee-funded.
@@ -27,6 +31,7 @@ contract FeeDistributor is AccessControl, ReentrancyGuard, Pausable {
     uint256 public constant MIN_BURN_BPS = 2000;    // Burn floor: 20%
     uint256 public constant MAX_SINGLE_BPS = 5000;   // No channel > 50%
     uint256 public constant SPLIT_CHANGE_DELAY = 72 hours;
+    uint256 public constant DESTINATION_CHANGE_DELAY = 48 hours;
 
     struct FeeSplit {
         uint256 burnBps;
@@ -36,7 +41,7 @@ contract FeeDistributor is AccessControl, ReentrancyGuard, Pausable {
         uint256 headhunterPoolBps;
     }
 
-    IERC20 public immutable vfideToken;
+    IVFIDEBurnable public immutable vfideToken;
 
     // Destinations
     address public burnAddress;
@@ -66,11 +71,22 @@ contract FeeDistributor is AccessControl, ReentrancyGuard, Pausable {
     }
     PendingSplitChange public pendingSplitChange;
 
+    struct PendingDestinationChange {
+        bytes32 nameHash;
+        address addr;
+        uint256 effectiveTime;
+        bool pending;
+    }
+    PendingDestinationChange public pendingDestinationChange;
+
     event FeeReceived(uint256 amount);
     event FeeDistributed(uint256 total, uint256 burned, uint256 sanctum, uint256 dao, uint256 merchants, uint256 headhunters);
     event SplitChangeProposed(uint256 burn, uint256 sanctum, uint256 dao, uint256 merchants, uint256 headhunters, uint256 effectiveTime);
     event SplitChangeExecuted();
     event SplitChangeCancelled();
+    event DestinationChangeProposed(bytes32 indexed nameHash, address addr, uint256 effectiveTime);
+    event DestinationChangeExecuted(bytes32 indexed nameHash, address addr);
+    event DestinationChangeCancelled(bytes32 indexed nameHash);
     event DestinationUpdated(string name, address addr);
 
     error ZeroAddress();
@@ -94,7 +110,7 @@ contract FeeDistributor is AccessControl, ReentrancyGuard, Pausable {
         if (_sanctum == address(0) || _daoPayroll == address(0)) revert ZeroAddress();
         if (_merchantPool == address(0) || _headhunterPool == address(0)) revert ZeroAddress();
 
-        vfideToken = IERC20(_token);
+        vfideToken = IVFIDEBurnable(_token);
         burnAddress = _burn;
         sanctumFund = _sanctum;
         daoPayrollPool = _daoPayroll;
@@ -132,11 +148,11 @@ contract FeeDistributor is AccessControl, ReentrancyGuard, Pausable {
         uint256 toMerchants = (balance * feeSplit.merchantPoolBps) / MAX_BPS;
         uint256 toHeadhunters = balance - toBurn - toSanctum - toDAO - toMerchants;
 
-        if (toBurn > 0) { vfideToken.safeTransfer(burnAddress, toBurn); totalBurned += toBurn; }
-        if (toSanctum > 0) { vfideToken.safeTransfer(sanctumFund, toSanctum); totalToSanctum += toSanctum; }
-        if (toDAO > 0) { vfideToken.safeTransfer(daoPayrollPool, toDAO); totalToDAO += toDAO; }
-        if (toMerchants > 0) { vfideToken.safeTransfer(merchantPool, toMerchants); totalToMerchants += toMerchants; }
-        if (toHeadhunters > 0) { vfideToken.safeTransfer(headhunterPool, toHeadhunters); totalToHeadhunters += toHeadhunters; }
+        if (toBurn > 0) { vfideToken.burn(toBurn); totalBurned += toBurn; }
+        if (toSanctum > 0) { IERC20(address(vfideToken)).safeTransfer(sanctumFund, toSanctum); totalToSanctum += toSanctum; }
+        if (toDAO > 0) { IERC20(address(vfideToken)).safeTransfer(daoPayrollPool, toDAO); totalToDAO += toDAO; }
+        if (toMerchants > 0) { IERC20(address(vfideToken)).safeTransfer(merchantPool, toMerchants); totalToMerchants += toMerchants; }
+        if (toHeadhunters > 0) { IERC20(address(vfideToken)).safeTransfer(headhunterPool, toHeadhunters); totalToHeadhunters += toHeadhunters; }
 
         totalDistributed += balance;
         emit FeeDistributed(balance, toBurn, toSanctum, toDAO, toMerchants, toHeadhunters);
@@ -174,13 +190,35 @@ contract FeeDistributor is AccessControl, ReentrancyGuard, Pausable {
     function setDestination(string calldata name, address addr) external onlyRole(ADMIN_ROLE) {
         if (addr == address(0)) revert ZeroAddress();
         bytes32 h = keccak256(bytes(name));
-        if (h == keccak256("burn")) burnAddress = addr;
-        else if (h == keccak256("sanctum")) sanctumFund = addr;
-        else if (h == keccak256("dao")) daoPayrollPool = addr;
-        else if (h == keccak256("merchants")) merchantPool = addr;
-        else if (h == keccak256("headhunters")) headhunterPool = addr;
-        else revert("Unknown destination");
+        _requireKnownDestination(h);
+        pendingDestinationChange = PendingDestinationChange({
+            nameHash: h,
+            addr: addr,
+            effectiveTime: block.timestamp + DESTINATION_CHANGE_DELAY,
+            pending: true
+        });
+        emit DestinationChangeProposed(h, addr, block.timestamp + DESTINATION_CHANGE_DELAY);
+    }
+
+    function executeDestinationChange() external onlyRole(ADMIN_ROLE) {
+        if (!pendingDestinationChange.pending) revert NoSplitChangePending();
+        if (block.timestamp < pendingDestinationChange.effectiveTime) revert SplitChangeNotReady();
+
+        address addr = pendingDestinationChange.addr;
+        bytes32 h = pendingDestinationChange.nameHash;
+        string memory name = _applyDestination(h, addr);
+
+        delete pendingDestinationChange;
+
         emit DestinationUpdated(name, addr);
+        emit DestinationChangeExecuted(h, addr);
+    }
+
+    function cancelDestinationChange() external onlyRole(ADMIN_ROLE) {
+        if (!pendingDestinationChange.pending) revert NoSplitChangePending();
+        bytes32 h = pendingDestinationChange.nameHash;
+        delete pendingDestinationChange;
+        emit DestinationChangeCancelled(h);
     }
 
     function setMinDistributionAmount(uint256 _min) external onlyRole(ADMIN_ROLE) {
@@ -203,5 +241,39 @@ contract FeeDistributor is AccessControl, ReentrancyGuard, Pausable {
 
     function getCurrentSplit() external view returns (uint256, uint256, uint256, uint256, uint256) {
         return (feeSplit.burnBps, feeSplit.sanctumBps, feeSplit.daoPayrollBps, feeSplit.merchantPoolBps, feeSplit.headhunterPoolBps);
+    }
+
+    function _requireKnownDestination(bytes32 h) private pure {
+        if (
+            h != keccak256("burn") &&
+            h != keccak256("sanctum") &&
+            h != keccak256("dao") &&
+            h != keccak256("merchants") &&
+            h != keccak256("headhunters")
+        ) revert("Unknown destination");
+    }
+
+    function _applyDestination(bytes32 h, address addr) private returns (string memory name) {
+        if (h == keccak256("burn")) {
+            burnAddress = addr;
+            return "burn";
+        }
+        if (h == keccak256("sanctum")) {
+            sanctumFund = addr;
+            return "sanctum";
+        }
+        if (h == keccak256("dao")) {
+            daoPayrollPool = addr;
+            return "dao";
+        }
+        if (h == keccak256("merchants")) {
+            merchantPool = addr;
+            return "merchants";
+        }
+        if (h == keccak256("headhunters")) {
+            headhunterPool = addr;
+            return "headhunters";
+        }
+        revert("Unknown destination");
     }
 }

@@ -160,166 +160,28 @@ interface GovernanceStats {
   delegatedVotes: number;
 }
 
-// ==================== MOCK DATA ====================
+// ==================== INITIAL STATE (replace with on-chain reads when DAO delegation is enabled) ====================
 
-function generateMockProposals(): Proposal[] {
-  const now = Date.now();
-  return [
-    {
-      id: 'prop-001',
-      title: 'Increase ProofScore Emissions by 10%',
-      description: 'Proposal to increase the monthly ProofScore token emissions from 100M to 110M tokens to incentivize greater network participation.',
-      proposer: '0x1234...5678',
-      startDate: now - 3 * 24 * 60 * 60 * 1000,
-      endDate: now + 2 * 24 * 60 * 60 * 1000,
-      status: 'active',
-      forVotes: 850000,
-      againstVotes: 120000,
-      abstainVotes: 30000,
-      totalVotes: 1000000,
-      votesRequired: 600000,
-      category: 'parameter',
-      details: 'This proposal aims to boost network activity by increasing token emissions. The increase will be gradual over 6 months.',
-      actions: [
-        {
-          target: '0xProofScoreToken',
-          functionSig: 'setEmissionRate(uint256)',
-          calldataParams: ['110000000000000000000000000'],
-          eta: now + 3 * 24 * 60 * 60 * 1000,
-        },
-      ],
-    },
-    {
-      id: 'prop-002',
-      title: 'Add Uniswap V4 Integration',
-      description: 'Proposal to add support for Uniswap V4 in the VFIDE trading interface for improved liquidity management.',
-      proposer: '0x9876...5432',
-      startDate: now - 7 * 24 * 60 * 60 * 1000,
-      endDate: now - 1 * 24 * 60 * 60 * 1000,
-      status: 'passed',
-      forVotes: 920000,
-      againstVotes: 45000,
-      abstainVotes: 35000,
-      totalVotes: 1000000,
-      votesRequired: 600000,
-      category: 'technical',
-      details: 'Integration with Uniswap V4 will enable advanced liquidity pool management and improved trading efficiency.',
-      actions: [
-        {
-          target: '0xVFIDESwapRouter',
-          functionSig: 'addProtocol(address,string)',
-          calldataParams: ['0xUniswapV4Router', 'uniswapv4'],
-          eta: now + 5 * 24 * 60 * 60 * 1000,
-        },
-      ],
-    },
-    {
-      id: 'prop-003',
-      title: 'Treasury Allocation: Community Grants',
-      description: 'Allocate 5% of treasury funds to community developer grants and ecosystem development programs.',
-      proposer: '0xabcd...ef01',
-      startDate: now + 1 * 24 * 60 * 60 * 1000,
-      endDate: now + 8 * 24 * 60 * 60 * 1000,
-      status: 'active',
-      forVotes: 650000,
-      againstVotes: 200000,
-      abstainVotes: 150000,
-      totalVotes: 1000000,
-      votesRequired: 600000,
-      category: 'treasury',
-      details: 'This initiative will distribute grants to qualified community members to accelerate ecosystem development.',
-      actions: [
-        {
-          target: '0xDAOTreasury',
-          functionSig: 'allocateFunds(uint256,address)',
-          calldataParams: ['5000000000000000000000000', '0xGrantPool'],
-          eta: now + 9 * 24 * 60 * 60 * 1000,
-        },
-      ],
-    },
-    {
-      id: 'prop-004',
-      title: 'Governance Framework Update',
-      description: 'Update governance framework to include quadratic voting for better representation of minority stakeholders.',
-      proposer: '0xfedc...ba98',
-      startDate: now - 14 * 24 * 60 * 60 * 1000,
-      endDate: now - 8 * 24 * 60 * 60 * 1000,
-      status: 'failed',
-      forVotes: 400000,
-      againstVotes: 550000,
-      abstainVotes: 50000,
-      totalVotes: 1000000,
-      votesRequired: 600000,
-      category: 'governance',
-      details: 'Implementation of quadratic voting would provide fairer representation but requires careful mechanism design.',
-      actions: [],
-    },
-  ];
+function getInitialProposals(): Proposal[] {
+  return [];
 }
 
-function generateMockVotes(): Vote[] {
-  const votes: Vote[] = [];
-  const proposals = generateMockProposals();
-  const addresses = ['0x1111...1111', '0x2222...2222', '0x3333...3333', '0x4444...4444', '0x5555...5555'];
-  const directions: ('for' | 'against' | 'abstain')[] = ['for', 'against', 'abstain'];
-  
-  proposals.forEach((prop) => {
-    for (let i = 0; i < 15; i++) {
-      votes.push({
-        id: `vote-${prop.id}-${i}`,
-        proposalId: prop.id,
-        voter: addresses[i % addresses.length]!,
-        direction: directions[i % directions.length]!,
-        weight: Math.floor(Math.random() * 100000) + 10000,
-        timestamp: prop.startDate + Math.random() * (prop.endDate - prop.startDate),
-      });
-    }
-  });
-  
-  return votes;
+function getInitialVotes(): Vote[] {
+  return [];
 }
 
-function generateMockDelegations(): Delegation[] {
-  return [
-    {
-      delegator: '0xuser123',
-      delegatee: '0xdeleg001',
-      votes: 150000,
-      timestamp: Date.now() - 30 * 24 * 60 * 60 * 1000,
-      active: true,
-    },
-    {
-      delegator: '0xuser456',
-      delegatee: '0xdeleg002',
-      votes: 275000,
-      timestamp: Date.now() - 60 * 24 * 60 * 60 * 1000,
-      active: true,
-    },
-    {
-      delegator: '0xuser789',
-      delegatee: '0xdeleg001',
-      votes: 95000,
-      timestamp: Date.now() - 15 * 24 * 60 * 60 * 1000,
-      active: true,
-    },
-    {
-      delegator: '0xuserabc',
-      delegatee: '0xdeleg003',
-      votes: 180000,
-      timestamp: Date.now() - 90 * 24 * 60 * 60 * 1000,
-      active: false,
-    },
-  ];
+function getInitialDelegations(): Delegation[] {
+  return [];
 }
 
-function generateGovernanceStats(): GovernanceStats {
+function getInitialGovernanceStats(): GovernanceStats {
   return {
-    totalProposals: 47,
-    activeProposals: 2,
-    participationRate: 68.5,
-    averageTurnout: 75.2,
-    totalVotesCast: 15234000,
-    delegatedVotes: 5423000,
+    totalProposals: 0,
+    activeProposals: 0,
+    participationRate: 0,
+    averageTurnout: 0,
+    totalVotesCast: 0,
+    delegatedVotes: 0,
   };
 }
 
@@ -828,10 +690,10 @@ export default function GovernanceUI() {
   const [activeTab, setActiveTab] = useState<'proposals' | 'voting' | 'delegation' | 'history'>(
     'proposals'
   );
-  const [proposals, setProposals] = useState(generateMockProposals());
-  const [votes, setVotes] = useState(generateMockVotes());
-  const [delegations, setDelegations] = useState(generateMockDelegations());
-  const [stats] = useState(generateGovernanceStats());
+  const [proposals, setProposals] = useState(getInitialProposals());
+  const [votes, setVotes] = useState(getInitialVotes());
+  const [delegations, setDelegations] = useState(getInitialDelegations());
+  const [stats] = useState(getInitialGovernanceStats());
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [filterCategory, setFilterCategory] = useState<string>('all');
   const [delegateeAddress, setDelegateeAddress] = useState('');

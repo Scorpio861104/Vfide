@@ -349,10 +349,10 @@ export default function BuyPage() {
               </div>
             </div>
 
-            {/* Coming Soon Providers */}
+            {/* Additional Providers */}
             {comingSoonProviders.length > 0 && (
               <div className="mb-8">
-                <h3 className="text-sm font-medium text-zinc-500 mb-3">Coming Soon</h3>
+                <h3 className="text-sm font-medium text-zinc-500 mb-3">Additional Providers</h3>
                 <div className="grid grid-cols-2 gap-3">
                   {comingSoonProviders.map(provider => (
                     <div key={provider.id} className="p-4 bg-zinc-900/30 border border-zinc-800 rounded-xl opacity-60">

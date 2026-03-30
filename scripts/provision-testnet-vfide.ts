@@ -148,7 +148,7 @@ async function main(): Promise<void> {
     'VAULT_HUB_ADDRESS / --vault-hub'
   )
 
-  const amountInput = getArg('--amount') || process.env.TESTER_VFIDE_AMOUNT || '1000'
+  const amountInput = getArg('--amount') || process.env.TESTER_VFIDE_AMOUNT || '10000'
   const amountDecimalsInput = getArg('--decimals') || process.env.TESTER_VFIDE_DECIMALS
   const maxCountInput = getArg('--max')
   const dryRun = hasFlag('--dry-run')

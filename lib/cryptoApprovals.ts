@@ -236,6 +236,9 @@ export async function requestTokenApproval(
       'accounts'
     );
     const userAddress = accounts[0];
+    if (!userAddress) {
+      throw new Error('No wallet address returned from provider');
+    }
     assertNonZeroAddress(userAddress, 'Wallet address');
 
     // Determine approval amount. Unlimited approvals remain opt-in only.
@@ -423,6 +426,9 @@ export async function revokeTokenApproval(
       'accounts'
     );
     const userAddress = accounts[0];
+    if (!userAddress) {
+      throw new Error('No wallet address returned from provider');
+    }
     assertNonZeroAddress(userAddress, 'Wallet address');
 
     // Encode approve(spender, 0)

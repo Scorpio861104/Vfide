@@ -92,7 +92,7 @@ export async function POST(request: NextRequest) {
     }
 
     const domain = (request.headers.get('host') || 'vfide.io').split(':')[0] || 'vfide.io';
-    const challengeValidation = consumeAndValidateSiweChallenge({
+    const challengeValidation = await consumeAndValidateSiweChallenge({
       address: normalizedAddress,
       message,
       domain,

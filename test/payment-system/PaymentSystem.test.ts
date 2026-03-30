@@ -34,18 +34,21 @@ describe("FeeDistributor (5-channel)", function () {
   });
 
   it("should split 35/20/15/20/10 by default", async function () {
+    const totalSupplyBefore = await token.totalSupply();
     await distributor.distribute();
     const bBal = await token.balanceOf(burn.address);
     const sBal = await token.balanceOf(sanctum.address);
     const dBal = await token.balanceOf(dao.address);
     const mBal = await token.balanceOf(merchants.address);
     const hBal = await token.balanceOf(headhunters.address);
-    expect(bBal).to.equal(FEE.mul(3500).div(10000));
+    expect(bBal).to.equal(0);
     expect(sBal).to.equal(FEE.mul(2000).div(10000));
     expect(dBal).to.equal(FEE.mul(1500).div(10000));
     expect(mBal).to.equal(FEE.mul(2000).div(10000));
     // Headhunters get remainder (handles rounding)
-    expect(hBal).to.equal(FEE.sub(bBal).sub(sBal).sub(dBal).sub(mBal));
+    expect(hBal).to.equal(FEE.sub(FEE.mul(3500).div(10000)).sub(sBal).sub(dBal).sub(mBal));
+    expect(await distributor.totalBurned()).to.equal(FEE.mul(3500).div(10000));
+    expect(await token.totalSupply()).to.equal(totalSupplyBefore.sub(FEE.mul(3500).div(10000)));
   });
 
   it("should leave zero balance after distribution", async function () {
@@ -79,6 +82,30 @@ describe("FeeDistributor (5-channel)", function () {
     await expect(
       distributor.connect(admin).proposeSplitChange(3000, 2000, 2000, 2000, 999)
     ).to.be.revertedWithCustomError(distributor, "InvalidSplit");
+  });
+
+  it("should timelock destination updates before applying them", async function () {
+    const replacement = (await ethers.getSigners())[6];
+
+    await distributor.connect(admin).setDestination("dao", replacement.address);
+    expect(await distributor.daoPayrollPool()).to.equal(dao.address);
+
+    await expect(distributor.connect(admin).executeDestinationChange()).to.be.revertedWithCustomError(distributor, "SplitChangeNotReady");
+
+    await time.increase(48 * 3600 + 1);
+    await distributor.connect(admin).executeDestinationChange();
+
+    expect(await distributor.daoPayrollPool()).to.equal(replacement.address);
+  });
+
+  it("should allow cancelling a pending destination update", async function () {
+    const replacement = (await ethers.getSigners())[6];
+
+    await distributor.connect(admin).setDestination("dao", replacement.address);
+    await distributor.connect(admin).cancelDestinationChange();
+
+    await expect(distributor.connect(admin).executeDestinationChange()).to.be.revertedWithCustomError(distributor, "NoSplitChangePending");
+    expect(await distributor.daoPayrollPool()).to.equal(dao.address);
   });
 });
 

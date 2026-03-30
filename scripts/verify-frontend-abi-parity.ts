@@ -15,7 +15,6 @@ const ARTIFACT_OVERRIDES: Record<string, string> = {
 };
 
 const MANUAL_ABI_EXCEPTIONS = new Set<string>([
-  'PromotionalTreasury.json',
   'UserRewards.json',
 ]);
 

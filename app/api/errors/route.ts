@@ -35,6 +35,18 @@ function parseStrictIntegerParam(value: string | null): number | null {
   return Number.parseInt(trimmed, 10);
 }
 
+function sanitizeStack(stack: string): string {
+  return stack
+    // Strip absolute Unix paths, keep filename
+    .replace(/\/(?:[\w@._-]+\/){2,}([\w@._-]+)/g, '$1')
+    // Strip absolute Windows paths, keep filename
+    .replace(/[A-Z]:\\(?:[\w@._-]+\\){2,}([\w@._-]+)/g, '$1')
+    // Redact connection strings
+    .replace(/(?:postgres|mysql|redis|mongodb|amqp)s?:\/\/[^\s)]+/gi, '[REDACTED_URI]')
+    // Redact env references
+    .replace(/process\.env\.\w+/g, 'process.env.[REDACTED]');
+}
+
 export async function GET(request: NextRequest) {
   // Rate limiting
   const rateLimit = await withRateLimit(request, 'api');
@@ -189,12 +201,13 @@ export async function POST(request: NextRequest) {
     );
 
     const userId = userResult.rows[0]?.id || null;
+    const sanitizedStack = typeof stack === 'string' ? sanitizeStack(stack) : stack;
 
     const result = await query(
       `INSERT INTO error_logs (user_id, severity, message, stack, metadata, timestamp)
        VALUES ($1, $2, $3, $4, $5, NOW())
        RETURNING *`,
-      [userId, normalizedSeverity || 'error', message, stack, serializedMetadata]
+      [userId, normalizedSeverity || 'error', message, sanitizedStack, serializedMetadata]
     );
 
     return NextResponse.json({ success: true, error: result.rows[0] });

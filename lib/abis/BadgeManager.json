@@ -1,0 +1,754 @@
+[
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_dao",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_seer",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_qualificationRules",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "constructor"
+  },
+  {
+    "inputs": [],
+    "name": "BM_InvalidBadge",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "BM_NotDAO",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "BM_NotOperator",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "BM_Zero",
+    "type": "error"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "user",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "badge",
+        "type": "bytes32"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "expiry",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint16",
+        "name": "scoreBoost",
+        "type": "uint16"
+      }
+    ],
+    "name": "BadgeEarned",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "user",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "badge",
+        "type": "bytes32"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "newExpiry",
+        "type": "uint256"
+      }
+    ],
+    "name": "BadgeRenewed",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "user",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "badge",
+        "type": "bytes32"
+      },
+      {
+        "indexed": false,
+        "internalType": "string",
+        "name": "reason",
+        "type": "string"
+      }
+    ],
+    "name": "BadgeRevoked",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "operator",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "bool",
+        "name": "authorized",
+        "type": "bool"
+      }
+    ],
+    "name": "OperatorSet",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "user",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "string",
+        "name": "metric",
+        "type": "string"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint32",
+        "name": "newValue",
+        "type": "uint32"
+      }
+    ],
+    "name": "StatsUpdated",
+    "type": "event"
+  },
+  {
+    "inputs": [],
+    "name": "MAX_FOUNDING_MEMBERS",
+    "outputs": [
+      {
+        "internalType": "uint32",
+        "name": "",
+        "type": "uint32"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "MAX_PIONEERS",
+    "outputs": [
+      {
+        "internalType": "uint32",
+        "name": "",
+        "type": "uint32"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "user",
+        "type": "address"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "badge",
+        "type": "bytes32"
+      }
+    ],
+    "name": "awardBadge",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "user",
+        "type": "address"
+      }
+    ],
+    "name": "awardFoundingMember",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "user",
+        "type": "address"
+      }
+    ],
+    "name": "awardPioneer",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "user",
+        "type": "address"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "badge",
+        "type": "bytes32"
+      }
+    ],
+    "name": "checkBadgeQualification",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "qualified",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "dao",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "foundingMemberCount",
+    "outputs": [
+      {
+        "internalType": "uint32",
+        "name": "",
+        "type": "uint32"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "user",
+        "type": "address"
+      }
+    ],
+    "name": "getUserStats",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint32",
+            "name": "commerceTxCount",
+            "type": "uint32"
+          },
+          {
+            "internalType": "uint32",
+            "name": "consecutiveDays",
+            "type": "uint32"
+          },
+          {
+            "internalType": "uint32",
+            "name": "governanceVotes",
+            "type": "uint32"
+          },
+          {
+            "internalType": "uint32",
+            "name": "successfulTrades",
+            "type": "uint32"
+          },
+          {
+            "internalType": "uint32",
+            "name": "endorsementsReceived",
+            "type": "uint32"
+          },
+          {
+            "internalType": "uint32",
+            "name": "referralsMade",
+            "type": "uint32"
+          },
+          {
+            "internalType": "uint32",
+            "name": "referralsQualified",
+            "type": "uint32"
+          },
+          {
+            "internalType": "uint32",
+            "name": "disputesMediated",
+            "type": "uint32"
+          },
+          {
+            "internalType": "uint32",
+            "name": "fraudReports",
+            "type": "uint32"
+          },
+          {
+            "internalType": "uint32",
+            "name": "educationalContent",
+            "type": "uint32"
+          },
+          {
+            "internalType": "uint64",
+            "name": "lastActivityDay",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint64",
+            "name": "firstActivity",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint64",
+            "name": "lastScoreDropBelow700",
+            "type": "uint64"
+          },
+          {
+            "internalType": "bool",
+            "name": "hasContributed",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "hasTranslated",
+            "type": "bool"
+          }
+        ],
+        "internalType": "struct BadgeManager.UserStats",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
+    "name": "lastBadgeCheck",
+    "outputs": [
+      {
+        "internalType": "uint64",
+        "name": "",
+        "type": "uint64"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "name": "operators",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "pioneerCount",
+    "outputs": [
+      {
+        "internalType": "uint32",
+        "name": "",
+        "type": "uint32"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "qualificationRules",
+    "outputs": [
+      {
+        "internalType": "contract IBadgeQualificationRules",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "user",
+        "type": "address"
+      },
+      {
+        "internalType": "bool",
+        "name": "successful",
+        "type": "bool"
+      }
+    ],
+    "name": "recordCommerceTx",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "contributor",
+        "type": "address"
+      }
+    ],
+    "name": "recordContribution",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "creator",
+        "type": "address"
+      }
+    ],
+    "name": "recordEducationalContent",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "user",
+        "type": "address"
+      }
+    ],
+    "name": "recordEndorsement",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "reporter",
+        "type": "address"
+      }
+    ],
+    "name": "recordFraudReport",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "user",
+        "type": "address"
+      }
+    ],
+    "name": "recordGovernanceVote",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "referrer",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      },
+      {
+        "internalType": "bool",
+        "name": "qualified",
+        "type": "bool"
+      }
+    ],
+    "name": "recordReferral",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "translator",
+        "type": "address"
+      }
+    ],
+    "name": "recordTranslation",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "user",
+        "type": "address"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "badge",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "string",
+        "name": "reason",
+        "type": "string"
+      }
+    ],
+    "name": "revokeBadge",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "seer",
+    "outputs": [
+      {
+        "internalType": "contract Seer",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "newDAO",
+        "type": "address"
+      }
+    ],
+    "name": "setDAO",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "operator",
+        "type": "address"
+      },
+      {
+        "internalType": "bool",
+        "name": "authorized",
+        "type": "bool"
+      }
+    ],
+    "name": "setOperator",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "newRules",
+        "type": "address"
+      }
+    ],
+    "name": "setQualificationRules",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "newSeer",
+        "type": "address"
+      }
+    ],
+    "name": "setSeer",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "name": "userStats",
+    "outputs": [
+      {
+        "internalType": "uint32",
+        "name": "commerceTxCount",
+        "type": "uint32"
+      },
+      {
+        "internalType": "uint32",
+        "name": "consecutiveDays",
+        "type": "uint32"
+      },
+      {
+        "internalType": "uint32",
+        "name": "governanceVotes",
+        "type": "uint32"
+      },
+      {
+        "internalType": "uint32",
+        "name": "successfulTrades",
+        "type": "uint32"
+      },
+      {
+        "internalType": "uint32",
+        "name": "endorsementsReceived",
+        "type": "uint32"
+      },
+      {
+        "internalType": "uint32",
+        "name": "referralsMade",
+        "type": "uint32"
+      },
+      {
+        "internalType": "uint32",
+        "name": "referralsQualified",
+        "type": "uint32"
+      },
+      {
+        "internalType": "uint32",
+        "name": "disputesMediated",
+        "type": "uint32"
+      },
+      {
+        "internalType": "uint32",
+        "name": "fraudReports",
+        "type": "uint32"
+      },
+      {
+        "internalType": "uint32",
+        "name": "educationalContent",
+        "type": "uint32"
+      },
+      {
+        "internalType": "uint64",
+        "name": "lastActivityDay",
+        "type": "uint64"
+      },
+      {
+        "internalType": "uint64",
+        "name": "firstActivity",
+        "type": "uint64"
+      },
+      {
+        "internalType": "uint64",
+        "name": "lastScoreDropBelow700",
+        "type": "uint64"
+      },
+      {
+        "internalType": "bool",
+        "name": "hasContributed",
+        "type": "bool"
+      },
+      {
+        "internalType": "bool",
+        "name": "hasTranslated",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  }
+]

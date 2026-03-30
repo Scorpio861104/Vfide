@@ -90,129 +90,38 @@ interface SocialConnections {
 
 // ==================== MOCK DATA ====================
 
-const generateMockProfile = (): UserProfile => ({
-  id: 'user-1',
-  username: 'johndoe',
-  displayName: 'John Doe',
-  email: 'john.doe@example.com',
-  bio: 'Blockchain enthusiast and early adopter of Vfide. Passionate about decentralized governance and community-driven projects.',
+// Initial empty states (will be populated by user profile API)
+const getInitialProfile = (): UserProfile => ({
+  id: '',
+  username: '',
+  displayName: '',
+  email: '',
+  bio: '',
   avatar: '👤',
-  joinedDate: new Date('2024-01-15'),
-  location: 'San Francisco, CA',
-  website: 'https://johndoe.com',
-  twitter: '@johndoe',
-  github: 'johndoe',
+  joinedDate: new Date(),
+  location: '',
+  website: '',
+  twitter: '',
+  github: '',
 });
 
-const generateMockStats = (): UserStats => ({
-  totalActivities: 247,
-  badgesEarned: 12,
-  votescast: 45,
-  transactionsCount: 89,
-  governanceScore: 850,
-  proofScore: 1250,
+const getInitialStats = (): UserStats => ({
+  totalActivities: 0,
+  badgesEarned: 0,
+  votescast: 0,
+  transactionsCount: 0,
+  governanceScore: 0,
+  proofScore: 0,
 });
 
-const generateMockBadges = (): Badge[] => [
-  {
-    id: 'badge-1',
-    name: 'Early Adopter',
-    description: 'Joined in the first month',
-    icon: '🚀',
-    earnedDate: new Date('2024-01-20'),
-    rarity: 'legendary',
-  },
-  {
-    id: 'badge-2',
-    name: 'Active Voter',
-    description: 'Participated in 25+ votes',
-    icon: '🗳️',
-    earnedDate: new Date('2024-03-15'),
-    rarity: 'epic',
-  },
-  {
-    id: 'badge-3',
-    name: 'Transaction Master',
-    description: 'Completed 50+ transactions',
-    icon: '💰',
-    earnedDate: new Date('2024-05-10'),
-    rarity: 'rare',
-  },
-  {
-    id: 'badge-4',
-    name: 'Community Builder',
-    description: 'Referred 10+ users',
-    icon: '🤝',
-    earnedDate: new Date('2024-07-01'),
-    rarity: 'rare',
-  },
-  {
-    id: 'badge-5',
-    name: 'Governance Pro',
-    description: 'Created 5+ proposals',
-    icon: '📜',
-    earnedDate: new Date('2024-08-20'),
-    rarity: 'epic',
-  },
-  {
-    id: 'badge-6',
-    name: 'Streak Champion',
-    description: '30 day activity streak',
-    icon: '🔥',
-    earnedDate: new Date('2024-09-15'),
-    rarity: 'common',
-  },
-];
-
-const generateMockRecentActivities = (): RecentActivity[] => [
-  {
-    id: 'act-1',
-    type: 'vote',
-    title: 'Voted on Treasury Proposal #42',
-    timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000),
-  },
-  {
-    id: 'act-2',
-    type: 'transaction',
-    title: 'Received 500 USDC',
-    timestamp: new Date(Date.now() - 5 * 60 * 60 * 1000),
-  },
-  {
-    id: 'act-3',
-    type: 'badge',
-    title: 'Earned "Streak Champion" badge',
-    timestamp: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
-  },
-];
-
-const generateMockPrivacySettings = (): PrivacySettings => ({
+const getInitialPrivacySettings = (): PrivacySettings => ({
   profileVisibility: 'public',
-  showEmail: true,
+  showEmail: false,
   showActivities: true,
   showBadges: true,
   showStats: true,
   allowMessages: true,
 });
-
-const generateMockSocialConnections = (): SocialConnections => ({
-  followers: 156,
-  following: 89,
-  friends: 42,
-});
-
-const generateActivityHeatmap = (): ActivityHeatmapDay[] => {
-  const days: ActivityHeatmapDay[] = [];
-  const today = new Date();
-  for (let i = 0; i < 365; i++) {
-    const date = new Date(today);
-    date.setDate(date.getDate() - i);
-    days.push({
-      date,
-      count: Math.random() > 0.3 ? Math.floor(Math.random() * 12) : 0
-    });
-  }
-  return days.reverse();
-};
 
 // ==================== HELPER FUNCTIONS ====================
 
@@ -688,13 +597,13 @@ function ActivityItem({ activity, index = 0 }: ActivityItemProps) {
 
 export default function UserProfile() {
   // State
-  const [profile, setProfile] = useState<UserProfile>(generateMockProfile());
-  const [stats] = useState<UserStats>(generateMockStats());
-  const [badges] = useState<Badge[]>(generateMockBadges());
-  const [recentActivities] = useState<RecentActivity[]>(generateMockRecentActivities());
-  const [privacySettings, setPrivacySettings] = useState<PrivacySettings>(generateMockPrivacySettings());
-  const [socialConnections] = useState<SocialConnections>(generateMockSocialConnections());
-  const [activityHeatmap] = useState<ActivityHeatmapDay[]>(generateActivityHeatmap());
+  const [profile, setProfile] = useState<UserProfile>(getInitialProfile());
+  const [stats] = useState<UserStats>(getInitialStats());
+  const [badges] = useState<Badge[]>([]);
+  const [recentActivities] = useState<RecentActivity[]>([]);
+  const [privacySettings, setPrivacySettings] = useState<PrivacySettings>(getInitialPrivacySettings());
+  const [socialConnections] = useState<SocialConnections>({ followers: 0, following: 0, friends: 0 });
+  const [activityHeatmap] = useState<ActivityHeatmapDay[]>([]);
   
   const [isEditing, setIsEditing] = useState(false);
   const [editedProfile, setEditedProfile] = useState<UserProfile>(profile);

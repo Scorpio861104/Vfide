@@ -27,11 +27,15 @@ function getPool(): Pool {
               'DATABASE_URL is required. Set ALLOW_DEV_DB=true in development to use the local fallback.'
             ); })()
         ),
-      max: 20,
+      max: Number.parseInt(process.env.DB_POOL_MAX || (process.env.NODE_ENV === 'production' ? '10' : '20'), 10),
       idleTimeoutMillis: 30000,
       connectionTimeoutMillis: 2000,
       statement_timeout: 30000, // 30 second query timeout
       query_timeout: 30000, // 30 second query timeout (node-postgres)
+      // Enable SSL in production; allow self-signed certs when CA is not provided.
+      ...(process.env.NODE_ENV === 'production'
+        ? { ssl: { rejectUnauthorized: process.env.DB_SSL_REJECT_UNAUTHORIZED !== 'false' } }
+        : {}),
     });
 
     // Test connection on startup

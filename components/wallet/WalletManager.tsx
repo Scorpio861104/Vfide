@@ -83,7 +83,7 @@ interface TokenBalance {
   logo: string;
 }
 
-interface Transaction {
+interface _Transaction {
   hash: string;
   from: string;
   to: string;
@@ -151,127 +151,14 @@ const supportedChains: Chain[] = [
   },
 ];
 
-function generateMockWallets(): Wallet[] {
-  return [
-    {
-      id: 'wallet-1',
-      address: '0x1234...5678',
-      type: 'metamask',
-      nickname: 'Main Wallet',
-      balance: '2.5',
-      balanceUSD: 8750,
-      chainId: 1,
-      chainName: 'Ethereum',
-      connected: true,
-      isActive: true,
-      connectedAt: Date.now() - 7 * 24 * 60 * 60 * 1000,
-      lastUsed: Date.now() - 30 * 60 * 1000,
-      icon: '🦊',
-    },
-    {
-      id: 'wallet-2',
-      address: '0xabcd...ef01',
-      type: 'ledger',
-      nickname: 'Hardware Wallet',
-      balance: '15.8',
-      balanceUSD: 55300,
-      chainId: 1,
-      chainName: 'Ethereum',
-      connected: true,
-      isActive: false,
-      connectedAt: Date.now() - 14 * 24 * 60 * 60 * 1000,
-      lastUsed: Date.now() - 2 * 60 * 60 * 1000,
-      icon: '🔐',
-    },
-    {
-      id: 'wallet-3',
-      address: '0x9876...5432',
-      type: 'walletconnect',
-      nickname: 'Mobile Wallet',
-      balance: '0.85',
-      balanceUSD: 2975,
-      chainId: 8453,
-      chainName: 'Base',
-      connected: true,
-      isActive: false,
-      connectedAt: Date.now() - 3 * 24 * 60 * 60 * 1000,
-      lastUsed: Date.now() - 5 * 60 * 60 * 1000,
-      icon: '📱',
-    },
-  ];
-}
-
-function generateTokenBalances(_address: string): TokenBalance[] {
-  return [
-    {
-      address: '0x0000000000000000000000000000000000000000',
-      symbol: 'ETH',
-      name: 'Ethereum',
-      balance: '2500000000000000000',
-      balanceFormatted: '2.5',
-      valueUSD: 8750,
-      decimals: 18,
-      logo: '⟠',
-    },
-    {
-      address: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',
-      symbol: 'USDC',
-      name: 'USD Coin',
-      balance: '5000000000',
-      balanceFormatted: '5000',
-      valueUSD: 5000,
-      decimals: 6,
-      logo: '💵',
-    },
-    {
-      address: '0xdAC17F958D2ee523a2206206994597C13D831ec7',
-      symbol: 'USDT',
-      name: 'Tether USD',
-      balance: '3500000000',
-      balanceFormatted: '3500',
-      valueUSD: 3500,
-      decimals: 6,
-      logo: '💲',
-    },
-    {
-      address: '0x6B175474E89094C44Da98b954EedeAC495271d0F',
-      symbol: 'DAI',
-      name: 'Dai Stablecoin',
-      balance: '2000000000000000000000',
-      balanceFormatted: '2000',
-      valueUSD: 2000,
-      decimals: 18,
-      logo: '◈',
-    },
-  ];
-}
-
-function _generateTransactions(walletAddress: string): Transaction[] {
-  const transactions: Transaction[] = [];
-  const now = Date.now();
-
-  for (let i = 0; i < 10; i++) {
-    transactions.push({
-      hash: `0x${Math.random().toString(16).substr(2, 64)}`,
-      from: i % 2 === 0 ? walletAddress : '0xother...addr',
-      to: i % 2 === 0 ? '0xother...addr' : walletAddress,
-      value: (Math.random() * 2).toFixed(4),
-      timestamp: now - i * 24 * 60 * 60 * 1000,
-      status: i === 0 ? 'pending' : 'confirmed',
-      chainId: 1,
-      type: i % 2 === 0 ? 'send' : 'receive',
-    });
-  }
-
-  return transactions;
-}
+// Initial empty states (will be populated by wagmi wallet connection)
 
 function calculateWalletStats(wallets: Wallet[]): WalletStats {
   return {
     totalWallets: wallets.length,
     connectedWallets: wallets.filter((w) => w.connected).length,
     totalBalanceUSD: wallets.reduce((sum, w) => sum + w.balanceUSD, 0),
-    totalTransactions: 156,
+    totalTransactions: 0,
   };
 }
 
@@ -577,11 +464,9 @@ export default function WalletManager() {
   const [activeTab, setActiveTab] = useState<'wallets' | 'chains' | 'tokens' | 'settings'>(
     'wallets'
   );
-  const [wallets, setWallets] = useState<Wallet[]>(generateMockWallets());
+  const [wallets, setWallets] = useState<Wallet[]>([]);
   const [selectedChain, setSelectedChain] = useState<number>(1);
-  const [tokens, _setTokens] = useState<TokenBalance[]>(
-    generateTokenBalances(wallets[0]?.address ?? '')
-  );
+  const [tokens, _setTokens] = useState<TokenBalance[]>([]);
   const [showConnectModal, setShowConnectModal] = useState(false);
   const [editingWallet, setEditingWallet] = useState<string | null>(null);
   const [walletNickname, setWalletNickname] = useState('');

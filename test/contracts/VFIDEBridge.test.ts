@@ -1,255 +1,165 @@
 import { expect } from "chai";
 import { ethers, loadFixture, time, type SignerWithAddress } from "./helpers/hardhatCompat";
-import fs from "node:fs";
+
+async function expectRevert(action: Promise<unknown>) {
+  let reverted = false;
+  try {
+    await action;
+  } catch {
+    reverted = true;
+  }
+  expect(reverted).to.equal(true);
+}
 
 describe("VFIDEBridge", function () {
   let bridge: any;
   let token: any;
+  let endpoint: any;
   let owner: SignerWithAddress;
-  let admin: SignerWithAddress;
-  let multiSig: SignerWithAddress;
   let user: SignerWithAddress;
   let attacker: SignerWithAddress;
-  let capabilities: any;
 
-  const CHAIN_ID_REMOTE = 10121;
-
-  before(async function () {
-    const BridgeFactory = await ethers.getContractFactory("VFIDEBridge");
-    const constructorInputs = (BridgeFactory.interface.deploy?.inputs ?? []).length;
-    const requiredMethods = ["token", "owner", "bridge"];
-    const hasExpectedAbi = constructorInputs === 2 && requiredMethods.every((methodName) =>
-      BridgeFactory.interface.fragments.some(
-        (fragment: any) => fragment.type === "function" && fragment.name === methodName
-      )
-    );
-
-    if (!hasExpectedAbi) {
-      this.skip();
-    }
-  });
+  const REMOTE_CHAIN_ID = 10121;
 
   async function deployFixture() {
-    [owner, admin, multiSig, user, attacker] = await ethers.getSigners();
+    [owner, user, attacker] = await ethers.getSigners();
 
     const MockERC20 = await ethers.getContractFactory("MockERC20");
     token = await MockERC20.deploy("VFIDE", "VFD", ethers.utils.parseEther("1000000"));
     await token.deployed();
 
+    const MockEndpoint = await ethers.getContractFactory("MockLzEndpointForBridge");
+    endpoint = await MockEndpoint.deploy();
+    await endpoint.deployed();
+
     const BridgeFactory = await ethers.getContractFactory("VFIDEBridge");
-    bridge = await BridgeFactory.deploy(token.address, owner.address);
+    bridge = await BridgeFactory.deploy(token.address, endpoint.address, owner.address);
     await bridge.deployed();
 
-    await token.transfer(user.address, ethers.utils.parseEther("10000"));
+    await token.transfer(user.address, ethers.utils.parseEther("1000"));
     await token.connect(user).approve(bridge.address, ethers.constants.MaxUint256);
 
-    // Detect available capabilities
-    const caps = {
-      canBypassExemptCheck: typeof bridge.setExemptCheckBypass === "function",
-      canClaimRefund: typeof bridge.claimRefund === "function",
-      hasSafeERC20: fs.existsSync(
-        "artifacts/test/contracts/mocks/MockContracts.sol/MockNonStandardERC20.json"
-      ),
-      canPause: typeof bridge.pause === "function" && typeof bridge.unpause === "function",
-    };
-
-    return { bridge, token, owner, admin, multiSig, user, attacker, capabilities: caps };
+    return { bridge, token, endpoint, owner, user, attacker };
   }
 
   beforeEach(async function () {
-    ({ bridge, token, owner, admin, multiSig, user, attacker, capabilities } = await loadFixture(deployFixture));
+    ({ bridge, token, endpoint, owner, user, attacker } = await loadFixture(deployFixture));
   });
 
-  // ─────────────────────────────────────────────
-  // Deployment
-  // ─────────────────────────────────────────────
   describe("Deployment", function () {
-    it("should set token address", async function () {
-      expect(await bridge.token()).to.equal(token.address);
-    });
-
-    it("should set owner", async function () {
+    it("sets constructor dependencies", async function () {
+      expect(await bridge.vfideToken()).to.equal(token.address);
       expect(await bridge.owner()).to.equal(owner.address);
+      expect(await bridge.feeCollector()).to.equal(owner.address);
     });
 
-    it("should revert with zero-address token", async function () {
+    it("rejects zero constructor addresses", async function () {
       const BridgeFactory = await ethers.getContractFactory("VFIDEBridge");
-      await expect(
-        BridgeFactory.deploy(ethers.constants.AddressZero, owner.address)
-      ).to.be.reverted;
+      await expectRevert(BridgeFactory.deploy(ethers.constants.AddressZero, endpoint.address, owner.address));
+      await expectRevert(BridgeFactory.deploy(token.address, ethers.constants.AddressZero, owner.address));
+      await expectRevert(BridgeFactory.deploy(token.address, endpoint.address, ethers.constants.AddressZero));
     });
   });
 
-  // ─────────────────────────────────────────────
-  // Bridge Operations
-  // ─────────────────────────────────────────────
-  describe("bridge()", function () {
-    it("should allow user to bridge tokens", async function () {
-      const amount = ethers.utils.parseEther("100");
-      await expect(
-        bridge.connect(user).bridge(CHAIN_ID_REMOTE, user.address, amount, {
-          value: ethers.utils.parseEther("0.01"),
-        })
-      ).to.emit(bridge, "BridgeInitiated");
+  describe("Bridge guardrails", function () {
+    it("reverts on invalid amount", async function () {
+      await expectRevert(
+        bridge.connect(user).bridge(REMOTE_CHAIN_ID, user.address, 0, "0x")
+      );
     });
 
-    it("should revert bridging zero amount", async function () {
-      await expect(
-        bridge.connect(user).bridge(CHAIN_ID_REMOTE, user.address, 0, {
-          value: ethers.utils.parseEther("0.01"),
-        })
-      ).to.be.reverted;
+    it("reverts on zero destination", async function () {
+      await expectRevert(
+        bridge.connect(user).bridge(REMOTE_CHAIN_ID, ethers.constants.AddressZero, ethers.utils.parseEther("1"), "0x")
+      );
     });
 
-    it("should revert bridging to zero address", async function () {
-      await expect(
-        bridge.connect(user).bridge(
-          CHAIN_ID_REMOTE,
-          ethers.constants.AddressZero,
-          ethers.utils.parseEther("100"),
-          { value: ethers.utils.parseEther("0.01") }
-        )
-      ).to.be.reverted;
+    it("reverts when remote is not trusted", async function () {
+      await expectRevert(
+        bridge.connect(user).bridge(REMOTE_CHAIN_ID, user.address, ethers.utils.parseEther("1"), "0x")
+      );
     });
 
-    it("should deduct tokens from sender", async function () {
-      const amount = ethers.utils.parseEther("100");
-      const balBefore = await token.balanceOf(user.address);
-      await bridge.connect(user).bridge(CHAIN_ID_REMOTE, user.address, amount, {
-        value: ethers.utils.parseEther("0.01"),
-      });
-      const balAfter = await token.balanceOf(user.address);
-      expect(balBefore - balAfter).to.be.gte(amount);
+    it("schedules and applies trusted remote after timelock", async function () {
+      const remote = (`0x${"33".repeat(32)}`) as `0x${string}`;
+      await bridge.connect(owner).setTrustedRemote(REMOTE_CHAIN_ID, remote);
+      await expectRevert(bridge.connect(owner).applyTrustedRemote(REMOTE_CHAIN_ID));
+
+      await time.increase(48 * 60 * 60 + 1);
+      await bridge.connect(owner).applyTrustedRemote(REMOTE_CHAIN_ID);
+
+      expect(await bridge.trustedRemotes(REMOTE_CHAIN_ID)).to.equal(remote);
     });
 
-    it("should respect rate limits from SecurityModule", async function () {
-      const hugeAmount = ethers.utils.parseEther("999999");
-      await token.transfer(user.address, hugeAmount);
-      await token.connect(user).approve(bridge.address, hugeAmount);
-      await expect(
-        bridge.connect(user).bridge(CHAIN_ID_REMOTE, user.address, hugeAmount, {
-          value: ethers.utils.parseEther("0.01"),
-        })
-      ).to.be.reverted;
+    it("enforces max bridge amount", async function () {
+      // MIN_BRIDGE_AMOUNT = 100e18; set max to 200 ETH, then try to bridge 201 ETH
+      await bridge.connect(owner).setMaxBridgeAmount(ethers.utils.parseEther("200"));
+      await time.increase(48 * 60 * 60 + 1);
+      await bridge.connect(owner).applyMaxBridgeAmount();
+
+      const remote = (`0x${"44".repeat(32)}`) as `0x${string}`;
+      await bridge.connect(owner).setTrustedRemote(REMOTE_CHAIN_ID, remote);
+      await time.increase(48 * 60 * 60 + 1);
+      await bridge.connect(owner).applyTrustedRemote(REMOTE_CHAIN_ID);
+
+      await bridge.connect(owner).setExemptCheckBypass(true, 3600);
+
+      await expectRevert(
+        bridge.connect(user).bridge(REMOTE_CHAIN_ID, user.address, ethers.utils.parseEther("201"), "0x")
+      );
     });
   });
 
-  // ─────────────────────────────────────────────
-  // [FINDING C-05] Exempt Check Bypass
-  // ─────────────────────────────────────────────
-  describe("C-05: setExemptCheckBypass - Single Owner Vulnerability", function () {
-    beforeEach(function () {
-      if (!capabilities.canBypassExemptCheck) {
-        this.skip();
-      }
-    });
-
-    it("should NOT allow single owner to set exempt bypass", async function () {
-      await expect(bridge.connect(owner).setExemptCheckBypass(true)).to.be.reverted;
-    });
-
-    it("should enforce MAX_EXEMPT_CHECK_BYPASS_DURATION", async function () {
-      await expect(bridge.connect(owner).setExemptCheckBypass(true)).to.be.reverted;
-    });
-
-    it("should not allow attacker to bypass after compromising single owner key", async function () {
-      await expect(bridge.connect(owner).setExemptCheckBypass(true)).to.be.reverted;
-    });
-
-    it("should emit event when bypass is toggled", async function () {
-      await expect(bridge.connect(owner).setExemptCheckBypass(true)).to.be.reverted;
-    });
-  });
-
-  // ─────────────────────────────────────────────
-  // [FINDING H-08] Missing Bridge Refund
-  // ─────────────────────────────────────────────
-  describe("H-08: Bridge Refund Claiming", function () {
-    beforeEach(function () {
-      if (!capabilities.canClaimRefund) {
-        this.skip();
-      }
-    });
-
-    it("should have a claimRefund function", async function () {
-      expect(bridge.claimRefund).to.not.be.undefined;
-    });
-
-    it("should allow refund when destination chain fails", async function () {
-      await expect(bridge.connect(user).claimRefund(0)).to.be.reverted;
-    });
-
-    it("should not allow double refund", async function () {
-      await expect(bridge.connect(user).claimRefund(0)).to.be.reverted;
-      await expect(bridge.connect(user).claimRefund(0)).to.be.reverted;
-    });
-
-    it("should not allow refund of successful bridge", async function () {
-      await expect(bridge.connect(user).claimRefund(0)).to.be.reverted;
-    });
-
-    it("should only allow original sender to claim refund", async function () {
-      await expect(bridge.connect(attacker).claimRefund(0)).to.be.reverted;
-    });
-  });
-
-  // ─────────────────────────────────────────────
-  // SafeERC20 Usage
-  // ─────────────────────────────────────────────
-  describe("SafeERC20 usage", function () {
-    it("should use safeTransfer for token movements", async function () {
-      const BadToken = await ethers.getContractFactory("MockNonStandardERC20");
-      const badToken = await BadToken.deploy("BAD", "BAD", ethers.utils.parseEther("1000"));
-      await badToken.deployed();
-      expect(capabilities.hasSafeERC20).to.be.true;
-      expect(badToken.address).to.not.equal(ethers.constants.AddressZero);
-    });
-  });
-
-  // ─────────────────────────────────────────────
-  // Access Control
-  // ─────────────────────────────────────────────
-  describe("Access control", function () {
-    beforeEach(function () {
-      if (!capabilities.canPause) {
-        this.skip();
-      }
-    });
-
-    it("should restrict admin functions to owner/admin", async function () {
-      await expect(
-        bridge.connect(attacker).pause()
-      ).to.be.reverted;
-    });
-
-    it("should allow pausing and unpausing", async function () {
+  describe("Admin controls", function () {
+    it("restricts pause/unpause to owner", async function () {
+      await expectRevert(bridge.connect(attacker).pause());
       await bridge.connect(owner).pause();
-      await expect(
-        bridge.connect(user).bridge(CHAIN_ID_REMOTE, user.address, ethers.utils.parseEther("1"), {
-          value: ethers.utils.parseEther("0.01"),
-        })
-      ).to.be.reverted;
+      expect(await bridge.paused()).to.equal(true);
       await bridge.connect(owner).unpause();
+      expect(await bridge.paused()).to.equal(false);
+    });
+
+    it("schedules and applies bridge fee update", async function () {
+      const oldFee = await bridge.bridgeFee();
+      await bridge.connect(owner).setBridgeFee(25);
+      await expectRevert(bridge.connect(owner).applyBridgeFee());
+      await time.increase(48 * 60 * 60 + 1);
+      await bridge.connect(owner).applyBridgeFee();
+      const newFee = await bridge.bridgeFee();
+      expect(newFee).to.equal(25);
+      expect(newFee).to.not.equal(oldFee);
+    });
+
+    it("rejects bridge fee above cap", async function () {
+      await expectRevert(bridge.connect(owner).setBridgeFee(101));
     });
   });
 
-  // ─────────────────────────────────────────────
-  // Event Emissions
-  // ─────────────────────────────────────────────
-  describe("Events", function () {
-    it("should emit BridgeInitiated on bridge", async function () {
-      await expect(
-        bridge.connect(user).bridge(CHAIN_ID_REMOTE, user.address, ethers.utils.parseEther("100"), {
-          value: ethers.utils.parseEther("0.01"),
-        })
-      ).to.emit(bridge, "BridgeInitiated");
+  describe("Exempt bypass and refunds", function () {
+    it("sets temporary bypass with expiry", async function () {
+      await bridge.connect(owner).setExemptCheckBypass(true, 3600);
+      expect(await bridge.isExemptCheckBypassActive()).to.equal(true);
+
+      await time.increase(3600 + 1);
+      expect(await bridge.isExemptCheckBypassActive()).to.equal(false);
     });
 
-    it("should emit BridgeCompleted on receive", async function () {
-      // Simulating incoming LayerZero message requires mock endpoint
-      // Verify the contract has the event in its interface
-      const fragment = bridge.interface.getEvent("BridgeCompleted");
-      expect(fragment || true).to.be.ok;
+    it("rejects invalid bypass duration", async function () {
+      await expectRevert(bridge.connect(owner).setExemptCheckBypass(true, 0));
+    });
+
+    it("rejects refund claim for unknown tx", async function () {
+      const unknownTxId = (`0x${"55".repeat(32)}`) as `0x${string}`;
+      await expectRevert(bridge.connect(user).claimBridgeRefund(unknownTxId));
+    });
+  });
+
+  describe("Event ABI", function () {
+    it("exposes BridgeSent and BridgeReceived events", async function () {
+      const sent = bridge.interface.getEvent("BridgeSent");
+      const received = bridge.interface.getEvent("BridgeReceived");
+      expect(!!sent).to.equal(true);
+      expect(!!received).to.equal(true);
     });
   });
 });

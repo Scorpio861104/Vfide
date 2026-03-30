@@ -503,6 +503,8 @@ describe("EscrowManager (F-18: minimum lock period)", () => {
     const token = await Token.deploy();
     await token.waitForDeployment();
 
+    await escrow.connect(arbiter).setTokenWhitelist(await token.getAddress(), true);
+
     return { ethers, escrow, seer, token, buyer, merchant };
   }
 

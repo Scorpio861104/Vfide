@@ -19,7 +19,7 @@ import {
   Zap, DollarSign, TrendingUp, X, Loader2
 } from "lucide-react";
 import { safeParseFloat } from "@/lib/validation";
-import { CONTRACT_ADDRESSES, VFIDETokenABI, VaultHubABI, UserVaultABI, CARD_BOUND_VAULT_ABI, isCardBoundVaultMode } from "@/lib/contracts";
+import { CONTRACT_ADDRESSES, VFIDETokenABI, UserVaultABI, CARD_BOUND_VAULT_ABI, isCardBoundVaultMode } from "@/lib/contracts";
 import { TOKEN_REFERENCE_PRICE } from "@/lib/constants";
 
 // Animation variants
@@ -256,14 +256,6 @@ function VaultContent() {
     abi: VFIDETokenABI,
     functionName: 'balanceOf',
     args: address ? [address] : undefined,
-  });
-  
-  // Read allowance for VaultHub
-  const { data: allowance, refetch: refetchAllowance } = useReadContract({
-    address: CONTRACT_ADDRESSES.VFIDEToken,
-    abi: VFIDETokenABI,
-    functionName: 'allowance',
-    args: address && CONTRACT_ADDRESSES.VaultHub ? [address, CONTRACT_ADDRESSES.VaultHub] : undefined,
   });
   
   const walletBalanceFormatted = walletBalance ? formatUnits(walletBalance as bigint, 18) : '0';

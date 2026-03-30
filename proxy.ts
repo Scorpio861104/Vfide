@@ -61,7 +61,6 @@ function getConnectSrcAllowlist(): string {
     asOrigin(process.env.NEXT_PUBLIC_WS_URL),
     asOrigin(process.env.NEXT_PUBLIC_APP_URL),
     asOrigin(process.env.NEXT_PUBLIC_EXPLORER_URL),
-    asOrigin(process.env.NEXT_PUBLIC_BLOCK_EXPLORER_URL),
     asOrigin(process.env.NEXT_PUBLIC_SENTRY_DSN),
   ];
 
@@ -86,7 +85,7 @@ function buildCsp(nonce: string): string {
 
   return [
     "default-src 'self'",
-    `script-src 'self' 'nonce-${nonce}' 'unsafe-eval' https://vercel.live https://*.walletconnect.com https://*.walletconnect.org`,
+    `script-src 'self' 'nonce-${nonce}' https://vercel.live https://*.walletconnect.com https://*.walletconnect.org`,
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     "img-src 'self' data: https: blob:",
     "font-src 'self' data: https://fonts.gstatic.com",
@@ -105,6 +104,32 @@ function applySecurityHeaders(response: NextResponse, nonce: string, csp: string
   response.headers.set('x-nonce', nonce);
   response.headers.set('Content-Security-Policy', csp);
   return response;
+}
+
+/**
+ * Determine if the request origin is allowed for CORS.
+ * Self-origin and configured app URLs are permitted.
+ */
+function getAllowedOrigin(origin: string | null): string | null {
+  if (!origin) return null;
+
+  const allowed = new Set<string>();
+
+  // Always allow the configured app URL
+  const appUrl = asOrigin(process.env.NEXT_PUBLIC_APP_URL);
+  if (appUrl) allowed.add(appUrl);
+
+  // Allow Vercel preview deployments
+  if (origin.endsWith('.vercel.app')) allowed.add(origin);
+
+  // Allow localhost in development
+  if (process.env.NODE_ENV !== 'production') {
+    if (origin.startsWith('http://localhost:') || origin.startsWith('http://127.0.0.1:')) {
+      allowed.add(origin);
+    }
+  }
+
+  return allowed.has(origin) ? origin : null;
 }
 
 /**
@@ -148,6 +173,31 @@ export function proxy(request: NextRequest) {
   const pathname = new URL(request.url).pathname;
   const nonce = generateNonce();
   const csp = buildCsp(nonce);
+
+  // --- CORS for API routes ---
+  if (pathname.startsWith('/api/')) {
+    const origin = request.headers.get('origin');
+    const allowedOrigin = getAllowedOrigin(origin);
+
+    // Handle preflight OPTIONS
+    if (request.method === 'OPTIONS') {
+      const preflightResponse = new NextResponse(null, { status: 204 });
+      if (allowedOrigin) {
+        preflightResponse.headers.set('Access-Control-Allow-Origin', allowedOrigin);
+      }
+      preflightResponse.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
+      preflightResponse.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-csrf-token');
+      preflightResponse.headers.set('Access-Control-Allow-Credentials', 'true');
+      preflightResponse.headers.set('Access-Control-Max-Age', '86400');
+      return preflightResponse;
+    }
+
+    // For non-preflight requests, we set CORS headers on the response below.
+    // Store the allowed origin to attach later.
+    if (allowedOrigin) {
+      request.headers.set('x-cors-origin', allowedOrigin);
+    }
+  }
 
   // Check request body size for write operations (POST, PUT, PATCH, DELETE)
   if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(request.method)) {
@@ -198,6 +248,13 @@ export function proxy(request: NextRequest) {
   const response = applySecurityHeaders(NextResponse.next({
     request: { headers: requestHeaders },
   }), nonce, csp);
+
+  // Attach CORS headers for API responses
+  const corsOrigin = request.headers.get('x-cors-origin');
+  if (corsOrigin) {
+    response.headers.set('Access-Control-Allow-Origin', corsOrigin);
+    response.headers.set('Access-Control-Allow-Credentials', 'true');
+  }
 
   return response;
 }

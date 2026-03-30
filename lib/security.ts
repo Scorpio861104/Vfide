@@ -193,27 +193,41 @@ export const XSSProtection = {
    * Encode HTML entities
    */
   encodeHTML(str: string): string {
-    const div = document.createElement('div');
-    div.textContent = str;
-    return div.innerHTML;
+    return str
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
   },
   
   /**
    * Decode HTML entities
    */
   decodeHTML(str: string): string {
-    const div = document.createElement('div');
-    div.innerHTML = str;
-    return div.textContent || '';
+    if (typeof window === 'undefined' || typeof DOMParser === 'undefined') {
+      return str
+        .replace(/&lt;/g, '<')
+        .replace(/&gt;/g, '>')
+        .replace(/&quot;/g, '"')
+        .replace(/&#39;/g, "'")
+        .replace(/&amp;/g, '&');
+    }
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(str, 'text/html');
+    return doc.documentElement.textContent || '';
   },
   
   /**
    * Remove all HTML tags
    */
   stripHTML(str: string): string {
-    const div = document.createElement('div');
-    div.innerHTML = str;
-    return div.textContent || '';
+    if (typeof window === 'undefined' || typeof DOMParser === 'undefined') {
+      return str.replace(/<[^>]*>/g, '');
+    }
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(str, 'text/html');
+    return doc.body.textContent || '';
   },
   
   /**

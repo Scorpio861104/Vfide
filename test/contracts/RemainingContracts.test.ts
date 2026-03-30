@@ -1,177 +1,50 @@
 import { expect } from "chai";
 import { ethers, loadFixture, type SignerWithAddress } from "./helpers/hardhatCompat";
+import { keccak256, toUtf8Bytes } from "ethers";
 import fs from "node:fs";
+
+async function expectRevert(action: Promise<unknown>) {
+  let reverted = false;
+  try {
+    await action;
+  } catch {
+    reverted = true;
+  }
+  expect(reverted).to.equal(true);
+}
 
 function hasArtifact(...paths: string[]) {
   return paths.some((artifactPath) => fs.existsSync(artifactPath));
 }
 
-describe("MainstreamPayments", function () {
+describe("FiatRampRegistry", function () {
   const suiteAvailable =
-    hasArtifact("artifacts/contracts/MainstreamPayments.sol/MainstreamPayments.json") &&
+    hasArtifact("artifacts/contracts/MainstreamPayments.sol/FiatRampRegistry.json") &&
     hasArtifact(
       "artifacts/test/contracts/mocks/MockContracts.sol/MockERC20.json",
       "artifacts/test/contracts/mocks/MockERC20.sol/MockERC20.json"
     );
 
-  let payments: any;
+  let registry: any;
   let token: any;
   let owner: SignerWithAddress;
-  let merchant: SignerWithAddress;
-  let customer: SignerWithAddress;
-  let recorder: SignerWithAddress;
-  let attacker: SignerWithAddress;
-  let capabilities: any;
-
-  async function deployFixture() {
-    [owner, merchant, customer, recorder, attacker] = await ethers.getSigners();
-    const MockERC20 = await ethers.getContractFactory("MockERC20");
-    token = await MockERC20.deploy("VFIDE", "VFD", ethers.utils.parseEther("1000000"));
-    const Factory = await ethers.getContractFactory("MainstreamPayments");
-    payments = await Factory.deploy(token.address, owner.address);
-    await payments.deployed();
-    await token.transfer(customer.address, ethers.utils.parseEther("10000"));
-    const caps = {
-      canCreateSession: typeof payments.createSession === "function",
-      canRecordPayment:
-        typeof payments.setAuthorizedRecorder === "function" &&
-        typeof payments.recordPayment === "function",
-    };
-    return { payments, token, owner, merchant, customer, recorder, attacker, capabilities: caps };
-  }
-
-  before(function () {
-    if (!suiteAvailable) {
-      this.skip();
-    }
-  });
-
-  beforeEach(async function () {
-    ({ payments, token, owner, merchant, customer, recorder, attacker, capabilities } = await loadFixture(deployFixture));
-  });
-
-  describe("Session key architecture", function () {
-    beforeEach(function () {
-      if (!capabilities.canCreateSession) {
-        this.skip();
-      }
-    });
-
-    it("should create session key for customer", async function () {
-      const sessionKey = ethers.Wallet.createRandom();
-      const tx = await payments
-        .connect(customer)
-        .createSession(sessionKey.address, ethers.utils.parseEther("100"), 3600);
-      const receipt = await tx.wait();
-      expect(receipt.status).to.equal(1);
-    });
-
-    it("should expose a compatible session lifecycle surface", async function () {
-      const hasExpiryPath =
-        typeof payments.expireSession === "function" ||
-        typeof payments.revokeSession === "function" ||
-        typeof payments.getSession === "function";
-      expect(hasExpiryPath).to.equal(true);
-    });
-  });
-
-  describe("Authorized recorder pattern", function () {
-    beforeEach(function () {
-      if (!capabilities.canRecordPayment) {
-        this.skip();
-      }
-    });
-
-    it("should restrict recording to authorized addresses", async function () {
-      await expect(
-        payments.connect(attacker).recordPayment(customer.address, merchant.address, ethers.utils.parseEther("10"))
-      ).to.be.reverted;
-    });
-
-    it("should allow owner to set authorized recorder", async function () {
-      await payments.connect(owner).setAuthorizedRecorder(recorder.address);
-      const tx = await payments
-        .connect(recorder)
-        .recordPayment(customer.address, merchant.address, ethers.utils.parseEther("10"));
-      const receipt = await tx.wait();
-      expect(receipt.status).to.equal(1);
-    });
-  });
-
-  describe("Payment processing", function () {
-    it("should revert payment to zero address", async function () {
-      await expect(
-        payments.connect(customer).pay(ethers.constants.AddressZero, ethers.utils.parseEther("10"))
-      ).to.be.reverted;
-    });
-  });
-});
-
-describe("VFIDECommerce", function () {
-  const suiteAvailable =
-    hasArtifact("artifacts/contracts/VFIDECommerce.sol/VFIDECommerce.json") &&
-    hasArtifact(
-      "artifacts/test/contracts/mocks/MockContracts.sol/MockERC20.json",
-      "artifacts/test/contracts/mocks/MockERC20.sol/MockERC20.json"
-    );
-
-  let commerce: any;
-  let token: any;
-  let owner: SignerWithAddress;
-  let buyer: SignerWithAddress;
-  let attacker: SignerWithAddress;
-
-  async function deployFixture() {
-    [owner, , buyer, attacker] = await ethers.getSigners();
-    const MockERC20 = await ethers.getContractFactory("MockERC20");
-    token = await MockERC20.deploy("VFIDE", "VFD", ethers.utils.parseEther("1000000"));
-    const Factory = await ethers.getContractFactory("VFIDECommerce");
-    commerce = await Factory.deploy(token.address, owner.address);
-    await commerce.deployed();
-    await token.transfer(buyer.address, ethers.utils.parseEther("10000"));
-    return { commerce, token, owner, buyer, attacker };
-  }
-
-  before(function () {
-    if (!suiteAvailable) {
-      this.skip();
-    }
-  });
-
-  beforeEach(async function () {
-    ({ commerce, token, owner, buyer, attacker } = await loadFixture(deployFixture));
-  });
-
-  describe("Access control", function () {
-    it("should restrict admin functions", async function () {
-      await expect(commerce.connect(attacker).setFeeRate(1000)).to.be.reverted;
-    });
-  });
-});
-
-describe("VFIDESecurity", function () {
-  const suiteAvailable = hasArtifact("artifacts/contracts/VFIDESecurity.sol/VFIDESecurity.json");
-
-  let security: any;
-  let owner: SignerWithAddress;
-  let guardian: SignerWithAddress;
+  let provider: SignerWithAddress;
   let user: SignerWithAddress;
   let attacker: SignerWithAddress;
-  let capabilities: any;
+  let _capabilities: any;
 
   async function deployFixture() {
-    [owner, guardian, user, attacker] = await ethers.getSigners();
-    const Factory = await ethers.getContractFactory("VFIDESecurity");
-    security = await Factory.deploy(owner.address);
-    await security.deployed();
+    [owner, provider, user, attacker] = await ethers.getSigners();
+    const MockERC20 = await ethers.getContractFactory("MockERC20");
+    token = await MockERC20.deploy("VFIDE", "VFD", ethers.utils.parseEther("1000000"));
+    const Factory = await ethers.getContractFactory("FiatRampRegistry");
+    registry = await Factory.deploy(owner.address, ethers.constants.AddressZero, ethers.constants.AddressZero);
+    await registry.deployed();
     const caps = {
-      canOperateSecurityHub:
-        typeof security.registerGuardian === "function" &&
-        typeof security.lockAccount === "function" &&
-        typeof security.unlockAccount === "function" &&
-        typeof security.isLocked === "function",
+      canRegisterProvider: typeof registry.registerProvider === "function",
+      canRecordRamp: typeof registry.recordRampTransaction === "function",
     };
-    return { security, owner, guardian, user, attacker, capabilities: caps };
+    return { registry, token, owner, provider, user, attacker, capabilities: caps };
   }
 
   before(function () {
@@ -181,29 +54,160 @@ describe("VFIDESecurity", function () {
   });
 
   beforeEach(async function () {
-    ({ security, owner, guardian, user, attacker, capabilities } = await loadFixture(deployFixture));
+    ({ registry, token, owner, provider, user, attacker, capabilities: _capabilities } = await loadFixture(deployFixture));
   });
 
-  describe("Security hub operations", function () {
-    beforeEach(function () {
-      if (!capabilities.canOperateSecurityHub) {
+  describe("Provider registry", function () {
+    it("should allow DAO to register provider", async function () {
+      const tx = await registry
+        .connect(owner)
+        .registerProvider(provider.address, "Provider", "License", "https://widget.example");
+      const receipt = await tx.wait();
+      expect(receipt.status).to.equal(1);
+    });
+
+    it("should reject non-DAO provider registration", async function () {
+      await expectRevert(
+        registry.connect(attacker).registerProvider(provider.address, "Provider", "License", "https://widget.example")
+      );
+    });
+  });
+
+  describe("Ramp recording", function () {
+    it("should allow registered provider to record ramp tx", async function () {
+      await registry
+        .connect(owner)
+        .registerProvider(provider.address, "Provider", "License", "https://widget.example");
+
+      const txHash = (`0x${"11".repeat(32)}`) as `0x${string}`;
+      const tx = await registry.connect(provider).recordRampTransaction(user.address, txHash, true);
+      const receipt = await tx.wait();
+      expect(receipt.status).to.equal(1);
+
+      const count = await registry.getProviderCount();
+      expect(count).to.equal(1);
+    });
+
+    it("should reject unregistered provider recording", async function () {
+      const txHash = (`0x${"22".repeat(32)}`) as `0x${string}`;
+      await expectRevert(
+        registry.connect(attacker).recordRampTransaction(user.address, txHash, true)
+      );
+    });
+  });
+});
+
+describe("VFIDECommerce artifact compatibility", function () {
+  const suiteAvailable =
+    hasArtifact("artifacts/contracts/VFIDECommerce.sol/MerchantRegistry.json") &&
+    hasArtifact("artifacts/contracts/VFIDECommerce.sol/CommerceEscrow.json");
+
+  it("should expose MerchantRegistry and CommerceEscrow artifacts", async function () {
+    if (!suiteAvailable) {
+      this.skip();
+    }
+
+    const merchantFactory = await ethers.getContractFactory("MerchantRegistry");
+    const escrowFactory = await ethers.getContractFactory("CommerceEscrow");
+
+    const hasMerchantAdd = merchantFactory.interface.fragments.some(
+      (f: any) => f.type === "function" && f.name === "addMerchant"
+    );
+    const hasEscrowOpen = escrowFactory.interface.fragments.some(
+      (f: any) => f.type === "function" && f.name === "open"
+    );
+
+    expect(hasMerchantAdd).to.equal(true);
+    expect(hasEscrowOpen).to.equal(true);
+  });
+});
+
+describe("VFIDESecurity artifact compatibility", function () {
+  const suiteAvailable = hasArtifact(
+    "artifacts/contracts/VFIDESecurity.sol/SecurityHub.json",
+    "artifacts/contracts/VFIDESecurity.sol/GuardianRegistry.json",
+    "artifacts/contracts/VFIDESecurity.sol/PanicGuard.json"
+  );
+
+  it("should expose core security module artifacts", async function () {
+    if (!suiteAvailable) {
+      this.skip();
+    }
+
+    const securityHubFactory = await ethers.getContractFactory("SecurityHub");
+    const guardianRegistryFactory = await ethers.getContractFactory("GuardianRegistry");
+
+    const hasIsLocked = securityHubFactory.interface.fragments.some(
+      (f: any) => f.type === "function" && f.name === "isLocked"
+    );
+    const hasAddGuardian = guardianRegistryFactory.interface.fragments.some(
+      (f: any) => f.type === "function" && f.name === "addGuardian"
+    );
+
+    expect(hasIsLocked).to.equal(true);
+    expect(hasAddGuardian).to.equal(true);
+  });
+});
+
+describe("GuardianRegistry", function () {
+  let registry: any;
+  let dao: SignerWithAddress;
+  let vaultOwner: SignerWithAddress;
+  let guardian: SignerWithAddress;
+
+  async function deployFixture() {
+    [dao, vaultOwner, guardian] = await ethers.getSigners();
+    const Factory = await ethers.getContractFactory("GuardianRegistry");
+    registry = await Factory.deploy(dao.address);
+    await registry.deployed();
+    return { registry, dao, vaultOwner, guardian };
+  }
+
+  beforeEach(async function () {
+    ({ registry, dao, vaultOwner, guardian } = await loadFixture(deployFixture));
+  });
+
+  it("should allow vault owner to add and remove guardian", async function () {
+    await registry.connect(vaultOwner).addGuardian(vaultOwner.address, guardian.address);
+    expect(await registry.isGuardianOf(vaultOwner.address, guardian.address)).to.equal(true);
+
+    await registry.connect(vaultOwner).removeGuardian(vaultOwner.address, guardian.address);
+    expect(await registry.isGuardianOf(vaultOwner.address, guardian.address)).to.equal(false);
+  });
+});
+
+describe("SecurityHub", function () {
+  it("should expose lock-status read function in ABI", async function () {
+    const Factory = await ethers.getContractFactory("SecurityHub");
+    const hasFn = Factory.interface.fragments.some(
+      (f: any) => f.type === "function" && f.name === "isLocked"
+    );
+    expect(hasFn).to.equal(true);
+  });
+});
+
+describe("Deploy Contracts", function () {
+  const capabilities = {
+    canDeployPhase1: fs.existsSync("artifacts/contracts/DeployPhase1.sol/Phase1Deployer.json"),
+    canDeployPhase3Peripherals: fs.existsSync(
+      "artifacts/contracts/DeployPhase3Peripherals.sol/DeployPhase3Peripherals.json"
+    ),
+  };
+
+  describe("Phase1Deployer", function () {
+    before(function () {
+      if (!capabilities.canDeployPhase1) {
         this.skip();
       }
     });
 
-    it("should prevent unauthorized account locking", async function () {
-      await expect(security.connect(attacker).lockAccount(user.address)).to.be.reverted;
-    });
-
-    it("should lock and unlock via guardian", async function () {
-      await security.connect(user).registerGuardian(guardian.address);
-      await security.connect(owner).lockAccount(user.address);
-      expect(await security.isLocked(user.address)).to.be.true;
-      await security.connect(guardian).unlockAccount(user.address);
-      expect(await security.isLocked(user.address)).to.be.false;
+    it("should deploy Phase1Deployer", async function () {
+      const Factory = await ethers.getContractFactory("Phase1Deployer");
+      const deploy = await Factory.deploy();
+      await deploy.deployed();
+      expect(deploy.address).to.not.equal(ethers.constants.AddressZero);
     });
   });
-});
 
 describe("ProofLedger", function () {
   let proofLedger: any;
@@ -221,7 +225,7 @@ describe("ProofLedger", function () {
       owner,
       user,
       capabilities: {
-        canRecordEntry: typeof proofLedger.recordEntry === "function",
+        canLogEvent: typeof proofLedger.logEvent === "function",
       },
     };
   }
@@ -236,13 +240,13 @@ describe("ProofLedger", function () {
     });
 
     it("should restrict recording to authorized callers", async function () {
-      if (!capabilities.canRecordEntry) {
+      if (!capabilities.canLogEvent) {
         this.skip();
       }
 
-      await expect(
-        proofLedger.connect(user).recordEntry(user.address, 100, "transfer")
-      ).to.be.reverted;
+      await expectRevert(
+        proofLedger.connect(user).logEvent(user.address, "transfer", 100, "test")
+      );
     });
   });
 });
@@ -261,7 +265,7 @@ describe("VFIDEAccessControl", function () {
     await accessControl.deployed();
     const caps = {
       canManageRoles:
-        typeof accessControl.ADMIN_ROLE === "function" &&
+        typeof accessControl.DEFAULT_ADMIN_ROLE === "function" &&
         typeof accessControl.grantRole === "function" &&
         typeof accessControl.revokeRole === "function" &&
         typeof accessControl.hasRole === "function",
@@ -281,14 +285,14 @@ describe("VFIDEAccessControl", function () {
     });
 
     it("should prevent unauthorized role grants", async function () {
-      const ADMIN_ROLE = await accessControl.ADMIN_ROLE();
-      await expect(
+      const ADMIN_ROLE = await accessControl.DEFAULT_ADMIN_ROLE();
+      await expectRevert(
         accessControl.connect(attacker).grantRole(ADMIN_ROLE, attacker.address)
-      ).to.be.reverted;
+      );
     });
 
     it("should grant and revoke roles", async function () {
-      const ADMIN_ROLE = await accessControl.ADMIN_ROLE();
+      const ADMIN_ROLE = await accessControl.DEFAULT_ADMIN_ROLE();
       await accessControl.connect(owner).grantRole(ADMIN_ROLE, admin.address);
       expect(await accessControl.hasRole(ADMIN_ROLE, admin.address)).to.be.true;
       await accessControl.connect(owner).revokeRole(ADMIN_ROLE, admin.address);
@@ -309,7 +313,7 @@ describe("BadgeQualificationRules", function () {
     rules = await Factory.deploy();
     await rules.deployed();
     const caps = {
-      canCheckQualification: typeof rules.isQualified === "function",
+      canCheckQualification: typeof rules.checkQualification === "function",
     };
     return { rules, owner, user, capabilities: caps };
   }
@@ -325,39 +329,49 @@ describe("BadgeQualificationRules", function () {
       }
     });
 
-    it("should reject non-admin qualification changes", async function () {
-      await expect(rules.connect(user).setQualification(1, 100, 30)).to.be.reverted;
+    it("should return true for qualifying ACTIVE_TRADER stats", async function () {
+      const badge = keccak256(toUtf8Bytes("ACTIVE_TRADER"));
+      const qualified = await rules.checkQualification(
+        50,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        700,
+        badge,
+        Math.floor(Date.now() / 1000)
+      );
+
+      expect(qualified).to.equal(true);
     });
 
-    it("should evaluate badge qualification", async function () {
-      const qualified = await rules.isQualified(user.address, 1);
-      expect(typeof qualified).to.equal("boolean");
+    it("should return false for non-qualifying ACTIVE_TRADER stats", async function () {
+      const badge = keccak256(toUtf8Bytes("ACTIVE_TRADER"));
+      const qualified = await rules.checkQualification(
+        10,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        700,
+        badge,
+        Math.floor(Date.now() / 1000)
+      );
+
+      expect(qualified).to.equal(false);
     });
   });
 });
-
-describe("Deploy Contracts", function () {
-  const capabilities = {
-    canDeployPhase1: fs.existsSync("artifacts/contracts/DeployPhase1.sol/DeployPhase1.json"),
-    canDeployPhase3Peripherals: fs.existsSync(
-      "artifacts/contracts/DeployPhase3Peripherals.sol/DeployPhase3Peripherals.json"
-    ),
-  };
-
-  describe("DeployPhase1", function () {
-    before(function () {
-      if (!capabilities.canDeployPhase1) {
-        this.skip();
-      }
-    });
-
-    it("should deploy DeployPhase1", async function () {
-      const Factory = await ethers.getContractFactory("DeployPhase1");
-      const deploy = await Factory.deploy();
-      await deploy.deployed();
-      expect(deploy.address).to.not.equal(ethers.constants.AddressZero);
-    });
-  });
 
   describe("DeployPhase3Peripherals", function () {
     before(function () {

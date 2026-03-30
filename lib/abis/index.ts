@@ -34,12 +34,15 @@ import SanctumVaultABI from './SanctumVault.json'
 import DevReserveVestingABI from './DevReserveVesting.json'
 import PayrollManagerABI from './PayrollManager.json'
 import EcosystemVaultABI from './EcosystemVault.json'
+import EcosystemVaultViewABI from './EcosystemVaultView.json'
 import VaultRegistryABI from './VaultRegistry.json'
 import ERC20ABI from './ERC20.json'
 import SeerSocialABI from './SeerSocial.json'
 import SeerViewABI from './SeerView.json'
 import UserRewardsABI from './UserRewards.json'
-import PromotionalTreasuryABI from './PromotionalTreasury.json'
+import OwnerControlPanelABI from './OwnerControlPanel.json'
+import EscrowManagerABI from './EscrowManager.json'
+import BadgeManagerABI from './BadgeManager.json'
 import { logger } from '@/lib/logger';
 
 // Runtime validation: Ensure ABIs are valid arrays
@@ -85,12 +88,15 @@ validateABI(SanctumVaultABI, 'SanctumVault');
 validateABI(DevReserveVestingABI, 'DevReserveVesting');
 validateABI(PayrollManagerABI, 'PayrollManager');
 validateABI(EcosystemVaultABI, 'EcosystemVault');
+validateABI(EcosystemVaultViewABI, 'EcosystemVaultView');
 validateABI(VaultRegistryABI, 'VaultRegistry');
 validateABI(ERC20ABI, 'ERC20');
 validateABI(SeerSocialABI, 'SeerSocial');
 validateABI(SeerViewABI, 'SeerView');
 validateABI(UserRewardsABI, 'UserRewards');
-validateABI(PromotionalTreasuryABI, 'PromotionalTreasury');
+validateABI(OwnerControlPanelABI, 'OwnerControlPanel');
+validateABI(EscrowManagerABI, 'EscrowManager');
+validateABI(BadgeManagerABI, 'BadgeManager');
 
 // VaultHub ABI points to the full compiled artifact (includes ensureVault, getVaultInfo, etc.).
 validateABI(VaultHubFullABI, 'VaultHub');
@@ -130,10 +136,13 @@ export {
   DevReserveVestingABI,
   PayrollManagerABI,
   EcosystemVaultABI,
+  EcosystemVaultViewABI,
   VaultRegistryABI,
   ERC20ABI,
   SeerSocialABI,
   SeerViewABI,
   UserRewardsABI,
-  PromotionalTreasuryABI,
+  OwnerControlPanelABI,
+  EscrowManagerABI,
+  BadgeManagerABI,
 }

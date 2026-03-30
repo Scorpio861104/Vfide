@@ -38,6 +38,22 @@ npm run lint
 npm run test:ci
 ```
 
+## Advanced Contract Validation
+
+The current blocking lane covers deterministic unit/integration behavior. For high-risk contract changes, add an invariant/fuzz pass before deployment:
+
+```bash
+# Reserved for future invariant suite
+# npx hardhat test test/invariants/**/*.ts
+```
+
+Priority invariant targets:
+
+- vault accounting cannot underflow or over-distribute
+- reward allocation basis points sum correctly
+- timelock and ownership transitions cannot bypass required delays
+- burn/distribution flows preserve total accounting constraints
+
 ## Generated Stub Refresh
 
 When contract artifacts or constructors change, regenerate stubs:

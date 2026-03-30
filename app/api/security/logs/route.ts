@@ -328,6 +328,24 @@ async function notifyCriticalSecurityLog(params: {
     return;
   }
 
+  // Validate webhook URL to prevent SSRF
+  let parsedWebhookUrl: URL;
+  try {
+    parsedWebhookUrl = new URL(webhookUrl);
+  } catch {
+    logger.error('[Security Logs Alert] Invalid webhook URL in environment');
+    return;
+  }
+  if (parsedWebhookUrl.protocol !== 'https:') {
+    logger.error('[Security Logs Alert] Webhook URL must use HTTPS');
+    return;
+  }
+  const webhookHostname = parsedWebhookUrl.hostname.toLowerCase();
+  if (webhookHostname === 'localhost' || webhookHostname === '127.0.0.1' || webhookHostname === '::1' || webhookHostname.endsWith('.local')) {
+    logger.error('[Security Logs Alert] Webhook URL targets blocked host');
+    return;
+  }
+
   const webhookSecret = process.env[SECURITY_ALERT_WEBHOOK_SECRET_ENV]?.trim();
   const runbookUrl = process.env[SECURITY_ALERT_RUNBOOK_URL_ENV]?.trim() || null;
 

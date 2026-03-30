@@ -2,6 +2,7 @@
 pragma solidity 0.8.30;
 
 import { ReentrancyGuard, ISeer } from "./SharedInterfaces.sol";
+import { SeerAutonomousLib } from "./SeerAutonomousLib.sol";
 
 /**
  * @title SeerAutonomous
@@ -1017,60 +1018,15 @@ contract SeerAutonomous is ReentrancyGuard {
             patternSensitivity
         );
 
-        // Tighten rate limits across all restriction levels and action types.
-        _setRateLimitWithEvent(RestrictionLevel.None, ActionType.Transfer, 300);
-        _setRateLimitWithEvent(RestrictionLevel.None, ActionType.VaultDeposit, 300);
-        _setRateLimitWithEvent(RestrictionLevel.None, ActionType.VaultWithdraw, 300);
-        _setRateLimitWithEvent(RestrictionLevel.None, ActionType.GovernanceVote, 30);
-        _setRateLimitWithEvent(RestrictionLevel.None, ActionType.GovernancePropose, 6);
-        _setRateLimitWithEvent(RestrictionLevel.None, ActionType.Endorse, 30);
-        _setRateLimitWithEvent(RestrictionLevel.None, ActionType.Stake, 60);
-        _setRateLimitWithEvent(RestrictionLevel.None, ActionType.Trade, 300);
-
-        _setRateLimitWithEvent(RestrictionLevel.Monitored, ActionType.Transfer, 40);
-        _setRateLimitWithEvent(RestrictionLevel.Monitored, ActionType.VaultDeposit, 40);
-        _setRateLimitWithEvent(RestrictionLevel.Monitored, ActionType.VaultWithdraw, 40);
-        _setRateLimitWithEvent(RestrictionLevel.Monitored, ActionType.GovernanceVote, 15);
-        _setRateLimitWithEvent(RestrictionLevel.Monitored, ActionType.GovernancePropose, 3);
-        _setRateLimitWithEvent(RestrictionLevel.Monitored, ActionType.Endorse, 15);
-        _setRateLimitWithEvent(RestrictionLevel.Monitored, ActionType.Stake, 15);
-        _setRateLimitWithEvent(RestrictionLevel.Monitored, ActionType.Trade, 40);
-
-        _setRateLimitWithEvent(RestrictionLevel.Limited, ActionType.Transfer, 8);
-        _setRateLimitWithEvent(RestrictionLevel.Limited, ActionType.VaultDeposit, 8);
-        _setRateLimitWithEvent(RestrictionLevel.Limited, ActionType.VaultWithdraw, 8);
-        _setRateLimitWithEvent(RestrictionLevel.Limited, ActionType.GovernanceVote, 3);
-        _setRateLimitWithEvent(RestrictionLevel.Limited, ActionType.GovernancePropose, 1);
-        _setRateLimitWithEvent(RestrictionLevel.Limited, ActionType.Endorse, 4);
-        _setRateLimitWithEvent(RestrictionLevel.Limited, ActionType.Stake, 4);
-        _setRateLimitWithEvent(RestrictionLevel.Limited, ActionType.Trade, 8);
-
-        _setRateLimitWithEvent(RestrictionLevel.Restricted, ActionType.Transfer, 2);
-        _setRateLimitWithEvent(RestrictionLevel.Restricted, ActionType.VaultDeposit, 1);
-        _setRateLimitWithEvent(RestrictionLevel.Restricted, ActionType.VaultWithdraw, 1);
-        _setRateLimitWithEvent(RestrictionLevel.Restricted, ActionType.GovernanceVote, 0);
-        _setRateLimitWithEvent(RestrictionLevel.Restricted, ActionType.GovernancePropose, 0);
-        _setRateLimitWithEvent(RestrictionLevel.Restricted, ActionType.Endorse, 1);
-        _setRateLimitWithEvent(RestrictionLevel.Restricted, ActionType.Stake, 1);
-        _setRateLimitWithEvent(RestrictionLevel.Restricted, ActionType.Trade, 2);
-
-        _setRateLimitWithEvent(RestrictionLevel.Suspended, ActionType.Transfer, 0);
-        _setRateLimitWithEvent(RestrictionLevel.Suspended, ActionType.VaultDeposit, 0);
-        _setRateLimitWithEvent(RestrictionLevel.Suspended, ActionType.VaultWithdraw, 0);
-        _setRateLimitWithEvent(RestrictionLevel.Suspended, ActionType.GovernanceVote, 0);
-        _setRateLimitWithEvent(RestrictionLevel.Suspended, ActionType.GovernancePropose, 0);
-        _setRateLimitWithEvent(RestrictionLevel.Suspended, ActionType.Endorse, 0);
-        _setRateLimitWithEvent(RestrictionLevel.Suspended, ActionType.Stake, 0);
-        _setRateLimitWithEvent(RestrictionLevel.Suspended, ActionType.Trade, 0);
-
-        _setRateLimitWithEvent(RestrictionLevel.Frozen, ActionType.Transfer, 0);
-        _setRateLimitWithEvent(RestrictionLevel.Frozen, ActionType.VaultDeposit, 0);
-        _setRateLimitWithEvent(RestrictionLevel.Frozen, ActionType.VaultWithdraw, 0);
-        _setRateLimitWithEvent(RestrictionLevel.Frozen, ActionType.GovernanceVote, 0);
-        _setRateLimitWithEvent(RestrictionLevel.Frozen, ActionType.GovernancePropose, 0);
-        _setRateLimitWithEvent(RestrictionLevel.Frozen, ActionType.Endorse, 0);
-        _setRateLimitWithEvent(RestrictionLevel.Frozen, ActionType.Stake, 0);
-        _setRateLimitWithEvent(RestrictionLevel.Frozen, ActionType.Trade, 0);
+        // Apply rate limits from library-supplied profile table
+        SeerAutonomousLib.RateLimitEntry[48] memory profile = SeerAutonomousLib.getMaxAutonomyProfile();
+        for (uint256 i = 0; i < 48; i++) {
+            _setRateLimitWithEvent(
+                RestrictionLevel(profile[i].level),
+                ActionType(profile[i].action),
+                profile[i].limit
+            );
+        }
 
         emit DAOMaxAutonomyProfileApplied(msg.sender);
     }

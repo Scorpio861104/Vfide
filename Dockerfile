@@ -5,7 +5,7 @@
 #   docker pull node:25-alpine
 #   docker inspect node:25-alpine --format='{{index .RepoDigests 0}}'
 # Then replace `node:25-alpine` with `node:25-alpine@sha256:<digest>` on the FROM line below.
-FROM node:25-alpine AS base
+FROM node:25-alpine@sha256:cf38e1f3c28ac9d81cdc0c51d8220320b3b618780e44ef96a39f76f7dbfef023 AS base
 
 # Install dependencies only when needed
 FROM base AS deps

@@ -29,6 +29,9 @@ export function GroupsManager({ friends, onSelectGroup, selectedGroup }: GroupsM
   const { toast } = useToast();
   const [groups, setGroups] = useState<Group[]>([]);
   const [pendingLeaveGroupId, setPendingLeaveGroupId] = useState<string | null>(null);
+  const [settingsGroupId, setSettingsGroupId] = useState<string | null>(null);
+  const [settingsName, setSettingsName] = useState('');
+  const [settingsDescription, setSettingsDescription] = useState('');
   const [showCreateGroup, setShowCreateGroup] = useState(false);
   const [newGroupName, setNewGroupName] = useState('');
   const [newGroupDescription, setNewGroupDescription] = useState('');
@@ -93,6 +96,23 @@ export function GroupsManager({ friends, onSelectGroup, selectedGroup }: GroupsM
     if (!pendingLeaveGroupId) return;
     setGroups(groups.filter((g) => g.id !== pendingLeaveGroupId));
     setPendingLeaveGroupId(null);
+  };
+
+  const handleOpenSettings = (group: Group) => {
+    setSettingsGroupId(group.id);
+    setSettingsName(group.name);
+    setSettingsDescription(group.description ?? '');
+  };
+
+  const handleSaveSettings = () => {
+    if (!settingsGroupId || !settingsName.trim()) return;
+    setGroups(prev => prev.map(g =>
+      g.id === settingsGroupId
+        ? { ...g, name: settingsName.trim(), description: settingsDescription.trim() || undefined }
+        : g
+    ));
+    toast({ title: 'Group updated', description: `"${settingsName.trim()}" saved.` });
+    setSettingsGroupId(null);
   };
 
   const toggleMemberSelection = (memberAddress: string) => {
@@ -275,10 +295,7 @@ export function GroupsManager({ friends, onSelectGroup, selectedGroup }: GroupsM
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            toast({
-                              title: 'Group Settings',
-                              description: 'Group settings are coming soon.',
-                            });
+                            handleOpenSettings(group);
                           }}
                           className="p-1.5 rounded-lg hover:bg-zinc-700 text-zinc-400 hover:text-zinc-100 transition-colors"
                         >
@@ -334,6 +351,65 @@ export function GroupsManager({ friends, onSelectGroup, selectedGroup }: GroupsM
                   className="flex-1 rounded-lg bg-pink-600 px-3 py-2 text-sm font-semibold text-white hover:bg-pink-700 transition-colors"
                 >
                   Leave Group
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Group Settings Modal */}
+      <AnimatePresence>
+        {settingsGroupId && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 z-20 flex items-center justify-center bg-black/70 p-4"
+            onClick={() => setSettingsGroupId(null)}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              transition={{ duration: 0.15 }}
+              className="w-full max-w-sm rounded-xl border border-zinc-700 bg-zinc-900 p-4"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <h4 className="text-sm font-semibold text-zinc-100 mb-3 flex items-center gap-2">
+                <Settings className="w-4 h-4 text-violet-400" />
+                Group Settings
+              </h4>
+              <label className="text-xs text-zinc-400 mb-1 block">Name</label>
+              <input
+                type="text"
+                value={settingsName}
+                onChange={(e) => setSettingsName(e.target.value)}
+                maxLength={80}
+                className="w-full px-3 py-2 mb-3 bg-zinc-800 border border-zinc-700 rounded-lg text-zinc-100 text-sm focus:border-violet-400 focus:outline-none"
+              />
+              <label className="text-xs text-zinc-400 mb-1 block">Description</label>
+              <input
+                type="text"
+                value={settingsDescription}
+                onChange={(e) => setSettingsDescription(e.target.value)}
+                maxLength={200}
+                placeholder="Optional"
+                className="w-full px-3 py-2 mb-4 bg-zinc-800 border border-zinc-700 rounded-lg text-zinc-100 text-sm focus:border-violet-400 focus:outline-none"
+              />
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setSettingsGroupId(null)}
+                  className="flex-1 rounded-lg border border-zinc-700 px-3 py-2 text-sm text-zinc-200 hover:bg-zinc-800 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSaveSettings}
+                  disabled={!settingsName.trim()}
+                  className="flex-1 rounded-lg bg-violet-600 px-3 py-2 text-sm font-semibold text-white hover:bg-violet-700 disabled:opacity-50 transition-colors"
+                >
+                  Save
                 </button>
               </div>
             </motion.div>

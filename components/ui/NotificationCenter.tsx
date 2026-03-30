@@ -88,65 +88,8 @@ const priorityColors: Record<NotificationPriority, string> = {
 
 const STORAGE_KEY = 'vfide-notif-prefs';
 
-// Mock notifications with enhanced data
-const mockNotifications: Notification[] = [
-  {
-    id: '1',
-    type: 'vote',
-    title: 'Active Proposal',
-    message: 'Proposal #142: Treasury allocation ends in 5 hours',
-    time: '5h',
-    timestamp: Date.now() - 5 * 60 * 60 * 1000,
-    href: '/governance',
-    read: false,
-    priority: 'high',
-    groupKey: 'governance',
-  },
-  {
-    id: '2',
-    type: 'reward',
-    title: 'Claimable Rewards',
-    message: '467.50 VFIDE from payroll streams',
-    time: '1d',
-    timestamp: Date.now() - 24 * 60 * 60 * 1000,
-    href: '/payroll',
-    read: false,
-    priority: 'medium',
-  },
-  {
-    id: '3',
-    type: 'security',
-    title: 'Guardian Request',
-    message: '0x1a2b...3c4d wants you as guardian',
-    time: '2d',
-    timestamp: Date.now() - 48 * 60 * 60 * 1000,
-    href: '/vault',
-    read: false,
-    priority: 'critical',
-  },
-  {
-    id: '4',
-    type: 'success',
-    title: 'Badge Unlocked',
-    message: 'You earned the "Early Adopter" badge!',
-    time: '3d',
-    timestamp: Date.now() - 72 * 60 * 60 * 1000,
-    href: '/badges',
-    read: true,
-    priority: 'low',
-  },
-  {
-    id: '5',
-    type: 'transaction',
-    title: 'Transaction Confirmed',
-    message: 'Sent 0.5 ETH to alice.eth',
-    time: '10m',
-    timestamp: Date.now() - 10 * 60 * 1000,
-    href: '/crypto',
-    read: false,
-    priority: 'medium',
-  },
-];
+// Initial empty state (notifications will be populated by backend/websocket events)
+const initialNotifications: Notification[] = [];
 
 // ==================== HELPERS ====================
 
@@ -409,7 +352,7 @@ function SettingsPanel({ prefs, onUpdate }: SettingsPanelProps) {
 
 export function NotificationCenter() {
   const [isOpen, setIsOpen] = useState(false);
-  const [notifications, setNotifications] = useState(mockNotifications);
+  const [notifications, setNotifications] = useState(initialNotifications);
   const [activeTab, setActiveTab] = useState<'all' | 'unread' | 'settings'>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [prefs, setPrefs] = useState<NotificationPreferences>({

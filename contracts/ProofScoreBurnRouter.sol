@@ -620,12 +620,14 @@ contract ProofScoreBurnRouter is Ownable, Pausable {
     }
 
     function _validateModules(address _seer, address _sanctumSink, address _burnSink, address _ecosystemSink) internal pure {
-        if (_seer == address(0) || _sanctumSink == address(0) || _burnSink == address(0) || _ecosystemSink == address(0)) {
+        if (_seer == address(0) || _sanctumSink == address(0) || _ecosystemSink == address(0)) {
             revert BURN_Zero();
         }
-        require(_sanctumSink != _burnSink, "BR: duplicate sinks");
         require(_sanctumSink != _ecosystemSink, "BR: duplicate sinks");
-        require(_burnSink != _ecosystemSink, "BR: duplicate sinks");
+        if (_burnSink != address(0)) {
+            require(_sanctumSink != _burnSink, "BR: duplicate sinks");
+            require(_burnSink != _ecosystemSink, "BR: duplicate sinks");
+        }
     }
     
     /**

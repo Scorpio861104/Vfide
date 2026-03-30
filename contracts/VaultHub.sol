@@ -47,10 +47,19 @@ contract VaultHub is Ownable, Pausable, ReentrancyGuard {
     uint64 public constant SECURITY_HUB_CHANGE_DELAY = 48 hours;
     address public pendingSecurityHub_VH;
     uint64  public pendingSecurityHubAt_VH;
+    address public pendingVFIDE_VH;
+    uint64 public pendingVFIDEAt_VH;
+    address public pendingProofLedger_VH;
+    uint64 public pendingProofLedgerAt_VH;
+    address public pendingDAO_VH;
+    uint64 public pendingDAOAt_VH;
 
     /// Events
     event ModulesSet(address vfide, address securityHub, address ledger, address dao);
-        event SecurityHubScheduled_VH(address indexed hub, uint64 effectiveAt);
+    event SecurityHubScheduled_VH(address indexed hub, uint64 effectiveAt);
+    event VFIDEScheduled_VH(address indexed vfide, uint64 effectiveAt);
+    event ProofLedgerScheduled_VH(address indexed ledger, uint64 effectiveAt);
+    event DAOScheduled_VH(address indexed dao, uint64 effectiveAt);
     event VaultCreated(address indexed owner, address indexed vault);
     event ForcedRecoveryInitiated(address indexed vault, address indexed newOwner, uint64 unlockTime);
     event ForcedRecovery(address indexed vault, address indexed newOwner);
@@ -76,27 +85,35 @@ contract VaultHub is Ownable, Pausable, ReentrancyGuard {
 
     // ——— Module wiring
     function setModules(address _vfideToken, address _securityHub, address _ledger, address _dao) external onlyOwner {
-        if (_vfideToken == address(0) || _securityHub == address(0) || _dao == address(0)) revert VH_Zero();
-        vfideToken = _vfideToken;
-        securityHub = ISecurityHub(_securityHub);
-        ledger = IProofLedger(_ledger);
-        dao = _dao;
-        emit ModulesSet(_vfideToken, _securityHub, _ledger, _dao);
-        _log("hub_modules_set");
+        _vfideToken; _securityHub; _ledger; _dao;
+        revert("VH: use individual setters");
     }
 
     function setVFIDE(address _vfide) external onlyOwner {
         if (_vfide == address(0)) revert VH_Zero();
-        vfideToken = _vfide;
-        emit VFIDESet(_vfide);
-        _log("hub_vfide_set");
+        uint64 effectiveAt = uint64(block.timestamp) + SECURITY_HUB_CHANGE_DELAY;
+        pendingVFIDE_VH = _vfide;
+        pendingVFIDEAt_VH = effectiveAt;
+        emit VFIDEScheduled_VH(_vfide, effectiveAt);
+        _log("hub_vfide_scheduled");
     }
 
     // IVaultHub compatibility wrapper
     function setVFIDEToken(address token) external onlyOwner {
         if (token == address(0)) revert VH_Zero();
-        vfideToken = token;
-        emit VFIDESet(token);
+        uint64 effectiveAt = uint64(block.timestamp) + SECURITY_HUB_CHANGE_DELAY;
+        pendingVFIDE_VH = token;
+        pendingVFIDEAt_VH = effectiveAt;
+        emit VFIDEScheduled_VH(token, effectiveAt);
+        _log("hub_vfide_scheduled");
+    }
+
+    function applyVFIDEToken() external onlyOwner {
+        require(pendingVFIDEAt_VH != 0 && block.timestamp >= pendingVFIDEAt_VH, "VH: timelock");
+        vfideToken = pendingVFIDE_VH;
+        emit VFIDESet(pendingVFIDE_VH);
+        delete pendingVFIDE_VH;
+        delete pendingVFIDEAt_VH;
         _log("hub_vfide_set");
     }
 
@@ -120,7 +137,18 @@ contract VaultHub is Ownable, Pausable, ReentrancyGuard {
 
     // IVaultHub compatibility wrapper
     function setProofLedger(address proofLedger) external onlyOwner {
-        ledger = IProofLedger(proofLedger);
+        uint64 effectiveAt = uint64(block.timestamp) + SECURITY_HUB_CHANGE_DELAY;
+        pendingProofLedger_VH = proofLedger;
+        pendingProofLedgerAt_VH = effectiveAt;
+        emit ProofLedgerScheduled_VH(proofLedger, effectiveAt);
+        _log("hub_ledger_scheduled");
+    }
+
+    function applyProofLedger() external onlyOwner {
+        require(pendingProofLedgerAt_VH != 0 && block.timestamp >= pendingProofLedgerAt_VH, "VH: timelock");
+        ledger = IProofLedger(pendingProofLedger_VH);
+        delete pendingProofLedger_VH;
+        delete pendingProofLedgerAt_VH;
         _log("hub_ledger_set");
     }
 
@@ -140,8 +168,19 @@ contract VaultHub is Ownable, Pausable, ReentrancyGuard {
 
     function setDAO(address _dao) external onlyOwner {
         if (_dao == address(0)) revert VH_Zero();
-        dao = _dao;
-        emit DAOSet(_dao);
+        uint64 effectiveAt = uint64(block.timestamp) + SECURITY_HUB_CHANGE_DELAY;
+        pendingDAO_VH = _dao;
+        pendingDAOAt_VH = effectiveAt;
+        emit DAOScheduled_VH(_dao, effectiveAt);
+        _log("hub_dao_scheduled");
+    }
+
+    function applyDAO() external onlyOwner {
+        require(pendingDAOAt_VH != 0 && block.timestamp >= pendingDAOAt_VH, "VH: timelock");
+        dao = pendingDAO_VH;
+        emit DAOSet(pendingDAO_VH);
+        delete pendingDAO_VH;
+        delete pendingDAOAt_VH;
         _log("hub_dao_set");
     }
     

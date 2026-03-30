@@ -22,6 +22,17 @@ const ALLOWED_FILE_TYPES = [
 
 const ALLOWED_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.pdf', '.txt', '.doc', '.docx'];
 
+const MIME_EXTENSION_MAP: Record<string, string[]> = {
+  'image/jpeg': ['.jpg', '.jpeg'],
+  'image/png': ['.png'],
+  'image/gif': ['.gif'],
+  'image/webp': ['.webp'],
+  'application/pdf': ['.pdf'],
+  'text/plain': ['.txt'],
+  'application/msword': ['.doc'],
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'],
+};
+
 function isObjectRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
@@ -110,6 +121,26 @@ export async function POST(request: NextRequest) {
     if (!hasValidExtension) {
       return NextResponse.json(
         { error: 'File extension not allowed' },
+        { status: 400 }
+      );
+    }
+
+    // Block double extensions (e.g., file.php.png)
+    const fileBasename = lowerFilename.split('/').pop() || lowerFilename;
+    const dotCount = (fileBasename.match(/\./g) || []).length;
+    if (dotCount > 1) {
+      return NextResponse.json(
+        { error: 'Multiple file extensions are not allowed' },
+        { status: 400 }
+      );
+    }
+
+    // Validate MIME type matches file extension
+    const fileExt = '.' + fileBasename.split('.').pop();
+    const allowedExtsForMime = MIME_EXTENSION_MAP[fileType];
+    if (!allowedExtsForMime || !allowedExtsForMime.includes(fileExt)) {
+      return NextResponse.json(
+        { error: 'File type does not match file extension' },
         { status: 400 }
       );
     }

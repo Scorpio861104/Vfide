@@ -73,6 +73,8 @@ next-env.d.ts
 
 .turbo
 .next
+artifacts/
+cache/
 
 
 # Deployment wizard state
@@ -83,3 +85,7 @@ deployments-solo-*.json
 /VFIDE_Complete_Package.zip
 /VFIDE_Full_Audit_v2.docx
 /vfide-complete/
+# Audit archives and unpack workspace
+/Vfide-full-repo-audit-complete.zip
+/newaudit.zip
+/.audit_unpack/

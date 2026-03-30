@@ -160,12 +160,12 @@ export default function DailyQuestsPanel() {
   const [quests, setQuests] = useState<Quest[]>([]);
   const [showCalendar, setShowCalendar] = useState(false);
   const [streak] = useState<StreakData>({
-    current: 7,
-    longest: 12,
-    lastActive: Date.now(),
-    nextMilestone: 30,
-    multiplier: 1.15,
-    history: Array(30).fill(false).map((_, i) => i < 7 || Math.random() > 0.4)
+    current: 0,
+    longest: 0,
+    lastActive: 0,
+    nextMilestone: 7,
+    multiplier: 1.0,
+    history: Array(30).fill(false)
   });
   const [showClaimModal, setShowClaimModal] = useState(false);
   const [claimedReward, setClaimedReward] = useState<Quest | null>(null);
@@ -178,8 +178,8 @@ export default function DailyQuestsPanel() {
   }, [isConnected, activeTab]);
 
   const loadQuests = async () => {
-    const mockQuests: Quest[] = generateMockQuests(activeTab);
-    setQuests(mockQuests);
+    // Quest data will be populated by backend/contract integration
+    setQuests([]);
   };
 
   const claimReward = async (quest: Quest) => {
@@ -621,164 +621,4 @@ function ClaimRewardModal({ reward, onClose }: { reward: Quest; onClose: () => v
       </div>
     </div>
   );
-}
-
-// Generate Mock Quests
-function generateMockQuests(type: 'daily' | 'weekly' | 'monthly'): Quest[] {
-  const now = Date.now();
-  const day = 24 * 60 * 60 * 1000;
-  
-  if (type === 'daily') {
-    return [
-      {
-        id: 'd1',
-        type: 'daily',
-        title: 'Daily Login',
-        description: 'Log in to VFIDE today',
-        progress: 1,
-        target: 1,
-        reward: { xp: 50 },
-        completed: true,
-        claimed: false,
-        expiresAt: now + day,
-        difficulty: 'easy',
-        icon: '🌅'
-      },
-      {
-        id: 'd2',
-        type: 'daily',
-        title: 'First Transaction',
-        description: 'Make at least 1 transaction',
-        progress: 0,
-        target: 1,
-        reward: { xp: 100 },
-        completed: false,
-        claimed: false,
-        expiresAt: now + day,
-        difficulty: 'easy',
-        icon: '💸'
-      },
-      {
-        id: 'd3',
-        type: 'daily',
-        title: 'Social Butterfly',
-        description: 'Send 3 messages',
-        progress: 2,
-        target: 3,
-        reward: { xp: 75 },
-        completed: false,
-        claimed: false,
-        expiresAt: now + day,
-        difficulty: 'easy',
-        icon: '💬'
-      },
-      {
-        id: 'd4',
-        type: 'daily',
-        title: 'Vote on Proposal',
-        description: 'Cast 1 governance vote',
-        progress: 0,
-        target: 1,
-        reward: { xp: 150 },
-        completed: false,
-        claimed: false,
-        expiresAt: now + day,
-        difficulty: 'medium',
-        icon: '🗳️'
-      }
-    ];
-  }
-  
-  if (type === 'weekly') {
-    return [
-      {
-        id: 'w1',
-        type: 'weekly',
-        title: 'Transaction Master',
-        description: 'Complete 20 transactions',
-        progress: 12,
-        target: 20,
-        reward: { xp: 500 },
-        completed: false,
-        claimed: false,
-        expiresAt: now + 5 * day,
-        difficulty: 'medium',
-        icon: '💰'
-      },
-      {
-        id: 'w2',
-        type: 'weekly',
-        title: 'Friend Collector',
-        description: 'Add 5 new friends',
-        progress: 3,
-        target: 5,
-        reward: { xp: 400 },
-        completed: false,
-        claimed: false,
-        expiresAt: now + 5 * day,
-        difficulty: 'medium',
-        icon: '👥'
-      },
-      {
-        id: 'w3',
-        type: 'weekly',
-        title: 'Governance Participant',
-        description: 'Vote on 5 proposals',
-        progress: 5,
-        target: 5,
-        reward: { xp: 600, badge: 'Active Voter' },
-        completed: true,
-        claimed: false,
-        expiresAt: now + 5 * day,
-        difficulty: 'hard',
-        icon: '⚖️'
-      }
-    ];
-  }
-  
-  // Monthly quests
-  return [
-    {
-      id: 'm1',
-      type: 'monthly',
-      title: 'Power User',
-      description: 'Complete 100 transactions',
-      progress: 67,
-      target: 100,
-      reward: { xp: 2500, badge: 'Power User' },
-      completed: false,
-      claimed: false,
-      expiresAt: now + 20 * day,
-      difficulty: 'hard',
-      icon: '⚡'
-    },
-    {
-      id: 'm2',
-      type: 'monthly',
-      title: 'ProofScore Elite',
-      description: 'Reach 8000 ProofScore',
-      progress: 7850,
-      target: 8000,
-      reward: { xp: 3000, badge: 'Elite Member' },
-      completed: false,
-      claimed: false,
-      expiresAt: now + 20 * day,
-      difficulty: 'legendary',
-      icon: '👑'
-    },
-    {
-      id: 'm3',
-      type: 'monthly',
-      title: 'Community Leader',
-      description: 'Help 10 users resolve issues',
-      progress: 4,
-      target: 10,
-      reward: { xp: 5000, badge: 'Community Helper' },
-      completed: false,
-      claimed: false,
-      expiresAt: now + 20 * day,
-      difficulty: 'legendary',
-      icon: '🤝'
-    }
-  ];
 }

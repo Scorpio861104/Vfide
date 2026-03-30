@@ -239,6 +239,77 @@ describe("VaultHub (F-20: SecurityHub timelock)", () => {
     assert.equal(await hub.pendingSecurityHub_VH(), ethers.ZeroAddress);
     assert.equal(await hub.pendingSecurityHubAt_VH(), 0n);
   });
+
+  it("rejects legacy setModules and delays VFIDE, ledger, and DAO changes", async () => {
+    const { ethers } = (await network.connect()) as any;
+    const [owner] = await ethers.getSigners();
+
+    const TokenStub = await ethers.getContractFactory("TokenStub");
+    const token = await TokenStub.deploy();
+    const newToken = await TokenStub.deploy();
+    await token.waitForDeployment();
+    await newToken.waitForDeployment();
+
+    const Placeholder = await ethers.getContractFactory("Placeholder");
+    const security = await Placeholder.deploy();
+    const oldLedger = await Placeholder.deploy();
+    const newLedger = await Placeholder.deploy();
+    const oldDao = await Placeholder.deploy();
+    const newDao = await Placeholder.deploy();
+    await security.waitForDeployment();
+    await oldLedger.waitForDeployment();
+    await newLedger.waitForDeployment();
+    await oldDao.waitForDeployment();
+    await newDao.waitForDeployment();
+
+    const VaultHub = await ethers.getContractFactory("VaultHub");
+    const hub = await VaultHub.deploy(
+      await token.getAddress(),
+      await security.getAddress(),
+      await oldLedger.getAddress(),
+      await oldDao.getAddress(),
+    );
+    await hub.waitForDeployment();
+
+    const newTokenAddress = await newToken.getAddress();
+    const securityAddress = await security.getAddress();
+    const newLedgerAddress = await newLedger.getAddress();
+    const newDaoAddress = await newDao.getAddress();
+
+    await assert.rejects(
+      () => hub.connect(owner).setModules(newTokenAddress, securityAddress, newLedgerAddress, newDaoAddress),
+      /VH: use individual setters/
+    );
+
+    await hub.connect(owner).setVFIDEToken(newTokenAddress);
+    await hub.connect(owner).setProofLedger(newLedgerAddress);
+    await hub.connect(owner).setDAO(newDaoAddress);
+
+    assert.equal(await hub.vfideToken(), await token.getAddress());
+    assert.equal(await hub.pendingVFIDE_VH(), newTokenAddress);
+    assert.equal(await hub.pendingProofLedger_VH(), newLedgerAddress);
+    assert.equal(await hub.pendingDAO_VH(), newDaoAddress);
+
+    await assert.rejects(() => hub.connect(owner).applyVFIDEToken(), /VH: timelock|revert/);
+    await assert.rejects(() => hub.connect(owner).applyProofLedger(), /VH: timelock|revert/);
+    await assert.rejects(() => hub.connect(owner).applyDAO(), /VH: timelock|revert/);
+
+    await ethers.provider.send("evm_increaseTime", [48 * 60 * 60]);
+    await ethers.provider.send("evm_mine", []);
+
+    await hub.connect(owner).applyVFIDEToken();
+    await hub.connect(owner).applyProofLedger();
+    await hub.connect(owner).applyDAO();
+
+    assert.equal(await hub.vfideToken(), newTokenAddress);
+    assert.equal(await hub.pendingVFIDE_VH(), ethers.ZeroAddress);
+    assert.equal(await hub.pendingVFIDEAt_VH(), 0n);
+    assert.equal(await hub.pendingProofLedger_VH(), ethers.ZeroAddress);
+    assert.equal(await hub.pendingProofLedgerAt_VH(), 0n);
+    assert.equal(await hub.dao(), newDaoAddress);
+    assert.equal(await hub.pendingDAO_VH(), ethers.ZeroAddress);
+    assert.equal(await hub.pendingDAOAt_VH(), 0n);
+  });
 });
 
 describe("MerchantPortal (NEW-05: auto-convert safety hold)", () => {

@@ -5,10 +5,14 @@ import {
 } from '@/lib/security/webhookConsumerGuard';
 import { PostgresWebhookReplayTelemetry } from '@/lib/security/webhookReplayTelemetry';
 import { getRequestCorrelationContext } from '@/lib/security/requestContext';
+import { withRateLimit } from '@/lib/auth/rateLimit';
 
 const WEBHOOK_SECRET_ENV = 'SECURITY_ALERT_WEBHOOK_SECRET';
 
 export async function POST(request: NextRequest) {
+  const rateLimitResponse = await withRateLimit(request, 'write');
+  if (rateLimitResponse) return rateLimitResponse;
+
   const secret = process.env[WEBHOOK_SECRET_ENV]?.trim();
   if (!secret) {
     return NextResponse.json({ error: 'Webhook secret is not configured' }, { status: 500 });

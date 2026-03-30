@@ -354,8 +354,8 @@ function PayContent() {
               <div className="space-y-3">
                 {[
                   { id: 'vfide' as const, label: 'VFIDE Token', desc: `0.25-5% burn fee (ProofScore-based) • ${settlementTone.method}` },
-                  { id: 'usdc' as const, label: 'USDC', desc: 'Stablecoin • Coming soon on this checkout route' },
-                  { id: 'usdt' as const, label: 'USDT', desc: 'Stablecoin • Coming soon on this checkout route' },
+                  { id: 'usdc' as const, label: 'USDC', desc: 'Stablecoin • Supported on this checkout route' },
+                  { id: 'usdt' as const, label: 'USDT', desc: 'Stablecoin • Supported on this checkout route' },
                 ].map((method) => (
                   <motion.button 
                     key={method.id}

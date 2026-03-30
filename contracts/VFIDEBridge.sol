@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
-import {OApp, Origin, MessagingFee} from "@layerzerolabs/lz-evm-oapp-v2/contracts/oapp/OApp.sol";
+import {OApp, Origin, MessagingFee, MessagingReceipt} from "@layerzerolabs/lz-evm-oapp-v2/contracts/oapp/OApp.sol";
 import {OAppOptionsType3} from "@layerzerolabs/lz-evm-oapp-v2/contracts/oapp/libs/OAppOptionsType3.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
@@ -29,6 +29,9 @@ import "@openzeppelin/contracts/utils/Pausable.sol";
  */
 contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
     using SafeERC20 for IERC20;
+
+    uint16 internal constant MSG_TYPE_BRIDGE_TRANSFER = 1;
+    uint16 internal constant MSG_TYPE_BRIDGE_CONFIRMATION = 2;
 
     /// @notice VFIDE token contract
     IERC20 public immutable vfideToken;
@@ -139,6 +142,7 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
         uint256 amount,
         bytes32 txId
     );
+    event BridgeDeliveryConfirmed(bytes32 indexed txId);
 
     event TrustedRemoteSet(uint32 indexed chainId, bytes32 remote);
     event TrustedRemoteScheduled(uint32 indexed chainId, bytes32 remote, uint64 effectiveAt);
@@ -171,6 +175,7 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
     error RateLimitExceeded();
     error InvalidFee();
     error TransferFailed();
+    error ConfirmationSendFailed();
 
     /**
      * @notice Constructor
@@ -229,14 +234,20 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
             vfideToken.safeTransfer(feeCollector, fee);
         }
 
-        // Prepare message payload
-        bytes memory payload = abi.encode(_to, amountAfterFee);
+        // Prepare message payload.
+        bytes memory payload = abi.encode(MSG_TYPE_BRIDGE_TRANSFER, _to, amountAfterFee);
+        bytes memory options = combineOptions(_dstChainId, MSG_TYPE_BRIDGE_TRANSFER, _options);
 
-        // Generate transaction ID
-        uint256 nonce = ++bridgeTxNonce;
-        bytes32 txId = keccak256(
-            abi.encodePacked(msg.sender, _to, _amount, _dstChainId, block.timestamp, nonce)
+        // Send message via LayerZero first so the transaction ID is the real transport GUID.
+        MessagingReceipt memory receipt = _lzSend(
+            _dstChainId,
+            payload,
+            options,
+            MessagingFee(msg.value, 0),
+            payable(msg.sender)
         );
+        bytes32 txId = receipt.guid;
+        ++bridgeTxNonce;
 
         // Record transaction
         bridgeTransactions[txId] = BridgeTransaction({
@@ -253,15 +264,6 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
         userStats[msg.sender].lastBridgeTime = block.timestamp;
         userStats[msg.sender].bridgeCount++;
         totalBridgedOut += amountAfterFee;
-
-        // Send message via LayerZero
-        _lzSend(
-            _dstChainId,
-            payload,
-            _options,
-            MessagingFee(msg.value, 0),
-            payable(msg.sender)
-        );
 
         // Lock tokens on source chain; destination bridge releases pre-funded liquidity.
         // This avoids mint-dependency failures and prevents burn-without-delivery scenarios.
@@ -330,11 +332,22 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
         if (processedInboundGuids[_guid]) revert DuplicateMessage();
         processedInboundGuids[_guid] = true;
 
+        uint16 messageType = _decodeMessageType(payload);
+
+        if (messageType == MSG_TYPE_BRIDGE_CONFIRMATION) {
+            (, bytes32 confirmedTxId) = abi.decode(payload, (uint16, bytes32));
+            _confirmBridgeDelivery(confirmedTxId);
+            return;
+        }
+
+        if (messageType != MSG_TYPE_BRIDGE_TRANSFER) revert InvalidRemote();
+
         // Decode payload
-        (address receiver, uint256 amount) = abi.decode(payload, (address, uint256));
+        (, address receiver, uint256 amount) = abi.decode(payload, (uint16, address, uint256));
 
         if (receiver == address(0)) revert InvalidDestination();
         if (amount == 0) revert InvalidAmount();
+        require(amount <= maxBridgeAmount, "VFIDEBridge: exceeds max bridge amount");
 
         // Generate transaction ID
         bytes32 txId = _guid;
@@ -347,6 +360,8 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
         uint256 bridgeBalance = vfideToken.balanceOf(address(this));
         require(bridgeBalance >= amount, "VFIDEBridge: insufficient liquidity");
         vfideToken.safeTransfer(receiver, amount);
+
+        _sendDeliveryConfirmation(_origin.srcEid, _guid);
 
         emit BridgeReceived(receiver, _origin.srcEid, amount, txId);
     }
@@ -363,8 +378,14 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
         uint256 _amount,
         bytes calldata _options
     ) external view returns (uint256 nativeFee) {
-        bytes memory payload = abi.encode(msg.sender, _amount);
-        MessagingFee memory fee = _quote(_dstChainId, payload, _options, false);
+        bytes memory payload = abi.encode(MSG_TYPE_BRIDGE_TRANSFER, msg.sender, _amount);
+        MessagingFee memory fee = _quote(_dstChainId, payload, combineOptions(_dstChainId, MSG_TYPE_BRIDGE_TRANSFER, _options), false);
+        return fee.nativeFee;
+    }
+
+    function quoteDeliveryConfirmation(uint32 _dstChainId) external view returns (uint256 nativeFee) {
+        bytes memory payload = abi.encode(MSG_TYPE_BRIDGE_CONFIRMATION, bytes32(0));
+        MessagingFee memory fee = _quote(_dstChainId, payload, enforcedOptions[_dstChainId][MSG_TYPE_BRIDGE_CONFIRMATION], false);
         return fee.nativeFee;
     }
 
@@ -434,6 +455,7 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
         require(pending.effectiveAt != 0, "VFIDEBridge: no pending update");
         require(block.timestamp >= pending.effectiveAt, "VFIDEBridge: timelock not elapsed");
         trustedRemotes[_chainId] = pending.remote;
+        _setPeer(_chainId, pending.remote);
         delete pendingTrustedRemotes[_chainId];
         emit TrustedRemoteSet(_chainId, pending.remote);
     }
@@ -716,6 +738,36 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
         require(!btx.executed, "VFIDEBridge: already executed");
         btx.executed = true;
         delete bridgeRefundableAfter[txId];
+        emit BridgeDeliveryConfirmed(txId);
+    }
+
+    receive() external payable {}
+
+    function _sendDeliveryConfirmation(uint32 _dstChainId, bytes32 txId) internal virtual {
+        bytes memory payload = abi.encode(MSG_TYPE_BRIDGE_CONFIRMATION, txId);
+        bytes memory options = enforcedOptions[_dstChainId][MSG_TYPE_BRIDGE_CONFIRMATION];
+        MessagingFee memory fee = _quote(_dstChainId, payload, options, false);
+
+        if (address(this).balance < fee.nativeFee) revert ConfirmationSendFailed();
+
+        _lzSend(_dstChainId, payload, options, fee, payable(address(this)));
+    }
+
+    function _confirmBridgeDelivery(bytes32 txId) internal {
+        BridgeTransaction storage btx = bridgeTransactions[txId];
+        if (btx.sender == address(0) || btx.executed) {
+            return;
+        }
+
+        btx.executed = true;
+        delete bridgeRefundableAfter[txId];
+        emit BridgeDeliveryConfirmed(txId);
+    }
+
+    function _decodeMessageType(bytes calldata payload) internal pure returns (uint16 messageType) {
+        assembly {
+            messageType := and(calldataload(payload.offset), 0xffff)
+        }
     }
 
     function renounceOwnership() public view override onlyOwner {

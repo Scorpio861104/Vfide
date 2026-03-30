@@ -2,6 +2,7 @@ import { defineConfig, globalIgnores } from "eslint/config";
 import nextVitals from "eslint-config-next/core-web-vitals";
 import nextTs from "eslint-config-next/typescript";
 import reactPlugin from "eslint-plugin-react";
+import securityPlugin from "eslint-plugin-security";
 
 const eslintConfig = defineConfig([
   ...nextVitals,
@@ -21,6 +22,7 @@ const eslintConfig = defineConfig([
     "docs-internal/**",
     "coverage/**",
     "artifacts/**",
+    "websocket-server/dist/**",
     "storybook-static/**",
     "playwright-report/**",
     "test-results/**",
@@ -45,8 +47,17 @@ const eslintConfig = defineConfig([
   {
     plugins: {
       react: reactPlugin,
+      security: securityPlugin,
     },
     rules: {
+      // Security plugin rules (warn to avoid blocking existing code)
+      "security/detect-object-injection": "off", // Too noisy for bracket notation
+      "security/detect-non-literal-regexp": "off",
+      "security/detect-unsafe-regex": "off",
+      "security/detect-buffer-noassert": "warn",
+      "security/detect-eval-with-expression": "error",
+      "security/detect-no-csrf-before-method-override": "warn",
+      "security/detect-possible-timing-attacks": "warn",
       "@typescript-eslint/no-explicit-any": "off",
       "@typescript-eslint/no-unused-vars": ["warn", {
         "argsIgnorePattern": "^_",

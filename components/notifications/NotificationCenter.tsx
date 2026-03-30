@@ -77,113 +77,9 @@ interface NotificationFilter {
 
 // ==================== MOCK DATA ====================
 
-function generateMockNotifications(): Notification[] {
-  const now = Date.now();
-  return [
-    {
-      id: 'notif-1',
-      title: 'Transaction Confirmed',
-      message: 'Your payment of $500 to John Doe has been confirmed',
-      type: 'success',
-      icon: '✅',
-      timestamp: now - 2 * 60 * 1000,
-      read: false,
-      archived: false,
-      actionUrl: '/transactions/tx-123',
-      actionLabel: 'View Details',
-      priority: 'high',
-      category: 'transaction',
-      source: 'Blockchain',
-    },
-    {
-      id: 'notif-2',
-      title: 'Governance Vote Available',
-      message: 'New proposal "Increase Treasury" is open for voting. Cast your vote now!',
-      type: 'info',
-      icon: '🗳️',
-      timestamp: now - 30 * 60 * 1000,
-      read: false,
-      archived: false,
-      actionUrl: '/governance/proposals/456',
-      actionLabel: 'Vote Now',
-      priority: 'medium',
-      category: 'governance',
-      source: 'DAO',
-    },
-    {
-      id: 'notif-3',
-      title: 'Security Alert',
-      message: 'New login from Chrome on Windows detected',
-      type: 'warning',
-      icon: '⚠️',
-      timestamp: now - 1 * 60 * 60 * 1000,
-      read: true,
-      archived: false,
-      actionUrl: '/settings/security',
-      actionLabel: 'Review Activity',
-      priority: 'critical',
-      category: 'security',
-      source: 'Security System',
-    },
-    {
-      id: 'notif-4',
-      title: 'Payment Request Received',
-      message: 'Alice Smith requested $250 for project services',
-      type: 'transaction',
-      icon: '💰',
-      timestamp: now - 2 * 60 * 60 * 1000,
-      read: true,
-      archived: false,
-      actionUrl: '/payments/requests/789',
-      actionLabel: 'Review Request',
-      priority: 'medium',
-      category: 'merchant',
-      source: 'Merchant Portal',
-    },
-    {
-      id: 'notif-5',
-      title: 'System Maintenance',
-      message: 'Scheduled maintenance on January 5 from 2-4 AM UTC',
-      type: 'info',
-      icon: '🔧',
-      timestamp: now - 6 * 60 * 60 * 1000,
-      read: true,
-      archived: false,
-      priority: 'low',
-      category: 'system',
-      source: 'System',
-    },
-    {
-      id: 'notif-6',
-      title: 'ProofScore Increased',
-      message: 'Your ProofScore increased by 45 points. You are now a Rising Star!',
-      type: 'success',
-      icon: '⭐',
-      timestamp: now - 12 * 60 * 60 * 1000,
-      read: true,
-      archived: false,
-      actionUrl: '/proofscore',
-      actionLabel: 'View Profile',
-      priority: 'low',
-      category: 'system',
-      source: 'ProofScore',
-    },
-    {
-      id: 'notif-7',
-      title: 'Transaction Failed',
-      message: 'Transaction to 0x1234...5678 failed due to insufficient gas',
-      type: 'error',
-      icon: '❌',
-      timestamp: now - 24 * 60 * 60 * 1000,
-      read: true,
-      archived: true,
-      actionUrl: '/transactions/failed/abc',
-      actionLabel: 'Retry',
-      priority: 'high',
-      category: 'transaction',
-      source: 'Blockchain',
-    },
-  ];
+// Notifications will be populated by backend/websocket events
+function getInitialNotifications(): Notification[] {
+  return [];
 }
 
 function calculateNotificationStats(notifications: Notification[]): NotificationStats {
@@ -551,7 +447,7 @@ export default function NotificationCenter() {
   const [activeTab, setActiveTab] = useState<'notifications' | 'history' | 'preferences'>(
     'notifications'
   );
-  const [notifications, setNotifications] = useState<Notification[]>(generateMockNotifications());
+  const [notifications, setNotifications] = useState<Notification[]>(getInitialNotifications());
   const [filter, setFilter] = useState<NotificationFilter>({
     search: '',
     type: 'all',

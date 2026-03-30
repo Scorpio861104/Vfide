@@ -42,9 +42,11 @@ function isObjectRecord(value: unknown): value is Record<string, unknown> {
 
 async function generateInviteCode(): Promise<string> {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  const bytes = new Uint8Array(12);
+  crypto.getRandomValues(bytes);
   let code = '';
   for (let i = 0; i < 12; i++) {
-    code += chars.charAt(Math.floor(Math.random() * chars.length));
+    code += chars.charAt(bytes[i]! % chars.length);
   }
   const existing = await query('SELECT id FROM group_invites WHERE code = $1', [code]);
   if (existing.rows.length > 0) {

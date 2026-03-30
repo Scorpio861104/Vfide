@@ -299,7 +299,7 @@ describe("VFIDEToken", () => {
       const router = await Router.deploy(
         await seer.getAddress(),
         sanctumSink.address,
-        burnSink.address,
+        ethers.ZeroAddress,
         ecoSink.address,
       );
       await router.waitForDeployment();
@@ -341,7 +341,7 @@ describe("VFIDEToken", () => {
       const router = await Router.deploy(
         await seer.getAddress(),
         sanctumSink.address,
-        burnSink.address,
+        ethers.ZeroAddress,
         ecoSink.address,
       );
       await router.waitForDeployment();

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getBadgeByPath, formatDuration } from '@/lib/badge-registry'
+import { withRateLimit } from '@/lib/auth/rateLimit'
 
 function parseTokenId(raw: string): bigint | null {
   if (!/^\d+$/.test(raw)) return null
@@ -14,6 +15,9 @@ export async function GET(
   request: NextRequest,
   context: { params: Promise<{ badge: string; tokenId: string }> }
 ) {
+  const rateLimitResponse = await withRateLimit(request, 'read');
+  if (rateLimitResponse) return rateLimitResponse;
+
   const { badge, tokenId } = await context.params
 
   const badgeMeta = getBadgeByPath(badge)

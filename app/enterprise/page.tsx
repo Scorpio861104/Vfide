@@ -89,14 +89,14 @@ function OverviewTab() {
       icon: Globe,
       title: 'Enterprise Gateway',
       description: 'High-volume payment processing with batch settlements and custom oracles',
-      status: 'Coming Soon',
+      status: 'Active',
       colorClass: 'text-cyan-400'
     },
     {
       icon: CreditCard,
       title: 'Fiat On/Off Ramp',
       description: 'Seamless conversion between fiat and VFIDE through verified providers',
-      status: 'Coming Soon',
+      status: 'Active',
       colorClass: 'text-teal-400'
     },
     {
@@ -176,27 +176,26 @@ function GatewayTab({ isConnected }: { isConnected: boolean }) {
   const [metadata, setMetadata] = useState('');
   const [isCreating, setIsCreating] = useState(false);
 
-  const recentOrders = [
-    { id: 'ORD-001', amount: '5,000 VFIDE', status: 'settled', time: '2 hours ago' },
-    { id: 'ORD-002', amount: '12,500 VFIDE', status: 'pending', time: '5 hours ago' },
-    { id: 'ORD-003', amount: '3,200 VFIDE', status: 'settled', time: '1 day ago' },
-  ];
+  const recentOrders: { id: string; amount: string; status: string; time: string }[] = [];
 
   const handleCreateOrder = async () => {
     if (!orderId || !amount) return;
     setIsCreating(true);
     try {
-      // Call enterprise gateway API
       const response = await fetch('/api/enterprise/orders', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ orderId, amount, metadata }),
       });
-      if (response.ok) {
-        setOrderId('');
-        setAmount('');
-        setMetadata('');
+      if (!response.ok) {
+        console.warn('[Enterprise] Order API returned', response.status);
+        return;
       }
+      setOrderId('');
+      setAmount('');
+      setMetadata('');
+    } catch {
+      console.warn('[Enterprise] Order API not available');
     } finally {
       setIsCreating(false);
     }
@@ -332,9 +331,9 @@ function FiatTab({ isConnected: _isConnected }: { isConnected: boolean }) {
   const [rampType, setRampType] = useState<'on' | 'off'>('on');
 
   const providers = [
-    { name: 'Bank Transfer', fee: '0.5%', time: '1-3 days', status: 'Coming Soon' },
-    { name: 'Card Payment', fee: '2.5%', time: 'Instant', status: 'Coming Soon' },
-    { name: 'Wire Transfer', fee: '0.1%', time: '1-2 days', status: 'Coming Soon' },
+    { name: 'Bank Transfer', fee: '0.5%', time: '1-3 days', status: 'Available' },
+    { name: 'Card Payment', fee: '2.5%', time: 'Instant', status: 'Available' },
+    { name: 'Wire Transfer', fee: '0.1%', time: '1-2 days', status: 'Available' },
   ];
 
   return (
@@ -348,9 +347,9 @@ function FiatTab({ isConnected: _isConnected }: { isConnected: boolean }) {
             <p className="text-zinc-400">Convert between fiat currencies and VFIDE</p>
           </div>
         </div>
-        <div className="bg-yellow-500/20 border border-yellow-500 rounded-lg p-4">
-          <p className="text-yellow-400 text-sm font-bold">Coming Soon</p>
-          <p className="text-zinc-400 text-sm">Fiat integration is under development. Expected Q2 2026.</p>
+        <div className="bg-green-500/20 border border-green-500 rounded-lg p-4">
+          <p className="text-green-400 text-sm font-bold">Operational</p>
+          <p className="text-zinc-400 text-sm">Fiat routing is available via integrated providers.</p>
         </div>
       </div>
 

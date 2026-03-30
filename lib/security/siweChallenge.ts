@@ -1,5 +1,7 @@
+import { Redis } from '@upstash/redis';
 import { isAddress } from 'viem';
 import { getRequestIp as getRequestIpContext } from '@/lib/security/requestContext';
+import { logger } from '@/lib/logger';
 
 interface ChallengeRecord {
   nonce: string;
@@ -13,7 +15,10 @@ interface ChallengeRecord {
 }
 
 const CHALLENGE_TTL_MS = 5 * 60 * 1000;
+const CHALLENGE_TTL_SECONDS = Math.floor(CHALLENGE_TTL_MS / 1000);
+const CHALLENGE_PREFIX = 'auth:siwe:challenge:';
 const challenges = new Map<string, ChallengeRecord>();
+let redisClient: Redis | null | undefined;
 
 function randomNonceHex(bytes = 16): string {
   const random = crypto.getRandomValues(new Uint8Array(bytes));
@@ -21,7 +26,77 @@ function randomNonceHex(bytes = 16): string {
 }
 
 function challengeKey(address: string): string {
-  return address.toLowerCase();
+  return `${CHALLENGE_PREFIX}${address.toLowerCase()}`;
+}
+
+function getRedisClient(): Redis | null {
+  if (redisClient !== undefined) {
+    return redisClient;
+  }
+
+  try {
+    if (process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN) {
+      redisClient = new Redis({
+        url: process.env.UPSTASH_REDIS_REST_URL,
+        token: process.env.UPSTASH_REDIS_REST_TOKEN,
+      });
+      return redisClient;
+    }
+  } catch (error) {
+    logger.error('[SIWE Challenge] Failed to initialize Redis:', error as Error);
+  }
+
+  redisClient = null;
+  return redisClient;
+}
+
+function cleanupExpiredChallenges(now = Date.now()): void {
+  for (const [key, record] of challenges.entries()) {
+    if (record.expiresAt <= now) {
+      challenges.delete(key);
+    }
+  }
+}
+
+function normalizeFingerprintValue(value: string, fallback: string): string {
+  const normalized = value.trim().slice(0, 512);
+  return normalized || fallback;
+}
+
+async function storeChallengeRecord(record: ChallengeRecord): Promise<void> {
+  const redis = getRedisClient();
+  const key = challengeKey(record.address);
+
+  if (redis) {
+    try {
+      await redis.set(key, JSON.stringify(record), { ex: CHALLENGE_TTL_SECONDS });
+      return;
+    } catch (error) {
+      logger.error('[SIWE Challenge] Redis store failed, using memory fallback:', error as Error);
+    }
+  }
+
+  cleanupExpiredChallenges(record.issuedAt);
+  challenges.set(key, record);
+}
+
+async function consumeChallengeRecord(address: string): Promise<ChallengeRecord | null> {
+  const key = challengeKey(address);
+  const redis = getRedisClient();
+
+  if (redis) {
+    try {
+      const record = await redis.getdel<string>(key);
+      return record ? JSON.parse(record) as ChallengeRecord : null;
+    } catch (error) {
+      logger.error('[SIWE Challenge] Redis consume failed, using memory fallback:', error as Error);
+    }
+  }
+
+  cleanupExpiredChallenges();
+  const record = challenges.get(key) ?? null;
+  challenges.delete(key);
+  return record;
 }
 
 export function getRequestIp(headers: Headers): string {
@@ -51,13 +126,13 @@ export function buildSiweMessage(params: {
   ].join('\n');
 }
 
-export function createSiweChallenge(input: {
+export async function createSiweChallenge(input: {
   address: string;
   domain: string;
   chainId: number;
   ip: string;
   userAgent: string;
-}): { message: string; nonce: string; expiresAt: number; issuedAt: number } {
+}): Promise<{ message: string; nonce: string; expiresAt: number; issuedAt: number }> {
   if (!isAddress(input.address)) {
     throw new Error('Invalid address');
   }
@@ -67,16 +142,18 @@ export function createSiweChallenge(input: {
   const nonce = randomNonceHex(16);
   const address = input.address.toLowerCase();
 
-  challenges.set(challengeKey(address), {
+  const record: ChallengeRecord = {
     nonce,
     address,
     domain: input.domain,
     chainId: input.chainId,
     issuedAt,
     expiresAt,
-    ip: input.ip,
-    userAgent: input.userAgent,
-  });
+    ip: normalizeFingerprintValue(input.ip, 'unknown'),
+    userAgent: normalizeFingerprintValue(input.userAgent, 'unknown'),
+  };
+
+  await storeChallengeRecord(record);
 
   return {
     message: buildSiweMessage({
@@ -98,23 +175,20 @@ function parseField(message: string, field: string): string | null {
   return match?.[1]?.trim() || null;
 }
 
-export function consumeAndValidateSiweChallenge(input: {
+export async function consumeAndValidateSiweChallenge(input: {
   address: string;
   message: string;
   domain: string;
   chainId: number;
   ip: string;
   userAgent: string;
-}): { ok: true } | { ok: false; error: string } {
+}): Promise<{ ok: true } | { ok: false; error: string }> {
   const address = input.address.toLowerCase();
-  const key = challengeKey(address);
-  const record = challenges.get(key);
+  const record = await consumeChallengeRecord(address);
 
   if (!record) {
     return { ok: false, error: 'Challenge not found. Request a new challenge.' };
   }
-
-  challenges.delete(key);
 
   if (Date.now() > record.expiresAt) {
     return { ok: false, error: 'Challenge expired. Request a new challenge.' };
@@ -126,6 +200,14 @@ export function consumeAndValidateSiweChallenge(input: {
 
   if (record.chainId !== input.chainId) {
     return { ok: false, error: 'Challenge chain mismatch' };
+  }
+
+  if (record.ip !== normalizeFingerprintValue(input.ip, 'unknown')) {
+    return { ok: false, error: 'Challenge IP mismatch' };
+  }
+
+  if (record.userAgent !== normalizeFingerprintValue(input.userAgent, 'unknown')) {
+    return { ok: false, error: 'Challenge user agent mismatch' };
   }
 
   const messageNonce = parseField(input.message, 'Nonce');

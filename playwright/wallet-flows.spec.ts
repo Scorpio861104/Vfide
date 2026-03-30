@@ -1,5 +1,43 @@
 import { test, expect, Page } from '@playwright/test';
 
+const cspViolationPatterns = [
+  /content security policy/i,
+  /violates the following content security policy directive/i,
+  /securitypolicyviolation/i,
+  /refused to (load|execute|connect)/i,
+];
+
+const cspViolationsByPage = new WeakMap<Page, string[]>();
+
+function installCspViolationGuard(page: Page): void {
+  const violations: string[] = [];
+  cspViolationsByPage.set(page, violations);
+
+  const maybeRecordViolation = (message: string) => {
+    if (cspViolationPatterns.some((pattern) => pattern.test(message))) {
+      violations.push(message);
+    }
+  };
+
+  page.on('console', (msg) => {
+    if (msg.type() === 'error' || msg.type() === 'warning') {
+      maybeRecordViolation(msg.text());
+    }
+  });
+
+  page.on('pageerror', (error) => {
+    maybeRecordViolation(error.message);
+  });
+}
+
+async function assertNoCspViolations(page: Page): Promise<void> {
+  const violations = cspViolationsByPage.get(page) ?? [];
+  expect(
+    violations,
+    `CSP/security-policy violation(s) detected:\n${violations.join('\n')}`
+  ).toEqual([]);
+}
+
 /**
  * Wallet Connection Flows E2E Tests
  * Tests MetaMask, WalletConnect, hardware wallets, multi-wallet switching, and network management
@@ -10,6 +48,7 @@ test.describe('Wallet Connection Flows', () => {
 
   test.beforeEach(async ({ browser }) => {
     page = await browser.newPage();
+    installCspViolationGuard(page);
     
     // Mock Web3 provider to avoid actual wallet interaction
     await page.addInitScript(() => {
@@ -37,6 +76,7 @@ test.describe('Wallet Connection Flows', () => {
   });
 
   test.afterEach(async () => {
+    await assertNoCspViolations(page);
     await page.close();
   });
 
@@ -179,6 +219,14 @@ test.describe('Wallet Connection Flows', () => {
 });
 
 test.describe('Network Switching', () => {
+  test.beforeEach(async ({ page }) => {
+    installCspViolationGuard(page);
+  });
+
+  test.afterEach(async ({ page }) => {
+    await assertNoCspViolations(page);
+  });
+
   test('should display current network', async ({ page }) => {
     await page.addInitScript(() => {
       // @ts-ignore
@@ -301,6 +349,14 @@ test.describe('Network Switching', () => {
 });
 
 test.describe('Multi-Wallet Support', () => {
+  test.beforeEach(async ({ page }) => {
+    installCspViolationGuard(page);
+  });
+
+  test.afterEach(async ({ page }) => {
+    await assertNoCspViolations(page);
+  });
+
   test('should support multiple wallet types', async ({ page }) => {
     await page.goto('/');
     
@@ -376,6 +432,14 @@ test.describe('Multi-Wallet Support', () => {
 });
 
 test.describe('Hardware Wallet Support', () => {
+  test.beforeEach(async ({ page }) => {
+    installCspViolationGuard(page);
+  });
+
+  test.afterEach(async ({ page }) => {
+    await assertNoCspViolations(page);
+  });
+
   test('should display hardware wallet options', async ({ page }) => {
     await page.goto('/');
     
@@ -426,6 +490,14 @@ test.describe('Hardware Wallet Support', () => {
 });
 
 test.describe('Wallet Error Handling', () => {
+  test.beforeEach(async ({ page }) => {
+    installCspViolationGuard(page);
+  });
+
+  test.afterEach(async ({ page }) => {
+    await assertNoCspViolations(page);
+  });
+
   test('should handle missing wallet provider', async ({ page }) => {
     await page.addInitScript(() => {
       // @ts-ignore

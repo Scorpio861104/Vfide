@@ -2,6 +2,10 @@
 
 import Script from 'next/script';
 
+/** Serialize JSON-LD safely: prevent `</script>` injection in tag content. */
+function safeJsonLd(data: unknown): string {
+  return JSON.stringify(data).replace(/</g, '\\u003c');
+}
 // Organization structured data
 const organizationSchema = {
   '@context': 'https://schema.org',
@@ -65,21 +69,21 @@ export function StructuredData() {
         id="organization-schema"
         type="application/ld+json"
         dangerouslySetInnerHTML={{
-          __html: JSON.stringify(organizationSchema),
+          __html: safeJsonLd(organizationSchema),
         }}
       />
       <Script
         id="web-application-schema"
         type="application/ld+json"
         dangerouslySetInnerHTML={{
-          __html: JSON.stringify(webApplicationSchema),
+          __html: safeJsonLd(webApplicationSchema),
         }}
       />
       <Script
         id="software-application-schema"
         type="application/ld+json"
         dangerouslySetInnerHTML={{
-          __html: JSON.stringify(softwareApplicationSchema),
+          __html: safeJsonLd(softwareApplicationSchema),
         }}
       />
     </>
@@ -109,7 +113,7 @@ export function PageBreadcrumbSchema({ items }: { items: BreadcrumbItem[] }) {
       id="breadcrumb-schema"
       type="application/ld+json"
       dangerouslySetInnerHTML={{
-        __html: JSON.stringify(breadcrumbSchema),
+        __html: safeJsonLd(breadcrumbSchema),
       }}
     />
   );
@@ -140,7 +144,7 @@ export function FAQSchema({ faqs }: { faqs: FAQItem[] }) {
       id="faq-schema"
       type="application/ld+json"
       dangerouslySetInnerHTML={{
-        __html: JSON.stringify(faqSchema),
+        __html: safeJsonLd(faqSchema),
       }}
     />
   );

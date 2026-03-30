@@ -283,6 +283,7 @@ contract VaultRegistry is Ownable, ReentrancyGuard {
         if (!_isGuardianOf[guardian][vault]) {
             _isGuardianOf[guardian][vault] = true;
             require(vaultsGuardedBy[guardian].length < 100, "VR: guardian cap"); // I-11
+            require(guardianCountOfVault[vault] < 20, "VR: max guardians per vault");
             vaultsGuardedBy[guardian].push(vault);
             guardianCountOfVault[vault]++;
             emit GuardianRegistered(vault, guardian);

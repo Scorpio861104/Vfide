@@ -73,6 +73,8 @@ contract FiatRampRegistry {
     uint16 public constant RAMP_TX_BONUS = 5;
     uint256 public constant MAX_RAMP_REWARDS_PER_PROVIDER_USER = 5;
     mapping(address => mapping(address => uint256)) public rampRewardCount;
+    mapping(address => mapping(address => uint64)) public lastRampTime;
+    uint64 public constant RAMP_COOLDOWN = 1 hours;
     
     modifier onlyDAO() {
         require(msg.sender == dao, "FRR: not DAO");
@@ -154,6 +156,11 @@ contract FiatRampRegistry {
         bool isOnRamp
     ) external onlyProvider {
         require(user != address(0), "FRR: zero user");
+        require(
+            block.timestamp >= lastRampTime[msg.sender][user] + RAMP_COOLDOWN,
+            "FRR: ramp cooldown active"
+        );
+        lastRampTime[msg.sender][user] = uint64(block.timestamp);
         
         bytes32 recordId = keccak256(abi.encode(msg.sender, externalTxHash));
         require(rampRecords[recordId].timestamp == 0, "FRR: already recorded");

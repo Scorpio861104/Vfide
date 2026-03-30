@@ -303,8 +303,8 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
     }
 
     function transferFrom(address from, address to, uint256 amount) external nonReentrant returns (bool) {
-        // Spender must not be blacklisted
-        require(!isBlacklisted[msg.sender], "Sanctioned");
+        // Spender must not be blacklisted or frozen.
+        require(!isBlacklisted[msg.sender] && !isFrozen[msg.sender], "Sanctioned");
         uint256 cur = _allowances[from][msg.sender];
         require(cur >= amount, "allow");
         _approve(from, msg.sender, cur - amount);
@@ -812,58 +812,76 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
 
         // Dynamic fees via burn router (if present and not exempt and not bypassed)
         if (address(burnRouter) != address(0) && !isFeeBypassed() && !(systemExempt[from] || systemExempt[to])) {
-            (uint256 _burnAmt, uint256 _sanctumAmt, uint256 _ecoAmt, address _sanctumSink, address _ecoSink, address _burnSink) =
-                burnRouter.computeFeesAndReserve(from, to, amount);
+            try burnRouter.computeFeesAndReserve(from, to, amount) returns (
+                uint256 _burnAmt,
+                uint256 _sanctumAmt,
+                uint256 _ecoAmt,
+                address _sanctumSink,
+                address _ecoSink,
+                address _burnSink
+            ) {
+                // Validate fee sum cannot exceed transfer amount (prevents malicious router DoS)
+                require(_burnAmt + _sanctumAmt + _ecoAmt <= amount, "VF: fees exceed amount");
 
-            // Validate fee sum cannot exceed transfer amount (prevents malicious router DoS)
-            require(_burnAmt + _sanctumAmt + _ecoAmt <= amount, "VF: fees exceed amount");
+                // F-17/C-01 FIX: Validate all returned sink addresses against token-level configuration.
+                if (_sanctumSink != address(0)) {
+                    require(
+                        _sanctumSink == sanctumSink || _sanctumSink == treasurySink,
+                        "VF: invalid sanctum sink"
+                    );
+                }
+                if (_ecoSink != address(0)) {
+                    require(
+                        _ecoSink == treasurySink || _ecoSink == sanctumSink,
+                        "VF: invalid eco sink"
+                    );
+                }
+                if (_burnSink != address(0)) {
+                    require(
+                        _burnSink == treasurySink || _burnSink == sanctumSink,
+                        "VF: invalid burn sink"
+                    );
+                }
 
-            // F-17 FIX: Validate returned sink addresses match token-level configured sinks.
-            // Prevents a malicious/compromised burn router from redirecting fees to attacker wallets.
-            if (_sanctumSink != address(0)) {
-                require(
-                    _sanctumSink == sanctumSink || _sanctumSink == treasurySink,
-                    "VF: invalid sanctum sink"
-                );
-            }
-            if (_ecoSink != address(0)) {
-                require(
-                    _ecoSink == treasurySink || _ecoSink == sanctumSink,
-                    "VF: invalid eco sink"
-                );
-            }
+                if (_burnAmt > 0) {
+                    address sink = (_burnSink == address(0)) ? address(0) : _burnSink;
+                    _applyBurn(from, sink, _burnAmt);
+                    remaining -= _burnAmt;
+                }
+                if (_sanctumAmt > 0) {
+                    address sink2 = (_sanctumSink == address(0)) ? treasurySink : _sanctumSink;
+                    require(sink2 != address(0), "sanctum sink=0");
+                    _balances[sink2] += _sanctumAmt;
+                    emit Transfer(from, sink2, _sanctumAmt);
+                    remaining -= _sanctumAmt;
+                }
+                if (_ecoAmt > 0) {
+                    address sink3 = (_ecoSink == address(0)) ? treasurySink : _ecoSink;
+                    require(sink3 != address(0), "eco sink=0");
+                    _balances[sink3] += _ecoAmt;
+                    emit Transfer(from, sink3, _ecoAmt);
+                    remaining -= _ecoAmt;
+                }
 
-            if (_burnAmt > 0) {
-                address sink = (_burnSink == address(0)) ? address(0) : _burnSink;
-                _applyBurn(from, sink, _burnAmt);
-                remaining -= _burnAmt;
-            }
-            if (_sanctumAmt > 0) {
-                address sink2 = (_sanctumSink == address(0)) ? treasurySink : _sanctumSink;
-                require(sink2 != address(0), "sanctum sink=0");
-                _balances[sink2] += _sanctumAmt;
-                emit Transfer(from, sink2, _sanctumAmt);
-                remaining -= _sanctumAmt;
-            }
-            if (_ecoAmt > 0) {
-                address sink3 = (_ecoSink == address(0)) ? treasurySink : _ecoSink;
-                require(sink3 != address(0), "eco sink=0");
-                _balances[sink3] += _ecoAmt;
-                emit Transfer(from, sink3, _ecoAmt);
-                remaining -= _ecoAmt;
-            }
+                if (_burnAmt > 0 || _sanctumAmt > 0 || _ecoAmt > 0) {
+                    emit FeeApplied(from, to, _burnAmt, _sanctumAmt, _ecoAmt, (_sanctumSink == address(0) ? treasurySink : _sanctumSink), (_ecoSink == address(0) ? treasurySink : _ecoSink));
+                }
 
-            if (_burnAmt > 0 || _sanctumAmt > 0 || _ecoAmt > 0) {
-                emit FeeApplied(from, to, _burnAmt, _sanctumAmt, _ecoAmt, (_sanctumSink == address(0) ? treasurySink : _sanctumSink), (_ecoSink == address(0) ? treasurySink : _ecoSink));
+                // Record volume for adaptive fee tracking (sustainability)
+                try IProofScoreBurnRouter(address(burnRouter)).recordVolume(amount) {} catch (bytes memory reason) { emit ExternalCallFailed("recordVolume", reason); }
+            } catch (bytes memory reason) {
+                emit ExternalCallFailed("computeFeesAndReserve", reason);
             }
-            
-            // Record volume for adaptive fee tracking (sustainability)
-            try IProofScoreBurnRouter(address(burnRouter)).recordVolume(amount) {} catch (bytes memory reason) { emit ExternalCallFailed("recordVolume", reason); }
         } else {
             // If policy is locked we require a router be present so fees cannot be bypassed
             if (policyLocked && !isFeeBypassed()) {
                 require(address(burnRouter) != address(0), "router required");
             }
+        }
+
+        if (!whaleLimitExempt[from] && !whaleLimitExempt[to] &&
+            !systemExempt[from] && !systemExempt[to]) {
+            _recordActualDailyTransfer(from, remaining);
         }
 
         // Deliver net to receiver
@@ -1013,7 +1031,8 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
             }
         }
         
-        // 3. Daily transfer limit tracking: always track regardless of limit state
+        // 3. Daily transfer limit tracking: validate using projected post-fee flow,
+        // but persist the actual delivered amount later in _transfer().
         // Reset daily counter if 24h has passed
         uint256 currentDayStart = (block.timestamp / 1 days) * 1 days;
         uint256 lastResetStart = (dailyResetTime[from] / 1 days) * 1 days;
@@ -1021,10 +1040,10 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
             dailyTransferred[from] = 0;
             dailyResetTime[from] = currentDayStart;
         }
-        dailyTransferred[from] += trackedAmount; // track post-fee net flow when fee routing is active
 
         if (dailyTransferLimit > 0) {
-            if (dailyTransferred[from] > dailyTransferLimit) {
+            uint256 projectedTransferred = dailyTransferred[from] + trackedAmount;
+            if (projectedTransferred > dailyTransferLimit) {
                 revert VF_DailyLimitExceeded();
             }
         }
@@ -1036,6 +1055,20 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
                 revert VF_TransferCooldown();
             }
             lastTransferTime[from] = block.timestamp;
+        }
+    }
+
+    function _recordActualDailyTransfer(address from, uint256 actualAmount) internal {
+        uint256 currentDayStart = (block.timestamp / 1 days) * 1 days;
+        uint256 lastResetStart = (dailyResetTime[from] / 1 days) * 1 days;
+        if (currentDayStart > lastResetStart) {
+            dailyTransferred[from] = 0;
+            dailyResetTime[from] = currentDayStart;
+        }
+
+        dailyTransferred[from] += actualAmount;
+        if (dailyTransferLimit > 0 && dailyTransferred[from] > dailyTransferLimit) {
+            revert VF_DailyLimitExceeded();
         }
     }
     

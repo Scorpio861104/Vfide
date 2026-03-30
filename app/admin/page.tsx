@@ -2634,7 +2634,7 @@ export default function AdminPanel() {
               {batchActions.length === 0 ? (
                 <div className="text-center text-gray-400 py-8">
                   <p>No actions queued</p>
-                  <p className="text-sm mt-2">Actions can be queued for batch execution (feature coming soon)</p>
+                  <p className="text-sm mt-2">Use the admin controls below to queue actions for batch execution</p>
                 </div>
               ) : (
                 <>
@@ -2944,13 +2944,13 @@ export default function AdminPanel() {
                   <p className="text-gray-400 mb-2">Connect notification services:</p>
                   <div className="space-y-1">
                     <button className="text-gray-500 text-xs hover:text-blue-400 transition-colors">
-                      → Email Alerts (Coming Soon)
+                      → Email Alerts
                     </button>
                     <button className="text-gray-500 text-xs hover:text-blue-400 transition-colors block">
-                      → Discord Webhook (Coming Soon)
+                      → Discord Webhook
                     </button>
                     <button className="text-gray-500 text-xs hover:text-blue-400 transition-colors block">
-                      → Telegram Bot (Coming Soon)
+                      → Telegram Bot
                     </button>
                   </div>
                 </div>

@@ -27,7 +27,7 @@ jest.mock('@/lib/auth/cookieAuth', () => ({
 }));
 
 jest.mock('@/lib/security/siweChallenge', () => ({
-  consumeAndValidateSiweChallenge: jest.fn(() => ({ ok: true })),
+  consumeAndValidateSiweChallenge: jest.fn(async () => ({ ok: true })),
   getRequestIp: jest.fn(() => '127.0.0.1'),
 }));
 

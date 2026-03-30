@@ -1,4 +1,4 @@
-import { defineConfig } from "hardhat/config";
+import type { HardhatUserConfig } from "hardhat/types/config";
 import hardhatEthers from "@nomicfoundation/hardhat-ethers";
 import hardhatEthersChaiMatchers from "@nomicfoundation/hardhat-ethers-chai-matchers";
 import hardhatMocha from "@nomicfoundation/hardhat-mocha";
@@ -11,7 +11,24 @@ const privateKey = process.env.PRIVATE_KEY;
 const accounts = privateKey ? [privateKey] : [];
 const allowUnlimitedContractSize = process.env.HARDHAT_ALLOW_UNLIMITED_CONTRACT_SIZE === "true";
 
-const config = defineConfig({
+type VfideHardhatConfig = HardhatUserConfig & {
+  etherscan?: {
+    apiKey: Record<string, string>;
+    customChains?: Array<{
+      network: string;
+      chainId: number;
+      urls: {
+        apiURL: string;
+        browserURL: string;
+      };
+    }>;
+  };
+  sourcify?: {
+    enabled: boolean;
+  };
+};
+
+const config: VfideHardhatConfig = {
   plugins: [hardhatEthers, hardhatEthersChaiMatchers, hardhatMocha, hardhatNetworkHelpers],
 
   /*
@@ -177,6 +194,18 @@ const config = defineConfig({
       accounts,
       chainId: 11155111,
     },
+    baseSepolia: {
+      type: "http" as const,
+      url: process.env.BASE_SEPOLIA_RPC_URL || "https://sepolia.base.org",
+      accounts,
+      chainId: 84532,
+    },
+    polygonAmoy: {
+      type: "http" as const,
+      url: process.env.POLYGON_AMOY_RPC_URL || "https://rpc-amoy.polygon.technology",
+      accounts,
+      chainId: 80002,
+    },
     mainnet: {
       type: "http" as const,
       url: process.env.MAINNET_RPC_URL || "https://eth.llamarpc.com",
@@ -202,6 +231,47 @@ const config = defineConfig({
       chainId: 324,
     },
   },
+  // ── Etherscan / Sourcify verification ───────────────────────
+  // Set BASESCAN_API_KEY, ETHERSCAN_API_KEY, POLYGONSCAN_API_KEY in .env
+  etherscan: {
+    apiKey: {
+      baseSepolia: process.env.BASESCAN_API_KEY || "",
+      base: process.env.BASESCAN_API_KEY || "",
+      sepolia: process.env.ETHERSCAN_API_KEY || "",
+      mainnet: process.env.ETHERSCAN_API_KEY || "",
+      polygon: process.env.POLYGONSCAN_API_KEY || "",
+      polygonAmoy: process.env.POLYGONSCAN_API_KEY || "",
+    },
+    customChains: [
+      {
+        network: "baseSepolia",
+        chainId: 84532,
+        urls: {
+          apiURL: "https://api-sepolia.basescan.org/api",
+          browserURL: "https://sepolia.basescan.org",
+        },
+      },
+      {
+        network: "base",
+        chainId: 8453,
+        urls: {
+          apiURL: "https://api.basescan.org/api",
+          browserURL: "https://basescan.org",
+        },
+      },
+      {
+        network: "polygonAmoy",
+        chainId: 80002,
+        urls: {
+          apiURL: "https://api-amoy.polygonscan.com/api",
+          browserURL: "https://amoy.polygonscan.com",
+        },
+      },
+    ],
+  },
+  sourcify: {
+    enabled: true,
+  },
   paths: {
     sources: ["./contracts", "./test/contracts/helpers", "./test/contracts/mocks"],
     tests: {
@@ -210,6 +280,6 @@ const config = defineConfig({
     cache: "./cache",
     artifacts: "./artifacts",
   },
-});
+};
 
 export default config;

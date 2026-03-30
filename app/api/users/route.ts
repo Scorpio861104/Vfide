@@ -32,6 +32,12 @@ interface User {
 
 const ETH_ADDRESS_REGEX = /^0x[a-fA-F0-9]{40}$/;
 
+const ALLOWED_USER_FIELDS = [
+  'id', 'wallet_address', 'username', 'display_name', 'bio', 'avatar_url',
+  'proof_score', 'reputation_score', 'is_council_member', 'is_verified',
+  'created_at', 'last_seen_at',
+];
+
 function normalizeAddress(value: string): string {
   return value.trim().toLowerCase();
 }
@@ -59,6 +65,15 @@ export async function GET(request: NextRequest) {
     const { page = 1, limit = 10 } = parsePaginationParams(request);
     const offset = (page - 1) * limit;
     const fields = parseFieldsParam(request);
+    if (fields) {
+      const invalidFields = fields.filter(f => !ALLOWED_USER_FIELDS.includes(f));
+      if (invalidFields.length > 0) {
+        return NextResponse.json(
+          { error: 'Invalid fields requested' },
+          { status: 400 }
+        );
+      }
+    }
     
     const searchParams = request.nextUrl.searchParams;
     const search = searchParams.get('search');
@@ -128,7 +143,7 @@ export async function GET(request: NextRequest) {
     trackApiCallSimple('/api/users', 'GET', 500, Date.now() - startTime);
     logger.error('Error fetching users:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch users', details: error instanceof Error ? error.message : 'Unknown error' },
+      { error: 'Failed to fetch users' },
       { status: 500 }
     );
   }

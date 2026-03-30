@@ -2,6 +2,7 @@
 pragma solidity 0.8.30;
 
 import { IERC20, ISeer, ICouncilManager, ISwapRouter, SafeERC20, Ownable, ReentrancyGuard } from "./SharedInterfaces.sol";
+import { EcosystemVaultLib } from "./EcosystemVaultLib.sol";
 
 /**
  * EcosystemVault — Growth Incentive Treasury (Howey-safe)
@@ -43,6 +44,9 @@ error ECO_RevokeFailed();
 error ECO_AlreadyExecuted();
 error ECO_AlreadyCancelled();
 error ECO_TimelockNotPassed();
+error ECO_InvalidConfig();
+error ECO_ApprovalFailed();
+error ECO_ExceedsMax();
 
 contract EcosystemVault is Ownable, ReentrancyGuard {
     using SafeERC20 for IERC20;
@@ -268,6 +272,15 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
     mapping(uint256 => mapping(address => uint8)) public referralLevelPaid;
 
     // ═══════════════════════════════════════════════════════════════════════
+    //                     SPENDING HISTORY TRACKING
+    // ═══════════════════════════════════════════════════════════════════════
+    uint256 public totalCouncilPaid;
+    uint256 public totalMerchantBonusPaid;
+    uint256 public totalHeadhunterPaid;
+    uint256 public totalBurned;
+    uint256 public totalExpensesPaid;
+
+    // ═══════════════════════════════════════════════════════════════════════
     //                              MODIFIERS
     // ═══════════════════════════════════════════════════════════════════════
     modifier onlyManager() {
@@ -307,10 +320,7 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
 
     function setRewardToken(address token) external onlyOwner {
         if (token == address(0)) revert ECO_Zero();
-        require(
-            councilPool == 0 && merchantPool == 0 && headhunterPool == 0 && operationsPool == 0,
-            "ECO: drain pools first"
-        );
+        if (councilPool != 0 || merchantPool != 0 || headhunterPool != 0 || operationsPool != 0) revert ECO_InvalidConfig();
         address oldToken = address(rewardToken);
         rewardToken = IERC20(token);
         emit RewardTokenUpdated(oldToken, token);
@@ -322,11 +332,11 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
 
     function setAllocations(uint16 _councilBps, uint16 _merchantBps, uint16 _headhunterBps) external onlyOwner {
         uint16 nonOps = _councilBps + _merchantBps + _headhunterBps;
-        require(nonOps <= MAX_BPS, "allocations exceed 100%");
+        if (nonOps > MAX_BPS) revert ECO_InvalidConfig();
         if (_councilBps < MIN_ALLOCATION_BPS) revert ECO_CouncilBelowMinimum();
         if (_merchantBps < MIN_ALLOCATION_BPS) revert ECO_MerchantBelowMinimum();
         if (_headhunterBps < MIN_ALLOCATION_BPS) revert ECO_HeadhunterBelowMinimum();
-        require(MAX_BPS - nonOps >= MIN_ALLOCATION_BPS, "ECO: operations below minimum");
+        if (MAX_BPS - nonOps < MIN_ALLOCATION_BPS) revert ECO_InvalidConfig();
         councilBps = _councilBps;
         merchantBps = _merchantBps;
         headhunterBps = _headhunterBps;
@@ -338,7 +348,7 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
      * @notice Set operations wallet for team sustainability
      */
     function setOperationsWallet(address _wallet) external onlyOwner {
-        require(_wallet != address(0), "ECO: zero wallet");
+        if (_wallet == address(0)) revert ECO_Zero();
         operationsWallet = _wallet;
     }
     
@@ -346,14 +356,14 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
      * @notice Set operations allocation percentage
      */
     function setOperationsAllocation(uint16 _operationsBps) external onlyOwner {
-        require(_operationsBps >= MIN_ALLOCATION_BPS, "ECO: invalid bps");
-        require(_operationsBps <= MAX_BPS - (3 * MIN_ALLOCATION_BPS), "ECO: ops exceeds max");
+        if (_operationsBps < MIN_ALLOCATION_BPS) revert ECO_InvalidConfig();
+        if (_operationsBps > MAX_BPS - (3 * MIN_ALLOCATION_BPS)) revert ECO_ExceedsMax();
 
         uint16 remaining = MAX_BPS - _operationsBps;
         if (councilBps < MIN_ALLOCATION_BPS) revert ECO_CouncilBelowMinimum();
         if (merchantBps < MIN_ALLOCATION_BPS) revert ECO_MerchantBelowMinimum();
         if (headhunterBps < MIN_ALLOCATION_BPS) revert ECO_HeadhunterBelowMinimum();
-        require(councilBps + merchantBps + headhunterBps == remaining, "ECO: remaining mismatch");
+        if (councilBps + merchantBps + headhunterBps != remaining) revert ECO_InvalidConfig();
         operationsBps = _operationsBps;
         emit AllocationUpdated(councilBps, merchantBps, headhunterBps, _operationsBps);
     }
@@ -362,8 +372,8 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
      * @notice Set operations withdrawal cooldown
      */
     function setOperationsCooldown(uint256 _cooldown) external onlyOwner {
-        require(_cooldown >= 1 hours, "ECO: cooldown too short");
-        require(_cooldown <= 90 days, "ECO: cooldown too long");
+        if (_cooldown < 1 hours) revert ECO_InvalidConfig();
+        if (_cooldown > 90 days) revert ECO_InvalidConfig();
         operationsWithdrawalCooldown = _cooldown;
     }
     
@@ -383,11 +393,11 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
         bool _enabled,
         uint16 _maxSlippageBps
     ) external onlyOwner {
-        require(_maxSlippageBps <= 500, "ECO: slippage too high"); // Max 5%
+        if (_maxSlippageBps > 500) revert ECO_InvalidConfig(); // Max 5%
         if (_enabled) {
-            require(_router != address(0), "ECO: zero router");
-            require(_stablecoin != address(0), "ECO: zero stablecoin");
-            require(minOutputPerVfide > 0, "ECO: set min output price first");
+            if (_router == address(0)) revert ECO_Zero();
+            if (_stablecoin == address(0)) revert ECO_Zero();
+            if (minOutputPerVfide == 0) revert ECO_InvalidConfig();
         }
         swapRouter = _router;
         preferredStablecoin = _stablecoin;
@@ -405,7 +415,7 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
      * @param _minOutput Floor price in stablecoin units per 1e18 VFIDE.
      */
     function setMinOutputPerVfide(uint256 _minOutput) external onlyOwner {
-        require(_minOutput > 0, "ECO: zero price");
+        if (_minOutput == 0) revert ECO_Zero();
         minOutputPerVfide = _minOutput;
         emit MinOutputPerVfideSet(_minOutput);
     }
@@ -433,11 +443,11 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
      */
     function setStablecoinOnlyMode(bool _enabled) external onlyOwner {
         if (_enabled) {
-            require(preferredStablecoin != address(0), "ECO: set preferred stablecoin first");
+            if (preferredStablecoin == address(0)) revert ECO_InvalidConfig();
             // At least one payment path must be ready: direct reserve OR swap router
             bool hasReserve = stablecoinReserves[preferredStablecoin] > 0;
             bool hasRouter = swapRouter != address(0);
-            require(hasReserve || hasRouter, "ECO: fund reserve or set swap router first");
+            if (!hasReserve && !hasRouter) revert ECO_InvalidConfig();
         }
         stablecoinOnlyMode = _enabled;
         emit StablecoinOnlyModeSet(_enabled);
@@ -453,8 +463,8 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
      * @param amount Amount to deposit (in stablecoin's native decimals).
      */
     function depositStablecoinReserve(address stablecoin, uint256 amount) external onlyManager nonReentrant {
-        require(stablecoin != address(0), "ECO: zero stablecoin");
-        require(amount > 0, "ECO: zero amount");
+        if (stablecoin == address(0)) revert ECO_Zero();
+        if (amount == 0) revert ECO_Zero();
         IERC20(stablecoin).safeTransferFrom(msg.sender, address(this), amount);
         stablecoinReserves[stablecoin] += amount;
         emit StablecoinDeposited(stablecoin, msg.sender, amount);
@@ -467,8 +477,8 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
      * @param recipient Destination address.
      */
     function withdrawStablecoinReserve(address stablecoin, uint256 amount, address recipient) external onlyOwner nonReentrant {
-        require(stablecoin != address(0) && recipient != address(0), "ECO: zero address");
-        require(amount > 0 && amount <= stablecoinReserves[stablecoin], "ECO: insufficient reserve");
+        if (stablecoin == address(0) || recipient == address(0)) revert ECO_Zero();
+        if (amount == 0 || amount > stablecoinReserves[stablecoin]) revert ECO_InsufficientFunds();
         stablecoinReserves[stablecoin] -= amount;
         IERC20(stablecoin).safeTransfer(recipient, amount);
         emit StablecoinReserveWithdrawn(stablecoin, amount, recipient);
@@ -501,9 +511,9 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
         uint16 headhunterReserve,
         uint16 maxAutoPayout
     ) external onlyOwner {
-        require(merchantReserve <= 9000, "ECO: merchant reserve too high");
-        require(headhunterReserve <= 9000, "ECO: headhunter reserve too high");
-        require(maxAutoPayout > 0 && maxAutoPayout <= 5000, "ECO: invalid auto payout bps");
+        if (merchantReserve > 9000) revert ECO_ExceedsMax();
+        if (headhunterReserve > 9000) revert ECO_ExceedsMax();
+        if (maxAutoPayout == 0 || maxAutoPayout > 5000) revert ECO_InvalidConfig();
 
         merchantPoolReserveBps = merchantReserve;
         headhunterPoolReserveBps = headhunterReserve;
@@ -526,10 +536,10 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
         uint256 level3Reward,
         uint256 level4Reward
     ) external onlyOwner {
-        require(level1Points > 0, "ECO: invalid level1 points");
-        require(level1Points < level2Points, "ECO: levels not ascending");
-        require(level2Points < level3Points, "ECO: levels not ascending");
-        require(level3Points < level4Points, "ECO: levels not ascending");
+        if (level1Points == 0) revert ECO_InvalidConfig();
+        if (level1Points >= level2Points) revert ECO_InvalidConfig();
+        if (level2Points >= level3Points) revert ECO_InvalidConfig();
+        if (level3Points >= level4Points) revert ECO_InvalidConfig();
 
         referralLevel1Points = level1Points;
         referralLevel2Points = level2Points;
@@ -600,13 +610,13 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
      * @dev Can only be called monthly by owner (DAO), ensures transparent team funding
      */
     function withdrawOperations() external onlyOwner nonReentrant {
-        require(operationsWallet != address(0), "ECO: no ops wallet");
-        require(block.timestamp >= lastOperationsWithdrawal + operationsWithdrawalCooldown, "ECO: cooldown");
+        if (operationsWallet == address(0)) revert ECO_Zero();
+        if (block.timestamp < lastOperationsWithdrawal + operationsWithdrawalCooldown) revert ECO_TooEarly();
         
         _allocateIncoming(); // Ensure pool is up to date
         
         uint256 amount = operationsPool;
-        require(amount > 0, "ECO: no funds");
+        if (amount == 0) revert ECO_InsufficientFunds();
         
         operationsPool = 0;
         lastOperationsWithdrawal = block.timestamp;
@@ -615,23 +625,8 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
         
         emit OperationsWithdrawal(operationsWallet, amount);
     }
-    
-    /**
-     * @notice View operations pool status
-     */
-    function getOperationsStatus() external view returns (
-        uint256 poolBalance,
-        address wallet,
-        uint256 lastWithdrawal,
-        uint256 nextWithdrawalTime,
-        bool canWithdraw
-    ) {
-        poolBalance = operationsPool;
-        wallet = operationsWallet;
-        lastWithdrawal = lastOperationsWithdrawal;
-        nextWithdrawalTime = lastOperationsWithdrawal + operationsWithdrawalCooldown;
-        canWithdraw = block.timestamp >= nextWithdrawalTime && wallet != address(0) && poolBalance > 0;
-    }
+
+    // getOperationsStatus moved to EcosystemVaultView.sol
 
     // ═══════════════════════════════════════════════════════════════════════
     //                         1. COUNCIL REWARDS (Monthly)
@@ -747,77 +742,17 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
         merchantPool -= amount;
         totalMerchantBonusPaid += amount;
         bool ok = _deliverWorkReward(worker, amount, "merchant_work", reason);
-        require(ok, "ECO: stablecoin swap failed");
+        if (!ok) revert ECO_ApprovalFailed();
     }
 
-    function _calculateMerchantRank(uint256 period, address merchant) internal view returns (uint8) {
-        uint256 myWeight = periodMerchantTxCount[period][merchant] * periodMerchantTier[period][merchant];
-        if (myWeight == 0) return 0;
-        
-        uint8 rank = 1;
-        address[] storage merchants = periodMerchants[period];
-        
-        // Instead of returning wrong rank, cap rank at MERCHANT_RANKS (100) for unranked merchants
-        if (merchants.length > MAX_RANK_ITERATIONS) {
-            // For large merchant counts, we need to sample or use a different approach
-            // As a safety measure, anyone outside top MAX_RANK_ITERATIONS gets rank 100 (lowest tier)
-            // This ensures they don't get unfairly high rewards
-            
-            // First, check if we're likely in top 200 by sampling
-            uint256 higherCount = 0;
-            uint256 step = merchants.length / MAX_RANK_ITERATIONS + 1;
-            
-            for (uint256 i = 0; i < merchants.length && higherCount < MERCHANT_RANKS; i += step) {
-                address m = merchants[i];
-                if (m != merchant) {
-                    uint256 theirWeight = periodMerchantTxCount[period][m] * periodMerchantTier[period][m];
-                    if (theirWeight > myWeight) {
-                        higherCount++;
-                    }
-                }
-            }
-            
-            // Scale the sampled count to estimate actual rank
-            rank = uint8(higherCount * step + 1);
-            if (rank > MERCHANT_RANKS) return MERCHANT_RANKS;
-            return rank;
-        }
-        
-        // Original logic for smaller merchant lists
-        for (uint256 i = 0; i < merchants.length && rank <= MERCHANT_RANKS; i++) {
-            address m = merchants[i];
-            if (m != merchant) {
-                uint256 theirWeight = periodMerchantTxCount[period][m] * periodMerchantTier[period][m];
-                if (theirWeight > myWeight) {
-                    rank++;
-                }
-            }
-        }
-        
-        return rank;
-    }
+    // _calculateMerchantRank moved to EcosystemVaultView.sol (off-chain indexing)
 
-    /**
-     * @notice Get merchant rank share based on rank position
-     * @dev Rank 1-5: 500bps, 6-10: 300bps, 11-20: 200bps, 21-40: 100bps, 41-60: 50bps, 61-100: 25bps
-     */
     function _getMerchantRankShare(uint8 rank) internal pure returns (uint16) {
-        if (rank == 0 || rank > 100) return 0;
-        if (rank <= 5) return 500;   // 5.0% each, ranks 1-5
-        if (rank <= 10) return 300;  // 3.0% each, ranks 6-10
-        if (rank <= 20) return 200;  // 2.0% each, ranks 11-20
-        if (rank <= 40) return 100;  // 1.0% each, ranks 21-40
-        if (rank <= 60) return 50;   // 0.5% each, ranks 41-60
-        return 25;                    // 0.25% each, ranks 61-100
+        return EcosystemVaultLib.getMerchantRankShare(rank);
     }
 
     function _getMerchantBonusTier(uint16 score) internal pure returns (uint16) {
-        // Returns tier multiplier (higher = better)
-        if (score >= TIER1_THRESHOLD) return TIER1_MULTIPLIER; // 95%+ = 5x weight
-        if (score >= TIER2_THRESHOLD) return TIER2_MULTIPLIER; // 90-94% = 4x
-        if (score >= TIER3_THRESHOLD) return TIER3_MULTIPLIER; // 85-89% = 3x
-        if (score >= TIER4_THRESHOLD) return TIER4_MULTIPLIER; // 80-84% = 2x
-        return 0; // Below 80% = not eligible
+        return EcosystemVaultLib.getMerchantBonusTier(score);
     }
 
     // ═══════════════════════════════════════════════════════════════════════
@@ -1042,7 +977,7 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
         headhunterPool -= amount;
         totalHeadhunterPaid += amount;
         bool ok = _deliverWorkReward(worker, amount, "referral_work", reason);
-        require(ok, "ECO: stablecoin swap failed");
+        if (!ok) revert ECO_ApprovalFailed();
     }
 
     /**
@@ -1136,7 +1071,7 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
 
         referralLevelPaid[year][worker] = finalPaidLevel;
         bool ok = _deliverWorkReward(worker, totalAmount, "referral_work_level", reason);
-        require(ok, "ECO: stablecoin swap failed");
+        if (!ok) revert ECO_ApprovalFailed();
     }
 
     function _getReferralWorkLevel(uint16 points) internal view returns (uint8) {
@@ -1156,10 +1091,7 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
     }
 
     function _getSpendablePoolBalance(uint256 poolBalance, uint16 reserveBps) internal pure returns (uint256) {
-        if (poolBalance < 1) return 0;
-        if (reserveBps == 0) return poolBalance;
-        uint256 reserveAmount = (poolBalance * reserveBps) / MAX_BPS;
-        return poolBalance > reserveAmount ? poolBalance - reserveAmount : 0;
+        return EcosystemVaultLib.getSpendablePoolBalance(poolBalance, reserveBps);
     }
 
     function _getReferralLevelRequiredPoints(uint8 level) internal view returns (uint16) {
@@ -1170,24 +1102,7 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
         return 0;
     }
 
-    function _calculateHeadhunterRank(uint256 year, address referrer) internal view returns (uint8) {
-        uint16 myPoints = yearPoints[year][referrer];
-        if (myPoints == 0) return 0;
-        
-        uint8 rank = 1;
-        address[] storage referrers = yearReferrers[year];
-        
-        // Limit iterations to prevent gas issues on large arrays
-        uint256 maxIterations = referrers.length > MAX_RANK_ITERATIONS ? MAX_RANK_ITERATIONS : referrers.length;
-        
-        for (uint256 i = 0; i < maxIterations && rank <= HEADHUNTER_RANKS; i++) {
-            if (referrers[i] != referrer && yearPoints[year][referrers[i]] > myPoints) {
-                rank++;
-            }
-        }
-        
-        return rank;
-    }
+    // _calculateHeadhunterRank moved to EcosystemVaultView.sol (off-chain indexing)
 
     // Keep checkHeadhunterReward for interface compatibility (no-op now)
     function checkHeadhunterReward(address) external onlyManager {
@@ -1245,7 +1160,7 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
         if (vfideAmount == 0) return 0;
 
         // Approve router to spend VFIDE
-        require(rewardToken.approve(swapRouter, vfideAmount), "ECO: approve failed");
+        if (!rewardToken.approve(swapRouter, vfideAmount)) revert ECO_ApprovalFailed();
 
         address[] memory path = new address[](2);
         path[0] = address(rewardToken);  // VFIDE
@@ -1314,10 +1229,10 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
     event WithdrawExecuted(uint256 indexed id, address to, uint256 amount);
 
     function requestWithdraw(address to, uint256 amount) external onlyOwner returns (uint256 id) {
-        require(to != address(0), "zero to");
-        require(amount > 0, "zero amount");
+        if (to == address(0)) revert ECO_Zero();
+        if (amount == 0) revert ECO_Zero();
         uint256 bal = rewardToken.balanceOf(address(this));
-        require(amount <= bal * maxWithdrawBps / 10_000, "exceeds max withdraw");
+        if (amount > bal * maxWithdrawBps / 10_000) revert ECO_ExceedsMax();
         
         id = ++withdrawRequestCount;
         withdrawRequests[id] = WithdrawRequest({
@@ -1352,7 +1267,7 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
 
     /// @notice Allow owner to adjust max withdrawal percentage (in basis points, max 5000 = 50%)
     function setMaxWithdrawBps(uint256 _bps) external onlyOwner {
-        require(_bps > 0 && _bps <= 5000, "invalid bps");
+        if (_bps == 0 || _bps > 5000) revert ECO_InvalidConfig();
         maxWithdrawBps = _bps;
     }
 
@@ -1492,7 +1407,10 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
     // ═══════════════════════════════════════════════════════════════════════
     //                         VIEW FUNCTIONS
     // ═══════════════════════════════════════════════════════════════════════
-    
+    // Heavy view/pure functions have been extracted to EcosystemVaultView.sol
+    // to bring this contract under the 24576-byte EIP-170 limit.
+    // Retained: getPoolBalances (lightweight) for Chainlink Automation compatibility.
+
     function getPoolBalances() external view returns (
         uint256 council,
         uint256 merchant,
@@ -1503,220 +1421,5 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
         merchant = merchantPool;
         headhunter = headhunterPool;
         total = rewardToken.balanceOf(address(this));
-    }
-
-    function getMerchantStats(address merchant) external view returns (
-        uint256 txCount,
-        uint256 bonusesPaid,
-        uint16 currentTier,
-        uint8 currentPeriodRank
-    ) {
-        txCount = periodMerchantTxCount[currentMerchantPeriod][merchant];
-        bonusesPaid = totalMerchantBonusesPaid[merchant];
-        currentTier = _getMerchantBonusTier(seer.getScore(merchant));
-        currentPeriodRank = _calculateMerchantRank(currentMerchantPeriod, merchant);
-    }
-
-    function getHeadhunterStats(address referrer) external view returns (
-        uint16 currentYearPoints,
-        uint8 estimatedRank,
-        uint256 currentYearNumber,
-        uint256 currentQuarterNumber,
-        uint256 quarterEndsAt
-    ) {
-        currentYearPoints = yearPoints[currentYear][referrer];
-        estimatedRank = _calculateHeadhunterRank(currentYear, referrer);
-        currentYearNumber = currentYear;
-        currentQuarterNumber = currentQuarter;
-        quarterEndsAt = yearStartTime + (QUARTER * currentQuarter);
-    }
-
-    /**
-     * @notice Returns current referral-work level progress for a referrer in a year.
-     */
-    function getReferralLevelStatus(address referrer, uint256 year) external view returns (
-        uint16 points,
-        uint8 unlockedLevel,
-        uint8 highestPaidLevel,
-        uint8 nextLevel,
-        uint16 nextLevelRequiredPoints,
-        uint256 nextLevelReward
-    ) {
-        points = yearPoints[year][referrer];
-        unlockedLevel = _getReferralWorkLevel(points);
-        highestPaidLevel = referralLevelPaid[year][referrer];
-
-        nextLevel = highestPaidLevel >= 4 ? 0 : highestPaidLevel + 1;
-
-        nextLevelRequiredPoints = _getReferralLevelRequiredPoints(nextLevel);
-
-        nextLevelReward = _getReferralLevelReward(nextLevel);
-    }
-
-    function getMerchantTierMultipliers() external pure returns (
-        uint16 tier1Threshold, uint16 tier1Multiplier,
-        uint16 tier2Threshold, uint16 tier2Multiplier,
-        uint16 tier3Threshold, uint16 tier3Multiplier,
-        uint16 tier4Threshold, uint16 tier4Multiplier
-    ) {
-        return (
-            TIER1_THRESHOLD, TIER1_MULTIPLIER,
-            TIER2_THRESHOLD, TIER2_MULTIPLIER,
-            TIER3_THRESHOLD, TIER3_MULTIPLIER,
-            TIER4_THRESHOLD, TIER4_MULTIPLIER
-        );
-    }
-
-    /**
-     * @notice Get pending referral status for an address
-     * @param referred The referred address to check
-     */
-    function getPendingReferral(address referred) external view returns (
-        address merchantReferrer,
-        address userReferrer,
-        bool credited
-    ) {
-        merchantReferrer = pendingMerchantReferrer[referred];
-        userReferrer = pendingUserReferrer[referred];
-        credited = referralCredited[referred];
-    }
-    
-    /**
-     * @notice Get paginated list of merchants for a period
-     * @param period The merchant period to query
-     * @param offset Starting index
-     * @param limit Maximum merchants to return
-     * @return merchants Array of merchant addresses
-     * @return total Total number of merchants in the period
-     */
-    function getMerchantsPaginated(uint256 period, uint256 offset, uint256 limit) external view returns (
-        address[] memory merchants,
-        uint256 total
-    ) {
-        address[] storage all = periodMerchants[period];
-        total = all.length;
-        
-        if (offset >= total) {
-            return (new address[](0), total);
-        }
-        
-        uint256 end = offset + limit;
-        if (end > total) end = total;
-        uint256 length = end - offset;
-        
-        merchants = new address[](length);
-        for (uint256 i = 0; i < length; i++) {
-            merchants[i] = all[offset + i];
-        }
-    }
-    
-    /**
-     * @notice Get paginated list of referrers for a year
-     * @param year The year to query
-     * @param offset Starting index
-     * @param limit Maximum referrers to return
-     * @return referrers Array of referrer addresses
-     * @return total Total number of referrers in the year
-     */
-    function getReferrersPaginated(uint256 year, uint256 offset, uint256 limit) external view returns (
-        address[] memory referrers,
-        uint256 total
-    ) {
-        address[] storage all = yearReferrers[year];
-        total = all.length;
-        
-        if (offset >= total) {
-            return (new address[](0), total);
-        }
-        
-        uint256 end = offset + limit;
-        if (end > total) end = total;
-        uint256 length = end - offset;
-        
-        referrers = new address[](length);
-        for (uint256 i = 0; i < length; i++) {
-            referrers[i] = all[offset + i];
-        }
-    }
-    
-    // ═══════════════════════════════════════════════════════════════════════
-    //                     SPENDING HISTORY TRACKING
-    // ═══════════════════════════════════════════════════════════════════════
-    
-    // Track spending by category
-    uint256 public totalCouncilPaid;
-    uint256 public totalMerchantBonusPaid;
-    uint256 public totalHeadhunterPaid;
-    uint256 public totalBurned;
-    uint256 public totalExpensesPaid;
-    
-    /**
-     * @notice Get spending summary by category
-     */
-    function getSpendingSummary() external view returns (
-        uint256 councilTotal,
-        uint256 merchantTotal,
-        uint256 headhunterTotal,
-        uint256 burnedTotal,
-        uint256 expensesTotal,
-        uint256 grandTotal
-    ) {
-        councilTotal = totalCouncilPaid;
-        merchantTotal = totalMerchantBonusPaid;
-        headhunterTotal = totalHeadhunterPaid;
-        burnedTotal = totalBurned;
-        expensesTotal = totalExpensesPaid;
-        grandTotal = councilTotal + merchantTotal + headhunterTotal + burnedTotal + expensesTotal;
-    }
-    
-    /**
-     * @notice Get vault health metrics
-     */
-    function getVaultHealth() external view returns (
-        uint256 currentBalance,
-        uint256 totalIn,
-        uint256 totalOut,
-        uint256 councilPoolBalance,
-        uint256 merchantPoolBalance,
-        uint256 headhunterPoolBalance
-    ) {
-        currentBalance = rewardToken.balanceOf(address(this));
-        totalIn = councilPool + merchantPool + headhunterPool + operationsPool + totalCouncilPaid + totalMerchantBonusPaid + totalHeadhunterPaid + totalBurned + totalExpensesPaid;
-        totalOut = totalCouncilPaid + totalMerchantBonusPaid + totalHeadhunterPaid + totalBurned + totalExpensesPaid;
-        councilPoolBalance = councilPool;
-        merchantPoolBalance = merchantPool;
-        headhunterPoolBalance = headhunterPool;
-    }
-    
-    /**
-     * @notice Preview merchant reward before claiming
-     */
-    function previewMerchantReward(uint256 period, address merchant) external view returns (
-        uint256 txCount,
-        uint16 bestTier,
-        bool claimed,
-        bool periodEnded,
-        uint256 poolSnapshot
-    ) {
-        txCount = periodMerchantTxCount[period][merchant];
-        bestTier = periodMerchantTier[period][merchant];
-        claimed = merchantPeriodClaimed[period][merchant];
-        periodEnded = merchantPeriodEnded[period];
-        poolSnapshot = merchantPeriodPoolSnapshot[period];
-    }
-    
-    /**
-     * @notice Preview headhunter reward before claiming
-     */
-    function previewHeadhunterReward(uint256 year, uint256 quarter, address referrer) external view returns (
-        uint16 referrerPoints,
-        bool claimed,
-        bool quarterEndedFlag,
-        uint256 poolSnapshot
-    ) {
-        referrerPoints = yearPoints[year][referrer];
-        claimed = quarterClaimed[year][quarter][referrer];
-        quarterEndedFlag = quarterEnded[year][quarter];
-        poolSnapshot = quarterPoolSnapshot[year][quarter];
     }
 }

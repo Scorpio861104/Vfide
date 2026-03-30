@@ -37,12 +37,12 @@ import {
   DevReserveVestingABI,
   PayrollManagerABI,
   EcosystemVaultABI,
+  EcosystemVaultViewABI,
   VaultRegistryABI,
   ERC20ABI,
   SeerSocialABI,
   SeerViewABI,
   UserRewardsABI,
-  PromotionalTreasuryABI,
 } from './abis'
 import { logger } from '@/lib/logger';
 
@@ -79,6 +79,7 @@ const CONTRACT_ENV_VAR_MAP: Record<string, string> = {
   DevReserveVesting: 'NEXT_PUBLIC_DEV_VAULT_ADDRESS',
   SeerSocial: 'NEXT_PUBLIC_SEER_SOCIAL_ADDRESS',
   EcosystemVault: 'NEXT_PUBLIC_ECOSYSTEM_VAULT_ADDRESS',
+  EcosystemVaultView: 'NEXT_PUBLIC_ECOSYSTEM_VAULT_VIEW_ADDRESS',
   VaultRegistry: 'NEXT_PUBLIC_VAULT_REGISTRY_ADDRESS',
   CommerceEscrow: 'NEXT_PUBLIC_COMMERCE_ESCROW_ADDRESS',
 };
@@ -142,6 +143,7 @@ export const CONTRACT_ADDRESSES = {
   DevReserveVesting: validateContractAddress(process.env.NEXT_PUBLIC_DEV_VAULT_ADDRESS, 'DevReserveVesting'),
   SeerSocial: validateContractAddress(process.env.NEXT_PUBLIC_SEER_SOCIAL_ADDRESS, 'SeerSocial'),
   EcosystemVault: validateContractAddress(process.env.NEXT_PUBLIC_ECOSYSTEM_VAULT_ADDRESS, 'EcosystemVault'),
+  EcosystemVaultView: validateContractAddress(process.env.NEXT_PUBLIC_ECOSYSTEM_VAULT_VIEW_ADDRESS, 'EcosystemVaultView'),
   VaultRegistry: validateContractAddress(process.env.NEXT_PUBLIC_VAULT_REGISTRY_ADDRESS, 'VaultRegistry'),
   CommerceEscrow: validateContractAddress(process.env.NEXT_PUBLIC_COMMERCE_ESCROW_ADDRESS, 'CommerceEscrow'),
 }
@@ -219,10 +221,10 @@ export {
   DevReserveVestingABI,
   PayrollManagerABI,
   EcosystemVaultABI,
+  EcosystemVaultViewABI,
   VaultRegistryABI,
   ERC20ABI,
   SeerSocialABI,
   SeerViewABI,
   UserRewardsABI,
-  PromotionalTreasuryABI,
 }

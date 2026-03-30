@@ -242,19 +242,23 @@ run_step1_deploy() {
   # ── Collect config ─────────────────────────────────────────────────────────
   echo ""
   bold "Choose a network:"
-  echo "  1) sepolia   (testnet — recommended for first deploy)"
-  echo "  2) mainnet"
-  echo "  3) base"
-  echo "  4) polygon"
-  echo "  5) hardhat   (local node — for testing only)"
+  echo "  1) baseSepolia (Base Sepolia testnet — recommended)"
+  echo "  2) sepolia     (Ethereum Sepolia testnet)"
+  echo "  3) polygonAmoy (Polygon Amoy testnet)"
+  echo "  4) mainnet"
+  echo "  5) base"
+  echo "  6) polygon"
+  echo "  7) hardhat     (local node — for testing only)"
   ask "Your choice" "1" _net_choice
   case "$_net_choice" in
-    1|sepolia)  NET="sepolia"  ;;
-    2|mainnet)  NET="mainnet"  ;;
-    3|base)     NET="base"     ;;
-    4|polygon)  NET="polygon"  ;;
-    5|hardhat)  NET="hardhat"  ;;
-    *)          NET="$_net_choice" ;;
+    1|baseSepolia)  NET="baseSepolia"  ;;
+    2|sepolia)      NET="sepolia"      ;;
+    3|polygonAmoy)  NET="polygonAmoy"  ;;
+    4|mainnet)      NET="mainnet"      ;;
+    5|base)         NET="base"         ;;
+    6|polygon)      NET="polygon"      ;;
+    7|hardhat)      NET="hardhat"      ;;
+    *)              NET="$_net_choice"  ;;
   esac
 
   # PRIVATE_KEY

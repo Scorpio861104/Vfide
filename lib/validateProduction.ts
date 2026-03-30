@@ -39,6 +39,7 @@ const REQUIRED_ENV_VARS: EnvironmentConfig[] = [
   { name: 'NEXT_PUBLIC_SUBSCRIPTION_MANAGER_ADDRESS', required: false, category: 'blockchain', production: true },
   { name: 'NEXT_PUBLIC_SANCTUM_VAULT_ADDRESS', required: false, category: 'blockchain', production: true },
   { name: 'NEXT_PUBLIC_DEV_VAULT_ADDRESS', required: false, category: 'blockchain', production: true },
+  { name: 'NEXT_PUBLIC_ECOSYSTEM_VAULT_VIEW_ADDRESS', required: false, category: 'blockchain' },
 
   // WalletConnect (optional but recommended)
   { name: 'NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID', required: false, category: 'blockchain' },
@@ -99,14 +100,13 @@ function getEnvValue(name: string): string | undefined {
   const value = process.env[name];
   if (value && value.trim() !== '') return value;
 
-  const legacyExplorer = process.env.NEXT_PUBLIC_BLOCK_EXPLORER_URL;
   const inferredAppUrl = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : undefined;
 
   const fallbacks: Record<string, string | undefined> = {
     NEXT_PUBLIC_IS_TESTNET: 'true',
     NEXT_PUBLIC_CHAIN_ID: '84532',
     NEXT_PUBLIC_RPC_URL: 'https://sepolia.base.org',
-    NEXT_PUBLIC_EXPLORER_URL: legacyExplorer || 'https://sepolia.basescan.org',
+    NEXT_PUBLIC_EXPLORER_URL: 'https://sepolia.basescan.org',
     NEXT_PUBLIC_APP_URL: inferredAppUrl || 'http://localhost:3000',
   };
 
@@ -144,11 +144,6 @@ export function validateProductionEnvironment(): ValidationResult {
   for (const config of REQUIRED_ENV_VARS) {
     const value = getEnvValue(config.name);
     const isEmpty = !value || value.trim() === '';
-
-    if (config.name === 'NEXT_PUBLIC_EXPLORER_URL' && !process.env.NEXT_PUBLIC_EXPLORER_URL && process.env.NEXT_PUBLIC_BLOCK_EXPLORER_URL) {
-      result.warnings.push('⚠️  NEXT_PUBLIC_BLOCK_EXPLORER_URL is set; migrate to NEXT_PUBLIC_EXPLORER_URL');
-      result.info.push('✅ NEXT_PUBLIC_EXPLORER_URL satisfied by legacy NEXT_PUBLIC_BLOCK_EXPLORER_URL');
-    }
 
     // Check if required
     const serverOnlyVar = config.name === 'DATABASE_URL' || config.name === 'JWT_SECRET';
@@ -212,6 +207,10 @@ export function validateProductionEnvironment(): ValidationResult {
     if (vaultImplementation === 'cardbound' && !getEnvValue('NEXT_PUBLIC_VAULT_REGISTRY_ADDRESS')) {
       result.errors.push('❌ NEXT_PUBLIC_VAULT_REGISTRY_ADDRESS is required when NEXT_PUBLIC_VAULT_IMPLEMENTATION=cardbound in production');
       result.valid = false;
+    }
+
+    if (getEnvValue('NEXT_PUBLIC_ECOSYSTEM_VAULT_ADDRESS') && !getEnvValue('NEXT_PUBLIC_ECOSYSTEM_VAULT_VIEW_ADDRESS')) {
+      result.warnings.push('⚠️  NEXT_PUBLIC_ECOSYSTEM_VAULT_VIEW_ADDRESS is not set; extracted EcosystemVault read-only hooks will fail unless the view contract is deployed and configured');
     }
 
     if (vaultImplementation === 'uservault' && !getEnvValue('NEXT_PUBLIC_VAULT_RECOVERY_CLAIM_ADDRESS')) {

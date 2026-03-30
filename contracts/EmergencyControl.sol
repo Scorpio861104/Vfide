@@ -32,14 +32,15 @@ contract EmergencyControl {
     event CommitteeReset(uint8 threshold, address[] members);
     event MemberAdded(address member);
     event MemberRemoved(address member);
+    event FoundationRotated(address indexed oldFoundation, address indexed newFoundation);
     event CommitteeVote(address indexed member, bool halt, uint8 approvals, string reason);
     event CommitteeTriggered(bool halt, string reason);
     event DAOToggled(bool halt, string reason);
 
     address public dao;
-    /// @notice FINAL-10 FIX: Immutable foundation address that can manage committee members
+    /// @notice Foundation address that can manage committee members
     ///         independent of the DAO, preventing a compromised DAO from locking out emergency control.
-    address public immutable foundation;
+    address public foundation;
     IEmergencyBreaker public breaker;
     IProofLedger public ledger; // optional
 
@@ -181,6 +182,16 @@ contract EmergencyControl {
         if (_threshold == 0 || _threshold > memberCount) revert EC_BadThreshold();
         threshold = _threshold;
         _log("ec_threshold_set");
+    }
+
+    /// @notice Rotate foundation address (only callable by current foundation)
+    function rotateFoundation(address newFoundation) external {
+        require(msg.sender == foundation, "EC: not foundation");
+        require(newFoundation != address(0), "EC: foundation=0");
+        address old = foundation;
+        foundation = newFoundation;
+        emit FoundationRotated(old, newFoundation);
+        _log("ec_foundation_rotated");
     }
 
     // ───────────────────────────────── Actions

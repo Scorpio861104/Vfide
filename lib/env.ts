@@ -28,7 +28,7 @@ const envSchema = z.object({
   NEXT_PUBLIC_API_BASE_URL: z.string().url().optional(),
   NEXT_PUBLIC_APP_URL: z.string().url().optional(),
   NEXT_PUBLIC_DOCS_URL: z.string().url().optional(),
-  NEXT_PUBLIC_BLOCK_EXPLORER_URL: z.string().url().default('https://sepolia.basescan.org'),
+  NEXT_PUBLIC_EXPLORER_URL: z.string().url().default('https://sepolia.basescan.org'),
 
   // WebSocket
   NEXT_PUBLIC_WS_URL: z.string().optional(),
@@ -48,6 +48,7 @@ const envSchema = z.object({
   NEXT_PUBLIC_SANCTUM_VAULT_ADDRESS: optionalEthAddress,
   NEXT_PUBLIC_DEV_VAULT_ADDRESS: optionalEthAddress,
   NEXT_PUBLIC_ECOSYSTEM_VAULT_ADDRESS: optionalEthAddress,
+  NEXT_PUBLIC_ECOSYSTEM_VAULT_VIEW_ADDRESS: optionalEthAddress,
   NEXT_PUBLIC_VAULT_REGISTRY_ADDRESS: optionalEthAddress,
   NEXT_PUBLIC_VAULT_RECOVERY_CLAIM_ADDRESS: optionalEthAddress,
 
@@ -139,7 +140,7 @@ function parseEnv(): Environment {
     NEXT_PUBLIC_API_BASE_URL: process.env.NEXT_PUBLIC_API_BASE_URL,
     NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
     NEXT_PUBLIC_DOCS_URL: process.env.NEXT_PUBLIC_DOCS_URL,
-    NEXT_PUBLIC_BLOCK_EXPLORER_URL: process.env.NEXT_PUBLIC_BLOCK_EXPLORER_URL,
+    NEXT_PUBLIC_EXPLORER_URL: process.env.NEXT_PUBLIC_EXPLORER_URL,
     NEXT_PUBLIC_WS_URL: process.env.NEXT_PUBLIC_WS_URL,
     
     // Core Token Contracts
@@ -157,6 +158,7 @@ function parseEnv(): Environment {
     NEXT_PUBLIC_SANCTUM_VAULT_ADDRESS: process.env.NEXT_PUBLIC_SANCTUM_VAULT_ADDRESS,
     NEXT_PUBLIC_DEV_VAULT_ADDRESS: process.env.NEXT_PUBLIC_DEV_VAULT_ADDRESS,
     NEXT_PUBLIC_ECOSYSTEM_VAULT_ADDRESS: process.env.NEXT_PUBLIC_ECOSYSTEM_VAULT_ADDRESS,
+    NEXT_PUBLIC_ECOSYSTEM_VAULT_VIEW_ADDRESS: process.env.NEXT_PUBLIC_ECOSYSTEM_VAULT_VIEW_ADDRESS,
     NEXT_PUBLIC_VAULT_REGISTRY_ADDRESS: process.env.NEXT_PUBLIC_VAULT_REGISTRY_ADDRESS,
     NEXT_PUBLIC_VAULT_RECOVERY_CLAIM_ADDRESS: process.env.NEXT_PUBLIC_VAULT_RECOVERY_CLAIM_ADDRESS,
     

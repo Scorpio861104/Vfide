@@ -106,6 +106,23 @@ function getRecentlyViewed(): Array<{ id: string; name: string; price: string; i
   try { return JSON.parse(localStorage.getItem('vfide_recently_viewed') || '[]'); } catch { return []; }
 }
 
+/* ─── Cart (localStorage) ─── */
+function addProductToCart(product: { id: string; name: string; price: string; merchant_slug: string | null }, qty: number): void {
+  try {
+    const existing = JSON.parse(localStorage.getItem('vfide_cart') || '[]') as Array<{
+      id: string; name: string; price: string; qty: number; merchantSlug: string | null;
+    }>;
+    const idx = existing.findIndex(i => i.id === product.id);
+    if (idx >= 0) {
+      const entry = existing[idx];
+      if (entry) entry.qty += qty;
+    } else {
+      existing.push({ id: product.id, name: product.name, price: product.price, qty, merchantSlug: product.merchant_slug });
+    }
+    localStorage.setItem('vfide_cart', JSON.stringify(existing));
+  } catch { /* ignore storage errors */ }
+}
+
 /* ─── Wishlist (localStorage) ─── */
 function toggleWishlist(productId: string): boolean {
   try {
@@ -139,6 +156,7 @@ export default function ProductDetailPage() {
   const [selectedVariant, setSelectedVariant] = useState<string | null>(null);
   const [quantity, setQuantity] = useState(1);
   const [wishlisted, setWishlisted] = useState(false);
+  const [cartAdded, setCartAdded] = useState(false);
   const [showAllReviews, setShowAllReviews] = useState(false);
   const [recentlyViewed, setRecentlyViewed] = useState<Array<{ id: string; name: string; price: string; image?: string }>>([]);
 
@@ -464,10 +482,14 @@ export default function ProductDetailPage() {
                 disabled={!inStock}
                 className="flex-1 py-3 rounded-xl font-bold text-white transition hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 style={{ backgroundColor: inStock ? themeColor : '#9CA3AF' }}
-                onClick={() => alert(`Added ${quantity}× ${product.name} to cart — checkout integration coming soon`)}
+                onClick={() => {
+                  addProductToCart(product, quantity);
+                  setCartAdded(true);
+                  setTimeout(() => setCartAdded(false), 1500);
+                }}
               >
                 <ShoppingCart className="w-5 h-5" />
-                Add to Cart
+                {cartAdded ? 'Added ✓' : 'Add to Cart'}
               </button>
 
               <button

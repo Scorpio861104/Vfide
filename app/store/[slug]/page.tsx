@@ -5,10 +5,12 @@
 
 import React, { useEffect, useState, useCallback } from 'react';
 import { useParams } from 'next/navigation';
+import { useAccount } from 'wagmi';
 import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Star, MapPin, Package, ShoppingCart, ArrowLeft, ExternalLink, Globe, X, Plus, Minus, Search } from 'lucide-react';
+import { Star, MapPin, Package, ShoppingCart, ArrowLeft, ExternalLink, Globe, X, Plus, Minus, Search, CheckCircle, AlertCircle } from 'lucide-react';
+import { getAuthHeaders } from '@/lib/auth/client';
 
 interface MerchantProfile {
   merchant_address: string;
@@ -69,6 +71,7 @@ interface CartItem {
 export default function StorefrontPage() {
   const params = useParams();
   const slug = params?.slug as string;
+  const { address: walletAddress, isConnected } = useAccount();
 
   const [profile, setProfile] = useState<MerchantProfile | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
@@ -79,6 +82,9 @@ export default function StorefrontPage() {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [showCart, setShowCart] = useState(false);
+  const [checkoutState, setCheckoutState] = useState<'idle' | 'creating' | 'success' | 'error'>('idle');
+  const [orderNumber, setOrderNumber] = useState<string | null>(null);
+  const [checkoutError, setCheckoutError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'products' | 'reviews' | 'about'>('products');
   const [productSearch, setProductSearch] = useState('');
 
@@ -145,6 +151,46 @@ export default function StorefrontPage() {
 
   const cartTotal = cart.reduce((s, i) => s + parseFloat(i.product.price) * i.quantity, 0);
   const cartCount = cart.reduce((s, i) => s + i.quantity, 0);
+
+  const handleCheckout = useCallback(async () => {
+    if (!profile || cart.length === 0) return;
+    if (!isConnected || !walletAddress) {
+      setCheckoutError('Connect your wallet to checkout.');
+      setCheckoutState('error');
+      return;
+    }
+    setCheckoutError(null);
+    setCheckoutState('creating');
+    try {
+      const body = {
+        merchant_address: profile.merchant_address,
+        items: cart.map(i => ({
+          product_id: i.product.id,
+          name: i.product.name,
+          quantity: i.quantity,
+          unit_price: parseFloat(i.product.price),
+        })),
+        subtotal: cartTotal,
+        tax_amount: 0,
+        shipping_amount: 0,
+        discount_amount: 0,
+        total: cartTotal,
+      };
+      const res = await fetch('/api/merchant/orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+        body: JSON.stringify(body),
+      });
+      const data = await res.json() as { order?: { order_number?: string }; error?: string };
+      if (!res.ok) throw new Error(data.error || 'Failed to place order');
+      setOrderNumber(data.order?.order_number ?? null);
+      setCart([]);
+      setCheckoutState('success');
+    } catch (e: unknown) {
+      setCheckoutError(e instanceof Error ? e.message : 'Checkout failed');
+      setCheckoutState('error');
+    }
+  }, [profile, cart, cartTotal, isConnected, walletAddress]);
 
   if (loading) {
     return (
@@ -527,16 +573,29 @@ export default function StorefrontPage() {
                 <p className="text-xs text-gray-400 mb-3">
                   Pay with VFIDE tokens to {profile.display_name}
                 </p>
-                <button
-                  className="w-full py-3 rounded-lg text-white font-semibold transition hover:opacity-90"
-                  style={{ backgroundColor: themeColor }}
-                  onClick={() => {
-                    // Future: integrate with checkout flow  
-                    alert('Checkout integration coming soon — use the merchant POS for payments');
-                  }}
-                >
-                  Checkout
-                </button>
+                {checkoutState === 'success' ? (
+                  <div className="flex items-center gap-2 text-green-600 dark:text-green-400 text-sm font-semibold py-3 justify-center">
+                    <CheckCircle className="w-5 h-5" />
+                    Order placed! #{orderNumber}
+                  </div>
+                ) : (
+                  <>
+                    {checkoutState === 'error' && checkoutError && (
+                      <div className="flex items-center gap-2 text-red-500 text-xs mb-2">
+                        <AlertCircle className="w-4 h-4 shrink-0" />
+                        {checkoutError}
+                      </div>
+                    )}
+                    <button
+                      className="w-full py-3 rounded-lg text-white font-semibold transition hover:opacity-90 disabled:opacity-60"
+                      style={{ backgroundColor: themeColor }}
+                      onClick={handleCheckout}
+                      disabled={checkoutState === 'creating' || cart.length === 0}
+                    >
+                      {checkoutState === 'creating' ? 'Placing order…' : 'Checkout'}
+                    </button>
+                  </>
+                )}
               </div>
             </motion.div>
           </>

@@ -35,6 +35,8 @@ error ESC_ActionBlocked(uint8 result);
 contract EscrowManager is ReentrancyGuard {
         uint256 public constant MIN_LOCK_PERIOD = 3 days; // F-18 FIX: Enforce minimum lock period regardless of score
     using SafeERC20 for IERC20;
+
+    mapping(address => bool) public whitelistedTokens;
     
     event EscrowCreated(uint256 indexed escrowId, address indexed buyer, address indexed merchant, uint256 amount, uint256 releaseTime, uint256 lockPeriod, uint256 timestamp);
     event EscrowReleased(uint256 indexed escrowId, address indexed to);
@@ -80,6 +82,12 @@ contract EscrowManager is ReentrancyGuard {
         arbiterChangeTime = type(uint256).max;
     }
 
+    function setTokenWhitelist(address token, bool status) external {
+        require(msg.sender == dao, "ESC: not DAO");
+        require(token != address(0), "ESC: zero address");
+        whitelistedTokens[token] = status;
+    }
+
     // 1. Create Escrow (Buyer pays)
     function createEscrow(
         address merchant,
@@ -88,6 +96,7 @@ contract EscrowManager is ReentrancyGuard {
         string calldata orderId
     ) external nonReentrant returns (uint256) {
         require(merchant != address(0) && token != address(0), "zero address");
+        require(whitelistedTokens[token], "ESC: token not whitelisted");
         require(msg.sender != address(0), "buyer zero address");
         require(amount > 0, "zero amount");
 

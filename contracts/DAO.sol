@@ -69,6 +69,7 @@ contract DAO is ReentrancyGuard {
 
     uint64 public votingPeriod = 3 days;
     uint64 public votingDelay = 1 days; // Flash loan protection: vote cannot start immediately
+    uint64 public constant VOTE_GRACE_PERIOD = 30 minutes; // Anti-front-running: voting closes early
     uint64 public proposalCooldown = 1 hours;
     uint256 public minVotesRequired = 5000; // Absolute number of vote-points (Score) required to pass
     uint256 public minParticipation = 10;
@@ -459,6 +460,8 @@ contract DAO is ReentrancyGuard {
         if (p.end == 0 || p.start == 0) revert DAO_UnknownProposal();
         if (block.timestamp < p.start) revert DAO_VoteNotStarted(); // Flash loan protection
         if (block.timestamp >= p.end) revert DAO_VoteEnded();
+        // Anti-front-running: reject votes in the final grace period
+        require(block.timestamp < p.end - VOTE_GRACE_PERIOD, "DAO: vote submission closed");
         if (!_eligible(voter)) revert DAO_NotEligible();
         if (p.hasVoted[voter]) revert DAO_AlreadyVoted();
         

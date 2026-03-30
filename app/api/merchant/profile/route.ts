@@ -117,6 +117,18 @@ export async function POST(request: NextRequest) {
   if (authAddress instanceof NextResponse) return authAddress;
 
   try {
+    // Eligibility check: minimum proof score required for merchant registration
+    const eligibility = await query<{ proof_score: number }>(
+      'SELECT proof_score FROM users WHERE wallet_address = $1',
+      [authAddress]
+    );
+    if (eligibility.rows.length === 0 || Number(eligibility.rows[0]?.proof_score ?? 0) < 1000) {
+      return NextResponse.json(
+        { error: 'Minimum proof score of 1000 required for merchant registration' },
+        { status: 403 }
+      );
+    }
+
     // Check existing
     const existing = await query(
       'SELECT id FROM merchant_profiles WHERE merchant_address = $1',
