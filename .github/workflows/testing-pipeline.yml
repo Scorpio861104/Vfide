@@ -29,7 +29,7 @@ jobs:
         env:
           REPORT_GAS: true
       - name: Upload gas report
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         if: always()
         with:
           name: gas-report
@@ -70,7 +70,7 @@ jobs:
           if (failed) process.exit(1);
           "
       - name: Upload coverage
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         if: always()
         with:
           name: coverage-report
@@ -129,7 +129,7 @@ jobs:
         with:
           sarif_file: reports/slither.sarif
       - name: Upload Slither report
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         if: always()
         with:
           name: slither-report
@@ -160,7 +160,7 @@ jobs:
           ./scripts/run-mythril.sh --critical-only
         timeout-minutes: 60
       - name: Upload Mythril reports
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         if: always()
         with:
           name: mythril-reports
@@ -285,7 +285,7 @@ jobs:
       - name: Run E2E
         run: npx playwright test
       - name: Upload E2E results
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         if: always()
         with:
           name: playwright-report
