@@ -10,7 +10,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Star, MapPin, Package, ShoppingCart, ArrowLeft, ExternalLink, Globe, X, Plus, Minus, Search, CheckCircle, AlertCircle } from 'lucide-react';
-import { getAuthHeaders } from '@/lib/auth/client';
 
 interface MerchantProfile {
   merchant_address: string;
@@ -178,7 +177,7 @@ export default function StorefrontPage() {
       };
       const res = await fetch('/api/merchant/orders', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
       });
       const data = await res.json() as { order?: { order_number?: string }; error?: string };

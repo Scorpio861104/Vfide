@@ -12,7 +12,6 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import { useAccount } from 'wagmi';
 import { usePayMerchant } from '@/hooks/useMerchantHooks';
-import { getAuthHeaders } from '@/lib/auth/client';
 import { Shield, Clock, CheckCircle, AlertTriangle, FileText, ExternalLink } from 'lucide-react';
 
 interface InvoiceItem {
@@ -129,10 +128,7 @@ export default function CheckoutPage() {
 
       await fetch(`/api/merchant/checkout/${paymentLinkId}`, {
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          ...getAuthHeaders(),
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'pay', tx_hash: hash }),
       });
 

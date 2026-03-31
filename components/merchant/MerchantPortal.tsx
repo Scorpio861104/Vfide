@@ -22,7 +22,7 @@ import { useTransactionSounds } from '@/hooks/useTransactionSounds';
 import { Key, Upload, CreditCard, BarChart3, Bell, FileText, Repeat, Package, ShoppingCart, Star, Calendar, Download } from 'lucide-react';
 import { useEffect } from 'react';
 import { useAccount } from 'wagmi';
-import { getAuthHeaders } from '@/lib/auth/client';
+
 import { isAddress } from 'viem';
 
 // Animated counter
@@ -238,7 +238,7 @@ export default function MerchantPortal() {
       setRequestsError(null);
       try {
         const response = await fetch(`/api/crypto/payment-requests?userAddress=${address}`, {
-          headers: getAuthHeaders(),
+          
         });
         if (!response.ok) {
           const data = await response.json().catch(() => ({}));
@@ -287,7 +287,7 @@ export default function MerchantPortal() {
     try {
       const response = await fetch('/api/crypto/payment-requests', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           toAddress: newRequest.address,
           amount: newRequest.amount,
@@ -1195,7 +1195,7 @@ function WebhooksSection({ merchantAddress }: { merchantAddress: string }) {
     (async () => {
       try {
         const res = await fetch('/api/merchant/webhooks', {
-          headers: getAuthHeaders(),
+          
         });
         if (res.ok) {
           const data = await res.json();
@@ -1212,7 +1212,7 @@ function WebhooksSection({ merchantAddress }: { merchantAddress: string }) {
     try {
       const res = await fetch('/api/merchant/webhooks', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ url: newUrl, events: newEvents, description: newDescription }),
       });
       if (res.ok) {
@@ -1230,7 +1230,7 @@ function WebhooksSection({ merchantAddress }: { merchantAddress: string }) {
     try {
       const res = await fetch('/api/merchant/webhooks', {
         method: 'DELETE',
-        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id }),
       });
       if (res.ok) {
@@ -1389,7 +1389,7 @@ function InvoicesSection({ merchantAddress }: { merchantAddress: string }) {
       const url = statusFilter
         ? `/api/merchant/invoices?status=${statusFilter}`
         : '/api/merchant/invoices';
-      const res = await fetch(url, { headers: getAuthHeaders() });
+      const res = await fetch(url, );
       if (res.ok) {
         const data = await res.json();
         setInvoices(data.invoices || []);
@@ -1412,7 +1412,7 @@ function InvoicesSection({ merchantAddress }: { merchantAddress: string }) {
         }));
       const res = await fetch('/api/merchant/invoices', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           customer_name: newInvoice.customer_name,
           customer_address: newInvoice.customer_address || undefined,
@@ -1587,7 +1587,7 @@ function SubscriptionsSection({ merchantAddress }: { merchantAddress: string }) 
 
   const fetchPlans = async () => {
     try {
-      const res = await fetch('/api/merchant/subscriptions', { headers: getAuthHeaders() });
+      const res = await fetch('/api/merchant/subscriptions', );
       if (res.ok) {
         const data = await res.json();
         setPlans(data.plans || []);
@@ -1604,7 +1604,7 @@ function SubscriptionsSection({ merchantAddress }: { merchantAddress: string }) 
     try {
       const res = await fetch('/api/merchant/subscriptions', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: newPlan.name,
           description: newPlan.description || undefined,
@@ -1628,7 +1628,7 @@ function SubscriptionsSection({ merchantAddress }: { merchantAddress: string }) 
     try {
       await fetch('/api/merchant/subscriptions', {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id, status: 'archived' }),
       });
       fetchPlans();
@@ -1747,7 +1747,7 @@ function ProductsSection({ merchantAddress }: { merchantAddress: string }) {
     else delete payload.platform_category_id;
     const res = await fetch('/api/merchant/products', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
     });
     if (res.ok) {
@@ -1761,7 +1761,7 @@ function ProductsSection({ merchantAddress }: { merchantAddress: string }) {
   const archiveProduct = async (id: string) => {
     const res = await fetch(`/api/merchant/products?id=${id}`, {
       method: 'DELETE',
-      headers: getAuthHeaders(),
+      
     });
     if (res.ok) setProducts(prev => prev.filter(p => p.id !== id));
   };
@@ -1824,7 +1824,7 @@ function OrdersSection({ merchantAddress }: { merchantAddress: string }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch(`/api/merchant/orders?role=merchant`, { headers: getAuthHeaders() })
+    fetch(`/api/merchant/orders?role=merchant`, )
       .then(r => r.ok ? r.json() : null)
       .then(d => { if (d?.orders) setOrders(d.orders); })
       .finally(() => setLoading(false));
@@ -1833,7 +1833,7 @@ function OrdersSection({ merchantAddress }: { merchantAddress: string }) {
   const updateStatus = async (id: string, status: string) => {
     const res = await fetch('/api/merchant/orders', {
       method: 'PATCH',
-      headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ order_id: id, status }),
     });
     if (res.ok) {
@@ -1922,7 +1922,7 @@ function ReviewsSection({ merchantAddress }: { merchantAddress: string }) {
     if (!reply?.trim()) return;
     const res = await fetch('/api/merchant/reviews', {
       method: 'PATCH',
-      headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ review_id: reviewId, merchant_reply: reply }),
     });
     if (res.ok) {
@@ -1983,7 +1983,7 @@ function BookingsSection({ merchantAddress }: { merchantAddress: string }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch(`/api/merchant/bookings?role=merchant`, { headers: getAuthHeaders() })
+    fetch(`/api/merchant/bookings?role=merchant`, )
       .then(r => r.ok ? r.json() : null)
       .then(d => { if (d?.bookings) setBookings(d.bookings); })
       .finally(() => setLoading(false));
@@ -1992,7 +1992,7 @@ function BookingsSection({ merchantAddress }: { merchantAddress: string }) {
   const updateBookingStatus = async (id: string, status: string) => {
     const res = await fetch('/api/merchant/bookings', {
       method: 'PATCH',
-      headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ booking_id: id, status }),
     });
     if (res.ok) setBookings(prev => prev.map(b => b.id === id ? { ...b, status } : b));
@@ -2041,7 +2041,7 @@ function DigitalGoodsSection({ merchantAddress }: { merchantAddress: string }) {
   const [form, setForm] = useState({ product_id: '', file_name: '', file_url: '', file_size: '', license_keys: '' });
 
   useEffect(() => {
-    fetch(`/api/merchant/digital?role=merchant`, { headers: getAuthHeaders() })
+    fetch(`/api/merchant/digital?role=merchant`, )
       .then(r => r.ok ? r.json() : null)
       .then(d => { if (d?.assets) setAssets(d.assets); })
       .finally(() => setLoading(false));
@@ -2060,7 +2060,7 @@ function DigitalGoodsSection({ merchantAddress }: { merchantAddress: string }) {
     }
     const res = await fetch('/api/merchant/digital', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
     });
     if (res.ok) {

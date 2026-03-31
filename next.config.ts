@@ -63,13 +63,6 @@ const nextConfig: NextConfig = {
         protocol: 'https',
         hostname: '*.amazonaws.com',
       },
-      // Allow any https origin for user-generated content (avatars, story
-      // previews, merchant logos, product images, IPFS gateways, etc.).
-      // img-src in the CSP header already enforces https-only for images.
-      {
-        protocol: 'https',
-        hostname: '**',
-      },
     ],
   },
 
@@ -79,45 +72,6 @@ const nextConfig: NextConfig = {
       {
         source: '/:path*',
         headers: [
-          // Content Security Policy
-          // NOTE: 'unsafe-inline' has been removed from script-src.
-          // Per-request nonce injection is handled by middleware.ts, which sets
-          // the 'Content-Security-Policy' header with 'nonce-{nonce}' for every
-          // HTML response.  This static header definition in next.config.ts is kept
-          // only as a fallback for routes not matched by the middleware matcher
-          // (static files, etc.) and deliberately omits 'unsafe-inline'.
-          // 'unsafe-eval' is intentionally omitted to reduce script execution risk.
-          {
-            key: 'Content-Security-Policy',
-            value: [
-              // Default: only same origin
-              "default-src 'self'",
-              // Scripts: strict source list without unsafe-eval
-              "script-src 'self' https://vercel.live https://*.walletconnect.com https://*.walletconnect.org",
-              // Styles: self and unsafe-inline for Tailwind/Radix UI
-              "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-              // Images: self, data URIs, HTTPS, and blob for avatars/NFTs
-              "img-src 'self' data: https: blob:",
-              // Fonts: self, data URIs, and Google Fonts
-              "font-src 'self' data: https://fonts.gstatic.com",
-              // Connect: self, WebSocket, and blockchain RPC endpoints
-              "connect-src 'self' wss: ws: https: https://*.walletconnect.com https://*.walletconnect.org https://*.base.org https://*.polygon.technology https://*.zksync.io",
-              // Frame: self and wallet connect
-              "frame-src 'self' https://*.walletconnect.com",
-              // Media: self and blob (for potential voice/video features)
-              "media-src 'self' blob:",
-              // Object: none (block plugins)
-              "object-src 'none'",
-              // Base URI: self
-              "base-uri 'self'",
-              // Form actions: self
-              "form-action 'self'",
-              // Frame ancestors: none (prevent clickjacking)
-              "frame-ancestors 'none'",
-              // Upgrade insecure requests in production
-              process.env.NODE_ENV === 'production' ? "upgrade-insecure-requests" : "",
-            ].filter(Boolean).join('; '),
-          },
           // X-Frame-Options: prevent clickjacking
           {
             key: 'X-Frame-Options',

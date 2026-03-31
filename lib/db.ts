@@ -2,10 +2,17 @@
 // NO MOCKS - Real database queries
 
 import { Pool, QueryResult, QueryResultRow } from 'pg';
+import { AsyncLocalStorage } from 'node:async_hooks';
 import { logger } from './logger';
 
 // Lazy initialization to avoid build-time errors
 let _pool: Pool | null = null;
+const dbUserContext = new AsyncLocalStorage<{ userAddress: string | null }>();
+
+export function setDbUserAddressContext(userAddress: string | null | undefined) {
+  const normalized = userAddress ? userAddress.toLowerCase() : null;
+  dbUserContext.enterWith({ userAddress: normalized });
+}
 
 function getPool(): Pool {
   if (!_pool) {
@@ -59,8 +66,23 @@ export async function query<T extends QueryResultRow = QueryResultRow>(
 ): Promise<QueryResult<T>> {
   const pool = getPool();
   const start = Date.now();
+  const userAddress = dbUserContext.getStore()?.userAddress ?? null;
+
   try {
-    const res = await pool.query<T>(text, params);
+    let res: QueryResult<T>;
+    if (userAddress) {
+      const client = await pool.connect();
+      try {
+        await client.query("SELECT set_config('app.current_user_address', $1, false)", [userAddress]);
+        res = await client.query<T>(text, params);
+        await client.query("RESET app.current_user_address");
+      } finally {
+        client.release();
+      }
+    } else {
+      res = await pool.query<T>(text, params);
+    }
+
     const duration = Date.now() - start;
     // Only log slow queries (>100ms) to reduce noise
     if (duration > 100) {

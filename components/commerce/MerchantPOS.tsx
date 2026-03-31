@@ -15,7 +15,6 @@ import { CONTRACT_ADDRESSES } from '@/lib/contracts'
 import { MerchantPortalABI } from '@/lib/abis'
 import { safeParseFloat } from '@/lib/validation'
 import { DEFAULT_VFIDE_PRICE } from '@/lib/price-utils'
-import { getAuthHeaders } from '@/lib/auth/client'
 
 interface Product {
   id: string
@@ -205,7 +204,7 @@ export function MerchantPOS() {
     // Notify server for webhook dispatch (fire-and-forget)
     fetch('/api/merchant/payments/confirm', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         customer_address: customerAddress,
         amount,
@@ -237,7 +236,7 @@ export function MerchantPOS() {
     try {
       const res = await fetch('/api/merchant/products', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: product.name,
           price: product.price,
