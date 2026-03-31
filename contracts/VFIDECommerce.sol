@@ -205,12 +205,14 @@ contract CommerceEscrow {
 
         address buyerV = vaultHub.vaultOf(msg.sender);
         if (buyerV == address(0)) revert COM_NotBuyer();
+        address sellerV = vaultHub.vaultOf(merchantOwner);
+        if (sellerV == address(0)) revert COM_NotSeller();
         id = ++escrowCount;
         escrows[id] = Escrow({
             buyerOwner: msg.sender,
             merchantOwner: merchantOwner,
             buyerVault: buyerV,
-            sellerVault: m.vault,
+            sellerVault: sellerV,
             amount: amount,
             state: State.OPEN,
             metaHash: metaHash
@@ -220,7 +222,7 @@ contract CommerceEscrow {
     function markFunded(uint256 id) external nonReentrant {
         Escrow storage e = escrows[id];
         if (e.state != State.OPEN) revert COM_BadState();
-        if (msg.sender != e.buyerOwner && msg.sender != e.merchantOwner && msg.sender != dao) revert COM_NotAllowed();
+        if (msg.sender != e.buyerOwner && msg.sender != dao) revert COM_NotAllowed();
         e.state = State.FUNDED;
         escrowDeposited[id] = e.amount;
         token.safeTransferFrom(e.buyerVault, address(this), e.amount);

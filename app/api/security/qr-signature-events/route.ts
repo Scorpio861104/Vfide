@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { withRateLimit } from '@/lib/auth/rateLimit';
+import { requireAuth } from '@/lib/auth/middleware';
 import { logger } from '@/lib/logger';
 
 const EVENT_TYPES = ['missing', 'invalid', 'expired'] as const;
@@ -61,6 +62,9 @@ function normalizeMerchant(value: unknown): string {
 export async function POST(request: NextRequest) {
   const rateLimitResponse = await withRateLimit(request, 'write');
   if (rateLimitResponse) return rateLimitResponse;
+
+  const authResult = await requireAuth(request);
+  if (authResult instanceof NextResponse) return authResult;
 
   let body: unknown;
   try {

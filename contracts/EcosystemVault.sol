@@ -50,6 +50,7 @@ error ECO_ExceedsMax();
 error ECO_NoPendingChange();
 error ECO_ChangeNotReady();
 error ECO_ExpenseCapExceeded();
+error ECO_NotKeeper();
 
 contract EcosystemVault is Ownable, ReentrancyGuard {
     using SafeERC20 for IERC20;
@@ -80,6 +81,7 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
     event CouncilManagerChangeCancelled(address indexed councilManager);
     event CouncilManagerUpdated(address indexed oldCouncilManager, address indexed newCouncilManager);
     event ExpenseEpochRolled(uint256 startedAt, uint256 baseOperationsPool, uint256 capAmount);
+    event KeeperAddressSet(address indexed newKeeper);
 
     // ═══════════════════════════════════════════════════════════════════════
     //                              CONSTANTS
@@ -183,6 +185,9 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
     address public operationsWallet;
     uint256 public lastOperationsWithdrawal;
     uint256 public operationsWithdrawalCooldown = 30 days;
+
+    // Authorized Chainlink Automation keeper (address(0) = anyone may call performUpkeep)
+    address public keeperAddress;
 
     // Pool balances
     uint256 public councilPool;
@@ -1532,13 +1537,24 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
      * @notice Chainlink Automation performUpkeep entrypoint.
      * @dev Accepts the bitmask produced by checkUpkeep.  Time guards are re-validated
      *      on-chain before each task to guard against stale performData.
+     *      M-9 FIX: Restricted to keeperAddress (or owner) when a keeper is registered.
+     *      The bitmask from performData is respected so selective task execution is possible.
      */
     function performUpkeep(bytes calldata performData) external nonReentrant {
-        if (performData.length > 0) {
-            // Decode for compatibility with keeper payload expectations.
-            abi.decode(performData, (uint8));
+        if (keeperAddress != address(0) && msg.sender != keeperAddress && msg.sender != owner) {
+            revert ECO_NotKeeper();
         }
-        _runScheduledTasks(TASK_COUNCIL | TASK_MERCHANT | TASK_HEADHUNTER | TASK_OPERATIONS);
+        uint8 tasks = TASK_COUNCIL | TASK_MERCHANT | TASK_HEADHUNTER | TASK_OPERATIONS;
+        if (performData.length > 0) {
+            tasks = abi.decode(performData, (uint8));
+        }
+        _runScheduledTasks(tasks);
+    }
+
+    /// @notice Set the authorized Chainlink Automation keeper. Set to address(0) to allow any caller.
+    function setKeeperAddress(address _keeper) external onlyOwner {
+        keeperAddress = _keeper;
+        emit KeeperAddressSet(_keeper);
     }
 
     /**

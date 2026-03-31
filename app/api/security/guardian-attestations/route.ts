@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyMessage } from 'viem';
 import { withRateLimit } from '@/lib/auth/rateLimit';
+import { requireAuth } from '@/lib/auth/middleware';
 import { buildGuardianAttestationMessage, type GuardianAttestationPayload } from '@/lib/recovery/guardianAttestation';
 
 const ADDRESS_REGEX = /^0x[a-fA-F0-9]{40}$/;
@@ -57,6 +58,9 @@ export async function POST(request: NextRequest) {
   const rateLimitResponse = await withRateLimit(request, 'write');
   if (rateLimitResponse) return rateLimitResponse;
 
+  const authResult = await requireAuth(request);
+  if (authResult instanceof NextResponse) return authResult;
+
   let body: unknown;
   try {
     body = await request.json();
@@ -78,6 +82,10 @@ export async function POST(request: NextRequest) {
 
   if (!owner || !vault || !guardian || !issuedAt || !expiresAt || !signature) {
     return NextResponse.json({ error: 'Invalid attestation payload' }, { status: 400 });
+  }
+
+  if (authResult.user.address.toLowerCase() !== owner.toLowerCase()) {
+    return NextResponse.json({ error: 'Authenticated user must match owner' }, { status: 403 });
   }
 
   if (expiresAt <= issuedAt) {

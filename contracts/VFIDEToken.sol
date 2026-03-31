@@ -76,8 +76,10 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
     uint256 public constant MAX_CIRCUIT_BREAKER_DURATION = 7 days; // maximum allowed duration
     bool public securityBypass = false;           // bypass SecurityHub lock checks only
     uint256 public securityBypassExpiry = 0;
+    uint64 public securityBypassActivatedAt = 0;  // L-3 FIX: cooldown anchor
     bool public feeBypass = false;                // bypass BurnRouter fee calculation only
     uint256 public feeBypassExpiry = 0;
+    uint64 public feeBypassActivatedAt = 0;       // L-3 FIX: cooldown anchor for fee bypass
     
     /// Exemptions
     mapping(address => bool) public systemExempt; // bypass all checks (sinks, etc)
@@ -600,10 +602,14 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
     }
 
     /// @notice Bypass SecurityHub lock checks only (does not disable fees)
+    /// @dev L-3 FIX: Re-activation requires a 1-day cooldown from the previous activation.
     function setSecurityBypass(bool _active, uint256 _duration) external onlyOwner {
         _syncEmergencyFlags();
         if (_active) {
             if (_duration == 0 || _duration > MAX_CIRCUIT_BREAKER_DURATION) revert VF_InvalidDuration();
+            if (securityBypassActivatedAt > 0 && block.timestamp < uint256(securityBypassActivatedAt) + 1 days)
+                revert VF_TimelockActive();
+            securityBypassActivatedAt = uint64(block.timestamp);
             securityBypass = true;
             securityBypassExpiry = block.timestamp + _duration;
         } else {
@@ -615,10 +621,14 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
     }
 
     /// @notice Bypass BurnRouter fees only (does not disable security locks)
+    /// @dev L-3 FIX: Re-activation requires a 1-day cooldown from the previous activation.
     function setFeeBypass(bool _active, uint256 _duration) external onlyOwner {
         _syncEmergencyFlags();
         if (_active) {
             if (_duration == 0 || _duration > MAX_CIRCUIT_BREAKER_DURATION) revert VF_InvalidDuration();
+            if (feeBypassActivatedAt > 0 && block.timestamp < uint256(feeBypassActivatedAt) + 1 days)
+                revert VF_TimelockActive();
+            feeBypassActivatedAt = uint64(block.timestamp);
             feeBypass = true;
             feeBypassExpiry = block.timestamp + _duration;
         } else {
@@ -657,11 +667,6 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
         if (!feeBypass) return false;
         if (feeBypassExpiry > 0 && block.timestamp >= feeBypassExpiry) return false;
         return true;
-    }
-
-    /// @notice Clear expired emergency flags from storage.
-    function syncEmergencyFlags() external {
-        _syncEmergencyFlags();
     }
 
     /**
@@ -816,7 +821,8 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
 
         // Dynamic fees via burn router (if present and not exempt and not bypassed)
         if (address(burnRouter) != address(0) && !isFeeBypassed() && !(systemExempt[from] || systemExempt[logicalTo])) {
-            try burnRouter.computeFeesAndReserve(from, logicalTo, amount) returns (
+            address feeFrom = _resolveFeeScoringAddress(from);
+            try burnRouter.computeFeesAndReserve(feeFrom, logicalTo, amount) returns (
                 uint256 _burnAmt,
                 uint256 _sanctumAmt,
                 uint256 _ecoAmt,
@@ -965,6 +971,19 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
         }
     }
 
+    function _resolveFeeScoringAddress(address from) internal view returns (address feeFrom) {
+        feeFrom = from;
+        if (address(vaultHub) == address(0) || !_isVault(from)) return feeFrom;
+
+        (bool ok, bytes memory data) = address(vaultHub).staticcall(
+            abi.encodeWithSignature("ownerOfVault(address)", from)
+        );
+        if (ok && data.length >= 32) {
+            address vaultOwner = abi.decode(data, (address));
+            if (vaultOwner != address(0)) feeFrom = vaultOwner;
+        }
+    }
+
     function _locked(address vault) internal view returns (bool) {
         (bool ok, bytes memory d) = address(securityHub).staticcall(abi.encodeWithSelector(ISecurityHub.isLocked.selector, vault));
         // Fail closed: if lock status cannot be determined, treat vault as locked.
@@ -987,9 +1006,17 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
         }
     }
 
+    /// @notice T-07 FIX: Permissionless state cleanup — clears stale circuit breaker / bypass
+    ///         storage flags so that off-chain reads of the public variables reflect reality.
+    ///         Safe to call by anyone; no funds are moved and no access is granted.
+    function syncEmergencyFlags() external {
+        _syncEmergencyFlags();
+    }
+
     function _tryExpectedNetAmount(address from, address to, uint256 amount) internal view returns (bool ok, uint256 expectedNet) {
+        address feeFrom = _resolveFeeScoringAddress(from);
         (bool success, bytes memory data) = address(burnRouter).staticcall(
-            abi.encodeWithSelector(IProofScoreBurnRouterToken.computeFees.selector, from, to, amount)
+            abi.encodeWithSelector(IProofScoreBurnRouterToken.computeFees.selector, feeFrom, to, amount)
         );
         if (!success || data.length < 192) return (false, 0);
 
@@ -1254,9 +1281,11 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
         if (systemExempt[from] || systemExempt[to] || address(burnRouter) == address(0) || isFeeBypassed()) {
             return (0, 0, 0, amount);
         }
+
+        address feeFrom = _resolveFeeScoringAddress(from);
         
         // Get fees from router
-        (burnAmount, sanctumAmount, ecosystemAmount, , , ) = burnRouter.computeFees(from, to, amount);
+        (burnAmount, sanctumAmount, ecosystemAmount, , , ) = burnRouter.computeFees(feeFrom, to, amount);
         
         netReceived = amount - burnAmount - sanctumAmount - ecosystemAmount;
     }

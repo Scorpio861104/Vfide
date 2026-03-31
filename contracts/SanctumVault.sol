@@ -81,7 +81,7 @@ contract SanctumVault is Ownable, ReentrancyGuard {
     mapping(uint256 => Disbursement) public disbursements;
 
     /// Governance
-    uint8 public approvalsRequired = 1; // Default to 1 (DAO only)
+    uint8 public approvalsRequired = 2; // M-2 FIX: Default to 2 (requires multi-approval from the start)
     mapping(address => bool) public isApprover; // DAO members who can approve
     mapping(address => uint256) public approverIndex;    address[] public approvers;
 
@@ -163,7 +163,7 @@ contract SanctumVault is Ownable, ReentrancyGuard {
     }
 
     function setApprovalsRequired(uint8 _required) external onlyDAO {
-        require(_required > 0 && _required <= approvers.length, "bad threshold");
+        require(_required >= 2 && _required <= approvers.length, "bad threshold"); // M-2 FIX: minimum 2
         approvalsRequired = _required;
         emit ApprovalsRequiredSet(_required);
         _log("sanctum_approvals_set");

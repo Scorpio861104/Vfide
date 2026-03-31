@@ -23,6 +23,7 @@ contract ProofScoreBurnRouter is Ownable, Pausable {
     event FeesComputed(address indexed from, address indexed to, uint256 burnAmount, uint256 sanctumAmount, uint256 ecosystemAmount, uint16 score);
     event SustainabilitySet(uint256 dailyBurnCap, uint256 minimumSupplyFloor, uint16 ecosystemMinBps);
     event MicroTxFeeCeilingSet(uint16 maxBps, uint256 maxAmount);
+    event MicroTxUsdCapSet(address indexed priceOracle, uint256 maxUsd6);
     event BurnCapReached(uint256 dailyBurned, uint256 dailyCap, uint256 redirectedToEcosystem);
     // L-03: Emitted when seer returns score 0 for a user, which silently applies max fees.
     // Monitoring systems should alert on this — it may indicate a misconfigured seer address.
@@ -62,6 +63,8 @@ contract ProofScoreBurnRouter is Ownable, Pausable {
     uint16 public maxTotalBps = 500;  // 5% maximum fee for score ≤4000
     uint16 public microTxFeeCeilingBps = 100; // 1.00% max fee for small payments
     uint256 public microTxMaxAmount = 10 * 1e18;
+    address public microTxPriceOracle; // Optional VFIDE/USD oracle (getPrice -> 18 decimals)
+    uint256 public microTxMaxUsd6;     // Optional USD cap with 6 decimals (e.g., 10e6 = $10)
     
     // BR-05 FIX: Rate limit fee policy changes (max 1 per day)
     uint64 public lastFeePolicyChange;
@@ -472,6 +475,27 @@ contract ProofScoreBurnRouter is Ownable, Pausable {
         emit MicroTxFeeCeilingSet(_maxBps, _maxAmount);
     }
 
+    function setMicroTxUsdCap(address _priceOracle, uint256 _maxUsd6) external onlyOwner {
+        microTxPriceOracle = _priceOracle;
+        microTxMaxUsd6 = _maxUsd6;
+        emit MicroTxUsdCapSet(_priceOracle, _maxUsd6);
+    }
+
+    function _isWithinMicroTxUsdCap(uint256 amount) internal view returns (bool) {
+        if (microTxMaxUsd6 == 0 || microTxPriceOracle == address(0)) return false;
+
+        (bool ok, bytes memory data) = microTxPriceOracle.staticcall(
+            abi.encodeWithSignature("getPrice()")
+        );
+        if (!ok || data.length < 64) return false;
+
+        (uint256 price, ) = abi.decode(data, (uint256, uint8));
+        if (price == 0) return false;
+
+        uint256 amountUsd6 = (amount * price) / 1e30;
+        return amountUsd6 <= microTxMaxUsd6;
+    }
+
     // ─────────────────────────── Core Interface (for VFIDEToken)
 
     /**
@@ -510,7 +534,9 @@ contract ProofScoreBurnRouter is Ownable, Pausable {
         uint256 totalBps = _calculateLinearFee(scoreFrom);
 
         // Cap fee for low-value payments to avoid punitive costs on daily commerce.
-        if (microTxMaxAmount > 0 && amount <= microTxMaxAmount && totalBps > microTxFeeCeilingBps) {
+        bool belowTokenCap = microTxMaxAmount > 0 && amount <= microTxMaxAmount;
+        bool belowUsdCap = _isWithinMicroTxUsdCap(amount);
+        if ((belowTokenCap || belowUsdCap) && totalBps > microTxFeeCeilingBps) {
             totalBps = microTxFeeCeilingBps;
         }
         

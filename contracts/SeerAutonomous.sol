@@ -843,10 +843,10 @@ contract SeerAutonomous is ReentrancyGuard {
             _adjustThreshold(ThresholdType.PatternSensitivity, false, 5);
         }
         
-        // Use damped counters instead of full reset to reduce oscillation.
-        networkViolationCount = networkViolationCount / 2;
-        networkActionCount = networkActionCount / 2;
-        networkBlockedCount = networkBlockedCount / 2;
+        // Apply 80% EMA decay instead of a full reset to smooth threshold oscillation.
+        networkViolationCount = (networkViolationCount * 8) / 10;
+        networkActionCount    = (networkActionCount    * 8) / 10;
+        networkBlockedCount   = (networkBlockedCount   * 8) / 10;
 
         // Automatically trigger any due EcosystemVault scheduled tasks on the
         // same daily cadence — no separate keeper bot needed.

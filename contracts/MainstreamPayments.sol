@@ -805,6 +805,7 @@ contract TerminalRegistry {
     event TerminalPayment(bytes32 indexed terminalId, address indexed customer, uint256 amount);
     event TerminalLocationUpdated(bytes32 indexed terminalId, string newLocation);
     event TapLimitUpdated(uint256 oldLimit, uint256 newLimit);
+    event PaymentRecorderSet(address indexed recorder, bool allowed);
     
     address public dao;
     IVaultHub public vaultHub;
@@ -822,6 +823,7 @@ contract TerminalRegistry {
     
     mapping(bytes32 => Terminal) public terminals;
     mapping(address => bytes32[]) private merchantTerminals;
+    mapping(address => bool) public paymentRecorders;
     
     // Spending limits for tap-to-pay (no signature required)
     uint256 public tapLimit = 50 * 1e18;  // 50 VFIDE max for tap (like $50 contactless limit)
@@ -909,8 +911,11 @@ contract TerminalRegistry {
     function recordPayment(bytes32 terminalId, address customer, uint256 amount) external {
         Terminal storage t = terminals[terminalId];
         require(t.merchant != address(0), "TR: terminal not found");
-        require(msg.sender == t.merchant || msg.sender == dao, "TR: not authorized");
+        require(msg.sender == dao || paymentRecorders[msg.sender], "TR: not recorder");
         require(t.active, "TR: terminal inactive");
+        require(customer != address(0), "TR: zero customer");
+        require(amount > 0, "TR: zero amount");
+        require(customer != t.merchant, "TR: self-pay blocked");
         require(vaultHub.vaultOf(customer) != address(0), "TR: customer no vault");
         
         t.txCount++;
@@ -918,6 +923,12 @@ contract TerminalRegistry {
         t.lastTxTime = uint64(block.timestamp);
         
         emit TerminalPayment(terminalId, customer, amount);
+    }
+
+    function setPaymentRecorder(address recorder, bool allowed) external onlyDAO {
+        require(recorder != address(0), "TR: zero recorder");
+        paymentRecorders[recorder] = allowed;
+        emit PaymentRecorderSet(recorder, allowed);
     }
     
     /**

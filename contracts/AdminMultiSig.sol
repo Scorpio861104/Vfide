@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
-import { ReentrancyGuard, IERC20 } from "./SharedInterfaces.sol";
+import { ReentrancyGuard, IERC20, ISeer } from "./SharedInterfaces.sol";
 
 /**
  * @title AdminMultiSig
@@ -56,8 +56,10 @@ contract AdminMultiSig is ReentrancyGuard {
     
     uint256 public vetoThreshold = 100; // 100 veto votes needed
     // This makes Sybil attacks economically costly — 100 wallets × 10,000 VFIDE = 1M VFIDE locked.
-    uint256 public vetoMinStake = 10_000e18; // 10,000 VFIDE minimum to cast one veto vote
-    IERC20 public vfideToken; // VFIDE token reference for stake checks
+    uint256 public vetoMinStake = 10_000e18; // 10,000 VFIDE minimum to cast one veto vote (fallback when seer not set)
+    IERC20 public vfideToken; // VFIDE token reference for fallback stake checks
+    ISeer public seer;        // M-6 FIX: ProofScore oracle — primary veto eligibility gate
+    uint16 public vetoMinScore = 5000; // M-6 FIX: minimum ProofScore (50/100) to cast a veto vote
     mapping(uint256 => mapping(address => bool)) public communityVetos;
 
     uint256 private constant NO_ACTIVE_PROPOSAL = type(uint256).max;
@@ -78,6 +80,8 @@ contract AdminMultiSig is ReentrancyGuard {
     event CouncilMemberUpdated(address indexed oldMember, address indexed newMember);
     event VetoMinStakeSet(uint256 newMinStake);
     event VFIDETokenSet(address token);
+    event SeerSet(address seer);
+    event VetoMinScoreSet(uint16 minScore);
     event ExecutionGasLimitSet(uint256 newGasLimit);
 
     modifier onlyCouncil() {
@@ -117,11 +121,24 @@ contract AdminMultiSig is ReentrancyGuard {
         }
     }
 
-    /// @notice Set the VFIDE token address used for stake checks on community veto
+    /// @notice Set the VFIDE token address used for fallback stake checks on community veto
     function setVFIDEToken(address _token) external onlyCouncil {
         require(_token != address(0), "AdminMultiSig: zero address");
         vfideToken = IERC20(_token);
         emit VFIDETokenSet(_token);
+    }
+
+    /// @notice Set the ProofScore oracle used as the primary veto eligibility gate (M-6 FIX)
+    function setSeer(address _seer) external onlyCouncil {
+        require(_seer != address(0), "AdminMultiSig: zero address");
+        seer = ISeer(_seer);
+        emit SeerSet(_seer);
+    }
+
+    /// @notice Set the minimum ProofScore required to cast a community veto (M-6 FIX)
+    function setVetoMinScore(uint16 _minScore) external onlyCouncil {
+        vetoMinScore = _minScore;
+        emit VetoMinScoreSet(_minScore);
     }
 
     /// @notice Update the minimum VFIDE stake required to cast a community veto
@@ -284,7 +301,14 @@ contract AdminMultiSig is ReentrancyGuard {
             block.timestamp <= proposal.executionTime + VETO_WINDOW,
             "AdminMultiSig: veto window closed"
         );
-        if (vetoMinStake > 0 && address(vfideToken) != address(0)) {
+        if (address(seer) != address(0)) {
+            // M-6 FIX: Primary gate — ProofScore reflects reputation, not just wealth
+            require(
+                seer.getCachedScore(msg.sender) >= vetoMinScore,
+                "AdminMultiSig: ProofScore too low to veto"
+            );
+        } else if (vetoMinStake > 0 && address(vfideToken) != address(0)) {
+            // Fallback to token-balance gate when seer is not yet configured
             require(
                 vfideToken.balanceOf(msg.sender) >= vetoMinStake,
                 "AdminMultiSig: insufficient VFIDE stake to veto"

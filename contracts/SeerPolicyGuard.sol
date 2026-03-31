@@ -19,7 +19,6 @@ contract SeerPolicyGuard {
     address public seer;
 
     mapping(bytes32 => uint64) public policyChangeReadyAt;
-    uint256 public policyNonce; // BATCH-06: ensures unique changeId per scheduling call
 
     event DAOSet(address indexed oldDAO, address indexed newDAO);
     event SeerSet(address indexed oldSeer, address indexed newSeer);

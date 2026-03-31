@@ -136,9 +136,11 @@ contract CouncilSalary {
 
         lastPayTime = block.timestamp;
         
-        // 3. Pay
+        // 3. Pay — last member receives the dust remainder to avoid stale funds
+        uint256 remainder = balance % eligibleCount;
         for (uint256 i = 0; i < eligibleCount; i++) {
-            token.safeTransfer(eligible[i], share);
+            uint256 payout = (i == eligibleCount - 1) ? share + remainder : share;
+            token.safeTransfer(eligible[i], payout);
         }
         emit SalaryPaid(block.timestamp, balance);
     }
