@@ -8,7 +8,7 @@ import {
   Check,
   Mail,
   MessageCircle,
-  Twitter,
+  X,
   Share2,
   Users,
   Trophy,
@@ -84,7 +84,7 @@ export default function InviteFriendsPage() {
     },
     {
       id: 'twitter',
-      icon: Twitter,
+      icon: X,
       label: 'Twitter',
       action: shareViaTwitter,
       color: 'bg-sky-500',

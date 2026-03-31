@@ -7,8 +7,8 @@ import {
   Copy,
   CheckCircle2,
   Download,
-  Twitter,
-  Linkedin,
+  X,
+  Briefcase,
 } from 'lucide-react';
 
 // ==================== TYPES ====================
@@ -266,7 +266,7 @@ export function ShareSystem({ userId: _userId = 'current_user', onShare }: Share
                               }}
                               className="p-2 bg-sky-500/20 text-sky-500 rounded hover:bg-sky-500/30 transition-colors flex items-center justify-center gap-1 text-xs font-semibold"
                             >
-                              <Twitter className="w-4 h-4" />
+                              <X className="w-4 h-4" />
                               Twitter
                             </button>
 
@@ -277,7 +277,7 @@ export function ShareSystem({ userId: _userId = 'current_user', onShare }: Share
                               }}
                               className="p-2 bg-blue-700/20 text-blue-700 rounded hover:bg-blue-700/30 transition-colors flex items-center justify-center gap-1 text-xs font-semibold"
                             >
-                              <Linkedin className="w-4 h-4" />
+                              <Briefcase className="w-4 h-4" />
                               LinkedIn
                             </button>
 

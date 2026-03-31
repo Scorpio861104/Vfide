@@ -15,8 +15,8 @@ import {
   Loader2,
   AlertCircle,
   CheckCircle,
-  Chrome,
-  Twitter,
+  Globe,
+  X,
   Smartphone,
 } from 'lucide-react';
 import { useEmailLogin, useSocialLogin, useEmbeddedWallet } from '@/lib/embeddedWallet/embeddedWalletService';
@@ -170,9 +170,9 @@ function SocialLoginButtons({ onSuccess, onError }: { onSuccess?: () => void; on
   };
 
   const socialButtons = [
-    { id: 'google' as const, label: 'Google', icon: Chrome, color: 'hover:bg-red-50 dark:hover:bg-red-900/20' },
+    { id: 'google' as const, label: 'Google', icon: Globe, color: 'hover:bg-red-50 dark:hover:bg-red-900/20' },
     { id: 'apple' as const, label: 'Apple', icon: AppleIcon, color: 'hover:bg-gray-100 dark:hover:bg-gray-700' },
-    { id: 'twitter' as const, label: 'Twitter', icon: Twitter, color: 'hover:bg-blue-50 dark:hover:bg-blue-900/20' },
+    { id: 'twitter' as const, label: 'Twitter', icon: X, color: 'hover:bg-blue-50 dark:hover:bg-blue-900/20' },
     { id: 'discord' as const, label: 'Discord', icon: DiscordIcon, color: 'hover:bg-indigo-50 dark:hover:bg-indigo-900/20' },
   ];
 

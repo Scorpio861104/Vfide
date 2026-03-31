@@ -1,4 +1,4 @@
-import dynamic from 'next/dynamic';
+import AdminDashboardClient from './AdminDashboardClient';
 import { Suspense } from 'react';
 
 /**
@@ -6,15 +6,6 @@ import { Suspense } from 'react';
  * Checks authorization before rendering the admin dashboard.
  * Prevents shipping full admin UI code to unauthorized browsers.
  */
-
-// Dynamic import of the client component (lazy-loaded after auth passes)
-const AdminDashboardClient = dynamic(
-  () => import('./AdminDashboardClient'),
-  { 
-    loading: () => <LoadingUI />,
-    ssr: false // Render only on client-side after auth
-  }
-);
 
 function LoadingUI() {
   return (

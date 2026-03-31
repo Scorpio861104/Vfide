@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Github, Twitter, MessageCircle, ExternalLink } from "lucide-react";
+import { Code2, X, MessageCircle, ExternalLink } from "lucide-react";
 
 type FooterLink = {
   href: string;
@@ -40,9 +40,9 @@ const footerLinks: {
 };
 
 const socialLinks = [
-  { href: "https://github.com/Scorpio861104/Vfide", icon: Github, label: "GitHub" },
-  { href: "https://twitter.com/VFIDEProtocol", icon: Twitter, label: "Twitter" },
-  { href: "https://discord.gg/vfide", icon: MessageCircle, label: "Discord" },
+  { href: "https://github.com/Scorpio861104/Vfide", icon: Code2, label: "GitHub" },
+  { href: "https://twitter.com/VFIDEProtocol", icon: X, label: "Twitter" },
+  { href: "/support", icon: MessageCircle, label: "Support" },
 ];
 
 export function Footer() {

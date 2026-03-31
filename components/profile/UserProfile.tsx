@@ -22,7 +22,7 @@ import { motion, AnimatePresence, useMotionValue, useTransform, animate } from '
 import Image from 'next/image';
 import { 
   Share2, Copy, Check, QrCode, ChevronLeft, ChevronRight, 
-  Edit2, X, ExternalLink, Twitter, Github, Globe, MapPin, 
+  Edit2, X, ExternalLink, Code2, Globe, MapPin, 
   Calendar, TrendingUp, Award, Zap, Users, MessageSquare
 } from 'lucide-react';
 import { useTransactionSounds } from '@/hooks/useTransactionSounds';
@@ -424,7 +424,7 @@ function ShareProfileModal({ profile, onClose }: { profile: UserProfile; onClose
             onClick={shareToTwitter}
             className="flex-1 flex items-center justify-center gap-2 py-3 bg-sky-500/20 text-sky-500 rounded-lg hover:bg-sky-500/30 transition-colors"
           >
-            <Twitter className="w-4 h-4" />
+            <X className="w-4 h-4" />
             Twitter
           </button>
           <button
@@ -987,7 +987,7 @@ export default function UserProfile() {
                 rel="noopener noreferrer"
                 className="flex items-center gap-2 px-4 py-2 bg-sky-500/20 hover:bg-sky-500/30 text-sky-500 rounded-xl text-sm transition-colors"
               >
-                <Twitter className="w-4 h-4" />
+                <X className="w-4 h-4" />
                 {profile.twitter}
               </motion.a>
             )}
@@ -1000,7 +1000,7 @@ export default function UserProfile() {
                 rel="noopener noreferrer"
                 className="flex items-center gap-2 px-4 py-2 bg-gray-700/30 hover:bg-gray-700/50 text-white rounded-xl text-sm transition-colors"
               >
-                <Github className="w-4 h-4" />
+                <Code2 className="w-4 h-4" />
                 {profile.github}
               </motion.a>
             )}

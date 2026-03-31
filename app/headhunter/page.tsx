@@ -5,7 +5,7 @@ import { useAccount } from 'wagmi';
 import { 
   Trophy, Users, TrendingUp, Copy, Check, 
   Award, Target, Crown,
-  Share2, MessageCircle, Mail, Twitter
+  Share2, MessageCircle, Mail, X
 } from 'lucide-react';
 import { 
   useHeadhunterStats, 
@@ -49,7 +49,7 @@ export default function HeadhunterPage() {
   };
 
   const shareOptions = [
-    { name: 'Twitter', icon: Twitter, color: 'bg-sky-500', link: `https://twitter.com/intent/tweet?text=Join VFIDE with my referral link!&url=${encodeURIComponent(referralLink)}` },
+    { name: 'Twitter', icon: X, color: 'bg-sky-500', link: `https://twitter.com/intent/tweet?text=Join VFIDE with my referral link!&url=${encodeURIComponent(referralLink)}` },
     { name: 'Telegram', icon: MessageCircle, color: 'bg-sky-600', link: `https://t.me/share/url?url=${encodeURIComponent(referralLink)}&text=Join VFIDE!` },
     { name: 'Email', icon: Mail, color: 'bg-red-500', link: `mailto:?subject=Join VFIDE&body=Sign up with my link: ${encodeURIComponent(referralLink)}` },
   ];

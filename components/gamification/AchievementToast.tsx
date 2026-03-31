@@ -8,7 +8,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { X, Trophy, Star, Award, Flame, Gift, Zap, Share2, Twitter, Copy, Check, ChevronUp, Sparkles } from 'lucide-react';
+import { X, Trophy, Star, Award, Flame, Gift, Zap, Share2, Copy, Check, ChevronUp, Sparkles } from 'lucide-react';
 import { motion, AnimatePresence, useMotionValue, useTransform, animate } from 'framer-motion';
 import { useTransactionSounds } from '@/hooks/useTransactionSounds';
 
@@ -137,7 +137,7 @@ function ShareMenu({ notification, onClose: _onClose }: { notification: Achievem
           className="p-2 hover:bg-zinc-800 rounded-lg text-sky-500 transition-colors"
           title="Share on Twitter"
         >
-          <Twitter className="w-4 h-4" />
+          <X className="w-4 h-4" />
         </button>
         <button
           onClick={copyToClipboard}
