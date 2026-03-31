@@ -3,6 +3,7 @@
 import React from 'react';
 import { AlertTriangle, RefreshCw, Wallet, CreditCard, MessageSquare, Vote, LayoutDashboard } from 'lucide-react';
 import Link from 'next/link';
+import { getUserFriendlyMessage } from '@/lib/security/errorSanitizer';
 
 // ==================== TYPES ====================
 
@@ -85,7 +86,7 @@ export function WalletErrorFallback({ error, reset }: ErrorFallbackProps) {
       reset={reset}
       icon={Wallet}
       title="Wallet Connection Error"
-      description={error.message || 'Failed to connect to your wallet. Please try reconnecting.'}
+      description={getUserFriendlyMessage(error) || 'Failed to connect to your wallet. Please try reconnecting.'}
       actions={
         <>
           <button
@@ -111,8 +112,8 @@ export function WalletErrorFallback({ error, reset }: ErrorFallbackProps) {
  * Error fallback for transaction-related errors
  */
 export function TransactionErrorFallback({ error, reset }: ErrorFallbackProps) {
-  const isUserRejection = error.message?.toLowerCase().includes('user rejected') ||
-    error.message?.toLowerCase().includes('user denied');
+  const friendlyMsg = getUserFriendlyMessage(error);
+  const isUserRejection = friendlyMsg.toLowerCase().includes('cancelled');
 
   return (
     <BaseFallback
@@ -120,11 +121,7 @@ export function TransactionErrorFallback({ error, reset }: ErrorFallbackProps) {
       reset={reset}
       icon={CreditCard}
       title={isUserRejection ? 'Transaction Cancelled' : 'Transaction Error'}
-      description={
-        isUserRejection
-          ? 'You cancelled the transaction. Click retry to try again.'
-          : error.message || 'Failed to process the transaction. Please try again.'
-      }
+      description={friendlyMsg || 'Failed to process the transaction. Please try again.'}
       actions={
         <Link
           href="/explorer"
@@ -147,7 +144,7 @@ export function DashboardErrorFallback({ error, reset }: ErrorFallbackProps) {
       reset={reset}
       icon={LayoutDashboard}
       title="Dashboard Error"
-      description={error.message || 'Failed to load dashboard data. Please refresh.'}
+      description={getUserFriendlyMessage(error) || 'Failed to load dashboard data. Please refresh.'}
       actions={
         <button
           onClick={() => window.location.reload()}
@@ -171,7 +168,7 @@ export function SocialErrorFallback({ error, reset }: ErrorFallbackProps) {
       reset={reset}
       icon={MessageSquare}
       title="Social Feature Error"
-      description={error.message || 'Failed to load social features. Please try again.'}
+      description={getUserFriendlyMessage(error) || 'Failed to load social features. Please try again.'}
       actions={
         <Link
           href="/feed"
@@ -194,7 +191,7 @@ export function MerchantErrorFallback({ error, reset }: ErrorFallbackProps) {
       reset={reset}
       icon={CreditCard}
       title="Merchant Portal Error"
-      description={error.message || 'Failed to load merchant features. Please try again.'}
+      description={getUserFriendlyMessage(error) || 'Failed to load merchant features. Please try again.'}
       actions={
         <Link
           href="/dashboard"
@@ -217,7 +214,7 @@ export function GovernanceErrorFallback({ error, reset }: ErrorFallbackProps) {
       reset={reset}
       icon={Vote}
       title="Governance Error"
-      description={error.message || 'Failed to load governance features. Please try again.'}
+      description={getUserFriendlyMessage(error) || 'Failed to load governance features. Please try again.'}
       actions={
         <Link
           href="/governance"
@@ -240,7 +237,7 @@ export function SectionErrorFallback({ error, reset }: ErrorFallbackProps) {
       reset={reset}
       icon={AlertTriangle}
       title="Section Error"
-      description={error.message || "This section encountered an error and couldn't be displayed."}
+      description={getUserFriendlyMessage(error) || "This section encountered an error and couldn't be displayed."}
     />
   );
 }

@@ -1,20 +1,24 @@
-'use client';
+/**
+ * Sanitization utilities using isomorphic-dompurify
+ * 
+ * This module provides XSS protection that works on both server and client.
+ * Previously, DOMPurify was client-only, requiring a weak regex fallback on the server.
+ * Now using isomorphic-dompurify for consistent, robust sanitization everywhere.
+ * 
+ * M-5 mitigation: DOMPurify now available server-side via isomorphic-dompurify
+ */
 
-import DOMPurify from 'dompurify';
+import DOMPurify from 'isomorphic-dompurify';
 
 /**
  * Sanitize user input to prevent XSS attacks
+ * Works on both server and client, providing consistent sanitization
  */
 export function sanitizeInput(input: string, options?: {
   allowHTML?: boolean;
   allowedTags?: string[];
   allowedAttributes?: string[];
 }): string {
-  if (typeof window === 'undefined') {
-    // Server-side: just return plain text
-    return input.replace(/<[^>]*>/g, '');
-  }
-
   const {
     allowHTML = false,
     allowedTags = [],
@@ -23,7 +27,10 @@ export function sanitizeInput(input: string, options?: {
 
   if (!allowHTML) {
     // Strip all HTML
-    return DOMPurify.sanitize(input, { ALLOWED_TAGS: [] });
+    return DOMPurify.sanitize(input, { 
+      ALLOWED_TAGS: [],
+      ALLOWED_ATTR: [],
+    });
   }
 
   // Allow specific tags and attributes

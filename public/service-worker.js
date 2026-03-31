@@ -10,9 +10,9 @@
 const CACHE_NAME = 'vfide-v1';
 const RUNTIME_CACHE = 'vfide-runtime';
 
-// Files to cache on install
+// Files to cache on install (static assets only - NOT HTML pages)
+// For a DeFi app with dynamic content, HTML should always be fetched fresh from network
 const STATIC_ASSETS = [
-  '/',
   '/manifest.json',
   '/icons/icon-192x192.png',
   '/icons/icon-512x512.png',
