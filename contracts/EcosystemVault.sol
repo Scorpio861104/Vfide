@@ -47,6 +47,9 @@ error ECO_TimelockNotPassed();
 error ECO_InvalidConfig();
 error ECO_ApprovalFailed();
 error ECO_ExceedsMax();
+error ECO_NoPendingChange();
+error ECO_ChangeNotReady();
+error ECO_ExpenseCapExceeded();
 
 contract EcosystemVault is Ownable, ReentrancyGuard {
     using SafeERC20 for IERC20;
@@ -69,6 +72,11 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
     event PendingReferralRegistered(address indexed referred, address indexed referrer, bool isMerchant);
     event RewardTokenUpdated(address indexed oldToken, address indexed newToken);
     event WorkRewardPaid(address indexed worker, uint256 amount, string program, string reason);
+    event ManagerChangeQueued(address indexed manager, bool active, uint256 executeAfter);
+    event ManagerChangeCancelled(address indexed manager, bool active);
+    event AllocationChangeQueued(uint16 councilBps, uint16 merchantBps, uint16 headhunterBps, uint16 operationsBps, uint256 executeAfter);
+    event AllocationChangeCancelled(uint16 councilBps, uint16 merchantBps, uint16 headhunterBps, uint16 operationsBps);
+    event ExpenseEpochRolled(uint256 startedAt, uint256 baseOperationsPool, uint256 capAmount);
 
     // ═══════════════════════════════════════════════════════════════════════
     //                              CONSTANTS
@@ -79,6 +87,9 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
     uint8 public constant MERCHANT_RANKS = 100;
     uint256 public constant MONTH = 30 days;
     uint256 public constant QUARTER = 90 days;
+    uint256 public constant SENSITIVE_CHANGE_DELAY = 2 days;
+    uint256 public constant EXPENSE_EPOCH_DURATION = 7 days;
+    uint16 public constant EXPENSE_EPOCH_CAP_BPS = 2500;
     
     // Points for referrals
     uint16 public constant POINTS_USER_REFERRAL = 1;
@@ -134,6 +145,22 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
     ICouncilManager public councilManager;
     
     mapping(address => bool) public isManager;
+
+    struct PendingManagerChange {
+        address manager;
+        bool active;
+        uint256 executeAfter;
+    }
+
+    struct PendingAllocationChange {
+        uint16 councilBps;
+        uint16 merchantBps;
+        uint16 headhunterBps;
+        uint256 executeAfter;
+    }
+
+    PendingManagerChange public pendingManagerChange;
+    PendingAllocationChange public pendingAllocationChange;
 
     // Allocation buckets (council + merchant + headhunter + operations = 10000)
     uint16 public councilBps = 2500;      // 25% - DAO council
@@ -279,6 +306,9 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
     uint256 public totalHeadhunterPaid;
     uint256 public totalBurned;
     uint256 public totalExpensesPaid;
+    uint256 public operationsExpenseEpochStartedAt;
+    uint256 public operationsExpenseEpochBase;
+    uint256 public operationsSpentInEpoch;
 
     // ═══════════════════════════════════════════════════════════════════════
     //                              MODIFIERS
@@ -307,8 +337,35 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
     //                              ADMIN
     // ═══════════════════════════════════════════════════════════════════════
     function setManager(address manager, bool active) external onlyOwner {
-        isManager[manager] = active;
-        emit ManagerSet(manager, active);
+        if (_ownerGovernanceMediated()) {
+            _applyManagerChange(manager, active);
+            return;
+        }
+
+        pendingManagerChange = PendingManagerChange({
+            manager: manager,
+            active: active,
+            executeAfter: block.timestamp + SENSITIVE_CHANGE_DELAY
+        });
+
+        emit ManagerChangeQueued(manager, active, block.timestamp + SENSITIVE_CHANGE_DELAY);
+    }
+
+    function executeManagerChange() external onlyOwner {
+        PendingManagerChange memory pending = pendingManagerChange;
+        if (pending.executeAfter == 0) revert ECO_NoPendingChange();
+        if (block.timestamp < pending.executeAfter) revert ECO_ChangeNotReady();
+
+        delete pendingManagerChange;
+        _applyManagerChange(pending.manager, pending.active);
+    }
+
+    function cancelManagerChange() external onlyOwner {
+        PendingManagerChange memory pending = pendingManagerChange;
+        if (pending.executeAfter == 0) revert ECO_NoPendingChange();
+
+        delete pendingManagerChange;
+        emit ManagerChangeCancelled(pending.manager, pending.active);
     }
 
     function setSeer(address _seer) external onlyOwner {
@@ -331,17 +388,50 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
     }
 
     function setAllocations(uint16 _councilBps, uint16 _merchantBps, uint16 _headhunterBps) external onlyOwner {
-        uint16 nonOps = _councilBps + _merchantBps + _headhunterBps;
-        if (nonOps > MAX_BPS) revert ECO_InvalidConfig();
-        if (_councilBps < MIN_ALLOCATION_BPS) revert ECO_CouncilBelowMinimum();
-        if (_merchantBps < MIN_ALLOCATION_BPS) revert ECO_MerchantBelowMinimum();
-        if (_headhunterBps < MIN_ALLOCATION_BPS) revert ECO_HeadhunterBelowMinimum();
-        if (MAX_BPS - nonOps < MIN_ALLOCATION_BPS) revert ECO_InvalidConfig();
-        councilBps = _councilBps;
-        merchantBps = _merchantBps;
-        headhunterBps = _headhunterBps;
-        operationsBps = MAX_BPS - nonOps;
-        emit AllocationUpdated(_councilBps, _merchantBps, _headhunterBps, MAX_BPS - nonOps);
+        _validateAllocationConfig(_councilBps, _merchantBps, _headhunterBps);
+
+        if (_ownerGovernanceMediated()) {
+            _applyAllocationChange(_councilBps, _merchantBps, _headhunterBps);
+            return;
+        }
+
+        uint16 operationsAllocation = MAX_BPS - (_councilBps + _merchantBps + _headhunterBps);
+        pendingAllocationChange = PendingAllocationChange({
+            councilBps: _councilBps,
+            merchantBps: _merchantBps,
+            headhunterBps: _headhunterBps,
+            executeAfter: block.timestamp + SENSITIVE_CHANGE_DELAY
+        });
+
+        emit AllocationChangeQueued(
+            _councilBps,
+            _merchantBps,
+            _headhunterBps,
+            operationsAllocation,
+            block.timestamp + SENSITIVE_CHANGE_DELAY
+        );
+    }
+
+    function executeAllocationChange() external onlyOwner {
+        PendingAllocationChange memory pending = pendingAllocationChange;
+        if (pending.executeAfter == 0) revert ECO_NoPendingChange();
+        if (block.timestamp < pending.executeAfter) revert ECO_ChangeNotReady();
+
+        delete pendingAllocationChange;
+        _applyAllocationChange(pending.councilBps, pending.merchantBps, pending.headhunterBps);
+    }
+
+    function cancelAllocationChange() external onlyOwner {
+        PendingAllocationChange memory pending = pendingAllocationChange;
+        if (pending.executeAfter == 0) revert ECO_NoPendingChange();
+
+        delete pendingAllocationChange;
+        emit AllocationChangeCancelled(
+            pending.councilBps,
+            pending.merchantBps,
+            pending.headhunterBps,
+            MAX_BPS - (pending.councilBps + pending.merchantBps + pending.headhunterBps)
+        );
     }
     
     /**
@@ -1125,6 +1215,11 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
 
         _allocateIncoming();
         if (operationsPool < amount) revert ECO_InsufficientFunds();
+        _rollExpenseEpochIfNeeded();
+
+        uint256 expenseCap = operationsExpenseEpochBase * EXPENSE_EPOCH_CAP_BPS / MAX_BPS;
+        if (operationsSpentInEpoch + amount > expenseCap) revert ECO_ExpenseCapExceeded();
+        operationsSpentInEpoch += amount;
         
         // If auto-swap is enabled and configured, convert VFIDE to stablecoin
         if (autoSwapEnabled && swapRouter != address(0) && preferredStablecoin != address(0)) {
@@ -1223,7 +1318,8 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
     uint256 public withdrawRequestCount;
     mapping(uint256 => WithdrawRequest) public withdrawRequests;
     uint256 public constant WITHDRAW_TIMELOCK = 2 days;
-    uint256 public maxWithdrawBps = 1000;    
+    uint256 public maxWithdrawBps = 1000;
+    uint256 public pendingWithdrawTotal;
     event WithdrawRequested(uint256 indexed id, address to, uint256 amount);
     event WithdrawCancelled(uint256 indexed id);
     event WithdrawExecuted(uint256 indexed id, address to, uint256 amount);
@@ -1232,7 +1328,7 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
         if (to == address(0)) revert ECO_Zero();
         if (amount == 0) revert ECO_Zero();
         uint256 bal = rewardToken.balanceOf(address(this));
-        if (amount > bal * maxWithdrawBps / 10_000) revert ECO_ExceedsMax();
+        if (amount + pendingWithdrawTotal > bal * maxWithdrawBps / 10_000) revert ECO_ExceedsMax();
         
         id = ++withdrawRequestCount;
         withdrawRequests[id] = WithdrawRequest({
@@ -1242,6 +1338,7 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
             executed: false,
             cancelled: false
         });
+        pendingWithdrawTotal += amount;
         
         emit WithdrawRequested(id, to, amount);
     }
@@ -1251,6 +1348,7 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
         if (req.executed) revert ECO_AlreadyExecuted();
         if (req.cancelled) revert ECO_AlreadyCancelled();
         req.cancelled = true;
+        pendingWithdrawTotal -= req.amount;
         emit WithdrawCancelled(id);
     }
     
@@ -1261,6 +1359,7 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
         if (block.timestamp < req.requestedAt + WITHDRAW_TIMELOCK) revert ECO_TimelockNotPassed();
 
         req.executed = true;
+        pendingWithdrawTotal -= req.amount;
         rewardToken.safeTransfer(req.to, req.amount);
         emit WithdrawExecuted(id, req.to, req.amount);
     }
@@ -1269,6 +1368,49 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
     function setMaxWithdrawBps(uint256 _bps) external onlyOwner {
         if (_bps == 0 || _bps > 5000) revert ECO_InvalidConfig();
         maxWithdrawBps = _bps;
+    }
+
+    function _ownerGovernanceMediated() internal view returns (bool) {
+        return owner.code.length > 0;
+    }
+
+    function _applyManagerChange(address manager, bool active) internal {
+        isManager[manager] = active;
+        emit ManagerSet(manager, active);
+    }
+
+    function _applyAllocationChange(uint16 _councilBps, uint16 _merchantBps, uint16 _headhunterBps) internal {
+        uint16 nonOps = _councilBps + _merchantBps + _headhunterBps;
+        councilBps = _councilBps;
+        merchantBps = _merchantBps;
+        headhunterBps = _headhunterBps;
+        operationsBps = MAX_BPS - nonOps;
+        emit AllocationUpdated(_councilBps, _merchantBps, _headhunterBps, MAX_BPS - nonOps);
+    }
+
+    function _validateAllocationConfig(uint16 _councilBps, uint16 _merchantBps, uint16 _headhunterBps) internal pure {
+        uint16 nonOps = _councilBps + _merchantBps + _headhunterBps;
+        if (nonOps > MAX_BPS) revert ECO_InvalidConfig();
+        if (_councilBps < MIN_ALLOCATION_BPS) revert ECO_CouncilBelowMinimum();
+        if (_merchantBps < MIN_ALLOCATION_BPS) revert ECO_MerchantBelowMinimum();
+        if (_headhunterBps < MIN_ALLOCATION_BPS) revert ECO_HeadhunterBelowMinimum();
+        if (MAX_BPS - nonOps < MIN_ALLOCATION_BPS) revert ECO_InvalidConfig();
+    }
+
+    function _rollExpenseEpochIfNeeded() internal {
+        if (
+            operationsExpenseEpochStartedAt == 0
+            || block.timestamp >= operationsExpenseEpochStartedAt + EXPENSE_EPOCH_DURATION
+        ) {
+            operationsExpenseEpochStartedAt = block.timestamp;
+            operationsExpenseEpochBase = operationsPool;
+            operationsSpentInEpoch = 0;
+            emit ExpenseEpochRolled(
+                block.timestamp,
+                operationsExpenseEpochBase,
+                operationsExpenseEpochBase * EXPENSE_EPOCH_CAP_BPS / MAX_BPS
+            );
+        }
     }
 
     // ═══════════════════════════════════════════════════════════════════════

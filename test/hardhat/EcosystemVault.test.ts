@@ -3,6 +3,14 @@ import assert from "node:assert/strict";
 import { network } from "hardhat";
 
 describe("EcosystemVault (EV-07: payExpense accounting order)", () => {
+  const CHANGE_DELAY = 2 * 24 * 60 * 60 + 1;
+  const EXPENSE_EPOCH = 7 * 24 * 60 * 60 + 1;
+
+  async function advanceTime(ethers: Awaited<ReturnType<typeof network.connect>>["ethers"], seconds: number) {
+    await ethers.provider.send("evm_increaseTime", [seconds]);
+    await ethers.provider.send("evm_mine", []);
+  }
+
   async function deployVaultHarness() {
     const { ethers } = await network.connect({
       override: {
@@ -28,6 +36,9 @@ describe("EcosystemVault (EV-07: payExpense accounting order)", () => {
 
     await vault.connect(owner).setManager(manager.address, true);
     await vault.connect(owner).setAllocations(500, 500, 500);
+    await advanceTime(ethers, CHANGE_DELAY);
+    await vault.connect(owner).executeManagerChange();
+    await vault.connect(owner).executeAllocationChange();
 
     await rewardToken.setObservedVault(await vault.getAddress());
     await stableToken.setObservedVault(await vault.getAddress());
@@ -71,5 +82,66 @@ describe("EcosystemVault (EV-07: payExpense accounting order)", () => {
     assert.equal(await vault.operationsPool(), 750n);
     assert.equal(await stableToken.observedOperationsPool(), 750n);
     assert.equal(await stableToken.balanceOf(recipient.address), 100n);
+  });
+
+  it("queues manager changes for direct owners until the delay matures", async () => {
+    const { ethers, owner, manager, rewardToken, vault } = await deployVaultHarness();
+    const candidateManager = (await ethers.getSigners())[3];
+
+    await vault.connect(owner).setManager(candidateManager.address, true);
+
+    assert.equal(await vault.isManager(candidateManager.address), false);
+    await assert.rejects(
+      vault.connect(candidateManager).payExpense(manager.address, 1n, "too early"),
+      /custom error|0xb73271c2/
+    );
+
+    await advanceTime(ethers, CHANGE_DELAY);
+    await vault.connect(owner).executeManagerChange();
+
+    await rewardToken.mint(await vault.getAddress(), 100n);
+    await vault.connect(candidateManager).payExpense(manager.address, 1n, "after delay");
+    assert.equal(await rewardToken.balanceOf(manager.address), 1n);
+  });
+
+  it("enforces the rolling operations expense ceiling", async () => {
+    const { ethers, manager, recipient, rewardToken, vault } = await deployVaultHarness();
+
+    await rewardToken.mint(await vault.getAddress(), 1_000n);
+
+    await vault.connect(manager).payExpense(recipient.address, 200n, "within cap");
+    await assert.rejects(
+      vault.connect(manager).payExpense(recipient.address, 20n, "over cap"),
+      /ECO_ExpenseCapExceeded/
+    );
+
+    await advanceTime(ethers, EXPENSE_EPOCH);
+    await vault.connect(manager).payExpense(recipient.address, 20n, "next epoch");
+
+    assert.equal(await rewardToken.balanceOf(recipient.address), 220n);
+  });
+
+  it("caps aggregate pending withdrawals instead of each request independently", async () => {
+    const { ethers, owner, recipient, rewardToken, vault } = await deployVaultHarness();
+
+    await rewardToken.mint(await vault.getAddress(), 1_000n);
+
+    await vault.connect(owner).requestWithdraw(recipient.address, 100n);
+    assert.equal(await vault.pendingWithdrawTotal(), 100n);
+
+    await assert.rejects(
+      vault.connect(owner).requestWithdraw(recipient.address, 1n),
+      /ECO_ExceedsMax/
+    );
+
+    await vault.connect(owner).cancelWithdraw(1n);
+    assert.equal(await vault.pendingWithdrawTotal(), 0n);
+
+    await vault.connect(owner).requestWithdraw(recipient.address, 100n);
+    await advanceTime(ethers, CHANGE_DELAY);
+    await vault.connect(owner).executeWithdraw(2n);
+
+    assert.equal(await vault.pendingWithdrawTotal(), 0n);
+    assert.equal(await rewardToken.balanceOf(recipient.address), 100n);
   });
 });
