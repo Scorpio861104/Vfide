@@ -754,7 +754,8 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
     
     /**
      * @notice Withdraw operations pool to team wallet
-     * @dev Can only be called monthly by owner (DAO), ensures transparent team funding
+     * @dev Can only be called by owner (DAO), enforces expense epoch cap
+     *      M-8 FIX: Now applies EXPENSE_EPOCH_CAP_BPS to ensure the expense guardrail remains effective
      */
     function withdrawOperations() external onlyOwner nonReentrant {
         if (operationsWallet == address(0)) revert ECO_Zero();
@@ -765,7 +766,11 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
         uint256 amount = operationsPool;
         if (amount == 0) revert ECO_InsufficientFunds();
 
-        _consumeOperationsSpend(amount);
+        // M-8 FIX: Apply the same expense epoch cap that payExpense() enforces
+        _rollExpenseEpochIfNeeded();
+        uint256 expenseCap = operationsExpenseEpochBase * EXPENSE_EPOCH_CAP_BPS / MAX_BPS;
+        if (operationsSpentInEpoch + amount > expenseCap) revert ECO_ExpenseCapExceeded();
+        operationsSpentInEpoch += amount;
         
         operationsPool = 0;
         lastOperationsWithdrawal = block.timestamp;

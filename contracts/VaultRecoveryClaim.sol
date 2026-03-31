@@ -455,6 +455,8 @@ contract VaultRecoveryClaim is Ownable, ReentrancyGuard {
      * @notice Execute the actual ownership transfer
      * @dev Internal function called after all verifications pass
      *      This contract must be registered as a recovery approver on VaultInfrastructure
+     *      M-12 FIX: activeClaimForVault is NOT cleared until finalizeExecution succeeds,
+     *      preventing new claims during the 7-day VaultInfrastructure timelock
      */
     function _executeRecovery(uint256 claimId) internal {
         RecoveryClaim storage claim = claims[claimId];
@@ -473,7 +475,7 @@ contract VaultRecoveryClaim is Ownable, ReentrancyGuard {
             // Note: DAO must call finalizeForceRecovery, or we need DAO role
             // For now, emit event and update status - DAO/governance will finalize
             claim.status = ClaimStatus.Executed;
-            activeClaimForVault[claim.vault] = 0;
+            // M-12 FIX: Don't clear activeClaimForVault here — wait for finalizeExecution success
         } else if (unlockTime != 0) {
             // Timelock started but not passed yet - mark as approved, will need finalize later
             claim.status = ClaimStatus.Approved;
@@ -488,6 +490,8 @@ contract VaultRecoveryClaim is Ownable, ReentrancyGuard {
     /**
      * @notice Finalize a claim after VaultInfrastructure timelock has passed
      * @dev Can be called by anyone once the timelock on VaultInfrastructure is complete
+     *      M-12 FIX: Only clears activeClaimForVault after finalizeExecution succeeds,
+     *      preventing new claims from being initiated prematurely during timelock
      * @param claimId The claim to finalize
      */
     function finalizeExecution(uint256 claimId) external nonReentrant {
@@ -503,10 +507,12 @@ contract VaultRecoveryClaim is Ownable, ReentrancyGuard {
         // If this fails, DAO must manually call finalizeForceRecovery
         try vaultHub.finalizeForceRecovery(claim.vault) {
             claim.status = ClaimStatus.Executed;
+            // M-12 FIX: Clear activeClaimForVault ONLY after successful execution
             activeClaimForVault[claim.vault] = 0;
             emit ClaimExecuted(claimId, claim.vault, claim.claimant, claim.originalOwner);
         } catch {
             // DAO must manually finalize - emit event for tracking
+            // M-12 FIX: Keep activeClaimForVault intact so no new claims can be initiated
             emit ClaimApproved(claimId, claim.vault, claim.claimant);
         }
     }

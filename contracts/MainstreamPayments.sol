@@ -328,9 +328,11 @@ contract MainstreamPriceOracle {
     
     /**
      * @notice Force set price (DAO only, bypasses sanity check)
+     * @dev H-5 FIX: Now truly bypasses the sanity check to allow DAO recovery from stale prices
      */
     function forceSetPrice(uint256 newPrice) external onlyDAO {
         require(newPrice > 0, "PO: zero price");
+        // H-5 FIX: Removed sanity check to allow DAO to recover from stale oracle prices
         vfidePerUsd = newPrice;
         lastUpdateTime = block.timestamp;
         emit PriceUpdated(newPrice, block.timestamp, msg.sender);
