@@ -77,8 +77,10 @@ describe("CircuitBreaker coverage backfill", { concurrency: 1 }, () => {
 
     const configRole = await breaker.CONFIG_MANAGER_ROLE();
     const pauserRole = await breaker.EMERGENCY_PAUSER_ROLE();
+    const recorderRole = await breaker.RECORDER_ROLE();
     await breaker.connect(admin).grantRole(configRole, configManager.address);
     await breaker.connect(admin).grantRole(pauserRole, pauser.address);
+    await breaker.connect(admin).grantRole(recorderRole, attacker.address);
 
     return { ethers, admin, configManager, pauser, oracle, attacker, breaker, controller };
   }

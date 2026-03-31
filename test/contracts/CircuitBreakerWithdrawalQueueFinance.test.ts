@@ -108,10 +108,13 @@ describe("CircuitBreaker", function () {
   });
 
   describe("recordVolume", function () {
-    beforeEach(function () {
+    beforeEach(async function () {
       if (!capabilities.canRecordVolume || !capabilities.canAdminConfig) {
         this.skip();
       }
+      // Grant RECORDER_ROLE to attacker for recordVolume tests
+      const recorderRole = await circuitBreaker.RECORDER_ROLE();
+      await grantRoleIfNeeded(circuitBreaker, recorderRole, attacker.address);
     });
 
     it("should record volume", async function () {
@@ -162,10 +165,13 @@ describe("CircuitBreaker", function () {
   });
 
   describe("Volume tracking", function () {
-    beforeEach(function () {
+    beforeEach(async function () {
       if (!capabilities.canTrackVolume || !capabilities.canAdminConfig) {
         this.skip();
       }
+      // Grant RECORDER_ROLE to attacker for recordVolume calls
+      const recorderRole = await circuitBreaker.RECORDER_ROLE();
+      await grantRoleIfNeeded(circuitBreaker, recorderRole, attacker.address);
     });
 
     it("should reset daily volume after day boundary", async function () {

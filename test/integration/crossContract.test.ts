@@ -81,6 +81,11 @@ describe("Integration: Bridge Full Flow", function () {
 
     // Set TVL so volume-threshold checks are active.
     await circuitBreaker.updateTVL(ethers.utils.parseEther("1000"));
+    
+    // Grant RECORDER_ROLE to owner for recordVolume calls
+    const recorderRole = await circuitBreaker.RECORDER_ROLE();
+    await circuitBreaker.grantRole(recorderRole, owner.address);
+    
     return { owner, user, circuitBreaker };
   }
 
