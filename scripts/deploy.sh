@@ -101,6 +101,15 @@ run_pre_deployment_checks() {
         npm install
         log_success "Dependencies installed"
     fi
+
+    # Run deployment validation gate (SCRIPT-1 requirement)
+    log_info "Running deployment validation gate..."
+    if npm run validate:deploy; then
+        log_success "Deployment validation passed"
+    else
+        log_error "Deployment validation failed"
+        exit 1
+    fi
     
     # Run TypeScript check
     log_info "Running TypeScript check..."

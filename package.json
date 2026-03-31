@@ -143,6 +143,7 @@
     "security:gate": "bash scripts/security-gate.sh",
     "security:canary": "tsx scripts/security-monitor-canary.ts",
     "security:report:replay": "tsx scripts/security-replay-metrics-report.ts",
+    "validate:deploy": "node scripts/validate-deployment.js --force-continue",
     "test:fuzz": "jest --testPathPattern=fuzz",
     "chromatic": "chromatic --exit-zero-on-changes",
     "changeset": "changeset",
