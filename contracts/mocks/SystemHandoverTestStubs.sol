@@ -17,6 +17,34 @@ contract SHTimelockAdminStub {
     }
 }
 
+contract SHDAOOnlyTimelockStub {
+    address public admin;
+    address public timelock;
+
+    constructor(address _admin, address _timelock) {
+        admin = _admin;
+        timelock = _timelock;
+    }
+
+    function setAdmin(address _admin) external {
+        require(msg.sender == timelock, "DAO: only timelock");
+        admin = _admin;
+    }
+}
+
+contract SHTimelockOnlySelfStub {
+    address public admin;
+
+    constructor(address _admin) {
+        admin = _admin;
+    }
+
+    function setAdmin(address _admin) external {
+        require(msg.sender == address(this), "TL: only self");
+        admin = _admin;
+    }
+}
+
 contract SHSeerStub {
     mapping(address => uint16) public scores;
     uint16 public minGov = 5600;

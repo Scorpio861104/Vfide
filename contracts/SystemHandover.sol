@@ -3,15 +3,17 @@ pragma solidity 0.8.30;
 
 interface ISeer_SH { function minForGovernance() external view returns (uint16); function getScore(address subject) external view returns (uint16); }
 interface ICouncilElection_SH { function getActualCouncilSize() external view returns (uint256); function getCouncilMember(uint256 index) external view returns (address); }
-interface IDAO_SH { function setAdmin(address _admin) external; }
-interface IDAOTimelock_SH { function setAdmin(address _admin) external; }
+interface IDAO_SH { function setAdmin(address _admin) external; function admin() external view returns (address); }
+interface IDAOTimelock_SH { function setAdmin(address _admin) external; function admin() external view returns (address); }
 interface IProofLedger_SH { function logSystemEvent(address who, string calldata action, address by) external; }
 
 error SH_NotDev();
 error SH_TooEarly();
 error SH_Zero();
 error SH_NotArmed();
+error SH_Armed();
 error SH_AlreadyExecuted();
+error SH_GovernanceNotReady();
 
 /// @dev Fallback event when ledger logging fails
 event LedgerLogFailed(address indexed source, string action);
@@ -21,6 +23,9 @@ contract SystemHandover {
     event ParamsSet(uint64 monthsDelay, uint16 minAvgCouncilScore, uint8 maxExtensions, uint64 extensionSpan);
     event Executed(address dao, address timelock, address newAdmin, uint8 extensionsUsed);
     event LedgerSet(address ledger);
+    event DAOSet(address dao);
+    event TimelockSet(address timelock);
+    event CouncilElectionSet(address councilElection);
 
     address public devMultisig;
     IDAO_SH public dao;
@@ -40,6 +45,11 @@ contract SystemHandover {
 
     modifier onlyDev() {
         _checkDev();
+        _;
+    }
+
+    modifier notArmed() {
+        if (start != 0) revert SH_Armed();
         _;
     }
 
@@ -71,6 +81,30 @@ contract SystemHandover {
         _log("handover_params");
     }
 
+    /// @notice Replace bootstrap DAO address before handover is armed.
+    function setDAO(address _dao) external onlyDev notArmed {
+        if (_dao == address(0)) revert SH_Zero();
+        dao = IDAO_SH(_dao);
+        emit DAOSet(_dao);
+        _log("handover_dao_set");
+    }
+
+    /// @notice Replace bootstrap timelock address before handover is armed.
+    function setTimelock(address _timelock) external onlyDev notArmed {
+        if (_timelock == address(0)) revert SH_Zero();
+        timelock = IDAOTimelock_SH(_timelock);
+        emit TimelockSet(_timelock);
+        _log("handover_timelock_set");
+    }
+
+    /// @notice Replace bootstrap council election module before handover is armed.
+    function setCouncilElection(address _councilElection) external onlyDev notArmed {
+        if (_councilElection == address(0)) revert SH_Zero();
+        councilElection = ICouncilElection_SH(_councilElection);
+        emit CouncilElectionSet(_councilElection);
+        _log("handover_council_set");
+    }
+
     /// If average council proof score is below threshold at deadline, dev can extend once (failsafe).
     function extendOnceIfNeeded() external onlyDev {
         require(extensionsUsed < maxExtensions, "no_ext_left");
@@ -97,8 +131,17 @@ contract SystemHandover {
         if (handoverExecuted) revert SH_AlreadyExecuted();
         if (block.timestamp < handoverAt) revert SH_TooEarly();
         if (newAdmin == address(0)) newAdmin = address(dao);
-        dao.setAdmin(newAdmin);
-        timelock.setAdmin(address(dao));
+
+        // Best-effort direct updates for permissive bootstrap deployments.
+        // In production, these may revert due to onlyTimelock / onlyTimelockSelf gates.
+        try dao.setAdmin(newAdmin) {} catch {}
+        try timelock.setAdmin(address(dao)) {} catch {}
+
+        // Final state must still be correct before dev key burn.
+        if (dao.admin() != newAdmin || timelock.admin() != address(dao)) {
+            revert SH_GovernanceNotReady();
+        }
+
         handoverExecuted = true;
         devMultisig = address(0);
         emit Executed(address(dao), address(timelock), newAdmin, extensionsUsed);

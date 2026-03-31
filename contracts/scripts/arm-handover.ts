@@ -3,7 +3,7 @@
  * @description One-shot script to call SystemHandover.arm(t0), which starts the
  *              governance-handover countdown.  Call this only once you have replaced
  *              the dao/timelock/council temporary slots in SystemHandover with real
- *              governance contract addresses (via setParams / governance proposal).
+ *              governance contract addresses (via setDAO / setTimelock / setCouncilElection).
  *
  *              arm() is idempotent (calling it a second time is a no-op), but the
  *              timestamp passed to the first call is permanent.

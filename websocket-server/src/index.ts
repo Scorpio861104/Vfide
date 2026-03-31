@@ -29,6 +29,7 @@ const MAX_PAYLOAD_BYTES = 8 * 1024; // 8 KiB
 const AUTH_TIMEOUT_MS = parseInt(process.env.WS_AUTH_TIMEOUT_MS || '5000', 10);
 const TOPIC_ACL_PATH = process.env.WS_TOPIC_ACL_PATH;
 const TOPIC_ACL_REFRESH_MS = parseInt(process.env.WS_TOPIC_ACL_REFRESH_MS || '30000', 10);
+const TOPIC_ACL_ALLOW_MISSING = process.env.WS_TOPIC_ACL_ALLOW_MISSING === 'true';
 const IS_PRODUCTION = process.env.NODE_ENV === 'production';
 
 /**
@@ -110,9 +111,12 @@ interface AuthenticatedSocket extends WebSocket {
   connectedAt: number;
   /** Auth timeout timer until first valid auth frame */
   authTimeoutTimer?: NodeJS.Timeout;
+  /** Topics currently subscribed by this session */
+  subscribedTopics: Set<string>;
 }
 
 const clients = new Map<string, AuthenticatedSocket>();
+const topicSubscribers = new Map<string, Set<string>>();
 
 type TopicAclSnapshot = {
   version: number;
@@ -205,7 +209,11 @@ function refreshTopicAclSnapshot(path: string): void {
 
 function startTopicAclRefresh(): void {
   if (!TOPIC_ACL_PATH) {
-    console.warn('[ws] No WS_TOPIC_ACL_PATH configured; topic ACL refresh disabled (compatibility mode).');
+    if (TOPIC_ACL_ALLOW_MISSING) {
+      console.warn('[ws] No WS_TOPIC_ACL_PATH configured; topic ACL in compatibility allow mode.');
+    } else {
+      console.warn('[ws] No WS_TOPIC_ACL_PATH configured; topic ACL is fail-closed.');
+    }
     return;
   }
 
@@ -243,7 +251,7 @@ function isAuthorizedForTopic(client: AuthenticatedSocket, topic: string): boole
   }
 
   if (!TOPIC_ACL_PATH) {
-    return true;
+    return TOPIC_ACL_ALLOW_MISSING;
   }
 
   if (!topicAclSnapshot || !client.vfideAddress) {
@@ -280,12 +288,71 @@ function getClientLabel(client: AuthenticatedSocket): string {
 }
 
 export function broadcast(msg: OutboundMessage, except?: string): void {
+  const topic = extractTopicFromOutbound(msg);
+
+  if (topic) {
+    const subscriberSessions = topicSubscribers.get(topic);
+    if (!subscriberSessions || subscriberSessions.size === 0) {
+      return;
+    }
+
+    const rawTopic = JSON.stringify(msg);
+    for (const sessionId of subscriberSessions) {
+      if (sessionId === except) continue;
+
+      const client = clients.get(sessionId);
+      if (!client || client.readyState !== WebSocket.OPEN) {
+        continue;
+      }
+
+      // Enforce ACL at delivery-time in addition to subscription-time.
+      if (!isAuthorizedForTopic(client, topic)) {
+        unsubscribeClientFromTopic(client, topic);
+        continue;
+      }
+
+      client.send(rawTopic);
+    }
+    return;
+  }
+
   const raw = JSON.stringify(msg);
   for (const [sessionId, client] of clients) {
     if (sessionId === except) continue;
     if (client.readyState === WebSocket.OPEN) {
       client.send(raw);
     }
+  }
+}
+
+function extractTopicFromOutbound(msg: OutboundMessage): string | null {
+  const topic = (msg.payload as Record<string, unknown> | undefined)?.topic;
+  if (typeof topic !== 'string' || topic.length === 0) {
+    return null;
+  }
+  return topic;
+}
+
+function subscribeClientToTopic(client: AuthenticatedSocket, topic: string): void {
+  client.subscribedTopics.add(topic);
+  const subscribers = topicSubscribers.get(topic) || new Set<string>();
+  subscribers.add(client.sessionId);
+  topicSubscribers.set(topic, subscribers);
+}
+
+function unsubscribeClientFromTopic(client: AuthenticatedSocket, topic: string): void {
+  client.subscribedTopics.delete(topic);
+  const subscribers = topicSubscribers.get(topic);
+  if (!subscribers) return;
+  subscribers.delete(client.sessionId);
+  if (subscribers.size === 0) {
+    topicSubscribers.delete(topic);
+  }
+}
+
+function unsubscribeClientFromAllTopics(client: AuthenticatedSocket): void {
+  for (const topic of client.subscribedTopics) {
+    unsubscribeClientFromTopic(client, topic);
   }
 }
 
@@ -340,6 +407,7 @@ server.on('upgrade', (req: http.IncomingMessage, socket, head) => {
     client.sessionId = sessionId;
     client.remoteIp = ip;
     client.connectedAt = Date.now();
+    client.subscribedTopics = new Set<string>();
 
     wss.emit('connection', client, req);
   });
@@ -453,15 +521,17 @@ wss.on('connection', (ws: WebSocket, _req: http.IncomingMessage) => {
           sendError(ws, 'UNAUTHORIZED_TOPIC', `Subscription denied for topic ${msg.payload.topic}`);
           return;
         }
+        subscribeClientToTopic(client, msg.payload.topic);
         console.info(`[ws] Subscribe: ${getClientLabel(client)} → ${msg.payload.topic}`);
         ws.send(JSON.stringify({ type: 'subscribed', payload: { topic: msg.payload.topic } }));
         break;
 
       case 'unsubscribe':
-        if (!isAuthorizedForTopic(client, msg.payload.topic)) {
+        if (!isAllowedTopic(msg.payload.topic)) {
           sendError(ws, 'UNAUTHORIZED_TOPIC', `Unsubscribe denied for topic ${msg.payload.topic}`);
           return;
         }
+        unsubscribeClientFromTopic(client, msg.payload.topic);
         ws.send(JSON.stringify({ type: 'unsubscribed', payload: { topic: msg.payload.topic } }));
         break;
 
@@ -493,6 +563,7 @@ wss.on('connection', (ws: WebSocket, _req: http.IncomingMessage) => {
       clearTimeout(client.authTimeoutTimer);
       client.authTimeoutTimer = undefined;
     }
+    unsubscribeClientFromAllTopics(client);
     clients.delete(client.sessionId);
     console.info(
       `[ws] Disconnected: ${getClientLabel(client)} (session: ${client.sessionId}) ` +
