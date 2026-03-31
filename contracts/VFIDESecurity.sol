@@ -405,7 +405,7 @@ contract PanicGuard {
         // Must wait at least 1 hour (prevents abuse / accidental toggle)
         require(block.timestamp >= lastSelfPanic[msg.sender] + 1 hours, "SEC: cancel too soon");
         require(selfPanicUntil[vault] != 0, "SEC: no self panic");
-        require(quarantineUntil[vault] == selfPanicUntil[vault], "SEC: overridden quarantine");
+        require(quarantineUntil[vault] <= selfPanicUntil[vault], "SEC: overridden quarantine");
         quarantineUntil[vault] = 0;
         delete selfPanicUntil[vault];
         emit Cleared(vault, "self_panic_cancelled");

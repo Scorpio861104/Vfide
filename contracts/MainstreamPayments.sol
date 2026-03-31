@@ -331,11 +331,6 @@ contract MainstreamPriceOracle {
      */
     function forceSetPrice(uint256 newPrice) external onlyDAO {
         require(newPrice > 0, "PO: zero price");
-        uint256 maxChange = vfidePerUsd / 2;
-        require(
-            newPrice >= vfidePerUsd - maxChange && newPrice <= vfidePerUsd + maxChange,
-            "PO: price change too large"
-        );
         vfidePerUsd = newPrice;
         lastUpdateTime = block.timestamp;
         emit PriceUpdated(newPrice, block.timestamp, msg.sender);
@@ -366,7 +361,18 @@ contract MainstreamPriceOracle {
      * @notice Remove a price source
      */
     function removePriceSource(address source) external onlyDAO {
+        require(priceSources[source].active, "PO: source not active");
         priceSources[source].active = false;
+
+        uint256 len = sourceList.length;
+        for (uint256 i = 0; i < len; i++) {
+            if (sourceList[i] == source) {
+                sourceList[i] = sourceList[len - 1];
+                sourceList.pop();
+                break;
+            }
+        }
+
         emit PriceSourceRemoved(source);
     }
     
@@ -903,6 +909,7 @@ contract TerminalRegistry {
         require(t.merchant != address(0), "TR: terminal not found");
         require(msg.sender == t.merchant || msg.sender == dao, "TR: not authorized");
         require(t.active, "TR: terminal inactive");
+        require(vaultHub.vaultOf(customer) != address(0), "TR: customer no vault");
         
         t.txCount++;
         t.totalVolume += amount;

@@ -517,7 +517,7 @@ contract UserVaultLegacy is ReentrancyGuard {
         require(block.timestamp <= _recovery.expiryTime, "UV: recovery expired");
         
         // Use locked guardian count from request time to prevent threshold manipulation
-        uint256 threshold = _recovery.guardianCountSnapshot >= 2 ? 2 : 1;
+        uint256 threshold = _recovery.guardianCountSnapshot == 0 ? 1 : (_recovery.guardianCountSnapshot / 2) + 1;
         require(_recovery.approvals >= threshold, "UV:insufficient-approvals");
         
         address newOwner = _recovery.proposedOwner;
@@ -976,7 +976,7 @@ contract UserVaultLegacy is ReentrancyGuard {
         proposedOwner = _recovery.proposedOwner;
         approvals = _recovery.approvals;
         expiryTime = _recovery.expiryTime;
-        guardianThreshold = _recovery.guardianCountSnapshot >= 2 ? 2 : 1;
+        guardianThreshold = _recovery.guardianCountSnapshot == 0 ? 1 : (_recovery.guardianCountSnapshot / 2) + 1;
     }
     
     /**
@@ -1166,7 +1166,9 @@ contract VaultInfrastructure is Ownable {
     // Recovery Timelock with Multi-Sig
     mapping(address => uint64) public recoveryUnlockTime;
     mapping(address => address) public recoveryProposedOwner;
-    mapping(address => mapping(address => mapping(uint256 => bool))) public recoveryApprovals;    mapping(address => uint8) public recoveryApprovalCount;
+    mapping(address => mapping(address => mapping(uint256 => bool))) public recoveryApprovals;
+    mapping(address => uint8) public recoveryApprovalCount;
+    mapping(address => mapping(uint256 => address)) public recoveryCandidateForNonce;
     mapping(address => uint256) public recoveryNonce;    uint64 public constant RECOVERY_DELAY = 7 days; // H-5: Increased from 3 to 7 days
     uint8 public constant RECOVERY_APPROVALS_REQUIRED = 3; // H-5: Multi-sig requirement
     mapping(address => bool) public isRecoveryApprover;
@@ -1294,6 +1296,14 @@ contract VaultInfrastructure is Ownable {
         require(vaultOf[newOwner] == address(0), "target has vault");
         
         uint256 nonce = recoveryNonce[vault];
+
+        address candidate = recoveryCandidateForNonce[vault][nonce];
+        if (candidate == address(0)) {
+            recoveryCandidateForNonce[vault][nonce] = newOwner;
+            recoveryApprovalCount[vault] = 0;
+        } else {
+            require(candidate == newOwner, "VI:owner-mismatch");
+        }
         
         // Record approval for current nonce
         if (!recoveryApprovals[vault][msg.sender][nonce]) {
@@ -1304,9 +1314,9 @@ contract VaultInfrastructure is Ownable {
         
         // If threshold reached, initiate timelock
         if (recoveryApprovalCount[vault] >= RECOVERY_APPROVALS_REQUIRED) {
-            recoveryProposedOwner[vault] = newOwner;
+            recoveryProposedOwner[vault] = recoveryCandidateForNonce[vault][nonce];
             recoveryUnlockTime[vault] = uint64(block.timestamp + RECOVERY_DELAY);
-            emit ForcedRecoveryInitiated(vault, newOwner, recoveryUnlockTime[vault]);
+            emit ForcedRecoveryInitiated(vault, recoveryProposedOwner[vault], recoveryUnlockTime[vault]);
             _logEv(vault, "force_recover_init", 0, "");
         }
     }
@@ -1320,6 +1330,12 @@ contract VaultInfrastructure is Ownable {
         require(vaultOf[newOwner] == address(0), "target has vault");
         
         require(recoveryApprovalCount[vault] >= RECOVERY_APPROVALS_REQUIRED, "VI:insufficient-approvals");
+
+        uint256 nonce = recoveryNonce[vault];
+        address candidate = recoveryCandidateForNonce[vault][nonce];
+        if (candidate != address(0)) {
+            require(candidate == newOwner, "VI:owner-mismatch");
+        }
 
         recoveryProposedOwner[vault] = newOwner;
         recoveryUnlockTime[vault] = uint64(block.timestamp + RECOVERY_DELAY);

@@ -458,8 +458,6 @@ contract VaultRecoveryClaim is Ownable, ReentrancyGuard {
      */
     function _executeRecovery(uint256 claimId) internal {
         RecoveryClaim storage claim = claims[claimId];
-
-        activeClaimForVault[claim.vault] = 0;
         
         // First, approve the recovery via VaultInfrastructure
         // This contract must be set as a recovery approver using:
@@ -475,6 +473,7 @@ contract VaultRecoveryClaim is Ownable, ReentrancyGuard {
             // Note: DAO must call finalizeForceRecovery, or we need DAO role
             // For now, emit event and update status - DAO/governance will finalize
             claim.status = ClaimStatus.Executed;
+            activeClaimForVault[claim.vault] = 0;
         } else if (unlockTime != 0) {
             // Timelock started but not passed yet - mark as approved, will need finalize later
             claim.status = ClaimStatus.Approved;
@@ -504,6 +503,7 @@ contract VaultRecoveryClaim is Ownable, ReentrancyGuard {
         // If this fails, DAO must manually call finalizeForceRecovery
         try vaultHub.finalizeForceRecovery(claim.vault) {
             claim.status = ClaimStatus.Executed;
+            activeClaimForVault[claim.vault] = 0;
             emit ClaimExecuted(claimId, claim.vault, claim.claimant, claim.originalOwner);
         } catch {
             // DAO must manually finalize - emit event for tracking

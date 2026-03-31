@@ -640,13 +640,13 @@ contract SeerAutonomous is ReentrancyGuard {
         else if (pattern == PatternType.WashTrading) severity = 80;
         else if (pattern == PatternType.SybilActivity) severity = 100;
         
-        totalViolationScore[subject] += severity;
+        _saturatingAddViolationScore(subject, severity);
 
         // Blend oracle risk if available
         if (address(riskOracle) != address(0)) {
             uint8 risk = riskOracle.getRiskScore(subject);
             if (risk > 0) {
-                totalViolationScore[subject] += risk; // bounded by uint16 per design
+                _saturatingAddViolationScore(subject, risk);
                 severity += risk > 50 ? 20 : 0; // bump severity for high risk
             }
         }
@@ -673,7 +673,7 @@ contract SeerAutonomous is ReentrancyGuard {
             patternViolations[subject][pattern]++;
         }
         lastViolationTime[subject] = uint64(block.timestamp);
-        totalViolationScore[subject] += 20;
+        _saturatingAddViolationScore(subject, 20);
         networkViolationCount++;
         _log(reason);
     }
@@ -791,10 +791,14 @@ contract SeerAutonomous is ReentrancyGuard {
         if (last == 0 || block.timestamp <= last) return;
 
         uint256 elapsed = block.timestamp - last;
-        uint16 decay = uint16(elapsed / 30 days);
-        if (decay == 0) return;
+        uint256 periods = elapsed / 30 days;
+        if (periods == 0) return;
 
         uint16 raw = totalViolationScore[subject];
+        uint256 decayBps = periods * 500; // 5% per 30 days
+        if (decayBps > 10_000) decayBps = 10_000;
+        uint16 decay = uint16((uint256(raw) * decayBps) / 10_000);
+        if (decay == 0 && raw > 0) decay = 1;
         totalViolationScore[subject] = decay >= raw ? 0 : raw - decay;
         lastViolationTime[subject] = uint64(block.timestamp);
     }
@@ -805,7 +809,12 @@ contract SeerAutonomous is ReentrancyGuard {
         if (raw == 0 || last == 0 || block.timestamp <= last) return raw;
 
         uint256 elapsed = block.timestamp - last;
-        uint16 decay = uint16(elapsed / 30 days);
+        uint256 periods = elapsed / 30 days;
+        if (periods == 0) return raw;
+        uint256 decayBps = periods * 500; // 5% per 30 days
+        if (decayBps > 10_000) decayBps = 10_000;
+        uint16 decay = uint16((uint256(raw) * decayBps) / 10_000);
+        if (decay == 0 && raw > 0) decay = 1;
         return decay >= raw ? 0 : raw - decay;
     }
     
@@ -834,10 +843,10 @@ contract SeerAutonomous is ReentrancyGuard {
             _adjustThreshold(ThresholdType.PatternSensitivity, false, 5);
         }
         
-        // Reset counters for next period
-        networkViolationCount = 0;
-        networkActionCount = 0;
-        networkBlockedCount = 0;
+        // Use damped counters instead of full reset to reduce oscillation.
+        networkViolationCount = networkViolationCount / 2;
+        networkActionCount = networkActionCount / 2;
+        networkBlockedCount = networkBlockedCount / 2;
 
         // Automatically trigger any due EcosystemVault scheduled tasks on the
         // same daily cadence — no separate keeper bot needed.
@@ -862,6 +871,11 @@ contract SeerAutonomous is ReentrancyGuard {
         emit ChallengeResolvedCode(subject, true, 0, ch.reason);
         delete pendingChallenge[subject];
         delete challengeRequested[subject];
+    }
+
+    function _saturatingAddViolationScore(address subject, uint16 delta) internal {
+        uint32 sum = uint32(totalViolationScore[subject]) + uint32(delta);
+        totalViolationScore[subject] = sum > type(uint16).max ? type(uint16).max : uint16(sum);
     }
 
     /**

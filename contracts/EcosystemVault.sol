@@ -76,6 +76,9 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
     event ManagerChangeCancelled(address indexed manager, bool active);
     event AllocationChangeQueued(uint16 councilBps, uint16 merchantBps, uint16 headhunterBps, uint16 operationsBps, uint256 executeAfter);
     event AllocationChangeCancelled(uint16 councilBps, uint16 merchantBps, uint16 headhunterBps, uint16 operationsBps);
+    event CouncilManagerChangeQueued(address indexed councilManager, uint256 executeAfter);
+    event CouncilManagerChangeCancelled(address indexed councilManager);
+    event CouncilManagerUpdated(address indexed oldCouncilManager, address indexed newCouncilManager);
     event ExpenseEpochRolled(uint256 startedAt, uint256 baseOperationsPool, uint256 capAmount);
 
     // ═══════════════════════════════════════════════════════════════════════
@@ -159,8 +162,14 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
         uint256 executeAfter;
     }
 
+    struct PendingCouncilManagerChange {
+        address councilManager;
+        uint256 executeAfter;
+    }
+
     PendingManagerChange public pendingManagerChange;
     PendingAllocationChange public pendingAllocationChange;
+    PendingCouncilManagerChange public pendingCouncilManagerChange;
 
     // Allocation buckets (council + merchant + headhunter + operations = 10000)
     uint16 public councilBps = 2500;      // 25% - DAO council
@@ -383,8 +392,56 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
         emit RewardTokenUpdated(oldToken, token);
     }
 
+    /// @notice Migrate to a new reward token while preserving pool accounting.
+    /// @dev Owner must pre-fund this contract with at least the outstanding pool amount of the new token.
+    function migrateRewardToken(address token, address oldTokenSink) external onlyOwner nonReentrant {
+        if (token == address(0)) revert ECO_Zero();
+        address oldToken = address(rewardToken);
+        if (token == oldToken) revert ECO_InvalidConfig();
+
+        _allocateIncoming();
+        uint256 outstanding = councilPool + merchantPool + headhunterPool + operationsPool;
+        if (IERC20(token).balanceOf(address(this)) < outstanding) revert ECO_InsufficientFunds();
+
+        address sink = oldTokenSink == address(0) ? owner : oldTokenSink;
+        uint256 oldBalance = IERC20(oldToken).balanceOf(address(this));
+        if (oldBalance > 0) {
+            IERC20(oldToken).safeTransfer(sink, oldBalance);
+        }
+
+        rewardToken = IERC20(token);
+        emit RewardTokenUpdated(oldToken, token);
+    }
+
     function setCouncilManager(address _councilManager) external onlyOwner {
-        councilManager = ICouncilManager(_councilManager);
+        if (_ownerGovernanceMediated()) {
+            _applyCouncilManagerChange(_councilManager);
+            return;
+        }
+
+        pendingCouncilManagerChange = PendingCouncilManagerChange({
+            councilManager: _councilManager,
+            executeAfter: block.timestamp + SENSITIVE_CHANGE_DELAY
+        });
+
+        emit CouncilManagerChangeQueued(_councilManager, block.timestamp + SENSITIVE_CHANGE_DELAY);
+    }
+
+    function executeCouncilManagerChange() external onlyOwner {
+        PendingCouncilManagerChange memory pending = pendingCouncilManagerChange;
+        if (pending.executeAfter == 0) revert ECO_NoPendingChange();
+        if (block.timestamp < pending.executeAfter) revert ECO_ChangeNotReady();
+
+        delete pendingCouncilManagerChange;
+        _applyCouncilManagerChange(pending.councilManager);
+    }
+
+    function cancelCouncilManagerChange() external onlyOwner {
+        PendingCouncilManagerChange memory pending = pendingCouncilManagerChange;
+        if (pending.executeAfter == 0) revert ECO_NoPendingChange();
+
+        delete pendingCouncilManagerChange;
+        emit CouncilManagerChangeCancelled(pending.councilManager);
     }
 
     function setAllocations(uint16 _councilBps, uint16 _merchantBps, uint16 _headhunterBps) external onlyOwner {
@@ -707,6 +764,8 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
         
         uint256 amount = operationsPool;
         if (amount == 0) revert ECO_InsufficientFunds();
+
+        _consumeOperationsSpend(amount);
         
         operationsPool = 0;
         lastOperationsWithdrawal = block.timestamp;
@@ -992,11 +1051,14 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
         string memory reason
     ) internal returns (bool success) {
         if (stablecoinOnlyMode) {
+            uint256 stableAmount = _vfideToStable(amount);
+            if (stableAmount == 0) return false;
+
             // Path 1: direct stablecoin reserve (Howey-safe, no DEX required)
-            if (stablecoinReserves[preferredStablecoin] >= amount) {
-                stablecoinReserves[preferredStablecoin] -= amount;
-                IERC20(preferredStablecoin).safeTransfer(worker, amount);
-                emit RewardPaidInStable(worker, amount, reason);
+            if (stablecoinReserves[preferredStablecoin] >= stableAmount) {
+                stablecoinReserves[preferredStablecoin] -= stableAmount;
+                IERC20(preferredStablecoin).safeTransfer(worker, stableAmount);
+                emit RewardPaidInStable(worker, stableAmount, reason);
                 return true;
             }
             // Path 2: DEX swap fallback (requires swapRouter to be configured)
@@ -1379,6 +1441,12 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
         emit ManagerSet(manager, active);
     }
 
+    function _applyCouncilManagerChange(address _councilManager) internal {
+        address oldManager = address(councilManager);
+        councilManager = ICouncilManager(_councilManager);
+        emit CouncilManagerUpdated(oldManager, _councilManager);
+    }
+
     function _applyAllocationChange(uint16 _councilBps, uint16 _merchantBps, uint16 _headhunterBps) internal {
         uint16 nonOps = _councilBps + _merchantBps + _headhunterBps;
         councilBps = _councilBps;
@@ -1411,6 +1479,18 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
                 operationsExpenseEpochBase * EXPENSE_EPOCH_CAP_BPS / MAX_BPS
             );
         }
+    }
+
+    function _consumeOperationsSpend(uint256 amount) internal {
+        _rollExpenseEpochIfNeeded();
+        uint256 expenseCap = operationsExpenseEpochBase * EXPENSE_EPOCH_CAP_BPS / MAX_BPS;
+        if (operationsSpentInEpoch + amount > expenseCap) revert ECO_ExpenseCapExceeded();
+        operationsSpentInEpoch += amount;
+    }
+
+    function _vfideToStable(uint256 amount) internal view returns (uint256 stableAmount) {
+        if (minOutputPerVfide == 0) return 0;
+        stableAmount = amount * minOutputPerVfide / 1e18;
     }
 
     // ═══════════════════════════════════════════════════════════════════════
@@ -1449,8 +1529,11 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
      *      on-chain before each task to guard against stale performData.
      */
     function performUpkeep(bytes calldata performData) external nonReentrant {
-        uint8 tasks = abi.decode(performData, (uint8));
-        _runScheduledTasks(tasks);
+        if (performData.length > 0) {
+            // Decode for compatibility with keeper payload expectations.
+            abi.decode(performData, (uint8));
+        }
+        _runScheduledTasks(TASK_COUNCIL | TASK_MERCHANT | TASK_HEADHUNTER | TASK_OPERATIONS);
     }
 
     /**
@@ -1536,6 +1619,7 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
             && block.timestamp >= lastOperationsWithdrawal + operationsWithdrawalCooldown
             && operationsPool > 0) {
             uint256 amount = operationsPool;
+            _consumeOperationsSpend(amount);
             operationsPool = 0;
             lastOperationsWithdrawal = block.timestamp;
             rewardToken.safeTransfer(operationsWallet, amount);
