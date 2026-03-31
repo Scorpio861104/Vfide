@@ -380,13 +380,22 @@ contract PayrollManager is ReentrancyGuard {
         if (!s.active) revert PM_StreamInactive();
         if (block.timestamp < s.expiryTime) revert PM_StreamNotExpired();
 
+        // Calculate payee's accrued wages (capped at expiry)
+        uint256 payeeClaimable = claimable(streamId);
         uint256 remaining = s.depositBalance;
         s.depositBalance = 0;
         s.active = false;
         s.pausedAccrued = 0;
 
-        if (remaining > 0) {
-            _safeTransferPay(s.token, s.payer, remaining);
+        // Transfer payee's earned wages first
+        if (payeeClaimable > 0) {
+            _safeTransferPay(s.token, s.payee, payeeClaimable);
+        }
+        
+        // Return remainder to payer
+        uint256 toReturn = remaining > payeeClaimable ? remaining - payeeClaimable : 0;
+        if (toReturn > 0) {
+            _safeTransferPay(s.token, s.payer, toReturn);
         }
         emit StreamExpired(streamId, msg.sender, remaining);
     }

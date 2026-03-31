@@ -335,8 +335,10 @@ abstract contract ServicePool is AccessControl, ReentrancyGuard, Pausable {
 
     function _advancePeriodIfNeeded() internal {
         if (block.timestamp >= periodStartTime + PERIOD_DURATION) {
-            currentPeriod += 1;
-            periodStartTime = block.timestamp;
+            uint256 elapsed = block.timestamp - periodStartTime;
+            uint256 periods = elapsed / PERIOD_DURATION;
+            currentPeriod += periods;
+            periodStartTime = periodStartTime + (periods * PERIOD_DURATION);
             emit PeriodStarted(currentPeriod, block.timestamp);
         }
     }

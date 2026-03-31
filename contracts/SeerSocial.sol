@@ -58,6 +58,7 @@ contract SeerSocial {
     event ScoreDisputeRequested(address indexed subject, string reason);
     event ScoreDisputeResolved(address indexed subject, bool approved, int256 adjustment);
     event EndorsementPolicySet();
+    event EndorserPruned(address indexed endorser, uint256 endorsementsCleaned);
     /// @notice BATCH-14 FIX: Events for Seer reference timelock
     event SeerChangeProposed(address indexed pending, uint64 effectiveAt);
     event SeerChangeCancelled();
@@ -88,6 +89,7 @@ contract SeerSocial {
     mapping(address => uint16) public endorsementsGiven;                    // active endorsements given by user
     mapping(address => uint64) public lastEndorseTime;                      // cooldown tracker per endorser
     mapping(address => uint64) public lastActivity;                         // For decay tracking
+    mapping(address => address[]) private endorsedSubjects;                 // subjects each endorser has endorsed (for cleanup)
 
     uint16 public endorsementBaseValue = 40;        // 0.40% boost per endorsement (10x scale)
     uint16 public endorsementMaxPerEndorser = 80;   // clamp per endorsement
@@ -261,6 +263,10 @@ contract SeerSocial {
         endorsersOf[subject].push(msg.sender);
         endorsementsReceived[subject] = activeReceived + 1;
         endorsementsGiven[msg.sender] += 1;
+        
+        // L-9 FIX: Track subjects endorsed by this user for later cleanup
+        endorsedSubjects[msg.sender].push(subject);
+        
         lastEndorseTime[msg.sender] = uint64(block.timestamp);
         lastActivity[subject] = uint64(block.timestamp);
 
@@ -270,6 +276,40 @@ contract SeerSocial {
 
     function pruneEndorsements(address subject) external onlyNotPaused {
         _pruneExpiredEndorsements(subject);
+    }
+
+    /**
+     * @notice Prune expired endorsements given by the caller across all subjects.
+     * @dev Allows endorsers to clean up their own stale endorsement counter (L-9 FIX).
+     * @return cleaned Count of cleaned-up endorsements
+     */
+    function pruneOwnEndorsements() external returns (uint256 cleaned) {
+        cleaned = 0;
+        address[] storage subjects = endorsedSubjects[msg.sender];
+        uint256 i = 0;
+        
+        while (i < subjects.length) {
+            address subject = subjects[i];
+            Endorsement storage e = endorsements[subject][msg.sender];
+            
+            // If endorsement expired, clean it up
+            if (e.expiry > 0 && e.expiry <= block.timestamp) {
+                delete endorsements[subject][msg.sender];
+                if (endorsementsReceived[subject] > 0) endorsementsReceived[subject]--;
+                if (endorsementsGiven[msg.sender] > 0) endorsementsGiven[msg.sender]--;
+                cleaned++;
+                
+                // Remove subject from list
+                subjects[i] = subjects[subjects.length - 1];
+                subjects.pop();
+                continue;
+            }
+            i++;
+        }
+        
+        if (cleaned > 0) {
+            emit EndorserPruned(msg.sender, cleaned);
+        }
     }
 
     function calculateEndorsementBonus(address subject) public view returns (uint256 bonus) {

@@ -13,6 +13,8 @@ interface IEmergencyController {
  * @dev Triggers emergency pause when thresholds are exceeded
  */
 contract CircuitBreaker is VFIDEAccessControl {
+    bytes32 public constant RECORDER_ROLE = keccak256("RECORDER_ROLE");
+    
     struct TriggerConfig {
         bool enabled;
         uint256 dailyVolumeThreshold;    // % of TVL (e.g., 50 = 50%)
@@ -134,7 +136,7 @@ contract CircuitBreaker is VFIDEAccessControl {
      * @notice Record transaction volume and check threshold
      * @param _volume Transaction volume to record
      */
-    function recordVolume(uint256 _volume) external notTriggered {
+    function recordVolume(uint256 _volume) external onlyRole(RECORDER_ROLE) notTriggered {
         if (!config.enabled) return;
 
         // Reset daily volume after 24h
