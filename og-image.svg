@@ -1,0 +1,152 @@
+<svg width="1200" height="630" viewBox="0 0 1200 630" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1200" height="630" fill="#08080E"/>
+
+  <defs>
+    <linearGradient id="oL" x1="0" y1="0" x2="0.35" y2="1">
+      <stop offset="0%" stop-color="#1c3040"/>
+      <stop offset="40%" stop-color="#142430"/>
+      <stop offset="100%" stop-color="#0a1218"/>
+    </linearGradient>
+    <linearGradient id="oR" x1="1" y1="0" x2="0.65" y2="1">
+      <stop offset="0%" stop-color="#243848"/>
+      <stop offset="40%" stop-color="#1a2c38"/>
+      <stop offset="100%" stop-color="#0e1a22"/>
+    </linearGradient>
+    <linearGradient id="oBar" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#00e8f0" stop-opacity="0"/>
+      <stop offset="15%" stop-color="#00e8f0" stop-opacity="0.7"/>
+      <stop offset="50%" stop-color="#00e8f0"/>
+      <stop offset="85%" stop-color="#00e8f0" stop-opacity="0.7"/>
+      <stop offset="100%" stop-color="#00e8f0" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="oBarDim" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#00e8f0" stop-opacity="0"/>
+      <stop offset="20%" stop-color="#00e8f0" stop-opacity="0.35"/>
+      <stop offset="80%" stop-color="#00e8f0" stop-opacity="0.35"/>
+      <stop offset="100%" stop-color="#00e8f0" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="oRise" x1="0.5" y1="1" x2="0.5" y2="0">
+      <stop offset="0%" stop-color="#00e8f0"/>
+      <stop offset="40%" stop-color="#00c0d0" stop-opacity="0.5"/>
+      <stop offset="100%" stop-color="#00e8f0" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="oEdge" x1="0.5" y1="0" x2="0.5" y2="1">
+      <stop offset="0%" stop-color="#00dce6" stop-opacity="0.5"/>
+      <stop offset="50%" stop-color="#00dce6" stop-opacity="0.2"/>
+      <stop offset="100%" stop-color="#00dce6" stop-opacity="0.6"/>
+    </linearGradient>
+    <linearGradient id="oGlow" x1="0.5" y1="1" x2="0.5" y2="0.2">
+      <stop offset="0%" stop-color="#00e8f0" stop-opacity="0.2"/>
+      <stop offset="100%" stop-color="#00e8f0" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="oInL" x1="0.3" y1="0" x2="0.7" y2="1">
+      <stop offset="0%" stop-color="#14242e"/>
+      <stop offset="100%" stop-color="#0a1418"/>
+    </linearGradient>
+    <linearGradient id="oInR" x1="0.7" y1="0" x2="0.3" y2="1">
+      <stop offset="0%" stop-color="#1a2e38"/>
+      <stop offset="100%" stop-color="#0c1820"/>
+    </linearGradient>
+    <!-- Wordmark gradient -->
+    <linearGradient id="oWord" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#E8E8F0"/>
+      <stop offset="100%" stop-color="#C0C0D0"/>
+    </linearGradient>
+    <!-- Ambient grid -->
+    <linearGradient id="oGrid" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#00e8f0" stop-opacity="0"/>
+      <stop offset="50%" stop-color="#00e8f0" stop-opacity="0.04"/>
+      <stop offset="100%" stop-color="#00e8f0" stop-opacity="0"/>
+    </linearGradient>
+    <!-- Background radial glow -->
+    <radialGradient id="oBgGlow" cx="350" cy="315" r="400" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#00e8f0" stop-opacity="0.03"/>
+      <stop offset="100%" stop-color="#00e8f0" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <!-- Background glow -->
+  <rect width="1200" height="630" fill="url(#oBgGlow)"/>
+
+  <!-- Subtle horizontal grid lines -->
+  <g opacity="0.5">
+    <line x1="0" y1="157" x2="1200" y2="157" stroke="url(#oGrid)" stroke-width="0.5"/>
+    <line x1="0" y1="315" x2="1200" y2="315" stroke="url(#oGrid)" stroke-width="0.5"/>
+    <line x1="0" y1="473" x2="1200" y2="473" stroke="url(#oGrid)" stroke-width="0.5"/>
+  </g>
+
+  <!-- ═══ MARK (left side) ═══ -->
+  <g transform="translate(115, 90)">
+    <!-- Ground glow -->
+    <ellipse cx="200" cy="380" rx="80" ry="16" fill="url(#oGlow)"/>
+
+    <!-- Left arm -->
+    <path d="M52 52 L96 52 L96 68 L82 68 L184 320 L172 320Z" fill="url(#oL)"/>
+    <!-- Right arm -->
+    <path d="M348 52 L304 52 L304 68 L318 68 L216 320 L228 320Z" fill="url(#oR)"/>
+
+    <!-- Inner depth -->
+    <path d="M102 100 L190 312" stroke="url(#oInL)" stroke-width="14" stroke-linecap="butt"/>
+    <path d="M298 100 L210 312" stroke="url(#oInR)" stroke-width="14" stroke-linecap="butt"/>
+
+    <!-- Bracket fills -->
+    <path d="M96 52 L96 68 L82 68 L88 80" fill="url(#oInL)"/>
+    <path d="M304 52 L304 68 L318 68 L312 80" fill="url(#oInR)"/>
+
+    <!-- F top bar -->
+    <rect x="96" y="52" width="208" height="16" fill="url(#oBar)"/>
+    <!-- Bracket shadows -->
+    <rect x="96" y="52" width="16" height="16" fill="#0c2030"/>
+    <rect x="288" y="52" width="16" height="16" fill="#0e2232"/>
+    <!-- F crossbar -->
+    <rect x="116" y="130" width="168" height="10" fill="url(#oBarDim)"/>
+
+    <!-- Edge -->
+    <path d="M52 52 L96 52 L96 68 L82 68 L200 354 L318 68 L304 68 L304 52 L348 52" fill="none" stroke="url(#oEdge)" stroke-width="1.2" stroke-linejoin="miter"/>
+
+    <!-- Corner marks -->
+    <path d="M52 52 L52 42 L62 42" fill="none" stroke="#00dce6" stroke-width="1" opacity="0.4" stroke-linecap="round"/>
+    <path d="M348 52 L348 42 L338 42" fill="none" stroke="#00dce6" stroke-width="1" opacity="0.4" stroke-linecap="round"/>
+
+    <!-- Ticks -->
+    <path d="M96 46 L96 52" stroke="#00dce6" stroke-width="0.6" opacity="0.3"/>
+    <path d="M304 46 L304 52" stroke="#00dce6" stroke-width="0.6" opacity="0.3"/>
+    <path d="M200 46 L200 52" stroke="#00dce6" stroke-width="0.4" opacity="0.15"/>
+
+    <!-- Vertex -->
+    <path d="M184 320 L200 360 L216 320" fill="none" stroke="url(#oRise)" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>
+    <circle cx="200" cy="362" r="5.5" fill="#00e8f0"/>
+    <circle cx="200" cy="362" r="10" fill="#00e8f0" opacity="0.12"/>
+    <circle cx="200" cy="362" r="18" fill="#00e8f0" opacity="0.04"/>
+
+    <!-- Light axis -->
+    <path d="M200 354 L200 38" stroke="url(#oRise)" stroke-width="1" opacity="0.06"/>
+
+    <!-- Construction lines -->
+    <path d="M184 320 L92 128 M216 320 L308 128" fill="none" stroke="#00dce6" stroke-width="0.3" opacity="0.06" stroke-dasharray="2 6"/>
+  </g>
+
+  <!-- ═══ WORDMARK (right side) ═══ -->
+  <text x="600" y="265" fill="url(#oWord)" font-family="'SF Pro Display', 'Inter', 'Helvetica Neue', system-ui, sans-serif" font-size="108" font-weight="700" letter-spacing="12">VFIDE</text>
+
+  <!-- Tagline -->
+  <text x="604" y="316" fill="#00e8f0" font-family="'SF Pro Display', 'Inter', system-ui, sans-serif" font-size="26" font-weight="400" letter-spacing="1" opacity="0.85">Decentralized Payment Protocol</text>
+
+  <!-- Motto line -->
+  <line x1="600" y1="342" x2="970" y2="342" stroke="#00e8f0" stroke-width="0.5" opacity="0.15"/>
+
+  <!-- Feature badges -->
+  <g font-family="'SF Pro Text', 'Inter', system-ui, sans-serif" font-size="17" fill="#606078" letter-spacing="0.5">
+    <text x="604" y="382">Trust-scored payments</text>
+    <circle cx="776" cy="378" r="2" fill="#00e8f0" opacity="0.3"/>
+    <text x="790" y="382">Zero merchant fees</text>
+    <circle cx="940" cy="378" r="2" fill="#00e8f0" opacity="0.3"/>
+    <text x="954" y="382">Self-custody vaults</text>
+  </g>
+
+  <!-- Bottom accent line -->
+  <rect x="0" y="614" width="1200" height="16" fill="url(#oBar)" opacity="0.6"/>
+
+  <!-- Bottom motto -->
+  <text x="600" y="590" text-anchor="start" fill="#2a2a3c" font-family="'Times New Roman', 'Georgia', serif" font-size="13" letter-spacing="6">VERITAS · FIDES</text>
+</svg>

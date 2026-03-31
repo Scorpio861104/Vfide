@@ -1,0 +1,77 @@
+<svg width="480" height="120" viewBox="0 0 480 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="lL" x1="0" y1="0" x2="0.35" y2="1">
+      <stop offset="0%" stop-color="#1c3040"/>
+      <stop offset="100%" stop-color="#0a1218"/>
+    </linearGradient>
+    <linearGradient id="lR" x1="1" y1="0" x2="0.65" y2="1">
+      <stop offset="0%" stop-color="#243848"/>
+      <stop offset="100%" stop-color="#0e1a22"/>
+    </linearGradient>
+    <linearGradient id="lBar" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#00e8f0" stop-opacity="0"/>
+      <stop offset="15%" stop-color="#00e8f0" stop-opacity="0.7"/>
+      <stop offset="50%" stop-color="#00e8f0"/>
+      <stop offset="85%" stop-color="#00e8f0" stop-opacity="0.7"/>
+      <stop offset="100%" stop-color="#00e8f0" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="lBarDim" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#00e8f0" stop-opacity="0"/>
+      <stop offset="25%" stop-color="#00e8f0" stop-opacity="0.4"/>
+      <stop offset="75%" stop-color="#00e8f0" stop-opacity="0.4"/>
+      <stop offset="100%" stop-color="#00e8f0" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="lRise" x1="0.5" y1="1" x2="0.5" y2="0">
+      <stop offset="0%" stop-color="#00e8f0"/>
+      <stop offset="50%" stop-color="#00c0d0" stop-opacity="0.4"/>
+      <stop offset="100%" stop-color="#00e8f0" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="lEdge" x1="0.5" y1="0" x2="0.5" y2="1">
+      <stop offset="0%" stop-color="#00dce6" stop-opacity="0.45"/>
+      <stop offset="50%" stop-color="#00dce6" stop-opacity="0.18"/>
+      <stop offset="100%" stop-color="#00dce6" stop-opacity="0.55"/>
+    </linearGradient>
+    <linearGradient id="lWord" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#E8E8F0"/>
+      <stop offset="100%" stop-color="#C0C0D0"/>
+    </linearGradient>
+  </defs>
+
+  <!-- ═══ MARK ═══ -->
+  <g transform="translate(10, 5)">
+    <!-- Left arm -->
+    <path d="M14 14 L26 14 L26 18.5 L23 18.5 L50 86 L47 86Z" fill="url(#lL)"/>
+    <!-- Right arm -->
+    <path d="M94 14 L82 14 L82 18.5 L85 18.5 L58 86 L61 86Z" fill="url(#lR)"/>
+    <!-- Inner depth -->
+    <path d="M28 27 L51 84" stroke="#14242e" stroke-width="4" stroke-linecap="butt"/>
+    <path d="M80 27 L57 84" stroke="#1a2e38" stroke-width="4" stroke-linecap="butt"/>
+    <!-- Bracket fills -->
+    <path d="M26 14 L26 18.5 L23 18.5 L24 21" fill="#14242e"/>
+    <path d="M82 14 L82 18.5 L85 18.5 L84 21" fill="#1a2e38"/>
+    <!-- F top bar -->
+    <rect x="26" y="14" width="56" height="4.5" fill="url(#lBar)"/>
+    <rect x="26" y="14" width="4.5" height="4.5" fill="#0c2030"/>
+    <rect x="77.5" y="14" width="4.5" height="4.5" fill="#0e2232"/>
+    <!-- F crossbar -->
+    <rect x="32" y="36" width="44" height="3" fill="url(#lBarDim)"/>
+    <!-- Edge -->
+    <path d="M14 14 L26 14 L26 18.5 L23 18.5 L54 96 L85 18.5 L82 18.5 L82 14 L94 14" fill="none" stroke="url(#lEdge)" stroke-width="0.6" stroke-linejoin="miter"/>
+    <!-- Corner marks -->
+    <path d="M14 14 L14 11 L17 11" fill="none" stroke="#00dce6" stroke-width="0.5" opacity="0.35" stroke-linecap="round"/>
+    <path d="M94 14 L94 11 L91 11" fill="none" stroke="#00dce6" stroke-width="0.5" opacity="0.35" stroke-linecap="round"/>
+    <!-- Vertex -->
+    <path d="M47 86 L54 98 L61 86" fill="none" stroke="url(#lRise)" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+    <circle cx="54" cy="99" r="2.5" fill="#00e8f0"/>
+    <circle cx="54" cy="99" r="4.5" fill="#00e8f0" opacity="0.1"/>
+  </g>
+
+  <!-- ═══ WORDMARK ═══ -->
+  <text x="130" y="72" fill="url(#lWord)" font-family="'SF Pro Display', 'Inter', 'Helvetica Neue', system-ui, sans-serif" font-size="52" font-weight="700" letter-spacing="6">VFIDE</text>
+
+  <!-- Divider -->
+  <line x1="120" y1="30" x2="120" y2="90" stroke="#00e8f0" stroke-width="0.5" opacity="0.12"/>
+
+  <!-- Subtitle -->
+  <text x="132" y="92" fill="#484860" font-family="'Times New Roman', 'Georgia', serif" font-size="9.5" letter-spacing="4.5">VERITAS · FIDES</text>
+</svg>

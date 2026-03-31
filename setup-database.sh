@@ -27,35 +27,42 @@ echo ""
 echo "📥 Step 4: Pull environment variables"
 vercel env pull .env.local
 
-# Step 5: Initialize database schema
+# Step 5: Initialize database schema using migrations
 echo ""
-echo "🏗️  Step 5: Initialize database schema"
-if [ -f init-db.sql ]; then
-  # Extract DATABASE_URL from .env.local
-  if [ -f .env.local ]; then
-    export $(grep -v '^#' .env.local | grep DATABASE_URL | xargs)
-    
-    if [ -z "$DATABASE_URL" ]; then
-      echo "⚠️  DATABASE_URL not found in .env.local"
-      echo "Using POSTGRES_PRISMA_URL instead..."
-      export $(grep -v '^#' .env.local | grep POSTGRES_PRISMA_URL | xargs)
-      DATABASE_URL=$POSTGRES_PRISMA_URL
-    fi
-    
-    if command -v psql &> /dev/null; then
-      echo "Running schema initialization..."
-      psql "$DATABASE_URL" -f init-db.sql
-      echo "✅ Database schema initialized!"
+echo "🏗️  Step 5: Initialize database schema using migrations"
+echo "The authoritative schema is defined in /scripts/migrations/"
+
+if [ -f .env.local ]; then
+  export $(grep -v '^#' .env.local | grep -E 'DATABASE_URL|POSTGRES_PRISMA_URL' | xargs)
+  
+  if [ -z "$DATABASE_URL" ]; then
+    echo "⚠️  DATABASE_URL not found in .env.local"
+    echo "Using POSTGRES_PRISMA_URL instead..."
+    export $(grep -v '^#' .env.local | grep POSTGRES_PRISMA_URL | xargs)
+    DATABASE_URL=$POSTGRES_PRISMA_URL
+  fi
+  
+  # Check if migrations exist
+  if [ -d "scripts/migrations" ] && [ "$(ls -A scripts/migrations)" ]; then
+    echo "Running database migrations..."
+    if command -v node &> /dev/null; then
+      # Run migration script using Node/tsx (handles TypeScript)
+      npx tsx scripts/migrate.ts || {
+        echo "⚠️  Migration via tsx failed. Ensure scripts/migrate.ts exists and NODE_ENV is set."
+        echo "Fallback: Apply migrations manually via psql or migration tool."
+      }
+      echo "✅ Database migrations applied!"
     else
-      echo "⚠️  psql not found. Please install PostgreSQL client or run manually:"
-      echo "psql \"\$DATABASE_URL\" -f init-db.sql"
+      echo "⚠️  Node not found. Please install Node.js or apply migrations manually:"
+      echo "npx tsx scripts/migrate.ts"
     fi
   else
-    echo "❌ .env.local not found. Run 'vercel env pull' first."
-    exit 1
+    echo "⚠️  No migrations found in scripts/migrations/"
+    echo "Please ensure the migration system is set up in scripts/migrate.ts"
+    echo "See documentation: docs/DATABASE_SETUP.md"
   fi
 else
-  echo "❌ init-db.sql not found"
+  echo "❌ .env.local not found. Run 'vercel env pull' first."
   exit 1
 fi
 

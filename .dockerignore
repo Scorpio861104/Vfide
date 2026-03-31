@@ -50,7 +50,61 @@ artifacts/
 cache/
 typechain-types/
 
+# Smart contracts (compiled artifacts only needed, source not used at runtime)
+contracts/
+typechain-types/
+tsconfig.contracts.json
+
+# WebSocket server source (uses compiled dist/)
+websocket-server/src/
+
+# Deployment & tooling
+scripts/
+migrations/
+verify-*.sh
+verify-*.ts
+deploy.sh
+
+# Audit & analysis outputs
+audit/
+slither*.txt
+*.audit.json
+lighthouserc.json
+lighthouse-budget.json
+VFIDE*.md
+LOCAL_VALIDATION_RUNBOOK.md
+TEST_EXECUTION_GUIDE.md
+
+# CI/CD config (not needed at runtime)
+.github/
+.gitlab-ci.yml
+.circleci/
+.travis.yml
+
+# NPM/package files (not needed with node-modules already excluded)
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Development configuration & linting rules
+.prettierrc
+.eslintrc*
+eslint.config.mjs
+postcss.config.mjs
+tailwind.config.cjs
+commitlint.config.js
+.editorconfig
+
+# Misc files
+*.zip
+files.zip
+VFIDE_Brand_Assets.zip
+*.3ds
+*.blend
+VFIDEDashboard.jsx
+
 # Docker files
-docker-compose.yml
+docker-compose*.yml
 Dockerfile
+Dockerfile.*
 .dockerignore

@@ -28,10 +28,7 @@ export async function GET(request: NextRequest) {
   if (process.env.NODE_ENV === 'production') {
     return NextResponse.json(
       {
-        ok: envHealthy,
         status,
-        timestamp: new Date().toISOString(),
-        version: process.env.npm_package_version || '1.2.0',
       },
       { status: statusCode }
     );
