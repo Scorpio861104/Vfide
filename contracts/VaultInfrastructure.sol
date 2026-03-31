@@ -639,7 +639,7 @@ contract UserVaultLegacy is ReentrancyGuard {
         
         // Use guardian snapshot from request time to prevent threshold manipulation
         uint8 snapshotCount = _inheritance.guardianCountSnapshot;
-        uint256 threshold = snapshotCount >= 2 ? 2 : 1;
+        uint256 threshold = snapshotCount == 0 ? 1 : (snapshotCount / 2) + 1;
         
         if (_inheritanceCancellationApprovals >= threshold) {
             // Cancel inheritance request
@@ -678,7 +678,7 @@ contract UserVaultLegacy is ReentrancyGuard {
         require(block.timestamp <= _inheritance.expiryTime, "UV: inheritance expired");
         
         // Require 2/3 guardian threshold (same as recovery)
-        uint256 threshold = _inheritance.guardianCountSnapshot >= 2 ? 2 : 1;
+        uint256 threshold = _inheritance.guardianCountSnapshot == 0 ? 1 : (_inheritance.guardianCountSnapshot / 2) + 1;
         require(_inheritance.approvals >= threshold, "UV: insufficient approvals");
         
         address inheritor = nextOfKin;
@@ -995,7 +995,7 @@ contract UserVaultLegacy is ReentrancyGuard {
         readyTime = _inheritance.readyTime;
         expiryTime = _inheritance.expiryTime;
         ownerDenied = _inheritance.ownerDenied;
-        guardianThreshold = _inheritance.guardianCountSnapshot >= 2 ? 2 : 1;
+        guardianThreshold = _inheritance.guardianCountSnapshot == 0 ? 1 : uint8((_inheritance.guardianCountSnapshot / 2) + 1);
     }
     
     /**

@@ -685,6 +685,70 @@ contract ProofScoreBurnRouter is Ownable, Pausable {
     }
 
     /**
+     * @notice Reverse fee calculator: find gross transfer amount needed to deliver a target net amount.
+     * @dev Uses bounded iterative refinement so final amounts always match computeFees behavior,
+     *      including micro-tx ceilings and sustainability redirects.
+     */
+    function calculateGrossAmount(
+        address from,
+        address to,
+        uint256 desiredNetAmount
+    ) public view returns (
+        uint256 grossAmount,
+        uint256 burnAmount,
+        uint256 sanctumAmount,
+        uint256 ecosystemAmount,
+        uint256 totalFee
+    ) {
+        if (desiredNetAmount == 0) {
+            return (0, 0, 0, 0, 0);
+        }
+        uint256 effectiveMaxBps = maxTotalBps;
+        if (effectiveMaxBps >= 10000) {
+            effectiveMaxBps = 9999;
+        }
+
+        // Conservative gross-up against current max fee bound.
+        uint256 denominator = 10000 - effectiveMaxBps;
+        grossAmount = (desiredNetAmount * 10000 + denominator - 1) / denominator;
+
+        // Normalize returned split values for final grossAmount.
+        (burnAmount, sanctumAmount, ecosystemAmount,,,) = computeFees(from, to, grossAmount);
+        totalFee = burnAmount + sanctumAmount + ecosystemAmount;
+
+        // Safety top-up for any edge-case policy interactions.
+        uint256 netAmount = grossAmount - totalFee;
+        uint256 guard;
+        while (netAmount < desiredNetAmount && guard < 8) {
+            grossAmount += desiredNetAmount - netAmount + 1;
+            (burnAmount, sanctumAmount, ecosystemAmount,,,) = computeFees(from, to, grossAmount);
+            totalFee = burnAmount + sanctumAmount + ecosystemAmount;
+            netAmount = grossAmount - totalFee;
+            guard++;
+        }
+    }
+
+    /**
+     * @notice Checkout preview helper for UIs: desired net value in, gross + fee split out.
+     */
+    function previewCheckout(
+        address from,
+        address to,
+        uint256 desiredNetAmount
+    ) external view returns (
+        uint256 grossAmount,
+        uint256 burnAmount,
+        uint256 sanctumAmount,
+        uint256 ecosystemAmount,
+        uint256 totalFee,
+        uint256 netAmount
+    ) {
+        (grossAmount, burnAmount, sanctumAmount, ecosystemAmount, totalFee) =
+            calculateGrossAmount(from, to, desiredNetAmount);
+        netAmount = grossAmount - totalFee;
+    }
+
+    /**
      * Get effective fee rates for a user (using linear curve)
      */
     function getEffectiveBurnRate(address user) external view returns (uint16 burnBps, uint16 sanctumBps, uint16 ecosystemBps) {
