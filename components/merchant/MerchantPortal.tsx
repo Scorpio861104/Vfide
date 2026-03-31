@@ -636,44 +636,7 @@ function PaymentRequestsSection({
   submitting: boolean;
   error: string | null;
 }) {
-  const displayRequests = requests.length > 0 ? requests : [
-    {
-      id: 'req-1',
-      fromAddress: '0x0000000000000000000000000000000000000000',
-      toAddress: 'dev@example.com',
-      amount: 1500,
-      currency: 'USDC',
-      memo: 'Monthly retainer',
-      status: 'pending' as const,
-      createdAt: Date.now() - 2 * 24 * 60 * 60 * 1000,
-      updatedAt: Date.now() - 24 * 60 * 60 * 1000,
-      txHash: null,
-    },
-    {
-      id: 'req-2',
-      fromAddress: '0x0000000000000000000000000000000000000000',
-      toAddress: 'consultant@example.com',
-      amount: 500,
-      currency: 'ETH',
-      memo: 'Consulting hours',
-      status: 'sent' as const,
-      createdAt: Date.now() - 5 * 24 * 60 * 60 * 1000,
-      updatedAt: Date.now() - 4 * 24 * 60 * 60 * 1000,
-      txHash: null,
-    },
-    {
-      id: 'req-3',
-      fromAddress: '0x0000000000000000000000000000000000000000',
-      toAddress: 'vendor@example.com',
-      amount: 2000,
-      currency: 'USDC',
-      memo: 'Vendor invoice',
-      status: 'completed' as const,
-      createdAt: Date.now() - 10 * 24 * 60 * 60 * 1000,
-      updatedAt: Date.now() - 9 * 24 * 60 * 60 * 1000,
-      txHash: null,
-    },
-  ];
+  const displayRequests = requests;
 
   return (
     <div className="space-y-6">
@@ -882,30 +845,7 @@ function BulkPaymentsSection({
   onUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
   uploading: boolean;
 }) {
-  const displayJobs = jobs.length > 0
-    ? jobs
-    : [
-        {
-          id: 'sample-job-1',
-          filename: 'payroll_january_2024.csv',
-          uploadedAt: Date.now() - 2 * 60 * 60 * 1000,
-          status: 'processing' as const,
-          totalRows: 120,
-          successCount: 84,
-          failureCount: 2,
-          totalAmount: 54250,
-        },
-        {
-          id: 'sample-job-2',
-          filename: 'payouts_february_2024.csv',
-          uploadedAt: Date.now() - 24 * 60 * 60 * 1000,
-          status: 'completed' as const,
-          totalRows: 200,
-          successCount: 200,
-          failureCount: 0,
-          totalAmount: 98200,
-        },
-      ];
+  const displayJobs = jobs;
 
   return (
     <div className="space-y-6">
@@ -946,6 +886,11 @@ function BulkPaymentsSection({
           Upload History
         </h2>
         <div className="space-y-3">
+          {displayJobs.length === 0 ? (
+            <div className="rounded-lg border border-gray-200 dark:border-gray-700 p-4 text-sm text-gray-600 dark:text-gray-400">
+              No bulk upload history yet.
+            </div>
+          ) : null}
           {displayJobs.map((job) => (
             <BulkJobCard key={job.id} job={job} />
           ))}
@@ -968,36 +913,7 @@ function ApiKeysSection({
   onGenerateKey: () => void;
   onRevokeKey: (keyId: string) => void;
 }) {
-  const displayKeys = keys.length > 0 ? keys : [
-    {
-      id: 'sample-key-1',
-      name: 'Production Key (Issued)',
-      maskedKey: 'issued_live_************',
-      status: 'active' as const,
-      createdAt: Date.now() - 7 * 24 * 60 * 60 * 1000,
-      lastUsed: Date.now() - 2 * 60 * 60 * 1000,
-      permissions: ['read:payments', 'write:payments'],
-    },
-    {
-      id: 'sample-key-2',
-      name: 'Staging Key (Issued)',
-      maskedKey: 'issued_stage_***********',
-      status: 'inactive' as const,
-      createdAt: Date.now() - 30 * 24 * 60 * 60 * 1000,
-      lastUsed: Date.now() - 24 * 60 * 60 * 1000,
-      permissions: ['read:payments'],
-    },
-    {
-      id: 'sample-key-3',
-      name: 'Old Test Key',
-      key: 'vfide_live_test_1122334455',
-      maskedKey: 'vfide_live_****************',
-      status: 'revoked' as const,
-      createdAt: Date.now() - 90 * 24 * 60 * 60 * 1000,
-      lastUsed: null,
-      permissions: ['read:payments'],
-    },
-  ];
+  const displayKeys = keys;
 
   return (
     <div className="space-y-6">
@@ -1031,6 +947,11 @@ function ApiKeysSection({
           Your API Keys
         </h2>
         <div className="space-y-3">
+          {displayKeys.length === 0 ? (
+            <div className="rounded-lg border border-gray-200 dark:border-gray-700 p-4 text-sm text-gray-600 dark:text-gray-400">
+              No API keys available yet.
+            </div>
+          ) : null}
           {displayKeys.map((key) => (
             <ApiKeyCard
               key={key.id}

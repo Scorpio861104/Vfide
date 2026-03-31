@@ -707,11 +707,15 @@ export default function GovernanceUI() {
   });
 
   const handleVote = (proposalId: string, direction: 'for' | 'against' | 'abstain') => {
-    const weight = 100000; // Mock vote weight
+    const weight = 0;
+    if (weight <= 0) {
+      setDelegateError('Vote weight data is unavailable in this UI preview.');
+      return;
+    }
     const newVote: Vote = {
       id: `vote-${Date.now()}`,
       proposalId,
-      voter: '0xuser...',
+      voter: 'unknown',
       direction,
       weight,
       timestamp: Date.now(),

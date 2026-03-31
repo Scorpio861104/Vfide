@@ -101,7 +101,7 @@ interface WalletStats {
   totalTransactions: number;
 }
 
-// ==================== MOCK DATA ====================
+// ==================== CHAIN CONFIG ====================
 
 const supportedChains: Chain[] = [
   {

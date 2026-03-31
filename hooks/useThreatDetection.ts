@@ -361,11 +361,14 @@ export const useThreatDetection = (): UseThreatDetectionResult => {
   }, [threats]);
 
   const activeThreats = threats.filter(t => !t.resolved);
+  const hasFocusedWindow = typeof document !== 'undefined' ? document.hasFocus() : false;
+  const visibilityActive = typeof document !== 'undefined' ? document.visibilityState === 'visible' : false;
+  const sessionCount = hasFocusedWindow || visibilityActive ? 1 : 0;
 
   const metrics: SecurityMetrics = {
-    totalSessions: 1, // Mock value
+    totalSessions: sessionCount,
     failedLoginAttempts: activeThreats.filter(t => t.type === 'brute_force').length,
-    activeSessions: 1, // Mock value
+    activeSessions: sessionCount,
     threatsDetected: threats.length,
     lastThreatDetected: threats.length > 0 ? threats[threats.length - 1]?.detected ?? null : null,
     averageRiskScore: riskScore

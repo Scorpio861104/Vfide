@@ -75,7 +75,7 @@ interface NotificationFilter {
   dateRange: 'all' | 'today' | 'week' | 'month';
 }
 
-// ==================== MOCK DATA ====================
+// ==================== INITIAL STATE ====================
 
 // Notifications will be populated by backend/websocket events
 function getInitialNotifications(): Notification[] {

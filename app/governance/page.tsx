@@ -2352,35 +2352,15 @@ function CouncilTab() {
   const requiredScoreToRun = 7000; // Minimum ProofScore to run for council (70% on 0-10000 scale)
   const canRun = (score || 0) >= requiredScoreToRun;
 
-  // Mock council data - in production, read from CouncilElection contract
-  // Council has 12 seats, 365-day terms, 7000 min ProofScore to run
-  const councilMembers = [
-    { address: '0x1a2b...3c4d', name: 'CryptoSage', score: 8500, term: 'Term 1', votes: 45200, status: 'active' },
-    { address: '0x5e6f...7g8h', name: 'VaultMaster', score: 8200, term: 'Term 1', votes: 38500, status: 'active' },
-    { address: '0x9i0j...1k2l', name: 'DeFiWhale', score: 8100, term: 'Term 1', votes: 32100, status: 'active' },
-    { address: '0xmnop...qrst', name: 'TokenNinja', score: 7950, term: 'Term 1', votes: 28900, status: 'active' },
-    { address: '0xuvwx...yz12', name: 'ChainGuard', score: 7800, term: 'Term 1', votes: 25400, status: 'active' },
-    { address: '0x3456...7890', name: 'TrustBuilder', score: 7750, term: 'Term 1', votes: 23100, status: 'active' },
-    { address: '0xabcd...ef01', name: 'ProofKeeper', score: 7680, term: 'Term 1', votes: 21800, status: 'active' },
-    { address: '0x2345...6789', name: 'ScoreMaxer', score: 7550, term: 'Term 1', votes: 19500, status: 'active' },
-    { address: '0xbcde...f012', name: 'VaultSentry', score: 7420, term: 'Term 1', votes: 18200, status: 'active' },
-    { address: '0xcdef...0123', name: 'TrustWarden', score: 7350, term: 'Term 1', votes: 17100, status: 'active' },
-    { address: '0xdef0...1234', name: 'ChainSage', score: 7280, term: 'Term 1', votes: 15800, status: 'active' },
-    { address: '0xef01...2345', name: 'ProofMaster', score: 7150, term: 'Term 1', votes: 14500, status: 'active' },
-  ];
-
-  const candidates = [
-    { address: '0xabc1...def2', name: 'RisingStar', score: 520, statement: 'I will focus on merchant adoption and reducing fees.', votes: 12500 },
-    { address: '0xghi3...jkl4', name: 'NewVoice', score: 480, statement: 'Community first! More transparency in treasury.', votes: 8200 },
-    { address: '0xmno5...pqr6', name: 'TechBuilder', score: 445, statement: 'Improve smart contract security and auditing.', votes: 5800 },
-  ];
+  const councilMembers: Array<{ address: string; name: string; score: number; term: string; votes: number; status: string }> = [];
+  const candidates: Array<{ address: string; name: string; score: number; statement: string; votes: number }> = [];
 
   const electionStatus = {
-    phase: 'Voting', // 'Registration' | 'Voting' | 'Cooldown'
-    daysLeft: 12,
-    nextElection: 'Jan 15, 2026',
+    phase: 'Registration', // 'Registration' | 'Voting' | 'Cooldown'
+    daysLeft: 0,
+    nextElection: 'TBD',
     totalCandidates: candidates.length,
-    currentTerm: 1,
+    currentTerm: 0,
   };
 
   const handleRegister = async () => {

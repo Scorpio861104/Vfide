@@ -68,10 +68,10 @@ interface ScoreBreakdown {
   trend: 'up' | 'down' | 'stable';
 }
 
-// ==================== MOCK DATA ====================
+// ==================== DATA BUILDERS ====================
 
 function getCurrentScore(): number {
-  return 7850;
+  return 0;
 }
 
 function getCurrentTier(): ScoreTier {
@@ -138,182 +138,19 @@ function getCurrentTier(): ScoreTier {
 }
 
 function generateScoreHistory(): ScoreRecord[] {
-  const now = Date.now();
-  const records: ScoreRecord[] = [];
-  let currentScore = 7850;
-
-  for (let i = 29; i >= 0; i--) {
-    const date = new Date(now - i * 24 * 60 * 60 * 1000);
-    const change = Math.floor(Math.random() * 100) - 30;
-    currentScore = Math.max(0, currentScore + change);
-
-    records.push({
-      date: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-      score: currentScore,
-      change,
-      activities: [
-        'Verified transaction',
-        'Dispute resolution',
-        'Community participation',
-      ].filter(() => Math.random() > 0.5),
-    });
-  }
-
-  return records;
+  return [];
 }
 
 function generateBadges(): Badge[] {
-  return [
-    {
-      id: 'first-transaction',
-      name: 'First Step',
-      description: 'Completed your first transaction',
-      icon: '🚀',
-      earnedAt: Date.now() - 60 * 24 * 60 * 60 * 1000,
-      rarity: 'common',
-      requirements: 'Complete 1 transaction',
-    },
-    {
-      id: 'verified-account',
-      name: 'Verified Badge',
-      description: 'Account fully verified',
-      icon: '✅',
-      earnedAt: Date.now() - 45 * 24 * 60 * 60 * 1000,
-      rarity: 'common',
-      requirements: 'Verify account',
-    },
-    {
-      id: 'trader',
-      name: 'Active Trader',
-      description: 'Completed 10 transactions',
-      icon: '📈',
-      earnedAt: Date.now() - 30 * 24 * 60 * 60 * 1000,
-      rarity: 'uncommon',
-      requirements: 'Complete 10 transactions',
-    },
-    {
-      id: 'power-user',
-      name: 'Power User',
-      description: 'Score over 5000',
-      icon: '⚡',
-      earnedAt: Date.now() - 14 * 24 * 60 * 60 * 1000,
-      rarity: 'rare',
-      requirements: 'Achieve 5000+ score',
-    },
-    {
-      id: 'community-helper',
-      name: 'Community Helper',
-      description: 'Helped 5 community members',
-      icon: '🤝',
-      earnedAt: Date.now() - 7 * 24 * 60 * 60 * 1000,
-      rarity: 'rare',
-      requirements: 'Help 5 members',
-    },
-    {
-      id: 'legend',
-      name: 'Legend Status',
-      description: 'Reached highest tier',
-      icon: '🏆',
-      earnedAt: Date.now() - 2 * 24 * 60 * 60 * 1000,
-      rarity: 'legendary',
-      requirements: 'Reach Legend tier',
-    },
-  ];
+  return [];
 }
 
 function generateAchievements(): Achievement[] {
-  return [
-    {
-      id: 'achieve-1',
-      title: 'Transaction Master',
-      description: 'Complete 50 transactions',
-      progress: 38,
-      target: 50,
-      reward: '+500 ProofScore',
-      icon: '💰',
-      completed: false,
-    },
-    {
-      id: 'achieve-2',
-      title: 'Social Butterfly',
-      description: 'Add 10 trusted contacts',
-      progress: 7,
-      target: 10,
-      reward: '+300 ProofScore',
-      icon: '🦋',
-      completed: false,
-    },
-    {
-      id: 'achieve-3',
-      title: 'Dispute Resolver',
-      description: 'Resolve disputes successfully',
-      progress: 5,
-      target: 5,
-      reward: '+1000 ProofScore',
-      icon: '⚖️',
-      completed: true,
-    },
-    {
-      id: 'achieve-4',
-      title: 'Consistency Champion',
-      description: 'Active for 30 consecutive days',
-      progress: 28,
-      target: 30,
-      reward: '+750 ProofScore',
-      icon: '🔥',
-      completed: false,
-    },
-    {
-      id: 'achieve-5',
-      title: 'Governance Guardian',
-      description: 'Participate in 5 governance votes',
-      progress: 3,
-      target: 5,
-      reward: '+400 ProofScore',
-      icon: '🗳️',
-      completed: false,
-    },
-  ];
+  return [];
 }
 
 function generateScoreBreakdown(): ScoreBreakdown[] {
-  return [
-    {
-      category: 'Transaction History',
-      score: 2500,
-      percentage: 32,
-      activities: 45,
-      trend: 'up',
-    },
-    {
-      category: 'Account Verification',
-      score: 1800,
-      percentage: 23,
-      activities: 8,
-      trend: 'stable',
-    },
-    {
-      category: 'Community Engagement',
-      score: 1600,
-      percentage: 20,
-      activities: 12,
-      trend: 'up',
-    },
-    {
-      category: 'Security & Safety',
-      score: 1200,
-      percentage: 15,
-      activities: 15,
-      trend: 'stable',
-    },
-    {
-      category: 'Governance Participation',
-      score: 750,
-      percentage: 10,
-      activities: 5,
-      trend: 'down',
-    },
-  ];
+  return [];
 }
 
 // ==================== COMPONENTS ====================
@@ -523,19 +360,19 @@ export default function ProofScoreDashboard() {
           />
           <StatBox
             label="This Month"
-            value="+185"
+            value="0"
             icon="📈"
             color="from-green-500 to-green-700"
           />
           <StatBox
             label="Rank"
-            value="#2,847"
+            value="--"
             icon="🏅"
             color="from-purple-500 to-purple-700"
           />
           <StatBox
             label="Streak"
-            value="28 days"
+            value="0 days"
             icon="🔥"
             color="from-orange-500 to-orange-700"
           />
@@ -548,6 +385,11 @@ export default function ProofScoreDashboard() {
           Score Breakdown
         </h2>
         <div className="space-y-3">
+          {breakdown.length === 0 ? (
+            <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700 text-sm text-gray-600 dark:text-gray-400">
+              No score breakdown data available yet.
+            </div>
+          ) : null}
           {breakdown.map((item, idx) => (
             <div key={idx} className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
               <div className="flex justify-between items-start mb-2">
@@ -592,6 +434,11 @@ export default function ProofScoreDashboard() {
       </h2>
 
       <div className="space-y-4">
+        {scoreHistory.length === 0 ? (
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700 text-sm text-gray-600 dark:text-gray-400">
+            No score timeline data available yet.
+          </div>
+        ) : null}
         {scoreHistory.map((record, idx) => (
           <div
             key={idx}
@@ -648,6 +495,11 @@ export default function ProofScoreDashboard() {
       </h2>
 
       <div className={`grid ${responsiveGrids.balanced} gap-4`}>
+        {badges.length === 0 ? (
+          <div className="col-span-full rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4 text-sm text-gray-600 dark:text-gray-400">
+            No badge data available yet.
+          </div>
+        ) : null}
         {badges.map((badge) => (
           <BadgeCard key={badge.id} badge={badge} />
         ))}
@@ -662,6 +514,11 @@ export default function ProofScoreDashboard() {
       </h2>
 
       <div className="space-y-4">
+        {achievements.length === 0 ? (
+          <div className="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4 text-sm text-gray-600 dark:text-gray-400">
+            No achievement data available yet.
+          </div>
+        ) : null}
         {achievements.map((achievement) => (
           <AchievementItem key={achievement.id} achievement={achievement} />
         ))}
@@ -702,11 +559,11 @@ export default function ProofScoreDashboard() {
                 </div>
                 <div>
                   <p className="text-xs opacity-75">This Month</p>
-                  <p className="font-bold">+185</p>
+                  <p className="font-bold">0</p>
                 </div>
                 <div>
                   <p className="text-xs opacity-75">Percentile</p>
-                  <p className="font-bold">Top 0.3%</p>
+                  <p className="font-bold">--</p>
                 </div>
               </div>
             </div>

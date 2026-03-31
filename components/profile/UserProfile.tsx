@@ -88,7 +88,7 @@ interface SocialConnections {
   friends: number;
 }
 
-// ==================== MOCK DATA ====================
+// ==================== INITIAL STATE ====================
 
 // Initial empty states (will be populated by user profile API)
 const getInitialProfile = (): UserProfile => ({

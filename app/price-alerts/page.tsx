@@ -4,6 +4,8 @@ import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Footer } from '@/components/layout/Footer';
 import { useAccount } from 'wagmi';
+import { useVfidePrice } from '@/hooks/usePriceHooks';
+import { useEthPrice } from '@/hooks/useEthPrice';
 import { 
   Bell, 
   BellRing,
@@ -53,17 +55,6 @@ interface TokenInfo {
   icon: string;
 }
 
-// Sample token data
-const TOKENS: TokenInfo[] = [
-  { symbol: 'VFIDE', name: 'VFIDE Token', price: 0.0847, change24h: 5.23, icon: '🔷' },
-  { symbol: 'ETH', name: 'Ethereum', price: 3847.52, change24h: -1.24, icon: '⟠' },
-  { symbol: 'BTC', name: 'Bitcoin', price: 67234.18, change24h: 2.15, icon: '₿' },
-  { symbol: 'USDC', name: 'USD Coin', price: 1.00, change24h: 0.01, icon: '💵' },
-  { symbol: 'ARB', name: 'Arbitrum', price: 1.23, change24h: -3.45, icon: '🔵' },
-  { symbol: 'OP', name: 'Optimism', price: 2.87, change24h: 4.12, icon: '🔴' },
-  { symbol: 'MATIC', name: 'Polygon', price: 0.89, change24h: -0.87, icon: '💜' },
-];
-
 const ALERT_TYPES: Record<AlertType, { label: string; icon: React.ComponentType<{ size?: number; className?: string }> }> = {
   'price_above': { label: 'Price Above', icon: TrendingUp },
   'price_below': { label: 'Price Below', icon: TrendingDown },
@@ -73,6 +64,12 @@ const ALERT_TYPES: Record<AlertType, { label: string; icon: React.ComponentType<
 
 export default function PriceAlertsPage() {
   const { address } = useAccount();
+  const { priceUsd: vfidePriceUsd } = useVfidePrice();
+  const { ethPrice } = useEthPrice();
+  const tokens: TokenInfo[] = [
+    { symbol: 'VFIDE', name: 'VFIDE Token', price: vfidePriceUsd, change24h: 0, icon: '🔷' },
+    { symbol: 'ETH', name: 'Ethereum', price: ethPrice, change24h: 0, icon: '⟠' },
+  ];
   const [alerts, setAlerts] = useState<PriceAlert[]>([]);
   const [isCreating, setIsCreating] = useState(false);
   const [_editingId, _setEditingId] = useState<string | null>(null);
@@ -122,7 +119,7 @@ export default function PriceAlertsPage() {
 
   // Create alert
   const handleCreateAlert = () => {
-    const token = TOKENS.find(t => t.symbol === newToken);
+    const token = tokens.find(t => t.symbol === newToken);
     if (!token || !newValue) return;
 
     const alert: PriceAlert = {
@@ -183,7 +180,7 @@ export default function PriceAlertsPage() {
     triggered: alerts.filter(a => a.status === 'triggered').length
   };
 
-  const getSelectedToken = () => TOKENS.find(t => t.symbol === newToken);
+  const getSelectedToken = () => tokens.find(t => t.symbol === newToken);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-zinc-950 via-zinc-900 to-zinc-950">
@@ -279,7 +276,7 @@ export default function PriceAlertsPage() {
         <div className="mb-8">
           <h2 className="text-lg font-semibold text-white mb-4">Market Overview</h2>
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
-            {TOKENS.map(token => (
+            {tokens.map(token => (
               <div key={token.symbol} className="p-3 bg-zinc-900/50 border border-zinc-700 rounded-xl">
                 <div className="flex items-center gap-2 mb-2">
                   <span className="text-lg">{token.icon}</span>
@@ -335,7 +332,7 @@ export default function PriceAlertsPage() {
                       onChange={(e) => setNewToken(e.target.value)}
                       className="w-full px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-lg text-white focus:outline-none focus:border-jade-500"
                     >
-                      {TOKENS.map(token => (
+                      {tokens.map(token => (
                         <option key={token.symbol} value={token.symbol}>
                           {token.icon} {token.symbol} - ${token.price < 1 ? token.price.toFixed(4) : token.price.toLocaleString()}
                         </option>
@@ -495,7 +492,7 @@ export default function PriceAlertsPage() {
         ) : (
           <div className="space-y-3">
             {filteredAlerts.map(alert => {
-              const token = TOKENS.find(t => t.symbol === alert.tokenSymbol);
+              const token = tokens.find(t => t.symbol === alert.tokenSymbol);
               const AlertIcon = ALERT_TYPES[alert.type].icon;
               const progress = alert.type === 'price_above' 
                 ? Math.min((alert.currentPrice / alert.targetValue) * 100, 100)
@@ -603,7 +600,7 @@ export default function PriceAlertsPage() {
               onClick={() => {
                 setNewToken('VFIDE');
                 setNewType('price_above');
-                const vfide = TOKENS.find(t => t.symbol === 'VFIDE');
+                const vfide = tokens.find(t => t.symbol === 'VFIDE');
                 setNewValue(vfide ? (vfide.price * 1.1).toFixed(4) : '0.10');
                 setNewNote('10% price increase');
                 setIsCreating(true);
@@ -644,10 +641,11 @@ export default function PriceAlertsPage() {
 
             <button
               onClick={() => {
-                setNewToken('BTC');
+                setNewToken('VFIDE');
                 setNewType('price_above');
-                setNewValue('70000');
-                setNewNote('BTC new ATH territory');
+                const vfide = tokens.find(t => t.symbol === 'VFIDE');
+                setNewValue(vfide ? (vfide.price * 1.5).toFixed(4) : '0');
+                setNewNote('VFIDE upside watch');
                 setIsCreating(true);
               }}
               className="p-4 bg-zinc-900/50 border border-zinc-700 rounded-xl hover:border-zinc-500 transition-colors text-left"
@@ -657,8 +655,8 @@ export default function PriceAlertsPage() {
                   <Target className="text-amber-400" size={20} />
                 </div>
                 <div>
-                  <p className="font-medium text-white">BTC at $70K</p>
-                  <p className="text-sm text-zinc-400">New all-time high alert</p>
+                  <p className="font-medium text-white">VFIDE +50%</p>
+                  <p className="text-sm text-zinc-400">High-momentum breakout alert</p>
                 </div>
               </div>
             </button>

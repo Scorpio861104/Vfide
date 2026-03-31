@@ -64,7 +64,8 @@ describe('Price alerts page pathways', () => {
 
     expect(screen.getByRole('heading', { name: /Create Price Alert/i })).toBeTruthy();
 
-    fireEvent.change(screen.getByPlaceholderText(/0\.0847/i), {
+    const targetInput = screen.getByRole('spinbutton');
+    fireEvent.change(targetInput, {
       target: { value: '0.11' },
     });
 

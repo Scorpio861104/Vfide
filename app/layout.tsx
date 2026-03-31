@@ -21,7 +21,6 @@ import { PieMenu } from "@/components/navigation/PieMenu";
 import { ServiceWorkerRegistration } from "@/components/core/ServiceWorkerRegistration";
 import { ZustandHydration } from "@/components/core/ZustandHydration";
 import { WebVitalsTracker } from "@/components/core/WebVitalsTracker";
-import { MockServiceWorker } from "@/components/dev/MockServiceWorker";
 
 // Fonts are self-hosted via @fontsource in globals.css
 
@@ -108,7 +107,6 @@ export default async function RootLayout({
                   <DevErrorConsole />
                   <DemoModeBanner />
                   <ServiceWorkerRegistration />
-                  <MockServiceWorker />
                   <ZustandHydration />
                   <WebVitalsTracker />
                   <NetworkSwitchOverlay />

@@ -157,7 +157,7 @@ function calculateBadgeProgress(
   
   // Default for other badges
   return {
-    progress: Math.random() * 30, // Placeholder
+    progress: 0,
     progressText: 'Keep participating to earn this badge',
   }
 }

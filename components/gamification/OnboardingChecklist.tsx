@@ -87,16 +87,15 @@ export default function OnboardingChecklist() {
   }, [isConnected]);
 
   const loadProgress = async () => {
-    // In production: Fetch from API
-    const mockItems: ChecklistItem[] = [
+    const checklistItems: ChecklistItem[] = [
       {
         id: '1',
         title: 'Connect Your Wallet',
         description: 'Link your wallet to get started',
         icon: <Wallet className="w-5 h-5" />,
-        completed: true,
+        completed: isConnected,
         reward: { xp: 50 },
-        action: { label: 'Connected', link: '#' },
+        action: { label: isConnected ? 'Connected' : 'Connect Wallet', link: '/dashboard' },
         order: 1
       },
       {
@@ -171,7 +170,7 @@ export default function OnboardingChecklist() {
       }
     ];
 
-    setItems(mockItems);
+    setItems(checklistItems);
   };
 
   const completedCount = items.filter(item => item.completed).length;

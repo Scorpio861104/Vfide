@@ -53,7 +53,7 @@ interface ActivityStats {
   byType: Record<Activity['type'], number>;
 }
 
-// ==================== MOCK DATA ====================
+// ==================== DATA HELPERS ====================
 
 const calculateActivityStats = (activities: Activity[]): ActivityStats => {
   const now = new Date();

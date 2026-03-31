@@ -59,7 +59,7 @@ interface CommunityStats {
   communityHealth: 'excellent' | 'good' | 'average' | 'needs_improvement';
 }
 
-// ==================== MOCK DATA ====================
+// ==================== PAGE DATA STATE ====================
 
 const socialMetrics: SocialMetric[] = [];
 const engagementData: EngagementData[] = [];

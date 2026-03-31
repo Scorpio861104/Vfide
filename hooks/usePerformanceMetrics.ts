@@ -27,10 +27,25 @@ export function usePerformanceMetrics(): UsePerformanceMetricsResult {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
+  const getConnectionDownlink = useCallback((): number => {
+    if (typeof navigator === 'undefined') return 0;
+    const nav = navigator as Navigator & { connection?: { downlink?: number } };
+    return typeof nav.connection?.downlink === 'number' ? nav.connection.downlink : 0;
+  }, []);
+
+  const getPerformanceEntries = useCallback((): PerformanceEntry[] => {
+    if (typeof performance === 'undefined' || typeof performance.getEntriesByType !== 'function') {
+      return [];
+    }
+    return performance.getEntriesByType('resource');
+  }, []);
+
   // Estimate CPU usage using available browser performance signals
   const getCPUMetric = useCallback(async (): Promise<PerformanceMetric> => {
-    // Mock CPU usage - in production, fetch from backend
-    const cpuValue = Math.random() * 100;
+    const entries = getPerformanceEntries();
+    const samples = entries.slice(-50).map((entry) => entry.duration).filter((v) => Number.isFinite(v));
+    const avgDuration = samples.length > 0 ? samples.reduce((acc, val) => acc + val, 0) / samples.length : 0;
+    const cpuValue = Math.max(0, Math.min(100, avgDuration / 20));
     const threshold = DEFAULT_PERFORMANCE_THRESHOLDS[MetricType.CPU];
 
     let status: 'healthy' | 'warning' | 'critical' = 'healthy';
@@ -46,11 +61,16 @@ export function usePerformanceMetrics(): UsePerformanceMetricsResult {
       threshold,
       status,
     };
-  }, []);
+  }, [getPerformanceEntries]);
 
   // Get memory usage
   const getMemoryMetric = useCallback(async (): Promise<PerformanceMetric> => {
-    const memValue = Math.random() * 100;
+    const perfWithMemory = performance as Performance & {
+      memory?: { usedJSHeapSize: number; jsHeapSizeLimit: number };
+    };
+    const used = perfWithMemory.memory?.usedJSHeapSize;
+    const limit = perfWithMemory.memory?.jsHeapSizeLimit;
+    const memValue = used && limit ? (used / limit) * 100 : 0;
     const threshold = DEFAULT_PERFORMANCE_THRESHOLDS[MetricType.MEMORY];
 
     let status: 'healthy' | 'warning' | 'critical' = 'healthy';
@@ -96,7 +116,7 @@ export function usePerformanceMetrics(): UsePerformanceMetricsResult {
 
   // Estimate network usage from observed request patterns
   const getNetworkMetric = useCallback(async (): Promise<PerformanceMetric> => {
-    const networkValue = Math.random() * 100;
+    const networkValue = getConnectionDownlink();
     const threshold = DEFAULT_PERFORMANCE_THRESHOLDS[MetricType.API_RESPONSE_TIME];
 
     let status: 'healthy' | 'warning' | 'critical' = 'healthy';
@@ -112,12 +132,14 @@ export function usePerformanceMetrics(): UsePerformanceMetricsResult {
       threshold,
       status,
     };
-  }, []);
+  }, [getConnectionDownlink]);
 
   // Get API response time
   const getApiResponseMetric = useCallback(
     async (): Promise<PerformanceMetric> => {
-      const apiTime = Math.random() * 2000; // 0-2000ms
+      const entries = getPerformanceEntries();
+      const samples = entries.slice(-25).map((entry) => entry.duration).filter((v) => Number.isFinite(v));
+      const apiTime = samples.length > 0 ? samples.reduce((acc, val) => acc + val, 0) / samples.length : 0;
       const threshold =
         DEFAULT_PERFORMANCE_THRESHOLDS[MetricType.API_RESPONSE_TIME];
 
@@ -135,12 +157,12 @@ export function usePerformanceMetrics(): UsePerformanceMetricsResult {
         status,
       };
     },
-    []
+    [getPerformanceEntries]
   );
 
   // Get error rate
   const getErrorRateMetric = useCallback(async (): Promise<PerformanceMetric> => {
-    const errorRate = Math.random() * 5; // 0-5%
+    const errorRate = 0;
     const threshold = DEFAULT_PERFORMANCE_THRESHOLDS[MetricType.ERROR_RATE];
 
     let status: 'healthy' | 'warning' | 'critical' = 'healthy';
@@ -182,11 +204,11 @@ export function usePerformanceMetrics(): UsePerformanceMetricsResult {
         timestamp: Date.now(),
         cpu: cpu.value,
         memory: memory.value,
-        disk: Math.random() * 100,
-        networkIn: Math.random() * 100,
-        networkOut: Math.random() * 100,
-        activeConnections: Math.floor(Math.random() * 1000),
-        requestsPerSecond: Math.floor(Math.random() * 500),
+        disk: 0,
+        networkIn: network.value,
+        networkOut: network.value,
+        activeConnections: 0,
+        requestsPerSecond: 0,
       };
 
       setSystemMetrics((prev) => [newSystemMetrics, ...prev.slice(0, 59)]);

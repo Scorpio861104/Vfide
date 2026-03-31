@@ -657,23 +657,20 @@ export function AddressInput({
     }
   };
 
-  // Mock ENS resolution
   const handleResolve = async () => {
-    if (!isENS) return;
+    if (!isENS || !onResolve) return;
     setIsResolving(true);
-    
-    // Simulate ENS resolution
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    
-    // Mock resolved address
-    const mockAddress = `0x${'1234'.repeat(10)}`;
-    onResolve?.(mockAddress);
-    setIsResolving(false);
+
+    try {
+      await Promise.resolve(onResolve(value));
+    } finally {
+      setIsResolving(false);
+    }
   };
 
   React.useEffect(() => {
     if (isENS) {
-      handleResolve();
+      void handleResolve();
     }
   }, [isENS]);
 
