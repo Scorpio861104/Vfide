@@ -167,6 +167,40 @@ describe("ProofScoreBurnRouter (F-26: only Seer updates score)", () => {
 
     assert.deepEqual([...reserved], [...expected]);
   });
+
+  it("caps low-value transfer fees at micro transaction ceiling", async () => {
+    const { ethers } = (await network.connect()) as any;
+    const [owner, user, sanctum, burn, ecosystem] = await ethers.getSigners();
+
+    const SeerStub = await ethers.getContractFactory("SeerScoreStub");
+    const seer = await SeerStub.deploy();
+    await seer.waitForDeployment();
+    await seer.setScore(owner.address, 4000); // worst-tier score -> max base fee before cap
+
+    const Router = await ethers.getContractFactory("ProofScoreBurnRouter");
+    const router = await Router.deploy(
+      await seer.getAddress(),
+      sanctum.address,
+      burn.address,
+      ecosystem.address,
+    );
+    await router.waitForDeployment();
+
+    await router.connect(owner).setToken(owner.address);
+    await router.connect(owner).setSustainability(0n, 0n, 5);
+
+    const smallAmount = ethers.parseEther("5");
+    const largeAmount = ethers.parseEther("50");
+
+    const small = await router.computeFees(owner.address, user.address, smallAmount);
+    const large = await router.computeFees(owner.address, user.address, largeAmount);
+
+    const smallTotalFee = small[0] + small[1] + small[2];
+    const largeTotalFee = large[0] + large[1] + large[2];
+
+    assert.equal(smallTotalFee, (smallAmount * 100n) / 10000n);
+    assert.ok(largeTotalFee > (largeAmount * 100n) / 10000n);
+  });
 });
 
 describe("VaultHub (F-20: SecurityHub timelock)", () => {

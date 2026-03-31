@@ -53,7 +53,7 @@ describe("FeeDistributor (audit guardrails)", () => {
       /SplitChangeNotReady|revert/
     );
 
-    await ethers.provider.send("evm_increaseTime", [48 * 60 * 60 + 1]);
+    await ethers.provider.send("evm_increaseTime", [72 * 60 * 60 + 1]);
     await ethers.provider.send("evm_mine", []);
 
     await distributor.connect(admin).executeDestinationChange();

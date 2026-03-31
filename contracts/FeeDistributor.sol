@@ -31,7 +31,7 @@ contract FeeDistributor is AccessControl, ReentrancyGuard, Pausable {
     uint256 public constant MIN_BURN_BPS = 2000;    // Burn floor: 20%
     uint256 public constant MAX_SINGLE_BPS = 5000;   // No channel > 50%
     uint256 public constant SPLIT_CHANGE_DELAY = 72 hours;
-    uint256 public constant DESTINATION_CHANGE_DELAY = 48 hours;
+    uint256 public constant DESTINATION_CHANGE_DELAY = 72 hours;
 
     struct FeeSplit {
         uint256 burnBps;

@@ -17,6 +17,10 @@ pragma solidity 0.8.30;
 
 import "./SharedInterfaces.sol";
 
+interface IVFIDETokenBurnRouterView {
+    function burnRouter() external view returns (address);
+}
+
 error MERCH_Zero();
 error MERCH_NotDAO();
 error MERCH_NotMerchant();
@@ -548,6 +552,8 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
             customerScore,
             PaymentChannel.IN_PERSON // Legacy function defaults to in-person
         );
+
+        _rewardPaymentParticipants(customer, msg.sender);
         
         _logEv(customer, "merchant_payment", amount, orderId);
     }
@@ -654,6 +660,8 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
             customerScore,
             PaymentChannel.IN_PERSON // Legacy internal function defaults to in-person
         );
+
+        _rewardPaymentParticipants(customer, merchant);
         
         _logEv(customer, "merchant_payment", amount, orderId);
     }
@@ -825,6 +833,8 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
             customerScore,
             channel
         );
+
+        _rewardPaymentParticipants(customer, merchant);
         
         _logEv(customer, "merchant_payment", amount, orderId);
     }
@@ -961,6 +971,51 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
         netAmount = amount - fee;
     }
 
+    /// @notice Reverse calculator to estimate gross amount needed for a target net merchant receipt.
+    function calculateGrossAmount(
+        address customer,
+        address merchant,
+        address token,
+        uint256 desiredNetAmount
+    ) public view returns (
+        uint256 grossAmount,
+        uint256 totalFee,
+        uint256 protocolFee,
+        uint256 networkFee
+    ) {
+        require(desiredNetAmount > 0, "MP: invalid desired amount");
+
+        grossAmount = desiredNetAmount;
+        for (uint256 i = 0; i < 6; i++) {
+            protocolFee = (grossAmount * protocolFeeBps) / 10000;
+            networkFee = _estimateNetworkFee(customer, merchant, token, grossAmount);
+            uint256 nextGross = desiredNetAmount + protocolFee + networkFee;
+            if (nextGross == grossAmount) {
+                break;
+            }
+            grossAmount = nextGross;
+        }
+
+        protocolFee = (grossAmount * protocolFeeBps) / 10000;
+        networkFee = _estimateNetworkFee(customer, merchant, token, grossAmount);
+        totalFee = protocolFee + networkFee;
+    }
+
+    /// @notice Preview checkout totals for UI display (item + network/protocol fees).
+    function previewCheckout(
+        address customer,
+        address merchant,
+        address token,
+        uint256 itemAmount
+    ) external view returns (
+        uint256 grossAmount,
+        uint256 totalFee,
+        uint256 protocolFee,
+        uint256 networkFee
+    ) {
+        return calculateGrossAmount(customer, merchant, token, itemAmount);
+    }
+
     function isTokenAccepted(address token) external view returns (bool) {
         return acceptedTokens[token];
     }
@@ -1039,6 +1094,39 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
             }
         }
         return false;
+    }
+
+    function _rewardPaymentParticipants(address customer, address merchant) internal {
+        if (address(seer) == address(0)) return;
+        try seer.reward(merchant, 3, "merchant_payment") {} catch {}
+        try seer.reward(customer, 1, "customer_payment") {} catch {}
+    }
+
+    function _estimateNetworkFee(address customer, address merchant, address token, uint256 amount) internal view returns (uint256) {
+        // Non-VFIDE tokens do not pass through VFIDE burn router fee mechanics.
+        if (!acceptedTokens[token]) return 0;
+
+        address router;
+        try IVFIDETokenBurnRouterView(token).burnRouter() returns (address r) {
+            router = r;
+        } catch {
+            return 0;
+        }
+
+        if (router == address(0)) return 0;
+
+        try IProofScoreBurnRouterToken(router).computeFees(customer, merchant, amount) returns (
+            uint256 burnAmount,
+            uint256 sanctumAmount,
+            uint256 ecosystemAmount,
+            address,
+            address,
+            address
+        ) {
+            return burnAmount + sanctumAmount + ecosystemAmount;
+        } catch {
+            return 0;
+        }
     }
 
     // ─────────────────────────── Internal Helpers

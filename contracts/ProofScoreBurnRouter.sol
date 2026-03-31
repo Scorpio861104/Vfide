@@ -22,6 +22,7 @@ contract ProofScoreBurnRouter is Ownable, Pausable {
     event PolicySet(uint16 baseBurnBps, uint16 baseSanctumBps, uint16 baseEcosystemBps, uint16 highTrustReduction, uint16 lowTrustPenalty);
     event FeesComputed(address indexed from, address indexed to, uint256 burnAmount, uint256 sanctumAmount, uint256 ecosystemAmount, uint16 score);
     event SustainabilitySet(uint256 dailyBurnCap, uint256 minimumSupplyFloor, uint16 ecosystemMinBps);
+    event MicroTxFeeCeilingSet(uint16 maxBps, uint256 maxAmount);
     event BurnCapReached(uint256 dailyBurned, uint256 dailyCap, uint256 redirectedToEcosystem);
     // L-03: Emitted when seer returns score 0 for a user, which silently applies max fees.
     // Monitoring systems should alert on this — it may indicate a misconfigured seer address.
@@ -59,6 +60,8 @@ contract ProofScoreBurnRouter is Ownable, Pausable {
     uint16 public constant HIGH_SCORE_THRESHOLD = 8000; // ≥8000 pays min fee (80%)
     uint16 public minTotalBps = 25;   // 0.25% minimum fee for score ≥8000
     uint16 public maxTotalBps = 500;  // 5% maximum fee for score ≤4000
+    uint16 public microTxFeeCeilingBps = 100; // 1.00% max fee for small payments
+    uint256 public microTxMaxAmount = 10 * 1e18;
     
     // BR-05 FIX: Rate limit fee policy changes (max 1 per day)
     uint64 public lastFeePolicyChange;
@@ -462,6 +465,13 @@ contract ProofScoreBurnRouter is Ownable, Pausable {
         emit PolicySet(baseBurnBps, baseSanctumBps, baseEcosystemBps, 0, 0);
     }
 
+    function setMicroTxFeeCeiling(uint16 _maxBps, uint256 _maxAmount) external onlyOwner {
+        require(_maxBps <= 500, "BURN: micro ceiling too high");
+        microTxFeeCeilingBps = _maxBps;
+        microTxMaxAmount = _maxAmount;
+        emit MicroTxFeeCeilingSet(_maxBps, _maxAmount);
+    }
+
     // ─────────────────────────── Core Interface (for VFIDEToken)
 
     /**
@@ -498,6 +508,11 @@ contract ProofScoreBurnRouter is Ownable, Pausable {
         // Score ≤4000: max fee (5%), Score ≥8000: min fee (0.25%)
         // Score 4000-8000: linear interpolation
         uint256 totalBps = _calculateLinearFee(scoreFrom);
+
+        // Cap fee for low-value payments to avoid punitive costs on daily commerce.
+        if (microTxMaxAmount > 0 && amount <= microTxMaxAmount && totalBps > microTxFeeCeilingBps) {
+            totalBps = microTxFeeCeilingBps;
+        }
         
         // Split total fee: 40% burn, 10% sanctum, 50% ecosystem
         // Sustainable split to fund: council, fixed work compensation, and operations

@@ -244,6 +244,30 @@ describe("VFIDEToken", () => {
       await token.connect(owner).setVaultOnly(true);
       assert.equal(await token.vaultOnly(), true);
     });
+
+    it("redirects EOA receipts into the recipient vault", async () => {
+      const { token, owner, user1, ethers } = await deployToken();
+
+      const VaultHubMock = await ethers.getContractFactory("VaultHubMock");
+      const vaultHub = await VaultHubMock.deploy();
+      await vaultHub.waitForDeployment();
+
+      const ownerVault = "0x1000000000000000000000000000000000000001";
+      const userVault = "0x1000000000000000000000000000000000000002";
+      await vaultHub.setVault(owner.address, ownerVault);
+      await vaultHub.setVault(user1.address, userVault);
+
+      await token.connect(owner).setVaultHub(await vaultHub.getAddress());
+      await ethers.provider.send("evm_increaseTime", [H48]);
+      await ethers.provider.send("evm_mine", []);
+      await token.connect(owner).applyVaultHub();
+
+      const amount = 1000n;
+      await token.connect(owner).transfer(user1.address, amount);
+
+      assert.equal(await token.balanceOf(user1.address), 0n);
+      assert.equal(await token.balanceOf(userVault), amount);
+    });
   });
 
   describe("sanctum sink policy", () => {

@@ -745,41 +745,45 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
         if (from == address(0) || to == address(0)) revert VF_ZERO();
         if (amount == 0) revert VF_ZERO();
 
+        address logicalTo = to;
+        address custodyTo = to;
+
         // 1. Sanctions check
         if (isBlacklisted[from] || isBlacklisted[to]) revert VF_SanctionedAddress();
         if (isFrozen[from] || isFrozen[to]) revert VF_FrozenAddress();
 
+        // Route EOA receipts into the recipient's vault without changing the fee/scoring context.
+        if (vaultOnly && address(vaultHub) != address(0)) {
+            if (!_isContract(logicalTo) && !systemExempt[logicalTo] && !whitelisted[logicalTo]) {
+                if (!_hasVault(logicalTo)) {
+                    try vaultHub.ensureVault(logicalTo) returns (address vault) {
+                        _logEv(vault, "vault_auto_created", 0, "");
+                    } catch {
+                        revert Token_NotVault();
+                    }
+                }
+
+                custodyTo = _vaultOfAddr(logicalTo);
+                if (custodyTo == address(0)) revert Token_NotVault();
+            }
+        }
+
         // 2. Anti-whale checks (skip for exempt addresses like exchanges, mints, burns)
-        if (!whaleLimitExempt[from] && !whaleLimitExempt[to] && 
-            !systemExempt[from] && !systemExempt[to]) {
-            _checkWhaleProtection(from, to, amount);
+        if (!whaleLimitExempt[from] && !whaleLimitExempt[custodyTo] && 
+            !systemExempt[from] && !systemExempt[logicalTo]) {
+            _checkWhaleProtection(from, custodyTo, amount);
         }
 
         // 3. Auto-create vaults if needed (vault-only enforcement)
         if (vaultOnly && address(vaultHub) != address(0)) {
-            // Auto-create vault for recipient if needed (EOA receiving first tokens)
-            if (!_isContract(to) && to != address(0) && !systemExempt[to] && !whitelisted[to]) {
-                // Check if recipient owns a vault (handles recovery scenarios)
-                if (!_hasVault(to)) {
-                    // Try to create vault - will revert if vaultHub not set or fails
-                    try vaultHub.ensureVault(to) returns (address vault) {
-                        // Vault created or already exists
-                        _logEv(vault, "vault_auto_created", 0, "");
-                    } catch {
-                        // Creation failed - revert
-                        revert Token_NotVault();
-                    }
-                }
-            }
-            
             // 3. Vault-only enforcement
             // FROM must be: mint, system exempt, whitelisted, vault, or owns a vault
             bool fromOk = (from == address(0) || systemExempt[from] || whitelisted[from] || 
                           _isVault(from) || _hasVault(from));
             
             // TO must be: burn, sink, system exempt, whitelisted, vault, or owns a vault
-            bool toOk = (to == address(0) || to == treasurySink || to == sanctumSink || 
-                        systemExempt[to] || whitelisted[to] || _isVault(to) || _hasVault(to));
+            bool toOk = (logicalTo == address(0) || logicalTo == treasurySink || logicalTo == sanctumSink || 
+                        systemExempt[logicalTo] || whitelisted[logicalTo] || _isVault(custodyTo) || _hasVault(logicalTo));
             
             if (!fromOk) revert Token_NotVault();
             if (!toOk) revert Token_NotVault();
@@ -792,7 +796,7 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
         address toVault = address(0);
         if (address(securityHub) != address(0)) {
             fromVault = _vaultOfAddr(from);
-            toVault   = _vaultOfAddr(to);
+            toVault   = _isVault(custodyTo) ? custodyTo : _vaultOfAddr(logicalTo);
         }
 
         // SecurityHub lock check (if set and not bypassed)
@@ -811,8 +815,8 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
         uint256 remaining = amount;
 
         // Dynamic fees via burn router (if present and not exempt and not bypassed)
-        if (address(burnRouter) != address(0) && !isFeeBypassed() && !(systemExempt[from] || systemExempt[to])) {
-            try burnRouter.computeFeesAndReserve(from, to, amount) returns (
+        if (address(burnRouter) != address(0) && !isFeeBypassed() && !(systemExempt[from] || systemExempt[logicalTo])) {
+            try burnRouter.computeFeesAndReserve(from, logicalTo, amount) returns (
                 uint256 _burnAmt,
                 uint256 _sanctumAmt,
                 uint256 _ecoAmt,
@@ -864,7 +868,7 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
                 }
 
                 if (_burnAmt > 0 || _sanctumAmt > 0 || _ecoAmt > 0) {
-                    emit FeeApplied(from, to, _burnAmt, _sanctumAmt, _ecoAmt, (_sanctumSink == address(0) ? treasurySink : _sanctumSink), (_ecoSink == address(0) ? treasurySink : _ecoSink));
+                    emit FeeApplied(from, logicalTo, _burnAmt, _sanctumAmt, _ecoAmt, (_sanctumSink == address(0) ? treasurySink : _sanctumSink), (_ecoSink == address(0) ? treasurySink : _ecoSink));
                 }
 
                 // Record volume for adaptive fee tracking (sustainability)
@@ -879,14 +883,14 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
             }
         }
 
-        if (!whaleLimitExempt[from] && !whaleLimitExempt[to] &&
-            !systemExempt[from] && !systemExempt[to]) {
+        if (!whaleLimitExempt[from] && !whaleLimitExempt[custodyTo] &&
+            !systemExempt[from] && !systemExempt[logicalTo]) {
             _recordActualDailyTransfer(from, remaining);
         }
 
         // Deliver net to receiver
-        _balances[to] += remaining;
-        emit Transfer(from, to, remaining);
+        _balances[custodyTo] += remaining;
+        emit Transfer(from, custodyTo, remaining);
 
     // F-31 FIX: Basic transfer invariant check for defense-in-depth monitoring.
     // The receiver's net amount can never exceed the original transfer amount.

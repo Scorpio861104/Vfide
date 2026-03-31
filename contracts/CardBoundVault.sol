@@ -114,6 +114,7 @@ contract CardBoundVault is ReentrancyGuard {
 
     event PauseSet(bool paused, address indexed by);
     event SpendLimitsSet(uint256 maxPerTransfer, uint256 dailyTransferLimit);
+    event VaultApprove(address indexed spender, uint256 amount);
     event NativeRescue(address indexed to, uint256 amount);
 
     error CBV_NotAdmin();
@@ -283,6 +284,13 @@ contract CardBoundVault is ReentrancyGuard {
         maxPerTransfer = _maxPerTransfer;
         dailyTransferLimit = _dailyTransferLimit;
         emit SpendLimitsSet(_maxPerTransfer, _dailyTransferLimit);
+    }
+
+    /// @notice Approve a spender to pull VFIDE from this vault (e.g., MerchantPortal).
+    function approveVFIDE(address spender, uint256 amount) external onlyAdmin notLocked {
+        require(spender != address(0), "CBV: zero spender");
+        IERC20(vfideToken).approve(spender, amount);
+        emit VaultApprove(spender, amount);
     }
 
     function pause() external {
