@@ -78,7 +78,7 @@ if (process.env.WS_TLS_CERT && process.env.WS_TLS_KEY) {
 }
 
 const wss = new WebSocketServer({
-  server,
+  noServer: true,
   maxPayload: MAX_PAYLOAD_BYTES,
   // Disable per-message deflate to avoid zip-bomb style attacks
   perMessageDeflate: false,
@@ -351,6 +351,10 @@ function unsubscribeClientFromTopic(client: AuthenticatedSocket, topic: string):
 }
 
 function unsubscribeClientFromAllTopics(client: AuthenticatedSocket): void {
+  if (!client.subscribedTopics) {
+    return;
+  }
+
   for (const topic of client.subscribedTopics) {
     unsubscribeClientFromTopic(client, topic);
   }
@@ -417,6 +421,23 @@ server.on('upgrade', (req: http.IncomingMessage, socket, head) => {
 
 wss.on('connection', (ws: WebSocket, _req: http.IncomingMessage) => {
   const client = ws as AuthenticatedSocket;
+  // Defensive defaults in case upstream wiring changes.
+  if (!client.sessionId) {
+    client.sessionId = `session-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  }
+  if (!client.remoteIp) {
+    client.remoteIp = 'unknown';
+  }
+  if (!client.subscribedTopics) {
+    client.subscribedTopics = new Set<string>();
+  }
+  if (!client.connectedAt) {
+    client.connectedAt = Date.now();
+  }
+  if (typeof client.isAuthenticated !== 'boolean') {
+    client.isAuthenticated = false;
+  }
+
   clients.set(client.sessionId, client);
 
   console.info(`[ws] Connected: ${getClientLabel(client)} (session: ${client.sessionId})`);

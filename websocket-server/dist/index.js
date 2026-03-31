@@ -99,7 +99,7 @@ else {
         'Set WS_TLS_CERT and WS_TLS_KEY for direct TLS.');
 }
 const wss = new ws_1.WebSocketServer({
-    server,
+    noServer: true,
     maxPayload: MAX_PAYLOAD_BYTES,
     // Disable per-message deflate to avoid zip-bomb style attacks
     perMessageDeflate: false,
@@ -305,6 +305,9 @@ function unsubscribeClientFromTopic(client, topic) {
     }
 }
 function unsubscribeClientFromAllTopics(client) {
+    if (!client.subscribedTopics) {
+        return;
+    }
     for (const topic of client.subscribedTopics) {
         unsubscribeClientFromTopic(client, topic);
     }
@@ -362,6 +365,22 @@ server.on('upgrade', (req, socket, head) => {
 // ─── Connection Handler ─────────────────────────────────────────────────────
 wss.on('connection', (ws, _req) => {
     const client = ws;
+    // Defensive defaults in case upstream wiring changes.
+    if (!client.sessionId) {
+        client.sessionId = `session-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    }
+    if (!client.remoteIp) {
+        client.remoteIp = 'unknown';
+    }
+    if (!client.subscribedTopics) {
+        client.subscribedTopics = new Set();
+    }
+    if (!client.connectedAt) {
+        client.connectedAt = Date.now();
+    }
+    if (typeof client.isAuthenticated !== 'boolean') {
+        client.isAuthenticated = false;
+    }
     clients.set(client.sessionId, client);
     console.info(`[ws] Connected: ${getClientLabel(client)} (session: ${client.sessionId})`);
     if (!client.isAuthenticated) {
