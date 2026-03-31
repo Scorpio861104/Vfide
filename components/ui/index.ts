@@ -95,6 +95,9 @@ export {
 // Hexagon Pattern Components
 export { HexagonPattern, FloatingHexagon, HexagonShield } from './HexagonPattern';
 
+// VFIDE Mark Components
+export { VFIDEMark } from './VFIDEMark';
+
 // Trust Ring Components
 export { TrustRing, TrustRings, TrustRipple } from './TrustRing';
 

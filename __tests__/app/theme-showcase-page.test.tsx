@@ -13,7 +13,7 @@ jest.mock('@/components/ui', () => {
   const Stub = ({ children }: { children?: React.ReactNode }) => <div>{children || 'ui-stub'}</div>;
   return {
     FloatingHexagon: () => <div>FloatingHexagon</div>,
-    HexagonShield: () => <div>HexagonShield</div>,
+    VFIDEMark: () => <div>VFIDEMark</div>,
     TrustRing: () => <div>TrustRing</div>,
     TrustRings: () => <div>TrustRings</div>,
     TrustBadge: () => <div>TrustBadge</div>,

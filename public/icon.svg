@@ -1,8 +1,54 @@
-<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <!-- Shield background -->
-  <path d="M16 2L28 6V14C28 22 22 28 16 30C10 28 4 22 4 14V6L16 2Z" fill="#1A1A1D" stroke="#00F0FF" stroke-width="1.5"/>
-  <!-- V letterform -->
-  <path d="M10 10L16 22L22 10" stroke="#F5F3E8" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-  <!-- Accent dot -->
-  <circle cx="16" cy="24" r="1.2" fill="#00F0FF"/>
+<svg width="32" height="32" viewBox="0 0 400 440" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="fav-armL" x1="0" y1="0" x2="0.35" y2="1">
+      <stop offset="0%" stop-color="#1c3040"/>
+      <stop offset="100%" stop-color="#0a1218"/>
+    </linearGradient>
+    <linearGradient id="fav-armR" x1="1" y1="0" x2="0.65" y2="1">
+      <stop offset="0%" stop-color="#243848"/>
+      <stop offset="100%" stop-color="#0e1a22"/>
+    </linearGradient>
+    <linearGradient id="fav-barTop" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#00e8f0" stop-opacity="0"/>
+      <stop offset="15%" stop-color="#00e8f0" stop-opacity="0.7"/>
+      <stop offset="50%" stop-color="#00e8f0"/>
+      <stop offset="85%" stop-color="#00e8f0" stop-opacity="0.7"/>
+      <stop offset="100%" stop-color="#00e8f0" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="fav-barMid" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#00e8f0" stop-opacity="0"/>
+      <stop offset="20%" stop-color="#00e8f0" stop-opacity="0.35"/>
+      <stop offset="50%" stop-color="#00e8f0" stop-opacity="0.5"/>
+      <stop offset="80%" stop-color="#00e8f0" stop-opacity="0.35"/>
+      <stop offset="100%" stop-color="#00e8f0" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="fav-rise" x1="0.5" y1="1" x2="0.5" y2="0">
+      <stop offset="0%" stop-color="#00e8f0"/>
+      <stop offset="40%" stop-color="#00c0d0" stop-opacity="0.5"/>
+      <stop offset="100%" stop-color="#00e8f0" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Left arm -->
+  <path d="M52 52 L96 52 L96 68 L82 68 L184 320 L172 320Z" fill="url(#fav-armL)"/>
+
+  <!-- Right arm -->
+  <path d="M348 52 L304 52 L304 68 L318 68 L216 320 L228 320Z" fill="url(#fav-armR)"/>
+
+  <!-- Inner depth strokes (simplified) -->
+  <path d="M102 100 L190 312" stroke="url(#fav-armL)" stroke-width="14" stroke-linecap="butt" opacity="0.6"/>
+  <path d="M298 100 L210 312" stroke="url(#fav-armR)" stroke-width="14" stroke-linecap="butt" opacity="0.6"/>
+
+  <!-- F top bar -->
+  <rect x="96" y="52" width="208" height="16" fill="url(#fav-barTop)"/>
+
+  <!-- F crossbar -->
+  <rect x="116" y="130" width="168" height="10" fill="url(#fav-barMid)"/>
+
+  <!-- Vertex chevron + light -->
+  <path d="M184 320 L200 360 L216 320" fill="none" stroke="url(#fav-rise)" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>
+
+  <!-- Focal point -->
+  <circle cx="200" cy="362" r="5.5" fill="#00e8f0"/>
+  <circle cx="200" cy="362" r="10" fill="#00e8f0" opacity="0.12"/>
 </svg>

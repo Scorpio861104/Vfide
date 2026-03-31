@@ -9,7 +9,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { 
   FloatingHexagon, 
-  HexagonShield,
+  VFIDEMark,
   TrustRing,
   TrustRings,
   TrustBadge,
@@ -74,17 +74,17 @@ export default function ThemeShowcasePage() {
         </div>
       </Section>
 
-      {/* Hexagon Shield */}
+      {/* VFIDE Mark */}
       <Section>
-        <h2 className="text-2xl font-bold mb-8 text-center">Hexagon Shield - Brand Identity</h2>
+        <h2 className="text-2xl font-bold mb-8 text-center">VFIDE Mark - Brand Identity</h2>
         <div className="flex justify-center gap-12 flex-wrap">
           <div className="text-center">
-            <HexagonShield size={100} />
-            <p className="text-zinc-400 mt-4">Animated Shield</p>
+            <VFIDEMark size={100} />
+            <p className="text-zinc-400 mt-4">Animated Mark</p>
           </div>
           <div className="text-center">
-            <HexagonShield size={100} glowing={false} />
-            <p className="text-zinc-400 mt-4">Static Shield</p>
+            <VFIDEMark size={100} glowing={false} />
+            <p className="text-zinc-400 mt-4">Static Mark</p>
           </div>
           <div className="text-center relative">
             <FloatingHexagon size={60} color="accent" className="top-0 left-0" />
