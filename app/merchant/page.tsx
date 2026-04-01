@@ -5,6 +5,7 @@ import { MerchantDashboard } from '@/components/merchant/MerchantDashboard';
 import { PaymentInterface } from '@/components/merchant/PaymentInterface';
 import { PaymentQR } from '@/components/merchant/PaymentQR';
 import { ErrorBoundary } from '@/components/error/ErrorBoundary';
+import { MerchantStructuredData, PageBreadcrumbSchema } from '@/components/seo/StructuredData';
 import { motion } from 'framer-motion';
 import {
     ArrowRight,
@@ -271,7 +272,18 @@ function Step({ number, title, description }: { number: number; title: string; d
 export default function MerchantPage() {
   return (
     <>
-      
+      <MerchantStructuredData
+        name="VFIDE Merchant Portal"
+        description="Accept VFIDE payments with zero protocol processing fees, instant settlement, trust-aware risk controls, and merchant operations tooling."
+        url="https://vfide.io/merchant"
+      />
+      <PageBreadcrumbSchema
+        items={[
+          { name: 'Home', url: 'https://vfide.io/' },
+          { name: 'Merchant Portal', url: 'https://vfide.io/merchant' },
+        ]}
+      />
+
       {/* Background effects */}
       <div className="fixed inset-0 -z-10">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(124,58,237,0.15),transparent_50%)]" />

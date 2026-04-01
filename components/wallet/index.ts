@@ -18,8 +18,8 @@
 export { EnhancedWalletConnect } from './EnhancedWalletConnect';
 export { EnhancedNetworkBanner, NetworkSwitchWidget } from './EnhancedNetworkBanner';
 
-export { PremiumWalletConnect, PremiumWalletConnectCompact } from './PremiumWalletConnect';
-export { UltimateWalletConnect, UltimateWalletConnectCompact } from './UltimateWalletConnect';
+// Legacy/experimental wallet variants are intentionally not re-exported from
+// the public barrel to keep consumers on the actively maintained connection UX.
 
 export { WalletCapabilities } from './WalletCapabilities';
 export type { WalletCapabilitiesProps } from './WalletCapabilities';
@@ -35,9 +35,6 @@ export type { GaslessBannerProps, GaslessStatusProps, GaslessToggleProps } from 
 
 export { SessionKeyManager } from './SessionKeyManager';
 export type { SessionKeyManagerProps } from './SessionKeyManager';
-
-export { UnifiedWalletModal } from './UnifiedWalletModal';
-export type { UnifiedWalletModalProps } from './UnifiedWalletModal';
 
 // ==================== HOOKS (re-exported for convenience) ====================
 

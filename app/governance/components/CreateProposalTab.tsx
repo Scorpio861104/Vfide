@@ -111,7 +111,8 @@ export function CreateProposalTab({
 
               {!isConnected && (
                 <div className="bg-amber-400/20 border border-amber-400 rounded-lg p-3 mb-4 text-sm text-amber-400">
-                  ⚠️ Connect your wallet to propose with your identity
+                  <p className="font-semibold">⚠️ Connect Wallet</p>
+                  <p className="mt-1">You need to connect your wallet to create proposals.</p>
                 </div>
               )}
 

@@ -8,23 +8,58 @@
 // Default price for display
 export const DEFAULT_VFIDE_PRICE = 0.05;
 
+const CURRENCY_LOCALES: Record<string, string> = {
+  USD: 'en-US',
+  EUR: 'de-DE',
+  GBP: 'en-GB',
+  GHS: 'en-GH',
+  NGN: 'en-NG',
+  KES: 'en-KE',
+  INR: 'en-IN',
+  ZAR: 'en-ZA',
+  BRL: 'pt-BR',
+};
+
+const ESTIMATED_USD_EXCHANGE_RATES: Record<string, number> = {
+  USD: 1,
+  EUR: 0.92,
+  GBP: 0.79,
+  GHS: 15.4,
+  NGN: 1540,
+  KES: 129,
+  INR: 83,
+  ZAR: 18.5,
+  BRL: 5.7,
+};
+
 /**
  * Format a numeric price for display.
  * Defaults to USD with 2 decimal places.
  */
 export function formatPrice(value: number, currency: string = 'USD'): string {
   const safeValue = Number.isFinite(value) ? value : 0;
+  const normalizedCurrency = currency.toUpperCase();
 
-  if (currency === 'USD') {
-    return new Intl.NumberFormat('en-US', {
+  try {
+    return new Intl.NumberFormat(CURRENCY_LOCALES[normalizedCurrency] || 'en-US', {
       style: 'currency',
-      currency: 'USD',
+      currency: normalizedCurrency,
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     }).format(safeValue);
+  } catch {
+    return `${safeValue.toFixed(2)} ${normalizedCurrency}`.trim();
   }
+}
 
-  return `${safeValue.toFixed(2)} ${currency}`.trim();
+export function convertUsdToCurrency(amountUsd: number, currency: string = 'USD'): number {
+  const normalizedCurrency = currency.toUpperCase();
+  const rate = ESTIMATED_USD_EXCHANGE_RATES[normalizedCurrency] ?? 1;
+  return amountUsd * rate;
+}
+
+export function formatConvertedUsd(amountUsd: number, currency: string = 'USD'): string {
+  return formatPrice(convertUsdToCurrency(amountUsd, currency), currency);
 }
 
 /**

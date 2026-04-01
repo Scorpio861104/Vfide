@@ -13,6 +13,15 @@ import { useCopyWithId } from "@/lib/hooks/useCopyToClipboard";
 import { toast } from "@/lib/toast";
 import { CouncilElectionABI } from "@/lib/abis";
 import { CONTRACT_ADDRESSES } from "@/lib/contracts";
+import { OverviewTab as GovernanceOverviewTab } from "./components/OverviewTab";
+import { ProposalsTab as GovernanceProposalsTab } from "./components/ProposalsTab";
+import { CreateProposalTab as GovernanceCreateProposalTab } from "./components/CreateProposalTab";
+import { CouncilTab as GovernanceCouncilTab } from "./components/CouncilTab";
+import { SuggestionsTab as GovernanceSuggestionsTab } from "./components/SuggestionsTab";
+import { DiscussionsTab as GovernanceDiscussionsTab } from "./components/DiscussionsTab";
+import { MembersTab as GovernanceMembersTab } from "./components/MembersTab";
+import { HistoryTab as GovernanceHistoryTab } from "./components/HistoryTab";
+import { StatsTab as GovernanceStatsTab } from "./components/StatsTab";
 
 // Contract address from centralized registry
 const DAO_ADDRESS = CONTRACT_ADDRESSES.DAO;
@@ -334,15 +343,38 @@ export default function GovernancePage() {
           </div>
         </section>
 
-        {activeTab === 'overview' && <OverviewTab score={score} proposalCount={proposalCount} />}
-        {activeTab === 'proposals' && <ProposalsTab searchQuery={searchQuery} onVote={handleVote} />}
-        {activeTab === 'create' && <CreateProposalTab />}
-        {activeTab === 'council' && <CouncilTab />}
-        {activeTab === 'suggestions' && <SuggestionsTab />}
-        {activeTab === 'discussions' && <DiscussionsTab searchQuery={searchQuery} />}
-        {activeTab === 'members' && <MembersTab searchQuery={searchQuery} />}
-        {activeTab === 'history' && <HistoryTab searchQuery={searchQuery} />}
-        {activeTab === 'stats' && <StatsTab />}
+        {activeTab === 'overview' && <GovernanceOverviewTab score={score} proposalCount={proposalCount} />}
+        {activeTab === 'proposals' && <GovernanceProposalsTab searchQuery={searchQuery} onVote={(proposalId, support) => handleVote(Number(proposalId), support)} />}
+        {activeTab === 'create' && <GovernanceCreateProposalTab DAO_DEPLOYED={DAO_ADDRESS !== ZERO_ADDRESS} canPropose={Boolean(score && score >= 5400)} isCreating={lastAction === 'creating-proposal'} onPropose={(targets, values, calldatas, description) => handlePropose(0, targets[0] ?? DAO_ADDRESS, values[0] ?? 0n, calldatas[0] ?? '0x', description)} />}
+        {activeTab === 'council' && (
+          <GovernanceCouncilTab
+            currentTerm="Q2 2026"
+            terms={["Q1 2026", "Q2 2026"]}
+            councilMembers={[
+              { name: 'Amara Okafor', address: '0x742d...bEb', role: 'Lead Steward', tenure: '8 months', attendance: 96, votesCast: 184 },
+              { name: 'Luis Ferreira', address: '0x1a2b...3c4d', role: 'Treasury Steward', tenure: '6 months', attendance: 92, votesCast: 171 },
+              { name: 'Maya Rahman', address: '0x5e6f...7g8h', role: 'Security Steward', tenure: '5 months', attendance: 94, votesCast: 163 },
+            ]}
+            epochData={[
+              { epoch: 12, participation: 87, avgDecisionTime: '4.2h', emergencyActions: 1 },
+            ]}
+            electionEvents={[
+              { title: 'Candidate registration closes', date: 'April 14, 2026', type: 'Deadline', link: '/governance' },
+              { title: 'Council town hall', date: 'April 18, 2026', type: 'Community', link: '/governance' },
+              { title: 'Voting opens', date: 'April 22, 2026', type: 'Election', link: '/governance' },
+            ]}
+            electionStats={[
+              { label: 'Registered voters', value: '247', change: '+12 this week' },
+              { label: 'Avg turnout', value: '73%', change: '+4% vs last term' },
+              { label: 'Open nominations', value: '9', change: '3 new today' },
+            ]}
+          />
+        )}
+        {activeTab === 'suggestions' && <GovernanceSuggestionsTab />}
+        {activeTab === 'discussions' && <GovernanceDiscussionsTab searchQuery={searchQuery} />}
+        {activeTab === 'members' && <GovernanceMembersTab searchQuery={searchQuery} />}
+        {activeTab === 'history' && <GovernanceHistoryTab searchQuery={searchQuery} />}
+        {activeTab === 'stats' && <GovernanceStatsTab />}
       </div>
 
       <Footer />

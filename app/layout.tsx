@@ -18,6 +18,7 @@ import { AccessibilityProvider } from "@/components/accessibility/AccessibilityP
 import { AchievementToastContainer } from "@/components/gamification/AchievementToast";
 import { PieMenu } from "@/components/navigation/PieMenu";
 import { OfflineIndicator } from "@/components/connectivity/OfflineIndicator";
+import { StructuredData } from "@/components/seo/StructuredData";
 import { EmbeddedWalletProvider } from "@/lib/embeddedWallet/embeddedWalletService";
 import { PreferencesProvider } from "@/lib/preferences/userPreferences";
 // Core integrations from PR #56
@@ -90,6 +91,7 @@ export default async function RootLayout({
         {nonce && <meta property="csp-nonce" content={nonce} />}
       </head>
       <body className="font-sans antialiased bg-zinc-900">
+        <StructuredData />
         <a
           href="#main-content"
           className="sr-only focus:not-sr-only focus:absolute focus:left-3 focus:top-3 focus:z-50 focus:rounded focus:bg-white focus:px-3 focus:py-2 focus:text-black"

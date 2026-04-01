@@ -125,6 +125,24 @@ interface FAQItem {
   answer: string;
 }
 
+interface MerchantStructuredDataProps {
+  name: string;
+  description: string;
+  url: string;
+  serviceArea?: string;
+  category?: string;
+}
+
+interface ProductStructuredDataProps {
+  name: string;
+  description: string;
+  url: string;
+  price?: number;
+  priceCurrency?: string;
+  availability?: 'https://schema.org/InStock' | 'https://schema.org/OutOfStock' | 'https://schema.org/PreOrder';
+  brand?: string;
+}
+
 export function FAQSchema({ faqs }: { faqs: FAQItem[] }) {
   const faqSchema = {
     '@context': 'https://schema.org',
@@ -145,6 +163,77 @@ export function FAQSchema({ faqs }: { faqs: FAQItem[] }) {
       type="application/ld+json"
       dangerouslySetInnerHTML={{
         __html: safeJsonLd(faqSchema),
+      }}
+    />
+  );
+}
+
+export function MerchantStructuredData({
+  name,
+  description,
+  url,
+  serviceArea = 'Global',
+  category = 'Financial Technology',
+}: MerchantStructuredDataProps) {
+  const merchantSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'Service',
+    name,
+    description,
+    url,
+    areaServed: serviceArea,
+    category,
+    provider: {
+      '@type': 'Organization',
+      name: 'VFIDE',
+      url: 'https://vfide.io',
+    },
+  };
+
+  return (
+    <Script
+      id="merchant-service-schema"
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{
+        __html: safeJsonLd(merchantSchema),
+      }}
+    />
+  );
+}
+
+export function ProductStructuredData({
+  name,
+  description,
+  url,
+  price,
+  priceCurrency = 'USD',
+  availability = 'https://schema.org/InStock',
+  brand = 'VFIDE',
+}: ProductStructuredDataProps) {
+  const productSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    name,
+    description,
+    brand: {
+      '@type': 'Brand',
+      name: brand,
+    },
+    offers: {
+      '@type': 'Offer',
+      url,
+      price: typeof price === 'number' ? price.toFixed(2) : undefined,
+      priceCurrency,
+      availability,
+    },
+  };
+
+  return (
+    <Script
+      id="product-schema"
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{
+        __html: safeJsonLd(productSchema),
       }}
     />
   );

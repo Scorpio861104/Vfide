@@ -21,6 +21,8 @@ import {
 import { formatEther, formatUnits, type Address, type Hex } from 'viem';
 import { useAccount, useBalance, useEstimateFeesPerGas } from 'wagmi';
 import { useChainId } from 'wagmi';
+import { useOptionalPreferences } from '@/lib/preferences/userPreferences';
+import { formatConvertedUsd } from '@/lib/price-utils';
 
 // ==================== TYPES ====================
 
@@ -332,7 +334,9 @@ const GasEstimate: React.FC<GasEstimateProps> = ({
               <p className="text-gray-200 font-medium">
                 {estimatedGasEth.toFixed(6)} ETH
               </p>
-              <p className="text-xs text-gray-500">{estimatedGasUsd}</p>
+              <p className="text-xs text-gray-500">
+                {estimatedGasUsd}
+              </p>
             </div>
           </div>
         </div>
@@ -357,6 +361,7 @@ export const TransactionPreview: React.FC<TransactionPreviewProps> = ({
   const [intentConfirmed, setIntentConfirmed] = useState(false);
   const { address } = useAccount();
   const chainId = useChainId();
+  const { preferences } = useOptionalPreferences();
   const { data: balance } = useBalance({ address });
   const { data: feeData } = useEstimateFeesPerGas();
   
@@ -370,6 +375,7 @@ export const TransactionPreview: React.FC<TransactionPreviewProps> = ({
 
   const totalCost = (transaction.value || BigInt(0)) + gasLimit * maxFeePerGas;
   const totalCostEth = parseFloat(formatEther(totalCost));
+  const preferredCurrency = (preferences.preferredCurrency || 'USD').toUpperCase();
 
   const hasBlockingWarnings = warnings.some(w => w.level === 'critical');
   const requiresManualIntentConfirmation = warnings.some((w) => w.level === 'high' || w.level === 'critical');
@@ -463,6 +469,7 @@ export const TransactionPreview: React.FC<TransactionPreviewProps> = ({
             </p>
             <p className="text-sm text-gray-500">
               ≈ {formatUSD(parseFloat(formatEther(transaction.value)), 3000)}
+              {preferredCurrency !== 'USD' ? ` / ${formatConvertedUsd(parseFloat(formatEther(transaction.value)) * 3000, preferredCurrency)}` : ''}
             </p>
           </div>
         )}

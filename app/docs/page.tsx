@@ -10,6 +10,7 @@ import {
   Search, Clock
 } from "lucide-react";
 import LessonModal, { LessonContent } from "@/components/modals/LessonModal";
+import { FAQSchema, PageBreadcrumbSchema } from "@/components/seo/StructuredData";
 import { lessonContentData } from "@/data/lessonContent";
 
 type DocTab = "overview" | "learn" | "faq" | "security";
@@ -218,7 +219,21 @@ export default function DocsPage() {
 
   return (
     <>
-      
+      <PageBreadcrumbSchema
+        items={[
+          { name: 'Home', url: 'https://vfide.io/' },
+          { name: 'Documentation', url: 'https://vfide.io/docs' },
+        ]}
+      />
+      <FAQSchema
+        faqs={faqs.flatMap((category) =>
+          category.questions.map((item) => ({
+            question: item.q,
+            answer: item.a,
+          }))
+        )}
+      />
+
       <main className="min-h-screen bg-zinc-900 pt-20">
         {/* Header */}
         <section className="py-8 sm:py-12 bg-gradient-to-b from-zinc-800 to-zinc-900 border-b border-zinc-700">
