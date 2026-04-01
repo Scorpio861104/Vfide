@@ -6,8 +6,13 @@ import {
 import { PostgresWebhookReplayTelemetry } from '@/lib/security/webhookReplayTelemetry';
 import { getRequestCorrelationContext } from '@/lib/security/requestContext';
 import { withRateLimit } from '@/lib/auth/rateLimit';
+import { z } from 'zod4';
 
 const WEBHOOK_SECRET_ENV = 'SECURITY_ALERT_WEBHOOK_SECRET';
+const webhookRequestSchema = z.object({
+  signatureHeader: z.string().trim().min(1),
+  timestampHeader: z.string().trim().regex(/^\d+$/),
+});
 
 export async function POST(request: NextRequest) {
   const rateLimitResponse = await withRateLimit(request, 'write');
@@ -19,8 +24,15 @@ export async function POST(request: NextRequest) {
   }
 
   const body = await request.text();
-  const signatureHeader = request.headers.get('x-vfide-alert-signature');
-  const timestampHeader = request.headers.get('x-vfide-alert-timestamp');
+  const parsedHeaders = webhookRequestSchema.safeParse({
+    signatureHeader: request.headers.get('x-vfide-alert-signature'),
+    timestampHeader: request.headers.get('x-vfide-alert-timestamp'),
+  });
+  if (!parsedHeaders.success) {
+    return NextResponse.json({ error: 'Invalid webhook headers' }, { status: 400 });
+  }
+
+  const { signatureHeader, timestampHeader } = parsedHeaders.data;
   const correlation = getRequestCorrelationContext(request.headers);
 
   const replayStore = createUpstashWebhookReplayStoreFromEnv();

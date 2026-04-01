@@ -3,8 +3,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { logger } from '@/lib/logger';
+import { z } from 'zod4';
 
 const ADDRESS_LIKE_REGEX = /^0x[a-fA-F0-9]{3,40}$/;
+const attachmentParamsSchema = z.object({
+  id: z.string().trim().regex(/^\d+$/),
+});
 
 function parsePositiveInteger(value: string): number | null {
   const trimmed = value.trim();
@@ -30,16 +34,15 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
   try {
     const resolvedParams = await params;
-    const idParam = resolvedParams?.id;
-
-    if (!idParam || typeof idParam !== 'string') {
+    const parsedParams = attachmentParamsSchema.safeParse(resolvedParams ?? {});
+    if (!parsedParams.success) {
       return NextResponse.json(
         { error: 'Invalid id parameter' },
         { status: 400 }
       );
     }
 
-    const id = parsePositiveInteger(idParam);
+    const id = parsePositiveInteger(parsedParams.data.id);
     if (!id) {
       return NextResponse.json({ error: 'Invalid id parameter' }, { status: 400 });
     }
@@ -84,16 +87,15 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
 
   try {
     const resolvedParams = await params;
-    const idParam = resolvedParams?.id;
-
-    if (!idParam || typeof idParam !== 'string') {
+    const parsedParams = attachmentParamsSchema.safeParse(resolvedParams ?? {});
+    if (!parsedParams.success) {
       return NextResponse.json(
         { error: 'Invalid id parameter' },
         { status: 400 }
       );
     }
 
-    const id = parsePositiveInteger(idParam);
+    const id = parsePositiveInteger(parsedParams.data.id);
     if (!id) {
       return NextResponse.json({ error: 'Invalid id parameter' }, { status: 400 });
     }

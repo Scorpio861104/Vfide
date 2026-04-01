@@ -3,17 +3,22 @@ import { query } from '@/lib/db';
 import { requireAdmin } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { logger } from '@/lib/logger';
+import { z } from 'zod4';
 
 const DEFAULT_LOOKBACK_DAYS = 30;
 const MAX_LOOKBACK_DAYS = 180;
-
-function parseDays(raw: string | null): number | null {
-  if (raw === null) return DEFAULT_LOOKBACK_DAYS;
-  if (!/^\d+$/.test(raw.trim())) return null;
-  const parsed = Number.parseInt(raw, 10);
-  if (!Number.isFinite(parsed) || parsed < 1) return null;
-  return Math.min(parsed, MAX_LOOKBACK_DAYS);
-}
+const rollupParamsSchema = z.object({
+  days: z.preprocess(
+    (value) => {
+      if (value === null || value === undefined) return undefined;
+      if (typeof value !== 'string') return value;
+      const trimmed = value.trim();
+      if (trimmed.length === 0 || !/^\d+$/.test(trimmed)) return NaN;
+      return Number.parseInt(trimmed, 10);
+    },
+    z.number().int().min(1).max(MAX_LOOKBACK_DAYS).optional()
+  ),
+});
 
 export async function POST(request: NextRequest) {
   const rateLimit = await withRateLimit(request, 'write');
@@ -24,14 +29,16 @@ export async function POST(request: NextRequest) {
 
   try {
     const { searchParams } = new URL(request.url);
-    const lookbackDays = parseDays(searchParams.get('days'));
-
-    if (lookbackDays === null) {
+    const parsedParams = rollupParamsSchema.safeParse({
+      days: searchParams.get('days'),
+    });
+    if (!parsedParams.success) {
       return NextResponse.json(
         { error: 'Invalid days parameter. Must be a positive integer.' },
         { status: 400 }
       );
     }
+    const lookbackDays = parsedParams.data.days ?? DEFAULT_LOOKBACK_DAYS;
 
     const result = await query<{
       start_date: string;
