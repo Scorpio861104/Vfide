@@ -1,22 +1,19 @@
 # VFIDE WebSocket Server — Production Dockerfile
-# SECURITY NOTE: Pin this image to a specific digest before production deployment.
-# Steps to pin:
-#   docker pull node:20-alpine
-#   docker inspect node:20-alpine --format='{{index .RepoDigests 0}}'
-# Then replace `node:20-alpine` with `node:20-alpine@sha256:<digest>` on the FROM lines below.
+# Security hardening mirrors the main app container policy: pinned image digest + non-root runtime.
+FROM node:25-alpine@sha256:cf38e1f3c28ac9d81cdc0c51d8220320b3b618780e44ef96a39f76f7dbfef023 AS base
 
-FROM node:20-alpine AS deps
+FROM base AS deps
 WORKDIR /app
 COPY package.json ./
 RUN npm install --omit=dev --ignore-scripts
 
-FROM node:20-alpine AS builder
+FROM base AS builder
 WORKDIR /app
 COPY package.json tsconfig.json ./
 COPY src/ ./src/
 RUN npm install --ignore-scripts && npm run build
 
-FROM node:20-alpine AS runner
+FROM base AS runner
 WORKDIR /app
 
 # Run as non-root user

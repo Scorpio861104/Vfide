@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   postgres:
     image: postgres:16-alpine
@@ -23,24 +21,21 @@ services:
       timeout: 5s
       retries: 5
 
-  # WebSocket server (optional - commented out by default)
-  # The Dockerfile now exists at websocket-server/Dockerfile.
-  # Before enabling, complete all items in §26 of the audit doc and set the required env vars.
-  # See websocket-server/README.md for full configuration instructions.
-  # websocket:
-  #   build:
-  #     context: ./websocket-server
-  #     dockerfile: Dockerfile
-  #   container_name: vfide-websocket
-  #   restart: unless-stopped
-  #   ports:
-  #     - "8080:8080"
-  #   depends_on:
-  #     - postgres
-  #   environment:
-  #     JWT_SECRET: ${JWT_SECRET:?JWT_SECRET must be set}
-  #     ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost:3000}
-  #     DATABASE_URL: postgresql://vfide_user:${POSTGRES_PASSWORD}@postgres:5432/vfide_db
+  websocket:
+    build:
+      context: ./websocket-server
+      dockerfile: Dockerfile
+    container_name: vfide-websocket
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET must be set}
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost:3000}
+      DATABASE_URL: postgresql://vfide_user:${POSTGRES_PASSWORD}@postgres:5432/vfide_db
 
 volumes:
   postgres_data:

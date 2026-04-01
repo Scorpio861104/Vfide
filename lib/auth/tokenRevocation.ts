@@ -11,6 +11,12 @@ import { logger } from '@/lib/logger';
 // Initialize Redis client (will use environment variables)
 let redis: Redis | null = null;
 
+function assertRedisAvailableInProduction(): void {
+  if (process.env.NODE_ENV === 'production' && !redis) {
+    throw new Error('Redis is required in production for token revocation. Configure UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN.');
+  }
+}
+
 try {
   if (process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN) {
     redis = new Redis({
@@ -50,6 +56,7 @@ export async function revokeToken(
   expiresAt: number,
   reason?: string
 ): Promise<void> {
+  assertRedisAvailableInProduction();
   const key = `${BLACKLIST_PREFIX}${tokenHash}`;
   const now = Math.floor(Date.now() / 1000);
   
@@ -84,6 +91,7 @@ export async function revokeToken(
  * @returns true if token is revoked, false otherwise
  */
 export async function isTokenRevoked(tokenHash: string): Promise<boolean> {
+  assertRedisAvailableInProduction();
   const key = `${BLACKLIST_PREFIX}${tokenHash}`;
 
   if (redis) {
@@ -120,6 +128,7 @@ export async function revokeUserTokens(
   userAddress: string,
   reason: string = 'security_revocation'
 ): Promise<void> {
+  assertRedisAvailableInProduction();
   const key = `${BLACKLIST_PREFIX}user:${userAddress.toLowerCase()}`;
   const now = Math.floor(Date.now() / 1000);
 
@@ -151,6 +160,7 @@ export async function isUserRevoked(userAddress: string): Promise<{
   revokedAt?: number;
   reason?: string;
 } | null> {
+  assertRedisAvailableInProduction();
   const key = `${BLACKLIST_PREFIX}user:${userAddress.toLowerCase()}`;
 
   if (redis) {

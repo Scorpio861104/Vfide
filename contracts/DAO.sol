@@ -170,11 +170,13 @@ contract DAO is ReentrancyGuard {
     
     /// @notice Set the SeerGuardian for mutual DAO/Seer oversight
     function setGuardian(address _guardian) external onlyTimelock {
+        require(_guardian != address(0), "zero");
         guardian = ISeerGuardian_DAO(_guardian);
     }
 
     /// @notice Set SeerAutonomous for proactive pre-action governance enforcement
     function setSeerAutonomous(address _seerAutonomous) external onlyTimelock {
+        require(_seerAutonomous != address(0), "zero");
         seerAutonomous = ISeerAutonomous_DAO(_seerAutonomous);
         emit SeerAutonomousSet(_seerAutonomous);
     }

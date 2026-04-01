@@ -20,6 +20,12 @@ const CHALLENGE_PREFIX = 'auth:siwe:challenge:';
 const challenges = new Map<string, ChallengeRecord>();
 let redisClient: Redis | null | undefined;
 
+function assertRedisAvailableInProduction(redis: Redis | null): void {
+  if (process.env.NODE_ENV === 'production' && !redis) {
+    throw new Error('Redis is required in production for SIWE challenge replay protection. Configure UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN.');
+  }
+}
+
 function randomNonceHex(bytes = 16): string {
   const random = crypto.getRandomValues(new Uint8Array(bytes));
   return Array.from(random, (b) => b.toString(16).padStart(2, '0')).join('');
@@ -65,6 +71,7 @@ function normalizeFingerprintValue(value: string, fallback: string): string {
 
 async function storeChallengeRecord(record: ChallengeRecord): Promise<void> {
   const redis = getRedisClient();
+  assertRedisAvailableInProduction(redis);
   const key = challengeKey(record.address);
 
   if (redis) {
@@ -83,6 +90,7 @@ async function storeChallengeRecord(record: ChallengeRecord): Promise<void> {
 async function consumeChallengeRecord(address: string): Promise<ChallengeRecord | null> {
   const key = challengeKey(address);
   const redis = getRedisClient();
+  assertRedisAvailableInProduction(redis);
 
   if (redis) {
     try {
