@@ -16,6 +16,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { isCsrfExemptPath } from '@/lib/security/csrfPolicy';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -23,21 +24,6 @@ const STATE_CHANGING_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
 
 const CSRF_COOKIE_NAME = 'csrf_token';
 const CSRF_HEADER_NAME = 'x-csrf-token';
-
-/**
- * Paths that are exempt from CSRF validation.
- * Keep in sync with lib/security/csrfPolicy.ts.
- */
-const CSRF_EXEMPT_PATHS = new Set([
-  '/api/auth',
-  '/api/auth/challenge',
-  '/api/health',
-  '/api/csrf',
-]);
-
-const CSRF_EXEMPT_PREFIXES = [
-  '/api/security/webhook-',
-] as const;
 
 function makeNonce(): string {
   const bytes = new Uint8Array(16);
@@ -50,13 +36,36 @@ function makeNonce(): string {
 }
 
 function buildCsp(nonce: string): string {
+  const isProduction = process.env.NODE_ENV === 'production';
+  const connectSrc = isProduction
+    ? [
+        "'self'",
+        'wss://*.vfide.io',
+        'https://*.base.org',
+        'https://sepolia.base.org',
+        'https://*.sentry.io',
+        'https://*.walletconnect.com',
+        'https://*.walletconnect.org',
+        'https://api.sendgrid.com',
+        'https://*.upstash.io',
+      ].join(' ')
+    : [
+        "'self'",
+        'https:',
+        'wss:',
+        'http://localhost:3000',
+        'ws://localhost:3000',
+        'http://127.0.0.1:3000',
+        'ws://127.0.0.1:3000',
+      ].join(' ');
+
   const directives = [
     "default-src 'self'",
     `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'`,
     "style-src 'self' 'unsafe-inline'",
     "img-src 'self' data: blob: https:",
     "font-src 'self' data:",
-    "connect-src 'self' https: wss:",
+    `connect-src ${connectSrc}`,
     "frame-ancestors 'none'",
     "base-uri 'self'",
     "form-action 'self'",
@@ -79,8 +88,7 @@ function applySecurityHeaders(response: NextResponse, nonce: string): void {
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function isCsrfExempt(pathname: string): boolean {
-  if (CSRF_EXEMPT_PATHS.has(pathname)) return true;
-  return CSRF_EXEMPT_PREFIXES.some((prefix) => pathname.startsWith(prefix));
+  return isCsrfExemptPath(pathname);
 }
 
 /**

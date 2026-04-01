@@ -6,6 +6,7 @@ pragma solidity 0.8.30;
  * @notice Central registry of all VFIDE badge types and metadata
  * @dev Philosophy: Every badge is earned through actions, never purchased with wealth
  */
+// ReentrancyGuard intentionally omitted: constants-only metadata library with no external calls or transfers.
 library BadgeRegistry {
     
     // ============ PIONEER & FOUNDATION ============

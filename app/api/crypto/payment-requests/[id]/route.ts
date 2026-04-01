@@ -8,7 +8,7 @@ import { z } from 'zod4';
 // Allowed status transitions for payment requests
 const ALLOWED_STATUSES = ['pending', 'accepted', 'rejected', 'completed', 'cancelled'] as const;
 const ADDRESS_PATTERN = /^0x[a-fA-F0-9]{40}$/;
-const TX_HASH_PATTERN = /^0x[a-fA-F0-9]{3,130}$/;
+const TX_HASH_PATTERN = /^0x[a-fA-F0-9]{64}$/;
 
 const paymentStatusSchema = z.string().trim().toLowerCase().refine(
   (value) => ALLOWED_STATUSES.includes(value as (typeof ALLOWED_STATUSES)[number]),

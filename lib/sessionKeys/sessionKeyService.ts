@@ -93,7 +93,7 @@ const SESSION_KEY_MAX_DURATION_SECONDS = 4 * 60 * 60;
 
 function resolveMaxSessionDurationSeconds(): number {
   // Read raw env first so test/runtime overrides are respected even if getEnv() was memoized earlier.
-  const rawEnvValue = process.env.SESSION_KEY_MAX_DURATION_SECONDS ?? process.env.NEXT_PUBLIC_SESSION_KEY_MAX_DURATION_SECONDS;
+  const rawEnvValue = process.env.SESSION_KEY_MAX_DURATION_SECONDS;
   const parsedFromProcess = rawEnvValue !== undefined
     ? Number.parseInt(rawEnvValue, 10)
     : Number.NaN;
