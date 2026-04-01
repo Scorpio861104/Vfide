@@ -3,6 +3,7 @@ import { query } from '@/lib/db';
 import { isAdmin, requireAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { logger } from '@/lib/logger';
+import { z } from 'zod4';
 
 interface Notification {
   id: number;
@@ -20,6 +21,26 @@ const MAX_NOTIFICATIONS_LIMIT = 200;
 const MAX_NOTIFICATIONS_OFFSET = 10000;
 const MAX_BULK_NOTIFICATION_IDS = 500;
 const ADDRESS_LIKE_REGEX = /^0x[a-fA-F0-9]{3,40}$/;
+
+const createNotificationSchema = z.object({
+  userAddress: z.string().trim().toLowerCase().regex(ADDRESS_LIKE_REGEX),
+  type: z.string().trim().min(1),
+  title: z.string().trim().min(1),
+  message: z.string().trim().min(1),
+  data: z.record(z.string(), z.unknown()).optional(),
+});
+
+const updateNotificationsSchema = z.object({
+  notificationIds: z.array(z.coerce.number().int().positive()).max(MAX_BULK_NOTIFICATION_IDS).optional(),
+  userAddress: z.string().trim().toLowerCase().regex(ADDRESS_LIKE_REGEX).optional(),
+  markAllRead: z.boolean().optional(),
+});
+
+const deleteNotificationsSchema = z.object({
+  notificationIds: z.array(z.coerce.number().int().positive()).max(MAX_BULK_NOTIFICATION_IDS).optional(),
+  userAddress: z.string().trim().toLowerCase().regex(ADDRESS_LIKE_REGEX).optional(),
+  deleteAll: z.boolean().optional(),
+});
 
 function isAddressLike(value: string): boolean {
   return ADDRESS_LIKE_REGEX.test(value.trim());
@@ -203,9 +224,17 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  let body: Record<string, unknown>;
+  let body: z.infer<typeof createNotificationSchema>;
   try {
-    body = await request.json();
+    const rawBody = await request.json();
+    const parsed = createNotificationSchema.safeParse(rawBody);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Invalid request body' },
+        { status: 400 }
+      );
+    }
+    body = parsed.data;
   } catch {
     return NextResponse.json(
       { error: 'Invalid JSON body' },
@@ -213,42 +242,9 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  if (!body || typeof body !== 'object' || Array.isArray(body)) {
-    return NextResponse.json(
-      { error: 'Request body must be a JSON object' },
-      { status: 400 }
-    );
-  }
-
   try {
     const { userAddress, type, title, message, data } = body;
-
-    if (!userAddress || !type || !title || !message) {
-      return NextResponse.json(
-        { error: 'Missing required fields: userAddress, type, title, message' },
-        { status: 400 }
-      );
-    }
-
-    if (
-      typeof userAddress !== 'string' ||
-      typeof type !== 'string' ||
-      typeof title !== 'string' ||
-      typeof message !== 'string'
-    ) {
-      return NextResponse.json(
-        { error: 'userAddress, type, title, and message must be strings' },
-        { status: 400 }
-      );
-    }
-
-    const targetAddress = userAddress.trim().toLowerCase();
-    if (!isAddressLike(targetAddress)) {
-      return NextResponse.json(
-        { error: 'Invalid userAddress format' },
-        { status: 400 }
-      );
-    }
+    const targetAddress = userAddress;
 
     const requesterAddress = authAddress;
     const canCreate = requesterAddress === targetAddress || isAdmin(authResult.user);
@@ -324,9 +320,17 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  let body: Record<string, unknown>;
+  let body: z.infer<typeof updateNotificationsSchema>;
   try {
-    body = await request.json();
+    const rawBody = await request.json();
+    const parsed = updateNotificationsSchema.safeParse(rawBody);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Invalid request body' },
+        { status: 400 }
+      );
+    }
+    body = parsed.data;
   } catch {
     return NextResponse.json(
       { error: 'Invalid JSON body' },
@@ -334,32 +338,12 @@ export async function PATCH(request: NextRequest) {
     );
   }
 
-  if (!body || typeof body !== 'object' || Array.isArray(body)) {
-    return NextResponse.json(
-      { error: 'Request body must be a JSON object' },
-      { status: 400 }
-    );
-  }
-
   try {
     const { notificationIds, userAddress, markAllRead } = body;
-    const userAddressValue = typeof userAddress === 'string' ? userAddress : null;
-
-    if (markAllRead !== undefined && typeof markAllRead !== 'boolean') {
-      return NextResponse.json(
-        { error: 'markAllRead must be a boolean when provided' },
-        { status: 400 }
-      );
-    }
+    const userAddressValue = userAddress ?? null;
 
     if (markAllRead && userAddressValue) {
-      const normalizedUserAddress = userAddressValue.trim().toLowerCase();
-      if (!isAddressLike(normalizedUserAddress)) {
-        return NextResponse.json(
-          { error: 'Invalid userAddress format' },
-          { status: 400 }
-        );
-      }
+      const normalizedUserAddress = userAddressValue;
 
       // Verify ownership - user can only modify their own notifications
       if (authAddress !== normalizedUserAddress) {
@@ -402,13 +386,6 @@ export async function PATCH(request: NextRequest) {
         updated: result.rowCount || 0,
       });
     } else if (notificationIds && Array.isArray(notificationIds)) {
-      if (notificationIds.length > MAX_BULK_NOTIFICATION_IDS) {
-        return NextResponse.json(
-          { error: `Too many notificationIds. Maximum ${MAX_BULK_NOTIFICATION_IDS} allowed.` },
-          { status: 400 }
-        );
-      }
-
       const normalizedNotificationIds = normalizeNotificationIds(notificationIds);
       if (!normalizedNotificationIds || normalizedNotificationIds.length === 0) {
         return NextResponse.json(
@@ -488,9 +465,17 @@ export async function DELETE(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  let body: Record<string, unknown>;
+  let body: z.infer<typeof deleteNotificationsSchema>;
   try {
-    body = await request.json();
+    const rawBody = await request.json();
+    const parsed = deleteNotificationsSchema.safeParse(rawBody);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Invalid request body' },
+        { status: 400 }
+      );
+    }
+    body = parsed.data;
   } catch {
     return NextResponse.json(
       { error: 'Invalid JSON body' },
@@ -498,32 +483,12 @@ export async function DELETE(request: NextRequest) {
     );
   }
 
-  if (!body || typeof body !== 'object' || Array.isArray(body)) {
-    return NextResponse.json(
-      { error: 'Request body must be a JSON object' },
-      { status: 400 }
-    );
-  }
-
   try {
     const { notificationIds, userAddress, deleteAll } = body;
-    const userAddressValue = typeof userAddress === 'string' ? userAddress : null;
-
-    if (deleteAll !== undefined && typeof deleteAll !== 'boolean') {
-      return NextResponse.json(
-        { error: 'deleteAll must be a boolean when provided' },
-        { status: 400 }
-      );
-    }
+    const userAddressValue = userAddress ?? null;
 
     if (deleteAll && userAddressValue) {
-      const normalizedUserAddress = userAddressValue.trim().toLowerCase();
-      if (!isAddressLike(normalizedUserAddress)) {
-        return NextResponse.json(
-          { error: 'Invalid userAddress format' },
-          { status: 400 }
-        );
-      }
+      const normalizedUserAddress = userAddressValue;
 
       // Verify ownership - user can only delete their own notifications
       if (authAddress !== normalizedUserAddress) {
@@ -564,13 +529,6 @@ export async function DELETE(request: NextRequest) {
         deleted: result.rowCount || 0,
       });
     } else if (notificationIds && Array.isArray(notificationIds)) {
-      if (notificationIds.length > MAX_BULK_NOTIFICATION_IDS) {
-        return NextResponse.json(
-          { error: `Too many notificationIds. Maximum ${MAX_BULK_NOTIFICATION_IDS} allowed.` },
-          { status: 400 }
-        );
-      }
-
       const normalizedNotificationIds = normalizeNotificationIds(notificationIds);
       if (!normalizedNotificationIds || normalizedNotificationIds.length === 0) {
         return NextResponse.json(

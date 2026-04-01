@@ -10,12 +10,14 @@ import { requireAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { isAddress } from 'viem';
 import { logger } from '@/lib/logger';
+import { z } from 'zod4';
 
 const MAX_INVITE_CODE_LENGTH = 64;
 
-function isObjectRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
-}
+const joinGroupSchema = z.object({
+  code: z.string().trim().min(1).max(MAX_INVITE_CODE_LENGTH),
+  userId: z.number().int().positive().optional(),
+});
 
 function normalizeInviteCode(value: string): string {
   return value.trim();
@@ -45,34 +47,20 @@ export async function POST(request: NextRequest) {
 
   try {
     client = await getClient();
-    let body: unknown;
+    let body: z.infer<typeof joinGroupSchema>;
     try {
-      body = await request.json();
+      const rawBody = await request.json();
+      const parsed = joinGroupSchema.safeParse(rawBody);
+      if (!parsed.success) {
+        return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
+      }
+      body = parsed.data;
     } catch {
       return NextResponse.json({ error: 'Invalid JSON payload' }, { status: 400 });
     }
 
-    if (!isObjectRecord(body)) {
-      return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
-    }
-
     const { code, userId } = body;
-
-    const inviteCode = typeof code === 'string' ? normalizeInviteCode(code) : '';
-
-    if (inviteCode.length === 0 || inviteCode.length > MAX_INVITE_CODE_LENGTH) {
-      return NextResponse.json(
-        { error: 'Invalid invite code' },
-        { status: 400 }
-      );
-    }
-
-    if (userId !== undefined && (!Number.isInteger(userId) || Number(userId) <= 0)) {
-      return NextResponse.json(
-        { error: 'Invalid userId' },
-        { status: 400 }
-      );
-    }
+    const inviteCode = normalizeInviteCode(code);
 
     const authUserResult = await client.query(
       'SELECT id FROM users WHERE wallet_address = $1',
