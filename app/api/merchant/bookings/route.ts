@@ -11,10 +11,37 @@ import { query } from '@/lib/db';
 import { requireAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { logger } from '@/lib/logger';
+import { z } from 'zod4';
 
 const ADDRESS_LIKE_REGEX = /^0x[a-fA-F0-9]{3,40}$/;
 const TIME_REGEX = /^\d{2}:\d{2}$/;
 const DATE_REGEX = /^\d{4}-\d{2}-\d{2}$/;
+
+const createSlotBookingSchema = z.object({
+  action: z.literal('create_slot'),
+  product_id: z.number().int().positive(),
+  day_of_week: z.number().int().min(0).max(6).optional(),
+  specific_date: z.string().regex(DATE_REGEX).optional(),
+  start_time: z.string().regex(TIME_REGEX),
+  end_time: z.string().regex(TIME_REGEX),
+  max_bookings: z.coerce.number().int().min(1).optional(),
+});
+
+const createAppointmentBookingSchema = z.object({
+  action: z.string().optional(),
+  merchant_address: z.string().trim().toLowerCase().regex(ADDRESS_LIKE_REGEX),
+  product_id: z.number().int().positive(),
+  slot_id: z.number().int().positive(),
+  booking_date: z.string().regex(DATE_REGEX),
+  customer_email: z.string().email().max(254).optional(),
+  customer_name: z.string().max(200).optional(),
+  notes: z.string().max(1000).optional(),
+});
+
+const updateBookingSchema = z.object({
+  id: z.number().int().positive(),
+  status: z.enum(['confirmed', 'cancelled', 'completed', 'no_show']),
+});
 
 async function getAuthAddress(request: NextRequest): Promise<string | NextResponse> {
   const authResult = await requireAuth(request);
@@ -122,22 +149,19 @@ export async function POST(request: NextRequest) {
   if (authAddress instanceof NextResponse) return authAddress;
 
   try {
-    const body = await request.json() as Record<string, unknown>;
-    const { action } = body;
+    const rawBody: unknown = await request.json();
+    const action = typeof (rawBody as { action?: unknown })?.action === 'string'
+      ? (rawBody as { action?: string }).action
+      : undefined;
 
     if (action === 'create_slot') {
-      // Merchant creates availability slots
-      const { product_id, day_of_week, specific_date, start_time, end_time, max_bookings } = body;
+      const slotPayload = createSlotBookingSchema.safeParse(rawBody);
+      if (!slotPayload.success) {
+        return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
+      }
 
-      if (typeof product_id !== 'number') {
-        return NextResponse.json({ error: 'product_id required' }, { status: 400 });
-      }
-      if (typeof start_time !== 'string' || !TIME_REGEX.test(start_time)) {
-        return NextResponse.json({ error: 'start_time required (HH:MM)' }, { status: 400 });
-      }
-      if (typeof end_time !== 'string' || !TIME_REGEX.test(end_time)) {
-        return NextResponse.json({ error: 'end_time required (HH:MM)' }, { status: 400 });
-      }
+      // Merchant creates availability slots
+      const { product_id, day_of_week, specific_date, start_time, end_time, max_bookings } = slotPayload.data;
 
       // Verify product ownership and type
       const productResult = await query(
@@ -148,8 +172,8 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: 'Service product not found' }, { status: 404 });
       }
 
-      const hasDayOfWeek = typeof day_of_week === 'number' && day_of_week >= 0 && day_of_week <= 6;
-      const hasSpecificDate = typeof specific_date === 'string' && DATE_REGEX.test(specific_date);
+      const hasDayOfWeek = typeof day_of_week === 'number';
+      const hasSpecificDate = typeof specific_date === 'string';
 
       if (!hasDayOfWeek && !hasSpecificDate) {
         return NextResponse.json({ error: 'day_of_week (0-6) or specific_date required' }, { status: 400 });
@@ -176,26 +200,21 @@ export async function POST(request: NextRequest) {
           hasSpecificDate ? specific_date : null,
           start_time,
           end_time,
-          typeof max_bookings === 'number' ? Math.max(1, Math.floor(max_bookings)) : 1,
+          typeof max_bookings === 'number' ? max_bookings : 1,
         ]
       );
 
       return NextResponse.json({ slot: result.rows[0] }, { status: 201 });
     }
 
+    const appointmentPayload = createAppointmentBookingSchema.safeParse(rawBody);
+    if (!appointmentPayload.success) {
+      return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
+    }
+
     // Default: customer books an appointment
     const { merchant_address, product_id, slot_id, booking_date,
-            customer_email, customer_name, notes } = body;
-
-    if (typeof merchant_address !== 'string' || !ADDRESS_LIKE_REGEX.test(merchant_address)) {
-      return NextResponse.json({ error: 'Valid merchant_address required' }, { status: 400 });
-    }
-    if (typeof product_id !== 'number') {
-      return NextResponse.json({ error: 'product_id required' }, { status: 400 });
-    }
-    if (typeof booking_date !== 'string' || !DATE_REGEX.test(booking_date)) {
-      return NextResponse.json({ error: 'booking_date required (YYYY-MM-DD)' }, { status: 400 });
-    }
+            customer_email, customer_name, notes } = appointmentPayload.data;
 
     // Date must be in the future
     const bookDate = new Date(booking_date + 'T00:00:00Z');
@@ -206,32 +225,25 @@ export async function POST(request: NextRequest) {
     }
 
     // Get slot
-    let slotStartTime: string;
-    let slotEndTime: string;
+    const slotResult = await query(
+      "SELECT * FROM merchant_service_slots WHERE id = $1 AND product_id = $2 AND status = 'active'",
+      [slot_id, product_id]
+    );
+    if (slotResult.rows.length === 0) {
+      return NextResponse.json({ error: 'Slot not found' }, { status: 404 });
+    }
 
-    if (typeof slot_id === 'number') {
-      const slotResult = await query(
-        "SELECT * FROM merchant_service_slots WHERE id = $1 AND product_id = $2 AND status = 'active'",
-        [slot_id, product_id]
-      );
-      if (slotResult.rows.length === 0) {
-        return NextResponse.json({ error: 'Slot not found' }, { status: 404 });
-      }
+    const slot = slotResult.rows[0]!;
+    const slotStartTime = slot.start_time as string;
+    const slotEndTime = slot.end_time as string;
 
-      const slot = slotResult.rows[0]!;
-      slotStartTime = slot.start_time as string;
-      slotEndTime = slot.end_time as string;
-
-      // Check availability
-      const bookedResult = await query(
-        "SELECT COUNT(*) as count FROM merchant_bookings WHERE slot_id = $1 AND booking_date = $2 AND status != 'cancelled'",
-        [slot_id, booking_date]
-      );
-      if (Number(bookedResult.rows[0]?.count) >= Number(slot.max_bookings)) {
-        return NextResponse.json({ error: 'Slot is fully booked' }, { status: 409 });
-      }
-    } else {
-      return NextResponse.json({ error: 'slot_id required' }, { status: 400 });
+    // Check availability
+    const bookedResult = await query(
+      "SELECT COUNT(*) as count FROM merchant_bookings WHERE slot_id = $1 AND booking_date = $2 AND status != 'cancelled'",
+      [slot_id, booking_date]
+    );
+    if (Number(bookedResult.rows[0]?.count) >= Number(slot.max_bookings)) {
+      return NextResponse.json({ error: 'Slot is fully booked' }, { status: 409 });
     }
 
     // Check duplicate booking
@@ -250,16 +262,16 @@ export async function POST(request: NextRequest) {
        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
        RETURNING *`,
       [
-        (merchant_address as string).toLowerCase(),
+        merchant_address,
         product_id,
         slot_id,
         authAddress,
-        typeof customer_email === 'string' ? customer_email.slice(0, 254) : null,
-        typeof customer_name === 'string' ? customer_name.slice(0, 200) : null,
+        customer_email ?? null,
+        customer_name ?? null,
         booking_date,
         slotStartTime,
         slotEndTime,
-        typeof notes === 'string' ? notes.slice(0, 1000) : null,
+        notes ?? null,
       ]
     );
 
@@ -279,15 +291,11 @@ export async function PATCH(request: NextRequest) {
   if (authAddress instanceof NextResponse) return authAddress;
 
   try {
-    const body = await request.json() as Record<string, unknown>;
-    const { id, status } = body;
-
-    if (typeof id !== 'number') {
-      return NextResponse.json({ error: 'Booking ID required' }, { status: 400 });
+    const parsedBody = updateBookingSchema.safeParse(await request.json());
+    if (!parsedBody.success) {
+      return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
     }
-    if (typeof status !== 'string' || !['confirmed', 'cancelled', 'completed', 'no_show'].includes(status)) {
-      return NextResponse.json({ error: 'Valid status required' }, { status: 400 });
-    }
+    const { id, status } = parsedBody.data;
 
     // Merchant or customer can update
     const existing = await query(
