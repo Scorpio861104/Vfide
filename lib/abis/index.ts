@@ -73,6 +73,16 @@ import VFIDEEnterpriseGatewayABI from './VFIDEEnterpriseGateway.json'
 import VFIDEPriceOracleABI from './VFIDEPriceOracle.json'
 import VFIDEReentrancyGuardABI from './VFIDEReentrancyGuard.json'
 import VaultRecoveryClaimABI from './VaultRecoveryClaim.json'
+import DeployPhase1ABI from './DeployPhase1.json'
+import DeployPhase1GovernanceABI from './DeployPhase1Governance.json'
+import DeployPhase1InfrastructureABI from './DeployPhase1Infrastructure.json'
+import DeployPhase1TokenABI from './DeployPhase1Token.json'
+import DeployPhases3to6ABI from './DeployPhases3to6.json'
+import PoolsABI from './Pools.json'
+import SharedInterfacesABI from './SharedInterfaces.json'
+import VFIDEFinanceABI from './VFIDEFinance.json'
+import VFIDESecurityABI from './VFIDESecurity.json'
+import VFIDETrustABI from './VFIDETrust.json'
 import { logger } from '@/lib/logger';
 
 // Runtime validation: Ensure ABIs are valid arrays
@@ -174,6 +184,26 @@ validateABI(VFIDEReentrancyGuardABI, 'VFIDEReentrancyGuard');
 
 validateABI(VaultRecoveryClaimABI, 'VaultRecoveryClaim');
 
+validateABI(DeployPhase1ABI, 'DeployPhase1');
+
+validateABI(DeployPhase1GovernanceABI, 'DeployPhase1Governance');
+
+validateABI(DeployPhase1InfrastructureABI, 'DeployPhase1Infrastructure');
+
+validateABI(DeployPhase1TokenABI, 'DeployPhase1Token');
+
+validateABI(DeployPhases3to6ABI, 'DeployPhases3to6');
+
+validateABI(PoolsABI, 'Pools');
+
+validateABI(SharedInterfacesABI, 'SharedInterfaces');
+
+validateABI(VFIDEFinanceABI, 'VFIDEFinance');
+
+validateABI(VFIDESecurityABI, 'VFIDESecurity');
+
+validateABI(VFIDETrustABI, 'VFIDETrust');
+
 // VaultHub ABI points to the full compiled artifact (includes ensureVault, getVaultInfo, etc.).
 validateABI(VaultHubFullABI, 'VaultHub');
 const VaultHubABI = VaultHubFullABI
@@ -251,4 +281,14 @@ export {
   VFIDEPriceOracleABI,
   VFIDEReentrancyGuardABI,
   VaultRecoveryClaimABI,
+  DeployPhase1ABI,
+  DeployPhase1GovernanceABI,
+  DeployPhase1InfrastructureABI,
+  DeployPhase1TokenABI,
+  DeployPhases3to6ABI,
+  PoolsABI,
+  SharedInterfacesABI,
+  VFIDEFinanceABI,
+  VFIDESecurityABI,
+  VFIDETrustABI,
 }
