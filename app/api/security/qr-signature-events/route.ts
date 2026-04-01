@@ -86,7 +86,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
     }
     payload = parsed.data;
-  } catch {
+  } catch (error) {
+    logger.debug('[Security][QR Signature Event] Invalid JSON body', error);
     return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
   }
 

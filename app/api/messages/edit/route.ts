@@ -68,7 +68,8 @@ function isEncryptedDirectMessagePayload(content: string): boolean {
     ) return false;
 
     return true;
-  } catch {
+  } catch (error) {
+    logger.debug('[Message Edit] Failed to parse encrypted payload', error);
     return false;
   }
 }
@@ -99,7 +100,8 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
     }
     body = parsed.data;
-  } catch {
+  } catch (error) {
+    logger.debug('[Message Edit] Invalid JSON body', error);
     return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
   }
 
