@@ -344,7 +344,8 @@ export async function POST(request: NextRequest) {
       );
     }
     body = parsed.data;
-  } catch {
+  } catch (error) {
+    logger.debug('[Endorsements POST] Invalid JSON body', error);
     return NextResponse.json(
       { error: 'Invalid JSON body' },
       { status: 400 }

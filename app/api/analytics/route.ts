@@ -199,7 +199,8 @@ export async function POST(request: NextRequest) {
         }
         body = parsedSingle.data;
       }
-    } catch {
+    } catch (error) {
+      logger.debug('[Analytics POST] Invalid JSON payload', error);
       return NextResponse.json({ error: 'Invalid JSON payload' }, { status: 400 });
     }
 
