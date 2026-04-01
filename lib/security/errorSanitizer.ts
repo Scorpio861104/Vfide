@@ -13,6 +13,8 @@
  *   }
  */
 
+import { logger } from '@/lib/logger';
+
 type ErrorPattern = {
   pattern: RegExp;
   userMessage: string;
@@ -131,7 +133,7 @@ function extractErrorMessage(error: unknown): string {
   if (error instanceof Error) {
     // Chain the error message with cause if available (Error.cause)
     const message = error.message || '';
-    const cause = (error as any).cause;
+    const cause = (error as Error & { cause?: unknown }).cause;
     if (cause instanceof Error && cause.message && message !== cause.message) {
       return `${message} (${cause.message})`;
     }
@@ -139,15 +141,15 @@ function extractErrorMessage(error: unknown): string {
   }
 
   if (typeof error === 'object' && error !== null) {
-    if ('message' in error && typeof (error as any).message === 'string') {
-      return (error as any).message;
-    }
-    if ('error' in error && typeof (error as any).error === 'string') {
-      return (error as any).error;
-    }
-    if ('reason' in error && typeof (error as any).reason === 'string') {
-      return (error as any).reason;
-    }
+    const errorRecord = error as Record<string, unknown>;
+    const message = errorRecord.message;
+    if (typeof message === 'string') return message;
+
+    const nestedError = errorRecord.error;
+    if (typeof nestedError === 'string') return nestedError;
+
+    const reason = errorRecord.reason;
+    if (typeof reason === 'string') return reason;
   }
 
   return 'An unknown error occurred';
@@ -221,7 +223,7 @@ export function sanitizeErrorForLogging(error: unknown): Record<string, unknown>
  */
 export function handleErrorWithLogging(error: unknown, context?: string): string {
   // Log full details (server-side or to monitoring)
-  console.error('[ERROR]', context || 'Unhandled error:', error);
+  logger.error(context || 'Unhandled error', error);
 
   // Return sanitized message to user
   return getUserFriendlyMessage(error);
