@@ -16,6 +16,7 @@ import {
   type LoanTerms,
 } from '@/lib/flashloans/engine'
 import { logger } from '@/lib/logger';
+import { z } from 'zod4';
 
 const ADDRESS_RE = /^0x[a-fA-F0-9]{40}$/
 const ACTIONS: LoanAction[] = [
@@ -30,6 +31,12 @@ const ACTIONS: LoanAction[] = [
   'advance-day',
   'reset',
 ]
+
+const flashloanLaneActionSchema = z.object({
+  action: z.enum(ACTIONS),
+  drawnAmount: z.coerce.number().optional(),
+  evidenceNote: z.string().optional(),
+})
 
 function normalizeAddress(value: string): string {
   return value.trim().toLowerCase()
@@ -52,16 +59,6 @@ function resolveActorRole(authAddress: string, lane: {
   return null
 }
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value)
-}
-
-function parseAction(value: unknown): LoanAction | null {
-  if (typeof value !== 'string') return null
-  const normalized = value.trim() as LoanAction
-  return ACTIONS.includes(normalized) ? normalized : null
-}
-
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const rateLimited = await withRateLimit(request, 'write')
   if (rateLimited) return rateLimited
@@ -80,21 +77,19 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     return NextResponse.json({ error: 'Invalid lane id' }, { status: 400 })
   }
 
-  let body: unknown
+  let body: z.infer<typeof flashloanLaneActionSchema>
   try {
-    body = await request.json()
+    const rawBody = await request.json()
+    const parsed = flashloanLaneActionSchema.safeParse(rawBody)
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid request body' }, { status: 400 })
+    }
+    body = parsed.data
   } catch {
     return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 })
   }
 
-  if (!isRecord(body)) {
-    return NextResponse.json({ error: 'Request body must be an object' }, { status: 400 })
-  }
-
-  const action = parseAction(body.action)
-  if (!action) {
-    return NextResponse.json({ error: 'Invalid action' }, { status: 400 })
-  }
+  const action = body.action
 
   try {
     const lane = await getLaneById(laneId)

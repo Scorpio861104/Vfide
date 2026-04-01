@@ -4,15 +4,22 @@ import { withRateLimit } from '@/lib/auth/rateLimit'
 import { createLane, listLanesForAddress } from '@/lib/flashloans/repository'
 import { sanitizeTerms, validateSimulationState, type LoanSimulationState, type LoanTerms } from '@/lib/flashloans/engine'
 import { logger } from '@/lib/logger';
+import { z } from 'zod4';
 
 const ADDRESS_RE = /^0x[a-fA-F0-9]{40}$/
 
+const createLaneSchema = z.object({
+  lenderAddress: z.string().trim().regex(ADDRESS_RE),
+  arbiterAddress: z.string().trim().regex(ADDRESS_RE).optional(),
+  principal: z.coerce.number(),
+  durationDays: z.coerce.number(),
+  interestBps: z.coerce.number(),
+  collateralPct: z.coerce.number(),
+  drawnAmount: z.coerce.number().optional(),
+})
+
 function normalizeAddress(value: string): string {
   return value.trim().toLowerCase()
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value)
 }
 
 function parseLimit(value: string | null): number {
@@ -58,15 +65,16 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  let body: unknown
+  let body: z.infer<typeof createLaneSchema>
   try {
-    body = await request.json()
+    const rawBody = await request.json()
+    const parsed = createLaneSchema.safeParse(rawBody)
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid request body' }, { status: 400 })
+    }
+    body = parsed.data
   } catch {
     return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 })
-  }
-
-  if (!isRecord(body)) {
-    return NextResponse.json({ error: 'Request body must be an object' }, { status: 400 })
   }
 
   const lenderAddressRaw = typeof body.lenderAddress === 'string' ? normalizeAddress(body.lenderAddress) : ''

@@ -3,8 +3,14 @@ import { getClient } from '@/lib/db';
 import { requireAuth, checkOwnership } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { logger } from '@/lib/logger';
+import { z } from 'zod4';
 
 const ADDRESS_LIKE_REGEX = /^0x[a-fA-F0-9]{3,40}$/;
+
+const claimAchievementSchema = z.object({
+  milestoneId: z.union([z.number().int().positive(), z.string().regex(/^\d+$/)]),
+  userAddress: z.string().trim().regex(ADDRESS_LIKE_REGEX),
+});
 
 function parsePositiveInteger(value: unknown): number | null {
   const parsed = typeof value === 'number'
@@ -43,19 +49,20 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  let body: Record<string, unknown>;
+  let body: z.infer<typeof claimAchievementSchema>;
   try {
-    body = await request.json();
+    const rawBody = await request.json();
+    const parsed = claimAchievementSchema.safeParse(rawBody);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Invalid request body' },
+        { status: 400 }
+      );
+    }
+    body = parsed.data;
   } catch {
     return NextResponse.json(
       { error: 'Invalid JSON body' },
-      { status: 400 }
-    );
-  }
-
-  if (!body || typeof body !== 'object' || Array.isArray(body)) {
-    return NextResponse.json(
-      { error: 'Request body must be a JSON object' },
       { status: 400 }
     );
   }
@@ -66,13 +73,6 @@ export async function POST(request: NextRequest) {
     if (!milestoneId || !userAddress) {
       return NextResponse.json(
         { error: 'Milestone ID and user address required' },
-        { status: 400 }
-      );
-    }
-
-    if (typeof userAddress !== 'string') {
-      return NextResponse.json(
-        { error: 'User address must be a string' },
         { status: 400 }
       );
     }

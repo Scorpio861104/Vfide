@@ -3,13 +3,20 @@ import { getClient } from '@/lib/db';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { requireAuth } from '@/lib/auth/middleware';
 import { logger } from '@/lib/logger';
+import { z } from 'zod4';
 
 const ADDRESS_PATTERN = /^0x[a-fA-F0-9]{3,64}$/;
 const MONTH_PATTERN = /^\d{4}-(0[1-9]|1[0-2])$/;
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
-}
+const updateMonthlyLeaderboardSchema = z.object({
+  userAddress: z.string().trim().regex(ADDRESS_PATTERN),
+  questsCompleted: z.number().int().nonnegative().optional(),
+  challengesCompleted: z.number().int().nonnegative().optional(),
+  currentStreak: z.number().int().nonnegative().optional(),
+  transactionsCount: z.number().int().nonnegative().optional(),
+  socialInteractions: z.number().int().nonnegative().optional(),
+  governanceVotes: z.number().int().nonnegative().optional(),
+});
 
 function normalizeAddress(value: string): string {
   return value.trim().toLowerCase();
@@ -319,15 +326,16 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    let body: unknown;
+    let body: z.infer<typeof updateMonthlyLeaderboardSchema>;
     try {
-      body = await request.json();
+      const rawBody = await request.json();
+      const parsed = updateMonthlyLeaderboardSchema.safeParse(rawBody);
+      if (!parsed.success) {
+        return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
+      }
+      body = parsed.data;
     } catch {
       return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
-    }
-
-    if (!isRecord(body)) {
-      return NextResponse.json({ error: 'Request body must be a JSON object' }, { status: 400 });
     }
 
     const {
