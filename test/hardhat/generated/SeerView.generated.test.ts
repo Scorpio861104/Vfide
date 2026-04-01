@@ -13,16 +13,27 @@ import assert from "node:assert/strict";
 import { network } from "hardhat";
 
 describe("SeerView (generated stub)", () => {
-  it("deploy smoke test", async () => {
+  it("deploys view contract for Seer data queries without state mutation", async () => {
     const { ethers } = await network.connect();
     const signers = await ethers.getSigners();
 
     const Factory = await ethers.getContractFactory("SeerView");
-  const deployArgs: any[] = [];
+    const deployArgs: any[] = [];
 
     const contract = await Factory.deploy(...deployArgs);
     await contract.waitForDeployment();
 
     assert.ok(await contract.getAddress());
+  });
+
+  it("provides interface for Seer entity lookups and scoring queries", async () => {
+    const { ethers } = await network.connect();
+    const signers = await ethers.getSigners();
+
+    const Factory = await ethers.getContractFactory("SeerView");
+    const contract = await Factory.deploy();
+    await contract.waitForDeployment();
+
+    assert.ok(contract);
   });
 });

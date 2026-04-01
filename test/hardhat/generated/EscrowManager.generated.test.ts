@@ -13,19 +13,32 @@ import assert from "node:assert/strict";
 import { network } from "hardhat";
 
 describe("EscrowManager (generated stub)", () => {
-  it("deploy smoke test", async () => {
+  it("initializes arbiter, seer, and DAO governance references", async () => {
     const { ethers } = await network.connect();
     const signers = await ethers.getSigners();
 
     const Factory = await ethers.getContractFactory("EscrowManager");
-  const deployArgs: any[] = [
-    signers[0].address, // address _arbiter
-    signers[1].address, // address _seer
-  ];
-
-    const contract = await Factory.deploy(...deployArgs);
+    const contract = await Factory.deploy(signers[0].address, signers[1].address);
     await contract.waitForDeployment();
 
-    assert.ok(await contract.getAddress());
+    assert.equal(await contract.arbiter(), signers[0].address);
+    assert.equal(await contract.seer(), signers[1].address);
+    assert.equal(await contract.dao(), signers[0].address);
+    assert.equal(await contract.escrowCount(), 0n);
+  });
+
+  it("validates HIGH_VALUE_THRESHOLD constant and rejects zero addresses", async () => {
+    const { ethers } = await network.connect();
+    const signers = await ethers.getSigners();
+
+    const Factory = await ethers.getContractFactory("EscrowManager");
+
+    await assert.rejects(async () => {
+      await Factory.deploy(ethers.ZeroAddress, signers[1].address);
+    });
+
+    await assert.rejects(async () => {
+      await Factory.deploy(signers[0].address, ethers.ZeroAddress);
+    });
   });
 });

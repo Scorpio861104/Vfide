@@ -13,19 +13,33 @@ import assert from "node:assert/strict";
 import { network } from "hardhat";
 
 describe("BridgeSecurityModule (generated stub)", () => {
-  it("deploy smoke test", async () => {
+  it("initializes owner and bridge address", async () => {
     const { ethers } = await network.connect();
     const signers = await ethers.getSigners();
 
     const Factory = await ethers.getContractFactory("BridgeSecurityModule");
-  const deployArgs: any[] = [
-    signers[0].address, // address _owner
-    signers[1].address, // address _bridge
-  ];
-
-    const contract = await Factory.deploy(...deployArgs);
+    const contract = await Factory.deploy(signers[0].address, signers[1].address);
     await contract.waitForDeployment();
 
-    assert.ok(await contract.getAddress());
+    assert.equal(await contract.owner(), signers[0].address);
+    assert.equal(await contract.bridge(), signers[1].address);
+  });
+
+  it("enforces owner-only access to rate limit updates", async () => {
+    const { ethers } = await network.connect();
+    const signers = await ethers.getSigners();
+
+    const Factory = await ethers.getContractFactory("BridgeSecurityModule");
+    const contract = await Factory.deploy(signers[0].address, signers[1].address);
+    await contract.waitForDeployment();
+
+    const newHourly = ethers.parseEther("5000");
+    const newDaily = ethers.parseEther("50000");
+
+    await assert.rejects(async () => {
+      await contract.connect(signers[2]).setUserLimits(newHourly, newDaily);
+    });
+    await contract.connect(signers[0]).setUserLimits(newHourly, newDaily);
+    assert.ok(true);
   });
 });

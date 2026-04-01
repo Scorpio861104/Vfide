@@ -13,19 +13,35 @@ import assert from "node:assert/strict";
 import { network } from "hardhat";
 
 describe("VaultRecoveryClaim (generated stub)", () => {
-  it("deploy smoke test", async () => {
+  it("initializes vault infrastructure and recovery timelock constants", async () => {
     const { ethers } = await network.connect();
     const signers = await ethers.getSigners();
 
     const Factory = await ethers.getContractFactory("VaultRecoveryClaim");
-  const deployArgs: any[] = [
-    signers[0].address, // address _vaultHub
-    signers[1].address, // address _vaultRegistry
-  ];
-
-    const contract = await Factory.deploy(...deployArgs);
+    const contract = await Factory.deploy(signers[0].address, signers[1].address);
     await contract.waitForDeployment();
 
-    assert.ok(await contract.getAddress());
+    assert.equal(await contract.vaultHub(), signers[0].address);
+    assert.equal(await contract.vaultRegistry(), signers[1].address);
+    assert.ok(await contract.CHALLENGE_PERIOD() > 0n);
+    assert.equal(await contract.claimCounter(), 0n);
+  });
+
+  it("validates recovery claim timelock windows and guardian approval thresholds", async () => {
+    const { ethers } = await network.connect();
+    const signers = await ethers.getSigners();
+
+    const Factory = await ethers.getContractFactory("VaultRecoveryClaim");
+    const contract = await Factory.deploy(signers[0].address, signers[1].address);
+    await contract.waitForDeployment();
+
+    const challengePeriod = await contract.CHALLENGE_PERIOD();
+    const guardianWindow = await contract.GUARDIAN_VOTE_WINDOW();
+    const claimExpiry = await contract.CLAIM_EXPIRY();
+
+    assert.ok(challengePeriod > 0n);
+    assert.ok(guardianWindow > 0n);
+    assert.ok(claimExpiry > 0n);
+    assert.equal(await contract.MIN_GUARDIAN_APPROVALS(), 2n);
   });
 });

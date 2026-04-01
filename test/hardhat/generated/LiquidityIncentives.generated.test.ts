@@ -13,19 +13,36 @@ import assert from "node:assert/strict";
 import { network } from "hardhat";
 
 describe("LiquidityIncentives (generated stub)", () => {
-  it("deploy smoke test", async () => {
+  it("initializes DAO and VFIDE token references with pool tracking", async () => {
     const { ethers } = await network.connect();
     const signers = await ethers.getSigners();
 
     const Factory = await ethers.getContractFactory("LiquidityIncentives");
-  const deployArgs: any[] = [
-    signers[0].address, // address _dao
-    signers[1].address, // address _vfideToken
-  ];
-
-    const contract = await Factory.deploy(...deployArgs);
+    const contract = await Factory.deploy(signers[0].address, signers[1].address);
     await contract.waitForDeployment();
 
-    assert.ok(await contract.getAddress());
+    assert.equal(await contract.dao(), signers[0].address);
+    assert.equal(await contract.vfideToken(), signers[1].address);
+    assert.ok(await contract.unstakeCooldown() > 0n);
+  });
+
+  it("enforces DAO-only pool management with zero-address validation", async () => {
+    const { ethers } = await network.connect();
+    const signers = await ethers.getSigners();
+
+    const Factory = await ethers.getContractFactory("LiquidityIncentives");
+    const contract = await Factory.deploy(signers[0].address, signers[1].address);
+    await contract.waitForDeployment();
+
+    const lpTokenAddr = signers[2].address;
+    const poolName = "VFIDE/ETH";
+
+    await assert.rejects(async () => {
+      await contract.connect(signers[1]).addPool(lpTokenAddr, poolName);
+    });
+
+    await assert.rejects(async () => {
+      await contract.connect(signers[0]).addPool(ethers.ZeroAddress, poolName);
+    });
   });
 });
