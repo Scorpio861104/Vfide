@@ -30,7 +30,7 @@ vercel env pull .env.local
 # Step 5: Initialize database schema using migrations
 echo ""
 echo "🏗️  Step 5: Initialize database schema using migrations"
-echo "The authoritative schema is defined in /scripts/migrations/"
+echo "The authoritative schema is defined in /migrations/"
 
 if [ -f .env.local ]; then
   export $(grep -v '^#' .env.local | grep -E 'DATABASE_URL|POSTGRES_PRISMA_URL' | xargs)
@@ -42,8 +42,8 @@ if [ -f .env.local ]; then
     DATABASE_URL=$POSTGRES_PRISMA_URL
   fi
   
-  # Check if migrations exist
-  if [ -d "scripts/migrations" ] && [ "$(ls -A scripts/migrations)" ]; then
+  # Check if migrations exist in the canonical top-level directory
+  if [ -d "migrations" ] && [ "$(ls -A migrations)" ]; then
     echo "Running database migrations..."
     if command -v node &> /dev/null; then
       # Run migration script using Node/tsx (handles TypeScript)
@@ -57,7 +57,7 @@ if [ -f .env.local ]; then
       echo "npx tsx scripts/migrate.ts"
     fi
   else
-    echo "⚠️  No migrations found in scripts/migrations/"
+    echo "⚠️  No migrations found in migrations/"
     echo "Please ensure the migration system is set up in scripts/migrate.ts"
     echo "See documentation: docs/DATABASE_SETUP.md"
   fi
