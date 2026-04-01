@@ -1,12 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getBadgeByPath, formatDuration } from '@/lib/badge-registry'
 import { withRateLimit } from '@/lib/auth/rateLimit'
+import { logger } from '@/lib/logger'
 
 function parseTokenId(raw: string): bigint | null {
   if (!/^\d+$/.test(raw)) return null
   try {
     return BigInt(raw)
-  } catch {
+  } catch (error) {
+    logger.debug('[Badge Metadata] Failed to parse tokenId', error)
     return null
   }
 }
