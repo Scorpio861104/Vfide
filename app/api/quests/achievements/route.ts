@@ -3,10 +3,17 @@ import { getClient } from '@/lib/db';
 import { isAdmin, requireAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { logger } from '@/lib/logger';
+import { z } from 'zod4';
 
 const MILESTONE_KEY_REGEX = /^[a-z0-9_:-]{1,64}$/;
 const MAX_PROGRESS_VALUE = 1000000000;
 const ADDRESS_PATTERN = /^0x[a-fA-F0-9]{3,64}$/;
+
+const updateAchievementProgressSchema = z.object({
+  milestoneKey: z.string().trim().regex(MILESTONE_KEY_REGEX),
+  userAddress: z.string().trim().regex(ADDRESS_PATTERN),
+  progress: z.union([z.number(), z.string().trim()]),
+});
 
 function toNonEmptyString(value: unknown): string | null {
   if (typeof value !== 'string') return null;
@@ -156,15 +163,16 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  let body: Record<string, unknown>;
+  let body: z.infer<typeof updateAchievementProgressSchema>;
   try {
-    body = await request.json();
+    const rawBody = await request.json();
+    const parsed = updateAchievementProgressSchema.safeParse(rawBody);
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
+    }
+    body = parsed.data;
   } catch {
     return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
-  }
-
-  if (!body || typeof body !== 'object' || Array.isArray(body)) {
-    return NextResponse.json({ error: 'Request body must be a JSON object' }, { status: 400 });
   }
 
   try {
@@ -172,16 +180,9 @@ export async function POST(request: NextRequest) {
     const userAddress = toNonEmptyString(body.userAddress);
     const { progress } = body;
 
-    if (!milestoneKey || !userAddress || progress === undefined) {
+    if (!milestoneKey || !userAddress) {
       return NextResponse.json(
         { error: 'Milestone key, user address, and progress required' },
-        { status: 400 }
-      );
-    }
-
-    if (!MILESTONE_KEY_REGEX.test(milestoneKey)) {
-      return NextResponse.json(
-        { error: 'Invalid milestone key format' },
         { status: 400 }
       );
     }

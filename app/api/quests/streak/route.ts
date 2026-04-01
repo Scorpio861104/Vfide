@@ -3,9 +3,15 @@ import { getClient } from '@/lib/db';
 import { isAdmin, requireAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { logger } from '@/lib/logger';
+import { z } from 'zod4';
 
 const STREAK_TYPE_REGEX = /^[a-z_]{1,32}$/;
 const ADDRESS_PATTERN = /^0x[a-fA-F0-9]{3,64}$/;
+
+const updateStreakSchema = z.object({
+  userAddress: z.string().trim().regex(ADDRESS_PATTERN),
+  streakType: z.string().regex(STREAK_TYPE_REGEX).optional(),
+});
 
 function normalizeAddress(value: string): string {
   return value.trim().toLowerCase();
@@ -156,33 +162,22 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  let body: Record<string, unknown>;
+  let body: z.infer<typeof updateStreakSchema>;
   try {
-    body = await request.json();
+    const rawBody = await request.json();
+    const parsed = updateStreakSchema.safeParse(rawBody);
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
+    }
+    body = parsed.data;
   } catch {
     return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
-  }
-
-  if (!body || typeof body !== 'object' || Array.isArray(body)) {
-    return NextResponse.json({ error: 'Request body must be a JSON object' }, { status: 400 });
   }
 
   try {
     const { userAddress, streakType = 'login' } = body;
 
-    if (!userAddress) {
-      return NextResponse.json({ error: 'User address required' }, { status: 400 });
-    }
-
-    if (typeof userAddress !== 'string') {
-      return NextResponse.json({ error: 'User address must be a string' }, { status: 400 });
-    }
-
-    const streakTypeValue = typeof streakType === 'string' ? streakType : 'login';
-
-    if (!STREAK_TYPE_REGEX.test(streakTypeValue)) {
-      return NextResponse.json({ error: 'Invalid streak type' }, { status: 400 });
-    }
+    const streakTypeValue = streakType;
 
     const targetAddress = normalizeAddress(userAddress);
     if (!isAddressLike(targetAddress)) {
