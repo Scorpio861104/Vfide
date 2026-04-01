@@ -334,7 +334,8 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
       }
       body = parsed.data;
-    } catch {
+    } catch (error) {
+      logger.debug('[Monthly Leaderboard POST] Invalid JSON body', error);
       return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
     }
 

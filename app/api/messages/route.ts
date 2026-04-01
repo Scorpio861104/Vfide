@@ -88,7 +88,8 @@ function isEncryptedDirectMessagePayload(content: string): boolean {
     if (typeof nonce !== 'string' || nonce.length < 16 || !HEX_STRING_REGEX.test(nonce)) return false;
 
     return true;
-  } catch {
+  } catch (error) {
+    logger.debug('[Messages] Failed to parse encrypted payload', error);
     return false;
   }
 }
@@ -296,7 +297,8 @@ export async function POST(request: NextRequest) {
         );
       }
       body = parsed.data;
-    } catch {
+    } catch (error) {
+      logger.debug('[Messages POST] Invalid JSON body', error);
       return NextResponse.json(
         { error: 'Invalid JSON body' },
         { status: 400 }
@@ -466,7 +468,8 @@ export async function PATCH(request: NextRequest) {
       );
     }
     body = parsed.data;
-  } catch {
+  } catch (error) {
+    logger.debug('[Messages PATCH] Invalid JSON body', error);
     return NextResponse.json(
       { error: 'Invalid JSON body' },
       { status: 400 }

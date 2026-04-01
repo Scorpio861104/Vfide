@@ -95,7 +95,8 @@ export async function POST(request: NextRequest) {
       );
     }
     body = parsed.data;
-  } catch {
+  } catch (error) {
+    logger.debug('[Message Reaction POST] Invalid JSON body', error);
     return NextResponse.json(
       { error: 'Invalid JSON body' },
       { status: 400 }
@@ -160,7 +161,8 @@ export async function POST(request: NextRequest) {
         if (parsedUrl.protocol !== 'https:' && parsedUrl.protocol !== 'http:') {
           throw new Error('Invalid protocol');
         }
-      } catch {
+      } catch (error) {
+        logger.debug('[Message Reaction POST] Invalid image URL', error);
         return NextResponse.json(
           { error: 'Invalid image URL' },
           { status: 400 }
@@ -319,7 +321,8 @@ export async function DELETE(request: NextRequest) {
       );
     }
     body = parsed.data;
-  } catch {
+  } catch (error) {
+    logger.debug('[Message Reaction DELETE] Invalid JSON body', error);
     return NextResponse.json(
       { error: 'Invalid JSON body' },
       { status: 400 }
