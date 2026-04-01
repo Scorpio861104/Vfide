@@ -1,7 +1,7 @@
 // Database Client - Real PostgreSQL Connection
 // NO MOCKS - Real database queries
 
-import { Pool, QueryResult, QueryResultRow } from 'pg';
+import { Pool, PoolClient, QueryResult, QueryResultRow } from 'pg';
 import { AsyncLocalStorage } from 'node:async_hooks';
 import { logger } from './logger';
 
@@ -12,6 +12,16 @@ const dbUserContext = new AsyncLocalStorage<{ userAddress: string | null }>();
 export function setDbUserAddressContext(userAddress: string | null | undefined) {
   const normalized = userAddress ? userAddress.toLowerCase() : null;
   dbUserContext.enterWith({ userAddress: normalized });
+}
+
+async function applyDbUserAddressContext(client: PoolClient, userAddress: string | null) {
+  if (!userAddress) return;
+  await client.query("SELECT set_config('app.current_user_address', $1, false)", [userAddress]);
+}
+
+async function clearDbUserAddressContext(client: PoolClient, userAddress: string | null) {
+  if (!userAddress) return;
+  await client.query("RESET app.current_user_address");
 }
 
 function getPool(): Pool {
@@ -73,9 +83,12 @@ export async function query<T extends QueryResultRow = QueryResultRow>(
     if (userAddress) {
       const client = await pool.connect();
       try {
-        await client.query("SELECT set_config('app.current_user_address', $1, false)", [userAddress]);
-        res = await client.query<T>(text, params);
-        await client.query("RESET app.current_user_address");
+        await applyDbUserAddressContext(client, userAddress);
+        try {
+          res = await client.query<T>(text, params);
+        } finally {
+          await clearDbUserAddressContext(client, userAddress);
+        }
       } finally {
         client.release();
       }
@@ -126,8 +139,31 @@ export async function safeQuery<T extends QueryResultRow = QueryResultRow>(
   return query<T>(fullQuery, params as (string | number | boolean | null | Date | undefined | unknown[])[]);
 }
 
-export async function getClient() {
-  return await getPool().connect();
+export async function getClient(): Promise<PoolClient> {
+  const client = await getPool().connect();
+  const userAddress = dbUserContext.getStore()?.userAddress ?? null;
+
+  try {
+    await applyDbUserAddressContext(client, userAddress);
+  } catch (error) {
+    client.release();
+    throw error;
+  }
+
+  if (userAddress) {
+    const originalRelease = client.release.bind(client);
+    client.release = ((err?: Error | boolean) => {
+      void clearDbUserAddressContext(client, userAddress)
+        .catch((resetError) => {
+          logger.warn('Failed to reset DB session user context', {
+            error: resetError instanceof Error ? resetError.message : String(resetError),
+          });
+        })
+        .finally(() => originalRelease(err));
+    }) as PoolClient['release'];
+  }
+
+  return client;
 }
 
 // Export pool getter for compatibility

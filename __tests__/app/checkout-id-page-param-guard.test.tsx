@@ -31,10 +31,6 @@ jest.mock('@/hooks/useMerchantHooks', () => ({
   }),
 }));
 
-jest.mock('@/lib/auth/client', () => ({
-  getAuthHeaders: () => ({}),
-}));
-
 jest.mock('lucide-react', () => {
   const Icon = ({ className }: { className?: string }) => <span className={className}>icon</span>;
   return {

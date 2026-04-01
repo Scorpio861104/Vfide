@@ -39,34 +39,28 @@ const nextConfig: NextConfig = {
     ],
   },
 
-  // Image optimization
+  // Image optimization — allow only explicit remote hosts used by the app.
   images: {
     remotePatterns: [
-      // Specific trusted domains (highest-priority, most common)
       {
         protocol: 'https',
         hostname: 'avatars.githubusercontent.com',
-      },
-      {
-        protocol: 'https',
-        hostname: '*.vercel-storage.com',
+        pathname: '/**',
       },
       {
         protocol: 'https',
         hostname: 'images.unsplash.com',
+        pathname: '/**',
       },
       {
         protocol: 'https',
         hostname: 'cloudflare-ipfs.com',
-      },
-      {
-        protocol: 'https',
-        hostname: '*.amazonaws.com',
+        pathname: '/**',
       },
     ],
   },
 
-  // Security headers including Content Security Policy
+  // Security headers excluding CSP (nonce-based CSP is set in root middleware/proxy)
   async headers() {
     return [
       {

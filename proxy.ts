@@ -173,30 +173,22 @@ export function proxy(request: NextRequest) {
   const pathname = new URL(request.url).pathname;
   const nonce = generateNonce();
   const csp = buildCsp(nonce);
+  const corsOrigin = pathname.startsWith('/api/')
+    ? getAllowedOrigin(request.headers.get('origin'))
+    : null;
 
   // --- CORS for API routes ---
-  if (pathname.startsWith('/api/')) {
-    const origin = request.headers.get('origin');
-    const allowedOrigin = getAllowedOrigin(origin);
-
-    // Handle preflight OPTIONS
-    if (request.method === 'OPTIONS') {
-      const preflightResponse = new NextResponse(null, { status: 204 });
-      if (allowedOrigin) {
-        preflightResponse.headers.set('Access-Control-Allow-Origin', allowedOrigin);
-      }
-      preflightResponse.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
-      preflightResponse.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-csrf-token');
-      preflightResponse.headers.set('Access-Control-Allow-Credentials', 'true');
-      preflightResponse.headers.set('Access-Control-Max-Age', '86400');
-      return preflightResponse;
+  if (pathname.startsWith('/api/') && request.method === 'OPTIONS') {
+    const preflightResponse = new NextResponse(null, { status: 204 });
+    if (corsOrigin) {
+      preflightResponse.headers.set('Access-Control-Allow-Origin', corsOrigin);
+      preflightResponse.headers.set('Vary', 'Origin');
     }
-
-    // For non-preflight requests, we set CORS headers on the response below.
-    // Store the allowed origin to attach later.
-    if (allowedOrigin) {
-      request.headers.set('x-cors-origin', allowedOrigin);
-    }
+    preflightResponse.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
+    preflightResponse.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-csrf-token');
+    preflightResponse.headers.set('Access-Control-Allow-Credentials', 'true');
+    preflightResponse.headers.set('Access-Control-Max-Age', '86400');
+    return applySecurityHeaders(preflightResponse, nonce, csp);
   }
 
   // Check request body size for write operations (POST, PUT, PATCH, DELETE)
@@ -250,21 +242,19 @@ export function proxy(request: NextRequest) {
   }), nonce, csp);
 
   // Attach CORS headers for API responses
-  const corsOrigin = request.headers.get('x-cors-origin');
   if (corsOrigin) {
     response.headers.set('Access-Control-Allow-Origin', corsOrigin);
     response.headers.set('Access-Control-Allow-Credentials', 'true');
+    response.headers.set('Vary', 'Origin');
   }
 
   return response;
 }
 
-// Configure which routes should use this proxy
 export const config = {
   matcher: [
-    /*
-     * Match all request paths including API routes
-     */
-    '/(.*)',
+    '/api/:path*',
+    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|css|js)$).*)',
   ],
 };
+

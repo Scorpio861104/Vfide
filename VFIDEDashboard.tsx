@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import type { CSSProperties, ElementType, ReactNode } from "react";
 import {
   SidebarNav,
   TopBar,
@@ -28,14 +29,14 @@ const T = {
   glassHover: "rgba(255,255,255,0.06)",
 };
 
-function useAnimatedValue(target, duration = 1400) {
+function useAnimatedValue(target: number, duration = 1400) {
   const [val, setVal] = useState(0);
-  const ref = useRef(null);
+  const ref = useRef<number | null>(null);
 
   useEffect(() => {
     const start = val;
     const startTime = performance.now();
-    const tick = (now) => {
+    const tick = (now: number) => {
       const p = Math.min((now - startTime) / duration, 1);
       const eased = 1 - Math.pow(1 - p, 3);
       setVal(Math.floor(start + (target - start) * eased));
@@ -43,13 +44,17 @@ function useAnimatedValue(target, duration = 1400) {
     };
 
     ref.current = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(ref.current);
-  }, [target]);
+    return () => {
+      if (ref.current !== null) {
+        cancelAnimationFrame(ref.current);
+      }
+    };
+  }, [duration, target]);
 
   return val;
 }
 
-function ProofScoreHero({ score }) {
+function ProofScoreHero({ score }: { score: number }) {
   const displayScore = useAnimatedValue(score);
   const size = 220;
   const stroke = 8;
@@ -123,7 +128,21 @@ function ProofScoreHero({ score }) {
   );
 }
 
-function ChartTooltip({ active, payload, label }) {
+type ChartTooltipItem = {
+  color?: string;
+  name?: string;
+  value: number;
+};
+
+function ChartTooltip({
+  active,
+  payload,
+  label,
+}: {
+  active?: boolean;
+  payload?: ChartTooltipItem[];
+  label?: string | number;
+}) {
   if (!active || !payload?.length) return null;
   return (
     <div style={{
@@ -141,7 +160,19 @@ function ChartTooltip({ active, payload, label }) {
   );
 }
 
-function Card({ children, style, hover = true, onClick, glow }) {
+function Card({
+  children,
+  style,
+  hover = true,
+  onClick,
+  glow,
+}: {
+  children: ReactNode;
+  style?: CSSProperties;
+  hover?: boolean;
+  onClick?: () => void;
+  glow?: string;
+}) {
   const [hovered, setHovered] = useState(false);
   return (
     <div
@@ -167,7 +198,17 @@ function Card({ children, style, hover = true, onClick, glow }) {
   );
 }
 
-function IconBadge({ icon: Icon, color, bg, size = 36 }) {
+function IconBadge({
+  icon: Icon,
+  color,
+  bg,
+  size = 36,
+}: {
+  icon: ElementType<{ size?: number; color?: string; strokeWidth?: number }>;
+  color: string;
+  bg?: string;
+  size?: number;
+}) {
   return (
     <div style={{
       width: size, height: size, borderRadius: 10,
@@ -194,7 +235,7 @@ export default function VFIDEDashboard() {
     setTimeout(() => setCopied(false), 2000);
   }, []);
 
-  const stagger = (i) => ({
+  const stagger = (i: number): CSSProperties => ({
     opacity: mounted ? 1 : 0,
     transform: mounted ? "translateY(0)" : "translateY(20px)",
     transition: `all 0.6s cubic-bezier(0.4,0,0.2,1) ${i * 0.08}s`,

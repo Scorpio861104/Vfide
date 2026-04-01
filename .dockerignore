@@ -81,8 +81,8 @@ TEST_EXECUTION_GUIDE.md
 .circleci/
 .travis.yml
 
-# NPM/package files (not needed with node-modules already excluded)
-package-lock.json
+# Additional package manager files not used by this image build
+# Keep `package-lock.json` in the build context for deterministic `npm ci`.
 yarn.lock
 pnpm-lock.yaml
 
@@ -97,11 +97,16 @@ commitlint.config.js
 
 # Misc files
 *.zip
+*.log
 files.zip
 VFIDE_Brand_Assets.zip
 *.3ds
 *.blend
 VFIDEDashboard.jsx
+extracted-archives/
+playwright-report/
+test-results/
+vfide-complete/
 
 # Docker files
 docker-compose*.yml
