@@ -11,10 +11,60 @@ import { query } from '@/lib/db';
 import { requireAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { logger } from '@/lib/logger';
+import { z } from 'zod4';
 
 const ADDRESS_LIKE_REGEX = /^0x[a-fA-F0-9]{3,40}$/;
 const SLUG_REGEX = /^[a-z0-9][a-z0-9-]{1,58}$/;
 const RESERVED_SLUGS = ['admin', 'api', 'app', 'checkout', 'dashboard', 'store', 'merchant', 'vfide'];
+
+const merchantProfileCreateSchema = z.object({
+  display_name: z.string().trim().min(1).max(120),
+  tagline: z.string().max(200).optional(),
+  description: z.string().max(5000).optional(),
+  slug: z.string().trim().regex(SLUG_REGEX).optional(),
+  logo_url: z.string().max(2000).optional(),
+  banner_url: z.string().max(2000).optional(),
+  website: z.string().max(500).optional(),
+  contact_email: z.string().email().max(254).optional(),
+  phone: z.string().max(30).optional(),
+  business_hours: z.record(z.string(), z.unknown()).optional(),
+  address_line1: z.string().max(200).optional(),
+  address_line2: z.string().max(200).optional(),
+  city: z.string().max(100).optional(),
+  state_province: z.string().max(100).optional(),
+  postal_code: z.string().max(20).optional(),
+  country: z.string().max(2).optional(),
+  social_links: z.record(z.string(), z.unknown()).optional(),
+  theme_color: z.string().regex(/^#[a-fA-F0-9]{6}$/).optional(),
+  shipping_enabled: z.boolean().optional(),
+  pickup_enabled: z.boolean().optional(),
+  digital_goods_enabled: z.boolean().optional(),
+  services_enabled: z.boolean().optional(),
+});
+
+const merchantProfilePatchSchema = z.object({
+  display_name: z.string().max(120).optional(),
+  tagline: z.string().max(200).optional(),
+  description: z.string().max(5000).optional(),
+  logo_url: z.string().max(2000).optional(),
+  banner_url: z.string().max(2000).optional(),
+  website: z.string().max(500).optional(),
+  contact_email: z.string().email().max(254).optional(),
+  phone: z.string().max(30).optional(),
+  address_line1: z.string().max(200).optional(),
+  address_line2: z.string().max(200).optional(),
+  city: z.string().max(100).optional(),
+  state_province: z.string().max(100).optional(),
+  postal_code: z.string().max(20).optional(),
+  country: z.string().max(2).optional(),
+  theme_color: z.string().regex(/^#[a-fA-F0-9]{6}$/).optional(),
+  business_hours: z.record(z.string(), z.unknown()).optional(),
+  social_links: z.record(z.string(), z.unknown()).optional(),
+  shipping_enabled: z.boolean().optional(),
+  pickup_enabled: z.boolean().optional(),
+  digital_goods_enabled: z.boolean().optional(),
+  services_enabled: z.boolean().optional(),
+});
 
 function slugify(text: string): string {
   return text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 60);
@@ -138,18 +188,18 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Profile already exists, use PATCH to update' }, { status: 409 });
     }
 
-    const body = await request.json() as Record<string, unknown>;
+    const parsedBody = merchantProfileCreateSchema.safeParse(await request.json());
+    if (!parsedBody.success) {
+      return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
+    }
+
+    const body = parsedBody.data;
     const { display_name, tagline, description, slug: requestedSlug, logo_url, banner_url,
             website, contact_email, phone, business_hours, address_line1, address_line2,
             city, state_province, postal_code, country, social_links, theme_color,
             shipping_enabled, pickup_enabled, digital_goods_enabled, services_enabled } = body;
 
-    if (typeof display_name !== 'string' || display_name.trim().length === 0) {
-      return NextResponse.json({ error: 'display_name required' }, { status: 400 });
-    }
-
-    let slug = typeof requestedSlug === 'string' && SLUG_REGEX.test(requestedSlug)
-      ? requestedSlug : slugify(display_name.trim());
+    let slug = typeof requestedSlug === 'string' ? requestedSlug : slugify(display_name.trim());
 
     if (RESERVED_SLUGS.includes(slug)) {
       slug = `${slug}-store`;
@@ -173,23 +223,23 @@ export async function POST(request: NextRequest) {
       [
         authAddress,
         slug,
-        (display_name as string).trim().slice(0, 120),
-        typeof tagline === 'string' ? tagline.slice(0, 200) : null,
-        typeof description === 'string' ? description.slice(0, 5000) : null,
-        typeof logo_url === 'string' ? logo_url.slice(0, 2000) : null,
-        typeof banner_url === 'string' ? banner_url.slice(0, 2000) : null,
-        typeof website === 'string' ? website.slice(0, 500) : null,
-        typeof contact_email === 'string' ? contact_email.slice(0, 254) : null,
-        typeof phone === 'string' ? phone.slice(0, 30) : null,
-        business_hours && typeof business_hours === 'object' ? JSON.stringify(business_hours) : null,
-        typeof address_line1 === 'string' ? address_line1.slice(0, 200) : null,
-        typeof address_line2 === 'string' ? address_line2.slice(0, 200) : null,
-        typeof city === 'string' ? city.slice(0, 100) : null,
-        typeof state_province === 'string' ? state_province.slice(0, 100) : null,
-        typeof postal_code === 'string' ? postal_code.slice(0, 20) : null,
-        typeof country === 'string' ? country.slice(0, 2).toUpperCase() : null,
-        social_links && typeof social_links === 'object' ? JSON.stringify(social_links) : null,
-        typeof theme_color === 'string' && /^#[a-fA-F0-9]{6}$/.test(theme_color) ? theme_color : null,
+        display_name,
+        tagline ?? null,
+        description ?? null,
+        logo_url ?? null,
+        banner_url ?? null,
+        website ?? null,
+        contact_email ?? null,
+        phone ?? null,
+        business_hours ? JSON.stringify(business_hours) : null,
+        address_line1 ?? null,
+        address_line2 ?? null,
+        city ?? null,
+        state_province ?? null,
+        postal_code ?? null,
+        country ? country.toUpperCase() : null,
+        social_links ? JSON.stringify(social_links) : null,
+        theme_color ?? null,
         shipping_enabled === true,
         pickup_enabled === true,
         digital_goods_enabled === true,
@@ -221,7 +271,12 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: 'Profile not found, create one first' }, { status: 404 });
     }
 
-    const body = await request.json() as Record<string, unknown>;
+    const parsedBody = merchantProfilePatchSchema.safeParse(await request.json());
+    if (!parsedBody.success) {
+      return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
+    }
+
+    const body = parsedBody.data;
     const updates: string[] = ['updated_at = NOW()'];
     const params: (string | number | boolean | null)[] = [];
     let pi = 1;
@@ -243,35 +298,44 @@ export async function PATCH(request: NextRequest) {
     ];
 
     for (const [bodyKey, col, maxLen] of strFields) {
-      if (typeof body[bodyKey] === 'string') {
+      if (typeof body[bodyKey as keyof typeof body] === 'string') {
         updates.push(`${col} = $${pi++}`);
-        params.push((body[bodyKey] as string).slice(0, maxLen));
+        params.push((body[bodyKey as keyof typeof body] as string).slice(0, maxLen));
       }
     }
 
-    if (typeof body.country === 'string') {
+    if (body.country !== undefined) {
       updates.push(`country = $${pi++}`);
-      params.push((body.country as string).slice(0, 2).toUpperCase());
+      params.push(body.country.toUpperCase());
     }
-    if (typeof body.theme_color === 'string' && /^#[a-fA-F0-9]{6}$/.test(body.theme_color as string)) {
+    if (body.theme_color !== undefined) {
       updates.push(`theme_color = $${pi++}`);
-      params.push(body.theme_color as string);
+      params.push(body.theme_color);
     }
-    if (body.business_hours && typeof body.business_hours === 'object') {
+    if (body.business_hours) {
       updates.push(`business_hours = $${pi++}`);
       params.push(JSON.stringify(body.business_hours));
     }
-    if (body.social_links && typeof body.social_links === 'object') {
+    if (body.social_links) {
       updates.push(`social_links = $${pi++}`);
       params.push(JSON.stringify(body.social_links));
     }
 
-    const boolFields = ['shipping_enabled', 'pickup_enabled', 'digital_goods_enabled', 'services_enabled'];
-    for (const field of boolFields) {
-      if (typeof body[field] === 'boolean') {
-        updates.push(`${field} = $${pi++}`);
-        params.push(body[field] as boolean);
-      }
+    if (typeof body.shipping_enabled === 'boolean') {
+      updates.push(`shipping_enabled = $${pi++}`);
+      params.push(body.shipping_enabled);
+    }
+    if (typeof body.pickup_enabled === 'boolean') {
+      updates.push(`pickup_enabled = $${pi++}`);
+      params.push(body.pickup_enabled);
+    }
+    if (typeof body.digital_goods_enabled === 'boolean') {
+      updates.push(`digital_goods_enabled = $${pi++}`);
+      params.push(body.digital_goods_enabled);
+    }
+    if (typeof body.services_enabled === 'boolean') {
+      updates.push(`services_enabled = $${pi++}`);
+      params.push(body.services_enabled);
     }
 
     params.push(authAddress);
