@@ -2,12 +2,21 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 import { requireAuth, checkOwnership } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
-import { createProposalSchema } from '@/lib/auth/validation';
 import { isAddress } from 'viem';
 import { logger } from '@/lib/logger';
+import { z } from 'zod4';
 
 const MAX_PROPOSALS_LIMIT = 100;
 const MAX_PROPOSALS_OFFSET = 10000;
+
+const createProposalRequestSchema = z.object({
+  proposerAddress: z.string().trim().refine((value) => isAddress(value), {
+    message: 'Invalid proposer address format',
+  }),
+  title: z.string().trim().min(1),
+  description: z.string().trim().min(1),
+  endsAt: z.coerce.date().optional(),
+});
 
 function isDatabaseUnavailableError(error: unknown): boolean {
   const stack: unknown[] = [error];
@@ -237,9 +246,17 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  let body: unknown;
+  let body: z.infer<typeof createProposalRequestSchema>;
   try {
-    body = await request.json();
+    const rawBody = await request.json();
+    const parsed = createProposalRequestSchema.safeParse(rawBody);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Validation failed', details: parsed.error.issues },
+        { status: 400 }
+      );
+    }
+    body = parsed.data;
   } catch {
     return NextResponse.json(
       { error: 'Invalid JSON body' },
@@ -247,23 +264,8 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  if (!body || typeof body !== 'object' || Array.isArray(body)) {
-    return NextResponse.json(
-      { error: 'Request body must be a JSON object' },
-      { status: 400 }
-    );
-  }
-
-  const parsed = createProposalSchema.safeParse(body);
-  if (!parsed.success) {
-    return NextResponse.json(
-      { error: 'Validation failed', details: parsed.error.issues },
-      { status: 400 }
-    );
-  }
-
   try {
-    const { proposerAddress, title, description, endsAt } = parsed.data;
+    const { proposerAddress, title, description, endsAt } = body;
 
     // Verify user is creating proposal for themselves
     if (!checkOwnership(authResult.user, proposerAddress)) {

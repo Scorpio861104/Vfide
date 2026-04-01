@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { verifyMessage } from 'viem';
 import { generateToken, verifyToken, extractToken } from '@/lib/auth/jwt';
 import { withRateLimit } from '@/lib/auth/rateLimit';
-import { validateBody, authSchema } from '@/lib/auth/validation';
 import { setAuthCookie, getAuthCookie } from '@/lib/auth/cookieAuth';
 import {
   consumeAndValidateSiweChallenge,
@@ -14,6 +13,16 @@ import {
   recordSecurityEvent,
 } from '@/lib/security/accountProtection';
 import { logger } from '@/lib/logger';
+import { z } from 'zod4';
+
+const ADDRESS_PATTERN = /^0x[a-fA-F0-9]{40}$/;
+const SIGNATURE_PATTERN = /^0x[a-fA-F0-9]{130}$/;
+
+const authRequestSchema = z.object({
+  address: z.string().trim().regex(ADDRESS_PATTERN),
+  message: z.string().min(1),
+  signature: z.string().trim().regex(SIGNATURE_PATTERN),
+});
 
 function parseMessageTimestamp(message: string): number | null {
   const timestampMatch = message.match(/^Timestamp:\s*(\d+)\s*$/m);
@@ -60,16 +69,25 @@ export async function POST(request: NextRequest) {
   if (rateLimitResponse) return rateLimitResponse;
 
   try {
-    // Validate request body
-    const validation = await validateBody(request, authSchema);
-    if (!validation.success) {
+    let body: z.infer<typeof authRequestSchema>;
+    try {
+      const rawBody = await request.json();
+      const parsed = authRequestSchema.safeParse(rawBody);
+      if (!parsed.success) {
+        return NextResponse.json(
+          { error: 'Invalid request body' },
+          { status: 400 }
+        );
+      }
+      body = parsed.data;
+    } catch {
       return NextResponse.json(
-        { error: validation.error, details: validation.details },
+        { error: 'Invalid JSON body' },
         { status: 400 }
       );
     }
 
-    const { address, message, signature } = validation.data;
+    const { address, message, signature } = body;
     const normalizedAddress = address.toLowerCase();
     const ip = getRequestIp(request.headers);
     const userAgent = request.headers.get('user-agent') || 'unknown';

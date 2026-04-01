@@ -7,6 +7,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { logger } from '@/lib/logger';
+import { z } from 'zod4';
 
 interface CSPViolation {
   'document-uri'?: string;
@@ -31,6 +32,10 @@ const MAX_CSP_REPORTS_LIMIT = 200;
 
 // Maximum length for string fields to prevent log-flooding
 const MAX_FIELD_LENGTH = 2048;
+
+const cspReportRequestSchema = z.object({
+  'csp-report': z.record(z.string(), z.unknown()),
+});
 
 function parseStrictIntegerParam(value: string | null): number | null {
   if (value === null) return null;
@@ -100,9 +105,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unsupported content type' }, { status: 415 });
     }
 
-    let body: CSPReport;
+    let body: z.infer<typeof cspReportRequestSchema>;
     try {
-      body = await request.json();
+      const rawBody = await request.json();
+      const parsed = cspReportRequestSchema.safeParse(rawBody);
+      if (!parsed.success) {
+        return NextResponse.json({ error: 'Invalid report' }, { status: 400 });
+      }
+      body = parsed.data;
     } catch {
       return NextResponse.json({ error: 'Invalid JSON payload' }, { status: 400 });
     }
