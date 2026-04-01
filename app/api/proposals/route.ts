@@ -139,53 +139,59 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    let queryText = `
-      SELECT 
+    const selectBase = `
+      SELECT
         p.*,
         u.wallet_address as proposer_address,
         u.username as proposer_username,
         u.avatar_url as proposer_avatar
       FROM proposals p
       JOIN users u ON p.proposer_id = u.id
-      WHERE 1=1
     `;
-    const params: (string | number)[] = [];
-    let paramCount = 1;
 
-    if (status) {
-      queryText += ` AND p.status = $${paramCount}`;
-      params.push(status);
-      paramCount++;
+    const countBase = `
+      SELECT COUNT(*) as count
+      FROM proposals p
+      JOIN users u ON p.proposer_id = u.id
+    `;
+
+    let result;
+    let countResult;
+
+    if (status && normalizedProposerId) {
+      result = await query<Proposal>(
+        `${selectBase} WHERE p.status = $1 AND u.wallet_address = $2 ORDER BY p.created_at DESC LIMIT $3 OFFSET $4`,
+        [status, normalizedProposerId, limit, offset]
+      );
+      countResult = await query<{ count: string }>(
+        `${countBase} WHERE p.status = $1 AND u.wallet_address = $2`,
+        [status, normalizedProposerId]
+      );
+    } else if (status) {
+      result = await query<Proposal>(
+        `${selectBase} WHERE p.status = $1 ORDER BY p.created_at DESC LIMIT $2 OFFSET $3`,
+        [status, limit, offset]
+      );
+      countResult = await query<{ count: string }>(
+        `${countBase} WHERE p.status = $1`,
+        [status]
+      );
+    } else if (normalizedProposerId) {
+      result = await query<Proposal>(
+        `${selectBase} WHERE u.wallet_address = $1 ORDER BY p.created_at DESC LIMIT $2 OFFSET $3`,
+        [normalizedProposerId, limit, offset]
+      );
+      countResult = await query<{ count: string }>(
+        `${countBase} WHERE u.wallet_address = $1`,
+        [normalizedProposerId]
+      );
+    } else {
+      result = await query<Proposal>(
+        `${selectBase} ORDER BY p.created_at DESC LIMIT $1 OFFSET $2`,
+        [limit, offset]
+      );
+      countResult = await query<{ count: string }>(countBase);
     }
-
-    if (normalizedProposerId) {
-      queryText += ` AND u.wallet_address = $${paramCount}`;
-      params.push(normalizedProposerId);
-      paramCount++;
-    }
-
-    queryText += ` ORDER BY p.created_at DESC LIMIT $${paramCount} OFFSET $${paramCount + 1}`;
-    params.push(limit, offset);
-
-    const result = await query<Proposal>(queryText, params);
-
-    // Get total count
-    let countQuery = 'SELECT COUNT(*) as count FROM proposals p JOIN users u ON p.proposer_id = u.id WHERE 1=1';
-    const countParams: (string | number)[] = [];
-    let countParamCount = 1;
-
-    if (status) {
-      countQuery += ` AND p.status = $${countParamCount}`;
-      countParams.push(status);
-      countParamCount++;
-    }
-
-    if (normalizedProposerId) {
-      countQuery += ` AND u.wallet_address = $${countParamCount}`;
-      countParams.push(normalizedProposerId);
-    }
-
-    const countResult = await query<{ count: string }>(countQuery, countParams);
 
     const totalCount = parseInt(countResult.rows[0]?.count || '0', 10);
     if (isNaN(totalCount)) {
