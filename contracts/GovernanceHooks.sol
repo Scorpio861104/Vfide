@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
+import "./SharedInterfaces.sol";
+
 /**
  * @title GovernanceHooks
  * @notice Callback hooks for DAO events with SeerGuardian integration
@@ -25,7 +27,7 @@ interface ISeerGuardian_GH {
     function recordViolation(address subject, uint8 vtype, string calldata reason) external;
 }
 
-contract GovernanceHooks {
+contract GovernanceHooks is ReentrancyGuard {
     address public owner;
     address public dao; // DAO contract that can call hooks
     IProofLedger_GH public ledger; // optional
@@ -81,7 +83,7 @@ contract GovernanceHooks {
      * @notice Called when a new proposal is created
      * @dev Automatically checks proposer via SeerGuardian
      */
-    function onProposalCreated(uint256 id, address proposer) external onlyDAO {
+    function onProposalCreated(uint256 id, address proposer) external onlyDAO nonReentrant {
         _log("gh_proposal_created");
         
         // Auto-check proposer via SeerGuardian
@@ -98,7 +100,7 @@ contract GovernanceHooks {
      * @notice Called before proposal execution - checks Seer flags
      * @dev Reverts if proposal is blocked by SeerGuardian
      */
-    function onProposalQueued(uint256 id, address /*target*/, uint256 /*value*/) external onlyDAO {
+    function onProposalQueued(uint256 id, address /*target*/, uint256 /*value*/) external onlyDAO nonReentrant {
         _log("gh_queued");
         
         // Check if Seer has flagged this proposal
@@ -114,7 +116,7 @@ contract GovernanceHooks {
      * @notice Called when a vote is cast
      * @dev Checks voter restrictions and rewards participation
      */
-    function onVoteCast(uint256 /*id*/, address voter, bool /*support*/) external onlyDAO {
+    function onVoteCast(uint256 /*id*/, address voter, bool /*support*/) external onlyDAO nonReentrant {
         _log("gh_vote");
         
         // Check if voter is restricted by SeerGuardian
@@ -131,7 +133,7 @@ contract GovernanceHooks {
         }
     }
     
-    function onFinalized(uint256 /*id*/, bool passed) external onlyDAO {
+    function onFinalized(uint256 /*id*/, bool passed) external onlyDAO nonReentrant {
         _log(passed ? "gh_passed" : "gh_failed");
     }
     
@@ -140,7 +142,7 @@ contract GovernanceHooks {
      * @param user The abusing user
      * @param description What happened
      */
-    function reportGovernanceAbuse(address user, string calldata description) external onlyDAO {
+    function reportGovernanceAbuse(address user, string calldata description) external onlyDAO nonReentrant {
         emit GovernanceViolation(user, description);
         
         if (address(guardian) != address(0)) {

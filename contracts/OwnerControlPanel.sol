@@ -467,14 +467,14 @@ contract OwnerControlPanel {
         if (router != address(0)) vfideToken.setBurnRouter(router);
     }
 
-    function token_applyModules() external onlyOwner {
+    function token_applyModules() external onlyOwner nonReentrant {
         vfideToken.applyVaultHub();
         vfideToken.applySecurityHub();
         vfideToken.applyLedger();
         vfideToken.applyBurnRouter();
     }
 
-    function token_cancelModules() external onlyOwner {
+    function token_cancelModules() external onlyOwner nonReentrant {
         // Best-effort: cancel each pending module change if present.
         try vfideToken.cancelVaultHub() {} catch {}
         try vfideToken.cancelSecurityHub() {} catch {}
@@ -488,7 +488,7 @@ contract OwnerControlPanel {
     function token_setSinks(
         address treasury,
         address sanctum
-    ) external onlyOwner {
+    ) external onlyOwner nonReentrant {
         _consumeQueuedAction(actionId_token_setSinks(treasury, sanctum));
         if (treasury != address(0)) vfideToken.setTreasurySink(treasury);
         if (sanctum != address(0)) vfideToken.setSanctumSink(sanctum);
@@ -498,49 +498,49 @@ contract OwnerControlPanel {
      * @notice Propose system exemption with 48-hour timelock
      * @dev Exempts address from vault-only enforcement and all fees
      */
-    function token_proposeSystemExempt(address who, bool isExempt) external onlyOwner {
+    function token_proposeSystemExempt(address who, bool isExempt) external onlyOwner nonReentrant {
         vfideToken.proposeSystemExempt(who, isExempt);
     }
 
     /**
      * @notice Confirm a pending system exemption after timelock elapses
      */
-    function token_confirmSystemExempt() external onlyOwner {
+    function token_confirmSystemExempt() external onlyOwner nonReentrant {
         vfideToken.confirmSystemExempt();
     }
 
     /**
      * @notice Cancel a pending system exemption proposal
      */
-    function token_cancelPendingSystemExempt() external onlyOwner {
+    function token_cancelPendingSystemExempt() external onlyOwner nonReentrant {
         vfideToken.cancelPendingExempt();
     }
     
     /**
      * @notice Propose whitelist entry with 48-hour timelock
      */
-    function token_proposeWhitelist(address addr, bool status) external onlyOwner {
+    function token_proposeWhitelist(address addr, bool status) external onlyOwner nonReentrant {
         vfideToken.proposeWhitelist(addr, status);
     }
 
     /**
      * @notice Confirm a pending whitelist change
      */
-    function token_confirmWhitelist() external onlyOwner {
+    function token_confirmWhitelist() external onlyOwner nonReentrant {
         vfideToken.confirmWhitelist();
     }
 
     /**
      * @notice Cancel a pending whitelist change
      */
-    function token_cancelPendingWhitelist() external onlyOwner {
+    function token_cancelPendingWhitelist() external onlyOwner nonReentrant {
         vfideToken.cancelPendingWhitelist();
     }
     
     /**
      * @notice Enable/disable vault-only enforcement
      */
-    function token_setVaultOnly(bool enabled) external onlyOwner {
+    function token_setVaultOnly(bool enabled) external onlyOwner nonReentrant {
         _consumeQueuedAction(actionId_token_setVaultOnly(enabled));
         vfideToken.setVaultOnly(enabled);
     }
@@ -548,7 +548,7 @@ contract OwnerControlPanel {
     /**
      * @notice Lock policy permanently (ONE-WAY - cannot be undone!)
      */
-    function token_lockPolicy() external onlyOwner {
+    function token_lockPolicy() external onlyOwner nonReentrant {
         _consumeQueuedAction(actionId_token_lockPolicy());
         vfideToken.lockPolicy();
     }
@@ -558,7 +558,7 @@ contract OwnerControlPanel {
      * @param active True to enable, false to disable
      * @param duration Duration in seconds (max 7 days). Ignored when disabling.
      */
-    function token_setCircuitBreaker(bool active, uint256 duration) external onlyOwner {
+    function token_setCircuitBreaker(bool active, uint256 duration) external onlyOwner nonReentrant {
         _consumeQueuedAction(actionId_token_setCircuitBreaker(active, duration));
         vfideToken.setCircuitBreaker(active, duration);
         emit EmergencyAction(active ? "circuit_breaker_on" : "circuit_breaker_off", address(vfideToken));
@@ -566,7 +566,7 @@ contract OwnerControlPanel {
 
     /// @notice H-01 FIX: Confirm a pending circuit breaker activation after its 48-hour timelock.
     /// @dev Must be called after `token_setCircuitBreaker(true, ...)` + 48h delay to complete activation.
-    function token_confirmCircuitBreaker() external onlyOwner {
+    function token_confirmCircuitBreaker() external onlyOwner nonReentrant {
         _consumeQueuedAction(actionId_token_confirmCircuitBreaker());
         vfideToken.confirmCircuitBreaker();
         emit EmergencyAction("circuit_breaker_confirmed", address(vfideToken));
@@ -578,7 +578,7 @@ contract OwnerControlPanel {
     /**
      * @notice Blacklist address for compliance (sanctions)
      */
-    function token_setBlacklist(address user, bool status) external onlyOwner {
+    function token_setBlacklist(address user, bool status) external onlyOwner nonReentrant {
         _consumeQueuedAction(actionId_token_setBlacklist(user, status));
         vfideToken.setBlacklist(user, status);
     }
@@ -587,7 +587,7 @@ contract OwnerControlPanel {
      * @notice Batch blacklist multiple addresses
      * @dev Each address requires its own queued action to prevent timelock bypass
      */
-    function token_batchBlacklist(address[] calldata users, bool status) external onlyOwner {
+    function token_batchBlacklist(address[] calldata users, bool status) external onlyOwner nonReentrant {
         for (uint256 i = 0; i < users.length; i++) {
             _consumeQueuedAction(actionId_token_setBlacklist(users[i], status));
             vfideToken.setBlacklist(users[i], status);
@@ -618,7 +618,7 @@ contract OwnerControlPanel {
         uint256 maxWallet,
         uint256 dailyLimit,
         uint256 cooldown
-    ) external onlyOwner {
+    ) external onlyOwner nonReentrant {
         // F-14 FIX: require governance queue before execution
         _consumeQueuedAction(actionId_token_setAntiWhale(maxTransfer, maxWallet, dailyLimit, cooldown));
         vfideToken.setAntiWhale(maxTransfer, maxWallet, dailyLimit, cooldown);
@@ -627,7 +627,7 @@ contract OwnerControlPanel {
     /**
      * @notice Exempt address from whale limits (for exchanges, liquidity pools)
      */
-    function token_setWhaleLimitExempt(address addr, bool exempt) external onlyOwner {
+    function token_setWhaleLimitExempt(address addr, bool exempt) external onlyOwner nonReentrant {
         // F-14 FIX: require governance queue before execution
         _consumeQueuedAction(actionId_token_setWhaleLimitExempt(addr, exempt));
         vfideToken.setWhaleLimitExempt(addr, exempt);
@@ -636,7 +636,7 @@ contract OwnerControlPanel {
     /**
      * @notice Batch exempt multiple addresses from whale limits
      */
-    function token_batchWhaleLimitExempt(address[] calldata addrs, bool exempt) external onlyOwner {
+    function token_batchWhaleLimitExempt(address[] calldata addrs, bool exempt) external onlyOwner nonReentrant {
         for (uint256 i = 0; i < addrs.length; i++) {
             // F-14 FIX: require governance queue per-address before execution
             _consumeQueuedAction(actionId_token_setWhaleLimitExempt(addrs[i], exempt));
@@ -657,7 +657,7 @@ contract OwnerControlPanel {
         return keccak256(abi.encode("fees_setPolicy", minBps, maxBps));
     }
 
-    function fees_setPolicy(uint16 minBps, uint16 maxBps) external onlyOwner {
+    function fees_setPolicy(uint16 minBps, uint16 maxBps) external onlyOwner nonReentrant {
         // F-14 FIX: require governance queue before execution
         _consumeQueuedAction(actionId_fees_setPolicy(minBps, maxBps));
         burnRouter.setFeePolicy(minBps, maxBps);
@@ -681,7 +681,7 @@ contract OwnerControlPanel {
         uint256 dailyBurnCap,
         uint256 minimumSupplyFloor,
         uint16 ecosystemMinBps
-    ) external onlyOwner {
+    ) external onlyOwner nonReentrant {
         _consumeQueuedAction(actionId_sustainability_setBurnLimits(dailyBurnCap, minimumSupplyFloor, ecosystemMinBps));
         burnRouter.setSustainability(dailyBurnCap, minimumSupplyFloor, ecosystemMinBps);
         emit SustainabilityUpdated(dailyBurnCap, minimumSupplyFloor, ecosystemMinBps);
@@ -701,7 +701,7 @@ contract OwnerControlPanel {
         uint16 lowVolMultiplier,
         uint16 highVolMultiplier,
         bool enabled
-    ) external onlyOwner {
+    ) external onlyOwner nonReentrant {
         _consumeQueuedAction(
             actionId_sustainability_setAdaptiveFees(
                 lowVolumeThreshold,
@@ -724,7 +724,7 @@ contract OwnerControlPanel {
     /**
      * @notice Set token reference on burn router (required for supply checks)
      */
-    function sustainability_setTokenReference(address token) external onlyOwner {
+    function sustainability_setTokenReference(address token) external onlyOwner nonReentrant {
         _consumeQueuedAction(actionId_sustainability_setTokenReference(token));
         burnRouter.setToken(token);
     }
@@ -741,7 +741,7 @@ contract OwnerControlPanel {
         uint16 highTrust,
         uint16 minGovernance,
         uint16 minMerchant
-    ) external onlyOwner {
+    ) external onlyOwner nonReentrant {
         _consumeQueuedAction(actionId_seer_setThresholds(lowTrust, highTrust, minGovernance, minMerchant));
         seer.setThresholds(lowTrust, highTrust, minGovernance, minMerchant);
     }
@@ -757,7 +757,7 @@ contract OwnerControlPanel {
         address token,
         address security,
         address ledger
-    ) external onlyOwner {
+    ) external onlyOwner nonReentrant {
         _consumeQueuedAction(actionId_vault_setModules(token, security, ledger));
         if (token != address(0)) vaultHub.setVFIDEToken(token);
         if (security != address(0)) vaultHub.setSecurityHub(security);
@@ -767,7 +767,7 @@ contract OwnerControlPanel {
     /**
      * @notice Set DAO recovery multisig
      */
-    function vault_setDAOMultisig(address multisig) external onlyOwner {
+    function vault_setDAOMultisig(address multisig) external onlyOwner nonReentrant {
         _consumeQueuedAction(actionId_vault_setDAOMultisig(multisig));
         vaultHub.setDAORecoveryMultisig(multisig);
     }
@@ -775,7 +775,7 @@ contract OwnerControlPanel {
     /**
      * @notice Set DAO recovery timelock duration
      */
-    function vault_setRecoveryTimelock(uint64 timelock) external onlyOwner {
+    function vault_setRecoveryTimelock(uint64 timelock) external onlyOwner nonReentrant {
         _consumeQueuedAction(actionId_vault_setRecoveryTimelock(timelock));
         vaultHub.setRecoveryTimelock(timelock);
     }
@@ -783,7 +783,7 @@ contract OwnerControlPanel {
     /**
      * @notice Initiate DAO emergency recovery for a vault
      */
-    function vault_requestDAORecovery(address vault, address newOwner) external onlyOwner {
+    function vault_requestDAORecovery(address vault, address newOwner) external onlyOwner nonReentrant {
         _consumeQueuedAction(actionId_vault_requestDAORecovery(vault, newOwner));
         vaultHub.requestDAORecovery(vault, newOwner);
         emit EmergencyAction("dao_recovery_requested", vault);
@@ -792,7 +792,7 @@ contract OwnerControlPanel {
     /**
      * @notice Finalize DAO recovery after timelock
      */
-    function vault_finalizeDAORecovery(address vault) external onlyOwner {
+    function vault_finalizeDAORecovery(address vault) external onlyOwner nonReentrant {
         _consumeQueuedAction(actionId_vault_finalizeDAORecovery(vault));
         vaultHub.finalizeDAORecovery(vault);
         emit EmergencyAction("dao_recovery_finalized", vault);
@@ -801,7 +801,7 @@ contract OwnerControlPanel {
     /**
      * @notice Cancel DAO recovery request
      */
-    function vault_cancelDAORecovery(address vault) external onlyOwner {
+    function vault_cancelDAORecovery(address vault) external onlyOwner nonReentrant {
         _consumeQueuedAction(actionId_vault_cancelDAORecovery(vault));
         vaultHub.cancelDAORecovery(vault);
     }
@@ -819,7 +819,7 @@ contract OwnerControlPanel {
 
     /// @notice Freeze/unfreeze a vault via PanicGuard (does not call vault directly — OCP is not vault owner)
     /// @dev Freeze: reports high-severity risk to PanicGuard (panicGuard must be set). Unfreeze: clears via DAO process.
-    function vault_freezeVault(address vault, bool frozen) external onlyOwner {
+    function vault_freezeVault(address vault, bool frozen) external onlyOwner nonReentrant {
         _consumeQueuedAction(actionId_vault_freezeVault(vault, frozen));
         if (address(panicGuard) == address(0)) revert OCP_PanicGuardNotSet();
         if (frozen) {
@@ -965,7 +965,7 @@ contract OwnerControlPanel {
         address stablecoin,
         bool enabled,
         uint16 maxSlippageBps
-    ) external onlyOwner {
+    ) external onlyOwner nonReentrant {
         if (maxSlippageBps > maxAutoSwapSlippageBps) revert OCP_SlippageTooHigh();
         _consumeQueuedAction(actionId_autoSwap_configure(router, stablecoin, enabled, maxSlippageBps));
         ecosystemVault.configureAutoSwap(router, stablecoin, enabled, maxSlippageBps);
@@ -976,7 +976,7 @@ contract OwnerControlPanel {
      * @notice Quick enable/disable auto-swap (keeps existing config)
      * @param enabled True to enable, false to disable
      */
-    function autoSwap_setEnabled(bool enabled) external onlyOwner {
+    function autoSwap_setEnabled(bool enabled) external onlyOwner nonReentrant {
         // F-14 FIX: use same actionId as autoSwap_configure (same config, just toggling enabled)
         address router = ecosystemVault.swapRouter();
         address stablecoin = ecosystemVault.preferredStablecoin();
@@ -1008,7 +1008,7 @@ contract OwnerControlPanel {
      * @param router DEX router address
      * @param usdc USDC token address
      */
-    function autoSwap_quickSetupUSDC(address router, address usdc) external onlyOwner {
+    function autoSwap_quickSetupUSDC(address router, address usdc) external onlyOwner nonReentrant {
         if (100 > maxAutoSwapSlippageBps) revert OCP_SlippageTooHigh();
         _consumeQueuedAction(actionId_autoSwap_quickSetupUSDC(router, usdc));
         ecosystemVault.configureAutoSwap(router, usdc, true, 100); // 1% slippage
@@ -1028,7 +1028,7 @@ contract OwnerControlPanel {
         return keccak256(abi.encode("ecosystem_setManager", manager, active));
     }
 
-    function ecosystem_setManager(address manager, bool active) external onlyOwner {
+    function ecosystem_setManager(address manager, bool active) external onlyOwner nonReentrant {
         // F-14 FIX: require governance queue before execution
         _consumeQueuedAction(actionId_ecosystem_setManager(manager, active));
         ecosystemVault.setManager(manager, active);
@@ -1045,7 +1045,7 @@ contract OwnerControlPanel {
         uint16 councilBps,
         uint16 merchantBps,
         uint16 headhunterBps
-    ) external onlyOwner {
+    ) external onlyOwner nonReentrant {
         _consumeQueuedAction(actionId_ecosystem_setAllocations(councilBps, merchantBps, headhunterBps));
         ecosystemVault.setAllocations(councilBps, merchantBps, headhunterBps);
     }
@@ -1062,7 +1062,7 @@ contract OwnerControlPanel {
         uint256 merchantTxReward,
         uint256 merchantReferralReward,
         uint256 userReferralReward
-    ) external onlyOwner {
+    ) external onlyOwner nonReentrant {
         if (
             !_isAutoWorkRewardWithinBounds(merchantTxReward) ||
             merchantTxReward > maxAutoWorkPayoutWei ||
@@ -1121,7 +1121,7 @@ contract OwnerControlPanel {
      * @dev Disables auto-swap (safest starting configuration).
      *      Howey-safe mode is hardcoded — no calls needed.
      */
-    function production_setupSafeDefaults() external onlyOwner {
+    function production_setupSafeDefaults() external onlyOwner nonReentrant {
         _consumeQueuedAction(actionId_production_setupSafeDefaults());
         // Disable auto-swap (start conservatively)
         if (address(ecosystemVault) != address(0)) {
@@ -1141,7 +1141,7 @@ contract OwnerControlPanel {
      * @param dexRouter DEX router address for swaps
      * @param usdc USDC token address (or other preferred stablecoin)
      */
-    function production_setupWithAutoSwap(address dexRouter, address usdc) external onlyOwner {
+    function production_setupWithAutoSwap(address dexRouter, address usdc) external onlyOwner nonReentrant {
         _consumeQueuedAction(actionId_production_setupWithAutoSwap(dexRouter, usdc));
         // Enable auto-swap with conservative 1% slippage
         if (address(ecosystemVault) != address(0)) {

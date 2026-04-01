@@ -3,6 +3,7 @@ pragma solidity 0.8.30;
 
 // ProofLedger (and the TRUST_NotDAO / TRUST_Zero errors) live in ProofLedger.sol.
 import "./ProofLedger.sol";
+import "./SharedInterfaces.sol";
 
 /// ────────────────────────── Interfaces
 
@@ -40,7 +41,7 @@ interface IScoreSource {
 /// @dev I-15 Note: This contract approaches the 24KB deployment limit. If adding features,
 ///      consider extracting view-only helpers to SeerView.sol.
 
-contract Seer {
+contract Seer is ReentrancyGuard {
     enum PolicyClass { Critical, Important, Operational }
 
     event LedgerSet(address ledger);
@@ -670,7 +671,7 @@ contract Seer {
     }
 
     /// DAO can directly set scores for migrations or rectifications.
-    function setScore(address subject, uint16 newScore, string calldata reason) external onlyDAO {
+    function setScore(address subject, uint16 newScore, string calldata reason) external onlyDAO nonReentrant {
         if (subject == address(0)) revert TRUST_Zero();
         if (newScore > MAX_SCORE) revert TRUST_Bounds();
         // S-04 FIX: Enforce per-subject cooldown on DAO score changes (max 1 per hour)
@@ -689,7 +690,7 @@ contract Seer {
 
 
     /// Light-weight behavior hooks (can be called by authorized modules).
-    function reward(address subject, uint16 delta, string calldata reason) external onlyOperator onlyNotPaused {
+    function reward(address subject, uint16 delta, string calldata reason) external onlyOperator onlyNotPaused nonReentrant {
         // C-2 FIX: Rate limit operator rewards to prevent score inflation
         if (delta > maxSingleReward) revert TRUST_Bounds();
         
@@ -723,7 +724,7 @@ contract Seer {
         _delta(subject, int256(uint256(delta)), reason, 501);
     }
 
-    function punish(address subject, uint16 delta, string calldata reason) external onlyOperator onlyNotPaused {
+    function punish(address subject, uint16 delta, string calldata reason) external onlyOperator onlyNotPaused nonReentrant {
         // C-2 FIX: Rate limit punishments too
         if (delta > maxSingleReward) revert TRUST_Bounds();
         
@@ -956,7 +957,7 @@ contract Seer {
      * @param approved Whether the dispute is approved
      * @param adjustment Score adjustment (positive or negative)
      */
-    function resolveScoreDispute(address subject, bool approved, int16 adjustment) external onlyDAO {
+    function resolveScoreDispute(address subject, bool approved, int16 adjustment) external onlyDAO nonReentrant {
         ScoreDispute storage dispute = scoreDisputes[subject];
         if (dispute.timestamp == 0) revert TRUST_NotSet();
         if (dispute.resolved) revert TRUST_AlreadySet();
@@ -1113,7 +1114,7 @@ contract Seer {
      * @notice Apply decay to a user's stored score (callable by anyone, gas refund opportunity)
      * @param subject The user to apply decay to
      */
-    function applyDecay(address subject) external onlyNotPaused {
+    function applyDecay(address subject) external onlyNotPaused nonReentrant {
         if (!decayEnabled) revert TRUST_Disabled();
         
         uint64 lastAct = lastActivity[subject];
@@ -1140,7 +1141,7 @@ contract Seer {
      * @notice Batch apply decay to multiple users (keeper function)
      * @param subjects Array of users to apply decay to
      */
-    function applyDecayBatch(address[] calldata subjects) external onlyNotPaused {
+    function applyDecayBatch(address[] calldata subjects) external onlyNotPaused nonReentrant {
         if (!decayEnabled) revert TRUST_Disabled();
         if (subjects.length == 0 || subjects.length > 50) revert TRUST_Bounds();
         

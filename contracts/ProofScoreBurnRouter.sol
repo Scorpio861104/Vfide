@@ -17,7 +17,7 @@ import "./SharedInterfaces.sol";
 error BURN_Zero();
 error BURN_NotDAO();
 
-contract ProofScoreBurnRouter is Ownable, Pausable {
+contract ProofScoreBurnRouter is Ownable, Pausable, ReentrancyGuard {
     event ModulesSet(address seer, address sanctumSink, address burnSink, address ecosystemSink);
     event PolicySet(uint16 baseBurnBps, uint16 baseSanctumBps, uint16 baseEcosystemBps, uint16 highTrustReduction, uint16 lowTrustPenalty);
     event FeesComputed(address indexed from, address indexed to, uint256 burnAmount, uint256 sanctumAmount, uint256 ecosystemAmount, uint16 score);
@@ -315,7 +315,7 @@ contract ProofScoreBurnRouter is Ownable, Pausable {
         revert("BR: use proposeModules/applyModules");
     }
 
-    function updateScore(address user) external {
+    function updateScore(address user) external nonReentrant {
         // F-26 FIX: Only Seer can write score history. Removing owner authorization
         // prevents the owner from injecting arbitrary score snapshots to manipulate fees.
         require(msg.sender == address(seer), "only seer");

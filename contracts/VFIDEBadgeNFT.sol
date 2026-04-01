@@ -22,7 +22,7 @@ import "./BadgeRegistry.sol";
  * - Metadata: Rich JSON with images, descriptions, rarity
  * - Synced with Seer: NFT requires active badge in VFIDETrust contract
  */
-contract VFIDEBadgeNFT is ERC721, ERC721URIStorage, ERC721Enumerable, Ownable {
+contract VFIDEBadgeNFT is ERC721, ERC721URIStorage, ERC721Enumerable, Ownable, ReentrancyGuard {
     
     // ============ STATE VARIABLES ============
     
@@ -102,7 +102,7 @@ contract VFIDEBadgeNFT is ERC721, ERC721URIStorage, ERC721Enumerable, Ownable {
      * @param badge The badge ID to mint
      * @dev Verifies badge ownership via Seer contract before minting
      */
-    function mintBadge(bytes32 badge) public returns (uint256 tokenId) {
+    function mintBadge(bytes32 badge) public nonReentrant returns (uint256 tokenId) {
         // Check badge is valid
         if (!BadgeRegistry.isValidBadge(badge)) revert InvalidBadge();
         
@@ -158,7 +158,7 @@ contract VFIDEBadgeNFT is ERC721, ERC721URIStorage, ERC721Enumerable, Ownable {
      * @param tokenId The token ID to burn
      * @dev Only token owner can burn. Doesn't affect badge status in Seer.
      */
-    function burnBadge(uint256 tokenId) external {
+    function burnBadge(uint256 tokenId) external nonReentrant {
         if (ownerOf(tokenId) != msg.sender) revert NotTokenOwner();
         
         bytes32 badge = tokenBadge[tokenId];
@@ -327,7 +327,7 @@ contract VFIDEBadgeNFT is ERC721, ERC721URIStorage, ERC721Enumerable, Ownable {
      * @param tokenId Token to burn
      * @dev Only owner can call. Used if badge revoked but user hasn't burned NFT.
      */
-    function adminBurn(uint256 tokenId) external onlyOwner {
+    function adminBurn(uint256 tokenId) external onlyOwner nonReentrant {
         address owner = ownerOf(tokenId);
         bytes32 badge = tokenBadge[tokenId];
         

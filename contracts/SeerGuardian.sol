@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
+import "./SharedInterfaces.sol";
+
 /**
  * @title SeerGuardian
  * @notice Automatic enforcement system with mutual DAO/Seer checks
@@ -21,8 +23,6 @@ pragma solidity 0.8.30;
 /// ═══════════════════════════════════════════════════════════════════════════
 ///                              INTERFACES
 /// ═══════════════════════════════════════════════════════════════════════════
-
-event LedgerLogFailed(address indexed source, string action);
 
 interface ISeer_Guardian {
     function getScore(address) external view returns (uint16);
@@ -74,7 +74,7 @@ error SG_InvalidAction();
 ///                           SEER GUARDIAN
 /// ═══════════════════════════════════════════════════════════════════════════
 
-contract SeerGuardian {
+contract SeerGuardian is ReentrancyGuard {
     uint16 private constant RC_AUTO_LOW_SCORE = 300;
     uint16 private constant RC_AUTO_VERY_LOW_SCORE = 301;
     uint16 private constant RC_AUTO_CRITICAL_SCORE = 302;
@@ -238,7 +238,7 @@ contract SeerGuardian {
      * @dev Anyone can call this to trigger automatic enforcement
      * @param subject The address to check
      */
-    function checkAndEnforce(address subject) external {
+    function checkAndEnforce(address subject) external nonReentrant {
         if (daoOverridden[subject]) return; // DAO has overridden, skip auto-enforcement
         require(block.timestamp >= lastEnforceCheck[subject] + 1 hours, "SG: cooldown");
         lastEnforceCheck[subject] = uint64(block.timestamp);
@@ -276,7 +276,7 @@ contract SeerGuardian {
      * @param vtype Type of violation
      * @param reason Description
      */
-    function recordViolation(address subject, ViolationType vtype, string calldata reason) external onlyAuthorized {
+    function recordViolation(address subject, ViolationType vtype, string calldata reason) external onlyAuthorized nonReentrant {
         if (block.timestamp < lastViolationTime[subject] + violationCooldown) revert SG_Cooldown();
         if (vtype == ViolationType.None) revert SG_InvalidAction();
         
@@ -361,7 +361,7 @@ contract SeerGuardian {
      * @param isPositive True for reward, false for punish
      * @param reason Justification
      */
-    function daoAdjustScore(address subject, uint16 newDelta, bool isPositive, string calldata reason) external onlyDAO {
+    function daoAdjustScore(address subject, uint16 newDelta, bool isPositive, string calldata reason) external onlyDAO nonReentrant {
         bytes32 actionId = keccak256(abi.encode("score_adjust", subject, newDelta, block.timestamp));
         
         if (isPositive) {
@@ -454,7 +454,7 @@ contract SeerGuardian {
      * @param proposalId The proposal ID
      * @param proposer The proposer address
      */
-    function autoCheckProposer(uint256 proposalId, address proposer) external onlyAuthorized {
+    function autoCheckProposer(uint256 proposalId, address proposer) external onlyAuthorized nonReentrant {
         IDAO_Guardian daoRef = IDAO_Guardian(dao);
         require(proposalId > 0 && proposalId <= daoRef.proposalCount(), "SG: invalid proposal");
 

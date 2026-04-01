@@ -26,7 +26,7 @@ error EC_NotMember();
 error EC_AlreadyVoted();
 error EC_Cooldown();
 
-contract EmergencyControl {
+contract EmergencyControl is ReentrancyGuard {
     event ModulesSet(address dao, address breaker, address ledger);
     event CooldownSet(uint64 secondsMin);
     event CommitteeReset(uint8 threshold, address[] members);
@@ -318,7 +318,7 @@ contract EmergencyControl {
     event RecoveryExecuted(bytes32 indexed id, address target, address newOwner);
     event RecoveryCancelled(bytes32 indexed id);
 
-    function proposeRecovery(address target, address newOwner) external returns (bytes32 id) {
+    function proposeRecovery(address target, address newOwner) external nonReentrant returns (bytes32 id) {
         require(isMember[msg.sender], "EC: not member");
         require(target != address(0) && newOwner != address(0), "EC: zero");
         // System must be halted first
@@ -341,7 +341,7 @@ contract EmergencyControl {
         _log("recovery_proposed");
     }
 
-    function approveRecovery(bytes32 id) external {
+    function approveRecovery(bytes32 id) external nonReentrant {
         require(isMember[msg.sender], "EC: not member");
         RecoveryProposal storage p = recoveryProposals[id];
         require(p.target != address(0), "EC: no proposal");
@@ -363,7 +363,7 @@ contract EmergencyControl {
         _log("recovery_approved");
     }
 
-    function executeRecovery(bytes32 id) external {
+    function executeRecovery(bytes32 id) external nonReentrant {
         require(isMember[msg.sender], "EC: not member");
         RecoveryProposal storage p = recoveryProposals[id];
         require(p.target != address(0) && !p.executed, "EC: invalid");
@@ -381,7 +381,7 @@ contract EmergencyControl {
         _log("recovery_executed");
     }
 
-    function cancelRecovery(bytes32 id) external {
+    function cancelRecovery(bytes32 id) external nonReentrant {
         require(msg.sender == dao || isMember[msg.sender], "EC: not authorized");
         RecoveryProposal storage p = recoveryProposals[id];
         require(p.target != address(0) && !p.executed, "EC: invalid");
@@ -393,7 +393,7 @@ contract EmergencyControl {
 
     /// @notice Refresh a recovery proposal's epoch after committee reset so it is not stale
     /// @dev Only callable by DAO when recovery is in progress but committee was reset
-    function refreshRecoveryEpoch(bytes32 id) external {
+    function refreshRecoveryEpoch(bytes32 id) external nonReentrant {
         require(msg.sender == dao, "EC: not DAO");
         RecoveryProposal storage p = recoveryProposals[id];
         require(p.target != address(0) && !p.executed, "EC: invalid");

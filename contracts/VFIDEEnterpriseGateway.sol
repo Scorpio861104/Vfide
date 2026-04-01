@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
-import { IERC20, ISeer, ISwapRouter, IVaultHub, SafeERC20 } from "./SharedInterfaces.sol";
+import { IERC20, ISeer, ISwapRouter, IVaultHub, ReentrancyGuard, SafeERC20 } from "./SharedInterfaces.sol";
 
 error ENT_NotOracle();
 error ENT_NotDAO();
@@ -14,7 +14,7 @@ error ENT_Zero();
 /**
  * VFIDEEnterpriseGateway (Amazon/Enterprise Integration)
  */
-contract VFIDEEnterpriseGateway {
+contract VFIDEEnterpriseGateway is ReentrancyGuard {
     using SafeERC20 for IERC20;
     
     event OrderCreated(bytes32 indexed orderId, address indexed buyer, uint256 amount, string meta);
@@ -128,7 +128,7 @@ contract VFIDEEnterpriseGateway {
      * @param amount Amount of VFIDE to pay
      * @param meta Metadata (e.g., "Amazon Order #123")
      */
-    function createOrder(bytes32 orderId, uint256 amount, string calldata meta) external {
+    function createOrder(bytes32 orderId, uint256 amount, string calldata meta) external nonReentrant {
         if (orders[orderId].status != Status.NONE) revert ENT_OrderExists();
         if (amount == 0) revert ENT_Zero();
 
@@ -201,14 +201,14 @@ contract VFIDEEnterpriseGateway {
      * @dev Triggers Trust Score reward for the buyer.
      * @dev If stableSettlementEnabled, converts VFIDE to stablecoin before sending to merchant
      */
-    function settleOrder(bytes32 orderId) external onlyOracle {
+    function settleOrder(bytes32 orderId) external onlyOracle nonReentrant {
         _settle(orderId);
     }
 
     /**
      * @notice Batch settlement for gas efficiency.
      */
-    function settleBatch(bytes32[] calldata orderIds) external onlyOracle {
+    function settleBatch(bytes32[] calldata orderIds) external onlyOracle nonReentrant {
         for (uint256 i = 0; i < orderIds.length; i++) {
             _settle(orderIds[i]);
         }
@@ -303,14 +303,14 @@ contract VFIDEEnterpriseGateway {
     /**
      * @notice Emergency rescue for stuck tokens or blacklisted merchant wallet.
      */
-    function rescueFunds(address _token, uint256 _amount, address _to) external onlyDAO {
+    function rescueFunds(address _token, uint256 _amount, address _to) external onlyDAO nonReentrant {
         IERC20(_token).safeTransfer(_to, _amount);
     }
 
     /**
      * @notice Oracle (Amazon) or DAO initiates refund.
      */
-    function refundOrder(bytes32 orderId, string calldata reason) external {
+    function refundOrder(bytes32 orderId, string calldata reason) external nonReentrant {
         // Allow Oracle (Amazon return) or DAO (Dispute resolution)
         if (msg.sender != oracle && msg.sender != dao) revert ENT_NotOracle();
         
