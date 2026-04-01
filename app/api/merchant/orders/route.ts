@@ -13,6 +13,7 @@ import { requireAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { dispatchWebhook } from '@/lib/webhooks/merchantWebhookDispatcher';
 import { logger } from '@/lib/logger';
+import { z } from 'zod4';
 
 const ADDRESS_LIKE_REGEX = /^0x[a-fA-F0-9]{3,40}$/;
 const TX_HASH_REGEX = /^0x[a-fA-F0-9]{64}$/;
@@ -38,6 +39,40 @@ const STATUS_TRANSITIONS: Record<string, string[]> = {
   cancelled:  [],
   refunded:   [],
 };
+
+const orderItemInputSchema = z.object({
+  product_id: z.number().int().positive().optional(),
+  variant_id: z.number().int().positive().optional(),
+  name: z.string().trim().min(1).max(200),
+  sku: z.string().max(100).optional(),
+  quantity: z.coerce.number().int().min(1),
+  unit_price: z.coerce.number().min(0),
+  product_type: z.enum(['physical', 'digital', 'service']).optional(),
+});
+
+const createOrderSchema = z.object({
+  merchant_address: z.string().trim().toLowerCase().regex(ADDRESS_LIKE_REGEX),
+  items: z.array(orderItemInputSchema).min(1).max(100),
+  customer_email: z.string().trim().email().max(254).optional(),
+  customer_name: z.string().trim().max(200).optional(),
+  tx_hash: z.string().regex(TX_HASH_REGEX).optional(),
+  token: z.string().trim().max(20).optional(),
+  shipping_address: z.record(z.string(), z.unknown()).optional(),
+  shipping_method: z.string().trim().max(100).optional(),
+  tax_amount: z.coerce.number().min(0).optional(),
+  shipping_amount: z.coerce.number().min(0).optional(),
+  discount_amount: z.coerce.number().min(0).optional(),
+  customer_notes: z.string().trim().max(1000).optional(),
+});
+
+const updateOrderSchema = z.object({
+  id: z.number().int().positive(),
+  status: z.enum(VALID_STATUSES).optional(),
+  tracking_number: z.string().max(200).optional(),
+  tracking_url: z.string().max(2000).optional(),
+  notes: z.string().max(2000).optional(),
+  tx_hash: z.string().regex(TX_HASH_REGEX).optional(),
+});
 
 function generateOrderNumber(): string {
   const d = new Date();
@@ -134,54 +169,46 @@ export async function POST(request: NextRequest) {
   if (authAddress instanceof NextResponse) return authAddress;
 
   try {
-    const body = await request.json() as Record<string, unknown>;
+    const parsedBody = createOrderSchema.safeParse(await request.json());
+    if (!parsedBody.success) {
+      return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
+    }
+
+    const body = parsedBody.data;
     const { merchant_address, items, customer_email, customer_name,
             tx_hash, token, shipping_address, shipping_method,
             tax_amount, shipping_amount, discount_amount, customer_notes } = body;
-
-    if (typeof merchant_address !== 'string' || !ADDRESS_LIKE_REGEX.test(merchant_address)) {
-      return NextResponse.json({ error: 'Valid merchant_address required' }, { status: 400 });
-    }
-    if (!Array.isArray(items) || items.length === 0 || items.length > 100) {
-      return NextResponse.json({ error: '1-100 items required' }, { status: 400 });
-    }
 
     // Validate items
     const validatedItems: OrderItem[] = [];
     let subtotal = 0;
     for (const item of items) {
-      const i = item as Record<string, unknown>;
-      if (typeof i.name !== 'string' || !i.name.trim()) continue;
-      const qty = typeof i.quantity === 'number' ? Math.max(1, Math.floor(i.quantity)) : 1;
-      const price = typeof i.unit_price === 'number' && i.unit_price >= 0 ? i.unit_price : 0;
+      const qty = Math.max(1, Math.floor(item.quantity));
+      const price = item.unit_price;
       const lineTotal = Math.round(qty * price * 100) / 100;
       subtotal += lineTotal;
       validatedItems.push({
-        product_id: typeof i.product_id === 'number' ? i.product_id : undefined,
-        variant_id: typeof i.variant_id === 'number' ? i.variant_id : undefined,
-        name: (i.name as string).trim().slice(0, 200),
-        sku: typeof i.sku === 'string' ? i.sku.slice(0, 100) : undefined,
+        product_id: item.product_id,
+        variant_id: item.variant_id,
+        name: item.name,
+        sku: item.sku,
         quantity: qty,
         unit_price: price,
-        product_type: typeof i.product_type === 'string' ? i.product_type : 'physical',
+        product_type: item.product_type ?? 'physical',
       });
     }
 
-    if (validatedItems.length === 0) {
-      return NextResponse.json({ error: 'At least one valid item required' }, { status: 400 });
-    }
-
     subtotal = Math.round(subtotal * 100) / 100;
-    const tax = typeof tax_amount === 'number' && tax_amount >= 0 ? Math.round(tax_amount * 100) / 100 : 0;
-    const shipping = typeof shipping_amount === 'number' && shipping_amount >= 0 ? Math.round(shipping_amount * 100) / 100 : 0;
-    const discount = typeof discount_amount === 'number' && discount_amount >= 0 ? Math.round(discount_amount * 100) / 100 : 0;
+    const tax = typeof tax_amount === 'number' ? Math.round(tax_amount * 100) / 100 : 0;
+    const shipping = typeof shipping_amount === 'number' ? Math.round(shipping_amount * 100) / 100 : 0;
+    const discount = typeof discount_amount === 'number' ? Math.round(discount_amount * 100) / 100 : 0;
     const total = Math.round((subtotal + tax + shipping - discount) * 100) / 100;
 
     if (total < 0) {
       return NextResponse.json({ error: 'Order total cannot be negative' }, { status: 400 });
     }
 
-    const validTxHash = typeof tx_hash === 'string' && TX_HASH_REGEX.test(tx_hash) ? tx_hash : null;
+    const validTxHash = tx_hash || null;
     const paymentStatus = validTxHash ? 'paid' : 'unpaid';
     const orderStatus = validTxHash ? 'confirmed' : 'pending';
 
@@ -200,22 +227,22 @@ export async function POST(request: NextRequest) {
          RETURNING *`,
         [
           orderNumber,
-          (merchant_address as string).toLowerCase(),
+          merchant_address,
           authAddress,
-          typeof customer_email === 'string' ? customer_email.slice(0, 254) : null,
-          typeof customer_name === 'string' ? customer_name.slice(0, 200) : null,
+          customer_email ?? null,
+          customer_name ?? null,
           orderStatus,
           paymentStatus,
           validTxHash,
-          typeof token === 'string' ? token.slice(0, 20) : 'VFIDE',
+          token || 'VFIDE',
           subtotal,
           tax,
           shipping,
           discount,
           total,
-          shipping_address && typeof shipping_address === 'object' ? JSON.stringify(shipping_address) : null,
-          typeof shipping_method === 'string' ? shipping_method.slice(0, 100) : null,
-          typeof customer_notes === 'string' ? customer_notes.slice(0, 1000) : null,
+          shipping_address ? JSON.stringify(shipping_address) : null,
+          shipping_method ?? null,
+          customer_notes ?? null,
         ]
       );
 
@@ -272,10 +299,10 @@ export async function POST(request: NextRequest) {
       await client.query('COMMIT');
 
       // Dispatch webhook (outside transaction — fire-and-forget)
-      dispatchWebhook((merchant_address as string).toLowerCase(), 'payment.completed', {
+      dispatchWebhook(merchant_address, 'payment.completed', {
         order_number: orderNumber,
         total,
-        token: typeof token === 'string' ? token : 'VFIDE',
+        token: token || 'VFIDE',
         tx_hash: validTxHash,
         customer_address: authAddress,
         items_count: validatedItems.length,
@@ -303,12 +330,12 @@ export async function PATCH(request: NextRequest) {
   if (authAddress instanceof NextResponse) return authAddress;
 
   try {
-    const body = await request.json() as Record<string, unknown>;
-    const { id, status, tracking_number, tracking_url, notes, tx_hash } = body;
-
-    if (typeof id !== 'number') {
-      return NextResponse.json({ error: 'Order ID required' }, { status: 400 });
+    const parsedBody = updateOrderSchema.safeParse(await request.json());
+    if (!parsedBody.success) {
+      return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
     }
+    const body = parsedBody.data;
+    const { id, status, tracking_number, tracking_url, notes, tx_hash } = body;
 
     const existing = await query(
       'SELECT * FROM merchant_orders WHERE id = $1 AND merchant_address = $2',
@@ -324,7 +351,7 @@ export async function PATCH(request: NextRequest) {
     let pi = 1;
 
     // Status transitions
-    if (typeof status === 'string' && VALID_STATUSES.includes(status as typeof VALID_STATUSES[number])) {
+    if (status) {
       const allowed = STATUS_TRANSITIONS[order.status as string];
       if (!allowed || !allowed.includes(status)) {
         return NextResponse.json({
@@ -347,16 +374,16 @@ export async function PATCH(request: NextRequest) {
       }
     }
 
-    if (typeof tracking_number === 'string') {
-      updates.push(`tracking_number = $${pi++}`); params.push(tracking_number.slice(0, 200));
+    if (tracking_number !== undefined) {
+      updates.push(`tracking_number = $${pi++}`); params.push(tracking_number);
     }
-    if (typeof tracking_url === 'string') {
-      updates.push(`tracking_url = $${pi++}`); params.push(tracking_url.slice(0, 2000));
+    if (tracking_url !== undefined) {
+      updates.push(`tracking_url = $${pi++}`); params.push(tracking_url);
     }
-    if (typeof notes === 'string') {
-      updates.push(`notes = $${pi++}`); params.push(notes.slice(0, 2000));
+    if (notes !== undefined) {
+      updates.push(`notes = $${pi++}`); params.push(notes);
     }
-    if (typeof tx_hash === 'string' && TX_HASH_REGEX.test(tx_hash)) {
+    if (tx_hash !== undefined) {
       updates.push(`tx_hash = $${pi++}`); params.push(tx_hash);
       updates.push(`payment_status = 'paid'`);
     }
