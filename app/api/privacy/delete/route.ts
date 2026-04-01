@@ -34,8 +34,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
     }
     body = parsed.data;
-  } catch {
+  } catch (error) {
     // Allow empty body; reason/email are optional.
+    logger.debug('[Privacy Deletion Request] Empty or invalid JSON body treated as optional', error);
   }
 
   const email = body.email ?? null;

@@ -196,7 +196,8 @@ export async function GET(request: NextRequest) {
         vfidePriceInEth = liveVfidePriceInEth;
         vfidePrice = liveVfidePriceInEth * ethPrice;
         priceSource = 'uniswap';
-      } catch {
+      } catch (error) {
+        logger.debug('[Price API] Pool read failed, falling back to tokenomics price', error);
         // Pool read failed, continue with tokenomics price
         logger.warn('[Price API] Pool read failed, using tokenomics price');
       }

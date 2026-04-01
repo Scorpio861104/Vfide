@@ -333,7 +333,8 @@ export async function GET(request: NextRequest) {
         query(trendSqlRollup, [windowHours]),
         query(reasonCodeSqlRollup, [windowHours]),
       ]);
-    } catch {
+    } catch (error) {
+      logger.debug('[Seer Analytics] Falling back to raw analytics query set', error);
       [summaryResult, trendResult, reasonCodeResult] = await Promise.all([
         query(summarySqlRawFallback, [windowHours]),
         query(trendSqlRawFallback, [windowHours]),

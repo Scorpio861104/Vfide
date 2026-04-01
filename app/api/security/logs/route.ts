@@ -272,7 +272,8 @@ async function notifyCriticalSecurityLog(params: {
   let parsedWebhookUrl: URL;
   try {
     parsedWebhookUrl = new URL(webhookUrl);
-  } catch {
+  } catch (error) {
+    logger.debug('[Security Logs Alert] Invalid webhook URL', error);
     logger.error('[Security Logs Alert] Invalid webhook URL in environment');
     return;
   }
