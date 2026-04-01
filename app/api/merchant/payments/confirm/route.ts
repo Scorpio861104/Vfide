@@ -11,11 +11,19 @@ import { requireAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { query } from '@/lib/db';
 import { dispatchWebhook } from '@/lib/webhooks/merchantWebhookDispatcher';
+import { z } from 'zod4';
 
 const TX_HASH_REGEX = /^0x[a-fA-F0-9]{64}$/;
 const ADDRESS_LIKE_REGEX = /^0x[a-fA-F0-9]{40}$/;
 const INTEGER_STRING_REGEX = /^\d+$/;
 const DEFAULT_MIN_CONFIRMATIONS = 2n;
+const merchantPaymentConfirmSchema = z.object({
+  customer_address: z.string().trim().toLowerCase().regex(ADDRESS_LIKE_REGEX),
+  amount: z.union([z.string(), z.number()]),
+  token: z.string().trim().optional(),
+  order_id: z.string().trim().optional(),
+  tx_hash: z.string().regex(TX_HASH_REGEX),
+});
 
 const PAYMENT_PROCESSED_EVENT = parseAbiItem(
   'event PaymentProcessed(address indexed customer, address indexed merchant, address token, uint256 amount, uint256 fee, string orderId, uint16 customerScore, uint8 channel)'
@@ -185,24 +193,23 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  let body: Record<string, unknown>;
+  let body: z.infer<typeof merchantPaymentConfirmSchema>;
   try {
-    body = await request.json();
+    const rawBody = await request.json();
+    const parsed = merchantPaymentConfirmSchema.safeParse(rawBody);
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
+    }
+    body = parsed.data;
   } catch {
     return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
   }
 
   const { customer_address, amount, token, order_id, tx_hash } = body;
 
-  if (!customer_address || typeof customer_address !== 'string' || !ADDRESS_LIKE_REGEX.test(customer_address.toLowerCase())) {
-    return NextResponse.json({ error: 'Valid customer_address required' }, { status: 400 });
-  }
   const amountUnits = parseAmountToUnits(amount);
   if (amountUnits === null) {
     return NextResponse.json({ error: 'amount required' }, { status: 400 });
-  }
-  if (typeof tx_hash !== 'string' || !TX_HASH_REGEX.test(tx_hash)) {
-    return NextResponse.json({ error: 'Valid tx_hash required' }, { status: 400 });
   }
 
   const verification = await verifyPaymentEventOnChain({
@@ -233,10 +240,10 @@ export async function POST(request: NextRequest) {
 
   // Dispatch webhook to merchant (the authenticated user is the merchant)
   await dispatchWebhook(authAddress, 'payment.completed', {
-    customer_address: (customer_address as string).toLowerCase(),
+    customer_address: customer_address.toLowerCase(),
     amount: amountUnits.toString(),
-    token: typeof token === 'string' ? token : 'VFIDE',
-    order_id: typeof order_id === 'string' ? order_id : undefined,
+    token: token || 'VFIDE',
+    order_id: order_id || undefined,
     tx_hash,
     confirmed_at: new Date().toISOString(),
   });

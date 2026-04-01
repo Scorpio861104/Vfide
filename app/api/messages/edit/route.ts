@@ -4,6 +4,7 @@ import { requireAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { isAddress } from 'viem';
 import { logger } from '@/lib/logger';
+import { z } from 'zod4';
 
 const MAX_ID_LENGTH = 128;
 const MAX_CONTENT_LENGTH = 5000;
@@ -16,15 +17,14 @@ const HEX_STRING_REGEX = /^[0-9a-fA-F]+$/;
 const BASE64_STRING_REGEX = /^[A-Za-z0-9+/]+={0,2}$/;
 const ETH_SIGNATURE_REGEX = /^0x[0-9a-fA-F]{130}$/;
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
-}
-
-function toNonEmptyString(value: unknown): string | null {
-  if (typeof value !== 'string') return null;
-  const trimmed = value.trim();
-  return trimmed.length > 0 ? trimmed : null;
-}
+const messageEditSchema = z.object({
+  messageId: z.string().trim().min(1).max(MAX_ID_LENGTH),
+  conversationId: z.string().trim().min(1).max(MAX_ID_LENGTH),
+  newContent: z.string().trim().min(1).max(MAX_CONTENT_LENGTH),
+  userAddress: z.string().trim().toLowerCase().refine((value) => isAddress(value), {
+    message: 'Invalid Ethereum address format',
+  }),
+});
 
 function isEncryptedDirectMessagePayload(content: string): boolean {
   try {
@@ -91,51 +91,27 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  let body: Record<string, unknown>;
+  let body: z.infer<typeof messageEditSchema>;
   try {
-    body = await request.json() as unknown as Record<string, unknown>;
+    const rawBody = await request.json();
+    const parsed = messageEditSchema.safeParse(rawBody);
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
+    }
+    body = parsed.data;
   } catch {
     return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
-  }
-
-  if (!isRecord(body)) {
-    return NextResponse.json({ error: 'Request body must be a JSON object' }, { status: 400 });
   }
 
   const client = await getClient();
   
   try {
-    const messageId = toNonEmptyString(body.messageId);
-    const conversationId = toNonEmptyString(body.conversationId);
-    const newContent = toNonEmptyString(body.newContent);
-    const userAddress = toNonEmptyString(body.userAddress);
-
-    if (!messageId || !conversationId || !newContent || !userAddress) {
-      return NextResponse.json(
-        { error: 'Missing required fields' },
-        { status: 400 }
-      );
-    }
-
-    if (messageId.length > MAX_ID_LENGTH || conversationId.length > MAX_ID_LENGTH) {
-      return NextResponse.json({ error: 'messageId or conversationId is too long' }, { status: 400 });
-    }
-
-    const normalizedUserAddress = userAddress.toLowerCase();
-
-    // Validate address format
-    if (!isAddress(normalizedUserAddress)) {
-      return NextResponse.json({ error: 'Invalid Ethereum address format' }, { status: 400 });
-    }
+    const { messageId, conversationId, newContent } = body;
+    const normalizedUserAddress = body.userAddress;
 
     // Verify authenticated user matches userAddress
     if (authenticatedAddress !== normalizedUserAddress) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
-    }
-
-    // Validate content length and sanitization happens in validation schema
-    if (newContent.length < 1 || newContent.length > MAX_CONTENT_LENGTH) {
-      return NextResponse.json({ error: `Content must be between 1 and ${MAX_CONTENT_LENGTH} characters` }, { status: 400 });
     }
 
     if (!isEncryptedDirectMessagePayload(newContent)) {
