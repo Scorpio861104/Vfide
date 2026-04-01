@@ -81,6 +81,10 @@ cache/
 .deploy-state.json
 deployments-solo-*.json
 
+# Keep source cache policy module tracked (needed by runtime imports)
+!lib/cache/
+!lib/cache/cacheInvalidationPolicy.ts
+
 # Segment A hygiene quarantine (non-destructive)
 /VFIDE_Complete_Package.zip
 /VFIDE_Full_Audit_v2.docx
