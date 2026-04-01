@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { useTransactionSounds } from './useTransactionSounds';
+import { safeLocalStorage } from '@/lib/utils';
 
 // ==================== TYPES ====================
 
@@ -83,7 +84,7 @@ export function useNotifications() {
   // Load from storage
   useEffect(() => {
     try {
-      const stored = localStorage.getItem(STORAGE_KEY);
+      const stored = safeLocalStorage.getItem(STORAGE_KEY);
       if (stored) {
         const parsed = JSON.parse(stored);
         // Filter out old archived notifications (older than 7 days)
@@ -93,7 +94,7 @@ export function useNotifications() {
         ));
       }
 
-      const prefs = localStorage.getItem(PREFS_KEY);
+      const prefs = safeLocalStorage.getItem(PREFS_KEY);
       if (prefs) {
         setPreferences({ ...DEFAULT_PREFS, ...JSON.parse(prefs) });
       }
@@ -111,7 +112,7 @@ export function useNotifications() {
   useEffect(() => {
     if (notifications.length > 0) {
       try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(notifications));
+        safeLocalStorage.setItem(STORAGE_KEY, JSON.stringify(notifications));
       } catch {
         // Ignore storage errors
       }
@@ -121,7 +122,7 @@ export function useNotifications() {
   // Save preferences
   useEffect(() => {
     try {
-      localStorage.setItem(PREFS_KEY, JSON.stringify(preferences));
+      safeLocalStorage.setItem(PREFS_KEY, JSON.stringify(preferences));
     } catch {
       // Ignore storage errors
     }

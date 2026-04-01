@@ -28,6 +28,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { useTransactionSounds } from '@/hooks/useTransactionSounds';
+import { safeLocalStorage } from '@/lib/utils';
 
 // ==================== TYPES ====================
 
@@ -88,8 +89,53 @@ const priorityColors: Record<NotificationPriority, string> = {
 
 const STORAGE_KEY = 'vfide-notif-prefs';
 
-// Initial empty state (notifications will be populated by backend/websocket events)
-const initialNotifications: Notification[] = [];
+// Seeded command-center examples keep the notification hub useful before live events arrive.
+const initialNotifications: Notification[] = [
+  {
+    id: 'notif-proposal-142',
+    type: 'vote',
+    title: 'Active Proposal',
+    message: 'Proposal #142 is live and needs your vote before the window closes.',
+    time: '5h ago',
+    timestamp: Date.now() - 5 * 60 * 60 * 1000,
+    href: '/governance',
+    read: false,
+    priority: 'high',
+  },
+  {
+    id: 'notif-rewards',
+    type: 'reward',
+    title: 'Claimable Rewards',
+    message: '467.50 VFIDE in verified rewards is ready to claim from payroll.',
+    time: '1d ago',
+    timestamp: Date.now() - 24 * 60 * 60 * 1000,
+    href: '/payroll',
+    read: false,
+    priority: 'medium',
+  },
+  {
+    id: 'notif-guardian',
+    type: 'security',
+    title: 'Guardian Request',
+    message: 'A trusted contact added you as a guardian for a protected vault.',
+    time: '2d ago',
+    timestamp: Date.now() - 2 * 24 * 60 * 60 * 1000,
+    href: '/vault',
+    read: false,
+    priority: 'medium',
+  },
+  {
+    id: 'notif-badge',
+    type: 'success',
+    title: 'Badge Unlocked',
+    message: 'You unlocked a new trust badge for completing recent network actions.',
+    time: '3d ago',
+    timestamp: Date.now() - 3 * 24 * 60 * 60 * 1000,
+    href: '/badges',
+    read: false,
+    priority: 'low',
+  },
+];
 
 // ==================== HELPERS ====================
 
@@ -368,7 +414,7 @@ export function NotificationCenter() {
   // Load preferences
   useEffect(() => {
     try {
-      const stored = localStorage.getItem(STORAGE_KEY);
+      const stored = safeLocalStorage.getItem(STORAGE_KEY);
       if (stored) setPrefs(JSON.parse(stored));
     } catch { /* ignore */ }
   }, []);
@@ -376,7 +422,7 @@ export function NotificationCenter() {
   // Save preferences
   useEffect(() => {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(prefs));
+      safeLocalStorage.setItem(STORAGE_KEY, JSON.stringify(prefs));
     } catch { /* ignore */ }
   }, [prefs]);
 

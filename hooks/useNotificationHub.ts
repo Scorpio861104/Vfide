@@ -6,6 +6,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { safeLocalStorage } from '@/lib/utils';
 import type {
   Notification,
   NotificationPreference,
@@ -70,13 +71,13 @@ export function useNotificationHub(): UseNotificationHubResult {
   // Load notifications from localStorage on mount
   useEffect(() => {
     try {
-      const stored = localStorage.getItem(STORAGE_KEY);
+      const stored = safeLocalStorage.getItem(STORAGE_KEY);
       if (stored) {
         const parsed = JSON.parse(stored);
         setNotifications(Array.isArray(parsed) ? parsed : []);
       }
 
-      const storedPrefs = localStorage.getItem(PREFS_STORAGE_KEY);
+      const storedPrefs = safeLocalStorage.getItem(PREFS_STORAGE_KEY);
       if (storedPrefs) {
         const parsed = JSON.parse(storedPrefs);
         setPreferences(parsed);
@@ -89,7 +90,7 @@ export function useNotificationHub(): UseNotificationHubResult {
   // Save notifications to localStorage
   useEffect(() => {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(notifications));
+      safeLocalStorage.setItem(STORAGE_KEY, JSON.stringify(notifications));
     } catch (e) {
       logger.error('Failed to save notifications:', e);
     }
@@ -98,7 +99,7 @@ export function useNotificationHub(): UseNotificationHubResult {
   // Save preferences to localStorage
   useEffect(() => {
     try {
-      localStorage.setItem(PREFS_STORAGE_KEY, JSON.stringify(preferences));
+      safeLocalStorage.setItem(PREFS_STORAGE_KEY, JSON.stringify(preferences));
     } catch (e) {
       logger.error('Failed to save preferences:', e);
     }
@@ -211,7 +212,7 @@ export function useNotificationHub(): UseNotificationHubResult {
   // Clear all notifications
   const clearNotifications = useCallback(() => {
     setNotifications([]);
-    localStorage.removeItem(STORAGE_KEY);
+    safeLocalStorage.removeItem(STORAGE_KEY);
   }, []);
 
   // Filter notifications

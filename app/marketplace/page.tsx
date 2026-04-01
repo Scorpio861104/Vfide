@@ -6,6 +6,7 @@
 
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
+import { safeLocalStorage } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -85,10 +86,10 @@ function pctOff(price: string, compare: string): number {
 
 function toggleWishlist(id: string): boolean {
   try {
-    const list = JSON.parse(localStorage.getItem('vfide_wishlist') || '[]') as string[];
+    const list = JSON.parse(safeLocalStorage.getItem('vfide_wishlist') || '[]') as string[];
     const idx = list.indexOf(id);
     if (idx >= 0) list.splice(idx, 1); else list.push(id);
-    localStorage.setItem('vfide_wishlist', JSON.stringify(list));
+    safeLocalStorage.setItem('vfide_wishlist', JSON.stringify(list));
     return idx < 0;
   } catch { return false; }
 }
@@ -322,7 +323,7 @@ export default function MarketplacePage() {
   // Load wishlist state
   useEffect(() => {
     try {
-      const list = JSON.parse(localStorage.getItem('vfide_wishlist') || '[]') as string[];
+      const list = JSON.parse(safeLocalStorage.getItem('vfide_wishlist') || '[]') as string[];
       setWishlistedIds(new Set(list));
     } catch { /* ignore */ }
   }, []);

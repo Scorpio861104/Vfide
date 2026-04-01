@@ -18,6 +18,7 @@ import {
   Wrench,
 } from 'lucide-react';
 import { Footer } from '@/components/layout/Footer';
+import { safeLocalStorage } from '@/lib/utils';
 import { useAppealStatus, useProofScore } from '@/lib/vfide-hooks';
 import { getSeerReasonCodeInfo } from '@/lib/seer/reasonCodes';
 import {
@@ -106,7 +107,7 @@ export default function SeerServicePage() {
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    const stored = window.localStorage.getItem(SAFE_MODE_KEY);
+    const stored = safeLocalStorage.getItem(SAFE_MODE_KEY);
     if (stored === 'true' || stored === 'false') {
       setSafeMode(stored === 'true');
     }
@@ -114,7 +115,7 @@ export default function SeerServicePage() {
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    window.localStorage.setItem(SAFE_MODE_KEY, String(safeMode));
+    safeLocalStorage.setItem(SAFE_MODE_KEY, String(safeMode));
   }, [safeMode]);
 
   useEffect(() => {
