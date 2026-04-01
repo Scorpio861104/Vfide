@@ -1,0 +1,2 @@
+DROP INDEX IF EXISTS idx_merchant_payment_confirmations_merchant_created;
+DROP TABLE IF EXISTS merchant_payment_confirmations;

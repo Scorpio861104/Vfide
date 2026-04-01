@@ -49,9 +49,6 @@ const VALID_TYPES = [
   'security_setting_changed',
 ] as const;
 const ADDRESS_PATTERN = /^0x[a-fA-F0-9]{3,64}$/;
-
-let initSecurityEventLogsTablePromise: Promise<void> | null = null;
-let initSecurityAlertDispatchesTablePromise: Promise<void> | null = null;
 let lastSecurityLogsCleanupAtMs = 0;
 const SECURITY_LOG_CLEANUP_INTERVAL_MS = 5 * 60 * 1000;
 
@@ -157,68 +154,6 @@ function isValidType(value: string): value is (typeof VALID_TYPES)[number] {
   return VALID_TYPES.includes(value as (typeof VALID_TYPES)[number]);
 }
 
-async function ensureSecurityEventLogsTable(): Promise<void> {
-  if (initSecurityEventLogsTablePromise) {
-    await initSecurityEventLogsTablePromise;
-    return;
-  }
-
-  initSecurityEventLogsTablePromise = (async () => {
-    await query(
-      `CREATE TABLE IF NOT EXISTS security_event_logs (
-         id BIGSERIAL PRIMARY KEY,
-         address TEXT NOT NULL,
-         ts TIMESTAMPTZ NOT NULL,
-         type TEXT NOT NULL,
-         severity TEXT NOT NULL,
-         message TEXT NOT NULL,
-         details JSONB,
-         user_agent TEXT,
-         location TEXT,
-         device_id TEXT,
-         ip_hash TEXT,
-         created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-       )`
-    );
-
-    await query(
-      'CREATE INDEX IF NOT EXISTS idx_security_event_logs_address_ts ON security_event_logs(address, ts DESC)'
-    );
-  })().catch((error) => {
-    initSecurityEventLogsTablePromise = null;
-    throw error;
-  });
-
-  await initSecurityEventLogsTablePromise;
-}
-
-async function ensureSecurityAlertDispatchesTable(): Promise<void> {
-  if (initSecurityAlertDispatchesTablePromise) {
-    await initSecurityAlertDispatchesTablePromise;
-    return;
-  }
-
-  initSecurityAlertDispatchesTablePromise = (async () => {
-    await query(
-      `CREATE TABLE IF NOT EXISTS security_alert_dispatches (
-         dedup_key TEXT PRIMARY KEY,
-         last_sent_at TIMESTAMPTZ NOT NULL,
-         suppressed_count INTEGER NOT NULL DEFAULT 0,
-         updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-       )`
-    );
-
-    await query(
-      'CREATE INDEX IF NOT EXISTS idx_security_alert_dispatches_last_sent_at ON security_alert_dispatches(last_sent_at DESC)'
-    );
-  })().catch((error) => {
-    initSecurityAlertDispatchesTablePromise = null;
-    throw error;
-  });
-
-  await initSecurityAlertDispatchesTablePromise;
-}
-
 async function maybeRunSecurityLogsCleanup(): Promise<void> {
   const now = Date.now();
   if (now - lastSecurityLogsCleanupAtMs < SECURITY_LOG_CLEANUP_INTERVAL_MS) {
@@ -250,7 +185,6 @@ async function shouldDispatchCriticalAlert(params: {
   message: string;
 }): Promise<{ shouldDispatch: boolean; suppressedCount: number }> {
   try {
-    await ensureSecurityAlertDispatchesTable();
     const dedupWindowSeconds = resolveAlertDedupWindowSeconds();
     const dedupKey = buildCriticalAlertDedupKey(params);
 
@@ -415,8 +349,6 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    await ensureSecurityEventLogsTable();
-
     const { searchParams } = new URL(request.url);
     const rawLimit = searchParams.get('limit');
     const parsedLimit = rawLimit === null
@@ -475,7 +407,6 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    await ensureSecurityEventLogsTable();
     await maybeRunSecurityLogsCleanup();
 
     const body: unknown = await request.json();
@@ -570,7 +501,6 @@ export async function DELETE(request: NextRequest) {
   }
 
   try {
-    await ensureSecurityEventLogsTable();
     await maybeRunSecurityLogsCleanup();
     await query('DELETE FROM security_event_logs WHERE address = $1', [authAddress]);
 

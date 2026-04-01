@@ -7,8 +7,6 @@ const RETENTION_DAYS_ENV = 'SECURITY_WEBHOOK_REPLAY_TELEMETRY_RETENTION_DAYS';
 const DEFAULT_RETENTION_DAYS = 30;
 const MIN_RETENTION_DAYS = 1;
 const MAX_RETENTION_DAYS = 365;
-
-let initTelemetryTablesPromise: Promise<void> | null = null;
 let lastCleanupMs = 0;
 
 function parseEnvPositiveInt(raw: string | undefined): number | null {
@@ -33,41 +31,6 @@ function hashReplayKey(value: string | undefined): string | null {
   return createHash('sha256').update(value).digest('hex');
 }
 
-async function ensureTelemetryTables(): Promise<void> {
-  if (initTelemetryTablesPromise) {
-    await initTelemetryTablesPromise;
-    return;
-  }
-
-  initTelemetryTablesPromise = (async () => {
-    await query(
-      `CREATE TABLE IF NOT EXISTS security_webhook_replay_events (
-         id BIGSERIAL PRIMARY KEY,
-         ts TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-         status TEXT NOT NULL,
-         reason TEXT,
-         source TEXT,
-         replay_key_hash TEXT,
-         event_timestamp BIGINT,
-         created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-       )`
-    );
-
-    await query(
-      'CREATE INDEX IF NOT EXISTS idx_security_webhook_replay_events_ts ON security_webhook_replay_events(ts DESC)'
-    );
-
-    await query(
-      'CREATE INDEX IF NOT EXISTS idx_security_webhook_replay_events_status_ts ON security_webhook_replay_events(status, ts DESC)'
-    );
-  })().catch((error) => {
-    initTelemetryTablesPromise = null;
-    throw error;
-  });
-
-  await initTelemetryTablesPromise;
-}
-
 async function maybeCleanupTelemetry(): Promise<void> {
   const now = Date.now();
   if (now - lastCleanupMs < CLEANUP_INTERVAL_MS) return;
@@ -87,7 +50,6 @@ async function maybeCleanupTelemetry(): Promise<void> {
 
 export class PostgresWebhookReplayTelemetry implements WebhookReplayTelemetry {
   async record(event: WebhookReplayTelemetryEvent): Promise<void> {
-    await ensureTelemetryTables();
     await maybeCleanupTelemetry();
 
     await query(

@@ -17,46 +17,12 @@ const ADDRESS_LIKE_REGEX = /^0x[a-fA-F0-9]{40}$/;
 const INTEGER_STRING_REGEX = /^\d+$/;
 const DEFAULT_MIN_CONFIRMATIONS = 2n;
 
-let initMerchantPaymentConfirmationsPromise: Promise<void> | null = null;
-
 const PAYMENT_PROCESSED_EVENT = parseAbiItem(
   'event PaymentProcessed(address indexed customer, address indexed merchant, address token, uint256 amount, uint256 fee, string orderId, uint16 customerScore, uint8 channel)'
 );
 const PAYMENT_WITH_CHANNEL_EVENT = parseAbiItem(
   'event PaymentWithChannel(address indexed customer, address indexed merchant, address token, uint256 amount, uint256 fee, string orderId, uint16 customerScore, uint8 channel)'
 );
-
-async function ensureMerchantPaymentConfirmationsTable(): Promise<void> {
-  if (initMerchantPaymentConfirmationsPromise) {
-    await initMerchantPaymentConfirmationsPromise;
-    return;
-  }
-
-  initMerchantPaymentConfirmationsPromise = (async () => {
-    await query(
-      `CREATE TABLE IF NOT EXISTS merchant_payment_confirmations (
-         id BIGSERIAL PRIMARY KEY,
-         merchant_address TEXT NOT NULL,
-         tx_hash TEXT NOT NULL,
-         customer_address TEXT NOT NULL,
-         amount TEXT NOT NULL,
-         token TEXT,
-         order_id TEXT,
-         created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-         UNIQUE(merchant_address, tx_hash)
-       )`
-    );
-
-    await query(
-      'CREATE INDEX IF NOT EXISTS idx_merchant_payment_confirmations_merchant_created ON merchant_payment_confirmations(merchant_address, created_at DESC)'
-    );
-  })().catch((error) => {
-    initMerchantPaymentConfirmationsPromise = null;
-    throw error;
-  });
-
-  await initMerchantPaymentConfirmationsPromise;
-}
 
 async function claimPaymentConfirmationIdempotency(params: {
   merchant: string;
@@ -66,8 +32,6 @@ async function claimPaymentConfirmationIdempotency(params: {
   token?: string;
   orderId?: string;
 }): Promise<boolean> {
-  await ensureMerchantPaymentConfirmationsTable();
-
   const result = await query<{ id: string }>(
     `INSERT INTO merchant_payment_confirmations (
        merchant_address,

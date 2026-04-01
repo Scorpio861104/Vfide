@@ -12,8 +12,6 @@ const MONITOR_API_TOKEN_ENV = 'SECURITY_MONITOR_API_TOKEN';
 const DEFAULT_REPLAY_THRESHOLD_1H = 25;
 const MAX_TOP_SOURCES = 10;
 
-let initWebhookReplayMetricsTablesPromise: Promise<void> | null = null;
-
 function normalizeAddress(value: string): string {
   return value.trim().toLowerCase();
 }
@@ -70,41 +68,6 @@ function isMachineTokenAuthorized(request: NextRequest): boolean {
   return bearerToken === configuredToken;
 }
 
-async function ensureWebhookReplayMetricsTables(): Promise<void> {
-  if (initWebhookReplayMetricsTablesPromise) {
-    await initWebhookReplayMetricsTablesPromise;
-    return;
-  }
-
-  initWebhookReplayMetricsTablesPromise = (async () => {
-    await query(
-      `CREATE TABLE IF NOT EXISTS security_webhook_replay_events (
-         id BIGSERIAL PRIMARY KEY,
-         ts TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-         status TEXT NOT NULL,
-         reason TEXT,
-         source TEXT,
-         replay_key_hash TEXT,
-         event_timestamp BIGINT,
-         created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-       )`
-    );
-
-    await query(
-      'CREATE INDEX IF NOT EXISTS idx_security_webhook_replay_events_ts ON security_webhook_replay_events(ts DESC)'
-    );
-
-    await query(
-      'CREATE INDEX IF NOT EXISTS idx_security_webhook_replay_events_status_ts ON security_webhook_replay_events(status, ts DESC)'
-    );
-  })().catch((error) => {
-    initWebhookReplayMetricsTablesPromise = null;
-    throw error;
-  });
-
-  await initWebhookReplayMetricsTablesPromise;
-}
-
 export async function GET(request: NextRequest) {
   const rateLimit = await withRateLimit(request, 'api');
   if (rateLimit) return rateLimit;
@@ -135,8 +98,6 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    await ensureWebhookReplayMetricsTables();
-
     const aggregateResult = await query<{
       accepted_1h: string;
       rejected_1h: string;

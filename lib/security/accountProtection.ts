@@ -24,7 +24,6 @@ const CLEANUP_INTERVAL_MS = 5 * 60 * 1000;
 
 const securityEvents = new Map<string, SecurityEvent[]>();
 const accountLocks = new Map<string, LockRecord>();
-let initSecurityTablesPromise: Promise<void> | null = null;
 let lastCleanupTs = 0;
 
 function keyFor(address: string): string {
@@ -33,49 +32,6 @@ function keyFor(address: string): string {
 
 function prune(events: SecurityEvent[], now: number): SecurityEvent[] {
   return events.filter((e) => now - e.ts <= WINDOW_MS);
-}
-
-async function ensureSecurityAccountProtectionTables(): Promise<void> {
-  if (initSecurityTablesPromise) {
-    await initSecurityTablesPromise;
-    return;
-  }
-
-  initSecurityTablesPromise = (async () => {
-    await query(
-      `CREATE TABLE IF NOT EXISTS security_account_events (
-         id BIGSERIAL PRIMARY KEY,
-         address TEXT NOT NULL,
-         ts TIMESTAMPTZ NOT NULL,
-         ip TEXT NOT NULL,
-         type TEXT NOT NULL,
-         amount NUMERIC,
-         created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-       )`
-    );
-
-    await query(
-      `CREATE TABLE IF NOT EXISTS security_account_locks (
-         address TEXT PRIMARY KEY,
-         until_ts TIMESTAMPTZ NOT NULL,
-         reason TEXT NOT NULL,
-         updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-       )`
-    );
-
-    await query(
-      'CREATE INDEX IF NOT EXISTS idx_security_account_events_address_ts ON security_account_events(address, ts DESC)'
-    );
-
-    await query(
-      'CREATE INDEX IF NOT EXISTS idx_security_account_locks_until_ts ON security_account_locks(until_ts DESC)'
-    );
-  })().catch((error) => {
-    initSecurityTablesPromise = null;
-    throw error;
-  });
-
-  await initSecurityTablesPromise;
 }
 
 export async function getAccountLock(address: string): Promise<LockRecord | null> {
@@ -90,8 +46,6 @@ export async function getAccountLock(address: string): Promise<LockRecord | null
   }
 
   try {
-    await ensureSecurityAccountProtectionTables();
-
     const dbLockResult = await query<{ until_ts: string; reason: string }>(
       `SELECT until_ts::text, reason
        FROM security_account_locks
@@ -131,7 +85,6 @@ export async function lockAccount(address: string, reason: string): Promise<void
   accountLocks.set(key, { until, reason });
 
   try {
-    await ensureSecurityAccountProtectionTables();
     await query(
       `INSERT INTO security_account_locks (address, until_ts, reason, updated_at)
        VALUES ($1, to_timestamp($2 / 1000.0), $3, NOW())
@@ -155,7 +108,6 @@ async function maybeRunSecurityDataCleanup(nowMs: number): Promise<void> {
   lastCleanupTs = nowMs;
 
   try {
-    await ensureSecurityAccountProtectionTables();
     await query(
       `DELETE FROM security_account_events
        WHERE ts < NOW() - INTERVAL '24 hours'`
@@ -235,7 +187,6 @@ export async function recordSecurityEvent(address: string, event: SecurityEvent)
   let distinctIps = new Set(existing.map((e) => e.ip)).size;
 
   try {
-    await ensureSecurityAccountProtectionTables();
     await maybeRunSecurityDataCleanup(now);
 
     await query(
@@ -331,7 +282,6 @@ export async function clearAuthFailureSignals(address: string): Promise<void> {
   securityEvents.set(key, existing);
 
   try {
-    await ensureSecurityAccountProtectionTables();
     await query(
       `DELETE FROM security_account_events
        WHERE address = $1
