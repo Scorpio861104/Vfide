@@ -9,8 +9,13 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { logger } from '@/lib/logger';
+import { z } from 'zod4';
 
 const TX_HASH_REGEX = /^0x[a-fA-F0-9]{64}$/;
+const checkoutActionSchema = z.discriminatedUnion('action', [
+  z.object({ action: z.literal('view') }),
+  z.object({ action: z.literal('pay'), tx_hash: z.string().regex(TX_HASH_REGEX) }),
+]);
 
 // ─────────────────────────── GET: Public invoice view
 export async function GET(
@@ -75,8 +80,11 @@ export async function PATCH(
   }
 
   try {
-    const body = await request.json() as Record<string, unknown>;
-    const { action, tx_hash } = body;
+    const parsedBody = checkoutActionSchema.safeParse(await request.json());
+    if (!parsedBody.success) {
+      return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
+    }
+    const { action } = parsedBody.data;
 
     // Fetch invoice
     const invoiceResult = await query(
@@ -111,16 +119,14 @@ export async function PATCH(
       }
 
       // Require a valid transaction hash — payment confirmation should be verified on-chain
-      if (typeof tx_hash !== 'string' || !TX_HASH_REGEX.test(tx_hash)) {
-        return NextResponse.json({ error: 'Valid tx_hash required' }, { status: 400 });
-      }
+      const txHash = parsedBody.data.tx_hash;
 
       // Mark as pending_confirmation, not paid — merchant or backend job verifies on-chain
       await query(
         `UPDATE merchant_invoices
          SET status = 'pending_confirmation', tx_hash = $1, updated_at = NOW()
          WHERE id = $2 AND status NOT IN ('paid', 'cancelled')`,
-        [tx_hash, invoice.id]
+        [txHash, invoice.id]
       );
 
       // Do not emit payment.completed here.
