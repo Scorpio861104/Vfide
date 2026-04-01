@@ -13,9 +13,30 @@ import { requireAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { dispatchWebhook } from '@/lib/webhooks/merchantWebhookDispatcher';
 import { logger } from '@/lib/logger';
+import { z } from 'zod4';
 
 const ADDRESS_LIKE_REGEX = /^0x[a-fA-F0-9]{3,40}$/;
 const VALID_INTERVALS = ['weekly', 'monthly', 'quarterly', 'yearly'] as const;
+
+const createSubscriptionPlanSchema = z.object({
+  name: z.string().trim().min(1).max(100),
+  description: z.string().max(2000).optional(),
+  token: z.string().regex(ADDRESS_LIKE_REGEX),
+  amount: z.coerce.number().positive(),
+  interval: z.enum(VALID_INTERVALS),
+  trial_days: z.coerce.number().int().min(0).max(90).optional(),
+  max_subscribers: z.union([z.coerce.number().int().positive(), z.null()]).optional(),
+});
+
+const updateSubscriptionPlanSchema = z.object({
+  id: z.number().int().positive(),
+  name: z.string().trim().min(1).max(100).optional(),
+  description: z.string().max(2000).optional(),
+  amount: z.coerce.number().positive().optional(),
+  status: z.enum(['active', 'paused', 'archived']).optional(),
+  trial_days: z.coerce.number().int().min(0).max(90).optional(),
+  max_subscribers: z.union([z.coerce.number().int().positive(), z.null()]).optional(),
+});
 
 async function getAuthAddress(request: NextRequest): Promise<string | NextResponse> {
   const authResult = await requireAuth(request);
@@ -97,23 +118,12 @@ export async function POST(request: NextRequest) {
   if (authAddress instanceof NextResponse) return authAddress;
 
   try {
-    const body = await request.json() as Record<string, unknown>;
+    const parsedBody = createSubscriptionPlanSchema.safeParse(await request.json());
+    if (!parsedBody.success) {
+      return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
+    }
+    const body = parsedBody.data;
     const { name, description, token, amount, interval, trial_days, max_subscribers } = body;
-
-    // Validate required fields
-    if (typeof name !== 'string' || name.trim().length === 0 || name.trim().length > 100) {
-      return NextResponse.json({ error: 'Plan name required (max 100 chars)' }, { status: 400 });
-    }
-    if (typeof token !== 'string' || !ADDRESS_LIKE_REGEX.test(token)) {
-      return NextResponse.json({ error: 'Valid token address required' }, { status: 400 });
-    }
-    const amountNum = Number(amount);
-    if (!Number.isFinite(amountNum) || amountNum <= 0) {
-      return NextResponse.json({ error: 'Positive amount required' }, { status: 400 });
-    }
-    if (typeof interval !== 'string' || !VALID_INTERVALS.includes(interval as typeof VALID_INTERVALS[number])) {
-      return NextResponse.json({ error: `Interval must be one of: ${VALID_INTERVALS.join(', ')}` }, { status: 400 });
-    }
 
     // Limit plans per merchant
     const countResult = await query(
@@ -124,9 +134,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Maximum 20 subscription plans per merchant' }, { status: 400 });
     }
 
-    const trialDays = Math.max(0, Math.min(90, Math.floor(Number(trial_days) || 0)));
-    const maxSubs = typeof max_subscribers === 'number' && max_subscribers > 0
-      ? Math.floor(max_subscribers) : null;
+    const trialDays = trial_days ?? 0;
+    const maxSubs = max_subscribers ?? null;
 
     const result = await query(
       `INSERT INTO merchant_subscription_plans
@@ -135,10 +144,10 @@ export async function POST(request: NextRequest) {
        RETURNING *`,
       [
         authAddress,
-        name.trim(),
-        typeof description === 'string' ? description.slice(0, 2000) : null,
+        name,
+        description ?? null,
         token,
-        amountNum,
+        amount,
         interval,
         trialDays,
         maxSubs,
@@ -161,12 +170,12 @@ export async function PATCH(request: NextRequest) {
   if (authAddress instanceof NextResponse) return authAddress;
 
   try {
-    const body = await request.json() as Record<string, unknown>;
-    const { id, name, description, amount, status, trial_days, max_subscribers } = body;
-
-    if (typeof id !== 'number') {
-      return NextResponse.json({ error: 'Plan ID required' }, { status: 400 });
+    const parsedBody = updateSubscriptionPlanSchema.safeParse(await request.json());
+    if (!parsedBody.success) {
+      return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
     }
+    const body = parsedBody.data;
+    const { id, name, description, amount, status, trial_days, max_subscribers } = body;
 
     // Verify ownership
     const existing = await query(
@@ -181,29 +190,29 @@ export async function PATCH(request: NextRequest) {
     const params: unknown[] = [];
     let paramIndex = 1;
 
-    if (typeof name === 'string' && name.trim().length > 0) {
+    if (typeof name === 'string') {
       updates.push(`name = $${paramIndex++}`);
-      params.push(name.trim().slice(0, 100));
+      params.push(name);
     }
-    if (typeof description === 'string') {
+    if (description !== undefined) {
       updates.push(`description = $${paramIndex++}`);
-      params.push(description.slice(0, 2000));
+      params.push(description);
     }
-    if (typeof amount === 'number' && amount > 0) {
+    if (typeof amount === 'number') {
       updates.push(`amount = $${paramIndex++}`);
       params.push(amount);
     }
-    if (typeof status === 'string' && ['active', 'paused', 'archived'].includes(status)) {
+    if (status) {
       updates.push(`status = $${paramIndex++}`);
       params.push(status);
     }
     if (typeof trial_days === 'number') {
       updates.push(`trial_days = $${paramIndex++}`);
-      params.push(Math.max(0, Math.min(90, Math.floor(trial_days))));
+      params.push(trial_days);
     }
-    if (typeof max_subscribers === 'number' || max_subscribers === null) {
+    if (max_subscribers !== undefined) {
       updates.push(`max_subscribers = $${paramIndex++}`);
-      params.push(max_subscribers === null ? null : Math.max(0, Math.floor(max_subscribers as number)));
+      params.push(max_subscribers);
     }
 
     params.push(id);

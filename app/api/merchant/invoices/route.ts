@@ -13,9 +13,35 @@ import { requireAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { dispatchWebhook } from '@/lib/webhooks/merchantWebhookDispatcher';
 import { logger } from '@/lib/logger';
+import { z } from 'zod4';
 
 const ADDRESS_LIKE_REGEX = /^0x[a-fA-F0-9]{3,40}$/;
 const VALID_STATUSES = ['draft', 'sent', 'viewed', 'paid', 'overdue', 'cancelled', 'refunded'] as const;
+
+const invoiceItemSchema = z.object({
+  description: z.string().trim().min(1).max(500),
+  quantity: z.coerce.number().positive(),
+  unit_price: z.coerce.number().positive(),
+});
+
+const createInvoiceSchema = z.object({
+  customer_address: z.string().trim().toLowerCase().regex(ADDRESS_LIKE_REGEX).optional(),
+  customer_email: z.string().email().max(255).optional(),
+  customer_name: z.string().max(200).optional(),
+  token: z.string().regex(ADDRESS_LIKE_REGEX),
+  items: z.array(invoiceItemSchema).min(1).max(50),
+  tax_rate: z.coerce.number().min(0).max(100).optional(),
+  memo: z.string().max(2000).optional(),
+  due_date: z.string().optional(),
+  currency_display: z.string().max(10).optional(),
+  send_immediately: z.boolean().optional(),
+});
+
+const updateInvoiceSchema = z.object({
+  id: z.number().int().positive(),
+  status: z.enum(VALID_STATUSES),
+  tx_hash: z.string().regex(/^0x[a-fA-F0-9]{64}$/).optional(),
+});
 
 interface InvoiceItem {
   description: string;
@@ -110,7 +136,11 @@ export async function POST(request: NextRequest) {
   if (authAddress instanceof NextResponse) return authAddress;
 
   try {
-    const body = await request.json() as Record<string, unknown>;
+    const parsedBody = createInvoiceSchema.safeParse(await request.json());
+    if (!parsedBody.success) {
+      return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
+    }
+    const body = parsedBody.data;
     const {
       customer_address,
       customer_email,
@@ -124,32 +154,12 @@ export async function POST(request: NextRequest) {
       send_immediately,
     } = body;
 
-    // Validate token
-    if (typeof token !== 'string' || !ADDRESS_LIKE_REGEX.test(token)) {
-      return NextResponse.json({ error: 'Valid token address required' }, { status: 400 });
-    }
-
-    // Validate items
-    if (!Array.isArray(items) || items.length === 0 || items.length > 50) {
-      return NextResponse.json({ error: 'Invoice must have 1-50 line items' }, { status: 400 });
-    }
-
     const validatedItems: InvoiceItem[] = [];
     for (const item of items) {
-      if (typeof item !== 'object' || item === null) {
-        return NextResponse.json({ error: 'Invalid line item' }, { status: 400 });
-      }
-      const { description, quantity, unit_price } = item as Record<string, unknown>;
-      if (typeof description !== 'string' || description.trim().length === 0) {
-        return NextResponse.json({ error: 'Each item needs a description' }, { status: 400 });
-      }
-      const qty = Number(quantity) || 1;
-      const price = Number(unit_price);
-      if (!Number.isFinite(price) || price <= 0) {
-        return NextResponse.json({ error: 'Each item needs a positive unit price' }, { status: 400 });
-      }
+      const qty = Number(item.quantity) || 1;
+      const price = Number(item.unit_price);
       validatedItems.push({
-        description: description.trim().slice(0, 500),
+        description: item.description,
         quantity: qty,
         unit_price: price,
       });
@@ -157,7 +167,7 @@ export async function POST(request: NextRequest) {
 
     // Calculate totals
     const subtotal = validatedItems.reduce((sum, item) => sum + item.quantity * item.unit_price, 0);
-    const taxRateNum = Math.max(0, Math.min(100, Number(tax_rate) || 0));
+    const taxRateNum = tax_rate ?? 0;
     const taxAmount = subtotal * (taxRateNum / 100);
     const total = subtotal + taxAmount;
 
@@ -167,7 +177,7 @@ export async function POST(request: NextRequest) {
 
     // Validate due date
     let dueDateValue: Date | null = null;
-    if (typeof due_date === 'string') {
+    if (due_date) {
       dueDateValue = new Date(due_date);
       if (isNaN(dueDateValue.getTime())) {
         return NextResponse.json({ error: 'Invalid due date' }, { status: 400 });
@@ -190,17 +200,17 @@ export async function POST(request: NextRequest) {
         [
           invoiceNumber,
           authAddress,
-          typeof customer_address === 'string' ? customer_address.toLowerCase() : null,
-          typeof customer_email === 'string' ? customer_email.slice(0, 255) : null,
-          typeof customer_name === 'string' ? customer_name.slice(0, 200) : null,
+          customer_address ?? null,
+          customer_email ?? null,
+          customer_name ?? null,
           status,
           token,
           subtotal,
           taxRateNum,
           taxAmount,
           total,
-          typeof currency_display === 'string' ? currency_display.slice(0, 10) : 'VFIDE',
-          typeof memo === 'string' ? memo.slice(0, 2000) : null,
+          currency_display ?? 'VFIDE',
+          memo ?? null,
           dueDateValue,
           paymentLinkId,
         ]
@@ -262,12 +272,12 @@ export async function PATCH(request: NextRequest) {
   if (authAddress instanceof NextResponse) return authAddress;
 
   try {
-    const body = await request.json() as Record<string, unknown>;
-    const { id, status, tx_hash } = body;
-
-    if (typeof id !== 'number') {
-      return NextResponse.json({ error: 'Invoice ID required' }, { status: 400 });
+    const parsedBody = updateInvoiceSchema.safeParse(await request.json());
+    if (!parsedBody.success) {
+      return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
     }
+    const body = parsedBody.data;
+    const { id, status, tx_hash } = body;
 
     // Verify ownership
     const existing = await query(
@@ -288,10 +298,6 @@ export async function PATCH(request: NextRequest) {
       overdue: ['paid', 'cancelled'],
       paid: ['refunded'],
     };
-
-    if (typeof status !== 'string' || !VALID_STATUSES.includes(status as typeof VALID_STATUSES[number])) {
-      return NextResponse.json({ error: 'Invalid status' }, { status: 400 });
-    }
 
     const allowed = validTransitions[invoice.status as string];
     if (!allowed || !allowed.includes(status)) {
