@@ -11,8 +11,23 @@ import { query } from '@/lib/db';
 import { requireAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { logger } from '@/lib/logger';
+import { z } from 'zod4';
 
 const ADDRESS_LIKE_REGEX = /^0x[a-fA-F0-9]{3,40}$/;
+
+const createReviewSchema = z.object({
+  merchant_address: z.string().trim().toLowerCase().regex(ADDRESS_LIKE_REGEX),
+  product_id: z.number().int().positive(),
+  rating: z.number().int().min(1).max(5),
+  title: z.string().max(200).optional(),
+  body: z.string().max(5000).optional(),
+});
+
+const patchReviewSchema = z.object({
+  id: z.number().int().positive(),
+  merchant_reply: z.string().max(2000).optional(),
+  status: z.enum(['published', 'hidden']).optional(),
+});
 
 async function getAuthAddress(request: NextRequest): Promise<string | NextResponse> {
   const authResult = await requireAuth(request);
@@ -114,21 +129,15 @@ export async function POST(request: NextRequest) {
   if (authAddress instanceof NextResponse) return authAddress;
 
   try {
-    const body = await request.json() as Record<string, unknown>;
+    const parsedBody = createReviewSchema.safeParse(await request.json());
+    if (!parsedBody.success) {
+      return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
+    }
+    const body = parsedBody.data;
     const { merchant_address, product_id, rating, title, body: reviewBody } = body;
 
-    if (typeof merchant_address !== 'string' || !ADDRESS_LIKE_REGEX.test(merchant_address)) {
-      return NextResponse.json({ error: 'Valid merchant_address required' }, { status: 400 });
-    }
-    if (typeof rating !== 'number' || rating < 1 || rating > 5 || !Number.isInteger(rating)) {
-      return NextResponse.json({ error: 'Rating must be 1-5 integer' }, { status: 400 });
-    }
-    if (typeof product_id !== 'number') {
-      return NextResponse.json({ error: 'product_id required' }, { status: 400 });
-    }
-
     // Can't review own store
-    if (authAddress === (merchant_address as string).toLowerCase()) {
+    if (authAddress === merchant_address) {
       return NextResponse.json({ error: 'Cannot review your own store' }, { status: 400 });
     }
 
@@ -170,13 +179,13 @@ export async function POST(request: NextRequest) {
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
        RETURNING *`,
       [
-        (merchant_address as string).toLowerCase(),
+        merchant_address,
         product_id,
         authAddress,
         orderId,
         rating,
-        typeof title === 'string' ? title.slice(0, 200) : null,
-        typeof reviewBody === 'string' ? reviewBody.slice(0, 5000) : null,
+        title ?? null,
+        reviewBody ?? null,
         verifiedPurchase,
       ]
     );
@@ -197,12 +206,12 @@ export async function PATCH(request: NextRequest) {
   if (authAddress instanceof NextResponse) return authAddress;
 
   try {
-    const body = await request.json() as Record<string, unknown>;
-    const { id, merchant_reply, status } = body;
-
-    if (typeof id !== 'number') {
-      return NextResponse.json({ error: 'Review ID required' }, { status: 400 });
+    const parsedBody = patchReviewSchema.safeParse(await request.json());
+    if (!parsedBody.success) {
+      return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
     }
+    const body = parsedBody.data;
+    const { id, merchant_reply, status } = body;
 
     // Verify merchant owns the review's merchant_address
     const existing = await query(
@@ -220,12 +229,12 @@ export async function PATCH(request: NextRequest) {
     const params: (string | number)[] = [];
     let pi = 1;
 
-    if (typeof merchant_reply === 'string') {
+    if (merchant_reply !== undefined) {
       updates.push(`merchant_reply = $${pi++}`);
-      params.push(merchant_reply.slice(0, 2000));
+      params.push(merchant_reply);
       updates.push('merchant_replied_at = NOW()');
     }
-    if (typeof status === 'string' && ['published', 'hidden'].includes(status)) {
+    if (status !== undefined) {
       updates.push(`status = $${pi++}`);
       params.push(status);
     }

@@ -12,8 +12,25 @@ import { query } from '@/lib/db';
 import { requireAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { logger } from '@/lib/logger';
+import { z } from 'zod4';
 
 const ADDRESS_LIKE_REGEX = /^0x[a-fA-F0-9]{3,40}$/;
+
+const createDigitalAssetSchema = z.object({
+  product_id: z.number().int().positive(),
+  file_name: z.string().trim().min(1).max(255),
+  file_url: z.string().trim().min(1).max(2000),
+  file_type: z.string().max(100).optional(),
+  file_size_bytes: z.coerce.number().int().min(0).optional(),
+  download_limit: z.coerce.number().int().min(1).optional(),
+  expires_hours: z.coerce.number().int().min(1).optional(),
+  license_key_pool: z.array(z.string().max(500)).max(10000).optional(),
+});
+
+const fulfillDigitalDeliverySchema = z.object({
+  order_id: z.number().int().positive(),
+  product_id: z.number().int().positive(),
+});
 
 async function getAuthAddress(request: NextRequest): Promise<string | NextResponse> {
   const authResult = await requireAuth(request);
@@ -117,19 +134,13 @@ export async function POST(request: NextRequest) {
   if (authAddress instanceof NextResponse) return authAddress;
 
   try {
-    const body = await request.json() as Record<string, unknown>;
+    const parsedBody = createDigitalAssetSchema.safeParse(await request.json());
+    if (!parsedBody.success) {
+      return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
+    }
+    const body = parsedBody.data;
     const { product_id, file_name, file_url, file_type, file_size_bytes,
             download_limit, expires_hours, license_key_pool } = body;
-
-    if (typeof product_id !== 'number') {
-      return NextResponse.json({ error: 'product_id required' }, { status: 400 });
-    }
-    if (typeof file_name !== 'string' || !file_name.trim()) {
-      return NextResponse.json({ error: 'file_name required' }, { status: 400 });
-    }
-    if (typeof file_url !== 'string' || !file_url.trim()) {
-      return NextResponse.json({ error: 'file_url required' }, { status: 400 });
-    }
 
     // Verify product ownership and type
     const productResult = await query(
@@ -143,10 +154,7 @@ export async function POST(request: NextRequest) {
     // Validate license keys if provided
     let safeKeyPool: string[] | null = null;
     if (Array.isArray(license_key_pool)) {
-      safeKeyPool = (license_key_pool as unknown[])
-        .filter((k): k is string => typeof k === 'string')
-        .slice(0, 10000)
-        .map(k => k.slice(0, 500));
+      safeKeyPool = license_key_pool.slice(0, 10000).map((k) => k.slice(0, 500));
     }
 
     const result = await query(
@@ -157,12 +165,12 @@ export async function POST(request: NextRequest) {
        RETURNING *`,
       [
         product_id,
-        file_name.trim().slice(0, 255),
-        file_url.trim().slice(0, 2000),
-        typeof file_size_bytes === 'number' ? file_size_bytes : null,
-        typeof file_type === 'string' ? file_type.slice(0, 100) : null,
-        typeof download_limit === 'number' ? Math.max(1, download_limit) : null,
-        typeof expires_hours === 'number' ? Math.max(1, expires_hours) : null,
+        file_name,
+        file_url,
+        file_size_bytes ?? null,
+        file_type ?? null,
+        download_limit ?? null,
+        expires_hours ?? null,
         safeKeyPool,
       ]
     );
@@ -183,12 +191,12 @@ export async function PATCH(request: NextRequest) {
   if (authAddress instanceof NextResponse) return authAddress;
 
   try {
-    const body = await request.json() as Record<string, unknown>;
-    const { order_id, product_id } = body;
-
-    if (typeof order_id !== 'number' || typeof product_id !== 'number') {
-      return NextResponse.json({ error: 'order_id and product_id required' }, { status: 400 });
+    const parsedBody = fulfillDigitalDeliverySchema.safeParse(await request.json());
+    if (!parsedBody.success) {
+      return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
     }
+    const body = parsedBody.data;
+    const { order_id, product_id } = body;
 
     // Verify order belongs to this merchant
     const orderResult = await query(
