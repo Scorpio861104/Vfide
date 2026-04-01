@@ -59,13 +59,13 @@ contract GovernanceHooks is ReentrancyGuard {
         emit OwnershipTransferred(address(0), msg.sender);
     }
 
-    function setDAO(address _dao) external onlyDAO {
+    function setDAO(address _dao) external onlyDAO nonReentrant {
         require(_dao != address(0), "zero dao");
         dao = _dao;
         emit DAOSet(_dao);
     }
 
-    function setModules(address _ledger, address _seer, address _guardian) external onlyOwner { 
+    function setModules(address _ledger, address _seer, address _guardian) external onlyOwner nonReentrant { 
         require(_seer != address(0), "zero seer");
         ledger=IProofLedger_GH(_ledger); 
         seer=ISeer_GH(_seer);
@@ -73,7 +73,7 @@ contract GovernanceHooks is ReentrancyGuard {
         emit ModulesSet(_ledger,_seer, _guardian); 
     }
 
-    function transferOwnership(address newOwner) external onlyOwner {
+    function transferOwnership(address newOwner) external onlyOwner nonReentrant {
         require(newOwner != address(0), "zero");
         emit OwnershipTransferred(owner, newOwner);
         owner = newOwner;

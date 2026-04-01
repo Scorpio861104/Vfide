@@ -248,7 +248,8 @@ contract OwnerControlPanel {
     }
 
     function governance_queueAction(bytes32 actionId) external onlyOwner returns (uint256 executeAfter) {
-        return _queueAction(actionId);
+        executeAfter = _queueAction(actionId);
+        emit EmergencyAction("governance_action_queued", address(this));
     }
 
     function governance_cancelAction(bytes32 actionId) external onlyOwner {

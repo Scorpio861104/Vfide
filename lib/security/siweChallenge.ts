@@ -17,12 +17,11 @@ interface ChallengeRecord {
 const CHALLENGE_TTL_MS = 5 * 60 * 1000;
 const CHALLENGE_TTL_SECONDS = Math.floor(CHALLENGE_TTL_MS / 1000);
 const CHALLENGE_PREFIX = 'auth:siwe:challenge:';
-const challenges = new Map<string, ChallengeRecord>();
 let redisClient: Redis | null | undefined;
 
-function assertRedisAvailableInProduction(redis: Redis | null): void {
-  if (process.env.NODE_ENV === 'production' && !redis) {
-    throw new Error('Redis is required in production for SIWE challenge replay protection. Configure UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN.');
+function assertRedisAvailable(redis: Redis | null): void {
+  if (!redis) {
+    throw new Error('Redis is required for SIWE challenge replay protection. Configure UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN.');
   }
 }
 
@@ -56,14 +55,6 @@ function getRedisClient(): Redis | null {
   return redisClient;
 }
 
-function cleanupExpiredChallenges(now = Date.now()): void {
-  for (const [key, record] of challenges.entries()) {
-    if (record.expiresAt <= now) {
-      challenges.delete(key);
-    }
-  }
-}
-
 function normalizeFingerprintValue(value: string, fallback: string): string {
   const normalized = value.trim().slice(0, 512);
   return normalized || fallback;
@@ -71,40 +62,17 @@ function normalizeFingerprintValue(value: string, fallback: string): string {
 
 async function storeChallengeRecord(record: ChallengeRecord): Promise<void> {
   const redis = getRedisClient();
-  assertRedisAvailableInProduction(redis);
+  assertRedisAvailable(redis);
   const key = challengeKey(record.address);
-
-  if (redis) {
-    try {
-      await redis.set(key, JSON.stringify(record), { ex: CHALLENGE_TTL_SECONDS });
-      return;
-    } catch (error) {
-      logger.error('[SIWE Challenge] Redis store failed, using memory fallback:', error as Error);
-    }
-  }
-
-  cleanupExpiredChallenges(record.issuedAt);
-  challenges.set(key, record);
+  await redis!.set(key, JSON.stringify(record), { ex: CHALLENGE_TTL_SECONDS });
 }
 
 async function consumeChallengeRecord(address: string): Promise<ChallengeRecord | null> {
   const key = challengeKey(address);
   const redis = getRedisClient();
-  assertRedisAvailableInProduction(redis);
-
-  if (redis) {
-    try {
-      const record = await redis.getdel<string>(key);
-      return record ? JSON.parse(record) as ChallengeRecord : null;
-    } catch (error) {
-      logger.error('[SIWE Challenge] Redis consume failed, using memory fallback:', error as Error);
-    }
-  }
-
-  cleanupExpiredChallenges();
-  const record = challenges.get(key) ?? null;
-  challenges.delete(key);
-  return record;
+  assertRedisAvailable(redis);
+  const record = await redis!.getdel<string>(key);
+  return record ? JSON.parse(record) as ChallengeRecord : null;
 }
 
 export function getRequestIp(headers: Headers): string {

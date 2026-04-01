@@ -93,20 +93,20 @@ contract EmergencyControl is ReentrancyGuard {
 
     // ───────────────────────────────── Admin / config
 
-    function setModules(address _dao, address _breaker, address _ledger) external onlyDAO {
+    function setModules(address _dao, address _breaker, address _ledger) external onlyDAO nonReentrant {
         if (_dao == address(0) || _breaker == address(0)) revert EC_Zero();
         dao = _dao; breaker = IEmergencyBreaker(_breaker); ledger = IProofLedger(_ledger);
         emit ModulesSet(_dao, _breaker, _ledger);
         _log("ec_modules_set");
     }
 
-    function setCooldown(uint64 secondsMin) external onlyDAO {
+    function setCooldown(uint64 secondsMin) external onlyDAO nonReentrant {
         minCooldown = secondsMin;
         emit CooldownSet(secondsMin);
         _log("ec_cooldown_set");
     }
 
-    function resetCommittee(uint8 _threshold, address[] calldata members) external onlyDAO {
+    function resetCommittee(uint8 _threshold, address[] calldata members) external onlyDAO nonReentrant {
         if (_threshold == 0 || _threshold > members.length) revert EC_BadThreshold();
         
         // Clear old members
@@ -134,14 +134,14 @@ contract EmergencyControl is ReentrancyGuard {
         _log("ec_committee_reset");
     }
 
-    function resetVotes() external onlyDAO {
+    function resetVotes() external onlyDAO nonReentrant {
         _resetVotes();
         haltVotingStartTime = 0;
         unhaltVotingStartTime = 0;
         _log("ec_votes_reset");
     }
 
-    function addMember(address m) external onlyDAOOrFoundation {
+    function addMember(address m) external onlyDAOOrFoundation nonReentrant {
         if (m == address(0)) revert EC_Zero();
         if (isMember[m]) revert EC_AlreadyMember();
         isMember[m] = true; memberCount += 1;
@@ -151,7 +151,7 @@ contract EmergencyControl is ReentrancyGuard {
         // threshold unchanged; DAO should adjust separately if desired
     }
 
-    function removeMember(address m) external onlyDAOOrFoundation {
+    function removeMember(address m) external onlyDAOOrFoundation nonReentrant {
         if (!isMember[m]) revert EC_NotMember();
         isMember[m] = false; memberCount -= 1;
         
@@ -178,14 +178,14 @@ contract EmergencyControl is ReentrancyGuard {
         _log("ec_member_remove");
     }
 
-    function setThreshold(uint8 _threshold) external onlyDAO {
+    function setThreshold(uint8 _threshold) external onlyDAO nonReentrant {
         if (_threshold == 0 || _threshold > memberCount) revert EC_BadThreshold();
         threshold = _threshold;
         _log("ec_threshold_set");
     }
 
     /// @notice Rotate foundation address (only callable by current foundation)
-    function rotateFoundation(address newFoundation) external {
+    function rotateFoundation(address newFoundation) external nonReentrant {
         require(msg.sender == foundation, "EC: not foundation");
         require(newFoundation != address(0), "EC: foundation=0");
         address old = foundation;
@@ -196,7 +196,7 @@ contract EmergencyControl is ReentrancyGuard {
 
     // ───────────────────────────────── Actions
 
-    function daoToggle(bool halt, string calldata reason) external onlyDAO {
+    function daoToggle(bool halt, string calldata reason) external onlyDAO nonReentrant {
         _enforceCooldown();
         lastToggleTs = uint64(block.timestamp);
         breaker.toggle(halt, reason);
@@ -205,7 +205,7 @@ contract EmergencyControl is ReentrancyGuard {
     }
 
     /// Committee member casts a vote to (un)halt.
-    function committeeVote(bool halt, string calldata reason) external {
+    function committeeVote(bool halt, string calldata reason) external nonReentrant {
         if (!isMember[msg.sender]) revert EC_NotMember();
 
         if (halt) {

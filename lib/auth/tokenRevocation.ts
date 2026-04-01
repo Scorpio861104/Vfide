@@ -11,9 +11,9 @@ import { logger } from '@/lib/logger';
 // Initialize Redis client (will use environment variables)
 let redis: Redis | null = null;
 
-function assertRedisAvailableInProduction(): void {
-  if (process.env.NODE_ENV === 'production' && !redis) {
-    throw new Error('Redis is required in production for token revocation. Configure UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN.');
+function assertRedisAvailable(): void {
+  if (!redis) {
+    throw new Error('Redis is required for token revocation. Configure UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN.');
   }
 }
 
@@ -27,12 +27,6 @@ try {
 } catch (error) {
   logger.error('[Token Revocation] Failed to initialize Redis:', error as Error);
 }
-
-/**
- * In-memory fallback for development/testing
- * NOT suitable for production with multiple server instances
- */
-const memoryBlacklist = new Map<string, number>();
 
 /**
  * Token blacklist key prefix
@@ -56,7 +50,7 @@ export async function revokeToken(
   expiresAt: number,
   reason?: string
 ): Promise<void> {
-  assertRedisAvailableInProduction();
+  assertRedisAvailable();
   const key = `${BLACKLIST_PREFIX}${tokenHash}`;
   const now = Math.floor(Date.now() / 1000);
   
@@ -69,20 +63,8 @@ export async function revokeToken(
     reason: reason || 'manual_revocation',
   });
 
-  if (redis) {
-    try {
-      await redis.setex(key, ttl, value);
-      logger.info(`[Token Revocation] Token blacklisted until ${new Date(expiresAt * 1000).toISOString()}`);
-    } catch (error) {
-      logger.error('[Token Revocation] Redis error:', error as Error);
-      // Fallback to memory
-      memoryBlacklist.set(tokenHash, expiresAt);
-    }
-  } else {
-    // Use memory fallback
-    memoryBlacklist.set(tokenHash, expiresAt);
-    logger.warn('[Token Revocation] Using in-memory blacklist (not suitable for production)');
-  }
+  await redis!.setex(key, ttl, value);
+  logger.info(`[Token Revocation] Token blacklisted until ${new Date(expiresAt * 1000).toISOString()}`);
 }
 
 /**
@@ -91,32 +73,10 @@ export async function revokeToken(
  * @returns true if token is revoked, false otherwise
  */
 export async function isTokenRevoked(tokenHash: string): Promise<boolean> {
-  assertRedisAvailableInProduction();
+  assertRedisAvailable();
   const key = `${BLACKLIST_PREFIX}${tokenHash}`;
-
-  if (redis) {
-    try {
-      const result = await redis.get(key);
-      return result !== null;
-    } catch (error) {
-      logger.error('[Token Revocation] Redis error during check:', error as Error);
-      // Fallback to memory
-      return memoryBlacklist.has(tokenHash);
-    }
-  } else {
-    // Use memory fallback
-    const expiresAt = memoryBlacklist.get(tokenHash);
-    if (!expiresAt) return false;
-
-    const now = Math.floor(Date.now() / 1000);
-    if (now > expiresAt) {
-      // Token expired naturally, remove from memory
-      memoryBlacklist.delete(tokenHash);
-      return false;
-    }
-
-    return true;
-  }
+  const result = await redis!.get(key);
+  return result !== null;
 }
 
 /**
@@ -128,7 +88,7 @@ export async function revokeUserTokens(
   userAddress: string,
   reason: string = 'security_revocation'
 ): Promise<void> {
-  assertRedisAvailableInProduction();
+  assertRedisAvailable();
   const key = `${BLACKLIST_PREFIX}user:${userAddress.toLowerCase()}`;
   const now = Math.floor(Date.now() / 1000);
 
@@ -137,17 +97,8 @@ export async function revokeUserTokens(
     reason,
   });
 
-  if (redis) {
-    try {
-      // Store user revocation with long TTL
-      await redis.setex(key, BLACKLIST_TTL, value);
-      logger.info(`[Token Revocation] All tokens revoked for user: ${userAddress}`);
-    } catch (error) {
-      logger.error('[Token Revocation] Redis error during user revocation:', error as Error);
-    }
-  } else {
-    logger.warn('[Token Revocation] User-wide revocation requires Redis in production');
-  }
+  await redis!.setex(key, BLACKLIST_TTL, value);
+  logger.info(`[Token Revocation] All tokens revoked for user: ${userAddress}`);
 }
 
 /**
@@ -160,27 +111,17 @@ export async function isUserRevoked(userAddress: string): Promise<{
   revokedAt?: number;
   reason?: string;
 } | null> {
-  assertRedisAvailableInProduction();
+  assertRedisAvailable();
   const key = `${BLACKLIST_PREFIX}user:${userAddress.toLowerCase()}`;
+  const result = await redis!.get(key);
+  if (!result) return null;
 
-  if (redis) {
-    try {
-      const result = await redis.get(key);
-      if (!result) return null;
-
-      const parsed = JSON.parse(result as string);
-      return {
-        revoked: true,
-        revokedAt: parsed.revokedAt,
-        reason: parsed.reason,
-      };
-    } catch (error) {
-      logger.error('[Token Revocation] Redis error during user check:', error as Error);
-      return null;
-    }
-  }
-
-  return null;
+  const parsed = JSON.parse(result as string);
+  return {
+    revoked: true,
+    revokedAt: parsed.revokedAt,
+    reason: parsed.reason,
+  };
 }
 
 /**
@@ -203,39 +144,12 @@ export async function hashToken(token: string): Promise<string> {
 }
 
 /**
- * Clean up expired entries from memory blacklist
- * Should be called periodically (e.g., every hour)
- */
-export function cleanupMemoryBlacklist(): void {
-  const now = Math.floor(Date.now() / 1000);
-  let cleaned = 0;
-
-  for (const [tokenHash, expiresAt] of memoryBlacklist.entries()) {
-    if (now > expiresAt) {
-      memoryBlacklist.delete(tokenHash);
-      cleaned++;
-    }
-  }
-
-  if (cleaned > 0) {
-    logger.info(`[Token Revocation] Cleaned up ${cleaned} expired entries from memory`);
-  }
-}
-
-/**
  * Get revocation statistics (for monitoring)
  */
 export async function getRevocationStats(): Promise<{
-  memoryBlacklistSize: number;
   redisAvailable: boolean;
 }> {
   return {
-    memoryBlacklistSize: memoryBlacklist.size,
     redisAvailable: redis !== null,
   };
-}
-
-// Set up periodic cleanup (every hour)
-if (typeof setInterval !== 'undefined') {
-  setInterval(cleanupMemoryBlacklist, 60 * 60 * 1000);
 }

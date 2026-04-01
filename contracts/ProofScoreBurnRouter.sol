@@ -142,7 +142,7 @@ contract ProofScoreBurnRouter is Ownable, Pausable, ReentrancyGuard {
     /**
      * @notice Set token reference for supply checking
      */
-    function setToken(address _token) external onlyOwner {
+    function setToken(address _token) external onlyOwner nonReentrant {
         require(_token != address(0), "zero token");
         token = _token;
     }
@@ -157,7 +157,7 @@ contract ProofScoreBurnRouter is Ownable, Pausable, ReentrancyGuard {
         uint256 _dailyBurnCap,
         uint256 _minimumSupplyFloor,
         uint16 _ecosystemMinBps
-    ) external onlyOwner {
+    ) external onlyOwner nonReentrant {
         require(_ecosystemMinBps <= 100, "eco min too high"); // Max 1% minimum
         dailyBurnCap = _dailyBurnCap;
         minimumSupplyFloor = _minimumSupplyFloor;
@@ -179,7 +179,7 @@ contract ProofScoreBurnRouter is Ownable, Pausable, ReentrancyGuard {
         uint16 _lowVolMultiplier,
         uint16 _highVolMultiplier,
         bool _enabled
-    ) external onlyOwner {
+    ) external onlyOwner nonReentrant {
         require(_lowVolumeThreshold <= _highVolumeThreshold, "low > high");
         require(_lowVolMultiplier <= 20000, "low mult max 2x"); // Max 2x
         require(_highVolMultiplier >= 5000, "high mult min 0.5x"); // Min 0.5x
@@ -264,7 +264,7 @@ contract ProofScoreBurnRouter is Ownable, Pausable, ReentrancyGuard {
      *      computeFees gas-free while still producing an on-chain alert trail.
      * @param user Address to probe
      */
-    function warnIfSeerMisconfigured(address user) external onlyOwner {
+    function warnIfSeerMisconfigured(address user) external onlyOwner nonReentrant {
         uint16 score = seer.getScore(user);
         if (score == 0) {
             emit SeerScoreZeroWarning(user, address(seer));
@@ -274,7 +274,7 @@ contract ProofScoreBurnRouter is Ownable, Pausable, ReentrancyGuard {
     // ─────────────────────────── Admin
 
     /// @notice BR-04 FIX: Propose new modules (takes effect after timelock)
-    function proposeModules(address _seer, address _sanctumSink, address _burnSink, address _ecosystemSink) external onlyOwner {
+    function proposeModules(address _seer, address _sanctumSink, address _burnSink, address _ecosystemSink) external onlyOwner nonReentrant {
         _validateModules(_seer, _sanctumSink, _burnSink, _ecosystemSink);
         pendingModules = PendingModules({
             seer_: _seer,
@@ -286,7 +286,7 @@ contract ProofScoreBurnRouter is Ownable, Pausable, ReentrancyGuard {
     }
 
     /// @notice BR-04 FIX: Apply pending modules after timelock expires
-    function applyModules() external onlyOwner {
+    function applyModules() external onlyOwner nonReentrant {
         require(pendingModulesAt != 0 && block.timestamp >= pendingModulesAt, "BR: timelock");
         _validateModules(
             pendingModules.seer_,
@@ -304,7 +304,7 @@ contract ProofScoreBurnRouter is Ownable, Pausable, ReentrancyGuard {
     }
 
     /// @notice Cancel pending modules change
-    function cancelProposeModules() external onlyOwner {
+    function cancelProposeModules() external onlyOwner nonReentrant {
         delete pendingModules;
         delete pendingModulesAt;
     }
@@ -450,7 +450,7 @@ contract ProofScoreBurnRouter is Ownable, Pausable, ReentrancyGuard {
     function setFeePolicy(
         uint16 _minTotalBps,
         uint16 _maxTotalBps
-    ) external onlyOwner {
+    ) external onlyOwner nonReentrant {
         // BR-05 FIX: Enforce per-day rate limit on fee policy changes
         require(block.timestamp >= lastFeePolicyChange + FEE_POLICY_COOLDOWN, "BR: fee policy cooldown active");
         require(_minTotalBps <= _maxTotalBps, "min > max");
@@ -468,14 +468,14 @@ contract ProofScoreBurnRouter is Ownable, Pausable, ReentrancyGuard {
         emit PolicySet(baseBurnBps, baseSanctumBps, baseEcosystemBps, 0, 0);
     }
 
-    function setMicroTxFeeCeiling(uint16 _maxBps, uint256 _maxAmount) external onlyOwner {
+    function setMicroTxFeeCeiling(uint16 _maxBps, uint256 _maxAmount) external onlyOwner nonReentrant {
         require(_maxBps <= 500, "BURN: micro ceiling too high");
         microTxFeeCeilingBps = _maxBps;
         microTxMaxAmount = _maxAmount;
         emit MicroTxFeeCeilingSet(_maxBps, _maxAmount);
     }
 
-    function setMicroTxUsdCap(address _priceOracle, uint256 _maxUsd6) external onlyOwner {
+    function setMicroTxUsdCap(address _priceOracle, uint256 _maxUsd6) external onlyOwner nonReentrant {
         microTxPriceOracle = _priceOracle;
         microTxMaxUsd6 = _maxUsd6;
         emit MicroTxUsdCapSet(_priceOracle, _maxUsd6);
@@ -611,7 +611,7 @@ contract ProofScoreBurnRouter is Ownable, Pausable, ReentrancyGuard {
         address from,
         address to,
         uint256 amount
-    ) external whenNotPaused returns (
+    ) external whenNotPaused nonReentrant returns (
         uint256 burnAmount,
         uint256 sanctumAmount,
         uint256 ecosystemAmount,
@@ -635,7 +635,7 @@ contract ProofScoreBurnRouter is Ownable, Pausable, ReentrancyGuard {
      * @notice Update daily burn tracking (called by token after transfer)
      * @dev This allows accurate daily cap enforcement
      */
-    function recordBurn(uint256 burnAmount) external whenNotPaused {
+    function recordBurn(uint256 burnAmount) external whenNotPaused nonReentrant {
         require(msg.sender == token, "only token");
         _resetDayIfNeeded();
         dailyBurnedAmount += burnAmount;
@@ -645,7 +645,7 @@ contract ProofScoreBurnRouter is Ownable, Pausable, ReentrancyGuard {
      * @notice Record transfer volume (called by token after transfer)
      * @dev Used for adaptive fee calculations
      */
-    function recordVolume(uint256 amount) external whenNotPaused {
+    function recordVolume(uint256 amount) external whenNotPaused nonReentrant {
         require(msg.sender == token, "only token");
         _resetDayIfNeeded();
         dailyVolumeTracked += amount;
@@ -798,8 +798,8 @@ contract ProofScoreBurnRouter is Ownable, Pausable, ReentrancyGuard {
         feePercent = totalBps;
     }
 
-    function pause() external onlyOwner { _pause(); }
-    function unpause() external onlyOwner { _unpause(); }
+    function pause() external onlyOwner nonReentrant { _pause(); }
+    function unpause() external onlyOwner nonReentrant { _unpause(); }
 
     /**
      * Calculate split ratio (for transparency)

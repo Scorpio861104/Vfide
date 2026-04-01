@@ -199,7 +199,7 @@ contract SeerGuardian is ReentrancyGuard {
     //                      DAO CONFIGURATION
     // ═══════════════════════════════════════════════════════════════════════
     
-    function setModules(address _seer, address _vaultHub, address _ledger) external onlyDAO {
+    function setModules(address _seer, address _vaultHub, address _ledger) external onlyDAO nonReentrant {
         if (_seer == address(0)) revert SG_Zero();
         seer = ISeer_Guardian(_seer);
         if (_vaultHub != address(0)) vaultHub = IVaultHub_Guardian(_vaultHub);
@@ -207,7 +207,7 @@ contract SeerGuardian is ReentrancyGuard {
         emit ModulesSet(_seer, dao, _vaultHub, _ledger);
     }
     
-    function setDAO(address _newDAO) external onlyDAO {
+    function setDAO(address _newDAO) external onlyDAO nonReentrant {
         if (_newDAO == address(0)) revert SG_Zero();
         address old = dao;
         dao = _newDAO;
@@ -220,7 +220,7 @@ contract SeerGuardian is ReentrancyGuard {
         uint64 _violationCooldown,
         uint64 _maxDuration,
         uint64 _flagDelay
-    ) external onlyDAO {
+    ) external onlyDAO nonReentrant {
         require(_autoRestrict < _autoLift, "SG: invalid thresholds");
         autoRestrictThreshold = _autoRestrict;
         autoLiftThreshold = _autoLift;
@@ -338,7 +338,7 @@ contract SeerGuardian is ReentrancyGuard {
      * @param subject The restricted address
      * @param reason Justification for override
      */
-    function daoOverrideRestriction(address subject, string calldata reason) external onlyDAO {
+    function daoOverrideRestriction(address subject, string calldata reason) external onlyDAO nonReentrant {
         if (activeRestriction[subject] == RestrictionType.None) revert SG_NoViolation();
         
         bytes32 actionId = keccak256(abi.encode(subject, activeRestriction[subject], block.timestamp));
@@ -379,7 +379,7 @@ contract SeerGuardian is ReentrancyGuard {
      * @notice DAO clears violation history for rehabilitation
      * @param subject The address to rehabilitate
      */
-    function daoRehabilitateUser(address subject) external onlyDAO {
+    function daoRehabilitateUser(address subject) external onlyDAO nonReentrant {
         // Clear all violation types
         violationCount[subject][ViolationType.SuspiciousTransfer] = 0;
         violationCount[subject][ViolationType.RapidScoreDrop] = 0;
@@ -406,7 +406,7 @@ contract SeerGuardian is ReentrancyGuard {
      * @param proposalId The DAO proposal ID
      * @param concern The security/trust concern
      */
-    function seerFlagProposal(uint256 proposalId, string calldata concern) external onlyAuthorized {
+    function seerFlagProposal(uint256 proposalId, string calldata concern) external onlyAuthorized nonReentrant {
         require(!proposalFlagged[proposalId], "SG: already flagged");
         
         proposalFlagged[proposalId] = true;
@@ -439,7 +439,7 @@ contract SeerGuardian is ReentrancyGuard {
      * @notice DAO clears a Seer flag (override Seer's concern)
      * @param proposalId The flagged proposal
      */
-    function daoClearFlag(uint256 proposalId) external onlyDAO {
+    function daoClearFlag(uint256 proposalId) external onlyDAO nonReentrant {
         require(proposalFlagged[proposalId], "SG: not flagged");
         
         proposalFlagged[proposalId] = false;

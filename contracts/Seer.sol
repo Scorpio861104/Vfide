@@ -250,7 +250,7 @@ contract Seer is ReentrancyGuard {
         if (_hub != address(0)) vaultHub = IVaultHub_Trust(_hub);
     }
 
-    function setModules(address _ledger, address _hub) external onlyDAO {
+    function setModules(address _ledger, address _hub) external onlyDAO nonReentrant {
         if (_ledger == address(0) || _hub == address(0)) revert TRUST_Zero();
         ledger = ProofLedger(_ledger);
         vaultHub = IVaultHub_Trust(_hub);
@@ -262,7 +262,7 @@ contract Seer is ReentrancyGuard {
      * @notice Set the SeerSocial extension contract for endorsement calculations
      * @param _seerSocial The SeerSocial contract address
      */
-    function setSeerSocial(address _seerSocial) external onlyDAO {
+    function setSeerSocial(address _seerSocial) external onlyDAO nonReentrant {
         if (_seerSocial == address(0)) revert TRUST_Zero();
         seerSocial = _seerSocial;
         emit SeerSocialSet(_seerSocial);
@@ -272,19 +272,19 @@ contract Seer is ReentrancyGuard {
      * @notice Set the SeerAutonomous contract for automatic enforcement
      * @param _seerAutonomous The SeerAutonomous contract address
      */
-    function setSeerAutonomous(address _seerAutonomous) external onlyDAO {
+    function setSeerAutonomous(address _seerAutonomous) external onlyDAO nonReentrant {
         if (_seerAutonomous == address(0)) revert TRUST_Zero();
         seerAutonomous = _seerAutonomous;
         emit SeerAutonomousSet(_seerAutonomous);
     }
 
     /// @notice Set ProofScoreBurnRouter for score snapshot synchronization
-    function setBurnRouter(address _burnRouter) external onlyDAO {
+    function setBurnRouter(address _burnRouter) external onlyDAO nonReentrant {
         burnRouter = _burnRouter;
         emit BurnRouterSet(_burnRouter);
     }
 
-    function setPolicyGuard(address _policyGuard) external onlyDAO {
+    function setPolicyGuard(address _policyGuard) external onlyDAO nonReentrant {
         if (_policyGuard == address(0)) revert TRUST_Zero();
         policyGuard = _policyGuard;
     }
@@ -293,14 +293,14 @@ contract Seer is ReentrancyGuard {
      * @notice Transfer DAO control to a new address (for DAO migration)
      * @param newDAO The new DAO address
      */
-    function setDAO(address newDAO) external onlyDAO {
+    function setDAO(address newDAO) external onlyDAO nonReentrant {
         if (newDAO == address(0)) revert TRUST_Zero();
         pendingDAO = newDAO;
         pendingDAOAt = uint64(block.timestamp) + DAO_CHANGE_DELAY;
         emit DAOChangeProposed(newDAO, pendingDAOAt);
     }
 
-    function applyDAOChange() external onlyDAO {
+    function applyDAOChange() external onlyDAO nonReentrant {
            if (pendingDAOAt == 0 || block.timestamp < pendingDAOAt) revert TRUST_InvalidState();
         address oldDAO = dao;
         dao = pendingDAO;
@@ -310,7 +310,7 @@ contract Seer is ReentrancyGuard {
         _logSystem();
     }
 
-    function cancelDAOChange() external onlyDAO {
+    function cancelDAOChange() external onlyDAO nonReentrant {
         if (pendingDAOAt == 0) revert TRUST_NotSet();
         delete pendingDAO;
         delete pendingDAOAt;
@@ -322,7 +322,7 @@ contract Seer is ReentrancyGuard {
      * @param operator The address to authorize/deauthorize
      * @param authorized True to authorize, false to revoke
      */
-    function setOperator(address operator, bool authorized) external onlyDAO {
+    function setOperator(address operator, bool authorized) external onlyDAO nonReentrant {
         if (operator == address(0)) revert TRUST_Zero();
         operators[operator] = authorized;
         emit OperatorSet(operator, authorized);
@@ -333,7 +333,7 @@ contract Seer is ReentrancyGuard {
      * @notice Emergency pause/unpause score modifications
      * @param _paused True to pause, false to unpause
      */
-    function setPaused(bool _paused) external onlyDAO {
+    function setPaused(bool _paused) external onlyDAO nonReentrant {
         paused = _paused;
         emit Paused(_paused);
         _logSystem();
@@ -345,7 +345,7 @@ contract Seer is ReentrancyGuard {
      * @param startDays Days of inactivity before decay begins
      * @param perMonth Score points lost per month toward neutral
      */
-    function setDecayConfig(bool enabled, uint64 startDays, uint16 perMonth) external onlyDAO {
+    function setDecayConfig(bool enabled, uint64 startDays, uint16 perMonth) external onlyDAO nonReentrant {
         if (startDays < 30) revert TRUST_Bounds();
         if (perMonth > 500) revert TRUST_Bounds();
         decayEnabled = enabled;
@@ -355,7 +355,7 @@ contract Seer is ReentrancyGuard {
         _logSystem();
     }
 
-    function setThresholds(uint16 low, uint16 high, uint16 minGov, uint16 minMerch) external onlyDAO {
+    function setThresholds(uint16 low, uint16 high, uint16 minGov, uint16 minMerch) external onlyDAO nonReentrant {
         if (low > high) revert TRUST_Bounds();
         if (high > MAX_SCORE) revert TRUST_Bounds();
         // M-1 FIX: Add minimum value constraints to prevent threshold manipulation
@@ -384,7 +384,7 @@ contract Seer is ReentrancyGuard {
      * @param name Human-readable name for the source
      * @param weight Weight of this source (0-100)
      */
-    function addScoreSource(address source, string calldata name, uint8 weight) external onlyDAO {
+    function addScoreSource(address source, string calldata name, uint8 weight) external onlyDAO nonReentrant {
         if (source == address(0)) revert TRUST_Zero();
         if (weight > 100) revert TRUST_Bounds();
         if (scoreSourceIndex[source] != 0) revert TRUST_AlreadySet();
@@ -405,7 +405,7 @@ contract Seer is ReentrancyGuard {
     /**
      * @notice Remove an on-chain score source
      */
-    function removeScoreSource(address source) external onlyDAO {
+    function removeScoreSource(address source) external onlyDAO nonReentrant {
         uint256 idx = scoreSourceIndex[source];
         if (idx == 0) revert TRUST_NotSet();
         
@@ -421,7 +421,7 @@ contract Seer is ReentrancyGuard {
      * @param daoWeight Weight for DAO-set scores (0-100)
      * @param onChainWeight Weight for on-chain sources (0-100)
      */
-    function setDecentralizationWeights(uint8 daoWeight, uint8 onChainWeight) external onlyDAO {
+    function setDecentralizationWeights(uint8 daoWeight, uint8 onChainWeight) external onlyDAO nonReentrant {
         if (daoWeight + onChainWeight != 100) revert TRUST_Bounds();
         daoScoreWeight = daoWeight;
         onChainScoreWeight = onChainWeight;
@@ -435,7 +435,7 @@ contract Seer is ReentrancyGuard {
      * @param policyHash Cryptographic hash of policy content/version package.
      * @param policyURI URI to human-readable policy artifact.
      */
-    function setPolicyVersion(bytes32 policyHash, string calldata policyURI) external onlyDAO {
+    function setPolicyVersion(bytes32 policyHash, string calldata policyURI) external onlyDAO nonReentrant {
         if (policyHash == bytes32(0)) revert TRUST_Bounds();
         if (bytes(policyURI).length == 0 || bytes(policyURI).length > 512) revert TRUST_Bounds();
 
@@ -465,7 +465,7 @@ contract Seer is ReentrancyGuard {
     mapping(address => uint64) public cachedScoreTimestamp;
     uint64 public scoreCacheTTL = 1 hours; // Cache validity window
 
-    function setScoreCacheTTL(uint64 ttl) external onlyDAO {
+    function setScoreCacheTTL(uint64 ttl) external onlyDAO nonReentrant {
         if (ttl < 5 minutes || ttl > 1 days) revert TRUST_Bounds();
         scoreCacheTTL = ttl;
     }
@@ -485,7 +485,7 @@ contract Seer is ReentrancyGuard {
     }
 
     /// @notice Refresh the score cache for a user (callable by anyone, pays gas)
-    function refreshScoreCache(address subject) external {
+    function refreshScoreCache(address subject) external nonReentrant {
         uint16 score = getScore(subject);
         cachedScore[subject] = score;
         cachedScoreTimestamp[subject] = uint64(block.timestamp);
@@ -758,7 +758,7 @@ contract Seer is ReentrancyGuard {
     }
     
     /// @notice DAO can set operator rate limits
-    function setOperatorLimits(uint16 _maxSingle, uint16 _maxDaily, uint32 _maxGlobal) external onlyDAO {
+    function setOperatorLimits(uint16 _maxSingle, uint16 _maxDaily, uint32 _maxGlobal) external onlyDAO nonReentrant {
         if (_maxSingle > 500) revert TRUST_Bounds(); // Max 5% per call
         if (_maxDaily > 1000) revert TRUST_Bounds(); // Max 10% per day per subject
         if (_maxGlobal < _maxDaily) revert TRUST_Bounds(); // Global must be >= per-subject
@@ -846,7 +846,7 @@ contract Seer is ReentrancyGuard {
     /// @param badge The badge ID
     /// @param active True to grant, false to revoke
     /// @param expiry Expiration timestamp (0 = permanent)
-    function setBadge(address subject, bytes32 badge, bool active, uint256 expiry) external onlyDAO {
+    function setBadge(address subject, bytes32 badge, bool active, uint256 expiry) external onlyDAO nonReentrant {
         if (subject == address(0)) revert TRUST_Zero();
         if (active && expiry > 0 && expiry <= block.timestamp) revert TRUST_Bounds();
         hasBadge[subject][badge] = active;
@@ -870,7 +870,7 @@ contract Seer is ReentrancyGuard {
     /// @param badge The badge ID to set for all subjects
     /// @param active True to grant, false to revoke
     /// @param expiry Expiration timestamp (0 = permanent)
-    function setBadgeBatch(address[] calldata subjects, bytes32 badge, bool active, uint256 expiry) external onlyDAO {
+    function setBadgeBatch(address[] calldata subjects, bytes32 badge, bool active, uint256 expiry) external onlyDAO nonReentrant {
         uint256 len = subjects.length;
         if (len == 0 || len > 100) revert TRUST_Bounds();
         if (active && expiry > 0 && expiry <= block.timestamp) revert TRUST_Bounds();
@@ -933,7 +933,7 @@ contract Seer is ReentrancyGuard {
      * @param reason Explanation for why you believe your score is incorrect
      * @dev DAO will review and can adjust score if warranted
      */
-    function requestScoreReview(string calldata reason) external {
+    function requestScoreReview(string calldata reason) external nonReentrant {
         if (bytes(reason).length == 0 || bytes(reason).length > 500) revert TRUST_Bounds();
         if (scoreDisputes[msg.sender].timestamp > 0 && !scoreDisputes[msg.sender].resolved) revert TRUST_AlreadySet();
         
@@ -986,7 +986,7 @@ contract Seer is ReentrancyGuard {
     }
 
     // ───────────────── Appeals (general-purpose)
-    function fileAppeal(string calldata reason) external {
+    function fileAppeal(string calldata reason) external nonReentrant {
         if (bytes(reason).length == 0 || bytes(reason).length > 500) revert TRUST_Bounds();
         Appeal storage existing = appeals[msg.sender];
         if (!(existing.timestamp == 0 || existing.resolved)) revert TRUST_AlreadySet();
@@ -1005,7 +1005,7 @@ contract Seer is ReentrancyGuard {
         _logEv(msg.sender, 0, reason);
     }
 
-    function resolveAppeal(address subject, bool approved, string calldata resolution) external onlyDAO {
+    function resolveAppeal(address subject, bool approved, string calldata resolution) external onlyDAO nonReentrant {
         Appeal storage appeal = appeals[subject];
         if (appeal.timestamp == 0) revert TRUST_NotSet();
         if (appeal.resolved) revert TRUST_AlreadySet();
@@ -1255,10 +1255,18 @@ contract ProofScoreBurnRouterPlus {
     uint16 public lowPenaltyBps  = 150;  // +1.50% extra burn for low-trust
     uint16 public maxTotalBps    = 1000; // 10.00% ceiling for (burn + reward + treasury)
     address public treasury;             // EcoTreasuryVault later
+    uint256 private _reentrancyLock;
 
     modifier onlyDAO() {
         _checkDAO();
         _;
+    }
+
+    modifier nonReentrantPSBRP() {
+        require(_reentrancyLock == 0, "Reentrancy");
+        _reentrancyLock = 1;
+        _;
+        _reentrancyLock = 0;
     }
 
     function _checkDAO() internal view {
@@ -1273,7 +1281,7 @@ contract ProofScoreBurnRouterPlus {
         treasury = _treasury;
     }
 
-    function setModules(address _seer, address _treasury) external onlyDAO {
+    function setModules(address _seer, address _treasury) external onlyDAO nonReentrantPSBRP {
         if (_seer == address(0) || _treasury == address(0)) revert TRUST_Zero();
         seer = Seer(_seer);
         treasury = _treasury;
@@ -1287,7 +1295,7 @@ contract ProofScoreBurnRouterPlus {
         uint16 _lowPenaltyBps,
         uint16 _maxTotalBps,
         address _treasury
-    ) external onlyDAO {
+    ) external onlyDAO nonReentrantPSBRP {
         if (_treasury == address(0)) revert TRUST_Zero();
         if (_maxTotalBps == 0 || _maxTotalBps > 4000) revert TRUST_Bounds(); // hard ceiling 40% for safety
         if (_baseBurnBps > _maxTotalBps || _baseRewardBps > _maxTotalBps) revert TRUST_Bounds();

@@ -1,6 +1,6 @@
 /**
  * Rate Limiting Module
- * Provides distributed rate limiting using Upstash Redis or in-memory fallback
+ * Provides distributed rate limiting using Upstash Redis
  */
 
 import { Ratelimit } from '@upstash/ratelimit';
@@ -31,73 +31,13 @@ export const RATE_LIMITS = {
 
 type RateLimitType = keyof typeof RATE_LIMITS;
 
-// In-memory fallback when Redis is not configured
-class InMemoryRateLimiter {
-  private store = new Map<string, { count: number; resetTime: number }>();
-  
-  async limit(identifier: string, config: { requests: number; window: string }): Promise<{
-    success: boolean;
-    remaining: number;
-    reset: number;
-  }> {
-    const now = Date.now();
-    const windowMs = this.parseWindow(config.window);
-    const key = `${identifier}:${config.window}`;
-    
-    const entry = this.store.get(key);
-    
-    if (!entry || entry.resetTime < now) {
-      // New window
-      this.store.set(key, { count: 1, resetTime: now + windowMs });
-      return { success: true, remaining: config.requests - 1, reset: now + windowMs };
-    }
-    
-    if (entry.count >= config.requests) {
-      return { success: false, remaining: 0, reset: entry.resetTime };
-    }
-    
-    entry.count++;
-    return { success: true, remaining: config.requests - entry.count, reset: entry.resetTime };
-  }
-  
-  private parseWindow(window: string): number {
-    const match = window.match(/^(\d+)([smh])$/);
-    if (!match || !match[1] || !match[2]) return 60000; // Default 1 minute
-    
-    const value = parseInt(match[1], 10);
-    if (isNaN(value) || !isFinite(value) || value <= 0) {
-      return 60000; // Default 1 minute
-    }
-    
-    const unit = match[2];
-    
-    switch (unit) {
-      case 's': return value * 1000;
-      case 'm': return value * 60000;
-      case 'h': return value * 3600000;
-      default: return 60000;
-    }
-  }
-  
-  // Cleanup old entries periodically
-  cleanup(): void {
-    const now = Date.now();
-    for (const [key, entry] of this.store.entries()) {
-      if (entry.resetTime < now) {
-        this.store.delete(key);
-      }
-    }
-  }
-}
-
-// Create rate limiter instances (one per type when using Upstash, shared in-memory otherwise)
+// Create rate limiter instances (one per limit type)
 let upstashLimiters: Map<RateLimitType, Ratelimit> | null = null;
-let inMemoryLimiter: InMemoryRateLimiter | null = null;
 
-function assertRedisConfiguredInProduction(): void {
+function assertRedisConfigured(): void {
   const hasRedis = Boolean(process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN);
-  if (process.env.NODE_ENV === 'production' && !hasRedis) {
-    throw new Error('Redis is required in production for distributed rate limiting. Configure UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN.');
+  if (!hasRedis) {
+    throw new Error('Redis is required for distributed rate limiting. Configure UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN.');
   }
 }
 
@@ -130,25 +70,11 @@ function getUpstashLimiters(): Map<RateLimitType, Ratelimit> | null {
       logger.info('[RateLimit] Using Upstash Redis');
       return upstashLimiters;
     } catch (_error) {
-      logger.warn('[RateLimit] Failed to initialize Upstash Redis, using in-memory fallback');
+      logger.error('[RateLimit] Failed to initialize Upstash Redis');
     }
   }
 
   return null;
-}
-
-function getInMemoryLimiter(): InMemoryRateLimiter {
-  if (!inMemoryLimiter) {
-    inMemoryLimiter = new InMemoryRateLimiter();
-
-    // Cleanup old entries every 5 minutes
-    if (typeof setInterval !== 'undefined') {
-      setInterval(() => inMemoryLimiter?.cleanup(), 300000);
-    }
-
-    logger.info('[RateLimit] Using in-memory rate limiting');
-  }
-  return inMemoryLimiter;
 }
 
 /**
@@ -186,7 +112,7 @@ export async function rateLimit(
   request: NextRequest,
   type: RateLimitType = 'api'
 ): Promise<{ success: boolean; response?: NextResponse }> {
-  assertRedisConfiguredInProduction();
+  assertRedisConfigured();
   const identifier = getClientIdentifier(request);
   const config = RATE_LIMITS[type];
 
@@ -194,12 +120,11 @@ export async function rateLimit(
     let result;
 
     const upstash = getUpstashLimiters();
-    if (upstash) {
-      // Use the per-type Upstash limiter so endpoint-specific limits are enforced
-      result = await upstash.get(type)!.limit(`${identifier}:${type}`);
-    } else {
-      result = await getInMemoryLimiter().limit(`${identifier}:${type}`, config);
+    if (!upstash) {
+      throw new Error('Rate limiter unavailable: Redis client initialization failed');
     }
+    // Use the per-type Upstash limiter so endpoint-specific limits are enforced
+    result = await upstash.get(type)!.limit(`${identifier}:${type}`);
     
     if (!result.success) {
       const retryAfter = Math.ceil((result.reset - Date.now()) / 1000);

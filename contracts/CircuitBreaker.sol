@@ -129,7 +129,7 @@ contract CircuitBreaker is VFIDEAccessControl {
         uint256 _dailyVolumeThreshold,
         uint256 _priceDropThreshold,
         uint256 _blacklistThreshold
-    ) external onlyRole(CONFIG_MANAGER_ROLE) {
+    ) external onlyRole(CONFIG_MANAGER_ROLE) nonReentrantCB {
         require(_dailyVolumeThreshold <= 100, "CircuitBreaker: invalid volume threshold");
         require(_priceDropThreshold <= 100, "CircuitBreaker: invalid price threshold");
 
@@ -230,7 +230,7 @@ contract CircuitBreaker is VFIDEAccessControl {
      * @notice Update total value locked
      * @param _tvl New TVL value
      */
-    function updateTVL(uint256 _tvl) external onlyRole(CONFIG_MANAGER_ROLE) {
+    function updateTVL(uint256 _tvl) external onlyRole(CONFIG_MANAGER_ROLE) nonReentrantCB {
         monitoring.totalValueLocked = _tvl;
     }
 
@@ -298,7 +298,7 @@ contract CircuitBreaker is VFIDEAccessControl {
      * @notice Enable or disable circuit breaker
      * @param _enabled True to enable, false to disable
      */
-    function setEnabled(bool _enabled) external onlyRole(DEFAULT_ADMIN_ROLE) {
+    function setEnabled(bool _enabled) external onlyRole(DEFAULT_ADMIN_ROLE) nonReentrantCB {
         config.enabled = _enabled;
     }
 
@@ -306,7 +306,7 @@ contract CircuitBreaker is VFIDEAccessControl {
      * @notice Update price oracle address
      * @param _newOracle New oracle address
      */
-    function updatePriceOracle(address _newOracle) external onlyRole(CONFIG_MANAGER_ROLE) {
+    function updatePriceOracle(address _newOracle) external onlyRole(CONFIG_MANAGER_ROLE) nonReentrantCB {
         require(_newOracle != address(0), "CircuitBreaker: zero address");
         priceOracle = _newOracle;
         emit PriceOracleUpdated(_newOracle);
@@ -318,7 +318,8 @@ contract CircuitBreaker is VFIDEAccessControl {
      */
     function updateEmergencyController(address _newController) 
         external 
-        onlyRole(DEFAULT_ADMIN_ROLE) 
+        onlyRole(DEFAULT_ADMIN_ROLE)
+        nonReentrantCB
     {
         require(_newController != address(0), "CircuitBreaker: zero address");
         emergencyController = _newController;

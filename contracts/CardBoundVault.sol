@@ -268,7 +268,10 @@ contract CardBoundVault is ReentrancyGuard {
         emit GuardianSet(guardian, active);
     }
 
-    /// @dev Legacy: kept for compatibility during deployment bootstrap but restricted to admin
+    /// @notice Legacy guardian mutator retained for bootstrap compatibility.
+    /// @param guardian Guardian address to update.
+    /// @param active True to set guardian active, false to remove.
+    /// @dev Restricted to admin; prefer propose/apply guardian flow.
     function setGuardian(address guardian, bool active) external onlyAdmin {
         if (guardian == address(0)) revert CBV_Zero();
         _applyGuardianChange(guardian, active);
@@ -437,6 +440,7 @@ contract CardBoundVault is ReentrancyGuard {
         _logTransfer(intent.toVault, amount);
     }
 
+    /// @notice Return EIP-712 domain separator used for transfer intent signing.
     function domainSeparator() public view returns (bytes32) {
         return keccak256(
             abi.encode(
@@ -449,10 +453,13 @@ contract CardBoundVault is ReentrancyGuard {
         );
     }
 
+    /// @notice Compute typed-data transfer digest for a transfer intent.
+    /// @param intent Transfer intent payload.
     function transferDigest(TransferIntent calldata intent) external view returns (bytes32) {
         return _transferDigest(intent);
     }
 
+    /// @notice Return remaining daily transfer capacity under current spend limits.
     function viewRemainingDailyCapacity() external view returns (uint256) {
         if (block.timestamp >= dayStart + 1 days) {
             return dailyTransferLimit;
