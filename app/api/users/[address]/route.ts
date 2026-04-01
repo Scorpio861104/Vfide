@@ -3,6 +3,7 @@ import { query } from '@/lib/db';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { requireAuth } from '@/lib/auth/middleware';
 import { logger } from '@/lib/logger';
+import { z } from 'zod4';
 
 interface User {
   wallet_address: string;
@@ -31,9 +32,12 @@ const MAX_EMAIL_LENGTH = 254;
 const MAX_AVATAR_URL_LENGTH = 2048;
 const ADDRESS_PATTERN = /^0x[a-fA-F0-9]{3,64}$/;
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
-}
+const updateUserProfileSchema = z.object({
+  username: z.string().trim().optional(),
+  email: z.string().trim().optional(),
+  bio: z.string().trim().optional(),
+  avatar_url: z.string().trim().optional(),
+});
 
 function normalizeAddress(value: string): string {
   return value.trim().toLowerCase();
@@ -223,10 +227,20 @@ export async function PUT(
       );
     }
 
-    const rawBody: unknown = await request.json();
-    if (!isRecord(rawBody)) {
+    let rawBody: z.infer<typeof updateUserProfileSchema>;
+    try {
+      const parsedBody = await request.json();
+      const parsed = updateUserProfileSchema.safeParse(parsedBody);
+      if (!parsed.success) {
+        return NextResponse.json(
+          { error: 'Invalid request body' },
+          { status: 400 }
+        );
+      }
+      rawBody = parsed.data;
+    } catch {
       return NextResponse.json(
-        { error: 'Request body must be a JSON object' },
+        { error: 'Invalid JSON body' },
         { status: 400 }
       );
     }

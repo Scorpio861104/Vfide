@@ -2,10 +2,15 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getClient } from '@/lib/db';
 import { requireAuth, checkOwnership } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
-import { validateBody, claimQuestSchema } from '@/lib/auth/validation';
 import { logger } from '@/lib/logger';
+import { z } from 'zod4';
 
 const ADDRESS_LIKE_REGEX = /^0x[a-fA-F0-9]{3,40}$/;
+
+const claimQuestRequestSchema = z.object({
+  questId: z.union([z.number().int().positive(), z.string().regex(/^\d+$/)]),
+  userAddress: z.string().trim().regex(ADDRESS_LIKE_REGEX),
+});
 
 function parsePositiveInteger(value: unknown): number | null {
   const parsed = typeof value === 'number'
@@ -45,24 +50,26 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const validation = await validateBody(request, claimQuestSchema);
-    if (!validation.success) {
+    let body: z.infer<typeof claimQuestRequestSchema>;
+    try {
+      const rawBody = await request.json();
+      const parsed = claimQuestRequestSchema.safeParse(rawBody);
+      if (!parsed.success) {
+        return NextResponse.json(
+          { error: 'Invalid request body' },
+          { status: 400 }
+        );
+      }
+      body = parsed.data;
+    } catch {
       return NextResponse.json(
-        { error: validation.error, details: validation.details },
+        { error: 'Invalid JSON body' },
         { status: 400 }
       );
     }
 
-    const { questId, userAddress } = validation.data;
-    const normalizedUserAddress = typeof userAddress === 'string'
-      ? userAddress.trim().toLowerCase()
-      : '';
-    if (!normalizedUserAddress || !ADDRESS_LIKE_REGEX.test(normalizedUserAddress)) {
-      return NextResponse.json(
-        { error: 'Invalid user address format' },
-        { status: 400 }
-      );
-    }
+    const { questId, userAddress } = body;
+    const normalizedUserAddress = userAddress.trim().toLowerCase();
 
     const parsedQuestId = parsePositiveInteger(questId);
     if (!parsedQuestId) {

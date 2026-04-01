@@ -3,6 +3,7 @@ import { getClient } from '@/lib/db';
 import { isAdmin, requireAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { logger } from '@/lib/logger';
+import { z } from 'zod4';
 
 const VALID_ONBOARDING_STEPS = new Set([
   'connectWallet',
@@ -17,6 +18,17 @@ const VALID_ONBOARDING_STEPS = new Set([
   'completeQuest',
 ]);
 const ADDRESS_PATTERN = /^0x[a-fA-F0-9]{3,64}$/;
+
+const updateOnboardingStepSchema = z.object({
+  step: z.string().trim().refine((value) => VALID_ONBOARDING_STEPS.has(value), {
+    message: 'Invalid onboarding step',
+  }),
+  userAddress: z.string().trim().regex(ADDRESS_PATTERN),
+});
+
+const claimOnboardingRewardSchema = z.object({
+  userAddress: z.string().trim().regex(ADDRESS_PATTERN),
+});
 
 function toNonEmptyString(value: unknown): string | null {
   if (typeof value !== 'string') return null;
@@ -144,27 +156,21 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  let body: Record<string, unknown>;
+  let body: z.infer<typeof updateOnboardingStepSchema>;
   try {
-    body = await request.json();
+    const rawBody = await request.json();
+    const parsed = updateOnboardingStepSchema.safeParse(rawBody);
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
+    }
+    body = parsed.data;
   } catch {
     return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
   }
 
-  if (!body || typeof body !== 'object' || Array.isArray(body)) {
-    return NextResponse.json({ error: 'Request body must be a JSON object' }, { status: 400 });
-  }
-
   try {
-    const step = toNonEmptyString(body.step);
-    const userAddress = toNonEmptyString(body.userAddress);
-
-    if (!step || !userAddress || !VALID_ONBOARDING_STEPS.has(step)) {
-      return NextResponse.json(
-        { error: 'Valid step name and user address required' },
-        { status: 400 }
-      );
-    }
+    const step = body.step;
+    const userAddress = body.userAddress;
 
     const targetAddress = normalizeAddress(userAddress);
     if (!isAddressLike(targetAddress)) {
@@ -284,23 +290,20 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  let body: Record<string, unknown>;
+  let body: z.infer<typeof claimOnboardingRewardSchema>;
   try {
-    body = await request.json();
+    const rawBody = await request.json();
+    const parsed = claimOnboardingRewardSchema.safeParse(rawBody);
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
+    }
+    body = parsed.data;
   } catch {
     return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
   }
 
-  if (!body || typeof body !== 'object' || Array.isArray(body)) {
-    return NextResponse.json({ error: 'Request body must be a JSON object' }, { status: 400 });
-  }
-
   try {
-    const userAddress = toNonEmptyString(body.userAddress);
-
-    if (!userAddress) {
-      return NextResponse.json({ error: 'User address required' }, { status: 400 });
-    }
+    const userAddress = body.userAddress;
 
     const targetAddress = normalizeAddress(userAddress);
     if (!isAddressLike(targetAddress)) {
