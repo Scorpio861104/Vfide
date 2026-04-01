@@ -17,6 +17,7 @@ contract SeerPolicyGuard {
 
     address public dao;
     address public seer;
+    uint256 private _guardLock;
 
     mapping(bytes32 => uint64) public policyChangeReadyAt;
 
@@ -36,27 +37,34 @@ contract SeerPolicyGuard {
         _;
     }
 
+    modifier nonReentrantSPG() {
+        if (_guardLock != 0) revert SPG_InvalidState();
+        _guardLock = 1;
+        _;
+        _guardLock = 0;
+    }
+
     constructor(address _dao, address _seer) {
         if (_dao == address(0) || _seer == address(0)) revert SPG_Zero();
         dao = _dao;
         seer = _seer;
     }
 
-    function setDAO(address _dao) external onlyDAO {
+    function setDAO(address _dao) external onlyDAO nonReentrantSPG {
         if (_dao == address(0)) revert SPG_Zero();
         address old = dao;
         dao = _dao;
         emit DAOSet(old, _dao);
     }
 
-    function setSeer(address _seer) external onlyDAO {
+    function setSeer(address _seer) external onlyDAO nonReentrantSPG {
         if (_seer == address(0)) revert SPG_Zero();
         address old = seer;
         seer = _seer;
         emit SeerSet(old, _seer);
     }
 
-    function schedulePolicyChange(bytes4 selector, uint8 pclass) external onlyDAO returns (bytes32 changeId, uint64 readyAt) {
+    function schedulePolicyChange(bytes4 selector, uint8 pclass) external onlyDAO nonReentrantSPG returns (bytes32 changeId, uint64 readyAt) {
         if (selector == bytes4(0) || pclass > POLICY_CLASS_OPERATIONAL) revert SPG_InvalidState();
         changeId = getPolicyChangeId(selector, pclass);
         if (policyChangeReadyAt[changeId] != 0) revert SPG_InvalidState();
@@ -65,7 +73,7 @@ contract SeerPolicyGuard {
         emit PolicyChangeScheduled(changeId, selector, pclass, readyAt);
     }
 
-    function cancelPolicyChange(bytes4 selector, uint8 pclass) external onlyDAO {
+    function cancelPolicyChange(bytes4 selector, uint8 pclass) external onlyDAO nonReentrantSPG {
         bytes32 changeId = getPolicyChangeId(selector, pclass);
         if (policyChangeReadyAt[changeId] == 0) revert SPG_InvalidState();
 
@@ -73,7 +81,7 @@ contract SeerPolicyGuard {
         emit PolicyChangeCancelled(changeId, selector, pclass);
     }
 
-    function consume(bytes4 selector, uint8 pclass) external onlySeer {
+    function consume(bytes4 selector, uint8 pclass) external onlySeer nonReentrantSPG {
         bytes32 changeId = getPolicyChangeId(selector, pclass);
         uint64 readyAt = policyChangeReadyAt[changeId];
         if (readyAt == 0 || block.timestamp < readyAt) revert SPG_InvalidState();

@@ -84,6 +84,7 @@ contract VaultHub is Ownable, Pausable, ReentrancyGuard {
     }
 
     // ——— Module wiring
+    /// @notice Deprecated aggregate module setter retained for interface compatibility.
     function setModules(address _vfideToken, address _securityHub, address _ledger, address _dao) external onlyOwner {
         _vfideToken; _securityHub; _ledger; _dao;
         revert("VH: use individual setters");
@@ -101,6 +102,8 @@ contract VaultHub is Ownable, Pausable, ReentrancyGuard {
     }
 
     // IVaultHub compatibility wrapper
+    /// @notice Schedule VFIDE token update via compatibility interface.
+    /// @param token New VFIDE token address.
     function setVFIDEToken(address token) external onlyOwner {
         if (token == address(0)) revert VH_Zero();
         uint64 effectiveAt = uint64(block.timestamp) + SECURITY_HUB_CHANGE_DELAY;
@@ -121,6 +124,8 @@ contract VaultHub is Ownable, Pausable, ReentrancyGuard {
     }
 
     // IVaultHub compatibility wrapper
+    /// @notice Schedule SecurityHub update with timelock.
+    /// @param security New SecurityHub address.
     function setSecurityHub(address security) external onlyOwner {
         // F-20 FIX: SecurityHub changes now require 48h timelock
         uint64 effectiveAt = uint64(block.timestamp) + SECURITY_HUB_CHANGE_DELAY;
@@ -130,6 +135,7 @@ contract VaultHub is Ownable, Pausable, ReentrancyGuard {
         _log("hub_security_scheduled");
     }
 
+    /// @notice Apply pending SecurityHub update after timelock.
     function applySecurityHub() external onlyOwner {
         require(pendingSecurityHubAt_VH != 0 && block.timestamp >= pendingSecurityHubAt_VH, "VH: timelock");
         securityHub = ISecurityHub(pendingSecurityHub_VH);
@@ -139,6 +145,8 @@ contract VaultHub is Ownable, Pausable, ReentrancyGuard {
     }
 
     // IVaultHub compatibility wrapper
+    /// @notice Schedule ProofLedger update with timelock.
+    /// @param proofLedger New ProofLedger address.
     function setProofLedger(address proofLedger) external onlyOwner {
         uint64 effectiveAt = uint64(block.timestamp) + SECURITY_HUB_CHANGE_DELAY;
         pendingProofLedger_VH = proofLedger;
@@ -147,6 +155,7 @@ contract VaultHub is Ownable, Pausable, ReentrancyGuard {
         _log("hub_ledger_scheduled");
     }
 
+    /// @notice Apply pending ProofLedger update after timelock.
     function applyProofLedger() external onlyOwner {
         require(pendingProofLedgerAt_VH != 0 && block.timestamp >= pendingProofLedgerAt_VH, "VH: timelock");
         ledger = IProofLedger(pendingProofLedger_VH);
@@ -156,6 +165,8 @@ contract VaultHub is Ownable, Pausable, ReentrancyGuard {
     }
 
     // IVaultHub compatibility wrapper
+    /// @notice Add a DAO recovery approver multisig.
+    /// @param multisig Address that may approve force recovery operations.
     function setDAORecoveryMultisig(address multisig) external onlyOwner {
         if (multisig == address(0)) revert VH_Zero();
         isRecoveryApprover[multisig] = true;
@@ -163,12 +174,15 @@ contract VaultHub is Ownable, Pausable, ReentrancyGuard {
     }
 
     // IVaultHub compatibility wrapper
+    /// @notice Immutable placeholder for legacy IVaultHub API compatibility.
     function setRecoveryTimelock(uint256 timelock) external pure {
         // Recovery timelock is intentionally immutable in this version.
         timelock;
         revert("VH: immutable timelock");
     }
 
+    /// @notice Schedule DAO address update via timelock.
+    /// @param _dao New DAO address.
     function setDAO(address _dao) external onlyOwner {
         if (_dao == address(0)) revert VH_Zero();
         uint64 effectiveAt = uint64(block.timestamp) + SECURITY_HUB_CHANGE_DELAY;
@@ -178,6 +192,7 @@ contract VaultHub is Ownable, Pausable, ReentrancyGuard {
         _log("hub_dao_scheduled");
     }
 
+    /// @notice Apply pending DAO address update after timelock.
     function applyDAO() external onlyOwner {
         require(pendingDAOAt_VH != 0 && block.timestamp >= pendingDAOAt_VH, "VH: timelock");
         dao = pendingDAO_VH;
@@ -187,12 +202,17 @@ contract VaultHub is Ownable, Pausable, ReentrancyGuard {
         _log("hub_dao_set");
     }
     
+    /// @notice Add or remove an address allowed to approve force recovery.
+    /// @param approver Address to update.
+    /// @param status True to authorize, false to revoke.
     function setRecoveryApprover(address approver, bool status) external onlyOwner {
         require(approver != address(0), "VH:zero");
         isRecoveryApprover[approver] = status;
         _log(status ? "recovery_approver_added" : "recovery_approver_removed");
     }
 
+    /// @notice Set council contract used for approver fallback checks.
+    /// @param _council Council election/registry contract.
     function setCouncil(address _council) external onlyOwner {
         require(_council != address(0), "VH:zero");
         council = _council;
@@ -201,6 +221,8 @@ contract VaultHub is Ownable, Pausable, ReentrancyGuard {
     }
 
     // ——— Deterministic address prediction for UX
+    /// @notice Predict deterministic vault address for an owner using CREATE2 salt.
+    /// @param owner_ Owner whose vault address is queried.
     function predictVault(address owner_) public view returns (address predicted) {
         if (owner_ == address(0)) return address(0);
         bytes32 salt = _salt(owner_);
@@ -215,6 +237,7 @@ contract VaultHub is Ownable, Pausable, ReentrancyGuard {
     }
 
     // ——— Legacy function for compatibility
+    /// @notice Legacy helper to ensure caller vault exists.
     function createVault() external returns (address) {
         return ensureVault(msg.sender);
     }
@@ -255,16 +278,23 @@ contract VaultHub is Ownable, Pausable, ReentrancyGuard {
     }
 
     // ——— Compatibility alias
+    /// @notice Return vault address for owner.
+    /// @param owner_ Owner address.
     function getVault(address owner_) external view returns (address) {
         return vaultOf[owner_];
     }
 
     // ——— View helpers (token expects vaultOf(owner))
+    /// @notice Check whether address is an active vault tracked by this hub.
+    /// @param a Candidate vault address.
     function isVault(address a) external view returns (bool) {
         return ownerOfVault[a] != address(0) && vaultOf[ ownerOfVault[a] ] == a;
     }
 
     // ——— DAO forced recovery with Multi-Sig
+    /// @notice Cast approval toward force-recovery of a vault owner.
+    /// @param vault Vault to recover.
+    /// @param newOwner Proposed new owner.
     function approveForceRecovery(address vault, address newOwner) external nonReentrant {
         bool isApprover = isRecoveryApprover[msg.sender];
         if (!isApprover && council != address(0)) {
@@ -310,6 +340,9 @@ contract VaultHub is Ownable, Pausable, ReentrancyGuard {
     }
     
     // Legacy function kept for compatibility but now requires multi-sig first
+    /// @notice DAO-initiated recovery wrapper that requires multisig approvals.
+    /// @param vault Vault to recover.
+    /// @param newOwner Proposed new owner.
     function initiateForceRecovery(address vault, address newOwner) public {
         if (msg.sender != dao) revert VH_NotDAO();
         if (vault == address(0) || newOwner == address(0)) revert VH_Zero();
@@ -335,6 +368,8 @@ contract VaultHub is Ownable, Pausable, ReentrancyGuard {
         _logEv(vault, "force_recover_init", 0, "");
     }
 
+    /// @notice Finalize DAO force recovery once recovery timelock has elapsed.
+    /// @param vault Vault to recover.
     function finalizeForceRecovery(address vault) public nonReentrant {
         if (msg.sender != dao) revert VH_NotDAO();
         require(recoveryUnlockTime[vault] != 0, "VH:no-req");
@@ -370,16 +405,19 @@ contract VaultHub is Ownable, Pausable, ReentrancyGuard {
     }
 
     // IVaultHub compatibility wrapper
+    /// @notice Compatibility wrapper for initiating DAO recovery.
     function requestDAORecovery(address vault, address newOwner) external {
         initiateForceRecovery(vault, newOwner);
     }
 
     // IVaultHub compatibility wrapper
+    /// @notice Compatibility wrapper for finalizing DAO recovery.
     function finalizeDAORecovery(address vault) external {
         finalizeForceRecovery(vault);
     }
 
     // IVaultHub compatibility wrapper
+    /// @notice Cancel pending DAO recovery and reset recovery nonce.
     function cancelDAORecovery(address vault) external {
         if (msg.sender != dao && msg.sender != owner) revert VH_NotDAO();
         delete recoveryProposedOwner[vault];
@@ -390,6 +428,7 @@ contract VaultHub is Ownable, Pausable, ReentrancyGuard {
     }
 
     // IVaultHub compatibility wrapper
+    /// @notice Total number of vaults created by this hub.
     function totalVaultsCreated() external view returns (uint256) {
         return totalVaults;
     }
@@ -492,6 +531,9 @@ contract VaultHub is Ownable, Pausable, ReentrancyGuard {
         isVaultContract = ownerOfVault[addr] != address(0);
     }
 
+    /// @notice Pause vault-creation flows at hub level.
     function pause() external onlyOwner { _pause(); }
+
+    /// @notice Unpause vault-creation flows at hub level.
     function unpause() external onlyOwner { _unpause(); }
 }

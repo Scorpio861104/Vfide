@@ -189,6 +189,7 @@ contract FeeDistributor is AccessControl, ReentrancyGuard, Pausable {
         emit SplitChangeExecuted();
     }
 
+    /// @notice Cancel any pending split change proposal.
     function cancelSplitChange() external onlyRole(ADMIN_ROLE) {
         pendingSplitChange.pending = false;
         emit SplitChangeCancelled();
@@ -225,6 +226,7 @@ contract FeeDistributor is AccessControl, ReentrancyGuard, Pausable {
         emit DestinationChangeExecuted(h, addr);
     }
 
+    /// @notice Cancel any pending destination change proposal.
     function cancelDestinationChange() external onlyRole(ADMIN_ROLE) {
         if (!pendingDestinationChange.pending) revert NoSplitChangePending();
         bytes32 h = pendingDestinationChange.nameHash;
@@ -238,9 +240,19 @@ contract FeeDistributor is AccessControl, ReentrancyGuard, Pausable {
         minDistributionAmount = _min;
     }
 
+    /// @notice Pause fee distribution operations.
     function pause() external onlyRole(ADMIN_ROLE) { _pause(); }
+
+    /// @notice Resume fee distribution operations.
     function unpause() external onlyRole(ADMIN_ROLE) { _unpause(); }
 
+    /// @notice Preview current split outputs using the contract's current token balance.
+    /// @return total Current token balance available for distribution.
+    /// @return toBurn Tokens that would be burned.
+    /// @return toSanctum Tokens that would be sent to the sanctum fund.
+    /// @return toDAO Tokens that would be sent to the DAO payroll pool.
+    /// @return toMerchants Tokens that would be sent to merchant rewards.
+    /// @return toHeadhunters Tokens that would be sent to headhunter rewards.
     function previewDistribution() external view returns (
         uint256 total, uint256 toBurn, uint256 toSanctum, uint256 toDAO, uint256 toMerchants, uint256 toHeadhunters
     ) {
@@ -252,6 +264,7 @@ contract FeeDistributor is AccessControl, ReentrancyGuard, Pausable {
         toHeadhunters = total - toBurn - toSanctum - toDAO - toMerchants;
     }
 
+    /// @notice Return the active split basis points in burn/sanctum/dao/merchant/headhunter order.
     function getCurrentSplit() external view returns (uint256, uint256, uint256, uint256, uint256) {
         return (feeSplit.burnBps, feeSplit.sanctumBps, feeSplit.daoPayrollBps, feeSplit.merchantPoolBps, feeSplit.headhunterPoolBps);
     }

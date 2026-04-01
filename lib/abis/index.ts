@@ -57,6 +57,22 @@ import SeerGuardianABI from './SeerGuardian.json'
 import SeerPolicyGuardABI from './SeerPolicyGuard.json'
 import MainstreamPaymentsABI from './MainstreamPayments.json'
 import VFIDECommerceABI from './VFIDECommerce.json'
+import BadgeQualificationRulesABI from './BadgeQualificationRules.json'
+import BridgeSecurityModuleABI from './BridgeSecurityModule.json'
+import DeployPhase3PeripheralsABI from './DeployPhase3Peripherals.json'
+import DevReserveVestingVaultABI from './DevReserveVestingVault.json'
+import EcosystemVaultLibABI from './EcosystemVaultLib.json'
+import LiquidityIncentivesABI from './LiquidityIncentives.json'
+import RevenueSplitterABI from './RevenueSplitter.json'
+import SeerAutonomousLibABI from './SeerAutonomousLib.json'
+import SeerWorkAttestationABI from './SeerWorkAttestation.json'
+import ServicePoolABI from './ServicePool.json'
+import TempVaultABI from './TempVault.json'
+import VFIDEAccessControlABI from './VFIDEAccessControl.json'
+import VFIDEEnterpriseGatewayABI from './VFIDEEnterpriseGateway.json'
+import VFIDEPriceOracleABI from './VFIDEPriceOracle.json'
+import VFIDEReentrancyGuardABI from './VFIDEReentrancyGuard.json'
+import VaultRecoveryClaimABI from './VaultRecoveryClaim.json'
 import { logger } from '@/lib/logger';
 
 // Runtime validation: Ensure ABIs are valid arrays
@@ -126,6 +142,38 @@ validateABI(SeerPolicyGuardABI, 'SeerPolicyGuard');
 validateABI(MainstreamPaymentsABI, 'MainstreamPayments');
 validateABI(VFIDECommerceABI, 'VFIDECommerce');
 
+validateABI(BadgeQualificationRulesABI, 'BadgeQualificationRules');
+
+validateABI(BridgeSecurityModuleABI, 'BridgeSecurityModule');
+
+validateABI(DeployPhase3PeripheralsABI, 'DeployPhase3Peripherals');
+
+validateABI(DevReserveVestingVaultABI, 'DevReserveVestingVault');
+
+validateABI(EcosystemVaultLibABI, 'EcosystemVaultLib');
+
+validateABI(LiquidityIncentivesABI, 'LiquidityIncentives');
+
+validateABI(RevenueSplitterABI, 'RevenueSplitter');
+
+validateABI(SeerAutonomousLibABI, 'SeerAutonomousLib');
+
+validateABI(SeerWorkAttestationABI, 'SeerWorkAttestation');
+
+validateABI(ServicePoolABI, 'ServicePool');
+
+validateABI(TempVaultABI, 'TempVault');
+
+validateABI(VFIDEAccessControlABI, 'VFIDEAccessControl');
+
+validateABI(VFIDEEnterpriseGatewayABI, 'VFIDEEnterpriseGateway');
+
+validateABI(VFIDEPriceOracleABI, 'VFIDEPriceOracle');
+
+validateABI(VFIDEReentrancyGuardABI, 'VFIDEReentrancyGuard');
+
+validateABI(VaultRecoveryClaimABI, 'VaultRecoveryClaim');
+
 // VaultHub ABI points to the full compiled artifact (includes ensureVault, getVaultInfo, etc.).
 validateABI(VaultHubFullABI, 'VaultHub');
 const VaultHubABI = VaultHubFullABI
@@ -187,4 +235,20 @@ export {
   SeerPolicyGuardABI,
   MainstreamPaymentsABI,
   VFIDECommerceABI,
+  BadgeQualificationRulesABI,
+  BridgeSecurityModuleABI,
+  DeployPhase3PeripheralsABI,
+  DevReserveVestingVaultABI,
+  EcosystemVaultLibABI,
+  LiquidityIncentivesABI,
+  RevenueSplitterABI,
+  SeerAutonomousLibABI,
+  SeerWorkAttestationABI,
+  ServicePoolABI,
+  TempVaultABI,
+  VFIDEAccessControlABI,
+  VFIDEEnterpriseGatewayABI,
+  VFIDEPriceOracleABI,
+  VFIDEReentrancyGuardABI,
+  VaultRecoveryClaimABI,
 }

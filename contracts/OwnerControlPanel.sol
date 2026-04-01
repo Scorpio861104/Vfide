@@ -604,6 +604,7 @@ contract OwnerControlPanel {
             _consumeQueuedAction(actionId_token_setBlacklist(users[i], status));
             vfideToken.setBlacklist(users[i], status);
         }
+        emit EmergencyAction(status ? "token_batch_blacklist_applied" : "token_batch_unblacklist_applied", address(vfideToken));
     }
     
     // ═══════════════════════════════════════════════════════════════════════
@@ -656,6 +657,7 @@ contract OwnerControlPanel {
             _consumeQueuedAction(actionId_token_setWhaleLimitExempt(addrs[i], exempt));
             vfideToken.setWhaleLimitExempt(addrs[i], exempt);
         }
+        emit EmergencyAction(exempt ? "token_batch_whale_exempt_added" : "token_batch_whale_exempt_removed", address(vfideToken));
     }
     
     // ═══════════════════════════════════════════════════════════════════════

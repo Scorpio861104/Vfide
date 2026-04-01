@@ -50,6 +50,7 @@ contract BadgeManager {
     
     /// @notice Authorized callers (Commerce, DAO, etc.)
     mapping(address => bool) public operators;
+    uint256 private _guardLock;
     
     /// @notice Pioneer counter (first 10,000 users)
     uint32 public pioneerCount;
@@ -77,6 +78,7 @@ contract BadgeManager {
     error BM_NotOperator();
     error BM_Zero();
     error BM_InvalidBadge();
+    error BM_ReentrantCall();
     
     // ════════════════════════════════════════════════════════════════════════
     //                           MODIFIERS
@@ -90,6 +92,13 @@ contract BadgeManager {
     modifier onlyOperator() {
         if (msg.sender != dao && !operators[msg.sender]) revert BM_NotOperator();
         _;
+    }
+
+    modifier nonReentrantBM() {
+        if (_guardLock != 0) revert BM_ReentrantCall();
+        _guardLock = 1;
+        _;
+        _guardLock = 0;
     }
     
     // ════════════════════════════════════════════════════════════════════════
@@ -107,23 +116,23 @@ contract BadgeManager {
     //                          ADMIN FUNCTIONS
     // ════════════════════════════════════════════════════════════════════════
     
-    function setDAO(address newDAO) external onlyDAO {
+    function setDAO(address newDAO) external onlyDAO nonReentrantBM {
         if (newDAO == address(0)) revert BM_Zero();
         dao = newDAO;
     }
     
-    function setSeer(address newSeer) external onlyDAO {
+    function setSeer(address newSeer) external onlyDAO nonReentrantBM {
         if (newSeer == address(0)) revert BM_Zero();
         seer = Seer(newSeer);
     }
     
-    function setOperator(address operator, bool authorized) external onlyDAO {
+    function setOperator(address operator, bool authorized) external onlyDAO nonReentrantBM {
         if (operator == address(0)) revert BM_Zero();
         operators[operator] = authorized;
         emit OperatorSet(operator, authorized);
     }
 
-    function setQualificationRules(address newRules) external onlyDAO {
+    function setQualificationRules(address newRules) external onlyDAO nonReentrantBM {
         if (newRules == address(0)) revert BM_Zero();
         qualificationRules = IBadgeQualificationRules(newRules);
     }
@@ -137,7 +146,7 @@ contract BadgeManager {
      * @param user The user address
      * @param badge The badge ID
      */
-    function awardBadge(address user, bytes32 badge) public onlyOperator {
+    function awardBadge(address user, bytes32 badge) public onlyOperator nonReentrantBM {
         // Skip if user already has this badge
         if (seer.hasBadge(user, badge)) {
             // Check if renewable and needs renewal
@@ -171,7 +180,7 @@ contract BadgeManager {
      * @param badge The badge ID
      * @param reason Reason for revocation
      */
-    function revokeBadge(address user, bytes32 badge, string calldata reason) external onlyDAO {
+    function revokeBadge(address user, bytes32 badge, string calldata reason) external onlyDAO nonReentrantBM {
         if (!seer.hasBadge(user, badge)) return;
         
         // Revoke badge in Seer
@@ -271,7 +280,7 @@ contract BadgeManager {
      * @param user The user address
      * @param successful Whether transaction was successful (no dispute)
      */
-    function recordCommerceTx(address user, bool successful) external onlyOperator {
+    function recordCommerceTx(address user, bool successful) external onlyOperator nonReentrantBM {
         UserStats storage stats = userStats[user];
         stats.commerceTxCount++;
         if (successful) {
@@ -288,7 +297,7 @@ contract BadgeManager {
      * @notice Record a governance vote
      * @param user The user address
      */
-    function recordGovernanceVote(address user) external onlyOperator {
+    function recordGovernanceVote(address user) external onlyOperator nonReentrantBM {
         UserStats storage stats = userStats[user];
         stats.governanceVotes++;
         
@@ -302,7 +311,7 @@ contract BadgeManager {
      * @notice Record an endorsement received
      * @param user The user address
      */
-    function recordEndorsement(address user) external onlyOperator {
+    function recordEndorsement(address user) external onlyOperator nonReentrantBM {
         UserStats storage stats = userStats[user];
         stats.endorsementsReceived++;
         
@@ -316,7 +325,7 @@ contract BadgeManager {
      * @param referrer The referrer address
      * @param qualified Whether referred user reached 600+ score
      */
-    function recordReferral(address referrer, address /*referred*/, bool qualified) external onlyOperator {
+    function recordReferral(address referrer, address /*referred*/, bool qualified) external onlyOperator nonReentrantBM {
         UserStats storage stats = userStats[referrer];
         stats.referralsMade++;
         if (qualified) {
@@ -332,7 +341,7 @@ contract BadgeManager {
      * @notice Record fraud report confirmation
      * @param reporter The reporter address
      */
-    function recordFraudReport(address reporter) external onlyOperator {
+    function recordFraudReport(address reporter) external onlyOperator nonReentrantBM {
         UserStats storage stats = userStats[reporter];
         stats.fraudReports++;
         
@@ -345,7 +354,7 @@ contract BadgeManager {
      * @notice Record educational content creation
      * @param creator The creator address
      */
-    function recordEducationalContent(address creator) external onlyOperator {
+    function recordEducationalContent(address creator) external onlyOperator nonReentrantBM {
         UserStats storage stats = userStats[creator];
         stats.educationalContent++;
         
@@ -358,7 +367,7 @@ contract BadgeManager {
      * @notice Record contribution (code/design/content)
      * @param contributor The contributor address
      */
-    function recordContribution(address contributor) external onlyDAO {
+    function recordContribution(address contributor) external onlyDAO nonReentrantBM {
         UserStats storage stats = userStats[contributor];
         if (!stats.hasContributed) {
             stats.hasContributed = true;
@@ -372,7 +381,7 @@ contract BadgeManager {
      * @notice Record translation work
      * @param translator The translator address
      */
-    function recordTranslation(address translator) external onlyDAO {
+    function recordTranslation(address translator) external onlyDAO nonReentrantBM {
         UserStats storage stats = userStats[translator];
         if (!stats.hasTranslated) {
             stats.hasTranslated = true;
@@ -386,7 +395,7 @@ contract BadgeManager {
      * @notice Award Pioneer badge (first 10,000 users)
      * @param user The user address
      */
-    function awardPioneer(address user) external onlyOperator {
+    function awardPioneer(address user) external onlyOperator nonReentrantBM {
         if (pioneerCount >= MAX_PIONEERS) return;
         if (seer.hasBadge(user, BadgeRegistry.PIONEER)) return;
         
@@ -398,7 +407,7 @@ contract BadgeManager {
      * @notice Award Founding Member badge (first 1,000 to reach 800+)
      * @param user The user address
      */
-    function awardFoundingMember(address user) external onlyOperator {
+    function awardFoundingMember(address user) external onlyOperator nonReentrantBM {
         if (foundingMemberCount >= MAX_FOUNDING_MEMBERS) return;
         if (seer.hasBadge(user, BadgeRegistry.FOUNDING_MEMBER)) return;
         if (seer.getScore(user) < 8000) return; // 800 on 0-10000 scale

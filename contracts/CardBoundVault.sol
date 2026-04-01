@@ -211,12 +211,15 @@ contract CardBoundVault is ReentrancyGuard {
         emit SpendLimitsSet(_maxPerTransfer, _dailyTransferLimit);
     }
 
+    /// @notice Start two-step admin transfer for this vault.
+    /// @param newAdmin Address that must call `acceptAdmin` to complete transfer.
     function transferAdmin(address newAdmin) external onlyAdmin {
         if (newAdmin == address(0)) revert CBV_Zero();
         pendingAdmin = newAdmin;
         emit AdminTransferStarted(admin, newAdmin);
     }
 
+    /// @notice Accept pending admin transfer initiated by current admin.
     function acceptAdmin() external {
         if (msg.sender != pendingAdmin) revert CBV_NotAdmin();
         address old = admin;
@@ -298,6 +301,7 @@ contract CardBoundVault is ReentrancyGuard {
         emit VaultApprove(spender, amount);
     }
 
+    /// @notice Pause vault operations (admin or guardian emergency control).
     function pause() external {
         if (msg.sender != admin && !isGuardian[msg.sender]) {
             revert CBV_NotGuardian();
@@ -306,11 +310,15 @@ contract CardBoundVault is ReentrancyGuard {
         emit PauseSet(true, msg.sender);
     }
 
+    /// @notice Unpause vault operations (admin only).
     function unpause() external onlyAdmin notLocked {
         paused = false;
         emit PauseSet(false, msg.sender);
     }
 
+    /// @notice Propose active-wallet rotation with delay and guardian approvals.
+    /// @param newWallet New wallet that will become active after finalization.
+    /// @param delaySeconds Timelock delay before rotation can be finalized.
     function proposeWalletRotation(address newWallet, uint64 delaySeconds) external onlyAdmin {
         if (!IVaultHubGuardianSetup(hub).guardianSetupComplete(address(this))) {
             revert CBV_GuardianSetupRequired();
@@ -329,6 +337,7 @@ contract CardBoundVault is ReentrancyGuard {
         emit WalletRotationProposed(activeWallet, newWallet, pendingRotation.activateAt, rotationNonce);
     }
 
+    /// @notice Cast one guardian approval for the currently pending wallet rotation.
     function approveWalletRotation() external onlyGuardian {
         if (!IVaultHubGuardianSetup(hub).guardianSetupComplete(address(this))) {
             revert CBV_GuardianSetupRequired();
@@ -346,6 +355,7 @@ contract CardBoundVault is ReentrancyGuard {
         emit WalletRotationApproved(msg.sender, current.proposalNonce, pendingRotation.approvals);
     }
 
+    /// @notice Finalize pending wallet rotation after delay and threshold approvals.
     function finalizeWalletRotation() external {
         if (!IVaultHubGuardianSetup(hub).guardianSetupComplete(address(this))) {
             revert CBV_GuardianSetupRequired();
@@ -389,6 +399,9 @@ contract CardBoundVault is ReentrancyGuard {
         }
     }
 
+    /// @notice Execute a signed transfer intent from this vault to another vault.
+    /// @param intent Structured transfer intent signed by active wallet.
+    /// @param signature ECDSA signature over the intent digest.
     function executeVaultToVaultTransfer(TransferIntent calldata intent, bytes calldata signature)
         external
         nonReentrant

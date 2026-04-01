@@ -29,27 +29,27 @@ contract DAOPayrollPool is ServicePool {
     ) ServicePool(_token, _admin, MAX_DAO_MEMBERS, _maxPayoutPerPeriod) {}
 
     /// @notice Record a governance vote. 1 point per vote.
-    function recordVote(address member) external onlyRole(RECORDER_ROLE) {
+    function recordVote(address member) external onlyRole(RECORDER_ROLE) nonReentrant {
         _recordContribution(member, 1);
     }
 
     /// @notice Record a proposal review. 2 points (more effort than voting).
-    function recordReview(address member) external onlyRole(RECORDER_ROLE) {
+    function recordReview(address member) external onlyRole(RECORDER_ROLE) nonReentrant {
         _recordContribution(member, 2);
     }
 
     /// @notice Record a substantive discussion post. 1 point.
-    function recordDiscussion(address member) external onlyRole(RECORDER_ROLE) {
+    function recordDiscussion(address member) external onlyRole(RECORDER_ROLE) nonReentrant {
         _recordContribution(member, 1);
     }
 
     /// @notice Record governance session attendance. 1 point.
-    function recordAttendance(address member) external onlyRole(RECORDER_ROLE) {
+    function recordAttendance(address member) external onlyRole(RECORDER_ROLE) nonReentrant {
         _recordContribution(member, 1);
     }
 
     /// @notice Batch record votes for all voters on a proposal.
-    function batchRecordVotes(address[] calldata members) external onlyRole(RECORDER_ROLE) {
+    function batchRecordVotes(address[] calldata members) external onlyRole(RECORDER_ROLE) nonReentrant {
         uint256 len = members.length;
         require(len <= MAX_DAO_MEMBERS, "Exceeds max members");
         for (uint256 i = 0; i < len;) {
@@ -61,7 +61,7 @@ contract DAOPayrollPool is ServicePool {
     }
 
     /// @notice Grant the recorder role to DAO or Seer contract.
-    function grantRecorder(address recorder) external onlyRole(ADMIN_ROLE) {
+    function grantRecorder(address recorder) external onlyRole(ADMIN_ROLE) nonReentrant {
         _grantRole(RECORDER_ROLE, recorder);
     }
 }
@@ -122,7 +122,7 @@ contract MerchantCompetitionPool is ServicePool {
     function recordTransaction(
         address merchant,
         uint256 volumeUsd
-    ) external onlyRole(RECORDER_ROLE) {
+    ) external onlyRole(RECORDER_ROLE) nonReentrant {
         require(volumeUsd >= minTransactionSize, "Below minimum transaction size");
 
         // Score = volume in USD (so $1000 tx = 1000 points, $10 tx = 10 points)
@@ -140,12 +140,12 @@ contract MerchantCompetitionPool is ServicePool {
     }
 
     /// @notice Update minimum transaction size.
-    function setMinTransactionSize(uint256 _min) external onlyRole(ADMIN_ROLE) {
+    function setMinTransactionSize(uint256 _min) external onlyRole(ADMIN_ROLE) nonReentrant {
         minTransactionSize = _min;
     }
 
     /// @notice Grant recorder role to MerchantPortal contract.
-    function grantRecorder(address recorder) external onlyRole(ADMIN_ROLE) {
+    function grantRecorder(address recorder) external onlyRole(ADMIN_ROLE) nonReentrant {
         _grantRole(RECORDER_ROLE, recorder);
     }
 
@@ -213,7 +213,7 @@ contract HeadhunterCompetitionPool is ServicePool {
     function registerReferral(
         address newUser,
         address headhunter
-    ) external onlyRole(RECORDER_ROLE) {
+    ) external onlyRole(RECORDER_ROLE) nonReentrant {
         if (newUser == address(0) || headhunter == address(0)) revert ZeroAddress();
         if (newUser == headhunter) revert SelfReferral();
         if (referredBy[newUser] != address(0)) revert AlreadyReferred();
@@ -226,7 +226,7 @@ contract HeadhunterCompetitionPool is ServicePool {
     ///         Called by Seer after verifying the new user completed their
     ///         first qualifying action (transaction, vault creation, vote, etc.)
     /// @param newUser The referred user who completed qualifying activity
-    function qualifyReferral(address newUser) external onlyRole(RECORDER_ROLE) {
+    function qualifyReferral(address newUser) external onlyRole(RECORDER_ROLE) nonReentrant {
         if (newUser == address(0)) revert ZeroAddress();
         address headhunter = referredBy[newUser];
         if (headhunter == address(0)) revert NotReferred();
@@ -246,7 +246,7 @@ contract HeadhunterCompetitionPool is ServicePool {
     }
 
     /// @notice Grant recorder role to Seer or auth contract.
-    function grantRecorder(address recorder) external onlyRole(ADMIN_ROLE) {
+    function grantRecorder(address recorder) external onlyRole(ADMIN_ROLE) nonReentrant {
         _grantRole(RECORDER_ROLE, recorder);
     }
 
