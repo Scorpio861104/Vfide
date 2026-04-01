@@ -1,0 +1,43 @@
+{
+  "signoffVersion": 1,
+  "scope": "frontend-abi-registry-placeholders",
+  "evaluatedAt": "2026-04-01T00:00:00.000Z",
+  "decision": "accepted-with-known-limitations",
+  "repository": "Scorpio861104/Vfide",
+  "branch": "main",
+  "evidence": {
+    "registryFile": "lib/abis/index.ts",
+    "placeholderCommit": "ffb3819f",
+    "gapCheck": "direct-name ABI gap count = 0"
+  },
+  "summary": {
+    "compiledAbiCount": 72,
+    "placeholderAbiCount": 10,
+    "notes": "Placeholder ABI files are intentionally empty arrays and are present only for naming/registry completeness where no matching build artifact exists."
+  },
+  "placeholders": [
+    "DeployPhase1",
+    "DeployPhase1Governance",
+    "DeployPhase1Infrastructure",
+    "DeployPhase1Token",
+    "DeployPhases3to6",
+    "Pools",
+    "SharedInterfaces",
+    "VFIDEFinance",
+    "VFIDESecurity",
+    "VFIDETrust"
+  ],
+  "risks": [
+    "Runtime calls against placeholder ABIs will fail if used as contract interaction ABIs.",
+    "Placeholders must be replaced with compiled ABIs when/if concrete deployable contract artifacts become available."
+  ],
+  "controls": [
+    "All placeholders are explicitly listed in this signoff document.",
+    "ABI registry validation allows empty arrays but warns on empty ABIs at runtime.",
+    "Future artifact generation should replace placeholders before production feature binding."
+  ],
+  "approvers": [
+    "engineering-lead",
+    "security-lead"
+  ]
+}
