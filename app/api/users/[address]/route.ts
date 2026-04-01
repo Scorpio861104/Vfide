@@ -238,7 +238,8 @@ export async function PUT(
         );
       }
       rawBody = parsed.data;
-    } catch {
+    } catch (error) {
+      logger.debug('[User Profile PATCH] Invalid JSON body', error);
       return NextResponse.json(
         { error: 'Invalid JSON body' },
         { status: 400 }
@@ -285,7 +286,8 @@ export async function PUT(
         if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') {
           throw new Error('invalid protocol');
         }
-      } catch {
+      } catch (error) {
+        logger.debug('[User Profile PATCH] Invalid avatar URL', error);
         return NextResponse.json(
           { error: 'Invalid avatar URL' },
           { status: 400 }

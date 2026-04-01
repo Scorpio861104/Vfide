@@ -3,6 +3,7 @@ import { verifyMessage } from 'viem';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { requireAuth } from '@/lib/auth/middleware';
 import { buildGuardianAttestationMessage, type GuardianAttestationPayload } from '@/lib/recovery/guardianAttestation';
+import { logger } from '@/lib/logger';
 import { z } from 'zod4';
 
 const ADDRESS_REGEX = /^0x[a-fA-F0-9]{40}$/;
@@ -73,7 +74,8 @@ export async function POST(request: NextRequest) {
   let body: unknown;
   try {
     body = await request.json();
-  } catch {
+  } catch (error) {
+    logger.debug('[Guardian Attestations POST] Invalid JSON body', error);
     return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
   }
 
@@ -124,7 +126,8 @@ export async function POST(request: NextRequest) {
       message,
       signature,
     });
-  } catch {
+  } catch (error) {
+    logger.debug('[Guardian Attestations POST] Signature verification failed', error);
     isValidSig = false;
   }
 
