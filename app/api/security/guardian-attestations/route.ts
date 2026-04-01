@@ -3,8 +3,17 @@ import { verifyMessage } from 'viem';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { requireAuth } from '@/lib/auth/middleware';
 import { buildGuardianAttestationMessage, type GuardianAttestationPayload } from '@/lib/recovery/guardianAttestation';
+import { z } from 'zod4';
 
 const ADDRESS_REGEX = /^0x[a-fA-F0-9]{40}$/;
+const guardianAttestationSchema = z.object({
+  owner: z.string(),
+  vault: z.string(),
+  guardian: z.string(),
+  issuedAt: z.number(),
+  expiresAt: z.number(),
+  signature: z.string(),
+});
 
 type GuardianAttestationRecord = GuardianAttestationPayload & {
   signature: `0x${string}`;
@@ -68,11 +77,12 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
   }
 
-  if (!body || typeof body !== 'object' || Array.isArray(body)) {
-    return NextResponse.json({ error: 'Request body must be a JSON object' }, { status: 400 });
+  const parsedBody = guardianAttestationSchema.safeParse(body);
+  if (!parsedBody.success) {
+    return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
   }
 
-  const payload = body as Record<string, unknown>;
+  const payload = parsedBody.data;
   const owner = normalizeAddress(payload.owner);
   const vault = normalizeAddress(payload.vault);
   const guardian = normalizeAddress(payload.guardian);

@@ -5,6 +5,7 @@ import { withRateLimit } from '@/lib/auth/rateLimit';
 import { requireAuth } from '@/lib/auth/middleware';
 import { getRequestCorrelationContext } from '@/lib/security/requestContext';
 import { logger } from '@/lib/logger';
+import { z } from 'zod4';
 
 const DEFAULT_LOGS_LIMIT = 200;
 const MAX_LOGS_LIMIT = 1000;
@@ -49,12 +50,17 @@ const VALID_TYPES = [
   'security_setting_changed',
 ] as const;
 const ADDRESS_PATTERN = /^0x[a-fA-F0-9]{3,64}$/;
+const securityLogPostSchema = z.object({
+  type: z.string().trim().min(1).max(MAX_TYPE_LENGTH),
+  severity: z.string().trim().toLowerCase().max(MAX_SEVERITY_LENGTH),
+  message: z.string().trim().min(1).max(MAX_MESSAGE_LENGTH),
+  details: z.record(z.string(), z.unknown()).optional(),
+  userAgent: z.string().optional(),
+  location: z.string().optional(),
+  deviceId: z.string().optional(),
+});
 let lastSecurityLogsCleanupAtMs = 0;
 const SECURITY_LOG_CLEANUP_INTERVAL_MS = 5 * 60 * 1000;
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
-}
 
 function normalizeAddress(value: string): string {
   return value.trim().toLowerCase();
@@ -409,18 +415,14 @@ export async function POST(request: NextRequest) {
   try {
     await maybeRunSecurityLogsCleanup();
 
-    const body: unknown = await request.json();
-    if (!isRecord(body)) {
-      return NextResponse.json({ error: 'Request body must be a JSON object' }, { status: 400 });
+    const parsedBody = securityLogPostSchema.safeParse(await request.json());
+    if (!parsedBody.success) {
+      return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
     }
 
-    const type = typeof body.type === 'string' ? body.type.trim() : '';
-    const severity = typeof body.severity === 'string' ? body.severity.trim().toLowerCase() : '';
-    const message = typeof body.message === 'string' ? body.message.trim() : '';
+    const body = parsedBody.data;
 
-    if (!type || !severity || !message) {
-      return NextResponse.json({ error: 'type, severity, and message are required' }, { status: 400 });
-    }
+    const { type, severity, message } = body;
 
     if (type.length > MAX_TYPE_LENGTH || !isValidType(type)) {
       return NextResponse.json({ error: 'Invalid log type' }, { status: 400 });
@@ -434,7 +436,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: `message too long (max ${MAX_MESSAGE_LENGTH})` }, { status: 400 });
     }
 
-    const details = isRecord(body.details) ? body.details : null;
+    const details = body.details ?? null;
     const detailsJson = details ? JSON.stringify(details) : null;
     const userAgent = normalizeOptionalString(body.userAgent, MAX_USER_AGENT_LENGTH);
     const location = normalizeOptionalString(body.location, MAX_LOCATION_LENGTH);
