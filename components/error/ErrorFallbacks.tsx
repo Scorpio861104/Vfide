@@ -4,6 +4,7 @@ import React from 'react';
 import { AlertTriangle, RefreshCw, Wallet, CreditCard, MessageSquare, Vote, LayoutDashboard } from 'lucide-react';
 import Link from 'next/link';
 import { getUserFriendlyMessage } from '@/lib/security/errorSanitizer';
+import { safeLocalStorage } from '@/lib/utils';
 
 // ==================== TYPES ====================
 
@@ -74,8 +75,8 @@ export function WalletErrorFallback({ error, reset }: ErrorFallbackProps) {
   const handleReconnect = () => {
     // Clear any cached wallet state
     if (typeof window !== 'undefined') {
-      localStorage.removeItem('wagmi.wallet');
-      localStorage.removeItem('wagmi.connected');
+      safeLocalStorage.removeItem('wagmi.wallet');
+      safeLocalStorage.removeItem('wagmi.connected');
     }
     reset();
   };

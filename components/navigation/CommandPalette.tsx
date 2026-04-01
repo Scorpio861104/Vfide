@@ -51,6 +51,7 @@ import {
 import { useRouter } from 'next/navigation';
 import { useAccount } from 'wagmi';
 import { useTransactionSounds } from '@/hooks/useTransactionSounds';
+import { safeLocalStorage } from '@/lib/utils';
 
 // ==================== TYPES ====================
 
@@ -168,7 +169,7 @@ export function CommandPalette({ customCommands = [], onSearch }: CommandPalette
 
   // Load recent commands from localStorage
   useEffect(() => {
-    const saved = localStorage.getItem('vfide_recent_commands');
+    const saved = safeLocalStorage.getItem('vfide_recent_commands');
     if (saved) {
       try {
         setRecentCommands(JSON.parse(saved));
@@ -182,7 +183,7 @@ export function CommandPalette({ customCommands = [], onSearch }: CommandPalette
   const saveRecentCommand = useCallback((commandId: string) => {
     setRecentCommands((prev) => {
       const updated = [commandId, ...prev.filter((id) => id !== commandId)].slice(0, 5);
-      localStorage.setItem('vfide_recent_commands', JSON.stringify(updated));
+      safeLocalStorage.setItem('vfide_recent_commands', JSON.stringify(updated));
       return updated;
     });
   }, []);

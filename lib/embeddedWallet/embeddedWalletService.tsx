@@ -15,6 +15,7 @@
 
 import React, { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react';
 import { type Address } from 'viem';
+import { safeLocalStorage } from '@/lib/utils';
 
 // ==================== TYPES ====================
 
@@ -202,12 +203,14 @@ export class EmbeddedWalletService {
   // ==================== PRIVATE METHODS ====================
 
   private async loginWithEmail(email: string): Promise<EmbeddedUser> {
-    // Validate email
     if (!email || !email.includes('@')) {
       throw new Error('Invalid email address');
     }
 
-    void email;
+    if (this.isDemoMode()) {
+      return this.createMockUser(email, 'email');
+    }
+
     throw new Error('Embedded wallet email login is not configured');
   }
 
@@ -215,13 +218,27 @@ export class EmbeddedWalletService {
     provider: AuthMethod,
     _redirectUrl?: string
   ): Promise<EmbeddedUser> {
-    void provider;
+    if (this.isDemoMode()) {
+      return this.createMockUser(`${provider}@vfide.demo`, provider);
+    }
+
     throw new Error('Embedded wallet OAuth login is not configured');
   }
 
   private async loginWithSMS(phone: string): Promise<EmbeddedUser> {
-    void phone;
+    if (!phone) {
+      throw new Error('Phone number required');
+    }
+
+    if (this.isDemoMode()) {
+      return this.createMockUser(phone, 'sms');
+    }
+
     throw new Error('Embedded wallet SMS login is not configured');
+  }
+
+  private isDemoMode(): boolean {
+    return !this.config.appId || this.config.appId === 'vfide-demo';
   }
 
   private createMockUser(identifier: string, method: AuthMethod): EmbeddedUser {
@@ -273,7 +290,7 @@ export class EmbeddedWalletService {
     if (typeof window === 'undefined') return null;
     
     try {
-      const stored = localStorage.getItem('vfide_embedded_session');
+      const stored = safeLocalStorage.getItem('vfide_embedded_session');
       if (!stored) return null;
       
       const parsed = JSON.parse(stored);
@@ -313,12 +330,12 @@ export class EmbeddedWalletService {
 
   private storeSession(user: EmbeddedUser): void {
     if (typeof window === 'undefined') return;
-    localStorage.setItem('vfide_embedded_session', JSON.stringify(user));
+    safeLocalStorage.setItem('vfide_embedded_session', JSON.stringify(user));
   }
 
   private clearSession(): void {
     if (typeof window === 'undefined') return;
-    localStorage.removeItem('vfide_embedded_session');
+    safeLocalStorage.removeItem('vfide_embedded_session');
   }
 }
 

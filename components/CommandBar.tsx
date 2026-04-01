@@ -9,6 +9,11 @@ import { toast } from '@/lib/toast';
 // Command Bar Component - Natural Language + Voice
 // ============================================================================
 
+const hasUnsafeNavigationInput = (value: string): boolean => {
+  const trimmed = value.trim().toLowerCase();
+  return /^(https?:|javascript:|data:|file:)/.test(trimmed) || trimmed.startsWith('www.');
+};
+
 export default function CommandBar() {
   const [isOpen, setIsOpen] = useState(false);
   const [input, setInput] = useState('');
@@ -76,9 +81,15 @@ export default function CommandBar() {
 
   const handleSubmit = useCallback((e: React.FormEvent) => {
     e.preventDefault();
-    if (input.trim()) {
-      parse(input.trim());
+    const trimmed = input.trim();
+    if (!trimmed) return;
+
+    if (hasUnsafeNavigationInput(trimmed)) {
+      toast.error('Direct external URL commands are blocked for safety.');
+      return;
     }
+
+    parse(trimmed);
   }, [input, parse]);
 
   const handleVoiceToggle = useCallback(() => {
@@ -113,6 +124,10 @@ export default function CommandBar() {
   }, [executionPlan, clearIntent]);
 
   const handleExampleClick = useCallback((example: string) => {
+    if (hasUnsafeNavigationInput(example)) {
+      toast.error('External navigation commands are disabled.');
+      return;
+    }
     setInput(example);
     parse(example);
   }, [parse]);
@@ -151,9 +166,10 @@ export default function CommandBar() {
               type="text"
               value={input}
               onChange={(e) => {
-                setInput(e.target.value);
-                if (e.target.value.length > 3) {
-                  parse(e.target.value);
+                const nextValue = e.target.value;
+                setInput(nextValue);
+                if (nextValue.length > 3 && !hasUnsafeNavigationInput(nextValue)) {
+                  parse(nextValue);
                 }
               }}
               placeholder="Type a command... (e.g., 'send 0.1 ETH to alice.eth')"

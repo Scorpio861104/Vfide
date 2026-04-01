@@ -200,7 +200,11 @@ export function TwoFactorSetup({
                 Scan this QR code with your authenticator app:
               </p>
               <div className="bg-white p-4 rounded-lg inline-block">
-                <img src={totpSetup.qrCode} alt="QR Code" className="w-48 h-48" />
+                <img
+                  src={totpSetup.qrCode}
+                  alt={`Authenticator setup QR code for ${userEmail || 'your VFIDE account'}`}
+                  className="h-48 w-48"
+                />
               </div>
               <p className="text-xs text-gray-500 mt-2">
                 Or enter this key manually: <code className="bg-gray-200 dark:bg-gray-700 px-2 py-1 rounded">{totpSetup.secret}</code>
@@ -210,11 +214,14 @@ export function TwoFactorSetup({
             <div>
               <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-4">Step 2: Verify Code</h3>
               <input
+                id="twofactor-verification-code"
                 type="text"
                 value={verificationCode}
                 onChange={(e) => setVerificationCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
                 placeholder="Enter 6-digit code"
-                className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
+                aria-invalid={Boolean(error)}
+                aria-describedby={error ? 'twofactor-error' : undefined}
+                className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-gray-900 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100"
                 maxLength={6}
               />
             </div>
@@ -274,11 +281,14 @@ export function TwoFactorSetup({
                 Phone Number
               </label>
               <input
+                id="twofactor-phone"
                 type="tel"
                 value={phoneNumber}
                 onChange={(e) => setPhoneNumber(e.target.value)}
                 placeholder="+1 (555) 123-4567"
-                className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
+                aria-invalid={Boolean(error)}
+                aria-describedby={error ? 'twofactor-error' : undefined}
+                className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-gray-900 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100"
               />
             </div>
 
@@ -313,11 +323,14 @@ export function TwoFactorSetup({
                 Email Address
               </label>
               <input
+                id="twofactor-email"
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="you@example.com"
-                className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
+                aria-invalid={Boolean(error)}
+                aria-describedby={error ? 'twofactor-error' : undefined}
+                className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-gray-900 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100"
               />
             </div>
 

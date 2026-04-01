@@ -1,9 +1,10 @@
 'use client';
 
 import { useState, ReactNode } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { useAccount } from "wagmi";
 import { Wallet, Smartphone, Link, Building2, PartyPopper } from "lucide-react";
+import { EmbeddedLogin } from "@/components/wallet/EmbeddedLogin";
 
 interface Step {
   id: number;
@@ -19,6 +20,7 @@ export function BeginnerWizard({ onComplete }: { onComplete?: () => void }) {
   const [currentStep, setCurrentStep] = useState(0);
   const [showWizard, setShowWizard] = useState(true);
   const { isConnected } = useAccount();
+  const shouldReduceMotion = useReducedMotion();
 
   const steps: Step[] = [
     {
@@ -30,26 +32,41 @@ export function BeginnerWizard({ onComplete }: { onComplete?: () => void }) {
     {
       id: 2,
       icon: <Smartphone className={iconClass} />,
-      title: "Get a wallet (it's free!)",
-      description: "We recommend MetaMask or Coinbase Wallet. They're easy to use, like having a bank app on your phone. Click a button below to install one.",
+      title: "Choose the easiest wallet setup",
+      description: "New to crypto? Start with email or social login. If you already use a browser wallet, you can still connect MetaMask or Coinbase Wallet below.",
       action: (
-        <div className="flex flex-col sm:flex-row gap-3 mt-4">
-          <a
-            href="https://metamask.io/download/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="px-6 py-3 bg-orange-500 text-white font-bold rounded-lg hover:bg-orange-400 transition-all text-center"
-          >
-            Get MetaMask
-          </a>
-          <a
-            href="https://www.coinbase.com/wallet/downloads"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="px-6 py-3 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-600 transition-all text-center"
-          >
-            Get Coinbase Wallet
-          </a>
+        <div className="mt-4 w-full max-w-xl space-y-4">
+          {!isConnected && (
+            <div className="rounded-2xl border border-cyan-400/30 bg-zinc-900/80 p-2">
+              <EmbeddedLogin
+                className="rounded-xl bg-white/95 text-left shadow-sm dark:bg-zinc-950"
+                onSuccess={() => setCurrentStep(2)}
+              />
+            </div>
+          )}
+
+          <div className="text-center text-xs font-semibold uppercase tracking-[0.2em] text-zinc-400">
+            Or connect an existing wallet
+          </div>
+
+          <div className="flex flex-col gap-3 sm:flex-row">
+            <a
+              href="https://metamask.io/download/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="min-h-[44px] flex-1 rounded-lg bg-orange-500 px-6 py-3 text-center font-bold text-white transition-all hover:bg-orange-400"
+            >
+              Get MetaMask
+            </a>
+            <a
+              href="https://www.coinbase.com/wallet/downloads"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="min-h-[44px] flex-1 rounded-lg bg-blue-600 px-6 py-3 text-center font-bold text-white transition-all hover:bg-blue-500"
+            >
+              Get Coinbase Wallet
+            </a>
+          </div>
         </div>
       ),
     },
@@ -99,16 +116,16 @@ export function BeginnerWizard({ onComplete }: { onComplete?: () => void }) {
 
   return (
     <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
+      initial={shouldReduceMotion ? false : { opacity: 0 }}
+      animate={shouldReduceMotion ? { opacity: 1 } : { opacity: 1 }}
+      exit={shouldReduceMotion ? { opacity: 1 } : { opacity: 0 }}
       className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4"
       onClick={(e) => {
         if (e.target === e.currentTarget) skipWizard();
       }}
     >
       <motion.div
-        initial={{ scale: 0.9, y: 20 }}
+        initial={shouldReduceMotion ? false : { scale: 0.9, y: 20 }}
         animate={{ scale: 1, y: 0 }}
         className="bg-zinc-800 border-2 border-cyan-400 rounded-2xl p-8 max-w-2xl w-full relative"
       >
@@ -136,9 +153,9 @@ export function BeginnerWizard({ onComplete }: { onComplete?: () => void }) {
         <AnimatePresence mode="wait">
           <motion.div
             key={currentStep}
-            initial={{ opacity: 0, x: 20 }}
+            initial={shouldReduceMotion ? false : { opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
+            exit={shouldReduceMotion ? { opacity: 1 } : { opacity: 0, x: -20 }}
             transition={{ duration: 0.3 }}
           >
             <div className="text-center mb-6">
@@ -178,7 +195,7 @@ export function BeginnerWizard({ onComplete }: { onComplete?: () => void }) {
           <button
             onClick={prevStep}
             disabled={currentStep === 0}
-            className={`px-6 py-2 rounded-lg font-bold transition-all ${
+            className={`min-h-[44px] rounded-lg px-6 py-2 font-bold transition-all ${
               currentStep === 0
                 ? "bg-zinc-700 text-zinc-500 cursor-not-allowed"
                 : "bg-zinc-700 text-zinc-100 hover:bg-zinc-700"
@@ -193,7 +210,7 @@ export function BeginnerWizard({ onComplete }: { onComplete?: () => void }) {
 
           <button
             onClick={nextStep}
-            className="px-6 py-2 bg-gradient-to-r from-cyan-400 to-blue-500 text-zinc-900 font-bold rounded-lg hover:shadow-lg hover:shadow-cyan-400/50 transition-all"
+            className="min-h-[44px] rounded-lg bg-gradient-to-r from-cyan-400 to-blue-500 px-6 py-2 font-bold text-zinc-900 transition-all hover:shadow-lg hover:shadow-cyan-400/50"
           >
             {currentStep === steps.length - 1 ? "Start Using VFIDE!" : "Next →"}
           </button>

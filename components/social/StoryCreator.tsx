@@ -1,7 +1,8 @@
 'use client';
 
+import Image from 'next/image';
 import React, { useState, useRef } from 'react';
-import { motion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 import { X, Camera, Type, Image as ImageIcon } from 'lucide-react';
 import { createTextStory, createMediaStory, STORY_BACKGROUNDS, Story } from '@/lib/storiesSystem';
 
@@ -21,6 +22,7 @@ export function StoryCreator({
   userAvatar,
 }: StoryCreatorProps) {
   const [mode, setMode] = useState<'text' | 'media'>('text');
+  const shouldReduceMotion = useReducedMotion();
   const [textContent, setTextContent] = useState('');
   const [selectedBackground, setSelectedBackground] = useState(0);
   const [mediaFile, setMediaFile] = useState<File | null>(null);
@@ -31,6 +33,21 @@ export function StoryCreator({
   const handleMediaSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
+    const allowedTypes = new Set([
+      'image/png',
+      'image/jpeg',
+      'image/webp',
+      'image/gif',
+      'video/mp4',
+      'video/webm',
+      'video/quicktime',
+    ]);
+
+    if (!allowedTypes.has(file.type)) {
+      alert('Only PNG, JPEG, WEBP, GIF, MP4, WEBM, and MOV uploads are allowed.');
+      return;
+    }
 
     // Validate file size (10MB for images, 100MB for videos)
     const maxSize = file.type.startsWith('video/') ? 100 * 1024 * 1024 : 10 * 1024 * 1024;
@@ -86,15 +103,15 @@ export function StoryCreator({
 
   return (
     <motion.div 
-      initial={{ opacity: 0 }}
+      initial={shouldReduceMotion ? false : { opacity: 0 }}
       animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
+      exit={shouldReduceMotion ? { opacity: 1 } : { opacity: 0 }}
       className="fixed inset-0 bg-black/90 backdrop-blur-sm z-50 flex items-center justify-center p-4"
     >
       <motion.div 
-        initial={{ scale: 0.9, opacity: 0 }}
+        initial={shouldReduceMotion ? false : { scale: 0.9, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
-        exit={{ scale: 0.9, opacity: 0 }}
+        exit={shouldReduceMotion ? { opacity: 1 } : { scale: 0.9, opacity: 0 }}
         className="bg-zinc-900 border border-zinc-700 rounded-xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col"
       >
         {/* Header */}
@@ -102,7 +119,8 @@ export function StoryCreator({
           <h2 className="text-xl font-bold text-cyan-400">Create Story</h2>
           <button
             onClick={onClose}
-            className="text-zinc-400 hover:text-white transition-colors w-8 h-8 flex items-center justify-center rounded-lg hover:bg-zinc-700"
+            aria-label="Close story creator"
+            className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-lg text-zinc-400 transition-colors hover:bg-zinc-700 hover:text-white"
           >
             <X size={20} />
           </button>
@@ -183,7 +201,7 @@ export function StoryCreator({
               <input
                 ref={fileInputRef}
                 type="file"
-                accept="image/*,video/*"
+                accept="image/png,image/jpeg,image/webp,image/gif,video/mp4,video/webm,video/quicktime"
                 onChange={handleMediaSelect}
                 className="hidden"
               />
@@ -203,7 +221,14 @@ export function StoryCreator({
                   {mediaFile?.type.startsWith('video/') ? (
                     <video src={mediaPreview} className="w-full h-full object-cover" controls />
                   ) : (
-                    <img src={mediaPreview} alt="Preview" className="w-full h-full object-cover" />
+                    <Image
+                      src={mediaPreview}
+                      alt="Selected story media preview"
+                      fill
+                      unoptimized
+                      sizes="(max-width: 768px) 100vw, 384px"
+                      className="object-cover"
+                    />
                   )}
                   <button
                     onClick={() => {
@@ -211,7 +236,8 @@ export function StoryCreator({
                       setMediaPreview('');
                       setCaption('');
                     }}
-                    className="absolute top-2 right-2 w-8 h-8 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition-colors"
+                    aria-label="Remove selected media"
+                    className="absolute right-2 top-2 flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full bg-red-500 text-white transition-colors hover:bg-red-600"
                   >
                     <X size={16} />
                   </button>
@@ -242,14 +268,14 @@ export function StoryCreator({
         <div className="p-4 border-t border-zinc-700 flex gap-3">
           <button
             onClick={onClose}
-            className="flex-1 py-3 border border-zinc-700 text-zinc-400 rounded-lg font-semibold hover:bg-zinc-700/50 transition-colors"
+            className="flex-1 rounded-lg border border-zinc-700 py-3 font-semibold text-zinc-400 transition-colors hover:bg-zinc-700/50 min-h-[44px]"
           >
             Cancel
           </button>
           <button
             onClick={handleCreate}
             disabled={(mode === 'text' && !textContent.trim()) || (mode === 'media' && !mediaPreview)}
-            className="flex-1 py-3 bg-cyan-400 text-zinc-950 rounded-lg font-semibold hover:bg-cyan-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex-1 rounded-lg bg-cyan-400 py-3 font-semibold text-zinc-950 transition-colors hover:bg-cyan-300 disabled:cursor-not-allowed disabled:opacity-50 min-h-[44px]"
           >
             Share Story
           </button>

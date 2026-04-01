@@ -17,6 +17,9 @@ import { ErrorMonitoringProvider, DevErrorConsole } from "@/components/monitorin
 import { AccessibilityProvider } from "@/components/accessibility/AccessibilityProvider";
 import { AchievementToastContainer } from "@/components/gamification/AchievementToast";
 import { PieMenu } from "@/components/navigation/PieMenu";
+import { OfflineIndicator } from "@/components/connectivity/OfflineIndicator";
+import { EmbeddedWalletProvider } from "@/lib/embeddedWallet/embeddedWalletService";
+import { PreferencesProvider } from "@/lib/preferences/userPreferences";
 // Core integrations from PR #56
 import { ServiceWorkerRegistration } from "@/components/core/ServiceWorkerRegistration";
 import { ZustandHydration } from "@/components/core/ZustandHydration";
@@ -103,31 +106,43 @@ export default async function RootLayout({
           </main>
         ) : (
           <ErrorBoundary>
-            <AccessibilityProvider>
-              <Web3Provider>
-                <ToastProvider>
-                  <SecurityProvider />
-                  <PerformanceProvider />
-                  <ErrorMonitoringProvider />
-                  <PresenceManager />
-                  <DevErrorConsole />
-                  <DemoModeBanner />
-                  <ServiceWorkerRegistration />
-                  <ZustandHydration />
-                  <WebVitalsTracker />
-                  <NetworkSwitchOverlay />
-                  <TestnetNotification />
-                  {/* Network detection handled by wallet connection */}
-                  <AchievementToastContainer />
-                  <main id="main-content" className="min-h-screen min-w-0 w-full" tabIndex={-1}>
-                    {children}
-                  </main>
-                  <PieMenu />
-                  <OnboardingManager />
-                  <HelpCenter />
-                </ToastProvider>
-              </Web3Provider>
-            </AccessibilityProvider>
+            <PreferencesProvider>
+              <AccessibilityProvider>
+                <EmbeddedWalletProvider
+                  config={{
+                    provider: 'magic',
+                    appId: process.env.NEXT_PUBLIC_EMBEDDED_WALLET_APP_ID ?? 'vfide-demo',
+                    appName: 'VFIDE',
+                    authMethods: ['email', 'google', 'apple', 'twitter', 'discord'],
+                  }}
+                >
+                  <Web3Provider>
+                    <ToastProvider>
+                      <SecurityProvider />
+                      <PerformanceProvider />
+                      <ErrorMonitoringProvider />
+                      <PresenceManager />
+                      <DevErrorConsole />
+                      <DemoModeBanner />
+                      <OfflineIndicator />
+                      <ServiceWorkerRegistration />
+                      <ZustandHydration />
+                      <WebVitalsTracker />
+                      <NetworkSwitchOverlay />
+                      <TestnetNotification />
+                      {/* Network detection handled by wallet connection */}
+                      <AchievementToastContainer />
+                      <main id="main-content" className="min-h-screen min-w-0 w-full" tabIndex={-1}>
+                        {children}
+                      </main>
+                      <PieMenu />
+                      <OnboardingManager />
+                      <HelpCenter />
+                    </ToastProvider>
+                  </Web3Provider>
+                </EmbeddedWalletProvider>
+              </AccessibilityProvider>
+            </PreferencesProvider>
           </ErrorBoundary>
         )}
       </body>

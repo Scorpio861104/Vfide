@@ -62,7 +62,12 @@ const QRCodeDisplay = ({ data, size = 200, label }: { data: string; size?: numbe
     <div className="flex flex-col items-center">
       <div className="bg-white rounded-lg p-2" style={{ width: size, height: size }}>
         {dataUrl ? (
-          <img src={dataUrl} alt="QR code" width={size} height={size} />
+          <img
+            src={dataUrl}
+            alt={label ? `${label} QR code for this paper wallet` : 'Paper wallet QR code'}
+            width={size}
+            height={size}
+          />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-xs text-zinc-500">
             {hasError ? 'QR unavailable' : 'Generating QR...'}

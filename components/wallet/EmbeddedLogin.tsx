@@ -8,7 +8,7 @@
  */
 
 import React, { useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 import {
   Mail,
   ArrowRight,
@@ -61,6 +61,7 @@ function DiscordIcon({ className }: { className?: string }) {
 function EmailLoginForm({ onSuccess, onError }: { onSuccess?: () => void; onError?: (error: string) => void }) {
   const { email, setEmail, submit, isLoading, error } = useEmailLogin();
   const [sent, setSent] = useState(false);
+  const errorId = error ? 'embedded-login-email-error' : undefined;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -111,7 +112,9 @@ function EmailLoginForm({ onSuccess, onError }: { onSuccess?: () => void; onErro
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="you@example.com"
-            className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+            aria-invalid={Boolean(error)}
+            aria-describedby={errorId}
+            className="w-full rounded-xl border border-gray-300 bg-white py-3 pl-10 pr-4 transition-all focus:border-transparent focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800"
             required
             disabled={isLoading}
           />
@@ -120,9 +123,10 @@ function EmailLoginForm({ onSuccess, onError }: { onSuccess?: () => void; onErro
 
       {error && (
         <motion.div
+          id={errorId}
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex items-center gap-2 text-red-600 text-sm"
+          className="flex items-center gap-2 text-sm text-red-600"
         >
           <AlertCircle className="w-4 h-4" />
           {error}
@@ -132,7 +136,7 @@ function EmailLoginForm({ onSuccess, onError }: { onSuccess?: () => void; onErro
       <button
         type="submit"
         disabled={isLoading || !email}
-        className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-semibold rounded-xl transition-colors"
+        className="min-h-[44px] w-full rounded-xl bg-blue-600 px-4 py-3 font-semibold text-white transition-colors hover:bg-blue-700 disabled:bg-blue-400"
       >
         {isLoading ? (
           <>
@@ -184,10 +188,9 @@ function SocialLoginButtons({ onSuccess, onError }: { onSuccess?: () => void; on
           onClick={() => handleLogin(id)}
           disabled={isLoading}
           className={`
-            flex items-center justify-center gap-2 px-4 py-3
-            border border-gray-300 dark:border-gray-600 rounded-xl
-            font-medium transition-colors disabled:opacity-50
-            ${color}
+            min-h-[44px] flex items-center justify-center gap-2 rounded-xl
+            border border-gray-300 px-4 py-3 font-medium transition-colors disabled:opacity-50
+            dark:border-gray-600 ${color}
           `}
         >
           <Icon className="w-5 h-5" />
@@ -209,6 +212,7 @@ export function EmbeddedLogin({
   className = '',
 }: EmbeddedLoginProps) {
   const { state } = useEmbeddedWallet();
+  const shouldReduceMotion = useReducedMotion();
 
   // If already authenticated, show success
   if (state.isAuthenticated && state.user) {
@@ -230,10 +234,10 @@ export function EmbeddedLogin({
 
   return (
     <div className={`p-6 ${className}`}>
-      <div className="text-center mb-6">
-        <h2 className="text-2xl font-bold mb-2">Welcome to Vfide</h2>
+      <div className="mb-6 text-center">
+        <h2 className="mb-2 text-2xl font-bold">Welcome to VFIDE</h2>
         <p className="text-gray-500">
-          Sign in to get started with your wallet
+          Use email or social login for the easiest start, or connect an existing wallet if you already have one.
         </p>
       </div>
 
@@ -267,7 +271,7 @@ export function EmbeddedLogin({
         </button>
       )}
 
-      <p className="text-xs text-center text-gray-400 mt-6">
+      <p className="mt-6 text-center text-xs text-gray-400">
         By continuing, you agree to our{' '}
         <a href="/legal" className="text-blue-600 hover:underline">Terms</a>
         {' '}and{' '}

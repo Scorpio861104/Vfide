@@ -9,6 +9,7 @@
 
 import { useState, useEffect, useCallback, useMemo, createContext, useContext, type ReactNode } from 'react';
 import { logger } from '@/lib/logger';
+import { safeLocalStorage } from '@/lib/utils';
 
 // ==================== TYPES ====================
 
@@ -134,7 +135,7 @@ function loadFromStorage(): UserPreferences {
   if (typeof window === 'undefined') return DEFAULT_PREFERENCES;
   
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const raw = safeLocalStorage.getItem(STORAGE_KEY);
     if (!raw) return DEFAULT_PREFERENCES;
     
     const stored: StoredPreferences = JSON.parse(raw);
@@ -161,7 +162,7 @@ function saveToStorage(preferences: UserPreferences): void {
       preferences,
       lastUpdated: Date.now(),
     };
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(stored));
+    safeLocalStorage.setItem(STORAGE_KEY, JSON.stringify(stored));
   } catch (e) {
     logger.error('Failed to save preferences:', e);
   }
@@ -181,6 +182,16 @@ function migratePreferences(old: Partial<UserPreferences>, fromVersion: number):
 // ==================== CONTEXT ====================
 
 const PreferencesContext = createContext<PreferencesContextValue | null>(null);
+const DEFAULT_CONTEXT_VALUE: PreferencesContextValue = {
+  preferences: DEFAULT_PREFERENCES,
+  setPreference: (() => undefined) as PreferencesContextValue['setPreference'],
+  setPreferences: () => undefined,
+  resetPreferences: () => undefined,
+  resetPreference: (() => undefined) as PreferencesContextValue['resetPreference'],
+  exportPreferences: () => JSON.stringify(DEFAULT_PREFERENCES, null, 2),
+  importPreferences: () => false,
+  isLoaded: true,
+};
 
 export function PreferencesProvider({ children }: { children: ReactNode }) {
   const [preferences, setPreferencesState] = useState<UserPreferences>(DEFAULT_PREFERENCES);
@@ -277,6 +288,10 @@ export function usePreferences(): PreferencesContextValue {
   return context;
 }
 
+export function useOptionalPreferences(): PreferencesContextValue {
+  return useContext(PreferencesContext) ?? DEFAULT_CONTEXT_VALUE;
+}
+
 export function usePreference<K extends PreferenceKey>(key: K): [UserPreferences[K], (value: UserPreferences[K]) => void] {
   const { preferences, setPreference } = usePreferences();
   
@@ -295,7 +310,7 @@ function applySystemPreferences(prefs: UserPreferences): void {
   // Check for system reduced motion preference
   if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
     // Don't override if user explicitly set reducedMotion
-    if (!localStorage.getItem(STORAGE_KEY)) {
+    if (!safeLocalStorage.getItem(STORAGE_KEY)) {
       prefs.reducedMotion = true;
     }
   }

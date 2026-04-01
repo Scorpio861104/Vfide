@@ -12,6 +12,8 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import { useAccount } from 'wagmi';
 import { usePayMerchant } from '@/hooks/useMerchantHooks';
+import { useOptionalPreferences } from '@/lib/preferences/userPreferences';
+import { logger } from '@/lib/logger';
 import { Shield, Clock, CheckCircle, AlertTriangle, FileText, ExternalLink } from 'lucide-react';
 
 interface InvoiceItem {
@@ -45,11 +47,52 @@ interface InvoiceData {
 
 type CheckoutStatus = 'loading' | 'ready' | 'paying' | 'confirming' | 'paid' | 'error' | 'not_found' | 'already_paid';
 
+const LOCAL_CURRENCY_LOCALES: Record<string, string> = {
+  USD: 'en-US',
+  EUR: 'de-DE',
+  GBP: 'en-GB',
+  GHS: 'en-GH',
+  NGN: 'en-NG',
+  KES: 'en-KE',
+  INR: 'en-IN',
+  ZAR: 'en-ZA',
+  BRL: 'pt-BR',
+};
+
+const ESTIMATED_USD_TO_LOCAL: Record<string, number> = {
+  USD: 1,
+  EUR: 0.92,
+  GBP: 0.79,
+  GHS: 15.4,
+  NGN: 1540,
+  KES: 129,
+  INR: 83,
+  ZAR: 18.5,
+  BRL: 5.7,
+};
+
+function isUsdAnchoredDisplay(code: string): boolean {
+  return ['USD', 'USDC', 'USDT', 'DAI', 'USDS'].includes(code.toUpperCase());
+}
+
+function formatEstimatedLocalCurrency(amount: number, currency: string): string | null {
+  const normalizedCurrency = currency.toUpperCase();
+  const rate = ESTIMATED_USD_TO_LOCAL[normalizedCurrency];
+  if (!rate) return null;
+
+  return new Intl.NumberFormat(LOCAL_CURRENCY_LOCALES[normalizedCurrency] ?? 'en-US', {
+    style: 'currency',
+    currency: normalizedCurrency,
+    maximumFractionDigits: 2,
+  }).format(amount * rate);
+}
+
 export default function CheckoutPage() {
   const params = useParams();
   const paymentLinkId = params?.id as string;
   const { address, isConnected } = useAccount();
   const { payMerchant, isPaying } = usePayMerchant();
+  const { preferences } = useOptionalPreferences();
 
   const [invoice, setInvoice] = useState<InvoiceData | null>(null);
   const [status, setStatus] = useState<CheckoutStatus>('loading');
@@ -94,7 +137,9 @@ export default function CheckoutPage() {
               method: 'PATCH',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ action: 'view' }),
-            }).catch((err: unknown) => { console.warn('[checkout] view tracking failed:', err); });
+            }).catch((err: unknown) => {
+              logger.warn('[checkout] view tracking failed:', err);
+            });
           }
         }
       } catch {
@@ -138,6 +183,11 @@ export default function CheckoutPage() {
       setErrorMessage(err instanceof Error ? err.message : 'Payment failed');
     }
   }, [invoice, address, isConnected, payMerchant, paymentLinkId]);
+
+  const preferredCurrency = (preferences.preferredCurrency || 'USD').toUpperCase();
+  const estimatedLocalTotal = invoice && isUsdAnchoredDisplay(invoice.currency_display)
+    ? formatEstimatedLocalCurrency(Number(invoice.total), preferredCurrency)
+    : null;
 
   // ─────────────────────────── Render
 
@@ -241,6 +291,29 @@ export default function CheckoutPage() {
                   <p className="text-sm text-gray-700 dark:text-gray-300">{invoice.memo}</p>
                 </div>
               )}
+
+              <div className="mt-3 rounded-xl border border-blue-100 bg-blue-50/80 p-3 dark:border-blue-900/40 dark:bg-blue-900/10">
+                <p className="text-sm font-semibold text-blue-900 dark:text-blue-200">Buyer fee transparency</p>
+                <div className="mt-2 space-y-1.5 text-sm text-blue-900/90 dark:text-blue-100/90">
+                  <div className="flex justify-between gap-3">
+                    <span>You pay</span>
+                    <span className="font-medium">{Number(invoice.total).toFixed(4)} {invoice.currency_display}</span>
+                  </div>
+                  {estimatedLocalTotal && (
+                    <div className="flex justify-between gap-3 text-xs text-blue-800/80 dark:text-blue-200/80">
+                      <span>Estimated local value ({preferredCurrency})</span>
+                      <span>{estimatedLocalTotal}</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between gap-3 text-xs text-blue-800/80 dark:text-blue-200/80">
+                    <span>Merchant receives</span>
+                    <span>the full invoice amount</span>
+                  </div>
+                </div>
+                <p className="mt-2 text-xs text-blue-800/80 dark:text-blue-200/80">
+                  Any trust-based network fee and chain gas appear separately in your wallet confirmation and are paid by the buyer — they are not deducted from the merchant&apos;s invoice total.
+                </p>
+              </div>
             </div>
 
             {/* Payment Action */}

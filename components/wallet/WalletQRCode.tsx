@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { useAccount, useChainId } from 'wagmi';
 import { QrCode, Copy, Check, Download, Share2, X } from 'lucide-react';
 import { IS_TESTNET } from '@/lib/chains';
@@ -29,6 +29,7 @@ export function WalletQRCode({ isOpen, onClose }: WalletQRCodeProps) {
   const [copied, setCopied] = useState(false);
   const [qrDataUrl, setQrDataUrl] = useState<string>('');
   const copiedTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const shouldReduceMotion = useReducedMotion();
 
   // Generate QR code using canvas
   useEffect(() => {
@@ -142,16 +143,16 @@ export function WalletQRCode({ isOpen, onClose }: WalletQRCodeProps) {
     <AnimatePresence>
       {isOpen && (
         <motion.div
-          initial={{ opacity: 0 }}
+          initial={shouldReduceMotion ? false : { opacity: 0 }}
           animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
+          exit={shouldReduceMotion ? { opacity: 1 } : { opacity: 0 }}
           className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4"
           onClick={onClose}
         >
           <motion.div
-            initial={{ scale: 0.9, opacity: 0 }}
+            initial={shouldReduceMotion ? false : { scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0.9, opacity: 0 }}
+            exit={shouldReduceMotion ? { opacity: 1 } : { scale: 0.9, opacity: 0 }}
             onClick={e => e.stopPropagation()}
             className="bg-zinc-900 rounded-2xl border border-zinc-700 p-6 max-w-sm w-full"
           >
@@ -168,7 +169,8 @@ export function WalletQRCode({ isOpen, onClose }: WalletQRCodeProps) {
               </div>
               <button
                 onClick={onClose}
-                className="p-2 text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-lg transition-colors"
+                aria-label="Close wallet QR code dialog"
+                className="min-h-[44px] min-w-[44px] rounded-lg p-2 text-zinc-400 transition-colors hover:bg-zinc-800 hover:text-white"
               >
                 <X size={20} />
               </button>
@@ -179,8 +181,8 @@ export function WalletQRCode({ isOpen, onClose }: WalletQRCodeProps) {
               {qrDataUrl ? (
                 <img 
                   src={qrDataUrl} 
-                  alt="Wallet QR Code" 
-                  className="w-full aspect-square"
+                  alt={`QR code for the wallet address ${address}`} 
+                  className="aspect-square w-full"
                 />
               ) : (
                 <div className="w-full aspect-square flex items-center justify-center">
@@ -199,7 +201,8 @@ export function WalletQRCode({ isOpen, onClose }: WalletQRCodeProps) {
             <div className="grid grid-cols-3 gap-2">
               <button
                 onClick={handleCopy}
-                className="flex flex-col items-center gap-1 p-3 bg-zinc-800 hover:bg-zinc-700 rounded-xl transition-colors"
+                aria-label="Copy wallet address"
+                className="flex min-h-[44px] flex-col items-center gap-1 rounded-xl bg-zinc-800 p-3 transition-colors hover:bg-zinc-700"
               >
                 {copied ? (
                   <Check size={20} className="text-green-400" />
@@ -213,7 +216,8 @@ export function WalletQRCode({ isOpen, onClose }: WalletQRCodeProps) {
 
               <button
                 onClick={handleDownload}
-                className="flex flex-col items-center gap-1 p-3 bg-zinc-800 hover:bg-zinc-700 rounded-xl transition-colors"
+                aria-label="Download wallet QR code"
+                className="flex min-h-[44px] flex-col items-center gap-1 rounded-xl bg-zinc-800 p-3 transition-colors hover:bg-zinc-700"
               >
                 <Download size={20} className="text-zinc-400" />
                 <span className="text-xs text-zinc-400">Save</span>
@@ -221,7 +225,8 @@ export function WalletQRCode({ isOpen, onClose }: WalletQRCodeProps) {
 
               <button
                 onClick={handleShare}
-                className="flex flex-col items-center gap-1 p-3 bg-zinc-800 hover:bg-zinc-700 rounded-xl transition-colors"
+                aria-label="Share wallet address"
+                className="flex min-h-[44px] flex-col items-center gap-1 rounded-xl bg-zinc-800 p-3 transition-colors hover:bg-zinc-700"
               >
                 <Share2 size={20} className="text-zinc-400" />
                 <span className="text-xs text-zinc-400">Share</span>

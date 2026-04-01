@@ -5,6 +5,7 @@ import { Book, ChevronRight, Droplets, Globe, HelpCircle, Shield, Star, Store, V
 import { useState, useEffect } from "react";
 import { useChainId } from "wagmi";
 import { isTestnetChainId } from "@/lib/chains";
+import { safeLocalStorage } from "@/lib/utils";
 import { WIZARD_ENABLED_KEY, TOUR_COMPLETED_KEY, BEGINNER_COMPLETED_KEY } from "@/components/onboarding/OnboardingManager";
 
 interface HelpTopic {
@@ -204,7 +205,7 @@ export function HelpCenter() {
 
   // Read wizard enabled state from localStorage (after mount to avoid SSR mismatch)
   useEffect(() => {
-    setWizardEnabled(localStorage.getItem(WIZARD_ENABLED_KEY) !== "false");
+    setWizardEnabled(safeLocalStorage.getItem(WIZARD_ENABLED_KEY) !== "false");
   }, [isOpen]);
 
   const handleToggleWizard = () => {
@@ -214,13 +215,13 @@ export function HelpCenter() {
     }
     const win = window as WindowWithWizard;
     if (wizardEnabled) {
-      localStorage.setItem(WIZARD_ENABLED_KEY, "false");
+      safeLocalStorage.setItem(WIZARD_ENABLED_KEY, "false");
       setWizardEnabled(false);
       win.disableVFIDEWizard?.();
     } else {
-      localStorage.removeItem(WIZARD_ENABLED_KEY);
-      localStorage.removeItem(TOUR_COMPLETED_KEY);
-      localStorage.removeItem(BEGINNER_COMPLETED_KEY);
+      safeLocalStorage.removeItem(WIZARD_ENABLED_KEY);
+      safeLocalStorage.removeItem(TOUR_COMPLETED_KEY);
+      safeLocalStorage.removeItem(BEGINNER_COMPLETED_KEY);
       setWizardEnabled(true);
       win.enableVFIDEWizard?.();
       setIsOpen(false);

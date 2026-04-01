@@ -12,6 +12,7 @@ import { CURRENT_CHAIN_ID, FAUCET_URLS } from '@/lib/testnet'
 import { getChainByChainId } from '@/lib/chains'
 import { safeParseFloat } from '@/lib/validation'
 import { getEthereumProvider, getProviderErrorCode, requestEthereum } from '@/lib/ethereumProvider'
+import { safeLocalStorage } from '@/lib/utils'
 import { formatUnits } from 'viem'
 import { baseSepolia } from 'wagmi/chains'
 
@@ -59,7 +60,7 @@ export function SetupWizard({ onComplete }: SetupWizardProps) {
   useEffect(() => {
     if (typeof window === 'undefined') return
     
-    const seen = localStorage.getItem('vfide-setup-complete')
+    const seen = safeLocalStorage.getItem('vfide-setup-complete')
     setHasSeenWizard(!!seen)
     
     // Don't auto-show wizard - let user open it manually if needed
@@ -79,7 +80,7 @@ export function SetupWizard({ onComplete }: SetupWizardProps) {
   }, [isConnected, isCorrectNetwork, hasBalance, currentStep])
 
   const handleComplete = () => {
-    localStorage.setItem('vfide-setup-complete', 'true')
+    safeLocalStorage.setItem('vfide-setup-complete', 'true')
     setIsOpen(false)
     onComplete?.()
   }
