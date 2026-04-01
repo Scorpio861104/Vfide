@@ -10,24 +10,32 @@ import { requireAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { isAddress } from 'viem';
 import { logger } from '@/lib/logger';
-
-interface ReactionRequest {
-  messageId: string;
-  conversationId: string;
-  reactionType?: 'emoji' | 'custom_image';
-  emoji?: string;
-  imageUrl?: string;
-  imageName?: string;
-  userAddress: string;
-}
+import { z } from 'zod4';
 
 const MAX_ID_LENGTH = 128;
 const MAX_IMAGE_NAME_LENGTH = 120;
 const MAX_EMOJI_LENGTH = 16;
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
-}
+const messageReactionPostSchema = z.object({
+  messageId: z.string().trim().min(1).max(MAX_ID_LENGTH),
+  conversationId: z.string().trim().min(1).max(MAX_ID_LENGTH),
+  reactionType: z.enum(['emoji', 'custom_image']).optional(),
+  emoji: z.string().trim().min(1).max(MAX_EMOJI_LENGTH).optional(),
+  imageUrl: z.string().trim().min(1).optional(),
+  imageName: z.string().trim().min(1).max(MAX_IMAGE_NAME_LENGTH).optional(),
+  userAddress: z.string().trim().refine((value) => isAddress(value), {
+    message: 'Invalid Ethereum address format',
+  }),
+});
+
+const messageReactionDeleteSchema = z.object({
+  messageId: z.string().trim().min(1).max(MAX_ID_LENGTH),
+  conversationId: z.string().trim().min(1).max(MAX_ID_LENGTH),
+  emoji: z.string().trim().min(1).max(MAX_EMOJI_LENGTH),
+  userAddress: z.string().trim().refine((value) => isAddress(value), {
+    message: 'Invalid Ethereum address format',
+  }),
+});
 
 function normalizeRequiredString(value: unknown): string | null {
   if (typeof value !== 'string') return null;
@@ -76,16 +84,17 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  let body: Record<string, unknown>;
+  let body: z.infer<typeof messageReactionPostSchema>;
   try {
-    const parsed: unknown = await request.json();
-    if (!isRecord(parsed)) {
+    const rawBody = await request.json();
+    const parsed = messageReactionPostSchema.safeParse(rawBody);
+    if (!parsed.success) {
       return NextResponse.json(
-        { error: 'Request body must be a JSON object' },
+        { error: 'Invalid request body' },
         { status: 400 }
       );
     }
-    body = parsed;
+    body = parsed.data;
   } catch {
     return NextResponse.json(
       { error: 'Invalid JSON body' },
@@ -94,34 +103,15 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const reactionType = (body.reactionType as ReactionRequest['reactionType']) || 'emoji';
+    const reactionType = body.reactionType || 'emoji';
     const normalizedEmoji = normalizeRequiredString(body.emoji);
     const normalizedImageUrl = normalizeRequiredString(body.imageUrl);
     const normalizedImageName = normalizeRequiredString(body.imageName);
-    const messageId = normalizeRequiredString(body.messageId);
-    const conversationId = normalizeRequiredString(body.conversationId);
-    const userAddress = normalizeRequiredString(body.userAddress);
-
-    if (!messageId || !conversationId || !userAddress) {
-      return NextResponse.json(
-        { error: 'Missing required fields' },
-        { status: 400 }
-      );
-    }
-
-    if (messageId.length > MAX_ID_LENGTH || conversationId.length > MAX_ID_LENGTH) {
-      return NextResponse.json(
-        { error: 'messageId or conversationId too long' },
-        { status: 400 }
-      );
-    }
+    const messageId = body.messageId;
+    const conversationId = body.conversationId;
+    const userAddress = body.userAddress;
 
     const normalizedUserAddress = userAddress.toLowerCase();
-
-    // Validate address format
-    if (!isAddress(normalizedUserAddress)) {
-      return NextResponse.json({ error: 'Invalid Ethereum address format' }, { status: 400 });
-    }
 
     // Verify authenticated user matches userAddress
     if (authenticatedAddress !== normalizedUserAddress) {
@@ -318,16 +308,17 @@ export async function DELETE(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  let body: Record<string, unknown>;
+  let body: z.infer<typeof messageReactionDeleteSchema>;
   try {
-    const parsed: unknown = await request.json();
-    if (!isRecord(parsed)) {
+    const rawBody = await request.json();
+    const parsed = messageReactionDeleteSchema.safeParse(rawBody);
+    if (!parsed.success) {
       return NextResponse.json(
-        { error: 'Request body must be a JSON object' },
+        { error: 'Invalid request body' },
         { status: 400 }
       );
     }
-    body = parsed;
+    body = parsed.data;
   } catch {
     return NextResponse.json(
       { error: 'Invalid JSON body' },
@@ -336,38 +327,12 @@ export async function DELETE(request: NextRequest) {
   }
 
   try {
-    const messageId = normalizeRequiredString(body.messageId);
-    const conversationId = normalizeRequiredString(body.conversationId);
-    const emoji = normalizeRequiredString(body.emoji);
-    const userAddress = normalizeRequiredString(body.userAddress);
-
-    if (!messageId || !conversationId || !emoji || !userAddress) {
-      return NextResponse.json(
-        { error: 'Missing required fields' },
-        { status: 400 }
-      );
-    }
-
-    if (messageId.length > MAX_ID_LENGTH || conversationId.length > MAX_ID_LENGTH) {
-      return NextResponse.json(
-        { error: 'messageId or conversationId too long' },
-        { status: 400 }
-      );
-    }
-
-    if (emoji.length > MAX_EMOJI_LENGTH) {
-      return NextResponse.json(
-        { error: 'Emoji reaction is too long' },
-        { status: 400 }
-      );
-    }
+    const messageId = body.messageId;
+    const conversationId = body.conversationId;
+    const emoji = body.emoji;
+    const userAddress = body.userAddress;
 
     const normalizedUserAddress = userAddress.toLowerCase();
-
-    // Validate address format
-    if (!isAddress(normalizedUserAddress)) {
-      return NextResponse.json({ error: 'Invalid Ethereum address format' }, { status: 400 });
-    }
 
     // Verify authenticated user matches userAddress
     if (authenticatedAddress !== normalizedUserAddress) {

@@ -2,9 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query, getClient } from '@/lib/db';
 import { requireAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
-import { validateBody, sendMessageSchema } from '@/lib/auth/validation';
 import { isAddress } from 'viem';
 import { logger } from '@/lib/logger';
+import { z } from 'zod4';
 
 interface Message {
   id: number;
@@ -32,6 +32,22 @@ const ADDRESS_LIKE_REGEX = /^0x[a-fA-F0-9]{3,40}$/;
 const HEX_STRING_REGEX = /^[0-9a-fA-F]+$/;
 const BASE64_STRING_REGEX = /^[A-Za-z0-9+/]+={0,2}$/;
 const ETH_SIGNATURE_REGEX = /^0x[0-9a-fA-F]{130}$/;
+
+const sendDirectMessageSchema = z.object({
+  from: z.string().trim().refine((value) => isAddress(value), {
+    message: 'Invalid from address format',
+  }),
+  to: z.string().trim().refine((value) => isAddress(value), {
+    message: 'Invalid to address format',
+  }),
+  content: z.string().trim().min(1),
+});
+
+const markMessagesReadSchema = z.object({
+  messageIds: z.array(z.number().int().positive()).max(MAX_BULK_MESSAGE_IDS).optional(),
+  conversationWith: z.string().trim().min(1).max(MAX_CONVERSATION_ADDRESS_LENGTH).optional(),
+  userAddress: z.string().trim().min(1).max(MAX_CONVERSATION_ADDRESS_LENGTH).optional(),
+});
 
 function isAddressLike(value: string): boolean {
   return ADDRESS_LIKE_REGEX.test(value.trim());
@@ -269,16 +285,25 @@ export async function POST(request: NextRequest) {
   const client = await getClient();
   
   try {
-    // Validate request body
-    const validation = await validateBody(request, sendMessageSchema);
-    if (!validation.success) {
+    let body: z.infer<typeof sendDirectMessageSchema>;
+    try {
+      const rawBody = await request.json();
+      const parsed = sendDirectMessageSchema.safeParse(rawBody);
+      if (!parsed.success) {
+        return NextResponse.json(
+          { error: 'Invalid request body' },
+          { status: 400 }
+        );
+      }
+      body = parsed.data;
+    } catch {
       return NextResponse.json(
-        { error: validation.error, details: validation.details },
+        { error: 'Invalid JSON body' },
         { status: 400 }
       );
     }
 
-    const { from, to, content } = validation.data;
+    const { from, to, content } = body;
 
     if (!isEncryptedDirectMessagePayload(content)) {
       return NextResponse.json(
@@ -289,7 +314,7 @@ export async function POST(request: NextRequest) {
 
     const isEncrypted = true;
     
-    // Content is already sanitized by sendMessageSchema via validateBody
+    // Content shape is validated by schema and encrypted payload parser.
 
     // Verify the sender is the authenticated user
     if (authAddress !== from.toLowerCase()) {
@@ -430,19 +455,20 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  let body: Record<string, unknown>;
+  let body: z.infer<typeof markMessagesReadSchema>;
   try {
-    body = await request.json();
+    const rawBody = await request.json();
+    const parsed = markMessagesReadSchema.safeParse(rawBody);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Invalid request body' },
+        { status: 400 }
+      );
+    }
+    body = parsed.data;
   } catch {
     return NextResponse.json(
       { error: 'Invalid JSON body' },
-      { status: 400 }
-    );
-  }
-
-  if (!body || typeof body !== 'object' || Array.isArray(body)) {
-    return NextResponse.json(
-      { error: 'Request body must be a JSON object' },
       { status: 400 }
     );
   }
