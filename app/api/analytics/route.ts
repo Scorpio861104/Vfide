@@ -3,6 +3,7 @@ import { query } from '@/lib/db';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { requireAdmin, requireAuth } from '@/lib/auth/middleware';
 import { logger } from '@/lib/logger';
+import { z } from 'zod4';
 
 // Constants for validation
 const MAX_ANALYTICS_LIMIT = 1000;
@@ -73,6 +74,24 @@ function parseStrictIntegerParam(value: string | null): number | null {
   if (!/^\d+$/.test(trimmed)) return null;
   return Number.parseInt(trimmed, 10);
 }
+
+const analyticsBatchMetricSchema = z.object({
+  event: z.string().optional(),
+  properties: z.record(z.string(), z.unknown()).optional(),
+  value: z.unknown().optional(),
+  sessionId: z.string().optional(),
+  timestamp: z.number().finite().optional(),
+});
+
+const analyticsBatchSchema = z.object({
+  metrics: z.array(analyticsBatchMetricSchema).min(1).max(MAX_BATCH_METRICS),
+});
+
+const analyticsSingleSchema = z.object({
+  userId: z.union([z.string(), z.number()]).optional(),
+  eventType: z.string().trim().min(1),
+  eventData: z.record(z.string(), z.unknown()).optional(),
+});
 
 export async function GET(request: NextRequest) {
   // Rate limiting
@@ -164,18 +183,27 @@ export async function POST(request: NextRequest) {
     const authResult = await requireAuth(request);
     if (authResult instanceof NextResponse) return authResult;
 
-    let body: unknown;
+    let body: z.infer<typeof analyticsBatchSchema> | z.infer<typeof analyticsSingleSchema>;
     try {
-      body = await request.json();
+      const rawBody = await request.json();
+      if (isObjectRecord(rawBody) && Array.isArray(rawBody.metrics)) {
+        const parsedBatch = analyticsBatchSchema.safeParse(rawBody);
+        if (!parsedBatch.success) {
+          return NextResponse.json({ error: 'Invalid batch metric payload' }, { status: 400 });
+        }
+        body = parsedBatch.data;
+      } else {
+        const parsedSingle = analyticsSingleSchema.safeParse(rawBody);
+        if (!parsedSingle.success) {
+          return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
+        }
+        body = parsedSingle.data;
+      }
     } catch {
       return NextResponse.json({ error: 'Invalid JSON payload' }, { status: 400 });
     }
 
-    if (!isObjectRecord(body)) {
-      return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
-    }
-
-    const metrics = Array.isArray(body.metrics) ? body.metrics : null;
+    const metrics = 'metrics' in body && Array.isArray(body.metrics) ? body.metrics : null;
 
     if (metrics && metrics.length > 0) {
       if (metrics.length > MAX_BATCH_METRICS) {
@@ -274,7 +302,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: true });
     }
 
-    const { userId, eventType, eventData } = body;
+    const singleEventBody = body as z.infer<typeof analyticsSingleSchema>;
+    const { userId, eventType, eventData } = singleEventBody;
 
     const normalizedEventType = typeof eventType === 'string' ? eventType.trim().toLowerCase() : null;
     const normalizedUserId =

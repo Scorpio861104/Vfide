@@ -3,15 +3,18 @@ import { query } from '@/lib/db';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { requireAdmin } from '@/lib/auth/middleware';
 import { logger } from '@/lib/logger';
+import { z } from 'zod4';
 
 const MAX_METRIC_NAME_LENGTH = 100;
 const MAX_METADATA_BYTES = 10_000;
 const DEFAULT_METRICS_GET_LIMIT = 50;
 const MAX_METRICS_GET_LIMIT = 100;
 
-function isObjectRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
-}
+const performanceMetricSchema = z.object({
+  metricName: z.string().trim().min(1).max(MAX_METRIC_NAME_LENGTH),
+  value: z.number().finite(),
+  metadata: z.record(z.string(), z.unknown()).optional(),
+});
 
 function byteLength(value: string): number {
   return Buffer.byteLength(value, 'utf8');
@@ -80,48 +83,21 @@ export async function POST(request: NextRequest) {
   if (authResult instanceof NextResponse) return authResult;
 
   try {
-    let body: unknown;
+    let body: z.infer<typeof performanceMetricSchema>;
     try {
-      body = await request.json();
+      const rawBody = await request.json();
+      const parsed = performanceMetricSchema.safeParse(rawBody);
+      if (!parsed.success) {
+        return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
+      }
+      body = parsed.data;
     } catch {
       return NextResponse.json({ error: 'Invalid JSON payload' }, { status: 400 });
     }
 
-    if (!isObjectRecord(body)) {
-      return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
-    }
-
     const { metricName: rawMetricName, value, metadata } = body;
 
-    if (typeof rawMetricName !== 'string') {
-      return NextResponse.json(
-        { error: `Invalid metricName. Must be a non-empty string up to ${MAX_METRIC_NAME_LENGTH} characters.` },
-        { status: 400 }
-      );
-    }
-
     const metricName = rawMetricName.trim();
-
-    if (metricName.length === 0 || metricName.length > MAX_METRIC_NAME_LENGTH) {
-      return NextResponse.json(
-        { error: `Invalid metricName. Must be a non-empty string up to ${MAX_METRIC_NAME_LENGTH} characters.` },
-        { status: 400 }
-      );
-    }
-
-    if (typeof value !== 'number' || !Number.isFinite(value)) {
-      return NextResponse.json(
-        { error: 'Invalid value. Must be a finite number.' },
-        { status: 400 }
-      );
-    }
-
-    if (metadata !== undefined && !isObjectRecord(metadata)) {
-      return NextResponse.json(
-        { error: 'Invalid metadata. Must be an object if provided.' },
-        { status: 400 }
-      );
-    }
 
     const serializedMetadata = JSON.stringify(metadata || {});
     if (byteLength(serializedMetadata) > MAX_METADATA_BYTES) {

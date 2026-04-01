@@ -4,12 +4,18 @@ import { requireAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { isAddress } from 'viem';
 import { logger } from '@/lib/logger';
+import { z } from 'zod4';
 
 const MAX_ID_LENGTH = 128;
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
-}
+const deleteMessageSchema = z.object({
+  messageId: z.string().trim().min(1).max(MAX_ID_LENGTH),
+  conversationId: z.string().trim().min(1).max(MAX_ID_LENGTH),
+  userAddress: z.string().trim().refine((value) => isAddress(value), {
+    message: 'Invalid Ethereum address format',
+  }),
+  hardDelete: z.boolean().optional(),
+});
 
 function toNonEmptyString(value: unknown): string | null {
   if (typeof value !== 'string') return null;
@@ -35,15 +41,16 @@ export async function DELETE(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  let body: Record<string, unknown>;
+  let body: z.infer<typeof deleteMessageSchema>;
   try {
-    body = await request.json() as unknown as Record<string, unknown>;
+    const rawBody = await request.json();
+    const parsed = deleteMessageSchema.safeParse(rawBody);
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
+    }
+    body = parsed.data;
   } catch {
     return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
-  }
-
-  if (!isRecord(body)) {
-    return NextResponse.json({ error: 'Request body must be a JSON object' }, { status: 400 });
   }
 
   try {
@@ -61,11 +68,6 @@ export async function DELETE(request: NextRequest) {
     }
 
     const normalizedUserAddress = userAddress.toLowerCase();
-
-    // Validate address format
-    if (!isAddress(normalizedUserAddress)) {
-      return NextResponse.json({ error: 'Invalid Ethereum address format' }, { status: 400 });
-    }
 
     // Verify authenticated user matches userAddress
     if (authenticatedAddress !== normalizedUserAddress) {
