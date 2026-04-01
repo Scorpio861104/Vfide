@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { requireAuth } from '@/lib/auth/middleware';
 import { logger } from '@/lib/logger';
+import { z } from 'zod4';
 
 const ADDRESS_REGEX = /^0x[a-fA-F0-9]{40}$/;
 const SOURCE_TYPES = ['guardian-inbox', 'guardians-page', 'unknown'] as const;
@@ -23,6 +24,17 @@ type RecoveryFraudEvent = {
 
 const MAX_EVENTS = 1000;
 const recoveryFraudStore: RecoveryFraudEvent[] = [];
+
+const recoveryFraudEventSchema = z.object({
+  vault: z.unknown(),
+  label: z.unknown().optional(),
+  source: z.unknown().optional(),
+  proposedOwner: z.unknown().optional(),
+  approvals: z.unknown().optional(),
+  threshold: z.unknown().optional(),
+  active: z.unknown().optional(),
+  watcher: z.unknown().optional(),
+});
 
 function asSourceType(value: unknown): SourceType {
   if (typeof value !== 'string') return 'unknown';
@@ -53,18 +65,17 @@ export async function POST(request: NextRequest) {
   const authResult = await requireAuth(request);
   if (authResult instanceof NextResponse) return authResult;
 
-  let body: unknown;
+  let payload: z.infer<typeof recoveryFraudEventSchema>;
   try {
-    body = await request.json();
+    const rawBody = await request.json();
+    const parsed = recoveryFraudEventSchema.safeParse(rawBody);
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
+    }
+    payload = parsed.data;
   } catch {
     return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
   }
-
-  if (!body || typeof body !== 'object' || Array.isArray(body)) {
-    return NextResponse.json({ error: 'Request body must be a JSON object' }, { status: 400 });
-  }
-
-  const payload = body as Record<string, unknown>;
   const vault = normalizeAddress(payload.vault);
   if (vault === 'unknown') {
     return NextResponse.json({ error: 'Invalid vault address' }, { status: 400 });

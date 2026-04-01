@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { requireAuth } from '@/lib/auth/middleware';
 import { logger } from '@/lib/logger';
+import { z } from 'zod4';
 
 const EVENT_TYPES = ['missing', 'invalid', 'expired'] as const;
 const SOURCE_TYPES = ['qr', 'checkout', 'unknown'] as const;
@@ -29,6 +30,17 @@ type QrSignatureEvent = {
 
 const MAX_EVENTS = 1000;
 const qrSignatureEventStore: QrSignatureEvent[] = [];
+
+const qrSignatureEventSchema = z.object({
+  eventType: z.enum(EVENT_TYPES),
+  source: z.unknown().optional(),
+  settlement: z.unknown().optional(),
+  merchant: z.unknown().optional(),
+  orderId: z.unknown().optional(),
+  exp: z.unknown().optional(),
+  sigPrefix: z.unknown().optional(),
+  reason: z.unknown().optional(),
+});
 
 function asEventType(value: unknown): EventType | null {
   if (typeof value !== 'string') return null;
@@ -66,22 +78,19 @@ export async function POST(request: NextRequest) {
   const authResult = await requireAuth(request);
   if (authResult instanceof NextResponse) return authResult;
 
-  let body: unknown;
+  let payload: z.infer<typeof qrSignatureEventSchema>;
   try {
-    body = await request.json();
+    const rawBody = await request.json();
+    const parsed = qrSignatureEventSchema.safeParse(rawBody);
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
+    }
+    payload = parsed.data;
   } catch {
     return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
   }
 
-  if (!body || typeof body !== 'object' || Array.isArray(body)) {
-    return NextResponse.json({ error: 'Request body must be a JSON object' }, { status: 400 });
-  }
-
-  const payload = body as Record<string, unknown>;
-  const eventType = asEventType(payload.eventType);
-  if (!eventType) {
-    return NextResponse.json({ error: 'Invalid eventType' }, { status: 400 });
-  }
+  const eventType = payload.eventType;
 
   const source = asSourceType(payload.source);
   const settlement = asSettlementType(payload.settlement);
