@@ -3,15 +3,26 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { logger } from '@/lib/logger';
+import { z } from 'zod4';
 
 // Allowed status transitions for payment requests
 const ALLOWED_STATUSES = ['pending', 'accepted', 'rejected', 'completed', 'cancelled'] as const;
 const ADDRESS_PATTERN = /^0x[a-fA-F0-9]{3,64}$/;
 const TX_HASH_PATTERN = /^0x[a-fA-F0-9]{3,130}$/;
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
-}
+const paymentStatusSchema = z.string().trim().toLowerCase().refine(
+  (value) => ALLOWED_STATUSES.includes(value as (typeof ALLOWED_STATUSES)[number]),
+  { message: 'Invalid status' }
+);
+
+const putPaymentRequestSchema = z.object({
+  status: paymentStatusSchema,
+});
+
+const patchPaymentRequestSchema = z.object({
+  status: paymentStatusSchema,
+  txHash: z.string().trim().regex(TX_HASH_PATTERN).optional(),
+});
 
 function parsePositiveInteger(value: string): number | null {
   if (!/^\d+$/.test(value)) {
@@ -111,15 +122,16 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  let body: unknown;
+  let body: z.infer<typeof putPaymentRequestSchema>;
   try {
-    body = await request.json();
+    const rawBody = await request.json();
+    const parsed = putPaymentRequestSchema.safeParse(rawBody);
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
+    }
+    body = parsed.data;
   } catch {
     return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
-  }
-
-  if (!isRecord(body)) {
-    return NextResponse.json({ error: 'Request body must be a JSON object' }, { status: 400 });
   }
 
   try {
@@ -136,20 +148,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       );
     }
 
-    const { status } = body;
-    const normalizedStatus = typeof status === 'string' ? status.trim().toLowerCase() : null;
-
-    if (!normalizedStatus) {
-      return NextResponse.json({ error: 'Status required' }, { status: 400 });
-    }
-
-    // Validate status is an allowed value
-    if (!ALLOWED_STATUSES.includes(normalizedStatus as (typeof ALLOWED_STATUSES)[number])) {
-      return NextResponse.json(
-        { error: `Invalid status. Allowed values: ${ALLOWED_STATUSES.join(', ')}` },
-        { status: 400 }
-      );
-    }
+    const normalizedStatus = body.status;
 
     // Verify the authenticated user is a party to this payment request
     const existing = await query('SELECT * FROM payment_requests WHERE id = $1', [id]);
@@ -184,15 +183,16 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  let body: unknown;
+  let body: z.infer<typeof patchPaymentRequestSchema>;
   try {
-    body = await request.json();
+    const rawBody = await request.json();
+    const parsed = patchPaymentRequestSchema.safeParse(rawBody);
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
+    }
+    body = parsed.data;
   } catch {
     return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
-  }
-
-  if (!isRecord(body)) {
-    return NextResponse.json({ error: 'Request body must be a JSON object' }, { status: 400 });
   }
 
   try {
@@ -209,29 +209,8 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       );
     }
 
-    const { status, txHash } = body;
-    const normalizedStatus = typeof status === 'string' ? status.trim().toLowerCase() : null;
-    const normalizedTxHash = typeof txHash === 'string' ? txHash.trim() : null;
-
-    if (!normalizedStatus) {
-      return NextResponse.json({ error: 'Status required' }, { status: 400 });
-    }
-
-    // Validate status is an allowed value
-    if (!ALLOWED_STATUSES.includes(normalizedStatus as (typeof ALLOWED_STATUSES)[number])) {
-      return NextResponse.json(
-        { error: `Invalid status. Allowed values: ${ALLOWED_STATUSES.join(', ')}` },
-        { status: 400 }
-      );
-    }
-
-    if (txHash !== undefined && typeof txHash !== 'string') {
-      return NextResponse.json({ error: 'Invalid txHash format' }, { status: 400 });
-    }
-
-    if (normalizedTxHash && !TX_HASH_PATTERN.test(normalizedTxHash)) {
-      return NextResponse.json({ error: 'Invalid txHash format' }, { status: 400 });
-    }
+    const normalizedStatus = body.status;
+    const normalizedTxHash = body.txHash ?? null;
 
     // Verify the authenticated user is a party to this payment request
     const existing = await query('SELECT * FROM payment_requests WHERE id = $1', [id]);

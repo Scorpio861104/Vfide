@@ -9,10 +9,23 @@ import {
 } from '@/lib/security/accountProtection';
 import { getRequestIp } from '@/lib/security/requestContext';
 import { logger } from '@/lib/logger';
+import { z } from 'zod4';
 
 const USER_ID_REGEX = /^\d+$/;
 const DECIMAL_AMOUNT_REGEX = /^\d+(\.\d{1,18})?$/;
 const ADDRESS_LIKE_REGEX = /^0x[a-fA-F0-9]{3,40}$/;
+
+const createPaymentRequestSchema = z.object({
+  fromUserId: z.union([z.number().int().positive(), z.string().regex(USER_ID_REGEX)]).optional(),
+  toUserId: z.union([z.number().int().positive(), z.string().regex(USER_ID_REGEX)]).optional(),
+  toAddress: z.string().trim().regex(ADDRESS_LIKE_REGEX).optional(),
+  amount: z.union([
+    z.number().positive(),
+    z.string().trim().regex(DECIMAL_AMOUNT_REGEX),
+  ]),
+  token: z.string().trim().optional(),
+  memo: z.string().max(500).nullable().optional(),
+});
 
 function parsePositiveInteger(value: string): number | null {
   const trimmed = value.trim();
@@ -118,15 +131,16 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  let body: Record<string, unknown>;
+  let body: z.infer<typeof createPaymentRequestSchema>;
   try {
-    body = await request.json();
+    const rawBody = await request.json();
+    const parsed = createPaymentRequestSchema.safeParse(rawBody);
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
+    }
+    body = parsed.data;
   } catch {
     return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
-  }
-
-  if (!body || typeof body !== 'object' || Array.isArray(body)) {
-    return NextResponse.json({ error: 'Request body must be a JSON object' }, { status: 400 });
   }
 
   try {
