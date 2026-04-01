@@ -235,7 +235,8 @@ export async function POST(request: NextRequest) {
       );
     }
     body = parsed.data;
-  } catch {
+  } catch (error) {
+    logger.debug('[Notifications POST] Invalid JSON body', error);
     return NextResponse.json(
       { error: 'Invalid JSON body' },
       { status: 400 }
@@ -331,7 +332,8 @@ export async function PATCH(request: NextRequest) {
       );
     }
     body = parsed.data;
-  } catch {
+  } catch (error) {
+    logger.debug('[Notifications PATCH] Invalid JSON body', error);
     return NextResponse.json(
       { error: 'Invalid JSON body' },
       { status: 400 }
@@ -476,7 +478,8 @@ export async function DELETE(request: NextRequest) {
       );
     }
     body = parsed.data;
-  } catch {
+  } catch (error) {
+    logger.debug('[Notifications DELETE] Invalid JSON body', error);
     return NextResponse.json(
       { error: 'Invalid JSON body' },
       { status: 400 }
