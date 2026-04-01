@@ -6,12 +6,13 @@ import { createPublicClient, http, isAddress } from 'viem';
 import { base, baseSepolia, polygon, polygonAmoy, zkSync, zkSyncSepoliaTestnet } from 'viem/chains';
 import rewardABI from '@/lib/abis/UserRewards.json';
 import { logger } from '@/lib/logger';
+import { z } from 'zod4';
 
 const REWARD_ID_REGEX = /^[a-zA-Z0-9:_-]{1,128}$/;
 
-function isObjectRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
-}
+const claimRewardsSchema = z.object({
+  rewardIds: z.array(z.string().trim().regex(REWARD_ID_REGEX)).min(1).max(100),
+});
 
 // Initialize viem client for on-chain verification
 function getConfiguredChain() {
@@ -126,44 +127,27 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       );
     }
 
-    let body: unknown;
+    let body: z.infer<typeof claimRewardsSchema>;
     try {
-      body = await request.json();
+      const rawBody = await request.json();
+      const parsed = claimRewardsSchema.safeParse(rawBody);
+      if (!parsed.success) {
+        return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
+      }
+      body = parsed.data;
     } catch {
       return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
     }
 
-    if (!isObjectRecord(body)) {
-      return NextResponse.json({ error: 'Request body must be a JSON object' }, { status: 400 });
-    }
-
     const { rewardIds } = body;
-
-    if (!rewardIds || !Array.isArray(rewardIds)) {
-      return NextResponse.json({ error: 'rewardIds array required' }, { status: 400 });
-    }
-
-    // Validate array length to prevent abuse
-    if (rewardIds.length === 0) {
-      return NextResponse.json({ error: 'At least one reward must be selected' }, { status: 400 });
-    }
-    
-    if (rewardIds.length > 100) {
-      return NextResponse.json({ error: 'Cannot claim more than 100 rewards at once' }, { status: 400 });
-    }
 
     // Validate reward IDs and deduplicate while preserving supported ID formats
     const normalizedRewardIds = [...new Set(rewardIds)]
-      .filter((id): id is string => typeof id === 'string')
       .map((id) => id.trim())
       .filter((id) => id.length > 0);
 
     if (normalizedRewardIds.length === 0) {
       return NextResponse.json({ error: 'No valid reward IDs provided' }, { status: 400 });
-    }
-
-    if (normalizedRewardIds.some((id) => !REWARD_ID_REGEX.test(id))) {
-      return NextResponse.json({ error: 'Invalid reward ID format' }, { status: 400 });
     }
 
     // First, fetch the rewards to verify they exist and belong to the user

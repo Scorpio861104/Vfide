@@ -3,10 +3,17 @@ import { query } from '@/lib/db';
 import { requireAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { logger } from '@/lib/logger';
+import { z } from 'zod4';
 
 const USER_ID_REGEX = /^\d+$/;
 const ENTITY_REGEX = /^[a-zA-Z0-9:_-]{1,64}$/;
 const ADDRESS_PATTERN = /^0x[a-fA-F0-9]{3,64}$/;
+
+const updateSyncStateSchema = z.object({
+  userId: z.union([z.number().int().positive(), z.string().regex(USER_ID_REGEX)]),
+  entity: z.string().trim().regex(ENTITY_REGEX),
+  lastSyncTimestamp: z.union([z.string(), z.number()]).optional(),
+});
 
 function normalizeAddress(value: string): string {
   return value.trim().toLowerCase();
@@ -85,15 +92,16 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  let body: Record<string, unknown>;
+  let body: z.infer<typeof updateSyncStateSchema>;
   try {
-    body = await request.json();
+    const rawBody = await request.json();
+    const parsed = updateSyncStateSchema.safeParse(rawBody);
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
+    }
+    body = parsed.data;
   } catch {
     return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
-  }
-
-  if (!body || typeof body !== 'object' || Array.isArray(body)) {
-    return NextResponse.json({ error: 'Request body must be a JSON object' }, { status: 400 });
   }
 
   try {

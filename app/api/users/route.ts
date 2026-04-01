@@ -14,6 +14,7 @@ import {
 } from '@/lib/optimization/apiOptimization';
 import { trackApiCallSimple } from '@/lib/optimization/monitoring';
 import { logger } from '@/lib/logger';
+import { z } from 'zod4';
 
 interface User {
   id: string;
@@ -31,6 +32,19 @@ interface User {
 }
 
 const ETH_ADDRESS_REGEX = /^0x[a-fA-F0-9]{40}$/;
+
+const upsertUserSchema = z.object({
+  username: z.string().optional(),
+  display_name: z.string().optional(),
+  bio: z.string().optional(),
+  avatar_url: z.string().optional(),
+  email: z.string().optional(),
+  location: z.string().optional(),
+  website: z.string().optional(),
+  twitter: z.string().optional(),
+  github: z.string().optional(),
+  wallet_address: z.string().optional(),
+});
 
 const ALLOWED_USER_FIELDS = [
   'id', 'wallet_address', 'username', 'display_name', 'bio', 'avatar_url',
@@ -162,15 +176,16 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  let body: Record<string, unknown>;
+  let body: z.infer<typeof upsertUserSchema>;
   try {
-    body = await request.json();
+    const rawBody = await request.json();
+    const parsed = upsertUserSchema.safeParse(rawBody);
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
+    }
+    body = parsed.data;
   } catch {
     return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
-  }
-
-  if (!body || typeof body !== 'object' || Array.isArray(body)) {
-    return NextResponse.json({ error: 'Request body must be a JSON object' }, { status: 400 });
   }
 
   try {
