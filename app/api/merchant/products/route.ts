@@ -12,6 +12,7 @@ import { query } from '@/lib/db';
 import { requireAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { logger } from '@/lib/logger';
+import { z } from 'zod4';
 
 const ADDRESS_LIKE_REGEX = /^0x[a-fA-F0-9]{3,40}$/;
 const SLUG_REGEX = /^[a-z0-9][a-z0-9-]{1,198}$/;
@@ -19,6 +20,52 @@ const SLUG_REGEX = /^[a-z0-9][a-z0-9-]{1,198}$/;
 function slugify(text: string): string {
   return text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 200);
 }
+
+const productImageSchema = z.object({
+  url: z.string().max(2000).optional(),
+  alt: z.string().max(200).optional(),
+});
+
+const createProductSchema = z.object({
+  name: z.string().trim().min(1).max(200),
+  description: z.string().max(10000).optional(),
+  short_description: z.string().max(500).optional(),
+  price: z.coerce.number().min(0).max(999999.99),
+  compare_at_price: z.coerce.number().min(0).optional(),
+  token_price: z.coerce.number().min(0).optional(),
+  token: z.string().max(20).optional(),
+  sku: z.string().max(100).optional(),
+  product_type: z.enum(['physical', 'digital', 'service']).optional(),
+  category_id: z.coerce.number().int().positive().optional(),
+  platform_category_id: z.coerce.number().int().positive().optional(),
+  images: z.array(productImageSchema).max(10).optional(),
+  tags: z.array(z.string().max(50)).max(20).optional(),
+  weight_grams: z.coerce.number().int().min(0).optional(),
+  inventory_count: z.coerce.number().int().min(0).optional(),
+  inventory_tracking: z.boolean().optional(),
+  status: z.enum(['active', 'draft']).optional(),
+  metadata: z.record(z.string(), z.unknown()).optional(),
+});
+
+const patchProductSchema = z.object({
+  id: z.number().int().positive(),
+  name: z.string().max(200).optional(),
+  description: z.string().max(10000).optional(),
+  short_description: z.string().max(500).optional(),
+  sku: z.string().max(100).optional(),
+  price: z.coerce.number().min(0).optional(),
+  compare_at_price: z.union([z.coerce.number().min(0), z.null()]).optional(),
+  token_price: z.union([z.coerce.number().min(0), z.null()]).optional(),
+  status: z.enum(['active', 'draft', 'archived']).optional(),
+  product_type: z.enum(['physical', 'digital', 'service']).optional(),
+  category_id: z.union([z.coerce.number().int().positive(), z.null()]).optional(),
+  platform_category_id: z.union([z.coerce.number().int().positive(), z.null()]).optional(),
+  inventory_count: z.union([z.coerce.number().int().min(0), z.null()]).optional(),
+  featured: z.boolean().optional(),
+  sort_order: z.coerce.number().int().optional(),
+  tags: z.array(z.string().max(50)).max(20).optional(),
+  images: z.array(productImageSchema).max(10).optional(),
+});
 
 async function getAuthAddress(request: NextRequest): Promise<string | NextResponse> {
   const authResult = await requireAuth(request);
@@ -296,30 +343,25 @@ export async function POST(request: NextRequest) {
   if (authAddress instanceof NextResponse) return authAddress;
 
   try {
-    const body = await request.json() as Record<string, unknown>;
+    const parsedBody = createProductSchema.safeParse(await request.json());
+    if (!parsedBody.success) {
+      return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
+    }
+    const body = parsedBody.data;
     const { name, description, short_description, price, compare_at_price,
             token_price, token, sku, product_type, category_id, platform_category_id,
             images, tags, weight_grams, inventory_count, inventory_tracking,
             status: productStatus, metadata } = body;
 
-    if (typeof name !== 'string' || name.trim().length === 0 || name.length > 200) {
-      return NextResponse.json({ error: 'Product name required (max 200 chars)' }, { status: 400 });
-    }
-    if (typeof price !== 'number' || price < 0 || price > 999999.99) {
-      return NextResponse.json({ error: 'Valid price required (0-999999.99)' }, { status: 400 });
-    }
-
     const slug = slugify(name.trim());
-    const type = typeof product_type === 'string' && ['physical', 'digital', 'service'].includes(product_type)
-      ? product_type : 'physical';
-    const stat = typeof productStatus === 'string' && ['active', 'draft'].includes(productStatus)
-      ? productStatus : 'active';
+    const type = product_type || 'physical';
+    const stat = productStatus || 'active';
 
     // Verify category ownership if provided
-    if (category_id) {
+    if (category_id !== undefined) {
       const catCheck = await query(
         'SELECT id FROM merchant_categories WHERE id = $1 AND merchant_address = $2',
-        [category_id as string, authAddress]
+        [category_id, authAddress]
       );
       if (catCheck.rows.length === 0) {
         return NextResponse.json({ error: 'Category not found' }, { status: 404 });
@@ -336,20 +378,13 @@ export async function POST(request: NextRequest) {
     }
 
     // Validate images array
-    let safeImages: unknown[] = [];
-    if (Array.isArray(images)) {
-      safeImages = images.slice(0, 10).map((img: unknown, i: number) => ({
-        url: typeof (img as Record<string, unknown>)?.url === 'string'
-          ? ((img as Record<string, unknown>).url as string).slice(0, 2000) : '',
-        alt: typeof (img as Record<string, unknown>)?.alt === 'string'
-          ? ((img as Record<string, unknown>).alt as string).slice(0, 200) : '',
-        sort_order: i,
-      }));
-    }
+    const safeImages = (images || []).slice(0, 10).map((img, i: number) => ({
+      url: img.url || '',
+      alt: img.alt || '',
+      sort_order: i,
+    }));
 
-    const safeTags = Array.isArray(tags)
-      ? tags.filter((t: unknown) => typeof t === 'string').slice(0, 20).map((t: unknown) => (t as string).slice(0, 50))
-      : [];
+    const safeTags = (tags || []).slice(0, 20);
 
     const result = await query(
       `INSERT INTO merchant_products
@@ -360,25 +395,25 @@ export async function POST(request: NextRequest) {
        RETURNING *`,
       [
         authAddress,
-        (category_id as string) ?? null,
-        typeof platform_category_id === 'number' ? platform_category_id : null,
-        name.trim().slice(0, 200),
+        category_id ?? null,
+        platform_category_id ?? null,
+        name.trim(),
         slug,
-        typeof description === 'string' ? description.slice(0, 10000) : null,
-        typeof short_description === 'string' ? short_description.slice(0, 500) : null,
+        description ?? null,
+        short_description ?? null,
         price,
-        typeof compare_at_price === 'number' && compare_at_price > 0 ? compare_at_price : null,
-        typeof token_price === 'number' && token_price > 0 ? token_price : null,
-        typeof token === 'string' ? token.slice(0, 20) : null,
-        typeof sku === 'string' ? sku.slice(0, 100) : null,
+        typeof compare_at_price === 'number' ? compare_at_price : null,
+        typeof token_price === 'number' ? token_price : null,
+        token ?? null,
+        sku ?? null,
         type,
         JSON.stringify(safeImages),
         safeTags,
         typeof weight_grams === 'number' ? Math.floor(weight_grams) : null,
-        typeof inventory_count === 'number' ? Math.max(0, Math.floor(inventory_count)) : null,
+        typeof inventory_count === 'number' ? inventory_count : null,
         inventory_tracking === true,
         stat,
-        metadata && typeof metadata === 'object' ? JSON.stringify(metadata) : null,
+        metadata ? JSON.stringify(metadata) : null,
       ]
     );
 
@@ -398,12 +433,12 @@ export async function PATCH(request: NextRequest) {
   if (authAddress instanceof NextResponse) return authAddress;
 
   try {
-    const body = await request.json() as Record<string, unknown>;
-    const { id } = body;
-
-    if (typeof id !== 'number') {
-      return NextResponse.json({ error: 'Product ID required' }, { status: 400 });
+    const parsedBody = patchProductSchema.safeParse(await request.json());
+    if (!parsedBody.success) {
+      return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
     }
+    const body = parsedBody.data;
+    const { id } = body;
 
     const existing = await query(
       'SELECT id FROM merchant_products WHERE id = $1 AND merchant_address = $2',
@@ -417,18 +452,23 @@ export async function PATCH(request: NextRequest) {
     const params: (string | number | boolean | null | string[])[] = [];
     let pi = 1;
 
-    const strFields: [string, number][] = [
-      ['name', 200], ['description', 10000], ['short_description', 500], ['sku', 100],
-    ];
-    for (const [field, maxLen] of strFields) {
-      if (typeof body[field] === 'string') {
-        updates.push(`${field} = $${pi++}`);
-        params.push((body[field] as string).slice(0, maxLen));
-        if (field === 'name') {
-          updates.push(`slug = $${pi++}`);
-          params.push(slugify((body[field] as string).slice(0, maxLen)));
-        }
-      }
+    if (typeof body.name === 'string') {
+      updates.push(`name = $${pi++}`);
+      params.push(body.name.slice(0, 200));
+      updates.push(`slug = $${pi++}`);
+      params.push(slugify(body.name.slice(0, 200)));
+    }
+    if (typeof body.description === 'string') {
+      updates.push(`description = $${pi++}`);
+      params.push(body.description.slice(0, 10000));
+    }
+    if (typeof body.short_description === 'string') {
+      updates.push(`short_description = $${pi++}`);
+      params.push(body.short_description.slice(0, 500));
+    }
+    if (typeof body.sku === 'string') {
+      updates.push(`sku = $${pi++}`);
+      params.push(body.sku.slice(0, 100));
     }
     if (typeof body.price === 'number' && body.price >= 0) {
       updates.push(`price = $${pi++}`); params.push(body.price as number);
