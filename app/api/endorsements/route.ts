@@ -169,8 +169,8 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    let queryText = `
-      SELECT 
+    const selectBase = `
+      SELECT
         e.*,
         endorser.wallet_address as endorser_address,
         endorser.username as endorser_username,
@@ -183,63 +183,102 @@ export async function GET(request: NextRequest) {
       JOIN users endorser ON e.endorser_id = endorser.id
       JOIN users endorsed ON e.endorsed_id = endorsed.id
       LEFT JOIN proposals p ON e.proposal_id = p.id
-      WHERE 1=1
     `;
-    const params: (string | number)[] = [];
-    let paramCount = 1;
 
-    if (endorsedAddress) {
-      queryText += ` AND endorsed.wallet_address = $${paramCount}`;
-      params.push(endorsedAddress);
-      paramCount++;
-    }
-
-    if (endorserAddress) {
-      queryText += ` AND endorser.wallet_address = $${paramCount}`;
-      params.push(endorserAddress);
-      paramCount++;
-    }
-
-    if (proposalId) {
-      queryText += ` AND e.proposal_id = $${paramCount}`;
-      params.push(proposalId);
-      paramCount++;
-    }
-
-    queryText += ` ORDER BY e.created_at DESC LIMIT $${paramCount} OFFSET $${paramCount + 1}`;
-    params.push(limit, offset);
-
-    const result = await query<Endorsement>(queryText, params);
-
-    // Get total count
-    let countQuery = `
-      SELECT COUNT(*) as count 
+    const countBase = `
+      SELECT COUNT(*) as count
       FROM endorsements e
       JOIN users endorser ON e.endorser_id = endorser.id
       JOIN users endorsed ON e.endorsed_id = endorsed.id
-      WHERE 1=1
     `;
-    const countParams: (string | number)[] = [];
-    let countParamCount = 1;
 
-    if (endorsedAddress) {
-      countQuery += ` AND endorsed.wallet_address = $${countParamCount}`;
-      countParams.push(endorsedAddress);
-      countParamCount++;
+    const hasEndorsed = Boolean(endorsedAddress);
+    const hasEndorser = Boolean(endorserAddress);
+    const hasProposal = proposalId !== null;
+    const filterKey = `${hasEndorsed ? '1' : '0'}${hasEndorser ? '1' : '0'}${hasProposal ? '1' : '0'}`;
+
+    let result;
+    let countResult;
+
+    switch (filterKey) {
+      case '111':
+        result = await query<Endorsement>(
+          `${selectBase} WHERE endorsed.wallet_address = $1 AND endorser.wallet_address = $2 AND e.proposal_id = $3 ORDER BY e.created_at DESC LIMIT $4 OFFSET $5`,
+          [endorsedAddress!, endorserAddress!, proposalId!, limit, offset]
+        );
+        countResult = await query<{ count: string }>(
+          `${countBase} WHERE endorsed.wallet_address = $1 AND endorser.wallet_address = $2 AND e.proposal_id = $3`,
+          [endorsedAddress!, endorserAddress!, proposalId!]
+        );
+        break;
+      case '110':
+        result = await query<Endorsement>(
+          `${selectBase} WHERE endorsed.wallet_address = $1 AND endorser.wallet_address = $2 ORDER BY e.created_at DESC LIMIT $3 OFFSET $4`,
+          [endorsedAddress!, endorserAddress!, limit, offset]
+        );
+        countResult = await query<{ count: string }>(
+          `${countBase} WHERE endorsed.wallet_address = $1 AND endorser.wallet_address = $2`,
+          [endorsedAddress!, endorserAddress!]
+        );
+        break;
+      case '101':
+        result = await query<Endorsement>(
+          `${selectBase} WHERE endorsed.wallet_address = $1 AND e.proposal_id = $2 ORDER BY e.created_at DESC LIMIT $3 OFFSET $4`,
+          [endorsedAddress!, proposalId!, limit, offset]
+        );
+        countResult = await query<{ count: string }>(
+          `${countBase} WHERE endorsed.wallet_address = $1 AND e.proposal_id = $2`,
+          [endorsedAddress!, proposalId!]
+        );
+        break;
+      case '100':
+        result = await query<Endorsement>(
+          `${selectBase} WHERE endorsed.wallet_address = $1 ORDER BY e.created_at DESC LIMIT $2 OFFSET $3`,
+          [endorsedAddress!, limit, offset]
+        );
+        countResult = await query<{ count: string }>(
+          `${countBase} WHERE endorsed.wallet_address = $1`,
+          [endorsedAddress!]
+        );
+        break;
+      case '011':
+        result = await query<Endorsement>(
+          `${selectBase} WHERE endorser.wallet_address = $1 AND e.proposal_id = $2 ORDER BY e.created_at DESC LIMIT $3 OFFSET $4`,
+          [endorserAddress!, proposalId!, limit, offset]
+        );
+        countResult = await query<{ count: string }>(
+          `${countBase} WHERE endorser.wallet_address = $1 AND e.proposal_id = $2`,
+          [endorserAddress!, proposalId!]
+        );
+        break;
+      case '010':
+        result = await query<Endorsement>(
+          `${selectBase} WHERE endorser.wallet_address = $1 ORDER BY e.created_at DESC LIMIT $2 OFFSET $3`,
+          [endorserAddress!, limit, offset]
+        );
+        countResult = await query<{ count: string }>(
+          `${countBase} WHERE endorser.wallet_address = $1`,
+          [endorserAddress!]
+        );
+        break;
+      case '001':
+        result = await query<Endorsement>(
+          `${selectBase} WHERE e.proposal_id = $1 ORDER BY e.created_at DESC LIMIT $2 OFFSET $3`,
+          [proposalId!, limit, offset]
+        );
+        countResult = await query<{ count: string }>(
+          `${countBase} WHERE e.proposal_id = $1`,
+          [proposalId!]
+        );
+        break;
+      default:
+        result = await query<Endorsement>(
+          `${selectBase} ORDER BY e.created_at DESC LIMIT $1 OFFSET $2`,
+          [limit, offset]
+        );
+        countResult = await query<{ count: string }>(countBase);
+        break;
     }
-
-    if (endorserAddress) {
-      countQuery += ` AND endorser.wallet_address = $${countParamCount}`;
-      countParams.push(endorserAddress);
-      countParamCount++;
-    }
-
-    if (proposalId) {
-      countQuery += ` AND e.proposal_id = $${countParamCount}`;
-      countParams.push(proposalId);
-    }
-
-    const countResult = await query<{ count: string }>(countQuery, countParams);
 
     const totalCount = parseInt(countResult.rows[0]?.count || '0', 10);
     if (isNaN(totalCount)) {

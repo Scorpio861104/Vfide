@@ -92,14 +92,15 @@ export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams;
     const search = searchParams.get('search');
 
-    let queryText = `
-      SELECT 
+    const selectUsersBase = `
+      SELECT
         id, wallet_address, username, display_name, bio, avatar_url,
         proof_score, reputation_score, is_council_member, is_verified,
         created_at, last_seen_at
       FROM users
     `;
-    const params: (string | number)[] = [];
+    let result;
+    let countResult;
 
     if (search) {
       // Validate search parameter length
@@ -121,22 +122,24 @@ export async function GET(request: NextRequest) {
         );
       }
       
-      queryText += ` WHERE username ILIKE $1 OR display_name ILIKE $1 OR wallet_address ILIKE $1`;
-      params.push(`%${search}%`);
-      queryText += ` ORDER BY proof_score DESC LIMIT $2 OFFSET $3`;
-      params.push(limit, offset);
+      const searchTerm = `%${search}%`;
+      result = await query<User>(
+        `${selectUsersBase}
+         WHERE username ILIKE $1 OR display_name ILIKE $1 OR wallet_address ILIKE $1
+         ORDER BY proof_score DESC LIMIT $2 OFFSET $3`,
+        [searchTerm, limit, offset]
+      );
+      countResult = await query<{ count: string }>(
+        'SELECT COUNT(*) FROM users WHERE username ILIKE $1 OR display_name ILIKE $1 OR wallet_address ILIKE $1',
+        [searchTerm]
+      );
     } else {
-      queryText += ` ORDER BY proof_score DESC LIMIT $1 OFFSET $2`;
-      params.push(limit, offset);
+      result = await query<User>(
+        `${selectUsersBase} ORDER BY proof_score DESC LIMIT $1 OFFSET $2`,
+        [limit, offset]
+      );
+      countResult = await query<{ count: string }>('SELECT COUNT(*) FROM users');
     }
-
-    const result = await query<User>(queryText, params);
-    
-    // Get total count for pagination
-    const countQuery = search 
-      ? 'SELECT COUNT(*) FROM users WHERE username ILIKE $1 OR display_name ILIKE $1 OR wallet_address ILIKE $1'
-      : 'SELECT COUNT(*) FROM users';
-    const countResult = await query<{ count: string }>(countQuery, search ? [`%${search}%`] : []);
     const total = parseInt(countResult.rows[0]?.count || '0', 10);
     
     // Apply field filtering if requested
