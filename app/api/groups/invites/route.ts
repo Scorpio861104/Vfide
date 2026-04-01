@@ -98,7 +98,8 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
       }
       body = parsed.data;
-    } catch {
+    } catch (error) {
+      logger.debug('[Group Invites POST] Invalid JSON payload', error);
       return NextResponse.json({ error: 'Invalid JSON payload' }, { status: 400 });
     }
 
@@ -279,7 +280,8 @@ export async function PATCH(request: NextRequest) {
         return NextResponse.json({ error: 'Invalid code or action' }, { status: 400 });
       }
       body = parsed.data;
-    } catch {
+    } catch (error) {
+      logger.debug('[Group Invites PATCH] Invalid JSON payload', error);
       return NextResponse.json({ error: 'Invalid JSON payload' }, { status: 400 });
     }
 
