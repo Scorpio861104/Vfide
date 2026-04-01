@@ -3,6 +3,7 @@ import { query } from '@/lib/db';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { requireAdmin, requireAuth } from '@/lib/auth/middleware';
 import { logger } from '@/lib/logger';
+import { z } from 'zod4';
 
 const MAX_ERROR_LOG_LIMIT = 200;
 const DEFAULT_ERROR_LOG_LIMIT = 100;
@@ -12,9 +13,12 @@ const MAX_ERROR_METADATA_BYTES = 10000;
 const VALID_SEVERITIES = ['error', 'warning', 'info', 'critical'] as const;
 const ADDRESS_PATTERN = /^0x[a-fA-F0-9]{3,64}$/;
 
-function isObjectRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
-}
+const logErrorSchema = z.object({
+  severity: z.enum(VALID_SEVERITIES).optional(),
+  message: z.string().trim().min(1).max(MAX_ERROR_MESSAGE_LENGTH),
+  stack: z.string().max(MAX_ERROR_STACK_LENGTH).optional(),
+  metadata: z.record(z.string(), z.unknown()).optional(),
+});
 
 function byteLength(value: string): number {
   return Buffer.byteLength(value, 'utf8');
@@ -117,15 +121,16 @@ export async function POST(request: NextRequest) {
   if (authResult instanceof NextResponse) return authResult;
 
   try {
-    let body: unknown;
+    let body: z.infer<typeof logErrorSchema>;
     try {
-      body = await request.json();
+      const rawBody = await request.json();
+      const parsed = logErrorSchema.safeParse(rawBody);
+      if (!parsed.success) {
+        return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
+      }
+      body = parsed.data;
     } catch {
       return NextResponse.json({ error: 'Invalid JSON payload' }, { status: 400 });
-    }
-
-    if (!isObjectRecord(body)) {
-      return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
     }
 
     const { severity, message: rawMessage, stack: rawStack, metadata } = body;
@@ -139,53 +144,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    if (typeof rawMessage !== 'string') {
-      return NextResponse.json({ error: 'message required' }, { status: 400 });
-    }
-
     const message = rawMessage.trim();
     const stack = typeof rawStack === 'string' ? rawStack : rawStack;
-
-    if (message.length === 0) {
-      return NextResponse.json({ error: 'message required' }, { status: 400 });
-    }
-
-    if (message.length > MAX_ERROR_MESSAGE_LENGTH) {
-      return NextResponse.json(
-        { error: `message too long. Maximum ${MAX_ERROR_MESSAGE_LENGTH} characters.` },
-        { status: 400 }
-      );
-    }
-
-    const normalizedSeverity = typeof severity === 'string' ? severity.trim().toLowerCase() : severity;
-
-    if (normalizedSeverity !== undefined && (typeof normalizedSeverity !== 'string' || !VALID_SEVERITIES.includes(normalizedSeverity as (typeof VALID_SEVERITIES)[number]))) {
-      return NextResponse.json(
-        { error: `Invalid severity. Must be one of: ${VALID_SEVERITIES.join(', ')}` },
-        { status: 400 }
-      );
-    }
-
-    if (stack !== undefined && typeof stack !== 'string') {
-      return NextResponse.json(
-        { error: 'Invalid stack. Must be a string if provided.' },
-        { status: 400 }
-      );
-    }
-
-    if (typeof stack === 'string' && stack.length > MAX_ERROR_STACK_LENGTH) {
-      return NextResponse.json(
-        { error: `stack too long. Maximum ${MAX_ERROR_STACK_LENGTH} characters.` },
-        { status: 400 }
-      );
-    }
-
-    if (metadata !== undefined && !isObjectRecord(metadata)) {
-      return NextResponse.json(
-        { error: 'Invalid metadata. Must be an object if provided.' },
-        { status: 400 }
-      );
-    }
+    const normalizedSeverity = severity;
 
     const serializedMetadata = JSON.stringify(metadata || {});
     if (byteLength(serializedMetadata) > MAX_ERROR_METADATA_BYTES) {

@@ -1,12 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getClient } from '@/lib/db';
 import { isAdmin, requireAuth } from '@/lib/auth/middleware';
+import { z } from 'zod4';
 
 const MAX_QUEST_NOTIFICATION_IDS = 500;
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const ADDRESS_PATTERN = /^0x[a-fA-F0-9]{3,64}$/;
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { logger } from '@/lib/logger';
+
+const markQuestNotificationsSchema = z.object({
+  notificationIds: z.array(z.string().trim().regex(UUID_REGEX)).min(1).max(MAX_QUEST_NOTIFICATION_IDS),
+  userAddress: z.string().trim().regex(ADDRESS_PATTERN),
+});
 
 function normalizeAddress(value: string): string {
   return value.trim().toLowerCase();
@@ -130,51 +136,22 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  let body: Record<string, unknown>;
+  let body: z.infer<typeof markQuestNotificationsSchema>;
   try {
-    body = await request.json();
+    const rawBody = await request.json();
+    const parsed = markQuestNotificationsSchema.safeParse(rawBody);
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
+    }
+    body = parsed.data;
   } catch {
     return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
-  }
-
-  if (!body || typeof body !== 'object' || Array.isArray(body)) {
-    return NextResponse.json({ error: 'Request body must be a JSON object' }, { status: 400 });
   }
 
   try {
     const { notificationIds, userAddress } = body;
 
-    if (!notificationIds || !Array.isArray(notificationIds) || !userAddress) {
-      return NextResponse.json(
-        { error: 'Notification IDs array and user address required' },
-        { status: 400 }
-      );
-    }
-
-    if (typeof userAddress !== 'string') {
-      return NextResponse.json(
-        { error: 'User address must be a string' },
-        { status: 400 }
-      );
-    }
-
-    if (notificationIds.length > MAX_QUEST_NOTIFICATION_IDS) {
-      return NextResponse.json(
-        { error: `Too many notificationIds. Maximum ${MAX_QUEST_NOTIFICATION_IDS} allowed.` },
-        { status: 400 }
-      );
-    }
-
-    const normalizedNotificationIds = notificationIds
-      .filter((id): id is string => typeof id === 'string')
-      .map((id) => id.trim());
-
-    if (normalizedNotificationIds.length !== notificationIds.length || normalizedNotificationIds.some((id) => !UUID_REGEX.test(id))) {
-      return NextResponse.json(
-        { error: 'notificationIds must be an array of UUID strings' },
-        { status: 400 }
-      );
-    }
+    const normalizedNotificationIds = notificationIds.map((id) => id.trim());
 
     const targetAddress = normalizeAddress(userAddress);
     if (!isAddressLike(targetAddress)) {

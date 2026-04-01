@@ -3,6 +3,7 @@ import { query } from '@/lib/db';
 import { requireAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { logger } from '@/lib/logger';
+import { z } from 'zod4';
 
 // File validation constants
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
@@ -33,9 +34,12 @@ const MIME_EXTENSION_MAP: Record<string, string[]> = {
   'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'],
 };
 
-function isObjectRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
-}
+const uploadAttachmentSchema = z.object({
+  filename: z.string().trim().min(1).max(MAX_FILENAME_LENGTH),
+  fileType: z.string().trim().min(1),
+  fileSize: z.number().int().min(MIN_FILE_SIZE).max(MAX_FILE_SIZE),
+  url: z.string().trim().min(1).max(MAX_URL_LENGTH),
+});
 
 export async function POST(request: NextRequest) {
   // Rate limiting
@@ -47,15 +51,16 @@ export async function POST(request: NextRequest) {
   if (authResult instanceof NextResponse) return authResult;
 
   try {
-    let body: unknown;
+    let body: z.infer<typeof uploadAttachmentSchema>;
     try {
-      body = await request.json();
+      const rawBody = await request.json();
+      const parsed = uploadAttachmentSchema.safeParse(rawBody);
+      if (!parsed.success) {
+        return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
+      }
+      body = parsed.data;
     } catch {
       return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
-    }
-
-    if (!isObjectRecord(body)) {
-      return NextResponse.json({ error: 'Request body must be a JSON object' }, { status: 400 });
     }
 
     if (!authResult.user?.address || typeof authResult.user.address !== 'string') {
@@ -68,18 +73,6 @@ export async function POST(request: NextRequest) {
     const url = typeof rawUrl === 'string' ? rawUrl.trim() : '';
     const fileType = typeof rawFileType === 'string' ? rawFileType.trim().toLowerCase() : '';
 
-    if (filename.length === 0 || url.length === 0) {
-      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
-    }
-
-    if (filename.length > MAX_FILENAME_LENGTH) {
-      return NextResponse.json({ error: `Filename too long. Maximum ${MAX_FILENAME_LENGTH} characters.` }, { status: 400 });
-    }
-
-    if (url.length > MAX_URL_LENGTH) {
-      return NextResponse.json({ error: `URL too long. Maximum ${MAX_URL_LENGTH} characters.` }, { status: 400 });
-    }
-
     let parsedUrl: URL;
     try {
       parsedUrl = new URL(url);
@@ -89,22 +82,6 @@ export async function POST(request: NextRequest) {
 
     if (parsedUrl.protocol !== 'https:' && parsedUrl.protocol !== 'http:') {
       return NextResponse.json({ error: 'Invalid URL protocol' }, { status: 400 });
-    }
-
-    if (fileType.length === 0) {
-      return NextResponse.json({ error: 'Missing required field: fileType' }, { status: 400 });
-    }
-
-    if (typeof fileSize !== 'number' || !Number.isFinite(fileSize) || !Number.isInteger(fileSize)) {
-      return NextResponse.json({ error: 'Missing required field: fileSize' }, { status: 400 });
-    }
-
-    // Validate file size
-    if (fileSize < MIN_FILE_SIZE || fileSize > MAX_FILE_SIZE) {
-      return NextResponse.json(
-        { error: `File size must be between ${MIN_FILE_SIZE} byte and ${MAX_FILE_SIZE / (1024 * 1024)}MB` },
-        { status: 400 }
-      );
     }
 
     // Validate file type
