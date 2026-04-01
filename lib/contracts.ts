@@ -91,6 +91,7 @@ const CONTRACT_ENV_VAR_MAP: Record<string, string> = {
  */
 function validateContractAddress(address: string | undefined, name: string): `0x${string}` {
   const isProduction = process.env.NODE_ENV === 'production';
+  const isBrowserRuntime = typeof window !== 'undefined';
   const isCI = process.env.CI === 'true' || process.env.VERCEL === '1';
   const frontendOnlyEnv = process.env.FRONTEND_SELF_CONTAINED ?? process.env.NEXT_PUBLIC_FRONTEND_ONLY;
   const autoFrontendOnly =
@@ -102,18 +103,19 @@ function validateContractAddress(address: string | undefined, name: string): `0x
 
   if (!address) {
     const envVarName = CONTRACT_ENV_VAR_MAP[name] ?? `NEXT_PUBLIC_${name.replace(/([a-z0-9])([A-Z])/g, '$1_$2').toUpperCase()}_ADDRESS`;
-    if (strictProduction) {
+    if (strictProduction && !isBrowserRuntime) {
       logger.error(`[VFIDE] Missing contract address in production: ${name}. Set ${envVarName} in environment. All calls to this contract will fail.`)
       throw new Error(`[VFIDE] Missing required contract address in production: ${name}`)
     } else {
       const modeHint = frontendOnly ? 'frontend-only mode' : 'non-production runtime';
-      logger.warn(`[VFIDE] Missing contract address: ${name}. Using ZERO_ADDRESS in ${modeHint}. Set ${envVarName} in environment.`)
+      const runtimeHint = isBrowserRuntime ? 'browser runtime' : modeHint;
+      logger.warn(`[VFIDE] Missing contract address: ${name}. Using ZERO_ADDRESS in ${runtimeHint}. Set ${envVarName} in environment.`)
     }
     return ZERO_ADDRESS
   }
   if (!isAddress(address)) {
     logger.error(`[VFIDE] Invalid contract address for ${name}: ${address}. This is a configuration error!`)
-    if (isProduction) {
+    if (isProduction && !isBrowserRuntime) {
       throw new Error(`[VFIDE] Invalid contract address in production for ${name}`)
     }
     return ZERO_ADDRESS
