@@ -47,6 +47,8 @@ interface IEcosystemVaultAdmin {
 
 contract OwnerControlPanel {
     using SafeERC20 for IERC20;
+
+    uint256 private _reentrancyLock;
     
     address public owner;
     address public pendingOwner;
@@ -98,6 +100,7 @@ contract OwnerControlPanel {
     error OCP_NotOwner();
     error OCP_NotPendingOwner();
     error OCP_Zero();
+    error OCP_ReentrantCall();
     error OCP_InvalidRange();
     error OCP_ActionNotQueued();
     error OCP_ActionNotReady(uint256 executeAfter);
@@ -111,6 +114,13 @@ contract OwnerControlPanel {
     modifier onlyOwner() {
         if (msg.sender != owner) revert OCP_NotOwner();
         _;
+    }
+
+    modifier nonReentrant() {
+        if (_reentrancyLock == 1) revert OCP_ReentrantCall();
+        _reentrancyLock = 1;
+        _;
+        _reentrancyLock = 0;
     }
 
     /// @notice Step 1: current owner nominates a new owner
@@ -1213,7 +1223,7 @@ contract OwnerControlPanel {
     /**
      * @notice Recover ETH sent to this contract
      */
-    function emergency_recoverETH(address payable recipient) external onlyOwner {
+    function emergency_recoverETH(address payable recipient) external onlyOwner nonReentrant {
         _consumeQueuedAction(actionId_emergency_recoverETH(recipient));
         if (recipient == address(0)) revert OCP_Zero();
         uint256 balance = address(this).balance;
@@ -1227,7 +1237,7 @@ contract OwnerControlPanel {
     /**
      * @notice Recover ERC20 tokens sent to this contract
      */
-    function emergency_recoverTokens(address token, address recipient, uint256 amount) external onlyOwner {
+    function emergency_recoverTokens(address token, address recipient, uint256 amount) external onlyOwner nonReentrant {
         _consumeQueuedAction(actionId_emergency_recoverTokens(token, recipient, amount));
         if (token == address(0) || recipient == address(0)) revert OCP_Zero();
         IERC20(token).safeTransfer(recipient, amount);

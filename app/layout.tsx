@@ -83,7 +83,7 @@ export default async function RootLayout({
     <html lang="en">
       <head>
         {/* CSP nonce exposed for getClientNonce() in lib/security.ts. The matching
-            nonce is set in the Content-Security-Policy header by middleware.ts. */}
+          nonce is set in the Content-Security-Policy header by proxy.ts. */}
         {nonce && <meta property="csp-nonce" content={nonce} />}
       </head>
       <body className="font-sans antialiased bg-zinc-900">

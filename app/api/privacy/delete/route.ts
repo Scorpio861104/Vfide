@@ -4,39 +4,6 @@ import { withRateLimit } from '@/lib/auth/rateLimit';
 import { query } from '@/lib/db';
 import { logger } from '@/lib/logger';
 
-let initDeletionTablePromise: Promise<void> | null = null;
-
-async function ensureDeletionRequestsTable(): Promise<void> {
-  if (initDeletionTablePromise) {
-    await initDeletionTablePromise;
-    return;
-  }
-
-  initDeletionTablePromise = (async () => {
-    await query(`
-      CREATE TABLE IF NOT EXISTS privacy_deletion_requests (
-        id BIGSERIAL PRIMARY KEY,
-        wallet_address TEXT NOT NULL,
-        email TEXT,
-        reason TEXT,
-        status TEXT NOT NULL DEFAULT 'pending',
-        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-        processed_at TIMESTAMPTZ,
-        UNIQUE(wallet_address, status)
-      )
-    `);
-
-    await query(
-      'CREATE INDEX IF NOT EXISTS idx_privacy_deletion_requests_wallet_created ON privacy_deletion_requests(wallet_address, created_at DESC)'
-    );
-  })().catch((error) => {
-    initDeletionTablePromise = null;
-    throw error;
-  });
-
-  await initDeletionTablePromise;
-}
-
 export async function POST(request: NextRequest) {
   const rateLimitResponse = await withRateLimit(request, 'write');
   if (rateLimitResponse) return rateLimitResponse;
@@ -68,8 +35,6 @@ export async function POST(request: NextRequest) {
     : null;
 
   try {
-    await ensureDeletionRequestsTable();
-
     await query(
       `INSERT INTO privacy_deletion_requests (wallet_address, email, reason, status)
        VALUES ($1, $2, $3, 'pending')
