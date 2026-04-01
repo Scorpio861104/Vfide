@@ -16,6 +16,7 @@ import {
 import { getEthereumProvider, requestEthereum } from '@/lib/ethereumProvider';
 import { IS_TESTNET } from '@/lib/chains';
 import { logger } from '@/lib/logger';
+import { safeLocalStorage } from '@/lib/utils';
 
 /**
  * Pending Transactions List Component
@@ -73,7 +74,7 @@ export function usePendingTransactions() {
     if (!address) return;
     
     try {
-      const stored = localStorage.getItem(`${STORAGE_KEY}-${address}`);
+      const stored = safeLocalStorage.getItem(`${STORAGE_KEY}-${address}`);
       if (stored) {
         setTransactions(JSON.parse(stored));
       }
@@ -87,7 +88,7 @@ export function usePendingTransactions() {
     if (!address || transactions.length === 0) return;
     
     try {
-      localStorage.setItem(`${STORAGE_KEY}-${address}`, JSON.stringify(transactions));
+      safeLocalStorage.setItem(`${STORAGE_KEY}-${address}`, JSON.stringify(transactions));
     } catch {
       // Ignore storage errors
     }
@@ -157,7 +158,7 @@ export function usePendingTransactions() {
   const clearAll = () => {
     setTransactions([]);
     if (address) {
-      localStorage.removeItem(`${STORAGE_KEY}-${address}`);
+      safeLocalStorage.removeItem(`${STORAGE_KEY}-${address}`);
     }
   };
 

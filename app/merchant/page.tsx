@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import { Footer } from '@/components/layout/Footer';
 import { MerchantDashboard } from '@/components/merchant/MerchantDashboard';
 import { PaymentInterface } from '@/components/merchant/PaymentInterface';
@@ -174,17 +175,42 @@ const merchantRecommendations = [
   }
 ];
 
+function usePrefersReducedMotion() {
+  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return;
+
+    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const updatePreference = () => setPrefersReducedMotion(mediaQuery.matches);
+
+    updatePreference();
+
+    if (typeof mediaQuery.addEventListener === 'function') {
+      mediaQuery.addEventListener('change', updatePreference);
+      return () => mediaQuery.removeEventListener('change', updatePreference);
+    }
+
+    mediaQuery.addListener(updatePreference);
+    return () => mediaQuery.removeListener(updatePreference);
+  }, []);
+
+  return prefersReducedMotion;
+}
+
 // Feature card component
 function FeatureCard({ 
   icon: Icon, 
   title, 
   description, 
-  color 
+  color,
+  reduceMotion = false,
 }: { 
   icon: React.ElementType; 
   title: string; 
   description: string; 
   color: 'green' | 'blue' | 'purple' | 'orange';
+  reduceMotion?: boolean;
 }) {
   const colorClasses = {
     green: { bg: 'from-emerald-500/20 to-green-500/10', border: 'border-emerald-500/30', text: 'text-emerald-400', glow: 'group-hover:shadow-emerald-500/20' },
@@ -198,7 +224,7 @@ function FeatureCard({
   return (
     <motion.div
       variants={scaleVariants}
-      whileHover={{ y: -5, scale: 1.02 }}
+      whileHover={reduceMotion ? undefined : { y: -3, scale: 1.01 }}
       className={`group relative p-6 rounded-2xl bg-gradient-to-br ${c.bg} border ${c.border} backdrop-blur-xl transition-all duration-300 hover:shadow-xl ${c.glow}`}
     >
       {/* Glow effect */}
@@ -270,6 +296,8 @@ function Step({ number, title, description }: { number: number; title: string; d
 }
 
 export default function MerchantPage() {
+  const prefersReducedMotion = usePrefersReducedMotion();
+
   return (
     <>
       <MerchantStructuredData
@@ -303,8 +331,8 @@ export default function MerchantPage() {
           <motion.div variants={itemVariants} className="text-center mb-16">
             {/* Floating icon */}
             <motion.div
-              animate={{ y: [0, -10, 0] }}
-              transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+              animate={prefersReducedMotion ? undefined : { y: [0, -6, 0] }}
+              transition={prefersReducedMotion ? undefined : { duration: 4.5, repeat: Infinity, ease: "easeInOut" }}
               className="inline-flex items-center justify-center w-24 h-24 mb-6 rounded-3xl bg-gradient-to-br from-purple-500 via-blue-500 to-cyan-500 shadow-2xl shadow-purple-500/30"
             >
               <Store className="w-12 h-12 text-white" />
@@ -344,7 +372,7 @@ export default function MerchantPage() {
                   key={badge.text}
                   initial={{ opacity: 0, scale: 0.8 }}
                   animate={{ opacity: 1, scale: 1 }}
-                  whileHover={{ y: -2, scale: 1.02 }}
+                  whileHover={prefersReducedMotion ? undefined : { y: -1 }}
                   transition={{ delay: 0.5 + i * 0.1 }}
                   className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 text-sm text-gray-300"
                 >
@@ -416,24 +444,28 @@ export default function MerchantPage() {
                 title="0% Processing Fees"
                 description="No payment processor fees. Network burn fees apply (0.25-5% based on ProofScore)."
                 color="green"
+                reduceMotion={prefersReducedMotion}
               />
               <FeatureCard
                 icon={Zap}
                 title="Flexible Settlement"
                 description="Instant settlement for trusted/QR flows. Escrow stays available for buyer protection."
                 color="blue"
+                reduceMotion={prefersReducedMotion}
               />
               <FeatureCard
                 icon={RefreshCw}
                 title="STABLE-PAY"
                 description="Auto-convert VFIDE → stablecoins via DEX. ~0.3% swap fees, 5% slippage protection."
                 color="purple"
+                reduceMotion={prefersReducedMotion}
               />
               <FeatureCard
                 icon={Shield}
                 title="Trust Scoring"
                 description="Real-time customer risk assessment. Know who you're dealing with before payment."
                 color="orange"
+                reduceMotion={prefersReducedMotion}
               />
             </div>
           </motion.section>

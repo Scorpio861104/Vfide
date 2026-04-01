@@ -7,7 +7,7 @@
 
 import { useActivityFeed, ActivityItem } from '@/lib/vfide-hooks'
 import { motion, AnimatePresence } from 'framer-motion'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 
 const activityConfig = {
   transfer: {
@@ -42,8 +42,36 @@ const activityConfig = {
   },
 }
 
+function usePrefersReducedMotion() {
+  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false)
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return
+
+    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
+    const updatePreference = () => setPrefersReducedMotion(mediaQuery.matches)
+
+    updatePreference()
+
+    if (typeof mediaQuery.addEventListener === 'function') {
+      mediaQuery.addEventListener('change', updatePreference)
+      return () => mediaQuery.removeEventListener('change', updatePreference)
+    }
+
+    mediaQuery.addListener(updatePreference)
+    return () => mediaQuery.removeListener(updatePreference)
+  }, [])
+
+  return prefersReducedMotion
+}
+
 export function LiveActivityFeed() {
   const { activities } = useActivityFeed()
+  const prefersReducedMotion = usePrefersReducedMotion()
+  const visibleActivities = useMemo(
+    () => activities.slice(0, prefersReducedMotion ? 6 : 12),
+    [activities, prefersReducedMotion]
+  )
   
   return (
     <div className="space-y-2 sm:space-y-3 md:space-y-4">
@@ -51,11 +79,11 @@ export function LiveActivityFeed() {
       <div className="flex items-center justify-between">
         <h3 className="text-base sm:text-lg md:text-xl font-bold text-zinc-100 flex items-center gap-2">
           <motion.span
-            animate={{
+            animate={prefersReducedMotion ? undefined : {
               scale: [1, 1.2, 1],
               opacity: [0.5, 1, 0.5],
             }}
-            transition={{ duration: 2, repeat: Infinity }}
+            transition={prefersReducedMotion ? undefined : { duration: 2.5, repeat: Infinity }}
             className="w-2 h-2 bg-emerald-400 rounded-full"
           />
           Live Activity
@@ -69,16 +97,18 @@ export function LiveActivityFeed() {
       <div className="relative h-[250px] sm:h-[300px] md:h-[350px] lg:h-[400px] overflow-hidden rounded-xl bg-zinc-950/50 backdrop-blur-xl border border-cyan-400/20">
         <div className="absolute inset-0 overflow-y-auto scrollbar-thin scrollbar-thumb-[#00F0FF]/30 scrollbar-track-transparent p-2 sm:p-3 md:p-4 space-y-1 sm:space-y-2">
           <AnimatePresence initial={false}>
-            {activities.map((activity) => (
+            {visibleActivities.map((activity) => (
               <ActivityCard key={activity.id} activity={activity} />
             ))}
           </AnimatePresence>
         </div>
         
         {/* Particle effect overlay */}
-        <div className="absolute inset-0 pointer-events-none">
-          <ParticleStream />
-        </div>
+        {!prefersReducedMotion && (
+          <div className="absolute inset-0 pointer-events-none">
+            <ParticleStream />
+          </div>
+        )}
       </div>
     </div>
   )
@@ -86,6 +116,7 @@ export function LiveActivityFeed() {
 
 function ActivityCard({ activity }: { activity: ActivityItem }) {
   const config = activityConfig[activity.type]
+  const prefersReducedMotion = usePrefersReducedMotion()
   const [isHovered, setIsHovered] = useState(false)
   const [currentTime] = useState(() => Date.now())
   
@@ -98,12 +129,12 @@ function ActivityCard({ activity }: { activity: ActivityItem }) {
   
   return (
     <motion.div
-      layout
-      initial={{ opacity: 0, x: -50, scale: 0.8 }}
-      animate={{ opacity: 1, x: 0, scale: 1 }}
-      exit={{ opacity: 0, x: 50, scale: 0.8 }}
-      transition={{ type: 'spring', stiffness: 500, damping: 30 }}
-      whileHover={{ scale: 1.02, x: 5 }}
+      layout={!prefersReducedMotion}
+      initial={prefersReducedMotion ? { opacity: 1 } : { opacity: 0, x: -50, scale: 0.8 }}
+      animate={prefersReducedMotion ? { opacity: 1 } : { opacity: 1, x: 0, scale: 1 }}
+      exit={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, x: 50, scale: 0.8 }}
+      transition={prefersReducedMotion ? { duration: 0.15 } : { type: 'spring', stiffness: 500, damping: 30 }}
+      whileHover={prefersReducedMotion ? undefined : { scale: 1.01, x: 3 }}
       onHoverStart={() => setIsHovered(true)}
       onHoverEnd={() => setIsHovered(false)}
       className="relative group"
@@ -182,21 +213,40 @@ function ActivityCard({ activity }: { activity: ActivityItem }) {
 }
 
 function ParticleStream() {
+  const prefersReducedMotion = usePrefersReducedMotion()
   const [particles, setParticles] = useState<Array<{ id: number; left: number }>>([])
+  const [isPageVisible, setIsPageVisible] = useState(true)
+
+  useEffect(() => {
+    if (typeof document === 'undefined') return
+
+    const handleVisibilityChange = () => setIsPageVisible(document.visibilityState !== 'hidden')
+    handleVisibilityChange()
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange)
+  }, [])
   
   useEffect(() => {
+    if (prefersReducedMotion || !isPageVisible) {
+      setParticles([])
+      return
+    }
+
     const interval = setInterval(() => {
       setParticles((prev) => [
-        ...prev.slice(-20), // Keep last 20
+        ...prev.slice(-12),
         {
           id: Date.now(),
           left: Math.random() * 100,
         },
       ])
-    }, 500)
+    }, 900)
     
     return () => clearInterval(interval)
-  }, [])
+  }, [prefersReducedMotion, isPageVisible])
+
+  if (prefersReducedMotion || !isPageVisible) return null
   
   return (
     <div className="absolute inset-0 overflow-hidden">

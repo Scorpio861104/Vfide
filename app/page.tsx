@@ -14,6 +14,29 @@ const Footer = lazy(() => import("@/components/layout/Footer").then(mod => ({ de
 const TESTNET_VAULT_COUNT = "2.8K";
 const TESTNET_VAULT_LABEL = `${TESTNET_VAULT_COUNT} Vaults (Testnet)`;
 
+function usePrefersReducedMotion() {
+  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return;
+
+    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const updatePreference = () => setPrefersReducedMotion(mediaQuery.matches);
+
+    updatePreference();
+
+    if (typeof mediaQuery.addEventListener === 'function') {
+      mediaQuery.addEventListener('change', updatePreference);
+      return () => mediaQuery.removeEventListener('change', updatePreference);
+    }
+
+    mediaQuery.addListener(updatePreference);
+    return () => mediaQuery.removeListener(updatePreference);
+  }, []);
+
+  return prefersReducedMotion;
+}
+
 // Animated counter hook
 function useAnimatedCounter(end: number, duration: number = 2000, start: number = 0) {
   const [count, setCount] = useState(start);
@@ -21,7 +44,11 @@ function useAnimatedCounter(end: number, duration: number = 2000, start: number 
   
   useEffect(() => {
     if (!isVisible) return;
-    
+    if (duration <= 0) {
+      setCount(end);
+      return;
+    }
+
     let startTime: number;
     const animate = (timestamp: number) => {
       if (!startTime) startTime = timestamp;
@@ -38,10 +65,15 @@ function useAnimatedCounter(end: number, duration: number = 2000, start: number 
 
 // Floating orbs background component
 function FloatingOrbs() {
+  const prefersReducedMotion = usePrefersReducedMotion();
+
   return (
     <div className="absolute inset-0 overflow-hidden pointer-events-none">
-      <div className="absolute top-1/4 -left-32 w-96 h-96 bg-cyan-400/10 rounded-full blur-[120px] animate-pulse" />
-      <div className="absolute bottom-1/4 -right-32 w-96 h-96 bg-blue-500/10 rounded-full blur-[120px] animate-pulse" style={{ animationDelay: '1s' }} />
+      <div className={`absolute top-1/4 -left-32 w-96 h-96 bg-cyan-400/10 rounded-full blur-[120px] ${prefersReducedMotion ? '' : 'animate-pulse'}`} />
+      <div
+        className={`absolute bottom-1/4 -right-32 w-96 h-96 bg-blue-500/10 rounded-full blur-[120px] ${prefersReducedMotion ? '' : 'animate-pulse'}`}
+        style={prefersReducedMotion ? undefined : { animationDelay: '1s' }}
+      />
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-150 h-150 bg-violet-400/5 rounded-full blur-[150px]" />
     </div>
   );
@@ -49,6 +81,8 @@ function FloatingOrbs() {
 
 // Hero 3D shield visualization
 function HeroVisualization() {
+  const prefersReducedMotion = usePrefersReducedMotion();
+
   return (
     <div className="relative w-full h-75 sm:h-100 md:h-125 flex items-center justify-center">
       <div className="absolute inset-0 flex items-center justify-center">
@@ -125,8 +159,8 @@ function HeroVisualization() {
         
         {/* Orbiting elements */}
         <motion.div
-          animate={{ rotate: 360 }}
-          transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+          animate={prefersReducedMotion ? undefined : { rotate: 360 }}
+          transition={prefersReducedMotion ? undefined : { duration: 40, repeat: Infinity, ease: "linear" }}
           className="absolute w-72 h-72 md:w-96 md:h-96"
         >
           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-3 h-3 bg-cyan-400 rounded-full shadow-[0_0_20px_rgba(0,240,255,0.8)]" />
@@ -196,7 +230,8 @@ interface StatItemProps {
 }
 
 function StatItem({ value, label, prefix = "", suffix = "", color }: StatItemProps) {
-  const { count, setIsVisible } = useAnimatedCounter(value, 2000);
+  const prefersReducedMotion = usePrefersReducedMotion();
+  const { count, setIsVisible } = useAnimatedCounter(value, prefersReducedMotion ? 0 : 2000);
   
   return (
     <motion.div
@@ -279,6 +314,7 @@ function TrustBadge({ children }: { children: React.ReactNode }) {
 }
 
 export default function Home() {
+  const prefersReducedMotion = usePrefersReducedMotion();
   const heroRef = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({
     target: heroRef,
@@ -300,7 +336,7 @@ export default function Home() {
         className="relative min-h-screen flex items-center justify-center overflow-hidden bg-zinc-950 pt-20"
       >
         <h1 className="sr-only">VFIDE Home</h1>
-        <motion.div style={{ y: orbY, opacity: orbOpacity }} className="absolute inset-0">
+        <motion.div style={{ y: prefersReducedMotion ? 0 : orbY, opacity: prefersReducedMotion ? 1 : orbOpacity }} className="absolute inset-0">
           <motion.div style={{ opacity: heroGlow }}>
             <FloatingOrbs />
           </motion.div>
@@ -310,7 +346,7 @@ export default function Home() {
         <div className="absolute inset-0 grid-pattern opacity-50" />
         
         <motion.div 
-          style={{ opacity: heroOpacity, y: heroY, scale: heroScale }}
+          style={{ opacity: heroOpacity, y: prefersReducedMotion ? 0 : heroY, scale: prefersReducedMotion ? 1 : heroScale }}
           className="relative z-10 container mx-auto px-3 sm:px-4"
         >
           <div className="grid lg:grid-cols-2 gap-12 items-center max-w-7xl mx-auto">
@@ -441,8 +477,8 @@ export default function Home() {
           className="absolute bottom-10 left-1/2 -translate-x-1/2"
         >
           <motion.div
-            animate={{ y: [0, 10, 0] }}
-            transition={{ duration: 2, repeat: Infinity }}
+            animate={prefersReducedMotion ? undefined : { y: [0, 10, 0] }}
+            transition={prefersReducedMotion ? undefined : { duration: 2, repeat: Infinity }}
             className="w-6 h-10 rounded-full border-2 border-zinc-700 flex items-start justify-center p-2"
           >
             <div className="w-1 h-2 bg-cyan-400 rounded-full" />
