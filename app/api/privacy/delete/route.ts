@@ -3,6 +3,12 @@ import { requireAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { query } from '@/lib/db';
 import { logger } from '@/lib/logger';
+import { z } from 'zod4';
+
+const privacyDeleteSchema = z.object({
+  email: z.string().trim().email().max(320).optional(),
+  reason: z.string().trim().max(2000).optional(),
+});
 
 export async function POST(request: NextRequest) {
   const rateLimitResponse = await withRateLimit(request, 'write');
@@ -20,19 +26,20 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  let body: { email?: string; reason?: string } = {};
+  let body: z.infer<typeof privacyDeleteSchema> = {};
   try {
-    body = await request.json();
+    const rawBody = await request.json();
+    const parsed = privacyDeleteSchema.safeParse(rawBody);
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
+    }
+    body = parsed.data;
   } catch {
     // Allow empty body; reason/email are optional.
   }
 
-  const email = typeof body.email === 'string' && body.email.trim().length > 0
-    ? body.email.trim().slice(0, 320)
-    : null;
-  const reason = typeof body.reason === 'string' && body.reason.trim().length > 0
-    ? body.reason.trim().slice(0, 2000)
-    : null;
+  const email = body.email ?? null;
+  const reason = body.reason ?? null;
 
   try {
     await query(

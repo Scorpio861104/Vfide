@@ -4,11 +4,17 @@ import { withRateLimit } from '@/lib/auth/rateLimit';
 import { requireAuth } from '@/lib/auth/middleware';
 import crypto from 'crypto';
 import { logger } from '@/lib/logger';
+import { z } from 'zod4';
 
 const CODE_TTL_MINUTES = 5;
 const ADDRESS_PATTERN = /^0x[a-fA-F0-9]{3,64}$/;
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const MAX_DESTINATION_LENGTH = 320;
+
+const initiate2faSchema = z.object({
+  method: z.enum(['sms', 'email']),
+  destination: z.string().trim().min(1).max(MAX_DESTINATION_LENGTH),
+});
 
 const generateCode = () => {
   return crypto.randomInt(100000, 1000000).toString();
@@ -114,30 +120,20 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  let body: Record<string, unknown>;
+  let parsedBody: z.infer<typeof initiate2faSchema>;
   try {
-    body = await request.json();
+    const body = await request.json();
+    const parsed = initiate2faSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
+    }
+    parsedBody = parsed.data;
   } catch {
     return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
   }
 
-  if (!body || typeof body !== 'object' || Array.isArray(body)) {
-    return NextResponse.json({ error: 'Request body must be a JSON object' }, { status: 400 });
-  }
-
   try {
-    const { method, destination } = body as {
-      method?: 'sms' | 'email';
-      destination?: string;
-    };
-
-    if (!method || (method !== 'sms' && method !== 'email')) {
-      return NextResponse.json({ error: 'Invalid method' }, { status: 400 });
-    }
-
-    if (!destination || typeof destination !== 'string') {
-      return NextResponse.json({ error: 'Destination required' }, { status: 400 });
-    }
+    const { method, destination } = parsedBody;
 
     const normalizedDestination = destination.trim();
     if (normalizedDestination.length === 0 || normalizedDestination.length > MAX_DESTINATION_LENGTH) {
