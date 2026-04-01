@@ -17,6 +17,7 @@ import "./SharedInterfaces.sol";
  * - Historical price tracking
  * - Price deviation monitoring
  */
+// ReentrancyGuard intentionally omitted: oracle update path stores rates and emits events without transfer calls.
 contract VFIDEPriceOracle is Ownable, Pausable {
     /// @notice Chainlink price feed
     AggregatorV3Interface public chainlinkFeed;

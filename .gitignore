@@ -70,6 +70,7 @@ next-env.d.ts
 
 # logs
 *.txt
+*.zip
 
 .turbo
 .next

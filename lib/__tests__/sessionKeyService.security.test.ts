@@ -57,8 +57,8 @@ describe('sessionKeyService drain protections', () => {
   });
 
   it('rejects session duration beyond configured maximum', async () => {
-    const originalMaxDuration = process.env.NEXT_PUBLIC_SESSION_KEY_MAX_DURATION_SECONDS;
-    process.env.NEXT_PUBLIC_SESSION_KEY_MAX_DURATION_SECONDS = '120';
+    const originalMaxDuration = process.env.SESSION_KEY_MAX_DURATION_SECONDS;
+    process.env.SESSION_KEY_MAX_DURATION_SECONDS = '120';
 
     try {
       const service = new SessionKeyService();
@@ -70,9 +70,9 @@ describe('sessionKeyService drain protections', () => {
       ).rejects.toThrow(/maximum/i);
     } finally {
       if (originalMaxDuration === undefined) {
-        delete process.env.NEXT_PUBLIC_SESSION_KEY_MAX_DURATION_SECONDS;
+        delete process.env.SESSION_KEY_MAX_DURATION_SECONDS;
       } else {
-        process.env.NEXT_PUBLIC_SESSION_KEY_MAX_DURATION_SECONDS = originalMaxDuration;
+        process.env.SESSION_KEY_MAX_DURATION_SECONDS = originalMaxDuration;
       }
     }
   });

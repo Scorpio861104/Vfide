@@ -6,7 +6,7 @@ import { logger } from '@/lib/logger';
 
 const MAX_TRANSACTIONS_LIMIT = 100;
 const MAX_TRANSACTIONS_OFFSET = 10000;
-const ADDRESS_LIKE_REGEX = /^0x[a-fA-F0-9]{3,40}$/;
+const ADDRESS_LIKE_REGEX = /^0x[a-fA-F0-9]{40}$/;
 
 function parseStrictIntegerParam(value: string | null): number | null {
   if (value === null) return null;

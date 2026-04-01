@@ -8,6 +8,7 @@ import "./SharedInterfaces.sol";
  * @notice Manages allowed stablecoins for ecosystem uses
  * @dev Stores decimals and enabled status for each stablecoin
  */
+// ReentrancyGuard intentionally omitted: registry state management with no token transfer execution.
 contract StablecoinRegistry is Ownable, Pausable {
     struct StablecoinInfo {
         bool allowed;

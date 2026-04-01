@@ -85,7 +85,7 @@ const REQUIRED_ENV_VARS: EnvironmentConfig[] = [
   { name: 'NEXT_PUBLIC_ENABLE_GOVERNANCE', required: false, category: 'feature' },
   { name: 'NEXT_PUBLIC_ENABLE_SW', required: false, category: 'feature' },
   { name: 'NEXT_PUBLIC_ENABLE_PERSISTENT_SESSION_KEYS', required: false, category: 'feature' },
-  { name: 'NEXT_PUBLIC_SESSION_KEY_MAX_DURATION_SECONDS', required: false, category: 'feature' },
+  { name: 'SESSION_KEY_MAX_DURATION_SECONDS', required: false, category: 'feature' },
 ];
 
 interface ValidationResult {

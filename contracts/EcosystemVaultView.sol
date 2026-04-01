@@ -58,6 +58,7 @@ interface ISeerView {
     function getScore(address) external view returns (uint16);
 }
 
+// ReentrancyGuard intentionally omitted: read-only view adapter with immutable references and no transfers.
 contract EcosystemVaultView {
     IEcosystemVaultView public immutable vault;
     ISeerView public immutable seer;

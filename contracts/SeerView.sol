@@ -57,6 +57,7 @@ interface IEcosystemSchedulerView {
     function checkUpkeep(bytes calldata) external view returns (bool upkeepNeeded, bytes memory performData);
 }
 
+// ReentrancyGuard intentionally omitted: read-only analytics surface over Seer state.
 contract SeerView {
     function getMentorInfo(address seer, address subject) external view returns (
         bool isMentorUser,

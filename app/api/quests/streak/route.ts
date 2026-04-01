@@ -6,7 +6,7 @@ import { logger } from '@/lib/logger';
 import { z } from 'zod4';
 
 const STREAK_TYPE_REGEX = /^[a-z_]{1,32}$/;
-const ADDRESS_PATTERN = /^0x[a-fA-F0-9]{3,64}$/;
+const ADDRESS_PATTERN = /^0x[a-fA-F0-9]{40}$/;
 
 const updateStreakSchema = z.object({
   userAddress: z.string().trim().regex(ADDRESS_PATTERN),

@@ -30,7 +30,7 @@ const USERNAME_REGEX = /^[a-zA-Z0-9_]{3,32}$/;
 const MAX_BIO_LENGTH = 500;
 const MAX_EMAIL_LENGTH = 254;
 const MAX_AVATAR_URL_LENGTH = 2048;
-const ADDRESS_PATTERN = /^0x[a-fA-F0-9]{3,64}$/;
+const ADDRESS_PATTERN = /^0x[a-fA-F0-9]{40}$/;
 
 const updateUserProfileSchema = z.object({
   username: z.string().trim().optional(),

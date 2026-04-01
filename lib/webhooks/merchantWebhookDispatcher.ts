@@ -8,7 +8,7 @@
  * - Auto-disable on repeated failures
  */
 
-import { createHmac, randomUUID } from 'crypto';
+import { createCipheriv, createDecipheriv, createHmac, createHash, randomBytes, randomUUID } from 'crypto';
 import { lookup } from 'dns/promises';
 import { isIP } from 'node:net';
 import { query } from '@/lib/db';
@@ -47,6 +47,8 @@ interface WebhookEndpoint {
   id: number;
   url: string;
   secret: string;
+  secret_encrypted?: string | null;
+  secret_iv?: string | null;
   events: string[];
   status: string;
   failure_count: number;
@@ -130,6 +132,65 @@ function signPayload(payload: string, secret: string): string {
   return `v1=${createHmac('sha256', secret).update(payload).digest('hex')}`;
 }
 
+function deriveWebhookCryptoKey(): Buffer {
+  const keyMaterial = process.env.WEBHOOK_SECRET_ENCRYPTION_KEY;
+  if (!keyMaterial || keyMaterial.trim().length < 32) {
+    throw new Error('WEBHOOK_SECRET_ENCRYPTION_KEY must be set to at least 32 characters');
+  }
+
+  return createHash('sha256').update(keyMaterial).digest();
+}
+
+function decryptSecretFromEndpoint(endpoint: WebhookEndpoint): string {
+  if (endpoint.secret_encrypted && endpoint.secret_iv) {
+    const decipher = createDecipheriv(
+      'aes-256-gcm',
+      deriveWebhookCryptoKey(),
+      Buffer.from(endpoint.secret_iv, 'base64')
+    );
+
+    const payload = Buffer.from(endpoint.secret_encrypted, 'base64');
+    if (payload.length <= 16) {
+      throw new Error('Invalid encrypted webhook secret payload');
+    }
+
+    const authTag = payload.subarray(payload.length - 16);
+    const ciphertext = payload.subarray(0, payload.length - 16);
+    decipher.setAuthTag(authTag);
+
+    const decrypted = Buffer.concat([decipher.update(ciphertext), decipher.final()]).toString('utf8');
+    if (!decrypted) {
+      throw new Error('Decrypted webhook secret is empty');
+    }
+
+    return decrypted;
+  }
+
+  return endpoint.secret;
+}
+
+async function encryptAndPersistSecretIfNeeded(endpoint: WebhookEndpoint): Promise<void> {
+  if (!endpoint.secret || endpoint.secret_encrypted) {
+    return;
+  }
+
+  const iv = randomBytes(12);
+  const cipher = createCipheriv('aes-256-gcm', deriveWebhookCryptoKey(), iv);
+  const encrypted = Buffer.concat([cipher.update(endpoint.secret, 'utf8'), cipher.final()]);
+  const authTag = cipher.getAuthTag();
+  const payload = Buffer.concat([encrypted, authTag]).toString('base64');
+
+  await query(
+    `UPDATE merchant_webhook_endpoints
+     SET secret_encrypted = $1,
+         secret_iv = $2,
+         secret = NULL,
+         updated_at = NOW()
+     WHERE id = $3`,
+    [payload, iv.toString('base64'), endpoint.id]
+  );
+}
+
 // ─────────────────────────── Core Dispatch
 
 /**
@@ -144,7 +205,7 @@ export async function dispatchWebhook(
   try {
     // Find active endpoints that subscribe to this event type
     const result = await query<WebhookEndpoint>(
-      `SELECT id, url, secret, events, status, failure_count
+      `SELECT id, url, secret, secret_encrypted, secret_iv, events, status, failure_count
        FROM merchant_webhook_endpoints
        WHERE merchant_address = $1
          AND status = 'active'
@@ -196,8 +257,11 @@ async function deliverWithRetries(
     return;
   }
 
+  await encryptAndPersistSecretIfNeeded(endpoint);
+  const endpointSecret = decryptSecretFromEndpoint(endpoint);
+
   const body = JSON.stringify(payload);
-  const signature = signPayload(body, endpoint.secret);
+  const signature = signPayload(body, endpointSecret);
   const timestamp = Math.floor(Date.now() / 1000).toString();
 
   for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {

@@ -7,7 +7,7 @@ import { z } from 'zod4';
 
 const MILESTONE_KEY_REGEX = /^[a-z0-9_:-]{1,64}$/;
 const MAX_PROGRESS_VALUE = 1000000000;
-const ADDRESS_PATTERN = /^0x[a-fA-F0-9]{3,64}$/;
+const ADDRESS_PATTERN = /^0x[a-fA-F0-9]{40}$/;
 
 const updateAchievementProgressSchema = z.object({
   milestoneKey: z.string().trim().regex(MILESTONE_KEY_REGEX),

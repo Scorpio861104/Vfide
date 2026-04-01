@@ -48,6 +48,7 @@ error SEC_ExpiryTooShort();
 
 /// ───────────────────────────── GuardianRegistry
 
+// ReentrancyGuard intentionally omitted in this module set: contracts coordinate lock state and policy, not value transfers.
 contract GuardianRegistry {
     event DAOSet(address dao);
     event GuardianAdded(address indexed vault, address indexed guardian);

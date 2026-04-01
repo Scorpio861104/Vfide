@@ -247,6 +247,7 @@ contract SeerAutonomous is ReentrancyGuard {
     uint16 public autoLiftThreshold = 5000;        // Score above = lift
     uint16 public rateLimitThreshold = 4000;       // Score below = rate limit
     uint16 public patternSensitivity = 50;         // 0-100 sensitivity
+    uint256 public constant MAX_COUNTERPARTY_SCAN = 20;
     uint64 public challengeWindow = 1 days;        // Time to contest severe actions
     
     // Network health metrics (for dynamic adjustment)
@@ -588,13 +589,21 @@ contract SeerAutonomous is ReentrancyGuard {
             ActivityWindow storage cpWindow = activityWindows[counterparty];
             bool seenCounterpartyBefore = false;
             bool seenSubjectFromCounterparty = false;
-            for (uint256 i = 0; i < window.recentCounterparties.length; i++) {
+            uint256 subjectWindowLen = window.recentCounterparties.length;
+            if (subjectWindowLen > MAX_COUNTERPARTY_SCAN) {
+                subjectWindowLen = MAX_COUNTERPARTY_SCAN;
+            }
+            for (uint256 i = 0; i < subjectWindowLen; i++) {
                 if (window.recentCounterparties[i] == counterparty) {
                     seenCounterpartyBefore = true;
                     break;
                 }
             }
-            for (uint256 j = 0; j < cpWindow.recentCounterparties.length; j++) {
+            uint256 counterpartyWindowLen = cpWindow.recentCounterparties.length;
+            if (counterpartyWindowLen > MAX_COUNTERPARTY_SCAN) {
+                counterpartyWindowLen = MAX_COUNTERPARTY_SCAN;
+            }
+            for (uint256 j = 0; j < counterpartyWindowLen; j++) {
                 if (cpWindow.recentCounterparties[j] == subject) {
                     seenSubjectFromCounterparty = true;
                     break;

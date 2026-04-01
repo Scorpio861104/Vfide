@@ -136,7 +136,7 @@ export default function MerchantDirectoryPage() {
                 <div className="p-5">
                   <div className="flex items-start gap-3">
                     {m.logo_url ? (
-                      <Image src={m.logo_url} alt="" width={48} height={48} className="rounded-lg object-cover flex-shrink-0" />
+                      <Image src={m.logo_url} alt={`${m.display_name} logo`} width={48} height={48} className="rounded-lg object-cover flex-shrink-0" />
                     ) : (
                       <div
                         className="w-12 h-12 rounded-lg flex items-center justify-center text-white font-bold text-lg flex-shrink-0"

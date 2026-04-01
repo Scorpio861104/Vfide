@@ -29,6 +29,7 @@ import "./SharedInterfaces.sol";
  * as employment compensation (in stable coins), not investment returns.
  */
 
+// ReentrancyGuard intentionally omitted: duty points accounting performs no asset transfer operations.
 contract DutyDistributor is Ownable, IGovernanceHooks {
     event DutyPointsEarned(address indexed user, uint256 points, string reason);
     event EpochClosed(uint256 epochId, uint256 totalPoints);

@@ -13,7 +13,7 @@ import { withRateLimit } from '@/lib/auth/rateLimit';
 import { logger } from '@/lib/logger';
 import { z } from 'zod4';
 
-const ADDRESS_LIKE_REGEX = /^0x[a-fA-F0-9]{3,40}$/;
+const ADDRESS_LIKE_REGEX = /^0x[a-fA-F0-9]{40}$/;
 
 const createReviewSchema = z.object({
   merchant_address: z.string().trim().toLowerCase().regex(ADDRESS_LIKE_REGEX),

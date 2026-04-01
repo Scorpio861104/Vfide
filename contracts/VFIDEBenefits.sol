@@ -19,6 +19,7 @@ import "./SharedInterfaces.sol";
  * 4. Buyer releases funds → Merchant gets 100%
  * 5. VFIDEBenefits awards FREE ProofScore to both parties
  */
+// ReentrancyGuard intentionally omitted: this contract records incentives and delegates reward hooks only.
 contract VFIDEBenefits {
     // ═══════════════════════════════════════════════════════════════════════
     //                              ERRORS

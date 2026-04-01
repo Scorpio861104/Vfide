@@ -94,7 +94,7 @@ const envSchema = z.object({
   NEXT_PUBLIC_ENABLE_BETA_FEATURES: z.string().default('false').transform(v => v === 'true'),
   NEXT_PUBLIC_ENABLE_SW: z.string().default('false').transform(v => v === 'true'),
   NEXT_PUBLIC_ENABLE_PERSISTENT_SESSION_KEYS: z.string().default('false').transform(v => v === 'true'),
-  NEXT_PUBLIC_SESSION_KEY_MAX_DURATION_SECONDS: z.coerce.number().int().positive().default(14400),
+  SESSION_KEY_MAX_DURATION_SECONDS: z.coerce.number().int().positive().default(14400),
 
   // Analytics
   NEXT_PUBLIC_GA_ID: z.string().optional(),
@@ -204,7 +204,7 @@ function parseEnv(): Environment {
     NEXT_PUBLIC_ENABLE_BETA_FEATURES: process.env.NEXT_PUBLIC_ENABLE_BETA_FEATURES,
     NEXT_PUBLIC_ENABLE_SW: process.env.NEXT_PUBLIC_ENABLE_SW,
     NEXT_PUBLIC_ENABLE_PERSISTENT_SESSION_KEYS: process.env.NEXT_PUBLIC_ENABLE_PERSISTENT_SESSION_KEYS,
-    NEXT_PUBLIC_SESSION_KEY_MAX_DURATION_SECONDS: process.env.NEXT_PUBLIC_SESSION_KEY_MAX_DURATION_SECONDS,
+    SESSION_KEY_MAX_DURATION_SECONDS: process.env.SESSION_KEY_MAX_DURATION_SECONDS,
     
     // Analytics
     NEXT_PUBLIC_GA_ID: process.env.NEXT_PUBLIC_GA_ID,

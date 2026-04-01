@@ -43,6 +43,7 @@ error SOCIAL_EndorseExists();
  * @title SeerSocial
  * @notice Extension contract for Seer social features (endorsements, mentorship, appeals)
  */
+// ReentrancyGuard intentionally omitted: social graph operations do not move funds.
 contract SeerSocial {
     // ═══════════════════════════════════════════════════════════════════════
     // EVENTS

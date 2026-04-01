@@ -11,7 +11,7 @@ const MAX_VIOLATION_TYPE_LENGTH = 64;
 const MAX_DESCRIPTION_LENGTH = 2000;
 const MAX_IP_LENGTH = 64;
 const VALID_SEVERITIES = ['low', 'medium', 'high', 'critical'] as const;
-const ADDRESS_PATTERN = /^0x[a-fA-F0-9]{3,64}$/;
+const ADDRESS_PATTERN = /^0x[a-fA-F0-9]{40}$/;
 
 const securityViolationSchema = z.object({
   violationType: z.string().trim().min(1).max(MAX_VIOLATION_TYPE_LENGTH),

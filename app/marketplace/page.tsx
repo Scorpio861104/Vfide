@@ -711,7 +711,7 @@ function ProductGridCard({ product, wishlisted, onWishlist }: { product: Product
         {/* Image */}
         <div className="aspect-square overflow-hidden bg-gray-100 dark:bg-gray-700 relative">
           {product.images?.[0]?.url ? (
-            <Image src={product.images[0].url} alt="" fill className="object-cover group-hover:scale-105 transition-transform duration-300" sizes="(max-width: 768px) 50vw, 25vw" />
+            <Image src={product.images[0].url} alt={product.images[0].alt || product.name} fill className="object-cover group-hover:scale-105 transition-transform duration-300" sizes="(max-width: 768px) 50vw, 25vw" />
           ) : (
             <div className="w-full h-full flex items-center justify-center">
               <Package className="w-10 h-10 text-gray-300 dark:text-gray-500" />
@@ -784,7 +784,7 @@ function ProductListCard({ product, wishlisted, onWishlist }: { product: Product
         {/* Image */}
         <div className="w-40 h-40 flex-shrink-0 rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-700 relative">
           {product.images?.[0]?.url ? (
-            <Image src={product.images[0].url} alt="" fill className="object-cover" sizes="(max-width: 768px) 50vw, 25vw" />
+            <Image src={product.images[0].url} alt={product.images[0].alt || product.name} fill className="object-cover" sizes="(max-width: 768px) 50vw, 25vw" />
           ) : (
             <div className="w-full h-full flex items-center justify-center">
               <Package className="w-8 h-8 text-gray-400" />

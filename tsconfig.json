@@ -58,6 +58,7 @@
     "playwright/**",
     "vitest.config.ts",
     "vitest.setup.ts",
-    "__tests__/**"
+    "__tests__/**",
+    "extracted-archives/**"
   ]
 }

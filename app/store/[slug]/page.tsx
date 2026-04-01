@@ -217,7 +217,7 @@ export default function StorefrontPage() {
       {/* Banner */}
       <div className="relative h-48 md:h-64" style={{ backgroundColor: themeColor }}>
         {profile.banner_url && (
-          <Image src={profile.banner_url} alt="" fill className="object-cover" sizes="100vw" />
+          <Image src={profile.banner_url} alt={`${profile.display_name} store banner`} fill className="object-cover" sizes="100vw" />
         )}
         <div className="absolute inset-0 bg-black/20" />
         <Link
@@ -234,7 +234,7 @@ export default function StorefrontPage() {
           {profile.logo_url ? (
             <img
               src={profile.logo_url}
-              alt=""
+              alt={`${profile.display_name} logo`}
               className="w-24 h-24 md:w-32 md:h-32 rounded-2xl border-4 border-white dark:border-gray-800 object-cover shadow-lg bg-white"
             />
           ) : (
@@ -359,7 +359,7 @@ export default function StorefrontPage() {
                     >
                       {product.images?.[0] ? (
                         <div className="relative w-full h-40 overflow-hidden">
-                          <Image src={product.images[0]} alt="" fill className="object-cover" sizes="(max-width: 768px) 50vw, 25vw" />
+                          <Image src={product.images[0]} alt={product.name} fill className="object-cover" sizes="(max-width: 768px) 50vw, 25vw" />
                         </div>
                       ) : (
                         <div className="w-full h-40 bg-gray-100 dark:bg-gray-700 flex items-center justify-center">

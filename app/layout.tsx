@@ -83,10 +83,16 @@ export default async function RootLayout({
     <html lang="en">
       <head>
         {/* CSP nonce exposed for getClientNonce() in lib/security.ts. The matching
-          nonce is set in the Content-Security-Policy header by proxy.ts. */}
+          nonce is set in the Content-Security-Policy header by middleware.ts. */}
         {nonce && <meta property="csp-nonce" content={nonce} />}
       </head>
       <body className="font-sans antialiased bg-zinc-900">
+        <a
+          href="#main-content"
+          className="sr-only focus:not-sr-only focus:absolute focus:left-3 focus:top-3 focus:z-50 focus:rounded focus:bg-white focus:px-3 focus:py-2 focus:text-black"
+        >
+          Skip to content
+        </a>
         <header role="banner" className="sr-only">
           <span>VFIDE</span>
         </header>

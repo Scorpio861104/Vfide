@@ -140,6 +140,7 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
     uint256 public constant MAX_MERCHANTS_PER_PERIOD = 500;
     uint256 public constant MAX_REFERRERS_PER_YEAR = 200;
     uint256 public constant MAX_RANK_ITERATIONS = 200;  // Max iterations for ranking calculation
+    uint256 public constant MAX_COUNCIL_DISTRIBUTION_BATCH = 200;
 
     // ═══════════════════════════════════════════════════════════════════════
     //                              STATE
@@ -808,6 +809,7 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
         address[] memory members = councilManager.getActiveMembers();
         uint256 memberCount = members.length;
         if (memberCount == 0 || memberCount > type(uint8).max) revert ECO_Zero();
+        if (memberCount > MAX_COUNCIL_DISTRIBUTION_BATCH) revert ECO_ArrayCapReached();
         
         uint256 perMember = amount / memberCount;
         councilPool = amount % memberCount; // Keep remainder for next distribution

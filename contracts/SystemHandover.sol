@@ -18,6 +18,7 @@ error SH_GovernanceNotReady();
 /// @dev Fallback event when ledger logging fails
 event LedgerLogFailed(address indexed source, string action);
 
+// ReentrancyGuard intentionally omitted: handover transitions update admin pointers and emit logs only.
 contract SystemHandover {
     event Armed(uint64 start, uint64 handoverAt);
     event ParamsSet(uint64 monthsDelay, uint16 minAvgCouncilScore, uint8 maxExtensions, uint64 extensionSpan);

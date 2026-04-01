@@ -88,7 +88,14 @@ contract EscrowManager is ReentrancyGuard {
         whitelistedTokens[token] = status;
     }
 
-    // 1. Create Escrow (Buyer pays)
+    /**
+     * @notice Create a new escrow funded by the buyer.
+     * @param merchant Merchant that will receive funds on successful release.
+     * @param token Whitelisted ERC-20 token used for settlement.
+     * @param amount Token amount to lock in escrow.
+     * @param orderId External order identifier for merchant reconciliation.
+     * @return id Newly created escrow identifier.
+     */
     function createEscrow(
         address merchant,
         address token,
@@ -132,7 +139,10 @@ contract EscrowManager is ReentrancyGuard {
         return id;
     }
 
-    // 2. Release Funds (Buyer confirms receipt)
+    /**
+     * @notice Release escrowed funds to the merchant after buyer confirmation.
+     * @param id Escrow identifier.
+     */
     function release(uint256 id) external nonReentrant {
         Escrow storage e = escrows[id];
         require(msg.sender == e.buyer, "not buyer");
@@ -151,7 +161,10 @@ contract EscrowManager is ReentrancyGuard {
         emit EscrowReleased(id, e.merchant);
     }
 
-    // 3. Refund (Merchant cancels/refunds)
+    /**
+     * @notice Refund escrowed funds back to the buyer.
+     * @param id Escrow identifier.
+     */
     function refund(uint256 id) external nonReentrant {
         Escrow storage e = escrows[id];
         require(msg.sender == e.merchant, "not merchant");
@@ -164,7 +177,10 @@ contract EscrowManager is ReentrancyGuard {
         emit EscrowRefunded(id);
     }
 
-    // 4. Claim Timeout (Merchant claims after wait period)
+    /**
+     * @notice Claim escrow funds after the configured release timeout has elapsed.
+     * @param id Escrow identifier.
+     */
     function claimTimeout(uint256 id) external nonReentrant {
         Escrow storage e = escrows[id];
         require(msg.sender == e.merchant, "not merchant");

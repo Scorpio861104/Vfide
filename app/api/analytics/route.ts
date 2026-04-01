@@ -65,7 +65,7 @@ function normalizeAddress(value: string): string {
 }
 
 function isAddressLike(value: string): boolean {
-  return /^0x[a-fA-F0-9]{3,64}$/.test(value);
+  return /^0x[a-fA-F0-9]{40}$/.test(value);
 }
 
 function parseStrictIntegerParam(value: string | null): number | null {

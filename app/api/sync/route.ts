@@ -7,7 +7,7 @@ import { z } from 'zod4';
 
 const USER_ID_REGEX = /^\d+$/;
 const ENTITY_REGEX = /^[a-zA-Z0-9:_-]{1,64}$/;
-const ADDRESS_PATTERN = /^0x[a-fA-F0-9]{3,64}$/;
+const ADDRESS_PATTERN = /^0x[a-fA-F0-9]{40}$/;
 
 const updateSyncStateSchema = z.object({
   userId: z.union([z.number().int().positive(), z.string().regex(USER_ID_REGEX)]),

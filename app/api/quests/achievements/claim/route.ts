@@ -5,7 +5,7 @@ import { withRateLimit } from '@/lib/auth/rateLimit';
 import { logger } from '@/lib/logger';
 import { z } from 'zod4';
 
-const ADDRESS_LIKE_REGEX = /^0x[a-fA-F0-9]{3,40}$/;
+const ADDRESS_LIKE_REGEX = /^0x[a-fA-F0-9]{40}$/;
 
 const claimAchievementSchema = z.object({
   milestoneId: z.union([z.number().int().positive(), z.string().regex(/^\d+$/)]),

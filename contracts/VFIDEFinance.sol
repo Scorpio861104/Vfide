@@ -26,7 +26,7 @@ error FI_Insufficient();
  * - Funds development, marketing, operations
  * - DAO-controlled disbursements
  */
-contract EcoTreasuryVault {
+contract EcoTreasuryVault is ReentrancyGuard {
     using SafeERC20 for IERC20;
     
     event ModulesSet(address dao, address ledger, address vfideToken);
@@ -92,7 +92,7 @@ contract EcoTreasuryVault {
     /**
      * @notice Send VFIDE for ecosystem expenses (development, marketing, etc)
      */
-    function sendVFIDE(address to, uint256 amount, string calldata reason) external onlyDAO {
+    function sendVFIDE(address to, uint256 amount, string calldata reason) external onlyDAO nonReentrant {
         if (to == address(0) || amount == 0) revert FI_Zero();
         if (vfideToken.balanceOf(address(this)) < amount) revert FI_Insufficient();
 
@@ -107,7 +107,7 @@ contract EcoTreasuryVault {
      * @notice Rescue any accidentally sent tokens (not just VFIDE)
      * @dev Emergency function for recovering stuck tokens
      */
-    function rescueToken(address token, address to, uint256 amount) external onlyDAO {
+    function rescueToken(address token, address to, uint256 amount) external onlyDAO nonReentrant {
         if (token == address(0) || to == address(0) || amount == 0) revert FI_Zero();
         IERC20(token).safeTransfer(to, amount);
         emit Sent(token, to, amount, "rescue");

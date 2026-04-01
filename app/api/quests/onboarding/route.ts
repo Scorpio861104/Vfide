@@ -17,7 +17,7 @@ const VALID_ONBOARDING_STEPS = new Set([
   'giveEndorsement',
   'completeQuest',
 ]);
-const ADDRESS_PATTERN = /^0x[a-fA-F0-9]{3,64}$/;
+const ADDRESS_PATTERN = /^0x[a-fA-F0-9]{40}$/;
 
 const updateOnboardingStepSchema = z.object({
   step: z.string().trim().refine((value) => VALID_ONBOARDING_STEPS.has(value), {

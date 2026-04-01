@@ -9,6 +9,7 @@ error TRUST_Zero();
 /// @title ProofLedger
 /// @notice Immutable event log for behavioral signals consumed by the Seer ProofScore engine.
 ///         Only the DAO and explicitly authorized system contracts may write entries.
+/// @dev ReentrancyGuard intentionally omitted: this contract only emits events and mutates internal counters.
 contract ProofLedger {
     event SystemEvent(address indexed who, string action, address indexed by);
     event EventLog(address indexed who, string action, uint256 amount, string note);

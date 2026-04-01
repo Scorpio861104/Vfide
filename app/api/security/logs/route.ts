@@ -49,7 +49,7 @@ const VALID_TYPES = [
   'threat_detected',
   'security_setting_changed',
 ] as const;
-const ADDRESS_PATTERN = /^0x[a-fA-F0-9]{3,64}$/;
+const ADDRESS_PATTERN = /^0x[a-fA-F0-9]{40}$/;
 const securityLogPostSchema = z.object({
   type: z.string().trim().min(1).max(MAX_TYPE_LENGTH),
   severity: z.string().trim().toLowerCase().max(MAX_SEVERITY_LENGTH),

@@ -11,7 +11,7 @@ const MAX_ERROR_MESSAGE_LENGTH = 2000;
 const MAX_ERROR_STACK_LENGTH = 20000;
 const MAX_ERROR_METADATA_BYTES = 10000;
 const VALID_SEVERITIES = ['error', 'warning', 'info', 'critical'] as const;
-const ADDRESS_PATTERN = /^0x[a-fA-F0-9]{3,64}$/;
+const ADDRESS_PATTERN = /^0x[a-fA-F0-9]{40}$/;
 
 const logErrorSchema = z.object({
   severity: z.enum(VALID_SEVERITIES).optional(),

@@ -345,7 +345,7 @@ export default function ProductDetailPage() {
                     }`}
                   >
                     {img.url ? (
-                      <Image src={img.url} alt="" width={64} height={64} className="w-full h-full object-cover" />
+                      <Image src={img.url} alt={img.alt || `${product.name} thumbnail ${i + 1}`} width={64} height={64} className="w-full h-full object-cover" />
                     ) : (
                       <div className="w-full h-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
                         <Package className="w-4 h-4 text-gray-400" />
@@ -638,7 +638,7 @@ export default function ProductDetailPage() {
                   >
                     {rp.images?.[0]?.url ? (
                       <div className="relative w-full aspect-square overflow-hidden">
-                        <Image src={rp.images[0].url} alt="" fill className="object-cover" sizes="128px" />
+                        <Image src={rp.images[0].url} alt={rp.images[0].alt || rp.name} fill className="object-cover" sizes="128px" />
                       </div>
                     ) : (
                       <div className="w-full aspect-square bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
@@ -670,7 +670,7 @@ export default function ProductDetailPage() {
                   <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden hover:shadow-sm transition-shadow">
                     {rv.image ? (
                       <div className="relative w-full aspect-square overflow-hidden">
-                        <Image src={rv.image} alt="" fill className="object-cover" sizes="128px" />
+                        <Image src={rv.image} alt={`${rv.name} recently viewed`} fill className="object-cover" sizes="128px" />
                       </div>
                     ) : (
                       <div className="w-full aspect-square bg-gray-100 dark:bg-gray-700 flex items-center justify-center">

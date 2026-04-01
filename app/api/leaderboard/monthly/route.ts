@@ -5,7 +5,7 @@ import { requireAuth } from '@/lib/auth/middleware';
 import { logger } from '@/lib/logger';
 import { z } from 'zod4';
 
-const ADDRESS_PATTERN = /^0x[a-fA-F0-9]{3,64}$/;
+const ADDRESS_PATTERN = /^0x[a-fA-F0-9]{40}$/;
 const MONTH_PATTERN = /^\d{4}-(0[1-9]|1[0-2])$/;
 
 const updateMonthlyLeaderboardSchema = z.object({

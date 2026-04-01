@@ -5,7 +5,7 @@ import { withRateLimit } from '@/lib/auth/rateLimit';
 import { logger } from '@/lib/logger';
 import { z } from 'zod4';
 
-const ADDRESS_PATTERN = /^0x[a-fA-F0-9]{3,64}$/;
+const ADDRESS_PATTERN = /^0x[a-fA-F0-9]{40}$/;
 const ALLOWED_PREFERENCE_KEYS = new Set(['messages', 'proposals', 'endorsements', 'system_updates']);
 
 const notificationPreferencesUpdateSchema = z.object({

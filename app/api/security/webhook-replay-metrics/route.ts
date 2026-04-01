@@ -4,7 +4,7 @@ import { logger } from '@/lib/logger';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { requireAuth } from '@/lib/auth/middleware';
 
-const ADDRESS_PATTERN = /^0x[a-fA-F0-9]{3,64}$/;
+const ADDRESS_PATTERN = /^0x[a-fA-F0-9]{40}$/;
 const REPLAY_THRESHOLD_1H_ENV = 'SECURITY_WEBHOOK_REPLAY_REJECT_THRESHOLD_1H';
 const MONITOR_ALLOWLIST_ENV = 'SECURITY_MONITOR_ALLOWLIST';
 const REQUIRE_ALLOWLIST_ENV = 'SECURITY_MONITOR_REQUIRE_ALLOWLIST';

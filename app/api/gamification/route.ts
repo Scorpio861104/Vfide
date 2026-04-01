@@ -7,7 +7,7 @@ import { z } from 'zod4';
 
 /** Maximum XP awardable per wallet per calendar day (mirrors lib/gamification.ts). */
 const SERVER_MAX_XP_PER_DAY = 500;
-const ADDRESS_PATTERN = /^0x[a-fA-F0-9]{3,64}$/;
+const ADDRESS_PATTERN = /^0x[a-fA-F0-9]{40}$/;
 
 const awardXpRequestSchema = z.object({
   userAddress: z.string().trim().regex(ADDRESS_PATTERN),

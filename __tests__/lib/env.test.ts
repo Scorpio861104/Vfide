@@ -25,7 +25,7 @@ describe('lib/env feature and validation behavior', () => {
     process.env.NEXT_PUBLIC_ENABLE_GOVERNANCE = 'true';
     process.env.NEXT_PUBLIC_ENABLE_SW = 'true';
     process.env.NEXT_PUBLIC_ENABLE_PERSISTENT_SESSION_KEYS = 'true';
-    process.env.NEXT_PUBLIC_SESSION_KEY_MAX_DURATION_SECONDS = '7200';
+    process.env.SESSION_KEY_MAX_DURATION_SECONDS = '7200';
 
     const envModule = await import('@/lib/env');
     const env = envModule.getEnv();
@@ -34,7 +34,7 @@ describe('lib/env feature and validation behavior', () => {
     expect(env.NEXT_PUBLIC_ENABLE_GOVERNANCE).toBe(true);
     expect(env.NEXT_PUBLIC_ENABLE_SW).toBe(true);
     expect(env.NEXT_PUBLIC_ENABLE_PERSISTENT_SESSION_KEYS).toBe(true);
-    expect(env.NEXT_PUBLIC_SESSION_KEY_MAX_DURATION_SECONDS).toBe(7200);
+    expect(env.SESSION_KEY_MAX_DURATION_SECONDS).toBe(7200);
     expect(envModule.isFeatureEnabled('SW')).toBe(true);
     expect(envModule.isFeatureEnabled('PERSISTENT_SESSION_KEYS')).toBe(true);
   });

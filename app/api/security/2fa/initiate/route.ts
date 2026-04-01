@@ -7,7 +7,7 @@ import { logger } from '@/lib/logger';
 import { z } from 'zod4';
 
 const CODE_TTL_MINUTES = 5;
-const ADDRESS_PATTERN = /^0x[a-fA-F0-9]{3,64}$/;
+const ADDRESS_PATTERN = /^0x[a-fA-F0-9]{40}$/;
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const MAX_DESTINATION_LENGTH = 320;
 

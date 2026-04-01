@@ -137,7 +137,8 @@ export function OptimizedImage({
       {placeholder === 'blur' && blurDataUrl && !isLoaded && (
         <img
           src={blurDataUrl}
-          alt=""
+          alt="presentation"
+          role="presentation"
           aria-hidden="true"
           className={`absolute inset-0 w-full h-full ${objectFitClasses[objectFit]} scale-110 blur-lg`}
         />
@@ -563,7 +564,8 @@ export function BackgroundVideo({
       <div className={`absolute inset-0 ${className}`}>
         <img
           src={fallbackImage}
-          alt=""
+          alt="presentation"
+          role="presentation"
           className="w-full h-full object-cover"
           aria-hidden="true"
         />

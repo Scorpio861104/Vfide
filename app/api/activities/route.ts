@@ -13,7 +13,7 @@ const MAX_ACTIVITY_TYPE_LENGTH = 64;
 const MAX_ACTIVITY_TITLE_LENGTH = 200;
 const MAX_ACTIVITY_DESCRIPTION_LENGTH = 2000;
 const MAX_ACTIVITY_DATA_BYTES = 10000;
-const ETH_ADDRESS_REGEX = /^0x[a-fA-F0-9]{3,40}$/;
+const ETH_ADDRESS_REGEX = /^0x[a-fA-F0-9]{40}$/;
 
 const createActivitySchema = z.object({
   userAddress: z.string().trim().regex(ETH_ADDRESS_REGEX),
@@ -156,53 +156,29 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    let queryText = `
-      SELECT 
+    const result = await query<Activity>(
+      `SELECT
         a.*,
         u.wallet_address as user_address,
         u.username as user_username,
         u.avatar_url as user_avatar
       FROM activities a
       JOIN users u ON a.user_id = u.id
-      WHERE 1=1
-    `;
-    const params: (string | number)[] = [];
-    let paramCount = 1;
+      WHERE ($1::text IS NULL OR u.wallet_address = $1)
+        AND ($2::text IS NULL OR a.activity_type = $2)
+      ORDER BY a.created_at DESC
+      LIMIT $3 OFFSET $4`,
+      [userAddress, activityType, limit, offset]
+    );
 
-    if (userAddress) {
-      queryText += ` AND u.wallet_address = $${paramCount}`;
-      params.push(userAddress);
-      paramCount++;
-    }
-
-    if (activityType) {
-      queryText += ` AND a.activity_type = $${paramCount}`;
-      params.push(activityType);
-      paramCount++;
-    }
-
-    queryText += ` ORDER BY a.created_at DESC LIMIT $${paramCount} OFFSET $${paramCount + 1}`;
-    params.push(limit, offset);
-
-    const result = await query<Activity>(queryText, params);
-
-    // Get total count
-    let countQuery = 'SELECT COUNT(*) as count FROM activities a JOIN users u ON a.user_id = u.id WHERE 1=1';
-    const countParams: (string | number)[] = [];
-    let countParamCount = 1;
-
-    if (userAddress) {
-      countQuery += ` AND u.wallet_address = $${countParamCount}`;
-      countParams.push(userAddress);
-      countParamCount++;
-    }
-
-    if (activityType) {
-      countQuery += ` AND a.activity_type = $${countParamCount}`;
-      countParams.push(activityType);
-    }
-
-    const countResult = await query<{ count: string }>(countQuery, countParams);
+    const countResult = await query<{ count: string }>(
+      `SELECT COUNT(*) as count
+       FROM activities a
+       JOIN users u ON a.user_id = u.id
+       WHERE ($1::text IS NULL OR u.wallet_address = $1)
+         AND ($2::text IS NULL OR a.activity_type = $2)`,
+      [userAddress, activityType]
+    );
 
     const totalCount = parseInt(countResult.rows[0]?.count || '0', 10);
     if (isNaN(totalCount)) {

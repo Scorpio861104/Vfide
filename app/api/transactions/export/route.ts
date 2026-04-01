@@ -35,7 +35,7 @@ function normalizeAddress(value: string): string {
 }
 
 function isAddressLike(value: string): boolean {
-  return /^0x[a-fA-F0-9]{3,64}$/.test(value);
+  return /^0x[a-fA-F0-9]{40}$/.test(value);
 }
 
 function isIsoDateString(value: string): boolean {
@@ -494,60 +494,50 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Build query
-    let queryText = `
-      SELECT 
-        t.id,
-        t.hash,
-        t.type,
-        t.from_address,
-        t.to_address,
-        t.token_symbol,
-        t.amount::text,
-        t.usd_value::text,
-        t.fee::text,
-        t.status,
-        t.timestamp,
-        t.metadata
-      FROM transactions t
-      JOIN users u ON t.user_id = u.id
-      WHERE u.wallet_address = $1
-        AND t.timestamp >= $2
-        AND t.timestamp <= $3
-    `;
+    const typeFilter =
+      validatedOptions.filters.types.length > 0 && !validatedOptions.filters.types.includes('all')
+        ? validatedOptions.filters.types
+        : null;
+    const tokenFilter =
+      validatedOptions.filters.tokens.length > 0 && !validatedOptions.filters.tokens.includes('all')
+        ? validatedOptions.filters.tokens
+        : null;
 
-    const queryParams: (string | Date | number)[] = [
-      address.toLowerCase(),
-      startDate,
-      endDate,
-    ];
-
-    // Add type filter if not 'all'
-    if (validatedOptions.filters.types.length > 0 && !validatedOptions.filters.types.includes('all')) {
-      queryText += ` AND t.type = ANY($${queryParams.length + 1})`;
-      queryParams.push(validatedOptions.filters.types as unknown as string);
-    }
-
-    // Add token filter if not 'all'
-    if (validatedOptions.filters.tokens.length > 0 && !validatedOptions.filters.tokens.includes('all')) {
-      queryText += ` AND t.token_symbol = ANY($${queryParams.length + 1})`;
-      queryParams.push(validatedOptions.filters.tokens as unknown as string);
-    }
-
-    // Add amount filters
-    if (validatedOptions.filters.minAmount !== undefined) {
-      queryText += ` AND t.amount >= $${queryParams.length + 1}`;
-      queryParams.push(validatedOptions.filters.minAmount);
-    }
-
-    if (validatedOptions.filters.maxAmount !== undefined) {
-      queryText += ` AND t.amount <= $${queryParams.length + 1}`;
-      queryParams.push(validatedOptions.filters.maxAmount);
-    }
-
-    queryText += ' ORDER BY t.timestamp DESC LIMIT 50000'; // Max 50k transactions
-
-    const result = await query(queryText, queryParams);
+    const result = await query(
+      `SELECT
+         t.id,
+         t.hash,
+         t.type,
+         t.from_address,
+         t.to_address,
+         t.token_symbol,
+         t.amount::text,
+         t.usd_value::text,
+         t.fee::text,
+         t.status,
+         t.timestamp,
+         t.metadata
+       FROM transactions t
+       JOIN users u ON t.user_id = u.id
+       WHERE u.wallet_address = $1
+         AND t.timestamp >= $2
+         AND t.timestamp <= $3
+         AND ($4::text[] IS NULL OR t.type = ANY($4))
+         AND ($5::text[] IS NULL OR t.token_symbol = ANY($5))
+         AND ($6::numeric IS NULL OR t.amount >= $6)
+         AND ($7::numeric IS NULL OR t.amount <= $7)
+       ORDER BY t.timestamp DESC
+       LIMIT 50000`,
+      [
+        address.toLowerCase(),
+        startDate,
+        endDate,
+        typeFilter,
+        tokenFilter,
+        validatedOptions.filters.minAmount ?? null,
+        validatedOptions.filters.maxAmount ?? null,
+      ]
+    );
     const transactions = result.rows as Transaction[];
 
     // Format based on export type

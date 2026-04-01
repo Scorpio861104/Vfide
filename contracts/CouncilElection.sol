@@ -10,6 +10,7 @@ error CE_ArrayMismatch();
 error CE_BadSize();
 error CE_TermLimitReached();
 
+// ReentrancyGuard intentionally omitted: governance selection logic has no value transfers.
 contract CouncilElection {
     uint8 public constant MIN_COUNCIL_SIZE = 1;
     uint8 public constant MAX_COUNCIL_SIZE = 12;

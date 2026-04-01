@@ -137,7 +137,7 @@ function StoryRing({ story, onClick }: { story: Story; onClick: () => void }) {
       `}>
         <div className="w-14 h-14 rounded-full bg-zinc-900 flex items-center justify-center text-2xl overflow-hidden">
           {story.preview ? (
-            <Image src={story.preview} alt="" width={56} height={56} className="w-full h-full object-cover" />
+            <Image src={story.preview} alt={`${story.author.name} story preview`} width={56} height={56} className="w-full h-full object-cover" />
           ) : isYou ? (
             <Plus className="w-6 h-6 text-cyan-400" />
           ) : (

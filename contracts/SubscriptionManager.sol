@@ -71,6 +71,7 @@ contract SubscriptionManager is ReentrancyGuard {
     // NEW: Configuration
     uint256 public constant GRACE_PERIOD = 3 days;
     uint256 public constant MAX_FAILED_PAYMENTS = 3;
+    uint256 public constant MAX_BATCH_SIZE = 200;
     // Merchant has exclusive calling rights for 24h after payment is due.
     //               After this window anyone (keeper/bot) may process to prevent stalling.
     uint256 public constant MERCHANT_EXCLUSIVE_WINDOW = 24 hours;
@@ -427,6 +428,7 @@ contract SubscriptionManager is ReentrancyGuard {
         uint256 processed,
         uint256 failed
     ) {
+        require(subIds.length <= MAX_BATCH_SIZE, "SM: batch too large");
         for (uint256 i = 0; i < subIds.length; i++) {
             try this.processPayment(subIds[i]) {
                 processed++;

@@ -20,7 +20,7 @@ interface Notification {
 const MAX_NOTIFICATIONS_LIMIT = 200;
 const MAX_NOTIFICATIONS_OFFSET = 10000;
 const MAX_BULK_NOTIFICATION_IDS = 500;
-const ADDRESS_LIKE_REGEX = /^0x[a-fA-F0-9]{3,40}$/;
+const ADDRESS_LIKE_REGEX = /^0x[a-fA-F0-9]{40}$/;
 
 const createNotificationSchema = z.object({
   userAddress: z.string().trim().toLowerCase().regex(ADDRESS_LIKE_REGEX),
@@ -146,39 +146,24 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    let queryText = `
-      SELECT n.*
-      FROM notifications n
-      JOIN users u ON n.user_id = u.id
-      WHERE u.wallet_address = $1
-    `;
-
-    if (unreadOnly) {
-      queryText += ' AND n.is_read = false';
-    }
-
-    queryText += ' ORDER BY n.created_at DESC LIMIT $2 OFFSET $3';
-
     const result = await query<Notification>(
-      queryText,
-      [userAddress, limit, offset]
+      `SELECT n.*
+       FROM notifications n
+       JOIN users u ON n.user_id = u.id
+       WHERE u.wallet_address = $1
+         AND ($2::boolean = false OR n.is_read = false)
+       ORDER BY n.created_at DESC
+       LIMIT $3 OFFSET $4`,
+      [userAddress, unreadOnly, limit, offset]
     );
 
-    // Get total count
-    let countQuery = `
-      SELECT COUNT(*) as count
-      FROM notifications n
-      JOIN users u ON n.user_id = u.id
-      WHERE u.wallet_address = $1
-    `;
-
-    if (unreadOnly) {
-      countQuery += ' AND n.is_read = false';
-    }
-
     const countResult = await query<{ count: string }>(
-      countQuery,
-      [userAddress]
+      `SELECT COUNT(*) as count
+       FROM notifications n
+       JOIN users u ON n.user_id = u.id
+       WHERE u.wallet_address = $1
+         AND ($2::boolean = false OR n.is_read = false)`,
+      [userAddress, unreadOnly]
     );
 
     const totalCount = parseInt(countResult.rows[0]?.count || '0', 10);

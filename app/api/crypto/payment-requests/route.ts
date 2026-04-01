@@ -13,7 +13,7 @@ import { z } from 'zod4';
 
 const USER_ID_REGEX = /^\d+$/;
 const DECIMAL_AMOUNT_REGEX = /^\d+(\.\d{1,18})?$/;
-const ADDRESS_LIKE_REGEX = /^0x[a-fA-F0-9]{3,40}$/;
+const ADDRESS_LIKE_REGEX = /^0x[a-fA-F0-9]{40}$/;
 
 const createPaymentRequestSchema = z.object({
   fromUserId: z.union([z.number().int().positive(), z.string().regex(USER_ID_REGEX)]).optional(),
