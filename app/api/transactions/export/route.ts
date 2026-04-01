@@ -3,14 +3,32 @@ import { query } from '@/lib/db';
 import { requireAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { logger } from '@/lib/logger';
+import { z } from 'zod4';
 
 const MAX_EXPORT_DATE_RANGE_DAYS = 366;
 const MAX_EXPORT_DATE_RANGE_MS = MAX_EXPORT_DATE_RANGE_DAYS * 24 * 60 * 60 * 1000;
 const MAX_EXPORT_FILTER_VALUES = 100;
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null;
-}
+const exportRequestSchema = z.object({
+  address: z.string().trim().min(1),
+  options: z.object({
+    format: z.enum(['csv', 'json', 'pdf']),
+    dateRange: z.object({
+      start: z.string(),
+      end: z.string(),
+    }),
+    filters: z.object({
+      types: z.array(z.string()).max(MAX_EXPORT_FILTER_VALUES),
+      tokens: z.array(z.string()).max(MAX_EXPORT_FILTER_VALUES),
+      minAmount: z.number().finite().optional(),
+      maxAmount: z.number().finite().optional(),
+    }),
+    includeMetadata: z.boolean(),
+    includeFees: z.boolean(),
+    includeUsdValue: z.boolean(),
+    taxFormat: z.enum(['basic', 'turbotax', 'cointracker', 'koinly']).optional(),
+  }),
+});
 
 function normalizeAddress(value: string): string {
   return value.trim().toLowerCase();
@@ -346,9 +364,17 @@ export async function POST(request: NextRequest) {
     return authResult;
   }
 
-  let body: unknown;
+  let body: z.infer<typeof exportRequestSchema>;
   try {
-    body = await request.json();
+    const rawBody = await request.json();
+    const parsed = exportRequestSchema.safeParse(rawBody);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Invalid request body' },
+        { status: 400 }
+      );
+    }
+    body = parsed.data;
   } catch {
     return NextResponse.json(
       { error: 'Invalid JSON body' },
@@ -357,13 +383,6 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    if (!isRecord(body)) {
-      return NextResponse.json(
-        { error: 'Invalid request body' },
-        { status: 400 }
-      );
-    }
-
     const rawAddress = body.address;
     const options = body.options;
 
@@ -389,67 +408,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!isRecord(options)) {
-      return NextResponse.json(
-        { error: 'Invalid export options' },
-        { status: 400 }
-      );
-    }
-
-    if (options.format !== 'csv' && options.format !== 'json' && options.format !== 'pdf') {
-      return NextResponse.json(
-        { error: 'Unsupported format' },
-        { status: 400 }
-      );
-    }
-
-    if (typeof options.includeMetadata !== 'boolean' || typeof options.includeFees !== 'boolean' || typeof options.includeUsdValue !== 'boolean') {
-      return NextResponse.json(
-        { error: 'Invalid export options' },
-        { status: 400 }
-      );
-    }
-
     const dateRange = options.dateRange;
     const filters = options.filters;
-
-    if (!isRecord(dateRange) || typeof dateRange.start !== 'string' || typeof dateRange.end !== 'string') {
-      return NextResponse.json(
-        { error: 'Invalid date range' },
-        { status: 400 }
-      );
-    }
 
     if (!isIsoDateString(dateRange.start) || !isIsoDateString(dateRange.end)) {
       return NextResponse.json(
         { error: 'Invalid date range' },
-        { status: 400 }
-      );
-    }
-
-    if (!isRecord(filters) || !Array.isArray(filters.types) || !Array.isArray(filters.tokens)) {
-      return NextResponse.json(
-        { error: 'Invalid filters' },
-        { status: 400 }
-      );
-    }
-
-    if (
-      filters.types.length > MAX_EXPORT_FILTER_VALUES ||
-      filters.tokens.length > MAX_EXPORT_FILTER_VALUES
-    ) {
-      return NextResponse.json(
-        { error: `Too many filter values. Maximum ${MAX_EXPORT_FILTER_VALUES} per filter.` },
-        { status: 400 }
-      );
-    }
-
-    if (
-      !filters.types.every((value) => typeof value === 'string') ||
-      !filters.tokens.every((value) => typeof value === 'string')
-    ) {
-      return NextResponse.json(
-        { error: 'Invalid filters' },
         { status: 400 }
       );
     }
@@ -463,26 +427,6 @@ export async function POST(request: NextRequest) {
     ) {
       return NextResponse.json(
         { error: 'Invalid filters' },
-        { status: 400 }
-      );
-    }
-
-    if (
-      filters.minAmount !== undefined &&
-      (typeof filters.minAmount !== 'number' || !Number.isFinite(filters.minAmount))
-    ) {
-      return NextResponse.json(
-        { error: 'Invalid minimum amount filter' },
-        { status: 400 }
-      );
-    }
-
-    if (
-      filters.maxAmount !== undefined &&
-      (typeof filters.maxAmount !== 'number' || !Number.isFinite(filters.maxAmount))
-    ) {
-      return NextResponse.json(
-        { error: 'Invalid maximum amount filter' },
         { status: 400 }
       );
     }
@@ -513,13 +457,7 @@ export async function POST(request: NextRequest) {
       includeMetadata: options.includeMetadata,
       includeFees: options.includeFees,
       includeUsdValue: options.includeUsdValue,
-      taxFormat:
-        options.taxFormat === 'basic' ||
-        options.taxFormat === 'turbotax' ||
-        options.taxFormat === 'cointracker' ||
-        options.taxFormat === 'koinly'
-          ? options.taxFormat
-          : undefined,
+      taxFormat: options.taxFormat,
     };
 
     // Validate address matches authenticated user

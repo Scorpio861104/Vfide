@@ -1,11 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
-import { validateBody, pushSubscriptionSchema, pushUnsubscribeSchema } from '@/lib/auth/validation';
 import { requireAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { logger } from '@/lib/logger';
+import { z } from 'zod4';
 
 const ADDRESS_PATTERN = /^0x[a-fA-F0-9]{3,64}$/;
+
+const pushSubscriptionPayloadSchema = z.object({
+  userAddress: z.string().trim().regex(ADDRESS_PATTERN),
+  subscription: z.object({
+    endpoint: z.string().trim().min(1),
+    keys: z.record(z.string(), z.string()),
+  }),
+});
+
+const pushUnsubscribePayloadSchema = z.object({
+  userAddress: z.string().trim().regex(ADDRESS_PATTERN),
+  endpoint: z.string().trim().min(1),
+});
 
 function normalizeAddress(value: string): string {
   return value.trim().toLowerCase();
@@ -32,15 +45,25 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const validation = await validateBody(request, pushSubscriptionSchema);
-    if (!validation.success) {
+    let body: z.infer<typeof pushSubscriptionPayloadSchema>;
+    try {
+      const rawBody = await request.json();
+      const parsed = pushSubscriptionPayloadSchema.safeParse(rawBody);
+      if (!parsed.success) {
+        return NextResponse.json(
+          { error: 'Invalid request body' },
+          { status: 400 }
+        );
+      }
+      body = parsed.data;
+    } catch {
       return NextResponse.json(
-        { error: validation.error, details: validation.details },
+        { error: 'Invalid JSON body' },
         { status: 400 }
       );
     }
 
-    const { userAddress, subscription } = validation.data;
+    const { userAddress, subscription } = body;
     const normalizedUserAddress = normalizeAddress(userAddress);
 
     if (!isAddressLike(normalizedUserAddress)) {
@@ -90,15 +113,25 @@ export async function DELETE(request: NextRequest) {
   }
 
   try {
-    const validation = await validateBody(request, pushUnsubscribeSchema);
-    if (!validation.success) {
+    let body: z.infer<typeof pushUnsubscribePayloadSchema>;
+    try {
+      const rawBody = await request.json();
+      const parsed = pushUnsubscribePayloadSchema.safeParse(rawBody);
+      if (!parsed.success) {
+        return NextResponse.json(
+          { error: 'Invalid request body' },
+          { status: 400 }
+        );
+      }
+      body = parsed.data;
+    } catch {
       return NextResponse.json(
-        { error: validation.error, details: validation.details },
+        { error: 'Invalid JSON body' },
         { status: 400 }
       );
     }
 
-    const { userAddress, endpoint } = validation.data;
+    const { userAddress, endpoint } = body;
     const normalizedUserAddress = normalizeAddress(userAddress);
 
     if (!isAddressLike(normalizedUserAddress)) {
