@@ -14,6 +14,7 @@ import { query } from '@/lib/db';
 import { requireAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { logger } from '@/lib/logger';
+import { z } from 'zod4';
 
 const ADDRESS_LIKE_REGEX = /^0x[a-fA-F0-9]{3,40}$/;
 
@@ -37,6 +38,20 @@ const VALID_EVENTS = [
   'merchant.suspended',
   'merchant.reinstated',
 ] as const;
+
+const webhookCreateSchema = z.object({
+  url: z.string().trim(),
+  events: z.array(z.enum(VALID_EVENTS)).min(1),
+  description: z.string().max(200).optional(),
+});
+
+const webhookPatchSchema = z.object({
+  id: z.number().int().positive(),
+  url: z.string().trim().optional(),
+  events: z.array(z.enum(VALID_EVENTS)).min(1).optional(),
+  description: z.string().max(200).optional(),
+  status: z.enum(['active', 'paused']).optional(),
+});
 
 function isValidUrl(url: string): boolean {
   try {
@@ -138,7 +153,11 @@ export async function POST(request: NextRequest) {
   if (authAddress instanceof NextResponse) return authAddress;
 
   try {
-    const body = await request.json() as Record<string, unknown>;
+    const parsedBody = webhookCreateSchema.safeParse(await request.json());
+    if (!parsedBody.success) {
+      return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
+    }
+    const body = parsedBody.data;
     const { url, events, description } = body;
 
     // Validate URL (HTTPS only)
@@ -147,14 +166,6 @@ export async function POST(request: NextRequest) {
     }
 
     // Validate events
-    if (!Array.isArray(events) || events.length === 0) {
-      return NextResponse.json({ error: 'At least one event type is required' }, { status: 400 });
-    }
-    const invalidEvents = events.filter((e) => !VALID_EVENTS.includes(e as typeof VALID_EVENTS[number]));
-    if (invalidEvents.length > 0) {
-      return NextResponse.json({ error: `Invalid events: ${invalidEvents.join(', ')}` }, { status: 400 });
-    }
-
     // Limit endpoints per merchant
     const countResult = await query(
       'SELECT COUNT(*) as count FROM merchant_webhook_endpoints WHERE merchant_address = $1',
@@ -172,7 +183,7 @@ export async function POST(request: NextRequest) {
        (merchant_address, url, secret, events, description)
        VALUES ($1, $2, $3, $4, $5)
        RETURNING id, url, events, status, description, created_at`,
-      [authAddress, url, secret, events, typeof description === 'string' ? description.slice(0, 200) : null]
+      [authAddress, url, secret, events, description ?? null]
     );
 
     return NextResponse.json({
@@ -194,12 +205,12 @@ export async function PATCH(request: NextRequest) {
   if (authAddress instanceof NextResponse) return authAddress;
 
   try {
-    const body = await request.json() as Record<string, unknown>;
-    const { id, url, events, description, status } = body;
-
-    if (typeof id !== 'number') {
-      return NextResponse.json({ error: 'Endpoint ID required' }, { status: 400 });
+    const parsedBody = webhookPatchSchema.safeParse(await request.json());
+    if (!parsedBody.success) {
+      return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
     }
+    const body = parsedBody.data;
+    const { id, url, events, description, status } = body;
 
     // Verify ownership
     const existing = await query(
@@ -222,19 +233,15 @@ export async function PATCH(request: NextRequest) {
       updates.push(`url = $${paramIndex++}`);
       params.push(url);
     }
-    if (Array.isArray(events)) {
-      const invalidEvents = events.filter((e) => !VALID_EVENTS.includes(e as typeof VALID_EVENTS[number]));
-      if (invalidEvents.length > 0) {
-        return NextResponse.json({ error: `Invalid events: ${invalidEvents.join(', ')}` }, { status: 400 });
-      }
+    if (events) {
       updates.push(`events = $${paramIndex++}`);
       params.push(events);
     }
-    if (typeof description === 'string') {
+    if (description !== undefined) {
       updates.push(`description = $${paramIndex++}`);
-      params.push(description.slice(0, 200));
+      params.push(description);
     }
-    if (typeof status === 'string' && ['active', 'paused'].includes(status)) {
+    if (status) {
       updates.push(`status = $${paramIndex++}`);
       params.push(status);
       // Reset failure count when reactivating

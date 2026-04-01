@@ -12,8 +12,21 @@ import { query } from '@/lib/db';
 import { requireAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { logger } from '@/lib/logger';
+import { z } from 'zod4';
 
 const ADDRESS_LIKE_REGEX = /^0x[a-fA-F0-9]{3,40}$/;
+
+const createCategorySchema = z.object({
+  name: z.string().trim().min(1).max(100),
+  parent_id: z.number().int().positive().optional(),
+  sort_order: z.coerce.number().int().optional(),
+});
+
+const patchCategorySchema = z.object({
+  id: z.number().int().positive(),
+  name: z.string().trim().min(1).max(100).optional(),
+  sort_order: z.coerce.number().int().optional(),
+});
 
 function slugify(text: string): string {
   return text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 100);
@@ -68,12 +81,12 @@ export async function POST(request: NextRequest) {
   if (authAddress instanceof NextResponse) return authAddress;
 
   try {
-    const body = await request.json() as Record<string, unknown>;
-    const { name, parent_id, sort_order } = body;
-
-    if (typeof name !== 'string' || name.trim().length === 0 || name.length > 100) {
-      return NextResponse.json({ error: 'Category name required (max 100 chars)' }, { status: 400 });
+    const parsedBody = createCategorySchema.safeParse(await request.json());
+    if (!parsedBody.success) {
+      return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
     }
+    const body = parsedBody.data;
+    const { name, parent_id, sort_order } = body;
 
     const countResult = await query(
       'SELECT COUNT(*) as count FROM merchant_categories WHERE merchant_address = $1',
@@ -91,10 +104,10 @@ export async function POST(request: NextRequest) {
        RETURNING *`,
       [
         authAddress,
-        name.trim().slice(0, 100),
+        name,
         slug,
-        typeof parent_id === 'number' ? parent_id : null,
-        typeof sort_order === 'number' ? sort_order : 0,
+        parent_id ?? null,
+        sort_order ?? 0,
       ]
     );
 
@@ -113,22 +126,22 @@ export async function PATCH(request: NextRequest) {
   if (authAddress instanceof NextResponse) return authAddress;
 
   try {
-    const body = await request.json() as Record<string, unknown>;
-    const { id, name, sort_order } = body;
-
-    if (typeof id !== 'number') {
-      return NextResponse.json({ error: 'Category ID required' }, { status: 400 });
+    const parsedBody = patchCategorySchema.safeParse(await request.json());
+    if (!parsedBody.success) {
+      return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
     }
+    const body = parsedBody.data;
+    const { id, name, sort_order } = body;
 
     const updates: string[] = [];
     const params: (string | number)[] = [];
     let pi = 1;
 
-    if (typeof name === 'string' && name.trim().length > 0) {
+    if (typeof name === 'string') {
       updates.push(`name = $${pi++}`);
-      params.push(name.trim().slice(0, 100));
+      params.push(name);
       updates.push(`slug = $${pi++}`);
-      params.push(slugify(name.trim()));
+      params.push(slugify(name));
     }
     if (typeof sort_order === 'number') {
       updates.push(`sort_order = $${pi++}`);
