@@ -91,7 +91,8 @@ function isValidUrl(url: string): boolean {
     }
 
     return true;
-  } catch {
+  } catch (error) {
+    logger.debug('[Webhooks] Invalid URL parsing failed', error);
     return false;
   }
 }

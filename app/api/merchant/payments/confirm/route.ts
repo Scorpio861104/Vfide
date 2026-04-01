@@ -10,6 +10,7 @@ import { createPublicClient, decodeEventLog, getAddress, http, parseAbiItem } fr
 import { requireAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { query } from '@/lib/db';
+import { logger } from '@/lib/logger';
 import { dispatchWebhook } from '@/lib/webhooks/merchantWebhookDispatcher';
 import { z } from 'zod4';
 
@@ -171,7 +172,9 @@ async function verifyPaymentEventOnChain(params: {
       if (expectedToken && getAddress(args.token) !== expectedToken) continue;
 
       return { ok: true };
-    } catch {
+    } catch (error) {
+      // Non-payment logs in the receipt can fail event decoding; continue scanning remaining logs.
+      logger.debug('[Merchant Payment Confirm] Failed to decode receipt log', error);
       continue;
     }
   }
@@ -201,7 +204,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
     }
     body = parsed.data;
-  } catch {
+  } catch (error) {
+    logger.debug('[Merchant Payment Confirm] Invalid JSON payload', error);
     return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
   }
 

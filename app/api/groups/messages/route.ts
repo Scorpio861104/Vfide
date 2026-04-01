@@ -105,7 +105,8 @@ function isEncryptedDirectMessagePayload(content: string): boolean {
     ) return false;
 
     return true;
-  } catch {
+  } catch (error) {
+    logger.debug('[Group Messages] Failed to parse encrypted direct message payload', error);
     return false;
   }
 }
@@ -183,7 +184,8 @@ function parseEncryptedGroupMessagePayload(content: string, routeGroupId?: numbe
       encryptedForMembers: normalizedEncryptedForMembers,
       groupSig,
     };
-  } catch {
+  } catch (error) {
+    logger.debug('[Group Messages] Failed to parse encrypted group payload', error);
     return null;
   }
 }
@@ -401,7 +403,8 @@ export async function POST(request: NextRequest) {
         );
       }
       body = parsed.data;
-    } catch {
+    } catch (error) {
+      logger.debug('[Group Messages POST] Invalid JSON body', error);
       return NextResponse.json(
         { error: 'Invalid JSON body' },
         { status: 400 }

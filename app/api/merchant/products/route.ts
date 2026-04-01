@@ -176,7 +176,8 @@ export async function GET(request: NextRequest) {
         [suggest, `%${suggest}%`]
       );
       return NextResponse.json({ suggestions: result.rows });
-    } catch {
+    } catch (error) {
+      logger.debug('[Products GET suggest] Failed to build suggestions', error);
       return NextResponse.json({ suggestions: [] });
     }
   }

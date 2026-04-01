@@ -218,7 +218,8 @@ export async function POST(request: NextRequest) {
         );
       }
       body = parsed.data;
-    } catch {
+    } catch (error) {
+      logger.debug('[Friends POST API] Invalid JSON payload', error);
       return NextResponse.json(
         { error: 'Invalid JSON payload' },
         { status: 400 }
@@ -350,7 +351,8 @@ export async function PATCH(request: NextRequest) {
         );
       }
       body = parsed.data;
-    } catch {
+    } catch (error) {
+      logger.debug('[Friends PATCH API] Invalid JSON payload', error);
       return NextResponse.json(
         { error: 'Invalid JSON payload' },
         { status: 400 }

@@ -91,7 +91,8 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
       }
       body = parsed.data;
-    } catch {
+    } catch (error) {
+      logger.debug('[Performance Metrics POST] Invalid JSON payload', error);
       return NextResponse.json({ error: 'Invalid JSON payload' }, { status: 400 });
     }
 
