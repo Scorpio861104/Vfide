@@ -49,7 +49,8 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
     }
     body = parsed.data;
-  } catch {
+  } catch (error) {
+    logger.debug('[Message Delete] Invalid JSON body', error);
     return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
   }
 

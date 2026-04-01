@@ -56,7 +56,8 @@ export async function POST(request: NextRequest) {
         );
       }
       body = parsed.data;
-    } catch {
+    } catch (error) {
+      logger.debug('[Push Subscribe] Invalid JSON body', error);
       return NextResponse.json(
         { error: 'Invalid JSON body' },
         { status: 400 }
@@ -124,7 +125,8 @@ export async function DELETE(request: NextRequest) {
         );
       }
       body = parsed.data;
-    } catch {
+    } catch (error) {
+      logger.debug('[Push Unsubscribe] Invalid JSON body', error);
       return NextResponse.json(
         { error: 'Invalid JSON body' },
         { status: 400 }

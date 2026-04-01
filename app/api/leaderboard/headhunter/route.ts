@@ -121,7 +121,8 @@ export async function GET(request: NextRequest) {
     let parsedUrl: URL;
     try {
       parsedUrl = new URL(subgraphUrl);
-    } catch {
+    } catch (error) {
+      logger.debug('[Leaderboard API] Invalid subgraph URL configured', error);
       return NextResponse.json({ error: 'Invalid subgraph URL configured' }, { status: 500 });
     }
     if (parsedUrl.protocol !== 'https:' || !ALLOWED_SUBGRAPH_HOSTS.includes(parsedUrl.hostname)) {

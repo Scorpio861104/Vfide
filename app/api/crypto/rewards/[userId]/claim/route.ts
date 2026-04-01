@@ -135,7 +135,8 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
         return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
       }
       body = parsed.data;
-    } catch {
+    } catch (error) {
+      logger.debug('[Rewards Claim] Invalid JSON body', error);
       return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
     }
 
