@@ -4,6 +4,7 @@ import { requireAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { isAddress } from 'viem';
 import { logger } from '@/lib/logger';
+import { z } from 'zod4';
 
 interface GroupMember {
   id: number;
@@ -19,16 +20,35 @@ interface GroupMember {
 const VALID_GROUP_MEMBER_ROLES = ['member', 'moderator', 'admin'] as const;
 const GROUP_ID_REGEX = /^\d+$/;
 
+const groupIdSchema = z.union([
+  z.number().int().positive(),
+  z.string().regex(GROUP_ID_REGEX),
+]).transform((value) => value.toString());
+
+const addGroupMemberSchema = z.object({
+  groupId: groupIdSchema,
+  userAddress: z.string().refine((value) => isAddress(value), { message: 'Invalid userAddress format' }),
+  role: z.enum(VALID_GROUP_MEMBER_ROLES).default('member'),
+  actorAddress: z.string().optional().refine((value) => value === undefined || isAddress(value), {
+    message: 'Invalid actorAddress format',
+  }),
+});
+
+const patchGroupMemberSchema = z.object({
+  groupId: groupIdSchema,
+  userAddress: z.string().refine((value) => isAddress(value), { message: 'Invalid userAddress format' }),
+  role: z.enum(VALID_GROUP_MEMBER_ROLES),
+  actorAddress: z.string().optional().refine((value) => value === undefined || isAddress(value), {
+    message: 'Invalid actorAddress format',
+  }),
+});
+
 const ROLE_RANK: Record<string, number> = {
   member: 1,
   moderator: 2,
   admin: 3,
   owner: 4,
 };
-
-function isObjectRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
-}
 
 function normalizeAddress(value: string): string {
   return value.trim().toLowerCase();
@@ -157,15 +177,16 @@ export async function POST(request: NextRequest) {
   if (authResult instanceof NextResponse) return authResult;
 
   try {
-    let body: unknown;
+    let body: z.infer<typeof addGroupMemberSchema>;
     try {
-      body = await request.json();
+      const rawBody = await request.json();
+      const parsed = addGroupMemberSchema.safeParse(rawBody);
+      if (!parsed.success) {
+        return NextResponse.json({ success: false, error: 'Invalid request body' }, { status: 400 });
+      }
+      body = parsed.data;
     } catch {
       return NextResponse.json({ success: false, error: 'Invalid JSON payload' }, { status: 400 });
-    }
-
-    if (!isObjectRecord(body)) {
-      return NextResponse.json({ success: false, error: 'Invalid request body' }, { status: 400 });
     }
 
     const { groupId, userAddress, role = 'member', actorAddress } = body;
@@ -176,31 +197,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
 
-    if (!groupId || !userAddress) {
-      return NextResponse.json({ success: false, error: 'groupId and userAddress required' }, { status: 400 });
-    }
-
-    const groupIdValue =
-      typeof groupId === 'number' || typeof groupId === 'string' ? groupId.toString() : null;
-    const userAddressValue = typeof userAddress === 'string' ? userAddress : null;
-    const roleValue = typeof role === 'string' ? role : null;
-    const actorAddressValue = typeof actorAddress === 'string' ? actorAddress : null;
-
-    if (!groupIdValue || !userAddressValue || !roleValue) {
-      return NextResponse.json({ success: false, error: 'Invalid groupId, userAddress, or role type' }, { status: 400 });
-    }
-
-    if (!GROUP_ID_REGEX.test(groupIdValue)) {
-      return NextResponse.json({ success: false, error: 'Invalid groupId format' }, { status: 400 });
-    }
-
-    if (!isAddress(userAddressValue)) {
-      return NextResponse.json({ success: false, error: 'Invalid userAddress format' }, { status: 400 });
-    }
-
-    if (!VALID_GROUP_MEMBER_ROLES.includes(roleValue as (typeof VALID_GROUP_MEMBER_ROLES)[number])) {
-      return NextResponse.json({ success: false, error: 'Invalid role value' }, { status: 400 });
-    }
+    const groupIdValue = groupId;
+    const userAddressValue = userAddress;
+    const roleValue = role;
+    const actorAddressValue = actorAddress;
 
     if (actorAddressValue && actorAddressValue.toLowerCase() !== authenticatedAddress) {
       return NextResponse.json({ success: false, error: 'Unauthorized actor' }, { status: 403 });
@@ -265,15 +265,16 @@ export async function PATCH(request: NextRequest) {
   if (authResult instanceof NextResponse) return authResult;
 
   try {
-    let body: unknown;
+    let body: z.infer<typeof patchGroupMemberSchema>;
     try {
-      body = await request.json();
+      const rawBody = await request.json();
+      const parsed = patchGroupMemberSchema.safeParse(rawBody);
+      if (!parsed.success) {
+        return NextResponse.json({ success: false, error: 'Invalid request body' }, { status: 400 });
+      }
+      body = parsed.data;
     } catch {
       return NextResponse.json({ success: false, error: 'Invalid JSON payload' }, { status: 400 });
-    }
-
-    if (!isObjectRecord(body)) {
-      return NextResponse.json({ success: false, error: 'Invalid request body' }, { status: 400 });
     }
 
     const { groupId, userAddress, role, actorAddress } = body;
@@ -284,31 +285,10 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
 
-    if (!groupId || !userAddress || !role) {
-      return NextResponse.json({ success: false, error: 'Missing required fields' }, { status: 400 });
-    }
-
-    const groupIdValue =
-      typeof groupId === 'number' || typeof groupId === 'string' ? groupId.toString() : null;
-    const userAddressValue = typeof userAddress === 'string' ? userAddress : null;
-    const roleValue = typeof role === 'string' ? role : null;
-    const actorAddressValue = typeof actorAddress === 'string' ? actorAddress : null;
-
-    if (!groupIdValue || !userAddressValue || !roleValue) {
-      return NextResponse.json({ success: false, error: 'Invalid groupId, userAddress, role, or actorAddress type' }, { status: 400 });
-    }
-
-    if (!GROUP_ID_REGEX.test(groupIdValue)) {
-      return NextResponse.json({ success: false, error: 'Invalid groupId format' }, { status: 400 });
-    }
-
-    if (!isAddress(userAddressValue) || (actorAddressValue !== null && !isAddress(actorAddressValue))) {
-      return NextResponse.json({ success: false, error: 'Invalid address format' }, { status: 400 });
-    }
-
-    if (!VALID_GROUP_MEMBER_ROLES.includes(roleValue as (typeof VALID_GROUP_MEMBER_ROLES)[number])) {
-      return NextResponse.json({ success: false, error: 'Invalid role value' }, { status: 400 });
-    }
+    const groupIdValue = groupId;
+    const userAddressValue = userAddress;
+    const roleValue = role;
+    const actorAddressValue = actorAddress;
 
     if (actorAddressValue && actorAddressValue.toLowerCase() !== authenticatedAddress) {
       return NextResponse.json({ success: false, error: 'Unauthorized actor' }, { status: 403 });
