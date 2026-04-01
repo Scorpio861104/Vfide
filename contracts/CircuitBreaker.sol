@@ -48,6 +48,7 @@ contract CircuitBreaker is VFIDEAccessControl {
     
     bool public circuitBreakerTriggered;
     uint256 public lastTriggerTime;
+    uint256 private _guardLock;
     
     TriggerEvent[] public triggerHistory;
     uint256 public constant MAX_TRIGGER_HISTORY = 1000;
@@ -74,6 +75,13 @@ contract CircuitBreaker is VFIDEAccessControl {
     modifier notTriggered() {
         require(!circuitBreakerTriggered, "CircuitBreaker: already triggered");
         _;
+    }
+
+    modifier nonReentrantCB() {
+        require(_guardLock == 0, "CircuitBreaker: reentrant call");
+        _guardLock = 1;
+        _;
+        _guardLock = 0;
     }
 
     modifier onlyEmergencyController() {
@@ -136,7 +144,7 @@ contract CircuitBreaker is VFIDEAccessControl {
      * @notice Record transaction volume and check threshold
      * @param _volume Transaction volume to record
      */
-    function recordVolume(uint256 _volume) external onlyRole(RECORDER_ROLE) notTriggered {
+    function recordVolume(uint256 _volume) external onlyRole(RECORDER_ROLE) notTriggered nonReentrantCB {
         if (!config.enabled) return;
 
         // Reset daily volume after 24h
@@ -164,7 +172,7 @@ contract CircuitBreaker is VFIDEAccessControl {
      * @notice Update price and check for significant drops
      * @param _newPrice New price from oracle
      */
-    function updatePrice(uint256 _newPrice) external notTriggered {
+    function updatePrice(uint256 _newPrice) external notTriggered nonReentrantCB {
         if (!config.enabled) return;
         require(msg.sender == priceOracle, "CircuitBreaker: not oracle");
         require(_newPrice > 0, "CircuitBreaker: invalid price");
@@ -197,7 +205,7 @@ contract CircuitBreaker is VFIDEAccessControl {
     /**
      * @notice Increment blacklist counter and check threshold
      */
-    function incrementBlacklist() external onlyRole(BLACKLIST_MANAGER_ROLE) notTriggered {
+    function incrementBlacklist() external onlyRole(BLACKLIST_MANAGER_ROLE) notTriggered nonReentrantCB {
         if (!config.enabled) return;
 
         // Reset counter after 24h
@@ -233,7 +241,8 @@ contract CircuitBreaker is VFIDEAccessControl {
     function manualTrigger(string calldata _reason) 
         external 
         onlyRole(EMERGENCY_PAUSER_ROLE) 
-        notTriggered 
+        notTriggered
+        nonReentrantCB
     {
         require(bytes(_reason).length > 0, "CircuitBreaker: reason required");
         _trigger(_reason, 0);
@@ -246,7 +255,7 @@ contract CircuitBreaker is VFIDEAccessControl {
      *      without requiring a specific role. No state is written if thresholds are not exceeded.
      * @return triggered True if the circuit breaker was triggered by this call.
      */
-    function checkAndTrigger() external notTriggered returns (bool triggered) {
+    function checkAndTrigger() external notTriggered nonReentrantCB returns (bool triggered) {
         if (!config.enabled) return false;
 
         // Check daily volume threshold
@@ -271,7 +280,7 @@ contract CircuitBreaker is VFIDEAccessControl {
      * @notice Reset circuit breaker
      * @dev Can only be called by governance to resume operations
      */
-    function reset() external onlyRole(DEFAULT_ADMIN_ROLE) {
+    function reset() external onlyRole(DEFAULT_ADMIN_ROLE) nonReentrantCB {
         require(circuitBreakerTriggered, "CircuitBreaker: not triggered");
         
         circuitBreakerTriggered = false;

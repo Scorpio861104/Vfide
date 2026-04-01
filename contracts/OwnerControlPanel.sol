@@ -472,6 +472,7 @@ contract OwnerControlPanel {
         vfideToken.applySecurityHub();
         vfideToken.applyLedger();
         vfideToken.applyBurnRouter();
+        emit EmergencyAction("token_modules_applied", address(vfideToken));
     }
 
     function token_cancelModules() external onlyOwner nonReentrant {
@@ -480,6 +481,7 @@ contract OwnerControlPanel {
         try vfideToken.cancelSecurityHub() {} catch {}
         try vfideToken.cancelLedger() {} catch {}
         try vfideToken.cancelBurnRouter() {} catch {}
+        emit EmergencyAction("token_modules_cancelled", address(vfideToken));
     }
     
     /**
@@ -492,6 +494,7 @@ contract OwnerControlPanel {
         _consumeQueuedAction(actionId_token_setSinks(treasury, sanctum));
         if (treasury != address(0)) vfideToken.setTreasurySink(treasury);
         if (sanctum != address(0)) vfideToken.setSanctumSink(sanctum);
+        emit EmergencyAction("token_sinks_set", address(vfideToken));
     }
     
     /**
@@ -500,6 +503,7 @@ contract OwnerControlPanel {
      */
     function token_proposeSystemExempt(address who, bool isExempt) external onlyOwner nonReentrant {
         vfideToken.proposeSystemExempt(who, isExempt);
+        emit EmergencyAction(isExempt ? "token_exempt_proposed" : "token_exempt_remove_proposed", who);
     }
 
     /**
@@ -507,6 +511,7 @@ contract OwnerControlPanel {
      */
     function token_confirmSystemExempt() external onlyOwner nonReentrant {
         vfideToken.confirmSystemExempt();
+        emit EmergencyAction("token_exempt_confirmed", address(vfideToken));
     }
 
     /**
@@ -514,6 +519,7 @@ contract OwnerControlPanel {
      */
     function token_cancelPendingSystemExempt() external onlyOwner nonReentrant {
         vfideToken.cancelPendingExempt();
+        emit EmergencyAction("token_exempt_cancelled", address(vfideToken));
     }
     
     /**
@@ -521,6 +527,7 @@ contract OwnerControlPanel {
      */
     function token_proposeWhitelist(address addr, bool status) external onlyOwner nonReentrant {
         vfideToken.proposeWhitelist(addr, status);
+        emit EmergencyAction(status ? "token_whitelist_proposed" : "token_unwhitelist_proposed", addr);
     }
 
     /**
@@ -528,6 +535,7 @@ contract OwnerControlPanel {
      */
     function token_confirmWhitelist() external onlyOwner nonReentrant {
         vfideToken.confirmWhitelist();
+        emit EmergencyAction("token_whitelist_confirmed", address(vfideToken));
     }
 
     /**
@@ -535,6 +543,7 @@ contract OwnerControlPanel {
      */
     function token_cancelPendingWhitelist() external onlyOwner nonReentrant {
         vfideToken.cancelPendingWhitelist();
+        emit EmergencyAction("token_whitelist_cancelled", address(vfideToken));
     }
     
     /**
@@ -543,6 +552,7 @@ contract OwnerControlPanel {
     function token_setVaultOnly(bool enabled) external onlyOwner nonReentrant {
         _consumeQueuedAction(actionId_token_setVaultOnly(enabled));
         vfideToken.setVaultOnly(enabled);
+        emit EmergencyAction(enabled ? "token_vault_only_enabled" : "token_vault_only_disabled", address(vfideToken));
     }
     
     /**
@@ -551,6 +561,7 @@ contract OwnerControlPanel {
     function token_lockPolicy() external onlyOwner nonReentrant {
         _consumeQueuedAction(actionId_token_lockPolicy());
         vfideToken.lockPolicy();
+        emit EmergencyAction("token_policy_locked", address(vfideToken));
     }
     
     /**
@@ -581,6 +592,7 @@ contract OwnerControlPanel {
     function token_setBlacklist(address user, bool status) external onlyOwner nonReentrant {
         _consumeQueuedAction(actionId_token_setBlacklist(user, status));
         vfideToken.setBlacklist(user, status);
+        emit EmergencyAction(status ? "token_blacklisted" : "token_unblacklisted", user);
     }
     
     /**
@@ -622,6 +634,7 @@ contract OwnerControlPanel {
         // F-14 FIX: require governance queue before execution
         _consumeQueuedAction(actionId_token_setAntiWhale(maxTransfer, maxWallet, dailyLimit, cooldown));
         vfideToken.setAntiWhale(maxTransfer, maxWallet, dailyLimit, cooldown);
+        emit AntiWhaleUpdated(maxTransfer, maxWallet, dailyLimit, cooldown);
     }
     
     /**
@@ -631,6 +644,7 @@ contract OwnerControlPanel {
         // F-14 FIX: require governance queue before execution
         _consumeQueuedAction(actionId_token_setWhaleLimitExempt(addr, exempt));
         vfideToken.setWhaleLimitExempt(addr, exempt);
+        emit EmergencyAction(exempt ? "token_whale_exempt_added" : "token_whale_exempt_removed", addr);
     }
     
     /**
@@ -727,6 +741,7 @@ contract OwnerControlPanel {
     function sustainability_setTokenReference(address token) external onlyOwner nonReentrant {
         _consumeQueuedAction(actionId_sustainability_setTokenReference(token));
         burnRouter.setToken(token);
+        emit EmergencyAction("sustainability_token_reference_set", token);
     }
     
     // ═══════════════════════════════════════════════════════════════════════
@@ -744,6 +759,7 @@ contract OwnerControlPanel {
     ) external onlyOwner nonReentrant {
         _consumeQueuedAction(actionId_seer_setThresholds(lowTrust, highTrust, minGovernance, minMerchant));
         seer.setThresholds(lowTrust, highTrust, minGovernance, minMerchant);
+        emit EmergencyAction("seer_thresholds_set", address(seer));
     }
     
     // ═══════════════════════════════════════════════════════════════════════
@@ -762,6 +778,7 @@ contract OwnerControlPanel {
         if (token != address(0)) vaultHub.setVFIDEToken(token);
         if (security != address(0)) vaultHub.setSecurityHub(security);
         if (ledger != address(0)) vaultHub.setProofLedger(ledger);
+        emit EmergencyAction("vault_modules_set", address(vaultHub));
     }
     
     /**
@@ -770,6 +787,7 @@ contract OwnerControlPanel {
     function vault_setDAOMultisig(address multisig) external onlyOwner nonReentrant {
         _consumeQueuedAction(actionId_vault_setDAOMultisig(multisig));
         vaultHub.setDAORecoveryMultisig(multisig);
+        emit EmergencyAction("vault_dao_multisig_set", multisig);
     }
     
     /**
@@ -778,6 +796,7 @@ contract OwnerControlPanel {
     function vault_setRecoveryTimelock(uint64 timelock) external onlyOwner nonReentrant {
         _consumeQueuedAction(actionId_vault_setRecoveryTimelock(timelock));
         vaultHub.setRecoveryTimelock(timelock);
+        emit EmergencyAction("vault_recovery_timelock_set", address(vaultHub));
     }
     
     /**
@@ -804,6 +823,7 @@ contract OwnerControlPanel {
     function vault_cancelDAORecovery(address vault) external onlyOwner nonReentrant {
         _consumeQueuedAction(actionId_vault_cancelDAORecovery(vault));
         vaultHub.cancelDAORecovery(vault);
+        emit EmergencyAction("dao_recovery_cancelled", vault);
     }
     
     /**
@@ -1032,6 +1052,7 @@ contract OwnerControlPanel {
         // F-14 FIX: require governance queue before execution
         _consumeQueuedAction(actionId_ecosystem_setManager(manager, active));
         ecosystemVault.setManager(manager, active);
+        emit EmergencyAction(active ? "ecosystem_manager_set" : "ecosystem_manager_removed", manager);
     }
     
     /**
@@ -1048,6 +1069,7 @@ contract OwnerControlPanel {
     ) external onlyOwner nonReentrant {
         _consumeQueuedAction(actionId_ecosystem_setAllocations(councilBps, merchantBps, headhunterBps));
         ecosystemVault.setAllocations(councilBps, merchantBps, headhunterBps);
+        emit EmergencyAction("ecosystem_allocations_set", address(ecosystemVault));
     }
 
     /**
@@ -1087,6 +1109,7 @@ contract OwnerControlPanel {
             merchantReferralReward,
             userReferralReward
         );
+        emit EmergencyAction(enabled ? "ecosystem_auto_work_enabled" : "ecosystem_auto_work_disabled", address(ecosystemVault));
     }
 
     function _isAutoWorkRewardWithinBounds(uint256 rewardWei) internal view returns (bool) {

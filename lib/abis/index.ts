@@ -43,6 +43,20 @@ import UserRewardsABI from './UserRewards.json'
 import OwnerControlPanelABI from './OwnerControlPanel.json'
 import EscrowManagerABI from './EscrowManager.json'
 import BadgeManagerABI from './BadgeManager.json'
+import FeeDistributorABI from './FeeDistributor.json'
+import SystemHandoverABI from './SystemHandover.json'
+import VFIDEBridgeABI from './VFIDEBridge.json'
+import AdminMultiSigABI from './AdminMultiSig.json'
+import CircuitBreakerABI from './CircuitBreaker.json'
+import EmergencyControlABI from './EmergencyControl.json'
+import WithdrawalQueueABI from './WithdrawalQueue.json'
+import VFIDEBenefitsABI from './VFIDEBenefits.json'
+import GovernanceHooksABI from './GovernanceHooks.json'
+import BadgeRegistryABI from './BadgeRegistry.json'
+import SeerGuardianABI from './SeerGuardian.json'
+import SeerPolicyGuardABI from './SeerPolicyGuard.json'
+import MainstreamPaymentsABI from './MainstreamPayments.json'
+import VFIDECommerceABI from './VFIDECommerce.json'
 import { logger } from '@/lib/logger';
 
 // Runtime validation: Ensure ABIs are valid arrays
@@ -97,6 +111,20 @@ validateABI(UserRewardsABI, 'UserRewards');
 validateABI(OwnerControlPanelABI, 'OwnerControlPanel');
 validateABI(EscrowManagerABI, 'EscrowManager');
 validateABI(BadgeManagerABI, 'BadgeManager');
+validateABI(FeeDistributorABI, 'FeeDistributor');
+validateABI(SystemHandoverABI, 'SystemHandover');
+validateABI(VFIDEBridgeABI, 'VFIDEBridge');
+validateABI(AdminMultiSigABI, 'AdminMultiSig');
+validateABI(CircuitBreakerABI, 'CircuitBreaker');
+validateABI(EmergencyControlABI, 'EmergencyControl');
+validateABI(WithdrawalQueueABI, 'WithdrawalQueue');
+validateABI(VFIDEBenefitsABI, 'VFIDEBenefits');
+validateABI(GovernanceHooksABI, 'GovernanceHooks');
+validateABI(BadgeRegistryABI, 'BadgeRegistry');
+validateABI(SeerGuardianABI, 'SeerGuardian');
+validateABI(SeerPolicyGuardABI, 'SeerPolicyGuard');
+validateABI(MainstreamPaymentsABI, 'MainstreamPayments');
+validateABI(VFIDECommerceABI, 'VFIDECommerce');
 
 // VaultHub ABI points to the full compiled artifact (includes ensureVault, getVaultInfo, etc.).
 validateABI(VaultHubFullABI, 'VaultHub');
@@ -145,4 +173,18 @@ export {
   OwnerControlPanelABI,
   EscrowManagerABI,
   BadgeManagerABI,
+  FeeDistributorABI,
+  SystemHandoverABI,
+  VFIDEBridgeABI,
+  AdminMultiSigABI,
+  CircuitBreakerABI,
+  EmergencyControlABI,
+  WithdrawalQueueABI,
+  VFIDEBenefitsABI,
+  GovernanceHooksABI,
+  BadgeRegistryABI,
+  SeerGuardianABI,
+  SeerPolicyGuardABI,
+  MainstreamPaymentsABI,
+  VFIDECommerceABI,
 }

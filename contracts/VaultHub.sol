@@ -89,6 +89,8 @@ contract VaultHub is Ownable, Pausable, ReentrancyGuard {
         revert("VH: use individual setters");
     }
 
+    /// @notice Schedule an update for the VFIDE token module.
+    /// @param _vfide New VFIDE token address.
     function setVFIDE(address _vfide) external onlyOwner {
         if (_vfide == address(0)) revert VH_Zero();
         uint64 effectiveAt = uint64(block.timestamp) + SECURITY_HUB_CHANGE_DELAY;
@@ -108,6 +110,7 @@ contract VaultHub is Ownable, Pausable, ReentrancyGuard {
         _log("hub_vfide_scheduled");
     }
 
+    /// @notice Apply pending VFIDE token module after timelock delay.
     function applyVFIDEToken() external onlyOwner {
         require(pendingVFIDEAt_VH != 0 && block.timestamp >= pendingVFIDEAt_VH, "VH: timelock");
         vfideToken = pendingVFIDE_VH;
@@ -217,6 +220,9 @@ contract VaultHub is Ownable, Pausable, ReentrancyGuard {
     }
 
     // ——— Auto-create (anyone can sponsor)
+    /// @notice Ensure a deterministic CardBoundVault exists for an owner.
+    /// @param owner_ Wallet owner for whom the vault is created or fetched.
+    /// @return vault Existing or newly created vault address.
     function ensureVault(address owner_) public whenNotPaused nonReentrant returns (address vault) {
         if (owner_ == address(0)) revert VH_Zero();
         if (vfideToken == address(0)) revert VH_Zero(); // Ensure token is set

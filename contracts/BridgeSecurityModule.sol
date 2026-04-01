@@ -16,7 +16,7 @@ import "./SharedInterfaces.sol";
  * - Multi-oracle verification support
  * - Emergency shutdown capability
  */
-contract BridgeSecurityModule is Ownable, Pausable {
+contract BridgeSecurityModule is Ownable, Pausable, ReentrancyGuard {
     /// @notice Hourly rate limit (100,000 VFIDE)
     uint256 public constant HOURLY_RATE_LIMIT = 100_000 * 1e18;
 
@@ -109,7 +109,7 @@ contract BridgeSecurityModule is Ownable, Pausable {
     function checkRateLimit(
         address user,
         uint256 amount
-    ) external onlyBridge whenNotPaused returns (bool approved) {
+    ) external onlyBridge whenNotPaused nonReentrant returns (bool approved) {
         // Check blacklist
         if (blacklist[user]) revert Blacklisted();
 

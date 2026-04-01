@@ -13,9 +13,17 @@ contract VFIDEAccessControl is AccessControlEnumerable {
     bytes32 public constant CONFIG_MANAGER_ROLE = keccak256("CONFIG_MANAGER_ROLE");
     bytes32 public constant BLACKLIST_MANAGER_ROLE = keccak256("BLACKLIST_MANAGER_ROLE");
     bytes32 public constant TREASURY_MANAGER_ROLE = keccak256("TREASURY_MANAGER_ROLE");
+    uint256 private _reentrancyLock;
 
     event RoleGrantedWithReason(bytes32 indexed role, address indexed account, address indexed grantor, string reason);
     event RoleRevokedWithReason(bytes32 indexed role, address indexed account, address indexed revoker, string reason);
+
+    modifier nonReentrantAC() {
+        require(_reentrancyLock == 0, "VFIDEAccessControl: reentrant call");
+        _reentrancyLock = 1;
+        _;
+        _reentrancyLock = 0;
+    }
 
     /**
      * @notice Constructor sets up initial admin and all roles
@@ -37,7 +45,7 @@ contract VFIDEAccessControl is AccessControlEnumerable {
      *         Call this after deployment to transfer control from the deploy EOA to governance.
      * @param newAdmin Address to receive DEFAULT_ADMIN_ROLE (should be DAO timelock)
      */
-    function transferAdminRole(address newAdmin) external onlyRole(DEFAULT_ADMIN_ROLE) {
+    function transferAdminRole(address newAdmin) external onlyRole(DEFAULT_ADMIN_ROLE) nonReentrantAC {
         require(newAdmin != address(0), "VFIDEAccessControl: new admin is zero address");
         require(newAdmin != msg.sender, "VFIDEAccessControl: already admin");
         _grantRole(DEFAULT_ADMIN_ROLE, newAdmin);
@@ -55,7 +63,7 @@ contract VFIDEAccessControl is AccessControlEnumerable {
         bytes32 role,
         address account,
         string calldata reason
-    ) external onlyRole(getRoleAdmin(role)) {
+    ) external onlyRole(getRoleAdmin(role)) nonReentrantAC {
         require(account != address(0), "VFIDEAccessControl: account is zero address");
         require(bytes(reason).length > 0, "VFIDEAccessControl: reason required");
         
@@ -73,7 +81,7 @@ contract VFIDEAccessControl is AccessControlEnumerable {
         bytes32 role,
         address account,
         string calldata reason
-    ) external onlyRole(getRoleAdmin(role)) {
+    ) external onlyRole(getRoleAdmin(role)) nonReentrantAC {
         require(bytes(reason).length > 0, "VFIDEAccessControl: reason required");
         
         _revokeRole(role, account);
@@ -117,7 +125,8 @@ contract VFIDEAccessControl is AccessControlEnumerable {
      */
     function batchGrantRole(bytes32 role, address[] calldata accounts) 
         external 
-        onlyRole(getRoleAdmin(role)) 
+        onlyRole(getRoleAdmin(role))
+        nonReentrantAC
     {
         for (uint256 i = 0; i < accounts.length; i++) {
             require(accounts[i] != address(0), "VFIDEAccessControl: account is zero address");
@@ -132,7 +141,8 @@ contract VFIDEAccessControl is AccessControlEnumerable {
      */
     function batchRevokeRole(bytes32 role, address[] calldata accounts) 
         external 
-        onlyRole(getRoleAdmin(role)) 
+        onlyRole(getRoleAdmin(role))
+        nonReentrantAC
     {
         for (uint256 i = 0; i < accounts.length; i++) {
             _revokeRole(role, accounts[i]);

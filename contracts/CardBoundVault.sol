@@ -271,12 +271,17 @@ contract CardBoundVault is ReentrancyGuard {
         _applyGuardianChange(guardian, active);
     }
 
+    /// @notice Set required guardian approvals for sensitive wallet-rotation actions.
+    /// @param threshold New guardian approval threshold.
     function setGuardianThreshold(uint8 threshold) external onlyAdmin {
         if (threshold == 0 || threshold > guardianCount) revert CBV_InvalidThreshold();
         guardianThreshold = threshold;
         emit GuardianThresholdSet(threshold);
     }
 
+    /// @notice Configure per-transfer and daily transfer limits.
+    /// @param _maxPerTransfer Maximum VFIDE transferable in a single authorized transfer.
+    /// @param _dailyTransferLimit Maximum VFIDE transferable during the active 24h window.
     function setSpendLimits(uint256 _maxPerTransfer, uint256 _dailyTransferLimit) external onlyAdmin {
         if (_maxPerTransfer == 0 || _dailyTransferLimit == 0 || _maxPerTransfer > _dailyTransferLimit) {
             revert CBV_TransferLimit();
@@ -362,6 +367,8 @@ contract CardBoundVault is ReentrancyGuard {
         emit WalletRotated(oldWallet, activeWallet, walletEpoch);
     }
 
+    /// @notice Emergency owner and wallet reset callable only by VaultHub.
+    /// @param newOwner New admin and active wallet address.
     function __forceSetOwner(address newOwner) external {
         if (msg.sender != hub) revert CBV_OnlyHub();
         if (newOwner == address(0)) revert CBV_Zero();

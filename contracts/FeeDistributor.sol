@@ -158,12 +158,18 @@ contract FeeDistributor is AccessControl, ReentrancyGuard, Pausable {
         emit FeeDistributed(balance, toBurn, toSanctum, toDAO, toMerchants, toHeadhunters);
     }
 
+    /// @notice Propose a new fee split subject to timelock.
+    /// @param burn Burn channel basis points.
+    /// @param sanctum Sanctum channel basis points.
+    /// @param dao DAO payroll channel basis points.
+    /// @param merchants Merchant pool channel basis points.
+    /// @param headhunters Headhunter pool channel basis points.
     function proposeSplitChange(
         uint256 burn, uint256 sanctum, uint256 dao, uint256 merchants, uint256 headhunters
     ) external onlyRole(ADMIN_ROLE) {
         if (burn + sanctum + dao + merchants + headhunters != MAX_BPS) revert InvalidSplit();
         if (burn < MIN_BURN_BPS) revert BurnTooLow();
-        if (sanctum > MAX_SINGLE_BPS || dao > MAX_SINGLE_BPS || merchants > MAX_SINGLE_BPS || headhunters > MAX_SINGLE_BPS)
+        if (burn > MAX_SINGLE_BPS || sanctum > MAX_SINGLE_BPS || dao > MAX_SINGLE_BPS || merchants > MAX_SINGLE_BPS || headhunters > MAX_SINGLE_BPS)
             revert SingleSinkTooHigh();
 
         pendingSplitChange = PendingSplitChange({
@@ -174,6 +180,7 @@ contract FeeDistributor is AccessControl, ReentrancyGuard, Pausable {
         emit SplitChangeProposed(burn, sanctum, dao, merchants, headhunters, block.timestamp + SPLIT_CHANGE_DELAY);
     }
 
+    /// @notice Apply a pending split change after delay.
     function executeSplitChange() external onlyRole(ADMIN_ROLE) {
         if (!pendingSplitChange.pending) revert NoSplitChangePending();
         if (block.timestamp < pendingSplitChange.effectiveTime) revert SplitChangeNotReady();
@@ -187,6 +194,9 @@ contract FeeDistributor is AccessControl, ReentrancyGuard, Pausable {
         emit SplitChangeCancelled();
     }
 
+    /// @notice Schedule an update to one destination sink address.
+    /// @param name Destination key: burn|sanctum|daoPayroll|merchantPool|headhunterPool.
+    /// @param addr New destination address.
     function setDestination(string calldata name, address addr) external onlyRole(ADMIN_ROLE) {
         if (addr == address(0)) revert ZeroAddress();
         bytes32 h = keccak256(bytes(name));
@@ -200,6 +210,7 @@ contract FeeDistributor is AccessControl, ReentrancyGuard, Pausable {
         emit DestinationChangeProposed(h, addr, block.timestamp + DESTINATION_CHANGE_DELAY);
     }
 
+    /// @notice Apply a pending destination change after delay.
     function executeDestinationChange() external onlyRole(ADMIN_ROLE) {
         if (!pendingDestinationChange.pending) revert NoSplitChangePending();
         if (block.timestamp < pendingDestinationChange.effectiveTime) revert SplitChangeNotReady();
@@ -221,6 +232,8 @@ contract FeeDistributor is AccessControl, ReentrancyGuard, Pausable {
         emit DestinationChangeCancelled(h);
     }
 
+    /// @notice Set the minimum token balance required before distribution can run.
+    /// @param _min Minimum contract token balance to allow `distribute`.
     function setMinDistributionAmount(uint256 _min) external onlyRole(ADMIN_ROLE) {
         minDistributionAmount = _min;
     }
