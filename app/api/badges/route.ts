@@ -2,10 +2,15 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 import { isAdmin, requireAdmin, requireAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
-import { validateBody, awardBadgeSchema } from '@/lib/auth/validation';
 import { logger } from '@/lib/logger';
+import { z } from 'zod4';
 
 const ADDRESS_LIKE_REGEX = /^0x[a-fA-F0-9]{3,40}$/;
+
+const awardBadgeRequestSchema = z.object({
+  userAddress: z.string().trim().regex(ADDRESS_LIKE_REGEX),
+  badgeType: z.number().int().positive(),
+});
 
 function isAddressLike(value: string): boolean {
   return ADDRESS_LIKE_REGEX.test(value.trim());
@@ -179,16 +184,25 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    // Validate request body
-    const validation = await validateBody(request, awardBadgeSchema);
-    if (!validation.success) {
+    let body: z.infer<typeof awardBadgeRequestSchema>;
+    try {
+      const rawBody = await request.json();
+      const parsed = awardBadgeRequestSchema.safeParse(rawBody);
+      if (!parsed.success) {
+        return NextResponse.json(
+          { error: 'Invalid request body' },
+          { status: 400 }
+        );
+      }
+      body = parsed.data;
+    } catch {
       return NextResponse.json(
-        { error: validation.error, details: validation.details },
+        { error: 'Invalid JSON body' },
         { status: 400 }
       );
     }
 
-    const { userAddress, badgeType: badgeId } = validation.data;
+    const { userAddress, badgeType: badgeId } = body;
 
     // Get user ID
     const userResult = await query(

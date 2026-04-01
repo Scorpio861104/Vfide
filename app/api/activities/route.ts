@@ -3,6 +3,7 @@ import { query } from '@/lib/db';
 import { isAdmin, requireAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { logger } from '@/lib/logger';
+import { z } from 'zod4';
 
 // Constants
 const MAX_ACTIVITIES_LIMIT = 100;
@@ -13,6 +14,14 @@ const MAX_ACTIVITY_TITLE_LENGTH = 200;
 const MAX_ACTIVITY_DESCRIPTION_LENGTH = 2000;
 const MAX_ACTIVITY_DATA_BYTES = 10000;
 const ETH_ADDRESS_REGEX = /^0x[a-fA-F0-9]{3,40}$/;
+
+const createActivitySchema = z.object({
+  userAddress: z.string().trim().regex(ETH_ADDRESS_REGEX),
+  activityType: z.string().trim().min(1).max(MAX_ACTIVITY_TYPE_LENGTH),
+  title: z.string().trim().min(1).max(MAX_ACTIVITY_TITLE_LENGTH),
+  description: z.string().max(MAX_ACTIVITY_DESCRIPTION_LENGTH).optional(),
+  data: z.record(z.string(), z.unknown()).optional(),
+});
 
 function isDatabaseUnavailableError(error: unknown): boolean {
   const stack: unknown[] = [error];
@@ -249,9 +258,17 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  let body: Record<string, unknown>;
+  let body: z.infer<typeof createActivitySchema>;
   try {
-    body = await request.json();
+    const rawBody = await request.json();
+    const parsed = createActivitySchema.safeParse(rawBody);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Invalid request body' },
+        { status: 400 }
+      );
+    }
+    body = parsed.data;
   } catch {
     return NextResponse.json(
       { error: 'Invalid JSON body' },
@@ -259,69 +276,15 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  if (!body || typeof body !== 'object' || Array.isArray(body)) {
-    return NextResponse.json(
-      { error: 'Request body must be a JSON object' },
-      { status: 400 }
-    );
-  }
-
   try {
     const { userAddress, activityType, title, description, data } = body;
 
-    if (
-      typeof userAddress !== 'string' ||
-      typeof activityType !== 'string' ||
-      typeof title !== 'string' ||
-      userAddress.trim().length === 0 ||
-      activityType.trim().length === 0 ||
-      title.trim().length === 0
-    ) {
-      return NextResponse.json(
-        { error: 'Missing required fields: userAddress, activityType, title' },
-        { status: 400 }
-      );
-    }
-
     const normalizedUserAddress = userAddress.toLowerCase().trim();
-    if (!ETH_ADDRESS_REGEX.test(normalizedUserAddress)) {
-      return NextResponse.json(
-        { error: 'Invalid userAddress format' },
-        { status: 400 }
-      );
-    }
 
     const normalizedActivityType = activityType.trim().toLowerCase();
     const normalizedTitle = title.trim();
 
-    if (normalizedActivityType.length > MAX_ACTIVITY_TYPE_LENGTH) {
-      return NextResponse.json(
-        { error: `activityType too long. Maximum ${MAX_ACTIVITY_TYPE_LENGTH} characters.` },
-        { status: 400 }
-      );
-    }
-
-    if (normalizedTitle.length > MAX_ACTIVITY_TITLE_LENGTH) {
-      return NextResponse.json(
-        { error: `title too long. Maximum ${MAX_ACTIVITY_TITLE_LENGTH} characters.` },
-        { status: 400 }
-      );
-    }
-
     const normalizedDescription = typeof description === 'string' ? description : '';
-    if (normalizedDescription.length > MAX_ACTIVITY_DESCRIPTION_LENGTH) {
-      return NextResponse.json(
-        { error: `description too long. Maximum ${MAX_ACTIVITY_DESCRIPTION_LENGTH} characters.` },
-        { status: 400 }
-      );
-    }
-
-    if (data !== undefined && (typeof data !== 'object' || data === null || Array.isArray(data))) {
-      return NextResponse.json(
-        { error: 'data must be an object if provided' },
-        { status: 400 }
-      );
-    }
 
     const serializedData = data ? JSON.stringify(data) : null;
     if (serializedData && serializedData.length > MAX_ACTIVITY_DATA_BYTES) {

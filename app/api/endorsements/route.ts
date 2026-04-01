@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query, getClient } from '@/lib/db';
 import { requireAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
-import { endorsementSchema } from '@/lib/auth/validation';
 import { logger } from '@/lib/logger';
+import { z } from 'zod4';
 
 interface Endorsement {
   id: number;
@@ -24,6 +24,16 @@ interface Endorsement {
 const MAX_ENDORSEMENTS_LIMIT = 200;
 const MAX_ENDORSEMENTS_OFFSET = 10000;
 const MAX_ENDORSEMENT_MESSAGE_LENGTH = 1000;
+
+const createEndorsementSchema = z.object({
+  fromAddress: z.string().trim().refine((value) => isAddressLike(value), {
+    message: 'Invalid fromAddress format',
+  }),
+  toAddress: z.string().trim().refine((value) => isAddressLike(value), {
+    message: 'Invalid toAddress format',
+  }),
+  message: z.string().max(MAX_ENDORSEMENT_MESSAGE_LENGTH).optional(),
+});
 
 function normalizeAddress(value: string): string {
   return value.trim().toLowerCase();
@@ -284,9 +294,17 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  let body: unknown;
+  let body: z.infer<typeof createEndorsementSchema>;
   try {
-    body = await request.json();
+    const rawBody = await request.json();
+    const parsed = createEndorsementSchema.safeParse(rawBody);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Validation failed', details: parsed.error.issues },
+        { status: 400 }
+      );
+    }
+    body = parsed.data;
   } catch {
     return NextResponse.json(
       { error: 'Invalid JSON body' },
@@ -294,29 +312,10 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  if (!body || typeof body !== 'object' || Array.isArray(body)) {
-    return NextResponse.json(
-      { error: 'Request body must be a JSON object' },
-      { status: 400 }
-    );
-  }
-
-  const parsed = endorsementSchema.safeParse(body);
-  if (!parsed.success) {
-    return NextResponse.json(
-      { error: 'Validation failed', details: parsed.error.issues },
-      { status: 400 }
-    );
-  }
-
   const client = await getClient();
   
   try {
-    const { fromAddress: rawEndorserAddress, toAddress: rawEndorsedAddress, message } = parsed.data as {
-      fromAddress: string;
-      toAddress: string;
-      message: string;
-    };
+    const { fromAddress: rawEndorserAddress, toAddress: rawEndorsedAddress, message } = body;
 
     const endorserAddress = normalizeAddress(rawEndorserAddress);
     const endorsedAddress = normalizeAddress(rawEndorsedAddress);
