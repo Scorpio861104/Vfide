@@ -3,33 +3,33 @@ import { isAddress } from 'viem';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { createSiweChallenge, getRequestIp } from '@/lib/security/siweChallenge';
 import { logger } from '@/lib/logger';
+import { z } from 'zod4';
 
-function toPositiveInteger(value: unknown, fallback: number): number {
-  if (typeof value === 'number' && Number.isInteger(value) && value > 0) return value;
-  if (typeof value === 'string') {
-    const parsed = Number.parseInt(value, 10);
-    if (Number.isInteger(parsed) && parsed > 0) return parsed;
-  }
-  return fallback;
-}
+const authChallengeSchema = z.object({
+  address: z.string().trim().toLowerCase().refine((value) => isAddress(value), {
+    message: 'Valid address is required',
+  }),
+  chainId: z.coerce.number().int().positive().optional(),
+});
 
 export async function POST(request: NextRequest) {
   const rateLimitResponse = await withRateLimit(request, 'auth');
   if (rateLimitResponse) return rateLimitResponse;
 
-  let body: Record<string, unknown>;
+  let body: z.infer<typeof authChallengeSchema>;
   try {
-    body = await request.json() as Record<string, unknown>;
+    const rawBody = await request.json();
+    const parsed = authChallengeSchema.safeParse(rawBody);
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
+    }
+    body = parsed.data;
   } catch {
     return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
   }
 
-  const rawAddress = typeof body.address === 'string' ? body.address.trim().toLowerCase() : '';
-  if (!rawAddress || !isAddress(rawAddress)) {
-    return NextResponse.json({ error: 'Valid address is required' }, { status: 400 });
-  }
-
-  const chainId = toPositiveInteger(body.chainId, 8453);
+  const rawAddress = body.address;
+  const chainId = body.chainId ?? 8453;
   const hostHeader = request.headers.get('host') || 'vfide.io';
   const domain = hostHeader.split(':')[0] || 'vfide.io';
   const ip = getRequestIp(request.headers);

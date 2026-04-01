@@ -3,12 +3,13 @@ import { getRequestAuthToken, requireAuth } from '@/lib/auth/middleware';
 import { revokeToken, revokeUserTokens, hashToken } from '@/lib/auth/tokenRevocation';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { logger } from '@/lib/logger';
+import { z } from 'zod4';
 
 const MAX_REVOKE_REASON_LENGTH = 200;
-
-function isObjectRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
-}
+const revokeSchema = z.object({
+  revokeAll: z.boolean().optional(),
+  reason: z.string().trim().min(1).max(MAX_REVOKE_REASON_LENGTH).optional(),
+});
 
 /**
  * POST /api/auth/revoke
@@ -33,35 +34,19 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    let body: unknown;
+    let body: z.infer<typeof revokeSchema>;
     try {
-      body = await request.json();
+      const rawBody = await request.json();
+      const parsed = revokeSchema.safeParse(rawBody);
+      if (!parsed.success) {
+        return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
+      }
+      body = parsed.data;
     } catch {
       return NextResponse.json({ error: 'Invalid JSON payload' }, { status: 400 });
     }
 
-    if (!isObjectRecord(body)) {
-      return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
-    }
-
     const { revokeAll, reason } = body;
-
-    if (revokeAll !== undefined && typeof revokeAll !== 'boolean') {
-      return NextResponse.json(
-        { error: 'Invalid revokeAll flag. Must be a boolean if provided.' },
-        { status: 400 }
-      );
-    }
-
-    if (
-      reason !== undefined &&
-      (typeof reason !== 'string' || reason.trim().length === 0 || reason.length > MAX_REVOKE_REASON_LENGTH)
-    ) {
-      return NextResponse.json(
-        { error: `Invalid reason. Must be a non-empty string up to ${MAX_REVOKE_REASON_LENGTH} characters.` },
-        { status: 400 }
-      );
-    }
 
     const normalizedReason = typeof reason === 'string' ? reason.trim() : 'user_requested';
 

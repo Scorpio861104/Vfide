@@ -15,6 +15,7 @@ import {
 } from '@/lib/security/accountProtection';
 import { getRequestIp } from '@/lib/security/requestContext';
 import { logger } from '@/lib/logger';
+import { z } from 'zod4';
 
 interface KeyDirectoryRow {
   address: string;
@@ -30,6 +31,14 @@ function toNonEmptyString(value: unknown): string | null {
   const trimmed = value.trim();
   return trimmed.length > 0 ? trimmed : null;
 }
+
+const keyDirectoryUpdateSchema = z.object({
+  address: z.string().trim().toLowerCase(),
+  encryptionPublicKey: z.string().trim().min(1),
+  signature: z.string().trim().min(1),
+  timestamp: z.coerce.number().int().positive(),
+  algorithm: z.string().trim().min(1).optional(),
+});
 
 export async function GET(request: NextRequest) {
   const rateLimitResponse = await withRateLimit(request, 'read');
@@ -86,18 +95,23 @@ export async function PUT(request: NextRequest) {
     );
   }
 
-  let body: Record<string, unknown>;
+  let body: z.infer<typeof keyDirectoryUpdateSchema>;
   try {
-    body = await request.json() as Record<string, unknown>;
+    const rawBody = await request.json();
+    const parsed = keyDirectoryUpdateSchema.safeParse(rawBody);
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
+    }
+    body = parsed.data;
   } catch {
     return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
   }
 
-  const address = toNonEmptyString(body.address)?.toLowerCase() || '';
-  const encryptionPublicKey = toNonEmptyString(body.encryptionPublicKey) || '';
-  const signature = toNonEmptyString(body.signature) || '';
-  const timestamp = Number(body.timestamp);
-  const algorithm = toNonEmptyString(body.algorithm) || KEY_DIRECTORY_ALGORITHM;
+  const address = body.address;
+  const encryptionPublicKey = body.encryptionPublicKey;
+  const signature = body.signature;
+  const timestamp = body.timestamp;
+  const algorithm = body.algorithm ?? KEY_DIRECTORY_ALGORITHM;
 
   if (address !== authenticatedAddress) {
     return NextResponse.json({ error: 'You can only publish your own key' }, { status: 403 });

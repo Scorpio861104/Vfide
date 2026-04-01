@@ -3,9 +3,18 @@ import { query } from '@/lib/db';
 import { requireOwnership } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { logger } from '@/lib/logger';
+import { z } from 'zod4';
 
 const ADDRESS_PATTERN = /^0x[a-fA-F0-9]{3,64}$/;
 const ALLOWED_PREFERENCE_KEYS = new Set(['messages', 'proposals', 'endorsements', 'system_updates']);
+
+const notificationPreferencesUpdateSchema = z.object({
+  userAddress: z.string().trim(),
+  messages: z.boolean().optional(),
+  proposals: z.boolean().optional(),
+  endorsements: z.boolean().optional(),
+  system_updates: z.boolean().optional(),
+});
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -67,15 +76,16 @@ export async function PUT(request: NextRequest) {
   const rateLimitResponse = await withRateLimit(request, 'write');
   if (rateLimitResponse) return rateLimitResponse;
 
-  let body: unknown;
+  let body: z.infer<typeof notificationPreferencesUpdateSchema>;
   try {
-    body = await request.json();
+    const rawBody = await request.json();
+    const parsed = notificationPreferencesUpdateSchema.safeParse(rawBody);
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
+    }
+    body = parsed.data;
   } catch {
     return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
-  }
-
-  if (!isRecord(body)) {
-    return NextResponse.json({ error: 'Request body must be a JSON object' }, { status: 400 });
   }
 
   try {
@@ -88,12 +98,6 @@ export async function PUT(request: NextRequest) {
     const userAddress = normalizeAddress(rawUserAddress);
     if (!isAddressLike(userAddress)) {
       return NextResponse.json({ error: 'Invalid user address' }, { status: 400 });
-    }
-
-    for (const key of ALLOWED_PREFERENCE_KEYS) {
-      if (preferences[key] !== undefined && typeof preferences[key] !== 'boolean') {
-        return NextResponse.json({ error: `Preference ${key} must be a boolean` }, { status: 400 });
-      }
     }
 
     // Require the caller to be the owner of these preferences
