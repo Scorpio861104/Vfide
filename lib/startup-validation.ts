@@ -56,6 +56,16 @@ export function validateEnvironment(): void {
       );
     }
 
+    // Redis is mandatory in production for distributed security controls.
+    const redisUrl = process.env.UPSTASH_REDIS_REST_URL;
+    const redisToken = process.env.UPSTASH_REDIS_REST_TOKEN;
+    if (!redisUrl || !redisToken) {
+      errors.push(
+        'CRITICAL: UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN are required in production. ' +
+        'In-memory fallbacks are unsafe for multi-instance deployments.'
+      );
+    }
+
     // Validate PREV_JWT_SECRET during rotation window — must not equal JWT_SECRET
     const prevSecret = process.env.PREV_JWT_SECRET;
     if (prevSecret) {
@@ -97,21 +107,6 @@ export function validateEnvironment(): void {
     logger.info('✅ Environment validation passed');
   }
 
-  // Warn when Redis is absent in production — rate limiting and token revocation
-  // fall back to in-memory stores, which are NOT shared across multiple instances.
-  if (process.env.NODE_ENV === 'production' && !process.env.NEXT_PHASE) {
-    const redisUrl = process.env.UPSTASH_REDIS_REST_URL;
-    const redisToken = process.env.UPSTASH_REDIS_REST_TOKEN;
-    if (!redisUrl || !redisToken) {
-      logger.warn(
-        '⚠️  UPSTASH_REDIS_REST_URL / UPSTASH_REDIS_REST_TOKEN are not set. ' +
-        'Rate limiting and JWT token revocation are using in-memory stores. ' +
-        'This is unsafe in multi-instance (horizontally-scaled) deployments because ' +
-        'each instance maintains its own independent state. ' +
-        'Set both variables to use the shared Redis backend.'
-      );
-    }
-  }
 }
 
 /**
