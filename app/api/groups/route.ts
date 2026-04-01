@@ -3,9 +3,9 @@ import { getClient, query } from '@/lib/db';
 import { ensureGroupVisualColumns } from '@/lib/dbPatches';
 import { requireAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
-import { createGroupWithMembersSchema, validateBody } from '@/lib/auth/validation';
 import { isAddress } from 'viem';
 import { logger } from '@/lib/logger';
+import { z } from 'zod4';
 
 interface GroupRow {
   id: number;
@@ -28,6 +28,16 @@ interface GroupMemberRow {
 
 const MAX_GROUPS_LIMIT = 200;
 const MAX_GROUPS_OFFSET = 10000;
+
+const createGroupRequestSchema = z.object({
+  name: z.string().trim().min(1),
+  description: z.string().trim().optional(),
+  memberAddresses: z.array(z.string().trim().refine((value) => isAddress(value), {
+    message: 'Invalid member address format',
+  })).optional(),
+  icon: z.string().trim().optional(),
+  color: z.string().trim().optional(),
+});
 
 function parseStrictIntegerParam(value: string | null): number | null {
   if (value === null) return null;
@@ -191,15 +201,25 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const validation = await validateBody(request, createGroupWithMembersSchema);
-  if (!validation.success) {
+  let body: z.infer<typeof createGroupRequestSchema>;
+  try {
+    const rawBody = await request.json();
+    const parsed = createGroupRequestSchema.safeParse(rawBody);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Invalid request body' },
+        { status: 400 }
+      );
+    }
+    body = parsed.data;
+  } catch {
     return NextResponse.json(
-      { error: validation.error, details: validation.details },
+      { error: 'Invalid JSON body' },
       { status: 400 }
     );
   }
 
-  const { name, description, memberAddresses, icon, color } = validation.data;
+  const { name, description, memberAddresses, icon, color } = body;
   const requestedMemberAddresses = memberAddresses ?? [];
 
   let client: Awaited<ReturnType<typeof getClient>> | null = null;

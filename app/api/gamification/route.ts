@@ -2,12 +2,18 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 import { requireAdmin, requireAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
-import { validateBody, awardXpSchema } from '@/lib/auth/validation';
 import { logger } from '@/lib/logger';
+import { z } from 'zod4';
 
 /** Maximum XP awardable per wallet per calendar day (mirrors lib/gamification.ts). */
 const SERVER_MAX_XP_PER_DAY = 500;
 const ADDRESS_PATTERN = /^0x[a-fA-F0-9]{3,64}$/;
+
+const awardXpRequestSchema = z.object({
+  userAddress: z.string().trim().regex(ADDRESS_PATTERN),
+  xpAmount: z.number().int().positive(),
+  reason: z.string().trim().min(1).optional(),
+});
 
 const isTestEnv = process.env.NODE_ENV === 'test';
 
@@ -165,23 +171,25 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    // Validate request body
-    const validation = await validateBody(request, awardXpSchema);
-    if (!validation.success) {
+    let body: z.infer<typeof awardXpRequestSchema>;
+    try {
+      const rawBody = await request.json();
+      const parsed = awardXpRequestSchema.safeParse(rawBody);
+      if (!parsed.success) {
+        return NextResponse.json(
+          { error: 'Invalid request body' },
+          { status: 400 }
+        );
+      }
+      body = parsed.data;
+    } catch {
       return NextResponse.json(
-        { error: validation.error, details: validation.details },
+        { error: 'Invalid JSON body' },
         { status: 400 }
       );
     }
 
-    const { userAddress, xpAmount, reason } = validation.data;
-
-    if (!userAddress || !xpAmount) {
-      return NextResponse.json(
-        { error: 'Missing required fields' },
-        { status: 400 }
-      );
-    }
+    const { userAddress, xpAmount, reason } = body;
 
     // Enforce daily XP cap server-side.
     // daily_xp_earned resets when daily_xp_date is not today's UTC date.

@@ -2,11 +2,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 import { requireAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
-import { validateBody, sendGroupMessageSchema } from '@/lib/auth/validation';
 import { buildGroupPayloadSignatureMessage } from '@/lib/messageEncryption';
 import { logger } from '@/lib/logger';
 import { getRequestCorrelationContext } from '@/lib/security/requestContext';
 import { isAddress, verifyMessage } from 'viem';
+import { z } from 'zod4';
 
 interface GroupMessageRow {
   id: number;
@@ -41,6 +41,11 @@ const HEX_STRING_REGEX = /^[0-9a-fA-F]+$/;
 const BASE64_STRING_REGEX = /^[A-Za-z0-9+/]+={0,2}$/;
 const ETH_SIGNATURE_REGEX = /^0x[0-9a-fA-F]{130}$/;
 const STRICT_GROUP_MESSAGES_GET_ENV = 'VFIDE_STRICT_GROUP_MESSAGE_GET';
+
+const sendGroupMessageRequestSchema = z.object({
+  groupId: z.number().int().positive(),
+  content: z.string().trim().min(1),
+});
 
 type ParsedEncryptedGroupPayload = {
   v: 2;
@@ -385,15 +390,25 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const validation = await validateBody(request, sendGroupMessageSchema);
-    if (!validation.success) {
+    let body: z.infer<typeof sendGroupMessageRequestSchema>;
+    try {
+      const rawBody = await request.json();
+      const parsed = sendGroupMessageRequestSchema.safeParse(rawBody);
+      if (!parsed.success) {
+        return NextResponse.json(
+          { error: 'Invalid request body' },
+          { status: 400 }
+        );
+      }
+      body = parsed.data;
+    } catch {
       return NextResponse.json(
-        { error: validation.error, details: validation.details },
+        { error: 'Invalid JSON body' },
         { status: 400 }
       );
     }
 
-    const { groupId, content } = validation.data;
+    const { groupId, content } = body;
 
     const parsedPayload = parseEncryptedGroupMessagePayload(content, groupId);
     if (!parsedPayload) {
