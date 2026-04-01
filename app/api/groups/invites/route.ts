@@ -4,6 +4,7 @@ import { requireAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { isAddress } from 'viem';
 import { logger } from '@/lib/logger';
+import { z } from 'zod4';
 
 interface GroupInvite {
   id: number;
@@ -23,6 +24,19 @@ const MAX_INVITE_CODE_LENGTH = 64;
 const MAX_INVITE_DESCRIPTION_LENGTH = 500;
 const MAX_INVITE_EXPIRY_MS = 365 * 24 * 60 * 60 * 1000;
 
+const createInviteSchema = z.object({
+  groupId: z.number().int().positive(),
+  expiresIn: z.number().positive().max(MAX_INVITE_EXPIRY_MS).optional(),
+  maxUses: z.number().int().positive().optional(),
+  description: z.string().max(MAX_INVITE_DESCRIPTION_LENGTH).optional(),
+  requireApproval: z.boolean().optional(),
+});
+
+const updateInviteSchema = z.object({
+  code: z.string().trim().min(1).max(MAX_INVITE_CODE_LENGTH),
+  action: z.enum(['revoke', 'activate']),
+});
+
 function parsePositiveInteger(value: string): number | null {
   if (!/^\d+$/.test(value)) {
     return null;
@@ -34,10 +48,6 @@ function parsePositiveInteger(value: string): number | null {
   }
 
   return parsed;
-}
-
-function isObjectRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
 async function generateInviteCode(): Promise<string> {
@@ -80,62 +90,19 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    let body: unknown;
+    let body: z.infer<typeof createInviteSchema>;
     try {
-      body = await request.json();
+      const rawBody = await request.json();
+      const parsed = createInviteSchema.safeParse(rawBody);
+      if (!parsed.success) {
+        return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
+      }
+      body = parsed.data;
     } catch {
       return NextResponse.json({ error: 'Invalid JSON payload' }, { status: 400 });
     }
 
-    if (!isObjectRecord(body)) {
-      return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
-    }
-
     const { groupId, expiresIn, maxUses, description, requireApproval } = body;
-
-    if (!Number.isInteger(groupId) || Number(groupId) <= 0) {
-      return NextResponse.json(
-        { error: 'Invalid groupId' },
-        { status: 400 }
-      );
-    }
-
-    if (
-      expiresIn !== undefined &&
-      (!Number.isFinite(expiresIn) || Number(expiresIn) <= 0 || Number(expiresIn) > MAX_INVITE_EXPIRY_MS)
-    ) {
-      return NextResponse.json(
-        { error: `Invalid expiresIn. Must be a positive number up to ${MAX_INVITE_EXPIRY_MS}.` },
-        { status: 400 }
-      );
-    }
-
-    if (
-      maxUses !== undefined &&
-      (!Number.isInteger(maxUses) || Number(maxUses) <= 0)
-    ) {
-      return NextResponse.json(
-        { error: 'Invalid maxUses. Must be a positive integer if provided.' },
-        { status: 400 }
-      );
-    }
-
-    if (
-      description !== undefined &&
-      (typeof description !== 'string' || description.length > MAX_INVITE_DESCRIPTION_LENGTH)
-    ) {
-      return NextResponse.json(
-        { error: `Invalid description. Must be a string up to ${MAX_INVITE_DESCRIPTION_LENGTH} characters.` },
-        { status: 400 }
-      );
-    }
-
-    if (requireApproval !== undefined && typeof requireApproval !== 'boolean') {
-      return NextResponse.json(
-        { error: 'Invalid requireApproval flag. Must be a boolean if provided.' },
-        { status: 400 }
-      );
-    }
 
     const userResult = await query(
       'SELECT id FROM users WHERE wallet_address = $1',
@@ -304,32 +271,20 @@ export async function PATCH(request: NextRequest) {
   }
 
   try {
-    let body: unknown;
+    let body: z.infer<typeof updateInviteSchema>;
     try {
-      body = await request.json();
+      const rawBody = await request.json();
+      const parsed = updateInviteSchema.safeParse(rawBody);
+      if (!parsed.success) {
+        return NextResponse.json({ error: 'Invalid code or action' }, { status: 400 });
+      }
+      body = parsed.data;
     } catch {
       return NextResponse.json({ error: 'Invalid JSON payload' }, { status: 400 });
     }
 
-    if (!isObjectRecord(body)) {
-      return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
-    }
-
-    const rawCode = body.code;
-    const rawAction = body.action;
-    const code = typeof rawCode === 'string' ? normalizeInviteCode(rawCode) : '';
-    const action = typeof rawAction === 'string' ? rawAction.trim().toLowerCase() : '';
-
-    if (
-      code.length === 0 ||
-      code.length > MAX_INVITE_CODE_LENGTH ||
-      (action !== 'revoke' && action !== 'activate')
-    ) {
-      return NextResponse.json(
-        { error: 'Invalid code or action' },
-        { status: 400 }
-      );
-    }
+    const code = normalizeInviteCode(body.code);
+    const action = body.action;
 
     const result = await query<GroupInvite>(
       'SELECT * FROM group_invites WHERE code = $1',

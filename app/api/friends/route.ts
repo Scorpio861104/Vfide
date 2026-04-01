@@ -2,15 +2,31 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query, getClient } from '@/lib/db';
 import { requireAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
-import { validateBody, friendRequestSchema } from '@/lib/auth/validation';
 import { isAddress } from 'viem';
 import { logger } from '@/lib/logger';
+import { z } from 'zod4';
 
 const DEFAULT_FRIENDS_LIMIT = 50;
 const MAX_FRIENDS_LIMIT = 200;
 const MAX_FRIENDS_OFFSET = 10000;
 const ALLOWED_FRIENDSHIP_STATUS = new Set(['pending', 'accepted', 'blocked', 'rejected']);
-const FRIENDSHIP_ID_REGEX = /^\d+$/;
+
+const createFriendRequestSchema = z.object({
+  from: z.string().trim().refine((value) => isAddress(value), {
+    message: 'Invalid from address format',
+  }),
+  to: z.string().trim().refine((value) => isAddress(value), {
+    message: 'Invalid to address format',
+  }),
+});
+
+const updateFriendRequestSchema = z.object({
+  friendshipId: z.coerce.number().int().positive(),
+  status: z.enum(['accepted', 'rejected']),
+  userAddress: z.string().trim().refine((value) => isAddress(value), {
+    message: 'Invalid userAddress format',
+  }),
+});
 
 interface Friendship {
   id: number;
@@ -25,10 +41,6 @@ interface Friendship {
   friend_address?: string;
   friend_username?: string;
   friend_avatar?: string;
-}
-
-function isObjectRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
 function normalizeAddress(value: string): string {
@@ -195,16 +207,25 @@ export async function POST(request: NextRequest) {
   const client = await getClient();
   
   try {
-    // Validate request body
-    const validation = await validateBody(request, friendRequestSchema);
-    if (!validation.success) {
+    let body: z.infer<typeof createFriendRequestSchema>;
+    try {
+      const rawBody = await request.json();
+      const parsed = createFriendRequestSchema.safeParse(rawBody);
+      if (!parsed.success) {
+        return NextResponse.json(
+          { error: 'Invalid request body' },
+          { status: 400 }
+        );
+      }
+      body = parsed.data;
+    } catch {
       return NextResponse.json(
-        { error: validation.error, details: validation.details },
+        { error: 'Invalid JSON payload' },
         { status: 400 }
       );
     }
 
-    const { from, to } = validation.data;
+    const { from, to } = body;
     const fromAddress = normalizeAddress(from);
     const toAddress = normalizeAddress(to);
 
@@ -318,9 +339,17 @@ export async function PATCH(request: NextRequest) {
   const client = await getClient();
   
   try {
-    let body: unknown;
+    let body: z.infer<typeof updateFriendRequestSchema>;
     try {
-      body = await request.json();
+      const rawBody = await request.json();
+      const parsed = updateFriendRequestSchema.safeParse(rawBody);
+      if (!parsed.success) {
+        return NextResponse.json(
+          { error: 'Invalid request body' },
+          { status: 400 }
+        );
+      }
+      body = parsed.data;
     } catch {
       return NextResponse.json(
         { error: 'Invalid JSON payload' },
@@ -328,51 +357,10 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
-    if (!isObjectRecord(body)) {
-      return NextResponse.json(
-        { error: 'Invalid request body' },
-        { status: 400 }
-      );
-    }
-
     const { friendshipId, status, userAddress } = body;
-
-    if (!friendshipId || !status || !userAddress) {
-      return NextResponse.json(
-        { error: 'Missing required fields: friendshipId, status, userAddress' },
-        { status: 400 }
-      );
-    }
-
-    const friendshipIdValue =
-      typeof friendshipId === 'number' || typeof friendshipId === 'string'
-        ? friendshipId.toString()
-        : null;
-    const statusValue = typeof status === 'string' ? status : null;
-    const userAddressValue = typeof userAddress === 'string' ? userAddress : null;
-
-    if (!friendshipIdValue || !statusValue || !userAddressValue) {
-      return NextResponse.json(
-        { error: 'friendshipId, status, and userAddress must be strings/numbers as expected' },
-        { status: 400 }
-      );
-    }
-
-    if (!FRIENDSHIP_ID_REGEX.test(friendshipIdValue)) {
-      return NextResponse.json(
-        { error: 'friendshipId must be a positive integer' },
-        { status: 400 }
-      );
-    }
-
-    if (!isAddress(userAddressValue)) {
-      return NextResponse.json(
-        { error: 'Invalid userAddress format' },
-        { status: 400 }
-      );
-    }
-
-    const normalizedUserAddress = normalizeAddress(userAddressValue);
+    const friendshipIdValue = friendshipId;
+    const statusValue = status;
+    const normalizedUserAddress = normalizeAddress(userAddress);
 
     await client.query('BEGIN');
 
