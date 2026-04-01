@@ -51,6 +51,10 @@ jest.mock('wagmi', () => ({
     isConnected: true,
     address: '0x1111111111111111111111111111111111111111' as const,
   }),
+  useReadContract: () => ({ data: undefined, refetch: jest.fn() }),
+  useWriteContract: () => ({ writeContractAsync: jest.fn(), isPending: false }),
+  useSignMessage: () => ({ signMessageAsync: jest.fn() }),
+  usePublicClient: () => null,
 }));
 
 jest.mock('viem', () => ({
@@ -182,5 +186,17 @@ describe('Guardians page Chain of Return', () => {
     await waitFor(() => {
       expect(mockCreateVault).toHaveBeenCalledTimes(1);
     });
+  });
+
+  it('renders the extracted responsibilities and pending inbox tabs', async () => {
+    renderGuardiansPage();
+
+    fireEvent.click(screen.getByRole('tab', { name: /Responsibilities/i }));
+    expect(await screen.findByText(/Guardian Vault Watchlist/i)).toBeTruthy();
+    expect(screen.getByText(/Vaults You're Guarding/i)).toBeTruthy();
+
+    fireEvent.click(screen.getByRole('tab', { name: /Pending Actions/i }));
+    expect(await screen.findByText(/Pending Recovery Inbox/i)).toBeTruthy();
+    expect(screen.getByText(/No tracked vaults yet/i)).toBeTruthy();
   });
 });

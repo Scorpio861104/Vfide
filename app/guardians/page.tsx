@@ -9,6 +9,8 @@ import { useVaultHub } from "@/hooks/useVaultHub";
 import { useVaultRecovery } from "@/hooks/useVaultRecovery";
 import { USER_VAULT_ABI, isCardBoundVaultMode } from "@/lib/contracts";
 import { buildGuardianAttestationMessage, type GuardianAttestationPayload } from "@/lib/recovery/guardianAttestation";
+import { safeLocalStorage } from "@/lib/utils";
+import { GuardiansOverviewTab, GuardiansResponsibilitiesTab, GuardiansPendingActionsTab } from "./components/GuardianManagementTabs";
 import { Shield, Users, Clock, CheckCircle2, AlertCircle, Key, Heart, UserPlus, UserMinus, RefreshCw, ArrowRightCircle, Timer, Lock, FileText } from "lucide-react";
 
 type TabType = 'overview' | 'my-guardians' | 'next-of-kin' | 'recovery' | 'responsibilities' | 'pending';
@@ -50,8 +52,7 @@ function useGuardianWatchlist() {
   const [lastAddAt, setLastAddAt] = useState(0);
 
   useEffect(() => {
-    if (typeof window === 'undefined') return;
-    const raw = window.localStorage.getItem(GUARDIAN_WATCHLIST_KEY);
+    const raw = safeLocalStorage.getItem(GUARDIAN_WATCHLIST_KEY);
     if (!raw) return;
 
     try {
@@ -72,9 +73,7 @@ function useGuardianWatchlist() {
 
   const save = (next: WatchedVault[]) => {
     setEntries(next);
-    if (typeof window !== 'undefined') {
-      window.localStorage.setItem(GUARDIAN_WATCHLIST_KEY, JSON.stringify(next));
-    }
+    safeLocalStorage.setItem(GUARDIAN_WATCHLIST_KEY, JSON.stringify(next));
   };
 
   const addEntry = (address: string, label: string) => {
@@ -114,8 +113,7 @@ function useNextOfKinWatchlist() {
   const [lastAddAt, setLastAddAt] = useState(0);
 
   useEffect(() => {
-    if (typeof window === 'undefined') return;
-    const raw = window.localStorage.getItem(NEXT_OF_KIN_WATCHLIST_KEY);
+    const raw = safeLocalStorage.getItem(NEXT_OF_KIN_WATCHLIST_KEY);
     if (!raw) return;
 
     try {
@@ -135,9 +133,7 @@ function useNextOfKinWatchlist() {
 
   const save = (next: NextOfKinWatchedVault[]) => {
     setEntries(next);
-    if (typeof window !== 'undefined') {
-      window.localStorage.setItem(NEXT_OF_KIN_WATCHLIST_KEY, JSON.stringify(next));
-    }
+    safeLocalStorage.setItem(NEXT_OF_KIN_WATCHLIST_KEY, JSON.stringify(next));
   };
 
   const addEntry = (address: string, label: string) => {
@@ -322,7 +318,7 @@ export default function GuardiansPage() {
         <div className="container mx-auto px-4 py-8 relative z-10">
           <AnimatePresence mode="wait">
             <div role="tabpanel" id="tabpanel-overview" hidden={activeTab !== 'overview'}>
-              {activeTab === 'overview' && <OverviewTab key="overview" />}
+              {activeTab === 'overview' && <GuardiansOverviewTab key="overview" />}
             </div>
             <div role="tabpanel" id="tabpanel-my-guardians" hidden={activeTab !== 'my-guardians'}>
               {activeTab === 'my-guardians' && <MyGuardiansTab key="my-guardians" isConnected={isConnected} />}
@@ -334,10 +330,10 @@ export default function GuardiansPage() {
               {activeTab === 'recovery' && <RecoveryTab key="recovery" isConnected={isConnected} />}
             </div>
             <div role="tabpanel" id="tabpanel-responsibilities" hidden={activeTab !== 'responsibilities'}>
-              {activeTab === 'responsibilities' && <ResponsibilitiesTab key="responsibilities" isConnected={isConnected} />}
+              {activeTab === 'responsibilities' && <GuardiansResponsibilitiesTab key="responsibilities" isConnected={isConnected} />}
             </div>
             <div role="tabpanel" id="tabpanel-pending" hidden={activeTab !== 'pending'}>
-              {activeTab === 'pending' && <PendingActionsTab key="pending" isConnected={isConnected} />}
+              {activeTab === 'pending' && <GuardiansPendingActionsTab key="pending" isConnected={isConnected} />}
             </div>
           </AnimatePresence>
         </div>
