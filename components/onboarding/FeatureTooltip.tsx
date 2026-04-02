@@ -153,12 +153,12 @@ export function useFeatureTooltip(id: string) {
     setIsVisible(true);
     try {
       const dismissedTooltips = JSON.parse(
-        localStorage.getItem("vfide_dismissed_tooltips") || "[]"
+        safeLocalStorage.getItem("vfide_dismissed_tooltips") || "[]"
       );
       const filtered = dismissedTooltips.filter((tooltipId: string) => tooltipId !== id);
-      localStorage.setItem("vfide_dismissed_tooltips", JSON.stringify(filtered));
+      safeLocalStorage.setItem("vfide_dismissed_tooltips", JSON.stringify(filtered));
     } catch {
-      // Ignore localStorage errors (private browsing mode)
+      // Ignore storage errors (private browsing mode)
     }
   };
 

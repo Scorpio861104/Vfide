@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { Eye, Sun, Type, Zap, Volume2 } from 'lucide-react';
+import { safeLocalStorage } from '@/lib/utils';
 
 // ==================== TYPES ====================
 
@@ -73,9 +74,9 @@ export function AccessibilityProvider({ children }: AccessibilityProviderProps) 
   const [settings, setSettings] = useState<AccessibilitySettings>(defaultSettings);
   const announceRef = useRef<HTMLDivElement>(null);
 
-  // Load settings from localStorage
+  // Load settings from storage
   useEffect(() => {
-    const saved = localStorage.getItem('vfide_accessibility');
+    const saved = safeLocalStorage.getItem('vfide_accessibility');
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
@@ -133,8 +134,8 @@ export function AccessibilityProvider({ children }: AccessibilityProviderProps) 
     // Reduce motion
     root.classList.toggle('reduce-motion', settings.reduceMotion);
 
-    // Save to localStorage
-    localStorage.setItem('vfide_accessibility', JSON.stringify(settings));
+    // Save to storage
+    safeLocalStorage.setItem('vfide_accessibility', JSON.stringify(settings));
   }, [settings]);
 
   const updateSettings = useCallback((updates: Partial<AccessibilitySettings>) => {
@@ -143,7 +144,7 @@ export function AccessibilityProvider({ children }: AccessibilityProviderProps) 
 
   const resetSettings = useCallback(() => {
     setSettings(defaultSettings);
-    localStorage.removeItem('vfide_accessibility');
+    safeLocalStorage.removeItem('vfide_accessibility');
   }, []);
 
   const announceMessage = useCallback((message: string, priority: 'polite' | 'assertive' = 'polite') => {

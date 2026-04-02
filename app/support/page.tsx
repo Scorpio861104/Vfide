@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Footer } from '@/components/layout/Footer';
+import { safeLocalStorage } from '@/lib/utils';
 import { useAccount } from 'wagmi';
 import { 
   MessageCircle, 
@@ -123,29 +124,42 @@ export default function SupportPage() {
   const [newMessage, setNewMessage] = useState('');
   const [replyMessage, setReplyMessage] = useState('');
 
-  // Load tickets from localStorage
+  // Load tickets from storage
   useEffect(() => {
-    if (address) {
-      const stored = localStorage.getItem(`support_tickets_${address}`);
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        setTickets(parsed.map((t: Ticket) => ({
-          ...t,
-          createdAt: new Date(t.createdAt),
-          updatedAt: new Date(t.updatedAt),
-          messages: t.messages.map(m => ({
-            ...m,
-            timestamp: new Date(m.timestamp)
-          }))
-        })));
-      }
+    if (!address) {
+      setTickets([]);
+      setSelectedTicket(null);
+      return;
+    }
+
+    const stored = safeLocalStorage.getItem(`support_tickets_${address}`);
+    if (!stored) {
+      setTickets([]);
+      setSelectedTicket(null);
+      return;
+    }
+
+    try {
+      const parsed = JSON.parse(stored);
+      setTickets(parsed.map((t: Ticket) => ({
+        ...t,
+        createdAt: new Date(t.createdAt),
+        updatedAt: new Date(t.updatedAt),
+        messages: t.messages.map(m => ({
+          ...m,
+          timestamp: new Date(m.timestamp)
+        }))
+      })));
+    } catch {
+      setTickets([]);
+      setSelectedTicket(null);
     }
   }, [address]);
 
-  // Save tickets to localStorage
+  // Save tickets to storage
   const saveTickets = useCallback((newTickets: Ticket[]) => {
     if (address) {
-      localStorage.setItem(`support_tickets_${address}`, JSON.stringify(newTickets));
+      safeLocalStorage.setItem(`support_tickets_${address}`, JSON.stringify(newTickets));
     }
     setTickets(newTickets);
   }, [address]);

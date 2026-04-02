@@ -11,6 +11,7 @@
 import React, { useState, useEffect, useRef, useCallback, createContext, useContext } from 'react';
 import { motion, AnimatePresence, MotionConfig } from 'framer-motion';
 import { usePrefersReducedMotion } from '@/lib/ux/uxUtils';
+import { safeLocalStorage } from '@/lib/utils';
 
 // ==================== TYPES ====================
 
@@ -66,7 +67,7 @@ export function A11yProvider({ children }: { children: React.ReactNode }) {
 
   // Load high contrast preference
   useEffect(() => {
-    const saved = localStorage.getItem('vfide-high-contrast');
+    const saved = safeLocalStorage.getItem('vfide-high-contrast');
     if (saved === 'true') {
       setHighContrast(true);
       document.documentElement.classList.add('high-contrast');
@@ -84,7 +85,7 @@ export function A11yProvider({ children }: { children: React.ReactNode }) {
   const toggleHighContrast = useCallback(() => {
     setHighContrast((prev) => {
       const newValue = !prev;
-      localStorage.setItem('vfide-high-contrast', String(newValue));
+      safeLocalStorage.setItem('vfide-high-contrast', String(newValue));
       if (newValue) {
         document.documentElement.classList.add('high-contrast');
       } else {

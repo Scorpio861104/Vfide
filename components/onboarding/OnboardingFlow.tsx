@@ -16,6 +16,7 @@ import {
 import { useAccount } from 'wagmi';
 import { useRouter } from 'next/navigation';
 import Confetti from 'react-confetti';
+import { safeLocalStorage } from '@/lib/utils';
 
 // ==================== TYPES ====================
 
@@ -74,7 +75,7 @@ const STORAGE_KEY = 'vfide_onboarding_progress';
 function loadProgress(): Record<string, boolean> {
   if (typeof window === 'undefined') return {};
   try {
-    const saved = localStorage.getItem(STORAGE_KEY);
+    const saved = safeLocalStorage.getItem(STORAGE_KEY);
     return saved ? JSON.parse(saved) : {};
   } catch {
     return {};
@@ -83,7 +84,7 @@ function loadProgress(): Record<string, boolean> {
 
 function saveProgress(progress: Record<string, boolean>): void {
   if (typeof window === 'undefined') return;
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(progress));
+  safeLocalStorage.setItem(STORAGE_KEY, JSON.stringify(progress));
 }
 
 // ==================== PROVIDER ====================

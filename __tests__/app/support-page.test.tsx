@@ -143,6 +143,19 @@ describe('Support page logic pathways', () => {
     expect(screen.getByText(/Connect your wallet to create support tickets/i)).toBeTruthy();
   });
 
+  it('handles unavailable localStorage gracefully', () => {
+    const getItemSpy = jest.spyOn(Storage.prototype, 'getItem').mockImplementation(() => {
+      throw new Error('Storage unavailable');
+    });
+
+    try {
+      renderSupportPage();
+      expect(screen.getByText(/Help & Support Center/i)).toBeTruthy();
+    } finally {
+      getItemSpy.mockRestore();
+    }
+  });
+
   it('creates a new ticket, selects it, and appends support auto-response', async () => {
     renderSupportPage();
 

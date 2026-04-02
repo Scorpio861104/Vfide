@@ -38,6 +38,7 @@ import { useRouter } from 'next/navigation';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useAccount } from 'wagmi';
 import { useTransactionSounds } from '@/hooks/useTransactionSounds';
+import { safeLocalStorage } from '@/lib/utils';
 
 // ==================== TYPES ====================
 
@@ -152,7 +153,7 @@ export function GlobalSearch() {
   // Load recent searches
   useEffect(() => {
     try {
-      const stored = localStorage.getItem(RECENT_SEARCHES_KEY);
+      const stored = safeLocalStorage.getItem(RECENT_SEARCHES_KEY);
       if (stored) {
         setRecentSearches(JSON.parse(stored));
       }
@@ -173,7 +174,7 @@ export function GlobalSearch() {
       const filtered = prev.filter(s => s.query.toLowerCase() !== searchQuery.toLowerCase());
       const updated = [newSearch, ...filtered].slice(0, MAX_RECENT_SEARCHES);
       try {
-        localStorage.setItem(RECENT_SEARCHES_KEY, JSON.stringify(updated));
+        safeLocalStorage.setItem(RECENT_SEARCHES_KEY, JSON.stringify(updated));
       } catch { /* ignore */ }
       return updated;
     });
@@ -183,7 +184,7 @@ export function GlobalSearch() {
   const clearRecentSearches = useCallback(() => {
     setRecentSearches([]);
     try {
-      localStorage.removeItem(RECENT_SEARCHES_KEY);
+      safeLocalStorage.removeItem(RECENT_SEARCHES_KEY);
     } catch { /* ignore */ }
   }, []);
 
@@ -386,7 +387,7 @@ export function GlobalSearch() {
     // Search friends
     if ((activeCategory === 'all' || activeCategory === 'people') && address && typeof window !== 'undefined') {
       try {
-        const storedFriends = localStorage.getItem(`vfide_friends_${address}`);
+        const storedFriends = safeLocalStorage.getItem(`vfide_friends_${address}`);
         if (storedFriends) {
           const friends: Friend[] = JSON.parse(storedFriends);
           friends.forEach(friend => {
@@ -415,7 +416,7 @@ export function GlobalSearch() {
     // Search groups
     if ((activeCategory === 'all' || activeCategory === 'people') && address && typeof window !== 'undefined') {
       try {
-        const storedGroups = localStorage.getItem(`vfide_groups_${address}`);
+        const storedGroups = safeLocalStorage.getItem(`vfide_groups_${address}`);
         if (storedGroups) {
           const groups: Group[] = JSON.parse(storedGroups);
           groups.forEach(group => {
