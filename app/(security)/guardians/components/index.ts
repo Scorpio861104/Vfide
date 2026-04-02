@@ -1,12 +1,13 @@
-export { OverviewTab } from '../../../guardians/components/OverviewTab';
-export { MyGuardiansTab } from '../../../guardians/components/MyGuardiansTab';
-export { AddGuardianForm } from '../../../guardians/components/AddGuardianForm';
-export { RecoveryTab } from '../../../guardians/components/RecoveryTab';
-export { RecoveryActivePanel } from '../../../guardians/components/RecoveryActivePanel';
-export { RecoveryTimeline } from '../../../guardians/components/RecoveryTimeline';
-export { NextOfKinTab } from '../../../guardians/components/NextOfKinTab';
-export { NextOfKinInboxCard } from '../../../guardians/components/NextOfKinInboxCard';
-export { PendingActionsTab } from '../../../guardians/components/PendingActionsTab';
-export { ResponsibilitiesTab } from '../../../guardians/components/ResponsibilitiesTab';
-export { GuardianPendingRecoveryCard } from '../../../guardians/components/GuardianPendingRecoveryCard';
-export { GuardianResponsibilitiesCard } from '../../../guardians/components/GuardianResponsibilitiesCard';
+// app/guardians/components/index.ts
+export { OverviewTab } from './OverviewTab';
+export { MyGuardiansTab } from './MyGuardiansTab';
+export { AddGuardianForm } from './AddGuardianForm';
+export { RecoveryTab } from './RecoveryTab';
+export { RecoveryActivePanel } from './RecoveryActivePanel';
+export { RecoveryTimeline } from './RecoveryTimeline';
+export { NextOfKinTab } from './NextOfKinTab';
+export { NextOfKinInboxCard } from './NextOfKinInboxCard';
+export { PendingActionsTab } from './PendingActionsTab';
+export { ResponsibilitiesTab } from './ResponsibilitiesTab';
+export { GuardianPendingRecoveryCard } from './GuardianPendingRecoveryCard';
+export { GuardianResponsibilitiesCard } from './GuardianResponsibilitiesCard';

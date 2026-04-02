@@ -3,7 +3,7 @@
 import { useState, useCallback } from 'react';
 import { useAccount } from 'wagmi';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Loader2, Package, Send, Share2, Store, X, Zap } from 'lucide-react';
+import { Share2, X, Check, Loader2, Send } from 'lucide-react';
 import { toast } from '@/lib/toast';
 import { type ShareProductToFeedProps } from './social-commerce-types';
 

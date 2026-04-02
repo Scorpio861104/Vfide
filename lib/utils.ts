@@ -211,8 +211,7 @@ export const safeLocalStorage = {
     if (typeof window === 'undefined') return null;
     try {
       return localStorage.getItem(key)
-    } catch (error) {
-      console.error(`safeLocalStorage.getItem failed for key: ${key}`, error)
+    } catch {
       return null
     }
   },
@@ -221,8 +220,7 @@ export const safeLocalStorage = {
     try {
       localStorage.setItem(key, value)
       return true
-    } catch (error) {
-      console.error(`safeLocalStorage.setItem failed for key: ${key}`, error)
+    } catch {
       return false
     }
   },
@@ -231,44 +229,7 @@ export const safeLocalStorage = {
     try {
       localStorage.removeItem(key)
       return true
-    } catch (error) {
-      console.error(`safeLocalStorage.removeItem failed for key: ${key}`, error)
-      return false
-    }
-  },
-}
-
-/**
- * Safe sessionStorage wrapper that handles errors
- * Prevents crashes in restricted browser contexts
- */
-export const safeSessionStorage = {
-  getItem: (key: string): string | null => {
-    if (typeof window === 'undefined') return null;
-    try {
-      return sessionStorage.getItem(key)
-    } catch (error) {
-      console.error(`safeSessionStorage.getItem failed for key: ${key}`, error)
-      return null
-    }
-  },
-  setItem: (key: string, value: string): boolean => {
-    if (typeof window === 'undefined') return false;
-    try {
-      sessionStorage.setItem(key, value)
-      return true
-    } catch (error) {
-      console.error(`safeSessionStorage.setItem failed for key: ${key}`, error)
-      return false
-    }
-  },
-  removeItem: (key: string): boolean => {
-    if (typeof window === 'undefined') return false;
-    try {
-      sessionStorage.removeItem(key)
-      return true
-    } catch (error) {
-      console.error(`safeSessionStorage.removeItem failed for key: ${key}`, error)
+    } catch {
       return false
     }
   },
@@ -277,11 +238,8 @@ export const safeSessionStorage = {
 /**
  * Format a blockchain address for display
  */
-export function formatAddress(address: string, chars = 4): string {
-  if (!address) return ''
-  if (address.length < chars * 2 + 2) return address // Too short to format
-  return `${address.slice(0, chars + 2)}...${address.slice(-chars)}`
-}
+// Re-exported from canonical source — see lib/format.ts
+export { formatAddress } from '@/lib/format';
 
 /**
  * Format a large number with commas

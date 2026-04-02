@@ -1,11 +1,18 @@
+/**
+ * (gamification) Route Group Layout
+ * 
+ * Pages: quests/, achievements/, badges/, leaderboard/,
+ *        headhunter/, rewards/, benefits/
+ * 
+ * Adds GamificationProviders (Tier 3) for achievement toasts.
+ */
 'use client';
 
-import type { ReactNode } from 'react';
-
-import { Footer } from '@/components/layout/Footer';
-import { WalletGate } from '@/components/layout/WalletGate';
-import { GamificationProviders } from '@/lib/providers/FeatureProviders';
+import { ReactNode } from 'react';
 import { Web3Providers } from '@/lib/providers/Web3Providers';
+import { GamificationProviders } from '@/lib/providers/FeatureProviders';
+import { WalletGate } from '@/components/layout/WalletGate';
+import { Footer } from '@/components/layout/Footer';
 
 export default function GamificationLayout({ children }: { children: ReactNode }) {
   return (

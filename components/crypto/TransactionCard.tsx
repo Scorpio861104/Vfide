@@ -3,7 +3,7 @@
 import React from 'react';
 import { type Transaction } from '@/lib/crypto';
 import { motion } from 'framer-motion';
-import { Check, Clock, ExternalLink, FileText, XCircle } from 'lucide-react';
+import { ArrowDownLeft, ArrowUpRight, ExternalLink } from 'lucide-react';
 import { shortAddress as formatAddress } from '@/lib/format';
 import { renderIconForType, getTransactionLabel, getStatusColor } from './transaction-helpers';
 

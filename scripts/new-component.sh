@@ -1,5 +1,11 @@
 #!/bin/bash
-# Scaffold a new component file.
+# ═══════════════════════════════════════════════════════════════════════════════
+# Scaffold a new component
+#
+# Usage: bash scripts/new-component.sh components/merchant/OrderTracker
+# Creates:
+#   components/merchant/OrderTracker.tsx
+# ═══════════════════════════════════════════════════════════════════════════════
 
 set -euo pipefail
 

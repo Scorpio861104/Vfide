@@ -170,10 +170,9 @@ export function ProgressiveNavProvider({ children, userState }: ProgressiveNavPr
 
     if (currentIdx < STAGE_ORDER.length - 1) {
       const nextStage = STAGE_ORDER[currentIdx + 1];
-      if (nextStage) {
-        const nextItems = allItems.filter(item => item.unlocksAt === nextStage);
-        if (nextItems.length > 0) {
-          const labels: Record<JourneyStage, string> = {
+      const nextItems = allItems.filter(item => item.unlocksAt === nextStage);
+      if (nextItems.length > 0) {
+        const labels: Record<JourneyStage, string> = {
           visitor: 'Connect your wallet',
           connected: 'Connect your wallet',
           transacting: 'Make your first transaction',
@@ -182,12 +181,11 @@ export function ProgressiveNavProvider({ children, userState }: ProgressiveNavPr
           trusted: 'Reach ProofScore 1,000',
           governor: 'Reach ProofScore 3,000',
         };
-          nextMilestone = {
-            stage: nextStage,
-            label: labels[nextStage],
-            itemsToUnlock: nextItems,
-          };
-        }
+        nextMilestone = {
+          stage: nextStage,
+          label: labels[nextStage],
+          itemsToUnlock: nextItems,
+        };
       }
     }
 

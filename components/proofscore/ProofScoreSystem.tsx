@@ -40,13 +40,12 @@ export const TIERS: Tier[] = [
 ];
 
 export function getTier(score: number): Tier {
-  const matchingTier = [...TIERS].reverse().find((tier) => score >= tier.minScore);
-  return matchingTier ?? TIERS[0]!;
+  return TIERS.findLast(t => score >= t.minScore) || TIERS[0];
 }
 
 export function getNextTier(score: number): Tier | null {
-  const currentIdx = TIERS.reduce((lastMatch, tier, index) => (score >= tier.minScore ? index : lastMatch), 0);
-  return TIERS[currentIdx + 1] ?? null;
+  const currentIdx = TIERS.findLastIndex(t => score >= t.minScore);
+  return currentIdx < TIERS.length - 1 ? TIERS[currentIdx + 1] : null;
 }
 
 // ── ProofScore Ring ─────────────────────────────────────────────────────────

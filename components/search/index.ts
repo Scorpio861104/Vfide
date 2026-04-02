@@ -1,2 +1,3 @@
-export * from './AdvancedSearch';
-export * from './GlobalSearch';
+// components/search/index.ts
+export { UnifiedSearch } from './UnifiedSearch';
+export { useUnifiedSearch } from './useUnifiedSearch';

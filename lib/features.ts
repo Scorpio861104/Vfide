@@ -1,4 +1,18 @@
+/**
+ * Feature Flags — Simple Record<string, boolean> gating
+ * 
+ * Usage:
+ *   import { features } from '@/lib/features';
+ *   if (!features.flashloans) return <ComingSoon feature="Flash Loans" />;
+ * 
+ * For mainnet launch: set incomplete features to false.
+ * Post-launch: flip to true as each ships.
+ * 
+ * No external service needed. Just edit this file.
+ */
+
 export const features = {
+  // ── Ready for mainnet ─────────────────────────────────────────────────────
   vault: true,
   guardians: true,
   nextOfKin: true,
@@ -9,6 +23,7 @@ export const features = {
   proofScore: true,
   feeDistributor: true,
 
+  // ── In progress — hide from users ─────────────────────────────────────────
   socialFeed: false,
   socialMessaging: false,
   socialPayments: false,
@@ -37,6 +52,7 @@ export const features = {
   csvExport: false,
   analytics: false,
 
+  // ── Theme/cosmetic ────────────────────────────────────────────────────────
   themeManager: false,
   themeShowcase: false,
   pieMenu: false,
@@ -44,6 +60,9 @@ export const features = {
 
 export type FeatureKey = keyof typeof features;
 
+/**
+ * Check if a feature is enabled. Type-safe.
+ */
 export function isFeatureEnabled(key: FeatureKey): boolean {
   return features[key];
 }

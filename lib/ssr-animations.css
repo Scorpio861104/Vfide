@@ -1,3 +1,20 @@
+/**
+ * SSR-safe CSS Animations
+ * 
+ * Add this to your globals.css (or import in tailwind config).
+ * These replace framer-motion for (marketing) pages:
+ * 
+ * Before (client):  <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+ * After (server):   <div className="animate-fade-in">
+ * 
+ * Before (client):  <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
+ * After (server):   <div className="animate-slide-up [animation-delay:200ms]">
+ */
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Add these to your globals.css inside @layer utilities { }
+   ═══════════════════════════════════════════════════════════════════════════
+
 @layer utilities {
   .animate-fade-in {
     animation: fade-in 0.5s ease-out forwards;
@@ -19,65 +36,31 @@
     opacity: 0;
   }
 
-  .animate-stagger-1 {
-    animation-delay: 100ms;
-  }
-
-  .animate-stagger-2 {
-    animation-delay: 200ms;
-  }
-
-  .animate-stagger-3 {
-    animation-delay: 300ms;
-  }
-
-  .animate-stagger-4 {
-    animation-delay: 400ms;
-  }
-
-  .animate-stagger-5 {
-    animation-delay: 500ms;
-  }
+  .animate-stagger-1 { animation-delay: 100ms; }
+  .animate-stagger-2 { animation-delay: 200ms; }
+  .animate-stagger-3 { animation-delay: 300ms; }
+  .animate-stagger-4 { animation-delay: 400ms; }
+  .animate-stagger-5 { animation-delay: 500ms; }
 }
 
 @keyframes fade-in {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 @keyframes slide-up {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 @keyframes slide-right {
-  from {
-    opacity: 0;
-    transform: translateX(-20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
+  from { opacity: 0; transform: translateX(-20px); }
+  to { opacity: 1; transform: translateX(0); }
 }
 
 @keyframes scale-in {
-  from {
-    opacity: 0;
-    transform: scale(0.95);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
 }
+
+*/

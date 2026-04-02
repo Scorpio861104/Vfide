@@ -412,10 +412,8 @@ export function getConversationId(address1: string, address2: string): string {
 /**
  * Format wallet address for display
  */
-export function formatAddress(address: string): string {
-  if (!address || address.length < 10) return address;
-  return `${address.slice(0, 6)}...${address.slice(-4)}`;
-}
+// Re-exported from canonical source — see lib/format.ts
+export { formatAddress } from '@/lib/format';
 
 /**
  * Storage keys for local message cache

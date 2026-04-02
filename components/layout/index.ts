@@ -1,7 +1,3 @@
-export { ComingSoon } from './ComingSoon';
-export { DemoMode } from './DemoMode';
-export { DemoModeBanner } from './DemoModeBanner';
-export { Footer } from './Footer';
-export { GlobalNav } from './GlobalNav';
-export { MobileBottomNav } from './MobileBottomNav';
+// components/layout/index.ts
 export { WalletGate } from './WalletGate';
+export { ComingSoon } from './ComingSoon';

@@ -1,8 +1,8 @@
 import React from 'react';
 import { type Transaction } from '@/lib/crypto';
-import { ArrowDownLeft, ArrowUpRight, Check, Clock, FileText, Gift, Users, XCircle } from 'lucide-react';
+import { ArrowDownLeft, ArrowUpRight, Gift, Users, FileText, ExternalLink } from 'lucide-react';
 
-export function renderIconForType(type: Transaction['type'], className: string) {
+function renderIconForType(type: Transaction['type'], className: string) {
   switch (type) {
     case 'send':
       return <ArrowUpRight className={className} />;
@@ -32,7 +32,7 @@ function _getStatusIcon(status: Transaction['status']) {
   }
 }
 
-export function getTransactionLabel(type: Transaction['type'], isSent: boolean): string {
+function getTransactionLabel(type: Transaction['type'], isSent: boolean): string {
   switch (type) {
     case 'tip':
       return isSent ? 'Tip Sent' : 'Tip Received';
@@ -45,7 +45,7 @@ export function getTransactionLabel(type: Transaction['type'], isSent: boolean):
   }
 }
 
-export function getStatusColor(status: Transaction['status']): string {
+function getStatusColor(status: Transaction['status']): string {
   switch (status) {
     case 'confirmed':
       return 'bg-green-500/10 text-green-400';

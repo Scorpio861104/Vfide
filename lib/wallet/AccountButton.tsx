@@ -10,7 +10,7 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { User, Mail, Phone, Globe, X, LogOut, Wallet, Shield, ChevronDown, Fingerprint, Loader2, type LucideIcon } from 'lucide-react';
+import { User, Mail, Phone, Chrome, X, LogOut, Wallet, Shield, ChevronDown, Fingerprint, Loader2, type LucideIcon } from 'lucide-react';
 import { useVFIDEWallet, type AuthMethod } from './VFIDEWalletProvider';
 
 // ── Sign-In Modal ───────────────────────────────────────────────────────────
@@ -43,7 +43,7 @@ function SignInModal({ onClose }: { onClose: () => void }) {
   const authOptions: { method: AuthMethod; label: string; icon: LucideIcon; color: string }[] = [
     { method: 'email', label: 'Continue with email', icon: Mail, color: 'cyan' },
     { method: 'phone', label: 'Continue with phone', icon: Phone, color: 'emerald' },
-    { method: 'google', label: 'Continue with Google', icon: Globe, color: 'red' },
+    { method: 'google', label: 'Continue with Google', icon: Chrome, color: 'red' },
     { method: 'passkey', label: 'Use passkey', icon: Fingerprint, color: 'purple' },
     { method: 'wallet', label: 'Connect wallet', icon: Wallet, color: 'amber' },
   ];

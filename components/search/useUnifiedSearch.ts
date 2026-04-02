@@ -93,7 +93,6 @@ export function useUnifiedSearch(containerRef: React.RefObject<HTMLDivElement | 
       e.preventDefault();
       if (activeIndex >= 0 && activeIndex < navItems.length) {
         const item = navItems[activeIndex];
-        if (!item) return;
         if (item.type === 'merchant') goToMerchant((item.data as MerchantResult).slug);
         else goToProduct((item.data as ProductSuggestion).merchant_slug, (item.data as ProductSuggestion).slug);
       } else if (query.trim()) {
