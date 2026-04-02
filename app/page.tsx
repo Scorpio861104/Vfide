@@ -3,6 +3,15 @@
 import Link from "next/link";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { useRef, useEffect, useState, lazy, Suspense } from "react";
+import {
+  DEFAULT_LOCALE,
+  HOME_TRANSLATIONS,
+  LOCALE_OPTIONS,
+  getBrowserLocale,
+  persistLocale,
+  pickLocaleCopy,
+  type SupportedLocale,
+} from "@/lib/i18n";
 import { 
   Shield, Zap, Users, TrendingDown, Lock, Sparkles,
   ArrowRight, ChevronRight, Play, CheckCircle2, Star
@@ -315,6 +324,8 @@ function TrustBadge({ children }: { children: React.ReactNode }) {
 
 export default function Home() {
   const prefersReducedMotion = usePrefersReducedMotion();
+  const [locale, setLocale] = useState<SupportedLocale>(DEFAULT_LOCALE);
+  const homeCopy = pickLocaleCopy(HOME_TRANSLATIONS, locale);
   const heroRef = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({
     target: heroRef,
@@ -327,6 +338,10 @@ export default function Home() {
   const heroGlow = useTransform(scrollYProgress, [0, 0.5], [1, 0.7]);
   const orbY = useTransform(scrollYProgress, [0, 1], [0, -80]);
   const orbOpacity = useTransform(scrollYProgress, [0, 1], [1, 0.6]);
+
+  useEffect(() => {
+    setLocale(getBrowserLocale());
+  }, []);
 
   return (
     <>
@@ -352,6 +367,23 @@ export default function Home() {
           <div className="grid lg:grid-cols-2 gap-12 items-center max-w-7xl mx-auto">
             {/* Left: Text content */}
             <div className="text-center lg:text-left">
+              <div className="mb-4 flex justify-center lg:justify-start">
+                <div className="flex items-center gap-2 rounded-lg border border-zinc-800 bg-zinc-900/80 px-3 py-2 text-sm text-zinc-300">
+                  <label htmlFor="home-language" className="font-medium">{homeCopy.languageLabel}</label>
+                  <select
+                    id="home-language"
+                    aria-label={homeCopy.languageLabel}
+                    value={locale}
+                    onChange={(e) => setLocale(persistLocale(e.target.value))}
+                    className="rounded-md border border-zinc-700 bg-zinc-950 px-2 py-1 text-sm text-white"
+                  >
+                    {LOCALE_OPTIONS.map((option) => (
+                      <option key={option.value} value={option.value}>{option.label}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -359,7 +391,7 @@ export default function Home() {
                 className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-cyan-400/10 border border-cyan-400/20 text-cyan-400 text-sm font-medium mb-8"
               >
                 <Sparkles className="w-4 h-4" />
-                Now Live on Base
+                {homeCopy.liveBadge}
               </motion.div>
               
               <motion.h1
@@ -368,9 +400,9 @@ export default function Home() {
                 transition={{ duration: 0.6, delay: 0.1 }}
                 className="text-5xl sm:text-6xl lg:text-7xl font-display font-bold text-zinc-50 mb-6 leading-[1.1]"
               >
-                Accept Crypto.
+                {homeCopy.heroTitle}
                 <br />
-                <span className="gradient-text">Zero Fees.</span>
+                <span className="gradient-text">{homeCopy.heroAccent}</span>
               </motion.h1>
               
                 <motion.p
@@ -379,8 +411,12 @@ export default function Home() {
                   transition={{ duration: 0.6, delay: 0.2 }}
                   className="text-xl text-zinc-400 mb-10 max-w-xl mx-auto lg:mx-0 leading-relaxed"
                 >
-                  The first payment protocol where merchants pay <strong className="text-zinc-50">zero processing fees</strong>. 
-                  Token transfers have behavioral fees (0.25-5%) that reward trust. Own your funds and build a ProofScore that unlocks lower fees.
+                  {homeCopy.heroDescription.split('zero processing fees').map((segment, index, parts) => (
+                    <span key={`${locale}-${index}`}>
+                      {segment}
+                      {index < parts.length - 1 ? <strong className="text-zinc-50">zero processing fees</strong> : null}
+                    </span>
+                  ))}
                 </motion.p>
 
                 <motion.div
@@ -389,11 +425,11 @@ export default function Home() {
                   transition={{ duration: 0.6, delay: 0.25 }}
                   className="flex flex-wrap items-center justify-center lg:justify-start gap-3 text-xs uppercase tracking-[0.3em] text-zinc-500 mb-8"
                 >
-                  <span>Pay</span>
+                  <span>{homeCopy.valueProps[0]}</span>
                   <ChevronRight className="w-4 h-4 text-cyan-400" />
-                  <span>Build Trust</span>
+                  <span>{homeCopy.valueProps[1]}</span>
                   <ChevronRight className="w-4 h-4 text-cyan-400" />
-                  <span>Unlock Rewards</span>
+                  <span>{homeCopy.valueProps[2]}</span>
                 </motion.div>
               
                 <motion.div
@@ -407,7 +443,7 @@ export default function Home() {
                       href="/token-launch"
                       className="group inline-flex items-center justify-center gap-2 btn-primary ring-effect text-lg"
                     >
-                      Get Started
+                      {homeCopy.primaryCta}
                       <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                     </Link>
                   </motion.div>
@@ -417,7 +453,7 @@ export default function Home() {
                       className="group inline-flex items-center justify-center gap-2 btn-secondary ring-effect text-lg"
                     >
                       <Play className="w-5 h-5" />
-                      Explore Flashloans P2P
+                      {homeCopy.secondaryCta}
                     </Link>
                   </motion.div>
                 </motion.div>
@@ -431,11 +467,11 @@ export default function Home() {
               >
                 <TrustBadge>
                   <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
-                  14 Contracts Deployed
+                  {homeCopy.contractsBadge}
                 </TrustBadge>
                 <TrustBadge>
                   <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                  Audited &amp; Open Source
+                  {homeCopy.auditBadge}
                 </TrustBadge>
                 <TrustBadge>
                   <Sparkles className="w-4 h-4 text-cyan-400" />
@@ -443,7 +479,7 @@ export default function Home() {
                 </TrustBadge>
                 <TrustBadge>
                   <Zap className="w-4 h-4 text-cyan-400" />
-                  Instant Settlement
+                  {homeCopy.settlementBadge}
                 </TrustBadge>
               </motion.div>
               <motion.div
@@ -452,7 +488,7 @@ export default function Home() {
                 transition={{ duration: 0.6, delay: 0.6 }}
                 className="mt-6 text-xs uppercase tracking-[0.2em] text-zinc-600"
               >
-                Built for Base • Polygon • zkSync
+                {homeCopy.chainBadge}
               </motion.div>
             </div>
             
@@ -701,7 +737,7 @@ export default function Home() {
             viewport={{ once: true }}
             className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-display font-bold text-zinc-50 mb-6"
           >
-            Ready to Own Your Payments?
+            {homeCopy.finalTitle}
           </motion.h2>
           
           <motion.p
@@ -711,7 +747,7 @@ export default function Home() {
             transition={{ delay: 0.1 }}
             className="text-xl text-zinc-400 mb-10"
           >
-            Join thousands of merchants and users building trust on VFIDE.
+            {homeCopy.finalDescription}
           </motion.p>
           
           <motion.div
@@ -725,14 +761,14 @@ export default function Home() {
               href="/token-launch"
               className="group inline-flex items-center justify-center gap-2 btn-primary ring-effect text-lg"
             >
-              Launch App
+              {homeCopy.launchApp}
               <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
             </Link>
             <Link 
               href="/docs"
               className="group inline-flex items-center justify-center gap-2 btn-secondary ring-effect text-lg"
             >
-              Read Documentation
+              {homeCopy.docsCta}
             </Link>
           </motion.div>
           

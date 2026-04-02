@@ -5,6 +5,15 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Footer } from '@/components/layout/Footer';
 import { FAQSchema, PageBreadcrumbSchema } from '@/components/seo/StructuredData';
 import { safeLocalStorage } from '@/lib/utils';
+import {
+  DEFAULT_LOCALE,
+  LOCALE_OPTIONS,
+  SUPPORT_TRANSLATIONS,
+  getBrowserLocale,
+  persistLocale,
+  pickLocaleCopy,
+  type SupportedLocale,
+} from '@/lib/i18n';
 import { useAccount } from 'wagmi';
 import { 
   MessageCircle, 
@@ -117,6 +126,8 @@ export default function SupportPage() {
   const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
   const [expandedFaq, setExpandedFaq] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [locale, setLocale] = useState<SupportedLocale>(DEFAULT_LOCALE);
+  const uiCopy = pickLocaleCopy(SUPPORT_TRANSLATIONS, locale);
   
   // New ticket form
   const [newSubject, setNewSubject] = useState('');
@@ -124,6 +135,10 @@ export default function SupportPage() {
   const [newPriority, setNewPriority] = useState<TicketPriority>('medium');
   const [newMessage, setNewMessage] = useState('');
   const [replyMessage, setReplyMessage] = useState('');
+
+  useEffect(() => {
+    setLocale(getBrowserLocale());
+  }, []);
 
   // Load tickets from storage
   useEffect(() => {
@@ -271,12 +286,24 @@ export default function SupportPage() {
         <div className="text-center mb-12">
           <div className="inline-flex items-center gap-2 px-4 py-2 bg-jade-500/10 rounded-full text-jade-400 text-sm font-medium mb-4">
             <Headphones size={16} />
-            24/7 Support
+            {uiCopy.badge}
           </div>
-          <h1 className="text-4xl font-bold text-white mb-4">Help & Support Center</h1>
+          <div className="mx-auto mb-4 flex w-full max-w-xs items-center justify-center gap-2 text-sm text-zinc-300">
+            <label htmlFor="support-language" className="font-medium text-zinc-300">{uiCopy.languageLabel}</label>
+            <select
+              id="support-language"
+              value={locale}
+              onChange={(e) => setLocale(persistLocale(e.target.value))}
+              className="rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white"
+            >
+              {LOCALE_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>{option.label}</option>
+              ))}
+            </select>
+          </div>
+          <h1 className="text-4xl font-bold text-white mb-4">{uiCopy.heading}</h1>
           <p className="text-zinc-400 max-w-2xl mx-auto">
-            Find answers to common questions or open a support ticket. 
-            Our team is here to help you with any issues.
+            {uiCopy.description}
           </p>
         </div>
 
@@ -292,8 +319,8 @@ export default function SupportPage() {
             whileHover={{ scale: 1.02 }}
           >
             <Book className={activeTab === 'faq' ? 'text-jade-400' : 'text-zinc-400'} size={28} />
-            <h3 className="text-lg font-semibold text-white mt-3">FAQ & Guides</h3>
-            <p className="text-sm text-zinc-400 mt-1">Browse common questions and tutorials</p>
+            <h3 className="text-lg font-semibold text-white mt-3">{uiCopy.faqTitle}</h3>
+            <p className="text-sm text-zinc-400 mt-1">{uiCopy.faqDescription}</p>
           </motion.button>
 
           <motion.button
@@ -306,12 +333,12 @@ export default function SupportPage() {
             whileHover={{ scale: 1.02 }}
           >
             <MessageSquare className={activeTab === 'tickets' ? 'text-jade-400' : 'text-zinc-400'} size={28} />
-            <h3 className="text-lg font-semibold text-white mt-3">My Tickets</h3>
+            <h3 className="text-lg font-semibold text-white mt-3">{uiCopy.ticketsTitle}</h3>
             <p className="text-sm text-zinc-400 mt-1">
-              View and manage your support requests
+              {uiCopy.ticketsDescription}
               {tickets.filter(t => t.status !== 'closed').length > 0 && (
                 <span className="ml-2 px-2 py-0.5 bg-jade-500/20 text-jade-400 rounded-full text-xs">
-                  {tickets.filter(t => t.status !== 'closed').length} active
+                  {tickets.filter(t => t.status !== 'closed').length} {uiCopy.activeSuffix}
                 </span>
               )}
             </p>
@@ -327,8 +354,8 @@ export default function SupportPage() {
             whileHover={{ scale: 1.02 }}
           >
             <Plus className={activeTab === 'new' ? 'text-jade-400' : 'text-zinc-400'} size={28} />
-            <h3 className="text-lg font-semibold text-white mt-3">New Ticket</h3>
-            <p className="text-sm text-zinc-400 mt-1">Create a new support request</p>
+            <h3 className="text-lg font-semibold text-white mt-3">{uiCopy.newTicketTitle}</h3>
+            <p className="text-sm text-zinc-400 mt-1">{uiCopy.newTicketDescription}</p>
           </motion.button>
         </div>
 
@@ -349,7 +376,7 @@ export default function SupportPage() {
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search for answers..."
+                  placeholder={uiCopy.searchPlaceholder}
                   className="w-full pl-12 pr-4 py-4 bg-zinc-900/50 border border-zinc-700 rounded-xl text-white placeholder-zinc-500 focus:outline-none focus:border-jade-500"
                 />
               </div>

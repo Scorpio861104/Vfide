@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { headers } from "next/headers";
+import { cookies, headers } from "next/headers";
 import "./globals.css";
 import { Web3Provider } from "@/components/wallet/Web3Provider";
 import { OnboardingManager } from "@/components/onboarding/OnboardingManager";
@@ -25,6 +25,7 @@ import { PreferencesProvider } from "@/lib/preferences/userPreferences";
 import { ServiceWorkerRegistration } from "@/components/core/ServiceWorkerRegistration";
 import { ZustandHydration } from "@/components/core/ZustandHydration";
 import { WebVitalsTracker } from "@/components/core/WebVitalsTracker";
+import { getHtmlLang, normalizeLocale } from "@/lib/i18n";
 
 // Fonts are self-hosted via @fontsource in globals.css
 
@@ -81,10 +82,13 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const isE2E = process.env.E2E === '1'
-  const nonce = (await headers()).get('x-nonce') ?? ''
+  const requestHeaders = await headers()
+  const cookieStore = await cookies()
+  const nonce = requestHeaders.get('x-nonce') ?? ''
+  const locale = normalizeLocale(cookieStore.get('vfide_locale')?.value ?? requestHeaders.get('accept-language'))
 
   return (
-    <html lang="en">
+    <html lang={getHtmlLang(locale)} data-locale={locale}>
       <head>
         {/* CSP nonce exposed for getClientNonce() in lib/security.ts. The matching
           nonce is set in the Content-Security-Policy header by middleware.ts. */}

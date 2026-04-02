@@ -156,6 +156,18 @@ describe('Support page logic pathways', () => {
     }
   });
 
+  it('switches support content to Spanish and persists the locale choice', () => {
+    renderSupportPage();
+
+    fireEvent.change(screen.getByLabelText(/Language/i), {
+      target: { value: 'es-ES' },
+    });
+
+    expect(localStorage.getItem('vfide_locale')).toBe('es-ES');
+    expect(screen.getByRole('heading', { name: /Centro de ayuda y soporte/i })).toBeTruthy();
+    expect(screen.getByRole('button', { name: /Mis tickets/i })).toBeTruthy();
+  });
+
   it('creates a new ticket, selects it, and appends support auto-response', async () => {
     renderSupportPage();
 

@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import type React from 'react';
 
 const renderHomePage = () => {
@@ -50,5 +50,16 @@ describe('Home page pathways', () => {
     expect(screen.getByRole('link', { name: /Start Accepting Payments/i }).getAttribute('href')).toBe('/merchant');
     expect(screen.getByRole('link', { name: /Read Documentation/i }).getAttribute('href')).toBe('/docs');
     expect(screen.getByText(/Built for Base/i)).toBeTruthy();
+  });
+
+  it('switches homepage copy to Spanish and persists the locale choice', () => {
+    renderHomePage();
+
+    const selector = screen.getByLabelText(/Language/i);
+    fireEvent.change(selector, { target: { value: 'es-ES' } });
+
+    expect(localStorage.getItem('vfide_locale')).toBe('es-ES');
+    expect(screen.getByText(/Acepta criptomonedas\./i)).toBeTruthy();
+    expect(screen.getByRole('link', { name: /Comenzar/i }).getAttribute('href')).toBe('/token-launch');
   });
 });
