@@ -211,7 +211,8 @@ export const safeLocalStorage = {
     if (typeof window === 'undefined') return null;
     try {
       return localStorage.getItem(key)
-    } catch {
+    } catch (error) {
+      console.error(`safeLocalStorage.getItem failed for key: ${key}`, error)
       return null
     }
   },
@@ -220,7 +221,8 @@ export const safeLocalStorage = {
     try {
       localStorage.setItem(key, value)
       return true
-    } catch {
+    } catch (error) {
+      console.error(`safeLocalStorage.setItem failed for key: ${key}`, error)
       return false
     }
   },
@@ -229,7 +231,8 @@ export const safeLocalStorage = {
     try {
       localStorage.removeItem(key)
       return true
-    } catch {
+    } catch (error) {
+      console.error(`safeLocalStorage.removeItem failed for key: ${key}`, error)
       return false
     }
   },
@@ -244,7 +247,8 @@ export const safeSessionStorage = {
     if (typeof window === 'undefined') return null;
     try {
       return sessionStorage.getItem(key)
-    } catch {
+    } catch (error) {
+      console.error(`safeSessionStorage.getItem failed for key: ${key}`, error)
       return null
     }
   },
@@ -253,7 +257,8 @@ export const safeSessionStorage = {
     try {
       sessionStorage.setItem(key, value)
       return true
-    } catch {
+    } catch (error) {
+      console.error(`safeSessionStorage.setItem failed for key: ${key}`, error)
       return false
     }
   },
@@ -262,7 +267,8 @@ export const safeSessionStorage = {
     try {
       sessionStorage.removeItem(key)
       return true
-    } catch {
+    } catch (error) {
+      console.error(`safeSessionStorage.removeItem failed for key: ${key}`, error)
       return false
     }
   },

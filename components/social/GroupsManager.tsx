@@ -16,6 +16,7 @@ import {
 import { useAccount } from 'wagmi';
 import { Group, Friend } from '@/types/messaging';
 import { formatAddress, STORAGE_KEYS } from '@/lib/messageEncryption';
+import { safeLocalStorage } from '@/lib/utils';
 import { useToast } from '@/components/ui/toast';
 
 interface GroupsManagerProps {
@@ -42,7 +43,7 @@ export function GroupsManager({ friends, onSelectGroup, selectedGroup }: GroupsM
   useEffect(() => {
     if (!address) return;
     
-    const stored = localStorage.getItem(`${STORAGE_KEYS.GROUPS}_${address}`);
+    const stored = safeLocalStorage.getItem(`${STORAGE_KEYS.GROUPS}_${address}`);
     if (stored) {
       try {
         setGroups(JSON.parse(stored));
@@ -56,7 +57,7 @@ export function GroupsManager({ friends, onSelectGroup, selectedGroup }: GroupsM
   useEffect(() => {
     if (!address || groups.length === 0) return;
     
-    localStorage.setItem(`${STORAGE_KEYS.GROUPS}_${address}`, JSON.stringify(groups));
+    safeLocalStorage.setItem(`${STORAGE_KEYS.GROUPS}_${address}`, JSON.stringify(groups));
   }, [address, groups]);
 
   const handleCreateGroup = () => {

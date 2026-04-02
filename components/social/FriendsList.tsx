@@ -17,6 +17,7 @@ import {
 import { useAccount } from 'wagmi';
 import { Friend } from '@/types/messaging';
 import { formatAddress, STORAGE_KEYS } from '@/lib/messageEncryption';
+import { safeLocalStorage } from '@/lib/utils';
 import { PresenceDot } from './PresenceIndicator';
 import { useBulkPresence } from '@/lib/presence';
 import { useTransactionSounds } from '@/hooks/useTransactionSounds';
@@ -48,7 +49,7 @@ export function FriendsList({ onSelectFriend, selectedFriend }: FriendsListProps
   useEffect(() => {
     if (!address) return;
     
-    const stored = localStorage.getItem(`${STORAGE_KEYS.FRIENDS}_${address}`);
+    const stored = safeLocalStorage.getItem(`${STORAGE_KEYS.FRIENDS}_${address}`);
     if (stored) {
       try {
         setFriends(JSON.parse(stored));
@@ -62,7 +63,7 @@ export function FriendsList({ onSelectFriend, selectedFriend }: FriendsListProps
   useEffect(() => {
     if (!address || friends.length === 0) return;
     
-    localStorage.setItem(`${STORAGE_KEYS.FRIENDS}_${address}`, JSON.stringify(friends));
+    safeLocalStorage.setItem(`${STORAGE_KEYS.FRIENDS}_${address}`, JSON.stringify(friends));
   }, [address, friends]);
 
   const handleAddFriend = () => {

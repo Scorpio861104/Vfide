@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import { Share2 } from 'lucide-react';
 import { Friend } from '@/types/messaging';
 import { formatAddress } from '@/lib/messageEncryption';
+import { safeLocalStorage } from '@/lib/utils';
 import { UserDisplay } from '@/components/common/UserDisplay';
 
 interface MutualFriendsProps {
@@ -31,11 +32,11 @@ export function MutualFriends({ userAddress, currentUserAddress }: MutualFriends
     const findMutualFriends = () => {
       try {
         // Load current user's friends
-        const myFriendsData = localStorage.getItem(`vfide_friends_${currentUserAddress}`);
+        const myFriendsData = safeLocalStorage.getItem(`vfide_friends_${currentUserAddress}`);
         const myFriends: Friend[] = myFriendsData ? JSON.parse(myFriendsData) : [];
 
         // Load other user's friends
-        const theirFriendsData = localStorage.getItem(`vfide_friends_${userAddress}`);
+        const theirFriendsData = safeLocalStorage.getItem(`vfide_friends_${userAddress}`);
         const theirFriends: Friend[] = theirFriendsData ? JSON.parse(theirFriendsData) : [];
 
         // Find mutual friends

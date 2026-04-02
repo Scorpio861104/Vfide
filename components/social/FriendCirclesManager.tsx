@@ -17,6 +17,7 @@ import { useAccount } from 'wagmi';
 import { FriendCircle, CircleMember, DEFAULT_CIRCLES } from '@/types/friendCircles';
 import { Friend } from '@/types/messaging';
 import { STORAGE_KEYS, formatAddress } from '@/lib/messageEncryption';
+import { safeLocalStorage } from '@/lib/utils';
 
 interface FriendCirclesManagerProps {
   friends: Friend[];
@@ -50,7 +51,7 @@ export function FriendCirclesManager({ friends }: FriendCirclesManagerProps) {
   useEffect(() => {
     if (!address) return;
     
-    const storedCircles = localStorage.getItem(`${STORAGE_KEYS.FRIENDS}_circles_${address}`);
+    const storedCircles = safeLocalStorage.getItem(`${STORAGE_KEYS.FRIENDS}_circles_${address}`);
     if (storedCircles) {
       try {
         setCircles(JSON.parse(storedCircles));
@@ -61,7 +62,7 @@ export function FriendCirclesManager({ friends }: FriendCirclesManagerProps) {
       initializeDefaultCircles();
     }
 
-    const storedMembers = localStorage.getItem(`${STORAGE_KEYS.FRIENDS}_circle_members_${address}`);
+    const storedMembers = safeLocalStorage.getItem(`${STORAGE_KEYS.FRIENDS}_circle_members_${address}`);
     if (storedMembers) {
       try {
         setCircleMembers(JSON.parse(storedMembers));
@@ -74,13 +75,13 @@ export function FriendCirclesManager({ friends }: FriendCirclesManagerProps) {
   // Save circles
   useEffect(() => {
     if (!address || circles.length === 0) return;
-    localStorage.setItem(`${STORAGE_KEYS.FRIENDS}_circles_${address}`, JSON.stringify(circles));
+    safeLocalStorage.setItem(`${STORAGE_KEYS.FRIENDS}_circles_${address}`, JSON.stringify(circles));
   }, [address, circles]);
 
   // Save members
   useEffect(() => {
     if (!address || circleMembers.length === 0) return;
-    localStorage.setItem(`${STORAGE_KEYS.FRIENDS}_circle_members_${address}`, JSON.stringify(circleMembers));
+    safeLocalStorage.setItem(`${STORAGE_KEYS.FRIENDS}_circle_members_${address}`, JSON.stringify(circleMembers));
   }, [address, circleMembers]);
 
   const initializeDefaultCircles = () => {

@@ -13,6 +13,7 @@ import {
   Clock,
 } from 'lucide-react';
 import { formatAddress as _formatAddress } from '@/lib/messageEncryption';
+import { safeLocalStorage } from '@/lib/utils';
 import { UserDisplay } from '@/components/common/UserDisplay';
 
 interface ActivityItem {
@@ -42,7 +43,7 @@ export function ActivityFeed({ userAddress }: ActivityFeedProps) {
     if (!userAddress || !isClient || typeof window === 'undefined') return;
     
     try {
-      const stored = localStorage.getItem(`vfide_activity_feed_${userAddress}`);
+      const stored = safeLocalStorage.getItem(`vfide_activity_feed_${userAddress}`);
       if (stored) {
         setActivities(JSON.parse(stored));
       }
@@ -197,7 +198,7 @@ export function addActivity(
   if (typeof window === 'undefined') return;
   
   try {
-    const stored = localStorage.getItem(`vfide_activity_feed_${userAddress}`);
+    const stored = safeLocalStorage.getItem(`vfide_activity_feed_${userAddress}`);
     const activities: ActivityItem[] = stored ? JSON.parse(stored) : [];
     
     const newActivity: ActivityItem = {
@@ -213,8 +214,8 @@ export function addActivity(
       activities.splice(100);
     }
     
-    localStorage.setItem(`vfide_activity_feed_${userAddress}`, JSON.stringify(activities));
-  } catch {
-    // localStorage write failure; activity is captured in-memory for the session
+    safeLocalStorage.setItem(`vfide_activity_feed_${userAddress}`, JSON.stringify(activities));
+  } catch (error) {
+    console.error('Failed to persist social activity', error);
   }
 }

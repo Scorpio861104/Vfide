@@ -34,6 +34,7 @@ import { MessageActions, EditedIndicator } from './MessageActions';
 import { apiClient } from '@/lib/api-client';
 import { PaymentButton } from '../crypto/PaymentButton';
 import { useAnnounce } from '@/lib/accessibility';
+import { safeLocalStorage } from '@/lib/utils';
 interface MessagingCenterProps {
   friend: Friend;
   hasVault?: boolean;
@@ -99,7 +100,7 @@ export function MessagingCenter({ friend, hasVault = false }: MessagingCenterPro
     
     const loadMessages = async () => {
       try {
-        const stored = localStorage.getItem(`${STORAGE_KEYS.MESSAGES}_${conversationId}`);
+        const stored = safeLocalStorage.getItem(`${STORAGE_KEYS.MESSAGES}_${conversationId}`);
         if (!stored) return;
         
         const msgs: Message[] = JSON.parse(stored);
@@ -147,7 +148,7 @@ export function MessagingCenter({ friend, hasVault = false }: MessagingCenterPro
     if (!conversationId || messages.length === 0) return;
     
     const encryptedOnlyMessages = stripDecryptedContentForStorage(messages);
-    localStorage.setItem(`${STORAGE_KEYS.MESSAGES}_${conversationId}`, JSON.stringify(encryptedOnlyMessages));
+    safeLocalStorage.setItem(`${STORAGE_KEYS.MESSAGES}_${conversationId}`, JSON.stringify(encryptedOnlyMessages));
   }, [conversationId, messages]);
 
   const handleSendMessage = async () => {
@@ -270,7 +271,7 @@ export function MessagingCenter({ friend, hasVault = false }: MessagingCenterPro
           ? { ...msg, encryptedContent, editedAt: Date.now() }
           : msg
       );
-      localStorage.setItem(`${STORAGE_KEYS.MESSAGES}_${conversationId}`, JSON.stringify(updatedMessages));
+      safeLocalStorage.setItem(`${STORAGE_KEYS.MESSAGES}_${conversationId}`, JSON.stringify(updatedMessages));
     } catch {
       alert('Failed to edit message. Please try again.');
     }
@@ -298,7 +299,7 @@ export function MessagingCenter({ friend, hasVault = false }: MessagingCenterPro
           ? { ...msg, deletedAt: Date.now(), encryptedContent: '' }
           : msg
       );
-      localStorage.setItem(`${STORAGE_KEYS.MESSAGES}_${conversationId}`, JSON.stringify(updatedMessages));
+      safeLocalStorage.setItem(`${STORAGE_KEYS.MESSAGES}_${conversationId}`, JSON.stringify(updatedMessages));
     } catch {
       alert('Failed to delete message. Please try again.');
     }

@@ -12,6 +12,7 @@ import {
 import { useAccount } from 'wagmi';
 import { FriendRequest } from '@/types/friendRequests';
 import { formatAddress, STORAGE_KEYS } from '@/lib/messageEncryption';
+import { safeLocalStorage } from '@/lib/utils';
 
 interface FriendRequestsPanelProps {
   onAccept: (request: FriendRequest) => void;
@@ -27,7 +28,7 @@ export function FriendRequestsPanel({ onAccept, onReject }: FriendRequestsPanelP
   useEffect(() => {
     if (!address) return;
     
-    const stored = localStorage.getItem(`${STORAGE_KEYS.FRIENDS}_requests_${address}`);
+    const stored = safeLocalStorage.getItem(`${STORAGE_KEYS.FRIENDS}_requests_${address}`);
     if (stored) {
       try {
         const allRequests: FriendRequest[] = JSON.parse(stored);
@@ -47,7 +48,7 @@ export function FriendRequestsPanel({ onAccept, onReject }: FriendRequestsPanelP
   useEffect(() => {
     if (!address || requests.length === 0) return;
     
-    localStorage.setItem(
+    safeLocalStorage.setItem(
       `${STORAGE_KEYS.FRIENDS}_requests_${address}`,
       JSON.stringify(requests)
     );

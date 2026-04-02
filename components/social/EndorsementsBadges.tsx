@@ -11,6 +11,7 @@ import {
   AlertCircle,
 } from 'lucide-react';
 import { formatAddress } from '@/lib/messageEncryption';
+import { safeLocalStorage } from '@/lib/utils';
 
 interface Endorsement {
   id: string;
@@ -52,7 +53,7 @@ export function EndorsementsBadges({ userAddress, showGiveEndorsement, onGiveEnd
     
     // Load endorsements from localStorage
     try {
-      const storedEndorsements = localStorage.getItem(`vfide_endorsements_${userAddress}`);
+      const storedEndorsements = safeLocalStorage.getItem(`vfide_endorsements_${userAddress}`);
       if (storedEndorsements) {
         const endorsementsData: Endorsement[] = JSON.parse(storedEndorsements);
         setEndorsements(endorsementsData);
@@ -63,7 +64,7 @@ export function EndorsementsBadges({ userAddress, showGiveEndorsement, onGiveEnd
 
     // Load badges
     try {
-      const storedBadges = localStorage.getItem(`vfide_badges_${userAddress}`);
+      const storedBadges = safeLocalStorage.getItem(`vfide_badges_${userAddress}`);
       if (storedBadges) {
         setBadges(JSON.parse(storedBadges));
       }

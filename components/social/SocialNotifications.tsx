@@ -13,6 +13,7 @@ import {
 import { useAccount } from 'wagmi';
 import { Notification } from '@/types/socialIntegration';
 import { formatAddress as _formatAddress } from '@/lib/messageEncryption';
+import { safeLocalStorage } from '@/lib/utils';
 
 export function SocialNotifications() {
   const { address } = useAccount();
@@ -31,7 +32,7 @@ export function SocialNotifications() {
     if (!address || !isClient || typeof window === 'undefined') return;
     
     try {
-      const stored = localStorage.getItem(`vfide_notifications_${address}`);
+      const stored = safeLocalStorage.getItem(`vfide_notifications_${address}`);
       if (stored) {
         const notifs: Notification[] = JSON.parse(stored);
         setNotifications(notifs);
@@ -46,7 +47,7 @@ export function SocialNotifications() {
   useEffect(() => {
     if (!address || notifications.length === 0 || !isClient || typeof window === 'undefined') return;
     try {
-      localStorage.setItem(`vfide_notifications_${address}`, JSON.stringify(notifications));
+      safeLocalStorage.setItem(`vfide_notifications_${address}`, JSON.stringify(notifications));
       setUnreadCount(notifications.filter(n => !n.read).length);
     } catch {
       // save failure is non-critical; in-memory state remains correct
@@ -286,7 +287,7 @@ export function addNotification(address: string, notification: Omit<Notification
   if (typeof window === 'undefined') return;
   
   try {
-    const stored = localStorage.getItem(`vfide_notifications_${address}`);
+    const stored = safeLocalStorage.getItem(`vfide_notifications_${address}`);
     const notifications: Notification[] = stored ? JSON.parse(stored) : [];
     
     const newNotif: Notification = {
@@ -303,11 +304,11 @@ export function addNotification(address: string, notification: Omit<Notification
       notifications.splice(50);
     }
     
-    localStorage.setItem(`vfide_notifications_${address}`, JSON.stringify(notifications));
+    safeLocalStorage.setItem(`vfide_notifications_${address}`, JSON.stringify(notifications));
     
     // Trigger custom event for real-time updates
     window.dispatchEvent(new CustomEvent('vfide-notification', { detail: newNotif }));
-  } catch {
-    // notification persistence failure is non-critical
+  } catch (error) {
+    console.error('Failed to persist social notification', error);
   }
 }

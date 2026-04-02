@@ -19,6 +19,7 @@ import { Friend } from '@/types/messaging';
 import { encryptGroupMessage, formatAddress } from '@/lib/messageEncryption';
 import { UserDisplay } from '@/components/common/UserDisplay';
 import { addNotification } from './SocialNotifications';
+import { safeLocalStorage } from '@/lib/utils';
 
 const KEY_DIR_ROUTE = '/api/security/keys';
 const GROUPS_ROUTE = '/api/groups';
@@ -130,7 +131,7 @@ export function GroupMessaging() {
     const loadGroups = async () => {
       let localGroups: Group[] = [];
       try {
-        const stored = localStorage.getItem(`vfide_groups_${address}`);
+        const stored = safeLocalStorage.getItem(`vfide_groups_${address}`);
         if (stored) {
           localGroups = JSON.parse(stored) as Group[];
         }
@@ -157,7 +158,7 @@ export function GroupMessaging() {
 
         if (isActive) {
           setGroups(mergedGroups);
-          localStorage.setItem(`vfide_groups_${address}`, JSON.stringify(mergedGroups));
+          safeLocalStorage.setItem(`vfide_groups_${address}`, JSON.stringify(mergedGroups));
         }
       } catch {
         if (isActive) {
@@ -214,7 +215,7 @@ export function GroupMessaging() {
 
             if (isActive) {
               setMessages(normalized);
-              localStorage.setItem(`vfide_group_messages_${groupStorageKey}`, JSON.stringify(normalized));
+              safeLocalStorage.setItem(`vfide_group_messages_${groupStorageKey}`, JSON.stringify(normalized));
             }
             return;
           }
@@ -224,7 +225,7 @@ export function GroupMessaging() {
       }
 
       try {
-        const stored = localStorage.getItem(`vfide_group_messages_${groupStorageKey}`);
+        const stored = safeLocalStorage.getItem(`vfide_group_messages_${groupStorageKey}`);
         if (stored) {
           const parsed = JSON.parse(stored) as GroupMessage[];
           const sanitized = parsed.map((msg) => {
@@ -318,7 +319,7 @@ export function GroupMessaging() {
       content: undefined,
     }));
 
-    localStorage.setItem(`vfide_group_messages_${groupStorageKey}`, JSON.stringify(encryptedOnly));
+    safeLocalStorage.setItem(`vfide_group_messages_${groupStorageKey}`, JSON.stringify(encryptedOnly));
   }, [messages, selectedGroup, address]);
 
   const sendMessage = async () => {
@@ -418,7 +419,7 @@ export function GroupMessaging() {
       normalizeGroupId(g.id) === normalizeGroupId(selectedGroup.id) ? { ...g, lastActivity: Date.now() } : g
     );
     setGroups(updatedGroups.sort((a, b) => b.lastActivity - a.lastActivity));
-    localStorage.setItem(`vfide_groups_${address}`, JSON.stringify(updatedGroups));
+    safeLocalStorage.setItem(`vfide_groups_${address}`, JSON.stringify(updatedGroups));
 
       // Notify group members without leaking plaintext preview
       selectedGroup.members.forEach(member => {
@@ -467,7 +468,7 @@ export function GroupMessaging() {
 
       const updatedGroups = groups.filter(g => normalizeGroupId(g.id) !== normalizeGroupId(selectedGroup.id));
       setGroups(updatedGroups);
-      localStorage.setItem(`vfide_groups_${address}`, JSON.stringify(updatedGroups));
+      safeLocalStorage.setItem(`vfide_groups_${address}`, JSON.stringify(updatedGroups));
       setSelectedGroup(null);
       setShowGroupMenu(false);
     };
@@ -728,7 +729,7 @@ export function GroupMessaging() {
 
               const updatedGroups = [createdGroup, ...groups];
               setGroups(updatedGroups);
-              localStorage.setItem(`vfide_groups_${address}`, JSON.stringify(updatedGroups));
+              safeLocalStorage.setItem(`vfide_groups_${address}`, JSON.stringify(updatedGroups));
               setSelectedGroup(createdGroup);
               setShowCreateGroup(false);
             }}
@@ -756,7 +757,7 @@ function CreateGroupModal({ onClose, onCreate, userAddress }: CreateGroupModalPr
 
   useEffect(() => {
     // Load friends
-    const stored = localStorage.getItem(`vfide_friends_${userAddress}`);
+    const stored = safeLocalStorage.getItem(`vfide_friends_${userAddress}`);
     if (stored) {
       setFriends(JSON.parse(stored));
     }

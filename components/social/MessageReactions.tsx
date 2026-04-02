@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Smile } from 'lucide-react';
+import { safeLocalStorage } from '@/lib/utils';
 
 export interface MessageReaction {
   emoji: string;
@@ -123,7 +124,7 @@ export function useMessageReactions(conversationId: string, currentUserAddress: 
     if (typeof window === 'undefined' || !conversationId) return;
 
     try {
-      const stored = localStorage.getItem(`vfide_reactions_${conversationId}`);
+      const stored = safeLocalStorage.getItem(`vfide_reactions_${conversationId}`);
       if (stored) {
         setReactions(JSON.parse(stored));
       }
@@ -134,7 +135,7 @@ export function useMessageReactions(conversationId: string, currentUserAddress: 
 
   const saveReactions = (newReactions: Record<string, MessageReaction[]>) => {
     setReactions(newReactions);
-    localStorage.setItem(`vfide_reactions_${conversationId}`, JSON.stringify(newReactions));
+    safeLocalStorage.setItem(`vfide_reactions_${conversationId}`, JSON.stringify(newReactions));
   };
 
   const addReaction = (messageId: string, emoji: string) => {

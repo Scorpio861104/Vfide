@@ -16,6 +16,7 @@ import {
 import { useAccount } from 'wagmi';
 import { PrivacySettings as PrivacySettingsType, DEFAULT_PRIVACY_SETTINGS, BlockedUser } from '@/types/friendRequests';
 import { STORAGE_KEYS, formatAddress } from '@/lib/messageEncryption';
+import { safeLocalStorage } from '@/lib/utils';
 import { safeParseInt } from '@/lib/validation';
 
 export function PrivacySettings() {
@@ -29,7 +30,7 @@ export function PrivacySettings() {
   useEffect(() => {
     if (!address) return;
     
-    const storedSettings = localStorage.getItem(`${STORAGE_KEYS.FRIENDS}_privacy_${address}`);
+    const storedSettings = safeLocalStorage.getItem(`${STORAGE_KEYS.FRIENDS}_privacy_${address}`);
     if (storedSettings) {
       try {
         setSettings(JSON.parse(storedSettings));
@@ -38,7 +39,7 @@ export function PrivacySettings() {
       }
     }
 
-    const storedBlocked = localStorage.getItem(`${STORAGE_KEYS.FRIENDS}_blocked_${address}`);
+    const storedBlocked = safeLocalStorage.getItem(`${STORAGE_KEYS.FRIENDS}_blocked_${address}`);
     if (storedBlocked) {
       try {
         setBlockedUsers(JSON.parse(storedBlocked));
@@ -52,7 +53,7 @@ export function PrivacySettings() {
   const saveSettings = () => {
     if (!address) return;
     
-    localStorage.setItem(
+    safeLocalStorage.setItem(
       `${STORAGE_KEYS.FRIENDS}_privacy_${address}`,
       JSON.stringify(settings)
     );
@@ -81,7 +82,7 @@ export function PrivacySettings() {
 
     const updated = [...blockedUsers, newBlocked];
     setBlockedUsers(updated);
-    localStorage.setItem(`${STORAGE_KEYS.FRIENDS}_blocked_${address}`, JSON.stringify(updated));
+    safeLocalStorage.setItem(`${STORAGE_KEYS.FRIENDS}_blocked_${address}`, JSON.stringify(updated));
     setBlockAddress('');
   };
 
@@ -91,7 +92,7 @@ export function PrivacySettings() {
     
     const updated = blockedUsers.filter(u => u.address !== userAddress);
     setBlockedUsers(updated);
-    localStorage.setItem(`${STORAGE_KEYS.FRIENDS}_blocked_${address}`, JSON.stringify(updated));
+    safeLocalStorage.setItem(`${STORAGE_KEYS.FRIENDS}_blocked_${address}`, JSON.stringify(updated));
   };
 
   return (
