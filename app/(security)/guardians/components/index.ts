@@ -1,0 +1,12 @@
+export { OverviewTab } from '../../../guardians/components/OverviewTab';
+export { MyGuardiansTab } from '../../../guardians/components/MyGuardiansTab';
+export { AddGuardianForm } from '../../../guardians/components/AddGuardianForm';
+export { RecoveryTab } from '../../../guardians/components/RecoveryTab';
+export { RecoveryActivePanel } from '../../../guardians/components/RecoveryActivePanel';
+export { RecoveryTimeline } from '../../../guardians/components/RecoveryTimeline';
+export { NextOfKinTab } from '../../../guardians/components/NextOfKinTab';
+export { NextOfKinInboxCard } from '../../../guardians/components/NextOfKinInboxCard';
+export { PendingActionsTab } from '../../../guardians/components/PendingActionsTab';
+export { ResponsibilitiesTab } from '../../../guardians/components/ResponsibilitiesTab';
+export { GuardianPendingRecoveryCard } from '../../../guardians/components/GuardianPendingRecoveryCard';
+export { GuardianResponsibilitiesCard } from '../../../guardians/components/GuardianResponsibilitiesCard';
