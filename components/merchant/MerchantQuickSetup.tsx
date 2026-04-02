@@ -17,7 +17,7 @@ import { SetupStepSuccess } from './SetupStepSuccess';
 
 export function MerchantQuickSetup({ onComplete }: { onComplete?: (slug: string) => void }) {
   const { address, isConnected } = useAccount();
-  const { register: registerOnChain } = useRegisterMerchant();
+  const { registerMerchant: registerOnChain } = useRegisterMerchant();
 
   const [step, setStep] = useState<Step>(1);
   const [isSubmitting, setIsSubmitting] = useState(false);

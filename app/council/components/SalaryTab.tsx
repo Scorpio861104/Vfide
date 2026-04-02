@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { DollarSign, Clock, TrendingUp, Shield, AlertTriangle } from 'lucide-react';
+import { AlertTriangle, Calendar, CheckCircle2 as CheckCircle, Clock, DollarSign, Shield, TrendingUp } from 'lucide-react';
 import { useAccount, useReadContract, useWriteContract } from 'wagmi';
 import { CouncilSalaryABI } from '@/lib/abis';
 import { CONTRACT_ADDRESSES } from '@/lib/contracts';

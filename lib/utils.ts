@@ -235,6 +235,35 @@ export const safeLocalStorage = {
   },
 }
 
+export const safeSessionStorage = {
+  getItem: (key: string): string | null => {
+    if (typeof window === 'undefined') return null;
+    try {
+      return sessionStorage.getItem(key)
+    } catch {
+      return null
+    }
+  },
+  setItem: (key: string, value: string): boolean => {
+    if (typeof window === 'undefined') return false;
+    try {
+      sessionStorage.setItem(key, value)
+      return true
+    } catch {
+      return false
+    }
+  },
+  removeItem: (key: string): boolean => {
+    if (typeof window === 'undefined') return false;
+    try {
+      sessionStorage.removeItem(key)
+      return true
+    } catch {
+      return false
+    }
+  },
+}
+
 /**
  * Format a blockchain address for display
  */

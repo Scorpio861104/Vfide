@@ -14,6 +14,10 @@
 
 import { ReactNode } from 'react';
 
+export function AppFeatureProviders({ children }: { children: ReactNode }) {
+  return <>{children}</>;
+}
+
 // ── Social: presence, notifications, real-time ──────────────────────────────
 // Only loaded in (social) route group
 export function SocialProviders({ children }: { children: ReactNode }) {

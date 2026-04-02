@@ -1,7 +1,7 @@
 'use client';
 import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Users, Crown, Star, CheckCircle2, Clock, Shield, Search } from 'lucide-react';
+import { Calendar, Crown, Search, Shield, Star, TrendingUp, Users, CheckCircle2, Clock } from 'lucide-react';
 import { useReadContract } from 'wagmi';
 import { CouncilElectionABI } from '@/lib/abis';
 import { CONTRACT_ADDRESSES } from '@/lib/contracts';

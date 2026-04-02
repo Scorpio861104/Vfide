@@ -1,726 +1,163 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import { ConnectButton } from '@rainbow-me/rainbowkit';
+import { useEffect, useMemo, useState } from 'react';
+import { Hash, MessageCircle, Users } from 'lucide-react';
+import { useAccount } from 'wagmi';
+
 import { Footer } from '@/components/layout/Footer';
 import { PageWrapper } from '@/components/ui/PageLayout';
-import { motion, AnimatePresence } from 'framer-motion';
-import { useAccount } from 'wagmi';
-import { ConnectButton } from '@rainbow-me/rainbowkit';
-import Image from 'next/image';
-import Link from 'next/link';
-import {
-  Rss,
-  Camera,
-  MessageCircle,
-  Users,
-  Heart,
-  Share2,
-  TrendingUp,
-  Plus,
-  Image as ImageIcon,
-  Video,
-  Smile,
-  Send,
-  MoreHorizontal,
-  Bookmark,
-  Flag,
-  UserPlus,
-  Award,
-  Zap,
-  MapPin,
-  MessageSquare,
-  Repeat2,
-  Shield,
-  Sparkles,
-  RefreshCw,
-  ArrowRight,
-} from 'lucide-react';
 
-// ============================================================================
-// TYPES
-// ============================================================================
+import { CreatePostCard } from './components/CreatePostCard';
+import { PostCard } from './components/PostCard';
+import { StoryRing } from './components/StoryRing';
+import { TrendingSidebar } from './components/TrendingSidebar';
 
-interface Post {
-  id: string;
-  author: {
-    address: string;
-    name: string;
-    avatar: string;
-    verified: boolean;
-    proofScore: number;
-  };
-  content: string;
-  media?: {
-    type: 'image' | 'video';
-    url: string;
-  }[];
-  timestamp: number;
-  likes: number;
-  comments: number;
-  shares: number;
-  views: number;
-  liked: boolean;
-  bookmarked: boolean;
-  isFollowing: boolean;
-  tags?: string[];
-}
-
-interface Story {
-  id: string;
-  author: {
-    address: string;
-    name: string;
-    avatar: string;
-  };
-  preview: string;
-  viewed: boolean;
-  isLive: boolean;
-}
-
-interface TrendingTopic {
-  id: string;
-  tag: string;
-  posts: number;
-  trending: 'up' | 'down' | 'stable';
-}
-
-interface SuggestedUser {
-  address: string;
-  name: string;
-  avatar: string;
-  bio: string;
-  followers: number;
-  mutualFriends: number;
-  verified: boolean;
-}
-
-const EMPTY_STORIES: Story[] = [];
-const EMPTY_TRENDING: TrendingTopic[] = [];
-const EMPTY_SUGGESTED: SuggestedUser[] = [];
-
-// ============================================================================
-// HELPER FUNCTIONS
-// ============================================================================
-
-function formatTimeAgo(timestamp: number): string {
-  const seconds = Math.floor((Date.now() - timestamp) / 1000);
-  if (seconds < 60) return 'just now';
-  if (seconds < 3600) return `${Math.floor(seconds / 60)}m`;
-  if (seconds < 86400) return `${Math.floor(seconds / 3600)}h`;
-  return `${Math.floor(seconds / 86400)}d`;
-}
-
-function formatNumber(num: number): string {
-  if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`;
-  if (num >= 1000) return `${(num / 1000).toFixed(1)}K`;
-  return num.toString();
-}
-
-// ============================================================================
-// COMPONENTS
-// ============================================================================
-
-function StoryRing({ story, onClick }: { story: Story; onClick: () => void }) {
-  const isYou = story.author.name === 'You';
-  
-  return (
-    <motion.button
-      whileHover={{ scale: 1.05 }}
-      whileTap={{ scale: 0.95 }}
-      onClick={onClick}
-      className="flex flex-col items-center gap-1 min-w-18"
-    >
-      <div className={`
-        relative p-0.5 rounded-full
-        ${story.viewed ? 'bg-zinc-700' : 'bg-gradient-to-tr from-rose-500 via-[#FF6B9D] to-cyan-400'}
-        ${story.isLive ? 'ring-2 ring-red-500 ring-offset-2 ring-offset-[#0A0A0F]' : ''}
-      `}>
-        <div className="w-14 h-14 rounded-full bg-zinc-900 flex items-center justify-center text-2xl overflow-hidden">
-          {story.preview ? (
-            <Image src={story.preview} alt={`${story.author.name} story preview`} width={56} height={56} className="w-full h-full object-cover" />
-          ) : isYou ? (
-            <Plus className="w-6 h-6 text-cyan-400" />
-          ) : (
-            story.author.avatar
-          )}
-        </div>
-        {story.isLive && (
-          <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-1.5 py-0.5 bg-red-500 text-white text-[10px] font-bold rounded">
-            LIVE
-          </span>
-        )}
-      </div>
-      <span className="text-xs text-zinc-400 truncate max-w-15">
-        {story.author.name}
-      </span>
-    </motion.button>
-  );
-}
-
-function CreatePostCard({ onPost }: { onPost: (content: string) => void }) {
-  const [content, setContent] = useState('');
-  const [isFocused, setIsFocused] = useState(false);
-
-  const handleSubmit = () => {
-    if (content.trim()) {
-      onPost(content);
-      setContent('');
-      setIsFocused(false);
-    }
-  };
-
-  return (
-    <motion.div
-      layout
-      className="bg-zinc-900/80 backdrop-blur-xl border border-zinc-700 rounded-2xl p-4 ring-effect"
-    >
-      <div className="flex gap-3">
-        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-cyan-400 to-violet-400 flex items-center justify-center text-lg">
-          ✨
-        </div>
-        <div className="flex-1">
-          <textarea
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-            onFocus={() => setIsFocused(true)}
-            placeholder="What's happening in Web3?"
-            className="w-full bg-transparent text-zinc-50 placeholder-[#6A6A6F] resize-none outline-none min-h-15"
-            rows={isFocused ? 3 : 1}
-          />
-          
-          <AnimatePresence>
-            {isFocused && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                exit={{ opacity: 0, height: 0 }}
-                className="flex items-center justify-between pt-3 border-t border-zinc-700 mt-3"
-              >
-                <div className="flex gap-2">
-                  <button className="p-2 hover:bg-zinc-700 rounded-lg transition-colors text-cyan-400">
-                    <ImageIcon className="w-5 h-5" />
-                  </button>
-                  <button className="p-2 hover:bg-zinc-700 rounded-lg transition-colors text-violet-400">
-                    <Video className="w-5 h-5" />
-                  </button>
-                  <button className="p-2 hover:bg-zinc-700 rounded-lg transition-colors text-pink-400">
-                    <Smile className="w-5 h-5" />
-                  </button>
-                  <button className="p-2 hover:bg-zinc-700 rounded-lg transition-colors text-emerald-500">
-                    <MapPin className="w-5 h-5" />
-                  </button>
-                </div>
-                <div className="flex items-center gap-3">
-                  <span className={`text-sm ${content.length > 280 ? 'text-red-400' : 'text-zinc-500'}`}>
-                    {content.length}/280
-                  </span>
-                  <button
-                    onClick={handleSubmit}
-                    disabled={!content.trim() || content.length > 280}
-                    className="px-4 py-2 bg-gradient-to-r from-cyan-400 to-violet-400 text-zinc-950 font-semibold rounded-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-                  >
-                    <Send className="w-4 h-4" />
-                    Post
-                  </button>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-      </div>
-    </motion.div>
-  );
-}
-
-function PostCard({ post, onLike, onBookmark }: { post: Post; onLike: () => void; onBookmark: () => void }) {
-  const [showMenu, setShowMenu] = useState(false);
-
-  return (
-    <motion.article
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="bg-zinc-900/80 backdrop-blur-xl border border-zinc-700 rounded-2xl overflow-hidden"
-    >
-      {/* Header */}
-      <div className="p-4 flex items-start justify-between">
-        <div className="flex gap-3">
-          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-cyan-400 to-violet-400 flex items-center justify-center text-xl">
-            {post.author.avatar}
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="font-semibold text-zinc-50">{post.author.name}</span>
-              {post.author.verified && (
-                <Shield className="w-4 h-4 text-cyan-400" />
-              )}
-              <span className="text-xs px-2 py-0.5 rounded-full bg-cyan-400/20 text-cyan-400">
-                {post.author.proofScore} PS
-              </span>
-            </div>
-            <div className="flex items-center gap-2 text-sm text-zinc-500">
-              <span>{post.author.address}</span>
-              <span>•</span>
-              <span>{formatTimeAgo(post.timestamp)}</span>
-            </div>
-          </div>
-        </div>
-        <div className="relative">
-          <button
-            onClick={() => setShowMenu(!showMenu)}
-            className="p-2 hover:bg-zinc-700 rounded-lg transition-colors text-zinc-500"
-          >
-            <MoreHorizontal className="w-5 h-5" />
-          </button>
-          {showMenu && (
-            <div className="absolute right-0 top-full mt-1 bg-zinc-900 border border-zinc-700 rounded-lg py-1 min-w-37.5 z-10">
-              <button className="w-full px-4 py-2 text-left text-sm text-zinc-400 hover:bg-zinc-700 flex items-center gap-2">
-                <Flag className="w-4 h-4" /> Report
-              </button>
-              <button className="w-full px-4 py-2 text-left text-sm text-zinc-400 hover:bg-zinc-700 flex items-center gap-2">
-                <UserPlus className="w-4 h-4" /> {post.isFollowing ? 'Unfollow' : 'Follow'}
-              </button>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Content */}
-      <div className="px-4 pb-3">
-        <p className="text-zinc-50 whitespace-pre-wrap">{post.content}</p>
-        {post.tags && post.tags.length > 0 && (
-          <div className="flex flex-wrap gap-2 mt-2">
-            {post.tags.map((tag) => (
-              <span key={tag} className="text-cyan-400 text-sm hover:underline cursor-pointer">
-                #{tag}
-              </span>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* Media */}
-      {post.media && post.media.length > 0 && (
-        <div className={`grid ${post.media.length === 1 ? 'grid-cols-1' : 'grid-cols-2'} gap-0.5`}>
-          {post.media.map((m, index) => (
-            <img
-              key={m.url}
-              src={m.url}
-              alt={`Post image ${index + 1}`}
-              className="w-full h-64 object-cover"
-            />
-          ))}
-        </div>
-      )}
-
-      {/* Stats */}
-      <div className="px-4 py-2 flex items-center gap-4 text-sm text-zinc-500 border-t border-zinc-700/50">
-        <span>{formatNumber(post.views)} views</span>
-      </div>
-
-      {/* Actions */}
-      <div className="px-4 py-3 flex items-center justify-between border-t border-zinc-700">
-        <button
-          onClick={onLike}
-          className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-colors ${
-            post.liked ? 'text-pink-400 bg-pink-400/10' : 'text-zinc-400 hover:bg-zinc-700'
-          }`}
-        >
-          <Heart className={`w-5 h-5 ${post.liked ? 'fill-current' : ''}`} />
-          <span className="text-sm">{formatNumber(post.likes)}</span>
-        </button>
-        
-        <button className="flex items-center gap-2 px-3 py-2 rounded-lg text-zinc-400 hover:bg-zinc-700 transition-colors">
-          <MessageSquare className="w-5 h-5" />
-          <span className="text-sm">{formatNumber(post.comments)}</span>
-        </button>
-        
-        <button className="flex items-center gap-2 px-3 py-2 rounded-lg text-zinc-400 hover:bg-zinc-700 transition-colors">
-          <Repeat2 className="w-5 h-5" />
-          <span className="text-sm">{formatNumber(post.shares)}</span>
-        </button>
-        
-        <button
-          onClick={onBookmark}
-          className={`p-2 rounded-lg transition-colors ${
-            post.bookmarked ? 'text-cyan-400 bg-cyan-400/10' : 'text-zinc-400 hover:bg-zinc-700'
-          }`}
-        >
-          <Bookmark className={`w-5 h-5 ${post.bookmarked ? 'fill-current' : ''}`} />
-        </button>
-        
-        <button className="p-2 rounded-lg text-zinc-400 hover:bg-zinc-700 transition-colors">
-          <Share2 className="w-5 h-5" />
-        </button>
-      </div>
-    </motion.article>
-  );
-}
-
-function TrendingSidebar({ trending, suggested }: { trending: TrendingTopic[]; suggested: SuggestedUser[] }) {
-  return (
-      <div className="space-y-6">
-        {/* Quick Links */}
-        <div className="bg-zinc-900/80 backdrop-blur-xl border border-zinc-700 rounded-2xl p-4 ring-effect">
-          <h3 className="font-semibold text-zinc-50 mb-4 flex items-center gap-2">
-            <Zap className="w-5 h-5 text-cyan-400" />
-            Quick Access
-          </h3>
-        <div className="space-y-2">
-          <Link href="/feed" className="flex items-center gap-3 p-2 rounded-lg hover:bg-zinc-700 transition-colors text-zinc-400">
-            <Rss className="w-5 h-5" />
-            <span>Activity Feed</span>
-          </Link>
-          <Link href="/stories" className="flex items-center gap-3 p-2 rounded-lg hover:bg-zinc-700 transition-colors text-zinc-400">
-            <Camera className="w-5 h-5" />
-            <span>Stories</span>
-          </Link>
-          <Link href="/social-messaging" className="flex items-center gap-3 p-2 rounded-lg hover:bg-zinc-700 transition-colors text-zinc-400">
-            <MessageCircle className="w-5 h-5" />
-            <span>Messages</span>
-          </Link>
-          <Link href="/social-payments" className="flex items-center gap-3 p-2 rounded-lg hover:bg-zinc-700 transition-colors text-zinc-400">
-            <Zap className="w-5 h-5" />
-            <span>Social Payments</span>
-          </Link>
-        </div>
-      </div>
-
-      {/* Trending */}
-        <div className="bg-zinc-900/80 backdrop-blur-xl border border-zinc-700 rounded-2xl p-4 ring-effect">
-          <h3 className="font-semibold text-zinc-50 mb-4 flex items-center gap-2">
-            <TrendingUp className="w-5 h-5 text-pink-400" />
-            Trending
-          </h3>
-        <div className="space-y-3">
-          {trending.length === 0 ? (
-            <div className="text-sm text-zinc-500">Trending topics will appear when live activity indexing is available.</div>
-          ) : null}
-          {trending.map((topic, index) => (
-            <div key={topic.id} className="flex items-center justify-between group cursor-pointer">
-              <div>
-                <div className="flex items-center gap-2">
-                  <span className="text-sm text-zinc-500">{index + 1}</span>
-                  <span className="text-cyan-400 font-medium group-hover:underline">{topic.tag}</span>
-                </div>
-                <span className="text-xs text-zinc-500">{formatNumber(topic.posts)} posts</span>
-              </div>
-              {topic.trending === 'up' && <TrendingUp className="w-4 h-4 text-green-400" />}
-              {topic.trending === 'down' && <TrendingUp className="w-4 h-4 text-red-400 rotate-180" />}
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Who to Follow */}
-        <div className="bg-zinc-900/80 backdrop-blur-xl border border-zinc-700 rounded-2xl p-4 ring-effect">
-          <h3 className="font-semibold text-zinc-50 mb-4 flex items-center gap-2">
-            <Users className="w-5 h-5 text-violet-400" />
-            Who to Follow
-          </h3>
-        <div className="space-y-4">
-          {suggested.length === 0 ? (
-            <div className="text-sm text-zinc-500">Suggested accounts will appear once social graph data is available.</div>
-          ) : null}
-          {suggested.map((user) => (
-            <div key={user.address} className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-cyan-400 to-violet-400 flex items-center justify-center text-lg">
-                {user.avatar}
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-1">
-                  <span className="font-medium text-zinc-50 truncate">{user.name}</span>
-                  {user.verified && <Shield className="w-3 h-3 text-cyan-400" />}
-                </div>
-                <span className="text-xs text-zinc-500">{user.mutualFriends} mutual</span>
-              </div>
-              <button className="px-3 py-1 bg-cyan-400 text-zinc-950 text-sm font-semibold rounded-full hover:bg-cyan-400 transition-colors">
-                Follow
-              </button>
-            </div>
-          ))}
-        </div>
-        <button className="w-full mt-4 text-cyan-400 text-sm hover:underline">
-          Show more
-        </button>
-      </div>
-
-      {/* Stats Card */}
-        <div className="bg-gradient-to-br from-zinc-900 to-zinc-800 border border-zinc-700 rounded-2xl p-4 ring-effect">
-          <h3 className="font-semibold text-zinc-50 mb-4 flex items-center gap-2">
-            <Award className="w-5 h-5 text-amber-400" />
-            Your Stats
-          </h3>
-        <div className="text-sm text-zinc-500">Personal social stats are not available until profile analytics is connected.</div>
-      </div>
-    </div>
-  );
-}
-
-// ============================================================================
-// MAIN PAGE
-// ============================================================================
+type FeedFilter = 'all' | 'following' | 'trending';
 
 export default function SocialHubPage() {
-  const { address, isConnected } = useAccount();
-  const [posts, setPosts] = useState<Post[]>([]);
-  const [stories, setStories] = useState<Story[]>(EMPTY_STORIES);
-  const [trending, setTrending] = useState<TrendingTopic[]>(EMPTY_TRENDING);
-  const [suggested, setSuggested] = useState<SuggestedUser[]>(EMPTY_SUGGESTED);
-  const [feedFilter, setFeedFilter] = useState<'all' | 'following' | 'trending'>('all');
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  const [_isLoading, setIsLoading] = useState(true);
+  const { isConnected, address } = useAccount();
+  const [posts, setPosts] = useState<any[]>([]);
+  const [stories, setStories] = useState<any[]>([]);
+  const [trending, setTrending] = useState<any[]>([]);
+  const [suggested, setSuggested] = useState<any[]>([]);
+  const [filter, setFilter] = useState<FeedFilter>('all');
 
-  // Fetch social data on mount
   useEffect(() => {
-    const fetchSocialData = async () => {
-      setIsLoading(true);
-      try {
-        const [postsRes, storiesRes, trendingRes, suggestedRes] = await Promise.all([
-          fetch('/api/community/posts').catch(() => null),
-          fetch('/api/community/stories').catch(() => null),
-          fetch('/api/community/trending').catch(() => null),
-          fetch('/api/friends/suggested').catch(() => null),
-        ]);
-        
-        if (postsRes?.ok) {
-          const data = await postsRes.json();
-          setPosts(data.posts || []);
-        }
-        if (storiesRes?.ok) {
-          const data = await storiesRes.json();
-          setStories(data.stories || []);
-        }
-        if (trendingRes?.ok) {
-          const data = await trendingRes.json();
-          setTrending(data.topics || []);
-        }
-        if (suggestedRes?.ok) {
-          const data = await suggestedRes.json();
-          setSuggested(data.users || []);
-        }
-      } catch {
-        // APIs not available yet - use empty state
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchSocialData();
-  }, []);
+    if (!isConnected) {
+      setPosts([]);
+      return;
+    }
 
-  const handlePost = async (content: string) => {
-    const newPost: Post = {
-      id: Date.now().toString(),
-      author: {
-        address: address ? `${address.slice(0, 6)}...${address.slice(-4)}` : '0x...',
-        name: 'You',
-        avatar: '✨',
-        verified: false,
-        proofScore: 75,
+    fetch('/api/community/posts')
+      .then((response) => (response.ok ? response.json() : { posts: [] }))
+      .then((data) => {
+        setPosts(Array.isArray(data.posts) ? data.posts : []);
+      })
+      .catch(() => setPosts([]));
+  }, [isConnected]);
+
+  const filteredPosts = useMemo(() => {
+    if (filter === 'following') {
+      return posts.filter((post) => post.isFollowing);
+    }
+    if (filter === 'trending') {
+      return [...posts].sort((a, b) => Number(b.views ?? 0) - Number(a.views ?? 0));
+    }
+    return posts;
+  }, [filter, posts]);
+
+  const handlePost = (content: string) => {
+    setPosts((prev) => [
+      {
+        id: `draft-${Date.now()}`,
+        author: {
+          address: address ?? 'You',
+          name: 'You',
+          avatar: '✨',
+          verified: true,
+          proofScore: 100,
+        },
+        content,
+        timestamp: Date.now(),
+        likes: 0,
+        comments: 0,
+        shares: 0,
+        views: 0,
+        liked: false,
+        bookmarked: false,
+        isFollowing: true,
+        tags: [],
       },
-      content,
-      timestamp: Date.now(),
-      likes: 0,
-      comments: 0,
-      shares: 0,
-      views: 0,
-      liked: false,
-      bookmarked: false,
-      isFollowing: false,
-    };
-    setPosts([newPost, ...posts]);
-    
-    // Post to API
-    try {
-      await fetch('/api/community/posts', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ content, author: address }),
-      });
-    } catch {
-      // Local-only if API fails
-    }
+      ...prev,
+    ]);
   };
 
-  const handleLike = (postId: string) => {
-    setPosts(posts.map(p => 
-      p.id === postId 
-        ? { ...p, liked: !p.liked, likes: p.liked ? p.likes - 1 : p.likes + 1 }
-        : p
-    ));
-  };
-
-  const handleBookmark = (postId: string) => {
-    setPosts(posts.map(p => 
-      p.id === postId 
-        ? { ...p, bookmarked: !p.bookmarked }
-        : p
-    ));
-  };
-
-  const handleRefresh = async () => {
-    setIsRefreshing(true);
-    try {
-      const postsRes = await fetch('/api/community/posts');
-      if (postsRes.ok) {
-        const data = await postsRes.json();
-        setPosts(data.posts || []);
-      }
-    } catch {
-      // Refresh failed silently
-    } finally {
-      setIsRefreshing(false);
-    }
-  };
+  if (!isConnected) {
+    return (
+      <>
+        <div className="min-h-screen bg-zinc-950 pt-20">
+          <PageWrapper>
+            <div className="mx-auto max-w-3xl px-4 py-16 text-center text-white">
+              <h1 className="mb-4 text-4xl font-bold">Connect to Join the Conversation</h1>
+              <p className="mb-8 text-white/60">Sign in with your wallet to unlock the VFIDE social feed, stories, and community reactions.</p>
+              <div className="flex justify-center">
+                <ConnectButton />
+              </div>
+            </div>
+          </PageWrapper>
+        </div>
+        <Footer />
+      </>
+    );
+  }
 
   return (
     <>
-      <PageWrapper variant="cosmic" showOrbs showGrid>
-        <main className="pt-20 pb-20 min-h-screen">
-          <div className="container mx-auto px-4">
-            {/* Header */}
-            <motion.div
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="text-center mb-8"
-            >
-              <h1 className="text-4xl md:text-5xl font-bold text-zinc-50 mb-3 flex items-center justify-center gap-3">
-                <Sparkles className="w-10 h-10 text-cyan-400" />
-                Social Hub
-              </h1>
-              <p className="text-zinc-400 text-lg max-w-2xl mx-auto">
-                Connect, share, and engage with the VFIDE community
-              </p>
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2 }}
-                className="flex flex-wrap justify-center gap-3 text-xs uppercase tracking-[0.3em] text-zinc-500 mt-4"
-              >
-                <span>Share</span>
-                <ArrowRight className="w-4 h-4 text-cyan-400" />
-                <span>Build Trust</span>
-                <ArrowRight className="w-4 h-4 text-cyan-400" />
-                <span>Earn Reach</span>
-              </motion.div>
-            </motion.div>
-
-            {!isConnected ? (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="text-center py-12"
-              >
-                <div className="bg-zinc-900 border border-zinc-700 rounded-xl p-8 max-w-md mx-auto ring-effect">
-                  <div className="text-6xl mb-4">🔗</div>
-                  <h2 className="text-xl font-bold text-zinc-50 mb-4">
-                    Connect to Join the Conversation
-                  </h2>
-                  <p className="text-zinc-400 mb-6">
-                    Connect your wallet to post, like, comment, and interact with the community.
-                  </p>
-                  <ConnectButton />
-                </div>
-              </motion.div>
-            ) : (
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {/* Main Feed */}
-                <div className="lg:col-span-2 space-y-6">
-                  {/* Stories */}
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="bg-zinc-900/80 backdrop-blur-xl border border-zinc-700 rounded-2xl p-4 ring-effect"
+      <div className="min-h-screen bg-zinc-950 pt-20">
+        <PageWrapper>
+          <div className="container mx-auto max-w-6xl px-4 py-8 text-white">
+            <div className="mb-6 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+              <div>
+                <h1 className="text-4xl font-bold">Social Hub</h1>
+                <p className="text-white/60">Follow merchants, share updates, and track community activity across VFIDE.</p>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {([
+                  { id: 'all', label: 'All', icon: Hash },
+                  { id: 'following', label: 'Following', icon: Users },
+                  { id: 'trending', label: 'Trending', icon: MessageCircle },
+                ] as const).map((tab) => (
+                  <button
+                    key={tab.id}
+                    type="button"
+                    onClick={() => setFilter(tab.id)}
+                    className={`flex items-center gap-2 rounded-xl border px-3 py-2 text-sm font-semibold ${filter === tab.id ? 'border-cyan-500/30 bg-cyan-500/20 text-cyan-300' : 'border-white/10 bg-white/5 text-white/70 hover:text-white'}`}
                   >
-                    <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide">
-                      {stories.length === 0 ? (
-                        <div className="text-sm text-zinc-500 px-2 py-1">No live stories available yet.</div>
-                      ) : null}
-                      {stories.map((story) => (
-                        <StoryRing
-                          key={story.id}
-                          story={story}
-                          onClick={() => {}}
-                        />
-                      ))}
-                    </div>
-                  </motion.div>
+                    <tab.icon size={16} />
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
+            </div>
 
-                  {/* Create Post */}
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.1 }}
-                  >
-                    <CreatePostCard onPost={handlePost} />
-                  </motion.div>
-
-                  {/* Feed Filter */}
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.2 }}
-                    className="flex items-center justify-between"
-                  >
-                    <div className="flex gap-2">
-                      {(['all', 'following', 'trending'] as const).map((filter) => (
-                        <button
-                          key={filter}
-                          onClick={() => setFeedFilter(filter)}
-                          className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors capitalize ${
-                            feedFilter === filter
-                              ? 'bg-cyan-400 text-zinc-950'
-                              : 'bg-zinc-900 text-zinc-400 hover:bg-zinc-700'
-                          }`}
-                        >
-                          {filter}
-                        </button>
-                      ))}
-                    </div>
-                    <button
-                      onClick={handleRefresh}
-                      disabled={isRefreshing}
-                      className="p-2 hover:bg-zinc-700 rounded-lg transition-colors text-zinc-400"
-                    >
-                      <RefreshCw className={`w-5 h-5 ${isRefreshing ? 'animate-spin' : ''}`} />
-                    </button>
-                  </motion.div>
-
-                  {/* Posts */}
-                  <div className="space-y-6">
-                    {posts.map((post, index) => (
-                      <motion.div
-                        key={post.id}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.3 + index * 0.1 }}
-                      >
-                        <PostCard
-                          post={post}
-                          onLike={() => handleLike(post.id)}
-                          onBookmark={() => handleBookmark(post.id)}
-                        />
-                      </motion.div>
+            <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
+              <div className="space-y-6 lg:col-span-2">
+                {stories.length > 0 && (
+                  <div className="flex gap-3 overflow-x-auto pb-2">
+                    {stories.map((story, index) => (
+                      <StoryRing key={index} story={story} onClick={() => {}} />
                     ))}
                   </div>
+                )}
 
-                  {/* Load More */}
-                  <button className="w-full py-4 bg-zinc-900 border border-zinc-700 rounded-xl text-cyan-400 hover:bg-zinc-700 transition-colors">
-                    Load More Posts
-                  </button>
-                </div>
+                <CreatePostCard onPost={handlePost} />
 
-                {/* Sidebar */}
-                <div className="hidden lg:block">
-                  <div className="sticky top-24">
-                    <TrendingSidebar trending={trending} suggested={suggested} />
+                {filteredPosts.map((post, index) => (
+                  <PostCard key={post.id || index} post={post} onLike={() => {}} onBookmark={() => {}} />
+                ))}
+
+                {filteredPosts.length === 0 && (
+                  <div className="py-16 text-center text-gray-500">
+                    <Users size={48} className="mx-auto mb-4 opacity-50" />
+                    <p className="text-lg">Your feed is empty</p>
+                    <p className="mt-1 text-sm">Follow merchants and users to see activity</p>
                   </div>
-                </div>
+                )}
+
+                <button type="button" className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-semibold text-cyan-300 hover:bg-white/10">
+                  Load More Posts
+                </button>
               </div>
-            )}
+
+              <div className="hidden lg:block">
+                <TrendingSidebar trending={trending} suggested={suggested} />
+              </div>
+            </div>
           </div>
-        </main>
-        <Footer />
-      </PageWrapper>
+        </PageWrapper>
+      </div>
+      <Footer />
     </>
   );
 }

@@ -21,11 +21,13 @@ export function ProductImageGallery({ images, name, currentImage, setCurrentImag
   }
 
   const getImageUrl = (img: string | { url: string }) => typeof img === 'string' ? img : img.url;
+  const activeImage = images[currentImage] ?? images[0];
+  if (!activeImage) return null;
 
   return (
     <>
       <div className="aspect-square relative overflow-hidden">
-        <img src={getImageUrl(images[currentImage])} alt={name} className="w-full h-full object-cover" />
+        <img src={getImageUrl(activeImage)} alt={name} className="w-full h-full object-cover" />
         {hasDiscount && (
           <div className="absolute top-3 left-3 px-2.5 py-1 bg-red-500 text-white text-xs font-bold rounded-lg">
             -{discountPct}% OFF

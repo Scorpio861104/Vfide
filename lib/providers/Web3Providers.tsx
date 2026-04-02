@@ -1,42 +1,24 @@
-/**
- * Tier 2 Providers — Web3 + Wallet + Security
- * 
- * Loaded in (auth), (finance), (commerce), (governance), (social),
- * (security), (gamification) route group layouts.
- * 
- * NOT loaded in (marketing) — those are pure RSC with zero client JS.
- */
 'use client';
 
-import { ReactNode } from 'react';
-import { WagmiProvider } from 'wagmi';
-import { RainbowKitProvider } from '@rainbow-me/rainbowkit';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { wagmiConfig } from '@/lib/wagmi';
-import { SecurityProvider } from '@/providers/SecurityProvider';
+import type { ReactNode } from 'react';
 
-// Single QueryClient instance — shared across all authenticated routes.
-// Stale-while-revalidate: contract reads cached 30s, refetch on window focus.
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 30_000,
-      refetchOnWindowFocus: true,
-      retry: 2,
-    },
-  },
-});
+import { ErrorMonitoringProvider, DevErrorConsole } from '@/components/monitoring/ErrorMonitoringProvider';
+import { PerformanceProvider } from '@/components/performance/PerformanceProvider';
+import { SecurityProvider } from '@/components/security/SecurityProvider';
+import { TestnetNotification } from '@/components/ui/TestnetNotification';
+import { NetworkSwitchOverlay } from '@/components/wallet/NetworkSwitchOverlay';
+import { Web3Provider } from '@/components/wallet/Web3Provider';
 
 export function Web3Providers({ children }: { children: ReactNode }) {
   return (
-    <WagmiProvider config={wagmiConfig}>
-      <QueryClientProvider client={queryClient}>
-        <RainbowKitProvider>
-          <SecurityProvider>
-            {children}
-          </SecurityProvider>
-        </RainbowKitProvider>
-      </QueryClientProvider>
-    </WagmiProvider>
+    <Web3Provider>
+      <SecurityProvider />
+      <PerformanceProvider />
+      <ErrorMonitoringProvider />
+      <DevErrorConsole />
+      <NetworkSwitchOverlay />
+      <TestnetNotification />
+      {children}
+    </Web3Provider>
   );
 }

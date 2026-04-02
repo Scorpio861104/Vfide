@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Vote, Clock, Users, CheckCircle2, Shield, AlertTriangle } from 'lucide-react';
+import { AlertTriangle, CheckCircle2 as CheckCircle, Clock, Shield, Users, Vote } from 'lucide-react';
 import { useAccount, useReadContract, useWriteContract } from 'wagmi';
 import { CouncilElectionABI } from '@/lib/abis';
 import { CONTRACT_ADDRESSES } from '@/lib/contracts';

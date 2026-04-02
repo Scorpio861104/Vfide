@@ -1,9 +1,9 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Zap, ExternalLink } from 'lucide-react';
+import { Shield, ShoppingCart, Zap } from 'lucide-react';
 import Link from 'next/link';
-import { type PurchaseProofEventProps, formatTimeAgo } from './social-commerce-types';
+import { type PurchaseProofEventProps } from './social-commerce-types';
 
 export function PurchaseProofEvent({
   buyer,

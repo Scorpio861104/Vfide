@@ -2,7 +2,7 @@
 import { GlassCard } from "@/components/ui/GlassCard";
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Shield, Users, Crown, Star, CheckCircle2, Clock, Sparkles, BarChart3 } from 'lucide-react';
+import { BarChart3, CheckCircle2, Clock, Crown, DollarSign, Shield, Sparkles, Star, TrendingUp, Users, Vote } from 'lucide-react';
 
 
 

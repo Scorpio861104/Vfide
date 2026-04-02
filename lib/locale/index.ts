@@ -36,7 +36,7 @@ export function setUserLocale(locale: string): void {
 
 export function isRTL(locale?: string): boolean {
   const l = locale || getUserLocale();
-  const lang = l.split('-')[0];
+  const lang = l.split('-')[0] ?? l;
   return ['ar', 'he', 'fa', 'ur', 'ps', 'sd', 'yi'].includes(lang);
 }
 
@@ -86,7 +86,8 @@ const ZERO_DECIMAL = new Set([
 
 export function getDefaultCurrency(locale?: string): string {
   const l = locale || getUserLocale();
-  return LOCALE_CURRENCY[l] || LOCALE_CURRENCY[l.split('-')[0]] || 'USD';
+  const baseLocale = l.split('-')[0] ?? l;
+  return LOCALE_CURRENCY[l] || LOCALE_CURRENCY[baseLocale] || 'USD';
 }
 
 export function formatCurrency(
@@ -187,11 +188,12 @@ export function formatDate(
     return formatRelativeTime(date, l);
   }
 
-  const options: Intl.DateTimeFormatOptions = {
+  const optionsByStyle: Record<'short' | 'medium' | 'long', Intl.DateTimeFormatOptions> = {
     short: { month: 'numeric', day: 'numeric', year: '2-digit' },
     medium: { month: 'short', day: 'numeric', year: 'numeric' },
     long: { month: 'long', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' },
-  }[style];
+  };
+  const options = optionsByStyle[style];
 
   return new Intl.DateTimeFormat(l, options).format(date);
 }

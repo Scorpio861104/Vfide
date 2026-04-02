@@ -1,10 +1,9 @@
-// app/vault/components/index.ts — Barrel export for vault domain
-export { VaultContent } from './VaultContent';
-export { VaultHeader } from './VaultHeader';
-export { VaultOverviewStats } from './VaultOverviewStats';
-export { VaultQuickActions } from './VaultQuickActions';
-export { VaultSecuritySection } from './VaultSecuritySection';
-export { VaultRecoveryPanel } from './VaultRecoveryPanel';
-export { DepositModal } from './DepositModal';
-export { WithdrawModal } from './WithdrawModal';
-export { useVaultOperations } from './useVaultOperations';
+export { VaultContent } from '@/app/vault/components/VaultContent';
+export { VaultHeader } from '@/app/vault/components/VaultHeader';
+export { VaultOverviewStats } from '@/app/vault/components/VaultOverviewStats';
+export { VaultQuickActions } from '@/app/vault/components/VaultQuickActions';
+export { VaultSecuritySection } from '@/app/vault/components/VaultSecuritySection';
+export { VaultRecoveryPanel } from '@/app/vault/components/VaultRecoveryPanel';
+export { DepositModal } from '@/app/vault/components/DepositModal';
+export { WithdrawModal } from '@/app/vault/components/WithdrawModal';
+export { useVaultOperations } from '@/app/vault/components/useVaultOperations';

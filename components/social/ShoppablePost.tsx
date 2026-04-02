@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { ShoppingCart, Star, Shield, Heart, MessageCircle, ArrowRight, Package, Store, ExternalLink } from 'lucide-react';
+import { ArrowRight, Heart, MessageCircle, Share2, Shield, ShoppingCart, Star, Store, Zap } from 'lucide-react';
 import Link from 'next/link';
 import { type ShoppablePostProps, formatTimeAgo } from './social-commerce-types';
 
