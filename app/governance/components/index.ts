@@ -1,0 +1,9 @@
+export { OverviewTab } from './OverviewTab';
+export { ProposalsTab } from './ProposalsTab';
+export { CreateProposalTab } from './CreateProposalTab';
+export { CouncilTab } from './CouncilTab';
+export { SuggestionsTab } from './SuggestionsTab';
+export { DiscussionsTab } from './DiscussionsTab';
+export { MembersTab } from './MembersTab';
+export { HistoryTab } from './HistoryTab';
+export { StatsTab } from './StatsTab';
