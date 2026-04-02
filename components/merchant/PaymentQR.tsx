@@ -38,7 +38,7 @@ export function PaymentQR({ defaultAmount, defaultOrderId }: PaymentQRProps) {
   const merchantInfo = useIsMerchant(address)
   const [amount, setAmount] = useState(defaultAmount || '')
   const [orderId, setOrderId] = useState(defaultOrderId || '')
-  const [copied, setCopied] = useState(false)
+  const [copiedTarget, setCopiedTarget] = useState<'link' | 'address' | null>(null)
   const [signature, setSignature] = useState<`0x${string}` | null>(null)
   const [expiresAt, setExpiresAt] = useState<number | null>(null)
   const [signatureError, setSignatureError] = useState<string | null>(null)
@@ -72,11 +72,18 @@ export function PaymentQR({ defaultAmount, defaultOrderId }: PaymentQRProps) {
 
   // USD estimate using canonical token reference price
   const usdValue = amount ? (parseFloat(amount) * TOKEN_REFERENCE_PRICE).toFixed(2) : '0.00'
+  const merchantName = merchantInfo.businessName || 'VFIDE Merchant'
 
   const copyPaymentLink = () => {
     if (!paymentUrl || !securePayloadReady) return
     navigator.clipboard.writeText(paymentUrl)
-    setCopied(true)
+    setCopiedTarget('link')
+  }
+
+  const copyMerchantAddress = () => {
+    if (!address) return
+    navigator.clipboard.writeText(address)
+    setCopiedTarget('address')
   }
 
   const signQrPayload = async () => {
@@ -104,10 +111,10 @@ export function PaymentQR({ defaultAmount, defaultOrderId }: PaymentQRProps) {
   }
 
   useEffect(() => {
-    if (!copied) return
-    const timer = setTimeout(() => setCopied(false), 2000)
+    if (!copiedTarget) return
+    const timer = setTimeout(() => setCopiedTarget(null), 2000)
     return () => clearTimeout(timer)
-  }, [copied])
+  }, [copiedTarget])
 
   const downloadQR = () => {
     if (!securePayloadReady) return
@@ -190,7 +197,11 @@ export function PaymentQR({ defaultAmount, defaultOrderId }: PaymentQRProps) {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* QR Code Display */}
         <div className="bg-zinc-800 border border-zinc-700 rounded-xl p-6 flex flex-col items-center">
-          <div className="bg-white p-4 rounded-xl mb-4">
+          <div
+            className="bg-white p-4 rounded-xl mb-4"
+            role="img"
+            aria-label={`Payment QR code for ${merchantName}${amount ? ` for ${amount} VFIDE` : ''}`}
+          >
             {paymentUrl && securePayloadReady ? (
               <QRCodeSVG
                 id="payment-qr-code"
@@ -206,8 +217,8 @@ export function PaymentQR({ defaultAmount, defaultOrderId }: PaymentQRProps) {
                 }}
               />
             ) : (
-              <div className="w-[200px] h-[200px] flex flex-col items-center justify-center text-xs text-zinc-500 text-center gap-2">
-                <ShieldCheck className="w-8 h-8 text-cyan-400" />
+              <div className="w-[200px] h-[200px] flex flex-col items-center justify-center text-xs text-zinc-600 text-center gap-2">
+                <ShieldCheck className="w-8 h-8 text-cyan-500" />
                 <span>Sign payment details to generate a tamper-proof QR</span>
               </div>
             )}
@@ -227,9 +238,13 @@ export function PaymentQR({ defaultAmount, defaultOrderId }: PaymentQRProps) {
           
           {/* Merchant Name */}
           <div className="text-center text-zinc-100 font-bold mb-4 flex flex-col items-center gap-1">
-            <span>{merchantInfo.businessName}</span>
-            <span className="text-xs text-zinc-500">Instant settlement via signed QR scan</span>
+            <span>{merchantName}</span>
+            <span className="text-xs text-zinc-300">Instant settlement via signed QR scan</span>
           </div>
+
+          <p className="mb-4 text-center text-sm text-zinc-300">
+            Can&apos;t scan? Copy the secure payment link or merchant address below.
+          </p>
 
           <div className={`mb-4 rounded-lg px-3 py-2 text-xs ${securePayloadReady ? 'bg-emerald-500/10 text-emerald-300 border border-emerald-500/30' : 'bg-amber-500/10 text-amber-300 border border-amber-500/30'}`}>
             {securePayloadReady
@@ -260,22 +275,35 @@ export function PaymentQR({ defaultAmount, defaultOrderId }: PaymentQRProps) {
           )}
 
           {/* Action Buttons */}
-          <div className="flex gap-3 mt-4 w-full">
+          <div className="grid w-full grid-cols-1 gap-3 mt-4 sm:grid-cols-3">
             <button
+              type="button"
               onClick={downloadQR}
               disabled={!securePayloadReady}
-              className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-zinc-700 hover:bg-zinc-700 rounded-lg text-zinc-100 transition-colors"
+              aria-label="Download payment QR code"
+              className="min-h-[44px] flex items-center justify-center gap-2 px-4 py-3 bg-zinc-700 hover:bg-zinc-600 rounded-lg text-zinc-100 transition-colors disabled:opacity-60"
             >
               <Download size={18} />
               <span>Download</span>
             </button>
             <button
+              type="button"
               onClick={sharePayment}
               disabled={!securePayloadReady}
-              className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-cyan-400 hover:bg-cyan-400 rounded-lg text-zinc-900 font-bold transition-colors"
+              aria-label="Share payment link"
+              className="min-h-[44px] flex items-center justify-center gap-2 px-4 py-3 bg-cyan-400 hover:bg-cyan-300 rounded-lg text-zinc-900 font-bold transition-colors disabled:opacity-60"
             >
               <Share2 size={18} />
               <span>Share</span>
+            </button>
+            <button
+              type="button"
+              onClick={copyMerchantAddress}
+              aria-label="Copy merchant address"
+              className="min-h-[44px] flex items-center justify-center gap-2 px-4 py-3 bg-zinc-700 hover:bg-zinc-600 rounded-lg text-zinc-100 transition-colors"
+            >
+              {copiedTarget === 'address' ? <Check className="text-emerald-400" size={18} /> : <Copy size={18} />}
+              <span>{copiedTarget === 'address' ? 'Copied address' : 'Copy merchant address'}</span>
             </button>
           </div>
         </div>
@@ -286,24 +314,24 @@ export function PaymentQR({ defaultAmount, defaultOrderId }: PaymentQRProps) {
 
           {/* Amount Input */}
           <div>
-            <label className="text-sm text-zinc-400 mb-2 block">Amount (VFIDE)</label>
+            <label htmlFor="payment-amount" className="text-sm text-zinc-300 mb-2 block">Amount (VFIDE)</label>
             <div className="relative">
-              <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" size={18} />
+              <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-300" size={18} />
               <input
+                id="payment-amount"
                 type="number"
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
                 placeholder="0.00 (leave empty for any amount)"
                 step="0.01"
                 min="0"
-                className="w-full bg-zinc-900 border border-zinc-700 rounded-lg pl-10 pr-4 py-3 text-zinc-100 placeholder-[#6A6A6F] focus:border-cyan-400 focus:outline-none"
+                aria-describedby="payment-amount-help"
+                className="w-full bg-zinc-900 border border-zinc-700 rounded-lg pl-10 pr-4 py-3 text-zinc-100 placeholder-[#9A9AA3] focus:border-cyan-400 focus:outline-none"
               />
             </div>
-            {amount && (
-              <div className="text-sm text-zinc-400 mt-1">
-                ≈ ${usdValue} USD
-              </div>
-            )}
+            <div id="payment-amount-help" className="text-sm text-zinc-300 mt-1">
+              {amount ? `≈ $${usdValue} USD` : 'Leave blank to let the customer enter any amount.'}
+            </div>
           </div>
 
           {/* Quick Amounts */}
@@ -311,11 +339,12 @@ export function PaymentQR({ defaultAmount, defaultOrderId }: PaymentQRProps) {
             {['10', '50', '100', '500', '1000'].map((preset) => (
               <button
                 key={preset}
+                type="button"
                 onClick={() => setAmount(preset)}
-                className={`px-3 py-1.5 rounded-lg text-sm font-bold transition-colors ${
+                className={`min-h-[44px] px-4 py-2.5 rounded-lg text-sm font-bold transition-colors ${
                   amount === preset
                     ? 'bg-cyan-400 text-zinc-900'
-                    : 'bg-zinc-700 text-zinc-400 hover:bg-zinc-700 hover:text-zinc-100'
+                    : 'bg-zinc-700 text-zinc-100 hover:bg-zinc-600'
                 }`}
               >
                 {preset}
@@ -325,35 +354,44 @@ export function PaymentQR({ defaultAmount, defaultOrderId }: PaymentQRProps) {
 
           {/* Order ID Input */}
           <div>
-            <label className="text-sm text-zinc-400 mb-2 block">Order ID / Reference (Optional)</label>
+            <label htmlFor="payment-order" className="text-sm text-zinc-300 mb-2 block">Order ID / Reference (Optional)</label>
             <input
+              id="payment-order"
               type="text"
               value={orderId}
               onChange={(e) => setOrderId(e.target.value)}
               placeholder="INV-12345"
-              className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-4 py-3 text-zinc-100 placeholder-[#6A6A6F] focus:border-cyan-400 focus:outline-none"
+              aria-describedby="payment-order-help"
+              className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-4 py-3 text-zinc-100 placeholder-[#9A9AA3] focus:border-cyan-400 focus:outline-none"
             />
+            <div id="payment-order-help" className="mt-1 text-sm text-zinc-300">
+              Add a customer-facing reference so the payment stays easy to reconcile.
+            </div>
           </div>
 
           {/* Copy Payment Link */}
           <div className="pt-4 border-t border-zinc-700">
-            <label className="text-sm text-zinc-400 mb-2 block">Payment Link</label>
+            <label htmlFor="payment-link" className="text-sm text-zinc-300 mb-2 block">Payment Link</label>
             <div className="flex gap-2">
               <input
+                id="payment-link"
                 type="text"
                 value={paymentUrl}
                 readOnly
-                className="flex-1 bg-zinc-900 border border-zinc-700 rounded-lg px-4 py-3 text-zinc-400 text-sm truncate"
+                aria-label="Secure payment link"
+                className="flex-1 bg-zinc-900 border border-zinc-700 rounded-lg px-4 py-3 text-zinc-300 text-sm truncate"
               />
               <button
+                type="button"
                 onClick={copyPaymentLink}
                 disabled={!securePayloadReady}
-                className="px-4 py-3 bg-zinc-700 hover:bg-zinc-700 rounded-lg transition-colors"
+                aria-label="Copy payment link"
+                className="min-h-[44px] px-4 py-3 bg-zinc-700 hover:bg-zinc-600 rounded-lg transition-colors disabled:opacity-60"
               >
-                {copied ? (
-                  <Check className="text-emerald-500" size={20} />
+                {copiedTarget === 'link' ? (
+                  <Check className="text-emerald-400" size={20} />
                 ) : (
-                  <Copy className="text-zinc-400" size={20} />
+                  <Copy className="text-zinc-100" size={20} />
                 )}
               </button>
             </div>

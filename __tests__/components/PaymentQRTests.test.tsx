@@ -114,6 +114,35 @@ describe('PaymentQR', () => {
       })
     })
 
+  it('provides accessible QR alternatives and copy actions after signing', async () => {
+    render(<PaymentQR defaultAmount="25" defaultOrderId="INV-42" />)
+
+    fireEvent.click(screen.getByRole('button', { name: /Sign & Lock QR/i }))
+
+    await waitFor(() => {
+      expect(screen.getByTestId('qr-code')).toBeInTheDocument()
+      expect(screen.getByRole('img', { name: /payment qr code for test store/i })).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: /Copy payment link/i })).toBeEnabled()
+    })
+
+    expect(screen.getByText(/can't scan\? copy the secure payment link or merchant address below\./i)).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: /Copy payment link/i }))
+    fireEvent.click(screen.getByRole('button', { name: /Copy merchant address/i }))
+
+    await waitFor(() => {
+      expect(mockClipboard.writeText).toHaveBeenCalledWith(expect.stringContaining('/pay?'))
+      expect(mockClipboard.writeText).toHaveBeenCalledWith('0x1234567890123456789012345678901234567890')
+    })
+  })
+
+  it('links field guidance with aria-describedby for QR configuration inputs', () => {
+    render(<PaymentQR />)
+
+    expect(screen.getByRole('spinbutton')).toHaveAttribute('aria-describedby', 'payment-amount-help')
+    expect(screen.getByRole('textbox', { name: /Order ID/i })).toHaveAttribute('aria-describedby', 'payment-order-help')
+  })
+
   it('has QrCode icon in header', () => {
     render(<PaymentQR />)
 
