@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Footer } from '@/components/layout/Footer';
+import { FAQSchema, PageBreadcrumbSchema } from '@/components/seo/StructuredData';
 import { safeLocalStorage } from '@/lib/utils';
 import { useAccount } from 'wagmi';
 import { 
@@ -249,7 +250,22 @@ export default function SupportPage() {
   })).filter(c => c.questions.length > 0);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-zinc-950 via-zinc-900 to-zinc-950">
+    <>
+      <PageBreadcrumbSchema
+        items={[
+          { name: 'Home', url: 'https://vfide.io' },
+          { name: 'Support', url: 'https://vfide.io/support' },
+        ]}
+      />
+      <FAQSchema
+        faqs={FAQ_ITEMS.flatMap((category) =>
+          category.questions.map((item) => ({
+            question: item.q,
+            answer: item.a,
+          }))
+        )}
+      />
+      <div className="min-h-screen bg-gradient-to-b from-zinc-950 via-zinc-900 to-zinc-950">
       <div className="max-w-6xl mx-auto px-4 py-12">
         {/* Header */}
         <div className="text-center mb-12">
@@ -706,5 +722,6 @@ export default function SupportPage() {
       </div>
       <Footer />
     </div>
+    </>
   );
 }

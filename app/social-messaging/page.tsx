@@ -21,6 +21,7 @@ import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { useHasVault } from '@/hooks/useHasVault';
 import { SocialNotifications } from '@/components/social/SocialNotifications';
 import { FirstTimeUserBanner } from '@/components/ui/FirstTimeUserBanner';
+import { PageBreadcrumbSchema } from '@/components/seo/StructuredData';
 import { safeLocalStorage } from '@/lib/utils';
 import { Friend, Group } from '@/types/messaging';
 import { FriendRequest } from '@/types/friendRequests';
@@ -129,6 +130,12 @@ export default function SocialPage() {
 
   return (
     <>
+      <PageBreadcrumbSchema
+        items={[
+          { name: 'Home', url: 'https://vfide.io' },
+          { name: 'Social Hub', url: 'https://vfide.io/social-messaging' },
+        ]}
+      />
 
       <PageWrapper variant="cosmic" showOrbs showGrid>
         <main className="pt-20 pb-20">
