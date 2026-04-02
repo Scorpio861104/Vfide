@@ -114,15 +114,75 @@ async function runValidationSuite(): Promise<void> {
   console.log(`\n${BOLD}${BLUE}TIER 2: Security & Infrastructure Checks${RESET}`);
   console.log('─'.repeat(60));
 
-  // Check middleware exists
+  // Check proxy/middleware security layer exists and stays aligned
+  const proxyExists = existsSync('proxy.ts');
   const middlewareExists = existsSync('middleware.ts');
   console.log(`\n${BLUE}Running:${RESET} Root middleware check`);
-  if (middlewareExists) {
-    console.log(`${GREEN}✓ Passed${RESET} (middleware.ts exists)`);
-    results.push(new CheckResult('middleware.ts exists', true));
+  if (proxyExists || middlewareExists) {
+    const proxySource = proxyExists ? readFileSync('proxy.ts', 'utf8') : '';
+    const middlewareSource = middlewareExists ? readFileSync('middleware.ts', 'utf8') : '';
+    const middlewareDelegatesToProxy = !middlewareExists || middlewareSource.includes("export { proxy as middleware, config } from './proxy'");
+    const cspHandledInProxy = !proxyExists || proxySource.includes('Content-Security-Policy');
+
+    if (middlewareDelegatesToProxy && cspHandledInProxy) {
+      console.log(`${GREEN}✓ Passed${RESET} (proxy.ts is the CSP/CSRF source of truth)`);
+      results.push(new CheckResult('proxy security layer aligned', true));
+    } else {
+      console.error(`${RED}✗ FAILED${RESET} (proxy/middleware security layer is misaligned)`);
+      results.push(new CheckResult('proxy security layer aligned', false, 'proxy.ts and middleware.ts are not aligned'));
+    }
   } else {
-    console.error(`${RED}✗ FAILED${RESET} (middleware.ts not found)`);
-    results.push(new CheckResult('middleware.ts exists', false, 'middleware.ts not found'));
+    console.error(`${RED}✗ FAILED${RESET} (proxy.ts and middleware.ts not found)`);
+    results.push(new CheckResult('proxy security layer aligned', false, 'proxy.ts and middleware.ts not found'));
+  }
+
+  // Check Next.js image config is restricted to explicit hosts
+  console.log(`\n${BLUE}Running:${RESET} Next image domain restriction check`);
+  const nextConfig = readFileSync('next.config.ts', 'utf8');
+  const hasRestrictedImageConfig = nextConfig.includes('remotePatterns') && !nextConfig.includes('images: { domains: ["*"]');
+  if (hasRestrictedImageConfig) {
+    console.log(`${GREEN}✓ Passed${RESET} (next/image remote hosts are explicitly allowlisted)`);
+    results.push(new CheckResult('next image domains restricted', true));
+  } else {
+    console.error(`${RED}✗ FAILED${RESET} (next/image remote host restrictions missing)`);
+    results.push(new CheckResult('next image domains restricted', false, 'next.config.ts is missing restricted remotePatterns'));
+  }
+
+  // Check DB RLS context wiring is active
+  console.log(`\n${BLUE}Running:${RESET} DB session context / RLS check`);
+  const dbSource = readFileSync('lib/db.ts', 'utf8');
+  const hasRlsSessionContext = dbSource.includes("set_config('app.current_user_address'") && dbSource.includes('RESET app.current_user_address');
+  if (hasRlsSessionContext) {
+    console.log(`${GREEN}✓ Passed${RESET} (database session user context is wired for RLS)`);
+    results.push(new CheckResult('db RLS session context wired', true));
+  } else {
+    console.error(`${RED}✗ FAILED${RESET} (database session user context wiring missing)`);
+    results.push(new CheckResult('db RLS session context wired', false, 'lib/db.ts is missing session context setup/reset'));
+  }
+
+  // Check dead getAuthHeaders usage is gone
+  console.log(`\n${BLUE}Running:${RESET} Dead getAuthHeaders usage check`);
+  const authHeaderReferences = [
+    'app',
+    'components',
+    'lib',
+  ]
+    .filter((dir) => existsSync(dir))
+    .flatMap((dir) => {
+      try {
+        const output = execSync(`grep -R \"getAuthHeaders\" ${dir} --include='*.ts' --include='*.tsx' || true`, { encoding: 'utf8' });
+        return output.split('\n').filter(Boolean);
+      } catch {
+        return [];
+      }
+    });
+
+  if (authHeaderReferences.length === 0) {
+    console.log(`${GREEN}✓ Passed${RESET} (no dead getAuthHeaders references remain)`);
+    results.push(new CheckResult('dead getAuthHeaders usage removed', true));
+  } else {
+    console.error(`${RED}✗ FAILED${RESET} (dead getAuthHeaders references found)`);
+    results.push(new CheckResult('dead getAuthHeaders usage removed', false, authHeaderReferences.join('\n')));
   }
 
   // Check .dockerignore exists

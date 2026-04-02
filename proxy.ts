@@ -9,6 +9,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { validateContentType } from './lib/api/contentTypeValidation';
+import { buildCsp, generateNonce, asOrigin } from './lib/security/csp';
 import { validateCSRF } from './lib/security/csrf';
 
 /**
@@ -25,80 +26,6 @@ const MAX_BODY_SIZES = {
   // Pages - no body size limits (GET requests)
   pages: Infinity,
 };
-
-/**
- * Generate a random nonce for CSP
- */
-function generateNonce(): string {
-  return btoa(String.fromCharCode(...crypto.getRandomValues(new Uint8Array(16))));
-}
-
-function asOrigin(value: string | undefined): string | null {
-  if (!value || value.trim() === '') return null;
-
-  try {
-    const parsed = new URL(value);
-    return `${parsed.protocol}//${parsed.host}`;
-  } catch {
-    return null;
-  }
-}
-
-function getConnectSrcAllowlist(): string {
-  const allowlist = new Set<string>([
-    "'self'",
-    'https://*.walletconnect.com',
-    'https://*.walletconnect.org',
-    'wss://*.walletconnect.com',
-    'wss://*.walletconnect.org',
-  ]);
-
-  const configuredOrigins = [
-    asOrigin(process.env.NEXT_PUBLIC_RPC_URL),
-    asOrigin(process.env.RPC_URL),
-    asOrigin(process.env.NEXT_PUBLIC_API_URL),
-    asOrigin(process.env.NEXT_PUBLIC_WEBSOCKET_URL),
-    asOrigin(process.env.NEXT_PUBLIC_WS_URL),
-    asOrigin(process.env.NEXT_PUBLIC_APP_URL),
-    asOrigin(process.env.NEXT_PUBLIC_EXPLORER_URL),
-    asOrigin(process.env.NEXT_PUBLIC_SENTRY_DSN),
-  ];
-
-  for (const origin of configuredOrigins) {
-    if (origin) {
-      allowlist.add(origin);
-    }
-  }
-
-  if (process.env.NODE_ENV !== 'production') {
-    allowlist.add('http://localhost:*');
-    allowlist.add('ws://localhost:*');
-    allowlist.add('http://127.0.0.1:*');
-    allowlist.add('ws://127.0.0.1:*');
-  }
-
-  return [...allowlist].join(' ');
-}
-
-function buildCsp(nonce: string): string {
-  const connectSrc = getConnectSrcAllowlist();
-
-  return [
-    "default-src 'self'",
-    `script-src 'self' 'nonce-${nonce}' https://vercel.live https://*.walletconnect.com https://*.walletconnect.org`,
-    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-    "img-src 'self' data: https: blob:",
-    "font-src 'self' data: https://fonts.gstatic.com",
-    `connect-src ${connectSrc}`,
-    "frame-src 'self' https://*.walletconnect.com",
-    "media-src 'self' blob:",
-    "object-src 'none'",
-    "base-uri 'self'",
-    "form-action 'self'",
-    "frame-ancestors 'none'",
-    ...(process.env.NODE_ENV === 'production' ? ["upgrade-insecure-requests"] : []),
-  ].join('; ');
-}
 
 function applySecurityHeaders(response: NextResponse, nonce: string, csp: string): NextResponse {
   response.headers.set('x-nonce', nonce);

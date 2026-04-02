@@ -127,8 +127,9 @@ describe("HIGH Regressions", function () {
   });
 
   it("H-06: WalletConnect CSP documented", async function () {
-    // unsafe-eval for WalletConnect should be documented
-    const source = fs.readFileSync("middleware.ts", "utf-8");
+    // CSP enforcement lives in proxy.ts; middleware.ts is only a compatibility shim.
+    const sourcePath = fs.existsSync("proxy.ts") ? "proxy.ts" : "middleware.ts";
+    const source = fs.readFileSync(sourcePath, "utf-8");
     if (source.includes("unsafe-eval")) {
       expect(source).to.match(/(?:walletconnect|WalletConnect|wallet.connect)/i);
     } else {

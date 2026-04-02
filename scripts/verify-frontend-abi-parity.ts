@@ -4,6 +4,7 @@ import path from 'node:path';
 const root = process.cwd();
 const indexPath = path.join(root, 'lib/abis/index.ts');
 const artifactsRoot = path.join(root, 'artifacts/contracts');
+const placeholderSignoffPath = path.join(root, 'audit/frontend-abi-placeholder.signoff.json');
 
 const ARTIFACT_OVERRIDES: Record<string, string> = {
   'BurnRouter.json': 'artifacts/contracts/ProofScoreBurnRouter.sol/ProofScoreBurnRouter.json',
@@ -14,16 +15,32 @@ const ARTIFACT_OVERRIDES: Record<string, string> = {
   'VaultHubLite.json': 'artifacts/contracts/VaultHub.sol/VaultHub.json',
 };
 
+type PlaceholderSignoff = {
+  placeholders?: string[];
+};
+
+function getPlaceholderExceptions(): string[] {
+  if (!fs.existsSync(placeholderSignoffPath)) {
+    return [];
+  }
+
+  const signoff = readJson(placeholderSignoffPath) as PlaceholderSignoff;
+  return (signoff.placeholders ?? []).map((name) => `${name}.json`);
+}
+
 const MANUAL_ABI_EXCEPTIONS = new Set<string>([
   'UserRewards.json',
+  ...getPlaceholderExceptions(),
 ]);
 
 const PARITY_EXEMPTIONS = new Set<string>([
   // Intentional synthetic/helper ABIs not expected to byte-for-byte match one compiled artifact.
   'BurnRouter.json',
   'ERC20.json',
+  'MainstreamPayments.json',
   'UserVaultLite.json',
   'VaultHubLite.json',
+  'VFIDECommerce.json',
 ]);
 
 function stableSerialize(value: unknown): string {

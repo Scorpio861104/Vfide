@@ -179,17 +179,18 @@ describe("Content Security Policy", () => {
   it("should not include unsafe-inline for script-src without nonce", () => {
     const fs = require("fs");
     try {
-      const middleware = fs.readFileSync("middleware.ts", "utf-8");
+      const sourcePath = fs.existsSync("proxy.ts") ? "proxy.ts" : "middleware.ts";
+      const cspSource = fs.readFileSync(sourcePath, "utf-8");
       // CSP should use nonce, not blanket unsafe-inline
-      if (middleware.includes("unsafe-inline") && !middleware.includes("nonce")) {
+      if (cspSource.includes("unsafe-inline") && !cspSource.includes("nonce")) {
         throw new Error("CSP uses unsafe-inline without nonce");
       }
-      expect(middleware.length).toBeGreaterThan(0);
+      expect(cspSource.length).toBeGreaterThan(0);
     } catch (e: any) {
       if (e.message.includes("CSP uses")) {
         throw e;
       }
-      console.warn("CSP test: middleware.ts not found");
+      console.warn("CSP test: proxy.ts/middleware.ts not found");
     }
   });
 });
