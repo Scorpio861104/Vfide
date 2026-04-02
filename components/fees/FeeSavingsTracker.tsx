@@ -143,8 +143,9 @@ interface FeeSavingsInlineProps {
 
 export function FeeSavingsInline({ amount, buyerFeeBps, compareTo }: FeeSavingsInlineProps) {
   const { formatCurrency } = useLocale();
-  const competitor = COMPETITORS.find(c => c.name === compareTo) ?? COMPETITORS[0]; // Default Square
+  const competitor = COMPETITORS.find(c => c.name === compareTo) ?? COMPETITORS[0];
   if (!competitor) return null;
+
   const theirFee = (amount * competitor.percentFee) + competitor.flatFee;
   const ourFee = amount * (buyerFeeBps / 10000);
   const saved = theirFee - ourFee;

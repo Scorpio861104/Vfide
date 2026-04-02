@@ -174,14 +174,14 @@ export function ProgressiveNavProvider({ children, userState }: ProgressiveNavPr
         const nextItems = allItems.filter(item => item.unlocksAt === nextStage);
         if (nextItems.length > 0) {
           const labels: Record<JourneyStage, string> = {
-          visitor: 'Connect your wallet',
-          connected: 'Connect your wallet',
-          transacting: 'Make your first transaction',
-          established: 'Create a vault and add guardians',
-          merchant: 'Register as a merchant',
-          trusted: 'Reach ProofScore 1,000',
-          governor: 'Reach ProofScore 3,000',
-        };
+            visitor: 'Connect your wallet',
+            connected: 'Connect your wallet',
+            transacting: 'Make your first transaction',
+            established: 'Create a vault and add guardians',
+            merchant: 'Register as a merchant',
+            trusted: 'Reach ProofScore 1,000',
+            governor: 'Reach ProofScore 3,000',
+          };
           nextMilestone = {
             stage: nextStage,
             label: labels[nextStage],

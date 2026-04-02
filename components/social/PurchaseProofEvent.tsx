@@ -1,9 +1,8 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Shield, ShoppingCart, Zap } from 'lucide-react';
+import { ShoppingCart, Shield, Zap } from 'lucide-react';
 import Link from 'next/link';
-import { type PurchaseProofEventProps } from './social-commerce-types';
 
 export function PurchaseProofEvent({
   buyer,

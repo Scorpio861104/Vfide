@@ -87,7 +87,7 @@ export function CheckoutPanel({
   const feeAmount = subtotal * (buyerFeeBps / 10000);
   const total = subtotal + feeAmount;
 
-  const activeToken = tokens.find(t => t.symbol === selectedToken) ?? PAYMENT_TOKENS[0]!;
+  const activeToken = tokens.find(t => t.symbol === selectedToken) ?? tokens[0] ?? PAYMENT_TOKENS[0]!;
   const tokenAmount = total / activeToken.rate;
 
   const feeSavedVsSquare = subtotal * 0.029 + 0.30; // Square's 2.9% + $0.30

@@ -2,23 +2,20 @@
 
 import { motion } from 'framer-motion';
 
-const itemVariants = {
-  hidden: { opacity: 0, y: 8 },
-  show: { opacity: 1, y: 0 },
-} as const;
-
 export function Step({ number, title, description }: { number: number; title: string; description: string }) {
   return (
     <motion.div
-      variants={itemVariants}
+      initial={{ opacity: 0, x: -12 }}
+      whileInView={{ opacity: 1, x: 0 }}
+      viewport={{ once: true }}
       whileHover={{ x: 5 }}
-      className="flex gap-4 items-start group"
+      className="group flex items-start gap-4"
     >
-      <div className="shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center font-bold text-white shadow-lg shadow-blue-500/20 group-hover:shadow-blue-500/40 transition-shadow">
+      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 font-bold text-white shadow-lg shadow-blue-500/20 transition-shadow group-hover:shadow-blue-500/40">
         {number}
       </div>
       <div>
-        <h4 className="font-semibold text-white mb-1">{title}</h4>
+        <h4 className="mb-1 font-semibold text-white">{title}</h4>
         <p className="text-sm text-gray-400">{description}</p>
       </div>
     </motion.div>

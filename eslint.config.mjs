@@ -22,6 +22,7 @@ const eslintConfig = defineConfig([
     "docs-internal/**",
     "coverage/**",
     "artifacts/**",
+    ".audit_unpack/**",
     "websocket-server/dist/**",
     "storybook-static/**",
     "playwright-report/**",

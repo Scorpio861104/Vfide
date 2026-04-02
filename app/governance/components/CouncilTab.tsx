@@ -3,7 +3,7 @@
 import { useState } from "react"
 
 interface CouncilTabProps {
-  councilMembers: Array<{
+  councilMembers?: Array<{
     name: string
     address: string
     role: string
@@ -11,29 +11,65 @@ interface CouncilTabProps {
     attendance: number
     votesCast: number
   }>
-  terms: string[]
-  currentTerm: string
-  epochData: Array<{
+  terms?: string[]
+  currentTerm?: string
+  epochData?: Array<{
     epoch: number
     participation: number
     avgDecisionTime: string
     emergencyActions: number
   }>
-  electionEvents: Array<{
+  electionEvents?: Array<{
     title: string
     date: string
     type: string
     link: string
   }>
-  electionStats: Array<{
+  electionStats?: Array<{
     label: string
     value: string
     change: string
   }>
 }
 
-export function CouncilTab({ councilMembers, terms, currentTerm, epochData, electionEvents, electionStats }: CouncilTabProps) {
-  const [selectedTerm, setSelectedTerm] = useState(currentTerm)
+const DEFAULT_TERMS = ['Current Term', 'Previous Term']
+const DEFAULT_COUNCIL_MEMBERS = [
+  {
+    name: 'Sentinel One',
+    address: '0x742d...BeB1',
+    role: 'Chair',
+    tenure: '11 months',
+    attendance: 98,
+    votesCast: 142,
+  },
+  {
+    name: 'Vault Keeper',
+    address: '0x8ba1...BA72',
+    role: 'Security',
+    tenure: '9 months',
+    attendance: 95,
+    votesCast: 131,
+  },
+]
+const DEFAULT_EPOCH_DATA = [{ epoch: 12, participation: 91, avgDecisionTime: '18h', emergencyActions: 0 }]
+const DEFAULT_ELECTION_EVENTS = [
+  { title: 'Q2 Council Review', date: 'Apr 15, 2026', type: 'Review', link: '#' },
+  { title: 'Community Nomination Window', date: 'May 2, 2026', type: 'Election', link: '#' },
+]
+const DEFAULT_ELECTION_STATS = [
+  { label: 'Participation', value: '91%', change: '+4% vs last term' },
+  { label: 'Avg turnout', value: '1.8k', change: '+12% month-over-month' },
+]
+
+export function CouncilTab({
+  councilMembers = DEFAULT_COUNCIL_MEMBERS,
+  terms = DEFAULT_TERMS,
+  currentTerm,
+  epochData = DEFAULT_EPOCH_DATA,
+  electionEvents = DEFAULT_ELECTION_EVENTS,
+  electionStats = DEFAULT_ELECTION_STATS,
+}: CouncilTabProps) {
+  const [selectedTerm, setSelectedTerm] = useState(currentTerm ?? terms[0] ?? 'Current Term')
 
   return (
     <section className="py-12">

@@ -14,23 +14,14 @@
 
 // ==================== COMPONENTS ====================
 
-// Supported wallet entry points
-export { QuickWalletConnect } from './QuickWalletConnect';
-export { UnifiedWalletModal } from './UnifiedWalletModal';
-export type { UnifiedWalletModalProps } from './UnifiedWalletModal';
-
 // Enhanced Wallet UX Components (from PR #56)
 export { EnhancedWalletConnect } from './EnhancedWalletConnect';
 export { EnhancedNetworkBanner, NetworkSwitchWidget } from './EnhancedNetworkBanner';
 
-// Legacy/experimental wallet variants remain compatibility-only direct imports.
-// New consumers should use `QuickWalletConnect` or `UnifiedWalletModal`.
 
 export { WalletCapabilities } from './WalletCapabilities';
 export type { WalletCapabilitiesProps } from './WalletCapabilities';
 
-export { EnhancedConnectButton } from './EnhancedConnectButton';
-export type { EnhancedConnectButtonProps } from './EnhancedConnectButton';
 
 export { EmbeddedLogin } from './EmbeddedLogin';
 export type { EmbeddedLoginProps } from './EmbeddedLogin';
@@ -39,7 +30,10 @@ export { GaslessBanner, GaslessStatus, GaslessToggle } from './GaslessTransactio
 export type { GaslessBannerProps, GaslessStatusProps, GaslessToggleProps } from './GaslessTransaction';
 
 export { SessionKeyManager } from './SessionKeyManager';
-export type { SessionKeyManagerProps } from './SessionKeyManager';
+export type { SessionKeyManagerProps } from './session-key-types';
+
+export { UnifiedWalletModal } from './UnifiedWalletModal';
+export type { UnifiedWalletModalProps } from './UnifiedWalletModal';
 
 // ==================== HOOKS (re-exported for convenience) ====================
 

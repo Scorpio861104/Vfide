@@ -254,6 +254,7 @@ const mainnetConfig = createConfig({
 
 // Export the appropriate config based on environment
 export const config = IS_TESTNET ? testnetConfig : mainnetConfig
+export const wagmiConfig = config
 
 declare module 'wagmi' {
   interface Register {

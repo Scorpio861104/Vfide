@@ -13,9 +13,8 @@
  */
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Shield, TrendingUp, Star, Award, Zap, Users, ShoppingCart, Vote, Sparkles } from 'lucide-react';
+import { Shield, Star, Zap, Users, ShoppingCart, Vote, Sparkles } from 'lucide-react';
 
 // ── Tier System ─────────────────────────────────────────────────────────────
 
@@ -40,13 +39,20 @@ export const TIERS: Tier[] = [
 ];
 
 export function getTier(score: number): Tier {
-  const matchingTier = [...TIERS].reverse().find((tier) => score >= tier.minScore);
-  return matchingTier ?? TIERS[0]!;
+  for (let i = TIERS.length - 1; i >= 0; i -= 1) {
+    const tier = TIERS[i];
+    if (tier && score >= tier.minScore) return tier;
+  }
+  return TIERS[0]!;
 }
 
 export function getNextTier(score: number): Tier | null {
-  const currentIdx = TIERS.reduce((lastMatch, tier, index) => (score >= tier.minScore ? index : lastMatch), 0);
-  return TIERS[currentIdx + 1] ?? null;
+  let currentIdx = 0;
+  TIERS.forEach((tier, index) => {
+    if (score >= tier.minScore) currentIdx = index;
+  });
+
+  return currentIdx < TIERS.length - 1 ? TIERS[currentIdx + 1] ?? null : null;
 }
 
 // ── ProofScore Ring ─────────────────────────────────────────────────────────
@@ -132,7 +138,7 @@ export function ProofScoreTierProgress({ score }: { score: number }) {
         <div className="text-amber-400 font-bold flex items-center justify-center gap-2">
           <Sparkles size={16} /> Maximum tier reached
         </div>
-        <div className="text-gray-400 text-xs mt-1">You're in the top tier — 0.25% fee rate</div>
+        <div className="text-gray-400 text-xs mt-1">You&apos;re in the top tier — 0.25% fee rate</div>
       </div>
     );
   }

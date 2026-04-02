@@ -2,7 +2,7 @@
 
 import { useMemo } from "react"
 
-export function HistoryTab({ searchQuery }: { searchQuery: string }) {
+export function HistoryTab({ searchQuery = '' }: { searchQuery?: string }) {
   const filteredHistory = useMemo(() => {
     const history = [
       { id: 140, title: "Fee Reduction", vote: "FOR", date: "2 hours ago", result: "Pending", power: 845 },

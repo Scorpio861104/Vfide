@@ -15,12 +15,12 @@ import type { Proposal } from "./types"
 const DAO_ADDRESS = CONTRACT_ADDRESSES.DAO
 
 export function ProposalsTab({
-  searchQuery,
+  searchQuery = '',
   activeProposalIds,
   onVote,
   onFinalize,
 }: {
-  searchQuery: string
+  searchQuery?: string
   activeProposalIds?: readonly bigint[]
   onVote?: (proposalId: bigint, support: boolean) => void
   onFinalize?: (proposalId: bigint) => void

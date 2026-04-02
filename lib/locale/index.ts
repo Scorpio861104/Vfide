@@ -36,7 +36,7 @@ export function setUserLocale(locale: string): void {
 
 export function isRTL(locale?: string): boolean {
   const l = locale || getUserLocale();
-  const lang = l.split('-')[0] ?? l;
+  const lang = (l.split('-')[0] ?? '').toLowerCase();
   return ['ar', 'he', 'fa', 'ur', 'ps', 'sd', 'yi'].includes(lang);
 }
 
@@ -86,7 +86,7 @@ const ZERO_DECIMAL = new Set([
 
 export function getDefaultCurrency(locale?: string): string {
   const l = locale || getUserLocale();
-  const baseLocale = l.split('-')[0] ?? l;
+  const baseLocale = l.split('-')[0] ?? 'en';
   return LOCALE_CURRENCY[l] || LOCALE_CURRENCY[baseLocale] || 'USD';
 }
 
@@ -188,14 +188,13 @@ export function formatDate(
     return formatRelativeTime(date, l);
   }
 
-  const optionsByStyle: Record<'short' | 'medium' | 'long', Intl.DateTimeFormatOptions> = {
+  const formatOptions: Record<'short' | 'medium' | 'long', Intl.DateTimeFormatOptions> = {
     short: { month: 'numeric', day: 'numeric', year: '2-digit' },
     medium: { month: 'short', day: 'numeric', year: 'numeric' },
     long: { month: 'long', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' },
   };
-  const options = optionsByStyle[style];
 
-  return new Intl.DateTimeFormat(l, options).format(date);
+  return new Intl.DateTimeFormat(l, formatOptions[style]).format(date);
 }
 
 function formatRelativeTime(date: Date, locale: string): string {

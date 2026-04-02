@@ -22,7 +22,14 @@ export function ProductImageGallery({ images, name, currentImage, setCurrentImag
 
   const getImageUrl = (img: string | { url: string }) => typeof img === 'string' ? img : img.url;
   const activeImage = images[currentImage] ?? images[0];
-  if (!activeImage) return null;
+
+  if (!activeImage) {
+    return (
+      <div className="aspect-square bg-white/5 flex items-center justify-center">
+        <Package size={48} className="text-gray-600" />
+      </div>
+    );
+  }
 
   return (
     <>

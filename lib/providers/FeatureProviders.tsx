@@ -12,7 +12,12 @@
  */
 'use client';
 
-import { ReactNode } from 'react';
+import type { ReactNode } from 'react';
+
+import { AchievementToastProvider } from '@/providers/AchievementToastProvider';
+import { CartProvider } from '@/providers/CartProvider';
+import { NotificationProvider } from '@/providers/NotificationProvider';
+import { PresenceManager } from '@/providers/PresenceManager';
 
 export function AppFeatureProviders({ children }: { children: ReactNode }) {
   return <>{children}</>;
@@ -21,10 +26,6 @@ export function AppFeatureProviders({ children }: { children: ReactNode }) {
 // ── Social: presence, notifications, real-time ──────────────────────────────
 // Only loaded in (social) route group
 export function SocialProviders({ children }: { children: ReactNode }) {
-  // Lazy-import to avoid loading these modules in non-social routes
-  const PresenceManager = require('@/providers/PresenceManager').PresenceManager;
-  const NotificationProvider = require('@/providers/NotificationProvider').NotificationProvider;
-
   return (
     <PresenceManager>
       <NotificationProvider>
@@ -37,8 +38,6 @@ export function SocialProviders({ children }: { children: ReactNode }) {
 // ── Gamification: achievements, XP events ───────────────────────────────────
 // Only loaded in (gamification) route group
 export function GamificationProviders({ children }: { children: ReactNode }) {
-  const AchievementToastProvider = require('@/providers/AchievementToastProvider').AchievementToastProvider;
-
   return (
     <AchievementToastProvider>
       {children}
@@ -49,8 +48,6 @@ export function GamificationProviders({ children }: { children: ReactNode }) {
 // ── Commerce: cart state, checkout flow ──────────────────────────────────────
 // Only loaded in (commerce) route group
 export function CommerceProviders({ children }: { children: ReactNode }) {
-  const CartProvider = require('@/providers/CartProvider').CartProvider;
-
   return (
     <CartProvider>
       {children}

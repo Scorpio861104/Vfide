@@ -14,7 +14,7 @@ interface TransactionCardProps {
 }
 
 // Memoized for list performance
-const TransactionCard = React.memo(function TransactionCard({ transaction, userId, index = 0 }: TransactionCardProps) {
+export const TransactionCard = React.memo(function TransactionCard({ transaction, userId, index = 0 }: TransactionCardProps) {
   const isSent = transaction.from.toLowerCase() === userId.toLowerCase();
   const statusColor = getStatusColor(transaction.status);
 

@@ -1,43 +1,48 @@
 'use client';
 
-import { Check } from 'lucide-react';
 import { motion } from 'framer-motion';
 
-const itemVariants = {
-  hidden: { opacity: 0, y: 8 },
-  show: { opacity: 1, y: 0 },
+const COLOR_STYLES = {
+  blue: 'from-blue-500/15 to-cyan-500/10 border-blue-500/30 text-blue-300',
+  purple: 'from-purple-500/15 to-fuchsia-500/10 border-purple-500/30 text-purple-300',
+  orange: 'from-orange-500/15 to-amber-500/10 border-orange-500/30 text-orange-300',
+  cyan: 'from-cyan-500/20 to-blue-500/15 border-cyan-500/40 text-cyan-200',
 } as const;
 
-export function ComparisonRow({ 
-  feature, 
-  vfide, 
-  stripe, 
-  square, 
-  paypal,
-  isLast = false 
-}: { 
-  feature: string;
-  vfide: string;
-  stripe: string;
-  square: string;
-  paypal: string;
-  isLast?: boolean;
-}) {
+interface ComparisonRowProps {
+  platform: string;
+  fee: string;
+  color?: keyof typeof COLOR_STYLES;
+  highlight?: boolean;
+}
+
+export function ComparisonRow({
+  platform,
+  fee,
+  color = 'blue',
+  highlight = false,
+}: ComparisonRowProps) {
+  const tone = COLOR_STYLES[color] ?? COLOR_STYLES.blue;
+
   return (
-    <motion.tr 
-      variants={itemVariants}
-      className={`${!isLast ? 'border-b border-white/5' : ''} group hover:bg-white/2 transition-colors`}
+    <motion.div
+      initial={{ opacity: 0, y: 12 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      whileHover={{ x: 4 }}
+      className={`group rounded-2xl border bg-gradient-to-r p-4 transition-all ${tone} ${
+        highlight ? 'shadow-lg shadow-cyan-500/10' : ''
+      }`}
     >
-      <td className="py-3 sm:py-4 px-2 sm:px-4 text-gray-300 font-medium text-sm">{feature}</td>
-      <td className="py-3 sm:py-4 px-2 sm:px-4 text-center">
-        <span className="inline-flex items-center gap-1.5 text-emerald-400 font-bold text-sm">
-          {vfide === 'Yes' ? <Check className="w-4 h-4" /> : null}
-          {vfide}
-        </span>
-      </td>
-      <td className="py-3 sm:py-4 px-2 sm:px-4 text-center text-gray-500 text-sm">{stripe}</td>
-      <td className="py-3 sm:py-4 px-2 sm:px-4 text-center text-gray-500 text-sm">{square}</td>
-      <td className="py-3 sm:py-4 px-2 sm:px-4 text-center text-gray-500 text-sm">{paypal}</td>
-    </motion.tr>
+      <div className="flex items-center justify-between gap-4">
+        <div>
+          <div className="text-lg font-bold text-white">{platform}</div>
+          <div className="text-sm text-gray-400">Typical merchant processing cost</div>
+        </div>
+        <div className={`text-right font-mono text-sm sm:text-base ${highlight ? 'text-cyan-300' : 'text-white/85'}`}>
+          {fee}
+        </div>
+      </div>
+    </motion.div>
   );
 }
