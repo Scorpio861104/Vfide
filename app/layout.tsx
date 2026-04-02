@@ -1,31 +1,10 @@
 import type { Metadata, Viewport } from "next";
 import { cookies, headers } from "next/headers";
 import "./globals.css";
-import { Web3Provider } from "@/components/wallet/Web3Provider";
-import { OnboardingManager } from "@/components/onboarding/OnboardingManager";
-import { HelpCenter } from "@/components/onboarding/HelpCenter";
-import { ToastProvider } from "@/components/ui/toast";
-// Network-agnostic: Works on testnet and mainnet identically
-import { NetworkSwitchOverlay } from "@/components/wallet/NetworkSwitchOverlay";
-import { DemoModeBanner } from "@/components/layout/DemoModeBanner";
-import { TestnetNotification } from "@/components/ui/TestnetNotification";
-import { ErrorBoundary } from "@/components/error/ErrorBoundary";
-import { PresenceManager } from "@/components/social/PresenceManager";
-import { SecurityProvider } from "@/components/security/SecurityProvider";
-import { PerformanceProvider } from "@/components/performance/PerformanceProvider";
-import { ErrorMonitoringProvider, DevErrorConsole } from "@/components/monitoring/ErrorMonitoringProvider";
-import { AccessibilityProvider } from "@/components/accessibility/AccessibilityProvider";
-import { AchievementToastContainer } from "@/components/gamification/AchievementToast";
-import { PieMenu } from "@/components/navigation/PieMenu";
-import { OfflineIndicator } from "@/components/connectivity/OfflineIndicator";
+import "@/lib/ssr-animations.css";
 import { StructuredData } from "@/components/seo/StructuredData";
-import { EmbeddedWalletProvider } from "@/lib/embeddedWallet/embeddedWalletService";
-import { PreferencesProvider } from "@/lib/preferences/userPreferences";
-// Core integrations from PR #56
-import { ServiceWorkerRegistration } from "@/components/core/ServiceWorkerRegistration";
-import { ZustandHydration } from "@/components/core/ZustandHydration";
-import { WebVitalsTracker } from "@/components/core/WebVitalsTracker";
 import { getHtmlLang, normalizeLocale } from "@/lib/i18n";
+import { AppFeatureProviders, CoreProviders, Web3Providers } from "@/lib/providers";
 
 // Fonts are self-hosted via @fontsource in globals.css
 
@@ -111,45 +90,15 @@ export default async function RootLayout({
             {children}
           </main>
         ) : (
-          <ErrorBoundary>
-            <PreferencesProvider>
-              <AccessibilityProvider>
-                <EmbeddedWalletProvider
-                  config={{
-                    provider: 'magic',
-                    appId: process.env.NEXT_PUBLIC_EMBEDDED_WALLET_APP_ID ?? 'vfide-demo',
-                    appName: 'VFIDE',
-                    authMethods: ['email', 'google', 'apple', 'twitter', 'discord'],
-                  }}
-                >
-                  <Web3Provider>
-                    <ToastProvider>
-                      <SecurityProvider />
-                      <PerformanceProvider />
-                      <ErrorMonitoringProvider />
-                      <PresenceManager />
-                      <DevErrorConsole />
-                      <DemoModeBanner />
-                      <OfflineIndicator />
-                      <ServiceWorkerRegistration />
-                      <ZustandHydration />
-                      <WebVitalsTracker />
-                      <NetworkSwitchOverlay />
-                      <TestnetNotification />
-                      {/* Network detection handled by wallet connection */}
-                      <AchievementToastContainer />
-                      <main id="main-content" className="min-h-screen min-w-0 w-full" tabIndex={-1}>
-                        {children}
-                      </main>
-                      <PieMenu />
-                      <OnboardingManager />
-                      <HelpCenter />
-                    </ToastProvider>
-                  </Web3Provider>
-                </EmbeddedWalletProvider>
-              </AccessibilityProvider>
-            </PreferencesProvider>
-          </ErrorBoundary>
+          <CoreProviders>
+            <Web3Providers>
+              <AppFeatureProviders>
+                <main id="main-content" className="min-h-screen min-w-0 w-full" tabIndex={-1}>
+                  {children}
+                </main>
+              </AppFeatureProviders>
+            </Web3Providers>
+          </CoreProviders>
         )}
       </body>
     </html>
