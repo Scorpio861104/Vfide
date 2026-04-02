@@ -5,6 +5,7 @@
 import { describe, it, expect, vi } from '@jest/globals'
 import { render, screen, fireEvent } from '@testing-library/react'
 import { NotificationCenter } from '@/components/ui/NotificationCenter'
+import LegacyNotificationCenter from '@/components/notifications/NotificationCenter'
 
 // Mock framer-motion
 jest.mock('framer-motion', () => ({
@@ -205,5 +206,15 @@ describe('NotificationCenter', () => {
     
     // Badge Unlocked is the read notification
     expect(screen.getByText('Badge Unlocked')).toBeInTheDocument()
+  })
+
+  it('keeps the legacy notification-center import aligned with the active UI experience', () => {
+    render(<LegacyNotificationCenter />)
+
+    const bellButton = screen.getByRole('button', { name: /notifications/i })
+    fireEvent.click(bellButton)
+
+    expect(screen.getByText('Active Proposal')).toBeInTheDocument()
+    expect(screen.getByText('Mark all read')).toBeInTheDocument()
   })
 })
