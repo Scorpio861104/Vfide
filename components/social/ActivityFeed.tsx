@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { formatAddress as _formatAddress } from '@/lib/messageEncryption';
 import { safeLocalStorage } from '@/lib/utils';
+import { VirtualizedList } from '@/lib/ux/performanceUtils';
 import { UserDisplay } from '@/components/common/UserDisplay';
 
 interface ActivityItem {
@@ -33,6 +34,7 @@ export function ActivityFeed({ userAddress }: ActivityFeedProps) {
   const [activities, setActivities] = useState<ActivityItem[]>([]);
   const [filter, setFilter] = useState<'all' | ActivityItem['type']>('all');
   const [isClient, setIsClient] = useState(false);
+  const [showFullFeed, setShowFullFeed] = useState(false);
 
   // Handle SSR
   useEffect(() => {
@@ -84,6 +86,62 @@ export function ActivityFeed({ userAddress }: ActivityFeedProps) {
     return filtered.sort((a, b) => b.timestamp - a.timestamp);
   }, [activities, filter]);
 
+  const shouldVirtualize = filteredActivities.length > 8;
+  const usePerformanceMode = shouldVirtualize && !showFullFeed;
+
+  useEffect(() => {
+    if (!shouldVirtualize) {
+      setShowFullFeed(false);
+    }
+  }, [shouldVirtualize]);
+
+  const renderActivityRow = (activity: ActivityItem, padded = false) => {
+    const color = getColor(activity.type);
+    const content = (
+      <motion.div
+        key={activity.id}
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="p-4 bg-zinc-950 border border-zinc-800 rounded-xl hover:border-zinc-700 transition-colors"
+      >
+        <div className="flex items-start gap-3">
+          <div
+            className="w-10 h-10 rounded-full flex items-center justify-center shrink-0"
+            style={{ backgroundColor: `${color}20` }}
+          >
+            <div style={{ color }}>{getIcon(activity.type)}</div>
+          </div>
+
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-1">
+              <UserDisplay address={activity.user} />
+              <span
+                className="text-xs font-bold px-2 py-0.5 rounded"
+                style={{
+                  backgroundColor: `${color}20`,
+                  color: color,
+                }}
+              >
+                {activity.type.replace('_', ' ')}
+              </span>
+            </div>
+            <p className="text-sm text-zinc-400 mb-2">
+              {activity.content}
+            </p>
+            <div className="flex items-center gap-2 text-xs text-zinc-500">
+              <Clock className="w-3 h-3" />
+              <span>
+                {new Date(activity.timestamp).toLocaleString()}
+              </span>
+            </div>
+          </div>
+        </div>
+      </motion.div>
+    );
+
+    return padded ? <div className="h-full pb-2">{content}</div> : content;
+  };
+
   const filterOptions: Array<{ value: 'all' | ActivityItem['type']; label: string }> = [
     { value: 'all', label: 'All' },
     { value: 'message', label: 'Messages' },
@@ -134,53 +192,38 @@ export function ActivityFeed({ userAddress }: ActivityFeedProps) {
           <p className="text-zinc-500">No activity yet</p>
         </div>
       ) : (
-        <div className="space-y-2">
-          {filteredActivities.map((activity) => {
-              const color = getColor(activity.type);
-              return (
-                <motion.div
-                  key={activity.id}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="p-4 bg-zinc-950 border border-zinc-800 rounded-xl hover:border-zinc-700 transition-colors"
-                >
-                  <div className="flex items-start gap-3">
-                    {/* Icon */}
-                    <div
-                      className="w-10 h-10 rounded-full flex items-center justify-center shrink-0"
-                      style={{ backgroundColor: `${color}20` }}
-                    >
-                      <div style={{ color }}>{getIcon(activity.type)}</div>
-                    </div>
+        <div className="space-y-3">
+          {usePerformanceMode ? (
+            <>
+              <div className="rounded-lg border border-cyan-400/30 bg-cyan-400/5 px-3 py-2 text-sm text-cyan-100">
+                Performance mode active — long activity feeds are virtualized for smoother scrolling.
+              </div>
+              <VirtualizedList
+                items={filteredActivities}
+                itemHeight={132}
+                containerHeight={Math.min(filteredActivities.length * 132, 520)}
+                className="pr-2"
+                keyExtractor={(activity) => activity.id}
+                renderItem={(activity) => renderActivityRow(activity, true)}
+              />
+            </>
+          ) : (
+            <div className="space-y-2">
+              {filteredActivities.map((activity) => renderActivityRow(activity))}
+            </div>
+          )}
 
-                    {/* Content */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <UserDisplay address={activity.user} />
-                        <span
-                          className="text-xs font-bold px-2 py-0.5 rounded"
-                          style={{
-                            backgroundColor: `${color}20`,
-                            color: color,
-                          }}
-                        >
-                          {activity.type.replace('_', ' ')}
-                        </span>
-                      </div>
-                      <p className="text-sm text-zinc-400 mb-2">
-                        {activity.content}
-                      </p>
-                      <div className="flex items-center gap-2 text-xs text-zinc-500">
-                        <Clock className="w-3 h-3" />
-                        <span>
-                          {new Date(activity.timestamp).toLocaleString()}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </motion.div>
-              );
-            })}
+          {shouldVirtualize ? (
+            <div className="flex justify-end">
+              <button
+                type="button"
+                onClick={() => setShowFullFeed((prev) => !prev)}
+                className="text-sm text-cyan-400 hover:underline"
+              >
+                {usePerformanceMode ? 'Show full feed' : 'Use performance mode'}
+              </button>
+            </div>
+          ) : null}
         </div>
       )}
     </div>

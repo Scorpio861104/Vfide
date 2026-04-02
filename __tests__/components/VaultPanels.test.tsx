@@ -141,6 +141,24 @@ describe('TransactionHistory', () => {
     render(<TransactionHistory transactions={transactions} />)
     expect(screen.getByText('-100 VFIDE')).toBeInTheDocument()
   })
+
+  it('switches to performance mode for long transaction histories', () => {
+    const transactions = Array.from({ length: 18 }, (_, i) => ({
+      id: String(i + 1),
+      type: (i % 2 === 0 ? 'send' : 'receive') as const,
+      amount: `${i + 1} VFIDE`,
+      to: '0xabc...def',
+      timestamp: `${i + 1} hours ago`,
+      status: 'completed' as const,
+      txHash: `0x${String(i + 1).padStart(6, '0')}`,
+    }))
+
+    render(<TransactionHistory transactions={transactions} />)
+
+    expect(screen.getByText(/performance mode active/i)).toBeInTheDocument()
+    expect(screen.getByText('1 VFIDE')).toBeInTheDocument()
+    expect(screen.queryByText('18 VFIDE')).not.toBeInTheDocument()
+  })
 })
 
 describe('VaultSettingsPanel', () => {
