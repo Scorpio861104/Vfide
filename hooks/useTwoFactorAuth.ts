@@ -10,6 +10,7 @@ import {
   generateBackupCodes
 } from '@/config/security-advanced';
 import { logger } from '@/lib/logger';
+import { safeLocalStorage } from '@/lib/utils';
 
 export interface UseTwoFactorAuthResult {
   config: TwoFactorConfig;
@@ -84,7 +85,7 @@ const loadConfig = (): TwoFactorConfig => {
   }
 
   try {
-    const stored = localStorage.getItem(SECURITY_STORAGE_KEYS.twoFactor);
+    const stored = safeLocalStorage.getItem(SECURITY_STORAGE_KEYS.twoFactor);
     if (!stored) return {
       enabled: false,
       method: null,
@@ -111,7 +112,7 @@ const loadConfig = (): TwoFactorConfig => {
 const saveConfig = (config: TwoFactorConfig): void => {
   if (typeof window === 'undefined') return;
   try {
-    localStorage.setItem(SECURITY_STORAGE_KEYS.twoFactor, JSON.stringify(config));
+    safeLocalStorage.setItem(SECURITY_STORAGE_KEYS.twoFactor, JSON.stringify(config));
   } catch (e) {
     logger.error('Failed to save 2FA config', e);
   }

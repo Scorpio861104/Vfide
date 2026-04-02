@@ -186,4 +186,17 @@ describe('useThemeManager Hook', () => {
     const savedThemes = result.current.getSavedThemes();
     expect(savedThemes).toHaveLength(1);
   });
+
+  it('should initialize safely when storage is unavailable', () => {
+    const getItemSpy = jest.spyOn(Storage.prototype, 'getItem').mockImplementation(() => {
+      throw new Error('Storage unavailable');
+    });
+
+    try {
+      const { result } = renderHook(() => useThemeManager());
+      expect(result.current.settings).toBeDefined();
+    } finally {
+      getItemSpy.mockRestore();
+    }
+  });
 });

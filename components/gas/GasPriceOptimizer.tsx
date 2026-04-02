@@ -23,6 +23,7 @@ import {
   GasPriceHistory,
   OptimalTimingRecommendation,
 } from '@/lib/services/gasPriceService';
+import { safeLocalStorage } from '@/lib/utils';
 
 // ==================== TYPES ====================
 
@@ -47,7 +48,7 @@ interface AlertSettings {
 function loadAlertSettings(): AlertSettings {
   if (typeof window === 'undefined') return { enabled: false, threshold: 30 };
   try {
-    const stored = localStorage.getItem(ALERT_STORAGE_KEY);
+    const stored = safeLocalStorage.getItem(ALERT_STORAGE_KEY);
     return stored ? JSON.parse(stored) : { enabled: false, threshold: 30 };
   } catch {
     return { enabled: false, threshold: 30 };
@@ -56,7 +57,7 @@ function loadAlertSettings(): AlertSettings {
 
 function saveAlertSettings(settings: AlertSettings): void {
   if (typeof window === 'undefined') return;
-  localStorage.setItem(ALERT_STORAGE_KEY, JSON.stringify(settings));
+  safeLocalStorage.setItem(ALERT_STORAGE_KEY, JSON.stringify(settings));
 }
 
 // ==================== SUB-COMPONENTS ====================

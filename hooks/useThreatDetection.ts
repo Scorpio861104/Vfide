@@ -13,6 +13,7 @@ import {
   generateDeviceFingerprint,
   DEFAULT_RATE_LIMITS
 } from '@/config/security-advanced';
+import { safeLocalStorage } from '@/lib/utils';
 import { logger } from '@/lib/logger';
 
 export interface UseThreatDetectionResult {
@@ -44,7 +45,7 @@ const loadThreats = (): ThreatAlert[] => {
   if (typeof window === 'undefined') return [];
 
   try {
-    const stored = localStorage.getItem(SECURITY_STORAGE_KEYS.threats);
+    const stored = safeLocalStorage.getItem(SECURITY_STORAGE_KEYS.threats);
     if (!stored) return [];
 
     const parsed = JSON.parse(stored);
@@ -60,7 +61,7 @@ const loadThreats = (): ThreatAlert[] => {
 
 const saveThreats = (threats: ThreatAlert[]): void => {
   if (typeof window === 'undefined') return;
-  localStorage.setItem(SECURITY_STORAGE_KEYS.threats, JSON.stringify(threats));
+  safeLocalStorage.setItem(SECURITY_STORAGE_KEYS.threats, JSON.stringify(threats));
 };
 
 const generateThreatId = (): string => {
@@ -76,10 +77,10 @@ const checkUnusualDevice = (currentDevice: DeviceFingerprint): boolean => {
   if (typeof window === 'undefined') return false;
 
   try {
-    const stored = localStorage.getItem(SECURITY_STORAGE_KEYS.deviceFingerprint);
+    const stored = safeLocalStorage.getItem(SECURITY_STORAGE_KEYS.deviceFingerprint);
     if (!stored) {
       // First time device, save it
-      localStorage.setItem(SECURITY_STORAGE_KEYS.deviceFingerprint, JSON.stringify(currentDevice));
+      safeLocalStorage.setItem(SECURITY_STORAGE_KEYS.deviceFingerprint, JSON.stringify(currentDevice));
       return false;
     }
 

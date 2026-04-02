@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useChainId } from 'wagmi';
+import { safeLocalStorage } from '@/lib/utils';
 
 /**
  * Gas Price Monitor Hook
@@ -59,7 +60,7 @@ export function useGasPrice() {
   // Load alert settings from storage
   useEffect(() => {
     try {
-      const stored = localStorage.getItem(STORAGE_KEY);
+      const stored = safeLocalStorage.getItem(STORAGE_KEY);
       if (stored) {
         const parsed = JSON.parse(stored);
         setAlert(prev => ({ ...prev, ...parsed }));
@@ -152,7 +153,7 @@ export function useGasPrice() {
   const setAlertEnabled = useCallback((enabled: boolean) => {
     setAlert(prev => {
       const updated = { ...prev, enabled, notified: false };
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+      safeLocalStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
       return updated;
     });
 
@@ -166,7 +167,7 @@ export function useGasPrice() {
   const setAlertThreshold = useCallback((threshold: number) => {
     setAlert(prev => {
       const updated = { ...prev, threshold, notified: false };
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+      safeLocalStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
       return updated;
     });
   }, []);

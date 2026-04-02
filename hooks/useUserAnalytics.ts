@@ -8,6 +8,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import { AnalyticsEvent, UserAnalytics } from '@/config/performance-dashboard';
 import { logger } from '@/lib/logger';
+import { safeLocalStorage, safeSessionStorage } from '@/lib/utils';
 
 interface UseUserAnalyticsResult {
   events: AnalyticsEvent[];
@@ -26,10 +27,10 @@ const MAX_EVENTS = 1000;
 function getOrCreateSessionId(): string {
   if (typeof window === 'undefined') return '';
 
-  let sessionId = sessionStorage.getItem(SESSION_KEY);
+  let sessionId = safeSessionStorage.getItem(SESSION_KEY);
   if (!sessionId) {
     sessionId = `session-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-    sessionStorage.setItem(SESSION_KEY, sessionId);
+    safeSessionStorage.setItem(SESSION_KEY, sessionId);
   }
   return sessionId;
 }
@@ -52,7 +53,7 @@ export function useUserAnalytics(): UseUserAnalyticsResult {
   // Load events from localStorage on mount
   useEffect(() => {
     try {
-      const stored = localStorage.getItem(STORAGE_KEY);
+      const stored = safeLocalStorage.getItem(STORAGE_KEY);
       if (stored) {
         const parsed = JSON.parse(stored);
         setEvents(Array.isArray(parsed) ? parsed : []);
@@ -65,7 +66,7 @@ export function useUserAnalytics(): UseUserAnalyticsResult {
   // Save events to localStorage whenever they change
   useEffect(() => {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(events));
+      safeLocalStorage.setItem(STORAGE_KEY, JSON.stringify(events));
     } catch (e) {
       logger.error('Failed to save analytics events:', e);
     }

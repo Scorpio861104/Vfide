@@ -143,4 +143,21 @@ describe('NetworkWarning', () => {
     // Component should render with pending state
     expect(container).toBeInTheDocument()
   })
+
+  it('handles unavailable localStorage gracefully', async () => {
+    const { useAccount, useChainId } = await import('wagmi')
+    ;(useAccount as ReturnType<typeof jest.fn>).mockReturnValue({ isConnected: true })
+    ;(useChainId as ReturnType<typeof jest.fn>).mockReturnValue(1)
+
+    const getItemSpy = jest.spyOn(Storage.prototype, 'getItem').mockImplementation(() => {
+      throw new Error('Storage unavailable')
+    })
+
+    try {
+      const { container } = render(<NetworkWarning />)
+      expect(container).toBeInTheDocument()
+    } finally {
+      getItemSpy.mockRestore()
+    }
+  })
 })

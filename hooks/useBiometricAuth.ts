@@ -79,7 +79,7 @@ const loadConfig = (): BiometricConfig => {
   }
 
   try {
-    const stored = localStorage.getItem(SECURITY_STORAGE_KEYS.biometric);
+    const stored = safeLocalStorage.getItem(SECURITY_STORAGE_KEYS.biometric);
     if (!stored) {
       return {
         enabled: false,
@@ -120,7 +120,7 @@ const loadConfig = (): BiometricConfig => {
 const saveConfig = (config: BiometricConfig): void => {
   if (typeof window === 'undefined') return;
   try {
-    localStorage.setItem(SECURITY_STORAGE_KEYS.biometric, JSON.stringify(config));
+    safeLocalStorage.setItem(SECURITY_STORAGE_KEYS.biometric, JSON.stringify(config));
   } catch (e) {
     logger.error('Failed to save biometric config', e);
   }
@@ -211,7 +211,7 @@ export const useBiometricAuth = (userId?: string): UseBiometricAuthResult => {
       // In production, send public key to backend for storage
       if (typeof window !== 'undefined') {
         const rawId = Array.from(new Uint8Array(credential.rawId));
-        localStorage.setItem(`vfide:biometric:${credential.id}`, JSON.stringify(rawId));
+        safeLocalStorage.setItem(`vfide:biometric:${credential.id}`, JSON.stringify(rawId));
       }
 
       return newCredential;
@@ -231,7 +231,7 @@ export const useBiometricAuth = (userId?: string): UseBiometricAuthResult => {
       });
 
       if (typeof window !== 'undefined') {
-        localStorage.removeItem(`vfide:biometric:${credentialId}`);
+        safeLocalStorage.removeItem(`vfide:biometric:${credentialId}`);
       }
 
       return true;

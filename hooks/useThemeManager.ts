@@ -20,6 +20,7 @@ import {
   THEME_PRESETS as PRESETS,
   type ThemePalette,
 } from '@/config/theme-manager';
+import { safeLocalStorage } from '@/lib/utils';
 
 const STORAGE_KEY = 'vfide_theme_settings';
 const SAVED_THEMES_KEY = 'vfide_saved_themes';
@@ -72,8 +73,8 @@ export function useThemeManager(): UseThemeManagerReturn {
 
   // Load settings from storage
   useEffect(() => {
-    const storedSettings = localStorage.getItem(STORAGE_KEY);
-    const storedThemes = localStorage.getItem(SAVED_THEMES_KEY);
+    const storedSettings = safeLocalStorage.getItem(STORAGE_KEY);
+    const storedThemes = safeLocalStorage.getItem(SAVED_THEMES_KEY);
 
     if (storedSettings) {
       try {
@@ -97,7 +98,7 @@ export function useThemeManager(): UseThemeManagerReturn {
 
   // Save settings to storage
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
+    safeLocalStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
     setIsSaved(true);
   }, [settings]);
 
@@ -263,7 +264,7 @@ export function useThemeManager(): UseThemeManagerReturn {
       };
 
       setSavedThemes((prev) => [...prev, theme]);
-      localStorage.setItem(SAVED_THEMES_KEY, JSON.stringify([...savedThemes, theme]));
+      safeLocalStorage.setItem(SAVED_THEMES_KEY, JSON.stringify([...savedThemes, theme]));
 
       return theme;
     },
@@ -295,7 +296,7 @@ export function useThemeManager(): UseThemeManagerReturn {
   const deleteSavedTheme = useCallback((id: string) => {
     setSavedThemes((prev) => prev.filter((t) => t.id !== id));
     const updated = savedThemes.filter((t) => t.id !== id);
-    localStorage.setItem(SAVED_THEMES_KEY, JSON.stringify(updated));
+    safeLocalStorage.setItem(SAVED_THEMES_KEY, JSON.stringify(updated));
   }, [savedThemes]);
 
   const updateSavedTheme = useCallback(
@@ -311,7 +312,7 @@ export function useThemeManager(): UseThemeManagerReturn {
       const updated = savedThemes.map((t) =>
         t.id === id ? { ...t, ...updates, updatedAt: Date.now() } : t
       );
-      localStorage.setItem(SAVED_THEMES_KEY, JSON.stringify(updated));
+      safeLocalStorage.setItem(SAVED_THEMES_KEY, JSON.stringify(updated));
     },
     [savedThemes]
   );

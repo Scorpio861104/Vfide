@@ -6,6 +6,7 @@ import { X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CURRENT_CHAIN_ID } from '@/lib/testnet';
 import { getChainByChainId, isTestnetChainId } from '@/lib/chains';
+import { safeLocalStorage } from '@/lib/utils';
 import { safeParseInt } from '@/lib/validation';
 
 const DISMISS_KEY = 'vfide-network-warning-dismissed';
@@ -32,7 +33,7 @@ export function NetworkWarning() {
   // Check localStorage on mount
   useEffect(() => {
     const timer = setTimeout(() => {
-      const dismissedUntil = localStorage.getItem(DISMISS_KEY);
+      const dismissedUntil = safeLocalStorage.getItem(DISMISS_KEY);
       if (dismissedUntil && Date.now() < safeParseInt(dismissedUntil, 0)) {
         setDismissed(prev => prev !== true ? true : prev);
       } else {
@@ -45,7 +46,7 @@ export function NetworkWarning() {
   // Clear dismissal when user switches to correct chain
   useEffect(() => {
     if (chainId === expectedChainId) {
-      localStorage.removeItem(DISMISS_KEY);
+      safeLocalStorage.removeItem(DISMISS_KEY);
       setTimeout(() => {
         setDismissed(prev => prev !== false ? false : prev);
       }, 0);
@@ -54,7 +55,7 @@ export function NetworkWarning() {
 
   const handleDismiss = () => {
     setDismissed(true);
-    localStorage.setItem(DISMISS_KEY, String(Date.now() + DISMISS_DURATION));
+    safeLocalStorage.setItem(DISMISS_KEY, String(Date.now() + DISMISS_DURATION));
   };
 
   const handleSwitch = () => {

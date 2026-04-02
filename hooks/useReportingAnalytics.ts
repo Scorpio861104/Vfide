@@ -6,6 +6,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
+import { safeLocalStorage } from '@/lib/utils';
 import type {
   Report,
   Query,
@@ -50,7 +51,7 @@ export function useReportingAnalytics() {
   // Load from localStorage on mount
   useEffect(() => {
     try {
-      const stored = localStorage.getItem(STORAGE_KEY);
+      const stored = safeLocalStorage.getItem(STORAGE_KEY);
       if (stored) {
         const parsed = JSON.parse(stored);
         setState((prev) => ({
@@ -66,7 +67,7 @@ export function useReportingAnalytics() {
   // Persist to localStorage
   useEffect(() => {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      safeLocalStorage.setItem(STORAGE_KEY, JSON.stringify(state));
     } catch (e) {
       logger.error('Failed to persist analytics state:', e);
     }

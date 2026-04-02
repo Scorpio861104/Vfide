@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { logger } from '@/lib/logger';
+import { safeLocalStorage } from '@/lib/utils';
 
 /**
  * Transaction Sound Effects Hook
@@ -66,7 +67,7 @@ export function useTransactionSounds() {
   // Load settings from storage
   useEffect(() => {
     try {
-      const stored = localStorage.getItem(STORAGE_KEY);
+      const stored = safeLocalStorage.getItem(STORAGE_KEY);
       if (stored) {
         setSettings(JSON.parse(stored));
       }
@@ -147,7 +148,7 @@ export function useTransactionSounds() {
   const setEnabled = useCallback((enabled: boolean) => {
     setSettings(prev => {
       const updated = { ...prev, enabled };
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+      safeLocalStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
       return updated;
     });
   }, []);
@@ -156,7 +157,7 @@ export function useTransactionSounds() {
     const clampedVolume = Math.max(0, Math.min(1, volume));
     setSettings(prev => {
       const updated = { ...prev, volume: clampedVolume };
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+      safeLocalStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
       return updated;
     });
   }, []);
