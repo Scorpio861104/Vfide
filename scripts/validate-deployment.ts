@@ -199,9 +199,12 @@ async function runValidationSuite(): Promise<void> {
   // Check health endpoint is not leaking version
   console.log(`\n${BLUE}Running:${RESET} Health endpoint security check`);
   const healthRoute = readFileSync('app/api/health/route.ts', 'utf8');
-  const versionInProduction = healthRoute.includes("process.env.NODE_ENV === 'production'") &&
-    !healthRoute.includes("version: process.env.npm_package_version");
-  if (versionInProduction) {
+  const productionBranchMatch = healthRoute.match(/if \(process\.env\.NODE_ENV === 'production'\) \{([\s\S]*?)\n  \}/);
+  const productionBranch = productionBranchMatch?.[1] ?? '';
+  const productionPayloadHidesVersion = productionBranch.includes('ok: envHealthy') &&
+    productionBranch.includes('status') &&
+    !productionBranch.includes('version');
+  if (productionPayloadHidesVersion) {
     console.log(`${GREEN}✓ Passed${RESET} (version not leaked in production)`);
     results.push(new CheckResult('health endpoint secure', true));
   } else {

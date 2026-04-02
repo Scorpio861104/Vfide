@@ -70,6 +70,7 @@ describe('/api/health', () => {
         ok: false,
         status: 'degraded',
       });
+      expect(data.version).toBeUndefined();
       expect(data.environment).toBeUndefined();
       expect(data.checks).toBeUndefined();
       expect(data.memory).toBeUndefined();

@@ -28,17 +28,20 @@ export async function GET(request: NextRequest) {
   if (process.env.NODE_ENV === 'production') {
     return NextResponse.json(
       {
+        ok: envHealthy,
         status,
       },
       { status: statusCode }
     );
   }
 
+  const appVersion = process.env.npm_package_version || '1.2.0';
+
   const healthData = {
     ok: envHealthy,
     status,
     timestamp: new Date().toISOString(),
-    version: process.env.npm_package_version || '1.2.0',
+    version: appVersion,
     environment: process.env.NODE_ENV || 'development',
     uptime: process.uptime(),
     memory: {
