@@ -2,7 +2,7 @@
 
 import { Footer } from '@/components/layout/Footer';
 import { PageWrapper } from '@/components/ui/PageLayout';
-import React, { useState } from 'react';
+import React, { Suspense, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   MessageCircle,
@@ -19,18 +19,9 @@ import {
 import { useAccount } from 'wagmi';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { useHasVault } from '@/hooks/useHasVault';
-import { FriendsList } from '@/components/social/FriendsList';
-import { MessagingCenter } from '@/components/social/MessagingCenter';
-import { GroupMessaging } from '@/components/social/GroupMessaging';
-import { FriendRequestsPanel } from '@/components/social/FriendRequestsPanel';
-import { PrivacySettings } from '@/components/social/PrivacySettings';
-import { FriendCirclesManager } from '@/components/social/FriendCirclesManager';
-import { AccountSettings } from '@/components/settings/AccountSettings';
 import { SocialNotifications } from '@/components/social/SocialNotifications';
-import { GlobalUserSearch } from '@/components/social/GlobalUserSearch';
-import { ActivityFeed } from '@/components/social/ActivityFeed';
-import { EndorsementsBadges } from '@/components/social/EndorsementsBadges';
 import { FirstTimeUserBanner } from '@/components/ui/FirstTimeUserBanner';
+import { safeLocalStorage } from '@/lib/utils';
 import { Friend, Group } from '@/types/messaging';
 import { FriendRequest } from '@/types/friendRequests';
 import { STORAGE_KEYS } from '@/lib/messageEncryption';
@@ -39,6 +30,25 @@ import { gamification, useGamification } from '@/lib/gamification';
 import { UserStatsWidget } from '@/components/gamification/GamificationWidgets';
 
 type TabType = 'messages' | 'requests' | 'circles' | 'groups' | 'account' | 'privacy' | 'discover' | 'activity';
+
+const FriendsList = React.lazy(() => import('@/components/social/FriendsList').then((module) => ({ default: module.FriendsList })));
+const MessagingCenter = React.lazy(() => import('@/components/social/MessagingCenter').then((module) => ({ default: module.MessagingCenter })));
+const GroupMessaging = React.lazy(() => import('@/components/social/GroupMessaging').then((module) => ({ default: module.GroupMessaging })));
+const FriendRequestsPanel = React.lazy(() => import('@/components/social/FriendRequestsPanel').then((module) => ({ default: module.FriendRequestsPanel })));
+const PrivacySettings = React.lazy(() => import('@/components/social/PrivacySettings').then((module) => ({ default: module.PrivacySettings })));
+const FriendCirclesManager = React.lazy(() => import('@/components/social/FriendCirclesManager').then((module) => ({ default: module.FriendCirclesManager })));
+const AccountSettings = React.lazy(() => import('@/components/settings/AccountSettings').then((module) => ({ default: module.AccountSettings })));
+const GlobalUserSearch = React.lazy(() => import('@/components/social/GlobalUserSearch').then((module) => ({ default: module.GlobalUserSearch })));
+const ActivityFeed = React.lazy(() => import('@/components/social/ActivityFeed').then((module) => ({ default: module.ActivityFeed })));
+const EndorsementsBadges = React.lazy(() => import('@/components/social/EndorsementsBadges').then((module) => ({ default: module.EndorsementsBadges })));
+
+function SocialPanelFallback({ message }: { message: string }) {
+  return (
+    <div className="bg-zinc-900 rounded-xl border border-zinc-700 p-6 text-sm text-zinc-400 animate-pulse">
+      {message}
+    </div>
+  );
+}
 
 export default function SocialPage() {
   const { address, isConnected } = useAccount();
@@ -53,7 +63,7 @@ export default function SocialPage() {
   React.useEffect(() => {
     if (!address) return;
     
-    const stored = localStorage.getItem(`${STORAGE_KEYS.FRIENDS}_${address}`);
+    const stored = safeLocalStorage.getItem(`${STORAGE_KEYS.FRIENDS}_${address}`);
     if (stored) {
       try {
         setFriends(JSON.parse(stored));
@@ -91,11 +101,11 @@ export default function SocialPage() {
       proofScore: request.fromProofScore || 0,
     };
 
-    const stored = localStorage.getItem(`${STORAGE_KEYS.FRIENDS}_${address}`);
+    const stored = safeLocalStorage.getItem(`${STORAGE_KEYS.FRIENDS}_${address}`);
     const existingFriends: Friend[] = stored ? JSON.parse(stored) : [];
     const updated = [...existingFriends, newFriend];
     setFriends(updated);
-    localStorage.setItem(`${STORAGE_KEYS.FRIENDS}_${address}`, JSON.stringify(updated));
+    safeLocalStorage.setItem(`${STORAGE_KEYS.FRIENDS}_${address}`, JSON.stringify(updated));
 
     // Award XP and update gamification stats
     gamification.incrementStat(address, 'friendsAdded');
@@ -317,28 +327,32 @@ export default function SocialPage() {
               >
                 {/* Friends List */}
                 <div className="lg:col-span-1">
-                  <FriendsList
-                    onSelectFriend={(friend) => {
-                      setSelectedFriend(friend);
-                      setSelectedGroup(undefined);
-                      // Store friends for group creation
-                      const stored = localStorage.getItem(`vfide_friends_${address}`);
-                      if (stored) {
-                        try {
-                          setFriends(JSON.parse(stored));
-                        } catch {
-                          // Invalid JSON in localStorage, ignore and use default empty array
+                  <Suspense fallback={<SocialPanelFallback message="Loading friends…" />}>
+                    <FriendsList
+                      onSelectFriend={(friend) => {
+                        setSelectedFriend(friend);
+                        setSelectedGroup(undefined);
+                        // Store friends for group creation
+                        const stored = safeLocalStorage.getItem(`vfide_friends_${address}`);
+                        if (stored) {
+                          try {
+                            setFriends(JSON.parse(stored));
+                          } catch {
+                            // Invalid JSON in storage, ignore and use default empty array
+                          }
                         }
-                      }
-                    }}
-                    selectedFriend={selectedFriend}
-                  />
+                      }}
+                      selectedFriend={selectedFriend}
+                    />
+                  </Suspense>
                 </div>
 
                 {/* Messaging Center */}
                 <div className="lg:col-span-2">
                   {selectedFriend ? (
-                    <MessagingCenter friend={selectedFriend} hasVault={hasVault} />
+                    <Suspense fallback={<SocialPanelFallback message="Loading encrypted conversation…" />}>
+                      <MessagingCenter friend={selectedFriend} hasVault={hasVault} />
+                    </Suspense>
                   ) : (
                     <div className="bg-zinc-900 rounded-xl border border-zinc-700 h-full flex flex-col items-center justify-center p-12 text-center">
                       <div className="w-24 h-24 rounded-full bg-cyan-400/10 flex items-center justify-center mb-6">
@@ -369,10 +383,12 @@ export default function SocialPage() {
                 exit={{ opacity: 0, y: -20 }}
               >
                 <div className="max-w-4xl mx-auto">
-                  <FriendRequestsPanel
-                    onAccept={handleAcceptRequest}
-                    onReject={handleRejectRequest}
-                  />
+                  <Suspense fallback={<SocialPanelFallback message="Loading friend requests…" />}>
+                    <FriendRequestsPanel
+                      onAccept={handleAcceptRequest}
+                      onReject={handleRejectRequest}
+                    />
+                  </Suspense>
                 </div>
               </motion.div>
             )}
@@ -386,7 +402,9 @@ export default function SocialPage() {
                 exit={{ opacity: 0, y: -20 }}
               >
                 <div className="max-w-7xl mx-auto">
-                  <FriendCirclesManager friends={friends} />
+                  <Suspense fallback={<SocialPanelFallback message="Loading circles…" />}>
+                    <FriendCirclesManager friends={friends} />
+                  </Suspense>
                 </div>
               </motion.div>
             )}
@@ -399,7 +417,9 @@ export default function SocialPage() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
               >
-                <GroupMessaging />
+                <Suspense fallback={<SocialPanelFallback message="Loading group messaging…" />}>
+                  <GroupMessaging />
+                </Suspense>
               </motion.div>
             )}
 
@@ -412,12 +432,16 @@ export default function SocialPage() {
                 exit={{ opacity: 0, y: -20 }}
               >
                 <div className="max-w-4xl mx-auto space-y-6">
-                  <AccountSettings />
+                  <Suspense fallback={<SocialPanelFallback message="Loading account settings…" />}>
+                    <AccountSettings />
+                  </Suspense>
                   {address && (
-                    <EndorsementsBadges 
-                      userAddress={address}
-                      showGiveEndorsement={false}
-                    />
+                    <Suspense fallback={<SocialPanelFallback message="Loading endorsements…" />}>
+                      <EndorsementsBadges 
+                        userAddress={address}
+                        showGiveEndorsement={false}
+                      />
+                    </Suspense>
                   )}
                 </div>
               </motion.div>
@@ -432,7 +456,9 @@ export default function SocialPage() {
                 exit={{ opacity: 0, y: -20 }}
               >
                 <div className="max-w-6xl mx-auto">
-                  <PrivacySettings />
+                  <Suspense fallback={<SocialPanelFallback message="Loading privacy controls…" />}>
+                    <PrivacySettings />
+                  </Suspense>
                 </div>
               </motion.div>
             )}
@@ -446,7 +472,9 @@ export default function SocialPage() {
                 exit={{ opacity: 0, y: -20 }}
               >
                 <div className="max-w-4xl mx-auto">
-                  <GlobalUserSearch />
+                  <Suspense fallback={<SocialPanelFallback message="Loading discovery…" />}>
+                    <GlobalUserSearch />
+                  </Suspense>
                 </div>
               </motion.div>
             )}
@@ -460,7 +488,9 @@ export default function SocialPage() {
                 exit={{ opacity: 0, y: -20 }}
               >
                 <div className="max-w-4xl mx-auto">
-                  <ActivityFeed userAddress={address} />
+                  <Suspense fallback={<SocialPanelFallback message="Loading activity feed…" />}>
+                    <ActivityFeed userAddress={address} />
+                  </Suspense>
                 </div>
               </motion.div>
             )}

@@ -154,30 +154,43 @@ describe('Social messaging page pathways', () => {
     expect(screen.getByRole('button', { name: /Connect Wallet/i })).toBeTruthy();
   });
 
-  it('renders connected messaging shell and default messages tab', () => {
+  it('renders connected messaging shell and default messages tab', async () => {
     renderSocialMessagingPage();
 
     expect(screen.getByRole('heading', { name: /Social Hub/i })).toBeTruthy();
     expect(screen.getByText(/Vault Active/i)).toBeTruthy();
     expect(screen.getByText(/First Time Banner:/i)).toBeTruthy();
-    expect(screen.getByText('Friends List Component')).toBeTruthy();
+    expect(await screen.findByText('Friends List Component')).toBeTruthy();
     expect(screen.getByText(/Select a Friend to Start Messaging/i)).toBeTruthy();
   });
 
-  it('switches tabs for requests, groups, discover, and account modules', () => {
+  it('switches tabs for requests, groups, discover, and account modules', async () => {
     renderSocialMessagingPage();
 
     fireEvent.click(screen.getAllByRole('button', { name: /Requests/i })[0]);
-    expect(screen.getByText('Friend Requests Component')).toBeTruthy();
+    expect(await screen.findByText('Friend Requests Component')).toBeTruthy();
 
     fireEvent.click(screen.getAllByRole('button', { name: /Groups/i })[0]);
-    expect(screen.getByText('Group Messaging Component')).toBeTruthy();
+    expect(await screen.findByText('Group Messaging Component')).toBeTruthy();
 
     fireEvent.click(screen.getAllByRole('button', { name: /Discover/i })[0]);
-    expect(screen.getByText('Global User Search Component')).toBeTruthy();
+    expect(await screen.findByText('Global User Search Component')).toBeTruthy();
 
     fireEvent.click(screen.getAllByRole('button', { name: /Account/i })[0]);
-    expect(screen.getByText('Account Settings Component')).toBeTruthy();
-    expect(screen.getByText('Endorsements & Badges Component')).toBeTruthy();
+    expect(await screen.findByText('Account Settings Component')).toBeTruthy();
+    expect(await screen.findByText('Endorsements & Badges Component')).toBeTruthy();
+  });
+
+  it('renders the social shell when storage access throws', () => {
+    const getItemSpy = jest.spyOn(Storage.prototype, 'getItem').mockImplementation(() => {
+      throw new Error('Storage unavailable');
+    });
+
+    try {
+      renderSocialMessagingPage();
+      expect(screen.getByRole('heading', { name: /Social Hub/i })).toBeTruthy();
+    } finally {
+      getItemSpy.mockRestore();
+    }
   });
 });
