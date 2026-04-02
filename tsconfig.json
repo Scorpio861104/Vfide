@@ -10,7 +10,7 @@
     "module": "ESNext",
     "moduleResolution": "bundler",
     "resolveJsonModule": true,
-    "allowJs": true,
+    "allowJs": false,
     "strict": true,
     "noUncheckedIndexedAccess": true,
     "noImplicitReturns": true,

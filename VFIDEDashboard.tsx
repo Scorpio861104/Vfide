@@ -7,7 +7,7 @@ import {
   ChartActivityRow,
   EcosystemStatsRow,
   FooterStatus,
-} from "@/components/dashboard/VFIDEDashboardSections";
+} from "@/components/dashboard";
 
 // Design tokens
 const T = {
