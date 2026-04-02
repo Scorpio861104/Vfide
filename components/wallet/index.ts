@@ -14,12 +14,17 @@
 
 // ==================== COMPONENTS ====================
 
+// Supported wallet entry points
+export { QuickWalletConnect } from './QuickWalletConnect';
+export { UnifiedWalletModal } from './UnifiedWalletModal';
+export type { UnifiedWalletModalProps } from './UnifiedWalletModal';
+
 // Enhanced Wallet UX Components (from PR #56)
 export { EnhancedWalletConnect } from './EnhancedWalletConnect';
 export { EnhancedNetworkBanner, NetworkSwitchWidget } from './EnhancedNetworkBanner';
 
-// Legacy/experimental wallet variants are intentionally not re-exported from
-// the public barrel to keep consumers on the actively maintained connection UX.
+// Legacy/experimental wallet variants remain compatibility-only direct imports.
+// New consumers should use `QuickWalletConnect` or `UnifiedWalletModal`.
 
 export { WalletCapabilities } from './WalletCapabilities';
 export type { WalletCapabilitiesProps } from './WalletCapabilities';
