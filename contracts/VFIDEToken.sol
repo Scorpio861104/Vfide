@@ -305,8 +305,8 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
     }
 
     function transferFrom(address from, address to, uint256 amount) external nonReentrant returns (bool) {
-        // Spender must not be blacklisted or frozen.
-        require(!isBlacklisted[msg.sender] && !isFrozen[msg.sender], "Sanctioned");
+        // System-exempt protocol modules must remain operable even if accidentally sanctioned.
+        require((!isBlacklisted[msg.sender] && !isFrozen[msg.sender]) || systemExempt[msg.sender], "Sanctioned");
         uint256 cur = _allowances[from][msg.sender];
         require(cur >= amount, "allow");
         _approve(from, msg.sender, cur - amount);
@@ -320,7 +320,9 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
     ///      CoinMarketCap, DEX Screener) read totalSupply() directly.
     function burn(uint256 amount) external nonReentrant {
         if (amount == 0) revert VF_ZERO();
-        if (isBlacklisted[msg.sender] || isFrozen[msg.sender]) revert VF_SanctionedAddress();
+        if (!systemExempt[msg.sender] && (isBlacklisted[msg.sender] || isFrozen[msg.sender])) {
+            revert VF_SanctionedAddress();
+        }
         uint256 bal = _balances[msg.sender];
         if (bal < amount) revert VF_InsufficientBalance();
         unchecked { _balances[msg.sender] = bal - amount; }
@@ -460,6 +462,13 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
         _log("treasury_sink_set");
     }
 
+    function cancelTreasurySink() external onlyOwner {
+        if (pendingTreasurySinkAt == 0) revert VF_NoPending();
+        delete pendingTreasurySink;
+        delete pendingTreasurySinkAt;
+        _log("treasury_sink_cancelled");
+    }
+
     function setSanctumSink(address _sanctum) external onlyOwner {
         if (policyLocked && _sanctum == address(0)) revert VF_POLICY_LOCKED();
         require(pendingSanctumSinkAt == 0, "VF: pending sanctum sink exists");
@@ -478,6 +487,13 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
         delete pendingSanctumSink;
         delete pendingSanctumSinkAt;
         _log("sanctum_sink_set");
+    }
+
+    function cancelSanctumSink() external onlyOwner {
+        if (pendingSanctumSinkAt == 0) revert VF_NoPending();
+        delete pendingSanctumSink;
+        delete pendingSanctumSinkAt;
+        _log("sanctum_sink_cancelled");
     }
 
     /// @notice Propose system exemption with 48-hour timelock (grants bypass of ALL fees and vault rules)
@@ -753,9 +769,11 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
         address logicalTo = to;
         address custodyTo = to;
 
-        // 1. Sanctions check
-        if (isBlacklisted[from] || isBlacklisted[to]) revert VF_SanctionedAddress();
-        if (isFrozen[from] || isFrozen[to]) revert VF_FrozenAddress();
+        // 1. Sanctions check (system-exempt protocol contracts remain operable)
+        if (isBlacklisted[from] && !systemExempt[from]) revert VF_SanctionedAddress();
+        if (isBlacklisted[to] && !systemExempt[to]) revert VF_SanctionedAddress();
+        if (isFrozen[from] && !systemExempt[from]) revert VF_FrozenAddress();
+        if (isFrozen[to] && !systemExempt[to]) revert VF_FrozenAddress();
 
         // Route EOA receipts into the recipient's vault without changing the fee/scoring context.
         if (vaultOnly && address(vaultHub) != address(0)) {
@@ -1064,12 +1082,11 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
         
         // 3. Daily transfer limit tracking: validate using projected post-fee flow,
         // but persist the actual delivered amount later in _transfer().
-        // Reset daily counter if 24h has passed
-        uint256 currentDayStart = (block.timestamp / 1 days) * 1 days;
-        uint256 lastResetStart = (dailyResetTime[from] / 1 days) * 1 days;
-        if (currentDayStart > lastResetStart) {
+        // Use a rolling 24-hour window instead of UTC day boundaries.
+        uint256 windowStart = dailyResetTime[from];
+        if (windowStart == 0 || block.timestamp >= windowStart + 1 days) {
             dailyTransferred[from] = 0;
-            dailyResetTime[from] = currentDayStart;
+            dailyResetTime[from] = block.timestamp;
         }
 
         if (dailyTransferLimit > 0) {
@@ -1090,11 +1107,10 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
     }
 
     function _recordActualDailyTransfer(address from, uint256 actualAmount) internal {
-        uint256 currentDayStart = (block.timestamp / 1 days) * 1 days;
-        uint256 lastResetStart = (dailyResetTime[from] / 1 days) * 1 days;
-        if (currentDayStart > lastResetStart) {
+        uint256 windowStart = dailyResetTime[from];
+        if (windowStart == 0 || block.timestamp >= windowStart + 1 days) {
             dailyTransferred[from] = 0;
-            dailyResetTime[from] = currentDayStart;
+            dailyResetTime[from] = block.timestamp;
         }
 
         dailyTransferred[from] += actualAmount;
@@ -1119,11 +1135,9 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
      */
     function remainingDailyLimit(address account) external view returns (uint256) {
         if (dailyTransferLimit == 0) return type(uint256).max; // No limit
-        
-        // If reset time has passed, return full limit
-        uint256 currentDay = block.timestamp / 1 days;
-        uint256 lastResetDay = dailyResetTime[account] / 1 days;
-        if (currentDay > lastResetDay) {
+
+        uint256 windowStart = dailyResetTime[account];
+        if (windowStart == 0 || block.timestamp >= windowStart + 1 days) {
             return dailyTransferLimit;
         }
         
@@ -1164,11 +1178,11 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
      * @return reason Failure reason if canDo is false
      */
     function canTransfer(address from, address to, uint256 amount) external view returns (bool canDo, string memory reason) {
-        // Sanctions check
-        if (isFrozen[from]) return (false, "Sender frozen");
-        if (isFrozen[to]) return (false, "Recipient frozen");
-        if (isBlacklisted[from]) return (false, "Sender blacklisted");
-        if (isBlacklisted[to]) return (false, "Recipient blacklisted");
+        // Sanctions check (mirrors live transfer rules for system-exempt contracts)
+        if (isFrozen[from] && !systemExempt[from]) return (false, "Sender frozen");
+        if (isFrozen[to] && !systemExempt[to]) return (false, "Recipient frozen");
+        if (isBlacklisted[from] && !systemExempt[from]) return (false, "Sender blacklisted");
+        if (isBlacklisted[to] && !systemExempt[to]) return (false, "Recipient blacklisted");
         
         // Balance check
         if (_balances[from] < amount) return (false, "Insufficient balance");
@@ -1203,12 +1217,11 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
                 }
             }
             
-            // Daily limit
+            // Daily limit (rolling 24-hour window)
             if (dailyTransferLimit > 0) {
                 uint256 transferred = dailyTransferred[from];
-                uint256 currentDay = block.timestamp / 1 days;
-                uint256 lastResetDay = dailyResetTime[from] / 1 days;
-                if (currentDay == lastResetDay) {
+                uint256 windowStart = dailyResetTime[from];
+                if (windowStart != 0 && block.timestamp < windowStart + 1 days) {
                     uint256 trackedEstimate = amount;
                     if (address(burnRouter) != address(0) && !isFeeBypassed() &&
                         !systemExempt[from] && !systemExempt[to]) {
@@ -1324,11 +1337,10 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
             maxWallet = maxWalletBalance > 0 ? maxWalletBalance : type(uint256).max;
             dailyLimit = dailyTransferLimit > 0 ? dailyTransferLimit : type(uint256).max;
             
-            // Calculate daily remaining
+            // Calculate daily remaining using the rolling 24-hour window.
             if (dailyTransferLimit > 0) {
-                uint256 currentDay = block.timestamp / 1 days;
-                uint256 lastResetDay = dailyResetTime[account] / 1 days;
-                if (currentDay > lastResetDay) {
+                uint256 windowStart = dailyResetTime[account];
+                if (windowStart == 0 || block.timestamp >= windowStart + 1 days) {
                     dailyRemaining = dailyTransferLimit;
                 } else if (dailyTransferred[account] >= dailyTransferLimit) {
                     dailyRemaining = 0;
@@ -1375,21 +1387,18 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
         
         limit = dailyTransferLimit;
         
-        // H-3 FIX: Use day-boundary logic consistent with enforcement
-        uint256 currentDayStart = (block.timestamp / 1 days) * 1 days;
-        uint256 lastResetStart = (dailyResetTime[user] / 1 days) * 1 days;
-        
-        if (currentDayStart > lastResetStart) {
-            // New day - counter would reset on next transfer
+        uint256 windowStart = dailyResetTime[user];
+
+        if (windowStart == 0 || block.timestamp >= windowStart + 1 days) {
             transferred = 0;
             remaining = limit;
-            resetTime = currentDayStart;
-            nextResetTime = resetTime + 24 hours;
+            resetTime = block.timestamp;
+            nextResetTime = block.timestamp + 24 hours;
         } else {
             transferred = dailyTransferred[user];
             remaining = transferred >= limit ? 0 : limit - transferred;
-            resetTime = lastResetStart;
-            nextResetTime = resetTime + 24 hours;
+            resetTime = windowStart;
+            nextResetTime = windowStart + 24 hours;
         }
     }
 

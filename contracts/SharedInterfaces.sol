@@ -178,7 +178,11 @@ interface IVFIDEToken is IERC20 {
     function applyBurnRouter() external;
     function cancelBurnRouter() external;
     function setTreasurySink(address treasury) external;
+    function applyTreasurySink() external;
+    function cancelTreasurySink() external;
     function setSanctumSink(address sanctum) external;
+    function applySanctumSink() external;
+    function cancelSanctumSink() external;
     function proposeSystemExempt(address who, bool isExempt) external;
     function cancelPendingExempt() external;
     function confirmSystemExempt() external;
@@ -303,21 +307,49 @@ interface IPanicGuard {
 abstract contract Ownable {
     event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
     event OwnershipTransferStarted(address indexed previousOwner, address indexed newOwner);
-    
+    event EmergencyControllerSet(address indexed previousController, address indexed newController);
+
     address public owner;
     address public pendingOwner;
-    uint64  public ownershipTransferDeadline;    
-    constructor() { owner = msg.sender; emit OwnershipTransferred(address(0), msg.sender); }
+    address public emergencyController;
+    uint64  public ownershipTransferDeadline;
+
+    constructor() {
+        owner = msg.sender;
+        emit OwnershipTransferred(address(0), msg.sender);
+    }
+
     modifier onlyOwner() { _checkOwner(); _; }
-    function _checkOwner() internal view { require(msg.sender == owner, "OWN: not owner"); }
-    
+
+    function _checkOwner() internal view {
+        require(msg.sender == owner, "OWN: not owner");
+    }
+
+    /// @notice Register or rotate the emergency controller that may atomically recover ownership.
+    /// @dev Single-step by design for halted-system recovery only.
+    function setEmergencyController(address controller) external onlyOwner {
+        emit EmergencyControllerSet(emergencyController, controller);
+        emergencyController = controller;
+    }
+
     /// @notice Start two-step ownership transfer
     function transferOwnership(address newOwner) external onlyOwner {
         require(newOwner != address(0), "OWN: zero");
         pendingOwner = newOwner;
-        ownershipTransferDeadline = uint64(block.timestamp + 7 days);        emit OwnershipTransferStarted(owner, newOwner);
+        ownershipTransferDeadline = uint64(block.timestamp + 7 days);
+        emit OwnershipTransferStarted(owner, newOwner);
     }
-    
+
+    /// @notice Emergency-only ownership recovery path for a registered controller.
+    function emergencyTransferOwnership(address newOwner) external {
+        require(msg.sender == emergencyController, "OWN: not emergency controller");
+        require(newOwner != address(0), "OWN: zero");
+        emit OwnershipTransferred(owner, newOwner);
+        owner = newOwner;
+        pendingOwner = address(0);
+        ownershipTransferDeadline = 0;
+    }
+
     /// @notice Complete ownership transfer (must be called by pending owner)
     function acceptOwnership() external {
         require(msg.sender == pendingOwner, "OWN: not pending owner");
@@ -327,7 +359,7 @@ abstract contract Ownable {
         pendingOwner = address(0);
         ownershipTransferDeadline = 0;
     }
-    
+
     /// @notice Cancel pending ownership transfer
     function cancelOwnershipTransfer() external onlyOwner {
         pendingOwner = address(0);

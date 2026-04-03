@@ -34,6 +34,7 @@ contract CardBoundVault is ReentrancyGuard {
 
     uint64 public constant MIN_ROTATION_DELAY = 10 minutes;
     uint64 public constant MAX_ROTATION_DELAY = 7 days;
+    uint8 public constant MAX_GUARDIANS = 20;
 
     address public immutable hub;
     address public immutable vfideToken;
@@ -177,7 +178,7 @@ contract CardBoundVault is ReentrancyGuard {
             revert CBV_Zero();
         }
 
-        if (_guardians.length == 0) revert CBV_InvalidThreshold();
+        if (_guardians.length == 0 || _guardians.length > MAX_GUARDIANS) revert CBV_InvalidThreshold();
         if (_guardianThreshold == 0 || _guardianThreshold > _guardians.length) revert CBV_InvalidThreshold();
         if (_maxPerTransfer == 0 || _dailyTransferLimit == 0 || _maxPerTransfer > _dailyTransferLimit) {
             revert CBV_TransferLimit();
@@ -255,6 +256,7 @@ contract CardBoundVault is ReentrancyGuard {
 
         isGuardian[guardian] = active;
         if (active) {
+            if (guardianCount >= MAX_GUARDIANS) revert CBV_InvalidThreshold();
             guardianCount++;
         } else {
             guardianCount--;

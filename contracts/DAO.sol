@@ -119,6 +119,7 @@ contract DAO is ReentrancyGuard {
         mapping(address => uint256) scoreSnapshot;
     }
     uint256 public proposalCount;
+    uint256 public activeProposalCount;
     mapping(uint256 => Proposal) public proposals;
     
     //           so identical proposals can be re-submitted after the cooldown window elapses.
@@ -232,14 +233,8 @@ contract DAO is ReentrancyGuard {
         require(emergencyApprover != address(0), "DAO: emergency approver not set");
         require(msg.sender == admin || msg.sender == emergencyApprover, "DAO: not authorized");
         require(emergencyRescueInitiator != address(0), "DAO: no initiator");
-        // If emergencyApprover is a contract (e.g., timelock), it may not be able to
-        // call this function directly. In that bootstrap mode, allow admin self-approval
-        // so emergency recovery remains live.
-        bool approverIsContract = emergencyApprover.code.length > 0;
-        if (!approverIsContract) {
-            require(msg.sender != emergencyRescueInitiator, "DAO: initiator cannot self-approve");
-        }
-        
+        require(msg.sender != emergencyRescueInitiator, "DAO: initiator cannot self-approve");
+
         emergencyRescueApproved = true;
         emit EmergencyQuorumRescueApproved();
     }
@@ -300,13 +295,8 @@ contract DAO is ReentrancyGuard {
         require(emergencyApprover != address(0), "DAO: emergency approver not set");
         require(msg.sender == admin || msg.sender == emergencyApprover, "DAO: not authorized");
         require(emergencyTimelockInitiator != address(0), "DAO: no initiator");
-        // Keep two-party approval for EOA approvers. Allow admin self-approval only
-        // when approver is a contract to avoid emergency deadlock during bootstrap.
-        bool approverIsContract = emergencyApprover.code.length > 0;
-        if (!approverIsContract) {
-            require(msg.sender != emergencyTimelockInitiator, "DAO: initiator cannot self-approve");
-        }
-        
+        require(msg.sender != emergencyTimelockInitiator, "DAO: initiator cannot self-approve");
+
         emergencyTimelockApproved = true;
         emit EmergencyTimelockReplacementApproved();
     }
@@ -437,9 +427,11 @@ contract DAO is ReentrancyGuard {
 
         lastProposalAt[msg.sender] = uint64(block.timestamp);
         
-        // DAO-10 FIX: Cap total proposals to prevent unbounded array iteration
-        require(proposalCount < MAX_PROPOSALS, "DAO: proposal cap reached");
+        // Cap concurrently active proposals instead of the historical ID counter so
+        // withdrawn/finalized proposals cannot permanently brick governance capacity.
+        require(activeProposalCount < MAX_PROPOSALS, "DAO: proposal cap reached");
         id=++proposalCount;
+        activeProposalCount += 1;
         Proposal storage p=proposals[id];
         p.proposer=msg.sender; p.proposalType=ptype; p.target=target; p.value=value; p.data=data; p.description=description;
         p.createdAt = uint64(block.timestamp);
@@ -562,7 +554,11 @@ contract DAO is ReentrancyGuard {
         // FLOW-2 FIX: Also require minimum number of unique voters
         bool qmet = total >= minVotesRequired && p.voterCount >= minParticipation; 
         bool passed = qmet && p.forVotes > p.againstVotes;
-        
+
+        if (activeProposalCount > 0) {
+            activeProposalCount -= 1;
+        }
+
         emit Finalized(id,passed);
         if (passed){
             p.queued=true;
@@ -607,6 +603,10 @@ contract DAO is ReentrancyGuard {
         // Must match the proposer-scoped hash used in propose()
         bytes32 proposalHash = keccak256(abi.encode(msg.sender, p.target, p.value, p.data));
         withdrawnProposalHashes[proposalHash] = uint64(block.timestamp);
+
+        if (activeProposalCount > 0) {
+            activeProposalCount -= 1;
+        }
 
         // Reset scalar fields instead of deleting the struct, which contains mappings.
         p.proposer = address(0);

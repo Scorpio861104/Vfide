@@ -291,6 +291,21 @@ describe("VFIDEToken", () => {
         /revert/
       );
     });
+
+    it("owner can cancel pending treasury and sanctum sink updates", async () => {
+      const { token, owner } = await deployToken();
+
+      await token.connect(owner).setTreasurySink(owner.address);
+      await token.connect(owner).setSanctumSink(owner.address);
+      await token.connect(owner).cancelTreasurySink();
+      await token.connect(owner).cancelSanctumSink();
+
+      assert.equal(await token.pendingTreasurySinkAt(), 0n);
+      assert.equal(await token.pendingSanctumSinkAt(), 0n);
+
+      await assert.rejects(() => token.connect(owner).applyTreasurySink(), /revert/);
+      await assert.rejects(() => token.connect(owner).applySanctumSink(), /revert/);
+    });
   });
 
   describe("transfer preview", () => {
@@ -400,6 +415,35 @@ describe("VFIDEToken", () => {
 
       await token.connect(owner).transfer(user1.address, amount);
       assert.equal(await token.dailyTransferred(owner.address), expectedNet);
+    });
+
+    it("enforces the daily limit across UTC boundaries until 24 hours have elapsed", async () => {
+      const { token, owner, user1, ethers } = await deployToken();
+
+      await token.connect(owner).setWhaleLimitExempt(owner.address, false);
+      await token.connect(owner).setAntiWhale(
+        2_000_000n * 10n ** 18n,
+        4_000_000n * 10n ** 18n,
+        500_000n * 10n ** 18n,
+        0n,
+      );
+
+      const amount = 500_000n * 10n ** 18n;
+      const latest = await ethers.provider.getBlock("latest");
+      const now = BigInt(latest.timestamp);
+      const nextMidnight = ((now / 86400n) + 1n) * 86400n;
+
+      await ethers.provider.send("evm_setNextBlockTimestamp", [Number(nextMidnight - 1n)]);
+      await ethers.provider.send("evm_mine", []);
+      await token.connect(owner).transfer(user1.address, amount);
+
+      await ethers.provider.send("evm_setNextBlockTimestamp", [Number(nextMidnight + 1n)]);
+      await ethers.provider.send("evm_mine", []);
+
+      await assert.rejects(
+        () => token.connect(owner).transfer(user1.address, 1n),
+        /VF_DailyLimitExceeded|revert/
+      );
     });
   });
 });

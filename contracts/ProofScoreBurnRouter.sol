@@ -120,6 +120,7 @@ contract ProofScoreBurnRouter is Ownable, Pausable, ReentrancyGuard {
     mapping(address => ScoreSnapshot[]) public scoreHistory;
     uint64 public constant SCORE_WINDOW = 7 days; // 7-day time-weighted average
     uint256 public constant MAX_SCORE_SNAPSHOTS = 32; // Hard cap to bound score-history iteration gas
+    uint64 public constant MIN_SCORE_UPDATE_INTERVAL = 1 hours;
     mapping(address => uint64) public lastScoreUpdate;
     mapping(address => uint64) public scoreHistoryLatestTs;
     mapping(address => uint256) public scoreHistoryHead;
@@ -320,9 +321,14 @@ contract ProofScoreBurnRouter is Ownable, Pausable, ReentrancyGuard {
         // prevents the owner from injecting arbitrary score snapshots to manipulate fees.
         require(msg.sender == address(seer), "only seer");
         
-        uint16 currentScore = seer.getScore(user);
         uint64 now_ = uint64(block.timestamp);
-        
+        uint64 lastUpdate = lastScoreUpdate[user];
+        if (lastUpdate != 0 && now_ < lastUpdate + MIN_SCORE_UPDATE_INTERVAL) {
+            return;
+        }
+
+        uint16 currentScore = seer.getScore(user);
+
         ScoreSnapshot memory snap = ScoreSnapshot({
             score: currentScore,
             timestamp: now_

@@ -324,6 +324,12 @@ contract EmergencyControl is ReentrancyGuard {
         // System must be halted first
         require(breaker.halted(), "EC: system must be halted");
 
+        try Ownable(target).emergencyController() returns (address controller) {
+            require(controller == address(this), "EC: target not recovery-enabled");
+        } catch {
+            revert("EC: target not recovery-enabled");
+        }
+
         id = keccak256(abi.encode(target, newOwner, epoch));
         require(recoveryProposals[id].target == address(0), "EC: already proposed");
 
@@ -374,8 +380,8 @@ contract EmergencyControl is ReentrancyGuard {
 
         p.executed = true;
 
-        // Transfer ownership of target contract
-        Ownable(p.target).transferOwnership(p.newOwner);
+        // Transfer ownership of target contract through the emergency-only recovery hook.
+        Ownable(p.target).emergencyTransferOwnership(p.newOwner);
 
         emit RecoveryExecuted(id, p.target, p.newOwner);
         _log("recovery_executed");

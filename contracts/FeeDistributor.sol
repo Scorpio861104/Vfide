@@ -81,6 +81,7 @@ contract FeeDistributor is AccessControl, ReentrancyGuard, Pausable {
 
     event FeeReceived(uint256 amount);
     event FeeDistributed(uint256 total, uint256 burned, uint256 sanctum, uint256 dao, uint256 merchants, uint256 headhunters);
+    event BurnFallbackTransfer(uint256 amount, address indexed burnAddress);
     event SplitChangeProposed(uint256 burn, uint256 sanctum, uint256 dao, uint256 merchants, uint256 headhunters, uint256 effectiveTime);
     event SplitChangeExecuted();
     event SplitChangeCancelled();
@@ -92,6 +93,7 @@ contract FeeDistributor is AccessControl, ReentrancyGuard, Pausable {
     error ZeroAddress();
     error InvalidSplit();
     error BurnTooLow();
+    error NotAuthorized();
     error SingleSinkTooHigh();
     error BelowMinimum();
     error SplitChangeNotReady();
@@ -133,6 +135,7 @@ contract FeeDistributor is AccessControl, ReentrancyGuard, Pausable {
 
     /// @notice Receive fee tokens from VFIDEToken._transfer().
     function receiveFee(uint256 amount) external {
+        if (msg.sender != address(vfideToken) && !hasRole(ADMIN_ROLE, msg.sender)) revert NotAuthorized();
         totalReceived += amount;
         emit FeeReceived(amount);
     }
@@ -148,14 +151,23 @@ contract FeeDistributor is AccessControl, ReentrancyGuard, Pausable {
         uint256 toMerchants = (balance * feeSplit.merchantPoolBps) / MAX_BPS;
         uint256 toHeadhunters = balance - toBurn - toSanctum - toDAO - toMerchants;
 
-        if (toBurn > 0) { vfideToken.burn(toBurn); totalBurned += toBurn; }
+        uint256 burnedThisRun = 0;
+        if (toBurn > 0) {
+            try vfideToken.burn(toBurn) {
+                totalBurned += toBurn;
+                burnedThisRun = toBurn;
+            } catch {
+                IERC20(address(vfideToken)).safeTransfer(burnAddress, toBurn);
+                emit BurnFallbackTransfer(toBurn, burnAddress);
+            }
+        }
         if (toSanctum > 0) { IERC20(address(vfideToken)).safeTransfer(sanctumFund, toSanctum); totalToSanctum += toSanctum; }
         if (toDAO > 0) { IERC20(address(vfideToken)).safeTransfer(daoPayrollPool, toDAO); totalToDAO += toDAO; }
         if (toMerchants > 0) { IERC20(address(vfideToken)).safeTransfer(merchantPool, toMerchants); totalToMerchants += toMerchants; }
         if (toHeadhunters > 0) { IERC20(address(vfideToken)).safeTransfer(headhunterPool, toHeadhunters); totalToHeadhunters += toHeadhunters; }
 
         totalDistributed += balance;
-        emit FeeDistributed(balance, toBurn, toSanctum, toDAO, toMerchants, toHeadhunters);
+        emit FeeDistributed(balance, burnedThisRun, toSanctum, toDAO, toMerchants, toHeadhunters);
     }
 
     /// @notice Propose a new fee split subject to timelock.

@@ -196,7 +196,7 @@ contract CommerceEscrow {
         spender = address(this);
     }
 
-    function open(address merchantOwner, uint256 amount, bytes32 metaHash) external returns (uint256 id) {
+    function open(address merchantOwner, uint256 amount, bytes32 metaHash) external nonReentrant returns (uint256 id) {
         if (amount == 0) revert COM_BadAmount();
         MerchantRegistry.Merchant memory m = merchants.info(merchantOwner);
         if (m.status == MerchantRegistry.Status.NONE) revert COM_NotMerchant();

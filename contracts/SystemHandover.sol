@@ -21,6 +21,7 @@ event LedgerLogFailed(address indexed source, string action);
 // ReentrancyGuard intentionally omitted: handover transitions update admin pointers and emit logs only.
 contract SystemHandover {
     event Armed(uint64 start, uint64 handoverAt);
+    event Disarmed(uint64 previousStart, uint64 previousHandoverAt);
     event ParamsSet(uint64 monthsDelay, uint16 minAvgCouncilScore, uint8 maxExtensions, uint64 extensionSpan);
     event Executed(address dao, address timelock, address newAdmin, uint8 extensionsUsed);
     event LedgerSet(address ledger);
@@ -72,6 +73,19 @@ contract SystemHandover {
         handoverAt = start + monthsDelay;
         emit Armed(start,handoverAt);
         _log("handover_armed");
+    }
+
+    /// @notice Abort a previously armed handover countdown before execution.
+    function disarm() external onlyDev {
+        if (handoverExecuted) revert SH_AlreadyExecuted();
+        if (start == 0) revert SH_NotArmed();
+        uint64 previousStart = start;
+        uint64 previousHandoverAt = handoverAt;
+        start = 0;
+        handoverAt = 0;
+        extensionsUsed = 0;
+        emit Disarmed(previousStart, previousHandoverAt);
+        _log("handover_disarmed");
     }
 
     function setParams(uint64 _monthsDelay, uint16 _minAvg, uint8 _maxExt, uint64 _extSpan) external onlyDev {

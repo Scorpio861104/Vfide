@@ -18,6 +18,23 @@ contract MockERC20 is ERC20 {
     }
 }
 
+contract MockRevertingBurnERC20 is ERC20 {
+    bool public revertBurn;
+
+    constructor(string memory name, string memory symbol, uint256 initialSupply) ERC20(name, symbol) {
+        _mint(msg.sender, initialSupply);
+    }
+
+    function setRevertBurn(bool value) external {
+        revertBurn = value;
+    }
+
+    function burn(uint256 amount) external {
+        require(!revertBurn, "burn disabled");
+        _burn(msg.sender, amount);
+    }
+}
+
 /// @title MockNonStandardERC20 - Token that doesn't return bool on transfer
 /// Used to test SafeERC20 usage (finding C-01, C-02)
 contract MockNonStandardERC20 {

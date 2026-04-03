@@ -299,19 +299,16 @@ describe("DAO (F-21: emergency quorum rescue 10% floor)", () => {
     );
   });
 
-  it("allows rescue self-approval when the emergency approver is a contract", async () => {
-    const { ethers, dao, admin, timelock } = await deployDAOWithoutApprover();
+  it("rejects rescue self-approval even when the emergency approver is a contract", async () => {
+    const { dao, admin, timelock } = await deployDAOWithoutApprover();
 
     assert.equal(await dao.emergencyApprover(), await timelock.getAddress());
 
     await dao.connect(admin).initiateEmergencyQuorumRescue();
-    await dao.connect(admin).approveEmergencyQuorumRescue();
-
-    await ethers.provider.send("evm_increaseTime", [14 * 24 * 60 * 60]);
-    await ethers.provider.send("evm_mine", []);
-
-    await dao.connect(admin).executeEmergencyQuorumRescue(500n, 3n);
-    assert.equal(await dao.minVotesRequired(), 500n);
+    await assert.rejects(
+      () => dao.connect(admin).approveEmergencyQuorumRescue(),
+      /initiator cannot self-approve/
+    );
   });
 
   it("initializes emergency approver to timelock at deployment", async () => {
@@ -320,6 +317,27 @@ describe("DAO (F-21: emergency quorum rescue 10% floor)", () => {
 
     assert.equal(await dao.emergencyApprover(), timelockAddr);
     await dao.connect(admin).initiateEmergencyQuorumRescue();
+  });
+
+  it("counts only active proposals toward the cap", async () => {
+    const { ethers, dao, admin, seer, hub, timelock } = await deployDAO();
+
+    await hub.setVault(admin.address, admin.address);
+    await seer.setScore(admin.address, 5000);
+
+    await dao.connect(admin).propose(0, await timelock.getAddress(), 0n, "0x", "first-proposal");
+    assert.equal(await dao.proposalCount(), 1n);
+    assert.equal(await dao.activeProposalCount(), 1n);
+
+    await dao.connect(admin).withdrawProposal(1n);
+    assert.equal(await dao.activeProposalCount(), 0n);
+
+    await ethers.provider.send("evm_increaseTime", [60 * 60 + 1]);
+    await ethers.provider.send("evm_mine", []);
+
+    await dao.connect(admin).propose(0, await timelock.getAddress(), 0n, "0x01", "second-proposal");
+    assert.equal(await dao.proposalCount(), 2n);
+    assert.equal(await dao.activeProposalCount(), 1n);
   });
 
   it("allows voting when voter activity is established at least SCORE_SETTLEMENT_WINDOW before proposal", async () => {
