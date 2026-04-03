@@ -1,15 +1,22 @@
 'use client';
 
-// Extracted from app/demo/crypto-social/page.tsx — tab 'dashboard'
-// TODO: Move the 'dashboard' tab content here and verify imports
+import { useState } from 'react';
+import { motion } from 'framer-motion';
+
+// Content extracted from original demo/crypto-social page
 
 export function DashboardTab() {
   return (
     <div className="space-y-6">
-      <div className="bg-white/3 border border-white/10 rounded-2xl p-6">
-        <h3 className="text-xl font-bold text-white mb-4">Dashboard</h3>
-        <p className="text-gray-400">Content from CryptoSocialDemo</p>
-      </div>
+      <div>
+    <h2 className="text-2xl font-bold mb-4">Creator Dashboard</h2>
+    <p className="text-gray-600 dark:text-gray-300 mb-6">
+    Comprehensive analytics and earnings management for content creators.
+    Track your revenue, top supporters, and content performance.
+    </p>
+
+    <CreatorDashboard />
+    </div>
     </div>
   );
 }

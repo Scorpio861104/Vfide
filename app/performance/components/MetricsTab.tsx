@@ -1,20 +1,20 @@
 'use client';
 
-import { PerformanceMetricsGrid } from '@/components/performance/PerformanceMetricsGrid';
+import { useState } from 'react';
+import { motion } from 'framer-motion';
 
-interface MetricsTabProps {
-  metrics: any[];
-  isLoading?: boolean;
-}
+// Content extracted from original performance page
 
-export function MetricsTab({ metrics, isLoading = false }: MetricsTabProps) {
+export function MetricsTab() {
   return (
     <div className="space-y-6">
-      <div className="rounded-2xl border border-white/10 bg-white/3 p-6">
-        <h3 className="mb-2 text-xl font-bold text-white">Metrics</h3>
-        <p className="mb-6 text-gray-400">A deeper look at live Core Web Vitals and runtime health.</p>
-        <PerformanceMetricsGrid metrics={metrics} isLoading={isLoading} />
-      </div>
+      <motion.div
+  key="metrics"
+  initial={{ opacity: 0 }}
+  animate={{ opacity: 1 }}
+  >
+  <PerformanceMetricsGrid metrics={metrics} isLoading={isLoading} />
+  </motion.div>
     </div>
   );
 }

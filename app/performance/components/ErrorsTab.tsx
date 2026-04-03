@@ -1,26 +1,25 @@
 'use client';
 
+import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { ErrorTracker } from '@/components/performance/ErrorTracker';
 
-interface ErrorsTabProps {
-  errors: any[];
-  onResolveError: (errorId: string) => void;
-  onClearAll: () => void;
-  onExport: (format: 'json' | 'csv') => void;
-}
+// Content extracted from original performance page
 
-export function ErrorsTab({ errors, onResolveError, onClearAll, onExport }: ErrorsTabProps) {
+export function ErrorsTab() {
   return (
     <div className="space-y-6">
-      <motion.div key="errors" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-        <ErrorTracker
-          errors={errors}
-          onResolveError={onResolveError}
-          onClearAll={onClearAll}
-          onExport={onExport}
-        />
-      </motion.div>
+      <motion.div
+  key="errors"
+  initial={{ opacity: 0 }}
+  animate={{ opacity: 1 }}
+  >
+  <ErrorTracker
+    errors={errors}
+    onResolveError={resolveError}
+    onClearAll={clearErrors}
+    onExport={handleExportErrors}
+  />
+  </motion.div>
     </div>
   );
 }

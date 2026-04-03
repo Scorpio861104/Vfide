@@ -1,160 +1,71 @@
 'use client';
-import { containerVariants, itemVariants } from "@/lib/motion-presets";
 
-import { lazy, Suspense, useState, useMemo } from 'react';
-import { Footer } from "@/components/layout/Footer";
-import { QuickWalletConnect } from "@/components/wallet/QuickWalletConnect";
-import { SEOHead } from "@/components/seo/SEOHead";
-import { PageWrapper } from "@/components/ui/PageLayout";
-import { motion, AnimatePresence } from "framer-motion";
-import { safeParseFloat } from "@/lib/validation";
-import { Wallet, Shield, TrendingUp, CheckCircle2, Copy, ExternalLink, Calculator, Activity, Sliders, Trophy, Sparkles, Zap } from "lucide-react";
-import { useAccount, useChainId } from 'wagmi';
-import { useVaultBalance, useProofScore, useVfidePrice } from "@/lib/vfide-hooks";
-import { getExplorerUrlForChainId } from '@/lib/chains';
-import { useCopyToClipboard } from "@/lib/hooks/useCopyToClipboard";
+import { Footer } from '@/components/layout/Footer';
+import { useState } from 'react';
+import { useAccount } from 'wagmi';
+import { motion } from 'framer-motion';
+import { Home, BarChart3, Award, Calculator, Activity } from 'lucide-react';
+import { ProofScoreRing, ProofScoreTierProgress } from '@/components/proofscore';
+import { FeeSavingsCard } from '@/components/fees';
+import { OnboardingProgressBar } from '@/components/onboarding';
+import { NonCustodialNotice } from '@/components/compliance';
 
-import { StatCard } from './components/shared';
+import { OverviewTab } from './components/OverviewTab';
+import { BadgesTab } from './components/BadgesTab';
+import { ScoreSimulatorTab } from './components/ScoreSimulatorTab';
+import { FeeSimulatorTab } from './components/FeeSimulatorTab';
+import { RecentActivity } from './components/RecentActivity';
 
-// ── Lazy-loaded tabs ────────────────────────────────────────────────────────
-const OverviewTab = lazy(() => import('./components/OverviewTab').then(m => ({ default: m.OverviewTab })));
-const FeeSimulatorTab = lazy(() => import('./components/FeeSimulatorTab').then(m => ({ default: m.FeeSimulatorTab })));
-const ScoreSimulatorTab = lazy(() => import('./components/ScoreSimulatorTab').then(m => ({ default: m.ScoreSimulatorTab })));
-const BadgesTab = lazy(() => import('./components/BadgesTab').then(m => ({ default: m.BadgesTab })));
-
-type TabType = 'overview' | 'fee-simulator' | 'score-simulator' | 'badges';
-
-
-const TAB_CONFIG = [
-  { id: 'overview' as const, label: 'Overview', icon: Activity },
-  { id: 'fee-simulator' as const, label: 'Fee Simulator', icon: Calculator },
-  { id: 'score-simulator' as const, label: 'Score Simulator', icon: Sliders },
-  { id: 'badges' as const, label: 'Badges', icon: Trophy },
+const tabs = [
+  { id: 'overview', label: 'Overview', icon: Home },
+  { id: 'badges', label: 'Badges', icon: Award },
+  { id: 'score', label: 'Score Sim', icon: Calculator },
+  { id: 'fees', label: 'Fee Sim', icon: BarChart3 },
+  { id: 'activity', label: 'Activity', icon: Activity },
 ] as const;
-
-function TabSkeleton() {
-  return <div className="animate-pulse space-y-4"><div className="h-8 bg-white/5 rounded-lg w-1/3" /><div className="h-48 bg-white/5 rounded-2xl" /></div>;
-}
+type TabId = typeof tabs[number]['id'];
 
 export default function DashboardPage() {
-  const { address, isConnected } = useAccount();
-  const chainId = useChainId();
-  const explorerUrl = getExplorerUrlForChainId(chainId);
-  const { copied: copiedAddress, copy } = useCopyToClipboard();
-  const [activeTab, setActiveTab] = useState<TabType>('overview');
-
-  const { balance: vaultBalanceRaw, isLoading: vaultLoading } = useVaultBalance();
-  const { score: proofscore, tier, isLoading: scoreLoading } = useProofScore(address);
-  const { priceUsd: liveVfidePrice, isLoading: priceLoading } = useVfidePrice();
-
-  const walletAddress = address || "";
-  const walletBalance = vaultLoading ? "Loading..." : vaultBalanceRaw;
-  const balanceValue = safeParseFloat(vaultBalanceRaw, 0);
-  const usdValue = vaultLoading || priceLoading ? "..." : (balanceValue * liveVfidePrice).toFixed(2);
-
-  const currentFeeRate = useMemo(() => {
-    if (proofscore <= 4000) return 5.00;
-    if (proofscore >= 8000) return 0.25;
-    return 5.00 - ((proofscore - 4000) * 4.75 / 4000);
-  }, [proofscore]);
-
-  if (!isConnected) {
-    return (
-      <>
-        <SEOHead title="Dashboard" description="Manage your VFIDE vault, view your ProofScore, and track your transactions." keywords="dashboard, vault, ProofScore, crypto wallet" canonicalUrl="https://vfide.io/dashboard" />
-        <div className="min-h-screen bg-zinc-950 pt-20 flex items-center justify-center relative overflow-hidden">
-          <div className="absolute inset-0 overflow-hidden">
-            <div className="absolute top-1/4 left-1/4 w-150 h-150 bg-cyan-500/10 rounded-full blur-[120px] animate-pulse" />
-            <div className="absolute bottom-1/4 right-1/4 w-100 h-100 bg-purple-500/10 rounded-full blur-[100px] animate-pulse" style={{ animationDelay: '1s' }} />
-          </div>
-          <motion.div initial={{ opacity: 1, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center px-4 relative z-10">
-            <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", stiffness: 200, delay: 0.2 }} className="w-24 h-24 mx-auto mb-8 rounded-3xl bg-gradient-to-br from-cyan-500/20 to-purple-500/20 border border-white/10 flex items-center justify-center backdrop-blur-xl">
-              <Wallet className="text-cyan-400" size={48} />
-            </motion.div>
-            <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-4">Connect Your Wallet</h1>
-            <p className="text-white/60 mb-8 max-w-md text-lg">Connect your wallet to access your dashboard, view your ProofScore, and explore the ecosystem.</p>
-            <QuickWalletConnect size="lg" />
-          </motion.div>
-        </div>
-        <Footer />
-      </>
-    );
-  }
+  const [activeTab, setActiveTab] = useState<TabId>('overview');
+  const { isConnected } = useAccount();
+  const proofScore = 4500;
+  const totalVolume = 3200;
+  const txCount = 87;
 
   return (
     <>
-      <PageWrapper variant="cosmic" showOrbs showGrid>
-        <div className="pt-20 pb-20">
-          <div className="fixed inset-0 overflow-hidden pointer-events-none">
-            <div className="absolute top-0 left-1/4 w-150 h-150 bg-cyan-400/5 rounded-full blur-[120px]" />
-            <div className="absolute bottom-1/4 right-0 w-125 h-125 bg-purple-500/5 rounded-full blur-[100px]" />
+      <OnboardingProgressBar />
+      <div className="min-h-screen bg-zinc-950 pt-20">
+        <div className="container mx-auto px-4 max-w-6xl py-8">
+          <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
+            className="text-4xl font-bold text-white mb-8">Dashboard</motion.h1>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            <div className="bg-white/3 border border-white/10 rounded-2xl p-6 flex flex-col items-center">
+              <ProofScoreRing score={proofScore} size={160} />
+              <div className="w-full mt-4"><ProofScoreTierProgress score={proofScore} /></div>
+            </div>
+            <FeeSavingsCard totalVolume={totalVolume} transactionCount={txCount} buyerFeeBps={50} />
           </div>
 
-          {/* Header */}
-          <section data-onboarding="dashboard" className="relative py-8 border-b border-white/5">
-            <div className="container mx-auto px-3 sm:px-4">
-              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 mb-8">
-                <div>
-                  <h1 className="text-3xl md:text-4xl font-bold text-white mb-3 flex items-center gap-3">
-                    Dashboard <motion.span animate={{ rotate: [0, 10, -10, 0] }} transition={{ duration: 2, repeat: Infinity, repeatDelay: 5 }}><Sparkles className="text-amber-400" size={28} /></motion.span>
-                  </h1>
-                  <p className="text-white/60 max-w-2xl text-sm sm:text-base mb-4">Your VFIDE command center for vaults, ProofScore, and governance.</p>
-                  <div className="flex items-center gap-3 flex-wrap">
-                    <motion.div whileHover={{ scale: 1.02 }} className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-full px-3 sm:px-4 py-2 flex items-center gap-2 sm:gap-3 max-w-full">
-                      <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
-                      <span className="text-white font-mono text-xs sm:text-sm truncate">{walletAddress.slice(0, 6)}...{walletAddress.slice(-4)}</span>
-                      <button onClick={() => copy(walletAddress)} className="p-1 hover:bg-white/10 rounded-lg transition-colors">
-                        <AnimatePresence mode="wait">{copiedAddress ? <motion.div key="c" initial={{ scale: 0 }} animate={{ scale: 1 }}><CheckCircle2 className="text-emerald-400" size={14} /></motion.div> : <motion.div key="d" initial={{ scale: 0 }} animate={{ scale: 1 }}><Copy className="text-white/60" size={14} /></motion.div>}</AnimatePresence>
-                      </button>
-                      <a href={`${explorerUrl}/address/${walletAddress}`} target="_blank" rel="noopener noreferrer" className="p-1 hover:bg-white/10 rounded-lg transition-colors"><ExternalLink className="text-white/60" size={14} /></a>
-                    </motion.div>
-                    <motion.div whileHover={{ scale: 1.05 }} data-onboarding="proof-score" className="px-4 py-2 bg-gradient-to-r from-cyan-500/20 to-cyan-500/5 border border-cyan-500/30 rounded-full">
-                      <span className="text-cyan-400 font-bold text-sm flex items-center gap-2"><Zap size={14} /> ProofScore {proofscore}</span>
-                    </motion.div>
-                    <motion.div whileHover={{ scale: 1.05 }} className="px-4 py-2 bg-gradient-to-r from-emerald-500/20 to-emerald-500/5 border border-emerald-500/30 rounded-full">
-                      <span className="text-emerald-400 font-bold text-sm">{currentFeeRate.toFixed(2)}% fee</span>
-                    </motion.div>
-                  </div>
-                </div>
-                <QuickWalletConnect />
-              </motion.div>
+          <NonCustodialNotice className="mb-6" />
 
-              <motion.div variants={containerVariants} initial="hidden" animate="show" className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                <motion.div variants={itemVariants}><StatCard icon={Wallet} label="Wallet Balance" value={walletBalance} subValue={`≈ $${usdValue}`} color="cyan" loading={vaultLoading} /></motion.div>
-                <motion.div variants={itemVariants}><StatCard icon={Shield} label="Vault" value={vaultBalanceRaw} subValue="Manage →" color="green" href="/vault" loading={vaultLoading} /></motion.div>
-                <motion.div variants={itemVariants}><StatCard icon={TrendingUp} label="ProofScore" value={proofscore} subValue={`${tier || 'NEUTRAL'} tier`} color="gold" loading={scoreLoading} /></motion.div>
-                <motion.div variants={itemVariants}><StatCard icon={Calculator} label="Fee Rate" value={`${currentFeeRate.toFixed(2)}%`} subValue="On transfers" color="purple" /></motion.div>
-              </motion.div>
-            </div>
-          </section>
-
-          {/* Tab Nav */}
-          <section className="sticky top-20 z-40 bg-zinc-950/80 backdrop-blur-xl border-b border-white/5">
-            <div className="container mx-auto px-3 sm:px-4">
-              <div className="flex gap-1 overflow-x-auto py-3 scrollbar-hide" role="tablist">
-                {TAB_CONFIG.map(tab => (
-                  <motion.button key={tab.id} role="tab" aria-selected={activeTab === tab.id} onClick={() => setActiveTab(tab.id)} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
-                    className={`px-5 py-3 rounded-xl font-semibold transition-all whitespace-nowrap flex items-center gap-2 ${activeTab === tab.id ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-lg shadow-cyan-500/25' : 'bg-transparent text-white/60 hover:text-white hover:bg-white/5'}`}>
-                    <tab.icon size={18} /> {tab.label}
-                  </motion.button>
-                ))}
-              </div>
-            </div>
-          </section>
-
-          {/* Tab Content */}
-          <div className="container mx-auto px-3 sm:px-4 py-8 relative z-10">
-            <Suspense fallback={<TabSkeleton />}>
-              <AnimatePresence mode="wait">
-                {activeTab === 'overview' && <motion.div key="overview" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}><OverviewTab proofscore={proofscore} feeRate={currentFeeRate} /></motion.div>}
-                {activeTab === 'fee-simulator' && <motion.div key="fee-sim" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}><FeeSimulatorTab currentScore={proofscore} /></motion.div>}
-                {activeTab === 'score-simulator' && <motion.div key="score-sim" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}><ScoreSimulatorTab currentScore={proofscore} /></motion.div>}
-                {activeTab === 'badges' && <motion.div key="badges" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}><BadgesTab address={address} /></motion.div>}
-              </AnimatePresence>
-            </Suspense>
+          <div className="flex gap-2 mb-8 overflow-x-auto pb-2">
+            {tabs.map(tab => (
+              <button key={tab.id} onClick={() => setActiveTab(tab.id)}
+                className={`flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-sm whitespace-nowrap transition-all ${
+                  activeTab === tab.id ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30' : 'bg-white/5 text-gray-400 border border-white/10 hover:text-white'
+                }`}><tab.icon size={16} />{tab.label}</button>
+            ))}
           </div>
+
+          {activeTab === 'overview' && <OverviewTab />}
+          {activeTab === 'badges' && <BadgesTab />}
+          {activeTab === 'score' && <ScoreSimulatorTab />}
+          {activeTab === 'fees' && <FeeSimulatorTab />}
+          {activeTab === 'activity' && <RecentActivity />}
         </div>
-      </PageWrapper>
+      </div>
       <Footer />
     </>
   );

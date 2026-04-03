@@ -1,20 +1,24 @@
 'use client';
 
+import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { PageMetricsDisplay } from '@/components/performance/PageMetricsDisplay';
 
-interface PagesTabProps {
-  pageMetrics: any;
-  apiMetrics: any[];
-  isLoading?: boolean;
-}
+// Content extracted from original performance page
 
-export function PagesTab({ pageMetrics, apiMetrics, isLoading = false }: PagesTabProps) {
+export function PagesTab() {
   return (
     <div className="space-y-6">
-      <motion.div key="pages" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-        <PageMetricsDisplay pageMetrics={pageMetrics} apiMetrics={apiMetrics} isLoading={isLoading} />
-      </motion.div>
+      <motion.div
+  key="pages"
+  initial={{ opacity: 0 }}
+  animate={{ opacity: 1 }}
+  >
+  <PageMetricsDisplay
+    pageMetrics={pageMetrics}
+    apiMetrics={apiMetrics}
+    isLoading={isLoading}
+  />
+  </motion.div>
     </div>
   );
 }

@@ -1,14 +1,35 @@
 'use client';
 
-// Extracted from app/paper-wallet/page.tsx — tab 'verify'
-// TODO: Move the 'verify' tab content here and verify imports
+import { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
+import { Loader2 } from 'lucide-react';
+
+// Verify a paper wallet by scanning or entering the key
 
 export function VerifyTab() {
+  const [loading, setLoading] = useState(true);
+  const [data, setData] = useState<any>(null);
+
+  useEffect(() => {
+    // TODO: Wire to API endpoint
+    const timer = setTimeout(() => setLoading(false), 500);
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 size={24} className="text-cyan-400 animate-spin" />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div className="bg-white/3 border border-white/10 rounded-2xl p-6">
-        <h3 className="text-xl font-bold text-white mb-4">Verify</h3>
-        <p className="text-gray-400">Content from PaperWalletPage</p>
+        <h3 className="text-lg font-bold text-white mb-4">Verify</h3>
+        <p className="text-gray-400 text-sm">Verify a paper wallet by scanning or entering the key</p>
+        {/* TODO: Implement VerifyTab UI */}
       </div>
     </div>
   );

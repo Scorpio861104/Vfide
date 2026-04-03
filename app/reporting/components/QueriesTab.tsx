@@ -1,18 +1,26 @@
 'use client';
 
-import { Settings } from 'lucide-react';
+import { useState } from 'react';
+import { motion } from 'framer-motion';
+
+// Content extracted from original reporting page
 
 export function QueriesTab() {
   return (
     <div className="space-y-6">
-      <div className="rounded-lg border border-slate-800 bg-slate-900/50 p-6 py-12 text-center">
-        <Settings className="mx-auto mb-3 h-12 w-12 text-slate-400" />
-        <h3 className="mb-2 font-semibold text-white">Query Builder</h3>
-        <p className="text-sm text-slate-400">Visual query interface for advanced data analysis.</p>
-        <button className="mt-4 rounded-lg bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-700">
-          Create Custom Query
-        </button>
-      </div>
+      <div className="space-y-6">
+    {/* Query Builder placeholder */}
+    <div className="bg-slate-900/50 border border-slate-800 rounded-lg p-6 text-center py-12">
+    <Settings className="w-12 h-12 mx-auto mb-3 text-slate-400" />
+    <h3 className="text-white font-semibold mb-2">Query Builder</h3>
+    <p className="text-slate-400 text-sm">
+    Visual query interface for advanced data analysis
+    </p>
+    <button className="mt-4 px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-white text-sm">
+    Create Custom Query
+    </button>
+    </div>
+  </div>
     </div>
   );
 }
