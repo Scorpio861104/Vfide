@@ -23,6 +23,10 @@ function normalizeInviteCode(value: string): string {
   return value.trim();
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
 /**
  * POST /api/groups/join
  * Join a group using an invite code
@@ -50,8 +54,17 @@ export async function POST(request: NextRequest) {
     let body: z.infer<typeof joinGroupSchema>;
     try {
       const rawBody = await request.json();
+      if (!isRecord(rawBody)) {
+        return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
+      }
+
       const parsed = joinGroupSchema.safeParse(rawBody);
       if (!parsed.success) {
+        const hasUserIdIssue = parsed.error.issues.some((issue) => issue.path[0] === 'userId');
+        if (hasUserIdIssue) {
+          return NextResponse.json({ error: 'Invalid userId' }, { status: 400 });
+        }
+
         return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
       }
       body = parsed.data;

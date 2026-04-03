@@ -10,7 +10,12 @@ import { DashboardTab } from './components/DashboardTab';
 
 type TabId = 'feed' | 'premium' | 'subscriptions' | 'dashboard';
 
-const TAB_LABELS: Record<TabId, string> = { 'feed': 'Feed', 'premium': 'Premium', 'subscriptions': 'Subscriptions', 'dashboard': 'Dashboard' };
+const TAB_LABELS: Record<TabId, string> = {
+  'feed': 'Social Feed with Tipping',
+  'premium': 'Premium Content',
+  'subscriptions': 'Subscriptions',
+  'dashboard': 'Creator Dashboard'
+};
 const TAB_IDS: TabId[] = ['feed', 'premium', 'subscriptions', 'dashboard'];
 
 export default function CryptoSocialDemo() {
@@ -20,8 +25,9 @@ export default function CryptoSocialDemo() {
     <>
       <div className="min-h-screen bg-zinc-950 pt-20">
         <div className="container mx-auto px-4 max-w-6xl py-8">
-          <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-            className="text-4xl font-bold text-white mb-2">Social Demo</motion.h1>
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+            <h1 className="text-4xl font-bold text-white mb-2">Crypto-Social Integration Demo</h1>
+          </motion.div>
           <p className="text-white/60 mb-8">Try the social commerce features</p>
 
           <div className="flex gap-2 mb-8 overflow-x-auto pb-2">

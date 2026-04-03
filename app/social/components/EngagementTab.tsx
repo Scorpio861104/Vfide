@@ -1,35 +1,21 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { Loader2 } from 'lucide-react';
+interface EngagementTabProps {
+  timeRange?: 'Week' | 'Month' | 'Year';
+}
 
-// Detailed engagement metrics: likes, comments, shares by post
-
-export function EngagementTab() {
-  const [loading, setLoading] = useState(true);
-  const [data, setData] = useState<any>(null);
-
-  useEffect(() => {
-    // TODO: Wire to API endpoint
-    const timer = setTimeout(() => setLoading(false), 500);
-    return () => clearTimeout(timer);
-  }, []);
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <Loader2 size={24} className="text-cyan-400 animate-spin" />
-      </div>
-    );
-  }
-
+export function EngagementTab({ timeRange = 'Week' }: EngagementTabProps) {
   return (
     <div className="space-y-6">
       <div className="bg-white/3 border border-white/10 rounded-2xl p-6">
-        <h3 className="text-lg font-bold text-white mb-4">Engagement</h3>
-        <p className="text-gray-400 text-sm">Detailed engagement metrics: likes, comments, shares by post</p>
-        {/* TODO: Implement EngagementTab UI */}
+        <p className="text-xs uppercase tracking-[0.2em] text-cyan-400 mb-2">{timeRange} engagement</p>
+        <h2 className="text-xl font-bold text-white mb-4">Engagement Trends</h2>
+        <p className="text-gray-400">Detailed post, message, and reaction analytics are not available right now.</p>
+      </div>
+
+      <div className="bg-white/3 border border-white/10 rounded-2xl p-6">
+        <h2 className="text-xl font-bold text-white mb-4">Community Health</h2>
+        <p className="text-gray-400">Sentiment and retention signals will populate here when telemetry is enabled.</p>
       </div>
     </div>
   );

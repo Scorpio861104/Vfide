@@ -1,25 +1,20 @@
 'use client';
 
-import { useState } from 'react';
-import { motion } from 'framer-motion';
-
-// Content extracted from original social-messaging page
+import { useAccount } from 'wagmi';
+import { ActivityFeed } from '@/components/social/ActivityFeed';
+import { GlobalUserSearch } from '@/components/social/GlobalUserSearch';
 
 export function DiscoverTab() {
+  const { address } = useAccount();
+
   return (
     <div className="space-y-6">
-      <motion.div
-    key="discover"
-    initial={{ opacity: 0, y: 20 }}
-    animate={{ opacity: 1, y: 0 }}
-    exit={{ opacity: 0, y: -20 }}
-    >
-    <div className="max-w-4xl mx-auto">
-    <Suspense fallback={<SocialPanelFallback message="Loading discovery…" />}>
-    <GlobalUserSearch />
-    </Suspense>
-    </div>
-    </motion.div>
+      <div className="mx-auto max-w-4xl">
+        <GlobalUserSearch />
+      </div>
+      <div className="rounded-2xl border border-white/10 bg-white/3 p-4">
+        <ActivityFeed userAddress={address ?? '0x0000000000000000000000000000000000000000'} />
+      </div>
     </div>
   );
 }

@@ -182,7 +182,11 @@ export async function POST(request: NextRequest) {
       const rawBody = await request.json();
       const parsed = addGroupMemberSchema.safeParse(rawBody);
       if (!parsed.success) {
-        return NextResponse.json({ success: false, error: 'Invalid request body' }, { status: 400 });
+        const hasRoleIssue = parsed.error.issues.some((issue) => issue.path.includes('role'));
+        return NextResponse.json(
+          { success: false, error: hasRoleIssue ? 'Invalid role value' : 'Invalid request body' },
+          { status: 400 }
+        );
       }
       body = parsed.data;
     } catch (error) {
@@ -271,7 +275,11 @@ export async function PATCH(request: NextRequest) {
       const rawBody = await request.json();
       const parsed = patchGroupMemberSchema.safeParse(rawBody);
       if (!parsed.success) {
-        return NextResponse.json({ success: false, error: 'Invalid request body' }, { status: 400 });
+        const hasRoleIssue = parsed.error.issues.some((issue) => issue.path.includes('role'));
+        return NextResponse.json(
+          { success: false, error: hasRoleIssue ? 'Invalid role value' : 'Invalid request body' },
+          { status: 400 }
+        );
       }
       body = parsed.data;
     } catch (error) {

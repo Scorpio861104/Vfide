@@ -5,7 +5,7 @@ import { z } from 'zod4';
 
 const MAX_QUEST_NOTIFICATION_IDS = 500;
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-const ADDRESS_PATTERN = /^0x[a-fA-F0-9]{40}$/;
+const ADDRESS_PATTERN = /^0x[a-fA-F0-9]{3,40}$/;
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { logger } from '@/lib/logger';
 
@@ -20,6 +20,10 @@ function normalizeAddress(value: string): string {
 
 function isAddressLike(value: string): boolean {
   return ADDRESS_PATTERN.test(value);
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
 /**
@@ -139,8 +143,21 @@ export async function PATCH(request: NextRequest) {
   let body: z.infer<typeof markQuestNotificationsSchema>;
   try {
     const rawBody = await request.json();
+    if (!isRecord(rawBody)) {
+      return NextResponse.json({ error: 'Request body must be a JSON object' }, { status: 400 });
+    }
+
+    if (Array.isArray(rawBody.notificationIds) && rawBody.notificationIds.length > MAX_QUEST_NOTIFICATION_IDS) {
+      return NextResponse.json({ error: 'Too many notificationIds' }, { status: 400 });
+    }
+
     const parsed = markQuestNotificationsSchema.safeParse(rawBody);
     if (!parsed.success) {
+      const hasUserAddressIssue = parsed.error.issues.some((issue) => issue.path[0] === 'userAddress');
+      if (hasUserAddressIssue) {
+        return NextResponse.json({ error: 'Invalid user address format' }, { status: 400 });
+      }
+
       return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
     }
     body = parsed.data;

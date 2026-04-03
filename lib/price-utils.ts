@@ -40,16 +40,11 @@ export function formatPrice(value: number, currency: string = 'USD'): string {
   const safeValue = Number.isFinite(value) ? value : 0;
   const normalizedCurrency = currency.toUpperCase();
 
-  try {
-    return new Intl.NumberFormat(CURRENCY_LOCALES[normalizedCurrency] || 'en-US', {
-      style: 'currency',
-      currency: normalizedCurrency,
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    }).format(safeValue);
-  } catch {
-    return `${safeValue.toFixed(2)} ${normalizedCurrency}`.trim();
+  if (normalizedCurrency === 'USD') {
+    return `$${safeValue.toFixed(2)}`;
   }
+
+  return `${safeValue.toFixed(2)} ${normalizedCurrency}`.trim();
 }
 
 export function convertUsdToCurrency(amountUsd: number, currency: string = 'USD'): number {

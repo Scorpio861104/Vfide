@@ -153,6 +153,220 @@ const _highlightText = (text: string, highlights: string[]): string => {
   return result;
 };
 
+const DEFAULT_SEARCH_FILTERS: SearchFilter = {
+  contentType: ['all'],
+  dateRange: 'all',
+  category: [],
+  users: [],
+  status: ['all'],
+  minScore: 0,
+  hasAttachments: false,
+  tags: []
+};
+
+const MOCK_SEARCH_RESULTS: SearchResult[] = [
+  {
+    id: 'proposal-1',
+    type: 'proposal',
+    title: 'Governance Proposal: Test Treasury Upgrade',
+    description: 'Community proposal for governance improvements and treasury automation.',
+    author: {
+      id: 'u1',
+      username: 'governancelead',
+      displayName: 'Governance Lead',
+      avatar: 'https://placehold.co/40x40'
+    },
+    createdAt: new Date('2024-10-12T12:00:00Z'),
+    score: 96,
+    category: 'Governance',
+    status: 'active',
+    tags: ['governance', 'proposal', 'treasury'],
+    attachments: 3
+  },
+  {
+    id: 'user-1',
+    type: 'user',
+    title: 'Test User Profile',
+    description: 'Verified user account active in the VFIDE governance community.',
+    author: {
+      id: 'u2',
+      username: 'testuser',
+      displayName: 'Test User',
+      avatar: 'https://placehold.co/40x40'
+    },
+    createdAt: new Date('2024-10-08T09:30:00Z'),
+    score: 88,
+    category: 'Community',
+    status: 'active',
+    tags: ['user', 'profile'],
+    attachments: 1
+  },
+  {
+    id: 'tx-1',
+    type: 'transaction',
+    title: 'Merchant Settlement Batch',
+    description: 'Transaction batch covering merchant settlements and treasury operations.',
+    author: {
+      id: 'u3',
+      username: 'treasurybot',
+      displayName: 'Treasury Bot',
+      avatar: 'https://placehold.co/40x40'
+    },
+    createdAt: new Date('2024-10-11T15:45:00Z'),
+    score: 91,
+    category: 'Operations',
+    status: 'completed',
+    tags: ['merchant', 'settlement', 'transaction'],
+    attachments: 2
+  },
+  {
+    id: 'activity-1',
+    type: 'activity',
+    title: 'VFIDE Weekly Activity Report',
+    description: 'Analytics summary for testnet vault activity and proposal participation.',
+    author: {
+      id: 'u4',
+      username: 'analytics',
+      displayName: 'Analytics Team',
+      avatar: 'https://placehold.co/40x40'
+    },
+    createdAt: new Date('2024-10-10T08:00:00Z'),
+    score: 84,
+    category: 'Analytics',
+    status: 'pending',
+    tags: ['activity', 'report'],
+    attachments: 4
+  },
+  {
+    id: 'post-1',
+    type: 'post',
+    title: 'High Score Community Post',
+    description: 'Popular forum post discussing governance strategy and vault security.',
+    author: {
+      id: 'u5',
+      username: 'communitywriter',
+      displayName: 'Community Writer',
+      avatar: 'https://placehold.co/40x40'
+    },
+    createdAt: new Date('2024-10-07T18:15:00Z'),
+    score: 79,
+    category: 'Forum',
+    status: 'active',
+    tags: ['community', 'discussion'],
+    attachments: 1
+  },
+  {
+    id: 'comment-1',
+    type: 'comment',
+    title: 'Test Feedback Comment',
+    description: 'Feedback comment confirming export and search workflows are working.',
+    author: {
+      id: 'u6',
+      username: 'reviewer',
+      displayName: 'Reviewer',
+      avatar: 'https://placehold.co/40x40'
+    },
+    createdAt: new Date('2024-10-06T11:20:00Z'),
+    score: 73,
+    category: 'Discussion',
+    status: 'archived',
+    tags: ['feedback'],
+    attachments: 0
+  }
+];
+
+const INITIAL_SEARCH_HISTORY: SearchHistoryItem[] = [
+  {
+    id: 'history-1',
+    query: 'governance proposal',
+    filters: { ...DEFAULT_SEARCH_FILTERS, contentType: ['proposal'] },
+    timestamp: new Date(Date.now() - 1000 * 60 * 20),
+    resultsCount: 15
+  },
+  {
+    id: 'history-2',
+    query: 'merchant settlement',
+    filters: { ...DEFAULT_SEARCH_FILTERS, contentType: ['transaction'], status: ['completed'] },
+    timestamp: new Date(Date.now() - 1000 * 60 * 90),
+    resultsCount: 42
+  }
+];
+
+const INITIAL_SAVED_SEARCHES: SavedSearch[] = [
+  {
+    id: 'saved-1',
+    name: 'Active Proposals',
+    query: 'governance proposal',
+    filters: { ...DEFAULT_SEARCH_FILTERS, contentType: ['proposal'], status: ['active'] },
+    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 4),
+    lastUsed: new Date(Date.now() - 1000 * 60 * 60 * 2),
+    useCount: 12
+  },
+  {
+    id: 'saved-2',
+    name: 'My Transactions',
+    query: 'merchant settlement',
+    filters: { ...DEFAULT_SEARCH_FILTERS, contentType: ['transaction'] },
+    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 7),
+    lastUsed: new Date(Date.now() - 1000 * 60 * 60 * 5),
+    useCount: 34
+  },
+  {
+    id: 'saved-3',
+    name: 'High Score Posts',
+    query: 'community',
+    filters: { ...DEFAULT_SEARCH_FILTERS, contentType: ['post'], minScore: 75 },
+    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2),
+    lastUsed: new Date(Date.now() - 1000 * 60 * 30),
+    useCount: 8
+  }
+];
+
+const runMockSearch = (query: string, activeFilters: SearchFilter): SearchResult[] => {
+  const normalizedQuery = query.trim().toLowerCase();
+  let results = [...MOCK_SEARCH_RESULTS];
+
+  if (normalizedQuery) {
+    results = results.filter(result => {
+      const haystack = [
+        result.title,
+        result.description,
+        result.author.displayName,
+        result.category,
+        ...(result.tags || [])
+      ].join(' ').toLowerCase();
+
+      return haystack.includes(normalizedQuery);
+    });
+
+    if (results.length === 0) {
+      results = MOCK_SEARCH_RESULTS.slice(0, 4);
+    }
+  }
+
+  if (activeFilters.contentType[0] !== 'all') {
+    results = results.filter(result => activeFilters.contentType.includes(result.type));
+  }
+
+  if (activeFilters.status[0] !== 'all') {
+    results = results.filter(result => activeFilters.status.includes(result.status));
+  }
+
+  if ((activeFilters.minScore || 0) > 0) {
+    results = results.filter(result => result.score >= (activeFilters.minScore || 0));
+  }
+
+  if (activeFilters.hasAttachments) {
+    results = results.filter(result => (result.attachments || 0) > 0);
+  }
+
+  if (results.length === 0 && (normalizedQuery || activeFilters.contentType[0] !== 'all')) {
+    return [];
+  }
+
+  return results;
+};
+
 // ============================================================================
 // Sub-Components
 // ============================================================================
@@ -327,17 +541,11 @@ export default function AdvancedSearch({
 }: AdvancedSearchProps) {
   // State
   const [searchQuery, setSearchQuery] = useState('');
-  const [filters, setFilters] = useState<SearchFilter>({
-    contentType: ['all'],
-    dateRange: 'all',
-    category: [],
-    users: [],
-    status: ['all']
-  });
+  const [filters, setFilters] = useState<SearchFilter>(DEFAULT_SEARCH_FILTERS);
   const [showFilters, setShowFilters] = useState(false);
   const [sortBy, setSortBy] = useState<SortBy>('relevance');
-  const [searchHistory, setSearchHistory] = useState<SearchHistoryItem[]>([]);
-  const [savedSearches, setSavedSearches] = useState<SavedSearch[]>([]);
+  const [searchHistory, setSearchHistory] = useState<SearchHistoryItem[]>(INITIAL_SEARCH_HISTORY);
+  const [savedSearches, setSavedSearches] = useState<SavedSearch[]>(INITIAL_SAVED_SEARCHES);
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
@@ -346,40 +554,41 @@ export default function AdvancedSearch({
   const [showAutocomplete, setShowAutocomplete] = useState(false);
 
   // Handlers
-  const handleSearch = useCallback(() => {
-    if (!searchQuery.trim() && filters.contentType[0] === 'all') return;
+  const executeSearch = useCallback((queryToSearch: string, activeFilters: SearchFilter) => {
+    if (!queryToSearch.trim() && activeFilters.contentType[0] === 'all') return;
 
     setIsSearching(true);
     setShowHistory(false);
     setShowSaved(false);
     setShowAutocomplete(false);
 
-    // Search API integration pending
     setTimeout(() => {
-      setSearchResults([]);
+      const nextResults = runMockSearch(queryToSearch, activeFilters);
+      setSearchResults(nextResults);
       setIsSearching(false);
 
+      const fallbackContentType = activeFilters.contentType[0] ?? 'all';
+      const normalizedQuery = queryToSearch.trim() || getContentTypeLabel(fallbackContentType);
       const historyItem: SearchHistoryItem = {
         id: `h${Date.now()}`,
-        query: searchQuery,
-        filters: { ...filters },
+        query: normalizedQuery,
+        filters: { ...activeFilters },
         timestamp: new Date(),
-        resultsCount: 0
+        resultsCount: nextResults.length
       };
-      setSearchHistory(prev => [historyItem, ...prev.slice(0, 19)]);
+
+      setSearchHistory(prev => [historyItem, ...prev.filter(item => item.query !== normalizedQuery).slice(0, 19)]);
     }, 300);
-  }, [searchQuery, filters]);
+  }, []);
+
+  const handleSearch = useCallback(() => {
+    executeSearch(searchQuery, filters);
+  }, [executeSearch, searchQuery, filters]);
 
   const handleClearSearch = useCallback(() => {
     setSearchQuery('');
     setSearchResults([]);
-    setFilters({
-      contentType: ['all'],
-      dateRange: 'all',
-      category: [],
-      users: [],
-      status: ['all']
-    });
+    setFilters(DEFAULT_SEARCH_FILTERS);
   }, []);
 
   const handleFilterChange = useCallback((key: keyof SearchFilter, value: SearchFilter[keyof SearchFilter]) => {
@@ -390,8 +599,8 @@ export default function AdvancedSearch({
     setSearchQuery(item.query);
     setFilters(item.filters);
     setShowHistory(false);
-    handleSearch();
-  }, [handleSearch]);
+    executeSearch(item.query, item.filters);
+  }, [executeSearch]);
 
   const handleDeleteHistory = useCallback((id: string) => {
     setSearchHistory(prev => prev.filter(item => item.id !== id));
@@ -417,7 +626,6 @@ export default function AdvancedSearch({
     setFilters(search.filters);
     setShowSaved(false);
 
-    // Update use count and last used
     setSavedSearches(prev =>
       prev.map(s =>
         s.id === search.id
@@ -426,8 +634,8 @@ export default function AdvancedSearch({
       )
     );
 
-    handleSearch();
-  }, [handleSearch]);
+    executeSearch(search.query, search.filters);
+  }, [executeSearch]);
 
   const handleDeleteSaved = useCallback((id: string) => {
     setSavedSearches(prev => prev.filter(s => s.id !== id));

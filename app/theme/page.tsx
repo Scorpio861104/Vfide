@@ -3,14 +3,20 @@
 import { Footer } from '@/components/layout/Footer';
 import { useState } from 'react';
 import { motion } from 'framer-motion';
+import { ThemeCustomizer } from '@/components/theme/ThemeCustomizer';
 import { PresetsTab } from './components/PresetsTab';
 import { PreviewTab } from './components/PreviewTab';
 import { AdvancedTab } from './components/AdvancedTab';
 
-type TabId = 'presets' | 'preview' | 'advanced';
+type TabId = 'presets' | 'customizer' | 'preview' | 'advanced';
 
-const TAB_LABELS: Record<TabId, string> = { 'presets': 'Presets', 'preview': 'Preview', 'advanced': 'Advanced' };
-const TAB_IDS: TabId[] = ['presets', 'preview', 'advanced'];
+const TAB_LABELS: Record<TabId, string> = {
+  presets: 'Presets',
+  customizer: 'Customizer',
+  preview: 'Preview',
+  advanced: 'Advanced',
+};
+const TAB_IDS: TabId[] = ['presets', 'customizer', 'preview', 'advanced'];
 
 export default function ThemeManagementPage() {
   const [activeTab, setActiveTab] = useState<TabId>('presets');
@@ -19,9 +25,10 @@ export default function ThemeManagementPage() {
     <>
       <div className="min-h-screen bg-zinc-950 pt-20">
         <div className="container mx-auto px-4 max-w-6xl py-8">
-          <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-            className="text-4xl font-bold text-white mb-2">Theme</motion.h1>
-          <p className="text-white/60 mb-8">Customize your VFIDE experience</p>
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+            <h1 className="text-4xl font-bold text-white mb-2">Theme Management</h1>
+          </motion.div>
+          <p className="text-white/60 mb-8">Customize your VFIDE experience with presets, preview tools, and advanced controls</p>
 
           <div className="flex gap-2 mb-8 overflow-x-auto pb-2">
             {TAB_IDS.map(id => (
@@ -35,6 +42,7 @@ export default function ThemeManagementPage() {
           </div>
 
           {activeTab === 'presets' && <PresetsTab />}
+          {activeTab === 'customizer' && <ThemeCustomizer />}
           {activeTab === 'preview' && <PreviewTab />}
           {activeTab === 'advanced' && <AdvancedTab />}
         </div>

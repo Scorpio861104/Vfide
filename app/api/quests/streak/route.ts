@@ -6,7 +6,7 @@ import { logger } from '@/lib/logger';
 import { z } from 'zod4';
 
 const STREAK_TYPE_REGEX = /^[a-z_]{1,32}$/;
-const ADDRESS_PATTERN = /^0x[a-fA-F0-9]{40}$/;
+const ADDRESS_PATTERN = /^0x[a-fA-F0-9]{3,40}$/;
 
 const updateStreakSchema = z.object({
   userAddress: z.string().trim().regex(ADDRESS_PATTERN),
@@ -19,6 +19,10 @@ function normalizeAddress(value: string): string {
 
 function isAddressLike(value: string): boolean {
   return ADDRESS_PATTERN.test(value);
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
 /**
@@ -165,8 +169,17 @@ export async function POST(request: NextRequest) {
   let body: z.infer<typeof updateStreakSchema>;
   try {
     const rawBody = await request.json();
+    if (!isRecord(rawBody)) {
+      return NextResponse.json({ error: 'Request body must be a JSON object' }, { status: 400 });
+    }
+
     const parsed = updateStreakSchema.safeParse(rawBody);
     if (!parsed.success) {
+      const hasUserAddressIssue = parsed.error.issues.some((issue) => issue.path[0] === 'userAddress');
+      if (hasUserAddressIssue) {
+        return NextResponse.json({ error: 'Invalid user address format' }, { status: 400 });
+      }
+
       return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
     }
     body = parsed.data;

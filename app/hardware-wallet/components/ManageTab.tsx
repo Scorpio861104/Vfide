@@ -1,35 +1,26 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { Loader2 } from 'lucide-react';
-
-// Manage connected hardware wallet accounts and signing
+const MANAGEMENT_TASKS = [
+  'Review firmware versions before important transfers or governance actions.',
+  'Label frequently used accounts so merchant, vault, and personal flows stay separated.',
+  'Reconfirm addresses on-device for every high-value withdrawal or payout batch.',
+];
 
 export function ManageTab() {
-  const [loading, setLoading] = useState(true);
-  const [data, setData] = useState<any>(null);
-
-  useEffect(() => {
-    // TODO: Wire to API endpoint
-    const timer = setTimeout(() => setLoading(false), 500);
-    return () => clearTimeout(timer);
-  }, []);
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <Loader2 size={24} className="text-cyan-400 animate-spin" />
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-6">
       <div className="bg-white/3 border border-white/10 rounded-2xl p-6">
-        <h3 className="text-lg font-bold text-white mb-4">Manage</h3>
-        <p className="text-gray-400 text-sm">Manage connected hardware wallet accounts and signing</p>
-        {/* TODO: Implement ManageTab UI */}
+        <h3 className="text-xl font-bold text-white mb-2">Ongoing Management</h3>
+        <p className="text-gray-400">Once connected, use this checklist to keep the device ready for day-to-day signing.</p>
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-3">
+        {MANAGEMENT_TASKS.map((task, index) => (
+          <div key={task} className="rounded-2xl border border-white/10 bg-black/20 p-5">
+            <p className="mb-2 text-sm font-semibold text-cyan-300">Task {index + 1}</p>
+            <p className="text-sm text-gray-400">{task}</p>
+          </div>
+        ))}
       </div>
     </div>
   );

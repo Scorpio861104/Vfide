@@ -34,6 +34,10 @@ function parsePositiveInteger(value: string): number | null {
   return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
 export async function GET(request: NextRequest) {
   // Rate limiting: 100 requests per minute
   const rateLimitResponse = await withRateLimit(request, 'read');
@@ -56,7 +60,25 @@ export async function GET(request: NextRequest) {
     const userIdParam = searchParams.get('userId');
     const userAddressParam = searchParams.get('userAddress');
 
-    // Resolve the authenticated user's DB id
+    let requestedUserId: number | null = null;
+
+    // Accept either userId or userAddress — validate the request before hitting the database.
+    if (userIdParam) {
+      requestedUserId = parsePositiveInteger(userIdParam);
+      if (!requestedUserId) {
+        return NextResponse.json({ error: 'Invalid userId parameter' }, { status: 400 });
+      }
+    } else if (userAddressParam) {
+      if (userAddressParam.trim().toLowerCase() !== authAddress) {
+        return NextResponse.json(
+          { error: 'You can only view your own payment requests' },
+          { status: 403 }
+        );
+      }
+    } else {
+      return NextResponse.json({ error: 'userId or userAddress required' }, { status: 400 });
+    }
+
     const userResult = await query(
       'SELECT id FROM users WHERE wallet_address = $1',
       [authAddress]
@@ -67,28 +89,11 @@ export async function GET(request: NextRequest) {
     }
     const userId = userResult.rows[0]?.id;
 
-    // Accept either userId or userAddress — verify caller owns the requested data
-    if (userIdParam) {
-      const requestedUserId = parsePositiveInteger(userIdParam);
-      if (!requestedUserId) {
-        return NextResponse.json({ error: 'Invalid userId parameter' }, { status: 400 });
-      }
-      if (!userId || userId.toString() !== requestedUserId.toString()) {
-        return NextResponse.json(
-          { error: 'You can only view your own payment requests' },
-          { status: 403 }
-        );
-      }
-    } else if (userAddressParam) {
-      // Verify the requested address matches the authenticated user
-      if (userAddressParam.trim().toLowerCase() !== authAddress) {
-        return NextResponse.json(
-          { error: 'You can only view your own payment requests' },
-          { status: 403 }
-        );
-      }
-    } else {
-      return NextResponse.json({ error: 'userId or userAddress required' }, { status: 400 });
+    if (requestedUserId && (!userId || userId.toString() !== requestedUserId.toString())) {
+      return NextResponse.json(
+        { error: 'You can only view your own payment requests' },
+        { status: 403 }
+      );
     }
 
     const result = await query(
@@ -134,6 +139,10 @@ export async function POST(request: NextRequest) {
   let body: z.infer<typeof createPaymentRequestSchema>;
   try {
     const rawBody = await request.json();
+    if (!isRecord(rawBody)) {
+      return NextResponse.json({ error: 'Request body must be a JSON object' }, { status: 400 });
+    }
+
     const parsed = createPaymentRequestSchema.safeParse(rawBody);
     if (!parsed.success) {
       return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
@@ -147,60 +156,6 @@ export async function POST(request: NextRequest) {
   try {
     const { fromUserId, toUserId, toAddress, amount, token, memo } = body;
 
-    // Resolve sender: use authenticated wallet address to look up fromUserId
-    const senderResult = await query(
-      'SELECT id FROM users WHERE wallet_address = $1',
-      [authAddress]
-    );
-    if (senderResult.rows.length === 0) {
-      return NextResponse.json({ error: 'Sender account not found' }, { status: 403 });
-    }
-    const resolvedFromUserId = (senderResult.rows[0] as { id: number }).id.toString();
-
-    // Resolve recipient: accept toUserId (numeric) or toAddress (wallet address)
-    let resolvedToUserId: string | null = null;
-    if (toUserId) {
-      const toUserIdValue =
-        typeof toUserId === 'number' || typeof toUserId === 'string' ? toUserId.toString() : null;
-      if (!toUserIdValue || !USER_ID_REGEX.test(toUserIdValue)) {
-        return NextResponse.json({ error: 'toUserId must be a positive integer' }, { status: 400 });
-      }
-      resolvedToUserId = toUserIdValue;
-    } else if (toAddress && typeof toAddress === 'string' && ADDRESS_LIKE_REGEX.test(toAddress.trim())) {
-      const recipientResult = await query(
-        'SELECT id FROM users WHERE wallet_address = $1',
-        [toAddress.trim().toLowerCase()]
-      );
-      if (recipientResult.rows.length === 0) {
-        return NextResponse.json({ error: 'Recipient address not found' }, { status: 404 });
-      }
-      resolvedToUserId = (recipientResult.rows[0] as { id: number }).id.toString();
-    } else {
-      return NextResponse.json({ error: 'toUserId or toAddress required' }, { status: 400 });
-    }
-
-    // Validate fromUserId if explicitly provided — must match authenticated user
-    if (fromUserId) {
-      const fromUserIdValue =
-        typeof fromUserId === 'number' || typeof fromUserId === 'string' ? fromUserId.toString() : null;
-      if (fromUserIdValue && fromUserIdValue !== resolvedFromUserId) {
-        return NextResponse.json(
-          { error: 'You can only create payment requests from your own account' },
-          { status: 403 }
-        );
-      }
-    }
-    const fromUserIdValue = resolvedFromUserId;
-    const toUserIdValue = resolvedToUserId;
-
-    if (!amount) {
-      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
-    }
-
-    if (fromUserIdValue === toUserIdValue) {
-      return NextResponse.json({ error: 'Cannot create a payment request to yourself' }, { status: 400 });
-    }
-
     const amountValue =
       typeof amount === 'number' ? amount.toString() : typeof amount === 'string' ? amount : null;
     if (!amountValue) {
@@ -212,14 +167,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Amount must be a positive decimal with up to 18 decimals' }, { status: 400 });
     }
 
-    // Validate amount is positive and within reasonable bounds
     const numAmount = parseFloat(normalizedAmountValue);
     const MAX_PAYMENT_AMOUNT = 1000000; // 1 million units max
-    
+
     if (isNaN(numAmount) || numAmount <= 0) {
       return NextResponse.json({ error: 'Amount must be positive' }, { status: 400 });
     }
-    
+
     if (numAmount > MAX_PAYMENT_AMOUNT) {
       return NextResponse.json(
         { error: `Amount exceeds maximum limit of ${MAX_PAYMENT_AMOUNT}` },
@@ -273,6 +227,53 @@ export async function POST(request: NextRequest) {
           { status: 423 }
         );
       }
+    }
+
+    const senderResult = await query(
+      'SELECT id FROM users WHERE wallet_address = $1',
+      [authAddress]
+    );
+    if (senderResult.rows.length === 0) {
+      return NextResponse.json({ error: 'Sender account not found' }, { status: 403 });
+    }
+    const resolvedFromUserId = (senderResult.rows[0] as { id: number }).id.toString();
+
+    let resolvedToUserId: string | null = null;
+    if (toUserId) {
+      const toUserIdValue =
+        typeof toUserId === 'number' || typeof toUserId === 'string' ? toUserId.toString() : null;
+      if (!toUserIdValue || !USER_ID_REGEX.test(toUserIdValue)) {
+        return NextResponse.json({ error: 'toUserId must be a positive integer' }, { status: 400 });
+      }
+      resolvedToUserId = toUserIdValue;
+    } else if (toAddress && typeof toAddress === 'string' && ADDRESS_LIKE_REGEX.test(toAddress.trim())) {
+      const recipientResult = await query(
+        'SELECT id FROM users WHERE wallet_address = $1',
+        [toAddress.trim().toLowerCase()]
+      );
+      if (recipientResult.rows.length === 0) {
+        return NextResponse.json({ error: 'Recipient address not found' }, { status: 404 });
+      }
+      resolvedToUserId = (recipientResult.rows[0] as { id: number }).id.toString();
+    } else {
+      return NextResponse.json({ error: 'toUserId or toAddress required' }, { status: 400 });
+    }
+
+    if (fromUserId) {
+      const fromUserIdValue =
+        typeof fromUserId === 'number' || typeof fromUserId === 'string' ? fromUserId.toString() : null;
+      if (fromUserIdValue && fromUserIdValue !== resolvedFromUserId) {
+        return NextResponse.json(
+          { error: 'You can only create payment requests from your own account' },
+          { status: 403 }
+        );
+      }
+    }
+    const fromUserIdValue = resolvedFromUserId;
+    const toUserIdValue = resolvedToUserId;
+
+    if (fromUserIdValue === toUserIdValue) {
+      return NextResponse.json({ error: 'Cannot create a payment request to yourself' }, { status: 400 });
     }
 
     // Validate token if provided

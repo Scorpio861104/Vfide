@@ -94,10 +94,10 @@ function validateContractAddress(address: string | undefined, name: string): `0x
   const isBrowserRuntime = typeof window !== 'undefined';
   const isCI = process.env.CI === 'true' || process.env.VERCEL === '1';
   const frontendOnlyEnv = process.env.FRONTEND_SELF_CONTAINED ?? process.env.NEXT_PUBLIC_FRONTEND_ONLY;
+  const missingServerSecrets = !process.env.DATABASE_URL || !process.env.JWT_SECRET;
   const autoFrontendOnly =
-    isCI &&
     frontendOnlyEnv !== 'false' &&
-    (!process.env.DATABASE_URL || !process.env.JWT_SECRET);
+    missingServerSecrets;
   const frontendOnly = frontendOnlyEnv === 'true' || autoFrontendOnly;
   const strictProduction = isProduction && !frontendOnly;
 

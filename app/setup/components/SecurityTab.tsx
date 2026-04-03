@@ -1,35 +1,44 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { Loader2 } from 'lucide-react';
+const SECURITY_CHECKLIST = [
+  'Add at least two guardians before storing meaningful balances in your vault.',
+  'Keep your recovery phrase offline and avoid reusing it across wallets or devices.',
+  'Enable wallet notifications so unusual approvals or transfers are caught quickly.',
+];
 
-// Security setup: guardians, recovery, two-factor authentication
+const EMERGENCY_ACTIONS = [
+  'Pause activity and rotate devices if your wallet session appears compromised.',
+  'Use the recovery flow early rather than waiting for a full account lockout.',
+];
 
 export function SecurityTab() {
-  const [loading, setLoading] = useState(true);
-  const [data, setData] = useState<any>(null);
-
-  useEffect(() => {
-    // TODO: Wire to API endpoint
-    const timer = setTimeout(() => setLoading(false), 500);
-    return () => clearTimeout(timer);
-  }, []);
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <Loader2 size={24} className="text-cyan-400 animate-spin" />
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-6">
       <div className="bg-white/3 border border-white/10 rounded-2xl p-6">
-        <h3 className="text-lg font-bold text-white mb-4">Security</h3>
-        <p className="text-gray-400 text-sm">Security setup: guardians, recovery, two-factor authentication</p>
-        {/* TODO: Implement SecurityTab UI */}
+        <h3 className="text-xl font-bold text-white mb-2">Security Hardening</h3>
+        <p className="text-gray-400">
+          Lock in the basics before using VFIDE for higher-value payments, vault storage, or recovery workflows.
+        </p>
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-2">
+        <div className="rounded-2xl border border-white/10 bg-black/20 p-5">
+          <h4 className="mb-3 font-semibold text-white">Recommended checklist</h4>
+          <ul className="space-y-2 text-sm text-gray-300">
+            {SECURITY_CHECKLIST.map((item) => (
+              <li key={item}>• {item}</li>
+            ))}
+          </ul>
+        </div>
+
+        <div className="rounded-2xl border border-red-500/20 bg-red-500/5 p-5">
+          <h4 className="mb-3 font-semibold text-white">Emergency response</h4>
+          <ul className="space-y-2 text-sm text-gray-300">
+            {EMERGENCY_ACTIONS.map((item) => (
+              <li key={item}>• {item}</li>
+            ))}
+          </ul>
+        </div>
       </div>
     </div>
   );

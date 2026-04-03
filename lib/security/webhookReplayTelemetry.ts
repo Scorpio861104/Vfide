@@ -8,6 +8,30 @@ const DEFAULT_RETENTION_DAYS = 30;
 const MIN_RETENTION_DAYS = 1;
 const MAX_RETENTION_DAYS = 365;
 let lastCleanupMs = 0;
+let replayTelemetrySchemaReady: Promise<void> | null = null;
+
+async function ensureReplayTelemetrySchema(): Promise<void> {
+  if (!replayTelemetrySchemaReady) {
+    replayTelemetrySchemaReady = (async () => {
+      await query(`
+        CREATE TABLE IF NOT EXISTS security_webhook_replay_events (
+          id BIGSERIAL PRIMARY KEY,
+          ts TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+          status TEXT NOT NULL,
+          reason TEXT,
+          source TEXT,
+          replay_key_hash TEXT,
+          event_timestamp TIMESTAMPTZ
+        )
+      `);
+    })().catch((error) => {
+      replayTelemetrySchemaReady = null;
+      throw error;
+    });
+  }
+
+  await replayTelemetrySchemaReady;
+}
 
 function parseEnvPositiveInt(raw: string | undefined): number | null {
   if (!raw) return null;
@@ -32,6 +56,8 @@ function hashReplayKey(value: string | undefined): string | null {
 }
 
 async function maybeCleanupTelemetry(): Promise<void> {
+  await ensureReplayTelemetrySchema();
+
   const now = Date.now();
   if (now - lastCleanupMs < CLEANUP_INTERVAL_MS) return;
   lastCleanupMs = now;

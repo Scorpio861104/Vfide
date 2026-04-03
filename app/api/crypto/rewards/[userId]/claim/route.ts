@@ -81,6 +81,10 @@ async function verifyRewardOnChain(
   return Boolean(eligible);
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
 export async function POST(request: NextRequest, { params }: { params: Promise<{ userId: string }> }) {
   // Rate limiting - strict for claims
   const rateLimitResponse = await withRateLimit(request, 'claim');
@@ -130,6 +134,10 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     let body: z.infer<typeof claimRewardsSchema>;
     try {
       const rawBody = await request.json();
+      if (!isRecord(rawBody)) {
+        return NextResponse.json({ error: 'Request body must be a JSON object' }, { status: 400 });
+      }
+
       const parsed = claimRewardsSchema.safeParse(rawBody);
       if (!parsed.success) {
         return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });

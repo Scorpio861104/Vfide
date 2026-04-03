@@ -4,9 +4,9 @@ import { Shield, TrendingUp, Users, Wallet } from 'lucide-react';
 
 export function EcosystemTab({ isConnected }: { isConnected: boolean }) {
   const allocations = [
-    { name: 'Council Salaries', percentage: 40, amount: '7.4M VFIDE', icon: Users },
-    { name: 'Merchant Rewards', percentage: 25, amount: '4.6M VFIDE', icon: Wallet },
-    { name: 'Headhunter Bounties', percentage: 20, amount: '3.7M VFIDE', icon: TrendingUp },
+    { name: 'Council Operations', percentage: 40, amount: '7.4M VFIDE', icon: Users },
+    { name: 'Merchant Service Fees', percentage: 25, amount: '4.6M VFIDE', icon: Wallet },
+    { name: 'Referral Work Fees', percentage: 20, amount: '3.7M VFIDE', icon: TrendingUp },
     { name: 'Operations', percentage: 15, amount: '2.8M VFIDE', icon: Shield },
   ];
 
@@ -18,7 +18,7 @@ export function EcosystemTab({ isConnected }: { isConnected: boolean }) {
           <Users className="w-12 h-12 text-cyan-400" />
           <div>
             <h2 className="text-2xl font-bold text-zinc-100">Ecosystem Vault</h2>
-            <p className="text-zinc-400">Funds council salaries, merchant rewards, and growth initiatives</p>
+            <p className="text-zinc-400">Funds council operations, verified service fees, and growth initiatives</p>
           </div>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -62,23 +62,23 @@ export function EcosystemTab({ isConnected }: { isConnected: boolean }) {
         </div>
       </div>
 
-      {/* Claim Rewards (if applicable) */}
+      {/* Verified work payout snapshot */}
       {isConnected && (
         <div className="bg-zinc-800 border border-zinc-700 rounded-xl p-6">
-          <h3 className="text-xl font-bold text-zinc-100 mb-4">Your Claimable Rewards</h3>
+          <h3 className="text-xl font-bold text-zinc-100 mb-4">Verified Work Payouts</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="p-4 bg-zinc-900 rounded-lg">
-              <div className="text-zinc-400 text-sm mb-1">Merchant Rewards</div>
-              <div className="text-2xl font-bold text-cyan-400">0 VFIDE</div>
+              <div className="text-zinc-400 text-sm mb-1">Merchant Service Fees</div>
+              <div className="text-2xl font-bold text-cyan-400">0 USDC</div>
               <button className="mt-3 w-full bg-zinc-700 text-zinc-500 font-bold py-2 rounded-lg cursor-not-allowed">
-                No Rewards Available
+                No Payout Available
               </button>
             </div>
             <div className="p-4 bg-zinc-900 rounded-lg">
-              <div className="text-zinc-400 text-sm mb-1">Headhunter Bounties</div>
-              <div className="text-2xl font-bold text-cyan-400">0 VFIDE</div>
+              <div className="text-zinc-400 text-sm mb-1">Referral Work Fees</div>
+              <div className="text-2xl font-bold text-cyan-400">0 USDC</div>
               <button className="mt-3 w-full bg-zinc-700 text-zinc-500 font-bold py-2 rounded-lg cursor-not-allowed">
-                No Bounties Available
+                No Payout Available
               </button>
             </div>
           </div>

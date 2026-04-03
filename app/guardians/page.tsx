@@ -1,20 +1,18 @@
 'use client';
 
-import { lazy, Suspense, useState } from 'react';
+import { useState } from 'react';
 import { Footer } from "@/components/layout/Footer";
 import { useAccount } from "wagmi";
 import { motion, AnimatePresence } from "framer-motion";
 import { Shield, Users, Heart, Key, FileText, Clock } from "lucide-react";
 
 import type { TabType } from './components/types';
-
-// ── Lazy-loaded tab components (code-split per tab) ─────────────────────────
-const OverviewTab = lazy(() => import('./components/OverviewTab').then(m => ({ default: m.OverviewTab })));
-const MyGuardiansTab = lazy(() => import('./components/MyGuardiansTab').then(m => ({ default: m.MyGuardiansTab })));
-const NextOfKinTab = lazy(() => import('./components/NextOfKinTab').then(m => ({ default: m.NextOfKinTab })));
-const RecoveryTab = lazy(() => import('./components/RecoveryTab').then(m => ({ default: m.RecoveryTab })));
-const ResponsibilitiesTab = lazy(() => import('./components/ResponsibilitiesTab').then(m => ({ default: m.ResponsibilitiesTab })));
-const PendingActionsTab = lazy(() => import('./components/PendingActionsTab').then(m => ({ default: m.PendingActionsTab })));
+import { OverviewTab } from './components/OverviewTab';
+import { MyGuardiansTab } from './components/MyGuardiansTab';
+import { NextOfKinTab } from './components/NextOfKinTab';
+import { RecoveryTab } from './components/RecoveryTab';
+import { ResponsibilitiesTab } from './components/ResponsibilitiesTab';
+import { PendingActionsTab } from './components/PendingActionsTab';
 
 // ── Config ──────────────────────────────────────────────────────────────────
 const TAB_CONFIG = [
@@ -34,17 +32,6 @@ const COLOR_MAP: Record<TabType, { gradient: string; shadow: string }> = {
   responsibilities: { gradient: 'from-emerald-500 to-green-500', shadow: 'shadow-emerald-500/25' },
   pending: { gradient: 'from-red-500 to-orange-500', shadow: 'shadow-red-500/25' },
 };
-
-// ── Loading fallback ────────────────────────────────────────────────────────
-function TabSkeleton() {
-  return (
-    <div className="animate-pulse space-y-4 max-w-4xl mx-auto">
-      <div className="h-8 bg-white/5 rounded-lg w-1/3" />
-      <div className="h-48 bg-white/5 rounded-2xl" />
-      <div className="h-48 bg-white/5 rounded-2xl" />
-    </div>
-  );
-}
 
 // ── Page ─────────────────────────────────────────────────────────────────────
 export default function GuardiansPage() {
@@ -107,30 +94,27 @@ export default function GuardiansPage() {
           </div>
         </section>
 
-        {/* Tab Content — each lazy-loaded and code-split */}
         <div className="container mx-auto px-4 py-8 relative z-10">
-          <Suspense fallback={<TabSkeleton />}>
-            <AnimatePresence mode="wait">
-              {activeTab === 'overview' && (
-                <div key="overview" role="tabpanel" id="tabpanel-overview"><OverviewTab /></div>
-              )}
-              {activeTab === 'my-guardians' && (
-                <div key="my-guardians" role="tabpanel" id="tabpanel-my-guardians"><MyGuardiansTab isConnected={isConnected} /></div>
-              )}
-              {activeTab === 'next-of-kin' && (
-                <div key="next-of-kin" role="tabpanel" id="tabpanel-next-of-kin"><NextOfKinTab isConnected={isConnected} /></div>
-              )}
-              {activeTab === 'recovery' && (
-                <div key="recovery" role="tabpanel" id="tabpanel-recovery"><RecoveryTab isConnected={isConnected} /></div>
-              )}
-              {activeTab === 'responsibilities' && (
-                <div key="responsibilities" role="tabpanel" id="tabpanel-responsibilities"><ResponsibilitiesTab isConnected={isConnected} /></div>
-              )}
-              {activeTab === 'pending' && (
-                <div key="pending" role="tabpanel" id="tabpanel-pending"><PendingActionsTab isConnected={isConnected} /></div>
-              )}
-            </AnimatePresence>
-          </Suspense>
+          <AnimatePresence mode="wait">
+            {activeTab === 'overview' && (
+              <div key="overview" role="tabpanel" id="tabpanel-overview"><OverviewTab /></div>
+            )}
+            {activeTab === 'my-guardians' && (
+              <div key="my-guardians" role="tabpanel" id="tabpanel-my-guardians"><MyGuardiansTab isConnected={isConnected} /></div>
+            )}
+            {activeTab === 'next-of-kin' && (
+              <div key="next-of-kin" role="tabpanel" id="tabpanel-next-of-kin"><NextOfKinTab isConnected={isConnected} /></div>
+            )}
+            {activeTab === 'recovery' && (
+              <div key="recovery" role="tabpanel" id="tabpanel-recovery"><RecoveryTab isConnected={isConnected} /></div>
+            )}
+            {activeTab === 'responsibilities' && (
+              <div key="responsibilities" role="tabpanel" id="tabpanel-responsibilities"><ResponsibilitiesTab isConnected={isConnected} /></div>
+            )}
+            {activeTab === 'pending' && (
+              <div key="pending" role="tabpanel" id="tabpanel-pending"><PendingActionsTab isConnected={isConnected} /></div>
+            )}
+          </AnimatePresence>
         </div>
       </motion.main>
 

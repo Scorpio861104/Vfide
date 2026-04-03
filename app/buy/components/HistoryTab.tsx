@@ -1,35 +1,15 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { Loader2 } from 'lucide-react';
-
-// Purchase and swap transaction history
-
 export function HistoryTab() {
-  const [loading, setLoading] = useState(true);
-  const [data, setData] = useState<any>(null);
-
-  useEffect(() => {
-    // TODO: Wire to API endpoint
-    const timer = setTimeout(() => setLoading(false), 500);
-    return () => clearTimeout(timer);
-  }, []);
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <Loader2 size={24} className="text-cyan-400 animate-spin" />
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-6">
       <div className="bg-white/3 border border-white/10 rounded-2xl p-6">
-        <h3 className="text-lg font-bold text-white mb-4">History</h3>
-        <p className="text-gray-400 text-sm">Purchase and swap transaction history</p>
-        {/* TODO: Implement HistoryTab UI */}
+        <h3 className="text-xl font-bold text-white mb-2">Purchase History</h3>
+        <p className="text-gray-400">Completed on-ramp sessions, provider references, and swap receipts will appear here after your first successful purchase.</p>
+      </div>
+
+      <div className="rounded-2xl border border-dashed border-white/10 bg-black/20 p-6 text-sm text-gray-300">
+        No completed buy or swap activity has been recorded in this session yet.
       </div>
     </div>
   );

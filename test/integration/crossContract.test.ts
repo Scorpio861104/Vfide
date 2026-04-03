@@ -14,7 +14,7 @@ import fs from "node:fs";
  * 4. Vault → EIP-712 → ECDSA → daily limit
  * 5. Merchant payment → escrow → settlement → revenue split
  * 6. Emergency → CircuitBreaker → pause → recovery
- * 7. Staking → governance weight
+ * 7. Liquidity utility tracking
  * 8. Full user lifecycle
  */
 
@@ -317,35 +317,37 @@ describe("Integration: Emergency Flow", function () {
 });
 
 
-describe("Integration: Staking → Governance Weight", function () {
+describe("Integration: Liquidity Utility Tracking", function () {
   let owner: SignerWithAddress;
 
   beforeEach(async function () {
     [owner] = await ethers.getSigners();
   });
 
-  it("should grant governance weight proportional to stake", async function () {
+  it("should expose LP participation stake and unstake entrypoints", async function () {
     const liFactory = await ethers.getContractFactory("LiquidityIncentives");
     const daoFactory = await ethers.getContractFactory("DAO");
     expect(liFactory.interface.getFunction("stake")).to.not.equal(undefined);
+    expect(liFactory.interface.getFunction("unstake")).to.not.equal(undefined);
     expect(daoFactory.interface.getFunction("vote")).to.not.equal(undefined);
   });
 
-  it("should reduce governance weight on unstake", async function () {
-    const liFactory = await ethers.getContractFactory("LiquidityIncentives");
-    expect(liFactory.interface.getFunction("unstake")).to.not.equal(undefined);
+  it("should keep cooldown-based exit protection on utility tracking", async function () {
+    const liSource = fs.readFileSync("contracts/LiquidityIncentives.sol", "utf-8");
+    expect(liSource).to.include("unstakeCooldown");
+    expect(liSource).to.include("LP_Cooldown");
   });
 
-  it("should apply early withdrawal penalty", async function () {
+  it("should remain utility-only with no reward distribution", async function () {
     const liSource = fs.readFileSync("contracts/LiquidityIncentives.sol", "utf-8");
-    expect(liSource).to.include("earlyUnstakePenaltyBps");
-    expect(liSource).to.include("unstake");
+    expect(liSource).to.include("NO rewards or yields");
+    expect(liSource).to.include("utility tracking only");
   });
 });
 
 
 describe("Integration: Full User Lifecycle", function () {
-  it("should handle: register → stake → govern → earn → bridge → withdraw", async function () {
+  it("should handle: register → provide liquidity → govern → pay → bridge → withdraw", async function () {
     const requiredContracts = [
       "contracts/DAO.sol",
       "contracts/LiquidityIncentives.sol",

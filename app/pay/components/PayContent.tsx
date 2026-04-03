@@ -8,10 +8,8 @@ import { useAccount } from 'wagmi';
 import { isAddress, verifyMessage } from 'viem';
 
 import { useToast } from '@/components/ui/toast';
-import { usePayMerchant } from '@/hooks/useMerchantHooks';
-import { useVfidePrice } from '@/hooks/usePriceHooks';
 import { CONTRACT_ADDRESSES } from '@/lib/contracts';
-import { useEscrow } from '@/lib/escrow/useEscrow';
+import { useEscrow, usePayMerchant, useVfidePrice } from '@/lib/vfide-hooks';
 import { buildQrSignatureMessage, parseExpiry } from '@/lib/payments/qrSignature';
 import { safeParseFloat } from '@/lib/validation';
 

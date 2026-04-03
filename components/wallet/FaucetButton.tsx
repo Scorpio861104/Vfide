@@ -26,7 +26,9 @@ export function FaucetButton() {
   // Only show on testnet chains when connected
   if (!isConnected || !chainId || !isTestnetChainId(chainId)) return null;
 
-  const ethBalance = balance ? safeParseFloat(formatUnits(balance.value, balance.decimals), 0) : 0;
+  const ethBalance = balance
+    ? safeParseFloat(formatUnits(balance.value, balance.decimals ?? 18), 0)
+    : 0;
   const isLowBalance = ethBalance < 0.01;
 
   const copyAddress = () => {

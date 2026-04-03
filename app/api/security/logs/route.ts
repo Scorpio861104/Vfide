@@ -61,6 +61,43 @@ const securityLogPostSchema = z.object({
 });
 let lastSecurityLogsCleanupAtMs = 0;
 const SECURITY_LOG_CLEANUP_INTERVAL_MS = 5 * 60 * 1000;
+let securityLogsSchemaReady: Promise<void> | null = null;
+
+async function ensureSecurityLogsSchema(): Promise<void> {
+  if (!securityLogsSchemaReady) {
+    securityLogsSchemaReady = (async () => {
+      await query(`
+        CREATE TABLE IF NOT EXISTS security_event_logs (
+          id BIGSERIAL PRIMARY KEY,
+          address TEXT NOT NULL,
+          ts TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+          type TEXT NOT NULL,
+          severity TEXT NOT NULL,
+          message TEXT NOT NULL,
+          details JSONB,
+          user_agent TEXT,
+          location TEXT,
+          device_id TEXT,
+          ip_hash TEXT
+        )
+      `);
+
+      await query(`
+        CREATE TABLE IF NOT EXISTS security_alert_dispatches (
+          dedup_key TEXT PRIMARY KEY,
+          last_sent_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+          suppressed_count INTEGER NOT NULL DEFAULT 0,
+          updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        )
+      `);
+    })().catch((error) => {
+      securityLogsSchemaReady = null;
+      throw error;
+    });
+  }
+
+  await securityLogsSchemaReady;
+}
 
 function normalizeAddress(value: string): string {
   return value.trim().toLowerCase();
@@ -161,6 +198,8 @@ function isValidType(value: string): value is (typeof VALID_TYPES)[number] {
 }
 
 async function maybeRunSecurityLogsCleanup(): Promise<void> {
+  await ensureSecurityLogsSchema();
+
   const now = Date.now();
   if (now - lastSecurityLogsCleanupAtMs < SECURITY_LOG_CLEANUP_INTERVAL_MS) {
     return;
@@ -424,6 +463,10 @@ export async function POST(request: NextRequest) {
     const body = parsedBody.data;
 
     const { type, severity, message } = body;
+
+    if (!type || !severity || !message) {
+      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+    }
 
     if (type.length > MAX_TYPE_LENGTH || !isValidType(type)) {
       return NextResponse.json({ error: 'Invalid log type' }, { status: 400 });

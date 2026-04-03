@@ -148,7 +148,7 @@ export function CustomerManager({ customers = [], onAddNote, onAddTag, onToggleF
       {filtered.length === 0 && (
         <div className="text-center py-12">
           <Users size={48} className="mx-auto mb-4 text-gray-600" />
-          <p className="text-gray-400">No customers yet. They'll appear here after their first purchase.</p>
+          <p className="text-gray-400">No customers yet. They&apos;ll appear here after their first purchase.</p>
         </div>
       )}
     </div>

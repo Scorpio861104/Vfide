@@ -1,64 +1,28 @@
 'use client';
 
-import { useState } from 'react';
-import { motion } from 'framer-motion';
-
-// Content extracted from original theme page
-
 export function PreviewTab() {
   return (
     <div className="space-y-6">
-      <div className="space-y-6">
-    <div className="bg-slate-900/50 border border-slate-800 rounded-lg p-8">
-    <h2 className="text-2xl font-bold text-white mb-6">Theme Preview</h2>
+      <div className="bg-white/3 border border-white/10 rounded-2xl p-6">
+        <h3 className="text-xl font-bold text-white mb-2">Live Preview</h3>
+        <p className="text-gray-400">Use this panel to sanity-check how headings, cards, and buttons will feel before saving a theme.</p>
+      </div>
 
-    {/* Typography Preview */}
-    <div className="mb-8">
-    <h3 className="text-lg font-semibold text-slate-400 mb-4 uppercase">Typography</h3>
-    <div className="space-y-3">
-    <p className="text-3xl font-bold text-white">Heading Level 1</p>
-    <p className="text-2xl font-bold text-white">Heading Level 2</p>
-    <p className="text-lg font-semibold text-white">Heading Level 3</p>
-    <p className="text-base text-slate-300">Body text - regular paragraph</p>
-    <p className="text-sm text-slate-400">Small text - supporting information</p>
-    </div>
-    </div>
+      <div className="grid gap-4 md:grid-cols-2">
+        <div className="rounded-2xl border border-white/10 bg-black/20 p-5">
+          <p className="text-sm uppercase tracking-[0.2em] text-cyan-400">Heading sample</p>
+          <h4 className="mt-2 text-2xl font-bold text-white">Payments at a glance</h4>
+          <p className="mt-2 text-sm text-gray-400">Preview how core marketing and dashboard typography will render in your selected theme.</p>
+        </div>
 
-    {/* Color Palette Preview */}
-    <div className="mb-8">
-    <h3 className="text-lg font-semibold text-slate-400 mb-4 uppercase">Color Palette</h3>
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-    {Object.entries(themeInfo.palette).slice(0, 8).map(([name, color]) => (
-    <div key={name} className="space-y-2">
-    <div
-    className="h-24 rounded-lg border border-slate-700"
-    style={{ backgroundColor: color as string }}
-    />
-    <p className="text-xs font-medium text-slate-400 capitalize">{name}</p>
-    <p className="text-xs text-slate-500">{color}</p>
-    </div>
-    ))}
-    </div>
-    </div>
-
-    {/* Components Preview */}
-    <div className="mb-8">
-    <h3 className="text-lg font-semibold text-slate-400 mb-4 uppercase">Components</h3>
-    <div className="space-y-4">
-    <button className="px-6 py-2 bg-purple-600 hover:bg-purple-700 text-white font-medium rounded-lg transition-colors">
-    Primary Button
-    </button>
-    <button className="px-6 py-2 bg-slate-700 hover:bg-slate-600 text-white font-medium rounded-lg transition-colors">
-    Secondary Button
-    </button>
-    <div className="p-4 bg-slate-800 border border-slate-700 rounded-lg text-white">
-    <p className="font-semibold mb-1">Card Component</p>
-    <p className="text-sm text-slate-400">This is a preview of a card with the current theme</p>
-    </div>
-    </div>
-    </div>
-    </div>
-  </div>
+        <div className="rounded-2xl border border-white/10 bg-black/20 p-5">
+          <p className="mb-3 text-sm font-semibold text-white">Action sample</p>
+          <div className="flex flex-wrap gap-3">
+            <button type="button" className="rounded-xl bg-cyan-500 px-4 py-2 font-semibold text-zinc-950">Primary</button>
+            <button type="button" className="rounded-xl border border-white/10 bg-white/5 px-4 py-2 font-semibold text-white">Secondary</button>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

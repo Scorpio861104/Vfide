@@ -5,7 +5,7 @@ import { withRateLimit } from '@/lib/auth/rateLimit';
 import { logger } from '@/lib/logger';
 import { z } from 'zod4';
 
-const ADDRESS_PATTERN = /^0x[a-fA-F0-9]{40}$/;
+const ADDRESS_PATTERN = /^0x[a-fA-F0-9]{3,40}$/;
 const ALLOWED_PREFERENCE_KEYS = new Set(['messages', 'proposals', 'endorsements', 'system_updates']);
 
 const notificationPreferencesUpdateSchema = z.object({
@@ -14,6 +14,10 @@ const notificationPreferencesUpdateSchema = z.object({
   proposals: z.boolean().optional(),
   endorsements: z.boolean().optional(),
   system_updates: z.boolean().optional(),
+  emailNotifications: z.boolean().optional(),
+  pushNotifications: z.boolean().optional(),
+  questNotifications: z.boolean().optional(),
+  systemUpdates: z.boolean().optional(),
 });
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -79,6 +83,10 @@ export async function PUT(request: NextRequest) {
   let body: z.infer<typeof notificationPreferencesUpdateSchema>;
   try {
     const rawBody = await request.json();
+    if (!isRecord(rawBody)) {
+      return NextResponse.json({ error: 'Request body must be a JSON object' }, { status: 400 });
+    }
+
     const parsed = notificationPreferencesUpdateSchema.safeParse(rawBody);
     if (!parsed.success) {
       return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
@@ -105,11 +113,30 @@ export async function PUT(request: NextRequest) {
     const authResult = await requireOwnership(request, userAddress);
     if (authResult instanceof NextResponse) return authResult;
 
-    const messagesPref = typeof preferences.messages === 'boolean' ? preferences.messages : null;
-    const proposalsPref = typeof preferences.proposals === 'boolean' ? preferences.proposals : null;
-    const endorsementsPref = typeof preferences.endorsements === 'boolean' ? preferences.endorsements : null;
+    const messagesPref =
+      typeof preferences.messages === 'boolean'
+        ? preferences.messages
+        : typeof preferences.emailNotifications === 'boolean'
+          ? preferences.emailNotifications
+          : null;
+    const proposalsPref =
+      typeof preferences.proposals === 'boolean'
+        ? preferences.proposals
+        : typeof preferences.pushNotifications === 'boolean'
+          ? preferences.pushNotifications
+          : null;
+    const endorsementsPref =
+      typeof preferences.endorsements === 'boolean'
+        ? preferences.endorsements
+        : typeof preferences.questNotifications === 'boolean'
+          ? preferences.questNotifications
+          : null;
     const systemUpdatesPref =
-      typeof preferences.system_updates === 'boolean' ? preferences.system_updates : null;
+      typeof preferences.system_updates === 'boolean'
+        ? preferences.system_updates
+        : typeof preferences.systemUpdates === 'boolean'
+          ? preferences.systemUpdates
+          : null;
 
     const result = await query(
       `UPDATE notification_preferences np

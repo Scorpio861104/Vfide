@@ -54,8 +54,8 @@ const REQUIRED_ENV_VARS: EnvironmentConfig[] = [
   { name: 'DATABASE_URL', required: true, category: 'api', production: true },
 
   // Security & Rate Limiting
-  { name: 'UPSTASH_REDIS_REST_URL', required: true, category: 'security', production: true },
-  { name: 'UPSTASH_REDIS_REST_TOKEN', required: true, category: 'security', production: true },
+  { name: 'UPSTASH_REDIS_REST_URL', required: false, category: 'security' },
+  { name: 'UPSTASH_REDIS_REST_TOKEN', required: false, category: 'security' },
   { name: 'JWT_SECRET', required: true, category: 'security', production: true },
 
   // Monitoring & Error Tracking
@@ -125,10 +125,10 @@ export function validateProductionEnvironment(): ValidationResult {
   const isProduction = process.env.NODE_ENV === 'production';
   const isCI = process.env.CI === 'true' || process.env.VERCEL === '1';
   const frontendOnlyEnv = process.env.FRONTEND_SELF_CONTAINED ?? process.env.NEXT_PUBLIC_FRONTEND_ONLY;
+  const missingServerSecrets = !process.env.DATABASE_URL || !process.env.JWT_SECRET;
   const autoFrontendOnly =
-    isCI &&
     frontendOnlyEnv !== 'false' &&
-    (!process.env.DATABASE_URL || !process.env.JWT_SECRET);
+    missingServerSecrets;
   const frontendOnly = frontendOnlyEnv === 'true' || autoFrontendOnly;
   const strictProduction = isProduction && isCI && !frontendOnly;
   const isTestnet = process.env.NEXT_PUBLIC_IS_TESTNET !== 'false';
@@ -136,7 +136,7 @@ export function validateProductionEnvironment(): ValidationResult {
   if (frontendOnly) {
     result.info.push('✅ FRONTEND_SELF_CONTAINED mode enabled (server-only requirements relaxed)');
     if (autoFrontendOnly) {
-      result.warnings.push('⚠️  Auto-enabled frontend-only mode in CI (DATABASE_URL/JWT_SECRET not set)');
+      result.warnings.push('⚠️  Auto-enabled frontend-only mode for this environment (DATABASE_URL/JWT_SECRET not set)');
     }
   }
 
@@ -289,6 +289,8 @@ export function validateProductionEnvironment(): ValidationResult {
     } else {
       result.valid = false;
     }
+  } else if (redisConfigured.length === 0) {
+    result.warnings.push('⚠️  Redis is not configured - rate limiting will run in degraded mode');
   }
 
   return result;

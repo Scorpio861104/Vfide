@@ -24,10 +24,10 @@ export function OverviewTab() {
   ];
 
   const recentDistributions = [
-    { recipient: 'Council Salaries', amount: '50,000 VFIDE', date: '2 hours ago', type: 'council' },
+    { recipient: 'Council Operations', amount: '50,000 VFIDE', date: '2 hours ago', type: 'council' },
     { recipient: 'Education Grants', amount: '25,000 VFIDE', date: '1 day ago', type: 'charity' },
-    { recipient: 'LP Incentives', amount: '100,000 VFIDE', date: '3 days ago', type: 'ecosystem' },
-    { recipient: 'Merchant Rewards', amount: '15,000 VFIDE', date: '5 days ago', type: 'ecosystem' },
+    { recipient: 'Liquidity Operations', amount: '100,000 VFIDE', date: '3 days ago', type: 'ecosystem' },
+    { recipient: 'Merchant Service Fees', amount: '15,000 VFIDE', date: '5 days ago', type: 'ecosystem' },
   ];
 
   return (

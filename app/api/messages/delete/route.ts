@@ -23,6 +23,10 @@ function toNonEmptyString(value: unknown): string | null {
   return trimmed.length > 0 ? trimmed : null;
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
 export async function DELETE(request: NextRequest) {
   // Rate limiting: 20 requests per minute for write operations
   const rateLimitResponse = await withRateLimit(request, 'write');
@@ -44,6 +48,10 @@ export async function DELETE(request: NextRequest) {
   let body: z.infer<typeof deleteMessageSchema>;
   try {
     const rawBody = await request.json();
+    if (!isRecord(rawBody)) {
+      return NextResponse.json({ error: 'Request body must be a JSON object' }, { status: 400 });
+    }
+
     const parsed = deleteMessageSchema.safeParse(rawBody);
     if (!parsed.success) {
       return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });

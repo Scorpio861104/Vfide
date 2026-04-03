@@ -16,7 +16,9 @@ import { safeLocalStorage } from '@/lib/utils'
 import { formatUnits } from 'viem'
 import { baseSepolia } from 'wagmi/chains'
 
-const targetChainConfig = getChainByChainId(CURRENT_CHAIN_ID)
+const targetChainConfig = typeof getChainByChainId === 'function'
+  ? getChainByChainId(CURRENT_CHAIN_ID)
+  : undefined
 const targetNetwork = targetChainConfig
   ? (targetChainConfig.mainnet.id === CURRENT_CHAIN_ID ? targetChainConfig.mainnet : targetChainConfig.testnet)
   : baseSepolia

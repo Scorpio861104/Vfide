@@ -54,7 +54,7 @@ export function PendingActionsTab({ isConnected }: { isConnected: boolean }) {
 
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
         className="bg-gradient-to-br from-white/8 to-white/2 backdrop-blur-xl border border-white/10 rounded-2xl p-6">
-        <h3 className="text-xl font-bold text-white mb-2">Guardian Watchlist</h3>
+        <h3 className="text-xl font-bold text-white mb-2">Pending Recovery Inbox</h3>
         <p className="text-gray-400 text-sm mb-4">Add vault addresses you guard. This is local and private.</p>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
@@ -71,7 +71,7 @@ export function PendingActionsTab({ isConnected }: { isConnected: boolean }) {
 
         {inboxEntries.length === 0 ? (
           <div className="mt-4 p-6 bg-black/30 border border-white/10 rounded-xl text-center">
-            <p className="text-gray-400">No vaults in watchlist yet.</p>
+            <p className="text-gray-400">No tracked vaults yet.</p>
             <p className="text-gray-500 text-sm mt-1">Add vault addresses to monitor recovery and inheritance status.</p>
           </div>
         ) : (

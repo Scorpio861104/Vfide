@@ -3,6 +3,7 @@ import { query } from '@/lib/db';
 import { requireAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { logger } from '@/lib/logger';
+import { isAddress } from 'viem';
 import { z } from 'zod4';
 
 // File validation constants
@@ -41,6 +42,10 @@ const uploadAttachmentSchema = z.object({
   url: z.string().trim().min(1).max(MAX_URL_LENGTH),
 });
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
 export async function POST(request: NextRequest) {
   // Rate limiting
   const rateLimit = await withRateLimit(request, 'write');
@@ -51,21 +56,41 @@ export async function POST(request: NextRequest) {
   if (authResult instanceof NextResponse) return authResult;
 
   try {
+    const authAddress = typeof authResult.user?.address === 'string' ? authResult.user.address.trim() : '';
+    if (!authAddress || !isAddress(authAddress)) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     let body: z.infer<typeof uploadAttachmentSchema>;
     try {
       const rawBody = await request.json();
+      if (!isRecord(rawBody)) {
+        return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
+      }
+
       const parsed = uploadAttachmentSchema.safeParse(rawBody);
       if (!parsed.success) {
+        const hasMissingFieldIssue = parsed.error.issues.some(
+          (issue) => issue.code === 'invalid_type' && ['filename', 'fileType', 'fileSize', 'url'].includes(String(issue.path[0] || ''))
+        );
+        if (hasMissingFieldIssue) {
+          return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+        }
+
+        const hasFileSizeIssue = parsed.error.issues.some((issue) => issue.path[0] === 'fileSize');
+        if (hasFileSizeIssue) {
+          return NextResponse.json(
+            { error: `File size must be between ${MIN_FILE_SIZE} and ${MAX_FILE_SIZE} bytes` },
+            { status: 400 }
+          );
+        }
+
         return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
       }
       body = parsed.data;
     } catch (error) {
       logger.debug('[Attachments Upload] Invalid JSON body', error);
       return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
-    }
-
-    if (!authResult.user?.address || typeof authResult.user.address !== 'string') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const { filename: rawFilename, fileType: rawFileType, fileSize, url: rawUrl } = body;

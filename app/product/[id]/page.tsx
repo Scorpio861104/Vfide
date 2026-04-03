@@ -1,8 +1,8 @@
 'use client';
 
 import { Footer } from '@/components/layout/Footer';
-import { useState, useEffect, useMemo } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
+import { useParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ShoppingCart, Heart, Star, Share2, ChevronLeft, ChevronRight, Package, ArrowLeft, Shield, Truck, Download, Clock, Minus, Plus, Check, Loader2, ExternalLink } from 'lucide-react';
 import Link from 'next/link';
@@ -26,15 +26,17 @@ interface Product {
 
 export default function ProductDetailPage() {
   const params = useParams();
-  const router = useRouter();
-  const productId = params?.id as string;
+  const productId = params?.id as string | undefined;
   
   const [product, setProduct] = useState<Product | null>(null);
   const [related, setRelated] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(Boolean(productId));
 
   useEffect(() => {
-    if (!productId) return;
+    if (!productId) {
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     fetch(`/api/merchant/products?id=${productId}`)
       .then(r => r.ok ? r.json() : null)
@@ -56,9 +58,9 @@ export default function ProductDetailPage() {
         <div className="text-center">
           <Package size={48} className="mx-auto mb-4 text-gray-600" />
           <p className="text-gray-400 text-lg">Product not found</p>
-          <button onClick={() => router.back()} className="mt-4 text-cyan-400 flex items-center gap-2 mx-auto">
-            <ArrowLeft size={16} /> Go back
-          </button>
+          <Link href="/marketplace" className="mt-4 text-cyan-400 flex items-center gap-2 mx-auto w-fit">
+            <ArrowLeft size={16} /> Back to marketplace
+          </Link>
         </div>
       </div>
     );

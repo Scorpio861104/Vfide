@@ -60,6 +60,10 @@ function isAddressLike(value: string): boolean {
   return ETH_ADDRESS_REGEX.test(value.trim());
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
 // GET /api/users - Get all users
 export async function GET(request: NextRequest) {
   const startTime = Date.now();
@@ -182,6 +186,10 @@ export async function POST(request: NextRequest) {
   let body: z.infer<typeof upsertUserSchema>;
   try {
     const rawBody = await request.json();
+    if (!isRecord(rawBody)) {
+      return NextResponse.json({ error: 'Request body must be a JSON object' }, { status: 400 });
+    }
+
     const parsed = upsertUserSchema.safeParse(rawBody);
     if (!parsed.success) {
       return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });

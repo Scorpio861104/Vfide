@@ -1,33 +1,19 @@
 'use client';
 
-import { useState } from 'react';
-import { motion } from 'framer-motion';
+import { AccountSettings } from '@/components/settings/AccountSettings';
+import { EndorsementsBadges } from '@/components/social/EndorsementsBadges';
 
-// Content extracted from original social-messaging page
+interface AccountTabProps {
+  address?: `0x${string}`;
+}
 
-export function AccountTab() {
+export function AccountTab({ address }: AccountTabProps) {
   return (
     <div className="space-y-6">
-      <motion.div
-    key="account"
-    initial={{ opacity: 0, y: 20 }}
-    animate={{ opacity: 1, y: 0 }}
-    exit={{ opacity: 0, y: -20 }}
-    >
-    <div className="max-w-4xl mx-auto space-y-6">
-    <Suspense fallback={<SocialPanelFallback message="Loading account settings…" />}>
-    <AccountSettings />
-    </Suspense>
-    {address && (
-    <Suspense fallback={<SocialPanelFallback message="Loading endorsements…" />}>
-    <EndorsementsBadges
-    userAddress={address}
-    showGiveEndorsement={false}
-    />
-    </Suspense>
-    )}
-    </div>
-    </motion.div>
+      <div className="mx-auto max-w-4xl space-y-6">
+        <AccountSettings />
+        {address ? <EndorsementsBadges userAddress={address} showGiveEndorsement={false} /> : null}
+      </div>
     </div>
   );
 }

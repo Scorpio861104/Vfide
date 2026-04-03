@@ -95,7 +95,7 @@ const PAGES = [
 const COMMANDS = [
   { id: 'send', title: 'Send Payment', description: 'Send crypto to an address', keywords: ['send', 'pay', 'transfer'], icon: Send, action: '/pay' },
   { id: 'swap', title: 'Swap Tokens', description: 'Exchange one token for another', keywords: ['swap', 'exchange', 'trade'], icon: ArrowRightLeft, action: '/crypto?tab=swap' },
-  { id: 'stake', title: 'Lock VFIDE', description: 'Lock tokens for governance voting power', keywords: ['stake', 'staking', 'lock', 'governance'], icon: PiggyBank, action: '/rewards?tab=stake' },
+  { id: 'utility', title: 'Review Token Utility', description: 'See VFIDE governance and protocol-use policy', keywords: ['utility', 'governance', 'token', 'policy', 'rewards'], icon: PiggyBank, action: '/rewards' },
   { id: 'vote', title: 'Vote on Proposal', description: 'Participate in governance', keywords: ['vote', 'governance', 'proposal'], icon: Vote, action: '/governance' },
   { id: 'claim', title: 'Claim Milestones', description: 'Claim completed milestone allocations', keywords: ['claim', 'rewards', 'milestones'], icon: Trophy, action: '/rewards?tab=claim' },
 ];

@@ -39,6 +39,11 @@ export async function POST(request: NextRequest) {
       const rawBody = await request.json();
       const parsed = revokeSchema.safeParse(rawBody);
       if (!parsed.success) {
+        const hasRevokeAllIssue = parsed.error.issues.some((issue) => issue.path[0] === 'revokeAll');
+        if (hasRevokeAllIssue) {
+          return NextResponse.json({ error: 'Invalid revokeAll flag' }, { status: 400 });
+        }
+
         return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
       }
       body = parsed.data;

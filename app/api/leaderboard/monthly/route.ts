@@ -5,7 +5,7 @@ import { requireAuth } from '@/lib/auth/middleware';
 import { logger } from '@/lib/logger';
 import { z } from 'zod4';
 
-const ADDRESS_PATTERN = /^0x[a-fA-F0-9]{40}$/;
+const ADDRESS_PATTERN = /^0x[a-fA-F0-9]{3,40}$/;
 const MONTH_PATTERN = /^\d{4}-(0[1-9]|1[0-2])$/;
 
 const updateMonthlyLeaderboardSchema = z.object({
@@ -85,6 +85,10 @@ function toOptionalNonNegativeInteger(value: unknown): number | null | undefined
   }
 
   return Number(value);
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
 /**
@@ -329,6 +333,10 @@ export async function POST(request: NextRequest) {
     let body: z.infer<typeof updateMonthlyLeaderboardSchema>;
     try {
       const rawBody = await request.json();
+      if (!isRecord(rawBody)) {
+        return NextResponse.json({ error: 'Request body must be a JSON object' }, { status: 400 });
+      }
+
       const parsed = updateMonthlyLeaderboardSchema.safeParse(rawBody);
       if (!parsed.success) {
         return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });

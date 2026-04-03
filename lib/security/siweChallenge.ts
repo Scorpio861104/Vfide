@@ -18,6 +18,11 @@ const CHALLENGE_TTL_MS = 5 * 60 * 1000;
 const CHALLENGE_TTL_SECONDS = Math.floor(CHALLENGE_TTL_MS / 1000);
 const CHALLENGE_PREFIX = 'auth:siwe:challenge:';
 let redisClient: Redis | null | undefined;
+const memoryChallengeStore = new Map<string, string>();
+
+function canUseInMemoryChallengeStore(): boolean {
+  return process.env.NODE_ENV !== 'production';
+}
 
 function assertRedisAvailable(redis: Redis | null): void {
   if (!redis) {
@@ -61,18 +66,44 @@ function normalizeFingerprintValue(value: string, fallback: string): string {
 }
 
 async function storeChallengeRecord(record: ChallengeRecord): Promise<void> {
-  const redis = getRedisClient();
-  assertRedisAvailable(redis);
   const key = challengeKey(record.address);
-  await redis!.set(key, JSON.stringify(record), { ex: CHALLENGE_TTL_SECONDS });
+  const redis = getRedisClient();
+
+  if (redis) {
+    await redis.set(key, JSON.stringify(record), { ex: CHALLENGE_TTL_SECONDS });
+    return;
+  }
+
+  if (canUseInMemoryChallengeStore()) {
+    memoryChallengeStore.set(key, JSON.stringify(record));
+    setTimeout(() => {
+      memoryChallengeStore.delete(key);
+    }, CHALLENGE_TTL_MS).unref?.();
+    return;
+  }
+
+  assertRedisAvailable(redis);
 }
 
 async function consumeChallengeRecord(address: string): Promise<ChallengeRecord | null> {
   const key = challengeKey(address);
   const redis = getRedisClient();
+
+  if (redis) {
+    const record = await redis.getdel<string>(key);
+    return record ? JSON.parse(record) as ChallengeRecord : null;
+  }
+
+  if (canUseInMemoryChallengeStore()) {
+    const record = memoryChallengeStore.get(key) ?? null;
+    if (record) {
+      memoryChallengeStore.delete(key);
+    }
+    return record ? JSON.parse(record) as ChallengeRecord : null;
+  }
+
   assertRedisAvailable(redis);
-  const record = await redis!.getdel<string>(key);
-  return record ? JSON.parse(record) as ChallengeRecord : null;
+  return null;
 }
 
 export function getRequestIp(headers: Headers): string {

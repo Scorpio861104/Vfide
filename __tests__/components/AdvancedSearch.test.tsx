@@ -182,7 +182,7 @@ describe('AdvancedSearch - Search History', () => {
     fireEvent.click(screen.getByRole('button', { name: /🕐 history \(\d+\)/i }));
 
     expect(screen.getByText(/"governance proposal"/i)).toBeInTheDocument();
-    expect(screen.getByText(/"staking rewards"/i)).toBeInTheDocument();
+    expect(screen.getByText(/"merchant settlement"/i)).toBeInTheDocument();
   });
 
   test('history items show result counts', () => {

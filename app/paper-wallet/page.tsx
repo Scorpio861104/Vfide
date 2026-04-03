@@ -19,8 +19,9 @@ export default function PaperWalletPage() {
     <>
       <div className="min-h-screen bg-zinc-950 pt-20">
         <div className="container mx-auto px-4 max-w-6xl py-8">
-          <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-            className="text-4xl font-bold text-white mb-2">Paper Wallet</motion.h1>
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+            <h1 className="text-4xl font-bold text-white mb-2">Paper Wallet Generator</h1>
+          </motion.div>
           <p className="text-white/60 mb-8">Generate cold storage backup</p>
 
           <div className="flex gap-2 mb-8 overflow-x-auto pb-2">

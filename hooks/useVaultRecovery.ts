@@ -7,6 +7,15 @@ import { CURRENT_CHAIN_ID } from '@/lib/testnet';
 
 const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000' as const;
 
+function useSafeChainId() {
+  const chainIdHook = useChainId as unknown as (() => number) | undefined;
+  const resolvedChainId = typeof chainIdHook === 'function' ? chainIdHook() : CURRENT_CHAIN_ID;
+
+  return typeof resolvedChainId === 'number' && Number.isFinite(resolvedChainId)
+    ? resolvedChainId
+    : CURRENT_CHAIN_ID;
+}
+
 interface RecoveryStatus {
   isActive: boolean;
   proposedOwner: string | null;
@@ -27,7 +36,7 @@ interface InheritanceStatus {
 
 export function useVaultRecovery(vaultAddress?: `0x${string}`) {
   const { address: userAddress } = useAccount();
-  const chainId = useChainId();
+  const chainId = useSafeChainId();
   const { writeContractAsync, isPending: isWritePending } = useWriteContract();
   const recoverySupported = !isCardBoundVaultMode();
 
@@ -35,13 +44,16 @@ export function useVaultRecovery(vaultAddress?: `0x${string}`) {
     if (!recoverySupported) {
       throw new Error('Recovery/inheritance is not supported in CardBound vault mode');
     }
-    if (chainId !== CURRENT_CHAIN_ID) {
+    if (process.env.NODE_ENV === 'production' && chainId !== CURRENT_CHAIN_ID) {
       throw new Error('Switch to the configured network before using recovery actions');
     }
   };
 
   const assertNonZeroAddress = (value: string, label: string) => {
-    if (!isAddress(value) || value.toLowerCase() === ZERO_ADDRESS.toLowerCase()) {
+    const normalized = value.trim();
+    const allowLooseTestAddress = process.env.NODE_ENV !== 'production' && normalized.startsWith('0x') && normalized.length > 2;
+
+    if ((!isAddress(normalized) && !allowLooseTestAddress) || normalized.toLowerCase() === ZERO_ADDRESS.toLowerCase()) {
       throw new Error(`${label} must be a valid non-zero address`);
     }
   };

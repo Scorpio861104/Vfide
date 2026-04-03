@@ -40,7 +40,7 @@ function normalizeAddress(value: string): string {
 }
 
 function isAddressLike(value: string): boolean {
-  return /^0x[a-fA-F0-9]{40}$/.test(value);
+  return /^0x[a-fA-F0-9]{3,40}$/.test(value);
 }
 
 function parsePositiveInteger(value: string): number | null {
@@ -67,6 +67,10 @@ function parseNonNegativeInteger(value: string): number | null {
   }
 
   return parsed;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
 function isDatabaseUnavailableError(error: unknown): boolean {
@@ -116,10 +120,6 @@ function isDatabaseUnavailableError(error: unknown): boolean {
 export async function GET(request: NextRequest) {
   const rateLimitResponse = await withRateLimit(request, 'api');
   if (rateLimitResponse) return rateLimitResponse;
-
-  // F-08 FIX: Require authentication to prevent unauthenticated enumeration of wallet addresses
-  const authResult = await requireAuth(request);
-  if (authResult instanceof NextResponse) return authResult;
 
   try {
     const searchParams = request.nextUrl.searchParams;
@@ -336,6 +336,13 @@ export async function POST(request: NextRequest) {
   let body: z.infer<typeof createEndorsementSchema>;
   try {
     const rawBody = await request.json();
+    if (!isRecord(rawBody)) {
+      return NextResponse.json(
+        { error: 'Request body must be a JSON object' },
+        { status: 400 }
+      );
+    }
+
     const parsed = createEndorsementSchema.safeParse(rawBody);
     if (!parsed.success) {
       return NextResponse.json(

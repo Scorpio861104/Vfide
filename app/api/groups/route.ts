@@ -3,6 +3,7 @@ import { getClient, query } from '@/lib/db';
 import { ensureGroupVisualColumns } from '@/lib/dbPatches';
 import { requireAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
+import { validateBody } from '@/lib/auth/validation';
 import { isAddress } from 'viem';
 import { logger } from '@/lib/logger';
 import { z } from 'zod4';
@@ -201,26 +202,15 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  let body: z.infer<typeof createGroupRequestSchema>;
-  try {
-    const rawBody = await request.json();
-    const parsed = createGroupRequestSchema.safeParse(rawBody);
-    if (!parsed.success) {
-      return NextResponse.json(
-        { error: 'Invalid request body' },
-        { status: 400 }
-      );
-    }
-    body = parsed.data;
-  } catch (error) {
-    logger.debug('[Groups POST] Invalid JSON body', error);
+  const validationResult = await validateBody(request, createGroupRequestSchema);
+  if (!validationResult.success) {
     return NextResponse.json(
-      { error: 'Invalid JSON body' },
+      { error: validationResult.error, details: validationResult.details },
       { status: 400 }
     );
   }
 
-  const { name, description, memberAddresses, icon, color } = body;
+  const { name, description, memberAddresses, icon, color } = validationResult.data;
   const requestedMemberAddresses = memberAddresses ?? [];
 
   let client: Awaited<ReturnType<typeof getClient>> | null = null;

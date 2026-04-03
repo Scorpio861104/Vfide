@@ -1,8 +1,11 @@
 // @ts-nocheck
 'use client';
 
+import { useMemo, useState } from 'react';
+import { useAccount } from 'wagmi';
 import { motion } from 'framer-motion';
 import { Shield, Users, Clock, CheckCircle2, AlertCircle, Lock, FileText, ArrowRightCircle } from 'lucide-react';
+import { mergeInboxEntries, useGuardianAttestations, useGuardianWatchlist } from './hooks';
 
 export function ResponsibilitiesTab({ isConnected }: { isConnected: boolean }) {
   const [vaultInput, setVaultInput] = useState('');

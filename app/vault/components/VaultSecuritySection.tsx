@@ -4,6 +4,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Shield, AlertTriangle, Lock, Clock, CheckCircle2, X } from 'lucide-react';
+import { GlassCard } from '@/components/ui/GlassCard';
 import { useSelfPanic, useQuarantineStatus, useCanSelfPanic } from '@/lib/vfide-hooks';
 
 export function VaultSecuritySection({ vaultAddress }: { vaultAddress: `0x${string}` | null | undefined }) {

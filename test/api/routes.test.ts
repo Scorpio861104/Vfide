@@ -135,7 +135,7 @@ describeLive("[M-03] Input Validation", () => {
     { method: "post", path: "/api/merchants/register" },
     { method: "put", path: "/api/users/profile" },
     { method: "post", path: "/api/governance/proposals" },
-    { method: "post", path: "/api/staking/stake" },
+    { method: "post", path: "/api/crypto/payment-requests" },
     { method: "post", path: "/api/bridge/initiate" },
   ];
 
@@ -269,7 +269,7 @@ describeLive("Authorization Matrix", () => {
   const authenticatedRoutes = [
     "/api/users/profile",
     "/api/crypto/balance",
-    "/api/staking/positions",
+    "/api/crypto/payment-requests",
     "/api/governance/proposals",
   ];
 

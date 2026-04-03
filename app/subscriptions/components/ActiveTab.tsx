@@ -1,35 +1,26 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { Loader2 } from 'lucide-react';
-
-// Active recurring payment subscriptions with manage/cancel options
+import { useAccount } from 'wagmi';
 
 export function ActiveTab() {
-  const [loading, setLoading] = useState(true);
-  const [data, setData] = useState<any>(null);
-
-  useEffect(() => {
-    // TODO: Wire to API endpoint
-    const timer = setTimeout(() => setLoading(false), 500);
-    return () => clearTimeout(timer);
-  }, []);
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <Loader2 size={24} className="text-cyan-400 animate-spin" />
-      </div>
-    );
-  }
+  const { isConnected } = useAccount();
 
   return (
     <div className="space-y-6">
       <div className="bg-white/3 border border-white/10 rounded-2xl p-6">
-        <h3 className="text-lg font-bold text-white mb-4">Active</h3>
-        <p className="text-gray-400 text-sm">Active recurring payment subscriptions with manage/cancel options</p>
-        {/* TODO: Implement ActiveTab UI */}
+        <h2 className="text-2xl font-bold text-white mb-3">Active Subscriptions</h2>
+        {isConnected ? (
+          <>
+            <p className="text-white font-semibold mb-2">No Active Subscriptions</p>
+            <p className="text-gray-400">
+              Create a recurring payment for payroll, rent, retainers, or software renewals in a few clicks.
+            </p>
+          </>
+        ) : (
+          <p className="text-gray-300">
+            Connect your wallet to view and manage your subscriptions.
+          </p>
+        )}
       </div>
     </div>
   );

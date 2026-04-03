@@ -51,7 +51,9 @@ export function TokenBalance({
     );
   }
 
-  const formattedEth = ethBalance ? parseFloat(formatUnits(ethBalance.value, ethBalance.decimals)).toFixed(4) : '0.0000';
+  const formattedEth = ethBalance
+    ? parseFloat(formatUnits(ethBalance.value, ethBalance.decimals ?? 18)).toFixed(4)
+    : '0.0000';
   const formattedToken = tokenBalance ? parseFloat(formatUnits(tokenBalance as bigint, 18)).toFixed(2) : '0.00';
 
   return (

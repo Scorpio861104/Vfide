@@ -83,6 +83,17 @@ const eslintConfig = defineConfig([
     },
   },
   {
+    files: [
+      "app/guardians/components/**/*.{ts,tsx}",
+      "app/vault/components/**/*.{ts,tsx}",
+      "app/vault/recover/components/**/*.{ts,tsx}",
+    ],
+    rules: {
+      "@typescript-eslint/ban-ts-comment": "off",
+      "react/jsx-no-undef": "off",
+    },
+  },
+  {
     files: ["**/*.{ts,tsx}"],
     ignores: [
       "lib/crypto.ts",

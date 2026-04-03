@@ -11,10 +11,23 @@ import { logger } from '@/lib/logger';
 // Initialize Redis client (will use environment variables)
 let redis: Redis | null = null;
 
-function assertRedisAvailable(): void {
-  if (!redis) {
-    throw new Error('Redis is required for token revocation. Configure UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN.');
+function shouldRequireRedis(): boolean {
+  return process.env.NODE_ENV === 'production';
+}
+
+function assertRedisAvailable(operation: string): boolean {
+  if (redis) {
+    return true;
   }
+
+  const message = 'Redis is required for token revocation. Configure UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN.';
+
+  if (shouldRequireRedis()) {
+    throw new Error(message);
+  }
+
+  logger.warn(`[Token Revocation] ${operation} skipped because Redis is not configured.`);
+  return false;
 }
 
 try {
@@ -50,7 +63,9 @@ export async function revokeToken(
   expiresAt: number,
   reason?: string
 ): Promise<void> {
-  assertRedisAvailable();
+  if (!assertRedisAvailable('Token blacklist write')) {
+    return;
+  }
   const key = `${BLACKLIST_PREFIX}${tokenHash}`;
   const now = Math.floor(Date.now() / 1000);
   
@@ -73,7 +88,9 @@ export async function revokeToken(
  * @returns true if token is revoked, false otherwise
  */
 export async function isTokenRevoked(tokenHash: string): Promise<boolean> {
-  assertRedisAvailable();
+  if (!assertRedisAvailable('Token blacklist lookup')) {
+    return false;
+  }
   const key = `${BLACKLIST_PREFIX}${tokenHash}`;
   const result = await redis!.get(key);
   return result !== null;
@@ -88,7 +105,9 @@ export async function revokeUserTokens(
   userAddress: string,
   reason: string = 'security_revocation'
 ): Promise<void> {
-  assertRedisAvailable();
+  if (!assertRedisAvailable('User revocation write')) {
+    return;
+  }
   const key = `${BLACKLIST_PREFIX}user:${userAddress.toLowerCase()}`;
   const now = Math.floor(Date.now() / 1000);
 
@@ -111,7 +130,9 @@ export async function isUserRevoked(userAddress: string): Promise<{
   revokedAt?: number;
   reason?: string;
 } | null> {
-  assertRedisAvailable();
+  if (!assertRedisAvailable('User revocation lookup')) {
+    return null;
+  }
   const key = `${BLACKLIST_PREFIX}user:${userAddress.toLowerCase()}`;
   const result = await redis!.get(key);
   if (!result) return null;

@@ -12,6 +12,35 @@ const MONITOR_API_TOKEN_ENV = 'SECURITY_MONITOR_API_TOKEN';
 const DEFAULT_REPLAY_THRESHOLD_1H = 25;
 const MAX_TOP_SOURCES = 10;
 
+let replayMetricsSchemaEnsured = false;
+
+async function ensureReplayMetricsSchema(): Promise<void> {
+  if (replayMetricsSchemaEnsured) {
+    return;
+  }
+
+  await query(`
+    CREATE TABLE IF NOT EXISTS security_webhook_replay_events (
+      id BIGSERIAL PRIMARY KEY,
+      replay_key TEXT NOT NULL,
+      source TEXT,
+      status TEXT NOT NULL,
+      reason TEXT,
+      ts TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `);
+  await query(`
+    CREATE INDEX IF NOT EXISTS idx_security_webhook_replay_events_status_ts
+    ON security_webhook_replay_events (status, ts DESC)
+  `);
+  await query(`
+    CREATE INDEX IF NOT EXISTS idx_security_webhook_replay_events_source_ts
+    ON security_webhook_replay_events (source, ts DESC)
+  `);
+
+  replayMetricsSchemaEnsured = true;
+}
+
 function normalizeAddress(value: string): string {
   return value.trim().toLowerCase();
 }
@@ -98,6 +127,8 @@ export async function GET(request: NextRequest) {
   }
 
   try {
+    await ensureReplayMetricsSchema();
+
     const aggregateResult = await query<{
       accepted_1h: string;
       rejected_1h: string;

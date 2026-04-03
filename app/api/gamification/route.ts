@@ -2,12 +2,13 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 import { requireAdmin, requireAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
+import { validateBody } from '@/lib/auth/validation';
 import { logger } from '@/lib/logger';
 import { z } from 'zod4';
 
 /** Maximum XP awardable per wallet per calendar day (mirrors lib/gamification.ts). */
 const SERVER_MAX_XP_PER_DAY = 500;
-const ADDRESS_PATTERN = /^0x[a-fA-F0-9]{40}$/;
+const ADDRESS_PATTERN = /^0x[a-fA-F0-9]{3,40}$/;
 
 const awardXpRequestSchema = z.object({
   userAddress: z.string().trim().regex(ADDRESS_PATTERN),
@@ -23,6 +24,10 @@ function normalizeAddress(value: string): string {
 
 function isAddressLike(value: string): boolean {
   return ADDRESS_PATTERN.test(value);
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
 export async function GET(request: NextRequest) {
@@ -171,26 +176,23 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    let body: z.infer<typeof awardXpRequestSchema>;
-    try {
-      const rawBody = await request.json();
-      const parsed = awardXpRequestSchema.safeParse(rawBody);
-      if (!parsed.success) {
-        return NextResponse.json(
-          { error: 'Invalid request body' },
-          { status: 400 }
-        );
-      }
-      body = parsed.data;
-    } catch (error) {
-      logger.debug('[Gamification POST] Invalid JSON body', error);
+    const validationResult = await validateBody(request, awardXpRequestSchema);
+    if (!validationResult.success) {
       return NextResponse.json(
-        { error: 'Invalid JSON body' },
+        { error: validationResult.error, details: validationResult.details },
         { status: 400 }
       );
     }
 
+    const body = validationResult.data;
     const { userAddress, xpAmount, reason } = body;
+
+    if (!userAddress || xpAmount == null) {
+      return NextResponse.json(
+        { error: 'Missing required fields' },
+        { status: 400 }
+      );
+    }
 
     // Enforce daily XP cap server-side.
     // daily_xp_earned resets when daily_xp_date is not today's UTC date.

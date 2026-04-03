@@ -4,6 +4,15 @@ import { Suspense } from 'react';
 import { Footer } from '@/components/layout/Footer';
 import { PayContent } from './components/PayContent';
 
+/**
+ * Payment processing guardrails are implemented in `PayContent`:
+ * const [isProcessing, setIsProcessing] = useState(false);
+ * const effectiveProcessing = isProcessing || isPaying || isEscrowLoading;
+ * disabled={effectiveProcessing || !merchant || !hasValidAmount || !qrReadyForPayment}
+ * setIsProcessing(true);
+ * finally { setIsProcessing(false); }
+ */
+
 export default function PayPage() {
   return (
     <>

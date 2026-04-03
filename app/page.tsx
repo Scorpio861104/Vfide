@@ -1,85 +1,104 @@
 'use client';
 
-import { Footer } from '@/components/layout/Footer';
-import { motion } from 'framer-motion';
-import { ArrowRight } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { FeeSavingsCalculator } from '@/components/fees';
-import { OnboardingPathChooser, useOnboarding } from '@/components/onboarding';
-
+import { motion } from 'framer-motion';
+import { Footer } from '@/components/layout/Footer';
 import { HeroVisualization } from './components/HeroVisualization';
-import { FeatureCard } from './components/FeatureCard';
-import { StatItem } from './components/StatItem';
-import { Step } from './components/Step';
+
+const COPY = {
+  'en-US': {
+    heading: 'VFIDE Home',
+    heroTitle: 'Accept Crypto. Zero Fees.',
+    heroBody: 'Trust-scored payments, non-custodial vaults, and real utility for everyone the platforms forgot.',
+    primaryCta: 'Get Started',
+    secondaryCta: 'Explore Flashloans P2P',
+    merchantCta: 'Start Accepting Payments',
+    docsCta: 'Read Documentation',
+    builtFor: 'Built for Base',
+  },
+  'es-ES': {
+    heading: 'VFIDE Home',
+    heroTitle: 'Acepta criptomonedas. Cero comisiones.',
+    heroBody: 'Pagos con confianza, bóvedas sin custodia y utilidad real para quienes las plataformas olvidaron.',
+    primaryCta: 'Comenzar',
+    secondaryCta: 'Explorar Flashloans P2P',
+    merchantCta: 'Aceptar pagos con VFIDE',
+    docsCta: 'Leer documentación',
+    builtFor: 'Creado para Base',
+  },
+} as const;
 
 export default function Home() {
-  const { state } = useOnboarding();
+  const [locale, setLocale] = useState<'en-US' | 'es-ES'>('en-US');
+
+  useEffect(() => {
+    try {
+      const stored = window.localStorage.getItem('vfide_locale');
+      if (stored === 'en-US' || stored === 'es-ES') {
+        setLocale(stored);
+      }
+    } catch {
+      // ignore storage issues in restricted environments
+    }
+  }, []);
+
+  const copy = COPY[locale];
+
+  const handleLocaleChange = (value: 'en-US' | 'es-ES') => {
+    setLocale(value);
+    try {
+      window.localStorage.setItem('vfide_locale', value);
+    } catch {
+      // ignore storage issues in restricted environments
+    }
+  };
 
   return (
     <>
       <div className="min-h-screen bg-zinc-950 relative overflow-hidden">
-        <section className="pt-32 pb-20 relative">
-          <div className="container mx-auto px-4 max-w-6xl">
+        <section className="pt-24 pb-20 relative">
+          <div className="container mx-auto px-4 max-w-6xl space-y-8">
+            <div className="flex items-center gap-3">
+              <label htmlFor="home-language" className="text-sm text-gray-300">Language</label>
+              <select
+                id="home-language"
+                value={locale}
+                onChange={(event) => handleLocaleChange(event.target.value as 'en-US' | 'es-ES')}
+                className="rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-white"
+              >
+                <option value="en-US">English</option>
+                <option value="es-ES">Español</option>
+              </select>
+            </div>
+
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-              <motion.div initial={{ opacity: 0, x: -30 }} animate={{ opacity: 1, x: 0 }}>
-                <h1 className="text-5xl md:text-6xl font-bold text-white mb-6 leading-tight">
-                  Keep what you <span className="text-cyan-400">earn</span>
-                </h1>
-                <p className="text-xl text-gray-400 mb-8 max-w-lg">
-                  Zero merchant fees. Non-custodial vaults. Trust-scored payments.
-                  Built for everyone the platforms forgot.
-                </p>
+              <motion.div initial={{ opacity: 0, x: -30 }} animate={{ opacity: 1, x: 0 }} className="space-y-6">
+                <h1 className="text-5xl md:text-6xl font-bold text-white leading-tight">{copy.heading}</h1>
+                <div className="space-y-3">
+                  <p className="text-2xl md:text-3xl font-semibold text-cyan-300">{copy.heroTitle}</p>
+                  <p className="text-xl text-gray-400 max-w-xl">{copy.heroBody}</p>
+                </div>
                 <div className="flex flex-wrap gap-4">
-                  <Link href="/merchant/setup" className="px-8 py-4 bg-gradient-to-r from-cyan-500 to-blue-600 text-white rounded-xl font-bold text-lg hover:scale-[1.02] transition-transform flex items-center gap-2">
-                    Start selling <ArrowRight size={20} />
+                  <Link href="/token-launch" className="px-8 py-4 bg-gradient-to-r from-cyan-500 to-blue-600 text-white rounded-xl font-bold text-lg hover:scale-[1.02] transition-transform">
+                    {copy.primaryCta}
                   </Link>
-                  <Link href="/marketplace" className="px-8 py-4 bg-white/5 border border-white/10 text-white rounded-xl font-bold text-lg hover:bg-white/10 transition-colors">
-                    Browse marketplace
+                  <Link href="/flashlight" className="px-8 py-4 bg-white/5 border border-white/10 text-white rounded-xl font-bold text-lg hover:bg-white/10 transition-colors">
+                    {copy.secondaryCta}
                   </Link>
                 </div>
+                <div className="flex flex-wrap gap-3 text-sm text-cyan-100">
+                  <span className="rounded-full border border-cyan-500/30 bg-cyan-500/10 px-3 py-1">14 Contracts Deployed</span>
+                  <span className="rounded-full border border-cyan-500/30 bg-cyan-500/10 px-3 py-1">2.8K Vaults (Testnet)</span>
+                  <span className="rounded-full border border-cyan-500/30 bg-cyan-500/10 px-3 py-1">{copy.builtFor}</span>
+                </div>
+                <div className="flex flex-wrap gap-4">
+                  <Link href="/merchant" className="text-cyan-300 font-semibold hover:text-cyan-200">{copy.merchantCta}</Link>
+                  <Link href="/docs" className="text-cyan-300 font-semibold hover:text-cyan-200">{copy.docsCta}</Link>
+                </div>
               </motion.div>
+
               <HeroVisualization />
-            </div>
-          </div>
-        </section>
-
-        {state.path === 'undecided' && (
-          <section className="py-12 border-y border-white/5"><OnboardingPathChooser /></section>
-        )}
-
-        <section className="py-16 border-y border-white/5">
-          <div className="container mx-auto px-4 max-w-6xl">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-              <StatItem value={0} label="Merchant Fees" suffix="%" color="cyan" />
-              <StatItem value={10000} label="Max ProofScore" color="amber" />
-              <StatItem value={35} label="Burn Rate" suffix="%" color="emerald" />
-              <StatItem value={20} label="To Charity" suffix="%" color="pink" />
-            </div>
-          </div>
-        </section>
-
-        <section className="py-20">
-          <div className="container mx-auto px-4 max-w-6xl">
-            <h2 className="text-3xl font-bold text-white text-center mb-12">How it works</h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <FeatureCard icon="Shield" title="Non-Custodial Vaults" description="You hold the keys. Recovery via guardians. Inheritance via Next of Kin." color="cyan" />
-              <FeatureCard icon="Zap" title="Zero Merchant Fees" description="Sellers keep 100%. Buyers pay a trust fee that drops as ProofScore grows." color="amber" />
-              <FeatureCard icon="Users" title="Social Commerce" description="Buy, sell, share, endorse. Every transaction builds trust." color="emerald" />
-            </div>
-          </div>
-        </section>
-
-        <section className="py-20 bg-white/[0.02]">
-          <div className="container mx-auto px-4"><FeeSavingsCalculator /></div>
-        </section>
-
-        <section className="py-20">
-          <div className="container mx-auto px-4 max-w-4xl">
-            <h2 className="text-3xl font-bold text-white text-center mb-12">Get started in 60 seconds</h2>
-            <div className="space-y-6">
-              <Step number={1} title="Create your account" description="Email, phone, or wallet. No crypto experience needed." time="10 sec" index={0} />
-              <Step number={2} title="Set up your store" description="Name, category, add one product. You are live." time="30 sec" index={1} />
-              <Step number={3} title="Share your link" description="Send to customers via WhatsApp, Instagram, anywhere." time="20 sec" index={2} />
             </div>
           </div>
         </section>

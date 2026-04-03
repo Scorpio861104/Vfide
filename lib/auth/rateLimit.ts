@@ -34,11 +34,8 @@ type RateLimitType = keyof typeof RATE_LIMITS;
 // Create rate limiter instances (one per limit type)
 let upstashLimiters: Map<RateLimitType, Ratelimit> | null = null;
 
-function assertRedisConfigured(): void {
-  const hasRedis = Boolean(process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN);
-  if (!hasRedis) {
-    throw new Error('Redis is required for distributed rate limiting. Configure UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN.');
-  }
+function isRedisConfigured(): boolean {
+  return Boolean(process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN);
 }
 
 function getUpstashLimiters(): Map<RateLimitType, Ratelimit> | null {
@@ -112,20 +109,22 @@ export async function rateLimit(
   request: NextRequest,
   type: RateLimitType = 'api'
 ): Promise<{ success: boolean; response?: NextResponse }> {
-  assertRedisConfigured();
   const identifier = getClientIdentifier(request);
   const config = RATE_LIMITS[type];
 
   try {
-    let result;
+    if (!isRedisConfigured()) {
+      return { success: true };
+    }
 
     const upstash = getUpstashLimiters();
     if (!upstash) {
-      throw new Error('Rate limiter unavailable: Redis client initialization failed');
+      logger.warn('[RateLimit] Redis configured but limiter unavailable; allowing request');
+      return { success: true };
     }
     // Use the per-type Upstash limiter so endpoint-specific limits are enforced
-    result = await upstash.get(type)!.limit(`${identifier}:${type}`);
-    
+    const result = await upstash.get(type)!.limit(`${identifier}:${type}`);
+
     if (!result.success) {
       const retryAfter = Math.ceil((result.reset - Date.now()) / 1000);
       

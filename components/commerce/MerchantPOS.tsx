@@ -29,6 +29,12 @@ interface CartItem extends Product {
   quantity: number
 }
 
+const DEFAULT_PRODUCTS: Product[] = [
+  { id: 'default-1', name: 'Espresso', price: 3.50, category: 'Coffee', description: 'Single shot' },
+  { id: 'default-2', name: 'Latte', price: 4.50, category: 'Coffee', description: '12oz with steamed milk' },
+  { id: 'default-3', name: 'Croissant', price: 3.00, category: 'Food', description: 'Fresh baked' },
+]
+
 export function MerchantPOS() {
   const { address } = useAccount()
   const { isMerchant, businessName } = useIsMerchant(address)
@@ -40,6 +46,15 @@ export function MerchantPOS() {
   // Fetch products from DB on mount
   useEffect(() => {
     if (!address) return
+
+    if (typeof fetch !== 'function') {
+      if (!productsLoaded) {
+        setProducts(DEFAULT_PRODUCTS)
+      }
+      setProductsLoaded(true)
+      return
+    }
+
     fetch(`/api/merchant/products?merchant=${encodeURIComponent(address)}`)
       .then(r => r.ok ? r.json() : null)
       .then(data => {
@@ -53,16 +68,16 @@ export function MerchantPOS() {
             image: p.images?.[0],
           })))
         } else if (!productsLoaded) {
-          // Seed defaults on first load if no products exist yet
-          setProducts([
-            { id: 'default-1', name: 'Espresso', price: 3.50, category: 'Coffee', description: 'Single shot' },
-            { id: 'default-2', name: 'Latte', price: 4.50, category: 'Coffee', description: '12oz with steamed milk' },
-            { id: 'default-3', name: 'Croissant', price: 3.00, category: 'Food', description: 'Fresh baked' },
-          ])
+          setProducts(DEFAULT_PRODUCTS)
         }
         setProductsLoaded(true)
       })
-      .catch(() => setProductsLoaded(true))
+      .catch(() => {
+        if (!productsLoaded) {
+          setProducts(DEFAULT_PRODUCTS)
+        }
+        setProductsLoaded(true)
+      })
   }, [address, productsLoaded])
   
   // Cart
@@ -202,16 +217,18 @@ export function MerchantPOS() {
     clearCart()
 
     // Notify server for webhook dispatch (fire-and-forget)
-    fetch('/api/merchant/payments/confirm', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        customer_address: customerAddress,
-        amount,
-        token: 'VFIDE',
-        order_id: sale.id,
-      }),
-    }).catch(() => { /* non-critical */ })
+    if (typeof fetch === 'function') {
+      fetch('/api/merchant/payments/confirm', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          customer_address: customerAddress,
+          amount,
+          token: 'VFIDE',
+          order_id: sale.id,
+        }),
+      }).catch(() => { /* non-critical */ })
+    }
   }, [subtotal, processorFees.vfide])
 
   // Add product to catalog (persisted to DB)
@@ -234,6 +251,10 @@ export function MerchantPOS() {
 
     // Persist to DB
     try {
+      if (typeof fetch !== 'function') {
+        return
+      }
+
       const res = await fetch('/api/merchant/products', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

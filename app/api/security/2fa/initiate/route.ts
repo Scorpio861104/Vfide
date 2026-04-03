@@ -125,6 +125,11 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const parsed = initiate2faSchema.safeParse(body);
     if (!parsed.success) {
+      const hasDestinationIssue = parsed.error.issues.some((issue) => issue.path[0] === 'destination');
+      if (hasDestinationIssue) {
+        return NextResponse.json({ error: 'Invalid destination' }, { status: 400 });
+      }
+
       return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
     }
     parsedBody = parsed.data;

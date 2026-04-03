@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { Code2, X, MessageCircle, ExternalLink } from "lucide-react";
+import type { ComponentType } from "react";
+import * as LucideIcons from "lucide-react";
 
 type FooterLink = {
   href: string;
@@ -39,11 +40,21 @@ const footerLinks: {
   ],
 };
 
-const socialLinks = [
-  { href: "https://github.com/Scorpio861104/Vfide", icon: Code2, label: "GitHub" },
-  { href: "https://twitter.com/VFIDEProtocol", icon: X, label: "Twitter" },
-  { href: "/support", icon: MessageCircle, label: "Support" },
+type FooterIcon = ComponentType<{ className?: string; "data-testid"?: string }>;
+
+const FallbackIcon: FooterIcon = ({ className }) => (
+  <span className={className} aria-hidden="true" />
+);
+
+const lucideIcons = LucideIcons as unknown as Record<string, FooterIcon | undefined>;
+
+const socialLinks: Array<{ href: string; icon?: FooterIcon; label: string }> = [
+  { href: "https://github.com/Scorpio861104/Vfide", icon: lucideIcons.Github ?? lucideIcons.GitBranch ?? FallbackIcon, label: "GitHub" },
+  { href: "https://twitter.com/VFIDEProtocol", icon: lucideIcons.Twitter ?? lucideIcons.Send ?? FallbackIcon, label: "Twitter" },
+  { href: "/support", icon: lucideIcons.MessageCircle ?? FallbackIcon, label: "Support" },
 ];
+
+const FooterExternalIcon = lucideIcons.ExternalLink ?? FallbackIcon;
 
 export function Footer() {
   return (
@@ -76,18 +87,21 @@ export function Footer() {
               The decentralized payment protocol where trust is earned, not bought. Zero processing fees, instant settlement.
             </p>
             <div className="flex items-center gap-3">
-              {socialLinks.map((social) => (
-                <a
-                  key={social.label}
-                  href={social.href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-10 h-10 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-400 hover:text-cyan-400 hover:border-cyan-400/30 transition-all"
-                  aria-label={social.label}
-                >
-                  <social.icon className="w-4 h-4" />
-                </a>
-              ))}
+              {socialLinks.map((social) => {
+                const SocialIcon = social.icon ?? FallbackIcon;
+                return (
+                  <a
+                    key={social.label}
+                    href={social.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-10 h-10 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-400 hover:text-cyan-400 hover:border-cyan-400/30 transition-all"
+                    aria-label={social.label}
+                  >
+                    <SocialIcon className="w-4 h-4" data-testid={`${social.label.toLowerCase()}-icon`} />
+                  </a>
+                );
+              })}
             </div>
           </div>
 
@@ -122,7 +136,7 @@ export function Footer() {
                       className="text-zinc-400 hover:text-cyan-400 text-sm transition-colors inline-flex items-center gap-1"
                     >
                       {link.label}
-                      <ExternalLink className="w-3 h-3" />
+                      <FooterExternalIcon className="w-3 h-3" />
                       {link.soon && (
                         <span className="text-[10px] px-1.5 py-0.5 rounded bg-zinc-900 text-zinc-400">Soon</span>
                       )}

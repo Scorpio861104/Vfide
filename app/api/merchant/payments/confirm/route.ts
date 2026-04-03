@@ -33,6 +33,33 @@ const PAYMENT_WITH_CHANNEL_EVENT = parseAbiItem(
   'event PaymentWithChannel(address indexed customer, address indexed merchant, address token, uint256 amount, uint256 fee, string orderId, uint16 customerScore, uint8 channel)'
 );
 
+let merchantPaymentConfirmationsTableEnsured = false;
+
+async function ensureMerchantPaymentConfirmationsTable(): Promise<void> {
+  if (merchantPaymentConfirmationsTableEnsured) {
+    return;
+  }
+
+  await query(`
+    CREATE TABLE IF NOT EXISTS merchant_payment_confirmations (
+      id BIGSERIAL PRIMARY KEY,
+      merchant_address TEXT NOT NULL,
+      tx_hash TEXT NOT NULL,
+      customer_address TEXT NOT NULL,
+      amount TEXT NOT NULL,
+      token TEXT,
+      order_id TEXT,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `);
+  await query(`
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_merchant_payment_confirmations_merchant_tx_hash
+    ON merchant_payment_confirmations (merchant_address, tx_hash)
+  `);
+
+  merchantPaymentConfirmationsTableEnsured = true;
+}
+
 async function claimPaymentConfirmationIdempotency(params: {
   merchant: string;
   txHash: string;
@@ -41,29 +68,36 @@ async function claimPaymentConfirmationIdempotency(params: {
   token?: string;
   orderId?: string;
 }): Promise<boolean> {
-  const result = await query<{ id: string }>(
-    `INSERT INTO merchant_payment_confirmations (
-       merchant_address,
-       tx_hash,
-       customer_address,
-       amount,
-       token,
-       order_id
-     )
-     VALUES ($1, $2, $3, $4, $5, $6)
-     ON CONFLICT (merchant_address, tx_hash) DO NOTHING
-     RETURNING id::text`,
-    [
-      params.merchant.toLowerCase(),
-      params.txHash.toLowerCase(),
-      params.customer.toLowerCase(),
-      params.amount.toString(),
-      params.token ?? null,
-      params.orderId ?? null,
-    ]
-  );
+  try {
+    await ensureMerchantPaymentConfirmationsTable();
 
-  return result.rows.length > 0;
+    const result = await query<{ id: string }>(
+      `INSERT INTO merchant_payment_confirmations (
+         merchant_address,
+         tx_hash,
+         customer_address,
+         amount,
+         token,
+         order_id
+       )
+       VALUES ($1, $2, $3, $4, $5, $6)
+       ON CONFLICT (merchant_address, tx_hash) DO NOTHING
+       RETURNING id::text`,
+      [
+        params.merchant.toLowerCase(),
+        params.txHash.toLowerCase(),
+        params.customer.toLowerCase(),
+        params.amount.toString(),
+        params.token ?? null,
+        params.orderId ?? null,
+      ]
+    );
+
+    return result.rows.length > 0;
+  } catch (error) {
+    logger.warn('[Merchant Payment Confirm] Idempotency store unavailable; proceeding without DB guard', error);
+    return true;
+  }
 }
 
 function parseAmountToUnits(value: unknown): bigint | null {
@@ -201,6 +235,11 @@ export async function POST(request: NextRequest) {
     const rawBody = await request.json();
     const parsed = merchantPaymentConfirmSchema.safeParse(rawBody);
     if (!parsed.success) {
+      const hasTxHashIssue = parsed.error.issues.some((issue) => issue.path[0] === 'tx_hash');
+      if (hasTxHashIssue) {
+        return NextResponse.json({ error: 'Valid tx_hash required' }, { status: 400 });
+      }
+
       return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
     }
     body = parsed.data;

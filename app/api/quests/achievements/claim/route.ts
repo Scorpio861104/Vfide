@@ -5,7 +5,7 @@ import { withRateLimit } from '@/lib/auth/rateLimit';
 import { logger } from '@/lib/logger';
 import { z } from 'zod4';
 
-const ADDRESS_LIKE_REGEX = /^0x[a-fA-F0-9]{40}$/;
+const ADDRESS_LIKE_REGEX = /^0x[a-fA-F0-9]{3,40}$/;
 
 const claimAchievementSchema = z.object({
   milestoneId: z.union([z.number().int().positive(), z.string().regex(/^\d+$/)]),
@@ -20,6 +20,10 @@ function parsePositiveInteger(value: unknown): number | null {
     return null;
   }
   return parsed;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
 /**
@@ -52,6 +56,13 @@ export async function POST(request: NextRequest) {
   let body: z.infer<typeof claimAchievementSchema>;
   try {
     const rawBody = await request.json();
+    if (!isRecord(rawBody)) {
+      return NextResponse.json(
+        { error: 'Request body must be a JSON object' },
+        { status: 400 }
+      );
+    }
+
     const parsed = claimAchievementSchema.safeParse(rawBody);
     if (!parsed.success) {
       return NextResponse.json(

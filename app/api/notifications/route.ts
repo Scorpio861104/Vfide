@@ -146,24 +146,26 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    const baseWhere = unreadOnly
+      ? `WHERE u.wallet_address = $1 AND n.is_read = false`
+      : `WHERE u.wallet_address = $1`;
+
     const result = await query<Notification>(
       `SELECT n.*
        FROM notifications n
        JOIN users u ON n.user_id = u.id
-       WHERE u.wallet_address = $1
-         AND ($2::boolean = false OR n.is_read = false)
+       ${baseWhere}
        ORDER BY n.created_at DESC
-       LIMIT $3 OFFSET $4`,
-      [userAddress, unreadOnly, limit, offset]
+       LIMIT $2 OFFSET $3`,
+      [userAddress, limit, offset]
     );
 
     const countResult = await query<{ count: string }>(
       `SELECT COUNT(*) as count
        FROM notifications n
        JOIN users u ON n.user_id = u.id
-       WHERE u.wallet_address = $1
-         AND ($2::boolean = false OR n.is_read = false)`,
-      [userAddress, unreadOnly]
+       ${baseWhere}`,
+      [userAddress]
     );
 
     const totalCount = parseInt(countResult.rows[0]?.count || '0', 10);
@@ -212,6 +214,22 @@ export async function POST(request: NextRequest) {
   let body: z.infer<typeof createNotificationSchema>;
   try {
     const rawBody = await request.json();
+
+    if (!rawBody || typeof rawBody !== 'object' || Array.isArray(rawBody)) {
+      return NextResponse.json(
+        { error: 'Request body must be a JSON object' },
+        { status: 400 }
+      );
+    }
+
+    const candidate = rawBody as Partial<z.infer<typeof createNotificationSchema>>;
+    if (!candidate.userAddress || !candidate.type || !candidate.title || !candidate.message) {
+      return NextResponse.json(
+        { error: 'Missing required fields' },
+        { status: 400 }
+      );
+    }
+
     const parsed = createNotificationSchema.safeParse(rawBody);
     if (!parsed.success) {
       return NextResponse.json(
@@ -309,6 +327,22 @@ export async function PATCH(request: NextRequest) {
   let body: z.infer<typeof updateNotificationsSchema>;
   try {
     const rawBody = await request.json();
+
+    if (!rawBody || typeof rawBody !== 'object' || Array.isArray(rawBody)) {
+      return NextResponse.json(
+        { error: 'Request body must be a JSON object' },
+        { status: 400 }
+      );
+    }
+
+    const candidate = rawBody as { notificationIds?: unknown };
+    if (Array.isArray(candidate.notificationIds) && candidate.notificationIds.length > MAX_BULK_NOTIFICATION_IDS) {
+      return NextResponse.json(
+        { error: `Too many notificationIds. Maximum ${MAX_BULK_NOTIFICATION_IDS} allowed.` },
+        { status: 400 }
+      );
+    }
+
     const parsed = updateNotificationsSchema.safeParse(rawBody);
     if (!parsed.success) {
       return NextResponse.json(
@@ -455,6 +489,22 @@ export async function DELETE(request: NextRequest) {
   let body: z.infer<typeof deleteNotificationsSchema>;
   try {
     const rawBody = await request.json();
+
+    if (!rawBody || typeof rawBody !== 'object' || Array.isArray(rawBody)) {
+      return NextResponse.json(
+        { error: 'Request body must be a JSON object' },
+        { status: 400 }
+      );
+    }
+
+    const candidate = rawBody as { notificationIds?: unknown };
+    if (Array.isArray(candidate.notificationIds) && candidate.notificationIds.length > MAX_BULK_NOTIFICATION_IDS) {
+      return NextResponse.json(
+        { error: `Too many notificationIds. Maximum ${MAX_BULK_NOTIFICATION_IDS} allowed.` },
+        { status: 400 }
+      );
+    }
+
     const parsed = deleteNotificationsSchema.safeParse(rawBody);
     if (!parsed.success) {
       return NextResponse.json(

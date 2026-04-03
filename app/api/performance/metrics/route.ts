@@ -20,6 +20,10 @@ function byteLength(value: string): number {
   return Buffer.byteLength(value, 'utf8');
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
 export async function GET(request: NextRequest) {
   // Rate limiting
   const rateLimit = await withRateLimit(request, 'api');
@@ -86,8 +90,35 @@ export async function POST(request: NextRequest) {
     let body: z.infer<typeof performanceMetricSchema>;
     try {
       const rawBody = await request.json();
+      if (!isRecord(rawBody)) {
+        return NextResponse.json({ error: 'Request body must be a JSON object' }, { status: 400 });
+      }
+
       const parsed = performanceMetricSchema.safeParse(rawBody);
       if (!parsed.success) {
+        const issues = parsed.error.issues.map((issue) => String(issue.path[0] || ''));
+
+        if (issues.includes('metricName')) {
+          return NextResponse.json(
+            { error: `Invalid metricName. Must be 1-${MAX_METRIC_NAME_LENGTH} characters.` },
+            { status: 400 }
+          );
+        }
+
+        if (issues.includes('value')) {
+          return NextResponse.json(
+            { error: 'Invalid value. Must be a finite number.' },
+            { status: 400 }
+          );
+        }
+
+        if (issues.includes('metadata')) {
+          return NextResponse.json(
+            { error: 'Invalid metadata. Must be a JSON object.' },
+            { status: 400 }
+          );
+        }
+
         return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
       }
       body = parsed.data;
