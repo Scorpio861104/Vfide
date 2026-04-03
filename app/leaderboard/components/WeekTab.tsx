@@ -1,15 +1,19 @@
 'use client';
 
-// Extracted from app/leaderboard/page.tsx — tab 'week'
-// TODO: Move the 'week' tab content here and verify imports
+interface WeekTabProps {
+  entries: Array<{ rank: number; address: `0x${string}`; score: number; tier: string; badges: number }>;
+}
 
-export function WeekTab() {
+export function WeekTab({ entries }: WeekTabProps) {
   return (
-    <div className="space-y-6">
-      <div className="bg-white/3 border border-white/10 rounded-2xl p-6">
-        <h3 className="text-xl font-bold text-white mb-4">This Week</h3>
-        <p className="text-gray-400">Content from LeaderboardPage</p>
-      </div>
+    <div className="space-y-4">
+      <div className="rounded-2xl border border-white/10 bg-white/3 p-5 text-white">Weekly highlights and fastest score momentum.</div>
+      {entries.slice(0, 3).map((entry, index) => (
+        <div key={entry.address} className="rounded-2xl border border-white/10 bg-white/3 p-4">
+          <div className="font-semibold text-cyan-300">{index === 0 ? '1st' : index === 1 ? '2nd' : '3rd'}</div>
+          <div className="text-white">{entry.score} pts • {entry.tier}</div>
+        </div>
+      ))}
     </div>
   );
 }

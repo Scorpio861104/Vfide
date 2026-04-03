@@ -1,15 +1,26 @@
 'use client';
 
-// Extracted from app/performance/page.tsx — tab 'errors'
-// TODO: Move the 'errors' tab content here and verify imports
+import { motion } from 'framer-motion';
+import { ErrorTracker } from '@/components/performance/ErrorTracker';
 
-export function ErrorsTab() {
+interface ErrorsTabProps {
+  errors: any[];
+  onResolveError: (errorId: string) => void;
+  onClearAll: () => void;
+  onExport: (format: 'json' | 'csv') => void;
+}
+
+export function ErrorsTab({ errors, onResolveError, onClearAll, onExport }: ErrorsTabProps) {
   return (
     <div className="space-y-6">
-      <div className="bg-white/3 border border-white/10 rounded-2xl p-6">
-        <h3 className="text-xl font-bold text-white mb-4">Errors</h3>
-        <p className="text-gray-400">Content from PerformancePage</p>
-      </div>
+      <motion.div key="errors" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+        <ErrorTracker
+          errors={errors}
+          onResolveError={onResolveError}
+          onClearAll={onClearAll}
+          onExport={onExport}
+        />
+      </motion.div>
     </div>
   );
 }

@@ -1,14 +1,19 @@
 'use client';
 
-// Extracted from app/social-messaging/page.tsx — tab 'discover'
-// TODO: Move the 'discover' tab content here and verify imports
+import { useAccount } from 'wagmi';
+import { ActivityFeed } from '@/components/social/ActivityFeed';
+import { GlobalUserSearch } from '@/components/social/GlobalUserSearch';
 
 export function DiscoverTab() {
+  const { address } = useAccount();
+
   return (
     <div className="space-y-6">
-      <div className="bg-white/3 border border-white/10 rounded-2xl p-6">
-        <h3 className="text-xl font-bold text-white mb-4">Discover</h3>
-        <p className="text-gray-400">Content from SocialMessagingPage</p>
+      <div className="mx-auto max-w-4xl">
+        <GlobalUserSearch />
+      </div>
+      <div className="rounded-2xl border border-white/10 bg-white/3 p-4">
+        <ActivityFeed userAddress={address ?? '0x0000000000000000000000000000000000000000'} />
       </div>
     </div>
   );
