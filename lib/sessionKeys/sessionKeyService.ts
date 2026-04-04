@@ -441,6 +441,14 @@ export class SessionKeyService {
 
 let sessionKeyInstance: SessionKeyService | null = null;
 
+export type { StaffPermissions, StaffSession } from '@/lib/merchantStaff';
+export {
+  clearStoredStaffSession,
+  getStoredStaffSession,
+  isStaffSessionActive,
+  storeStaffSession,
+} from '@/lib/merchantStaff';
+
 export function getSessionKeyService(): SessionKeyService {
   if (!sessionKeyInstance) {
     sessionKeyInstance = new SessionKeyService();

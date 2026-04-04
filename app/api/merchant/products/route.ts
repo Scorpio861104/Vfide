@@ -7,11 +7,13 @@
  * DELETE — Archive product (authenticated merchant)
  */
 
+import { createHash } from 'node:crypto';
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 import { requireAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { logger } from '@/lib/logger';
+import { normalizeStaffPermissions, type StaffRole } from '@/lib/merchantStaff';
 import { z } from 'zod4';
 
 const ADDRESS_LIKE_REGEX = /^0x[a-fA-F0-9]{40}$/;
@@ -76,6 +78,40 @@ async function getAuthAddress(request: NextRequest): Promise<string | NextRespon
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
   return address;
+}
+
+async function getMerchantAccessAddress(
+  request: NextRequest,
+  requiredPermission: 'editProducts' | 'viewProducts' = 'editProducts',
+): Promise<string | NextResponse> {
+  const staffToken = request.headers.get('x-vfide-staff-session')?.trim();
+  if (staffToken) {
+    const tokenHash = createHash('sha256').update(staffToken).digest('hex');
+    const result = await query(
+      `SELECT merchant_address, role, permissions
+         FROM merchant_staff
+        WHERE session_token_hash = $1
+          AND active = true
+          AND revoked_at IS NULL
+          AND (expires_at IS NULL OR expires_at > NOW())
+        LIMIT 1`,
+      [tokenHash]
+    );
+
+    if (result.rows.length === 0) {
+      return NextResponse.json({ error: 'Staff session invalid or expired' }, { status: 403 });
+    }
+
+    const row = result.rows[0] as { merchant_address: string; role?: StaffRole; permissions?: Record<string, unknown> };
+    const permissions = normalizeStaffPermissions(row.permissions, row.role ?? 'cashier');
+    if (!permissions[requiredPermission]) {
+      return NextResponse.json({ error: 'Staff session missing required permission' }, { status: 403 });
+    }
+
+    return row.merchant_address.toLowerCase();
+  }
+
+  return getAuthAddress(request);
 }
 
 // ─────────────────────────── GET: List/search products
@@ -340,7 +376,7 @@ export async function POST(request: NextRequest) {
   const rateLimitResponse = await withRateLimit(request, 'write');
   if (rateLimitResponse) return rateLimitResponse;
 
-  const authAddress = await getAuthAddress(request);
+  const authAddress = await getMerchantAccessAddress(request, 'editProducts');
   if (authAddress instanceof NextResponse) return authAddress;
 
   try {
@@ -430,7 +466,7 @@ export async function PATCH(request: NextRequest) {
   const rateLimitResponse = await withRateLimit(request, 'write');
   if (rateLimitResponse) return rateLimitResponse;
 
-  const authAddress = await getAuthAddress(request);
+  const authAddress = await getMerchantAccessAddress(request, 'editProducts');
   if (authAddress instanceof NextResponse) return authAddress;
 
   try {
@@ -534,7 +570,7 @@ export async function DELETE(request: NextRequest) {
   const rateLimitResponse = await withRateLimit(request, 'write');
   if (rateLimitResponse) return rateLimitResponse;
 
-  const authAddress = await getAuthAddress(request);
+  const authAddress = await getMerchantAccessAddress(request, 'editProducts');
   if (authAddress instanceof NextResponse) return authAddress;
 
   try {

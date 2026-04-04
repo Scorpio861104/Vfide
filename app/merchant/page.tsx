@@ -45,6 +45,14 @@ export default function MerchantPage() {
               Open Merchant Portal
               <ArrowRight size={20} />
             </Link>
+            <div className="mt-4 flex flex-wrap items-center justify-center gap-3 text-sm">
+              <Link href="/merchant/staff" className="rounded-xl border border-white/10 px-4 py-2 text-cyan-300 hover:border-cyan-400/40 hover:text-cyan-200">
+                Staff roles & cashier mode
+              </Link>
+              <Link href="/merchant/customers" className="rounded-xl border border-white/10 px-4 py-2 text-cyan-300 hover:border-cyan-400/40 hover:text-cyan-200">
+                Customer list & order history
+              </Link>
+            </div>
           </div>
         </section>
 

@@ -102,6 +102,7 @@ export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const role = searchParams.get('role') || 'merchant';  // merchant or customer
   const status = searchParams.get('status');
+  const customerAddressFilter = (searchParams.get('customer_address') || '').trim().toLowerCase();
   const page = Math.max(1, Number(searchParams.get('page')) || 1);
   const limit = Math.min(100, Math.max(1, Number(searchParams.get('limit')) || 20));
   const offset = (page - 1) * limit;
@@ -113,10 +114,19 @@ export async function GET(request: NextRequest) {
 
     if (role === 'customer') {
       conditions.push(`o.customer_address = $${pi++}`);
+      params.push(authAddress);
     } else {
       conditions.push(`o.merchant_address = $${pi++}`);
+      params.push(authAddress);
+
+      if (customerAddressFilter) {
+        if (!ADDRESS_LIKE_REGEX.test(customerAddressFilter)) {
+          return NextResponse.json({ error: 'Invalid customer address filter' }, { status: 400 });
+        }
+        conditions.push(`o.customer_address = $${pi++}`);
+        params.push(customerAddressFilter);
+      }
     }
-    params.push(authAddress);
 
     if (status && VALID_STATUSES.includes(status as typeof VALID_STATUSES[number])) {
       conditions.push(`o.status = $${pi++}`);

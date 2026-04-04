@@ -9,7 +9,7 @@
  */
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Users, Search, Plus, Star, Clock, DollarSign, MessageCircle, Tag, TrendingUp, UserPlus } from 'lucide-react';
 import { useLocale } from '@/lib/locale/LocaleProvider';
@@ -27,10 +27,23 @@ export interface Customer {
   proofScore: number;
   notes: string;
   isFavorite: boolean;
+  favoriteProduct?: string | null;
 }
 
-export function CustomerManager({ customers = [], onAddNote, onAddTag, onToggleFavorite }: {
+export interface CustomerOrder {
+  id: number | string;
+  orderNumber?: string | null;
+  total: number;
+  status: string;
+  createdAt: number;
+  items: Array<{ name: string; quantity: number }>;
+}
+
+export function CustomerManager({ customers = [], customerOrders = {}, isLoadingOrders = false, onSelectCustomer, onAddNote, onAddTag, onToggleFavorite }: {
   customers: Customer[];
+  customerOrders?: Record<string, CustomerOrder[]>;
+  isLoadingOrders?: boolean;
+  onSelectCustomer?: (customerId: string) => void;
   onAddNote?: (customerId: string, note: string) => void;
   onAddTag?: (customerId: string, tag: string) => void;
   onToggleFavorite?: (customerId: string) => void;
@@ -40,6 +53,7 @@ export function CustomerManager({ customers = [], onAddNote, onAddTag, onToggleF
   const [sortBy, setSortBy] = useState<'spent' | 'recent' | 'orders' | 'score'>('spent');
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
   const [selectedCustomer, setSelectedCustomer] = useState<string | null>(null);
+  const [noteDraft, setNoteDraft] = useState('');
 
   const allTags = useMemo(() => [...new Set(customers.flatMap(c => c.tags))], [customers]);
 
@@ -67,6 +81,11 @@ export function CustomerManager({ customers = [], onAddNote, onAddTag, onToggleF
   }), [customers]);
 
   const detail = selectedCustomer ? customers.find(c => c.id === selectedCustomer) : null;
+  const selectedOrders = detail ? customerOrders[detail.id] ?? [] : [];
+
+  useEffect(() => {
+    setNoteDraft(detail?.notes ?? '');
+  }, [detail?.id, detail?.notes]);
 
   return (
     <div className="space-y-6">
@@ -117,7 +136,10 @@ export function CustomerManager({ customers = [], onAddNote, onAddTag, onToggleF
       {/* Customer list */}
       <div className="space-y-2">
         {filtered.map(customer => (
-          <button key={customer.id} onClick={() => setSelectedCustomer(customer.id)}
+          <button key={customer.id} onClick={() => {
+            setSelectedCustomer(customer.id);
+            onSelectCustomer?.(customer.id);
+          }}
             className={`w-full flex items-center justify-between p-4 bg-white/3 border rounded-xl text-left transition-colors ${
               selectedCustomer === customer.id ? 'border-cyan-500/30' : 'border-white/5 hover:border-white/10'
             }`}>
@@ -130,7 +152,10 @@ export function CustomerManager({ customers = [], onAddNote, onAddTag, onToggleF
                   <span className="text-white font-medium text-sm">{customer.name || `${customer.walletAddress.slice(0, 8)}...`}</span>
                   {customer.isFavorite && <Star size={12} className="text-amber-400 fill-amber-400" />}
                 </div>
-                <div className="text-gray-500 text-xs">{customer.orderCount} orders · Last {formatDate(customer.lastOrderAt, 'relative')}</div>
+                <div className="text-gray-500 text-xs">
+                  {customer.orderCount} orders · Last {formatDate(customer.lastOrderAt, 'relative')}
+                  {customer.favoriteProduct ? ` · Likes ${customer.favoriteProduct}` : ''}
+                </div>
               </div>
             </div>
             <div className="text-right">
@@ -150,6 +175,117 @@ export function CustomerManager({ customers = [], onAddNote, onAddTag, onToggleF
           <Users size={48} className="mx-auto mb-4 text-gray-600" />
           <p className="text-gray-400">No customers yet. They&apos;ll appear here after their first purchase.</p>
         </div>
+      )}
+
+      {detail && (
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="grid gap-4 lg:grid-cols-[1.1fr_0.9fr]"
+        >
+          <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
+            <div className="mb-4 flex items-start justify-between gap-3">
+              <div>
+                <h3 className="text-lg font-semibold text-white">{detail.name || 'Customer profile'}</h3>
+                <p className="text-xs text-gray-500">{detail.walletAddress}</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => onToggleFavorite?.(detail.id)}
+                className="inline-flex items-center gap-1 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-1 text-xs text-amber-300"
+              >
+                <Star size={12} className={detail.isFavorite ? 'fill-amber-400 text-amber-400' : ''} />
+                {detail.isFavorite ? 'VIP' : 'Mark VIP'}
+              </button>
+            </div>
+
+            <div className="mb-4 grid gap-3 sm:grid-cols-2">
+              <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-3">
+                <div className="mb-1 flex items-center gap-2 text-xs text-gray-400"><DollarSign size={12} /> Lifetime spend</div>
+                <div className="font-mono text-lg font-bold text-emerald-400">{formatCurrency(detail.totalSpent)}</div>
+              </div>
+              <div className="rounded-xl border border-cyan-500/20 bg-cyan-500/5 p-3">
+                <div className="mb-1 flex items-center gap-2 text-xs text-gray-400"><TrendingUp size={12} /> Order count</div>
+                <div className="text-lg font-bold text-cyan-400">{detail.orderCount}</div>
+              </div>
+              <div className="rounded-xl border border-purple-500/20 bg-purple-500/5 p-3">
+                <div className="mb-1 flex items-center gap-2 text-xs text-gray-400"><Clock size={12} /> Last order</div>
+                <div className="text-sm font-semibold text-white">{formatDate(detail.lastOrderAt, 'relative')}</div>
+              </div>
+              <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-3">
+                <div className="mb-1 flex items-center gap-2 text-xs text-gray-400"><UserPlus size={12} /> Favorite product</div>
+                <div className="text-sm font-semibold text-white">{detail.favoriteProduct || 'No pattern yet'}</div>
+              </div>
+            </div>
+
+            <div className="mb-4">
+              <div className="mb-2 flex items-center gap-2 text-sm text-gray-300"><Tag size={14} /> Tags</div>
+              <div className="flex flex-wrap gap-2">
+                {detail.tags.length === 0 ? (
+                  <span className="text-xs text-gray-500">No tags yet.</span>
+                ) : detail.tags.map(tag => (
+                  <span key={tag} className="rounded-lg bg-white/5 px-2.5 py-1 text-xs text-cyan-300">{tag}</span>
+                ))}
+                <button
+                  type="button"
+                  onClick={() => {
+                    const tag = typeof window === 'undefined' ? '' : window.prompt('Add a tag for this customer', 'vip') || '';
+                    if (tag.trim()) onAddTag?.(detail.id, tag.trim());
+                  }}
+                  className="inline-flex items-center gap-1 rounded-lg border border-white/10 px-2.5 py-1 text-xs text-gray-300"
+                >
+                  <Plus size={12} /> Add tag
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <div className="mb-2 flex items-center gap-2 text-sm text-gray-300"><MessageCircle size={14} /> Private merchant notes</div>
+              <textarea
+                value={noteDraft}
+                onChange={e => setNoteDraft(e.target.value)}
+                rows={4}
+                placeholder="Prefers blue fabrics. Birthday in March. Sends referrals..."
+                className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white placeholder-gray-500 focus:border-cyan-500/50 focus:outline-none"
+              />
+              <button
+                type="button"
+                onClick={() => onAddNote?.(detail.id, noteDraft)}
+                className="mt-3 rounded-xl bg-cyan-500 px-4 py-2 text-sm font-semibold text-black"
+              >
+                Save note
+              </button>
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
+            <h3 className="mb-3 text-lg font-semibold text-white">Order history</h3>
+            {isLoadingOrders ? (
+              <p className="text-sm text-gray-400">Loading order history…</p>
+            ) : selectedOrders.length === 0 ? (
+              <p className="text-sm text-gray-400">Select a customer to view recent orders.</p>
+            ) : (
+              <div className="space-y-3">
+                {selectedOrders.map(order => (
+                  <div key={String(order.id)} className="rounded-xl border border-white/10 bg-black/20 p-3">
+                    <div className="flex items-center justify-between gap-3">
+                      <div>
+                        <div className="font-semibold text-white">{order.orderNumber || `Order #${order.id}`}</div>
+                        <div className="text-xs text-gray-500">{formatDate(order.createdAt, 'relative')} · {order.status}</div>
+                      </div>
+                      <div className="font-mono text-sm font-bold text-emerald-400">{formatCurrency(order.total)}</div>
+                    </div>
+                    {order.items.length > 0 && (
+                      <div className="mt-2 text-xs text-gray-400">
+                        {order.items.map(item => `${item.quantity}× ${item.name}`).join(', ')}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </motion.div>
       )}
     </div>
   );

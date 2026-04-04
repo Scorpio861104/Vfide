@@ -15,6 +15,13 @@ import { CONTRACT_ADDRESSES } from '@/lib/contracts'
 import { MerchantPortalABI } from '@/lib/abis'
 import { safeParseFloat } from '@/lib/validation'
 import { DEFAULT_VFIDE_PRICE } from '@/lib/price-utils'
+import {
+  clearStoredStaffSession,
+  getStoredStaffSession,
+  isStaffSessionActive,
+  storeStaffSession,
+  type StaffSession,
+} from '@/lib/sessionKeys/sessionKeyService'
 
 interface Product {
   id: string
@@ -38,6 +45,18 @@ const DEFAULT_PRODUCTS: Product[] = [
 export function MerchantPOS() {
   const { address } = useAccount()
   const { isMerchant, businessName } = useIsMerchant(address)
+  const [staffSession, setStaffSession] = useState<StaffSession | null>(null)
+  const [staffError, setStaffError] = useState<string | null>(null)
+  const [selectedCategory, setSelectedCategory] = useState('All')
+
+  const activeStaffSession = isStaffSessionActive(staffSession) ? staffSession : null
+  const merchantContextAddress = activeStaffSession?.merchantAddress || address
+  const canProcessSales = activeStaffSession ? activeStaffSession.permissions.processSales : true
+  const canViewProducts = activeStaffSession
+    ? (activeStaffSession.permissions.viewProducts || activeStaffSession.permissions.editProducts)
+    : true
+  const canEditProducts = activeStaffSession ? activeStaffSession.permissions.editProducts : true
+  const canViewAnalytics = activeStaffSession ? activeStaffSession.permissions.viewAnalytics : true
   
   // Product Management — DB-backed, persisted via /api/merchant/products
   const [products, setProducts] = useState<Product[]>([])
@@ -45,7 +64,7 @@ export function MerchantPOS() {
 
   // Fetch products from DB on mount
   useEffect(() => {
-    if (!address) return
+    if (!merchantContextAddress) return
 
     if (typeof fetch !== 'function') {
       if (!productsLoaded) {
@@ -55,7 +74,7 @@ export function MerchantPOS() {
       return
     }
 
-    fetch(`/api/merchant/products?merchant=${encodeURIComponent(address)}`)
+    fetch(`/api/merchant/products?merchant=${encodeURIComponent(merchantContextAddress)}`)
       .then(r => r.ok ? r.json() : null)
       .then(data => {
         if (data?.products?.length) {
@@ -78,7 +97,7 @@ export function MerchantPOS() {
         }
         setProductsLoaded(true)
       })
-  }, [address, productsLoaded])
+  }, [merchantContextAddress, productsLoaded])
   
   // Cart
   const [cart, setCart] = useState<CartItem[]>([])
@@ -90,6 +109,55 @@ export function MerchantPOS() {
   const [showEmailPrompt, setShowEmailPrompt] = useState(false)
   const [customerEmail, setCustomerEmail] = useState('')
   const [activeTab, setActiveTab] = useState<'pos' | 'products' | 'sales'>('pos')
+
+  useEffect(() => {
+    if (typeof window !== 'object') return
+
+    const storedSession = getStoredStaffSession()
+    const params = new URLSearchParams(window.location.search)
+    const token = params.get('staffToken')?.trim()
+
+    if (!token) {
+      setStaffSession(storedSession)
+      setStaffError(null)
+      return
+    }
+
+    if (storedSession?.sessionToken === token && isStaffSessionActive(storedSession)) {
+      setStaffSession(storedSession)
+      setStaffError(null)
+      return
+    }
+
+    if (typeof fetch !== 'function') return
+
+    fetch(`/api/merchant/staff?token=${encodeURIComponent(token)}`)
+      .then(async (response) => {
+        const data = await response.json().catch(() => null)
+        if (!response.ok || !data?.session) {
+          throw new Error(data?.error || 'Staff session not found or expired')
+        }
+
+        const resolvedSession = data.session as StaffSession
+        storeStaffSession(resolvedSession)
+        setStaffSession(resolvedSession)
+        setStaffError(null)
+      })
+      .catch((error: unknown) => {
+        clearStoredStaffSession()
+        setStaffSession(null)
+        setStaffError(error instanceof Error ? error.message : 'Staff session not found or expired')
+      })
+  }, [])
+
+  useEffect(() => {
+    if (activeTab === 'products' && !canViewProducts) {
+      setActiveTab(canViewAnalytics ? 'sales' : 'pos')
+    }
+    if (activeTab === 'sales' && !canViewAnalytics) {
+      setActiveTab(canViewProducts ? 'products' : 'pos')
+    }
+  }, [activeTab, canViewAnalytics, canViewProducts])
   
   // Sales tracking
   interface Sale {
@@ -102,6 +170,8 @@ export function MerchantPOS() {
     customerAddress?: string
     customerEmail?: string
     emailSent?: boolean
+    staffSessionId?: string
+    staffName?: string
   }
   
   const [salesHistory, setSalesHistory] = useState<Sale[]>([])
@@ -144,6 +214,11 @@ export function MerchantPOS() {
     const uniqueCategories = new Set(products.map(p => p.category));
     return ['All', ...Array.from(uniqueCategories)];
   }, [products]);
+
+  const filteredProducts = useMemo(() => {
+    if (selectedCategory === 'All') return products
+    return products.filter(product => product.category === selectedCategory)
+  }, [products, selectedCategory])
   
   // Track pending payment for event matching
   const pendingPaymentRef = useRef<{
@@ -169,12 +244,12 @@ export function MerchantPOS() {
     abi: MerchantPortalABI,
     eventName: 'PaymentProcessed',
     onLogs(logs) {
-      if (!address || !showQRPayment || !pendingPaymentRef.current) return
+      if (!merchantContextAddress || !showQRPayment || !pendingPaymentRef.current) return
       
       for (const log of logs) {
         const args = (log as unknown as { args: { customer?: `0x${string}`, merchant?: `0x${string}`, amount?: bigint } }).args
         // Check if this payment is for us
-        if (args.merchant?.toLowerCase() === address.toLowerCase()) {
+        if (args.merchant?.toLowerCase() === merchantContextAddress.toLowerCase()) {
           const receivedAmount = args.amount ? safeParseFloat(formatEther(args.amount), 0) : 0
           const expectedAmount = safeParseFloat(pendingPaymentRef.current.expectedAmount, 0)
           
@@ -186,9 +261,31 @@ export function MerchantPOS() {
         }
       }
     },
-    enabled: showQRPayment && !!address,
+    enabled: showQRPayment && !!merchantContextAddress,
   })
   
+  const logStaffActivity = useCallback(async (
+    action: 'sale' | 'product_edit' | 'refund',
+    details: Record<string, unknown>,
+  ) => {
+    if (!activeStaffSession?.sessionToken || typeof fetch !== 'function') return
+
+    try {
+      await fetch('/api/merchant/staff', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          mode: 'log',
+          staffToken: activeStaffSession.sessionToken,
+          action,
+          details,
+        }),
+      })
+    } catch {
+      // non-critical audit logging
+    }
+  }, [activeStaffSession])
+
   // Handle confirmed payment from blockchain event
   const handlePaymentConfirmed = useCallback((customerAddress: `0x${string}` | string, amount: string) => {
     if (!pendingPaymentRef.current) return
@@ -198,16 +295,19 @@ export function MerchantPOS() {
     pendingPaymentRef.current = null
     
     const timestamp = new Date().getTime()
+    const saleSubtotal = pending.cartSnapshot.reduce((sum, item) => sum + (item.price * item.quantity), 0)
     const sale: Sale = {
       id: timestamp.toString(),
       timestamp: timestamp,
       items: [...pending.cartSnapshot],
-      subtotal: subtotal,
+      subtotal: saleSubtotal,
       vfideAmount: amount,
       fee: processorFees.vfide,
       customerAddress: customerAddress,
       customerEmail: undefined,
       emailSent: false,
+      staffSessionId: activeStaffSession?.id,
+      staffName: activeStaffSession?.staffName,
     }
     
     setSalesHistory(prev => [sale, ...prev])
@@ -226,14 +326,28 @@ export function MerchantPOS() {
           amount,
           token: 'VFIDE',
           order_id: sale.id,
+          staff_session_id: activeStaffSession?.id ?? null,
         }),
       }).catch(() => { /* non-critical */ })
     }
-  }, [subtotal, processorFees.vfide])
+
+    if (activeStaffSession) {
+      void logStaffActivity('sale', {
+        saleId: sale.id,
+        subtotal: sale.subtotal,
+        itemCount: sale.items.length,
+        customerAddress,
+      })
+    }
+  }, [activeStaffSession, logStaffActivity, processorFees.vfide])
 
   // Add product to catalog (persisted to DB)
   const handleAddProduct = async () => {
     if (!newProduct.name || !newProduct.price) return
+    if (!canEditProducts) {
+      setStaffError('This staff session can view products but cannot edit them.')
+      return
+    }
     
     const price = safeParseFloat(newProduct.price, 0)
     const product: Product = {
@@ -248,6 +362,7 @@ export function MerchantPOS() {
     setProducts([...products, product])
     setNewProduct({ name: '', price: '', category: '', description: '' })
     setShowAddProduct(false)
+    setStaffError(null)
 
     // Persist to DB
     try {
@@ -257,7 +372,10 @@ export function MerchantPOS() {
 
       const res = await fetch('/api/merchant/products', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(activeStaffSession?.sessionToken ? { 'x-vfide-staff-session': activeStaffSession.sessionToken } : {}),
+        },
         body: JSON.stringify({
           name: product.name,
           price: product.price,
@@ -269,12 +387,29 @@ export function MerchantPOS() {
         const data = await res.json()
         // Replace temp id with real DB id
         setProducts(prev => prev.map(p => p.id === product.id ? { ...p, id: data.product.id } : p))
+        if (activeStaffSession) {
+          void logStaffActivity('product_edit', {
+            operation: 'create',
+            productName: product.name,
+            price: product.price,
+          })
+        }
+      } else {
+        setStaffError('Product was added locally, but server sync is still pending.')
       }
-    } catch { /* optimistic update already applied */ }
+    } catch {
+      setStaffError('Product was added locally, but server sync is still pending.')
+    }
   }
   
   // Add to cart
   const addToCart = (product: Product) => {
+    if (!canProcessSales) {
+      setStaffError('This staff session cannot process sales.')
+      return
+    }
+
+    setStaffError(null)
     const existing = cart.find(item => item.id === product.id)
     if (existing) {
       setCart(cart.map(item =>
@@ -350,20 +485,31 @@ export function MerchantPOS() {
   const todaysRevenue = revenue
   const todaysFees = fees
   const todaysNet = todaysRevenue - todaysFees
+  const staffDailySalesTotal = activeStaffSession
+    ? todaysSales
+        .filter(sale => sale.staffSessionId === activeStaffSession.id)
+        .reduce((sum, sale) => sum + sale.subtotal, 0)
+    : 0
+  const exceedsSingleSaleLimit = Boolean(activeStaffSession && subtotal > activeStaffSession.permissions.maxSaleAmount)
+  const exceedsDailyLimit = Boolean(
+    activeStaffSession && subtotal > 0 && (staffDailySalesTotal + subtotal) > activeStaffSession.permissions.dailySaleLimit
+  )
+  const checkoutDisabled = !canProcessSales || subtotal <= 0 || exceedsSingleSaleLimit || exceedsDailyLimit
   
   // Generate payment QR code
   const generatePaymentURL = () => {
     const params = new URLSearchParams({
-      merchant: address || '',
+      merchant: merchantContextAddress || '',
       amount: vfideAmount,
       source: 'qr',
       settlement: 'instant',
     })
     if (cart.length > 0) params.set('orderId', `POS-${Date.now()}`)
+    if (activeStaffSession?.id) params.set('staffSessionId', activeStaffSession.id)
     return `${window.location.origin}/pay?${params.toString()}`
   }
   
-  if (!isMerchant) {
+  if (!isMerchant && !activeStaffSession) {
     return (
       <div className="text-center py-20">
         <p className="text-xl text-zinc-100/60">Register as merchant to access POS</p>
@@ -377,15 +523,32 @@ export function MerchantPOS() {
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-zinc-100 mb-2">
-            {businessName} POS
+            {(businessName || 'VFIDE Merchant')} POS
           </h1>
           <p className="text-zinc-100/60">
             Point of sale with no processor fees (burn + gas apply)
           </p>
         </div>
+
+        {activeStaffSession && (
+          <div className="mb-4 rounded-xl border border-amber-400/30 bg-amber-400/10 px-4 py-3 text-sm text-amber-100">
+            <div className="font-semibold">
+              Staff mode active: {activeStaffSession.staffName} ({activeStaffSession.role})
+            </div>
+            <div className="text-amber-200/80">
+              Per-sale limit ${activeStaffSession.permissions.maxSaleAmount.toFixed(2)} • Daily limit ${activeStaffSession.permissions.dailySaleLimit.toFixed(2)}
+            </div>
+          </div>
+        )}
+
+        {staffError && (
+          <div className="mb-4 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
+            {staffError}
+          </div>
+        )}
         
         {/* Tabs */}
-        <div className="flex gap-4 mb-6">
+        <div className="flex gap-4 mb-6 flex-wrap">
           <button
             onClick={() => setActiveTab('pos')}
             className={`px-6 py-3 rounded-lg font-bold transition-all ${
@@ -396,26 +559,30 @@ export function MerchantPOS() {
           >
             🛒 Point of Sale
           </button>
-          <button
-            onClick={() => setActiveTab('products')}
-            className={`px-6 py-3 rounded-lg font-bold transition-all ${
-              activeTab === 'products'
-                ? 'bg-gradient-to-r from-cyan-400 to-blue-500 text-white'
-                : 'bg-zinc-950/50 text-zinc-100/60 hover:text-zinc-100'
-            }`}
-          >
-            📦 Products & Menu
-          </button>
-          <button
-            onClick={() => setActiveTab('sales')}
-            className={`px-6 py-3 rounded-lg font-bold transition-all ${
-              activeTab === 'sales'
-                ? 'bg-gradient-to-r from-cyan-400 to-blue-500 text-white'
-                : 'bg-zinc-950/50 text-zinc-100/60 hover:text-zinc-100'
-            }`}
-          >
-            📊 Sales & Reports
-          </button>
+          {canViewProducts && (
+            <button
+              onClick={() => setActiveTab('products')}
+              className={`px-6 py-3 rounded-lg font-bold transition-all ${
+                activeTab === 'products'
+                  ? 'bg-gradient-to-r from-cyan-400 to-blue-500 text-white'
+                  : 'bg-zinc-950/50 text-zinc-100/60 hover:text-zinc-100'
+              }`}
+            >
+              📦 Products & Menu
+            </button>
+          )}
+          {canViewAnalytics && (
+            <button
+              onClick={() => setActiveTab('sales')}
+              className={`px-6 py-3 rounded-lg font-bold transition-all ${
+                activeTab === 'sales'
+                  ? 'bg-gradient-to-r from-cyan-400 to-blue-500 text-white'
+                  : 'bg-zinc-950/50 text-zinc-100/60 hover:text-zinc-100'
+              }`}
+            >
+              📊 Sales & Reports
+            </button>
+          )}
         </div>
         
         {activeTab === 'pos' && (
@@ -431,7 +598,12 @@ export function MerchantPOS() {
                   {productCategories.map(cat => (
                     <button
                       key={cat}
-                      className="px-4 py-2 rounded-lg bg-cyan-400/10 text-cyan-400 hover:bg-cyan-400/20 transition-colors text-sm"
+                      onClick={() => setSelectedCategory(cat)}
+                      className={`px-4 py-2 rounded-lg transition-colors text-sm ${
+                        selectedCategory === cat
+                          ? 'bg-cyan-400 text-zinc-950'
+                          : 'bg-cyan-400/10 text-cyan-400 hover:bg-cyan-400/20'
+                      }`}
                     >
                       {cat}
                     </button>
@@ -440,7 +612,7 @@ export function MerchantPOS() {
                 
                 {/* Product Grid */}
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                  {products.map(product => (
+                  {filteredProducts.map(product => (
                     <motion.button
                       key={product.id}
                       onClick={() => addToCart(product)}
@@ -581,27 +753,49 @@ export function MerchantPOS() {
                   {/* Generate QR Button */}
                   <button
                     onClick={() => setShowQRPayment(true)}
-                    className="w-full bg-gradient-to-r from-emerald-400 to-cyan-400 text-zinc-950 font-bold py-4 rounded-xl hover:scale-105 transition-transform"
+                    disabled={checkoutDisabled}
+                    className={`w-full font-bold py-4 rounded-xl transition-transform ${
+                      checkoutDisabled
+                        ? 'cursor-not-allowed bg-zinc-800 text-zinc-400'
+                        : 'bg-gradient-to-r from-emerald-400 to-cyan-400 text-zinc-950 hover:scale-105'
+                    }`}
                   >
                     Generate QR Payment
                   </button>
+                  {exceedsSingleSaleLimit && activeStaffSession && (
+                    <p className="text-sm text-amber-300">
+                      This sale exceeds the cashier limit of ${activeStaffSession.permissions.maxSaleAmount.toFixed(2)}.
+                    </p>
+                  )}
+                  {exceedsDailyLimit && activeStaffSession && (
+                    <p className="text-sm text-amber-300">
+                      This checkout would exceed the daily limit of ${activeStaffSession.permissions.dailySaleLimit.toFixed(2)}.
+                    </p>
+                  )}
                 </motion.div>
               )}
             </div>
           </div>
         )}
         
-        {activeTab === 'products' && (
+        {activeTab === 'products' && canViewProducts && (
           /* PRODUCTS MANAGEMENT VIEW */
           <div className="bg-zinc-950/80 backdrop-blur-xl rounded-xl p-6 border border-cyan-400/20">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-bold text-zinc-100">Manage Products</h2>
-              <button
-                onClick={() => setShowAddProduct(true)}
-                className="bg-gradient-to-r from-emerald-400 to-cyan-400 text-zinc-950 font-bold px-6 py-3 rounded-lg hover:scale-105 transition-transform"
-              >
-                + Add Product
-              </button>
+            <div className="flex justify-between items-center mb-6 gap-4">
+              <div>
+                <h2 className="text-2xl font-bold text-zinc-100">Manage Products</h2>
+                {activeStaffSession && !canEditProducts && (
+                  <p className="mt-1 text-sm text-zinc-100/60">Read-only catalog access for this staff session.</p>
+                )}
+              </div>
+              {canEditProducts && (
+                <button
+                  onClick={() => setShowAddProduct(true)}
+                  className="bg-gradient-to-r from-emerald-400 to-cyan-400 text-zinc-950 font-bold px-6 py-3 rounded-lg hover:scale-105 transition-transform"
+                >
+                  + Add Product
+                </button>
+              )}
             </div>
             
             {/* Products List */}
@@ -620,12 +814,14 @@ export function MerchantPOS() {
                   </div>
                   <div className="flex items-center gap-4">
                     <span className="text-2xl font-bold text-emerald-400">${product.price.toFixed(2)}</span>
-                    <button
-                      onClick={() => setProducts(products.filter(p => p.id !== product.id))}
-                      className="text-red-500 hover:text-red-400 px-3 py-2"
-                    >
-                      🗑️
-                    </button>
+                    {canEditProducts && (
+                      <button
+                        onClick={() => setProducts(products.filter(p => p.id !== product.id))}
+                        className="text-red-500 hover:text-red-400 px-3 py-2"
+                      >
+                        🗑️
+                      </button>
+                    )}
                   </div>
                 </div>
               ))}
@@ -633,7 +829,7 @@ export function MerchantPOS() {
           </div>
         )}
         
-        {activeTab === 'sales' && (
+        {activeTab === 'sales' && canViewAnalytics && (
           /* SALES & REPORTS VIEW */
           <div className="space-y-6">
             {/* Today's Summary */}

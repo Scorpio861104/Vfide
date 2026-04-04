@@ -15,7 +15,7 @@ export interface StaffMember {
 
 interface StaffManagerProps {
   staff?: StaffMember[];
-  onAdd?: (name: string, address: string, role: StaffMember['role']) => void;
+  onAdd?: (name: string, address: string, role: StaffMember['role'], limits?: { maxSaleAmount: number; dailySaleLimit: number }) => void;
   onRemove?: (id: string) => void;
   onUpdateRole?: (id: string, role: StaffMember['role']) => void;
 }
@@ -43,17 +43,24 @@ export function StaffManager({ staff = [], onAdd, onRemove }: StaffManagerProps)
   const [name, setName] = useState('');
   const [address, setAddress] = useState('');
   const [role, setRole] = useState<StaffMember['role']>('cashier');
+  const [maxSaleAmount, setMaxSaleAmount] = useState('300');
+  const [dailySaleLimit, setDailySaleLimit] = useState('2000');
 
   const handleAdd = () => {
     if (!name || !address) {
       return;
     }
 
-    onAdd?.(name, address, role);
+    onAdd?.(name, address, role, {
+      maxSaleAmount: Number.parseFloat(maxSaleAmount) || 300,
+      dailySaleLimit: Number.parseFloat(dailySaleLimit) || 2000,
+    });
     setShowAdd(false);
     setName('');
     setAddress('');
     setRole('cashier');
+    setMaxSaleAmount('300');
+    setDailySaleLimit('2000');
   };
 
   return (
@@ -74,7 +81,7 @@ export function StaffManager({ staff = [], onAdd, onRemove }: StaffManagerProps)
 
       {showAdd && (
         <div className="space-y-4 rounded-xl border border-white/10 bg-white/3 p-5">
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
             <input
               type="text"
               value={name}
@@ -86,7 +93,7 @@ export function StaffManager({ staff = [], onAdd, onRemove }: StaffManagerProps)
               type="text"
               value={address}
               onChange={(event) => setAddress(event.target.value)}
-              placeholder="Wallet address"
+              placeholder="Wallet address or device label"
               className="rounded-lg border border-white/10 bg-white/5 px-3 py-2.5 text-sm font-mono text-white placeholder-gray-500 focus:outline-none"
             />
             <select
@@ -100,6 +107,24 @@ export function StaffManager({ staff = [], onAdd, onRemove }: StaffManagerProps)
                 </option>
               ))}
             </select>
+            <input
+              type="number"
+              min="0"
+              step="0.01"
+              value={maxSaleAmount}
+              onChange={(event) => setMaxSaleAmount(event.target.value)}
+              placeholder="Max sale amount"
+              className="rounded-lg border border-white/10 bg-white/5 px-3 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none"
+            />
+            <input
+              type="number"
+              min="0"
+              step="0.01"
+              value={dailySaleLimit}
+              onChange={(event) => setDailySaleLimit(event.target.value)}
+              placeholder="Daily sale limit"
+              className="rounded-lg border border-white/10 bg-white/5 px-3 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none"
+            />
           </div>
 
           <div className="flex gap-3">
