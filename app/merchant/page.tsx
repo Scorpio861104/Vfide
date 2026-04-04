@@ -52,6 +52,9 @@ export default function MerchantPage() {
               <Link href="/merchant/customers" className="rounded-xl border border-white/10 px-4 py-2 text-cyan-300 hover:border-cyan-400/40 hover:text-cyan-200">
                 Customer list & order history
               </Link>
+              <Link href="/merchant/coupons" className="rounded-xl border border-white/10 px-4 py-2 text-cyan-300 hover:border-cyan-400/40 hover:text-cyan-200">
+                Coupon & promo codes
+              </Link>
             </div>
           </div>
         </section>

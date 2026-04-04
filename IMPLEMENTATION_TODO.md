@@ -10,7 +10,7 @@ Source roadmap consolidated from `VFIDE_Complete_Assessment.md` and the active m
 ## Tier 2 — Scaling
 - [x] 2.1 Staff roles and cashier mode
 - [x] 2.2 Customer list and order history
-- [ ] 2.3 Coupon and promo code engine
+- [x] 2.3 Coupon and promo code engine
 - [ ] 2.4 Loyalty stamp cards
 
 ## Tier 3 — Operational Excellence

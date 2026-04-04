@@ -71,11 +71,15 @@ export function CheckoutPanel({
   onCancel,
 }: CheckoutPanelProps) {
   const { address, isConnected } = useAccount();
-  const { formatCurrency, displayCurrency } = useLocale();
+  const { formatCurrency } = useLocale();
   const [selectedToken, setSelectedToken] = useState<string>('VFIDE');
   const [isPaying, setIsPaying] = useState(false);
   const [step, setStep] = useState<'review' | 'paying' | 'complete'>('review');
   const [txHash, setTxHash] = useState<string | null>(null);
+  const [couponCode, setCouponCode] = useState('');
+  const [couponDiscount, setCouponDiscount] = useState(0);
+  const [couponStatus, setCouponStatus] = useState<string | null>(null);
+  const [appliedCouponCode, setAppliedCouponCode] = useState<string | null>(null);
 
   // Update token rates with live price
   const tokens = useMemo(() =>
@@ -85,12 +89,44 @@ export function CheckoutPanel({
 
   const subtotal = items.reduce((sum, item) => sum + item.price * item.qty, 0);
   const feeAmount = subtotal * (buyerFeeBps / 10000);
-  const total = subtotal + feeAmount;
+  const totalBeforeDiscount = subtotal + feeAmount;
+  const total = Math.max(0, totalBeforeDiscount - couponDiscount);
 
   const activeToken = tokens.find(t => t.symbol === selectedToken) ?? tokens[0] ?? PAYMENT_TOKENS[0]!;
   const tokenAmount = total / activeToken.rate;
 
   const feeSavedVsSquare = subtotal * 0.029 + 0.30; // Square's 2.9% + $0.30
+
+  const applyCoupon = async () => {
+    if (!couponCode.trim() || typeof fetch !== 'function') {
+      setCouponStatus('Enter a promo code to apply it.');
+      return;
+    }
+
+    try {
+      const params = new URLSearchParams({
+        code: couponCode.trim().toUpperCase(),
+        merchant: merchantAddress,
+        amount: subtotal.toString(),
+      });
+      if (address) params.set('customer', address);
+
+      const response = await fetch(`/api/merchant/coupons/validate?${params.toString()}`);
+      const data = await response.json().catch(() => null);
+      if (!response.ok || !data?.valid) {
+        setCouponDiscount(0);
+        setAppliedCouponCode(null);
+        setCouponStatus(data?.reason || 'Promo code is not valid for this checkout.');
+        return;
+      }
+
+      setCouponDiscount(Number(data.discount ?? 0));
+      setAppliedCouponCode(couponCode.trim().toUpperCase());
+      setCouponStatus(`Promo applied — you saved ${formatCurrency(Number(data.discount ?? 0))}.`);
+    } catch {
+      setCouponStatus('Unable to validate promo code right now.');
+    }
+  };
 
   const handlePay = async () => {
     if (!address) return;
@@ -168,6 +204,12 @@ export function CheckoutPanel({
                 </span>
                 <span className="text-white">{formatCurrency(feeAmount)}</span>
               </div>
+              {couponDiscount > 0 && (
+                <div className="flex justify-between text-sm text-emerald-400">
+                  <span>Promo discount{appliedCouponCode ? ` (${appliedCouponCode})` : ''}</span>
+                  <span>-{formatCurrency(couponDiscount)}</span>
+                </div>
+              )}
               <div className="border-t border-white/10 pt-2 flex justify-between">
                 <span className="text-white font-bold">Total</span>
                 <span className="text-cyan-400 font-bold text-lg">{formatCurrency(total)}</span>
@@ -201,6 +243,32 @@ export function CheckoutPanel({
                   </button>
                 ))}
               </div>
+            </div>
+
+            {/* Coupon code */}
+            <div className="mb-4 rounded-xl border border-white/10 bg-white/3 p-4">
+              <div className="mb-2 text-xs text-gray-500 uppercase tracking-wider">Promo code</div>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={couponCode}
+                  onChange={(event) => setCouponCode(event.target.value.toUpperCase())}
+                  placeholder="WELCOME10"
+                  className="flex-1 rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 text-sm text-white uppercase placeholder-gray-500 focus:border-cyan-500/40 focus:outline-none"
+                />
+                <button
+                  type="button"
+                  onClick={applyCoupon}
+                  className="rounded-xl border border-cyan-500/30 px-4 py-2.5 text-sm font-semibold text-cyan-300"
+                >
+                  Apply
+                </button>
+              </div>
+              {couponStatus && (
+                <div className={`mt-2 text-xs ${couponDiscount > 0 ? 'text-emerald-400' : 'text-amber-300'}`}>
+                  {couponStatus}
+                </div>
+              )}
             </div>
 
             {/* Pay button */}

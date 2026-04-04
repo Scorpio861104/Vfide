@@ -108,6 +108,9 @@ export function MerchantPOS() {
   const [showReceipt, setShowReceipt] = useState(false)
   const [showEmailPrompt, setShowEmailPrompt] = useState(false)
   const [customerEmail, setCustomerEmail] = useState('')
+  const [couponCode, setCouponCode] = useState('')
+  const [couponStatus, setCouponStatus] = useState<string | null>(null)
+  const [appliedCoupon, setAppliedCoupon] = useState<{ code: string; discount: number } | null>(null)
   const [activeTab, setActiveTab] = useState<'pos' | 'products' | 'sales'>('pos')
 
   useEffect(() => {
@@ -172,6 +175,8 @@ export function MerchantPOS() {
     emailSent?: boolean
     staffSessionId?: string
     staffName?: string
+    discountAmount?: number
+    couponCode?: string
   }
   
   const [salesHistory, setSalesHistory] = useState<Sale[]>([])
@@ -186,7 +191,9 @@ export function MerchantPOS() {
   })
   
   // Calculate totals
-  const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0)
+  const cartSubtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0)
+  const discountAmount = appliedCoupon?.discount ?? 0
+  const subtotal = Math.max(0, cartSubtotal - discountAmount)
   const calculator = useFeeCalculator(subtotal.toString())
   const vfideAmount = (subtotal / DEFAULT_VFIDE_PRICE).toFixed(2)
   
@@ -295,12 +302,13 @@ export function MerchantPOS() {
     pendingPaymentRef.current = null
     
     const timestamp = new Date().getTime()
-    const saleSubtotal = pending.cartSnapshot.reduce((sum, item) => sum + (item.price * item.quantity), 0)
+    const rawSaleSubtotal = pending.cartSnapshot.reduce((sum, item) => sum + (item.price * item.quantity), 0)
+    const saleDiscount = appliedCoupon?.discount ?? 0
     const sale: Sale = {
       id: timestamp.toString(),
       timestamp: timestamp,
       items: [...pending.cartSnapshot],
-      subtotal: saleSubtotal,
+      subtotal: Math.max(0, rawSaleSubtotal - saleDiscount),
       vfideAmount: amount,
       fee: processorFees.vfide,
       customerAddress: customerAddress,
@@ -308,6 +316,8 @@ export function MerchantPOS() {
       emailSent: false,
       staffSessionId: activeStaffSession?.id,
       staffName: activeStaffSession?.staffName,
+      discountAmount: saleDiscount,
+      couponCode: appliedCoupon?.code,
     }
     
     setSalesHistory(prev => [sale, ...prev])
@@ -402,11 +412,48 @@ export function MerchantPOS() {
     }
   }
   
+  const handleApplyCoupon = async () => {
+    if (!couponCode.trim()) {
+      setCouponStatus('Enter a promo code to apply it.')
+      return
+    }
+    if (!merchantContextAddress || typeof fetch !== 'function' || cartSubtotal <= 0) {
+      setCouponStatus('Add items to the cart before applying a promo code.')
+      return
+    }
+
+    try {
+      const params = new URLSearchParams({
+        code: couponCode.trim().toUpperCase(),
+        merchant: merchantContextAddress,
+        amount: cartSubtotal.toString(),
+      })
+      const response = await fetch(`/api/merchant/coupons/validate?${params.toString()}`)
+      const data = await response.json().catch(() => null)
+      if (!response.ok || !data?.valid) {
+        setAppliedCoupon(null)
+        setCouponStatus(data?.reason || 'Promo code is not valid for this cart.')
+        return
+      }
+
+      const resolvedDiscount = Number(data.discount ?? 0)
+      setAppliedCoupon({ code: couponCode.trim().toUpperCase(), discount: resolvedDiscount })
+      setCouponStatus(`Promo applied — saved $${resolvedDiscount.toFixed(2)}.`)
+    } catch {
+      setCouponStatus('Unable to validate promo code right now.')
+    }
+  }
+
   // Add to cart
   const addToCart = (product: Product) => {
     if (!canProcessSales) {
       setStaffError('This staff session cannot process sales.')
       return
+    }
+
+    if (appliedCoupon) {
+      setAppliedCoupon(null)
+      setCouponStatus('Cart updated — reapply promo code.')
     }
 
     setStaffError(null)
@@ -424,6 +471,11 @@ export function MerchantPOS() {
   
   // Update quantity
   const updateQuantity = (id: string, change: number) => {
+    if (appliedCoupon) {
+      setAppliedCoupon(null)
+      setCouponStatus('Cart updated — reapply promo code.')
+    }
+
     setCart(cart.map(item => {
       if (item.id === id) {
         const newQty = Math.max(0, item.quantity + change)
@@ -434,7 +486,12 @@ export function MerchantPOS() {
   }
   
   // Clear cart
-  const clearCart = () => setCart([])
+  const clearCart = () => {
+    setCart([])
+    setAppliedCoupon(null)
+    setCouponCode('')
+    setCouponStatus(null)
+  }
   
   // Complete sale - now just adds email to the current sale (payment already confirmed via event)
   const completeSale = (email?: string) => {
@@ -694,8 +751,14 @@ export function MerchantPOS() {
                   <div className="space-y-2">
                     <div className="flex justify-between text-zinc-100/60">
                       <span>Subtotal (USD)</span>
-                      <span className="font-bold">${subtotal.toFixed(2)}</span>
+                      <span className="font-bold">${cartSubtotal.toFixed(2)}</span>
                     </div>
+                    {discountAmount > 0 && (
+                      <div className="flex justify-between text-emerald-300">
+                        <span>Promo discount ({appliedCoupon?.code})</span>
+                        <span className="font-bold">-${discountAmount.toFixed(2)}</span>
+                      </div>
+                    )}
                     <div className="flex justify-between text-zinc-100/60">
                       <span>VFIDE Fee (0%)</span>
                       <span className="font-bold text-emerald-400">$0.00</span>
@@ -750,6 +813,31 @@ export function MerchantPOS() {
                     </motion.div>
                   </div>
                   
+                  <div className="rounded-lg border border-cyan-400/20 bg-zinc-950 p-3">
+                    <p className="mb-2 text-xs text-zinc-100/60">Promo code</p>
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={couponCode}
+                        onChange={(event) => setCouponCode(event.target.value.toUpperCase())}
+                        placeholder="WELCOME10"
+                        className="flex-1 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white uppercase placeholder-gray-500 focus:outline-none"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleApplyCoupon}
+                        className="rounded-lg border border-cyan-400/30 px-4 py-2 text-sm font-semibold text-cyan-300"
+                      >
+                        Apply
+                      </button>
+                    </div>
+                    {couponStatus && (
+                      <p className={`mt-2 text-xs ${discountAmount > 0 ? 'text-emerald-300' : 'text-amber-300'}`}>
+                        {couponStatus}
+                      </p>
+                    )}
+                  </div>
+
                   {/* Generate QR Button */}
                   <button
                     onClick={() => setShowQRPayment(true)}
@@ -1210,6 +1298,12 @@ export function MerchantPOS() {
                   <span className="text-gray-600">Subtotal</span>
                   <span className="font-bold">${currentSale.subtotal.toFixed(2)}</span>
                 </div>
+                {currentSale.discountAmount ? (
+                  <div className="flex justify-between text-sm text-green-600">
+                    <span>Promo discount{currentSale.couponCode ? ` (${currentSale.couponCode})` : ''}</span>
+                    <span className="font-bold">-${currentSale.discountAmount.toFixed(2)}</span>
+                  </div>
+                ) : null}
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600">Processing Fee</span>
                   <span className="font-bold">${currentSale.fee.toFixed(2)}</span>

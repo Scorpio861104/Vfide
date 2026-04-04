@@ -13,6 +13,7 @@ import { requireAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { dispatchWebhook } from '@/lib/webhooks/merchantWebhookDispatcher';
 import { logger } from '@/lib/logger';
+import { calculateCouponDiscount, serializeCouponRow } from '@/lib/coupons';
 import { z } from 'zod4';
 
 const ADDRESS_LIKE_REGEX = /^0x[a-fA-F0-9]{40}$/;
@@ -62,6 +63,7 @@ const createOrderSchema = z.object({
   tax_amount: z.coerce.number().min(0).optional(),
   shipping_amount: z.coerce.number().min(0).optional(),
   discount_amount: z.coerce.number().min(0).optional(),
+  coupon_code: z.string().trim().max(40).optional(),
   customer_notes: z.string().trim().max(1000).optional(),
 });
 
@@ -187,7 +189,7 @@ export async function POST(request: NextRequest) {
     const body = parsedBody.data;
     const { merchant_address, items, customer_email, customer_name,
             tx_hash, token, shipping_address, shipping_method,
-            tax_amount, shipping_amount, discount_amount, customer_notes } = body;
+            tax_amount, shipping_amount, discount_amount, coupon_code, customer_notes } = body;
 
     // Validate items
     const validatedItems: OrderItem[] = [];
@@ -211,12 +213,7 @@ export async function POST(request: NextRequest) {
     subtotal = Math.round(subtotal * 100) / 100;
     const tax = typeof tax_amount === 'number' ? Math.round(tax_amount * 100) / 100 : 0;
     const shipping = typeof shipping_amount === 'number' ? Math.round(shipping_amount * 100) / 100 : 0;
-    const discount = typeof discount_amount === 'number' ? Math.round(discount_amount * 100) / 100 : 0;
-    const total = Math.round((subtotal + tax + shipping - discount) * 100) / 100;
-
-    if (total < 0) {
-      return NextResponse.json({ error: 'Order total cannot be negative' }, { status: 400 });
-    }
+    const requestedDiscount = typeof discount_amount === 'number' ? Math.round(discount_amount * 100) / 100 : 0;
 
     const validTxHash = tx_hash || null;
     const paymentStatus = validTxHash ? 'paid' : 'unpaid';
@@ -227,6 +224,68 @@ export async function POST(request: NextRequest) {
     const client = await getClient();
     try {
       await client.query('BEGIN');
+
+      let couponId: string | null = null;
+      let resolvedDiscount = requestedDiscount;
+
+      if (coupon_code?.trim()) {
+        const couponResult = await client.query(
+          `SELECT id, merchant_address, code, discount_type, discount_value, min_order_amount,
+                  max_discount, max_uses, uses, per_customer_limit, valid_from, valid_until,
+                  active, product_ids
+             FROM merchant_coupons
+            WHERE merchant_address = $1
+              AND UPPER(code) = $2
+            LIMIT 1`,
+          [merchant_address, coupon_code.trim().toUpperCase()]
+        );
+
+        if (couponResult.rows.length === 0) {
+          await client.query('ROLLBACK');
+          return NextResponse.json({ error: 'Coupon not found' }, { status: 400 });
+        }
+
+        const coupon = serializeCouponRow(couponResult.rows[0] as Record<string, unknown>);
+        const now = Date.now();
+        if (!coupon.active || (coupon.validFrom && coupon.validFrom > now) || (coupon.validUntil && coupon.validUntil < now)) {
+          await client.query('ROLLBACK');
+          return NextResponse.json({ error: 'Coupon is inactive or expired' }, { status: 400 });
+        }
+        if (coupon.maxUses != null && coupon.uses >= coupon.maxUses) {
+          await client.query('ROLLBACK');
+          return NextResponse.json({ error: 'Coupon usage limit reached' }, { status: 400 });
+        }
+
+        if (coupon.perCustomerLimit != null) {
+          const redemptionResult = await client.query(
+            `SELECT COUNT(*) AS redemption_count
+               FROM coupon_redemptions
+              WHERE coupon_id = $1
+                AND customer_address = $2`,
+            [coupon.id, authAddress]
+          );
+          const redemptionCount = Number(redemptionResult.rows[0]?.redemption_count ?? 0);
+          if (redemptionCount >= coupon.perCustomerLimit) {
+            await client.query('ROLLBACK');
+            return NextResponse.json({ error: 'Coupon per-customer limit reached' }, { status: 400 });
+          }
+        }
+
+        const couponCheck = calculateCouponDiscount(coupon, subtotal + tax + shipping);
+        if (!couponCheck.valid) {
+          await client.query('ROLLBACK');
+          return NextResponse.json({ error: couponCheck.reason || 'Coupon is not valid for this order' }, { status: 400 });
+        }
+
+        couponId = coupon.id;
+        resolvedDiscount = couponCheck.discount;
+      }
+
+      const total = Math.round((subtotal + tax + shipping - resolvedDiscount) * 100) / 100;
+      if (total < 0) {
+        await client.query('ROLLBACK');
+        return NextResponse.json({ error: 'Order total cannot be negative' }, { status: 400 });
+      }
 
       const orderResult = await client.query(
         `INSERT INTO merchant_orders
@@ -248,7 +307,7 @@ export async function POST(request: NextRequest) {
           subtotal,
           tax,
           shipping,
-          discount,
+          resolvedDiscount,
           total,
           shipping_address ? JSON.stringify(shipping_address) : null,
           shipping_method ?? null,
@@ -304,6 +363,18 @@ export async function POST(request: NextRequest) {
             [item.quantity, item.product_id]
           );
         }
+      }
+
+      if (couponId) {
+        await client.query(
+          'UPDATE merchant_coupons SET uses = uses + 1 WHERE id = $1',
+          [couponId]
+        );
+        await client.query(
+          `INSERT INTO coupon_redemptions (coupon_id, customer_address, order_id, discount_applied)
+           VALUES ($1, $2, $3, $4)`,
+          [couponId, authAddress, order.id, resolvedDiscount]
+        );
       }
 
       await client.query('COMMIT');
