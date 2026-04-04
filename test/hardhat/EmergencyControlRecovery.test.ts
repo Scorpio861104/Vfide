@@ -3,6 +3,40 @@ import assert from "node:assert/strict";
 import { network } from "hardhat";
 
 describe("EmergencyControl recovery", () => {
+  it("queues module changes behind a timelock before applying them", async () => {
+    const { ethers } = (await network.connect()) as any;
+    const [dao, foundation, replacementDao] = await ethers.getSigners();
+
+    const Breaker = await ethers.getContractFactory("test/contracts/mocks/InterfaceMocks.sol:EmergencyBreakerMock");
+    const breaker = await Breaker.deploy();
+    await breaker.waitForDeployment();
+
+    const replacementBreaker = await Breaker.deploy();
+    await replacementBreaker.waitForDeployment();
+
+    const EmergencyControl = await ethers.getContractFactory("EmergencyControl");
+    const control = await EmergencyControl.deploy(
+      dao.address,
+      await breaker.getAddress(),
+      ethers.ZeroAddress,
+      foundation.address,
+    );
+    await control.waitForDeployment();
+
+    await control.connect(dao).setModules(replacementDao.address, await replacementBreaker.getAddress(), ethers.ZeroAddress);
+
+    await assert.rejects(
+      () => control.connect(dao).applyModules(),
+      /modules timelock|revert/
+    );
+
+    await ethers.provider.send("evm_increaseTime", [48 * 60 * 60 + 1]);
+    await ethers.provider.send("evm_mine", []);
+
+    await control.connect(dao).applyModules();
+    assert.equal(await control.dao(), replacementDao.address);
+  });
+
   it("transfers ownership through the emergency recovery hook after halt, approvals, and timelock", async () => {
     const { ethers } = (await network.connect()) as any;
     const [dao, foundation, member1, member2, newOwner] = await ethers.getSigners();

@@ -85,10 +85,15 @@ describe("ProofScoreBurnRouter (F-26: only Seer updates score)", () => {
     await ethers.provider.send("hardhat_impersonateAccount", [seerAddr]);
     const seerSigner = await ethers.getSigner(seerAddr);
 
-    // Push more than cap snapshots; ring head should advance modulo cap.
+    // Push more than cap snapshots while respecting the minimum update interval;
+    // the ring head should still advance modulo cap.
     for (let i = 0; i < 40; i++) {
       await seer.setScore(user.address, 7000 + i);
       await router.connect(seerSigner).updateScore(user.address);
+      if (i < 39) {
+        await ethers.provider.send("evm_increaseTime", [60 * 60 + 1]);
+        await ethers.provider.send("evm_mine", []);
+      }
     }
 
     assert.equal(await router.scoreHistoryHead(user.address), 8n);
@@ -443,7 +448,7 @@ describe("SeerPolicyGuard (BATCH-06: schedule/cancel flow)", () => {
 });
 
 describe("DAOTimelock (delay hardening)", () => {
-  it("blocks repeated admin emergency delay reductions", async () => {
+  it("blocks repeated admin emergency delay reductions until the reset window elapses", async () => {
     const { ethers } = (await network.connect()) as any;
     const [admin] = await ethers.getSigners();
 
@@ -455,10 +460,16 @@ describe("DAOTimelock (delay hardening)", () => {
     await tl.connect(admin).emergencyReduceDelay(36 * 60 * 60);
     assert.equal(await tl.delay(), 36n * 60n * 60n);
 
-    // Additional direct reductions must be blocked until normal timelock setDelay path runs.
+    // Additional direct reductions remain blocked during the reset window.
     await assert.rejects(
       () => tl.connect(admin).emergencyReduceDelay(30 * 60 * 60),
       /emergency reduction already used/
     );
+
+    await ethers.provider.send("evm_increaseTime", [30 * 24 * 60 * 60 + 1]);
+    await ethers.provider.send("evm_mine", []);
+
+    await tl.connect(admin).emergencyReduceDelay(30 * 60 * 60);
+    assert.equal(await tl.delay(), 30n * 60n * 60n);
   });
 });

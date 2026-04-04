@@ -36,6 +36,8 @@ contract EmergencyControl is ReentrancyGuard {
     event CommitteeVote(address indexed member, bool halt, uint8 approvals, string reason);
     event CommitteeTriggered(bool halt, string reason);
     event DAOToggled(bool halt, string reason);
+    event ModulesChangeQueued(address dao, address breaker, address ledger, uint64 executeAfter);
+    event ModulesChangeCancelled(address dao, address breaker, address ledger);
 
     address public dao;
     /// @notice Foundation address that can manage committee members
@@ -64,6 +66,15 @@ contract EmergencyControl is ReentrancyGuard {
     uint64 public voteExpiryPeriod = 7 days;
     uint64 public haltVotingStartTime;
     uint64 public unhaltVotingStartTime;
+
+    uint64 public constant MODULE_CHANGE_DELAY = 48 hours;
+    struct PendingModules {
+        address dao;
+        address breaker;
+        address ledger;
+    }
+    PendingModules public pendingModules;
+    uint64 public pendingModulesAt;
 
     modifier onlyDAO() {
         _checkDAO();
@@ -95,9 +106,31 @@ contract EmergencyControl is ReentrancyGuard {
 
     function setModules(address _dao, address _breaker, address _ledger) external onlyDAO nonReentrant {
         if (_dao == address(0) || _breaker == address(0)) revert EC_Zero();
-        dao = _dao; breaker = IEmergencyBreaker(_breaker); ledger = IProofLedger(_ledger);
-        emit ModulesSet(_dao, _breaker, _ledger);
+        require(pendingModulesAt == 0, "EC: pending modules");
+        pendingModules = PendingModules({ dao: _dao, breaker: _breaker, ledger: _ledger });
+        pendingModulesAt = uint64(block.timestamp) + MODULE_CHANGE_DELAY;
+        emit ModulesChangeQueued(_dao, _breaker, _ledger, pendingModulesAt);
+        _log("ec_modules_queued");
+    }
+
+    function applyModules() external onlyDAO nonReentrant {
+        require(pendingModulesAt != 0, "EC: no pending modules");
+        require(block.timestamp >= pendingModulesAt, "EC: modules timelock");
+        dao = pendingModules.dao;
+        breaker = IEmergencyBreaker(pendingModules.breaker);
+        ledger = IProofLedger(pendingModules.ledger);
+        emit ModulesSet(pendingModules.dao, pendingModules.breaker, pendingModules.ledger);
+        delete pendingModules;
+        delete pendingModulesAt;
         _log("ec_modules_set");
+    }
+
+    function cancelModules() external onlyDAO nonReentrant {
+        require(pendingModulesAt != 0, "EC: no pending modules");
+        emit ModulesChangeCancelled(pendingModules.dao, pendingModules.breaker, pendingModules.ledger);
+        delete pendingModules;
+        delete pendingModulesAt;
+        _log("ec_modules_cancelled");
     }
 
     function setCooldown(uint64 secondsMin) external onlyDAO nonReentrant {

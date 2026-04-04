@@ -389,7 +389,8 @@ contract VaultHub is Ownable, Pausable, ReentrancyGuard {
         delete recoveryApprovalCount[vault];
         recoveryNonce[vault]++;
 
-        // CEI: External call to vault BEFORE registry update
+        // Intentional external-call-first ordering: if the vault owner handoff fails,
+        // the registry state stays unchanged and the recovery can be retried safely.
         (bool ok, ) = vault.call(abi.encodeWithSignature("__forceSetOwner(address)", newOwner));
         require(ok, "VH:force-owner-failed");
 

@@ -15,6 +15,7 @@ contract AdminMultiSig is ReentrancyGuard {
     
     uint256 public constant CONFIG_DELAY = 24 hours;
     uint256 public constant CRITICAL_DELAY = 48 hours;
+    uint256 public constant EMERGENCY_DELAY = 1 hours;
     uint256 public constant VETO_WINDOW = 24 hours;
     uint256 public constant PROPOSAL_EXPIRY = 30 days;
 
@@ -177,9 +178,9 @@ contract AdminMultiSig is ReentrancyGuard {
         proposal.data = _data;
         proposal.description = _description;
         
-        uint256 delay = _proposalType == ProposalType.CONFIG 
-            ? CONFIG_DELAY 
-            : (_proposalType == ProposalType.CRITICAL ? CRITICAL_DELAY : 0);
+        uint256 delay = _proposalType == ProposalType.CONFIG
+            ? CONFIG_DELAY
+            : (_proposalType == ProposalType.CRITICAL ? CRITICAL_DELAY : EMERGENCY_DELAY);
         proposal.executionTime = block.timestamp + delay;
 
         proposal.hasApproved[msg.sender] = true;

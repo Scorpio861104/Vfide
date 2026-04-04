@@ -79,9 +79,13 @@ contract DAOTimelock is ReentrancyGuard {
     /// @dev Can only REDUCE delay (never increase), bounded by MIN_DELAY, max 50% reduction per call
     uint64 public lastEmergencyReduceTime;
     uint64 public constant ABSOLUTE_MIN_DELAY = 24 hours;
+    uint64 public constant EMERGENCY_REDUCTION_RESET = 30 days;
     bool public emergencyDelayReduced;
 
     function emergencyReduceDelay(uint64 _newDelay) external onlyAdmin {
+        if (emergencyDelayReduced && block.timestamp >= lastEmergencyReduceTime + EMERGENCY_REDUCTION_RESET) {
+            emergencyDelayReduced = false;
+        }
         require(!emergencyDelayReduced, "TL: emergency reduction already used");
         require(_newDelay >= ABSOLUTE_MIN_DELAY, "TL: below absolute minimum");
         require(_newDelay < delay, "TL: must reduce");
