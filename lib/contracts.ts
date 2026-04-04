@@ -47,7 +47,7 @@ import {
 import { logger } from '@/lib/logger';
 
 // Zero address placeholder for missing contracts
-const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000' as const
+export const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000' as const
 
 const CONTRACT_ENV_VAR_MAP: Record<string, string> = {
   VFIDEToken: 'NEXT_PUBLIC_VFIDE_TOKEN_ADDRESS',
@@ -92,7 +92,6 @@ const CONTRACT_ENV_VAR_MAP: Record<string, string> = {
 function validateContractAddress(address: string | undefined, name: string): `0x${string}` {
   const isProduction = process.env.NODE_ENV === 'production';
   const isBrowserRuntime = typeof window !== 'undefined';
-  const isCI = process.env.CI === 'true' || process.env.VERCEL === '1';
   const frontendOnlyEnv = process.env.FRONTEND_SELF_CONTAINED ?? process.env.NEXT_PUBLIC_FRONTEND_ONLY;
   const missingServerSecrets = !process.env.DATABASE_URL || !process.env.JWT_SECRET;
   const autoFrontendOnly =
@@ -121,6 +120,15 @@ function validateContractAddress(address: string | undefined, name: string): `0x
     return ZERO_ADDRESS
   }
   return address as `0x${string}`
+}
+
+export function isConfiguredContractAddress(address: string | undefined | null): address is `0x${string}` {
+  return typeof address === 'string' && isAddress(address) && address !== ZERO_ADDRESS
+}
+
+export function getContractConfigurationError(name: string): Error {
+  const envVarName = CONTRACT_ENV_VAR_MAP[name] ?? `NEXT_PUBLIC_${name.replace(/([a-z0-9])([A-Z])/g, '$1_$2').toUpperCase()}_ADDRESS`
+  return new Error(`[VFIDE] ${name} contract not configured. Set ${envVarName} in the environment.`)
 }
 
 export const CONTRACT_ADDRESSES = {
