@@ -142,6 +142,48 @@ describe("ProofScoreBurnRouter (F-26: only Seer updates score)", () => {
     await ethers.provider.send("hardhat_stopImpersonatingAccount", [seerAddr]);
   });
 
+  it("preview helpers expose the same time-weighted score used for live fee execution", async () => {
+    const { ethers } = (await network.connect()) as any;
+    const [, user, recipient, sanctum, burn, ecosystem] = await ethers.getSigners();
+
+    const SeerStub = await ethers.getContractFactory("SeerScoreStub");
+    const seer = await SeerStub.deploy();
+    await seer.waitForDeployment();
+    await seer.setScore(user.address, 6800);
+
+    const Router = await ethers.getContractFactory("ProofScoreBurnRouter");
+    const router = await Router.deploy(
+      await seer.getAddress(),
+      sanctum.address,
+      burn.address,
+      ecosystem.address,
+    );
+    await router.waitForDeployment();
+
+    const seerAddr = await seer.getAddress();
+    await ethers.provider.send("hardhat_setBalance", [seerAddr, "0x3635C9ADC5DEA00000"]);
+    await ethers.provider.send("hardhat_impersonateAccount", [seerAddr]);
+    const seerSigner = await ethers.getSigner(seerAddr);
+
+    await router.connect(seerSigner).updateScore(user.address);
+
+    const preview = await router.previewFees(user.address, 1_000_000n);
+    const previewAccurate = await router.previewFeesAccurate(user.address, recipient.address, 1_000_000n);
+    assert.equal(preview[4], 6800n);
+    assert.equal(previewAccurate[4], 6800n);
+
+    await seer.setScore(user.address, 7300);
+    await ethers.provider.send("evm_increaseTime", [8 * 24 * 60 * 60]);
+    await ethers.provider.send("evm_mine", []);
+
+    const refreshedPreview = await router.previewFees(user.address, 1_000_000n);
+    const refreshedAccurate = await router.previewFeesAccurate(user.address, recipient.address, 1_000_000n);
+    assert.equal(refreshedPreview[4], 7300n);
+    assert.equal(refreshedAccurate[4], 7300n);
+
+    await ethers.provider.send("hardhat_stopImpersonatingAccount", [seerAddr]);
+  });
+
   it("computeFeesAndReserve matches computeFees for identical inputs", async () => {
     const { ethers } = (await network.connect()) as any;
     const [owner, user, sanctum, burn, ecosystem] = await ethers.getSigners();

@@ -483,9 +483,26 @@ library SafeERC20 {
     }
     
     function safeApprove(IERC20 token, address spender, uint256 value) internal {
-        (bool success, bytes memory data) = address(token).call(
-            abi.encodeWithSelector(token.approve.selector, spender, value)
+        forceApprove(token, spender, value);
+    }
+
+    function forceApprove(IERC20 token, address spender, uint256 value) internal {
+        if (_callOptionalReturnBool(token, abi.encodeWithSelector(token.approve.selector, spender, value))) {
+            return;
+        }
+
+        require(
+            _callOptionalReturnBool(token, abi.encodeWithSelector(token.approve.selector, spender, 0)),
+            "SafeERC20: approve reset failed"
         );
-        require(success && (data.length == 0 || abi.decode(data, (bool))), "SafeERC20: approve failed");
+        require(
+            _callOptionalReturnBool(token, abi.encodeWithSelector(token.approve.selector, spender, value)),
+            "SafeERC20: approve failed"
+        );
+    }
+
+    function _callOptionalReturnBool(IERC20 token, bytes memory data) private returns (bool) {
+        (bool success, bytes memory returndata) = address(token).call(data);
+        return success && (returndata.length == 0 || abi.decode(returndata, (bool)));
     }
 }

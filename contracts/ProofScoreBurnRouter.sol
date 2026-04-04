@@ -701,7 +701,9 @@ contract ProofScoreBurnRouter is Ownable, Pausable, ReentrancyGuard {
     // ─────────────────────────── View Helpers
 
     /**
-     * Preview fees for a given user and amount
+     * @notice Preview fees for a given user and amount.
+     * @dev This reflects the current on-chain state only. Final execution can still differ if
+     *      other transfers reserve burn capacity before the user's transaction is mined.
      */
     function previewFees(address user, uint256 amount) external view returns (
         uint256 burnAmount,
@@ -710,10 +712,41 @@ contract ProofScoreBurnRouter is Ownable, Pausable, ReentrancyGuard {
         uint256 netAmount,
         uint16 score
     ) {
-        score = seer.getScore(user);
-        
+        score = getTimeWeightedScore(user);
+
         (burnAmount, sanctumAmount, ecosystemAmount,,,) = computeFees(user, address(0), amount);
         netAmount = amount - burnAmount - sanctumAmount - ecosystemAmount;
+    }
+
+    /**
+     * @notice Preview the fee outcome if this transfer executed next against current state.
+     * @dev Returns the projected post-transfer daily burn usage so frontends can surface when
+     *      the current burn cap headroom is nearly exhausted.
+     */
+    function previewFeesAccurate(address from, address to, uint256 amount) external view returns (
+        uint256 burnAmount,
+        uint256 sanctumAmount,
+        uint256 ecosystemAmount,
+        uint256 netAmount,
+        uint16 score,
+        uint256 projectedDailyBurned,
+        uint256 projectedBurnCapacityRemaining
+    ) {
+        score = getTimeWeightedScore(from);
+        (burnAmount, sanctumAmount, ecosystemAmount,,,) = computeFees(from, to, amount);
+        netAmount = amount - burnAmount - sanctumAmount - ecosystemAmount;
+
+        uint256 effectiveDaily = dailyBurnedAmount;
+        if (block.timestamp >= currentDayStart + 1 days) {
+            effectiveDaily = 0;
+        }
+
+        projectedDailyBurned = effectiveDaily + burnAmount;
+        if (dailyBurnCap == 0 || projectedDailyBurned >= dailyBurnCap) {
+            projectedBurnCapacityRemaining = 0;
+        } else {
+            projectedBurnCapacityRemaining = dailyBurnCap - projectedDailyBurned;
+        }
     }
 
     /**
@@ -784,9 +817,9 @@ contract ProofScoreBurnRouter is Ownable, Pausable, ReentrancyGuard {
      * Get effective fee rates for a user (using linear curve)
      */
     function getEffectiveBurnRate(address user) external view returns (uint16 burnBps, uint16 sanctumBps, uint16 ecosystemBps) {
-        uint16 score = seer.getScore(user);
-        
-        // Calculate total fee using linear curve
+        uint16 score = getTimeWeightedScore(user);
+
+        // Calculate total fee using the same time-weighted score path used by computeFees.
         uint256 totalBps = _calculateLinearFee(score);
         
         // Split: 40% burn, 10% sanctum, 50% ecosystem
