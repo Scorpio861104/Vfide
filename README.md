@@ -196,19 +196,20 @@ See contract configuration in `lib/contracts.ts` for contract addresses.
 
 Found a security issue? Please email security@vfide.io (do not open a public issue).
 
-## Issue Status
+## Validation Status
 
-**Status:** ✅ **100% Issue-Free** (Zero Blocking Issues)
+**Current local status:** ✅ `typecheck`, `build`, security suites, and on-chain guardrail suites pass with the maintained local configuration.
 
-All critical and high-priority issues have been resolved. See:
-- [100_PERCENT_ISSUE_FREE_STATUS.md](./100_PERCENT_ISSUE_FREE_STATUS.md) - Complete assessment
-- [KNOWN_ISSUES.md](./KNOWN_ISSUES.md) - Non-blocking enhancements (3 open, 1 resolved)
+Recent validation evidence:
+- `npm run typecheck && npm run typecheck:contracts`
+- `npm run test:security:all`
+- `npm run build`
+- `npm run security:supply-chain`
 
-**Summary:**
-- Critical Issues: 0
-- High Priority: 0
-- Blocking Issues: 0
-- Security Grade: A+ (Excellent)
+Operational notes:
+- Production deployment still requires the expected environment variables and contract addresses.
+- Local/frontend-only mode may emit non-blocking warnings when blockchain or server secrets are not configured.
+- `KNOWN_ISSUES.md` tracks remaining enhancements and follow-up work.
 
 ## License
 
@@ -216,6 +217,6 @@ All critical and high-priority issues have been resolved. See:
 
 ---
 
-**Status:** ✅ Production Ready | ✅ 100% Issue-Free  
-**Last Updated:** March 2, 2026  
+**Status:** ✅ Locally validated | ⚠️ Production env still required  
+**Last Updated:** April 4, 2026  
 **Version:** 0.1.0

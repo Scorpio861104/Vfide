@@ -1,11 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
+import { withRateLimit } from '@/lib/auth/rateLimit';
 import { logger } from '@/lib/logger';
 import { calculateCouponDiscount, serializeCouponRow } from '@/lib/coupons';
 
 const ADDRESS_LIKE_REGEX = /^0x[a-fA-F0-9]{40}$/;
+const PROMO_INVALID_MESSAGE = 'Promo code is not valid for this order';
 
 export async function GET(request: NextRequest) {
+  const rateLimitResponse = await withRateLimit(request, 'read');
+  if (rateLimitResponse) return rateLimitResponse;
   const { searchParams } = new URL(request.url);
   const code = (searchParams.get('code') || '').trim().toUpperCase();
   const merchant = (searchParams.get('merchant') || '').trim().toLowerCase();
@@ -29,20 +33,20 @@ export async function GET(request: NextRequest) {
     );
 
     if (result.rows.length === 0) {
-      return NextResponse.json({ valid: false, reason: 'Coupon not found' }, { status: 200 });
+      return NextResponse.json({ valid: false, reason: PROMO_INVALID_MESSAGE }, { status: 200 });
     }
 
     const coupon = serializeCouponRow(result.rows[0] as Record<string, unknown>);
     const now = Date.now();
 
     if (coupon.validFrom && coupon.validFrom > now) {
-      return NextResponse.json({ valid: false, reason: 'Coupon is not active yet' }, { status: 200 });
+      return NextResponse.json({ valid: false, reason: PROMO_INVALID_MESSAGE }, { status: 200 });
     }
     if (coupon.validUntil && coupon.validUntil < now) {
-      return NextResponse.json({ valid: false, reason: 'Coupon has expired' }, { status: 200 });
+      return NextResponse.json({ valid: false, reason: PROMO_INVALID_MESSAGE }, { status: 200 });
     }
     if (coupon.maxUses != null && coupon.uses >= coupon.maxUses) {
-      return NextResponse.json({ valid: false, reason: 'Coupon usage limit reached' }, { status: 200 });
+      return NextResponse.json({ valid: false, reason: PROMO_INVALID_MESSAGE }, { status: 200 });
     }
 
     if (customer && ADDRESS_LIKE_REGEX.test(customer) && coupon.perCustomerLimit != null) {
@@ -55,7 +59,7 @@ export async function GET(request: NextRequest) {
       );
       const redemptionCount = Number(redemptionResult.rows[0]?.redemption_count ?? 0);
       if (redemptionCount >= coupon.perCustomerLimit) {
-        return NextResponse.json({ valid: false, reason: 'Customer usage limit reached' }, { status: 200 });
+        return NextResponse.json({ valid: false, reason: PROMO_INVALID_MESSAGE }, { status: 200 });
       }
     } else if (customer) {
       await query('SELECT 0 AS redemption_count');
@@ -64,10 +68,9 @@ export async function GET(request: NextRequest) {
     const calculation = calculateCouponDiscount(coupon, amount);
     return NextResponse.json({
       valid: calculation.valid,
-      reason: calculation.reason,
+      reason: calculation.valid ? calculation.reason : PROMO_INVALID_MESSAGE,
       discount: calculation.discount,
       newTotal: calculation.newTotal,
-      coupon,
     });
   } catch (error) {
     logger.error('[Merchant Coupons Validate] Error:', error);

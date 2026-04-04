@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { requireAdmin, requireAuth } from '@/lib/auth/middleware';
+import { isAdmin, optionalAuth, verifyOnChainAdmin } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { logger } from '@/lib/logger';
 import { z } from 'zod4';
@@ -60,12 +60,22 @@ function normalizeNumber(value: unknown): number {
   return Math.max(0, Math.floor(value));
 }
 
+async function canViewFullTelemetry(request: NextRequest): Promise<boolean> {
+  const user = await optionalAuth(request).catch(() => null);
+  if (!user || !isAdmin(user)) {
+    return false;
+  }
+  return verifyOnChainAdmin(user.address);
+}
+
 export async function POST(request: NextRequest) {
   const rateLimitResponse = await withRateLimit(request, 'write');
   if (rateLimitResponse) return rateLimitResponse;
 
-  const authResult = await requireAuth(request);
-  if (authResult instanceof NextResponse) return authResult;
+  const user = await optionalAuth(request).catch(() => null);
+  const authenticatedAddress = typeof user?.address === 'string'
+    ? user.address.toLowerCase()
+    : null;
 
   let payload: z.infer<typeof nextOfKinFraudEventSchema>;
   try {
@@ -93,7 +103,7 @@ export async function POST(request: NextRequest) {
     threshold: normalizeNumber(payload.threshold),
     active: !!payload.active,
     denied: !!payload.denied,
-    watcher: normalizeAddress(payload.watcher),
+    watcher: authenticatedAddress || normalizeAddress(payload.watcher),
     userAgent: request.headers.get('user-agent') || 'unknown',
     ts: new Date().toISOString(),
   };
@@ -119,8 +129,7 @@ export async function GET(request: NextRequest) {
   const rateLimitResponse = await withRateLimit(request, 'read');
   if (rateLimitResponse) return rateLimitResponse;
 
-  const authResult = await requireAdmin(request);
-  if (authResult instanceof NextResponse) return authResult;
+  const includeSensitiveFields = await canViewFullTelemetry(request);
 
   const searchParams = request.nextUrl.searchParams;
   const sinceMinutes = parsePositiveInteger(searchParams.get('sinceMinutes'), 1440);
@@ -151,6 +160,16 @@ export async function GET(request: NextRequest) {
       total: events.length,
       bySource,
     },
-    events,
+    events: includeSensitiveFields
+      ? events
+      : events.map((event) => ({
+          vault: `${event.vault.slice(0, 6)}…${event.vault.slice(-4)}`,
+          source: event.source,
+          approvals: event.approvals,
+          threshold: event.threshold,
+          active: event.active,
+          denied: event.denied,
+          ts: event.ts,
+        })),
   });
 }

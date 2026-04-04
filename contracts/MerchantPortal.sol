@@ -83,6 +83,7 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
     event FeeUpdated(uint256 feeBasisPoints);
     event MinScoreUpdated(uint16 minScore);
     event FeeSinkSet(address sink);
+    event MinSwapOutputUpdated(uint256 previousBps, uint256 newBps);
     event AutoConvertSet(address indexed merchant, bool enabled);
     event PayoutAddressSet(address indexed merchant, address payoutAddress);
     event AutoConvertFallback(address indexed merchant, address indexed tokenIn, uint256 amountIn, string reason);
@@ -230,7 +231,9 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
     
     function setMinSwapOutput(uint256 _minBps) external onlyDAO {
         require(_minBps >= MIN_SWAP_OUTPUT_BPS && _minBps <= MAX_SWAP_OUTPUT_BPS, "invalid slippage"); // 0-10% slippage
+        uint256 previousBps = minSwapOutputBps;
         minSwapOutputBps = _minBps;
+        emit MinSwapOutputUpdated(previousBps, _minBps);
         _log("min_swap_output_set");
     }
     

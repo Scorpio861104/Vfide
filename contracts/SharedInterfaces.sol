@@ -328,6 +328,7 @@ abstract contract Ownable {
     /// @notice Register or rotate the emergency controller that may atomically recover ownership.
     /// @dev Single-step by design for halted-system recovery only.
     function setEmergencyController(address controller) external onlyOwner {
+        require(controller != address(0), "OWN: zero controller");
         emit EmergencyControllerSet(emergencyController, controller);
         emergencyController = controller;
     }

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
+import { requireAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { logger } from '@/lib/logger';
 
@@ -18,6 +19,9 @@ export async function GET(request: NextRequest) {
   const rateLimitResponse = await withRateLimit(request, 'read');
   if (rateLimitResponse) return rateLimitResponse;
 
+  const authResult = await requireAuth(request);
+  if (authResult instanceof NextResponse) return authResult;
+
   const { searchParams } = new URL(request.url);
   const merchantAddress = (searchParams.get('address') || '').trim().toLowerCase();
   const period = (searchParams.get('period') || '30d') as '7d' | '30d' | '90d';
@@ -26,6 +30,10 @@ export async function GET(request: NextRequest) {
 
   if (!ADDRESS_LIKE_REGEX.test(merchantAddress)) {
     return NextResponse.json({ error: 'Valid merchant address required' }, { status: 400 });
+  }
+
+  if (authResult.user.address.toLowerCase() !== merchantAddress) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 
   try {

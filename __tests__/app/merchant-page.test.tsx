@@ -32,6 +32,7 @@ jest.mock('framer-motion', () => ({
       return ({ children, ...props }: any) => <Tag {...props}>{children}</Tag>;
     },
   }),
+  AnimatePresence: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
 
 jest.mock('@/components/error/ErrorBoundary', () => ({

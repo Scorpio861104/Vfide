@@ -175,6 +175,32 @@ const config: VfideHardhatConfig = {
           viaIR: true,
         },
       },
+      "contracts/MerchantPortal.sol": {
+        version: "0.8.30",
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 1,
+          },
+          metadata: {
+            bytecodeHash: "none",
+          },
+          viaIR: true,
+        },
+      },
+      "contracts/VaultHub.sol": {
+        version: "0.8.30",
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 1,
+          },
+          metadata: {
+            bytecodeHash: "none",
+          },
+          viaIR: true,
+        },
+      },
     },
   },
   networks: {

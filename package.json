@@ -96,7 +96,7 @@
     "migrate:status": "tsx lib/migrations/cli.ts status",
     "migrate:create": "tsx lib/migrations/cli.ts create",
     "test": "jest",
-    "test:onchain": "HARDHAT_ALLOW_UNLIMITED_CONTRACT_SIZE=true find test/hardhat -name '*.test.ts' ! -path 'test/hardhat/generated/*' -print0 | xargs -0 -n 1 npx tsx --test",
+    "test:onchain": "HARDHAT_CONFIG=hardhat.unlimited.config.ts HARDHAT_ALLOW_UNLIMITED_CONTRACT_SIZE=true find test/hardhat -name '*.test.ts' ! -path 'test/hardhat/generated/*' -print0 | xargs -0 -n 1 npx tsx --test",
     "test:onchain:generated": "HARDHAT_ALLOW_UNLIMITED_CONTRACT_SIZE=true npx tsx --test 'test/hardhat/generated/**/*.test.ts'",
     "test:signoff:guard": "tsx scripts/validate-signoff-tests.ts",
     "test:stubs:generate": "node scripts/generate-onchain-test-stubs.mjs",
