@@ -85,4 +85,21 @@ describe('Price alerts page pathways', () => {
     expect(screen.getByDisplayValue('3500')).toBeTruthy();
     expect(screen.getByDisplayValue('ETH buying opportunity')).toBeTruthy();
   });
+
+  it('persists alerts and restores them after reload', () => {
+    const { unmount } = renderPriceAlertsPage();
+
+    fireEvent.click(screen.getAllByRole('button', { name: /Create Alert/i })[0]);
+    fireEvent.change(screen.getByDisplayValue('VFIDE'), { target: { value: 'BTC' } });
+    fireEvent.change(screen.getByRole('spinbutton'), { target: { value: '65000' } });
+    fireEvent.change(screen.getByDisplayValue('VFIDE momentum watch'), { target: { value: 'BTC breakout watch' } });
+    fireEvent.click(screen.getAllByRole('button', { name: /^Create Alert$/i })[0]);
+
+    expect(localStorage.getItem('vfide_price_alerts_0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')).toContain('BTC');
+
+    unmount();
+    renderPriceAlertsPage();
+
+    expect(screen.getByText(/BTC breakout watch/i)).toBeTruthy();
+  });
 });
