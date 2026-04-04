@@ -55,7 +55,7 @@ contract AdminMultiSig is ReentrancyGuard {
     uint256 public proposalCount;
     mapping(uint256 => Proposal) public proposals;
     
-    uint256 public vetoThreshold = 100; // 100 veto votes needed
+    uint256 public constant vetoThreshold = 100; // 100 veto votes needed
     // This makes Sybil attacks economically costly — 100 wallets × 10,000 VFIDE = 1M VFIDE locked.
     uint256 public vetoMinStake = 10_000e18; // 10,000 VFIDE minimum to cast one veto vote (fallback when seer not set)
     IERC20 public vfideToken; // VFIDE token reference for fallback stake checks
@@ -80,8 +80,8 @@ contract AdminMultiSig is ReentrancyGuard {
     event CommunityVeto(uint256 indexed proposalId, address indexed voter, uint256 vetoCount);
     event CouncilMemberUpdated(address indexed oldMember, address indexed newMember);
     event VetoMinStakeSet(uint256 newMinStake);
-    event VFIDETokenSet(address token);
-    event SeerSet(address seer);
+    event VFIDETokenSet(address indexed token);
+    event SeerSet(address indexed seer);
     event VetoMinScoreSet(uint16 minScore);
     event ExecutionGasLimitSet(uint256 newGasLimit);
 

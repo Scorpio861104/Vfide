@@ -113,7 +113,7 @@ interface IProofScoreBurnRouterToken {
 }
 
 interface IProofScoreBurnRouter {
-    function setFeePolicy(uint16 minTotalBps, uint16 maxTotalBps) external;
+    function setFeePolicy(uint16 _minTotalBps, uint16 _maxTotalBps) external;
     function setModules(address seer, address sanctumSink, address burnSink, address ecosystemSink) external;
     function minTotalBps() external view returns (uint16);
     function maxTotalBps() external view returns (uint16);
@@ -123,7 +123,7 @@ interface IProofScoreBurnRouter {
     
     // Sustainability controls
     function setToken(address token) external;
-    function setSustainability(uint256 dailyBurnCap, uint256 minimumSupplyFloor, uint16 ecosystemMinBps) external;
+    function setSustainability(uint256 _dailyBurnCap, uint256 _minimumSupplyFloor, uint16 _ecosystemMinBps) external;
     function setAdaptiveFees(uint256 lowVolumeThreshold, uint256 highVolumeThreshold, uint16 lowVolMultiplier, uint16 highVolMultiplier, bool enabled) external;
     function recordBurn(uint256 burnAmount) external;
     function recordVolume(uint256 amount) external;
@@ -390,8 +390,8 @@ abstract contract ReentrancyGuard {
 
 /// @notice Custom Pausable — matches OZ Pausable interface (paused, _pause, _unpause, whenNotPaused, whenPaused)
 abstract contract Pausable {
-    event Paused(address account);
-    event Unpaused(address account);
+    event Paused(address indexed account);
+    event Unpaused(address indexed account);
     bool private _paused;
     modifier whenNotPaused() { require(!_paused, "Pausable: paused"); _; }
     modifier whenPaused() { require(_paused, "Pausable: not paused"); _; }

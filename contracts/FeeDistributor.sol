@@ -88,7 +88,7 @@ contract FeeDistributor is AccessControl, ReentrancyGuard, Pausable {
     event DestinationChangeProposed(bytes32 indexed nameHash, address addr, uint256 effectiveTime);
     event DestinationChangeExecuted(bytes32 indexed nameHash, address addr);
     event DestinationChangeCancelled(bytes32 indexed nameHash);
-    event DestinationUpdated(string name, address addr);
+    event DestinationUpdated(string name, address indexed addr);
 
     error ZeroAddress();
     error InvalidSplit();

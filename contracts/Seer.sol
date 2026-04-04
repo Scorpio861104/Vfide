@@ -1242,7 +1242,7 @@ contract Seer is ReentrancyGuard {
 
 /// ────────────────────────── ProofScoreBurnRouterPlus
 contract ProofScoreBurnRouterPlus {
-    event SeerSet(address seer);
+    event SeerSet(address indexed seer);
     event PolicySet(uint16 baseBurnBps, uint16 baseRewardBps, uint16 highBoostBps, uint16 lowPenaltyBps, uint16 maxTotalBps, address treasury);
 
     address public dao;
