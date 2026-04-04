@@ -64,6 +64,18 @@ export default function MerchantPage() {
               <Link href="/merchant/returns" className="rounded-xl border border-white/10 px-4 py-2 text-cyan-300 hover:border-cyan-400/40 hover:text-cyan-200">
                 Returns &amp; exchanges
               </Link>
+              <Link href="/merchant/installments" className="rounded-xl border border-white/10 px-4 py-2 text-cyan-300 hover:border-cyan-400/40 hover:text-cyan-200">
+                Installments &amp; payment plans
+              </Link>
+              <Link href="/merchant/suppliers" className="rounded-xl border border-white/10 px-4 py-2 text-cyan-300 hover:border-cyan-400/40 hover:text-cyan-200">
+                Suppliers &amp; purchase orders
+              </Link>
+              <Link href="/merchant/locations" className="rounded-xl border border-white/10 px-4 py-2 text-cyan-300 hover:border-cyan-400/40 hover:text-cyan-200">
+                Store locations
+              </Link>
+              <Link href="/merchant/wholesale" className="rounded-xl border border-white/10 px-4 py-2 text-cyan-300 hover:border-cyan-400/40 hover:text-cyan-200">
+                Wholesale &amp; group buying
+              </Link>
               <Link href="/merchant/expenses" className="rounded-xl border border-white/10 px-4 py-2 text-cyan-300 hover:border-cyan-400/40 hover:text-cyan-200">
                 Expense tracking &amp; P&amp;L
               </Link>
