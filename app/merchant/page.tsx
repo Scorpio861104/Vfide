@@ -3,10 +3,12 @@
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { ArrowRight, Store } from 'lucide-react';
+import { useAccount } from 'wagmi';
 import { Footer } from '@/components/layout/Footer';
 import { MerchantDashboard } from '@/components/merchant/MerchantDashboard';
 import { PaymentInterface } from '@/components/merchant/PaymentInterface';
 import { PaymentQR } from '@/components/merchant/PaymentQR';
+import { OffRampButton, OffRampStatus } from '@/components/compliance/OffRampIntegration';
 
 const processors = [
   { name: 'Square', fee: '2.6% + $0.10' },
@@ -22,6 +24,8 @@ const onboardingSteps = [
 ];
 
 export default function MerchantPage() {
+  const { address } = useAccount();
+
   return (
     <>
       <div className="min-h-screen bg-zinc-950 pt-20">
@@ -63,7 +67,7 @@ export default function MerchantPage() {
 
         <section className="py-16">
           <div className="container mx-auto max-w-6xl px-4">
-            <div className="grid gap-6 lg:grid-cols-3">
+            <div className="grid gap-6 xl:grid-cols-4">
               <div className="rounded-2xl border border-white/10 bg-white/3 p-5">
                 <h2 className="mb-4 text-2xl font-bold text-white">Merchant Dashboard</h2>
                 <MerchantDashboard />
@@ -75,6 +79,22 @@ export default function MerchantPage() {
               <div className="rounded-2xl border border-white/10 bg-white/3 p-5">
                 <h2 className="mb-4 text-2xl font-bold text-white">Generate Payment QR Code</h2>
                 <PaymentQR />
+              </div>
+              <div className="rounded-2xl border border-white/10 bg-white/3 p-5">
+                <h2 className="mb-3 text-2xl font-bold text-white">Cash-Out Rails</h2>
+                <p className="mb-4 text-sm text-gray-400">
+                  Create mobile-money and bank withdrawal requests without leaving the merchant workspace.
+                </p>
+                {address ? (
+                  <div className="space-y-4">
+                    <OffRampButton walletAddress={address} className="w-full justify-center" />
+                    <OffRampStatus walletAddress={address} />
+                  </div>
+                ) : (
+                  <div className="rounded-xl border border-dashed border-white/10 bg-black/20 p-4 text-sm text-gray-400">
+                    Connect your wallet to unlock off-ramp requests and status tracking.
+                  </div>
+                )}
               </div>
             </div>
           </div>

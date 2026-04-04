@@ -670,7 +670,9 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
      * Enable or disable automatic conversion for stable-pay merchants
      */
     function setAutoConvert(bool enabled) external onlyMerchant {
-        require(!enabled, "MP: auto-convert temporarily disabled");
+        if (enabled) {
+            require(address(swapRouter) != address(0) && stablecoin != address(0), "MP: swap not configured");
+        }
         autoConvert[msg.sender] = enabled;
         emit AutoConvertSet(msg.sender, enabled);
     }

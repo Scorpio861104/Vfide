@@ -184,6 +184,45 @@ CREATE TABLE IF NOT EXISTS payment_requests (
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Merchant withdrawal requests table
+CREATE TABLE IF NOT EXISTS merchant_withdrawals (
+  id BIGSERIAL PRIMARY KEY,
+  merchant_address VARCHAR(42) NOT NULL,
+  amount DECIMAL(36, 18) NOT NULL,
+  token VARCHAR(20) NOT NULL,
+  provider VARCHAR(40) NOT NULL,
+  mobile_number_hint VARCHAR(16),
+  network VARCHAR(40) NOT NULL,
+  status VARCHAR(20) DEFAULT 'pending',
+  provider_tx_id VARCHAR(80),
+  metadata JSONB DEFAULT '{}'::jsonb,
+  created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+  completed_at TIMESTAMPTZ
+);
+
+CREATE INDEX IF NOT EXISTS idx_merchant_withdrawals_merchant_created
+  ON merchant_withdrawals (merchant_address, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_merchant_withdrawals_status
+  ON merchant_withdrawals (status);
+
+-- Remittance beneficiaries table
+CREATE TABLE IF NOT EXISTS remittance_beneficiaries (
+  id BIGSERIAL PRIMARY KEY,
+  owner_address VARCHAR(42) NOT NULL,
+  label VARCHAR(80),
+  name VARCHAR(120) NOT NULL,
+  phone VARCHAR(32) NOT NULL,
+  network VARCHAR(32) NOT NULL,
+  account_number VARCHAR(64),
+  wallet_address VARCHAR(42),
+  country VARCHAR(2) NOT NULL,
+  relationship VARCHAR(40) NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_remittance_beneficiaries_owner_created
+  ON remittance_beneficiaries (owner_address, created_at DESC);
+
 -- Activities table
 CREATE TABLE IF NOT EXISTS activities (
   id SERIAL PRIMARY KEY,

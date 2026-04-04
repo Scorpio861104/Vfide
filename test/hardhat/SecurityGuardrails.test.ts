@@ -394,7 +394,7 @@ describe("VaultHub (F-20: SecurityHub timelock)", () => {
 });
 
 describe("MerchantPortal (NEW-05: auto-convert safety hold)", () => {
-  it("blocks merchants from enabling auto-convert while allowing the disabled state to remain explicit", async () => {
+  it("allows merchants to enable auto-convert only after the swap path is configured", async () => {
     const { ethers } = (await network.connect()) as any;
     const [dao, merchant] = await ethers.getSigners();
 
@@ -408,10 +408,14 @@ describe("MerchantPortal (NEW-05: auto-convert safety hold)", () => {
     const securityHub = await Placeholder.deploy();
     const ledger = await Placeholder.deploy();
     const feeSink = await Placeholder.deploy();
+    const router = await Placeholder.deploy();
+    const stablecoin = await Placeholder.deploy();
     await vaultHub.waitForDeployment();
     await securityHub.waitForDeployment();
     await ledger.waitForDeployment();
     await feeSink.waitForDeployment();
+    await router.waitForDeployment();
+    await stablecoin.waitForDeployment();
 
     const MerchantPortal = await ethers.getContractFactory("MerchantPortal");
     const portal = await MerchantPortal.deploy(
@@ -428,8 +432,14 @@ describe("MerchantPortal (NEW-05: auto-convert safety hold)", () => {
 
     await assert.rejects(
       () => portal.connect(merchant).setAutoConvert(true),
-      /auto-convert temporarily disabled/
+      /swap not configured/
     );
+
+    await portal.connect(dao).setAcceptedToken(await stablecoin.getAddress(), true);
+    await portal.connect(dao).setSwapConfig(await router.getAddress(), await stablecoin.getAddress());
+
+    await portal.connect(merchant).setAutoConvert(true);
+    assert.equal(await portal.autoConvert(merchant.address), true);
 
     await portal.connect(merchant).setAutoConvert(false);
     assert.equal(await portal.autoConvert(merchant.address), false);
