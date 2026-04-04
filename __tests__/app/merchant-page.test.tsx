@@ -56,6 +56,8 @@ describe('Merchant page logic pathways', () => {
     expect(screen.getByRole('heading', { name: /Merchant Dashboard/i })).toBeTruthy();
     expect(screen.getByRole('heading', { name: /Make Payment/i })).toBeTruthy();
     expect(screen.getByRole('heading', { name: /Generate Payment QR Code/i })).toBeTruthy();
+    expect(screen.getByRole('link', { name: /gift cards/i })).toBeTruthy();
+    expect(screen.getByRole('link', { name: /returns/i })).toBeTruthy();
     expect(screen.getByText('Merchant Dashboard Component')).toBeTruthy();
     expect(screen.getByText('Payment Interface Component')).toBeTruthy();
     expect(screen.getByText('Payment QR Component')).toBeTruthy();
