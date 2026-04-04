@@ -4,7 +4,7 @@ import React, { useState, useCallback, useEffect, useRef, useMemo } from 'react'
 import { useCrossChain, Route, TransferRequest } from '@/lib/crossChain';
 import { useAccount } from 'wagmi';
 import { toast } from '@/lib/toast';
-import { safeParseInt } from '@/lib/validation';
+import { safeParseFloat, safeParseInt } from '@/lib/validation';
 
 // ============================================================================
 // Cross-Chain Transfer Component
@@ -43,7 +43,7 @@ export default function CrossChainTransfer() {
   const debounceRef = useRef<NodeJS.Timeout>(undefined);
 
   useEffect(() => {
-    if (!amount || parseFloat(amount) <= 0) {
+    if (!amount || safeParseFloat(amount, 0, { min: 0 }) <= 0) {
       return;
     }
 
@@ -104,6 +104,8 @@ export default function CrossChainTransfer() {
   const _fromChainData = getChain(fromChain);
   const _toChainData = getChain(toChain);
 
+  const formatAmount = (value: string | number | undefined) => safeParseFloat(value, 0, { min: 0 }).toFixed(4);
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -129,7 +131,7 @@ export default function CrossChainTransfer() {
         <div className="flex flex-wrap gap-3">
           {balances.slice(0, 5).map((balance) => (
             <div key={balance.token} className="bg-background/50 rounded-lg px-3 py-2">
-              <div className="text-lg font-semibold">{parseFloat(balance.totalBalance).toFixed(4)}</div>
+              <div className="text-lg font-semibold">{formatAmount(balance.totalBalance)}</div>
               <div className="text-xs text-muted-foreground">{balance.token}</div>
             </div>
           ))}
@@ -143,7 +145,7 @@ export default function CrossChainTransfer() {
           <div className="flex justify-between text-sm mb-2">
             <span className="text-muted-foreground">From</span>
             <span className="text-muted-foreground">
-              Balance: {balances.find((b) => b.token === fromToken)?.totalBalance || '0'}
+              Balance: {formatAmount(balances.find((b) => b.token === fromToken)?.totalBalance)}
             </span>
           </div>
           <div className="flex gap-3">

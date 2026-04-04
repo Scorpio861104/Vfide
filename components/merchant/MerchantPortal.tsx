@@ -1600,6 +1600,17 @@ function SubscriptionsSection({ merchantAddress }: { merchantAddress: string }) 
 
   const handleCreate = async () => {
     if (!newPlan.name || !newPlan.amount) return;
+
+    const amountValue = safeParseFloat(newPlan.amount, NaN, { min: 0 });
+    const trialDaysValue = Math.max(0, Math.floor(safeParseFloat(newPlan.trial_days, 0, { min: 0 })));
+    const maxSubscribersValue = newPlan.max_subscribers
+      ? Math.max(1, Math.floor(safeParseFloat(newPlan.max_subscribers, NaN, { min: 1 })))
+      : undefined;
+
+    if (!Number.isFinite(amountValue) || amountValue <= 0) {
+      return;
+    }
+
     setSubmitting(true);
     try {
       const res = await fetch('/api/merchant/subscriptions', {
@@ -1609,10 +1620,10 @@ function SubscriptionsSection({ merchantAddress }: { merchantAddress: string }) 
           name: newPlan.name,
           description: newPlan.description || undefined,
           token: newPlan.token,
-          amount: Number(newPlan.amount),
+          amount: amountValue,
           interval: newPlan.interval,
-          trial_days: Number(newPlan.trial_days) || 0,
-          max_subscribers: newPlan.max_subscribers ? Number(newPlan.max_subscribers) : undefined,
+          trial_days: trialDaysValue,
+          max_subscribers: Number.isFinite(maxSubscribersValue as number) ? maxSubscribersValue : undefined,
         }),
       });
       if (res.ok) {

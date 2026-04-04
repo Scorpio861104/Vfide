@@ -75,6 +75,7 @@ function generateQRDataUrl(text: string, size: number, fgColor: string, bgColor:
       } else {
         // Data area — pseudo-random based on text hash
         const hash = (text.charCodeAt(i % text.length) * 31 + j * 17 + i * 13) % 3;
+        // eslint-disable-next-line security/detect-possible-timing-attacks -- deterministic canvas placeholder generation; no secret comparison is involved.
         if (hash === 0) {
           ctx.fillRect(j * cellSize, i * cellSize, cellSize, cellSize);
         }

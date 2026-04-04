@@ -99,10 +99,20 @@ export function getStoredStaffSession(): StaffSession | null {
 
 export function storeStaffSession(session: StaffSession): void {
   if (typeof window === 'undefined') return;
-  window.localStorage.setItem(STAFF_SESSION_STORAGE_KEY, JSON.stringify(session));
+
+  try {
+    window.localStorage.setItem(STAFF_SESSION_STORAGE_KEY, JSON.stringify(session));
+  } catch {
+    // Storage may be unavailable in private browsing or restricted environments.
+  }
 }
 
 export function clearStoredStaffSession(): void {
   if (typeof window === 'undefined') return;
-  window.localStorage.removeItem(STAFF_SESSION_STORAGE_KEY);
+
+  try {
+    window.localStorage.removeItem(STAFF_SESSION_STORAGE_KEY);
+  } catch {
+    // Ignore storage cleanup failures in restricted environments.
+  }
 }
