@@ -1,8 +1,10 @@
 'use client';
 
-import { useState } from 'react';
-import { ShoppingCart, Heart, Share2, Minus, Plus, Check, Star, Truck, Download, Clock } from 'lucide-react';
+import { useMemo, useState } from 'react';
+import { ShoppingCart, Heart, Minus, Plus, Check, Truck, Download, Clock } from 'lucide-react';
 import Link from 'next/link';
+import { CheckoutPanel } from '@/components/checkout/CheckoutPanel';
+import { useCart } from '@/providers/CartProvider';
 import { StarRating } from './StarRating';
 
 interface Product {
@@ -10,7 +12,7 @@ interface Product {
   description: string | null; long_description: string | null;
   product_type: 'physical' | 'digital' | 'service';
   variants: { id: string; label: string; price_override: string | null }[] | null;
-  merchant_slug: string | null; merchant_name: string;
+  merchant_slug: string | null; merchant_name: string; merchant_address: string;
   avg_rating: number | null; review_count: number;
   track_inventory: boolean; inventory_count: number | null;
 }
@@ -20,6 +22,13 @@ export function ProductInfo({ product }: { product: Product }) {
   const [selectedVariant, setSelectedVariant] = useState<string | null>(product.variants?.[0]?.id || null);
   const [wishlisted, setWishlisted] = useState(false);
   const [addedToCart, setAddedToCart] = useState(false);
+  const [showCheckout, setShowCheckout] = useState(false);
+  const { items, addItem, clearCart } = useCart();
+
+  const merchantCartKey = useMemo(() => {
+    if (product.merchant_slug) return product.merchant_slug;
+    return product.merchant_name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || `merchant-${product.id}`;
+  }, [product.id, product.merchant_name, product.merchant_slug]);
 
   const activePrice = selectedVariant && product.variants?.find(v => v.id === selectedVariant)?.price_override || product.price;
   const hasDiscount = product.compare_at_price && parseFloat(product.compare_at_price) > parseFloat(activePrice);
@@ -27,7 +36,26 @@ export function ProductInfo({ product }: { product: Product }) {
   const typeIcons = { physical: Truck, digital: Download, service: Clock };
   const TypeIcon = typeIcons[product.product_type];
 
-  const handleAddToCart = () => { setAddedToCart(true); setTimeout(() => setAddedToCart(false), 2000); };
+  const merchantCartItems = useMemo(
+    () => items.filter((item) => item.merchantSlug === merchantCartKey),
+    [items, merchantCartKey]
+  );
+  const merchantItemCount = merchantCartItems.reduce((sum, item) => sum + item.qty, 0);
+  const merchantSubtotal = merchantCartItems.reduce((sum, item) => sum + item.price * item.qty, 0);
+
+  const handleAddToCart = () => {
+    addItem({
+      id: selectedVariant ? `${product.id}:${selectedVariant}` : product.id,
+      name: product.name,
+      slug: product.id,
+      price: Number.parseFloat(activePrice) || 0,
+      merchantSlug: merchantCartKey,
+      productType: product.product_type,
+      description: product.description,
+    }, qty);
+    setAddedToCart(true);
+    window.setTimeout(() => setAddedToCart(false), 2000);
+  };
 
   return (
     <div className="space-y-4">
@@ -74,13 +102,51 @@ export function ProductInfo({ product }: { product: Product }) {
           <button onClick={() => setQty(q => q + 1)} className="px-3 py-2 text-gray-400 hover:text-white"><Plus size={14} /></button>
         </div>
         <button onClick={handleAddToCart} disabled={!inStock}
+          aria-label={`Add ${product.name} to cart`}
           className={`flex-1 py-3 rounded-xl font-bold flex items-center justify-center gap-2 ${addedToCart ? 'bg-emerald-500 text-white' : inStock ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white' : 'bg-white/5 text-gray-500'}`}>
           {addedToCart ? <><Check size={16} /> Added!</> : <><ShoppingCart size={16} /> Add to cart</>}
         </button>
-        <button onClick={() => setWishlisted(!wishlisted)} className="p-3 rounded-xl border border-white/10 hover:border-red-500/30">
+        <button onClick={() => setWishlisted(!wishlisted)} aria-label={wishlisted ? 'Remove from wishlist' : 'Add to wishlist'} className="p-3 rounded-xl border border-white/10 hover:border-red-500/30">
           <Heart size={18} className={wishlisted ? 'text-red-400 fill-red-400' : 'text-gray-500'} />
         </button>
       </div>
+
+      {merchantCartItems.length > 0 && (
+        <div className="rounded-2xl border border-cyan-500/20 bg-cyan-500/5 p-4">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <div className="text-sm font-semibold text-white">{merchantItemCount} item in cart{merchantItemCount === 1 ? '' : 's'}</div>
+              <div className="text-xs text-gray-400">${merchantSubtotal.toFixed(2)} ready for checkout</div>
+            </div>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => setShowCheckout((current) => !current)}
+                className="rounded-xl bg-cyan-500 px-4 py-2 text-sm font-bold text-slate-950 transition hover:bg-cyan-400"
+              >
+                {showCheckout ? 'Hide checkout' : 'Checkout now'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showCheckout && merchantCartItems.length > 0 && (
+        <CheckoutPanel
+          items={merchantCartItems.map((item) => ({
+            name: item.name,
+            price: item.price,
+            qty: item.qty,
+          }))}
+          merchantAddress={product.merchant_address}
+          merchantName={product.merchant_name}
+          onCancel={() => setShowCheckout(false)}
+          onComplete={() => {
+            clearCart();
+            setShowCheckout(false);
+          }}
+        />
+      )}
 
       {product.merchant_slug && (
         <Link href={`/store/${product.merchant_slug}`} className="flex items-center gap-3 p-3 bg-white/3 border border-white/5 rounded-xl hover:border-cyan-500/20">

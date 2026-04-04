@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ShoppingCart, Heart, Star, Share2, ChevronLeft, ChevronRight, Package, ArrowLeft, Shield, Truck, Download, Clock, Minus, Plus, Check, Loader2, ExternalLink } from 'lucide-react';
 import Link from 'next/link';
 import { MerchantTrustBadge } from '@/components/merchant/MerchantTrustBadge';
+import { CartProvider } from '@/providers/CartProvider';
 
 import { StarRating } from './components/StarRating';
 import { ProductGallery } from './components/ProductGallery';
@@ -67,7 +68,7 @@ export default function ProductDetailPage() {
   }
 
   return (
-    <>
+    <CartProvider>
       <div className="min-h-screen bg-zinc-950 pt-20">
         <div className="container mx-auto px-4 max-w-6xl py-8">
           {/* Breadcrumb */}
@@ -94,6 +95,6 @@ export default function ProductDetailPage() {
         </div>
       </div>
       <Footer />
-    </>
+    </CartProvider>
   );
 }
