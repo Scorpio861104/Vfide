@@ -50,6 +50,9 @@ export default function MerchantPage() {
               <Link href="/merchant/staff" className="rounded-xl border border-white/10 px-4 py-2 text-cyan-300 hover:border-cyan-400/40 hover:text-cyan-200">
                 Staff roles & cashier mode
               </Link>
+              <Link href="/pos" className="rounded-xl border border-white/10 px-4 py-2 text-cyan-300 hover:border-cyan-400/40 hover:text-cyan-200">
+                Point of sale &amp; receipt tools
+              </Link>
               <Link href="/merchant/customers" className="rounded-xl border border-white/10 px-4 py-2 text-cyan-300 hover:border-cyan-400/40 hover:text-cyan-200">
                 Customer list & order history
               </Link>
@@ -76,6 +79,15 @@ export default function MerchantPage() {
               </Link>
               <Link href="/merchant/wholesale" className="rounded-xl border border-white/10 px-4 py-2 text-cyan-300 hover:border-cyan-400/40 hover:text-cyan-200">
                 Wholesale &amp; group buying
+              </Link>
+              <Link href="/lending" className="rounded-xl border border-white/10 px-4 py-2 text-cyan-300 hover:border-cyan-400/40 hover:text-cyan-200">
+                Working capital &amp; term loans
+              </Link>
+              <Link href="/disputes" className="rounded-xl border border-white/10 px-4 py-2 text-cyan-300 hover:border-cyan-400/40 hover:text-cyan-200">
+                Disputes &amp; mediation
+              </Link>
+              <Link href="/elections" className="rounded-xl border border-white/10 px-4 py-2 text-cyan-300 hover:border-cyan-400/40 hover:text-cyan-200">
+                Elections &amp; governance
               </Link>
               <Link href="/merchant/expenses" className="rounded-xl border border-white/10 px-4 py-2 text-cyan-300 hover:border-cyan-400/40 hover:text-cyan-200">
                 Expense tracking &amp; P&amp;L

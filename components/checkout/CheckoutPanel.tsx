@@ -18,10 +18,12 @@
 import { useEffect, useState, useMemo } from 'react';
 import { useAccount } from 'wagmi';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Wallet, Shield, Check, Loader2, Info } from 'lucide-react';
+import { Wallet, Shield, Check, Loader2, Info, Printer, Smartphone } from 'lucide-react';
 import { useLocale } from '@/lib/locale/LocaleProvider';
 import CouponInput from '@/components/checkout/CouponInput';
 import TipSelector from '@/components/checkout/TipSelector';
+import { writePaymentNFC, isNFCSupported } from '@/lib/nfc';
+import { printReceipt, isPrinterSupported } from '@/lib/printer';
 
 // ── Types ───────────────────────────────────────────────────────────────────
 
@@ -97,6 +99,9 @@ export function CheckoutPanel({
   const [isApplyingCoupon, setIsApplyingCoupon] = useState(false);
   const [loyaltyProgram, setLoyaltyProgram] = useState<LoyaltyProgramSnapshot | null>(null);
   const [loyaltyProgress, setLoyaltyProgress] = useState<LoyaltyProgressSnapshot | null>(null);
+  const [receiptPhone, setReceiptPhone] = useState('');
+  const [receiptStatus, setReceiptStatus] = useState<string | null>(null);
+  const [isSendingReceipt, setIsSendingReceipt] = useState(false);
 
   // Update token rates with live price
   const tokens = useMemo(() =>
@@ -111,6 +116,10 @@ export function CheckoutPanel({
 
   const activeToken = tokens.find(t => t.symbol === selectedToken) ?? tokens[0] ?? PAYMENT_TOKENS[0]!;
   const tokenAmount = total / activeToken.rate;
+  const merchantSlug = useMemo(
+    () => merchantName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || 'merchant',
+    [merchantName]
+  );
   const currentLoyaltyStamps = loyaltyProgress?.stamps ?? 0;
   const stampsRemaining = loyaltyProgram
     ? (() => {
@@ -189,6 +198,81 @@ export function CheckoutPanel({
     }
   };
 
+  const handlePrintReceipt = async () => {
+    if (!isPrinterSupported()) {
+      setReceiptStatus('Bluetooth receipt printing is not available on this device.');
+      return;
+    }
+
+    const result = await printReceipt({
+      merchantName,
+      items: items.map(({ name, qty, price }) => ({ name, qty, price })),
+      subtotal,
+      tip: tipAmount > 0 ? tipAmount : undefined,
+      total,
+      txHash: txHash ?? undefined,
+      paymentMethod: activeToken.symbol,
+    });
+
+    setReceiptStatus(
+      result.success
+        ? 'Receipt sent to your paired printer.'
+        : `Could not print the receipt. ${result.error ?? ''}`.trim()
+    );
+  };
+
+  const handleWriteNfc = async () => {
+    if (!isNFCSupported()) {
+      setReceiptStatus('NFC tap-to-pay is not supported on this device.');
+      return;
+    }
+
+    const result = await writePaymentNFC(merchantSlug, Number(total.toFixed(2)), activeToken.symbol);
+    setReceiptStatus(
+      result.success
+        ? 'Tap-to-pay checkout details were written to the NFC tag.'
+        : `Could not write the NFC tag. ${result.error ?? ''}`.trim()
+    );
+  };
+
+  const handleSendSmsReceipt = async () => {
+    if (!receiptPhone.trim()) {
+      setReceiptStatus('Enter a phone number to text the receipt.');
+      return;
+    }
+
+    if (typeof fetch !== 'function') {
+      setReceiptStatus('SMS receipt is not available in this environment.');
+      return;
+    }
+
+    setIsSendingReceipt(true);
+    try {
+      const response = await fetch('/api/merchant/receipts/sms', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          to: receiptPhone.trim(),
+          merchantName,
+          amount: total.toFixed(2),
+          currency: activeToken.symbol,
+          txHash: txHash ?? undefined,
+        }),
+      });
+      const data = await response.json().catch(() => null);
+      if (!response.ok || !data?.success) {
+        setReceiptStatus(data?.error || 'Unable to send the SMS receipt right now.');
+        return;
+      }
+
+      setReceiptStatus(`Receipt text sent via ${data.provider}.`);
+    } catch {
+      setReceiptStatus('Unable to send the SMS receipt right now.');
+    } finally {
+      setIsSendingReceipt(false);
+    }
+  };
+
   const handlePay = async () => {
     if (!address) return;
     setIsPaying(true);
@@ -203,6 +287,7 @@ export function CheckoutPanel({
       const hash = '0x' + Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join('');
       setTxHash(hash);
       setStep('complete');
+      setReceiptStatus('Payment confirmed. Print, tap, or text a receipt below.');
       onComplete?.(hash);
     } catch {
       setStep('review');
@@ -387,6 +472,49 @@ export function CheckoutPanel({
             )}
             <div className="text-sm text-emerald-400 mb-6">
               You saved {formatCurrency(feeSavedVsSquare)} in fees vs traditional payment
+            </div>
+
+            <div className="mx-auto max-w-md rounded-xl border border-white/10 bg-white/5 p-4 text-left">
+              <div className="mb-3 text-sm font-semibold text-white">Share or keep your receipt</div>
+              <div className="grid gap-2 sm:grid-cols-2">
+                <button
+                  type="button"
+                  onClick={handlePrintReceipt}
+                  className="flex items-center justify-center gap-2 rounded-lg border border-white/10 px-3 py-2 text-sm text-white transition hover:border-cyan-400/40 hover:text-cyan-200"
+                >
+                  <Printer size={16} />
+                  Print receipt
+                </button>
+                <button
+                  type="button"
+                  onClick={handleWriteNfc}
+                  className="flex items-center justify-center gap-2 rounded-lg border border-white/10 px-3 py-2 text-sm text-white transition hover:border-cyan-400/40 hover:text-cyan-200"
+                >
+                  <Smartphone size={16} />
+                  Write tap-to-pay
+                </button>
+              </div>
+
+              <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+                <input
+                  value={receiptPhone}
+                  onChange={(event) => setReceiptPhone(event.target.value)}
+                  placeholder="+233 50 123 4567"
+                  className="flex-1 rounded-lg border border-white/10 bg-black/20 px-3 py-2 text-sm text-white outline-none transition focus:border-cyan-400/50"
+                />
+                <button
+                  type="button"
+                  onClick={handleSendSmsReceipt}
+                  disabled={isSendingReceipt}
+                  className="rounded-lg bg-cyan-500 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-cyan-400 disabled:opacity-60"
+                >
+                  {isSendingReceipt ? 'Sending…' : 'Text receipt'}
+                </button>
+              </div>
+
+              {receiptStatus ? (
+                <div className="mt-3 text-xs text-cyan-200">{receiptStatus}</div>
+              ) : null}
             </div>
           </motion.div>
         )}
