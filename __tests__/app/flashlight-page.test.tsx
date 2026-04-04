@@ -109,4 +109,22 @@ describe('Flashlight page pathways', () => {
     expect(screen.getByText(/DAO Arbitration Required/i)).toBeTruthy();
     expect(screen.getByRole('button', { name: /Resolve to Lender/i })).toBeTruthy();
   });
+
+  it('switches between borrow, active, and history tabs while keeping lane progress visible', () => {
+    renderFlashlightPage();
+
+    expect(screen.getByRole('button', { name: /^Borrow$/i })).toBeTruthy();
+    expect(screen.getByRole('button', { name: /Active Loans/i })).toBeTruthy();
+    expect(screen.getByRole('button', { name: /^History$/i })).toBeTruthy();
+
+    fireEvent.click(screen.getByRole('button', { name: /Request Lane/i }));
+    fireEvent.click(screen.getByRole('button', { name: /History/i }));
+
+    expect(screen.getByText(/Activity history/i)).toBeTruthy();
+    expect(screen.getAllByText(/request/i).length).toBeGreaterThan(0);
+
+    fireEvent.click(screen.getByRole('button', { name: /Active Loans/i }));
+    expect(screen.getByText(/Lane Snapshot/i)).toBeTruthy();
+    expect(screen.getByText(/Requested/i)).toBeTruthy();
+  });
 });

@@ -159,4 +159,32 @@ describe('Escrow page logic pathways', () => {
       expect(mockToastSuccess).toHaveBeenCalledWith('Escrow created successfully');
     });
   });
+
+  it('switches between active, completed, and disputes workspace tabs', () => {
+    mockEscrowState = {
+      ...mockEscrowState,
+      activeEscrows: [
+        { id: 1n, orderId: 'ORD-ACTIVE', merchant: '0xmerchant', amount: 25000000000000000000n, releaseTime: 0n },
+      ],
+      completedEscrows: [
+        { id: 2n, orderId: 'ORD-COMPLETE', merchant: '0xmerchant2', amount: 12000000000000000000n, releaseTime: 0n },
+      ],
+      disputedEscrows: [
+        { id: 3n, orderId: 'ORD-DISPUTE', merchant: '0xmerchant3', amount: 5000000000000000000n, releaseTime: 0n },
+      ],
+    };
+
+    renderEscrowPage();
+
+    expect(screen.getByText(/Escrows pending release/i)).toBeTruthy();
+    expect(screen.getByText(/ORD-ACTIVE/i)).toBeTruthy();
+
+    fireEvent.click(screen.getByRole('button', { name: /Completed/i }));
+    expect(screen.getByText(/Completed settlement history/i)).toBeTruthy();
+    expect(screen.getByText(/ORD-COMPLETE/i)).toBeTruthy();
+
+    fireEvent.click(screen.getByRole('button', { name: /Disputes/i }));
+    expect(screen.getByText(/Cases requiring intervention/i)).toBeTruthy();
+    expect(screen.getByText(/ORD-DISPUTE/i)).toBeTruthy();
+  });
 });

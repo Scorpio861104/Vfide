@@ -1,0 +1,7 @@
+DROP INDEX IF EXISTS idx_merchant_group_buy_participants_merchant;
+DROP INDEX IF EXISTS idx_merchant_group_buys_status_created;
+DROP INDEX IF EXISTS idx_merchant_wholesale_orders_seller_created;
+DROP INDEX IF EXISTS idx_merchant_wholesale_orders_buyer_created;
+DROP TABLE IF EXISTS merchant_wholesale_group_buy_participants;
+DROP TABLE IF EXISTS merchant_wholesale_group_buys;
+DROP TABLE IF EXISTS merchant_wholesale_orders;

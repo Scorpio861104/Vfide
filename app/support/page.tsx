@@ -4,6 +4,10 @@ import { Footer } from '@/components/layout/Footer';
 import { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { useAccount } from 'wagmi';
+import { safeLocalStorage } from '@/lib/utils';
+import { FaqTab } from './components/FaqTab';
+import { TicketsTab } from './components/TicketsTab';
+import { NewTab } from './components/NewTab';
 
 type TabId = 'faq' | 'tickets' | 'new';
 type LocaleId = 'en-US' | 'es-ES';
@@ -69,20 +73,16 @@ export default function SupportPage() {
   const [details, setDetails] = useState('');
 
   useEffect(() => {
-    try {
-      const storedLocale = window.localStorage.getItem('vfide_locale');
-      if (storedLocale === 'es-ES' || storedLocale === 'en-US') {
-        setLocale(storedLocale);
-      }
-    } catch {
-      // ignore storage access failures
+    const storedLocale = safeLocalStorage.getItem('vfide_locale');
+    if (storedLocale === 'es-ES' || storedLocale === 'en-US') {
+      setLocale(storedLocale);
     }
   }, []);
 
   useEffect(() => {
     if (!address) return;
     try {
-      const stored = window.localStorage.getItem(`support_tickets_${address}`);
+      const stored = safeLocalStorage.getItem(`support_tickets_${address}`);
       if (stored) {
         const parsed = JSON.parse(stored) as SupportTicket[];
         setTickets(parsed);
@@ -95,11 +95,7 @@ export default function SupportPage() {
 
   useEffect(() => {
     if (!address) return;
-    try {
-      window.localStorage.setItem(`support_tickets_${address}`, JSON.stringify(tickets));
-    } catch {
-      // ignore storage access failures
-    }
+    safeLocalStorage.setItem(`support_tickets_${address}`, JSON.stringify(tickets));
   }, [address, tickets]);
 
   const filteredFaq = useMemo(() => {
@@ -113,14 +109,14 @@ export default function SupportPage() {
 
   const persistLocale = (nextLocale: LocaleId) => {
     setLocale(nextLocale);
-    try {
-      window.localStorage.setItem('vfide_locale', nextLocale);
-    } catch {
-      // ignore storage access failures
-    }
+    safeLocalStorage.setItem('vfide_locale', nextLocale);
   };
 
   const handleSubmitTicket = () => {
+    if (!subject.trim() || !details.trim()) {
+      return;
+    }
+
     const now = new Date().toISOString();
     const newTicket: SupportTicket = {
       id: `TKT-${Date.now()}`,
@@ -208,106 +204,35 @@ export default function SupportPage() {
             ))}
           </div>
 
-          {activeTab === 'faq' && (
-            <div className="space-y-4">
-              <input
-                type="search"
-                value={search}
-                onChange={(event) => setSearch(event.target.value)}
-                placeholder="Search for answers"
-                className="w-full rounded-2xl border border-white/10 bg-white/3 px-4 py-3 text-white placeholder:text-gray-500"
-              />
+          {activeTab === 'faq' ? (
+            <FaqTab
+              search={search}
+              items={filteredFaq}
+              openQuestion={openQuestion}
+              onSearchChange={setSearch}
+              onToggleQuestion={(question) => setOpenQuestion((current) => current === question ? null : question)}
+            />
+          ) : null}
 
-              {filteredFaq.map((item) => (
-                <div key={item.question} className="rounded-2xl border border-white/10 bg-white/3 p-4">
-                  <button
-                    type="button"
-                    onClick={() => setOpenQuestion((current) => current === item.question ? null : item.question)}
-                    className="w-full text-left text-white font-semibold"
-                  >
-                    {item.question}
-                  </button>
-                  {openQuestion === item.question ? (
-                    <p className="text-gray-400 mt-3">{item.answer}</p>
-                  ) : null}
-                </div>
-              ))}
-            </div>
-          )}
+          {activeTab === 'tickets' ? (
+            <TicketsTab
+              tickets={tickets}
+              selectedTicketId={selectedTicketId}
+              selectedTicket={selectedTicket}
+              onSelectTicket={setSelectedTicketId}
+            />
+          ) : null}
 
-          {activeTab === 'tickets' && (
-            <div className="grid grid-cols-1 lg:grid-cols-[320px_1fr] gap-4">
-              <div className="rounded-2xl border border-white/10 bg-white/3 p-4 space-y-3">
-                {tickets.length === 0 ? (
-                  <p className="text-gray-400">No tickets yet. Create one from the new ticket tab.</p>
-                ) : (
-                  tickets.map((ticket) => (
-                    <button
-                      key={ticket.id}
-                      type="button"
-                      onClick={() => setSelectedTicketId(ticket.id)}
-                      className={`w-full text-left rounded-xl border px-3 py-3 ${selectedTicketId === ticket.id ? 'border-cyan-500/30 bg-cyan-500/10' : 'border-white/10 bg-black/20'}`}
-                    >
-                      <div className="text-white font-semibold">{ticket.id}</div>
-                      <div className="text-xs text-gray-400 mt-1">Subject • {ticket.subject}</div>
-                    </button>
-                  ))
-                )}
-              </div>
-
-              <div className="rounded-2xl border border-white/10 bg-white/3 p-6">
-                {selectedTicket ? (
-                  <div className="space-y-4">
-                    <div>
-                      <h2 className="text-2xl font-bold text-white">{selectedTicket.subject}</h2>
-                      <p className="text-sm text-gray-400 mt-1">Ticket ID: {selectedTicket.id}</p>
-                    </div>
-                    <div className="space-y-3">
-                      {selectedTicket.messages.map((message) => (
-                        <div key={message.id} className="rounded-xl border border-white/10 bg-black/20 p-3">
-                          <div className="text-sm font-semibold text-white mb-1">{message.sender === 'support' ? 'Support Team' : 'You'}</div>
-                          <p className="text-sm text-gray-300">{message.content}</p>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                ) : (
-                  <p className="text-gray-400">Choose a ticket to see the conversation.</p>
-                )}
-              </div>
-            </div>
-          )}
-
-          {activeTab === 'new' && (
-            <div className="rounded-2xl border border-white/10 bg-white/3 p-6 space-y-4">
-              {!isConnected ? (
-                <p className="text-gray-300">Connect your wallet to create support tickets.</p>
-              ) : (
-                <>
-                  <input
-                    type="text"
-                    value={subject}
-                    onChange={(event) => setSubject(event.target.value)}
-                    placeholder="Brief description of your issue"
-                    className="w-full rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-white placeholder:text-gray-500"
-                  />
-                  <textarea
-                    value={details}
-                    onChange={(event) => setDetails(event.target.value)}
-                    placeholder="Describe your issue in detail"
-                    className="w-full min-h-32 rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-white placeholder:text-gray-500"
-                  />
-                  <button
-                    type="button"
-                    onClick={handleSubmitTicket}
-                    className="px-4 py-2 rounded-xl border border-cyan-500/30 bg-cyan-500/15 text-cyan-300 font-semibold"
-                  >
-                    Submit Ticket
-                  </button>
-                </>
-              )}
-            </div>
-          )}
+          {activeTab === 'new' ? (
+            <NewTab
+              isConnected={isConnected}
+              subject={subject}
+              details={details}
+              onSubjectChange={setSubject}
+              onDetailsChange={setDetails}
+              onSubmitTicket={handleSubmitTicket}
+            />
+          ) : null}
         </div>
       </div>
       <Footer />

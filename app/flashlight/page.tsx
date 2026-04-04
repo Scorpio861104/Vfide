@@ -13,6 +13,9 @@ import {
   type LoanSimulationState,
   type LoanTerms,
 } from '@/lib/flashloans/engine';
+import { BorrowTab } from './components/BorrowTab';
+import { ActiveTab } from './components/ActiveTab';
+import { HistoryTab } from './components/HistoryTab';
 
 const STAGE_LABELS: Record<LoanSimulationState['stage'], string> = {
   draft: 'Draft',
@@ -41,6 +44,23 @@ const INITIAL_STATE: LoanSimulationState = {
   evidenceNote: '',
 };
 
+type TabId = 'borrow' | 'active' | 'history';
+
+type HistoryItem = {
+  id: string;
+  event: string;
+  stage: string;
+  detail: string;
+};
+
+const TAB_LABELS: Record<TabId, string> = {
+  borrow: 'Borrow',
+  active: 'Active Loans',
+  history: 'History',
+};
+
+const TAB_IDS: TabId[] = ['borrow', 'active', 'history'];
+
 export default function FlashlightPage() {
   const [terms, setTerms] = useState<LoanTerms>(INITIAL_TERMS);
   const [simulation, setSimulation] = useState<LoanSimulationState>(INITIAL_STATE);
@@ -49,9 +69,30 @@ export default function FlashlightPage() {
   const [mode, setMode] = useState<'simulation' | 'server'>('simulation');
   const [serverLaneId, setServerLaneId] = useState<number | null>(null);
   const [evidenceNote, setEvidenceNote] = useState('');
+  const [activeTab, setActiveTab] = useState<TabId>('borrow');
+  const [historyItems, setHistoryItems] = useState<HistoryItem[]>([
+    {
+      id: 'init',
+      event: 'initialized',
+      stage: STAGE_LABELS[INITIAL_STATE.stage],
+      detail: 'System: simulation initialized',
+    },
+  ]);
 
   const protection = useMemo(() => getProtectionStatus(terms), [terms]);
   const totalDue = useMemo(() => computeTotalDue(terms), [terms]);
+
+  const recordHistory = (event: string, stage: LoanSimulationState['stage'], detail: string) => {
+    setHistoryItems((current) => [
+      {
+        id: `${Date.now()}-${event}`,
+        event,
+        stage: STAGE_LABELS[stage],
+        detail,
+      },
+      ...current,
+    ].slice(0, 24));
+  };
 
   const syncStateFromLane = (lane: Record<string, any>) => {
     setSimulation({
@@ -88,10 +129,12 @@ export default function FlashlightPage() {
       return;
     }
 
+    const nextStage = (data.lane?.stage as LoanSimulationState['stage']) ?? 'draft';
     setMode('server');
     setServerLaneId(Number(data.lane?.id ?? 0));
     syncStateFromLane(data.lane ?? {});
     setStatusMessage(`Server lane #${data.lane?.id ?? 'new'} created`);
+    recordHistory('create-server-lane', nextStage, `Server lane #${data.lane?.id ?? 'new'} created`);
   };
 
   const handleAction = async (action: LoanAction) => {
@@ -111,17 +154,38 @@ export default function FlashlightPage() {
           return;
         }
 
+        const nextStage = (data.lane?.stage as LoanSimulationState['stage']) ?? simulation.stage;
         syncStateFromLane(data.lane ?? {});
         setStatusMessage(String(data.event ?? action));
+        recordHistory(String(data.event ?? action), nextStage, `Stage moved to ${STAGE_LABELS[nextStage]}`);
         return;
       }
 
       const result = performAction(action, 'simulator', simulation, terms, { evidenceNote });
       setSimulation(result.state);
       setStatusMessage(result.event);
+      recordHistory(result.event, result.state.stage, `Stage moved to ${STAGE_LABELS[result.state.stage]}`);
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : 'Simulation action failed');
     }
+  };
+
+  const handleReset = () => {
+    setMode('simulation');
+    setServerLaneId(null);
+    setSimulation(INITIAL_STATE);
+    setStatusMessage('System: simulation initialized');
+    setErrorMessage('');
+    setEvidenceNote('');
+    setActiveTab('borrow');
+    setHistoryItems([
+      {
+        id: `${Date.now()}-reset`,
+        event: 'reset',
+        stage: STAGE_LABELS[INITIAL_STATE.stage],
+        detail: 'System: simulation initialized',
+      },
+    ]);
   };
 
   const actionButtons: Array<{ label: string; action: LoanAction }> = [
@@ -168,77 +232,50 @@ export default function FlashlightPage() {
             </div>
           </div>
 
-          <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
-            <div className="space-y-6 rounded-2xl border border-white/10 bg-white/3 p-6">
-              <div className="grid gap-4 md:grid-cols-2">
-                <div>
-                  <label htmlFor="drawn-amount" className="mb-2 block text-sm font-semibold text-white">Drawn Amount (USDC)</label>
-                  <input
-                    id="drawn-amount"
-                    type="number"
-                    value={terms.drawnAmount}
-                    onChange={(event) => setTerms((prev) => sanitizeTerms({ ...prev, drawnAmount: Number(event.target.value) || 0 }))}
-                    className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white"
-                  />
-                </div>
-                <div>
-                  <label className="mb-2 block text-sm font-semibold text-white">Current Stage</label>
-                  <div className="rounded-xl border border-cyan-500/30 bg-cyan-500/15 px-4 py-3 font-bold text-cyan-200">
-                    {STAGE_LABELS[simulation.stage]}
-                  </div>
-                </div>
-              </div>
-
-              <textarea
-                value={evidenceNote}
-                onChange={(event) => setEvidenceNote(event.target.value)}
-                placeholder="Attach borrower/lender evidence summary..."
-                className="min-h-28 w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder-gray-500"
-              />
-
-              {simulation.stage === 'disputed' ? (
-                <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-4 text-amber-100">DAO Arbitration Required</div>
-              ) : null}
-
-              <div className="flex flex-wrap gap-2">
-                {actionButtons.map(({ label, action }) => (
-                  <button
-                    key={action}
-                    onClick={() => handleAction(action)}
-                    disabled={!canPerformAction(action, 'simulator', simulation, terms)}
-                    className="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-40"
-                  >
-                    {label}
-                  </button>
-                ))}
-                <button
-                  onClick={() => {
-                    setMode('simulation');
-                    setServerLaneId(null);
-                    setSimulation(INITIAL_STATE);
-                    setStatusMessage('System: simulation initialized');
-                    setErrorMessage('');
-                    setEvidenceNote('');
-                  }}
-                  className="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-bold text-white"
-                >
-                  Reset
-                </button>
-              </div>
-            </div>
-
-            <div className="rounded-2xl border border-white/10 bg-white/3 p-6">
-              <h2 className="mb-4 text-xl font-bold text-white">Lane Snapshot</h2>
-              <div className="space-y-3 text-sm text-gray-300">
-                <div className="flex items-center justify-between"><span>Principal</span><span>{terms.principal} USDC</span></div>
-                <div className="flex items-center justify-between"><span>Interest</span><span>{terms.interestBps} bps</span></div>
-                <div className="flex items-center justify-between"><span>Collateral</span><span>{terms.collateralPct}%</span></div>
-                <div className="flex items-center justify-between"><span>Total Due</span><span>{totalDue.toFixed(2)} USDC</span></div>
-                <div className="flex items-center justify-between"><span>Sim Day</span><span>{simulation.simDay}</span></div>
-                <div className="flex items-center justify-between"><span>Due Day</span><span>{simulation.dueDay ?? 'Pending draw'}</span></div>
-              </div>
-            </div>
+          <div className="mb-6 flex gap-2 overflow-x-auto pb-2">
+            {TAB_IDS.map((id) => (
+              <button
+                key={id}
+                type="button"
+                onClick={() => setActiveTab(id)}
+                className={`px-4 py-2 rounded-xl font-bold text-sm whitespace-nowrap transition-all ${
+                  activeTab === id
+                    ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30'
+                    : 'bg-white/5 text-gray-400 border border-white/10 hover:text-white'
+                }`}
+              >
+                {TAB_LABELS[id]}
+              </button>
+            ))}
           </div>
+
+          {activeTab === 'borrow' ? (
+            <BorrowTab
+              terms={terms}
+              simulation={simulation}
+              stageLabel={STAGE_LABELS[simulation.stage]}
+              evidenceNote={evidenceNote}
+              onDrawnAmountChange={(value) => setTerms((prev) => sanitizeTerms({ ...prev, drawnAmount: value }))}
+              onEvidenceNoteChange={setEvidenceNote}
+              actionButtons={actionButtons}
+              canPerformAction={(action) => canPerformAction(action, 'simulator', simulation, terms)}
+              onAction={(action) => void handleAction(action)}
+              onReset={handleReset}
+            />
+          ) : null}
+
+          {activeTab === 'active' ? (
+            <ActiveTab
+              terms={terms}
+              simulation={simulation}
+              stageLabel={STAGE_LABELS[simulation.stage]}
+              totalDue={totalDue}
+            />
+          ) : null}
+
+          {activeTab === 'history' ? (
+            <HistoryTab items={historyItems} />
+          ) : null}
         </div>
       </div>
       <Footer />

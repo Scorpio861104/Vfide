@@ -1,11 +1,15 @@
 'use client';
 
 import { Footer } from '@/components/layout/Footer';
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { useAccount } from 'wagmi';
 import { useEscrow } from '@/lib/escrow/useEscrow';
 import { validateAddress } from '@/lib/validation';
 import { toast } from '@/lib/toast';
+import { CreateTab } from './components/CreateTab';
+import { ActiveTab } from './components/ActiveTab';
+import { CompletedTab } from './components/CompletedTab';
+import { DisputesTab } from './components/DisputesTab';
 
 type TabId = 'active' | 'completed' | 'disputes';
 
@@ -29,12 +33,6 @@ export default function EscrowPage() {
   const [merchantAddress, setMerchantAddress] = useState('');
   const [amount, setAmount] = useState('');
   const [orderId, setOrderId] = useState('');
-
-  const escrows = useMemo(() => {
-    if (activeTab === 'completed') return completedEscrows;
-    if (activeTab === 'disputes') return disputedEscrows;
-    return activeEscrows;
-  }, [activeEscrows, activeTab, completedEscrows, disputedEscrows]);
 
   const handleCreate = async () => {
     const validation = validateAddress(merchantAddress);
@@ -115,63 +113,39 @@ export default function EscrowPage() {
             ))}
           </div>
 
-          {showCreateForm && (
-            <div className="rounded-2xl border border-white/10 bg-white/3 p-6 space-y-4">
-              <h2 className="text-xl font-bold text-white">Create Escrow</h2>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                <input
-                  type="text"
-                  value={merchantAddress}
-                  onChange={(event) => setMerchantAddress(event.target.value)}
-                  placeholder="0x..."
-                  className="rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-white placeholder:text-gray-500"
-                />
-                <input
-                  type="number"
-                  value={amount}
-                  onChange={(event) => setAmount(event.target.value)}
-                  placeholder="1000"
-                  className="rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-white placeholder:text-gray-500"
-                />
-                <input
-                  type="text"
-                  value={orderId}
-                  onChange={(event) => setOrderId(event.target.value)}
-                  placeholder="ORD-2026-0001"
-                  className="rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-white placeholder:text-gray-500"
-                />
-              </div>
-              <button
-                type="button"
-                onClick={handleCreate}
-                className="px-4 py-2 rounded-xl border border-cyan-500/30 bg-cyan-500/15 text-cyan-300 font-semibold"
-              >
-                Create Escrow
-              </button>
-            </div>
-          )}
+          {showCreateForm ? (
+            <CreateTab
+              merchantAddress={merchantAddress}
+              amount={amount}
+              orderId={orderId}
+              onMerchantAddressChange={setMerchantAddress}
+              onAmountChange={setAmount}
+              onOrderIdChange={setOrderId}
+              onCreate={() => void handleCreate()}
+            />
+          ) : null}
 
-          {escrows.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-white/10 bg-white/3 p-10 text-center">
-              <h2 className="text-2xl font-bold text-white">No Escrows Found</h2>
-              <p className="text-gray-400 mt-2">New escrow orders will appear here once they are created.</p>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {escrows.map((escrow) => (
-                <div key={String(escrow.id)} className="rounded-2xl border border-white/10 bg-black/20 p-4 flex items-center justify-between gap-4">
-                  <div>
-                    <div className="text-white font-semibold">{escrow.orderId || `Escrow #${String(escrow.id)}`}</div>
-                    <div className="text-sm text-gray-400">Merchant {escrow.merchant}</div>
-                  </div>
-                  <div className="text-right text-sm text-gray-300">
-                    <div>{formatEscrowAmount(escrow.amount)} VFIDE</div>
-                    <div>{getTimeRemaining(escrow.releaseTime)}</div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
+          {activeTab === 'active' ? (
+            <ActiveTab
+              escrows={activeEscrows}
+              formatEscrowAmount={formatEscrowAmount}
+              getTimeRemaining={getTimeRemaining}
+            />
+          ) : null}
+
+          {activeTab === 'completed' ? (
+            <CompletedTab
+              escrows={completedEscrows}
+              formatEscrowAmount={formatEscrowAmount}
+            />
+          ) : null}
+
+          {activeTab === 'disputes' ? (
+            <DisputesTab
+              escrows={disputedEscrows}
+              formatEscrowAmount={formatEscrowAmount}
+            />
+          ) : null}
         </div>
       </div>
       <Footer />

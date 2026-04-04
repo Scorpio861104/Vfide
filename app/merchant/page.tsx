@@ -164,14 +164,18 @@ export default function MerchantPage() {
                 </div>
               </div>
               <div>
-                <SeasonalTrends title="Merchant sales pulse" data={[
-                  { label: 'Mon', value: 42 },
-                  { label: 'Tue', value: 51 },
-                  { label: 'Wed', value: 47 },
-                  { label: 'Thu', value: 63 },
-                  { label: 'Fri', value: 74 },
-                  { label: 'Sat', value: 68 },
-                ]} />
+                <SeasonalTrends
+                  title="Merchant sales pulse"
+                  merchantAddress={address ?? null}
+                  data={[
+                    { label: 'Mon', value: 42 },
+                    { label: 'Tue', value: 51 },
+                    { label: 'Wed', value: 47 },
+                    { label: 'Thu', value: 63 },
+                    { label: 'Fri', value: 74 },
+                    { label: 'Sat', value: 68 },
+                  ]}
+                />
               </div>
             </div>
           </div>
