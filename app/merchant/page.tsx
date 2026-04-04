@@ -58,6 +58,9 @@ export default function MerchantPage() {
               <Link href="/merchant/loyalty" className="rounded-xl border border-white/10 px-4 py-2 text-cyan-300 hover:border-cyan-400/40 hover:text-cyan-200">
                 Loyalty stamp cards
               </Link>
+              <Link href="/merchant/expenses" className="rounded-xl border border-white/10 px-4 py-2 text-cyan-300 hover:border-cyan-400/40 hover:text-cyan-200">
+                Expense tracking &amp; P&amp;L
+              </Link>
             </div>
           </div>
         </section>

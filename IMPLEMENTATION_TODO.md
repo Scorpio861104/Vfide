@@ -14,7 +14,7 @@ Source roadmap consolidated from `VFIDE_Complete_Assessment.md` and the active m
 - [x] 2.4 Loyalty stamp cards
 
 ## Tier 3 — Operational Excellence
-- [ ] 3.1 Expense tracking and profit/loss
+- [x] 3.1 Expense tracking and profit/loss
 - [ ] 3.2 Installment payments
 - [ ] 3.3 Tips and gratuity
 - [ ] 3.4 Gift cards / store credit
