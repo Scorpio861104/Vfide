@@ -24,6 +24,8 @@ import CouponInput from '@/components/checkout/CouponInput';
 import TipSelector from '@/components/checkout/TipSelector';
 import { writePaymentNFC, isNFCSupported } from '@/lib/nfc';
 import { printReceipt, isPrinterSupported } from '@/lib/printer';
+import { usePayMerchant } from '@/lib/vfide-hooks';
+import { CONTRACT_ADDRESSES, isConfiguredContractAddress } from '@/lib/contracts';
 
 // ── Types ───────────────────────────────────────────────────────────────────
 
@@ -74,6 +76,18 @@ const PAYMENT_TOKENS: PaymentToken[] = [
   { symbol: 'DAI', name: 'Dai', icon: '🟡', rate: 1.00, color: 'amber' },
 ];
 
+const OPTIONAL_TOKEN_ADDRESSES: Partial<Record<string, `0x${string}` | undefined>> = {
+  VFIDE: CONTRACT_ADDRESSES.VFIDEToken,
+  USDC: process.env.NEXT_PUBLIC_USDC_TOKEN_ADDRESS as `0x${string}` | undefined,
+  USDT: process.env.NEXT_PUBLIC_USDT_TOKEN_ADDRESS as `0x${string}` | undefined,
+  DAI: process.env.NEXT_PUBLIC_DAI_TOKEN_ADDRESS as `0x${string}` | undefined,
+};
+
+function formatPaymentAmount(value: number, decimals = 6): string {
+  const fixed = value.toFixed(decimals).replace(/\.0+$|(?<=\.\d*[1-9])0+$/u, '');
+  return fixed === '' ? '0' : fixed;
+}
+
 // ── Component ───────────────────────────────────────────────────────────────
 
 export function CheckoutPanel({
@@ -88,6 +102,7 @@ export function CheckoutPanel({
 }: CheckoutPanelProps) {
   const { address, isConnected } = useAccount();
   const { formatCurrency } = useLocale();
+  const { payMerchant, isPaying: isWalletPaying, error: payError } = usePayMerchant();
   const [selectedToken, setSelectedToken] = useState<string>('VFIDE');
   const [isPaying, setIsPaying] = useState(false);
   const [step, setStep] = useState<'review' | 'paying' | 'complete'>('review');
@@ -102,6 +117,8 @@ export function CheckoutPanel({
   const [receiptPhone, setReceiptPhone] = useState('');
   const [receiptStatus, setReceiptStatus] = useState<string | null>(null);
   const [isSendingReceipt, setIsSendingReceipt] = useState(false);
+  const [paymentError, setPaymentError] = useState<string | null>(null);
+  const [checkoutOrderId] = useState(() => `CHK-${Date.now().toString(36).toUpperCase()}`);
 
   // Update token rates with live price
   const tokens = useMemo(() =>
@@ -116,6 +133,11 @@ export function CheckoutPanel({
 
   const activeToken = tokens.find(t => t.symbol === selectedToken) ?? tokens[0] ?? PAYMENT_TOKENS[0]!;
   const tokenAmount = total / activeToken.rate;
+  const selectedTokenAddress = useMemo(() => {
+    const candidate = OPTIONAL_TOKEN_ADDRESSES[selectedToken];
+    return isConfiguredContractAddress(candidate) ? candidate : null;
+  }, [selectedToken]);
+  const paymentActionError = paymentError ?? payError;
   const merchantSlug = useMemo(
     () => merchantName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || 'merchant',
     [merchantName]
@@ -198,6 +220,53 @@ export function CheckoutPanel({
     }
   };
 
+  const persistCompletedOrder = async (hash: string) => {
+    if (typeof fetch !== 'function') return;
+
+    const orderItems = [
+      ...items.map(({ name, qty, price }) => ({
+        name,
+        quantity: qty,
+        unit_price: Number(price.toFixed(2)),
+        product_type: 'physical' as const,
+      })),
+      ...(tipAmount > 0
+        ? [{ name: 'Tip', quantity: 1, unit_price: Number(tipAmount.toFixed(2)), product_type: 'service' as const }]
+        : []),
+      ...(feeAmount > 0
+        ? [{ name: 'Trust fee', quantity: 1, unit_price: Number(feeAmount.toFixed(2)), product_type: 'service' as const }]
+        : []),
+    ];
+
+    const orderNotes = [
+      `Checkout reference ${checkoutOrderId}`,
+      appliedCouponCode ? `Coupon ${appliedCouponCode}` : null,
+      receiptPhone.trim() ? `Receipt phone ${receiptPhone.trim()}` : null,
+    ].filter(Boolean).join(' • ');
+
+    try {
+      const response = await fetch('/api/merchant/orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          merchant_address: merchantAddress,
+          items: orderItems,
+          tx_hash: hash,
+          token: selectedToken,
+          discount_amount: Number(couponDiscount.toFixed(2)),
+          coupon_code: appliedCouponCode ?? undefined,
+          customer_notes: orderNotes || undefined,
+        }),
+      });
+
+      if (!response.ok) {
+        setReceiptStatus('Payment confirmed, but order sync is still pending.');
+      }
+    } catch {
+      setReceiptStatus('Payment confirmed, but order sync is still pending.');
+    }
+  };
+
   const handlePrintReceipt = async () => {
     if (!isPrinterSupported()) {
       setReceiptStatus('Bluetooth receipt printing is not available on this device.');
@@ -275,21 +344,54 @@ export function CheckoutPanel({
 
   const handlePay = async () => {
     if (!address) return;
+
+    if (!isConfiguredContractAddress(merchantAddress)) {
+      setPaymentError('Merchant address is not configured for live checkout.');
+      return;
+    }
+
+    if (!selectedTokenAddress) {
+      setPaymentError(`${selectedToken} payments are not configured in this environment yet.`);
+      return;
+    }
+
+    const paymentAmount = formatPaymentAmount(tokenAmount, selectedToken === 'VFIDE' ? 6 : 2);
+    if (!paymentAmount || Number(paymentAmount) <= 0) {
+      setPaymentError('Payment amount must be greater than zero.');
+      return;
+    }
+
+    setPaymentError(null);
     setIsPaying(true);
     setStep('paying');
 
     try {
-      // TODO: Wire to actual contract call
-      // For VFIDE: direct transfer to merchant vault
-      // For stablecoins: call router contract that swaps and deposits
-      await new Promise(r => setTimeout(r, 2000)); // Placeholder
+      const result = await payMerchant(
+        merchantAddress as `0x${string}`,
+        selectedTokenAddress,
+        paymentAmount,
+        checkoutOrderId
+      );
 
-      const hash = '0x' + Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join('');
+      if (!result?.success) {
+        throw new Error(result?.error || 'Payment could not be confirmed.');
+      }
+
+      const hash = typeof result.hash === 'string' && result.hash.startsWith('0x')
+        ? result.hash
+        : null;
+
+      if (!hash) {
+        throw new Error('Payment completed without a transaction hash.');
+      }
+
       setTxHash(hash);
+      await persistCompletedOrder(hash);
       setStep('complete');
       setReceiptStatus('Payment confirmed. Print, tap, or text a receipt below.');
       onComplete?.(hash);
-    } catch {
+    } catch (error) {
+      setPaymentError(error instanceof Error ? error.message : 'Payment failed.');
       setStep('review');
     }
     setIsPaying(false);
@@ -426,12 +528,18 @@ export function CheckoutPanel({
             {/* Pay button */}
             <button
               onClick={handlePay}
-              disabled={!isConnected || isPaying}
+              disabled={!isConnected || isPaying || isWalletPaying}
               className="w-full py-4 bg-gradient-to-r from-cyan-500 to-blue-600 text-white rounded-xl font-bold text-lg disabled:opacity-50 flex items-center justify-center gap-2"
             >
-              {isPaying ? <Loader2 size={22} className="animate-spin" /> : <Wallet size={22} />}
-              {isPaying ? 'Processing…' : `Pay ${formatCurrency(total)}`}
+              {isPaying || isWalletPaying ? <Loader2 size={22} className="animate-spin" /> : <Wallet size={22} />}
+              {isPaying || isWalletPaying ? 'Processing…' : `Pay ${formatCurrency(total)}`}
             </button>
+
+            {paymentActionError ? (
+              <div className="mt-3 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
+                {paymentActionError}
+              </div>
+            ) : null}
 
             {onCancel && (
               <button onClick={onCancel} className="w-full mt-3 py-3 text-gray-400 hover:text-white text-sm transition-colors">
