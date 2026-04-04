@@ -7,15 +7,15 @@
 
 import { Footer } from '@/components/layout/Footer';
 import { MerchantQuickSetup } from '@/components/merchant/MerchantQuickSetup';
+import MerchantTraining from '@/components/merchant/training/MerchantTraining';
+import OffRampWithdraw from '@/components/merchant/OffRampWithdraw';
 import { useAccount } from 'wagmi';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { motion } from 'framer-motion';
 import { Store, Wallet } from 'lucide-react';
-import { useRouter } from 'next/navigation';
 
 export default function MerchantSetupPage() {
   const { isConnected } = useAccount();
-  const router = useRouter();
 
   if (!isConnected) {
     return (
@@ -54,9 +54,16 @@ export default function MerchantSetupPage() {
             <p className="text-gray-400 text-lg">Free storefront. No monthly fees. Live in 2 minutes.</p>
           </motion.div>
 
-          <MerchantQuickSetup onComplete={(slug) => {
-            // Store is live — could redirect or show in-place
-          }} />
+          <div className="grid gap-6 xl:grid-cols-[1.35fr_0.65fr]">
+            <MerchantQuickSetup onComplete={(_slug) => {
+              // Store is live — could redirect or show in-place
+            }} />
+
+            <div className="space-y-6">
+              <MerchantTraining />
+              <OffRampWithdraw />
+            </div>
+          </div>
         </div>
       </div>
       <Footer />

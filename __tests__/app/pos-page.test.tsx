@@ -17,6 +17,11 @@ jest.mock('@/components/commerce/MerchantPOS', () => ({
   MerchantPOS: () => <div>Merchant POS Component</div>,
 }));
 
+jest.mock('@/components/commerce/simplified/SimplifiedPOS', () => ({
+  __esModule: true,
+  default: () => <div>Simplified POS Component</div>,
+}));
+
 describe('POS page pathways', () => {
   beforeEach(() => {
     jest.clearAllMocks();
@@ -27,5 +32,6 @@ describe('POS page pathways', () => {
 
     expect(screen.getByText(/Point of Sale/i)).toBeTruthy();
     expect(screen.getByText(/Merchant POS Component/i)).toBeTruthy();
+    expect(screen.getByText(/Simplified POS Component/i)).toBeTruthy();
   });
 });

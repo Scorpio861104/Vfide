@@ -25,6 +25,11 @@ jest.mock('lucide-react', () => {
   return new Proxy({}, { get: () => Icon });
 });
 
+jest.mock('@/components/merchant/disputes/PeerMediation', () => ({
+  __esModule: true,
+  default: () => <div>Peer Mediation Component</div>,
+}));
+
 describe('Uploaded handoff pages', () => {
   it('renders the lending handoff page and its main CTA links', () => {
     const pageModule = require('../../app/lending/page');
@@ -54,5 +59,6 @@ describe('Uploaded handoff pages', () => {
     expect(screen.getByRole('heading', { name: /disputes & mediation/i })).toBeTruthy();
     expect(screen.getByRole('link', { name: /open appeals center/i })).toBeTruthy();
     expect(screen.getByRole('link', { name: /merchant returns/i })).toBeTruthy();
+    expect(screen.getByText(/Peer Mediation Component/i)).toBeTruthy();
   });
 });

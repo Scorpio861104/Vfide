@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { ArrowRight, Scale, ShieldAlert, RotateCcw, MessagesSquare } from 'lucide-react';
 import { Footer } from '@/components/layout/Footer';
+import PeerMediation from '@/components/merchant/disputes/PeerMediation';
 
 export default function DisputesPage() {
   return (
@@ -39,6 +40,10 @@ export default function DisputesPage() {
             <div className="mt-8 rounded-2xl border border-white/10 bg-white/5 p-5 text-sm text-gray-300">
               <div className="mb-2 flex items-center gap-2 text-purple-300"><MessagesSquare size={16} /> Mediation-first workflow</div>
               Start with merchant correction or peer review, then escalate into the formal appeal path only when needed.
+            </div>
+
+            <div className="mt-8">
+              <PeerMediation />
             </div>
           </div>
         </section>

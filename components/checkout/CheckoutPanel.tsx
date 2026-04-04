@@ -18,8 +18,10 @@
 import { useEffect, useState, useMemo } from 'react';
 import { useAccount } from 'wagmi';
 import { motion, AnimatePresence } from 'framer-motion';
-import { CreditCard, Wallet, Shield, ArrowRight, Check, Loader2, Info } from 'lucide-react';
+import { Wallet, Shield, Check, Loader2, Info } from 'lucide-react';
 import { useLocale } from '@/lib/locale/LocaleProvider';
+import CouponInput from '@/components/checkout/CouponInput';
+import TipSelector from '@/components/checkout/TipSelector';
 
 // ── Types ───────────────────────────────────────────────────────────────────
 
@@ -88,10 +90,11 @@ export function CheckoutPanel({
   const [isPaying, setIsPaying] = useState(false);
   const [step, setStep] = useState<'review' | 'paying' | 'complete'>('review');
   const [txHash, setTxHash] = useState<string | null>(null);
-  const [couponCode, setCouponCode] = useState('');
+  const [tipAmount, setTipAmount] = useState(0);
   const [couponDiscount, setCouponDiscount] = useState(0);
   const [couponStatus, setCouponStatus] = useState<string | null>(null);
   const [appliedCouponCode, setAppliedCouponCode] = useState<string | null>(null);
+  const [isApplyingCoupon, setIsApplyingCoupon] = useState(false);
   const [loyaltyProgram, setLoyaltyProgram] = useState<LoyaltyProgramSnapshot | null>(null);
   const [loyaltyProgress, setLoyaltyProgress] = useState<LoyaltyProgressSnapshot | null>(null);
 
@@ -103,7 +106,7 @@ export function CheckoutPanel({
 
   const subtotal = items.reduce((sum, item) => sum + item.price * item.qty, 0);
   const feeAmount = subtotal * (buyerFeeBps / 10000);
-  const totalBeforeDiscount = subtotal + feeAmount;
+  const totalBeforeDiscount = subtotal + feeAmount + tipAmount;
   const total = Math.max(0, totalBeforeDiscount - couponDiscount);
 
   const activeToken = tokens.find(t => t.symbol === selectedToken) ?? tokens[0] ?? PAYMENT_TOKENS[0]!;
@@ -151,15 +154,17 @@ export function CheckoutPanel({
       });
   }, [address, merchantAddress]);
 
-  const applyCoupon = async () => {
-    if (!couponCode.trim() || typeof fetch !== 'function') {
+  const applyCoupon = async (code: string) => {
+    if (!code.trim() || typeof fetch !== 'function') {
       setCouponStatus('Enter a promo code to apply it.');
       return;
     }
 
+    setIsApplyingCoupon(true);
     try {
+      const normalizedCode = code.trim().toUpperCase();
       const params = new URLSearchParams({
-        code: couponCode.trim().toUpperCase(),
+        code: normalizedCode,
         merchant: merchantAddress,
         amount: subtotal.toString(),
       });
@@ -175,10 +180,12 @@ export function CheckoutPanel({
       }
 
       setCouponDiscount(Number(data.discount ?? 0));
-      setAppliedCouponCode(couponCode.trim().toUpperCase());
+      setAppliedCouponCode(normalizedCode);
       setCouponStatus(`Promo applied — you saved ${formatCurrency(Number(data.discount ?? 0))}.`);
     } catch {
       setCouponStatus('Unable to validate promo code right now.');
+    } finally {
+      setIsApplyingCoupon(false);
     }
   };
 
@@ -197,7 +204,7 @@ export function CheckoutPanel({
       setTxHash(hash);
       setStep('complete');
       onComplete?.(hash);
-    } catch (error) {
+    } catch {
       setStep('review');
     }
     setIsPaying(false);
@@ -271,6 +278,12 @@ export function CheckoutPanel({
                 </span>
                 <span className="text-white">{formatCurrency(feeAmount)}</span>
               </div>
+              {tipAmount > 0 && (
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-400">Tip</span>
+                  <span className="text-white">{formatCurrency(tipAmount)}</span>
+                </div>
+              )}
               {couponDiscount > 0 && (
                 <div className="flex justify-between text-sm text-emerald-400">
                   <span>Promo discount{appliedCouponCode ? ` (${appliedCouponCode})` : ''}</span>
@@ -312,40 +325,27 @@ export function CheckoutPanel({
               </div>
             </div>
 
-            {/* Coupon code */}
-            <div className="mb-4 rounded-xl border border-white/10 bg-white/3 p-4">
-              <div className="mb-2 text-xs text-gray-500 uppercase tracking-wider">Promo code</div>
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={couponCode}
-                  onChange={(event) => setCouponCode(event.target.value.toUpperCase())}
-                  placeholder="WELCOME10"
-                  className="flex-1 rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 text-sm text-white uppercase placeholder-gray-500 focus:border-cyan-500/40 focus:outline-none"
-                />
-                <button
-                  type="button"
-                  onClick={applyCoupon}
-                  className="rounded-xl border border-cyan-500/30 px-4 py-2.5 text-sm font-semibold text-cyan-300"
-                >
-                  Apply
-                </button>
-              </div>
-              {couponStatus && (
-                <div className={`mt-2 text-xs ${couponDiscount > 0 ? 'text-emerald-400' : 'text-amber-300'}`}>
-                  {couponStatus}
-                </div>
-              )}
+            <div className="mb-4 space-y-4">
+              <TipSelector subtotal={subtotal} currency={activeToken.symbol} onChange={setTipAmount} />
+              <CouponInput
+                onApply={applyCoupon}
+                isApplying={isApplyingCoupon}
+                error={couponDiscount > 0 ? null : couponStatus}
+                appliedCode={appliedCouponCode}
+              />
+              {couponStatus && couponDiscount > 0 ? (
+                <div className="text-xs text-emerald-400">{couponStatus}</div>
+              ) : null}
             </div>
 
             {/* Pay button */}
             <button
               onClick={handlePay}
-              disabled={!isConnected}
+              disabled={!isConnected || isPaying}
               className="w-full py-4 bg-gradient-to-r from-cyan-500 to-blue-600 text-white rounded-xl font-bold text-lg disabled:opacity-50 flex items-center justify-center gap-2"
             >
-              <Wallet size={22} />
-              Pay {formatCurrency(total)}
+              {isPaying ? <Loader2 size={22} className="animate-spin" /> : <Wallet size={22} />}
+              {isPaying ? 'Processing…' : `Pay ${formatCurrency(total)}`}
             </button>
 
             {onCancel && (

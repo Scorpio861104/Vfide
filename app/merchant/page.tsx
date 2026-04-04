@@ -8,6 +8,7 @@ import { Footer } from '@/components/layout/Footer';
 import { MerchantDashboard } from '@/components/merchant/MerchantDashboard';
 import { PaymentInterface } from '@/components/merchant/PaymentInterface';
 import { PaymentQR } from '@/components/merchant/PaymentQR';
+import SeasonalTrends from '@/components/analytics/SeasonalTrends';
 import { OffRampButton, OffRampStatus } from '@/components/compliance/OffRampIntegration';
 
 const processors = [
@@ -136,16 +137,30 @@ export default function MerchantPage() {
         </section>
 
         <section className="py-20">
-          <div className="container mx-auto max-w-4xl px-4">
-            <h2 className="mb-12 text-center text-3xl font-bold text-white">Getting Started</h2>
-            <div className="space-y-6">
-              {onboardingSteps.map((step, index) => (
-                <div key={step.title} className="rounded-2xl border border-white/10 bg-white/3 p-5">
-                  <div className="mb-2 text-sm font-bold text-cyan-300">Step {index + 1}</div>
-                  <h3 className="text-xl font-semibold text-white">{step.title}</h3>
-                  <p className="mt-2 text-gray-400">{step.description}</p>
+          <div className="container mx-auto max-w-6xl px-4">
+            <div className="grid gap-6 lg:grid-cols-[1fr_0.9fr]">
+              <div>
+                <h2 className="mb-12 text-center text-3xl font-bold text-white lg:text-left">Getting Started</h2>
+                <div className="space-y-6">
+                  {onboardingSteps.map((step, index) => (
+                    <div key={step.title} className="rounded-2xl border border-white/10 bg-white/3 p-5">
+                      <div className="mb-2 text-sm font-bold text-cyan-300">Step {index + 1}</div>
+                      <h3 className="text-xl font-semibold text-white">{step.title}</h3>
+                      <p className="mt-2 text-gray-400">{step.description}</p>
+                    </div>
+                  ))}
                 </div>
-              ))}
+              </div>
+              <div>
+                <SeasonalTrends title="Merchant sales pulse" data={[
+                  { label: 'Mon', value: 42 },
+                  { label: 'Tue', value: 51 },
+                  { label: 'Wed', value: 47 },
+                  { label: 'Thu', value: 63 },
+                  { label: 'Fri', value: 74 },
+                  { label: 'Sat', value: 68 },
+                ]} />
+              </div>
             </div>
           </div>
         </section>
