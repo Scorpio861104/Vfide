@@ -1,4 +1,4 @@
-import { describe, it, expect, jest } from '@jest/globals';
+import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 import { render, screen } from '@testing-library/react';
 import type React from 'react';
 
@@ -30,8 +30,53 @@ jest.mock('@/components/merchant/disputes/PeerMediation', () => ({
   default: () => <div>Peer Mediation Component</div>,
 }));
 
+beforeEach(() => {
+  global.fetch = jest.fn(async (input: RequestInfo | URL) => {
+    const url = String(input);
+
+    if (url.includes('/api/flashloans/lanes')) {
+      return {
+        ok: true,
+        json: async () => ({
+          lanes: [
+            { id: 'lane-1', state: { stage: 'active' }, terms: { principal: 1200 } },
+            { id: 'lane-2', state: { stage: 'settled' }, terms: { principal: 800 } },
+          ],
+        }),
+      } as Response;
+    }
+
+    if (url.includes('/api/proposals')) {
+      return {
+        ok: true,
+        json: async () => ({
+          proposals: [{ id: 1, title: 'Upgrade council tooling', status: 'active' }],
+          total: 1,
+        }),
+      } as Response;
+    }
+
+    if (url.includes('/api/merchant/returns')) {
+      return {
+        ok: true,
+        json: async () => ({
+          returns: [
+            { id: 'ret-1', status: 'requested', type: 'refund' },
+            { id: 'ret-2', status: 'approved', type: 'exchange' },
+          ],
+        }),
+      } as Response;
+    }
+
+    return {
+      ok: true,
+      json: async () => ({}),
+    } as Response;
+  }) as typeof fetch;
+});
+
 describe('Uploaded handoff pages', () => {
-  it('renders the lending handoff page and its main CTA links', () => {
+  it('renders the lending handoff page and its main CTA links', async () => {
     const pageModule = require('../../app/lending/page');
     const LendingPage = pageModule.default as React.ComponentType;
     render(<LendingPage />);
@@ -39,9 +84,10 @@ describe('Uploaded handoff pages', () => {
     expect(screen.getByRole('heading', { name: /p2p lending/i })).toBeTruthy();
     expect(screen.getByRole('link', { name: /open flashlight simulator/i })).toBeTruthy();
     expect(screen.getByRole('link', { name: /view flash loans/i })).toBeTruthy();
+    expect(await screen.findByText(/2 live lanes/i)).toBeTruthy();
   });
 
-  it('renders the elections handoff page and governance links', () => {
+  it('renders the elections handoff page and governance links', async () => {
     const pageModule = require('../../app/elections/page');
     const ElectionsPage = pageModule.default as React.ComponentType;
     render(<ElectionsPage />);
@@ -49,9 +95,10 @@ describe('Uploaded handoff pages', () => {
     expect(screen.getByRole('heading', { name: /council elections/i })).toBeTruthy();
     expect(screen.getByRole('link', { name: /open governance hub/i })).toBeTruthy();
     expect(screen.getByRole('link', { name: /view council overview/i })).toBeTruthy();
+    expect(await screen.findByText(/1 active proposal/i)).toBeTruthy();
   });
 
-  it('renders the disputes handoff page and resolution links', () => {
+  it('renders the disputes handoff page and resolution links', async () => {
     const pageModule = require('../../app/disputes/page');
     const DisputesPage = pageModule.default as React.ComponentType;
     render(<DisputesPage />);
@@ -60,5 +107,6 @@ describe('Uploaded handoff pages', () => {
     expect(screen.getByRole('link', { name: /open appeals center/i })).toBeTruthy();
     expect(screen.getByRole('link', { name: /merchant returns/i })).toBeTruthy();
     expect(screen.getByText(/Peer Mediation Component/i)).toBeTruthy();
+    expect(await screen.findByText(/2 merchant cases/i)).toBeTruthy();
   });
 });
