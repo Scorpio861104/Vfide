@@ -15,7 +15,7 @@
  */
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useAccount } from 'wagmi';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CreditCard, Wallet, Shield, ArrowRight, Check, Loader2, Info } from 'lucide-react';
@@ -49,6 +49,18 @@ interface CheckoutPanelProps {
   onCancel?: () => void;
 }
 
+interface LoyaltyProgramSnapshot {
+  name: string;
+  stampsRequired: number;
+  rewardDescription: string;
+  active: boolean;
+}
+
+interface LoyaltyProgressSnapshot {
+  stamps: number;
+  rewardsEarned: number;
+}
+
 // ── Constants ───────────────────────────────────────────────────────────────
 
 const PAYMENT_TOKENS: PaymentToken[] = [
@@ -80,6 +92,8 @@ export function CheckoutPanel({
   const [couponDiscount, setCouponDiscount] = useState(0);
   const [couponStatus, setCouponStatus] = useState<string | null>(null);
   const [appliedCouponCode, setAppliedCouponCode] = useState<string | null>(null);
+  const [loyaltyProgram, setLoyaltyProgram] = useState<LoyaltyProgramSnapshot | null>(null);
+  const [loyaltyProgress, setLoyaltyProgress] = useState<LoyaltyProgressSnapshot | null>(null);
 
   // Update token rates with live price
   const tokens = useMemo(() =>
@@ -94,8 +108,48 @@ export function CheckoutPanel({
 
   const activeToken = tokens.find(t => t.symbol === selectedToken) ?? tokens[0] ?? PAYMENT_TOKENS[0]!;
   const tokenAmount = total / activeToken.rate;
+  const currentLoyaltyStamps = loyaltyProgress?.stamps ?? 0;
+  const stampsRemaining = loyaltyProgram
+    ? (() => {
+        const required = Math.max(1, loyaltyProgram.stampsRequired);
+        const remainder = currentLoyaltyStamps % required;
+        return remainder === 0 && currentLoyaltyStamps > 0 ? 0 : required - remainder;
+      })()
+    : null;
 
   const feeSavedVsSquare = subtotal * 0.029 + 0.30; // Square's 2.9% + $0.30
+
+  useEffect(() => {
+    if (typeof fetch !== 'function') return;
+
+    const params = new URLSearchParams({ merchant: merchantAddress });
+    if (address) params.set('customer', address);
+
+    fetch(`/api/merchant/loyalty?${params.toString()}`)
+      .then(async (response) => {
+        const data = await response.json().catch(() => null);
+        if (!response.ok || !data?.program) {
+          setLoyaltyProgram(null);
+          setLoyaltyProgress(null);
+          return;
+        }
+
+        setLoyaltyProgram({
+          name: String(data.program.name || 'Rewards'),
+          stampsRequired: Number(data.program.stampsRequired ?? 10),
+          rewardDescription: String(data.program.rewardDescription || 'Reward unlocked'),
+          active: Boolean(data.program.active),
+        });
+        setLoyaltyProgress(data.progress ? {
+          stamps: Number(data.progress.stamps ?? 0),
+          rewardsEarned: Number(data.progress.rewardsEarned ?? 0),
+        } : null);
+      })
+      .catch(() => {
+        setLoyaltyProgram(null);
+        setLoyaltyProgress(null);
+      });
+  }, [address, merchantAddress]);
 
   const applyCoupon = async () => {
     if (!couponCode.trim() || typeof fetch !== 'function') {
@@ -170,6 +224,19 @@ export function CheckoutPanel({
                 )}
               </div>
             </div>
+
+            {loyaltyProgram?.active && (
+              <div className="mb-4 rounded-xl border border-pink-500/20 bg-pink-500/5 p-4">
+                <div className="text-sm font-semibold text-pink-300">{loyaltyProgram.name}</div>
+                <div className="mt-1 text-white">
+                  {currentLoyaltyStamps}/{loyaltyProgram.stampsRequired} stamps collected
+                </div>
+                <div className="text-xs text-gray-400">
+                  {stampsRemaining ?? loyaltyProgram.stampsRequired} more for {loyaltyProgram.rewardDescription}
+                  {Number(loyaltyProgress?.rewardsEarned ?? 0) > 0 ? ` · ${loyaltyProgress?.rewardsEarned} reward${loyaltyProgress?.rewardsEarned === 1 ? '' : 's'} earned` : ''}
+                </div>
+              </div>
+            )}
 
             {/* Items */}
             <div className="bg-white/3 border border-white/10 rounded-xl divide-y divide-white/5 mb-4">

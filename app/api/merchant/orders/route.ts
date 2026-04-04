@@ -14,6 +14,7 @@ import { withRateLimit } from '@/lib/auth/rateLimit';
 import { dispatchWebhook } from '@/lib/webhooks/merchantWebhookDispatcher';
 import { logger } from '@/lib/logger';
 import { calculateCouponDiscount, serializeCouponRow } from '@/lib/coupons';
+import { recordLoyaltyPurchase } from '@/lib/merchantLoyalty';
 import { z } from 'zod4';
 
 const ADDRESS_LIKE_REGEX = /^0x[a-fA-F0-9]{40}$/;
@@ -378,6 +379,10 @@ export async function POST(request: NextRequest) {
       }
 
       await client.query('COMMIT');
+
+      if (validTxHash) {
+        await recordLoyaltyPurchase(merchant_address, authAddress, total);
+      }
 
       // Dispatch webhook (outside transaction — fire-and-forget)
       dispatchWebhook(merchant_address, 'payment.completed', {

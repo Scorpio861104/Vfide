@@ -55,6 +55,9 @@ export default function MerchantPage() {
               <Link href="/merchant/coupons" className="rounded-xl border border-white/10 px-4 py-2 text-cyan-300 hover:border-cyan-400/40 hover:text-cyan-200">
                 Coupon & promo codes
               </Link>
+              <Link href="/merchant/loyalty" className="rounded-xl border border-white/10 px-4 py-2 text-cyan-300 hover:border-cyan-400/40 hover:text-cyan-200">
+                Loyalty stamp cards
+              </Link>
             </div>
           </div>
         </section>

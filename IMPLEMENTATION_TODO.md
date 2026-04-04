@@ -11,7 +11,7 @@ Source roadmap consolidated from `VFIDE_Complete_Assessment.md` and the active m
 - [x] 2.1 Staff roles and cashier mode
 - [x] 2.2 Customer list and order history
 - [x] 2.3 Coupon and promo code engine
-- [ ] 2.4 Loyalty stamp cards
+- [x] 2.4 Loyalty stamp cards
 
 ## Tier 3 — Operational Excellence
 - [ ] 3.1 Expense tracking and profit/loss

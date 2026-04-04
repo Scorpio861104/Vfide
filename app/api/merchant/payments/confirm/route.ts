@@ -11,6 +11,7 @@ import { requireAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { query } from '@/lib/db';
 import { logger } from '@/lib/logger';
+import { recordLoyaltyPurchase } from '@/lib/merchantLoyalty';
 import { dispatchWebhook } from '@/lib/webhooks/merchantWebhookDispatcher';
 import { z } from 'zod4';
 
@@ -290,6 +291,8 @@ export async function POST(request: NextRequest) {
     tx_hash,
     confirmed_at: new Date().toISOString(),
   });
+
+  await recordLoyaltyPurchase(authAddress, customer_address.toLowerCase(), 1);
 
   return NextResponse.json({ success: true });
 }
