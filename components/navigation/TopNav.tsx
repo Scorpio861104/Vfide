@@ -17,7 +17,7 @@ const sections = [
 const sectionMatch: Record<string, string[]> = {
   home: ['/dashboard', '/'],
   shop: ['/merchant', '/pos', '/marketplace', '/merchants', '/store', '/product', '/checkout'],
-  pay: ['/pay', '/remittance', '/lending', '/crypto', '/escrow', '/flashloans', '/flashlight', '/buy'],
+  pay: ['/pay', '/remittance', '/lending', '/crypto', '/escrow', '/flashloans', '/buy'],
   social: ['/feed', '/stories', '/social', '/endorsements', '/headhunter', '/social-hub', '/social-payments', '/social-messaging'],
   me: ['/profile', '/vault', '/settings', '/badges', '/achievements', '/guardians', '/governance', '/dao-hub', '/council', '/elections', '/disputes', '/sanctum', '/rewards', '/leaderboard', '/quests', '/proofscore', '/security-center', '/notifications'],
 };

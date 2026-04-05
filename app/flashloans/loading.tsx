@@ -1,4 +1,4 @@
-export default function FlashlightLoading() {
+export default function FlashLoansLoading() {
   return (
     <div className="min-h-screen bg-zinc-950 p-4 md:p-8">
       <div className="max-w-6xl mx-auto space-y-6">

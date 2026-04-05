@@ -2,11 +2,11 @@ import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import { fireEvent, render, screen } from '@testing-library/react';
 import type React from 'react';
 
-const renderFlashlightPage = () => {
+const renderFlashloansPage = () => {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const pageModule = require('../../app/flashlight/page');
-  const FlashlightPage = pageModule.default as React.ComponentType;
-  return render(<FlashlightPage />);
+  const pageModule = require('../../app/flashloans/page');
+  const FlashLoansPage = pageModule.default as React.ComponentType;
+  return render(<FlashLoansPage />);
 };
 
 jest.mock('@/components/layout/Footer', () => ({
@@ -72,13 +72,13 @@ jest.mock('@/lib/flashloans/engine', () => {
   };
 });
 
-describe('Flashlight page pathways', () => {
+describe('Flashloans page pathways', () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
   it('renders hero, fairness rules, and simulator shell', () => {
-    renderFlashlightPage();
+    renderFlashloansPage();
 
     expect(screen.getByRole('heading', { name: /Flashloans P2P Borrowing, Built on Trust/i })).toBeTruthy();
     expect(screen.getByText(/Fairness & Compliance/i)).toBeTruthy();
@@ -87,7 +87,7 @@ describe('Flashlight page pathways', () => {
   });
 
   it('progresses simulation through request and approve actions', () => {
-    renderFlashlightPage();
+    renderFlashloansPage();
 
     fireEvent.click(screen.getByRole('button', { name: /Request Lane/i }));
     expect(screen.getByText(/Requested/i)).toBeTruthy();
@@ -98,7 +98,7 @@ describe('Flashlight page pathways', () => {
   });
 
   it('enters dispute stage and shows arbitration actions', () => {
-    renderFlashlightPage();
+    renderFlashloansPage();
 
     fireEvent.click(screen.getByRole('button', { name: /Request Lane/i }));
     fireEvent.click(screen.getByRole('button', { name: /Lender Approve Terms/i }));
@@ -111,7 +111,7 @@ describe('Flashlight page pathways', () => {
   });
 
   it('switches between borrow, active, and history tabs while keeping lane progress visible', () => {
-    renderFlashlightPage();
+    renderFlashloansPage();
 
     expect(screen.getByRole('button', { name: /^Borrow$/i })).toBeTruthy();
     expect(screen.getByRole('button', { name: /Active Loans/i })).toBeTruthy();

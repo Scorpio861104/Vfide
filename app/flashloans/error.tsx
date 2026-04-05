@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { AlertTriangle, RefreshCw, Home } from 'lucide-react';
 import { logger } from '@/lib/logger';
 
-export default function FlashlightError({
+export default function FlashLoansError({
   error,
   reset,
 }: {
@@ -13,7 +13,7 @@ export default function FlashlightError({
   reset: () => void;
 }) {
   useEffect(() => {
-    logger.error('Flashlight route error:', error);
+    logger.error('Flashloans route error:', error);
   }, [error]);
 
   return (
@@ -22,8 +22,8 @@ export default function FlashlightError({
         <div className="w-20 h-20 mx-auto bg-red-600/20 border-2 border-red-600 rounded-full flex items-center justify-center mb-6">
           <AlertTriangle className="w-10 h-10 text-red-600" />
         </div>
-        <h1 className="text-2xl font-bold text-zinc-100 mb-3">Flashlight Error</h1>
-        <p className="text-zinc-400 mb-2">Flashlight data failed to load. Please retry.</p>
+        <h1 className="text-2xl font-bold text-zinc-100 mb-3">Flashloans Error</h1>
+        <p className="text-zinc-400 mb-2">Flashloans data failed to load. Please retry.</p>
         {error.digest && (
           <p className="text-sm text-zinc-500 mb-6 font-mono">Error ID: {error.digest}</p>
         )}

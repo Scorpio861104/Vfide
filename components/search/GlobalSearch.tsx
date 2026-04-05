@@ -32,7 +32,6 @@ import {
   Bell,
   ChevronRight,
   Crown,
-  Flashlight
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
@@ -88,7 +87,7 @@ const PAGES = [
   { title: 'Rewards', path: '/rewards', keywords: ['rewards', 'claim', 'earnings'], icon: Trophy },
   { title: 'Payroll', path: '/payroll', keywords: ['payroll', 'salary', 'payments', 'streaming'], icon: CreditCard },
   { title: 'Treasury', path: '/treasury', keywords: ['treasury', 'funds', 'reserve'], icon: PiggyBank },
-  { title: 'Flashloans P2P', path: '/flashlight', keywords: ['flashlight', 'flashloans', 'p2p', 'credit', 'loan'], icon: Flashlight },
+  { title: 'Flashloans P2P', path: '/flashloans', keywords: ['flashloans', 'p2p', 'credit', 'loan'], icon: ArrowRightLeft },
   { title: 'Settings', path: '/vault/settings', keywords: ['settings', 'preferences', 'config', 'options'], icon: Settings },
 ];
 

@@ -83,7 +83,7 @@ export default function Home() {
                   <Link href="/token-launch" className="px-8 py-4 bg-gradient-to-r from-cyan-500 to-blue-600 text-white rounded-xl font-bold text-lg hover:scale-[1.02] transition-transform">
                     {copy.primaryCta}
                   </Link>
-                  <Link href="/flashlight" className="px-8 py-4 bg-white/5 border border-white/10 text-white rounded-xl font-bold text-lg hover:bg-white/10 transition-colors">
+                  <Link href="/flashloans" className="px-8 py-4 bg-white/5 border border-white/10 text-white rounded-xl font-bold text-lg hover:bg-white/10 transition-colors">
                     {copy.secondaryCta}
                   </Link>
                 </div>

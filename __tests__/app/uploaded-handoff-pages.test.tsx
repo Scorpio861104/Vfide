@@ -82,7 +82,7 @@ describe('Uploaded handoff pages', () => {
     render(<LendingPage />);
 
     expect(screen.getByRole('heading', { name: /p2p lending/i })).toBeTruthy();
-    expect(screen.getByRole('link', { name: /open flashlight simulator/i })).toBeTruthy();
+    expect(screen.getByRole('link', { name: /open flashloans workspace/i })).toBeTruthy();
     expect(screen.getByRole('link', { name: /view flash loans/i })).toBeTruthy();
     expect(await screen.findByText(/2 live lanes/i)).toBeTruthy();
   });

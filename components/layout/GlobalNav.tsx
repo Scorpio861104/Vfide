@@ -35,7 +35,6 @@ const navIcons: Record<string, React.ComponentType<{ className?: string; size?: 
   Governance: MetalGovernanceIcon,
   "DAO Hub": MetalGovernanceIcon,
   "Flashloans P2P": MetalTokenIcon,
-  Flashlight: MetalTokenIcon,
   Headhunter: MetalHeadhunterIcon,
   Endorsements: MetalShieldIcon,
   Rewards: MetalRewardsIcon,
@@ -51,7 +50,7 @@ const navLinks: Array<{ href: string; label: string; highlight?: boolean; accent
   { href: "/stories", label: "Stories", highlight: true },
   { href: "/social-messaging", label: "Messages", highlight: true },
   { href: "/merchant", label: "Merchant" },
-  { href: "/flashlight", label: "Flashloans P2P", highlight: true },
+  { href: "/flashloans", label: "Flashloans P2P", highlight: true },
   { href: "/governance", label: "Governance" },
   { href: "/dao-hub", label: "DAO Hub", highlight: true, accent: true },
 ];
@@ -92,7 +91,7 @@ const moreLinks = [
     items: [
       { href: "/pay", label: "Pay", accent: true },
       { href: "/pos", label: "POS", accent: true },
-      { href: "/flashlight", label: "Flashloans P2P", accent: true },
+      { href: "/flashloans", label: "Flashloans P2P", accent: true },
       { href: "/payroll", label: "Payroll" },
       { href: "/escrow", label: "Escrow" },
       { href: "/treasury", label: "Treasury" },

@@ -18,10 +18,10 @@ interface LanePreview {
 
 const lendingModes = [
   {
-    title: 'Trust-based lanes',
-    description: 'Use the existing Flashlight simulator and server-backed lane flow for borrower/lender/arbiter coordination.',
-    href: '/flashlight',
-    cta: 'Open Flashlight Simulator',
+    title: 'Trust-based flashloans',
+    description: 'Use the existing Flashloans workspace and server-backed lane flow for borrower, lender, and arbiter coordination.',
+    href: '/flashloans',
+    cta: 'Open Flashloans Workspace',
     icon: HandCoins,
   },
   {

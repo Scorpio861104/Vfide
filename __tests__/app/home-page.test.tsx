@@ -39,7 +39,7 @@ describe('Home page pathways', () => {
     expect(screen.getByText(/Accept Crypto\./i)).toBeTruthy();
     expect(screen.getByText(/Zero Fees\./i)).toBeTruthy();
     expect(screen.getByRole('link', { name: /Get Started/i }).getAttribute('href')).toBe('/token-launch');
-    expect(screen.getByRole('link', { name: /Explore Flashloans P2P/i }).getAttribute('href')).toBe('/flashlight');
+    expect(screen.getByRole('link', { name: /Explore Flashloans P2P/i }).getAttribute('href')).toBe('/flashloans');
   });
 
   it('renders trust indicators and launch flow links', () => {

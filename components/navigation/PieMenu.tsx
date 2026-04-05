@@ -66,7 +66,6 @@ import {
   ShieldAlert,
   HardDrive,
   Tag,
-  Flashlight,
 } from 'lucide-react';
 
 // ============================================================================
@@ -137,7 +136,7 @@ const navigationItems: NavItem[] = [
       { id: 'merchant-main', label: 'Merchant Hub', href: '/merchant', icon: Store, color: '#10B981', dataOnboarding: 'nav-merchant' },
       { id: 'pos', label: 'POS Terminal', href: '/pos', icon: CreditCard, color: '#10B981' },
       { id: 'buy', label: 'Buy Tokens', href: '/buy', icon: Globe, color: '#10B981' },
-      { id: 'flashlight', label: 'Flashloans P2P', href: '/flashlight', icon: Flashlight, color: '#10B981', badge: 'P2P' },
+      { id: 'flashloans', label: 'Flashloans P2P', href: '/flashloans', icon: Zap, color: '#10B981', badge: 'P2P' },
       { id: 'escrow', label: 'Escrow', href: '/escrow', icon: Lock, color: '#10B981' },
       { id: 'payroll', label: 'Payroll', href: '/payroll', icon: Banknote, color: '#10B981' },
       { id: 'streaming', label: 'Streaming', href: '/streaming', icon: Zap, color: '#10B981', badge: 'NEW' },

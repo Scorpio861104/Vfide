@@ -7,7 +7,7 @@ import { Home, Store, ArrowLeftRight, MessageCircle, User } from 'lucide-react';
 const tabs = [
   { id: 'home', href: '/dashboard', icon: Home, label: 'Home', match: ['/dashboard', '/'] },
   { id: 'shop', href: '/merchant', icon: Store, label: 'Shop', match: ['/merchant', '/pos', '/marketplace', '/merchants', '/store', '/product', '/checkout'] },
-  { id: 'pay', href: '/pay', icon: ArrowLeftRight, label: 'Pay', match: ['/pay', '/remittance', '/lending', '/crypto', '/escrow', '/flashloans', '/flashlight', '/buy', '/streaming', '/subscriptions'] },
+  { id: 'pay', href: '/pay', icon: ArrowLeftRight, label: 'Pay', match: ['/pay', '/remittance', '/lending', '/crypto', '/escrow', '/flashloans', '/buy', '/streaming', '/subscriptions'] },
   { id: 'social', href: '/feed', icon: MessageCircle, label: 'Social', match: ['/feed', '/stories', '/social', '/endorsements', '/headhunter', '/social-hub', '/social-payments', '/social-messaging'] },
   { id: 'me', href: '/profile', icon: User, label: 'Me', match: ['/profile', '/vault', '/settings', '/badges', '/achievements', '/guardians', '/governance', '/dao-hub', '/council', '/elections', '/disputes', '/sanctum', '/rewards', '/leaderboard', '/quests', '/proofscore', '/security-center', '/notifications'] },
 ];
