@@ -5,6 +5,12 @@
   "devCommand": "npm run dev",
   "framework": "nextjs",
   "ignoreCommand": "git diff --quiet HEAD^ HEAD",
+  "crons": [
+    {
+      "path": "/api/indexer/poll",
+      "schedule": "* * * * *"
+    }
+  ],
   "headers": [
     {
       "source": "/(.*)",

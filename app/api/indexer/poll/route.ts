@@ -1,0 +1,48 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { pollEvents } from '@/lib/indexer/service';
+
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+
+function isAuthorized(request: NextRequest): boolean {
+  if (process.env.NODE_ENV !== 'production') {
+    return true;
+  }
+
+  const cronSecret = process.env.CRON_SECRET;
+  if (!cronSecret) {
+    console.error('[Indexer API] CRON_SECRET is required in production');
+    return false;
+  }
+
+  return request.headers.get('authorization') === `Bearer ${cronSecret}`;
+}
+
+export async function GET(request: NextRequest) {
+  if (process.env.NODE_ENV === 'production' && !process.env.CRON_SECRET) {
+    return NextResponse.json(
+      { success: false, error: 'CRON_SECRET not configured' },
+      { status: 503 }
+    );
+  }
+
+  if (!isAuthorized(request)) {
+    return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+  }
+
+  try {
+    const result = await pollEvents();
+    return NextResponse.json({
+      success: true,
+      indexed: result.indexed,
+      toBlock: result.toBlock,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error) {
+    console.error('[Indexer API] Poll failed:', error);
+    return NextResponse.json(
+      { success: false, error: 'Indexer poll failed' },
+      { status: 500 }
+    );
+  }
+}
