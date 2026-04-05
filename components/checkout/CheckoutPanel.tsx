@@ -18,8 +18,9 @@
 import { useEffect, useState, useMemo } from 'react';
 import { useAccount } from 'wagmi';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Wallet, Shield, Check, Loader2, Info, Printer, Smartphone } from 'lucide-react';
+import { Wallet, Shield, Check, Loader2, Info, Printer, Smartphone, MessageCircle } from 'lucide-react';
 import { useLocale } from '@/lib/locale/LocaleProvider';
+import { shareReceipt } from '@/lib/whatsapp';
 import CouponInput from '@/components/checkout/CouponInput';
 import TipSelector from '@/components/checkout/TipSelector';
 import { writePaymentNFC, isNFCSupported } from '@/lib/nfc';
@@ -342,6 +343,25 @@ export function CheckoutPanel({
     }
   };
 
+  const handleShareWhatsAppReceipt = () => {
+    shareReceipt({
+      merchantName,
+      items: items.map(({ name, qty, price }) => ({ name, qty, price })),
+      subtotal,
+      fee: feeAmount,
+      total,
+      currency: `${activeToken.symbol} `,
+      txHash: txHash ?? undefined,
+      date: new Date().toLocaleString(),
+    }, receiptPhone.trim() || undefined);
+
+    setReceiptStatus(
+      receiptPhone.trim()
+        ? 'Opening WhatsApp with a pre-filled receipt for this customer.'
+        : 'Opening WhatsApp with your pre-filled receipt.'
+    );
+  };
+
   const handlePay = async () => {
     if (!address) return;
 
@@ -584,7 +604,7 @@ export function CheckoutPanel({
 
             <div className="mx-auto max-w-md rounded-xl border border-white/10 bg-white/5 p-4 text-left">
               <div className="mb-3 text-sm font-semibold text-white">Share or keep your receipt</div>
-              <div className="grid gap-2 sm:grid-cols-2">
+              <div className="grid gap-2 sm:grid-cols-3">
                 <button
                   type="button"
                   onClick={handlePrintReceipt}
@@ -600,6 +620,14 @@ export function CheckoutPanel({
                 >
                   <Smartphone size={16} />
                   Write tap-to-pay
+                </button>
+                <button
+                  type="button"
+                  onClick={handleShareWhatsAppReceipt}
+                  className="flex items-center justify-center gap-2 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-200 transition hover:border-emerald-400 hover:text-white"
+                >
+                  <MessageCircle size={16} />
+                  WhatsApp receipt
                 </button>
               </div>
 

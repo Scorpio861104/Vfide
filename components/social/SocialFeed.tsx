@@ -14,6 +14,15 @@ import {
   MoreHorizontal,
 } from 'lucide-react';
 import { SocialTipButton } from './SocialTipButton';
+import { TrustFeed } from './TrustEventCard';
+import { MarketStoriesRow } from './MarketStory';
+import { CommunityBoard } from './MerchantReview';
+import {
+  generateSeedStories,
+  generateSeedTrustEvents,
+  SEED_TRENDING_MERCHANTS,
+  SEED_TRENDING_PRODUCTS,
+} from '@/lib/data/seed';
 
 // ==================== TYPES ====================
 
@@ -66,6 +75,72 @@ interface Comment {
 
 const commentsData: Comment[] = [];
 
+const SEED_POSTS: FeedPost[] = [
+  {
+    id: 'seed_post_1',
+    author: {
+      id: 'kofi-textiles',
+      avatar: '🧵',
+      name: 'Kofi Textiles',
+      username: 'kofi.makola',
+      isVerified: true,
+      proofScore: 8200,
+    },
+    content: 'Closed 14 zero-fee payments at Makola today. Fast checkout and trust-first commerce are working exactly as promised.',
+    type: 'achievement',
+    timestamp: new Date(Date.now() - 42 * 60 * 1000),
+    likes: 18,
+    comments: 4,
+    shares: 3,
+    liked: false,
+    saved: false,
+    metrics: { engagement: 82, reach: 420, impressions: 910 },
+    tags: ['merchant', 'payments', 'makola'],
+  },
+  {
+    id: 'seed_post_2',
+    author: {
+      id: 'amara-kitchen',
+      avatar: '🍲',
+      name: 'Amara\'s Kitchen',
+      username: 'amara.kitchen',
+      isVerified: true,
+      proofScore: 7600,
+    },
+    content: 'Lunch rush sold out early again. Sending a thank-you bonus to the team through VFIDE tonight.',
+    type: 'status',
+    timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000),
+    likes: 25,
+    comments: 7,
+    shares: 5,
+    liked: false,
+    saved: false,
+    metrics: { engagement: 96, reach: 610, impressions: 1220 },
+    tags: ['food', 'social-commerce', 'team'],
+  },
+  {
+    id: 'seed_post_3',
+    author: {
+      id: 'vfide-community',
+      avatar: '🗳️',
+      name: 'VFIDE Community',
+      username: 'vfide',
+      isVerified: true,
+      proofScore: 10000,
+    },
+    content: 'A new proposal is live. Review the latest treasury and merchant tooling priorities before voting closes.',
+    type: 'proposal',
+    timestamp: new Date(Date.now() - 5 * 60 * 60 * 1000),
+    likes: 31,
+    comments: 12,
+    shares: 9,
+    liked: false,
+    saved: false,
+    metrics: { engagement: 128, reach: 880, impressions: 1750 },
+    tags: ['governance', 'proposal', 'community'],
+  },
+];
+
 // ==================== COMPONENTS ====================
 
 interface SocialFeedProps {
@@ -73,7 +148,7 @@ interface SocialFeedProps {
 }
 
 export function SocialFeed({ onPostCreated }: SocialFeedProps) {
-  const [posts, setPosts] = useState<FeedPost[]>([]);
+  const [posts, setPosts] = useState<FeedPost[]>(() => SEED_POSTS);
   const [newPostContent, setNewPostContent] = useState('');
   const [filter, setFilter] = useState<FeedFilter>({ type: 'all', sortBy: 'latest' });
   const [showFilters, setShowFilters] = useState(false);
@@ -81,6 +156,8 @@ export function SocialFeed({ onPostCreated }: SocialFeedProps) {
   const [likedPosts, setLikedPosts] = useState<Set<string>>(new Set());
   const [savedPosts, setSavedPosts] = useState<Set<string>>(new Set());
   const [searchQuery, setSearchQuery] = useState('');
+  const [stories] = useState(() => generateSeedStories());
+  const [trustEvents] = useState(() => generateSeedTrustEvents());
   const observerTarget = useRef<HTMLDivElement>(null);
 
   const filteredPosts = posts.filter((post) => {
@@ -276,6 +353,19 @@ export function SocialFeed({ onPostCreated }: SocialFeedProps) {
       </motion.div>
 
       <div className="px-4 md:px-8 py-8 max-w-3xl mx-auto">
+        <MarketStoriesRow stories={stories} onView={() => {}} />
+
+        <div className="mb-6 grid gap-4 lg:grid-cols-2">
+          <div className="space-y-2">
+            <div className="text-xs font-bold text-gray-500 uppercase tracking-wider">Trust activity</div>
+            <TrustFeed events={trustEvents} maxItems={4} />
+          </div>
+          <CommunityBoard
+            merchants={SEED_TRENDING_MERCHANTS}
+            products={SEED_TRENDING_PRODUCTS}
+          />
+        </div>
+
         {/* Create Post Section */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}

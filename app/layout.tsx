@@ -3,6 +3,7 @@ import { cookies, headers } from "next/headers";
 import "./globals.css";
 import "@/lib/ssr-animations.css";
 import { StructuredData } from "@/components/seo/StructuredData";
+import { ClientLayout } from "@/components/layout/ClientLayout";
 import { getHtmlLang, normalizeLocale } from "@/lib/i18n";
 import { AppFeatureProviders, CoreProviders, Web3Providers } from "@/lib/providers";
 
@@ -70,7 +71,7 @@ export default async function RootLayout({
     <html lang={getHtmlLang(locale)} data-locale={locale}>
       <head>
         {/* CSP nonce exposed for getClientNonce() in lib/security.ts. The matching
-          nonce is set in the Content-Security-Policy header by middleware.ts. */}
+          nonce is set in the Content-Security-Policy header by `proxy.ts`. */}
         {nonce && <meta property="csp-nonce" content={nonce} />}
       </head>
       <body className="font-sans antialiased bg-zinc-900">
@@ -93,9 +94,11 @@ export default async function RootLayout({
           <CoreProviders>
             <Web3Providers>
               <AppFeatureProviders>
-                <main id="main-content" className="min-h-screen min-w-0 w-full" tabIndex={-1}>
-                  {children}
-                </main>
+                <ClientLayout>
+                  <main id="main-content" className="min-h-screen min-w-0 w-full" tabIndex={-1}>
+                    {children}
+                  </main>
+                </ClientLayout>
               </AppFeatureProviders>
             </Web3Providers>
           </CoreProviders>
