@@ -91,6 +91,7 @@ error TL_NeedGuarantors();
 error TL_PlanNotAccepted();
 error TL_PlanExists();
 error TL_NothingDue();
+error TL_DebtOutstanding();
 
 // ── Contract ────────────────────────────────────────────────────────────────
 
@@ -188,6 +189,7 @@ contract VFIDETermLoan is ReentrancyGuard {
     mapping(uint256 => PaymentPlan) public plans;
     mapping(uint256 => address[]) public guarantors;          // Loan → guarantor addresses
     mapping(uint256 => mapping(address => bool)) public hasSigned; // Loan → guarantor → signed
+    mapping(uint256 => mapping(address => address)) public guarantorVault; // Loan → guarantor → approval source
     mapping(uint256 => uint8) public signatureCount;          // Loan → number of guarantor signatures
     mapping(uint256 => uint256) public guarantorLiabilityEach; // Loan → liability per guarantor
     mapping(uint256 => mapping(address => uint256)) public guarantorExtracted; // How much pulled from each
@@ -196,6 +198,7 @@ contract VFIDETermLoan is ReentrancyGuard {
     uint256 public nextLoanId = 1;
 
     mapping(address => uint256) public activeLoanCount;
+    mapping(address => uint256) public unresolvedDefaults;
 
     // ProofScore → max loan tiers (configurable by DAO)
     uint256 public tier1Limit = 100e18;     // Score 5000+: 100 VFIDE
@@ -297,6 +300,7 @@ contract VFIDETermLoan is ReentrancyGuard {
         if (l.state != LoanState.OPEN) revert TL_WrongState();
         if (msg.sender == l.lender) revert TL_SelfLoan();
         if (activeLoanCount[msg.sender] >= MAX_ACTIVE_LOANS) revert TL_LoanCap();
+        if (unresolvedDefaults[msg.sender] > 0) revert TL_DebtOutstanding();
 
         // ProofScore check: can borrower handle this amount?
         uint256 limit = _maxBorrowable(msg.sender);
@@ -317,6 +321,7 @@ contract VFIDETermLoan is ReentrancyGuard {
         Loan storage l = loans[id];
         if (l.state != LoanState.COSIGNING) revert TL_WrongState();
         if (hasSigned[id][msg.sender]) revert TL_AlreadySigned();
+        if (unresolvedDefaults[msg.sender] > 0) revert TL_DebtOutstanding();
 
         // Verify caller is a guardian of borrower's vault
         if (address(vaultHub) != address(0)) {
@@ -335,17 +340,24 @@ contract VFIDETermLoan is ReentrancyGuard {
         }
 
         // Calculate this guarantor's financial liability
-        // Split total liability evenly across guarantors
-        // For the first signer, assume 1 guarantor. Recalculated if more sign.
         uint256 liabilityPerGuarantor = (l.principal * GUARANTOR_LIABILITY_PCT) / 100;
 
-        // Verify guarantor has approved this contract for their liability
-        // This is the moment of truth: they're putting money behind their word
-        uint256 approved = vfideToken.allowance(msg.sender, address(this));
-        require(approved >= liabilityPerGuarantor, "TL: approve contract for liability first");
+        // Real deployments keep guarantor funds inside their vault when available.
+        // If the vault system is not present, fall back to wallet-level approval.
+        address approvalSource = msg.sender;
+        if (address(vaultHub) != address(0)) {
+            address signerVault = vaultHub.vaultOf(msg.sender);
+            if (signerVault != address(0)) {
+                approvalSource = signerVault;
+            }
+        }
+
+        uint256 approved = vfideToken.allowance(approvalSource, address(this));
+        require(approved >= liabilityPerGuarantor, "TL: guarantor must approve liability first");
 
         hasSigned[id][msg.sender] = true;
         guarantors[id].push(msg.sender);
+        guarantorVault[id][msg.sender] = approvalSource;
         signatureCount[id]++;
 
         // Recalculate per-guarantor liability (split evenly)
@@ -575,6 +587,12 @@ contract VFIDETermLoan is ReentrancyGuard {
         _closeLoan(l);
         totalDefaults++;
 
+        unresolvedDefaults[l.borrower]++;
+        address[] storage blockedGuarantors = guarantors[id];
+        for (uint256 i = 0; i < blockedGuarantors.length; i++) {
+            unresolvedDefaults[blockedGuarantors[i]]++;
+        }
+
         // Return any partial repayments to lender
         if (l.amountRepaid > 0) {
             // amountRepaid was already transferred during installments
@@ -651,8 +669,10 @@ contract VFIDETermLoan is ReentrancyGuard {
             uint256 remaining = liabilityPer - alreadyTaken;
             if (extractAmount > remaining) extractAmount = remaining;
 
-            // Try to pull from guarantor (they pre-approved at co-sign time)
-            try vfideToken.transferFrom(g[i], l.lender, extractAmount) {
+            // Try to pull from the guarantor's chosen approval source (vault first, wallet fallback)
+            address source = guarantorVault[id][g[i]];
+            if (source == address(0)) source = g[i];
+            try vfideToken.transferFrom(source, l.lender, extractAmount) {
                 guarantorExtracted[id][g[i]] += extractAmount;
                 totalThisRound += extractAmount;
                 emit GuarantorExtracted(id, g[i], extractAmount, guarantorExtracted[id][g[i]]);
@@ -699,6 +719,16 @@ contract VFIDETermLoan is ReentrancyGuard {
 
         // Mark as repaid — stops all future guarantor extractions
         l.state = LoanState.REPAID;
+
+        if (unresolvedDefaults[l.borrower] > 0) {
+            unresolvedDefaults[l.borrower]--;
+        }
+        address[] storage clearedGuarantors = guarantors[id];
+        for (uint256 i = 0; i < clearedGuarantors.length; i++) {
+            if (unresolvedDefaults[clearedGuarantors[i]] > 0) {
+                unresolvedDefaults[clearedGuarantors[i]]--;
+            }
+        }
 
         // Reduced penalty: they came back and paid. Not forgiven, but recognized.
         if (address(seer) != address(0)) {

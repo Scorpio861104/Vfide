@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import {
   Send,
@@ -13,6 +13,7 @@ import {
   CheckCheck,
   Check,
 } from 'lucide-react';
+import { VoiceNoteRecorder } from './VoiceNote';
 import { useAccount, useSignMessage } from 'wagmi';
 import { Friend, Message } from '@/types/messaging';
 import { 
@@ -233,6 +234,15 @@ export function MessagingCenter({ friend, hasVault = false }: MessagingCenterPro
       return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
     }
   };
+
+  const handleVoiceRecorded = useCallback((blob: Blob, duration: number) => {
+    void blob;
+    const roundedDuration = Math.max(1, Math.round(duration));
+    setInputMessage((current) => current.trim()
+      ? `${current.trim()} 🎤 Voice note ready (${roundedDuration}s)`
+      : `🎤 Voice note ready (${roundedDuration}s)`);
+    announce(`Voice note attached for ${roundedDuration} seconds`, 'polite');
+  }, [announce]);
 
   // Handle message edit
   const handleEditMessage = async (messageId: string, newContent: string) => {
@@ -607,6 +617,8 @@ export function MessagingCenter({ friend, hasVault = false }: MessagingCenterPro
           >
             <Paperclip className="w-5 h-5" />
           </button>
+
+          <VoiceNoteRecorder onRecorded={handleVoiceRecorded} />
 
           <button
             onClick={handleSendMessage}

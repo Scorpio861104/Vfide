@@ -70,6 +70,18 @@ export default function DisputesPage() {
     [merchantCases]
   );
 
+  const mediationPreview = useMemo(() => ({
+    id: merchantCases[0]?.id ?? 'preview-case',
+    buyerAddress: '0x7a12...42ef',
+    merchantAddress: address ?? '0x1fd0...90ab',
+    amount: '250',
+    reason: merchantCases[0]?.type ?? 'Return correction pending review',
+    status: awaitingReview > 0 ? 'open' as const : merchantCases.length > 0 ? 'mediating' as const : 'open' as const,
+    mediatorName: awaitingReview > 0 ? 'Market elder queue' : 'Escalation desk',
+    proposedResolution: resolvedCases > 0 ? 'Offer a partial refund or exchange before escalating to a DAO vote.' : undefined,
+    proposedSplit: resolvedCases > 0 ? { buyerPercent: 60, merchantPercent: 40 } : undefined,
+  }), [address, awaitingReview, merchantCases, resolvedCases]);
+
   return (
     <>
       <div className="min-h-screen bg-zinc-950 pt-20 text-white">
@@ -148,7 +160,7 @@ export default function DisputesPage() {
             </div>
 
             <div className="mt-8">
-              <PeerMediation />
+              <PeerMediation dispute={mediationPreview} userRole="merchant" />
             </div>
           </div>
         </section>

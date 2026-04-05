@@ -16,21 +16,23 @@
  */
 
 import { expect } from "chai";
-import { ethers } from "hardhat";
-import { loadFixture, time } from "@nomicfoundation/hardhat-network-helpers";
+import hre from "hardhat";
+
+const { ethers } = await hre.network.connect();
+const loadFixture = async <T>(fixture: () => Promise<T>) => fixture();
 
 describe("VFIDETermLoan", function () {
   async function deployFixture() {
     const [owner, lender, borrower, guarantor1, guarantor2, feeCollector] = await ethers.getSigners();
 
-    // Deploy mock ERC20
+    // Deploy the concrete OpenZeppelin-backed mock ERC20 used by the lending suites.
     let token: any;
     try {
-      const ERC20Mock = await ethers.getContractFactory("MockERC20");
+      const ERC20Mock = await ethers.getContractFactory("test/contracts/mocks/MockContracts.sol:MockERC20");
       token = await ERC20Mock.deploy("VFIDE", "VFIDE", ethers.parseEther("1000000"));
       await token.waitForDeployment();
     } catch {
-      return null; // Skip if MockERC20 unavailable
+      return null; // Skip if the mock token artifact is unavailable
     }
 
     // Deploy TermLoan
@@ -113,8 +115,8 @@ describe("VFIDETermLoan", function () {
       const f = await loadFixture(deployFixture);
       if (!f) return this.skip();
 
-      await f.token.connect(f.lender).approve(await f.termLoan.getAddress(), ethers.parseEther("500"));
-      await f.termLoan.connect(f.lender).createLoan(ethers.parseEther("500"), 500, f.FOURTEEN_DAYS);
+      await f.token.connect(f.lender).approve(await f.termLoan.getAddress(), ethers.parseEther("100"));
+      await f.termLoan.connect(f.lender).createLoan(ethers.parseEther("100"), 500, f.FOURTEEN_DAYS);
       await f.termLoan.connect(f.borrower).acceptLoan(1);
 
       const loan = await f.termLoan.getLoan(1);

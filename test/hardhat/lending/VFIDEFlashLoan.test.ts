@@ -15,8 +15,10 @@
  */
 
 import { expect } from "chai";
-import { ethers } from "hardhat";
-import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
+import hre from "hardhat";
+
+const { ethers } = await hre.network.connect();
+const loadFixture = async <T>(fixture: () => Promise<T>) => fixture();
 
 // Mock flash loan borrower that repays
 const GOOD_BORROWER_ABI = [
@@ -32,17 +34,13 @@ describe("VFIDEFlashLoan", function () {
   async function deployFixture() {
     const [owner, lender1, lender2, borrower, feeCollector] = await ethers.getSigners();
 
-    // Deploy mock VFIDE token (simplified ERC20)
-    const MockToken = await ethers.getContractFactory("contracts/SharedInterfaces.sol:IERC20");
-    // Use a simple ERC20 for testing
-    const tokenFactory = await ethers.getContractFactory("VFIDEToken");
-    // For simplicity, deploy a mock ERC20
-    const ERC20Mock = await ethers.getContractFactory("MockERC20");
+    // Deploy mock VFIDE token from the concrete OpenZeppelin-backed test contract.
     let token: any;
     try {
+      const ERC20Mock = await ethers.getContractFactory("test/contracts/mocks/MockContracts.sol:MockERC20");
       token = await ERC20Mock.deploy("VFIDE", "VFIDE", ethers.parseEther("1000000"));
     } catch {
-      // If MockERC20 doesn't exist, skip deployment-dependent tests
+      // If the mock token artifact is unavailable, skip deployment-dependent tests.
       return null;
     }
     await token.waitForDeployment();
@@ -199,11 +197,14 @@ describe("VFIDEFlashLoan", function () {
     it("should calculate correct fee", async function () {
       const fixture = await loadFixture(deployFixture);
       if (!fixture) return this.skip();
-      const { flashLoan, lender1 } = fixture;
+      const { token, flashLoan, lender1 } = fixture;
 
-      // Default fee is 9 bps = 0.09%
+      await token.connect(lender1).approve(await flashLoan.getAddress(), ethers.parseEther("100"));
+      await flashLoan.connect(lender1).deposit(ethers.parseEther("100"));
+
+      // Default fee is 9 bps = 0.09% after the lender is registered.
       const fee = await flashLoan.flashFee(lender1.address, ethers.parseEther("10000"));
-      expect(fee).to.equal(ethers.parseEther("9")); // 10000 * 9 / 10000 = 9
+      expect(fee).to.equal(ethers.parseEther("9"));
     });
 
     it("should find best lender", async function () {

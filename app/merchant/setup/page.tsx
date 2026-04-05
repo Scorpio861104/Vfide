@@ -15,7 +15,7 @@ import { motion } from 'framer-motion';
 import { Store, Wallet } from 'lucide-react';
 
 export default function MerchantSetupPage() {
-  const { isConnected } = useAccount();
+  const { address, isConnected } = useAccount();
 
   if (!isConnected) {
     return (
@@ -61,7 +61,7 @@ export default function MerchantSetupPage() {
 
             <div className="space-y-6">
               <MerchantTraining />
-              <OffRampWithdraw />
+              <OffRampWithdraw merchantAddress={address} />
             </div>
           </div>
         </div>
