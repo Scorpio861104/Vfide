@@ -80,7 +80,14 @@ export default function SupportPage() {
   }, []);
 
   useEffect(() => {
-    if (!address) return;
+    if (!address) {
+      setTickets([]);
+      setSelectedTicketId(null);
+      return;
+    }
+
+    let cancelled = false;
+
     try {
       const stored = safeLocalStorage.getItem(`support_tickets_${address}`);
       if (stored) {
@@ -91,6 +98,29 @@ export default function SupportPage() {
     } catch {
       // ignore storage access failures
     }
+
+    const loadTickets = async () => {
+      try {
+        const response = await fetch(`/api/support/tickets?address=${address}`, { cache: 'no-store' });
+        if (!response.ok) {
+          return;
+        }
+
+        const data = await response.json().catch(() => ({ tickets: [] }));
+        if (!cancelled && Array.isArray(data.tickets)) {
+          setTickets(data.tickets as SupportTicket[]);
+          setSelectedTicketId(data.tickets[0]?.id ?? null);
+        }
+      } catch {
+        // keep local cache fallback when backend sync is unavailable
+      }
+    };
+
+    void loadTickets();
+
+    return () => {
+      cancelled = true;
+    };
   }, [address]);
 
   useEffect(() => {
@@ -112,13 +142,13 @@ export default function SupportPage() {
     safeLocalStorage.setItem('vfide_locale', nextLocale);
   };
 
-  const handleSubmitTicket = () => {
+  const handleSubmitTicket = async () => {
     if (!subject.trim() || !details.trim()) {
       return;
     }
 
     const now = new Date().toISOString();
-    const newTicket: SupportTicket = {
+    let newTicket: SupportTicket = {
       id: `TKT-${Date.now()}`,
       subject,
       category: 'payments',
@@ -137,30 +167,78 @@ export default function SupportPage() {
       attachments: [],
     };
 
-    setTickets((current) => [newTicket, ...current]);
+    if (address) {
+      try {
+        const response = await fetch('/api/support/tickets', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            address,
+            subject,
+            details,
+            category: 'payments',
+          }),
+        });
+
+        const data = await response.json().catch(() => null) as { ticket?: SupportTicket; tickets?: SupportTicket[] } | null;
+        if (response.ok && data?.ticket) {
+          newTicket = data.ticket;
+          if (Array.isArray(data.tickets)) {
+            setTickets(data.tickets);
+          } else {
+            setTickets((current) => [newTicket, ...current]);
+          }
+        } else {
+          setTickets((current) => [newTicket, ...current]);
+        }
+      } catch {
+        setTickets((current) => [newTicket, ...current]);
+      }
+    } else {
+      setTickets((current) => [newTicket, ...current]);
+    }
+
     setSelectedTicketId(newTicket.id);
     setActiveTab('tickets');
 
     window.setTimeout(() => {
+      const supportMessage = `VFIDE Support has received your request. Reference ${newTicket.id}`;
+      const supportTimestamp = new Date().toISOString();
+
       setTickets((current) =>
         current.map((ticket) =>
           ticket.id === newTicket.id
             ? {
                 ...ticket,
-                updatedAt: new Date().toISOString(),
+                updatedAt: supportTimestamp,
                 messages: [
                   ...ticket.messages,
                   {
                     id: `${Date.now()}-support`,
                     sender: 'support',
-                    content: `VFIDE Support has received your request. Reference ${ticket.id}`,
-                    timestamp: new Date().toISOString(),
+                    content: supportMessage,
+                    timestamp: supportTimestamp,
                   },
                 ],
               }
             : ticket
         )
       );
+
+      if (address && typeof fetch === 'function') {
+        void fetch('/api/support/tickets', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            address,
+            ticketId: newTicket.id,
+            action: 'support-reply',
+            message: supportMessage,
+          }),
+        }).catch(() => {
+          // optimistic UI already reflects the support reply
+        });
+      }
     }, 1500);
 
     setSubject('');

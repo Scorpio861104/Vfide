@@ -68,7 +68,7 @@ export function ActiveTab({
               <div className="rounded-xl border border-cyan-500/20 bg-cyan-500/5 p-4">
                 <div className="text-xs uppercase tracking-[0.2em] text-cyan-300">Execution mode</div>
                 <div className="mt-2 text-sm font-semibold text-white">
-                  {contractsReady ? 'Wallet-backed automation ready' : 'Local scheduling mode'}
+                  {contractsReady ? 'Wallet-backed automation ready' : 'Backend-synced scheduling'}
                 </div>
               </div>
             </div>

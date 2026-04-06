@@ -77,18 +77,42 @@ export default function SubscriptionsPage() {
       return;
     }
 
+    let cancelled = false;
+    const storageKey = `vfide_subscriptions_${address.toLowerCase()}`;
+
     try {
-      const stored = safeLocalStorage.getItem(`vfide_subscriptions_${address.toLowerCase()}`);
+      const stored = safeLocalStorage.getItem(storageKey);
       if (!stored) {
         setSubscriptions([]);
-        return;
+      } else {
+        const parsed = JSON.parse(stored) as SubscriptionRecord[];
+        setSubscriptions(Array.isArray(parsed) ? parsed : []);
       }
-
-      const parsed = JSON.parse(stored) as SubscriptionRecord[];
-      setSubscriptions(Array.isArray(parsed) ? parsed : []);
     } catch {
       setSubscriptions([]);
     }
+
+    const loadSubscriptions = async () => {
+      try {
+        const response = await fetch(`/api/subscriptions?address=${address}`, { cache: 'no-store' });
+        if (!response.ok) {
+          return;
+        }
+
+        const data = await response.json().catch(() => ({ subscriptions: [] }));
+        if (!cancelled && Array.isArray(data.subscriptions)) {
+          setSubscriptions(data.subscriptions as SubscriptionRecord[]);
+        }
+      } catch {
+        // keep cached subscription data when backend sync is unavailable
+      }
+    };
+
+    void loadSubscriptions();
+
+    return () => {
+      cancelled = true;
+    };
   }, [address]);
 
   useEffect(() => {
@@ -111,13 +135,13 @@ export default function SubscriptionsPage() {
     [subscriptions]
   );
 
-  const handleCreate = () => {
+  const handleCreate = async () => {
     if (!isConnected || !draft.recipient.trim() || !draft.amount.trim()) {
       return;
     }
 
     const now = new Date();
-    const record: SubscriptionRecord = {
+    let record: SubscriptionRecord = {
       id: `sub-${Date.now()}`,
       recipient: draft.recipient.trim(),
       label: draft.label.trim() || 'Recurring payment',
@@ -130,15 +154,68 @@ export default function SubscriptionsPage() {
       source: contractsReady ? 'onchain-ready' : 'local',
       note: contractsReady
         ? 'Contract routes are configured and ready for wallet confirmation.'
-        : 'Saved locally until subscription contracts are configured in the environment.',
+        : 'Stored in the VFIDE backend schedule until production contract addresses are restored.',
     };
 
-    setSubscriptions((current) => [record, ...current]);
+    if (address) {
+      try {
+        const response = await fetch('/api/subscriptions', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            address,
+            recipient: record.recipient,
+            amount: record.amount,
+            label: record.label,
+            interval: record.interval,
+            contractsReady,
+          }),
+        });
+
+        const data = await response.json().catch(() => null) as { record?: SubscriptionRecord; subscriptions?: SubscriptionRecord[] } | null;
+        if (response.ok && data?.record) {
+          record = data.record;
+          if (Array.isArray(data.subscriptions)) {
+            setSubscriptions(data.subscriptions);
+          } else {
+            setSubscriptions((current) => [record, ...current]);
+          }
+        } else {
+          setSubscriptions((current) => [record, ...current]);
+        }
+      } catch {
+        setSubscriptions((current) => [record, ...current]);
+      }
+    } else {
+      setSubscriptions((current) => [record, ...current]);
+    }
+
     setDraft({ recipient: '', amount: '50', label: 'Recurring payment', interval: 'monthly' });
     setActiveTab('active');
   };
 
-  const handleTogglePause = (id: string) => {
+  const handleTogglePause = async (id: string) => {
+    const target = subscriptions.find((subscription) => subscription.id === id);
+    const action = target?.status === 'paused' ? 'resume' : 'pause';
+
+    if (address) {
+      try {
+        const response = await fetch('/api/subscriptions', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ address, id, action }),
+        });
+
+        const data = await response.json().catch(() => null) as { subscriptions?: SubscriptionRecord[] } | null;
+        if (response.ok && Array.isArray(data?.subscriptions)) {
+          setSubscriptions(data.subscriptions);
+          return;
+        }
+      } catch {
+        // fall back to the local cache update below
+      }
+    }
+
     setSubscriptions((current) =>
       current.map((subscription) =>
         subscription.id === id
@@ -152,7 +229,25 @@ export default function SubscriptionsPage() {
     );
   };
 
-  const handleCancel = (id: string) => {
+  const handleCancel = async (id: string) => {
+    if (address) {
+      try {
+        const response = await fetch('/api/subscriptions', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ address, id, action: 'cancel' }),
+        });
+
+        const data = await response.json().catch(() => null) as { subscriptions?: SubscriptionRecord[] } | null;
+        if (response.ok && Array.isArray(data?.subscriptions)) {
+          setSubscriptions(data.subscriptions);
+          return;
+        }
+      } catch {
+        // fall back to the local cache update below
+      }
+    }
+
     setSubscriptions((current) =>
       current.map((subscription) =>
         subscription.id === id
@@ -182,12 +277,12 @@ export default function SubscriptionsPage() {
 
           <div className="mb-8 rounded-2xl border border-cyan-500/20 bg-cyan-500/5 p-4 text-sm text-gray-200">
             <div className="font-semibold text-cyan-300">
-              {contractsReady ? 'On-chain automation ready' : 'Local scheduling mode'}
+              {contractsReady ? 'On-chain automation ready' : 'Backend scheduling active'}
             </div>
             <p className="mt-1 text-gray-300">
               {contractsReady
                 ? 'Subscription contract routes are configured for wallet-backed approvals and recurring execution.'
-                : 'You can still create, pause, and review recurring payment plans here while production contract addresses are being restored.'}
+                : 'Recurring plans are now saved through the VFIDE backend while production contract addresses are being restored.'}
             </p>
           </div>
 

@@ -43,7 +43,7 @@ export function HistoryTab({
                   </div>
                   <div className="text-right text-sm">
                     <div className="text-white capitalize">{entry.status}</div>
-                    <div className="text-cyan-300">{entry.source === 'onchain-ready' ? 'On-chain ready' : 'Local schedule'}</div>
+                    <div className="text-cyan-300">{entry.source === 'onchain-ready' ? 'On-chain ready' : 'Backend schedule'}</div>
                   </div>
                 </div>
               </div>

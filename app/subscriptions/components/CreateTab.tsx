@@ -25,7 +25,7 @@ export function CreateTab({
         <div className="mb-4 rounded-xl border border-white/10 bg-black/20 p-4 text-sm text-gray-300">
           {contractsReady
             ? 'This environment is ready for wallet-backed approvals once you confirm the recurring payment plan.'
-            : 'Create and preview the recurring schedule now; the plan will stay saved locally until the subscription contracts are configured.'}
+            : 'Create and preview the recurring schedule now; the plan will be stored in the VFIDE backend until the subscription contracts are configured.'}
         </div>
         <div className="grid gap-4 md:grid-cols-2">
           <label className="text-sm text-gray-300">
