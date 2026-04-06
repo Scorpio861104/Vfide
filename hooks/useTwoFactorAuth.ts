@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { authenticator } from 'otplib';
+import { generateURI, verifySync } from 'otplib';
 import {
   TwoFactorConfig,
   TwoFactorMethod,
@@ -63,12 +63,12 @@ const generateTOTPSecret = (): string => {
 };
 
 // Verify a TOTP code against the given Base32 secret using RFC 6238.
-// Uses otplib's `authenticator` which implements the standard 30-second
-// window algorithm (±1 window tolerance for clock skew).
+// `otplib` v13 returns a verification result object, so we normalize that
+// to a simple boolean for the rest of the hook.
 const verifyTOTPInternal = (secret: string, code: string): boolean => {
   if (!validateTOTPCode(code)) return false;
   try {
-    return authenticator.verify({ token: code, secret });
+    return verifySync({ token: code, secret }).valid;
   } catch {
     return false;
   }
@@ -143,8 +143,12 @@ export const useTwoFactorAuth = (userEmail?: string): UseTwoFactorAuthResult => 
     // users who register multiple accounts can distinguish them in their app.
     // Callers should always supply `userEmail`; if omitted we fall back to a
     // generated placeholder that remains unique per session via the secret itself.
-    const account = encodeURIComponent(userEmail ?? `vfide-user-${secret.slice(0, 8)}`);
-    const qrCode = authenticator.keyuri(account, 'VFIDE', secret);
+    const account = userEmail ?? `vfide-user-${secret.slice(0, 8)}`;
+    const qrCode = generateURI({
+      issuer: 'VFIDE',
+      label: account,
+      secret,
+    });
     const codes = generateBackupCodes();
 
     setTotpSecret(secret);
