@@ -17,6 +17,19 @@ import { BorrowTab } from './components/BorrowTab';
 import { ActiveTab } from './components/ActiveTab';
 import { HistoryTab } from './components/HistoryTab';
 
+interface ServerLane {
+  id: number | string;
+  principal?: number | string;
+  duration_days?: number;
+  interest_bps?: number;
+  collateral_pct?: number;
+  drawn_amount?: number | string;
+  stage?: string;
+  sim_day?: number;
+  due_day?: number | null;
+  evidence_note?: string;
+}
+
 const STAGE_LABELS: Record<LoanSimulationState['stage'], string> = {
   draft: 'Draft',
   requested: 'Requested',
@@ -61,6 +74,16 @@ const TAB_LABELS: Record<TabId, string> = {
 
 const TAB_IDS: TabId[] = ['borrow', 'active', 'history'];
 
+function normalizeStage(value: unknown): LoanSimulationState['stage'] {
+  const stage = String(value ?? 'draft') as LoanSimulationState['stage'];
+  return stage in STAGE_LABELS ? stage : 'draft';
+}
+
+function toNumberOrNull(value: unknown): number | null {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
 export default function FlashLoansPage() {
   const [terms, setTerms] = useState<LoanTerms>(INITIAL_TERMS);
   const [simulation, setSimulation] = useState<LoanSimulationState>(INITIAL_STATE);
@@ -68,6 +91,11 @@ export default function FlashLoansPage() {
   const [errorMessage, setErrorMessage] = useState('');
   const [mode, setMode] = useState<'simulation' | 'server'>('simulation');
   const [serverLaneId, setServerLaneId] = useState<number | null>(null);
+  const [serverLanes, setServerLanes] = useState<ServerLane[]>([]);
+  const [serverLaneLoading, setServerLaneLoading] = useState(false);
+  const [serverLaneError, setServerLaneError] = useState<string | null>(null);
+  const [lenderAddress, setLenderAddress] = useState('0x2222222222222222222222222222222222222222');
+  const [arbiterAddress, setArbiterAddress] = useState('0x3333333333333333333333333333333333333333');
   const [evidenceNote, setEvidenceNote] = useState('');
   const [activeTab, setActiveTab] = useState<TabId>('borrow');
   const [historyItems, setHistoryItems] = useState<HistoryItem[]>([
@@ -94,58 +122,105 @@ export default function FlashLoansPage() {
     ].slice(0, 24));
   };
 
-  const syncStateFromLane = (lane: Record<string, any>) => {
+  const upsertServerLane = (lane: ServerLane | null | undefined) => {
+    if (!lane?.id) return;
+    setServerLanes((current) => {
+      const next = current.filter((entry) => Number(entry.id) !== Number(lane.id));
+      return [lane, ...next];
+    });
+  };
+
+  const syncStateFromLane = (lane: ServerLane | null | undefined) => {
+    if (!lane) return;
+
     setSimulation({
-      stage: (lane.stage as LoanSimulationState['stage']) ?? 'draft',
+      stage: normalizeStage(lane.stage),
       simDay: Number(lane.sim_day ?? 0),
       dueDay: lane.due_day ?? null,
       evidenceNote: String(lane.evidence_note ?? ''),
     });
-    if (lane.drawn_amount) {
-      setTerms((prev) => sanitizeTerms({ ...prev, drawnAmount: Number(lane.drawn_amount) || prev.drawnAmount }));
+
+    setEvidenceNote(String(lane.evidence_note ?? ''));
+
+    setTerms((prev) =>
+      sanitizeTerms({
+        principal: toNumberOrNull(lane.principal) ?? prev.principal,
+        durationDays: toNumberOrNull(lane.duration_days) ?? prev.durationDays,
+        interestBps: toNumberOrNull(lane.interest_bps) ?? prev.interestBps,
+        collateralPct: toNumberOrNull(lane.collateral_pct) ?? prev.collateralPct,
+        drawnAmount: toNumberOrNull(lane.drawn_amount) ?? prev.drawnAmount,
+      })
+    );
+  };
+
+  const loadServerLanes = async () => {
+    setServerLaneLoading(true);
+    setServerLaneError(null);
+
+    try {
+      const response = await fetch('/api/flashloans/lanes?limit=50');
+      const data = await response.json().catch(() => ({ lanes: [] }));
+
+      if (!response.ok) {
+        throw new Error(typeof data?.error === 'string' ? data.error : 'Failed to load lanes');
+      }
+
+      setServerLanes(Array.isArray(data?.lanes) ? data.lanes : []);
+    } catch (error) {
+      setServerLanes([]);
+      setServerLaneError(error instanceof Error ? error.message : 'Failed to load server lanes');
+    } finally {
+      setServerLaneLoading(false);
     }
   };
 
   const handleCreateServerLane = async () => {
     setErrorMessage('');
-    const response = await fetch('/api/flashloans/lanes', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        borrower_address: '0x1111111111111111111111111111111111111111',
-        lender_address: '0x2222222222222222222222222222222222222222',
-        arbiter_address: '0x3333333333333333333333333333333333333333',
-        principal: String(terms.principal),
-        duration_days: terms.durationDays,
-        interest_bps: terms.interestBps,
-        collateral_pct: terms.collateralPct,
-        drawn_amount: String(terms.drawnAmount),
-      }),
-    });
 
-    const data = await response.json();
-    if (!response.ok) {
-      setErrorMessage(String(data.error ?? 'Failed to create server lane'));
-      return;
+    try {
+      const response = await fetch('/api/flashloans/lanes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          lenderAddress,
+          arbiterAddress,
+          principal: terms.principal,
+          durationDays: terms.durationDays,
+          interestBps: terms.interestBps,
+          collateralPct: terms.collateralPct,
+          drawnAmount: terms.drawnAmount,
+        }),
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        setErrorMessage(String(data.error ?? 'Failed to create server lane'));
+        return;
+      }
+
+      const nextStage = normalizeStage(data.lane?.stage);
+      setMode('server');
+      setServerLaneId(Number(data.lane?.id ?? 0) || null);
+      syncStateFromLane(data.lane ?? null);
+      upsertServerLane(data.lane ?? null);
+      setStatusMessage(`Lane #${data.lane?.id ?? 'new'} is ready`);
+      recordHistory('create-server-lane', nextStage, `Lane #${data.lane?.id ?? 'new'} is ready`);
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : 'Failed to create server lane');
     }
-
-    const nextStage = (data.lane?.stage as LoanSimulationState['stage']) ?? 'draft';
-    setMode('server');
-    setServerLaneId(Number(data.lane?.id ?? 0));
-    syncStateFromLane(data.lane ?? {});
-    setStatusMessage(`Server lane #${data.lane?.id ?? 'new'} created`);
-    recordHistory('create-server-lane', nextStage, `Server lane #${data.lane?.id ?? 'new'} created`);
   };
 
-  const handleAction = async (action: LoanAction) => {
+  const handleAction = async (action: LoanAction, overrideLaneId?: number | null) => {
     setErrorMessage('');
 
     try {
-      if (mode === 'server' && serverLaneId) {
-        const response = await fetch(`/api/flashloans/lanes/${serverLaneId}/actions`, {
+      const activeLaneId = overrideLaneId ?? serverLaneId;
+
+      if ((mode === 'server' || activeLaneId) && activeLaneId) {
+        const response = await fetch(`/api/flashloans/lanes/${activeLaneId}/actions`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action, role: 'simulator', state: simulation, terms, evidenceNote }),
+          body: JSON.stringify({ action, drawnAmount: terms.drawnAmount, evidenceNote }),
         });
         const data = await response.json();
 
@@ -154,8 +229,11 @@ export default function FlashLoansPage() {
           return;
         }
 
-        const nextStage = (data.lane?.stage as LoanSimulationState['stage']) ?? simulation.stage;
-        syncStateFromLane(data.lane ?? {});
+        const nextStage = normalizeStage(data.lane?.stage ?? simulation.stage);
+        setMode('server');
+        setServerLaneId(activeLaneId);
+        syncStateFromLane(data.lane ?? null);
+        upsertServerLane(data.lane ?? null);
         setStatusMessage(String(data.event ?? action));
         recordHistory(String(data.event ?? action), nextStage, `Stage moved to ${STAGE_LABELS[nextStage]}`);
         return;
@@ -237,7 +315,12 @@ export default function FlashLoansPage() {
               <button
                 key={id}
                 type="button"
-                onClick={() => setActiveTab(id)}
+                onClick={() => {
+                  setActiveTab(id);
+                  if (id !== 'borrow') {
+                    void loadServerLanes();
+                  }
+                }}
                 className={`px-4 py-2 rounded-xl font-bold text-sm whitespace-nowrap transition-all ${
                   activeTab === id
                     ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30'
@@ -255,8 +338,17 @@ export default function FlashLoansPage() {
               simulation={simulation}
               stageLabel={STAGE_LABELS[simulation.stage]}
               evidenceNote={evidenceNote}
+              lenderAddress={lenderAddress}
+              arbiterAddress={arbiterAddress}
+              onPrincipalChange={(value) => setTerms((prev) => sanitizeTerms({ ...prev, principal: value }))}
+              onDurationDaysChange={(value) => setTerms((prev) => sanitizeTerms({ ...prev, durationDays: value }))}
+              onInterestBpsChange={(value) => setTerms((prev) => sanitizeTerms({ ...prev, interestBps: value }))}
+              onCollateralPctChange={(value) => setTerms((prev) => sanitizeTerms({ ...prev, collateralPct: value }))}
+              onLenderAddressChange={setLenderAddress}
+              onArbiterAddressChange={setArbiterAddress}
               onDrawnAmountChange={(value) => setTerms((prev) => sanitizeTerms({ ...prev, drawnAmount: value }))}
               onEvidenceNoteChange={setEvidenceNote}
+              onCreateServerLane={() => void handleCreateServerLane()}
               actionButtons={actionButtons}
               canPerformAction={(action) => canPerformAction(action, 'simulator', simulation, terms)}
               onAction={(action) => void handleAction(action)}
@@ -270,11 +362,15 @@ export default function FlashLoansPage() {
               simulation={simulation}
               stageLabel={STAGE_LABELS[simulation.stage]}
               totalDue={totalDue}
+              serverLanes={serverLanes}
+              serverLaneLoading={serverLaneLoading}
+              serverLaneError={serverLaneError}
+              onAdvanceDay={() => void handleAction('advance-day', Number(serverLanes[0]?.id ?? serverLaneId ?? 0) || null)}
             />
           ) : null}
 
           {activeTab === 'history' ? (
-            <HistoryTab items={historyItems} />
+            <HistoryTab items={historyItems} serverLanes={serverLanes} />
           ) : null}
         </div>
       </div>

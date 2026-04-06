@@ -60,7 +60,7 @@ const nextConfig: NextConfig = {
     ],
   },
 
-  // Security headers excluding CSP (nonce-based CSP is enforced in `proxy.ts`, with `middleware.ts` kept as a compatibility shim)
+  // Security headers excluding CSP (`proxy.ts` remains the active CSP/CSRF runtime layer)
   async headers() {
     return [
       {
