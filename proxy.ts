@@ -10,7 +10,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { validateContentType } from './lib/api/contentTypeValidation';
 import { buildCsp, generateNonce, asOrigin } from './lib/security/csp';
-import { validateCSRF } from './lib/security/csrf';
+import { validateCSRF, generateCSRFToken, setCSRFTokenCookie } from './lib/security/csrf';
 
 /**
  * Maximum request body sizes by endpoint type
@@ -30,6 +30,22 @@ const MAX_BODY_SIZES = {
 function applySecurityHeaders(response: NextResponse, nonce: string, csp: string): NextResponse {
   response.headers.set('x-nonce', nonce);
   response.headers.set('Content-Security-Policy', csp);
+  response.headers.set('X-Content-Type-Options', 'nosniff');
+  response.headers.set('X-Frame-Options', 'DENY');
+  response.headers.set('X-XSS-Protection', '1; mode=block');
+  response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
+  response.headers.set(
+    'Permissions-Policy',
+    'camera=(self), microphone=(self), geolocation=(self), payment=(self)'
+  );
+
+  if (process.env.NODE_ENV === 'production') {
+    response.headers.set(
+      'Strict-Transport-Security',
+      'max-age=63072000; includeSubDomains; preload'
+    );
+  }
+
   return response;
 }
 
@@ -168,11 +184,29 @@ export function proxy(request: NextRequest) {
     request: { headers: requestHeaders },
   }), nonce, csp);
 
+  const existingToken = request.cookies.get('csrf_token')?.value;
+  if (!existingToken) {
+    const newToken = generateCSRFToken();
+    setCSRFTokenCookie(response, newToken);
+    response.cookies.set('csrf_token_client', newToken, {
+      httpOnly: false,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 60 * 60 * 24,
+      path: '/',
+    });
+  }
+
   // Attach CORS headers for API responses
   if (corsOrigin) {
     response.headers.set('Access-Control-Allow-Origin', corsOrigin);
     response.headers.set('Access-Control-Allow-Credentials', 'true');
     response.headers.set('Vary', 'Origin');
+  }
+
+  if (pathname.startsWith('/api/')) {
+    response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate');
+    response.headers.set('Pragma', 'no-cache');
   }
 
   return response;
