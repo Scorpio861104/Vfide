@@ -76,7 +76,7 @@ beforeEach(() => {
 });
 
 describe('Uploaded handoff pages', () => {
-  it('renders the lending handoff page and its main CTA links', async () => {
+  it('renders the lending workspace with preview links and interactive tabs', async () => {
     const pageModule = require('../../app/lending/page');
     const LendingPage = pageModule.default as React.ComponentType;
     render(<LendingPage />);
@@ -85,9 +85,12 @@ describe('Uploaded handoff pages', () => {
     expect(screen.getByRole('link', { name: /open flashloans workspace/i })).toBeTruthy();
     expect(screen.getByRole('link', { name: /view flash loans/i })).toBeTruthy();
     expect(await screen.findByText(/2 live lanes/i)).toBeTruthy();
+    expect(screen.getByRole('button', { name: /borrow/i })).toBeTruthy();
+    expect(screen.getByRole('button', { name: /lend/i })).toBeTruthy();
+    expect(screen.getByText(/how borrowing works/i)).toBeTruthy();
   });
 
-  it('renders the elections handoff page and governance links', async () => {
+  it('renders the elections workspace with governance links and candidate tabs', async () => {
     const pageModule = require('../../app/elections/page');
     const ElectionsPage = pageModule.default as React.ComponentType;
     render(<ElectionsPage />);
@@ -96,6 +99,9 @@ describe('Uploaded handoff pages', () => {
     expect(screen.getByRole('link', { name: /open governance hub/i })).toBeTruthy();
     expect(screen.getByRole('link', { name: /view council overview/i })).toBeTruthy();
     expect(await screen.findByText(/1 active proposal/i)).toBeTruthy();
+    expect(screen.getByRole('button', { name: /candidates/i })).toBeTruthy();
+    expect(screen.getByRole('button', { name: /current council/i })).toBeTruthy();
+    expect(screen.getByText(/election active/i)).toBeTruthy();
   });
 
   it('renders the disputes handoff page and resolution links', async () => {

@@ -15,6 +15,20 @@ export default function ElectionsPage() {
   const [proposals, setProposals] = useState<ProposalPreview[]>([]);
   const [loading, setLoading] = useState(true);
   const [previewError, setPreviewError] = useState<string | null>(null);
+  const [selectedView, setSelectedView] = useState<'candidates' | 'current-council'>('candidates');
+
+  const electionPanels = {
+    candidates: {
+      badge: 'Election active',
+      description:
+        'Candidates are reviewed through the current governance pipeline, so reputational checks and proposal momentum stay synced before any seat changes are finalized.',
+    },
+    'current-council': {
+      badge: 'Current council readiness',
+      description:
+        'The sitting council keeps oversight while proposals are open, giving governors a direct handoff into the live council workspace for review and execution context.',
+    },
+  } as const;
 
   useEffect(() => {
     let cancelled = false;
@@ -78,6 +92,31 @@ export default function ElectionsPage() {
                 <div className="mt-2 text-lg font-bold text-white">ProofScore weighted</div>
                 <div className="mt-1 text-sm text-gray-300">Current governance logic remains the source of truth</div>
               </div>
+            </div>
+
+            <div className="mt-8 rounded-2xl border border-purple-500/20 bg-purple-500/5 p-5">
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setSelectedView('candidates')}
+                  className={`rounded-full px-3 py-1 text-sm font-semibold transition ${
+                    selectedView === 'candidates' ? 'bg-purple-500 text-slate-950' : 'border border-white/10 bg-black/20 text-gray-200'
+                  }`}
+                >
+                  Candidates
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSelectedView('current-council')}
+                  className={`rounded-full px-3 py-1 text-sm font-semibold transition ${
+                    selectedView === 'current-council' ? 'bg-purple-500 text-slate-950' : 'border border-white/10 bg-black/20 text-gray-200'
+                  }`}
+                >
+                  Current Council
+                </button>
+              </div>
+              <div className="mt-4 text-xs uppercase tracking-[0.2em] text-purple-200">{electionPanels[selectedView].badge}</div>
+              <p className="mt-2 text-sm text-gray-300">{electionPanels[selectedView].description}</p>
             </div>
 
             <div className="mt-8 grid gap-4 md:grid-cols-2">

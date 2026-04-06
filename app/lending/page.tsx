@@ -42,6 +42,20 @@ export default function LendingPage() {
   const [lanes, setLanes] = useState<LanePreview[]>([]);
   const [loading, setLoading] = useState(true);
   const [previewError, setPreviewError] = useState<string | null>(null);
+  const [selectedTrack, setSelectedTrack] = useState<'borrow' | 'lend'>('borrow');
+
+  const lendingBriefs = {
+    borrow: {
+      title: 'How borrowing works',
+      description:
+        'Borrowers can request a live lane, confirm terms with the lender, and move directly into the flashloans workflow for drawdown and repayment checkpoints.',
+    },
+    lend: {
+      title: 'How lending works',
+      description:
+        'Lenders review lane readiness, confirm principal coverage, and monitor settlement stages from the same synced flashloans workspace.',
+    },
+  } as const;
 
   useEffect(() => {
     let cancelled = false;
@@ -123,6 +137,31 @@ export default function LendingPage() {
                 <div className="mt-2 text-3xl font-bold text-white">{loading ? '…' : formatCurrency(trackedPrincipal)}</div>
                 <div className="mt-1 text-sm text-gray-300">Recent lane volume routed into live tools</div>
               </div>
+            </div>
+
+            <div className="mt-8 rounded-2xl border border-cyan-500/20 bg-cyan-500/5 p-5">
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setSelectedTrack('borrow')}
+                  className={`rounded-full px-3 py-1 text-sm font-semibold transition ${
+                    selectedTrack === 'borrow' ? 'bg-cyan-500 text-slate-950' : 'border border-white/10 bg-black/20 text-gray-200'
+                  }`}
+                >
+                  Borrow
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSelectedTrack('lend')}
+                  className={`rounded-full px-3 py-1 text-sm font-semibold transition ${
+                    selectedTrack === 'lend' ? 'bg-cyan-500 text-slate-950' : 'border border-white/10 bg-black/20 text-gray-200'
+                  }`}
+                >
+                  Lend
+                </button>
+              </div>
+              <h2 className="mt-4 text-xl font-semibold text-white">{lendingBriefs[selectedTrack].title}</h2>
+              <p className="mt-2 text-sm text-gray-300">{lendingBriefs[selectedTrack].description}</p>
             </div>
 
             <div className="mt-8 grid gap-4 md:grid-cols-2">
