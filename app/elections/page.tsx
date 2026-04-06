@@ -57,10 +57,10 @@ export default function ElectionsPage() {
         <section className="py-16">
           <div className="container mx-auto max-w-5xl px-4">
             <div className="mb-8 inline-flex items-center gap-2 rounded-full border border-purple-500/30 bg-purple-500/10 px-3 py-1 text-sm text-purple-300">
-              <Vote size={14} /> Uploaded elections handoff
+              <Vote size={14} /> Governance bridge
             </div>
             <h1 className="text-4xl font-bold">Council Elections</h1>
-            <p className="mt-3 max-w-3xl text-gray-400">This handoff page now points into the existing governance and council workspaces already present in the repo.</p>
+            <p className="mt-3 max-w-3xl text-gray-400">Track proposal momentum, governance participation, and council oversight from the same VFIDE decision surface.</p>
 
             <div className="mt-6 grid gap-4 md:grid-cols-3">
               <div className="rounded-2xl border border-purple-500/20 bg-purple-500/5 p-4">

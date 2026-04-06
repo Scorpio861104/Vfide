@@ -88,10 +88,10 @@ export default function DisputesPage() {
         <section className="py-16">
           <div className="container mx-auto max-w-5xl px-4">
             <div className="mb-8 inline-flex items-center gap-2 rounded-full border border-amber-500/30 bg-amber-500/10 px-3 py-1 text-sm text-amber-300">
-              <Scale size={14} /> Uploaded disputes handoff
+              <Scale size={14} /> Dispute operations
             </div>
             <h1 className="text-4xl font-bold">Disputes & mediation</h1>
-            <p className="mt-3 max-w-3xl text-gray-400">This handoff page now routes to the repo’s existing appeals and merchant-resolution flows so dispute handling stays centralized.</p>
+            <p className="mt-3 max-w-3xl text-gray-400">Review merchant returns, escalation paths, and peer mediation from one dispute operations workspace.</p>
 
             <div className="mt-6 grid gap-4 md:grid-cols-3">
               <div className="rounded-2xl border border-amber-500/20 bg-amber-500/5 p-4">

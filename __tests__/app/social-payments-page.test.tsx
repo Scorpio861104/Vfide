@@ -47,8 +47,8 @@ describe('Social payments page pathways', () => {
     expect(screen.getByText(/Tips Received/i)).toBeTruthy();
     expect(screen.getByText(/Tips Sent/i)).toBeTruthy();
     expect(screen.getByText(/Top Supporters/i)).toBeTruthy();
-    // Supporters section shows placeholder text (no indexed data yet)
-    expect(screen.getByText(/Top supporter rankings will appear/i)).toBeTruthy();
+    expect(screen.getByText(/Creator circle/i)).toBeTruthy();
+    expect(screen.getByText(/Merchant buyers/i)).toBeTruthy();
   });
 
   it('switches across feed, activity, and earnings tabs', () => {

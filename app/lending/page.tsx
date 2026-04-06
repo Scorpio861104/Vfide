@@ -100,11 +100,11 @@ export default function LendingPage() {
         <section className="py-16">
           <div className="container mx-auto max-w-5xl px-4">
             <div className="mb-8 inline-flex items-center gap-2 rounded-full border border-cyan-500/30 bg-cyan-500/10 px-3 py-1 text-sm text-cyan-300">
-              <Banknote size={14} /> Uploaded lending handoff
+              <Banknote size={14} /> Live lending workspace
             </div>
             <h1 className="text-4xl font-bold">P2P Lending</h1>
             <p className="mt-3 max-w-3xl text-gray-400">
-              The uploaded lending concept is now routed into VFIDE’s existing loan flows so borrowers, lenders, and flash-liquidity tools stay in one place.
+              Borrowers, lenders, and liquidity coordinators can monitor lane health here and jump straight into the active flashloans workspace when it is time to act.
             </p>
 
             <div className="mt-6 grid gap-4 md:grid-cols-3">
