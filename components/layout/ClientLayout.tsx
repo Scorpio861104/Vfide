@@ -10,9 +10,7 @@ interface ClientLayoutProps {
   children: ReactNode;
 }
 
-function useRouteAnnouncer() {
-  const pathname = usePathname();
-
+function useRouteAnnouncement(pathname: string) {
   useEffect(() => {
     if (typeof document === 'undefined') return;
 
@@ -36,15 +34,15 @@ function useRouteAnnouncer() {
 
 export function ClientLayout({ children }: ClientLayoutProps) {
   const { address } = useAccount();
+  const pathname = usePathname();
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
     if (!('serviceWorker' in navigator) || process.env.NODE_ENV !== 'production') return;
-
     navigator.serviceWorker.register('/service-worker.js', { scope: '/' }).catch(() => {});
   }, []);
 
-  useRouteAnnouncer();
+  useRouteAnnouncement(pathname);
 
   return (
     <RealtimeProvider wsUrl={process.env.NEXT_PUBLIC_WEBSOCKET_URL}>

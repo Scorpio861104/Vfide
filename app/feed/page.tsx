@@ -2,7 +2,7 @@
 
 /**
  * Feed Page - Redirects to Social Hub
- * 
+ *
  * This page exists for backward compatibility and direct links.
  * The main social experience is now consolidated in /social-hub.
  */
@@ -23,7 +23,6 @@ export default function FeedPage() {
     <>
       <PageWrapper variant="cosmic" showOrbs showGrid>
         <div className="pt-20 pb-20">
-          {/* Header with link to Social Hub */}
           <motion.section
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -46,8 +45,8 @@ export default function FeedPage() {
                 <span className="text-cyan-400">→</span>
                 <span>Celebrate</span>
               </div>
-              <Link 
-                href="/social-hub" 
+              <Link
+                href="/social-hub"
                 className="inline-flex items-center gap-2 text-cyan-400 hover:underline"
               >
                 Go to full Social Hub <ArrowRight className="w-4 h-4" />

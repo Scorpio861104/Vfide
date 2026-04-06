@@ -158,7 +158,7 @@ export function useStreak(): number {
     try {
       const today = new Date().toISOString().split('T')[0] ?? '';
       const stored = localStorage.getItem(STREAK_KEY);
-      const data: StreakData = stored ? JSON.parse(stored) : { count: 0, lastDate: '' };
+      let data: StreakData = stored ? JSON.parse(stored) : { count: 0, lastDate: '' };
 
       if (data.lastDate === today) {
         setStreak(data.count);

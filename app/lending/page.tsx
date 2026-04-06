@@ -1,68 +1,62 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useMemo, useState } from 'react';
-import { useAccount } from 'wagmi';
-import { ArrowRight, Banknote, ShieldCheck, Zap, HandCoins, Activity, AlertCircle } from 'lucide-react';
+import { useState, useEffect, useCallback } from 'react';
+import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Banknote, Plus, Search, Clock, Check, X, Shield, AlertTriangle, Users, ChevronDown, ChevronUp, Zap, ArrowRight, HandCoins } from 'lucide-react';
+import { formatEther, parseEther } from 'viem';
+import { SEED_LOAN_OFFERS } from '@/lib/data/seed';
 import { Footer } from '@/components/layout/Footer';
 
-interface LanePreview {
-  id: string;
-  state?: {
-    stage?: string;
-  };
-  terms?: {
-    principal?: number;
-  };
-}
+type Tab = 'borrow' | 'lend' | 'my-loans' | 'flash';
+type LoanState = 'OPEN' | 'COSIGNING' | 'ACTIVE' | 'GRACE' | 'RESTRUCTURED' | 'REPAID' | 'DEFAULTED' | 'CANCELLED';
 
-const lendingModes = [
-  {
-    title: 'Trust-based flashloans',
-    description: 'Use the existing Flashloans workspace and server-backed lane flow for borrower, lender, and arbiter coordination.',
-    href: '/flashloans',
-    cta: 'Open Flashloans Workspace',
-    icon: HandCoins,
-  },
-  {
-    title: 'Flash liquidity tools',
-    description: 'Use the current flash-loan workspace for instant-liquidity concepts, history, and workflow tabs.',
-    href: '/flashloans',
-    cta: 'View Flash Loans',
-    icon: Zap,
-  },
-];
+const STATE_LABELS: Record<number, LoanState> = { 0: 'OPEN', 1: 'COSIGNING', 2: 'ACTIVE', 3: 'GRACE', 4: 'RESTRUCTURED', 5: 'REPAID', 6: 'DEFAULTED', 7: 'CANCELLED' };
+const STATE_COLORS: Record<LoanState, string> = {
+  OPEN: 'bg-cyan-500/20 text-cyan-400', COSIGNING: 'bg-blue-500/20 text-blue-400',
+  ACTIVE: 'bg-emerald-500/20 text-emerald-400', GRACE: 'bg-amber-500/20 text-amber-400',
+  RESTRUCTURED: 'bg-purple-500/20 text-purple-400', REPAID: 'bg-emerald-500/20 text-emerald-400',
+  DEFAULTED: 'bg-red-500/20 text-red-400', CANCELLED: 'bg-gray-500/20 text-gray-400',
+};
 
-function formatCurrency(value: number) {
-  return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(value);
+interface LoanData {
+  id: number; lender: string; borrower: string; principal: bigint;
+  interestBps: bigint; duration: bigint; startTime: bigint; deadline: bigint;
+  amountRepaid: bigint; revenueAssignment: boolean; state: number;
 }
 
 export default function LendingPage() {
-  const { address } = useAccount();
-  const [lanes, setLanes] = useState<LanePreview[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [previewError, setPreviewError] = useState<string | null>(null);
-  const [selectedTrack, setSelectedTrack] = useState<'borrow' | 'lend'>('borrow');
+  const { address, isConnected } = useAccount();
+  const [tab, setTab] = useState<Tab>('borrow');
+  const [showCreate, setShowCreate] = useState(false);
+  const [expandedLoan, setExpandedLoan] = useState<number | null>(null);
 
-  const lendingBriefs = {
-    borrow: {
-      title: 'How borrowing works',
-      description:
-        'Borrowers can request a live lane, confirm terms with the lender, and move directly into the flashloans workflow for drawdown and repayment checkpoints.',
-    },
-    lend: {
-      title: 'How lending works',
-      description:
-        'Lenders review lane readiness, confirm principal coverage, and monitor settlement stages from the same synced flashloans workspace.',
-    },
-  } as const;
+  // Create loan form
+  const [principal, setPrincipal] = useState('');
+  const [interestBps, setInterestBps] = useState('500'); // 5% default
+  const [durationDays, setDurationDays] = useState('14');
+
+  // Mock data — in production, read from contract events / subgraph
+  const [openLoans, setOpenLoans] = useState<LoanData[]>([]);
+  const [myLoans, setMyLoans] = useState<LoanData[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [previewLaneCount, setPreviewLaneCount] = useState(0);
+  const [previewError, setPreviewError] = useState<string | null>(null);
+
+  const shortAddr = (a: string) => a ? `${a.slice(0, 6)}...${a.slice(-4)}` : '';
+  const daysFromSeconds = (s: bigint) => Number(s) / 86400;
+  const formatVFIDE = (wei: bigint) => {
+    const eth = Number(formatEther(wei));
+    return eth.toLocaleString(undefined, { maximumFractionDigits: 2 });
+  };
 
   useEffect(() => {
     let cancelled = false;
 
     async function loadLanes() {
       if (!address) {
-        setLanes([]);
+        setPreviewLaneCount(0);
         setLoading(false);
         return;
       }
@@ -78,12 +72,12 @@ export default function LendingPage() {
         }
 
         if (!cancelled) {
-          setLanes(Array.isArray(data?.lanes) ? data.lanes : []);
+          setPreviewLaneCount(Array.isArray(data?.lanes) ? data.lanes.length : 0);
         }
       } catch (error) {
         if (!cancelled) {
           setPreviewError(error instanceof Error ? error.message : 'Lane preview offline');
-          setLanes([]);
+          setPreviewLaneCount(0);
         }
       } finally {
         if (!cancelled) {
@@ -98,120 +92,252 @@ export default function LendingPage() {
     };
   }, [address]);
 
-  const activeLaneCount = useMemo(
-    () => lanes.filter((lane) => ['active', 'funded', 'drawn'].includes(String(lane.state?.stage ?? '').toLowerCase())).length,
-    [lanes]
-  );
-
-  const trackedPrincipal = useMemo(
-    () => lanes.reduce((sum, lane) => sum + Number(lane.terms?.principal ?? 0), 0),
-    [lanes]
+  if (!isConnected) return (
+    <div className="min-h-screen bg-zinc-950 pt-20 flex items-center justify-center">
+      <div className="text-center"><Banknote size={48} className="mx-auto mb-4 text-gray-600" /><p className="text-gray-400">Connect wallet to access P2P lending</p></div>
+    </div>
   );
 
   return (
     <>
-      <div className="min-h-screen bg-zinc-950 pt-20 text-white">
-        <section className="py-16">
-          <div className="container mx-auto max-w-5xl px-4">
-            <div className="mb-8 inline-flex items-center gap-2 rounded-full border border-cyan-500/30 bg-cyan-500/10 px-3 py-1 text-sm text-cyan-300">
-              <Banknote size={14} /> Live lending workspace
+      <div className="min-h-screen bg-zinc-950 pt-24 pb-16">
+        <div className="container mx-auto px-4 max-w-3xl">
+          <h1 className="text-2xl font-bold text-white flex items-center gap-3 mb-2"><HandCoins className="text-cyan-400" />P2P Lending</h1>
+          <p className="text-gray-400 text-sm mb-6">Trust-based loans between people. Your ProofScore is your collateral.</p>
+
+          <div className="grid gap-4 md:grid-cols-3 mb-6">
+            <div className="rounded-2xl border border-cyan-500/20 bg-cyan-500/5 p-4">
+              <div className="text-xs uppercase tracking-[0.2em] text-cyan-200">Live lanes</div>
+              <div className="mt-2 text-3xl font-bold text-white">{loading ? '…' : previewLaneCount}</div>
+              <div className="mt-1 text-sm text-gray-300">{loading ? 'Loading preview…' : `${previewLaneCount} live lane${previewLaneCount === 1 ? '' : 's'}`}</div>
             </div>
-            <h1 className="text-4xl font-bold">P2P Lending</h1>
-            <p className="mt-3 max-w-3xl text-gray-400">
-              Borrowers, lenders, and liquidity coordinators can monitor lane health here and jump straight into the active flashloans workspace when it is time to act.
-            </p>
-
-            <div className="mt-6 grid gap-4 md:grid-cols-3">
-              <div className="rounded-2xl border border-cyan-500/20 bg-cyan-500/5 p-4">
-                <div className="text-xs uppercase tracking-[0.2em] text-cyan-200">Live lanes</div>
-                <div className="mt-2 text-3xl font-bold text-white">{loading ? '…' : lanes.length}</div>
-                <div className="mt-1 text-sm text-gray-300">{loading ? 'Loading preview…' : `${lanes.length} live lanes`}</div>
+            <div className="rounded-2xl border border-white/10 bg-white/5 p-4 md:col-span-2">
+              <div className="flex flex-wrap gap-3">
+                <Link href="/flashloans" className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 px-4 py-2 text-sm font-semibold text-white">
+                  Open Flashloans Workspace <ArrowRight size={14} />
+                </Link>
+                <Link href="/flashloans" className="inline-flex items-center gap-2 rounded-xl border border-cyan-500/30 bg-cyan-500/10 px-4 py-2 text-sm font-semibold text-cyan-200">
+                  View Flash Loans <ArrowRight size={14} />
+                </Link>
               </div>
-              <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/5 p-4">
-                <div className="text-xs uppercase tracking-[0.2em] text-emerald-200">Active now</div>
-                <div className="mt-2 text-3xl font-bold text-white">{loading ? '…' : activeLaneCount}</div>
-                <div className="mt-1 text-sm text-gray-300">Borrower and lender stages already synced</div>
-              </div>
-              <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-                <div className="text-xs uppercase tracking-[0.2em] text-gray-300">Tracked principal</div>
-                <div className="mt-2 text-3xl font-bold text-white">{loading ? '…' : formatCurrency(trackedPrincipal)}</div>
-                <div className="mt-1 text-sm text-gray-300">Recent lane volume routed into live tools</div>
-              </div>
-            </div>
-
-            <div className="mt-8 rounded-2xl border border-cyan-500/20 bg-cyan-500/5 p-5">
-              <div className="flex flex-wrap items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => setSelectedTrack('borrow')}
-                  className={`rounded-full px-3 py-1 text-sm font-semibold transition ${
-                    selectedTrack === 'borrow' ? 'bg-cyan-500 text-slate-950' : 'border border-white/10 bg-black/20 text-gray-200'
-                  }`}
-                >
-                  Borrow
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setSelectedTrack('lend')}
-                  className={`rounded-full px-3 py-1 text-sm font-semibold transition ${
-                    selectedTrack === 'lend' ? 'bg-cyan-500 text-slate-950' : 'border border-white/10 bg-black/20 text-gray-200'
-                  }`}
-                >
-                  Lend
-                </button>
-              </div>
-              <h2 className="mt-4 text-xl font-semibold text-white">{lendingBriefs[selectedTrack].title}</h2>
-              <p className="mt-2 text-sm text-gray-300">{lendingBriefs[selectedTrack].description}</p>
-            </div>
-
-            <div className="mt-8 grid gap-4 md:grid-cols-2">
-              {lendingModes.map((mode) => {
-                const Icon = mode.icon;
-                return (
-                  <div key={mode.title} className="rounded-2xl border border-white/10 bg-white/5 p-5">
-                    <div className="mb-3 inline-flex rounded-xl bg-white/5 p-2 text-cyan-300"><Icon size={18} /></div>
-                    <h2 className="text-xl font-semibold text-white">{mode.title}</h2>
-                    <p className="mt-2 text-sm text-gray-400">{mode.description}</p>
-                    <Link href={mode.href} className="mt-4 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 px-4 py-2 text-sm font-semibold text-white">
-                      {mode.cta} <ArrowRight size={14} />
-                    </Link>
-                  </div>
-                );
-              })}
-            </div>
-
-            <div className="mt-8 grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
-              <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
-                <div className="mb-3 flex items-center gap-2 text-cyan-300"><Activity size={16} /> Lane preview</div>
-                {lanes.length > 0 ? (
-                  <div className="space-y-3">
-                    {lanes.slice(0, 3).map((lane) => (
-                      <div key={lane.id} className="flex items-center justify-between rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-sm">
-                        <div>
-                          <div className="font-semibold text-white">{lane.id}</div>
-                          <div className="text-gray-400">Stage: {lane.state?.stage ?? 'draft'}</div>
-                        </div>
-                        <div className="text-cyan-200">{formatCurrency(Number(lane.terms?.principal ?? 0))}</div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="rounded-xl border border-dashed border-white/10 bg-black/20 p-4 text-sm text-gray-400">
-                    {previewError ?? 'Connect and authenticate to sync live lending lanes here.'}
-                  </div>
-                )}
-              </div>
-
-              <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/5 p-5">
-                <div className="mb-2 flex items-center gap-2 text-emerald-300"><ShieldCheck size={16} /> Safety model</div>
-                <p className="text-sm text-gray-300">Borrower/lender protections, dispute states, and lane simulation already exist in the repo, so this page now surfaces a live operational snapshot for fast decision-making.</p>
-                {previewError ? (
-                  <div className="mt-3 inline-flex items-center gap-2 text-xs text-amber-200"><AlertCircle size={14} /> {previewError}</div>
-                ) : null}
-              </div>
+              {previewError ? (
+                <div className="mt-3 text-xs text-amber-200">{previewError}</div>
+              ) : null}
             </div>
           </div>
-        </section>
+
+          {/* Tabs */}
+          <div className="flex gap-1.5 mb-6 p-1 bg-white/3 rounded-xl border border-white/10">
+            {([
+              { id: 'borrow' as Tab, label: 'Borrow', icon: <Banknote size={14} /> },
+              { id: 'lend' as Tab, label: 'Lend', icon: <Plus size={14} /> },
+              { id: 'my-loans' as Tab, label: 'My Loans', icon: <Clock size={14} /> },
+              { id: 'flash' as Tab, label: 'Flash Loans', icon: <Zap size={14} /> },
+            ]).map(t => (
+              <button key={t.id} onClick={() => setTab(t.id)}
+                className={`flex-1 py-2.5 flex items-center justify-center gap-1.5 rounded-lg text-sm font-bold transition-all ${tab === t.id ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30' : 'text-gray-400'}`}>
+                {t.icon}{t.label}
+              </button>
+            ))}
+          </div>
+
+          {/* ── BORROW TAB ─────────────────────────────────────── */}
+          {tab === 'borrow' && (
+            <div className="space-y-4">
+              <div className="p-4 bg-cyan-500/5 border border-cyan-500/15 rounded-xl">
+                <p className="text-cyan-400 text-sm font-medium mb-1">How borrowing works</p>
+                <p className="text-gray-400 text-xs">Browse offers from lenders. Accept one and your vault guardian co-signs. No token collateral — your ProofScore and your guardian's commitment are your guarantee. Interest is capped at 12%. Duration is max 30 days.</p>
+              </div>
+
+              {SEED_LOAN_OFFERS.length === 0 ? (
+                <div className="text-center py-16">
+                  <Search size={48} className="mx-auto mb-4 text-gray-600" />
+                  <p className="text-gray-400 mb-1">No loan offers available right now</p>
+                  <p className="text-gray-600 text-xs">Check back later or ask a community member to create an offer</p>
+                </div>
+              ) : (
+                SEED_LOAN_OFFERS.map(loan => (
+                  <div key={loan.id} className="p-4 bg-white/3 border border-white/10 rounded-2xl">
+                    <div className="flex items-center justify-between mb-3">
+                      <div>
+                        <span className="text-white font-mono font-bold text-lg">{loan.principal} VFIDE</span>
+                        <span className="text-gray-500 text-xs ml-2">from {loan.lenderName}</span>
+                        <span className="text-cyan-400 text-[10px] ml-1 flex items-center gap-0.5 inline-flex"><Shield size={8} />{loan.lenderScore}</span>
+                      </div>
+                      <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-cyan-500/20 text-cyan-400">{loan.state}</span>
+                    </div>
+                    <div className="flex gap-4 text-sm text-gray-400 mb-3">
+                      <span>Interest: <span className="text-white">{loan.interestBps / 100}%</span></span>
+                      <span>Duration: <span className="text-white">{loan.durationDays} days</span></span>
+                      <span>Repay: <span className="text-white">{(loan.principal * (1 + loan.interestBps / 10000)).toFixed(0)} VFIDE</span></span>
+                    </div>
+                    <button className="w-full py-2.5 bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-bold rounded-xl text-sm flex items-center justify-center gap-2">
+                      Accept Loan <ArrowRight size={14} />
+                    </button>
+                  </div>
+                ))
+              )}
+            </div>
+          )}
+
+          {/* ── LEND TAB ──────────────────────────────────────── */}
+          {tab === 'lend' && (
+            <div className="space-y-4">
+              <div className="p-4 bg-emerald-500/5 border border-emerald-500/15 rounded-xl">
+                <p className="text-emerald-400 text-sm font-medium mb-1">How lending works</p>
+                <p className="text-gray-400 text-xs">Create an offer with your terms. A borrower accepts and their guardian co-signs. You earn interest when they repay. If they default, their ProofScore is devastated (-20.0) and their guardian's funds are slowly extracted to repay you. Risk is real — lend to people you trust.</p>
+              </div>
+
+              <button onClick={() => setShowCreate(!showCreate)}
+                className="w-full py-3 flex items-center justify-center gap-2 bg-white/3 border border-dashed border-white/20 rounded-xl text-gray-400 hover:text-emerald-400 hover:border-emerald-500/30 transition-all">
+                <Plus size={16} />Create Loan Offer
+              </button>
+
+              <AnimatePresence>
+                {showCreate && (
+                  <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}
+                    className="p-5 bg-white/3 border border-white/10 rounded-2xl space-y-4">
+
+                    <div>
+                      <label className="text-xs text-gray-500 mb-1 block">Amount to Lend (VFIDE)</label>
+                      <input value={principal} onChange={e => setPrincipal(e.target.value)} type="number" step="1" placeholder="500"
+                        className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white font-mono text-lg focus:border-emerald-500/50 focus:outline-none" />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="text-xs text-gray-500 mb-1 block">Interest Rate</label>
+                        <div className="flex gap-1.5">
+                          {['300', '500', '800', '1000'].map(r => (
+                            <button key={r} onClick={() => setInterestBps(r)}
+                              className={`flex-1 py-2 rounded-lg text-sm font-bold ${interestBps === r ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-white/5 text-gray-400 border border-white/10'}`}>
+                              {parseInt(r) / 100}%
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                      <div>
+                        <label className="text-xs text-gray-500 mb-1 block">Duration</label>
+                        <div className="flex gap-1.5">
+                          {['7', '14', '21', '30'].map(d => (
+                            <button key={d} onClick={() => setDurationDays(d)}
+                              className={`flex-1 py-2 rounded-lg text-sm font-bold ${durationDays === d ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-white/5 text-gray-400 border border-white/10'}`}>
+                              {d}d
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+
+                    {principal && (
+                      <div className="p-3 bg-white/3 rounded-xl space-y-1.5 text-sm">
+                        <div className="flex justify-between"><span className="text-gray-400">You lend</span><span className="text-white font-mono">{principal} VFIDE</span></div>
+                        <div className="flex justify-between"><span className="text-gray-400">Interest earned</span><span className="text-emerald-400 font-mono">{(parseFloat(principal) * parseInt(interestBps) / 10000).toFixed(2)} VFIDE</span></div>
+                        <div className="flex justify-between"><span className="text-gray-400">You receive back</span><span className="text-white font-mono font-bold">{(parseFloat(principal) * (1 + parseInt(interestBps) / 10000)).toFixed(2)} VFIDE</span></div>
+                        <div className="flex justify-between"><span className="text-gray-400">Duration</span><span className="text-white">{durationDays} days + 3 day grace</span></div>
+                      </div>
+                    )}
+
+                    <div className="p-3 bg-amber-500/5 border border-amber-500/15 rounded-xl">
+                      <p className="text-amber-400 text-xs flex items-center gap-1.5"><AlertTriangle size={12} />Your principal is locked until the borrower repays or defaults. If they default, guarantor extraction begins (10% per week). Risk is real.</p>
+                    </div>
+
+                    <button disabled={!principal || parseFloat(principal) <= 0}
+                      className="w-full py-3 bg-gradient-to-r from-emerald-500 to-cyan-500 text-white font-bold rounded-xl disabled:opacity-30 flex items-center justify-center gap-2">
+                      <Banknote size={16} />Create Offer & Lock {principal || '0'} VFIDE
+                    </button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          )}
+
+          {/* ── MY LOANS TAB ──────────────────────────────────── */}
+          {tab === 'my-loans' && (
+            <div className="space-y-4">
+              {myLoans.length === 0 ? (
+                <div className="text-center py-16">
+                  <Clock size={48} className="mx-auto mb-4 text-gray-600" />
+                  <p className="text-gray-400 mb-1">No active loans</p>
+                  <p className="text-gray-600 text-xs">Your lending and borrowing history will appear here</p>
+                </div>
+              ) : (
+                myLoans.map(loan => {
+                  const isBorrower = loan.borrower.toLowerCase() === address?.toLowerCase();
+                  const isLender = loan.lender.toLowerCase() === address?.toLowerCase();
+                  const state = STATE_LABELS[loan.state] ?? 'OPEN';
+                  return (
+                    <div key={loan.id} className="p-4 bg-white/3 border border-white/10 rounded-2xl">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-2">
+                          <span className={`px-2 py-0.5 rounded text-xs font-bold ${isBorrower ? 'bg-amber-500/20 text-amber-400' : 'bg-emerald-500/20 text-emerald-400'}`}>
+                            {isBorrower ? 'Borrowing' : 'Lending'}
+                          </span>
+                          <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${STATE_COLORS[state]}`}>{state}</span>
+                        </div>
+                        <span className="text-white font-mono font-bold">{formatVFIDE(loan.principal)} VFIDE</span>
+                      </div>
+                      <div className="text-gray-500 text-xs space-y-0.5">
+                        <div>{isBorrower ? 'From' : 'To'}: {shortAddr(isBorrower ? loan.lender : loan.borrower)}</div>
+                        <div>Interest: {Number(loan.interestBps) / 100}% · Duration: {daysFromSeconds(loan.duration)} days</div>
+                        {loan.deadline > 0n && <div>Deadline: {new Date(Number(loan.deadline) * 1000).toLocaleDateString()}</div>}
+                      </div>
+
+                      {/* Action buttons based on state */}
+                      {state === 'ACTIVE' && isBorrower && (
+                        <button className="mt-3 w-full py-2 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 font-bold rounded-xl text-sm">Repay Now</button>
+                      )}
+                      {state === 'DEFAULTED' && isBorrower && (
+                        <button className="mt-3 w-full py-2 bg-amber-500/10 border border-amber-500/20 text-amber-400 font-bold rounded-xl text-sm">Repay Default & Restore Score</button>
+                      )}
+                      {state === 'DEFAULTED' && isLender && (
+                        <button className="mt-3 w-full py-2 bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 font-bold rounded-xl text-sm">Extract from Guarantors</button>
+                      )}
+                      {state === 'COSIGNING' && isBorrower && (
+                        <div className="mt-3 p-2 bg-blue-500/5 border border-blue-500/15 rounded-lg text-blue-400 text-xs flex items-center gap-1.5">
+                          <Users size={12} />Waiting for your guardian to co-sign this loan
+                        </div>
+                      )}
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          )}
+
+          {/* ── FLASH LOANS TAB ───────────────────────────────── */}
+          {tab === 'flash' && (
+            <div className="space-y-4">
+              <div className="p-4 bg-purple-500/5 border border-purple-500/15 rounded-xl">
+                <p className="text-purple-400 text-sm font-medium mb-1 flex items-center gap-1.5"><Zap size={14} />Atomic Flash Loans</p>
+                <p className="text-gray-400 text-xs">Borrow any amount, use it, and repay in the same transaction. If you don't repay, the entire transaction reverts. Zero risk to lenders. Used for arbitrage, liquidations, and refinancing.</p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="p-5 bg-white/3 border border-white/10 rounded-2xl text-center">
+                  <h3 className="text-sm text-gray-400 mb-2">Provide Liquidity</h3>
+                  <p className="text-gray-500 text-xs mb-4">Deposit VFIDE for others to flash-borrow. Set your fee. Earn on every loan. Your funds are never at risk.</p>
+                  <button className="w-full py-2.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 font-bold rounded-xl text-sm">Deposit & Earn</button>
+                </div>
+                <div className="p-5 bg-white/3 border border-white/10 rounded-2xl text-center">
+                  <h3 className="text-sm text-gray-400 mb-2">Flash Borrow</h3>
+                  <p className="text-gray-500 text-xs mb-4">For developers: borrow via smart contract callback. See docs for IERC3156FlashBorrower implementation.</p>
+                  <button onClick={() => window.open('/developer', '_blank')} className="w-full py-2.5 bg-purple-500/10 border border-purple-500/20 text-purple-400 font-bold rounded-xl text-sm">Developer Docs</button>
+                </div>
+              </div>
+
+              {/* Flash lender stats would go here */}
+              <div className="p-4 bg-white/3 border border-white/10 rounded-2xl">
+                <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-3">Your Flash Loan Stats</h3>
+                <div className="grid grid-cols-3 gap-3 text-center">
+                  <div><div className="text-gray-500 text-xs">Deposited</div><div className="text-white font-mono">0 VFIDE</div></div>
+                  <div><div className="text-gray-500 text-xs">Earned</div><div className="text-emerald-400 font-mono">0 VFIDE</div></div>
+                  <div><div className="text-gray-500 text-xs">Loans Served</div><div className="text-white font-mono">0</div></div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
       <Footer />
     </>

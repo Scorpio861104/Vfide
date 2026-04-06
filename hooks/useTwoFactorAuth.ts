@@ -63,7 +63,7 @@ const generateTOTPSecret = (): string => {
 };
 
 // Verify a TOTP code against the given Base32 secret using RFC 6238.
-// `otplib` v13 returns a verification result object, so we normalize that
+// `otplib` returns a verification result object, so we normalize it
 // to a simple boolean for the rest of the hook.
 const verifyTOTPInternal = (secret: string, code: string): boolean => {
   if (!validateTOTPCode(code)) return false;
