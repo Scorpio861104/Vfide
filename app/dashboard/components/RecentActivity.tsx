@@ -23,42 +23,61 @@ export function RecentActivitySection() {
 
   useEffect(() => {
     const fetchActivity = async () => {
-      if (!address) {
-        setActivities([]);
-        setIsLoading(false);
-        return;
-      }
-
       setIsLoading(true);
+
+      const candidateUrls = address
+        ? [`/api/activities/${address}`, `/api/activities?userAddress=${address}&limit=4`, '/api/activities?limit=4']
+        : ['/api/activities?limit=4'];
+
       try {
-        const response = await fetch(`/api/activities/${address}`);
-        if (!response.ok) {
-          return;
+        let rows: Array<{
+          activity_type?: string;
+          type?: string;
+          description?: string;
+          title?: string;
+          created_at?: string;
+          timestamp?: string;
+        }> = [];
+
+        for (const candidateUrl of candidateUrls) {
+          const response = await fetch(candidateUrl);
+          if (!response.ok) {
+            continue;
+          }
+
+          const data = await response.json();
+          rows = Array.isArray(data.activities) ? data.activities : [];
+          break;
         }
 
-        const data = await response.json();
         setActivities(
-          (data.activities || []).slice(0, 4).map((activity: { type: string; description: string; timestamp: string }) => ({
-            type: activity.type,
-            desc: activity.description,
-            time: formatTimeAgo(new Date(activity.timestamp).getTime()),
-            icon:
-              activity.type === 'send'
-                ? ArrowUpRight
-                : activity.type === 'receive'
-                  ? ArrowDownLeft
-                  : activity.type === 'badge'
-                    ? Award
-                    : Vote,
-            color:
-              activity.type === 'send'
-                ? 'cyan'
-                : activity.type === 'receive'
-                  ? 'emerald'
-                  : activity.type === 'badge'
-                    ? 'amber'
-                    : 'purple',
-          })),
+          rows.slice(0, 4).map((activity) => {
+            const type = String(activity.activity_type ?? activity.type ?? 'activity').toLowerCase();
+            const description = activity.description ?? activity.title ?? 'Activity recorded';
+            const timestamp = activity.created_at ?? activity.timestamp ?? new Date().toISOString();
+
+            return {
+              type,
+              desc: description,
+              time: formatTimeAgo(new Date(timestamp).getTime()),
+              icon:
+                type === 'send'
+                  ? ArrowUpRight
+                  : type === 'receive'
+                    ? ArrowDownLeft
+                    : type === 'badge'
+                      ? Award
+                      : Vote,
+              color:
+                type === 'send'
+                  ? 'cyan'
+                  : type === 'receive'
+                    ? 'emerald'
+                    : type === 'badge'
+                      ? 'amber'
+                      : 'purple',
+            };
+          }),
         );
       } catch {
         setActivities([]);

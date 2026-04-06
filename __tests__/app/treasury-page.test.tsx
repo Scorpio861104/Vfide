@@ -15,6 +15,7 @@ const renderTreasuryPage = () => {
 
 jest.mock('wagmi', () => ({
   useAccount: () => mockAccount,
+  useReadContract: () => ({ data: 0n }),
 }));
 
 jest.mock('@/components/layout/Footer', () => ({

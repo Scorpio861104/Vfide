@@ -23,7 +23,7 @@ import {
   TrendingUp,
   Users,
 } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 function shortenAddress(value?: string) {
   return value ? `${value.slice(0, 6)}…${value.slice(-4)}` : 'Guest mode';
@@ -32,12 +32,92 @@ function shortenAddress(value?: string) {
 export default function SocialPaymentsDashboard() {
   const { address, isConnected } = useAccount();
   const [activeTab, setActiveTab] = useState<'feed' | 'activity' | 'earnings'>('feed');
+  const [activitySnapshot, setActivitySnapshot] = useState<{
+    received: number;
+    sent: number;
+    sales: number;
+    rewards: number;
+    supporters: string[];
+  }>({
+    received: 0,
+    sent: 0,
+    sales: 0,
+    rewards: 0,
+    supporters: [],
+  });
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadSnapshot() {
+      const candidateUrls = address
+        ? [`/api/activities?userAddress=${address}&limit=50`, '/api/activities?limit=50']
+        : ['/api/activities?limit=50'];
+
+      try {
+        let rows: Array<{
+          activity_type?: string;
+          type?: string;
+          user_username?: string;
+          user_address?: string;
+          title?: string;
+          description?: string;
+        }> = [];
+
+        for (const candidateUrl of candidateUrls) {
+          const response = await fetch(candidateUrl);
+          if (!response.ok) {
+            continue;
+          }
+
+          const data = await response.json();
+          rows = Array.isArray(data.activities) ? data.activities : [];
+          break;
+        }
+
+        if (cancelled) {
+          return;
+        }
+
+        const received = rows.filter((row) => /receive|tip|reward/i.test(String(row.activity_type ?? row.type ?? ''))).length;
+        const sent = rows.filter((row) => /send|payment|transfer/i.test(String(row.activity_type ?? row.type ?? ''))).length;
+        const sales = rows.filter((row) => /sale|unlock|subscription|purchase|checkout/i.test(String(row.activity_type ?? row.type ?? ''))).length;
+        const rewards = rows.filter((row) => /reward|endorse|badge|proof/i.test(String(row.activity_type ?? row.type ?? ''))).length;
+        const supporters = Array.from(
+          new Set(
+            rows
+              .map((row) => row.user_username ?? shortenAddress(row.user_address))
+              .filter((value): value is string => Boolean(value))
+          )
+        ).slice(0, 3);
+
+        setActivitySnapshot({
+          received,
+          sent,
+          sales,
+          rewards,
+          supporters,
+        });
+      } catch {
+        if (!cancelled) {
+          setActivitySnapshot({ received: 0, sent: 0, sales: 0, rewards: 0, supporters: [] });
+        }
+      }
+    }
+
+    void loadSnapshot();
+    return () => {
+      cancelled = true;
+    };
+  }, [address]);
 
   const statCards = useMemo(() => ([
     {
       label: 'Tips Received',
-      value: isConnected ? 'Activity-ready' : 'Connect wallet',
-      helper: isConnected ? 'Incoming support appears in your unified activity stream.' : 'Connect to unlock direct creator support.',
+      value: isConnected ? `${activitySnapshot.received} recent events` : 'Connect wallet',
+      helper: isConnected
+        ? `${activitySnapshot.received} support events were detected in the latest activity rail.`
+        : 'Connect to unlock direct creator support.',
       cardClass: 'from-green-500/10 to-emerald-500/10 border-green-500/20',
       labelClass: 'text-green-400',
       Icon: ArrowDownLeft,
@@ -45,8 +125,10 @@ export default function SocialPaymentsDashboard() {
     },
     {
       label: 'Tips Sent',
-      value: isConnected ? 'Peer payments enabled' : 'Wallet required',
-      helper: 'Send appreciation straight from posts, stories, and creator profiles.',
+      value: isConnected ? `${activitySnapshot.sent} outbound actions` : 'Wallet required',
+      helper: isConnected
+        ? 'Recent sends and payment intents are now summarized from the live activity rail.'
+        : 'Send appreciation straight from posts, stories, and creator profiles.',
       cardClass: 'from-purple-500/10 to-blue-500/10 border-purple-500/20',
       labelClass: 'text-purple-400',
       Icon: ArrowUpRight,
@@ -54,7 +136,7 @@ export default function SocialPaymentsDashboard() {
     },
     {
       label: 'Content Sales',
-      value: 'Creator checkout ready',
+      value: activitySnapshot.sales > 0 ? `${activitySnapshot.sales} live settlements` : 'Awaiting new checkout activity',
       helper: 'Premium posts, unlocks, and merchant checkouts settle through the same payment rail.',
       cardClass: 'from-blue-500/10 to-cyan-500/10 border-blue-500/20',
       labelClass: 'text-blue-400',
@@ -63,47 +145,57 @@ export default function SocialPaymentsDashboard() {
     },
     {
       label: 'Endorsement Rewards',
-      value: 'ProofScore-linked',
+      value: activitySnapshot.rewards > 0 ? `${activitySnapshot.rewards} reward signals` : 'ProofScore-linked',
       helper: 'Reputation events and rewards stay visible alongside social engagement.',
       cardClass: 'from-yellow-500/10 to-orange-500/10 border-yellow-500/20',
       labelClass: 'text-yellow-400',
       Icon: Award,
       AccentIcon: Users,
     },
-  ]), [isConnected]);
+  ]), [activitySnapshot.received, activitySnapshot.rewards, activitySnapshot.sales, activitySnapshot.sent, isConnected]);
 
   const supporterHighlights = useMemo(() => ([
     {
       name: 'Creator circle',
-      note: 'Repeat backers, unlock buyers, and returning tippers surface here first.',
+      note: activitySnapshot.supporters[0]
+        ? `${activitySnapshot.supporters[0]} and other repeat backers are surfacing from the latest activity snapshot.`
+        : 'Repeat backers, unlock buyers, and returning tippers surface here first.',
       status: isConnected ? 'Wallet-personalized' : 'Community snapshot',
     },
     {
       name: 'Merchant buyers',
-      note: 'Checkout supporters and product unlocks share the same settlement rail.',
+      note: activitySnapshot.sales > 0
+        ? `${activitySnapshot.sales} checkout or unlock events are currently linked into the same settlement rail.`
+        : 'Checkout supporters and product unlocks share the same settlement rail.',
       status: 'Commerce-linked',
     },
     {
       name: 'Reward pool',
-      note: 'ProofScore boosts and endorsement rewards stay visible next to payout activity.',
+      note: activitySnapshot.rewards > 0
+        ? `${activitySnapshot.rewards} reward-linked events are now visible next to payout activity.`
+        : 'ProofScore boosts and endorsement rewards stay visible next to payout activity.',
       status: 'Rewards-aware',
     },
-  ]), [isConnected]);
+  ]), [activitySnapshot.rewards, activitySnapshot.sales, activitySnapshot.supporters, isConnected]);
 
   const earningsPanels = useMemo(() => ([
     {
       title: 'Recent Tips Received',
       icon: ArrowDownLeft,
       iconClass: 'text-green-400',
-      copy: 'Track incoming support, thank-you payments, and social transfers from the unified activity feed.',
+      copy: activitySnapshot.received > 0
+        ? `${activitySnapshot.received} recent support events are currently flowing through the unified activity feed.`
+        : 'Track incoming support, thank-you payments, and social transfers from the unified activity feed.',
     },
     {
       title: 'Content Sales',
       icon: Lock,
       iconClass: 'text-blue-400',
-      copy: 'Creator unlocks, subscriptions, and merchant receipts settle through the same VFIDE payment surface.',
+      copy: activitySnapshot.sales > 0
+        ? `${activitySnapshot.sales} recent sales or unlock settlements are already syncing through the same payment surface.`
+        : 'Creator unlocks, subscriptions, and merchant receipts settle through the same VFIDE payment surface.',
     },
-  ]), []);
+  ]), [activitySnapshot.received, activitySnapshot.sales]);
 
   return (
     <div className="min-h-screen bg-zinc-950">

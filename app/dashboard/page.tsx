@@ -32,8 +32,8 @@ type TabId = typeof tabs[number]['id'];
 export default function DashboardPage() {
   const [activeTab, setActiveTab] = useState<TabId>('overview');
   const { address, isConnected } = useAccount();
-  const { score = 4500 } = useProofScore();
-  const proofScore = score;
+  const { score, tier } = useProofScore();
+  const proofScore = isConnected ? (score ?? 0) : 0;
   const totalVolume = 3200;
   const txCount = 87;
   const feeRate = proofScore <= 4000 ? 5.0 : proofScore >= 8000 ? 0.25 : 5.0 - ((proofScore - 4000) * 4.75) / 4000;
@@ -79,7 +79,7 @@ export default function DashboardPage() {
                   ))}
                 </div>
 
-                {activeTab === 'overview' && <OverviewTab proofscore={proofScore} feeRate={feeRate} />}
+                {activeTab === 'overview' && <OverviewTab proofscore={proofScore} feeRate={feeRate} tier={tier} isConnected={isConnected} />}
                 {activeTab === 'badges' && <BadgesTab address={address} />}
                 {activeTab === 'score' && <ScoreSimulatorTab currentScore={proofScore} />}
                 {activeTab === 'fees' && <FeeSimulatorTab currentScore={proofScore} />}
