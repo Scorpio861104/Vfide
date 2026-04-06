@@ -40,7 +40,7 @@ export default function StoriesPage() {
           setUserStories(data.stories || []);
         }
       } catch {
-        // API not available yet - use empty state
+        // If the API is offline, fall back to the empty state safely.
       } finally {
         setIsLoading(false);
       }

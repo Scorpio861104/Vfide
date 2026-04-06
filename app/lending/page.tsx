@@ -60,7 +60,7 @@ export default function LendingPage() {
         const data = await response.json().catch(() => ({ lanes: [] }));
 
         if (!response.ok) {
-          throw new Error(typeof data?.error === 'string' ? data.error : 'Preview unavailable');
+          throw new Error(typeof data?.error === 'string' ? data.error : 'Lane preview offline');
         }
 
         if (!cancelled) {
@@ -68,7 +68,7 @@ export default function LendingPage() {
         }
       } catch (error) {
         if (!cancelled) {
-          setPreviewError(error instanceof Error ? error.message : 'Preview unavailable');
+          setPreviewError(error instanceof Error ? error.message : 'Lane preview offline');
           setLanes([]);
         }
       } finally {
@@ -165,7 +165,7 @@ export default function LendingPage() {
 
               <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/5 p-5">
                 <div className="mb-2 flex items-center gap-2 text-emerald-300"><ShieldCheck size={16} /> Safety model</div>
-                <p className="text-sm text-gray-300">Borrower/lender protections, dispute states, and lane simulation already exist in the repo, so this page now surfaces a live snapshot instead of acting only as a static handoff.</p>
+                <p className="text-sm text-gray-300">Borrower/lender protections, dispute states, and lane simulation already exist in the repo, so this page now surfaces a live operational snapshot for fast decision-making.</p>
                 {previewError ? (
                   <div className="mt-3 inline-flex items-center gap-2 text-xs text-amber-200"><AlertCircle size={14} /> {previewError}</div>
                 ) : null}

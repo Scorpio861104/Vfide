@@ -132,7 +132,7 @@ export function ChainSelector({ onChainSelect, showOnlyReady = false, compact = 
                       <div className="text-left">
                         <div className="font-medium">{chain.name}</div>
                         <div className="text-xs text-gray-400">
-                          {ready ? chain.tagline : 'Coming soon'}
+                          {ready ? chain.tagline : 'Rollout queued'}
                         </div>
                       </div>
                       {selectedChain === chain.id && (
@@ -237,7 +237,7 @@ export function ChainSelector({ onChainSelect, showOnlyReady = false, compact = 
 
                 {!ready && (
                   <span className="text-xs text-gray-500 bg-gray-800 px-2 py-1 rounded">
-                    Coming Soon
+                    Rollout queued
                   </span>
                 )}
               </div>

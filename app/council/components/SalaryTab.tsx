@@ -96,7 +96,7 @@ export function SalaryTab({ isConnected: _isConnected }: { isConnected: boolean 
           className="w-full bg-white/5 text-gray-500 font-bold py-3 rounded-xl border border-white/10 cursor-not-allowed"
           disabled
         >
-          Distribution Not Available Yet
+          Awaiting distribution window
         </button>
       </motion.div>
     </div>

@@ -49,9 +49,9 @@ describe('Social analytics page pathways', () => {
 
     expect(screen.getByRole('heading', { name: /Social Analytics/i })).toBeTruthy();
     expect(screen.getByRole('heading', { name: /Key Metrics/i })).toBeTruthy();
-    expect(screen.getByText(/Social analytics metrics are not available/i)).toBeTruthy();
+    expect(screen.getByText(/privacy-safe snapshot of social analytics/i)).toBeTruthy();
     expect(screen.getByRole('heading', { name: /Influence Score/i })).toBeTruthy();
-    expect(screen.getByText(/Influence scoring is unavailable/i)).toBeTruthy();
+    expect(screen.getByText(/verified engagement, trust activity, and payments/i)).toBeTruthy();
     expect(screen.getByRole('link', { name: /Go to Social Hub/i }).getAttribute('href')).toBe('/social-hub');
   });
 

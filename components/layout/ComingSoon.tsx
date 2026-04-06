@@ -25,10 +25,10 @@ export function ComingSoon({ feature, description }: ComingSoonProps) {
           <Clock className="w-10 h-10 text-amber-400" />
         </div>
         <h2 className="text-2xl font-bold text-white mb-3">{feature}</h2>
-        <p className="text-gray-400 mb-2">This feature is under development.</p>
+        <p className="text-gray-400 mb-2">This workspace is rolling out in scheduled stages.</p>
         {description && <p className="text-gray-500 text-sm">{description}</p>}
         <div className="mt-6 inline-flex items-center gap-2 px-4 py-2 bg-amber-500/10 border border-amber-500/30 rounded-lg">
-          <span className="text-amber-400 text-sm font-bold">Coming Soon</span>
+          <span className="text-amber-400 text-sm font-bold">Planned rollout</span>
         </div>
       </div>
     </div>

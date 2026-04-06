@@ -5,7 +5,7 @@
  * top products, daily revenue trend.
  * 
  * Data comes from /api/merchant/analytics endpoint.
- * Falls back gracefully if no data available yet.
+ * Falls back gracefully while merchant activity is still warming up.
  */
 'use client';
 
@@ -66,8 +66,8 @@ export function MerchantAnalytics({ merchantAddress }: MerchantAnalyticsProps) {
     return (
       <div className="text-center py-12">
         <Package size={48} className="mx-auto mb-4 text-gray-600" />
-        <p className="text-gray-400">No analytics data available yet.</p>
-        <p className="text-gray-500 text-sm mt-1">Start selling to see your dashboard.</p>
+        <p className="text-gray-400">Analytics will populate after your first synced sales cycle.</p>
+        <p className="text-gray-500 text-sm mt-1">Start selling to unlock revenue trends, product leaders, and exportable reports.</p>
       </div>
     );
   }
