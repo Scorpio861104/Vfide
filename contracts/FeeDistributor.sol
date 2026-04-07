@@ -151,22 +151,35 @@ contract FeeDistributor is AccessControl, ReentrancyGuard, Pausable {
         uint256 toMerchants = (balance * feeSplit.merchantPoolBps) / MAX_BPS;
         uint256 toHeadhunters = balance - toBurn - toSanctum - toDAO - toMerchants;
 
+        totalDistributed += balance;
+
         uint256 burnedThisRun = 0;
         if (toBurn > 0) {
+            totalBurned += toBurn;
             try vfideToken.burn(toBurn) {
-                totalBurned += toBurn;
                 burnedThisRun = toBurn;
             } catch {
+                totalBurned -= toBurn;
                 IERC20(address(vfideToken)).safeTransfer(burnAddress, toBurn);
                 emit BurnFallbackTransfer(toBurn, burnAddress);
             }
         }
-        if (toSanctum > 0) { IERC20(address(vfideToken)).safeTransfer(sanctumFund, toSanctum); totalToSanctum += toSanctum; }
-        if (toDAO > 0) { IERC20(address(vfideToken)).safeTransfer(daoPayrollPool, toDAO); totalToDAO += toDAO; }
-        if (toMerchants > 0) { IERC20(address(vfideToken)).safeTransfer(merchantPool, toMerchants); totalToMerchants += toMerchants; }
-        if (toHeadhunters > 0) { IERC20(address(vfideToken)).safeTransfer(headhunterPool, toHeadhunters); totalToHeadhunters += toHeadhunters; }
-
-        totalDistributed += balance;
+        if (toSanctum > 0) {
+            totalToSanctum += toSanctum;
+            IERC20(address(vfideToken)).safeTransfer(sanctumFund, toSanctum);
+        }
+        if (toDAO > 0) {
+            totalToDAO += toDAO;
+            IERC20(address(vfideToken)).safeTransfer(daoPayrollPool, toDAO);
+        }
+        if (toMerchants > 0) {
+            totalToMerchants += toMerchants;
+            IERC20(address(vfideToken)).safeTransfer(merchantPool, toMerchants);
+        }
+        if (toHeadhunters > 0) {
+            totalToHeadhunters += toHeadhunters;
+            IERC20(address(vfideToken)).safeTransfer(headhunterPool, toHeadhunters);
+        }
         emit FeeDistributed(balance, burnedThisRun, toSanctum, toDAO, toMerchants, toHeadhunters);
     }
 

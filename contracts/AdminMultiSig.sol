@@ -234,6 +234,10 @@ contract AdminMultiSig is ReentrancyGuard {
         require(block.timestamp >= proposal.executionTime, "AdminMultiSig: too early");
         require(block.timestamp <= proposal.createdAt + PROPOSAL_EXPIRY, "AdminMultiSig: proposal expired");
         require(proposal.vetoCount < vetoThreshold, "AdminMultiSig: community vetoed");
+        require(
+            proposal.target == address(this) || proposal.target.code.length > 0,
+            "AdminMultiSig: target has no code"
+        );
 
         if (proposal.proposalType != ProposalType.EMERGENCY) {
             require(
@@ -247,13 +251,24 @@ contract AdminMultiSig is ReentrancyGuard {
 
         emit ProposalExecuted(_proposalId, msg.sender);
 
-        // Use configurable gas limit for safety - prevents gas griefing
-        // Can be increased via governance if needed for complex operations
+        // Use configurable gas limit for safety - prevents gas griefing.
         // Intentional: emergency proposal execution may target this contract,
         // while `nonReentrant` prevents nested `executeProposal` entry.
-        (bool success, ) = proposal.target.call{gas: executionGasLimit}(proposal.data);
-        require(success, "AdminMultiSig: execution failed");
+        _executeProposalCall(proposal.target, proposal.data);
         executingProposalId = NO_ACTIVE_PROPOSAL;
+    }
+
+    function _executeProposalCall(address target, bytes memory data) internal {
+        (bool success, bytes memory returndata) = target.call{gas: executionGasLimit}(data);
+        if (success) return;
+
+        if (returndata.length > 0) {
+            assembly ("memory-safe") {
+                revert(add(returndata, 32), mload(returndata))
+            }
+        }
+
+        revert("AdminMultiSig: execution failed");
     }
 
     /// @notice Allow council to adjust execution gas limit via governance

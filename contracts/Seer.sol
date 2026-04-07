@@ -50,6 +50,8 @@ contract Seer is ReentrancyGuard {
     event ScoreSet(address indexed subject, uint16 oldScore, uint16 newScore, string reason);
     event ScoreReasonCode(address indexed subject, uint16 indexed reasonCode, int16 delta, address indexed actor);
     event ThresholdsSet(uint16 low, uint16 high, uint16 minForGov, uint16 minForMerchant);
+    event DecayConfigUpdated(bool enabled, uint64 startDays, uint16 perMonth);
+    event ScoreCacheTTLUpdated(uint64 ttl);
     event ScoreSourceAdded(address indexed source, string name, uint8 weight);
     event ScoreSourceRemoved(address indexed source);
     event DecentralizationUpdated(uint8 daoWeight, uint8 onChainWeight);
@@ -62,6 +64,8 @@ contract Seer is ReentrancyGuard {
     event SeerSocialSet(address indexed seerSocial);
     event SeerAutonomousSet(address indexed seerAutonomous);
     event BurnRouterSet(address indexed burnRouter);
+    event BurnRouterChangeProposed(address indexed currentBurnRouter, address indexed pendingBurnRouter, uint64 effectiveAt);
+    event BurnRouterChangeCancelled(address indexed pendingBurnRouter);
     event PolicyVersionUpdated(bytes32 indexed policyHash, string policyURI, address indexed updatedBy);
     event DAOChangeProposed(address indexed newDAO, uint64 effectiveAt);
     event DAOChangeCancelled();
@@ -79,6 +83,9 @@ contract Seer is ReentrancyGuard {
     // Reference to SeerAutonomous for automatic enforcement cascading
     address public seerAutonomous;
     address public burnRouter;
+    address public pendingBurnRouter;
+    uint64 public pendingBurnRouterAt;
+    uint64 public constant BURN_ROUTER_CHANGE_DELAY = 48 hours;
     address public policyGuard;
 
     // Canonical policy publication metadata for Seer governance.
@@ -89,7 +96,7 @@ contract Seer is ReentrancyGuard {
     bytes4 private constant SEL_SET_THRESHOLDS = bytes4(keccak256("setThresholds(uint16,uint16,uint16,uint16)"));
     bytes4 private constant SEL_SET_DECENTRALIZATION_WEIGHTS = bytes4(keccak256("setDecentralizationWeights(uint8,uint8)"));
     bytes4 private constant SEL_SET_POLICY_VERSION = bytes4(keccak256("setPolicyVersion(bytes32,string)"));
-    bytes4 private constant SEL_SET_OPERATOR_LIMITS = bytes4(keccak256("setOperatorLimits(uint16,uint16)"));
+    bytes4 private constant SEL_SET_OPERATOR_LIMITS = bytes4(keccak256("setOperatorLimits(uint16,uint16,uint32)"));
 
     // 0 == uninitialized → treated as NEUTRAL = 5000 (50% on 0-10000 scale)
     mapping(address => uint16) private _score;
@@ -278,10 +285,42 @@ contract Seer is ReentrancyGuard {
         emit SeerAutonomousSet(_seerAutonomous);
     }
 
-    /// @notice Set ProofScoreBurnRouter for score snapshot synchronization
+    /// @notice Set ProofScoreBurnRouter for score snapshot synchronization.
+    /// @dev First-time wiring is immediate; subsequent changes are timelocked for DAO review.
     function setBurnRouter(address _burnRouter) external onlyDAO nonReentrant {
-        burnRouter = _burnRouter;
-        emit BurnRouterSet(_burnRouter);
+        if (_burnRouter == address(0)) revert TRUST_Zero();
+        if (_burnRouter == burnRouter) revert TRUST_AlreadySet();
+
+        if (burnRouter == address(0)) {
+            burnRouter = _burnRouter;
+            emit BurnRouterSet(_burnRouter);
+            _logSystem();
+            return;
+        }
+
+        if (pendingBurnRouterAt != 0) revert TRUST_InvalidState();
+        pendingBurnRouter = _burnRouter;
+        pendingBurnRouterAt = uint64(block.timestamp) + BURN_ROUTER_CHANGE_DELAY;
+        emit BurnRouterChangeProposed(burnRouter, _burnRouter, pendingBurnRouterAt);
+        _logSystem();
+    }
+
+    function applyBurnRouterChange() external onlyDAO nonReentrant {
+        if (pendingBurnRouterAt == 0 || block.timestamp < pendingBurnRouterAt) revert TRUST_InvalidState();
+        burnRouter = pendingBurnRouter;
+        delete pendingBurnRouter;
+        delete pendingBurnRouterAt;
+        emit BurnRouterSet(burnRouter);
+        _logSystem();
+    }
+
+    function cancelBurnRouterChange() external onlyDAO nonReentrant {
+        if (pendingBurnRouterAt == 0) revert TRUST_NotSet();
+        address pending = pendingBurnRouter;
+        delete pendingBurnRouter;
+        delete pendingBurnRouterAt;
+        emit BurnRouterChangeCancelled(pending);
+        _logSystem();
     }
 
     function setPolicyGuard(address _policyGuard) external onlyDAO nonReentrant {
@@ -351,6 +390,7 @@ contract Seer is ReentrancyGuard {
         decayEnabled = enabled;
         decayStartDays = startDays;
         decayPerMonth = perMonth;
+        emit DecayConfigUpdated(enabled, startDays, perMonth);
         _consumePolicyChange(SEL_SET_DECAY_CONFIG, PolicyClass.Important);
         _logSystem();
     }
@@ -468,6 +508,8 @@ contract Seer is ReentrancyGuard {
     function setScoreCacheTTL(uint64 ttl) external onlyDAO nonReentrant {
         if (ttl < 5 minutes || ttl > 1 days) revert TRUST_Bounds();
         scoreCacheTTL = ttl;
+        emit ScoreCacheTTLUpdated(ttl);
+        _logSystem();
     }
 
     /// @notice Returns cached score if fresh, otherwise falls back to full calculation.
@@ -782,13 +824,14 @@ contract Seer is ReentrancyGuard {
         // Safe: next is clamped between MIN_SCORE (10) and MAX_SCORE (10000)
         uint16 newScore = uint16(uint256(next));
         _score[subject] = newScore;
-        _syncBurnRouterScore(subject);
-        
-        // Record in history (capped to prevent unbounded growth)
+
+        // Record in history (capped to prevent unbounded growth) before external sync.
         _recordHistory(subject, cur, newScore, reason);
-        
-        // Update last activity timestamp
+
+        // Update last activity timestamp before external sync.
         lastActivity[subject] = uint64(block.timestamp);
+
+        _syncBurnRouterScore(subject);
         
         emit ScoreSet(subject, cur, newScore, reason);
         emit ScoreReasonCode(subject, reasonCode, int16(newScore) - int16(cur), msg.sender);
@@ -965,6 +1008,10 @@ contract Seer is ReentrancyGuard {
         dispute.resolved = true;
         dispute.approved = approved;
         
+        if (pendingDisputeCount > 0) {
+            pendingDisputeCount--;
+        }
+
         if (approved && adjustment != 0) {
             // Apply against DAO baseline score to avoid double-counting weighted on-chain score.
             uint16 cur = _score[subject];
@@ -975,10 +1022,6 @@ contract Seer is ReentrancyGuard {
             _syncBurnRouterScore(subject);
             emit ScoreSet(subject, cur, _score[subject], "disp_ok");
             emit ScoreReasonCode(subject, 503, int16(_score[subject]) - int16(cur), msg.sender);
-        }
-        
-        if (pendingDisputeCount > 0) {
-            pendingDisputeCount--;
         }
 
         emit ScoreDisputeResolved(subject, approved, adjustment);

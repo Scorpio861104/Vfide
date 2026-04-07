@@ -267,6 +267,71 @@ describe("Seer (M-18: circular delta guard)", () => {
     assert.equal(snapshot[0], 7000n);
   });
 
+  it("rejects zero burn router wiring", async () => {
+    const { ethers } = await network.connect({
+      override: {
+        allowUnlimitedContractSize: true,
+      },
+    });
+    const [dao] = await ethers.getSigners();
+
+    const Seer = await ethers.getContractFactory("Seer");
+    const seer = await Seer.deploy(dao.address, ethers.ZeroAddress, ethers.ZeroAddress);
+    await seer.waitForDeployment();
+
+    await assert.rejects(
+      () => seer.connect(dao).setBurnRouter(ethers.ZeroAddress),
+      /TRUST_Zero|revert/
+    );
+  });
+
+  it("timelocks burn router replacement after initial wiring", async () => {
+    const { ethers } = await network.connect({
+      override: {
+        allowUnlimitedContractSize: true,
+      },
+    });
+    const [dao, sanctum, burn, eco, altBurn, altEco] = await ethers.getSigners();
+
+    const Seer = await ethers.getContractFactory("Seer");
+    const seer = await Seer.deploy(dao.address, ethers.ZeroAddress, ethers.ZeroAddress);
+    await seer.waitForDeployment();
+
+    const Router = await ethers.getContractFactory("ProofScoreBurnRouter");
+    const routerA = await Router.deploy(
+      await seer.getAddress(),
+      sanctum.address,
+      burn.address,
+      eco.address,
+    );
+    await routerA.waitForDeployment();
+
+    const routerB = await Router.deploy(
+      await seer.getAddress(),
+      sanctum.address,
+      altBurn.address,
+      altEco.address,
+    );
+    await routerB.waitForDeployment();
+
+    await seer.connect(dao).setBurnRouter(await routerA.getAddress());
+    assert.equal(await seer.burnRouter(), await routerA.getAddress());
+
+    await seer.connect(dao).setBurnRouter(await routerB.getAddress());
+    assert.equal(await seer.burnRouter(), await routerA.getAddress());
+
+    await assert.rejects(
+      () => seer.connect(dao).applyBurnRouterChange(),
+      /TRUST_InvalidState|revert/
+    );
+
+    await ethers.provider.send("evm_increaseTime", [48 * 60 * 60 + 1]);
+    await ethers.provider.send("evm_mine", []);
+
+    await seer.connect(dao).applyBurnRouterChange();
+    assert.equal(await seer.burnRouter(), await routerB.getAddress());
+  });
+
   it("does not punish again when auto restriction is triggered by low score", async () => {
     const { ethers } = await network.connect({
       override: {
