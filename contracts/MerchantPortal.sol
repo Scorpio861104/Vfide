@@ -538,12 +538,10 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
         // Transfer fee first to fee sink (if fee > 0).
         if (fee > 0 && feeSink != address(0)) {
             // Vault custody model: charge fee from the customer's registered vault.
-            // slither-disable-next-line arbitrary-send-erc20
             IERC20(token).safeTransferFrom(customerVault, feeSink, fee);
         }
 
         // Vault custody model: settle payment from the customer's registered vault.
-        // slither-disable-next-line arbitrary-send-erc20
         IERC20(token).safeTransferFrom(customerVault, merchantVault, netAmount);
         
         emit PaymentProcessed(

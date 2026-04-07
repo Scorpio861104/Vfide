@@ -761,7 +761,6 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
 
     // ─────────────────────────── Internal core
 
-    // slither-disable-start reentrancy-no-eth
     function _transfer(address from, address to, uint256 amount) internal {
         _syncEmergencyFlags();
         if (from == address(0) || to == address(0)) revert VF_ZERO();
@@ -923,7 +922,6 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
 
         _logEv(from, "transfer", amount, "");
     }
-    // slither-disable-end reentrancy-no-eth
 
     function _applyBurn(address from, address sink, uint256 burnAmt) internal {
         if (sink == address(0)) {

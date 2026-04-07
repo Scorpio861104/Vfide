@@ -648,7 +648,6 @@ contract VFIDETermLoan is ReentrancyGuard {
      * to find the borrower and make them pay. If the borrower shows up and
      * repays via repayDefaultedLoan(), extraction stops immediately.
      */
-    // slither-disable-start reentrancy-no-eth
     function extractFromGuarantors(uint256 id) external nonReentrant {
         Loan storage l = loans[id];
         if (l.lender != msg.sender) revert TL_NotLender();
@@ -689,7 +688,6 @@ contract VFIDETermLoan is ReentrancyGuard {
 
         totalExtracted[id] += totalThisRound;
     }
-    // slither-disable-end reentrancy-no-eth
 
     /**
      * @notice Borrower repays a defaulted loan — stops guarantor extraction
