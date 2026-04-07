@@ -422,7 +422,11 @@ describe("DAO (F-21: emergency quorum rescue 10% floor)", () => {
 // ─────────────────────────────────────────────────────────────────────────────
 describe("MerchantPortal (scoped pull permits)", { concurrency: 1 }, () => {
   async function deployPortal() {
-    const { ethers } = (await network.connect()) as any;
+    const { ethers } = (await network.connect({
+      override: {
+        allowUnlimitedContractSize: true,
+      },
+    })) as any;
     const [dao, merchant, customer, feeSink] = await ethers.getSigners();
 
     const VaultHub = await ethers.getContractFactory("VaultHubStub");

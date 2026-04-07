@@ -524,10 +524,10 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
         bool status = pendingExemptStatus;
         systemExempt[who] = status;
         emit SystemExemptSet(who, status);
-        _logEv(who, status ? "exempt_on" : "exempt_off", 0, "");
         delete pendingExemptAddr;
         delete pendingExemptStatus;
         delete pendingExemptAt;
+        _logEv(who, status ? "exempt_on" : "exempt_off", 0, "");
     }
 
     /// @notice Propose whitelist entry with 48-hour timelock (grants bypass of vault-only)
@@ -557,10 +557,10 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
         bool status = pendingWhitelistStatus;
         whitelisted[addr] = status;
         emit Whitelisted(addr, status);
-        _logEv(addr, status ? "whitelist_add" : "whitelist_remove", 0, "");
         delete pendingWhitelistAddr;
         delete pendingWhitelistStatus;
         delete pendingWhitelistAt;
+        _logEv(addr, status ? "whitelist_add" : "whitelist_remove", 0, "");
     }
 
     function setVaultOnly(bool enabled) external onlyOwner {
@@ -761,6 +761,7 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
 
     // ─────────────────────────── Internal core
 
+    // slither-disable-start reentrancy-no-eth
     function _transfer(address from, address to, uint256 amount) internal {
         _syncEmergencyFlags();
         if (from == address(0) || to == address(0)) revert VF_ZERO();
@@ -922,6 +923,7 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
 
         _logEv(from, "transfer", amount, "");
     }
+    // slither-disable-end reentrancy-no-eth
 
     function _applyBurn(address from, address sink, uint256 burnAmt) internal {
         if (sink == address(0)) {

@@ -603,6 +603,8 @@ contract OwnerControlPanel {
     function token_batchBlacklist(address[] calldata users, bool status) external onlyOwner nonReentrant {
         for (uint256 i = 0; i < users.length; i++) {
             _consumeQueuedAction(actionId_token_setBlacklist(users[i], status));
+        }
+        for (uint256 i = 0; i < users.length; i++) {
             vfideToken.setBlacklist(users[i], status);
         }
         emit EmergencyAction(status ? "token_batch_blacklist_applied" : "token_batch_unblacklist_applied", address(vfideToken));
@@ -656,6 +658,8 @@ contract OwnerControlPanel {
         for (uint256 i = 0; i < addrs.length; i++) {
             // F-14 FIX: require governance queue per-address before execution
             _consumeQueuedAction(actionId_token_setWhaleLimitExempt(addrs[i], exempt));
+        }
+        for (uint256 i = 0; i < addrs.length; i++) {
             vfideToken.setWhaleLimitExempt(addrs[i], exempt);
         }
         emit EmergencyAction(exempt ? "token_batch_whale_exempt_added" : "token_batch_whale_exempt_removed", address(vfideToken));

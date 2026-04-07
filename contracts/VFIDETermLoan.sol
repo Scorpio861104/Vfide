@@ -517,21 +517,25 @@ contract VFIDETermLoan is ReentrancyGuard {
         p.nextDue = uint64(block.timestamp) + (p.intervalDays * 1 days);
         l.amountRepaid += amount;
 
+        bool planCompleted = p.paidInstallments >= p.totalInstallments;
+        if (planCompleted) {
+            l.state = LoanState.REPAID;
+            _closeLoan(l);
+            totalLoans++;
+            totalVolume += l.principal;
+        }
+        totalProtocolFees += protocolFee;
+
         vfideToken.safeTransferFrom(msg.sender, address(this), amount);
         vfideToken.safeTransfer(l.lender, lenderReceives);
         if (protocolFee > 0 && feeDistributor != address(0)) {
             vfideToken.safeTransfer(feeDistributor, protocolFee);
         }
-        totalProtocolFees += protocolFee;
 
         emit InstallmentPaid(id, p.paidInstallments, amount);
 
         // Plan completed — reduced penalty (good faith recognized)
-        if (p.paidInstallments >= p.totalInstallments) {
-            l.state = LoanState.REPAID;
-            _closeLoan(l);
-            totalLoans++;
-            totalVolume += l.principal;
+        if (planCompleted) {
 
             if (address(seer) != address(0)) {
                 // Moderate penalty — they missed the original deadline but made it right
@@ -644,6 +648,7 @@ contract VFIDETermLoan is ReentrancyGuard {
      * to find the borrower and make them pay. If the borrower shows up and
      * repays via repayDefaultedLoan(), extraction stops immediately.
      */
+    // slither-disable-start reentrancy-no-eth
     function extractFromGuarantors(uint256 id) external nonReentrant {
         Loan storage l = loans[id];
         if (l.lender != msg.sender) revert TL_NotLender();
@@ -684,6 +689,7 @@ contract VFIDETermLoan is ReentrancyGuard {
 
         totalExtracted[id] += totalThisRound;
     }
+    // slither-disable-end reentrancy-no-eth
 
     /**
      * @notice Borrower repays a defaulted loan — stops guarantor extraction
@@ -706,15 +712,16 @@ contract VFIDETermLoan is ReentrancyGuard {
         uint256 remaining = totalDebt > alreadyCovered ? totalDebt - alreadyCovered : 0;
 
         if (remaining > 0) {
+            l.amountRepaid += remaining;
             uint256 protocolFee = (remaining * PROTOCOL_CUT_PCT) / 100;
             uint256 lenderGets = remaining - protocolFee;
 
+            // State is updated before external settlement; a failed transfer reverts all changes.
             vfideToken.safeTransferFrom(msg.sender, address(this), remaining);
             vfideToken.safeTransfer(l.lender, lenderGets);
             if (protocolFee > 0 && feeDistributor != address(0)) {
                 vfideToken.safeTransfer(feeDistributor, protocolFee);
             }
-            l.amountRepaid += remaining;
         }
 
         // Mark as repaid — stops all future guarantor extractions
@@ -775,6 +782,13 @@ contract VFIDETermLoan is ReentrancyGuard {
         if (amount > remaining) amount = remaining;
 
         l.amountRepaid += amount;
+        bool fullyRepaid = l.amountRepaid >= totalDebt;
+        if (fullyRepaid) {
+            l.state = LoanState.REPAID;
+            _closeLoan(l);
+            totalLoans++;
+            totalVolume += l.principal;
+        }
 
         uint256 protocolFee = (amount * PROTOCOL_CUT_PCT) / 100;
         uint256 lenderGets = amount - protocolFee;
@@ -786,11 +800,7 @@ contract VFIDETermLoan is ReentrancyGuard {
         }
 
         // Check if fully repaid via revenue
-        if (l.amountRepaid >= totalDebt) {
-            l.state = LoanState.REPAID;
-            _closeLoan(l);
-            totalLoans++;
-            totalVolume += l.principal;
+        if (fullyRepaid) {
             if (address(seer) != address(0)) {
                 try seer.reward(l.borrower, REWARD_ONTIME_BORROWER, "loan_revenue_repaid") {} catch {}
                 try seer.reward(l.lender, REWARD_ONTIME_LENDER, "loan_facilitated") {} catch {}

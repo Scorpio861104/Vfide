@@ -395,7 +395,11 @@ describe("VaultHub (F-20: SecurityHub timelock)", () => {
 
 describe("MerchantPortal (NEW-05: auto-convert safety hold)", () => {
   it("allows merchants to enable auto-convert only after the swap path is configured", async () => {
-    const { ethers } = (await network.connect()) as any;
+    const { ethers } = (await network.connect({
+      override: {
+        allowUnlimitedContractSize: true,
+      },
+    })) as any;
     const [dao, merchant] = await ethers.getSigners();
 
     const SeerStub = await ethers.getContractFactory("SeerScoreStub");

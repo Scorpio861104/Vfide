@@ -389,17 +389,15 @@ contract VaultHub is Ownable, Pausable, ReentrancyGuard {
         delete recoveryApprovalCount[vault];
         recoveryNonce[vault]++;
 
-        // Intentional external-call-first ordering: if the vault owner handoff fails,
-        // the registry state stays unchanged and the recovery can be retried safely.
-        (bool ok, ) = vault.call(abi.encodeWithSignature("__forceSetOwner(address)", newOwner));
-        require(ok, "VH:force-owner-failed");
-
-        // Update registry AFTER successful vault ownership transfer
+        // Update registry before the external vault handoff so any reentrant read sees the final owner.
         if (current != address(0)) {
             vaultOf[current] = address(0);
         }
         ownerOfVault[vault] = newOwner;
         vaultOf[newOwner] = vault;
+
+        (bool ok, ) = vault.call(abi.encodeWithSignature("__forceSetOwner(address)", newOwner));
+        require(ok, "VH:force-owner-failed");
 
         emit ForcedRecovery(vault, newOwner);
         _logEv(vault, "force_recover_final", 0, "");

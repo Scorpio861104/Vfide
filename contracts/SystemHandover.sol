@@ -147,6 +147,9 @@ contract SystemHandover {
         if (block.timestamp < handoverAt) revert SH_TooEarly();
         if (newAdmin == address(0)) newAdmin = address(dao);
 
+        handoverExecuted = true;
+        devMultisig = address(0);
+
         // Best-effort direct updates for permissive bootstrap deployments.
         // In production, these may revert due to onlyTimelock / onlyTimelockSelf gates.
         try dao.setAdmin(newAdmin) {} catch {}
@@ -156,9 +159,6 @@ contract SystemHandover {
         if (dao.admin() != newAdmin || timelock.admin() != address(dao)) {
             revert SH_GovernanceNotReady();
         }
-
-        handoverExecuted = true;
-        devMultisig = address(0);
         emit Executed(address(dao), address(timelock), newAdmin, extensionsUsed);
         _log("handover_executed");
     }

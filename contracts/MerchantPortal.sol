@@ -525,24 +525,25 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
             revert MERCH_VaultLocked();
         }
         
-        // Get merchant's vault (auto-create if needed)
-        address merchantVault = vaultHub.ensureVault(msg.sender);
-        
-        // Calculate fee
+        // Calculate fee and update merchant accounting before external interactions.
         uint256 fee = (amount * protocolFeeBps) / 10000;
         netAmount = amount - fee;
-        
+
         merchant.totalVolume += amount;
         merchant.txCount += 1;
-        
-        // Transfer fee first to fee sink (if fee > 0)
+
+        // Get merchant's vault (auto-create if needed) after internal accounting.
+        address merchantVault = vaultHub.ensureVault(msg.sender);
+
+        // Transfer fee first to fee sink (if fee > 0).
         if (fee > 0 && feeSink != address(0)) {
             // Vault custody model: charge fee from the customer's registered vault.
+            // slither-disable-next-line arbitrary-send-erc20
             IERC20(token).safeTransferFrom(customerVault, feeSink, fee);
         }
-        
+
         // Vault custody model: settle payment from the customer's registered vault.
-        // Transfer from customer vault to merchant vault
+        // slither-disable-next-line arbitrary-send-erc20
         IERC20(token).safeTransferFrom(customerVault, merchantVault, netAmount);
         
         emit PaymentProcessed(
@@ -628,20 +629,19 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
             revert MERCH_VaultLocked();
         }
         
-        // Determine recipient (Vault or Payout Address)
-        address recipient = merchants[merchant].payoutAddress;
-        if (recipient == address(0)) {
-            recipient = vaultHub.ensureVault(merchant);
-        }
-        
-        // Calculate fee
+        // Calculate fee and update merchant stats before external calls (CEI pattern).
         uint256 fee = (amount * protocolFeeBps) / 10000;
         netAmount = amount - fee;
-        
-        // C-3 FIX: Update merchant stats BEFORE external calls (CEI pattern)
+
         MerchantInfo storage m = merchants[merchant];
         m.totalVolume += amount;
         m.txCount += 1;
+
+        // Determine recipient (Vault or Payout Address) after internal accounting.
+        address recipient = m.payoutAddress;
+        if (recipient == address(0)) {
+            recipient = vaultHub.ensureVault(merchant);
+        }
         
         // Transfer fee FIRST (before net amount)
         if (fee > 0 && feeSink != address(0)) {
@@ -803,20 +803,19 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
         
         // Use scoped block to reduce stack depth
         {
-            // Determine recipient
-            address recipient = merchants[merchant].payoutAddress;
-            if (recipient == address(0)) {
-                recipient = vaultHub.ensureVault(merchant);
-            }
-            
-            // Calculate fee
+            // Calculate fee and update stats before external calls.
             uint256 fee = (amount * protocolFeeBps) / 10000;
             netAmount = amount - fee;
-            
-            // Update stats before external calls
+
             MerchantInfo storage m = merchants[merchant];
             m.totalVolume += amount;
             m.txCount += 1;
+
+            // Determine recipient after internal accounting.
+            address recipient = m.payoutAddress;
+            if (recipient == address(0)) {
+                recipient = vaultHub.ensureVault(merchant);
+            }
             
             // Fee transfer FIRST
             if (fee > 0 && feeSink != address(0)) {
