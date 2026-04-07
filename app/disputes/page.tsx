@@ -5,7 +5,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useAccount } from 'wagmi';
 import { ArrowRight, Scale, ShieldAlert, RotateCcw, MessagesSquare, AlertCircle } from 'lucide-react';
 import { Footer } from '@/components/layout/Footer';
-import PeerMediation from '@/components/merchant/disputes/PeerMediation';
+import { LazyPeerMediation as PeerMediation } from '@/lib/lazy';
 
 interface ReturnPreview {
   id: string;

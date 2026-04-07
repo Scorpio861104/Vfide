@@ -104,16 +104,15 @@ export function RealtimeProvider({ children, wsUrl }: { children: ReactNode; wsU
   const handlersRef = useRef<Map<string, Set<EventHandler>>>(new Map());
 
   useEffect(() => {
-    const resolvedUrl = wsUrl ?? process.env.NEXT_PUBLIC_WEBSOCKET_URL;
-    if (!resolvedUrl) return;
-    const url: string = resolvedUrl;
+    const socketUrl = wsUrl ?? process.env.NEXT_PUBLIC_WEBSOCKET_URL ?? '';
+    if (!socketUrl) return;
 
     let reconnectTimer: ReturnType<typeof setTimeout>;
     let ws: WebSocket;
 
     function connect() {
       try {
-        ws = new WebSocket(url);
+        ws = new WebSocket(socketUrl);
         wsRef.current = ws;
 
         ws.onopen = () => setConnected(true);
