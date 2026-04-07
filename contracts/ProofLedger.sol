@@ -15,6 +15,7 @@ contract ProofLedger {
     event EventLog(address indexed who, string action, uint256 amount, string note);
     event TransferLog(address indexed from, address indexed to, uint256 amount, string context);
     event LoggerSet(address indexed logger, bool authorized);
+    event DAOSet(address indexed oldDAO, address indexed newDAO);
 
     address public dao;
     mapping(address => bool) public authorizedLoggers;
@@ -36,7 +37,9 @@ contract ProofLedger {
 
     function setDAO(address _dao) external onlyDAO {
         if (_dao == address(0)) revert TRUST_Zero();
+        address oldDAO = dao;
         dao = _dao;
+        emit DAOSet(oldDAO, _dao);
     }
 
     /// @notice Authorize or deauthorize a contract to write log entries

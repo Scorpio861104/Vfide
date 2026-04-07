@@ -155,6 +155,96 @@ describe("ProofLedger coverage backfill", { concurrency: 1 }, () => {
     await ledger.connect(logger).logEvent(user.address, "transfer", 100, "note");
     await ledger.connect(logger).logTransfer(user.address, logger.address, 55, "context");
   });
+
+  it("emits a DAO change event when governance rotates", async () => {
+    const { dao, logger, ledger } = await deployFixture();
+
+    const tx = await ledger.connect(dao).setDAO(logger.address);
+    const receipt = await tx.wait();
+    const daoSetLog = receipt?.logs
+      .map((log: any) => {
+        try {
+          return ledger.interface.parseLog(log);
+        } catch {
+          return null;
+        }
+      })
+      .find((parsed: any) => parsed?.name === "DAOSet");
+
+    assert.equal(await ledger.dao(), logger.address);
+    assert.equal(daoSetLog?.args.oldDAO, dao.address);
+    assert.equal(daoSetLog?.args.newDAO, logger.address);
+  });
+});
+
+describe("Seer configuration event coverage", { concurrency: 1 }, () => {
+  async function deployFixture() {
+    const { ethers } = await network.connect({
+      override: {
+        allowUnlimitedContractSize: true,
+      },
+    });
+    const [dao] = await ethers.getSigners();
+
+    const Seer = await ethers.getContractFactory("Seer");
+    const seer = await Seer.deploy(dao.address, ethers.ZeroAddress, ethers.ZeroAddress);
+    await seer.waitForDeployment();
+
+    const Guard = await ethers.getContractFactory("SeerPolicyGuard");
+    const guard = await Guard.deploy(dao.address, await seer.getAddress());
+    await guard.waitForDeployment();
+
+    await seer.connect(dao).setPolicyGuard(await guard.getAddress());
+
+    return { ethers, dao, seer, guard };
+  }
+
+  it("emits ScoreCacheTTLUpdated when the cache TTL changes", async () => {
+    const { dao, seer } = await deployFixture();
+
+    const tx = await seer.connect(dao).setScoreCacheTTL(10n * 60n);
+    const receipt = await tx.wait();
+    const ttlLog = receipt?.logs
+      .map((log: any) => {
+        try {
+          return seer.interface.parseLog(log);
+        } catch {
+          return null;
+        }
+      })
+      .find((parsed: any) => parsed?.name === "ScoreCacheTTLUpdated");
+
+    assert.equal(await seer.scoreCacheTTL(), 600n);
+    assert.equal(ttlLog?.args.ttl, 600n);
+  });
+
+  it("emits DecayConfigUpdated after the policy delay matures", async () => {
+    const { ethers, dao, seer, guard } = await deployFixture();
+
+    const selector = seer.interface.getFunction("setDecayConfig").selector;
+    await guard.connect(dao).schedulePolicyChange(selector, 1);
+    await ethers.provider.send("evm_increaseTime", [72 * 60 * 60 + 1]);
+    await ethers.provider.send("evm_mine", []);
+
+    const tx = await seer.connect(dao).setDecayConfig(true, 120, 80);
+    const receipt = await tx.wait();
+    const decayLog = receipt?.logs
+      .map((log: any) => {
+        try {
+          return seer.interface.parseLog(log);
+        } catch {
+          return null;
+        }
+      })
+      .find((parsed: any) => parsed?.name === "DecayConfigUpdated");
+
+    assert.equal(await seer.decayEnabled(), true);
+    assert.equal(await seer.decayStartDays(), 120n);
+    assert.equal(await seer.decayPerMonth(), 80n);
+    assert.equal(decayLog?.args.enabled, true);
+    assert.equal(decayLog?.args.startDays, 120n);
+    assert.equal(decayLog?.args.perMonth, 80n);
+  });
 });
 
 describe("VFIDEAccessControl coverage backfill", { concurrency: 1 }, () => {
