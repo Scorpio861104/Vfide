@@ -17,7 +17,7 @@ import "./SharedInterfaces.sol";
  */
 
 interface IUserVaultOCP {
-    function setFrozen(bool _frozen) external;
+    // setFrozen removed — non-custodial
     function setAbnormalTransactionThreshold(uint256 threshold) external;
     function setWithdrawalCooldown(uint64 cooldown) external;
     function setLargeTransferThreshold(uint256 threshold) external;
@@ -288,9 +288,7 @@ contract OwnerControlPanel {
         return keccak256(abi.encode("token_confirmCircuitBreaker"));
     }
 
-    function actionId_token_setBlacklist(address user, bool status) private pure returns (bytes32) {
-        return keccak256(abi.encode("token_setBlacklist", user, status));
-    }
+    // actionId_token_setBlacklist removed — non-custodial, no blacklist
 
     function actionId_token_setModules(
         address hub,
@@ -587,26 +585,10 @@ contract OwnerControlPanel {
     /**
      * @notice Check if circuit breaker is currently active
      */
-    /**
-     * @notice Blacklist address for compliance (sanctions)
-     */
-    function token_setBlacklist(address user, bool status) external onlyOwner nonReentrant {
-        _consumeQueuedAction(actionId_token_setBlacklist(user, status));
-        vfideToken.setBlacklist(user, status);
-        emit EmergencyAction(status ? "token_blacklisted" : "token_unblacklisted", user);
-    }
-    
-    /**
-     * @notice Batch blacklist multiple addresses
-     * @dev Each address requires its own queued action to prevent timelock bypass
-     */
-    function token_batchBlacklist(address[] calldata users, bool status) external onlyOwner nonReentrant {
-        for (uint256 i = 0; i < users.length; i++) {
-            _consumeQueuedAction(actionId_token_setBlacklist(users[i], status));
-            vfideToken.setBlacklist(users[i], status);
-        }
-        emit EmergencyAction(status ? "token_batch_blacklist_applied" : "token_batch_unblacklist_applied", address(vfideToken));
-    }
+    // ── Blacklist functions REMOVED — non-custodial ──────────────
+    // No entity can blacklist another user's address. Fraud is handled
+    // through FraudRegistry (DAO-verified, 30-day escrow, service ban).
+    // ───────────────────────────────────────────────────────────────
     
     // ═══════════════════════════════════════════════════════════════════════
     //                          ANTI-WHALE PROTECTION
@@ -1224,8 +1206,7 @@ contract OwnerControlPanel {
      */
     function emergency_pauseAll() external onlyOwner {
         _consumeQueuedAction(actionId_emergency_pauseAll());
-        // Immediately bypass SecurityHub checks and BurnRouter fees (independent controls per H-02)
-        vfideToken.setSecurityBypass(true, 1 days);
+        // SecurityHub bypass removed — non-custodial (no third-party locks to bypass)
         vfideToken.setFeeBypass(true, 1 days);
         // Queue circuit breaker activation (requires confirmCircuitBreaker() after 48h)
         vfideToken.setCircuitBreaker(true, 1 days);
@@ -1238,8 +1219,7 @@ contract OwnerControlPanel {
      */
     function emergency_resumeAll() external onlyOwner {
         _consumeQueuedAction(actionId_emergency_resumeAll());
-        // Disable all bypasses immediately
-        vfideToken.setSecurityBypass(false, 0);
+        // SecurityHub bypass removed — non-custodial
         vfideToken.setFeeBypass(false, 0);
         vfideToken.setCircuitBreaker(false, 0);
         

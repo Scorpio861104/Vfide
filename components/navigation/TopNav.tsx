@@ -3,8 +3,9 @@
 import { useState } from 'react';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { Home, Store, ArrowLeftRight, MessageCircle, User, Search, Bell } from 'lucide-react';
+import { Home, Store, ArrowLeftRight, MessageCircle, User, Search } from 'lucide-react';
 import { NotificationBell } from '@/lib/notifications';
+import { ConnectButton } from '@rainbow-me/rainbowkit';
 
 const sections = [
   { id: 'home', href: '/dashboard', icon: Home, label: 'Home' },
@@ -74,6 +75,13 @@ export function TopNav() {
 
         {/* Notifications */}
         <NotificationBell />
+
+        {/* Wallet */}
+        <ConnectButton 
+          accountStatus="avatar"
+          chainStatus="icon"
+          showBalance={false}
+        />
       </div>
     </nav>
   );
