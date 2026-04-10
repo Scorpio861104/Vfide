@@ -4,24 +4,7 @@
 import { useState, useEffect } from 'react';
 import { useAccount, useWriteContract, useSignMessage } from 'wagmi';
 import { motion, AnimatePresence } from 'framer-motion';
-import {
-  Shield,
-  Key,
-  Lock,
-  Clock,
-  CheckCircle2,
-  AlertTriangle,
-  AlertCircle,
-  XCircle,
-  Loader2,
-  UserCheck,
-  Fingerprint,
-  HelpCircle,
-  ArrowRight,
-  ChevronRight,
-  Users,
-  Unlock,
-} from 'lucide-react';
+import { Shield, Key, Lock, Clock, CheckCircle2, AlertTriangle, X, Loader2 } from 'lucide-react';
 import { useVaultRecovery } from '@/hooks/useVaultRecovery';
 
 export function ClaimFlowModal({ 

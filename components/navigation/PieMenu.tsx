@@ -68,20 +68,6 @@ import {
   Tag,
   Flashlight,
 } from 'lucide-react';
-import {
-  ProofScoreRing, QuickActions, useHaptics,
-  useSmartRecents, SmartRecentsBar,
-  NotificationPulse, MenuSearch,
-  useFavorites, FavoriteStar, useLongPress,
-  PaymentRipple,
-} from './PieMenuEnhancements';
-import {
-  useSwipeGesture, SwipeHints, RevenuePulse,
-  useStreak, StreakFlame, AchievementBurst,
-  useSectionTone, useOnlineStatus, OfflineIndicator,
-  useTransactionChime,
-} from './PieMenuAdvanced';
-import { useAnimationBudget } from '@/lib/device';
 
 // ============================================================================
 // TYPES
@@ -672,35 +658,6 @@ export function PieMenu() {
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const audioRef = useRef<AudioContext | null>(null);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [quickActionsVisible, setQuickActionsVisible] = useState(false);
-  const [triggerRect, setTriggerRect] = useState({ x: 0, y: 0 });
-  const triggerRef = useRef<HTMLDivElement>(null);
-
-  // Enhancement hooks
-  const haptics = useHaptics();
-  const animBudget = useAnimationBudget();
-  const recents = useSmartRecents();
-  const { isFavorite, toggleFavorite } = useFavorites();
-  const streak = useStreak();
-  const { online, justReconnected } = useOnlineStatus();
-  const sectionTone = useSectionTone();
-  const longPressHandlers = useLongPress(
-    () => {
-      if (triggerRef.current) {
-        const rect = triggerRef.current.getBoundingClientRect();
-        setTriggerRect({ x: rect.left + rect.width / 2, y: rect.top });
-      }
-      setQuickActionsVisible(true);
-      haptics.heavy();
-    },
-    () => { toggleMenu(); },
-    400
-  );
-  const swipeHandlers = useSwipeGesture((dir, href) => {
-    haptics.tap();
-    router.push(href);
-  });
   
   // Close menu on outside click
   useEffect(() => {
@@ -785,43 +742,31 @@ export function PieMenu() {
   }, []);
 
   const handleItemClick = useCallback((item: NavItem) => {
-    haptics.tap();
     if (item.children && item.children.length > 0) {
       setActiveCategory(item);
       playClickTone(AUDIO_FREQUENCIES.categoryOpen);
     } else if (item.href) {
       playClickTone(AUDIO_FREQUENCIES.navigation);
-      // Detect section for ambient tone
-      const section = item.href.split('/')[1] || 'home';
-      sectionTone(section);
       router.push(item.href);
       setIsOpen(false);
       setActiveCategory(null);
-      setSearchQuery('');
     }
-  }, [router, playClickTone, haptics, sectionTone]);
+  }, [router, playClickTone]);
 
   const handleBack = useCallback(() => {
-    haptics.tap();
     playClickTone(AUDIO_FREQUENCIES.back);
     setActiveCategory(null);
-    setSearchQuery('');
-  }, [playClickTone, haptics]);
+  }, [playClickTone]);
 
   const toggleMenu = useCallback(() => {
-    haptics.tap();
     playClickTone(isOpen ? AUDIO_FREQUENCIES.toggleClose : AUDIO_FREQUENCIES.toggleOpen);
     setIsOpen(prev => !prev);
     if (isOpen) {
       setActiveCategory(null);
-      setSearchQuery('');
-      setQuickActionsVisible(false);
     }
-  }, [isOpen, playClickTone, haptics]);
+  }, [isOpen, playClickTone]);
 
-  const itemsToShow = (activeCategory?.children || navigationItems).filter(item =>
-    !searchQuery || item.label.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const itemsToShow = activeCategory?.children || navigationItems;
 
   const isPathActive = (href?: string) => {
     if (!href) return false;
@@ -991,18 +936,6 @@ export function PieMenu() {
                 )}
               </AnimatePresence>
               
-              {/* Search */}
-              <MenuSearch value={searchQuery} onChange={setSearchQuery} resultCount={
-                (activeCategory?.children || navigationItems).filter(item =>
-                  !searchQuery || item.label.toLowerCase().includes(searchQuery.toLowerCase())
-                ).length
-              } />
-
-              {/* Smart Recents */}
-              {!activeCategory && !searchQuery && (
-                <SmartRecentsBar recents={recents} onSelect={(href) => { router.push(href); setIsOpen(false); }} />
-              )}
-
               {/* Menu Items */}
               <div className="py-2 max-h-[60vh] overflow-y-auto scrollbar-hide">
                 <AnimatePresence mode="wait">
@@ -1049,25 +982,12 @@ export function PieMenu() {
           )}
         </AnimatePresence>
         
-        {/* Enhanced Trigger Button */}
-        <div ref={triggerRef} className="relative" {...longPressHandlers} {...swipeHandlers}>
-          <ProofScoreRing score={5000} size={56}>
-            <TriggerButton
-              isOpen={isOpen}
-              onClick={toggleMenu}
-              activeCategory={activeCategory || undefined}
-            />
-            <NotificationPulse active={false} count={0} />
-            <OfflineIndicator online={online} justReconnected={justReconnected} />
-          </ProofScoreRing>
-          <StreakFlame streak={streak} />
-          <QuickActions
-            visible={quickActionsVisible}
-            onSelect={(href) => { setQuickActionsVisible(false); haptics.tap(); router.push(href); }}
-            anchorX={triggerRect.x}
-            anchorY={triggerRect.y}
-          />
-        </div>
+        {/* Trigger Button */}
+        <TriggerButton
+          isOpen={isOpen}
+          onClick={toggleMenu}
+          activeCategory={activeCategory || undefined}
+        />
       </div>
     </nav>
   );

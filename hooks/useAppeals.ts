@@ -2,11 +2,7 @@
 
 import { useMemo } from 'react'
 import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi'
-import {
-  CONTRACT_ADDRESSES,
-  getContractConfigurationError,
-  isConfiguredContractAddress,
-} from '@/lib/contracts'
+import { CONTRACT_ADDRESSES } from '@/lib/contracts'
 import { SeerSocialABI } from '@/lib/abis'
 
 type AppealStatus = {
@@ -19,16 +15,12 @@ type AppealStatus = {
 }
 
 export function useAppealStatus(address?: `0x${string}`) {
-  const configError = !isConfiguredContractAddress(CONTRACT_ADDRESSES.SeerSocial)
-    ? getContractConfigurationError('SeerSocial')
-    : null
-
   const { data, isLoading, error, refetch } = useReadContract({
     address: CONTRACT_ADDRESSES.SeerSocial,
     abi: SeerSocialABI,
     functionName: 'appeals',
     args: address ? [address] : undefined,
-    query: { enabled: Boolean(address) && !configError },
+    query: { enabled: Boolean(address) },
   })
 
   const parsed = useMemo<AppealStatus>(() => {
@@ -48,19 +40,16 @@ export function useAppealStatus(address?: `0x${string}`) {
     }
   }, [data])
 
-  return { ...parsed, isLoading, error: configError ?? error, refetch, isAvailable: !configError }
+  return { ...parsed, isLoading, error, refetch }
 }
 
 export function useFileAppeal() {
   const { address } = useAccount()
-  const configError = !isConfiguredContractAddress(CONTRACT_ADDRESSES.SeerSocial)
-    ? getContractConfigurationError('SeerSocial')
-    : null
   const { writeContract, data: hash, isPending, error } = useWriteContract()
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash })
 
   const fileAppeal = (reason: string) => {
-    if (!address || !reason || configError) return
+    if (!address || !reason) return
     writeContract({
       address: CONTRACT_ADDRESSES.SeerSocial,
       abi: SeerSocialABI,
@@ -69,11 +58,5 @@ export function useFileAppeal() {
     })
   }
 
-  return {
-    fileAppeal,
-    isLoading: isPending || isConfirming,
-    isSuccess,
-    error: configError ?? error,
-    isAvailable: !configError,
-  }
+  return { fileAppeal, isLoading: isPending || isConfirming, isSuccess, error }
 }

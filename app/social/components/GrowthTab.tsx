@@ -1,16 +1,35 @@
 'use client';
 
-interface GrowthTabProps {
-  timeRange?: 'Week' | 'Month' | 'Year';
-}
+import { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
+import { Loader2 } from 'lucide-react';
 
-export function GrowthTab({ timeRange = 'Week' }: GrowthTabProps) {
+// Follower growth charts, demographic breakdown, referral sources
+
+export function GrowthTab() {
+  const [loading, setLoading] = useState(true);
+  const [data, setData] = useState<any>(null);
+
+  useEffect(() => {
+    // TODO: Wire to API endpoint
+    const timer = setTimeout(() => setLoading(false), 500);
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 size={24} className="text-cyan-400 animate-spin" />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div className="bg-white/3 border border-white/10 rounded-2xl p-6">
-        <p className="text-xs uppercase tracking-[0.2em] text-cyan-400 mb-2">{timeRange} growth</p>
-        <h2 className="text-xl font-bold text-white mb-4">Insights & Recommendations</h2>
-        <p className="text-gray-400">Growth guidance is temporarily unavailable while background analytics backfills complete.</p>
+        <h3 className="text-lg font-bold text-white mb-4">Growth</h3>
+        <p className="text-gray-400 text-sm">Follower growth charts, demographic breakdown, referral sources</p>
+        {/* TODO: Implement GrowthTab UI */}
       </div>
     </div>
   );

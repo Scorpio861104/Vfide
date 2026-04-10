@@ -183,40 +183,28 @@ export async function POST(request: NextRequest) {
     const authResult = await requireAuth(request);
     if (authResult instanceof NextResponse) return authResult;
 
-    let body: Record<string, unknown>;
+    let body: z.infer<typeof analyticsBatchSchema> | z.infer<typeof analyticsSingleSchema>;
     try {
       const rawBody = await request.json();
-      if (!isObjectRecord(rawBody)) {
-        return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
-      }
-
-      body = rawBody;
-
-      if ('metrics' in body) {
-        if (!Array.isArray(body.metrics)) {
-          return NextResponse.json({ error: 'Invalid batch metric payload' }, { status: 400 });
-        }
-
-        if (body.metrics.length > MAX_BATCH_METRICS) {
-          return NextResponse.json(
-            { error: `Too many metrics in one request. Max ${MAX_BATCH_METRICS}.` },
-            { status: 400 }
-          );
-        }
-
-        const parsedBatch = analyticsBatchSchema.safeParse({ metrics: body.metrics });
+      if (isObjectRecord(rawBody) && Array.isArray(rawBody.metrics)) {
+        const parsedBatch = analyticsBatchSchema.safeParse(rawBody);
         if (!parsedBatch.success) {
           return NextResponse.json({ error: 'Invalid batch metric payload' }, { status: 400 });
         }
-
-        body = parsedBatch.data as Record<string, unknown>;
+        body = parsedBatch.data;
+      } else {
+        const parsedSingle = analyticsSingleSchema.safeParse(rawBody);
+        if (!parsedSingle.success) {
+          return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
+        }
+        body = parsedSingle.data;
       }
     } catch (error) {
       logger.debug('[Analytics POST] Invalid JSON payload', error);
       return NextResponse.json({ error: 'Invalid JSON payload' }, { status: 400 });
     }
 
-    const metrics = Array.isArray(body.metrics) ? body.metrics : null;
+    const metrics = 'metrics' in body && Array.isArray(body.metrics) ? body.metrics : null;
 
     if (metrics && metrics.length > 0) {
       if (metrics.length > MAX_BATCH_METRICS) {
@@ -315,7 +303,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: true });
     }
 
-    const singleEventBody = body as Partial<z.infer<typeof analyticsSingleSchema>>;
+    const singleEventBody = body as z.infer<typeof analyticsSingleSchema>;
     const { userId, eventType, eventData } = singleEventBody;
 
     const normalizedEventType = typeof eventType === 'string' ? eventType.trim().toLowerCase() : null;

@@ -215,157 +215,157 @@ describe('TransferForm Pattern', () => {
   })
 })
 
-// Test Governance Lock Panel pattern
-describe('GovernanceLockPanel Pattern', () => {
-  interface GovernanceLockData {
-    lockedAmount: bigint
-    availableToLock: bigint
-    participationPoints: bigint
-    votingWeight: number
-    cooldownDays: number
+// Test Staking Panel pattern
+describe('StakingPanel Pattern', () => {
+  interface StakingData {
+    stakedAmount: bigint
+    availableToStake: bigint
+    rewards: bigint
+    apy: number
+    lockPeriod: number // days
   }
 
-  function GovernanceLockPanel({
+  function StakingPanel({
     data,
-    onLock,
-    onUnlock,
-    onViewActivity,
+    onStake,
+    onUnstake,
+    onClaimRewards,
     isProcessing,
   }: {
-    data: GovernanceLockData
-    onLock: (amount: string) => void
-    onUnlock: (amount: string) => void
-    onViewActivity: () => void
+    data: StakingData
+    onStake: (amount: string) => void
+    onUnstake: (amount: string) => void
+    onClaimRewards: () => void
     isProcessing: boolean
   }) {
     const formatAmount = (amount: bigint) => (Number(amount) / 1e18).toFixed(2)
 
     return (
-      <div data-testid="locking-panel">
-        <div data-testid="locking-stats">
-          <div data-testid="locked-amount">
-            <span>Locked</span>
-            <span>{formatAmount(data.lockedAmount)} VFIDE</span>
+      <div data-testid="staking-panel">
+        <div data-testid="staking-stats">
+          <div data-testid="staked-amount">
+            <span>Staked</span>
+            <span>{formatAmount(data.stakedAmount)} VFIDE</span>
           </div>
           <div data-testid="available-amount">
             <span>Available</span>
-            <span>{formatAmount(data.availableToLock)} VFIDE</span>
+            <span>{formatAmount(data.availableToStake)} VFIDE</span>
           </div>
-          <div data-testid="participation-amount">
-            <span>Participation</span>
-            <span>{formatAmount(data.participationPoints)} pts</span>
+          <div data-testid="rewards-amount">
+            <span>Rewards</span>
+            <span>{formatAmount(data.rewards)} VFIDE</span>
           </div>
-          <div data-testid="voting-weight">
-            <span>Voting Weight</span>
-            <span>{data.votingWeight}%</span>
+          <div data-testid="apy-display">
+            <span>APY</span>
+            <span>{data.apy}%</span>
           </div>
-          <div data-testid="cooldown-period">
-            <span>Cooldown</span>
-            <span>{data.cooldownDays} days</span>
+          <div data-testid="lock-period">
+            <span>Lock Period</span>
+            <span>{data.lockPeriod} days</span>
           </div>
         </div>
-        <div data-testid="locking-actions">
-          <button
-            data-testid="lock-button"
-            onClick={() => onLock('100')}
+        <div data-testid="staking-actions">
+          <button 
+            data-testid="stake-button"
+            onClick={() => onStake('100')}
             disabled={isProcessing}
           >
-            Lock
+            Stake
           </button>
-          <button
-            data-testid="unlock-button"
-            onClick={() => onUnlock('100')}
-            disabled={isProcessing || data.lockedAmount === 0n}
+          <button 
+            data-testid="unstake-button"
+            onClick={() => onUnstake('100')}
+            disabled={isProcessing || data.stakedAmount === 0n}
           >
-            Unlock
+            Unstake
           </button>
-          <button
-            data-testid="activity-button"
-            onClick={onViewActivity}
-            disabled={isProcessing || data.participationPoints === 0n}
+          <button 
+            data-testid="claim-button"
+            onClick={onClaimRewards}
+            disabled={isProcessing || data.rewards === 0n}
           >
-            View Activity
+            Claim Rewards
           </button>
         </div>
       </div>
     )
   }
 
-  const mockData: GovernanceLockData = {
-    lockedAmount: BigInt('1000000000000000000000'),
-    availableToLock: BigInt('500000000000000000000'),
-    participationPoints: BigInt('50000000000000000000'),
-    votingWeight: 12.5,
-    cooldownDays: 30,
+  const mockData: StakingData = {
+    stakedAmount: BigInt('1000000000000000000000'),
+    availableToStake: BigInt('500000000000000000000'),
+    rewards: BigInt('50000000000000000000'),
+    apy: 12.5,
+    lockPeriod: 30,
   }
 
-  it('displays locked amount', () => {
+  it('displays staked amount', () => {
     render(
-      <GovernanceLockPanel data={mockData} onLock={() => {}} onUnlock={() => {}} onViewActivity={() => {}} isProcessing={false} />
+      <StakingPanel data={mockData} onStake={() => {}} onUnstake={() => {}} onClaimRewards={() => {}} isProcessing={false} />
     )
-    expect(screen.getByTestId('locked-amount')).toHaveTextContent('1000.00 VFIDE')
+    expect(screen.getByTestId('staked-amount')).toHaveTextContent('1000.00 VFIDE')
   })
 
   it('displays available amount', () => {
     render(
-      <GovernanceLockPanel data={mockData} onLock={() => {}} onUnlock={() => {}} onViewActivity={() => {}} isProcessing={false} />
+      <StakingPanel data={mockData} onStake={() => {}} onUnstake={() => {}} onClaimRewards={() => {}} isProcessing={false} />
     )
     expect(screen.getByTestId('available-amount')).toHaveTextContent('500.00 VFIDE')
   })
 
-  it('displays participation points', () => {
+  it('displays rewards', () => {
     render(
-      <GovernanceLockPanel data={mockData} onLock={() => {}} onUnlock={() => {}} onViewActivity={() => {}} isProcessing={false} />
+      <StakingPanel data={mockData} onStake={() => {}} onUnstake={() => {}} onClaimRewards={() => {}} isProcessing={false} />
     )
-    expect(screen.getByTestId('participation-amount')).toHaveTextContent('50.00 pts')
+    expect(screen.getByTestId('rewards-amount')).toHaveTextContent('50.00 VFIDE')
   })
 
-  it('displays voting weight', () => {
+  it('displays APY', () => {
     render(
-      <GovernanceLockPanel data={mockData} onLock={() => {}} onUnlock={() => {}} onViewActivity={() => {}} isProcessing={false} />
+      <StakingPanel data={mockData} onStake={() => {}} onUnstake={() => {}} onClaimRewards={() => {}} isProcessing={false} />
     )
-    expect(screen.getByTestId('voting-weight')).toHaveTextContent('12.5%')
+    expect(screen.getByTestId('apy-display')).toHaveTextContent('12.5%')
   })
 
-  it('displays cooldown period', () => {
+  it('displays lock period', () => {
     render(
-      <GovernanceLockPanel data={mockData} onLock={() => {}} onUnlock={() => {}} onViewActivity={() => {}} isProcessing={false} />
+      <StakingPanel data={mockData} onStake={() => {}} onUnstake={() => {}} onClaimRewards={() => {}} isProcessing={false} />
     )
-    expect(screen.getByTestId('cooldown-period')).toHaveTextContent('30 days')
+    expect(screen.getByTestId('lock-period')).toHaveTextContent('30 days')
   })
 
-  it('calls onLock when lock clicked', () => {
-    const onLock = jest.fn()
+  it('calls onStake when stake clicked', () => {
+    const onStake = jest.fn()
     render(
-      <GovernanceLockPanel data={mockData} onLock={onLock} onUnlock={() => {}} onViewActivity={() => {}} isProcessing={false} />
+      <StakingPanel data={mockData} onStake={onStake} onUnstake={() => {}} onClaimRewards={() => {}} isProcessing={false} />
     )
-    fireEvent.click(screen.getByTestId('lock-button'))
-    expect(onLock).toHaveBeenCalled()
+    fireEvent.click(screen.getByTestId('stake-button'))
+    expect(onStake).toHaveBeenCalled()
   })
 
-  it('calls onViewActivity when activity clicked', () => {
-    const onViewActivity = jest.fn()
+  it('calls onClaimRewards when claim clicked', () => {
+    const onClaimRewards = jest.fn()
     render(
-      <GovernanceLockPanel data={mockData} onLock={() => {}} onUnlock={() => {}} onViewActivity={onViewActivity} isProcessing={false} />
+      <StakingPanel data={mockData} onStake={() => {}} onUnstake={() => {}} onClaimRewards={onClaimRewards} isProcessing={false} />
     )
-    fireEvent.click(screen.getByTestId('activity-button'))
-    expect(onViewActivity).toHaveBeenCalled()
+    fireEvent.click(screen.getByTestId('claim-button'))
+    expect(onClaimRewards).toHaveBeenCalled()
   })
 
-  it('disables activity button when there are no participation points', () => {
-    const noActivityData = { ...mockData, participationPoints: 0n }
+  it('disables claim when no rewards', () => {
+    const noRewardsData = { ...mockData, rewards: 0n }
     render(
-      <GovernanceLockPanel data={noActivityData} onLock={() => {}} onUnlock={() => {}} onViewActivity={() => {}} isProcessing={false} />
+      <StakingPanel data={noRewardsData} onStake={() => {}} onUnstake={() => {}} onClaimRewards={() => {}} isProcessing={false} />
     )
-    expect(screen.getByTestId('activity-button')).toBeDisabled()
+    expect(screen.getByTestId('claim-button')).toBeDisabled()
   })
 
   it('disables all actions when processing', () => {
     render(
-      <GovernanceLockPanel data={mockData} onLock={() => {}} onUnlock={() => {}} onViewActivity={() => {}} isProcessing={true} />
+      <StakingPanel data={mockData} onStake={() => {}} onUnstake={() => {}} onClaimRewards={() => {}} isProcessing={true} />
     )
-    expect(screen.getByTestId('lock-button')).toBeDisabled()
-    expect(screen.getByTestId('activity-button')).toBeDisabled()
+    expect(screen.getByTestId('stake-button')).toBeDisabled()
+    expect(screen.getByTestId('claim-button')).toBeDisabled()
   })
 })
 

@@ -47,7 +47,7 @@ export function OnRampDisclaimer({ providerName = 'the provider' }: { providerNa
       <p className="text-xs text-gray-400">
         Fiat purchases are processed by {providerName}, a separate regulated entity.
         Identity verification required by {providerName} is subject to their compliance policies,
-        not VFIDE&apos;s. VFIDE does not collect or store your identity documents.
+        not VFIDE's. VFIDE does not collect or store your identity documents.
       </p>
     </div>
   );

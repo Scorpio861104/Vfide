@@ -47,6 +47,11 @@
   },
   {
     "inputs": [],
+    "name": "VF_FrozenAddress",
+    "type": "error"
+  },
+  {
+    "inputs": [],
     "name": "VF_InsufficientBalance",
     "type": "error"
   },
@@ -78,6 +83,11 @@
   {
     "inputs": [],
     "name": "VF_POLICY_LOCKED",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "VF_SanctionedAddress",
     "type": "error"
   },
   {
@@ -162,6 +172,31 @@
       {
         "indexed": true,
         "internalType": "address",
+        "name": "user",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "bool",
+        "name": "status",
+        "type": "bool"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "setBy",
+        "type": "address"
+      }
+    ],
+    "name": "BlacklistSet",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
         "name": "router",
         "type": "address"
       },
@@ -200,55 +235,11 @@
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "duration",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint64",
-        "name": "effectiveAt",
-        "type": "uint64"
-      }
-    ],
-    "name": "CircuitBreakerProposed",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
-        "internalType": "bool",
-        "name": "active",
-        "type": "bool"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
         "name": "expiry",
         "type": "uint256"
       }
     ],
     "name": "CircuitBreakerSet",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "previousController",
-        "type": "address"
-      },
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "newController",
-        "type": "address"
-      }
-    ],
-    "name": "EmergencyControllerSet",
     "type": "event"
   },
   {
@@ -363,30 +354,23 @@
       {
         "indexed": true,
         "internalType": "address",
-        "name": "registry",
+        "name": "user",
         "type": "address"
       },
       {
         "indexed": false,
-        "internalType": "uint64",
-        "name": "effectiveAt",
-        "type": "uint64"
-      }
-    ],
-    "name": "FraudRegistryScheduled",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
+        "internalType": "bool",
+        "name": "frozen",
+        "type": "bool"
+      },
       {
         "indexed": true,
         "internalType": "address",
-        "name": "registry",
+        "name": "setBy",
         "type": "address"
       }
     ],
-    "name": "FraudRegistrySet",
+    "name": "FrozenSet",
     "type": "event"
   },
   {
@@ -804,6 +788,19 @@
   },
   {
     "inputs": [],
+    "name": "FREEZE_DELAY",
+    "outputs": [
+      {
+        "internalType": "uint64",
+        "name": "",
+        "type": "uint64"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "MAX_CIRCUIT_BREAKER_DURATION",
     "outputs": [
       {
@@ -888,13 +885,6 @@
   {
     "inputs": [],
     "name": "applyBurnRouter",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "applyFraudRegistry",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -1046,13 +1036,6 @@
   },
   {
     "inputs": [],
-    "name": "cancelFraudRegistry",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [],
     "name": "cancelLedger",
     "outputs": [],
     "stateMutability": "nonpayable",
@@ -1081,21 +1064,7 @@
   },
   {
     "inputs": [],
-    "name": "cancelSanctumSink",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [],
     "name": "cancelSecurityHub",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "cancelTreasurySink",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -1131,13 +1100,6 @@
       }
     ],
     "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "confirmCircuitBreaker",
-    "outputs": [],
-    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
@@ -1263,51 +1225,12 @@
   },
   {
     "inputs": [],
-    "name": "emergencyController",
-    "outputs": [
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "newOwner",
-        "type": "address"
-      }
-    ],
-    "name": "emergencyTransferOwnership",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [],
     "name": "feeBypass",
     "outputs": [
       {
         "internalType": "bool",
         "name": "",
         "type": "bool"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "feeBypassActivatedAt",
-    "outputs": [
-      {
-        "internalType": "uint64",
-        "name": "",
-        "type": "uint64"
       }
     ],
     "stateMutability": "view",
@@ -1327,13 +1250,19 @@
     "type": "function"
   },
   {
-    "inputs": [],
-    "name": "fraudRegistry",
-    "outputs": [
+    "inputs": [
       {
-        "internalType": "contract IFraudRegistry",
+        "internalType": "address",
         "name": "",
         "type": "address"
+      }
+    ],
+    "name": "freezeTime",
+    "outputs": [
+      {
+        "internalType": "uint64",
+        "name": "",
+        "type": "uint64"
       }
     ],
     "stateMutability": "view",
@@ -1481,6 +1410,25 @@
     "type": "function"
   },
   {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "name": "isBlacklisted",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [],
     "name": "isCircuitBreakerActive",
     "outputs": [
@@ -1496,6 +1444,25 @@
   {
     "inputs": [],
     "name": "isFeeBypassed",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "name": "isFrozen",
     "outputs": [
       {
         "internalType": "bool",
@@ -1670,45 +1637,6 @@
   },
   {
     "inputs": [],
-    "name": "pendingCircuitBreakerActive",
-    "outputs": [
-      {
-        "internalType": "bool",
-        "name": "",
-        "type": "bool"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "pendingCircuitBreakerAt",
-    "outputs": [
-      {
-        "internalType": "uint64",
-        "name": "",
-        "type": "uint64"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "pendingCircuitBreakerDuration",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
     "name": "pendingExemptAddr",
     "outputs": [
       {
@@ -1741,32 +1669,6 @@
         "internalType": "bool",
         "name": "",
         "type": "bool"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "pendingFraudRegistry",
-    "outputs": [
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "pendingFraudRegistryAt",
-    "outputs": [
-      {
-        "internalType": "uint64",
-        "name": "",
-        "type": "uint64"
       }
     ],
     "stateMutability": "view",
@@ -2144,19 +2046,6 @@
   },
   {
     "inputs": [],
-    "name": "securityBypassActivatedAt",
-    "outputs": [
-      {
-        "internalType": "uint64",
-        "name": "",
-        "type": "uint64"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
     "name": "securityBypassExpiry",
     "outputs": [
       {
@@ -2213,6 +2102,24 @@
     "inputs": [
       {
         "internalType": "address",
+        "name": "user",
+        "type": "address"
+      },
+      {
+        "internalType": "bool",
+        "name": "status",
+        "type": "bool"
+      }
+    ],
+    "name": "setBlacklist",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
         "name": "router",
         "type": "address"
       }
@@ -2243,19 +2150,6 @@
   {
     "inputs": [
       {
-        "internalType": "address",
-        "name": "controller",
-        "type": "address"
-      }
-    ],
-    "name": "setEmergencyController",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
         "internalType": "bool",
         "name": "_active",
         "type": "bool"
@@ -2275,11 +2169,16 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "_registry",
+        "name": "user",
         "type": "address"
+      },
+      {
+        "internalType": "bool",
+        "name": "frozen",
+        "type": "bool"
       }
     ],
-    "name": "setFraudRegistry",
+    "name": "setFrozen",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

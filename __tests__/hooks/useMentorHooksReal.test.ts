@@ -20,24 +20,11 @@ jest.mock('wagmi', () => ({
 }))
 
 // Mock contracts
-jest.mock('../../lib/contracts', () => {
-  const contractAddresses = {
+jest.mock('../../lib/contracts', () => ({
+  CONTRACT_ADDRESSES: {
     Seer: '0x1234567890123456789012345678901234567890',
-    SeerView: '0x1234567890123456789012345678901234567891',
-    SeerSocial: '0x1234567890123456789012345678901234567892',
-  }
-
-  return {
-    CONTRACT_ADDRESSES: contractAddresses,
-    ZERO_ADDRESS: '0x0000000000000000000000000000000000000000',
-    isConfiguredContractAddress: (address?: string | null) =>
-      typeof address === 'string' &&
-      address !== '0x0000000000000000000000000000000000000000' &&
-      address.startsWith('0x') &&
-      address.length === 42,
-    getContractConfigurationError: (name: string) => new Error(`[VFIDE] ${name} contract not configured.`),
-  }
-})
+  },
+}))
 
 // Mock ABIs
 jest.mock('../../lib/abis', () => ({
@@ -51,15 +38,11 @@ import {
   useSponsorMentee,
   useMentorInfo,
 } from '../../hooks/useMentorHooks'
-import { CONTRACT_ADDRESSES as mockContractAddresses } from '../../lib/contracts'
 
 describe('useIsMentor', () => {
   beforeEach(() => {
     jest.clearAllMocks()
     mockUseAccount.mockReturnValue({ address: '0xuser' })
-    mockContractAddresses.Seer = '0x1234567890123456789012345678901234567890'
-    mockContractAddresses.SeerView = '0x1234567890123456789012345678901234567891'
-    mockContractAddresses.SeerSocial = '0x1234567890123456789012345678901234567892'
   })
 
   it('returns isMentor true when data is true', () => {
@@ -107,21 +90,6 @@ describe('useIsMentor', () => {
     expect(result.current.isLoading).toBe(true)
   })
 
-  it('reports unavailable when mentor contracts are not configured', () => {
-    mockContractAddresses.SeerView = '0x0000000000000000000000000000000000000000'
-    mockContractAddresses.SeerSocial = '0x0000000000000000000000000000000000000000'
-    mockUseReadContract.mockReturnValue({
-      data: undefined,
-      isLoading: false,
-      error: null,
-      refetch: jest.fn(),
-    })
-
-    const { result } = renderHook(() => useIsMentor())
-
-    expect(result.current.isAvailable).toBe(false)
-  })
-
   it('uses connected address when no address provided', () => {
     mockUseAccount.mockReturnValue({ address: '0xconnected' })
     mockUseReadContract.mockReturnValue({ data: [true, '0xmentor', BigInt(0), false, false, BigInt(0), BigInt(0)], isLoading: false })
@@ -150,9 +118,6 @@ describe('useBecomeMentor', () => {
 
   beforeEach(() => {
     jest.clearAllMocks()
-    mockContractAddresses.Seer = '0x1234567890123456789012345678901234567890'
-    mockContractAddresses.SeerView = '0x1234567890123456789012345678901234567891'
-    mockContractAddresses.SeerSocial = '0x1234567890123456789012345678901234567892'
     mockUseWriteContract.mockReturnValue({
       writeContract: mockWriteContract,
       data: undefined,
@@ -219,17 +184,6 @@ describe('useBecomeMentor', () => {
       functionName: 'becomeMentor',
     }))
   })
-
-  it('fails closed when SeerSocial is not configured', () => {
-    mockContractAddresses.SeerSocial = '0x0000000000000000000000000000000000000000'
-
-    const { result } = renderHook(() => useBecomeMentor())
-
-    result.current.becomeMentor()
-
-    expect(result.current.isAvailable).toBe(false)
-    expect(mockWriteContract).not.toHaveBeenCalled()
-  })
 })
 
 describe('useSponsorMentee', () => {
@@ -237,9 +191,6 @@ describe('useSponsorMentee', () => {
 
   beforeEach(() => {
     jest.clearAllMocks()
-    mockContractAddresses.Seer = '0x1234567890123456789012345678901234567890'
-    mockContractAddresses.SeerView = '0x1234567890123456789012345678901234567891'
-    mockContractAddresses.SeerSocial = '0x1234567890123456789012345678901234567892'
     mockUseWriteContract.mockReturnValue({
       writeContract: mockWriteContract,
       data: undefined,

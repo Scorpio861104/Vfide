@@ -21,26 +21,8 @@ const putPaymentRequestSchema = z.object({
 
 const patchPaymentRequestSchema = z.object({
   status: paymentStatusSchema,
-  txHash: z.string().trim().min(1, 'Invalid txHash').optional(),
+  txHash: z.string().trim().regex(TX_HASH_PATTERN).optional(),
 });
-
-function validatePaymentRequestBody(rawBody: unknown, allowTxHash: boolean): string | null {
-  if (!rawBody || typeof rawBody !== 'object' || Array.isArray(rawBody)) {
-    return 'Request body must be a JSON object';
-  }
-
-  const candidate = rawBody as { status?: unknown; txHash?: unknown };
-
-  if (typeof candidate.status !== 'string' || !ALLOWED_STATUSES.includes(candidate.status.trim().toLowerCase() as (typeof ALLOWED_STATUSES)[number])) {
-    return 'Invalid status';
-  }
-
-  if (allowTxHash && candidate.txHash !== undefined && typeof candidate.txHash !== 'string') {
-    return 'Invalid txHash';
-  }
-
-  return null;
-}
 
 function parsePositiveInteger(value: string): number | null {
   if (!/^\d+$/.test(value)) {
@@ -143,11 +125,6 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
   let body: z.infer<typeof putPaymentRequestSchema>;
   try {
     const rawBody = await request.json();
-    const validationError = validatePaymentRequestBody(rawBody, false);
-    if (validationError) {
-      return NextResponse.json({ error: validationError }, { status: 400 });
-    }
-
     const parsed = putPaymentRequestSchema.safeParse(rawBody);
     if (!parsed.success) {
       return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
@@ -210,11 +187,6 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   let body: z.infer<typeof patchPaymentRequestSchema>;
   try {
     const rawBody = await request.json();
-    const validationError = validatePaymentRequestBody(rawBody, true);
-    if (validationError) {
-      return NextResponse.json({ error: validationError }, { status: 400 });
-    }
-
     const parsed = patchPaymentRequestSchema.safeParse(rawBody);
     if (!parsed.success) {
       return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });

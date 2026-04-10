@@ -23,10 +23,6 @@ function isAddressLike(value: string): boolean {
   return ADDRESS_PATTERN.test(value);
 }
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
-}
-
 export async function GET(request: NextRequest) {
   // Rate limiting
   const rateLimit = await withRateLimit(request, 'api');
@@ -99,10 +95,6 @@ export async function POST(request: NextRequest) {
   let body: z.infer<typeof updateSyncStateSchema>;
   try {
     const rawBody = await request.json();
-    if (!isRecord(rawBody)) {
-      return NextResponse.json({ error: 'Request body must be a JSON object' }, { status: 400 });
-    }
-
     const parsed = updateSyncStateSchema.safeParse(rawBody);
     if (!parsed.success) {
       return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });

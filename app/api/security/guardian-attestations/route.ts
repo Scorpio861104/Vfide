@@ -68,10 +68,8 @@ export async function POST(request: NextRequest) {
   const rateLimitResponse = await withRateLimit(request, 'write');
   if (rateLimitResponse) return rateLimitResponse;
 
-  const authResult = await requireAuth(request).catch(() => null);
-  const authenticatedAddress = authResult && !(authResult instanceof NextResponse) && typeof authResult.user?.address === 'string'
-    ? authResult.user.address.toLowerCase()
-    : null;
+  const authResult = await requireAuth(request);
+  if (authResult instanceof NextResponse) return authResult;
 
   let body: unknown;
   try {
@@ -98,7 +96,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Invalid attestation payload' }, { status: 400 });
   }
 
-  if (authenticatedAddress && authenticatedAddress !== owner.toLowerCase()) {
+  if (authResult.user.address.toLowerCase() !== owner.toLowerCase()) {
     return NextResponse.json({ error: 'Authenticated user must match owner' }, { status: 403 });
   }
 

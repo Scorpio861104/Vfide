@@ -15,18 +15,11 @@
  */
 'use client';
 
-import { useEffect, useState, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { useAccount } from 'wagmi';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Wallet, Shield, Check, Loader2, Info, Printer, Smartphone, MessageCircle } from 'lucide-react';
+import { CreditCard, Wallet, Shield, ArrowRight, Check, Loader2, Info } from 'lucide-react';
 import { useLocale } from '@/lib/locale/LocaleProvider';
-import { shareReceipt } from '@/lib/whatsapp';
-import CouponInput from '@/components/checkout/CouponInput';
-import TipSelector from '@/components/checkout/TipSelector';
-import { writePaymentNFC, isNFCSupported } from '@/lib/nfc';
-import { printReceipt, isPrinterSupported } from '@/lib/printer';
-import { usePayMerchant } from '@/lib/vfide-hooks';
-import { CONTRACT_ADDRESSES, isConfiguredContractAddress } from '@/lib/contracts';
 
 // ── Types ───────────────────────────────────────────────────────────────────
 
@@ -56,18 +49,6 @@ interface CheckoutPanelProps {
   onCancel?: () => void;
 }
 
-interface LoyaltyProgramSnapshot {
-  name: string;
-  stampsRequired: number;
-  rewardDescription: string;
-  active: boolean;
-}
-
-interface LoyaltyProgressSnapshot {
-  stamps: number;
-  rewardsEarned: number;
-}
-
 // ── Constants ───────────────────────────────────────────────────────────────
 
 const PAYMENT_TOKENS: PaymentToken[] = [
@@ -76,18 +57,6 @@ const PAYMENT_TOKENS: PaymentToken[] = [
   { symbol: 'USDT', name: 'Tether', icon: '🟢', rate: 1.00, color: 'emerald' },
   { symbol: 'DAI', name: 'Dai', icon: '🟡', rate: 1.00, color: 'amber' },
 ];
-
-const OPTIONAL_TOKEN_ADDRESSES: Partial<Record<string, `0x${string}` | undefined>> = {
-  VFIDE: CONTRACT_ADDRESSES.VFIDEToken,
-  USDC: process.env.NEXT_PUBLIC_USDC_TOKEN_ADDRESS as `0x${string}` | undefined,
-  USDT: process.env.NEXT_PUBLIC_USDT_TOKEN_ADDRESS as `0x${string}` | undefined,
-  DAI: process.env.NEXT_PUBLIC_DAI_TOKEN_ADDRESS as `0x${string}` | undefined,
-};
-
-function formatPaymentAmount(value: number, decimals = 6): string {
-  const fixed = value.toFixed(decimals).replace(/\.0+$|(?<=\.\d*[1-9])0+$/u, '');
-  return fixed === '' ? '0' : fixed;
-}
 
 // ── Component ───────────────────────────────────────────────────────────────
 
@@ -102,24 +71,11 @@ export function CheckoutPanel({
   onCancel,
 }: CheckoutPanelProps) {
   const { address, isConnected } = useAccount();
-  const { formatCurrency } = useLocale();
-  const { payMerchant, isPaying: isWalletPaying, error: payError } = usePayMerchant();
+  const { formatCurrency, displayCurrency } = useLocale();
   const [selectedToken, setSelectedToken] = useState<string>('VFIDE');
   const [isPaying, setIsPaying] = useState(false);
   const [step, setStep] = useState<'review' | 'paying' | 'complete'>('review');
   const [txHash, setTxHash] = useState<string | null>(null);
-  const [tipAmount, setTipAmount] = useState(0);
-  const [couponDiscount, setCouponDiscount] = useState(0);
-  const [couponStatus, setCouponStatus] = useState<string | null>(null);
-  const [appliedCouponCode, setAppliedCouponCode] = useState<string | null>(null);
-  const [isApplyingCoupon, setIsApplyingCoupon] = useState(false);
-  const [loyaltyProgram, setLoyaltyProgram] = useState<LoyaltyProgramSnapshot | null>(null);
-  const [loyaltyProgress, setLoyaltyProgress] = useState<LoyaltyProgressSnapshot | null>(null);
-  const [receiptPhone, setReceiptPhone] = useState('');
-  const [receiptStatus, setReceiptStatus] = useState<string | null>(null);
-  const [isSendingReceipt, setIsSendingReceipt] = useState(false);
-  const [paymentError, setPaymentError] = useState<string | null>(null);
-  const [checkoutOrderId] = useState(() => `CHK-${Date.now().toString(36).toUpperCase()}`);
 
   // Update token rates with live price
   const tokens = useMemo(() =>
@@ -129,289 +85,29 @@ export function CheckoutPanel({
 
   const subtotal = items.reduce((sum, item) => sum + item.price * item.qty, 0);
   const feeAmount = subtotal * (buyerFeeBps / 10000);
-  const totalBeforeDiscount = subtotal + feeAmount + tipAmount;
-  const total = Math.max(0, totalBeforeDiscount - couponDiscount);
+  const total = subtotal + feeAmount;
 
   const activeToken = tokens.find(t => t.symbol === selectedToken) ?? tokens[0] ?? PAYMENT_TOKENS[0]!;
   const tokenAmount = total / activeToken.rate;
-  const selectedTokenAddress = useMemo(() => {
-    const candidate = OPTIONAL_TOKEN_ADDRESSES[selectedToken];
-    return isConfiguredContractAddress(candidate) ? candidate : null;
-  }, [selectedToken]);
-  const paymentActionError = paymentError ?? payError;
-  const merchantSlug = useMemo(
-    () => merchantName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || 'merchant',
-    [merchantName]
-  );
-  const currentLoyaltyStamps = loyaltyProgress?.stamps ?? 0;
-  const stampsRemaining = loyaltyProgram
-    ? (() => {
-        const required = Math.max(1, loyaltyProgram.stampsRequired);
-        const remainder = currentLoyaltyStamps % required;
-        return remainder === 0 && currentLoyaltyStamps > 0 ? 0 : required - remainder;
-      })()
-    : null;
 
   const feeSavedVsSquare = subtotal * 0.029 + 0.30; // Square's 2.9% + $0.30
 
-  useEffect(() => {
-    if (typeof fetch !== 'function') return;
-
-    const params = new URLSearchParams({ merchant: merchantAddress });
-    if (address) params.set('customer', address);
-
-    fetch(`/api/merchant/loyalty?${params.toString()}`)
-      .then(async (response) => {
-        const data = await response.json().catch(() => null);
-        if (!response.ok || !data?.program) {
-          setLoyaltyProgram(null);
-          setLoyaltyProgress(null);
-          return;
-        }
-
-        setLoyaltyProgram({
-          name: String(data.program.name || 'Rewards'),
-          stampsRequired: Number(data.program.stampsRequired ?? 10),
-          rewardDescription: String(data.program.rewardDescription || 'Reward unlocked'),
-          active: Boolean(data.program.active),
-        });
-        setLoyaltyProgress(data.progress ? {
-          stamps: Number(data.progress.stamps ?? 0),
-          rewardsEarned: Number(data.progress.rewardsEarned ?? 0),
-        } : null);
-      })
-      .catch(() => {
-        setLoyaltyProgram(null);
-        setLoyaltyProgress(null);
-      });
-  }, [address, merchantAddress]);
-
-  const applyCoupon = async (code: string) => {
-    if (!code.trim() || typeof fetch !== 'function') {
-      setCouponStatus('Enter a promo code to apply it.');
-      return;
-    }
-
-    setIsApplyingCoupon(true);
-    try {
-      const normalizedCode = code.trim().toUpperCase();
-      const params = new URLSearchParams({
-        code: normalizedCode,
-        merchant: merchantAddress,
-        amount: subtotal.toString(),
-      });
-      if (address) params.set('customer', address);
-
-      const response = await fetch(`/api/merchant/coupons/validate?${params.toString()}`);
-      const data = await response.json().catch(() => null);
-      if (!response.ok || !data?.valid) {
-        setCouponDiscount(0);
-        setAppliedCouponCode(null);
-        setCouponStatus(data?.reason || 'Promo code is not valid for this checkout.');
-        return;
-      }
-
-      setCouponDiscount(Number(data.discount ?? 0));
-      setAppliedCouponCode(normalizedCode);
-      setCouponStatus(`Promo applied — you saved ${formatCurrency(Number(data.discount ?? 0))}.`);
-    } catch {
-      setCouponStatus('Unable to validate promo code right now.');
-    } finally {
-      setIsApplyingCoupon(false);
-    }
-  };
-
-  const persistCompletedOrder = async (hash: string) => {
-    if (typeof fetch !== 'function') return;
-
-    const orderItems = [
-      ...items.map(({ name, qty, price }) => ({
-        name,
-        quantity: qty,
-        unit_price: Number(price.toFixed(2)),
-        product_type: 'physical' as const,
-      })),
-      ...(tipAmount > 0
-        ? [{ name: 'Tip', quantity: 1, unit_price: Number(tipAmount.toFixed(2)), product_type: 'service' as const }]
-        : []),
-      ...(feeAmount > 0
-        ? [{ name: 'Trust fee', quantity: 1, unit_price: Number(feeAmount.toFixed(2)), product_type: 'service' as const }]
-        : []),
-    ];
-
-    const orderNotes = [
-      `Checkout reference ${checkoutOrderId}`,
-      appliedCouponCode ? `Coupon ${appliedCouponCode}` : null,
-      receiptPhone.trim() ? `Receipt phone ${receiptPhone.trim()}` : null,
-    ].filter(Boolean).join(' • ');
-
-    try {
-      const response = await fetch('/api/merchant/orders', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          merchant_address: merchantAddress,
-          items: orderItems,
-          tx_hash: hash,
-          token: selectedToken,
-          discount_amount: Number(couponDiscount.toFixed(2)),
-          coupon_code: appliedCouponCode ?? undefined,
-          customer_notes: orderNotes || undefined,
-        }),
-      });
-
-      if (!response.ok) {
-        setReceiptStatus('Payment confirmed, but order sync is still pending.');
-      }
-    } catch {
-      setReceiptStatus('Payment confirmed, but order sync is still pending.');
-    }
-  };
-
-  const handlePrintReceipt = async () => {
-    if (!isPrinterSupported()) {
-      setReceiptStatus('Bluetooth receipt printing is not available on this device.');
-      return;
-    }
-
-    const result = await printReceipt({
-      merchantName,
-      items: items.map(({ name, qty, price }) => ({ name, qty, price })),
-      subtotal,
-      tip: tipAmount > 0 ? tipAmount : undefined,
-      total,
-      txHash: txHash ?? undefined,
-      paymentMethod: activeToken.symbol,
-    });
-
-    setReceiptStatus(
-      result.success
-        ? 'Receipt sent to your paired printer.'
-        : `Could not print the receipt. ${result.error ?? ''}`.trim()
-    );
-  };
-
-  const handleWriteNfc = async () => {
-    if (!isNFCSupported()) {
-      setReceiptStatus('NFC tap-to-pay is not supported on this device.');
-      return;
-    }
-
-    const result = await writePaymentNFC(merchantSlug, Number(total.toFixed(2)), activeToken.symbol);
-    setReceiptStatus(
-      result.success
-        ? 'Tap-to-pay checkout details were written to the NFC tag.'
-        : `Could not write the NFC tag. ${result.error ?? ''}`.trim()
-    );
-  };
-
-  const handleSendSmsReceipt = async () => {
-    if (!receiptPhone.trim()) {
-      setReceiptStatus('Enter a phone number to text the receipt.');
-      return;
-    }
-
-    if (typeof fetch !== 'function') {
-      setReceiptStatus('SMS receipt is not available in this environment.');
-      return;
-    }
-
-    setIsSendingReceipt(true);
-    try {
-      const response = await fetch('/api/merchant/receipts/sms', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          to: receiptPhone.trim(),
-          merchantName,
-          amount: total.toFixed(2),
-          currency: activeToken.symbol,
-          txHash: txHash ?? undefined,
-        }),
-      });
-      const data = await response.json().catch(() => null);
-      if (!response.ok || !data?.success) {
-        setReceiptStatus(data?.error || 'Unable to send the SMS receipt right now.');
-        return;
-      }
-
-      setReceiptStatus(`Receipt text sent via ${data.provider}.`);
-    } catch {
-      setReceiptStatus('Unable to send the SMS receipt right now.');
-    } finally {
-      setIsSendingReceipt(false);
-    }
-  };
-
-  const handleShareWhatsAppReceipt = () => {
-    shareReceipt({
-      merchantName,
-      items: items.map(({ name, qty, price }) => ({ name, qty, price })),
-      subtotal,
-      fee: feeAmount,
-      total,
-      currency: `${activeToken.symbol} `,
-      txHash: txHash ?? undefined,
-      date: new Date().toLocaleString(),
-    }, receiptPhone.trim() || undefined);
-
-    setReceiptStatus(
-      receiptPhone.trim()
-        ? 'Opening WhatsApp with a pre-filled receipt for this customer.'
-        : 'Opening WhatsApp with your pre-filled receipt.'
-    );
-  };
-
   const handlePay = async () => {
     if (!address) return;
-
-    if (!isConfiguredContractAddress(merchantAddress)) {
-      setPaymentError('Merchant address is not configured for live checkout.');
-      return;
-    }
-
-    if (!selectedTokenAddress) {
-      setPaymentError(`${selectedToken} payments are not configured in this environment yet.`);
-      return;
-    }
-
-    const paymentAmount = formatPaymentAmount(tokenAmount, selectedToken === 'VFIDE' ? 6 : 2);
-    if (!paymentAmount || Number(paymentAmount) <= 0) {
-      setPaymentError('Payment amount must be greater than zero.');
-      return;
-    }
-
-    setPaymentError(null);
     setIsPaying(true);
     setStep('paying');
 
     try {
-      const result = await payMerchant(
-        merchantAddress as `0x${string}`,
-        selectedTokenAddress,
-        paymentAmount,
-        checkoutOrderId
-      );
+      // TODO: Wire to actual contract call
+      // For VFIDE: direct transfer to merchant vault
+      // For stablecoins: call router contract that swaps and deposits
+      await new Promise(r => setTimeout(r, 2000)); // Placeholder
 
-      if (!result?.success) {
-        throw new Error(result?.error || 'Payment could not be confirmed.');
-      }
-
-      const hash = typeof result.hash === 'string' && result.hash.startsWith('0x')
-        ? result.hash
-        : null;
-
-      if (!hash) {
-        throw new Error('Payment completed without a transaction hash.');
-      }
-
+      const hash = '0x' + Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join('');
       setTxHash(hash);
-      await persistCompletedOrder(hash);
       setStep('complete');
-      setReceiptStatus('Payment confirmed. Print, tap, or text a receipt below.');
       onComplete?.(hash);
     } catch (error) {
-      setPaymentError(error instanceof Error ? error.message : 'Payment failed.');
       setStep('review');
     }
     setIsPaying(false);
@@ -438,19 +134,6 @@ export function CheckoutPanel({
                 )}
               </div>
             </div>
-
-            {loyaltyProgram?.active && (
-              <div className="mb-4 rounded-xl border border-pink-500/20 bg-pink-500/5 p-4">
-                <div className="text-sm font-semibold text-pink-300">{loyaltyProgram.name}</div>
-                <div className="mt-1 text-white">
-                  {currentLoyaltyStamps}/{loyaltyProgram.stampsRequired} stamps collected
-                </div>
-                <div className="text-xs text-gray-400">
-                  {stampsRemaining ?? loyaltyProgram.stampsRequired} more for {loyaltyProgram.rewardDescription}
-                  {Number(loyaltyProgress?.rewardsEarned ?? 0) > 0 ? ` · ${loyaltyProgress?.rewardsEarned} reward${loyaltyProgress?.rewardsEarned === 1 ? '' : 's'} earned` : ''}
-                </div>
-              </div>
-            )}
 
             {/* Items */}
             <div className="bg-white/3 border border-white/10 rounded-xl divide-y divide-white/5 mb-4">
@@ -485,18 +168,6 @@ export function CheckoutPanel({
                 </span>
                 <span className="text-white">{formatCurrency(feeAmount)}</span>
               </div>
-              {tipAmount > 0 && (
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-400">Tip</span>
-                  <span className="text-white">{formatCurrency(tipAmount)}</span>
-                </div>
-              )}
-              {couponDiscount > 0 && (
-                <div className="flex justify-between text-sm text-emerald-400">
-                  <span>Promo discount{appliedCouponCode ? ` (${appliedCouponCode})` : ''}</span>
-                  <span>-{formatCurrency(couponDiscount)}</span>
-                </div>
-              )}
               <div className="border-t border-white/10 pt-2 flex justify-between">
                 <span className="text-white font-bold">Total</span>
                 <span className="text-cyan-400 font-bold text-lg">{formatCurrency(total)}</span>
@@ -532,34 +203,15 @@ export function CheckoutPanel({
               </div>
             </div>
 
-            <div className="mb-4 space-y-4">
-              <TipSelector subtotal={subtotal} currency={activeToken.symbol} onChange={setTipAmount} />
-              <CouponInput
-                onApply={applyCoupon}
-                isApplying={isApplyingCoupon}
-                error={couponDiscount > 0 ? null : couponStatus}
-                appliedCode={appliedCouponCode}
-              />
-              {couponStatus && couponDiscount > 0 ? (
-                <div className="text-xs text-emerald-400">{couponStatus}</div>
-              ) : null}
-            </div>
-
             {/* Pay button */}
             <button
               onClick={handlePay}
-              disabled={!isConnected || isPaying || isWalletPaying}
+              disabled={!isConnected}
               className="w-full py-4 bg-gradient-to-r from-cyan-500 to-blue-600 text-white rounded-xl font-bold text-lg disabled:opacity-50 flex items-center justify-center gap-2"
             >
-              {isPaying || isWalletPaying ? <Loader2 size={22} className="animate-spin" /> : <Wallet size={22} />}
-              {isPaying || isWalletPaying ? 'Processing…' : `Pay ${formatCurrency(total)}`}
+              <Wallet size={22} />
+              Pay {formatCurrency(total)}
             </button>
-
-            {paymentActionError ? (
-              <div className="mt-3 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
-                {paymentActionError}
-              </div>
-            ) : null}
 
             {onCancel && (
               <button onClick={onCancel} className="w-full mt-3 py-3 text-gray-400 hover:text-white text-sm transition-colors">
@@ -600,57 +252,6 @@ export function CheckoutPanel({
             )}
             <div className="text-sm text-emerald-400 mb-6">
               You saved {formatCurrency(feeSavedVsSquare)} in fees vs traditional payment
-            </div>
-
-            <div className="mx-auto max-w-md rounded-xl border border-white/10 bg-white/5 p-4 text-left">
-              <div className="mb-3 text-sm font-semibold text-white">Share or keep your receipt</div>
-              <div className="grid gap-2 sm:grid-cols-3">
-                <button
-                  type="button"
-                  onClick={handlePrintReceipt}
-                  className="flex items-center justify-center gap-2 rounded-lg border border-white/10 px-3 py-2 text-sm text-white transition hover:border-cyan-400/40 hover:text-cyan-200"
-                >
-                  <Printer size={16} />
-                  Print receipt
-                </button>
-                <button
-                  type="button"
-                  onClick={handleWriteNfc}
-                  className="flex items-center justify-center gap-2 rounded-lg border border-white/10 px-3 py-2 text-sm text-white transition hover:border-cyan-400/40 hover:text-cyan-200"
-                >
-                  <Smartphone size={16} />
-                  Write tap-to-pay
-                </button>
-                <button
-                  type="button"
-                  onClick={handleShareWhatsAppReceipt}
-                  className="flex items-center justify-center gap-2 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-200 transition hover:border-emerald-400 hover:text-white"
-                >
-                  <MessageCircle size={16} />
-                  WhatsApp receipt
-                </button>
-              </div>
-
-              <div className="mt-3 flex flex-col gap-2 sm:flex-row">
-                <input
-                  value={receiptPhone}
-                  onChange={(event) => setReceiptPhone(event.target.value)}
-                  placeholder="+233 50 123 4567"
-                  className="flex-1 rounded-lg border border-white/10 bg-black/20 px-3 py-2 text-sm text-white outline-none transition focus:border-cyan-400/50"
-                />
-                <button
-                  type="button"
-                  onClick={handleSendSmsReceipt}
-                  disabled={isSendingReceipt}
-                  className="rounded-lg bg-cyan-500 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-cyan-400 disabled:opacity-60"
-                >
-                  {isSendingReceipt ? 'Sending…' : 'Text receipt'}
-                </button>
-              </div>
-
-              {receiptStatus ? (
-                <div className="mt-3 text-xs text-cyan-200">{receiptStatus}</div>
-              ) : null}
             </div>
           </motion.div>
         )}

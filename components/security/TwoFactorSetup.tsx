@@ -151,9 +151,6 @@ export function TwoFactorSetup({
         <p className="text-gray-600 dark:text-gray-400 mb-6">
           Add an extra layer of security to your account by requiring a second verification method.
         </p>
-        <div className="mb-6 rounded-lg border border-blue-200 bg-blue-50 p-4 text-sm text-blue-900 dark:border-blue-900/60 dark:bg-blue-950/30 dark:text-blue-100">
-          <strong className="font-semibold">Recommended setup:</strong> use an authenticator app as your primary factor, keep your backup codes offline, and treat SMS or email as fallback recovery methods.
-        </div>
 
         {!selectedMethod && (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

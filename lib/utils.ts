@@ -211,8 +211,7 @@ export const safeLocalStorage = {
     if (typeof window === 'undefined') return null;
     try {
       return localStorage.getItem(key)
-    } catch (error) {
-      console.error('safeLocalStorage.getItem failed', error)
+    } catch {
       return null
     }
   },
@@ -221,8 +220,7 @@ export const safeLocalStorage = {
     try {
       localStorage.setItem(key, value)
       return true
-    } catch (error) {
-      console.error('safeLocalStorage.setItem failed', error)
+    } catch {
       return false
     }
   },
@@ -231,8 +229,7 @@ export const safeLocalStorage = {
     try {
       localStorage.removeItem(key)
       return true
-    } catch (error) {
-      console.error('safeLocalStorage.removeItem failed', error)
+    } catch {
       return false
     }
   },
@@ -366,17 +363,17 @@ export function timeUntil(futureDate: Date): string {
 export const devLog = {
   error: (message: string, ...args: unknown[]) => {
     if (process.env.NODE_ENV !== 'production') {
-      console.error(`[DEV] ${message}`, ...args);
+      logger.error(`[DEV] ${message}`, ...args);
     }
   },
   warn: (message: string, ...args: unknown[]) => {
     if (process.env.NODE_ENV !== 'production') {
-      console.warn(`[DEV] ${message}`, ...args);
+      logger.warn(`[DEV] ${message}`, ...args);
     }
   },
   log: (message: string, ...args: unknown[]) => {
     if (process.env.NODE_ENV !== 'production') {
-      console.log(`[DEV] ${message}`, ...args);
+      logger.info(`[DEV] ${message}`, ...args);
     }
   },
 };

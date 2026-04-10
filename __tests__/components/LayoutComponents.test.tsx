@@ -71,7 +71,7 @@ jest.mock('lucide-react', () => ({
   ExternalLink: () => <span data-testid="external-link-icon">↗</span>,
   MoreHorizontal: () => <span data-testid="more-icon">⋯</span>,
   User: () => <span data-testid="user-icon">👤</span>,
-  Zap: () => <span data-testid="flashloans-icon">⚡</span>,
+  Flashlight: () => <span data-testid="flashlight-icon">🔦</span>,
 }));
 
 // Mock MetallicIcons

@@ -200,7 +200,7 @@ All POST/PUT/PATCH requests must have a valid `Content-Type` header:
 - `multipart/form-data` for file uploads
 - `application/x-www-form-urlencoded` for form data
 
-**Runtime guard:** Automatically validates in `proxy.ts`
+**Middleware:** Automatically validates in `middleware.ts`
 
 #### Input Sanitization
 - **React XSS Protection:** React automatically escapes content rendered in JSX
@@ -214,7 +214,7 @@ All POST/PUT/PATCH requests must have a valid `Content-Type` header:
 
 ### Body Size Enforcement
 
-**Location:** `proxy.ts`
+**Location:** `middleware.ts`
 
 #### Size Limits by Endpoint
 
@@ -237,7 +237,7 @@ All POST/PUT/PATCH requests must have a valid `Content-Type` header:
 
 ### Content Security Policy (CSP)
 
-**Location:** `proxy.ts`
+**Location:** `middleware.ts`
 
 #### Features
 - **Nonce-based CSP:** Unique nonce per request for inline scripts/styles

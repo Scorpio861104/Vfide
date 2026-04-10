@@ -1,7 +1,7 @@
 /**
  * (seer) Route Group Layout
  * 
- * Pages: seer-service/, flashloans/, insights/, agent/
+ * Pages: seer-service/, flashlight/, insights/, agent/
  */
 'use client';
 

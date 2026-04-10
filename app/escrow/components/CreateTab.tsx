@@ -1,57 +1,36 @@
 'use client';
 
-interface CreateTabProps {
-  merchantAddress: string;
-  amount: string;
-  orderId: string;
-  onMerchantAddressChange: (value: string) => void;
-  onAmountChange: (value: string) => void;
-  onOrderIdChange: (value: string) => void;
-  onCreate: () => void;
-}
+import { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
+import { Loader2 } from 'lucide-react';
 
-export function CreateTab({
-  merchantAddress,
-  amount,
-  orderId,
-  onMerchantAddressChange,
-  onAmountChange,
-  onOrderIdChange,
-  onCreate,
-}: CreateTabProps) {
-  return (
-    <div className="rounded-2xl border border-white/10 bg-white/3 p-6 space-y-4">
-      <h2 className="text-xl font-bold text-white">Create Escrow</h2>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-        <input
-          type="text"
-          value={merchantAddress}
-          onChange={(event) => onMerchantAddressChange(event.target.value)}
-          placeholder="0x..."
-          className="rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-white placeholder:text-gray-500"
-        />
-        <input
-          type="number"
-          value={amount}
-          onChange={(event) => onAmountChange(event.target.value)}
-          placeholder="1000"
-          className="rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-white placeholder:text-gray-500"
-        />
-        <input
-          type="text"
-          value={orderId}
-          onChange={(event) => onOrderIdChange(event.target.value)}
-          placeholder="ORD-2026-0001"
-          className="rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-white placeholder:text-gray-500"
-        />
+// Form to create new escrow: counterparty, amount, conditions, deadline
+
+export function CreateTab() {
+  const [loading, setLoading] = useState(true);
+  const [data, setData] = useState<any>(null);
+
+  useEffect(() => {
+    // TODO: Wire to API endpoint
+    const timer = setTimeout(() => setLoading(false), 500);
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 size={24} className="text-cyan-400 animate-spin" />
       </div>
-      <button
-        type="button"
-        onClick={onCreate}
-        className="px-4 py-2 rounded-xl border border-cyan-500/30 bg-cyan-500/15 text-cyan-300 font-semibold"
-      >
-        Create Escrow
-      </button>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="bg-white/3 border border-white/10 rounded-2xl p-6">
+        <h3 className="text-lg font-bold text-white mb-4">Create</h3>
+        <p className="text-gray-400 text-sm">Form to create new escrow: counterparty, amount, conditions, deadline</p>
+        {/* TODO: Implement CreateTab UI */}
+      </div>
     </div>
   );
 }

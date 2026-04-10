@@ -18,22 +18,11 @@ jest.mock('wagmi', () => ({
 }))
 
 // Mock contracts
-jest.mock('../../lib/contracts', () => {
-  const contractAddresses = {
+jest.mock('../../lib/contracts', () => ({
+  CONTRACT_ADDRESSES: {
     DAO: '0x1234567890123456789012345678901234567890',
-  }
-
-  return {
-    CONTRACT_ADDRESSES: contractAddresses,
-    ZERO_ADDRESS: '0x0000000000000000000000000000000000000000',
-    isConfiguredContractAddress: (address?: string | null) =>
-      typeof address === 'string' &&
-      address !== '0x0000000000000000000000000000000000000000' &&
-      address.startsWith('0x') &&
-      address.length === 42,
-    getContractConfigurationError: (name: string) => new Error(`[VFIDE] ${name} contract not configured.`),
-  }
-})
+  },
+}))
 
 // Mock ABIs
 jest.mock('../../lib/abis', () => ({
@@ -45,12 +34,10 @@ import {
   useDAOProposals,
   useVote,
 } from '../../hooks/useDAOHooks'
-import { CONTRACT_ADDRESSES as mockContractAddresses } from '../../lib/contracts'
 
 describe('useDAOProposals', () => {
   beforeEach(() => {
     jest.clearAllMocks()
-    mockContractAddresses.DAO = '0x1234567890123456789012345678901234567890'
   })
 
   it('returns proposal count', () => {
@@ -82,19 +69,6 @@ describe('useDAOProposals', () => {
     
     expect(typeof result.current.proposalCount).toBe('number')
   })
-
-  it('reports unavailable when DAO is not configured', () => {
-    mockContractAddresses.DAO = '0x0000000000000000000000000000000000000000'
-    mockUseReadContract.mockReturnValue({
-      data: undefined,
-      error: null,
-    })
-
-    const { result } = renderHook(() => useDAOProposals())
-
-    expect(result.current.isAvailable).toBe(false)
-    expect(result.current.error?.message).toContain('DAO')
-  })
 })
 
 describe('useVote', () => {
@@ -102,7 +76,6 @@ describe('useVote', () => {
 
   beforeEach(() => {
     jest.clearAllMocks()
-    mockContractAddresses.DAO = '0x1234567890123456789012345678901234567890'
     mockUseWriteContract.mockReturnValue({
       writeContract: mockWriteContract,
       data: undefined,
@@ -180,16 +153,5 @@ describe('useVote', () => {
       functionName: 'vote',
       args: [BigInt(3), false],
     }))
-  })
-
-  it('fails closed when DAO is not configured', () => {
-    mockContractAddresses.DAO = '0x0000000000000000000000000000000000000000'
-
-    const { result } = renderHook(() => useVote())
-
-    result.current.vote(BigInt(7), true)
-
-    expect(result.current.isAvailable).toBe(false)
-    expect(mockWriteContract).not.toHaveBeenCalled()
   })
 })

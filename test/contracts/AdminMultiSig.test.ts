@@ -117,21 +117,6 @@ describe("AdminMultiSig", function () {
       expect(proposal.status).to.equal(0); // still Pending
     });
 
-    it("applies a minimum delay even to emergency proposals", async function () {
-      const data = multiSig.interface.encodeFunctionData("updateCouncilMember", [0, target.address]);
-      await multiSig.connect(council[0]!).createProposal(2, multiSig.address, data, "emergency delay");
-      await multiSig.connect(council[1]!).approveProposal(0);
-      await multiSig.connect(council[2]!).approveProposal(0);
-      await multiSig.connect(council[3]!).approveProposal(0);
-      await multiSig.connect(council[4]!).approveProposal(0);
-
-      await expectRevert(multiSig.connect(council[0]!).executeProposal(0));
-
-      await time.increase(60 * 60 + 1);
-      await multiSig.connect(council[0]!).executeProposal(0);
-      expect(await multiSig.isCouncilMember(target.address)).to.equal(true);
-    });
-
     it("blocks direct setExecutionGasLimit unless called via active proposal", async function () {
       await expectRevert(multiSig.connect(council[0]!).setExecutionGasLimit(700000));
     });

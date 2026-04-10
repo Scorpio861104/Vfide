@@ -13,7 +13,7 @@ const MAX_ACTIVITY_TYPE_LENGTH = 64;
 const MAX_ACTIVITY_TITLE_LENGTH = 200;
 const MAX_ACTIVITY_DESCRIPTION_LENGTH = 2000;
 const MAX_ACTIVITY_DATA_BYTES = 10000;
-const ETH_ADDRESS_REGEX = /^0x[a-fA-F0-9]{3,40}$/;
+const ETH_ADDRESS_REGEX = /^0x[a-fA-F0-9]{40}$/;
 
 const createActivitySchema = z.object({
   userAddress: z.string().trim().regex(ETH_ADDRESS_REGEX),
@@ -68,10 +68,6 @@ function parseStrictIntegerParam(value: string | null): number | null {
   const trimmed = value.trim();
   if (!/^\d+$/.test(trimmed)) return null;
   return Number.parseInt(trimmed, 10);
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
 interface Activity {
@@ -160,53 +156,29 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    let result;
-    let countResult;
+    const result = await query<Activity>(
+      `SELECT
+        a.*,
+        u.wallet_address as user_address,
+        u.username as user_username,
+        u.avatar_url as user_avatar
+      FROM activities a
+      JOIN users u ON a.user_id = u.id
+      WHERE ($1::text IS NULL OR u.wallet_address = $1)
+        AND ($2::text IS NULL OR a.activity_type = $2)
+      ORDER BY a.created_at DESC
+      LIMIT $3 OFFSET $4`,
+      [userAddress, activityType, limit, offset]
+    );
 
-    if (!userAddress && !activityType) {
-      result = await query<Activity>(
-        `SELECT
-          a.*,
-          u.wallet_address as user_address,
-          u.username as user_username,
-          u.avatar_url as user_avatar
-        FROM activities a
-        JOIN users u ON a.user_id = u.id
-        ORDER BY a.created_at DESC
-        LIMIT $1 OFFSET $2`,
-        [limit, offset]
-      );
-
-      countResult = await query<{ count: string }>(
-        `SELECT COUNT(*) as count
-         FROM activities a
-         JOIN users u ON a.user_id = u.id`
-      );
-    } else {
-      result = await query<Activity>(
-        `SELECT
-          a.*,
-          u.wallet_address as user_address,
-          u.username as user_username,
-          u.avatar_url as user_avatar
-        FROM activities a
-        JOIN users u ON a.user_id = u.id
-        WHERE ($1::text IS NULL OR u.wallet_address = $1)
-          AND ($2::text IS NULL OR a.activity_type = $2)
-        ORDER BY a.created_at DESC
-        LIMIT $3 OFFSET $4`,
-        [userAddress, activityType, limit, offset]
-      );
-
-      countResult = await query<{ count: string }>(
-        `SELECT COUNT(*) as count
-         FROM activities a
-         JOIN users u ON a.user_id = u.id
-         WHERE ($1::text IS NULL OR u.wallet_address = $1)
-           AND ($2::text IS NULL OR a.activity_type = $2)`,
-        [userAddress, activityType]
-      );
-    }
+    const countResult = await query<{ count: string }>(
+      `SELECT COUNT(*) as count
+       FROM activities a
+       JOIN users u ON a.user_id = u.id
+       WHERE ($1::text IS NULL OR u.wallet_address = $1)
+         AND ($2::text IS NULL OR a.activity_type = $2)`,
+      [userAddress, activityType]
+    );
 
     const totalCount = parseInt(countResult.rows[0]?.count || '0', 10);
     if (isNaN(totalCount)) {
@@ -265,31 +237,8 @@ export async function POST(request: NextRequest) {
   let body: z.infer<typeof createActivitySchema>;
   try {
     const rawBody = await request.json();
-    if (!isRecord(rawBody)) {
-      return NextResponse.json(
-        { error: 'Request body must be a JSON object' },
-        { status: 400 }
-      );
-    }
-
     const parsed = createActivitySchema.safeParse(rawBody);
     if (!parsed.success) {
-      const hasUserAddressIssue = parsed.error.issues.some((issue) => issue.path[0] === 'userAddress');
-      if (hasUserAddressIssue) {
-        return NextResponse.json(
-          { error: 'Invalid userAddress format' },
-          { status: 400 }
-        );
-      }
-
-      const hasTitleIssue = parsed.error.issues.some((issue) => issue.path[0] === 'title');
-      if (hasTitleIssue) {
-        return NextResponse.json(
-          { error: `title too long. Maximum ${MAX_ACTIVITY_TITLE_LENGTH} characters.` },
-          { status: 400 }
-        );
-      }
-
       return NextResponse.json(
         { error: 'Invalid request body' },
         { status: 400 }

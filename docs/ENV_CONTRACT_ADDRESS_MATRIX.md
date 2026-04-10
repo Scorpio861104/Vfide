@@ -53,13 +53,5 @@ This matrix aligns contract address env keys used by validation and runtime wiri
 ## Operational Notes
 
 - For local feature development, placeholder addresses can be used when contract calls are not exercised.
-- For staging/production, every runtime key above should be set to deployed addresses from the latest signed deployment manifest or explorer verification record.
-- Keep `.env.local`, `.env.staging`, and `.env.production` synchronized with deployment manifests after each deployment batch.
-
-## Operator Workflow
-
-1. Copy `.env.staging.example` or `.env.production.example` to the real secret store or untracked env file.
-2. Paste the **exact** deployed addresses for every key listed above.
-3. Run `npm run validate:env`.
-4. Run `npm run validate:deploy`.
-5. Only then proceed to staging/production rollout.
+- For staging/production, every runtime key above should be set to deployed addresses to avoid runtime call failures.
+- Keep `.env.local` synchronized with deployment manifests after each deployment batch.

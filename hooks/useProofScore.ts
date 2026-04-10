@@ -1,11 +1,5 @@
 import { useReadContract, useAccount } from 'wagmi'
-import {
-  CONTRACT_ADDRESSES,
-  SeerABI,
-  ProofScoreBurnRouterABI,
-  getContractConfigurationError,
-  isConfiguredContractAddress,
-} from '@/lib/contracts'
+import { CONTRACT_ADDRESSES, SeerABI, ProofScoreBurnRouterABI } from '@/lib/contracts'
 import { PROOF_SCORE_PERMISSIONS, PROOF_SCORE_TIERS } from '@/lib/constants'
 
 const FEE_QUOTE_AMOUNT = 10_000n * 10n ** 18n
@@ -17,21 +11,16 @@ const FEE_QUOTE_AMOUNT = 10_000n * 10n ** 18n
 export function useProofScore(userAddress?: `0x${string}`) {
   const { address: connectedAddress } = useAccount()
   const targetAddress = userAddress || connectedAddress
-  const seerConfigError = !isConfiguredContractAddress(CONTRACT_ADDRESSES.Seer)
-    ? getContractConfigurationError('Seer')
-    : null
 
-  const { data, isError, isLoading, refetch, error } = useReadContract({
+  const { data, isError, isLoading, refetch } = useReadContract({
     address: CONTRACT_ADDRESSES.Seer,
     abi: SeerABI,
     functionName: 'getScore',
     args: targetAddress ? [targetAddress] : undefined,
     query: {
-      enabled: !!targetAddress && !seerConfigError,
+      enabled: !!targetAddress,
     }
   })
-
-  const burnRouterConfigured = isConfiguredContractAddress(CONTRACT_ADDRESSES.BurnRouter)
 
   const { data: onChainFeeQuote } = useReadContract({
     address: CONTRACT_ADDRESSES.BurnRouter,
@@ -39,7 +28,9 @@ export function useProofScore(userAddress?: `0x${string}`) {
     functionName: 'computeFees',
     args: targetAddress ? [targetAddress, targetAddress, FEE_QUOTE_AMOUNT] : undefined,
     query: {
-      enabled: !!targetAddress && burnRouterConfigured,
+      enabled:
+        !!targetAddress &&
+        CONTRACT_ADDRESSES.BurnRouter !== '0x0000000000000000000000000000000000000000',
     },
   })
 
@@ -79,11 +70,9 @@ export function useProofScore(userAddress?: `0x${string}`) {
     canCouncil: scoreNum >= PROOF_SCORE_PERMISSIONS.MIN_FOR_COUNCIL,
     canEndorse: scoreNum >= 8000,
     isElite: scoreNum >= 8000,
-    isError: isError || !!seerConfigError,
+    isError,
     isLoading,
     refetch,
-    error: seerConfigError ?? error,
-    isAvailable: !seerConfigError,
   }
 }
 
@@ -121,36 +110,28 @@ function getTierColor(score: number): string {
  * Hook to read Seer thresholds from contract
  */
 export function useSeerThresholds() {
-  const seerConfigError = !isConfiguredContractAddress(CONTRACT_ADDRESSES.Seer)
-    ? getContractConfigurationError('Seer')
-    : null
-
   const { data: minForGovernance } = useReadContract({
     address: CONTRACT_ADDRESSES.Seer,
     abi: SeerABI,
     functionName: 'minForGovernance',
-    query: { enabled: !seerConfigError },
   })
   
   const { data: minForMerchant } = useReadContract({
     address: CONTRACT_ADDRESSES.Seer,
     abi: SeerABI,
     functionName: 'minForMerchant',
-    query: { enabled: !seerConfigError },
   })
   
   const { data: lowTrustThreshold } = useReadContract({
     address: CONTRACT_ADDRESSES.Seer,
     abi: SeerABI,
     functionName: 'lowTrustThreshold',
-    query: { enabled: !seerConfigError },
   })
   
   const { data: highTrustThreshold } = useReadContract({
     address: CONTRACT_ADDRESSES.Seer,
     abi: SeerABI,
     functionName: 'highTrustThreshold',
-    query: { enabled: !seerConfigError },
   })
 
   return {
@@ -158,8 +139,6 @@ export function useSeerThresholds() {
     minForMerchant: minForMerchant ? Number(minForMerchant) : PROOF_SCORE_PERMISSIONS.MIN_FOR_MERCHANT,
     lowTrustThreshold: lowTrustThreshold ? Number(lowTrustThreshold) : 3500,
     highTrustThreshold: highTrustThreshold ? Number(highTrustThreshold) : 8000,
-    error: seerConfigError ?? null,
-    isAvailable: !seerConfigError,
   }
 }
 
@@ -169,24 +148,19 @@ export function useSeerThresholds() {
 export function useHasBadge(badgeId: `0x${string}`, userAddress?: `0x${string}`) {
   const { address: connectedAddress } = useAccount()
   const targetAddress = userAddress || connectedAddress
-  const seerConfigError = !isConfiguredContractAddress(CONTRACT_ADDRESSES.Seer)
-    ? getContractConfigurationError('Seer')
-    : null
 
-  const { data, isLoading, error } = useReadContract({
+  const { data, isLoading } = useReadContract({
     address: CONTRACT_ADDRESSES.Seer,
     abi: SeerABI,
     functionName: 'hasBadge',
     args: targetAddress && badgeId ? [targetAddress, badgeId] : undefined,
     query: {
-      enabled: !!targetAddress && !!badgeId && !seerConfigError,
+      enabled: !!targetAddress && !!badgeId,
     }
   })
 
   return {
     hasBadge: !!data,
     isLoading,
-    error: seerConfigError ?? error,
-    isAvailable: !seerConfigError,
   }
 }

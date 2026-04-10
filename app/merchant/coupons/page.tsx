@@ -23,7 +23,7 @@ function toDiscount(coupon: CouponResponse): Discount {
   return {
     id: coupon.id,
     code: coupon.code,
-    type: coupon.discountType,
+    type: coupon.discountType === 'percentage' ? 'percent' : 'fixed',
     value: coupon.discountValue,
     minOrder: Number(coupon.minOrderAmount ?? 0),
     maxUses: Number(coupon.maxUses ?? 0),

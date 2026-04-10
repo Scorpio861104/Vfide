@@ -8,21 +8,10 @@ import { useReadContract, useWriteContract, useAccount } from 'wagmi';
 import { useState, useEffect } from 'react';
 import { parseEther, formatEther } from 'viem';
 import { EcosystemVaultABI, EcosystemVaultViewABI } from '@/lib/abis';
-import {
-  CONTRACT_ADDRESSES,
-  ZERO_ADDRESS,
-  getContractConfigurationError,
-  isConfiguredContractAddress,
-} from '@/lib/contracts';
 
-const ECOSYSTEM_VAULT_ADDRESS = CONTRACT_ADDRESSES.EcosystemVault;
-const ECOSYSTEM_VAULT_VIEW_ADDRESS = isConfiguredContractAddress(CONTRACT_ADDRESSES.EcosystemVaultView)
-  ? CONTRACT_ADDRESSES.EcosystemVaultView
-  : ECOSYSTEM_VAULT_ADDRESS;
-
-const getEcosystemVaultError = () => getContractConfigurationError('EcosystemVault');
-const isEcosystemVaultConfigured = () => isConfiguredContractAddress(ECOSYSTEM_VAULT_ADDRESS);
-const isEcosystemVaultViewConfigured = () => isConfiguredContractAddress(ECOSYSTEM_VAULT_VIEW_ADDRESS);
+// Contract address (update with deployed address)
+const ECOSYSTEM_VAULT_ADDRESS = (process.env.NEXT_PUBLIC_ECOSYSTEM_VAULT_ADDRESS || '0x0000000000000000000000000000000000000000') as `0x${string}`;
+const ECOSYSTEM_VAULT_VIEW_ADDRESS = (process.env.NEXT_PUBLIC_ECOSYSTEM_VAULT_VIEW_ADDRESS || process.env.NEXT_PUBLIC_ECOSYSTEM_VAULT_ADDRESS || '0x0000000000000000000000000000000000000000') as `0x${string}`;
 
 export interface HeadhunterStats {
   currentYearPoints: number;
@@ -69,7 +58,6 @@ export interface ReferralLevelStatus {
  */
 export function useHeadhunterStats(): HeadhunterStats {
   const { address } = useAccount();
-  const configError = !isEcosystemVaultViewConfigured() ? getEcosystemVaultError() : null;
   
   const { data, isLoading, error } = useReadContract({
     address: ECOSYSTEM_VAULT_VIEW_ADDRESS,
@@ -77,7 +65,7 @@ export function useHeadhunterStats(): HeadhunterStats {
     functionName: 'getHeadhunterStats',
     args: address ? [address] : undefined,
     query: {
-      enabled: !!address && !configError,
+      enabled: !!address,
       refetchInterval: 30000, // Refresh every 30 seconds
     },
   });
@@ -90,7 +78,7 @@ export function useHeadhunterStats(): HeadhunterStats {
       currentQuarterNumber: 0n,
       quarterEndsAt: 0n,
       isLoading,
-      error: configError ?? (error as Error | null),
+      error: error as Error | null,
     };
   }
 
@@ -114,7 +102,6 @@ export function useHeadhunterStats(): HeadhunterStats {
  */
 export function useHeadhunterReward(year: bigint, quarter: bigint): HeadhunterReward {
   const { address } = useAccount();
-  const configError = !isEcosystemVaultViewConfigured() ? getEcosystemVaultError() : null;
 
   const { data, isLoading, error } = useReadContract({
     address: ECOSYSTEM_VAULT_VIEW_ADDRESS,
@@ -122,7 +109,7 @@ export function useHeadhunterReward(year: bigint, quarter: bigint): HeadhunterRe
     functionName: 'previewHeadhunterReward',
     args: address && year && quarter ? [year, quarter, address] : undefined,
     query: {
-      enabled: !!address && !!year && !!quarter && !configError,
+      enabled: !!address && !!year && !!quarter,
     },
   });
 
@@ -135,7 +122,7 @@ export function useHeadhunterReward(year: bigint, quarter: bigint): HeadhunterRe
       estimatedReward: 0n,
       rewardShare: '0%',
       isLoading,
-      error: configError ?? (error as Error | null),
+      error: error as Error | null,
     };
   }
 
@@ -159,25 +146,23 @@ export function useHeadhunterReward(year: bigint, quarter: bigint): HeadhunterRe
  * Get pending referral info for an address
  */
 export function usePendingReferral(referred: `0x${string}` | undefined): PendingReferral {
-  const configError = !isEcosystemVaultViewConfigured() ? getEcosystemVaultError() : null;
-
   const { data, isLoading, error } = useReadContract({
     address: ECOSYSTEM_VAULT_VIEW_ADDRESS,
     abi: EcosystemVaultViewABI,
     functionName: 'getPendingReferral',
     args: referred ? [referred] : undefined,
     query: {
-      enabled: !!referred && !configError,
+      enabled: !!referred,
     },
   });
 
   if (!data || !referred) {
     return {
-      merchantReferrer: ZERO_ADDRESS,
-      userReferrer: ZERO_ADDRESS,
+      merchantReferrer: '0x0000000000000000000000000000000000000000',
+      userReferrer: '0x0000000000000000000000000000000000000000',
       credited: false,
       isLoading,
-      error: configError ?? (error as Error | null),
+      error: error as Error | null,
     };
   }
 
@@ -200,7 +185,6 @@ export function usePendingReferral(referred: `0x${string}` | undefined): Pending
 export function useReferralLevelStatus(year?: bigint): ReferralLevelStatus {
   const { address } = useAccount();
   const selectedYear = year ?? 1n;
-  const configError = !isEcosystemVaultViewConfigured() ? getEcosystemVaultError() : null;
 
   const { data, isLoading, error } = useReadContract({
     address: ECOSYSTEM_VAULT_VIEW_ADDRESS,
@@ -208,7 +192,7 @@ export function useReferralLevelStatus(year?: bigint): ReferralLevelStatus {
     functionName: 'getReferralLevelStatus',
     args: address ? [address, selectedYear] : undefined,
     query: {
-      enabled: !!address && !configError,
+      enabled: !!address,
       refetchInterval: 30000,
     },
   });
@@ -222,7 +206,7 @@ export function useReferralLevelStatus(year?: bigint): ReferralLevelStatus {
       nextLevelRequiredPoints: 0,
       nextLevelReward: 0n,
       isLoading,
-      error: configError ?? (error as Error | null),
+      error: error as Error | null,
     };
   }
 
@@ -272,10 +256,6 @@ export function usePayReferralWorkReward() {
     amount: string,
     reason: string
   ) => {
-    if (!isEcosystemVaultConfigured()) {
-      throw getEcosystemVaultError();
-    }
-
     writeContract({
       address: ECOSYSTEM_VAULT_ADDRESS,
       abi: EcosystemVaultABI,
@@ -303,10 +283,6 @@ export function usePayReferralLevelReward() {
     year: bigint,
     reason: string
   ) => {
-    if (!isEcosystemVaultConfigured()) {
-      throw getEcosystemVaultError();
-    }
-
     writeContract({
       address: ECOSYSTEM_VAULT_ADDRESS,
       abi: EcosystemVaultABI,
@@ -330,10 +306,6 @@ export function useClaimReferralLevelRewards() {
   const { writeContract, isPending, isSuccess, error } = useWriteContract();
 
   const claimReferralLevelRewards = async (year: bigint, reason: string) => {
-    if (!isEcosystemVaultConfigured()) {
-      throw getEcosystemVaultError();
-    }
-
     writeContract({
       address: ECOSYSTEM_VAULT_ADDRESS,
       abi: EcosystemVaultABI,
@@ -361,10 +333,6 @@ export function usePayMerchantWorkReward() {
     amount: string,
     reason: string
   ) => {
-    if (!isEcosystemVaultConfigured()) {
-      throw getEcosystemVaultError();
-    }
-
     writeContract({
       address: ECOSYSTEM_VAULT_ADDRESS,
       abi: EcosystemVaultABI,
@@ -511,10 +479,6 @@ export function useDepositStablecoinReserve() {
   const { writeContractAsync, isPending, isSuccess, error } = useWriteContract();
 
   const depositStablecoinReserve = async (stablecoin: `0x${string}`, amount: bigint) => {
-    if (!isEcosystemVaultConfigured()) {
-      throw getEcosystemVaultError();
-    }
-
     return writeContractAsync({
       address: ECOSYSTEM_VAULT_ADDRESS,
       abi: EcosystemVaultABI,
@@ -540,6 +504,6 @@ export function useStablecoinReserveBalance(stablecoin: `0x${string}` | undefine
     abi: EcosystemVaultABI,
     functionName: 'stablecoinReserves',
     args: stablecoin ? [stablecoin] : undefined,
-    query: { enabled: !!stablecoin && isEcosystemVaultConfigured() },
+    query: { enabled: !!stablecoin },
   });
 }

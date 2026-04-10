@@ -3,7 +3,6 @@ import { query } from '@/lib/db';
 import { requireAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { logger } from '@/lib/logger';
-import { isAddress } from 'viem';
 import { z } from 'zod4';
 
 const MAX_EXPORT_DATE_RANGE_DAYS = 366;
@@ -42,10 +41,6 @@ function isAddressLike(value: string): boolean {
 function isIsoDateString(value: string): boolean {
   const parsed = new Date(value);
   return !Number.isNaN(parsed.getTime());
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
 // ==================== TYPES ====================
@@ -372,33 +367,8 @@ export async function POST(request: NextRequest) {
   let body: z.infer<typeof exportRequestSchema>;
   try {
     const rawBody = await request.json();
-    if (!isRecord(rawBody)) {
-      return NextResponse.json(
-        { error: 'Invalid request body' },
-        { status: 400 }
-      );
-    }
-
     const parsed = exportRequestSchema.safeParse(rawBody);
     if (!parsed.success) {
-      const issues = parsed.error.issues.map((issue) => issue.path.join('.'));
-      const hasOptionsIssue = issues.some((path) => path === 'options' || path.startsWith('options.'));
-      const hasFilterLimitIssue = issues.some((path) => path.startsWith('options.filters.types') || path.startsWith('options.filters.tokens'));
-
-      if (hasFilterLimitIssue) {
-        return NextResponse.json(
-          { error: 'Too many filter values' },
-          { status: 400 }
-        );
-      }
-
-      if (hasOptionsIssue) {
-        return NextResponse.json(
-          { error: 'Invalid export options' },
-          { status: 400 }
-        );
-      }
-
       return NextResponse.json(
         { error: 'Invalid request body' },
         { status: 400 }
@@ -432,7 +402,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!authResult.user?.address || typeof authResult.user.address !== 'string' || !isAddress(authResult.user.address)) {
+    if (!authResult.user?.address || !isAddressLike(authResult.user.address)) {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }

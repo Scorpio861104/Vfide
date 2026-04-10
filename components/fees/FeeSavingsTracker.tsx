@@ -262,7 +262,7 @@ export function FeeSavingsCalculator() {
             <div className="text-4xl font-bold text-emerald-400 font-mono">
               {formatCurrency((results.find(r => r.name === 'Square')?.yearlyFee || 0) - vfideFeeYearly)}
             </div>
-            <div className="text-gray-500 text-xs mt-2">That&apos;s money back in your pocket, not theirs.</div>
+            <div className="text-gray-500 text-xs mt-2">That's money back in your pocket, not theirs.</div>
           </div>
         </motion.div>
       )}

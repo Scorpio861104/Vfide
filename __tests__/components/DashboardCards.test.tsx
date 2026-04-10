@@ -112,11 +112,11 @@ describe('StatCard', () => {
         icon={<span>📊</span>} 
         label="Balance" 
         value="$500" 
-        subValue="5% Fee Savings"
+        subValue="5% APY"
         color="#00FF00" 
       />
     )
-    expect(screen.getByText('5% Fee Savings')).toBeInTheDocument()
+    expect(screen.getByText('5% APY')).toBeInTheDocument()
   })
 
   it('shows loading state', () => {

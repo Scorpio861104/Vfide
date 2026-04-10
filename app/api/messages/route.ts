@@ -460,47 +460,6 @@ export async function PATCH(request: NextRequest) {
   let body: z.infer<typeof markMessagesReadSchema>;
   try {
     const rawBody = await request.json();
-
-    if (!rawBody || typeof rawBody !== 'object' || Array.isArray(rawBody)) {
-      return NextResponse.json(
-        { error: 'Request body must be a JSON object' },
-        { status: 400 }
-      );
-    }
-
-    const candidate = rawBody as {
-      messageIds?: unknown;
-      conversationWith?: unknown;
-      userAddress?: unknown;
-    };
-
-    if (candidate.messageIds !== undefined) {
-      if (!Array.isArray(candidate.messageIds)) {
-        return NextResponse.json(
-          { error: 'Invalid messageIds. Must be an array of positive integers.' },
-          { status: 400 }
-        );
-      }
-
-      if (candidate.messageIds.length > MAX_BULK_MESSAGE_IDS) {
-        return NextResponse.json(
-          { error: `Too many messageIds. Maximum ${MAX_BULK_MESSAGE_IDS} allowed.` },
-          { status: 400 }
-        );
-      }
-
-      const hasInvalidMessageIds = candidate.messageIds.some(
-        (id) => !Number.isInteger(id) || Number(id) <= 0
-      );
-
-      if (hasInvalidMessageIds) {
-        return NextResponse.json(
-          { error: 'Invalid messageIds. Must be an array of positive integers.' },
-          { status: 400 }
-        );
-      }
-    }
-
     const parsed = markMessagesReadSchema.safeParse(rawBody);
     if (!parsed.success) {
       return NextResponse.json(

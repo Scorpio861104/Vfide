@@ -3,12 +3,20 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { useAccount } from 'wagmi'
-import * as LucideIcons from 'lucide-react'
+import {
+  Copy,
+  Check,
+  Mail,
+  MessageCircle,
+  X,
+  Share2,
+  Users,
+  Trophy,
+  Zap,
+  QrCode,
+} from 'lucide-react'
 import Link from 'next/link'
 import { useCopyToClipboard } from '@/lib/hooks/useCopyToClipboard'
-
-const { Copy, Check, Mail, MessageCircle, Share2, Users, Trophy, Zap, QrCode } = LucideIcons
-const Twitter = (LucideIcons as unknown as Record<string, typeof LucideIcons.Send | undefined>).Twitter ?? LucideIcons.Send
 
 export default function InviteFriendsPage() {
   const { address } = useAccount()
@@ -76,7 +84,7 @@ export default function InviteFriendsPage() {
     },
     {
       id: 'twitter',
-      icon: Twitter,
+      icon: X,
       label: 'Twitter',
       action: shareViaTwitter,
       color: 'bg-sky-500',

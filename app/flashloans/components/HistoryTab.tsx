@@ -1,81 +1,36 @@
 'use client';
 
-interface HistoryItem {
-  id: string;
-  event: string;
-  stage: string;
-  detail: string;
-}
+import { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
+import { Loader2 } from 'lucide-react';
 
-interface ServerLaneHistory {
-  id: string | number;
-  stage?: string;
-  evidence_note?: string;
-}
+// Past flash loan transactions
 
-interface HistoryTabProps {
-  items: HistoryItem[];
-  serverLanes: ServerLaneHistory[];
-}
+export function HistoryTab() {
+  const [loading, setLoading] = useState(true);
+  const [data, setData] = useState<any>(null);
 
-function formatOutcome(stage?: string) {
-  switch (stage) {
-    case 'resolved-lender':
-      return 'Resolved to lender';
-    case 'resolved-borrower':
-      return 'Resolved to borrower';
-    case 'drawn':
-      return 'Borrower Drawn';
-    default:
-      return stage ? stage.replace(/-/g, ' ').replace(/\b\w/g, (char) => char.toUpperCase()) : 'Draft';
-  }
-}
+  useEffect(() => {
+    // TODO: Wire to API endpoint
+    const timer = setTimeout(() => setLoading(false), 500);
+    return () => clearTimeout(timer);
+  }, []);
 
-export function HistoryTab({ items, serverLanes }: HistoryTabProps) {
-  const serverHistory = serverLanes.filter((lane) =>
-    ['drawn', 'disputed', 'repaid', 'resolved-borrower', 'resolved-lender'].includes(String(lane.stage ?? ''))
-  );
-
-  if (items.length === 0 && serverHistory.length === 0) {
+  if (loading) {
     return (
-      <div className="rounded-2xl border border-white/10 bg-white/3 p-6">
-        <h2 className="mb-4 text-xl font-bold text-white">Activity history</h2>
-        <p className="text-gray-400">No lane activity has been recorded yet.</p>
+      <div className="flex items-center justify-center py-12">
+        <Loader2 size={24} className="text-cyan-400 animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/3 p-6">
-      <h2 className="mb-4 text-xl font-bold text-white">Activity history</h2>
-
-      {serverHistory.length > 0 ? (
-        <div className="mb-6 space-y-3">
-          {serverHistory.map((lane) => (
-            <div key={lane.id} className="rounded-xl border border-white/10 bg-black/20 p-3">
-              <div className="flex items-center justify-between gap-3">
-                <span className="font-semibold text-white">Lane #{lane.id}</span>
-                <span className="text-xs text-cyan-200">{formatOutcome(lane.stage)}</span>
-              </div>
-              <p className="mt-1 text-sm text-gray-400">{lane.evidence_note || formatOutcome(lane.stage)}</p>
-            </div>
-          ))}
-        </div>
-      ) : null}
-
-      {items.length > 0 ? (
-        <div className="space-y-3">
-          {items.map((item) => (
-            <div key={item.id} className="rounded-xl border border-white/10 bg-black/20 p-3">
-              <div className="flex items-center justify-between gap-3">
-                <span className="font-semibold text-white">{item.event}</span>
-                <span className="text-xs text-cyan-200">{item.stage}</span>
-              </div>
-              <p className="mt-1 text-sm text-gray-400">{item.detail}</p>
-            </div>
-          ))}
-        </div>
-      ) : null}
+    <div className="space-y-6">
+      <div className="bg-white/3 border border-white/10 rounded-2xl p-6">
+        <h3 className="text-lg font-bold text-white mb-4">History</h3>
+        <p className="text-gray-400 text-sm">Past flash loan transactions</p>
+        {/* TODO: Implement HistoryTab UI */}
+      </div>
     </div>
   );
 }

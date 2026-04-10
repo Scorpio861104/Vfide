@@ -10,7 +10,7 @@ import { HistoryTab } from './components/HistoryTab';
 
 type TabId = 'dashboard' | 'streams' | 'create' | 'history';
 
-const TAB_LABELS: Record<TabId, string> = { dashboard: 'Dashboard', streams: 'Streams', create: 'Create', history: 'History' };
+const TAB_LABELS: Record<TabId, string> = { 'dashboard': 'Dashboard', 'streams': 'Streams', 'create': 'Create Stream', 'history': 'History' };
 const TAB_IDS: TabId[] = ['dashboard', 'streams', 'create', 'history'];
 
 export default function PayrollPage() {

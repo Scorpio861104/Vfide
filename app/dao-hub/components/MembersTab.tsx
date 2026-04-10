@@ -1,23 +1,36 @@
 'use client';
 
-const MEMBER_QUEUE = [
-  'Council roster validation for the upcoming term',
-  'Moderator availability confirmations',
-  'Compensation acknowledgment follow-ups',
-];
+import { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
+import { Loader2 } from 'lucide-react';
+
+// Council members, election status, and delegation info
 
 export function MembersTab() {
-  return (
-    <div className="space-y-4">
-      <div className="bg-white/3 border border-white/10 rounded-2xl p-6">
-        <h3 className="text-xl font-bold text-white mb-2">Member Operations</h3>
-        <p className="text-gray-400">Review service eligibility, term continuity, and open coordination items.</p>
+  const [loading, setLoading] = useState(true);
+  const [data, setData] = useState<any>(null);
+
+  useEffect(() => {
+    // TODO: Wire to API endpoint
+    const timer = setTimeout(() => setLoading(false), 500);
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 size={24} className="text-cyan-400 animate-spin" />
       </div>
-      {MEMBER_QUEUE.map((item) => (
-        <div key={item} className="rounded-2xl border border-white/10 bg-black/20 p-4 text-gray-200">
-          {item}
-        </div>
-      ))}
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="bg-white/3 border border-white/10 rounded-2xl p-6">
+        <h3 className="text-lg font-bold text-white mb-4">Members</h3>
+        <p className="text-gray-400 text-sm">Council members, election status, and delegation info</p>
+        {/* TODO: Implement MembersTab UI */}
+      </div>
     </div>
   );
 }

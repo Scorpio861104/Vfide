@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { isAdmin, optionalAuth, verifyOnChainAdmin } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
+import { requireAuth } from '@/lib/auth/middleware';
 import { logger } from '@/lib/logger';
 import { z } from 'zod4';
 
@@ -71,22 +71,12 @@ function normalizeMerchant(value: unknown): string {
   return trimmed.toLowerCase();
 }
 
-async function canViewFullTelemetry(request: NextRequest): Promise<boolean> {
-  const user = await optionalAuth(request).catch(() => null);
-  if (!user || !isAdmin(user)) {
-    return false;
-  }
-  return verifyOnChainAdmin(user.address);
-}
-
 export async function POST(request: NextRequest) {
   const rateLimitResponse = await withRateLimit(request, 'write');
   if (rateLimitResponse) return rateLimitResponse;
 
-  const user = await optionalAuth(request).catch(() => null);
-  const authenticatedAddress = typeof user?.address === 'string'
-    ? user.address.toLowerCase()
-    : null;
+  const authResult = await requireAuth(request);
+  if (authResult instanceof NextResponse) return authResult;
 
   let payload: z.infer<typeof qrSignatureEventSchema>;
   try {
@@ -121,7 +111,7 @@ export async function POST(request: NextRequest) {
     orderId,
     exp,
     sigPrefix,
-    reason: authenticatedAddress ? `${reason} | reporter:${authenticatedAddress.slice(0, 10)}` : reason,
+    reason,
     userAgent,
     ts,
   };
@@ -147,8 +137,6 @@ function parsePositiveInteger(value: string | null, fallback: number): number {
 export async function GET(request: NextRequest) {
   const rateLimitResponse = await withRateLimit(request, 'read');
   if (rateLimitResponse) return rateLimitResponse;
-
-  const includeSensitiveFields = await canViewFullTelemetry(request);
 
   const searchParams = request.nextUrl.searchParams;
   const sinceMinutes = parsePositiveInteger(searchParams.get('sinceMinutes'), 60);
@@ -176,24 +164,10 @@ export async function GET(request: NextRequest) {
     byMerchant[event.merchant] = (byMerchant[event.merchant] || 0) + 1;
   }
 
-  const topMerchants = includeSensitiveFields
-    ? Object.entries(byMerchant)
-        .sort((a, b) => b[1] - a[1])
-        .slice(0, 10)
-        .map(([merchant, count]) => ({ merchant, count }))
-    : [];
-
-  const events = includeSensitiveFields
-    ? recentEvents
-    : recentEvents.map((event) => ({
-        eventType: event.eventType,
-        source: event.source,
-        settlement: event.settlement,
-        merchant: event.merchant === 'unknown'
-          ? 'unknown'
-          : `${event.merchant.slice(0, 6)}…${event.merchant.slice(-4)}`,
-        ts: event.ts,
-      }));
+  const topMerchants = Object.entries(byMerchant)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 10)
+    .map(([merchant, count]) => ({ merchant, count }));
 
   return NextResponse.json({
     summary: {
@@ -202,6 +176,6 @@ export async function GET(request: NextRequest) {
       byEventType,
       topMerchants,
     },
-    events,
+    events: recentEvents,
   });
 }

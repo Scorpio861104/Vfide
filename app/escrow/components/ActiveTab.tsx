@@ -1,48 +1,36 @@
 'use client';
 
-export type EscrowListItem = {
-  id: string | number | bigint;
-  orderId?: string;
-  merchant?: string;
-  amount: bigint | number;
-  releaseTime: bigint | number;
-};
+import { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
+import { Loader2 } from 'lucide-react';
 
-interface ActiveTabProps {
-  escrows: EscrowListItem[];
-  formatEscrowAmount: (amount: bigint) => string;
-  getTimeRemaining: (releaseTime: bigint) => string;
-}
+// Active escrow contracts with status, amounts, and release/dispute buttons
 
-export function ActiveTab({ escrows, formatEscrowAmount, getTimeRemaining }: ActiveTabProps) {
-  return (
-    <div className="space-y-4">
-      <div className="rounded-2xl border border-white/10 bg-white/3 p-5">
-        <h2 className="text-xl font-bold text-white">Escrows pending release</h2>
-        <p className="mt-2 text-sm text-gray-400">Track orders awaiting merchant release, refund, or timeout resolution.</p>
+export function ActiveTab() {
+  const [loading, setLoading] = useState(true);
+  const [data, setData] = useState<any>(null);
+
+  useEffect(() => {
+    // TODO: Wire to API endpoint
+    const timer = setTimeout(() => setLoading(false), 500);
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 size={24} className="text-cyan-400 animate-spin" />
       </div>
+    );
+  }
 
-      {escrows.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-white/10 bg-white/3 p-10 text-center">
-          <h2 className="text-2xl font-bold text-white">No Escrows Found</h2>
-          <p className="text-gray-400 mt-2">New escrow orders will appear here once they are created.</p>
-        </div>
-      ) : (
-        <div className="space-y-3">
-          {escrows.map((escrow) => (
-            <div key={String(escrow.id)} className="rounded-2xl border border-white/10 bg-black/20 p-4 flex items-center justify-between gap-4">
-              <div>
-                <div className="text-white font-semibold">{escrow.orderId || `Escrow #${String(escrow.id)}`}</div>
-                <div className="text-sm text-gray-400">Merchant {escrow.merchant}</div>
-              </div>
-              <div className="text-right text-sm text-gray-300">
-                <div>{formatEscrowAmount(escrow.amount as bigint)} VFIDE</div>
-                <div>{getTimeRemaining(escrow.releaseTime as bigint)}</div>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
+  return (
+    <div className="space-y-6">
+      <div className="bg-white/3 border border-white/10 rounded-2xl p-6">
+        <h3 className="text-lg font-bold text-white mb-4">Active</h3>
+        <p className="text-gray-400 text-sm">Active escrow contracts with status, amounts, and release/dispute buttons</p>
+        {/* TODO: Implement ActiveTab UI */}
+      </div>
     </div>
   );
 }

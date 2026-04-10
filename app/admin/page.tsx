@@ -38,7 +38,10 @@ function UnauthorizedUI() {
  * This prevents the entire admin UI from being sent to unauthorized users.
  * The client component (AdminDashboardClient) will perform wallet connection verification.
  */
-export default function AdminPage() {
+export default async function AdminPage() {
+  // Note: In the future, you can add server-side auth checks here
+  // For now, the client component verifies wallet connection against on-chain owner
+  
   return (
     <Suspense fallback={<LoadingUI />}>
       <AdminDashboardClient />

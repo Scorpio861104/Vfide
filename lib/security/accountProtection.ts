@@ -21,7 +21,6 @@ const WINDOW_MS = 10 * 60 * 1000;
 const LOCK_MS = 30 * 60 * 1000;
 const RETENTION_MS = 24 * 60 * 60 * 1000;
 const CLEANUP_INTERVAL_MS = 5 * 60 * 1000;
-const LOCK_READ_RETRIES = 5;
 
 const securityEvents = new Map<string, SecurityEvent[]>();
 const accountLocks = new Map<string, LockRecord>();
@@ -47,36 +46,29 @@ export async function getAccountLock(address: string): Promise<LockRecord | null
   }
 
   try {
-    for (let attempt = 0; attempt < LOCK_READ_RETRIES; attempt += 1) {
-      const dbLockResult = await query<{ until_ts: string; reason: string }>(
-        `SELECT until_ts::text, reason
-         FROM security_account_locks
-         WHERE address = $1
-         LIMIT 1`,
-        [key]
-      );
+    const dbLockResult = await query<{ until_ts: string; reason: string }>(
+      `SELECT until_ts::text, reason
+       FROM security_account_locks
+       WHERE address = $1
+       LIMIT 1`,
+      [key]
+    );
 
-      const dbLock = dbLockResult.rows[0];
-      if (!dbLock) {
-        if (attempt === LOCK_READ_RETRIES - 1) {
-          return null;
-        }
-        continue;
-      }
-
-      const untilMs = Date.parse(dbLock.until_ts);
-      if (!Number.isFinite(untilMs) || Date.now() >= untilMs) {
-        await query('DELETE FROM security_account_locks WHERE address = $1', [key]);
-        accountLocks.delete(key);
-        return null;
-      }
-
-      const hydrated = { until: untilMs, reason: dbLock.reason };
-      accountLocks.set(key, hydrated);
-      return hydrated;
+    const dbLock = dbLockResult.rows[0];
+    if (!dbLock) {
+      return null;
     }
 
-    return null;
+    const untilMs = Date.parse(dbLock.until_ts);
+    if (!Number.isFinite(untilMs) || Date.now() >= untilMs) {
+      await query('DELETE FROM security_account_locks WHERE address = $1', [key]);
+      accountLocks.delete(key);
+      return null;
+    }
+
+    const hydrated = { until: untilMs, reason: dbLock.reason };
+    accountLocks.set(key, hydrated);
+    return hydrated;
   } catch {
     // Fallback to memory if DB is unavailable.
     return memoryLock ?? null;

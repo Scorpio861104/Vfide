@@ -1,11 +1,7 @@
 'use client'
 
 import { useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi'
-import {
-  CONTRACT_ADDRESSES,
-  getContractConfigurationError,
-  isConfiguredContractAddress,
-} from '../lib/contracts'
+import { CONTRACT_ADDRESSES } from '../lib/contracts'
 import { DAOABI } from '../lib/abis'
 
 // ============================================
@@ -13,39 +9,25 @@ import { DAOABI } from '../lib/abis'
 // ============================================
 
 export function useDAOProposals() {
-  const configError = !isConfiguredContractAddress(CONTRACT_ADDRESSES.DAO)
-    ? getContractConfigurationError('DAO')
-    : null
-
-  const { data: proposalCount, error } = useReadContract({
+  const { data: proposalCount } = useReadContract({
     address: CONTRACT_ADDRESSES.DAO,
     abi: DAOABI,
     functionName: 'proposalCount',
-    query: {
-      enabled: !configError,
-    },
   })
   
   return {
     proposalCount: proposalCount ? Number(proposalCount) : 0,
-    error: configError ?? error,
-    isAvailable: !configError,
   }
 }
 
 export function useVote() {
-  const configError = !isConfiguredContractAddress(CONTRACT_ADDRESSES.DAO)
-    ? getContractConfigurationError('DAO')
-    : null
   const { writeContract, data, isPending } = useWriteContract()
   
-  const { isLoading: isConfirming, isSuccess, error } = useWaitForTransactionReceipt({
+  const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({
     hash: data,
   })
   
   const vote = (proposalId: bigint, support: boolean) => {
-    if (configError) return
-
     writeContract({
       address: CONTRACT_ADDRESSES.DAO,
       abi: DAOABI,
@@ -58,7 +40,5 @@ export function useVote() {
     vote,
     isVoting: isPending || isConfirming,
     isSuccess,
-    error: configError ?? error,
-    isAvailable: !configError,
   }
 }

@@ -8,9 +8,6 @@ const withBundleAnalyzer = require('@next/bundle-analyzer')({
 });
 
 const nextConfig: NextConfig = {
-  // Allow local and forwarded dev origins to access Next.js HMR/runtime resources.
-  allowedDevOrigins: ['localhost', '127.0.0.1', '*.app.github.dev', '*.github.dev'],
-
   // Fix for pino/thread-stream compatibility
   serverExternalPackages: ['pino', 'pino-pretty', 'thread-stream'],
 
@@ -63,7 +60,7 @@ const nextConfig: NextConfig = {
     ],
   },
 
-  // Security headers excluding CSP (`proxy.ts` remains the active CSP/CSRF runtime layer)
+  // Security headers excluding CSP (nonce-based CSP is enforced in `proxy.ts`, with `middleware.ts` kept as a compatibility shim)
   async headers() {
     return [
       {

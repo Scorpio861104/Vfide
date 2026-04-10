@@ -71,6 +71,11 @@
     "type": "error"
   },
   {
+    "inputs": [],
+    "name": "MERCH_VaultLocked",
+    "type": "error"
+  },
+  {
     "anonymous": false,
     "inputs": [
       {
@@ -118,25 +123,6 @@
       }
     ],
     "name": "AutoConvertSet",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "previousController",
-        "type": "address"
-      },
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "newController",
-        "type": "address"
-      }
-    ],
-    "name": "EmergencyControllerSet",
     "type": "event"
   },
   {
@@ -346,25 +332,6 @@
       }
     ],
     "name": "MinScoreUpdated",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "previousBps",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "newBps",
-        "type": "uint256"
-      }
-    ],
-    "name": "MinSwapOutputUpdated",
     "type": "event"
   },
   {
@@ -749,55 +716,6 @@
     "type": "function"
   },
   {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "customer",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "merchant",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "token",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "desiredNetAmount",
-        "type": "uint256"
-      }
-    ],
-    "name": "calculateGrossAmount",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "grossAmount",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "totalFee",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "protocolFee",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "networkFee",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
     "inputs": [],
     "name": "cancelOwnershipTransfer",
     "outputs": [],
@@ -839,46 +757,7 @@
   },
   {
     "inputs": [],
-    "name": "emergencyController",
-    "outputs": [
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "newOwner",
-        "type": "address"
-      }
-    ],
-    "name": "emergencyTransferOwnership",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [],
     "name": "feeSink",
-    "outputs": [
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "fraudRegistry",
     "outputs": [
       {
         "internalType": "address",
@@ -1610,55 +1489,6 @@
       },
       {
         "internalType": "address",
-        "name": "merchant",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "token",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "itemAmount",
-        "type": "uint256"
-      }
-    ],
-    "name": "previewCheckout",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "grossAmount",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "totalFee",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "protocolFee",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "networkFee",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "customer",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
         "name": "token",
         "type": "address"
       },
@@ -1843,37 +1673,11 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "controller",
-        "type": "address"
-      }
-    ],
-    "name": "setEmergencyController",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
         "name": "_sink",
         "type": "address"
       }
     ],
     "name": "setFeeSink",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "_fr",
-        "type": "address"
-      }
-    ],
-    "name": "setFraudRegistry",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

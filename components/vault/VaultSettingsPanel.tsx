@@ -82,7 +82,7 @@ export function VaultSettingsPanel() {
           <h2 className="text-2xl font-bold">Vault Settings</h2>
         </div>
 
-        <div className="bg-gray-900 border border-gray-700 rounded-2xl p-8 space-y-5">
+        <div className="bg-gray-900 border border-gray-700 rounded-2xl p-8">
           <div className="flex items-start gap-3">
             <Shield className="w-6 h-6 text-cyan-400 mt-0.5" />
             <div className="space-y-3">
@@ -101,26 +101,6 @@ export function VaultSettingsPanel() {
                 </p>
               </div>
             </div>
-          </div>
-
-          <div className="rounded-xl border border-white/10 bg-black/20 p-4 text-sm text-gray-300">
-            Current abnormal transfer threshold reference: {usePercentage ? `${(percentageBps ?? 0) / 100}%` : `${formatEther(threshold)} VFIDE`}.
-            Pending transaction review remains available through CardBound policy controls.
-          </div>
-
-          <div className="flex flex-wrap gap-3">
-            <button
-              type="button"
-              className="px-4 py-2 rounded-lg bg-cyan-500/15 border border-cyan-500/30 text-cyan-300 font-semibold"
-            >
-              Review guardian controls
-            </button>
-            <button
-              type="button"
-              className="px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white font-semibold"
-            >
-              Open security checklist
-            </button>
           </div>
         </div>
       </div>

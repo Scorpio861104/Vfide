@@ -15,7 +15,6 @@ const renderTreasuryPage = () => {
 
 jest.mock('wagmi', () => ({
   useAccount: () => mockAccount,
-  useReadContract: () => ({ data: 0n }),
 }));
 
 jest.mock('@/components/layout/Footer', () => ({
@@ -61,12 +60,12 @@ describe('Treasury page pathways', () => {
     expect(screen.getByText(/Connect wallet to view and approve disbursements/i)).toBeTruthy();
   });
 
-  it('shows ecosystem payout panel for connected wallet', () => {
+  it('shows ecosystem rewards panel for connected wallet', () => {
     renderTreasuryPage();
 
     fireEvent.click(screen.getByRole('button', { name: /Ecosystem Vault/i }));
 
     expect(screen.getByRole('heading', { name: /Allocation Breakdown/i })).toBeTruthy();
-    expect(screen.getByRole('heading', { name: /Verified Work Payouts/i })).toBeTruthy();
+    expect(screen.getByRole('heading', { name: /Your Claimable Rewards/i })).toBeTruthy();
   });
 });

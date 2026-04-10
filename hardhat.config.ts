@@ -50,12 +50,6 @@ const config: VfideHardhatConfig = {
             enabled: true,
             runs: 200,
           },
-          metadata: {
-            bytecodeHash: "none",
-          },
-          debug: {
-            revertStrings: "strip",
-          },
           // viaIR increases compilation time but helps avoid stack-too-deep errors
           viaIR: true,
         },
@@ -66,12 +60,6 @@ const config: VfideHardhatConfig = {
           optimizer: {
             enabled: true,
             runs: 200,
-          },
-          metadata: {
-            bytecodeHash: "none",
-          },
-          debug: {
-            revertStrings: "strip",
           },
           viaIR: true,
         },
@@ -84,16 +72,10 @@ const config: VfideHardhatConfig = {
         settings: {
           optimizer: {
             enabled: true,
-            runs: 0,
-            details: {
-              inliner: false,
-            },
+            runs: 1,
           },
           metadata: {
             bytecodeHash: "none",
-          },
-          debug: {
-            revertStrings: "strip",
           },
           viaIR: true,
         },
@@ -159,16 +141,10 @@ const config: VfideHardhatConfig = {
         settings: {
           optimizer: {
             enabled: true,
-            runs: 0,
-            details: {
-              inliner: false,
-            },
+            runs: 1,
           },
           metadata: {
             bytecodeHash: "none",
-          },
-          debug: {
-            revertStrings: "strip",
           },
           viaIR: true,
         },
@@ -178,16 +154,10 @@ const config: VfideHardhatConfig = {
         settings: {
           optimizer: {
             enabled: true,
-            runs: 0,
-            details: {
-              inliner: false,
-            },
+            runs: 1,
           },
           metadata: {
             bytecodeHash: "none",
-          },
-          debug: {
-            revertStrings: "strip",
           },
           viaIR: true,
         },
@@ -201,38 +171,6 @@ const config: VfideHardhatConfig = {
           },
           metadata: {
             bytecodeHash: "none",
-          },
-          viaIR: true,
-        },
-      },
-      "contracts/MerchantPortal.sol": {
-        version: "0.8.30",
-        settings: {
-          optimizer: {
-            enabled: true,
-            runs: 1,
-          },
-          metadata: {
-            bytecodeHash: "none",
-          },
-          debug: {
-            revertStrings: "strip",
-          },
-          viaIR: true,
-        },
-      },
-      "contracts/VaultHub.sol": {
-        version: "0.8.30",
-        settings: {
-          optimizer: {
-            enabled: true,
-            runs: 1,
-          },
-          metadata: {
-            bytecodeHash: "none",
-          },
-          debug: {
-            revertStrings: "strip",
           },
           viaIR: true,
         },

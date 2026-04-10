@@ -74,10 +74,6 @@ function isEncryptedDirectMessagePayload(content: string): boolean {
   }
 }
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
-}
-
 export async function PATCH(request: NextRequest) {
   // Rate limiting: 20 requests per minute for write operations
   const rateLimitResponse = await withRateLimit(request, 'write');
@@ -99,10 +95,6 @@ export async function PATCH(request: NextRequest) {
   let body: z.infer<typeof messageEditSchema>;
   try {
     const rawBody = await request.json();
-    if (!isRecord(rawBody)) {
-      return NextResponse.json({ error: 'Request body must be a JSON object' }, { status: 400 });
-    }
-
     const parsed = messageEditSchema.safeParse(rawBody);
     if (!parsed.success) {
       return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });

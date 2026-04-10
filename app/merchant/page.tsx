@@ -3,13 +3,10 @@
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { ArrowRight, Store } from 'lucide-react';
-import { useAccount } from 'wagmi';
 import { Footer } from '@/components/layout/Footer';
 import { MerchantDashboard } from '@/components/merchant/MerchantDashboard';
 import { PaymentInterface } from '@/components/merchant/PaymentInterface';
 import { PaymentQR } from '@/components/merchant/PaymentQR';
-import SeasonalTrends from '@/components/analytics/SeasonalTrends';
-import { OffRampButton, OffRampStatus } from '@/components/compliance/OffRampIntegration';
 
 const processors = [
   { name: 'Square', fee: '2.6% + $0.10' },
@@ -25,8 +22,6 @@ const onboardingSteps = [
 ];
 
 export default function MerchantPage() {
-  const { address } = useAccount();
-
   return (
     <>
       <div className="min-h-screen bg-zinc-950 pt-20">
@@ -46,53 +41,6 @@ export default function MerchantPage() {
               Open Merchant Portal
               <ArrowRight size={20} />
             </Link>
-            <div className="mt-4 flex flex-wrap items-center justify-center gap-3 text-sm">
-              <Link href="/merchant/staff" className="rounded-xl border border-white/10 px-4 py-2 text-cyan-300 hover:border-cyan-400/40 hover:text-cyan-200">
-                Staff roles & cashier mode
-              </Link>
-              <Link href="/pos" className="rounded-xl border border-white/10 px-4 py-2 text-cyan-300 hover:border-cyan-400/40 hover:text-cyan-200">
-                Point of sale &amp; receipt tools
-              </Link>
-              <Link href="/merchant/customers" className="rounded-xl border border-white/10 px-4 py-2 text-cyan-300 hover:border-cyan-400/40 hover:text-cyan-200">
-                Customer list & order history
-              </Link>
-              <Link href="/merchant/coupons" className="rounded-xl border border-white/10 px-4 py-2 text-cyan-300 hover:border-cyan-400/40 hover:text-cyan-200">
-                Coupon & promo codes
-              </Link>
-              <Link href="/merchant/loyalty" className="rounded-xl border border-white/10 px-4 py-2 text-cyan-300 hover:border-cyan-400/40 hover:text-cyan-200">
-                Loyalty stamp cards
-              </Link>
-              <Link href="/merchant/gift-cards" className="rounded-xl border border-white/10 px-4 py-2 text-cyan-300 hover:border-cyan-400/40 hover:text-cyan-200">
-                Gift cards &amp; store credit
-              </Link>
-              <Link href="/merchant/returns" className="rounded-xl border border-white/10 px-4 py-2 text-cyan-300 hover:border-cyan-400/40 hover:text-cyan-200">
-                Returns &amp; exchanges
-              </Link>
-              <Link href="/merchant/installments" className="rounded-xl border border-white/10 px-4 py-2 text-cyan-300 hover:border-cyan-400/40 hover:text-cyan-200">
-                Installments &amp; payment plans
-              </Link>
-              <Link href="/merchant/suppliers" className="rounded-xl border border-white/10 px-4 py-2 text-cyan-300 hover:border-cyan-400/40 hover:text-cyan-200">
-                Suppliers &amp; purchase orders
-              </Link>
-              <Link href="/merchant/locations" className="rounded-xl border border-white/10 px-4 py-2 text-cyan-300 hover:border-cyan-400/40 hover:text-cyan-200">
-                Store locations
-              </Link>
-              <Link href="/merchant/wholesale" className="rounded-xl border border-white/10 px-4 py-2 text-cyan-300 hover:border-cyan-400/40 hover:text-cyan-200">
-                Wholesale &amp; group buying
-              </Link>
-              <Link href="/lending" className="rounded-xl border border-white/10 px-4 py-2 text-cyan-300 hover:border-cyan-400/40 hover:text-cyan-200">
-                Working capital &amp; term loans
-              </Link>
-              <Link href="/disputes" className="rounded-xl border border-white/10 px-4 py-2 text-cyan-300 hover:border-cyan-400/40 hover:text-cyan-200">
-                Disputes &amp; mediation
-              </Link>
-              <Link href="/elections" className="rounded-xl border border-white/10 px-4 py-2 text-cyan-300 hover:border-cyan-400/40 hover:text-cyan-200">
-                Elections &amp; governance
-              </Link>
-              <Link href="/merchant/expenses" className="rounded-xl border border-white/10 px-4 py-2 text-cyan-300 hover:border-cyan-400/40 hover:text-cyan-200">
-                Expense tracking &amp; P&amp;L
-              </Link>
-            </div>
           </div>
         </section>
 
@@ -115,7 +63,7 @@ export default function MerchantPage() {
 
         <section className="py-16">
           <div className="container mx-auto max-w-6xl px-4">
-            <div className="grid gap-6 xl:grid-cols-4">
+            <div className="grid gap-6 lg:grid-cols-3">
               <div className="rounded-2xl border border-white/10 bg-white/3 p-5">
                 <h2 className="mb-4 text-2xl font-bold text-white">Merchant Dashboard</h2>
                 <MerchantDashboard />
@@ -128,55 +76,21 @@ export default function MerchantPage() {
                 <h2 className="mb-4 text-2xl font-bold text-white">Generate Payment QR Code</h2>
                 <PaymentQR />
               </div>
-              <div className="rounded-2xl border border-white/10 bg-white/3 p-5">
-                <h2 className="mb-3 text-2xl font-bold text-white">Cash-Out Rails</h2>
-                <p className="mb-4 text-sm text-gray-400">
-                  Create mobile-money and bank withdrawal requests without leaving the merchant workspace.
-                </p>
-                {address ? (
-                  <div className="space-y-4">
-                    <OffRampButton walletAddress={address} className="w-full justify-center" />
-                    <OffRampStatus walletAddress={address} />
-                  </div>
-                ) : (
-                  <div className="rounded-xl border border-dashed border-white/10 bg-black/20 p-4 text-sm text-gray-400">
-                    Connect your wallet to unlock off-ramp requests and status tracking.
-                  </div>
-                )}
-              </div>
             </div>
           </div>
         </section>
 
         <section className="py-20">
-          <div className="container mx-auto max-w-6xl px-4">
-            <div className="grid gap-6 lg:grid-cols-[1fr_0.9fr]">
-              <div>
-                <h2 className="mb-12 text-center text-3xl font-bold text-white lg:text-left">Getting Started</h2>
-                <div className="space-y-6">
-                  {onboardingSteps.map((step, index) => (
-                    <div key={step.title} className="rounded-2xl border border-white/10 bg-white/3 p-5">
-                      <div className="mb-2 text-sm font-bold text-cyan-300">Step {index + 1}</div>
-                      <h3 className="text-xl font-semibold text-white">{step.title}</h3>
-                      <p className="mt-2 text-gray-400">{step.description}</p>
-                    </div>
-                  ))}
+          <div className="container mx-auto max-w-4xl px-4">
+            <h2 className="mb-12 text-center text-3xl font-bold text-white">Getting Started</h2>
+            <div className="space-y-6">
+              {onboardingSteps.map((step, index) => (
+                <div key={step.title} className="rounded-2xl border border-white/10 bg-white/3 p-5">
+                  <div className="mb-2 text-sm font-bold text-cyan-300">Step {index + 1}</div>
+                  <h3 className="text-xl font-semibold text-white">{step.title}</h3>
+                  <p className="mt-2 text-gray-400">{step.description}</p>
                 </div>
-              </div>
-              <div>
-                <SeasonalTrends
-                  title="Merchant sales pulse"
-                  merchantAddress={address ?? null}
-                  data={[
-                    { label: 'Mon', value: 42 },
-                    { label: 'Tue', value: 51 },
-                    { label: 'Wed', value: 47 },
-                    { label: 'Thu', value: 63 },
-                    { label: 'Fri', value: 74 },
-                    { label: 'Sat', value: 68 },
-                  ]}
-                />
-              </div>
+              ))}
             </div>
           </div>
         </section>

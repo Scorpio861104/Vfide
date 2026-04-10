@@ -5,7 +5,7 @@
  * top products, daily revenue trend.
  * 
  * Data comes from /api/merchant/analytics endpoint.
- * Falls back gracefully while merchant activity is still warming up.
+ * Falls back gracefully if no data available yet.
  */
 'use client';
 
@@ -19,9 +19,6 @@ interface AnalyticsData {
   transactionCount: number;
   averageOrderValue: number;
   revenueChange: number; // percent change vs previous period
-  totalExpenses: number;
-  netProfit: number;
-  profitMargin: number;
   topProducts: { name: string; revenue: number; count: number }[];
   dailyRevenue: { date: string; amount: number }[];
 }
@@ -48,10 +45,6 @@ export function MerchantAnalytics({ merchantAddress }: MerchantAnalyticsProps) {
     return data.dailyRevenue.map(d => [d.date, d.amount]);
   }, [data]);
 
-  const formatMoney = (value: number) => (
-    `$${value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-  );
-
   if (loading) {
     return (
       <div className="space-y-4">
@@ -66,8 +59,8 @@ export function MerchantAnalytics({ merchantAddress }: MerchantAnalyticsProps) {
     return (
       <div className="text-center py-12">
         <Package size={48} className="mx-auto mb-4 text-gray-600" />
-        <p className="text-gray-400">Analytics will populate after your first synced sales cycle.</p>
-        <p className="text-gray-500 text-sm mt-1">Start selling to unlock revenue trends, product leaders, and exportable reports.</p>
+        <p className="text-gray-400">No analytics data available yet.</p>
+        <p className="text-gray-500 text-sm mt-1">Start selling to see your dashboard.</p>
       </div>
     );
   }
@@ -97,7 +90,7 @@ export function MerchantAnalytics({ merchantAddress }: MerchantAnalyticsProps) {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <StatCard
           label="Total Revenue"
-          value={formatMoney(data.totalRevenue)}
+          value={`$${data.totalRevenue.toLocaleString(undefined, { maximumFractionDigits: 2 })}`}
           change={data.revenueChange}
           icon={DollarSign}
           color="cyan"
@@ -110,23 +103,10 @@ export function MerchantAnalytics({ merchantAddress }: MerchantAnalyticsProps) {
         />
         <StatCard
           label="Avg Order Value"
-          value={formatMoney(data.averageOrderValue)}
+          value={`$${data.averageOrderValue.toFixed(2)}`}
           icon={TrendingUp}
           color="amber"
         />
-      </div>
-
-      <div className="bg-white/3 border border-white/10 rounded-2xl p-6">
-        <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-          <DollarSign size={20} className="text-cyan-400" />
-          Profit &amp; Loss
-        </h3>
-        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-          <PnLMetric label="Revenue" value={formatMoney(data.totalRevenue)} toneClass="text-emerald-400" />
-          <PnLMetric label="Operating Expenses" value={`-${formatMoney(data.totalExpenses)}`} toneClass="text-red-400" />
-          <PnLMetric label="Net Profit" value={formatMoney(data.netProfit)} toneClass={data.netProfit >= 0 ? 'text-cyan-400' : 'text-red-400'} />
-          <PnLMetric label="Margin" value={`${data.profitMargin.toFixed(1)}%`} toneClass="text-cyan-300" />
-        </div>
       </div>
 
       {/* Top Products */}
@@ -224,18 +204,5 @@ function StatCard({ label, value, change, icon: Icon, color }: {
         </div>
       )}
     </motion.div>
-  );
-}
-
-function PnLMetric({ label, value, toneClass }: {
-  label: string;
-  value: string;
-  toneClass: string;
-}) {
-  return (
-    <div className="rounded-xl border border-white/10 bg-black/20 p-3">
-      <div className="mb-1 text-xs text-gray-400">{label}</div>
-      <div className={`font-mono text-lg font-bold ${toneClass}`}>{value}</div>
-    </div>
   );
 }

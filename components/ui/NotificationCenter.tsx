@@ -105,8 +105,8 @@ const initialNotifications: Notification[] = [
   {
     id: 'notif-rewards',
     type: 'reward',
-    title: 'Verified Work Payout',
-    message: 'A 467.50 USDC payroll settlement is ready for review.',
+    title: 'Claimable Rewards',
+    message: '467.50 VFIDE in verified rewards is ready to claim from payroll.',
     time: '1d ago',
     timestamp: Date.now() - 24 * 60 * 60 * 1000,
     href: '/payroll',

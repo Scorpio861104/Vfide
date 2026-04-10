@@ -1,51 +1,13 @@
 'use client';
 
-import { useMemo } from 'react';
 import { Shield, TrendingUp, Users, Wallet } from 'lucide-react';
 
-function formatTokenAmount(value: number) {
-  if (value <= 0) {
-    return '0 VFIDE';
-  }
-
-  return `${new Intl.NumberFormat('en-US', {
-    maximumFractionDigits: value >= 1000 ? 1 : 2,
-  }).format(value)} VFIDE`;
-}
-
-export function EcosystemTab({
-  isConnected,
-  vaultBalance = 0,
-  contractsReady = false,
-}: {
-  isConnected: boolean;
-  vaultBalance?: number;
-  contractsReady?: boolean;
-}) {
-  const allocations = useMemo(
-    () => [
-      { name: 'Council Operations', percentage: 40, icon: Users },
-      { name: 'Merchant Service Fees', percentage: 25, icon: Wallet },
-      { name: 'Referral Work Fees', percentage: 20, icon: TrendingUp },
-      { name: 'Operations', percentage: 15, icon: Shield },
-    ].map((alloc) => ({
-      ...alloc,
-      amount: contractsReady && vaultBalance > 0
-        ? formatTokenAmount((vaultBalance * alloc.percentage) / 100)
-        : 'Awaiting live sync',
-    })),
-    [contractsReady, vaultBalance],
-  );
-
-  const payoutCards = [
-    {
-      label: 'Merchant Service Fees',
-      amount: contractsReady && vaultBalance > 0 ? formatTokenAmount(vaultBalance * 0.08) : '0 VFIDE',
-    },
-    {
-      label: 'Referral Work Fees',
-      amount: contractsReady && vaultBalance > 0 ? formatTokenAmount(vaultBalance * 0.06) : '0 VFIDE',
-    },
+export function EcosystemTab({ isConnected }: { isConnected: boolean }) {
+  const allocations = [
+    { name: 'Council Salaries', percentage: 40, amount: '7.4M VFIDE', icon: Users },
+    { name: 'Merchant Rewards', percentage: 25, amount: '4.6M VFIDE', icon: Wallet },
+    { name: 'Headhunter Bounties', percentage: 20, amount: '3.7M VFIDE', icon: TrendingUp },
+    { name: 'Operations', percentage: 15, amount: '2.8M VFIDE', icon: Shield },
   ];
 
   return (
@@ -56,17 +18,12 @@ export function EcosystemTab({
           <Users className="w-12 h-12 text-cyan-400" />
           <div>
             <h2 className="text-2xl font-bold text-zinc-100">Ecosystem Vault</h2>
-            <p className="text-zinc-400">Funds council operations, verified service fees, and growth initiatives</p>
+            <p className="text-zinc-400">Funds council salaries, merchant rewards, and growth initiatives</p>
           </div>
-        </div>
-        <div className="mb-4 rounded-lg border border-cyan-500/20 bg-black/20 p-3 text-sm text-zinc-300">
-          {contractsReady
-            ? 'This tab now derives its allocation cards from the live ecosystem vault balance when contract reads are available.'
-            : 'Restore the Ecosystem vault environment variables to replace guidance mode with live routed balances.'}
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="bg-black/30 rounded-lg p-4">
-            <div className="text-3xl font-bold text-cyan-400">{contractsReady ? formatTokenAmount(vaultBalance) : 'Awaiting sync'}</div>
+            <div className="text-3xl font-bold text-cyan-400">18.5M</div>
             <div className="text-sm text-zinc-400">VFIDE Balance</div>
           </div>
           <div className="bg-black/30 rounded-lg p-4">
@@ -74,10 +31,8 @@ export function EcosystemTab({
             <div className="text-sm text-zinc-400">Of Transfer Fees</div>
           </div>
           <div className="bg-black/30 rounded-lg p-4">
-            <div className="text-3xl font-bold text-green-400">
-              {contractsReady && vaultBalance > 0 ? formatTokenAmount(vaultBalance * 0.6) : 'Awaiting sync'}
-            </div>
-            <div className="text-sm text-zinc-400">Managed Distribution Window</div>
+            <div className="text-3xl font-bold text-green-400">42.1M</div>
+            <div className="text-sm text-zinc-400">Total Distributed</div>
           </div>
         </div>
       </div>
@@ -107,24 +62,25 @@ export function EcosystemTab({
         </div>
       </div>
 
-      {/* Verified work payout snapshot */}
+      {/* Claim Rewards (if applicable) */}
       {isConnected && (
         <div className="bg-zinc-800 border border-zinc-700 rounded-xl p-6">
-          <h3 className="text-xl font-bold text-zinc-100 mb-4">Verified Work Payouts</h3>
+          <h3 className="text-xl font-bold text-zinc-100 mb-4">Your Claimable Rewards</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {payoutCards.map((card) => (
-              <div key={card.label} className="p-4 bg-zinc-900 rounded-lg">
-                <div className="text-zinc-400 text-sm mb-1">{card.label}</div>
-                <div className="text-2xl font-bold text-cyan-400">{card.amount}</div>
-                <button
-                  type="button"
-                  disabled={!contractsReady}
-                  className="mt-3 w-full rounded-lg bg-zinc-700 py-2 font-bold text-zinc-500 disabled:cursor-not-allowed"
-                >
-                  {contractsReady ? 'Review Queue' : 'No Payout Available'}
-                </button>
-              </div>
-            ))}
+            <div className="p-4 bg-zinc-900 rounded-lg">
+              <div className="text-zinc-400 text-sm mb-1">Merchant Rewards</div>
+              <div className="text-2xl font-bold text-cyan-400">0 VFIDE</div>
+              <button className="mt-3 w-full bg-zinc-700 text-zinc-500 font-bold py-2 rounded-lg cursor-not-allowed">
+                No Rewards Available
+              </button>
+            </div>
+            <div className="p-4 bg-zinc-900 rounded-lg">
+              <div className="text-zinc-400 text-sm mb-1">Headhunter Bounties</div>
+              <div className="text-2xl font-bold text-cyan-400">0 VFIDE</div>
+              <button className="mt-3 w-full bg-zinc-700 text-zinc-500 font-bold py-2 rounded-lg cursor-not-allowed">
+                No Bounties Available
+              </button>
+            </div>
           </div>
         </div>
       )}

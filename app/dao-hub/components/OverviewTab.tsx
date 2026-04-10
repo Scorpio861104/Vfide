@@ -1,33 +1,36 @@
 'use client';
 
-const OVERVIEW_SECTIONS = [
-  {
-    title: 'Active Disputes',
-    description: 'Track open member issues, mediation queues, and required reviewer assignments.',
-  },
-  {
-    title: 'Proposal Pipeline',
-    description: 'Review upcoming submissions, quorum timing, and scheduled governance windows.',
-  },
-  {
-    title: 'DAO Messages',
-    description: 'Check operational broadcasts, notices from guardians, and coordination updates.',
-  },
-  {
-    title: 'DAO Payment Queue',
-    description: 'Monitor payroll approvals, reimbursements, and queued treasury releases.',
-  },
-];
+import { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
+import { Loader2 } from 'lucide-react';
+
+// DAO governance overview: treasury balance, active proposals, council composition
 
 export function OverviewTab() {
+  const [loading, setLoading] = useState(true);
+  const [data, setData] = useState<any>(null);
+
+  useEffect(() => {
+    // TODO: Wire to API endpoint
+    const timer = setTimeout(() => setLoading(false), 500);
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 size={24} className="text-cyan-400 animate-spin" />
+      </div>
+    );
+  }
+
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-      {OVERVIEW_SECTIONS.map((section) => (
-        <div key={section.title} className="bg-white/3 border border-white/10 rounded-2xl p-6">
-          <h3 className="text-xl font-bold text-white mb-3">{section.title}</h3>
-          <p className="text-gray-400">{section.description}</p>
-        </div>
-      ))}
+    <div className="space-y-6">
+      <div className="bg-white/3 border border-white/10 rounded-2xl p-6">
+        <h3 className="text-lg font-bold text-white mb-4">Overview</h3>
+        <p className="text-gray-400 text-sm">DAO governance overview: treasury balance, active proposals, council composition</p>
+        {/* TODO: Implement OverviewTab UI */}
+      </div>
     </div>
   );
 }

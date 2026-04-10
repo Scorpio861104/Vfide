@@ -11,95 +11,6 @@ import { safeBigIntToNumber } from '@/lib/validation';
 
 const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000' as const
 
-type SafeWriteRequest = Record<string, unknown>
-type SafeWriteContractAsync = ((request: SafeWriteRequest) => Promise<unknown>) | undefined
-type SafeWriteContract = ((request: SafeWriteRequest) => unknown) | undefined
-
-function useSafeChainId() {
-  const chainIdHook = useChainId as unknown as (() => number) | undefined
-  const resolvedChainId = typeof chainIdHook === 'function' ? chainIdHook() : CURRENT_CHAIN_ID
-
-  return typeof resolvedChainId === 'number' && Number.isFinite(resolvedChainId)
-    ? resolvedChainId
-    : CURRENT_CHAIN_ID
-}
-
-function useSafePublicClient() {
-  const publicClientHook = usePublicClient as unknown as (() => ReturnType<typeof usePublicClient>) | undefined
-  return typeof publicClientHook === 'function' ? publicClientHook() : null
-}
-
-function useSafeWriteContract() {
-  const writeContractHook = useWriteContract as unknown as (() => {
-    writeContractAsync: SafeWriteContractAsync
-    writeContract: SafeWriteContract
-    data: `0x${string}` | undefined
-    isPending: boolean
-  }) | undefined
-
-  if (typeof writeContractHook !== 'function') {
-    return {
-      writeContractAsync: undefined as SafeWriteContractAsync,
-      writeContract: undefined as SafeWriteContract,
-      data: undefined as `0x${string}` | undefined,
-      isPending: false,
-    }
-  }
-
-  return writeContractHook()
-}
-
-function useSafeReceipt(hash: `0x${string}` | undefined) {
-  const receiptHook = useWaitForTransactionReceipt as unknown as
-    | ((args: { hash: `0x${string}` | undefined }) => { isLoading: boolean; isSuccess: boolean })
-    | undefined
-
-  return typeof receiptHook === 'function'
-    ? receiptHook({ hash })
-    : { isLoading: false, isSuccess: false }
-}
-
-async function submitContractWrite(
-  writeContractAsync: SafeWriteContractAsync,
-  writeContract: SafeWriteContract,
-  request: SafeWriteRequest,
-  fallbackHash?: `0x${string}`
-) {
-  if (typeof writeContractAsync === 'function') {
-    return await writeContractAsync(request)
-  }
-
-  if (typeof writeContract === 'function') {
-    writeContract(request)
-    return fallbackHash ?? null
-  }
-
-  throw new Error('Wallet write function is unavailable')
-}
-
-async function waitForReceipt(
-  publicClient: { waitForTransactionReceipt?: (args: { hash: `0x${string}` }) => Promise<unknown> } | null,
-  hash: unknown
-) {
-  if (publicClient && typeof publicClient.waitForTransactionReceipt === 'function' && typeof hash === 'string' && hash.startsWith('0x')) {
-    await publicClient.waitForTransactionReceipt({ hash: hash as `0x${string}` })
-  }
-}
-
-function isSupportedAddress(address: string | undefined): address is `0x${string}` {
-  if (!address || typeof address !== 'string') {
-    return false
-  }
-
-  if (address.toLowerCase() === ZERO_ADDRESS) {
-    return false
-  }
-
-  return process.env.NODE_ENV === 'production'
-    ? isAddress(address)
-    : address.startsWith('0x') && address.length > 2
-}
-
 // ============================================
 // MERCHANT HOOKS - No processor fees (burn + gas apply)
 // ============================================
@@ -138,12 +49,14 @@ export function useIsMerchant(address?: `0x${string}`) {
 }
 
 export function useRegisterMerchant() {
-  const chainId = useSafeChainId()
-  const publicClient = useSafePublicClient()
-  const { writeContractAsync, writeContract, data, isPending } = useSafeWriteContract()
+  const chainId = useChainId()
+  const publicClient = usePublicClient()
+  const { writeContractAsync, data, isPending } = useWriteContract()
   const [error, setError] = useState<string | null>(null)
   
-  const { isLoading: isConfirming, isSuccess } = useSafeReceipt(data)
+  const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({
+    hash: data,
+  })
   
   const registerMerchant = async (businessName: string, category: string) => {
     setError(null)
@@ -154,18 +67,19 @@ export function useRegisterMerchant() {
       if (!businessName.trim() || !category.trim()) {
         throw new Error('Business name and category are required')
       }
-      if (process.env.NODE_ENV === 'production' && chainId !== CURRENT_CHAIN_ID) {
+      if (chainId !== CURRENT_CHAIN_ID) {
         throw new Error('Switch to the configured network before registering a merchant')
       }
-      const request = {
+      const hash = await writeContractAsync({
         address: CONTRACT_ADDRESSES.MerchantPortal,
         abi: MerchantPortalABI,
         functionName: 'registerMerchant',
-        args: [businessName.trim(), category.trim()] as const,
+        args: [businessName.trim(), category.trim()],
         chainId: CURRENT_CHAIN_ID,
+      })
+      if (publicClient) {
+        await publicClient.waitForTransactionReceipt({ hash })
       }
-      const hash = await submitContractWrite(writeContractAsync, writeContract, request, data)
-      await waitForReceipt(publicClient, hash)
       return { success: true, hash }
     } catch (err: unknown) {
       logError('registerMerchant', err);
@@ -189,12 +103,14 @@ export function useRegisterMerchant() {
  * Process payment from customer to merchant (merchant-initiated)
  */
 export function useProcessPayment() {
-  const chainId = useSafeChainId()
-  const publicClient = useSafePublicClient()
-  const { writeContractAsync, writeContract, data, isPending } = useSafeWriteContract()
+  const chainId = useChainId()
+  const publicClient = usePublicClient()
+  const { writeContractAsync, data, isPending } = useWriteContract()
   const [error, setError] = useState<string | null>(null)
   
-  const { isLoading: isConfirming, isSuccess } = useSafeReceipt(data)
+  const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({
+    hash: data,
+  })
   
   const processPayment = async (
     customer: `0x${string}`,
@@ -207,10 +123,10 @@ export function useProcessPayment() {
       if (CONTRACT_ADDRESSES.MerchantPortal === ZERO_ADDRESS) {
         throw new Error('MerchantPortal is not configured in this environment')
       }
-      if (!isSupportedAddress(customer)) {
+      if (!isAddress(customer) || customer.toLowerCase() === ZERO_ADDRESS) {
         throw new Error('Customer must be a valid non-zero address')
       }
-      if (!isSupportedAddress(token)) {
+      if (!isAddress(token) || token.toLowerCase() === ZERO_ADDRESS) {
         throw new Error('Payment token must be a valid non-zero address')
       }
       if (!amount || Number(amount) <= 0) {
@@ -219,18 +135,19 @@ export function useProcessPayment() {
       if (!orderId.trim()) {
         throw new Error('Order ID is required')
       }
-      if (process.env.NODE_ENV === 'production' && chainId !== CURRENT_CHAIN_ID) {
+      if (chainId !== CURRENT_CHAIN_ID) {
         throw new Error('Switch to the configured network before processing payments')
       }
-      const request = {
+      const hash = await writeContractAsync({
         address: CONTRACT_ADDRESSES.MerchantPortal,
         abi: MerchantPortalABI,
         functionName: 'processPayment',
-        args: [customer, token, parseEther(amount), orderId.trim()] as const,
+        args: [customer, token, parseEther(amount), orderId.trim()],
         chainId: CURRENT_CHAIN_ID,
+      })
+      if (publicClient) {
+        await publicClient.waitForTransactionReceipt({ hash })
       }
-      const hash = await submitContractWrite(writeContractAsync, writeContract, request, data)
-      await waitForReceipt(publicClient, hash)
       return { success: true, hash }
     } catch (err: unknown) {
       logError('processPayment', err);
@@ -254,12 +171,14 @@ export function useProcessPayment() {
  * Set a scoped merchant pull permit for merchant-initiated payments.
  */
 export function useSetMerchantPullPermit() {
-  const chainId = useSafeChainId()
-  const publicClient = useSafePublicClient()
-  const { writeContractAsync, writeContract, data, isPending } = useSafeWriteContract()
+  const chainId = useChainId()
+  const publicClient = usePublicClient()
+  const { writeContractAsync, data, isPending } = useWriteContract()
   const [error, setError] = useState<string | null>(null)
 
-  const { isLoading: isConfirming, isSuccess } = useSafeReceipt(data)
+  const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({
+    hash: data,
+  })
 
   const setMerchantPullPermit = async (
     merchant: `0x${string}`,
@@ -271,24 +190,25 @@ export function useSetMerchantPullPermit() {
       if (CONTRACT_ADDRESSES.MerchantPortal === ZERO_ADDRESS) {
         throw new Error('MerchantPortal is not configured in this environment')
       }
-      if (!isSupportedAddress(merchant)) {
+      if (!isAddress(merchant) || merchant.toLowerCase() === ZERO_ADDRESS) {
         throw new Error('Merchant must be a valid non-zero address')
       }
       if (!maxAmount || Number(maxAmount) <= 0) {
         throw new Error('Maximum amount must be greater than zero')
       }
-      if (process.env.NODE_ENV === 'production' && chainId !== CURRENT_CHAIN_ID) {
+      if (chainId !== CURRENT_CHAIN_ID) {
         throw new Error('Switch to the configured network before setting merchant pull permits')
       }
-      const request = {
+      const hash = await writeContractAsync({
         address: CONTRACT_ADDRESSES.MerchantPortal,
         abi: MerchantPortalABI,
         functionName: 'setMerchantPullPermit',
-        args: [merchant, parseEther(maxAmount), BigInt(expiresAt)] as const,
+        args: [merchant, parseEther(maxAmount), BigInt(expiresAt)],
         chainId: CURRENT_CHAIN_ID,
+      })
+      if (publicClient) {
+        await publicClient.waitForTransactionReceipt({ hash })
       }
-      const hash = await submitContractWrite(writeContractAsync, writeContract, request, data)
-      await waitForReceipt(publicClient, hash)
       return { success: true, hash }
     } catch (err: unknown) {
       logError('setMerchantPullPermit', err);
@@ -312,12 +232,14 @@ export function useSetMerchantPullPermit() {
  * Pay merchant (customer-initiated)
  */
 export function usePayMerchant() {
-  const chainId = useSafeChainId()
-  const publicClient = useSafePublicClient()
-  const { writeContractAsync, writeContract, data, isPending } = useSafeWriteContract()
+  const chainId = useChainId()
+  const publicClient = usePublicClient()
+  const { writeContractAsync, data, isPending } = useWriteContract()
   const [error, setError] = useState<string | null>(null)
   
-  const { isLoading: isConfirming, isSuccess } = useSafeReceipt(data)
+  const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({
+    hash: data,
+  })
   
   const payMerchant = async (
     merchant: `0x${string}`,
@@ -330,10 +252,10 @@ export function usePayMerchant() {
       if (CONTRACT_ADDRESSES.MerchantPortal === ZERO_ADDRESS) {
         throw new Error('MerchantPortal is not configured in this environment')
       }
-      if (!isSupportedAddress(merchant)) {
+      if (!isAddress(merchant) || merchant.toLowerCase() === ZERO_ADDRESS) {
         throw new Error('Merchant must be a valid non-zero address')
       }
-      if (!isSupportedAddress(token)) {
+      if (!isAddress(token) || token.toLowerCase() === ZERO_ADDRESS) {
         throw new Error('Payment token must be a valid non-zero address')
       }
       if (!amount || Number(amount) <= 0) {
@@ -342,18 +264,19 @@ export function usePayMerchant() {
       if (!orderId.trim()) {
         throw new Error('Order ID is required')
       }
-      if (process.env.NODE_ENV === 'production' && chainId !== CURRENT_CHAIN_ID) {
+      if (chainId !== CURRENT_CHAIN_ID) {
         throw new Error('Switch to the configured network before paying merchants')
       }
-      const request = {
+      const hash = await writeContractAsync({
         address: CONTRACT_ADDRESSES.MerchantPortal,
         abi: MerchantPortalABI,
         functionName: 'pay',
-        args: [merchant, token, parseEther(amount), orderId.trim()] as const,
+        args: [merchant, token, parseEther(amount), orderId.trim()],
         chainId: CURRENT_CHAIN_ID,
+      })
+      if (publicClient) {
+        await publicClient.waitForTransactionReceipt({ hash })
       }
-      const hash = await submitContractWrite(writeContractAsync, writeContract, request, data)
-      await waitForReceipt(publicClient, hash)
       return { success: true, hash }
     } catch (err: unknown) {
       logError('payMerchant', err);

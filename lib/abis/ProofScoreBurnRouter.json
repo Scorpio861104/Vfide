@@ -61,25 +61,6 @@
       {
         "indexed": true,
         "internalType": "address",
-        "name": "previousController",
-        "type": "address"
-      },
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "newController",
-        "type": "address"
-      }
-    ],
-    "name": "EmergencyControllerSet",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
-        "internalType": "address",
         "name": "from",
         "type": "address"
       },
@@ -115,44 +96,6 @@
       }
     ],
     "name": "FeesComputed",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
-        "internalType": "uint16",
-        "name": "maxBps",
-        "type": "uint16"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "maxAmount",
-        "type": "uint256"
-      }
-    ],
-    "name": "MicroTxFeeCeilingSet",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "priceOracle",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "maxUsd6",
-        "type": "uint256"
-      }
-    ],
-    "name": "MicroTxUsdCapSet",
     "type": "event"
   },
   {
@@ -228,7 +171,7 @@
     "anonymous": false,
     "inputs": [
       {
-        "indexed": true,
+        "indexed": false,
         "internalType": "address",
         "name": "account",
         "type": "address"
@@ -322,7 +265,7 @@
     "anonymous": false,
     "inputs": [
       {
-        "indexed": true,
+        "indexed": false,
         "internalType": "address",
         "name": "account",
         "type": "address"
@@ -417,19 +360,6 @@
         "internalType": "uint256",
         "name": "",
         "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "MIN_SCORE_UPDATE_INTERVAL",
-    "outputs": [
-      {
-        "internalType": "uint64",
-        "name": "",
-        "type": "uint64"
       }
     ],
     "stateMutability": "view",
@@ -567,55 +497,6 @@
         "internalType": "uint16",
         "name": "",
         "type": "uint16"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "from",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "to",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "desiredNetAmount",
-        "type": "uint256"
-      }
-    ],
-    "name": "calculateGrossAmount",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "grossAmount",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "burnAmount",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "sanctumAmount",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "ecosystemAmount",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "totalFee",
-        "type": "uint256"
       }
     ],
     "stateMutability": "view",
@@ -819,32 +700,6 @@
       }
     ],
     "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "emergencyController",
-    "outputs": [
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "newOwner",
-        "type": "address"
-      }
-    ],
-    "name": "emergencyTransferOwnership",
-    "outputs": [],
-    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
@@ -1097,58 +952,6 @@
   },
   {
     "inputs": [],
-    "name": "microTxFeeCeilingBps",
-    "outputs": [
-      {
-        "internalType": "uint16",
-        "name": "",
-        "type": "uint16"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "microTxMaxAmount",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "microTxMaxUsd6",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "microTxPriceOracle",
-    "outputs": [
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
     "name": "minTotalBps",
     "outputs": [
       {
@@ -1277,60 +1080,6 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "from",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "to",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "desiredNetAmount",
-        "type": "uint256"
-      }
-    ],
-    "name": "previewCheckout",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "grossAmount",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "burnAmount",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "sanctumAmount",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "ecosystemAmount",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "totalFee",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "netAmount",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
         "name": "user",
         "type": "address"
       },
@@ -1366,65 +1115,6 @@
         "internalType": "uint16",
         "name": "score",
         "type": "uint16"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "from",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "to",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "amount",
-        "type": "uint256"
-      }
-    ],
-    "name": "previewFeesAccurate",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "burnAmount",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "sanctumAmount",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "ecosystemAmount",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "netAmount",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint16",
-        "name": "score",
-        "type": "uint16"
-      },
-      {
-        "internalType": "uint256",
-        "name": "projectedDailyBurned",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "projectedBurnCapacityRemaining",
-        "type": "uint256"
       }
     ],
     "stateMutability": "view",
@@ -1645,19 +1335,6 @@
   {
     "inputs": [
       {
-        "internalType": "address",
-        "name": "controller",
-        "type": "address"
-      }
-    ],
-    "name": "setEmergencyController",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
         "internalType": "uint16",
         "name": "_minTotalBps",
         "type": "uint16"
@@ -1669,42 +1346,6 @@
       }
     ],
     "name": "setFeePolicy",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint16",
-        "name": "_maxBps",
-        "type": "uint16"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_maxAmount",
-        "type": "uint256"
-      }
-    ],
-    "name": "setMicroTxFeeCeiling",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "_priceOracle",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_maxUsd6",
-        "type": "uint256"
-      }
-    ],
-    "name": "setMicroTxUsdCap",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

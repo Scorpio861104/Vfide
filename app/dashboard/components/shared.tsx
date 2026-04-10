@@ -55,7 +55,7 @@ export const ecosystemLoadout = [
     icon: Sparkles,
     label: 'Flashloans P2P',
     description: 'Peer-powered credit pools',
-    href: '/flashloans',
+    href: '/flashlight',
   },
   {
     icon: Banknote,

@@ -73,10 +73,6 @@ function parsePositiveInteger(value: string): number | null {
   return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
 }
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
-}
-
 interface Proposal {
   id: number;
   proposer_id: number;
@@ -259,13 +255,6 @@ export async function POST(request: NextRequest) {
   let body: z.infer<typeof createProposalRequestSchema>;
   try {
     const rawBody = await request.json();
-    if (!isRecord(rawBody)) {
-      return NextResponse.json(
-        { error: 'Request body must be a JSON object' },
-        { status: 400 }
-      );
-    }
-
     const parsed = createProposalRequestSchema.safeParse(rawBody);
     if (!parsed.success) {
       return NextResponse.json(

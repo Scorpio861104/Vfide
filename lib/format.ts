@@ -17,14 +17,9 @@
 // ── Address formatting ──────────────────────────────────────────────────────
 
 /** Truncate an address to 0x1234...abcd format */
-export function shortAddress(address: string, prefixChars = 4, suffixChars = prefixChars): string {
-  const normalized = address?.trim() || '';
-  if (!normalized) return '';
-
-  const effectivePrefixChars = normalized.startsWith('0x') ? prefixChars + 2 : prefixChars;
-  if (normalized.length < effectivePrefixChars + suffixChars + 3) return normalized;
-
-  return `${normalized.slice(0, effectivePrefixChars)}...${normalized.slice(-suffixChars)}`;
+export function shortAddress(address: string, prefixChars = 6, suffixChars = 4): string {
+  if (!address || address.length < prefixChars + suffixChars + 3) return address || '';
+  return `${address.slice(0, prefixChars)}...${address.slice(-suffixChars)}`;
 }
 
 /** Alias for backward compatibility */

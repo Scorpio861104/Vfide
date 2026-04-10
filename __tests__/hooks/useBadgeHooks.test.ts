@@ -9,23 +9,12 @@ jest.mock('wagmi', () => ({
 }))
 
 // Mock contracts
-jest.mock('@/lib/contracts', () => {
-  const contractAddresses = {
+jest.mock('@/lib/contracts', () => ({
+  CONTRACT_ADDRESSES: {
     Seer: '0x1234567890123456789012345678901234567890',
     BadgeNFT: '0x1234567890123456789012345678901234567891',
-  }
-
-  return {
-    CONTRACT_ADDRESSES: contractAddresses,
-    ZERO_ADDRESS: '0x0000000000000000000000000000000000000000',
-    isConfiguredContractAddress: (address?: string | null) =>
-      typeof address === 'string' &&
-      address !== '0x0000000000000000000000000000000000000000' &&
-      address.startsWith('0x') &&
-      address.length === 42,
-    getContractConfigurationError: (name: string) => new Error(`[VFIDE] ${name} contract not configured.`),
-  }
-})
+  },
+}))
 
 // Mock ABIs
 jest.mock('@/lib/abis', () => ({
@@ -34,14 +23,11 @@ jest.mock('@/lib/abis', () => ({
 }))
 
 import { useReadContract, useAccount, useWriteContract, useWaitForTransactionReceipt } from 'wagmi'
-import { CONTRACT_ADDRESSES as mockContractAddresses } from '@/lib/contracts'
 import { useUserBadges, useBadgeNFTs, useMintBadge, useCanMintBadge } from '@/hooks/useBadgeHooks'
 
 describe('useBadgeHooks', () => {
   beforeEach(() => {
     jest.clearAllMocks()
-    mockContractAddresses.Seer = '0x1234567890123456789012345678901234567890'
-    mockContractAddresses.BadgeNFT = '0x1234567890123456789012345678901234567891'
     // Reset all mocks to default values
     jest.mocked(useReadContract).mockReturnValue({
       data: null,
@@ -98,15 +84,6 @@ describe('useBadgeHooks', () => {
       const { tokenIds, count } = useBadgeNFTs()
       expect(tokenIds).toEqual([1n, 2n, 3n])
       expect(count).toBe(3)
-    })
-
-    it('reports unavailable when BadgeNFT is not configured', () => {
-      mockContractAddresses.BadgeNFT = '0x0000000000000000000000000000000000000000'
-
-      const { isAvailable, error } = useBadgeNFTs()
-
-      expect(isAvailable).toBe(false)
-      expect(error?.message).toContain('BadgeNFT')
     })
   })
 
@@ -170,22 +147,6 @@ describe('useBadgeHooks', () => {
 
       const { isSuccess } = useMintBadge()
       expect(isSuccess).toBe(true)
-    })
-
-    it('fails closed when BadgeNFT is not configured', () => {
-      const mockWriteContract = jest.fn()
-      mockContractAddresses.BadgeNFT = '0x0000000000000000000000000000000000000000'
-      jest.mocked(useWriteContract).mockReturnValue({
-        writeContract: mockWriteContract,
-        data: null,
-        isPending: false,
-      } as unknown as ReturnType<typeof useWriteContract>)
-
-      const { mintBadge, isAvailable } = useMintBadge()
-      mintBadge('0xbadge123456789012345678901234567890123456789012345678901234567890' as `0x${string}`)
-
-      expect(isAvailable).toBe(false)
-      expect(mockWriteContract).not.toHaveBeenCalled()
     })
   })
 

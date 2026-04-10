@@ -30,19 +30,15 @@ export const RATE_LIMITS = {
 } as const;
 
 type RateLimitType = keyof typeof RATE_LIMITS;
-type RateLimitWindow = (typeof RATE_LIMITS)[RateLimitType]['window'];
-type MemoryRateLimitEntry = {
-  count: number;
-  reset: number;
-};
 
 // Create rate limiter instances (one per limit type)
 let upstashLimiters: Map<RateLimitType, Ratelimit> | null = null;
-const memoryRateLimitStore = new Map<string, MemoryRateLimitEntry>();
-let hasWarnedAboutMemoryFallback = false;
 
-function isRedisConfigured(): boolean {
-  return Boolean(process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN);
+function assertRedisConfigured(): void {
+  const hasRedis = Boolean(process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN);
+  if (!hasRedis) {
+    throw new Error('Redis is required for distributed rate limiting. Configure UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN.');
+  }
 }
 
 function getUpstashLimiters(): Map<RateLimitType, Ratelimit> | null {
@@ -109,48 +105,6 @@ function simpleHash(str: string): string {
   return Math.abs(hash).toString(16).slice(0, 8);
 }
 
-function windowToMs(window: RateLimitWindow): number {
-  switch (window) {
-    case '1h':
-      return 60 * 60 * 1000;
-    case '1m':
-    default:
-      return 60 * 1000;
-  }
-}
-
-function limitWithMemoryFallback(
-  identifier: string,
-  type: RateLimitType,
-): { success: boolean; reset: number; remaining: number } {
-  const config = RATE_LIMITS[type];
-  const key = `${identifier}:${type}`;
-  const now = Date.now();
-  const windowMs = windowToMs(config.window);
-  const existing = memoryRateLimitStore.get(key);
-
-  if (!existing || existing.reset <= now) {
-    memoryRateLimitStore.set(key, {
-      count: 1,
-      reset: now + windowMs,
-    });
-    return {
-      success: true,
-      reset: now + windowMs,
-      remaining: Math.max(config.requests - 1, 0),
-    };
-  }
-
-  existing.count += 1;
-  memoryRateLimitStore.set(key, existing);
-
-  return {
-    success: existing.count <= config.requests,
-    reset: existing.reset,
-    remaining: Math.max(config.requests - existing.count, 0),
-  };
-}
-
 /**
  * Apply rate limiting to a request
  */
@@ -158,65 +112,48 @@ export async function rateLimit(
   request: NextRequest,
   type: RateLimitType = 'api'
 ): Promise<{ success: boolean; response?: NextResponse }> {
+  assertRedisConfigured();
   const identifier = getClientIdentifier(request);
   const config = RATE_LIMITS[type];
 
-  const buildLimitResponse = (reset: number, remaining = 0) => {
-    const retryAfter = Math.max(1, Math.ceil((reset - Date.now()) / 1000));
-    return {
-      success: false,
-      response: NextResponse.json(
-        {
-          error: 'Too many requests',
-          retryAfter,
-        },
-        {
-          status: 429,
-          headers: {
-            'Retry-After': retryAfter.toString(),
-            'X-RateLimit-Limit': config.requests.toString(),
-            'X-RateLimit-Remaining': remaining.toString(),
-            'X-RateLimit-Reset': reset.toString(),
-          },
-        }
-      ),
-    };
-  };
-
-  const applyFallbackLimit = () => {
-    if (!hasWarnedAboutMemoryFallback) {
-      logger.warn('[RateLimit] Using in-memory fallback limiter because Redis is unavailable');
-      hasWarnedAboutMemoryFallback = true;
-    }
-
-    const result = limitWithMemoryFallback(identifier, type);
-    if (!result.success) {
-      return buildLimitResponse(result.reset, result.remaining);
-    }
-    return { success: true };
-  };
-
   try {
-    if (!isRedisConfigured()) {
-      return applyFallbackLimit();
-    }
+    let result;
 
     const upstash = getUpstashLimiters();
     if (!upstash) {
-      logger.warn('[RateLimit] Redis configured but limiter unavailable; using in-memory fallback');
-      return applyFallbackLimit();
+      throw new Error('Rate limiter unavailable: Redis client initialization failed');
     }
     // Use the per-type Upstash limiter so endpoint-specific limits are enforced
-    const result = await upstash.get(type)!.limit(`${identifier}:${type}`);
-
+    result = await upstash.get(type)!.limit(`${identifier}:${type}`);
+    
     if (!result.success) {
-      return buildLimitResponse(result.reset, 0);
+      const retryAfter = Math.ceil((result.reset - Date.now()) / 1000);
+      
+      return {
+        success: false,
+        response: NextResponse.json(
+          { 
+            error: 'Too many requests',
+            retryAfter,
+          },
+          { 
+            status: 429,
+            headers: {
+              'Retry-After': retryAfter.toString(),
+              'X-RateLimit-Limit': config.requests.toString(),
+              'X-RateLimit-Remaining': '0',
+              'X-RateLimit-Reset': result.reset.toString(),
+            },
+          }
+        ),
+      };
     }
     
     return { success: true };
   } catch (error) {
     logger.error('[RateLimit] Error:', error as Error);
-    return applyFallbackLimit();
+    // On error, allow the request to proceed
+    return { success: true };
   }
 }
 

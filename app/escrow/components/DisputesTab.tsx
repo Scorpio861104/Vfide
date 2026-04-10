@@ -1,40 +1,36 @@
 'use client';
 
-import type { EscrowListItem } from './ActiveTab';
+import { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
+import { Loader2 } from 'lucide-react';
 
-interface DisputesTabProps {
-  escrows: EscrowListItem[];
-  formatEscrowAmount: (amount: bigint) => string;
-}
+// Disputed escrows pending resolution
 
-export function DisputesTab({ escrows, formatEscrowAmount }: DisputesTabProps) {
-  return (
-    <div className="space-y-4">
-      <div className="rounded-2xl border border-white/10 bg-white/3 p-5">
-        <h2 className="text-xl font-bold text-white">Cases requiring intervention</h2>
-        <p className="mt-2 text-sm text-gray-400">Escrows in this queue need mediation, proof review, or manual resolution.</p>
+export function DisputesTab() {
+  const [loading, setLoading] = useState(true);
+  const [data, setData] = useState<any>(null);
+
+  useEffect(() => {
+    // TODO: Wire to API endpoint
+    const timer = setTimeout(() => setLoading(false), 500);
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 size={24} className="text-cyan-400 animate-spin" />
       </div>
+    );
+  }
 
-      {escrows.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-white/10 bg-white/3 p-8 text-center text-gray-400">
-          No disputed escrows right now.
-        </div>
-      ) : (
-        <div className="space-y-3">
-          {escrows.map((escrow) => (
-            <div key={String(escrow.id)} className="rounded-2xl border border-amber-500/20 bg-amber-500/10 p-4 flex items-center justify-between gap-4">
-              <div>
-                <div className="text-white font-semibold">{escrow.orderId || `Escrow #${String(escrow.id)}`}</div>
-                <div className="text-sm text-gray-300">Merchant {escrow.merchant}</div>
-              </div>
-              <div className="text-right text-sm text-gray-200">
-                <div>{formatEscrowAmount(escrow.amount as bigint)} VFIDE</div>
-                <div className="text-amber-200">Under review</div>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
+  return (
+    <div className="space-y-6">
+      <div className="bg-white/3 border border-white/10 rounded-2xl p-6">
+        <h3 className="text-lg font-bold text-white mb-4">Disputes</h3>
+        <p className="text-gray-400 text-sm">Disputed escrows pending resolution</p>
+        {/* TODO: Implement DisputesTab UI */}
+      </div>
     </div>
   );
 }

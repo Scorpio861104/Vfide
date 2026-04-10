@@ -65,10 +65,6 @@ async function fetchLogsFromServer(limit: number = MAX_LOGS): Promise<SecurityLo
     credentials: 'include',
   });
 
-  if (response.status === 401 || response.status === 403) {
-    return [];
-  }
-
   if (!response.ok) {
     throw new Error(`Failed to fetch security logs (${response.status})`);
   }
@@ -96,10 +92,6 @@ async function persistLogToServer(log: SecurityLogEntry): Promise<void> {
     }),
   });
 
-  if (response.status === 401 || response.status === 403) {
-    return;
-  }
-
   if (!response.ok) {
     throw new Error(`Failed to store security log (${response.status})`);
   }
@@ -110,10 +102,6 @@ async function clearLogsOnServer(): Promise<void> {
     method: 'DELETE',
     credentials: 'include',
   });
-
-  if (response.status === 401 || response.status === 403) {
-    return;
-  }
 
   if (!response.ok) {
     throw new Error(`Failed to clear security logs (${response.status})`);

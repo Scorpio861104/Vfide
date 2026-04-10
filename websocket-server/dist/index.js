@@ -59,21 +59,11 @@ const schema_1 = require("./schema");
 // ─── Configuration ─────────────────────────────────────────────────────────
 const PORT = parseInt(process.env.WS_PORT || '8080', 10);
 const MAX_PAYLOAD_BYTES = 8 * 1024; // 8 KiB
-// WS-2 mitigation: Cap auth timeout at 30 seconds regardless of env var
-// Prevents env var misconfiguration from allowing extremely long unauthenticated persistence
-const AUTH_TIMEOUT_MS = Math.min(parseInt(process.env.WS_AUTH_TIMEOUT_MS || '5000', 10), 30000 // Maximum 30 seconds
-);
+const AUTH_TIMEOUT_MS = parseInt(process.env.WS_AUTH_TIMEOUT_MS || '5000', 10);
 const TOPIC_ACL_PATH = process.env.WS_TOPIC_ACL_PATH;
 const TOPIC_ACL_REFRESH_MS = parseInt(process.env.WS_TOPIC_ACL_REFRESH_MS || '30000', 10);
 const TOPIC_ACL_ALLOW_MISSING = process.env.WS_TOPIC_ACL_ALLOW_MISSING === 'true';
 const IS_PRODUCTION = process.env.NODE_ENV === 'production';
-// WS-1 mitigation: Require explicit proxy configuration to use X-Forwarded-For
-// Defaults to false for security (direct address only) unless explicitly enabled
-const TRUST_PROXY = process.env.WS_TRUST_PROXY === 'true';
-if (IS_PRODUCTION && !TRUST_PROXY) {
-    console.warn('[ws] WS_TRUST_PROXY=false (default). ' +
-        'X-Forwarded-For headers will be ignored. Set WS_TRUST_PROXY=true only if behind a trusted reverse proxy.');
-}
 /**
  * Comma-separated list of allowed upgrade Origins.
  * Example: ALLOWED_ORIGINS=https://vfide.io,https://staging.vfide.io
@@ -129,16 +119,10 @@ let topicAclSnapshot = null;
 let topicAclRefreshTimer = null;
 // ─── Helpers ───────────────────────────────────────────────────────────────
 function getRemoteIp(req) {
-    // WS-1 mitigation: Only trust X-Forwarded-For if explicitly enabled and behind trusted proxy
-    if (TRUST_PROXY) {
-        const forwarded = req.headers['x-forwarded-for'];
-        if (typeof forwarded === 'string') {
-            // X-Forwarded-For format: "client, proxy1, proxy2"
-            // In a reverse proxy setup, take the first value (original client IP)
-            return forwarded.split(',')[0].trim();
-        }
+    const forwarded = req.headers['x-forwarded-for'];
+    if (typeof forwarded === 'string') {
+        return forwarded.split(',')[0].trim();
     }
-    // Fallback to direct socket address (only source of truth when not behind proxy)
     return req.socket.remoteAddress || 'unknown';
 }
 function sendError(ws, code, message) {

@@ -4,7 +4,7 @@ import { isAdmin, requireAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { logger } from '@/lib/logger';
 
-const ADDRESS_PATTERN = /^0x[a-fA-F0-9]{3,40}$/;
+const ADDRESS_PATTERN = /^0x[a-fA-F0-9]{40}$/;
 
 function normalizeAddress(value: string): string {
   return value.trim().toLowerCase();

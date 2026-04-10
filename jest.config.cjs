@@ -15,8 +15,6 @@ const customJestConfig = {
     '^@/(.*)$': '<rootDir>/$1',
     '^uncrypto$': '<rootDir>/__mocks__/uncrypto.js',
     '^minimatch$': '<rootDir>/__mocks__/minimatch-compat.cjs',
-    '^@sentry/nextjs$': '<rootDir>/__mocks__/sentry-nextjs.js',
-    '^isomorphic-dompurify$': '<rootDir>/__mocks__/isomorphic-dompurify.js',
   },
   collectCoverageFrom: [
     'lib/utils.ts',
@@ -80,7 +78,7 @@ const customJestConfig = {
   },
   testMatch: [
     '**/__tests__/**/*.[jt]s?(x)',
-    '<rootDir>/test/infrastructure/**/*.test.[jt]s?(x)',
+    '**/?(*.)+(spec|test).[jt]s?(x)',
   ],
   transformIgnorePatterns: [
     'node_modules/(?!(wagmi|@wagmi|viem|@tanstack|@rainbow-me|@walletconnect|@noble|@scure|abitype|ox|uncrypto|@upstash|chai)/)',
@@ -90,12 +88,9 @@ const customJestConfig = {
     '/__mocks__/',
     '/vfide-complete/',
     '/test/integration/', // Hardhat/Chai integration specs should run via on-chain test runner
-    '/test/hardhat/', // On-chain Hardhat specs run via `npm run test:onchain`
-    '/test/contracts/', // Contract/mocha suites run via the contract-specific runners
     '/test/performance/load.test.js', // k6 scenario; execute with `k6 run`, not Jest
     '<rootDir>/playwright/',
     '/e2e/',  // E2E tests run via Playwright, not Jest
-    '/websocket-server/', // websocket-server validates under its own package/test workflow
   ],
 }
 

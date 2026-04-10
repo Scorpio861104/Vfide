@@ -78,14 +78,13 @@ export default function SocialHubPage() {
       <>
         <div className="min-h-screen bg-zinc-950 pt-20">
           <PageWrapper>
-            <main className="mx-auto max-w-3xl px-4 py-16 text-center text-white">
-              <h1 className="mb-3 text-4xl font-bold">Social Hub</h1>
-              <h2 className="mb-4 text-2xl font-semibold">Connect to Join the Conversation</h2>
+            <div className="mx-auto max-w-3xl px-4 py-16 text-center text-white">
+              <h1 className="mb-4 text-4xl font-bold">Connect to Join the Conversation</h1>
               <p className="mb-8 text-white/60">Sign in with your wallet to unlock the VFIDE social feed, stories, and community reactions.</p>
               <div className="flex justify-center">
                 <ConnectButton />
               </div>
-            </main>
+            </div>
           </PageWrapper>
         </div>
         <Footer />
@@ -97,17 +96,17 @@ export default function SocialHubPage() {
     <>
       <div className="min-h-screen bg-zinc-950 pt-20">
         <PageWrapper>
-          <main className="container mx-auto max-w-6xl px-4 py-8 text-white">
+          <div className="container mx-auto max-w-6xl px-4 py-8 text-white">
             <div className="mb-6 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
               <div>
                 <h1 className="text-4xl font-bold">Social Hub</h1>
-                <p className="text-white/60">Connect, share, and engage with the VFIDE community.</p>
+                <p className="text-white/60">Follow merchants, share updates, and track community activity across VFIDE.</p>
               </div>
               <div className="flex flex-wrap gap-2">
                 {([
                   { id: 'all', label: 'All', icon: Hash },
                   { id: 'following', label: 'Following', icon: Users },
-                  { id: 'trending', label: 'Trending Feed', icon: MessageCircle },
+                  { id: 'trending', label: 'Trending', icon: MessageCircle },
                 ] as const).map((tab) => (
                   <button
                     key={tab.id}
@@ -155,7 +154,7 @@ export default function SocialHubPage() {
                 <TrendingSidebar trending={trending} suggested={suggested} />
               </div>
             </div>
-          </main>
+          </div>
         </PageWrapper>
       </div>
       <Footer />

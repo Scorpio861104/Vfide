@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { verifyMessage } from 'viem';
 import { generateToken, verifyToken, extractToken } from '@/lib/auth/jwt';
 import { withRateLimit } from '@/lib/auth/rateLimit';
-import { validateBody } from '@/lib/auth/validation';
 import { setAuthCookie, getAuthCookie } from '@/lib/auth/cookieAuth';
 import {
   consumeAndValidateSiweChallenge,
@@ -70,15 +69,26 @@ export async function POST(request: NextRequest) {
   if (rateLimitResponse) return rateLimitResponse;
 
   try {
-    const validationResult = await validateBody(request, authRequestSchema);
-    if (!validationResult.success) {
+    let body: z.infer<typeof authRequestSchema>;
+    try {
+      const rawBody = await request.json();
+      const parsed = authRequestSchema.safeParse(rawBody);
+      if (!parsed.success) {
+        return NextResponse.json(
+          { error: 'Invalid request body' },
+          { status: 400 }
+        );
+      }
+      body = parsed.data;
+    } catch (error) {
+      logger.debug('[Auth POST] Invalid JSON body', error);
       return NextResponse.json(
-        { error: validationResult.error, details: validationResult.details },
+        { error: 'Invalid JSON body' },
         { status: 400 }
       );
     }
 
-    const { address, message, signature } = validationResult.data;
+    const { address, message, signature } = body;
     const normalizedAddress = address.toLowerCase();
     const ip = getRequestIp(request.headers);
     const userAgent = request.headers.get('user-agent') || 'unknown';

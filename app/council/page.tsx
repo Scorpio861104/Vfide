@@ -1,15 +1,16 @@
 'use client';
 
-import { useState } from 'react';
+import { lazy, Suspense, useState } from 'react';
 import { Footer } from "@/components/layout/Footer";
 import { CouncilElectionABI, CouncilSalaryABI } from "@/lib/abis";
 import { useAccount, useWriteContract, useWaitForTransactionReceipt, useReadContract } from "wagmi";
 import { motion, AnimatePresence } from "framer-motion";
 import { Users, DollarSign, Vote, Crown } from "lucide-react";
-import { OverviewTab } from './components/OverviewTab';
-import { MembersTab } from './components/MembersTab';
-import { SalaryTab } from './components/SalaryTab';
-import { VotingTab } from './components/VotingTab';
+
+const OverviewTab = lazy(() => import('./components/OverviewTab').then(m => ({ default: m.OverviewTab })));
+const MembersTab = lazy(() => import('./components/MembersTab').then(m => ({ default: m.MembersTab })));
+const SalaryTab = lazy(() => import('./components/SalaryTab').then(m => ({ default: m.SalaryTab })));
+const VotingTab = lazy(() => import('./components/VotingTab').then(m => ({ default: m.VotingTab })));
 
 const COUNCIL_ELECTION_ADDRESS = (process.env.NEXT_PUBLIC_COUNCIL_ELECTION_ADDRESS || '0x0000000000000000000000000000000000000000') as `0x${string}`;
 const IS_COUNCIL_ELECTION_DEPLOYED = COUNCIL_ELECTION_ADDRESS !== '0x0000000000000000000000000000000000000000';
@@ -22,6 +23,10 @@ const TAB_CONFIG = [
   { id: 'salary' as const, label: 'Salary Distribution', icon: DollarSign },
   { id: 'voting' as const, label: 'Member Voting', icon: Vote },
 ] as const;
+
+function TabSkeleton() {
+  return <div className="animate-pulse space-y-4"><div className="h-8 bg-white/5 rounded-lg w-1/3" /><div className="h-48 bg-white/5 rounded-2xl" /></div>;
+}
 
 export default function CouncilPage() {
   const { address, isConnected } = useAccount();
@@ -64,14 +69,16 @@ export default function CouncilPage() {
             ))}
           </motion.div>
 
-          <AnimatePresence mode="wait">
-            <motion.div key={activeTab} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} transition={{ duration: 0.2 }}>
-              {activeTab === 'overview' && <OverviewTab />}
-              {activeTab === 'members' && <MembersTab />}
-              {activeTab === 'salary' && <SalaryTab isConnected={isConnected} />}
-              {activeTab === 'voting' && <VotingTab isConnected={isConnected} />}
-            </motion.div>
-          </AnimatePresence>
+          <Suspense fallback={<TabSkeleton />}>
+            <AnimatePresence mode="wait">
+              <motion.div key={activeTab} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} transition={{ duration: 0.2 }}>
+                {activeTab === 'overview' && <OverviewTab />}
+                {activeTab === 'members' && <MembersTab />}
+                {activeTab === 'salary' && <SalaryTab isConnected={isConnected} />}
+                {activeTab === 'voting' && <VotingTab isConnected={isConnected} />}
+              </motion.div>
+            </AnimatePresence>
+          </Suspense>
         </div>
       </motion.main>
       <Footer />

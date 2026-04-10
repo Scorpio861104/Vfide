@@ -21,32 +21,7 @@ import { ProofScoreRing } from '@/components/ui/ProofScoreRing';
 import { RecentActivitySection } from './RecentActivity';
 import { GlassCard, QuickAction, containerVariants, ecosystemLoadout, itemVariants } from './shared';
 
-export function OverviewTab({
-  proofscore,
-  feeRate,
-  tier,
-  isConnected,
-}: {
-  proofscore: number;
-  feeRate: number;
-  tier?: string;
-  isConnected: boolean;
-}) {
-  const normalizedScore = Math.max(0, Math.min(proofscore, 10000));
-  const scoreBreakdown = [
-    { label: 'Core Trust', value: Math.min(3000, Math.round(normalizedScore * 0.32)), max: 3000, color: 'cyan' },
-    { label: 'Verified Activity', value: Math.min(2500, Math.round(normalizedScore * 0.25)), max: 2500, color: 'emerald' },
-    { label: 'Vault Hygiene', value: Math.min(1800, Math.round(normalizedScore * 0.18)), max: 1800, color: 'amber' },
-    { label: 'Governance Participation', value: Math.min(1600, Math.round(normalizedScore * 0.15)), max: 1600, color: 'purple' },
-    { label: 'Community Endorsements', value: Math.min(1100, Math.round(normalizedScore * 0.1)), max: 1100, color: 'pink' },
-  ] as const;
-
-  const ecosystemStatus = !isConnected
-    ? 'Connect your wallet to unlock live routing.'
-    : tier
-      ? `${tier} routing enabled across vault, governance, and payment flows.`
-      : 'Live wallet session detected.';
-
+export function OverviewTab({ proofscore, feeRate }: { proofscore: number; feeRate: number }) {
   return (
     <motion.div variants={containerVariants} initial="hidden" animate="show" className="space-y-8">
       <motion.div variants={itemVariants}>
@@ -74,12 +49,10 @@ export function OverviewTab({
               <Sparkles className="text-cyan-300" size={22} />
               Ecosystem Loadout
             </h2>
-            <span className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-300/80">
-              {isConnected ? 'Wallet linked' : 'Explore mode'}
-            </span>
+            <span className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-300/80">Fully loaded</span>
           </div>
           <p className="mb-5 text-sm text-white/50">
-            {ecosystemStatus}
+            Every core system is online and ready—move between vaults, governance, escrow, and credit in a single flow.
           </p>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
             {ecosystemLoadout.map((item) => (
@@ -132,7 +105,13 @@ export function OverviewTab({
               Score Breakdown
             </h2>
             <div className="space-y-4">
-              {scoreBreakdown.map((item, index) => (
+              {[
+                { label: 'Transaction Volume', value: 2500, max: 3000, color: 'cyan' },
+                { label: 'Account Age', value: 1200, max: 2000, color: 'emerald' },
+                { label: 'Badge Bonuses', value: 800, max: 1500, color: 'amber' },
+                { label: 'Governance Participation', value: 500, max: 1000, color: 'purple' },
+                { label: 'Community Endorsements', value: 300, max: 500, color: 'pink' },
+              ].map((item, index) => (
                 <motion.div
                   key={item.label}
                   initial={{ opacity: 0, x: -20 }}

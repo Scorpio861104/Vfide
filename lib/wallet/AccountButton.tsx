@@ -164,7 +164,7 @@ function SignInModal({ onClose }: { onClose: () => void }) {
           {/* Footer */}
           {!isLoading && (
             <p className="text-center text-gray-600 text-xs mt-6">
-              By continuing you agree to VFIDE&apos;s terms. No crypto experience required — we handle everything.
+              By continuing you agree to VFIDE's terms. No crypto experience required — we handle everything.
             </p>
           )}
         </div>

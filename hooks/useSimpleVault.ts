@@ -1,5 +1,6 @@
 import { useWriteContract, usePublicClient } from 'wagmi';
 import { useState } from 'react';
+import { isAddress } from 'viem';
 import { useVaultHub } from './useVaultHub';
 import { devLog } from '../lib/utils';
 
@@ -8,13 +9,8 @@ import { devLog } from '../lib/utils';
  * Shows user-friendly messages instead of raw transactions
  */
 export function useSimpleVault() {
-  const publicClientHook = usePublicClient as unknown as (() => ReturnType<typeof usePublicClient>) | undefined;
-  const publicClient = typeof publicClientHook === 'function' ? publicClientHook() : null;
-  const writeContractState = useWriteContract() as unknown as {
-    writeContractAsync?: (config: Record<string, unknown>) => Promise<`0x${string}`>;
-    writeContract?: (config: Record<string, unknown>) => Promise<`0x${string}` | void> | `0x${string}` | void;
-  };
-  const submitContract = writeContractState.writeContractAsync ?? writeContractState.writeContract;
+  const publicClient = usePublicClient();
+  const { writeContractAsync } = useWriteContract();
   const { vaultAddress } = useVaultHub();
   const [actionStatus, setActionStatus] = useState<'idle' | 'preparing' | 'signing' | 'confirming' | 'success' | 'error'>('idle');
   const [userMessage, setUserMessage] = useState('');
@@ -34,7 +30,7 @@ export function useSimpleVault() {
       return;
     }
 
-    if (!targetContract || !targetContract.startsWith('0x')) {
+    if (!isAddress(targetContract)) {
       setActionStatus('error');
       setUserMessage('❌ Invalid target contract address.');
       return;
@@ -56,11 +52,7 @@ export function useSimpleVault() {
       setUserMessage(`✍️ Please sign the transaction in your wallet`);
 
       // Execute through vault
-      if (!submitContract) {
-        throw new Error('Wallet client unavailable');
-      }
-
-      const txHash = await submitContract({
+      const txHash = await writeContractAsync({
         address: vaultAddress,
         abi: [
           {
@@ -69,19 +61,20 @@ export function useSimpleVault() {
             stateMutability: 'nonpayable',
             inputs: [
               { name: 'target', type: 'address' },
+              { name: 'value', type: 'uint256' },
               { name: 'data', type: 'bytes' },
             ],
             outputs: [],
           },
         ],
         functionName: 'execute',
-        args: [targetContract as `0x${string}`, callData as `0x${string}`],
+        args: [targetContract as `0x${string}`, 0n, callData as `0x${string}`],
       });
 
       setActionStatus('confirming');
       setUserMessage(`⏳ Your vault is ${actionName.toLowerCase()}... (this takes ~10 seconds)`);
 
-      if (publicClient && typeof txHash === 'string' && txHash.startsWith('0x')) {
+      if (publicClient) {
         await publicClient.waitForTransactionReceipt({ hash: txHash });
       } else {
         await new Promise(resolve => setTimeout(resolve, 3000));

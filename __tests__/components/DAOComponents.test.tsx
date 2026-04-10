@@ -89,8 +89,8 @@ describe('ProposalCard Pattern', () => {
 
   const mockProposal: Proposal = {
     id: 1,
-    title: 'Increase Merchant Service Budget',
-    description: 'Proposal to increase verified merchant service funding by 10%',
+    title: 'Increase Staking Rewards',
+    description: 'Proposal to increase staking rewards by 10%',
     status: 'active',
     forVotes: 1000n,
     againstVotes: 500n,
@@ -105,7 +105,7 @@ describe('ProposalCard Pattern', () => {
 
   it('displays proposal title', () => {
     render(<ProposalCard proposal={mockProposal} onClick={() => {}} />)
-    expect(screen.getByTestId('proposal-title')).toHaveTextContent('Increase Merchant Service Budget')
+    expect(screen.getByTestId('proposal-title')).toHaveTextContent('Increase Staking Rewards')
   })
 
   it('displays proposal status', () => {

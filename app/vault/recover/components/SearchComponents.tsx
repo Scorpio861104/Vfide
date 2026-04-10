@@ -3,37 +3,7 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import {
-  Shield,
-  Key,
-  Lock,
-  Clock,
-  CheckCircle2,
-  AlertTriangle,
-  Loader2,
-  Copy,
-  ExternalLink,
-  Sparkles,
-  ShieldCheck,
-  User,
-  Activity,
-  Award,
-  Users,
-  Timer,
-  XCircle,
-  UserCheck,
-  Fingerprint,
-  ArrowRight,
-  HelpCircle,
-  Radar,
-  Scan,
-  RefreshCw,
-  KeyRound,
-  Mail,
-  ChevronRight,
-  Zap,
-} from 'lucide-react';
-import { GlassCard } from '@/components/ui/GlassCard';
+import { Shield, Key, Lock, Clock, CheckCircle2, AlertTriangle, Loader2, Copy, ExternalLink } from 'lucide-react';
 
 export function SearchMethodButton({ 
   icon: Icon, 

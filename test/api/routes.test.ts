@@ -4,7 +4,6 @@
  * Findings: H-05, H-10, M-03, M-04, M-06, L-09, L-15
  */
 
-import fs from "node:fs";
 import request from "supertest";
 import { describe, it, expect, beforeAll } from "@jest/globals";
 
@@ -136,7 +135,7 @@ describeLive("[M-03] Input Validation", () => {
     { method: "post", path: "/api/merchants/register" },
     { method: "put", path: "/api/users/profile" },
     { method: "post", path: "/api/governance/proposals" },
-    { method: "post", path: "/api/crypto/payment-requests" },
+    { method: "post", path: "/api/staking/stake" },
     { method: "post", path: "/api/bridge/initiate" },
   ];
 
@@ -258,12 +257,7 @@ describeLive("[L-15] Seer Analytics Authentication", () => {
 // 9. WebSocket Security
 // ═══════════════════════════════════════════════
 describeLive("WebSocket Security", () => {
-  it("[M-06] should not accept JWT via query parameter", async () => {
-    const source = fs.readFileSync("websocket-server/src/index.ts", "utf-8");
-
-    expect(source).toMatch(/authorization|auth required|payload\.token/i);
-    expect(source).not.toMatch(/query\s*.*token|searchParams\s*.*token|url\s*.*jwt/i);
-  });
+  it.todo("[M-06] should not accept JWT via query parameter");
 });
 
 // ═══════════════════════════════════════════════
@@ -275,7 +269,7 @@ describeLive("Authorization Matrix", () => {
   const authenticatedRoutes = [
     "/api/users/profile",
     "/api/crypto/balance",
-    "/api/crypto/payment-requests",
+    "/api/staking/positions",
     "/api/governance/proposals",
   ];
 

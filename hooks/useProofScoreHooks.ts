@@ -69,11 +69,9 @@ export function useProofScore(userAddress?: `0x${string}`) {
 }
 
 export function useEndorse(targetAddress?: `0x${string}`) {
-  const chainIdHook = useChainId as unknown as (() => number) | undefined
-  const publicClientHook = usePublicClient as unknown as (() => ReturnType<typeof usePublicClient>) | undefined
-  const chainId = typeof chainIdHook === 'function' ? chainIdHook() : CURRENT_CHAIN_ID
-  const publicClient = typeof publicClientHook === 'function' ? publicClientHook() : null
-  const { writeContractAsync, writeContract, data, isPending } = useWriteContract()
+  const chainId = useChainId()
+  const publicClient = usePublicClient()
+  const { writeContractAsync, data, isPending } = useWriteContract()
   const [error, setError] = useState<string | null>(null)
   
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({
@@ -97,26 +95,15 @@ export function useEndorse(targetAddress?: `0x${string}`) {
       return { success: false, error: message }
     }
     try {
-      const request = {
+      const hash = await writeContractAsync({
         address: CONTRACT_ADDRESSES.SeerSocial,
         abi: SeerSocialABI,
         functionName: 'endorse',
-        args: [targetAddress, reason] as const,
+        args: [targetAddress, reason],
         chainId: CURRENT_CHAIN_ID,
-      }
-
-      const hash = typeof writeContractAsync === 'function'
-        ? await writeContractAsync(request)
-        : (() => {
-            if (typeof writeContract !== 'function') {
-              throw new Error('Wallet write function is unavailable')
-            }
-            writeContract(request)
-            return data ?? null
-          })()
-
-      if (publicClient && typeof publicClient.waitForTransactionReceipt === 'function' && typeof hash === 'string' && hash.startsWith('0x')) {
-        await publicClient.waitForTransactionReceipt({ hash: hash as `0x${string}` })
+      })
+      if (publicClient) {
+        await publicClient.waitForTransactionReceipt({ hash })
       }
       return { success: true, hash }
     } catch (err: unknown) {

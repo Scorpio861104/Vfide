@@ -93,11 +93,6 @@
   },
   {
     "inputs": [],
-    "name": "NotAuthorized",
-    "type": "error"
-  },
-  {
-    "inputs": [],
     "name": "ReentrancyGuardReentrantCall",
     "type": "error"
   },
@@ -126,25 +121,6 @@
     "inputs": [],
     "name": "ZeroAddress",
     "type": "error"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "amount",
-        "type": "uint256"
-      },
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "burnAddress",
-        "type": "address"
-      }
-    ],
-    "name": "BurnFallbackTransfer",
-    "type": "event"
   },
   {
     "anonymous": false,
@@ -213,7 +189,7 @@
         "type": "string"
       },
       {
-        "indexed": true,
+        "indexed": false,
         "internalType": "address",
         "name": "addr",
         "type": "address"

@@ -29,90 +29,6 @@ const HUB_ABI = VaultHubABI
 const VAULT_ABI = ACTIVE_VAULT_ABI
 const LEGACY_VAULT_UNSUPPORTED_MESSAGE = 'This action is not supported in CardBound vault mode.'
 
-type SafeWriteRequest = Record<string, unknown>
-type SafeWriteContractAsync = ((request: SafeWriteRequest) => Promise<unknown>) | undefined
-type SafeWriteContract = ((request: SafeWriteRequest) => unknown) | undefined
-
-function useSafeChainId() {
-  const chainIdHook = useChainId as unknown as (() => number) | undefined
-  const resolvedChainId = typeof chainIdHook === 'function' ? chainIdHook() : CURRENT_CHAIN_ID
-
-  return typeof resolvedChainId === 'number' && Number.isFinite(resolvedChainId)
-    ? resolvedChainId
-    : CURRENT_CHAIN_ID
-}
-
-function useSafePublicClient() {
-  const publicClientHook = usePublicClient as unknown as (() => ReturnType<typeof usePublicClient>) | undefined
-  return typeof publicClientHook === 'function' ? publicClientHook() : null
-}
-
-function useSafeWriteContract() {
-  const writeContractHook = useWriteContract as unknown as (() => {
-    writeContractAsync: SafeWriteContractAsync
-    writeContract: SafeWriteContract
-    data: `0x${string}` | undefined
-    isPending: boolean
-  }) | undefined
-
-  if (typeof writeContractHook !== 'function') {
-    return {
-      writeContractAsync: undefined as SafeWriteContractAsync,
-      writeContract: undefined as SafeWriteContract,
-      data: undefined as `0x${string}` | undefined,
-      isPending: false,
-    }
-  }
-
-  return writeContractHook()
-}
-
-function useSafeWaitForTransactionReceipt(hash: `0x${string}` | null | undefined) {
-  const receiptHook = useWaitForTransactionReceipt as unknown as
-    | ((args: { hash: `0x${string}` | undefined }) => { isLoading: boolean; isSuccess: boolean })
-    | undefined
-
-  return typeof receiptHook === 'function'
-    ? receiptHook({
-        hash: hash || undefined,
-      })
-    : { isLoading: false, isSuccess: false }
-}
-
-function normalizeTxHash(hash: unknown): `0x${string}` | null {
-  return typeof hash === 'string' && hash.startsWith('0x')
-    ? (hash as `0x${string}`)
-    : null
-}
-
-async function submitWriteRequest(
-  request: SafeWriteRequest,
-  options: {
-    writeContractAsync?: SafeWriteContractAsync
-    writeContract?: SafeWriteContract
-    data?: `0x${string}` | undefined
-    publicClient: ReturnType<typeof useSafePublicClient>
-  },
-) {
-  const hash = typeof options.writeContractAsync === 'function'
-    ? await options.writeContractAsync(request)
-    : (() => {
-        if (typeof options.writeContract !== 'function') {
-          throw new Error('Wallet write function is unavailable')
-        }
-
-        options.writeContract(request)
-        return options.data ?? null
-      })()
-
-  const normalizedHash = normalizeTxHash(hash)
-  if (options.publicClient && typeof options.publicClient.waitForTransactionReceipt === 'function' && normalizedHash) {
-    await options.publicClient.waitForTransactionReceipt({ hash: normalizedHash })
-  }
-
-  return normalizedHash
-}
-
 export function useUserVault() {
   const { address } = useAccount()
   
@@ -138,12 +54,14 @@ export function useUserVault() {
 }
 
 export function useCreateVault() {
-  const chainId = useSafeChainId()
-  const publicClient = useSafePublicClient()
+  const chainId = useChainId()
+  const publicClient = usePublicClient()
   const { address } = useAccount()
-  const { writeContractAsync, writeContract, data, isPending } = useSafeWriteContract()
+  const { writeContractAsync, data, isPending } = useWriteContract()
   
-  const { isLoading: isConfirming, isSuccess } = useSafeWaitForTransactionReceipt(data)
+  const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({
+    hash: data,
+  })
   
   // VaultHub ensureVault() creates if doesn't exist, returns existing vault if it does
   const createVault = async () => {
@@ -151,27 +69,18 @@ export function useCreateVault() {
     if (CONTRACT_ADDRESSES.VaultHub === ZERO_ADDRESS) {
       throw new Error('VaultHub is not configured in this environment')
     }
-    if (process.env.NODE_ENV === 'production' && chainId !== CURRENT_CHAIN_ID) {
+    if (chainId !== CURRENT_CHAIN_ID) {
       throw new Error('Switch to the configured network before creating a vault')
     }
-    const request = {
+    const hash = await writeContractAsync({
       address: CONTRACT_ADDRESSES.VaultHub,
       abi: HUB_ABI,
       functionName: 'ensureVault',
-      args: [address] as const,
+      args: [address],
       chainId: CURRENT_CHAIN_ID,
-    }
-    const hash = typeof writeContractAsync === 'function'
-      ? await writeContractAsync(request)
-      : (() => {
-          if (typeof writeContract !== 'function') {
-            throw new Error('Wallet write function is unavailable')
-          }
-          writeContract(request)
-          return data ?? null
-        })()
-    if (publicClient && typeof publicClient.waitForTransactionReceipt === 'function' && typeof hash === 'string' && hash.startsWith('0x')) {
-      await publicClient.waitForTransactionReceipt({ hash: hash as `0x${string}` })
+    })
+    if (publicClient) {
+      await publicClient.waitForTransactionReceipt({ hash })
     }
     return hash
   }
@@ -272,11 +181,13 @@ export function useVaultBalance() {
 }
 
 export function useTransferVFIDE() {
-  const chainId = useSafeChainId()
+  const chainId = useChainId()
   const { vaultAddress } = useUserVault()
-  const { writeContract, data, isPending } = useSafeWriteContract()
+  const { writeContract, data, isPending } = useWriteContract()
   
-  const { isLoading: isConfirming, isSuccess } = useSafeWaitForTransactionReceipt(data)
+  const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({
+    hash: data,
+  })
   
   const transfer = (toVault: `0x${string}`, amount: string) => {
     if (!vaultAddress) return
@@ -293,15 +204,11 @@ export function useTransferVFIDE() {
       throw new Error('Amount must be a positive number')
     }
     
-    if (process.env.NODE_ENV === 'production' && chainId !== CURRENT_CHAIN_ID) {
+    if (chainId !== CURRENT_CHAIN_ID) {
       throw new Error('Switch to the configured network before transferring VFIDE')
     }
 
     // UserVault uses 'transferVFIDE' function (matches ABI)
-    if (typeof writeContract !== 'function') {
-      throw new Error('Wallet write function is unavailable')
-    }
-
     writeContract({
       address: vaultAddress as `0x${string}`,
       abi: VAULT_ABI,
@@ -367,12 +274,14 @@ export function useIsGuardianMature(vaultAddress?: `0x${string}`, guardianAddres
  * @param active True to add, false to remove
  */
 export function useSetGuardian(vaultAddress: `0x${string}`) {
-  const publicClient = useSafePublicClient()
-  const { writeContractAsync, writeContract, data } = useSafeWriteContract()
+  const publicClient = usePublicClient()
+  const { writeContractAsync } = useWriteContract()
   const [txHash, setTxHash] = useState<`0x${string}` | null>(null)
   const [error, setError] = useState<string | null>(null)
 
-  const { isSuccess, isLoading } = useSafeWaitForTransactionReceipt(txHash ?? data)
+  const { isSuccess, isLoading } = useWaitForTransactionReceipt({
+    hash: txHash || undefined,
+  })
 
   // Fixed: setGuardian(address g, bool active) matches actual ABI
   const setGuardian = async (guardianAddress: `0x${string}`, active: boolean) => {
@@ -386,15 +295,15 @@ export function useSetGuardian(vaultAddress: `0x${string}`) {
     }
     
     try {
-      const hash = await submitWriteRequest(
-        {
-          address: vaultAddress,
-          abi: VAULT_ABI,
-          functionName: 'setGuardian',
-          args: [guardianAddress, active],
-        },
-        { writeContractAsync, writeContract, data, publicClient },
-      )
+      const hash = await writeContractAsync({
+        address: vaultAddress,
+        abi: VAULT_ABI,
+        functionName: 'setGuardian',
+        args: [guardianAddress, active],
+      })
+      if (publicClient) {
+        await publicClient.waitForTransactionReceipt({ hash })
+      }
       setTxHash(hash)
       return { success: true, txHash: hash }
     } catch (err: unknown) {
@@ -469,24 +378,30 @@ export function useAbnormalTransactionThreshold(vaultAddress?: `0x${string}`) {
  * Set balance snapshot mode for abnormal transaction detection
  */
 export function useSetBalanceSnapshotMode(vaultAddress: `0x${string}`) {
-  const publicClient = useSafePublicClient()
-  const { writeContractAsync, writeContract, data } = useSafeWriteContract()
+  const publicClient = usePublicClient()
+  const { writeContractAsync } = useWriteContract()
   const [txHash, setTxHash] = useState<`0x${string}` | null>(null)
   const isLegacyMode = ACTIVE_VAULT_IMPLEMENTATION === 'uservault'
 
-  const { isSuccess, isLoading } = useSafeWaitForTransactionReceipt(txHash ?? data)
+  const { isSuccess, isLoading } = useWaitForTransactionReceipt({
+    hash: txHash || undefined,
+  })
 
   const setSnapshotMode = async (useSnapshot: boolean) => {
+    if (!isLegacyMode) {
+      return { success: false, error: LEGACY_VAULT_UNSUPPORTED_MESSAGE }
+    }
+
     try {
-      const hash = await submitWriteRequest(
-        {
-          address: vaultAddress,
-          abi: VAULT_ABI,
-          functionName: 'setBalanceSnapshotMode',
-          args: [useSnapshot],
-        },
-        { writeContractAsync, writeContract, data, publicClient },
-      )
+      const hash = await writeContractAsync({
+        address: vaultAddress,
+        abi: VAULT_ABI,
+        functionName: 'setBalanceSnapshotMode',
+        args: [useSnapshot],
+      })
+      if (publicClient) {
+        await publicClient.waitForTransactionReceipt({ hash })
+      }
       setTxHash(hash)
       return { success: true, txHash: hash }
     } catch (err: unknown) {
@@ -508,23 +423,29 @@ export function useSetBalanceSnapshotMode(vaultAddress: `0x${string}`) {
  * Update balance snapshot
  */
 export function useUpdateBalanceSnapshot(vaultAddress: `0x${string}`) {
-  const publicClient = useSafePublicClient()
-  const { writeContractAsync, writeContract, data } = useSafeWriteContract()
+  const publicClient = usePublicClient()
+  const { writeContractAsync } = useWriteContract()
   const [txHash, setTxHash] = useState<`0x${string}` | null>(null)
   const isLegacyMode = ACTIVE_VAULT_IMPLEMENTATION === 'uservault'
 
-  const { isSuccess, isLoading } = useSafeWaitForTransactionReceipt(txHash ?? data)
+  const { isSuccess, isLoading } = useWaitForTransactionReceipt({
+    hash: txHash || undefined,
+  })
 
   const updateSnapshot = async () => {
+    if (!isLegacyMode) {
+      return { success: false, error: LEGACY_VAULT_UNSUPPORTED_MESSAGE }
+    }
+
     try {
-      const hash = await submitWriteRequest(
-        {
-          address: vaultAddress,
-          abi: VAULT_ABI,
-          functionName: 'updateBalanceSnapshot',
-        },
-        { writeContractAsync, writeContract, data, publicClient },
-      )
+      const hash = await writeContractAsync({
+        address: vaultAddress,
+        abi: VAULT_ABI,
+        functionName: 'updateBalanceSnapshot',
+      })
+      if (publicClient) {
+        await publicClient.waitForTransactionReceipt({ hash })
+      }
       setTxHash(hash)
       return { success: true, txHash: hash }
     } catch (err: unknown) {
@@ -615,24 +536,30 @@ export function usePendingTransaction(vaultAddress?: `0x${string}`, txId?: numbe
  * Approve pending abnormal transaction
  */
 export function useApprovePendingTransaction(vaultAddress: `0x${string}`) {
-  const publicClient = useSafePublicClient()
-  const { writeContractAsync, writeContract, data } = useSafeWriteContract()
+  const publicClient = usePublicClient()
+  const { writeContractAsync } = useWriteContract()
   const [txHash, setTxHash] = useState<`0x${string}` | null>(null)
   const isLegacyMode = ACTIVE_VAULT_IMPLEMENTATION === 'uservault'
 
-  const { isSuccess, isLoading } = useSafeWaitForTransactionReceipt(txHash ?? data)
+  const { isSuccess, isLoading } = useWaitForTransactionReceipt({
+    hash: txHash || undefined,
+  })
 
   const approve = async (txId: number) => {
+    if (!isLegacyMode) {
+      return { success: false, error: LEGACY_VAULT_UNSUPPORTED_MESSAGE }
+    }
+
     try {
-      const hash = await submitWriteRequest(
-        {
-          address: vaultAddress,
-          abi: VAULT_ABI,
-          functionName: 'approvePendingTransaction',
-          args: [BigInt(txId)],
-        },
-        { writeContractAsync, writeContract, data, publicClient },
-      )
+      const hash = await writeContractAsync({
+        address: vaultAddress,
+        abi: VAULT_ABI,
+        functionName: 'approvePendingTransaction',
+        args: [BigInt(txId)],
+      })
+      if (publicClient) {
+        await publicClient.waitForTransactionReceipt({ hash })
+      }
       setTxHash(hash)
       return { success: true, txHash: hash }
     } catch (err: unknown) {
@@ -654,24 +581,30 @@ export function useApprovePendingTransaction(vaultAddress: `0x${string}`) {
  * Execute approved pending transaction
  */
 export function useExecutePendingTransaction(vaultAddress: `0x${string}`) {
-  const publicClient = useSafePublicClient()
-  const { writeContractAsync, writeContract, data } = useSafeWriteContract()
+  const publicClient = usePublicClient()
+  const { writeContractAsync } = useWriteContract()
   const [txHash, setTxHash] = useState<`0x${string}` | null>(null)
   const isLegacyMode = ACTIVE_VAULT_IMPLEMENTATION === 'uservault'
 
-  const { isSuccess, isLoading } = useSafeWaitForTransactionReceipt(txHash ?? data)
+  const { isSuccess, isLoading } = useWaitForTransactionReceipt({
+    hash: txHash || undefined,
+  })
 
   const execute = async (txId: number) => {
+    if (!isLegacyMode) {
+      return { success: false, error: LEGACY_VAULT_UNSUPPORTED_MESSAGE }
+    }
+
     try {
-      const hash = await submitWriteRequest(
-        {
-          address: vaultAddress,
-          abi: VAULT_ABI,
-          functionName: 'executePendingTransaction',
-          args: [BigInt(txId)],
-        },
-        { writeContractAsync, writeContract, data, publicClient },
-      )
+      const hash = await writeContractAsync({
+        address: vaultAddress,
+        abi: VAULT_ABI,
+        functionName: 'executePendingTransaction',
+        args: [BigInt(txId)],
+      })
+      if (publicClient) {
+        await publicClient.waitForTransactionReceipt({ hash })
+      }
       setTxHash(hash)
       return { success: true, txHash: hash }
     } catch (err: unknown) {
@@ -693,24 +626,30 @@ export function useExecutePendingTransaction(vaultAddress: `0x${string}`) {
  * Cleanup expired pending transaction
  */
 export function useCleanupExpiredTransaction(vaultAddress: `0x${string}`) {
-  const publicClient = useSafePublicClient()
-  const { writeContractAsync, writeContract, data } = useSafeWriteContract()
+  const publicClient = usePublicClient()
+  const { writeContractAsync } = useWriteContract()
   const [txHash, setTxHash] = useState<`0x${string}` | null>(null)
   const isLegacyMode = ACTIVE_VAULT_IMPLEMENTATION === 'uservault'
 
-  const { isSuccess, isLoading } = useSafeWaitForTransactionReceipt(txHash ?? data)
+  const { isSuccess, isLoading } = useWaitForTransactionReceipt({
+    hash: txHash || undefined,
+  })
 
   const cleanup = async (txId: number) => {
+    if (!isLegacyMode) {
+      return { success: false, error: LEGACY_VAULT_UNSUPPORTED_MESSAGE }
+    }
+
     try {
-      const hash = await submitWriteRequest(
-        {
-          address: vaultAddress,
-          abi: VAULT_ABI,
-          functionName: 'cleanupExpiredTransaction',
-          args: [BigInt(txId)],
-        },
-        { writeContractAsync, writeContract, data, publicClient },
-      )
+      const hash = await writeContractAsync({
+        address: vaultAddress,
+        abi: VAULT_ABI,
+        functionName: 'cleanupExpiredTransaction',
+        args: [BigInt(txId)],
+      })
+      if (publicClient) {
+        await publicClient.waitForTransactionReceipt({ hash })
+      }
       setTxHash(hash)
       return { success: true, txHash: hash }
     } catch (err: unknown) {
@@ -732,23 +671,29 @@ export function useCleanupExpiredTransaction(vaultAddress: `0x${string}`) {
  * Guardian votes to cancel fraudulent inheritance request
  */
 export function useGuardianCancelInheritance(vaultAddress: `0x${string}`) {
-  const publicClient = useSafePublicClient()
-  const { writeContractAsync, writeContract, data } = useSafeWriteContract()
+  const publicClient = usePublicClient()
+  const { writeContractAsync } = useWriteContract()
   const [txHash, setTxHash] = useState<`0x${string}` | null>(null)
   const isLegacyMode = ACTIVE_VAULT_IMPLEMENTATION === 'uservault'
 
-  const { isSuccess, isLoading } = useSafeWaitForTransactionReceipt(txHash ?? data)
+  const { isSuccess, isLoading } = useWaitForTransactionReceipt({
+    hash: txHash || undefined,
+  })
 
   const cancelInheritance = async () => {
+    if (!isLegacyMode) {
+      return { success: false, error: LEGACY_VAULT_UNSUPPORTED_MESSAGE }
+    }
+
     try {
-      const hash = await submitWriteRequest(
-        {
-          address: vaultAddress,
-          abi: VAULT_ABI,
-          functionName: 'guardianCancelInheritance',
-        },
-        { writeContractAsync, writeContract, data, publicClient },
-      )
+      const hash = await writeContractAsync({
+        address: vaultAddress,
+        abi: VAULT_ABI,
+        functionName: 'guardianCancelInheritance',
+      })
+      if (publicClient) {
+        await publicClient.waitForTransactionReceipt({ hash })
+      }
       setTxHash(hash)
       return { success: true, txHash: hash }
     } catch (err: unknown) {

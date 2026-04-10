@@ -1,27 +1,25 @@
-/**
- * Tier 1 Providers — Always loaded, zero auth dependency
- * 
- * These wrap the entire app in root layout.tsx.
- * Must be lightweight — no Web3, no wallet, no heavy state.
- */
 'use client';
 
 import { ReactNode } from 'react';
-import { ThemeProvider } from '@/providers/ThemeProvider';
-import { AccessibilityProvider } from '@/providers/AccessibilityProvider';
-import { PreferencesProvider } from '@/providers/PreferencesProvider';
+import { ThemeProvider } from 'next-themes';
+import { LocaleProvider } from '@/lib/locale/LocaleProvider';
+import { AdaptiveProvider } from '@/lib/adaptive';
+import { Web3Providers } from '@/lib/providers/Web3Providers';
+import { OnboardingProvider } from '@/components/onboarding';
 import { ToastProvider } from '@/components/ui/toast';
 
 export function CoreProviders({ children }: { children: ReactNode }) {
   return (
-    <ThemeProvider>
-      <AccessibilityProvider>
-        <PreferencesProvider>
-          <ToastProvider>
-            {children}
-          </ToastProvider>
-        </PreferencesProvider>
-      </AccessibilityProvider>
+    <ThemeProvider attribute="class" defaultTheme="dark" disableTransitionOnChange>
+      <LocaleProvider>
+        <AdaptiveProvider>
+          <Web3Providers>
+            <OnboardingProvider>
+              <ToastProvider>{children}</ToastProvider>
+            </OnboardingProvider>
+          </Web3Providers>
+        </AdaptiveProvider>
+      </LocaleProvider>
     </ThemeProvider>
   );
 }

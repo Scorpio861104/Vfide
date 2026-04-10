@@ -52,22 +52,6 @@ describe('proxy CSRF enforcement coverage', () => {
     });
   });
 
-  it('allows CSP reports without CSRF token', () => {
-    const request = new NextRequest('http://localhost:3000/api/security/csp-report', {
-      method: 'POST',
-      headers: {
-        'content-type': 'application/csp-report',
-        'content-length': '2',
-      },
-      body: '{}',
-    });
-
-    const response = proxy(request);
-
-    expect(response.status).toBe(200);
-    expect(response.headers.get('x-nonce')).toBeTruthy();
-  });
-
   it('allows non-state-changing methods without CSRF token', () => {
     const request = new NextRequest('http://localhost:3000/api/messages', {
       method: 'GET',

@@ -1,11 +1,7 @@
 'use client'
 
 import { useReadContract, useWriteContract, useAccount, useWaitForTransactionReceipt } from 'wagmi'
-import {
-  CONTRACT_ADDRESSES,
-  getContractConfigurationError,
-  isConfiguredContractAddress,
-} from '../lib/contracts'
+import { CONTRACT_ADDRESSES } from '../lib/contracts'
 import { VFIDEBadgeNFTABI } from '../lib/abis'
 
 // ============================================
@@ -37,17 +33,14 @@ export function useUserBadges(_address?: `0x${string}`) {
 export function useBadgeNFTs(address?: `0x${string}`) {
   const { address: connectedAddress } = useAccount()
   const targetAddress = address || connectedAddress
-  const configError = !isConfiguredContractAddress(CONTRACT_ADDRESSES.BadgeNFT)
-    ? getContractConfigurationError('BadgeNFT')
-    : null
   
-  const { data: tokenIds, isLoading, refetch, error } = useReadContract({
+  const { data: tokenIds, isLoading, refetch } = useReadContract({
     address: CONTRACT_ADDRESSES.BadgeNFT,
     abi: VFIDEBadgeNFTABI,
     functionName: 'getBadgesOfUser',
     args: targetAddress ? [targetAddress] : undefined,
     query: {
-      enabled: !!targetAddress && !configError,
+      enabled: !!targetAddress && CONTRACT_ADDRESSES.BadgeNFT !== '0x0000000000000000000000000000000000000000',
     }
   })
   
@@ -56,24 +49,17 @@ export function useBadgeNFTs(address?: `0x${string}`) {
     count: tokenIds ? (tokenIds as bigint[]).length : 0,
     isLoading,
     refetch,
-    error: configError ?? error,
-    isAvailable: !configError,
   }
 }
 
 export function useMintBadge() {
-  const configError = !isConfiguredContractAddress(CONTRACT_ADDRESSES.BadgeNFT)
-    ? getContractConfigurationError('BadgeNFT')
-    : null
   const { writeContract, data, isPending } = useWriteContract()
   
-  const { isLoading: isConfirming, isSuccess, error } = useWaitForTransactionReceipt({
+  const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({
     hash: data,
   })
   
   const mintBadge = (badgeId: `0x${string}`) => {
-    if (configError) return
-
     writeContract({
       address: CONTRACT_ADDRESSES.BadgeNFT,
       abi: VFIDEBadgeNFTABI,
@@ -87,25 +73,20 @@ export function useMintBadge() {
     isMinting: isPending || isConfirming,
     isSuccess,
     txHash: data,
-    error: configError ?? error,
-    isAvailable: !configError,
   }
 }
 
 export function useCanMintBadge(badgeId: `0x${string}`, address?: `0x${string}`) {
   const { address: connectedAddress } = useAccount()
   const targetAddress = address || connectedAddress
-  const configError = !isConfiguredContractAddress(CONTRACT_ADDRESSES.BadgeNFT)
-    ? getContractConfigurationError('BadgeNFT')
-    : null
   
-  const { data, isLoading, error } = useReadContract({
+  const { data, isLoading } = useReadContract({
     address: CONTRACT_ADDRESSES.BadgeNFT,
     abi: VFIDEBadgeNFTABI,
     functionName: 'canMintBadge',
     args: targetAddress && badgeId ? [targetAddress, badgeId] : undefined,
     query: {
-      enabled: !!targetAddress && !!badgeId && !configError,
+      enabled: !!targetAddress && !!badgeId && CONTRACT_ADDRESSES.BadgeNFT !== '0x0000000000000000000000000000000000000000',
     }
   })
   
@@ -113,7 +94,5 @@ export function useCanMintBadge(badgeId: `0x${string}`, address?: `0x${string}`)
     canMint: data ? (data as [boolean, string])[0] : false,
     reason: data ? (data as [boolean, string])[1] : '',
     isLoading,
-    error: configError ?? error,
-    isAvailable: !configError,
   }
 }

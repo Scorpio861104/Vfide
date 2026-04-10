@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
-import "../../../contracts/SharedInterfaces.sol";
-
 contract DAOMock {
     event AdminSet(address admin);
     function setAdmin(address admin) external { emit AdminSet(admin); }
@@ -26,21 +24,6 @@ contract PanicGuardInterfaceMock {
 }
 
 contract EmergencyBreakerMock {
-    bool public haltedState;
-
-    function setHalted(bool value) external {
-        haltedState = value;
-    }
-
-    function halted() external view returns (bool) { return haltedState; }
-
-    function toggle(bool on, string calldata) external {
-        haltedState = on;
-    }
-}
-
-contract OwnableRecoveryTarget is Ownable {
-    function touch() external pure returns (uint256) {
-        return 1;
-    }
+    function halted() external view returns (bool) { return false; }
+    function toggle(bool, string calldata) external {}
 }

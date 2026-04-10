@@ -1,25 +1,35 @@
 'use client';
 
-const GUIDE_STEPS = [
-  'Initialize the device with vendor software only, then write down the recovery phrase offline.',
-  'Install the chain app you need and confirm the displayed receiving address on the hardware screen itself.',
-  'Use a small test transaction before routing payroll, vault, or merchant funds through the device.',
-];
+import { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
+import { Loader2 } from 'lucide-react';
+
+// Setup guide for hardware wallet integration
 
 export function GuideTab() {
+  const [loading, setLoading] = useState(true);
+  const [data, setData] = useState<any>(null);
+
+  useEffect(() => {
+    // TODO: Wire to API endpoint
+    const timer = setTimeout(() => setLoading(false), 500);
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 size={24} className="text-cyan-400 animate-spin" />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div className="bg-white/3 border border-white/10 rounded-2xl p-6">
-        <h3 className="text-xl font-bold text-white mb-2">Setup Guide</h3>
-        <p className="text-gray-400">Follow this sequence when onboarding a Ledger, Trezor, or similar signing device into VFIDE.</p>
-      </div>
-
-      <div className="rounded-2xl border border-white/10 bg-black/20 p-6">
-        <ul className="space-y-2 text-sm text-gray-300">
-          {GUIDE_STEPS.map((step) => (
-            <li key={step}>• {step}</li>
-          ))}
-        </ul>
+        <h3 className="text-lg font-bold text-white mb-4">Guide</h3>
+        <p className="text-gray-400 text-sm">Setup guide for hardware wallet integration</p>
+        {/* TODO: Implement GuideTab UI */}
       </div>
     </div>
   );

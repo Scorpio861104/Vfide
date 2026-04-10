@@ -57,7 +57,7 @@ describe('NotificationCenter', () => {
     fireEvent.click(bellButton)
     
     expect(screen.getByText('Active Proposal')).toBeInTheDocument()
-    expect(screen.getByText('Verified Work Payout')).toBeInTheDocument()
+    expect(screen.getByText('Claimable Rewards')).toBeInTheDocument()
     expect(screen.getByText('Guardian Request')).toBeInTheDocument()
     expect(screen.getByText('Badge Unlocked')).toBeInTheDocument()
   })
@@ -69,7 +69,7 @@ describe('NotificationCenter', () => {
     fireEvent.click(bellButton)
     
     expect(screen.getByText(/Proposal #142/)).toBeInTheDocument()
-    expect(screen.getByText(/467\.50 USDC/)).toBeInTheDocument()
+    expect(screen.getByText(/467\.50 VFIDE/)).toBeInTheDocument()
   })
 
   it('has Mark all read button', () => {

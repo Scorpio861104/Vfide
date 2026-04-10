@@ -2,8 +2,6 @@ import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import { render, screen } from '@testing-library/react';
 import type React from 'react';
 
-const mockFetch = jest.fn<typeof fetch>();
-
 const renderMerchantPage = () => {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const pageModule = require('../../app/merchant/page');
@@ -34,16 +32,6 @@ jest.mock('framer-motion', () => ({
       return ({ children, ...props }: any) => <Tag {...props}>{children}</Tag>;
     },
   }),
-  AnimatePresence: ({ children }: { children: React.ReactNode }) => <>{children}</>,
-}));
-
-jest.mock('wagmi', () => ({
-  useAccount: () => ({ address: '0x1111111111111111111111111111111111111111', isConnected: true }),
-}));
-
-jest.mock('@/components/compliance/OffRampIntegration', () => ({
-  OffRampButton: () => <div>OffRamp Button Component</div>,
-  OffRampStatus: () => <div>OffRamp Status Component</div>,
 }));
 
 jest.mock('@/components/error/ErrorBoundary', () => ({
@@ -58,8 +46,6 @@ jest.mock('lucide-react', () => {
 describe('Merchant page logic pathways', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    mockFetch.mockReset();
-    global.fetch = mockFetch as unknown as typeof fetch;
   });
 
   it('renders portal hero and integrated merchant modules', () => {
@@ -69,12 +55,6 @@ describe('Merchant page logic pathways', () => {
     expect(screen.getByRole('heading', { name: /Merchant Dashboard/i })).toBeTruthy();
     expect(screen.getByRole('heading', { name: /Make Payment/i })).toBeTruthy();
     expect(screen.getByRole('heading', { name: /Generate Payment QR Code/i })).toBeTruthy();
-    expect(screen.getByRole('link', { name: /gift cards/i })).toBeTruthy();
-    expect(screen.getByRole('link', { name: /returns/i })).toBeTruthy();
-    expect(screen.getByRole('link', { name: /installments/i })).toBeTruthy();
-    expect(screen.getByRole('link', { name: /suppliers/i })).toBeTruthy();
-    expect(screen.getByRole('link', { name: /locations/i })).toBeTruthy();
-    expect(screen.getByRole('link', { name: /wholesale/i })).toBeTruthy();
     expect(screen.getByText('Merchant Dashboard Component')).toBeTruthy();
     expect(screen.getByText('Payment Interface Component')).toBeTruthy();
     expect(screen.getByText('Payment QR Component')).toBeTruthy();
@@ -90,28 +70,5 @@ describe('Merchant page logic pathways', () => {
     expect(screen.getAllByText(/Register Your Business/i).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/Configure Settings/i).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/Start Accepting Payments/i).length).toBeGreaterThan(0);
-  });
-
-  it('renders live sales pulse and restock alerts when analytics data is available', async () => {
-    mockFetch.mockResolvedValue({
-      ok: true,
-      json: async () => ({
-        revenueChange: 18.4,
-        dailyRevenue: [
-          { date: '2026-04-01', amount: 42 },
-          { date: '2026-04-02', amount: 57 },
-          { date: '2026-04-03', amount: 74 },
-        ],
-        topProducts: [
-          { name: 'Premium Rice Bag', revenue: 540, count: 18 },
-        ],
-      }),
-    } as Response);
-
-    renderMerchantPage();
-
-    expect(await screen.findByText(/Restock alerts/i)).toBeTruthy();
-    expect((await screen.findAllByText(/Premium Rice Bag/i)).length).toBeGreaterThan(0);
-    expect(await screen.findByText(/18\.4% vs prior period/i)).toBeTruthy();
   });
 });

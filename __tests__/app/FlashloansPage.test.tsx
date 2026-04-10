@@ -1,5 +1,5 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
-import FlashLoansPage from '../../app/flashloans/page'
+import FlashlightPage from '../../app/flashlight/page'
 import React from 'react'
 
 jest.mock('framer-motion', () => ({
@@ -26,7 +26,7 @@ describe('FlashloansPage', () => {
   })
 
   it('runs the happy-path p2p lifecycle', () => {
-    render(<FlashLoansPage />)
+    render(<FlashlightPage />)
 
     expect(screen.getByText('Current Stage')).toBeInTheDocument()
     expect(screen.getByText('Draft')).toBeInTheDocument()
@@ -48,7 +48,7 @@ describe('FlashloansPage', () => {
   })
 
   it('supports dispute and resolution path', () => {
-    render(<FlashLoansPage />)
+    render(<FlashlightPage />)
 
     fireEvent.click(screen.getByRole('button', { name: 'Request Lane' }))
     fireEvent.click(screen.getByRole('button', { name: 'Lender Approve Terms' }))
@@ -72,7 +72,7 @@ describe('FlashloansPage', () => {
   })
 
   it('shows both-party protection status as satisfied with defaults', () => {
-    render(<FlashLoansPage />)
+    render(<FlashlightPage />)
 
     expect(
       screen.getByText('Both parties are currently protected under configured terms.')
@@ -80,7 +80,7 @@ describe('FlashloansPage', () => {
   })
 
   it('blocks dispute without evidence and surfaces a clear error', () => {
-    render(<FlashLoansPage />)
+    render(<FlashlightPage />)
 
     fireEvent.click(screen.getByRole('button', { name: 'Request Lane' }))
     fireEvent.click(screen.getByRole('button', { name: 'Lender Approve Terms' }))
@@ -113,7 +113,7 @@ describe('FlashloansPage', () => {
       }),
     })
 
-    render(<FlashLoansPage />)
+    render(<FlashlightPage />)
 
     fireEvent.click(screen.getByRole('button', { name: 'Create Server Lane' }))
 
@@ -172,7 +172,7 @@ describe('FlashloansPage', () => {
         }),
       })
 
-    render(<FlashLoansPage />)
+    render(<FlashlightPage />)
 
     fireEvent.click(screen.getByRole('button', { name: 'Create Server Lane' }))
 

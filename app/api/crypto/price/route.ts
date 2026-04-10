@@ -205,7 +205,7 @@ export async function GET(request: NextRequest) {
 
     // Market data
     const marketCap = 200_000_000 * vfidePrice; // Total supply * price
-    const circulatingSupply = 50_000_000; // Initial circulating supply
+    const circulatingSupply = 35_000_000; // Initial circulating supply — actual circulating depends on claims
     const circulatingMarketCap = circulatingSupply * vfidePrice;
 
     return NextResponse.json({
@@ -245,9 +245,9 @@ export async function GET(request: NextRequest) {
       },
       market: {
         marketCap: 20_000_000,
-        circulatingMarketCap: 5_000_000,
+        circulatingMarketCap: 3_500_000,
         totalSupply: 200_000_000,
-        circulatingSupply: 50_000_000,
+        circulatingSupply: 35_000_000,
       },
       timestamp: Date.now(),
       source: 'fallback',

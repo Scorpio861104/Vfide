@@ -24,10 +24,6 @@ function byteLength(value: string): number {
   return Buffer.byteLength(value, 'utf8');
 }
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
-}
-
 function normalizeAddress(value: string): string {
   return value.trim().toLowerCase();
 }
@@ -128,20 +124,8 @@ export async function POST(request: NextRequest) {
     let body: z.infer<typeof logErrorSchema>;
     try {
       const rawBody = await request.json();
-      if (!isRecord(rawBody)) {
-        return NextResponse.json({ error: 'Request body must be a JSON object' }, { status: 400 });
-      }
-
       const parsed = logErrorSchema.safeParse(rawBody);
       if (!parsed.success) {
-        const hasSeverityIssue = parsed.error.issues.some((issue) => issue.path[0] === 'severity');
-        if (hasSeverityIssue) {
-          return NextResponse.json(
-            { error: `Invalid severity. Must be one of: ${VALID_SEVERITIES.join(', ')}` },
-            { status: 400 }
-          );
-        }
-
         return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
       }
       body = parsed.data;
