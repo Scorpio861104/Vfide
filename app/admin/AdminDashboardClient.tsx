@@ -1964,7 +1964,7 @@ export default function AdminPanel() {
               <input
                 type="text"
                 value={whitelistAddress}
-                onChange={(e) => setWhitelistAddress(e.target.value)}
+                onChange={(e) =>  setWhitelistAddress(e.target.value)}
                 placeholder="0x..."
                 className="w-full bg-black/30 text-white rounded-lg px-4 py-3 border border-gray-600 focus:border-purple-500 focus:outline-none font-mono text-sm"
               />
@@ -1993,7 +1993,7 @@ export default function AdminPanel() {
               <input
                 type="text"
                 value={checkAddress}
-                onChange={(e) => setCheckAddress(e.target.value)}
+                onChange={(e) =>  setCheckAddress(e.target.value)}
                 placeholder="0x..."
                 className="w-full bg-black/30 text-white rounded-lg px-4 py-3 border border-gray-600 focus:border-purple-500 focus:outline-none font-mono text-sm mb-3"
               />
@@ -2109,7 +2109,7 @@ export default function AdminPanel() {
               <label className="block text-gray-300 text-sm mb-2">Module Type</label>
               <select
                 value={moduleType}
-                onChange={(e) => setModuleType(e.target.value as typeof moduleType)}
+                onChange={(e) =>  setModuleType(e.target.value as typeof moduleType)}
                 className="w-full bg-black/30 text-white rounded-lg px-4 py-3 border border-gray-600 focus:border-purple-500 focus:outline-none"
               >
                 <option value="vaultHub">Vault Hub</option>
@@ -2126,7 +2126,7 @@ export default function AdminPanel() {
               <input
                 type="text"
                 value={moduleAddress}
-                onChange={(e) => setModuleAddress(e.target.value)}
+                onChange={(e) =>  setModuleAddress(e.target.value)}
                 placeholder="0x..."
                 className="w-full bg-black/30 text-white rounded-lg px-4 py-3 border border-gray-600 focus:border-purple-500 focus:outline-none font-mono text-sm"
               />
@@ -2184,7 +2184,7 @@ export default function AdminPanel() {
               <input
                 type="text"
                 value={exemptAddress}
-                onChange={(e) => setExemptAddress(e.target.value)}
+                onChange={(e) =>  setExemptAddress(e.target.value)}
                 placeholder="0x..."
                 className="w-full bg-black/30 text-white rounded-lg px-4 py-3 border border-gray-600 focus:border-purple-500 focus:outline-none font-mono text-sm"
               />
@@ -2237,7 +2237,7 @@ export default function AdminPanel() {
               <input
                 type="text"
                 value={blacklistAddress}
-                onChange={(e) => setBlacklistAddress(e.target.value)}
+                onChange={(e) =>  setBlacklistAddress(e.target.value)}
                 placeholder="0x..."
                 className="w-full bg-black/30 text-white rounded-lg px-4 py-3 border border-gray-600 focus:border-purple-500 focus:outline-none font-mono text-sm"
               />
@@ -2290,7 +2290,7 @@ export default function AdminPanel() {
               <input
                 type="text"
                 value={vaultBypassAddress}
-                onChange={(e) => setVaultBypassAddress(e.target.value)}
+                onChange={(e) =>  setVaultBypassAddress(e.target.value)}
                 placeholder="0x..."
                 className="w-full bg-black/30 text-white rounded-lg px-4 py-3 border border-gray-600 focus:border-purple-500 focus:outline-none font-mono text-sm"
               />
@@ -2350,7 +2350,7 @@ export default function AdminPanel() {
               <input
                 type="text"
                 value={whaleExemptAddress}
-                onChange={(e) => setWhaleExemptAddress(e.target.value)}
+                onChange={(e) =>  setWhaleExemptAddress(e.target.value)}
                 placeholder="0x..."
                 className="w-full bg-black/30 text-white rounded-lg px-4 py-3 border border-gray-600 focus:border-purple-500 focus:outline-none font-mono text-sm"
               />
@@ -2432,7 +2432,7 @@ export default function AdminPanel() {
                   <input
                     type="number"
                     value={burnParams.minTotalBps}
-                    onChange={(e) => setBurnParams({...burnParams, minTotalBps: e.target.value})}
+                    onChange={(e) =>  setBurnParams({...burnParams, minTotalBps: e.target.value})}
                     placeholder={String(minTotalBps || 50)}
                     className="w-full bg-black/30 text-white rounded px-3 py-2 text-sm border border-gray-600 focus:border-orange-500 focus:outline-none"
                   />
@@ -2442,7 +2442,7 @@ export default function AdminPanel() {
                   <input
                     type="number"
                     value={burnParams.maxTotalBps}
-                    onChange={(e) => setBurnParams({...burnParams, maxTotalBps: e.target.value})}
+                    onChange={(e) =>  setBurnParams({...burnParams, maxTotalBps: e.target.value})}
                     placeholder={String(maxTotalBps || 500)}
                     className="w-full bg-black/30 text-white rounded px-3 py-2 text-sm border border-gray-600 focus:border-orange-500 focus:outline-none"
                   />
@@ -2765,7 +2765,7 @@ export default function AdminPanel() {
               <input
                 type="text"
                 value={newOwner}
-                onChange={(e) => setNewOwner(e.target.value)}
+                onChange={(e) =>  setNewOwner(e.target.value)}
                 placeholder="0x... (DAO Timelock address)"
                 className="w-full bg-black/30 text-white rounded-lg px-4 py-3 border border-red-600 focus:border-red-500 focus:outline-none font-mono text-sm"
               />

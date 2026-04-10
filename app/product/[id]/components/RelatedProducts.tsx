@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { Package } from 'lucide-react';
 
 export function RelatedProducts({ products }: { products: any[] }) {
@@ -12,7 +13,7 @@ export function RelatedProducts({ products }: { products: any[] }) {
           <Link key={p.id} href={`/product/${p.id}`} className="flex-shrink-0 w-40 group">
             <div className="aspect-square rounded-lg bg-white/5 overflow-hidden mb-2">
               {p.images?.[0]?.url ? (
-                <img src={p.images[0].url} alt="" className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
+                <Image src={p.images[0].url} alt="" className="w-full h-full object-cover group-hover:scale-105 transition-transform"  width={48} height={48} />
               ) : (
                 <div className="w-full h-full flex items-center justify-center"><Package size={20} className="text-gray-600" /></div>
               )}

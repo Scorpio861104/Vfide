@@ -915,7 +915,7 @@ export default function AdvancedSearch({
                     max="100"
                     step="5"
                     value={filters.minScore || 0}
-                    onChange={(e) => handleFilterChange('minScore', safeParseInt(e.target.value, 0, { min: 0, max: 100 }))}
+                    onChange={(e) =>  handleFilterChange('minScore', safeParseInt(e.target.value, 0, { min: 0, max: 100 }))}
                     className="w-full"
                   />
                 </div>

@@ -180,7 +180,7 @@ export function TransactionHistory({ transactions = [], loading = false }: Trans
               type="text"
               placeholder="Search tx hash..."
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={(e) =>  setSearchTerm(e.target.value)}
               className="pl-10 pr-4 py-2 bg-zinc-900 border border-zinc-700 rounded-lg text-zinc-100 text-sm w-full sm:w-48"
             />
           </div>
@@ -190,7 +190,7 @@ export function TransactionHistory({ transactions = [], loading = false }: Trans
             <Filter className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" size={16} />
             <select
               value={filter}
-              onChange={(e) => setFilter(e.target.value)}
+              onChange={(e) =>  setFilter(e.target.value)}
               className="pl-10 pr-8 py-2 bg-zinc-900 border border-zinc-700 rounded-lg text-zinc-100 text-sm appearance-none cursor-pointer w-full sm:w-auto"
             >
               <option value="all">All Types</option>

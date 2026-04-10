@@ -149,7 +149,7 @@ export default function CrossChainTransfer() {
           <div className="flex gap-3">
             <select
               value={fromChain}
-              onChange={(e) => setFromChain(safeParseInt(e.target.value, 8453))}
+              onChange={(e) =>  setFromChain(safeParseInt(e.target.value, 8453))}
               className="flex-1 bg-background border border-border rounded-lg px-3 py-2 text-sm"
             >
               {mainnetChains.map((chain) => (
@@ -160,7 +160,7 @@ export default function CrossChainTransfer() {
             </select>
             <select
               value={fromToken}
-              onChange={(e) => setFromToken(e.target.value)}
+              onChange={(e) =>  setFromToken(e.target.value)}
               className="w-24 bg-background border border-border rounded-lg px-3 py-2 text-sm"
             >
               <option value="ETH">ETH</option>
@@ -171,7 +171,7 @@ export default function CrossChainTransfer() {
           <input
             type="number"
             value={amount}
-            onChange={(e) => setAmount(e.target.value)}
+            onChange={(e) =>  setAmount(e.target.value)}
             placeholder="0.0"
             className="w-full mt-3 bg-transparent text-2xl font-semibold outline-none"
           />
@@ -196,7 +196,7 @@ export default function CrossChainTransfer() {
           <div className="flex gap-3">
             <select
               value={toChain}
-              onChange={(e) => setToChain(safeParseInt(e.target.value, 42161))}
+              onChange={(e) =>  setToChain(safeParseInt(e.target.value, 42161))}
               className="flex-1 bg-background border border-border rounded-lg px-3 py-2 text-sm"
             >
               {mainnetChains.map((chain) => (
@@ -207,7 +207,7 @@ export default function CrossChainTransfer() {
             </select>
             <select
               value={toToken}
-              onChange={(e) => setToToken(e.target.value)}
+              onChange={(e) =>  setToToken(e.target.value)}
               className="w-24 bg-background border border-border rounded-lg px-3 py-2 text-sm"
             >
               <option value="ETH">ETH</option>
@@ -228,7 +228,7 @@ export default function CrossChainTransfer() {
           <input
             type="text"
             value={recipient}
-            onChange={(e) => setRecipient(e.target.value)}
+            onChange={(e) =>  setRecipient(e.target.value)}
             placeholder="0x..."
             className="w-full bg-muted border border-border rounded-lg px-3 py-2 text-sm font-mono"
           />

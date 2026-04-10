@@ -16,6 +16,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
+import Image from 'next/image';
 import { useAccount } from 'wagmi';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CreditCard, Wallet, Shield, ArrowRight, Check, Loader2, Info } from 'lucide-react';
@@ -141,7 +142,7 @@ export function CheckoutPanel({
                 <div key={i} className="flex items-center justify-between px-4 py-3">
                   <div className="flex items-center gap-3">
                     {item.imageUrl && (
-                      <img src={item.imageUrl} alt="" className="w-10 h-10 rounded-lg object-cover" />
+                      <Image src={item.imageUrl} alt="" className="w-10 h-10 rounded-lg object-cover"  width={48} height={48} />
                     )}
                     <div>
                       <div className="text-white text-sm">{item.name}</div>

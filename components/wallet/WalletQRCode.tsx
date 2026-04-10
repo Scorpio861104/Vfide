@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import Image from 'next/image';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { useAccount, useChainId } from 'wagmi';
 import { QrCode, Copy, Check, Download, Share2, X } from 'lucide-react';
@@ -179,11 +180,11 @@ export function WalletQRCode({ isOpen, onClose }: WalletQRCodeProps) {
             {/* QR Code */}
             <div className="bg-white p-4 rounded-xl mb-4">
               {qrDataUrl ? (
-                <img 
+                <Image 
                   src={qrDataUrl} 
                   alt={`QR code for the wallet address ${address}`} 
                   className="aspect-square w-full"
-                />
+                 width={48} height={48} />
               ) : (
                 <div className="w-full aspect-square flex items-center justify-center">
                   <div className="w-8 h-8 border-2 border-zinc-300 border-t-cyan-500 rounded-full animate-spin" />

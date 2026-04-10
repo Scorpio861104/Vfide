@@ -136,7 +136,7 @@ export function AttachmentUploader({ messageId, userId, onUploaded }: Attachment
             onChange={handleFileInputChange}
             className="hidden"
             accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv"
-          />
+           aria-label="Upload file" />
         </div>
       </div>
 

@@ -595,7 +595,7 @@ export function MessagingCenter({ friend, hasVault = false }: MessagingCenterPro
           <div className="flex-1 relative">
             <textarea
               value={inputMessage}
-              onChange={(e) => setInputMessage(e.target.value)}
+              onChange={(e) =>  setInputMessage(e.target.value)}
               onKeyDown={(e) => {
                 if (e.key === 'Enter' && !e.shiftKey) {
                   e.preventDefault();

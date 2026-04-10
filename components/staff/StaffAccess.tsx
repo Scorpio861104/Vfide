@@ -78,20 +78,20 @@ export function StaffManager({ staff = [], onAdd, onRemove }: StaffManagerProps)
             <input
               type="text"
               value={name}
-              onChange={(event) => setName(event.target.value)}
+              onChange={(event) =>  setName(event.target.value)}
               placeholder="Name"
               className="rounded-lg border border-white/10 bg-white/5 px-3 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none"
             />
             <input
               type="text"
               value={address}
-              onChange={(event) => setAddress(event.target.value)}
+              onChange={(event) =>  setAddress(event.target.value)}
               placeholder="Wallet address"
               className="rounded-lg border border-white/10 bg-white/5 px-3 py-2.5 text-sm font-mono text-white placeholder-gray-500 focus:outline-none"
             />
             <select
               value={role}
-              onChange={(event) => setRole(event.target.value as StaffMember['role'])}
+              onChange={(event) =>  setRole(event.target.value as StaffMember['role'])}
               className="rounded-lg border border-white/10 bg-white/5 px-3 py-2.5 text-sm text-white"
             >
               {Object.entries(ROLES).map(([key, value]) => (

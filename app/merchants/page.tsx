@@ -81,7 +81,7 @@ export default function MerchantDirectoryPage() {
                 type="text"
                 placeholder="Search merchants..."
                 value={search}
-                onChange={(e) => setSearch(e.target.value)}
+                onChange={(e) =>  setSearch(e.target.value)}
                 className="w-full pl-10 pr-4 py-3 rounded-lg text-gray-900 bg-white focus:ring-2 focus:ring-blue-300 outline-none"
                 maxLength={100}
               />
@@ -98,7 +98,7 @@ export default function MerchantDirectoryPage() {
             <input
               type="checkbox"
               checked={featuredOnly}
-              onChange={(e) => setFeaturedOnly(e.target.checked)}
+              onChange={(e) =>  setFeaturedOnly(e.target.checked)}
               className="rounded"
             />
             Featured merchants only

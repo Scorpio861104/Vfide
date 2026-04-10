@@ -17,7 +17,7 @@ export function FaqTab() {
       <input
         type="text"
         value={query}
-        onChange={(event) => setQuery(event.target.value)}
+        onChange={(event) =>  setQuery(event.target.value)}
         placeholder="Search FAQ"
         className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder-gray-500"
       />

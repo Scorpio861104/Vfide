@@ -30,7 +30,7 @@ export default function TaxesPage() {
         </div>
         <select
           value={year}
-          onChange={(e) => setYear(Number(e.target.value))}
+          onChange={(e) =>  setYear(Number(e.target.value))}
           className="px-4 py-2 bg-card border border-border rounded-lg"
         >
           <option value={2026}>2026</option>

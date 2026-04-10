@@ -134,7 +134,7 @@ export function CreateProposalTab({
                   <input
                     type="text"
                     value={proposal.title}
-                    onChange={(e) => updateProposal("title", e.target.value)}
+                    onChange={(e) =>  updateProposal("title", e.target.value)}
                     placeholder="e.g., Fund community validator nodes"
                     className="w-full px-4 py-3 bg-zinc-900 border border-zinc-700 rounded-lg text-zinc-100 placeholder-[#A0A0A5] focus:border-cyan-400 focus:outline-none"
                   />
@@ -148,7 +148,7 @@ export function CreateProposalTab({
                     <label className="block text-zinc-400 text-sm mb-2">Category</label>
                     <select
                       value={proposal.category}
-                      onChange={(e) => updateProposal("category", e.target.value)}
+                      onChange={(e) =>  updateProposal("category", e.target.value)}
                       className="w-full px-4 py-3 bg-zinc-900 border border-zinc-700 rounded-lg text-zinc-100 focus:border-cyan-400 focus:outline-none"
                     >
                       <option value="funding">Funding</option>
@@ -165,7 +165,7 @@ export function CreateProposalTab({
                       min={1}
                       max={30}
                       value={proposal.duration}
-                      onChange={(e) => updateProposal("duration", Number(e.target.value))}
+                      onChange={(e) =>  updateProposal("duration", Number(e.target.value))}
                       className="w-full px-4 py-3 bg-zinc-900 border border-zinc-700 rounded-lg text-zinc-100 focus:border-cyan-400 focus:outline-none"
                     />
                   </div>
@@ -175,7 +175,7 @@ export function CreateProposalTab({
                   <label className="block text-zinc-400 text-sm mb-2">Description *</label>
                   <textarea
                     value={proposal.description}
-                    onChange={(e) => updateProposal("description", e.target.value)}
+                    onChange={(e) =>  updateProposal("description", e.target.value)}
                     placeholder="Describe the problem, proposed solution, and impact..."
                     rows={8}
                     maxLength={2000}
@@ -192,7 +192,7 @@ export function CreateProposalTab({
                     <input
                       type="text"
                       value={proposal.targetContract}
-                      onChange={(e) => updateProposal("targetContract", e.target.value)}
+                      onChange={(e) =>  updateProposal("targetContract", e.target.value)}
                       placeholder="0x..."
                       className="w-full px-4 py-3 bg-zinc-900 border border-zinc-700 rounded-lg text-zinc-100 placeholder-[#A0A0A5] focus:border-cyan-400 focus:outline-none"
                     />
@@ -202,7 +202,7 @@ export function CreateProposalTab({
                     <input
                       type="text"
                       value={proposal.calldata}
-                      onChange={(e) => updateProposal("calldata", e.target.value)}
+                      onChange={(e) =>  updateProposal("calldata", e.target.value)}
                       placeholder="0x..."
                       className="w-full px-4 py-3 bg-zinc-900 border border-zinc-700 rounded-lg text-zinc-100 placeholder-[#A0A0A5] focus:border-cyan-400 focus:outline-none"
                     />
@@ -215,7 +215,7 @@ export function CreateProposalTab({
                     <input
                       type="number"
                       value={proposal.amount}
-                      onChange={(e) => updateProposal("amount", e.target.value)}
+                      onChange={(e) =>  updateProposal("amount", e.target.value)}
                       placeholder="0"
                       className="w-full px-4 py-3 bg-zinc-900 border border-zinc-700 rounded-lg text-zinc-100 placeholder-[#A0A0A5] focus:border-cyan-400 focus:outline-none"
                     />

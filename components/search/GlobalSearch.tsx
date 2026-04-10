@@ -526,7 +526,7 @@ export function GlobalSearch() {
                   ref={inputRef}
                   type="text"
                   value={query}
-                  onChange={e => setQuery(e.target.value)}
+                  onChange={e =>  setQuery(e.target.value)}
                   placeholder="Search pages, people, commands... (try /send)"
                   className="flex-1 bg-transparent text-zinc-100 placeholder-zinc-500 outline-none text-lg"
                   autoFocus

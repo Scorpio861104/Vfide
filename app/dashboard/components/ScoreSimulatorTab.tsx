@@ -56,7 +56,7 @@ export function ScoreSimulatorTab({ currentScore }: { currentScore: number }) {
                     max={item.max}
                     step={item.step || 1}
                     value={activities[item.key as keyof typeof activities]}
-                    onChange={(e) =>
+                    onChange={(e) => 
                       setActivities((previous) => ({
                         ...previous,
                         [item.key]: Number(e.target.value),

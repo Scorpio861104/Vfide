@@ -31,7 +31,7 @@ export function SetupStepBusiness({
       <div className="space-y-5">
         <div>
           <label className="text-sm text-gray-400 mb-1.5 block">Business name *</label>
-          <input type="text" value={businessName} onChange={(e) => setBusinessName(e.target.value)}
+          <input type="text" value={businessName} onChange={(e) =>  setBusinessName(e.target.value)}
             placeholder="e.g., Ama's Fabrics" maxLength={100} autoFocus
             className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:border-cyan-500/50 focus:outline-none focus:ring-2 focus:ring-cyan-500/20" />
         </div>
@@ -54,19 +54,19 @@ export function SetupStepBusiness({
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label className="text-sm text-gray-400 mb-1.5 block">City</label>
-            <input type="text" value={city} onChange={(e) => setCity(e.target.value)} placeholder="Accra" maxLength={100}
+            <input type="text" value={city} onChange={(e) =>  setCity(e.target.value)} placeholder="Accra" maxLength={100}
               className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:border-cyan-500/50 focus:outline-none" />
           </div>
           <div>
             <label className="text-sm text-gray-400 mb-1.5 block">Country</label>
-            <input type="text" value={country} onChange={(e) => setCountry(e.target.value)} placeholder="Ghana" maxLength={100}
+            <input type="text" value={country} onChange={(e) =>  setCountry(e.target.value)} placeholder="Ghana" maxLength={100}
               className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:border-cyan-500/50 focus:outline-none" />
           </div>
         </div>
 
         <div>
           <label className="text-sm text-gray-400 mb-1.5 block">Tagline</label>
-          <input type="text" value={tagline} onChange={(e) => setTagline(e.target.value)} placeholder="Handwoven kente cloth since 1998" maxLength={200}
+          <input type="text" value={tagline} onChange={(e) =>  setTagline(e.target.value)} placeholder="Handwoven kente cloth since 1998" maxLength={200}
             className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:border-cyan-500/50 focus:outline-none" />
         </div>
       </div>

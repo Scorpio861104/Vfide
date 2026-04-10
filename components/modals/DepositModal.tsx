@@ -85,7 +85,7 @@ export default function DepositModal({
             </label>
             <select
               value={token}
-              onChange={(e) => setToken(e.target.value)}
+              onChange={(e) =>  setToken(e.target.value)}
               className="w-full px-4 py-3 bg-zinc-900 border border-zinc-800 rounded-lg text-white focus:outline-none focus:border-cyan-400 transition-colors"
             >
               <option value="VFIDE">VFIDE</option>
@@ -104,7 +104,7 @@ export default function DepositModal({
               <input
                 type="number"
                 value={amount}
-                onChange={(e) => setAmount(e.target.value)}
+                onChange={(e) =>  setAmount(e.target.value)}
                 placeholder="0.00"
                 className="w-full px-4 py-3 bg-zinc-900 border border-zinc-800 rounded-lg text-white text-lg focus:outline-none focus:border-cyan-400 transition-colors"
               />

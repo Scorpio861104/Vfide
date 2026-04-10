@@ -200,7 +200,7 @@ export default function LendingPage() {
 
                     <div>
                       <label className="text-xs text-gray-500 mb-1 block">Amount to Lend (VFIDE)</label>
-                      <input value={principal} onChange={e => setPrincipal(e.target.value)} type="number" step="1" placeholder="500"
+                      <input value={principal} onChange={e =>  setPrincipal(e.target.value)} type="number" step="1" placeholder="500"
                         className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white font-mono text-lg focus:border-emerald-500/50 focus:outline-none" />
                     </div>
 

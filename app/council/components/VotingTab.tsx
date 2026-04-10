@@ -136,7 +136,7 @@ export function VotingTab({ isConnected }: { isConnected: boolean }) {
                 type="text"
                 placeholder="0x..."
                 className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:border-red-500/50 focus:outline-none transition-colors"
-              />
+               aria-label="0x..." />
             </div>
             <div>
               <label className="text-sm text-gray-400 mb-2 block">Reason for Removal</label>
@@ -145,7 +145,7 @@ export function VotingTab({ isConnected }: { isConnected: boolean }) {
                 rows={3}
                 maxLength={500}
                 className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:border-red-500/50 focus:outline-none resize-none transition-colors"
-              />
+               aria-label="Describe why this member should be removed..." />
             </div>
           </div>
           <motion.button 

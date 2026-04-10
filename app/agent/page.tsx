@@ -113,7 +113,7 @@ export default function AgentPage() {
                 <span className="mb-1 block text-sm text-zinc-300">Customer reference</span>
                 <input
                   value={customerReference}
-                  onChange={(e) => setCustomerReference(e.target.value)}
+                  onChange={(e) =>  setCustomerReference(e.target.value)}
                   placeholder="Phone number, wallet, or customer ID"
                   className="min-h-[44px] w-full rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-sm outline-none transition focus:border-cyan-400"
                 />
@@ -123,7 +123,7 @@ export default function AgentPage() {
                 <span className="mb-1 block text-sm text-zinc-300">Requested action</span>
                 <select
                   value={action}
-                  onChange={(e) => setAction(e.target.value as AgentAction)}
+                  onChange={(e) =>  setAction(e.target.value as AgentAction)}
                   className="min-h-[44px] w-full rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-sm outline-none transition focus:border-cyan-400"
                 >
                   <option value="payment">Payment assistance</option>
@@ -138,7 +138,7 @@ export default function AgentPage() {
                 <span className="mb-1 block text-sm text-zinc-300">Amount (optional)</span>
                 <input
                   value={amount}
-                  onChange={(e) => setAmount(e.target.value)}
+                  onChange={(e) =>  setAmount(e.target.value)}
                   placeholder="e.g. 25 USDC"
                   className="min-h-[44px] w-full rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-sm outline-none transition focus:border-cyan-400"
                 />
@@ -148,7 +148,7 @@ export default function AgentPage() {
                 <span className="mb-1 block text-sm text-zinc-300">Notes</span>
                 <textarea
                   value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
+                  onChange={(e) =>  setNotes(e.target.value)}
                   placeholder="What are you helping the customer do?"
                   rows={4}
                   className="w-full rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-sm outline-none transition focus:border-cyan-400"

@@ -4,6 +4,7 @@
 'use client';
 
 import { useRef } from 'react';
+import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, X, Store, Package, Star, MapPin, ArrowRight, Clock } from 'lucide-react';
 import { useUnifiedSearch } from './useUnifiedSearch';
@@ -45,7 +46,7 @@ export function UnifiedSearch({
     <div ref={containerRef} className={`relative ${className}`}>
       <div className="relative">
         <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" size={iconSizes[size]} />
-        <input ref={inputRef} type="text" value={query} onChange={(e) => handleInput(e.target.value)}
+        <input ref={inputRef} type="text" value={query} onChange={(e) =>  handleInput(e.target.value)}
           onFocus={() => setIsOpen(true)} onKeyDown={handleKeyDown} placeholder={placeholder} autoFocus={autoFocus}
           className={`w-full ${sizeClasses[size]} bg-white/5 border border-white/10 rounded-2xl text-white placeholder-gray-500 focus:border-cyan-500/50 focus:outline-none focus:ring-2 focus:ring-cyan-500/20 transition-all`} />
         {query && (
@@ -86,7 +87,7 @@ export function UnifiedSearch({
                 {results.merchants.map((m, i) => (
                   <button key={m.merchant_address} onClick={() => goToMerchant(m.slug)}
                     className={`w-full text-left px-3 py-3 rounded-xl transition-colors flex items-center gap-3 ${activeIndex === i ? 'bg-cyan-500/10 border border-cyan-500/20' : 'hover:bg-white/5 border border-transparent'}`}>
-                    {m.logo_url ? <img src={m.logo_url} alt="" className="w-10 h-10 rounded-lg object-cover flex-shrink-0" /> : (
+                    {m.logo_url ? <Image src={m.logo_url} alt="" className="w-10 h-10 rounded-lg object-cover flex-shrink-0"  width={48} height={48} /> : (
                       <div className="w-10 h-10 rounded-lg flex items-center justify-center text-white font-bold flex-shrink-0" style={{ backgroundColor: m.theme_color || '#3B82F6' }}>{m.display_name[0]?.toUpperCase()}</div>
                     )}
                     <div className="flex-1 min-w-0">

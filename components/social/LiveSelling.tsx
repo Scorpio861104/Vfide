@@ -11,6 +11,7 @@
 'use client';
 
 import { useState, useRef, useCallback, useEffect } from 'react';
+import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Video, VideoOff, ShoppingCart, Shield, Heart, Send, Users, X, MessageCircle, Mic, MicOff, RotateCcw, Package, Sparkles } from 'lucide-react';
 
@@ -165,7 +166,7 @@ export function LiveViewer({
             <div className="p-3 flex gap-2.5 overflow-x-auto scrollbar-hide">
               {products.map(p => (
                 <div key={p.id} className="shrink-0 w-36 p-2.5 bg-white/5 border border-white/10 rounded-xl">
-                  {p.imageUrl && <img src={p.imageUrl} alt="" className="w-full h-20 rounded-lg object-cover mb-2" />}
+                  {p.imageUrl && <Image src={p.imageUrl} alt="" className="w-full h-20 rounded-lg object-cover mb-2"  width={48} height={48} />}
                   <div className="text-white text-xs font-medium truncate">{p.name}</div>
                   <div className="flex items-center justify-between mt-1">
                     <span className="text-cyan-400 font-mono text-xs font-bold">{p.currency}{p.price}</span>
@@ -195,7 +196,7 @@ export function LiveViewer({
         {/* Input */}
         <div className="flex items-center gap-2 px-3 py-2 border-t border-white/5">
           <input
-            value={commentText} onChange={e => setCommentText(e.target.value)}
+            value={commentText} onChange={e =>  setCommentText(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && handleSend()}
             placeholder="Say something..."
             className="flex-1 px-3 py-2 bg-white/5 rounded-full text-white text-xs placeholder-gray-600 focus:outline-none"

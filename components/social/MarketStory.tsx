@@ -15,6 +15,7 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Shield, ShoppingCart, MessageCircle, ChevronUp, ChevronDown, MapPin, Star, X, ExternalLink } from 'lucide-react';
 
@@ -85,7 +86,7 @@ export function MarketStory({ story, onBuy, onWhatsApp, onView, compact = false 
           style={{ borderColor: isExpired ? 'rgba(255,255,255,0.1)' : `${scoreColor}60` }}>
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent z-10" />
           <div className="absolute inset-0 bg-zinc-800" />
-          {story.imageUrl && <img src={story.imageUrl} alt="" className="absolute inset-0 w-full h-full object-cover" />}
+          {story.imageUrl && <Image src={story.imageUrl} alt="" className="absolute inset-0 w-full h-full object-cover"  width={48} height={48} />}
           <div className="absolute bottom-0 left-0 right-0 p-2 z-20">
             <div className="text-white text-[10px] font-bold truncate">{story.merchant.name}</div>
             <div className="text-gray-400 text-[9px]">{story.products.length} items · {timeUntilExpiry(story.expiresAt)}</div>
@@ -103,7 +104,7 @@ export function MarketStory({ story, onBuy, onWhatsApp, onView, compact = false 
     >
       {/* Story image */}
       <div className="relative aspect-[4/3] bg-zinc-800">
-        {story.imageUrl && <img src={story.imageUrl} alt={story.caption} className="w-full h-full object-cover" />}
+        {story.imageUrl && <Image src={story.imageUrl} alt={story.caption} className="w-full h-full object-cover"  width={48} height={48} />}
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-black/30" />
 
         {/* Merchant info overlay (top) */}
@@ -163,7 +164,7 @@ export function MarketStory({ story, onBuy, onWhatsApp, onView, compact = false 
                 >
                   <div className="flex items-center gap-2.5">
                     {product.imageUrl && (
-                      <img src={product.imageUrl} alt="" className="w-10 h-10 rounded-lg object-cover" />
+                      <Image src={product.imageUrl} alt="" className="w-10 h-10 rounded-lg object-cover"  width={48} height={48} />
                     )}
                     <div>
                       <div className="text-white text-sm font-medium">{product.name}</div>

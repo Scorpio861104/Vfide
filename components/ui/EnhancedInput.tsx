@@ -70,7 +70,7 @@ export const EnhancedInput = forwardRef<HTMLInputElement, EnhancedInputProps>(
               ${className}
             `}
             {...props}
-          />
+           aria-label="Input field" />
           
           {icon && iconPosition === "right" && (
             <div className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400">
@@ -149,7 +149,7 @@ export const EnhancedTextarea = forwardRef<HTMLTextAreaElement, EnhancedTextarea
             ${className}
           `}
           {...props}
-        />
+         aria-label="Input field" />
         
         {error && (
           <motion.p
@@ -222,7 +222,7 @@ export const EnhancedSelect = forwardRef<HTMLSelectElement, EnhancedSelectProps>
             ${className}
           `}
           {...props}
-        >
+         aria-label="Input field" >
           {options.map((option) => (
             <option 
               key={option.value} 

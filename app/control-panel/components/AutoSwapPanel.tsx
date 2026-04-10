@@ -226,7 +226,7 @@ export function AutoSwapPanel() {
               max="500"
               step="50"
               value={slippageBps}
-              onChange={(e) => setSlippageBps(Number(e.target.value))}
+              onChange={(e) =>  setSlippageBps(Number(e.target.value))}
               className="w-full"
             />
             <div className="flex justify-between text-sm text-slate-400">

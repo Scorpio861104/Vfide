@@ -139,7 +139,7 @@ export function ProfileSettings() {
               <input
                 type="text"
                 value={formData.alias}
-                onChange={(e) => handleInputChange('alias', e.target.value)}
+                onChange={(e) =>  handleInputChange('alias', e.target.value)}
                 placeholder="Enter your display name"
                 maxLength={50}
                 className="w-full pl-10 pr-4 py-3 bg-zinc-950 border border-zinc-700 rounded-lg text-zinc-100 placeholder:text-zinc-500 focus:border-cyan-400 focus:outline-none transition-colors"
@@ -157,7 +157,7 @@ export function ProfileSettings() {
             </label>
             <textarea
               value={formData.bio}
-              onChange={(e) => handleInputChange('bio', e.target.value)}
+              onChange={(e) =>  handleInputChange('bio', e.target.value)}
               placeholder="Tell us about yourself..."
               maxLength={200}
               rows={4}
@@ -178,7 +178,7 @@ export function ProfileSettings() {
               <input
                 type="email"
                 value={formData.email}
-                onChange={(e) => handleInputChange('email', e.target.value)}
+                onChange={(e) =>  handleInputChange('email', e.target.value)}
                 placeholder="your.email@example.com"
                 className="w-full pl-10 pr-4 py-3 bg-zinc-950 border border-zinc-700 rounded-lg text-zinc-100 placeholder:text-zinc-500 focus:border-cyan-400 focus:outline-none transition-colors"
               />
@@ -198,7 +198,7 @@ export function ProfileSettings() {
               <input
                 type="text"
                 value={formData.location}
-                onChange={(e) => handleInputChange('location', e.target.value)}
+                onChange={(e) =>  handleInputChange('location', e.target.value)}
                 placeholder="City, Country"
                 maxLength={50}
                 className="w-full pl-10 pr-4 py-3 bg-zinc-950 border border-zinc-700 rounded-lg text-zinc-100 placeholder:text-zinc-500 focus:border-cyan-400 focus:outline-none transition-colors"
@@ -216,7 +216,7 @@ export function ProfileSettings() {
               <input
                 type="url"
                 value={formData.website}
-                onChange={(e) => handleInputChange('website', e.target.value)}
+                onChange={(e) =>  handleInputChange('website', e.target.value)}
                 placeholder="https://yourwebsite.com"
                 className="w-full pl-10 pr-4 py-3 bg-zinc-950 border border-zinc-700 rounded-lg text-zinc-100 placeholder:text-zinc-500 focus:border-cyan-400 focus:outline-none transition-colors"
               />

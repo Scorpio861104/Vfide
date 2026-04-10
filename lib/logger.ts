@@ -93,7 +93,7 @@ class Logger {
   warn(message: string, context?: unknown): void {
     if (isLevelEnabled('warn')) {
       console.warn(`[WARN] ${formatMessage(message, normalizeContext(context))}`);
-      
+
       // Send warnings to Sentry in production (if configured)
       if (process.env.NODE_ENV === 'production') {
         try {
@@ -115,7 +115,7 @@ class Logger {
   error(message: string, error?: unknown, context?: unknown): void {
     if (isLevelEnabled('error')) {
       console.error(`[ERROR] ${formatMessage(message, normalizeContext(context))}`, error);
-      
+
       // Always report errors to Sentry (if configured)
       try {
         if (error instanceof Error) {

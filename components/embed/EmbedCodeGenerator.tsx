@@ -54,7 +54,7 @@ export function EmbedCodeGenerator({ slug, merchantName }: EmbedCodeGeneratorPro
         </div>
         <div>
           <label className="text-xs text-gray-500 block mb-1">Columns</label>
-          <select value={columns} onChange={e => setColumns(parseInt(e.target.value))}
+          <select value={columns} onChange={e =>  setColumns(parseInt(e.target.value))}
             className="w-full py-2 px-3 bg-white/5 border border-white/10 rounded-lg text-white text-sm">
             <option value={1}>1</option>
             <option value={2}>2</option>
@@ -64,7 +64,7 @@ export function EmbedCodeGenerator({ slug, merchantName }: EmbedCodeGeneratorPro
         </div>
         <div>
           <label className="text-xs text-gray-500 block mb-1">Max Products</label>
-          <select value={maxProducts} onChange={e => setMaxProducts(parseInt(e.target.value))}
+          <select value={maxProducts} onChange={e =>  setMaxProducts(parseInt(e.target.value))}
             className="w-full py-2 px-3 bg-white/5 border border-white/10 rounded-lg text-white text-sm">
             <option value={4}>4</option>
             <option value={8}>8</option>

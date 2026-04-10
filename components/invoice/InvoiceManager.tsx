@@ -92,10 +92,10 @@ export function InvoiceManager({ merchantAddress, invoices = [], onCreateInvoice
       <div className="flex items-center gap-3">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={16} />
-          <input type="text" value={search} onChange={e => setSearch(e.target.value)} placeholder="Search invoices..."
+          <input type="text" value={search} onChange={e =>  setSearch(e.target.value)} placeholder="Search invoices..."
             className="w-full pl-9 pr-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white text-sm placeholder-gray-500 focus:border-cyan-500/50 focus:outline-none" />
         </div>
-        <select value={filter} onChange={e => setFilter(e.target.value as any)}
+        <select value={filter} onChange={e =>  setFilter(e.target.value as any)}
           className="px-3 py-2.5 bg-white/5 border border-white/10 rounded-xl text-gray-400 text-sm">
           <option value="all">All</option>
           <option value="draft">Drafts</option>
@@ -197,9 +197,9 @@ function CreateInvoiceForm({ onSubmit, onCancel }: {
       <div className="bg-white/3 border border-white/10 rounded-xl p-5 space-y-4">
         <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider">Customer</h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <input type="text" value={customerName} onChange={e => setCustomerName(e.target.value)} placeholder="Customer name"
+          <input type="text" value={customerName} onChange={e =>  setCustomerName(e.target.value)} placeholder="Customer name"
             className="px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:border-cyan-500/50 focus:outline-none" />
-          <input type="tel" value={customerPhone} onChange={e => setCustomerPhone(e.target.value)} placeholder="Phone (optional)"
+          <input type="tel" value={customerPhone} onChange={e =>  setCustomerPhone(e.target.value)} placeholder="Phone (optional)"
             className="px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:border-cyan-500/50 focus:outline-none" />
         </div>
       </div>
@@ -209,11 +209,11 @@ function CreateInvoiceForm({ onSubmit, onCancel }: {
         <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider">Items</h3>
         {items.map((item, i) => (
           <div key={i} className="flex items-center gap-3">
-            <input type="text" value={item.description} onChange={e => updateItem(i, 'description', e.target.value)} placeholder="Description"
+            <input type="text" value={item.description} onChange={e =>  updateItem(i, 'description', e.target.value)} placeholder="Description"
               className="flex-1 px-3 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white text-sm placeholder-gray-500 focus:border-cyan-500/50 focus:outline-none" />
-            <input type="number" value={item.quantity || ''} onChange={e => updateItem(i, 'quantity', e.target.value)} placeholder="Qty" min="1"
+            <input type="number" value={item.quantity || ''} onChange={e =>  updateItem(i, 'quantity', e.target.value)} placeholder="Qty" min="1"
               className="w-20 px-3 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white text-sm text-center focus:border-cyan-500/50 focus:outline-none" />
-            <input type="number" value={item.unitPrice || ''} onChange={e => updateItem(i, 'unitPrice', e.target.value)} placeholder="Price" step="0.01"
+            <input type="number" value={item.unitPrice || ''} onChange={e =>  updateItem(i, 'unitPrice', e.target.value)} placeholder="Price" step="0.01"
               className="w-28 px-3 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white text-sm text-right font-mono focus:border-cyan-500/50 focus:outline-none" />
             <span className="w-24 text-right text-cyan-400 font-mono text-sm">{formatCurrency(item.quantity * item.unitPrice)}</span>
             {items.length > 1 && <button onClick={() => removeItem(i)} className="text-gray-500 hover:text-red-400"><X size={16} /></button>}
@@ -227,19 +227,19 @@ function CreateInvoiceForm({ onSubmit, onCancel }: {
         <div className="space-y-4">
           <div>
             <label className="text-xs text-gray-500 mb-1 block">Tax rate (%)</label>
-            <input type="number" value={taxRate || ''} onChange={e => setTaxRate(parseFloat(e.target.value) || 0)} min="0" max="30" step="0.1"
+            <input type="number" value={taxRate || ''} onChange={e =>  setTaxRate(parseFloat(e.target.value) || 0)} min="0" max="30" step="0.1"
               className="w-full px-3 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white text-sm focus:border-cyan-500/50 focus:outline-none" />
           </div>
           <div>
             <label className="text-xs text-gray-500 mb-1 block">Due in (days)</label>
-            <select value={dueInDays} onChange={e => setDueInDays(parseInt(e.target.value))}
+            <select value={dueInDays} onChange={e =>  setDueInDays(parseInt(e.target.value))}
               className="w-full px-3 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white text-sm">
               <option value={7}>7 days</option><option value={14}>14 days</option><option value={30}>30 days</option><option value={60}>60 days</option>
             </select>
           </div>
           <div>
             <label className="text-xs text-gray-500 mb-1 block">Notes</label>
-            <textarea value={notes} onChange={e => setNotes(e.target.value)} rows={3} placeholder="Thank you for your business..."
+            <textarea value={notes} onChange={e =>  setNotes(e.target.value)} rows={3} placeholder="Thank you for your business..."
               className="w-full px-3 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white text-sm placeholder-gray-500 resize-none focus:border-cyan-500/50 focus:outline-none" />
           </div>
         </div>

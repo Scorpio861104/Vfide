@@ -18,6 +18,7 @@
  *   npm run migrate:create name - Create new migration
  */
 
+import { logger } from '@/lib/logger';
 import { Pool, PoolClient } from 'pg';
 import { readdir, readFile } from 'fs/promises';
 import { join } from 'path';
@@ -158,7 +159,7 @@ export async function ensureMigrationsTable(pool: Pool): Promise<void> {
       CREATE INDEX IF NOT EXISTS idx_schema_migrations_name 
         ON schema_migrations(name);
     `);
-    console.log('✅ Migrations table ready');
+    logger.info('✅ Migrations table ready');
   } finally {
     client.release();
   }
@@ -175,7 +176,7 @@ export async function getMigrationFiles(migrationsDir: string): Promise<string[]
       .sort(); // Chronological order (YYYYMMDD_HHMMSS_name.sql)
   } catch (error) {
     if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
-      console.warn('⚠️ Migrations directory not found, creating it...');
+      logger.warn('⚠️ Migrations directory not found, creating it...');
       return [];
     }
     throw error;
@@ -200,7 +201,7 @@ export async function parseMigrationFile(
     try {
       downSql = await readFile(downPath, 'utf-8');
     } catch (_error) {
-      console.warn(`⚠️ No rollback file found for ${filename}`);
+      logger.warn(`⚠️ No rollback file found for ${filename}`);
     }
 
     return { up: upSql, down: downSql };
@@ -284,10 +285,10 @@ export async function applyMigration(
         'INSERT INTO schema_migrations (name, applied_at) VALUES ($1, NOW())',
         [name]
       );
-      console.log(`✅ Applied migration: ${name} (non-transactional)`);
+      logger.info(`✅ Applied migration: ${name} (non-transactional)`);
       return;
     } catch (error) {
-      console.error(`❌ Failed to apply migration ${name}:`, error);
+      logger.error(`❌ Failed to apply migration ${name}:`, error);
       throw error;
     }
   }
@@ -305,10 +306,10 @@ export async function applyMigration(
     );
 
     await client.query('COMMIT');
-    console.log(`✅ Applied migration: ${name}`);
+    logger.info(`✅ Applied migration: ${name}`);
   } catch (error) {
     await client.query('ROLLBACK');
-    console.error(`❌ Failed to apply migration ${name}:`, error);
+    logger.error(`❌ Failed to apply migration ${name}:`, error);
     throw error;
   }
 }
@@ -336,10 +337,10 @@ export async function rollbackMigration(
         'DELETE FROM schema_migrations WHERE name = $1',
         [name]
       );
-      console.log(`✅ Rolled back migration: ${name} (non-transactional)`);
+      logger.info(`✅ Rolled back migration: ${name} (non-transactional)`);
       return;
     } catch (error) {
-      console.error(`❌ Failed to rollback migration ${name}:`, error);
+      logger.error(`❌ Failed to rollback migration ${name}:`, error);
       throw error;
     }
   }
@@ -357,10 +358,10 @@ export async function rollbackMigration(
     );
 
     await client.query('COMMIT');
-    console.log(`✅ Rolled back migration: ${name}`);
+    logger.info(`✅ Rolled back migration: ${name}`);
   } catch (error) {
     await client.query('ROLLBACK');
-    console.error(`❌ Failed to rollback migration ${name}:`, error);
+    logger.error(`❌ Failed to rollback migration ${name}:`, error);
     throw error;
   }
 }
@@ -379,11 +380,11 @@ export async function migrateUp(
   const pending = files.filter(f => !applied.has(f.replace('.sql', '')));
 
   if (pending.length === 0) {
-    console.log('✅ No pending migrations');
+    logger.info('✅ No pending migrations');
     return 0;
   }
 
-  console.log(`📦 Found ${pending.length} pending migration(s)`);
+  logger.info(`📦 Found ${pending.length} pending migration(s)`);
 
   const client = await pool.connect();
   try {
@@ -393,7 +394,7 @@ export async function migrateUp(
       await applyMigration(client, name, up);
     }
 
-    console.log(`✅ Successfully applied ${pending.length} migration(s)`);
+    logger.info(`✅ Successfully applied ${pending.length} migration(s)`);
     return pending.length;
   } finally {
     client.release();
@@ -419,11 +420,11 @@ export async function migrateDown(
     );
 
     if (result.rows.length === 0) {
-      console.log('✅ No migrations to rollback');
+      logger.info('✅ No migrations to rollback');
       return 0;
     }
 
-    console.log(`📦 Rolling back ${result.rows.length} migration(s)`);
+    logger.info(`📦 Rolling back ${result.rows.length} migration(s)`);
 
     for (const row of result.rows) {
       const filename = `${row.name}.sql`;
@@ -431,7 +432,7 @@ export async function migrateDown(
       await rollbackMigration(client, row.name, down);
     }
 
-    console.log(`✅ Successfully rolled back ${result.rows.length} migration(s)`);
+    logger.info(`✅ Successfully rolled back ${result.rows.length} migration(s)`);
     return result.rows.length;
   } finally {
     client.release();

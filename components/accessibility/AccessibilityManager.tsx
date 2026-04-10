@@ -506,7 +506,7 @@ function SettingSelect({ label, value, onChange, options }: SettingSelectProps) 
       <p className="text-sm font-medium text-white">{label}</p>
       <select
         value={value}
-        onChange={(e) => onChange(e.target.value)}
+        onChange={(e) =>  onChange(e.target.value)}
         className="bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
       >
         {options.map((opt) => (

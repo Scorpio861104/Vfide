@@ -240,7 +240,7 @@ export function NetworkSwitchOverlay() {
                 <label className="flex items-center justify-center gap-2 text-sm text-gray-400 cursor-pointer hover:text-gray-300">
                   <input
                     type="checkbox"
-                    onChange={(e) => {
+                    onChange={(e) =>  {
                       if (e.target.checked) {
                         handleSwitch(true)
                       } else {

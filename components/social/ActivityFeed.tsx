@@ -1,5 +1,6 @@
 'use client';
 
+import { logger } from '@/lib/logger';
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import {
@@ -259,6 +260,6 @@ export function addActivity(
     
     safeLocalStorage.setItem(`vfide_activity_feed_${userAddress}`, JSON.stringify(activities));
   } catch (error) {
-    console.error('Failed to persist social activity', error);
+    logger.error('Failed to persist social activity', error);
   }
 }

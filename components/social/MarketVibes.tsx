@@ -12,6 +12,7 @@
 'use client';
 
 import { useState, useRef, useCallback } from 'react';
+import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Camera, Clock, MapPin, Shield, RotateCcw, Check, Sparkles } from 'lucide-react';
 
@@ -92,7 +93,7 @@ export function MarketVibesCapture({ promptTime, onCapture, timeRemaining }: Mar
         {/* Captured preview (small PIP) */}
         {backImage && !frontImage && (
           <div className="absolute top-16 left-4 w-24 h-32 rounded-xl overflow-hidden border-2 border-white/30 z-20">
-            <img src={URL.createObjectURL(backImage)} alt="Market" className="w-full h-full object-cover" />
+            <Image src={URL.createObjectURL(backImage)} alt="Market" className="w-full h-full object-cover"  width={48} height={48} />
             <div className="absolute bottom-1 left-1 text-[8px] text-white bg-black/50 px-1 rounded">Market</div>
           </div>
         )}
@@ -119,7 +120,7 @@ export function MarketVibesCapture({ promptTime, onCapture, timeRemaining }: Mar
           </>
         ) : (
           <div className="flex-1 flex gap-2">
-            <input value={caption} onChange={e => setCaption(e.target.value)} placeholder="What's the vibe today?"
+            <input value={caption} onChange={e =>  setCaption(e.target.value)} placeholder="What's the vibe today?"
               className="flex-1 px-4 py-3 bg-white/10 rounded-xl text-white text-sm placeholder-gray-400 focus:outline-none" />
             <button onClick={() => { if (frontImage && backImage) onCapture(frontImage, backImage, caption); }}
               className="px-4 py-3 bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-bold rounded-xl text-sm flex items-center gap-1">
@@ -145,12 +146,12 @@ export function MarketVibeCard({ vibe, onReact }: MarketVibeCardProps) {
     <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="rounded-2xl overflow-hidden border border-white/10">
       {/* Dual image */}
       <div className="relative aspect-[3/4] bg-zinc-800 cursor-pointer" onClick={() => setShowFront(!showFront)}>
-        <img src={showFront ? vibe.frontImageUrl : vibe.backImageUrl} alt="" className="w-full h-full object-cover" />
+        <Image src={showFront ? vibe.frontImageUrl : vibe.backImageUrl} alt="" className="w-full h-full object-cover"  width={48} height={48} />
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
 
         {/* PIP of the other camera */}
         <div className="absolute top-3 left-3 w-20 h-28 rounded-xl overflow-hidden border-2 border-white/30" onClick={e => { e.stopPropagation(); setShowFront(!showFront); }}>
-          <img src={showFront ? vibe.backImageUrl : vibe.frontImageUrl} alt="" className="w-full h-full object-cover" />
+          <Image src={showFront ? vibe.backImageUrl : vibe.frontImageUrl} alt="" className="w-full h-full object-cover"  width={48} height={48} />
         </div>
 
         {/* Late badge */}

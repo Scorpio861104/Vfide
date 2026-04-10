@@ -604,7 +604,7 @@ export function SearchInput({
       <input
         type="text"
         value={value}
-        onChange={(e) => onChange(e.target.value)}
+        onChange={(e) =>  onChange(e.target.value)}
         placeholder={placeholder}
         autoFocus={autoFocus}
         className="

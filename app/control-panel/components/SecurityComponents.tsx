@@ -223,7 +223,7 @@ export function AddressInput({
       <input
         type="text"
         value={value}
-        onChange={(e) => onChange(e.target.value)}
+        onChange={(e) =>  onChange(e.target.value)}
         onBlur={() => setTouched(true)}
         placeholder={placeholder}
         disabled={disabled}
@@ -282,7 +282,7 @@ export function NumberInput({
         <input
           type="number"
           value={value}
-          onChange={(e) => onChange(Number(e.target.value))}
+          onChange={(e) =>  onChange(Number(e.target.value))}
           onBlur={() => setTouched(true)}
           min={min}
           max={max}

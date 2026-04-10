@@ -1,6 +1,7 @@
 'use client';
 
 import { ReactNode, useEffect } from 'react';
+import { registerServiceWorker } from '@/lib/sw-register';
 import { usePathname } from 'next/navigation';
 import { useAccount } from 'wagmi';
 import { AppShell } from '@/components/navigation';
@@ -9,6 +10,9 @@ import { RealtimeProvider, UserProvider } from '@/lib/data';
 interface ClientLayoutProps {
   children: ReactNode;
 }
+
+// Register service worker for PWA offline support
+if (typeof window !== "undefined") { registerServiceWorker(); }
 
 function useRouteAnnouncement(pathname: string) {
   useEffect(() => {

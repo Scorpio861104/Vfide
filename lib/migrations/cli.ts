@@ -11,6 +11,7 @@
  *   create <name> - Create a new migration file
  */
 
+import { logger } from '@/lib/logger';
 import { Pool } from 'pg';
 import { writeFile, mkdir } from 'fs/promises';
 import { join } from 'path';
@@ -48,10 +49,10 @@ async function runUp(): Promise<void> {
   const pool = await getPool();
   try {
     const count = await migrateUp(MIGRATIONS_DIR, pool);
-    console.log(`\n✅ Migration complete. Applied ${count} migration(s).`);
+    logger.info(`\n✅ Migration complete. Applied ${count} migration(s).`);
     process.exit(0);
   } catch (error) {
-    console.error('\n❌ Migration failed:', error);
+    logger.error('\n❌ Migration failed:', error);
     process.exit(1);
   } finally {
     await pool.end();
@@ -62,10 +63,10 @@ async function runDown(count: number = 1): Promise<void> {
   const pool = await getPool();
   try {
     const rolled = await migrateDown(MIGRATIONS_DIR, pool, count);
-    console.log(`\n✅ Rollback complete. Rolled back ${rolled} migration(s).`);
+    logger.info(`\n✅ Rollback complete. Rolled back ${rolled} migration(s).`);
     process.exit(0);
   } catch (error) {
-    console.error('\n❌ Rollback failed:', error);
+    logger.error('\n❌ Rollback failed:', error);
     process.exit(1);
   } finally {
     await pool.end();
@@ -77,28 +78,28 @@ async function showStatus(): Promise<void> {
   try {
     const status = await getMigrationStatus(MIGRATIONS_DIR, pool);
 
-    console.log('\n📊 Migration Status:\n');
-    console.log('Status  | Migration Name');
-    console.log('--------|' + '-'.repeat(60));
+    logger.info('\n📊 Migration Status:\n');
+    logger.info('Status  | Migration Name');
+    logger.info('--------|' + '-'.repeat(60));
 
     for (const migration of status) {
       const statusIcon = migration.applied ? '✅' : '⏳';
       const appliedInfo = migration.applied_at
         ? ` (${migration.applied_at.toISOString()})`
         : '';
-      console.log(`${statusIcon}      | ${migration.name}${appliedInfo}`);
+      logger.info(`${statusIcon}      | ${migration.name}${appliedInfo}`);
     }
 
     const pending = status.filter(m => !m.applied).length;
     const applied = status.filter(m => m.applied).length;
 
-    console.log('\n' + '-'.repeat(70));
-    console.log(`Total: ${status.length} | Applied: ${applied} | Pending: ${pending}`);
-    console.log('');
+    logger.info('\n' + '-'.repeat(70));
+    logger.info(`Total: ${status.length} | Applied: ${applied} | Pending: ${pending}`);
+    logger.info('');
 
     process.exit(0);
   } catch (error) {
-    console.error('\n❌ Failed to get migration status:', error);
+    logger.error('\n❌ Failed to get migration status:', error);
     process.exit(1);
   } finally {
     await pool.end();
@@ -107,9 +108,9 @@ async function showStatus(): Promise<void> {
 
 async function createMigration(description: string): Promise<void> {
   if (!description || description.trim().length === 0) {
-    console.error('❌ Error: Migration name is required');
-    console.log('Usage: npm run migrate:create <description>');
-    console.log('Example: npm run migrate:create add_users_table');
+    logger.error('❌ Error: Migration name is required');
+    logger.info('Usage: npm run migrate:create <description>');
+    logger.info('Example: npm run migrate:create add_users_table');
     process.exit(1);
   }
 
@@ -148,15 +149,15 @@ async function createMigration(description: string): Promise<void> {
     await writeFile(upPath, upTemplate, 'utf-8');
     await writeFile(downPath, downTemplate, 'utf-8');
 
-    console.log('\n✅ Migration files created:');
-    console.log(`   📄 ${filename}`);
-    console.log(`   📄 ${filename.replace('.sql', '.down.sql')}`);
-    console.log('\n📝 Edit these files to add your migration SQL.');
-    console.log('   Then run: npm run migrate:up\n');
+    logger.info('\n✅ Migration files created:');
+    logger.info(`   📄 ${filename}`);
+    logger.info(`   📄 ${filename.replace('.sql', '.down.sql')}`);
+    logger.info('\n📝 Edit these files to add your migration SQL.');
+    logger.info('   Then run: npm run migrate:up\n');
 
     process.exit(0);
   } catch (error) {
-    console.error('\n❌ Failed to create migration:', error);
+    logger.error('\n❌ Failed to create migration:', error);
     process.exit(1);
   }
 }
@@ -174,7 +175,7 @@ const arg = process.argv[3];
     case 'down':
       const count = arg ? parseInt(arg, 10) : 1;
       if (isNaN(count) || count < 1) {
-        console.error('❌ Error: Count must be a positive number');
+        logger.error('❌ Error: Count must be a positive number');
         process.exit(1);
       }
       await runDown(count);
@@ -186,27 +187,27 @@ const arg = process.argv[3];
 
     case 'create':
       if (!arg) {
-        console.error('Error: Migration name is required');
+        logger.error('Error: Migration name is required');
         process.exit(1);
       }
       await createMigration(arg);
       break;
 
     default:
-      console.log('Usage: migrate <command> [options]');
-      console.log('');
-      console.log('Commands:');
-      console.log('  up              Apply all pending migrations');
-      console.log('  down [count]    Rollback last N migrations (default: 1)');
-      console.log('  status          Show migration status');
-      console.log('  create <name>   Create a new migration file');
-      console.log('');
-      console.log('Examples:');
-      console.log('  npm run migrate:up');
-      console.log('  npm run migrate:down');
-      console.log('  npm run migrate:down 2');
-      console.log('  npm run migrate:status');
-      console.log('  npm run migrate:create add_users_table');
+      logger.info('Usage: migrate <command> [options]');
+      logger.info('');
+      logger.info('Commands:');
+      logger.info('  up              Apply all pending migrations');
+      logger.info('  down [count]    Rollback last N migrations (default: 1)');
+      logger.info('  status          Show migration status');
+      logger.info('  create <name>   Create a new migration file');
+      logger.info('');
+      logger.info('Examples:');
+      logger.info('  npm run migrate:up');
+      logger.info('  npm run migrate:down');
+      logger.info('  npm run migrate:down 2');
+      logger.info('  npm run migrate:status');
+      logger.info('  npm run migrate:create add_users_table');
       process.exit(1);
   }
 })();

@@ -167,7 +167,7 @@ export default function BudgetsPage() {
               <label className="text-sm text-muted-foreground block mb-1">Category</label>
               <select
                 value={newBudget.category}
-                onChange={(e) => setNewBudget({ ...newBudget, category: e.target.value })}
+                onChange={(e) =>  setNewBudget({ ...newBudget, category: e.target.value })}
                 className="w-full p-3 bg-muted border border-border rounded-lg"
               >
                 <option value="">Select category</option>
@@ -186,7 +186,7 @@ export default function BudgetsPage() {
               <input
                 type="number"
                 value={newBudget.limit}
-                onChange={(e) => setNewBudget({ ...newBudget, limit: e.target.value })}
+                onChange={(e) =>  setNewBudget({ ...newBudget, limit: e.target.value })}
                 placeholder="0.00"
                 className="w-full p-3 bg-muted border border-border rounded-lg"
               />
@@ -196,7 +196,7 @@ export default function BudgetsPage() {
               <label className="text-sm text-muted-foreground block mb-1">Period</label>
               <select
                 value={newBudget.period}
-                onChange={(e) => setNewBudget({ ...newBudget, period: e.target.value as typeof newBudget.period })}
+                onChange={(e) =>  setNewBudget({ ...newBudget, period: e.target.value as typeof newBudget.period })}
                 className="w-full p-3 bg-muted border border-border rounded-lg"
               >
                 <option value="daily">Daily</option>

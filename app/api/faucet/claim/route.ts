@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { NextRequest, NextResponse } from 'next/server';
 import { createWalletClient, createPublicClient, http, parseAbi, isAddress } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
@@ -66,7 +67,7 @@ export async function POST(request: NextRequest) {
     if (message.includes('AlreadyClaimed')) return NextResponse.json({ error: 'Already claimed' }, { status: 409 });
     if (message.includes('DailyCapReached')) return NextResponse.json({ error: 'Daily limit reached' }, { status: 429 });
     if (message.includes('Insufficient')) return NextResponse.json({ error: 'Faucet empty. Contact team.' }, { status: 503 });
-    console.error('[Faucet]', message);
+    logger.error('[Faucet]', message);
     return NextResponse.json({ error: 'Claim failed. Try again.' }, { status: 500 });
   }
 }

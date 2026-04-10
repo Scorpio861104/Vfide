@@ -145,7 +145,7 @@ export default function VaultRecoveryPage() {
                 <div className="flex flex-col md:flex-row gap-4">
                   <div className="flex-1 relative">
                     <div className="absolute left-5 top-1/2 -translate-y-1/2"><Search className="h-5 w-5 text-cyan-400" /></div>
-                    <input type={searchMethod === "email" ? "email" : "text"} value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                    <input type={searchMethod === "email" ? "email" : "text"} value={searchQuery} onChange={(e) =>  setSearchQuery(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
                       placeholder={searchMethod === "recoveryId" ? "Enter your secret recovery phrase..." : searchMethod === "email" ? "Enter your email address..." : searchMethod === "username" ? "Enter your VFide username..." : "Enter guardian wallet address..."}
                       className="w-full pl-14 pr-6 py-5 rounded-2xl bg-white/5 border-2 border-white/10 text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500/50 text-lg transition-all" />
                   </div>

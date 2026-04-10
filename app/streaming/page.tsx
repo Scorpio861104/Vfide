@@ -216,7 +216,7 @@ export default function StreamingPage() {
               <input
                 type="text"
                 value={recipient}
-                onChange={(e) => setRecipient(e.target.value)}
+                onChange={(e) =>  setRecipient(e.target.value)}
                 placeholder="0x... or ENS name"
                 className="w-full p-3 bg-muted border border-border rounded-lg"
               />
@@ -228,7 +228,7 @@ export default function StreamingPage() {
                 <input
                   type="number"
                   value={amount}
-                  onChange={(e) => setAmount(e.target.value)}
+                  onChange={(e) =>  setAmount(e.target.value)}
                   placeholder="0.0"
                   className="w-full p-3 bg-muted border border-border rounded-lg"
                 />
@@ -237,7 +237,7 @@ export default function StreamingPage() {
                 <label className="text-sm text-muted-foreground block mb-1">Token</label>
                 <select
                   value={token}
-                  onChange={(e) => setToken(e.target.value)}
+                  onChange={(e) =>  setToken(e.target.value)}
                   className="w-full p-3 bg-muted border border-border rounded-lg"
                 >
                   <option>ETH</option>
@@ -252,7 +252,7 @@ export default function StreamingPage() {
               <input
                 type="number"
                 value={duration}
-                onChange={(e) => setDuration(e.target.value)}
+                onChange={(e) =>  setDuration(e.target.value)}
                 className="w-full p-3 bg-muted border border-border rounded-lg"
               />
             </div>

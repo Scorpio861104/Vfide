@@ -49,7 +49,7 @@ export function GlobalUserSearch() {
           type="text"
           placeholder="Search users by @username..."
           value={searchQuery}
-          onChange={(e) => handleSearch(e.target.value)}
+          onChange={(e) =>  handleSearch(e.target.value)}
           aria-label="Search users by username or address"
           aria-describedby="search-results-count"
           className="w-full pl-12 pr-4 py-3 bg-zinc-950 border border-zinc-700 rounded-xl text-zinc-100 placeholder-zinc-500 focus:border-cyan-400 focus:outline-none"

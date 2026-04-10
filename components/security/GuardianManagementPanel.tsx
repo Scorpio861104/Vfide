@@ -187,7 +187,7 @@ export function GuardianManagementPanel() {
             <input
               type="text"
               value={newGuardian}
-              onChange={(e) => {
+              onChange={(e) =>  {
                 setNewGuardian(e.target.value)
                 setAddError(null)
               }}
@@ -242,7 +242,7 @@ export function GuardianManagementPanel() {
             <input
               type="text"
               value={removeAddress}
-              onChange={(e) => {
+              onChange={(e) =>  {
                 setRemoveAddress(e.target.value)
                 setRemoveError(null)
               }}
@@ -302,7 +302,7 @@ export function GuardianManagementPanel() {
               min="1"
               max={Math.max(guardians.guardianCount, 1)}
               value={newThreshold}
-              onChange={(e) => {
+              onChange={(e) =>  {
                 setNewThreshold(safeParseInt(e.target.value, 1, { min: 1, max: guardians.guardianCount }))
                 setThresholdError(null)
               }}

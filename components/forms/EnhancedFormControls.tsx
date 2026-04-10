@@ -338,7 +338,7 @@ export const EnhancedTextarea = forwardRef<HTMLTextAreaElement, EnhancedTextarea
       </div>
 
       <textarea
-        ref={(node) => {
+        ref={(node) =>  {
           textareaRef.current = node;
           if (typeof ref === 'function') ref(node);
           else if (ref) ref.current = node;

@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { randomUUID } from 'node:crypto';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { NextRequest, NextResponse } from 'next/server';
@@ -113,7 +114,7 @@ export async function POST(request: NextRequest) {
       type: file.type,
     });
   } catch (error) {
-    console.error('[Media Upload] Error:', error);
+    logger.error('[Media Upload] Error:', error);
     return NextResponse.json({ error: 'Upload failed' }, { status: 500 });
   }
 }

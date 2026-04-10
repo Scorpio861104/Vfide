@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { NextRequest, NextResponse } from 'next/server';
 import { pollEvents } from '@/lib/indexer/service';
 
@@ -11,7 +12,7 @@ function isAuthorized(request: NextRequest): boolean {
 
   const cronSecret = process.env.CRON_SECRET;
   if (!cronSecret) {
-    console.error('[Indexer API] CRON_SECRET is required in production');
+    logger.error('[Indexer API] CRON_SECRET is required in production');
     return false;
   }
 
@@ -39,7 +40,7 @@ export async function GET(request: NextRequest) {
       timestamp: new Date().toISOString(),
     });
   } catch (error) {
-    console.error('[Indexer API] Poll failed:', error);
+    logger.error('[Indexer API] Poll failed:', error);
     return NextResponse.json(
       { success: false, error: 'Indexer poll failed' },
       { status: 500 }

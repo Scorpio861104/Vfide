@@ -114,7 +114,7 @@ export function MessageActions({
       <div className="flex flex-col gap-2">
         <textarea
           value={editContent}
-          onChange={(e) => setEditContent(e.target.value)}
+          onChange={(e) =>  setEditContent(e.target.value)}
           className="w-full p-2 bg-zinc-900 border border-zinc-800 rounded-lg text-white resize-none focus:outline-none focus:border-blue-500"
           rows={3}
           autoFocus

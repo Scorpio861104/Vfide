@@ -88,7 +88,7 @@ export default function SwapModal({
               <div className="flex items-center justify-between mb-2">
                 <select
                   value={fromToken}
-                  onChange={(e) => setFromToken(e.target.value)}
+                  onChange={(e) =>  setFromToken(e.target.value)}
                   className="bg-transparent text-white text-lg font-medium focus:outline-none"
                 >
                   <option value="ETH">ETH</option>
@@ -99,7 +99,7 @@ export default function SwapModal({
                 <input
                   type="number"
                   value={amount}
-                  onChange={(e) => setAmount(e.target.value)}
+                  onChange={(e) =>  setAmount(e.target.value)}
                   placeholder="0.00"
                   className="bg-transparent text-white text-lg text-right focus:outline-none w-1/2"
                 />
@@ -127,7 +127,7 @@ export default function SwapModal({
               <div className="flex items-center justify-between mb-2">
                 <select
                   value={toToken}
-                  onChange={(e) => setToToken(e.target.value)}
+                  onChange={(e) =>  setToToken(e.target.value)}
                   className="bg-transparent text-white text-lg font-medium focus:outline-none"
                 >
                   <option value="VFIDE">VFIDE</option>

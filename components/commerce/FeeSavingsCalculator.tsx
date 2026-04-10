@@ -43,7 +43,7 @@ export function FeeSavingsCalculator() {
             <input
               type="number"
               value={amount}
-              onChange={(e) => setAmount(e.target.value)}
+              onChange={(e) =>  setAmount(e.target.value)}
               className="flex-1 bg-transparent text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold text-zinc-100 outline-none min-w-0 w-full"
               placeholder="100"
               min="0"

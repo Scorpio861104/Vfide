@@ -724,14 +724,14 @@ export function NotificationDropdown({ isOpen, onClose }: NotificationDropdownPr
                     <input
                       type="text"
                       value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
+                      onChange={(e) =>  setSearchQuery(e.target.value)}
                       placeholder="Search notifications..."
                       className="w-full pl-9 pr-3 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500/50"
                     />
                   </div>
                   <select
                     value={categoryFilter}
-                    onChange={(e) => setCategoryFilter(e.target.value as NotificationCategory | 'all')}
+                    onChange={(e) =>  setCategoryFilter(e.target.value as NotificationCategory | 'all')}
                     className="px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-white focus:outline-none focus:border-cyan-500/50"
                   >
                     <option value="all">All</option>
@@ -773,7 +773,7 @@ export function NotificationDropdown({ isOpen, onClose }: NotificationDropdownPr
                         onSnooze={() => snooze(notification.id)}
                         onAction={() => {
                           if (notification.actionUrl && isAllowedURL(notification.actionUrl)) {
-                            window.location.href = notification.actionUrl;
+                            window.location.assign(notification.actionUrl);
                           }
                         }}
                         compact
@@ -832,7 +832,7 @@ function NotificationSettings({ preferences, onUpdate }: NotificationSettingsPro
             <input
               type="checkbox"
               checked={preferences.enabled}
-              onChange={(e) => onUpdate({ ...preferences, enabled: e.target.checked })}
+              onChange={(e) =>  onUpdate({ ...preferences, enabled: e.target.checked })}
               className="w-5 h-5 rounded bg-white/10 border-white/20 text-cyan-500 focus:ring-cyan-500/50"
             />
           </label>
@@ -841,7 +841,7 @@ function NotificationSettings({ preferences, onUpdate }: NotificationSettingsPro
             <input
               type="checkbox"
               checked={preferences.sound}
-              onChange={(e) => onUpdate({ ...preferences, sound: e.target.checked })}
+              onChange={(e) =>  onUpdate({ ...preferences, sound: e.target.checked })}
               className="w-5 h-5 rounded bg-white/10 border-white/20 text-cyan-500 focus:ring-cyan-500/50"
             />
           </label>
@@ -850,7 +850,7 @@ function NotificationSettings({ preferences, onUpdate }: NotificationSettingsPro
             <input
               type="checkbox"
               checked={preferences.desktop}
-              onChange={(e) => onUpdate({ ...preferences, desktop: e.target.checked })}
+              onChange={(e) =>  onUpdate({ ...preferences, desktop: e.target.checked })}
               className="w-5 h-5 rounded bg-white/10 border-white/20 text-cyan-500 focus:ring-cyan-500/50"
             />
           </label>
@@ -859,7 +859,7 @@ function NotificationSettings({ preferences, onUpdate }: NotificationSettingsPro
             <input
               type="checkbox"
               checked={preferences.vibrate}
-              onChange={(e) => onUpdate({ ...preferences, vibrate: e.target.checked })}
+              onChange={(e) =>  onUpdate({ ...preferences, vibrate: e.target.checked })}
               className="w-5 h-5 rounded bg-white/10 border-white/20 text-cyan-500 focus:ring-cyan-500/50"
             />
           </label>
@@ -879,7 +879,7 @@ function NotificationSettings({ preferences, onUpdate }: NotificationSettingsPro
               <input
                 type="checkbox"
                 checked={preferences.categories[key]}
-                onChange={(e) => onUpdate({
+                onChange={(e) =>  onUpdate({
                   ...preferences,
                   categories: { ...preferences.categories, [key]: e.target.checked }
                 })}
@@ -898,7 +898,7 @@ function NotificationSettings({ preferences, onUpdate }: NotificationSettingsPro
           <input
             type="checkbox"
             checked={preferences.quietHours.enabled}
-            onChange={(e) => onUpdate({
+            onChange={(e) =>  onUpdate({
               ...preferences,
               quietHours: { ...preferences.quietHours, enabled: e.target.checked }
             })}
@@ -912,7 +912,7 @@ function NotificationSettings({ preferences, onUpdate }: NotificationSettingsPro
               <input
                 type="time"
                 value={preferences.quietHours.start}
-                onChange={(e) => onUpdate({
+                onChange={(e) =>  onUpdate({
                   ...preferences,
                   quietHours: { ...preferences.quietHours, start: e.target.value }
                 })}
@@ -924,7 +924,7 @@ function NotificationSettings({ preferences, onUpdate }: NotificationSettingsPro
               <input
                 type="time"
                 value={preferences.quietHours.end}
-                onChange={(e) => onUpdate({
+                onChange={(e) =>  onUpdate({
                   ...preferences,
                   quietHours: { ...preferences.quietHours, end: e.target.value }
                 })}
@@ -940,7 +940,7 @@ function NotificationSettings({ preferences, onUpdate }: NotificationSettingsPro
         <h4 className="text-sm font-medium text-white mb-3">Snooze Duration</h4>
         <select
           value={preferences.snoozeMinutes}
-          onChange={(e) => onUpdate({ ...preferences, snoozeMinutes: Number(e.target.value) })}
+          onChange={(e) =>  onUpdate({ ...preferences, snoozeMinutes: Number(e.target.value) })}
           className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-white"
         >
           <option value={15}>15 minutes</option>

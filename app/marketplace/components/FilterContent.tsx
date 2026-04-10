@@ -47,7 +47,7 @@ export function FilterContent({ filters, setFilters, onClose }: FilterContentPro
           <label className="mb-2 block text-sm text-gray-300">Category</label>
           <select
             value={filters.category}
-            onChange={(event) => updateFilter('category', event.target.value === 'all' ? '' : event.target.value)}
+            onChange={(event) =>  updateFilter('category', event.target.value === 'all' ? '' : event.target.value)}
             className="w-full rounded-xl border border-white/10 bg-zinc-900 px-3 py-2 text-sm"
           >
             {categories.map((category) => (
@@ -64,7 +64,7 @@ export function FilterContent({ filters, setFilters, onClose }: FilterContentPro
             type="number"
             min="0"
             value={filters.minPrice}
-            onChange={(event) => updateFilter('minPrice', event.target.value)}
+            onChange={(event) =>  updateFilter('minPrice', event.target.value)}
             className="w-full rounded-xl border border-white/10 bg-zinc-900 px-3 py-2 text-sm"
             placeholder="0"
           />
@@ -76,7 +76,7 @@ export function FilterContent({ filters, setFilters, onClose }: FilterContentPro
             type="number"
             min="0"
             value={filters.maxPrice}
-            onChange={(event) => updateFilter('maxPrice', event.target.value)}
+            onChange={(event) =>  updateFilter('maxPrice', event.target.value)}
             className="w-full rounded-xl border border-white/10 bg-zinc-900 px-3 py-2 text-sm"
             placeholder="1000"
           />
@@ -86,7 +86,7 @@ export function FilterContent({ filters, setFilters, onClose }: FilterContentPro
           <label className="mb-2 block text-sm text-gray-300">Sort</label>
           <select
             value={filters.sort}
-            onChange={(event) => updateFilter('sort', event.target.value)}
+            onChange={(event) =>  updateFilter('sort', event.target.value)}
             className="w-full rounded-xl border border-white/10 bg-zinc-900 px-3 py-2 text-sm"
           >
             {sortOptions.map((option) => (

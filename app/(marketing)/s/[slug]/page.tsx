@@ -16,6 +16,7 @@
  */
 
 import type { Metadata } from 'next';
+import Image from 'next/image';
 import { notFound } from 'next/navigation';
 import { LinkInBioClient } from './LinkInBioClient';
 
@@ -78,9 +79,9 @@ export default async function LinkInBioPage({ params }: PageProps) {
       <div className="pt-24 pb-8 text-center px-4" style={{ background: `linear-gradient(to bottom, ${themeColor}15, transparent)` }}>
         {/* Avatar */}
         {merchant.logo_url ? (
-          <img src={merchant.logo_url} alt={merchant.display_name}
+          <Image src={merchant.logo_url} alt={merchant.display_name}
             className="w-24 h-24 rounded-2xl object-cover mx-auto mb-4 border-2 border-white/10 shadow-lg"
-            style={{ boxShadow: `0 8px 32px ${themeColor}30` }} />
+            style={{ boxShadow: `0 8px 32px ${themeColor}30` }}  width={48} height={48} />
         ) : (
           <div className="w-24 h-24 rounded-2xl mx-auto mb-4 flex items-center justify-center text-4xl font-bold text-white border-2 border-white/10"
             style={{ backgroundColor: themeColor, boxShadow: `0 8px 32px ${themeColor}30` }}>

@@ -14,6 +14,7 @@
 'use client';
 
 import { useState, useRef, useCallback } from 'react';
+import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Camera, Sparkles, Check, Edit3, RefreshCw, ShoppingCart, Tag, X } from 'lucide-react';
 
@@ -138,7 +139,7 @@ export function AIProductListing({ onPublish, onClose }: AIProductListingProps) 
         /* Review & edit */
         <div className="flex-1 overflow-y-auto">
           <div className="p-4 space-y-4">
-            <img src={imageUrl} alt="Product" className="w-full aspect-square rounded-xl object-cover" />
+            <Image src={imageUrl} alt="Product" className="w-full aspect-square rounded-xl object-cover"  width={48} height={48} />
 
             {generating ? (
               <div className="flex items-center justify-center gap-3 py-8">
@@ -150,14 +151,14 @@ export function AIProductListing({ onPublish, onClose }: AIProductListingProps) 
                 <div>
                   <label className="text-[10px] text-gray-500 uppercase tracking-wider">Product Name</label>
                   {editing ? (
-                    <input value={listing.name} onChange={e => setListing({ ...listing, name: e.target.value })}
+                    <input value={listing.name} onChange={e =>  setListing({ ...listing, name: e.target.value })}
                       className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm mt-1 focus:outline-none focus:border-cyan-500/50" />
                   ) : <p className="text-white font-bold">{listing.name}</p>}
                 </div>
                 <div>
                   <label className="text-[10px] text-gray-500 uppercase tracking-wider">Description</label>
                   {editing ? (
-                    <textarea value={listing.description} onChange={e => setListing({ ...listing, description: e.target.value })}
+                    <textarea value={listing.description} onChange={e =>  setListing({ ...listing, description: e.target.value })}
                       className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm mt-1 h-16 resize-none focus:outline-none focus:border-cyan-500/50" />
                   ) : <p className="text-gray-300 text-sm">{listing.description}</p>}
                 </div>
@@ -165,7 +166,7 @@ export function AIProductListing({ onPublish, onClose }: AIProductListingProps) 
                   <div>
                     <label className="text-[10px] text-gray-500 uppercase tracking-wider">Price</label>
                     {editing ? (
-                      <input value={listing.suggestedPrice} onChange={e => setListing({ ...listing, suggestedPrice: parseFloat(e.target.value) || 0 })} type="number"
+                      <input value={listing.suggestedPrice} onChange={e =>  setListing({ ...listing, suggestedPrice: parseFloat(e.target.value) || 0 })} type="number"
                         className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white font-mono text-sm mt-1 focus:outline-none focus:border-cyan-500/50" />
                     ) : <p className="text-cyan-400 font-mono font-bold">{listing.currency}{listing.suggestedPrice}</p>}
                   </div>

@@ -432,7 +432,7 @@ export function ReportingDashboard({
           </label>
           <select
             value={selectedReportId}
-            onChange={(e) => setSelectedReportId(e.target.value)}
+            onChange={(e) =>  setSelectedReportId(e.target.value)}
             className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
           >
             {reports.map(report => (
@@ -450,7 +450,7 @@ export function ReportingDashboard({
           </label>
           <select
             value={dateRange.label}
-            onChange={(e) => {
+            onChange={(e) =>  {
               const range = DATE_RANGES.find(r => r.label === e.target.value);
               if (range) setDateRange(range);
             }}
@@ -512,7 +512,7 @@ export function ReportingDashboard({
               <input
                 type="checkbox"
                 checked={autoRefresh}
-                onChange={(e) => setAutoRefresh(e.target.checked)}
+                onChange={(e) =>  setAutoRefresh(e.target.checked)}
                 className="w-4 h-4 text-blue-600 rounded"
               />
               <span className="text-sm text-gray-700 dark:text-gray-300">Auto-refresh</span>

@@ -195,7 +195,7 @@ export function AccountSettings() {
               type="text"
               placeholder="your_username"
               value={username}
-              onChange={(e) => setUsername(e.target.value.toLowerCase())}
+              onChange={(e) =>  setUsername(e.target.value.toLowerCase())}
               disabled={!editing}
               className={`w-full px-4 py-3 bg-zinc-950 border rounded-lg text-zinc-100 focus:outline-none transition-colors ${
                 editing
@@ -248,7 +248,7 @@ export function AccountSettings() {
             type="text"
             placeholder="Your Display Name"
             value={displayName}
-            onChange={(e) => setDisplayName(e.target.value)}
+            onChange={(e) =>  setDisplayName(e.target.value)}
             disabled={!editing}
             maxLength={50}
             className={`w-full px-4 py-3 bg-zinc-950 border rounded-lg text-zinc-100 focus:outline-none ${
@@ -271,7 +271,7 @@ export function AccountSettings() {
           <textarea
             placeholder="Tell us about yourself..."
             value={bio}
-            onChange={(e) => setBio(e.target.value)}
+            onChange={(e) =>  setBio(e.target.value)}
             disabled={!editing}
             rows={3}
             maxLength={200}

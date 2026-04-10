@@ -244,7 +244,7 @@ export function VaultSecurityPanel() {
                     min="1"
                     max="720"
                     value={panicDuration}
-                    onChange={(e) => setPanicDuration(safeParseInt(e.target.value, 24, { min: 1, max: 720 }))}
+                    onChange={(e) =>  setPanicDuration(safeParseInt(e.target.value, 24, { min: 1, max: 720 }))}
                     className="w-full"
                   />
                   <div className="text-center text-white font-bold mt-2">

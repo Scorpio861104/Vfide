@@ -313,7 +313,7 @@ export function NotificationSettings({ userId }: NotificationSettingsProps) {
                 <input
                   type="time"
                   value={preferences.quietHours?.start || '22:00'}
-                  onChange={(e) => 
+                  onChange={(e) =>  
                     updatePreferences({
                       quietHours: {
                         enabled: preferences.quietHours?.enabled ?? true,
@@ -330,7 +330,7 @@ export function NotificationSettings({ userId }: NotificationSettingsProps) {
                 <input
                   type="time"
                   value={preferences.quietHours?.end || '08:00'}
-                  onChange={(e) => 
+                  onChange={(e) =>  
                     updatePreferences({
                       quietHours: {
                         enabled: preferences.quietHours?.enabled ?? true,

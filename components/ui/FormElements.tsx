@@ -231,7 +231,7 @@ export function Input({
         <input
           type={type}
           value={value}
-          onChange={(e) => onChange(e.target.value)}
+          onChange={(e) =>  onChange(e.target.value)}
           placeholder={placeholder}
           disabled={disabled}
           className={`
@@ -292,7 +292,7 @@ export function Select({
       )}
       <select
         value={value}
-        onChange={(e) => onChange(e.target.value)}
+        onChange={(e) =>  onChange(e.target.value)}
         disabled={disabled}
         className={`
           w-full px-4 py-3

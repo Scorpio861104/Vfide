@@ -414,7 +414,7 @@ function ShareProfileModal({ profile, onClose }: { profile: UserProfile; onClose
               value={profileUrl}
               readOnly
               className="flex-1 bg-transparent text-sm text-zinc-400 truncate outline-none"
-            />
+             aria-label="Text input" />
             <button onClick={copyLink} className="p-2 hover:bg-zinc-800 rounded-lg transition-colors">
               {copied ? <Check className="w-4 h-4 text-green-400" /> : <Copy className="w-4 h-4 text-zinc-400" />}
             </button>
@@ -883,7 +883,7 @@ export default function UserProfile() {
                         className="w-full px-3 py-2 bg-zinc-900 border border-zinc-800 rounded-lg text-white resize-none focus:border-amber-400 outline-none"
                         rows={3}
                         autoFocus
-                      />
+                       aria-label="Input field" />
                       <div className="flex gap-2">
                         <button
                           onClick={() => bioInputRef.current && handleSaveBio(bioInputRef.current.value)}
@@ -1300,7 +1300,7 @@ export default function UserProfile() {
           <h3 className="text-lg font-semibold text-white mb-4">Profile Visibility</h3>
           <select
             value={privacySettings.profileVisibility}
-            onChange={(e) =>
+            onChange={(e) => 
               handlePrivacyChange('profileVisibility', e.target.value as PrivacySettings['profileVisibility'])
             }
             className="w-full px-3 py-3 border border-zinc-800 rounded-xl bg-zinc-900 text-white focus:border-amber-400 outline-none"
@@ -1346,7 +1346,7 @@ export default function UserProfile() {
                   <input
                     type="checkbox"
                     checked={privacySettings[setting.key as keyof PrivacySettings] as boolean}
-                    onChange={(e) => handlePrivacyChange(setting.key as keyof PrivacySettings, e.target.checked)}
+                    onChange={(e) =>  handlePrivacyChange(setting.key as keyof PrivacySettings, e.target.checked)}
                     className="opacity-0 absolute inset-0 cursor-pointer"
                   />
                 </div>

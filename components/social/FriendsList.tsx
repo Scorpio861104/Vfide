@@ -179,7 +179,7 @@ export function FriendsList({ onSelectFriend, selectedFriend }: FriendsListProps
             type="text"
             placeholder="Search friends..."
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={(e) =>  setSearchQuery(e.target.value)}
             className="w-full pl-10 pr-4 py-2.5 bg-zinc-950 border border-zinc-700 rounded-xl text-zinc-100 text-sm focus:border-cyan-400 focus:outline-none transition-colors"
           />
         </div>
@@ -242,14 +242,14 @@ export function FriendsList({ onSelectFriend, selectedFriend }: FriendsListProps
                 type="text"
                 placeholder="Wallet address (0x...)"
                 value={newFriendAddress}
-                onChange={(e) => setNewFriendAddress(e.target.value)}
+                onChange={(e) =>  setNewFriendAddress(e.target.value)}
                 className="w-full px-3 py-2.5 mb-2 bg-zinc-900 border border-zinc-700 rounded-xl text-zinc-100 text-sm focus:border-cyan-400 focus:outline-none transition-colors"
               />
               <input
                 type="text"
                 placeholder="Nickname (optional)"
                 value={newFriendAlias}
-                onChange={(e) => setNewFriendAlias(e.target.value)}
+                onChange={(e) =>  setNewFriendAlias(e.target.value)}
                 className="w-full px-3 py-2.5 mb-3 bg-zinc-900 border border-zinc-700 rounded-xl text-zinc-100 text-sm focus:border-cyan-400 focus:outline-none transition-colors"
               />
               <motion.button

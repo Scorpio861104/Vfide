@@ -165,7 +165,7 @@ export default function CommandBar() {
               ref={inputRef}
               type="text"
               value={input}
-              onChange={(e) => {
+              onChange={(e) =>  {
                 const nextValue = e.target.value;
                 setInput(nextValue);
                 if (nextValue.length > 3 && !hasUnsafeNavigationInput(nextValue)) {

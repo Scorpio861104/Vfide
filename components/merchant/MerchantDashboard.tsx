@@ -182,7 +182,7 @@ export function MerchantDashboard() {
                   <input
                     type="text"
                     value={businessName}
-                    onChange={(e) => setBusinessName(e.target.value)}
+                    onChange={(e) =>  setBusinessName(e.target.value)}
                     placeholder="e.g., Acme Coffee Shop"
                     className="w-full bg-black/40 border border-gray-600 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:border-purple-500 focus:outline-none transition-colors"
                   />
@@ -196,7 +196,7 @@ export function MerchantDashboard() {
                   <label className="text-sm text-gray-400 mb-2 block">Category</label>
                   <select
                     value={category}
-                    onChange={(e) => setCategory(e.target.value)}
+                    onChange={(e) =>  setCategory(e.target.value)}
                     className="w-full bg-black/40 border border-gray-600 rounded-lg px-4 py-3 text-white focus:border-purple-500 focus:outline-none transition-colors"
                   >
                     {categories.map(cat => (
@@ -421,7 +421,7 @@ export function MerchantDashboard() {
             <input
               type="text"
               value={customPayout}
-              onChange={(e) => setCustomPayout(e.target.value)}
+              onChange={(e) =>  setCustomPayout(e.target.value)}
               placeholder="0x... (optional)"
               className="w-full bg-black/40 border border-gray-600 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:border-blue-500 focus:outline-none text-sm"
             />

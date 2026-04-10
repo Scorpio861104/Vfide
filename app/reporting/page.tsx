@@ -72,7 +72,7 @@ export default function ReportingPage() {
             <div className="flex flex-wrap items-center gap-2">
               <select
                 value={selectedTimeRange}
-                onChange={(event) => setTimeRange(event.target.value as TimeRange)}
+                onChange={(event) =>  setTimeRange(event.target.value as TimeRange)}
                 className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white"
               >
                 {timeRangeOptions.map((range) => (

@@ -145,7 +145,7 @@ export function GuardianWizard({ onClose }: { onClose: () => void }) {
                     <input
                       type="text"
                       value={guardians[index] || ''}
-                      onChange={(e) => handleAddGuardian(index, e.target.value)}
+                      onChange={(e) =>  handleAddGuardian(index, e.target.value)}
                       placeholder="0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb"
                       className="w-full px-4 py-3 bg-zinc-900 border border-zinc-700 rounded-lg text-zinc-100 focus:border-emerald-500 outline-none font-mono text-sm"
                     />

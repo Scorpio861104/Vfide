@@ -185,7 +185,7 @@ export function SocialTipButton({
                     <input
                       type="number"
                       value={amount}
-                      onChange={(e) => setAmount(e.target.value)}
+                      onChange={(e) =>  setAmount(e.target.value)}
                       placeholder="0.00"
                       className="w-full px-4 py-3 bg-zinc-950 border border-zinc-800 rounded-xl text-zinc-100 text-lg font-bold focus:border-purple-500 focus:outline-none"
                       step="0.01"
@@ -215,7 +215,7 @@ export function SocialTipButton({
                   </label>
                   <textarea
                     value={message}
-                    onChange={(e) => setMessage(e.target.value)}
+                    onChange={(e) =>  setMessage(e.target.value)}
                     placeholder="Great content! 🎉"
                     className="w-full px-4 py-3 bg-zinc-950 border border-zinc-800 rounded-xl text-zinc-100 focus:border-purple-500 focus:outline-none resize-none"
                     rows={3}

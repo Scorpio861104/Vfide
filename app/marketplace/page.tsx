@@ -55,7 +55,7 @@ export default function MarketplacePage() {
           <div className="flex gap-3 mb-6">
             <div className="relative flex-1">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500" size={20} />
-              <input type="text" value={query} onChange={e => setQuery(e.target.value)} placeholder="Search products..."
+              <input type="text" value={query} onChange={e =>  setQuery(e.target.value)} placeholder="Search products..."
                 className="w-full pl-12 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:border-cyan-500/50 focus:outline-none" />
             </div>
             <button onClick={() => setShowFilters(!showFilters)}

@@ -163,7 +163,7 @@ export function StoryCreator({
               >
                 <textarea
                   value={textContent}
-                  onChange={(e) => setTextContent(e.target.value)}
+                  onChange={(e) =>  setTextContent(e.target.value)}
                   placeholder="Type your story..."
                   className="w-full h-full bg-transparent text-white text-2xl md:text-3xl font-bold text-center resize-none focus:outline-none placeholder-white/50"
                   maxLength={200}
@@ -204,7 +204,7 @@ export function StoryCreator({
                 accept="image/png,image/jpeg,image/webp,image/gif,video/mp4,video/webm,video/quicktime"
                 onChange={handleMediaSelect}
                 className="hidden"
-              />
+               aria-label="Upload file" />
 
               {/* Media Upload/Preview */}
               {!mediaPreview ? (
@@ -253,7 +253,7 @@ export function StoryCreator({
                   <input
                     type="text"
                     value={caption}
-                    onChange={(e) => setCaption(e.target.value)}
+                    onChange={(e) =>  setCaption(e.target.value)}
                     placeholder="Write a caption..."
                     className="w-full px-4 py-3 bg-zinc-950 border border-zinc-700 rounded-lg text-zinc-100 placeholder-zinc-500 focus:border-cyan-400 focus:outline-none"
                     maxLength={100}

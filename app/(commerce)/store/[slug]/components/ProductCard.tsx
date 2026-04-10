@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { ShoppingCart, Check, Package } from 'lucide-react';
 
@@ -45,7 +46,7 @@ export function ProductCard({ product, merchantSlug, viewMode, themeColor }: Pro
         className="flex items-center gap-4 p-3 bg-white/3 border border-white/5 rounded-xl hover:border-cyan-500/20 transition-colors">
         <div className="w-16 h-16 rounded-lg bg-white/5 overflow-hidden flex-shrink-0">
           {product.images[0] ? (
-            <img src={getImageUrl(product.images[0])} alt={product.name} className="w-full h-full object-cover" />
+            <Image src={getImageUrl(product.images[0])} alt={product.name} className="w-full h-full object-cover"  width={48} height={48} />
           ) : (
             <div className="w-full h-full flex items-center justify-center"><Package size={20} className="text-gray-600" /></div>
           )}
@@ -72,8 +73,8 @@ export function ProductCard({ product, merchantSlug, viewMode, themeColor }: Pro
       className="group block bg-white/3 border border-white/5 rounded-xl overflow-hidden hover:border-cyan-500/20 transition-all">
       <div className="aspect-square bg-white/5 relative overflow-hidden">
         {product.images[0] ? (
-          <img src={getImageUrl(product.images[0])} alt={product.name}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+          <Image src={getImageUrl(product.images[0])} alt={product.name}
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"  width={48} height={48} />
         ) : (
           <div className="w-full h-full flex items-center justify-center">
             <Package size={32} className="text-gray-600" />

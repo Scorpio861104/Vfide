@@ -227,7 +227,7 @@ export default function MerchantExpensesPage() {
                         <h2 className="text-lg font-bold">Expense list</h2>
                         <select
                           value={selectedCategory}
-                          onChange={(event) => setSelectedCategory(event.target.value)}
+                          onChange={(event) =>  setSelectedCategory(event.target.value)}
                           className="rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-sm text-white"
                         >
                           {categories.map((category) => (

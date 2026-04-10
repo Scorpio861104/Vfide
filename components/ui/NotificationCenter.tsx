@@ -105,8 +105,8 @@ const initialNotifications: Notification[] = [
   {
     id: 'notif-rewards',
     type: 'reward',
-    title: 'Claimable Rewards',
-    message: '467.50 VFIDE in verified rewards is ready to claim from payroll.',
+    title: 'Verified Work Payout',
+    message: 'A 467.50 USDC payroll settlement is ready for review.',
     time: '1d ago',
     timestamp: Date.now() - 24 * 60 * 60 * 1000,
     href: '/payroll',
@@ -307,7 +307,7 @@ function SettingsPanel({ prefs, onUpdate }: SettingsPanelProps) {
           <input
             type="checkbox"
             checked={prefs.sound}
-            onChange={(e) => onUpdate({ ...prefs, sound: e.target.checked })}
+            onChange={(e) =>  onUpdate({ ...prefs, sound: e.target.checked })}
             className="w-5 h-5 rounded bg-zinc-700 border-zinc-700 text-cyan-500 focus:ring-cyan-500/50"
           />
         </label>
@@ -316,7 +316,7 @@ function SettingsPanel({ prefs, onUpdate }: SettingsPanelProps) {
           <input
             type="checkbox"
             checked={prefs.desktop}
-            onChange={(e) => onUpdate({ ...prefs, desktop: e.target.checked })}
+            onChange={(e) =>  onUpdate({ ...prefs, desktop: e.target.checked })}
             className="w-5 h-5 rounded bg-zinc-700 border-zinc-700 text-cyan-500 focus:ring-cyan-500/50"
           />
         </label>
@@ -325,7 +325,7 @@ function SettingsPanel({ prefs, onUpdate }: SettingsPanelProps) {
           <input
             type="checkbox"
             checked={prefs.vibrate}
-            onChange={(e) => onUpdate({ ...prefs, vibrate: e.target.checked })}
+            onChange={(e) =>  onUpdate({ ...prefs, vibrate: e.target.checked })}
             className="w-5 h-5 rounded bg-zinc-700 border-zinc-700 text-cyan-500 focus:ring-cyan-500/50"
           />
         </label>
@@ -337,7 +337,7 @@ function SettingsPanel({ prefs, onUpdate }: SettingsPanelProps) {
           <input
             type="checkbox"
             checked={prefs.quietHours.enabled}
-            onChange={(e) => onUpdate({ 
+            onChange={(e) =>  onUpdate({ 
               ...prefs, 
               quietHours: { ...prefs.quietHours, enabled: e.target.checked }
             })}
@@ -349,7 +349,7 @@ function SettingsPanel({ prefs, onUpdate }: SettingsPanelProps) {
             <input
               type="time"
               value={prefs.quietHours.start}
-              onChange={(e) => onUpdate({
+              onChange={(e) =>  onUpdate({
                 ...prefs,
                 quietHours: { ...prefs.quietHours, start: e.target.value }
               })}
@@ -359,7 +359,7 @@ function SettingsPanel({ prefs, onUpdate }: SettingsPanelProps) {
             <input
               type="time"
               value={prefs.quietHours.end}
-              onChange={(e) => onUpdate({
+              onChange={(e) =>  onUpdate({
                 ...prefs,
                 quietHours: { ...prefs.quietHours, end: e.target.value }
               })}
@@ -373,7 +373,7 @@ function SettingsPanel({ prefs, onUpdate }: SettingsPanelProps) {
         <label className="text-sm text-zinc-100 mb-2 block">Snooze duration</label>
         <select
           value={prefs.snoozeMinutes}
-          onChange={(e) => onUpdate({ ...prefs, snoozeMinutes: Number(e.target.value) })}
+          onChange={(e) =>  onUpdate({ ...prefs, snoozeMinutes: Number(e.target.value) })}
           className="w-full px-3 py-2 bg-zinc-700 border border-zinc-700 rounded-lg text-sm text-white"
         >
           <option value={15}>15 minutes</option>
@@ -623,7 +623,7 @@ export function NotificationCenter() {
                       <input
                         type="text"
                         value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
+                        onChange={(e) =>  setSearchQuery(e.target.value)}
                         placeholder="Search notifications..."
                         className="w-full pl-9 pr-3 py-2 bg-white/5 border border-zinc-700 rounded-lg text-sm text-white placeholder-[#A0A0A5] focus:outline-none focus:border-cyan-500/50"
                       />

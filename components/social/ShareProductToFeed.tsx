@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useCallback } from 'react';
+import Image from 'next/image';
 import { useAccount } from 'wagmi';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Loader2, Package, Send, Share2, Store, X, Zap } from 'lucide-react';
@@ -94,7 +95,7 @@ export function ShareProductToFeed({ product, className = '' }: ShareProductToFe
               <div className="px-5 py-4">
                 <div className="flex items-start gap-3 bg-white/3 border border-white/5 rounded-xl p-3 mb-4">
                   {product.imageUrl ? (
-                    <img src={product.imageUrl} alt="" className="w-16 h-16 rounded-lg object-cover flex-shrink-0" />
+                    <Image src={product.imageUrl} alt="" className="w-16 h-16 rounded-lg object-cover flex-shrink-0"  width={48} height={48} />
                   ) : (
                     <div className="w-16 h-16 rounded-lg bg-white/5 flex items-center justify-center flex-shrink-0">
                       <Package size={20} className="text-gray-500" />
@@ -117,7 +118,7 @@ export function ShareProductToFeed({ product, className = '' }: ShareProductToFe
                 {/* Caption input */}
                 <textarea
                   value={caption}
-                  onChange={(e) => setCaption(e.target.value)}
+                  onChange={(e) =>  setCaption(e.target.value)}
                   placeholder="Add a caption... (optional)"
                   maxLength={500}
                   rows={3}

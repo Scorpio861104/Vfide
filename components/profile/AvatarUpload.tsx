@@ -275,7 +275,7 @@ export function AvatarUpload({
               accept={ALLOWED_TYPES.join(',')}
               onChange={handleFileInput}
               className="hidden"
-            />
+             aria-label="Upload file" />
 
             <div className="flex flex-col items-center gap-3 text-center">
               <div className="p-3 bg-cyan-400/10 rounded-full">
@@ -376,7 +376,7 @@ export function AvatarUploadCompact({
         ref={fileInputRef}
         type="file"
         accept={ALLOWED_TYPES.join(',')}
-        onChange={(e) => {
+        onChange={(e) =>  {
           const file = e.target.files?.[0];
           if (file) handleFileSelect(file);
         }}

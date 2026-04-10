@@ -85,7 +85,7 @@ export function StoreClient({ merchant, initialProducts, slug }: StoreClientProp
               <input
                 type="text"
                 value={search}
-                onChange={(e) => setSearch(e.target.value)}
+                onChange={(e) =>  setSearch(e.target.value)}
                 placeholder="Search products..."
                 className="w-full pl-10 pr-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white text-sm placeholder-gray-500 focus:border-cyan-500/50 focus:outline-none"
               />
@@ -94,7 +94,7 @@ export function StoreClient({ merchant, initialProducts, slug }: StoreClientProp
             {/* Sort */}
             <select
               value={sortBy}
-              onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
+              onChange={(e) =>  setSortBy(e.target.value as typeof sortBy)}
               className="px-3 py-2.5 bg-white/5 border border-white/10 rounded-xl text-gray-400 text-sm focus:outline-none"
             >
               <option value="default">Default</option>

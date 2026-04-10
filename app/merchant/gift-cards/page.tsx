@@ -140,7 +140,7 @@ export default function MerchantGiftCardsPage() {
                       Amount
                       <input
                         value={amount}
-                        onChange={(event) => setAmount(event.target.value)}
+                        onChange={(event) =>  setAmount(event.target.value)}
                         type="number"
                         min="0"
                         step="0.01"
@@ -152,7 +152,7 @@ export default function MerchantGiftCardsPage() {
                       Recipient name
                       <input
                         value={recipientName}
-                        onChange={(event) => setRecipientName(event.target.value)}
+                        onChange={(event) =>  setRecipientName(event.target.value)}
                         type="text"
                         placeholder="Optional"
                         className="mt-1 w-full rounded-xl border border-white/10 bg-black/20 px-3 py-2.5 text-white"
@@ -163,7 +163,7 @@ export default function MerchantGiftCardsPage() {
                     Message
                     <textarea
                       value={message}
-                      onChange={(event) => setMessage(event.target.value)}
+                      onChange={(event) =>  setMessage(event.target.value)}
                       rows={3}
                       placeholder="Happy birthday!"
                       className="mt-1 w-full rounded-xl border border-white/10 bg-black/20 px-3 py-2.5 text-white"

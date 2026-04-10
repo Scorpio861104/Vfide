@@ -8,7 +8,7 @@
  *   import { sanitizeError, getUserFriendlyMessage } from '@/lib/security/errorSanitizer';
  *   
  *   try { ... } catch (error) {
- *     console.error('[INTERNAL]', error); // Server-side logging
+ *     logger.error('[INTERNAL]', error); // Server-side logging
  *     toast.error(getUserFriendlyMessage(error)); // User sees sanitized message
  *   }
  */

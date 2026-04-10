@@ -330,7 +330,7 @@ export function MenuSearch({ value, onChange, resultCount }: MenuSearchProps) {
         <input
           ref={inputRef}
           value={value}
-          onChange={e => onChange(e.target.value)}
+          onChange={e =>  onChange(e.target.value)}
           placeholder="Search pages..."
           className="w-full pl-7 pr-3 py-1.5 bg-white/3 border border-white/5 rounded-lg text-xs text-white placeholder-gray-600 focus:outline-none focus:border-cyan-500/30"
         />

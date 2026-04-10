@@ -154,7 +154,7 @@ function SelectRow({ label, value, onChange, options, description, icon }: Selec
     </div>
     <select
       value={value}
-      onChange={(e) => onChange(e.target.value)}
+      onChange={(e) =>  onChange(e.target.value)}
       className="w-full px-3 py-2 border border-zinc-700 rounded-lg bg-zinc-800 text-gray-100 focus:ring-2 focus:ring-yellow-500/50 focus:border-yellow-500 transition-all outline-none cursor-pointer"
       aria-label={label}
     >
@@ -566,7 +566,7 @@ export function SettingsDashboard({
                     name="theme"
                     value={opt.value}
                     checked={isSelected}
-                    onChange={() => {
+                    onChange={() =>  {
                       setTheme(opt.value);
                       playNotification();
                     }}
@@ -750,7 +750,7 @@ export function SettingsDashboard({
                 min={5}
                 max={480}
                 value={settings.security.sessionTimeoutMinutes}
-                onChange={(e) => updateSecurity({ sessionTimeoutMinutes: safeParseInt(e.target.value, 30, { min: 5, max: 480 }) })}
+                onChange={(e) =>  updateSecurity({ sessionTimeoutMinutes: safeParseInt(e.target.value, 30, { min: 5, max: 480 }) })}
                 className="w-24 px-3 py-2 border border-zinc-700 rounded-lg bg-zinc-800 text-gray-100 focus:ring-2 focus:ring-yellow-500/50 focus:border-yellow-500 transition-all outline-none"
                 aria-label="Session timeout in minutes"
               />
@@ -775,7 +775,7 @@ export function SettingsDashboard({
             <input
               type="email"
               value={settings.security.backupEmail || ''}
-              onChange={(e) => updateSecurity({ backupEmail: e.target.value })}
+              onChange={(e) =>  updateSecurity({ backupEmail: e.target.value })}
               placeholder="user@company.com"
               className="w-full px-3 py-2 border border-zinc-700 rounded-lg bg-zinc-800 text-gray-100 placeholder-gray-500 focus:ring-2 focus:ring-yellow-500/50 focus:border-yellow-500 transition-all outline-none"
               aria-label="Backup email"
@@ -872,7 +872,7 @@ export function SettingsDashboard({
             </div>
             <textarea
               value={importText}
-              onChange={(e) => setImportText(e.target.value)}
+              onChange={(e) =>  setImportText(e.target.value)}
               placeholder="Paste JSON here..."
               className="w-full h-32 px-3 py-2 border border-zinc-700 rounded-lg bg-zinc-800 text-gray-100 placeholder-gray-500 focus:ring-2 focus:ring-yellow-500/50 focus:border-yellow-500 transition-all outline-none resize-none font-mono text-xs"
               aria-label="Import settings JSON"

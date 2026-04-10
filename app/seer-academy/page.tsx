@@ -149,7 +149,7 @@ export default function SeerAcademyPage() {
                   <input
                     type="checkbox"
                     checked={checks[item.key]}
-                    onChange={(e) => setChecks((prev) => ({ ...prev, [item.key]: e.target.checked }))}
+                    onChange={(e) =>  setChecks((prev) => ({ ...prev, [item.key]: e.target.checked }))}
                     className="mt-1"
                   />
                   <span className="text-sm text-zinc-300">{item.label}</span>

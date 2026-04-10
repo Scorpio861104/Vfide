@@ -155,7 +155,7 @@ export default function DeveloperPage() {
               type="text"
               placeholder="https://yourapp.com/webhooks/vfide"
               className="w-full p-3 bg-muted border border-border rounded-lg font-mono text-xs sm:text-sm"
-            />
+             aria-label="https://yourapp.com/webhooks/vfide" />
             <button className="mt-3 w-full sm:w-auto px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm">
               Save Webhook
             </button>

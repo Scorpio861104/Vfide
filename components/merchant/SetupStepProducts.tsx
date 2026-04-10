@@ -1,6 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
+import Image from 'next/image';
 import { Package, Camera, Plus, X, ArrowLeft, ArrowRight, Rocket, Loader2 } from 'lucide-react';
 import { type QuickProduct } from './merchant-setup-types';
 
@@ -48,24 +49,24 @@ export function SetupStepProducts({
               <button onClick={() => handleImageCapture(product.id)}
                 className="w-16 h-16 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center flex-shrink-0 overflow-hidden hover:border-cyan-500/30 transition-colors">
                 {product.imagePreview ? (
-                  <img src={product.imagePreview} alt="" className="w-full h-full object-cover" />
+                  <Image src={product.imagePreview} alt="" className="w-full h-full object-cover"  width={48} height={48} />
                 ) : (
                   <Camera size={20} className="text-gray-500" />
                 )}
               </button>
 
               <div className="flex-1 space-y-2">
-                <input type="text" value={product.name} onChange={(e) => updateProduct(product.id, 'name', e.target.value)}
+                <input type="text" value={product.name} onChange={(e) =>  updateProduct(product.id, 'name', e.target.value)}
                   placeholder={`Product ${idx + 1} name`} maxLength={200}
                   className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm placeholder-gray-500 focus:border-cyan-500/50 focus:outline-none" />
                 <div className="flex gap-2">
                   <div className="relative flex-1">
                     <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">$</span>
                     <input type="number" step="0.01" min="0" value={product.price}
-                      onChange={(e) => updateProduct(product.id, 'price', e.target.value)} placeholder="0.00"
+                      onChange={(e) =>  updateProduct(product.id, 'price', e.target.value)} placeholder="0.00"
                       className="w-full pl-7 pr-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm placeholder-gray-500 focus:border-cyan-500/50 focus:outline-none" />
                   </div>
-                  <input type="text" value={product.description} onChange={(e) => updateProduct(product.id, 'description', e.target.value)}
+                  <input type="text" value={product.description} onChange={(e) =>  updateProduct(product.id, 'description', e.target.value)}
                     placeholder="Short description" maxLength={200}
                     className="flex-[2] px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm placeholder-gray-500 focus:border-cyan-500/50 focus:outline-none" />
                 </div>

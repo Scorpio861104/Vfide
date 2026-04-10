@@ -200,7 +200,7 @@ export function FeeSavingsCalculator() {
             <input
               type="number"
               value={monthlyVolume}
-              onChange={e => setMonthlyVolume(e.target.value)}
+              onChange={e =>  setMonthlyVolume(e.target.value)}
               className="w-full pl-8 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white text-lg font-mono focus:border-cyan-500/50 focus:outline-none"
             />
           </div>
@@ -212,7 +212,7 @@ export function FeeSavingsCalculator() {
             <input
               type="number"
               value={avgTransaction}
-              onChange={e => setAvgTransaction(e.target.value)}
+              onChange={e =>  setAvgTransaction(e.target.value)}
               className="w-full pl-8 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white text-lg font-mono focus:border-cyan-500/50 focus:outline-none"
             />
           </div>

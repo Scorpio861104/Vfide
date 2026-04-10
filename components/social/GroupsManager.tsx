@@ -153,7 +153,7 @@ export function GroupsManager({ friends, onSelectGroup, selectedGroup }: GroupsM
             type="text"
             placeholder="Search groups..."
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={(e) =>  setSearchQuery(e.target.value)}
             className="w-full pl-10 pr-4 py-2 bg-zinc-950 border border-zinc-700 rounded-lg text-zinc-100 text-sm focus:border-violet-400 focus:outline-none"
           />
         </div>
@@ -180,7 +180,7 @@ export function GroupsManager({ friends, onSelectGroup, selectedGroup }: GroupsM
                 type="text"
                 placeholder="Group name"
                 value={newGroupName}
-                onChange={(e) => setNewGroupName(e.target.value)}
+                onChange={(e) =>  setNewGroupName(e.target.value)}
                 className="w-full px-3 py-2 mb-2 bg-zinc-900 border border-zinc-700 rounded-lg text-zinc-100 text-sm focus:border-violet-400 focus:outline-none"
               />
 
@@ -188,7 +188,7 @@ export function GroupsManager({ friends, onSelectGroup, selectedGroup }: GroupsM
                 type="text"
                 placeholder="Description (optional)"
                 value={newGroupDescription}
-                onChange={(e) => setNewGroupDescription(e.target.value)}
+                onChange={(e) =>  setNewGroupDescription(e.target.value)}
                 className="w-full px-3 py-2 mb-3 bg-zinc-900 border border-zinc-700 rounded-lg text-zinc-100 text-sm focus:border-violet-400 focus:outline-none"
               />
 
@@ -385,7 +385,7 @@ export function GroupsManager({ friends, onSelectGroup, selectedGroup }: GroupsM
               <input
                 type="text"
                 value={settingsName}
-                onChange={(e) => setSettingsName(e.target.value)}
+                onChange={(e) =>  setSettingsName(e.target.value)}
                 maxLength={80}
                 className="w-full px-3 py-2 mb-3 bg-zinc-800 border border-zinc-700 rounded-lg text-zinc-100 text-sm focus:border-violet-400 focus:outline-none"
               />
@@ -393,7 +393,7 @@ export function GroupsManager({ friends, onSelectGroup, selectedGroup }: GroupsM
               <input
                 type="text"
                 value={settingsDescription}
-                onChange={(e) => setSettingsDescription(e.target.value)}
+                onChange={(e) =>  setSettingsDescription(e.target.value)}
                 maxLength={200}
                 placeholder="Optional"
                 className="w-full px-3 py-2 mb-4 bg-zinc-800 border border-zinc-700 rounded-lg text-zinc-100 text-sm focus:border-violet-400 focus:outline-none"

@@ -127,7 +127,7 @@ export default function MerchantLoyaltyPage() {
                   <input
                     type="text"
                     value={config.programName}
-                    onChange={(event) => setConfig((current) => ({ ...current, programName: event.target.value }))}
+                    onChange={(event) =>  setConfig((current) => ({ ...current, programName: event.target.value }))}
                     placeholder="Coffee Club"
                     className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 text-sm text-white focus:outline-none"
                   />
@@ -136,7 +136,7 @@ export default function MerchantLoyaltyPage() {
                       type="number"
                       min="1"
                       value={config.redeemThreshold}
-                      onChange={(event) => setConfig((current) => ({ ...current, redeemThreshold: Number(event.target.value) || 10 }))}
+                      onChange={(event) =>  setConfig((current) => ({ ...current, redeemThreshold: Number(event.target.value) || 10 }))}
                       placeholder="Stamps required"
                       className="rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 text-sm text-white focus:outline-none"
                     />
@@ -145,21 +145,21 @@ export default function MerchantLoyaltyPage() {
                       min="0"
                       step="0.01"
                       value={config.redeemValue}
-                      onChange={(event) => setConfig((current) => ({ ...current, redeemValue: Number(event.target.value) || 0 }))}
+                      onChange={(event) =>  setConfig((current) => ({ ...current, redeemValue: Number(event.target.value) || 0 }))}
                       placeholder="Reward value"
                       className="rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 text-sm text-white focus:outline-none"
                     />
                   </div>
                   <textarea
                     value={rewardDescription}
-                    onChange={(event) => setRewardDescription(event.target.value)}
+                    onChange={(event) =>  setRewardDescription(event.target.value)}
                     rows={3}
                     placeholder="Free coffee after 10 stamps"
                     className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 text-sm text-white focus:outline-none"
                   />
                   <select
                     value={rewardType}
-                    onChange={(event) => setRewardType(event.target.value as 'free_item' | 'percentage_discount' | 'fixed_discount')}
+                    onChange={(event) =>  setRewardType(event.target.value as 'free_item' | 'percentage_discount' | 'fixed_discount')}
                     className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 text-sm text-white"
                   >
                     <option value="free_item">Free item</option>
@@ -170,7 +170,7 @@ export default function MerchantLoyaltyPage() {
                     <input
                       type="checkbox"
                       checked={config.enabled}
-                      onChange={(event) => setConfig((current) => ({ ...current, enabled: event.target.checked }))}
+                      onChange={(event) =>  setConfig((current) => ({ ...current, enabled: event.target.checked }))}
                     />
                     Loyalty program active
                   </label>

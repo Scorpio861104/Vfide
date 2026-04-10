@@ -86,7 +86,7 @@ export function DiscussionThread({ discussion, onBack, onReplyAdded }: Discussio
         <div className="bg-zinc-800 border border-zinc-700 rounded-xl p-6">
           <h3 className="text-lg font-bold text-zinc-100 mb-4">Reply to this discussion</h3>
           {!isConnected && <div className="bg-amber-400/20 border border-amber-400 rounded-lg p-3 mb-4 text-sm text-amber-400">⚠️ Connect your wallet to reply with your identity</div>}
-          <textarea value={newReply} onChange={(e) => setNewReply(e.target.value)} placeholder="Share your thoughts..." rows={4} maxLength={1000}
+          <textarea value={newReply} onChange={(e) =>  setNewReply(e.target.value)} placeholder="Share your thoughts..." rows={4} maxLength={1000}
             className="w-full px-4 py-3 bg-zinc-900 border border-zinc-700 rounded-lg text-zinc-100 placeholder-[#A0A0A5] focus:border-cyan-400 focus:outline-none resize-none mb-4" />
           <button onClick={handleReply} disabled={!newReply.trim()}
             className="px-6 py-3 bg-cyan-400 text-zinc-900 font-bold rounded-lg hover:opacity-90 transition-all disabled:opacity-50">💬 Post Reply</button>

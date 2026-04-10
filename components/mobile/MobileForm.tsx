@@ -83,7 +83,7 @@ export const MobileInput = React.forwardRef<HTMLInputElement, MobileInputProps>(
             ${className}
           `}
           {...props}
-        />
+         aria-label="Input field" />
 
         {error && (
           <span className="text-sm text-red-500" role="alert">
@@ -271,7 +271,7 @@ export const MobileSelect = React.forwardRef<
       <select
         ref={setRef}
         value={current}
-        onChange={(e) => {
+        onChange={(e) =>  {
           setCurrent(e.target.value);
           props.onChange?.(e);
         }}
@@ -503,7 +503,7 @@ export function MobileNumberInput({
         <input
           type="number"
           value={current}
-          onChange={(e) => handleChange(safeParseInt(e.target.value, min, { min, max }))}
+          onChange={(e) =>  handleChange(safeParseInt(e.target.value, min, { min, max }))}
           min={min}
           max={max}
           className="flex-1 py-3 px-4 bg-zinc-800 border border-zinc-700 rounded-lg text-zinc-100 text-center font-semibold"

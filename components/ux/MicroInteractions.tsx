@@ -101,7 +101,7 @@ export function ElasticSlider({
         max={max}
         step={step}
         value={value}
-        onChange={(e) => onChange(Number(e.target.value))}
+        onChange={(e) =>  onChange(Number(e.target.value))}
         className="absolute w-full h-2 opacity-0 cursor-pointer z-10"
       />
       <div className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">

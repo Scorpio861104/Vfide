@@ -1,5 +1,6 @@
 'use client';
 
+import { logger } from '@/lib/logger';
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -309,6 +310,6 @@ export function addNotification(address: string, notification: Omit<Notification
     // Trigger custom event for real-time updates
     window.dispatchEvent(new CustomEvent('vfide-notification', { detail: newNotif }));
   } catch (error) {
-    console.error('Failed to persist social notification', error);
+    logger.error('Failed to persist social notification', error);
   }
 }

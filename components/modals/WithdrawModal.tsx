@@ -95,7 +95,7 @@ export default function WithdrawModal({
             </label>
             <select
               value={token}
-              onChange={(e) => setToken(e.target.value)}
+              onChange={(e) =>  setToken(e.target.value)}
               className="w-full px-4 py-3 bg-zinc-900 border border-zinc-800 rounded-lg text-white focus:outline-none focus:border-pink-400 transition-colors"
             >
               <option value="VFIDE">VFIDE</option>
@@ -114,7 +114,7 @@ export default function WithdrawModal({
               <input
                 type="number"
                 value={amount}
-                onChange={(e) => setAmount(e.target.value)}
+                onChange={(e) =>  setAmount(e.target.value)}
                 placeholder="0.00"
                 className="w-full px-4 py-3 bg-zinc-900 border border-zinc-800 rounded-lg text-white text-lg focus:outline-none focus:border-pink-400 transition-colors"
               />
@@ -138,7 +138,7 @@ export default function WithdrawModal({
             <input
               type="text"
               value={toAddress}
-              onChange={(e) => setToAddress(e.target.value)}
+              onChange={(e) =>  setToAddress(e.target.value)}
               placeholder="0x..."
               className="w-full px-4 py-3 bg-zinc-900 border border-zinc-800 rounded-lg text-white focus:outline-none focus:border-pink-400 transition-colors font-mono text-sm"
             />

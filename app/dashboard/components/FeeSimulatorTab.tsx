@@ -36,7 +36,7 @@ export function FeeSimulatorTab({ currentScore }: { currentScore: number }) {
               <input
                 type="number"
                 value={amount}
-                onChange={(e) => setAmount(Number(e.target.value))}
+                onChange={(e) =>  setAmount(Number(e.target.value))}
                 className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-4 text-xl font-bold text-white transition-colors focus:border-cyan-500/50 focus:outline-none"
               />
             </div>
@@ -50,7 +50,7 @@ export function FeeSimulatorTab({ currentScore }: { currentScore: number }) {
                 min={0}
                 max={10000}
                 value={simulatedScore}
-                onChange={(e) => setSimulatedScore(Number(e.target.value))}
+                onChange={(e) =>  setSimulatedScore(Number(e.target.value))}
                 className="h-3 w-full cursor-pointer appearance-none rounded-full bg-white/10 accent-cyan-500"
               />
               <div className="mt-2 flex justify-between text-xs text-white/40">

@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { type Address, createPublicClient, http, parseAbiItem, type Log } from 'viem';
 import { base, baseSepolia } from 'viem/chains';
 import { query } from '@/lib/db';
@@ -40,7 +41,7 @@ async function storeEvent(type: string, data: Record<string, unknown>): Promise<
       ]
     );
   } catch (error) {
-    console.error(`[Indexer] Failed to store ${type} event:`, error);
+    logger.error(`[Indexer] Failed to store ${type} event:`, error);
   }
 }
 
@@ -84,7 +85,7 @@ async function setLastIndexedBlock(block: number): Promise<void> {
       [block.toString()]
     );
   } catch (error) {
-    console.error('[Indexer] Failed to update last indexed block:', error);
+    logger.error('[Indexer] Failed to update last indexed block:', error);
   }
 }
 
@@ -195,7 +196,7 @@ export async function pollEvents(): Promise<{ indexed: number; toBlock: number }
         totalIndexed += 1;
       }
     } catch (error) {
-      console.error(`[Indexer] Error polling ${eventDef.contract}.${eventDef.event}:`, error);
+      logger.error(`[Indexer] Error polling ${eventDef.contract}.${eventDef.event}:`, error);
     }
   }
 

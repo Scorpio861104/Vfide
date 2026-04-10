@@ -1,5 +1,6 @@
 'use client';
 
+import { logger } from '@/lib/logger';
 import { useState } from 'react';
 import { FileText, Globe } from 'lucide-react';
 
@@ -21,14 +22,14 @@ export function GatewayTab({ isConnected }: { isConnected: boolean }) {
         body: JSON.stringify({ orderId, amount, metadata }),
       });
       if (!response.ok) {
-        console.warn('[Enterprise] Order API returned', response.status);
+        logger.warn('[Enterprise] Order API returned', response.status);
         return;
       }
       setOrderId('');
       setAmount('');
       setMetadata('');
     } catch {
-      console.warn('[Enterprise] Order API not available');
+      logger.warn('[Enterprise] Order API not available');
     } finally {
       setIsCreating(false);
     }
@@ -71,7 +72,7 @@ export function GatewayTab({ isConnected }: { isConnected: boolean }) {
               <input
                 type="text"
                 value={orderId}
-                onChange={(e) => setOrderId(e.target.value)}
+                onChange={(e) =>  setOrderId(e.target.value)}
                 placeholder="Enter unique order ID"
                 className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-4 py-3 text-zinc-100 placeholder-zinc-500 focus:border-cyan-400 focus:outline-none"
               />
@@ -81,7 +82,7 @@ export function GatewayTab({ isConnected }: { isConnected: boolean }) {
               <input
                 type="number"
                 value={amount}
-                onChange={(e) => setAmount(e.target.value)}
+                onChange={(e) =>  setAmount(e.target.value)}
                 placeholder="0.00"
                 className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-4 py-3 text-zinc-100 placeholder-zinc-500 focus:border-cyan-400 focus:outline-none"
               />
@@ -92,7 +93,7 @@ export function GatewayTab({ isConnected }: { isConnected: boolean }) {
             <input
               type="text"
               value={metadata}
-              onChange={(e) => setMetadata(e.target.value)}
+              onChange={(e) =>  setMetadata(e.target.value)}
               placeholder="Order reference, customer ID, etc."
               className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-4 py-3 text-zinc-100 placeholder-zinc-500 focus:border-cyan-400 focus:outline-none"
             />

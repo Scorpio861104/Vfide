@@ -1,6 +1,7 @@
 'use client';
 
 import { ChevronLeft, ChevronRight, Package } from 'lucide-react';
+import Image from 'next/image';
 
 interface ProductImageGalleryProps {
   images: (string | { url: string; alt?: string })[];
@@ -34,7 +35,7 @@ export function ProductImageGallery({ images, name, currentImage, setCurrentImag
   return (
     <>
       <div className="aspect-square relative overflow-hidden">
-        <img src={getImageUrl(activeImage)} alt={name} className="w-full h-full object-cover" />
+        <Image src={getImageUrl(activeImage)} alt={name} className="w-full h-full object-cover"  width={48} height={48} />
         {hasDiscount && (
           <div className="absolute top-3 left-3 px-2.5 py-1 bg-red-500 text-white text-xs font-bold rounded-lg">
             -{discountPct}% OFF

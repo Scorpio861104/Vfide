@@ -707,7 +707,7 @@ export function MerchantPOS() {
                   <input
                     type="text"
                     value={newProduct.name}
-                    onChange={(e) => setNewProduct({...newProduct, name: e.target.value})}
+                    onChange={(e) =>  setNewProduct({...newProduct, name: e.target.value})}
                     placeholder="Cappuccino"
                     className="w-full bg-zinc-950 border border-cyan-400/30 rounded-lg px-4 py-3 text-zinc-100 focus:border-cyan-400 outline-none"
                   />
@@ -719,7 +719,7 @@ export function MerchantPOS() {
                     type="number"
                     step="0.01"
                     value={newProduct.price}
-                    onChange={(e) => setNewProduct({...newProduct, price: e.target.value})}
+                    onChange={(e) =>  setNewProduct({...newProduct, price: e.target.value})}
                     placeholder="4.50"
                     className="w-full bg-zinc-950 border border-cyan-400/30 rounded-lg px-4 py-3 text-zinc-100 focus:border-cyan-400 outline-none"
                   />
@@ -730,7 +730,7 @@ export function MerchantPOS() {
                   <input
                     type="text"
                     value={newProduct.category}
-                    onChange={(e) => setNewProduct({...newProduct, category: e.target.value})}
+                    onChange={(e) =>  setNewProduct({...newProduct, category: e.target.value})}
                     placeholder="Coffee, Food, Drinks..."
                     className="w-full bg-zinc-950 border border-cyan-400/30 rounded-lg px-4 py-3 text-zinc-100 focus:border-cyan-400 outline-none"
                   />
@@ -740,7 +740,7 @@ export function MerchantPOS() {
                   <label className="block text-sm text-zinc-100/70 mb-2">Description</label>
                   <textarea
                     value={newProduct.description}
-                    onChange={(e) => setNewProduct({...newProduct, description: e.target.value})}
+                    onChange={(e) =>  setNewProduct({...newProduct, description: e.target.value})}
                     placeholder="Double shot espresso with steamed milk..."
                     rows={3}
                     className="w-full bg-zinc-950 border border-cyan-400/30 rounded-lg px-4 py-3 text-zinc-100 focus:border-cyan-400 outline-none resize-none"
@@ -905,7 +905,7 @@ export function MerchantPOS() {
                   <input
                     type="email"
                     value={customerEmail}
-                    onChange={(e) => setCustomerEmail(e.target.value)}
+                    onChange={(e) =>  setCustomerEmail(e.target.value)}
                     placeholder="customer@example.com"
                     className="w-full bg-zinc-950 border border-cyan-400/30 rounded-lg px-4 py-3 text-zinc-100 focus:border-cyan-400 outline-none"
                   />

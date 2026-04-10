@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 import { MessageCircle, Phone, Mail, ExternalLink, Package, QrCode, Shield, Share2, Copy, Check } from 'lucide-react';
 
 interface Product {
@@ -93,8 +94,8 @@ export function LinkInBioClient({ merchant, products, slug, themeColor }: LinkIn
                 className="bg-white/3 border border-white/5 rounded-xl overflow-hidden hover:border-white/15 transition-colors">
                 <div className="aspect-square bg-white/5 overflow-hidden">
                   {product.images[0] ? (
-                    <img src={getImageUrl(product.images[0])} alt={product.name}
-                      className="w-full h-full object-cover" loading="lazy" />
+                    <Image src={getImageUrl(product.images[0])} alt={product.name}
+                      className="w-full h-full object-cover" loading="lazy"  width={48} height={48} />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center">
                       <Package size={20} className="text-gray-600" />

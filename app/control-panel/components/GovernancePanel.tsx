@@ -258,7 +258,7 @@ export function GovernancePanel() {
             <label className="text-white font-medium">Guarded Action</label>
             <select
               value={selectedAction}
-              onChange={(event) => setSelectedAction(event.target.value as GuardedAction)}
+              onChange={(event) =>  setSelectedAction(event.target.value as GuardedAction)}
               className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white"
             >
               <option value="tokenLockPolicy">Token: Lock Policy</option>

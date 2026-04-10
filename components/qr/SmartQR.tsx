@@ -15,6 +15,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { QrCode, Download, Copy, Check, Share2, Printer } from 'lucide-react';
 
@@ -159,7 +160,7 @@ export function SmartQR({
         p { color: #666; margin: 5px 0; font-size: 14px; }
         .amount { font-size: 32px; font-weight: bold; margin: 10px 0; }
       </style></head><body>
-        <img src="${qrDataUrl}" alt="QR Code" />
+        <Image src="${qrDataUrl}" alt="QR Code"  width={48} height={48} />
         <h2>${data.merchantName}</h2>
         ${data.amount ? `<div class="amount">$${data.amount.toFixed(2)}</div>` : ''}
         ${data.description ? `<p>${data.description}</p>` : ''}
@@ -180,7 +181,7 @@ export function SmartQR({
         className="relative p-4 bg-zinc-950 rounded-2xl border border-white/10"
       >
         {qrDataUrl ? (
-          <img src={qrDataUrl} alt="Payment QR Code" width={size} height={size} className="rounded-lg" />
+          <Image src={qrDataUrl} alt="Payment QR Code" width={size} height={size} className="rounded-lg" />
         ) : (
           <div style={{ width: size, height: size }} className="bg-white/5 rounded-lg flex items-center justify-center">
             <QrCode size={48} className="text-gray-600 animate-pulse" />

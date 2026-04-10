@@ -53,7 +53,7 @@ export function CreateSessionDialog({ isOpen, onClose, onSubmit, targetContracts
           <div>
             <label className="block text-sm font-medium mb-1">Target Contract</label>
             {targetContracts.length > 0 ? (
-              <select value={selectedContract} onChange={(e) => setSelectedContract(e.target.value as Address)}
+              <select value={selectedContract} onChange={(e) =>  setSelectedContract(e.target.value as Address)}
                 className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900" required>
                 <option value="">Select a contract</option>
                 {targetContracts.map((contract) => (
@@ -63,7 +63,7 @@ export function CreateSessionDialog({ isOpen, onClose, onSubmit, targetContracts
                 ))}
               </select>
             ) : (
-              <input type="text" value={selectedContract} onChange={(e) => setSelectedContract(e.target.value as Address)}
+              <input type="text" value={selectedContract} onChange={(e) =>  setSelectedContract(e.target.value as Address)}
                 placeholder="0x..."
                 className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 font-mono" required />
             )}
@@ -85,7 +85,7 @@ export function CreateSessionDialog({ isOpen, onClose, onSubmit, targetContracts
 
           <div>
             <label className="block text-sm font-medium mb-1">Max Transactions</label>
-            <input type="number" value={maxCalls} onChange={(e) => setMaxCalls(parseInt(e.target.value) || 1)}
+            <input type="number" value={maxCalls} onChange={(e) =>  setMaxCalls(parseInt(e.target.value) || 1)}
               min={1} max={1000}
               className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900" />
           </div>

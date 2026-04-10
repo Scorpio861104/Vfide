@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { Redis } from '@upstash/redis';
 
 let redis: Redis | null = null;
@@ -17,7 +18,7 @@ export function getRedis(): Redis | null {
   }
 
   if (process.env.NODE_ENV === 'production') {
-    console.error('[Redis] UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN are required in production');
+    logger.error('[Redis] UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN are required in production');
     return null;
   }
 

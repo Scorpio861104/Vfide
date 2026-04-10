@@ -346,7 +346,7 @@ export function CommandPalette({ customCommands = [], onSearch }: CommandPalette
                 <input
                   type="text"
                   value={query}
-                  onChange={(e) => {
+                  onChange={(e) =>  {
                     setQuery(e.target.value);
                     setSelectedIndex(0);
                   }}

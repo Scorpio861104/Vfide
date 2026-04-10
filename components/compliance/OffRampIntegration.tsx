@@ -190,7 +190,7 @@ function OffRampModal({ walletAddress, onClose }: { walletAddress: string; onClo
               <span>Amount</span>
               <input
                 value={amount}
-                onChange={(event) => setAmount(event.target.value)}
+                onChange={(event) =>  setAmount(event.target.value)}
                 className="w-full rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-white"
                 inputMode="decimal"
                 placeholder="100"
@@ -201,7 +201,7 @@ function OffRampModal({ walletAddress, onClose }: { walletAddress: string; onClo
               <span>Token</span>
               <select
                 value={token}
-                onChange={(event) => setToken(event.target.value)}
+                onChange={(event) =>  setToken(event.target.value)}
                 className="w-full rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-white"
               >
                 {selectedProvider.supportedTokens.map((supportedToken) => (
@@ -233,7 +233,7 @@ function OffRampModal({ walletAddress, onClose }: { walletAddress: string; onClo
               <span>Network</span>
               <select
                 value={network}
-                onChange={(event) => setNetwork(event.target.value)}
+                onChange={(event) =>  setNetwork(event.target.value)}
                 className="w-full rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-white"
               >
                 {selectedProvider.supportedNetworks.map((supportedNetwork) => (
@@ -246,7 +246,7 @@ function OffRampModal({ walletAddress, onClose }: { walletAddress: string; onClo
               <span>Mobile / payout account</span>
               <input
                 value={mobileNumber}
-                onChange={(event) => setMobileNumber(event.target.value)}
+                onChange={(event) =>  setMobileNumber(event.target.value)}
                 className="w-full rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-white"
                 placeholder="+254700123456"
               />

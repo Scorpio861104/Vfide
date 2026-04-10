@@ -141,7 +141,7 @@ export default function ThemeShowcasePage() {
             min="0"
             max="100"
             value={trustScore}
-            onChange={(e) => setTrustScore(Number(e.target.value))}
+            onChange={(e) =>  setTrustScore(Number(e.target.value))}
             className="w-full"
           />
         </div>

@@ -148,7 +148,7 @@ export function ThemeCustomizer() {
             <input
               type="checkbox"
               checked={settings.disableAnimations}
-              onChange={(e) => setDisableAnimations(e.target.checked)}
+              onChange={(e) =>  setDisableAnimations(e.target.checked)}
               className="w-5 h-5 cursor-pointer"
             />
           </div>
@@ -164,7 +164,7 @@ export function ThemeCustomizer() {
             <input
               type="checkbox"
               checked={settings.highContrast}
-              onChange={(e) => setHighContrast(e.target.checked)}
+              onChange={(e) =>  setHighContrast(e.target.checked)}
               className="w-5 h-5 cursor-pointer"
             />
           </div>
@@ -185,7 +185,7 @@ export function ThemeCustomizer() {
               <input
                 type="color"
                 value={primaryColor}
-                onChange={(e) => {
+                onChange={(e) =>  {
                   setPrimaryColor(e.target.value);
                   if (isValidHexColor(e.target.value)) {
                     // Would generate palette from color here
@@ -196,7 +196,7 @@ export function ThemeCustomizer() {
               <input
                 type="text"
                 value={primaryColor}
-                onChange={(e) => setPrimaryColor(e.target.value)}
+                onChange={(e) =>  setPrimaryColor(e.target.value)}
                 placeholder="#0ea5e9"
                 className="flex-1 px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm"
               />

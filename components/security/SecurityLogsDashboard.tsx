@@ -73,7 +73,7 @@ export function SecurityLogsDashboard({ className = '' }: SecurityLogsDashboardP
             <input
               type="text"
               value={searchQuery}
-              onChange={(e) => {
+              onChange={(e) =>  {
                 setSearchQuery(e.target.value);
                 logs.search(e.target.value);
               }}
@@ -82,7 +82,7 @@ export function SecurityLogsDashboard({ className = '' }: SecurityLogsDashboardP
             />
           </div>
           <select
-            onChange={(e) => {
+            onChange={(e) =>  {
               logs.filterBySeverity((e.target.value || null) as 'info' | 'warning' | 'critical' | null);
               playNotification();
             }}

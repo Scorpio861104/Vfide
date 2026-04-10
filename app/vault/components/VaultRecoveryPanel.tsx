@@ -1,4 +1,3 @@
-// @ts-nocheck
 'use client';
 
 import { GlassCard } from '@/components/ui/GlassCard';
@@ -81,7 +80,7 @@ export function VaultRecoveryPanel({
                   type="text"
                   placeholder="Next of Kin address (0x...)"
                   value={newNextOfKinAddress}
-                  onChange={(e) => setNewNextOfKinAddress(e.target.value)}
+                  onChange={(e) =>  setNewNextOfKinAddress(e.target.value)}
                   className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-amber-500/50"
                 />
                 <motion.button
@@ -151,7 +150,7 @@ export function VaultRecoveryPanel({
                   type="text"
                   placeholder="Guardian address (0x...)"
                   value={newGuardianAddress}
-                  onChange={(e) => setNewGuardianAddress(e.target.value)}
+                  onChange={(e) =>  setNewGuardianAddress(e.target.value)}
                   className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-cyan-500/50"
                 />
                 <motion.button

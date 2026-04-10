@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { ArrowRight, Heart, MessageCircle, Share2, Shield, ShoppingCart, Store, Zap } from 'lucide-react';
 import Link from 'next/link';
@@ -52,7 +53,7 @@ export function ShoppablePost({ product, postedBy, timestamp, caption, likes = 0
         <div className="mx-4 mb-3 bg-white/3 border border-white/10 rounded-xl overflow-hidden hover:border-cyan-500/30 transition-colors cursor-pointer">
           {product.imageUrl && (
             <div className="relative h-48 bg-white/5">
-              <img src={product.imageUrl} alt={product.name} className="w-full h-full object-cover" />
+              <Image src={product.imageUrl} alt={product.name} className="w-full h-full object-cover"  width={48} height={48} />
               {hasDiscount && (
                 <div className="absolute top-2 right-2 px-2 py-1 bg-red-500 text-white text-xs font-bold rounded-lg">
                   -{discountPct}%

@@ -155,7 +155,7 @@ export function PrivacySettings() {
                   name="allowMessagesFrom"
                   value={option.value}
                   checked={settings.allowMessagesFrom === option.value}
-                  onChange={(e) => setSettings({ ...settings, allowMessagesFrom: e.target.value as PrivacySettingsType['allowMessagesFrom'] })}
+                  onChange={(e) =>  setSettings({ ...settings, allowMessagesFrom: e.target.value as PrivacySettingsType['allowMessagesFrom'] })}
                   className="sr-only"
                 />
                 <div className="flex items-start gap-3">
@@ -198,7 +198,7 @@ export function PrivacySettings() {
                   name="allowFriendRequestsFrom"
                   value={option.value}
                   checked={settings.allowFriendRequestsFrom === option.value}
-                  onChange={(e) => setSettings({ ...settings, allowFriendRequestsFrom: e.target.value as PrivacySettingsType['allowFriendRequestsFrom'] })}
+                  onChange={(e) =>  setSettings({ ...settings, allowFriendRequestsFrom: e.target.value as PrivacySettingsType['allowFriendRequestsFrom'] })}
                   className="sr-only"
                 />
                 <div className="flex items-start gap-3">
@@ -241,7 +241,7 @@ export function PrivacySettings() {
                   name="showOnlineStatus"
                   value={option.value}
                   checked={settings.showOnlineStatus === option.value}
-                  onChange={(e) => setSettings({ ...settings, showOnlineStatus: e.target.value as PrivacySettingsType['showOnlineStatus'] })}
+                  onChange={(e) =>  setSettings({ ...settings, showOnlineStatus: e.target.value as PrivacySettingsType['showOnlineStatus'] })}
                   className="sr-only"
                 />
                 <div className="flex items-center gap-3">
@@ -267,7 +267,7 @@ export function PrivacySettings() {
               <input
                 type="checkbox"
                 checked={settings.requireProofScoreForRequests}
-                onChange={(e) => setSettings({ ...settings, requireProofScoreForRequests: e.target.checked })}
+                onChange={(e) =>  setSettings({ ...settings, requireProofScoreForRequests: e.target.checked })}
                 className="mt-1 w-4 h-4 rounded border-zinc-700 bg-zinc-950 text-cyan-400 focus:ring-cyan-400 focus:ring-offset-0"
               />
               <div>
@@ -290,7 +290,7 @@ export function PrivacySettings() {
                 max="10000"
                 step="100"
                 value={settings.minimumProofScoreForRequests}
-                onChange={(e) => setSettings({ ...settings, minimumProofScoreForRequests: safeParseInt(e.target.value, 0, { min: 0, max: 10000 }) })}
+                onChange={(e) =>  setSettings({ ...settings, minimumProofScoreForRequests: safeParseInt(e.target.value, 0, { min: 0, max: 10000 }) })}
                 disabled={!settings.requireProofScoreForRequests}
                 className="w-full"
               />
@@ -300,7 +300,7 @@ export function PrivacySettings() {
               <input
                 type="checkbox"
                 checked={settings.autoRejectLowTrust}
-                onChange={(e) => setSettings({ ...settings, autoRejectLowTrust: e.target.checked })}
+                onChange={(e) =>  setSettings({ ...settings, autoRejectLowTrust: e.target.checked })}
                 className="mt-1 w-4 h-4 rounded border-zinc-700 bg-zinc-950 text-cyan-400 focus:ring-cyan-400 focus:ring-offset-0"
               />
               <div>
@@ -330,7 +330,7 @@ export function PrivacySettings() {
               type="text"
               placeholder="Wallet address to block (0x...)"
               value={blockAddress}
-              onChange={(e) => setBlockAddress(e.target.value)}
+              onChange={(e) =>  setBlockAddress(e.target.value)}
               className="flex-1 px-3 py-2 bg-zinc-950 border border-zinc-700 rounded-lg text-zinc-100 text-sm focus:border-pink-400 focus:outline-none"
             />
             <button

@@ -253,7 +253,7 @@ export function DiscussionsTab({ searchQuery }: { searchQuery: string }) {
             )}
             <textarea
               value={newReply}
-              onChange={(e) => setNewReply(e.target.value)}
+              onChange={(e) =>  setNewReply(e.target.value)}
               placeholder="Share your thoughts..."
               rows={4}
               maxLength={1000}
@@ -299,7 +299,7 @@ export function DiscussionsTab({ searchQuery }: { searchQuery: string }) {
                   <input
                     type="text"
                     value={newThread.title}
-                    onChange={(e) => setNewThread({ ...newThread, title: e.target.value })}
+                    onChange={(e) =>  setNewThread({ ...newThread, title: e.target.value })}
                     placeholder="Discussion topic..."
                     className="w-full px-4 py-3 bg-zinc-900 border border-zinc-700 rounded-lg text-zinc-100 placeholder-[#A0A0A5] focus:border-cyan-400 focus:outline-none"
                   />
@@ -308,7 +308,7 @@ export function DiscussionsTab({ searchQuery }: { searchQuery: string }) {
                   <label className="block text-zinc-400 text-sm mb-2">Category</label>
                   <select
                     value={newThread.category}
-                    onChange={(e) => setNewThread({ ...newThread, category: e.target.value })}
+                    onChange={(e) =>  setNewThread({ ...newThread, category: e.target.value })}
                     className="w-full px-4 py-3 bg-zinc-900 border border-zinc-700 rounded-lg text-zinc-100 focus:border-cyan-400 focus:outline-none"
                   >
                     <option value="general">General</option>
@@ -323,7 +323,7 @@ export function DiscussionsTab({ searchQuery }: { searchQuery: string }) {
                 <label className="block text-zinc-400 text-sm mb-2">Content *</label>
                 <textarea
                   value={newThread.content}
-                  onChange={(e) => setNewThread({ ...newThread, content: e.target.value })}
+                  onChange={(e) =>  setNewThread({ ...newThread, content: e.target.value })}
                   placeholder="What would you like to discuss?"
                   rows={5}
                   maxLength={2000}

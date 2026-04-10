@@ -123,7 +123,7 @@ export function NotificationPreferences({
                   </label>
                   <select
                     value={pref.frequency}
-                    onChange={(e) =>
+                    onChange={(e) => 
                       onUpdatePreference(type as NotificationType, {
                         frequency: e.target.value as NotificationFrequency,
                       })
@@ -152,7 +152,7 @@ export function NotificationPreferences({
                         <input
                           type="checkbox"
                           checked={pref.channels.includes(channel)}
-                          onChange={(e) => {
+                          onChange={(e) =>  {
                             const newChannels = e.target.checked
                               ? [...pref.channels, channel]
                               : pref.channels.filter((c) => c !== channel);
@@ -179,7 +179,7 @@ export function NotificationPreferences({
                     <input
                       type="checkbox"
                       defaultChecked={!!(pref.doNotDisturbStart && pref.doNotDisturbEnd)}
-                      onChange={(e) => {
+                      onChange={(e) =>  {
                         if (e.target.checked) {
                           onUpdatePreference(type as NotificationType, {
                             doNotDisturbStart: '22:00',
@@ -202,7 +202,7 @@ export function NotificationPreferences({
                       <input
                         type="time"
                         value={pref.doNotDisturbStart}
-                        onChange={(e) =>
+                        onChange={(e) => 
                           onUpdatePreference(type as NotificationType, {
                             doNotDisturbStart: e.target.value,
                           })
@@ -212,7 +212,7 @@ export function NotificationPreferences({
                       <input
                         type="time"
                         value={pref.doNotDisturbEnd}
-                        onChange={(e) =>
+                        onChange={(e) => 
                           onUpdatePreference(type as NotificationType, {
                             doNotDisturbEnd: e.target.value,
                           })

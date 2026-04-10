@@ -123,7 +123,7 @@ export function ErrorTracker({
 
         <select
           value={selectedCategory}
-          onChange={(e) => setSelectedCategory(e.target.value as ErrorCategory | 'all')}
+          onChange={(e) =>  setSelectedCategory(e.target.value as ErrorCategory | 'all')}
           className="px-3 py-1.5 bg-slate-800 border border-slate-700 rounded text-sm text-white focus:outline-none focus:border-blue-500"
         >
           <option value="all">All Categories</option>
@@ -136,7 +136,7 @@ export function ErrorTracker({
 
         <select
           value={selectedSeverity}
-          onChange={(e) => setSelectedSeverity(e.target.value as 'all' | 'low' | 'medium' | 'high')}
+          onChange={(e) =>  setSelectedSeverity(e.target.value as 'all' | 'low' | 'medium' | 'high')}
           className="px-3 py-1.5 bg-slate-800 border border-slate-700 rounded text-sm text-white focus:outline-none focus:border-blue-500"
         >
           <option value="all">All Severities</option>

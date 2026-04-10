@@ -83,7 +83,7 @@ export default function RemittancePage() {
                   Transfer amount
                   <input
                     value={amount}
-                    onChange={(event) => setAmount(event.target.value)}
+                    onChange={(event) =>  setAmount(event.target.value)}
                     className="mt-1 w-full rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-white"
                     inputMode="decimal"
                   />

@@ -4,6 +4,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import {
@@ -167,7 +168,7 @@ export function ProductDetailModal({ productId, onClose, onAddToCart }: ProductD
                     {related.slice(0, 6).map(r => (
                       <div key={r.id} className="flex-shrink-0 w-36 cursor-pointer group" onClick={() => loadRelated(r.id)}>
                         <div className="aspect-square rounded-lg bg-white/5 overflow-hidden mb-2">
-                          {r.imageUrl ? <img src={r.imageUrl} alt="" className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
+                          {r.imageUrl ? <Image src={r.imageUrl} alt="" className="w-full h-full object-cover group-hover:scale-105 transition-transform"  width={48} height={48} />
                             : <div className="w-full h-full flex items-center justify-center"><Package size={20} className="text-gray-600" /></div>}
                         </div>
                         <div className="text-xs text-white truncate">{r.name}</div>

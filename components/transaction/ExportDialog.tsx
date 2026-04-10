@@ -285,7 +285,7 @@ export function ExportDialog({ isOpen, onClose, userId }: ExportDialogProps) {
                     <input
                       type="date"
                       value={formatDate(options.dateRange.start)}
-                      onChange={(e) =>
+                      onChange={(e) => 
                         setOptions((prev) => ({
                           ...prev,
                           dateRange: {
@@ -302,7 +302,7 @@ export function ExportDialog({ isOpen, onClose, userId }: ExportDialogProps) {
                     <input
                       type="date"
                       value={formatDate(options.dateRange.end)}
-                      onChange={(e) =>
+                      onChange={(e) => 
                         setOptions((prev) => ({
                           ...prev,
                           dateRange: {
@@ -376,7 +376,7 @@ export function ExportDialog({ isOpen, onClose, userId }: ExportDialogProps) {
                     <input
                       type="checkbox"
                       checked={options[key as keyof ExportOptions] as boolean}
-                      onChange={(e) =>
+                      onChange={(e) => 
                         setOptions((prev) => ({ ...prev, [key]: e.target.checked }))
                       }
                       className="w-4 h-4 rounded border-zinc-600 bg-zinc-800 text-yellow-500 focus:ring-yellow-500"
@@ -393,7 +393,7 @@ export function ExportDialog({ isOpen, onClose, userId }: ExportDialogProps) {
                 <label className="text-sm font-medium text-gray-300">Tax Software Format (Optional)</label>
                 <select
                   value={options.taxFormat || ''}
-                  onChange={(e) =>
+                  onChange={(e) => 
                     setOptions((prev) => ({
                       ...prev,
                       taxFormat: e.target.value as TaxFormat | undefined,

@@ -122,7 +122,7 @@ export default function POSPage() {
                   step="0.01"
                   min="0"
                   value={amount}
-                  onChange={(e) => setAmount(e.target.value)}
+                  onChange={(e) =>  setAmount(e.target.value)}
                   placeholder="0.00"
                   className="w-full pl-10 pr-4 py-4 bg-white/5 border border-white/10 rounded-xl text-white text-2xl font-mono focus:border-cyan-500/50 focus:outline-none"
                   autoFocus
@@ -135,7 +135,7 @@ export default function POSPage() {
               <input
                 type="text"
                 value={description}
-                onChange={(e) => setDescription(e.target.value)}
+                onChange={(e) =>  setDescription(e.target.value)}
                 placeholder="e.g., 2x kente cloth"
                 maxLength={200}
                 className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:border-cyan-500/50 focus:outline-none"

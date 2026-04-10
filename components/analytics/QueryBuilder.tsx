@@ -246,7 +246,7 @@ export function QueryBuilder({
                 >
                   <select
                     value={filter.field}
-                    onChange={(e) => updateFilter(index, { field: e.target.value })}
+                    onChange={(e) =>  updateFilter(index, { field: e.target.value })}
                     className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 text-sm"
                   >
                     {fields.map(field => (
@@ -258,7 +258,7 @@ export function QueryBuilder({
 
                   <select
                     value={filter.operator}
-                    onChange={(e) => updateFilter(index, { operator: e.target.value as FilterCondition['operator'] })}
+                    onChange={(e) =>  updateFilter(index, { operator: e.target.value as FilterCondition['operator'] })}
                     className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 text-sm"
                   >
                     <option value="equals">Equals</option>
@@ -283,7 +283,7 @@ export function QueryBuilder({
                               ? 'false'
                               : ''
                     }
-                    onChange={(e) => updateFilter(index, { value: e.target.value })}
+                    onChange={(e) =>  updateFilter(index, { value: e.target.value })}
                     placeholder="Value"
                     className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 text-sm"
                   />
@@ -311,7 +311,7 @@ export function QueryBuilder({
           <select
             multiple
             value={groupBy}
-            onChange={(e) => setGroupBy(Array.from(e.target.selectedOptions, opt => opt.value))}
+            onChange={(e) =>  setGroupBy(Array.from(e.target.selectedOptions, opt => opt.value))}
             className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 text-sm"
             size={4}
           >
@@ -365,7 +365,7 @@ export function QueryBuilder({
                 >
                   <select
                     value={agg.function}
-                    onChange={(e) => updateAggregation(index, { function: e.target.value as AggregationConfig['function'] })}
+                    onChange={(e) =>  updateAggregation(index, { function: e.target.value as AggregationConfig['function'] })}
                     className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 text-sm"
                   >
                     <option value="sum">SUM</option>
@@ -377,7 +377,7 @@ export function QueryBuilder({
 
                   <select
                     value={agg.field}
-                    onChange={(e) => updateAggregation(index, { field: e.target.value })}
+                    onChange={(e) =>  updateAggregation(index, { field: e.target.value })}
                     className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 text-sm"
                   >
                     {fields.map(field => (
@@ -390,7 +390,7 @@ export function QueryBuilder({
                   <input
                     type="text"
                     value={agg.alias || ''}
-                    onChange={(e) => updateAggregation(index, { alias: e.target.value })}
+                    onChange={(e) =>  updateAggregation(index, { alias: e.target.value })}
                     placeholder="Alias (optional)"
                     className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 text-sm"
                   />
@@ -418,7 +418,7 @@ export function QueryBuilder({
           <input
             type="number"
             value={limit}
-            onChange={(e) => setLimit(safeParseInt(e.target.value, 100, { min: 1 }))}
+            onChange={(e) =>  setLimit(safeParseInt(e.target.value, 100, { min: 1 }))}
             min={1}
             className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
           />

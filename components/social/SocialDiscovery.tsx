@@ -157,7 +157,7 @@ export function SocialDiscovery({ onSelectUser }: SocialDiscoveryProps) {
                 type="text"
                 placeholder="Search users, tags, or interests..."
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(e) =>  setSearchQuery(e.target.value)}
                 className="w-full pl-10 pr-4 py-3 bg-zinc-900 border border-zinc-700 rounded-lg text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-cyan-400 transition-colors"
               />
             </div>
@@ -190,7 +190,7 @@ export function SocialDiscovery({ onSelectUser }: SocialDiscoveryProps) {
                     <input
                       type="number"
                       value={filter.proofScoreMin || ''}
-                      onChange={(e) => setFilter({ ...filter, proofScoreMin: e.target.value ? safeParseInt(e.target.value, 0, { min: 0 }) : undefined })}
+                      onChange={(e) =>  setFilter({ ...filter, proofScoreMin: e.target.value ? safeParseInt(e.target.value, 0, { min: 0 }) : undefined })}
                       className="w-full px-3 py-2 bg-zinc-950 border border-zinc-700 rounded text-zinc-100 focus:outline-none focus:border-cyan-400"
                       placeholder="0"
                     />
@@ -201,7 +201,7 @@ export function SocialDiscovery({ onSelectUser }: SocialDiscoveryProps) {
                     <input
                       type="number"
                       value={filter.proofScoreMax || ''}
-                      onChange={(e) => setFilter({ ...filter, proofScoreMax: e.target.value ? safeParseInt(e.target.value, undefined, { max: 10000 }) : undefined })}
+                      onChange={(e) =>  setFilter({ ...filter, proofScoreMax: e.target.value ? safeParseInt(e.target.value, undefined, { max: 10000 }) : undefined })}
                       className="w-full px-3 py-2 bg-zinc-950 border border-zinc-700 rounded text-zinc-100 focus:outline-none focus:border-cyan-400"
                       placeholder="10000"
                     />
@@ -211,7 +211,7 @@ export function SocialDiscovery({ onSelectUser }: SocialDiscoveryProps) {
                     <label className="text-sm text-zinc-400 font-semibold mb-2 block">Sort By</label>
                     <select
                       value={filter.sortBy}
-                      onChange={(e) => setFilter({ ...filter, sortBy: e.target.value as DiscoverFilter['sortBy'] })}
+                      onChange={(e) =>  setFilter({ ...filter, sortBy: e.target.value as DiscoverFilter['sortBy'] })}
                       className="w-full px-3 py-2 bg-zinc-950 border border-zinc-700 rounded text-zinc-100 focus:outline-none focus:border-cyan-400"
                     >
                       <option value="trending">Trending</option>

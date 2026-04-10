@@ -142,7 +142,7 @@ export function GasPriceAlert({ compact = false }: GasPriceAlertProps) {
                 min="1"
                 max="100"
                 value={alert.threshold}
-                onChange={e => setAlertThreshold(Number(e.target.value))}
+                onChange={e =>  setAlertThreshold(Number(e.target.value))}
                 className="w-full h-2 bg-zinc-700 rounded-lg appearance-none cursor-pointer accent-amber-500"
               />
               <div className="flex justify-between mt-1 text-xs text-zinc-600">
