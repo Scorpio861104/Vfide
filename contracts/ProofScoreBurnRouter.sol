@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
+import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 import "./SharedInterfaces.sol";
 
 /**
@@ -17,14 +18,21 @@ import "./SharedInterfaces.sol";
 error BURN_Zero();
 error BURN_NotDAO();
 
-contract ProofScoreBurnRouter is Ownable, Pausable, ReentrancyGuard {
-    event ModulesSet(address seer, address sanctumSink, address burnSink, address ecosystemSink);
+interface IMicroTxPriceOracle_Burn {
+    function getPrice() external view returns (uint256 price, uint8 source);
+}
+
+contract ProofScoreBurnRouter is IProofScoreBurnRouterToken, Ownable, Pausable, ReentrancyGuard {
+    event ModulesSet(address indexed seer, address indexed sanctumSink, address indexed burnSink, address ecosystemSink);
     event PolicySet(uint16 baseBurnBps, uint16 baseSanctumBps, uint16 baseEcosystemBps, uint16 highTrustReduction, uint16 lowTrustPenalty);
     event FeesComputed(address indexed from, address indexed to, uint256 burnAmount, uint256 sanctumAmount, uint256 ecosystemAmount, uint16 score);
     event SustainabilitySet(uint256 dailyBurnCap, uint256 minimumSupplyFloor, uint16 ecosystemMinBps);
+    event AdaptiveFeesSet(uint256 lowVolumeThreshold, uint256 highVolumeThreshold, uint16 lowVolumeMultiplier, uint16 highVolumeMultiplier, bool enabled);
     event MicroTxFeeCeilingSet(uint16 maxBps, uint256 maxAmount);
     event MicroTxUsdCapSet(address indexed priceOracle, uint256 maxUsd6);
     event BurnCapReached(uint256 dailyBurned, uint256 dailyCap, uint256 redirectedToEcosystem);
+    event BurnRecorded(uint256 burnAmount, uint256 newDailyBurnedAmount);
+    event VolumeRecorded(uint256 amount, uint256 newDailyVolumeTracked);
     // L-03: Emitted when seer returns score 0 for a user, which silently applies max fees.
     // Monitoring systems should alert on this — it may indicate a misconfigured seer address.
     event SeerScoreZeroWarning(address indexed user, address indexed seerAddr);
@@ -50,9 +58,9 @@ contract ProofScoreBurnRouter is Ownable, Pausable, ReentrancyGuard {
     uint16 public constant DEFAULT_SANCTUM_BPS = 5;  // 0.05% base Sanctum
     uint16 public constant DEFAULT_ECOSYSTEM_BPS = 20;  // 0.2% base Ecosystem
     
-    uint16 public baseBurnBps = DEFAULT_BURN_BPS;
-    uint16 public baseSanctumBps = DEFAULT_SANCTUM_BPS;
-    uint16 public baseEcosystemBps = DEFAULT_ECOSYSTEM_BPS;
+    uint16 public constant baseBurnBps = DEFAULT_BURN_BPS;
+    uint16 public constant baseSanctumBps = DEFAULT_SANCTUM_BPS;
+    uint16 public constant baseEcosystemBps = DEFAULT_ECOSYSTEM_BPS;
     
     // Linear fee curve parameters (0-10000 scale)
     // Fee = linear interpolation between minFeeBps and maxFeeBps based on score
@@ -127,14 +135,20 @@ contract ProofScoreBurnRouter is Ownable, Pausable, ReentrancyGuard {
     mapping(address => uint16) public cachedTimeWeightedScore;
 
     function _dayStart(uint256 timestamp) internal pure returns (uint256) {
-        return (timestamp / 1 days) * 1 days;
+        uint256 wholeDays = Math.mulDiv(timestamp, 1, 1 days);
+        return wholeDays * 1 days;
     }
 
     constructor(address _seer, address _sanctumSink, address _burnSink, address _ecosystemSink) {
+        if (_seer == address(0) || _sanctumSink == address(0) || _ecosystemSink == address(0)) {
+            revert BURN_Zero();
+        }
         _validateModules(_seer, _sanctumSink, _burnSink, _ecosystemSink);
         seer = ISeer(_seer);
         sanctumSink = _sanctumSink;
-        burnSink = _burnSink;
+        if (_burnSink != address(0)) {
+            burnSink = _burnSink;
+        }
         ecosystemSink = _ecosystemSink;
         currentDayStart = _dayStart(block.timestamp);
         emit ModulesSet(_seer, _sanctumSink, _burnSink, _ecosystemSink);
@@ -190,6 +204,7 @@ contract ProofScoreBurnRouter is Ownable, Pausable, ReentrancyGuard {
         lowVolumeFeeMultiplier = _lowVolMultiplier;
         highVolumeFeeMultiplier = _highVolMultiplier;
         adaptiveFeesEnabled = _enabled;
+        emit AdaptiveFeesSet(_lowVolumeThreshold, _highVolumeThreshold, _lowVolMultiplier, _highVolMultiplier, _enabled);
     }
     
     /**
@@ -482,6 +497,7 @@ contract ProofScoreBurnRouter is Ownable, Pausable, ReentrancyGuard {
     }
 
     function setMicroTxUsdCap(address _priceOracle, uint256 _maxUsd6) external onlyOwner nonReentrant {
+        if (_maxUsd6 != 0 && _priceOracle == address(0)) revert BURN_Zero();
         microTxPriceOracle = _priceOracle;
         microTxMaxUsd6 = _maxUsd6;
         emit MicroTxUsdCapSet(_priceOracle, _maxUsd6);
@@ -490,16 +506,14 @@ contract ProofScoreBurnRouter is Ownable, Pausable, ReentrancyGuard {
     function _isWithinMicroTxUsdCap(uint256 amount) internal view returns (bool) {
         if (microTxMaxUsd6 == 0 || microTxPriceOracle == address(0)) return false;
 
-        (bool ok, bytes memory data) = microTxPriceOracle.staticcall(
-            abi.encodeWithSignature("getPrice()")
-        );
-        if (!ok || data.length < 64) return false;
+        try IMicroTxPriceOracle_Burn(microTxPriceOracle).getPrice() returns (uint256 price, uint8 priceSource) {
+            if (price == 0 || priceSource > 2) return false;
 
-        (uint256 price, ) = abi.decode(data, (uint256, uint8));
-        if (price == 0) return false;
-
-        uint256 amountUsd6 = (amount * price) / 1e30;
-        return amountUsd6 <= microTxMaxUsd6;
+            uint256 amountUsd6 = (amount * price) / 1e30;
+            return amountUsd6 <= microTxMaxUsd6;
+        } catch {
+            return false;
+        }
     }
 
     // ─────────────────────────── Core Interface (for VFIDEToken)
@@ -546,30 +560,25 @@ contract ProofScoreBurnRouter is Ownable, Pausable, ReentrancyGuard {
             totalBps = microTxFeeCeilingBps;
         }
         
-        // Split total fee: 40% burn, 10% sanctum, 50% ecosystem
-        // Sustainable split to fund: council, fixed work compensation, and operations
-        uint256 burnBps = (totalBps * 40) / 100;       // 40% of total (deflationary)
-        uint256 sanctumBps = (totalBps * 10) / 100;    // 10% of total (charity)
-        uint256 ecosystemBps = totalBps - burnBps - sanctumBps; // 50% remainder (operations)
-        
-        // Ensure ecosystem always gets minimum (sustainability)
-        if (ecosystemBps < ecosystemMinBps) {
-            uint256 shortfall = ecosystemMinBps - ecosystemBps;
-            ecosystemBps = ecosystemMinBps;
-            // Take shortfall from burn portion
-            if (burnBps >= shortfall) {
-                burnBps -= shortfall;
+        // Split total fee: 40% burn, 10% sanctum, 50% ecosystem.
+        // Use mulDiv directly so the proportional split stays precise without chained divide/multiply steps.
+        uint256 totalFee = Math.mulDiv(amount, totalBps, 10_000);
+        burnAmount = Math.mulDiv(totalFee, 40, 100);
+        sanctumAmount = Math.mulDiv(totalFee, 10, 100);
+        ecosystemAmount = totalFee - burnAmount - sanctumAmount;
+
+        // Ensure ecosystem always gets at least the configured minimum share.
+        uint256 minEcosystemAmount = Math.mulDiv(amount, ecosystemMinBps, 10_000);
+        if (ecosystemAmount < minEcosystemAmount) {
+            uint256 shortfall = minEcosystemAmount - ecosystemAmount;
+            if (burnAmount >= shortfall) {
+                burnAmount -= shortfall;
+                ecosystemAmount += shortfall;
             } else {
-                burnBps = 0;
+                ecosystemAmount += burnAmount;
+                burnAmount = 0;
             }
         }
-        
-        // Compute burn/sanctum directly from totalBps to avoid chained divide-then-multiply paths.
-        // three amounts are derived consistently.  Ecosystem absorbs any rounding dust.
-        uint256 totalFee = (amount * totalBps) / 10000;
-        burnAmount    = (amount * burnBps) / 10000;
-        sanctumAmount = (amount * sanctumBps) / 10000;
-        ecosystemAmount = totalFee - burnAmount - sanctumAmount;
         
         // ═══ SUSTAINABILITY CHECKS ═══
         
@@ -645,6 +654,7 @@ contract ProofScoreBurnRouter is Ownable, Pausable, ReentrancyGuard {
         require(msg.sender == token, "only token");
         _resetDayIfNeeded();
         dailyBurnedAmount += burnAmount;
+        emit BurnRecorded(burnAmount, dailyBurnedAmount);
     }
     
     /**
@@ -655,6 +665,7 @@ contract ProofScoreBurnRouter is Ownable, Pausable, ReentrancyGuard {
         require(msg.sender == token, "only token");
         _resetDayIfNeeded();
         dailyVolumeTracked += amount;
+        emit VolumeRecorded(amount, dailyVolumeTracked);
     }
 
     /// @dev Atomically reset both counters when a new day starts

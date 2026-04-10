@@ -460,30 +460,23 @@ contract VaultRecoveryClaim is Ownable, ReentrancyGuard {
      */
     function _executeRecovery(uint256 claimId) internal {
         RecoveryClaim storage claim = claims[claimId];
-        
-        // First, approve the recovery via VaultInfrastructure
+
+        // Effects first: keep the claim in an approved-but-active state while the hub call runs.
+        // If the downstream call reverts, this assignment is rolled back automatically.
+        claim.status = ClaimStatus.Approved;
+
+        // First, approve the recovery via VaultInfrastructure.
         // This contract must be set as a recovery approver using:
         // VaultInfrastructure.setRecoveryApprover(address(this), true)
         vaultHub.approveForceRecovery(claim.vault, claim.claimant);
-        
-        // Check if approval threshold is met and timelock has started
-        // If we're the only approver or last needed, this will initiate the timelock
+
+        // Check if the hub timelock is already open. Actual ownership transfer still happens in
+        // finalizeExecution(), which keeps state transitions effects-first around that external call.
         uint64 unlockTime = vaultHub.recoveryUnlockTime(claim.vault);
-        
         if (unlockTime != 0 && block.timestamp >= unlockTime) {
-            // Timelock passed, finalize the recovery
-            // Note: DAO must call finalizeForceRecovery, or we need DAO role
-            // For now, emit event and update status - DAO/governance will finalize
-            claim.status = ClaimStatus.Executed;
-            // M-12 FIX: Don't clear activeClaimForVault here — wait for finalizeExecution success
-        } else if (unlockTime != 0) {
-            // Timelock started but not passed yet - mark as approved, will need finalize later
-            claim.status = ClaimStatus.Approved;
-        } else {
-            // Need more approvals - keep in approved state
-            claim.status = ClaimStatus.Approved;
+            // Timelock has already matured; the caller can finalize immediately via finalizeExecution().
         }
-        
+
         emit ClaimExecuted(claimId, claim.vault, claim.claimant, claim.originalOwner);
     }
     
@@ -497,24 +490,20 @@ contract VaultRecoveryClaim is Ownable, ReentrancyGuard {
     function finalizeExecution(uint256 claimId) external nonReentrant {
         RecoveryClaim storage claim = claims[claimId];
         require(claim.status == ClaimStatus.Approved || claim.status == ClaimStatus.Executed, "not approved");
-        
+
         uint64 unlockTime = vaultHub.recoveryUnlockTime(claim.vault);
         require(unlockTime != 0, "recovery not initiated on hub");
         require(block.timestamp >= unlockTime, "timelock not passed");
-        
-        // Call VaultInfrastructure to finalize
-        // Note: This requires this contract or caller to have DAO role
-        // If this fails, DAO must manually call finalizeForceRecovery
-        try vaultHub.finalizeForceRecovery(claim.vault) {
-            claim.status = ClaimStatus.Executed;
-            // M-12 FIX: Clear activeClaimForVault ONLY after successful execution
-            activeClaimForVault[claim.vault] = 0;
-            emit ClaimExecuted(claimId, claim.vault, claim.claimant, claim.originalOwner);
-        } catch {
-            // DAO must manually finalize - emit event for tracking
-            // M-12 FIX: Keep activeClaimForVault intact so no new claims can be initiated
-            emit ClaimApproved(claimId, claim.vault, claim.claimant);
-        }
+
+        // Effects first: mark the claim finalized before the external hub call executes.
+        // If finalization fails, the transaction reverts and the previous approved state is restored automatically.
+        claim.status = ClaimStatus.Executed;
+        activeClaimForVault[claim.vault] = 0;
+
+        // Call VaultInfrastructure to finalize.
+        // Note: This requires this contract or caller to have DAO role.
+        vaultHub.finalizeForceRecovery(claim.vault);
+        emit ClaimExecuted(claimId, claim.vault, claim.claimant, claim.originalOwner);
     }
     
     // ═══════════════════════════════════════════════════════════════════════════════

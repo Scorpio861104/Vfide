@@ -14,6 +14,18 @@ contract MockVaultHub is IVaultHub {
     function vaultOf(address owner) external view override returns (address) {
         return vaults[owner];
     }
+
+    function ownerOfVault(address vault) external view override returns (address) {
+        return vaults[vault] == vault ? vault : address(0);
+    }
+
+    function vaultsOfBatch(address[] calldata owners) external view override returns (address[] memory batchVaults) {
+        uint256 length = owners.length;
+        batchVaults = new address[](length);
+        for (uint256 i = 0; i < length; i++) {
+            batchVaults[i] = vaults[owners[i]];
+        }
+    }
     
     function isVault(address a) external view override returns (bool) {
         // Returns true if a == vaults[a], it's a vault (since we set vault=owner in test)

@@ -30,6 +30,7 @@ contract DeployPhase3Peripherals {
         // via setBridge(address(bridge)) immediately after bridge deployment.
         BridgeSecurityModule securityModule = new BridgeSecurityModule(owner, owner);
         bsm_ = address(securityModule);
+        if (bsm_ == address(0)) revert DPP_Zero();
         bsm = bsm_;
         emit PeripheralDeployed(bytes32("BSM"), bsm_);
 
@@ -41,6 +42,7 @@ contract DeployPhase3Peripherals {
             owner
         );
         oracle_ = address(priceOracle);
+        if (oracle_ == address(0)) revert DPP_Zero();
         oracle = oracle_;
         emit PeripheralDeployed(bytes32("ORC"), oracle_);
     }

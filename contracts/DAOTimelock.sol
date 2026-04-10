@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
+import { Address } from "@openzeppelin/contracts/utils/Address.sol";
 import "./SharedInterfaces.sol";
 
 error TL_NotAdmin();
@@ -10,12 +11,12 @@ error TL_TooEarly();
 error TL_AlreadyExecuted(); // TL-02 FIX: distinct error for already-executed ops
 error TL_OnlyTimelock();
 
-contract DAOTimelock is ReentrancyGuard {
-    event AdminSet(address admin);
+contract DAOTimelock is ReentrancyGuard, IDAOTimelock {
+    event AdminSet(address indexed admin);
     event DelaySet(uint64 delay);
-    event LedgerSet(address ledger);
-    event PanicGuardSet(address panicGuard);
-    event Queued(bytes32 id, address target, uint256 value, bytes data, uint64 eta);
+    event LedgerSet(address indexed ledger);
+    event PanicGuardSet(address indexed panicGuard);
+    event Queued(bytes32 indexed id, address indexed target, uint256 value, bytes data, uint64 eta);
     event Cancelled(bytes32 id);
     event Executed(bytes32 id);
     event GracePeriodExpired(bytes32 id);
@@ -61,6 +62,13 @@ contract DAOTimelock is ReentrancyGuard {
     function setAdmin(address _admin) external onlyTimelockSelf { require(_admin!=address(0),"admin=0"); admin=_admin; emit AdminSet(_admin); _log("tl_admin_set"); }
     /// @notice TL-02 FIX: Set or remove the secondary executor (backup execution role).
     function setSecondaryExecutor(address _executor) external onlyTimelockSelf {
+        if (_executor == address(0)) {
+            secondaryExecutor = address(0);
+            emit SecondaryExecutorSet(address(0));
+            _log("tl_secondary_executor_cleared");
+            return;
+        }
+
         secondaryExecutor = _executor;
         emit SecondaryExecutorSet(_executor);
         _log("tl_secondary_executor_set");
@@ -124,27 +132,11 @@ contract DAOTimelock is ReentrancyGuard {
         }
 
         op.done=true;
-        (bool ok, bytes memory r) = op.target.call{value:op.value}(op.data);
-        require(ok, "exec failed");
-        
-        // Only validate bool return for transfer/transferFrom/approve selectors
-        if (r.length == 32 && op.data.length >= 4) {
-            bytes4 selector;
-            bytes memory data = op.data;
-            assembly {
-                selector := mload(add(data, 32))
-            }
-            // ERC20: transfer(address,uint256), transferFrom(address,address,uint256), approve(address,uint256)
-            if (selector == bytes4(0xa9059cbb) ||  // transfer
-                selector == bytes4(0x23b872dd) ||  // transferFrom  
-                selector == bytes4(0x095ea7b3)) {  // approve
-                bool returnValue = abi.decode(r, (bool));
-                require(returnValue, "TL: ERC20 call returned false");
-            }
-        }
+        res = _callTarget(op.target, op.value, op.data);
 
-        emit Executed(id); _log("tl_executed");
-        return r;
+        emit Executed(id);
+        _log("tl_executed");
+        return res;
     }
 
     /**
@@ -170,16 +162,38 @@ contract DAOTimelock is ReentrancyGuard {
         require(block.timestamp <= op.eta + EXPIRY_WINDOW, "TL: transaction expired");
 
         op.done = true;
-        (bool ok, bytes memory r) = op.target.call{value: op.value}(op.data);
-        require(ok, "TL: secondary exec failed");
+        res = _callTarget(op.target, op.value, op.data);
 
         emit ExecutedBySecondary(id);
         _log("tl_executed_by_secondary");
-        return r;
+        return res;
+    }
+
+    function _callTarget(address target, uint256 value, bytes memory data) internal returns (bytes memory result) {
+        if (data.length == 0) {
+            Address.sendValue(payable(target), value);
+            return bytes("");
+        }
+
+        result = Address.functionCallWithValue(target, data, value);
+        if (_requiresBoolValidation(data, result)) {
+            require(abi.decode(result, (bool)), "TL: ERC20 call returned false");
+        }
+    }
+
+    function _requiresBoolValidation(bytes memory data, bytes memory result) internal pure returns (bool) {
+        if (result.length != 32 || data.length < 4) {
+            return false;
+        }
+
+        bytes4 selector = bytes4(abi.encodePacked(data[0], data[1], data[2], data[3]));
+        return selector == bytes4(0xa9059cbb)
+            || selector == bytes4(0x23b872dd)
+            || selector == bytes4(0x095ea7b3);
     }
 
     function _log(string memory action) internal {
-        if(address(ledger)!=address(0)){ try ledger.logSystemEvent(address(this),action,msg.sender) {} catch { emit LedgerLogFailed(address(this), action); } }
+        if(address(ledger)!=address(0)){ try ledger.logSystemEvent(address(this),action,msg.sender) {} catch {} }
     }
     
     // ═══════════════════════════════════════════════════════════════════════

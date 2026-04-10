@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
+import "./SharedInterfaces.sol";
+
 // Errors shared with Seer.sol are defined here; Seer.sol imports this file.
 
 error TRUST_NotDAO();
@@ -10,7 +12,7 @@ error TRUST_Zero();
 /// @notice Immutable event log for behavioral signals consumed by the Seer ProofScore engine.
 ///         Only the DAO and explicitly authorized system contracts may write entries.
 /// @dev ReentrancyGuard intentionally omitted: this contract only emits events and mutates internal counters.
-contract ProofLedger {
+contract ProofLedger is IProofLedger {
     event SystemEvent(address indexed who, string action, address indexed by);
     event EventLog(address indexed who, string action, uint256 amount, string note);
     event TransferLog(address indexed from, address indexed to, uint256 amount, string context);

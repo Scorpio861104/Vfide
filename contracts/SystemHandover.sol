@@ -1,8 +1,16 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
-interface ISeer_SH { function minForGovernance() external view returns (uint16); function getScore(address subject) external view returns (uint16); }
-interface ICouncilElection_SH { function getActualCouncilSize() external view returns (uint256); function getCouncilMember(uint256 index) external view returns (address); }
+interface ISeer_SH {
+    function minForGovernance() external view returns (uint16);
+    function getScore(address subject) external view returns (uint16);
+    function getScoresBatch(address[] calldata subjects) external view returns (uint16[] memory scores);
+}
+interface ICouncilElection_SH {
+    function getActualCouncilSize() external view returns (uint256);
+    function getCouncilMember(uint256 index) external view returns (address);
+    function getCouncilMembers() external view returns (address[] memory);
+}
 interface IDAO_SH { function setAdmin(address _admin) external; function admin() external view returns (address); }
 interface IDAOTimelock_SH { function setAdmin(address _admin) external; function admin() external view returns (address); }
 interface IProofLedger_SH { function logSystemEvent(address who, string calldata action, address by) external; }
@@ -23,16 +31,16 @@ contract SystemHandover {
     event Armed(uint64 start, uint64 handoverAt);
     event Disarmed(uint64 previousStart, uint64 previousHandoverAt);
     event ParamsSet(uint64 monthsDelay, uint16 minAvgCouncilScore, uint8 maxExtensions, uint64 extensionSpan);
-    event Executed(address dao, address timelock, address newAdmin, uint8 extensionsUsed);
-    event LedgerSet(address ledger);
-    event DAOSet(address dao);
-    event TimelockSet(address timelock);
-    event CouncilElectionSet(address councilElection);
+    event Executed(address indexed dao, address indexed timelock, address indexed newAdmin, uint8 extensionsUsed);
+    event LedgerSet(address indexed ledger);
+    event DAOSet(address indexed dao);
+    event TimelockSet(address indexed timelock);
+    event CouncilElectionSet(address indexed councilElection);
 
     address public devMultisig;
     IDAO_SH public dao;
     IDAOTimelock_SH public timelock;
-    ISeer_SH public seer;
+    ISeer_SH public immutable seer;
     ICouncilElection_SH public councilElection;
     IProofLedger_SH public ledger; // optional
 
@@ -123,15 +131,18 @@ contract SystemHandover {
     /// If average council proof score is below threshold at deadline, dev can extend once (failsafe).
     function extendOnceIfNeeded() external onlyDev {
         require(extensionsUsed < maxExtensions, "no_ext_left");
-        uint256 size = councilElection.getActualCouncilSize();
+        address[] memory members = councilElection.getCouncilMembers();
+        uint256 size = members.length;
         require(size > 0, "SH: no council");
-        uint256 total;
+
+        uint16[] memory scores = seer.getScoresBatch(members);
+        uint256 total = 0;
         for (uint256 i = 0; i < size; i++) {
-            address member = councilElection.getCouncilMember(i);
-            if (member != address(0)) {
-                total += seer.getScore(member);
+            if (members[i] != address(0)) {
+                total += scores[i];
             }
         }
+
         uint16 avgScore = uint16(total / size);
         if (avgScore < minAvgCouncilScore) {
             handoverAt += extensionSpan;
@@ -149,6 +160,7 @@ contract SystemHandover {
 
         handoverExecuted = true;
         devMultisig = address(0);
+        emit Executed(address(dao), address(timelock), newAdmin, extensionsUsed);
 
         // Best-effort direct updates for permissive bootstrap deployments.
         // In production, these may revert due to onlyTimelock / onlyTimelockSelf gates.
@@ -159,13 +171,14 @@ contract SystemHandover {
         if (dao.admin() != newAdmin || timelock.admin() != address(dao)) {
             revert SH_GovernanceNotReady();
         }
-        emit Executed(address(dao), address(timelock), newAdmin, extensionsUsed);
         _log("handover_executed");
     }
 
     function setLedger(address _ledger) external onlyDev { ledger=IProofLedger_SH(_ledger); emit LedgerSet(_ledger); }
 
     function _log(string memory action) internal {
-        if (address(ledger)!=address(0)) { try ledger.logSystemEvent(address(this), action, msg.sender) {} catch { emit LedgerLogFailed(address(this), action); } }
+        if (address(ledger)!=address(0)) {
+            try ledger.logSystemEvent(address(this), action, msg.sender) {} catch {}
+        }
     }
 }

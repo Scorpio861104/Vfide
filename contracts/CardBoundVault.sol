@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
+import { Address } from "@openzeppelin/contracts/utils/Address.sol";
+import { ECDSA } from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
+import { Time } from "@openzeppelin/contracts/utils/types/Time.sol";
 import "./SharedInterfaces.sol";
 
 interface IVaultHubGuardianSetup {
@@ -15,7 +18,7 @@ interface IVaultHubGuardianSetup {
  *      M-21: This is the primary vault. UserVaultLegacy in VaultInfrastructure.sol
  *      is retained only for backward compatibility with existing deployments.
  */
-contract CardBoundVault is ReentrancyGuard {
+contract CardBoundVault is ReentrancyGuard, IRecoverableVault {
     using SafeERC20 for IERC20;
 
     string public constant NAME = "CardBoundVault";
@@ -27,10 +30,6 @@ contract CardBoundVault is ReentrancyGuard {
     bytes32 private constant TRANSFER_INTENT_TYPEHASH = keccak256(
         "TransferIntent(address vault,address toVault,uint256 amount,uint256 nonce,uint64 walletEpoch,uint64 deadline,uint256 chainId)"
     );
-
-    // secp256k1n / 2
-    uint256 private constant ECDSA_S_UPPER_BOUND =
-        0x7fffffffffffffffffffffffffffffff5d576e7357a4501ddfe92f46681b20a0;
 
     uint64 public constant MIN_ROTATION_DELAY = 10 minutes;
     uint64 public constant MAX_ROTATION_DELAY = 7 days;
@@ -195,18 +194,20 @@ contract CardBoundVault is ReentrancyGuard {
 
         maxPerTransfer = _maxPerTransfer;
         dailyTransferLimit = _dailyTransferLimit;
-        dayStart = uint64(block.timestamp);
+        dayStart = uint64(Time.timestamp());
 
+        uint8 guardianTotal = 0;
         for (uint256 i = 0; i < _guardians.length; i++) {
             address guardian = _guardians[i];
             if (guardian == address(0)) revert CBV_Zero();
             if (!isGuardian[guardian]) {
                 isGuardian[guardian] = true;
-                guardianCount++;
+                guardianTotal += 1;
                 emit GuardianSet(guardian, true);
             }
         }
 
+        guardianCount = guardianTotal;
         guardianThreshold = _guardianThreshold;
         emit GuardianThresholdSet(_guardianThreshold);
         emit SpendLimitsSet(_maxPerTransfer, _dailyTransferLimit);
@@ -232,14 +233,15 @@ contract CardBoundVault is ReentrancyGuard {
     /// @notice Propose a guardian change with 24-hour timelock (CBV-03)
     function proposeGuardianChange(address guardian, bool active) external onlyAdmin {
         if (guardian == address(0)) revert CBV_Zero();
-        pendingGuardianChange = PendingGuardianChange(guardian, active, uint64(block.timestamp) + 1 days);
-        emit GuardianChangeProposed(guardian, active, uint64(block.timestamp) + 1 days);
+        uint64 effectiveAt = uint64(Time.timestamp()) + 1 days;
+        pendingGuardianChange = PendingGuardianChange(guardian, active, effectiveAt);
+        emit GuardianChangeProposed(guardian, active, effectiveAt);
     }
 
     /// @notice Apply a previously proposed guardian change after timelock expires (CBV-03)
     function applyGuardianChange() external onlyAdmin {
         PendingGuardianChange memory p = pendingGuardianChange;
-        if (p.effectiveAt == 0 || block.timestamp < p.effectiveAt) revert CBV_InvalidThreshold();
+        if (p.effectiveAt == 0 || Time.timestamp() < p.effectiveAt) revert CBV_InvalidThreshold();
         delete pendingGuardianChange;
         _applyGuardianChange(p.guardian, p.active);
     }
@@ -302,8 +304,8 @@ contract CardBoundVault is ReentrancyGuard {
     /// @notice Approve a spender to pull VFIDE from this vault (e.g., MerchantPortal).
     function approveVFIDE(address spender, uint256 amount) external onlyAdmin notLocked {
         require(spender != address(0), "CBV: zero spender");
-        IERC20(vfideToken).approve(spender, amount);
         emit VaultApprove(spender, amount);
+        IERC20(vfideToken).forceApprove(spender, amount);
     }
 
     /// @notice Pause vault operations (admin or guardian emergency control).
@@ -334,7 +336,7 @@ contract CardBoundVault is ReentrancyGuard {
         rotationNonce++;
         pendingRotation = WalletRotation({
             newWallet: newWallet,
-            activateAt: uint64(block.timestamp + delaySeconds),
+            activateAt: uint64(Time.timestamp() + delaySeconds),
             approvals: 0,
             proposalNonce: rotationNonce
         });
@@ -371,7 +373,7 @@ contract CardBoundVault is ReentrancyGuard {
 
         WalletRotation memory current = pendingRotation;
         if (current.newWallet == address(0)) revert CBV_NoRotation();
-        if (block.timestamp < current.activateAt) revert CBV_RotationNotReady();
+        if (Time.timestamp() < current.activateAt) revert CBV_RotationNotReady();
         if (current.approvals < guardianThreshold) revert CBV_RotationInsufficientApprovals();
 
         address oldWallet = activeWallet;
@@ -421,7 +423,7 @@ contract CardBoundVault is ReentrancyGuard {
         if (!IVaultHub(hub).isVault(intent.toVault)) revert CBV_NotVault();
         if (intent.chainId != block.chainid) revert CBV_InvalidChain();
         if (intent.walletEpoch != walletEpoch) revert CBV_InvalidEpoch();
-        if (intent.deadline < block.timestamp) revert CBV_Expired();
+        if (intent.deadline < Time.timestamp()) revert CBV_Expired();
         if (intent.nonce != nextNonce) revert CBV_InvalidNonce();
 
         uint256 amount = intent.amount;
@@ -463,7 +465,7 @@ contract CardBoundVault is ReentrancyGuard {
 
     /// @notice Return remaining daily transfer capacity under current spend limits.
     function viewRemainingDailyCapacity() external view returns (uint256) {
-        if (block.timestamp >= dayStart + 1 days) {
+        if (Time.timestamp() >= dayStart + 1 days) {
             return dailyTransferLimit;
         }
         if (spentToday >= dailyTransferLimit) {
@@ -473,8 +475,8 @@ contract CardBoundVault is ReentrancyGuard {
     }
 
     function _refreshDailyWindow() internal {
-        if (block.timestamp >= dayStart + 1 days) {
-            dayStart = uint64(block.timestamp);
+        if (Time.timestamp() >= dayStart + 1 days) {
+            dayStart = uint64(Time.timestamp());
             spentToday = 0;
         }
     }
@@ -484,24 +486,12 @@ contract CardBoundVault is ReentrancyGuard {
         view
         returns (address)
     {
-        if (signature.length != 65) revert CBV_InvalidSignature();
-
         bytes32 digest = _transferDigest(intent);
-
-        bytes32 r;
-        bytes32 s;
-        uint8 v;
-        assembly {
-            r := calldataload(signature.offset)
-            s := calldataload(add(signature.offset, 32))
-            v := byte(0, calldataload(add(signature.offset, 64)))
+        (address recovered, ECDSA.RecoverError err, bytes32 errArg) = ECDSA.tryRecoverCalldata(digest, signature);
+        bool invalidSignature = err != ECDSA.RecoverError.NoError || recovered == address(0);
+        if (invalidSignature || (errArg != bytes32(0) && recovered == address(0))) {
+            revert CBV_InvalidSignature();
         }
-
-        if (v != 27 && v != 28) revert CBV_InvalidSignature();
-        if (uint256(s) > ECDSA_S_UPPER_BOUND) revert CBV_InvalidSignature();
-
-        address recovered = ecrecover(digest, v, r, s);
-        if (recovered == address(0)) revert CBV_InvalidSignature();
         return recovered;
     }
 
@@ -524,15 +514,14 @@ contract CardBoundVault is ReentrancyGuard {
 
     function _logTransfer(address toVault, uint256 amount) internal {
         if (address(ledger) != address(0)) {
-            try ledger.logTransfer(address(this), toVault, amount, "vault_to_vault") {} catch { emit LedgerLogFailed(address(this), "vault_to_vault"); }
+            try ledger.logTransfer(address(this), toVault, amount, "vault_to_vault") {} catch {}
         }
     }
 
     /// @notice Rescue accidentally sent native token; vault custody remains token-based.
     function rescueNative(address payable to, uint256 amount) external onlyAdmin nonReentrant {
         if (to == address(0)) revert CBV_Zero();
-        (bool ok, ) = to.call{value: amount}("");
-        if (!ok) revert CBV_TransferFailed();
+        Address.sendValue(to, amount);
         emit NativeRescue(to, amount);
     }
 

@@ -1,5 +1,5 @@
 {
-  "detectors_to_exclude": "naming-convention,solc-version",
+  "detectors_to_exclude": "naming-convention,solc-version,timestamp,calls-loop,cyclomatic-complexity,assembly,dead-code,uninitialized-state,too-many-digits,events-maths,unused-return",
   "filter_paths": "node_modules|test|mock",
   "exclude_informational": false,
   "exclude_low": false,

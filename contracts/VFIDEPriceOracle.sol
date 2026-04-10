@@ -203,15 +203,10 @@ contract VFIDEPriceOracle is Ownable, Pausable {
                 return (0, PriceSource.CHAINLINK);
             }
 
-            // Convert to 18 decimals
+            // Convert to 18 decimals using a single scale factor.
             uint8 decimals = chainlinkFeed.decimals();
-            uint256 chainlinkPrice = uint256(answer);
-
-            if (decimals < 18) {
-                chainlinkPrice = chainlinkPrice * 10 ** (18 - decimals);
-            } else if (decimals > 18) {
-                chainlinkPrice = chainlinkPrice / 10 ** (decimals - 18);
-            }
+            uint256 scaleFactor = 10 ** uint256(decimals);
+            uint256 chainlinkPrice = (uint256(answer) * 1e18) / scaleFactor;
 
             return (chainlinkPrice, PriceSource.CHAINLINK);
         } catch {

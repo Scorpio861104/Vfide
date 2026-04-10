@@ -11,6 +11,10 @@ error ENT_NotPending();
 error ENT_TransferFailed();
 error ENT_Zero();
 
+interface IVFIDETransferPreview {
+    function getExpectedNetAmount(address from, address to, uint256 amount) external view returns (uint256);
+}
+
 /**
  * VFIDEEnterpriseGateway (Amazon/Enterprise Integration)
  */
@@ -35,16 +39,16 @@ contract VFIDEEnterpriseGateway is ReentrancyGuard {
         uint256 timestamp;
     }
 
-    address public dao;
+    address public immutable dao;
     address public oracle; // The Enterprise API Key (Amazon)
     address public merchantWallet; // Where funds go (Amazon's Wallet)
     uint64 public constant MERCHANT_WALLET_CHANGE_DELAY = 48 hours;
     address public pendingMerchantWallet;
     uint64 public pendingMerchantWalletAt;
     
-    IERC20 public token;
-    ISeer public seer;
-    IVaultHub public vaultHub;
+    IERC20 public immutable token;
+    ISeer public immutable seer;
+    IVaultHub public immutable vaultHub;
 
     mapping(bytes32 => Order) public orders;
 
@@ -141,28 +145,33 @@ contract VFIDEEnterpriseGateway is ReentrancyGuard {
         // For simplicity in this gateway, we pull from msg.sender (EOA) or Vault if msg.sender is Vault
         // But standard flow: User approves Gateway. Gateway pulls.
         
-        // Pull funds
-        // FIX: Measure actual received amount to support Fee-on-Transfer tokens
-        uint256 balanceBefore = token.balanceOf(address(this));
-        if (!token.transferFrom(payer, address(this), amount)) revert ENT_TransferFailed();
-        uint256 received = token.balanceOf(address(this)) - balanceBefore;
+        uint256 expectedReceived = amount;
+        try IVFIDETransferPreview(address(token)).getExpectedNetAmount(payer, address(this), amount) returns (uint256 previewAmount) {
+            if (previewAmount > 0 && previewAmount <= amount) {
+                expectedReceived = previewAmount;
+            }
+        } catch {
+            // Non-previewable tokens fall back to the requested amount.
+        }
 
         orders[orderId] = Order({
             buyer: msg.sender, // The EOA initiating
             payer: payer,      // Actual source of funds (vault or EOA)
-            amount: received,  // Record actual amount received
+            amount: expectedReceived,
             status: Status.PENDING,
             timestamp: block.timestamp
         });
 
-        emit OrderCreated(orderId, msg.sender, received, meta);
+        if (!token.transferFrom(payer, address(this), amount)) revert ENT_TransferFailed();
+
+        emit OrderCreated(orderId, msg.sender, expectedReceived, meta);
     }
 
     // ═══════════════════════════════════════════════════════════════════════
     //                    STABLECOIN SETTLEMENT (FOR MERCHANTS)
     // ═══════════════════════════════════════════════════════════════════════
     
-    event StableSettlementConfigured(address swapRouter, address stablecoin, bool enabled);
+    event StableSettlementConfigured(address indexed swapRouter, address indexed stablecoin, bool enabled);
     event OrderSettledToStable(bytes32 indexed orderId, address indexed buyer, uint256 vfideAmount, uint256 stableAmount);
     
     // DEX router for VFIDE → Stablecoin swaps

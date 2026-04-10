@@ -6,6 +6,7 @@ import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/utils/Pausable.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 
 /// @title ServicePool — Base for Percentage-Based Work Compensation Pools
 /// @author VFIDE Team
@@ -141,23 +142,27 @@ abstract contract ServicePool is AccessControl, ReentrancyGuard, Pausable {
         if (score == 0) revert ZeroAmount();
 
         _advancePeriodIfNeeded();
+        _recordContributionForCurrentPeriod(participant, score);
+    }
+
+    function _recordContributionForCurrentPeriod(address participant, uint256 score) internal {
+        uint256 period = currentPeriod;
 
         // Register participant if new this period
-        if (!_isParticipant[currentPeriod][participant]) {
-            if (_participants[currentPeriod].length >= maxParticipants)
-                revert MaxParticipantsReached();
-            _participants[currentPeriod].push(participant);
-            _isParticipant[currentPeriod][participant] = true;
+        if (!_isParticipant[period][participant]) {
+            if (_participants[period].length >= maxParticipants) revert MaxParticipantsReached();
+            _participants[period].push(participant);
+            _isParticipant[period][participant] = true;
         }
 
-        scores[currentPeriod][participant] += score;
-        totalScores[currentPeriod] += score;
+        scores[period][participant] += score;
+        totalScores[period] += score;
 
         emit ContributionRecorded(
-            currentPeriod,
+            period,
             participant,
             score,
-            scores[currentPeriod][participant]
+            scores[period][participant]
         );
     }
 
@@ -336,9 +341,9 @@ abstract contract ServicePool is AccessControl, ReentrancyGuard, Pausable {
     function _advancePeriodIfNeeded() internal {
         if (block.timestamp >= periodStartTime + PERIOD_DURATION) {
             uint256 elapsed = block.timestamp - periodStartTime;
-            uint256 periods = elapsed / PERIOD_DURATION;
+            uint256 periods = Math.mulDiv(elapsed, 1, PERIOD_DURATION);
             currentPeriod += periods;
-            periodStartTime = periodStartTime + (periods * PERIOD_DURATION);
+            periodStartTime += periods * PERIOD_DURATION;
             emit PeriodStarted(currentPeriod, block.timestamp);
         }
     }

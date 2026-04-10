@@ -20,6 +20,7 @@ async function expectRevert(txPromise: Promise<any>) {
 
 describe("Seer", function () {
   let seer: any;
+  let seerView: any;
   let owner: SignerWithAddress;
   let scorer: SignerWithAddress;
   let user: SignerWithAddress;
@@ -44,6 +45,9 @@ describe("Seer", function () {
     const SeerFactory = await ethers.getContractFactory("Seer");
     seer = await SeerFactory.deploy(owner.address, ethers.constants.AddressZero, ethers.constants.AddressZero);
     await seer.deployed();
+    const SeerViewFactory = await ethers.getContractFactory("SeerView");
+    seerView = await SeerViewFactory.deploy();
+    await seerView.deployed();
     const hasFn = (name: string) => {
       try {
         return !!seer.interface.getFunction(name);
@@ -54,14 +58,14 @@ describe("Seer", function () {
     const caps = {
       canDeployCheck: hasFn("dao") && hasFn("ledger") && hasFn("vaultHub"),
       canManageScore: hasFn("setScore") && hasFn("getScore") && hasFn("setOperator") && hasFn("reward") && hasFn("MAX_SCORE"),
-      canClassifyRisk: hasFn("getUserStatus"),
+      canClassifyRisk: true,
       canEmitEvents: hasFn("setScore"),
     };
-    return { seer, owner, scorer, user, attacker, capabilities: caps };
+    return { seer, seerView, owner, scorer, user, attacker, capabilities: caps };
   }
 
   beforeEach(async function () {
-    ({ seer, owner, scorer, user, attacker, capabilities } = await loadFixture(deployFixture));
+    ({ seer, seerView, owner, scorer, user, attacker, capabilities } = await loadFixture(deployFixture));
   });
 
   describe("Deployment", function () {
@@ -113,7 +117,7 @@ describe("Seer", function () {
 
     it("should return comprehensive user status", async function () {
       await waitTx(seer.connect(owner).setOperator(scorer.address, true));
-      const status = await seer.getUserStatus(scorer.address);
+      const status = await seerView.getUserStatus(seer.address, scorer.address);
       expect(status.isOperator).to.equal(true);
     });
   });
@@ -126,7 +130,7 @@ describe("Seer", function () {
     });
 
     it("should classify users with status output", async function () {
-      const status = await seer.getUserStatus(user.address);
+      const status = await seerView.getUserStatus(seer.address, user.address);
       expect(status.currentScore).to.be.gte(0);
       expect(status.decayAdjustedScore).to.be.gte(0);
     });

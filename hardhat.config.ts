@@ -50,6 +50,12 @@ const config: VfideHardhatConfig = {
             enabled: true,
             runs: 200,
           },
+          metadata: {
+            bytecodeHash: "none",
+          },
+          debug: {
+            revertStrings: "strip",
+          },
           // viaIR increases compilation time but helps avoid stack-too-deep errors
           viaIR: true,
         },
@@ -60,6 +66,12 @@ const config: VfideHardhatConfig = {
           optimizer: {
             enabled: true,
             runs: 200,
+          },
+          metadata: {
+            bytecodeHash: "none",
+          },
+          debug: {
+            revertStrings: "strip",
           },
           viaIR: true,
         },
@@ -72,10 +84,16 @@ const config: VfideHardhatConfig = {
         settings: {
           optimizer: {
             enabled: true,
-            runs: 1,
+            runs: 0,
+            details: {
+              inliner: false,
+            },
           },
           metadata: {
             bytecodeHash: "none",
+          },
+          debug: {
+            revertStrings: "strip",
           },
           viaIR: true,
         },
@@ -141,10 +159,16 @@ const config: VfideHardhatConfig = {
         settings: {
           optimizer: {
             enabled: true,
-            runs: 1,
+            runs: 0,
+            details: {
+              inliner: false,
+            },
           },
           metadata: {
             bytecodeHash: "none",
+          },
+          debug: {
+            revertStrings: "strip",
           },
           viaIR: true,
         },
@@ -154,10 +178,16 @@ const config: VfideHardhatConfig = {
         settings: {
           optimizer: {
             enabled: true,
-            runs: 1,
+            runs: 0,
+            details: {
+              inliner: false,
+            },
           },
           metadata: {
             bytecodeHash: "none",
+          },
+          debug: {
+            revertStrings: "strip",
           },
           viaIR: true,
         },
@@ -185,6 +215,9 @@ const config: VfideHardhatConfig = {
           metadata: {
             bytecodeHash: "none",
           },
+          debug: {
+            revertStrings: "strip",
+          },
           viaIR: true,
         },
       },
@@ -197,6 +230,9 @@ const config: VfideHardhatConfig = {
           },
           metadata: {
             bytecodeHash: "none",
+          },
+          debug: {
+            revertStrings: "strip",
           },
           viaIR: true,
         },

@@ -50,9 +50,10 @@ contract LiquidityIncentives is ReentrancyGuard {
     event PoolUpdated(address indexed lpToken, bool active);
     event Staked(address indexed user, address indexed lpToken, uint256 amount);
     event Unstaked(address indexed user, address indexed lpToken, uint256 amount);
+    event UnstakeCooldownSet(uint256 previousCooldown, uint256 newCooldown);
     
-    address public dao;
-    IVFIDEToken public vfideToken;
+    address public immutable dao;
+    IVFIDEToken public immutable vfideToken;
     
     // Pool configuration - tracking only, no rewards
     struct Pool {
@@ -107,11 +108,10 @@ contract LiquidityIncentives is ReentrancyGuard {
         });
         
         poolList.push(lpToken);
+        emit PoolAdded(lpToken, name);
         
         // Mark LP token as whale-exempt in VFIDE token
         try vfideToken.setWhaleLimitExempt(lpToken, true) {} catch {}
-
-        emit PoolAdded(lpToken, name);
     }
     
     /**
@@ -131,7 +131,9 @@ contract LiquidityIncentives is ReentrancyGuard {
     function setUnstakeCooldown(uint256 cooldown) external onlyDAO {
         require(cooldown >= MIN_UNSTAKE_COOLDOWN, "LP: cooldown too short");
         require(cooldown <= MAX_UNSTAKE_COOLDOWN, "LP: cooldown too long");
+        uint256 previousCooldown = unstakeCooldown;
         unstakeCooldown = cooldown;
+        emit UnstakeCooldownSet(previousCooldown, cooldown);
     }
     
     // ═══════════════════════════════════════════════════════════════════════

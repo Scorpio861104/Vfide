@@ -34,13 +34,13 @@ contract CouncilSalary {
         _reentrancyStatus = 1;
     }
 
-    ICouncilElection public election;
-    ISeer public seer;
-    IERC20 public token;
+    ICouncilElection public immutable election;
+    ISeer public immutable seer;
+    IERC20 public immutable token;
 
     uint256 public lastPayTime;
-    uint256 public payInterval = 120 days; // 4 months
-    uint16 public minScoreToPay = 7000; // Must maintain high trust (70% on 0-10000 scale)
+    uint256 public constant payInterval = 120 days; // 4 months
+    uint16 public constant minScoreToPay = 7000; // Must maintain high trust (70% on 0-10000 scale)
 
     // Removal Voting
     uint256 public currentTerm;

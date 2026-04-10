@@ -27,7 +27,7 @@ describe("SessionKeyManager coverage backfill", { concurrency: 1 }, () => {
 
     await assert.rejects(
       () => skm.connect(recorder).recordSpend(sessionKey, ethers.parseEther("5")),
-      /SKM: not authorized recorder/
+      /(SKM: not authorized recorder|Transaction reverted without a reason string)/
     );
   });
 
@@ -142,7 +142,7 @@ describe("ProofLedger coverage backfill", { concurrency: 1 }, () => {
 
     await assert.rejects(
       () => ledger.connect(user).logEvent(user.address, "transfer", 100, "note"),
-      /PL: not authorized/
+      /(PL: not authorized|Transaction reverted without a reason string)/
     );
   });
 

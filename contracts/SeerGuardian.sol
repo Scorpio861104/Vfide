@@ -78,7 +78,6 @@ contract SeerGuardian is ReentrancyGuard {
     uint16 private constant RC_AUTO_LOW_SCORE = 300;
     uint16 private constant RC_AUTO_VERY_LOW_SCORE = 301;
     uint16 private constant RC_AUTO_CRITICAL_SCORE = 302;
-    uint16 private constant RC_AUTO_SCORE_RECOVERED = 303;
     uint16 private constant RC_PROPOSER_NEAR_THRESHOLD = 400;
     uint16 private constant RC_PROPOSER_HAS_VIOLATIONS = 401;
     uint16 private constant RC_MANUAL_PROPOSAL_FLAG = 450;
@@ -87,8 +86,9 @@ contract SeerGuardian is ReentrancyGuard {
     //                              EVENTS
     // ═══════════════════════════════════════════════════════════════════════
     
-    event ModulesSet(address seer, address dao, address vaultHub, address ledger);
+    event ModulesSet(address indexed seer, address indexed dao, address indexed vaultHub, address ledger);
     event DAOSet(address indexed oldDAO, address indexed newDAO);
+    event ThresholdsSet(uint16 autoRestrictThreshold, uint16 autoLiftThreshold, uint64 violationCooldown, uint64 maxRestrictionDuration, uint64 proposalFlagDelay);
     
     // Automatic enforcement events
     event AutoRestrictionApplied(address indexed subject, RestrictionType rtype, string reason);
@@ -227,6 +227,7 @@ contract SeerGuardian is ReentrancyGuard {
         violationCooldown = _violationCooldown;
         maxRestrictionDuration = _maxDuration;
         proposalFlagDelay = _flagDelay;
+        emit ThresholdsSet(_autoRestrict, _autoLift, _violationCooldown, _maxDuration, _flagDelay);
     }
     
     // ═══════════════════════════════════════════════════════════════════════
@@ -240,33 +241,44 @@ contract SeerGuardian is ReentrancyGuard {
      */
     function checkAndEnforce(address subject) external nonReentrant {
         if (daoOverridden[subject]) return; // DAO has overridden, skip auto-enforcement
-        require(block.timestamp >= lastEnforceCheck[subject] + 1 hours, "SG: cooldown");
-        lastEnforceCheck[subject] = uint64(block.timestamp);
-        
+
+        uint256 currentTime = block.timestamp;
+        require(currentTime >= lastEnforceCheck[subject] + 1 hours, "SG: cooldown");
+        lastEnforceCheck[subject] = uint64(currentTime);
+
         uint16 score = seer.getScore(subject);
         RestrictionType currentRestriction = activeRestriction[subject];
-        
+        string memory action = "";
+
         // SG-01 FIX: Check most-severe conditions first so a single call applies the
         // harshest applicable restriction immediately (no multi-call escalation needed).
         // Critical: full freeze for dangerous scores (< 1000 — highest priority)
         if (score < 1000 && currentRestriction < RestrictionType.FullFreeze) {
             _applyAutoRestriction(subject, RestrictionType.FullFreeze, "auto_critical_score", RC_AUTO_CRITICAL_SCORE);
+            action = "auto_restriction_applied";
         }
         // More severe restriction for very low scores (< 2000) — only if not already FullFreeze
         else if (score < 2000 && currentRestriction < RestrictionType.TransferLimit) {
             _applyAutoRestriction(subject, RestrictionType.TransferLimit, "auto_very_low_score", RC_AUTO_VERY_LOW_SCORE);
+            action = "auto_restriction_applied";
         }
         // Base governance ban for generally low scores
         else if (score < autoRestrictThreshold && currentRestriction == RestrictionType.None) {
             _applyAutoRestriction(subject, RestrictionType.GovernanceBan, "auto_low_score", RC_AUTO_LOW_SCORE);
+            action = "auto_restriction_applied";
         }
-        
+
         // Auto-lift if score recovered
         if (score >= autoLiftThreshold && currentRestriction != RestrictionType.None) {
             // Only lift if restriction has expired or score is high enough
-            if (block.timestamp >= restrictionExpiry[subject] || score >= seer.highTrustThreshold()) {
-                _liftRestriction(subject, "auto_score_recovered");
+            if (currentTime >= restrictionExpiry[subject] || score >= seer.highTrustThreshold()) {
+                _liftRestriction(subject, "auto_score_recovered", false);
+                action = "restriction_lifted";
             }
+        }
+
+        if (bytes(action).length > 0) {
+            _log(action);
         }
     }
     
@@ -277,38 +289,40 @@ contract SeerGuardian is ReentrancyGuard {
      * @param reason Description
      */
     function recordViolation(address subject, ViolationType vtype, string calldata reason) external onlyAuthorized nonReentrant {
-        if (block.timestamp < lastViolationTime[subject] + violationCooldown) revert SG_Cooldown();
+        uint256 currentTime = block.timestamp;
+        if (currentTime < lastViolationTime[subject] + violationCooldown) revert SG_Cooldown();
         if (vtype == ViolationType.None) revert SG_InvalidAction();
-        
+
         // Increment violation count
         uint8 count = violationCount[subject][vtype];
         if (count < 255) {
             violationCount[subject][vtype] = count + 1;
             count++;
         }
-        lastViolationTime[subject] = uint64(block.timestamp);
-        
+        lastViolationTime[subject] = uint64(currentTime);
+
         emit ViolationRecorded(subject, vtype, count);
-        
+
         // Apply escalating penalty
         uint8 penaltyIndex = count > 5 ? 4 : count - 1;
         uint16 penalty = penaltyScale[penaltyIndex];
-        
-        // Auto-punish via Seer
-        try seer.punish(subject, penalty, reason) {
-            emit PenaltyApplied(subject, penalty, reason);
-            emit PenaltyAppliedCode(subject, penalty, _violationReasonCode(vtype), reason);
-        } catch {}
-        
-        // Apply time-based restriction for repeat offenders
+        uint16 reasonCode = _violationReasonCode(vtype);
+
+        // Apply time-based restriction for repeat offenders before the external Seer call.
         if (count >= 3) {
             RestrictionType rtype = count >= 5 ? RestrictionType.FullFreeze : RestrictionType.GovernanceBan;
             uint64 duration = restrictionDurations[penaltyIndex];
-            restrictionExpiry[subject] = uint64(block.timestamp) + duration;
-            _applyAutoRestriction(subject, rtype, reason, _violationReasonCode(vtype));
+            restrictionExpiry[subject] = uint64(currentTime) + duration;
+            _applyAutoRestriction(subject, rtype, reason, reasonCode);
         }
-        
-        _log("violation_recorded");
+
+        // Auto-punish via Seer
+        try seer.punish(subject, penalty, reason) {
+            emit PenaltyApplied(subject, penalty, reason);
+            emit PenaltyAppliedCode(subject, penalty, reasonCode, reason);
+        } catch {}
+
+        _log(count >= 3 ? "auto_restriction_applied" : "violation_recorded");
     }
     
     function _applyAutoRestriction(address subject, RestrictionType rtype, string memory reason, uint16 reasonCode) internal {
@@ -318,15 +332,13 @@ contract SeerGuardian is ReentrancyGuard {
         }
         emit AutoRestrictionApplied(subject, rtype, reason);
         emit AutoRestrictionAppliedCode(subject, rtype, reasonCode, reason);
-        _log("auto_restriction_applied");
     }
     
-    function _liftRestriction(address subject, string memory reason) internal {
+    function _liftRestriction(address subject, string memory reason, bool keepDaoOverride) internal {
         activeRestriction[subject] = RestrictionType.None;
         restrictionExpiry[subject] = 0;
-        daoOverridden[subject] = false;
+        daoOverridden[subject] = keepDaoOverride;
         emit AutoRestrictionLifted(subject, RestrictionType.None, reason);
-        _log("restriction_lifted");
     }
     
     // ═══════════════════════════════════════════════════════════════════════
@@ -343,11 +355,8 @@ contract SeerGuardian is ReentrancyGuard {
         
         bytes32 actionId = keccak256(abi.encode(subject, activeRestriction[subject], block.timestamp));
         
-        // Lift the restriction
-        _liftRestriction(subject, reason);
-        
-        // Mark as DAO overridden so auto-enforcement won't re-trigger immediately
-        daoOverridden[subject] = true;
+        // Lift the restriction and preserve DAO override so auto-enforcement won't re-trigger immediately
+        _liftRestriction(subject, reason, true);
         
         emit DAOOverride(subject, actionId, reason);
         emit SeerActionOverridden(actionId, reason);
@@ -363,14 +372,13 @@ contract SeerGuardian is ReentrancyGuard {
      */
     function daoAdjustScore(address subject, uint16 newDelta, bool isPositive, string calldata reason) external onlyDAO nonReentrant {
         bytes32 actionId = keccak256(abi.encode("score_adjust", subject, newDelta, block.timestamp));
-        
+        actionOverridden[actionId] = true;
+
         if (isPositive) {
             try seer.reward(subject, newDelta, reason) {} catch {}
         } else {
             try seer.punish(subject, newDelta, reason) {} catch {}
         }
-        
-        actionOverridden[actionId] = true;
         emit SeerActionOverridden(actionId, reason);
         _log("dao_adjust_score");
     }
@@ -386,13 +394,14 @@ contract SeerGuardian is ReentrancyGuard {
         violationCount[subject][ViolationType.SpamActivity] = 0;
         violationCount[subject][ViolationType.FailedRecovery] = 0;
         violationCount[subject][ViolationType.GovernanceAbuse] = 0;
-        
-        // Lift any restrictions
-        if (activeRestriction[subject] != RestrictionType.None) {
-            _liftRestriction(subject, "dao_rehabilitation");
-        }
-        
+
         daoOverridden[subject] = true;
+
+        // Lift any restrictions while preserving the DAO override.
+        if (activeRestriction[subject] != RestrictionType.None) {
+            _liftRestriction(subject, "dao_rehabilitation", true);
+        }
+
         _log("dao_rehabilitation");
     }
     
@@ -458,7 +467,22 @@ contract SeerGuardian is ReentrancyGuard {
         IDAO_Guardian daoRef = IDAO_Guardian(dao);
         require(proposalId > 0 && proposalId <= daoRef.proposalCount(), "SG: invalid proposal");
 
-        (address recordedProposer,,,,,,,,,,) = daoRef.getProposalDetails(proposalId);
+        (
+            address recordedProposer,
+            uint8 ptype,
+            address target,
+            uint256 value,
+            string memory description,
+            uint64 startTime,
+            uint64 endTime,
+            uint256 forVotes,
+            uint256 againstVotes,
+            bool executed,
+            bool queued
+        ) = daoRef.getProposalDetails(proposalId);
+        bool hasProposalMetadata = ptype != 0 || target != address(0) || value != 0 || bytes(description).length != 0
+            || startTime != 0 || endTime != 0 || forVotes != 0 || againstVotes != 0 || executed || queued;
+        require(recordedProposer != address(0) || hasProposalMetadata, "SG: missing proposal");
         require(recordedProposer == proposer, "SG: proposer mismatch");
 
         uint16 score = seer.getScore(proposer);
@@ -569,7 +593,7 @@ contract SeerGuardian is ReentrancyGuard {
     
     function _log(string memory action) internal {
         if (address(ledger) != address(0)) {
-            try ledger.logSystemEvent(address(this), action, msg.sender) {} catch { emit LedgerLogFailed(address(this), action); }
+            try ledger.logSystemEvent(address(this), action, msg.sender) {} catch {}
         }
     }
 }

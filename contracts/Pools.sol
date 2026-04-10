@@ -52,9 +52,11 @@ contract DAOPayrollPool is ServicePool {
     function batchRecordVotes(address[] calldata members) external onlyRole(RECORDER_ROLE) nonReentrant {
         uint256 len = members.length;
         require(len <= MAX_DAO_MEMBERS, "Exceeds max members");
+
+        _advancePeriodIfNeeded();
         for (uint256 i = 0; i < len;) {
             if (members[i] != address(0)) {
-                _recordContribution(members[i], 1);
+                _recordContributionForCurrentPeriod(members[i], 1);
             }
             unchecked { i++; }
         }

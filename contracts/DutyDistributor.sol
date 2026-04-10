@@ -34,7 +34,7 @@ contract DutyDistributor is Ownable, IGovernanceHooks {
     event DutyPointsEarned(address indexed user, uint256 points, string reason);
     event EpochClosed(uint256 epochId, uint256 totalPoints);
 
-    address public dao;
+    address public immutable dao;
 
     // Duty Points Tracking (badges/metrics only, not value)
     mapping(address => uint256) public userPoints;

@@ -67,6 +67,7 @@ contract BadgeManager {
     event BadgeEarned(address indexed user, bytes32 indexed badge, uint256 expiry, uint16 scoreBoost);
     event BadgeRevoked(address indexed user, bytes32 indexed badge, string reason);
     event BadgeRenewed(address indexed user, bytes32 indexed badge, uint256 newExpiry);
+    event DAOSet(address indexed previousDAO, address indexed newDAO);
     event OperatorSet(address indexed operator, bool authorized);
     event StatsUpdated(address indexed user, string metric, uint32 newValue);
     
@@ -118,7 +119,9 @@ contract BadgeManager {
     
     function setDAO(address newDAO) external onlyDAO nonReentrantBM {
         if (newDAO == address(0)) revert BM_Zero();
+        address previousDAO = dao;
         dao = newDAO;
+        emit DAOSet(previousDAO, newDAO);
     }
     
     function setSeer(address newSeer) external onlyDAO nonReentrantBM {
@@ -169,8 +172,6 @@ contract BadgeManager {
                 string memory reason = string(abi.encodePacked("Badge: ", BadgeRegistry.getName(badge)));
                 try seer.reward(user, scoreBoost, reason) {} catch {}
             }
-
-            emit BadgeEarned(user, badge, expiry, scoreBoost);
         } catch {}
     }
     
@@ -190,8 +191,6 @@ contract BadgeManager {
             if (scorePenalty > 0) {
                 try seer.punish(user, scorePenalty, reason) {} catch {}
             }
-
-            emit BadgeRevoked(user, badge, reason);
         } catch {}
     }
     
@@ -230,7 +229,6 @@ contract BadgeManager {
             uint256 newExpiry = block.timestamp + duration;
             
             try seer.setBadge(user, badge, true, newExpiry) {
-                emit BadgeRenewed(user, badge, newExpiry);
             } catch {}
         } else {
             // Revoke expired badge
@@ -239,7 +237,6 @@ contract BadgeManager {
                 if (scorePenalty > 0) {
                     try seer.punish(user, scorePenalty, "Badge expired - not re-qualified") {} catch {}
                 }
-                emit BadgeRevoked(user, badge, "Failed to re-qualify");
             } catch {}
         }
     }
@@ -288,9 +285,8 @@ contract BadgeManager {
         }
         
         _updateActivity(user);
-        _checkBadgeEligibility(user);
-
         emit StatsUpdated(user, "commerceTx", stats.commerceTxCount);
+        _checkBadgeEligibility(user);
     }
     
     /**
@@ -302,9 +298,8 @@ contract BadgeManager {
         stats.governanceVotes++;
         
         _updateActivity(user);
-        _checkBadgeEligibility(user);
-
         emit StatsUpdated(user, "governanceVotes", stats.governanceVotes);
+        _checkBadgeEligibility(user);
     }
     
     /**
@@ -315,9 +310,8 @@ contract BadgeManager {
         UserStats storage stats = userStats[user];
         stats.endorsementsReceived++;
         
-        _checkBadgeEligibility(user);
-
         emit StatsUpdated(user, "endorsements", stats.endorsementsReceived);
+        _checkBadgeEligibility(user);
     }
     
     /**
@@ -332,9 +326,8 @@ contract BadgeManager {
             stats.referralsQualified++;
         }
         
-        _checkBadgeEligibility(referrer);
-
         emit StatsUpdated(referrer, "referrals", stats.referralsMade);
+        _checkBadgeEligibility(referrer);
     }
     
     /**
@@ -345,9 +338,8 @@ contract BadgeManager {
         UserStats storage stats = userStats[reporter];
         stats.fraudReports++;
         
-        _checkBadgeEligibility(reporter);
-
         emit StatsUpdated(reporter, "fraudReports", stats.fraudReports);
+        _checkBadgeEligibility(reporter);
     }
     
     /**
@@ -358,9 +350,8 @@ contract BadgeManager {
         UserStats storage stats = userStats[creator];
         stats.educationalContent++;
         
-        _checkBadgeEligibility(creator);
-
         emit StatsUpdated(creator, "education", stats.educationalContent);
+        _checkBadgeEligibility(creator);
     }
     
     /**
@@ -436,10 +427,10 @@ contract BadgeManager {
             // First activity
             stats.consecutiveDays = 1;
             stats.lastActivityDay = currentDay;
-        } else if (currentDay == stats.lastActivityDay) {
-            // Same day, no change
+        } else if (currentDay <= stats.lastActivityDay) {
+            // Same day (or clock anomaly), no change
             return;
-        } else if (currentDay == stats.lastActivityDay + 1) {
+        } else if (currentDay - stats.lastActivityDay < 2) {
             // Consecutive day, increment streak
             stats.consecutiveDays++;
             stats.lastActivityDay = currentDay;

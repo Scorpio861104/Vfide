@@ -29,8 +29,8 @@ error FI_Insufficient();
 contract EcoTreasuryVault is ReentrancyGuard {
     using SafeERC20 for IERC20;
     
-    event ModulesSet(address dao, address ledger, address vfideToken);
-    event ReceivedVFIDE(uint256 amount, address from);
+    event ModulesSet(address indexed dao, address indexed ledger, address indexed vfideToken);
+    event ReceivedVFIDE(uint256 amount, address indexed from);
     event Sent(address indexed token, address to, uint256 amount, string reason);
 
     address public dao;

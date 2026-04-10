@@ -116,8 +116,6 @@ contract Phase1Deployer {
             addresses.multiSig
         );
 
-        emit Phase1Deployed(msg.sender, addresses, block.timestamp);
-
         return addresses;
     }
 

@@ -97,43 +97,37 @@ contract VFIDEBadgeNFT is ERC721, ERC721URIStorage, ERC721Enumerable, Ownable, R
     
     // ============ MINTING ============
     
+    function _mintBadgeTo(address recipient, bytes32 badge, uint256 tokenId) internal returns (uint256 badgeNum) {
+        if (!BadgeRegistry.isValidBadge(badge)) revert InvalidBadge();
+        if (userBadgeToken[recipient][badge] != 0) revert BadgeAlreadyMinted(badge);
+        if (!seer.hasBadge(recipient, badge)) revert BadgeNotEarned(badge);
+
+        uint256 expiry = seer.badgeExpiry(recipient, badge);
+        if (expiry > 0 && block.timestamp > expiry) revert BadgeExpired(badge);
+
+        badgeMintCount[badge]++;
+        badgeNum = badgeMintCount[badge];
+
+        // Store metadata BEFORE _safeMint to prevent reentrancy via onERC721Received
+        tokenBadge[tokenId] = badge;
+        userBadgeToken[recipient][badge] = tokenId;
+        mintTimestamp[tokenId] = block.timestamp;
+        badgeNumber[tokenId] = badgeNum;
+
+        _safeMint(recipient, tokenId);
+        emit Locked(tokenId);
+        emit BadgeNFTMinted(recipient, tokenId, badge, badgeNum, block.timestamp);
+    }
+
     /**
      * @notice Mint an NFT for a badge you've earned
      * @param badge The badge ID to mint
      * @dev Verifies badge ownership via Seer contract before minting
      */
     function mintBadge(bytes32 badge) public nonReentrant returns (uint256 tokenId) {
-        // Check badge is valid
-        if (!BadgeRegistry.isValidBadge(badge)) revert InvalidBadge();
-        
-        // Check user hasn't already minted this badge
-        if (userBadgeToken[msg.sender][badge] != 0) revert BadgeAlreadyMinted(badge);
-        
-        // Verify user has earned this badge in Seer
-        if (!seer.hasBadge(msg.sender, badge)) revert BadgeNotEarned(badge);
-        
-        // Check badge hasn't expired
-        uint256 expiry = seer.badgeExpiry(msg.sender, badge);
-        if (expiry > 0 && block.timestamp > expiry) revert BadgeExpired(badge);
-        
-        // Mint the NFT
-        tokenId = _nextTokenId++;
-        badgeMintCount[badge]++;
-        uint256 badgeNum = badgeMintCount[badge];
-        
-        // Store metadata BEFORE _safeMint to prevent reentrancy via onERC721Received
-        tokenBadge[tokenId] = badge;
-        userBadgeToken[msg.sender][badge] = tokenId;
-        mintTimestamp[tokenId] = block.timestamp;
-        badgeNumber[tokenId] = badgeNum;
-        
-        _safeMint(msg.sender, tokenId);
-        
-        // Lock the token (soulbound)
-        emit Locked(tokenId);
-        
-        emit BadgeNFTMinted(msg.sender, tokenId, badge, badgeNum, block.timestamp);
-        
+        tokenId = _nextTokenId;
+        _nextTokenId = tokenId + 1;
+        _mintBadgeTo(msg.sender, badge, tokenId);
         return tokenId;
     }
     
@@ -142,14 +136,18 @@ contract VFIDEBadgeNFT is ERC721, ERC721URIStorage, ERC721Enumerable, Ownable, R
      * @param badges Array of badge IDs to mint
      * @return tokenIds Array of minted token IDs
      */
-    function mintBadges(bytes32[] calldata badges) external returns (uint256[] memory tokenIds) {
+    function mintBadges(bytes32[] calldata badges) external nonReentrant returns (uint256[] memory tokenIds) {
         require(badges.length <= 28, "BADGE: batch too large");
         tokenIds = new uint256[](badges.length);
-        
+
+        uint256 nextTokenId = _nextTokenId;
         for (uint256 i = 0; i < badges.length; i++) {
-            tokenIds[i] = mintBadge(badges[i]);
+            uint256 tokenId = nextTokenId + i;
+            tokenIds[i] = tokenId;
+            _mintBadgeTo(msg.sender, badges[i], tokenId);
         }
-        
+
+        _nextTokenId = nextTokenId + badges.length;
         return tokenIds;
     }
     
@@ -328,21 +326,21 @@ contract VFIDEBadgeNFT is ERC721, ERC721URIStorage, ERC721Enumerable, Ownable, R
      * @dev Only owner can call. Used if badge revoked but user hasn't burned NFT.
      */
     function adminBurn(uint256 tokenId) external onlyOwner nonReentrant {
-        address owner = ownerOf(tokenId);
+        address tokenOwner = ownerOf(tokenId);
         bytes32 badge = tokenBadge[tokenId];
-        
+
         // Verify badge is actually revoked in Seer
-        require(!seer.hasBadge(owner, badge), "Badge still active");
-        
+        require(!seer.hasBadge(tokenOwner, badge), "Badge still active");
+
         // Clear mappings
-        delete userBadgeToken[owner][badge];
+        delete userBadgeToken[tokenOwner][badge];
         delete tokenBadge[tokenId];
         delete mintTimestamp[tokenId];
         delete badgeNumber[tokenId];
-        
+
         _burn(tokenId);
-        
-        emit BadgeNFTBurned(owner, tokenId, badge);
+
+        emit BadgeNFTBurned(tokenOwner, tokenId, badge);
     }
     
     // ============ INTERNAL HELPERS ============

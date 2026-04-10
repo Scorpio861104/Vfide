@@ -27,17 +27,17 @@ error EC_AlreadyVoted();
 error EC_Cooldown();
 
 contract EmergencyControl is ReentrancyGuard {
-    event ModulesSet(address dao, address breaker, address ledger);
+    event ModulesSet(address indexed dao, address indexed breaker, address indexed ledger);
     event CooldownSet(uint64 secondsMin);
     event CommitteeReset(uint8 threshold, address[] members);
-    event MemberAdded(address member);
-    event MemberRemoved(address member);
+    event MemberAdded(address indexed member);
+    event MemberRemoved(address indexed member);
     event FoundationRotated(address indexed oldFoundation, address indexed newFoundation);
     event CommitteeVote(address indexed member, bool halt, uint8 approvals, string reason);
     event CommitteeTriggered(bool halt, string reason);
     event DAOToggled(bool halt, string reason);
-    event ModulesChangeQueued(address dao, address breaker, address ledger, uint64 executeAfter);
-    event ModulesChangeCancelled(address dao, address breaker, address ledger);
+    event ModulesChangeQueued(address indexed dao, address indexed breaker, address indexed ledger, uint64 executeAfter);
+    event ModulesChangeCancelled(address indexed dao, address indexed breaker, address indexed ledger);
 
     address public dao;
     /// @notice Foundation address that can manage committee members
@@ -63,7 +63,7 @@ contract EmergencyControl is ReentrancyGuard {
     uint8 public approvalsHalt;
     uint8 public approvalsUnhalt;
     
-    uint64 public voteExpiryPeriod = 7 days;
+    uint64 public constant voteExpiryPeriod = 7 days;
     uint64 public haltVotingStartTime;
     uint64 public unhaltVotingStartTime;
 
@@ -143,26 +143,29 @@ contract EmergencyControl is ReentrancyGuard {
         if (_threshold == 0 || _threshold > members.length) revert EC_BadThreshold();
         
         // Clear old members
-        for (uint256 i = 0; i < currentMembers.length; i++) {
+        uint256 currentLength = currentMembers.length;
+        for (uint256 i = 0; i < currentLength; i++) {
             isMember[currentMembers[i]] = false;
         }
         delete currentMembers;
 
-        // Reinitialize:
-        memberCount = 0;
         threshold = _threshold;
-
         _resetVotes();
 
+        uint8 newMemberCount = 0;
         for (uint256 j = 0; j < members.length; j++) {
             address m = members[j];
             if (m == address(0)) revert EC_Zero();
             if (isMember[m]) revert EC_AlreadyMember();
             isMember[m] = true;
             currentMembers.push(m);
-            memberCount += 1;
+            unchecked {
+                newMemberCount += 1;
+            }
             emit MemberAdded(m);
         }
+
+        memberCount = newMemberCount;
         emit CommitteeReset(_threshold, members);
         _log("ec_committee_reset");
     }
@@ -186,14 +189,24 @@ contract EmergencyControl is ReentrancyGuard {
 
     function removeMember(address m) external onlyDAOOrFoundation nonReentrant {
         if (!isMember[m]) revert EC_NotMember();
-        isMember[m] = false; memberCount -= 1;
-        
-        for (uint256 i = 0; i < currentMembers.length; i++) {
+        isMember[m] = false;
+        memberCount -= 1;
+
+        uint256 memberIndex = type(uint256).max;
+        uint256 currentLength = currentMembers.length;
+        for (uint256 i = 0; i < currentLength; i++) {
             if (currentMembers[i] == m) {
-                currentMembers[i] = currentMembers[currentMembers.length - 1];
-                currentMembers.pop();
+                memberIndex = i;
                 break;
             }
+        }
+
+        if (memberIndex != type(uint256).max) {
+            uint256 lastIndex = currentMembers.length - 1;
+            if (memberIndex != lastIndex) {
+                currentMembers[memberIndex] = currentMembers[lastIndex];
+            }
+            currentMembers.pop();
         }
 
         emit MemberRemoved(m);
@@ -316,10 +329,14 @@ contract EmergencyControl is ReentrancyGuard {
     }
 
     function _log(string memory action) internal {
-        if (address(ledger) != address(0)) { try ledger.logSystemEvent(address(this), action, msg.sender) {} catch { emit LedgerLogFailed(address(this), action); } }
+        if (address(ledger) != address(0)) {
+            try ledger.logSystemEvent(address(this), action, msg.sender) {} catch {}
+        }
     }
     function _logEv(address who, string memory action, uint256 amount, string memory note) internal {
-        if (address(ledger) != address(0)) { try ledger.logEvent(who, action, amount, note) {} catch { emit LedgerLogFailed(who, action); } }
+        if (address(ledger) != address(0)) {
+            try ledger.logEvent(who, action, amount, note) {} catch {}
+        }
     }
 
     // ═══════════════════════════════════════════════════════════════════════

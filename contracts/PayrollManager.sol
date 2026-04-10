@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
+import { Time } from "@openzeppelin/contracts/utils/types/Time.sol";
 import "./SharedInterfaces.sol";
 
 /**
@@ -51,6 +52,7 @@ contract PayrollManager is ReentrancyGuard {
     event PayeeUpdated(uint256 indexed streamId, address indexed oldPayee, address indexed newPayee);
     event EmergencyWithdraw(uint256 indexed streamId, address indexed to, uint256 amount);
     event StreamExpired(uint256 indexed streamId, address indexed reclaimedBy, uint256 amount);
+    event DAOSet(address indexed previousDAO, address indexed newDAO);
 
     struct Stream {
         address payer;
@@ -96,7 +98,9 @@ contract PayrollManager is ReentrancyGuard {
     
     function setDAO(address _dao) external onlyDAO {
         require(_dao != address(0), "PM: zero DAO");
+        address previousDAO = dao;
         dao = _dao;
+        emit DAOSet(previousDAO, _dao);
     }
     
     function setSeer(address _seer) external onlyDAO {
@@ -128,14 +132,14 @@ contract PayrollManager is ReentrancyGuard {
             payee: payee,
             token: token,
             ratePerSecond: rate,
-            startTime: block.timestamp,
-            lastWithdrawTime: block.timestamp,
+            startTime: Time.timestamp(),
+            lastWithdrawTime: Time.timestamp(),
             depositBalance: initialDeposit,
             active: true,
             paused: false,
             pausedAt: 0,
             pausedAccrued: 0,
-            expiryTime: block.timestamp + MAX_STREAM_DURATION
+            expiryTime: Time.timestamp() + MAX_STREAM_DURATION
         });
         
         // Track streams for both parties (I-11: capped)
@@ -182,7 +186,7 @@ contract PayrollManager is ReentrancyGuard {
         // Store accrued amount before pausing
         s.pausedAccrued = claimable(streamId);
         s.paused = true;
-        s.pausedAt = block.timestamp;
+        s.pausedAt = Time.timestamp();
         
         emit StreamPaused(streamId, msg.sender);
     }
@@ -318,7 +322,7 @@ contract PayrollManager is ReentrancyGuard {
             return s.pausedAccrued;
         }
         
-        uint256 effectiveNow = block.timestamp;
+        uint256 effectiveNow = Time.timestamp();
         if (s.expiryTime > 0 && effectiveNow > s.expiryTime) {
             effectiveNow = s.expiryTime;
         }
@@ -378,7 +382,7 @@ contract PayrollManager is ReentrancyGuard {
     function claimExpiredStream(uint256 streamId) external nonReentrant {
         Stream storage s = streams[streamId];
         if (!s.active) revert PM_StreamInactive();
-        if (block.timestamp < s.expiryTime) revert PM_StreamNotExpired();
+        if (Time.timestamp() < s.expiryTime) revert PM_StreamNotExpired();
 
         // Calculate payee's accrued wages (capped at expiry)
         uint256 payeeClaimable = claimable(streamId);
@@ -440,10 +444,10 @@ contract PayrollManager is ReentrancyGuard {
         
         uint256 remaining = s.depositBalance;
         uint256 due = claimable(streamId);
-        if (due >= remaining) return block.timestamp;
+        if (due >= remaining) return Time.timestamp();
         
         remaining -= due;
-        return block.timestamp + (remaining / s.ratePerSecond);
+        return Time.timestamp() + (remaining / s.ratePerSecond);
     }
     
     // ═══════════════════════════════════════════════════════════════════════
