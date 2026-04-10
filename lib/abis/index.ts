@@ -85,13 +85,39 @@ import VFIDESecurityABI from './VFIDESecurity.json'
 import VFIDETrustABI from './VFIDETrust.json'
 import { logger } from '@/lib/logger';
 
+const KNOWN_EMPTY_ABIS = new Set([
+  'DeployPhase3Peripherals',
+  'DeployPhase1',
+  'DeployPhase1Governance',
+  'DeployPhase1Infrastructure',
+  'DeployPhase1Token',
+  'DeployPhases3to6',
+  'DevReserveVestingVault',
+  'EcosystemVaultLib',
+  'SeerAutonomousLib',
+  'Pools',
+  'SharedInterfaces',
+  'VFIDEFinance',
+  'VFIDESecurity',
+  'VFIDETrust',
+]);
+
+const abiWarningState = ((globalThis as typeof globalThis & {
+  __vfideAbiWarnings?: Set<string>;
+}).__vfideAbiWarnings ??= new Set<string>());
+
 // Runtime validation: Ensure ABIs are valid arrays
 function validateABI(abi: unknown, name: string): unknown[] {
   if (!Array.isArray(abi)) {
     throw new Error(`Invalid ABI for ${name}: Expected array, got ${typeof abi}`);
   }
-  if (abi.length === 0) {
-    logger.warn(`[VFIDE] Warning: Empty ABI for ${name}`);
+  if (abi.length === 0 && !abiWarningState.has(name)) {
+    abiWarningState.add(name);
+    if (KNOWN_EMPTY_ABIS.has(name)) {
+      logger.info(`[VFIDE] Empty ABI allowed for ${name} (library/deployment artifact).`);
+    } else {
+      logger.warn(`[VFIDE] Warning: Empty ABI for ${name}`);
+    }
   }
   return abi;
 }

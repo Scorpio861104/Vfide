@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
-import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
-import { Time } from "@openzeppelin/contracts/utils/types/Time.sol";
 import "./SharedInterfaces.sol";
 
 /**
@@ -131,6 +129,7 @@ contract VFIDEFlashLoan is ReentrancyGuard {
 
     IERC20 public immutable vfideToken;
     address public dao;
+    address public fraudRegistry; // FraudRegistry — banned addresses cannot use flash loans
     ISeerFL public seer;
     address public feeDistributor;
 
@@ -173,7 +172,7 @@ contract VFIDEFlashLoan is ReentrancyGuard {
     // ═══════════════════════════════════════════════════════════════════════
 
     constructor(address _vfideToken, address _dao, address _seer, address _feeDistributor) {
-        if (_vfideToken == address(0) || _dao == address(0) || _feeDistributor == address(0)) revert FL_Zero();
+        if (_vfideToken == address(0) || _dao == address(0)) revert FL_Zero();
         vfideToken = IERC20(_vfideToken);
         dao = _dao;
         if (_seer != address(0)) seer = ISeerFL(_seer);
@@ -186,7 +185,9 @@ contract VFIDEFlashLoan is ReentrancyGuard {
 
     /// @notice Deposit VFIDE to offer for flash loans
     function deposit(uint256 amount) external nonReentrant {
+        if (fraudRegistry != address(0)) { (bool ok, bytes memory d) = fraudRegistry.staticcall(abi.encodeWithSelector(0x38603ddd, msg.sender)); if (ok && d.length >= 32 && abi.decode(d, (bool))) revert FL_Paused(); } // 0x38603ddd = isServiceBanned(address)
         if (amount == 0) revert FL_Zero();
+        if (fraudRegistry != address(0)) { (bool ok, bytes memory d) = fraudRegistry.staticcall(abi.encodeWithSelector(0x38603ddd, msg.sender)); if (ok && d.length >= 32 && abi.decode(d, (bool))) revert FL_Paused(); }
 
         LenderInfo storage info = lenders[msg.sender];
         if (!info.registered) {
@@ -204,6 +205,7 @@ contract VFIDEFlashLoan is ReentrancyGuard {
     /// @notice Withdraw VFIDE — available anytime, no lockup
     function withdraw(uint256 amount) external nonReentrant {
         if (amount == 0) revert FL_Zero();
+        if (fraudRegistry != address(0)) { (bool ok, bytes memory d) = fraudRegistry.staticcall(abi.encodeWithSelector(0x38603ddd, msg.sender)); if (ok && d.length >= 32 && abi.decode(d, (bool))) revert FL_Paused(); }
         LenderInfo storage info = lenders[msg.sender];
         if (amount > info.balance) revert FL_InsufficientBalance();
 
@@ -239,7 +241,6 @@ contract VFIDEFlashLoan is ReentrancyGuard {
      * If receiver doesn't repay amount + fee, the entire tx reverts.
      * Lender funds are mathematically impossible to lose.
      */
-    // slither-disable-next-line arbitrary-send-erc20
     function flashLoan(
         address lender,
         IERC3156FlashBorrower receiver,
@@ -247,6 +248,7 @@ contract VFIDEFlashLoan is ReentrancyGuard {
         bytes calldata data
     ) external nonReentrant whenNotPaused returns (bool) {
         if (amount == 0) revert FL_Zero();
+        if (fraudRegistry != address(0)) { (bool ok, bytes memory d) = fraudRegistry.staticcall(abi.encodeWithSelector(0x38603ddd, msg.sender)); if (ok && d.length >= 32 && abi.decode(d, (bool))) revert FL_Paused(); }
 
         LenderInfo storage info = lenders[lender];
         if (!info.registered) revert FL_NotLender();
@@ -254,24 +256,18 @@ contract VFIDEFlashLoan is ReentrancyGuard {
         if (amount > info.balance) revert FL_ExceedsAvailable();
 
         // Anti-spam cooldown
-        if (Time.timestamp() < lastFlashLoan[msg.sender] + BORROWER_COOLDOWN) revert FL_CooldownActive();
-        lastFlashLoan[msg.sender] = Time.timestamp();
+        if (block.timestamp < lastFlashLoan[msg.sender] + BORROWER_COOLDOWN) revert FL_CooldownActive();
+        lastFlashLoan[msg.sender] = block.timestamp;
 
         // Fee calculation: lender's rate applied to loan amount
-        uint256 totalFee = Math.mulDiv(amount, info.feeBps, 10_000);
-        uint256 protocolFee = Math.mulDiv(amount, info.feeBps * PROTOCOL_CUT_PCT, 1_000_000); // 10% of fee → protocol
-        uint256 lenderFee = totalFee - protocolFee;                                            // 90% of fee → lender
+        uint256 totalFee = (amount * info.feeBps) / 10000;
+        uint256 protocolFee = (totalFee * PROTOCOL_CUT_PCT) / 100; // 10% of fee → protocol
+        uint256 lenderFee = totalFee - protocolFee;                // 90% of fee → lender
 
         // ── ATOMIC EXECUTION ─────────────────────────────────────
 
-        // Optimistic accounting; any failed callback or repayment reverts the whole transaction.
-        info.balance = info.balance - amount + amount + lenderFee;
-        info.totalEarned += lenderFee;
-        info.totalVolume += amount;
-        info.loanCount++;
-        totalProtocolFees += protocolFee;
-        totalVolume += amount;
-        totalLoans++;
+        // Debit lender's tracked balance
+        info.balance -= amount;
 
         // 1. Send tokens to receiver
         vfideToken.safeTransfer(address(receiver), amount);
@@ -285,10 +281,23 @@ contract VFIDEFlashLoan is ReentrancyGuard {
         vfideToken.safeTransferFrom(address(receiver), address(this), amount + totalFee);
         if (vfideToken.balanceOf(address(this)) < balBefore + amount + totalFee) revert FL_InsufficientRepayment();
 
+        // ── SETTLEMENT ───────────────────────────────────────────
+
+        // Credit lender: principal returned + their fee share
+        info.balance += amount + lenderFee;
+
         // Protocol fee → FeeDistributor → 5-way community split
-        if (protocolFee > 0) {
+        if (protocolFee > 0 && feeDistributor != address(0)) {
             vfideToken.safeTransfer(feeDistributor, protocolFee);
         }
+
+        // ── BOOKKEEPING ──────────────────────────────────────────
+        info.totalEarned += lenderFee;
+        info.totalVolume += amount;
+        info.loanCount++;
+        totalProtocolFees += protocolFee;
+        totalVolume += amount;
+        totalLoans++;
 
         // Reward lender with ProofScore (providing a community service)
         if (address(seer) != address(0)) {
@@ -360,9 +369,6 @@ contract VFIDEFlashLoan is ReentrancyGuard {
     function setPaused(bool _paused) external onlyDAO { paused = _paused; emit Paused(_paused); }
     function setDAO(address _dao) external onlyDAO { if (_dao == address(0)) revert FL_Zero(); dao = _dao; emit DAOSet(_dao); }
     function setSeer(address _seer) external onlyDAO { seer = ISeerFL(_seer); emit SeerSet(_seer); }
-    function setFeeDistributor(address _fd) external onlyDAO {
-        if (_fd == address(0)) revert FL_Zero();
-        feeDistributor = _fd;
-        emit FeeDistributorSet(_fd);
-    }
+    function setFeeDistributor(address _fd) external onlyDAO { feeDistributor = _fd; emit FeeDistributorSet(_fd); }
+    function setFraudRegistry(address _fr) external onlyDAO { fraudRegistry = _fr; }
 }

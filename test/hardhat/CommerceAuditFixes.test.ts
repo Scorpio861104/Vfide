@@ -36,11 +36,7 @@ describe("CardBoundVault (Fix 2)", () => {
 
 describe("MerchantPortal (Fixes 3 and 5)", () => {
   async function deployPortalFixture() {
-    const { ethers } = (await network.connect({
-      override: {
-        allowUnlimitedContractSize: true,
-      },
-    })) as any;
+    const { ethers } = (await network.connect()) as any;
     const [dao, customer, merchant, feeSink] = await ethers.getSigners();
 
     const VaultHubStub = await ethers.getContractFactory("test/contracts/helpers/Stubs.sol:VaultHubStub");

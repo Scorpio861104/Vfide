@@ -83,6 +83,21 @@ describe('/api/security/logs', () => {
       );
     });
 
+    it('returns an empty state for anonymous users', async () => {
+      requireAuth.mockResolvedValue(NextResponse.json({ error: 'Unauthorized' }, { status: 401 }));
+
+      const request = new NextRequest('http://localhost:3000/api/security/logs?limit=10');
+      const response = await GET(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(200);
+      expect(data).toMatchObject({
+        logs: [],
+        requiresAuth: true,
+      });
+      expect(query).not.toHaveBeenCalled();
+    });
+
     it('rejects invalid limit', async () => {
       query
         .mockResolvedValueOnce({ rows: [] }) // create table

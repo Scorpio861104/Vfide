@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
-import { Address } from "@openzeppelin/contracts/utils/Address.sol";
 import "./SharedInterfaces.sol";
 
 /**
@@ -26,7 +25,7 @@ import "./SharedInterfaces.sol";
 /// @dev DEPRECATED — Retained for backward compatibility with existing deployments.
 ///      New vaults are deployed as CardBoundVault via VaultHub.ensureVault().
 /// ─────────────────────────── User Vault (embedded, legacy)
-contract UserVaultLegacy is ReentrancyGuard, IRecoverableVault {
+contract UserVaultLegacy is ReentrancyGuard {
     using SafeERC20 for IERC20;
     
     /// Immutable references
@@ -42,7 +41,6 @@ contract UserVaultLegacy is ReentrancyGuard, IRecoverableVault {
     
     // Track guardian list for enumeration
     address[] private guardianList;
-    mapping(address => uint256) private guardianIndexPlusOne;
 
     address public nextOfKin;
     
@@ -52,9 +50,9 @@ contract UserVaultLegacy is ReentrancyGuard, IRecoverableVault {
     uint256 public largeTransferThreshold = 10000 * 1e18; // Default 10k VFIDE (legacy, optional)
     
     uint64 public lastExecuteTime;
-    uint64 public constant executeCooldown = 1 hours; // Default 1h cooldown for execute()
+    uint64 public executeCooldown = 1 hours; // Default 1h cooldown for execute()
     
-    uint256 public constant maxExecuteValue = 1 ether; // Default 1 ETH max per execute call
+    uint256 public maxExecuteValue = 1 ether; // Default 1 ETH max per execute call
 
     mapping(address => bool) public allowedExecuteTarget;
     bool public executeWhitelistEnforced = true; // Legacy vaults default to whitelist-on
@@ -159,7 +157,7 @@ contract UserVaultLegacy is ReentrancyGuard, IRecoverableVault {
     }
 
     function _checkNotLocked() internal view {
-        if (address(securityHub) != address(0) && securityHub.isLocked(address(this))) revert UV_Locked();
+        // SecurityHub lock check removed — non-custodial, no third-party locks
     }
     
     modifier notFrozen() {
@@ -226,8 +224,8 @@ contract UserVaultLegacy is ReentrancyGuard, IRecoverableVault {
             _recovery.nonce++;
         }
         
-        emit OwnerSet(newOwner);
         _logSys("vault_force_owner");
+        emit OwnerSet(newOwner);
     }
 
     // ——— Owner controls
@@ -255,22 +253,16 @@ contract UserVaultLegacy is ReentrancyGuard, IRecoverableVault {
                 guardianCount++;
                 guardianAddTime[g] = uint64(block.timestamp); // H-1: Track add time
                 guardianList.push(g); // Track for enumeration
-                guardianIndexPlusOne[g] = guardianList.length;
             } else {
                 guardianCount--;
                 delete guardianAddTime[g]; // H-17: Clear on removal
-
-                uint256 indexPlusOne = guardianIndexPlusOne[g];
-                if (indexPlusOne != 0) {
-                    uint256 index = indexPlusOne - 1;
-                    uint256 lastIndex = guardianList.length - 1;
-                    if (index != lastIndex) {
-                        address lastGuardian = guardianList[lastIndex];
-                        guardianList[index] = lastGuardian;
-                        guardianIndexPlusOne[lastGuardian] = index + 1;
+                // Remove from list (swap and pop)
+                for (uint256 i = 0; i < guardianList.length; i++) {
+                    if (guardianList[i] == g) {
+                        guardianList[i] = guardianList[guardianList.length - 1];
+                        guardianList.pop();
+                        break;
                     }
-                    guardianList.pop();
-                    delete guardianIndexPlusOne[g];
                 }
             }
             emit GuardianSet(g, active);
@@ -287,8 +279,8 @@ contract UserVaultLegacy is ReentrancyGuard, IRecoverableVault {
         if (kin == address(0)) revert UV_Zero();
         if (_inheritance.active) revert UV_InheritanceActive();
         nextOfKin = kin;
-        emit NextOfKinSet(kin);
         _logEv(kin, "next_of_kin_set", 0, "");
+        emit NextOfKinSet(kin);
     }
 
     event WithdrawalCooldownSet(uint64 cooldown);
@@ -485,8 +477,8 @@ contract UserVaultLegacy is ReentrancyGuard, IRecoverableVault {
             _recovery.expiryTime = uint64(block.timestamp + RECOVERY_EXPIRY);
             _recovery.guardianCountSnapshot = 0;
             
-            emit RecoveryRequested(proposedOwner);
             _logEv(proposedOwner, "recovery_requested_kin", 0, "7-day wait required");
+            emit RecoveryRequested(proposedOwner);
             return;
         }
 
@@ -503,8 +495,8 @@ contract UserVaultLegacy is ReentrancyGuard, IRecoverableVault {
             _recovery.approvals = 1;
         }
         
-        emit RecoveryRequested(proposedOwner);
         _logEv(proposedOwner, "recovery_requested", 0, "");
+        emit RecoveryRequested(proposedOwner);
     }
 
     function guardianApproveRecovery() external notLocked {
@@ -515,8 +507,8 @@ contract UserVaultLegacy is ReentrancyGuard, IRecoverableVault {
         if (_recovery.voted[msg.sender][_recovery.nonce]) revert UV_AlreadyVoted();
         _recovery.voted[msg.sender][_recovery.nonce] = true;
         _recovery.approvals += 1;
-        emit RecoveryApproved(msg.sender, _recovery.proposedOwner, _recovery.approvals);
         _logEv(msg.sender, "recovery_approval", _recovery.approvals, "");
+        emit RecoveryApproved(msg.sender, _recovery.proposedOwner, _recovery.approvals);
     }
 
     function finalizeRecovery() external notLocked {
@@ -540,8 +532,8 @@ contract UserVaultLegacy is ReentrancyGuard, IRecoverableVault {
         // Note: Individual voted mappings cannot be cleared efficiently in a loop
         // They will be overwritten on next recovery request
 
-        emit RecoveryFinalized(newOwner);
         _logSys("recovery_finalized");
+        emit RecoveryFinalized(newOwner);
     }
 
     function cancelRecovery() external onlyOwner notLocked {
@@ -555,8 +547,8 @@ contract UserVaultLegacy is ReentrancyGuard, IRecoverableVault {
         _recovery.expiryTime = 0;
         _recovery.guardianCountSnapshot = 0;
         
-        emit RecoveryCancelled(msg.sender);
         _logEv(cancelled, "recovery_cancelled", 0, "");
+        emit RecoveryCancelled(msg.sender);
     }
 
     // ——— Inheritance (Next of Kin fund transfer with guardian approval)
@@ -581,8 +573,8 @@ contract UserVaultLegacy is ReentrancyGuard, IRecoverableVault {
         _inheritance.guardianCountSnapshot = guardianCount;
         _inheritance.ownerDenied = false;
         
-        emit InheritanceRequested(msg.sender);
         _logEv(msg.sender, "inheritance_requested", 0, "");
+        emit InheritanceRequested(msg.sender);
     }
     
     /**
@@ -602,8 +594,8 @@ contract UserVaultLegacy is ReentrancyGuard, IRecoverableVault {
         _inheritance.voted[msg.sender][_inheritance.nonce] = true;
         _inheritance.approvals++;
         
-        emit InheritanceApproved(msg.sender, _inheritance.approvals);
         _logEv(msg.sender, "inheritance_approved", _inheritance.approvals, "");
+        emit InheritanceApproved(msg.sender, _inheritance.approvals);
     }
     
     /**
@@ -620,8 +612,8 @@ contract UserVaultLegacy is ReentrancyGuard, IRecoverableVault {
         _inheritance.expiryTime = 0;
         _inheritance.guardianCountSnapshot = 0;
         
-        emit InheritanceDenied(msg.sender);
         _logEv(msg.sender, "inheritance_denied", 0, "");
+        emit InheritanceDenied(msg.sender);
     }
     
     // Guardian cancellation tracking for inheritance
@@ -662,10 +654,10 @@ contract UserVaultLegacy is ReentrancyGuard, IRecoverableVault {
             _inheritanceCancellationNonce++;
             _inheritanceCancellationApprovals = 0;
             
+            _logEv(msg.sender, "inheritance_cancelled_by_guardians", threshold, "");
             // forge-lint: disable-next-line(unsafe-typecast)
             // Safe: threshold is bounded by guardian count (max 255) fits in uint8
             emit InheritanceCancelledByGuardians(msg.sender, uint8(threshold));
-            _logEv(msg.sender, "inheritance_cancelled_by_guardians", threshold, "");
         } else {
             _logEv(msg.sender, "inheritance_cancel_vote", _inheritanceCancellationApprovals, "");
         }
@@ -711,9 +703,10 @@ contract UserVaultLegacy is ReentrancyGuard, IRecoverableVault {
         _inheritance.ownerDenied = false;
         _inheritanceCancellationApprovals = 0; // Clear guardian cancellation votes
         
-        emit InheritanceFinalized(inheritor, inheritorVault, balance);
         IERC20(vfideToken).safeTransfer(inheritorVault, balance);
+        
         _logEv(inheritorVault, "inheritance_finalized", balance, "");
+        emit InheritanceFinalized(inheritor, inheritorVault, balance);
         
         // Note: Deceased's vault remains for record-keeping
         // Owner is NOT changed - vault effectively becomes locked historical record
@@ -726,7 +719,9 @@ contract UserVaultLegacy is ReentrancyGuard, IRecoverableVault {
     function transferVFIDE(address toVault, uint256 amount) external onlyOwner notLocked notFrozen noActiveClaims nonReentrant returns (bool) {
         if (toVault == address(0)) revert UV_Zero();
         require(amount > 0, "UV: zero amount");
-
+        uint256 currentBalance = IERC20(vfideToken).balanceOf(address(this));
+        require(currentBalance >= amount, "UV: insufficient balance");
+        
         // Get current abnormal transaction threshold (dynamic based on user preference)
         uint256 currentThreshold = getAbnormalTransactionThreshold();
         
@@ -744,7 +739,8 @@ contract UserVaultLegacy is ReentrancyGuard, IRecoverableVault {
             
             emit AbnormalTransactionDetected(txId, toVault, amount);
             emit TransferPendingApproval(txId, toVault, amount); // Additional event for clarity
-
+            _logEv(toVault, "abnormal_tx_detected", amount, "");
+            
             // CRITICAL: Revert with pending tx info so caller knows what happened
             // This is safer than returning false which callers might ignore
             revert(string(abi.encodePacked("UV:pending-approval:", _uint2str(txId))));
@@ -756,10 +752,7 @@ contract UserVaultLegacy is ReentrancyGuard, IRecoverableVault {
         }
 
         lastWithdrawalTime = uint64(block.timestamp);
-
-        uint256 currentBalance = IERC20(vfideToken).balanceOf(address(this));
-        require(currentBalance >= amount, "UV: insufficient balance");
-
+        
         // Amount-based threshold: large transfers face additional scrutiny
         // (All transfers already checked by notLocked and notFrozen modifiers above)
         // This could be used for future enhanced checks on large amounts
@@ -791,10 +784,10 @@ contract UserVaultLegacy is ReentrancyGuard, IRecoverableVault {
             lastWithdrawalTime = uint64(block.timestamp);
         }
         
-        emit VaultApprove(spender, amount);
         bool ok = IERC20(vfideToken).approve(spender, amount);
         require(ok, "UV:approve-failed");
         _logEv(spender, "vault_approve", amount, "");
+        emit VaultApprove(spender, amount);
         return ok;
     }
 
@@ -818,8 +811,20 @@ contract UserVaultLegacy is ReentrancyGuard, IRecoverableVault {
 
         // Update execute timestamp before external interaction to minimize reentrancy surface.
         lastExecuteTime = uint64(block.timestamp);
-
-        result = _callTarget(target, value, data);
+        
+        // Execute call
+        bool success;
+        (success, result) = target.call{value: value}(data);
+        
+        if (!success) {
+            // Bubble up error
+            assembly {
+                let ptr := mload(0x40)
+                returndatacopy(ptr, 0, returndatasize())
+                revert(ptr, returndatasize())
+            }
+        }
+        
         _logEv(target, "vault_execute", value, "");
     }
 
@@ -843,19 +848,18 @@ contract UserVaultLegacy is ReentrancyGuard, IRecoverableVault {
             if (executeWhitelistEnforced) {
                 require(allowedExecuteTarget[targets[i]], "UV:target-not-whitelisted");
             }
-            results[i] = _callTarget(targets[i], values[i], datas[i]);
+            (bool success, bytes memory res) = targets[i].call{value: values[i]}(datas[i]);
+            if (!success) {
+                assembly {
+                    let ptr := mload(0x40)
+                    returndatacopy(ptr, 0, returndatasize())
+                    revert(ptr, returndatasize())
+                }
+            }
+            results[i] = res;
             _logEv(targets[i], "vault_execute_batch", values[i], "");
         }
-
-    }
-
-    function _callTarget(address target, uint256 value, bytes memory data) internal returns (bytes memory result) {
-        if (target.code.length == 0) {
-            Address.sendValue(payable(target), value);
-            return bytes("");
-        }
-
-        return Address.functionCallWithValue(target, data, value);
+        
     }
 
     /// @notice Allow or disallow a target address for execute() calls
@@ -909,9 +913,10 @@ contract UserVaultLegacy is ReentrancyGuard, IRecoverableVault {
         require(recipient != address(0), "UV: zero recipient");
         uint256 balance = address(this).balance;
         require(balance > 0, "UV: no ETH to rescue");
-
-        Address.sendValue(recipient, balance);
-
+        
+        (bool success, ) = recipient.call{value: balance}("");
+        require(success, "UV: ETH transfer failed");
+        
         _logEv(recipient, "eth_rescued", balance, "");
     }
     
@@ -950,7 +955,7 @@ contract UserVaultLegacy is ReentrancyGuard, IRecoverableVault {
         vfideBalance = IERC20(vfideToken).balanceOf(address(this));
         ethBalance = address(this).balance;
         isFrozen = frozen;
-        isLocked = address(securityHub) != address(0) && securityHub.isLocked(address(this));
+        isLocked = false; // SecurityHub locking removed — non-custodial
         numGuardians = guardianCount;
         kinAddress = nextOfKin;
         hasActiveRecovery = _recovery.proposedOwner != address(0);
@@ -971,7 +976,7 @@ contract UserVaultLegacy is ReentrancyGuard, IRecoverableVault {
         proposedOwner = _recovery.proposedOwner;
         approvals = _recovery.approvals;
         expiryTime = _recovery.expiryTime;
-        guardianThreshold = _recovery.guardianCountSnapshot < 1 ? 1 : (_recovery.guardianCountSnapshot / 2) + 1;
+        guardianThreshold = _recovery.guardianCountSnapshot == 0 ? 1 : (_recovery.guardianCountSnapshot / 2) + 1;
     }
     
     /**
@@ -990,7 +995,7 @@ contract UserVaultLegacy is ReentrancyGuard, IRecoverableVault {
         readyTime = _inheritance.readyTime;
         expiryTime = _inheritance.expiryTime;
         ownerDenied = _inheritance.ownerDenied;
-        guardianThreshold = _inheritance.guardianCountSnapshot < 1 ? 1 : uint8((_inheritance.guardianCountSnapshot / 2) + 1);
+        guardianThreshold = _inheritance.guardianCountSnapshot == 0 ? 1 : uint8((_inheritance.guardianCountSnapshot / 2) + 1);
     }
     
     /**
@@ -1080,12 +1085,11 @@ contract UserVaultLegacy is ReentrancyGuard, IRecoverableVault {
         uint64[] memory addedTimes,
         bool[] memory mature
     ) {
-        uint256 guardianCount_ = guardianList.length;
-        addresses = new address[](guardianCount_);
-        addedTimes = new uint64[](guardianCount_);
-        mature = new bool[](guardianCount_);
+        addresses = new address[](guardianList.length);
+        addedTimes = new uint64[](guardianList.length);
+        mature = new bool[](guardianList.length);
         
-        for (uint256 i = 0; i < guardianCount_; i++) {
+        for (uint256 i = 0; i < guardianList.length; i++) {
             address g = guardianList[i];
             addresses[i] = g;
             addedTimes[i] = guardianAddTime[g];
@@ -1170,14 +1174,14 @@ contract VaultInfrastructure is Ownable {
     mapping(address => bool) public isRecoveryApprover;
 
     /// Events
-    event ModulesSet(address indexed vfide, address indexed securityHub, address indexed ledger, address dao);
+    event ModulesSet(address vfide, address securityHub, address ledger, address dao);
     event VaultCreated(address indexed owner, address indexed vault);
     event ForcedRecoveryInitiated(address indexed vault, address indexed newOwner, uint64 unlockTime);
     event ForcedRecovery(address indexed vault, address indexed newOwner);
     event ForcedRecoveryCancelled(address indexed vault); // VI-06 FIX
-    event VFIDESet(address indexed vfide);
-    event DAOSet(address indexed dao);
-    event VaultBytecodeProviderSet(address indexed provider);
+    event VFIDESet(address vfide);
+    event DAOSet(address dao);
+    event VaultBytecodeProviderSet(address provider);
 
     /// Errors
     error VI_Zero();
@@ -1267,8 +1271,6 @@ contract VaultInfrastructure is Ownable {
         totalVaults++;
         vaultCreatedAt[vault] = block.timestamp;
         
-        emit VaultCreated(owner_, vault);
-
         // Register vault with SecurityHub for vault age tracking (self-panic requirements)
         if (address(securityHub) != address(0)) {
             try securityHub.registerVault(vault) {} catch {
@@ -1276,6 +1278,7 @@ contract VaultInfrastructure is Ownable {
             }
         }
 
+        emit VaultCreated(owner_, vault);
         _logEv(vault, "vault_created", 0, "");
     }
 
@@ -1303,11 +1306,10 @@ contract VaultInfrastructure is Ownable {
         }
         
         // Record approval for current nonce
-        bool approvalCasted = false;
         if (!recoveryApprovals[vault][msg.sender][nonce]) {
             recoveryApprovals[vault][msg.sender][nonce] = true;
             recoveryApprovalCount[vault]++;
-            approvalCasted = true;
+            _log("recovery_approval_cast");
         }
         
         // If threshold reached, initiate timelock
@@ -1316,10 +1318,6 @@ contract VaultInfrastructure is Ownable {
             recoveryUnlockTime[vault] = uint64(block.timestamp + RECOVERY_DELAY);
             emit ForcedRecoveryInitiated(vault, recoveryProposedOwner[vault], recoveryUnlockTime[vault]);
             _logEv(vault, "force_recover_init", 0, "");
-        }
-
-        if (approvalCasted) {
-            _log("recovery_approval_cast");
         }
     }
     
@@ -1372,8 +1370,9 @@ contract VaultInfrastructure is Ownable {
         // Note: We clear by incrementing a nonce rather than iterating (gas efficient)
         recoveryNonce[vault]++;
 
-        emit ForcedRecovery(vault, newOwner);
         UserVaultLegacy(payable(vault)).__forceSetOwner(newOwner);
+
+        emit ForcedRecovery(vault, newOwner);
         _logEv(vault, "force_recover_final", 0, "");
     }
     
@@ -1409,14 +1408,10 @@ contract VaultInfrastructure is Ownable {
     }
 
     function _log(string memory action) internal {
-        if (address(ledger) != address(0)) {
-            try ledger.logSystemEvent(address(this), action, msg.sender) {} catch {}
-        }
+        if (address(ledger) != address(0)) { try ledger.logSystemEvent(address(this), action, msg.sender) {} catch { emit LedgerLogFailed(address(this), action); } }
     }
     function _logEv(address who, string memory action, uint256 amount, string memory note) internal {
-        if (address(ledger) != address(0)) {
-            try ledger.logEvent(who, action, amount, note) {} catch {}
-        }
+        if (address(ledger) != address(0)) { try ledger.logEvent(who, action, amount, note) {} catch { emit LedgerLogFailed(who, action); } }
     }
     
     // ═══════════════════════════════════════════════════════════════════════

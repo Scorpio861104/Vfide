@@ -41,9 +41,9 @@ contract FiatRampRegistry is ReentrancyGuard {
     event RampProviderRemoved(address indexed provider);
     event RampTransactionRecorded(address indexed user, address indexed provider, bytes32 txHash, bool isOnRamp);
     
-    address public immutable dao;
-    ISeer public immutable seer;
-    IProofLedger public immutable ledger;
+    address public dao;
+    ISeer public seer;
+    IProofLedger public ledger;
     
     struct RampProvider {
         bool registered;
@@ -65,7 +65,6 @@ contract FiatRampRegistry is ReentrancyGuard {
     
     mapping(address => RampProvider) public providers;
     address[] public providerList;
-    mapping(address => uint256) private providerIndexPlusOne;
     mapping(bytes32 => RampRecord) public rampRecords;
     mapping(address => bytes32[]) public userRampHistory;
     
@@ -120,7 +119,6 @@ contract FiatRampRegistry is ReentrancyGuard {
         });
         require(providerList.length < 200, "FRR: provider cap"); // I-11
         providerList.push(provider);
-        providerIndexPlusOne[provider] = providerList.length;
         
         emit RampProviderRegistered(provider, name, licenseInfo);
     }
@@ -131,18 +129,13 @@ contract FiatRampRegistry is ReentrancyGuard {
     function removeProvider(address provider) external onlyDAO nonReentrant {
         require(providers[provider].registered, "FRR: not registered");
         providers[provider].registered = false;
-
-        uint256 idxPlusOne = providerIndexPlusOne[provider];
-        if (idxPlusOne != 0) {
-            uint256 idx = idxPlusOne - 1;
-            uint256 lastIdx = providerList.length - 1;
-            if (idx != lastIdx) {
-                address moved = providerList[lastIdx];
-                providerList[idx] = moved;
-                providerIndexPlusOne[moved] = idx + 1;
+        // MP-07: keep providerList compact via swap-and-pop.
+        for (uint256 i = 0; i < providerList.length; i++) {
+            if (providerList[i] == provider) {
+                providerList[i] = providerList[providerList.length - 1];
+                providerList.pop();
+                break;
             }
-            providerList.pop();
-            delete providerIndexPlusOne[provider];
         }
         emit RampProviderRemoved(provider);
     }
@@ -203,9 +196,8 @@ contract FiatRampRegistry is ReentrancyGuard {
         string[] memory names,
         string[] memory widgetUrls
     ) {
-        uint256 providerCount = providerList.length;
         uint256 count = 0;
-        for (uint256 i = 0; i < providerCount; i++) {
+        for (uint256 i = 0; i < providerList.length; i++) {
             if (providers[providerList[i]].registered) count++;
         }
         
@@ -214,7 +206,7 @@ contract FiatRampRegistry is ReentrancyGuard {
         widgetUrls = new string[](count);
         
         uint256 idx = 0;
-        for (uint256 i = 0; i < providerCount; i++) {
+        for (uint256 i = 0; i < providerList.length; i++) {
             if (providers[providerList[i]].registered) {
                 addresses[idx] = providerList[i];
                 names[idx] = providers[providerList[i]].name;
@@ -230,8 +222,7 @@ contract FiatRampRegistry is ReentrancyGuard {
     
     function getUserRampCount(address user) external view returns (uint256 onRamps, uint256 offRamps) {
         bytes32[] memory history = userRampHistory[user];
-        uint256 historyLength = history.length;
-        for (uint256 i = 0; i < historyLength; i++) {
+        for (uint256 i = 0; i < history.length; i++) {
             if (rampRecords[history[i]].isOnRamp) {
                 onRamps++;
             } else {
@@ -274,7 +265,7 @@ contract MainstreamPriceOracle is ReentrancyGuard {
     event PriceSourceReported(address indexed source, uint256 price, uint256 timestamp);
     event StalenessThresholdUpdated(uint256 oldThreshold, uint256 newThreshold);
     
-    address public immutable dao;
+    address public dao;
     
     // Price in VFIDE per 1 USD (18 decimals)
     // If VFIDE = $0.10, then vfidePerUsd = 10e18 (10 VFIDE per $1)
@@ -292,7 +283,6 @@ contract MainstreamPriceOracle is ReentrancyGuard {
     
     mapping(address => PriceSource) public priceSources;
     address[] public sourceList;
-    mapping(address => uint256) private sourceIndexPlusOne;
     
     // Authorized updaters (keepers, oracles)
     mapping(address => bool) public isUpdater;
@@ -356,7 +346,6 @@ contract MainstreamPriceOracle is ReentrancyGuard {
         
         if (!priceSources[source].active) {
             sourceList.push(source);
-            sourceIndexPlusOne[source] = sourceList.length;
         }
         
         priceSources[source] = PriceSource({
@@ -377,17 +366,13 @@ contract MainstreamPriceOracle is ReentrancyGuard {
         require(priceSources[source].active, "PO: source not active");
         priceSources[source].active = false;
 
-        uint256 idxPlusOne = sourceIndexPlusOne[source];
-        if (idxPlusOne != 0) {
-            uint256 idx = idxPlusOne - 1;
-            uint256 lastIdx = sourceList.length - 1;
-            if (idx != lastIdx) {
-                address moved = sourceList[lastIdx];
-                sourceList[idx] = moved;
-                sourceIndexPlusOne[moved] = idx + 1;
+        uint256 len = sourceList.length;
+        for (uint256 i = 0; i < len; i++) {
+            if (sourceList[i] == source) {
+                sourceList[i] = sourceList[len - 1];
+                sourceList.pop();
+                break;
             }
-            sourceList.pop();
-            delete sourceIndexPlusOne[source];
         }
 
         emit PriceSourceRemoved(source);
@@ -536,8 +521,8 @@ contract SessionKeyManager is ReentrancyGuard {
 
     error SKM_ActionBlocked(uint8 result);
     
-    address public immutable dao;
-    IVaultHub public immutable vaultHub;
+    address public dao;
+    IVaultHub public vaultHub;
     ISeerAutonomous_SKM public seerAutonomous;
     
     struct Session {
@@ -822,8 +807,8 @@ contract TerminalRegistry is ReentrancyGuard {
     event TapLimitUpdated(uint256 oldLimit, uint256 newLimit);
     event PaymentRecorderSet(address indexed recorder, bool allowed);
     
-    address public immutable dao;
-    IVaultHub public immutable vaultHub;
+    address public dao;
+    IVaultHub public vaultHub;
     
     struct Terminal {
         address merchant;
@@ -1035,9 +1020,9 @@ contract MultiCurrencyRouter is ReentrancyGuard {
         string orderId
     );
     
-    address public immutable dao;
-    address public immutable vfideToken;
-    MainstreamPriceOracle public immutable priceOracle;
+    address public dao;
+    address public vfideToken;
+    MainstreamPriceOracle public priceOracle;
     mapping(address => bool) public authorizedRecorder;
     
     // Recommended DEX routers (user chooses which to use)
@@ -1245,9 +1230,8 @@ contract MultiCurrencyRouter is ReentrancyGuard {
         string[] memory symbols,
         bool[] memory needsSwap
     ) {
-        uint256 tokenCount = supportedTokens.length;
         uint256 count = 0;
-        for (uint256 i = 0; i < tokenCount; i++) {
+        for (uint256 i = 0; i < supportedTokens.length; i++) {
             if (routes[supportedTokens[i]].supported) count++;
         }
         
@@ -1256,7 +1240,7 @@ contract MultiCurrencyRouter is ReentrancyGuard {
         needsSwap = new bool[](count);
         
         uint256 idx = 0;
-        for (uint256 i = 0; i < tokenCount; i++) {
+        for (uint256 i = 0; i < supportedTokens.length; i++) {
             if (routes[supportedTokens[i]].supported) {
                 addresses[idx] = supportedTokens[i];
                 symbols[idx] = routes[supportedTokens[i]].symbol;

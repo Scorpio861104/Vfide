@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
-import { Time } from "@openzeppelin/contracts/utils/types/Time.sol";
 import "./SharedInterfaces.sol";
 import "./interfaces/IVaultInfrastructure.sol";
 
@@ -43,9 +42,8 @@ contract VaultRegistry is Ownable, ReentrancyGuard {
     // Recovery identifiers (all hashed for privacy)
     // recoveryIdHash => primary vault address (backward compatibility)
     mapping(bytes32 => address) public vaultByRecoveryId;
-
-    // FINAL-06: collision-safe storage of all vaults sharing the same recovery hash.
-    mapping(bytes32 => address[]) private recoveryVaultMatches;
+    // FINAL-06: collision-safe storage of all vaults sharing the same recovery hash
+    mapping(bytes32 => address[]) public vaultsByRecoveryId;
     
     // Vault => recovery ID hash (for verification)
     mapping(address => bytes32) public recoveryIdOfVault;
@@ -88,7 +86,6 @@ contract VaultRegistry is Ownable, ReentrancyGuard {
     mapping(address => uint256) public vaultCreatedAt;
     mapping(address => uint256) public vaultLastActiveAt;
     mapping(address => uint256) public guardianCountOfVault;
-    mapping(address => address) public vaultOwnerSnapshot;
     
     // ═══════════════════════════════════════════════════════════════════════════════
     // EVENTS
@@ -136,8 +133,8 @@ contract VaultRegistry is Ownable, ReentrancyGuard {
     // ═══════════════════════════════════════════════════════════════════════════════
     
     modifier onlyVaultOwner(address vault) {
-        address vaultOwner = vaultHub.ownerOfVault(vault);
-        if (vaultOwner != msg.sender) revert NotVaultOwner();
+        address owner = vaultHub.ownerOfVault(vault);
+        if (owner != msg.sender) revert NotVaultOwner();
         _;
     }
     
@@ -155,22 +152,19 @@ contract VaultRegistry is Ownable, ReentrancyGuard {
      * @dev Called automatically when vault is created, or manually by user
      */
     function registerVault(address vault) external validVault(vault) {
-        address vaultOwner = vaultHub.ownerOfVault(vault);
-        require(msg.sender == vaultOwner || msg.sender == address(vaultHub), "not authorized");
-
-        uint256 currentTime = Time.timestamp();
-        vaultOwnerSnapshot[vault] = vaultOwner;
-
-        if (vaultCreatedAt[vault] == 0) {
+        address owner = vaultHub.ownerOfVault(vault);
+        require(msg.sender == owner || msg.sender == address(vaultHub), "not authorized");
+        
+        if (vaultCreatedAt[vault] < 1) {
             vaultIndex[vault] = allVaults.length;
-            require(allVaults.length < 100_000, "VR: vault cap"); // I-11
+            require(allVaults.length < 100000, "VR: vault cap"); // I-11
             allVaults.push(vault);
-            vaultCreatedAt[vault] = currentTime;
+            vaultCreatedAt[vault] = block.timestamp;
         }
-
-        vaultLastActiveAt[vault] = currentTime;
-
-        emit VaultRegistered(vault, vaultOwner, currentTime);
+        
+        vaultLastActiveAt[vault] = block.timestamp;
+        
+        emit VaultRegistered(vault, owner, block.timestamp);
     }
     
     /**
@@ -328,10 +322,10 @@ contract VaultRegistry is Ownable, ReentrancyGuard {
      * @dev Called periodically or when badges change to enable badge-based lookup
      */
     function updateBadgeFingerprint(address vault) external validVault(vault) {
-        address vaultOwner = vaultHub.ownerOfVault(vault);
-
+        address owner = vaultHub.ownerOfVault(vault);
+        
         if (address(badgeManager) != address(0)) {
-            uint256[] memory badges = badgeManager.getUserBadges(vaultOwner);
+            uint256[] memory badges = badgeManager.getUserBadges(owner);
             
             if (badges.length > 0) {
                 // Create unique fingerprint from badge IDs
@@ -357,9 +351,8 @@ contract VaultRegistry is Ownable, ReentrancyGuard {
             msg.sender == owner,
             "VR: not authorized"
         );
-        uint256 currentTime = Time.timestamp();
-        vaultLastActiveAt[vault] = currentTime;
-        emit VaultActivityUpdated(vault, currentTime);
+        vaultLastActiveAt[vault] = block.timestamp;
+        emit VaultActivityUpdated(vault, block.timestamp);
     }
     
     // ═══════════════════════════════════════════════════════════════════════════════
@@ -373,7 +366,7 @@ contract VaultRegistry is Ownable, ReentrancyGuard {
      */
     function searchByRecoveryId(string calldata recoveryId) external view returns (address vault) {
         bytes32 hashedId = keccak256(abi.encodePacked(recoveryId));
-        address[] storage matches = recoveryVaultMatches[hashedId];
+        address[] storage matches = vaultsByRecoveryId[hashedId];
         if (matches.length == 0) return address(0);
         return matches[0];
     }
@@ -383,7 +376,7 @@ contract VaultRegistry is Ownable, ReentrancyGuard {
      */
     function searchByRecoveryIdAll(string calldata recoveryId) external view returns (address[] memory vaults) {
         bytes32 hashedId = keccak256(abi.encodePacked(recoveryId));
-        return recoveryVaultMatches[hashedId];
+        return vaultsByRecoveryId[hashedId];
     }
     
     /**
@@ -491,7 +484,7 @@ contract VaultRegistry is Ownable, ReentrancyGuard {
             address vault = allVaults[i];
             uint256 created = vaultCreatedAt[vault];
             if (created >= startTime && created <= endTime) {
-                tmp[matchCount] = _getCachedVaultInfo(vault);
+                tmp[matchCount] = getVaultInfo(vault);
                 matchCount++;
             }
             lastChecked = i + 1;
@@ -550,9 +543,9 @@ contract VaultRegistry is Ownable, ReentrancyGuard {
 
         for (uint256 i = offset; i < batchEnd && matchCount < limit; i++) {
             address vault = allVaults[i];
-            address vaultOwner = vaultOwnerSnapshot[vault];
+            address vaultOwner = vaultHub.ownerOfVault(vault);
             if (bytes4(bytes20(vaultOwner)) == addressPrefix) {
-                tmp[matchCount] = _getCachedVaultInfo(vault);
+                tmp[matchCount] = getVaultInfo(vault);
                 matchCount++;
             }
             lastChecked = i + 1;
@@ -574,25 +567,26 @@ contract VaultRegistry is Ownable, ReentrancyGuard {
      */
     function getVaultInfo(address vault) public view returns (VaultInfo memory info) {
         if (!vaultHub.isVault(vault)) revert InvalidVault();
-
-        address vaultOwner = vaultHub.ownerOfVault(vault);
+        
+        address owner = vaultHub.ownerOfVault(vault);
+        
         uint256 proofScore = 0;
         if (address(proofScoreManager) != address(0)) {
-            try proofScoreManager.getProofScore(vaultOwner) returns (uint256 score) {
+            try proofScoreManager.getProofScore(owner) returns (uint256 score) {
                 proofScore = score;
             } catch {}
         }
-
+        
         uint256 badgeCount = 0;
         if (address(badgeManager) != address(0)) {
-            try badgeManager.getUserBadges(vaultOwner) returns (uint256[] memory badges) {
+            try badgeManager.getUserBadges(owner) returns (uint256[] memory badges) {
                 badgeCount = badges.length;
             } catch {}
         }
-
+        
         info = VaultInfo({
             vault: vault,
-            originalOwner: vaultOwner,
+            originalOwner: owner,
             createdAt: vaultCreatedAt[vault],
             lastActiveAt: vaultLastActiveAt[vault],
             proofScore: proofScore,
@@ -600,24 +594,6 @@ contract VaultRegistry is Ownable, ReentrancyGuard {
             hasGuardians: _hasGuardians(vault),
             hasRecoveryId: recoveryIdOfVault[vault] != bytes32(0),
             isRecoverable: recoveryIdOfVault[vault] != bytes32(0) || _hasGuardians(vault)
-        });
-    }
-
-    function _getCachedVaultInfo(address vault) internal view returns (VaultInfo memory info) {
-        address vaultOwner = vaultOwnerSnapshot[vault];
-        bool hasRecovery = recoveryIdOfVault[vault] != bytes32(0);
-        bool hasGuardians = _hasGuardians(vault);
-
-        info = VaultInfo({
-            vault: vault,
-            originalOwner: vaultOwner,
-            createdAt: vaultCreatedAt[vault],
-            lastActiveAt: vaultLastActiveAt[vault],
-            proofScore: 0,
-            badgeCount: 0,
-            hasGuardians: hasGuardians,
-            hasRecoveryId: hasRecovery,
-            isRecoverable: hasRecovery || hasGuardians
         });
     }
     
@@ -640,19 +616,11 @@ contract VaultRegistry is Ownable, ReentrancyGuard {
      */
     function isRecoveryIdAvailable(string calldata recoveryId) external view returns (bool) {
         bytes32 hashedId = keccak256(abi.encodePacked(recoveryId));
-        return recoveryVaultMatches[hashedId].length == 0;
-    }
-
-    function vaultsByRecoveryId(bytes32 hashedId, uint256 index) external view returns (address) {
-        return recoveryVaultMatches[hashedId][index];
-    }
-
-    function recoveryVaultCount(bytes32 hashedId) external view returns (uint256) {
-        return recoveryVaultMatches[hashedId].length;
+        return vaultsByRecoveryId[hashedId].length == 0;
     }
 
     function _addRecoveryVault(bytes32 hashedId, address vault) internal {
-        address[] storage matches = recoveryVaultMatches[hashedId];
+        address[] storage matches = vaultsByRecoveryId[hashedId];
         for (uint256 i = 0; i < matches.length; i++) {
             if (matches[i] == vault) {
                 // Already present: keep primary pointer consistent and return.
@@ -669,7 +637,7 @@ contract VaultRegistry is Ownable, ReentrancyGuard {
     }
 
     function _removeRecoveryVault(bytes32 hashedId, address vault) internal {
-        address[] storage matches = recoveryVaultMatches[hashedId];
+        address[] storage matches = vaultsByRecoveryId[hashedId];
         uint256 len = matches.length;
         if (len == 0) {
             if (vaultByRecoveryId[hashedId] == vault) delete vaultByRecoveryId[hashedId];

@@ -76,13 +76,13 @@ describe('VFIDE Security Contracts - Phase 1', () => {
   });
 
   describe('VFIDEToken', () => {
-    it('retains blacklist, freeze, anti-whale, and cooldown protections', () => {
+    it('retains fraud-registry, anti-whale, vault-only, and cooldown protections', () => {
       const source = read('contracts/VFIDEToken.sol');
 
-      expect(source).toContain('isBlacklisted');
-      expect(source).toContain('freezeTime');
-      expect(source).toContain('FREEZE_DELAY');
-      expect(source).toContain('setBlacklist');
+      expect(source).toContain('fraudRegistry');
+      expect(source).toContain('setFraudRegistry');
+      expect(source).toContain('requiresEscrow');
+      expect(source).toContain('vaultOnly = true');
       expect(source).toContain('maxTransferAmount');
       expect(source).toContain('transferCooldown');
     });

@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
-import { Time } from "@openzeppelin/contracts/utils/types/Time.sol";
-
 error SPG_NotDAO();
 error SPG_NotSeer();
 error SPG_Zero();
@@ -70,7 +68,7 @@ contract SeerPolicyGuard {
         if (selector == bytes4(0) || pclass > POLICY_CLASS_OPERATIONAL) revert SPG_InvalidState();
         changeId = getPolicyChangeId(selector, pclass);
         if (policyChangeReadyAt[changeId] != 0) revert SPG_InvalidState();
-        readyAt = uint64(Time.timestamp() + _policyDelay(pclass));
+        readyAt = uint64(block.timestamp + _policyDelay(pclass));
         policyChangeReadyAt[changeId] = readyAt;
         emit PolicyChangeScheduled(changeId, selector, pclass, readyAt);
     }
@@ -86,7 +84,7 @@ contract SeerPolicyGuard {
     function consume(bytes4 selector, uint8 pclass) external onlySeer nonReentrantSPG {
         bytes32 changeId = getPolicyChangeId(selector, pclass);
         uint64 readyAt = policyChangeReadyAt[changeId];
-        if (readyAt == 0 || Time.timestamp() < readyAt) revert SPG_InvalidState();
+        if (readyAt == 0 || block.timestamp < readyAt) revert SPG_InvalidState();
 
         delete policyChangeReadyAt[changeId];
         emit PolicyChangeConsumed(changeId, selector, pclass);

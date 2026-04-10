@@ -27,14 +27,14 @@ interface ISeerGuardian_GH {
     function recordViolation(address subject, uint8 vtype, string calldata reason) external;
 }
 
-contract GovernanceHooks is IGovernanceHooks, ReentrancyGuard {
+contract GovernanceHooks is ReentrancyGuard {
     address public owner;
     address public dao; // DAO contract that can call hooks
     IProofLedger_GH public ledger; // optional
     ISeer_GH public seer;          // optional
     ISeerGuardian_GH public guardian; // SeerGuardian for mutual checks
 
-    event ModulesSet(address indexed ledger, address indexed seer, address indexed guardian);
+    event ModulesSet(address ledger, address seer, address guardian);
     event DAOSet(address indexed dao);
     event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
     event ProposalAutoChecked(uint256 indexed proposalId, address indexed proposer, bool flagged);

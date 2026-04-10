@@ -35,7 +35,7 @@ error COM_NotAllowed();
 error COM_BadRating();
 
 contract MerchantRegistry {
-    event ModulesSet(address indexed dao, address indexed token, address indexed hub, address seer, address sec, address ledger);
+    event ModulesSet(address dao, address token, address hub, address seer, address sec, address ledger);
     event PolicySet(uint16 minScore, uint8 autoSuspendRefunds, uint8 autoSuspendDisputes);
     event MerchantAdded(address indexed owner, address indexed vault, bytes32 metaHash);
     event MerchantStatus(address indexed owner, Status status, string reason);
@@ -60,9 +60,9 @@ contract MerchantRegistry {
     }
 
     mapping(address => Merchant) public merchants;
-    uint16 public immutable minScore;
-    uint8  public constant AUTO_SUSPEND_REFUNDS = 5;
-    uint8  public constant AUTO_SUSPEND_DISPUTES = 3;
+    uint16 public minScore;
+    uint8  public autoSuspendRefunds = 5;
+    uint8  public autoSuspendDisputes = 3;
 
     modifier onlyDAO() { if (msg.sender != dao) revert COM_NotDAO(); _; }
 
@@ -91,8 +91,8 @@ contract MerchantRegistry {
             metaHash: metaHash
         });
 
-        emit MerchantAdded(msg.sender, v, metaHash);
         try ledger.logSystemEvent(msg.sender, "MerchantAdded", msg.sender) {} catch {}
+        emit MerchantAdded(msg.sender, v, metaHash);
     }
 
     address public authorizedEscrow;
@@ -111,7 +111,7 @@ contract MerchantRegistry {
         Merchant storage m = merchants[owner];
         if (m.status == Status.NONE) revert COM_NotMerchant();
         m.refunds += 1;
-        if (m.refunds >= AUTO_SUSPEND_REFUNDS) {
+        if (m.refunds >= autoSuspendRefunds) {
             m.status = Status.SUSPENDED;
             emit AutoFlagged(owner, "refund_threshold");
         }
@@ -122,7 +122,7 @@ contract MerchantRegistry {
         Merchant storage m = merchants[owner];
         if (m.status == Status.NONE) revert COM_NotMerchant();
         m.disputes += 1;
-        if (m.disputes >= AUTO_SUSPEND_DISPUTES) {
+        if (m.disputes >= autoSuspendDisputes) {
             m.status = Status.SUSPENDED;
             emit AutoFlagged(owner, "dispute_threshold");
         }
@@ -150,11 +150,11 @@ contract CommerceEscrow {
     
     enum State { NONE, OPEN, FUNDED, RELEASED, REFUNDED, DISPUTED, RESOLVED }
 
-    address public immutable dao;
-    IERC20 public immutable token;
-    IVaultHub_COM public immutable vaultHub;
-    MerchantRegistry public immutable merchants;
-    ISecurityHub_COM public immutable security;
+    address public dao;
+    IERC20     public token;
+    IVaultHub_COM  public vaultHub;
+    MerchantRegistry public merchants;
+    ISecurityHub_COM public security;
 
     uint256 private _reentrancyStatus = 1;
     modifier nonReentrant() {
@@ -225,7 +225,6 @@ contract CommerceEscrow {
         if (msg.sender != e.buyerOwner && msg.sender != dao) revert COM_NotAllowed();
         e.state = State.FUNDED;
         escrowDeposited[id] = e.amount;
-        // slither-disable-next-line arbitrary-send-erc20
         token.safeTransferFrom(e.buyerVault, address(this), e.amount);
     }
 

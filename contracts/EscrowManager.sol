@@ -32,7 +32,7 @@ error ESC_TooEarly();
 error ESC_HighValueRequiresDAO();
 error ESC_ActionBlocked(uint8 result);
 
-contract EscrowManager is IEscrowManager, ReentrancyGuard {
+contract EscrowManager is ReentrancyGuard {
         uint256 public constant MIN_LOCK_PERIOD = 3 days; // F-18 FIX: Enforce minimum lock period regardless of score
     using SafeERC20 for IERC20;
 
@@ -63,7 +63,7 @@ contract EscrowManager is IEscrowManager, ReentrancyGuard {
     mapping(uint256 => Escrow) public escrows;
     
     address public arbiter; // DAO or specialized court
-    ISeer public immutable seer;
+    ISeer public seer;
     ISeerAutonomous_ESC public seerAutonomous;
     address public dao; // For high-value disputes
     /// @notice Threshold above which disputes require DAO approval (10,000 VFIDE)

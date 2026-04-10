@@ -17,7 +17,6 @@ pragma solidity 0.8.30;
  */
 
 import "./SharedInterfaces.sol";
-import { Address } from "@openzeppelin/contracts/utils/Address.sol";
 
 // Seer interface for ProofScore
 interface ISeer_Sanct {
@@ -34,8 +33,8 @@ contract SanctumVault is Ownable, ReentrancyGuard {
     using SafeERC20 for IERC20;
     
     /// Events
-    event DAOSet(address indexed dao);
-    event LedgerSet(address indexed ledger);
+    event DAOSet(address dao);
+    event LedgerSet(address ledger);
     event CharityApproved(address indexed charity, string name, string category);
     event CharityRemoved(address indexed charity, string reason);
     event DisbursementProposed(uint256 indexed proposalId, address indexed charity, address token, uint256 amount, string campaign);
@@ -63,7 +62,6 @@ contract SanctumVault is Ownable, ReentrancyGuard {
     }
     mapping(address => CharityInfo) public charities;
     address[] public charityList;
-    mapping(address => uint256) private charityIndexPlusOne;
 
     /// Disbursement proposals
     struct Disbursement {
@@ -218,7 +216,6 @@ contract SanctumVault is Ownable, ReentrancyGuard {
         
         require(charityList.length < 200, "sanctum: charity cap"); // I-11
         charityList.push(charity);
-        charityIndexPlusOne[charity] = charityList.length;
         
         emit CharityApproved(charity, name, category);
         _logEv(charity, "charity_approved", 0, category);
@@ -228,18 +225,14 @@ contract SanctumVault is Ownable, ReentrancyGuard {
         require(charities[charity].approved, "not approved");
         
         charities[charity].approved = false;
-
-        uint256 idxPlusOne = charityIndexPlusOne[charity];
-        if (idxPlusOne != 0) {
-            uint256 idx = idxPlusOne - 1;
-            uint256 lastIdx = charityList.length - 1;
-            if (idx != lastIdx) {
-                address moved = charityList[lastIdx];
-                charityList[idx] = moved;
-                charityIndexPlusOne[moved] = idx + 1;
+        
+        uint256 len = charityList.length;
+        for (uint256 i = 0; i < len; i++) {
+            if (charityList[i] == charity) {
+                charityList[i] = charityList[len - 1];
+                charityList.pop();
+                break;
             }
-            charityList.pop();
-            delete charityIndexPlusOne[charity];
         }
         
         emit CharityRemoved(charity, reason);
@@ -291,7 +284,8 @@ contract SanctumVault is Ownable, ReentrancyGuard {
         if (to == address(0) || amount < 1) revert SANCT_Zero();
         require(amount <= address(this).balance, "insufficient native");
 
-        Address.sendValue(to, amount);
+        (bool sent, ) = to.call{value: amount, gas: 10_000}("");
+        require(sent, "native transfer failed");
 
         emit NativeWithdrawal(to, amount);
         _logEv(to, "sanctum_native_withdraw", amount, "");
@@ -445,13 +439,13 @@ contract SanctumVault is Ownable, ReentrancyGuard {
 
     function _log(string memory action) internal {
         if (address(ledger) != address(0)) {
-            try ledger.logSystemEvent(address(this), action, msg.sender) {} catch {}
+            try ledger.logSystemEvent(address(this), action, msg.sender) {} catch { emit LedgerLogFailed(address(this), action); }
         }
     }
 
     function _logEv(address who, string memory action, uint256 amount, string memory note) internal {
         if (address(ledger) != address(0)) {
-            try ledger.logEvent(who, action, amount, note) {} catch {}
+            try ledger.logEvent(who, action, amount, note) {} catch { emit LedgerLogFailed(who, action); }
         }
     }
 

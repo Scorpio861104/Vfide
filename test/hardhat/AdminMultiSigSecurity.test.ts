@@ -1,6 +1,6 @@
 import { describe, it } from "node:test";
-import assert from "node:assert/strict";
 import { network } from "hardhat";
+import { expectHardhatRevert } from "./utils/expectHardhatRevert";
 
 describe("AdminMultiSig security hardening", () => {
   async function deployMultiSig() {
@@ -37,9 +37,9 @@ describe("AdminMultiSig security hardening", () => {
     await ethers.provider.send("evm_increaseTime", [24 * 60 * 60 + 1]);
     await ethers.provider.send("evm_mine", []);
 
-    await assert.rejects(
+    await expectHardhatRevert(
       () => multisig.connect(c0).executeProposal(0),
-      /target has no code|revert/
+      /target has no code/
     );
   });
 
@@ -61,7 +61,7 @@ describe("AdminMultiSig security hardening", () => {
     await ethers.provider.send("evm_increaseTime", [24 * 60 * 60 + 1]);
     await ethers.provider.send("evm_mine", []);
 
-    await assert.rejects(
+    await expectHardhatRevert(
       () => multisig.connect(c0).executeProposal.staticCall(0)
     );
   });

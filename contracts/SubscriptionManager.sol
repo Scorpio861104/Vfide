@@ -49,7 +49,6 @@ contract SubscriptionManager is ReentrancyGuard {
     event PaymentFailed(uint256 indexed subId, uint256 timestamp, string reason);
     event GracePeriodStarted(uint256 indexed subId, uint256 graceEndTime);
     event EmergencyCancelled(uint256 indexed subId, address indexed cancelledBy);
-    event DAOSet(address indexed previousDAO, address indexed newDAO);
 
     struct Subscription {
         address subscriber;
@@ -80,7 +79,7 @@ contract SubscriptionManager is ReentrancyGuard {
     // NEW: DAO for emergency controls
     address public dao;
     
-    IVaultHub public immutable vaultHub;
+    IVaultHub public vaultHub;
     
     // ProofScore integration
     ISeer_SM public seer;
@@ -112,9 +111,7 @@ contract SubscriptionManager is ReentrancyGuard {
      */
     function setDAO(address _dao) external onlyDAO {
         require(_dao != address(0), "SM: zero DAO");
-        address previousDAO = dao;
         dao = _dao;
-        emit DAOSet(previousDAO, _dao);
     }
 
     // 1. User creates a subscription
@@ -224,101 +221,80 @@ contract SubscriptionManager is ReentrancyGuard {
     // 3. Merchant (or anyone) processes the payment
     // Within MERCHANT_EXCLUSIVE_WINDOW after due time, only the merchant
     //                can call — prevents third-party griefing during brief balance dips.
-    function _authorizeProcessor(Subscription storage sub, uint256 currentTime, address caller) internal view {
-        if (currentTime < sub.nextPayment + MERCHANT_EXCLUSIVE_WINDOW) {
-            if (caller != sub.merchant) revert SM_NotMerchant();
-            return;
-        }
-
-        if (caller != sub.merchant && caller != sub.subscriber && caller != dao) {
-            revert SM_NotAuthorized();
-        }
-    }
-
-    function _handleFailedPayment(
-        Subscription storage sub,
-        uint256 subId,
-        uint256 currentTime,
-        uint256 allowance,
-        uint256 balance
-    ) internal returns (bool handled) {
-        if (allowance >= sub.amount && balance >= sub.amount) {
-            return false;
-        }
-
-        sub.failedPayments++;
-
-        if (sub.failedPayments >= MAX_FAILED_PAYMENTS) {
-            sub.active = false;
-            emit PaymentFailed(subId, currentTime, "max failures reached");
-            emit SubscriptionCancelled(subId);
-            return true;
-        }
-
-        if (sub.graceEndTime == 0) {
-            sub.graceEndTime = currentTime + GRACE_PERIOD;
-            emit GracePeriodStarted(subId, sub.graceEndTime);
-        }
-
-        emit PaymentFailed(
-            subId,
-            currentTime,
-            allowance < sub.amount ? "insufficient allowance" : "insufficient balance"
-        );
-        return true;
-    }
-
-    function _processPaymentInternal(
-        Subscription storage sub,
-        uint256 subId,
-        address caller,
-        uint256 currentTime
-    ) internal returns (bool paid) {
+    function processPayment(uint256 subId) external nonReentrant {
+        Subscription storage sub = subscriptions[subId];
         if (!sub.active) revert SM_InactiveSubscription();
-        if (sub.paused) revert SM_SubscriptionPaused();
-        if (currentTime < sub.nextPayment) revert SM_PaymentTooEarly();
+        if (sub.paused) revert SM_SubscriptionPaused(); // Cannot process while paused
+        if (block.timestamp < sub.nextPayment) revert SM_PaymentTooEarly();
 
-        _authorizeProcessor(sub, currentTime, caller);
-
-        if (sub.graceEndTime > 0 && currentTime > sub.graceEndTime) {
+        // During the merchant-exclusive window only the merchant may trigger.
+        if (block.timestamp < sub.nextPayment + MERCHANT_EXCLUSIVE_WINDOW) {
+            if (msg.sender != sub.merchant) revert SM_NotMerchant();
+        } else {
+            // After the exclusive window, only merchant/subscriber/DAO may trigger.
+            if (msg.sender != sub.merchant && msg.sender != sub.subscriber && msg.sender != dao) {
+                revert SM_NotAuthorized();
+            }
+        }
+        
+        // Check grace period
+        if (sub.graceEndTime > 0 && block.timestamp > sub.graceEndTime) {
+            // Grace period expired, auto-cancel
             sub.active = false;
-            emit PaymentFailed(subId, currentTime, "grace period expired");
             emit SubscriptionCancelled(subId);
-            return false;
+            revert SM_GracePeriodExpired();
         }
 
+        // Get Vaults
         address userVault = vaultHub.vaultOf(sub.subscriber);
         address merchantVault = vaultHub.vaultOf(sub.merchant);
         require(userVault != address(0), "no user vault");
         require(merchantVault != address(0), "no merchant vault");
 
-        IERC20 token = IERC20(sub.token);
-        uint256 allowance = token.allowance(userVault, address(this));
-        uint256 balance = token.balanceOf(userVault);
-
-        if (_handleFailedPayment(sub, subId, currentTime, allowance, balance)) {
-            return false;
+        // Check allowance and balance
+        uint256 allowance = IERC20(sub.token).allowance(userVault, address(this));
+        uint256 balance = IERC20(sub.token).balanceOf(userVault);
+        
+        // NEW: Grace period handling for insufficient funds
+        if (allowance < sub.amount || balance < sub.amount) {
+            sub.failedPayments++;
+            
+            if (sub.failedPayments >= MAX_FAILED_PAYMENTS) {
+                // Too many failures, cancel subscription
+                sub.active = false;
+                emit PaymentFailed(subId, block.timestamp, "max failures reached");
+                emit SubscriptionCancelled(subId);
+                return;
+            }
+            
+            // Start or extend grace period
+            if (sub.graceEndTime == 0) {
+                sub.graceEndTime = block.timestamp + GRACE_PERIOD;
+                emit GracePeriodStarted(subId, sub.graceEndTime);
+            }
+            
+            emit PaymentFailed(subId, block.timestamp, allowance < sub.amount ? "insufficient allowance" : "insufficient balance");
+            return;
         }
-
+        
+        // Reset grace period and failed payments on successful payment
         sub.graceEndTime = 0;
         sub.failedPayments = 0;
+
+        // Update next payment time FIRST (reentrancy protection pattern)
         sub.nextPayment += sub.interval;
 
-        // slither-disable-next-line arbitrary-send-erc20
-        token.safeTransferFrom(userVault, merchantVault, sub.amount);
-
+        // This pull uses user vault custody by design (not arbitrary user-provided from-address).
+        // Execute Transfer (using SafeERC20 for non-standard tokens)
+        IERC20(sub.token).safeTransferFrom(userVault, merchantVault, sub.amount);
+        
+        // Reward ProofScore for successful subscription payment
         if (address(seer) != address(0)) {
             try seer.reward(sub.subscriber, SUBSCRIPTION_PAYER_REWARD, "subscription_payment") {} catch {}
             try seer.reward(sub.merchant, SUBSCRIPTION_MERCHANT_REWARD, "subscription_received") {} catch {}
         }
 
-        emit PaymentProcessed(subId, currentTime);
-        return true;
-    }
-
-    function processPayment(uint256 subId) external nonReentrant {
-        Subscription storage sub = subscriptions[subId];
-        _processPaymentInternal(sub, subId, msg.sender, Time.timestamp());
+        emit PaymentProcessed(subId, block.timestamp);
     }
     
     // ═══════════════════════════════════════════════════════════════════════
@@ -442,46 +418,21 @@ contract SubscriptionManager is ReentrancyGuard {
         }
     }
     
-    /// @notice Internal pre-check used by keeper batches to skip obviously invalid subscriptions.
-    function _isBatchProcessable(Subscription storage sub, uint256 currentTime, address caller) internal view returns (bool) {
-        if (!sub.active || sub.paused || currentTime < sub.nextPayment) {
-            return false;
-        }
-        if (sub.graceEndTime > 0 && currentTime > sub.graceEndTime) {
-            return true;
-        }
-        if (currentTime < sub.nextPayment + MERCHANT_EXCLUSIVE_WINDOW) {
-            return caller == sub.merchant;
-        }
-        return caller == sub.merchant || caller == sub.subscriber || caller == dao;
-    }
-
     /**
      * @notice Batch process multiple subscription payments (gas efficient for keepers)
      * @param subIds Array of subscription IDs to process
      * @return processed Number of successfully processed payments
      * @return failed Number of failed payments
      */
-    function batchProcessPayments(uint256[] calldata subIds) external nonReentrant returns (
+    function batchProcessPayments(uint256[] calldata subIds) external returns (
         uint256 processed,
         uint256 failed
     ) {
         require(subIds.length <= MAX_BATCH_SIZE, "SM: batch too large");
-        uint256 currentTime = Time.timestamp();
-
         for (uint256 i = 0; i < subIds.length; i++) {
-            uint256 subId = subIds[i];
-            Subscription storage sub = subscriptions[subId];
-
-            if (!_isBatchProcessable(sub, currentTime, msg.sender)) {
-                failed++;
-                continue;
-            }
-
-            bool paid = _processPaymentInternal(sub, subId, msg.sender, currentTime);
-            if (paid) {
+            try this.processPayment(subIds[i]) {
                 processed++;
-            } else {
+            } catch {
                 failed++;
             }
         }

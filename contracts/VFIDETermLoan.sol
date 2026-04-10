@@ -180,6 +180,7 @@ contract VFIDETermLoan is ReentrancyGuard {
 
     IERC20 public immutable vfideToken;
     address public dao;
+    address public fraudRegistry;
     ISeerTL public seer;
     IVaultHubTL public vaultHub;
     address public feeDistributor;
@@ -231,8 +232,6 @@ contract VFIDETermLoan is ReentrancyGuard {
     event LoanCancelled(uint256 indexed id);
     event RevenueAssignmentSet(uint256 indexed id, bool enabled);
     event TiersUpdated(uint256 t1, uint256 t2, uint256 t3, uint256 t4);
-    event DAOSet(address indexed previousDAO, address indexed newDAO);
-    event FeeDistributorSet(address indexed previousFeeDistributor, address indexed newFeeDistributor);
 
     // ═══════════════════════════════════════════════════════════════════════
     //                              MODIFIERS
@@ -251,9 +250,7 @@ contract VFIDETermLoan is ReentrancyGuard {
         dao = _dao;
         if (_seer != address(0)) seer = ISeerTL(_seer);
         if (_vaultHub != address(0)) vaultHub = IVaultHubTL(_vaultHub);
-        if (_feeDist != address(0)) {
-            feeDistributor = _feeDist;
-        }
+        feeDistributor = _feeDist;
     }
 
     // ═══════════════════════════════════════════════════════════════════════
@@ -300,6 +297,7 @@ contract VFIDETermLoan is ReentrancyGuard {
 
     /// @notice Accept a loan offer. ProofScore checked. Needs guarantor co-sign after.
     function acceptLoan(uint256 id) external nonReentrant whenNotPaused {
+        if (fraudRegistry != address(0)) { (bool ok, bytes memory d) = fraudRegistry.staticcall(abi.encodeWithSelector(0x38603ddd, msg.sender)); if (ok && d.length >= 32 && abi.decode(d, (bool))) revert TL_Paused(); }
         Loan storage l = loans[id];
         if (l.state != LoanState.OPEN) revert TL_WrongState();
         if (msg.sender == l.lender) revert TL_SelfLoan();
@@ -406,7 +404,7 @@ contract VFIDETermLoan is ReentrancyGuard {
 
         uint256 interest = (l.principal * l.interestBps) / 10000;
         uint256 totalOwed = l.principal + interest - l.amountRepaid;
-        uint256 protocolFee = (l.principal * l.interestBps * PROTOCOL_CUT_PCT) / 10000 / 100;
+        uint256 protocolFee = (interest * PROTOCOL_CUT_PCT) / 100;
         uint256 lenderReceives = totalOwed - protocolFee;
 
         l.amountRepaid = l.principal + interest;
@@ -488,7 +486,7 @@ contract VFIDETermLoan is ReentrancyGuard {
     function acceptPaymentPlan(uint256 id) external {
         Loan storage l = loans[id];
         if (l.lender != msg.sender) revert TL_NotLender();
-        if (plans[id].totalOwed < 1) revert TL_WrongState();
+        if (plans[id].totalOwed == 0) revert TL_WrongState();
         if (plans[id].accepted) revert TL_WrongState();
 
         plans[id].accepted = true;
@@ -521,25 +519,21 @@ contract VFIDETermLoan is ReentrancyGuard {
         p.nextDue = uint64(block.timestamp) + (p.intervalDays * 1 days);
         l.amountRepaid += amount;
 
-        bool planCompleted = p.paidInstallments >= p.totalInstallments;
-        if (planCompleted) {
-            l.state = LoanState.REPAID;
-            _closeLoan(l);
-            totalLoans++;
-            totalVolume += l.principal;
-        }
-        totalProtocolFees += protocolFee;
-
         vfideToken.safeTransferFrom(msg.sender, address(this), amount);
         vfideToken.safeTransfer(l.lender, lenderReceives);
         if (protocolFee > 0 && feeDistributor != address(0)) {
             vfideToken.safeTransfer(feeDistributor, protocolFee);
         }
+        totalProtocolFees += protocolFee;
 
         emit InstallmentPaid(id, p.paidInstallments, amount);
 
         // Plan completed — reduced penalty (good faith recognized)
-        if (planCompleted) {
+        if (p.paidInstallments >= p.totalInstallments) {
+            l.state = LoanState.REPAID;
+            _closeLoan(l);
+            totalLoans++;
+            totalVolume += l.principal;
 
             if (address(seer) != address(0)) {
                 // Moderate penalty — they missed the original deadline but made it right
@@ -652,7 +646,6 @@ contract VFIDETermLoan is ReentrancyGuard {
      * to find the borrower and make them pay. If the borrower shows up and
      * repays via repayDefaultedLoan(), extraction stops immediately.
      */
-    // slither-disable-next-line arbitrary-send-erc20
     function extractFromGuarantors(uint256 id) external nonReentrant {
         Loan storage l = loans[id];
         if (l.lender != msg.sender) revert TL_NotLender();
@@ -667,11 +660,10 @@ contract VFIDETermLoan is ReentrancyGuard {
 
         uint256 liabilityPer = guarantorLiabilityEach[id];
         address[] storage g = guarantors[id];
-        IVFIDEToken guardedToken = IVFIDEToken(address(vfideToken));
+        uint256 totalThisRound = 0;
 
         for (uint256 i = 0; i < g.length; i++) {
-            address guarantor = g[i];
-            uint256 alreadyTaken = guarantorExtracted[id][guarantor];
+            uint256 alreadyTaken = guarantorExtracted[id][g[i]];
             if (alreadyTaken >= liabilityPer) continue; // Already fully extracted
 
             // 10% of their total liability per round
@@ -680,27 +672,19 @@ contract VFIDETermLoan is ReentrancyGuard {
             if (extractAmount > remaining) extractAmount = remaining;
 
             // Try to pull from the guarantor's chosen approval source (vault first, wallet fallback)
-            address source = guarantorVault[id][guarantor];
-            if (source == address(0)) source = guarantor;
-
-            if (vfideToken.allowance(source, address(this)) < extractAmount) continue;
-            if (vfideToken.balanceOf(source) < extractAmount) continue;
-            (bool canPull, string memory denialReason) = guardedToken.canTransfer(source, l.lender, extractAmount);
-            if (!canPull) {
-                if (bytes(denialReason).length > 0) {
-                    // Respect token-level transfer restrictions (freeze, sanctions, whale limits, etc.).
-                }
-                continue;
+            address source = guarantorVault[id][g[i]];
+            if (source == address(0)) source = g[i];
+            try vfideToken.transferFrom(source, l.lender, extractAmount) {
+                guarantorExtracted[id][g[i]] += extractAmount;
+                totalThisRound += extractAmount;
+                emit GuarantorExtracted(id, g[i], extractAmount, guarantorExtracted[id][g[i]]);
+            } catch {
+                // Guarantor doesn't have funds or revoked approval
+                // Score penalty still applies — they can't escape accountability
             }
-
-            // Effects first: once all pre-checks pass, record the extraction before the token pull.
-            uint256 newExtracted = alreadyTaken + extractAmount;
-            guarantorExtracted[id][guarantor] = newExtracted;
-            totalExtracted[id] += extractAmount;
-
-            vfideToken.safeTransferFrom(source, l.lender, extractAmount);
-            emit GuarantorExtracted(id, guarantor, extractAmount, newExtracted);
         }
+
+        totalExtracted[id] += totalThisRound;
     }
 
     /**
@@ -724,16 +708,15 @@ contract VFIDETermLoan is ReentrancyGuard {
         uint256 remaining = totalDebt > alreadyCovered ? totalDebt - alreadyCovered : 0;
 
         if (remaining > 0) {
-            l.amountRepaid += remaining;
             uint256 protocolFee = (remaining * PROTOCOL_CUT_PCT) / 100;
             uint256 lenderGets = remaining - protocolFee;
 
-            // State is updated before external settlement; a failed transfer reverts all changes.
             vfideToken.safeTransferFrom(msg.sender, address(this), remaining);
             vfideToken.safeTransfer(l.lender, lenderGets);
             if (protocolFee > 0 && feeDistributor != address(0)) {
                 vfideToken.safeTransfer(feeDistributor, protocolFee);
             }
+            l.amountRepaid += remaining;
         }
 
         // Mark as repaid — stops all future guarantor extractions
@@ -794,13 +777,6 @@ contract VFIDETermLoan is ReentrancyGuard {
         if (amount > remaining) amount = remaining;
 
         l.amountRepaid += amount;
-        bool fullyRepaid = l.amountRepaid >= totalDebt;
-        if (fullyRepaid) {
-            l.state = LoanState.REPAID;
-            _closeLoan(l);
-            totalLoans++;
-            totalVolume += l.principal;
-        }
 
         uint256 protocolFee = (amount * PROTOCOL_CUT_PCT) / 100;
         uint256 lenderGets = amount - protocolFee;
@@ -812,7 +788,11 @@ contract VFIDETermLoan is ReentrancyGuard {
         }
 
         // Check if fully repaid via revenue
-        if (fullyRepaid) {
+        if (l.amountRepaid >= totalDebt) {
+            l.state = LoanState.REPAID;
+            _closeLoan(l);
+            totalLoans++;
+            totalVolume += l.principal;
             if (address(seer) != address(0)) {
                 try seer.reward(l.borrower, REWARD_ONTIME_BORROWER, "loan_revenue_repaid") {} catch {}
                 try seer.reward(l.lender, REWARD_ONTIME_LENDER, "loan_facilitated") {} catch {}
@@ -875,23 +855,9 @@ contract VFIDETermLoan is ReentrancyGuard {
     }
 
     function setPaused(bool _p) external onlyDAO { paused = _p; }
-    function setDAO(address _d) external onlyDAO {
-        if (_d == address(0)) revert TL_Zero();
-        address previousDAO = dao;
-        dao = _d;
-        emit DAOSet(previousDAO, _d);
-    }
+    function setDAO(address _d) external onlyDAO { if (_d == address(0)) revert TL_Zero(); dao = _d; }
     function setSeer(address _s) external onlyDAO { seer = ISeerTL(_s); }
     function setVaultHub(address _v) external onlyDAO { vaultHub = IVaultHubTL(_v); }
-    function setFeeDistributor(address _f) external onlyDAO {
-        address previousFeeDistributor = feeDistributor;
-        if (_f == address(0)) {
-            feeDistributor = address(0);
-            emit FeeDistributorSet(previousFeeDistributor, address(0));
-            return;
-        }
-
-        feeDistributor = _f;
-        emit FeeDistributorSet(previousFeeDistributor, _f);
-    }
+    function setFeeDistributor(address _f) external onlyDAO { feeDistributor = _f; }
+    function setFraudRegistry(address _fr) external onlyDAO { fraudRegistry = _fr; }
 }

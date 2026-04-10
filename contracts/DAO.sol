@@ -31,11 +31,11 @@ error DAO_ActionBlocked(uint8 result);
 contract DAO is ReentrancyGuard {
     enum ProposalType { Generic, Financial, ProtocolChange, SecurityAction }
 
-    event ModulesSet(address indexed timelock, address indexed seer, address indexed hub, address hooks, address council);
-    event AdminSet(address indexed admin);
+    event ModulesSet(address timelock, address seer, address hub, address hooks, address council);
+    event AdminSet(address admin);
     event ParamsSet(uint64 votingPeriod, uint256 minVotesRequired);
-    event ProposalCreated(uint256 indexed id, address indexed proposer, ProposalType ptype, address indexed target, uint256 value, bytes data, string description);
-    event Voted(uint256 indexed id, address indexed voter, bool support);
+    event ProposalCreated(uint256 id, address proposer, ProposalType ptype, address target, uint256 value, bytes data, string description);
+    event Voted(uint256 id, address voter, bool support);
     event Finalized(uint256 id, bool passed);
     event Queued(uint256 id, bytes32 timelockId);
     event Executed(uint256 id);
@@ -44,10 +44,9 @@ contract DAO is ReentrancyGuard {
     event VoteDelegated(address indexed delegator, address indexed delegate);
     event ProposalWithdrawn(uint256 id, address indexed proposer);
     event ProposalCooldownSet(uint64 cooldown);
-    event MinParticipationSet(uint256 previousMinParticipation, uint256 newMinParticipation);
     event ProposalTypeTargetPolicySet(ProposalType indexed ptype, address indexed target, bool allowed);
     event ProposalTypeSelectorPolicySet(ProposalType indexed ptype, bytes4 indexed selector, bool allowed);
-    event SeerAutonomousSet(address indexed seerAutonomous);
+    event SeerAutonomousSet(address seerAutonomous);
     event EmergencyQuorumRescueInitiated(uint256 readyAt);
     event EmergencyQuorumRescueApproved(); // DAO-03 FIX: Track secondary approval
     event EmergencyQuorumRescueExecuted(uint256 newMinVotes, uint256 newMinParticipation);
@@ -64,12 +63,12 @@ contract DAO is ReentrancyGuard {
     ISeer public seer;
     IVaultHub public vaultHub;
     IGovernanceHooks public hooks; // optional callbacks (logs/penalties)
-    IProofLedger public constant ledger = IProofLedger(address(0)); // optional via hooks
+    IProofLedger public ledger; // optional via hooks
     ISeerGuardian_DAO public guardian; // SeerGuardian for mutual oversight
     ISeerAutonomous_DAO public seerAutonomous; // optional proactive Seer automation checks
 
     uint64 public votingPeriod = 3 days;
-    uint64 public constant votingDelay = 1 days; // Flash loan protection: vote cannot start immediately
+    uint64 public votingDelay = 1 days; // Flash loan protection: vote cannot start immediately
     uint64 public constant VOTE_GRACE_PERIOD = 30 minutes; // Anti-front-running: voting closes early
     uint64 public proposalCooldown = 1 hours;
     uint256 public minVotesRequired = 5000; // Absolute number of vote-points (Score) required to pass
@@ -207,9 +206,7 @@ contract DAO is ReentrancyGuard {
     /// @param _minParticipation Minimum unique voters required for quorum
     function setMinParticipation(uint256 _minParticipation) external onlyTimelock {
         require(_minParticipation >= 3 && _minParticipation <= 100, "DAO: invalid participation");
-        uint256 previousMinParticipation = minParticipation;
         minParticipation = _minParticipation;
-        emit MinParticipationSet(previousMinParticipation, _minParticipation);
     }
 
     // ═══════════════════════════════════════════════════════════════════════
@@ -221,7 +218,7 @@ contract DAO is ReentrancyGuard {
     function initiateEmergencyQuorumRescue() external {
         require(msg.sender == admin || msg.sender == emergencyApprover, "DAO: not authorized");
         require(emergencyApprover != address(0), "DAO: emergency approver not set");
-        require(emergencyRescueReadyAt < 1, "DAO: rescue already pending");
+        require(emergencyRescueReadyAt == 0, "DAO: rescue already pending");
         
         emergencyRescueReadyAt = uint64(block.timestamp + EMERGENCY_RESCUE_DELAY);
         emergencyRescueApproved = false; // Reset approval flag
@@ -521,20 +518,19 @@ contract DAO is ReentrancyGuard {
         
         if (support) p.forVotes += weight; else p.againstVotes += weight;
 
-        uint256 today = block.timestamp / 1 days;
-        bool rewardVote = address(hooks) == address(0) && lastVoteRewardDay[voter] < today;
-        if (rewardVote) {
-            lastVoteRewardDay[voter] = today;
-        }
-
         _enforceSeerAction(voter, 3, 0, address(0)); // GovernanceVote
-
+        
         emit Voted(id, voter, support);
 
         // Avoid double rewards when hooks are configured and already reward voting.
-        if (rewardVote) {
-            try seer.reward(voter, 5, "dao_vote") {} catch {}
+        if (address(hooks) == address(0)) {
+            uint256 today = block.timestamp / 1 days;
+            if (lastVoteRewardDay[voter] < today) {
+                lastVoteRewardDay[voter] = today;
+                try seer.reward(voter, 5, "dao_vote") {} catch {}
+            }
         }
+
         if (address(hooks) != address(0)) {
             try hooks.onVoteCast(id, voter, support) {} catch {}
         }

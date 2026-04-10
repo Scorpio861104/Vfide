@@ -9,12 +9,18 @@ import "./VFIDEToken.sol";
 ///      which handles all dependencies through TypeScript configuration.
 contract Phase1TokenDeployer {
     function deployToken(
-        string memory,
-        string memory,
-        uint256,
-        address,
-        address
+        string memory _tokenName,
+        string memory _tokenSymbol,
+        uint256 _initialSupply,
+        address _admin,
+        address _multiSig
     ) external pure returns (address) {
+        _tokenName;
+        _tokenSymbol;
+        _initialSupply;
+        _admin;
+        _multiSig;
+
         revert("Phase1TokenDeployer: LEGACY factory disabled. Use contracts/scripts/deploy-phase1.ts for production.");
     }
 }

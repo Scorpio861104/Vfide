@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
-import { Address } from "@openzeppelin/contracts/utils/Address.sol";
-import { Time } from "@openzeppelin/contracts/utils/types/Time.sol";
 import { ReentrancyGuard, IERC20, ISeer } from "./SharedInterfaces.sol";
 
 /**
@@ -11,7 +9,6 @@ import { ReentrancyGuard, IERC20, ISeer } from "./SharedInterfaces.sol";
  * @dev Implements 3/5 council approval system with configurable delays and emergency override
  */
 contract AdminMultiSig is ReentrancyGuard {
-    using Address for address;
     uint256 public constant COUNCIL_SIZE = 5;
     uint256 public constant REQUIRED_APPROVALS = 3;
     uint256 public constant EMERGENCY_APPROVALS = 5;
@@ -73,7 +70,7 @@ contract AdminMultiSig is ReentrancyGuard {
         uint256 indexed proposalId,
         address indexed proposer,
         ProposalType proposalType,
-        address indexed target,
+        address target,
         string description
     );
     
@@ -176,7 +173,7 @@ contract AdminMultiSig is ReentrancyGuard {
         proposal.proposer = msg.sender;
         proposal.proposalType = _proposalType;
         proposal.status = ProposalStatus.Pending;
-        proposal.createdAt = Time.timestamp();
+        proposal.createdAt = block.timestamp;
         proposal.target = _target;
         proposal.data = _data;
         proposal.description = _description;
@@ -184,7 +181,7 @@ contract AdminMultiSig is ReentrancyGuard {
         uint256 delay = _proposalType == ProposalType.CONFIG
             ? CONFIG_DELAY
             : (_proposalType == ProposalType.CRITICAL ? CRITICAL_DELAY : EMERGENCY_DELAY);
-        proposal.executionTime = Time.timestamp() + delay;
+        proposal.executionTime = block.timestamp + delay;
 
         proposal.hasApproved[msg.sender] = true;
         proposal.approvalCount = 1;
@@ -234,43 +231,36 @@ contract AdminMultiSig is ReentrancyGuard {
         Proposal storage proposal = proposals[_proposalId];
         
         require(proposal.status == ProposalStatus.Approved, "AdminMultiSig: not approved");
-        require(Time.timestamp() >= proposal.executionTime, "AdminMultiSig: too early");
-        require(Time.timestamp() <= proposal.createdAt + PROPOSAL_EXPIRY, "AdminMultiSig: proposal expired");
+        require(block.timestamp >= proposal.executionTime, "AdminMultiSig: too early");
+        require(block.timestamp <= proposal.createdAt + PROPOSAL_EXPIRY, "AdminMultiSig: proposal expired");
         require(proposal.vetoCount < vetoThreshold, "AdminMultiSig: community vetoed");
-        require(
-            proposal.target == address(this) || proposal.target.code.length > 0,
-            "AdminMultiSig: target has no code"
-        );
 
         if (proposal.proposalType != ProposalType.EMERGENCY) {
             require(
-                Time.timestamp() <= proposal.executionTime + VETO_WINDOW,
+                block.timestamp <= proposal.executionTime + VETO_WINDOW,
                 "AdminMultiSig: veto window expired"
             );
         }
+
+        require(proposal.target.code.length > 0, "AdminMultiSig: target has no code");
 
         proposal.status = ProposalStatus.Executed;
         executingProposalId = _proposalId;
 
         emit ProposalExecuted(_proposalId, msg.sender);
 
-        // Use configurable gas limit for safety - prevents gas griefing.
+        // Use configurable gas limit for safety - prevents gas griefing
+        // Can be increased via governance if needed for complex operations
         // Intentional: emergency proposal execution may target this contract,
         // while `nonReentrant` prevents nested `executeProposal` entry.
-        _executeProposalCall(proposal.target, proposal.data);
+        (bool success, ) = proposal.target.call{gas: executionGasLimit}(proposal.data);
+        require(success, "AdminMultiSig: execution failed");
         executingProposalId = NO_ACTIVE_PROPOSAL;
-    }
-
-    function _executeProposalCall(address target, bytes memory data) internal {
-        bytes memory returndata = target.functionCall(data);
-        if (returndata.length > 0) {
-            // Intentionally ignore arbitrary proposal return data after verifying the call succeeded.
-        }
     }
 
     /// @notice Allow council to adjust execution gas limit via governance
     function setExecutionGasLimit(uint256 _gasLimit) external {
-        require(msg.sender == address(this), "AdminMultiSig: must be via proposal");
+        require(executingProposalId != NO_ACTIVE_PROPOSAL, "AdminMultiSig: must be via proposal");
         require(_gasLimit >= 100_000 && _gasLimit <= 10_000_000, "AdminMultiSig: invalid gas limit");
         executionGasLimit = _gasLimit;
         emit ExecutionGasLimitSet(_gasLimit);
@@ -311,7 +301,7 @@ contract AdminMultiSig is ReentrancyGuard {
         require(proposal.status == ProposalStatus.Approved, "AdminMultiSig: not approved");
         require(!communityVetos[_proposalId][msg.sender], "AdminMultiSig: already voted");
         require(
-            Time.timestamp() <= proposal.executionTime + VETO_WINDOW,
+            block.timestamp <= proposal.executionTime + VETO_WINDOW,
             "AdminMultiSig: veto window closed"
         );
         if (address(seer) != address(0)) {

@@ -30,16 +30,15 @@ error CM_NotKeeper();
 error CM_TooSoon();
 
 contract CouncilManager is ReentrancyGuard {
-    event ModulesSet(address indexed election, address indexed seer, address indexed ecosystemVault, address councilSalary);
+    event ModulesSet(address election, address seer, address ecosystemVault, address councilSalary);
     event KeeperSet(address indexed keeper, bool authorized);
     event ScoreCheckPerformed(uint256 membersChecked, uint256 membersRemoved, uint256 timestamp);
     event PaymentDistributed(uint256 opsAmount, uint256 councilAmount, uint256 timestamp);
-    event PaymentIntervalSet(uint256 previousInterval, uint256 newInterval);
     event MemberGracePeriod(address indexed member, uint256 daysBelow, uint16 currentScore);
     event MemberAutoRemoved(address indexed member, uint256 daysBelow, uint16 finalScore);
 
     // --- Core Modules ---
-    address public immutable dao;
+    address public dao;
     ICouncilElection public election;
     ISeer public seer;
     address public ecosystemVault; // Receives 0.2% ecosystem fee
@@ -137,9 +136,7 @@ contract CouncilManager is ReentrancyGuard {
 
     function setPaymentInterval(uint256 _interval) external onlyDAO {
         require(_interval >= 7 days && _interval <= 365 days, "CM: invalid interval");
-        uint256 previousInterval = paymentInterval;
         paymentInterval = _interval;
-        emit PaymentIntervalSet(previousInterval, _interval);
     }
 
     // ────────────────────────── Daily Score Checks ──────────────────────────
@@ -150,16 +147,20 @@ contract CouncilManager is ReentrancyGuard {
      * H-2 FIX: Iterate in reverse to prevent index corruption when removing members
      */
     function checkDailyScores() external onlyKeeper {
-        address[] memory membersToCheck = election.getCouncilMembers();
-        uint256 councilSize = membersToCheck.length;
+        uint256 councilSize = election.getActualCouncilSize();
         if (councilSize == 0) return;
 
-        uint16[] memory scoreSnapshot = seer.getScoresBatch(membersToCheck);
-        address[] memory membersForRemoval = new address[](councilSize);
-        uint16[] memory removalScores = new uint16[](councilSize);
         uint256 membersChecked = 0;
         uint256 membersRemoved = 0;
+        
+        // H-2 FIX: Collect members to check first, then process
+        // This prevents issues with array modification during iteration
+        address[] memory membersToCheck = new address[](councilSize);
+        for (uint256 i = 0; i < councilSize; i++) {
+            membersToCheck[i] = election.getCouncilMember(i);
+        }
 
+        // Now process the cached list (safe from array modifications)
         for (uint256 i = 0; i < councilSize; i++) {
             address member = membersToCheck[i];
             if (member == address(0)) continue;
@@ -170,7 +171,7 @@ contract CouncilManager is ReentrancyGuard {
             }
 
             membersChecked++;
-            uint16 score = scoreSnapshot[i];
+            uint16 score = seer.getScore(member);
 
             if (score < COUNCIL_MIN_SCORE) {
                 // Increment grace period counter
@@ -182,9 +183,17 @@ contract CouncilManager is ReentrancyGuard {
                 // Auto-remove after 7 days
                 if (daysBelow700[member] >= 7) {
                     daysBelow700[member] = 0;
-                    membersForRemoval[membersRemoved] = member;
-                    removalScores[membersRemoved] = score;
-                    membersRemoved++;
+
+                    // H-2 FIX: Use try/catch to handle potential removal failures
+                    try election.removeCouncilMember(
+                        member,
+                        "ProofScore below 7000 for 7+ days (auto-removal)"
+                    ) {
+                        membersRemoved++;
+                        emit MemberAutoRemoved(member, 7, score);
+                    } catch {
+                        // Member may have already been removed or other issue
+                    }
                 }
             } else {
                 // Score recovered - reset counter
@@ -196,17 +205,6 @@ contract CouncilManager is ReentrancyGuard {
         }
 
         emit ScoreCheckPerformed(membersChecked, membersRemoved, block.timestamp);
-
-        for (uint256 i = 0; i < membersRemoved; i++) {
-            emit MemberAutoRemoved(membersForRemoval[i], 7, removalScores[i]);
-        }
-
-        for (uint256 i = 0; i < membersRemoved; i++) {
-            election.removeCouncilMember(
-                membersForRemoval[i],
-                "ProofScore below 7000 for 7+ days (auto-removal)"
-            );
-        }
     }
 
     /**
@@ -215,19 +213,19 @@ contract CouncilManager is ReentrancyGuard {
      */
     function checkMemberScore(address member) external onlyDAO {
         require(election.isCouncil(member), "CM: not council member");
-
+        
         uint16 score = seer.getScore(member);
-
+        
         if (score < COUNCIL_MIN_SCORE) {
             daysBelow700[member]++;
             lastCheckTime[member] = block.timestamp;
-
+            
             emit MemberGracePeriod(member, daysBelow700[member], score);
-
+            
             if (daysBelow700[member] >= 7) {
                 daysBelow700[member] = 0;
-                emit MemberAutoRemoved(member, 7, score);
                 election.removeCouncilMember(member, "Manual check: score below 700 for 7+ days");
+                emit MemberAutoRemoved(member, 7, score);
             }
         } else {
             daysBelow700[member] = 0;
@@ -257,13 +255,13 @@ contract CouncilManager is ReentrancyGuard {
      */
     function distributePayments() external onlyKeeper nonReentrant {
         require(block.timestamp >= lastPaymentTime + paymentInterval, "CM: too soon");
-
-        // Effects first: timestamp is rolled back automatically if any downstream call reverts.
-        lastPaymentTime = block.timestamp;
         IEcosystemVault(ecosystemVault).allocateIncoming();
         
         uint256 vaultBalance = IEcosystemVault(ecosystemVault).councilPool(); // BATCH-04: read pool balance not raw token balance
         require(vaultBalance > 0, "CM: no funds");
+
+        // Effects first: timestamp is rolled back automatically if downstream call reverts.
+        lastPaymentTime = block.timestamp;
 
         // Calculate split (60% ops, 40% council)
         uint256 opsAmount = (vaultBalance * OPS_PERCENTAGE) / 100;
@@ -282,10 +280,14 @@ contract CouncilManager is ReentrancyGuard {
                 "council_salary"
             ) {
                 // CouncilSalary.distributeSalary() will be called by keeper or DAO separately
+                emit PaymentDistributed(opsAmount, councilAmount, block.timestamp);
             } catch {
                 // If council transfer fails, ops still gets 100%
                 // Keep interval open so keeper can retry without waiting a full cycle.
+                emit PaymentDistributed(opsAmount, 0, block.timestamp);
             }
+        } else {
+            emit PaymentDistributed(opsAmount, 0, block.timestamp);
         }
     }
 
@@ -295,8 +297,6 @@ contract CouncilManager is ReentrancyGuard {
      * Council payments are employment compensation (not investment returns)
      */
     function forcePaymentDistribution() external onlyDAO {
-        // Effects first; downstream call revert will roll back this assignment.
-        lastPaymentTime = block.timestamp;
         IEcosystemVault(ecosystemVault).allocateIncoming();
         // BATCH-04 FIX: Use councilPool() to read the earmarked council balance,
         // not the raw token balance which includes all pools.
@@ -306,13 +306,26 @@ contract CouncilManager is ReentrancyGuard {
         uint256 opsAmount = (vaultBalance * OPS_PERCENTAGE) / 100;
         uint256 councilAmount = vaultBalance - opsAmount;
 
+        // Effects first; downstream call revert will roll back this assignment.
+        lastPaymentTime = block.timestamp;
+
         if (councilAmount > 0) {
+            bool success = true;
             try IEcosystemVault(ecosystemVault).payExpense(
                 councilSalary,
                 councilAmount,
                 "council_salary_emergency"
             ) {} catch {
+                success = false;
             }
+
+            emit PaymentDistributed(
+                opsAmount,
+                success ? councilAmount : 0,
+                block.timestamp
+            );
+        } else {
+            emit PaymentDistributed(opsAmount, 0, block.timestamp);
         }
     }
 
@@ -393,19 +406,17 @@ contract CouncilManager is ReentrancyGuard {
             uint16[] memory scores
         )
     {
-        address[] memory members = election.getCouncilMembers();
-        uint256 councilSize = members.length;
+        uint256 councilSize = election.getActualCouncilSize();
         address[] memory tempMembers = new address[](councilSize);
         uint256[] memory tempDays = new uint256[](councilSize);
         uint16[] memory tempScores = new uint16[](councilSize);
-        uint16[] memory scoreSnapshot = seer.getScoresBatch(members);
         uint256 riskCount = 0;
 
         for (uint256 i = 0; i < councilSize; i++) {
-            address member = members[i];
+            address member = election.getCouncilMember(i);
             if (member == address(0)) continue;
 
-            uint16 score = scoreSnapshot[i];
+            uint16 score = seer.getScore(member);
             if (score < COUNCIL_MIN_SCORE || daysBelow700[member] > 0) {
                 tempMembers[riskCount] = member;
                 tempDays[riskCount] = daysBelow700[member];

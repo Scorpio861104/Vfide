@@ -49,6 +49,29 @@ import { logger } from '@/lib/logger';
 // Zero address placeholder for missing contracts
 export const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000' as const
 
+const contractAddressWarningState = ((globalThis as typeof globalThis & {
+  __vfideContractWarnings?: Set<string>;
+}).__vfideContractWarnings ??= new Set<string>());
+
+function logContractAddressIssue(level: 'info' | 'warn' | 'error', message: string) {
+  if (contractAddressWarningState.has(message)) {
+    return;
+  }
+  contractAddressWarningState.add(message);
+
+  if (level === 'error') {
+    logger.error(message);
+    return;
+  }
+
+  if (level === 'warn') {
+    logger.warn(message);
+    return;
+  }
+
+  logger.info(message);
+}
+
 const CONTRACT_ENV_VAR_MAP: Record<string, string> = {
   VFIDEToken: 'NEXT_PUBLIC_VFIDE_TOKEN_ADDRESS',
   StablecoinRegistry: 'NEXT_PUBLIC_STABLECOIN_REGISTRY_ADDRESS',
@@ -103,17 +126,18 @@ function validateContractAddress(address: string | undefined, name: string): `0x
   if (!address) {
     const envVarName = CONTRACT_ENV_VAR_MAP[name] ?? `NEXT_PUBLIC_${name.replace(/([a-z0-9])([A-Z])/g, '$1_$2').toUpperCase()}_ADDRESS`;
     if (strictProduction && !isBrowserRuntime) {
-      logger.error(`[VFIDE] Missing contract address in production: ${name}. Set ${envVarName} in environment. All calls to this contract will fail.`)
+      logContractAddressIssue('error', `[VFIDE] Missing contract address in production: ${name}. Set ${envVarName} in environment. All calls to this contract will fail.`)
       throw new Error(`[VFIDE] Missing required contract address in production: ${name}`)
     } else {
       const modeHint = frontendOnly ? 'frontend-only mode' : 'non-production runtime';
       const runtimeHint = isBrowserRuntime ? 'browser runtime' : modeHint;
-      logger.warn(`[VFIDE] Missing contract address: ${name}. Using ZERO_ADDRESS in ${runtimeHint}. Set ${envVarName} in environment.`)
+      const level = frontendOnly || isBrowserRuntime ? 'info' : 'warn';
+      logContractAddressIssue(level, `[VFIDE] Missing contract address: ${name}. Using ZERO_ADDRESS in ${runtimeHint}. Set ${envVarName} in environment.`)
     }
     return ZERO_ADDRESS
   }
   if (!isAddress(address)) {
-    logger.error(`[VFIDE] Invalid contract address for ${name}: ${address}. This is a configuration error!`)
+    logContractAddressIssue('error', `[VFIDE] Invalid contract address for ${name}: ${address}. This is a configuration error!`)
     if (isProduction && !isBrowserRuntime) {
       throw new Error(`[VFIDE] Invalid contract address in production for ${name}`)
     }

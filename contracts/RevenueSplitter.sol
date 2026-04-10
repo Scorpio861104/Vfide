@@ -14,7 +14,7 @@ import { IERC20, SafeERC20, ReentrancyGuard } from "./SharedInterfaces.sol";
 
 contract RevenueSplitter is ReentrancyGuard {
     using SafeERC20 for IERC20;
-    address public immutable owner;
+    address public owner;
     
     struct Payee {
         address account;
@@ -34,14 +34,12 @@ contract RevenueSplitter is ReentrancyGuard {
         owner = msg.sender;
         
         uint256 length = _accounts.length;
-        uint256 sharesTotal = 0;
-        for (uint256 i = 0; i < length; ++i) {
+        for (uint i = 0; i < length; ++i) {
             require(_accounts[i] != address(0), "zero address");
             require(_shares[i] > 0, "zero share");
             payees.push(Payee({account: _accounts[i], shareBps: _shares[i]}));
-            sharesTotal += _shares[i];
+            totalShares += _shares[i];
         }
-        totalShares = sharesTotal;
         require(totalShares == 10000, "must equal 100%");
     }
 
@@ -97,16 +95,14 @@ contract RevenueSplitter is ReentrancyGuard {
 
         // Clear existing
         delete payees;
+        totalShares = 0;
 
-        uint256 sharesTotal = 0;
-        uint256 length = _accounts.length;
-        for (uint256 i = 0; i < length; i++) {
+        for (uint256 i = 0; i < _accounts.length; i++) {
             require(_accounts[i] != address(0), "zero address");
             require(_shares[i] > 0, "zero share");
             payees.push(Payee({account: _accounts[i], shareBps: _shares[i]}));
-            sharesTotal += _shares[i];
+            totalShares += _shares[i];
         }
-        totalShares = sharesTotal;
         require(totalShares == 10000, "must equal 100%");
     }
 }

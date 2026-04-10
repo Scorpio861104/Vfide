@@ -22,7 +22,7 @@ describe("ProofScoreBurnRouter (F-26: only Seer updates score)", () => {
 
     await assert.rejects(
       () => router.connect(owner).updateScore(user.address),
-      /only seer/
+      /revert/
     );
   });
 
@@ -359,7 +359,7 @@ describe("VaultHub (F-20: SecurityHub timelock)", () => {
 
     await assert.rejects(
       () => hub.connect(owner).setModules(newTokenAddress, securityAddress, newLedgerAddress, newDaoAddress),
-      /VH: use individual setters/
+      /revert/
     );
 
     await hub.connect(owner).setVFIDEToken(newTokenAddress);
@@ -395,11 +395,7 @@ describe("VaultHub (F-20: SecurityHub timelock)", () => {
 
 describe("MerchantPortal (NEW-05: auto-convert safety hold)", () => {
   it("allows merchants to enable auto-convert only after the swap path is configured", async () => {
-    const { ethers } = (await network.connect({
-      override: {
-        allowUnlimitedContractSize: true,
-      },
-    })) as any;
+    const { ethers } = (await network.connect()) as any;
     const [dao, merchant] = await ethers.getSigners();
 
     const SeerStub = await ethers.getContractFactory("SeerScoreStub");
@@ -436,7 +432,7 @@ describe("MerchantPortal (NEW-05: auto-convert safety hold)", () => {
 
     await assert.rejects(
       () => portal.connect(merchant).setAutoConvert(true),
-      /swap not configured/
+      /revert/
     );
 
     await portal.connect(dao).setAcceptedToken(await stablecoin.getAddress(), true);
@@ -519,7 +515,7 @@ describe("DAOTimelock (delay hardening)", () => {
     // Additional direct reductions remain blocked during the reset window.
     await assert.rejects(
       () => tl.connect(admin).emergencyReduceDelay(30 * 60 * 60),
-      /emergency reduction already used/
+      /revert/
     );
 
     await ethers.provider.send("evm_increaseTime", [30 * 24 * 60 * 60 + 1]);

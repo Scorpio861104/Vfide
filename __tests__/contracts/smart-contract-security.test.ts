@@ -14,8 +14,8 @@
  *   – VaultHub setModules is onlyOwner
  *
  * R-042: Timelock bypass paths
- *   – SINK_CHANGE_DELAY = 48 h applied to all sink/config mutations
- *   – FREEZE_DELAY = 1 h required before blacklisting
+ *   – SINK_CHANGE_DELAY = 48 h applied to sink/config mutations
+ *   – fraud registry changes are timelocked before activation
  *   – pendingCircuitBreakerAt prevents instant circuit-breaker bypass
  *   – VaultHub RECOVERY_DELAY = 7 d; DAO uses extended 14 d
  *
@@ -92,8 +92,9 @@ describe('R-041 – Role boundary regression', () => {
       'confirmCircuitBreaker',
       'setSecurityBypass',
       'setFeeBypass',
-      'setFrozen',
-      'setBlacklist',
+      'setFraudRegistry',
+      'applyFraudRegistry',
+      'cancelFraudRegistry',
       'setAntiWhale',
       'setWhaleLimitExempt',
     ];
@@ -139,8 +140,10 @@ describe('R-042 – Timelock bypass paths', () => {
       expect(tokenSrc).toMatch(/SINK_CHANGE_DELAY\s*=\s*48\s+hours/);
     });
 
-    it('FREEZE_DELAY constant equals 1 hour (pre-blacklist cool-off)', () => {
-      expect(tokenSrc).toMatch(/FREEZE_DELAY\s*=\s*1\s+hours/);
+    it('fraud registry changes are staged through pendingFraudRegistryAt before activation', () => {
+      expect(tokenSrc).toMatch(/pendingFraudRegistryAt/);
+      expect(tokenSrc).toMatch(/function\s+setFraudRegistry\(/);
+      expect(tokenSrc).toMatch(/block\.timestamp\s*<\s*pendingFraudRegistryAt/);
     });
 
     it('circuit breaker activation has a pending delay guard (H-01 FIX)', () => {

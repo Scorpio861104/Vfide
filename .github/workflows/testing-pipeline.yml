@@ -25,6 +25,8 @@ jobs:
           cache: "npm"
       - run: npm ci
       - run: npx hardhat compile
+      - name: Run critical on-chain guardrails first
+        run: npm run -s test:onchain:critical
       - run: npx hardhat test --parallel
         env:
           REPORT_GAS: true
@@ -304,6 +306,8 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: "npm"
       - run: npm ci
+      - name: Run critical UI and security lint gate
+        run: npm run -s lint:critical
       - run: npx solhint 'contracts/**/*.sol'
       - run: npx eslint . --ext .ts,.tsx || true
       - run: npx prettier --check 'contracts/**/*.sol' 'test/**/*.ts'

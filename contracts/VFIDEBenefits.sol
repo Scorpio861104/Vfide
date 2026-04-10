@@ -158,12 +158,16 @@ contract VFIDEBenefits {
 
         // Award FREE ProofScore to buyer
         if (buyerScorePerTx > 0) {
-            try seer.reward(buyer, buyerScorePerTx, "commerce_buyer") {} catch {}
+            try seer.reward(buyer, buyerScorePerTx, "commerce_buyer") {
+                emit ProofScoreAwarded(buyer, buyerScorePerTx, "commerce_buyer");
+            } catch {}
         }
         
         // Award FREE ProofScore to merchant
         if (merchantScorePerTx > 0) {
-            try seer.reward(merchant, merchantScorePerTx, "commerce_merchant") {} catch {}
+            try seer.reward(merchant, merchantScorePerTx, "commerce_merchant") {
+                emit ProofScoreAwarded(merchant, merchantScorePerTx, "commerce_merchant");
+            } catch {}
         }
         
         // Trigger EcosystemVault activity tracking (merchant ranking rewards are permanently disabled)
@@ -174,7 +178,7 @@ contract VFIDEBenefits {
         
         // Log the event
         if (address(ledger) != address(0)) {
-            try ledger.logEvent(buyer, "CommerceReward", amount, "escrow_complete") {} catch {}
+            try ledger.logEvent(buyer, "CommerceReward", amount, "escrow_complete") {} catch { emit LedgerLogFailed(buyer, "CommerceReward"); }
         }
     }
 

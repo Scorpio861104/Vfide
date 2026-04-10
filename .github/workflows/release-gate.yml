@@ -38,6 +38,9 @@ jobs:
       - name: Typecheck contracts
         run: npm run -s typecheck:contracts
 
+      - name: Critical lint gate
+        run: npm run -s lint:critical
+
       - name: Lint
         run: npm run -s lint
 
@@ -46,6 +49,9 @@ jobs:
 
       - name: Jest CI suite
         run: npm run -s test:ci
+
+      - name: Critical on-chain guardrails
+        run: npm run -s test:onchain:critical
 
       - name: Validate environment
         run: npm run -s validate:env

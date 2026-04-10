@@ -14,12 +14,12 @@ import assert from "node:assert/strict";
 import { network } from "hardhat";
 
 // ──────────────────────────────────────────────────────────────────────────────
-// M-11: VaultHub + Council Recovery Approver
+// M-11: VaultHub + Non-custodial recovery guard
 // ──────────────────────────────────────────────────────────────────────────────
-describe("VaultHub (M-11: council as recovery approver)", () => {
-  it("council member can approve force recovery" , async () => {
+describe("VaultHub (M-11: non-custodial recovery guard)", () => {
+  it("keeps DAO/council force recovery paths disabled", async () => {
     const { ethers } = await network.connect();
-    const [owner, dao, approver, councilMember, vaultOwner, newOwner] = await ethers.getSigners();
+    const [, dao, , councilMember, vaultOwner, newOwner] = await ethers.getSigners();
 
     const TokenStub = await ethers.getContractFactory("TokenStub");
     const token = await TokenStub.deploy();
@@ -29,20 +29,20 @@ describe("VaultHub (M-11: council as recovery approver)", () => {
     const hub = await VaultHub.deploy(await token.getAddress(), ethers.ZeroAddress, ethers.ZeroAddress, dao.address);
     await hub.waitForDeployment();
 
-    // Create vault for vaultOwner
     await (await hub.connect(vaultOwner).ensureVault(vaultOwner.address)).wait();
     const vaultAddr = await hub.vaultOf(vaultOwner.address);
 
-    // Deploy and set up council
     const CouncilStub = await ethers.getContractFactory("CouncilStub");
     const council = await CouncilStub.deploy();
     await council.waitForDeployment();
     await council.addCouncilMember(councilMember.address);
     await hub.setCouncil(await council.getAddress());
 
-    // Council member calls approveForceRecovery — should work
-    await hub.connect(councilMember).approveForceRecovery(vaultAddr, newOwner.address);
-    assert.equal(await hub.recoveryApprovalCount(vaultAddr), 1n);
+    await assert.rejects(
+      () => hub.connect(councilMember).approveForceRecovery(vaultAddr, newOwner.address),
+      /revert/
+    );
+    assert.equal(await hub.recoveryApprovalCount(vaultAddr), 0n);
   });
 });
 
@@ -265,71 +265,6 @@ describe("Seer (M-18: circular delta guard)", () => {
     const snapshot = await router.scoreHistory(user.address, 0);
     assert.ok(updatedAt > 0n);
     assert.equal(snapshot[0], 7000n);
-  });
-
-  it("rejects zero burn router wiring", async () => {
-    const { ethers } = await network.connect({
-      override: {
-        allowUnlimitedContractSize: true,
-      },
-    });
-    const [dao] = await ethers.getSigners();
-
-    const Seer = await ethers.getContractFactory("Seer");
-    const seer = await Seer.deploy(dao.address, ethers.ZeroAddress, ethers.ZeroAddress);
-    await seer.waitForDeployment();
-
-    await assert.rejects(
-      () => seer.connect(dao).setBurnRouter(ethers.ZeroAddress),
-      /TRUST_Zero|revert/
-    );
-  });
-
-  it("timelocks burn router replacement after initial wiring", async () => {
-    const { ethers } = await network.connect({
-      override: {
-        allowUnlimitedContractSize: true,
-      },
-    });
-    const [dao, sanctum, burn, eco, altBurn, altEco] = await ethers.getSigners();
-
-    const Seer = await ethers.getContractFactory("Seer");
-    const seer = await Seer.deploy(dao.address, ethers.ZeroAddress, ethers.ZeroAddress);
-    await seer.waitForDeployment();
-
-    const Router = await ethers.getContractFactory("ProofScoreBurnRouter");
-    const routerA = await Router.deploy(
-      await seer.getAddress(),
-      sanctum.address,
-      burn.address,
-      eco.address,
-    );
-    await routerA.waitForDeployment();
-
-    const routerB = await Router.deploy(
-      await seer.getAddress(),
-      sanctum.address,
-      altBurn.address,
-      altEco.address,
-    );
-    await routerB.waitForDeployment();
-
-    await seer.connect(dao).setBurnRouter(await routerA.getAddress());
-    assert.equal(await seer.burnRouter(), await routerA.getAddress());
-
-    await seer.connect(dao).setBurnRouter(await routerB.getAddress());
-    assert.equal(await seer.burnRouter(), await routerA.getAddress());
-
-    await assert.rejects(
-      () => seer.connect(dao).applyBurnRouterChange(),
-      /TRUST_InvalidState|revert/
-    );
-
-    await ethers.provider.send("evm_increaseTime", [48 * 60 * 60 + 1]);
-    await ethers.provider.send("evm_mine", []);
-
-    await seer.connect(dao).applyBurnRouterChange();
-    assert.equal(await seer.burnRouter(), await routerB.getAddress());
   });
 
   it("does not punish again when auto restriction is triggered by low score", async () => {

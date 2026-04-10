@@ -309,19 +309,15 @@ describe("VFIDEToken", () => {
   });
 
   describe("transfer preview", () => {
-    it("reports frozen sender and recipient consistently with live transfer rules", async () => {
+    it("keeps transfer preview non-custodial after legacy freeze controls were removed", async () => {
       const { token, owner, user1 } = await deployToken();
 
-      await token.connect(owner).setFrozen(owner.address, true);
-      let result = await token.canTransfer(owner.address, user1.address, 1n);
-      assert.equal(result[0], false);
-      assert.equal(result[1], "Sender frozen");
+      assert.equal(typeof (token as any).setFrozen, "undefined");
+      assert.equal(typeof (token as any).setBlacklist, "undefined");
 
-      await token.connect(owner).setFrozen(owner.address, false);
-      await token.connect(owner).setFrozen(user1.address, true);
-      result = await token.canTransfer(owner.address, user1.address, 1n);
-      assert.equal(result[0], false);
-      assert.equal(result[1], "Recipient frozen");
+      const result = await token.canTransfer(owner.address, user1.address, 1n);
+      assert.equal(result[0], true);
+      assert.equal(result[1], "");
     });
   });
 

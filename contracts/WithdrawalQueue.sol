@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
-import { Time } from "@openzeppelin/contracts/utils/types/Time.sol";
 import "./VFIDEAccessControl.sol";
 import "./VFIDEReentrancyGuard.sol";
 
@@ -77,7 +76,7 @@ abstract contract WithdrawalQueue is VFIDEAccessControl, VFIDEReentrancyGuard {
         require(_amount > 0, "WithdrawalQueue: zero amount");
         require(_amount <= _getUserBalance(msg.sender), "WithdrawalQueue: insufficient balance");
 
-        uint256 executionTime = Time.timestamp();
+        uint256 executionTime = block.timestamp;
         
         // Apply delay for large withdrawals
         if (_amount >= minimumDelayAmount) {
@@ -90,7 +89,7 @@ abstract contract WithdrawalQueue is VFIDEAccessControl, VFIDEReentrancyGuard {
         withdrawalQueue.push(WithdrawalRequest({
             user: msg.sender,
             amount: _amount,
-            requestTime: Time.timestamp(),
+            requestTime: block.timestamp,
             executionTime: executionTime,
             executed: false,
             cancelled: false,
@@ -115,10 +114,10 @@ abstract contract WithdrawalQueue is VFIDEAccessControl, VFIDEReentrancyGuard {
         require(!request.executed, "WithdrawalQueue: already executed");
         require(!request.cancelled, "WithdrawalQueue: cancelled");
         require(msg.sender == request.user, "WithdrawalQueue: not requester");
-        require(Time.timestamp() >= request.executionTime, "WithdrawalQueue: too early");
+        require(block.timestamp >= request.executionTime, "WithdrawalQueue: too early");
 
         // Check daily cap
-        uint256 today = Time.timestamp() / 1 days;
+        uint256 today = block.timestamp / 1 days;
         uint256 dailyCap = (totalVaultBalance * DAILY_WITHDRAWAL_CAP_PERCENT) / 100;
         
         require(
@@ -152,7 +151,7 @@ abstract contract WithdrawalQueue is VFIDEAccessControl, VFIDEReentrancyGuard {
             require(!request.executed, "WithdrawalQueue: already executed");
             require(!request.cancelled, "WithdrawalQueue: cancelled");
             require(msg.sender == request.user, "WithdrawalQueue: not requester");
-            require(Time.timestamp() >= request.executionTime, "WithdrawalQueue: too early");
+            require(block.timestamp >= request.executionTime, "WithdrawalQueue: too early");
 
             totalAmount += request.amount;
         }

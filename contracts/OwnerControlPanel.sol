@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
-import { Address } from "@openzeppelin/contracts/utils/Address.sol";
 import "./SharedInterfaces.sol";
 
 /**
@@ -83,13 +82,13 @@ contract OwnerControlPanel {
 
     mapping(bytes32 => uint256) public queuedActionEta;
     
-    event ContractsUpdated(address indexed token, address indexed vaultHub, address indexed burnRouter, address seer);
-    event EcosystemContractsUpdated(address indexed ecosystemVault);
-    event PanicGuardUpdated(address indexed panicGuard);
-    event EmergencyAction(string action, address indexed target);
+    event ContractsUpdated(address token, address vaultHub, address burnRouter, address seer);
+    event EcosystemContractsUpdated(address ecosystemVault);
+    event PanicGuardUpdated(address panicGuard);
+    event EmergencyAction(string action, address target);
     event FeePolicyUpdated(uint16 minBps, uint16 maxBps);
     event AntiWhaleUpdated(uint256 maxTransfer, uint256 maxWallet, uint256 dailyLimit, uint256 cooldown);
-    event AutoSwapConfigured(address indexed router, address indexed stablecoin, bool enabled, uint16 maxSlippageBps);
+    event AutoSwapConfigured(address router, address stablecoin, bool enabled, uint16 maxSlippageBps);
     event GovernanceActionQueued(bytes32 indexed actionId, uint256 executeAfter);
     event GovernanceActionCancelled(bytes32 indexed actionId);
     event GovernanceActionExecuted(bytes32 indexed actionId);
@@ -204,7 +203,6 @@ contract OwnerControlPanel {
      */
     function setDevReserveVault(address _devReserveVault) external onlyOwner {
         _consumeQueuedAction(actionId_setDevReserveVault(_devReserveVault));
-        if (_devReserveVault == address(0)) revert OCP_Zero();
         address previous = devReserveVault;
         devReserveVault = _devReserveVault;
         emit DevReserveVaultUpdated(previous, _devReserveVault);
@@ -600,11 +598,11 @@ contract OwnerControlPanel {
     
     /**
      * @notice Batch blacklist multiple addresses
-     * @dev The exact batch contents must be queued before execution.
+     * @dev Each address requires its own queued action to prevent timelock bypass
      */
     function token_batchBlacklist(address[] calldata users, bool status) external onlyOwner nonReentrant {
-        _consumeQueuedAction(actionId_token_batchBlacklist(users, status));
         for (uint256 i = 0; i < users.length; i++) {
+            _consumeQueuedAction(actionId_token_setBlacklist(users[i], status));
             vfideToken.setBlacklist(users[i], status);
         }
         emit EmergencyAction(status ? "token_batch_blacklist_applied" : "token_batch_unblacklist_applied", address(vfideToken));
@@ -627,12 +625,6 @@ contract OwnerControlPanel {
     }
     function actionId_token_setWhaleLimitExempt(address addr, bool exempt) private pure returns (bytes32) {
         return keccak256(abi.encode("token_setWhaleLimitExempt", addr, exempt));
-    }
-    function actionId_token_batchBlacklist(address[] memory users, bool status) private pure returns (bytes32) {
-        return keccak256(abi.encode("token_batchBlacklist", users, status));
-    }
-    function actionId_token_batchWhaleLimitExempt(address[] memory addrs, bool exempt) private pure returns (bytes32) {
-        return keccak256(abi.encode("token_batchWhaleLimitExempt", addrs, exempt));
     }
 
     function token_setAntiWhale(
@@ -659,11 +651,11 @@ contract OwnerControlPanel {
     
     /**
      * @notice Batch exempt multiple addresses from whale limits
-     * @dev The exact batch contents must be queued before execution.
      */
     function token_batchWhaleLimitExempt(address[] calldata addrs, bool exempt) external onlyOwner nonReentrant {
-        _consumeQueuedAction(actionId_token_batchWhaleLimitExempt(addrs, exempt));
         for (uint256 i = 0; i < addrs.length; i++) {
+            // F-14 FIX: require governance queue per-address before execution
+            _consumeQueuedAction(actionId_token_setWhaleLimitExempt(addrs[i], exempt));
             vfideToken.setWhaleLimitExempt(addrs[i], exempt);
         }
         emit EmergencyAction(exempt ? "token_batch_whale_exempt_added" : "token_batch_whale_exempt_removed", address(vfideToken));
@@ -1232,13 +1224,13 @@ contract OwnerControlPanel {
      */
     function emergency_pauseAll() external onlyOwner {
         _consumeQueuedAction(actionId_emergency_pauseAll());
-        emit EmergencyAction("system_paused", address(this));
-
         // Immediately bypass SecurityHub checks and BurnRouter fees (independent controls per H-02)
         vfideToken.setSecurityBypass(true, 1 days);
         vfideToken.setFeeBypass(true, 1 days);
         // Queue circuit breaker activation (requires confirmCircuitBreaker() after 48h)
         vfideToken.setCircuitBreaker(true, 1 days);
+        
+        emit EmergencyAction("system_paused", address(this));
     }
     
     /**
@@ -1246,12 +1238,12 @@ contract OwnerControlPanel {
      */
     function emergency_resumeAll() external onlyOwner {
         _consumeQueuedAction(actionId_emergency_resumeAll());
-        emit EmergencyAction("system_resumed", address(this));
-
         // Disable all bypasses immediately
         vfideToken.setSecurityBypass(false, 0);
         vfideToken.setFeeBypass(false, 0);
         vfideToken.setCircuitBreaker(false, 0);
+        
+        emit EmergencyAction("system_resumed", address(this));
     }
     
     /**
@@ -1262,7 +1254,8 @@ contract OwnerControlPanel {
         if (recipient == address(0)) revert OCP_Zero();
         uint256 balance = address(this).balance;
         if (balance > 0) {
-            Address.sendValue(recipient, balance);
+            (bool success, ) = recipient.call{value: balance}("");
+            if (!success) revert OCP_ETHTransferFailed();
             emit EmergencyAction("eth_recovered", recipient);
         }
     }

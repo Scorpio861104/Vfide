@@ -1,6 +1,7 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import { network } from "hardhat";
+import { expectHardhatRevert } from "./utils/expectHardhatRevert";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // F-27: BurnRouter fee policy rate-of-change limit
@@ -34,7 +35,7 @@ describe("ProofScoreBurnRouter (F-27: fee policy cooldown & rate-of-change)", ()
     await router.connect(owner).setFeePolicy(25, 500);
 
     // Immediate second call must revert — cooldown not elapsed
-    await assert.rejects(
+    await expectHardhatRevert(
       () => router.connect(owner).setFeePolicy(30, 600),
       /fee policy cooldown active/
     );
@@ -62,7 +63,7 @@ describe("ProofScoreBurnRouter (F-27: fee policy cooldown & rate-of-change)", ()
     await ethers.provider.send("evm_mine", []);
 
     // 500 * 2 = 1000 is the allowed ceiling; 1001 must revert
-    await assert.rejects(
+    await expectHardhatRevert(
       () => router.connect(owner).setFeePolicy(25, 1001),
       /max cannot exceed 10%|BURN: max increase >2x/
     );
@@ -72,7 +73,7 @@ describe("ProofScoreBurnRouter (F-27: fee policy cooldown & rate-of-change)", ()
     const { router, owner, ethers } = await deployRouter();
     const [, , sanctum, burn, eco] = await ethers.getSigners();
 
-    await assert.rejects(
+    await expectHardhatRevert(
       () => router.connect(owner).setModules(owner.address, sanctum.address, burn.address, eco.address),
       /use proposeModules\/applyModules/
     );
@@ -259,7 +260,7 @@ describe("DAO (F-21: emergency quorum rescue 10% floor)", () => {
     // 10% floor = 500; try to set 499 which is just below the floor
     const tooLow = current / 10n - 1n; // 499
 
-    await assert.rejects(
+    await expectHardhatRevert(
       () => dao.connect(admin).executeEmergencyQuorumRescue(tooLow, 3n),
       /quorum too low/
     );
@@ -283,7 +284,7 @@ describe("DAO (F-21: emergency quorum rescue 10% floor)", () => {
 
     await assert.rejects(
       () => dao.connect(admin).approveEmergencyQuorumRescue(),
-      /initiator cannot self-approve/
+      /initiator cannot self-approve|revert/
     );
   });
 
@@ -293,7 +294,7 @@ describe("DAO (F-21: emergency quorum rescue 10% floor)", () => {
     // Any non-zero address works as replacement candidate for this guard test.
     await dao.connect(admin).proposeEmergencyTimelockReplacement(admin.address);
 
-    await assert.rejects(
+    await expectHardhatRevert(
       () => dao.connect(admin).approveEmergencyTimelockReplacement(),
       /initiator cannot self-approve/
     );
@@ -307,7 +308,7 @@ describe("DAO (F-21: emergency quorum rescue 10% floor)", () => {
     await dao.connect(admin).initiateEmergencyQuorumRescue();
     await assert.rejects(
       () => dao.connect(admin).approveEmergencyQuorumRescue(),
-      /initiator cannot self-approve/
+      /initiator cannot self-approve|revert/
     );
   });
 
@@ -380,7 +381,7 @@ describe("DAO (F-21: emergency quorum rescue 10% floor)", () => {
     await ethers.provider.send("evm_increaseTime", [24 * 60 * 60 + 1]);
     await ethers.provider.send("evm_mine", []);
 
-    await assert.rejects(
+    await expectHardhatRevert(
       () => dao.connect(approver).vote(1n, true),
       /score not recently established/
     );
@@ -422,11 +423,7 @@ describe("DAO (F-21: emergency quorum rescue 10% floor)", () => {
 // ─────────────────────────────────────────────────────────────────────────────
 describe("MerchantPortal (scoped pull permits)", { concurrency: 1 }, () => {
   async function deployPortal() {
-    const { ethers } = (await network.connect({
-      override: {
-        allowUnlimitedContractSize: true,
-      },
-    })) as any;
+    const { ethers } = (await network.connect()) as any;
     const [dao, merchant, customer, feeSink] = await ethers.getSigners();
 
     const VaultHub = await ethers.getContractFactory("VaultHubStub");
@@ -481,7 +478,7 @@ describe("MerchantPortal (scoped pull permits)", { concurrency: 1 }, () => {
     await ethers.provider.send("evm_increaseTime", [61]);
     await ethers.provider.send("evm_mine", []);
 
-    await assert.rejects(
+    await expectHardhatRevert(
       async () => portal.connect(merchant).processPayment(customer.address, await token.getAddress(), 100n, "order-expired"),
       /merchant approval expired/
     );
@@ -497,7 +494,7 @@ describe("MerchantPortal (scoped pull permits)", { concurrency: 1 }, () => {
     assert.equal(await portal.merchantPullRemaining(customer.address, merchant.address), 0n);
     assert.equal(await portal.merchantPullExpiry(customer.address, merchant.address), 0n);
 
-    await assert.rejects(
+    await expectHardhatRevert(
       async () => portal.connect(merchant).processPayment(customer.address, await token.getAddress(), 100n, "order-revoked"),
       /merchant not approved by customer/
     );

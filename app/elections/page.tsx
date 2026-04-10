@@ -204,7 +204,7 @@ export default function ElectionsPage() {
                 <div className="text-center py-16">
                   <Vote size={48} className="mx-auto mb-4 text-gray-600" />
                   <p className="text-gray-400 mb-1">No candidates registered yet</p>
-                  <p className="text-gray-600 text-xs">Be the first to register and shape VFIDE's future</p>
+                  <p className="text-gray-600 text-xs">Be the first to register and shape VFIDE&apos;s future</p>
                 </div>
               ) : (
                 candidates.sort((a, b) => b.votePower - a.votePower).map((c, rank) => (

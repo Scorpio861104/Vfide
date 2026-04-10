@@ -91,7 +91,7 @@ contract SeerAutonomous is ReentrancyGuard {
     //                              EVENTS
     // ═══════════════════════════════════════════════════════════════════════
     
-    event ModulesSet(address indexed seer, address indexed dao, address indexed ledger);
+    event ModulesSet(address seer, address dao, address ledger);
     event DAOSet(address indexed oldDAO, address indexed newDAO);
     event OperatorSet(address indexed operator, bool authorized);
     event RiskOracleSet(address indexed oldOracle, address indexed newOracle);
@@ -248,7 +248,7 @@ contract SeerAutonomous is ReentrancyGuard {
     uint16 public rateLimitThreshold = 4000;       // Score below = rate limit
     uint16 public patternSensitivity = 50;         // 0-100 sensitivity
     uint256 public constant MAX_COUNTERPARTY_SCAN = 20;
-    uint64 public constant challengeWindow = 1 days; // Time to contest severe actions
+    uint64 public challengeWindow = 1 days;        // Time to contest severe actions
     
     // Network health metrics (for dynamic adjustment)
     uint256 public networkViolationCount;
@@ -440,12 +440,12 @@ contract SeerAutonomous is ReentrancyGuard {
         
         // 5. Update rate limit counters
         _updateRateLimits(subject, action);
-
-        // 6. Increment network counters before any downstream external upkeep.
-        networkActionCount++;
-
-        // 7. Periodic dynamic threshold adjustment
+        
+        // 6. Periodic dynamic threshold adjustment
         _maybeAdjustThresholds();
+        
+        // 7. Increment network counters
+        networkActionCount++;
         
         emit AutoEnforced(subject, action, result);
         return result;
@@ -797,16 +797,17 @@ contract SeerAutonomous is ReentrancyGuard {
 
     function _decayViolationScore(address subject) internal {
         uint64 last = lastViolationTime[subject];
-        if (last < 1 || block.timestamp <= last) return;
+        if (last == 0 || block.timestamp <= last) return;
 
         uint256 elapsed = block.timestamp - last;
-        if (elapsed < 30 days / 500) return;
+        uint256 periods = elapsed / 30 days;
+        if (periods == 0) return;
 
         uint16 raw = totalViolationScore[subject];
-        uint256 decayRaw = (uint256(raw) * elapsed * 500) / (30 days * 10_000);
-        if (decayRaw > raw) decayRaw = raw;
-        uint16 decay = uint16(decayRaw);
-        if (decay < 1 && raw > 0) decay = 1;
+        uint256 decayBps = periods * 500; // 5% per 30 days
+        if (decayBps > 10_000) decayBps = 10_000;
+        uint16 decay = uint16((uint256(raw) * decayBps) / 10_000);
+        if (decay == 0 && raw > 0) decay = 1;
         totalViolationScore[subject] = decay >= raw ? 0 : raw - decay;
         lastViolationTime[subject] = uint64(block.timestamp);
     }
@@ -814,15 +815,15 @@ contract SeerAutonomous is ReentrancyGuard {
     function getEffectiveViolationScore(address subject) public view returns (uint16) {
         uint16 raw = totalViolationScore[subject];
         uint64 last = lastViolationTime[subject];
-        if (raw < 1 || last < 1 || block.timestamp <= last) return raw;
+        if (raw == 0 || last == 0 || block.timestamp <= last) return raw;
 
         uint256 elapsed = block.timestamp - last;
-        if (elapsed < 30 days / 500) return raw;
-
-        uint256 decayRaw = (uint256(raw) * elapsed * 500) / (30 days * 10_000);
-        if (decayRaw > raw) decayRaw = raw;
-        uint16 decay = uint16(decayRaw);
-        if (decay < 1 && raw > 0) decay = 1;
+        uint256 periods = elapsed / 30 days;
+        if (periods == 0) return raw;
+        uint256 decayBps = periods * 500; // 5% per 30 days
+        if (decayBps > 10_000) decayBps = 10_000;
+        uint16 decay = uint16((uint256(raw) * decayBps) / 10_000);
+        if (decay == 0 && raw > 0) decay = 1;
         return decay >= raw ? 0 : raw - decay;
     }
     
@@ -831,10 +832,6 @@ contract SeerAutonomous is ReentrancyGuard {
     // ═══════════════════════════════════════════════════════════════════════
     
     function _maybeAdjustThresholds() internal {
-        if (lastThresholdAdjustment < 1) {
-            lastThresholdAdjustment = uint64(block.timestamp);
-            return;
-        }
         if (block.timestamp < lastThresholdAdjustment + ADJUSTMENT_INTERVAL) return;
         lastThresholdAdjustment = uint64(block.timestamp);
         
@@ -1074,12 +1071,6 @@ contract SeerAutonomous is ReentrancyGuard {
      * @dev DAO-only. Pass address(0) to disable vault monitoring.
      */
     function setEcosystemVault(address _vault) external onlyDAO {
-        if (_vault == address(0)) {
-            ecosystemVault = address(0);
-            emit EcosystemVaultSet(address(0));
-            return;
-        }
-
         ecosystemVault = _vault;
         emit EcosystemVaultSet(_vault);
     }

@@ -50,7 +50,7 @@ error SEC_ExpiryTooShort();
 
 // ReentrancyGuard intentionally omitted in this module set: contracts coordinate lock state and policy, not value transfers.
 contract GuardianRegistry {
-    event DAOSet(address indexed dao);
+    event DAOSet(address dao);
     event GuardianAdded(address indexed vault, address indexed guardian);
     event GuardianRemoved(address indexed vault, address indexed guardian);
     event ThresholdSet(address indexed vault, uint8 mOfN);
@@ -148,14 +148,14 @@ contract GuardianRegistry {
 /// ───────────────────────────── GuardianLock (manual M-of-N lock)
 
 contract GuardianLock {
-    event ModulesSet(address indexed registry, address indexed ledger);
+    event ModulesSet(address registry, address ledger);
     event Locked(address indexed vault, address indexed byGuardian, uint8 approvals, string reason);
     event Unlocked(address indexed vault, address indexed by, string reason);
     event Cancelled(address indexed vault, address indexed by);
     event VotesInvalidated(address indexed vault, uint256 oldNonce, uint256 newNonce, string reason);
     event GuardianRemovedDuringVote(address indexed vault, address indexed guardian, uint8 remainingApprovals);
 
-    address public immutable dao;
+    address public dao;
     GuardianRegistry public registry;
     IProofLedger public ledger;
 
@@ -280,14 +280,14 @@ contract GuardianLock {
 /// ───────────────────────────── PanicGuard (auto quarantine + global risk)
 
 contract PanicGuard {
-    event LedgerSet(address indexed ledger);
-    event HubSet(address indexed hub);
+    event LedgerSet(address ledger);
+    event HubSet(address hub);
     event Quarantined(address indexed vault, uint64 untilTs, string reason, uint8 severity);
     event Cleared(address indexed vault, string reason);
     event GlobalRiskSet(bool on, string reason);
     event PolicySet(uint64 minDuration, uint64 maxDuration);
 
-    address public immutable dao;
+    address public dao;
     IProofLedger public ledger;
     IVaultHub public vaultHub;
     address public securityHub;
@@ -334,7 +334,6 @@ contract PanicGuard {
     }
 
     function setSecurityHub(address _secHub) external onlyDAO {
-        if (_secHub == address(0)) revert SEC_Zero();
         securityHub = _secHub;
     }
 
@@ -465,8 +464,8 @@ contract PanicGuard {
 
 contract EmergencyBreaker {
     event Toggled(bool on, string reason);
-    event DAOSet(address indexed dao);
-    event LedgerSet(address indexed ledger);
+    event DAOSet(address dao);
+    event LedgerSet(address ledger);
     event CooldownSet(uint64 cooldown);
 
     address public dao;
@@ -533,9 +532,9 @@ contract EmergencyBreaker {
 
 /// ───────────────────────────── SecurityHub (single truth for locks)
 
-contract SecurityHub is ISecurityHub {
-    event ModulesSet(address indexed guardianLock, address indexed panicGuard, address indexed breaker, address ledger);
-    event DAOSet(address indexed dao);
+contract SecurityHub {
+    event ModulesSet(address guardianLock, address panicGuard, address breaker, address ledger);
+    event DAOSet(address dao);
 
     address public dao;
     GuardianLock     public guardianLock;

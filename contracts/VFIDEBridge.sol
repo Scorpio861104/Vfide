@@ -8,15 +8,6 @@ import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/utils/Pausable.sol";
-import { Time } from "@openzeppelin/contracts/utils/types/Time.sol";
-
-interface IVFIDEBridge_Deploy {
-    function setSecurityModule(address _securityModule) external;
-}
-
-interface ISystemExemptView {
-    function systemExempt(address who) external view returns (bool);
-}
 
 /**
  * @title VFIDEBridge
@@ -36,7 +27,7 @@ interface ISystemExemptView {
  * - Polygon (Chain ID: 137)
  * - zkSync Era (Chain ID: 324)
  */
-contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable, IVFIDEBridge_Deploy {
+contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
     using SafeERC20 for IERC20;
 
     uint16 internal constant MSG_TYPE_BRIDGE_TRANSFER = 1;
@@ -264,13 +255,13 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable, IVFID
             receiver: _to,
             amount: amountAfterFee,
             dstChainId: _dstChainId,
-            timestamp: Time.timestamp(),
+            timestamp: block.timestamp,
             executed: false
         });
 
         // Update statistics
         userStats[msg.sender].totalSent += amountAfterFee;
-        userStats[msg.sender].lastBridgeTime = Time.timestamp();
+        userStats[msg.sender].lastBridgeTime = block.timestamp;
         userStats[msg.sender].bridgeCount++;
         totalBridgedOut += amountAfterFee;
 
@@ -279,21 +270,23 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable, IVFID
 
         emit BridgeSent(msg.sender, _dstChainId, _to, amountAfterFee, fee, txId);
     // F-25 FIX: Set refund window — if the destination bridge never executes, sender can claim a refund
-    bridgeRefundableAfter[txId] = Time.timestamp() + BRIDGE_REFUND_DELAY;
+    bridgeRefundableAfter[txId] = block.timestamp + BRIDGE_REFUND_DELAY;
 
         return txId;
     }
 
     function _bridgeIsSystemExempt() internal view returns (bool) {
-        try ISystemExemptView(address(vfideToken)).systemExempt(address(this)) returns (bool isExempt) {
-            return isExempt;
-        } catch {
+        (bool ok, bytes memory data) = address(vfideToken).staticcall(
+            abi.encodeWithSignature("systemExempt(address)", address(this))
+        );
+        if (!ok || data.length < 32) {
             // Balanced fail-closed behavior: allow a temporary owner-controlled bypass.
             if (isExemptCheckBypassActive()) {
                 return true;
             }
             return false;
         }
+        return abi.decode(data, (bool));
     }
 
     /// @notice Enable/disable temporary bypass when token exemption probe fails.
@@ -302,7 +295,7 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable, IVFID
         if (active) {
             require(duration > 0 && duration <= MAX_EXEMPT_CHECK_BYPASS_DURATION, "VFIDEBridge: invalid duration");
             exemptCheckBypass = true;
-            exemptCheckBypassExpiry = Time.timestamp() + duration;
+            exemptCheckBypassExpiry = block.timestamp + duration;
         } else {
             exemptCheckBypass = false;
             exemptCheckBypassExpiry = 0;
@@ -314,7 +307,7 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable, IVFID
     /// @notice Returns true only while bypass is enabled and not expired.
     function isExemptCheckBypassActive() public view returns (bool) {
         if (!exemptCheckBypass) return false;
-        if (exemptCheckBypassExpiry > 0 && Time.timestamp() >= exemptCheckBypassExpiry) return false;
+        if (exemptCheckBypassExpiry > 0 && block.timestamp >= exemptCheckBypassExpiry) return false;
         return true;
     }
 
@@ -438,7 +431,7 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable, IVFID
      * @param _remote Remote bridge address
      */
     function setTrustedRemote(uint32 _chainId, bytes32 _remote) external onlyOwner {
-        uint64 effectiveAt = uint64(Time.timestamp()) + CONFIG_TIMELOCK_DELAY;
+        uint64 effectiveAt = uint64(block.timestamp) + CONFIG_TIMELOCK_DELAY;
         pendingTrustedRemotes[_chainId] = PendingRemote({remote: _remote, effectiveAt: effectiveAt});
         emit TrustedRemoteScheduled(_chainId, _remote, effectiveAt);
     }
@@ -460,7 +453,7 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable, IVFID
     function applyTrustedRemote(uint32 _chainId) external onlyOwner {
         PendingRemote memory pending = pendingTrustedRemotes[_chainId];
         require(pending.effectiveAt != 0, "VFIDEBridge: no pending update");
-        require(Time.timestamp() >= pending.effectiveAt, "VFIDEBridge: timelock not elapsed");
+        require(block.timestamp >= pending.effectiveAt, "VFIDEBridge: timelock not elapsed");
         trustedRemotes[_chainId] = pending.remote;
         _setPeer(_chainId, pending.remote);
         delete pendingTrustedRemotes[_chainId];
@@ -472,8 +465,8 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable, IVFID
      * @param _securityModule New security module address
      */
     function setSecurityModule(address _securityModule) external onlyOwner {
-        require(_securityModule != address(0), "VFIDEBridge: zero security module");
-        uint64 effectiveAt = uint64(Time.timestamp()) + CONFIG_TIMELOCK_DELAY;
+        // Intentional: zero address is allowed to disable module checks after timelock.
+        uint64 effectiveAt = uint64(block.timestamp) + CONFIG_TIMELOCK_DELAY;
         pendingSecurityModule = _securityModule;
         pendingSecurityModuleAt = effectiveAt;
         emit SecurityModuleScheduled(_securityModule, effectiveAt);
@@ -494,7 +487,7 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable, IVFID
      */
     function applySecurityModule() external onlyOwner {
         require(pendingSecurityModuleAt != 0, "VFIDEBridge: no pending update");
-        require(Time.timestamp() >= pendingSecurityModuleAt, "VFIDEBridge: timelock not elapsed");
+        require(block.timestamp >= pendingSecurityModuleAt, "VFIDEBridge: timelock not elapsed");
         address oldModule = securityModule;
         securityModule = pendingSecurityModule;
         delete pendingSecurityModule;
@@ -508,7 +501,7 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable, IVFID
      */
     function setMaxBridgeAmount(uint256 _maxAmount) external onlyOwner {
         if (_maxAmount < MIN_BRIDGE_AMOUNT) revert InvalidAmount();
-        uint64 effectiveAt = uint64(Time.timestamp()) + CONFIG_TIMELOCK_DELAY;
+        uint64 effectiveAt = uint64(block.timestamp) + CONFIG_TIMELOCK_DELAY;
         pendingMaxBridgeAmount = _maxAmount;
         pendingMaxBridgeAmountAt = effectiveAt;
         emit MaxBridgeAmountScheduled(_maxAmount, effectiveAt);
@@ -529,7 +522,7 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable, IVFID
      */
     function applyMaxBridgeAmount() external onlyOwner {
         require(pendingMaxBridgeAmountAt != 0, "VFIDEBridge: no pending update");
-        require(Time.timestamp() >= pendingMaxBridgeAmountAt, "VFIDEBridge: timelock not elapsed");
+        require(block.timestamp >= pendingMaxBridgeAmountAt, "VFIDEBridge: timelock not elapsed");
         uint256 oldAmount = maxBridgeAmount;
         uint256 newAmount = pendingMaxBridgeAmount;
         maxBridgeAmount = newAmount;
@@ -544,7 +537,7 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable, IVFID
      */
     function setBridgeFee(uint256 _fee) external onlyOwner {
         if (_fee > 100) revert InvalidFee(); // Max 1%
-        uint64 effectiveAt = uint64(Time.timestamp()) + CONFIG_TIMELOCK_DELAY;
+        uint64 effectiveAt = uint64(block.timestamp) + CONFIG_TIMELOCK_DELAY;
         pendingBridgeFee = _fee;
         pendingBridgeFeeAt = effectiveAt;
         emit BridgeFeeScheduled(_fee, effectiveAt);
@@ -565,7 +558,7 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable, IVFID
      */
     function applyBridgeFee() external onlyOwner {
         require(pendingBridgeFeeAt != 0, "VFIDEBridge: no pending update");
-        require(Time.timestamp() >= pendingBridgeFeeAt, "VFIDEBridge: timelock not elapsed");
+        require(block.timestamp >= pendingBridgeFeeAt, "VFIDEBridge: timelock not elapsed");
         uint256 oldFee = bridgeFee;
         uint256 newFee = pendingBridgeFee;
         bridgeFee = newFee;
@@ -580,7 +573,7 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable, IVFID
      */
     function setFeeCollector(address _feeCollector) external onlyOwner {
         require(_feeCollector != address(0), "Invalid collector");
-        uint64 effectiveAt = uint64(Time.timestamp()) + CONFIG_TIMELOCK_DELAY;
+        uint64 effectiveAt = uint64(block.timestamp) + CONFIG_TIMELOCK_DELAY;
         pendingFeeCollector = _feeCollector;
         pendingFeeCollectorAt = effectiveAt;
         emit FeeCollectorScheduled(_feeCollector, effectiveAt);
@@ -601,7 +594,7 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable, IVFID
      */
     function applyFeeCollector() external onlyOwner {
         require(pendingFeeCollectorAt != 0, "VFIDEBridge: no pending update");
-        require(Time.timestamp() >= pendingFeeCollectorAt, "VFIDEBridge: timelock not elapsed");
+        require(block.timestamp >= pendingFeeCollectorAt, "VFIDEBridge: timelock not elapsed");
         address oldCollector = feeCollector;
         address newCollector = pendingFeeCollector;
         feeCollector = newCollector;
@@ -641,7 +634,7 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable, IVFID
     function transferOwnership(address newOwner) public override onlyOwner {
         require(newOwner != address(0), "VFIDEBridge: zero address");
         _pendingBridgeOwner = newOwner;
-        _pendingOwnerInitiatedAt = uint64(Time.timestamp());
+        _pendingOwnerInitiatedAt = uint64(block.timestamp);
         emit OwnershipTransferStarted(owner(), newOwner);
     }
 
@@ -650,7 +643,7 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable, IVFID
     function acceptOwnership() external {
         require(msg.sender == _pendingBridgeOwner, "VFIDEBridge: not pending owner");
         require(
-            Time.timestamp() <= _pendingOwnerInitiatedAt + OWNERSHIP_TRANSFER_EXPIRY,
+            block.timestamp <= _pendingOwnerInitiatedAt + OWNERSHIP_TRANSFER_EXPIRY,
             "VFIDEBridge: ownership transfer expired"
         );
         _transferOwnership(msg.sender);
@@ -673,7 +666,7 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable, IVFID
         require(_token != address(0), "Invalid token");
         require(_token != address(vfideToken), "VFIDEBridge: cannot withdraw VFIDE");
         require(_amount > 0, "Invalid amount");
-        uint64 effectiveAt = uint64(Time.timestamp()) + CONFIG_TIMELOCK_DELAY;
+        uint64 effectiveAt = uint64(block.timestamp) + CONFIG_TIMELOCK_DELAY;
         pendingEmergencyWithdraw = PendingEmergencyWithdraw({
             token: _token,
             amount: _amount,
@@ -688,7 +681,7 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable, IVFID
     function applyEmergencyWithdraw() external onlyOwner {
         PendingEmergencyWithdraw memory pending = pendingEmergencyWithdraw;
         require(pending.effectiveAt != 0, "VFIDEBridge: no pending withdraw");
-        require(Time.timestamp() >= pending.effectiveAt, "VFIDEBridge: timelock not elapsed");
+        require(block.timestamp >= pending.effectiveAt, "VFIDEBridge: timelock not elapsed");
         delete pendingEmergencyWithdraw;
         IERC20(pending.token).safeTransfer(owner(), pending.amount);
         emit EmergencyWithdrawExecuted(pending.token, pending.amount);
@@ -723,7 +716,7 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable, IVFID
         require(btx.sender == msg.sender, "VFIDEBridge: not sender");
         require(!btx.executed, "VFIDEBridge: already executed");
         require(bridgeRefundableAfter[txId] > 0, "VFIDEBridge: not refundable");
-        require(Time.timestamp() >= bridgeRefundableAfter[txId], "VFIDEBridge: refund too early");
+        require(block.timestamp >= bridgeRefundableAfter[txId], "VFIDEBridge: refund too early");
 
         btx.executed = true; // Prevent double-claim
         uint256 amount = btx.amount;
@@ -772,8 +765,9 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable, IVFID
     }
 
     function _decodeMessageType(bytes calldata payload) internal pure returns (uint16 messageType) {
-        if (payload.length < 32) revert InvalidRemote();
-        messageType = abi.decode(payload, (uint16));
+        assembly {
+            messageType := and(calldataload(payload.offset), 0xffff)
+        }
     }
 
     function renounceOwnership() public view override onlyOwner {

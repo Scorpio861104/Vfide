@@ -3,7 +3,7 @@
 import { useState, useMemo } from 'react';
 import { useAccount } from 'wagmi';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Rss, ShoppingCart, Shield, Heart, PenSquare, Image, Camera, Sparkles, TrendingUp, Users, X } from 'lucide-react';
+import { Rss, ShoppingCart, Shield, PenSquare, ImageIcon, Camera, Sparkles, TrendingUp, Users, X } from 'lucide-react';
 import { TrustEventCard, type TrustEvent } from '@/components/social/TrustEventCard';
 import { MarketStory, MarketStoriesRow, type MarketStoryData } from '@/components/social/MarketStory';
 import { CommunityBoard } from '@/components/social/MerchantReview';
@@ -22,7 +22,7 @@ interface FeedPost {
 }
 
 export default function FeedPage() {
-  const { address, isConnected } = useAccount();
+  const { isConnected } = useAccount();
   const [filter, setFilter] = useState<FeedFilter>('all');
   const [showCompose, setShowCompose] = useState(false);
   const [composeText, setComposeText] = useState('');
@@ -108,7 +108,7 @@ export default function FeedPage() {
                     className="w-full bg-transparent text-white placeholder-gray-600 text-sm resize-none h-20 focus:outline-none" autoFocus />
                   <div className="flex items-center justify-between pt-2 border-t border-white/5">
                     <div className="flex gap-1">
-                      <button className="p-1.5 rounded-lg text-gray-500 hover:text-cyan-400"><Image size={16} /></button>
+                      <button className="p-1.5 rounded-lg text-gray-500 hover:text-cyan-400"><ImageIcon size={16} /></button>
                       <button className="p-1.5 rounded-lg text-gray-500 hover:text-cyan-400"><Camera size={16} /></button>
                       <button className="p-1.5 rounded-lg text-gray-500 hover:text-emerald-400"><ShoppingCart size={16} /></button>
                     </div>
@@ -161,7 +161,13 @@ export default function FeedPage() {
                           <span className="text-gray-600 text-xs">{new Date(item.timestamp).toLocaleDateString()}</span>
                         </div>
                         <p className="text-gray-300 text-sm leading-relaxed">{item.data?.content}</p>
-                        {item.data?.image && <img src={item.data.image} alt="" className="mt-2 rounded-xl w-full aspect-video object-cover" />}
+                        {item.data?.image && (
+                          <img
+                            src={item.data.image}
+                            alt={`${item.data?.author?.name || 'Community'} post attachment`}
+                            className="mt-2 rounded-xl w-full aspect-video object-cover"
+                          />
+                        )}
                         <div className="flex items-center gap-4 mt-3">
                           <ReactionsBar reactions={[
                             { emoji: '❤️', count: item.data?.likes || 0, reacted: false },

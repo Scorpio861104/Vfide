@@ -1,13 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
-import { IERC20 as OZIERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import { SafeERC20 as OZSafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import { ReentrancyGuardTransient as OZReentrancyGuard } from "@openzeppelin/contracts/utils/ReentrancyGuardTransient.sol";
-import { Pausable as OZPausable } from "@openzeppelin/contracts/utils/Pausable.sol";
-import { AccessControl as OZAccessControl } from "@openzeppelin/contracts/access/AccessControl.sol";
-import { Time } from "@openzeppelin/contracts/utils/types/Time.sol";
-
 /*
  * I-01 CODEBASE NOTE: This is a large protocol (~99 Solidity files). To manage
  * attack surface: dead code has been removed (M-21), unbounded arrays capped (I-11),
@@ -67,8 +60,6 @@ event LedgerLogFailed(address indexed source, string action);
 
 interface IVaultHub {
     function vaultOf(address owner) external view returns (address);
-    function ownerOfVault(address vault) external view returns (address owner);
-    function vaultsOfBatch(address[] calldata owners) external view returns (address[] memory vaults);
     function isVault(address a) external view returns (bool);
     function ensureVault(address owner_) external returns (address vault);
     function setVFIDEToken(address token) external;
@@ -93,10 +84,6 @@ interface IProofLedger {
     function logTransfer(address from, address to, uint256 amount, string calldata context) external;
 }
 
-interface IRecoverableVault {
-    function __forceSetOwner(address newOwner) external;
-}
-
 interface IProofScoreBurnRouterToken {
     function computeFees(
         address from,
@@ -109,18 +96,6 @@ interface IProofScoreBurnRouterToken {
         address sanctumSink,
         address ecosystemSink,
         address burnSink
-    );
-
-    function calculateGrossAmount(
-        address from,
-        address to,
-        uint256 desiredNetAmount
-    ) external view returns (
-        uint256 grossAmount,
-        uint256 burnAmount,
-        uint256 sanctumAmount,
-        uint256 ecosystemAmount,
-        uint256 totalFee
     );
 
     function computeFeesAndReserve(
@@ -236,12 +211,10 @@ interface IVFIDEToken is IERC20 {
     function whaleLimitExempt(address) external view returns (bool);
     function remainingDailyLimit(address account) external view returns (uint256);
     function cooldownRemaining(address account) external view returns (uint256);
-    function canTransfer(address from, address to, uint256 amount) external view returns (bool canDo, string memory reason);
 }
 
 interface ISeer {
     function getScore(address subject) external view returns (uint16);
-    function getScoresBatch(address[] calldata subjects) external view returns (uint16[] memory scores);
     function getCachedScore(address subject) external view returns (uint16); // I-13: Gas-efficient for transfer path
     function getScoreAt(address subject, uint64 timestamp) external view returns (uint16);
     function lastActivity(address subject) external view returns (uint64);
@@ -294,7 +267,6 @@ interface ISwapRouter {
 
 interface ICouncilElection {
     function getCouncilMember(uint256 index) external view returns (address);
-    function getCouncilMembers() external view returns (address[] memory);
     function getActualCouncilSize() external view returns (uint256);
     function isCouncil(address account) external view returns (bool);
     function removeCouncilMember(address member, string calldata reason) external;
@@ -365,7 +337,7 @@ abstract contract Ownable {
     function transferOwnership(address newOwner) external onlyOwner {
         require(newOwner != address(0), "OWN: zero");
         pendingOwner = newOwner;
-        ownershipTransferDeadline = uint64(Time.timestamp() + 7 days);
+        ownershipTransferDeadline = uint64(block.timestamp + 7 days);
         emit OwnershipTransferStarted(owner, newOwner);
     }
 
@@ -382,7 +354,7 @@ abstract contract Ownable {
     /// @notice Complete ownership transfer (must be called by pending owner)
     function acceptOwnership() external {
         require(msg.sender == pendingOwner, "OWN: not pending owner");
-        require(Time.timestamp() <= ownershipTransferDeadline, "OWN: transfer expired");
+        require(block.timestamp <= ownershipTransferDeadline, "OWN: transfer expired");
         emit OwnershipTransferred(owner, msg.sender);
         owner = msg.sender;
         pendingOwner = address(0);
@@ -400,30 +372,138 @@ abstract contract Ownable {
 ///   1. This (SharedInterfaces.ReentrancyGuard) — single-contract guard, used by most contracts
 ///   2. VFIDEReentrancyGuard.sol — cross-contract guard with per-address locking (WithdrawalQueue)
 ///   3. OZ ReentrancyGuard — VFIDEBridge only (required by LayerZero OApp inheritance)
-abstract contract ReentrancyGuard is OZReentrancyGuard {}
+abstract contract ReentrancyGuard {
+    uint256 private _status = 1;
+    modifier nonReentrant() {
+        _nonReentrantBefore();
+        _;
+        _nonReentrantAfter();
+    }
+    function _nonReentrantBefore() internal {
+        require(_status == 1, "reentrancy");
+        _status = 2;
+    }
+    function _nonReentrantAfter() internal {
+        _status = 1;
+    }
+}
 
-/// @notice Shared pausable wrapper exposing the audited OZ implementation under the local import path.
-abstract contract Pausable is OZPausable {}
+/// @notice Custom Pausable — matches OZ Pausable interface (paused, _pause, _unpause, whenNotPaused, whenPaused)
+abstract contract Pausable {
+    event Paused(address indexed account);
+    event Unpaused(address indexed account);
+    bool private _paused;
+    modifier whenNotPaused() { require(!_paused, "Pausable: paused"); _; }
+    modifier whenPaused() { require(_paused, "Pausable: not paused"); _; }
+    function paused() public view returns (bool) { return _paused; }
+    function _pause() internal whenNotPaused { _paused = true; emit Paused(msg.sender); }
+    function _unpause() internal whenPaused { _paused = false; emit Unpaused(msg.sender); }
+}
 
-/// @notice Shared access control wrapper exposing the audited OZ implementation under the local import path.
-abstract contract AccessControl is OZAccessControl {}
+/// @notice AccessControl for role-based permissions (OpenZeppelin-compatible pattern)
+abstract contract AccessControl {
+    struct RoleData {
+        mapping(address => bool) members;
+        bytes32 adminRole;
+    }
+    
+    mapping(bytes32 => RoleData) private _roles;
+    
+    bytes32 public constant DEFAULT_ADMIN_ROLE = 0x00;
+    
+    event RoleGranted(bytes32 indexed role, address indexed account, address indexed sender);
+    event RoleRevoked(bytes32 indexed role, address indexed account, address indexed sender);
+    event RoleAdminChanged(bytes32 indexed role, bytes32 indexed previousAdminRole, bytes32 indexed newAdminRole);
+    
+    /// @dev Auto-grant DEFAULT_ADMIN_ROLE to deployer to prevent bootstrap deadlock
+    constructor() {
+        _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
+    }
+    
+    modifier onlyRole(bytes32 role) {
+        require(hasRole(role, msg.sender), "AC: missing role");
+        _;
+    }
+    
+    function hasRole(bytes32 role, address account) public view returns (bool) {
+        return _roles[role].members[account];
+    }
+    
+    function getRoleAdmin(bytes32 role) public view returns (bytes32) {
+        return _roles[role].adminRole;
+    }
+    
+    function grantRole(bytes32 role, address account) public onlyRole(getRoleAdmin(role)) {
+        _grantRole(role, account);
+    }
+    
+    function revokeRole(bytes32 role, address account) public onlyRole(getRoleAdmin(role)) {
+        _revokeRole(role, account);
+    }
+    
+    function renounceRole(bytes32 role, address account) public {
+        require(account == msg.sender, "AC: can only renounce for self");
+        _revokeRole(role, account);
+    }
+    
+    function _grantRole(bytes32 role, address account) internal {
+        if (!hasRole(role, account)) {
+            _roles[role].members[account] = true;
+            emit RoleGranted(role, account, msg.sender);
+        }
+    }
+    
+    function _revokeRole(bytes32 role, address account) internal {
+        if (hasRole(role, account)) {
+            _roles[role].members[account] = false;
+            emit RoleRevoked(role, account, msg.sender);
+        }
+    }
+    
+    function _setRoleAdmin(bytes32 role, bytes32 adminRole) internal {
+        bytes32 previousAdminRole = getRoleAdmin(role);
+        _roles[role].adminRole = adminRole;
+        emit RoleAdminChanged(role, previousAdminRole, adminRole);
+    }
+}
 
 /// @notice SafeERC20 library for non-standard tokens (USDT, etc.)
 library SafeERC20 {
     function safeTransfer(IERC20 token, address to, uint256 value) internal {
-        OZSafeERC20.safeTransfer(OZIERC20(address(token)), to, value);
+        (bool success, bytes memory data) = address(token).call(
+            abi.encodeWithSelector(token.transfer.selector, to, value)
+        );
+        require(success && (data.length == 0 || abi.decode(data, (bool))), "SafeERC20: transfer failed");
     }
 
-    // slither-disable-next-line arbitrary-send-erc20
     function safeTransferFrom(IERC20 token, address from, address to, uint256 value) internal {
-        OZSafeERC20.safeTransferFrom(OZIERC20(address(token)), from, to, value);
+        (bool success, bytes memory data) = address(token).call(
+            abi.encodeWithSelector(token.transferFrom.selector, from, to, value)
+        );
+        require(success && (data.length == 0 || abi.decode(data, (bool))), "SafeERC20: transferFrom failed");
     }
     
     function safeApprove(IERC20 token, address spender, uint256 value) internal {
-        OZSafeERC20.forceApprove(OZIERC20(address(token)), spender, value);
+        forceApprove(token, spender, value);
     }
 
     function forceApprove(IERC20 token, address spender, uint256 value) internal {
-        OZSafeERC20.forceApprove(OZIERC20(address(token)), spender, value);
+        if (_callOptionalReturnBool(token, abi.encodeWithSelector(token.approve.selector, spender, value))) {
+            return;
+        }
+
+        require(
+            _callOptionalReturnBool(token, abi.encodeWithSelector(token.approve.selector, spender, 0)),
+            "SafeERC20: approve reset failed"
+        );
+        require(
+            _callOptionalReturnBool(token, abi.encodeWithSelector(token.approve.selector, spender, value)),
+            "SafeERC20: approve failed"
+        );
+    }
+
+    function _callOptionalReturnBool(IERC20 token, bytes memory data) private returns (bool) {
+        (bool success, bytes memory returndata) = address(token).call(data);
+        return success && (returndata.length == 0 || abi.decode(returndata, (bool)));
     }
 }

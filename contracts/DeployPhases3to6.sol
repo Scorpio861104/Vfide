@@ -15,6 +15,9 @@ interface ISystemExemptToken {
 interface IBridgeSecurityModule_Deploy {
     function setBridge(address _bridge) external;
 }
+interface IVFIDEBridge_Deploy {
+    function setSecurityModule(address _securityModule) external;
+}
 
 // ============================================
 // HOWEY COMPLIANCE NOTICE:
@@ -43,7 +46,9 @@ contract DeployPhase3 {
     error DP3_Zero();
 
     bytes32 private constant NAME_BSM = bytes32("BSM");
+    bytes32 private constant NAME_BRG = bytes32("BRG");
     bytes32 private constant NAME_ORC = bytes32("ORC");
+    bytes32 private constant NAME_PHASE3 = bytes32("P3");
 
     struct DeploymentAddresses {
         // Phase 3: Bridge & Oracle (Howey-Safe)
@@ -56,6 +61,8 @@ contract DeployPhase3 {
         // Phase 5: Liquidity Mining - REMOVED
         // Phase 6: Advanced DeFi - REMOVED
     }
+
+    DeploymentAddresses public deployed;
 
     event ContractDeployed(bytes32 indexed name, address indexed contractAddress);
     event PhaseDeployed(uint256 indexed phase, bytes32 name);
@@ -77,11 +84,13 @@ contract DeployPhase3 {
         address preDeployedBSM,
         address preDeployedOracle,
         address owner
-    ) external returns (DeploymentAddresses memory deployment) {
+    ) external returns (DeploymentAddresses memory) {
         if (vfideToken == address(0) || owner == address(0)) revert DP3_Zero();
         if (preDeployedBSM == address(0) || preDeployedOracle == address(0)) revert DP3_Zero();
 
-        deployment = _deployPhase3(vfideToken, layerZeroEndpoint, preDeployedBSM, preDeployedOracle, owner);
+        _deployPhase3(vfideToken, layerZeroEndpoint, preDeployedBSM, preDeployedOracle, owner);
+
+        return deployed;
     }
 
     /**
@@ -93,24 +102,30 @@ contract DeployPhase3 {
         address preDeployedBSM,
         address preDeployedOracle,
         address owner
-    ) internal returns (DeploymentAddresses memory deployment) {
-        deployment.bridgeSecurityModule = preDeployedBSM;
-        deployment.priceOracle = preDeployedOracle;
+    ) internal {
+        // Record pre-deployed peripherals
+        deployed.bridgeSecurityModule = preDeployedBSM;
+        deployed.priceOracle = preDeployedOracle;
         emit ContractDeployed(NAME_BSM, preDeployedBSM);
         emit ContractDeployed(NAME_ORC, preDeployedOracle);
 
+        // Deploy VFIDE Bridge (OZ-based, required by LayerZero OApp)
         VFIDEBridge bridge = new VFIDEBridge(
             vfideToken,
             layerZeroEndpoint,
             owner
         );
-        deployment.vfideBridge = address(bridge);
+        deployed.vfideBridge = address(bridge);
+        emit ContractDeployed(NAME_BRG, address(bridge));
 
+        // Wire BSM ↔ Bridge linkage
         IBridgeSecurityModule_Deploy(preDeployedBSM).setBridge(address(bridge));
         bridge.setSecurityModule(preDeployedBSM);
 
         // Required for vault-only mode: allow bridge contract transfers.
         //           In production: call confirmSystemExempt() after SINK_CHANGE_DELAY elapses
         ISystemExemptToken(vfideToken).proposeSystemExempt(address(bridge), true);
+
+        emit PhaseDeployed(3, NAME_PHASE3);
     }
 }

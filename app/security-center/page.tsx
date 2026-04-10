@@ -27,6 +27,29 @@ export default function SecurityCenterPage() {
     { id: 'threats', label: 'Threat Detection', icon: '🛡️' }
   ];
 
+  const securityScore = Math.max(
+    0,
+    Math.min(
+      100,
+      (twoFactor.isEnabled ? 35 : 10) +
+        (biometric.isEnabled ? 20 : 5) +
+        (threats.threatLevel === 'none'
+          ? 30
+          : threats.threatLevel === 'low'
+            ? 24
+            : threats.threatLevel === 'medium'
+              ? 14
+              : 4) +
+        (logs.logs.length > 0 ? 15 : 8)
+    )
+  );
+
+  const recommendedActions = [
+    !twoFactor.isEnabled ? 'Enable authenticator-based 2FA and store backup codes offline.' : null,
+    !biometric.isEnabled ? 'Enroll a passkey or biometric factor for faster sign-ins and recovery.' : null,
+    threats.activeThreats.length > 0 ? `Review ${threats.activeThreats.length} active threat alert${threats.activeThreats.length !== 1 ? 's' : ''} and run a security scan.` : null,
+  ].filter(Boolean) as string[];
+
   return (
     <div className="mx-auto px-4 sm:px-6 md:px-8 lg:px-12" style={{ maxWidth: '1280px' }}>
       <div className="py-8">
@@ -62,6 +85,43 @@ export default function SecurityCenterPage() {
         {/* Content */}
         {activeTab === 'overview' && (
           <div className="space-y-6">
+            <div className="rounded-xl border border-blue-200 bg-gradient-to-r from-blue-50 to-indigo-50 p-6 dark:border-blue-900/60 dark:from-blue-950/40 dark:to-indigo-950/30">
+              <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                <div>
+                  <p className="text-sm font-semibold uppercase tracking-wide text-blue-700 dark:text-blue-300">
+                    Protection score
+                  </p>
+                  <div className="mt-1 text-3xl font-bold text-gray-900 dark:text-white">
+                    {securityScore}/100
+                  </div>
+                  <p className="mt-2 text-sm text-gray-700 dark:text-gray-300">
+                    {recommendedActions.length === 0
+                      ? 'Your core sign-in protections are enabled. Keep monitoring new alerts and recovery methods.'
+                      : 'A few high-impact steps are still open. Complete the recommended actions below to strengthen your account.'}
+                  </p>
+                </div>
+                <button
+                  onClick={() => {
+                    threats.detectAnomalies();
+                    setActiveTab(recommendedActions.length > 0 && !twoFactor.isEnabled ? '2fa' : 'threats');
+                  }}
+                  className="inline-flex items-center justify-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700"
+                >
+                  Review next best action
+                </button>
+              </div>
+              {recommendedActions.length > 0 && (
+                <ul className="mt-4 space-y-2 text-sm text-gray-800 dark:text-gray-200">
+                  {recommendedActions.map((action) => (
+                    <li key={action} className="flex items-start gap-2">
+                      <span className="mt-0.5">•</span>
+                      <span>{action}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+
             {/* Security Status Overview */}
             <div className="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700">
               <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-6">

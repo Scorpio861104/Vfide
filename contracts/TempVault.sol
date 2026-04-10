@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
-import { Address } from "@openzeppelin/contracts/utils/Address.sol";
 import "./SharedInterfaces.sol";
 
 /**
@@ -64,7 +63,8 @@ contract TempVault is ReentrancyGuard {
         if (amount < 1) revert TV_ZeroAmount();
         require(amount <= address(this).balance, "TempVault: insufficient ETH");
 
-        Address.sendValue(to, amount);
+        (bool success, ) = to.call{value: amount}("");
+        if (!success) revert TV_TransferFailed();
 
         emit NativeWithdrawal(to, amount, msg.sender);
     }

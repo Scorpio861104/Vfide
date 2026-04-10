@@ -58,7 +58,7 @@ contract DevReserveVestingVault is ReentrancyGuard {
     event Claimed(address indexed beneficiary, address indexed vault, uint256 amount);
     event PauseSet(bool paused);
     event EmergencyFreeze(address indexed by);
-    event ModulesSet(address indexed vfide, address indexed beneficiary, address indexed vaultHub, address securityHub, address ledger);
+    event ModulesSet(address vfide, address beneficiary, address vaultHub, address securityHub, address ledger);
 
     // ── Errors
     error DV_Zero();
@@ -80,15 +80,13 @@ contract DevReserveVestingVault is ReentrancyGuard {
         uint256 _allocation,
         address _dao
     ) {
-        if (_vfide==address(0) || _beneficiary==address(0) || _vaultHub==address(0) || _allocation==0 || _dao == address(0)) {
-            revert DV_Zero();
-        }
+        if (_vfide==address(0) || _beneficiary==address(0) || _vaultHub==address(0) || _allocation==0) revert DV_Zero();
         if (_allocation != EXPECTED_ALLOCATION) revert DV_InvalidAllocation();
         VFIDE        = _vfide;
         BENEFICIARY  = _beneficiary;
         VAULT_HUB    = _vaultHub;
-        SECURITY_HUB = _securityHub == address(0) ? address(0) : _securityHub;
-        LEDGER       = _ledger == address(0) ? address(0) : _ledger;
+        SECURITY_HUB = _securityHub;
+        LEDGER       = _ledger;
         ALLOCATION   = _allocation;
         DAO          = _dao;
         emit ModulesSet(_vfide, _beneficiary, _vaultHub, _securityHub, _ledger);
@@ -109,12 +107,12 @@ contract DevReserveVestingVault is ReentrancyGuard {
         require(msg.sender == BENEFICIARY || msg.sender == DAO, "DV: unauthorized");
         if (startTimestamp != 0) revert DV_AlreadyStarted();
         if (timestamp == 0) revert DV_Zero();
-        if (timestamp > Time.timestamp() + 7 days) revert DV_InvalidStartTimestamp();
+        if (timestamp > block.timestamp + 7 days) revert DV_InvalidStartTimestamp();
         startTimestamp  = timestamp;
         cliffTimestamp  = timestamp + CLIFF;
         endTimestamp    = timestamp + VESTING;
-        emit SyncedStart(startTimestamp, cliffTimestamp, endTimestamp);
         _log("dev_vesting_synced");
+        emit SyncedStart(startTimestamp, cliffTimestamp, endTimestamp);
     }
 
     // ─────────────────────────────────────────────────────────────
@@ -178,19 +176,19 @@ contract DevReserveVestingVault is ReentrancyGuard {
 
         if (startTimestamp == 0) revert DV_NotStarted();
 
+        address vault = beneficiaryVault();
+
+        // SecurityHub lock check removed — non-custodial
+
         uint256 amount = claimable();
         if (amount < 1) revert DV_NothingToClaim();
 
         totalClaimed += amount;
 
-        address vault = beneficiaryVault();
-        if (SECURITY_HUB != address(0) && ISecurityHub(SECURITY_HUB).isLocked(vault)) {
-            revert DV_VaultLocked();
-        }
-
         IERC20(VFIDE).safeTransfer(vault, amount);
-        emit Claimed(BENEFICIARY, vault, amount);
+
         _logEv(BENEFICIARY, "dev_vesting_claim", amount, "");
+        emit Claimed(BENEFICIARY, vault, amount);
     }
 
     // ─────────────────────────────────────────────────────────────
@@ -296,9 +294,9 @@ contract DevReserveVestingVault is ReentrancyGuard {
     // ─────────────────────────────────────────────────────────────
 
     function _log(string memory action) internal {
-        if (LEDGER != address(0)) { try IProofLedger(LEDGER).logSystemEvent(address(this), action, msg.sender) {} catch {} }
+        if (LEDGER != address(0)) { try IProofLedger(LEDGER).logSystemEvent(address(this), action, msg.sender) {} catch { emit LedgerLogFailed(address(this), action); } }
     }
     function _logEv(address who, string memory action, uint256 amount, string memory note) internal {
-        if (LEDGER != address(0)) { try IProofLedger(LEDGER).logEvent(who, action, amount, note) {} catch {} }
+        if (LEDGER != address(0)) { try IProofLedger(LEDGER).logEvent(who, action, amount, note) {} catch { emit LedgerLogFailed(who, action); } }
     }
 }

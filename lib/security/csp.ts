@@ -58,10 +58,19 @@ export function getConnectSrcAllowlist(env: NodeJS.ProcessEnv = process.env): st
 
 export function buildCsp(nonce: string, env: NodeJS.ProcessEnv = process.env): string {
   const connectSrc = getConnectSrcAllowlist(env);
+  const isProduction = env.NODE_ENV === 'production';
+  const scriptSrc = [
+    "'self'",
+    `'nonce-${nonce}'`,
+    'https://vercel.live',
+    'https://*.walletconnect.com',
+    'https://*.walletconnect.org',
+    ...(!isProduction ? ["'unsafe-eval'"] : []),
+  ].join(' ');
 
   return [
     "default-src 'self'",
-    `script-src 'self' 'nonce-${nonce}' https://vercel.live https://*.walletconnect.com https://*.walletconnect.org`,
+    `script-src ${scriptSrc}`,
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     "img-src 'self' data: https: blob:",
     "font-src 'self' data: https://fonts.gstatic.com",
@@ -72,7 +81,7 @@ export function buildCsp(nonce: string, env: NodeJS.ProcessEnv = process.env): s
     "base-uri 'self'",
     "form-action 'self'",
     "frame-ancestors 'none'",
-    ...(env.NODE_ENV === 'production' ? ['upgrade-insecure-requests'] : []),
+    ...(isProduction ? ['upgrade-insecure-requests'] : []),
   ].join('; ');
 }
 

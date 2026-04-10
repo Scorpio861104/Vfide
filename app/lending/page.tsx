@@ -146,7 +146,7 @@ export default function LendingPage() {
             <div className="space-y-4">
               <div className="p-4 bg-cyan-500/5 border border-cyan-500/15 rounded-xl">
                 <p className="text-cyan-400 text-sm font-medium mb-1">How borrowing works</p>
-                <p className="text-gray-400 text-xs">Browse offers from lenders. Accept one and your vault guardian co-signs. No token collateral — your ProofScore and your guardian's commitment are your guarantee. Interest is capped at 12%. Duration is max 30 days.</p>
+                <p className="text-gray-400 text-xs">Browse offers from lenders. Accept one and your vault guardian co-signs. No token collateral — your ProofScore and your guardian&apos;s commitment are your guarantee. Interest is capped at 12%. Duration is max 30 days.</p>
               </div>
 
               {SEED_LOAN_OFFERS.length === 0 ? (
@@ -185,7 +185,7 @@ export default function LendingPage() {
             <div className="space-y-4">
               <div className="p-4 bg-emerald-500/5 border border-emerald-500/15 rounded-xl">
                 <p className="text-emerald-400 text-sm font-medium mb-1">How lending works</p>
-                <p className="text-gray-400 text-xs">Create an offer with your terms. A borrower accepts and their guardian co-signs. You earn interest when they repay. If they default, their ProofScore is devastated (-20.0) and their guardian's funds are slowly extracted to repay you. Risk is real — lend to people you trust.</p>
+                <p className="text-gray-400 text-xs">Create an offer with your terms. A borrower accepts and their guardian co-signs. You earn interest when they repay. If they default, their ProofScore is devastated (-20.0) and their guardian&apos;s funds are slowly extracted to repay you. Risk is real — lend to people you trust.</p>
               </div>
 
               <button onClick={() => setShowCreate(!showCreate)}
@@ -310,7 +310,7 @@ export default function LendingPage() {
             <div className="space-y-4">
               <div className="p-4 bg-purple-500/5 border border-purple-500/15 rounded-xl">
                 <p className="text-purple-400 text-sm font-medium mb-1 flex items-center gap-1.5"><Zap size={14} />Atomic Flash Loans</p>
-                <p className="text-gray-400 text-xs">Borrow any amount, use it, and repay in the same transaction. If you don't repay, the entire transaction reverts. Zero risk to lenders. Used for arbitrage, liquidations, and refinancing.</p>
+                <p className="text-gray-400 text-xs">Borrow any amount, use it, and repay in the same transaction. If you don&apos;t repay, the entire transaction reverts. Zero risk to lenders. Used for arbitrage, liquidations, and refinancing.</p>
               </div>
 
               <div className="grid grid-cols-2 gap-4">

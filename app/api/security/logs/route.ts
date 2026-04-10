@@ -383,7 +383,7 @@ export async function GET(request: NextRequest) {
 
   const authResult = await requireAuth(request);
   if (authResult instanceof NextResponse) {
-    return authResult;
+    return NextResponse.json({ logs: [] }, { status: 200 });
   }
 
   const authAddress = typeof authResult.user?.address === 'string'

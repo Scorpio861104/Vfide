@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { generateURI, verifySync } from 'otplib';
+import { authenticator } from 'otplib';
 import {
   TwoFactorConfig,
   TwoFactorMethod,
@@ -68,7 +68,7 @@ const generateTOTPSecret = (): string => {
 const verifyTOTPInternal = (secret: string, code: string): boolean => {
   if (!validateTOTPCode(code)) return false;
   try {
-    return verifySync({ token: code, secret }).valid;
+    return authenticator.check(code, secret);
   } catch {
     return false;
   }
@@ -144,11 +144,7 @@ export const useTwoFactorAuth = (userEmail?: string): UseTwoFactorAuthResult => 
     // Callers should always supply `userEmail`; if omitted we fall back to a
     // generated placeholder that remains unique per session via the secret itself.
     const account = userEmail ?? `vfide-user-${secret.slice(0, 8)}`;
-    const qrCode = generateURI({
-      issuer: 'VFIDE',
-      label: account,
-      secret,
-    });
+    const qrCode = authenticator.keyuri(account, 'VFIDE', secret);
     const codes = generateBackupCodes();
 
     setTotpSecret(secret);
