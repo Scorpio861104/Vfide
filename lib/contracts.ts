@@ -43,6 +43,8 @@ import {
   SeerSocialABI,
   SeerViewABI,
   UserRewardsABI,
+  FraudRegistryABI,
+  VFIDETestnetFaucetABI,
 } from './abis'
 import { logger } from '@/lib/logger';
 
@@ -105,6 +107,8 @@ const CONTRACT_ENV_VAR_MAP: Record<string, string> = {
   EcosystemVaultView: 'NEXT_PUBLIC_ECOSYSTEM_VAULT_VIEW_ADDRESS',
   VaultRegistry: 'NEXT_PUBLIC_VAULT_REGISTRY_ADDRESS',
   CommerceEscrow: 'NEXT_PUBLIC_COMMERCE_ESCROW_ADDRESS',
+  FraudRegistry: 'NEXT_PUBLIC_FRAUD_REGISTRY_ADDRESS',
+  VFIDETestnetFaucet: 'NEXT_PUBLIC_FAUCET_ADDRESS',
 };
 
 /**
@@ -189,6 +193,8 @@ export const CONTRACT_ADDRESSES = {
   EcosystemVaultView: validateContractAddress(process.env.NEXT_PUBLIC_ECOSYSTEM_VAULT_VIEW_ADDRESS, 'EcosystemVaultView'),
   VaultRegistry: validateContractAddress(process.env.NEXT_PUBLIC_VAULT_REGISTRY_ADDRESS, 'VaultRegistry'),
   CommerceEscrow: validateContractAddress(process.env.NEXT_PUBLIC_COMMERCE_ESCROW_ADDRESS, 'CommerceEscrow'),
+  FraudRegistry: validateContractAddress(process.env.NEXT_PUBLIC_FRAUD_REGISTRY_ADDRESS, 'FraudRegistry'),
+  VFIDETestnetFaucet: validateContractAddress(process.env.NEXT_PUBLIC_FAUCET_ADDRESS, 'VFIDETestnetFaucet'),
 }
 
 // Legacy ABI alias names for compatibility with existing hooks
@@ -270,4 +276,6 @@ export {
   SeerSocialABI,
   SeerViewABI,
   UserRewardsABI,
+  FraudRegistryABI,
+  VFIDETestnetFaucetABI,
 }

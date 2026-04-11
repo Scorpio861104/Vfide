@@ -33,12 +33,10 @@ type RateLimitType = keyof typeof RATE_LIMITS;
 
 // Create rate limiter instances (one per limit type)
 let upstashLimiters: Map<RateLimitType, Ratelimit> | null = null;
+let missingRedisWarningLogged = false;
 
-function assertRedisConfigured(): void {
-  const hasRedis = Boolean(process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN);
-  if (!hasRedis) {
-    throw new Error('Redis is required for distributed rate limiting. Configure UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN.');
-  }
+function hasRedisConfiguration(): boolean {
+  return Boolean(process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN);
 }
 
 function getUpstashLimiters(): Map<RateLimitType, Ratelimit> | null {
@@ -112,7 +110,14 @@ export async function rateLimit(
   request: NextRequest,
   type: RateLimitType = 'api'
 ): Promise<{ success: boolean; response?: NextResponse }> {
-  assertRedisConfigured();
+  if (!hasRedisConfiguration()) {
+    if (!missingRedisWarningLogged) {
+      missingRedisWarningLogged = true;
+      logger.warn('[RateLimit] Redis not configured; allowing requests in degraded mode.');
+    }
+    return { success: true };
+  }
+
   const identifier = getClientIdentifier(request);
   const config = RATE_LIMITS[type];
 

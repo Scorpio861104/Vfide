@@ -1,8 +1,10 @@
 import { logger } from '@/lib/logger';
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod4';
 import { createWalletClient, createPublicClient, http, parseAbi, isAddress } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
 import { baseSepolia } from 'viem/chains';
+import { withRateLimit } from '@/lib/auth/rateLimit';
 
 const FAUCET_ABI = parseAbi([
   'function claim(address user, address referrer) external',
@@ -10,10 +12,24 @@ const FAUCET_ABI = parseAbi([
   'function getRemainingToday() external view returns (uint256)',
 ]);
 
+const claimSchema = z.object({
+  address: z.string().regex(/^0x[a-fA-F0-9]{40}$/),
+  referrer: z.string().regex(/^0x[a-fA-F0-9]{40}$/).optional(),
+});
+
 export async function POST(request: NextRequest) {
+  const rateLimitResponse = await withRateLimit(request, 'claim');
+  if (rateLimitResponse) return rateLimitResponse;
+
   try {
-    const body = await request.json();
-    const { address, referrer } = body;
+    const rawBody = await request.json().catch(() => null);
+    const parsed = claimSchema.safeParse(rawBody);
+
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Valid wallet address required' }, { status: 400 });
+    }
+
+    const { address, referrer } = parsed.data;
 
     if (!address || !isAddress(address)) {
       return NextResponse.json({ error: 'Valid wallet address required' }, { status: 400 });
@@ -62,8 +78,11 @@ export async function POST(request: NextRequest) {
       success: true, txHash: hash, blockNumber: Number(receipt.blockNumber),
       message: 'Testnet VFIDE + gas ETH sent to your wallet!',
     });
-  } catch (error: any) {
-    const message = error?.shortMessage || error?.message || 'Claim failed';
+  } catch (error: unknown) {
+    const shortMessage = typeof (error as { shortMessage?: unknown })?.shortMessage === 'string'
+      ? (error as { shortMessage: string }).shortMessage
+      : '';
+    const message = shortMessage || (error instanceof Error ? error.message : 'Claim failed');
     if (message.includes('AlreadyClaimed')) return NextResponse.json({ error: 'Already claimed' }, { status: 409 });
     if (message.includes('DailyCapReached')) return NextResponse.json({ error: 'Daily limit reached' }, { status: 429 });
     if (message.includes('Insufficient')) return NextResponse.json({ error: 'Faucet empty. Contact team.' }, { status: 503 });

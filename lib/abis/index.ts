@@ -51,6 +51,8 @@ import CircuitBreakerABI from './CircuitBreaker.json'
 import EmergencyControlABI from './EmergencyControl.json'
 import WithdrawalQueueABI from './WithdrawalQueue.json'
 import VFIDEBenefitsABI from './VFIDEBenefits.json'
+import FraudRegistryABI from './FraudRegistry.json'
+import VFIDETestnetFaucetABI from './VFIDETestnetFaucet.json'
 import GovernanceHooksABI from './GovernanceHooks.json'
 import BadgeRegistryABI from './BadgeRegistry.json'
 import SeerGuardianABI from './SeerGuardian.json'
@@ -171,6 +173,8 @@ validateABI(CircuitBreakerABI, 'CircuitBreaker');
 validateABI(EmergencyControlABI, 'EmergencyControl');
 validateABI(WithdrawalQueueABI, 'WithdrawalQueue');
 validateABI(VFIDEBenefitsABI, 'VFIDEBenefits');
+validateABI(FraudRegistryABI, 'FraudRegistry');
+validateABI(VFIDETestnetFaucetABI, 'VFIDETestnetFaucet');
 validateABI(GovernanceHooksABI, 'GovernanceHooks');
 validateABI(BadgeRegistryABI, 'BadgeRegistry');
 validateABI(SeerGuardianABI, 'SeerGuardian');
@@ -285,6 +289,8 @@ export {
   EmergencyControlABI,
   WithdrawalQueueABI,
   VFIDEBenefitsABI,
+  FraudRegistryABI,
+  VFIDETestnetFaucetABI,
   GovernanceHooksABI,
   BadgeRegistryABI,
   SeerGuardianABI,

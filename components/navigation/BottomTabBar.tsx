@@ -3,6 +3,7 @@
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { Home, Store, ArrowLeftRight, MessageCircle, User } from 'lucide-react';
+import { useAccount } from 'wagmi';
 
 const tabs = [
   { id: 'home', href: '/dashboard', icon: Home, label: 'Home', match: ['/dashboard', '/'] },
@@ -14,6 +15,7 @@ const tabs = [
 
 export function BottomTabBar() {
   const pathname = usePathname();
+  const { isConnected } = useAccount();
 
   const activeTab = tabs.find(t =>
     t.match.some(m => pathname === m || pathname.startsWith(m + '/'))
@@ -28,13 +30,18 @@ export function BottomTabBar() {
           const Icon = tab.icon;
           return (
             <Link key={tab.id} href={tab.href}
-              className={`flex flex-col items-center justify-center gap-0.5 w-16 py-1.5 rounded-xl transition-all ${
+              className={`relative flex flex-col items-center justify-center gap-0.5 w-16 py-1.5 rounded-xl transition-all ${
                 isActive
                   ? 'text-cyan-400'
                   : 'text-gray-500 active:text-gray-300'
               }`}
               aria-current={isActive ? 'page' : undefined}>
-              <Icon size={22} strokeWidth={isActive ? 2.2 : 1.5} />
+              <div className="relative">
+                <Icon size={22} strokeWidth={isActive ? 2.2 : 1.5} />
+                {tab.id === 'me' && isConnected && (
+                  <div className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-green-400 shadow-[0_0_0_2px_rgba(9,9,11,0.95)]" />
+                )}
+              </div>
               <span className={`text-[10px] font-medium ${isActive ? 'text-cyan-400' : 'text-gray-500'}`}>
                 {tab.label}
               </span>
