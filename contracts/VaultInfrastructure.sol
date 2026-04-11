@@ -1272,109 +1272,25 @@ contract VaultInfrastructure is Ownable {
         return ownerOfVault[a] != address(0) && vaultOf[ ownerOfVault[a] ] == a;
     }
 
-    // ——— DAO forced recovery with Multi-Sig
+    // ── Force Recovery REMOVED — non-custodial ──────────────
+    // Recovery is ONLY through the user's own guardians via
+    // wallet rotation or VaultRecoveryClaim.
+    // ──────────────────────────────────────────────────────────
+
     function approveForceRecovery(address vault, address newOwner) external {
-        require(isRecoveryApprover[msg.sender], "VI:not-approver");
-        if (vault == address(0) || newOwner == address(0)) revert VI_Zero();
-        address current = ownerOfVault[vault];
-        require(current != address(0), "unknown vault");
-        require(vaultOf[newOwner] == address(0), "target has vault");
-        
-        uint256 nonce = recoveryNonce[vault];
-
-        address candidate = recoveryCandidateForNonce[vault][nonce];
-        if (candidate == address(0)) {
-            recoveryCandidateForNonce[vault][nonce] = newOwner;
-            recoveryApprovalCount[vault] = 0;
-        } else {
-            require(candidate == newOwner, "VI:owner-mismatch");
-        }
-        
-        // Record approval for current nonce
-        if (!recoveryApprovals[vault][msg.sender][nonce]) {
-            recoveryApprovals[vault][msg.sender][nonce] = true;
-            recoveryApprovalCount[vault]++;
-            _log("recovery_approval_cast");
-        }
-        
-        // If threshold reached, initiate timelock
-        if (recoveryApprovalCount[vault] >= RECOVERY_APPROVALS_REQUIRED) {
-            recoveryProposedOwner[vault] = recoveryCandidateForNonce[vault][nonce];
-            recoveryUnlockTime[vault] = uint64(block.timestamp + RECOVERY_DELAY);
-            emit ForcedRecoveryInitiated(vault, recoveryProposedOwner[vault], recoveryUnlockTime[vault]);
-            _logEv(vault, "force_recover_init", 0, "");
-        }
+        revert("VI: force recovery disabled - non-custodial");
     }
-    
-    // Legacy function kept for compatibility but now requires multi-sig first
+
     function initiateForceRecovery(address vault, address newOwner) external {
-        if (msg.sender != dao) revert VI_NotDAO();
-        if (vault == address(0) || newOwner == address(0)) revert VI_Zero();
-        address current = ownerOfVault[vault];
-        require(current != address(0), "unknown vault");
-        require(vaultOf[newOwner] == address(0), "target has vault");
-        
-        require(recoveryApprovalCount[vault] >= RECOVERY_APPROVALS_REQUIRED, "VI:insufficient-approvals");
-
-        uint256 nonce = recoveryNonce[vault];
-        address candidate = recoveryCandidateForNonce[vault][nonce];
-        if (candidate != address(0)) {
-            require(candidate == newOwner, "VI:owner-mismatch");
-        }
-
-        recoveryProposedOwner[vault] = newOwner;
-        recoveryUnlockTime[vault] = uint64(block.timestamp + RECOVERY_DELAY);
-        
-        emit ForcedRecoveryInitiated(vault, newOwner, recoveryUnlockTime[vault]);
-        _logEv(vault, "force_recover_init", 0, "");
+        revert("VI: force recovery disabled - non-custodial");
     }
 
     function finalizeForceRecovery(address vault) external {
-        if (msg.sender != dao) revert VI_NotDAO();
-        require(recoveryUnlockTime[vault] != 0, "VI:no-req");
-        require(block.timestamp >= recoveryUnlockTime[vault], "VI:timelock");
-        
-        address newOwner = recoveryProposedOwner[vault];
-        require(newOwner != address(0), "VI:zero");
-        
-        // Re-check target has no vault (in case they made one during wait)
-        require(vaultOf[newOwner] == address(0), "target has vault");
-
-        address current = ownerOfVault[vault];
-        
-        // update registry and tell vault
-        if (current != address(0)) {
-            vaultOf[current] = address(0);
-        }
-        ownerOfVault[vault] = newOwner;
-        vaultOf[newOwner] = vault;
-
-        delete recoveryProposedOwner[vault];
-        delete recoveryUnlockTime[vault];
-        delete recoveryApprovalCount[vault];
-        // Note: We clear by incrementing a nonce rather than iterating (gas efficient)
-        recoveryNonce[vault]++;
-
-        UserVaultLegacy(payable(vault)).__forceSetOwner(newOwner);
-
-        emit ForcedRecovery(vault, newOwner);
-        _logEv(vault, "force_recover_final", 0, "");
+        revert("VI: force recovery disabled - non-custodial");
     }
-    
-    /// @notice VI-06 FIX: Cancel a pending forced recovery — callable by DAO to abort compromised approvals
+
     function cancelForceRecovery(address vault) external {
-        if (msg.sender != dao) revert VI_NotDAO();
-        require(vault != address(0), "VI:zero");
-        require(recoveryUnlockTime[vault] != 0 || recoveryApprovalCount[vault] > 0, "VI:no-pending-recovery");
-        
-        delete recoveryProposedOwner[vault];
-        delete recoveryUnlockTime[vault];
-        delete recoveryApprovalCount[vault];
-        // Increment nonce to invalidate any outstanding signed approvals
-        recoveryNonce[vault]++;
-        
-        emit ForcedRecoveryCancelled(vault);
-        _logEv(vault, "force_recover_cancelled", 0, "");
+        revert("VI: force recovery disabled - non-custodial");
     }
     function _salt(address owner_) internal pure returns (bytes32) {
         return keccak256(abi.encodePacked(owner_));

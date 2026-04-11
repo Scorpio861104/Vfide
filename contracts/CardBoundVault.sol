@@ -294,18 +294,29 @@ contract CardBoundVault is ReentrancyGuard {
         emit GuardianSet(guardian, active);
     }
 
-    /// @notice Legacy guardian mutator retained for bootstrap compatibility.
+    /// @notice Legacy guardian mutator — ONLY usable during bootstrap (before guardianSetupComplete).
     /// @param guardian Guardian address to update.
     /// @param active True to set guardian active, false to remove.
-    /// @dev Restricted to admin; prefer propose/apply guardian flow.
+    /// @dev C-2 FIX: After guardian setup is complete on VaultHub, admin must use
+    ///      proposeGuardianChange + applyGuardianChange (24-hour timelock) instead.
     function setGuardian(address guardian, bool active) external onlyAdmin {
+        // C-2 FIX: Block instant guardian changes after bootstrap
+        require(
+            !IVaultHubGuardianSetup(hub).guardianSetupComplete(address(this)),
+            "CBV: use propose/apply after setup"
+        );
         if (guardian == address(0)) revert CBV_Zero();
         _applyGuardianChange(guardian, active);
     }
 
     /// @notice Set required guardian approvals for sensitive wallet-rotation actions.
     /// @param threshold New guardian approval threshold.
+    /// @dev C-2 FIX: Also gated to bootstrap-only to prevent instant threshold reduction.
     function setGuardianThreshold(uint8 threshold) external onlyAdmin {
+        require(
+            !IVaultHubGuardianSetup(hub).guardianSetupComplete(address(this)),
+            "CBV: use propose/apply after setup"
+        );
         if (threshold == 0 || threshold > guardianCount) revert CBV_InvalidThreshold();
         guardianThreshold = threshold;
         emit GuardianThresholdSet(threshold);

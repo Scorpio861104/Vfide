@@ -284,7 +284,9 @@ contract SanctumVault is Ownable, ReentrancyGuard {
         if (to == address(0) || amount < 1) revert SANCT_Zero();
         require(amount <= address(this).balance, "insufficient native");
 
-        (bool sent, ) = to.call{value: amount, gas: 10_000}("");
+        // H-6 FIX: Removed hardcoded gas limit (was 10_000). NonReentrant guard
+        // protects against reentrancy. Fixed gas limits can fail on L2s.
+        (bool sent, ) = to.call{value: amount}("");
         require(sent, "native transfer failed");
 
         emit NativeWithdrawal(to, amount);

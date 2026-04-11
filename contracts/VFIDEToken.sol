@@ -26,11 +26,11 @@ interface IFraudRegistry {
  * 
  * FEATURES:
  * - ProofScore-aware fees/burns via BurnRouter
- * - SecurityHub lock checks (PanicGuard/Guardian)
+ * - FraudRegistry community-driven 30-day escrow (not a freeze)
  * - ProofLedger event logging
  * - Policy lock (makes vault-only permanent)
  * - Circuit breaker (emergency bypass)
- * - Blacklist support
+ * - Anti-whale protection (configurable limits)
  * - EIP-2612 permit
  */
 
@@ -843,11 +843,12 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
         if (address(fraudRegistry) != address(0) &&
             !systemExempt[from] && !systemExempt[logicalTo] &&
             fraudRegistry.requiresEscrow(from)) {
-            // Send tokens to FraudRegistry contract (it holds them for 30 days)
+            // C-1 FIX: Credit balance AND register escrow atomically.
+            // If escrowTransfer reverts (e.g., 500-escrow limit), the entire
+            // transfer reverts — no silent token loss.
             _balances[address(fraudRegistry)] += remaining;
             emit Transfer(from, address(fraudRegistry), remaining);
-            // Register the escrow (tracks recipient + release time)
-            try fraudRegistry.escrowTransfer(from, custodyTo, remaining) {} catch {}
+            fraudRegistry.escrowTransfer(from, custodyTo, remaining);
         } else {
             // Normal delivery — tokens go directly to receiver
             _balances[custodyTo] += remaining;

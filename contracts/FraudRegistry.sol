@@ -362,4 +362,30 @@ contract FraudRegistry is ReentrancyGuard {
             if (!e.released && !e.cancelled) pendingEscrowCount++;
         }
     }
+
+    // ── H-7 FIX: DAO rescue for unrecorded token balance ──────────
+    // If tokens end up in FraudRegistry's balance without a matching
+    // escrow record (e.g., direct transfer, edge case), the DAO can
+    // recover the surplus.
+    event TokensRescued(address indexed to, uint256 amount);
+
+    function rescueExcessTokens(address to) external onlyDAO nonReentrant {
+        if (to == address(0)) revert FR_Zero();
+
+        // Calculate total tokens held in active (unreleased, uncancelled) escrows
+        uint256 escrowed = 0;
+        for (uint256 i = 0; i < escrowedTransfers.length; i++) {
+            EscrowedTransfer storage e = escrowedTransfers[i];
+            if (!e.released && !e.cancelled) {
+                escrowed += e.amount;
+            }
+        }
+
+        uint256 balance = vfideToken.balanceOf(address(this));
+        require(balance > escrowed, "FR: no excess");
+        uint256 excess = balance - escrowed;
+
+        SafeERC20.safeTransfer(vfideToken, to, excess);
+        emit TokensRescued(to, excess);
+    }
 }
