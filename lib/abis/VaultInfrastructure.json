@@ -8,11 +8,6 @@
       },
       {
         "internalType": "address",
-        "name": "_securityHub",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
         "name": "_ledger",
         "type": "address"
       },
@@ -51,6 +46,25 @@
       }
     ],
     "name": "DAOSet",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "previousController",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "newController",
+        "type": "address"
+      }
+    ],
+    "name": "EmergencyControllerSet",
     "type": "event"
   },
   {
@@ -136,12 +150,6 @@
         "indexed": false,
         "internalType": "address",
         "name": "vfide",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "address",
-        "name": "securityHub",
         "type": "address"
       },
       {
@@ -325,6 +333,32 @@
       }
     ],
     "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "emergencyController",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "newOwner",
+        "type": "address"
+      }
+    ],
+    "name": "emergencyTransferOwnership",
+    "outputs": [],
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
@@ -559,6 +593,30 @@
         "internalType": "address",
         "name": "",
         "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "name": "recoveryCandidateForNonce",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
       }
     ],
     "name": "recoveryNonce",
@@ -611,19 +669,6 @@
     "type": "function"
   },
   {
-    "inputs": [],
-    "name": "securityHub",
-    "outputs": [
-      {
-        "internalType": "contract ISecurityHub",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
     "inputs": [
       {
         "internalType": "address",
@@ -640,12 +685,20 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "_vfideToken",
+        "name": "controller",
         "type": "address"
-      },
+      }
+    ],
+    "name": "setEmergencyController",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
       {
         "internalType": "address",
-        "name": "_securityHub",
+        "name": "_vfideToken",
         "type": "address"
       },
       {

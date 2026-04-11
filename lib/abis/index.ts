@@ -14,7 +14,6 @@ import SeerAutonomousABI from './SeerAutonomous.json'
 import VFIDEBadgeNFTABI from './VFIDEBadgeNFT.json'
 import DAOABI from './DAO.json'
 import DAOTimelockABI from './DAOTimelock.json'
-import SecurityHubABI from './SecurityHub.json'
 import GuardianRegistryABI from './GuardianRegistry.json'
 import GuardianLockABI from './GuardianLock.json'
 import PanicGuardABI from './PanicGuard.json'
@@ -136,7 +135,6 @@ validateABI(SeerAutonomousABI, 'SeerAutonomous');
 validateABI(VFIDEBadgeNFTABI, 'VFIDEBadgeNFT');
 validateABI(DAOABI, 'DAO');
 validateABI(DAOTimelockABI, 'DAOTimelock');
-validateABI(SecurityHubABI, 'SecurityHub');
 validateABI(GuardianRegistryABI, 'GuardianRegistry');
 validateABI(GuardianLockABI, 'GuardianLock');
 validateABI(PanicGuardABI, 'PanicGuard');
@@ -237,6 +235,7 @@ validateABI(VFIDETrustABI, 'VFIDETrust');
 // VaultHub ABI points to the full compiled artifact (includes ensureVault, getVaultInfo, etc.).
 validateABI(VaultHubFullABI, 'VaultHub');
 const VaultHubABI = VaultHubFullABI
+const SecurityHubABI: unknown[] = []
 
 export {
   VFIDETokenABI,

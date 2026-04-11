@@ -35,7 +35,7 @@ contract MerchantRegistryTestable {
     IERC20 public immutable token;
     IVaultHub public immutable vaultHub;
     ISeer public immutable seer;
-    ISecurityHub public immutable security;
+    address public immutable security;
     IProofLedger public immutable ledger;
 
     struct Merchant {
@@ -68,7 +68,7 @@ contract MerchantRegistryTestable {
     constructor(address _dao, address _token, address _hub, address _seer, address _sec, address _ledger) {
         if (_dao==address(0)||_token==address(0)||_hub==address(0)||_seer==address(0)) revert COM_Zero();
         dao=_dao; token=IERC20(_token); vaultHub=IVaultHub(_hub); seer=ISeer(_seer);
-        security = ISecurityHub(_sec);
+        security = _sec;
         ledger = IProofLedger(_ledger);
         // minScore = ISeer(_seer).minForMerchant();
         emit ModulesSet(_dao, _token, _hub, _seer, _sec, _ledger);
@@ -161,7 +161,7 @@ contract CommerceEscrowTestable {
     IERC20     public token;
     IVaultHub  public vaultHub;
     MerchantRegistryTestable public merchants;
-    ISecurityHub public security;
+    address public security;
 
     struct Escrow {
         address buyerOwner;
@@ -181,7 +181,7 @@ contract CommerceEscrowTestable {
     constructor(address _dao, address _token, address _hub, address _merchants, address _sec, address /*_ledger*/) {
         if (_dao==address(0)||_token==address(0)||_hub==address(0)||_merchants==address(0)) revert COM_Zero();
         dao=_dao; token=IERC20(_token); vaultHub=IVaultHub(_hub); merchants=MerchantRegistryTestable(_merchants);
-        security = ISecurityHub(_sec);
+        security = _sec;
     }
 
     function open(address merchantOwner, uint256 amount, bytes32 metaHash) external returns (uint256 id) {

@@ -290,7 +290,6 @@ contract PanicGuard {
     address public dao;
     IProofLedger public ledger;
     IVaultHub public vaultHub;
-    address public securityHub;
     // per-vault quarantine until timestamp (0 = not quarantined)
     mapping(address => uint64) public quarantineUntil;
     mapping(address => uint64) public selfPanicUntil;
@@ -333,13 +332,9 @@ contract PanicGuard {
         _log("panicguard_hub_set");
     }
 
-    function setSecurityHub(address _secHub) external onlyDAO {
-        securityHub = _secHub;
-    }
-
-    /// @dev Register vault creation time (called by VaultHub via SecurityHub)
+    /// @dev Register vault creation time (called by VaultHub)
     function registerVault(address vault) external {
-        require(msg.sender == address(vaultHub) || msg.sender == securityHub, "only VaultHub/SecurityHub");
+        require(msg.sender == address(vaultHub), "only VaultHub");
         if (vaultCreationTime[vault] < 1) {
             vaultCreationTime[vault] = block.timestamp;
         }
@@ -530,70 +525,6 @@ contract EmergencyBreaker {
     }
 }
 
-/// ───────────────────────────── SecurityHub (single truth for locks)
-
-contract SecurityHub {
-    event ModulesSet(address guardianLock, address panicGuard, address breaker, address ledger);
-    event DAOSet(address dao);
-
-    address public dao;
-    GuardianLock     public guardianLock;
-    PanicGuard       public panicGuard;
-    EmergencyBreaker public breaker;
-    IProofLedger public ledger;
-
-    modifier onlyDAO() { _checkDAOSH(); _; }
-    function _checkDAOSH() internal view { if (msg.sender != dao) revert SEC_NotDAO(); }
-
-    constructor(address _dao, address _guardianLock, address _panicGuard, address _breaker, address _ledger) {
-        if (_dao == address(0)) revert SEC_Zero();
-        dao = _dao;
-        guardianLock = GuardianLock(_guardianLock);
-        panicGuard   = PanicGuard(_panicGuard);
-        breaker      = EmergencyBreaker(_breaker);
-        ledger       = IProofLedger(_ledger);
-    }
-
-    function setDAO(address _dao) external onlyDAO {
-        if (_dao == address(0)) revert SEC_Zero();
-        dao = _dao; emit DAOSet(_dao);
-        _log("sechub_dao_set");
-    }
-
-    function setModules(address _guardianLock, address _panicGuard, address _breaker, address _ledger) external onlyDAO {
-        require(
-            _guardianLock != address(0) || _panicGuard != address(0) || _breaker != address(0),
-            "SEC: all modules zero"
-        );
-        guardianLock = GuardianLock(_guardianLock);
-        panicGuard   = PanicGuard(_panicGuard);
-        breaker      = EmergencyBreaker(_breaker);
-        ledger       = IProofLedger(_ledger);
-        emit ModulesSet(_guardianLock, _panicGuard, _breaker, _ledger);
-        _log("sechub_modules_set");
-    }
-
-    /// The single call everyone else should use.
-    /// Order of precedence:
-    ///  1) Emergency Breaker (hard stop)
-    ///  2) GuardianLock manual lock (threshold M-of-N, indefinite until unlock)
-    ///  3) PanicGuard quarantine (time-based)
-    ///  4) Global risk (soft stop) also treated as locked for safety
-    function isLocked(address vault) external view returns (bool) {
-        if (address(breaker) != address(0) && breaker.halted()) return true;
-        if (address(guardianLock) != address(0) && guardianLock.locked(vault)) return true;
-        if (address(panicGuard) != address(0) && panicGuard.isRestricted(vault)) return true;
-        return false;
-    }
-
-    function _log(string memory action) internal {
-        address L = address(ledger);
-        if (L != address(0)) { try ledger.logSystemEvent(address(this), action, msg.sender) {} catch {} }
-    }
-
-    function registerVault(address vault) external {
-        if (address(panicGuard) != address(0)) {
-            panicGuard.registerVault(vault);
-        }
-    }
-}
+// ── SecurityHub contract REMOVED — non-custodial ──
+// No contract aggregates lock state. Vault protection is through
+// the user's own guardians (pause, spend limits, withdrawal queue).

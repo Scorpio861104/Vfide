@@ -444,7 +444,6 @@ describe("MerchantPortal (scoped pull permits)", { concurrency: 1 }, () => {
       await hub.getAddress(),
       await seer.getAddress(),
       ethers.ZeroAddress,
-      ethers.ZeroAddress,
       feeSink.address,
     );
     await portal.waitForDeployment();
@@ -585,7 +584,6 @@ describe("VaultHub (guardian bootstrap hardening)", () => {
     const hub = await VaultHub.deploy(
       await token.getAddress(),
       ethers.ZeroAddress,
-      ethers.ZeroAddress,
       dao.address,
     );
     await hub.waitForDeployment();
@@ -611,7 +609,6 @@ describe("VaultHub (guardian bootstrap hardening)", () => {
     const VaultHub = await ethers.getContractFactory("VaultHub");
     const hub = await VaultHub.deploy(
       await token.getAddress(),
-      ethers.ZeroAddress,
       ethers.ZeroAddress,
       dao.address,
     );

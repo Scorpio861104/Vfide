@@ -3,6 +3,9 @@
  * 
  * Deploys ALL contracts in dependency order and wires them together.
  * Run: npx hardhat run scripts/deploy-all.ts --network baseSepolia
+ * 
+ * IMPORTANT: All module setters use 48h timelocks.
+ * After deploy, wait 48h then run: npx hardhat run scripts/apply-all.ts --network baseSepolia
  */
 
 import hre from "hardhat";
@@ -32,24 +35,29 @@ async function main() {
   // ══════════════════════════════════════════════
   console.log("\n═══ LAYER 1: Foundation ═══");
   
-  const proofLedger = await deploy("ProofLedger", deployer.address);
-  
-  // DevReserveVestingVault must exist before token
-  const devVault = await deploy("DevReserveVestingVault",
-    deployer.address, // beneficiary
-    deployer.address, // admin
-    ethers.ZeroAddress, // token (set after)
-    ethers.ZeroAddress, // securityHub
-    365 * 24 * 3600, // 1 year vest
-    90 * 24 * 3600,  // 3 month cliff
+  // ProofLedger(admin)
+  await deploy("ProofLedger",
+    deployer.address,             // admin
   );
   
-  const token = await deploy("VFIDEToken",
-    deployed.DevReserveVestingVault,
-    deployer.address,  // treasury
-    ethers.ZeroAddress, // vaultHub (set after)
-    deployed.ProofLedger,
-    deployer.address,  // treasurySink (temp, update later)
+  // DevReserveVestingVault(vfide, beneficiary, vaultHub, ledger, allocation, dao)
+  // vfide and vaultHub are zero at deploy — wired after token exists
+  await deploy("DevReserveVestingVault",
+    ethers.ZeroAddress,           // _vfide (set after token deploy)
+    deployer.address,             // _beneficiary
+    ethers.ZeroAddress,           // _vaultHub (set after)
+    ethers.ZeroAddress,           // _ledger (set after)
+    ethers.parseEther("50000000"),// _allocation (50M VFIDE)
+    deployer.address,             // _dao (temp, transfer to DAO later)
+  );
+  
+  // VFIDEToken(devReserve, treasury, vaultHub, ledger, treasurySink)
+  await deploy("VFIDEToken",
+    deployed.DevReserveVestingVault, // devReserveVestingVault
+    deployer.address,                // treasury (receives 150M)
+    ethers.ZeroAddress,              // _vaultHub (set after via timelock)
+    deployed.ProofLedger,            // _ledger
+    deployer.address,                // _treasurySink (temp, update later)
   );
   
   // ══════════════════════════════════════════════
@@ -57,13 +65,19 @@ async function main() {
   // ══════════════════════════════════════════════
   console.log("\n═══ LAYER 2: Trust Engine ═══");
   
-  const seer = await deploy("Seer", deployer.address, deployed.ProofLedger, ethers.ZeroAddress);
-  const burnRouter = await deploy("ProofScoreBurnRouter",
-    deployed.VFIDEToken,
-    deployed.Seer,
-    deployer.address,  // sanctumSink (temp)
-    deployer.address,  // ecosystemSink (temp)
-    deployer.address,  // burnSink
+  // Seer(dao, ledger, hub)
+  await deploy("Seer",
+    deployer.address,             // _dao (temp)
+    deployed.ProofLedger,         // _ledger
+    ethers.ZeroAddress,           // _hub (set after VaultHub)
+  );
+  
+  // ProofScoreBurnRouter(seer, sanctumSink, burnSink, ecosystemSink)
+  await deploy("ProofScoreBurnRouter",
+    deployed.Seer,                // _seer
+    deployer.address,             // _sanctumSink (temp)
+    deployer.address,             // _burnSink (temp)
+    deployer.address,             // _ecosystemSink (temp)
   );
   
   // ══════════════════════════════════════════════
@@ -71,28 +85,36 @@ async function main() {
   // ══════════════════════════════════════════════
   console.log("\n═══ LAYER 3: Vault System ═══");
   
-  const vaultHub = await deploy("VaultHub", deployer.address, deployed.VFIDEToken);
+  // VaultHub(vfideToken, ledger, dao)
+  await deploy("VaultHub",
+    deployed.VFIDEToken,          // _vfideToken
+    deployed.ProofLedger,         // _ledger
+    deployer.address,             // _dao (temp)
+  );
   
   // ══════════════════════════════════════════════
   //  LAYER 4: Commerce
   // ══════════════════════════════════════════════
   console.log("\n═══ LAYER 4: Commerce ═══");
   
-  const feeDistributor = await deploy("FeeDistributor",
-    deployed.VFIDEToken,
-    deployer.address, // burn
-    deployer.address, // sanctum
-    deployer.address, // daoPayroll
-    deployer.address, // merchantPool
-    deployer.address, // headhunterPool
+  // FeeDistributor(token, burn, sanctum, daoPayroll, merchantPool, headhunterPool, admin)
+  await deploy("FeeDistributor",
+    deployed.VFIDEToken,          // _token
+    deployer.address,             // _burn (temp)
+    deployer.address,             // _sanctum (temp)
+    deployer.address,             // _daoPayroll (temp)
+    deployer.address,             // _merchantPool (temp)
+    deployer.address,             // _headhunterPool (temp)
+    deployer.address,             // _admin
   );
 
-  const merchantPortal = await deploy("MerchantPortal",
-    deployed.VFIDEToken,
-    deployed.VaultHub,
-    deployed.Seer,
-    deployed.ProofLedger,
-    deployer.address, // dao
+  // MerchantPortal(dao, vaultHub, seer, ledger, feeSink)
+  await deploy("MerchantPortal",
+    deployer.address,             // _dao (temp)
+    deployed.VaultHub,            // _vaultHub
+    deployed.Seer,                // _seer
+    deployed.ProofLedger,         // _ledger
+    deployer.address,             // _feeSink (temp)
   );
   
   // ══════════════════════════════════════════════
@@ -100,47 +122,90 @@ async function main() {
   // ══════════════════════════════════════════════
   console.log("\n═══ LAYER 5: Governance ═══");
   
-  const daoTimelock = await deploy("DAOTimelock", deployer.address, deployed.ProofLedger);
-  const dao = await deploy("DAO", deployed.DAOTimelock, deployed.Seer, deployed.VaultHub, deployed.ProofLedger);
+  // DAOTimelock(admin)
+  await deploy("DAOTimelock",
+    deployer.address,             // _admin
+  );
+
+  // GovernanceHooks(ledger, seer, dao)
+  await deploy("GovernanceHooks",
+    deployed.ProofLedger,         // _ledger
+    deployed.Seer,                // _seer
+    deployer.address,             // _dao (temp)
+  );
+  
+  // DAO(admin, timelock, seer, hub, hooks)
+  await deploy("DAO",
+    deployer.address,             // _admin (temp)
+    deployed.DAOTimelock,         // _timelock
+    deployed.Seer,                // _seer
+    deployed.VaultHub,            // _hub
+    deployed.GovernanceHooks,     // _hooks
+  );
   
   // ══════════════════════════════════════════════
   //  LAYER 6: Finance
   // ══════════════════════════════════════════════
   console.log("\n═══ LAYER 6: Finance ═══");
   
-  const flashLoan = await deploy("VFIDEFlashLoan", deployed.VFIDEToken, deployer.address);
-  const termLoan = await deploy("VFIDETermLoan", deployed.VFIDEToken, deployed.Seer, deployed.VaultHub, deployer.address);
+  // VFIDEFlashLoan(vfideToken, dao, seer, feeDistributor)
+  await deploy("VFIDEFlashLoan",
+    deployed.VFIDEToken,          // _vfideToken
+    deployer.address,             // _dao (temp)
+    deployed.Seer,                // _seer
+    deployed.FeeDistributor,      // _feeDistributor
+  );
+  
+  // VFIDETermLoan(token, dao, seer, vaultHub, feeDist)
+  await deploy("VFIDETermLoan",
+    deployed.VFIDEToken,          // _token
+    deployer.address,             // _dao (temp)
+    deployed.Seer,                // _seer
+    deployed.VaultHub,            // _vaultHub
+    deployed.FeeDistributor,      // _feeDist
+  );
   
   // ══════════════════════════════════════════════
-  //  NEW: Fraud Registry + Faucet
+  //  LAYER 7: Safety
   // ══════════════════════════════════════════════
-  console.log("\n═══ Fraud Registry + Faucet ═══");
+  console.log("\n═══ LAYER 7: Safety ═══");
   
-  const fraudRegistry = await deploy("FraudRegistry", deployer.address, deployed.Seer, deployed.VFIDEToken);
-  const faucet = await deploy("VFIDETestnetFaucet", deployed.VFIDEToken, deployer.address);
+  // FraudRegistry(dao, seer, vfideToken)
+  await deploy("FraudRegistry",
+    deployer.address,             // _dao (temp)
+    deployed.Seer,                // _seer
+    deployed.VFIDEToken,          // _vfideToken
+  );
+  
+  // VFIDETestnetFaucet(vfideToken, owner) — testnet only
+  await deploy("VFIDETestnetFaucet",
+    deployed.VFIDEToken,          // _vfideToken
+    deployer.address,             // _owner
+  );
   
   // ══════════════════════════════════════════════
   //  WIRING (48h timelocks — these are proposals)
   // ══════════════════════════════════════════════
-  console.log("\n═══ WIRING ═══");
-  console.log("NOTE: All setters have 48h timelocks.");
-  console.log("Run apply* functions after 48 hours.\n");
+  console.log("\n═══ WIRING (proposals — apply after 48h) ═══");
   
   const tokenContract = await ethers.getContractAt("VFIDEToken", deployed.VFIDEToken);
   
-  // These are propose calls — need apply after 48h
+  // Token module proposals (48h timelocks)
   await tokenContract.setVaultHub(deployed.VaultHub);
-  console.log("  Proposed: VaultHub on Token");
+  console.log("  Proposed: VaultHub → Token");
   
   await tokenContract.setBurnRouter(deployed.ProofScoreBurnRouter);
-  console.log("  Proposed: BurnRouter on Token");
+  console.log("  Proposed: BurnRouter → Token");
   
   await tokenContract.setFraudRegistry(deployed.FraudRegistry);
-  console.log("  Proposed: FraudRegistry on Token");
+  console.log("  Proposed: FraudRegistry → Token");
   
   // System exemptions (48h timelock each)
   await tokenContract.proposeSystemExempt(deployed.FeeDistributor, true);
   console.log("  Proposed: FeeDistributor as systemExempt");
+  
+  await tokenContract.proposeSystemExempt(deployed.VFIDEFlashLoan, true);
+  console.log("  Proposed: FlashLoan as systemExempt");
 
   // ══════════════════════════════════════════════
   //  OUTPUT
@@ -156,9 +221,14 @@ async function main() {
   console.log(`NEXT_PUBLIC_SEER_ADDRESS=${deployed.Seer}`);
   console.log(`NEXT_PUBLIC_MERCHANT_PORTAL_ADDRESS=${deployed.MerchantPortal}`);
   console.log(`NEXT_PUBLIC_BURN_ROUTER_ADDRESS=${deployed.ProofScoreBurnRouter}`);
+  console.log(`NEXT_PUBLIC_DAO_ADDRESS=${deployed.DAO}`);
+  console.log(`NEXT_PUBLIC_DAO_TIMELOCK_ADDRESS=${deployed.DAOTimelock}`);
+  console.log(`NEXT_PUBLIC_FRAUD_REGISTRY_ADDRESS=${deployed.FraudRegistry}`);
+  console.log(`NEXT_PUBLIC_FEE_DISTRIBUTOR_ADDRESS=${deployed.FeeDistributor}`);
   console.log(`NEXT_PUBLIC_FAUCET_ADDRESS=${deployed.VFIDETestnetFaucet}`);
   
-  console.log("\n⚠️  IMPORTANT: Run apply* functions after 48 hours to finalize wiring.");
+  console.log("\n⚠️  IMPORTANT: Wait 48 hours, then run apply-all.ts to finalize wiring.");
+  console.log("⚠️  IMPORTANT: Transfer ownership to multisig before mainnet announcement.");
 }
 
 main().catch(console.error);

@@ -63,7 +63,6 @@ interface IVaultHub {
     function isVault(address a) external view returns (bool);
     function ensureVault(address owner_) external returns (address vault);
     function setVFIDEToken(address token) external;
-    function setSecurityHub(address security) external;
     function setProofLedger(address ledger) external;
     function setDAORecoveryMultisig(address multisig) external;
     function setRecoveryTimelock(uint256 timelock) external;
@@ -71,11 +70,6 @@ interface IVaultHub {
     function finalizeDAORecovery(address vault) external;
     function cancelDAORecovery(address vault) external;
     function totalVaultsCreated() external view returns (uint256);
-}
-
-interface ISecurityHub {
-    function isLocked(address vault) external view returns (bool);
-    function registerVault(address vault) external;
 }
 
 interface IProofLedger {
@@ -165,12 +159,9 @@ interface IERC20 {
 }
 
 interface IVFIDEToken is IERC20 {
-    function setSecurityHub(address hub) external;
     function setVaultHub(address hub) external;
     function applyVaultHub() external;
     function cancelVaultHub() external;
-    function applySecurityHub() external;
-    function cancelSecurityHub() external;
     function setLedger(address ledger) external;
     function applyLedger() external;
     function cancelLedger() external;

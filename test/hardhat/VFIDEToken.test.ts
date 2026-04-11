@@ -207,7 +207,6 @@ describe("VFIDEToken", () => {
       await ethers.provider.send("evm_increaseTime", [H48]);
       await ethers.provider.send("evm_mine", []);
       await token.connect(owner).confirmCircuitBreaker();
-      await token.connect(owner).setSecurityBypass(true, 1);
       await token.connect(owner).setFeeBypass(true, 1);
 
       await ethers.provider.send("evm_increaseTime", [2]);
@@ -215,15 +214,12 @@ describe("VFIDEToken", () => {
 
       // View functions already treat expired flags as inactive, but storage is stale until synced.
       assert.equal(await token.isCircuitBreakerActive(), false);
-      assert.equal(await token.isSecurityBypassed(), false);
       assert.equal(await token.isFeeBypassed(), false);
 
       await token.connect(owner).syncEmergencyFlags();
 
       assert.equal(await token.circuitBreaker(), false);
       assert.equal(await token.circuitBreakerExpiry(), 0n);
-      assert.equal(await token.securityBypass(), false);
-      assert.equal(await token.securityBypassExpiry(), 0n);
       assert.equal(await token.feeBypass(), false);
       assert.equal(await token.feeBypassExpiry(), 0n);
     });

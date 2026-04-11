@@ -13,9 +13,6 @@ interface IProofLedger_COM {
     function logSystemEvent(address who, string calldata action, address by) external;
     function logEvent(address who, string calldata action, uint256 amount, string calldata note) external;
 }
-interface ISecurityHub_COM {
-    function isLocked(address vault) external view returns (bool);
-}
 
 error COM_NotDAO();
 error COM_Zero();
@@ -35,7 +32,7 @@ error COM_NotAllowed();
 error COM_BadRating();
 
 contract MerchantRegistry {
-    event ModulesSet(address dao, address token, address hub, address seer, address sec, address ledger);
+    event ModulesSet(address dao, address token, address hub, address seer, address ledger);
     event PolicySet(uint16 minScore, uint8 autoSuspendRefunds, uint8 autoSuspendDisputes);
     event MerchantAdded(address indexed owner, address indexed vault, bytes32 metaHash);
     event MerchantStatus(address indexed owner, Status status, string reason);
@@ -47,7 +44,6 @@ contract MerchantRegistry {
     IERC20 public immutable token;
     IVaultHub_COM public immutable vaultHub;
     ISeer_COM public immutable seer;
-    ISecurityHub_COM public immutable security;
     IProofLedger_COM public immutable ledger;
 
     struct Merchant {
@@ -66,13 +62,12 @@ contract MerchantRegistry {
 
     modifier onlyDAO() { if (msg.sender != dao) revert COM_NotDAO(); _; }
 
-    constructor(address _dao, address _token, address _hub, address _seer, address _sec, address _ledger) {
+    constructor(address _dao, address _token, address _hub, address _seer, address _ledger) {
         if (_dao==address(0)||_token==address(0)||_hub==address(0)||_seer==address(0)) revert COM_Zero();
         dao=_dao; token=IERC20(_token); vaultHub=IVaultHub_COM(_hub); seer=ISeer_COM(_seer);
-        security = ISecurityHub_COM(_sec);
         ledger = IProofLedger_COM(_ledger);
         minScore = ISeer_COM(_seer).minForMerchant();
-        emit ModulesSet(_dao, _token, _hub, _seer, _sec, _ledger);
+        emit ModulesSet(_dao, _token, _hub, _seer, _ledger);
     }
 
     function addMerchant(bytes32 metaHash) external {
@@ -154,7 +149,6 @@ contract CommerceEscrow {
     IERC20     public token;
     IVaultHub_COM  public vaultHub;
     MerchantRegistry public merchants;
-    ISecurityHub_COM public security;
 
     uint256 private _reentrancyStatus = 1;
     modifier nonReentrant() {
@@ -181,10 +175,9 @@ contract CommerceEscrow {
 
     modifier onlyDAO() { if (msg.sender != dao) revert COM_NotDAO(); _; }
 
-    constructor(address _dao, address _token, address _hub, address _merchants, address _sec, address /*_ledger*/) {
+    constructor(address _dao, address _token, address _hub, address _merchants) {
         if (_dao==address(0)||_token==address(0)||_hub==address(0)||_merchants==address(0)) revert COM_Zero();
         dao=_dao; token=IERC20(_token); vaultHub=IVaultHub_COM(_hub); merchants=MerchantRegistry(_merchants);
-        security = ISecurityHub_COM(_sec);
     }
 
     /**

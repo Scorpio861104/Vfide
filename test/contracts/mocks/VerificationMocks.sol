@@ -31,7 +31,7 @@ contract MockVaultHub is IVaultHub {
     }
     
     function setVFIDEToken(address) external override {}
-    function setSecurityHub(address) external override {}
+    function setSecurityHub(address) external {}
     function setProofLedger(address) external override {}
     function setDAORecoveryMultisig(address) external override {}
     function setRecoveryTimelock(uint256) external override {}

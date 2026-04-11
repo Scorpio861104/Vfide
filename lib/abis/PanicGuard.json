@@ -151,6 +151,19 @@
   },
   {
     "inputs": [],
+    "name": "ABSOLUTE_MAX_QUARANTINE",
+    "outputs": [
+      {
+        "internalType": "uint64",
+        "name": "",
+        "type": "uint64"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "MIN_VAULT_AGE_FOR_PANIC",
     "outputs": [
       {
@@ -383,19 +396,6 @@
     "type": "function"
   },
   {
-    "inputs": [],
-    "name": "securityHub",
-    "outputs": [
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
     "inputs": [
       {
         "internalType": "uint64",
@@ -485,19 +485,6 @@
       }
     ],
     "name": "setPolicy",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "_secHub",
-        "type": "address"
-      }
-    ],
-    "name": "setSecurityHub",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

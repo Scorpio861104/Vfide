@@ -71,7 +71,6 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
 
     /// Modules & config
     IVaultHub public vaultHub;                    // vault registry (required)
-    ISecurityHub public securityHub;              // lock checks (optional)
     IProofLedger public ledger;                   // event logging (optional)
     IProofScoreBurnRouterToken public burnRouter; // fee calculator (optional)
 
@@ -88,12 +87,9 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
     /// Policy settings
     bool public vaultOnly = true;                 // VAULT-ONLY ON BY DEFAULT (user security)
     bool public policyLocked = false;             // once locked, cannot disable vault-only
-    bool public circuitBreaker = false;           // H-02 FIX: emergency status flag; does NOT implicitly bypass fees/security (use setSecurityBypass/setFeeBypass separately)
+    bool public circuitBreaker = false;           // H-02 FIX: emergency status flag; does NOT implicitly bypass fees (use setFeeBypass separately)
     uint256 public circuitBreakerExpiry = 0;      // auto-disable timestamp (0 = indefinite)
     uint256 public constant MAX_CIRCUIT_BREAKER_DURATION = 7 days; // maximum allowed duration
-    bool public securityBypass = false;           // bypass SecurityHub lock checks only
-    uint256 public securityBypassExpiry = 0;
-    uint64 public securityBypassActivatedAt = 0;  // L-3 FIX: cooldown anchor
     bool public feeBypass = false;                // bypass BurnRouter fee calculation only
     uint256 public feeBypassExpiry = 0;
     uint64 public feeBypassActivatedAt = 0;       // L-3 FIX: cooldown anchor for fee bypass
@@ -117,8 +113,7 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
 
     address public pendingVaultHub;
     uint64  public pendingVaultHubAt;
-    address public pendingSecurityHub;
-    uint64  public pendingSecurityHubAt;
+
     /// F-05 FIX: Add timelock state for ledger changes (matches other module setters)
     address public pendingLedger;
     uint64  public pendingLedgerAt;
@@ -147,8 +142,7 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
     /// Events
     event VaultHubSet(address indexed hub);
     event VaultHubScheduled(address indexed hub, uint64 effectiveAt);
-    event SecurityHubSet(address indexed hub);
-    event SecurityHubScheduled(address indexed hub, uint64 effectiveAt);
+
     event LedgerSet(address indexed ledger);
     event LedgerScheduled(address indexed ledger, uint64 effectiveAt);
     event BurnRouterSet(address indexed router);
@@ -166,7 +160,6 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
     event PolicyLocked();
     event CircuitBreakerSet(bool active, uint256 expiry);
     event CircuitBreakerProposed(bool active, uint256 duration, uint64 effectiveAt); // H-01 FIX
-    event SecurityBypassSet(bool active, uint256 expiry); // T-12 FIX: emit on bypass change
     event FeeBypassSet(bool active, uint256 expiry);      // T-12 FIX: emit on bypass change
     event ExternalCallFailed(string indexed context, bytes reason);
     event FeeApplied(address indexed from, address indexed to, uint256 burnAmount, uint256 sanctumAmount, uint256 ecosystemAmount, address indexed sanctumSink, address ecosystemSink);
@@ -360,32 +353,7 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
         _log("vault_hub_cancelled");
     }
 
-    function setSecurityHub(address hub) external onlyOwner {
-        if (hub == address(0)) revert VF_ZeroAddress();
-        require(pendingSecurityHubAt == 0, "VF: pending security hub exists");
-        uint64 effectiveAt = uint64(block.timestamp) + SINK_CHANGE_DELAY;
-        pendingSecurityHub = hub;
-        pendingSecurityHubAt = effectiveAt;
-        emit SecurityHubScheduled(hub, effectiveAt);
-        _log("security_hub_scheduled");
-    }
-
-    function applySecurityHub() external onlyOwner {
-        if (pendingSecurityHubAt == 0) revert VF_NoPending();
-        if (block.timestamp < pendingSecurityHubAt) revert VF_TimelockActive();
-        securityHub = ISecurityHub(pendingSecurityHub);
-        emit SecurityHubSet(pendingSecurityHub);
-        delete pendingSecurityHub;
-        delete pendingSecurityHubAt;
-        _log("security_hub_set");
-    }
-
-    function cancelSecurityHub() external onlyOwner {
-        if (pendingSecurityHubAt == 0) revert VF_NoPending();
-        delete pendingSecurityHub;
-        delete pendingSecurityHubAt;
-        _log("security_hub_cancelled");
-    }
+    // ── SecurityHub functions REMOVED — non-custodial, no third-party locks ──
 
     /// F-05 FIX: setLedger now uses 48h timelock (matches all other module setters)
     function setLedger(address _ledger) external onlyOwner {
@@ -643,26 +611,9 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
         _log("circuit_breaker_on");
     }
 
-    /// @notice Bypass SecurityHub lock checks only (does not disable fees)
-    /// @dev L-3 FIX: Re-activation requires a 1-day cooldown from the previous activation.
-    function setSecurityBypass(bool _active, uint256 _duration) external onlyOwner {
-        _syncEmergencyFlags();
-        if (_active) {
-            if (_duration == 0 || _duration > MAX_CIRCUIT_BREAKER_DURATION) revert VF_InvalidDuration();
-            if (securityBypassActivatedAt > 0 && block.timestamp < uint256(securityBypassActivatedAt) + 1 days)
-                revert VF_TimelockActive();
-            securityBypassActivatedAt = uint64(block.timestamp);
-            securityBypass = true;
-            securityBypassExpiry = block.timestamp + _duration;
-        } else {
-            securityBypass = false;
-            securityBypassExpiry = 0;
-        }
-        emit SecurityBypassSet(_active, securityBypassExpiry); // T-12 FIX: emit event
-        _log(_active ? "security_bypass_on" : "security_bypass_off");
-    }
+    // ── setSecurityBypass REMOVED — no SecurityHub lock checks to bypass ──
 
-    /// @notice Bypass BurnRouter fees only (does not disable security locks)
+    /// @notice Bypass BurnRouter fees only
     /// @dev L-3 FIX: Re-activation requires a 1-day cooldown from the previous activation.
     function setFeeBypass(bool _active, uint256 _duration) external onlyOwner {
         _syncEmergencyFlags();
@@ -691,17 +642,7 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
         return true;
     }
 
-    /// @notice Check if security bypass is active (independent of fee bypass and circuit breaker).
-    /// @dev H-02 FIX: Circuit breaker no longer implicitly enables security bypass.
-    ///      Use setSecurityBypass() to explicitly disable SecurityHub checks.
-    ///      This prevents the circuit breaker from silently overriding security controls.
-    function isSecurityBypassed() public view returns (bool) {
-        if (!securityBypass) return false;
-        if (securityBypassExpiry > 0 && block.timestamp >= securityBypassExpiry) return false;
-        return true;
-    }
-
-    /// @notice Check if fee bypass is active (independent of security bypass and circuit breaker).
+    /// @notice Check if fee bypass is active (independent of circuit breaker).
     /// @dev H-02 FIX: Circuit breaker no longer implicitly enables fee bypass.
     ///      Use setFeeBypass() to explicitly disable BurnRouter fee collection.
     ///      Keeping bypasses independent means each must be explicitly activated.
@@ -1005,10 +946,6 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
         if (circuitBreaker && circuitBreakerExpiry > 0 && block.timestamp >= circuitBreakerExpiry) {
             circuitBreaker = false;
             circuitBreakerExpiry = 0;
-        }
-        if (securityBypass && securityBypassExpiry > 0 && block.timestamp >= securityBypassExpiry) {
-            securityBypass = false;
-            securityBypassExpiry = 0;
         }
         if (feeBypass && feeBypassExpiry > 0 && block.timestamp >= feeBypassExpiry) {
             feeBypass = false;

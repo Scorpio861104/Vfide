@@ -9,7 +9,7 @@ import "./SharedInterfaces.sol";
 
 interface IVaultHub_Trust { function vaultOf(address owner) external view returns (address); }
 interface ITokenLike_Trust { function balanceOf(address) external view returns (uint256); }
-interface ISecurityHub_Trust { function isLocked(address vault) external view returns (bool); }
+
 interface ISeerSocial { function calculateEndorsementBonus(address subject) external view returns (uint256); }
 interface ISeerAutonomous { function onScoreChange(address subject, uint16 oldScore, uint16 newScore) external; }
 interface ISeerPolicyGuard { function consume(bytes4 selector, uint8 pclass) external; }

@@ -38,7 +38,6 @@ contract CardBoundVault is ReentrancyGuard {
 
     address public immutable hub;
     address public immutable vfideToken;
-    ISecurityHub public immutable securityHub;
     IProofLedger public immutable ledger;
 
     address public admin;
@@ -198,7 +197,6 @@ contract CardBoundVault is ReentrancyGuard {
         uint8 _guardianThreshold,
         uint256 _maxPerTransfer,
         uint256 _dailyTransferLimit,
-        address _securityHub,
         address _ledger
     ) {
         if (_hub == address(0) || _vfideToken == address(0) || _admin == address(0) || _activeWallet == address(0)) {
@@ -217,7 +215,6 @@ contract CardBoundVault is ReentrancyGuard {
         activeWallet = _activeWallet;
         walletEpoch = 1;
 
-        securityHub = ISecurityHub(_securityHub);
         ledger = IProofLedger(_ledger);
 
         maxPerTransfer = _maxPerTransfer;

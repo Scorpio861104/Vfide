@@ -20,16 +20,6 @@
         "internalType": "address",
         "name": "_merchants",
         "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "_sec",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
       }
     ],
     "stateMutability": "nonpayable",
@@ -68,6 +58,11 @@
   {
     "inputs": [],
     "name": "COM_NotMerchant",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "COM_NotSeller",
     "type": "error"
   },
   {
@@ -313,19 +308,6 @@
     "name": "resolve",
     "outputs": [],
     "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "security",
-    "outputs": [
-      {
-        "internalType": "contract ISecurityHub_COM",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
     "type": "function"
   },
   {

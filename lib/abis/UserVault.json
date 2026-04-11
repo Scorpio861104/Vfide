@@ -18,11 +18,6 @@
       },
       {
         "internalType": "address",
-        "name": "_securityHub",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
         "name": "_ledger",
         "type": "address"
       }
@@ -1508,19 +1503,6 @@
     "name": "rescueToken",
     "outputs": [],
     "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "securityHub",
-    "outputs": [
-      {
-        "internalType": "contract ISecurityHub",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
     "type": "function"
   },
   {

@@ -18,11 +18,6 @@
       },
       {
         "internalType": "address",
-        "name": "_securityHub",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
         "name": "_ledger",
         "type": "address"
       },
@@ -380,12 +375,6 @@
         "indexed": false,
         "internalType": "address",
         "name": "seer",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "address",
-        "name": "securityHub",
         "type": "address"
       },
       {
@@ -1784,19 +1773,6 @@
   },
   {
     "inputs": [],
-    "name": "securityHub",
-    "outputs": [
-      {
-        "internalType": "contract ISecurityHub",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
     "name": "seer",
     "outputs": [
       {
@@ -1955,11 +1931,6 @@
       {
         "internalType": "address",
         "name": "_seer",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "_securityHub",
         "type": "address"
       },
       {

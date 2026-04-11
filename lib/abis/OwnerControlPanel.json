@@ -1642,11 +1642,6 @@
       },
       {
         "internalType": "address",
-        "name": "security",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
         "name": "ledger",
         "type": "address"
       },
@@ -1816,11 +1811,6 @@
       {
         "internalType": "address",
         "name": "token",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "security",
         "type": "address"
       },
       {

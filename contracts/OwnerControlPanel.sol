@@ -292,11 +292,10 @@ contract OwnerControlPanel {
 
     function actionId_token_setModules(
         address hub,
-        address security,
         address ledger,
         address router
     ) private pure returns (bytes32) {
-        return keccak256(abi.encode("token_setModules", hub, security, ledger, router));
+        return keccak256(abi.encode("token_setModules", hub, ledger, router));
     }
 
     function actionId_token_setSinks(address treasury, address sanctum) private pure returns (bytes32) {
@@ -365,8 +364,8 @@ contract OwnerControlPanel {
         return keccak256(abi.encode("setDevReserveVault", vault));
     }
 
-    function actionId_vault_setModules(address token, address security, address ledger) private pure returns (bytes32) {
-        return keccak256(abi.encode("vault_setModules", token, security, ledger));
+    function actionId_vault_setModules(address token, address ledger) private pure returns (bytes32) {
+        return keccak256(abi.encode("vault_setModules", token, ledger));
     }
 
     function actionId_vault_setDAOMultisig(address multisig) private pure returns (bytes32) {
@@ -451,24 +450,21 @@ contract OwnerControlPanel {
     // ═══════════════════════════════════════════════════════════════════════
     
     /**
-     * @notice Configure token modules (VaultHub, SecurityHub, Ledger, Router)
+     * @notice Configure token modules (VaultHub, Ledger, Router)
      */
     function token_setModules(
         address hub,
-        address security,
         address ledger,
         address router
     ) external onlyOwner {
-        _consumeQueuedAction(actionId_token_setModules(hub, security, ledger, router));
+        _consumeQueuedAction(actionId_token_setModules(hub, ledger, router));
         if (hub != address(0)) vfideToken.setVaultHub(hub);
-        if (security != address(0)) vfideToken.setSecurityHub(security);
         if (ledger != address(0)) vfideToken.setLedger(ledger);
         if (router != address(0)) vfideToken.setBurnRouter(router);
     }
 
     function token_applyModules() external onlyOwner nonReentrant {
         vfideToken.applyVaultHub();
-        vfideToken.applySecurityHub();
         vfideToken.applyLedger();
         vfideToken.applyBurnRouter();
         emit EmergencyAction("token_modules_applied", address(vfideToken));
@@ -477,7 +473,6 @@ contract OwnerControlPanel {
     function token_cancelModules() external onlyOwner nonReentrant {
         // Best-effort: cancel each pending module change if present.
         try vfideToken.cancelVaultHub() {} catch {}
-        try vfideToken.cancelSecurityHub() {} catch {}
         try vfideToken.cancelLedger() {} catch {}
         try vfideToken.cancelBurnRouter() {} catch {}
         emit EmergencyAction("token_modules_cancelled", address(vfideToken));
@@ -756,12 +751,10 @@ contract OwnerControlPanel {
      */
     function vault_setModules(
         address token,
-        address security,
         address ledger
     ) external onlyOwner nonReentrant {
-        _consumeQueuedAction(actionId_vault_setModules(token, security, ledger));
+        _consumeQueuedAction(actionId_vault_setModules(token, ledger));
         if (token != address(0)) vaultHub.setVFIDEToken(token);
-        if (security != address(0)) vaultHub.setSecurityHub(security);
         if (ledger != address(0)) vaultHub.setProofLedger(ledger);
         emit EmergencyAction("vault_modules_set", address(vaultHub));
     }

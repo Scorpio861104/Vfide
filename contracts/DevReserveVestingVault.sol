@@ -15,7 +15,7 @@ import "./SharedInterfaces.sol";
  * - Each unlock: 1,666,666 VFIDE (~1.67M); last unlock covers rounding remainder
  * - Unlock schedule: Every 60 days after cliff (Month 2, 4, 6, 8...60)
  * - Claims deliver VFIDE to the beneficiary's Vault (auto-created)
- * - SecurityHub lock respected (claims revert while locked)
+ * - Claims paused by beneficiary
  * - Beneficiary-only claim pause (no DAO / no third parties)
  * - ProofLedger logs (best-effort)
  *
@@ -32,7 +32,6 @@ contract DevReserveVestingVault is ReentrancyGuard {
     address public immutable VFIDE;         // token
     address public immutable BENEFICIARY;   // your EOA (controls pause)
     address public immutable VAULT_HUB;     // VaultInfrastructure
-    address public immutable SECURITY_HUB;  // optional
     address public immutable LEDGER;        // optional
     uint256 public immutable ALLOCATION;    // e.g., 50_000_000e18
     address public immutable DAO;
@@ -58,7 +57,7 @@ contract DevReserveVestingVault is ReentrancyGuard {
     event Claimed(address indexed beneficiary, address indexed vault, uint256 amount);
     event PauseSet(bool paused);
     event EmergencyFreeze(address indexed by);
-    event ModulesSet(address vfide, address beneficiary, address vaultHub, address securityHub, address ledger);
+    event ModulesSet(address vfide, address beneficiary, address vaultHub, address ledger);
 
     // ── Errors
     error DV_Zero();
@@ -75,7 +74,6 @@ contract DevReserveVestingVault is ReentrancyGuard {
         address _vfide,
         address _beneficiary,
         address _vaultHub,
-        address _securityHub,
         address _ledger,
         uint256 _allocation,
         address _dao
@@ -85,11 +83,10 @@ contract DevReserveVestingVault is ReentrancyGuard {
         VFIDE        = _vfide;
         BENEFICIARY  = _beneficiary;
         VAULT_HUB    = _vaultHub;
-        SECURITY_HUB = _securityHub;
         LEDGER       = _ledger;
         ALLOCATION   = _allocation;
         DAO          = _dao;
-        emit ModulesSet(_vfide, _beneficiary, _vaultHub, _securityHub, _ledger);
+        emit ModulesSet(_vfide, _beneficiary, _vaultHub, _ledger);
         _log("dev_vesting_deployed");
     }
 

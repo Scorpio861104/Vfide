@@ -55,7 +55,7 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
     uint256 public constant REFUND_COMPLETION_WINDOW = 30 days;
     
     /// Events
-    event ModulesSet(address vaultHub, address seer, address securityHub, address ledger);
+    event ModulesSet(address vaultHub, address seer, address ledger);
     event MerchantRegistered(address indexed merchant, string businessName, string category);
     event MerchantSuspended(address indexed merchant, string reason);
     event MerchantReinstated(address indexed merchant);
@@ -91,7 +91,6 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
     /// External modules
     IVaultHub public vaultHub;
     ISeer public seer;
-    ISecurityHub public securityHub;
     IProofLedger public ledger;
 
     /// DAO control
@@ -159,7 +158,6 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
         address _dao,
         address _vaultHub,
         address _seer,
-        address _securityHub,
         address _ledger,
         address _feeSink
     ) {
@@ -168,11 +166,10 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
         dao = _dao;
         vaultHub = IVaultHub(_vaultHub);
         seer = ISeer(_seer);
-        securityHub = ISecurityHub(_securityHub);
         ledger = IProofLedger(_ledger);
         feeSink = _feeSink;
         
-        emit ModulesSet(_vaultHub, _seer, _securityHub, _ledger);
+        emit ModulesSet(_vaultHub, _seer, _ledger);
         emit FeeSinkSet(_feeSink);
     }
 
@@ -181,15 +178,13 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
     function setModules(
         address _vaultHub,
         address _seer,
-        address _securityHub,
         address _ledger
     ) external onlyDAO {
         require(_vaultHub != address(0) && _seer != address(0), "zero");
         vaultHub = IVaultHub(_vaultHub);
         seer = ISeer(_seer);
-        securityHub = ISecurityHub(_securityHub);
         ledger = IProofLedger(_ledger);
-        emit ModulesSet(_vaultHub, _seer, _securityHub, _ledger);
+        emit ModulesSet(_vaultHub, _seer, _ledger);
         _log("merchant_modules_set");
     }
 

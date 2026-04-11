@@ -18,11 +18,6 @@
       },
       {
         "internalType": "address",
-        "name": "_securityHub",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
         "name": "_ledger",
         "type": "address"
       },
@@ -166,12 +161,6 @@
       {
         "indexed": false,
         "internalType": "address",
-        "name": "securityHub",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "address",
         "name": "ledger",
         "type": "address"
       }
@@ -285,19 +274,6 @@
   {
     "inputs": [],
     "name": "LEDGER",
-    "outputs": [
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "SECURITY_HUB",
     "outputs": [
       {
         "internalType": "address",

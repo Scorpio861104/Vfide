@@ -31,7 +31,6 @@ contract UserVaultLegacy is ReentrancyGuard {
     /// Immutable references
     address public immutable hub;
     address public immutable vfideToken;
-    ISecurityHub public immutable securityHub;
     IProofLedger public immutable ledger;
 
     /// State
@@ -182,14 +181,12 @@ contract UserVaultLegacy is ReentrancyGuard {
         address _hub,
         address _vfide,
         address _owner,
-        address _securityHub,
         address _ledger
     ) {
         require(_hub != address(0) && _vfide != address(0) && _owner != address(0), "UV:zero");
         hub = _hub;
         vfideToken = _vfide;
         owner = _owner;
-        securityHub = ISecurityHub(_securityHub);
         ledger = IProofLedger(_ledger);
         executeWhitelistEnforced = true;
         _logSys("vault_created");
@@ -1130,7 +1127,6 @@ interface IUserVaultBytecodeProvider {
         address hub,
         address vfide,
         address owner_,
-        address securityHub,
         address ledger
     ) external pure returns (bytes memory);
 }
@@ -1140,12 +1136,11 @@ contract UserVaultBytecodeProvider is IUserVaultBytecodeProvider {
         address hub,
         address vfide,
         address owner_,
-        address securityHub,
         address ledger
     ) external pure returns (bytes memory) {
         return abi.encodePacked(
             type(UserVaultLegacy).creationCode,
-            abi.encode(hub, vfide, owner_, securityHub, ledger)
+            abi.encode(hub, vfide, owner_, ledger)
         );
     }
 }
@@ -1154,7 +1149,6 @@ contract UserVaultBytecodeProvider is IUserVaultBytecodeProvider {
 contract VaultInfrastructure is Ownable {
     /// Modules & config
     address public vfideToken;
-    ISecurityHub public securityHub;  // shared lock view
     IProofLedger public ledger;       // optional ledger
     address public dao;                  // DAO can force recover
     address public vaultBytecodeProvider;
@@ -1174,7 +1168,7 @@ contract VaultInfrastructure is Ownable {
     mapping(address => bool) public isRecoveryApprover;
 
     /// Events
-    event ModulesSet(address vfide, address securityHub, address ledger, address dao);
+    event ModulesSet(address vfide, address ledger, address dao);
     event VaultCreated(address indexed owner, address indexed vault);
     event ForcedRecoveryInitiated(address indexed vault, address indexed newOwner, uint64 unlockTime);
     event ForcedRecovery(address indexed vault, address indexed newOwner);
@@ -1188,25 +1182,23 @@ contract VaultInfrastructure is Ownable {
     error VI_NotDAO();
     error VI_NotConfigured();
 
-    constructor(address _vfideToken, address _securityHub, address _ledger, address _dao) {
+    constructor(address _vfideToken, address _ledger, address _dao) {
         if (_vfideToken == address(0) || _dao == address(0)) revert VI_Zero();
         vfideToken = _vfideToken;
-        securityHub = ISecurityHub(_securityHub);
         ledger = IProofLedger(_ledger);
         dao = _dao;
         vaultBytecodeProvider = address(new UserVaultBytecodeProvider());
-        emit ModulesSet(_vfideToken, _securityHub, _ledger, _dao);
+        emit ModulesSet(_vfideToken, _ledger, _dao);
         emit VaultBytecodeProviderSet(vaultBytecodeProvider);
     }
 
     // ——— Module wiring
-    function setModules(address _vfideToken, address _securityHub, address _ledger, address _dao) external onlyOwner {
-        if (_vfideToken == address(0) || _securityHub == address(0) || _dao == address(0)) revert VI_Zero();
+    function setModules(address _vfideToken, address _ledger, address _dao) external onlyOwner {
+        if (_vfideToken == address(0) || _dao == address(0)) revert VI_Zero();
         vfideToken = _vfideToken;
-        securityHub = ISecurityHub(_securityHub);
         ledger = IProofLedger(_ledger);
         dao = _dao;
-        emit ModulesSet(_vfideToken, _securityHub, _ledger, _dao);
+        emit ModulesSet(_vfideToken, _ledger, _dao);
         _log("hub_modules_set");
     }
 
@@ -1271,13 +1263,6 @@ contract VaultInfrastructure is Ownable {
         totalVaults++;
         vaultCreatedAt[vault] = block.timestamp;
         
-        // Register vault with SecurityHub for vault age tracking (self-panic requirements)
-        if (address(securityHub) != address(0)) {
-            try securityHub.registerVault(vault) {} catch {
-                // Best-effort registration, don't fail vault creation if SecurityHub registration fails
-            }
-        }
-
         emit VaultCreated(owner_, vault);
         _logEv(vault, "vault_created", 0, "");
     }
@@ -1402,7 +1387,6 @@ contract VaultInfrastructure is Ownable {
             address(this),
             vfideToken,
             owner_,
-            address(securityHub),
             address(ledger)
         );
     }

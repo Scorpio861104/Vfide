@@ -256,7 +256,6 @@ describe("MerchantRegistry coverage backfill", { concurrency: 1 }, () => {
       await token.getAddress(),
       await vaultHub.getAddress(),
       await seer.getAddress(),
-      ethers.ZeroAddress,
       await ledger.getAddress(),
     );
     await registry.waitForDeployment();
@@ -287,7 +286,7 @@ describe("MerchantRegistry coverage backfill", { concurrency: 1 }, () => {
   });
 });
 
-describe("SecurityHub coverage backfill", { concurrency: 1 }, () => {
+describe("EmergencyBreaker coverage backfill", { concurrency: 1 }, () => {
   async function deployFixture() {
     const { ethers } = (await network.connect()) as any;
     const [dao] = await ethers.getSigners();
@@ -296,25 +295,15 @@ describe("SecurityHub coverage backfill", { concurrency: 1 }, () => {
     const breaker = await EmergencyBreaker.deploy(dao.address, ethers.ZeroAddress);
     await breaker.waitForDeployment();
 
-    const SecurityHub = await ethers.getContractFactory("SecurityHub");
-    const hub = await SecurityHub.deploy(
-      dao.address,
-      ethers.ZeroAddress,
-      ethers.ZeroAddress,
-      await breaker.getAddress(),
-      ethers.ZeroAddress,
-    );
-    await hub.waitForDeployment();
-
-    return { dao, breaker, hub };
+    return { dao, breaker };
   }
 
-  it("reports vaults as locked when the emergency breaker is halted", async () => {
-    const { dao, breaker, hub } = await deployFixture();
+  it("reports the halted state when the emergency breaker is toggled", async () => {
+    const { dao, breaker } = await deployFixture();
 
-    assert.equal(await hub.isLocked(dao.address), false);
+    assert.equal(await breaker.halted(), false);
     await breaker.connect(dao).toggle(true, "incident");
-    assert.equal(await hub.isLocked(dao.address), true);
+    assert.equal(await breaker.halted(), true);
   });
 });
 

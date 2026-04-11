@@ -43,11 +43,6 @@
       },
       {
         "internalType": "address",
-        "name": "_securityHub",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
         "name": "_ledger",
         "type": "address"
       }
@@ -1218,19 +1213,6 @@
         "internalType": "uint256",
         "name": "",
         "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "securityHub",
-    "outputs": [
-      {
-        "internalType": "contract ISecurityHub",
-        "name": "",
-        "type": "address"
       }
     ],
     "stateMutability": "view",
