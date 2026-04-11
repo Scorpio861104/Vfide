@@ -6,12 +6,12 @@ import { Heart, Key, UserPlus, Users } from 'lucide-react';
 
 interface VaultRecoveryPanelProps {
   address: string | undefined;
-  vaultOwner: string | undefined;
-  hasNextOfKin: boolean;
-  nextOfKin: string | undefined;
-  inheritanceStatus: { isActive: boolean; daysRemaining: number };
+  vaultOwner: unknown;
+  hasNextOfKin: boolean | undefined;
+  nextOfKin: unknown;
+  inheritanceStatus: { isActive: boolean; daysRemaining: number | null };
   guardianCount: number;
-  isUserGuardian: boolean;
+  isUserGuardian: boolean | undefined;
   isWritePending: boolean;
   newNextOfKinAddress: string;
   setNewNextOfKinAddress: (v: string) => void;
@@ -27,7 +27,9 @@ export function VaultRecoveryPanel({
   newNextOfKinAddress, setNewNextOfKinAddress, handleSetNextOfKin,
   newGuardianAddress, setNewGuardianAddress, handleAddGuardian,
 }: VaultRecoveryPanelProps) {
-  const isOwner = address === vaultOwner;
+  const ownerAddress = typeof vaultOwner === 'string' ? vaultOwner : undefined;
+  const nextOfKinAddress = typeof nextOfKin === 'string' ? nextOfKin : undefined;
+  const isOwner = !!address && !!ownerAddress && address === ownerAddress;
 
   return (
     <>
@@ -51,12 +53,12 @@ export function VaultRecoveryPanel({
             </div>
 
             <div className="p-4 bg-white/5 border border-white/10 rounded-xl mb-4">
-              {hasNextOfKin ? (
+              {hasNextOfKin && nextOfKinAddress ? (
                 <div className="flex items-center justify-between">
                   <div>
                     <div className="text-emerald-400 font-bold text-sm mb-1">✓ Next of Kin Configured</div>
                     <div className="font-mono text-white/80 text-sm">
-                      {nextOfKin?.slice(0, 6)}...{nextOfKin?.slice(-4)}
+                      {nextOfKinAddress.slice(0, 6)}...{nextOfKinAddress.slice(-4)}
                     </div>
                   </div>
                   {inheritanceStatus.isActive && (

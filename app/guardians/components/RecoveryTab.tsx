@@ -1,4 +1,3 @@
-// @ts-nocheck
 'use client';
 
 import { useState } from 'react';
@@ -26,7 +25,7 @@ export function RecoveryTab({ isConnected }: { isConnected: boolean }) {
 
   const clearNotices = () => { setActionError(null); setActionSuccess(null); };
 
-  const withNotice = async (fn: () => Promise<void>, successMsg: string, failMsg: string) => {
+  const withNotice = async (fn: () => Promise<unknown>, successMsg: string, failMsg: string) => {
     clearNotices();
     try { await fn(); setActionSuccess(successMsg); }
     catch (error) { setActionError(error instanceof Error ? error.message : failMsg); }

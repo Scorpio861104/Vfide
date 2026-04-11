@@ -1,11 +1,23 @@
-// @ts-nocheck
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useAccount, useWriteContract, useSignMessage } from 'wagmi';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Shield, Key, Lock, Clock, CheckCircle2, AlertTriangle, X, Loader2 } from 'lucide-react';
-import { useVaultRecovery } from '@/hooks/useVaultRecovery';
+import { useState } from 'react';
+import { useAccount } from 'wagmi';
+import { AnimatePresence, motion } from 'framer-motion';
+import {
+  AlertCircle,
+  ArrowRight,
+  CheckCircle2,
+  ChevronRight,
+  Clock,
+  Fingerprint,
+  HelpCircle,
+  Key,
+  Shield,
+  Unlock,
+  UserCheck,
+  Users,
+  XCircle,
+} from 'lucide-react';
 
 export function ClaimFlowModal({ 
   vault, 

@@ -83,6 +83,11 @@
   },
   {
     "inputs": [],
+    "name": "OCP_ReentrantCall",
+    "type": "error"
+  },
+  {
+    "inputs": [],
     "name": "OCP_SlippageTooHigh",
     "type": "error"
   },
@@ -1483,24 +1488,6 @@
     "inputs": [
       {
         "internalType": "address[]",
-        "name": "users",
-        "type": "address[]"
-      },
-      {
-        "internalType": "bool",
-        "name": "status",
-        "type": "bool"
-      }
-    ],
-    "name": "token_batchBlacklist",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address[]",
         "name": "addrs",
         "type": "address[]"
       },
@@ -1624,24 +1611,6 @@
       }
     ],
     "name": "token_setAntiWhale",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "user",
-        "type": "address"
-      },
-      {
-        "internalType": "bool",
-        "name": "status",
-        "type": "bool"
-      }
-    ],
-    "name": "token_setBlacklist",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

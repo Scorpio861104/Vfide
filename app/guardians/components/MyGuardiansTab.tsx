@@ -1,4 +1,3 @@
-// @ts-nocheck
 'use client';
 
 import { useState } from 'react';
@@ -27,7 +26,7 @@ export function MyGuardiansTab({ isConnected }: { isConnected: boolean }) {
 
   const clearNotices = () => { setActionError(null); setActionSuccess(null); };
 
-  const withNotice = async (fn: () => Promise<void>, ok: string, fail: string) => {
+  const withNotice = async (fn: () => Promise<unknown>, ok: string, fail: string) => {
     clearNotices();
     try { await fn(); setActionSuccess(ok); } catch (e) { setActionError(e instanceof Error ? e.message : fail); }
   };

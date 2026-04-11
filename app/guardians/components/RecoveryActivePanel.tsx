@@ -1,4 +1,3 @@
-// @ts-nocheck
 'use client';
 
 import { motion } from 'framer-motion';
@@ -10,7 +9,7 @@ interface RecoveryActivePanelProps {
     approvals: number;
     threshold: number;
     daysRemaining: number | null;
-    proposedAddress: string;
+    proposedOwner: string | null;
   };
   isUserGuardian: boolean;
   isUserGuardianMature: boolean;
@@ -45,7 +44,7 @@ export function RecoveryActivePanel({
         <div>
           <div className="text-gray-500">Proposed Owner</div>
           <div className="text-white font-mono text-xs truncate">
-            {recoveryStatus.proposedAddress}
+            {recoveryStatus.proposedOwner ?? 'n/a'}
           </div>
         </div>
         <div>

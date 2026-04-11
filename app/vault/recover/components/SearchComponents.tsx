@@ -1,9 +1,28 @@
-// @ts-nocheck
 'use client';
 
 import { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Shield, Key, Lock, Clock, CheckCircle2, AlertTriangle, Loader2, Copy, ExternalLink } from 'lucide-react';
+import { AnimatePresence, motion } from 'framer-motion';
+import {
+  Activity,
+  AlertTriangle,
+  Award,
+  CheckCircle2,
+  Clock,
+  Copy,
+  ExternalLink,
+  Key,
+  Loader2,
+  Lock,
+  Shield,
+  ShieldCheck,
+  Sparkles,
+  Timer,
+  User,
+  Users,
+  XCircle,
+} from 'lucide-react';
+
+import { GlassCard } from '@/components/ui/GlassCard';
 
 export function SearchMethodButton({ 
   icon: Icon, 

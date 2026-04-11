@@ -1,12 +1,9 @@
-// @ts-nocheck
 'use client';
 
-import { useState } from 'react';
 import { useReadContract } from 'wagmi';
-import { motion } from 'framer-motion';
-import { Shield, Clock, CheckCircle2, AlertCircle } from 'lucide-react';
+
 import { USER_VAULT_ABI, isCardBoundVaultMode } from '@/lib/contracts';
-import { shortAddress } from './types';
+import { shortAddress, type WatchedVault } from './types';
 
 export function GuardianResponsibilitiesCard({
   entry,

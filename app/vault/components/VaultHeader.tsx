@@ -12,7 +12,7 @@ interface VaultHeaderProps {
   address: string | undefined;
   hasVault: boolean;
   isLoadingVault: boolean;
-  createVault: () => Promise<void>;
+  createVault: () => Promise<unknown>;
   isCreatingVault: boolean;
   isOnCorrectChain: boolean | undefined;
   expectedChainName: string | null | undefined;

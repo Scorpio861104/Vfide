@@ -1,10 +1,11 @@
-// @ts-nocheck
 'use client';
 
-import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Shield, AlertTriangle, Lock, Clock, CheckCircle2, X } from 'lucide-react';
-import { useSelfPanic, useQuarantineStatus, useCanSelfPanic } from '@/lib/vfide-hooks';
+import { useEffect, useState } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
+import { AlertTriangle, Clock, Lock, Shield } from 'lucide-react';
+
+import { GlassCard } from '@/components/ui/GlassCard';
+import { useCanSelfPanic, useQuarantineStatus, useSelfPanic } from '@/lib/vfide-hooks';
 
 export function VaultSecuritySection({ vaultAddress }: { vaultAddress: `0x${string}` | null | undefined }) {
   const quarantineData = useQuarantineStatus(vaultAddress || undefined);

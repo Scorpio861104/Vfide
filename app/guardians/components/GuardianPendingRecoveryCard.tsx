@@ -1,13 +1,10 @@
-// @ts-nocheck
 'use client';
 
-import { useState } from 'react';
-import { useAccount, useReadContract, useWriteContract, useSignMessage, usePublicClient } from 'wagmi';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Shield, Clock, CheckCircle2, AlertCircle, Key, Timer, Lock, RefreshCw, ArrowRightCircle } from 'lucide-react';
+import { useMemo, useState } from 'react';
+import { useReadContract, useWriteContract, usePublicClient } from 'wagmi';
+
 import { USER_VAULT_ABI, isCardBoundVaultMode } from '@/lib/contracts';
-import { buildGuardianAttestationMessage, type GuardianAttestationPayload } from '@/lib/recovery/guardianAttestation';
-import { shortAddress } from './types';
+import { shortAddress, type WatchedVault } from './types';
 
 export function GuardianPendingRecoveryCard({
   entry,

@@ -122,14 +122,12 @@ export async function rateLimit(
   const config = RATE_LIMITS[type];
 
   try {
-    let result;
-
     const upstash = getUpstashLimiters();
     if (!upstash) {
       throw new Error('Rate limiter unavailable: Redis client initialization failed');
     }
     // Use the per-type Upstash limiter so endpoint-specific limits are enforced
-    result = await upstash.get(type)!.limit(`${identifier}:${type}`);
+    const result = await upstash.get(type)!.limit(`${identifier}:${type}`);
     
     if (!result.success) {
       const retryAfter = Math.ceil((result.reset - Date.now()) / 1000);
