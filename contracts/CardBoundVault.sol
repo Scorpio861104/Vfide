@@ -691,5 +691,31 @@ contract CardBoundVault is ReentrancyGuard {
         IERC20(token).safeTransfer(to, amount);
     }
 
+    // ═══════════════════════════════════════════════════════════════
+    //  GUARDIAN-APPROVED RECOVERY ROTATION
+    // ═══════════════════════════════════════════════════════════════
+
+    event RecoveryRotationExecuted(address indexed oldWallet, address indexed newWallet, address indexed oldAdmin, address newAdmin);
+
+    function executeRecoveryRotation(address newWallet) external {
+        require(msg.sender == hub, "CBV: only hub");
+        require(newWallet != address(0), "CBV: zero wallet");
+
+        address oldWallet = activeWallet;
+        address oldAdmin = admin;
+
+        activeWallet = newWallet;
+        walletEpoch += 1;
+        admin = newWallet;
+        pendingAdmin = address(0);
+        paused = true;
+        delete pendingRotation;
+
+        emit RecoveryRotationExecuted(oldWallet, newWallet, oldAdmin, newWallet);
+        emit WalletRotated(oldWallet, newWallet, walletEpoch);
+        emit AdminTransferred(oldAdmin, newWallet);
+        emit PauseSet(true, msg.sender);
+    }
+
     receive() external payable {}
 }

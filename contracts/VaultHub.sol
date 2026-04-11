@@ -324,6 +324,28 @@ contract VaultHub is Ownable, Pausable, ReentrancyGuard {
         _logEv(vault, "guardian_setup_complete", 0, "");
     }
 
+    // ═══════════════════════════════════════════════════════════════
+    //  GUARDIAN-APPROVED RECOVERY ROTATION
+    // ═══════════════════════════════════════════════════════════════
+
+    event RecoveryRotationRequested(address indexed vault, address indexed newWallet, address indexed recoveryContract);
+
+    function executeRecoveryRotation(address vault, address newWallet) external nonReentrant {
+        require(isRecoveryApprover[msg.sender], "VH: not recovery contract");
+        require(vault != address(0) && newWallet != address(0), "VH: zero");
+        require(ownerOfVault[vault] != address(0), "VH: unknown vault");
+
+        CardBoundVault(payable(vault)).executeRecoveryRotation(newWallet);
+
+        address oldOwner = ownerOfVault[vault];
+        vaultOf[oldOwner] = address(0);
+        ownerOfVault[vault] = newWallet;
+        vaultOf[newWallet] = vault;
+
+        emit RecoveryRotationRequested(vault, newWallet, msg.sender);
+        _logEv(vault, "recovery_rotation", 0, "");
+    }
+
     // ——— Internals
     function _salt(address owner_) internal pure returns (bytes32) {
         return keccak256(abi.encodePacked(owner_));

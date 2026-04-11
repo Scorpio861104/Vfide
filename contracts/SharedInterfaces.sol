@@ -299,11 +299,17 @@ abstract contract Ownable {
     event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
     event OwnershipTransferStarted(address indexed previousOwner, address indexed newOwner);
     event EmergencyControllerSet(address indexed previousController, address indexed newController);
+    event EmergencyControllerProposed(address indexed controller, uint64 effectiveAt);
+    event EmergencyControllerCancelled();
 
     address public owner;
     address public pendingOwner;
     address public emergencyController;
     uint64  public ownershipTransferDeadline;
+
+    address public pendingEmergencyController;
+    uint64  public pendingEmergencyControllerAt;
+    uint64  public constant EMERGENCY_CONTROLLER_DELAY = 48 hours;
 
     constructor() {
         owner = msg.sender;
@@ -316,12 +322,30 @@ abstract contract Ownable {
         require(msg.sender == owner, "OWN: not owner");
     }
 
-    /// @notice Register or rotate the emergency controller that may atomically recover ownership.
-    /// @dev Single-step by design for halted-system recovery only.
+    /// @notice Propose a new emergency controller with 48-hour timelock.
     function setEmergencyController(address controller) external onlyOwner {
         require(controller != address(0), "OWN: zero controller");
-        emit EmergencyControllerSet(emergencyController, controller);
-        emergencyController = controller;
+        require(pendingEmergencyControllerAt == 0, "OWN: pending controller exists");
+        pendingEmergencyController = controller;
+        pendingEmergencyControllerAt = uint64(block.timestamp) + EMERGENCY_CONTROLLER_DELAY;
+        emit EmergencyControllerProposed(controller, pendingEmergencyControllerAt);
+    }
+
+    function applyEmergencyController() external onlyOwner {
+        require(pendingEmergencyControllerAt != 0, "OWN: no pending controller");
+        require(block.timestamp >= pendingEmergencyControllerAt, "OWN: timelock active");
+        address old = emergencyController;
+        emergencyController = pendingEmergencyController;
+        delete pendingEmergencyController;
+        delete pendingEmergencyControllerAt;
+        emit EmergencyControllerSet(old, emergencyController);
+    }
+
+    function cancelEmergencyController() external onlyOwner {
+        require(pendingEmergencyControllerAt != 0, "OWN: no pending controller");
+        delete pendingEmergencyController;
+        delete pendingEmergencyControllerAt;
+        emit EmergencyControllerCancelled();
     }
 
     /// @notice Start two-step ownership transfer

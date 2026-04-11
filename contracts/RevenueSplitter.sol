@@ -65,15 +65,15 @@ contract RevenueSplitter is ReentrancyGuard {
             
             if (amount > 0) {
                 distributed += amount;
-                try IERC20(token).transfer(payees[i].account, amount) returns (bool success) {
-                    if (success) {
-                        payeesSucceeded++;
-                        emit PayeeDistribution(payees[i].account, token, amount, true);
-                    } else {
-                        payeesFailed++;
-                        emit PayeeDistribution(payees[i].account, token, amount, false);
-                    }
-                } catch {
+                // M-2 FIX: Low-level call for non-standard ERC20s (USDT)
+                (bool callOk, bytes memory returnData) = token.call(
+                    abi.encodeWithSelector(IERC20.transfer.selector, payees[i].account, amount)
+                );
+                bool success = callOk && (returnData.length == 0 || abi.decode(returnData, (bool)));
+                if (success) {
+                    payeesSucceeded++;
+                    emit PayeeDistribution(payees[i].account, token, amount, true);
+                } else {
                     payeesFailed++;
                     emit PayeeDistribution(payees[i].account, token, amount, false);
                 }

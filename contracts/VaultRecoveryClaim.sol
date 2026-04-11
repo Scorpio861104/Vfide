@@ -3,7 +3,13 @@ pragma solidity 0.8.30;
 
 import "./SharedInterfaces.sol";
 import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
-import "./interfaces/IVaultInfrastructure.sol";
+
+interface IVaultHubRecovery {
+    function vaultOf(address owner) external view returns (address);
+    function ownerOfVault(address vault) external view returns (address);
+    function isVault(address a) external view returns (bool);
+    function executeRecoveryRotation(address vault, address newWallet) external;
+}
 
 /**
  * @title VaultRecoveryClaim
@@ -56,7 +62,7 @@ contract VaultRecoveryClaim is Ownable, ReentrancyGuard {
     // STORAGE
     // ═══════════════════════════════════════════════════════════════════════════════
     
-    IVaultInfrastructure public vaultHub;
+    IVaultHubRecovery public vaultHub;
     IVaultRegistry public vaultRegistry;
     
     enum ClaimStatus {
@@ -191,7 +197,7 @@ contract VaultRecoveryClaim is Ownable, ReentrancyGuard {
         address _vaultRegistry
     ) {
         if (_vaultHub == address(0)) revert ZeroAddress();
-        vaultHub = IVaultInfrastructure(_vaultHub);
+        vaultHub = IVaultHubRecovery(_vaultHub);
         vaultRegistry = IVaultRegistry(_vaultRegistry);
     }
     
@@ -452,69 +458,25 @@ contract VaultRecoveryClaim is Ownable, ReentrancyGuard {
     }
     
     /**
-     * @notice Execute the actual ownership transfer
-     * @dev Internal function called after all verifications pass
-     *      This contract must be registered as a recovery approver on VaultInfrastructure
-     *      M-12 FIX: activeClaimForVault is NOT cleared until finalizeExecution succeeds,
-     *      preventing new claims during the 7-day VaultInfrastructure timelock
+     * @notice Execute the actual ownership transfer via guardian-approved rotation
+     * @dev H-8 FIX: Uses VaultHub.executeRecoveryRotation instead of forceSetOwner.
+     *      Non-custodial: only reachable after guardian approvals + 7-day challenge.
      */
     function _executeRecovery(uint256 claimId) internal {
         RecoveryClaim storage claim = claims[claimId];
         
-        // First, approve the recovery via VaultInfrastructure
-        // This contract must be set as a recovery approver using:
-        // VaultInfrastructure.setRecoveryApprover(address(this), true)
-        vaultHub.approveForceRecovery(claim.vault, claim.claimant);
-        
-        // Check if approval threshold is met and timelock has started
-        // If we're the only approver or last needed, this will initiate the timelock
-        uint64 unlockTime = vaultHub.recoveryUnlockTime(claim.vault);
-        
-        if (unlockTime != 0 && block.timestamp >= unlockTime) {
-            // Timelock passed, finalize the recovery
-            // Note: DAO must call finalizeForceRecovery, or we need DAO role
-            // For now, emit event and update status - DAO/governance will finalize
-            claim.status = ClaimStatus.Executed;
-            // M-12 FIX: Don't clear activeClaimForVault here — wait for finalizeExecution success
-        } else if (unlockTime != 0) {
-            // Timelock started but not passed yet - mark as approved, will need finalize later
-            claim.status = ClaimStatus.Approved;
-        } else {
-            // Need more approvals - keep in approved state
-            claim.status = ClaimStatus.Approved;
-        }
+        vaultHub.executeRecoveryRotation(claim.vault, claim.claimant);
+
+        claim.status = ClaimStatus.Executed;
+        activeClaimForVault[claim.vault] = 0;
         
         emit ClaimExecuted(claimId, claim.vault, claim.claimant, claim.originalOwner);
     }
     
-    /**
-     * @notice Finalize a claim after VaultInfrastructure timelock has passed
-     * @dev Can be called by anyone once the timelock on VaultInfrastructure is complete
-     *      M-12 FIX: Only clears activeClaimForVault after finalizeExecution succeeds,
-     *      preventing new claims from being initiated prematurely during timelock
-     * @param claimId The claim to finalize
-     */
-    function finalizeExecution(uint256 claimId) external nonReentrant {
+    /// @notice Legacy finalization — no longer needed. Recovery completes in finalizeClaim.
+    function finalizeExecution(uint256 claimId) external view {
         RecoveryClaim storage claim = claims[claimId];
-        require(claim.status == ClaimStatus.Approved || claim.status == ClaimStatus.Executed, "not approved");
-        
-        uint64 unlockTime = vaultHub.recoveryUnlockTime(claim.vault);
-        require(unlockTime != 0, "recovery not initiated on hub");
-        require(block.timestamp >= unlockTime, "timelock not passed");
-        
-        // Call VaultInfrastructure to finalize
-        // Note: This requires this contract or caller to have DAO role
-        // If this fails, DAO must manually call finalizeForceRecovery
-        try vaultHub.finalizeForceRecovery(claim.vault) {
-            claim.status = ClaimStatus.Executed;
-            // M-12 FIX: Clear activeClaimForVault ONLY after successful execution
-            activeClaimForVault[claim.vault] = 0;
-            emit ClaimExecuted(claimId, claim.vault, claim.claimant, claim.originalOwner);
-        } catch {
-            // DAO must manually finalize - emit event for tracking
-            // M-12 FIX: Keep activeClaimForVault intact so no new claims can be initiated
-            emit ClaimApproved(claimId, claim.vault, claim.claimant);
-        }
+        require(claim.status == ClaimStatus.Executed, "not executed");
     }
     
     // ═══════════════════════════════════════════════════════════════════════════════
@@ -605,7 +567,7 @@ contract VaultRecoveryClaim is Ownable, ReentrancyGuard {
     
     function setVaultHub(address _vaultHub) external onlyOwner {
         if (_vaultHub == address(0)) revert ZeroAddress();
-        vaultHub = IVaultInfrastructure(_vaultHub);
+        vaultHub = IVaultHubRecovery(_vaultHub);
     }
     
     function setVaultRegistry(address _vaultRegistry) external onlyOwner {
