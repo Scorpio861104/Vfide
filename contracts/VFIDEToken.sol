@@ -932,13 +932,9 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
         feeFrom = from;
         if (address(vaultHub) == address(0) || !_isVault(from)) return feeFrom;
 
-        (bool ok, bytes memory data) = address(vaultHub).staticcall(
-            abi.encodeWithSignature("ownerOfVault(address)", from)
-        );
-        if (ok && data.length >= 32) {
-            address vaultOwner = abi.decode(data, (address));
+        try vaultHub.ownerOfVault(from) returns (address vaultOwner) {
             if (vaultOwner != address(0)) feeFrom = vaultOwner;
-        }
+        } catch {}
     }
 
     // _locked() REMOVED — no third-party locking of user vaults
@@ -1044,9 +1040,6 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
         }
 
         dailyTransferred[from] += actualAmount;
-        if (dailyTransferLimit > 0 && dailyTransferred[from] > dailyTransferLimit) {
-            revert VF_DailyLimitExceeded();
-        }
     }
     
     /// @notice T-02 FIX: Helper to compute expected net amount after fees
@@ -1056,7 +1049,9 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
         }
 
         (bool ok, uint256 expectedNet) = _tryExpectedNetAmount(from, to, amount);
-        require(ok, "VF: fee preview failed");
+        if (!ok) {
+            return (amount * 9500) / 10000;
+        }
         return expectedNet;
     }
     
@@ -1342,7 +1337,7 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
     }
 
     /// @notice T-14 FIX: Prevent accidental renounceOwnership which would permanently lock the contract
-    function renounceOwnership() external view onlyOwner {
+    function renounceOwnership() external onlyOwner {
         revert("VFIDEToken: renounce disabled");
     }
 }

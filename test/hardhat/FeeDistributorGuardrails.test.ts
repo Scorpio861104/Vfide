@@ -25,7 +25,6 @@ describe("FeeDistributor (audit guardrails)", () => {
 
     const fee = ethers.parseEther("10000");
     await token.transfer(await distributor.getAddress(), fee);
-    await distributor.connect(admin).receiveFee(fee);
 
     return { ethers, distributor, token, fee, burn, sanctum, dao, merchants, headhunters, replacement, admin };
   }
@@ -73,7 +72,6 @@ describe("FeeDistributor (audit guardrails)", () => {
 
     const fee = ethers.parseEther("10000");
     await token.transfer(await distributor.getAddress(), fee);
-    await distributor.connect(admin).receiveFee(fee);
     await token.setRevertBurn(true);
 
     await distributor.distribute();

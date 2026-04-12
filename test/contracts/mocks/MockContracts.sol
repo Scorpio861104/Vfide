@@ -13,7 +13,25 @@ contract MockERC20 is ERC20 {
         _mint(to, amount);
     }
 
-    function burn(uint256 amount) external {
+    function burn(uint256 amount) external virtual {
+        _burn(msg.sender, amount);
+    }
+}
+
+/// @title MockRevertingBurnERC20 - burn can be configured to revert
+contract MockRevertingBurnERC20 is MockERC20 {
+    bool public revertBurn;
+
+    constructor(string memory name, string memory symbol, uint256 initialSupply)
+        MockERC20(name, symbol, initialSupply)
+    {}
+
+    function setRevertBurn(bool shouldRevert) external {
+        revertBurn = shouldRevert;
+    }
+
+    function burn(uint256 amount) external override {
+        if (revertBurn) revert("Mock burn failed");
         _burn(msg.sender, amount);
     }
 }

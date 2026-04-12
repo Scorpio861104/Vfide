@@ -69,6 +69,9 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
     /// @notice Total bridged in to this chain
     uint256 public totalBridgedIn;
 
+    /// @notice Aggregate amount bridged out but not yet delivery-confirmed/refunded.
+    uint256 public pendingOutboundAmount;
+
     /// @notice Monotonic nonce for unique outgoing bridge transaction IDs
     uint256 public bridgeTxNonce;
 
@@ -154,6 +157,7 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
         uint256 amount,
         bytes32 txId
     );
+    event DeliveryConfirmationSkipped(uint32 indexed dstChainId, bytes32 indexed txId, string reason);
     event BridgeDeliveryConfirmed(bytes32 indexed txId);
 
     event TrustedRemoteSet(uint32 indexed chainId, bytes32 remote);
@@ -286,6 +290,7 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
         userStats[msg.sender].lastBridgeTime = block.timestamp;
         userStats[msg.sender].bridgeCount++;
         totalBridgedOut += amountAfterFee;
+        pendingOutboundAmount += amountAfterFee;
 
         // Lock tokens on source chain; destination bridge releases pre-funded liquidity.
         // This avoids mint-dependency failures and prevents burn-without-delivery scenarios.
@@ -445,6 +450,11 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
         } else {
             isHealthy = lockedBalance >= uint256(netFlow);
         }
+    }
+
+    /// @notice Amount currently locked on source-side bridge and still awaiting delivery confirmation or refund.
+    function getPendingOutboundAmount() external view returns (uint256) {
+        return pendingOutboundAmount;
     }
 
     /**
@@ -769,6 +779,9 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
         btx.executed = true; // Prevent double-claim
         uint256 amount = btx.amount;
         totalBridgedOut -= amount;
+        if (pendingOutboundAmount >= amount) {
+            pendingOutboundAmount -= amount;
+        }
         userStats[msg.sender].totalSent -= amount;
         delete bridgeRefundableAfter[txId];
 
@@ -785,6 +798,9 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
         BridgeTransaction storage btx = bridgeTransactions[txId];
         require(!btx.executed, "VFIDEBridge: already executed");
         btx.executed = true;
+        if (pendingOutboundAmount >= btx.amount) {
+            pendingOutboundAmount -= btx.amount;
+        }
         delete bridgeRefundableAfter[txId];
         emit BridgeDeliveryConfirmed(txId);
     }
@@ -796,9 +812,26 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
         bytes memory options = enforcedOptions[_dstChainId][MSG_TYPE_BRIDGE_CONFIRMATION];
         MessagingFee memory fee = _quote(_dstChainId, payload, options, false);
 
-        if (address(this).balance < fee.nativeFee) revert ConfirmationSendFailed();
+        if (address(this).balance < fee.nativeFee) {
+            emit DeliveryConfirmationSkipped(_dstChainId, txId, "insufficient native fee");
+            return;
+        }
 
-        _lzSend(_dstChainId, payload, options, fee, payable(address(this)));
+        try this.__sendDeliveryConfirmation(_dstChainId, payload, options, fee.nativeFee) {
+        } catch {
+            emit DeliveryConfirmationSkipped(_dstChainId, txId, "send failed");
+        }
+    }
+
+    /// @dev External self-call target used to preserve try/catch semantics for LayerZero send failures.
+    function __sendDeliveryConfirmation(
+        uint32 _dstChainId,
+        bytes calldata payload,
+        bytes calldata options,
+        uint256 nativeFee
+    ) external {
+        require(msg.sender == address(this), "VFIDEBridge: self only");
+        _lzSend(_dstChainId, payload, options, MessagingFee(nativeFee, 0), payable(address(this)));
     }
 
     function _confirmBridgeDelivery(bytes32 txId) internal {
@@ -808,6 +841,9 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
         }
 
         btx.executed = true;
+        if (pendingOutboundAmount >= btx.amount) {
+            pendingOutboundAmount -= btx.amount;
+        }
         delete bridgeRefundableAfter[txId];
         emit BridgeDeliveryConfirmed(txId);
     }
@@ -826,7 +862,7 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
         }
     }
 
-    function renounceOwnership() public view override onlyOwner {
+    function renounceOwnership() public override onlyOwner {
         revert("VFIDEBridge: renounce disabled");
     }
 

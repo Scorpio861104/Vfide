@@ -60,6 +60,7 @@ event LedgerLogFailed(address indexed source, string action);
 
 interface IVaultHub {
     function vaultOf(address owner) external view returns (address);
+    function ownerOfVault(address vault) external view returns (address);
     function isVault(address a) external view returns (bool);
     function ensureVault(address owner_) external returns (address vault);
     function setVFIDEToken(address token) external;

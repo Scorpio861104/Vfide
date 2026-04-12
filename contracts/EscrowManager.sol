@@ -36,7 +36,17 @@ contract EscrowManager is ReentrancyGuard {
         uint256 public constant MIN_LOCK_PERIOD = 3 days; // F-18 FIX: Enforce minimum lock period regardless of score
     using SafeERC20 for IERC20;
 
+    uint64 public constant TOKEN_WHITELIST_DELAY = 48 hours;
+
     mapping(address => bool) public whitelistedTokens;
+
+    struct PendingWhitelistChange {
+        bool status;
+        uint64 effectiveAt;
+        bool pending;
+    }
+
+    mapping(address => PendingWhitelistChange) public pendingWhitelistChanges;
     
     event EscrowCreated(uint256 indexed escrowId, address indexed buyer, address indexed merchant, uint256 amount, uint256 releaseTime, uint256 lockPeriod, uint256 timestamp);
     event EscrowReleased(uint256 indexed escrowId, address indexed to);
@@ -45,6 +55,9 @@ contract EscrowManager is ReentrancyGuard {
     event DisputeResolved(uint256 indexed escrowId, address indexed winner);
     event EscrowNearTimeout(uint256 indexed escrowId, uint256 timeRemaining);
     event BuyerClaimedTimeout(uint256 indexed escrowId, address indexed buyer); // BATCH-08 FIX
+    event TokenWhitelistChangeProposed(address indexed token, bool status, uint64 effectiveAt);
+    event TokenWhitelistSet(address indexed token, bool status);
+    event TokenWhitelistChangeCancelled(address indexed token);
 
     enum State { CREATED, RELEASED, REFUNDED, DISPUTED }
 
@@ -85,7 +98,31 @@ contract EscrowManager is ReentrancyGuard {
     function setTokenWhitelist(address token, bool status) external {
         require(msg.sender == dao, "ESC: not DAO");
         require(token != address(0), "ESC: zero address");
-        whitelistedTokens[token] = status;
+        uint64 effectiveAt = uint64(block.timestamp) + TOKEN_WHITELIST_DELAY;
+        pendingWhitelistChanges[token] = PendingWhitelistChange({
+            status: status,
+            effectiveAt: effectiveAt,
+            pending: true
+        });
+        emit TokenWhitelistChangeProposed(token, status, effectiveAt);
+    }
+
+    function applyTokenWhitelist(address token) external {
+        require(msg.sender == dao, "ESC: not DAO");
+        PendingWhitelistChange memory pending = pendingWhitelistChanges[token];
+        require(pending.pending, "ESC: no pending change");
+        require(block.timestamp >= pending.effectiveAt, "ESC: timelock active");
+
+        whitelistedTokens[token] = pending.status;
+        delete pendingWhitelistChanges[token];
+        emit TokenWhitelistSet(token, whitelistedTokens[token]);
+    }
+
+    function cancelTokenWhitelist(address token) external {
+        require(msg.sender == dao, "ESC: not DAO");
+        require(pendingWhitelistChanges[token].pending, "ESC: no pending change");
+        delete pendingWhitelistChanges[token];
+        emit TokenWhitelistChangeCancelled(token);
     }
 
     /**

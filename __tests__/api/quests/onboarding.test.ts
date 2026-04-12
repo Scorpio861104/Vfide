@@ -15,6 +15,8 @@ jest.mock('@/lib/auth/middleware', () => ({
 }));
 
 describe('/api/quests/onboarding', () => {
+  const USER_ADDRESS = '0x1111111111111111111111111111111111111111';
+  const OTHER_ADDRESS = '0x2222222222222222222222222222222222222222';
   const { getClient } = require('@/lib/db');
   const { withRateLimit } = require('@/lib/auth/rateLimit');
   const { requireAuth } = require('@/lib/auth/middleware');
@@ -22,7 +24,7 @@ describe('/api/quests/onboarding', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    requireAuth.mockResolvedValue({ user: { address: '0x123' } });
+    requireAuth.mockResolvedValue({ user: { address: USER_ADDRESS } });
     isAdmin.mockReturnValue(false);
   });
 
@@ -54,7 +56,7 @@ describe('/api/quests/onboarding', () => {
       };
       getClient.mockResolvedValue(mockClient);
 
-      const request = new NextRequest('http://localhost:3000/api/quests/onboarding?userAddress=0x123');
+      const request = new NextRequest(`http://localhost:3000/api/quests/onboarding?userAddress=${USER_ADDRESS}`);
       const response = await GET(request);
       const data = await response.json();
 
@@ -76,10 +78,10 @@ describe('/api/quests/onboarding', () => {
 
     it('should return 403 for cross-user access', async () => {
       withRateLimit.mockResolvedValue(null);
-      requireAuth.mockResolvedValue({ user: { address: '0xabc' } });
+      requireAuth.mockResolvedValue({ user: { address: OTHER_ADDRESS } });
       isAdmin.mockReturnValue(false);
 
-      const request = new NextRequest('http://localhost:3000/api/quests/onboarding?userAddress=0x123');
+      const request = new NextRequest(`http://localhost:3000/api/quests/onboarding?userAddress=${USER_ADDRESS}`);
       const response = await GET(request);
 
       expect(response.status).toBe(403);
@@ -89,7 +91,7 @@ describe('/api/quests/onboarding', () => {
       withRateLimit.mockResolvedValue(null);
       requireAuth.mockResolvedValue({ user: { address: 'bad-address' } });
 
-      const request = new NextRequest('http://localhost:3000/api/quests/onboarding?userAddress=0x123');
+      const request = new NextRequest(`http://localhost:3000/api/quests/onboarding?userAddress=${USER_ADDRESS}`);
       const response = await GET(request);
       const data = await response.json();
 
@@ -139,19 +141,19 @@ describe('/api/quests/onboarding', () => {
       const data = await response.json();
 
       expect(response.status).toBe(400);
-      expect(data.error).toContain('JSON object');
+      expect(data.error).toBe('Invalid request body');
     });
 
     it('should return 403 for cross-user updates', async () => {
       withRateLimit.mockResolvedValue(null);
-      requireAuth.mockResolvedValue({ user: { address: '0xabc' } });
+      requireAuth.mockResolvedValue({ user: { address: OTHER_ADDRESS } });
       isAdmin.mockReturnValue(false);
 
       const request = new NextRequest('http://localhost:3000/api/quests/onboarding', {
         method: 'PATCH',
         body: JSON.stringify({
           step: 'connectWallet',
-          userAddress: '0x123',
+          userAddress: USER_ADDRESS,
         }),
       });
 
@@ -165,7 +167,7 @@ describe('/api/quests/onboarding', () => {
 
       const request = new NextRequest('http://localhost:3000/api/quests/onboarding', {
         method: 'PATCH',
-        body: JSON.stringify({ step: 'connectWallet', userAddress: '0x123' }),
+        body: JSON.stringify({ step: 'connectWallet', userAddress: USER_ADDRESS }),
       });
 
       const response = await PATCH(request);
@@ -188,7 +190,7 @@ describe('/api/quests/onboarding', () => {
       const data = await response.json();
 
       expect(response.status).toBe(400);
-      expect(data.error).toBe('Invalid user address format');
+      expect(data.error).toBe('Invalid request body');
       expect(getClient).not.toHaveBeenCalled();
     });
   });
@@ -221,17 +223,17 @@ describe('/api/quests/onboarding', () => {
       const data = await response.json();
 
       expect(response.status).toBe(400);
-      expect(data.error).toContain('JSON object');
+      expect(data.error).toBe('Invalid request body');
     });
 
     it('should return 403 for cross-user reward claims', async () => {
       withRateLimit.mockResolvedValue(null);
-      requireAuth.mockResolvedValue({ user: { address: '0xabc' } });
+      requireAuth.mockResolvedValue({ user: { address: OTHER_ADDRESS } });
       isAdmin.mockReturnValue(false);
 
       const request = new NextRequest('http://localhost:3000/api/quests/onboarding', {
         method: 'POST',
-        body: JSON.stringify({ userAddress: '0x123' }),
+        body: JSON.stringify({ userAddress: USER_ADDRESS }),
       });
 
       const response = await POST(request);
@@ -244,7 +246,7 @@ describe('/api/quests/onboarding', () => {
 
       const request = new NextRequest('http://localhost:3000/api/quests/onboarding', {
         method: 'POST',
-        body: JSON.stringify({ userAddress: '0x123' }),
+        body: JSON.stringify({ userAddress: USER_ADDRESS }),
       });
 
       const response = await POST(request);
@@ -267,7 +269,7 @@ describe('/api/quests/onboarding', () => {
       const data = await response.json();
 
       expect(response.status).toBe(400);
-      expect(data.error).toBe('Invalid user address format');
+      expect(data.error).toBe('Invalid request body');
       expect(getClient).not.toHaveBeenCalled();
     });
   });

@@ -5,13 +5,5 @@
   "devCommand": "npm run dev",
   "framework": "nextjs",
   "ignoreCommand": "git diff --quiet HEAD^ HEAD",
-  "headers": [
-    {
-      "source": "/(.*)",
-      "headers": [
-        { "key": "Cross-Origin-Opener-Policy", "value": "same-origin" },
-        { "key": "Cross-Origin-Embedder-Policy", "value": "credentialless" }
-      ]
-    }
-  ]
+  "headers": []
 }

@@ -10,7 +10,6 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
-import { timingSafeEqual } from 'crypto';
 import { isCsrfExemptPath } from './csrfPolicy';
 
 const CSRF_TOKEN_LENGTH = 32;
@@ -75,8 +74,12 @@ export function verifyCSRFToken(request: NextRequest): boolean {
     return false;
   }
 
-  // Tokens must match in constant time.
-  return timingSafeEqual(cookieBuffer, headerBuffer);
+  // Constant-time comparison compatible with both Node and edge runtimes.
+  let diff = 0;
+  for (let i = 0; i < cookieBuffer.length; i++) {
+    diff |= (cookieBuffer[i] ?? 0) ^ (headerBuffer[i] ?? 0);
+  }
+  return diff === 0;
 }
 
 /**

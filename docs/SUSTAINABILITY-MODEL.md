@@ -114,12 +114,12 @@ Total Transfer Fee (0.25% - 5%)
 └── 10% → HEADHUNTER POOL (Network Incentives) [SEER Auto-Execute]
 ```
 
-### 1. BURN Pool (40% of fees) 🔥
+### 1. BURN Pool (35% of fees) 🔥
 
 **Purpose:** Deflationary tokenomics to increase scarcity and long-term value
 
 **Mechanism (Automated by SEER):**
-- SEER automatically routes 40% of each fee to `0x000...000` (burn address)
+- SEER automatically routes 35% of each fee to `0x000...000` (burn address)
 - Tokens are permanently removed from circulating supply instantly
 - No manual burning process - happens atomically with each transfer
 - Creates long-term value appreciation
@@ -131,14 +131,14 @@ Total Transfer Fee (0.25% - 5%)
 const dailyTransactions = 10_000;
 const avgTransactionSize = 1_000; // $1,000 VFIDE
 const avgFee = 0.025; // 2.5% average (mid-range ProofScore)
-const burnPercentage = 0.40;
+const burnPercentage = 0.35;
 
 const dailyVolume = dailyTransactions * avgTransactionSize;
 const dailyFees = dailyVolume * avgFee;
 const dailyBurn = dailyFees * burnPercentage;
 
-// Daily: $100,000 burned
-// Annual: $36.5M burned (at $0.10/token = 365M tokens)
+// Daily: $87,500 burned
+// Annual: $31.94M burned (at $0.10/token = 319.4M tokens)
 // % of supply: ~0.18% annual burn rate
 ```
 

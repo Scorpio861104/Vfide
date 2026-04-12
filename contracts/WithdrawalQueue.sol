@@ -118,7 +118,7 @@ abstract contract WithdrawalQueue is VFIDEAccessControl, VFIDEReentrancyGuard {
 
         // Check daily cap
         uint256 today = block.timestamp / 1 days;
-        uint256 dailyCap = (totalVaultBalance * DAILY_WITHDRAWAL_CAP_PERCENT) / 100;
+        uint256 dailyCap = (_effectiveVaultBalance() * DAILY_WITHDRAWAL_CAP_PERCENT) / 100;
         
         require(
             dailyWithdrawn[today] + request.amount <= dailyCap,
@@ -140,7 +140,7 @@ abstract contract WithdrawalQueue is VFIDEAccessControl, VFIDEReentrancyGuard {
     function batchExecuteWithdrawals(uint256[] calldata _indices) external nonReentrant {
         require(_indices.length <= 100, "WQ: batch too large");
         uint256 today = block.timestamp / 1 days;
-        uint256 dailyCap = (totalVaultBalance * DAILY_WITHDRAWAL_CAP_PERCENT) / 100;
+        uint256 dailyCap = (_effectiveVaultBalance() * DAILY_WITHDRAWAL_CAP_PERCENT) / 100;
         uint256 totalAmount = 0;
 
         for (uint256 i = 0; i < _indices.length; i++) {
@@ -315,7 +315,7 @@ abstract contract WithdrawalQueue is VFIDEAccessControl, VFIDEReentrancyGuard {
      */
     function getRemainingDailyCapacity() external view returns (uint256 remaining) {
         uint256 today = block.timestamp / 1 days;
-        uint256 dailyCap = (totalVaultBalance * DAILY_WITHDRAWAL_CAP_PERCENT) / 100;
+        uint256 dailyCap = (_effectiveVaultBalance() * DAILY_WITHDRAWAL_CAP_PERCENT) / 100;
         uint256 withdrawn = dailyWithdrawn[today];
         
         if (withdrawn >= dailyCap) {
@@ -340,6 +340,14 @@ abstract contract WithdrawalQueue is VFIDEAccessControl, VFIDEReentrancyGuard {
      * @dev MUST be overridden in implementing contract with actual balance logic
      */
     function _getUserBalance(address _user) internal view virtual returns (uint256);
+
+    /**
+     * @notice Return effective vault balance used for daily-cap calculations.
+     * @dev Integrators should override this and return real vault TVL from canonical accounting.
+     */
+    function _effectiveVaultBalance() internal view virtual returns (uint256) {
+        return totalVaultBalance;
+    }
 
     /**
      * @notice Get queue length

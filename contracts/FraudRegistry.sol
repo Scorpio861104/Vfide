@@ -165,6 +165,7 @@ contract FraudRegistry is ReentrancyGuard {
         // Only callable by the VFIDE token contract
         // The token sends tokens HERE instead of to the recipient
         // After 30 days, anyone can call releaseEscrow to deliver them
+        require(msg.sender == address(vfideToken), "FR: only token");
 
         uint64 releaseAt = uint64(block.timestamp) + uint64(ESCROW_DURATION);
 

@@ -5,6 +5,7 @@ import { createWalletClient, createPublicClient, http, parseAbi, isAddress } fro
 import { privateKeyToAccount } from 'viem/accounts';
 import { baseSepolia } from 'viem/chains';
 import { withRateLimit } from '@/lib/auth/rateLimit';
+import { requireAuth } from '@/lib/auth/middleware';
 
 const FAUCET_ABI = parseAbi([
   'function claim(address user, address referrer) external',
@@ -21,6 +22,9 @@ export async function POST(request: NextRequest) {
   const rateLimitResponse = await withRateLimit(request, 'claim');
   if (rateLimitResponse) return rateLimitResponse;
 
+  const authResult = await requireAuth(request);
+  if (authResult instanceof NextResponse) return authResult;
+
   try {
     const rawBody = await request.json().catch(() => null);
     const parsed = claimSchema.safeParse(rawBody);
@@ -33,6 +37,10 @@ export async function POST(request: NextRequest) {
 
     if (!address || !isAddress(address)) {
       return NextResponse.json({ error: 'Valid wallet address required' }, { status: 400 });
+    }
+
+    if (authResult.user.address.toLowerCase() !== address.toLowerCase()) {
+      return NextResponse.json({ error: 'Address must match authenticated wallet' }, { status: 403 });
     }
 
     const referrerAddr = referrer && isAddress(referrer) ? referrer : '0x0000000000000000000000000000000000000000';

@@ -136,7 +136,7 @@ contract FeeDistributor is AccessControl, ReentrancyGuard, Pausable {
 
     /// @notice Receive fee tokens from VFIDEToken._transfer().
     function receiveFee(uint256 amount) external nonReentrant {
-        if (msg.sender != address(vfideToken) && !hasRole(ADMIN_ROLE, msg.sender)) revert NotAuthorized();
+        if (msg.sender != address(vfideToken)) revert NotAuthorized();
         totalReceived += amount;
         emit FeeReceived(amount);
     }

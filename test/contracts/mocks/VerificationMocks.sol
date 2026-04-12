@@ -5,10 +5,12 @@ import "../../../contracts/SharedInterfaces.sol";
 
 contract MockVaultHub is IVaultHub {
     mapping(address => address) public vaults;
+    mapping(address => address) public vaultOwners;
     uint256 public totalVaultsCreatedCount;
     
     function setVault(address owner, address vault) external {
         vaults[owner] = vault;
+        vaultOwners[vault] = owner;
     }
     
     function vaultOf(address owner) external view override returns (address) {
@@ -26,8 +28,13 @@ contract MockVaultHub is IVaultHub {
             // Create dummy vault
             vault = address(uint160(uint256(keccak256(abi.encodePacked(owner_, block.timestamp)))));
             vaults[owner_] = vault;
+            vaultOwners[vault] = owner_;
             totalVaultsCreatedCount++;
         }
+    }
+
+    function ownerOfVault(address vault) external view override returns (address) {
+        return vaultOwners[vault];
     }
     
     function setVFIDEToken(address) external override {}

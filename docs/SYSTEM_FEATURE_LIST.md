@@ -185,7 +185,7 @@ Source basis: app routes, API routes, contract modules, and system trackers.
 - Merchant, commerce, payroll, and subscription modules
 - Escrow, revenue, and treasury modules
 - Bridge, oracle, and cross-chain modules
-- Liquidity, lending, collateral, and flashloan modules
+- Liquidity, lending, creditworthiness, and flashloan modules
 
 ## Notes
 - This list is a system-wide feature inventory, not a claim that every feature is fully production-enabled in every environment.

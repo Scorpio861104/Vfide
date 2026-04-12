@@ -73,6 +73,7 @@ contract CardBoundVault is ReentrancyGuard {
     }
 
     QueuedWithdrawal[] public withdrawalQueue;
+    uint8 public activeQueuedWithdrawals;
     uint256 public largeTransferThreshold; // Transfers above this get queued
 
     struct WalletRotation {
@@ -519,6 +520,9 @@ contract CardBoundVault is ReentrancyGuard {
         if (spentToday + w.amount > dailyTransferLimit) revert CBV_DailyLimit();
 
         w.executed = true;
+        if (activeQueuedWithdrawals > 0) {
+            activeQueuedWithdrawals -= 1;
+        }
         spentToday += w.amount;
 
         IERC20(vfideToken).safeTransfer(w.toVault, w.amount);
@@ -540,6 +544,9 @@ contract CardBoundVault is ReentrancyGuard {
         if (w.executed || w.cancelled) revert CBV_QueueAlreadyProcessed();
 
         w.cancelled = true;
+        if (activeQueuedWithdrawals > 0) {
+            activeQueuedWithdrawals -= 1;
+        }
 
         emit WithdrawalCancelled(queueIndex, msg.sender);
     }
@@ -573,18 +580,52 @@ contract CardBoundVault is ReentrancyGuard {
         }
     }
 
+    /// @notice Paginated pending withdrawal view to bound read-gas on long-lived vaults.
+    /// @param start Inclusive queue index to start scanning from.
+    /// @param limit Maximum queue slots to scan (not pending count).
+    /// @return indices Pending queue indices found in the scan window.
+    /// @return amounts Pending amounts found in the scan window.
+    /// @return executeAfters Pending execution times found in the scan window.
+    function getPendingQueuedWithdrawalsPaged(uint256 start, uint256 limit)
+        external
+        view
+        returns (uint256[] memory indices, uint256[] memory amounts, uint64[] memory executeAfters)
+    {
+        uint256 len = withdrawalQueue.length;
+        if (start >= len || limit == 0) {
+            return (new uint256[](0), new uint256[](0), new uint64[](0));
+        }
+
+        uint256 end = start + limit;
+        if (end > len) end = len;
+
+        uint256 pendingCount = 0;
+        for (uint256 i = start; i < end; i++) {
+            if (!withdrawalQueue[i].executed && !withdrawalQueue[i].cancelled) pendingCount++;
+        }
+
+        indices = new uint256[](pendingCount);
+        amounts = new uint256[](pendingCount);
+        executeAfters = new uint64[](pendingCount);
+
+        uint256 idx = 0;
+        for (uint256 i = start; i < end; i++) {
+            if (!withdrawalQueue[i].executed && !withdrawalQueue[i].cancelled) {
+                indices[idx] = i;
+                amounts[idx] = withdrawalQueue[i].amount;
+                executeAfters[idx] = withdrawalQueue[i].executeAfter;
+                idx++;
+            }
+        }
+    }
+
     /// @notice Get total number of queued withdrawals (including processed).
     function queueLength() external view returns (uint256) {
         return withdrawalQueue.length;
     }
 
     function _queueWithdrawal(address toVault, uint256 amount, uint256 intentNonce) internal {
-        // Count active (non-executed, non-cancelled) entries
-        uint256 active = 0;
-        for (uint256 i = 0; i < withdrawalQueue.length; i++) {
-            if (!withdrawalQueue[i].executed && !withdrawalQueue[i].cancelled) active++;
-        }
-        if (active >= MAX_QUEUED) revert CBV_QueueFull();
+        if (activeQueuedWithdrawals >= MAX_QUEUED) revert CBV_QueueFull();
 
         uint64 executeAfter = uint64(block.timestamp) + uint64(WITHDRAWAL_DELAY);
 
@@ -597,6 +638,7 @@ contract CardBoundVault is ReentrancyGuard {
             cancelled: false,
             intentNonce: intentNonce
         }));
+        activeQueuedWithdrawals += 1;
 
         emit WithdrawalQueued(withdrawalQueue.length - 1, toVault, amount, executeAfter);
     }

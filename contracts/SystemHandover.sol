@@ -83,7 +83,6 @@ contract SystemHandover {
         uint64 previousHandoverAt = handoverAt;
         start = 0;
         handoverAt = 0;
-        extensionsUsed = 0;
         emit Disarmed(previousStart, previousHandoverAt);
         _log("handover_disarmed");
     }

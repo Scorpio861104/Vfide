@@ -34,6 +34,49 @@ type RateLimitType = keyof typeof RATE_LIMITS;
 // Create rate limiter instances (one per limit type)
 let upstashLimiters: Map<RateLimitType, Ratelimit> | null = null;
 let missingRedisWarningLogged = false;
+const memoryRateBuckets = new Map<string, { count: number; resetAt: number }>();
+
+function parseWindowMs(window: typeof RATE_LIMITS[RateLimitType]['window']): number {
+  const match = /^(\d+)([smhd])$/.exec(window);
+  if (!match) return 60_000;
+  const [, valuePart, unitPart] = match;
+  const value = Number.parseInt(valuePart ?? '1', 10);
+  const unit = unitPart ?? 'm';
+  if (unit === 's') return value * 1000;
+  if (unit === 'm') return value * 60_000;
+  if (unit === 'h') return value * 3_600_000;
+  return value * 86_400_000;
+}
+
+function memoryRateLimit(identifier: string, type: RateLimitType): {
+  success: boolean;
+  remaining: number;
+  reset: number;
+} {
+  const config = RATE_LIMITS[type];
+  const windowMs = parseWindowMs(config.window);
+  const now = Date.now();
+  const key = `${identifier}:${type}`;
+  const existing = memoryRateBuckets.get(key);
+
+  if (!existing || now >= existing.resetAt) {
+    const resetAt = now + windowMs;
+    memoryRateBuckets.set(key, { count: 1, resetAt });
+    return { success: true, remaining: Math.max(config.requests - 1, 0), reset: resetAt };
+  }
+
+  const nextCount = existing.count + 1;
+  const success = nextCount <= config.requests;
+  if (success) {
+    memoryRateBuckets.set(key, { count: nextCount, resetAt: existing.resetAt });
+  }
+
+  return {
+    success,
+    remaining: Math.max(config.requests - Math.min(nextCount, config.requests), 0),
+    reset: existing.resetAt,
+  };
+}
 
 function hasRedisConfiguration(): boolean {
   return Boolean(process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN);
@@ -110,16 +153,38 @@ export async function rateLimit(
   request: NextRequest,
   type: RateLimitType = 'api'
 ): Promise<{ success: boolean; response?: NextResponse }> {
+  const identifier = getClientIdentifier(request);
+  const config = RATE_LIMITS[type];
+
   if (!hasRedisConfiguration()) {
     if (!missingRedisWarningLogged) {
       missingRedisWarningLogged = true;
-      logger.warn('[RateLimit] Redis not configured; allowing requests in degraded mode.');
+      logger.warn('[RateLimit] Redis not configured; using in-memory fallback limiter.');
+    }
+    const result = memoryRateLimit(identifier, type);
+    if (!result.success) {
+      const retryAfter = Math.ceil((result.reset - Date.now()) / 1000);
+      return {
+        success: false,
+        response: NextResponse.json(
+          {
+            error: 'Too many requests',
+            retryAfter,
+          },
+          {
+            status: 429,
+            headers: {
+              'Retry-After': retryAfter.toString(),
+              'X-RateLimit-Limit': config.requests.toString(),
+              'X-RateLimit-Remaining': result.remaining.toString(),
+              'X-RateLimit-Reset': result.reset.toString(),
+            },
+          }
+        ),
+      };
     }
     return { success: true };
   }
-
-  const identifier = getClientIdentifier(request);
-  const config = RATE_LIMITS[type];
 
   try {
     const upstash = getUpstashLimiters();

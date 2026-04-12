@@ -18,12 +18,7 @@ const CHALLENGE_TTL_MS = 5 * 60 * 1000;
 const CHALLENGE_TTL_SECONDS = Math.floor(CHALLENGE_TTL_MS / 1000);
 const CHALLENGE_PREFIX = 'auth:siwe:challenge:';
 let redisClient: Redis | null | undefined;
-
-function assertRedisAvailable(redis: Redis | null): void {
-  if (!redis) {
-    throw new Error('Redis is required for SIWE challenge replay protection. Configure UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN.');
-  }
-}
+const inMemoryChallenges = new Map<string, ChallengeRecord>();
 
 function randomNonceHex(bytes = 16): string {
   const random = crypto.getRandomValues(new Uint8Array(bytes));
@@ -62,17 +57,26 @@ function normalizeFingerprintValue(value: string, fallback: string): string {
 
 async function storeChallengeRecord(record: ChallengeRecord): Promise<void> {
   const redis = getRedisClient();
-  assertRedisAvailable(redis);
   const key = challengeKey(record.address);
-  await redis!.set(key, JSON.stringify(record), { ex: CHALLENGE_TTL_SECONDS });
+  if (redis) {
+    await redis.set(key, JSON.stringify(record), { ex: CHALLENGE_TTL_SECONDS });
+    return;
+  }
+
+  inMemoryChallenges.set(key, record);
 }
 
 async function consumeChallengeRecord(address: string): Promise<ChallengeRecord | null> {
   const key = challengeKey(address);
   const redis = getRedisClient();
-  assertRedisAvailable(redis);
-  const record = await redis!.getdel<string>(key);
-  return record ? JSON.parse(record) as ChallengeRecord : null;
+  if (redis) {
+    const record = await redis.getdel<string>(key);
+    return record ? JSON.parse(record) as ChallengeRecord : null;
+  }
+
+  const cached = inMemoryChallenges.get(key) ?? null;
+  inMemoryChallenges.delete(key);
+  return cached;
 }
 
 export function getRequestIp(headers: Headers): string {

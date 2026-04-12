@@ -19,6 +19,69 @@ const VALID_ONBOARDING_STEPS = new Set([
 ]);
 const ADDRESS_PATTERN = /^0x[a-fA-F0-9]{40}$/;
 
+const ONBOARDING_STEP_UPDATE_SQL: Record<string, string> = {
+  connectWallet: `
+    INSERT INTO user_onboarding (user_id, step_connect_wallet)
+    VALUES ($1, true)
+    ON CONFLICT (user_id)
+    DO UPDATE SET step_connect_wallet = true, updated_at = NOW()
+  `,
+  completeProfile: `
+    INSERT INTO user_onboarding (user_id, step_complete_profile)
+    VALUES ($1, true)
+    ON CONFLICT (user_id)
+    DO UPDATE SET step_complete_profile = true, updated_at = NOW()
+  `,
+  firstTransaction: `
+    INSERT INTO user_onboarding (user_id, step_first_transaction)
+    VALUES ($1, true)
+    ON CONFLICT (user_id)
+    DO UPDATE SET step_first_transaction = true, updated_at = NOW()
+  `,
+  addFriend: `
+    INSERT INTO user_onboarding (user_id, step_add_friend)
+    VALUES ($1, true)
+    ON CONFLICT (user_id)
+    DO UPDATE SET step_add_friend = true, updated_at = NOW()
+  `,
+  joinGroup: `
+    INSERT INTO user_onboarding (user_id, step_join_group)
+    VALUES ($1, true)
+    ON CONFLICT (user_id)
+    DO UPDATE SET step_join_group = true, updated_at = NOW()
+  `,
+  voteProposal: `
+    INSERT INTO user_onboarding (user_id, step_vote_proposal)
+    VALUES ($1, true)
+    ON CONFLICT (user_id)
+    DO UPDATE SET step_vote_proposal = true, updated_at = NOW()
+  `,
+  earnBadge: `
+    INSERT INTO user_onboarding (user_id, step_earn_badge)
+    VALUES ($1, true)
+    ON CONFLICT (user_id)
+    DO UPDATE SET step_earn_badge = true, updated_at = NOW()
+  `,
+  depositVault: `
+    INSERT INTO user_onboarding (user_id, step_deposit_vault)
+    VALUES ($1, true)
+    ON CONFLICT (user_id)
+    DO UPDATE SET step_deposit_vault = true, updated_at = NOW()
+  `,
+  giveEndorsement: `
+    INSERT INTO user_onboarding (user_id, step_give_endorsement)
+    VALUES ($1, true)
+    ON CONFLICT (user_id)
+    DO UPDATE SET step_give_endorsement = true, updated_at = NOW()
+  `,
+  completeQuest: `
+    INSERT INTO user_onboarding (user_id, step_complete_quest)
+    VALUES ($1, true)
+    ON CONFLICT (user_id)
+    DO UPDATE SET step_complete_quest = true, updated_at = NOW()
+  `,
+};
+
 const updateOnboardingStepSchema = z.object({
   step: z.string().trim().refine((value) => VALID_ONBOARDING_STEPS.has(value), {
     message: 'Invalid onboarding step',
@@ -201,16 +264,14 @@ export async function PATCH(request: NextRequest) {
 
       const userId = userResult.rows[0].id;
 
-      // Convert camelCase to snake_case for database column
-      const columnName = `step_${step.replace(/([A-Z])/g, '_$1').toLowerCase()}`;
+      const updateStepSql = ONBOARDING_STEP_UPDATE_SQL[step];
+      if (!updateStepSql) {
+        await client.query('ROLLBACK');
+        return NextResponse.json({ error: 'Invalid onboarding step' }, { status: 400 });
+      }
 
-      // Update the specific step
-      await client.query(`
-        INSERT INTO user_onboarding (user_id, ${columnName})
-        VALUES ($1, true)
-        ON CONFLICT (user_id) 
-        DO UPDATE SET ${columnName} = true, updated_at = NOW()
-      `, [userId]);
+      // Update the specific step using a fixed SQL template (no dynamic column interpolation).
+      await client.query(updateStepSql, [userId]);
 
       // Check if all steps are complete
       const checkResult = await client.query(`

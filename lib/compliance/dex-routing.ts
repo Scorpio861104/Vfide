@@ -63,7 +63,7 @@ export async function getSwapQuote(request: SwapQuoteRequest): Promise<SwapRoute
       }),
       {
         headers: {
-          'Authorization': `Bearer ${process.env.NEXT_PUBLIC_1INCH_API_KEY || ''}`,
+          'Authorization': `Bearer ${process.env.ONEINCH_API_KEY || ''}`,
         },
       }
     );
