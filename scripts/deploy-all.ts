@@ -200,12 +200,120 @@ async function main() {
   await tokenContract.setFraudRegistry(deployed.FraudRegistry);
   console.log("  Proposed: FraudRegistry → Token");
   
-  // System exemptions (48h timelock each)
+  // System exemptions (48h timelock each — only ONE can be pending at a time)
+  // Propose FeeDistributor first; apply-all.ts will confirm then propose the next
   await tokenContract.proposeSystemExempt(deployed.FeeDistributor, true);
-  console.log("  Proposed: FeeDistributor as systemExempt");
+  console.log("  Proposed: FeeDistributor as systemExempt (confirm in apply-all, then propose next)");
   
-  await tokenContract.proposeSystemExempt(deployed.VFIDEFlashLoan, true);
-  console.log("  Proposed: FlashLoan as systemExempt");
+  // NOTE: FraudRegistry and FlashLoan MUST also be systemExempt.
+  // FraudRegistry: without it, releaseEscrow() transfers will charge fees and re-escrow.
+  // FlashLoan: without it, flash loan repayment transfers will charge fees.
+  // These are proposed sequentially in apply-all.ts after each prior exemption is confirmed.
+
+  // ══════════════════════════════════════════════
+  //  PROOF LEDGER — Register authorized loggers
+  //  F-1 FIX: Without this, ALL event logging silently fails
+  // ══════════════════════════════════════════════
+  console.log("\n═══ ProofLedger Logger Registration ═══");
+
+  const ledger = await ethers.getContractAt("ProofLedger", deployed.ProofLedger);
+  const loggers = [
+    ["VFIDEToken", deployed.VFIDEToken],
+    ["VaultHub", deployed.VaultHub],
+    ["Seer", deployed.Seer],
+    ["MerchantPortal", deployed.MerchantPortal],
+    ["DAOTimelock", deployed.DAOTimelock],
+    ["GovernanceHooks", deployed.GovernanceHooks],
+    ["FraudRegistry", deployed.FraudRegistry],
+    ["VFIDEFlashLoan", deployed.VFIDEFlashLoan],
+    ["VFIDETermLoan", deployed.VFIDETermLoan],
+  ];
+
+  for (const [name, addr] of loggers) {
+    try {
+      await ledger.setLogger(addr, true);
+      console.log(`  ✅ ${name} registered as logger`);
+    } catch (e: any) {
+      console.log(`  ⏭️  ${name}: ${(e as Error).message?.slice(0, 60)}`);
+    }
+  }
+  // NOTE: CardBoundVault addresses are created dynamically via CREATE2.
+  // Individual vaults cannot be pre-registered. Vault logging uses try/catch
+  // and emits on-chain events directly — ProofLedger logging is best-effort.
+  // Register additional contracts (SanctumVault, EcosystemVault, etc.) after deployment.
+
+  // ══════════════════════════════════════════════
+  //  DAO ROLE TRANSFERS (immediate)
+  // ══════════════════════════════════════════════
+  console.log("\n═══ DAO Role Transfers ═══");
+
+  // GovernanceHooks → DAO
+  const hooks = await ethers.getContractAt("GovernanceHooks", deployed.GovernanceHooks);
+  try {
+    await hooks.setDAO(deployed.DAO);
+    console.log("  ✅ GovernanceHooks.dao → DAO");
+  } catch (e: any) {
+    console.log("  ⏭️  GovernanceHooks.setDAO:", (e as Error).message?.slice(0, 60));
+  }
+
+  // FraudRegistry → DAO
+  const fraudContract = await ethers.getContractAt("FraudRegistry", deployed.FraudRegistry);
+  try {
+    await fraudContract.setDAO(deployed.DAO);
+    console.log("  ✅ FraudRegistry.dao → DAO");
+  } catch (e: any) {
+    console.log("  ⏭️  FraudRegistry.setDAO:", (e as Error).message?.slice(0, 60));
+  }
+
+  // MerchantPortal → DAO (F-5 FIX: now has setDAO)
+  const merchantContract = await ethers.getContractAt("MerchantPortal", deployed.MerchantPortal);
+  try {
+    await merchantContract.setDAO(deployed.DAO);
+    console.log("  ✅ MerchantPortal.dao → DAO");
+  } catch (e: any) {
+    console.log("  ⏭️  MerchantPortal.setDAO:", (e as Error).message?.slice(0, 60));
+  }
+
+  // VFIDEFlashLoan → DAO
+  const flashLoan = await ethers.getContractAt("VFIDEFlashLoan", deployed.VFIDEFlashLoan);
+  try {
+    await flashLoan.setDAO(deployed.DAO);
+    console.log("  ✅ VFIDEFlashLoan.dao → DAO");
+  } catch (e: any) {
+    console.log("  ⏭️  VFIDEFlashLoan.setDAO:", (e as Error).message?.slice(0, 60));
+  }
+
+  // VFIDETermLoan → DAO
+  const termLoan = await ethers.getContractAt("VFIDETermLoan", deployed.VFIDETermLoan);
+  try {
+    await termLoan.setDAO(deployed.DAO);
+    console.log("  ✅ VFIDETermLoan.dao → DAO");
+  } catch (e: any) {
+    console.log("  ⏭️  VFIDETermLoan.setDAO:", (e as Error).message?.slice(0, 60));
+  }
+
+  // Seer.setDAO uses 48h timelock — proposed here, confirmed in transfer-governance.ts
+  const seerContract = await ethers.getContractAt("Seer", deployed.Seer);
+  try {
+    await seerContract.setDAO(deployed.DAO);
+    console.log("  ✅ Seer.setDAO → DAO proposed (48h timelock, confirm via seer.applyDAOChange())");
+  } catch (e: any) {
+    console.log("  ⏭️  Seer.setDAO:", (e as Error).message?.slice(0, 60));
+  }
+
+  // DAOTimelock admin transfer requires self-referencing queue tx
+  // Done in transfer-governance.ts after timelock delay is known
+  console.log("  ⚠️  DAOTimelock.admin transfer → run scripts/transfer-governance.ts");
+
+  // ══════════════════════════════════════════════
+  //  IMPORTANT: Deploy these separately before mainnet
+  // ══════════════════════════════════════════════
+  // - OwnerControlPanel (governance post-handover)
+  // - VaultRecoveryClaim (guardian recovery) + register: vaultHub.setRecoveryApprover(addr, true)
+  // - SanctumVault, EcosystemVault, SeerAutonomous, SeerGuardian
+  // - CouncilElection, CouncilManager, CouncilSalary
+  // - SystemHandover, EmergencyControl, VaultRegistry
+  // - BadgeManager, VFIDEBadgeNFT, SeerSocial, SeerWorkAttestation
 
   // ══════════════════════════════════════════════
   //  OUTPUT

@@ -3,7 +3,6 @@
 import { useReadContract, useWriteContract, useAccount, useWaitForTransactionReceipt } from 'wagmi'
 import { CONTRACT_ADDRESSES } from '../lib/contracts'
 import { 
-  SecurityHubABI, 
   PanicGuardABI, 
   GuardianRegistryABI, 
   GuardianLockABI, 
@@ -14,27 +13,18 @@ import { logger } from '@/lib/logger';
 
 // ============================================
 // SECURITY SYSTEM HOOKS - VFIDESecurity.sol
+// SecurityHub removed — non-custodial, no third-party locks
 // ============================================
 
 /**
  * Check if a vault is locked by any security layer
- * Priority: EmergencyBreaker > GuardianLock > PanicGuard > GlobalRisk
+ * SecurityHub removed — always returns false (non-custodial)
  */
 export function useIsVaultLocked(vaultAddress?: `0x${string}`) {
-  const { data: isLocked, isLoading, refetch } = useReadContract({
-    address: CONTRACT_ADDRESSES.SecurityHub,
-    abi: SecurityHubABI,
-    functionName: 'isLocked',
-    args: vaultAddress ? [vaultAddress] : undefined,
-    query: {
-      enabled: !!vaultAddress && CONTRACT_ADDRESSES.SecurityHub !== '0x0000000000000000000000000000000000000000',
-    }
-  })
-  
   return {
-    isLocked: isLocked || false,
-    isLoading,
-    refetch,
+    isLocked: false,
+    isLoading: false,
+    refetch: () => Promise.resolve({ data: false }),
   }
 }
 

@@ -235,7 +235,6 @@ validateABI(VFIDETrustABI, 'VFIDETrust');
 // VaultHub ABI points to the full compiled artifact (includes ensureVault, getVaultInfo, etc.).
 validateABI(VaultHubFullABI, 'VaultHub');
 const VaultHubABI = VaultHubFullABI
-const SecurityHubABI: unknown[] = []
 
 export {
   VFIDETokenABI,
@@ -251,7 +250,6 @@ export {
   VFIDEBadgeNFTABI,
   DAOABI,
   DAOTimelockABI,
-  SecurityHubABI,
   GuardianRegistryABI,
   GuardianLockABI,
   PanicGuardABI,

@@ -1,14 +1,16 @@
 /**
- * VFIDE Wiring Finalization Script
+ * VFIDE Wiring Finalization — Phase 1
  * 
- * Run AFTER 48 hours following deploy-all.ts to apply all pending module proposals.
+ * Run 48 hours after deploy-all.ts.
+ * 
+ * System exemptions can only be proposed ONE AT A TIME on VFIDEToken.
+ * This script confirms FeeDistributor (proposed in deploy-all) and
+ * proposes FraudRegistry. Wait 48h then run apply-phase2.ts.
+ * 
  * Run: npx hardhat run scripts/apply-all.ts --network baseSepolia
- * 
- * Requires the deployed addresses from deploy-all.ts output in .env
  */
 
 import hre from "hardhat";
-
 const ethers = (hre as any).ethers;
 
 async function main() {
@@ -16,66 +18,69 @@ async function main() {
   console.log("Applying pending proposals with:", deployer.address);
 
   const tokenAddr = process.env.NEXT_PUBLIC_VFIDE_TOKEN_ADDRESS;
+  const fraudAddr = process.env.NEXT_PUBLIC_FRAUD_REGISTRY_ADDRESS;
   if (!tokenAddr) throw new Error("Set NEXT_PUBLIC_VFIDE_TOKEN_ADDRESS in .env");
 
   const token = await ethers.getContractAt("VFIDEToken", tokenAddr);
 
-  // Apply token module proposals
+  // ══════════════════════════════════════════════
+  //  Apply Token Module Timelocks
+  // ══════════════════════════════════════════════
   console.log("\n═══ Applying Token Module Proposals ═══");
 
-  try {
-    await token.applyVaultHub();
-    console.log("  ✅ VaultHub applied");
-  } catch (e: any) {
-    console.log("  ⏭️  VaultHub:", e.reason || e.message);
-  }
-
-  try {
-    await token.applyBurnRouter();
-    console.log("  ✅ BurnRouter applied");
-  } catch (e: any) {
-    console.log("  ⏭️  BurnRouter:", e.reason || e.message);
-  }
-
-  try {
-    await token.applyLedger();
-    console.log("  ✅ Ledger applied");
-  } catch (e: any) {
-    console.log("  ⏭️  Ledger:", e.reason || e.message);
-  }
-
-  try {
-    await token.applyFraudRegistry();
-    console.log("  ✅ FraudRegistry applied");
-  } catch (e: any) {
-    console.log("  ⏭️  FraudRegistry:", e.reason || e.message);
-  }
-
-  // Apply system exemptions
-  console.log("\n═══ Applying System Exemptions ═══");
-
-  const feeDistAddr = process.env.NEXT_PUBLIC_FEE_DISTRIBUTOR_ADDRESS;
-  if (feeDistAddr) {
+  for (const fn of ["applyVaultHub", "applyBurnRouter", "applyLedger", "applyFraudRegistry"]) {
     try {
-      await token.applySystemExempt(feeDistAddr);
-      console.log("  ✅ FeeDistributor systemExempt applied");
+      await token[fn]();
+      console.log(`  ✅ ${fn} applied`);
     } catch (e: any) {
-      console.log("  ⏭️  FeeDistributor exempt:", e.reason || e.message);
+      console.log(`  ⏭️  ${fn}: ${e.reason || e.message}`);
     }
   }
 
-  const flashLoanAddr = process.env.NEXT_PUBLIC_FLASH_LOAN_ADDRESS;
-  if (flashLoanAddr) {
+  // ══════════════════════════════════════════════
+  //  System Exemptions — Phase 1
+  //  Only ONE can be pending at a time.
+  // ══════════════════════════════════════════════
+  console.log("\n═══ System Exemptions (Phase 1) ═══");
+
+  // 1. Confirm FeeDistributor (proposed in deploy-all.ts)
+  try {
+    await token.confirmSystemExempt();
+    console.log("  ✅ FeeDistributor systemExempt confirmed");
+  } catch (e: any) {
+    console.log("  ⏭️  confirmSystemExempt:", e.reason || e.message);
+  }
+
+  // 2. Propose FraudRegistry (CRITICAL — without this, releaseEscrow charges fees + re-escrows)
+  if (fraudAddr) {
     try {
-      await token.applySystemExempt(flashLoanAddr);
-      console.log("  ✅ FlashLoan systemExempt applied");
+      await token.proposeSystemExempt(fraudAddr, true);
+      console.log("  ✅ FraudRegistry systemExempt proposed → confirm in apply-phase2.ts (48h)");
     } catch (e: any) {
-      console.log("  ⏭️  FlashLoan exempt:", e.reason || e.message);
+      console.log("  ⏭️  proposeSystemExempt(FraudRegistry):", e.reason || e.message);
+    }
+  } else {
+    console.log("  ⚠️  FRAUD_REGISTRY_ADDRESS not set — MUST be exempted before mainnet!");
+  }
+
+  // ══════════════════════════════════════════════
+  //  Seer DAO Change (48h timelock, proposed in deploy-all)
+  // ══════════════════════════════════════════════
+  console.log("\n═══ Seer DAO Transfer ═══");
+
+  const seerAddr = process.env.NEXT_PUBLIC_SEER_ADDRESS;
+  if (seerAddr) {
+    const seer = await ethers.getContractAt("Seer", seerAddr);
+    try {
+      await seer.applyDAOChange();
+      console.log("  ✅ Seer.dao → DAO confirmed");
+    } catch (e: any) {
+      console.log("  ⏭️  Seer.applyDAOChange:", e.reason || e.message);
     }
   }
 
-  console.log("\n✅ Wiring finalization complete.");
-  console.log("⚠️  Next: Transfer all contract ownership to your multisig.");
+  console.log("\n✅ Phase 1 complete.");
+  console.log("⚠️  Wait 48h then run: npx hardhat run scripts/apply-phase2.ts");
 }
 
 main().catch(console.error);

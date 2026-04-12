@@ -1,0 +1,211 @@
+/**
+ * VFIDE Governance Transfer Script
+ * 
+ * Transfers all admin/dao roles from deployer to correct governance addresses.
+ * Run AFTER apply-phase3.ts (all module wiring complete).
+ * 
+ * CRITICAL: This is the most important post-deploy script. Without it:
+ * - All fees go to deployer wallet (not FeeDistributor)
+ * - DAO governance can't execute proposals (timelock admin = deployer)
+ * - All Seer/FraudRegistry/GovernanceHooks management locked to deployer
+ * 
+ * Run: npx hardhat run scripts/transfer-governance.ts --network baseSepolia
+ */
+
+import hre from "hardhat";
+const ethers = (hre as any).ethers;
+
+async function main() {
+  const [deployer] = await ethers.getSigners();
+  console.log("Transferring governance with:", deployer.address);
+
+  // Load addresses from env
+  const addrs = {
+    token: process.env.NEXT_PUBLIC_VFIDE_TOKEN_ADDRESS!,
+    vaultHub: process.env.NEXT_PUBLIC_VAULT_HUB_ADDRESS!,
+    seer: process.env.NEXT_PUBLIC_SEER_ADDRESS!,
+    burnRouter: process.env.NEXT_PUBLIC_BURN_ROUTER_ADDRESS!,
+    dao: process.env.NEXT_PUBLIC_DAO_ADDRESS!,
+    timelock: process.env.NEXT_PUBLIC_DAO_TIMELOCK_ADDRESS!,
+    feeDistributor: process.env.NEXT_PUBLIC_FEE_DISTRIBUTOR_ADDRESS!,
+    fraudRegistry: process.env.NEXT_PUBLIC_FRAUD_REGISTRY_ADDRESS!,
+    merchantPortal: process.env.NEXT_PUBLIC_MERCHANT_PORTAL_ADDRESS!,
+    flashLoan: process.env.NEXT_PUBLIC_FLASH_LOAN_ADDRESS!,
+    hooks: process.env.NEXT_PUBLIC_GOVERNANCE_HOOKS_ADDRESS!,
+    // Set these after deploying the remaining contracts:
+    ocp: process.env.NEXT_PUBLIC_OCP_ADDRESS || "",
+    sanctumVault: process.env.NEXT_PUBLIC_SANCTUM_VAULT_ADDRESS || "",
+    ecosystemVault: process.env.NEXT_PUBLIC_ECOSYSTEM_VAULT_ADDRESS || "",
+    termLoan: process.env.NEXT_PUBLIC_TERM_LOAN_ADDRESS || "",
+  };
+
+  for (const [name, addr] of Object.entries(addrs)) {
+    if (!addr && !["ocp", "sanctumVault", "ecosystemVault", "termLoan"].includes(name)) {
+      throw new Error(`Missing env var for ${name}`);
+    }
+  }
+
+  // ══════════════════════════════════════════════
+  //  1. SINK WIRING (48h timelocks on token)
+  // ══════════════════════════════════════════════
+  console.log("\n═══ 1. Fee Sink Wiring ═══");
+
+  const token = await ethers.getContractAt("VFIDEToken", addrs.token);
+
+  // Set treasurySink → FeeDistributor (so ecosystem fees flow correctly)
+  try {
+    await token.setTreasurySink(addrs.feeDistributor);
+    console.log("  ✅ TreasurySink → FeeDistributor proposed (48h)");
+  } catch (e: any) {
+    console.log("  ⏭️  setTreasurySink:", e.reason || e.message);
+  }
+
+  // Set sanctumSink (if SanctumVault deployed)
+  if (addrs.sanctumVault) {
+    try {
+      await token.setSanctumSink(addrs.sanctumVault);
+      console.log("  ✅ SanctumSink → SanctumVault proposed (48h)");
+    } catch (e: any) {
+      console.log("  ⏭️  setSanctumSink:", e.reason || e.message);
+    }
+  }
+
+  // ══════════════════════════════════════════════
+  //  2. BURNROUTER SINK WIRING (48h timelock)
+  // ══════════════════════════════════════════════
+  console.log("\n═══ 2. BurnRouter Sink Wiring ═══");
+
+  const burnRouter = await ethers.getContractAt("ProofScoreBurnRouter", addrs.burnRouter);
+  try {
+    await burnRouter.proposeModules(
+      addrs.seer,                               // _seer (keep same)
+      addrs.sanctumVault || addrs.feeDistributor, // _sanctumSink
+      ethers.ZeroAddress,                        // _burnSink (address(0) = hard burn)
+      addrs.feeDistributor,                      // _ecosystemSink
+    );
+    console.log("  ✅ BurnRouter modules proposed (48h)");
+  } catch (e: any) {
+    console.log("  ⏭️  proposeModules:", e.reason || e.message);
+  }
+
+  // ══════════════════════════════════════════════
+  //  3. DAO ROLE TRANSFERS (immediate where possible)
+  // ══════════════════════════════════════════════
+  console.log("\n═══ 3. DAO Role Transfers ═══");
+
+  // Seer.setDAO → DAO contract (48h timelock on Seer)
+  const seer = await ethers.getContractAt("Seer", addrs.seer);
+  try {
+    await seer.setDAO(addrs.dao);
+    console.log("  ✅ Seer.setDAO → DAO proposed (48h)");
+  } catch (e: any) {
+    console.log("  ⏭️  Seer.setDAO:", e.reason || e.message);
+  }
+
+  // FraudRegistry.setDAO → DAO contract (immediate if deployer is current dao)
+  const fraud = await ethers.getContractAt("FraudRegistry", addrs.fraudRegistry);
+  try {
+    await fraud.setDAO(addrs.dao);
+    console.log("  ✅ FraudRegistry.setDAO → DAO");
+  } catch (e: any) {
+    console.log("  ⏭️  FraudRegistry.setDAO:", e.reason || e.message);
+  }
+
+  // GovernanceHooks.setDAO → DAO contract
+  if (addrs.hooks) {
+    const hooks = await ethers.getContractAt("GovernanceHooks", addrs.hooks);
+    try {
+      await hooks.setDAO(addrs.dao);
+      console.log("  ✅ GovernanceHooks.setDAO → DAO");
+    } catch (e: any) {
+      console.log("  ⏭️  GovernanceHooks.setDAO:", e.reason || e.message);
+    }
+  }
+
+  // MerchantPortal — dao role (onlyDAO functions)
+  // MerchantPortal doesn't have setDAO; dao is set in constructor and immutable.
+  // Must redeploy with DAO address, or add a setDAO function.
+  console.log("  ⚠️  MerchantPortal.dao is constructor-set. Verify it points to DAO or deployer.");
+
+  // VFIDETermLoan — set dao
+  if (addrs.termLoan) {
+    const termLoan = await ethers.getContractAt("VFIDETermLoan", addrs.termLoan);
+    try {
+      await termLoan.setDAO(addrs.dao);
+      console.log("  ✅ VFIDETermLoan.setDAO → DAO");
+    } catch (e: any) {
+      console.log("  ⏭️  VFIDETermLoan.setDAO:", e.reason || e.message);
+    }
+  }
+
+  // ══════════════════════════════════════════════
+  //  4. DAOTIMELOCK ADMIN TRANSFER
+  //     (self-referencing tx: timelock changes its own admin to DAO)
+  // ══════════════════════════════════════════════
+  console.log("\n═══ 4. DAOTimelock Admin → DAO ═══");
+
+  const timelock = await ethers.getContractAt("DAOTimelock", addrs.timelock);
+  const setAdminData = timelock.interface.encodeFunctionData("setAdmin", [addrs.dao]);
+  try {
+    const txId = await timelock.queueTx(addrs.timelock, 0, setAdminData);
+    console.log("  ✅ DAOTimelock.setAdmin(DAO) queued — wait for delay then execute");
+    console.log("     Execute after delay: timelock.execute(txId)");
+  } catch (e: any) {
+    console.log("  ⏭️  queueTx(setAdmin):", e.reason || e.message);
+  }
+
+  // ══════════════════════════════════════════════
+  //  5. TOKEN OWNERSHIP → OCP (when deployed)
+  // ══════════════════════════════════════════════
+  console.log("\n═══ 5. Token Ownership ═══");
+
+  if (addrs.ocp) {
+    try {
+      await token.transferOwnership(addrs.ocp);
+      console.log("  ✅ VFIDEToken.transferOwnership → OCP initiated (7-day accept window)");
+      console.log("     OCP must call token.acceptOwnership() within 7 days");
+    } catch (e: any) {
+      console.log("  ⏭️  transferOwnership:", e.reason || e.message);
+    }
+  } else {
+    console.log("  ⚠️  OCP not deployed yet — token remains deployer-owned");
+  }
+
+  // ══════════════════════════════════════════════
+  //  6. FEEDISTRIBUTOR DESTINATIONS
+  // ══════════════════════════════════════════════
+  console.log("\n═══ 6. FeeDistributor Destinations ═══");
+
+  const feeDist = await ethers.getContractAt("FeeDistributor", addrs.feeDistributor);
+  const destinations = [
+    ["sanctum", addrs.sanctumVault || deployer.address],
+    ["daoPayroll", addrs.ecosystemVault || deployer.address],
+    ["merchantPool", addrs.ecosystemVault || deployer.address],
+    ["headhunterPool", addrs.ecosystemVault || deployer.address],
+  ];
+
+  for (const [name, addr] of destinations) {
+    try {
+      await feeDist.setDestination(name, addr);
+      console.log(`  ✅ FeeDistributor.${name} → ${addr.slice(0, 10)}...`);
+    } catch (e: any) {
+      console.log(`  ⏭️  setDestination(${name}): ${e.reason || e.message}`);
+    }
+  }
+
+  console.log("\n═══ SUMMARY ═══");
+  console.log("Wait 48h then run apply scripts to confirm:");
+  console.log("  - token.applyTreasurySink()");
+  console.log("  - token.applySanctumSink()");
+  console.log("  - burnRouter.applyModules()");
+  console.log("  - seer.applyDAOChange()");
+  console.log("  - timelock.execute(setAdmin txId)");
+  console.log("");
+  console.log("⚠️  BEFORE MAINNET:");
+  console.log("  - Deploy OwnerControlPanel → transfer token ownership");
+  console.log("  - Deploy VaultRecoveryClaim → register as recovery approver");
+  console.log("  - Deploy SanctumVault, EcosystemVault → update FeeDistributor destinations");
+  console.log("  - Run SystemHandover after 6 months");
+}
+
+main().catch(console.error);

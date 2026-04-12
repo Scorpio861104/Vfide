@@ -62,7 +62,7 @@ export function NextOfKinInboxCard({ entry, userAddress, onRemove }: NextOfKinIn
   const isOwner = !!normalizedUser && ownerAddress.toLowerCase() === normalizedUser;
   const isConfiguredNextOfKin = !!normalizedUser && nextOfKinAddress.toLowerCase() === normalizedUser;
 
-  const execute = async (functionName: 'requestInheritance' | 'finalizeInheritance' | 'approveInheritance' | 'guardianCancelInheritance' | 'denyInheritance' | 'cancelInheritance') => {
+  const execute = async (functionName: 'requestInheritance' | 'finalizeInheritance' | 'approveInheritance' | 'guardianCancelInheritance' | 'denyInheritance') => {
     setActionNotice(null);
     setActionTone('info');
 
@@ -135,7 +135,6 @@ export function NextOfKinInboxCard({ entry, userAddress, onRemove }: NextOfKinIn
     { label: 'Approve (Guardian)', fn: 'approveInheritance' as const, disabled: !isGuardian || !isGuardianMature || !active, style: 'bg-gradient-to-r from-green-500 to-emerald-500 text-white' },
     { label: 'Cancel Vote (Guardian)', fn: 'guardianCancelInheritance' as const, disabled: !isGuardian || !isGuardianMature || !active, style: 'border border-red-500/60 text-red-300 hover:bg-red-500/10' },
     { label: 'Deny (Owner)', fn: 'denyInheritance' as const, disabled: !isOwner || !active, style: 'border border-red-500/60 text-red-300 hover:bg-red-500/10' },
-    { label: 'Cancel (Owner)', fn: 'cancelInheritance' as const, disabled: !isOwner || !active, style: 'border border-orange-500/60 text-orange-300 hover:bg-orange-500/10' },
   ];
 
   return (

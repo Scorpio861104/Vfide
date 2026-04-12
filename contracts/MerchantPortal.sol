@@ -188,6 +188,14 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
         _log("merchant_modules_set");
     }
 
+    /// @notice F-5 FIX: Transfer DAO control to a new address (for DAO migration)
+    /// @dev Required because MerchantPortal is deployed before DAO contract.
+    function setDAO(address _dao) external onlyDAO {
+        require(_dao != address(0), "MP: zero dao");
+        dao = _dao;
+        _log("merchant_dao_set");
+    }
+
     function setProtocolFee(uint256 _feeBps) external onlyDAO {
         require(_feeBps <= 500, "fee too high"); // Max 5%
         protocolFeeBps = _feeBps;

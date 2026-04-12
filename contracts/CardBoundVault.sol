@@ -341,6 +341,19 @@ contract CardBoundVault is ReentrancyGuard {
         emit VaultApprove(spender, amount);
     }
 
+    /// @notice F-6 FIX: Approve a spender to pull any ERC20 from this vault.
+    /// @dev Required for stablecoin payments through MerchantPortal.
+    ///      Cannot approve VFIDE — use approveVFIDE for that.
+    event ERC20Approve(address indexed token, address indexed spender, uint256 amount);
+
+    function approveERC20(address token, address spender, uint256 amount) external onlyAdmin whenNotPaused {
+        require(token != vfideToken, "CBV: use approveVFIDE for VFIDE");
+        require(spender != address(0), "CBV: zero spender");
+        require(token != address(0), "CBV: zero token");
+        IERC20(token).approve(spender, amount);
+        emit ERC20Approve(token, spender, amount);
+    }
+
     /// @notice Pause vault operations (admin or guardian emergency control).
     function pause() external {
         if (msg.sender != admin && !isGuardian[msg.sender]) {

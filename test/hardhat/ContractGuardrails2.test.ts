@@ -423,7 +423,9 @@ describe("DAO (F-21: emergency quorum rescue 10% floor)", () => {
 // ─────────────────────────────────────────────────────────────────────────────
 describe("MerchantPortal (scoped pull permits)", { concurrency: 1 }, () => {
   async function deployPortal() {
-    const { ethers } = (await network.connect()) as any;
+    const { ethers } = (await network.connect({
+      override: { allowUnlimitedContractSize: true },
+    })) as any;
     const [dao, merchant, customer, feeSink] = await ethers.getSigners();
 
     const VaultHub = await ethers.getContractFactory("VaultHubStub");
@@ -573,7 +575,9 @@ describe("EscrowManager (F-18: minimum lock period)", () => {
 // ─────────────────────────────────────────────────────────────────────────────
 describe("VaultHub (guardian bootstrap hardening)", () => {
   it("assigns owner as initial guardian and does not assign DAO guardian by default", async () => {
-    const { ethers } = (await network.connect()) as any;
+    const { ethers } = (await network.connect({
+      override: { allowUnlimitedContractSize: true },
+    })) as any;
     const [dao, owner] = await ethers.getSigners();
 
     const Token = await ethers.getContractFactory("TokenStub");
@@ -599,7 +603,9 @@ describe("VaultHub (guardian bootstrap hardening)", () => {
   });
 
   it("blocks vault-to-vault transfers before guardian setup is completed", async () => {
-    const { ethers } = (await network.connect()) as any;
+    const { ethers } = (await network.connect({
+      override: { allowUnlimitedContractSize: true },
+    })) as any;
     const [dao, owner, recipient] = await ethers.getSigners();
 
     const Token = await ethers.getContractFactory("TokenStub");

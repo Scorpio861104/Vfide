@@ -213,13 +213,6 @@ const TOKEN_ABI = [
     type: 'function',
   },
   {
-    inputs: [{ name: 'hub', type: 'address' }],
-    name: 'setSecurityHub',
-    outputs: [],
-    stateMutability: 'nonpayable',
-    type: 'function',
-  },
-  {
     inputs: [{ name: '_ledger', type: 'address' }],
     name: 'setLedger',
     outputs: [],
@@ -338,13 +331,6 @@ const TOKEN_ABI = [
   },
   {
     inputs: [],
-    name: 'securityHub',
-    outputs: [{ type: 'address' }],
-    stateMutability: 'view',
-    type: 'function',
-  },
-  {
-    inputs: [],
     name: 'ledger',
     outputs: [{ type: 'address' }],
     stateMutability: 'view',
@@ -454,7 +440,7 @@ export default function AdminPanel() {
   const [vaultBypassAddress, setVaultBypassAddress] = useState('');
   const [whaleExemptAddress, setWhaleExemptAddress] = useState('');
   const [moduleAddress, setModuleAddress] = useState('');
-  const [moduleType, setModuleType] = useState<'vaultHub' | 'securityHub' | 'ledger' | 'burnRouter' | 'treasurySink' | 'sanctumSink'>('vaultHub');
+  const [moduleType, setModuleType] = useState<'vaultHub' | 'ledger' | 'burnRouter' | 'treasurySink' | 'sanctumSink'>('vaultHub');
   const [newOwner, setNewOwner] = useState('');
   const [burnParams, setBurnParams] = useState({
     minTotalBps: '',
@@ -578,12 +564,7 @@ export default function AdminPanel() {
     query: { enabled: IS_TOKEN_DEPLOYED },
   });
 
-  const { data: securityHubAddress } = useReadContract({
-    address: TOKEN_ADDRESS,
-    abi: TOKEN_ABI,
-    functionName: 'securityHub',
-    query: { enabled: IS_TOKEN_DEPLOYED },
-  });
+  // SecurityHub removed — non-custodial, no third-party locks
 
   const { data: ledgerAddress } = useReadContract({
     address: TOKEN_ADDRESS,
@@ -751,9 +732,8 @@ export default function AdminPanel() {
     if (!requireTokenDeployment()) return;
     const target = requireNonZeroAddress(moduleAddress, 'Module address');
     if (!target) return;
-    const functionMap: Record<string, 'setVaultHub' | 'setSecurityHub' | 'setLedger' | 'setBurnRouter' | 'setTreasurySink' | 'setSanctumSink'> = {
+    const functionMap: Record<string, 'setVaultHub' | 'setLedger' | 'setBurnRouter' | 'setTreasurySink' | 'setSanctumSink'> = {
       vaultHub: 'setVaultHub',
-      securityHub: 'setSecurityHub',
       ledger: 'setLedger',
       burnRouter: 'setBurnRouter',
       treasurySink: 'setTreasurySink',
@@ -762,7 +742,7 @@ export default function AdminPanel() {
     writeContract({
       address: TOKEN_ADDRESS,
       abi: TOKEN_ABI,
-      functionName: functionMap[moduleType] as 'setVaultHub' | 'setSecurityHub' | 'setLedger' | 'setBurnRouter' | 'setTreasurySink' | 'setSanctumSink',
+      functionName: functionMap[moduleType] as 'setVaultHub' | 'setLedger' | 'setBurnRouter' | 'setTreasurySink' | 'setSanctumSink',
       args: [target],
     });
   };
@@ -1240,7 +1220,6 @@ export default function AdminPanel() {
       owner: owner,
       modules: {
         vaultHub: vaultHubAddress,
-        securityHub: securityHubAddress,
         ledger: ledgerAddress,
         burnRouter: burnRouterAddress,
         treasurySink: treasurySinkAddress,
@@ -2066,7 +2045,7 @@ export default function AdminPanel() {
           <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6">
             <h2 className="text-2xl font-bold text-white mb-4">⚡ Circuit Breaker</h2>
             <p className="text-gray-300 text-sm mb-4">
-              Emergency circuit breaker bypasses SecurityHub lock checks. Use ONLY in emergencies.
+              Emergency circuit breaker bypasses external module checks. Use ONLY in emergencies.
             </p>
 
             <div className="bg-black/30 rounded-lg p-4 mb-4">
@@ -2093,7 +2072,7 @@ export default function AdminPanel() {
             {circuitBreaker && (
               <div className="bg-red-500/20 border border-red-500 rounded-lg p-4 mt-4">
                 <p className="text-red-400 text-sm font-bold">⚠️ EMERGENCY MODE ACTIVE</p>
-                <p className="text-gray-300 text-xs">SecurityHub locks are bypassed</p>
+                <p className="text-gray-300 text-xs">External module checks bypassed</p>
               </div>
             )}
           </div>
@@ -2102,7 +2081,7 @@ export default function AdminPanel() {
           <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6">
             <h2 className="text-2xl font-bold text-white mb-4">🔧 Module Configuration</h2>
             <p className="text-gray-300 text-sm mb-4">
-              Connect system modules (VaultHub, SecurityHub, Ledger, BurnRouter, etc.)
+              Connect system modules (VaultHub, Ledger, BurnRouter, TreasurySink, SanctumSink)
             </p>
 
             <div className="mb-4">
@@ -2113,7 +2092,6 @@ export default function AdminPanel() {
                 className="w-full bg-black/30 text-white rounded-lg px-4 py-3 border border-gray-600 focus:border-purple-500 focus:outline-none"
               >
                 <option value="vaultHub">Vault Hub</option>
-                <option value="securityHub">Security Hub</option>
                 <option value="ledger">Proof Ledger</option>
                 <option value="burnRouter">Burn Router</option>
                 <option value="treasurySink">Treasury Sink</option>
@@ -2147,10 +2125,6 @@ export default function AdminPanel() {
                 <div className="bg-black/30 rounded p-2">
                   <span className="text-gray-400">Vault Hub:</span>
                   <p className="text-white font-mono break-all">{vaultHubAddress as string || 'Not set'}</p>
-                </div>
-                <div className="bg-black/30 rounded p-2">
-                  <span className="text-gray-400">Security Hub:</span>
-                  <p className="text-white font-mono break-all">{securityHubAddress as string || 'Not set'}</p>
                 </div>
                 <div className="bg-black/30 rounded p-2">
                   <span className="text-gray-400">Proof Ledger:</span>
@@ -2496,14 +2470,6 @@ export default function AdminPanel() {
                       )}
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-gray-300 text-sm">SecurityHub</span>
-                      {securityHubAddress && securityHubAddress !== ZERO_ADDRESS ? (
-                        <span className="text-green-400 text-sm">✅ Connected</span>
-                      ) : (
-                        <span className="text-red-400 text-sm">❌ Not Set</span>
-                      )}
-                    </div>
-                    <div className="flex items-center justify-between">
                       <span className="text-gray-300 text-sm">ProofLedger</span>
                       {ledgerAddress && ledgerAddress !== ZERO_ADDRESS ? (
                         <span className="text-green-400 text-sm">✅ Connected</span>
@@ -2594,7 +2560,6 @@ export default function AdminPanel() {
                 <h3 className="text-purple-400 text-sm font-bold mb-3">Overall System Status</h3>
                 <div className="flex items-center gap-4">
                   {vaultHubAddress && vaultHubAddress !== ZERO_ADDRESS &&
-                  securityHubAddress && securityHubAddress !== ZERO_ADDRESS &&
                   ledgerAddress && ledgerAddress !== ZERO_ADDRESS &&
                   burnRouterAddress && burnRouterAddress !== ZERO_ADDRESS ? (
                     <>
@@ -2794,7 +2759,7 @@ export default function AdminPanel() {
             <div className="bg-blue-500/20 border border-blue-500 rounded-lg p-4">
               <p className="text-blue-400 text-sm font-bold">📋 Pre-Transfer Checklist</p>
               <ul className="text-gray-300 text-xs mt-2 space-y-1">
-                <li>✅ All modules configured (VaultHub, SecurityHub, etc.)</li>
+                <li>✅ All modules configured (VaultHub, Ledger, BurnRouter, etc.)</li>
                 <li>✅ Exchanges whitelisted and funded</li>
                 <li>✅ Vault-only mode enabled</li>
                 <li>✅ Policy locked (if permanent enforcement desired)</li>
