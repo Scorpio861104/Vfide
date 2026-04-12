@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { withRateLimit } from '@/lib/auth/rateLimit';
 import { query } from '@/lib/db';
 
 export async function GET(request: NextRequest) {
+  const rateLimitResponse = await withRateLimit(request, 'read');
+  if (rateLimitResponse) return rateLimitResponse;
+
   const address = request.nextUrl.searchParams.get('address');
   if (!address) return NextResponse.json({ error: 'address required' }, { status: 400 });
 

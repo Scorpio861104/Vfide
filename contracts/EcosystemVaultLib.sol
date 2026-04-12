@@ -22,7 +22,7 @@ library EcosystemVaultLib {
      * @notice Get merchant rank share based on rank position
      * @dev Rank 1-5: 500bps, 6-10: 300bps, 11-20: 200bps, 21-40: 100bps, 41-60: 50bps, 61-100: 25bps
      */
-    function getMerchantRankShare(uint8 rank) internal pure returns (uint16) {
+    function getMerchantRankShare(uint8 rank) public pure returns (uint16) {
         if (rank == 0 || rank > 100) return 0;
         if (rank <= 5) return 500;
         if (rank <= 10) return 300;
@@ -32,7 +32,7 @@ library EcosystemVaultLib {
         return 25;
     }
 
-    function getMerchantBonusTier(uint16 score) internal pure returns (uint16) {
+    function getMerchantBonusTier(uint16 score) public pure returns (uint16) {
         if (score >= TIER1_THRESHOLD) return TIER1_MULTIPLIER;
         if (score >= TIER2_THRESHOLD) return TIER2_MULTIPLIER;
         if (score >= TIER3_THRESHOLD) return TIER3_MULTIPLIER;
@@ -40,11 +40,58 @@ library EcosystemVaultLib {
         return 0;
     }
 
-    function getSpendablePoolBalance(uint256 poolBalance, uint16 reserveBps) internal pure returns (uint256) {
+    function getSpendablePoolBalance(uint256 poolBalance, uint16 reserveBps) public pure returns (uint256) {
         if (poolBalance < 1) return 0;
         if (reserveBps == 0) return poolBalance;
         uint256 reserveAmount = (poolBalance * reserveBps) / MAX_BPS;
         return poolBalance > reserveAmount ? poolBalance - reserveAmount : 0;
+    }
+
+    function getReferralWorkLevel(
+        uint16 points,
+        uint16 referralLevel1Points,
+        uint16 referralLevel2Points,
+        uint16 referralLevel3Points,
+        uint16 referralLevel4Points
+    ) public pure returns (uint8) {
+        if (points >= referralLevel4Points) return 4;
+        if (points >= referralLevel3Points) return 3;
+        if (points >= referralLevel2Points) return 2;
+        if (points >= referralLevel1Points) return 1;
+        return 0;
+    }
+
+    function getReferralLevelReward(
+        uint8 level,
+        uint256 referralLevel1Reward,
+        uint256 referralLevel2Reward,
+        uint256 referralLevel3Reward,
+        uint256 referralLevel4Reward
+    ) public pure returns (uint256) {
+        if (level == 1) return referralLevel1Reward;
+        if (level == 2) return referralLevel2Reward;
+        if (level == 3) return referralLevel3Reward;
+        if (level == 4) return referralLevel4Reward;
+        return 0;
+    }
+
+    function getReferralLevelRequiredPoints(
+        uint8 level,
+        uint16 referralLevel1Points,
+        uint16 referralLevel2Points,
+        uint16 referralLevel3Points,
+        uint16 referralLevel4Points
+    ) public pure returns (uint16) {
+        if (level == 1) return referralLevel1Points;
+        if (level == 2) return referralLevel2Points;
+        if (level == 3) return referralLevel3Points;
+        if (level == 4) return referralLevel4Points;
+        return 0;
+    }
+
+    function vfideToStable(uint256 amount, uint256 minOutputPerVfide) public pure returns (uint256 stableAmount) {
+        if (minOutputPerVfide == 0) return 0;
+        stableAmount = amount * minOutputPerVfide / 1e18;
     }
 
     function getMerchantTierMultipliers() internal pure returns (

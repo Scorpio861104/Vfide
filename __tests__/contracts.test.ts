@@ -12,7 +12,7 @@ describe('contracts', () => {
       expect(CONTRACT_ADDRESSES).toHaveProperty('DAO')
       expect(CONTRACT_ADDRESSES).toHaveProperty('DAOTimelock')
       expect(CONTRACT_ADDRESSES).toHaveProperty('BadgeNFT')
-      expect(CONTRACT_ADDRESSES).toHaveProperty('SecurityHub')
+      expect(CONTRACT_ADDRESSES).toHaveProperty('FraudRegistry')
       expect(CONTRACT_ADDRESSES).toHaveProperty('GuardianRegistry')
       expect(CONTRACT_ADDRESSES).toHaveProperty('GuardianLock')
       expect(CONTRACT_ADDRESSES).toHaveProperty('PanicGuard')

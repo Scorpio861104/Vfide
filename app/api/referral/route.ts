@@ -6,6 +6,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { withRateLimit } from '@/lib/auth/rateLimit';
 import { z } from 'zod4';
 import { isAddress } from 'viem';
 
@@ -14,6 +15,9 @@ const referralSchema = z.object({
 });
 
 export async function GET(request: NextRequest) {
+  const rateLimitResponse = await withRateLimit(request, 'read');
+  if (rateLimitResponse) return rateLimitResponse;
+
   const ref = request.nextUrl.searchParams.get('ref');
   
   if (!ref || !isAddress(ref)) {
@@ -28,6 +32,9 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  const rateLimitResponse = await withRateLimit(request, 'read');
+  if (rateLimitResponse) return rateLimitResponse;
+
   const rawBody = await request.json().catch(() => null);
   const parsed = referralSchema.safeParse(rawBody);
 

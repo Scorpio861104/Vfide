@@ -25,6 +25,8 @@ contract CouncilSalary {
     event MemberRemoved(address indexed member, address indexed by);
     event VoteCast(address indexed voter, address indexed target, bool support);
     event MemberReinstated(address indexed member);
+    event KeeperSet(address indexed keeper, bool authorized);
+    event DAOSet(address indexed oldDAO, address indexed newDAO);
 
     uint256 private _reentrancyStatus = 1;
     modifier nonReentrant() {
@@ -74,6 +76,7 @@ contract CouncilSalary {
         require(msg.sender == dao, "not dao");
         require(keeper != address(0), "zero address");
         isKeeper[keeper] = authorized;
+        emit KeeperSet(keeper, authorized);
     }
     
     function startNewTerm() external {
@@ -84,7 +87,9 @@ contract CouncilSalary {
     function setDAO(address _dao) external {
         require(msg.sender == dao, "not dao");
         require(_dao != address(0), "zero address");
+        address oldDAO = dao;
         dao = _dao;
+        emit DAOSet(oldDAO, _dao);
     }
     /**
      * Distribute salary to eligible council members.

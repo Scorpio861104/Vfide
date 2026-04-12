@@ -69,6 +69,7 @@ contract BadgeManager {
     event BadgeRenewed(address indexed user, bytes32 indexed badge, uint256 newExpiry);
     event OperatorSet(address indexed operator, bool authorized);
     event StatsUpdated(address indexed user, string metric, uint32 newValue);
+    event QualificationRulesSet(address indexed oldRules, address indexed newRules);
     
     // ════════════════════════════════════════════════════════════════════════
     //                              ERRORS
@@ -134,7 +135,9 @@ contract BadgeManager {
 
     function setQualificationRules(address newRules) external onlyDAO nonReentrantBM {
         if (newRules == address(0)) revert BM_Zero();
+        address oldRules = address(qualificationRules);
         qualificationRules = IBadgeQualificationRules(newRules);
+        emit QualificationRulesSet(oldRules, newRules);
     }
     
     // ════════════════════════════════════════════════════════════════════════

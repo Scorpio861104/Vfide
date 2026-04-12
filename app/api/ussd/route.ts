@@ -1,4 +1,5 @@
 import { NextRequest } from 'next/server';
+import { withRateLimit } from '@/lib/auth/rateLimit';
 import { logger } from '@/lib/logger';
 
 async function readUSSDFields(request: NextRequest): Promise<{ sessionId: string; phoneNumber: string; text: string }> {
@@ -67,6 +68,9 @@ function buildMenu(text: string): string {
 }
 
 export async function POST(request: NextRequest) {
+  const rateLimitResponse = await withRateLimit(request, 'write');
+  if (rateLimitResponse) return rateLimitResponse;
+
   try {
     const { sessionId, phoneNumber, text } = await readUSSDFields(request);
 

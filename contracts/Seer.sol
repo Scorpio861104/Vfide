@@ -62,9 +62,11 @@ contract Seer is ReentrancyGuard {
     event SeerSocialSet(address indexed seerSocial);
     event SeerAutonomousSet(address indexed seerAutonomous);
     event BurnRouterSet(address indexed burnRouter);
+    event PolicyGuardSet(address indexed oldGuard, address indexed newGuard);
     event PolicyVersionUpdated(bytes32 indexed policyHash, string policyURI, address indexed updatedBy);
     event DAOChangeProposed(address indexed newDAO, uint64 effectiveAt);
     event DAOChangeCancelled();
+    event ScoreCacheTTLSet(uint64 oldTTL, uint64 newTTL);
 
     address public dao;
     address public pendingDAO;
@@ -286,7 +288,9 @@ contract Seer is ReentrancyGuard {
 
     function setPolicyGuard(address _policyGuard) external onlyDAO nonReentrant {
         if (_policyGuard == address(0)) revert TRUST_Zero();
+        address oldGuard = policyGuard;
         policyGuard = _policyGuard;
+        emit PolicyGuardSet(oldGuard, _policyGuard);
     }
     
     /**
@@ -467,7 +471,9 @@ contract Seer is ReentrancyGuard {
 
     function setScoreCacheTTL(uint64 ttl) external onlyDAO nonReentrant {
         if (ttl < 5 minutes || ttl > 1 days) revert TRUST_Bounds();
+        uint64 oldTTL = scoreCacheTTL;
         scoreCacheTTL = ttl;
+        emit ScoreCacheTTLSet(oldTTL, ttl);
     }
 
     /// @notice Returns cached score if fresh, otherwise falls back to full calculation.

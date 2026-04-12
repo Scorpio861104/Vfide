@@ -71,6 +71,7 @@ contract CircuitBreaker is VFIDEAccessControl {
     event EmergencyControllerUpdated(address indexed newController);
     event VolumeRecorded(uint256 amount, uint256 totalDaily);
     event BlacklistIncremented(uint256 count24h);
+    event TVLUpdated(uint256 previousTVL, uint256 newTVL);
 
     modifier notTriggered() {
         require(!circuitBreakerTriggered, "CircuitBreaker: already triggered");
@@ -231,7 +232,9 @@ contract CircuitBreaker is VFIDEAccessControl {
      * @param _tvl New TVL value
      */
     function updateTVL(uint256 _tvl) external onlyRole(CONFIG_MANAGER_ROLE) nonReentrantCB {
+        uint256 previousTVL = monitoring.totalValueLocked;
         monitoring.totalValueLocked = _tvl;
+        emit TVLUpdated(previousTVL, _tvl);
     }
 
     /**

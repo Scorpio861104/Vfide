@@ -1,7 +1,11 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
+import { withRateLimit } from '@/lib/auth/rateLimit';
 import { query } from '@/lib/db';
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const rateLimitResponse = await withRateLimit(request, 'read');
+  if (rateLimitResponse) return rateLimitResponse;
+
   try {
     // Aggregate stats from database
     const [users, merchants, transactions] = await Promise.all([

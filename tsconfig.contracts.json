@@ -8,6 +8,7 @@
     "hardhat.config.ts",
     "scripts/**/*.ts",
     "typechain-types/**/*.ts",
+    "types/**/*.d.ts",
     "jest.d.ts"
   ],
   "exclude": [

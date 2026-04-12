@@ -9,6 +9,7 @@ import { useVaultOperations } from './useVaultOperations';
 import { VaultHeader } from './VaultHeader';
 import { VaultOverviewStats } from './VaultOverviewStats';
 import { VaultQuickActions } from './VaultQuickActions';
+import { MerchantApprovalPanel } from './MerchantApprovalPanel';
 import { VaultSecuritySection } from './VaultSecuritySection';
 import { VaultRecoveryPanel } from './VaultRecoveryPanel';
 import { DepositModal } from './DepositModal';
@@ -52,6 +53,11 @@ export function VaultContent() {
               onDeposit={() => ops.setShowDepositModal(true)}
               onWithdraw={() => ops.setShowWithdrawModal(true)}
               onTransfer={() => { ops.setWithdrawRecipient(''); ops.setShowWithdrawModal(true); }}
+            />
+
+            <MerchantApprovalPanel
+              cardBoundMode={ops.cardBoundMode}
+              vaultAddress={ops.vaultAddress}
             />
 
             <VaultSecuritySection vaultAddress={ops.vaultAddress} />

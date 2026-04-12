@@ -1,13 +1,10 @@
-import { promises as fs } from 'node:fs';
-import path from 'node:path';
 import { NextRequest, NextResponse } from 'next/server';
+import { withRateLimit } from '@/lib/auth/rateLimit';
+import { query } from '@/lib/db';
 
 export const runtime = 'nodejs';
 
 const ADDRESS_REGEX = /^0x[a-fA-F0-9]{40}$/;
-const STORE_DIR = path.join(process.cwd(), '.vfide-runtime');
-const STORE_PATH = path.join(STORE_DIR, 'subscriptions.json');
-
 const INTERVALS = new Set(['weekly', 'monthly', 'quarterly', 'yearly']);
 
 type BillingInterval = 'weekly' | 'monthly' | 'quarterly' | 'yearly';
@@ -26,8 +23,6 @@ type SubscriptionRecord = {
   source: 'local' | 'onchain-ready';
   note: string;
 };
-
-type SubscriptionStore = Record<string, SubscriptionRecord[]>;
 
 function normalizeAddress(value: string) {
   return value.trim().toLowerCase();
@@ -52,40 +47,114 @@ function getNextPaymentDate(interval: BillingInterval, from = new Date()) {
   return next.toISOString();
 }
 
-async function readStore(): Promise<SubscriptionStore> {
-  try {
-    const raw = await fs.readFile(STORE_PATH, 'utf8');
-    const parsed = JSON.parse(raw) as SubscriptionStore;
-    return parsed && typeof parsed === 'object' ? parsed : {};
-  } catch {
-    return {};
-  }
+type SubscriptionRow = {
+  id: number;
+  merchant_address: string;
+  merchant_name: string | null;
+  amount: string;
+  frequency: BillingInterval;
+  status: SubscriptionStatus;
+  next_payment: Date | string | null;
+  created_at: Date | string;
+  updated_at: Date | string;
+  source: 'local' | 'onchain-ready';
+  note: string;
+};
+
+function toIsoString(value: Date | string | null) {
+  if (!value) return null;
+  return value instanceof Date ? value.toISOString() : new Date(value).toISOString();
 }
 
-async function writeStore(store: SubscriptionStore) {
-  await fs.mkdir(STORE_DIR, { recursive: true });
-  await fs.writeFile(STORE_PATH, JSON.stringify(store, null, 2), 'utf8');
+function toRecord(row: SubscriptionRow): SubscriptionRecord {
+  return {
+    id: String(row.id),
+    recipient: row.merchant_address,
+    label: row.merchant_name?.trim() || 'Recurring payment',
+    amount: row.amount,
+    interval: row.frequency,
+    status: row.status,
+    nextPayment: toIsoString(row.next_payment),
+    createdAt: toIsoString(row.created_at) || new Date(0).toISOString(),
+    updatedAt: toIsoString(row.updated_at) || new Date(0).toISOString(),
+    source: row.source,
+    note: row.note,
+  };
+}
+
+async function ensureUserId(address: string) {
+  const normalizedAddress = normalizeAddress(address);
+
+  await query(
+    `INSERT INTO users (wallet_address, proof_score)
+     VALUES ($1, 5000)
+     ON CONFLICT (wallet_address) DO NOTHING`,
+    [normalizedAddress],
+  );
+
+  const result = await query<{ id: number }>(
+    'SELECT id FROM users WHERE wallet_address = $1',
+    [normalizedAddress],
+  );
+
+  const userId = result.rows[0]?.id;
+  if (!userId) {
+    throw new Error('Unable to resolve subscription owner');
+  }
+
+  return userId;
+}
+
+async function listSubscriptions(address: string) {
+  const result = await query<SubscriptionRow>(
+    `SELECT s.id,
+            s.merchant_address,
+            s.merchant_name,
+            s.amount::text AS amount,
+            s.frequency,
+            s.status,
+            s.next_payment,
+            s.created_at,
+            s.updated_at,
+            COALESCE(s.source, 'local') AS source,
+            COALESCE(s.note, '') AS note
+       FROM subscriptions s
+       INNER JOIN users u ON u.id = s.user_id
+      WHERE u.wallet_address = $1
+      ORDER BY s.created_at DESC`,
+    [normalizeAddress(address)],
+  );
+
+  return result.rows.map(toRecord);
 }
 
 export async function GET(request: NextRequest) {
+  const rateLimitResponse = await withRateLimit(request, 'read');
+  if (rateLimitResponse) return rateLimitResponse;
+
   const address = request.nextUrl.searchParams.get('address');
 
   if (!address || !ADDRESS_REGEX.test(address)) {
     return NextResponse.json({ error: 'Valid address query parameter is required' }, { status: 400 });
   }
 
-  const store = await readStore();
-  const normalizedAddress = normalizeAddress(address);
-  const subscriptions = store[normalizedAddress] ?? [];
+  try {
+    const subscriptions = await listSubscriptions(address);
 
-  return NextResponse.json({
-    subscriptions,
-    total: subscriptions.length,
-    source: 'backend',
-  });
+    return NextResponse.json({
+      subscriptions,
+      total: subscriptions.length,
+      source: 'backend',
+    });
+  } catch {
+    return NextResponse.json({ error: 'Failed to load subscriptions' }, { status: 500 });
+  }
 }
 
 export async function POST(request: NextRequest) {
+  const rateLimitResponse = await withRateLimit(request, 'write');
+  if (rateLimitResponse) return rateLimitResponse;
+
   const body = await request.json().catch(() => null) as {
     address?: string;
     recipient?: string;
@@ -105,45 +174,77 @@ export async function POST(request: NextRequest) {
   const interval = body.interval ?? 'monthly';
   const numericAmount = Number.parseFloat(amount);
 
-  if (!recipient || !amount || !Number.isFinite(numericAmount) || numericAmount <= 0 || !INTERVALS.has(interval)) {
+  if (!ADDRESS_REGEX.test(recipient) || !amount || !Number.isFinite(numericAmount) || numericAmount <= 0 || !INTERVALS.has(interval)) {
     return NextResponse.json({ error: 'recipient, amount, and interval are required' }, { status: 400 });
   }
 
   const now = new Date();
-  const record: SubscriptionRecord = {
-    id: `sub-${Date.now()}`,
-    recipient,
-    label,
-    amount,
-    interval,
-    status: 'active',
-    nextPayment: getNextPaymentDate(interval, now),
-    createdAt: now.toISOString(),
-    updatedAt: now.toISOString(),
-    source: body.contractsReady ? 'onchain-ready' : 'local',
-    note: body.contractsReady
-      ? 'Contract routes are configured and ready for wallet confirmation.'
-      : 'Stored in the VFIDE backend schedule until production contract addresses are restored.',
-  };
+  const source = body.contractsReady ? 'onchain-ready' : 'local';
+  const note = body.contractsReady
+    ? 'Contract routes are configured and ready for wallet confirmation.'
+    : 'Stored in the VFIDE backend schedule until production contract addresses are restored.';
 
-  const store = await readStore();
-  const normalizedAddress = normalizeAddress(body.address);
-  const nextSubscriptions = [record, ...(store[normalizedAddress] ?? [])];
-  store[normalizedAddress] = nextSubscriptions;
-  await writeStore(store);
+  try {
+    const userId = await ensureUserId(body.address);
+    const result = await query<SubscriptionRow>(
+      `INSERT INTO subscriptions (
+         user_id,
+         merchant_address,
+         merchant_name,
+         amount,
+         frequency,
+         next_payment,
+         status,
+         created_at,
+         updated_at,
+         source,
+         note
+       )
+       VALUES ($1, $2, $3, $4, $5, $6, 'active', $7, $7, $8, $9)
+       RETURNING id,
+                 merchant_address,
+                 merchant_name,
+                 amount::text AS amount,
+                 frequency,
+                 status,
+                 next_payment,
+                 created_at,
+                 updated_at,
+                 source,
+                 note`,
+      [
+        userId,
+        normalizeAddress(recipient),
+        label,
+        amount,
+        interval,
+        getNextPaymentDate(interval, now),
+        now.toISOString(),
+        source,
+        note,
+      ],
+    );
 
-  return NextResponse.json(
-    {
-      record,
-      subscriptions: nextSubscriptions,
-      total: nextSubscriptions.length,
-      source: 'backend',
-    },
-    { status: 201 },
-  );
+    const subscriptions = await listSubscriptions(body.address);
+
+    return NextResponse.json(
+      {
+        record: result.rows[0] ? toRecord(result.rows[0]) : null,
+        subscriptions,
+        total: subscriptions.length,
+        source: 'backend',
+      },
+      { status: 201 },
+    );
+  } catch {
+    return NextResponse.json({ error: 'Failed to create subscription' }, { status: 500 });
+  }
 }
 
 export async function PATCH(request: NextRequest) {
+  const rateLimitResponse = await withRateLimit(request, 'write');
+  if (rateLimitResponse) return rateLimitResponse;
+
   const body = await request.json().catch(() => null) as {
     address?: string;
     id?: string;
@@ -154,40 +255,49 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json({ error: 'address, id, and action are required' }, { status: 400 });
   }
 
-  const store = await readStore();
-  const normalizedAddress = normalizeAddress(body.address);
-  const subscriptions = store[normalizedAddress] ?? [];
-  const subscriptionIndex = subscriptions.findIndex((subscription) => subscription.id === body.id);
-
-  if (subscriptionIndex === -1) {
-    return NextResponse.json({ error: 'Subscription not found' }, { status: 404 });
-  }
-
-  const currentSubscription = subscriptions[subscriptionIndex];
-  if (!currentSubscription) {
-    return NextResponse.json({ error: 'Subscription not found' }, { status: 404 });
-  }
-
   const nextStatus: SubscriptionStatus = body.action === 'cancel'
     ? 'cancelled'
     : body.action === 'pause'
       ? 'paused'
       : 'active';
 
-  subscriptions[subscriptionIndex] = {
-    ...currentSubscription,
-    status: nextStatus,
-    nextPayment: nextStatus === 'cancelled' ? null : currentSubscription.nextPayment,
-    updatedAt: new Date().toISOString(),
-  };
+  try {
+    const userId = await ensureUserId(body.address);
+    const result = await query<SubscriptionRow>(
+      `UPDATE subscriptions
+          SET status = $1,
+              next_payment = CASE WHEN $1 = 'cancelled' THEN NULL ELSE next_payment END,
+              updated_at = NOW()
+        WHERE id = $2
+          AND user_id = $3
+        RETURNING id,
+                  merchant_address,
+                  merchant_name,
+                  amount::text AS amount,
+                  frequency,
+                  status,
+                  next_payment,
+                  created_at,
+                  updated_at,
+                  COALESCE(source, 'local') AS source,
+                  COALESCE(note, '') AS note`,
+      [nextStatus, Number(body.id), userId],
+    );
 
-  store[normalizedAddress] = subscriptions;
-  await writeStore(store);
+    if (result.rows.length === 0) {
+      return NextResponse.json({ error: 'Subscription not found' }, { status: 404 });
+    }
+    const updated = result.rows[0]!;
 
-  return NextResponse.json({
-    record: subscriptions[subscriptionIndex],
-    subscriptions,
-    total: subscriptions.length,
-    source: 'backend',
-  });
+    const subscriptions = await listSubscriptions(body.address);
+
+    return NextResponse.json({
+      record: toRecord(updated),
+      subscriptions,
+      total: subscriptions.length,
+      source: 'backend',
+    });
+  } catch {
+    return NextResponse.json({ error: 'Failed to update subscription' }, { status: 500 });
+  }
 }

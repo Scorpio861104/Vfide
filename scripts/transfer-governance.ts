@@ -122,10 +122,14 @@ async function main() {
     }
   }
 
-  // MerchantPortal — dao role (onlyDAO functions)
-  // MerchantPortal doesn't have setDAO; dao is set in constructor and immutable.
-  // Must redeploy with DAO address, or add a setDAO function.
-  console.log("  ⚠️  MerchantPortal.dao is constructor-set. Verify it points to DAO or deployer.");
+  // MerchantPortal.setDAO -> DAO contract
+  const merchantPortal = await ethers.getContractAt("MerchantPortal", addrs.merchantPortal);
+  try {
+    await merchantPortal.setDAO(addrs.dao);
+    console.log("  ✅ MerchantPortal.setDAO -> DAO");
+  } catch (e: any) {
+    console.log("  ⏭️  MerchantPortal.setDAO:", e.reason || e.message);
+  }
 
   // VFIDETermLoan — set dao
   if (addrs.termLoan) {
@@ -147,7 +151,7 @@ async function main() {
   const timelock = await ethers.getContractAt("DAOTimelock", addrs.timelock);
   const setAdminData = timelock.interface.encodeFunctionData("setAdmin", [addrs.dao]);
   try {
-    const txId = await timelock.queueTx(addrs.timelock, 0, setAdminData);
+    const _txId = await timelock.queueTx(addrs.timelock, 0, setAdminData);
     console.log("  ✅ DAOTimelock.setAdmin(DAO) queued — wait for delay then execute");
     console.log("     Execute after delay: timelock.execute(txId)");
   } catch (e: any) {

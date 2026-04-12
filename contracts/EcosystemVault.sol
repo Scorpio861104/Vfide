@@ -80,8 +80,12 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
     event CouncilManagerChangeQueued(address indexed councilManager, uint256 executeAfter);
     event CouncilManagerChangeCancelled(address indexed councilManager);
     event CouncilManagerUpdated(address indexed oldCouncilManager, address indexed newCouncilManager);
+    event OperationsWalletChangeQueued(address indexed wallet, uint256 executeAfter);
+    event OperationsWalletChangeCancelled(address indexed wallet);
+    event OperationsWalletUpdated(address indexed oldWallet, address indexed newWallet);
     event ExpenseEpochRolled(uint256 startedAt, uint256 baseOperationsPool, uint256 capAmount);
     event KeeperAddressSet(address indexed newKeeper);
+    event OperationsCooldownUpdated(uint256 oldCooldown, uint256 newCooldown);
 
     // ═══════════════════════════════════════════════════════════════════════
     //                              CONSTANTS
@@ -170,9 +174,15 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
         uint256 executeAfter;
     }
 
+    struct PendingOperationsWalletChange {
+        address wallet;
+        uint256 executeAfter;
+    }
+
     PendingManagerChange public pendingManagerChange;
     PendingAllocationChange public pendingAllocationChange;
     PendingCouncilManagerChange public pendingCouncilManagerChange;
+    PendingOperationsWalletChange public pendingOperationsWalletChange;
 
     // Allocation buckets (council + merchant + headhunter + operations = 10000)
     uint16 public councilBps = 2500;      // 25% - DAO council
@@ -502,7 +512,31 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
      */
     function setOperationsWallet(address _wallet) external onlyOwner {
         if (_wallet == address(0)) revert ECO_Zero();
-        operationsWallet = _wallet;
+        uint256 executeAfter = block.timestamp + SENSITIVE_CHANGE_DELAY;
+        pendingOperationsWalletChange = PendingOperationsWalletChange({
+            wallet: _wallet,
+            executeAfter: executeAfter
+        });
+        emit OperationsWalletChangeQueued(_wallet, executeAfter);
+    }
+
+    function cancelOperationsWalletChange() external onlyOwner {
+        PendingOperationsWalletChange memory pending = pendingOperationsWalletChange;
+        if (pending.executeAfter == 0) revert ECO_NoPendingChange();
+
+        delete pendingOperationsWalletChange;
+        emit OperationsWalletChangeCancelled(pending.wallet);
+    }
+
+    function applyOperationsWalletChange() external onlyOwner {
+        PendingOperationsWalletChange memory pending = pendingOperationsWalletChange;
+        if (pending.executeAfter == 0) revert ECO_NoPendingChange();
+        if (block.timestamp < pending.executeAfter) revert ECO_ChangeNotReady();
+
+        address oldWallet = operationsWallet;
+        operationsWallet = pending.wallet;
+        delete pendingOperationsWalletChange;
+        emit OperationsWalletUpdated(oldWallet, pending.wallet);
     }
     
     /**
@@ -527,7 +561,9 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
     function setOperationsCooldown(uint256 _cooldown) external onlyOwner {
         if (_cooldown < 1 hours) revert ECO_InvalidConfig();
         if (_cooldown > 90 days) revert ECO_InvalidConfig();
+        uint256 oldCooldown = operationsWithdrawalCooldown;
         operationsWithdrawalCooldown = _cooldown;
+        emit OperationsCooldownUpdated(oldCooldown, _cooldown);
     }
     
     /**
@@ -1239,19 +1275,23 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
     }
 
     function _getReferralWorkLevel(uint16 points) internal view returns (uint8) {
-        if (points >= referralLevel4Points) return 4;
-        if (points >= referralLevel3Points) return 3;
-        if (points >= referralLevel2Points) return 2;
-        if (points >= referralLevel1Points) return 1;
-        return 0;
+        return EcosystemVaultLib.getReferralWorkLevel(
+            points,
+            referralLevel1Points,
+            referralLevel2Points,
+            referralLevel3Points,
+            referralLevel4Points
+        );
     }
 
     function _getReferralLevelReward(uint8 level) internal view returns (uint256) {
-        if (level == 1) return referralLevel1Reward;
-        if (level == 2) return referralLevel2Reward;
-        if (level == 3) return referralLevel3Reward;
-        if (level == 4) return referralLevel4Reward;
-        return 0;
+        return EcosystemVaultLib.getReferralLevelReward(
+            level,
+            referralLevel1Reward,
+            referralLevel2Reward,
+            referralLevel3Reward,
+            referralLevel4Reward
+        );
     }
 
     function _getSpendablePoolBalance(uint256 poolBalance, uint16 reserveBps) internal pure returns (uint256) {
@@ -1259,11 +1299,13 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
     }
 
     function _getReferralLevelRequiredPoints(uint8 level) internal view returns (uint16) {
-        if (level == 1) return referralLevel1Points;
-        if (level == 2) return referralLevel2Points;
-        if (level == 3) return referralLevel3Points;
-        if (level == 4) return referralLevel4Points;
-        return 0;
+        return EcosystemVaultLib.getReferralLevelRequiredPoints(
+            level,
+            referralLevel1Points,
+            referralLevel2Points,
+            referralLevel3Points,
+            referralLevel4Points
+        );
     }
 
     // _calculateHeadhunterRank moved to EcosystemVaultView.sol (off-chain indexing)
@@ -1501,8 +1543,7 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
     }
 
     function _vfideToStable(uint256 amount) internal view returns (uint256 stableAmount) {
-        if (minOutputPerVfide == 0) return 0;
-        stableAmount = amount * minOutputPerVfide / 1e18;
+        return EcosystemVaultLib.vfideToStable(amount, minOutputPerVfide);
     }
 
     // ═══════════════════════════════════════════════════════════════════════

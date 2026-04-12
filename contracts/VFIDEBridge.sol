@@ -48,6 +48,15 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
     /// @notice Maximum bridge amount per transaction (100,000 VFIDE)
     uint256 public maxBridgeAmount = 100_000 * 1e18;
 
+    /// @notice Maximum total bridge volume per 24h window.
+    uint256 public dailyBridgeLimit = 500_000 * 1e18;
+
+    /// @notice Total bridge volume for the active 24h window.
+    uint256 public dailyBridgeVolume;
+
+    /// @notice Timestamp when the current daily window started.
+    uint64 public dailyBridgeResetTime;
+
     /// @notice Bridge fee in basis points (10 = 0.1%)
     uint256 public bridgeFee = 10;
 
@@ -107,6 +116,9 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
     uint256 public pendingMaxBridgeAmount;
     uint64 public pendingMaxBridgeAmountAt;
 
+    uint256 public pendingDailyBridgeLimit;
+    uint64 public pendingDailyBridgeLimitAt;
+
     uint256 public pendingBridgeFee;
     uint64 public pendingBridgeFeeAt;
 
@@ -153,6 +165,10 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
     event MaxBridgeAmountUpdated(uint256 oldAmount, uint256 newAmount);
     event MaxBridgeAmountScheduled(uint256 pendingAmount, uint64 effectiveAt);
     event MaxBridgeAmountCancelled();
+    event DailyBridgeLimitUpdated(uint256 oldLimit, uint256 newLimit);
+    event DailyBridgeLimitScheduled(uint256 pendingLimit, uint64 effectiveAt);
+    event DailyBridgeLimitCancelled();
+    event DailyBridgeWindowReset(uint64 startedAt);
     event BridgeFeeUpdated(uint256 oldFee, uint256 newFee);
     event BridgeFeeScheduled(uint256 pendingFee, uint64 effectiveAt);
     event BridgeFeeCancelled();
@@ -193,6 +209,7 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
         require(_owner != address(0), "Invalid owner");
         vfideToken = IERC20(_vfideToken);
         feeCollector = _owner;
+        dailyBridgeResetTime = uint64(block.timestamp);
     }
 
     /**
@@ -213,6 +230,11 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
         if (_to == address(0)) revert InvalidDestination();
         if (trustedRemotes[_dstChainId] == bytes32(0)) revert InvalidRemote();
         require(_bridgeIsSystemExempt(), "VFIDEBridge: configure token systemExempt for bridge");
+
+        _rollDailyBridgeWindow();
+        uint256 nextDailyVolume = dailyBridgeVolume + _amount;
+        if (nextDailyVolume > dailyBridgeLimit) revert RateLimitExceeded();
+        dailyBridgeVolume = nextDailyVolume;
 
         // Check rate limits if security module is set
         if (securityModule != address(0)) {
@@ -531,6 +553,32 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
         emit MaxBridgeAmountUpdated(oldAmount, newAmount);
     }
 
+    function setDailyBridgeLimit(uint256 _limit) external onlyOwner {
+        if (_limit < MIN_BRIDGE_AMOUNT) revert InvalidAmount();
+        uint64 effectiveAt = uint64(block.timestamp) + CONFIG_TIMELOCK_DELAY;
+        pendingDailyBridgeLimit = _limit;
+        pendingDailyBridgeLimitAt = effectiveAt;
+        emit DailyBridgeLimitScheduled(_limit, effectiveAt);
+    }
+
+    function cancelDailyBridgeLimit() external onlyOwner {
+        require(pendingDailyBridgeLimitAt != 0, "VFIDEBridge: no pending update");
+        delete pendingDailyBridgeLimit;
+        delete pendingDailyBridgeLimitAt;
+        emit DailyBridgeLimitCancelled();
+    }
+
+    function applyDailyBridgeLimit() external onlyOwner {
+        require(pendingDailyBridgeLimitAt != 0, "VFIDEBridge: no pending update");
+        require(block.timestamp >= pendingDailyBridgeLimitAt, "VFIDEBridge: timelock not elapsed");
+        uint256 oldLimit = dailyBridgeLimit;
+        uint256 newLimit = pendingDailyBridgeLimit;
+        dailyBridgeLimit = newLimit;
+        delete pendingDailyBridgeLimit;
+        delete pendingDailyBridgeLimitAt;
+        emit DailyBridgeLimitUpdated(oldLimit, newLimit);
+    }
+
     /**
      * @notice Update bridge fee
      * @param _fee New fee in basis points
@@ -762,6 +810,14 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
         btx.executed = true;
         delete bridgeRefundableAfter[txId];
         emit BridgeDeliveryConfirmed(txId);
+    }
+
+    function _rollDailyBridgeWindow() internal {
+        if (dailyBridgeResetTime == 0 || block.timestamp >= uint256(dailyBridgeResetTime) + 1 days) {
+            dailyBridgeVolume = 0;
+            dailyBridgeResetTime = uint64(block.timestamp);
+            emit DailyBridgeWindowReset(dailyBridgeResetTime);
+        }
     }
 
     function _decodeMessageType(bytes calldata payload) internal pure returns (uint16 messageType) {

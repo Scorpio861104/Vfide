@@ -108,6 +108,28 @@ describe("VFIDEBridge", function () {
         bridge.connect(user).bridge(REMOTE_CHAIN_ID, user.address, ethers.utils.parseEther("201"), "0x")
       );
     });
+
+    it("enforces the daily aggregate bridge limit", async function () {
+      const remote = (`0x${"55".repeat(32)}`) as `0x${string}`;
+      await bridge.connect(owner).setTrustedRemote(REMOTE_CHAIN_ID, remote);
+      await time.increase(48 * 60 * 60 + 1);
+      await bridge.connect(owner).applyTrustedRemote(REMOTE_CHAIN_ID);
+
+      await bridge.connect(owner).setDailyBridgeLimit(ethers.utils.parseEther("150"));
+      await time.increase(48 * 60 * 60 + 1);
+      await bridge.connect(owner).applyDailyBridgeLimit();
+
+      await bridge.connect(owner).setExemptCheckBypass(true, 3600);
+
+      await bridge.connect(user).bridge(REMOTE_CHAIN_ID, user.address, ethers.utils.parseEther("100"), "0x");
+      await expectRevert(
+        bridge.connect(user).bridge(REMOTE_CHAIN_ID, user.address, ethers.utils.parseEther("100"), "0x")
+      );
+
+      await time.increase(24 * 60 * 60 + 1);
+      await bridge.connect(owner).setExemptCheckBypass(true, 3600);
+      await bridge.connect(user).bridge(REMOTE_CHAIN_ID, user.address, ethers.utils.parseEther("100"), "0x");
+    });
   });
 
   describe("Admin controls", function () {

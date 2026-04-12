@@ -89,6 +89,7 @@ contract FeeDistributor is AccessControl, ReentrancyGuard, Pausable {
     event DestinationChangeExecuted(bytes32 indexed nameHash, address addr);
     event DestinationChangeCancelled(bytes32 indexed nameHash);
     event DestinationUpdated(string name, address indexed addr);
+    event MinDistributionAmountSet(uint256 oldAmount, uint256 newAmount);
 
     error ZeroAddress();
     error InvalidSplit();
@@ -249,7 +250,9 @@ contract FeeDistributor is AccessControl, ReentrancyGuard, Pausable {
     /// @notice Set the minimum token balance required before distribution can run.
     /// @param _min Minimum contract token balance to allow `distribute`.
     function setMinDistributionAmount(uint256 _min) external onlyRole(ADMIN_ROLE) {
+        uint256 oldAmount = minDistributionAmount;
         minDistributionAmount = _min;
+        emit MinDistributionAmountSet(oldAmount, _min);
     }
 
     /// @notice Pause fee distribution operations.
