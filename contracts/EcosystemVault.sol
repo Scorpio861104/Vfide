@@ -800,26 +800,7 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
      *      M-8 FIX: Now applies EXPENSE_EPOCH_CAP_BPS to ensure the expense guardrail remains effective
      */
     function withdrawOperations() external onlyOwner nonReentrant {
-        if (operationsWallet == address(0)) revert ECO_Zero();
-        if (block.timestamp < lastOperationsWithdrawal + operationsWithdrawalCooldown) revert ECO_TooEarly();
-        
-        _allocateIncoming(); // Ensure pool is up to date
-        
-        uint256 amount = operationsPool;
-        if (amount == 0) revert ECO_InsufficientFunds();
-
-        // M-8 FIX: Apply the same expense epoch cap that payExpense() enforces
-        _rollExpenseEpochIfNeeded();
-        uint256 expenseCap = operationsExpenseEpochBase * EXPENSE_EPOCH_CAP_BPS / MAX_BPS;
-        if (operationsSpentInEpoch + amount > expenseCap) revert ECO_ExpenseCapExceeded();
-        operationsSpentInEpoch += amount;
-        
-        operationsPool = 0;
-        lastOperationsWithdrawal = block.timestamp;
-        
-        rewardToken.safeTransfer(operationsWallet, amount);
-        
-        emit OperationsWithdrawal(operationsWallet, amount);
+        _withdrawOperationsIfDue(true);
     }
 
     // getOperationsStatus moved to EcosystemVaultView.sol
@@ -833,34 +814,7 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
      * @dev Called monthly, splits pool equally among active members
      */
     function distributeCouncilRewards() external onlyManager nonReentrant {
-        if (block.timestamp < lastCouncilDistribution + MONTH) revert ECO_TooEarly();
-        if (address(councilManager) == address(0)) revert ECO_Zero();
-        
-        _allocateIncoming(); // Ensure pool is up to date
-        
-        uint256 amount = councilPool;
-        if (amount < 1) revert ECO_InsufficientFunds();
-        
-        // Get active council members from CouncilManager
-        address[] memory members = councilManager.getActiveMembers();
-        uint256 memberCount = members.length;
-        if (memberCount == 0 || memberCount > type(uint8).max) revert ECO_Zero();
-        if (memberCount > MAX_COUNCIL_DISTRIBUTION_BATCH) revert ECO_ArrayCapReached();
-        
-        uint256 perMember = amount / memberCount;
-        councilPool = amount % memberCount; // Keep remainder for next distribution
-        uint256 distributed = amount - councilPool;
-
-        totalCouncilPaid += distributed;
-        lastCouncilDistribution = block.timestamp;
-        
-        for (uint256 i = 0; i < memberCount; i++) {
-            if (members[i] != address(0)) {
-                rewardToken.safeTransfer(members[i], perMember);
-            }
-        }
-
-        emit CouncilDistributed(distributed, uint8(memberCount), perMember);
+        _distributeCouncilRewardsIfDue(true);
     }
 
     // ═══════════════════════════════════════════════════════════════════════
@@ -898,19 +852,7 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
     * @dev Called monthly to snapshot pool/accounting for program management
      */
     function endMerchantPeriod() external onlyManager {
-        if (block.timestamp < lastMerchantDistribution + MONTH) revert ECO_TooEarly();
-        
-        _allocateIncoming();
-        
-        // Snapshot the pool for this period
-        merchantPeriodPoolSnapshot[currentMerchantPeriod] = merchantPool;
-        merchantPeriodEnded[currentMerchantPeriod] = true;
-        merchantPool = 0; // Reset for next period
-        
-        emit MerchantPeriodEnded(currentMerchantPeriod, merchantPeriodPoolSnapshot[currentMerchantPeriod]);
-        
-        lastMerchantDistribution = block.timestamp;
-        currentMerchantPeriod++;
+        _endMerchantPeriodIfDue(true);
     }
 
     /**
@@ -1005,9 +947,6 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
         referralCredited[merchant] = true;
         _awardPoints(referrer, POINTS_MERCHANT_REFERRAL, merchant, true);
         _tryAutoWorkPayout(referrer, autoMerchantReferralReward, false, "verified_merchant_referral");
-        if (autoWorkPayoutEnabled) {
-            _processReferralLevelPayouts(referrer, currentYear, "auto_referral_level_progress", false);
-        }
     }
 
     /**
@@ -1025,9 +964,6 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
         referralCredited[user] = true;
         _awardPoints(referrer, POINTS_USER_REFERRAL, user, false);
         _tryAutoWorkPayout(referrer, autoUserReferralReward, false, "verified_user_referral");
-        if (autoWorkPayoutEnabled) {
-            _processReferralLevelPayouts(referrer, currentYear, "auto_referral_level_progress", false);
-        }
     }
 
     function _awardPoints(address referrer, uint16 points, address referred, bool isMerchant) internal {
@@ -1098,31 +1034,9 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
         string memory program,
         string memory reason
     ) internal returns (bool success) {
-        if (stablecoinOnlyMode) {
-            uint256 stableAmount = _vfideToStable(amount);
-            if (stableAmount == 0) return false;
-
-            // Path 1: direct stablecoin reserve (Howey-safe, no DEX required)
-            if (stablecoinReserves[preferredStablecoin] >= stableAmount) {
-                stablecoinReserves[preferredStablecoin] -= stableAmount;
-                IERC20(preferredStablecoin).safeTransfer(worker, stableAmount);
-                emit RewardPaidInStable(worker, stableAmount, reason);
-                return true;
-            }
-            // Path 2: DEX swap fallback (requires swapRouter to be configured)
-            if (swapRouter != address(0)) {
-                uint256 stableReceived = _swapToStable(amount);
-                if (stableReceived == 0) return false;
-                IERC20(preferredStablecoin).safeTransfer(worker, stableReceived);
-                emit RewardPaidInStable(worker, stableReceived, reason);
-                return true;
-            }
-            // Neither path available
-            return false;
-        } else {
-            rewardToken.safeTransfer(worker, amount);
-            emit WorkRewardPaid(worker, amount, program, reason);
-        }
+        success = true;
+        rewardToken.safeTransfer(worker, amount);
+        emit WorkRewardPaid(worker, amount, program, reason);
         return true;
     }
 
@@ -1131,25 +1045,7 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
      * @dev Called quarterly, locks in rankings and pool amount for claims
      */
     function endHeadhunterQuarter() external onlyManager {
-        if (block.timestamp < yearStartTime + (QUARTER * currentQuarter)) revert ECO_TooEarly();
-        
-        _allocateIncoming();
-        
-        quarterPoolSnapshot[currentYear][currentQuarter] = headhunterPool;
-        quarterEnded[currentYear][currentQuarter] = true;
-        headhunterPool = 0; // Reset for next quarter
-        
-        emit HeadhunterQuarterEnded(currentYear, currentQuarter, quarterPoolSnapshot[currentYear][currentQuarter]);
-        
-        // Advance to next quarter (or next year)
-        if (currentQuarter == 4) {
-            currentQuarter = 1;
-            currentYear++;
-            yearStartTime = block.timestamp;
-        } else {
-            currentQuarter++;
-        }
-        lastQuarterPayout = block.timestamp;
+        _endHeadhunterQuarterIfDue(true);
     }
 
     /**
@@ -1185,7 +1081,10 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
      * @dev Only objective point milestones are used (no leaderboard rank, no percentage share).
      */
     function payReferralLevelReward(address worker, uint256 year, string calldata reason) external onlyManager nonReentrant {
-        _processReferralLevelPayouts(worker, year, reason, true);
+        worker;
+        year;
+        reason;
+        revert ECO_RewardsNotAvailable();
     }
 
     /**
@@ -1193,7 +1092,11 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
      * @dev Enables autonomous user claims from objective milestones without manager intervention.
      */
     function claimReferralLevelRewards(uint256 year, string calldata reason) external nonReentrant returns (uint8 levelsPaid, uint256 totalAmount) {
-        (levelsPaid, totalAmount) = _processReferralLevelPayouts(msg.sender, year, reason, true);
+        year;
+        reason;
+        levelsPaid;
+        totalAmount;
+        revert ECO_RewardsNotAvailable();
     }
 
     /**
@@ -1201,111 +1104,16 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
      * @dev Anyone can trigger, but payout always goes to `worker`.
      */
     function processReferralLevelRewards(address worker, uint256 year, string calldata reason) external nonReentrant returns (uint8 levelsPaid, uint256 totalAmount) {
-        if (worker == address(0)) revert ECO_Zero();
-        (levelsPaid, totalAmount) = _processReferralLevelPayouts(worker, year, reason, false);
-    }
-
-    function _processReferralLevelPayouts(
-        address worker,
-        uint256 year,
-        string memory reason,
-        bool strict
-    ) internal returns (uint8 levelsPaid, uint256 totalAmount) {
-        if (worker == address(0)) {
-            if (strict) revert ECO_Zero();
-            return (0, 0);
-        }
-
-        // Keep eligibility tied to minimum trust threshold at payout time.
-        if (seer.getScore(worker) < HEADHUNTER_MIN_SCORE) {
-            if (strict) revert ECO_NotEligible();
-            return (0, 0);
-        }
-
-        uint16 points = yearPoints[year][worker];
-        uint8 unlockedLevel = _getReferralWorkLevel(points);
-        if (unlockedLevel == 0) {
-            if (strict) revert ECO_NotEligible();
-            return (0, 0);
-        }
-
-        uint8 alreadyPaidLevel = referralLevelPaid[year][worker];
-        if (alreadyPaidLevel >= unlockedLevel) {
-            if (strict) revert ECO_AlreadyClaimed();
-            return (0, 0);
-        }
-
-        _allocateIncoming();
-
-        uint8 nextLevel = alreadyPaidLevel + 1;
-        uint8 finalPaidLevel = alreadyPaidLevel;
-
-        while (nextLevel <= unlockedLevel) {
-            uint256 levelReward = _getReferralLevelReward(nextLevel);
-            if (levelReward == 0) {
-                if (strict && levelsPaid == 0) revert ECO_NotEligible();
-                break;
-            }
-
-            uint256 spendable = _getSpendablePoolBalance(headhunterPool, headhunterPoolReserveBps);
-            if (levelReward > spendable) {
-                if (strict && levelsPaid == 0) revert ECO_InsufficientFunds();
-                break;
-            }
-
-            headhunterPool -= levelReward;
-            totalHeadhunterPaid += levelReward;
-            totalAmount += levelReward;
-            levelsPaid++;
-            finalPaidLevel = nextLevel;
-
-            emit ReferralWorkLevelRewardPaid(worker, year, nextLevel, levelReward, reason);
-
-            nextLevel++;
-        }
-
-        if (levelsPaid == 0) {
-            if (strict) revert ECO_AlreadyClaimed();
-            return (0, 0);
-        }
-
-        referralLevelPaid[year][worker] = finalPaidLevel;
-        bool ok = _deliverWorkReward(worker, totalAmount, "referral_work_level", reason);
-        if (!ok) revert ECO_ApprovalFailed();
-    }
-
-    function _getReferralWorkLevel(uint16 points) internal view returns (uint8) {
-        return EcosystemVaultLib.getReferralWorkLevel(
-            points,
-            referralLevel1Points,
-            referralLevel2Points,
-            referralLevel3Points,
-            referralLevel4Points
-        );
-    }
-
-    function _getReferralLevelReward(uint8 level) internal view returns (uint256) {
-        return EcosystemVaultLib.getReferralLevelReward(
-            level,
-            referralLevel1Reward,
-            referralLevel2Reward,
-            referralLevel3Reward,
-            referralLevel4Reward
-        );
+        worker;
+        year;
+        reason;
+        levelsPaid;
+        totalAmount;
+        revert ECO_RewardsNotAvailable();
     }
 
     function _getSpendablePoolBalance(uint256 poolBalance, uint16 reserveBps) internal pure returns (uint256) {
         return EcosystemVaultLib.getSpendablePoolBalance(poolBalance, reserveBps);
-    }
-
-    function _getReferralLevelRequiredPoints(uint8 level) internal view returns (uint16) {
-        return EcosystemVaultLib.getReferralLevelRequiredPoints(
-            level,
-            referralLevel1Points,
-            referralLevel2Points,
-            referralLevel3Points,
-            referralLevel4Points
-        );
     }
 
     // _calculateHeadhunterRank moved to EcosystemVaultView.sol (off-chain indexing)
@@ -1336,72 +1144,11 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
         uint256 expenseCap = operationsExpenseEpochBase * EXPENSE_EPOCH_CAP_BPS / MAX_BPS;
         if (operationsSpentInEpoch + amount > expenseCap) revert ECO_ExpenseCapExceeded();
         operationsSpentInEpoch += amount;
-        
-        // If auto-swap is enabled and configured, convert VFIDE to stablecoin
-        if (autoSwapEnabled && swapRouter != address(0) && preferredStablecoin != address(0)) {
-            uint256 stableReceived = _swapToStable(amount);
-            if (stableReceived > 0) {
-                operationsPool -= amount;
-                totalExpensesPaid += amount;
-                // Successfully swapped, transfer stablecoin to recipient
-                IERC20(preferredStablecoin).safeTransfer(recipient, stableReceived);
-                emit RewardPaidInStable(recipient, stableReceived, reason);
-                return;
-            } else {
-                // Swap failed, emit event and fallback to VFIDE payment
-                emit SwapFailed(recipient, amount, reason);
-            }
-        }
-        
-        // Default: pay in VFIDE (no swap or swap failed)
+
         operationsPool -= amount;
         totalExpensesPaid += amount;
         rewardToken.safeTransfer(recipient, amount);
         emit PaymentMade(recipient, amount, reason);
-    }
-    
-    /**
-     * @notice Internal: Swap VFIDE to preferred stablecoin via DEX.
-     * @dev Uses admin-set minOutputPerVfide floor as minAmountOut to prevent sandwich attacks.
-     *      The owner keeps this value current via setMinOutputPerVfide().
-     * @param vfideAmount Amount of VFIDE to swap
-     * @return stableAmount Amount of stablecoin received (0 if swap fails)
-     */
-    function _swapToStable(uint256 vfideAmount) internal returns (uint256) {
-        if (vfideAmount == 0) return 0;
-
-        // Approve router to spend VFIDE
-        if (!rewardToken.approve(swapRouter, vfideAmount)) revert ECO_ApprovalFailed();
-
-        address[] memory path = new address[](2);
-        path[0] = address(rewardToken);  // VFIDE
-        path[1] = preferredStablecoin;   // e.g., USDC
-
-        // Use admin-set floor price — no self-referential router quote, no sandwich vector.
-        uint256 minAmountOut = vfideAmount * minOutputPerVfide / 1e18;
-        // Guard against precision underflow: if vfideAmount is too small relative to 1e18,
-        // the integer division above truncates to 0, leaving no slippage floor.
-        // Treat this as an unswappable amount and fall back to VFIDE payment.
-        if (minAmountOut == 0) {
-            if (!rewardToken.approve(swapRouter, 0)) revert ECO_RevokeFailed();
-            return 0;
-        }
-
-        try ISwapRouter(swapRouter).swapExactTokensForTokens(
-            vfideAmount,
-            minAmountOut,
-            path,
-            address(this),
-            block.timestamp + 300 // 5 min deadline
-        ) returns (uint256[] memory amounts) {
-            // Revoke leftover approval for security
-            if (!rewardToken.approve(swapRouter, 0)) revert ECO_RevokeFailed();
-            return amounts[amounts.length - 1];
-        } catch {
-            // Swap failed (price below floor or no liquidity), revoke approval
-            if (!rewardToken.approve(swapRouter, 0)) revert ECO_RevokeFailed();
-            return 0;
-        }
     }
 
     /// @notice Permanently remove tokens from circulating supply.
@@ -1542,8 +1289,120 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
         operationsSpentInEpoch += amount;
     }
 
-    function _vfideToStable(uint256 amount) internal view returns (uint256 stableAmount) {
-        return EcosystemVaultLib.vfideToStable(amount, minOutputPerVfide);
+    function _distributeCouncilRewardsIfDue(bool strict) internal returns (bool) {
+        if (block.timestamp < lastCouncilDistribution + MONTH) {
+            if (strict) revert ECO_TooEarly();
+            return false;
+        }
+        if (address(councilManager) == address(0)) {
+            if (strict) revert ECO_Zero();
+            return false;
+        }
+
+        _allocateIncoming();
+
+        uint256 amount = councilPool;
+        if (amount < 1) {
+            if (strict) revert ECO_InsufficientFunds();
+            lastCouncilDistribution = block.timestamp;
+            return true;
+        }
+
+        address[] memory members = councilManager.getActiveMembers();
+        uint256 memberCount = members.length;
+        if (memberCount == 0 || memberCount > type(uint8).max) {
+            if (strict) revert ECO_Zero();
+            return false;
+        }
+        if (memberCount > MAX_COUNCIL_DISTRIBUTION_BATCH) {
+            if (strict) revert ECO_ArrayCapReached();
+            return false;
+        }
+
+        uint256 perMember = amount / memberCount;
+        councilPool = amount % memberCount;
+        uint256 distributed = amount - councilPool;
+
+        totalCouncilPaid += distributed;
+        lastCouncilDistribution = block.timestamp;
+
+        for (uint256 i = 0; i < memberCount; i++) {
+            if (members[i] != address(0)) {
+                rewardToken.safeTransfer(members[i], perMember);
+            }
+        }
+
+        emit CouncilDistributed(distributed, uint8(memberCount), perMember);
+        return true;
+    }
+
+    function _endMerchantPeriodIfDue(bool strict) internal returns (bool) {
+        if (block.timestamp < lastMerchantDistribution + MONTH) {
+            if (strict) revert ECO_TooEarly();
+            return false;
+        }
+
+        _allocateIncoming();
+        merchantPeriodPoolSnapshot[currentMerchantPeriod] = merchantPool;
+        merchantPeriodEnded[currentMerchantPeriod] = true;
+        merchantPool = 0;
+
+        emit MerchantPeriodEnded(currentMerchantPeriod, merchantPeriodPoolSnapshot[currentMerchantPeriod]);
+
+        lastMerchantDistribution = block.timestamp;
+        currentMerchantPeriod++;
+        return true;
+    }
+
+    function _endHeadhunterQuarterIfDue(bool strict) internal returns (bool) {
+        if (block.timestamp < yearStartTime + (QUARTER * currentQuarter)) {
+            if (strict) revert ECO_TooEarly();
+            return false;
+        }
+
+        _allocateIncoming();
+        quarterPoolSnapshot[currentYear][currentQuarter] = headhunterPool;
+        quarterEnded[currentYear][currentQuarter] = true;
+        headhunterPool = 0;
+
+        emit HeadhunterQuarterEnded(currentYear, currentQuarter, quarterPoolSnapshot[currentYear][currentQuarter]);
+
+        if (currentQuarter == 4) {
+            currentQuarter = 1;
+            currentYear++;
+            yearStartTime = block.timestamp;
+        } else {
+            currentQuarter++;
+        }
+        lastQuarterPayout = block.timestamp;
+        return true;
+    }
+
+    function _withdrawOperationsIfDue(bool strict) internal returns (bool) {
+        if (operationsWallet == address(0)) {
+            if (strict) revert ECO_Zero();
+            return false;
+        }
+        if (block.timestamp < lastOperationsWithdrawal + operationsWithdrawalCooldown) {
+            if (strict) revert ECO_TooEarly();
+            return false;
+        }
+
+        _allocateIncoming();
+        uint256 amount = operationsPool;
+        if (amount == 0) {
+            if (strict) revert ECO_InsufficientFunds();
+            return false;
+        }
+
+        _consumeOperationsSpend(amount);
+
+        operationsPool = 0;
+        lastOperationsWithdrawal = block.timestamp;
+
+        rewardToken.safeTransfer(operationsWallet, amount);
+        emit OperationsWithdrawal(operationsWallet, amount);
+        return true;
     }
 
     // ═══════════════════════════════════════════════════════════════════════
@@ -1551,10 +1410,10 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
     // ═══════════════════════════════════════════════════════════════════════
 
     /// @dev Bitmask values for scheduled tasks returned/consumed by checkUpkeep/performUpkeep.
-    uint8 public constant TASK_COUNCIL    = 0x01;
-    uint8 public constant TASK_MERCHANT   = 0x02;
-    uint8 public constant TASK_HEADHUNTER = 0x04;
-    uint8 public constant TASK_OPERATIONS = 0x08;
+    uint8 internal constant TASK_COUNCIL    = 0x01;
+    uint8 internal constant TASK_MERCHANT   = 0x02;
+    uint8 internal constant TASK_HEADHUNTER = 0x04;
+    uint8 internal constant TASK_OPERATIONS = 0x08;
 
     event ScheduledTasksRan(uint8 tasksBitmask);
 
@@ -1614,80 +1473,19 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
      * @notice Internal: execute the subset of scheduled tasks indicated by `tasks`.
      */
     function _runScheduledTasks(uint8 tasks) internal returns (uint8 ran) {
-        _allocateIncoming();
-
-        // ── Council distribution (monthly) ───────────────────────────────────
-        if ((tasks & TASK_COUNCIL) != 0
-            && block.timestamp >= lastCouncilDistribution + MONTH
-            && address(councilManager) != address(0)) {
-            uint256 amount = councilPool;
-            if (amount >= 1) {
-                address[] memory members = councilManager.getActiveMembers();
-                uint256 memberCount = members.length;
-                if (memberCount > 0 && memberCount <= type(uint8).max) {
-                    uint256 perMember = amount / memberCount;
-                    councilPool = amount % memberCount;
-                    uint256 distributed = amount - councilPool;
-                    totalCouncilPaid += distributed;
-                    lastCouncilDistribution = block.timestamp;
-                    for (uint256 i = 0; i < memberCount; i++) {
-                        // Mirrors the behaviour of the explicit distributeCouncilRewards():
-                        // if a single member's transfer reverts (e.g. token blacklist), the
-                        // entire council block reverts and the keeper will retry next call.
-                        if (members[i] != address(0)) rewardToken.safeTransfer(members[i], perMember);
-                    }
-                    emit CouncilDistributed(distributed, uint8(memberCount), perMember);
-                    ran |= TASK_COUNCIL;
-                }
-            } else {
-                // Advance the timer even when the pool is empty so the keeper
-                // does not fire on every block until funds arrive.
-                lastCouncilDistribution = block.timestamp;
-                ran |= TASK_COUNCIL;
-            }
+        if ((tasks & TASK_COUNCIL) != 0 && _distributeCouncilRewardsIfDue(false)) {
+            ran |= TASK_COUNCIL;
         }
 
-        // ── Merchant period end (monthly) ────────────────────────────────────
-        if ((tasks & TASK_MERCHANT) != 0
-            && block.timestamp >= lastMerchantDistribution + MONTH) {
-            merchantPeriodPoolSnapshot[currentMerchantPeriod] = merchantPool;
-            merchantPeriodEnded[currentMerchantPeriod] = true;
-            merchantPool = 0;
-            emit MerchantPeriodEnded(currentMerchantPeriod, merchantPeriodPoolSnapshot[currentMerchantPeriod]);
-            lastMerchantDistribution = block.timestamp;
-            currentMerchantPeriod++;
+        if ((tasks & TASK_MERCHANT) != 0 && _endMerchantPeriodIfDue(false)) {
             ran |= TASK_MERCHANT;
         }
 
-        // ── Headhunter quarter end (quarterly) ───────────────────────────────
-        if ((tasks & TASK_HEADHUNTER) != 0
-            && block.timestamp >= yearStartTime + (QUARTER * currentQuarter)) {
-            quarterPoolSnapshot[currentYear][currentQuarter] = headhunterPool;
-            quarterEnded[currentYear][currentQuarter] = true;
-            headhunterPool = 0;
-            emit HeadhunterQuarterEnded(currentYear, currentQuarter, quarterPoolSnapshot[currentYear][currentQuarter]);
-            if (currentQuarter == 4) {
-                currentQuarter = 1;
-                currentYear++;
-                yearStartTime = block.timestamp;
-            } else {
-                currentQuarter++;
-            }
-            lastQuarterPayout = block.timestamp;
+        if ((tasks & TASK_HEADHUNTER) != 0 && _endHeadhunterQuarterIfDue(false)) {
             ran |= TASK_HEADHUNTER;
         }
 
-        // ── Operations withdrawal (cooldown-gated) ───────────────────────────
-        if ((tasks & TASK_OPERATIONS) != 0
-            && operationsWallet != address(0)
-            && block.timestamp >= lastOperationsWithdrawal + operationsWithdrawalCooldown
-            && operationsPool > 0) {
-            uint256 amount = operationsPool;
-            _consumeOperationsSpend(amount);
-            operationsPool = 0;
-            lastOperationsWithdrawal = block.timestamp;
-            rewardToken.safeTransfer(operationsWallet, amount);
-            emit OperationsWithdrawal(operationsWallet, amount);
+        if ((tasks & TASK_OPERATIONS) != 0 && _withdrawOperationsIfDue(false)) {
             ran |= TASK_OPERATIONS;
         }
 

@@ -13,13 +13,6 @@ contract EcosystemVaultTestable is EcosystemVault {
         EcosystemVault(_vfide, _seer, _operationsWallet)
     {}
 
-    function forceAutoSwapConfig(address router, address stablecoin, bool enabled, uint16 slippageBps) external {
-        swapRouter = router;
-        preferredStablecoin = stablecoin;
-        autoSwapEnabled = enabled;
-        maxSlippageBps = slippageBps;
-    }
-
     /// @dev Bypasses the onlyOwner gate for test harness — sets the sandwich-prevention floor.
     function forceMinOutputPerVfide(uint256 floorPrice) external {
         minOutputPerVfide = floorPrice;

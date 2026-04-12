@@ -204,7 +204,7 @@ function MyComponent() {
 ### Treasury Dashboard (`/treasury`)
 - Total treasury balance
 - Sustainability ratio
-- Fee split (40% burn, 10% sanctum, 50% ecosystem)
+- Fee split (35% burn, 20% Sanctum Fund, 15% DAO payroll, 20% merchant pool, 10% headhunter pool)
 - Vault balances
 - Recent transactions
 

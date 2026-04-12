@@ -66,7 +66,7 @@ describe('Buy page on-ramp pathways', () => {
     });
   });
 
-  it('shows wallet connection gate when disconnected', () => {
+  it('renders buy page and coming-soon copy', async () => {
     mockAccountState = {
       isConnected: false,
       address: '0x1111111111111111111111111111111111111111',
@@ -75,30 +75,21 @@ describe('Buy page on-ramp pathways', () => {
     renderBuyPage();
 
     expect(screen.getByRole('heading', { name: /Buy Crypto/i })).toBeTruthy();
-    expect(screen.getByText(/Connect your wallet to receive purchased crypto/i)).toBeTruthy();
-    expect(screen.queryByText(/Choose a Provider/i)).toBeNull();
+    expect(await screen.findByText(/Direct fiat on-ramp is coming soon/i)).toBeTruthy();
   });
 
-  it('opens selected provider checkout URL with wallet address', () => {
+  it('renders tab navigation labels', () => {
     renderBuyPage();
 
-    fireEvent.click(screen.getByText('MoonPay'));
-    fireEvent.click(screen.getByRole('button', { name: /Buy with MoonPay/i }));
-
-    expect(window.open).toHaveBeenCalledTimes(1);
-    const openCall = (window.open as jest.Mock).mock.calls[0] as [string, string, string];
-    expect(openCall[0]).toContain('buy.moonpay.com');
-    expect(openCall[0]).toContain('walletAddress=0x1111111111111111111111111111111111111111');
+    expect(screen.getByRole('button', { name: 'Buy' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Swap' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'History' })).toBeTruthy();
   });
 
-  it('supports quick amount presets before provider checkout', () => {
+  it('switches tabs', async () => {
     renderBuyPage();
 
-    fireEvent.click(screen.getByRole('button', { name: '$500' }));
-    fireEvent.click(screen.getByText('MoonPay'));
-    fireEvent.click(screen.getByRole('button', { name: /Buy with MoonPay/i }));
-
-    const openCall = (window.open as jest.Mock).mock.calls[0] as [string, string, string];
-    expect(openCall[0]).toContain('baseCurrencyAmount=500');
+    fireEvent.click(screen.getByRole('button', { name: 'Swap' }));
+    expect(await screen.findByText(/Token swap support is coming soon/i)).toBeTruthy();
   });
 });

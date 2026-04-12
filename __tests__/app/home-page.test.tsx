@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
-import { fireEvent, render, screen } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import type React from 'react';
 
 const renderHomePage = () => {
@@ -27,6 +27,15 @@ jest.mock('lucide-react', () => {
   return new Proxy({}, { get: () => Icon });
 });
 
+jest.mock('@/components/onboarding', () => ({
+  useOnboarding: () => ({ state: { path: 'merchant' } }),
+  OnboardingPathChooser: () => <div data-testid="onboarding-path-chooser" />,
+}));
+
+jest.mock('@/components/fees', () => ({
+  FeeSavingsCalculator: () => <div data-testid="fee-savings-calculator" />,
+}));
+
 describe('Home page pathways', () => {
   beforeEach(() => {
     jest.clearAllMocks();
@@ -35,31 +44,23 @@ describe('Home page pathways', () => {
   it('renders hero content and primary actions', () => {
     renderHomePage();
 
-    expect(screen.getByRole('heading', { name: /VFIDE Home/i })).toBeTruthy();
-    expect(screen.getByText(/Accept Crypto\./i)).toBeTruthy();
-    expect(screen.getByText(/Zero Fees\./i)).toBeTruthy();
-    expect(screen.getByRole('link', { name: /Get Started/i }).getAttribute('href')).toBe('/token-launch');
-    expect(screen.getByRole('link', { name: /Explore Flashloans P2P/i }).getAttribute('href')).toBe('/flashlight');
+    expect(screen.getByRole('heading', { name: /Keep what you earn/i })).toBeTruthy();
+    expect(screen.getByRole('link', { name: /Start selling/i }).getAttribute('href')).toBe('/merchant/setup');
+    expect(screen.getByRole('link', { name: /Browse marketplace/i }).getAttribute('href')).toBe('/marketplace');
   });
 
-  it('renders trust indicators and launch flow links', () => {
+  it('renders trust indicators and onboarding steps', () => {
     renderHomePage();
 
-    expect(screen.getByText(/14 Contracts Deployed/i)).toBeTruthy();
-    expect(screen.getByText(/2\.8K Vaults \(Testnet\)/i)).toBeTruthy();
-    expect(screen.getByRole('link', { name: /Start Accepting Payments/i }).getAttribute('href')).toBe('/merchant');
-    expect(screen.getByRole('link', { name: /Read Documentation/i }).getAttribute('href')).toBe('/docs');
-    expect(screen.getByText(/Built for Base/i)).toBeTruthy();
+    expect(screen.getAllByText(/Merchant Fees/i).length).toBeGreaterThan(0);
+    expect(screen.getByText(/Max ProofScore/i)).toBeTruthy();
+    expect(screen.getByText(/Sanctum Fund/i)).toBeTruthy();
+    expect(screen.getByText(/Get started in 60 seconds/i)).toBeTruthy();
   });
 
-  it('switches homepage copy to Spanish and persists the locale choice', () => {
+  it('renders account creation step copy', () => {
     renderHomePage();
 
-    const selector = screen.getByLabelText(/Language/i);
-    fireEvent.change(selector, { target: { value: 'es-ES' } });
-
-    expect(localStorage.getItem('vfide_locale')).toBe('es-ES');
-    expect(screen.getByText(/Acepta criptomonedas\./i)).toBeTruthy();
-    expect(screen.getByRole('link', { name: /Comenzar/i }).getAttribute('href')).toBe('/token-launch');
+    expect(screen.getByText(/Connect your wallet to continue/i)).toBeTruthy();
   });
 });

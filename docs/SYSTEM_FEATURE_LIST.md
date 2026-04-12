@@ -76,7 +76,7 @@ Source basis: app routes, API routes, contract modules, and system trackers.
 - Payment request creation and management
 - Enterprise gateway payment paths
 - Subscription management
-- Streaming payment interfaces
+- Payroll streaming payment interfaces
 - Payroll payment workflows
 
 ## 9) Escrow and Dispute Lifecycle
@@ -93,10 +93,10 @@ Source basis: app routes, API routes, contract modules, and system trackers.
 - Price oracle integration for on-chain risk-sensitive decisions
 
 ## 11) DeFi and Advanced Finance Modules
-- Staking and rewards flows
+- LP incentives and rewards flows
 - Liquidity incentives and LP tracking
 - Lending module operations
-- Collateral management
+- ProofScore-based creditworthiness assessment (no token collateral)
 - Flashloan module operations
 - Stablecoin registry administration
 - Presale and token launch flows

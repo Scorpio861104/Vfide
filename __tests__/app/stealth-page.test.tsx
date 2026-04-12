@@ -15,9 +15,10 @@ jest.mock('@/components/StealthAddressUI', () => ({
 }));
 
 describe('Stealth page', () => {
-  it('renders stealth heading and core UI component', () => {
+  it('renders stealth heading and coming-soon message', () => {
     renderPage();
     expect(screen.getByRole('heading', { name: /Stealth Address/i })).toBeTruthy();
-    expect(screen.getByText('StealthAddressUI')).toBeTruthy();
+    expect(screen.getByText(/Coming Soon/i)).toBeTruthy();
+    expect(screen.getByText(/temporarily disabled/i)).toBeTruthy();
   });
 });

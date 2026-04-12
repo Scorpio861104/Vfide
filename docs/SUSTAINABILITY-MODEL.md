@@ -1,8 +1,8 @@
 # VFIDE Sustainability Model
 ## Self-Sufficient Ecosystem via Automated SEER Fee Distribution
 
-**Document Version:** 1.1  
-**Last Updated:** January 23, 2026  
+**Document Version:** 1.2  
+**Last Updated:** April 12, 2026  
 **Status:** Active - Production Ready
 
 ---
@@ -11,13 +11,13 @@
 
 **CRITICAL ARCHITECTURE:** All economic operations in VFIDE are **fully automated by the SEER system** (Smart Economic Engine & Router). The SEER smart contract suite handles:
 
-✅ **Automatic Fee Distribution** - Every transaction fee is instantly split (40% burn, 10% Sanctum, 50% ecosystem)  
+✅ **Automatic Fee Distribution** - Every transaction fee is instantly split (35% burn, 20% Sanctum Fund, 15% DAO payroll, 20% merchant pool, 10% headhunter pool)  
 ✅ **Real-Time Burns** - Deflationary tokens sent to burn address atomically  
 ✅ **DAO Reward Payments** - Governance participation rewards distributed automatically  
 ✅ **Service Payment Distributions** - Work and governance payments are computed and paid by SEER contracts  
 ✅ **Council Compensation** - Governance council salaries automated on schedule  
-✅ **Sanctum Allocations** - Charitable fund accumulations happen with each transfer  
-✅ **Ecosystem Fund Deposits** - Operational budgets funded continuously by SEER
+✅ **Sanctum Allocations** - Community protection reserves accrue with each transfer  
+✅ **Operations & Growth Pools** - DAO payroll, merchant, and headhunter pools funded continuously by SEER
 
 **Zero Human Intervention** - SEER operates trustlessly, transparently, and permissionlessly on-chain. All fee splits, burns, and distributions are executed by smart contracts with no centralized control points.
 
@@ -36,7 +36,7 @@ The ecosystem is sustained through token transfer fees that:
 - Charge bad actors higher fees (5%)
 - Automatically distribute to ecosystem sustainability pools
 - Create deflationary tokenomics through burns
-- Fund charitable initiatives through Sanctum allocations
+- Fund community protection and resilience through Sanctum allocations
 
 ---
 
@@ -92,22 +92,26 @@ if (proofScore <= 40%) {
 **Critical Architecture Note:** All fee distributions, rewards, DAO payments, and burn mechanisms are **fully automated by the SEER system** (Smart Economic Engine & Router). This includes:
 
 - ✅ Automatic fee splitting on every transaction
-- ✅ Real-time burn address transfers (40%)
-- ✅ Sanctum charitable allocations (10%)
-- ✅ Ecosystem fund distributions (50%)
+- ✅ Real-time burn address transfers (35%)
+- ✅ Sanctum Fund allocations (20%)
+- ✅ DAO payroll distributions (15%)
+- ✅ Merchant pool distributions (20%)
+- ✅ Headhunter pool distributions (10%)
 - ✅ DAO governance reward payments
 - ✅ Service payment calculations and distributions
 - ✅ Council compensation automation
 
 **Zero Manual Intervention Required** - The SEER smart contract system handles all economic operations trustlessly and transparently on-chain.
 
-Every VFIDE token transfer fee is **automatically split by SEER** into three strategic pools:
+Every VFIDE token transfer fee is **automatically split by SEER** across active distribution sinks:
 
 ```
 Total Transfer Fee (0.25% - 5%)
-├── 40% → BURN (Deflationary Mechanism) [SEER Auto-Execute]
-├── 10% → SANCTUM (Charitable Initiatives) [SEER Auto-Execute]
-└── 50% → ECOSYSTEM FUND (Operations & Growth) [SEER Auto-Execute]
+├── 35% → BURN (Deflationary Mechanism) [SEER Auto-Execute]
+├── 20% → SANCTUM FUND (Community Protection) [SEER Auto-Execute]
+├── 15% → DAO PAYROLL (Governance Operations) [SEER Auto-Execute]
+├── 20% → MERCHANT POOL (Commerce Growth) [SEER Auto-Execute]
+└── 10% → HEADHUNTER POOL (Network Incentives) [SEER Auto-Execute]
 ```
 
 ### 1. BURN Pool (40% of fees) 🔥
@@ -146,14 +150,14 @@ const dailyBurn = dailyFees * burnPercentage;
 
 ---
 
-### 2. SANCTUM Pool (10% of fees) 🤲
+### 2. SANCTUM Pool (20% of fees) 🤲
 
-**Purpose:** Charitable giving and social impact initiatives
+**Purpose:** Community protection, resilience, and social impact initiatives
 
 **Mission:** "Proof of care through verified impact"
 
 **Automation (via SEER System):**
-- SEER automatically routes 10% of each fee to Sanctum Vault contract
+- SEER automatically routes 20% of each fee to Sanctum Vault contract
 - Funds accumulate automatically with every transaction
 - **Zero manual transfers** - all allocations handled by SEER smart contracts
 - On-chain transparency for all donations
@@ -164,34 +168,34 @@ const dailyBurn = dailyFees * burnPercentage;
 - **20% Research** - Open-source development, protocol research
 
 **Governance:**
-- Council votes on charitable allocations quarterly
+- Council votes on Sanctum allocations quarterly
 - Verified impact reports required for all donations
 - On-chain transparency for all Sanctum distributions
-- Community can propose charity initiatives via DAO
+- Community can propose Sanctum initiatives via DAO
 
 **Annual Sanctum Projections:**
 ```typescript
 // Using same volume assumptions as burn
-const dailySanctum = dailyFees * 0.10;
+const dailySanctum = dailyFees * 0.20;
 
-// Daily: $25,000 to charity
-// Annual: $9.125M charitable impact
+// Daily: $50,000 to Sanctum Fund
+// Annual: $18.25M community impact
 // Equivalent to major crypto foundations
 ```
 
 **Key Differentiator:**
-- Traditional platforms: 0% to charity
-- VFIDE: Built-in 10% charitable allocation
+- Traditional platforms: 0% to community protection pools
+- VFIDE: Built-in 20% Sanctum allocation
 - Automatic, transparent, community-governed
 
 ---
 
-### 3. ECOSYSTEM FUND (50% of fees) 🌱
+### 3. OPERATIONS & GROWTH POOLS (45% of fees) 🌱
 
 **Purpose:** Self-sustaining operations and continuous development
 
 **Automation (via SEER System):**
-- SEER automatically routes 50% of each fee to Ecosystem Fund contract
+- SEER automatically routes 15% to DAO payroll, 20% to merchant incentives, and 10% to headhunter incentives
 - Funds accumulate in real-time with zero latency
 - **All deposits are automatic** - SEER executes on every transaction
 - Multi-signature DAO-controlled contract for budget withdrawals
@@ -328,17 +332,13 @@ const dailyFees = $10,000,000 * 0.025 = $250,000
 const annualFees = $250,000 * 365 = $91,250,000
 
 // Fee Distribution
-const burn = $91.25M * 0.40 = $36.50M (permanently destroyed)
-const sanctum = $91.25M * 0.10 = $9.125M (charity)
-const ecosystem = $91.25M * 0.50 = $45.625M (operations)
+const burn = $91.25M * 0.35 = $31.938M (permanently destroyed)
+const sanctum = $91.25M * 0.20 = $18.250M (community protection)
+const daoPayroll = $91.25M * 0.15 = $13.688M (governance payroll)
+const merchantPool = $91.25M * 0.20 = $18.250M (merchant growth)
+const headhunterPool = $91.25M * 0.10 = $9.125M (network incentives)
 
-// Ecosystem Breakdown
-const infrastructure = $45.625M * 0.30 = $13.688M
-const development = $45.625M * 0.25 = $11.406M
-const security = $45.625M * 0.15 = $6.844M
-const marketing = $45.625M * 0.15 = $6.844M
-const servicePayments = $45.625M * 0.10 = $4.563M
-const council = $45.625M * 0.05 = $2.281M
+// DAO Payroll / Merchant / Headhunter allocations can be budgeted by governance policy
 ```
 
 ### Annual Expense Budget
@@ -502,7 +502,7 @@ const combinedEffect = utilityEffect + deflationBenefit;
 Merchant Fee: 2.9% + $0.30
 Annual Revenue: ~$10B (Stripe)
 Profit Margin: ~20%
-Charity: 0%
+Community protection allocation: 0%
 User ownership: None
 Centralized control: 100%
 ```
@@ -513,7 +513,7 @@ Merchant Fee: 0%
 Transfer Fee: 0.25-5% (behavioral)
 Annual Revenue: $91M+ (at 10K daily txn)
 Profit Margin: Surplus distributed (0% corporate profit)
-Charity: 10% automatic
+Sanctum Fund: 20% automatic
 User ownership: 100% via DAO
 Centralized control: 0%
 ```
@@ -521,7 +521,7 @@ Centralized control: 0%
 **Key Advantages:**
 1. **Zero merchant fees** → Merchant adoption
 2. **Behavioral fees** → Encourages trust-building
-3. **Automatic charity** → Social impact
+3. **Automatic Sanctum allocation** → Social impact
 4. **User ownership** → Aligned incentives
 5. **Deflationary** → Long-term value
 6. **Self-sustaining** → No VC dependencies
@@ -604,9 +604,9 @@ Centralized control: 0%
 - **Impact:** Measure against token price appreciation
 
 ### Sanctum Impact
-- **Target:** $10M+ annual charitable giving
+- **Target:** $18M+ annual Sanctum funding at baseline volume
 - **Tracking:** Verified impact reports quarterly
-- **Transparency:** On-chain donation receipts
+- **Transparency:** On-chain allocation receipts
 
 ### Ecosystem Growth
 - **Infrastructure uptime:** 99.9%+ SLA
@@ -720,15 +720,11 @@ The fee model becomes **more robust** under stress:
 
 | Fee Component | % of Total Fee | Annual Amount (10K txn/day) | Purpose |
 |---------------|----------------|----------------------------|---------|
-| **BURN** | **40%** | **$36.50M** | Deflationary supply reduction |
-| **SANCTUM (Charity)** | **10%** | **$9.125M** | Social impact, verified donations |
-| **ECOSYSTEM TOTAL** | **50%** | **$45.625M** | Operations & growth |
-| ↳ Infrastructure | 15% | $13.688M | Servers, hosting, bandwidth |
-| ↳ Development | 12.5% | $11.406M | Core development, audits |
-| ↳ Security | 7.5% | $6.844M | Audits, bug bounties, monitoring |
-| ↳ Marketing | 7.5% | $6.844M | User acquisition, partnerships |
-| ↳ Service Payments | 5% | $4.563M | Work and governance compensation |
-| ↳ Council Compensation | 2.5% | $2.281M | Governance workload |
+| **BURN** | **35%** | **$31.938M** | Deflationary supply reduction |
+| **SANCTUM FUND** | **20%** | **$18.250M** | Community protection and resilience |
+| **DAO PAYROLL** | **15%** | **$13.688M** | Governance operations |
+| **MERCHANT POOL** | **20%** | **$18.250M** | Merchant growth and incentives |
+| **HEADHUNTER POOL** | **10%** | **$9.125M** | Network and referral incentives |
 | **TOTAL** | **100%** | **$91.25M** | Complete sustainability model |
 
 ---
@@ -742,7 +738,7 @@ Key Takeaways:
 2. ✅ **11.7x revenue-to-cost ratio** - Massive operational buffer
 3. ✅ **Behavioral fee model** - Rewards trust, charges bad actors
 4. ✅ **Deflationary burns** - Creates long-term value appreciation
-5. ✅ **Automatic charity** - 10% of all fees to social impact
+5. ✅ **Sanctum Fund allocation** - 20% of all fees to community protection
 6. ✅ **DAO-governed** - Community controls all allocations
 7. ✅ **Howey-compliant** - Structured as utility, not security
 8. ✅ **Anti-fragile** - Stronger under stress conditions

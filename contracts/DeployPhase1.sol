@@ -14,7 +14,10 @@ import "./CircuitBreaker.sol";
 interface IPhase1GovernanceDeployer {
     function deployGovernance(
         address _admin,
-        address[5] memory _council
+        address[5] memory _council,
+        bytes calldata accessControlInitCode,
+        bytes calldata multiSigInitCode,
+        bytes calldata emergencyControlInitCode
     ) external returns (
         address accessControl,
         address multiSig,
@@ -79,6 +82,9 @@ contract Phase1Deployer {
         address _tokenDeployer,
         address _admin,
         address[5] memory _council,
+        bytes calldata accessControlInitCode,
+        bytes calldata multiSigInitCode,
+        bytes calldata emergencyControlInitCode,
         address _priceOracle,
         string memory _tokenName,
         string memory _tokenSymbol,
@@ -96,7 +102,10 @@ contract Phase1Deployer {
             addresses.emergencyControl
         ) = IPhase1GovernanceDeployer(_governanceDeployer).deployGovernance(
             _admin,
-            _council
+            _council,
+            accessControlInitCode,
+            multiSigInitCode,
+            emergencyControlInitCode
         );
 
         (

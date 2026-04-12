@@ -31,6 +31,19 @@ error MERCH_VaultLocked();
 error MERCH_LowTrust();
 error MERCH_InvalidPayment();
 error MERCH_EscrowRequired();
+error MERCH_InvalidConfig();
+error MERCH_TokenNotAccepted();
+error MERCH_NoVault();
+error MERCH_NotApproved();
+error MERCH_ApprovalExpired();
+error MERCH_LimitExceeded();
+error MERCH_NotFound();
+error MERCH_AlreadyCompleted();
+error MERCH_Forbidden();
+error MERCH_CapExceeded();
+error MERCH_NotConfigured();
+error MERCH_ApproveFailed();
+error MERCH_RevokeFailed();
 
 // Removed local Ownable to use SharedInterfaces.sol
 
@@ -161,8 +174,7 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
         address _ledger,
         address _feeSink
     ) {
-        require(_dao != address(0) && _vaultHub != address(0), "zero");
-        require(_feeSink != address(0), "MerchantPortal: feeSink cannot be zero");
+        if (_dao == address(0) || _vaultHub == address(0) || _feeSink == address(0)) revert MERCH_InvalidConfig();
         dao = _dao;
         vaultHub = IVaultHub(_vaultHub);
         seer = ISeer(_seer);
@@ -180,7 +192,7 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
         address _seer,
         address _ledger
     ) external onlyDAO {
-        require(_vaultHub != address(0) && _seer != address(0), "zero");
+        if (_vaultHub == address(0) || _seer == address(0)) revert MERCH_Zero();
         vaultHub = IVaultHub(_vaultHub);
         seer = ISeer(_seer);
         ledger = IProofLedger(_ledger);
@@ -191,27 +203,27 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
     /// @notice F-5 FIX: Transfer DAO control to a new address (for DAO migration)
     /// @dev Required because MerchantPortal is deployed before DAO contract.
     function setDAO(address _dao) external onlyDAO {
-        require(_dao != address(0), "MP: zero dao");
+        if (_dao == address(0)) revert MERCH_Zero();
         dao = _dao;
         _log("merchant_dao_set");
     }
 
     function setProtocolFee(uint256 _feeBps) external onlyDAO {
-        require(_feeBps <= 500, "fee too high"); // Max 5%
+        if (_feeBps > 500) revert MERCH_InvalidConfig(); // Max 5%
         protocolFeeBps = _feeBps;
         emit FeeUpdated(_feeBps);
         _log("protocol_fee_updated");
     }
 
     function setFeeSink(address _sink) external onlyDAO {
-        require(_sink != address(0), "zero");
+        if (_sink == address(0)) revert MERCH_Zero();
         feeSink = _sink;
         emit FeeSinkSet(_sink);
         _log("fee_sink_set");
     }
 
     function setMinMerchantScore(uint16 _minScore) external onlyDAO {
-        require(_minScore <= 10000, "invalid score"); // 0-10000 scale
+        if (_minScore > 10000) revert MERCH_InvalidConfig(); // 0-10000 scale
         minMerchantScore = _minScore;
         emit MinScoreUpdated(_minScore);
         _log("min_merchant_score_set");
@@ -219,15 +231,15 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
 
     function setFraudRegistry(address _fr) external onlyDAO { fraudRegistry = _fr; }
     function setAcceptedToken(address token, bool accepted) external onlyDAO {
-        require(token != address(0), "zero");
+        if (token == address(0)) revert MERCH_Zero();
         acceptedTokens[token] = accepted;
         _log(accepted ? "token_accepted" : "token_removed");
     }
 
     function setSwapConfig(address _router, address _stable) external onlyDAO {
         if (_router != address(0)) {
-            require(_stable != address(0), "MP: stable required with router");
-            require(acceptedTokens[_stable] || _stable == stablecoin, "MP: stable not accepted");
+            if (_stable == address(0)) revert MERCH_InvalidConfig();
+            if (!(acceptedTokens[_stable] || _stable == stablecoin)) revert MERCH_TokenNotAccepted();
         }
         swapRouter = ISwapRouter(_router);
         stablecoin = _stable;
@@ -235,7 +247,7 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
     }
     
     function setMinSwapOutput(uint256 _minBps) external onlyDAO {
-        require(_minBps >= MIN_SWAP_OUTPUT_BPS && _minBps <= MAX_SWAP_OUTPUT_BPS, "invalid slippage"); // 0-10% slippage
+        if (_minBps < MIN_SWAP_OUTPUT_BPS || _minBps > MAX_SWAP_OUTPUT_BPS) revert MERCH_InvalidConfig(); // 0-10% slippage
         uint256 previousBps = minSwapOutputBps;
         minSwapOutputBps = _minBps;
         emit MinSwapOutputUpdated(previousBps, _minBps);
@@ -243,12 +255,12 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
     }
     
     function setSwapPath(address token, address[] calldata path) external onlyDAO {
-        require(token != address(0), "zero token");
-        require(path.length >= 2 && path.length <= MAX_SWAP_PATH_LENGTH, "invalid path length");
-        require(path[0] == token, "path start mismatch");
-        require(path[path.length - 1] == stablecoin, "path end mismatch");
+        if (token == address(0)) revert MERCH_Zero();
+        if (path.length < 2 || path.length > MAX_SWAP_PATH_LENGTH) revert MERCH_InvalidConfig();
+        if (path[0] != token) revert MERCH_InvalidConfig();
+        if (path[path.length - 1] != stablecoin) revert MERCH_InvalidConfig();
         for (uint256 i = 0; i < path.length; i++) {
-            require(path[i] != address(0), "zero path node");
+            if (path[i] == address(0)) revert MERCH_Zero();
         }
         tokenSwapPaths[token] = path;
         _log("swap_path_set");
@@ -279,8 +291,8 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
         string calldata businessName,
         string calldata category
     ) external {
-        if (fraudRegistry != address(0)) { (bool ok, bytes memory d) = fraudRegistry.staticcall(abi.encodeWithSelector(0x38603ddd, msg.sender)); require(!(ok && d.length >= 32 && abi.decode(d, (bool))), "MERCH: service banned"); }
-        require(!merchants[msg.sender].registered, "already registered");
+        if (fraudRegistry != address(0)) { (bool ok, bytes memory d) = fraudRegistry.staticcall(abi.encodeWithSelector(0x38603ddd, msg.sender)); if (ok && d.length >= 32 && abi.decode(d, (bool))) revert MERCH_Forbidden(); }
+        if (merchants[msg.sender].registered) revert MERCH_AlreadyRegistered();
         
         // Check ProofScore requirement
         _checkMerchantScore(msg.sender);
@@ -296,7 +308,7 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
             payoutAddress: address(0)
         });
         
-        require(merchantList.length < 10000, "MP: merchant cap"); // I-11
+        if (merchantList.length >= 10000) revert MERCH_CapExceeded(); // I-11
         if (!merchantInList[msg.sender]) {
             merchantList.push(msg.sender);
             merchantInList[msg.sender] = true;
@@ -327,8 +339,8 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
      */
     function deregisterMerchant() external onlyMerchant {
         MerchantInfo storage m = merchants[msg.sender];
-        require(!m.suspended, "Cannot deregister while suspended");
-        require(!_hasPendingRefunds(msg.sender), "Cannot deregister with pending refunds");
+        if (m.suspended) revert MERCH_Suspended();
+        if (_hasPendingRefunds(msg.sender)) revert MERCH_InvalidConfig();
 
         if (merchantInList[msg.sender]) {
             uint256 idx = merchantIndexPlusOne[msg.sender] - 1;
@@ -384,7 +396,7 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
         uint256 amount,
         string calldata orderId
     ) external onlyMerchant returns (bytes32 refundId) {
-        require(customer != address(0) && amount > 0, "Invalid refund params");
+        if (customer == address(0) || amount == 0) revert MERCH_InvalidPayment();
         
         refundId = keccak256(abi.encode(msg.sender, customer, orderId, block.timestamp, customerRefunds[customer].length));
         
@@ -400,9 +412,9 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
         });
         
         // Track refunds for both parties (I-11: capped)
-        require(customerRefunds[customer].length < 500, "MP: customer refund cap");
+        if (customerRefunds[customer].length >= 500) revert MERCH_CapExceeded();
         customerRefunds[customer].push(refundId);
-        require(merchantRefunds[msg.sender].length < 500, "MP: merchant refund cap");
+        if (merchantRefunds[msg.sender].length >= 500) revert MERCH_CapExceeded();
         merchantRefunds[msg.sender].push(refundId);
         
         emit RefundInitiated(customer, msg.sender, orderId, amount);
@@ -415,18 +427,18 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
      */
     function completeRefund(bytes32 refundId) external nonReentrant {
         RefundRequest storage r = refundRequests[refundId];
-        require(r.amount > 0, "Refund not found");
-        require(r.approved, "Refund not approved");
-        require(!r.completed, "Already completed");
-        require(msg.sender == r.merchant, "Only merchant can complete");
-        require(block.timestamp <= uint256(r.requestTime) + REFUND_COMPLETION_WINDOW, "Refund completion expired");
+        if (r.amount == 0) revert MERCH_NotFound();
+        if (!r.approved) revert MERCH_NotApproved();
+        if (r.completed) revert MERCH_AlreadyCompleted();
+        if (msg.sender != r.merchant) revert MERCH_Forbidden();
+        if (block.timestamp > uint256(r.requestTime) + REFUND_COMPLETION_WINDOW) revert MERCH_ApprovalExpired();
         
         r.completed = true;
         
         // Get vaults
         address merchantVault = vaultHub.vaultOf(r.merchant);
         address customerVault = vaultHub.vaultOf(r.customer);
-        require(merchantVault != address(0) && customerVault != address(0), "Missing vaults");
+        if (merchantVault == address(0) || customerVault == address(0)) revert MERCH_NoVault();
         
         // Pull refund from the merchant caller to avoid requiring approvals from vault contracts.
         IERC20(r.token).safeTransferFrom(msg.sender, customerVault, r.amount);
@@ -514,16 +526,16 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
         // Capture customer score at payment start for accurate logging
         uint16 customerScore = address(seer) != address(0) ? seer.getScore(customer) : 500;
         
-        require(acceptedTokens[token], "token not accepted");
+        if (!acceptedTokens[token]) revert MERCH_TokenNotAccepted();
         
         // Get customer's vault
         address customerVault = vaultHub.vaultOf(customer);
-        require(customerVault != address(0), "no vault");
-        require(merchantPullApproved[customer][msg.sender], "merchant not approved by customer");
+        if (customerVault == address(0)) revert MERCH_NoVault();
+        if (!merchantPullApproved[customer][msg.sender]) revert MERCH_NotApproved();
         uint64 permitExpiry = merchantPullExpiry[customer][msg.sender];
-        require(permitExpiry == 0 || block.timestamp <= permitExpiry, "merchant approval expired");
+        if (!(permitExpiry == 0 || block.timestamp <= permitExpiry)) revert MERCH_ApprovalExpired();
         uint256 remainingPull = merchantPullRemaining[customer][msg.sender];
-        require(remainingPull >= amount, "merchant pull limit exceeded");
+        if (remainingPull < amount) revert MERCH_LimitExceeded();
         unchecked { merchantPullRemaining[customer][msg.sender] = remainingPull - amount; }
         
         // SecurityHub lock check removed — non-custodial, no third-party locks
@@ -568,7 +580,7 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
     function setMerchantPullApproval(address merchant, bool approved) external {
         if (!merchants[merchant].registered) revert MERCH_NotRegistered();
         if (approved) {
-            revert("MP: use setMerchantPullPermit");
+            revert MERCH_InvalidConfig();
         }
         merchantPullApproved[msg.sender][merchant] = false;
         merchantPullRemaining[msg.sender][merchant] = 0;
@@ -582,8 +594,8 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
     /// @param expiresAt Unix timestamp when permit expires (0 = no expiry).
     function setMerchantPullPermit(address merchant, uint256 maxAmount, uint64 expiresAt) external {
         if (!merchants[merchant].registered) revert MERCH_NotRegistered();
-        require(maxAmount > 0, "MP: invalid permit amount");
-        require(expiresAt == 0 || expiresAt > block.timestamp, "MP: invalid permit expiry");
+        if (maxAmount == 0) revert MERCH_InvalidConfig();
+        if (!(expiresAt == 0 || expiresAt > block.timestamp)) revert MERCH_InvalidConfig();
         merchantPullApproved[msg.sender][merchant] = true;
         merchantPullRemaining[msg.sender][merchant] = maxAmount;
         merchantPullExpiry[msg.sender][merchant] = expiresAt;
@@ -617,14 +629,14 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
         string calldata orderId
     ) internal returns (uint256 netAmount) {
         if (token == address(0) || amount == 0) revert MERCH_InvalidPayment();
-        require(acceptedTokens[token], "token not accepted");
+        if (!acceptedTokens[token]) revert MERCH_TokenNotAccepted();
         
         // Capture customer score at payment start for accurate logging
         uint16 customerScore = address(seer) != address(0) ? seer.getScore(customer) : 500;
         
         // Get vaults
         address customerVault = vaultHub.vaultOf(customer);
-        require(customerVault != address(0), "no vault");
+        if (customerVault == address(0)) revert MERCH_NoVault();
         
         // SecurityHub lock check removed — non-custodial, no third-party locks
         
@@ -674,7 +686,7 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
      */
     function setAutoConvert(bool enabled) external onlyMerchant {
         if (enabled) {
-            require(address(swapRouter) != address(0) && stablecoin != address(0), "MP: swap not configured");
+            if (address(swapRouter) == address(0) || stablecoin == address(0)) revert MERCH_NotConfigured();
         }
         autoConvert[msg.sender] = enabled;
         emit AutoConvertSet(msg.sender, enabled);
@@ -685,7 +697,7 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
      * If set to address(0), funds go to the merchant's Vault.
      */
     function setPayoutAddress(address payout) external onlyMerchant {
-        require(payout == address(0) || vaultHub.isVault(payout), "MP: payout must be vault");
+        if (!(payout == address(0) || vaultHub.isVault(payout))) revert MERCH_InvalidConfig();
         merchants[msg.sender].payoutAddress = payout;
         emit PayoutAddressSet(msg.sender, payout);
     }
@@ -789,13 +801,13 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
         PaymentChannel channel
     ) internal returns (uint256 netAmount) {
         if (token == address(0) || amount == 0) revert MERCH_InvalidPayment();
-        require(acceptedTokens[token], "token not accepted");
+        if (!acceptedTokens[token]) revert MERCH_TokenNotAccepted();
         
         uint16 customerScore = address(seer) != address(0) ? seer.getScore(customer) : 500;
         
         // Get customer vault
         address customerVault = vaultHub.vaultOf(customer);
-        require(customerVault != address(0), "no vault");
+        if (customerVault == address(0)) revert MERCH_NoVault();
         
         // SecurityHub lock check removed — non-custodial
         
@@ -860,7 +872,7 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
             IERC20(token).safeTransferFrom(customerVault, address(this), netAmount);
             
             // 2. Approve Router
-            require(IERC20(token).approve(address(swapRouter), netAmount), "MP: approve failed");
+            if (!IERC20(token).approve(address(swapRouter), netAmount)) revert MERCH_ApproveFailed();
             
             // 3. Get swap path (multi-hop if configured, otherwise direct)
             address[] memory path;
@@ -894,17 +906,17 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
                 ) returns (uint256[] memory amountsOut) {
                     if (amountsOut.length > 0) {} // converted
                     // Revoke approval after successful swap
-                    require(IERC20(token).approve(address(swapRouter), 0), "MP: revoke failed");
+                    if (!IERC20(token).approve(address(swapRouter), 0)) revert MERCH_RevokeFailed();
                 } catch {
                     // Revoke approval after failed swap to prevent lingering approvals
-                    require(IERC20(token).approve(address(swapRouter), 0), "MP: revoke failed");
+                    if (!IERC20(token).approve(address(swapRouter), 0)) revert MERCH_RevokeFailed();
                     // Fallback: Send original token if swap fails
                     emit AutoConvertFallback(merchant, token, netAmount, "swap_failed");
                     IERC20(token).safeTransfer(recipient, netAmount);
                 }
             } else {
                 // No safe quote available; fallback to direct token settlement.
-                require(IERC20(token).approve(address(swapRouter), 0), "MP: revoke failed");
+                if (!IERC20(token).approve(address(swapRouter), 0)) revert MERCH_RevokeFailed();
                 emit AutoConvertFallback(merchant, token, netAmount, "quote_unavailable");
                 IERC20(token).safeTransfer(recipient, netAmount);
             }
@@ -983,7 +995,7 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
         uint256 protocolFee,
         uint256 networkFee
     ) {
-        require(desiredNetAmount > 0, "MP: invalid desired amount");
+        if (desiredNetAmount == 0) revert MERCH_InvalidPayment();
 
         grossAmount = desiredNetAmount;
         for (uint256 i = 0; i < 6; i++) {

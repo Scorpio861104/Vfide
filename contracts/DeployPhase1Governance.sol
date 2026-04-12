@@ -1,34 +1,34 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
-import "./VFIDEAccessControl.sol";
-import "./AdminMultiSig.sol";
-import { EmergencyControl as EmergencyControlCore } from "./EmergencyControl.sol";
+error P1G_Zero();
+error P1G_DeployFailed();
 
 contract Phase1GovernanceDeployer {
     function deployGovernance(
         address _admin,
-        address[5] memory _council
+        address[5] memory _council,
+        bytes calldata accessControlInitCode,
+        bytes calldata multiSigInitCode,
+        bytes calldata emergencyControlInitCode
     ) external returns (
         address accessControl,
         address multiSig,
         address emergencyControl
     ) {
-        require(_admin != address(0), "Phase1GovernanceDeployer: zero admin address");
+        _council;
+        if (_admin == address(0)) revert P1G_Zero();
 
-        VFIDEAccessControl accessControlContract = new VFIDEAccessControl(_admin);
-        accessControl = address(accessControlContract);
+        accessControl = _deploy(accessControlInitCode);
+        multiSig = _deploy(multiSigInitCode);
+        emergencyControl = _deploy(emergencyControlInitCode);
+    }
 
-        AdminMultiSig multiSigContract = new AdminMultiSig(_council, address(0)); // vfideToken wired post-deploy via setVFIDEToken()
-        multiSig = address(multiSigContract);
-
-        // Phase-1 bootstrap deployer wires a non-zero breaker placeholder; governance should set final modules post-deploy.
-        EmergencyControlCore emergencyControlContract = new EmergencyControlCore(
-            _admin,
-            _admin,
-            address(0),
-            _admin   // FINAL-10 FIX: foundation defaults to admin at deploy; governance should update post-deploy
-        );
-        emergencyControl = address(emergencyControlContract);
+    function _deploy(bytes calldata initCode) internal returns (address deployed) {
+        bytes memory code = initCode;
+        assembly {
+            deployed := create(0, add(code, 0x20), mload(code))
+        }
+        if (deployed == address(0)) revert P1G_DeployFailed();
     }
 }
