@@ -289,7 +289,7 @@
     "minimatch": "^10.1.1",
     "mocha": "^11.3.0",
     "msw": "^2.12.7",
-    "prettier": "^3.8.1",
+    "prettier": "^3.8.2",
     "prettier-plugin-tailwindcss": "^0.7.2",
     "solc": "^0.8.30",
     "storybook": "^10.2.13",
