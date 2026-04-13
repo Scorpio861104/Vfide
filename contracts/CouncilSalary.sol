@@ -62,6 +62,9 @@ contract CouncilSalary {
     uint256 public distributionNonce;
 
     constructor(address _election, address _seer, address _token, address _dao) {
+        require(_election != address(0), "zero election");
+        require(_seer != address(0), "zero seer");
+        require(_token != address(0), "zero token");
         require(_dao != address(0), "zero dao");
         election = ICouncilElection(_election);
         seer = ISeer(_seer);
