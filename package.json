@@ -110,6 +110,7 @@
     "migrate:status": "tsx lib/migrations/cli.ts status",
     "migrate:create": "tsx lib/migrations/cli.ts create",
     "test": "jest",
+    "test:hardhat:jest": "jest --config jest.hardhat.cjs --runInBand",
     "test:onchain": "HARDHAT_ALLOW_UNLIMITED_CONTRACT_SIZE=true find test/hardhat -name '*.test.ts' ! -path 'test/hardhat/generated/*' ! -path 'test/hardhat/lending/*' -print0 | xargs -0 -n 1 npx tsx --test && NODE_OPTIONS='--import tsx' HARDHAT_ALLOW_UNLIMITED_CONTRACT_SIZE=true npx mocha --timeout 120000 'test/hardhat/lending/*.test.ts'",
     "test:onchain:critical": "npm run -s contract:compile && NODE_OPTIONS='--import tsx' HARDHAT_CONFIG=hardhat.unlimited.config.ts HARDHAT_ALLOW_UNLIMITED_CONTRACT_SIZE=true npx mocha --timeout 120000 test/hardhat/AdminMultiSigSecurity.test.ts test/hardhat/ContractGuardrails2.test.ts test/hardhat/ContractCoverageBackfill.test.ts test/hardhat/VFIDEToken.test.ts",
     "test:onchain:generated": "HARDHAT_ALLOW_UNLIMITED_CONTRACT_SIZE=true npx tsx --test 'test/hardhat/generated/**/*.test.ts'",
