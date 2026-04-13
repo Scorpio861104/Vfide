@@ -283,7 +283,7 @@
     "jest": "^30.3.0",
     "jest-axe": "^8.0.0",
     "jest-environment-jsdom": "^30.3.0",
-    "lighthouse": "^13.0.1",
+    "lighthouse": "^13.1.0",
     "lint-staged": "^16.2.7",
     "madge": "^8.0.0",
     "minimatch": "^10.1.1",
