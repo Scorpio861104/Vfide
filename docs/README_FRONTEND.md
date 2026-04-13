@@ -101,6 +101,13 @@ This avoids loading wallet state globally on route groups that do not need Web3.
 - Prefer existing hooks/components over creating parallel wallet-connect implementations.
 - Preserve wallet-gate behavior in route groups that require connection.
 
+### Implemented Runtime Upgrades
+
+- `components/qr/SmartQR.tsx` now generates standards-compliant QR payloads via real encoder output.
+- `components/commerce/MerchantPOS.tsx` now performs concrete digital receipt preparation and delivery flow.
+- `components/search/AdvancedSearch.tsx` now executes live `/api/merchant/products` queries with resilient fallback behavior.
+- `lib/analytics.ts` now persists client analytics events and forwards ingestion payloads to `/api/analytics`.
+
 ## Resources
 
 - https://nextjs.org/docs

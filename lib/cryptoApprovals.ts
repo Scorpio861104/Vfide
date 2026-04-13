@@ -30,9 +30,17 @@ const asAddressArray = (value: unknown, name: string): string[] => {
 
 /**
  * VFIDE Token Contract Address
- * Read from environment variable or fallback to placeholder
+ * Required: set NEXT_PUBLIC_VFIDE_TOKEN_ADDRESS in the environment.
+ * Throws a ValidationError at import time if absent or clearly invalid.
  */
-export const VFIDE_TOKEN_ADDRESS = process.env.NEXT_PUBLIC_VFIDE_TOKEN_ADDRESS || '0x...';
+const _rawTokenAddress = process.env.NEXT_PUBLIC_VFIDE_TOKEN_ADDRESS ?? '';
+if (!_rawTokenAddress || _rawTokenAddress === '0x...' || !validateEthereumAddress(_rawTokenAddress)) {
+  throw new ValidationError(
+    'NEXT_PUBLIC_VFIDE_TOKEN_ADDRESS is not configured or is invalid. ' +
+    'Set a valid ERC-20 contract address in your environment.'
+  );
+}
+export const VFIDE_TOKEN_ADDRESS: string = _rawTokenAddress;
 
 /**
  * Maximum uint256 value for unlimited token approval

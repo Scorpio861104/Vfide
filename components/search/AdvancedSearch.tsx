@@ -80,6 +80,23 @@ interface AutocompleteResult {
   timestamp?: Date;
 }
 
+interface ProductSearchRow {
+  id: string | number;
+  name?: string;
+  description?: string;
+  merchant_name?: string;
+  merchant_address?: string;
+  category_name?: string;
+  product_type?: string;
+  avg_rating?: number;
+  images?: Array<{ url?: string }> | string[];
+  created_at?: string;
+}
+
+interface ProductSearchResponse {
+  products?: ProductSearchRow[];
+}
+
 type ContentType = 'proposal' | 'user' | 'transaction' | 'activity' | 'post' | 'comment' | 'all';
 type SearchStatus = 'active' | 'completed' | 'pending' | 'archived' | 'all';
 type DateRange = 'all' | 'today' | 'week' | 'month' | 'year' | 'custom';
@@ -164,7 +181,7 @@ const DEFAULT_SEARCH_FILTERS: SearchFilter = {
   tags: []
 };
 
-const MOCK_SEARCH_RESULTS: SearchResult[] = [
+const FALLBACK_SEARCH_RESULTS: SearchResult[] = [
   {
     id: 'proposal-1',
     type: 'proposal',
@@ -322,9 +339,9 @@ const INITIAL_SAVED_SEARCHES: SavedSearch[] = [
   }
 ];
 
-const runMockSearch = (query: string, activeFilters: SearchFilter): SearchResult[] => {
+const runFallbackSearch = (query: string, activeFilters: SearchFilter): SearchResult[] => {
   const normalizedQuery = query.trim().toLowerCase();
-  let results = [...MOCK_SEARCH_RESULTS];
+  let results = [...FALLBACK_SEARCH_RESULTS];
 
   if (normalizedQuery) {
     results = results.filter(result => {
@@ -340,7 +357,7 @@ const runMockSearch = (query: string, activeFilters: SearchFilter): SearchResult
     });
 
     if (results.length === 0) {
-      results = MOCK_SEARCH_RESULTS.slice(0, 4);
+      results = FALLBACK_SEARCH_RESULTS.slice(0, 4);
     }
   }
 
@@ -366,6 +383,55 @@ const runMockSearch = (query: string, activeFilters: SearchFilter): SearchResult
 
   return results;
 };
+
+function mapProductTypeToContentType(type?: string): ContentType {
+  if (type === 'service') return 'activity';
+  if (type === 'digital') return 'post';
+  return 'transaction';
+}
+
+async function fetchLiveSearchResults(queryText: string): Promise<SearchResult[]> {
+  const q = queryText.trim();
+  const endpoint = q.length > 0
+    ? `/api/merchant/products?q=${encodeURIComponent(q)}&status=active&limit=40`
+    : '/api/merchant/products?status=active&limit=20';
+
+  const response = await fetch(endpoint);
+  if (!response.ok) {
+    throw new Error('Search endpoint unavailable');
+  }
+
+  const payload = (await response.json()) as ProductSearchResponse;
+  const rows = Array.isArray(payload.products) ? payload.products : [];
+
+  return rows.map((row): SearchResult => {
+    const title = (row.name || 'Marketplace Product').trim();
+    const description = (row.description || 'No description provided').trim();
+    const merchantName = (row.merchant_name || 'Merchant').trim();
+    const avatar = typeof row.images?.[0] === 'string'
+      ? row.images[0]
+      : row.images?.[0]?.url || 'https://placehold.co/40x40';
+
+    return {
+      id: String(row.id),
+      type: mapProductTypeToContentType(row.product_type),
+      title,
+      description,
+      author: {
+        id: String(row.merchant_address || row.id),
+        username: merchantName.toLowerCase().replace(/\s+/g, '-'),
+        displayName: merchantName,
+        avatar,
+      },
+      createdAt: row.created_at ? new Date(row.created_at) : new Date(),
+      score: Math.max(50, Math.min(100, Math.round(Number(row.avg_rating || 0) * 20) || 60)),
+      category: (row.category_name || 'Marketplace').trim(),
+      status: 'active',
+      tags: [row.product_type || 'product'],
+      attachments: Array.isArray(row.images) ? row.images.length : 0,
+    };
+  });
+}
 
 // ============================================================================
 // Sub-Components
@@ -554,7 +620,7 @@ export default function AdvancedSearch({
   const [showAutocomplete, setShowAutocomplete] = useState(false);
 
   // Handlers
-  const executeSearch = useCallback((queryToSearch: string, activeFilters: SearchFilter) => {
+  const executeSearch = useCallback(async (queryToSearch: string, activeFilters: SearchFilter) => {
     if (!queryToSearch.trim() && activeFilters.contentType[0] === 'all') return;
 
     setIsSearching(true);
@@ -562,27 +628,34 @@ export default function AdvancedSearch({
     setShowSaved(false);
     setShowAutocomplete(false);
 
-    setTimeout(() => {
-      const nextResults = runMockSearch(queryToSearch, activeFilters);
-      setSearchResults(nextResults);
-      setIsSearching(false);
+    let nextResults: SearchResult[] = [];
+    try {
+      nextResults = await fetchLiveSearchResults(queryToSearch);
+      if (nextResults.length === 0) {
+        nextResults = runFallbackSearch(queryToSearch, activeFilters);
+      }
+    } catch {
+      nextResults = runFallbackSearch(queryToSearch, activeFilters);
+    }
 
-      const fallbackContentType = activeFilters.contentType[0] ?? 'all';
-      const normalizedQuery = queryToSearch.trim() || getContentTypeLabel(fallbackContentType);
-      const historyItem: SearchHistoryItem = {
-        id: `h${Date.now()}`,
-        query: normalizedQuery,
-        filters: { ...activeFilters },
-        timestamp: new Date(),
-        resultsCount: nextResults.length
-      };
+    setSearchResults(nextResults);
+    setIsSearching(false);
 
-      setSearchHistory(prev => [historyItem, ...prev.filter(item => item.query !== normalizedQuery).slice(0, 19)]);
-    }, 300);
+    const fallbackContentType = activeFilters.contentType[0] ?? 'all';
+    const normalizedQuery = queryToSearch.trim() || getContentTypeLabel(fallbackContentType);
+    const historyItem: SearchHistoryItem = {
+      id: `h${Date.now()}`,
+      query: normalizedQuery,
+      filters: { ...activeFilters },
+      timestamp: new Date(),
+      resultsCount: nextResults.length
+    };
+
+    setSearchHistory(prev => [historyItem, ...prev.filter(item => item.query !== normalizedQuery).slice(0, 19)]);
   }, []);
 
   const handleSearch = useCallback(() => {
-    executeSearch(searchQuery, filters);
+    void executeSearch(searchQuery, filters);
   }, [executeSearch, searchQuery, filters]);
 
   const handleClearSearch = useCallback(() => {
@@ -599,7 +672,7 @@ export default function AdvancedSearch({
     setSearchQuery(item.query);
     setFilters(item.filters);
     setShowHistory(false);
-    executeSearch(item.query, item.filters);
+    void executeSearch(item.query, item.filters);
   }, [executeSearch]);
 
   const handleDeleteHistory = useCallback((id: string) => {
@@ -634,7 +707,7 @@ export default function AdvancedSearch({
       )
     );
 
-    executeSearch(search.query, search.filters);
+    void executeSearch(search.query, search.filters);
   }, [executeSearch]);
 
   const handleDeleteSaved = useCallback((id: string) => {

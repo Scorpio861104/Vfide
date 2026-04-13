@@ -19,6 +19,7 @@ import {
   Trash2,
   RefreshCw,
 } from 'lucide-react';
+import { useAccount } from 'wagmi';
 import {
   InviteLink,
   EXPIRATION_OPTIONS,
@@ -48,10 +49,17 @@ export function InviteLinkCreator({
   const [maxUses, setMaxUses] = useState(0); // Unlimited
   const [description, setDescription] = useState('');
   const [requireApproval, setRequireApproval] = useState(false);
+  const { address } = useAccount();
   const { announce } = useAnnounce();
 
   const handleCreate = async () => {
     setIsCreating(true);
+
+    if (!address) {
+      announce('Connect your wallet to create an invite link', 'assertive');
+      setIsCreating(false);
+      return;
+    }
 
     try {
       const response = await fetch('/api/groups/invites', {
@@ -59,7 +67,7 @@ export function InviteLinkCreator({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           groupId,
-          createdBy: '0x...', // In production: get from auth
+          createdBy: address,
           expiresIn: expiresIn || undefined,
           maxUses: maxUses || undefined,
           description,

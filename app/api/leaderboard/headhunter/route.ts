@@ -102,17 +102,13 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({
         success: true,
         data: [],
-        mock: true,
+        unavailable: true,
         message: 'Leaderboard data will be available once the subgraph is deployed',
         meta: {
           year: yearNum,
           quarter: quarterNum,
           totalParticipants: 0,
         }
-      }, {
-        headers: {
-          'X-Mock-Data': 'true',
-        },
       });
     }
 
@@ -165,14 +161,10 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({
         success: true,
         data: [],
-        mock: true,
+        unavailable: true,
         year: yearNum,
         quarter: quarterNum,
-        source: 'fallback',
-      }, {
-        headers: {
-          'X-Mock-Data': 'true',
-        },
+        source: 'subgraph_error',
       });
     }
 
@@ -184,14 +176,10 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({
         success: true,
         data: [],
-        mock: true,
+        unavailable: true,
         year: yearNum,
         quarter: quarterNum,
-        source: 'fallback',
-      }, {
-        headers: {
-          'X-Mock-Data': 'true',
-        },
+        source: 'subgraph_invalid_response',
       });
     }
     

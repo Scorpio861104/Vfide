@@ -54,7 +54,7 @@ export interface AnalyticsEvent {
   type: MetricType;
   userId?: string;
   timestamp: number;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export interface TimeSeriesData {
@@ -110,11 +110,98 @@ export enum TimeRange {
 }
 
 // ============================================================================
-// Mock Storage (Replace with database in production)
+// Client Storage + Backend Ingestion
 // ============================================================================
 
+const ANALYTICS_STORAGE_KEY = 'vfide:analytics:events';
+const MAX_LOCAL_ANALYTICS_EVENTS = 500;
+
 const analyticsStore = new Map<string, AnalyticsEvent>();
+let analyticsStoreInitialized = false;
 let eventIdCounter = 0;
+
+function isBrowserRuntime(): boolean {
+  return typeof window !== 'undefined';
+}
+
+function toValidEvent(value: unknown): AnalyticsEvent | null {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
+  const input = value as Record<string, unknown>;
+  if (typeof input.id !== 'string' || typeof input.type !== 'string' || typeof input.timestamp !== 'number') {
+    return null;
+  }
+
+  return {
+    id: input.id,
+    type: input.type as MetricType,
+    userId: typeof input.userId === 'string' ? input.userId : undefined,
+    timestamp: input.timestamp,
+    metadata: input.metadata && typeof input.metadata === 'object' && !Array.isArray(input.metadata)
+      ? (input.metadata as Record<string, unknown>)
+      : undefined,
+  };
+}
+
+function initializeAnalyticsStore(): void {
+  if (analyticsStoreInitialized) return;
+  analyticsStoreInitialized = true;
+
+  if (!isBrowserRuntime()) return;
+
+  try {
+    const serialized = window.localStorage.getItem(ANALYTICS_STORAGE_KEY);
+    if (!serialized) return;
+
+    const parsed = JSON.parse(serialized) as unknown;
+    if (!Array.isArray(parsed)) return;
+
+    for (const row of parsed) {
+      const event = toValidEvent(row);
+      if (event) {
+        analyticsStore.set(event.id, event);
+      }
+    }
+
+    eventIdCounter = analyticsStore.size;
+  } catch (err) {
+    logger.warn('Analytics local store initialization failed:', err);
+  }
+}
+
+function persistAnalyticsStore(): void {
+  if (!isBrowserRuntime()) return;
+
+  try {
+    const latestEvents = Array.from(analyticsStore.values())
+      .sort((a, b) => a.timestamp - b.timestamp)
+      .slice(-MAX_LOCAL_ANALYTICS_EVENTS);
+    window.localStorage.setItem(ANALYTICS_STORAGE_KEY, JSON.stringify(latestEvents));
+  } catch (err) {
+    logger.warn('Analytics local store persistence failed:', err);
+  }
+}
+
+async function sendEventToBackend(event: AnalyticsEvent): Promise<void> {
+  if (!isBrowserRuntime()) return;
+
+  const payload = {
+    userId: event.userId,
+    eventType: event.type,
+    eventData: event.metadata ?? {},
+  };
+
+  try {
+    await fetch('/api/analytics', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      keepalive: true,
+      body: JSON.stringify(payload),
+    });
+  } catch (err) {
+    logger.debug('Analytics backend ingestion skipped:', err);
+  }
+}
 
 // ============================================================================
 // Event Tracking Functions
@@ -126,10 +213,12 @@ let eventIdCounter = 0;
 export function trackEvent(
   type: MetricType,
   userId?: string,
-  metadata?: Record<string, any>
+  metadata?: Record<string, unknown>
 ): AnalyticsEvent {
+  initializeAnalyticsStore();
+
   const event: AnalyticsEvent = {
-    id: `evt_${++eventIdCounter}`,
+    id: `evt_${Date.now()}_${++eventIdCounter}`,
     type,
     userId,
     timestamp: Date.now(),
@@ -137,9 +226,8 @@ export function trackEvent(
   };
 
   analyticsStore.set(event.id, event);
-  
-  // In production, send to analytics backend
-  // sendToAnalyticsBackend(event);
+  persistAnalyticsStore();
+  void sendEventToBackend(event);
   
   return event;
 }
@@ -204,6 +292,8 @@ export function getEventsInRange(
   type?: MetricType,
   userId?: string
 ): AnalyticsEvent[] {
+  initializeAnalyticsStore();
+
   const events: AnalyticsEvent[] = [];
   
   analyticsStore.forEach((event) => {

@@ -18,6 +18,7 @@ import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { QrCode, Download, Copy, Check, Share2, Printer } from 'lucide-react';
+import QRCode from 'qrcode';
 
 // ── Types ───────────────────────────────────────────────────────────────────
 
@@ -39,51 +40,20 @@ interface SmartQRProps extends QRPaymentData {
 
 // ── QR Generation (using browser canvas) ────────────────────────────────────
 
-// Lightweight QR code generation without external dependencies
-// Uses the QR code algorithm directly on canvas
-function generateQRDataUrl(text: string, size: number, fgColor: string, bgColor: string): string {
-  // In production, use a proper QR library like 'qrcode' npm package.
-  // This is a placeholder that creates a styled placeholder.
-  // Install: npm install qrcode
-  // Then: import QRCode from 'qrcode';
-  //       return await QRCode.toDataURL(text, { width: size, color: { dark: fgColor, light: bgColor } });
-  
-  const canvas = document.createElement('canvas');
-  canvas.width = size;
-  canvas.height = size;
-  const ctx = canvas.getContext('2d');
-  if (!ctx) return '';
-
-  // Background
-  ctx.fillStyle = bgColor;
-  ctx.fillRect(0, 0, size, size);
-
-  // Placeholder pattern (replace with real QR generation in production)
-  ctx.fillStyle = fgColor;
-  const cellSize = size / 25;
-  
-  // Simple pattern to indicate this is a QR placeholder
-  for (let i = 0; i < 25; i++) {
-    for (let j = 0; j < 25; j++) {
-      // Position detection patterns (corners)
-      if ((i < 7 && j < 7) || (i < 7 && j > 17) || (i > 17 && j < 7)) {
-        if (i === 0 || i === 6 || j === 0 || j === 6 || j === 18 || j === 24 || i === 18 || i === 24 ||
-            (i >= 2 && i <= 4 && j >= 2 && j <= 4) ||
-            (i >= 2 && i <= 4 && j >= 20 && j <= 22) ||
-            (i >= 20 && i <= 22 && j >= 2 && j <= 4)) {
-          ctx.fillRect(j * cellSize, i * cellSize, cellSize, cellSize);
-        }
-      } else {
-        // Data area — pseudo-random based on text hash
-        const hash = (text.charCodeAt(i % text.length) * 31 + j * 17 + i * 13) % 3;
-        if (hash === 0) {
-          ctx.fillRect(j * cellSize, i * cellSize, cellSize, cellSize);
-        }
-      }
-    }
+async function generateQRDataUrl(text: string, size: number, fgColor: string, bgColor: string): Promise<string> {
+  try {
+    return await QRCode.toDataURL(text, {
+      width: size,
+      margin: 1,
+      color: {
+        dark: fgColor,
+        light: bgColor,
+      },
+      errorCorrectionLevel: 'M',
+    });
+  } catch {
+    return '';
   }
-
-  return canvas.toDataURL('image/png');
 }
 
 // ── Build Payment URL ───────────────────────────────────────────────────────
@@ -115,9 +85,17 @@ export function SmartQR({
   const paymentUrl = buildPaymentUrl(data);
 
   useEffect(() => {
-    // Generate QR code
-    const url = generateQRDataUrl(paymentUrl, size * 2, '#ffffff', '#09090b');
-    setQrDataUrl(url);
+    let cancelled = false;
+
+    void generateQRDataUrl(paymentUrl, size * 2, '#ffffff', '#09090b').then((url) => {
+      if (!cancelled) {
+        setQrDataUrl(url);
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
   }, [paymentUrl, size]);
 
   const copyLink = () => {
@@ -160,7 +138,7 @@ export function SmartQR({
         p { color: #666; margin: 5px 0; font-size: 14px; }
         .amount { font-size: 32px; font-weight: bold; margin: 10px 0; }
       </style></head><body>
-        <Image src="${qrDataUrl}" alt="QR Code"  width={48} height={48} />
+        <img src="${qrDataUrl}" alt="QR Code" />
         <h2>${data.merchantName}</h2>
         ${data.amount ? `<div class="amount">$${data.amount.toFixed(2)}</div>` : ''}
         ${data.description ? `<p>${data.description}</p>` : ''}

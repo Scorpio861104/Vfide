@@ -10,6 +10,22 @@
 import { useState, useCallback, useEffect } from 'react';
 import { logger } from '@/lib/logger';
 
+import {
+  createConfig,
+  EVM,
+  getRoutes as lifiGetRoutes,
+  executeRoute as lifiExecuteRoute,
+  getTokenBalancesByChain,
+} from '@lifi/sdk';
+import type { Route as LifiRoute } from '@lifi/types';
+import type { WalletClient } from 'viem';
+
+// Initialize Li.Fi SDK at module load
+createConfig({ integrator: 'VFIDE', preloadChains: false });
+
+// Cache raw Li.Fi routes by ID so executeTransfer can look them up
+const lifiRouteCache = new Map<string, LifiRoute>();
+
 // ============================================================================
 // Types
 // ============================================================================
@@ -221,8 +237,13 @@ export const COMMON_TOKENS: Record<number, Token[]> = {
 // ============================================================================
 
 /**
- * Find optimal routes for cross-chain transfer
- * In production, this would call bridge aggregators like LI.FI or Socket
+
+// ============================================================================
+// Route Finder
+// ============================================================================
+
+/**
+ * Find optimal routes for cross-chain transfer via Li.Fi aggregator.
  */
 export async function findRoutes(request: TransferRequest): Promise<Route[]> {
   const fromChain = SUPPORTED_CHAINS.find((c) => c.id === request.fromChain);
@@ -233,25 +254,99 @@ export async function findRoutes(request: TransferRequest): Promise<Route[]> {
   }
 
   const fromToken = COMMON_TOKENS[request.fromChain]?.find(
-    (t) => t.address.toLowerCase() === request.fromToken.toLowerCase() ||
-           t.symbol.toLowerCase() === request.fromToken.toLowerCase()
+    (t) =>
+      t.address.toLowerCase() === request.fromToken.toLowerCase() ||
+      t.symbol.toLowerCase() === request.fromToken.toLowerCase()
   );
 
   const toToken = COMMON_TOKENS[request.toChain]?.find(
-    (t) => t.address.toLowerCase() === request.toToken.toLowerCase() ||
-           t.symbol.toLowerCase() === request.toToken.toLowerCase()
+    (t) =>
+      t.address.toLowerCase() === request.toToken.toLowerCase() ||
+      t.symbol.toLowerCase() === request.toToken.toLowerCase()
   );
 
   if (!fromToken || !toToken) {
-    throw new Error('Unsupported token');
+    throw new Error('Unsupported token pair');
   }
 
-  void request;
-  void fromChain;
-  void toChain;
-  void fromToken;
-  void toToken;
-  return [];
+  const lifiResponse = await lifiGetRoutes({
+    fromChainId: request.fromChain,
+    fromAmount: request.amount,
+    fromTokenAddress: fromToken.address,
+    toChainId: request.toChain,
+    toTokenAddress: toToken.address,
+    fromAddress: request.recipient,
+    options: { slippage: request.slippage ?? 0.03 },
+  });
+
+  if (!lifiResponse.routes.length) {
+    return [];
+  }
+
+  return lifiResponse.routes.map((lr) => {
+    lifiRouteCache.set(lr.id, lr);
+
+    const tags: Route['tags'] = [];
+    if (lr.tags?.includes('CHEAPEST')) tags.push('cheapest');
+    if (lr.tags?.includes('FASTEST')) tags.push('fastest');
+    if (lr.tags?.includes('RECOMMENDED')) tags.push('recommended');
+
+    const gasCostUsd = parseFloat(lr.gasCostUSD ?? '0');
+    const bridgeFeeUsd = Math.max(
+      0,
+      parseFloat(lr.fromAmountUSD ?? '0') -
+        parseFloat(lr.toAmountUSD ?? '0') -
+        gasCostUsd
+    );
+    const totalTime = lr.steps.reduce(
+      (acc, s) => acc + (s.estimate?.executionDuration ?? 0),
+      0
+    );
+
+    return {
+      id: lr.id,
+      protocol: lr.steps[0]?.toolDetails?.name ?? lr.steps[0]?.tool ?? 'Li.Fi',
+      fromChain,
+      toChain,
+      fromToken,
+      toToken,
+      fromAmount: lr.fromAmount,
+      toAmount: lr.toAmount,
+      estimatedTime: totalTime,
+      gasCost: { amount: lr.gasCostUSD ?? '0', usd: gasCostUsd },
+      bridgeFee: { amount: bridgeFeeUsd.toFixed(6), usd: bridgeFeeUsd },
+      totalCost: gasCostUsd + bridgeFeeUsd,
+      steps: lr.steps.map((s) => {
+        // LiFiStep.type is always 'lifi'; derive swap vs bridge from chain IDs
+        const stepType: RouteStep['type'] =
+          s.action.fromChainId !== s.action.toChainId ? 'bridge' : 'swap';
+        return {
+          type: stepType,
+          protocol: s.toolDetails?.name ?? s.tool,
+          fromToken: {
+            address: s.action.fromToken.address,
+            symbol: s.action.fromToken.symbol,
+            name: s.action.fromToken.name,
+            decimals: s.action.fromToken.decimals,
+            chainId: s.action.fromChainId,
+            logoUri: s.action.fromToken.logoURI,
+          },
+          toToken: {
+            address: s.action.toToken.address,
+            symbol: s.action.toToken.symbol,
+            name: s.action.toToken.name,
+            decimals: s.action.toToken.decimals,
+            chainId: s.action.toChainId,
+            logoUri: s.action.toToken.logoURI,
+          },
+          fromAmount: s.action.fromAmount,
+          toAmount: s.estimate?.toAmount ?? '0',
+          estimatedTime: s.estimate?.executionDuration ?? 0,
+        };
+      }),
+      tags,
+    } satisfies Route;
+  });
 }
 
 // ============================================================================
@@ -260,66 +355,74 @@ export async function findRoutes(request: TransferRequest): Promise<Route[]> {
 
 const transferStatuses = new Map<string, TransferStatus>();
 
+/**
+ * Execute a cross-chain transfer using Li.Fi.
+ * The route must be obtained from findRoutes() on this session.
+ * walletClient is a viem WalletClient (e.g. from wagmi useWalletClient).
+ */
 export async function executeTransfer(
   route: Route,
-  request: TransferRequest,
-  signer: { sendTransaction: (tx: unknown) => Promise<{ hash: string; wait: () => Promise<unknown> }> }
+  _request: TransferRequest,
+  walletClient: WalletClient
 ): Promise<string> {
-  void route;
-  void request;
-  void signer;
-  throw new Error('Cross-chain transfer execution is not configured');
+  const lifiRoute = lifiRouteCache.get(route.id);
+  if (!lifiRoute) {
+    throw new Error(
+      'Route not found in cache. Call findRoutes() first and use a route returned from it.'
+    );
+  }
+
+  // Configure Li.Fi EVM provider with the current wallet client before execution
+  createConfig({
+    integrator: 'VFIDE',
+    preloadChains: false,
+    providers: [EVM({ getWalletClient: () => Promise.resolve(walletClient as never) })],
+  });
 
   const transferId = `transfer-${Date.now()}-${Math.random().toString(36).slice(2)}`;
-
   const status: TransferStatus = {
     id: transferId,
     status: 'pending',
     currentStep: 0,
-    totalSteps: route.steps.length || 1,
+    totalSteps: lifiRoute.steps.length || 1,
   };
-
   transferStatuses.set(transferId, status);
 
-  // Execute asynchronously
   (async () => {
     try {
       status.status = 'processing';
 
-      for (let i = 0; i < route.steps.length; i++) {
-        const step = route.steps[i];
-        if (!step) continue;
-        status.currentStep = i + 1;
+      const executedRoute = await lifiExecuteRoute(lifiRoute, {
+        updateRouteHook(updatedRoute) {
+          const activeIdx = updatedRoute.steps.findIndex(
+            (s) =>
+              s.execution?.status === 'PENDING' ||
+              s.execution?.status === 'ACTION_REQUIRED'
+          );
+          if (activeIdx >= 0) status.currentStep = activeIdx + 1;
 
-        if (step.type === 'approve') {
-          // Simulate approval
-          await new Promise((resolve) => setTimeout(resolve, 2000));
-        } else if (step.type === 'swap') {
-          // Simulate swap
-          const tx = await signer.sendTransaction({
-            to: '0x1234...', // DEX router
-            data: '0x...', // Swap calldata
-          });
-          status.fromTxHash = tx.hash;
-          await tx.wait();
-        } else if (step.type === 'bridge') {
-          status.status = 'bridging';
-          // Simulate bridge deposit
-          const tx = await signer.sendTransaction({
-            to: '0x5678...', // Bridge contract
-            data: '0x...', // Bridge calldata
-          });
-          status.fromTxHash = tx.hash;
-          await tx.wait();
+          const firstProcs = updatedRoute.steps[0]?.execution?.process ?? [];
+          const srcTx = firstProcs.find((p) => p.txHash);
+          if (srcTx?.txHash) status.fromTxHash = srcTx.txHash;
 
-          // Wait for bridge completion signal
-          status.estimatedArrival = Date.now() + step.estimatedTime * 1000;
-          await new Promise((resolve) => setTimeout(resolve, step.estimatedTime * 1000));
-        }
-      }
+          const lastProcs =
+            updatedRoute.steps[updatedRoute.steps.length - 1]?.execution?.process ?? [];
+          const dstTx = [...lastProcs].reverse().find((p) => p.txHash);
+          if (dstTx?.txHash) status.toTxHash = dstTx.txHash;
+        },
+      });
+
+      const firstProcs = executedRoute.steps[0]?.execution?.process ?? [];
+      const srcTx = firstProcs.find((p) => p.txHash);
+      if (srcTx?.txHash) status.fromTxHash = srcTx.txHash;
+
+      const lastProcs =
+        executedRoute.steps[executedRoute.steps.length - 1]?.execution?.process ?? [];
+      const dstTx = [...lastProcs].reverse().find((p) => p.txHash);
+      if (dstTx?.txHash) status.toTxHash = dstTx.txHash;
 
       status.status = 'completed';
-      status.toTxHash = '0x...'; // Would come from bridge
+      status.currentStep = status.totalSteps;
     } catch (error) {
       status.status = 'failed';
       status.error = error instanceof Error ? error.message : 'Unknown error';
@@ -337,17 +440,67 @@ export function getTransferStatus(transferId: string): TransferStatus | undefine
 // Balance Aggregation
 // ============================================================================
 
-export async function getAggregatedBalances(
-  _address: string
-): Promise<AggregatedBalance[]> {
-  return [];
+export async function getAggregatedBalances(address: string): Promise<AggregatedBalance[]> {
+  // Build Li.Fi-compatible token list for all supported chains.
+  // priceUSD is required by the Li.Fi Token type; actual prices come back in the response.
+  const tokensByChain: Record<number, Array<Token & { priceUSD: string }>> = {};
+  for (const [chainIdStr, tokens] of Object.entries(COMMON_TOKENS)) {
+    tokensByChain[parseInt(chainIdStr)] = tokens.map((t) => ({ ...t, priceUSD: '0' }));
+  }
+
+  let balancesByChain: Record<number, import('@lifi/types').TokenAmount[]>;
+  try {
+    balancesByChain = await getTokenBalancesByChain(
+      address,
+      tokensByChain as Record<number, import('@lifi/types').Token[]>
+    );
+  } catch (err) {
+    logger.error(
+      'Failed to fetch token balances from Li.Fi',
+      err instanceof Error ? err : new Error(String(err))
+    );
+    return [];
+  }
+
+  const aggregate = new Map<string, AggregatedBalance>();
+  for (const [chainIdStr, tokenAmounts] of Object.entries(balancesByChain)) {
+    const chainId = parseInt(chainIdStr);
+    for (const ta of tokenAmounts) {
+      if (!ta.amount) continue;
+      const humanAmount = Number(ta.amount) / Math.pow(10, ta.decimals);
+      const usdValue = parseFloat(ta.priceUSD ?? '0') * humanAmount;
+      const token: Token = {
+        address: ta.address,
+        symbol: ta.symbol,
+        name: ta.name,
+        decimals: ta.decimals,
+        chainId,
+        logoUri: ta.logoURI,
+      };
+      const balance: Balance = { chainId, token, balance: humanAmount.toString(), usdValue };
+      const existing = aggregate.get(ta.symbol);
+      if (existing) {
+        existing.byChain.push(balance);
+        existing.totalUsdValue += usdValue;
+        existing.totalBalance = (parseFloat(existing.totalBalance) + humanAmount).toString();
+      } else {
+        aggregate.set(ta.symbol, {
+          token: ta.symbol,
+          totalBalance: humanAmount.toString(),
+          totalUsdValue: usdValue,
+          byChain: [balance],
+        });
+      }
+    }
+  }
+  return Array.from(aggregate.values());
 }
 
 // ============================================================================
 // React Hook
 // ============================================================================
 
-export function useCrossChain(userAddress: string | undefined) {
+export function useCrossChain(userAddress: string | undefined, walletClient?: WalletClient) {
   const [balances, setBalances] = useState<AggregatedBalance[]>([]);
   const [routes, setRoutes] = useState<Route[]>([]);
   const [currentTransfer, setCurrentTransfer] = useState<TransferStatus | null>(null);
@@ -360,7 +513,12 @@ export function useCrossChain(userAddress: string | undefined) {
 
     getAggregatedBalances(userAddress)
       .then(setBalances)
-      .catch((err: unknown) => logger.error('Failed to load aggregated balances', err instanceof Error ? err : new Error(String(err))));
+      .catch((err: unknown) =>
+        logger.error(
+          'Failed to load aggregated balances',
+          err instanceof Error ? err : new Error(String(err))
+        )
+      );
   }, [userAddress]);
 
   const findOptimalRoutes = useCallback(async (request: TransferRequest) => {
@@ -380,37 +538,39 @@ export function useCrossChain(userAddress: string | undefined) {
     }
   }, []);
 
-  const initiateTransfer = useCallback(async (
-    route: Route,
-    request: TransferRequest,
-    signer: { sendTransaction: (tx: unknown) => Promise<{ hash: string; wait: () => Promise<unknown> }> }
-  ) => {
-    setLoading(true);
-    setError(null);
+  const initiateTransfer = useCallback(
+    async (route: Route, request: TransferRequest) => {
+      if (!walletClient) {
+        setError('Wallet not connected. Please connect your wallet before initiating a transfer.');
+        return null;
+      }
+      setLoading(true);
+      setError(null);
 
-    try {
-      const transferId = await executeTransfer(route, request, signer);
-      
-      // Poll for status
-      const interval = setInterval(() => {
-        const status = getTransferStatus(transferId);
-        if (status) {
-          setCurrentTransfer(status);
-          if (status.status === 'completed' || status.status === 'failed') {
-            clearInterval(interval);
-            setLoading(false);
+      try {
+        const transferId = await executeTransfer(route, request, walletClient);
+
+        const interval = setInterval(() => {
+          const status = getTransferStatus(transferId);
+          if (status) {
+            setCurrentTransfer(status);
+            if (status.status === 'completed' || status.status === 'failed') {
+              clearInterval(interval);
+              setLoading(false);
+            }
           }
-        }
-      }, 1000);
+        }, 1000);
 
-      return transferId;
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'Transfer failed';
-      setError(message);
-      setLoading(false);
-      return null;
-    }
-  }, []);
+        return transferId;
+      } catch (err) {
+        const message = err instanceof Error ? err.message : 'Transfer failed';
+        setError(message);
+        setLoading(false);
+        return null;
+      }
+    },
+    [walletClient]
+  );
 
   const getChain = useCallback((chainId: number) => {
     return SUPPORTED_CHAINS.find((c) => c.id === chainId);

@@ -251,6 +251,7 @@ export async function deleteInviteLink(code: string): Promise<boolean> {
 export function useInviteLinks(groupId: string) {
   const [links, setLinks] = React.useState<InviteLink[]>([]);
   const [loading, setLoading] = React.useState(true);
+  const { address } = useAccount();
 
   const loadLinks = async () => {
     setLoading(true);
@@ -260,9 +261,8 @@ export function useInviteLinks(groupId: string) {
   };
 
   const create = async (options: InviteLinkOptions) => {
-    // In production: get user address from auth
-    const userAddress = '0x...';
-    const link = await createInviteLink(groupId, userAddress, options);
+    if (!address) throw new Error('Wallet not connected: cannot create invite link');
+    const link = await createInviteLink(groupId, address, options);
     await loadLinks();
     return link;
   };
@@ -292,3 +292,4 @@ export function useInviteLinks(groupId: string) {
 }
 
 import React from 'react';
+import { useAccount } from 'wagmi';

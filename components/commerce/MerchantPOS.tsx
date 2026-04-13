@@ -309,8 +309,43 @@ export function MerchantPOS() {
   
   // Send digital receipt
   const sendDigitalReceipt = async (sale: Sale, email: string) => {
-    // In production: await fetch('/api/send-receipt', { method: 'POST', body: JSON.stringify({ sale, email }) })
-    void sale; void email; // Placeholder until API integration
+    const receiptPayload = {
+      id: sale.id,
+      merchant: businessName || 'VFIDE Merchant',
+      date: new Date(sale.timestamp).toISOString(),
+      subtotal: sale.subtotal,
+      fee: sale.fee,
+      tokenAmount: sale.vfideAmount,
+      customerAddress: sale.customerAddress || '',
+      items: sale.items.map((item) => ({
+        id: item.id,
+        name: item.name,
+        quantity: item.quantity,
+        unitPrice: item.price,
+        total: item.quantity * item.price,
+      })),
+    }
+
+    // Store the latest receipt payload so support/tools can retrieve it even without backend email wiring.
+    localStorage.setItem(`vfide:merchant:receipt:${sale.id}`, JSON.stringify(receiptPayload))
+
+    const subject = encodeURIComponent(`Your receipt from ${businessName || 'VFIDE Merchant'} (${sale.id})`)
+    const lines = [
+      `Receipt ID: ${sale.id}`,
+      `Date: ${new Date(sale.timestamp).toLocaleString()}`,
+      `Merchant: ${businessName || 'VFIDE Merchant'}`,
+      '',
+      'Items:',
+      ...sale.items.map((item) => `- ${item.name} x${item.quantity} @ $${item.price.toFixed(2)} = $${(item.quantity * item.price).toFixed(2)}`),
+      '',
+      `Subtotal: $${sale.subtotal.toFixed(2)}`,
+      `Network Fee: $${sale.fee.toFixed(2)}`,
+      `Paid: ${sale.vfideAmount} VFIDE`,
+      sale.customerAddress ? `Customer Wallet: ${sale.customerAddress}` : '',
+    ].filter(Boolean)
+
+    const body = encodeURIComponent(lines.join('\n'))
+    window.open(`mailto:${encodeURIComponent(email)}?subject=${subject}&body=${body}`, '_blank', 'noopener,noreferrer')
   }
   
   // Sales analytics - Single-pass aggregation instead of multiple reduces (O(n) instead of O(n×3))

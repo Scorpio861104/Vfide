@@ -505,7 +505,12 @@ export function MessagingCenter({ friend, hasVault = false }: MessagingCenterPro
                       }`}
                     >
                       <p className="text-sm wrap-break-word whitespace-pre-wrap">
-                        {message.decryptedContent || '[Encrypted]'}
+                        {message.decryptedContent ?? (
+                          <span className="flex items-center gap-1 text-zinc-400 italic">
+                            <Lock className="w-3 h-3 shrink-0" aria-hidden="true" />
+                            Encrypted — key exchange required to read
+                          </span>
+                        )}
                       </p>
                     </div>
 

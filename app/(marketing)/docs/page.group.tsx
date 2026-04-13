@@ -23,7 +23,7 @@ export default function DocsPage() {
             <article className="rounded-xl border border-white/10 bg-white/3 p-5">
               <h2 className="text-white text-xl font-semibold mb-2">Getting Started</h2>
               <ul className="space-y-2 text-gray-300 text-sm">
-                <li>1. Create your VFIDE account with email, phone, or wallet.</li>
+                <li>1. Connect your wallet to create your VFIDE account.</li>
                 <li>2. Set up guardians for account recovery safety.</li>
                 <li>3. Confirm your vault address and backup recovery options.</li>
                 <li>4. Complete profile details to improve trust discovery.</li>
