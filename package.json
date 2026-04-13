@@ -269,7 +269,7 @@
     "chromatic": "^13.3.5",
     "dotenv": "^17.3.1",
     "eslint": "^9.39.4",
-    "eslint-config-next": "^16.1.5",
+    "eslint-config-next": "^16.2.3",
     "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-security": "^4.0.0",
     "ethers": "^6.16.0",
