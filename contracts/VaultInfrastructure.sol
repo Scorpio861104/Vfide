@@ -873,6 +873,9 @@ contract UserVaultLegacy is ReentrancyGuard {
     /// @dev Hub-only — ensures protocol-level control over enforcement
     function enforceExecuteWhitelist(bool enforce) external {
         require(msg.sender == hub, "UV:only-hub");
+        // H-7 FIX: Whitelist enforcement can only be enabled, never disabled.
+        // This prevents an admin key compromise from silently removing target restrictions.
+        require(enforce, "UV:cannot-disable-whitelist");
         executeWhitelistEnforced = enforce;
         emit ExecuteWhitelistEnforced(enforce);
     }

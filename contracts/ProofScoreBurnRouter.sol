@@ -377,9 +377,9 @@ contract ProofScoreBurnRouter is Ownable, Pausable, ReentrancyGuard {
 
             // For time-weighted, use simple equal weighting since circular buffer
             // doesn't guarantee ordering. Each snapshot contributes equally.
-            // Weight by time since snapshot (more recent = higher weight)
-            uint64 age = now_ - snapshotTime;
-            uint64 weight = age < SCORE_WINDOW ? SCORE_WINDOW - age : 1;
+            // M-4 FIX: Removed age-based weighting which was inverted (older = more weight).
+            // All snapshots within the window are weighted equally.
+            uint64 weight = 1;
 
             totalWeight += weight;
             weightedSum += uint256(scoreHistory[user][i].score) * weight;

@@ -19,6 +19,9 @@ contract VaultHub is Ownable, Pausable, ReentrancyGuard {
     uint8 public constant CARD_GUARDIAN_THRESHOLD = 1;
     uint256 public constant CARD_MAX_PER_TRANSFER = 100 * 1e18;
     uint256 public constant CARD_DAILY_TRANSFER_LIMIT = 300 * 1e18;
+    // M-3 FIX: Vaults have 30 days after creation to complete guardian setup.
+    // After this window, certain critical operations require setup to be complete.
+    uint256 public constant GUARDIAN_SETUP_GRACE = 30 days;
 
     /// Registry
     mapping(address => address) public vaultOf;
@@ -76,6 +79,7 @@ contract VaultHub is Ownable, Pausable, ReentrancyGuard {
     error VH_NeedIndependentGuardian();
     error VH_NotRecoveryContract();
     error VH_RecoveryDisabled();
+    error VH_GuardianSetupRequired(); // M-3 FIX: grace period expired, setup must be completed first
 
     constructor(address _vfideToken, address _ledger, address _dao) {
         if (_vfideToken == address(0) || _dao == address(0)) revert VH_Zero();
@@ -336,8 +340,19 @@ contract VaultHub is Ownable, Pausable, ReentrancyGuard {
 
     event RecoveryRotationRequested(address indexed vault, address indexed newWallet, address indexed recoveryContract);
 
+    /// @notice Check whether a vault's guardian setup deadline has passed without completion.
+    /// @dev M-3 FIX: Returns true if vault is older than GUARDIAN_SETUP_GRACE and setup is incomplete.
+    function isGuardianSetupExpired(address vault) public view returns (bool) {
+        if (guardianSetupComplete[vault]) return false;
+        uint256 created = vaultCreatedAt[vault];
+        return created > 0 && block.timestamp > created + GUARDIAN_SETUP_GRACE;
+    }
+
     function executeRecoveryRotation(address vault, address newWallet) external nonReentrant {
         if (!isRecoveryApprover[msg.sender]) revert VH_NotRecoveryContract();
+        // M-3 FIX: Block recovery if guardian setup grace period has expired without completion.
+        // This prevents vaults without proper guardian coverage from silently allowing recovery.
+        if (isGuardianSetupExpired(vault)) revert VH_GuardianSetupRequired();
         if (vault == address(0) || newWallet == address(0)) revert VH_Zero();
         if (ownerOfVault[vault] == address(0)) revert VH_UnknownVault();
 

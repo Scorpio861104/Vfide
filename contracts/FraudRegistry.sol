@@ -85,6 +85,8 @@ contract FraudRegistry is ReentrancyGuard {
 
     EscrowedTransfer[] public escrowedTransfers;
     mapping(address => uint256[]) public userEscrowIndices; // from → escrow indices
+    // H-3 FIX: Running total of tokens committed in active (unreleased/uncancelled) escrows
+    uint256 public totalActiveEscrowed;
 
     // ── Events ───────────────────────────────────────────────
     event ComplaintFiled(address indexed target, address indexed reporter, string reason, uint8 totalComplaints);
@@ -181,6 +183,8 @@ contract FraudRegistry is ReentrancyGuard {
 
         require(userEscrowIndices[from].length < 500, "FR: escrow limit");
         userEscrowIndices[from].push(escrowIndex);
+        // H-3 FIX: Track total actively escrowed tokens for O(1) excess calculation
+        totalActiveEscrowed += amount;
 
         emit TransferEscrowed(escrowIndex, from, to, amount, releaseAt);
     }
@@ -195,6 +199,8 @@ contract FraudRegistry is ReentrancyGuard {
         if (block.timestamp < e.releaseAt) revert FR_EscrowNotReady();
 
         e.released = true;
+        // H-3 FIX: Decrement active escrow counter before transfer
+        totalActiveEscrowed -= e.amount;
 
         // Transfer tokens from this contract to the intended recipient
         // FraudRegistry must be systemExempt on VFIDEToken so this transfer
@@ -373,14 +379,8 @@ contract FraudRegistry is ReentrancyGuard {
     function rescueExcessTokens(address to) external onlyDAO nonReentrant {
         if (to == address(0)) revert FR_Zero();
 
-        // Calculate total tokens held in active (unreleased, uncancelled) escrows
-        uint256 escrowed = 0;
-        for (uint256 i = 0; i < escrowedTransfers.length; i++) {
-            EscrowedTransfer storage e = escrowedTransfers[i];
-            if (!e.released && !e.cancelled) {
-                escrowed += e.amount;
-            }
-        }
+        // H-3 FIX: Use O(1) counter instead of O(n) loop over all escrows
+        uint256 escrowed = totalActiveEscrowed;
 
         uint256 balance = vfideToken.balanceOf(address(this));
         require(balance > escrowed, "FR: no excess");

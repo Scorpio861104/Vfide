@@ -162,11 +162,13 @@ contract Seer is ReentrancyGuard {
         mapping(address => uint32) public subjectGlobalPunishTotal;
         uint32 public maxDailySubjectDelta = 300; // Max 3% per day from ALL operators combined
         /// F-16 FIX: Limit the maximum score delta any single DAO setScore() call can make
-        uint16 public maxDAOScoreChange = 2000; // Max 20% change per call
+        // H-5 FIX: Reduced from 2000 (20%) to 500 (5%) to limit DAO manipulation velocity
+        uint16 public maxDAOScoreChange = 500; // Max 5% change per call
         
         // S-04 FIX: Rate limit DAO score changes to prevent rapid cascading manipulation
+        // H-5 FIX: Increased cooldown from 1 hour to 4 hours
         mapping(address => uint64) public lastDAOScoreChange;
-        uint64 public constant DAO_SCORE_COOLDOWN = 1 hours;
+        uint64 public constant DAO_SCORE_COOLDOWN = 4 hours;
     
     // ═══════════════════════════════════════════════════════════════════════
     // SCORE HISTORY - Track score changes for analytics and dispute resolution
@@ -526,7 +528,10 @@ contract Seer is ReentrancyGuard {
     function getScoreAt(address subject, uint64 timestamp) external view returns (uint16) {
         uint8 count = scoreHistoryCount[subject];
         if (count == 0) {
-            return getScore(subject);
+            // C-3 FIX: Return deterministic automated score instead of live getScore() which
+            // can include DAO operator overrides, allowing vote-weight manipulation for
+            // users with no score history.
+            return calculateAutomatedScore(subject);
         }
 
         uint8 head = scoreHistoryHead[subject];

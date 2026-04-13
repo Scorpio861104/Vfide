@@ -54,16 +54,8 @@ const config: VfideHardhatConfig = {
           viaIR: true,
         },
       },
-      {
-        version: "0.8.19",
-        settings: {
-          optimizer: {
-            enabled: true,
-            runs: 200,
-          },
-          viaIR: true,
-        },
-      },
+      // M-9 FIX: Removed 0.8.19 compiler — all contracts use 0.8.30 only.
+      // Having two compilers creates unverifiable compilation unit boundaries.
     ],
     overrides: {
       // L-01: Seer.sol is the large file after the VFIDETrust.sol monolith split; keep runs:1 to avoid bytecode-size issues

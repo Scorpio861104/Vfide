@@ -155,6 +155,8 @@ contract EscrowManager is ReentrancyGuard {
         }
         // F-18 FIX: Enforce minimum lock period as a safety net
         require(lockPeriod >= MIN_LOCK_PERIOD, "ESC: lock period too short");
+        // M-5 FIX: Enforce maximum lock period ceiling to prevent runaway escrow times
+        require(lockPeriod <= 30 days, "ESC: lock period ceiling");
 
         uint256 id = ++escrowCount;
         escrows[id] = Escrow({

@@ -184,7 +184,7 @@ interface IVFIDEToken is IERC20 {
     function setVaultOnly(bool enabled) external;
     function setCircuitBreaker(bool active, uint256 duration) external;
     function confirmCircuitBreaker() external; // H-01 FIX: confirm pending circuit breaker activation
-    function setSecurityBypass(bool active, uint256 duration) external; // H-02 FIX: explicit security bypass
+    // M-7 FIX: setSecurityBypass removed — function no longer exists in VFIDEToken.sol
     function setFeeBypass(bool active, uint256 duration) external;       // H-02 FIX: explicit fee bypass
     // setBlacklist removed — non-custodial
     function lockPolicy() external;

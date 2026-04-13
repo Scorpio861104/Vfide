@@ -10,6 +10,11 @@ interface IFraudRegistry {
     function escrowTransfer(address from, address to, uint256 amount) external returns (uint256);
 }
 
+/// @dev C-1 FIX: Interface for FeeDistributor.receiveFee() — called after eco fees are credited
+interface IEcosystemDistributor {
+    function receiveFee(uint256 amount) external;
+}
+
 /**
  * VFIDEToken (zkSync Era ready)
  * ----------------------------------------------------------
@@ -108,6 +113,8 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
     // Sinks (fallbacks if router is unset or returns zero sinks)
     address public treasurySink;  // sanctuary/treasury receiver for charity share
     address public sanctumSink; // Optional: Burn to Sanctum instead of 0x0
+    // C-1 FIX: FeeDistributor wiring — eco fees route here; triggers receiveFee() notification
+    address public ecosystemDistributor;
 
     // 48-hour timelock for fee-sink and burn-router changes
     uint64 public constant SINK_CHANGE_DELAY = 48 hours;
@@ -117,6 +124,9 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
     uint64  public pendingTreasurySinkAt;
     address public pendingSanctumSink;
     uint64  public pendingSanctumSinkAt;
+    // C-1 FIX: Pending state for ecosystemDistributor timelock
+    address public pendingEcosystemDistributor;
+    uint64  public pendingEcosystemDistributorAt;
 
     address public pendingVaultHub;
     uint64  public pendingVaultHubAt;
@@ -136,7 +146,16 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
     bool    public pendingCircuitBreakerActive;
     uint256 public pendingCircuitBreakerDuration;
     uint64  public pendingCircuitBreakerAt;
-    
+
+    // L-1 FIX: Per-address pending state for whale limit exemption timelock
+    mapping(address => bool)   public pendingWhaleExemptStatus;
+    mapping(address => uint64) public pendingWhaleExemptAt;
+
+    /// H-6 FIX: Timelock for fee bypass activation (48-hour delay; deactivation remains instant).
+        event WhaleLimitExemptProposed(address indexed addr, bool exempt, uint64 effectiveAt); // L-1 FIX
+    bool    public pendingFeeBypassActive;
+    uint256 public pendingFeeBypassDuration;
+    uint64  public pendingFeeBypassAt;
     
 
     // EIP-2612 Permit
@@ -158,6 +177,9 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
     event TreasurySinkScheduled(address indexed sink, uint64 effectiveAt);
     event SanctumSinkSet(address indexed sink);
     event SanctumSinkScheduled(address indexed sink, uint64 effectiveAt);
+    // C-1 FIX: Events for ecosystemDistributor timelock
+    event EcosystemDistributorSet(address indexed distributor);
+    event EcosystemDistributorScheduled(address indexed distributor, uint64 effectiveAt);
     event SystemExemptSet(address indexed who, bool isExempt);
     event SystemExemptProposed(address indexed who, bool isExempt, uint64 effectiveAt);
     event WhitelistProposed(address indexed addr, bool status, uint64 effectiveAt);
@@ -168,6 +190,7 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
     event CircuitBreakerSet(bool active, uint256 expiry);
     event CircuitBreakerProposed(bool active, uint256 duration, uint64 effectiveAt); // H-01 FIX
     event FeeBypassSet(bool active, uint256 expiry);      // T-12 FIX: emit on bypass change
+    event FeeBypassProposed(bool active, uint256 duration, uint64 effectiveAt); // H-6 FIX
     event ExternalCallFailed(string indexed context, bytes reason);
     event FeeApplied(address indexed from, address indexed to, uint256 burnAmount, uint256 sanctumAmount, uint256 ecosystemAmount, address indexed sanctumSink, address ecosystemSink);
     event Transfer(address indexed from, address indexed to, uint256 value);
@@ -477,6 +500,33 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
         _log("sanctum_sink_cancelled");
     }
 
+    // C-1 FIX: Timelocked setter for FeeDistributor wiring
+    function setEcosystemDistributor(address distributor) external onlyOwner {
+        if (pendingEcosystemDistributorAt != 0) revert VF_PendingExists();
+        uint64 effectiveAt = uint64(block.timestamp) + SINK_CHANGE_DELAY;
+        pendingEcosystemDistributor = distributor;
+        pendingEcosystemDistributorAt = effectiveAt;
+        emit EcosystemDistributorScheduled(distributor, effectiveAt);
+        _log("ecosystem_distributor_scheduled");
+    }
+
+    function applyEcosystemDistributor() external onlyOwner {
+        if (pendingEcosystemDistributorAt == 0) revert VF_NoPending();
+        if (block.timestamp < pendingEcosystemDistributorAt) revert VF_TimelockActive();
+        ecosystemDistributor = pendingEcosystemDistributor;
+        emit EcosystemDistributorSet(pendingEcosystemDistributor);
+        delete pendingEcosystemDistributor;
+        delete pendingEcosystemDistributorAt;
+        _log("ecosystem_distributor_set");
+    }
+
+    function cancelEcosystemDistributor() external onlyOwner {
+        if (pendingEcosystemDistributorAt == 0) revert VF_NoPending();
+        delete pendingEcosystemDistributor;
+        delete pendingEcosystemDistributorAt;
+        _log("ecosystem_distributor_cancelled");
+    }
+
     function setFraudRegistry(address _registry) external onlyOwner {
         if (pendingFraudRegistryAt != 0) revert VF_PendingExists();
         uint64 effectiveAt = uint64(block.timestamp) + SINK_CHANGE_DELAY;
@@ -626,23 +676,40 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
 
     // ── setSecurityBypass REMOVED — no SecurityHub lock checks to bypass ──
 
-    /// @notice Bypass BurnRouter fees only
-    /// @dev L-3 FIX: Re-activation requires a 1-day cooldown from the previous activation.
+    /// @notice Propose or immediately deactivate BurnRouter fee bypass.
+    /// @dev H-6 FIX: Activation now requires a 48-hour timelock (same as circuit breaker).
+    ///      Deactivation remains instant for liveness. Call confirmFeeBypass() after delay to apply.
     function setFeeBypass(bool _active, uint256 _duration) external onlyOwner {
         _syncEmergencyFlags();
         if (_active) {
             if (_duration == 0 || _duration > MAX_CIRCUIT_BREAKER_DURATION) revert VF_InvalidDuration();
-            if (feeBypassActivatedAt > 0 && block.timestamp < uint256(feeBypassActivatedAt) + 1 days)
-                revert VF_TimelockActive();
-            feeBypassActivatedAt = uint64(block.timestamp);
-            feeBypass = true;
-            feeBypassExpiry = block.timestamp + _duration;
+            // H-6 FIX: Propose activation with 48-hour delay instead of instant enable
+            pendingFeeBypassActive = true;
+            pendingFeeBypassDuration = _duration;
+            pendingFeeBypassAt = uint64(block.timestamp) + SINK_CHANGE_DELAY;
+            emit FeeBypassProposed(true, _duration, pendingFeeBypassAt);
+            _log("fee_bypass_proposed");
         } else {
+            // Immediate deactivation always allowed
             feeBypass = false;
             feeBypassExpiry = 0;
+            pendingFeeBypassAt = 0;
+            emit FeeBypassSet(false, 0);
+            _log("fee_bypass_off");
         }
-        emit FeeBypassSet(_active, feeBypassExpiry); // T-12 FIX: emit event
-        _log(_active ? "fee_bypass_on" : "fee_bypass_off");
+    }
+
+    /// @notice Apply a pending fee bypass activation after the 48-hour timelock.
+    function confirmFeeBypass() external onlyOwner {
+        if (pendingFeeBypassAt == 0) revert VF_NoPending();
+        if (block.timestamp < pendingFeeBypassAt) revert VF_TimelockActive();
+        _syncEmergencyFlags();
+        feeBypassActivatedAt = uint64(block.timestamp);
+        feeBypass = true;
+        feeBypassExpiry = block.timestamp + pendingFeeBypassDuration;
+        pendingFeeBypassAt = 0;
+        emit FeeBypassSet(true, feeBypassExpiry);
+        _log("fee_bypass_on");
     }
     
     /**
@@ -738,8 +805,27 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
      * @notice Exempt address from whale limits (for exchanges, liquidity pools, etc.)
      */
     function setWhaleLimitExempt(address addr, bool exempt) external onlyOwner {
-        whaleLimitExempt[addr] = exempt;
-        emit WhaleLimitExemptSet(addr, exempt);
+        // L-1 FIX: Timelocked — call applyWhaleLimitExempt(addr) after SINK_CHANGE_DELAY.
+        if (addr == address(0)) revert VF_ZeroAddress();
+        uint64 effectiveAt = uint64(block.timestamp) + SINK_CHANGE_DELAY;
+        pendingWhaleExemptStatus[addr] = exempt;
+        pendingWhaleExemptAt[addr] = effectiveAt;
+        emit WhaleLimitExemptProposed(addr, exempt, effectiveAt);
+    }
+
+    function applyWhaleLimitExempt(address addr) external onlyOwner {
+        if (pendingWhaleExemptAt[addr] == 0) revert VF_NoPending();
+        if (block.timestamp < pendingWhaleExemptAt[addr]) revert VF_TimelockActive();
+        whaleLimitExempt[addr] = pendingWhaleExemptStatus[addr];
+        delete pendingWhaleExemptAt[addr];
+        delete pendingWhaleExemptStatus[addr];
+        emit WhaleLimitExemptSet(addr, whaleLimitExempt[addr]);
+    }
+
+    function cancelWhaleLimitExempt(address addr) external onlyOwner {
+        if (pendingWhaleExemptAt[addr] == 0) revert VF_NoPending();
+        delete pendingWhaleExemptAt[addr];
+        delete pendingWhaleExemptStatus[addr];
     }
 
     // ─────────────────────────── Internal core
@@ -824,7 +910,8 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
                     if (_sanctumSink != sanctumSink && _sanctumSink != treasurySink) revert VF_InvalidFeeSink();
                 }
                 if (_ecoSink != address(0)) {
-                    if (_ecoSink != treasurySink && _ecoSink != sanctumSink) revert VF_InvalidFeeSink();
+                    // C-1 FIX: Also accept ecosystemDistributor as a valid eco sink
+                    if (_ecoSink != treasurySink && _ecoSink != sanctumSink && _ecoSink != ecosystemDistributor) revert VF_InvalidFeeSink();
                 }
                 if (_burnSink != address(0)) {
                     if (_burnSink != treasurySink && _burnSink != sanctumSink) revert VF_InvalidFeeSink();
@@ -843,11 +930,17 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
                     remaining -= _sanctumAmt;
                 }
                 if (_ecoAmt > 0) {
-                    address sink3 = (_ecoSink == address(0)) ? treasurySink : _ecoSink;
+                    address sink3 = (_ecoSink == address(0)) ? (ecosystemDistributor != address(0) ? ecosystemDistributor : treasurySink) : _ecoSink;
                     if (sink3 == address(0)) revert VF_InvalidFeeSink();
                     _balances[sink3] += _ecoAmt;
                     emit Transfer(from, sink3, _ecoAmt);
                     remaining -= _ecoAmt;
+                    // C-1 FIX: Notify FeeDistributor so it can track incoming revenue
+                    if (sink3 == ecosystemDistributor) {
+                        try IEcosystemDistributor(sink3).receiveFee(_ecoAmt) {} catch (bytes memory reason) {
+                            emit ExternalCallFailed("receiveFee", reason);
+                        }
+                    }
                 }
 
                 if (_burnAmt > 0 || _sanctumAmt > 0 || _ecoAmt > 0) {
@@ -858,6 +951,9 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
                 try IProofScoreBurnRouter(address(burnRouter)).recordVolume(amount) {} catch (bytes memory reason) { emit ExternalCallFailed("recordVolume", reason); }
             } catch (bytes memory reason) {
                 emit ExternalCallFailed("computeFeesAndReserve", reason);
+                // C-2 FIX: When policy is locked and the router reverts, the transfer must also
+                // revert rather than silently proceeding zero-fee. This closes the DoS/bypass gap.
+                if (policyLocked && !isFeeBypassed()) revert VF_RouterRequired();
             }
         } else {
             // If policy is locked we require a router be present so fees cannot be bypassed
@@ -1043,14 +1139,13 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
         // 3. Daily transfer limit tracking: validate using projected post-fee flow,
         // but persist the actual delivered amount later in _transfer().
         // Use a rolling 24-hour window instead of UTC day boundaries.
+        // H-2 FIX: Read-only window check — do NOT mutate dailyTransferred/dailyResetTime here.
+        // State mutations belong solely in _recordActualDailyTransfer to avoid double-reset.
         uint256 windowStart = dailyResetTime[from];
-        if (windowStart == 0 || block.timestamp >= windowStart + 1 days) {
-            dailyTransferred[from] = 0;
-            dailyResetTime[from] = block.timestamp;
-        }
-
+        bool windowExpired = (windowStart == 0 || block.timestamp >= windowStart + 1 days);
         if (dailyTransferLimit > 0) {
-            uint256 projectedTransferred = dailyTransferred[from] + trackedAmount;
+            uint256 effectiveTransferred = windowExpired ? 0 : dailyTransferred[from];
+            uint256 projectedTransferred = effectiveTransferred + trackedAmount;
             if (projectedTransferred > dailyTransferLimit) {
                 revert VF_DailyLimitExceeded();
             }

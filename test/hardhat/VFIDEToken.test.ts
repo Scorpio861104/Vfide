@@ -349,6 +349,9 @@ describe("VFIDEToken", () => {
 
       // Owner is treasury at genesis and exempt by default; disable exemption so anti-whale accounting executes.
       await token.connect(owner).setWhaleLimitExempt(owner.address, false);
+      await ethers.provider.send("evm_increaseTime", [H48]);
+      await ethers.provider.send("evm_mine", []);
+      await token.connect(owner).applyWhaleLimitExempt(owner.address);
 
       const amount = 1_000n * 10n ** 18n;
       const expectedNet = await token.getExpectedNetAmount(owner.address, user1.address, amount);
@@ -389,7 +392,6 @@ describe("VFIDEToken", () => {
       await token.connect(owner).applySanctumSink();
       await token.connect(owner).applyBurnRouter();
       await token.connect(owner).setWhaleLimitExempt(owner.address, false);
-
       await token.connect(owner).setAntiWhale(
         2_000_000n * 10n ** 18n,
         4_000_000n * 10n ** 18n,
@@ -398,6 +400,7 @@ describe("VFIDEToken", () => {
       );
       await ethers.provider.send("evm_increaseTime", [H48]);
       await ethers.provider.send("evm_mine", []);
+      await token.connect(owner).applyWhaleLimitExempt(owner.address);
       await token.connect(owner).applyAntiWhale();
 
       const amount = 600_000n * 10n ** 18n;
@@ -416,6 +419,7 @@ describe("VFIDEToken", () => {
       const { token, owner, user1, ethers } = await deployToken();
 
       await token.connect(owner).setWhaleLimitExempt(owner.address, false);
+      // L-1 FIX: applyWhaleLimitExempt is called after the 48h delay below (shared with applyAntiWhale)
       await token.connect(owner).setAntiWhale(
         2_000_000n * 10n ** 18n,
         4_000_000n * 10n ** 18n,
@@ -424,6 +428,7 @@ describe("VFIDEToken", () => {
       );
       await ethers.provider.send("evm_increaseTime", [H48]);
       await ethers.provider.send("evm_mine", []);
+      await token.connect(owner).applyWhaleLimitExempt(owner.address);
       await token.connect(owner).applyAntiWhale();
 
       const amount = 500_000n * 10n ** 18n;

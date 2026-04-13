@@ -147,8 +147,14 @@ contract FeeDistributor is AccessControl, ReentrancyGuard, Pausable {
         emit FeeReceived(amount);
     }
 
+    // M-6 FIX: Minimum interval between distribution calls to prevent spam/dust accumulation attacks
+    uint256 public constant MIN_DISTRIBUTION_INTERVAL = 1 hours;
+    uint256 public lastDistributionTime;
+
     /// @notice Distribute accumulated fees. Callable by anyone.
     function distribute() external nonReentrant whenNotPaused {
+        // M-6 FIX: Rate-limit to prevent repeated spam calls before fees accumulate
+        require(block.timestamp >= lastDistributionTime + MIN_DISTRIBUTION_INTERVAL, "FD: too soon");
         uint256 balance = vfideToken.balanceOf(address(this));
         if (balance < minDistributionAmount) revert BelowMinimum();
 
@@ -174,6 +180,7 @@ contract FeeDistributor is AccessControl, ReentrancyGuard, Pausable {
         if (toHeadhunters > 0) { IERC20(address(vfideToken)).safeTransfer(headhunterPool, toHeadhunters); totalToHeadhunters += toHeadhunters; }
 
         totalDistributed += balance;
+        lastDistributionTime = block.timestamp;
         emit FeeDistributed(balance, burnedThisRun, toSanctum, toDAO, toMerchants, toHeadhunters);
     }
 

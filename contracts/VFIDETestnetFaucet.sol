@@ -33,6 +33,7 @@ error Faucet_DailyCapReached();
 error Faucet_InsufficientVFIDE();
 error Faucet_InsufficientETH();
 error Faucet_ETHTransferFailed();
+error Faucet_UnsupportedChain();
 
 contract VFIDETestnetFaucet is ReentrancyGuard {
     using SafeERC20 for IERC20;
@@ -72,6 +73,15 @@ contract VFIDETestnetFaucet is ReentrancyGuard {
     
     constructor(address _vfideToken, address _owner) {
         if (_vfideToken == address(0) || _owner == address(0)) revert Faucet_Zero();
+        // L-13 FIX: Faucet is testnet-only and must never be deployable on major production chains.
+        if (
+            block.chainid == 1 ||    // Ethereum mainnet
+            block.chainid == 137 ||  // Polygon mainnet
+            block.chainid == 8453 || // Base mainnet
+            block.chainid == 324 ||  // zkSync Era mainnet
+            block.chainid == 10 ||   // Optimism mainnet
+            block.chainid == 42161   // Arbitrum One
+        ) revert Faucet_UnsupportedChain();
         vfideToken = IERC20(_vfideToken);
         owner = _owner;
         operators[_owner] = true;

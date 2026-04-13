@@ -576,7 +576,9 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
         _logEv(customer, "merchant_payment", amount, orderId);
     }
 
-    /// @notice Allow or revoke merchant permission to initiate pulls from your vault via processPayment.
+    /// @notice Revoke merchant permission to initiate pulls from your vault via processPayment.
+    /// @dev M-12 FIX: This function can ONLY revoke (approved must be false) — any call with approved=true reverts.
+    ///      Use setMerchantPullPermit() to grant a scoped permit instead.
     function setMerchantPullApproval(address merchant, bool approved) external {
         if (!merchants[merchant].registered) revert MERCH_NotRegistered();
         if (approved) {
