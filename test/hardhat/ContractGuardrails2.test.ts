@@ -524,6 +524,9 @@ describe("EscrowManager (F-18: minimum lock period)", () => {
     await token.waitForDeployment();
 
     await escrow.connect(arbiter).setTokenWhitelist(await token.getAddress(), true);
+    await ethers.provider.send("evm_increaseTime", [48 * 60 * 60 + 1]);
+    await ethers.provider.send("evm_mine", []);
+    await escrow.connect(arbiter).applyTokenWhitelist(await token.getAddress());
 
     return { ethers, escrow, seer, token, buyer, merchant };
   }

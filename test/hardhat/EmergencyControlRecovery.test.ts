@@ -37,9 +37,9 @@ describe("EmergencyControl recovery", () => {
     assert.equal(await control.dao(), replacementDao.address);
   });
 
-  it("transfers ownership through the emergency recovery hook after halt, approvals, and timelock", async () => {
+  it("allows only current foundation to rotate foundation address", async () => {
     const { ethers } = (await network.connect()) as any;
-    const [dao, foundation, member1, member2, newOwner] = await ethers.getSigners();
+    const [dao, foundation, outsider, newFoundation] = await ethers.getSigners();
 
     const Breaker = await ethers.getContractFactory("test/contracts/mocks/InterfaceMocks.sol:EmergencyBreakerMock");
     const breaker = await Breaker.deploy();
@@ -54,28 +54,12 @@ describe("EmergencyControl recovery", () => {
     );
     await control.waitForDeployment();
 
-    await control.connect(dao).resetCommittee(2, [member1.address, member2.address]);
-
-    const Target = await ethers.getContractFactory("test/contracts/mocks/InterfaceMocks.sol:OwnableRecoveryTarget");
-    const target = await Target.deploy();
-    await target.waitForDeployment();
-
-    await target.setEmergencyController(await control.getAddress());
-    await breaker.setHalted(true);
-
-    const epoch = await control.epoch();
-    const coder = ethers.AbiCoder.defaultAbiCoder();
-    const recoveryId = ethers.keccak256(
-      coder.encode(["address", "address", "uint256"], [await target.getAddress(), newOwner.address, epoch])
+    await assert.rejects(
+      () => control.connect(outsider).rotateFoundation(newFoundation.address),
+      /EC: not foundation|revert/
     );
 
-    await control.connect(member1).proposeRecovery(await target.getAddress(), newOwner.address);
-    await control.connect(member2).approveRecovery(recoveryId);
-
-    await ethers.provider.send("evm_increaseTime", [14 * 24 * 60 * 60]);
-    await ethers.provider.send("evm_mine", []);
-
-    await control.connect(member1).executeRecovery(recoveryId);
-    assert.equal(await target.owner(), newOwner.address);
+    await control.connect(foundation).rotateFoundation(newFoundation.address);
+    assert.equal(await control.foundation(), newFoundation.address);
   });
 });

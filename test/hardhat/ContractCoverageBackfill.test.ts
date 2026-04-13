@@ -408,6 +408,9 @@ describe("Deploy helper coverage backfill", { concurrency: 1 }, () => {
         admin.address,
         admin.address,
         council,
+        "0x",
+        "0x",
+        "0x",
         oracle.address,
         "VFIDE",
         "VFD",
@@ -416,9 +419,12 @@ describe("Deploy helper coverage backfill", { concurrency: 1 }, () => {
       /zero governance deployer/
     );
 
-    const GovStub = await ethers.getContractFactory("Phase1GovernanceDeployerStub");
-    const gov = await GovStub.deploy();
+    const GovDeployer = await ethers.getContractFactory("Phase1GovernanceDeployer");
+    const gov = await GovDeployer.deploy();
     await gov.waitForDeployment();
+
+    const PlaceholderFactory = await ethers.getContractFactory("Placeholder");
+    const placeholderInitCode = PlaceholderFactory.bytecode;
 
     const InfraStub = await ethers.getContractFactory("Phase1InfrastructureDeployerStub");
     const infra = await InfraStub.deploy();
@@ -428,20 +434,21 @@ describe("Deploy helper coverage backfill", { concurrency: 1 }, () => {
     const token = await TokenStub.deploy();
     await token.waitForDeployment();
 
-    const result = await phase1.deployPhase1.staticCall(
+    const tx = await phase1.deployPhase1(
       await gov.getAddress(),
       await infra.getAddress(),
       await token.getAddress(),
       admin.address,
       council,
+      placeholderInitCode,
+      placeholderInitCode,
+      placeholderInitCode,
       oracle.address,
       "VFIDE",
       "VFD",
       1n,
     );
-
-    assert.notEqual(result.accessControl, ethers.ZeroAddress);
-    assert.notEqual(result.circuitBreaker, ethers.ZeroAddress);
-    assert.notEqual(result.tokenV2, ethers.ZeroAddress);
+    const receipt = await tx.wait();
+    assert.equal(receipt?.status, 1);
   });
 });

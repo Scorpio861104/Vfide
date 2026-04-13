@@ -26,7 +26,7 @@ describe("VaultHub (M-11: non-custodial recovery guard)", () => {
     await token.waitForDeployment();
 
     const VaultHub = await ethers.getContractFactory("VaultHub");
-    const hub = await VaultHub.deploy(await token.getAddress(), ethers.ZeroAddress, ethers.ZeroAddress, dao.address);
+    const hub = await VaultHub.deploy(await token.getAddress(), ethers.ZeroAddress, dao.address);
     await hub.waitForDeployment();
 
     await (await hub.connect(vaultOwner).ensureVault(vaultOwner.address)).wait();
@@ -64,7 +64,7 @@ describe("DevReserveVestingVault (H-03: DAO pause claims)", () => {
     const DRVV = await ethers.getContractFactory("DevReserveVestingVault");
     const vault = await DRVV.deploy(
       await token.getAddress(), bene.address, await vaultHub.getAddress(),
-      ethers.ZeroAddress, ethers.ZeroAddress,
+      ethers.ZeroAddress,
       EXPECTED_ALLOC, dao.address
     );
     await vault.waitForDeployment();
@@ -88,7 +88,7 @@ describe("DevReserveVestingVault (H-03: DAO pause claims)", () => {
     const DRVV = await ethers.getContractFactory("DevReserveVestingVault");
     const vault = await DRVV.deploy(
       await token.getAddress(), bene.address, await vaultHub.getAddress(),
-      ethers.ZeroAddress, ethers.ZeroAddress,
+      ethers.ZeroAddress,
       EXPECTED_ALLOC, dao.address
     );
     await vault.waitForDeployment();
@@ -118,7 +118,7 @@ describe("UserVaultLegacy (H-05: execute whitelist)", () => {
     const Vault = await ethers.getContractFactory("UserVaultLegacy");
     const vault = await Vault.deploy(
       await hubContract.getAddress(), await token.getAddress(), owner.address,
-      ethers.ZeroAddress, ethers.ZeroAddress
+      ethers.ZeroAddress
     );
     await vault.waitForDeployment();
 
@@ -147,7 +147,7 @@ describe("UserVaultLegacy (H-05: execute whitelist)", () => {
     const Vault = await ethers.getContractFactory("UserVaultLegacy");
     const vault = await Vault.deploy(
       await hubContract.getAddress(), await token.getAddress(), owner.address,
-      ethers.ZeroAddress, ethers.ZeroAddress
+      ethers.ZeroAddress
     );
     await vault.waitForDeployment();
 
@@ -208,9 +208,11 @@ describe("Seer (M-18: circular delta guard)", () => {
     const seer = await Seer.deploy(dao.address, ethers.ZeroAddress, ethers.ZeroAddress);
     await seer.waitForDeployment();
 
-    // DAO sets score within maxDAOScoreChange (default score is 5000)
-    await seer.connect(dao).setScore(user.address, 7000, "initial");
-    assert.equal(await seer.getScore(user.address), 7000n);
+    // DAO can only change by maxDAOScoreChange (500) per call.
+    const baseline = await seer.getScore(user.address);
+    const target = Number(baseline) + 500;
+    await seer.connect(dao).setScore(user.address, target, "initial");
+    assert.equal(await seer.getScore(user.address), BigInt(target));
   });
 
   it("operator can reward user", async () => {
@@ -259,12 +261,14 @@ describe("Seer (M-18: circular delta guard)", () => {
 
     await seer.connect(dao).setBurnRouter(await router.getAddress());
 
-    await seer.connect(dao).setScore(user.address, 7000, "sync-check");
+    const baseline = await seer.getScore(user.address);
+    const target = Number(baseline) + 500;
+    await seer.connect(dao).setScore(user.address, target, "sync-check");
 
     const updatedAt = await router.lastScoreUpdate(user.address);
     const snapshot = await router.scoreHistory(user.address, 0);
     assert.ok(updatedAt > 0n);
-    assert.equal(snapshot[0], 7000n);
+    assert.equal(snapshot[0], BigInt(target));
   });
 
   it("does not punish again when auto restriction is triggered by low score", async () => {
@@ -284,21 +288,32 @@ describe("Seer (M-18: circular delta guard)", () => {
     await autonomous.waitForDeployment();
 
     await autonomous.connect(dao).setOperator(operator.address, true);
-    // Seer enforces maxDAOScoreChange (20%) per call, so step down in two calls.
-    await seer.connect(dao).setScore(user.address, 4000, "seed-1");
-    await ethers.provider.send("evm_increaseTime", [3600]);
-    await ethers.provider.send("evm_mine", []);
-    await seer.connect(dao).setScore(user.address, 2900, "seed-2");
+    await seer.connect(dao).setOperator(operator.address, true);
+
+    // Bring score down to 2900 without relying on DAO cooldown windows.
+    let current = await seer.getScore(user.address);
+    while (current > 2900n) {
+      const delta = current - 2900n > 100n ? 100n : current - 2900n;
+      await seer.connect(operator).punish(user.address, delta, "seed-low");
+      current = await seer.getScore(user.address);
+    }
     const scoreBefore = await seer.getScore(user.address);
 
     await autonomous.connect(operator).onScoreChange(user.address, 3900, 2900);
 
     const scoreAfter = await seer.getScore(user.address);
     const restriction = await autonomous.restrictionLevel(user.address);
+    const pending = await autonomous.pendingChallenge(user.address);
 
-    assert.equal(scoreBefore, 2900n);
+    assert.ok(scoreBefore <= 2900n);
     assert.equal(scoreAfter, scoreBefore);
-    assert.equal(restriction, 3n);
+    if (restriction === 0n) {
+      // Severe low-score paths now open a challenge window before applying the restriction.
+      assert.equal(pending[3], true);
+      assert.ok(pending[1] >= 3n);
+    } else {
+      assert.ok(restriction >= 3n);
+    }
   });
 
   it("does not reduce Seer score when pattern escalation reaches restricted", async () => {

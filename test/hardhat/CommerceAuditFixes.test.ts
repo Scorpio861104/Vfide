@@ -22,7 +22,6 @@ describe("CardBoundVault (Fix 2)", () => {
       ethers.parseEther("100"),
       ethers.parseEther("300"),
       ethers.ZeroAddress,
-      ethers.ZeroAddress,
     );
     await vault.waitForDeployment();
 
@@ -59,7 +58,6 @@ describe("MerchantPortal (Fixes 3 and 5)", () => {
       await vaultHub.getAddress(),
       await seer.getAddress(),
       await securityHub.getAddress(),
-      ethers.ZeroAddress,
       feeSink.address,
     );
     await portal.waitForDeployment();

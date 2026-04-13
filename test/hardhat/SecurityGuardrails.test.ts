@@ -251,7 +251,7 @@ describe("ProofScoreBurnRouter (F-26: only Seer updates score)", () => {
 });
 
 describe("VaultHub (F-20: SecurityHub timelock)", () => {
-  it("setSecurityHub schedules without immediate effect", async () => {
+  it("setProofLedger schedules without immediate effect", async () => {
     const { ethers } = (await network.connect()) as any;
     const [owner] = await ethers.getSigners();
 
@@ -260,28 +260,31 @@ describe("VaultHub (F-20: SecurityHub timelock)", () => {
     await token.waitForDeployment();
 
     const Placeholder = await ethers.getContractFactory("Placeholder");
-    const oldSecurity = await Placeholder.deploy();
-    const newSecurity = await Placeholder.deploy();
-    await oldSecurity.waitForDeployment();
-    await newSecurity.waitForDeployment();
+    const oldLedger = await Placeholder.deploy();
+    const newLedger = await Placeholder.deploy();
+    await oldLedger.waitForDeployment();
+    await newLedger.waitForDeployment();
 
     const VaultHub = await ethers.getContractFactory("VaultHub");
     const hub = await VaultHub.deploy(
       await token.getAddress(),
-      await oldSecurity.getAddress(),
-      ethers.ZeroAddress,
+      await oldLedger.getAddress(),
       owner.address,
     );
     await hub.waitForDeployment();
 
-    await hub.connect(owner).setSecurityHub(await newSecurity.getAddress());
+    await hub.connect(owner).setProofLedger(await oldLedger.getAddress());
+    await ethers.provider.send("evm_increaseTime", [48 * 60 * 60]);
+    await ethers.provider.send("evm_mine", []);
+    await hub.connect(owner).applyProofLedger();
 
-    assert.equal(await hub.securityHub(), await oldSecurity.getAddress());
-    assert.equal(await hub.pendingSecurityHub_VH(), await newSecurity.getAddress());
-    assert.ok((await hub.pendingSecurityHubAt_VH()) > 0n);
+    await hub.connect(owner).setProofLedger(await newLedger.getAddress());
+
+    assert.equal(await hub.pendingProofLedger_VH(), await newLedger.getAddress());
+    assert.ok((await hub.pendingProofLedgerAt_VH()) > 0n);
   });
 
-  it("applySecurityHub reverts before delay and succeeds after 48h", async () => {
+  it("applyProofLedger reverts before delay and succeeds after 48h", async () => {
     const { ethers } = (await network.connect()) as any;
     const [owner] = await ethers.getSigners();
 
@@ -290,35 +293,38 @@ describe("VaultHub (F-20: SecurityHub timelock)", () => {
     await token.waitForDeployment();
 
     const Placeholder = await ethers.getContractFactory("Placeholder");
-    const oldSecurity = await Placeholder.deploy();
-    const newSecurity = await Placeholder.deploy();
-    await oldSecurity.waitForDeployment();
-    await newSecurity.waitForDeployment();
+    const oldLedger = await Placeholder.deploy();
+    const newLedger = await Placeholder.deploy();
+    await oldLedger.waitForDeployment();
+    await newLedger.waitForDeployment();
 
     const VaultHub = await ethers.getContractFactory("VaultHub");
     const hub = await VaultHub.deploy(
       await token.getAddress(),
-      await oldSecurity.getAddress(),
-      ethers.ZeroAddress,
+      await oldLedger.getAddress(),
       owner.address,
     );
     await hub.waitForDeployment();
 
-    await hub.connect(owner).setSecurityHub(await newSecurity.getAddress());
+    await hub.connect(owner).setProofLedger(await oldLedger.getAddress());
+    await ethers.provider.send("evm_increaseTime", [48 * 60 * 60]);
+    await ethers.provider.send("evm_mine", []);
+    await hub.connect(owner).applyProofLedger();
+
+    await hub.connect(owner).setProofLedger(await newLedger.getAddress());
 
     await assert.rejects(
-      () => hub.connect(owner).applySecurityHub(),
+      () => hub.connect(owner).applyProofLedger(),
       /VH: timelock|revert/
     );
 
     await ethers.provider.send("evm_increaseTime", [48 * 60 * 60]);
     await ethers.provider.send("evm_mine", []);
 
-    await hub.connect(owner).applySecurityHub();
+    await hub.connect(owner).applyProofLedger();
 
-    assert.equal(await hub.securityHub(), await newSecurity.getAddress());
-    assert.equal(await hub.pendingSecurityHub_VH(), ethers.ZeroAddress);
-    assert.equal(await hub.pendingSecurityHubAt_VH(), 0n);
+    assert.equal(await hub.pendingProofLedger_VH(), ethers.ZeroAddress);
+    assert.equal(await hub.pendingProofLedgerAt_VH(), 0n);
   });
 
   it("rejects legacy setModules and delays VFIDE, ledger, and DAO changes", async () => {
@@ -332,12 +338,10 @@ describe("VaultHub (F-20: SecurityHub timelock)", () => {
     await newToken.waitForDeployment();
 
     const Placeholder = await ethers.getContractFactory("Placeholder");
-    const security = await Placeholder.deploy();
     const oldLedger = await Placeholder.deploy();
     const newLedger = await Placeholder.deploy();
     const oldDao = await Placeholder.deploy();
     const newDao = await Placeholder.deploy();
-    await security.waitForDeployment();
     await oldLedger.waitForDeployment();
     await newLedger.waitForDeployment();
     await oldDao.waitForDeployment();
@@ -346,19 +350,17 @@ describe("VaultHub (F-20: SecurityHub timelock)", () => {
     const VaultHub = await ethers.getContractFactory("VaultHub");
     const hub = await VaultHub.deploy(
       await token.getAddress(),
-      await security.getAddress(),
       await oldLedger.getAddress(),
       await oldDao.getAddress(),
     );
     await hub.waitForDeployment();
 
     const newTokenAddress = await newToken.getAddress();
-    const securityAddress = await security.getAddress();
     const newLedgerAddress = await newLedger.getAddress();
     const newDaoAddress = await newDao.getAddress();
 
     await assert.rejects(
-      () => hub.connect(owner).setModules(newTokenAddress, securityAddress, newLedgerAddress, newDaoAddress),
+      () => hub.connect(owner).setModules(newTokenAddress, newLedgerAddress, newDaoAddress),
       /revert/
     );
 
@@ -405,13 +407,11 @@ describe("MerchantPortal (NEW-05: auto-convert safety hold)", () => {
 
     const Placeholder = await ethers.getContractFactory("Placeholder");
     const vaultHub = await Placeholder.deploy();
-    const securityHub = await Placeholder.deploy();
     const ledger = await Placeholder.deploy();
     const feeSink = await Placeholder.deploy();
     const router = await Placeholder.deploy();
     const stablecoin = await Placeholder.deploy();
     await vaultHub.waitForDeployment();
-    await securityHub.waitForDeployment();
     await ledger.waitForDeployment();
     await feeSink.waitForDeployment();
     await router.waitForDeployment();
@@ -422,7 +422,6 @@ describe("MerchantPortal (NEW-05: auto-convert safety hold)", () => {
       dao.address,
       await vaultHub.getAddress(),
       await seer.getAddress(),
-      await securityHub.getAddress(),
       await ledger.getAddress(),
       await feeSink.getAddress(),
     );

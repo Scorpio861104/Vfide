@@ -12,7 +12,6 @@ describe("Complete audit blockers", () => {
       owner.address,
       owner.address,
       owner.address,
-      ethers.ZeroAddress,
       ethers.ZeroAddress
     );
     await legacy.waitForDeployment();

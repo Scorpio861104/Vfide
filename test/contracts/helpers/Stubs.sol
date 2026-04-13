@@ -15,7 +15,10 @@ contract EmergencyControllerStub {
 
 /// @dev Minimal deployer stubs for Phase1 orchestration coverage.
 contract Phase1GovernanceDeployerStub {
-    function deployGovernance(address, address[5] memory) external returns (address, address, address) {
+    function deployGovernance(address, address[5] memory, bytes calldata, bytes calldata, bytes calldata)
+        external
+        returns (address, address, address)
+    {
         return (address(new Placeholder()), address(new Placeholder()), address(new Placeholder()));
     }
 }
