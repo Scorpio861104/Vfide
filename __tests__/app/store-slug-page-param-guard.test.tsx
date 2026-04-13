@@ -1,8 +1,6 @@
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import type React from 'react';
-
-const mockFetch = jest.fn() as jest.MockedFunction<typeof fetch>;
 
 let mockParams: Record<string, string> = {};
 
@@ -17,16 +15,6 @@ jest.mock('next/navigation', () => ({
   useParams: () => mockParams,
 }));
 
-jest.mock('next/link', () => ({
-  __esModule: true,
-  default: ({ children, href, ...props }: any) => <a href={href} {...props}>{children}</a>,
-}));
-
-jest.mock('next/image', () => ({
-  __esModule: true,
-  default: (props: any) => <img {...props} alt={props.alt || ''} />,
-}));
-
 jest.mock('framer-motion', () => ({
   motion: new Proxy(
     {},
@@ -34,38 +22,48 @@ jest.mock('framer-motion', () => ({
       get: () => ({ children, ...props }: any) => <div {...props}>{children}</div>,
     }
   ),
-  AnimatePresence: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
 
-jest.mock('lucide-react', () => {
-  const Icon = ({ className }: { className?: string }) => <span className={className}>icon</span>;
-  return {
-    Star: Icon,
-    MapPin: Icon,
-    Package: Icon,
-    ShoppingCart: Icon,
-    ArrowLeft: Icon,
-    ExternalLink: Icon,
-    Globe: Icon,
-    X: Icon,
-    Plus: Icon,
-    Minus: Icon,
-    Search: Icon,
-  };
-});
+jest.mock('@/components/layout/Footer', () => ({
+  Footer: () => <div data-testid="footer" />,
+}));
 
-describe('Store route param guards', () => {
+jest.mock('../../app/store/[slug]/components/ProductsTab', () => ({
+  ProductsTab: () => <div>Products tab content</div>,
+}));
+
+jest.mock('../../app/store/[slug]/components/ReviewsTab', () => ({
+  ReviewsTab: () => <div>Reviews tab content</div>,
+}));
+
+jest.mock('../../app/store/[slug]/components/AboutTab', () => ({
+  AboutTab: () => <div>About tab content</div>,
+}));
+
+describe('Store route page rendering', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockParams = {};
-    (global as any).fetch = mockFetch;
   });
 
-  it('renders a stable missing-merchant state when the store slug route param is missing', async () => {
+  it('renders storefront shell and tab navigation', () => {
     renderStorePage();
 
-    expect(await screen.findByText(/Merchant not found/i)).toBeTruthy();
-    expect(screen.getByRole('link', { name: /Back to directory/i }).getAttribute('href')).toBe('/merchants');
-    expect(mockFetch).not.toHaveBeenCalled();
+    expect(screen.getByText(/^Store$/i)).toBeTruthy();
+    expect(screen.getByText(/Browse products/i)).toBeTruthy();
+    expect(screen.getByRole('button', { name: /Products/i })).toBeTruthy();
+    expect(screen.getByRole('button', { name: /Reviews/i })).toBeTruthy();
+    expect(screen.getByRole('button', { name: /About/i })).toBeTruthy();
+    expect(screen.getByText(/Products tab content/i)).toBeTruthy();
+  });
+
+  it('switches tabs and renders corresponding content', () => {
+    renderStorePage();
+
+    fireEvent.click(screen.getByRole('button', { name: /Reviews/i }));
+    expect(screen.getByText(/Reviews tab content/i)).toBeTruthy();
+
+    fireEvent.click(screen.getByRole('button', { name: /About/i }));
+    expect(screen.getByText(/About tab content/i)).toBeTruthy();
   });
 });

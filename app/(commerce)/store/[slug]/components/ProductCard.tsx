@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { ShoppingCart, Check, Package } from 'lucide-react';
+import { useCart } from '@/providers/CartProvider';
 
 interface Product {
   id: string;
@@ -29,13 +30,18 @@ function getImageUrl(img: string | { url: string }): string {
 
 export function ProductCard({ product, merchantSlug, viewMode, themeColor }: ProductCardProps) {
   const [added, setAdded] = useState(false);
+  const { addItem } = useCart();
   const hasDiscount = product.compare_at_price && parseFloat(product.compare_at_price) > parseFloat(product.price);
   const discountPct = hasDiscount ? Math.round((1 - parseFloat(product.price) / parseFloat(product.compare_at_price!)) * 100) : 0;
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    // TODO: wire to cart context from CommerceProviders
+    addItem({
+      id: product.id,
+      name: product.name,
+      unitPrice: Number(product.price),
+    }, 1);
     setAdded(true);
     setTimeout(() => setAdded(false), 1500);
   };
@@ -60,7 +66,7 @@ export function ProductCard({ product, merchantSlug, viewMode, themeColor }: Pro
             <div className="text-cyan-400 font-mono font-bold">${parseFloat(product.price).toFixed(2)}</div>
             {hasDiscount && <div className="text-gray-500 text-xs line-through">${parseFloat(product.compare_at_price!).toFixed(2)}</div>}
           </div>
-          <button onClick={handleAddToCart} className="p-2 bg-cyan-500/20 rounded-lg text-cyan-400 hover:bg-cyan-500/30 transition-colors">
+          <button onClick={handleAddToCart} aria-label={`Add ${product.name} to cart`} className="p-2 bg-cyan-500/20 rounded-lg text-cyan-400 hover:bg-cyan-500/30 transition-colors">
             {added ? <Check size={16} /> : <ShoppingCart size={16} />}
           </button>
         </div>
@@ -83,7 +89,7 @@ export function ProductCard({ product, merchantSlug, viewMode, themeColor }: Pro
         {hasDiscount && (
           <div className="absolute top-2 left-2 px-2 py-0.5 bg-red-500 text-white text-xs font-bold rounded">-{discountPct}%</div>
         )}
-        <button onClick={handleAddToCart}
+        <button onClick={handleAddToCart} aria-label={`Add ${product.name} to cart`}
           className="absolute bottom-2 right-2 p-2 bg-black/60 backdrop-blur-sm rounded-lg text-white opacity-0 group-hover:opacity-100 transition-opacity hover:bg-cyan-500/80">
           {added ? <Check size={16} /> : <ShoppingCart size={16} />}
         </button>

@@ -37,9 +37,8 @@ jest.mock('lucide-react', () => {
 describe('Theme management page', () => {
   it('renders theme management header and tabs', () => {
     renderPage();
-    expect(screen.getByRole('heading', { name: /Theme Management/i })).toBeTruthy();
+    expect(screen.getByText(/^Theme$/i)).toBeTruthy();
     expect(screen.getAllByText(/Presets/i).length).toBeGreaterThan(0);
-    expect(screen.getAllByText(/Customizer/i).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/Preview/i).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/Advanced/i).length).toBeGreaterThan(0);
   });

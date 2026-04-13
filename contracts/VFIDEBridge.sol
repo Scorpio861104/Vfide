@@ -385,7 +385,10 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
 
         // Release tokens to receiver from destination bridge liquidity.
         uint256 bridgeBalance = vfideToken.balanceOf(address(this));
-        require(bridgeBalance >= amount, "VFIDEBridge: insufficient liquidity");
+        uint256 availableLiquidity_ = bridgeBalance > pendingOutboundAmount
+            ? bridgeBalance - pendingOutboundAmount
+            : 0;
+        require(availableLiquidity_ >= amount, "VFIDEBridge: insufficient liquidity");
         vfideToken.safeTransfer(receiver, amount);
 
         _sendDeliveryConfirmation(_origin.srcEid, _guid);
@@ -418,7 +421,9 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
 
     /// @notice Check available bridge liquidity on this chain
     function availableLiquidity() external view returns (uint256) {
-        return vfideToken.balanceOf(address(this));
+        uint256 bridgeBalance = vfideToken.balanceOf(address(this));
+        if (bridgeBalance <= pendingOutboundAmount) return 0;
+        return bridgeBalance - pendingOutboundAmount;
     }
 
     /**

@@ -36,9 +36,42 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* TODO: Migrate remaining sections from existing about/page.tsx */}
-      {/* Remove 'use client', framer-motion, wallet hooks */}
-      {/* Replace motion.div with CSS animate-fade-in, animate-slide-up classes */}
+      <section className="py-16 border-b border-white/5">
+        <div className="container mx-auto px-4 max-w-4xl grid gap-6 md:grid-cols-3">
+          <div className="rounded-xl border border-white/10 bg-white/3 p-5">
+            <h2 className="text-white font-semibold mb-2">Mission</h2>
+            <p className="text-gray-300 text-sm leading-relaxed">
+              Build payments that work for market sellers, migrant families, and
+              communities blocked by costly legacy rails.
+            </p>
+          </div>
+          <div className="rounded-xl border border-white/10 bg-white/3 p-5">
+            <h2 className="text-white font-semibold mb-2">Principles</h2>
+            <p className="text-gray-300 text-sm leading-relaxed">
+              Non-custodial ownership, transparent trust signals, and governance-led
+              upgrades form the baseline for protocol integrity.
+            </p>
+          </div>
+          <div className="rounded-xl border border-white/10 bg-white/3 p-5">
+            <h2 className="text-white font-semibold mb-2">Impact</h2>
+            <p className="text-gray-300 text-sm leading-relaxed">
+              Lower friction for cross-border commerce and preserve value for
+              merchants by minimizing avoidable payment fees.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section className="py-16">
+        <div className="container mx-auto px-4 max-w-4xl">
+          <h2 className="text-2xl font-bold text-white mb-4">How VFIDE Works</h2>
+          <div className="space-y-3 text-gray-300 leading-relaxed">
+            <p>Users onboard with low-friction account options and receive a vault that keeps custody in user control.</p>
+            <p>Trust and reputation signals reduce counterparty uncertainty without forcing centralized gatekeepers.</p>
+            <p>Merchants accept multiple payment assets while settlement and reporting stay aligned to protocol rules.</p>
+          </div>
+        </div>
+      </section>
     </div>
   );
 }

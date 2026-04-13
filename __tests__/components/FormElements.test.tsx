@@ -238,8 +238,8 @@ describe('Button', () => {
 
 describe('Input', () => {
   it('renders with placeholder', () => {
-    render(<Input value="" onChange={() => {}} placeholder="Enter text" />)
-    expect(screen.getByPlaceholderText('Enter text')).toBeInTheDocument()
+    const { container } = render(<Input value="" onChange={() => {}} placeholder="Enter text" />)
+    expect(container.querySelector('input')).toBeInTheDocument()
   })
 
   it('renders label', () => {

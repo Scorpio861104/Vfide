@@ -57,9 +57,9 @@ export function PendingActionsTab({ isConnected }: { isConnected: boolean }) {
         <p className="text-gray-400 text-sm mb-4">Add vault addresses you guard. This is local and private.</p>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-          <input type="text" placeholder="Vault address (0x...)" value={vaultInput} onChange={(e) => setVaultInput(e.target.value)}
+          <input type="text" value={vaultInput} onChange={(e) => setVaultInput(e.target.value)}
             className="md:col-span-2 px-4 py-3 bg-black/30 border border-white/10 rounded-xl text-white focus:outline-none focus:border-cyan-500/50 font-mono" />
-          <input type="text" placeholder="Label (optional)" value={vaultLabel} onChange={(e) => setVaultLabel(e.target.value)}
+          <input type="text" value={vaultLabel} onChange={(e) => setVaultLabel(e.target.value)}
             className="px-4 py-3 bg-black/30 border border-white/10 rounded-xl text-white focus:outline-none focus:border-cyan-500/50" />
         </div>
         <button onClick={handleAddVault}

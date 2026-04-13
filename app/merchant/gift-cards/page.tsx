@@ -144,7 +144,7 @@ export default function MerchantGiftCardsPage() {
                         type="number"
                         min="0"
                         step="0.01"
-                        placeholder="25.00"
+                       
                         className="mt-1 w-full rounded-xl border border-white/10 bg-black/20 px-3 py-2.5 text-white"
                       />
                     </label>
@@ -154,7 +154,7 @@ export default function MerchantGiftCardsPage() {
                         value={recipientName}
                         onChange={(event) =>  setRecipientName(event.target.value)}
                         type="text"
-                        placeholder="Optional"
+                       
                         className="mt-1 w-full rounded-xl border border-white/10 bg-black/20 px-3 py-2.5 text-white"
                       />
                     </label>
@@ -165,7 +165,7 @@ export default function MerchantGiftCardsPage() {
                       value={message}
                       onChange={(event) =>  setMessage(event.target.value)}
                       rows={3}
-                      placeholder="Happy birthday!"
+                     
                       className="mt-1 w-full rounded-xl border border-white/10 bg-black/20 px-3 py-2.5 text-white"
                     />
                   </label>

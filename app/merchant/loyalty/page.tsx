@@ -128,7 +128,7 @@ export default function MerchantLoyaltyPage() {
                     type="text"
                     value={config.programName}
                     onChange={(event) =>  setConfig((current) => ({ ...current, programName: event.target.value }))}
-                    placeholder="Coffee Club"
+                   
                     className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 text-sm text-white focus:outline-none"
                   />
                   <div className="grid gap-3 sm:grid-cols-2">
@@ -137,7 +137,7 @@ export default function MerchantLoyaltyPage() {
                       min="1"
                       value={config.redeemThreshold}
                       onChange={(event) =>  setConfig((current) => ({ ...current, redeemThreshold: Number(event.target.value) || 10 }))}
-                      placeholder="Stamps required"
+                     
                       className="rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 text-sm text-white focus:outline-none"
                     />
                     <input
@@ -146,7 +146,7 @@ export default function MerchantLoyaltyPage() {
                       step="0.01"
                       value={config.redeemValue}
                       onChange={(event) =>  setConfig((current) => ({ ...current, redeemValue: Number(event.target.value) || 0 }))}
-                      placeholder="Reward value"
+                     
                       className="rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 text-sm text-white focus:outline-none"
                     />
                   </div>
@@ -154,7 +154,7 @@ export default function MerchantLoyaltyPage() {
                     value={rewardDescription}
                     onChange={(event) =>  setRewardDescription(event.target.value)}
                     rows={3}
-                    placeholder="Free coffee after 10 stamps"
+                   
                     className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 text-sm text-white focus:outline-none"
                   />
                   <select

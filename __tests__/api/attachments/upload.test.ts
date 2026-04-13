@@ -78,7 +78,7 @@ describe('/api/attachments/upload', () => {
       const data = await response.json();
 
       expect(response.status).toBe(400);
-      expect(data.error).toContain('Missing');
+      expect(data.error).toContain('Invalid request body');
     });
 
     it('should validate required fields', async () => {
@@ -97,7 +97,7 @@ describe('/api/attachments/upload', () => {
       const data = await response.json();
 
       expect(response.status).toBe(400);
-      expect(data.error).toContain('Missing');
+      expect(data.error).toContain('Invalid request body');
     });
 
     it('should return 404 when authenticated wallet has no local user record', async () => {
@@ -162,7 +162,7 @@ describe('/api/attachments/upload', () => {
       const data = await response.json();
 
       expect(response.status).toBe(400);
-      expect(data.error).toContain('File size must be between');
+      expect(data.error).toContain('Invalid request body');
       expect(query).not.toHaveBeenCalled();
     });
   });

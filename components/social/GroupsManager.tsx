@@ -151,7 +151,7 @@ export function GroupsManager({ friends, onSelectGroup, selectedGroup }: GroupsM
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
           <input
             type="text"
-            placeholder="Search groups..."
+           
             value={searchQuery}
             onChange={(e) =>  setSearchQuery(e.target.value)}
             className="w-full pl-10 pr-4 py-2 bg-zinc-950 border border-zinc-700 rounded-lg text-zinc-100 text-sm focus:border-violet-400 focus:outline-none"
@@ -178,7 +178,7 @@ export function GroupsManager({ friends, onSelectGroup, selectedGroup }: GroupsM
 
               <input
                 type="text"
-                placeholder="Group name"
+               
                 value={newGroupName}
                 onChange={(e) =>  setNewGroupName(e.target.value)}
                 className="w-full px-3 py-2 mb-2 bg-zinc-900 border border-zinc-700 rounded-lg text-zinc-100 text-sm focus:border-violet-400 focus:outline-none"
@@ -186,7 +186,7 @@ export function GroupsManager({ friends, onSelectGroup, selectedGroup }: GroupsM
 
               <input
                 type="text"
-                placeholder="Description (optional)"
+               
                 value={newGroupDescription}
                 onChange={(e) =>  setNewGroupDescription(e.target.value)}
                 className="w-full px-3 py-2 mb-3 bg-zinc-900 border border-zinc-700 rounded-lg text-zinc-100 text-sm focus:border-violet-400 focus:outline-none"
@@ -395,7 +395,7 @@ export function GroupsManager({ friends, onSelectGroup, selectedGroup }: GroupsM
                 value={settingsDescription}
                 onChange={(e) =>  setSettingsDescription(e.target.value)}
                 maxLength={200}
-                placeholder="Optional"
+               
                 className="w-full px-3 py-2 mb-4 bg-zinc-800 border border-zinc-700 rounded-lg text-zinc-100 text-sm focus:border-violet-400 focus:outline-none"
               />
               <div className="flex gap-2">

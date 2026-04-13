@@ -114,7 +114,7 @@ export default function AgentPage() {
                 <input
                   value={customerReference}
                   onChange={(e) =>  setCustomerReference(e.target.value)}
-                  placeholder="Phone number, wallet, or customer ID"
+                 
                   className="min-h-[44px] w-full rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-sm outline-none transition focus:border-cyan-400"
                 />
               </label>
@@ -139,7 +139,7 @@ export default function AgentPage() {
                 <input
                   value={amount}
                   onChange={(e) =>  setAmount(e.target.value)}
-                  placeholder="e.g. 25 USDC"
+                 
                   className="min-h-[44px] w-full rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-sm outline-none transition focus:border-cyan-400"
                 />
               </label>
@@ -149,7 +149,7 @@ export default function AgentPage() {
                 <textarea
                   value={notes}
                   onChange={(e) =>  setNotes(e.target.value)}
-                  placeholder="What are you helping the customer do?"
+                 
                   rows={4}
                   className="w-full rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-sm outline-none transition focus:border-cyan-400"
                 />

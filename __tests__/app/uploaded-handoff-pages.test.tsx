@@ -30,6 +30,10 @@ jest.mock('@/components/merchant/disputes/PeerMediation', () => ({
   default: () => <div>Peer Mediation Component</div>,
 }));
 
+jest.mock('@/lib/lazy', () => ({
+  LazyPeerMediation: () => <div>Peer Mediation Component</div>,
+}));
+
 beforeEach(() => {
   global.fetch = jest.fn(async (input: RequestInfo | URL) => {
     const url = String(input);

@@ -59,8 +59,15 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
     
     // Exemptions from whale limits (exchanges, contracts, etc.)
     mapping(address => bool) public whaleLimitExempt;
+
+    uint256 public pendingMaxTransfer;
+    uint256 public pendingMaxWallet;
+    uint256 public pendingDailyLimit;
+    uint256 public pendingCooldown;
+    uint64  public pendingAntiWhaleAt;
     
     event AntiWhaleSet(uint256 maxTransfer, uint256 maxWallet, uint256 dailyLimit, uint256 cooldown);
+    event AntiWhaleProposed(uint256 maxTransfer, uint256 maxWallet, uint256 dailyLimit, uint256 cooldown, uint64 effectiveAt);
     event WhaleLimitExemptSet(address indexed addr, bool exempt);
 
     /// Storage
@@ -681,14 +688,44 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
         if (_maxWallet > 0) require(_maxWallet >= 200_000e18, "min 200k");
         if (_dailyLimit > 0) require(_dailyLimit >= 500_000e18, "min 500k");
         if (_cooldown > 0) require(_cooldown <= 1 hours, "max 1 hour cooldown");
-        
-        maxTransferAmount = _maxTransfer;
-        maxWalletBalance = _maxWallet;
-        dailyTransferLimit = _dailyLimit;
-        transferCooldown = _cooldown;
-        
-        emit AntiWhaleSet(_maxTransfer, _maxWallet, _dailyLimit, _cooldown);
-        _log("anti_whale_updated");
+        require(pendingAntiWhaleAt == 0, "VF: pending anti-whale exists");
+
+        pendingMaxTransfer = _maxTransfer;
+        pendingMaxWallet = _maxWallet;
+        pendingDailyLimit = _dailyLimit;
+        pendingCooldown = _cooldown;
+        pendingAntiWhaleAt = uint64(block.timestamp) + SINK_CHANGE_DELAY;
+
+        emit AntiWhaleProposed(_maxTransfer, _maxWallet, _dailyLimit, _cooldown, pendingAntiWhaleAt);
+        _log("anti_whale_proposed");
+    }
+
+    function applyAntiWhale() external onlyOwner {
+        if (pendingAntiWhaleAt == 0) revert VF_NoPending();
+        if (block.timestamp < pendingAntiWhaleAt) revert VF_TimelockActive();
+
+        maxTransferAmount = pendingMaxTransfer;
+        maxWalletBalance = pendingMaxWallet;
+        dailyTransferLimit = pendingDailyLimit;
+        transferCooldown = pendingCooldown;
+
+        emit AntiWhaleSet(pendingMaxTransfer, pendingMaxWallet, pendingDailyLimit, pendingCooldown);
+        delete pendingMaxTransfer;
+        delete pendingMaxWallet;
+        delete pendingDailyLimit;
+        delete pendingCooldown;
+        delete pendingAntiWhaleAt;
+        _log("anti_whale_applied");
+    }
+
+    function cancelAntiWhale() external onlyOwner {
+        if (pendingAntiWhaleAt == 0) revert VF_NoPending();
+        delete pendingMaxTransfer;
+        delete pendingMaxWallet;
+        delete pendingDailyLimit;
+        delete pendingCooldown;
+        delete pendingAntiWhaleAt;
+        _log("anti_whale_cancelled");
     }
     
     /**

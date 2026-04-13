@@ -172,7 +172,7 @@ export default function CommandBar() {
                   parse(nextValue);
                 }
               }}
-              placeholder="Type a command... (e.g., 'send 0.1 ETH to alice.eth')"
+             
               className="flex-1 px-4 py-4 bg-transparent text-lg outline-none"
             />
             {voiceSupported && (

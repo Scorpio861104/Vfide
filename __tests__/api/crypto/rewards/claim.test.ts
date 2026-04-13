@@ -140,7 +140,7 @@ describe('/api/crypto/rewards/[userId]/claim', () => {
       const data = await response.json();
 
       expect(response.status).toBe(400);
-      expect(data.error).toContain('Request body must be a JSON object');
+      expect(data.error).toContain('Invalid request body');
     });
   });
 });

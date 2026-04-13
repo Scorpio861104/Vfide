@@ -43,14 +43,9 @@ describe('accountProtection durability behavior', () => {
     const { query } = require('@/lib/db');
 
     const futureUntil = new Date(Date.now() + 10 * 60 * 1000).toISOString();
-    query
-      .mockResolvedValueOnce({ rows: [] })
-      .mockResolvedValueOnce({ rows: [] })
-      .mockResolvedValueOnce({ rows: [] })
-      .mockResolvedValueOnce({ rows: [] })
-      .mockResolvedValueOnce({
-        rows: [{ until_ts: futureUntil, reason: 'Too many failed authentication attempts' }],
-      });
+    query.mockResolvedValueOnce({
+      rows: [{ until_ts: futureUntil, reason: 'Too many failed authentication attempts' }],
+    });
 
     const { getAccountLock } = require('../accountProtection');
     const lock = await getAccountLock('0x2222222222222222222222222222222222222222');

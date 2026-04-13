@@ -197,7 +197,7 @@ export function ThemeCustomizer() {
                 type="text"
                 value={primaryColor}
                 onChange={(e) =>  setPrimaryColor(e.target.value)}
-                placeholder="#0ea5e9"
+               
                 className="flex-1 px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm"
               />
               <motion.button

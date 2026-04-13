@@ -32,18 +32,18 @@ jest.mock('@/components/social/CreatorDashboard', () => ({
 describe('Demo Crypto Social page', () => {
   it('renders page shell and tab navigation', () => {
     renderPage();
-    expect(screen.getByRole('heading', { name: /Crypto-Social Integration Demo/i })).toBeTruthy();
-    expect(screen.getByRole('button', { name: /Social Feed with Tipping/i })).toBeTruthy();
-    expect(screen.getByRole('button', { name: /Premium Content/i })).toBeTruthy();
+    expect(screen.getByRole('heading', { name: /Social Demo/i })).toBeTruthy();
+    expect(screen.getByRole('button', { name: /^Feed$/i })).toBeTruthy();
+    expect(screen.getByRole('button', { name: /^Premium$/i })).toBeTruthy();
     expect(screen.getByRole('button', { name: /Subscriptions/i })).toBeTruthy();
-    expect(screen.getByRole('button', { name: /Creator Dashboard/i })).toBeTruthy();
+    expect(screen.getByRole('button', { name: /^Dashboard$/i })).toBeTruthy();
   });
 
   it('switches tabs and renders tab-specific content', () => {
     renderPage();
     fireEvent.click(screen.getByRole('button', { name: /Subscriptions/i }));
     expect(screen.getByText('SubscriptionManager')).toBeTruthy();
-    fireEvent.click(screen.getByRole('button', { name: /Creator Dashboard/i }));
+    fireEvent.click(screen.getByRole('button', { name: /^Dashboard$/i }));
     expect(screen.getByText('CreatorDashboard')).toBeTruthy();
   });
 });

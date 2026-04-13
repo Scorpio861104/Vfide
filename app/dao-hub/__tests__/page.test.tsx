@@ -36,12 +36,12 @@ jest.mock('next/link', () => ({
 }))
 
 jest.mock('framer-motion', () => ({
-  motion: {
-    div: ({ children, ...props }: React.PropsWithChildren<Record<string, unknown>>) => <div {...props}>{children}</div>,
-    main: ({ children, ...props }: React.PropsWithChildren<Record<string, unknown>>) => <main {...props}>{children}</main>,
-    section: ({ children, ...props }: React.PropsWithChildren<Record<string, unknown>>) => <section {...props}>{children}</section>,
-    button: ({ children, ...props }: React.PropsWithChildren<Record<string, unknown>>) => <button {...props}>{children}</button>,
-  },
+  motion: new Proxy(
+    {},
+    {
+      get: () => ({ children, ...props }: React.PropsWithChildren<Record<string, unknown>>) => <div {...props}>{children}</div>,
+    }
+  ),
 }))
 
 jest.mock('@/lib/contracts', () => ({
@@ -50,18 +50,24 @@ jest.mock('@/lib/contracts', () => ({
   },
 }))
 
+jest.mock('@/components/layout/Footer', () => ({
+  Footer: () => <div data-testid="footer" />,
+}))
+
 import DaoHubPage from '../page'
 
 describe('DaoHubPage', () => {
   it('renders the DAO hub header', () => {
     render(<DaoHubPage />)
-    expect(screen.getByText('DAO Operations Hub')).toBeInTheDocument()
-    expect(screen.getByText('DAO Members Only')).toBeInTheDocument()
+    expect(screen.getByText('DAO Hub')).toBeInTheDocument()
+    expect(screen.getByText('Decentralized governance center')).toBeInTheDocument()
   })
 
-  it('shows active dispute and messaging sections for members', () => {
+  it('shows default tabs and overview content shell', () => {
     render(<DaoHubPage />)
-    expect(screen.getByText('Active Disputes')).toBeInTheDocument()
-    expect(screen.getByText('DAO Messages')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Overview' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Proposals' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Treasury' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Members' })).toBeInTheDocument()
   })
 })

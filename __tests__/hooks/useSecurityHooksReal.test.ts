@@ -53,7 +53,7 @@ describe('useIsVaultLocked', () => {
     jest.clearAllMocks()
   })
 
-  it('returns true when vault is locked', () => {
+  it('returns false when vault lock controls are removed', () => {
     mockUseReadContract.mockReturnValue({
       data: true,
       isLoading: false,
@@ -62,7 +62,7 @@ describe('useIsVaultLocked', () => {
     
     const { result } = renderHook(() => useIsVaultLocked('0xVaultAddress' as `0x${string}`))
     
-    expect(result.current.isLocked).toBe(true)
+    expect(result.current.isLocked).toBe(false)
   })
 
   it('returns false when vault is unlocked', () => {
@@ -89,7 +89,7 @@ describe('useIsVaultLocked', () => {
     expect(result.current.isLocked).toBe(false)
   })
 
-  it('returns loading state', () => {
+  it('returns non-loading state for static lock status hook', () => {
     mockUseReadContract.mockReturnValue({
       data: undefined,
       isLoading: true,
@@ -98,7 +98,7 @@ describe('useIsVaultLocked', () => {
     
     const { result } = renderHook(() => useIsVaultLocked('0xVaultAddress' as `0x${string}`))
     
-    expect(result.current.isLoading).toBe(true)
+    expect(result.current.isLoading).toBe(false)
   })
 
   it('provides refetch function', () => {
@@ -111,7 +111,7 @@ describe('useIsVaultLocked', () => {
     
     const { result } = renderHook(() => useIsVaultLocked('0xVaultAddress' as `0x${string}`))
     
-    expect(result.current.refetch).toBe(mockRefetch)
+    expect(typeof result.current.refetch).toBe('function')
   })
 })
 

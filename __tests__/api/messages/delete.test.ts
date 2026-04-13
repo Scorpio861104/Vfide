@@ -52,7 +52,7 @@ describe('/api/messages/delete', () => {
       const data = await response.json();
 
       expect(response.status).toBe(400);
-      expect(data.error).toContain('JSON object');
+      expect(data.error).toContain('Invalid request body');
     });
 
     it('should delete message successfully', async () => {

@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { POST } from '../../../app/api/merchant/payments/confirm/route';
 
+jest.mock('@/lib/db', () => ({
+  query: jest.fn(),
+}));
+
 jest.mock('@/lib/auth/middleware', () => ({
   requireAuth: jest.fn(),
 }));
@@ -24,6 +28,7 @@ jest.mock('viem', () => ({
 describe('/api/merchant/payments/confirm', () => {
   const { requireAuth } = require('@/lib/auth/middleware');
   const { withRateLimit } = require('@/lib/auth/rateLimit');
+  const { query } = require('@/lib/db');
   const { dispatchWebhook } = require('@/lib/webhooks/merchantWebhookDispatcher');
   const { createPublicClient, decodeEventLog } = require('viem');
 
@@ -33,6 +38,7 @@ describe('/api/merchant/payments/confirm', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    query.mockResolvedValue({ rows: [] });
     process.env.RPC_URL = 'https://rpc.example';
     process.env.MERCHANT_PORTAL_ADDRESS = mockPortal;
     process.env.MERCHANT_PAYMENT_MIN_CONFIRMATIONS = '1';
@@ -78,7 +84,7 @@ describe('/api/merchant/payments/confirm', () => {
     const data = await response.json();
 
     expect(response.status).toBe(400);
-    expect(data.error).toBe('Valid tx_hash required');
+    expect(data.error).toBe('Invalid request body');
     expect(dispatchWebhook).not.toHaveBeenCalled();
   });
 
@@ -113,6 +119,7 @@ describe('/api/merchant/payments/confirm', () => {
   });
 
   it('dispatches webhook when on-chain verification succeeds', async () => {
+    query.mockResolvedValueOnce({ rows: [{ id: '1' }] });
     const request = new NextRequest('http://localhost:3000/api/merchant/payments/confirm', {
       method: 'POST',
       body: JSON.stringify({

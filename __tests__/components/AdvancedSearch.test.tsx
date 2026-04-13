@@ -15,20 +15,20 @@ import AdvancedSearch from '@/components/search/AdvancedSearch';
 describe('AdvancedSearch - Search Input', () => {
   test('renders search input field', () => {
     render(<AdvancedSearch />);
-    const input = screen.getByPlaceholderText(/search proposals, users, transactions/i);
+    const input = screen.getByRole('textbox', { name: /search/i });
     expect(input).toBeInTheDocument();
   });
 
   test('updates search query on input change', () => {
     render(<AdvancedSearch />);
-    const input = screen.getByPlaceholderText(/search proposals, users, transactions/i) as HTMLInputElement;
+    const input = screen.getByRole('textbox', { name: /search/i }) as HTMLInputElement;
     fireEvent.change(input, { target: { value: 'test query' } });
     expect(input.value).toBe('test query');
   });
 
   test('search button triggers search', async () => {
     render(<AdvancedSearch />);
-    const input = screen.getByPlaceholderText(/search proposals, users, transactions/i);
+    const input = screen.getByRole('textbox', { name: /search/i });
     const searchBtns = screen.getAllByRole('button', { name: /search/i });
     const searchBtn = searchBtns[0]; // Use first search button
 
@@ -45,7 +45,7 @@ describe('AdvancedSearch - Search Input', () => {
 
   test('pressing Enter triggers search', async () => {
     render(<AdvancedSearch />);
-    const input = screen.getByPlaceholderText(/search proposals, users, transactions/i);
+    const input = screen.getByRole('textbox', { name: /search/i });
 
     fireEvent.change(input, { target: { value: 'proposal' } });
     fireEvent.keyPress(input, { key: 'Enter', code: 'Enter', charCode: 13 });
@@ -60,7 +60,7 @@ describe('AdvancedSearch - Search Input', () => {
 
   test('clear button appears when query is entered', () => {
     render(<AdvancedSearch />);
-    const input = screen.getByPlaceholderText(/search proposals, users, transactions/i);
+    const input = screen.getByRole('textbox', { name: /search/i });
 
     fireEvent.change(input, { target: { value: 'test' } });
     const clearBtn = screen.getByLabelText(/clear search/i);
@@ -69,7 +69,7 @@ describe('AdvancedSearch - Search Input', () => {
 
   test('clear button clears search query', () => {
     render(<AdvancedSearch />);
-    const input = screen.getByPlaceholderText(/search proposals, users, transactions/i) as HTMLInputElement;
+    const input = screen.getByRole('textbox', { name: /search/i }) as HTMLInputElement;
 
     fireEvent.change(input, { target: { value: 'test query' } });
     const clearBtn = screen.getByLabelText(/clear search/i);
@@ -182,7 +182,7 @@ describe('AdvancedSearch - Search History', () => {
     fireEvent.click(screen.getByRole('button', { name: /🕐 history \(\d+\)/i }));
 
     expect(screen.getByText(/"governance proposal"/i)).toBeInTheDocument();
-    expect(screen.getByText(/"staking rewards"/i)).toBeInTheDocument();
+    expect(screen.getByText(/"merchant settlement"/i)).toBeInTheDocument();
   });
 
   test('history items show result counts', () => {
@@ -310,7 +310,7 @@ describe('AdvancedSearch - Saved Searches', () => {
 describe('AdvancedSearch - Autocomplete', () => {
   test('shows autocomplete when typing', async () => {
     render(<AdvancedSearch />);
-    const input = screen.getByPlaceholderText(/search proposals, users, transactions/i);
+    const input = screen.getByRole('textbox', { name: /search/i });
 
     fireEvent.change(input, { target: { value: 'gov' } });
 
@@ -322,7 +322,7 @@ describe('AdvancedSearch - Autocomplete', () => {
 
   test('autocomplete shows history items', async () => {
     render(<AdvancedSearch />);
-    const input = screen.getByPlaceholderText(/search proposals, users, transactions/i);
+    const input = screen.getByRole('textbox', { name: /search/i });
 
     fireEvent.change(input, { target: { value: 'g' } });
 
@@ -333,7 +333,7 @@ describe('AdvancedSearch - Autocomplete', () => {
 
   test('clicking autocomplete item fills search', async () => {
     render(<AdvancedSearch />);
-    const input = screen.getByPlaceholderText(/search proposals, users, transactions/i) as HTMLInputElement;
+    const input = screen.getByRole('textbox', { name: /search/i }) as HTMLInputElement;
 
     fireEvent.change(input, { target: { value: 'gov' } });
 
@@ -349,7 +349,7 @@ describe('AdvancedSearch - Autocomplete', () => {
 
   test('autocomplete hides when cleared', () => {
     render(<AdvancedSearch />);
-    const input = screen.getByPlaceholderText(/search proposals, users, transactions/i);
+    const input = screen.getByRole('textbox', { name: /search/i });
 
     fireEvent.change(input, { target: { value: 'test' } });
     fireEvent.change(input, { target: { value: '' } });
@@ -365,7 +365,7 @@ describe('AdvancedSearch - Autocomplete', () => {
 describe('AdvancedSearch - Search Results', () => {
   test('shows loading state during search', async () => {
     render(<AdvancedSearch />);
-    const input = screen.getByPlaceholderText(/search proposals, users, transactions/i);
+    const input = screen.getByRole('textbox', { name: /search/i });
     const searchBtn = screen.getByRole('button', { name: 'Search' });
 
     fireEvent.change(input, { target: { value: 'test' } });
@@ -376,7 +376,7 @@ describe('AdvancedSearch - Search Results', () => {
 
   test('displays search results after loading', async () => {
     render(<AdvancedSearch />);
-    const input = screen.getByPlaceholderText(/search proposals, users, transactions/i);
+    const input = screen.getByRole('textbox', { name: /search/i });
     const searchBtn = screen.getByRole('button', { name: 'Search' });
 
     fireEvent.change(input, { target: { value: 'test' } });
@@ -389,7 +389,7 @@ describe('AdvancedSearch - Search Results', () => {
 
   test('result cards display content type icons', async () => {
     render(<AdvancedSearch />);
-    const input = screen.getByPlaceholderText(/search proposals, users, transactions/i);
+    const input = screen.getByRole('textbox', { name: /search/i });
     fireEvent.change(input, { target: { value: 'test' } });
     fireEvent.click(screen.getByRole('button', { name: 'Search' }));
 
@@ -402,7 +402,7 @@ describe('AdvancedSearch - Search Results', () => {
 
   test('result cards show scores', async () => {
     render(<AdvancedSearch />);
-    const input = screen.getByPlaceholderText(/search proposals, users, transactions/i);
+    const input = screen.getByRole('textbox', { name: /search/i });
     fireEvent.change(input, { target: { value: 'test' } });
     fireEvent.click(screen.getByRole('button', { name: 'Search' }));
 
@@ -416,7 +416,7 @@ describe('AdvancedSearch - Search Results', () => {
     const handleSelect = jest.fn();
     render(<AdvancedSearch onResultSelect={handleSelect} />);
 
-    const input = screen.getByPlaceholderText(/search proposals, users, transactions/i);
+    const input = screen.getByRole('textbox', { name: /search/i });
     fireEvent.change(input, { target: { value: 'test' } });
     fireEvent.click(screen.getByRole('button', { name: 'Search' }));
 
@@ -439,7 +439,7 @@ describe('AdvancedSearch - Search Results', () => {
 describe('AdvancedSearch - Sorting', () => {
   test('sort dropdown appears with results', async () => {
     render(<AdvancedSearch />);
-    const input = screen.getByPlaceholderText(/search proposals, users, transactions/i);
+    const input = screen.getByRole('textbox', { name: /search/i });
     fireEvent.change(input, { target: { value: 'test' } });
     fireEvent.click(screen.getByRole('button', { name: 'Search' }));
 
@@ -450,7 +450,7 @@ describe('AdvancedSearch - Sorting', () => {
 
   test('sort dropdown has all options', async () => {
     render(<AdvancedSearch />);
-    const input = screen.getByPlaceholderText(/search proposals, users, transactions/i);
+    const input = screen.getByRole('textbox', { name: /search/i });
     fireEvent.change(input, { target: { value: 'test' } });
     fireEvent.click(screen.getByRole('button', { name: 'Search' }));
 
@@ -465,7 +465,7 @@ describe('AdvancedSearch - Sorting', () => {
 
   test('changing sort order updates results', async () => {
     render(<AdvancedSearch />);
-    const input = screen.getByPlaceholderText(/search proposals, users, transactions/i);
+    const input = screen.getByRole('textbox', { name: /search/i });
     fireEvent.change(input, { target: { value: 'test' } });
     fireEvent.click(screen.getByRole('button', { name: 'Search' }));
 
@@ -484,7 +484,7 @@ describe('AdvancedSearch - Sorting', () => {
 describe('AdvancedSearch - Save Search', () => {
   test('save search button appears with results', async () => {
     render(<AdvancedSearch />);
-    const input = screen.getByPlaceholderText(/search proposals, users, transactions/i);
+    const input = screen.getByRole('textbox', { name: /search/i });
     fireEvent.change(input, { target: { value: 'test' } });
     fireEvent.click(screen.getByRole('button', { name: 'Search' }));
 
@@ -497,7 +497,7 @@ describe('AdvancedSearch - Save Search', () => {
     global.prompt = jest.fn(() => 'My Search');
 
     render(<AdvancedSearch />);
-    const input = screen.getByPlaceholderText(/search proposals, users, transactions/i);
+    const input = screen.getByRole('textbox', { name: /search/i });
     fireEvent.change(input, { target: { value: 'test' } });
     fireEvent.click(screen.getByRole('button', { name: 'Search' }));
 
@@ -516,7 +516,7 @@ describe('AdvancedSearch - Save Search', () => {
 describe('AdvancedSearch - Export Results', () => {
   test('export button appears with results', async () => {
     render(<AdvancedSearch />);
-    const input = screen.getByPlaceholderText(/search proposals, users, transactions/i);
+    const input = screen.getByRole('textbox', { name: /search/i });
     fireEvent.change(input, { target: { value: 'test' } });
     fireEvent.click(screen.getByRole('button', { name: 'Search' }));
 
@@ -532,7 +532,7 @@ describe('AdvancedSearch - Export Results', () => {
     global.URL.revokeObjectURL = revokeObjectURL;
 
     render(<AdvancedSearch />);
-    const input = screen.getByPlaceholderText(/search proposals, users, transactions/i);
+    const input = screen.getByRole('textbox', { name: /search/i });
     fireEvent.change(input, { target: { value: 'test' } });
     fireEvent.click(screen.getByRole('button', { name: 'Search' }));
 
@@ -589,7 +589,7 @@ describe('AdvancedSearch - Empty States', () => {
 describe('AdvancedSearch - Accessibility', () => {
   test('search input has proper aria label', () => {
     render(<AdvancedSearch />);
-    const input = screen.getByPlaceholderText(/search proposals, users, transactions/i);
+    const input = screen.getByRole('textbox', { name: /search/i });
     expect(input).toBeInTheDocument();
   });
 
@@ -654,7 +654,7 @@ describe('AdvancedSearch - Integration Workflows', () => {
     render(<AdvancedSearch />);
 
     // Enter query
-    const input = screen.getByPlaceholderText(/search proposals, users, transactions/i);
+    const input = screen.getByRole('textbox', { name: /search/i });
     fireEvent.change(input, { target: { value: 'governance' } });
 
     // Open filters
@@ -679,7 +679,7 @@ describe('AdvancedSearch - Integration Workflows', () => {
     render(<AdvancedSearch />);
 
     // Perform search
-    const input = screen.getByPlaceholderText(/search proposals, users, transactions/i);
+    const input = screen.getByRole('textbox', { name: /search/i });
     fireEvent.change(input, { target: { value: 'test' } });
     fireEvent.click(screen.getByRole('button', { name: 'Search' }));
 
@@ -722,7 +722,7 @@ describe('AdvancedSearch - Integration Workflows', () => {
     render(<AdvancedSearch />);
 
     // Initial search
-    const input = screen.getByPlaceholderText(/search proposals, users, transactions/i);
+    const input = screen.getByRole('textbox', { name: /search/i });
     fireEvent.change(input, { target: { value: 'test' } });
     fireEvent.click(screen.getByRole('button', { name: 'Search' }));
 

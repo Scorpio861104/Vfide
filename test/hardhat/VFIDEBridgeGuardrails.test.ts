@@ -124,4 +124,33 @@ describe("VFIDEBridge (delivery confirmation)", () => {
     assert.equal((await sourceBridge.bridgeTransactions(txId)).executed, true);
     assert.equal(await token.balanceOf(user.address), balanceBeforeRefund + refundedAmount);
   });
+
+  it("rejects inbound delivery when only pending-outbound liquidity would cover it", async () => {
+    const { ethers, token, endpoint, sourceBridge, destinationBridge, owner, user, receiver } = await deployBridgePair();
+
+    // Seed source with baseline liquidity so the first inbound message succeeds.
+    await token.transfer(await sourceBridge.getAddress(), ethers.parseEther("5000"));
+
+    // Give user enough balance to create overlapping outbound flows on both chains.
+    await token.transfer(user.address, ethers.parseEther("10000"));
+    await token.connect(user).approve(await destinationBridge.getAddress(), ethers.MaxUint256);
+    await sourceBridge.connect(owner).setExemptCheckBypass(true, 3600);
+    await destinationBridge.connect(owner).setExemptCheckBypass(true, 3600);
+
+    // Destination outbound creates pendingOutboundAmount there; baseline available stays 5000.
+    await destinationBridge.connect(user).bridge(SOURCE_EID, receiver.address, ethers.parseEther("2000"), "0x");
+
+    // Source outbound to destination exceeds destination baseline available liquidity (after fee ~5994 > 5000).
+    await sourceBridge.connect(user).bridge(DEST_EID, receiver.address, ethers.parseEther("6000"), "0x");
+
+    // First queued delivery (destination -> source) should succeed.
+    await endpoint.deliverNext();
+
+    // Second queued delivery (source -> destination) should fail because destination available liquidity
+    // excludes tokens already committed as pending outbound.
+    await assert.rejects(
+      () => endpoint.deliverNext(),
+      /insufficient liquidity|revert/
+    );
+  });
 });

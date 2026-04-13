@@ -46,7 +46,7 @@ import {
   Rocket,
   CheckCircle,
   Crown,
-  Flashlight,
+  Flashloan,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useAccount } from 'wagmi';
@@ -87,7 +87,7 @@ function useCommands(address?: string) {
       { id: 'vault', title: 'Vault', description: 'Manage your vault', icon: <PiggyBank className="w-4 h-4" />, category: 'navigation', keywords: ['vault', 'savings', 'deposit', 'withdraw'], shortcut: 'G V', action: navigate('/vault') },
       { id: 'pay', title: 'Send Payment', description: 'Send tokens to someone', icon: <Send className="w-4 h-4" />, category: 'navigation', keywords: ['send', 'pay', 'transfer', 'payment'], shortcut: 'G P', action: navigate('/pay') },
       { id: 'transactions', title: 'Transaction History', description: 'View all transactions', icon: <ArrowRightLeft className="w-4 h-4" />, category: 'navigation', keywords: ['transactions', 'history', 'activity'], shortcut: 'G T', action: navigate('/reporting') },
-      { id: 'flashloans', title: 'Flashloans P2P', description: 'P2P credit lanes and escrow', icon: <Flashlight className="w-4 h-4" />, category: 'navigation', keywords: ['flashlight', 'flashloans', 'p2p', 'credit', 'loan'], action: navigate('/flashloans') },
+      { id: 'flashloans', title: 'Flashloans P2P', description: 'P2P credit lanes and escrow', icon: <Flashloan className="w-4 h-4" />, category: 'navigation', keywords: ['flashloan', 'flashloans', 'p2p', 'credit', 'loan'], action: navigate('/flashloans') },
       { id: 'merchant', title: 'Merchant Portal', description: 'Manage your store', icon: <Store className="w-4 h-4" />, category: 'navigation', keywords: ['merchant', 'store', 'business', 'shop'], shortcut: 'G M', action: navigate('/merchant') },
       { id: 'dao-hub', title: 'DAO Hub', description: 'DAO-only disputes, proposals, and messaging', icon: <Crown className="w-4 h-4" />, category: 'navigation', keywords: ['dao', 'hub', 'governance', 'disputes'], shortcut: 'G H', action: navigate('/dao-hub') },
       { id: 'governance', title: 'Governance', description: 'DAO proposals and voting', icon: <Vote className="w-4 h-4" />, category: 'navigation', keywords: ['governance', 'dao', 'vote', 'proposal'], shortcut: 'G G', action: navigate('/governance') },
@@ -351,8 +351,8 @@ export function CommandPalette({ customCommands = [], onSearch }: CommandPalette
                     setSelectedIndex(0);
                   }}
                   onKeyDown={handleKeyDown}
-                  placeholder="Type a command or search..."
-                  className="flex-1 bg-transparent text-zinc-100 placeholder-zinc-500 outline-none text-base"
+                 
+                  className="flex-1 bg-transparent text-zinc-100  outline-none text-base"
                   autoFocus
                 />
                 <button

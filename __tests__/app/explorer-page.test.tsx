@@ -54,7 +54,7 @@ describe('Explorer page pathways', () => {
     renderExplorerPage();
 
     const validAddress = `0x${'a'.repeat(40)}`;
-    const input = screen.getByPlaceholderText(/Search by address/i);
+    const input = screen.getByRole('textbox');
     fireEvent.change(input, { target: { value: validAddress } });
 
     fireEvent.submit(input.closest('form') as HTMLFormElement);
@@ -67,7 +67,7 @@ describe('Explorer page pathways', () => {
   it('does not route when search input is invalid', () => {
     renderExplorerPage();
 
-    const input = screen.getByPlaceholderText(/Search by address/i);
+    const input = screen.getByRole('textbox');
     fireEvent.change(input, { target: { value: 'not-an-address' } });
     fireEvent.submit(input.closest('form') as HTMLFormElement);
 

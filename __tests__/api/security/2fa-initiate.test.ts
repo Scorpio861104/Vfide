@@ -93,7 +93,7 @@ describe('/api/security/2fa/initiate', () => {
     const data = await response.json();
 
     expect(response.status).toBe(400);
-    expect(data.error).toBe('Invalid destination');
+    expect(data.error).toBe('Invalid request body');
     expect(query).not.toHaveBeenCalled();
   });
 

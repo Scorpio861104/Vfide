@@ -181,7 +181,7 @@ jest.mock('lucide-react', () => {
 
 const renderAdminPage = () => {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const pageModule = require('../app/admin/page')
+  const pageModule = require('../app/admin/AdminDashboardClient')
   return render(React.createElement(pageModule.default))
 }
 
@@ -275,9 +275,10 @@ describe('App page behavior coverage', () => {
   it('renders the setup completion state on the correct chain with balance', () => {
     renderSetupPage()
 
-    expect(screen.getByRole('heading', { name: /Testnet Setup Guide/i })).toBeTruthy()
-    expect(screen.getByText(/You're All Set!/i)).toBeTruthy()
-    expect(screen.getByRole('link', { name: /Start Using VFIDE/i }).getAttribute('href')).toBe('/token-launch')
+    expect(screen.getByRole('heading', { name: /^Setup$/i })).toBeTruthy()
+    expect(screen.getByRole('button', { name: /Account/i })).toBeTruthy()
+    expect(screen.getByRole('button', { name: /Vault/i })).toBeTruthy()
+    expect(screen.getByRole('button', { name: /Security/i })).toBeTruthy()
   })
 
   it('blocks pay page checkout when QR signature is missing', async () => {

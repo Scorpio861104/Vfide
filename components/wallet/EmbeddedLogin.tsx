@@ -111,7 +111,7 @@ function EmailLoginForm({ onSuccess, onError }: { onSuccess?: () => void; onErro
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            placeholder="you@example.com"
+           
             aria-invalid={Boolean(error)}
             aria-describedby={errorId}
             className="w-full rounded-xl border border-gray-300 bg-white py-3 pl-10 pr-4 transition-all focus:border-transparent focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800"

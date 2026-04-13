@@ -90,7 +90,7 @@ describe('/api/auth/revoke', () => {
       const data = await response.json();
 
       expect(response.status).toBe(400);
-      expect(data.error).toContain('Invalid revokeAll flag');
+      expect(data.error).toContain('Invalid request body');
       expect(revokeToken).not.toHaveBeenCalled();
     });
 

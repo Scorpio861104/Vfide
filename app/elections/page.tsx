@@ -190,8 +190,8 @@ export default function ElectionsPage() {
                   <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}
                     className="p-4 bg-white/3 border border-white/10 rounded-2xl space-y-3">
                     <p className="text-gray-400 text-sm">Stand for election. You need ProofScore ≥ {electionInfo.minScore} to register. Your platform statement is visible to all voters.</p>
-                    <textarea value={platform} onChange={e =>  setPlatform(e.target.value)} placeholder="Your platform: what will you do for the VFIDE community?"
-                      className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 text-sm h-24 resize-none focus:border-cyan-500/50 focus:outline-none" />
+                    <textarea value={platform} onChange={e =>  setPlatform(e.target.value)}
+                      className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white  text-sm h-24 resize-none focus:border-cyan-500/50 focus:outline-none" />
                     <div className="flex gap-3">
                       <button onClick={() => setShowRegister(false)} className="flex-1 py-2.5 bg-white/5 border border-white/10 text-gray-400 font-bold rounded-xl text-sm">Cancel</button>
                       <button disabled={!platform.trim()} className="flex-1 py-2.5 bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-bold rounded-xl text-sm disabled:opacity-30">Register</button>

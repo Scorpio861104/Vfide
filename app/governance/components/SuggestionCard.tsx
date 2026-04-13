@@ -96,8 +96,8 @@ export function SuggestionCard({ suggestion, address, copiedId, onVote, onShare,
               </div>
               <div className="flex gap-2">
                 <input type="text" value={newComment} onChange={(e) =>  setNewComment(e.target.value)}
-                  placeholder="Add a comment..." maxLength={500}
-                  className="flex-1 px-3 py-2 bg-zinc-900 border border-zinc-700 rounded-lg text-zinc-100 placeholder-[#A0A0A5] focus:border-cyan-400 focus:outline-none text-sm"
+                  maxLength={500}
+                  className="flex-1 px-3 py-2 bg-zinc-900 border border-zinc-700 rounded-lg text-zinc-100  focus:border-cyan-400 focus:outline-none text-sm"
                   onKeyDown={(e) => e.key === 'Enter' && handleAddComment()} />
                 <button onClick={handleAddComment} disabled={!newComment.trim()}
                   className="px-4 py-2 bg-cyan-400 text-zinc-900 font-bold rounded-lg hover:opacity-90 transition-all disabled:opacity-50 text-sm">Post</button>

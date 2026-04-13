@@ -56,20 +56,26 @@ jest.mock('viem', () => ({
   verifyMessage: mockVerifyMessage,
 }));
 
-jest.mock('@/lib/vfide-hooks', () => ({
+jest.mock('@/hooks/usePriceHooks', () => ({
   useVfidePrice: () => ({
     priceUsd: 0.07,
     isLoading: false,
   }),
-  useEscrow: () => ({
-    createEscrow: mockCreateEscrow,
-    loading: false,
-    isSuccess: false,
-    error: null,
-  }),
+}));
+
+jest.mock('@/hooks/useMerchantHooks', () => ({
   usePayMerchant: () => ({
     payMerchant: mockPayMerchant,
     isPaying: false,
+    isSuccess: false,
+    error: null,
+  }),
+}));
+
+jest.mock('@/lib/escrow/useEscrow', () => ({
+  useEscrow: () => ({
+    createEscrow: mockCreateEscrow,
+    loading: false,
     isSuccess: false,
     error: null,
   }),

@@ -118,7 +118,7 @@ describe('Vault recover page logic pathways', () => {
 
     fireEvent.click(screen.getByRole('button', { name: /Guardian Through your guardian/i }));
 
-    const input = screen.getByPlaceholderText(/Enter guardian wallet address/i);
+    const input = screen.getByRole('textbox');
     fireEvent.change(input, { target: { value: 'not-an-address' } });
     fireEvent.click(screen.getByRole('button', { name: /Search Vault/i }));
 
@@ -138,7 +138,7 @@ describe('Vault recover page logic pathways', () => {
 
     renderVaultRecoverPage();
 
-    const input = screen.getByPlaceholderText(/Enter your secret recovery phrase/i);
+    const input = screen.getByRole('textbox');
     fireEvent.change(input, { target: { value: 'my-secret-recovery' } });
     fireEvent.click(screen.getByRole('button', { name: /Search Vault/i }));
 
@@ -150,13 +150,13 @@ describe('Vault recover page logic pathways', () => {
     fireEvent.click(screen.getByRole('button', { name: /Continue/i }));
 
     await waitFor(() => {
-      expect(screen.getAllByPlaceholderText(/Enter your secret recovery phrase/i).length).toBeGreaterThan(1);
+      expect(screen.getAllByRole('textbox').length).toBeGreaterThan(1);
     });
 
     const continueButton = screen.getByRole('button', { name: /Continue/i });
     expect(continueButton.hasAttribute('disabled')).toBe(true);
 
-    fireEvent.change(screen.getAllByPlaceholderText(/Enter your secret recovery phrase/i)[1], {
+    fireEvent.change(screen.getAllByRole('textbox')[1], {
       target: { value: 'recovery-id-value' },
     });
 

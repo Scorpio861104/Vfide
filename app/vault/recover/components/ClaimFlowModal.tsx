@@ -165,8 +165,8 @@ export function ClaimFlowModal({
                     type="text"
                     value={recoveryId}
                     onChange={(e) => setRecoveryId(e.target.value)}
-                    placeholder="Enter your secret recovery phrase..."
-                    className="w-full px-5 py-4 rounded-xl bg-white/5 border-2 border-white/10 text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500/50 transition-colors text-lg"
+                   
+                    className="w-full px-5 py-4 rounded-xl bg-white/5 border-2 border-white/10 text-white  focus:outline-none focus:border-cyan-500/50 transition-colors text-lg"
                   />
                   <p className="text-xs text-gray-500 mt-2 ml-1">
                     The secret phrase you set when creating your vault
@@ -181,10 +181,10 @@ export function ClaimFlowModal({
                   <textarea
                     value={reason}
                     onChange={(e) => setReason(e.target.value)}
-                    placeholder="Explain why you need to recover (lost device, seed phrase destroyed, etc.)"
+                   
                     rows={3}
                     maxLength={500}
-                    className="w-full px-5 py-4 rounded-xl bg-white/5 border-2 border-white/10 text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500/50 transition-colors resize-none"
+                    className="w-full px-5 py-4 rounded-xl bg-white/5 border-2 border-white/10 text-white  focus:outline-none focus:border-cyan-500/50 transition-colors resize-none"
                   />
                 </div>
               </motion.div>

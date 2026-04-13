@@ -294,7 +294,7 @@ describe('SettingsDashboard', () => {
 
     it('renders import textarea placeholder', () => {
       render(<SettingsDashboard />);
-      expect(screen.getByPlaceholderText(/Paste JSON here/i)).toBeInTheDocument();
+      expect(screen.getByLabelText(/Import settings JSON/i)).toBeInTheDocument();
     });
 
     it('renders export helper text', () => {

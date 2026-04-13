@@ -90,12 +90,12 @@ export default function MerchantSuppliersPage() {
 
           {showAdd && (
             <div className="mb-6 rounded-2xl border border-white/10 bg-white/5 p-4 space-y-3">
-              <input value={draft.supplierName} onChange={(event) =>  setDraft((current) => ({ ...current, supplierName: event.target.value }))} placeholder="Supplier name" className="w-full rounded-xl border border-white/10 bg-black/20 px-3 py-2.5 text-white" />
+              <input value={draft.supplierName} onChange={(event) =>  setDraft((current) => ({ ...current, supplierName: event.target.value }))} className="w-full rounded-xl border border-white/10 bg-black/20 px-3 py-2.5 text-white" />
               <div className="grid gap-3 md:grid-cols-2">
-                <input value={draft.contactPhone} onChange={(event) =>  setDraft((current) => ({ ...current, contactPhone: event.target.value }))} placeholder="Phone" className="w-full rounded-xl border border-white/10 bg-black/20 px-3 py-2.5 text-white" />
-                <input value={draft.contactEmail} onChange={(event) =>  setDraft((current) => ({ ...current, contactEmail: event.target.value }))} placeholder="Email" className="w-full rounded-xl border border-white/10 bg-black/20 px-3 py-2.5 text-white" />
+                <input value={draft.contactPhone} onChange={(event) =>  setDraft((current) => ({ ...current, contactPhone: event.target.value }))} className="w-full rounded-xl border border-white/10 bg-black/20 px-3 py-2.5 text-white" />
+                <input value={draft.contactEmail} onChange={(event) =>  setDraft((current) => ({ ...current, contactEmail: event.target.value }))} className="w-full rounded-xl border border-white/10 bg-black/20 px-3 py-2.5 text-white" />
               </div>
-              <textarea value={draft.notes} onChange={(event) =>  setDraft((current) => ({ ...current, notes: event.target.value }))} placeholder="Notes" rows={3} className="w-full rounded-xl border border-white/10 bg-black/20 px-3 py-2.5 text-white" />
+              <textarea value={draft.notes} onChange={(event) =>  setDraft((current) => ({ ...current, notes: event.target.value }))} rows={3} className="w-full rounded-xl border border-white/10 bg-black/20 px-3 py-2.5 text-white" />
               <button type="button" onClick={() => void addSupplier()} disabled={!draft.supplierName.trim()} className="rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-50">Save supplier</button>
             </div>
           )}

@@ -370,11 +370,15 @@ describe('/api/auth', () => {
 
     it('should return 500 for unexpected errors', async () => {
       withRateLimit.mockResolvedValue(null);
-      validateBody.mockRejectedValue(new Error('Database error'));
+      verifyMessage.mockRejectedValue(new Error('Database error'));
 
       const request = new NextRequest('http://localhost:3000/api/auth', {
         method: 'POST',
-        body: JSON.stringify({}),
+        body: JSON.stringify({
+          address: mockAddress,
+          message: mockMessage,
+          signature: mockSignature,
+        }),
       });
 
       const response = await POST(request);

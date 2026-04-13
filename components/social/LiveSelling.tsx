@@ -198,8 +198,8 @@ export function LiveViewer({
           <input
             value={commentText} onChange={e =>  setCommentText(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && handleSend()}
-            placeholder="Say something..."
-            className="flex-1 px-3 py-2 bg-white/5 rounded-full text-white text-xs placeholder-gray-600 focus:outline-none"
+           
+            className="flex-1 px-3 py-2 bg-white/5 rounded-full text-white text-xs  focus:outline-none"
           />
           <button onClick={handleSend} className="p-2 text-cyan-400"><Send size={18} /></button>
           <button onClick={handleLike} className="p-2 text-pink-400"><Heart size={18} /></button>

@@ -213,7 +213,7 @@ describe('/api/groups/join', () => {
       const data = await response.json();
 
       expect(response.status).toBe(400);
-      expect(data.error).toContain('Invalid userId');
+      expect(data.error).toContain('Invalid request body');
     });
   });
 });

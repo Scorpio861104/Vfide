@@ -1,6 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
+/**
+ * SUPPLY-CHAIN NOTE: This contract intentionally uses OpenZeppelin imports
+ * because it relies on AccessControl and Pausable primitives for pool controls.
+ * OZ version baseline: 5.1.0. Review OZ advisories on dependency updates.
+ */
+
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/utils/Pausable.sol";

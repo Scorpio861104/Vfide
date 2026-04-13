@@ -61,7 +61,7 @@ export default function TipSelector({
           step="0.01"
           value={custom}
           onChange={(e: ChangeEvent<HTMLInputElement>) => setCustom(e.target.value)}
-          placeholder="Enter tip amount"
+         
           className="w-full rounded-md border bg-background px-3 py-2 text-sm"
         />
       ) : null}

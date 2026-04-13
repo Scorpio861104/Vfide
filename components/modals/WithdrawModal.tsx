@@ -115,7 +115,7 @@ export default function WithdrawModal({
                 type="number"
                 value={amount}
                 onChange={(e) =>  setAmount(e.target.value)}
-                placeholder="0.00"
+               
                 className="w-full px-4 py-3 bg-zinc-900 border border-zinc-800 rounded-lg text-white text-lg focus:outline-none focus:border-pink-400 transition-colors"
               />
               <button
@@ -139,7 +139,7 @@ export default function WithdrawModal({
               type="text"
               value={toAddress}
               onChange={(e) =>  setToAddress(e.target.value)}
-              placeholder="0x..."
+             
               className="w-full px-4 py-3 bg-zinc-900 border border-zinc-800 rounded-lg text-white focus:outline-none focus:border-pink-400 transition-colors font-mono text-sm"
             />
           </div>

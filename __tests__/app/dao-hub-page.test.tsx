@@ -2,20 +2,6 @@ import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import { render, screen } from '@testing-library/react';
 import type React from 'react';
 
-let mockAccountState = {
-  isConnected: true,
-  address: '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' as `0x${string}`,
-};
-
-let mockContracts = {
-  CouncilElection: '0x1111111111111111111111111111111111111111',
-};
-
-let mockReadResponses = {
-  isCouncilMember: true,
-  canServeNextTerm: [true, 2, BigInt(Math.floor(Date.now() / 1000) + 86400)] as [boolean, number, bigint],
-};
-
 const renderDaoHubPage = () => {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const pageModule = require('../../app/dao-hub/page');
@@ -23,29 +9,20 @@ const renderDaoHubPage = () => {
   return render(<DaoHubPage />);
 };
 
-jest.mock('wagmi', () => ({
-  useAccount: () => mockAccountState,
-  useReadContract: ({ functionName }: { functionName: string }) => {
-    if (functionName === 'isCouncil') {
-      return { data: mockReadResponses.isCouncilMember };
-    }
-    if (functionName === 'canServeNextTerm') {
-      return { data: mockReadResponses.canServeNextTerm };
-    }
-    return { data: undefined };
-  },
+jest.mock('../../app/dao-hub/components/OverviewTab', () => ({
+  OverviewTab: () => <div>Overview tab content</div>,
 }));
 
-jest.mock('@/lib/contracts', () => ({
-  CONTRACT_ADDRESSES: mockContracts,
+jest.mock('../../app/dao-hub/components/ProposalsTab', () => ({
+  ProposalsTab: () => <div>Proposals tab content</div>,
 }));
 
-jest.mock('@/lib/abis', () => ({
-  CouncilElectionABI: [],
+jest.mock('../../app/dao-hub/components/TreasuryTab', () => ({
+  TreasuryTab: () => <div>Treasury tab content</div>,
 }));
 
-jest.mock('@/lib/vfide-hooks', () => ({
-  useProofScore: () => ({ score: 7800 }),
+jest.mock('../../app/dao-hub/components/MembersTab', () => ({
+  MembersTab: () => <div>Members tab content</div>,
 }));
 
 jest.mock('@/components/layout/Footer', () => ({
@@ -53,10 +30,12 @@ jest.mock('@/components/layout/Footer', () => ({
 }));
 
 jest.mock('framer-motion', () => ({
-  motion: {
-    main: ({ children, ...props }: any) => <main {...props}>{children}</main>,
-    div: ({ children, ...props }: any) => <div {...props}>{children}</div>,
-  },
+  motion: new Proxy(
+    {},
+    {
+      get: () => ({ children, ...props }: any) => <div {...props}>{children}</div>,
+    }
+  ),
 }));
 
 jest.mock('lucide-react', () => {
@@ -67,50 +46,27 @@ jest.mock('lucide-react', () => {
 describe('DAO Hub page access pathways', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    mockAccountState = {
-      isConnected: true,
-      address: '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
-    };
-    mockContracts = {
-      CouncilElection: '0x1111111111111111111111111111111111111111',
-    };
-    mockReadResponses = {
-      isCouncilMember: true,
-      canServeNextTerm: [true, 2, BigInt(Math.floor(Date.now() / 1000) + 86400)],
-    };
   });
 
-  it('shows DAO access warning when wallet is disconnected', () => {
-    mockAccountState = {
-      isConnected: false,
-      address: '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
-    };
-
+  it('renders dao hub heading and copy', () => {
     renderDaoHubPage();
 
-    expect(screen.getByRole('heading', { name: /DAO Operations Hub/i })).toBeTruthy();
-    expect(screen.getByText(/Connect a wallet linked to an active DAO term/i)).toBeTruthy();
+    expect(screen.getByText(/DAO Hub/i)).toBeTruthy();
+    expect(screen.getByText(/Decentralized governance center/i)).toBeTruthy();
   });
 
-  it('shows locked-mode warning when user is not an active DAO member', () => {
-    mockReadResponses = {
-      ...mockReadResponses,
-      isCouncilMember: false,
-    };
-
+  it('renders tab controls', () => {
     renderDaoHubPage();
 
-    expect(screen.getByText(/term has ended or you are no longer an active member/i)).toBeTruthy();
-    expect(screen.getByText(/Access Locked/i)).toBeTruthy();
+    expect(screen.getByRole('button', { name: /Overview/i })).toBeTruthy();
+    expect(screen.getByRole('button', { name: /Proposals/i })).toBeTruthy();
+    expect(screen.getByRole('button', { name: /Treasury/i })).toBeTruthy();
+    expect(screen.getByRole('button', { name: /Members/i })).toBeTruthy();
   });
 
-  it('renders member queues when active DAO member is verified', () => {
+  it('renders default overview content', () => {
     renderDaoHubPage();
 
-    expect(screen.getByText(/Access Active/i)).toBeTruthy();
-    expect(screen.getByRole('heading', { name: /Active Disputes/i })).toBeTruthy();
-    expect(screen.getByRole('heading', { name: /Proposal Pipeline/i })).toBeTruthy();
-    expect(screen.getByRole('heading', { name: /DAO Messages/i })).toBeTruthy();
-    expect(screen.getByRole('heading', { name: /DAO Payment Queue/i })).toBeTruthy();
+    expect(screen.getByText(/Overview tab content/i)).toBeTruthy();
   });
 });

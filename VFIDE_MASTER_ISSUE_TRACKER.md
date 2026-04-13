@@ -1,5 +1,7 @@
 # VFIDE Master Issue Tracker
 
+> Status: Historical snapshot from April 2026. Verify all entries against current code, tests, and deployment manifests before acting on this list.
+
 **Date:** April 11, 2026
 **Total Issues:** 22
 **Status:** All identified, none started

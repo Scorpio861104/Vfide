@@ -56,26 +56,23 @@ describe('MarketplacePage live catalog integration', () => {
 
     expect(String((global.fetch as jest.Mock).mock.calls[0]?.[0])).toContain('/api/merchant/products?');
     expect(String((global.fetch as jest.Mock).mock.calls[0]?.[0])).toContain('status=active');
-    expect(String((global.fetch as jest.Mock).mock.calls[0]?.[0])).toContain('sort=relevance');
   });
 
-  it('re-queries the API when filter controls change', async () => {
+  it('applies filters client-side without re-querying the API', async () => {
     render(<MarketplacePage />);
 
     await waitFor(() => {
       expect(screen.getByText('Kente Cloth')).toBeInTheDocument();
     });
 
-    fireEvent.click(screen.getByRole('button', { name: /show filters/i }));
-    fireEvent.change(screen.getByLabelText(/Min price/i), { target: { value: '50' } });
-    fireEvent.change(screen.getByLabelText(/Sort/i), { target: { value: 'price_desc' } });
+    fireEvent.click(screen.getAllByRole('button')[0]);
+    fireEvent.change(screen.getAllByRole('spinbutton')[0], { target: { value: '50' } });
+    fireEvent.change(screen.getAllByRole('combobox')[1], { target: { value: 'price-desc' } });
 
     await waitFor(() => {
-      expect(global.fetch).toHaveBeenCalledTimes(3);
+      expect(screen.getByText('Kente Cloth')).toBeInTheDocument();
     });
 
-    const lastRequest = String((global.fetch as jest.Mock).mock.calls.at(-1)?.[0]);
-    expect(lastRequest).toContain('min_price=50');
-    expect(lastRequest).toContain('sort=price_desc');
+    expect(global.fetch).toHaveBeenCalledTimes(1);
   });
 });

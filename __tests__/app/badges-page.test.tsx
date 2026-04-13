@@ -2,8 +2,6 @@ import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import { fireEvent, render, screen } from '@testing-library/react';
 import React from 'react';
 
-const mockWriteContract = jest.fn();
-
 const renderBadgesPage = () => {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const pageModule = require('../../app/badges/page');
@@ -15,50 +13,16 @@ jest.mock('@/components/layout/Footer', () => ({
   Footer: () => <div data-testid="footer" />,
 }));
 
-jest.mock('wagmi', () => ({
-  useAccount: () => ({
-    address: '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
-    isConnected: true,
-  }),
-  useWriteContract: () => ({
-    writeContract: mockWriteContract,
-    data: undefined,
-    isPending: false,
-  }),
-  useWaitForTransactionReceipt: () => ({
-    isLoading: false,
-    isSuccess: false,
-  }),
-  useReadContract: () => ({
-    data: 1n,
-  }),
+jest.mock('../../app/badges/components/CollectionTab', () => ({
+  CollectionTab: () => <div>Collection tab content</div>,
 }));
 
-jest.mock('@/lib/badge-registry', () => ({
-  getBadgeCategories: () => ['Pioneer & Foundation', 'Activity & Participation'],
-  getAllBadges: () => [
-    {
-      name: 'PIONEER',
-      category: 'Pioneer & Foundation',
-      rarity: 'Legendary',
-      description: 'Early protocol contributor',
-      points: 100,
-    },
-    {
-      name: 'GOVERNANCE_VOTER',
-      category: 'Activity & Participation',
-      rarity: 'Rare',
-      description: 'Participated in governance',
-      points: 40,
-    },
-    {
-      name: 'ACTIVE_TRADER',
-      category: 'Activity & Participation',
-      rarity: 'Uncommon',
-      description: '50+ commerce transactions in 90 days',
-      points: 20,
-    },
-  ],
+jest.mock('../../app/badges/components/AvailableTab', () => ({
+  AvailableTab: () => <div>Available tab content</div>,
+}));
+
+jest.mock('../../app/badges/components/HistoryTab', () => ({
+  HistoryTab: () => <div>History tab content</div>,
 }));
 
 jest.mock('framer-motion', () => ({
@@ -81,32 +45,26 @@ describe('Badges page pathways', () => {
     jest.clearAllMocks();
   });
 
-  it('renders badge collection overview and tab counters', () => {
+  it('renders badges heading and default collection tab', () => {
     renderBadgesPage();
 
-    expect(screen.getByRole('heading', { name: /Badge Collection/i })).toBeTruthy();
-    expect(screen.getByText(/Total Badges/i)).toBeTruthy();
-    expect(screen.getByRole('button', { name: /All Badges \(3\)/i })).toBeTruthy();
-    expect(screen.getByRole('button', { name: /Earned \(0\)/i })).toBeTruthy();
+    expect(screen.getByRole('heading', { name: /^Badges$/i })).toBeTruthy();
+    expect(screen.getByText(/Earn badges through real activity/i)).toBeTruthy();
+    expect(screen.getByText(/Collection tab content/i)).toBeTruthy();
   });
 
-  it('filters badges by earned tab shows empty state', () => {
+  it('shows tab navigation labels', () => {
     renderBadgesPage();
 
-    fireEvent.click(screen.getByRole('button', { name: /Earned \(0\)/i }));
-
-    // No badges are earned (userBadges is empty), so empty state shows
-    expect(screen.getByRole('heading', { name: /No Badges Found/i })).toBeTruthy();
+    expect(screen.getByRole('button', { name: /^Collection$/i })).toBeTruthy();
+    expect(screen.getByRole('button', { name: /^Available$/i })).toBeTruthy();
+    expect(screen.getByRole('button', { name: /^History$/i })).toBeTruthy();
   });
 
-  it('shows empty state when search has no results', () => {
+  it('switches to available tab content', () => {
     renderBadgesPage();
 
-    fireEvent.change(screen.getByPlaceholderText(/Search badges/i), {
-      target: { value: 'does-not-exist' },
-    });
-
-    expect(screen.getByRole('heading', { name: /No Badges Found/i })).toBeTruthy();
-    expect(screen.getByText(/Try adjusting your search or filters/i)).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: /^Available$/i }));
+    expect(screen.getByText(/Available tab content/i)).toBeTruthy();
   });
 });

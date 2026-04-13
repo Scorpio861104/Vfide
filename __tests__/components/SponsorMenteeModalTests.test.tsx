@@ -72,7 +72,7 @@ describe('SponsorMenteeModal', () => {
   it('has mentee address input field', () => {
     render(<SponsorMenteeModal isOpen={true} onClose={mockOnClose} />)
     
-    expect(screen.getByPlaceholderText('0x...')).toBeInTheDocument()
+    expect(screen.getByRole('textbox')).toBeInTheDocument()
   })
 
   it('has label for address input', () => {
@@ -93,7 +93,7 @@ describe('SponsorMenteeModal', () => {
   it('updates address input on change', () => {
     render(<SponsorMenteeModal isOpen={true} onClose={mockOnClose} />)
     
-    const input = screen.getByPlaceholderText('0x...')
+    const input = screen.getByRole('textbox')
     fireEvent.change(input, { target: { value: '0x1234567890123456789012345678901234567890' } })
     
     expect(input).toHaveValue('0x1234567890123456789012345678901234567890')
@@ -102,7 +102,7 @@ describe('SponsorMenteeModal', () => {
   it('applies focus styling to input', () => {
     render(<SponsorMenteeModal isOpen={true} onClose={mockOnClose} />)
     
-    const input = screen.getByPlaceholderText('0x...')
+    const input = screen.getByRole('textbox')
     expect(input).toHaveClass('focus:border-emerald-400')
   })
 

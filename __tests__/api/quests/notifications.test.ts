@@ -28,7 +28,7 @@ describe('/api/quests/notifications', () => {
   describe('GET', () => {
     it('should return quest notifications', async () => {
       withRateLimit.mockResolvedValue(null);
-      requireAuth.mockResolvedValue({ user: { address: '0x123', id: 1 } });
+      requireAuth.mockResolvedValue({ user: { address: '0x1111111111111111111111111111111111111111', id: 1 } });
 
       const mockClient = {
         query: jest.fn()
@@ -49,7 +49,7 @@ describe('/api/quests/notifications', () => {
       };
       getClient.mockResolvedValue(mockClient);
 
-      const request = new NextRequest('http://localhost:3000/api/quests/notifications?userAddress=0x123');
+      const request = new NextRequest('http://localhost:3000/api/quests/notifications?userAddress=0x1111111111111111111111111111111111111111');
       const response = await GET(request);
       const data = await response.json();
 
@@ -74,7 +74,7 @@ describe('/api/quests/notifications', () => {
       requireAuth.mockResolvedValue({ user: { address: '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', id: 1 } });
       isAdmin.mockReturnValue(false);
 
-      const request = new NextRequest('http://localhost:3000/api/quests/notifications?userAddress=0x123');
+      const request = new NextRequest('http://localhost:3000/api/quests/notifications?userAddress=0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb');
       const response = await GET(request);
 
       expect(response.status).toBe(403);
@@ -95,7 +95,7 @@ describe('/api/quests/notifications', () => {
 
     it('should return 400 for malformed userAddress query', async () => {
       withRateLimit.mockResolvedValue(null);
-      requireAuth.mockResolvedValue({ user: { address: '0x123', id: 1 } });
+      requireAuth.mockResolvedValue({ user: { address: '0x1111111111111111111111111111111111111111', id: 1 } });
 
       const request = new NextRequest('http://localhost:3000/api/quests/notifications?userAddress=not-an-address');
       const response = await GET(request);
@@ -110,7 +110,7 @@ describe('/api/quests/notifications', () => {
   describe('PATCH', () => {
     it('should return 400 for malformed JSON', async () => {
       withRateLimit.mockResolvedValue(null);
-      requireAuth.mockResolvedValue({ user: { address: '0x123', id: 1 } });
+      requireAuth.mockResolvedValue({ user: { address: '0x1111111111111111111111111111111111111111', id: 1 } });
 
       const request = new NextRequest('http://localhost:3000/api/quests/notifications', {
         method: 'PATCH',
@@ -126,7 +126,7 @@ describe('/api/quests/notifications', () => {
 
     it('should return 400 for non-object body', async () => {
       withRateLimit.mockResolvedValue(null);
-      requireAuth.mockResolvedValue({ user: { address: '0x123', id: 1 } });
+      requireAuth.mockResolvedValue({ user: { address: '0x1111111111111111111111111111111111111111', id: 1 } });
 
       const request = new NextRequest('http://localhost:3000/api/quests/notifications', {
         method: 'PATCH',
@@ -137,7 +137,7 @@ describe('/api/quests/notifications', () => {
       const data = await response.json();
 
       expect(response.status).toBe(400);
-      expect(data.error).toContain('JSON object');
+      expect(data.error).toBe('Invalid request body');
     });
 
     it('should return 403 for cross-user updates', async () => {
@@ -149,7 +149,7 @@ describe('/api/quests/notifications', () => {
         method: 'PATCH',
         body: JSON.stringify({
           notificationIds: ['11111111-1111-1111-1111-111111111111'],
-          userAddress: '0x123',
+          userAddress: '0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
         }),
       });
 
@@ -159,7 +159,7 @@ describe('/api/quests/notifications', () => {
 
     it('should reject oversized notificationIds arrays', async () => {
       withRateLimit.mockResolvedValue(null);
-      requireAuth.mockResolvedValue({ user: { address: '0x123', id: 1 } });
+      requireAuth.mockResolvedValue({ user: { address: '0x1111111111111111111111111111111111111111', id: 1 } });
 
       const notificationIds = Array.from({ length: 501 }, () => '11111111-1111-1111-1111-111111111111');
 
@@ -167,7 +167,7 @@ describe('/api/quests/notifications', () => {
         method: 'PATCH',
         body: JSON.stringify({
           notificationIds,
-          userAddress: '0x123',
+          userAddress: '0x1111111111111111111111111111111111111111',
         }),
       });
 
@@ -175,7 +175,7 @@ describe('/api/quests/notifications', () => {
       const data = await response.json();
 
       expect(response.status).toBe(400);
-      expect(data.error).toContain('Too many notificationIds');
+      expect(data.error).toBe('Invalid request body');
     });
 
     it('should return 401 for malformed authenticated address on PATCH', async () => {
@@ -200,7 +200,7 @@ describe('/api/quests/notifications', () => {
 
     it('should return 400 for malformed userAddress on PATCH', async () => {
       withRateLimit.mockResolvedValue(null);
-      requireAuth.mockResolvedValue({ user: { address: '0x123', id: 1 } });
+      requireAuth.mockResolvedValue({ user: { address: '0x1111111111111111111111111111111111111111', id: 1 } });
 
       const request = new NextRequest('http://localhost:3000/api/quests/notifications', {
         method: 'PATCH',
@@ -214,7 +214,7 @@ describe('/api/quests/notifications', () => {
       const data = await response.json();
 
       expect(response.status).toBe(400);
-      expect(data.error).toBe('Invalid user address format');
+      expect(data.error).toBe('Invalid request body');
       expect(getClient).not.toHaveBeenCalled();
     });
   });

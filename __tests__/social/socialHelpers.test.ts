@@ -8,13 +8,27 @@ import { describe, it, expect, beforeEach } from '@jest/globals';
 import { addNotification } from '../../components/social/SocialNotifications';
 import { addActivity } from '../../components/social/ActivityFeed';
 
+const mockLoggerError = jest.fn();
+
+jest.mock('@/lib/logger', () => ({
+  logger: {
+    error: (...args: unknown[]) => mockLoggerError(...args),
+  },
+}));
+
 // Mock localStorage
 const localStorageMock = (() => {
   let store: Record<string, string> = {};
+  let throwOnGet = false;
+  let throwOnSet = false;
 
   return {
-    getItem: (key: string) => store[key] || null,
+    getItem: (key: string) => {
+      if (throwOnGet) throw new Error('SecurityError');
+      return store[key] || null;
+    },
     setItem: (key: string, value: string) => {
+      if (throwOnSet) throw new Error('QuotaExceededError');
       store[key] = value;
     },
     removeItem: (key: string) => {
@@ -23,8 +37,28 @@ const localStorageMock = (() => {
     clear: () => {
       store = {};
     },
+    __setThrowOnGet: (value: boolean) => {
+      throwOnGet = value;
+    },
+    __setThrowOnSet: (value: boolean) => {
+      throwOnSet = value;
+    },
   };
 })();
+
+jest.mock('@/lib/utils', () => ({
+  safeLocalStorage: {
+    getItem: (key: string) => localStorageMock.getItem(key),
+    setItem: (key: string, value: string) => {
+      localStorageMock.setItem(key, value);
+      return true;
+    },
+    removeItem: (key: string) => {
+      localStorageMock.removeItem(key);
+      return true;
+    },
+  },
+}));
 
 Object.defineProperty(window, 'localStorage', {
   value: localStorageMock,
@@ -36,6 +70,9 @@ describe('addNotification', () => {
   beforeEach(() => {
     localStorage.clear();
     jest.clearAllMocks();
+    localStorageMock.__setThrowOnGet(false);
+    localStorageMock.__setThrowOnSet(false);
+    mockLoggerError.mockReset();
   });
 
   it('should add a notification to localStorage', () => {
@@ -102,13 +139,7 @@ describe('addNotification', () => {
   });
 
   it('should handle localStorage errors gracefully', () => {
-    const consoleError = jest.spyOn(console, 'error').mockImplementation(() => {});
-    
-    // Mock the mock localStorage's setItem to throw
-    const originalSetItem = localStorageMock.setItem;
-    localStorageMock.setItem = () => {
-      throw new Error('QuotaExceededError');
-    };
+    localStorageMock.__setThrowOnSet(true);
 
     // Should not throw
     expect(() => {
@@ -120,20 +151,11 @@ describe('addNotification', () => {
       });
     }).not.toThrow();
 
-    expect(consoleError).toHaveBeenCalled();
-    consoleError.mockRestore();
-    localStorageMock.setItem = originalSetItem;
+    expect(mockLoggerError).toHaveBeenCalled();
   });
 
   it('should not modify state when localStorage throws on getItem', () => {
-    // This tests the error handling path - since we can't truly simulate SSR in jsdom,
-    // we verify that errors are caught gracefully
-    const consoleError = jest.spyOn(console, 'error').mockImplementation(() => {});
-    
-    const originalGetItem = localStorageMock.getItem;
-    localStorageMock.getItem = () => {
-      throw new Error('SecurityError');
-    };
+    localStorageMock.__setThrowOnGet(true);
 
     expect(() => {
       addNotification(testAddress, {
@@ -144,8 +166,7 @@ describe('addNotification', () => {
       });
     }).not.toThrow();
 
-    consoleError.mockRestore();
-    localStorageMock.getItem = originalGetItem;
+    expect(mockLoggerError).toHaveBeenCalled();
   });
 });
 
@@ -155,6 +176,9 @@ describe('addActivity', () => {
   beforeEach(() => {
     localStorage.clear();
     jest.clearAllMocks();
+    localStorageMock.__setThrowOnGet(false);
+    localStorageMock.__setThrowOnSet(false);
+    mockLoggerError.mockReset();
   });
 
   it('should add an activity to localStorage', () => {
@@ -252,13 +276,7 @@ describe('addActivity', () => {
   });
 
   it('should handle localStorage errors gracefully', () => {
-    const consoleError = jest.spyOn(console, 'error').mockImplementation(() => {});
-    
-    // Mock the mock localStorage's setItem to throw
-    const originalSetItem = localStorageMock.setItem;
-    localStorageMock.setItem = () => {
-      throw new Error('QuotaExceededError');
-    };
+    localStorageMock.__setThrowOnSet(true);
 
     expect(() => {
       addActivity(testAddress, {
@@ -268,8 +286,6 @@ describe('addActivity', () => {
       });
     }).not.toThrow();
 
-    expect(consoleError).toHaveBeenCalled();
-    consoleError.mockRestore();
-    localStorageMock.setItem = originalSetItem;
+    expect(mockLoggerError).toHaveBeenCalled();
   });
 });

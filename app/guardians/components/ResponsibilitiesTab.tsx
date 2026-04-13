@@ -56,14 +56,14 @@ export function ResponsibilitiesTab({ isConnected }: { isConnected: boolean }) {
         <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
           <input
             type="text"
-            placeholder="Vault address (0x...)"
+           
             value={vaultInput}
             onChange={(e) => setVaultInput(e.target.value)}
             className="font-mono md:col-span-2 rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-white focus:border-cyan-500/50 focus:outline-none"
           />
           <input
             type="text"
-            placeholder="Label (optional)"
+           
             value={vaultLabel}
             onChange={(e) => setVaultLabel(e.target.value)}
             className="rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-white focus:border-cyan-500/50 focus:outline-none"

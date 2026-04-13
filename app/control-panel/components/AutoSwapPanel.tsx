@@ -195,7 +195,7 @@ export function AutoSwapPanel() {
               setRouter(value);
               if (formError) setFormError(null);
             }}
-            placeholder="0x... (e.g., SyncSwap Router)"
+           
             required
           />
 
@@ -206,7 +206,7 @@ export function AutoSwapPanel() {
               setStablecoin(value);
               if (formError) setFormError(null);
             }}
-            placeholder="0x... (e.g., USDC)"
+           
             required
           />
 

@@ -1,0 +1,119 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod4';
+import { requireOwnership } from '@/lib/auth/middleware';
+import { withRateLimit } from '@/lib/auth/rateLimit';
+import { query } from '@/lib/db';
+
+export const runtime = 'nodejs';
+
+const ADDRESS_REGEX = /^0x[a-fA-F0-9]{40}$/;
+
+const createStreamSchema = z.object({
+  senderAddress: z.string().trim().regex(ADDRESS_REGEX),
+  recipientAddress: z.string().trim().regex(ADDRESS_REGEX),
+  token: z.string().trim().min(1).max(20),
+  totalAmount: z.number().positive(),
+  ratePerSecond: z.number().positive(),
+  startTime: z.string().datetime(),
+  endTime: z.string().datetime(),
+});
+
+type StreamRow = {
+  id: number;
+  sender_address: string;
+  recipient_address: string;
+  token: string;
+  total_amount: string;
+  rate_per_second: string;
+  start_time: string;
+  end_time: string;
+  withdrawn: string;
+  is_paused: boolean;
+  status: string;
+  created_at: string;
+};
+
+export async function GET(request: NextRequest) {
+  const rl = await withRateLimit(request, 'read');
+  if (rl) return rl;
+
+  const address = request.nextUrl.searchParams.get('address');
+  const role = request.nextUrl.searchParams.get('role') ?? 'sender'; // 'sender' | 'recipient' | 'all'
+
+  if (!address || !ADDRESS_REGEX.test(address)) {
+    return NextResponse.json({ error: 'Valid address query parameter is required' }, { status: 400 });
+  }
+
+  const normalized = address.trim().toLowerCase();
+  const authResult = await requireOwnership(request, normalized);
+  if (authResult instanceof NextResponse) {
+    return authResult;
+  }
+
+  try {
+    let rows: StreamRow[];
+    if (role === 'sender') {
+      const result = await query<StreamRow>(
+        'SELECT * FROM streams WHERE sender_address = $1 ORDER BY created_at DESC LIMIT 100',
+        [normalized]
+      );
+      rows = result.rows;
+    } else if (role === 'recipient') {
+      const result = await query<StreamRow>(
+        'SELECT * FROM streams WHERE recipient_address = $1 ORDER BY created_at DESC LIMIT 100',
+        [normalized]
+      );
+      rows = result.rows;
+    } else {
+      const result = await query<StreamRow>(
+        'SELECT * FROM streams WHERE sender_address = $1 OR recipient_address = $1 ORDER BY created_at DESC LIMIT 100',
+        [normalized]
+      );
+      rows = result.rows;
+    }
+
+    return NextResponse.json({ streams: rows, total: rows.length });
+  } catch (err) {
+    console.error('streams GET error', err);
+    return NextResponse.json({ error: 'Failed to fetch streams' }, { status: 500 });
+  }
+}
+
+export async function POST(request: NextRequest) {
+  const rl = await withRateLimit(request, 'write');
+  if (rl) return rl;
+
+  let body: unknown;
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
+  }
+
+  const parsed = createStreamSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json({ error: 'Invalid input', details: parsed.error.flatten() }, { status: 400 });
+  }
+
+  const { senderAddress, recipientAddress, token, totalAmount, ratePerSecond, startTime, endTime } = parsed.data;
+  const normalized = senderAddress.trim().toLowerCase();
+
+  const authResult = await requireOwnership(request, normalized);
+  if (authResult instanceof NextResponse) {
+    return authResult;
+  }
+
+  try {
+    const result = await query<StreamRow>(
+      `INSERT INTO streams (sender_address, recipient_address, token, total_amount, rate_per_second, start_time, end_time, withdrawn, is_paused, status)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, 0, false, 'active')
+       RETURNING *`,
+      [normalized, recipientAddress.trim().toLowerCase(), token, totalAmount, ratePerSecond, startTime, endTime]
+    );
+
+    return NextResponse.json({ stream: result.rows[0] }, { status: 201 });
+  } catch (err) {
+    console.error('streams POST error', err);
+    return NextResponse.json({ error: 'Failed to create stream' }, { status: 500 });
+  }
+}

@@ -507,7 +507,7 @@ describe('useVaultRegistry - Extended Tests', () => {
 
   // ==================== useInitiateClaim ====================
   describe('useInitiateClaim', () => {
-    it('should initiate claim successfully', () => {
+    it('should throw when recovery-claim contract is not deployed', () => {
       const mockWriteContract = jest.fn()
       ;(useWriteContract as Mock).mockReturnValue({
         writeContract: mockWriteContract,
@@ -518,15 +518,15 @@ describe('useVaultRegistry - Extended Tests', () => {
 
       const { result } = renderHook(() => useInitiateClaim())
 
-      act(() => {
+      expect(() => {
         result.current.initiateClaim(
           mockVaultAddress,
           'Lost access to wallet',
           '0x' + 'a'.repeat(64) as `0x${string}`
         )
-      })
+      }).toThrow(/not deployed/i)
 
-      expect(mockWriteContract).toHaveBeenCalled()
+      expect(mockWriteContract).not.toHaveBeenCalled()
     })
 
     it('should track pending state', () => {
@@ -623,7 +623,7 @@ describe('useVaultRegistry - Extended Tests', () => {
 
   // ==================== useGuardianVote ====================
   describe('useGuardianVote', () => {
-    it('should cast guardian vote successfully', async () => {
+    it('should throw when recovery-claim contract is not deployed', async () => {
       const mockWriteContract = jest.fn()
       ;(useWriteContract as Mock).mockReturnValue({
         writeContract: mockWriteContract,
@@ -634,11 +634,11 @@ describe('useVaultRegistry - Extended Tests', () => {
 
       const { result } = renderHook(() => useGuardianVote())
 
-      act(() => {
+      expect(() => {
         result.current.vote(BigInt(1), true)
-      })
+      }).toThrow(/not deployed/i)
 
-      expect(mockWriteContract).toHaveBeenCalled()
+      expect(mockWriteContract).not.toHaveBeenCalled()
     })
 
     it('should track voting state', () => {
@@ -657,7 +657,7 @@ describe('useVaultRegistry - Extended Tests', () => {
 
   // ==================== useChallengeClaim ====================
   describe('useChallengeClaim', () => {
-    it('should challenge claim successfully', () => {
+    it('should throw when recovery-claim contract is not deployed', () => {
       const mockWriteContract = jest.fn()
       ;(useWriteContract as Mock).mockReturnValue({
         writeContract: mockWriteContract,
@@ -668,11 +668,11 @@ describe('useVaultRegistry - Extended Tests', () => {
 
       const { result } = renderHook(() => useChallengeClaim())
 
-      act(() => {
+      expect(() => {
         result.current.challenge(BigInt(1), 'Invalid claim - owner is alive')
-      })
+      }).toThrow(/not deployed/i)
 
-      expect(mockWriteContract).toHaveBeenCalled()
+      expect(mockWriteContract).not.toHaveBeenCalled()
     })
 
     it('should track challenging state', () => {

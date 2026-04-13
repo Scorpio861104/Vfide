@@ -140,9 +140,9 @@ export function ProfileSettings() {
                 type="text"
                 value={formData.alias}
                 onChange={(e) =>  handleInputChange('alias', e.target.value)}
-                placeholder="Enter your display name"
+               
                 maxLength={50}
-                className="w-full pl-10 pr-4 py-3 bg-zinc-950 border border-zinc-700 rounded-lg text-zinc-100 placeholder:text-zinc-500 focus:border-cyan-400 focus:outline-none transition-colors"
+                className="w-full pl-10 pr-4 py-3 bg-zinc-950 border border-zinc-700 rounded-lg text-zinc-100  focus:border-cyan-400 focus:outline-none transition-colors"
               />
             </div>
             <p className="text-xs text-zinc-500 mt-1">
@@ -158,10 +158,10 @@ export function ProfileSettings() {
             <textarea
               value={formData.bio}
               onChange={(e) =>  handleInputChange('bio', e.target.value)}
-              placeholder="Tell us about yourself..."
+             
               maxLength={200}
               rows={4}
-              className="w-full px-4 py-3 bg-zinc-950 border border-zinc-700 rounded-lg text-zinc-100 placeholder:text-zinc-500 focus:border-cyan-400 focus:outline-none transition-colors resize-none"
+              className="w-full px-4 py-3 bg-zinc-950 border border-zinc-700 rounded-lg text-zinc-100  focus:border-cyan-400 focus:outline-none transition-colors resize-none"
             />
             <p className="text-xs text-zinc-500 mt-1">
               {formData.bio.length}/200 characters
@@ -179,8 +179,8 @@ export function ProfileSettings() {
                 type="email"
                 value={formData.email}
                 onChange={(e) =>  handleInputChange('email', e.target.value)}
-                placeholder="your.email@example.com"
-                className="w-full pl-10 pr-4 py-3 bg-zinc-950 border border-zinc-700 rounded-lg text-zinc-100 placeholder:text-zinc-500 focus:border-cyan-400 focus:outline-none transition-colors"
+               
+                className="w-full pl-10 pr-4 py-3 bg-zinc-950 border border-zinc-700 rounded-lg text-zinc-100  focus:border-cyan-400 focus:outline-none transition-colors"
               />
             </div>
             <p className="text-xs text-zinc-500 mt-1">
@@ -199,9 +199,9 @@ export function ProfileSettings() {
                 type="text"
                 value={formData.location}
                 onChange={(e) =>  handleInputChange('location', e.target.value)}
-                placeholder="City, Country"
+               
                 maxLength={50}
-                className="w-full pl-10 pr-4 py-3 bg-zinc-950 border border-zinc-700 rounded-lg text-zinc-100 placeholder:text-zinc-500 focus:border-cyan-400 focus:outline-none transition-colors"
+                className="w-full pl-10 pr-4 py-3 bg-zinc-950 border border-zinc-700 rounded-lg text-zinc-100  focus:border-cyan-400 focus:outline-none transition-colors"
               />
             </div>
           </div>
@@ -217,8 +217,8 @@ export function ProfileSettings() {
                 type="url"
                 value={formData.website}
                 onChange={(e) =>  handleInputChange('website', e.target.value)}
-                placeholder="https://yourwebsite.com"
-                className="w-full pl-10 pr-4 py-3 bg-zinc-950 border border-zinc-700 rounded-lg text-zinc-100 placeholder:text-zinc-500 focus:border-cyan-400 focus:outline-none transition-colors"
+               
+                className="w-full pl-10 pr-4 py-3 bg-zinc-950 border border-zinc-700 rounded-lg text-zinc-100  focus:border-cyan-400 focus:outline-none transition-colors"
               />
             </div>
           </div>

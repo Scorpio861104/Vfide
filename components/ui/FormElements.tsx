@@ -232,12 +232,12 @@ export function Input({
           type={type}
           value={value}
           onChange={(e) =>  onChange(e.target.value)}
-          placeholder={placeholder}
+         
           disabled={disabled}
           className={`
             w-full px-4 py-3 ${icon ? 'pl-12' : ''}
             bg-white/5 border rounded-xl
-            text-zinc-100 placeholder-[#6A6A6F]
+            text-zinc-100 
             focus:outline-none focus:ring-2 focus:ring-cyan-400/50 focus:border-cyan-400/50
             transition-all duration-300
             ${error ? 'border-red-500' : 'border-white/10 hover:border-white/20'}

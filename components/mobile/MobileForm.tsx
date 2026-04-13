@@ -74,7 +74,7 @@ export const MobileInput = React.forwardRef<HTMLInputElement, MobileInputProps>(
             border-2 border-zinc-700
             rounded-lg
             text-zinc-100
-            placeholder-[#A0A0A5]
+            
             focus:border-cyan-400
             focus:outline-none
             transition-colors

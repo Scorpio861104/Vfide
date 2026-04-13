@@ -200,7 +200,7 @@ export function ProductionSetupPanel() {
                 label="DEX Router"
                 value={dexRouter}
                 onChange={setDexRouter}
-                placeholder="0x... (e.g., SyncSwap)"
+               
                 required
               />
 
@@ -208,7 +208,7 @@ export function ProductionSetupPanel() {
                 label="USDC Address"
                 value={usdc}
                 onChange={setUsdc}
-                placeholder="0x..."
+               
                 required
               />
 

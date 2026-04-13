@@ -627,6 +627,10 @@ contract ProofScoreBurnRouter is Ownable, Pausable, ReentrancyGuard {
     ) {
         require(msg.sender == token, "only token");
 
+        if (from != address(0) && getTimeWeightedScore(from) == 0) {
+            emit SeerScoreZeroWarning(from, address(seer));
+        }
+
         // Reuse canonical fee computation via internal call, then reserve burn in the same tx.
         (burnAmount, sanctumAmount, ecosystemAmount, sanctumSink_, ecosystemSink_, burnSink_) =
             computeFees(from, to, amount);

@@ -19,10 +19,12 @@ describe('/api/quests/weekly', () => {
   const { withRateLimit } = require('@/lib/auth/rateLimit');
   const { requireAuth } = require('@/lib/auth/middleware');
   const { isAdmin } = require('@/lib/auth/middleware');
+  const requesterAddress = '0x1234567890123456789012345678901234567890';
+  const otherAddress = '0xabcdefabcdefabcdefabcdefabcdefabcdefabcd';
 
   beforeEach(() => {
     jest.clearAllMocks();
-    requireAuth.mockResolvedValue({ user: { address: '0x123' } });
+    requireAuth.mockResolvedValue({ user: { address: requesterAddress } });
     isAdmin.mockReturnValue(false);
   });
 
@@ -55,7 +57,7 @@ describe('/api/quests/weekly', () => {
       };
       getClient.mockResolvedValue(mockClient);
 
-      const request = new NextRequest('http://localhost:3000/api/quests/weekly?userAddress=0x123');
+      const request = new NextRequest(`http://localhost:3000/api/quests/weekly?userAddress=${requesterAddress}`);
       const response = await GET(request);
       const data = await response.json();
 
@@ -77,10 +79,10 @@ describe('/api/quests/weekly', () => {
 
     it('should return 403 for cross-user access', async () => {
       withRateLimit.mockResolvedValue(null);
-      requireAuth.mockResolvedValue({ user: { address: '0xabc' } });
+      requireAuth.mockResolvedValue({ user: { address: otherAddress } });
       isAdmin.mockReturnValue(false);
 
-      const request = new NextRequest('http://localhost:3000/api/quests/weekly?userAddress=0x123');
+      const request = new NextRequest(`http://localhost:3000/api/quests/weekly?userAddress=${requesterAddress}`);
       const response = await GET(request);
 
       expect(response.status).toBe(403);
@@ -90,7 +92,7 @@ describe('/api/quests/weekly', () => {
       withRateLimit.mockResolvedValue(null);
       requireAuth.mockResolvedValue({ user: { address: 'bad-address' } });
 
-      const request = new NextRequest('http://localhost:3000/api/quests/weekly?userAddress=0x123');
+      const request = new NextRequest(`http://localhost:3000/api/quests/weekly?userAddress=${requesterAddress}`);
       const response = await GET(request);
       const data = await response.json();
 

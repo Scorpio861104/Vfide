@@ -1,5 +1,7 @@
 # VFIDE Frontend Scaffold — Migration Guide
 
+> Status: Historical reference. Review current route structure and provider wiring in the live codebase before applying steps from this document.
+
 ## What's in this zip
 
 ```
@@ -84,7 +86,7 @@ scaffold/
 | (social) | social, social-hub, social-messaging, social-payments, feed, stories, endorsements, friends | Web3 + Social + WalletGate |
 | (security) | guardians, security-center, multisig, stealth, hardware-wallet, paper-wallet | Web3 + WalletGate |
 | (gamification) | quests, achievements, badges, leaderboard, headhunter, rewards | Web3 + Gamification + WalletGate |
-| (seer) | seer-service, flashlight, insights, agent | Web3 + WalletGate |
+| (seer) | seer-service, flashloan, insights, agent | Web3 + WalletGate |
 
 ### Phase 3: SSR conversion for marketing pages (1 hour)
 

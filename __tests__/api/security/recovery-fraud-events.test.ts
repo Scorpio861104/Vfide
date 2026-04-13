@@ -5,12 +5,20 @@ jest.mock('@/lib/auth/rateLimit', () => ({
   withRateLimit: jest.fn(),
 }));
 
+jest.mock('@/lib/auth/middleware', () => ({
+  requireAuth: jest.fn(),
+}));
+
 describe('/api/security/recovery-fraud-events', () => {
   const { withRateLimit } = require('@/lib/auth/rateLimit');
+  const { requireAuth } = require('@/lib/auth/middleware');
 
   beforeEach(() => {
     jest.clearAllMocks();
     withRateLimit.mockResolvedValue(null);
+    requireAuth.mockResolvedValue({
+      user: { address: '0x9999999999999999999999999999999999999999' },
+    });
   });
 
   it('accepts valid fraud telemetry payload', async () => {

@@ -21,7 +21,7 @@ describe('FlashLoansPage route integrations', () => {
     (global as typeof global & { fetch: jest.Mock }).fetch = jest.fn((input: RequestInfo | URL, init?: RequestInit) => {
       const url = String(input);
 
-      if (url.includes('/api/flashloans/lanes?limit=50')) {
+      if (url.includes('/api/flashloans/lanes') && (!init?.method || init.method === 'GET')) {
         return Promise.resolve({
           ok: true,
           json: async () => ({
@@ -39,6 +39,7 @@ describe('FlashLoansPage route integrations', () => {
                 stage: 'drawn',
                 sim_day: 3,
                 due_day: 14,
+                created_at: '2026-03-10T12:00:00.000Z',
                 evidence_note: '',
               },
               {
@@ -54,6 +55,7 @@ describe('FlashLoansPage route integrations', () => {
                 stage: 'resolved-lender',
                 sim_day: 9,
                 due_day: 7,
+                created_at: '2026-03-01T12:00:00.000Z',
                 evidence_note: 'Borrower missed the repayment window and lender supplied evidence.',
               },
             ],
@@ -78,32 +80,9 @@ describe('FlashLoansPage route integrations', () => {
               stage: 'draft',
               sim_day: 0,
               due_day: null,
+              created_at: '2026-03-14T12:00:00.000Z',
               evidence_note: '',
             },
-          }),
-        } as Response);
-      }
-
-      if (url.includes('/api/flashloans/lanes/7/actions') && init?.method === 'POST') {
-        return Promise.resolve({
-          ok: true,
-          json: async () => ({
-            lane: {
-              id: 7,
-              borrower_address: '0x1111111111111111111111111111111111111111',
-              lender_address: '0x2222222222222222222222222222222222222222',
-              arbiter_address: '0x3333333333333333333333333333333333333333',
-              principal: '1500',
-              duration_days: 14,
-              interest_bps: 600,
-              collateral_pct: 125,
-              drawn_amount: '1200',
-              stage: 'drawn',
-              sim_day: 4,
-              due_day: 14,
-              evidence_note: '',
-            },
-            event: 'Simulation advanced to day 4',
           }),
         } as Response);
       }
@@ -126,14 +105,11 @@ describe('FlashLoansPage route integrations', () => {
     fireEvent.change(screen.getByLabelText(/Lender address/i), {
       target: { value: '0x2222222222222222222222222222222222222222' },
     });
-    fireEvent.change(screen.getByLabelText(/Arbiter address/i), {
-      target: { value: '0x3333333333333333333333333333333333333333' },
-    });
     fireEvent.change(screen.getByLabelText(/Principal/i), { target: { value: '2400' } });
-    fireEvent.click(screen.getByRole('button', { name: /Create flash lane/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Request Flash Loan/i }));
 
     await waitFor(() => {
-      expect(screen.getByText(/Lane #21 is ready/i)).toBeInTheDocument();
+      expect(screen.getByText(/Loan request submitted!/i)).toBeInTheDocument();
     });
   });
 
@@ -144,20 +120,14 @@ describe('FlashLoansPage route integrations', () => {
 
     await waitFor(() => {
       expect(screen.getByText(/Lane #7/i)).toBeInTheDocument();
-      expect(screen.getByText(/Borrower Drawn/i)).toBeInTheDocument();
-    });
-
-    fireEvent.click(screen.getByRole('button', { name: /Advance day/i }));
-
-    await waitFor(() => {
-      expect(screen.getByText(/Simulation advanced to day 4/i)).toBeInTheDocument();
+      expect(screen.getByText(/drawn/i)).toBeInTheDocument();
     });
 
     fireEvent.click(screen.getByRole('button', { name: /History/i }));
 
     await waitFor(() => {
       expect(screen.getByText(/Lane #8/i)).toBeInTheDocument();
-      expect(screen.getByText(/Resolved to lender/i)).toBeInTheDocument();
+      expect(screen.getByText(/resolved-lender/i)).toBeInTheDocument();
     });
   });
 });

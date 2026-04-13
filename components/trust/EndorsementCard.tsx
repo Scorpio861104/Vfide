@@ -62,10 +62,10 @@ export function EndorsementCard({
               <input
                 type="text"
                 maxLength={160}
-                placeholder="Why you endorse them..."
+               
                 value={reason}
                 onChange={(e) =>  setReason(e.target.value)}
-                className="w-full text-xs bg-gray-900/50 border border-amber-500/30 rounded px-2 py-1.5 text-white placeholder-gray-500"
+                className="w-full text-xs bg-gray-900/50 border border-amber-500/30 rounded px-2 py-1.5 text-white "
               />
               <div className="flex gap-2">
                 <button

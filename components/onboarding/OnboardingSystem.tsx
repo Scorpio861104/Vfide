@@ -4,12 +4,12 @@
  * Detects first-time users and shows a progressive onboarding flow:
  * 
  * Buyer path:
- *   1. Create account (email/phone) → wallet auto-created
+ *   1. Connect wallet → browse
  *   2. Browse a store / scan a QR code
  *   3. Make first payment → celebration
  * 
  * Seller path:
- *   1. Create account (email/phone) → wallet + vault auto-created
+ *   1. Connect wallet → vault auto-created
  *   2. Quick setup: name + category + 1 product
  *   3. Share store link → first customer arrives → celebration
  * 
@@ -92,7 +92,7 @@ function defaultState(): OnboardingState {
 
 function getBuyerSteps(state: OnboardingState): OnboardingStep[] {
   return [
-    { id: 'account', label: 'Create account', description: 'Sign up with email or phone — takes 10 seconds', completed: state.accountCreated, current: !state.accountCreated },
+    { id: 'account', label: 'Create account', description: 'Connect your wallet to get started — takes 10 seconds', completed: state.accountCreated, current: !state.accountCreated },
     { id: 'browse', label: 'Find something', description: 'Browse the marketplace or scan a QR code', completed: state.firstPurchase, current: state.accountCreated && !state.firstPurchase },
     { id: 'purchase', label: 'Make your first payment', description: 'Pay directly — no middleman fees', completed: state.firstPurchase, current: false },
   ];
@@ -100,7 +100,7 @@ function getBuyerSteps(state: OnboardingState): OnboardingStep[] {
 
 function getSellerSteps(state: OnboardingState): OnboardingStep[] {
   return [
-    { id: 'account', label: 'Create account', description: 'Sign up with email or phone — takes 10 seconds', completed: state.accountCreated, current: !state.accountCreated },
+    { id: 'account', label: 'Create account', description: 'Connect your wallet to get started — takes 10 seconds', completed: state.accountCreated, current: !state.accountCreated },
     { id: 'store', label: 'Name your store', description: 'Pick a name and category', completed: state.storeCreated, current: state.accountCreated && !state.storeCreated },
     { id: 'product', label: 'Add a product', description: 'Add at least one thing you sell', completed: state.firstProductAdded, current: state.storeCreated && !state.firstProductAdded },
     { id: 'share', label: 'Share your link', description: 'Send your store link to a customer', completed: state.storeLinkShared, current: state.firstProductAdded && !state.storeLinkShared },

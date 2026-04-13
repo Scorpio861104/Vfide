@@ -776,8 +776,8 @@ export function SettingsDashboard({
               type="email"
               value={settings.security.backupEmail || ''}
               onChange={(e) =>  updateSecurity({ backupEmail: e.target.value })}
-              placeholder="user@company.com"
-              className="w-full px-3 py-2 border border-zinc-700 rounded-lg bg-zinc-800 text-gray-100 placeholder-gray-500 focus:ring-2 focus:ring-yellow-500/50 focus:border-yellow-500 transition-all outline-none"
+             
+              className="w-full px-3 py-2 border border-zinc-700 rounded-lg bg-zinc-800 text-gray-100  focus:ring-2 focus:ring-yellow-500/50 focus:border-yellow-500 transition-all outline-none"
               aria-label="Backup email"
             />
           </motion.div>
@@ -873,8 +873,8 @@ export function SettingsDashboard({
             <textarea
               value={importText}
               onChange={(e) =>  setImportText(e.target.value)}
-              placeholder="Paste JSON here..."
-              className="w-full h-32 px-3 py-2 border border-zinc-700 rounded-lg bg-zinc-800 text-gray-100 placeholder-gray-500 focus:ring-2 focus:ring-yellow-500/50 focus:border-yellow-500 transition-all outline-none resize-none font-mono text-xs"
+             
+              className="w-full h-32 px-3 py-2 border border-zinc-700 rounded-lg bg-zinc-800 text-gray-100  focus:ring-2 focus:ring-yellow-500/50 focus:border-yellow-500 transition-all outline-none resize-none font-mono text-xs"
               aria-label="Import settings JSON"
             />
             <motion.button

@@ -5,12 +5,20 @@ jest.mock('@/lib/auth/rateLimit', () => ({
   withRateLimit: jest.fn(),
 }));
 
+jest.mock('@/lib/auth/middleware', () => ({
+  requireAuth: jest.fn(),
+}));
+
 describe('/api/security/next-of-kin-fraud-events', () => {
   const { withRateLimit } = require('@/lib/auth/rateLimit');
+  const { requireAuth } = require('@/lib/auth/middleware');
 
   beforeEach(() => {
     jest.clearAllMocks();
     withRateLimit.mockResolvedValue(null);
+    requireAuth.mockResolvedValue({
+      user: { address: '0x9999999999999999999999999999999999999999' },
+    });
   });
 
   it('accepts valid next of kin fraud telemetry payload', async () => {

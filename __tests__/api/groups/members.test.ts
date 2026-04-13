@@ -238,7 +238,7 @@ describe('/api/groups/members', () => {
       const data = await response.json();
 
       expect(response.status).toBe(400);
-      expect(data.error).toContain('Invalid role value');
+      expect(data.error).toContain('Invalid request body');
       expect(query).not.toHaveBeenCalled();
     });
 
@@ -327,7 +327,7 @@ describe('/api/groups/members', () => {
       const data = await response.json();
 
       expect(response.status).toBe(400);
-      expect(data.error).toContain('Invalid role value');
+      expect(data.error).toContain('Invalid request body');
       expect(query).not.toHaveBeenCalled();
     });
 

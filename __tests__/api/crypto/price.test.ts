@@ -150,7 +150,7 @@ describe('/api/crypto/price', () => {
       const data = await response.json();
 
       expect(data.market.totalSupply).toBe(200_000_000);
-      expect(data.market.circulatingSupply).toBe(50_000_000);
+      expect(data.market.circulatingSupply).toBe(35_000_000);
       expect(data.market.marketCap).toBe(data.market.totalSupply * data.prices.vfide.usd);
       expect(data.market.circulatingMarketCap).toBe(data.market.circulatingSupply * data.prices.vfide.usd);
     });

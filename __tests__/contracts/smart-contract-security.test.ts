@@ -67,9 +67,6 @@ describe('R-041 – Role boundary regression', () => {
       'setVaultHub',
       'applyVaultHub',
       'cancelVaultHub',
-      'setSecurityHub',
-      'applySecurityHub',
-      'cancelSecurityHub',
       'setLedger',
       'applyLedger',
       'cancelLedger',
@@ -90,10 +87,7 @@ describe('R-041 – Role boundary regression', () => {
       'lockPolicy',
       'setCircuitBreaker',
       'confirmCircuitBreaker',
-      'setSecurityBypass',
       'setFeeBypass',
-      'setFrozen',
-      'setBlacklist',
       'setAntiWhale',
       'setWhaleLimitExempt',
     ];
@@ -140,7 +134,8 @@ describe('R-042 – Timelock bypass paths', () => {
     });
 
     it('FREEZE_DELAY constant equals 1 hour (pre-blacklist cool-off)', () => {
-      expect(tokenSrc).toMatch(/FREEZE_DELAY\s*=\s*1\s+hours/);
+      // Freeze/blacklist controls were removed to preserve non-custodial design.
+      expect(tokenSrc).toMatch(/Freeze\/Blacklist REMOVED/);
     });
 
     it('circuit breaker activation has a pending delay guard (H-01 FIX)', () => {
@@ -263,15 +258,17 @@ describe('R-044 – Guardian and recovery flow deadlocks', () => {
   });
 
   it('approveForceRecovery guards against non-approver callers (VH:not-approver)', () => {
-    expect(vaultHubSrc).toMatch(/require\s*\(\s*isApprover\s*,\s*"VH:not-approver"\s*\)/);
+    expect(vaultHubSrc).toMatch(/function\s+approveForceRecovery\([^)]*\)\s+external\s+pure/);
+    expect(vaultHubSrc).toMatch(/revert\(["']VH: force recovery disabled - non-custodial["']\)/);
   });
 
   it('approveForceRecovery prevents double-voting via recoveryApprovals mapping', () => {
-    expect(vaultHubSrc).toMatch(/recoveryApprovals\[vault\]\[msg\.sender\]\[nonce\]/);
+    // Legacy mapping remains declared for storage compatibility.
+    expect(vaultHubSrc).toMatch(/mapping\(address\s*=>\s*mapping\(address\s*=>\s*mapping\(uint256\s*=>\s*bool\)\)\)\s+public\s+recoveryApprovals/);
   });
 
   it('recovery candidate mismatch is rejected (VH:candidate-mismatch)', () => {
-    expect(vaultHubSrc).toMatch(/require\s*\(\s*candidate\s*==\s*newOwner\s*,\s*"VH:candidate-mismatch"\s*\)/);
+    expect(vaultHubSrc).toMatch(/revert\(["']VH: force recovery disabled - non-custodial["']\)/);
   });
 
   it('TypeScript model: 3-of-3 approval reaches RECOVERY_APPROVALS_REQUIRED', () => {

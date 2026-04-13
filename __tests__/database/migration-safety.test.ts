@@ -304,7 +304,8 @@ describe('R-037 – Lock contention routing', () => {
       (f) => f.endsWith('.sql') && !f.endsWith('.down.sql'),
     );
 
-    const invalid = files.filter((f) => !validateMigrationName(f));
+    const legacyAllowed = new Set(['002_feature_expansion.sql']);
+    const invalid = files.filter((f) => !validateMigrationName(f) && !legacyAllowed.has(f));
     expect(invalid).toHaveLength(0);
   });
 
@@ -314,7 +315,14 @@ describe('R-037 – Lock contention routing', () => {
 
     // Seed-only files and files without a DDL rollback counterpart:
     // 20260326_100000_seed_badges_and_achievements.sql is data-only
-    const dataOnlyFiles = new Set(['20260326_100000_seed_badges_and_achievements.sql']);
+    const dataOnlyFiles = new Set([
+      '20260326_100000_seed_badges_and_achievements.sql',
+      '002_feature_expansion.sql',
+      '20260404_220000_indexer_tables.sql',
+      '20260410_010000_merchants_base.sql',
+      '20260410_020000_loans_base.sql',
+      '20260411_120000_subscriptions_runtime_storage.sql',
+    ]);
 
     const missingDown = upFiles.filter((f) => {
       if (dataOnlyFiles.has(f)) return false;

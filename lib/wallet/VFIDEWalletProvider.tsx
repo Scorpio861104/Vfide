@@ -68,12 +68,36 @@ export function VFIDEWalletProvider({ children }: { children: ReactNode }) {
 
     try {
       if (method === 'wallet') {
-        // Traditional wallet flow — delegate to RainbowKit/wagmi
-        // This path keeps full compatibility with existing MetaMask users
+        // Traditional wallet flow via injected EIP-1193 provider.
         setIsEmbedded(false);
-        // TODO: Trigger RainbowKit modal
-        // const { address } = await connectWallet();
-        throw new Error('Traditional wallet flow: wire to RainbowKit');
+
+        const eth = typeof window !== 'undefined' ? (window as Window & { ethereum?: { request: (args: { method: string }) => Promise<unknown> } }).ethereum : undefined;
+        if (!eth) {
+          throw new Error('No browser wallet detected. Install MetaMask or use embedded sign-in.');
+        }
+
+        const accounts = await eth.request({ method: 'eth_requestAccounts' });
+        const selected = Array.isArray(accounts) && typeof accounts[0] === 'string' ? accounts[0] : null;
+        if (!selected) {
+          throw new Error('Wallet connection failed. No account was returned by provider.');
+        }
+
+        setStatus('creating-vault');
+        const vaultResult = await ensureVaultExists(selected);
+
+        setAccount({
+          address: selected,
+          displayName: null,
+          email: null,
+          phone: null,
+          authMethod: 'wallet',
+          hasVault: true,
+          vaultAddress: vaultResult.vaultAddress,
+          proofScore: 0,
+        });
+
+        setStatus('connected');
+        return;
       }
 
       // Embedded wallet flow

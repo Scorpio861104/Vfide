@@ -74,11 +74,11 @@ export default function MerchantLocationsPage() {
 
           {showAdd && (
             <div className="mb-6 rounded-2xl border border-white/10 bg-white/5 p-4 space-y-3">
-              <input value={form.name} onChange={(event) =>  setForm((current) => ({ ...current, name: event.target.value }))} placeholder="Location name" className="w-full rounded-xl border border-white/10 bg-black/20 px-3 py-2.5 text-white" />
-              <input value={form.address} onChange={(event) =>  setForm((current) => ({ ...current, address: event.target.value }))} placeholder="Street address" className="w-full rounded-xl border border-white/10 bg-black/20 px-3 py-2.5 text-white" />
+              <input value={form.name} onChange={(event) =>  setForm((current) => ({ ...current, name: event.target.value }))} className="w-full rounded-xl border border-white/10 bg-black/20 px-3 py-2.5 text-white" />
+              <input value={form.address} onChange={(event) =>  setForm((current) => ({ ...current, address: event.target.value }))} className="w-full rounded-xl border border-white/10 bg-black/20 px-3 py-2.5 text-white" />
               <div className="grid gap-3 md:grid-cols-2">
-                <input value={form.city} onChange={(event) =>  setForm((current) => ({ ...current, city: event.target.value }))} placeholder="City" className="w-full rounded-xl border border-white/10 bg-black/20 px-3 py-2.5 text-white" />
-                <input value={form.country} onChange={(event) =>  setForm((current) => ({ ...current, country: event.target.value }))} placeholder="Country" className="w-full rounded-xl border border-white/10 bg-black/20 px-3 py-2.5 text-white" />
+                <input value={form.city} onChange={(event) =>  setForm((current) => ({ ...current, city: event.target.value }))} className="w-full rounded-xl border border-white/10 bg-black/20 px-3 py-2.5 text-white" />
+                <input value={form.country} onChange={(event) =>  setForm((current) => ({ ...current, country: event.target.value }))} className="w-full rounded-xl border border-white/10 bg-black/20 px-3 py-2.5 text-white" />
               </div>
               <button type="button" onClick={() => void handleAdd()} disabled={!form.name.trim()} className="rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-50">Save location</button>
             </div>

@@ -320,7 +320,7 @@ describe('R-055 – Proposal payload validation', () => {
   });
 
   it('proposal count is capped (anti-spam)', () => {
-    expect(daoSrc).toMatch(/require\(proposalCount < MAX_PROPOSALS, "DAO: proposal cap reached"\)/);
+    expect(daoSrc).toMatch(/require\(activeProposalCount < MAX_PROPOSALS, "DAO: proposal cap reached"\)/);
   });
 
   it('resubmission cooldown exists for withdrawn proposal hashes', () => {

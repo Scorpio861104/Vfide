@@ -65,7 +65,7 @@ if $CLEANUP; then
              governance dao-hub council appeals \
              guardians security-center multisig stealth hardware-wallet paper-wallet \
              quests achievements badges leaderboard headhunter rewards \
-             seer-service flashlight insights agent; do
+             seer-service flashloan insights agent; do
     if [ -d "app/$dir" ] && [ -z "$(ls -A "app/$dir" 2>/dev/null)" ]; then
       rmdir "app/$dir"
       echo -e "  ${GREEN}✓${NC} Removed empty app/$dir"
@@ -127,7 +127,7 @@ done
 
 # ── (seer) — AI services ───────────────────────────────────────────────────
 echo -e "\n${GREEN}(seer) — Seer AI pages${NC}"
-for route in seer-service flashlight insights agent; do
+for route in seer-service flashloan insights agent; do
   move_route "$route" "(seer)"
 done
 

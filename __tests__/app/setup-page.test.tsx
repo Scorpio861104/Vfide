@@ -7,10 +7,7 @@ let mockAccountState = {
   address: '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' as `0x${string}`,
 };
 
-let mockChainId = 84532;
-let mockBalance = { value: 100000000000000000n, decimals: 18 } as { value: bigint; decimals: number } | undefined;
-
-const mockCopyWithId = jest.fn();
+const mockFetch: jest.MockedFunction<(input: RequestInfo | URL, init?: RequestInit) => Promise<Response>> = jest.fn();
 
 const renderSetupPage = () => {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -21,35 +18,6 @@ const renderSetupPage = () => {
 
 jest.mock('wagmi', () => ({
   useAccount: () => mockAccountState,
-  useChainId: () => mockChainId,
-  useBalance: () => ({ data: mockBalance }),
-}));
-
-jest.mock('@rainbow-me/rainbowkit', () => ({
-  ConnectButton: () => <button>Connect Wallet</button>,
-}));
-
-jest.mock('@/lib/testnet', () => ({
-  CURRENT_CHAIN_ID: 84532,
-  FAUCET_URLS: {
-    coinbase: 'https://coinbase.example/faucet',
-    alchemy: 'https://alchemy.example/faucet',
-    quicknode: 'https://quicknode.example/faucet',
-  },
-}));
-
-jest.mock('@/lib/validation', () => ({
-  safeParseFloat: (value: string, fallback: number) => {
-    const n = Number(value);
-    return Number.isFinite(n) ? n : fallback;
-  },
-}));
-
-jest.mock('@/lib/hooks/useCopyToClipboard', () => ({
-  useCopyWithId: () => ({
-    copiedId: null,
-    copyWithId: mockCopyWithId,
-  }),
 }));
 
 describe('Setup page pathways', () => {
@@ -59,60 +27,116 @@ describe('Setup page pathways', () => {
       isConnected: true,
       address: '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
     };
-    mockChainId = 84532;
-    mockBalance = { value: 100000000000000000n, decimals: 18 };
 
-    const win = window as unknown as { ethereum?: { request: (args: { method: string }) => Promise<unknown> } };
-    if (!win.ethereum) {
-      win.ethereum = {
-        request: jest.fn(async ({ method }: { method: string }) => {
-          if (method === 'wallet_switchEthereumChain') {
-            throw { code: 4902 };
-          }
-          return true;
-        }),
-      };
-    } else {
-      win.ethereum.request = jest.fn(async ({ method }: { method: string }) => {
-        if (method === 'wallet_switchEthereumChain') {
-          throw { code: 4902 };
-        }
-        return true;
-      });
-    }
+    mockFetch.mockReset();
+    mockFetch.mockImplementation(async (input) => {
+      const url = String(input);
+      if (url.includes('/api/users/')) {
+        return new Response(
+          JSON.stringify({
+            user: {
+              username: 'tester',
+              display_name: 'Test User',
+              bio: 'bio',
+              avatar_url: '',
+              is_verified: true,
+              stats: {
+                badge_count: 1,
+                friend_count: 2,
+                proposal_count: 3,
+                endorsement_count: 4,
+              },
+            },
+          }),
+          { status: 200, headers: { 'Content-Type': 'application/json' } }
+        );
+      }
+
+      if (url.includes('/api/user/state')) {
+        return new Response(
+          JSON.stringify({
+            address: mockAccountState.address,
+            proofScore: 780,
+            isMerchant: true,
+            badges: ['OG'],
+            activeLoanCount: 1,
+            unresolvedDefaults: 0,
+          }),
+          { status: 200, headers: { 'Content-Type': 'application/json' } }
+        );
+      }
+
+      if (url.includes('/api/stats/protocol')) {
+        return new Response(
+          JSON.stringify({
+            totalUsers: 1000,
+            totalVolume: '100000',
+            averageProofScore: 620,
+            activeLenders: 50,
+            activeLoans: 10,
+          }),
+          { status: 200, headers: { 'Content-Type': 'application/json' } }
+        );
+      }
+
+      if (url.includes('/api/security/logs')) {
+        return new Response(
+          JSON.stringify({
+            logs: [
+              {
+                id: '1',
+                ts: new Date().toISOString(),
+                type: 'login',
+                severity: 'info',
+                message: 'Wallet login',
+              },
+            ],
+          }),
+          { status: 200, headers: { 'Content-Type': 'application/json' } }
+        );
+      }
+
+      return new Response(JSON.stringify({}), { status: 200, headers: { 'Content-Type': 'application/json' } });
+    });
+
+    Object.defineProperty(global, 'fetch', {
+      configurable: true,
+      writable: true,
+      value: mockFetch,
+    });
   });
 
   it('shows wallet connect step when disconnected', () => {
     mockAccountState = {
       isConnected: false,
-      address: '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+      address: undefined as unknown as `0x${string}`,
     };
 
     renderSetupPage();
 
-    expect(screen.getByRole('heading', { name: /Testnet Setup Guide/i })).toBeTruthy();
-    expect(screen.getByRole('button', { name: /Connect Wallet/i })).toBeTruthy();
+    expect(screen.getByRole('heading', { name: /Setup/i })).toBeTruthy();
+    expect(screen.getByText(/Connect your wallet to manage your account/i)).toBeTruthy();
   });
 
-  it('renders completion state when connected on base sepolia with balance', () => {
+  it('renders account tab profile editor when connected', async () => {
     renderSetupPage();
 
-    expect(screen.getByText(/You're All Set!/i)).toBeTruthy();
-    expect(screen.getByRole('link', { name: /Start Using VFIDE/i }).getAttribute('href')).toBe('/token-launch');
+    expect(await screen.findByText(/Edit Profile/i)).toBeTruthy();
+    expect(screen.getByRole('button', { name: /Save Changes/i })).toBeTruthy();
   });
 
-  it('attempts add-network flow and supports copy actions in manual setup', async () => {
-    mockChainId = 1;
-    mockBalance = { value: 0n, decimals: 18 };
+  it('switches tabs and shows vault plus security sections', async () => {
     renderSetupPage();
 
-    fireEvent.click(screen.getByRole('button', { name: /Add .* to MetaMask/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Vault/i }));
+    expect(await screen.findByText(/Merchant Status/i)).toBeTruthy();
+    expect(screen.getByText(/Network Overview/i)).toBeTruthy();
+
+    fireEvent.click(screen.getByRole('button', { name: /Security/i }));
 
     await waitFor(() => {
-      expect(screen.getByText(/Network added!/i)).toBeTruthy();
+      expect(screen.getByText(/Security Event Log/i)).toBeTruthy();
+      expect(screen.getByText(/Wallet login/i)).toBeTruthy();
     });
-
-    fireEvent.click(screen.getByRole('button', { name: /0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa/i }));
-    expect(mockCopyWithId).toHaveBeenCalled();
   });
 });

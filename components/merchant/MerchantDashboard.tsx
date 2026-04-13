@@ -183,8 +183,8 @@ export function MerchantDashboard() {
                     type="text"
                     value={businessName}
                     onChange={(e) =>  setBusinessName(e.target.value)}
-                    placeholder="e.g., Acme Coffee Shop"
-                    className="w-full bg-black/40 border border-gray-600 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:border-purple-500 focus:outline-none transition-colors"
+                   
+                    className="w-full bg-black/40 border border-gray-600 rounded-lg px-4 py-3 text-white  focus:border-purple-500 focus:outline-none transition-colors"
                   />
                 </motion.div>
 
@@ -422,8 +422,8 @@ export function MerchantDashboard() {
               type="text"
               value={customPayout}
               onChange={(e) =>  setCustomPayout(e.target.value)}
-              placeholder="0x... (optional)"
-              className="w-full bg-black/40 border border-gray-600 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:border-blue-500 focus:outline-none text-sm"
+             
+              className="w-full bg-black/40 border border-gray-600 rounded-lg px-4 py-3 text-white  focus:border-blue-500 focus:outline-none text-sm"
             />
 
             <button

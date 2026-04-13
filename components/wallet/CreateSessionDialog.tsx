@@ -64,7 +64,7 @@ export function CreateSessionDialog({ isOpen, onClose, onSubmit, targetContracts
               </select>
             ) : (
               <input type="text" value={selectedContract} onChange={(e) =>  setSelectedContract(e.target.value as Address)}
-                placeholder="0x..."
+               
                 className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 font-mono" required />
             )}
           </div>

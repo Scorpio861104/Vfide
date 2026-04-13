@@ -181,7 +181,7 @@ export default function SimplifiedPOS() {
             <input
               value={search}
               onChange={(e: ChangeEvent<HTMLInputElement>) => setSearch(e.target.value)}
-              placeholder={t('common.search', 'Search products')}
+             
               className="min-w-[220px] flex-1 rounded-md border bg-background px-3 py-2 text-sm"
             />
             <Button variant={voice.enabled ? 'default' : 'outline'} onClick={voice.toggle}>

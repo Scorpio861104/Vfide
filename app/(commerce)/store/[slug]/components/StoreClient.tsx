@@ -11,6 +11,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Search, ShoppingCart, Share2, Filter, Grid, List, Package } from 'lucide-react';
 import { MerchantTrustBadge } from '@/components/merchant/MerchantTrustBadge';
 import { Footer } from '@/components/layout/Footer';
+import { CheckoutPanel } from '@/components/checkout/CheckoutPanel';
+import { useCart } from '@/providers/CartProvider';
 import { ProductCard } from './ProductCard';
 import { ShareStoreSheet } from './ShareStoreSheet';
 
@@ -42,6 +44,16 @@ export function StoreClient({ merchant, initialProducts, slug }: StoreClientProp
   const [sortBy, setSortBy] = useState<'default' | 'price-asc' | 'price-desc'>('default');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [showShare, setShowShare] = useState(false);
+  const [showCheckout, setShowCheckout] = useState(false);
+  const { items, clear } = useCart();
+
+  const cartCount = items.reduce((sum, item) => sum + item.quantity, 0);
+  const checkoutItems = items.map((item) => ({
+    name: item.name,
+    price: item.unitPrice,
+    qty: item.quantity,
+  }));
+  const firstItem = items[0];
 
   const filtered = useMemo(() => {
     let result = initialProducts;
@@ -86,8 +98,8 @@ export function StoreClient({ merchant, initialProducts, slug }: StoreClientProp
                 type="text"
                 value={search}
                 onChange={(e) =>  setSearch(e.target.value)}
-                placeholder="Search products..."
-                className="w-full pl-10 pr-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white text-sm placeholder-gray-500 focus:border-cyan-500/50 focus:outline-none"
+               
+                className="w-full pl-10 pr-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white text-sm  focus:border-cyan-500/50 focus:outline-none"
               />
             </div>
 
@@ -132,6 +144,36 @@ export function StoreClient({ merchant, initialProducts, slug }: StoreClientProp
       {/* Product Grid */}
       <section className="py-8">
         <div className="container mx-auto px-4 max-w-6xl">
+          {cartCount > 0 && !showCheckout && (
+            <div className="mb-4 rounded-xl border border-white/10 bg-white/3 p-4 flex flex-wrap items-center gap-3 justify-between">
+              <div>
+                <div className="text-white font-semibold">{cartCount} item in cart</div>
+                {firstItem && <div className="text-gray-400 text-sm">${firstItem.unitPrice.toFixed(2)} each</div>}
+              </div>
+              <button
+                onClick={() => setShowCheckout(true)}
+                className="px-4 py-2.5 rounded-lg bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 hover:bg-cyan-500/30"
+              >
+                Checkout
+              </button>
+            </div>
+          )}
+
+          {showCheckout && (
+            <div className="mb-6">
+              <CheckoutPanel
+                items={checkoutItems}
+                merchantAddress={merchant.merchant_address as `0x${string}`}
+                merchantName={merchant.display_name}
+                onComplete={() => {
+                  clear();
+                  setShowCheckout(false);
+                }}
+                onCancel={() => setShowCheckout(false)}
+              />
+            </div>
+          )}
+
           {filtered.length === 0 ? (
             <div className="text-center py-16">
               <Package size={48} className="mx-auto mb-4 text-gray-600" />

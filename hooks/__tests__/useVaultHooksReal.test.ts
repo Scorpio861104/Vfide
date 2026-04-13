@@ -10,6 +10,7 @@ jest.mock('wagmi', () => ({
   useWriteContract: jest.fn(),
   useWaitForTransactionReceipt: jest.fn(),
   useChainId: jest.fn(),
+  usePublicClient: jest.fn(),
   useWatchContractEvent: jest.fn(),
 }))
 
@@ -24,9 +25,11 @@ jest.mock('@/lib/abis', () => ({
 // Mock contracts
 jest.mock('@/lib/contracts', () => ({
   CONTRACT_ADDRESSES: {
-    VFIDE_TOKEN: '0x1234567890123456789012345678901234567890',
-    VAULT_HUB: '0x2345678901234567890123456789012345678901',
+    VFIDEToken: '0x1234567890123456789012345678901234567890',
+    VaultHub: '0x2345678901234567890123456789012345678901',
   },
+  ACTIVE_VAULT_IMPLEMENTATION: 'uservault',
+  ACTIVE_VAULT_ABI: [],
 }))
 
 // Mock utils
@@ -34,7 +37,7 @@ jest.mock('@/lib/utils', () => ({
   devLog: jest.fn(),
 }))
 
-import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi'
+import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt, useChainId, usePublicClient } from 'wagmi'
 import {
   useUserVault,
   useCreateVault,
@@ -66,6 +69,10 @@ describe('useVaultHooks - Comprehensive Tests', () => {
     ;(useAccount as Mock).mockReturnValue({
       address: mockAddress,
       isConnected: true,
+    })
+    ;(useChainId as Mock).mockReturnValue(84532)
+    ;(usePublicClient as Mock).mockReturnValue({
+      waitForTransactionReceipt: jest.fn().mockResolvedValue({}),
     })
     ;(useWriteContract as Mock).mockReturnValue({
       writeContractAsync: jest.fn().mockResolvedValue(mockTxHash),
@@ -134,10 +141,10 @@ describe('useVaultHooks - Comprehensive Tests', () => {
 
   // ==================== useCreateVault ====================
   describe('useCreateVault', () => {
-    it('should call createVault function', () => {
-      const mockWriteContract = jest.fn()
+    it('should call createVault function', async () => {
+      const mockWriteContractAsync = jest.fn().mockResolvedValue(mockTxHash)
       ;(useWriteContract as Mock).mockReturnValue({
-        writeContract: mockWriteContract,
+        writeContractAsync: mockWriteContractAsync,
         data: undefined,
         isPending: false,
       })
@@ -147,11 +154,11 @@ describe('useVaultHooks - Comprehensive Tests', () => {
       expect(result.current.isCreating).toBe(false)
       expect(result.current.txHash).toBeUndefined()
 
-      act(() => {
-        result.current.createVault()
+      await act(async () => {
+        await result.current.createVault()
       })
 
-      expect(mockWriteContract).toHaveBeenCalledWith(
+      expect(mockWriteContractAsync).toHaveBeenCalledWith(
         expect.objectContaining({
           functionName: 'ensureVault',
         })
@@ -160,7 +167,7 @@ describe('useVaultHooks - Comprehensive Tests', () => {
 
     it('should track transaction pending state', () => {
       ;(useWriteContract as Mock).mockReturnValue({
-        writeContract: jest.fn(),
+        writeContractAsync: jest.fn(),
         data: undefined,
         isPending: true,
       })

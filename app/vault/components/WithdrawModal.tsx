@@ -70,7 +70,7 @@ export function WithdrawModal({
                 type="text"
                 value={withdrawRecipient}
                 onChange={(e) =>  setWithdrawRecipient(e.target.value)}
-                placeholder="0x..."
+               
                 className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white font-mono focus:outline-none focus:border-cyan-500/50"
               />
               {address && (
@@ -93,7 +93,7 @@ export function WithdrawModal({
                   type="number"
                   value={withdrawAmount}
                   onChange={(e) =>  setWithdrawAmount(e.target.value)}
-                  placeholder="0.00"
+                 
                   className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-cyan-500/50 pr-20"
                 />
                 <button

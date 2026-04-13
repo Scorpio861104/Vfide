@@ -29,7 +29,7 @@ describe('Developer page pathways', () => {
     fireEvent.click(screen.getByRole('button', { name: /webhooks/i }));
 
     expect(screen.getByRole('heading', { name: /Webhook URL/i })).toBeTruthy();
-    expect(screen.getByPlaceholderText(/https:\/\/yourapp\.com\/webhooks\/vfide/i)).toBeTruthy();
+    expect(screen.getByRole('textbox')).toBeTruthy();
     expect(screen.getByRole('button', { name: /Save Webhook/i })).toBeTruthy();
     expect(screen.getByText(/A payment was confirmed on-chain/i)).toBeTruthy();
   });

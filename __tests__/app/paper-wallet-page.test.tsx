@@ -34,8 +34,10 @@ jest.mock('lucide-react', () => {
 describe('Paper wallet page', () => {
   it('renders page header and security warning', () => {
     renderPage();
-    expect(screen.getByRole('heading', { name: /Paper Wallet Generator/i })).toBeTruthy();
-    expect(screen.getByText(/Important Security Information/i)).toBeTruthy();
-    expect(screen.getByText(/Select Wallet Type/i)).toBeTruthy();
+    expect(screen.getByText(/^Paper Wallet$/i)).toBeTruthy();
+    expect(screen.getByText(/Security Warning/i)).toBeTruthy();
+    expect(screen.getByRole('button', { name: /^Generate$/i })).toBeTruthy();
+    expect(screen.getByRole('button', { name: /Verify/i })).toBeTruthy();
+    expect(screen.getByRole('button', { name: /Guide/i })).toBeTruthy();
   });
 });

@@ -983,14 +983,16 @@ export default function WalletManager() {
                   transition={{ delay: 0.1 }}
                 >
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <label htmlFor="wallet-nickname" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Nickname
                     </label>
                     <MobileInput
+                      id="wallet-nickname"
                       type="text"
+                      aria-label="Wallet nickname"
                       value={walletNickname}
                       onChange={(e) => setWalletNickname(e.target.value)}
-                      placeholder="Enter wallet nickname"
+                     
                     />
                   </div>
                   <div className="flex gap-3">

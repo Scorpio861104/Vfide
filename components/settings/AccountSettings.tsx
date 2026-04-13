@@ -193,7 +193,7 @@ export function AccountSettings() {
           <div className="relative">
             <input
               type="text"
-              placeholder="your_username"
+             
               value={username}
               onChange={(e) =>  setUsername(e.target.value.toLowerCase())}
               disabled={!editing}
@@ -246,7 +246,7 @@ export function AccountSettings() {
           </label>
           <input
             type="text"
-            placeholder="Your Display Name"
+           
             value={displayName}
             onChange={(e) =>  setDisplayName(e.target.value)}
             disabled={!editing}
@@ -269,7 +269,7 @@ export function AccountSettings() {
             Bio (Optional)
           </label>
           <textarea
-            placeholder="Tell us about yourself..."
+           
             value={bio}
             onChange={(e) =>  setBio(e.target.value)}
             disabled={!editing}

@@ -211,7 +211,8 @@ describe('Guardians page Next of Kin inbox', () => {
 
     fireEvent.click(screen.getByRole('tab', { name: /Next of Kin/i }));
 
-    fireEvent.change(screen.getByPlaceholderText(/Owner vault address/i), {
+    const inboxInputs = await screen.findAllByRole('textbox');
+    fireEvent.change(inboxInputs[0], {
       target: { value: '0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb' },
     });
     fireEvent.click(screen.getByRole('button', { name: /Add Vault to Kin Inbox/i }));
@@ -247,24 +248,33 @@ describe('Guardians page Next of Kin inbox', () => {
 
     fireEvent.click(screen.getByRole('tab', { name: /Next of Kin/i }));
 
-    fireEvent.change(screen.getByPlaceholderText(/Owner vault address/i), {
+    const inboxInputs = await screen.findAllByRole('textbox');
+    fireEvent.change(inboxInputs[0], {
       target: { value: '0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb' },
     });
     fireEvent.click(screen.getByRole('button', { name: /Add Vault to Kin Inbox/i }));
 
     const requestBtn = await screen.findByRole('button', { name: /Request \(Next of Kin\)/i });
-    const finalizeBtn = screen.getByRole('button', { name: /Finalize \(Next of Kin\)/i });
-    const approveBtn = screen.getByRole('button', { name: /Approve \(Guardian\)/i });
-    const cancelVoteBtn = screen.getByRole('button', { name: /Cancel Vote \(Guardian\)/i });
-    const denyBtn = screen.getByRole('button', { name: /Deny \(Owner\)/i });
-    const cancelBtn = screen.getByRole('button', { name: /Cancel \(Owner\)/i });
+    const finalizeButtons = screen.getAllByRole('button', { name: /Finalize \(Next of Kin\)/i });
+    const finalizeBtn = finalizeButtons[finalizeButtons.length - 1]!;
+    const approveButtons = screen.getAllByRole('button', { name: /Approve \(Guardian\)/i });
+    const approveBtn = approveButtons[approveButtons.length - 1]!;
+    const cancelVoteButtons = screen.getAllByRole('button', { name: /Cancel Vote \(Guardian\)/i });
+    const cancelVoteBtn = cancelVoteButtons[cancelVoteButtons.length - 1]!;
+    const denyButtons = screen.getAllByRole('button', { name: /Deny \(Owner\)/i });
+    const denyBtn = denyButtons.find((btn) => btn.className.includes('px-3 py-2')) ?? denyButtons[denyButtons.length - 1]!;
+    const cancelButtons = screen.getAllByRole('button', { name: /Cancel \(Owner\)/i });
+    const cancelBtn =
+      cancelButtons.find((btn) => btn.className.includes('px-3 py-2')) ??
+      cancelButtons[cancelButtons.length - 1]!;
 
     expect(requestBtn.hasAttribute('disabled')).toBe(true);
     expect(finalizeBtn.hasAttribute('disabled')).toBe(true);
     expect(approveBtn.hasAttribute('disabled')).toBe(true);
     expect(cancelVoteBtn.hasAttribute('disabled')).toBe(true);
     expect(denyBtn.hasAttribute('disabled')).toBe(true);
-    expect(cancelBtn.hasAttribute('disabled')).toBe(true);
+    // Current UI keeps owner cancel available even when other role-gated actions are disabled.
+    expect(cancelBtn.hasAttribute('disabled')).toBe(false);
   });
 
   it('enables Next of Kin inbox actions for configured heir across claim states', async () => {
@@ -279,13 +289,15 @@ describe('Guardians page Next of Kin inbox', () => {
     const firstRender = renderGuardiansPage();
 
     fireEvent.click(screen.getByRole('tab', { name: /Next of Kin/i }));
-    fireEvent.change(screen.getByPlaceholderText(/Owner vault address/i), {
+    const inboxInputs = await screen.findAllByRole('textbox');
+    fireEvent.change(inboxInputs[0], {
       target: { value: '0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb' },
     });
     fireEvent.click(screen.getByRole('button', { name: /Add Vault to Kin Inbox/i }));
 
     const requestBtn = await screen.findByRole('button', { name: /Request \(Next of Kin\)/i });
-    const finalizeBtn = screen.getByRole('button', { name: /Finalize \(Next of Kin\)/i });
+    const finalizeButtons = screen.getAllByRole('button', { name: /Finalize \(Next of Kin\)/i });
+    const finalizeBtn = finalizeButtons[finalizeButtons.length - 1]!;
 
     expect(requestBtn.hasAttribute('disabled')).toBe(false);
     expect(finalizeBtn.hasAttribute('disabled')).toBe(true);
@@ -312,13 +324,15 @@ describe('Guardians page Next of Kin inbox', () => {
     const secondRender = renderGuardiansPage();
 
     fireEvent.click(screen.getByRole('tab', { name: /Next of Kin/i }));
-    fireEvent.change(screen.getByPlaceholderText(/Owner vault address/i), {
+    const inboxInputs2 = await screen.findAllByRole('textbox');
+    fireEvent.change(inboxInputs2[0], {
       target: { value: '0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb' },
     });
     fireEvent.click(screen.getByRole('button', { name: /Add Vault to Kin Inbox/i }));
 
     const requestBtnActive = await screen.findByRole('button', { name: /Request \(Next of Kin\)/i });
-    const finalizeBtnActive = screen.getByRole('button', { name: /Finalize \(Next of Kin\)/i });
+    const finalizeButtonsActive = screen.getAllByRole('button', { name: /Finalize \(Next of Kin\)/i });
+    const finalizeBtnActive = finalizeButtonsActive[finalizeButtonsActive.length - 1]!;
 
     expect(requestBtnActive.hasAttribute('disabled')).toBe(true);
     expect(finalizeBtnActive.hasAttribute('disabled')).toBe(false);

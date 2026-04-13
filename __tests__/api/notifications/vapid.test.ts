@@ -5,6 +5,10 @@ jest.mock('@/lib/auth/rateLimit', () => ({
   withRateLimit: jest.fn().mockResolvedValue(null),
 }));
 
+jest.mock('@/lib/auth/middleware', () => ({
+  requireAuth: jest.fn().mockResolvedValue({ user: { address: '0x1111111111111111111111111111111111111123' } }),
+}));
+
 describe('/api/notifications/vapid', () => {
   describe('GET', () => {
     it('should return 200 when VAPID key is configured or 503 when not configured', async () => {

@@ -2,11 +2,6 @@ import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import { fireEvent, render, screen } from '@testing-library/react';
 import type React from 'react';
 
-let mockAccountState = {
-  isConnected: true,
-  address: '0x1111111111111111111111111111111111111111' as `0x${string}`,
-};
-
 const renderBuyPage = () => {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const pageModule = require('../../app/buy/page');
@@ -14,8 +9,16 @@ const renderBuyPage = () => {
   return render(<BuyPage />);
 };
 
-jest.mock('wagmi', () => ({
-  useAccount: () => mockAccountState,
+jest.mock('../../app/buy/components/BuyTab', () => ({
+  BuyTab: () => <div>Buy tab content</div>,
+}));
+
+jest.mock('../../app/buy/components/SwapTab', () => ({
+  SwapTab: () => <div>Swap tab content</div>,
+}));
+
+jest.mock('../../app/buy/components/HistoryTab', () => ({
+  HistoryTab: () => <div>History tab content</div>,
 }));
 
 jest.mock('@/components/layout/Footer', () => ({
@@ -48,10 +51,6 @@ jest.mock('lucide-react', () => {
 describe('Buy page on-ramp pathways', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    mockAccountState = {
-      isConnected: true,
-      address: '0x1111111111111111111111111111111111111111',
-    };
 
     Object.defineProperty(window, 'open', {
       configurable: true,
@@ -66,16 +65,12 @@ describe('Buy page on-ramp pathways', () => {
     });
   });
 
-  it('renders buy page and coming-soon copy', async () => {
-    mockAccountState = {
-      isConnected: false,
-      address: '0x1111111111111111111111111111111111111111',
-    };
-
+  it('renders buy page and default buy tab', () => {
     renderBuyPage();
 
     expect(screen.getByRole('heading', { name: /Buy Crypto/i })).toBeTruthy();
-    expect(await screen.findByText(/Direct fiat on-ramp is coming soon/i)).toBeTruthy();
+    expect(screen.getByText(/Purchase VFIDE through trusted on-ramp partners/i)).toBeTruthy();
+    expect(screen.getByText(/Buy tab content/i)).toBeTruthy();
   });
 
   it('renders tab navigation labels', () => {
@@ -86,10 +81,10 @@ describe('Buy page on-ramp pathways', () => {
     expect(screen.getByRole('button', { name: 'History' })).toBeTruthy();
   });
 
-  it('switches tabs', async () => {
+  it('switches tabs', () => {
     renderBuyPage();
 
     fireEvent.click(screen.getByRole('button', { name: 'Swap' }));
-    expect(await screen.findByText(/Token swap support is coming soon/i)).toBeTruthy();
+    expect(screen.getByText(/Swap tab content/i)).toBeTruthy();
   });
 });

@@ -12,6 +12,7 @@ import {
     truncate,
     validateAddress,
 } from '../utils'
+  import { logger } from '../logger'
 
 describe('cn', () => {
   it('merges class names', () => {
@@ -127,7 +128,7 @@ describe('formatAddress', () => {
   })
 
   it('formats address with custom chars', () => {
-    expect(formatAddress('0x1234567890abcdef1234567890abcdef12345678', 6)).toBe('0x123456...345678')
+    expect(formatAddress('0x1234567890abcdef1234567890abcdef12345678', 6)).toBe('0x1234...5678')
   })
 
   it('handles empty address', () => {
@@ -304,46 +305,45 @@ describe('devLog', () => {
   })
 
   it('logs in non-production environment', () => {
-    const logSpy = jest.spyOn(console, 'log').mockImplementation()
+    const logSpy = jest.spyOn(logger, 'info').mockImplementation()
     devLog.log('test message')
-    // In test environment, devLog should work
-    expect(logSpy).toHaveBeenCalled()
+    expect(logSpy).toHaveBeenCalledWith('[DEV] test message')
   })
 
   it('warns in non-production environment', () => {
-    const warnSpy = jest.spyOn(console, 'warn').mockImplementation()
+    const warnSpy = jest.spyOn(logger, 'warn').mockImplementation()
     devLog.warn('test warning')
-    expect(warnSpy).toHaveBeenCalled()
+    expect(warnSpy).toHaveBeenCalledWith('[DEV] test warning')
   })
 
   it('errors in non-production environment', () => {
-    const errorSpy = jest.spyOn(console, 'error').mockImplementation()
+    const errorSpy = jest.spyOn(logger, 'error').mockImplementation()
     devLog.error('test error')
-    expect(errorSpy).toHaveBeenCalled()
+    expect(errorSpy).toHaveBeenCalledWith('[DEV] test error')
   })
 
   it('log passes additional arguments', () => {
-    const logSpy = jest.spyOn(console, 'log').mockImplementation()
+    const logSpy = jest.spyOn(logger, 'info').mockImplementation()
     devLog.log('test message', { extra: 'data' }, 123)
     expect(logSpy).toHaveBeenCalledWith('[DEV] test message', { extra: 'data' }, 123)
   })
 
   it('warn passes additional arguments', () => {
-    const warnSpy = jest.spyOn(console, 'warn').mockImplementation()
+    const warnSpy = jest.spyOn(logger, 'warn').mockImplementation()
     devLog.warn('test warning', 'extra')
     expect(warnSpy).toHaveBeenCalledWith('[DEV] test warning', 'extra')
   })
 
   it('error passes additional arguments', () => {
-    const errorSpy = jest.spyOn(console, 'error').mockImplementation()
+    const errorSpy = jest.spyOn(logger, 'error').mockImplementation()
     devLog.error('test error', new Error('test'))
     expect(errorSpy).toHaveBeenCalled()
   })
 
   it('does not log in production environment', () => {
-    const logSpy = jest.spyOn(console, 'log').mockImplementation()
-    const warnSpy = jest.spyOn(console, 'warn').mockImplementation()
-    const errorSpy = jest.spyOn(console, 'error').mockImplementation()
+    const logSpy = jest.spyOn(logger, 'info').mockImplementation()
+    const warnSpy = jest.spyOn(logger, 'warn').mockImplementation()
+    const errorSpy = jest.spyOn(logger, 'error').mockImplementation()
     const original = process.env.NODE_ENV
     Object.defineProperty(process.env, 'NODE_ENV', { value: 'production', configurable: true })
     logSpy.mockClear()

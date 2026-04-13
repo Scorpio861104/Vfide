@@ -49,7 +49,7 @@ export function AddGuardianForm({
             </div>
             <div>
               <label className="block text-gray-400 text-sm mb-2">Guardian Wallet Address</label>
-              <input type="text" placeholder="0x..." value={newGuardianAddress}
+              <input type="text" value={newGuardianAddress}
                 onChange={(e) => setNewGuardianAddress(e.target.value)}
                 aria-label="Guardian wallet address" aria-invalid={isValidAddress === false}
                 className={`w-full px-4 py-3 bg-black/30 border rounded-xl text-white focus:outline-none focus:ring-2 font-mono transition-all ${

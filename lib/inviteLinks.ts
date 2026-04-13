@@ -45,6 +45,17 @@ export function generateInviteCode(): string {
   return code;
 }
 
+function randomIdSuffix(length = 9): string {
+  const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+  const bytes = new Uint8Array(length);
+  crypto.getRandomValues(bytes);
+  let out = '';
+  for (let i = 0; i < length; i++) {
+    out += chars.charAt(bytes[i]! % chars.length);
+  }
+  return out;
+}
+
 /**
  * Create invite link URL
  */
@@ -164,7 +175,7 @@ export async function createInviteLink(
 ): Promise<InviteLink> {
   const code = generateInviteCode();
   const link: InviteLink = {
-    id: `invite_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+    id: `invite_${Date.now()}_${randomIdSuffix(9)}`,
     groupId,
     code,
     createdBy,

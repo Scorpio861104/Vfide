@@ -6,7 +6,7 @@ import React from 'react'
 jest.mock('wagmi', () => ({
   useAccount: jest.fn(() => ({ address: '0x1234567890123456789012345678901234567890', isConnected: true })),
   useReadContract: jest.fn(() => ({ data: 1000000000000000000n, isLoading: false })),
-  useBalance: jest.fn(() => ({ data: { formatted: '1.5' }, isLoading: false })),
+  useBalance: jest.fn(() => ({ data: { value: 1500000000000000000n, decimals: 18 }, isLoading: false })),
 }))
 
 import { TokenBalance, NavbarBalance } from '@/components/ui/TokenBalance'
@@ -30,7 +30,7 @@ describe('TokenBalance', () => {
       isConnected: true 
     })
     ;(useBalance as ReturnType<typeof jest.fn>).mockReturnValue({ 
-      data: { formatted: '1.5' }, 
+      data: { value: 1500000000000000000n, decimals: 18 }, 
       isLoading: false 
     })
     ;(useReadContract as ReturnType<typeof jest.fn>).mockReturnValue({ 
@@ -41,6 +41,7 @@ describe('TokenBalance', () => {
     render(<TokenBalance />)
     expect(screen.getByText('Ξ')).toBeInTheDocument()
     expect(screen.getByText('1.5000')).toBeInTheDocument()
+    expect(screen.getByText('1.00')).toBeInTheDocument()
   })
 
   it('shows loading skeleton when loading', async () => {
@@ -69,7 +70,7 @@ describe('TokenBalance', () => {
       isConnected: true 
     })
     ;(useBalance as ReturnType<typeof jest.fn>).mockReturnValue({ 
-      data: { formatted: '1.5' }, 
+      data: { value: 1500000000000000000n, decimals: 18 }, 
       isLoading: false 
     })
     ;(useReadContract as ReturnType<typeof jest.fn>).mockReturnValue({ 
@@ -88,7 +89,7 @@ describe('TokenBalance', () => {
       isConnected: true 
     })
     ;(useBalance as ReturnType<typeof jest.fn>).mockReturnValue({ 
-      data: { formatted: '0' }, 
+      data: { value: 0n, decimals: 18 }, 
       isLoading: false 
     })
     ;(useReadContract as ReturnType<typeof jest.fn>).mockReturnValue({ 
@@ -120,7 +121,7 @@ describe('NavbarBalance', () => {
       isConnected: true 
     })
     ;(useBalance as ReturnType<typeof jest.fn>).mockReturnValue({ 
-      data: { formatted: '0.1' }, 
+      data: { value: 100000000000000000n, decimals: 18 }, 
       isLoading: false 
     })
     ;(useReadContract as ReturnType<typeof jest.fn>).mockReturnValue({ 

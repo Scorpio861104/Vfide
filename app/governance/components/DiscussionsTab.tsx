@@ -254,10 +254,10 @@ export function DiscussionsTab({ searchQuery }: { searchQuery: string }) {
             <textarea
               value={newReply}
               onChange={(e) =>  setNewReply(e.target.value)}
-              placeholder="Share your thoughts..."
+             
               rows={4}
               maxLength={1000}
-              className="w-full px-4 py-3 bg-zinc-900 border border-zinc-700 rounded-lg text-zinc-100 placeholder-[#A0A0A5] focus:border-cyan-400 focus:outline-none resize-none mb-4"
+              className="w-full px-4 py-3 bg-zinc-900 border border-zinc-700 rounded-lg text-zinc-100  focus:border-cyan-400 focus:outline-none resize-none mb-4"
             />
             <button
               onClick={handleReply}
@@ -300,8 +300,8 @@ export function DiscussionsTab({ searchQuery }: { searchQuery: string }) {
                     type="text"
                     value={newThread.title}
                     onChange={(e) =>  setNewThread({ ...newThread, title: e.target.value })}
-                    placeholder="Discussion topic..."
-                    className="w-full px-4 py-3 bg-zinc-900 border border-zinc-700 rounded-lg text-zinc-100 placeholder-[#A0A0A5] focus:border-cyan-400 focus:outline-none"
+                   
+                    className="w-full px-4 py-3 bg-zinc-900 border border-zinc-700 rounded-lg text-zinc-100  focus:border-cyan-400 focus:outline-none"
                   />
                 </div>
                 <div className="w-48">
@@ -324,10 +324,10 @@ export function DiscussionsTab({ searchQuery }: { searchQuery: string }) {
                 <textarea
                   value={newThread.content}
                   onChange={(e) =>  setNewThread({ ...newThread, content: e.target.value })}
-                  placeholder="What would you like to discuss?"
+                 
                   rows={5}
                   maxLength={2000}
-                  className="w-full px-4 py-3 bg-zinc-900 border border-zinc-700 rounded-lg text-zinc-100 placeholder-[#A0A0A5] focus:border-cyan-400 focus:outline-none resize-none"
+                  className="w-full px-4 py-3 bg-zinc-900 border border-zinc-700 rounded-lg text-zinc-100  focus:border-cyan-400 focus:outline-none resize-none"
                 />
               </div>
 

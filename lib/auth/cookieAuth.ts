@@ -114,60 +114,6 @@ export async function clearAuthCookies(response?: NextResponse): Promise<void> {
 }
 
 /**
- * Migration utility: Move token from localStorage to httpOnly cookie
- * This should be called client-side to get the token, then server-side to set it
- */
-export function getLocalStorageToken(): string | null {
-  if (typeof window === 'undefined') return null;
-  
-  try {
-    // Check various possible localStorage keys
-    const possibleKeys = [
-      'vfide_token',
-      'auth_token',
-      'jwt_token',
-      'token',
-    ];
-
-    for (const key of possibleKeys) {
-      const token = localStorage.getItem(key);
-      if (token) {
-        return token;
-      }
-    }
-
-    return null;
-  } catch (error) {
-    logger.error('[Cookie Auth] Error reading localStorage:', error as Error);
-    return null;
-  }
-}
-
-/**
- * Client-side: Clear localStorage tokens after migration
- */
-export function clearLocalStorageTokens(): void {
-  if (typeof window === 'undefined') return;
-
-  try {
-    const keysToRemove = [
-      'vfide_token',
-      'auth_token',
-      'jwt_token',
-      'token',
-    ];
-
-    keysToRemove.forEach(key => {
-      localStorage.removeItem(key);
-    });
-
-    logger.info('[Cookie Auth] LocalStorage tokens cleared after migration');
-  } catch (error) {
-    logger.error('[Cookie Auth] Error clearing localStorage:', error as Error);
-  }
-}
-
-/**
  * Check if auth cookies are set (useful for migration detection)
  */
 export async function hasAuthCookies(request?: NextRequest): Promise<boolean> {

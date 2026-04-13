@@ -70,7 +70,7 @@ describe('useSecurityHooks - Comprehensive Tests', () => {
 
   // ==================== useIsVaultLocked ====================
   describe('useIsVaultLocked', () => {
-    it('should return locked status when vault is locked', () => {
+    it('should always return unlocked status (non-custodial mode)', () => {
       ;(useReadContract as Mock).mockReturnValue({
         data: true,
         isLoading: false,
@@ -79,7 +79,7 @@ describe('useSecurityHooks - Comprehensive Tests', () => {
 
       const { result } = renderHook(() => useIsVaultLocked(mockVaultAddress))
 
-      expect(result.current.isLocked).toBe(true)
+      expect(result.current.isLocked).toBe(false)
       expect(result.current.isLoading).toBe(false)
     })
 
@@ -95,7 +95,7 @@ describe('useSecurityHooks - Comprehensive Tests', () => {
       expect(result.current.isLocked).toBe(false)
     })
 
-    it('should handle loading state', () => {
+    it('should never enter loading state', () => {
       ;(useReadContract as Mock).mockReturnValue({
         data: undefined,
         isLoading: true,
@@ -104,7 +104,7 @@ describe('useSecurityHooks - Comprehensive Tests', () => {
 
       const { result } = renderHook(() => useIsVaultLocked(mockVaultAddress))
 
-      expect(result.current.isLoading).toBe(true)
+      expect(result.current.isLoading).toBe(false)
       expect(result.current.isLocked).toBe(false)
     })
 
@@ -118,7 +118,7 @@ describe('useSecurityHooks - Comprehensive Tests', () => {
 
       const { result } = renderHook(() => useIsVaultLocked(mockVaultAddress))
 
-      expect(result.current.refetch).toBe(mockRefetch)
+      expect(typeof result.current.refetch).toBe('function')
     })
 
     it('should handle missing vault address', () => {

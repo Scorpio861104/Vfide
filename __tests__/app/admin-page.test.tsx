@@ -13,10 +13,11 @@ let mockAccountState = {
 let mockOwnerAddress = '0x1111111111111111111111111111111111111111';
 
 const renderAdminPage = () => {
+  // Render AdminDashboardClient directly — page.tsx is an async Server Component
+  // which cannot be rendered in Jest. The actual UI and auth logic live in the client component.
   // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const pageModule = require('../../app/admin/page');
-  const AdminPage = pageModule.default as React.ComponentType;
-  return render(<AdminPage />);
+  const AdminDashboardClient = require('../../app/admin/AdminDashboardClient').default as React.ComponentType;
+  return render(<AdminDashboardClient />);
 };
 
 jest.mock('@/components/layout/Footer', () => ({

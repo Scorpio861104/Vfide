@@ -8,6 +8,8 @@ jest.mock('wagmi', () => ({
   useReadContract: jest.fn(),
   useWriteContract: jest.fn(),
   useWaitForTransactionReceipt: jest.fn(),
+  useChainId: jest.fn(),
+  usePublicClient: jest.fn(),
 }))
 
 // Mock viem
@@ -32,7 +34,7 @@ jest.mock('@/lib/contracts', () => ({
   },
 }))
 
-import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi'
+import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt, useChainId, usePublicClient } from 'wagmi'
 import {
   useIsMerchant,
   useRegisterMerchant,
@@ -56,6 +58,10 @@ describe('useMerchantHooks - Extended Tests', () => {
     ;(useAccount as Mock).mockReturnValue({
       address: mockAddress,
       isConnected: true,
+    })
+    ;(useChainId as Mock).mockReturnValue(84532)
+    ;(usePublicClient as Mock).mockReturnValue({
+      waitForTransactionReceipt: jest.fn().mockResolvedValue({}),
     })
     ;(useWriteContract as Mock).mockReturnValue({
       writeContractAsync: jest.fn().mockResolvedValue(mockTxHash),

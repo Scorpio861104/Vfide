@@ -27,7 +27,7 @@ jest.mock('@/lib/contracts', () => ({
     VaultHub: '0x1000000000000000000000000000000000000001',
     VFIDEToken: '0x1000000000000000000000000000000000000002',
   },
-  ACTIVE_VAULT_IMPLEMENTATION: 'cardbound',
+  ACTIVE_VAULT_IMPLEMENTATION: 'uservault',
   ACTIVE_VAULT_ABI: [],
 }))
 
@@ -48,6 +48,13 @@ jest.mock('@/lib/abis', () => ({
 const mockAddress = '0x1234567890123456789012345678901234567890' as `0x${string}`
 const mockVaultAddress = '0xabcdef1234567890abcdef1234567890abcdef12' as `0x${string}`
 const mockGuardianAddress = '0x1111111111111111111111111111111111111111' as `0x${string}`
+
+beforeEach(() => {
+  ;(wagmi.useChainId as jest.Mock).mockReturnValue(84532)
+  ;(wagmi.usePublicClient as jest.Mock).mockReturnValue({
+    waitForTransactionReceipt: jest.fn(),
+  })
+})
 
 describe('useUserVault', () => {
   beforeEach(() => {
@@ -149,10 +156,10 @@ describe('useCreateVault', () => {
     expect(result.current.isSuccess).toBe(false)
   })
 
-  it('calls writeContract when createVault is invoked', () => {
-    const mockWriteContract = jest.fn()
+  it('calls writeContract when createVault is invoked', async () => {
+    const mockWriteContractAsync = jest.fn().mockResolvedValue('0xhash123')
     ;(wagmi.useWriteContract as jest.Mock).mockReturnValue({
-      writeContract: mockWriteContract,
+      writeContractAsync: mockWriteContractAsync,
       data: undefined,
       isPending: false,
     })
@@ -162,9 +169,11 @@ describe('useCreateVault', () => {
     })
 
     const { result } = renderHook(() => useCreateVault())
-    result.current.createVault()
+    await act(async () => {
+      await result.current.createVault()
+    })
 
-    expect(mockWriteContract).toHaveBeenCalled()
+    expect(mockWriteContractAsync).toHaveBeenCalled()
   })
 
   it('does not call writeContract when address is undefined', () => {

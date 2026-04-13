@@ -100,7 +100,7 @@ export default function SwapModal({
                   type="number"
                   value={amount}
                   onChange={(e) =>  setAmount(e.target.value)}
-                  placeholder="0.00"
+                 
                   className="bg-transparent text-white text-lg text-right focus:outline-none w-1/2"
                 />
               </div>

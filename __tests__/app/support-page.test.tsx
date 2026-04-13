@@ -89,7 +89,7 @@ describe('Support page logic pathways', () => {
     fireEvent.click(screen.getByRole('button', { name: /How do I connect my wallet/i }));
     expect(screen.getByText(/select your preferred wallet/i)).toBeTruthy();
 
-    fireEvent.change(screen.getByPlaceholderText(/Search for answers/i), {
+    fireEvent.change(screen.getByRole('searchbox'), {
       target: { value: 'proofscore work' },
     });
 
@@ -173,10 +173,10 @@ describe('Support page logic pathways', () => {
 
     fireEvent.click(screen.getByRole('button', { name: /New Ticket/i }));
 
-    fireEvent.change(screen.getByPlaceholderText(/Brief description of your issue/i), {
+    fireEvent.change(screen.getAllByRole('textbox')[0], {
       target: { value: 'Cannot settle payment' },
     });
-    fireEvent.change(screen.getByPlaceholderText(/Describe your issue in detail/i), {
+    fireEvent.change(screen.getAllByRole('textbox')[1], {
       target: { value: 'Settlement remains pending despite confirmations.' },
     });
 

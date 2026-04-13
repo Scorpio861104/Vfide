@@ -28,6 +28,8 @@ const requestContextSrc = read(join(LIB_DIR, 'security/requestContext.ts'));
 const securityLogsRouteSrc = read(join(API_DIR, 'logs/route.ts'));
 const replayMetricsRouteSrc = read(join(API_DIR, 'webhook-replay-metrics/route.ts'));
 const replayTelemetrySrc = read(join(LIB_DIR, 'security/webhookReplayTelemetry.ts'));
+const securityLogsMigrationSrc = read(join(__dirname, '../../migrations/20260312_170000_security_event_logs.sql'));
+const replayTelemetryMigrationSrc = read(join(__dirname, '../../migrations/20260312_190000_security_webhook_replay_events.sql'));
 const canaryScriptSrc = read(join(SCRIPTS_DIR, 'security-monitor-canary.ts'));
 const replayReportScriptSrc = read(join(SCRIPTS_DIR, 'security-replay-metrics-report.ts'));
 const replayWorkflowSrc = read(join(WORKFLOWS_DIR, 'security-replay-monitor.yml'));
@@ -48,12 +50,12 @@ describe('R-061 – Structured logging in critical flows', () => {
   });
 
   it('security logs endpoint stores structured fields (address/type/severity/message/details)', () => {
-    expect(securityLogsRouteSrc).toMatch(/CREATE TABLE IF NOT EXISTS security_event_logs/);
-    expect(securityLogsRouteSrc).toMatch(/address TEXT NOT NULL/);
-    expect(securityLogsRouteSrc).toMatch(/type TEXT NOT NULL/);
-    expect(securityLogsRouteSrc).toMatch(/severity TEXT NOT NULL/);
-    expect(securityLogsRouteSrc).toMatch(/message TEXT NOT NULL/);
-    expect(securityLogsRouteSrc).toMatch(/details JSONB/);
+    expect(securityLogsMigrationSrc).toMatch(/CREATE TABLE IF NOT EXISTS security_event_logs/);
+    expect(securityLogsMigrationSrc).toMatch(/address TEXT NOT NULL/);
+    expect(securityLogsMigrationSrc).toMatch(/type TEXT NOT NULL/);
+    expect(securityLogsMigrationSrc).toMatch(/severity TEXT NOT NULL/);
+    expect(securityLogsMigrationSrc).toMatch(/message TEXT NOT NULL/);
+    expect(securityLogsMigrationSrc).toMatch(/details JSONB/);
   });
 
   it('security logs endpoint includes request correlation metadata fields', () => {
@@ -66,7 +68,8 @@ describe('R-061 – Structured logging in critical flows', () => {
   it('security log severity and type are validated against allowlists', () => {
     expect(securityLogsRouteSrc).toMatch(/const VALID_SEVERITIES = \['info', 'warning', 'critical'\]/);
     expect(securityLogsRouteSrc).toMatch(/if \(severity\.length > MAX_SEVERITY_LENGTH \|\| !isValidSeverity\(severity\)\)/);
-    expect(securityLogsRouteSrc).toMatch(/if \(!type \|\| !severity \|\| !message\)/);
+    expect(securityLogsRouteSrc).toMatch(/securityLogPostSchema = z\.object\(/);
+    expect(securityLogsRouteSrc).toMatch(/if \(!parsedBody\.success\)/);
   });
 
   it('request context helper hashes IPs with salted SHA-256', () => {
@@ -181,11 +184,13 @@ describe('R-064 – Runbook links in alerts', () => {
 
 describe('R-065 – Security replay analytics', () => {
   it('telemetry writer persists replay events with status/reason/source/key hash', () => {
-    expect(replayTelemetrySrc).toMatch(/CREATE TABLE IF NOT EXISTS security_webhook_replay_events/);
-    expect(replayTelemetrySrc).toMatch(/status TEXT NOT NULL/);
-    expect(replayTelemetrySrc).toMatch(/reason TEXT/);
-    expect(replayTelemetrySrc).toMatch(/source TEXT/);
-    expect(replayTelemetrySrc).toMatch(/replay_key_hash TEXT/);
+    expect(replayTelemetryMigrationSrc).toMatch(/CREATE TABLE IF NOT EXISTS security_webhook_replay_events/);
+    expect(replayTelemetryMigrationSrc).toMatch(/status TEXT NOT NULL/);
+    expect(replayTelemetryMigrationSrc).toMatch(/reason TEXT/);
+    expect(replayTelemetryMigrationSrc).toMatch(/source TEXT/);
+    expect(replayTelemetryMigrationSrc).toMatch(/replay_key_hash TEXT/);
+    expect(replayTelemetrySrc).toMatch(/INSERT INTO security_webhook_replay_events/);
+    expect(replayTelemetrySrc).toMatch(/status, reason, source, replay_key_hash/);
   });
 
   it('replay telemetry retention cleanup is implemented and bounded by env', () => {

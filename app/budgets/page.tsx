@@ -187,7 +187,7 @@ export default function BudgetsPage() {
                 type="number"
                 value={newBudget.limit}
                 onChange={(e) =>  setNewBudget({ ...newBudget, limit: e.target.value })}
-                placeholder="0.00"
+               
                 className="w-full p-3 bg-muted border border-border rounded-lg"
               />
             </div>

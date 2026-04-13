@@ -76,7 +76,7 @@ export function TransactionHistory({ userId }: TransactionHistoryProps) {
       <div className="flex items-center gap-3">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
-          <input type="text" value={search} onChange={(e) =>  setSearch(e.target.value)} placeholder="Search by address or memo..."
+          <input type="text" value={search} onChange={(e) =>  setSearch(e.target.value)}
             className="w-full pl-10 pr-4 py-2.5 bg-zinc-900 border border-zinc-800 rounded-xl text-white text-sm focus:outline-none focus:border-yellow-500 transition-colors" />
         </div>
         <div className="flex items-center gap-1 p-1 bg-zinc-900 border border-zinc-800 rounded-xl">

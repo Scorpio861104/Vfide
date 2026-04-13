@@ -104,6 +104,11 @@ export default function CrossChainTransfer() {
   const _fromChainData = getChain(fromChain);
   const _toChainData = getChain(toChain);
 
+  const formatBalance = (raw: string): string => {
+    const parsed = Number.parseFloat(raw);
+    return Number.isFinite(parsed) ? parsed.toFixed(4) : '0.0000';
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -129,7 +134,7 @@ export default function CrossChainTransfer() {
         <div className="flex flex-wrap gap-3">
           {balances.slice(0, 5).map((balance) => (
             <div key={balance.token} className="bg-background/50 rounded-lg px-3 py-2">
-              <div className="text-lg font-semibold">{parseFloat(balance.totalBalance).toFixed(4)}</div>
+              <div className="text-lg font-semibold">{formatBalance(balance.totalBalance)}</div>
               <div className="text-xs text-muted-foreground">{balance.token}</div>
             </div>
           ))}
@@ -172,7 +177,7 @@ export default function CrossChainTransfer() {
             type="number"
             value={amount}
             onChange={(e) =>  setAmount(e.target.value)}
-            placeholder="0.0"
+           
             className="w-full mt-3 bg-transparent text-2xl font-semibold outline-none"
           />
         </div>
@@ -229,7 +234,7 @@ export default function CrossChainTransfer() {
             type="text"
             value={recipient}
             onChange={(e) =>  setRecipient(e.target.value)}
-            placeholder="0x..."
+           
             className="w-full bg-muted border border-border rounded-lg px-3 py-2 text-sm font-mono"
           />
         </div>

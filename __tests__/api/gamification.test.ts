@@ -309,7 +309,7 @@ describe('/api/gamification', () => {
       const data = await response.json();
 
       expect(response.status).toBe(400);
-      expect(data.error).toBe('Missing required fields');
+      expect(data.error).toBe('Invalid request body');
     });
 
     it('should return 404 when user not found', async () => {

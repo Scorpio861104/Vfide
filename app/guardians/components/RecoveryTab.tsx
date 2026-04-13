@@ -125,7 +125,7 @@ export function RecoveryTab({ isConnected }: { isConnected: boolean }) {
                 </div>
                 <div>
                   <label className="block text-gray-400 text-sm mb-2">New Owner Address (your new wallet)</label>
-                  <input type="text" placeholder="0x..." value={newAddress} onChange={(e) => setNewAddress(e.target.value)}
+                  <input type="text" value={newAddress} onChange={(e) => setNewAddress(e.target.value)}
                     className="w-full px-4 py-3 bg-black/30 border border-white/10 rounded-xl text-white focus:border-cyan-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/20 font-mono transition-all" />
                 </div>
                 <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}

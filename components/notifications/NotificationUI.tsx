@@ -725,8 +725,8 @@ export function NotificationDropdown({ isOpen, onClose }: NotificationDropdownPr
                       type="text"
                       value={searchQuery}
                       onChange={(e) =>  setSearchQuery(e.target.value)}
-                      placeholder="Search notifications..."
-                      className="w-full pl-9 pr-3 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500/50"
+                     
+                      className="w-full pl-9 pr-3 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-white  focus:outline-none focus:border-cyan-500/50"
                     />
                   </div>
                   <select

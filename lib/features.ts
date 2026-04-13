@@ -45,7 +45,7 @@ export const features = {
   multisig: false,
   seerService: false,
   seerAcademy: false,
-  flashlight: false,
+  flashloan: false,
   agent: false,
   bridge: false,
   whatsappReceipts: false,

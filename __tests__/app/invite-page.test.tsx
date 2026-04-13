@@ -45,7 +45,7 @@ jest.mock('lucide-react', () => {
 		Check: Icon,
 		Mail: Icon,
 		MessageCircle: Icon,
-		Twitter: Icon,
+		X: Icon,
 		Share2: Icon,
 		Users: Icon,
 		Trophy: Icon,

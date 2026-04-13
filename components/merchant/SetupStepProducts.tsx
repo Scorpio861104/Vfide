@@ -57,18 +57,18 @@ export function SetupStepProducts({
 
               <div className="flex-1 space-y-2">
                 <input type="text" value={product.name} onChange={(e) =>  updateProduct(product.id, 'name', e.target.value)}
-                  placeholder={`Product ${idx + 1} name`} maxLength={200}
-                  className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm placeholder-gray-500 focus:border-cyan-500/50 focus:outline-none" />
+                  maxLength={200}
+                  className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm  focus:border-cyan-500/50 focus:outline-none" />
                 <div className="flex gap-2">
                   <div className="relative flex-1">
                     <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">$</span>
                     <input type="number" step="0.01" min="0" value={product.price}
-                      onChange={(e) =>  updateProduct(product.id, 'price', e.target.value)} placeholder="0.00"
-                      className="w-full pl-7 pr-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm placeholder-gray-500 focus:border-cyan-500/50 focus:outline-none" />
+                      onChange={(e) =>  updateProduct(product.id, 'price', e.target.value)}
+                      className="w-full pl-7 pr-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm  focus:border-cyan-500/50 focus:outline-none" />
                   </div>
                   <input type="text" value={product.description} onChange={(e) =>  updateProduct(product.id, 'description', e.target.value)}
-                    placeholder="Short description" maxLength={200}
-                    className="flex-[2] px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm placeholder-gray-500 focus:border-cyan-500/50 focus:outline-none" />
+                    maxLength={200}
+                    className="flex-[2] px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm  focus:border-cyan-500/50 focus:outline-none" />
                 </div>
               </div>
 

@@ -315,7 +315,7 @@ export function VaultActionsModal({ isOpen, onClose, actionType, vaultAddress }:
                     type="number"
                     value={amount}
                     onChange={(e) =>  setAmount(e.target.value)}
-                    placeholder="0.00"
+                   
                     className="w-full p-4 pr-20 bg-white/5 border border-white/10 rounded-xl text-white text-lg font-mono focus:border-cyan-500 focus:outline-none"
                   />
                   <button
@@ -335,7 +335,7 @@ export function VaultActionsModal({ isOpen, onClose, actionType, vaultAddress }:
                     type="text"
                     value={recipientAddress}
                     onChange={(e) =>  setRecipientAddress(e.target.value)}
-                    placeholder="0x..."
+                   
                     className="w-full p-4 bg-white/5 border border-white/10 rounded-xl text-white font-mono text-sm focus:border-cyan-500 focus:outline-none"
                   />
                 </div>

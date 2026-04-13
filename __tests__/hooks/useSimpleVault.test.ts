@@ -8,6 +8,7 @@ import { renderHook, act, waitFor } from '@testing-library/react'
 // Mock wagmi
 jest.mock('wagmi', () => ({
   useWriteContract: jest.fn(),
+  usePublicClient: jest.fn(),
 }))
 
 // Mock useVaultHub

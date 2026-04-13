@@ -143,8 +143,8 @@ export function InviteLinkCreator({
                     type="text"
                     value={description}
                     onChange={(e) =>  setDescription(e.target.value)}
-                    placeholder="e.g., Weekly meetup invite"
-                    className="w-full px-3 py-2 bg-zinc-900 border border-zinc-800 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-blue-500"
+                   
+                    className="w-full px-3 py-2 bg-zinc-900 border border-zinc-800 rounded-lg text-white  focus:outline-none focus:border-blue-500"
                   />
                 </div>
 

@@ -109,9 +109,9 @@ export function BeneficiaryManager({ selectedId, onSelect }: BeneficiaryManagerP
       {error && <div className="rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-200">{error}</div>}
 
       <div className="grid gap-3 md:grid-cols-2">
-        <input value={form.name} onChange={(event) =>  setForm({ ...form, name: event.target.value })} className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-white" placeholder="Recipient name" />
-        <input value={form.phone} onChange={(event) =>  setForm({ ...form, phone: event.target.value })} className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-white" placeholder="Phone / account" />
-        <input value={form.label} onChange={(event) =>  setForm({ ...form, label: event.target.value })} className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-white" placeholder="Label (optional)" />
+        <input value={form.name} onChange={(event) =>  setForm({ ...form, name: event.target.value })} className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-white" />
+        <input value={form.phone} onChange={(event) =>  setForm({ ...form, phone: event.target.value })} className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-white" />
+        <input value={form.label} onChange={(event) =>  setForm({ ...form, label: event.target.value })} className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-white" />
         <select value={form.network} onChange={(event) =>  setForm({ ...form, network: event.target.value })} className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-white">
           <option value="mpesa">M-Pesa</option>
           <option value="mtn_momo">MTN MoMo</option>
@@ -119,8 +119,8 @@ export function BeneficiaryManager({ selectedId, onSelect }: BeneficiaryManagerP
           <option value="bank">Bank</option>
           <option value="wallet">Wallet</option>
         </select>
-        <input value={form.country} onChange={(event) =>  setForm({ ...form, country: event.target.value.toUpperCase() })} className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-white" placeholder="Country (KE)" maxLength={2} />
-        <input value={form.relationship} onChange={(event) =>  setForm({ ...form, relationship: event.target.value })} className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-white" placeholder="Relationship" />
+        <input value={form.country} onChange={(event) =>  setForm({ ...form, country: event.target.value.toUpperCase() })} className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-white" maxLength={2} />
+        <input value={form.relationship} onChange={(event) =>  setForm({ ...form, relationship: event.target.value })} className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-white" />
       </div>
 
       <motion.button

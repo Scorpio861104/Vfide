@@ -174,7 +174,7 @@ describe('logging helpers respect NODE_ENV', () => {
     process.env.NODE_ENV = 'development'
     const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {})
     const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {})
-    const logSpy = jest.spyOn(console, 'log').mockImplementation(() => {})
+    const infoSpy = jest.spyOn(console, 'info').mockImplementation(() => {})
 
     devLog.error('err')
     devLog.warn('warn')
@@ -182,7 +182,7 @@ describe('logging helpers respect NODE_ENV', () => {
 
     expect(errorSpy).toHaveBeenCalled()
     expect(warnSpy).toHaveBeenCalled()
-    expect(logSpy).toHaveBeenCalled()
+    expect(infoSpy).toHaveBeenCalled()
   })
 
   test('still callable in production builds', () => {

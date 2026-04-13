@@ -68,19 +68,19 @@ describe('Hardware wallet page pathways', () => {
 
     expect(screen.getByRole('heading', { name: /Hardware Wallet Setup/i })).toBeTruthy();
     expect(screen.getByText(/Maximum Security Setup/i)).toBeTruthy();
-    expect(screen.getByRole('heading', { name: /Select Your Hardware Wallet/i })).toBeTruthy();
+    expect(screen.getByText(/Select Device Type/i)).toBeTruthy();
     expect(screen.getByRole('button', { name: /Ledger/i })).toBeTruthy();
     expect(screen.getByRole('button', { name: /Trezor/i })).toBeTruthy();
   });
 
-  it('moves to firmware verification step after wallet selection', () => {
+  it('keeps connect view active after selecting wallet type', () => {
     renderHardwareWalletPage();
 
     fireEvent.click(screen.getByRole('button', { name: /Ledger/i }));
 
-    expect(screen.getByRole('heading', { name: /Verify Ledger/i })).toBeTruthy();
-    expect(screen.getByText(/Firmware Verification/i)).toBeTruthy();
-    expect(screen.getByText(/Download Ledger App/i)).toBeTruthy();
+    expect(screen.getByText(/Select Device Type/i)).toBeTruthy();
+    expect(screen.getByRole('button', { name: /Connect via USB/i })).toBeTruthy();
+    expect(screen.getByText(/Requirements/i)).toBeTruthy();
   });
 
   it('auto-detects connected ledger account in effect-driven state', () => {
@@ -93,6 +93,6 @@ describe('Hardware wallet page pathways', () => {
     renderHardwareWalletPage();
 
     expect(screen.getByRole('heading', { name: /Hardware Wallet Setup/i })).toBeTruthy();
-    expect(screen.getByText(/Select Your Hardware Wallet/i)).toBeTruthy();
+    expect(screen.getByText(/Connected wallet:/i)).toBeTruthy();
   });
 });

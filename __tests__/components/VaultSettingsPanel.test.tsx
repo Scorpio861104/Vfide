@@ -103,8 +103,7 @@ describe('VaultSettingsPanel', () => {
 
   it('displays threshold information', () => {
     const { container } = render(<VaultSettingsPanel />)
-    // Should show threshold percentage
-    expect(container.textContent).toMatch(/threshold|5/i)
+    expect(container.textContent).toMatch(/CardBound Vault Mode Active/i)
   })
 
   it('shows snapshot toggle option', () => {
@@ -115,14 +114,12 @@ describe('VaultSettingsPanel', () => {
 
   it('displays pending transaction count', () => {
     const { container } = render(<VaultSettingsPanel />)
-    // Should show pending tx info
-    expect(container.textContent).toMatch(/pending|transaction|2/i)
+    expect(container.textContent).toMatch(/legacy pending transaction approval flows/i)
   })
 
-  it('has action buttons', () => {
+  it('shows informational mode with no action buttons in CardBound mode', () => {
     render(<VaultSettingsPanel />)
-    const buttons = screen.getAllByRole('button')
-    expect(buttons.length).toBeGreaterThan(0)
+    expect(screen.queryAllByRole('button').length).toBe(0)
   })
 })
 

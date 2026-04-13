@@ -118,7 +118,7 @@ describe('VaultActionsModal', () => {
 
       expect(screen.getByText('Deposit to Vault')).toBeInTheDocument();
       expect(screen.getByText('Wallet Balance')).toBeInTheDocument();
-      expect(screen.getByPlaceholderText('0.00')).toBeInTheDocument();
+      expect(screen.getByRole('spinbutton')).toBeInTheDocument();
     });
 
     it('shows MAX button', () => {
@@ -159,7 +159,7 @@ describe('VaultActionsModal', () => {
         />
       );
 
-      const input = screen.getByPlaceholderText('0.00') as HTMLInputElement;
+      const input = screen.getByRole('spinbutton') as HTMLInputElement;
       expect(input).toBeInTheDocument();
       expect(input.type).toBe('number');
     });
@@ -193,7 +193,7 @@ describe('VaultActionsModal', () => {
       );
 
       expect(screen.getByText('Transfer to Another Vault')).toBeInTheDocument();
-      expect(screen.getByPlaceholderText('0x...')).toBeInTheDocument();
+      expect(screen.getByRole('textbox')).toBeInTheDocument();
     });
   });
 
@@ -278,7 +278,7 @@ describe('VaultActionsModal', () => {
         />
       );
 
-      const input = screen.getByPlaceholderText('0.00');
+      const input = screen.getByRole('spinbutton');
       fireEvent.change(input, { target: { value: '100' } });
       
       const continueButton = screen.getByText('Continue');
@@ -298,7 +298,7 @@ describe('VaultActionsModal', () => {
         />
       );
 
-      const input = screen.getByPlaceholderText('0.00');
+      const input = screen.getByRole('spinbutton');
       fireEvent.change(input, { target: { value: '0' } });
       
       const continueButton = screen.getByText('Continue');
@@ -318,7 +318,7 @@ describe('VaultActionsModal', () => {
         />
       );
 
-      const input = screen.getByPlaceholderText('0.00');
+      const input = screen.getByRole('spinbutton');
       // Enter a very large amount
       fireEvent.change(input, { target: { value: '999999999' } });
       
@@ -355,7 +355,7 @@ describe('VaultActionsModal', () => {
         />
       );
 
-      const recipientInput = screen.getByPlaceholderText('0x...');
+      const recipientInput = screen.getByRole('textbox');
       expect(recipientInput).toBeInTheDocument();
     });
 
@@ -369,10 +369,10 @@ describe('VaultActionsModal', () => {
         />
       );
 
-      const amountInput = screen.getByPlaceholderText('0.00');
+      const amountInput = screen.getByRole('spinbutton');
       fireEvent.change(amountInput, { target: { value: '100' } });
       
-      const recipientInput = screen.getByPlaceholderText('0x...');
+      const recipientInput = screen.getByRole('textbox');
       fireEvent.change(recipientInput, { target: { value: 'test-address' } });
       
       // Recipient input should be interactable
@@ -390,8 +390,8 @@ describe('VaultActionsModal', () => {
       );
 
       // Should have amount input and recipient input
-      expect(screen.getByPlaceholderText('0.00')).toBeInTheDocument();
-      expect(screen.getByPlaceholderText('0x...')).toBeInTheDocument();
+      expect(screen.getByRole('spinbutton')).toBeInTheDocument();
+      expect(screen.getByRole('textbox')).toBeInTheDocument();
       expect(screen.getByText('Continue')).toBeInTheDocument();
     });
   });
@@ -443,8 +443,8 @@ describe('VaultActionsModal', () => {
         />
       );
 
-      const amountInput = screen.getByPlaceholderText('0.00') as HTMLInputElement;
-      const recipientInput = screen.getByPlaceholderText('0x...') as HTMLInputElement;
+      const amountInput = screen.getByRole('spinbutton') as HTMLInputElement;
+      const recipientInput = screen.getByRole('textbox') as HTMLInputElement;
 
       fireEvent.input(amountInput, { target: { value: '100' } });
       fireEvent.change(recipientInput, {
@@ -496,8 +496,8 @@ describe('VaultActionsModal', () => {
         />
       );
 
-      fireEvent.input(screen.getByPlaceholderText('0.00'), { target: { value: '100' } });
-      fireEvent.change(screen.getByPlaceholderText('0x...'), {
+      fireEvent.input(screen.getByRole('spinbutton'), { target: { value: '100' } });
+      fireEvent.change(screen.getByRole('textbox'), {
         target: { value: '0x1111111111111111111111111111111111111111' },
       });
 

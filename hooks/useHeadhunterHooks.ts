@@ -8,6 +8,7 @@ import { useReadContract, useWriteContract, useAccount } from 'wagmi';
 import { useState, useEffect } from 'react';
 import { parseEther, formatEther } from 'viem';
 import { EcosystemVaultABI, EcosystemVaultViewABI } from '@/lib/abis';
+import { isConfiguredContractAddress, getContractConfigurationError } from '@/lib/contracts';
 
 // Contract address (update with deployed address)
 const ECOSYSTEM_VAULT_ADDRESS = (process.env.NEXT_PUBLIC_ECOSYSTEM_VAULT_ADDRESS || '0x0000000000000000000000000000000000000000') as `0x${string}`;
@@ -58,6 +59,7 @@ export interface ReferralLevelStatus {
  */
 export function useHeadhunterStats(): HeadhunterStats {
   const { address } = useAccount();
+  const contractConfigured = isConfiguredContractAddress(ECOSYSTEM_VAULT_VIEW_ADDRESS);
   
   const { data, isLoading, error } = useReadContract({
     address: ECOSYSTEM_VAULT_VIEW_ADDRESS,
@@ -65,10 +67,22 @@ export function useHeadhunterStats(): HeadhunterStats {
     functionName: 'getHeadhunterStats',
     args: address ? [address] : undefined,
     query: {
-      enabled: !!address,
+      enabled: !!address && contractConfigured,
       refetchInterval: 30000, // Refresh every 30 seconds
     },
   });
+
+  if (!contractConfigured) {
+    return {
+      currentYearPoints: 0,
+      estimatedRank: 0,
+      currentYearNumber: 0n,
+      currentQuarterNumber: 0n,
+      quarterEndsAt: 0n,
+      isLoading: false,
+      error: getContractConfigurationError('EcosystemVault'),
+    };
+  }
 
   if (!data || !address) {
     return {
@@ -256,6 +270,9 @@ export function usePayReferralWorkReward() {
     amount: string,
     reason: string
   ) => {
+    if (!isConfiguredContractAddress(ECOSYSTEM_VAULT_ADDRESS)) {
+      throw getContractConfigurationError('EcosystemVault');
+    }
     writeContract({
       address: ECOSYSTEM_VAULT_ADDRESS,
       abi: EcosystemVaultABI,

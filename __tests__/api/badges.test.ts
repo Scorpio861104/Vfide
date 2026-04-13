@@ -19,6 +19,8 @@ describe('/api/badges', () => {
   const { query } = require('@/lib/db');
   const { withRateLimit } = require('@/lib/auth/rateLimit');
   const { requireAuth, isAdmin, requireAdmin } = require('@/lib/auth/middleware');
+  const userAddress = '0x1234567890123456789012345678901234567890';
+  const otherAddress = '0xabcdefabcdefabcdefabcdefabcdefabcdefabcd';
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -27,7 +29,7 @@ describe('/api/badges', () => {
   describe('GET', () => {
     it('should return user badges', async () => {
       withRateLimit.mockResolvedValue(null);
-      requireAuth.mockResolvedValue({ user: { address: '0x123' } });
+      requireAuth.mockResolvedValue({ user: { address: userAddress } });
       isAdmin.mockReturnValue(false);
 
       const mockBadges = [
@@ -42,7 +44,7 @@ describe('/api/badges', () => {
 
       query.mockResolvedValue({ rows: mockBadges });
 
-      const request = new NextRequest('http://localhost:3000/api/badges?userAddress=0x123');
+      const request = new NextRequest(`http://localhost:3000/api/badges?userAddress=${userAddress}`);
       const response = await GET(request);
       const data = await response.json();
 
@@ -52,10 +54,10 @@ describe('/api/badges', () => {
 
     it('should reject when requesting another user badges without admin', async () => {
       withRateLimit.mockResolvedValue(null);
-      requireAuth.mockResolvedValue({ user: { address: '0xabc' } });
+      requireAuth.mockResolvedValue({ user: { address: otherAddress } });
       isAdmin.mockReturnValue(false);
 
-      const request = new NextRequest('http://localhost:3000/api/badges?userAddress=0x123');
+      const request = new NextRequest(`http://localhost:3000/api/badges?userAddress=${userAddress}`);
       const response = await GET(request);
 
       expect(response.status).toBe(403);
@@ -86,11 +88,11 @@ describe('/api/badges', () => {
 
     it('should return 500 for database errors', async () => {
       withRateLimit.mockResolvedValue(null);
-      requireAuth.mockResolvedValue({ user: { address: '0x123' } });
+      requireAuth.mockResolvedValue({ user: { address: userAddress } });
       isAdmin.mockReturnValue(false);
       query.mockRejectedValue(new Error('Database error'));
 
-      const request = new NextRequest('http://localhost:3000/api/badges?userAddress=0x123');
+      const request = new NextRequest(`http://localhost:3000/api/badges?userAddress=${userAddress}`);
       const response = await GET(request);
       const data = await response.json();
 
@@ -99,7 +101,7 @@ describe('/api/badges', () => {
     });
 
     it('should return 400 for invalid userAddress format', async () => {
-      requireAuth.mockResolvedValue({ user: { address: '0x123' } });
+      requireAuth.mockResolvedValue({ user: { address: userAddress } });
       isAdmin.mockReturnValue(false);
 
       const request = new NextRequest('http://localhost:3000/api/badges?userAddress=not-an-address');
@@ -112,7 +114,7 @@ describe('/api/badges', () => {
       requireAuth.mockResolvedValue({ user: {} });
       isAdmin.mockReturnValue(false);
 
-      const request = new NextRequest('http://localhost:3000/api/badges?userAddress=0x123');
+      const request = new NextRequest(`http://localhost:3000/api/badges?userAddress=${userAddress}`);
       const response = await GET(request);
 
       expect(response.status).toBe(401);

@@ -234,6 +234,15 @@ if (typeof global.Response === 'undefined') {
     }
   };
 }
+
+if (typeof global.fetch === 'undefined') {
+  global.fetch = jest.fn(async () =>
+    new Response(JSON.stringify({}), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    })
+  );
+}
 // Mock next/navigation
 jest.mock('next/navigation', () => ({
   useRouter: () => ({

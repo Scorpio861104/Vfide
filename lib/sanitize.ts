@@ -66,9 +66,8 @@ export function sanitizeURL(url: string): string {
     return '';
   }
 
-  // Allow http, https, and relative URLs
+  // Allow https and relative URLs only
   if (
-    trimmed.startsWith('http://') ||
     trimmed.startsWith('https://') ||
     trimmed.startsWith('/') ||
     trimmed.startsWith('./') ||

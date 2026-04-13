@@ -63,8 +63,30 @@ jest.mock('@/components/seo/SEOHead', () => ({
   SEOHead: () => <div data-testid="seo-head" />,
 }));
 
+jest.mock('@/components/proofscore', () => ({
+  ProofScoreRing: ({ score }: { score: number }) => <div>ProofScoreRing {score}</div>,
+  ProofScoreTierProgress: ({ score }: { score: number }) => <div>ProofScoreTierProgress {score}</div>,
+}));
+
+jest.mock('@/components/proofscore/ProofScoreSystem', () => ({
+  ProofScoreRing: ({ score }: { score: number }) => <div>ProofScoreRing {score}</div>,
+  ProofScoreTierProgress: ({ score }: { score: number }) => <div>ProofScoreTierProgress {score}</div>,
+}));
+
 jest.mock('@/components/ui/ProofScoreRing', () => ({
   ProofScoreRing: ({ score }: { score: number }) => <div>ProofScoreRing {score}</div>,
+}));
+
+jest.mock('@/components/fees', () => ({
+  FeeSavingsCard: () => <div>Fee Savings Card</div>,
+}));
+
+jest.mock('@/components/compliance', () => ({
+  NonCustodialNotice: () => <div>Non Custodial Notice</div>,
+}));
+
+jest.mock('@/components/onboarding', () => ({
+  OnboardingProgressBar: () => <div>Onboarding Progress</div>,
 }));
 
 jest.mock('@/components/ui/PageLayout', () => ({
@@ -132,7 +154,7 @@ describe('Dashboard page logic pathways', () => {
     });
   });
 
-  it('renders connect-wallet state when disconnected', () => {
+  it('renders dashboard shell when disconnected', () => {
     mockAccountState = {
       isConnected: false,
       address: '0x1111111111111111111111111111111111111111',
@@ -140,29 +162,31 @@ describe('Dashboard page logic pathways', () => {
 
     renderDashboardPage();
 
-    expect(screen.getByRole('heading', { name: /Connect Your Wallet/i })).toBeTruthy();
-    expect(screen.getByText(/access your dashboard/i)).toBeTruthy();
-    expect(screen.getByRole('button', { name: /Quick Connect/i })).toBeTruthy();
+    expect(screen.getByText(/Dashboard/i)).toBeTruthy();
+    expect(screen.getByRole('button', { name: /Overview/i })).toBeTruthy();
+    expect(screen.getByRole('button', { name: /Badges/i })).toBeTruthy();
   });
 
   it('renders connected dashboard and supports tab switching', async () => {
     renderDashboardPage();
 
-    expect(screen.getByRole('heading', { name: /Dashboard/i })).toBeTruthy();
-    expect(screen.getByText(/ProofScore 7600/i)).toBeTruthy();
-    expect(await screen.findByText(/No recent activity\./i)).toBeTruthy();
+    expect(screen.getByText(/Dashboard/i)).toBeTruthy();
+    expect(screen.getAllByText(/ProofScoreRing 4500/i).length).toBeGreaterThan(0);
 
-    fireEvent.click(screen.getByRole('tab', { name: /Fee Simulator/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Fee Sim/i }));
     expect(await screen.findByRole('heading', { name: /Fee Simulator/i })).toBeTruthy();
     expect(screen.getByText(/Transfer Amount \(VFIDE\)/i)).toBeTruthy();
 
-    fireEvent.click(screen.getByRole('tab', { name: /Score Simulator/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Score Sim/i }));
     expect(await screen.findByRole('heading', { name: /Score Simulator/i })).toBeTruthy();
     expect(screen.getByText(/Projected Score/i)).toBeTruthy();
 
-    fireEvent.click(screen.getByRole('tab', { name: /Badges/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Badges/i }));
     expect(await screen.findByText(/Badge Gallery/i)).toBeTruthy();
     expect(screen.getByText(/Badge Progress/i)).toBeTruthy();
+
+    fireEvent.click(screen.getByRole('button', { name: /Activity/i }));
+    expect(await screen.findByText(/No recent activity\. Start transacting to see your history!/i)).toBeTruthy();
 
     await waitFor(() => {
       expect(mockFetch).toHaveBeenCalledWith('/api/activities/0x1111111111111111111111111111111111111111');

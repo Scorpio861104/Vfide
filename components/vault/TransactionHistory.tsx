@@ -178,7 +178,7 @@ export function TransactionHistory({ transactions = [], loading = false }: Trans
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" size={16} />
             <input
               type="text"
-              placeholder="Search tx hash..."
+             
               value={searchTerm}
               onChange={(e) =>  setSearchTerm(e.target.value)}
               className="pl-10 pr-4 py-2 bg-zinc-900 border border-zinc-700 rounded-lg text-zinc-100 text-sm w-full sm:w-48"

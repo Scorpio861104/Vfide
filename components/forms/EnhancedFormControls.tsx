@@ -152,7 +152,7 @@ export const EnhancedInput = forwardRef<HTMLInputElement, FormFieldProps>(functi
           className={`
             w-full px-4 py-3 rounded-xl border-2 text-white
             transition-all duration-200 outline-none
-            placeholder:text-zinc-600
+            
             disabled:opacity-50 disabled:cursor-not-allowed
             ${variantClasses[variant]}
             ${leftIcon ? 'pl-10' : ''}
@@ -357,7 +357,7 @@ export const EnhancedTextarea = forwardRef<HTMLTextAreaElement, EnhancedTextarea
         className={`
           w-full px-4 py-3 rounded-xl border-2 text-white resize-none
           transition-all duration-200 outline-none
-          placeholder:text-zinc-600
+          
           disabled:opacity-50 disabled:cursor-not-allowed
           ${variantClasses[variant]}
           ${hasError ? 'border-red-500 focus:border-red-500 bg-red-500/5' : ''}
@@ -715,9 +715,9 @@ export function TagInput({
           onKeyDown={handleKeyDown}
           onFocus={() => setShowSuggestions(true)}
           onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
-          placeholder={value.length === 0 ? placeholder : ''}
+         
           disabled={value.length >= maxTags}
-          className="flex-1 min-w-25 bg-transparent outline-none text-white placeholder:text-zinc-600"
+          className="flex-1 min-w-25 bg-transparent outline-none text-white "
         />
       </div>
 

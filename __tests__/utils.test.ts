@@ -70,7 +70,7 @@ describe('formatAddress', () => {
 
   it('formats address with custom chars', () => {
     const address = '0x1234567890123456789012345678901234567890'
-    expect(formatAddress(address, 6)).toBe('0x123456...567890')
+    expect(formatAddress(address, 6)).toBe('0x1234...7890')
   })
 })
 
@@ -296,7 +296,7 @@ describe('devLog', () => {
     
     devLog.error('test error', { data: 123 })
     
-    expect(consoleSpy).toHaveBeenCalledWith('[DEV] test error', { data: 123 })
+    expect(consoleSpy).toHaveBeenCalledWith('[ERROR] [DEV] test error', { data: 123 })
     consoleSpy.mockRestore()
     process.env.NODE_ENV = originalEnv
   })
@@ -310,7 +310,7 @@ describe('devLog', () => {
     
     devLog.warn('test warning')
     
-    expect(consoleSpy).toHaveBeenCalledWith('[DEV] test warning')
+    expect(consoleSpy).toHaveBeenCalledWith('[WARN] [DEV] test warning')
     consoleSpy.mockRestore()
     process.env.NODE_ENV = originalEnv
   })
@@ -320,11 +320,11 @@ describe('devLog', () => {
     process.env.NODE_ENV = 'development'
     
     const { devLog } = await import('@/lib/utils')
-    const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {})
+    const consoleSpy = jest.spyOn(console, 'info').mockImplementation(() => {})
     
     devLog.log('test log')
     
-    expect(consoleSpy).toHaveBeenCalledWith('[DEV] test log')
+    expect(consoleSpy).toHaveBeenCalledWith('[INFO] [DEV] test log')
     consoleSpy.mockRestore()
     process.env.NODE_ENV = originalEnv
   })

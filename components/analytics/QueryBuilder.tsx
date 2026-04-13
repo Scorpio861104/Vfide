@@ -284,7 +284,7 @@ export function QueryBuilder({
                               : ''
                     }
                     onChange={(e) =>  updateFilter(index, { value: e.target.value })}
-                    placeholder="Value"
+                   
                     className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 text-sm"
                   />
 
@@ -391,7 +391,7 @@ export function QueryBuilder({
                     type="text"
                     value={agg.alias || ''}
                     onChange={(e) =>  updateAggregation(index, { alias: e.target.value })}
-                    placeholder="Alias (optional)"
+                   
                     className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 text-sm"
                   />
 

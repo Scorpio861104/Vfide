@@ -155,7 +155,7 @@ describe('/api/proposals', () => {
       const data = await response.json();
 
       expect(response.status).toBe(400);
-      expect(data.error).toContain('JSON object');
+      expect(data.error).toBe('Validation failed');
     });
 
     it('should create proposal successfully', async () => {

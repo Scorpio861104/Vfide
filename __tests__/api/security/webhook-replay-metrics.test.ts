@@ -39,9 +39,6 @@ describe('/api/security/webhook-replay-metrics', () => {
 
   it('returns replay metrics for authenticated caller', async () => {
     query
-      .mockResolvedValueOnce({ rows: [] })
-      .mockResolvedValueOnce({ rows: [] })
-      .mockResolvedValueOnce({ rows: [] })
       .mockResolvedValueOnce({
         rows: [{
           accepted_1h: '12',

@@ -100,13 +100,13 @@ describe('Enterprise page logic pathways', () => {
 
     fireEvent.click(screen.getByRole('button', { name: /Enterprise Gateway/i }));
 
-    fireEvent.change(screen.getByPlaceholderText(/Enter unique order ID/i), {
+    fireEvent.change(screen.getAllByRole('textbox')[0], {
       target: { value: 'ORD-NEW-001' },
     });
-    fireEvent.change(screen.getByPlaceholderText('0.00'), {
+    fireEvent.change(screen.getAllByRole('spinbutton')[0], {
       target: { value: '1250' },
     });
-    fireEvent.change(screen.getByPlaceholderText(/Order reference, customer ID/i), {
+    fireEvent.change(screen.getAllByRole('textbox')[1], {
       target: { value: 'customer-99' },
     });
 
@@ -124,9 +124,9 @@ describe('Enterprise page logic pathways', () => {
     });
 
     await waitFor(() => {
-      expect((screen.getByPlaceholderText(/Enter unique order ID/i) as HTMLInputElement).value).toBe('');
-      expect((screen.getByPlaceholderText('0.00') as HTMLInputElement).value).toBe('');
-      expect((screen.getByPlaceholderText(/Order reference, customer ID/i) as HTMLInputElement).value).toBe('');
+      expect((screen.getAllByRole('textbox')[0] as HTMLInputElement).value).toBe('');
+      expect((screen.getAllByRole('spinbutton')[0] as HTMLInputElement).value).toBe('');
+      expect((screen.getAllByRole('textbox')[1] as HTMLInputElement).value).toBe('');
     });
   });
 });

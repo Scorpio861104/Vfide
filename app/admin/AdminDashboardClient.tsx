@@ -1944,7 +1944,7 @@ export default function AdminPanel() {
                 type="text"
                 value={whitelistAddress}
                 onChange={(e) =>  setWhitelistAddress(e.target.value)}
-                placeholder="0x..."
+               
                 className="w-full bg-black/30 text-white rounded-lg px-4 py-3 border border-gray-600 focus:border-purple-500 focus:outline-none font-mono text-sm"
               />
             </div>
@@ -1973,7 +1973,7 @@ export default function AdminPanel() {
                 type="text"
                 value={checkAddress}
                 onChange={(e) =>  setCheckAddress(e.target.value)}
-                placeholder="0x..."
+               
                 className="w-full bg-black/30 text-white rounded-lg px-4 py-3 border border-gray-600 focus:border-purple-500 focus:outline-none font-mono text-sm mb-3"
               />
               {checkAddress && (
@@ -2105,7 +2105,7 @@ export default function AdminPanel() {
                 type="text"
                 value={moduleAddress}
                 onChange={(e) =>  setModuleAddress(e.target.value)}
-                placeholder="0x..."
+               
                 className="w-full bg-black/30 text-white rounded-lg px-4 py-3 border border-gray-600 focus:border-purple-500 focus:outline-none font-mono text-sm"
               />
             </div>
@@ -2159,7 +2159,7 @@ export default function AdminPanel() {
                 type="text"
                 value={exemptAddress}
                 onChange={(e) =>  setExemptAddress(e.target.value)}
-                placeholder="0x..."
+               
                 className="w-full bg-black/30 text-white rounded-lg px-4 py-3 border border-gray-600 focus:border-purple-500 focus:outline-none font-mono text-sm"
               />
             </div>
@@ -2212,7 +2212,7 @@ export default function AdminPanel() {
                 type="text"
                 value={blacklistAddress}
                 onChange={(e) =>  setBlacklistAddress(e.target.value)}
-                placeholder="0x..."
+               
                 className="w-full bg-black/30 text-white rounded-lg px-4 py-3 border border-gray-600 focus:border-purple-500 focus:outline-none font-mono text-sm"
               />
             </div>
@@ -2265,7 +2265,7 @@ export default function AdminPanel() {
                 type="text"
                 value={vaultBypassAddress}
                 onChange={(e) =>  setVaultBypassAddress(e.target.value)}
-                placeholder="0x..."
+               
                 className="w-full bg-black/30 text-white rounded-lg px-4 py-3 border border-gray-600 focus:border-purple-500 focus:outline-none font-mono text-sm"
               />
             </div>
@@ -2325,7 +2325,7 @@ export default function AdminPanel() {
                 type="text"
                 value={whaleExemptAddress}
                 onChange={(e) =>  setWhaleExemptAddress(e.target.value)}
-                placeholder="0x..."
+               
                 className="w-full bg-black/30 text-white rounded-lg px-4 py-3 border border-gray-600 focus:border-purple-500 focus:outline-none font-mono text-sm"
               />
             </div>
@@ -2407,7 +2407,7 @@ export default function AdminPanel() {
                     type="number"
                     value={burnParams.minTotalBps}
                     onChange={(e) =>  setBurnParams({...burnParams, minTotalBps: e.target.value})}
-                    placeholder={String(minTotalBps || 50)}
+                   
                     className="w-full bg-black/30 text-white rounded px-3 py-2 text-sm border border-gray-600 focus:border-orange-500 focus:outline-none"
                   />
                 </div>
@@ -2417,7 +2417,7 @@ export default function AdminPanel() {
                     type="number"
                     value={burnParams.maxTotalBps}
                     onChange={(e) =>  setBurnParams({...burnParams, maxTotalBps: e.target.value})}
-                    placeholder={String(maxTotalBps || 500)}
+                   
                     className="w-full bg-black/30 text-white rounded px-3 py-2 text-sm border border-gray-600 focus:border-orange-500 focus:outline-none"
                   />
                 </div>
@@ -2731,7 +2731,7 @@ export default function AdminPanel() {
                 type="text"
                 value={newOwner}
                 onChange={(e) =>  setNewOwner(e.target.value)}
-                placeholder="0x... (DAO Timelock address)"
+               
                 className="w-full bg-black/30 text-white rounded-lg px-4 py-3 border border-red-600 focus:border-red-500 focus:outline-none font-mono text-sm"
               />
             </div>

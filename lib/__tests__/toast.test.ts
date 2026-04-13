@@ -2,6 +2,18 @@
  * Toast Utility Tests
  */
 
+const mockLoggerInfo = jest.fn();
+const mockLoggerError = jest.fn();
+
+jest.mock('@/lib/logger', () => ({
+  logger: {
+    info: (...args: unknown[]) => mockLoggerInfo(...args),
+    error: (...args: unknown[]) => mockLoggerError(...args),
+    warn: jest.fn(),
+    debug: jest.fn(),
+  },
+}));
+
 import { toast, subscribeToToasts } from '../toast';
 
 // Mock console methods
@@ -13,6 +25,8 @@ let consoleOutput: string[] = [];
 
 beforeEach(() => {
   consoleOutput = [];
+  mockLoggerInfo.mockClear();
+  mockLoggerError.mockClear();
   console.log = jest.fn((...args) => {
     consoleOutput.push(args.join(' '));
   });
@@ -33,39 +47,36 @@ afterEach(() => {
 describe('toast.success', () => {
   it('logs success messages', () => {
     toast.success('Operation completed');
-    expect(console.log).toHaveBeenCalledWith('✅', 'Operation completed');
+    expect(mockLoggerInfo).toHaveBeenCalledWith('✅', 'Operation completed');
   });
 
   it('includes emoji in output', () => {
     toast.success('Test message');
-    expect(consoleOutput[0]).toContain('✅');
-    expect(consoleOutput[0]).toContain('Test message');
+    expect(mockLoggerInfo).toHaveBeenCalledWith('✅', 'Test message');
   });
 });
 
 describe('toast.error', () => {
   it('logs error messages', () => {
     toast.error('Something went wrong');
-    expect(console.error).toHaveBeenCalledWith('❌', 'Something went wrong');
+    expect(mockLoggerError).toHaveBeenCalledWith('❌', 'Something went wrong');
   });
 
   it('includes emoji in output', () => {
     toast.error('Error message');
-    expect(consoleOutput[0]).toContain('❌');
-    expect(consoleOutput[0]).toContain('Error message');
+    expect(mockLoggerError).toHaveBeenCalledWith('❌', 'Error message');
   });
 });
 
 describe('toast.info', () => {
   it('logs info messages', () => {
     toast.info('Information update');
-    expect(console.info).toHaveBeenCalledWith('ℹ️', 'Information update');
+    expect(mockLoggerInfo).toHaveBeenCalledWith('ℹ️', 'Information update');
   });
 
   it('includes emoji in output', () => {
     toast.info('Info message');
-    expect(consoleOutput[0]).toContain('ℹ️');
-    expect(consoleOutput[0]).toContain('Info message');
+    expect(mockLoggerInfo).toHaveBeenCalledWith('ℹ️', 'Info message');
   });
 });
 
@@ -145,6 +156,7 @@ describe('toast integration', () => {
     toast.error('Second');
     toast.info('Third');
     
-    expect(consoleOutput.length).toBe(3);
+    expect(mockLoggerInfo).toHaveBeenCalledTimes(2); // success + info
+    expect(mockLoggerError).toHaveBeenCalledTimes(1); // error
   });
 });

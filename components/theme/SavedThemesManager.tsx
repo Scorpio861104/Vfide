@@ -122,17 +122,17 @@ export function SavedThemesManager() {
           >
             <input
               type="text"
-              placeholder="Theme name (e.g., My Dark Blue)"
+             
               value={saveName}
               onChange={(e) =>  setSaveName(e.target.value)}
-              className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-blue-500"
+              className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white  focus:outline-none focus:border-blue-500"
             />
             <input
               type="text"
-              placeholder="Description (optional)"
+             
               value={saveDescription}
               onChange={(e) =>  setSaveDescription(e.target.value)}
-              className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-blue-500"
+              className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white  focus:outline-none focus:border-blue-500"
             />
             <div className="flex gap-2">
               <motion.button

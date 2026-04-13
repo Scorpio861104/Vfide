@@ -225,7 +225,7 @@ export function AddressInput({
         value={value}
         onChange={(e) =>  onChange(e.target.value)}
         onBlur={() => setTouched(true)}
-        placeholder={placeholder}
+       
         disabled={disabled}
         className={`w-full px-4 py-2 bg-white/5 border rounded-lg text-white font-mono text-sm 
           focus:outline-none focus:ring-2 transition-all
@@ -287,7 +287,7 @@ export function NumberInput({
           min={min}
           max={max}
           step={step}
-          placeholder={placeholder}
+         
           disabled={disabled}
           className={`w-full px-4 py-2 bg-white/5 border rounded-lg text-white 
             focus:outline-none focus:ring-2 transition-all

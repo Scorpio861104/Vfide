@@ -1,13 +1,8 @@
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import type React from 'react';
 
-const mockPush = jest.fn();
-const mockAnnounce = jest.fn();
-
-let mockConnected = false;
-let mockAddress: `0x${string}` | undefined;
-
+let mockCode: string | undefined = 'abc123';
 const mockFetch = jest.fn() as jest.MockedFunction<typeof fetch>;
 
 const renderInviteCodePage = () => {
@@ -18,24 +13,7 @@ const renderInviteCodePage = () => {
 };
 
 jest.mock('next/navigation', () => ({
-  useParams: () => ({ code: 'abc123' }),
-  useRouter: () => ({ push: mockPush }),
-}));
-
-jest.mock('wagmi', () => ({
-  useAccount: () => ({
-    address: mockAddress,
-    isConnected: mockConnected,
-  }),
-}));
-
-jest.mock('@/lib/accessibility', () => ({
-  useAnnounce: () => ({ announce: mockAnnounce }),
-}));
-
-jest.mock('@/lib/inviteLinks', () => ({
-  formatExpirationTime: () => 'Never',
-  formatUsageLimit: () => '0 / 10',
+  useParams: () => ({ code: mockCode }),
 }));
 
 jest.mock('framer-motion', () => ({
@@ -47,95 +25,56 @@ jest.mock('framer-motion', () => ({
   ),
 }));
 
+jest.mock('@/components/layout/Footer', () => ({
+  Footer: () => <div data-testid="footer" />,
+}));
+
 jest.mock('lucide-react', () => {
   const Icon = ({ className }: { className?: string }) => <span className={className}>icon</span>;
   return {
-    AlertCircle: Icon,
-    Check: Icon,
-    Clock: Icon,
-    Loader2: Icon,
-    Shield: Icon,
+    Gift: Icon,
     Users: Icon,
-    X: Icon,
+    Shield: Icon,
+    ArrowRight: Icon,
+    Check: Icon,
+    Loader2: Icon,
   };
 });
 
-describe('Invite code page logic pathways', () => {
+describe('Invite code page', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    mockConnected = false;
-    mockAddress = undefined;
+    mockCode = 'abc123';
     (global as any).fetch = mockFetch;
-
-    mockFetch.mockResolvedValue({
-      json: async () => ({
-        success: true,
-        valid: true,
-        invite: {
-          id: 'inv1',
-          groupId: 'group-1',
-          code: 'abc123',
-          createdAt: Date.now(),
-          currentUses: 0,
-          maxUses: 10,
-          metadata: { description: 'Join this group' },
-        },
-      }),
-    } as Response);
   });
 
-  it('loads invite data and prompts wallet connect when disconnected', async () => {
+  it('renders valid invite state with accept link', async () => {
+    mockFetch.mockResolvedValue({ ok: true, json: async () => ({ valid: true }) } as Response);
+
     renderInviteCodePage();
 
-    expect(await screen.findByText(/you\'ve been invited!/i)).toBeTruthy();
-    expect(screen.getByText(/connect your wallet to join this group/i)).toBeTruthy();
-    expect(mockFetch).toHaveBeenCalledWith('/api/groups/invites?code=abc123');
+    expect(await screen.findByText(/You\'re invited to VFIDE/i)).toBeTruthy();
+    expect(screen.getByRole('link', { name: /Accept Invite/i }).getAttribute('href')).toBe('/setup');
+    expect(mockFetch).toHaveBeenCalledWith('/api/users/invite?code=abc123');
   });
 
-  it('submits join request and redirects on success when connected', async () => {
-    mockConnected = true;
-    mockAddress = '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa';
+  it('renders invalid state when invite validation fails', async () => {
+    mockFetch.mockResolvedValue({ ok: true, json: async () => ({ valid: false }) } as Response);
 
-    mockFetch
-      .mockResolvedValueOnce({
-        json: async () => ({
-          success: true,
-          valid: true,
-          invite: {
-            id: 'inv1',
-            groupId: 'group-1',
-            code: 'abc123',
-            createdAt: Date.now(),
-            currentUses: 0,
-            maxUses: 10,
-            metadata: { description: 'Join this group', requireApproval: false },
-          },
-        }),
-      } as Response)
-      .mockResolvedValueOnce({
-        json: async () => ({ success: true, groupId: 'group-1', status: 'joined' }),
-      } as Response);
-
-    jest.useFakeTimers();
     renderInviteCodePage();
 
-    const joinButton = await screen.findByRole('button', { name: /join group/i });
-    fireEvent.click(joinButton);
+    expect(await screen.findByRole('heading', { name: /Invalid Invite/i })).toBeTruthy();
+    expect(screen.getByText(/expired or invalid/i)).toBeTruthy();
+  });
+
+  it('renders invalid state immediately when code is missing', async () => {
+    mockCode = undefined;
+
+    renderInviteCodePage();
 
     await waitFor(() => {
-      expect(mockFetch).toHaveBeenNthCalledWith(
-        2,
-        '/api/groups/join',
-        expect.objectContaining({ method: 'POST' })
-      );
+      expect(screen.getByRole('heading', { name: /Invalid Invite/i })).toBeTruthy();
     });
-
-    await waitFor(() => {
-      expect(mockAnnounce).toHaveBeenCalledWith('Successfully joined group', 'polite');
-    });
-
-    jest.advanceTimersByTime(2100);
-    expect(mockPush).toHaveBeenCalledWith('/groups/group-1');
-    jest.useRealTimers();
+    expect(mockFetch).not.toHaveBeenCalled();
   });
 });

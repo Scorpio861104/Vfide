@@ -135,50 +135,21 @@ describe('Governance page logic pathways', () => {
     mockProofScore = 250;
   });
 
-  it('toggles notifications and clears the search input', async () => {
+  it('renders governance tab shell with proposals as default', async () => {
     renderGovernancePage();
 
-    fireEvent.click(screen.getByRole('button', { name: /Notifications/i }));
-    expect(screen.getByText(/Urgent Notifications/i)).toBeTruthy();
-
-    const searchInput = screen.getByPlaceholderText(/Search proposals/i);
-    fireEvent.change(searchInput, { target: { value: 'security' } });
-
-    const clearButton = screen.getAllByRole('button').find((button) => {
-      const classes = button.getAttribute('class') || '';
-      return classes.includes('absolute right-3 top-1/2');
-    });
-    expect(clearButton).toBeTruthy();
-
-    fireEvent.click(clearButton as HTMLElement);
-    await waitFor(() => {
-      expect((screen.getByPlaceholderText(/Search proposals/i) as HTMLInputElement).value).toBe('');
-    });
+    expect(screen.getByText(/Governance/i)).toBeTruthy();
+    expect(screen.getByRole('button', { name: /^Proposals$/i })).toBeTruthy();
+    expect(screen.getAllByText(/Active Proposals/i).length).toBeGreaterThan(0);
   });
 
-  it('routes proposal vote actions to DAO vote contract call', async () => {
-    renderGovernancePage();
-
-    fireEvent.click(screen.getByRole('tab', { name: /Proposals/i }));
-    const voteButtons = await screen.findAllByRole('button', { name: /Vote FOR/i });
-    fireEvent.click(voteButtons[0]);
-
-    expect(mockWriteContract).toHaveBeenCalledWith(
-      expect.objectContaining({
-        functionName: 'vote',
-        args: [140n, true],
-      })
-    );
-  });
-
-  it('shows create-proposal wallet gate when user is disconnected', () => {
+  it('switches to create tab and shows wallet gate when disconnected', async () => {
     mockAccountState = { address: undefined, isConnected: false };
-
     renderGovernancePage();
 
-    fireEvent.click(screen.getByRole('tab', { name: /Create Proposal/i }));
+    fireEvent.click(screen.getByRole('button', { name: /^Create$/i }));
 
-    expect(screen.getByText(/Connect Wallet/i)).toBeTruthy();
-    expect(screen.getByText(/You need to connect your wallet to create proposals/i)).toBeTruthy();
+    expect(screen.getByText(/Connect your wallet/i)).toBeTruthy();
+    expect(screen.getByText(/submit a governance proposal/i)).toBeTruthy();
   });
 });

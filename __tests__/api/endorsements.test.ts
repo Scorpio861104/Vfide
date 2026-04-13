@@ -25,9 +25,12 @@ describe('/api/endorsements', () => {
   const { withRateLimit } = require('@/lib/auth/rateLimit');
   const { requireAuth } = require('@/lib/auth/middleware');
   const { endorsementSchema } = require('@/lib/auth/validation');
+  const validAuthAddress = '0x1111111111111111111111111111111111111123';
+  const validEndorsedAddress = '0x2222222222222222222222222222222222222456';
 
   beforeEach(() => {
     jest.clearAllMocks();
+    requireAuth.mockResolvedValue({ user: { address: validAuthAddress } });
   });
 
   describe('GET', () => {
@@ -60,14 +63,14 @@ describe('/api/endorsements', () => {
         .mockResolvedValueOnce({ rows: [] })
         .mockResolvedValueOnce({ rows: [{ count: '0' }] });
 
-      const request = new NextRequest('http://localhost:3000/api/endorsements?endorsedAddress=0x456&limit=10000&offset=0');
+      const request = new NextRequest(`http://localhost:3000/api/endorsements?endorsedAddress=${validEndorsedAddress}&limit=10000&offset=0`);
       const response = await GET(request);
 
       expect(response.status).toBe(200);
       expect(query).toHaveBeenNthCalledWith(
         1,
         expect.stringContaining('LIMIT $2 OFFSET $3'),
-        ['0x456', 200, 0]
+        [validEndorsedAddress, 200, 0]
       );
     });
 
@@ -77,14 +80,14 @@ describe('/api/endorsements', () => {
         .mockResolvedValueOnce({ rows: [] })
         .mockResolvedValueOnce({ rows: [{ count: '0' }] });
 
-      const request = new NextRequest('http://localhost:3000/api/endorsements?endorsedAddress=0x456&limit=50&offset=999999');
+      const request = new NextRequest(`http://localhost:3000/api/endorsements?endorsedAddress=${validEndorsedAddress}&limit=50&offset=999999`);
       const response = await GET(request);
 
       expect(response.status).toBe(200);
       expect(query).toHaveBeenNthCalledWith(
         1,
         expect.stringContaining('LIMIT $2 OFFSET $3'),
-        ['0x456', 50, 10000]
+        [validEndorsedAddress, 50, 10000]
       );
     });
 
@@ -131,7 +134,7 @@ describe('/api/endorsements', () => {
       const data = await response.json();
 
       expect(response.status).toBe(400);
-      expect(data.error).toContain('JSON object');
+      expect(data.error).toContain('Validation failed');
     });
 
     it('should create endorsement successfully', async () => {

@@ -82,7 +82,7 @@ export function PaymentModal({ friend, type, onClose, onSubmit }: PaymentModalPr
                 type="number"
                 step="0.01"
                 min="0"
-                placeholder="0.00"
+               
                 value={amount}
                 onChange={(e) =>  setAmount(e.target.value)}
                 className="w-full px-4 py-3 pr-24 bg-zinc-950 border border-zinc-700 rounded-lg text-zinc-100 text-lg font-bold focus:border-cyan-400 focus:outline-none"
@@ -105,7 +105,7 @@ export function PaymentModal({ friend, type, onClose, onSubmit }: PaymentModalPr
               Message (Optional)
             </label>
             <textarea
-              placeholder={type === 'send' ? 'What is this payment for?' : 'Why are you requesting this?'}
+             
               value={message}
               onChange={(e) =>  setMessage(e.target.value)}
               rows={3}

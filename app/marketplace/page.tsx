@@ -18,7 +18,6 @@ export default function MarketplacePage() {
   const [filters, setFilters] = useState({ category: '', minPrice: '', maxPrice: '', sort: 'relevance' });
   const [wishlist, setWishlist] = useState<Set<string>>(new Set());
 
-  // TODO: wire to /api/merchant/products
   useEffect(() => {
     setLoading(true);
     fetch(`/api/merchant/products?q=${query}&status=active`)
@@ -55,8 +54,8 @@ export default function MarketplacePage() {
           <div className="flex gap-3 mb-6">
             <div className="relative flex-1">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500" size={20} />
-              <input type="text" value={query} onChange={e =>  setQuery(e.target.value)} placeholder="Search products..."
-                className="w-full pl-12 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:border-cyan-500/50 focus:outline-none" />
+              <input type="text" value={query} onChange={e =>  setQuery(e.target.value)}
+                className="w-full pl-12 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white  focus:border-cyan-500/50 focus:outline-none" />
             </div>
             <button onClick={() => setShowFilters(!showFilters)}
               className={`px-4 py-3 rounded-xl border font-bold ${showFilters ? 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30' : 'bg-white/5 text-gray-400 border-white/10'}`}>

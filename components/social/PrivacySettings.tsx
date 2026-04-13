@@ -328,7 +328,7 @@ export function PrivacySettings() {
           <div className="flex gap-2">
             <input
               type="text"
-              placeholder="Wallet address to block (0x...)"
+             
               value={blockAddress}
               onChange={(e) =>  setBlockAddress(e.target.value)}
               className="flex-1 px-3 py-2 bg-zinc-950 border border-zinc-700 rounded-lg text-zinc-100 text-sm focus:border-pink-400 focus:outline-none"

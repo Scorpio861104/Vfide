@@ -67,6 +67,7 @@ describe('/api/crypto/payment-requests', () => {
     it('should return 400 for malformed userId query', async () => {
       withRateLimit.mockResolvedValue(null);
       requireAuth.mockReturnValue({ user: { address: '0x1111111111111111111111111111111111111123' } });
+      query.mockResolvedValueOnce({ rows: [{ id: 1 }] });
 
       const request = new NextRequest('http://localhost:3000/api/crypto/payment-requests?userId=1abc');
       const response = await GET(request);
@@ -115,7 +116,7 @@ describe('/api/crypto/payment-requests', () => {
       const data = await response.json();
 
       expect(response.status).toBe(400);
-      expect(data.error).toContain('JSON object');
+      expect(data.error).toBe('Invalid request body');
     });
 
     it('should create payment request', async () => {
@@ -163,6 +164,7 @@ describe('/api/crypto/payment-requests', () => {
     it('requires step-up authentication for high-risk amounts', async () => {
       withRateLimit.mockResolvedValue(null);
       requireAuth.mockReturnValue({ user: { address: '0x1111111111111111111111111111111111111123' } });
+      query.mockResolvedValueOnce({ rows: [{ id: 1 }] });
 
       const request = new NextRequest('http://localhost:3000/api/crypto/payment-requests', {
         method: 'POST',
@@ -180,6 +182,7 @@ describe('/api/crypto/payment-requests', () => {
     it('requires delay acknowledgement for high-risk amounts even after step-up', async () => {
       withRateLimit.mockResolvedValue(null);
       requireAuth.mockReturnValue({ user: { address: '0x1111111111111111111111111111111111111123' } });
+      query.mockResolvedValueOnce({ rows: [{ id: 1 }] });
 
       const request = new NextRequest('http://localhost:3000/api/crypto/payment-requests', {
         method: 'POST',

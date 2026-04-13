@@ -60,7 +60,7 @@ export const EnhancedInput = forwardRef<HTMLInputElement, EnhancedInputProps>(
             ref={ref}
             className={`
               w-full px-4 py-3 rounded-xl
-              text-zinc-50 placeholder:text-zinc-500
+              text-zinc-50 
               transition-all duration-300
               outline-none
               ${variantStyles[variant]}
@@ -140,7 +140,7 @@ export const EnhancedTextarea = forwardRef<HTMLTextAreaElement, EnhancedTextarea
           ref={ref}
           className={`
             w-full px-4 py-3 rounded-xl
-            text-zinc-50 placeholder:text-zinc-500
+            text-zinc-50 
             transition-all duration-300
             outline-none
             resize-none

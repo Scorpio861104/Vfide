@@ -11,12 +11,16 @@ const mockUseAccount = jest.fn()
 const mockUseReadContract = jest.fn()
 const mockUseWriteContract = jest.fn()
 const mockUseWaitForTransactionReceipt = jest.fn()
+const mockUseChainId = jest.fn()
+const mockUsePublicClient = jest.fn()
 
 jest.mock('wagmi', () => ({
   useAccount: () => mockUseAccount(),
   useReadContract: (args: unknown) => mockUseReadContract(args),
   useWriteContract: () => mockUseWriteContract(),
   useWaitForTransactionReceipt: () => mockUseWaitForTransactionReceipt(),
+  useChainId: () => mockUseChainId(),
+  usePublicClient: () => mockUsePublicClient(),
 }))
 
 // Mock viem
@@ -52,6 +56,8 @@ import {
 describe('useIsMerchant', () => {
   beforeEach(() => {
     jest.clearAllMocks()
+    mockUseChainId.mockReturnValue(84532)
+    mockUsePublicClient.mockReturnValue({ waitForTransactionReceipt: jest.fn().mockResolvedValue({}) })
     mockUseAccount.mockReturnValue({ address: '0x1234' })
   })
 
@@ -221,6 +227,8 @@ describe('useRegisterMerchant', () => {
 
 describe('useProcessPayment', () => {
   const mockWriteContractAsync = jest.fn()
+  const customerAddress = '0x1111111111111111111111111111111111111111' as `0x${string}`
+  const tokenAddress = '0x2222222222222222222222222222222222222222' as `0x${string}`
 
   beforeEach(() => {
     jest.clearAllMocks()
@@ -266,8 +274,8 @@ describe('useProcessPayment', () => {
     
     await act(async () => {
       await result.current.processPayment(
-        '0xCustomer' as `0x${string}`,
-        '0xToken' as `0x${string}`,
+        customerAddress,
+        tokenAddress,
         '100',
         'ORDER-123'
       )
@@ -275,7 +283,7 @@ describe('useProcessPayment', () => {
     
     expect(mockWriteContractAsync).toHaveBeenCalledWith(expect.objectContaining({
       functionName: 'processPayment',
-      args: ['0xCustomer', '0xToken', expect.any(BigInt), 'ORDER-123'],
+      args: [customerAddress, tokenAddress, expect.any(BigInt), 'ORDER-123'],
     }))
   })
 
@@ -286,8 +294,8 @@ describe('useProcessPayment', () => {
     
     await act(async () => {
       const response = await result.current.processPayment(
-        '0xCustomer' as `0x${string}`,
-        '0xToken' as `0x${string}`,
+        customerAddress,
+        tokenAddress,
         '50',
         'ORDER-456'
       )
@@ -302,8 +310,8 @@ describe('useProcessPayment', () => {
     
     await act(async () => {
       const response = await result.current.processPayment(
-        '0xCustomer' as `0x${string}`,
-        '0xToken' as `0x${string}`,
+        customerAddress,
+        tokenAddress,
         '100',
         'ORDER-789'
       )
@@ -315,6 +323,7 @@ describe('useProcessPayment', () => {
 
 describe('useSetMerchantPullPermit', () => {
   const mockWriteContractAsync = jest.fn()
+  const merchantAddress = '0x3333333333333333333333333333333333333333' as `0x${string}`
 
   beforeEach(() => {
     jest.clearAllMocks()
@@ -342,7 +351,7 @@ describe('useSetMerchantPullPermit', () => {
 
     await act(async () => {
       await result.current.setMerchantPullPermit(
-        '0xMerchant' as `0x${string}`,
+        merchantAddress,
         '75',
         1_900_000_000
       )
@@ -350,7 +359,7 @@ describe('useSetMerchantPullPermit', () => {
 
     expect(mockWriteContractAsync).toHaveBeenCalledWith(expect.objectContaining({
       functionName: 'setMerchantPullPermit',
-      args: ['0xMerchant', expect.any(BigInt), 1900000000n],
+      args: [merchantAddress, expect.any(BigInt), 1900000000n],
     }))
   })
 
@@ -361,7 +370,7 @@ describe('useSetMerchantPullPermit', () => {
 
     await act(async () => {
       const response = await result.current.setMerchantPullPermit(
-        '0xMerchant' as `0x${string}`,
+        merchantAddress,
         '25',
         0
       )

@@ -602,7 +602,7 @@ export function MessagingCenter({ friend, hasVault = false }: MessagingCenterPro
                   handleSendMessage();
                 }
               }}
-              placeholder={canEncryptForRecipient ? 'Type an encrypted message...' : 'Waiting for recipient encryption key...'}
+             
               aria-label="Message input"
               rows={1}
               disabled={!canEncryptForRecipient}

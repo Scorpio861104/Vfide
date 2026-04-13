@@ -129,7 +129,7 @@ describe('/api/crypto/payment-requests/[id]', () => {
       const data = await response.json();
 
       expect(response.status).toBe(400);
-      expect(data.error).toContain('JSON object');
+      expect(data.error).toContain('Invalid request body');
     });
 
     it('should update payment request status when user is a party', async () => {
@@ -169,7 +169,7 @@ describe('/api/crypto/payment-requests/[id]', () => {
       const data = await response.json();
 
       expect(response.status).toBe(400);
-      expect(data.error).toContain('Invalid status');
+      expect(data.error).toContain('Invalid request body');
     });
 
     it('should return 401 for unauthorized users', async () => {
@@ -216,7 +216,7 @@ describe('/api/crypto/payment-requests/[id]', () => {
       const data = await response.json();
 
       expect(response.status).toBe(400);
-      expect(data.error).toContain('JSON object');
+      expect(data.error).toContain('Invalid request body');
     });
 
     it('should update status and txHash when user is a party', async () => {
@@ -227,11 +227,11 @@ describe('/api/crypto/payment-requests/[id]', () => {
       // Second query: user lookup (user is to_user_id=99)
       query.mockResolvedValueOnce({ rows: [{ id: 99 }] });
       // Third query: update
-      query.mockResolvedValueOnce({ rows: [{ ...mockPaymentRequest, status: 'completed', tx_hash: '0xabc' }] });
+      query.mockResolvedValueOnce({ rows: [{ ...mockPaymentRequest, status: 'completed', tx_hash: '0x' + 'a'.repeat(64) }] });
 
       const request = new NextRequest('http://localhost:3000/api/crypto/payment-requests/1', {
         method: 'PATCH',
-        body: JSON.stringify({ status: 'completed', txHash: '0xabc' }),
+        body: JSON.stringify({ status: 'completed', txHash: '0x' + 'a'.repeat(64) }),
       });
 
       const response = await PATCH(request, { params: Promise.resolve({ id: '1' }) });
@@ -269,7 +269,7 @@ describe('/api/crypto/payment-requests/[id]', () => {
       const data = await response.json();
 
       expect(response.status).toBe(400);
-      expect(data.error).toContain('Invalid status');
+      expect(data.error).toContain('Invalid request body');
     });
 
     it('should return 400 when txHash is not a string', async () => {
@@ -285,7 +285,7 @@ describe('/api/crypto/payment-requests/[id]', () => {
       const data = await response.json();
 
       expect(response.status).toBe(400);
-      expect(data.error).toContain('Invalid txHash');
+      expect(data.error).toContain('Invalid request body');
       expect(query).not.toHaveBeenCalled();
     });
   });

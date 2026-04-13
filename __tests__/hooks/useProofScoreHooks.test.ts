@@ -32,6 +32,11 @@ jest.mock('@/lib/abis', () => ({
   SeerABI: [],
 }))
 
+jest.mock('@/lib/errorHandling', () => ({
+  parseContractError: jest.fn(() => ({ userMessage: 'mocked error' })),
+  logError: jest.fn(),
+}))
+
 import { useReadContract } from 'wagmi'
 import { useProofScore, useScoreBreakdown } from '@/hooks/useProofScoreHooks'
 

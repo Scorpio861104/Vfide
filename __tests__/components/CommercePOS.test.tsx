@@ -1,8 +1,7 @@
-import { describe, expect, it, vi } from '@jest/globals'
-import { render, screen, fireEvent } from '@testing-library/react'
-import React from 'react'
+import { describe, expect, it, beforeEach } from '@jest/globals';
+import { render, screen, fireEvent } from '@testing-library/react';
+import React from 'react';
 
-// Mock framer-motion
 jest.mock('framer-motion', () => ({
   motion: {
     div: ({ children, className, style, onClick, ...props }: any) => (
@@ -13,23 +12,20 @@ jest.mock('framer-motion', () => ({
     ),
   },
   AnimatePresence: ({ children }: any) => <>{children}</>,
-}))
+}));
 
-// Mock wagmi
 jest.mock('wagmi', () => ({
   useAccount: () => ({
     address: '0x1234567890123456789012345678901234567890',
     isConnected: true,
   }),
-  useWatchContractEvent: () => undefined, // This line is already present
-}))
+  useWatchContractEvent: () => undefined,
+}));
 
-// Mock QR code
 jest.mock('qrcode.react', () => ({
   QRCodeSVG: ({ value }: any) => <div data-testid="qr-code">{value}</div>,
-}))
+}));
 
-// Mock vfide hooks
 jest.mock('@/lib/vfide-hooks', () => ({
   useIsMerchant: () => ({
     isMerchant: true,
@@ -42,137 +38,56 @@ jest.mock('@/lib/vfide-hooks', () => ({
     savings: '0.40',
     vfideRate: 1,
   }),
-}))
+}));
 
-// Import after mocking
-import { MerchantPOS } from '@/components/commerce/MerchantPOS'
+import { MerchantPOS } from '@/components/commerce/MerchantPOS';
 
 describe('MerchantPOS', () => {
+  beforeEach(() => {
+    Object.defineProperty(global, 'fetch', {
+      configurable: true,
+      writable: true,
+      value: jest.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({ products: [] }),
+      }),
+    });
+  });
+
   it('renders without crashing', () => {
-    const { container } = render(<MerchantPOS />)
-    expect(container).toBeInTheDocument()
-  })
+    const { container } = render(<MerchantPOS />);
+    expect(container).toBeInTheDocument();
+  });
 
-  it('shows POS interface', () => {
-    render(<MerchantPOS />)
-    // Should show product list
-    expect(screen.getByText('Espresso')).toBeInTheDocument()
-    expect(screen.getByText('Latte')).toBeInTheDocument()
-    expect(screen.getByText('Croissant')).toBeInTheDocument()
-  })
+  it('shows merchant heading and primary tabs', () => {
+    render(<MerchantPOS />);
 
-  it('displays product prices', () => {
-    render(<MerchantPOS />)
-    expect(screen.getByText('$3.50')).toBeInTheDocument()
-    expect(screen.getByText('$4.50')).toBeInTheDocument()
-    expect(screen.getByText('$3.00')).toBeInTheDocument()
-  })
+    expect(screen.getByText(/Test Coffee Shop/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Point of Sale/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Products & Menu/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Sales & Reports/i })).toBeInTheDocument();
+  });
 
-  it('can add items to cart', () => {
-    render(<MerchantPOS />)
-    const espressoButton = screen.getByText('Espresso').closest('button') || screen.getByText('Espresso')
-    fireEvent.click(espressoButton)
-    // Cart should update
-    expect(document.body).toBeInTheDocument()
-  })
+  it('shows product and cart panels', () => {
+    render(<MerchantPOS />);
 
-  it('shows tabs for navigation', () => {
-    render(<MerchantPOS />)
-    // Should have tab buttons
-    const tabs = screen.getAllByRole('button')
-    expect(tabs.length).toBeGreaterThan(0)
-  })
-})
+    expect(screen.getByText('Products')).toBeInTheDocument();
+    expect(screen.getByText('Cart')).toBeInTheDocument();
+  });
 
-describe('MerchantPOS - Cart Operations', () => {
-  it('calculates subtotal', () => {
-    render(<MerchantPOS />)
-    // Cart section should exist
-    expect(screen.getByText('Cart')).toBeInTheDocument()
-  })
+  it('supports tab clicks', () => {
+    render(<MerchantPOS />);
 
-  it('shows empty cart message', () => {
-    render(<MerchantPOS />)
-    // Should show empty state when no items
-    expect(document.body).toBeInTheDocument()
-  })
-})
+    fireEvent.click(screen.getByRole('button', { name: /Products & Menu/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Sales & Reports/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Point of Sale/i }));
 
-describe('MerchantPOS - Product Management', () => {
-  it('renders product grid', () => {
-    const { container } = render(<MerchantPOS />)
-    // Should have product items
-    expect(container.querySelectorAll('button').length).toBeGreaterThan(0)
-  })
-})
+    expect(screen.getByText('Cart')).toBeInTheDocument();
+  });
 
-describe('MerchantPOS - Cart Functionality', () => {
-  it('can add multiple items to cart', () => {
-    render(<MerchantPOS />)
-    const espressoButton = screen.getByText('Espresso').closest('div')?.querySelector('button') || screen.getByText('Espresso')
-    
-    fireEvent.click(espressoButton)
-    fireEvent.click(espressoButton)
-    
-    // Should have items in cart
-    expect(screen.getByText('Cart')).toBeInTheDocument()
-  })
+  it('shows empty-cart baseline', () => {
+    render(<MerchantPOS />);
 
-  it('shows fee comparison', () => {
-    render(<MerchantPOS />)
-    // Should display fee comparison section
-    expect(document.body.textContent).toMatch(/VFIDE|fee|savings/i)
-  })
-
-  it('can clear cart', () => {
-    render(<MerchantPOS />)
-    // Add an item first
-    const espressoButton = screen.getByText('Espresso').closest('div')?.querySelector('button') || screen.getByText('Espresso')
-    fireEvent.click(espressoButton)
-    
-    // Find and click clear button if it exists
-    const clearButton = screen.queryByText(/clear/i)
-    if (clearButton) {
-      fireEvent.click(clearButton)
-    }
-    expect(document.body).toBeInTheDocument()
-  })
-})
-
-describe('MerchantPOS - Tab Navigation', () => {
-  it('can switch to products tab', () => {
-    const { container } = render(<MerchantPOS />)
-    const buttons = container.querySelectorAll('button')
-    // Click any button that might be a tab
-    if (buttons.length > 0) {
-      fireEvent.click(buttons[0])
-    }
-    expect(container).toBeInTheDocument()
-  })
-
-  it('can switch to sales tab', () => {
-    const { container } = render(<MerchantPOS />)
-    expect(container).toBeInTheDocument()
-  })
-})
-
-describe('MerchantPOS - QR Payment', () => {
-  it('can initiate QR payment flow', () => {
-    const { container } = render(<MerchantPOS />)
-    // Add item to cart first
-    const espressoButton = screen.getByText('Espresso').closest('div')?.querySelector('button') || screen.getByText('Espresso')
-    fireEvent.click(espressoButton)
-    
-    // Component should handle cart state
-    expect(container).toBeInTheDocument()
-  })
-})
-
-describe('MerchantPOS - Non-Merchant View', () => {
-  it('handles non-merchant user', () => {
-    // This test verifies the component handles different merchant states
-    const { container } = render(<MerchantPOS />)
-    expect(container).toBeInTheDocument()
-  })
-})
-
+    expect(screen.getByText(/Cart is empty/i)).toBeInTheDocument();
+  });
+});

@@ -13,56 +13,50 @@ jest.mock('@/components/layout/Footer', () => ({
   Footer: () => <div data-testid="footer" />,
 }));
 
-jest.mock('@/components/ui/PageLayout', () => ({
-  PageWrapper: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-}));
-
 jest.mock('framer-motion', () => ({
-  motion: {
-    section: ({ children, ...props }: any) => <section {...props}>{children}</section>,
-    div: ({ children, ...props }: any) => <div {...props}>{children}</div>,
-    svg: ({ children, ...props }: any) => <svg {...props}>{children}</svg>,
-    circle: ({ ...props }: any) => <circle {...props} />,
-  },
+  motion: new Proxy(
+    {},
+    {
+      get: () => ({ children, ...props }: any) => <div {...props}>{children}</div>,
+    }
+  ),
 }));
 
-jest.mock('lucide-react', () => {
-  const Icon = ({ className }: { className?: string }) => <span className={className}>icon</span>;
-  return {
-    Users: Icon,
-    Heart: Icon,
-    MessageCircle: Icon,
-    Share2: Icon,
-    ArrowUp: Icon,
-    ArrowDown: Icon,
-    ArrowRight: Icon,
-  };
-});
+jest.mock('../../app/social/components/OverviewTab', () => ({
+  OverviewTab: () => <div>Overview tab content</div>,
+}));
+
+jest.mock('../../app/social/components/EngagementTab', () => ({
+  EngagementTab: () => <div>Engagement tab content</div>,
+}));
+
+jest.mock('../../app/social/components/GrowthTab', () => ({
+  GrowthTab: () => <div>Growth tab content</div>,
+}));
 
 describe('Social analytics page pathways', () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
-  it('renders analytics dashboard with metric and influence sections', () => {
+  it('renders page shell with overview tab active', () => {
     renderSocialPage();
 
-    expect(screen.getByRole('heading', { name: /Social Analytics/i })).toBeTruthy();
-    expect(screen.getByRole('heading', { name: /Key Metrics/i })).toBeTruthy();
-    expect(screen.getByText(/Social analytics metrics are not available/i)).toBeTruthy();
-    expect(screen.getByRole('heading', { name: /Influence Score/i })).toBeTruthy();
-    expect(screen.getByText(/Influence scoring is unavailable/i)).toBeTruthy();
-    expect(screen.getByRole('link', { name: /Go to Social Hub/i }).getAttribute('href')).toBe('/social-hub');
+    expect(screen.getByText(/Social Analytics/i)).toBeTruthy();
+    expect(screen.getByText(/Community engagement metrics/i)).toBeTruthy();
+    expect(screen.getByRole('button', { name: /^Overview$/i })).toBeTruthy();
+    expect(screen.getByRole('button', { name: /^Engagement$/i })).toBeTruthy();
+    expect(screen.getByRole('button', { name: /^Growth$/i })).toBeTruthy();
+    expect(screen.getByText(/Overview tab content/i)).toBeTruthy();
   });
 
-  it('switches time ranges and keeps engagement sections visible', () => {
+  it('switches between engagement and growth tabs', () => {
     renderSocialPage();
 
-    fireEvent.click(screen.getByRole('button', { name: /^Month$/i }));
-    fireEvent.click(screen.getByRole('button', { name: /Year/i }));
+    fireEvent.click(screen.getByRole('button', { name: /^Engagement$/i }));
+    expect(screen.getByText(/Engagement tab content/i)).toBeTruthy();
 
-    expect(screen.getByRole('heading', { name: /Engagement Trends/i })).toBeTruthy();
-    expect(screen.getByRole('heading', { name: /Community Health/i })).toBeTruthy();
-    expect(screen.getByRole('heading', { name: /Insights & Recommendations/i })).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: /^Growth$/i }));
+    expect(screen.getByText(/Growth tab content/i)).toBeTruthy();
   });
 });

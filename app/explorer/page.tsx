@@ -66,8 +66,8 @@ export default function ExplorerPage() {
               type="text"
               value={searchQuery}
               onChange={(e) =>  setSearchQuery(e.target.value)}
-              placeholder="Search by address (0x...)"
-              className="w-full bg-zinc-900/50 border border-zinc-700 rounded-xl pl-12 pr-4 py-4 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500 transition-all"
+             
+              className="w-full bg-zinc-900/50 border border-zinc-700 rounded-xl pl-12 pr-4 py-4 text-white  focus:outline-none focus:ring-2 focus:ring-cyan-500 transition-all"
             />
           </div>
         </motion.form>

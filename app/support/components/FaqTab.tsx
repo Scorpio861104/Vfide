@@ -20,8 +20,8 @@ export function FaqTab({ search, items, openQuestion, onSearchChange, onToggleQu
         type="search"
         value={search}
         onChange={(event) =>  onSearchChange(event.target.value)}
-        placeholder="Search for answers"
-        className="w-full rounded-2xl border border-white/10 bg-white/3 px-4 py-3 text-white placeholder:text-gray-500"
+       
+        className="w-full rounded-2xl border border-white/10 bg-white/3 px-4 py-3 text-white "
       />
 
       {items.map((item) => (

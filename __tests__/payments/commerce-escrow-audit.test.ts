@@ -24,7 +24,7 @@ function readContract(name: string): string {
 const escrowSrc = readContract('EscrowManager');
 const merchantSrc = readContract('MerchantPortal');
 const paymentsApiSrc = readFileSync(join(APP_DIR, 'api/merchant/payments/confirm/route.ts'), 'utf-8');
-const payPageSrc = readFileSync(join(APP_DIR, 'pay/page.tsx'), 'utf-8');
+const payContentSrc = readFileSync(join(APP_DIR, 'pay/components/PayContent.tsx'), 'utf-8');
 
 // ─────────────────────────────────────────────────────────────────────────────
 // R-056 – Escrow lock-time edge-case bypass
@@ -101,20 +101,20 @@ describe('R-057 – Permit replay or overdraw', () => {
   });
 
   it('permit setup enforces positive amount and non-expired expiry', () => {
-    expect(merchantSrc).toMatch(/require\(maxAmount > 0, "MP: invalid permit amount"\)/);
-    expect(merchantSrc).toMatch(/require\(expiresAt == 0 \|\| expiresAt > block\.timestamp, "MP: invalid permit expiry"\)/);
+    expect(merchantSrc).toMatch(/if \(maxAmount == 0\) revert MERCH_InvalidConfig\(\)/);
+    expect(merchantSrc).toMatch(/if \(!\(expiresAt == 0 \|\| expiresAt > block\.timestamp\)\) revert MERCH_InvalidConfig\(\)/);
   });
 
   it('merchant pull requires approval flag', () => {
-    expect(merchantSrc).toMatch(/require\(merchantPullApproved\[customer\]\[msg\.sender\], "merchant not approved by customer"\)/);
+    expect(merchantSrc).toMatch(/if \(!merchantPullApproved\[customer\]\[msg\.sender\]\) revert MERCH_NotApproved\(\)/);
   });
 
   it('merchant pull enforces expiry window', () => {
-    expect(merchantSrc).toMatch(/require\(permitExpiry == 0 \|\| block\.timestamp <= permitExpiry, "merchant approval expired"\)/);
+    expect(merchantSrc).toMatch(/if \(!\(permitExpiry == 0 \|\| block\.timestamp <= permitExpiry\)\) revert MERCH_ApprovalExpired\(\)/);
   });
 
   it('merchant pull enforces remaining amount floor and decrements on use', () => {
-    expect(merchantSrc).toMatch(/require\(remainingPull >= amount, "merchant pull limit exceeded"\)/);
+    expect(merchantSrc).toMatch(/if \(remainingPull < amount\) revert MERCH_LimitExceeded\(\)/);
     expect(merchantSrc).toMatch(/merchantPullRemaining\[customer\]\[msg\.sender\] = remainingPull - amount/);
   });
 
@@ -228,23 +228,24 @@ describe('R-059 – Auto-convert policy misconfiguration', () => {
   it('slippage bounds are hard-capped by constants', () => {
     expect(merchantSrc).toMatch(/MIN_SWAP_OUTPUT_BPS\s*=\s*9000/);
     expect(merchantSrc).toMatch(/MAX_SWAP_OUTPUT_BPS\s*=\s*10000/);
-    expect(merchantSrc).toMatch(/require\(_minBps >= MIN_SWAP_OUTPUT_BPS && _minBps <= MAX_SWAP_OUTPUT_BPS, "invalid slippage"\)/);
+    expect(merchantSrc).toMatch(/if \(_minBps < MIN_SWAP_OUTPUT_BPS \|\| _minBps > MAX_SWAP_OUTPUT_BPS\) revert MERCH_InvalidConfig\(\)/);
   });
 
   it('swap config requires stablecoin when router is set', () => {
-    expect(merchantSrc).toMatch(/require\(_stable != address\(0\), "MP: stable required with router"\)/);
+    expect(merchantSrc).toMatch(/if \(_router != address\(0\)\) \{/);
+    expect(merchantSrc).toMatch(/if \(_stable == address\(0\)\) revert MERCH_InvalidConfig\(\)/);
   });
 
   it('swap path has strict shape and endpoint checks', () => {
     expect(merchantSrc).toMatch(/MAX_SWAP_PATH_LENGTH\s*=\s*5/);
-    expect(merchantSrc).toMatch(/require\(path\.length >= 2 && path\.length <= MAX_SWAP_PATH_LENGTH, "invalid path length"\)/);
-    expect(merchantSrc).toMatch(/require\(path\[0\] == token, "path start mismatch"\)/);
-    expect(merchantSrc).toMatch(/require\(path\[path\.length - 1\] == stablecoin, "path end mismatch"\)/);
+    expect(merchantSrc).toMatch(/if \(path\.length < 2 \|\| path\.length > MAX_SWAP_PATH_LENGTH\) revert MERCH_InvalidConfig\(\)/);
+    expect(merchantSrc).toMatch(/if \(path\[0\] != token\) revert MERCH_InvalidConfig\(\)/);
+    expect(merchantSrc).toMatch(/if \(path\[path\.length - 1\] != stablecoin\) revert MERCH_InvalidConfig\(\)/);
   });
 
   it('approval is revoked after both successful and failed swap attempts', () => {
     // success path
-    expect(merchantSrc).toMatch(/require\(IERC20\(token\)\.approve\(address\(swapRouter\), 0\), "MP: revoke failed"\)/);
+    expect(merchantSrc).toMatch(/if \(!IERC20\(token\)\.approve\(address\(swapRouter\), 0\)\) revert MERCH_RevokeFailed\(\)/);
     // failure path fallback
     expect(merchantSrc).toMatch(/emit AutoConvertFallback\(merchant, token, netAmount, "swap_failed"\)/);
   });
@@ -254,9 +255,10 @@ describe('R-059 – Auto-convert policy misconfiguration', () => {
     expect(merchantSrc).toMatch(/IERC20\(token\)\.safeTransfer\(recipient, netAmount\)/);
   });
 
-  it('merchant-side auto-convert enabling is currently disabled by explicit guard', () => {
+  it('merchant-side auto-convert enabling requires swap router and stablecoin configuration', () => {
     expect(merchantSrc).toMatch(/function\s+setAutoConvert\(bool enabled\) external onlyMerchant/);
-    expect(merchantSrc).toMatch(/require\(!enabled, "MP: auto-convert temporarily disabled"\)/);
+    expect(merchantSrc).toMatch(/if \(enabled\) \{/);
+    expect(merchantSrc).toMatch(/if \(address\(swapRouter\) == address\(0\) \|\| stablecoin == address\(0\)\) revert MERCH_NotConfigured\(\)/);
   });
 
   describe('TypeScript model: slippage bounds', () => {
@@ -286,18 +288,18 @@ describe('R-059 – Auto-convert policy misconfiguration', () => {
 
 describe('R-060 – Payment replay in frontend retries', () => {
   it('checkout UI has processing guard state and disables submit while pending', () => {
-    expect(payPageSrc).toMatch(/const \[isProcessing, setIsProcessing\] = useState\(false\)/);
-    expect(payPageSrc).toMatch(/const effectiveProcessing = isProcessing \|\| isPaying \|\| isEscrowLoading/);
-    expect(payPageSrc).toMatch(/disabled=\{effectiveProcessing \|\| !merchant \|\| !hasValidAmount \|\| !qrReadyForPayment\}/);
+    expect(payContentSrc).toMatch(/const \[isProcessing, setIsProcessing\] = useState\(false\)/);
+    expect(payContentSrc).toMatch(/const effectiveProcessing = isProcessing \|\| isPaying \|\| isEscrowLoading/);
+    expect(payContentSrc).toMatch(/disabled=\{effectiveProcessing \|\| !merchant \|\| !hasValidAmount \|\| !qrReadyForPayment\}/);
   });
 
   it('payment flow toggles processing state around async submit', () => {
-    expect(payPageSrc).toMatch(/setIsProcessing\(true\)/);
-    expect(payPageSrc).toMatch(/finally \{\s*setIsProcessing\(false\);\s*\}/);
+    expect(payContentSrc).toMatch(/setIsProcessing\(true\)/);
+    expect(payContentSrc).toMatch(/finally \{\s*setIsProcessing\(false\);\s*\}/);
   });
 
   it('server confirmation requires tx_hash and verifies on-chain matching payment event', () => {
-    expect(paymentsApiSrc).toMatch(/Valid tx_hash required/);
+    expect(paymentsApiSrc).toMatch(/tx_hash:\s*z\.string\(\)\.regex\(TX_HASH_REGEX\)/);
     expect(paymentsApiSrc).toMatch(/verifyPaymentEventOnChain/);
     expect(paymentsApiSrc).toMatch(/Transaction receipt does not contain a matching payment event/);
   });

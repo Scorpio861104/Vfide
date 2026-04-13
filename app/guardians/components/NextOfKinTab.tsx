@@ -127,7 +127,7 @@ export function NextOfKinTab({ isConnected }: { isConnected: boolean }) {
               className="space-y-4 pt-4 mt-4 border-t border-white/10">
               <div>
                 <label className="block text-gray-400 text-sm mb-2">New Next of Kin Address</label>
-                <input type="text" placeholder="0x..." value={newKinAddress} onChange={(e) => setNewKinAddress(e.target.value)}
+                <input type="text" value={newKinAddress} onChange={(e) => setNewKinAddress(e.target.value)}
                   className="w-full px-4 py-3 bg-black/30 border border-white/10 rounded-xl text-white focus:border-yellow-500 focus:outline-none focus:ring-2 focus:ring-yellow-500/20 font-mono transition-all" />
               </div>
               <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4">
@@ -187,9 +187,9 @@ export function NextOfKinTab({ isConnected }: { isConnected: boolean }) {
         <p className="text-gray-400 text-sm mb-4">Track external vaults where you may be configured as Next of Kin. This is private and manual; there is no public heir directory.</p>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-          <input type="text" placeholder="Owner vault address (0x...)" value={inboxVaultInput} onChange={(e) => setInboxVaultInput(e.target.value)}
+          <input type="text" value={inboxVaultInput} onChange={(e) => setInboxVaultInput(e.target.value)}
             className="md:col-span-2 px-4 py-3 bg-black/30 border border-white/10 rounded-xl text-white focus:outline-none focus:border-yellow-500/50 font-mono" />
-          <input type="text" placeholder="Label (optional)" value={inboxVaultLabel} onChange={(e) => setInboxVaultLabel(e.target.value)}
+          <input type="text" value={inboxVaultLabel} onChange={(e) => setInboxVaultLabel(e.target.value)}
             className="px-4 py-3 bg-black/30 border border-white/10 rounded-xl text-white focus:outline-none focus:border-yellow-500/50" />
         </div>
         <button onClick={() => { const r = addInboxEntry(inboxVaultInput, inboxVaultLabel); setInboxNotice(r.message); if (r.ok) { setInboxVaultInput(''); setInboxVaultLabel(''); } }}

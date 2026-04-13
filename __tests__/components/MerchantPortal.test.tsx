@@ -5,6 +5,19 @@ import '@testing-library/jest-dom';
 import MerchantPortal from '../../components/merchant/MerchantPortal';
 
 describe('MerchantPortal', () => {
+  beforeEach(() => {
+    Object.defineProperty(global, 'fetch', {
+      configurable: true,
+      writable: true,
+      value: jest.fn(async () =>
+        new Response(JSON.stringify({ requests: [] }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        })
+      ),
+    });
+  });
+
   it('renders base shell and metrics', () => {
     render(<MerchantPortal />);
 
@@ -13,12 +26,12 @@ describe('MerchantPortal', () => {
     expect(screen.getByText(/Pending Requests/i)).toBeInTheDocument();
   });
 
-  it('shows payment request form and empty request list by default', () => {
+  it('shows payment request form and empty request list by default', async () => {
     render(<MerchantPortal />);
 
     expect(screen.getByText('Create Payment Request')).toBeInTheDocument();
-    expect(screen.getByPlaceholderText(/recipient@example.com/i)).toBeInTheDocument();
-    expect(screen.getByText(/No payment requests yet/i)).toBeInTheDocument();
+    expect(screen.getAllByRole('textbox').length).toBeGreaterThan(0);
+    expect(await screen.findByText(/No payment requests yet/i)).toBeInTheDocument();
   });
 
   it('switches to revenue tab and renders chart/report containers', async () => {
@@ -57,7 +70,8 @@ describe('MerchantPortal', () => {
       expect(screen.getByText(/No API keys available yet/i)).toBeInTheDocument();
     });
 
-    await user.type(screen.getByPlaceholderText(/production api key/i), 'Internal Key');
+    const keyInput = screen.getAllByRole('textbox')[0];
+    await user.type(keyInput, 'Internal Key');
     await user.click(screen.getByRole('button', { name: /Generate/i }));
 
     await waitFor(() => {

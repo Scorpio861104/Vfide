@@ -140,7 +140,7 @@ describe('SocialFeatures - Following Tab', () => {
     fireEvent.click(screen.getByRole('button', { name: /👤 Following/i }));
     
     // Search bar should appear
-    expect(screen.getByPlaceholderText(/Search users/i)).toBeInTheDocument();
+    expect(screen.getByRole('textbox', { name: /search users/i })).toBeInTheDocument();
   });
 
   test('displays user cards in following tab', () => {
@@ -156,7 +156,7 @@ describe('SocialFeatures - Following Tab', () => {
     render(<SocialFeatures />);
     fireEvent.click(screen.getByRole('button', { name: /👤 Following/i }));
     
-    const searchInput = screen.getByPlaceholderText(/Search users/i);
+    const searchInput = screen.getByRole('textbox', { name: /search users/i });
     fireEvent.change(searchInput, { target: { value: 'user_1' } });
     
     // Should filter results
@@ -191,7 +191,7 @@ describe('SocialFeatures - Followers Tab', () => {
     render(<SocialFeatures />);
     fireEvent.click(screen.getByRole('button', { name: /⭐ Followers/i }));
     
-    expect(screen.getByPlaceholderText(/Search users/i)).toBeInTheDocument();
+    expect(screen.getByRole('textbox', { name: /search users/i })).toBeInTheDocument();
   });
 
   test('displays follower user cards', () => {
@@ -221,7 +221,7 @@ describe('SocialFeatures - Friends Tab', () => {
     render(<SocialFeatures />);
     fireEvent.click(screen.getByRole('button', { name: /🤝 Friends/i }));
     
-    expect(screen.getByPlaceholderText(/Search users/i)).toBeInTheDocument();
+    expect(screen.getByRole('textbox', { name: /search users/i })).toBeInTheDocument();
   });
 
   test('displays friend user cards', () => {
@@ -245,7 +245,7 @@ describe('SocialFeatures - Friends Tab', () => {
     render(<SocialFeatures />);
     fireEvent.click(screen.getByRole('button', { name: /🤝 Friends/i }));
     
-    const searchInput = screen.getByPlaceholderText(/Search users/i);
+    const searchInput = screen.getByRole('textbox', { name: /search users/i });
     fireEvent.change(searchInput, { target: { value: 'user_10' } });
     
     expect(searchInput).toHaveValue('user_10');
@@ -260,7 +260,7 @@ describe('SocialFeatures - Suggestions Tab', () => {
     fireEvent.click(screen.getByRole('button', { name: /⭐ Suggestions/i }));
     
     // Suggestions tab should not have search
-    expect(screen.queryByPlaceholderText(/Search users/i)).not.toBeInTheDocument();
+    expect(screen.queryByRole('textbox', { name: /search users/i })).not.toBeInTheDocument();
   });
 
   test('displays suggestion cards with reasons', () => {
@@ -314,7 +314,7 @@ describe('SocialFeatures - Friend Requests Tab', () => {
     fireEvent.click(screen.getByRole('button', { name: /📬 Requests/i }));
     
     // Should not have search bar
-    expect(screen.queryByPlaceholderText(/Search users/i)).not.toBeInTheDocument();
+    expect(screen.queryByRole('textbox', { name: /search users/i })).not.toBeInTheDocument();
   });
 
   test('displays friend request cards', () => {
@@ -371,7 +371,7 @@ describe('SocialFeatures - Blocked Users Tab', () => {
     render(<SocialFeatures />);
     fireEvent.click(screen.getByRole('button', { name: /🚫 Blocked/i }));
     
-    expect(screen.queryByPlaceholderText(/Search users/i)).not.toBeInTheDocument();
+    expect(screen.queryByRole('textbox', { name: /search users/i })).not.toBeInTheDocument();
   });
 
   test('displays blocked user cards', () => {
@@ -453,28 +453,28 @@ describe('SocialFeatures - Search Functionality', () => {
     render(<SocialFeatures />);
     fireEvent.click(screen.getByRole('button', { name: /👤 Following/i }));
     
-    expect(screen.getByPlaceholderText(/Search users/i)).toBeInTheDocument();
+    expect(screen.getByRole('textbox', { name: /search users/i })).toBeInTheDocument();
   });
 
   test('search input does not appear for non-searchable tabs', () => {
     render(<SocialFeatures />);
     fireEvent.click(screen.getByRole('button', { name: /⭐ Suggestions/i }));
     
-    expect(screen.queryByPlaceholderText(/Search users/i)).not.toBeInTheDocument();
+    expect(screen.queryByRole('textbox', { name: /search users/i })).not.toBeInTheDocument();
   });
 
   test('search clears when switching tabs', () => {
     render(<SocialFeatures />);
     fireEvent.click(screen.getByRole('button', { name: /👤 Following/i }));
     
-    const searchInput = screen.getByPlaceholderText(/Search users/i) as HTMLInputElement;
+    const searchInput = screen.getByRole('textbox', { name: /search users/i }) as HTMLInputElement;
     fireEvent.change(searchInput, { target: { value: 'test' } });
     expect(searchInput.value).toBe('test');
     
     fireEvent.click(screen.getByRole('button', { name: /⭐ Suggestions/i }));
     fireEvent.click(screen.getByRole('button', { name: /👤 Following/i }));
     
-    const newSearchInput = screen.getByPlaceholderText(/Search users/i) as HTMLInputElement;
+    const newSearchInput = screen.getByRole('textbox', { name: /search users/i }) as HTMLInputElement;
     expect(newSearchInput.value).toBe('');
   });
 });
@@ -593,13 +593,13 @@ describe('SocialFeatures - Integration', () => {
     render(<SocialFeatures />);
     
     fireEvent.click(screen.getByRole('button', { name: /👤 Following/i }));
-    const searchInput = screen.getByPlaceholderText(/Search users/i) as HTMLInputElement;
+    const searchInput = screen.getByRole('textbox', { name: /search users/i }) as HTMLInputElement;
     fireEvent.change(searchInput, { target: { value: 'test' } });
     
     fireEvent.click(screen.getByRole('button', { name: /⭐ Followers/i }));
     fireEvent.click(screen.getByRole('button', { name: /👤 Following/i }));
     
-    const newSearchInput = screen.getByPlaceholderText(/Search users/i) as HTMLInputElement;
+    const newSearchInput = screen.getByRole('textbox', { name: /search users/i }) as HTMLInputElement;
     // Search state is preserved when switching tabs
     expect(newSearchInput.value).toBe('test');
   });

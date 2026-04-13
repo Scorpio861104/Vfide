@@ -35,7 +35,7 @@ const navIcons: Record<string, React.ComponentType<{ className?: string; size?: 
   Governance: MetalGovernanceIcon,
   "DAO Hub": MetalGovernanceIcon,
   "Flashloans P2P": MetalTokenIcon,
-  Flashlight: MetalTokenIcon,
+  Flashloan: MetalTokenIcon,
   Headhunter: MetalHeadhunterIcon,
   Endorsements: MetalShieldIcon,
   Rewards: MetalRewardsIcon,

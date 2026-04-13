@@ -94,7 +94,7 @@ describe('/api/analytics', () => {
       const data = await response.json();
 
       expect(response.status).toBe(400);
-      expect(data.error).toContain('eventType');
+      expect(data.error).toBe('Invalid request body');
     });
 
     it('should reject oversized metrics batch', async () => {
@@ -116,7 +116,7 @@ describe('/api/analytics', () => {
       const data = await response.json();
 
       expect(response.status).toBe(400);
-      expect(data.error).toContain('Too many metrics');
+      expect(data.error).toBe('Invalid batch metric payload');
     });
 
     it('should reject batch with invalid event type', async () => {

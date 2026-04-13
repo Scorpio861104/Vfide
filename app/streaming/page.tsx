@@ -217,7 +217,7 @@ export default function StreamingPage() {
                 type="text"
                 value={recipient}
                 onChange={(e) =>  setRecipient(e.target.value)}
-                placeholder="0x... or ENS name"
+               
                 className="w-full p-3 bg-muted border border-border rounded-lg"
               />
             </div>
@@ -229,7 +229,7 @@ export default function StreamingPage() {
                   type="number"
                   value={amount}
                   onChange={(e) =>  setAmount(e.target.value)}
-                  placeholder="0.0"
+                 
                   className="w-full p-3 bg-muted border border-border rounded-lg"
                 />
               </div>

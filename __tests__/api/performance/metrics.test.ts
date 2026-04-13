@@ -105,7 +105,7 @@ describe('/api/performance/metrics', () => {
       const data = await response.json();
 
       expect(response.status).toBe(400);
-      expect(data.error).toContain('Invalid metricName');
+      expect(data.error).toContain('Invalid request body');
       expect(query).not.toHaveBeenCalled();
     });
 
@@ -126,7 +126,7 @@ describe('/api/performance/metrics', () => {
       const data = await response.json();
 
       expect(response.status).toBe(400);
-      expect(data.error).toContain('Invalid value');
+      expect(data.error).toContain('Invalid request body');
       expect(query).not.toHaveBeenCalled();
     });
 

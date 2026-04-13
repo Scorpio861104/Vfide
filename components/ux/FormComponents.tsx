@@ -153,7 +153,7 @@ export const FormInput = forwardRef<HTMLInputElement, FormInputProps>(({
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
           className={`
-            w-full bg-transparent text-white placeholder-gray-500
+            w-full bg-transparent text-white 
             rounded-xl outline-none
             ${sizes[size]}
             ${leftIcon ? 'pl-10' : 'pl-4'}
@@ -286,7 +286,7 @@ export const FormTextarea = forwardRef<HTMLTextAreaElement, FormTextareaProps>((
           disabled={disabled}
           className={`
             w-full min-h-25 px-4 py-3 bg-gray-900 border rounded-xl
-            text-white placeholder-gray-500
+            text-white 
             outline-none transition-colors resize-y
             ${error ? 'border-red-500' : success ? 'border-green-500' : 'border-gray-700 focus:border-cyan-500'}
             ${disabled ? 'opacity-50 cursor-not-allowed' : ''}
@@ -605,11 +605,11 @@ export function SearchInput({
         type="text"
         value={value}
         onChange={(e) =>  onChange(e.target.value)}
-        placeholder={placeholder}
+       
         autoFocus={autoFocus}
         className="
           w-full h-11 pl-10 pr-10 bg-gray-900 border border-gray-700 rounded-xl
-          text-white placeholder-gray-500
+          text-white 
           outline-none focus:border-cyan-500 transition-colors
         "
       />
@@ -688,10 +688,10 @@ export function AddressInput({
           type="text"
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          placeholder="0x... or ENS name"
+         
           className={`
             w-full h-11 px-4 pr-20 bg-gray-900 border rounded-xl
-            text-white font-mono text-sm placeholder-gray-500
+            text-white font-mono text-sm 
             outline-none transition-colors
             ${error ? 'border-red-500' : isValidAddress ? 'border-green-500' : 'border-gray-700 focus:border-cyan-500'}
           `}
@@ -815,10 +815,10 @@ export function AmountInput({
           inputMode="decimal"
           value={value}
           onChange={handleChange}
-          placeholder="0.00"
+         
           className="
             flex-1 h-14 px-4 bg-transparent text-white text-xl font-medium
-            placeholder-gray-500 outline-none
+             outline-none
           "
         />
 

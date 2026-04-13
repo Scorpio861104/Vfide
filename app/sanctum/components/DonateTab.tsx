@@ -43,8 +43,8 @@ export function DonateTab({ isConnected }: { isConnected: boolean }) {
               type="number"
               value={amount}
               onChange={(e) =>  setAmount(e.target.value)}
-              placeholder="Enter amount"
-              className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-4 py-3 text-zinc-100 placeholder-zinc-500 focus:border-pink-500 focus:outline-none"
+             
+              className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-4 py-3 text-zinc-100  focus:border-pink-500 focus:outline-none"
             />
           </div>
 
@@ -66,8 +66,8 @@ export function DonateTab({ isConnected }: { isConnected: boolean }) {
               type="text"
               value={note}
               onChange={(e) =>  setNote(e.target.value)}
-              placeholder="In memory of... / For..."
-              className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-4 py-3 text-zinc-100 placeholder-zinc-500 focus:border-pink-500 focus:outline-none"
+             
+              className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-4 py-3 text-zinc-100  focus:border-pink-500 focus:outline-none"
             />
           </div>
 

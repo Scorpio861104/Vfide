@@ -115,7 +115,7 @@ describe('Notifications page error boundary handling', () => {
     renderNotificationsPage();
 
     expect((await screen.findAllByRole('heading', { name: /Notification Command/i })).length).toBeGreaterThan(0);
-    expect(screen.getByText(/Oops! Something went wrong/i)).toBeTruthy();
-    expect(screen.getByText(/This has been logged and we'll look into it/i)).toBeTruthy();
+    expect(screen.getByText(/Something went wrong/i)).toBeTruthy();
+    expect(screen.getByText(/Notification list render failure/i)).toBeTruthy();
   });
 });

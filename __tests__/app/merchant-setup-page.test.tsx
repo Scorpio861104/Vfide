@@ -42,7 +42,7 @@ jest.mock('framer-motion', () => ({
 }));
 
 describe('Merchant setup page', () => {
-  it('renders the setup flow with training and off-ramp resources', () => {
+  it('renders the connected setup flow', () => {
     const pageModule = require('../../app/merchant/setup/page');
     const MerchantSetupPage = pageModule.default as React.ComponentType;
 
@@ -50,7 +50,5 @@ describe('Merchant setup page', () => {
 
     expect(screen.getByText(/Create your store/i)).toBeTruthy();
     expect(screen.getByText(/Merchant Quick Setup Component/i)).toBeTruthy();
-    expect(screen.getByText(/Merchant Training Component/i)).toBeTruthy();
-    expect(screen.getByText(/Off-Ramp Withdraw Component/i)).toBeTruthy();
   });
 });

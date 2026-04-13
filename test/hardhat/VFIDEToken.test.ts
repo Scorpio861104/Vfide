@@ -396,6 +396,9 @@ describe("VFIDEToken", () => {
         580_000n * 10n ** 18n,
         0n,
       );
+      await ethers.provider.send("evm_increaseTime", [H48]);
+      await ethers.provider.send("evm_mine", []);
+      await token.connect(owner).applyAntiWhale();
 
       const amount = 600_000n * 10n ** 18n;
       const expectedNet = await token.getExpectedNetAmount(owner.address, user1.address, amount);
@@ -419,6 +422,9 @@ describe("VFIDEToken", () => {
         500_000n * 10n ** 18n,
         0n,
       );
+      await ethers.provider.send("evm_increaseTime", [H48]);
+      await ethers.provider.send("evm_mine", []);
+      await token.connect(owner).applyAntiWhale();
 
       const amount = 500_000n * 10n ** 18n;
       const latest = await ethers.provider.getBlock("latest");

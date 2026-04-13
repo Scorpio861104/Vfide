@@ -129,7 +129,7 @@ describe('Social hub page pathways', () => {
     renderSocialHubPage();
 
     expect(screen.getByRole('heading', { name: /Social Hub/i })).toBeTruthy();
-    expect(screen.getByPlaceholderText(/What's happening in Web3\?/i)).toBeTruthy();
+    expect(screen.getByRole('textbox')).toBeTruthy();
     expect(screen.getByRole('button', { name: /all/i })).toBeTruthy();
     expect(screen.getByRole('button', { name: /following/i })).toBeTruthy();
     expect(screen.getByRole('button', { name: /trending/i })).toBeTruthy();

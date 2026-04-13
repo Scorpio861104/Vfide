@@ -21,7 +21,7 @@ export default function CouponInput({ onApply, isApplying = false, error, applie
           id="coupon-code"
           value={couponCode}
           onChange={(e: ChangeEvent<HTMLInputElement>) => setCouponCode(e.target.value.toUpperCase())}
-          placeholder="SAVE10"
+         
           disabled={isApplying}
           className="flex-1 rounded-md border bg-background px-3 py-2 text-sm"
         />

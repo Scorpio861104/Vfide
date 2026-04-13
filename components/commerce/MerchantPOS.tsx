@@ -708,7 +708,7 @@ export function MerchantPOS() {
                     type="text"
                     value={newProduct.name}
                     onChange={(e) =>  setNewProduct({...newProduct, name: e.target.value})}
-                    placeholder="Cappuccino"
+                   
                     className="w-full bg-zinc-950 border border-cyan-400/30 rounded-lg px-4 py-3 text-zinc-100 focus:border-cyan-400 outline-none"
                   />
                 </div>
@@ -720,7 +720,7 @@ export function MerchantPOS() {
                     step="0.01"
                     value={newProduct.price}
                     onChange={(e) =>  setNewProduct({...newProduct, price: e.target.value})}
-                    placeholder="4.50"
+                   
                     className="w-full bg-zinc-950 border border-cyan-400/30 rounded-lg px-4 py-3 text-zinc-100 focus:border-cyan-400 outline-none"
                   />
                 </div>
@@ -731,7 +731,7 @@ export function MerchantPOS() {
                     type="text"
                     value={newProduct.category}
                     onChange={(e) =>  setNewProduct({...newProduct, category: e.target.value})}
-                    placeholder="Coffee, Food, Drinks..."
+                   
                     className="w-full bg-zinc-950 border border-cyan-400/30 rounded-lg px-4 py-3 text-zinc-100 focus:border-cyan-400 outline-none"
                   />
                 </div>
@@ -741,7 +741,7 @@ export function MerchantPOS() {
                   <textarea
                     value={newProduct.description}
                     onChange={(e) =>  setNewProduct({...newProduct, description: e.target.value})}
-                    placeholder="Double shot espresso with steamed milk..."
+                   
                     rows={3}
                     className="w-full bg-zinc-950 border border-cyan-400/30 rounded-lg px-4 py-3 text-zinc-100 focus:border-cyan-400 outline-none resize-none"
                   />
@@ -906,7 +906,7 @@ export function MerchantPOS() {
                     type="email"
                     value={customerEmail}
                     onChange={(e) =>  setCustomerEmail(e.target.value)}
-                    placeholder="customer@example.com"
+                   
                     className="w-full bg-zinc-950 border border-cyan-400/30 rounded-lg px-4 py-3 text-zinc-100 focus:border-cyan-400 outline-none"
                   />
                 </div>

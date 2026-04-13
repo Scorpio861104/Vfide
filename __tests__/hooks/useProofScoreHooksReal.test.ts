@@ -11,12 +11,16 @@ const mockUseAccount = jest.fn()
 const mockUseReadContract = jest.fn()
 const mockUseWriteContract = jest.fn()
 const mockUseWaitForTransactionReceipt = jest.fn()
+const mockUseChainId = jest.fn()
+const mockUsePublicClient = jest.fn()
 
 jest.mock('wagmi', () => ({
   useAccount: () => mockUseAccount(),
   useReadContract: (args: unknown) => mockUseReadContract(args),
   useWriteContract: () => mockUseWriteContract(),
   useWaitForTransactionReceipt: () => mockUseWaitForTransactionReceipt(),
+  useChainId: () => mockUseChainId(),
+  usePublicClient: () => mockUsePublicClient(),
 }))
 
 // Mock contracts
@@ -41,6 +45,8 @@ import {
 describe('useProofScore', () => {
   beforeEach(() => {
     jest.clearAllMocks()
+    mockUseChainId.mockReturnValue(84532)
+    mockUsePublicClient.mockReturnValue({ waitForTransactionReceipt: jest.fn().mockResolvedValue({}) })
     mockUseAccount.mockReturnValue({ address: '0x1234' })
   })
 

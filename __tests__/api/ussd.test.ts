@@ -5,6 +5,8 @@ import { POST } from '../../app/api/ussd/route';
 jest.mock('@/lib/logger', () => ({
   logger: {
     info: jest.fn(),
+    warn: jest.fn(),
+    debug: jest.fn(),
     error: jest.fn(),
   },
 }));

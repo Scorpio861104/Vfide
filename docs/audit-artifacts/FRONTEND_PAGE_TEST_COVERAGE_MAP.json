@@ -192,8 +192,8 @@
     "writeHooks": 0
   },
   {
-    "page": "app/flashlight/page.tsx",
-    "expectedTest": "flashlight-page.test.tsx",
+    "page": "app/flashloan/page.tsx",
+    "expectedTest": "flashloan-page.test.tsx",
     "hasTest": true,
     "handlers": 0,
     "readHooks": 0,

@@ -17,11 +17,13 @@ jest.mock('../../hooks/useVaultHub', () => ({
 
 // Mock wagmi
 const mockWriteContract = jest.fn()
+const mockPublicClient = { waitForTransactionReceipt: jest.fn().mockResolvedValue({}) }
 
 jest.mock('wagmi', () => ({
   useWriteContract: () => ({
-    writeContract: mockWriteContract,
+    writeContractAsync: mockWriteContract,
   }),
+  usePublicClient: () => mockPublicClient,
 }))
 
 // Mock utils
@@ -41,10 +43,13 @@ import {
 } from '../../hooks/useSimpleVault'
 
 describe('useSimpleVault', () => {
+  const testVaultAddress = '0x1234567890123456789012345678901234567890' as `0x${string}`
+  const targetContract = '0xabcdefabcdefabcdefabcdefabcdefabcdefabcd' as `0x${string}`
+
   beforeEach(() => {
     jest.clearAllMocks()
     jest.useFakeTimers({ shouldAdvanceTime: true })
-    mockVaultAddress.mockReturnValue('0xvault123')
+    mockVaultAddress.mockReturnValue(testVaultAddress)
     mockWriteContract.mockResolvedValue('0xtxhash')
   })
 
@@ -77,7 +82,7 @@ describe('useSimpleVault', () => {
   })
 
   it('returns hasVault true when vault address exists', () => {
-    mockVaultAddress.mockReturnValue('0xvault123')
+    mockVaultAddress.mockReturnValue(testVaultAddress)
     
     const { result } = renderHook(() => useSimpleVault())
     
@@ -98,7 +103,7 @@ describe('useSimpleVault', () => {
     const { result } = renderHook(() => useSimpleVault())
     
     await act(async () => {
-      await result.current.executeVaultAction('Test', '0xtarget', '0xdata')
+      await result.current.executeVaultAction('Test', targetContract, '0xdata')
     })
     
     expect(result.current.actionStatus).toBe('error')
@@ -110,7 +115,7 @@ describe('useSimpleVault', () => {
     
     // Start the action
     act(() => {
-      result.current.executeVaultAction('Send Payment', '0xtarget', '0xdata', '💸')
+      result.current.executeVaultAction('Send Payment', targetContract, '0xdata', '💸')
     })
     
     // Should be preparing
@@ -123,7 +128,7 @@ describe('useSimpleVault', () => {
     const { result } = renderHook(() => useSimpleVault())
     
     act(() => {
-      result.current.executeVaultAction('Stake', '0xtarget', '0xdata', '🔒')
+      result.current.executeVaultAction('Stake', targetContract, '0xdata', '🔒')
     })
     
     await waitFor(() => {

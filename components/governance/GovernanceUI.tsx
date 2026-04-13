@@ -849,7 +849,7 @@ export default function GovernanceUI() {
             </label>
             <MobileInput
               type="text"
-              placeholder="0x1234...5678"
+             
               value={delegateeAddress}
               onChange={(e) => { setDelegateeAddress(e.target.value); setDelegateError(''); }}
             />
@@ -863,7 +863,7 @@ export default function GovernanceUI() {
             </label>
             <MobileInput
               type="number"
-              placeholder="e.g., 100"
+             
               value={votesAmount}
               onChange={(e) => setVotesAmount(e.target.value)}
             />

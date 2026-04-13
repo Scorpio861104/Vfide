@@ -142,8 +142,8 @@ describe('/api/notifications', () => {
       expect(response.status).toBe(200);
       expect(query).toHaveBeenNthCalledWith(
         1,
-        expect.stringContaining('LIMIT $2 OFFSET $3'),
-        [mockUserAddress.toLowerCase(), 200, 0]
+        expect.stringContaining('LIMIT $3 OFFSET $4'),
+        [mockUserAddress.toLowerCase(), false, 200, 0]
       );
     });
 
@@ -162,8 +162,8 @@ describe('/api/notifications', () => {
       expect(response.status).toBe(200);
       expect(query).toHaveBeenNthCalledWith(
         1,
-        expect.stringContaining('LIMIT $2 OFFSET $3'),
-        [mockUserAddress.toLowerCase(), 50, 10000]
+        expect.stringContaining('LIMIT $3 OFFSET $4'),
+        [mockUserAddress.toLowerCase(), false, 50, 10000]
       );
     });
 
@@ -293,7 +293,7 @@ describe('/api/notifications', () => {
       const data = await response.json();
 
       expect(response.status).toBe(400);
-      expect(data.error).toContain('Missing required fields');
+      expect(data.error).toContain('Invalid request body');
     });
 
     it('should return 400 for invalid userAddress format in POST', async () => {
@@ -347,7 +347,7 @@ describe('/api/notifications', () => {
       const data = await response.json();
 
       expect(response.status).toBe(400);
-      expect(data.error).toContain('JSON object');
+      expect(data.error).toContain('Invalid request body');
     });
 
     it('should return 400 for malformed JSON on DELETE', async () => {
@@ -380,7 +380,7 @@ describe('/api/notifications', () => {
       const data = await response.json();
 
       expect(response.status).toBe(400);
-      expect(data.error).toContain('Too many notificationIds');
+      expect(data.error).toContain('Invalid request body');
     });
 
     it('should reject oversized notificationIds on DELETE', async () => {
@@ -397,7 +397,7 @@ describe('/api/notifications', () => {
       const data = await response.json();
 
       expect(response.status).toBe(400);
-      expect(data.error).toContain('Too many notificationIds');
+      expect(data.error).toContain('Invalid request body');
     });
 
     it('should reject non-integer notificationIds on PATCH', async () => {

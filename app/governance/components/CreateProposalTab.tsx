@@ -135,8 +135,8 @@ export function CreateProposalTab({
                     type="text"
                     value={proposal.title}
                     onChange={(e) =>  updateProposal("title", e.target.value)}
-                    placeholder="e.g., Fund community validator nodes"
-                    className="w-full px-4 py-3 bg-zinc-900 border border-zinc-700 rounded-lg text-zinc-100 placeholder-[#A0A0A5] focus:border-cyan-400 focus:outline-none"
+                   
+                    className="w-full px-4 py-3 bg-zinc-900 border border-zinc-700 rounded-lg text-zinc-100  focus:border-cyan-400 focus:outline-none"
                   />
                   <div className="text-xs text-zinc-400 mt-1">
                     {proposal.title.length}/{VALIDATION.TITLE_MAX} characters
@@ -176,10 +176,10 @@ export function CreateProposalTab({
                   <textarea
                     value={proposal.description}
                     onChange={(e) =>  updateProposal("description", e.target.value)}
-                    placeholder="Describe the problem, proposed solution, and impact..."
+                   
                     rows={8}
                     maxLength={2000}
-                    className="w-full px-4 py-3 bg-zinc-900 border border-zinc-700 rounded-lg text-zinc-100 placeholder-[#A0A0A5] focus:border-cyan-400 focus:outline-none resize-none"
+                    className="w-full px-4 py-3 bg-zinc-900 border border-zinc-700 rounded-lg text-zinc-100  focus:border-cyan-400 focus:outline-none resize-none"
                   />
                   <div className="text-xs text-zinc-400 mt-1">
                     {proposal.description.length}/{VALIDATION.DESC_MAX} characters
@@ -193,8 +193,8 @@ export function CreateProposalTab({
                       type="text"
                       value={proposal.targetContract}
                       onChange={(e) =>  updateProposal("targetContract", e.target.value)}
-                      placeholder="0x..."
-                      className="w-full px-4 py-3 bg-zinc-900 border border-zinc-700 rounded-lg text-zinc-100 placeholder-[#A0A0A5] focus:border-cyan-400 focus:outline-none"
+                     
+                      className="w-full px-4 py-3 bg-zinc-900 border border-zinc-700 rounded-lg text-zinc-100  focus:border-cyan-400 focus:outline-none"
                     />
                   </div>
                   <div>
@@ -203,8 +203,8 @@ export function CreateProposalTab({
                       type="text"
                       value={proposal.calldata}
                       onChange={(e) =>  updateProposal("calldata", e.target.value)}
-                      placeholder="0x..."
-                      className="w-full px-4 py-3 bg-zinc-900 border border-zinc-700 rounded-lg text-zinc-100 placeholder-[#A0A0A5] focus:border-cyan-400 focus:outline-none"
+                     
+                      className="w-full px-4 py-3 bg-zinc-900 border border-zinc-700 rounded-lg text-zinc-100  focus:border-cyan-400 focus:outline-none"
                     />
                   </div>
                 </div>
@@ -216,8 +216,8 @@ export function CreateProposalTab({
                       type="number"
                       value={proposal.amount}
                       onChange={(e) =>  updateProposal("amount", e.target.value)}
-                      placeholder="0"
-                      className="w-full px-4 py-3 bg-zinc-900 border border-zinc-700 rounded-lg text-zinc-100 placeholder-[#A0A0A5] focus:border-cyan-400 focus:outline-none"
+                     
+                      className="w-full px-4 py-3 bg-zinc-900 border border-zinc-700 rounded-lg text-zinc-100  focus:border-cyan-400 focus:outline-none"
                     />
                   </div>
                 )}

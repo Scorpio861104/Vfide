@@ -123,7 +123,13 @@ describe('/api/groups', () => {
 
       const request = new NextRequest('http://localhost:3000/api/groups', {
         method: 'POST',
-        body: JSON.stringify({}),
+        body: JSON.stringify({
+          name: 'Core Team',
+          description: 'Ops',
+          memberAddresses: ['0x2222222222222222222222222222222222222222'],
+          icon: '👥',
+          color: '#00F0FF',
+        }),
       });
 
       const response = await POST(request);
@@ -191,7 +197,13 @@ describe('/api/groups', () => {
 
       const request = new NextRequest('http://localhost:3000/api/groups', {
         method: 'POST',
-        body: JSON.stringify({}),
+        body: JSON.stringify({
+          name: 'Core Team',
+          description: 'Ops',
+          memberAddresses: ['0x2222222222222222222222222222222222222222'],
+          icon: '👥',
+          color: '#00F0FF',
+        }),
       });
 
       const response = await POST(request);
@@ -230,7 +242,13 @@ describe('/api/groups', () => {
 
       const request = new NextRequest('http://localhost:3000/api/groups', {
         method: 'POST',
-        body: JSON.stringify({}),
+        body: JSON.stringify({
+          name: 'Core Team',
+          description: 'Ops',
+          memberAddresses: [],
+          icon: '👥',
+          color: '#00F0FF',
+        }),
       });
 
       const response = await POST(request);

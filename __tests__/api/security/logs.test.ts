@@ -47,8 +47,6 @@ describe('/api/security/logs', () => {
   describe('GET', () => {
     it('returns logs for authenticated user', async () => {
       query
-        .mockResolvedValueOnce({ rows: [] }) // create table
-        .mockResolvedValueOnce({ rows: [] }) // create index
         .mockResolvedValueOnce({ rowCount: 0 }) // retention cleanup
         .mockResolvedValueOnce({ rowCount: 0 }) // dispatch cleanup
         .mockResolvedValueOnce({
@@ -84,10 +82,6 @@ describe('/api/security/logs', () => {
     });
 
     it('rejects invalid limit', async () => {
-      query
-        .mockResolvedValueOnce({ rows: [] }) // create table
-        .mockResolvedValueOnce({ rows: [] }); // create index
-
       const request = new NextRequest('http://localhost:3000/api/security/logs?limit=bad');
       const response = await GET(request);
       const data = await response.json();

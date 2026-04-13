@@ -69,8 +69,8 @@ describe('Streaming page pathways', () => {
     fireEvent.click(screen.getByRole('button', { name: /^Create Stream$/i }));
     expect(mockToastError).toHaveBeenCalledWith('Please fill all fields');
 
-    fireEvent.change(screen.getByPlaceholderText(/0x\.\.\. or ENS name/i), { target: { value: '0xbbb' } });
-    fireEvent.change(screen.getByPlaceholderText('0.0'), { target: { value: '3' } });
+    fireEvent.change(screen.getAllByRole('textbox')[0], { target: { value: '0xbbb' } });
+    fireEvent.change(screen.getAllByRole('spinbutton')[0], { target: { value: '3' } });
     fireEvent.change(screen.getByDisplayValue('30'), { target: { value: '15' } });
 
     fireEvent.click(screen.getByRole('button', { name: /^Create Stream$/i }));

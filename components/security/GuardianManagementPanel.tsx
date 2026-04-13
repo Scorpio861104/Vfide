@@ -191,10 +191,10 @@ export function GuardianManagementPanel() {
                 setNewGuardian(e.target.value)
                 setAddError(null)
               }}
-              placeholder="0x... guardian address"
+             
               aria-label="Guardian address to add"
               aria-describedby={addError ? "add-guardian-error" : undefined}
-              className={`w-full bg-black/40 border rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none ${
+              className={`w-full bg-black/40 border rounded-lg px-4 py-3 text-white  focus:outline-none ${
                 addError ? 'border-red-500 focus:border-red-500' : 'border-gray-600 focus:border-purple-500'
               }`}
             />
@@ -246,10 +246,10 @@ export function GuardianManagementPanel() {
                 setRemoveAddress(e.target.value)
                 setRemoveError(null)
               }}
-              placeholder="0x... guardian address to remove"
+             
               aria-label="Guardian address to remove"
               aria-describedby={removeError ? "remove-guardian-error" : undefined}
-              className={`w-full bg-black/40 border rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none ${
+              className={`w-full bg-black/40 border rounded-lg px-4 py-3 text-white  focus:outline-none ${
                 removeError ? 'border-red-500 focus:border-red-500' : 'border-gray-600 focus:border-red-500'
               }`}
             />

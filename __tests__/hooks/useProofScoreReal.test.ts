@@ -49,30 +49,30 @@ describe('useProofScore real guards', () => {
     })
   })
 
-  it('reports unavailable when Seer is not configured', () => {
+  it('falls back to defaults when Seer is not configured', () => {
     mockContractAddresses.Seer = '0x0000000000000000000000000000000000000000'
 
     const { result } = renderHook(() => useProofScore())
 
-    expect(result.current.isAvailable).toBe(false)
-    expect(result.current.error?.message).toContain('Seer')
+    expect(result.current.score).toBe(5000)
+    expect(result.current.isLoading).toBe(false)
   })
 
-  it('reports unavailable when checking badges without Seer', () => {
+  it('returns badge defaults when Seer is not configured', () => {
     mockContractAddresses.Seer = '0x0000000000000000000000000000000000000000'
 
     const { result } = renderHook(() => useHasBadge('0xbadge123456789012345678901234567890123456789012345678901234567890' as `0x${string}`))
 
-    expect(result.current.isAvailable).toBe(false)
-    expect(result.current.error?.message).toContain('Seer')
+    expect(result.current.hasBadge).toBe(false)
+    expect(result.current.isLoading).toBe(false)
   })
 
-  it('reports unavailable thresholds when Seer is not configured', () => {
+  it('returns threshold defaults when Seer is not configured', () => {
     mockContractAddresses.Seer = '0x0000000000000000000000000000000000000000'
 
     const { result } = renderHook(() => useSeerThresholds())
 
-    expect(result.current.isAvailable).toBe(false)
-    expect(result.current.error?.message).toContain('Seer')
+    expect(result.current.minForGovernance).toBeGreaterThan(0)
+    expect(result.current.minForMerchant).toBeGreaterThan(0)
   })
 })

@@ -119,10 +119,10 @@ export function ShareProductToFeed({ product, className = '' }: ShareProductToFe
                 <textarea
                   value={caption}
                   onChange={(e) =>  setCaption(e.target.value)}
-                  placeholder="Add a caption... (optional)"
+                 
                   maxLength={500}
                   rows={3}
-                  className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white text-sm placeholder-gray-500 focus:border-cyan-500/50 focus:outline-none resize-none"
+                  className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white text-sm  focus:border-cyan-500/50 focus:outline-none resize-none"
                 />
                 <div className="text-xs text-gray-500 text-right mt-1">{caption.length}/500</div>
               </div>

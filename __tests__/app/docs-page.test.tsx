@@ -56,7 +56,7 @@ describe('Docs page pathways', () => {
     renderDocsPage();
 
     fireEvent.click(screen.getByRole('button', { name: /FAQ/i }));
-    const search = screen.getByPlaceholderText(/Search FAQ/i);
+    const search = screen.getByRole('textbox');
     fireEvent.change(search, { target: { value: 'ProofScore' } });
 
     expect(screen.getAllByText(/ProofScore/i).length).toBeGreaterThan(0);

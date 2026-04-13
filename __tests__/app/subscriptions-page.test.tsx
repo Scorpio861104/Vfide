@@ -1,11 +1,6 @@
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import type React from 'react';
-
-let mockAccount = {
-  isConnected: true,
-  address: '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' as `0x${string}`,
-};
 
 const renderSubscriptionsPage = () => {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -14,15 +9,16 @@ const renderSubscriptionsPage = () => {
   return render(<SubscriptionsPage />);
 };
 
-jest.mock('wagmi', () => ({
-  useAccount: () => mockAccount,
-  useWriteContract: () => ({ writeContract: jest.fn(), data: undefined, isPending: false }),
-  useWaitForTransactionReceipt: () => ({ isLoading: false, isSuccess: false }),
-  useReadContract: () => ({ data: [] }),
+jest.mock('../../app/subscriptions/components/ActiveTab', () => ({
+  ActiveTab: () => <div>Active subscriptions content</div>,
 }));
 
-jest.mock('@/components/ui/toast', () => ({
-  useToast: () => ({ showToast: jest.fn() }),
+jest.mock('../../app/subscriptions/components/CreateTab', () => ({
+  CreateTab: () => <div>Create subscriptions content</div>,
+}));
+
+jest.mock('../../app/subscriptions/components/HistoryTab', () => ({
+  HistoryTab: () => <div>History subscriptions content</div>,
 }));
 
 jest.mock('@/components/layout/Footer', () => ({
@@ -32,37 +28,28 @@ jest.mock('@/components/layout/Footer', () => ({
 describe('Subscriptions page pathways', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    mockAccount = {
-      isConnected: true,
-      address: '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
-    };
   });
 
-  it('renders subscription manager header and empty active state', () => {
+  it('renders subscriptions heading and default active tab', () => {
     renderSubscriptionsPage();
 
-    expect(screen.getByRole('heading', { name: /Subscription Manager/i })).toBeTruthy();
-    expect(screen.getByRole('heading', { name: /Active Subscriptions/i, level: 2 })).toBeTruthy();
-    expect(screen.getByText(/No Active Subscriptions/i)).toBeTruthy();
+    expect(screen.getByText(/^Subscriptions$/i)).toBeTruthy();
+    expect(screen.getByText(/Recurring payments/i)).toBeTruthy();
+    expect(screen.getByText(/Active subscriptions content/i)).toBeTruthy();
   });
 
-  it('shows disconnected wallet prompt in empty subscriptions section', () => {
-    mockAccount = {
-      isConnected: false,
-      address: undefined as unknown as `0x${string}`,
-    };
-
+  it('renders tab navigation labels', () => {
     renderSubscriptionsPage();
 
-    expect(screen.getByText(/Connect your wallet to view and manage your subscriptions/i)).toBeTruthy();
+    expect(screen.getByRole('button', { name: /^Active$/i })).toBeTruthy();
+    expect(screen.getByRole('button', { name: /^Create$/i })).toBeTruthy();
+    expect(screen.getByRole('button', { name: /^History$/i })).toBeTruthy();
   });
 
-  it('renders create form and recurring flow explanation blocks', () => {
+  it('switches to create tab content', () => {
     renderSubscriptionsPage();
 
-    expect(screen.getByRole('heading', { name: /Create New Subscription/i })).toBeTruthy();
-    expect(screen.getByRole('button', { name: /Create Subscription/i })).toBeTruthy();
-    expect(screen.getByRole('heading', { name: /How Subscriptions Work/i })).toBeTruthy();
-    expect(screen.getByText(/Set & Forget/i)).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: /^Create$/i }));
+    expect(screen.getByText(/Create subscriptions content/i)).toBeTruthy();
   });
 });

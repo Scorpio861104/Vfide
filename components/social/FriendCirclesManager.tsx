@@ -423,7 +423,7 @@ export function FriendCirclesManager({ friends }: FriendCirclesManagerProps) {
                   </label>
                   <input
                     type="text"
-                    placeholder="e.g., College Friends, Trading Group"
+                   
                     value={circleName}
                     onChange={(e) =>  setCircleName(e.target.value)}
                     className="w-full px-3 py-2 bg-zinc-950 border border-zinc-700 rounded-lg text-zinc-100 focus:border-cyan-400 focus:outline-none"
@@ -434,7 +434,7 @@ export function FriendCirclesManager({ friends }: FriendCirclesManagerProps) {
                     Description (Optional)
                   </label>
                   <textarea
-                    placeholder="What's this circle for?"
+                   
                     value={circleDescription}
                     onChange={(e) =>  setCircleDescription(e.target.value)}
                     rows={2}
@@ -556,7 +556,6 @@ export function FriendCirclesManager({ friends }: FriendCirclesManagerProps) {
                         {isSelected && (
                           <input
                             type="text"
-                            placeholder={`Nickname in ${selectedCircle.name} (optional)`}
                             value={memberNicknames[friend.address] || ''}
                             onChange={(e) => 
                               setMemberNicknames({

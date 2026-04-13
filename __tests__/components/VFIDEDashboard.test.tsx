@@ -1,6 +1,6 @@
 import { describe, expect, it, jest } from '@jest/globals';
 import { fireEvent, render, screen } from '@testing-library/react';
-import VFIDEDashboard from '../../VFIDEDashboard';
+import VFIDEDashboard from '../../components/dashboard/VFIDEDashboard';
 
 jest.mock('recharts', () => ({
   ResponsiveContainer: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,

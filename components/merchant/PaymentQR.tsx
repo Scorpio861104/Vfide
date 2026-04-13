@@ -322,11 +322,11 @@ export function PaymentQR({ defaultAmount, defaultOrderId }: PaymentQRProps) {
                 type="number"
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
-                placeholder="0.00 (leave empty for any amount)"
+               
                 step="0.01"
                 min="0"
                 aria-describedby="payment-amount-help"
-                className="w-full bg-zinc-900 border border-zinc-700 rounded-lg pl-10 pr-4 py-3 text-zinc-100 placeholder-[#9A9AA3] focus:border-cyan-400 focus:outline-none"
+                className="w-full bg-zinc-900 border border-zinc-700 rounded-lg pl-10 pr-4 py-3 text-zinc-100  focus:border-cyan-400 focus:outline-none"
               />
             </div>
             <div id="payment-amount-help" className="text-sm text-zinc-300 mt-1">
@@ -360,9 +360,9 @@ export function PaymentQR({ defaultAmount, defaultOrderId }: PaymentQRProps) {
               type="text"
               value={orderId}
               onChange={(e) => setOrderId(e.target.value)}
-              placeholder="INV-12345"
+             
               aria-describedby="payment-order-help"
-              className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-4 py-3 text-zinc-100 placeholder-[#9A9AA3] focus:border-cyan-400 focus:outline-none"
+              className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-4 py-3 text-zinc-100  focus:border-cyan-400 focus:outline-none"
             />
             <div id="payment-order-help" className="mt-1 text-sm text-zinc-300">
               Add a customer-facing reference so the payment stays easy to reconcile.

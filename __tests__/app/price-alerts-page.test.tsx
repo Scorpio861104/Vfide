@@ -2,10 +2,6 @@ import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import { fireEvent, render, screen } from '@testing-library/react';
 import type React from 'react';
 
-let mockAccount = {
-  address: '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' as `0x${string}`,
-};
-
 const renderPriceAlertsPage = () => {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const pageModule = require('../../app/price-alerts/page');
@@ -13,8 +9,16 @@ const renderPriceAlertsPage = () => {
   return render(<PriceAlertsPage />);
 };
 
-jest.mock('wagmi', () => ({
-  useAccount: () => mockAccount,
+jest.mock('../../app/price-alerts/components/ActiveTab', () => ({
+  ActiveTab: () => <div>Active alerts content</div>,
+}));
+
+jest.mock('../../app/price-alerts/components/CreateTab', () => ({
+  CreateTab: () => <div>Create alert content</div>,
+}));
+
+jest.mock('../../app/price-alerts/components/HistoryTab', () => ({
+  HistoryTab: () => <div>Alert history content</div>,
 }));
 
 jest.mock('@/components/layout/Footer', () => ({
@@ -42,47 +46,28 @@ describe('Price alerts page pathways', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     localStorage.clear();
-    mockAccount = {
-      address: '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
-    };
   });
 
-  it('renders price alerts shell and market overview blocks', () => {
+  it('renders price alerts shell and default active tab', () => {
     renderPriceAlertsPage();
 
-    expect(screen.getByRole('heading', { name: /Price Alerts/i })).toBeTruthy();
-    expect(screen.getByText(/Price Monitoring/i)).toBeTruthy();
-    expect(screen.getByRole('heading', { name: /Market Overview/i })).toBeTruthy();
-    expect(screen.getAllByText(/VFIDE/i).length).toBeGreaterThan(0);
-    expect(screen.getAllByText(/ETH/i).length).toBeGreaterThan(0);
+    expect(screen.getByText(/^Price Alerts$/i)).toBeTruthy();
+    expect(screen.getByText(/Monitor token prices/i)).toBeTruthy();
+    expect(screen.getByText(/Active alerts content/i)).toBeTruthy();
   });
 
-  it('opens create modal and adds a new alert card', () => {
+  it('renders tab navigation labels', () => {
     renderPriceAlertsPage();
 
-    fireEvent.click(screen.getAllByRole('button', { name: /Create Alert/i })[0]);
-
-    expect(screen.getByRole('heading', { name: /Create Price Alert/i })).toBeTruthy();
-
-    const targetInput = screen.getByRole('spinbutton');
-    fireEvent.change(targetInput, {
-      target: { value: '0.11' },
-    });
-
-    fireEvent.click(screen.getAllByRole('button', { name: /^Create Alert$/i })[0]);
-
-    expect(screen.queryByRole('heading', { name: /Create Price Alert/i })).toBeNull();
-    expect(screen.getAllByText(/VFIDE/i).length).toBeGreaterThan(0);
-    expect(screen.getAllByText(/Active/i).length).toBeGreaterThan(0);
+    expect(screen.getByRole('button', { name: /^Active Alerts$/i })).toBeTruthy();
+    expect(screen.getByRole('button', { name: /^Create Alert$/i })).toBeTruthy();
+    expect(screen.getByRole('button', { name: /^History$/i })).toBeTruthy();
   });
 
-  it('opens quick preset and preloads target values in modal', () => {
+  it('switches to create alert tab', () => {
     renderPriceAlertsPage();
 
-    fireEvent.click(screen.getByRole('button', { name: /ETH under \$3,500/i }));
-
-    expect(screen.getByRole('heading', { name: /Create Price Alert/i })).toBeTruthy();
-    expect(screen.getByDisplayValue('3500')).toBeTruthy();
-    expect(screen.getByDisplayValue('ETH buying opportunity')).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: /^Create Alert$/i }));
+    expect(screen.getByText(/Create alert content/i)).toBeTruthy();
   });
 });

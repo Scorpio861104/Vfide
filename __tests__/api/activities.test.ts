@@ -34,7 +34,7 @@ describe('/api/activities', () => {
   describe('GET', () => {
     it('should return user activities', async () => {
       withRateLimit.mockResolvedValue(null);
-      requireAuth.mockResolvedValue({ user: { address: '0x123' } });
+      requireAuth.mockResolvedValue({ user: { address: '0x1234567890123456789012345678901234567890' } });
 
       const mockActivities = [
         {
@@ -48,7 +48,7 @@ describe('/api/activities', () => {
 
       query.mockResolvedValue({ rows: mockActivities });
 
-      const request = new NextRequest('http://localhost:3000/api/activities?userAddress=0x123');
+      const request = new NextRequest('http://localhost:3000/api/activities?userAddress=0x1234567890123456789012345678901234567890');
       const response = await GET(request);
       const data = await response.json();
 
@@ -58,10 +58,10 @@ describe('/api/activities', () => {
 
     it('should return 403 for cross-user userAddress query', async () => {
       withRateLimit.mockResolvedValue(null);
-      requireAuth.mockResolvedValue({ user: { address: '0xabc' } });
+      requireAuth.mockResolvedValue({ user: { address: '0xabcdefabcdefabcdefabcdefabcdefabcdefabcd' } });
       isAdmin.mockReturnValue(false);
 
-      const request = new NextRequest('http://localhost:3000/api/activities?userAddress=0x123');
+      const request = new NextRequest('http://localhost:3000/api/activities?userAddress=0x1234567890123456789012345678901234567890');
       const response = await GET(request);
       const data = await response.json();
 
@@ -95,8 +95,8 @@ describe('/api/activities', () => {
       expect(response.status).toBe(200);
       expect(query).toHaveBeenNthCalledWith(
         1,
-        expect.stringContaining('LIMIT $1 OFFSET $2'),
-        [50, 10000]
+        expect.stringContaining('LIMIT $3 OFFSET $4'),
+        [null, null, 50, 10000]
       );
     });
   });
@@ -131,7 +131,7 @@ describe('/api/activities', () => {
       const data = await response.json();
 
       expect(response.status).toBe(400);
-      expect(data.error).toContain('JSON object');
+      expect(data.error).toContain('Invalid request body');
     });
 
     it('should create activity successfully', async () => {
@@ -222,7 +222,7 @@ describe('/api/activities', () => {
       const data = await response.json();
 
       expect(response.status).toBe(400);
-      expect(data.error).toContain('title too long');
+      expect(data.error).toContain('Invalid request body');
       expect(query).not.toHaveBeenCalled();
     });
 

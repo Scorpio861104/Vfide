@@ -314,9 +314,9 @@
       "traceStatus": "static-no-onchain-behavior"
     },
     {
-      "page": "app/flashlight/page.tsx",
+      "page": "app/flashloan/page.tsx",
       "source": "inventory",
-      "exportedDefault": "FlashlightPage",
+      "exportedDefault": "FlashloanPage",
       "handlers": 0,
       "readHooks": 0,
       "writeHooks": 0,

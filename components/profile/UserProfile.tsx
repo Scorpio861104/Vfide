@@ -966,7 +966,7 @@ export default function UserProfile() {
                 onChange={(e) => handleProfileChange('bio', e.target.value)}
                 rows={4}
                 className="w-full px-3 py-2 border border-zinc-800 rounded-lg bg-zinc-900 text-white focus:border-amber-400 outline-none"
-                placeholder="Tell us about yourself..."
+               
               />
             </div>
             <div>
@@ -976,7 +976,7 @@ export default function UserProfile() {
                 type="text"
                 value={editedProfile.location || ''}
                 onChange={(e) => handleProfileChange('location', e.target.value)}
-                placeholder="City, Country"
+               
               />
             </div>
             <div>
@@ -986,7 +986,7 @@ export default function UserProfile() {
                 type="url"
                 value={editedProfile.website || ''}
                 onChange={(e) => handleProfileChange('website', e.target.value)}
-                placeholder="https://example.com"
+               
                 error={errors.website}
               />
             </div>
@@ -997,7 +997,7 @@ export default function UserProfile() {
                 type="text"
                 value={editedProfile.twitter || ''}
                 onChange={(e) => handleProfileChange('twitter', e.target.value)}
-                placeholder="@username"
+               
               />
             </div>
             <div>
@@ -1007,7 +1007,7 @@ export default function UserProfile() {
                 type="text"
                 value={editedProfile.github || ''}
                 onChange={(e) => handleProfileChange('github', e.target.value)}
-                placeholder="username"
+               
               />
             </div>
           </div>

@@ -150,7 +150,7 @@ describe('/api/errors', () => {
       const data = await response.json();
 
       expect(response.status).toBe(400);
-      expect(data.error).toContain('Invalid severity');
+      expect(data.error).toBe('Invalid request body');
       expect(query).not.toHaveBeenCalled();
     });
 

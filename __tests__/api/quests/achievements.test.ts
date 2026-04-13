@@ -22,7 +22,7 @@ describe('/api/quests/achievements', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    requireAuth.mockResolvedValue({ user: { address: '0x123' } });
+    requireAuth.mockResolvedValue({ user: { address: '0x1234567890123456789012345678901234567890' } });
     isAdmin.mockReturnValue(false);
   });
 
@@ -56,7 +56,7 @@ describe('/api/quests/achievements', () => {
       };
       getClient.mockResolvedValue(mockClient);
 
-      const request = new NextRequest('http://localhost:3000/api/quests/achievements?userAddress=0x123');
+      const request = new NextRequest('http://localhost:3000/api/quests/achievements?userAddress=0x1234567890123456789012345678901234567890');
       const response = await GET(request);
       const data = await response.json();
 
@@ -77,10 +77,10 @@ describe('/api/quests/achievements', () => {
 
     it('should return 403 for cross-user access', async () => {
       withRateLimit.mockResolvedValue(null);
-      requireAuth.mockResolvedValue({ user: { address: '0xabc' } });
+      requireAuth.mockResolvedValue({ user: { address: '0xabcdefabcdefabcdefabcdefabcdefabcdefabcd' } });
       isAdmin.mockReturnValue(false);
 
-      const request = new NextRequest('http://localhost:3000/api/quests/achievements?userAddress=0x123');
+      const request = new NextRequest('http://localhost:3000/api/quests/achievements?userAddress=0x1234567890123456789012345678901234567890');
       const response = await GET(request);
 
       expect(response.status).toBe(403);
@@ -140,19 +140,19 @@ describe('/api/quests/achievements', () => {
       const data = await response.json();
 
       expect(response.status).toBe(400);
-      expect(data.error).toContain('JSON object');
+      expect(data.error).toContain('Invalid request body');
     });
 
     it('should return 403 for cross-user updates', async () => {
       withRateLimit.mockResolvedValue(null);
-      requireAuth.mockResolvedValue({ user: { address: '0xabc' } });
+      requireAuth.mockResolvedValue({ user: { address: '0xabcdefabcdefabcdefabcdefabcdefabcdefabcd' } });
       isAdmin.mockReturnValue(false);
 
       const request = new NextRequest('http://localhost:3000/api/quests/achievements', {
         method: 'POST',
         body: JSON.stringify({
           milestoneKey: 'first_quest',
-          userAddress: '0x123',
+          userAddress: '0x1234567890123456789012345678901234567890',
           progress: 1,
         }),
       });
@@ -190,7 +190,7 @@ describe('/api/quests/achievements', () => {
       const data = await response.json();
 
       expect(response.status).toBe(400);
-      expect(data.error).toBe('Invalid user address format');
+      expect(data.error).toBe('Invalid request body');
       expect(getClient).not.toHaveBeenCalled();
     });
   });

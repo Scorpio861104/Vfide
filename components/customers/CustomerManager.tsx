@@ -113,8 +113,8 @@ export function CustomerManager({ customers = [], customerOrders = {}, isLoading
       <div className="flex items-center gap-3 flex-wrap">
         <div className="relative flex-1 min-w-[200px]">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={16} />
-          <input type="text" value={search} onChange={e =>  setSearch(e.target.value)} placeholder="Search customers..."
-            className="w-full pl-9 pr-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white text-sm placeholder-gray-500 focus:border-cyan-500/50 focus:outline-none" />
+          <input type="text" value={search} onChange={e =>  setSearch(e.target.value)}
+            className="w-full pl-9 pr-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white text-sm  focus:border-cyan-500/50 focus:outline-none" />
         </div>
         <select value={sortBy} onChange={e =>  setSortBy(e.target.value as any)}
           className="px-3 py-2.5 bg-white/5 border border-white/10 rounded-xl text-gray-400 text-sm">
@@ -245,8 +245,8 @@ export function CustomerManager({ customers = [], customerOrders = {}, isLoading
                 value={noteDraft}
                 onChange={e =>  setNoteDraft(e.target.value)}
                 rows={4}
-                placeholder="Prefers blue fabrics. Birthday in March. Sends referrals..."
-                className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white placeholder-gray-500 focus:border-cyan-500/50 focus:outline-none"
+               
+                className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white  focus:border-cyan-500/50 focus:outline-none"
               />
               <button
                 type="button"

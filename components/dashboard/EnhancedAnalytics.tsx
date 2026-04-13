@@ -455,7 +455,7 @@ export default function EnhancedDashboardAnalytics() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
           <MobileInput
             label="Search"
-            placeholder="Asset, address, or hash..."
+           
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />

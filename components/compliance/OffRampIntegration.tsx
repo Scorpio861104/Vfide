@@ -193,7 +193,7 @@ function OffRampModal({ walletAddress, onClose }: { walletAddress: string; onClo
                 onChange={(event) =>  setAmount(event.target.value)}
                 className="w-full rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-white"
                 inputMode="decimal"
-                placeholder="100"
+               
               />
             </label>
 
@@ -248,7 +248,7 @@ function OffRampModal({ walletAddress, onClose }: { walletAddress: string; onClo
                 value={mobileNumber}
                 onChange={(event) =>  setMobileNumber(event.target.value)}
                 className="w-full rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-white"
-                placeholder="+254700123456"
+               
               />
             </label>
           </div>

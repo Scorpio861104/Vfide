@@ -17,6 +17,7 @@ describe('/api/notifications/preferences', () => {
   const { query } = require('@/lib/db');
   const { withRateLimit } = require('@/lib/auth/rateLimit');
   const { requireOwnership } = require('@/lib/auth/middleware');
+  const userAddress = '0x1234567890123456789012345678901234567890';
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -25,7 +26,7 @@ describe('/api/notifications/preferences', () => {
   describe('GET', () => {
     it('should return notification preferences', async () => {
       withRateLimit.mockResolvedValue(null);
-      requireOwnership.mockResolvedValue({ user: { address: '0x123' } });
+      requireOwnership.mockResolvedValue({ user: { address: userAddress } });
 
       query.mockResolvedValue({
         rows: [{
@@ -36,13 +37,13 @@ describe('/api/notifications/preferences', () => {
         }],
       });
 
-      const request = new NextRequest('http://localhost:3000/api/notifications/preferences?userAddress=0x123');
+      const request = new NextRequest(`http://localhost:3000/api/notifications/preferences?userAddress=${userAddress}`);
       const response = await GET(request);
       const data = await response.json();
 
       expect(response.status).toBe(200);
       expect(data.preferences).toBeDefined();
-      expect(requireOwnership).toHaveBeenCalledWith(request, '0x123');
+      expect(requireOwnership).toHaveBeenCalledWith(request, userAddress);
     });
   });
 
@@ -74,7 +75,7 @@ describe('/api/notifications/preferences', () => {
       const data = await response.json();
 
       expect(response.status).toBe(400);
-      expect(data.error).toContain('JSON object');
+      expect(data.error).toContain('Invalid request body');
     });
 
     it('should update notification preferences', async () => {
@@ -92,7 +93,7 @@ describe('/api/notifications/preferences', () => {
         method: 'PUT',
         body: JSON.stringify({
           userAddress: '0x1111111111111111111111111111111111111123',
-          emailNotifications: false,
+          messages: false,
         }),
       });
 

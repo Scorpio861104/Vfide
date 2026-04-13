@@ -13,13 +13,22 @@ jest.mock('@/lib/auth/rateLimit', () => ({
   withRateLimit: jest.fn(),
 }));
 
+jest.mock('@/lib/auth/middleware', () => ({
+  requireAuth: jest.fn(),
+}));
+
 describe('/api/security/guardian-attestations', () => {
   const { withRateLimit } = require('@/lib/auth/rateLimit');
+  const { requireAuth } = require('@/lib/auth/middleware');
 
   beforeEach(() => {
     jest.clearAllMocks();
     withRateLimit.mockResolvedValue(null);
     mockVerifyMessage.mockResolvedValue(true);
+    requireAuth.mockImplementation(async (request: NextRequest) => {
+      const owner = request.headers.get('x-test-owner')?.toLowerCase();
+      return { user: { address: owner ?? '0x0000000000000000000000000000000000000000' } };
+    });
   });
 
   it('accepts valid owner-signed guardian attestation', async () => {
@@ -41,6 +50,7 @@ describe('/api/security/guardian-attestations', () => {
     const request = new NextRequest('http://localhost:3000/api/security/guardian-attestations', {
       method: 'POST',
       body: JSON.stringify({ ...payload, signature }),
+      headers: { 'x-test-owner': owner },
     });
 
     const response = await POST(request);
@@ -63,6 +73,7 @@ describe('/api/security/guardian-attestations', () => {
         expiresAt: Math.floor(Date.now() / 1000) + 86400,
         signature: '0xdeadbeef',
       }),
+      headers: { 'x-test-owner': account.address.toLowerCase() },
     });
 
     const response = await POST(request);
@@ -89,6 +100,7 @@ describe('/api/security/guardian-attestations', () => {
       new NextRequest('http://localhost:3000/api/security/guardian-attestations', {
         method: 'POST',
         body: JSON.stringify({ ...payload, signature }),
+        headers: { 'x-test-owner': ownerAddress },
       })
     );
 
@@ -123,6 +135,7 @@ describe('/api/security/guardian-attestations', () => {
       new NextRequest('http://localhost:3000/api/security/guardian-attestations', {
         method: 'POST',
         body: JSON.stringify({ ...payload, signature }),
+        headers: { 'x-test-owner': ownerAddress },
       })
     );
 

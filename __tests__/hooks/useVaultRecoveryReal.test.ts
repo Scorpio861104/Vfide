@@ -11,6 +11,8 @@ const mockUseAccount = jest.fn()
 const mockUseReadContract = jest.fn()
 const mockUseWriteContract = jest.fn()
 const mockUseWatchContractEvent = jest.fn()
+const mockUseChainId = jest.fn()
+const mockUsePublicClient = jest.fn()
 const mockIsCardBoundVaultMode = jest.fn(() => false)
 
 jest.mock('wagmi', () => ({
@@ -18,6 +20,8 @@ jest.mock('wagmi', () => ({
   useReadContract: (args: unknown) => mockUseReadContract(args),
   useWriteContract: () => mockUseWriteContract(),
   useWatchContractEvent: (config: unknown) => mockUseWatchContractEvent(config),
+  useChainId: () => mockUseChainId(),
+  usePublicClient: () => mockUsePublicClient(),
 }))
 
 // Mock viem
@@ -40,11 +44,18 @@ import { useVaultRecovery } from '../../hooks/useVaultRecovery'
 describe('useVaultRecovery', () => {
   const mockWriteContractAsync = jest.fn()
   const testVaultAddress = '0x1234567890123456789012345678901234567890' as `0x${string}`
+  const userAddress = '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' as `0x${string}`
+  const ownerAddress = '0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb' as `0x${string}`
+  const nextOfKinAddress = '0xcccccccccccccccccccccccccccccccccccccccc' as `0x${string}`
+  const guardianAddress = '0xdddddddddddddddddddddddddddddddddddddddd' as `0x${string}`
+  const candidateAddress = '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee' as `0x${string}`
 
   beforeEach(() => {
     jest.clearAllMocks()
+    mockUseChainId.mockReturnValue(84532)
+    mockUsePublicClient.mockReturnValue({ waitForTransactionReceipt: jest.fn().mockResolvedValue({}) })
     mockIsCardBoundVaultMode.mockReturnValue(false)
-    mockUseAccount.mockReturnValue({ address: '0xuser' })
+    mockUseAccount.mockReturnValue({ address: userAddress })
     mockUseWriteContract.mockReturnValue({
       writeContractAsync: mockWriteContractAsync,
       isPending: false,
@@ -55,13 +66,13 @@ describe('useVaultRecovery', () => {
 
   it('returns vaultOwner', () => {
     mockUseReadContract.mockImplementation(({ functionName }) => {
-      if (functionName === 'owner') return { data: '0xowner' }
+      if (functionName === 'owner') return { data: ownerAddress }
       return { data: undefined }
     })
     
     const { result } = renderHook(() => useVaultRecovery(testVaultAddress))
     
-    expect(result.current.vaultOwner).toBe('0xowner')
+    expect(result.current.vaultOwner).toBe(ownerAddress)
   })
 
   it('returns guardianCount', () => {
@@ -120,13 +131,13 @@ describe('useVaultRecovery', () => {
 
   it('returns nextOfKin', () => {
     mockUseReadContract.mockImplementation(({ functionName }) => {
-      if (functionName === 'nextOfKin') return { data: '0xnextofkin' }
+      if (functionName === 'nextOfKin') return { data: nextOfKinAddress }
       return { data: undefined }
     })
     
     const { result } = renderHook(() => useVaultRecovery(testVaultAddress))
     
-    expect(result.current.nextOfKin).toBe('0xnextofkin')
+    expect(result.current.nextOfKin).toBe(nextOfKinAddress)
   })
 
   it('returns isWritePending', () => {
@@ -158,7 +169,7 @@ describe('useVaultRecovery', () => {
 
     mockUseReadContract.mockImplementation(({ functionName }) => {
       if (functionName === 'getRecoveryStatus') {
-        return { data: ['0xabc', 2n, 2n, futureSec, true] }
+        return { data: [candidateAddress, 2n, 2n, futureSec, true] }
       }
       if (functionName === 'getInheritanceStatus') {
         return { data: [true, 1n, 2n, futureSec, false] }
@@ -169,7 +180,7 @@ describe('useVaultRecovery', () => {
     const { result } = renderHook(() => useVaultRecovery(testVaultAddress))
 
     expect(result.current.recoveryStatus.isActive).toBe(true)
-    expect(result.current.recoveryStatus.proposedOwner).toBe('0xabc')
+    expect(result.current.recoveryStatus.proposedOwner).toBe(candidateAddress)
     expect(result.current.recoveryStatus.approvals).toBe(2)
     expect(result.current.recoveryStatus.threshold).toBe(2)
 
@@ -186,19 +197,19 @@ describe('useVaultRecovery', () => {
       const { result } = renderHook(() => useVaultRecovery(testVaultAddress))
       
       await act(async () => {
-        await result.current.setNextOfKinAddress('0xkin')
+        await result.current.setNextOfKinAddress(nextOfKinAddress)
       })
       
       expect(mockWriteContractAsync).toHaveBeenCalledWith(expect.objectContaining({
         functionName: 'setNextOfKin',
-        args: ['0xkin'],
+        args: [nextOfKinAddress],
       }))
     })
 
     it('throws when no vault address', async () => {
       const { result } = renderHook(() => useVaultRecovery(undefined))
       
-      await expect(result.current.setNextOfKinAddress('0xkin'))
+      await expect(result.current.setNextOfKinAddress(nextOfKinAddress))
         .rejects.toThrow('Vault address not provided')
     })
   })
@@ -210,19 +221,19 @@ describe('useVaultRecovery', () => {
       const { result } = renderHook(() => useVaultRecovery(testVaultAddress))
       
       await act(async () => {
-        await result.current.addGuardian('0xguardian')
+        await result.current.addGuardian(guardianAddress)
       })
       
       expect(mockWriteContractAsync).toHaveBeenCalledWith(expect.objectContaining({
         functionName: 'setGuardian',
-        args: ['0xguardian', true],
+        args: [guardianAddress, true],
       }))
     })
 
     it('throws when no vault address', async () => {
       const { result } = renderHook(() => useVaultRecovery(undefined))
       
-      await expect(result.current.addGuardian('0xguardian'))
+      await expect(result.current.addGuardian(guardianAddress))
         .rejects.toThrow('Vault address not provided')
     })
   })
@@ -234,12 +245,12 @@ describe('useVaultRecovery', () => {
       const { result } = renderHook(() => useVaultRecovery(testVaultAddress))
       
       await act(async () => {
-        await result.current.removeGuardian('0xguardian')
+        await result.current.removeGuardian(guardianAddress)
       })
       
       expect(mockWriteContractAsync).toHaveBeenCalledWith(expect.objectContaining({
         functionName: 'setGuardian',
-        args: ['0xguardian', false],
+        args: [guardianAddress, false],
       }))
     })
   })
@@ -251,19 +262,19 @@ describe('useVaultRecovery', () => {
       const { result } = renderHook(() => useVaultRecovery(testVaultAddress))
       
       await act(async () => {
-        await result.current.requestRecovery('0xnewowner')
+        await result.current.requestRecovery(candidateAddress)
       })
       
       expect(mockWriteContractAsync).toHaveBeenCalledWith(expect.objectContaining({
         functionName: 'requestRecovery',
-        args: ['0xnewowner'],
+        args: [candidateAddress],
       }))
     })
 
     it('throws when no vault address', async () => {
       const { result } = renderHook(() => useVaultRecovery(undefined))
       
-      await expect(result.current.requestRecovery('0xnewowner'))
+      await expect(result.current.requestRecovery(candidateAddress))
         .rejects.toThrow('Vault address not provided')
     })
   })
@@ -342,9 +353,9 @@ describe('useVaultRecovery', () => {
       mockIsCardBoundVaultMode.mockReturnValue(true)
       const { result } = renderHook(() => useVaultRecovery(testVaultAddress))
 
-      await expect(result.current.setNextOfKinAddress('0xkin'))
+      await expect(result.current.setNextOfKinAddress(nextOfKinAddress))
         .rejects.toThrow('Recovery/inheritance is not supported in CardBound vault mode')
-      await expect(result.current.requestRecovery('0xnewowner'))
+      await expect(result.current.requestRecovery(candidateAddress))
         .rejects.toThrow('Recovery/inheritance is not supported in CardBound vault mode')
     })
   })

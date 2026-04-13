@@ -21,6 +21,8 @@ import { useAccount } from 'wagmi';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CreditCard, Wallet, Shield, ArrowRight, Check, Loader2, Info } from 'lucide-react';
 import { useLocale } from '@/lib/locale/LocaleProvider';
+import { usePayMerchant } from '@/lib/vfide-hooks';
+import { CONTRACT_ADDRESSES, isConfiguredContractAddress } from '@/lib/contracts';
 
 // ── Types ───────────────────────────────────────────────────────────────────
 
@@ -74,9 +76,10 @@ export function CheckoutPanel({
   const { address, isConnected } = useAccount();
   const { formatCurrency, displayCurrency } = useLocale();
   const [selectedToken, setSelectedToken] = useState<string>('VFIDE');
-  const [isPaying, setIsPaying] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
   const [step, setStep] = useState<'review' | 'paying' | 'complete'>('review');
   const [txHash, setTxHash] = useState<string | null>(null);
+  const { payMerchant, isPaying } = usePayMerchant();
 
   // Update token rates with live price
   const tokens = useMemo(() =>
@@ -95,23 +98,49 @@ export function CheckoutPanel({
 
   const handlePay = async () => {
     if (!address) return;
-    setIsPaying(true);
+    if (!isConfiguredContractAddress(CONTRACT_ADDRESSES.VFIDEToken)) return;
+
+    setIsProcessing(true);
     setStep('paying');
 
     try {
-      // TODO: Wire to actual contract call
-      // For VFIDE: direct transfer to merchant vault
-      // For stablecoins: call router contract that swaps and deposits
-      await new Promise(r => setTimeout(r, 2000)); // Placeholder
+      const orderId = `CHK-${Date.now()}`;
+      const payResult = await payMerchant(
+        merchantAddress as `0x${string}`,
+        CONTRACT_ADDRESSES.VFIDEToken,
+        String(Number(tokenAmount.toFixed(4))),
+        orderId
+      );
 
-      const hash = '0x' + Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join('');
+      if (!payResult.success || !payResult.hash) {
+        throw new Error(payResult.error || 'Merchant payment failed');
+      }
+
+      const hash = payResult.hash;
+
+      await fetch('/api/merchant/orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          merchant_address: merchantAddress,
+          tx_hash: hash,
+          token: selectedToken,
+          order_id: orderId,
+          items: items.map((item) => ({
+            name: item.name,
+            quantity: item.qty,
+            unit_price: item.price,
+          })),
+        }),
+      });
+
       setTxHash(hash);
       setStep('complete');
       onComplete?.(hash);
     } catch (error) {
       setStep('review');
     }
-    setIsPaying(false);
+    setIsProcessing(false);
   };
 
   return (
@@ -207,7 +236,7 @@ export function CheckoutPanel({
             {/* Pay button */}
             <button
               onClick={handlePay}
-              disabled={!isConnected}
+              disabled={!isConnected || isPaying || isProcessing}
               className="w-full py-4 bg-gradient-to-r from-cyan-500 to-blue-600 text-white rounded-xl font-bold text-lg disabled:opacity-50 flex items-center justify-center gap-2"
             >
               <Wallet size={22} />

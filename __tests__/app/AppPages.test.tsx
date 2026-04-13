@@ -25,7 +25,7 @@ jest.mock('lucide-react', () => ({
   RefreshCw: () => <span data-testid="icon-refresh">RefreshCw</span>,
   Home: () => <span data-testid="icon-home">Home</span>,
   ArrowLeft: () => <span data-testid="icon-arrow-left">ArrowLeft</span>,
-  Flashlight: () => <span data-testid="icon-flashlight">Flashloans P2P</span>,
+  Flashloan: () => <span data-testid="icon-flashloan">Flashloans P2P</span>,
 }))
 
 // Mock next/link

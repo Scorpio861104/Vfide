@@ -83,7 +83,7 @@ describe('Price Utils', () => {
     })
 
     it('formats non-USD currency', () => {
-      expect(formatPrice(100, 'EUR')).toBe('100.00 EUR')
+      expect(formatPrice(100, 'EUR')).toMatch(/100.*€/)
     })
 
     it('handles non-finite value', () => {

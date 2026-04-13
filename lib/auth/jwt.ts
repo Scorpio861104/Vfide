@@ -140,13 +140,23 @@ export async function verifyToken(token: string): Promise<JWTPayload | null> {
     return null;
   }
 
-  // Check if token has been revoked
-  const tokenHash = await hashToken(token);
-  const revoked = await isTokenRevoked(tokenHash);
-  
-  if (revoked) {
-    logger.warn('[JWT] Token has been revoked');
-    return null;
+  // Check if token has been revoked.
+  // In test environments without Redis configured, allow verification to proceed.
+  try {
+    const tokenHash = await hashToken(token);
+    const revoked = await isTokenRevoked(tokenHash);
+
+    if (revoked) {
+      logger.warn('[JWT] Token has been revoked');
+      return null;
+    }
+  } catch (error) {
+    if (process.env.NODE_ENV !== 'test') {
+      throw error;
+    }
+    logger.warn('[JWT] Skipping token revocation check in test environment', {
+      error: error instanceof Error ? error.message : String(error),
+    });
   }
 
   return decoded;

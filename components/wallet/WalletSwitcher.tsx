@@ -142,7 +142,7 @@ export function WalletSwitcher() {
                         type="text"
                         value={editLabel}
                         onChange={(e) =>  setEditLabel(e.target.value)}
-                        placeholder="Wallet label..."
+                       
                         className="flex-1 px-2 py-1 text-sm bg-zinc-700 border border-zinc-600 rounded text-white focus:outline-none focus:border-cyan-500"
                         autoFocus
                       />

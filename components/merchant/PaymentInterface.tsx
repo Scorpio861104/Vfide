@@ -160,9 +160,9 @@ export function PaymentInterface() {
               type="text"
               value={merchantAddress}
               onChange={(e) => setMerchantAddress(e.target.value)}
-              placeholder="0x..."
+             
               aria-describedby="merchant-status"
-              className="w-full bg-black/40 border border-gray-600 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:border-blue-500 focus:outline-none"
+              className="w-full bg-black/40 border border-gray-600 rounded-lg px-4 py-3 text-white  focus:border-blue-500 focus:outline-none"
             />
             {merchantAddress && (
               <div className="mt-2" id="merchant-status" role="status">
@@ -210,11 +210,11 @@ export function PaymentInterface() {
               type="number"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
-              placeholder="0.00"
+             
               step="0.01"
               min="0"
               aria-describedby="amount-hint"
-              className="w-full bg-black/40 border border-gray-600 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:border-blue-500 focus:outline-none"
+              className="w-full bg-black/40 border border-gray-600 rounded-lg px-4 py-3 text-white  focus:border-blue-500 focus:outline-none"
             />
             <span id="amount-hint" className="sr-only">Enter the amount of VFIDE to send</span>
           </div>
@@ -227,8 +227,8 @@ export function PaymentInterface() {
               type="text"
               value={orderId}
               onChange={(e) => setOrderId(e.target.value)}
-              placeholder="INV-12345"
-              className="w-full bg-black/40 border border-gray-600 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:border-blue-500 focus:outline-none"
+             
+              className="w-full bg-black/40 border border-gray-600 rounded-lg px-4 py-3 text-white  focus:border-blue-500 focus:outline-none"
             />
           </div>
 

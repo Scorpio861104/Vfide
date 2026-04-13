@@ -30,8 +30,8 @@ export function CreatePostCard({ onPost }: { onPost: (content: string) => void }
             value={content}
             onChange={(e) =>  setContent(e.target.value)}
             onFocus={() => setIsFocused(true)}
-            placeholder="What's happening in Web3?"
-            className="w-full bg-transparent text-zinc-50 placeholder-[#6A6A6F] resize-none outline-none min-h-15"
+           
+            className="w-full bg-transparent text-zinc-50  resize-none outline-none min-h-15"
             rows={isFocused ? 3 : 1}
           />
           

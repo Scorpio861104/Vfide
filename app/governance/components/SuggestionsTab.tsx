@@ -221,8 +221,8 @@ export function SuggestionsTab() {
               type="text"
               value={searchQuery}
               onChange={(e) =>  setSearchQuery(e.target.value)}
-              placeholder="Search suggestions..."
-              className="px-4 py-2 bg-zinc-900 border border-zinc-700 rounded-lg text-zinc-100 placeholder-[#A0A0A5] focus:border-cyan-400 focus:outline-none"
+             
+              className="px-4 py-2 bg-zinc-900 border border-zinc-700 rounded-lg text-zinc-100  focus:border-cyan-400 focus:outline-none"
             />
             <button
               onClick={() => setShowSubmitForm(!showSubmitForm)}
@@ -250,8 +250,8 @@ export function SuggestionsTab() {
                   type="text"
                   value={newSuggestion.title}
                   onChange={(e) =>  setNewSuggestion({ ...newSuggestion, title: e.target.value })}
-                  placeholder="Brief, descriptive title for your idea..."
-                  className="w-full px-4 py-3 bg-zinc-900 border border-zinc-700 rounded-lg text-zinc-100 placeholder-[#A0A0A5] focus:border-emerald-500 focus:outline-none"
+                 
+                  className="w-full px-4 py-3 bg-zinc-900 border border-zinc-700 rounded-lg text-zinc-100  focus:border-emerald-500 focus:outline-none"
                   maxLength={100}
                 />
                 <div className="text-right text-xs text-zinc-400 mt-1">{newSuggestion.title.length}/100</div>
@@ -277,9 +277,9 @@ export function SuggestionsTab() {
                 <textarea
                   value={newSuggestion.description}
                   onChange={(e) =>  setNewSuggestion({ ...newSuggestion, description: e.target.value })}
-                  placeholder="Explain your idea in detail. What problem does it solve? How would it work?"
+                 
                   rows={5}
-                  className="w-full px-4 py-3 bg-zinc-900 border border-zinc-700 rounded-lg text-zinc-100 placeholder-[#A0A0A5] focus:border-emerald-500 focus:outline-none resize-none"
+                  className="w-full px-4 py-3 bg-zinc-900 border border-zinc-700 rounded-lg text-zinc-100  focus:border-emerald-500 focus:outline-none resize-none"
                   maxLength={2000}
                 />
                 <div className="text-right text-xs text-zinc-400 mt-1">{newSuggestion.description.length}/2000</div>
@@ -445,9 +445,9 @@ export function SuggestionsTab() {
                             type="text"
                             value={newComment}
                             onChange={(e) =>  setNewComment(e.target.value)}
-                            placeholder="Add a comment..."
+                           
                             maxLength={500}
-                            className="flex-1 px-3 py-2 bg-zinc-900 border border-zinc-700 rounded-lg text-zinc-100 placeholder-[#A0A0A5] focus:border-cyan-400 focus:outline-none text-sm"
+                            className="flex-1 px-3 py-2 bg-zinc-900 border border-zinc-700 rounded-lg text-zinc-100  focus:border-cyan-400 focus:outline-none text-sm"
                             onKeyDown={(e) => e.key === "Enter" && handleAddComment(suggestion.id)}
                           />
                           <button

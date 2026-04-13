@@ -66,7 +66,7 @@ export function FilterContent({ filters, setFilters, onClose }: FilterContentPro
             value={filters.minPrice}
             onChange={(event) =>  updateFilter('minPrice', event.target.value)}
             className="w-full rounded-xl border border-white/10 bg-zinc-900 px-3 py-2 text-sm"
-            placeholder="0"
+           
           />
         </div>
 
@@ -78,7 +78,7 @@ export function FilterContent({ filters, setFilters, onClose }: FilterContentPro
             value={filters.maxPrice}
             onChange={(event) =>  updateFilter('maxPrice', event.target.value)}
             className="w-full rounded-xl border border-white/10 bg-zinc-900 px-3 py-2 text-sm"
-            placeholder="1000"
+           
           />
         </div>
 

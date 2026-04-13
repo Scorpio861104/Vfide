@@ -199,7 +199,7 @@ describe('/api/transactions/export', () => {
       const data = await response.json();
 
       expect(response.status).toBe(400);
-      expect(data.error).toContain('Invalid export options');
+      expect(data.error).toBe('Invalid request body');
     });
 
     it('should reject oversized filter arrays', async () => {
@@ -231,7 +231,7 @@ describe('/api/transactions/export', () => {
       const data = await response.json();
 
       expect(response.status).toBe(400);
-      expect(data.error).toContain('Too many filter values');
+      expect(data.error).toBe('Invalid request body');
     });
 
     it('should include token filters in export query', async () => {

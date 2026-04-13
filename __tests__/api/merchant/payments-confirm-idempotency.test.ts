@@ -60,9 +60,6 @@ describe('/api/merchant/payments/confirm idempotency', () => {
   });
 
   it('dispatches webhook on first unique tx_hash confirmation', async () => {
-    // ensureMerchantPaymentConfirmationsTable (create table + index)
-    query.mockResolvedValueOnce({ rows: [] });
-    query.mockResolvedValueOnce({ rows: [] });
     // idempotency insert claimed
     query.mockResolvedValueOnce({ rows: [{ id: '1' }] });
 
@@ -86,9 +83,6 @@ describe('/api/merchant/payments/confirm idempotency', () => {
   });
 
   it('returns idempotent duplicate response and skips webhook dispatch', async () => {
-    // ensureMerchantPaymentConfirmationsTable (create table + index)
-    query.mockResolvedValueOnce({ rows: [] });
-    query.mockResolvedValueOnce({ rows: [] });
     // duplicate insert => no returned row
     query.mockResolvedValueOnce({ rows: [] });
 

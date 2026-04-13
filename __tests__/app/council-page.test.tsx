@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import type React from 'react';
 
 let mockAccount = {
@@ -51,24 +51,24 @@ describe('Council page pathways', () => {
     };
   });
 
-  it('renders council overview and responsibilities', () => {
+  it('renders council overview and responsibilities', async () => {
     renderCouncilPage();
 
     expect(screen.getByRole('heading', { name: /Council Management/i })).toBeTruthy();
-    expect(screen.getByRole('heading', { name: /VFIDE Governance Council/i })).toBeTruthy();
-    expect(screen.getByText(/Council Responsibilities/i)).toBeTruthy();
+    expect(await screen.findByRole('heading', { name: /VFIDE Governance Council/i })).toBeTruthy();
+    expect(await screen.findByText(/Council Responsibilities/i)).toBeTruthy();
   });
 
-  it('switches to council members tab and shows roster entries', () => {
+  it('switches to council members tab and shows roster entries', async () => {
     renderCouncilPage();
 
     fireEvent.click(screen.getByRole('button', { name: /Council Members/i }));
 
-    expect(screen.getByText(/Current Council Members/i)).toBeTruthy();
-    expect(screen.getByText(/Vacant Seat/i)).toBeTruthy();
+    expect(await screen.findByText(/Current Council Members/i)).toBeTruthy();
+    expect(await screen.findByText(/Vacant Seat/i)).toBeTruthy();
   });
 
-  it('shows voting connection prompt when disconnected', () => {
+  it('shows voting connection prompt when disconnected', async () => {
     mockAccount = {
       address: undefined as unknown as `0x${string}`,
       isConnected: false,
@@ -78,7 +78,9 @@ describe('Council page pathways', () => {
 
     fireEvent.click(screen.getByRole('button', { name: /Member Voting/i }));
 
-    expect(screen.getByRole('heading', { name: /Member Removal Voting/i })).toBeTruthy();
-    expect(screen.getByText(/Connect wallet to vote/i)).toBeTruthy();
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { name: /Member Removal Voting/i })).toBeTruthy();
+      expect(screen.getByText(/Connect wallet to vote/i)).toBeTruthy();
+    });
   });
 });

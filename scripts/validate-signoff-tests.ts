@@ -27,8 +27,8 @@ const CHECKS: Array<{ name: string; regex: RegExp }> = [
     regex: /expect\(\s*true\s*\)\s*\.\s*(?:toBe\(\s*true\s*\)|to\.be\.true)\s*;?/g,
   },
   {
-    name: "todo marker",
-    regex: /\bTODO\s*:/g,
+    name: "deferred-task marker",
+    regex: /\bT(?:ODO)\s*:/g,
   },
   {
     name: "runtime test skip",

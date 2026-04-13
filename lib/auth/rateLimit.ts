@@ -35,6 +35,20 @@ type RateLimitType = keyof typeof RATE_LIMITS;
 let upstashLimiters: Map<RateLimitType, Ratelimit> | null = null;
 let missingRedisWarningLogged = false;
 const memoryRateBuckets = new Map<string, { count: number; resetAt: number }>();
+const PRUNE_INTERVAL_MS = 5 * 60 * 1000;
+let lastPruneTime = Date.now();
+
+function pruneExpiredBuckets(): void {
+  const now = Date.now();
+  if (now - lastPruneTime < PRUNE_INTERVAL_MS) return;
+  lastPruneTime = now;
+
+  for (const [key, bucket] of memoryRateBuckets) {
+    if (now >= bucket.resetAt) {
+      memoryRateBuckets.delete(key);
+    }
+  }
+}
 
 function parseWindowMs(window: typeof RATE_LIMITS[RateLimitType]['window']): number {
   const match = /^(\d+)([smhd])$/.exec(window);
@@ -53,6 +67,7 @@ function memoryRateLimit(identifier: string, type: RateLimitType): {
   remaining: number;
   reset: number;
 } {
+  pruneExpiredBuckets();
   const config = RATE_LIMITS[type];
   const windowMs = parseWindowMs(config.window);
   const now = Date.now();

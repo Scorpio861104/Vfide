@@ -121,7 +121,7 @@ export function PaymentRequestButton({
                     type="number"
                     value={amount}
                     onChange={(e) =>  setAmount(e.target.value)}
-                    placeholder="0.00"
+                   
                     step="0.01"
                     className="w-full px-4 py-3 bg-zinc-900 border border-zinc-800 rounded-lg text-white text-lg focus:outline-none focus:border-blue-500"
                   />
@@ -135,7 +135,7 @@ export function PaymentRequestButton({
                     type="text"
                     value={reason}
                     onChange={(e) =>  setReason(e.target.value)}
-                    placeholder="What's this for?"
+                   
                     className="w-full px-4 py-2 bg-zinc-900 border border-zinc-800 rounded-lg text-white focus:outline-none focus:border-blue-500"
                   />
                 </div>

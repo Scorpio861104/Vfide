@@ -54,7 +54,7 @@ describe('/api/quests/achievements/claim', () => {
       const data = await response.json();
 
       expect(response.status).toBe(400);
-      expect(data.error).toContain('JSON object');
+      expect(data.error).toContain('Invalid request body');
     });
 
     it('should claim achievement successfully', async () => {

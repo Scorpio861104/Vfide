@@ -400,7 +400,6 @@ export default function MerchantWholesalePage() {
                             onChange={(event) => setQuantity(event.target.value)}
                             min={product.minOrder}
                             type="number"
-                            placeholder={`Min ${product.minOrder}`}
                             className="w-full rounded-xl border border-white/10 bg-black/20 px-3 py-2.5 text-white"
                           />
                         </div>

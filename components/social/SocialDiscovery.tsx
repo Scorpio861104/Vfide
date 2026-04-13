@@ -155,10 +155,10 @@ export function SocialDiscovery({ onSelectUser }: SocialDiscoveryProps) {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 w-5 h-5" />
               <input
                 type="text"
-                placeholder="Search users, tags, or interests..."
+               
                 value={searchQuery}
                 onChange={(e) =>  setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 bg-zinc-900 border border-zinc-700 rounded-lg text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-cyan-400 transition-colors"
+                className="w-full pl-10 pr-4 py-3 bg-zinc-900 border border-zinc-700 rounded-lg text-zinc-100  focus:outline-none focus:border-cyan-400 transition-colors"
               />
             </div>
 
@@ -192,7 +192,7 @@ export function SocialDiscovery({ onSelectUser }: SocialDiscoveryProps) {
                       value={filter.proofScoreMin || ''}
                       onChange={(e) =>  setFilter({ ...filter, proofScoreMin: e.target.value ? safeParseInt(e.target.value, 0, { min: 0 }) : undefined })}
                       className="w-full px-3 py-2 bg-zinc-950 border border-zinc-700 rounded text-zinc-100 focus:outline-none focus:border-cyan-400"
-                      placeholder="0"
+                     
                     />
                   </div>
 
@@ -203,7 +203,7 @@ export function SocialDiscovery({ onSelectUser }: SocialDiscoveryProps) {
                       value={filter.proofScoreMax || ''}
                       onChange={(e) =>  setFilter({ ...filter, proofScoreMax: e.target.value ? safeParseInt(e.target.value, undefined, { max: 10000 }) : undefined })}
                       className="w-full px-3 py-2 bg-zinc-950 border border-zinc-700 rounded text-zinc-100 focus:outline-none focus:border-cyan-400"
-                      placeholder="10000"
+                     
                     />
                   </div>
 

@@ -73,8 +73,8 @@ export function GatewayTab({ isConnected }: { isConnected: boolean }) {
                 type="text"
                 value={orderId}
                 onChange={(e) =>  setOrderId(e.target.value)}
-                placeholder="Enter unique order ID"
-                className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-4 py-3 text-zinc-100 placeholder-zinc-500 focus:border-cyan-400 focus:outline-none"
+               
+                className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-4 py-3 text-zinc-100  focus:border-cyan-400 focus:outline-none"
               />
             </div>
             <div>
@@ -83,8 +83,8 @@ export function GatewayTab({ isConnected }: { isConnected: boolean }) {
                 type="number"
                 value={amount}
                 onChange={(e) =>  setAmount(e.target.value)}
-                placeholder="0.00"
-                className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-4 py-3 text-zinc-100 placeholder-zinc-500 focus:border-cyan-400 focus:outline-none"
+               
+                className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-4 py-3 text-zinc-100  focus:border-cyan-400 focus:outline-none"
               />
             </div>
           </div>
@@ -94,8 +94,8 @@ export function GatewayTab({ isConnected }: { isConnected: boolean }) {
               type="text"
               value={metadata}
               onChange={(e) =>  setMetadata(e.target.value)}
-              placeholder="Order reference, customer ID, etc."
-              className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-4 py-3 text-zinc-100 placeholder-zinc-500 focus:border-cyan-400 focus:outline-none"
+             
+              className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-4 py-3 text-zinc-100  focus:border-cyan-400 focus:outline-none"
             />
           </div>
           <button 

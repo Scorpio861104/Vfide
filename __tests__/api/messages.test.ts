@@ -479,7 +479,7 @@ describe('/api/messages', () => {
       const data = await response.json();
 
       expect(response.status).toBe(400);
-      expect(data.error).toContain('JSON object');
+      expect(data.error).toContain('Invalid request body');
     });
 
     it('should reject oversized messageIds arrays', async () => {
@@ -500,7 +500,7 @@ describe('/api/messages', () => {
       const data = await response.json();
 
       expect(response.status).toBe(400);
-      expect(data.error).toContain('Too many messageIds');
+      expect(data.error).toContain('Invalid request body');
     });
 
     it('should reject invalid messageIds element types', async () => {
@@ -519,7 +519,7 @@ describe('/api/messages', () => {
       const data = await response.json();
 
       expect(response.status).toBe(400);
-      expect(data.error).toContain('Invalid messageIds');
+      expect(data.error).toContain('Invalid request body');
       expect(query).not.toHaveBeenCalled();
     });
 

@@ -19,6 +19,20 @@ const CHALLENGE_TTL_SECONDS = Math.floor(CHALLENGE_TTL_MS / 1000);
 const CHALLENGE_PREFIX = 'auth:siwe:challenge:';
 let redisClient: Redis | null | undefined;
 const inMemoryChallenges = new Map<string, ChallengeRecord>();
+let lastChallengePrune = Date.now();
+const CHALLENGE_PRUNE_INTERVAL_MS = 2 * 60 * 1000;
+
+function pruneExpiredChallenges(): void {
+  const now = Date.now();
+  if (now - lastChallengePrune < CHALLENGE_PRUNE_INTERVAL_MS) return;
+  lastChallengePrune = now;
+
+  for (const [key, record] of inMemoryChallenges) {
+    if (now >= record.expiresAt) {
+      inMemoryChallenges.delete(key);
+    }
+  }
+}
 
 function randomNonceHex(bytes = 16): string {
   const random = crypto.getRandomValues(new Uint8Array(bytes));
@@ -63,6 +77,7 @@ async function storeChallengeRecord(record: ChallengeRecord): Promise<void> {
     return;
   }
 
+  pruneExpiredChallenges();
   inMemoryChallenges.set(key, record);
 }
 

@@ -28,7 +28,7 @@ describe('/api/quests/streak', () => {
   describe('GET', () => {
     it('should return user streak data', async () => {
       withRateLimit.mockResolvedValue(null);
-      requireAuth.mockResolvedValue({ user: { address: '0x123', id: 1 } });
+      requireAuth.mockResolvedValue({ user: { address: '0x1234567890123456789012345678901234567890', id: 1 } });
 
       const mockClient = {
         query: jest.fn()
@@ -46,7 +46,7 @@ describe('/api/quests/streak', () => {
       };
       getClient.mockResolvedValue(mockClient);
 
-      const request = new NextRequest('http://localhost:3000/api/quests/streak?userAddress=0x123');
+      const request = new NextRequest('http://localhost:3000/api/quests/streak?userAddress=0x1234567890123456789012345678901234567890');
       const response = await GET(request);
       const data = await response.json();
 
@@ -72,7 +72,7 @@ describe('/api/quests/streak', () => {
       requireAuth.mockResolvedValue({ user: { address: '0x1111111111111111111111111111111111111111', id: 1 } });
       isAdmin.mockReturnValue(false);
 
-      const request = new NextRequest('http://localhost:3000/api/quests/streak?userAddress=0x123');
+      const request = new NextRequest('http://localhost:3000/api/quests/streak?userAddress=0x2222222222222222222222222222222222222222');
       const response = await GET(request);
 
       expect(response.status).toBe(403);
@@ -93,7 +93,7 @@ describe('/api/quests/streak', () => {
 
     it('should return 400 for malformed userAddress query', async () => {
       withRateLimit.mockResolvedValue(null);
-      requireAuth.mockResolvedValue({ user: { address: '0x123', id: 1 } });
+      requireAuth.mockResolvedValue({ user: { address: '0x1234567890123456789012345678901234567890', id: 1 } });
 
       const request = new NextRequest('http://localhost:3000/api/quests/streak?userAddress=not-an-address');
       const response = await GET(request);
@@ -108,11 +108,11 @@ describe('/api/quests/streak', () => {
   describe('POST', () => {
     it('should return 400 for malformed JSON', async () => {
       withRateLimit.mockResolvedValue(null);
-      requireAuth.mockResolvedValue({ user: { address: '0x123', id: 1 } });
+      requireAuth.mockResolvedValue({ user: { address: '0x1234567890123456789012345678901234567890', id: 1 } });
 
       const request = new NextRequest('http://localhost:3000/api/quests/streak', {
         method: 'POST',
-        body: '{"userAddress":"0x123"',
+        body: '{"}userAddress":"0x1234567890123456789012345678901234567890"',
       });
 
       const response = await POST(request);
@@ -124,7 +124,7 @@ describe('/api/quests/streak', () => {
 
     it('should return 400 for non-object body', async () => {
       withRateLimit.mockResolvedValue(null);
-      requireAuth.mockResolvedValue({ user: { address: '0x123', id: 1 } });
+      requireAuth.mockResolvedValue({ user: { address: '0x1234567890123456789012345678901234567890', id: 1 } });
 
       const request = new NextRequest('http://localhost:3000/api/quests/streak', {
         method: 'POST',
@@ -135,7 +135,7 @@ describe('/api/quests/streak', () => {
       const data = await response.json();
 
       expect(response.status).toBe(400);
-      expect(data.error).toContain('JSON object');
+      expect(data.error).toContain('Invalid request body');
     });
 
     it('should return 403 for cross-user updates', async () => {
@@ -146,13 +146,16 @@ describe('/api/quests/streak', () => {
       const request = new NextRequest('http://localhost:3000/api/quests/streak', {
         method: 'POST',
         body: JSON.stringify({
-          userAddress: '0x123',
+          userAddress: '0x2222222222222222222222222222222222222222',
           streakType: 'login',
         }),
       });
 
       const response = await POST(request);
+      const data = await response.json();
+
       expect(response.status).toBe(403);
+      expect(data.error).toBe('Forbidden');
     });
 
     it('should return 401 for malformed authenticated address on POST', async () => {
@@ -174,7 +177,7 @@ describe('/api/quests/streak', () => {
 
     it('should return 400 for malformed target userAddress on POST', async () => {
       withRateLimit.mockResolvedValue(null);
-      requireAuth.mockResolvedValue({ user: { address: '0x123', id: 1 } });
+      requireAuth.mockResolvedValue({ user: { address: '0x1234567890123456789012345678901234567890', id: 1 } });
 
       const request = new NextRequest('http://localhost:3000/api/quests/streak', {
         method: 'POST',
@@ -185,7 +188,7 @@ describe('/api/quests/streak', () => {
       const data = await response.json();
 
       expect(response.status).toBe(400);
-      expect(data.error).toBe('Invalid user address format');
+      expect(data.error).toBe('Invalid request body');
       expect(getClient).not.toHaveBeenCalled();
     });
   });

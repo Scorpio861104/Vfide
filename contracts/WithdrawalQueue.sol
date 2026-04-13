@@ -213,9 +213,20 @@ abstract contract WithdrawalQueue is VFIDEAccessControl, VFIDEReentrancyGuard {
 
     /**
      * @notice Update total vault balance
+     * @dev Inheriting vault contracts should keep this value synchronized after every
+     *      deposit/withdrawal state transition. Daily cap enforcement depends on this
+     *      value being current.
      * @param _balance New vault balance
      */
     function updateVaultBalance(uint256 _balance) external onlyRole(CONFIG_MANAGER_ROLE) {
+        _updateVaultBalance(_balance);
+    }
+
+    /**
+     * @notice Internal balance sync hook for inheriting contracts.
+     * @dev Daily withdrawal cap calculations rely on an up-to-date vault balance.
+     */
+    function _updateVaultBalance(uint256 _balance) internal {
         totalVaultBalance = _balance;
     }
 

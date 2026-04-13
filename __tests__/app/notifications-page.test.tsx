@@ -144,7 +144,7 @@ describe('Notifications page pathways', () => {
   it('applies search and type filter interactions', () => {
     renderNotificationsPage();
 
-    fireEvent.change(screen.getByPlaceholderText(/Search notifications/i), {
+    fireEvent.change(screen.getByRole('textbox'), {
       target: { value: 'payment' },
     });
     expect(mockSearchNotifications).toHaveBeenCalledWith('payment');

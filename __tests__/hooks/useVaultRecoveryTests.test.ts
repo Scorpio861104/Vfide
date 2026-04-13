@@ -11,6 +11,8 @@ jest.mock('wagmi', () => ({
   useWriteContract: jest.fn(),
   useReadContract: jest.fn(),
   useWatchContractEvent: jest.fn(),
+  useChainId: jest.fn(),
+  usePublicClient: jest.fn(),
 }))
 
 // Mock viem
@@ -25,7 +27,7 @@ describe('useVaultRecovery', () => {
   })
 
   it('should return initial recovery status', async () => {
-    const { useAccount, useWriteContract, useReadContract, useWatchContractEvent } = await import('wagmi')
+    const { useAccount, useWriteContract, useReadContract, useWatchContractEvent, useChainId, usePublicClient } = await import('wagmi')
     
     jest.mocked(useAccount).mockReturnValue({
       address: '0xuser123' as `0x${string}`,
@@ -81,6 +83,8 @@ describe('useVaultRecovery', () => {
     })
     
     jest.mocked(useWatchContractEvent).mockImplementation(() => {})
+    jest.mocked(useChainId).mockReturnValue(84532)
+    jest.mocked(usePublicClient).mockReturnValue({ waitForTransactionReceipt: jest.fn().mockResolvedValue({}) } as any)
 
     const { useVaultRecovery } = await import('@/hooks/useVaultRecovery')
     const vaultAddress = '0x1234567890123456789012345678901234567890' as `0x${string}`

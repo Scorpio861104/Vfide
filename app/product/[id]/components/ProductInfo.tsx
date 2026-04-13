@@ -4,6 +4,8 @@ import { useState } from 'react';
 import { ShoppingCart, Heart, Share2, Minus, Plus, Check, Star, Truck, Download, Clock } from 'lucide-react';
 import Link from 'next/link';
 import { StarRating } from './StarRating';
+import { useCart } from '@/providers/CartProvider';
+import { CheckoutPanel } from '@/components/checkout/CheckoutPanel';
 
 interface Product {
   id: string; name: string; price: string; compare_at_price: string | null;
@@ -11,6 +13,7 @@ interface Product {
   product_type: 'physical' | 'digital' | 'service';
   variants: { id: string; label: string; price_override: string | null }[] | null;
   merchant_slug: string | null; merchant_name: string;
+  merchant_address?: string;
   avg_rating: number | null; review_count: number;
   track_inventory: boolean; inventory_count: number | null;
 }
@@ -20,6 +23,8 @@ export function ProductInfo({ product }: { product: Product }) {
   const [selectedVariant, setSelectedVariant] = useState<string | null>(product.variants?.[0]?.id || null);
   const [wishlisted, setWishlisted] = useState(false);
   const [addedToCart, setAddedToCart] = useState(false);
+  const [showCheckout, setShowCheckout] = useState(false);
+  const { items, addItem, clear } = useCart();
 
   const activePrice = selectedVariant && product.variants?.find(v => v.id === selectedVariant)?.price_override || product.price;
   const hasDiscount = product.compare_at_price && parseFloat(product.compare_at_price) > parseFloat(activePrice);
@@ -27,7 +32,17 @@ export function ProductInfo({ product }: { product: Product }) {
   const typeIcons = { physical: Truck, digital: Download, service: Clock };
   const TypeIcon = typeIcons[product.product_type];
 
-  const handleAddToCart = () => { setAddedToCart(true); setTimeout(() => setAddedToCart(false), 2000); };
+  const handleAddToCart = () => {
+    addItem({
+      id: `${product.id}:${selectedVariant ?? 'default'}`,
+      name: product.name,
+      unitPrice: Number(activePrice),
+    }, qty);
+    setAddedToCart(true);
+    setTimeout(() => setAddedToCart(false), 2000);
+  };
+
+  const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
 
   return (
     <div className="space-y-4">
@@ -73,7 +88,7 @@ export function ProductInfo({ product }: { product: Product }) {
           <span className="px-3 py-2 text-white font-mono min-w-[2rem] text-center">{qty}</span>
           <button onClick={() => setQty(q => q + 1)} className="px-3 py-2 text-gray-400 hover:text-white"><Plus size={14} /></button>
         </div>
-        <button onClick={handleAddToCart} disabled={!inStock}
+        <button onClick={handleAddToCart} disabled={!inStock} aria-label={`Add ${product.name} to cart`}
           className={`flex-1 py-3 rounded-xl font-bold flex items-center justify-center gap-2 ${addedToCart ? 'bg-emerald-500 text-white' : inStock ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white' : 'bg-white/5 text-gray-500'}`}>
           {addedToCart ? <><Check size={16} /> Added!</> : <><ShoppingCart size={16} /> Add to cart</>}
         </button>
@@ -87,6 +102,31 @@ export function ProductInfo({ product }: { product: Product }) {
           <div className="w-8 h-8 rounded-lg bg-cyan-500/20 flex items-center justify-center text-cyan-400 font-bold text-xs">{product.merchant_name[0]}</div>
           <div className="flex-1"><div className="text-white text-sm font-medium">{product.merchant_name}</div><div className="text-xs text-gray-500">View store</div></div>
         </Link>
+      )}
+
+      {totalItems > 0 && !showCheckout && (
+        <div className="rounded-xl border border-white/10 bg-white/3 p-4">
+          <div className="text-white font-semibold mb-1">{totalItems} item in cart</div>
+          <button
+            onClick={() => setShowCheckout(true)}
+            className="w-full mt-2 py-2.5 rounded-lg bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 hover:bg-cyan-500/30"
+          >
+            Checkout now
+          </button>
+        </div>
+      )}
+
+      {showCheckout && (
+        <CheckoutPanel
+          items={items.map((item) => ({ name: item.name, price: item.unitPrice, qty: item.quantity }))}
+          merchantAddress={(product.merchant_address ?? '0x0000000000000000000000000000000000000001') as `0x${string}`}
+          merchantName={product.merchant_name}
+          onComplete={() => {
+            clear();
+            setShowCheckout(false);
+          }}
+          onCancel={() => setShowCheckout(false)}
+        />
       )}
     </div>
   );

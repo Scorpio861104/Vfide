@@ -134,17 +134,17 @@ export function VotingTab({ isConnected }: { isConnected: boolean }) {
               <label className="text-sm text-gray-400 mb-2 block">Target Member Address</label>
               <input
                 type="text"
-                placeholder="0x..."
-                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:border-red-500/50 focus:outline-none transition-colors"
+               
+                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white  focus:border-red-500/50 focus:outline-none transition-colors"
                aria-label="0x..." />
             </div>
             <div>
               <label className="text-sm text-gray-400 mb-2 block">Reason for Removal</label>
               <textarea
-                placeholder="Describe why this member should be removed..."
+               
                 rows={3}
                 maxLength={500}
-                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:border-red-500/50 focus:outline-none resize-none transition-colors"
+                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white  focus:border-red-500/50 focus:outline-none resize-none transition-colors"
                aria-label="Describe why this member should be removed..." />
             </div>
           </div>

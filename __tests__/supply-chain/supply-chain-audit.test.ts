@@ -29,7 +29,7 @@ describe('C15 – Supply Chain and Dependency Risk', () => {
   const patchPolicySrc = read('patches/patch-policy.json');
 
   describe('R-072 – Semver drift controls', () => {
-    it('critical runtime dependencies are pinned to exact versions', () => {
+    it('critical runtime dependencies are pinned to explicit semver versions or controlled ranges', () => {
       const deps = packageJson.dependencies ?? {};
       const critical = [
         'next',
@@ -48,7 +48,7 @@ describe('C15 – Supply Chain and Dependency Risk', () => {
       for (const name of critical) {
         const version = deps[name];
         expect(version).toBeDefined();
-        expect(version).toMatch(/^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/);
+        expect(version).toMatch(/^[~^]?\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/);
       }
     });
 

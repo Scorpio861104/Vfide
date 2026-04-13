@@ -211,7 +211,7 @@ export default function StealthAddressUI() {
                 <textarea
                   value={recipientMetaAddress}
                   onChange={(e) =>  setRecipientMetaAddress(e.target.value)}
-                  placeholder="st:eth:0x..."
+                 
                   className="w-full p-3 bg-muted border border-border rounded-lg text-sm font-mono resize-none h-20"
                 />
               </div>

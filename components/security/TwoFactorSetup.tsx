@@ -218,7 +218,7 @@ export function TwoFactorSetup({
                 type="text"
                 value={verificationCode}
                 onChange={(e) => setVerificationCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                placeholder="Enter 6-digit code"
+               
                 aria-invalid={Boolean(error)}
                 aria-describedby={error ? 'twofactor-error' : undefined}
                 className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-gray-900 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100"
@@ -285,7 +285,7 @@ export function TwoFactorSetup({
                 type="tel"
                 value={phoneNumber}
                 onChange={(e) => setPhoneNumber(e.target.value)}
-                placeholder="+1 (555) 123-4567"
+               
                 aria-invalid={Boolean(error)}
                 aria-describedby={error ? 'twofactor-error' : undefined}
                 className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-gray-900 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100"
@@ -327,7 +327,7 @@ export function TwoFactorSetup({
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="you@example.com"
+               
                 aria-invalid={Boolean(error)}
                 aria-describedby={error ? 'twofactor-error' : undefined}
                 className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-gray-900 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100"

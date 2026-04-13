@@ -289,10 +289,10 @@ export function SocialFeed({ onPostCreated }: SocialFeedProps) {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 w-5 h-5" />
               <input
                 type="text"
-                placeholder="Search feed..."
+               
                 value={searchQuery}
                 onChange={(e) =>  setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 bg-zinc-900 border border-zinc-700 rounded-lg text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-cyan-400 transition-colors text-sm"
+                className="w-full pl-10 pr-4 py-2 bg-zinc-900 border border-zinc-700 rounded-lg text-zinc-100  focus:outline-none focus:border-cyan-400 transition-colors text-sm"
               />
             </div>
 
@@ -377,8 +377,8 @@ export function SocialFeed({ onPostCreated }: SocialFeedProps) {
             <textarea
               value={newPostContent}
               onChange={(e) =>  setNewPostContent(e.target.value)}
-              placeholder="Share your thoughts, achievements, or updates with the community..."
-              className="flex-1 bg-zinc-950 border border-zinc-700 rounded-lg px-4 py-3 text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-cyan-400 transition-colors resize-none"
+             
+              className="flex-1 bg-zinc-950 border border-zinc-700 rounded-lg px-4 py-3 text-zinc-100  focus:outline-none focus:border-cyan-400 transition-colors resize-none"
               rows={3}
             />
           </div>
@@ -587,8 +587,8 @@ export function SocialFeed({ onPostCreated }: SocialFeedProps) {
                           <div className="flex-1 flex gap-2">
                             <input
                               type="text"
-                              placeholder="Write a reply..."
-                              className="flex-1 bg-zinc-950 border border-zinc-700 rounded px-3 py-2 text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-cyan-400 text-sm"
+                             
+                              className="flex-1 bg-zinc-950 border border-zinc-700 rounded px-3 py-2 text-zinc-100  focus:outline-none focus:border-cyan-400 text-sm"
                              aria-label="Write a reply..." />
                             <button className="p-2 bg-cyan-400 text-zinc-950 rounded hover:bg-cyan-400 transition-colors">
                               <Send className="w-4 h-4" />

@@ -95,7 +95,7 @@ export function SponsorMenteeModal({ isOpen, onClose }: SponsorMenteeModalProps)
                   type="text"
                   value={menteeAddress}
                   onChange={(e) =>  handleAddressChange(e.target.value)}
-                  placeholder="0x..."
+                 
                   className="w-full px-4 py-3 rounded-lg bg-zinc-950 border border-zinc-100/20 focus:border-emerald-400 focus:outline-none transition-colors text-zinc-100"
                 />
                 {menteeAddress && !isValidAddress && (

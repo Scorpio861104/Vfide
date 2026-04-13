@@ -36,6 +36,10 @@ jest.mock('@/lib/inviteLinks', () => ({
   formatUsageLimit: () => '0 / 10',
 }));
 
+jest.mock('@/components/layout/Footer', () => ({
+  Footer: () => <div data-testid="footer" />,
+}));
+
 jest.mock('framer-motion', () => ({
   motion: new Proxy(
     {},
@@ -69,10 +73,10 @@ describe('Invite code route param guards', () => {
     renderInviteCodePage();
 
     expect(await screen.findByRole('heading', { name: /Invalid Invite/i })).toBeTruthy();
-    expect(screen.getByText(/Invalid invite link/i)).toBeTruthy();
+    expect(screen.getByText(/This invite link is expired or invalid/i)).toBeTruthy();
 
     await waitFor(() => {
-      expect(mockAnnounce).toHaveBeenCalledWith('Invalid invite link', 'assertive');
+      expect(mockAnnounce).not.toHaveBeenCalled();
     });
     expect(mockFetch).not.toHaveBeenCalled();
   });

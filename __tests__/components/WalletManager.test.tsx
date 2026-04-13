@@ -88,7 +88,7 @@ describe('WalletManager - Wallet Management', () => {
     fireEvent.click(editButtons[0]);
     
     expect(screen.getByText('Edit Wallet')).toBeInTheDocument();
-    expect(screen.getByPlaceholderText('Enter wallet nickname')).toBeInTheDocument();
+    expect(screen.getByRole('textbox', { name: /input field/i })).toBeInTheDocument();
   });
 
   test('can update wallet nickname', () => {
@@ -99,7 +99,7 @@ describe('WalletManager - Wallet Management', () => {
     fireEvent.click(editButtons[0]);
     
     // Change nickname
-    const input = screen.getByPlaceholderText('Enter wallet nickname');
+    const input = screen.getByRole('textbox', { name: /input field/i });
     fireEvent.change(input, { target: { value: 'Updated Wallet' } });
     
     // Save changes
@@ -489,7 +489,7 @@ describe('WalletManager - Accessibility', () => {
     fireEvent.click(editButtons[0]);
     
     expect(screen.getByText('Nickname')).toBeInTheDocument();
-    expect(screen.getByPlaceholderText('Enter wallet nickname')).toBeInTheDocument();
+    expect(screen.getByRole('textbox', { name: /input field/i })).toBeInTheDocument();
   });
 });
 
@@ -586,7 +586,7 @@ describe('WalletManager - Integration', () => {
     if (editButtons.length > 0) {
       fireEvent.click(editButtons[0]);
       
-      const input = screen.getByPlaceholderText('Enter wallet nickname');
+      const input = screen.getByRole('textbox', { name: /input field/i });
       fireEvent.change(input, { target: { value: 'Test Wallet' } });
       
       const saveButton = screen.getByRole('button', { name: /Save/i });

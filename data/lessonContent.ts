@@ -327,7 +327,7 @@ export const lessonContentData: Record<string, LessonContent> = {
         content: "All transactions are recorded on-chain, making accounting transparent:",
         points: [
           "Export transaction history as CSV",
-          "Integrate with QuickBooks or Xero (coming soon)",
+          "Integrate with QuickBooks or Xero via accounting connectors",
           "Tax reporting tools for crypto income",
           "Automatic price conversion at time of sale for tax purposes"
         ]

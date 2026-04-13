@@ -64,7 +64,7 @@ export function DepositModal({
                   type="number"
                   value={depositAmount}
                   onChange={(e) =>  setDepositAmount(e.target.value)}
-                  placeholder="0.00"
+                 
                   className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-cyan-500/50 pr-20"
                 />
                 <button

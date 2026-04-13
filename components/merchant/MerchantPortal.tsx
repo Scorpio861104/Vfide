@@ -649,14 +649,14 @@ function PaymentRequestsSection({
           <MobileInput
             label="Recipient Address"
             type="text"
-            placeholder="recipient@example.com"
+           
             value={newRequest.address}
             onChange={(e) => setNewRequest({ ...newRequest, address: e.target.value })}
           />
           <MobileInput
             label="Amount"
             type="number"
-            placeholder="1500"
+           
             value={newRequest.amount}
             onChange={(e) => setNewRequest({ ...newRequest, amount: e.target.value })}
           />
@@ -673,7 +673,7 @@ function PaymentRequestsSection({
           />
           <MobileInput
             label="Memo"
-            placeholder="monthly retainer for services"
+           
             value={newRequest.memo}
             onChange={(e) => setNewRequest({ ...newRequest, memo: e.target.value })}
           />
@@ -928,7 +928,7 @@ function ApiKeysSection({
         <div className="flex flex-col sm:flex-row gap-4">
           <MobileInput
             label="Key Name"
-            placeholder="Production API Key"
+           
             value={newKeyName}
             onChange={(e) => setNewKeyName(e.target.value)}
             className="flex-1"
@@ -1255,13 +1255,13 @@ function WebhooksSection({ merchantAddress }: { merchantAddress: string }) {
         <div className="space-y-4">
           <MobileInput
             label="Endpoint URL (HTTPS)"
-            placeholder="https://your-server.com/webhook"
+           
             value={newUrl}
             onChange={(e) => setNewUrl(e.target.value)}
           />
           <MobileInput
             label="Description"
-            placeholder="Order fulfillment webhook"
+           
             value={newDescription}
             onChange={(e) => setNewDescription(e.target.value)}
           />
@@ -1489,7 +1489,7 @@ function InvoicesSection({ merchantAddress }: { merchantAddress: string }) {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
             <MobileInput label="Customer Name" value={newInvoice.customer_name}
               onChange={(e) => setNewInvoice(prev => ({ ...prev, customer_name: e.target.value }))} />
-            <MobileInput label="Customer Wallet (optional)" placeholder="0x..."
+            <MobileInput label="Customer Wallet (optional)"
               value={newInvoice.customer_address}
               onChange={(e) => setNewInvoice(prev => ({ ...prev, customer_address: e.target.value }))} />
             <MobileInput label="Tax Rate (%)" type="number" value={newInvoice.tax_rate}
@@ -1500,11 +1500,11 @@ function InvoicesSection({ merchantAddress }: { merchantAddress: string }) {
           <h3 className="text-sm font-bold text-gray-900 dark:text-white mb-2">Line Items</h3>
           {newInvoice.items.map((item, i) => (
             <div key={i} className="grid grid-cols-3 gap-2 mb-2">
-              <MobileInput placeholder="Description" value={item.description}
+              <MobileInput value={item.description}
                 onChange={(e) => updateItem(i, 'description', e.target.value)} />
-              <MobileInput placeholder="Qty" type="number" value={item.quantity}
+              <MobileInput type="number" value={item.quantity}
                 onChange={(e) => updateItem(i, 'quantity', e.target.value)} />
-              <MobileInput placeholder="Unit Price" type="number" value={item.unit_price}
+              <MobileInput type="number" value={item.unit_price}
                 onChange={(e) => updateItem(i, 'unit_price', e.target.value)} />
             </div>
           ))}
@@ -1658,9 +1658,9 @@ function SubscriptionsSection({ merchantAddress }: { merchantAddress: string }) 
         <div className="bg-white dark:bg-gray-800 rounded-lg p-4 md:p-6 shadow-sm border border-gray-200 dark:border-gray-700">
           <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Create Subscription Plan</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <MobileInput label="Plan Name" placeholder="Pro Plan" value={newPlan.name}
+            <MobileInput label="Plan Name" value={newPlan.name}
               onChange={(e) => setNewPlan(prev => ({ ...prev, name: e.target.value }))} />
-            <MobileInput label="Amount" type="number" placeholder="10" value={newPlan.amount}
+            <MobileInput label="Amount" type="number" value={newPlan.amount}
               onChange={(e) => setNewPlan(prev => ({ ...prev, amount: e.target.value }))} />
             <MobileSelect label="Interval"
               options={[
@@ -1789,9 +1789,9 @@ function ProductsSection({ merchantAddress }: { merchantAddress: string }) {
       </div>
       {showAdd && (
         <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 space-y-3">
-          <input placeholder="Product name" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} className="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white" />
-          <input placeholder="Price" type="number" step="0.01" value={form.price} onChange={e => setForm(f => ({ ...f, price: e.target.value }))} className="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white" />
-          <input placeholder="Description" value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} className="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white" />
+          <input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} className="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white" />
+          <input type="number" step="0.01" value={form.price} onChange={e => setForm(f => ({ ...f, price: e.target.value }))} className="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white" />
+          <input value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} className="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white" />
           <select value={form.product_type} onChange={e => setForm(f => ({ ...f, product_type: e.target.value }))} className="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white">
             <option value="physical">Physical</option>
             <option value="digital">Digital</option>
@@ -1972,7 +1972,7 @@ function ReviewsSection({ merchantAddress }: { merchantAddress: string }) {
             ) : (
               <div className="mt-2 flex gap-2">
                 <input
-                  placeholder="Write a reply..."
+                 
                   value={replyText[review.id] || ''}
                   onChange={e => setReplyText(prev => ({ ...prev, [review.id]: e.target.value }))}
                   className="flex-1 px-2 py-1 text-sm border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
@@ -2094,11 +2094,11 @@ function DigitalGoodsSection({ merchantAddress }: { merchantAddress: string }) {
       </div>
       {showAdd && (
         <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 space-y-3">
-          <input placeholder="Product ID" value={form.product_id} onChange={e => setForm(f => ({ ...f, product_id: e.target.value }))} className="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white" />
-          <input placeholder="File name" value={form.file_name} onChange={e => setForm(f => ({ ...f, file_name: e.target.value }))} className="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white" />
-          <input placeholder="File URL" value={form.file_url} onChange={e => setForm(f => ({ ...f, file_url: e.target.value }))} className="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white" />
-          <input placeholder="File size (bytes)" type="number" value={form.file_size} onChange={e => setForm(f => ({ ...f, file_size: e.target.value }))} className="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white" />
-          <textarea placeholder="License keys (one per line)" value={form.license_keys} onChange={e => setForm(f => ({ ...f, license_keys: e.target.value }))} className="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white" rows={3} />
+          <input value={form.product_id} onChange={e => setForm(f => ({ ...f, product_id: e.target.value }))} className="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white" />
+          <input value={form.file_name} onChange={e => setForm(f => ({ ...f, file_name: e.target.value }))} className="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white" />
+          <input value={form.file_url} onChange={e => setForm(f => ({ ...f, file_url: e.target.value }))} className="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white" />
+          <input type="number" value={form.file_size} onChange={e => setForm(f => ({ ...f, file_size: e.target.value }))} className="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white" />
+          <textarea value={form.license_keys} onChange={e => setForm(f => ({ ...f, license_keys: e.target.value }))} className="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white" rows={3} />
           <button onClick={addAsset} className="px-4 py-2 bg-green-600 text-white rounded-lg text-sm hover:bg-green-700">Save Asset</button>
         </div>
       )}

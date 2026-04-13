@@ -732,7 +732,7 @@ contract CardBoundVault is ReentrancyGuard {
     /// @notice Rescue accidentally sent native token; vault custody remains token-based.
     function rescueNative(address payable to, uint256 amount) external onlyAdmin nonReentrant {
         if (to == address(0)) revert CBV_Zero();
-        (bool ok, ) = to.call{value: amount}("");
+        (bool ok, ) = to.call{value: amount, gas: 10_000}("");
         if (!ok) revert CBV_TransferFailed();
         emit NativeRescue(to, amount);
     }

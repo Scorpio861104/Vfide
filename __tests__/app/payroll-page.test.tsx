@@ -1,13 +1,6 @@
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import type React from 'react';
-
-let mockAccount = {
-  address: '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' as `0x${string}`,
-  isConnected: true,
-};
-
-let mockPayrollState: any;
 
 const renderPayrollPage = () => {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -16,19 +9,20 @@ const renderPayrollPage = () => {
   return render(<PayrollPage />);
 };
 
-jest.mock('wagmi', () => ({
-  useAccount: () => mockAccount,
+jest.mock('../../app/payroll/components/DashboardTab', () => ({
+  DashboardTab: () => <div>Payroll dashboard content</div>,
 }));
 
-jest.mock('@/hooks/usePayroll', () => ({
-  usePayroll: () => mockPayrollState,
+jest.mock('../../app/payroll/components/StreamsTab', () => ({
+  StreamsTab: () => <div>Payroll streams content</div>,
 }));
 
-jest.mock('@/lib/toast', () => ({
-  toast: {
-    success: jest.fn(),
-    error: jest.fn(),
-  },
+jest.mock('../../app/payroll/components/CreateTab', () => ({
+  CreateTab: () => <div>Payroll create content</div>,
+}));
+
+jest.mock('../../app/payroll/components/HistoryTab', () => ({
+  HistoryTab: () => <div>Payroll history content</div>,
 }));
 
 jest.mock('@/components/layout/Footer', () => ({
@@ -58,61 +52,30 @@ jest.mock('lucide-react', () => {
 describe('Payroll page pathways', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    mockAccount = {
-      address: '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
-      isConnected: true,
-    };
-
-    mockPayrollState = {
-      streams: [],
-      receivingStreams: [],
-      sendingStreams: [],
-      loading: false,
-      error: null,
-      isDeployed: true,
-      currentTime: 0,
-      totalReceiving: 0n,
-      totalSending: 0n,
-      totalClaimable: 0n,
-      createStream: jest.fn(async () => {}),
-      withdraw: jest.fn(async () => {}),
-      pauseStream: jest.fn(async () => {}),
-      resumeStream: jest.fn(async () => {}),
-      topUp: jest.fn(async () => {}),
-      refresh: jest.fn(async () => {}),
-      formatAmount: () => '0',
-      formatMonthlyRate: () => '0 / month',
-      formatTimeRemaining: () => '0d',
-      calculateClaimable: () => 0n,
-    };
   });
 
-  it('renders payroll hero and stream-management shell', () => {
+  it('renders payroll hero and default dashboard tab', () => {
     renderPayrollPage();
 
-    expect(screen.getByText(/Salary Streaming/i)).toBeTruthy();
-    expect(screen.getByText(/Get Paid/i)).toBeTruthy();
-    expect(screen.getAllByText(/Every Second/i).length).toBeGreaterThan(0);
-    expect(screen.getByRole('button', { name: /Receiving/i })).toBeTruthy();
+    expect(screen.getByText(/^Payroll$/i)).toBeTruthy();
+    expect(screen.getByText(/Manage team payments and streaming salaries/i)).toBeTruthy();
+    expect(screen.getByText(/Payroll dashboard content/i)).toBeTruthy();
     expect(screen.getByRole('button', { name: /Create Stream/i })).toBeTruthy();
   });
 
-  it('shows connect-wallet guard when disconnected', () => {
-    mockAccount = {
-      address: undefined as unknown as `0x${string}`,
-      isConnected: false,
-    };
-
+  it('renders payroll tab navigation labels', () => {
     renderPayrollPage();
 
-    expect(screen.getByRole('heading', { name: /Connect Your Wallet/i })).toBeTruthy();
-    expect(screen.getByText(/Connect your wallet to view and manage your salary streams/i)).toBeTruthy();
+    expect(screen.getByRole('button', { name: /^Dashboard$/i })).toBeTruthy();
+    expect(screen.getByRole('button', { name: /^Streams$/i })).toBeTruthy();
+    expect(screen.getByRole('button', { name: /^Create Stream$/i })).toBeTruthy();
+    expect(screen.getByRole('button', { name: /^History$/i })).toBeTruthy();
   });
 
-  it('shows empty stream state for connected wallet with no entries', () => {
+  it('switches to streams tab content', () => {
     renderPayrollPage();
 
-    expect(screen.getByRole('heading', { name: /No Streams Found/i })).toBeTruthy();
-    expect(screen.getByText(/You're not receiving any salary streams yet/i)).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: /^Streams$/i }));
+    expect(screen.getByText(/Payroll streams content/i)).toBeTruthy();
   });
 });

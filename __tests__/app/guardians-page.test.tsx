@@ -196,7 +196,7 @@ describe('Guardians page Chain of Return', () => {
     expect(screen.getByText(/Vaults You're Guarding/i)).toBeTruthy();
 
     fireEvent.click(screen.getByRole('tab', { name: /Pending Actions/i }));
-    expect(await screen.findByText(/Pending Recovery Inbox/i)).toBeTruthy();
-    expect(screen.getByText(/No tracked vaults yet/i)).toBeTruthy();
+    expect(await screen.findByText(/Guardian Inbox/i)).toBeTruthy();
+    expect(screen.getByText(/No vaults in watchlist yet/i)).toBeTruthy();
   });
 });

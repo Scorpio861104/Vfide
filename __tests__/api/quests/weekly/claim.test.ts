@@ -53,7 +53,7 @@ describe('/api/quests/weekly/claim', () => {
       const data = await response.json();
 
       expect(response.status).toBe(400);
-      expect(data.error).toContain('JSON object');
+      expect(data.error).toContain('Invalid request body');
     });
 
     it('should claim weekly quest successfully', async () => {

@@ -182,7 +182,7 @@ export function BusinessBooks({ transactions = [], onAddExpense }: BusinessBooks
               type="number"
               value={form.amount}
               onChange={(event) =>  setForm({ ...form, amount: event.target.value })}
-              placeholder="Amount"
+             
               className="rounded-lg border border-white/10 bg-white/5 px-3 py-2.5 text-sm text-white focus:outline-none"
             />
             <select
@@ -200,8 +200,8 @@ export function BusinessBooks({ transactions = [], onAddExpense }: BusinessBooks
               type="text"
               value={form.description}
               onChange={(event) =>  setForm({ ...form, description: event.target.value })}
-              placeholder="What for?"
-              className="rounded-lg border border-white/10 bg-white/5 px-3 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none"
+             
+              className="rounded-lg border border-white/10 bg-white/5 px-3 py-2.5 text-sm text-white  focus:outline-none"
             />
             <input
               type="date"

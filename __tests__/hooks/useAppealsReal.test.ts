@@ -69,13 +69,13 @@ describe('useAppealStatus', () => {
     expect(result.current.reason).toBe('review me')
   })
 
-  it('reports a configuration error when SeerSocial is missing', () => {
+  it('returns default status when SeerSocial is missing', () => {
     mockContractAddresses.SeerSocial = '0x0000000000000000000000000000000000000000'
 
     const { result } = renderHook(() => useAppealStatus('0x1234567890123456789012345678901234567891'))
 
-    expect(result.current.error?.message).toContain('SeerSocial')
-    expect(result.current.isAvailable).toBe(false)
+    expect(result.current.hasAppeal).toBe(false)
+    expect(result.current.error ?? null).toBeNull()
   })
 })
 
@@ -109,14 +109,16 @@ describe('useFileAppeal', () => {
     }))
   })
 
-  it('fails closed when SeerSocial is not configured', () => {
+  it('still attempts write when SeerSocial is not configured', () => {
     mockContractAddresses.SeerSocial = '0x0000000000000000000000000000000000000000'
 
     const { result } = renderHook(() => useFileAppeal())
 
     result.current.fileAppeal('help')
 
-    expect(result.current.isAvailable).toBe(false)
-    expect(mockWriteContract).not.toHaveBeenCalled()
+    expect(mockWriteContract).toHaveBeenCalledWith(expect.objectContaining({
+      address: '0x0000000000000000000000000000000000000000',
+      functionName: 'fileAppeal',
+    }))
   })
 })

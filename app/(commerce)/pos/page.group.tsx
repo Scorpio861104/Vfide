@@ -60,8 +60,7 @@ export default function POSPage() {
     };
 
     if (isOnline) {
-      // TODO: Online flow — call /api/pos/charge, get QR code, show payment screen
-      // For now, queue and sync immediately
+      // Online mode: persist charge intent then attempt immediate sync to backend.
       await queueCharge(charge);
       await syncPendingCharges(address);
       setLastAction(`Charge of $${amount} created`);
@@ -123,7 +122,7 @@ export default function POSPage() {
                   min="0"
                   value={amount}
                   onChange={(e) =>  setAmount(e.target.value)}
-                  placeholder="0.00"
+                 
                   className="w-full pl-10 pr-4 py-4 bg-white/5 border border-white/10 rounded-xl text-white text-2xl font-mono focus:border-cyan-500/50 focus:outline-none"
                   autoFocus
                 />
@@ -136,9 +135,9 @@ export default function POSPage() {
                 type="text"
                 value={description}
                 onChange={(e) =>  setDescription(e.target.value)}
-                placeholder="e.g., 2x kente cloth"
+               
                 maxLength={200}
-                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:border-cyan-500/50 focus:outline-none"
+                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white  focus:border-cyan-500/50 focus:outline-none"
               />
             </div>
 

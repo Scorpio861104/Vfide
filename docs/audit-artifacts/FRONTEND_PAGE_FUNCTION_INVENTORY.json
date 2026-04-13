@@ -291,8 +291,8 @@
     "contractFns": []
   },
   {
-    "rel": "app/flashlight/page.tsx",
-    "exportedDefault": "FlashlightPage",
+    "rel": "app/flashloan/page.tsx",
+    "exportedDefault": "FlashloanPage",
     "handlers": [],
     "readHooks": 0,
     "writeHooks": 0,
