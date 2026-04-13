@@ -235,7 +235,7 @@
     "@layerzerolabs/lz-evm-protocol-v2": "^3.0.162",
     "@next/bundle-analyzer": "^16.1.5",
     "@nomicfoundation/hardhat-ethers": "^4.0.6",
-    "@nomicfoundation/hardhat-ethers-chai-matchers": "^3.0.1",
+    "@nomicfoundation/hardhat-ethers-chai-matchers": "^3.0.4",
     "@nomicfoundation/hardhat-mocha": "^3.0.14",
     "@nomicfoundation/hardhat-network-helpers": "^3.0.3",
     "@openzeppelin/contracts": "^5.4.0",
