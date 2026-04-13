@@ -10,7 +10,7 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { User, Mail, Phone, Globe, X, LogOut, Wallet, Shield, ChevronDown, Fingerprint, Loader2, type LucideIcon } from 'lucide-react';
+import { Mail, Phone, Globe, X, LogOut, Wallet, Shield, ChevronDown, Fingerprint, Loader2, type LucideIcon } from 'lucide-react';
 import { useVFIDEWallet, type AuthMethod } from './VFIDEWalletProvider';
 
 // ── Sign-In Modal ───────────────────────────────────────────────────────────

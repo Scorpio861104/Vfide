@@ -20,7 +20,7 @@ import { logger } from '@/lib/logger';
  * Check if a vault is locked by any security layer
  * SecurityHub removed — always returns false (non-custodial)
  */
-export function useIsVaultLocked(vaultAddress?: `0x${string}`) {
+export function useIsVaultLocked(_vaultAddress?: `0x${string}`) {
   return {
     isLocked: false,
     isLoading: false,

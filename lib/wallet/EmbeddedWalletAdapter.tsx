@@ -16,7 +16,7 @@
  * only THIS file — no other code changes needed.
  */
 
-import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from 'react';
+import { createContext, useContext, useState, useCallback, type ReactNode } from 'react';
 import { type Address } from 'viem';
 
 // ═══════════════════════════════════════════════════════════
@@ -140,7 +140,7 @@ export function EmbeddedWalletProvider({ children }: { children: ReactNode }) {
 
 export function EmbeddedWalletProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<EmbeddedUser | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const isLoading = false;
 
   const login = useCallback(async (method: AuthMethod, _credential?: string) => {
     if (method === 'wallet') {

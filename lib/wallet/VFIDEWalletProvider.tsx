@@ -187,7 +187,7 @@ async function authenticateWithProvider(
   };
 }
 
-async function ensureVaultExists(address: string): Promise<{ vaultAddress: string }> {
+async function ensureVaultExists(_address: string): Promise<{ vaultAddress: string }> {
   /**
    * PRODUCTION: Check if vault exists via VaultHub.getVault(address).
    * If not, call VaultHub.createVault() automatically.

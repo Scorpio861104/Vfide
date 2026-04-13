@@ -96,7 +96,8 @@ export function formatCurrency(
   options?: { locale?: string; compact?: boolean; showCode?: boolean }
 ): string {
   const locale = options?.locale || getUserLocale();
-  const curr = currency || getDefaultCurrency(locale);
+  const requestedCurrency = currency || getDefaultCurrency(locale);
+  const curr = TOKEN_DISPLAY_CURRENCY[requestedCurrency.toUpperCase()] || requestedCurrency;
   const num = typeof amount === 'string' ? parseFloat(amount) : amount;
 
   if (isNaN(num)) return '—';

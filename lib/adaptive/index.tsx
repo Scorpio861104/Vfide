@@ -15,7 +15,7 @@
  */
 'use client';
 
-import { createContext, useContext, useState, useEffect, ReactNode, useMemo } from 'react';
+import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 
 // ── Types ───────────────────────────────────────────────────────────────────
 
