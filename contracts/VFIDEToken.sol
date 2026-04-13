@@ -1232,85 +1232,13 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
      * @return reason Failure reason if canDo is false
      */
     function canTransfer(address from, address to, uint256 amount) external view returns (bool canDo, string memory reason) {
-        // Sanctions check (mirrors live transfer rules for system-exempt contracts)
-        
-        // Balance check
-        if (_balances[from] < amount) return (false, "Insufficient balance");
-        
-        // Anti-whale checks
-        if (!whaleLimitExempt[from] && !whaleLimitExempt[to] && 
-            !systemExempt[from] && !systemExempt[to] &&
-            from != address(0) && to != address(0)) {
-            
-            // Max transfer
-            if (maxTransferAmount > 0 && amount > maxTransferAmount) {
-                return (false, "Exceeds max transfer amount");
-            }
-            
-            // Max wallet
-            // T-02 FIX: Use net amount estimate (matching _transfer() behaviour) so view reports correctly
-            if (maxWalletBalance > 0) {
-                uint256 netEstimate = amount;
-                if (address(burnRouter) != address(0) && !isFeeBypassed() &&
-                    !whaleLimitExempt[from] && !whaleLimitExempt[to] &&
-                    !systemExempt[from] && !systemExempt[to]) {
-                    // Approximate: use 95% of gross as worst-case net (5% fee ceiling)
-                    (bool ok, uint256 expectedNet) = _tryExpectedNetAmount(from, to, amount);
-                    if (ok) {
-                        netEstimate = expectedNet;
-                    } else {
-                        netEstimate = (amount * 9500) / 10000;
-                    }
-                }
-                if (_balances[to] + netEstimate > maxWalletBalance) {
-                    return (false, "Exceeds max wallet balance");
-                }
-            }
-            
-            // Daily limit (rolling 24-hour window)
-            if (dailyTransferLimit > 0) {
-                uint256 transferred = dailyTransferred[from];
-                uint256 windowStart = dailyResetTime[from];
-                if (windowStart != 0 && block.timestamp < windowStart + 1 days) {
-                    uint256 trackedEstimate = amount;
-                    if (address(burnRouter) != address(0) && !isFeeBypassed() &&
-                        !systemExempt[from] && !systemExempt[to]) {
-                        (bool ok, uint256 expectedNet) = _tryExpectedNetAmount(from, to, amount);
-                        if (ok) {
-                            trackedEstimate = expectedNet;
-                        } else {
-                            trackedEstimate = (amount * 9500) / 10000;
-                        }
-                    }
+        if (_balances[from] < amount) return (false, "BALANCE");
 
-                    if (transferred + trackedEstimate > dailyTransferLimit) {
-                        return (false, "Exceeds daily transfer limit");
-                    }
-                }
-            }
-            
-            // Cooldown
-            if (transferCooldown > 0 && lastTransferTime[from] > 0) {
-                if (block.timestamp < lastTransferTime[from] + transferCooldown) {
-                    return (false, "Transfer cooldown active");
-                }
-            }
+        bool exempt = whaleLimitExempt[from] || whaleLimitExempt[to] || systemExempt[from] || systemExempt[to] || from == address(0) || to == address(0);
+        if (!exempt && maxTransferAmount > 0 && amount > maxTransferAmount) {
+            return (false, "MAX_TRANSFER");
         }
-        
-        // Vault-only check
-        if (vaultOnly && address(vaultHub) != address(0)) {
-            bool fromOk = (from == address(0) || systemExempt[from] || whitelisted[from] || 
-                          _isVault(from) || _hasVault(from));
-            bool toOk = (to == address(0) || to == treasurySink || to == sanctumSink || 
-                        systemExempt[to] || whitelisted[to] || _isVault(to) || _hasVault(to));
-            
-            if (!fromOk) return (false, "Sender must use vault");
-            if (!toOk) return (false, "Recipient must use vault");
-        }
-        
-        // SecurityHub lock check
-        // SecurityHub lock check removed — non-custodial, no third-party locks
-        
+
         return (true, "");
     }
     
@@ -1335,112 +1263,19 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
             return (0, 0, 0, amount);
         }
 
-        address feeFrom = _resolveFeeScoringAddress(from);
-        
-        // Get fees from router
-        (burnAmount, sanctumAmount, ecosystemAmount, , , ) = burnRouter.computeFees(feeFrom, to, amount);
-        
-        netReceived = amount - burnAmount - sanctumAmount - ecosystemAmount;
+        // Lightweight preview path for bytecode-size safety:
+        // derive total expected fee from net estimator and report as ecosystem component.
+        // Exact split is still applied by burnRouter in _transfer().
+        netReceived = getExpectedNetAmount(from, to, amount);
+        ecosystemAmount = amount - netReceived;
+        burnAmount = 0;
+        sanctumAmount = 0;
     }
     
-    /**
-     * @notice Get comprehensive transfer limits for an address
-     * @param account Address to check
-     * @return maxPerTransfer Maximum allowed per transfer
-     * @return maxWallet Maximum wallet balance
-     * @return dailyLimit Daily transfer limit
-     * @return dailyRemaining Remaining daily allowance
-     * @return cooldownSecs Cooldown between transfers
-     * @return cooldownRemain Time until next transfer allowed
-     * @return isExempt Whether address is exempt from limits
-     */
-    function getTransferLimitsFor(address account) external view returns (
-        uint256 maxPerTransfer,
-        uint256 maxWallet,
-        uint256 dailyLimit,
-        uint256 dailyRemaining,
-        uint256 cooldownSecs,
-        uint256 cooldownRemain,
-        bool isExempt
-    ) {
-        isExempt = whaleLimitExempt[account] || systemExempt[account];
-        
-        if (isExempt) {
-            maxPerTransfer = type(uint256).max;
-            maxWallet = type(uint256).max;
-            dailyLimit = type(uint256).max;
-            dailyRemaining = type(uint256).max;
-            cooldownSecs = 0;
-            cooldownRemain = 0;
-        } else {
-            maxPerTransfer = maxTransferAmount > 0 ? maxTransferAmount : type(uint256).max;
-            maxWallet = maxWalletBalance > 0 ? maxWalletBalance : type(uint256).max;
-            dailyLimit = dailyTransferLimit > 0 ? dailyTransferLimit : type(uint256).max;
-            
-            // Calculate daily remaining using the rolling 24-hour window.
-            if (dailyTransferLimit > 0) {
-                uint256 windowStart = dailyResetTime[account];
-                if (windowStart == 0 || block.timestamp >= windowStart + 1 days) {
-                    dailyRemaining = dailyTransferLimit;
-                } else if (dailyTransferred[account] >= dailyTransferLimit) {
-                    dailyRemaining = 0;
-                } else {
-                    dailyRemaining = dailyTransferLimit - dailyTransferred[account];
-                }
-            } else {
-                dailyRemaining = type(uint256).max;
-            }
-            
-            cooldownSecs = transferCooldown;
-            
-            // Calculate cooldown remaining
-            if (transferCooldown > 0 && lastTransferTime[account] > 0) {
-                uint256 unlockTime = lastTransferTime[account] + transferCooldown;
-                cooldownRemain = block.timestamp >= unlockTime ? 0 : unlockTime - block.timestamp;
-            } else {
-                cooldownRemain = 0;
-            }
-        }
-    }
-    
-    /**
-     * @notice Get daily transfer statistics for a user
-     * @param user Address to query
-     * @return transferred Amount transferred today
-     * @return limit Daily limit
-     * @return remaining Remaining allowance
-     * @return resetTime When current period started
-     * @return nextResetTime When limit resets
-     */
-    function getDailyTransferStats(address user) external view returns (
-        uint256 transferred,
-        uint256 limit,
-        uint256 remaining,
-        uint256 resetTime,
-        uint256 nextResetTime
-    ) {
-        if (whaleLimitExempt[user] || systemExempt[user]) {
-            limit = type(uint256).max;
-            remaining = type(uint256).max;
-            return (0, limit, remaining, 0, 0);
-        }
-        
-        limit = dailyTransferLimit;
-        
-        uint256 windowStart = dailyResetTime[user];
-
-        if (windowStart == 0 || block.timestamp >= windowStart + 1 days) {
-            transferred = 0;
-            remaining = limit;
-            resetTime = block.timestamp;
-            nextResetTime = block.timestamp + 24 hours;
-        } else {
-            transferred = dailyTransferred[user];
-            remaining = transferred >= limit ? 0 : limit - transferred;
-            resetTime = windowStart;
-            nextResetTime = windowStart + 24 hours;
-        }
-    }
+    // NOTE: Detailed transfer-limit and daily-stats helper views were removed to keep
+    // VFIDEToken runtime under EIP-170. Off-chain indexers should derive these values
+    // from existing public state (maxTransferAmount/maxWalletBalance/dailyTransferLimit,
+    // dailyTransferred/dailyResetTime/lastTransferTime) and helper views.
 
     /// @dev Internal burn accounting helper. Use transactionFeesProcessed() for public reads.
     function _totalBurnedInternal() private view returns (uint256) {
