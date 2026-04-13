@@ -61,14 +61,11 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
     event PaymentMade(address indexed recipient, uint256 amount, string reason);
     event FundsBurned(uint256 amount);
     event ManagerSet(address manager, bool active);
-    event MerchantBonusPaid(address indexed merchant, uint256 amount, uint16 tier);
     event CouncilDistributed(uint256 totalAmount, uint8 memberCount, uint256 perMember);
     event HeadhunterQuarterEnded(uint256 year, uint256 quarter, uint256 totalPool);
-    event HeadhunterRewardClaimed(address indexed referrer, uint256 year, uint256 quarter, uint256 amount, uint8 rank);
     event ReferralRecorded(address indexed referrer, address indexed referred, bool isMerchant, uint16 points);
     event AllocationUpdated(uint16 councilBps, uint16 merchantBps, uint16 headhunterBps, uint16 operationsBps);
     event MerchantPeriodEnded(uint256 period, uint256 poolSnapshot);
-    event MerchantRewardClaimed(address indexed merchant, uint256 period, uint256 reward, uint8 rank);
     event SeerUpdated(address indexed oldSeer, address indexed newSeer);
     event PendingReferralRegistered(address indexed referred, address indexed referrer, bool isMerchant);
     event RewardTokenUpdated(address indexed oldToken, address indexed newToken);
@@ -131,15 +128,6 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
     // Rank 61-100:  25 bps each = 10%
     // Total: 25 + 15 + 20 + 20 + 10 + 10 = 100%
 
-    // Headhunter rank percentages (out of 10000 = 100%)
-    // Rank 1 gets most, rank 20 gets least
-    // Distribution: 1500, 1200, 1000, 800, 700, 600, 500, 450, 400, 350, 
-    //               300, 280, 260, 240, 220, 200, 180, 160, 140, 120 = 10000
-    uint16[20] public HEADHUNTER_RANK_SHARE_BPS = [
-        1500, 1200, 1000, 800, 700, 600, 500, 450, 400, 350,
-        300, 280, 260, 240, 220, 200, 180, 160, 140, 120
-    ];
-    
     // Array caps to prevent O(n²) gas issues
     uint256 public constant MAX_MERCHANTS_PER_PERIOD = 500;
     uint256 public constant MAX_REFERRERS_PER_YEAR = 200;
@@ -267,8 +255,6 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
 
     event AutoSwapConfigured(address router, address stablecoin, bool enabled, uint16 maxSlippageBps);
     event MinOutputPerVfideSet(uint256 minOutput);
-    event RewardPaidInStable(address indexed recipient, uint256 stableAmount, string reason);
-    event SwapFailed(address indexed recipient, uint256 vfideAmount, string reason);
     event StablecoinOnlyModeSet(bool enabled);
     event StablecoinDeposited(address indexed token, address indexed from, uint256 amount);
     event StablecoinReserveWithdrawn(address indexed token, uint256 amount, address indexed recipient);
@@ -293,7 +279,6 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
         uint256 level3Reward,
         uint256 level4Reward
     );
-    event ReferralWorkLevelRewardPaid(address indexed worker, uint256 indexed year, uint8 level, uint256 amount, string reason);
 
     // Automatic fixed work-payout configuration
     bool public autoWorkPayoutEnabled;
@@ -856,15 +841,6 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
     }
 
     /**
-     * @notice Claim merchant reward for a completed period based on rank
-     */
-    function claimMerchantReward(uint256) external pure {
-        // Permanently disabled: distributing tokens based on merchant ranking
-        // creates an expectation of profit, conflicting with Howey Test compliance.
-        revert ECO_RewardsNotAvailable();
-    }
-
-    /**
      * @notice Pay fixed compensation for verified merchant work
      * @dev Uses merchant pool only; not a rank/percentage payout.
      *      HOWEY FIX: When stablecoinOnlyMode is enabled, payment is swapped to
@@ -880,15 +856,10 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
 
         merchantPool -= amount;
         totalMerchantBonusPaid += amount;
-        bool ok = _deliverWorkReward(worker, amount, "merchant_work", reason);
-        if (!ok) revert ECO_ApprovalFailed();
+        _deliverWorkReward(worker, amount, "merchant_work", reason);
     }
 
     // _calculateMerchantRank moved to EcosystemVaultView.sol (off-chain indexing)
-
-    function _getMerchantRankShare(uint8 rank) internal pure returns (uint16) {
-        return EcosystemVaultLib.getMerchantRankShare(rank);
-    }
 
     function _getMerchantBonusTier(uint16 score) internal pure returns (uint16) {
         return EcosystemVaultLib.getMerchantBonusTier(score);
@@ -997,12 +968,7 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
 
             merchantPool -= amount;
             totalMerchantBonusPaid += amount;
-            if (!_deliverWorkReward(worker, amount, "merchant_work", reason)) {
-                // Swap failed — rollback accounting and signal caller
-                merchantPool += amount;
-                totalMerchantBonusPaid -= amount;
-                return false;
-            }
+            _deliverWorkReward(worker, amount, "merchant_work", reason);
             return true;
         }
 
@@ -1012,11 +978,7 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
 
         headhunterPool -= amount;
         totalHeadhunterPaid += amount;
-        if (!_deliverWorkReward(worker, amount, "referral_work", reason)) {
-            headhunterPool += amount;
-            totalHeadhunterPaid -= amount;
-            return false;
-        }
+        _deliverWorkReward(worker, amount, "referral_work", reason);
         return true;
     }
 
@@ -1033,11 +995,9 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
         uint256 amount,
         string memory program,
         string memory reason
-    ) internal returns (bool success) {
-        success = true;
+    ) internal {
         rewardToken.safeTransfer(worker, amount);
         emit WorkRewardPaid(worker, amount, program, reason);
-        return true;
     }
 
     /**
@@ -1046,15 +1006,6 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
      */
     function endHeadhunterQuarter() external onlyManager {
         _endHeadhunterQuarterIfDue(true);
-    }
-
-    /**
-     * @notice Claim headhunter reward for a completed quarter
-     */
-    function claimHeadhunterReward(uint256, uint256) external pure {
-        // Permanently disabled: distributing tokens based on referral ranking
-        // creates an expectation of profit, conflicting with Howey Test compliance.
-        revert ECO_RewardsNotAvailable();
     }
 
     /**
@@ -1072,18 +1023,14 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
 
         headhunterPool -= amount;
         totalHeadhunterPaid += amount;
-        bool ok = _deliverWorkReward(worker, amount, "referral_work", reason);
-        if (!ok) revert ECO_ApprovalFailed();
+        _deliverWorkReward(worker, amount, "referral_work", reason);
     }
 
     /**
      * @notice Pay the next unlocked referral-work level reward for a referrer in a year.
      * @dev Only objective point milestones are used (no leaderboard rank, no percentage share).
      */
-    function payReferralLevelReward(address worker, uint256 year, string calldata reason) external onlyManager nonReentrant {
-        worker;
-        year;
-        reason;
+    function payReferralLevelReward(address, uint256, string calldata) external pure {
         revert ECO_RewardsNotAvailable();
     }
 
@@ -1091,11 +1038,7 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
      * @notice Self-claim unlocked referral work levels for the caller.
      * @dev Enables autonomous user claims from objective milestones without manager intervention.
      */
-    function claimReferralLevelRewards(uint256 year, string calldata reason) external nonReentrant returns (uint8 levelsPaid, uint256 totalAmount) {
-        year;
-        reason;
-        levelsPaid;
-        totalAmount;
+    function claimReferralLevelRewards(uint256, string calldata) external pure returns (uint8, uint256) {
         revert ECO_RewardsNotAvailable();
     }
 
@@ -1103,12 +1046,7 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
      * @notice Permissionless processor for objective referral level payouts.
      * @dev Anyone can trigger, but payout always goes to `worker`.
      */
-    function processReferralLevelRewards(address worker, uint256 year, string calldata reason) external nonReentrant returns (uint8 levelsPaid, uint256 totalAmount) {
-        worker;
-        year;
-        reason;
-        levelsPaid;
-        totalAmount;
+    function processReferralLevelRewards(address, uint256, string calldata) external pure returns (uint8, uint256) {
         revert ECO_RewardsNotAvailable();
     }
 
@@ -1119,9 +1057,7 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
     // _calculateHeadhunterRank moved to EcosystemVaultView.sol (off-chain indexing)
 
     // Keep checkHeadhunterReward for interface compatibility (no-op now)
-    function checkHeadhunterReward(address) external onlyManager {
-        // No-op: rank/percentage claims are disabled; use fixed work reward payouts.
-    }
+    function checkHeadhunterReward(address) external pure {}
 
     // ═══════════════════════════════════════════════════════════════════════
     //                         UTILITY FUNCTIONS

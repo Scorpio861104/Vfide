@@ -1,13 +1,15 @@
 # Production Contract Set
 
-This is the recommended production set: core contracts + interfaces.
+Authoritative inventory for the current `contracts/` tree. This replaces stale references to deleted contracts such as `PromotionalTreasury.sol`, `UserVault.sol`, and `VFIDEPresale.sol`.
 
-## Core contracts
+## Deployable Contracts
 
 - AdminMultiSig.sol
 - BadgeManager.sol
+- BadgeQualificationRules.sol
 - BadgeRegistry.sol
 - BridgeSecurityModule.sol
+- CardBoundVault.sol
 - CircuitBreaker.sol
 - CouncilElection.sol
 - CouncilManager.sol
@@ -15,31 +17,39 @@ This is the recommended production set: core contracts + interfaces.
 - DAO.sol
 - DAOTimelock.sol
 - DeployPhase1.sol
+- DeployPhase1Governance.sol
+- DeployPhase1Infrastructure.sol
+- DeployPhase1Token.sol
+- DeployPhase3Peripherals.sol
 - DeployPhases3to6.sol
 - DevReserveVestingVault.sol
 - DutyDistributor.sol
 - EcosystemVault.sol
 - EmergencyControl.sol
 - EscrowManager.sol
+- FeeDistributor.sol
+- FraudRegistry.sol
 - GovernanceHooks.sol
 - LiquidityIncentives.sol
 - MainstreamPayments.sol
 - MerchantPortal.sol
 - OwnerControlPanel.sol
 - PayrollManager.sol
-- PromotionalTreasury.sol
+- Pools.sol
+- ProofLedger.sol
 - ProofScoreBurnRouter.sol
 - RevenueSplitter.sol
 - SanctumVault.sol
+- Seer.sol
 - SeerAutonomous.sol
 - SeerGuardian.sol
 - SeerSocial.sol
-- SharedInterfaces.sol
+- SeerWorkAttestation.sol
+- ServicePool.sol
 - StablecoinRegistry.sol
 - SubscriptionManager.sol
 - SystemHandover.sol
 - TempVault.sol
-- UserVault.sol
 - VFIDEAccessControl.sol
 - VFIDEBadgeNFT.sol
 - VFIDEBenefits.sol
@@ -47,10 +57,12 @@ This is the recommended production set: core contracts + interfaces.
 - VFIDECommerce.sol
 - VFIDEEnterpriseGateway.sol
 - VFIDEFinance.sol
-- VFIDEPresale.sol
+- VFIDEFlashLoan.sol
 - VFIDEPriceOracle.sol
 - VFIDEReentrancyGuard.sol
 - VFIDESecurity.sol
+- VFIDETermLoan.sol
+- VFIDETestnetFaucet.sol
 - VFIDEToken.sol
 - VFIDETrust.sol
 - VaultHub.sol
@@ -59,8 +71,18 @@ This is the recommended production set: core contracts + interfaces.
 - VaultRegistry.sol
 - WithdrawalQueue.sol
 
+## Support Libraries And Views
+
+- EcosystemVaultLib.sol
+- EcosystemVaultView.sol
+- SeerAutonomousLib.sol
+- SeerPolicyGuard.sol
+- SeerView.sol
+- SharedInterfaces.sol
+
 ## Interfaces
 
+- interfaces/AggregatorV3Interface.sol
 - interfaces/ICommerceEscrow.sol
 - interfaces/ICouncilElection.sol
 - interfaces/IDAO.sol
@@ -83,13 +105,15 @@ This is the recommended production set: core contracts + interfaces.
 - interfaces/ISeer.sol
 - interfaces/IStablecoinRegistry.sol
 - interfaces/ISystemHandover.sol
-- interfaces/IUserVault.sol
-- interfaces/IVFIDEPresale.sol
 - interfaces/IVFIDEToken.sol
 - interfaces/IVaultFactory.sol
 - interfaces/IVaultHub.sol
+- interfaces/IVaultInfrastructure.sol
 
-## Test-only contracts
+## Excluded From Production Set
 
-- test/mocks/**
-- test/harness/**
+- mocks/**
+- security/**
+- scripts/**
+- package.json
+- package-lock.json

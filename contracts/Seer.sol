@@ -57,8 +57,6 @@ contract Seer is ReentrancyGuard {
     event DecayApplied(address indexed subject, uint16 oldScore, uint16 newScore, uint256 inactiveDays);
     event Paused(bool isPaused);
     // Endorsement/mentorship events emitted by SeerSocial directly
-    event AppealFiled(address indexed subject, string reason);
-    event AppealResolved(address indexed subject, bool approved, string resolution);
     event SeerSocialSet(address indexed seerSocial);
     event SeerAutonomousSet(address indexed seerAutonomous);
     event BurnRouterSet(address indexed burnRouter);
@@ -918,19 +916,6 @@ contract Seer is ReentrancyGuard {
     mapping(address => ScoreDispute) public scoreDisputes;
     uint256 public pendingDisputeCount;
 
-    // Appeals: lightweight channel for contesting flags/decisions outside score disputes
-    struct Appeal {
-        address requester;
-        string reason;
-        uint64 timestamp;
-        bool resolved;
-        bool approved;
-        string resolution;
-    }
-
-    mapping(address => Appeal) public appeals;
-    uint256 public pendingAppealCount;
-    
     event ScoreDisputeRequested(address indexed subject, string reason);
     event ScoreDisputeResolved(address indexed subject, bool approved, int256 adjustment);
     
@@ -991,43 +976,6 @@ contract Seer is ReentrancyGuard {
         _logEv(subject, approved ? 1 : 0, "");
     }
 
-    // ───────────────── Appeals (general-purpose)
-    function fileAppeal(string calldata reason) external nonReentrant {
-        if (bytes(reason).length == 0 || bytes(reason).length > 500) revert TRUST_Bounds();
-        Appeal storage existing = appeals[msg.sender];
-        if (!(existing.timestamp == 0 || existing.resolved)) revert TRUST_AlreadySet();
-
-        appeals[msg.sender] = Appeal({
-            requester: msg.sender,
-            reason: reason,
-            timestamp: uint64(block.timestamp),
-            resolved: false,
-            approved: false,
-            resolution: ""
-        });
-
-        pendingAppealCount++;
-        emit AppealFiled(msg.sender, reason);
-        _logEv(msg.sender, 0, reason);
-    }
-
-    function resolveAppeal(address subject, bool approved, string calldata resolution) external onlyDAO nonReentrant {
-        Appeal storage appeal = appeals[subject];
-        if (appeal.timestamp == 0) revert TRUST_NotSet();
-        if (appeal.resolved) revert TRUST_AlreadySet();
-
-        appeal.resolved = true;
-        appeal.approved = approved;
-        appeal.resolution = resolution;
-
-        if (pendingAppealCount > 0) {
-            pendingAppealCount--;
-        }
-
-        emit AppealResolved(subject, approved, resolution);
-        _logEv(subject, 0, resolution);
-    }
-    
     /**
      * @notice Get score breakdown showing component contributions
      * @param subject The user to get breakdown for

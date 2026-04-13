@@ -12,7 +12,7 @@ import Link from "next/link";
 import { useAccount, usePublicClient } from "wagmi";
 import { isAddress, keccak256, stringToHex, zeroAddress } from "viem";
 import { CONTRACT_ADDRESSES } from "@/lib/contracts";
-import { VaultHubABI, SeerABI, VFIDEBadgeNFTABI, VaultRegistryABI } from "@/lib/abis";
+import { SeerABI, VFIDEBadgeNFTABI, VaultRegistryABI } from "@/lib/abis";
 
 import { AuroraBackground, FloatingParticles, VaultKeyVisualization, GlassCard } from "./components/VisualEffects";
 import { SearchMethodButton, SearchResultCard } from "./components/SearchComponents";
@@ -72,15 +72,23 @@ export default function VaultRecoveryPage() {
       if (!resolvedVault) { setError(`No vault found for the provided ${searchMethod}.`); return; }
 
       const [info, score, badges] = await Promise.all([
-        publicClient.readContract({ address: CONTRACT_ADDRESSES.VaultHub, abi: VaultHubABI, functionName: "getVaultInfo", args: [resolvedVault] }),
+        publicClient.readContract({ address: CONTRACT_ADDRESSES.VaultRegistry, abi: VaultRegistryABI, functionName: "getVaultInfo", args: [resolvedVault] }),
         publicClient.readContract({ address: CONTRACT_ADDRESSES.Seer, abi: SeerABI, functionName: "getScore", args: [resolvedVault] }),
         publicClient.readContract({ address: CONTRACT_ADDRESSES.BadgeNFT, abi: VFIDEBadgeNFTABI, functionName: "balanceOf", args: [resolvedVault] }),
       ]);
 
-      const vaultInfo = info as [string, bigint, boolean, boolean] | undefined;
-      if (!vaultInfo || !vaultInfo[3]) { setError("Vault exists in registry but metadata lookup failed."); return; }
+      const parsedInfo = Array.isArray(info)
+        ? {
+            originalOwner: info[0] as string,
+            createdAt: info[1] as bigint,
+            hasGuardians: info[2] as boolean,
+            isRecoverable: info[3] as boolean,
+          }
+        : (info as { originalOwner: string; createdAt: bigint; hasGuardians: boolean; isRecoverable: boolean } | undefined);
 
-      const [owner, createdAt, isLocked] = vaultInfo;
+      if (!parsedInfo || !parsedInfo.isRecoverable) { setError("Vault exists in registry but metadata lookup failed."); return; }
+
+      const { originalOwner: owner, createdAt, hasGuardians, isRecoverable } = parsedInfo;
       const daysSince = Math.floor((Date.now() - Number(createdAt) * 1000) / (1000 * 60 * 60 * 24));
       const lastActive = daysSince === 0 ? "Today" : daysSince === 1 ? "Yesterday" : `${daysSince} days ago`;
 
@@ -88,7 +96,7 @@ export default function VaultRecoveryPage() {
         address: resolvedVault, originalOwner: owner,
         proofScore: score ? Number(score as bigint) / 100 : 0,
         badgeCount: badges ? Number(badges as bigint) : 0,
-        hasGuardians: isLocked, lastActive, isRecoverable: !isLocked && owner !== address,
+        hasGuardians, lastActive, isRecoverable: isRecoverable && owner !== address,
       });
     } catch { setError("Failed to fetch vault information. Please try again."); }
     finally { setIsSearching(false); }

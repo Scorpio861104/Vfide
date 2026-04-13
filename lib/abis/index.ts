@@ -1,15 +1,15 @@
 // Auto-generated contract ABIs
 // Run: ./scripts/generate-abis.sh to regenerate
 
-import VFIDETokenABI from './VFIDEToken.json'
+import VFIDETokenRaw from './VFIDEToken.json'
 import StablecoinRegistryABI from './StablecoinRegistry.json'
 import VaultInfrastructureABI from './VaultInfrastructure.json'
-import VaultHubFullABI from './VaultHub.json'
+import VaultHubFullRaw from './VaultHub.json'
 import VaultHubLiteABI from './VaultHubLite.json'
 import UserVaultLiteABI from './UserVaultLite.json'
 import UserVaultABI from './UserVault.json'
 import CardBoundVaultABI from './CardBoundVault.json'
-import SeerABI from './Seer.json'
+import SeerRaw from './Seer.json'
 import SeerAutonomousABI from './SeerAutonomous.json'
 import VFIDEBadgeNFTABI from './VFIDEBadgeNFT.json'
 import DAOABI from './DAO.json'
@@ -32,7 +32,7 @@ import SubscriptionManagerABI from './SubscriptionManager.json'
 import SanctumVaultABI from './SanctumVault.json'
 import DevReserveVestingABI from './DevReserveVesting.json'
 import PayrollManagerABI from './PayrollManager.json'
-import EcosystemVaultABI from './EcosystemVault.json'
+import EcosystemVaultRaw from './EcosystemVault.json'
 import EcosystemVaultViewABI from './EcosystemVaultView.json'
 import VaultRegistryABI from './VaultRegistry.json'
 import ERC20ABI from './ERC20.json'
@@ -44,7 +44,7 @@ import EscrowManagerABI from './EscrowManager.json'
 import BadgeManagerABI from './BadgeManager.json'
 import FeeDistributorABI from './FeeDistributor.json'
 import SystemHandoverABI from './SystemHandover.json'
-import VFIDEBridgeABI from './VFIDEBridge.json'
+import VFIDEBridgeRaw from './VFIDEBridge.json'
 import AdminMultiSigABI from './AdminMultiSig.json'
 import CircuitBreakerABI from './CircuitBreaker.json'
 import EmergencyControlABI from './EmergencyControl.json'
@@ -106,6 +106,20 @@ const KNOWN_EMPTY_ABIS = new Set([
 const abiWarningState = ((globalThis as typeof globalThis & {
   __vfideAbiWarnings?: Set<string>;
 }).__vfideAbiWarnings ??= new Set<string>());
+
+function normalizeImportedABI(input: unknown): unknown[] {
+  if (Array.isArray(input)) return input;
+  if (input && typeof input === 'object' && Array.isArray((input as { abi?: unknown }).abi)) {
+    return (input as { abi: unknown[] }).abi;
+  }
+  return [];
+}
+
+const VFIDETokenABI = normalizeImportedABI(VFIDETokenRaw);
+const VaultHubFullABI = normalizeImportedABI(VaultHubFullRaw);
+const SeerABI = normalizeImportedABI(SeerRaw);
+const EcosystemVaultABI = normalizeImportedABI(EcosystemVaultRaw);
+const VFIDEBridgeABI = normalizeImportedABI(VFIDEBridgeRaw);
 
 // Runtime validation: Ensure ABIs are valid arrays
 function validateABI(abi: unknown, name: string): unknown[] {
@@ -232,7 +246,7 @@ validateABI(VFIDESecurityABI, 'VFIDESecurity');
 
 validateABI(VFIDETrustABI, 'VFIDETrust');
 
-// VaultHub ABI points to the full compiled artifact (includes ensureVault, getVaultInfo, etc.).
+// VaultHub ABI — getVaultInfo/checkVaultStatus/predictVaultsBatch removed for size; use VaultRegistry.getVaultInfo instead.
 validateABI(VaultHubFullABI, 'VaultHub');
 const VaultHubABI = VaultHubFullABI
 

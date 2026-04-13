@@ -58,6 +58,7 @@
     "contract:verify:seer:reason-codes:runtime": "REQUIRE_SEER_RUNTIME_REASON_CODES=true tsx scripts/verify-seer-reason-codes.ts",
     "contract:verify:seer:reason-codes:runtime:local": "bash scripts/verify-seer-reason-codes-runtime-local.sh",
     "contract:verify:seer:size": "tsx scripts/verify-seer-code-size.ts",
+    "contract:verify:size-buffer": "tsx scripts/verify-contract-size-buffer.ts",
     "contract:verify:frontend-abi-parity": "tsx scripts/verify-frontend-abi-parity.ts",
     "contract:verify:seer:policy-delays": "tsx scripts/verify-seer-policy-delays.ts",
     "contract:verify:seer:policy-delays:local": "bash scripts/verify-seer-policy-delays-local.sh",

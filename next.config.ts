@@ -60,6 +60,17 @@ const nextConfig: NextConfig = {
     ],
   },
 
+  // Keep unfinished stealth functionality non-routable until the EIP-5564 flow is fully implemented.
+  async redirects() {
+    return [
+      {
+        source: '/stealth',
+        destination: '/docs',
+        permanent: false,
+      },
+    ];
+  },
+
   // Security headers excluding CSP (nonce-based CSP is enforced in `proxy.ts`, with `middleware.ts` kept as a compatibility shim)
   async headers() {
     return [

@@ -97,6 +97,7 @@ jobs:
             echo "::error::One or more contracts exceed the 24KB EVM limit"
             exit 1
           fi
+          npm run contract:verify:size-buffer
 
   # ───────────────────────────────────────────
   # 4. Slither Static Analysis

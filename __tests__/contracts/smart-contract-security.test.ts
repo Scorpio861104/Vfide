@@ -225,15 +225,15 @@ describe('R-043 – Math and accounting invariants', () => {
 
   describe('Anti-whale sanity bounds', () => {
     it('maxTransfer minimum is enforced as ≥ 100_000e18 in setAntiWhale', () => {
-      expect(tokenSrc).toMatch(/require\s*\(\s*_maxTransfer\s*>=\s*100_000e18/);
+      expect(tokenSrc).toMatch(/_maxTransfer\s*>\s*0\s*&&\s*_maxTransfer\s*<\s*100_000e18\)\s*revert\s+VF_InvalidAntiWhaleConfig\(\)/);
     });
 
     it('maxWallet minimum is enforced as ≥ 200_000e18 in setAntiWhale', () => {
-      expect(tokenSrc).toMatch(/require\s*\(\s*_maxWallet\s*>=\s*200_000e18/);
+      expect(tokenSrc).toMatch(/_maxWallet\s*>\s*0\s*&&\s*_maxWallet\s*<\s*200_000e18\)\s*revert\s+VF_InvalidAntiWhaleConfig\(\)/);
     });
 
     it('cooldown maximum is enforced as ≤ 1 hour in setAntiWhale', () => {
-      expect(tokenSrc).toMatch(/require\s*\(\s*_cooldown\s*<=\s*1\s+hours/);
+      expect(tokenSrc).toMatch(/_cooldown\s*>\s*0\s*&&\s*_cooldown\s*>\s*1\s+hours\)\s*revert\s+VF_InvalidAntiWhaleConfig\(\)/);
     });
 
     it('TypeScript model: default maxTransferAmount (2M) is ≤ 1% of MAX_SUPPLY', () => {
@@ -259,7 +259,7 @@ describe('R-044 – Guardian and recovery flow deadlocks', () => {
 
   it('approveForceRecovery guards against non-approver callers (VH:not-approver)', () => {
     expect(vaultHubSrc).toMatch(/function\s+approveForceRecovery\([^)]*\)\s+external\s+pure/);
-    expect(vaultHubSrc).toMatch(/revert\(["']VH: force recovery disabled - non-custodial["']\)/);
+    expect(vaultHubSrc).toMatch(/revert\s+VH_RecoveryDisabled\(\)/);
   });
 
   it('approveForceRecovery prevents double-voting via recoveryApprovals mapping', () => {
@@ -268,7 +268,7 @@ describe('R-044 – Guardian and recovery flow deadlocks', () => {
   });
 
   it('recovery candidate mismatch is rejected (VH:candidate-mismatch)', () => {
-    expect(vaultHubSrc).toMatch(/revert\(["']VH: force recovery disabled - non-custodial["']\)/);
+    expect(vaultHubSrc).toMatch(/revert\s+VH_RecoveryDisabled\(\)/);
   });
 
   it('TypeScript model: 3-of-3 approval reaches RECOVERY_APPROVALS_REQUIRED', () => {
