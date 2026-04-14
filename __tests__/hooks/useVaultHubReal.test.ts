@@ -26,6 +26,9 @@ jest.mock('viem', () => ({
 
 // Mock contracts
 jest.mock('../../lib/contracts', () => ({
+  CONTRACT_ADDRESSES: {
+    VaultHub: '0x6666666666666666666666666666666666666666',
+  },
   VAULT_HUB_ABI: [],
 }))
 
@@ -69,7 +72,6 @@ describe('useVaultHub', () => {
   it('returns hasVault false when no vault', () => {
     mockUseReadContract.mockImplementation(({ functionName }) => {
       if (functionName === 'vaultOf') return { data: '0x0000000000000000000000000000000000000000', isLoading: false, refetch: mockRefetch }
-      if (functionName === 'vfideToken') return { data: '0x1234567890123456789012345678901234567890' }
       return { data: undefined }
     })
     
@@ -81,7 +83,6 @@ describe('useVaultHub', () => {
   it('returns hasVault true when vault exists', () => {
     mockUseReadContract.mockImplementation(({ functionName }) => {
       if (functionName === 'vaultOf') return { data: '0x1234567890123456789012345678901234567890', isLoading: false, refetch: mockRefetch }
-      if (functionName === 'vfideToken') return { data: '0x1234567890123456789012345678901234567890' }
       return { data: undefined }
     })
     
@@ -93,7 +94,6 @@ describe('useVaultHub', () => {
   it('returns vaultAddress when vault exists', () => {
     mockUseReadContract.mockImplementation(({ functionName }) => {
       if (functionName === 'vaultOf') return { data: '0x1234567890123456789012345678901234567890', isLoading: false, refetch: mockRefetch }
-      if (functionName === 'vfideToken') return { data: '0x1234567890123456789012345678901234567890' }
       return { data: undefined }
     })
     
@@ -105,7 +105,6 @@ describe('useVaultHub', () => {
   it('returns undefined vaultAddress when no vault', () => {
     mockUseReadContract.mockImplementation(({ functionName }) => {
       if (functionName === 'vaultOf') return { data: undefined, isLoading: false, refetch: mockRefetch }
-      if (functionName === 'vfideToken') return { data: '0x1234567890123456789012345678901234567890' }
       return { data: undefined }
     })
     
@@ -117,7 +116,6 @@ describe('useVaultHub', () => {
   it('returns isLoadingVault state', () => {
     mockUseReadContract.mockImplementation(({ functionName }) => {
       if (functionName === 'vaultOf') return { data: undefined, isLoading: true, refetch: mockRefetch }
-      if (functionName === 'vfideToken') return { data: '0x1234567890123456789012345678901234567890' }
       return { data: undefined }
     })
     
@@ -146,7 +144,6 @@ describe('useVaultHub', () => {
   it('provides refetchVault function', () => {
     mockUseReadContract.mockImplementation(({ functionName }) => {
       if (functionName === 'vaultOf') return { data: undefined, isLoading: false, refetch: mockRefetch }
-      if (functionName === 'vfideToken') return { data: '0x1234567890123456789012345678901234567890' }
       return { data: undefined }
     })
     
@@ -183,27 +180,14 @@ describe('useVaultHub', () => {
     expect(result.current.expectedChainName).toBe('Base Sepolia')
   })
 
-  it('returns isContractConfigured true when vfideToken is set', () => {
+  it('returns isContractConfigured true when VaultHub address is configured', () => {
     mockUseReadContract.mockImplementation(({ functionName }) => {
       if (functionName === 'vaultOf') return { data: undefined, isLoading: false, refetch: mockRefetch }
-      if (functionName === 'vfideToken') return { data: '0x1234567890123456789012345678901234567890' }
       return { data: undefined }
     })
     
     const { result } = renderHook(() => useVaultHub())
     
     expect(result.current.isContractConfigured).toBe(true)
-  })
-
-  it('returns isContractConfigured false when vfideToken is zero', () => {
-    mockUseReadContract.mockImplementation(({ functionName }) => {
-      if (functionName === 'vaultOf') return { data: undefined, isLoading: false, refetch: mockRefetch }
-      if (functionName === 'vfideToken') return { data: '0x0000000000000000000000000000000000000000' }
-      return { data: undefined }
-    })
-    
-    const { result } = renderHook(() => useVaultHub())
-    
-    expect(result.current.isContractConfigured).toBe(false)
   })
 })

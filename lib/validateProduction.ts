@@ -35,11 +35,16 @@ const REQUIRED_ENV_VARS: EnvironmentConfig[] = [
   { name: 'NEXT_PUBLIC_DAO_ADDRESS', required: false, category: 'blockchain', production: true },
   { name: 'NEXT_PUBLIC_SEER_ADDRESS', required: false, category: 'blockchain', production: true },
   { name: 'NEXT_PUBLIC_VFIDE_COMMERCE_ADDRESS', required: false, category: 'blockchain', production: true },
+  { name: 'NEXT_PUBLIC_PROOF_LEDGER_ADDRESS', required: false, category: 'blockchain' },
+  { name: 'NEXT_PUBLIC_OWNER_CONTROL_PANEL_ADDRESS', required: false, category: 'blockchain' },
   { name: 'NEXT_PUBLIC_PAYROLL_MANAGER_ADDRESS', required: false, category: 'blockchain', production: true },
   { name: 'NEXT_PUBLIC_SUBSCRIPTION_MANAGER_ADDRESS', required: false, category: 'blockchain', production: true },
   { name: 'NEXT_PUBLIC_SANCTUM_VAULT_ADDRESS', required: false, category: 'blockchain', production: true },
   { name: 'NEXT_PUBLIC_DEV_VAULT_ADDRESS', required: false, category: 'blockchain', production: true },
   { name: 'NEXT_PUBLIC_ECOSYSTEM_VAULT_VIEW_ADDRESS', required: false, category: 'blockchain' },
+  { name: 'NEXT_PUBLIC_ESCROW_MANAGER_ADDRESS', required: false, category: 'blockchain' },
+  { name: 'NEXT_PUBLIC_FEE_DISTRIBUTOR_ADDRESS', required: false, category: 'blockchain' },
+  { name: 'NEXT_PUBLIC_WITHDRAWAL_QUEUE_ADDRESS', required: false, category: 'blockchain' },
 
   // WalletConnect (optional but recommended)
   { name: 'NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID', required: false, category: 'blockchain' },

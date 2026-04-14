@@ -1,6 +1,6 @@
 import { useAccount, useReadContract, useWriteContract, useChainId } from 'wagmi';
 import { isAddress } from 'viem';
-import { VAULT_HUB_ABI } from '../lib/contracts';
+import { CONTRACT_ADDRESSES, VAULT_HUB_ABI } from '../lib/contracts';
 import { CURRENT_CHAIN_ID } from '../lib/testnet';
 import { getChainByChainId, isTestnetChainId } from '../lib/chains';
 import { devLog } from '../lib/utils';
@@ -10,7 +10,7 @@ import { devLog } from '../lib/utils';
 const PARSED_VAULT_HUB_ABI = VAULT_HUB_ABI;
 
 // VaultHub contract address from environment
-const VAULT_HUB_ADDRESS = process.env.NEXT_PUBLIC_VAULT_HUB_ADDRESS as `0x${string}` | undefined;
+const VAULT_HUB_ADDRESS = CONTRACT_ADDRESSES.VaultHub;
 
 // Expected chain ID for the vault operations - use configured chain
 // Type assertion for wagmi's strict chain ID type system
@@ -112,21 +112,7 @@ export function useVaultHub() {
     },
   });
 
-  // Check if VaultHub has vfideToken set (contract is properly configured)
-  const { data: vfideTokenAddress } = useReadContract({
-    address: VAULT_HUB_ADDRESS,
-    abi: PARSED_VAULT_HUB_ABI,
-    functionName: 'vfideToken',
-    chainId: EXPECTED_CHAIN_ID,
-    query: { 
-      enabled: !!isValidVaultHubAddress && isOnCorrectChain,
-      retry: 3,
-      retryDelay: 1000,
-    },
-  });
-
-  // Contract is properly configured if vfideToken is set
-  const isContractConfigured = vfideTokenAddress && vfideTokenAddress !== '0x0000000000000000000000000000000000000000';
+  const isContractConfigured = !!isValidVaultHubAddress;
 
   // Check if vault exists (not zero address)
   const vaultAddressHex = vaultAddress as `0x${string}` | undefined;

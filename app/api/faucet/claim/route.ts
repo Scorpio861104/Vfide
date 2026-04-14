@@ -1,17 +1,12 @@
 import { logger } from '@/lib/logger';
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod4';
-import { createWalletClient, createPublicClient, http, parseAbi, isAddress } from 'viem';
+import { createWalletClient, createPublicClient, http, isAddress } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
 import { baseSepolia } from 'viem/chains';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { requireAuth } from '@/lib/auth/middleware';
-
-const FAUCET_ABI = parseAbi([
-  'function claim(address user, address referrer) external',
-  'function hasClaimed(address) external view returns (bool)',
-  'function getRemainingToday() external view returns (uint256)',
-]);
+import { VFIDETestnetFaucetABI } from '@/lib/contracts';
 
 const claimSchema = z.object({
   address: z.string().regex(/^0x[a-fA-F0-9]{40}$/),
@@ -57,17 +52,8 @@ export async function POST(request: NextRequest) {
     const account = privateKeyToAccount(operatorKey as `0x${string}`);
     const walletClient = createWalletClient({ account, chain: baseSepolia, transport: http(rpcUrl) });
 
-    const alreadyClaimed = await publicClient.readContract({
-      address: faucetAddress as `0x${string}`, abi: FAUCET_ABI,
-      functionName: 'hasClaimed', args: [address as `0x${string}`],
-    });
-
-    if (alreadyClaimed) {
-      return NextResponse.json({ error: 'Already claimed', alreadyClaimed: true }, { status: 409 });
-    }
-
     const remaining = await publicClient.readContract({
-      address: faucetAddress as `0x${string}`, abi: FAUCET_ABI,
+      address: faucetAddress as `0x${string}`, abi: VFIDETestnetFaucetABI,
       functionName: 'getRemainingToday',
     });
 
@@ -76,7 +62,7 @@ export async function POST(request: NextRequest) {
     }
 
     const hash = await walletClient.writeContract({
-      address: faucetAddress as `0x${string}`, abi: FAUCET_ABI,
+      address: faucetAddress as `0x${string}`, abi: VFIDETestnetFaucetABI,
       functionName: 'claim', args: [address as `0x${string}`, referrerAddr as `0x${string}`],
     });
 
@@ -107,7 +93,7 @@ export async function GET() {
 
     const publicClient = createPublicClient({ chain: baseSepolia, transport: http(rpcUrl) });
     const remaining = await publicClient.readContract({
-      address: faucetAddress as `0x${string}`, abi: FAUCET_ABI, functionName: 'getRemainingToday',
+      address: faucetAddress as `0x${string}`, abi: VFIDETestnetFaucetABI, functionName: 'getRemainingToday',
     });
 
     return NextResponse.json({ remainingToday: Number(remaining), faucetAddress });

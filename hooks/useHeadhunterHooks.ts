@@ -8,11 +8,10 @@ import { useReadContract, useWriteContract, useAccount } from 'wagmi';
 import { useState, useEffect } from 'react';
 import { parseEther, formatEther } from 'viem';
 import { EcosystemVaultABI, EcosystemVaultViewABI } from '@/lib/abis';
-import { isConfiguredContractAddress, getContractConfigurationError } from '@/lib/contracts';
+import { CONTRACT_ADDRESSES, isConfiguredContractAddress, getContractConfigurationError } from '@/lib/contracts';
 
-// Contract address (update with deployed address)
-const ECOSYSTEM_VAULT_ADDRESS = (process.env.NEXT_PUBLIC_ECOSYSTEM_VAULT_ADDRESS || '0x0000000000000000000000000000000000000000') as `0x${string}`;
-const ECOSYSTEM_VAULT_VIEW_ADDRESS = (process.env.NEXT_PUBLIC_ECOSYSTEM_VAULT_VIEW_ADDRESS || process.env.NEXT_PUBLIC_ECOSYSTEM_VAULT_ADDRESS || '0x0000000000000000000000000000000000000000') as `0x${string}`;
+const ECOSYSTEM_VAULT_ADDRESS = CONTRACT_ADDRESSES.EcosystemVault;
+const ECOSYSTEM_VAULT_VIEW_ADDRESS = CONTRACT_ADDRESSES.EcosystemVaultView || CONTRACT_ADDRESSES.EcosystemVault;
 
 export interface HeadhunterStats {
   currentYearPoints: number;

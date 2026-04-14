@@ -30,6 +30,9 @@ jest.mock('viem', () => ({
 
 // Mock lib/contracts
 jest.mock('@/lib/contracts', () => ({
+  CONTRACT_ADDRESSES: {
+    VaultHub: '0x6666666666666666666666666666666666666666',
+  },
   VAULT_HUB_ABI: [],
 }))
 
@@ -83,7 +86,7 @@ describe('useVaultHub - Extended Tests', () => {
       isLoading: false,
       isSuccess: false,
     })
-    // Default mock for useReadContract - returns zero address (no vault) and configured token
+    // Default mock for useReadContract - returns zero address (no vault)
     ;(useReadContract as Mock).mockImplementation(({ functionName }: { functionName: string }) => {
       if (functionName === 'vaultOf') {
         return { 
@@ -91,9 +94,6 @@ describe('useVaultHub - Extended Tests', () => {
           isLoading: false, 
           refetch: jest.fn() 
         }
-      }
-      if (functionName === 'vfideToken') {
-        return { data: mockTokenAddress }
       }
       return { data: undefined }
     })
@@ -108,9 +108,6 @@ describe('useVaultHub - Extended Tests', () => {
           isLoading: false, 
           refetch: jest.fn() 
         }
-      }
-      if (functionName === 'vfideToken') {
-        return { data: mockTokenAddress }
       }
       return { data: undefined }
     })
@@ -296,9 +293,6 @@ describe('useVaultHub - Extended Tests', () => {
         if (functionName === 'vaultOf') {
           return { data: mockVaultAddress, isLoading: false, refetch: jest.fn() }
         }
-        if (functionName === 'vfideToken') {
-          return { data: mockTokenAddress }
-        }
         return { data: undefined }
       })
 
@@ -312,9 +306,6 @@ describe('useVaultHub - Extended Tests', () => {
       ;(useReadContract as Mock).mockImplementation(({ functionName }: { functionName: string }) => {
         if (functionName === 'vaultOf') {
           return { data: '0x0000000000000000000000000000000000000000', isLoading: false, refetch: jest.fn() }
-        }
-        if (functionName === 'vfideToken') {
-          return { data: mockTokenAddress }
         }
         return { data: undefined }
       })
@@ -330,9 +321,6 @@ describe('useVaultHub - Extended Tests', () => {
         if (functionName === 'vaultOf') {
           return { data: undefined, isLoading: true, refetch: jest.fn() }
         }
-        if (functionName === 'vfideToken') {
-          return { data: mockTokenAddress }
-        }
         return { data: undefined }
       })
 
@@ -345,9 +333,6 @@ describe('useVaultHub - Extended Tests', () => {
       ;(useReadContract as Mock).mockImplementation(({ functionName }: { functionName: string }) => {
         if (functionName === 'vaultOf') {
           return { data: '0x0000000000000000000000000000000000000000', isLoading: false, refetch: jest.fn() }
-        }
-        if (functionName === 'vfideToken') {
-          return { data: mockTokenAddress }
         }
         return { data: undefined }
       })
@@ -368,9 +353,6 @@ describe('useVaultHub - Extended Tests', () => {
         if (functionName === 'vaultOf') {
           return { data: mockVaultAddress, isLoading: false, refetch: jest.fn() }
         }
-        if (functionName === 'vfideToken') {
-          return { data: mockTokenAddress }
-        }
         return { data: undefined }
       })
 
@@ -384,9 +366,6 @@ describe('useVaultHub - Extended Tests', () => {
       ;(useReadContract as Mock).mockImplementation(({ functionName }: { functionName: string }) => {
         if (functionName === 'vaultOf') {
           return { data: mockVaultAddress, isLoading: false, refetch: jest.fn() }
-        }
-        if (functionName === 'vfideToken') {
-          return { data: mockTokenAddress }
         }
         return { data: undefined }
       })
@@ -405,9 +384,6 @@ describe('useVaultHub - Extended Tests', () => {
             isLoading: false, 
             refetch: jest.fn() 
           }
-        }
-        if (functionName === 'vfideToken') {
-          return { data: mockTokenAddress }
         }
         return { data: undefined }
       })
@@ -431,58 +407,12 @@ describe('useVaultHub - Extended Tests', () => {
         if (functionName === 'vaultOf') {
           return { data: mockVaultAddress, isLoading: false, refetch: jest.fn() }
         }
-        if (functionName === 'vfideToken') {
-          return { data: mockTokenAddress }
-        }
         return { data: undefined }
       })
 
       const { result } = renderHook(() => useVaultHub())
 
       expect(result.current.isContractConfigured).toBe(true)
-    })
-
-    it('should detect unconfigured contract (zero token)', () => {
-      ;(useReadContract as Mock).mockImplementation(({ functionName }: { functionName: string }) => {
-        if (functionName === 'vaultOf') {
-          return { data: mockVaultAddress, isLoading: false, refetch: jest.fn() }
-        }
-        if (functionName === 'vfideToken') {
-          return { data: '0x0000000000000000000000000000000000000000' }
-        }
-        return { data: undefined }
-      })
-
-      const { result } = renderHook(() => useVaultHub())
-
-      expect(result.current.isContractConfigured).toBe(false)
-    })
-
-    it('should throw error when creating vault with unconfigured contract', async () => {
-      ;(useReadContract as Mock).mockImplementation(({ functionName }: { functionName: string }) => {
-        if (functionName === 'vaultOf') {
-          return { 
-            data: '0x0000000000000000000000000000000000000000', 
-            isLoading: false, 
-            refetch: jest.fn() 
-          }
-        }
-        if (functionName === 'vfideToken') {
-          return { data: '0x0000000000000000000000000000000000000000' }
-        }
-        return { data: undefined }
-      })
-
-      const { result } = renderHook(() => useVaultHub())
-
-      await act(async () => {
-        try {
-          await result.current.createVault()
-          expect.fail('Should have thrown')
-        } catch (e: unknown) {
-          expect((e as Error).message).toContain('not yet fully configured')
-        }
-      })
     })
   })
 
@@ -495,9 +425,6 @@ describe('useVaultHub - Extended Tests', () => {
             isLoading: false, 
             refetch: jest.fn() 
           }
-        }
-        if (functionName === 'vfideToken') {
-          return { data: mockTokenAddress }
         }
         return { data: undefined }
       })
@@ -519,9 +446,6 @@ describe('useVaultHub - Extended Tests', () => {
             isLoading: false, 
             refetch: mockRefetch 
           }
-        }
-        if (functionName === 'vfideToken') {
-          return { data: mockTokenAddress }
         }
         return { data: undefined }
       })

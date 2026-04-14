@@ -1,7 +1,7 @@
 // OwnerControlPanel Contract Configuration
-const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000' as const;
-export const OWNER_CONTROL_PANEL_ADDRESS =
-  (process.env.NEXT_PUBLIC_OWNER_CONTROL_PANEL_ADDRESS || ZERO_ADDRESS) as `0x${string}`;
+import { CONTRACT_ADDRESSES, ZERO_ADDRESS } from '@/lib/contracts';
+
+export const OWNER_CONTROL_PANEL_ADDRESS = CONTRACT_ADDRESSES.OwnerControlPanel ?? ZERO_ADDRESS;
 
 export const OWNER_CONTROL_PANEL_ABI = [
   // Owner verification

@@ -96,6 +96,7 @@ export function useCreateVault() {
 export function useVaultBalance() {
   const { vaultAddress } = useUserVault()
   const setVault = useAppStore((state) => state.setVault)
+  const isLegacyMode = ACTIVE_VAULT_IMPLEMENTATION === 'uservault'
   
   const { data: balance, isLoading, refetch } = useReadContract({
     address: CONTRACT_ADDRESSES.VFIDEToken,
@@ -114,7 +115,7 @@ export function useVaultBalance() {
     abi: VAULT_ABI,
     functionName: 'pendingTxCount',
     query: {
-      enabled: !!vaultAddress,
+      enabled: isLegacyMode && !!vaultAddress,
       refetchInterval: 5000,
     }
   })
@@ -184,6 +185,7 @@ export function useTransferVFIDE() {
   const chainId = useChainId()
   const { vaultAddress } = useUserVault()
   const { writeContract, data, isPending } = useWriteContract()
+  const isLegacyMode = ACTIVE_VAULT_IMPLEMENTATION === 'uservault'
   
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({
     hash: data,
@@ -191,6 +193,9 @@ export function useTransferVFIDE() {
   
   const transfer = (toVault: `0x${string}`, amount: string) => {
     if (!vaultAddress) return
+    if (!isLegacyMode) {
+      throw new Error('Direct vault transfers are not available in CardBound vault mode. Use the card-bound transfer flow instead.')
+    }
     
     // Validate recipient address
     const validation = validateAddress(toVault)
@@ -223,6 +228,7 @@ export function useTransferVFIDE() {
     isTransferring: isPending || isConfirming,
     isSuccess,
     txHash: data,
+    isSupported: isLegacyMode,
   }
 }
 
@@ -252,18 +258,20 @@ export function useVaultGuardiansDetailed(vaultAddress?: `0x${string}`) {
  * Check if guardian is mature (past 7-day maturity period)
  */
 export function useIsGuardianMature(vaultAddress?: `0x${string}`, guardianAddress?: `0x${string}`) {
+  const isLegacyMode = ACTIVE_VAULT_IMPLEMENTATION === 'uservault'
+
   const { data: isMature } = useReadContract({
     address: vaultAddress,
     abi: VAULT_ABI,
     functionName: 'isGuardianMature',
     args: guardianAddress ? [guardianAddress] : undefined,
     query: {
-      enabled: !!vaultAddress && !!guardianAddress,
+      enabled: isLegacyMode && !!vaultAddress && !!guardianAddress,
     }
   })
 
   return {
-    isMature: isMature || false,
+    isMature: isLegacyMode ? (isMature || false) : false,
   }
 }
 
