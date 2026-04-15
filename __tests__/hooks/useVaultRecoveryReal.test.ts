@@ -366,5 +366,35 @@ describe('useVaultRecovery', () => {
         args: [candidateAddress, 604800n],
       }))
     })
+
+    it('routes approve/finalize recovery actions to CardBound functions', async () => {
+      mockIsCardBoundVaultMode.mockReturnValue(true)
+      mockWriteContractAsync.mockResolvedValue('0xtx')
+      const { result } = renderHook(() => useVaultRecovery(testVaultAddress))
+
+      await act(async () => {
+        await result.current.approveRecovery()
+      })
+
+      expect(mockWriteContractAsync).toHaveBeenLastCalledWith(expect.objectContaining({
+        functionName: 'approveWalletRotation',
+      }))
+
+      await act(async () => {
+        await result.current.finalizeRecovery()
+      })
+
+      expect(mockWriteContractAsync).toHaveBeenLastCalledWith(expect.objectContaining({
+        functionName: 'finalizeWalletRotation',
+      }))
+    })
+
+    it('exposes inheritance as unsupported in CardBound mode', () => {
+      mockIsCardBoundVaultMode.mockReturnValue(true)
+      const { result } = renderHook(() => useVaultRecovery(testVaultAddress))
+
+      expect(result.current.inheritanceSupported).toBe(false)
+      expect(result.current.nextOfKin).toBeUndefined()
+    })
   })
 })

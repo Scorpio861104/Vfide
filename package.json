@@ -119,7 +119,7 @@
     "test:stubs:generate": "node scripts/generate-onchain-test-stubs.mjs",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
-    "test:ci": "jest --coverage --ci && npm run -s contract:verify:frontend-guardrails",
+    "test:ci": "jest --coverage --ci && npm run -s contract:verify:frontend-guardrails && npm run -s contract:verify:frontend-abi-parity",
     "test:mobile": "jest --testPathPatterns mobile",
     "test:contract": "jest --testPathPatterns contract-interactions",
     "test:network": "jest --testPathPatterns network-resilience",

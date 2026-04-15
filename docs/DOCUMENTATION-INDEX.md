@@ -73,6 +73,11 @@
    - Performance tips
    - 500+ lines
 
+5. **[testing/VFIDE_TESTING_INFRA_AUDIT_2026-04-14.md](./testing/VFIDE_TESTING_INFRA_AUDIT_2026-04-14.md)** - Testing infrastructure audit
+   - CI/test-gap findings and concrete remediations
+   - Coverage blind spots and guardrail recommendations
+   - Verification command references
+
 3. **[COMPONENT-LIBRARY.md](./COMPONENT-LIBRARY.md)** - Component API reference
    - 5 core components fully documented
    - Props, examples, accessibility notes

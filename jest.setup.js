@@ -857,11 +857,14 @@ if (typeof window !== 'undefined') {
   })
 }
 
-// Suppress console warnings in tests
-global.console = {
-  ...console,
-  warn: jest.fn(),
-  error: jest.fn(),
+// Keep console output visible by default so warnings/errors are not silently hidden.
+// Set SUPPRESS_TEST_CONSOLE=1 for local noise reduction when needed.
+if (process.env.SUPPRESS_TEST_CONSOLE === '1') {
+  global.console = {
+    ...console,
+    warn: jest.fn(),
+    error: jest.fn(),
+  }
 }
 
 // Mock socket.io-client

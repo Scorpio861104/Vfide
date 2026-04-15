@@ -19,17 +19,12 @@ describe('PromotionalTreasury — removed from protocol', () => {
   });
 
   it('confirms referral bonuses are not available', () => {
-    // Referral rewards are not part of this protocol.
-    // There are no referral rewards in this protocol.
-    const legacyAbi = JSON.parse(fs.readFileSync('lib/abis/PromotionalTreasury.json', 'utf-8'));
-    expect(Array.isArray(legacyAbi)).toBe(true);
-    expect(legacyAbi.some((entry: { name?: string }) => entry.name === 'claimReferralBonus')).toBe(false);
+    // Legacy ABI file is intentionally removed; no referral bonus surface remains.
+    expect(fs.existsSync('lib/abis/PromotionalTreasury.json')).toBe(false);
   });
 
   it('confirms merchant milestone rewards are not available', () => {
-    // claimMerchantMilestone and similar functions have been removed.
-    // Merchant participation is tracked but not rewarded with tokens.
-    const legacyAbi = JSON.parse(fs.readFileSync('lib/abis/PromotionalTreasury.json', 'utf-8'));
-    expect(legacyAbi.some((entry: { name?: string }) => entry.name === 'claimMerchantMilestone')).toBe(false);
+    // claimMerchantMilestone and similar functions are removed with the contract/ABI.
+    expect(fs.existsSync('lib/abis/PromotionalTreasury.json')).toBe(false);
   });
 });

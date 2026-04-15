@@ -2,6 +2,20 @@
 
 Complete testing documentation for the VFIDE frontend application.
 
+## Latest Infrastructure Audit
+
+- [VFIDE_TESTING_INFRA_AUDIT_2026-04-14.md](./VFIDE_TESTING_INFRA_AUDIT_2026-04-14.md) - testing pipeline risk review and remediation checklist.
+
+Key CI guard commands referenced by the audit:
+
+```bash
+# Full CI-like Jest run with guardrails + ABI parity
+npm run test:ci
+
+# Additional focused signoff checks
+npm run test:signoff:guard
+```
+
 ## 📊 Test Coverage
 
 **Current Status: 736 tests passing (100%)**
